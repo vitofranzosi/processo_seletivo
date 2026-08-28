@@ -578,6 +578,7 @@ components:
       type: object
       required: [id, editalId, publicationOrder, publishedAt, effectiveAt, contentHash, documentHash]
       properties:
+        kind: { type: string, enum: [PUBLICACAO], description: Discrimina o item dentro de HistoricoPage }
         id: { $ref: '#/components/schemas/Id' }
         editalId: { $ref: '#/components/schemas/Id' }
         publicationOrder: { type: integer, format: int64 }
@@ -601,6 +602,7 @@ components:
       additionalProperties: false
       required: [id, editalId, publicationId, justification, publishedAt, effectiveAt, changes]
       properties:
+        kind: { type: string, enum: [RETIFICACAO], description: Discrimina o item dentro de HistoricoPage }
         id: { $ref: '#/components/schemas/Id' }
         editalId: { $ref: '#/components/schemas/Id' }
         publicationId: { $ref: '#/components/schemas/Id' }
@@ -612,12 +614,22 @@ components:
       type: object
       required: [id, editalId, validFrom, contentHash, content, appliedPublications]
       properties:
+        kind: { type: string, enum: [VERSAO_CONSOLIDADA], description: Discrimina o item dentro de HistoricoPage }
         id: { $ref: '#/components/schemas/Id' }
         editalId: { $ref: '#/components/schemas/Id' }
         validFrom: { type: string, format: date-time }
         contentHash: { type: string }
         content: { type: object, additionalProperties: true }
         appliedPublications: { type: array, items: { $ref: '#/components/schemas/Id' } }
+        provenance:
+          type: array
+          description: Publicação que produziu cada caminho alterado, conforme FR-030
+          items:
+            type: object
+            required: [targetPath, publicationId]
+            properties:
+              targetPath: { type: string }
+              publicationId: { $ref: '#/components/schemas/Id' }
     HistoricoPage:
       type: object
       required: [items, nextCursor]
