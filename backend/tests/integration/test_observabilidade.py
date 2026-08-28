@@ -194,7 +194,11 @@ def test_metrics_require_explicit_permission(api_client):
 
 @pytest.mark.integration
 def test_operational_endpoints_stay_outside_the_business_contract():
-    """Health, readiness e métricas não são API institucional e não entram no openapi.yaml."""
+    """Health, readiness e métricas não são API institucional e não entram no openapi.yaml.
+
+    A interface administrativa também vive fora de /api/v1, pelo mesmo motivo: ela consome o
+    domínio pelos commands, não pelo contrato HTTP.
+    """
     from django.urls import get_resolver
 
     raiz = {
@@ -202,4 +206,4 @@ def test_operational_endpoints_stay_outside_the_business_contract():
         for pattern in get_resolver().url_patterns
         if not str(pattern.pattern).startswith("api/")
     }
-    assert raiz == {"", "health", "readiness", "metrics"}
+    assert raiz == {"", "health", "readiness", "metrics", "gestao/"}

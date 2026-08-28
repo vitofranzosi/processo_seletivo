@@ -1,0 +1,34 @@
+{% extends "interface/base.html" %}
+{% block titulo %}Identificar-se{% endblock %}
+{% block conteudo %}
+<h1>Quem está usando o sistema?</h1>
+<p class="sub">A autenticação institucional ainda não foi integrada. Escolha uma identidade para
+percorrer os fluxos — é assim que a demonstração substitui o diretório.</p>
+
+{% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
+
+<form method="post" class="identificar">
+  {% csrf_token %}
+  <label for="subject">Nome de quem está usando</label>
+  <input type="text" id="subject" name="subject" required autofocus
+         aria-describedby="ajuda-subject" value="ana.elaboradora">
+  <p id="ajuda-subject" class="nenhuma" style="margin:.35rem 0 1.25rem">
+    É registrado na auditoria de cada ato praticado.</p>
+
+  <fieldset>
+    <legend>Papéis de responsabilidade</legend>
+    {% for chave, papel in papeis.items %}
+    <div class="papel">
+      <input type="checkbox" id="papel-{{ chave }}" name="papeis" value="{{ chave }}"
+             aria-describedby="perms-{{ chave }}">
+      <label for="papel-{{ chave }}" style="margin:0">
+        {{ papel.0 }}
+        <span class="perms" id="perms-{{ chave }}">{{ papel.1|join:", " }}</span>
+      </label>
+    </div>
+    {% endfor %}
+  </fieldset>
+
+  <button type="submit" class="botao">Entrar</button>
+</form>
+{% endblock %}

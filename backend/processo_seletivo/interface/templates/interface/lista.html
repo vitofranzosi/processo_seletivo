@@ -1,0 +1,74 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Processos Seletivos{% endblock %}
+{% block conteudo %}
+<h1>Processos Seletivos</h1>
+<p class="sub">Processos e Editais do escopo <strong>{{ ator.institution_scope }}</strong>.</p>
+
+{% if seletor_identidade %}
+<p class="aviso"><strong>Ambiente de demonstração.</strong> A identidade acima foi escolhida
+manualmente e não vem do diretório institucional. Esta interface não pode ser usada em produção
+antes da autenticação real.</p>
+{% endif %}
+
+{% if sem_papel %}
+<p class="aviso"><strong>Sem permissões.</strong> Sua conta não possui nenhum papel de
+responsabilidade. Solicite acesso a quem administra o sistema no Cefor.</p>
+{% endif %}
+
+{% if resumo %}
+<ul class="resumo" aria-label="Editais por situação">
+  {% for situacao_valor, quantidade in resumo %}
+  <li><strong>{{ quantidade }}</strong>{{ situacao_valor|situacao }}</li>
+  {% endfor %}
+  <li><strong>{{ total_editais }}</strong>no total</li>
+</ul>
+{% endif %}
+
+{% for processo in processos %}
+<article class="processo">
+  <header>
+    <h2>{{ processo.title }}</h2>
+    <span class="codigo">{{ processo.institutional_code }}</span>
+    <span class="situacao s-{{ processo.status }}">{{ processo.status|situacao }}</span>
+  </header>
+  {% if processo.editais.all %}
+  <table>
+    <caption>{{ processo.editais.all|length }} Edital{{ processo.editais.all|length|pluralize:"is" }} neste Processo</caption>
+    <thead>
+      <tr>
+        <th scope="col">Edital</th>
+        <th scope="col">Título</th>
+        <th scope="col">Situação</th>
+        <th scope="col">O que posso fazer</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for edital in processo.editais.all %}
+      <tr>
+        <th scope="row"><span class="codigo">{{ edital.number }}/{{ edital.year }}</span></th>
+        <td>{{ edital.title }}</td>
+        <td><span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span></td>
+        <td>
+          {% if edital.acoes %}
+          <div class="acoes">
+            {% for acao in edital.acoes %}<span class="acao">{{ acao }}</span>{% endfor %}
+          </div>
+          {% else %}
+          <span class="nenhuma">Nenhuma ação disponível para seus papéis</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="padding:1rem 1.25rem;color:var(--texto-fraco)">Nenhum Edital neste Processo.</p>
+  {% endif %}
+</article>
+{% empty %}
+<div class="vazio">
+  <p>Nenhum Processo Seletivo no seu escopo institucional.</p>
+  {% if pode_criar %}<p><a class="botao" href="#">Criar Processo Seletivo</a></p>{% endif %}
+</div>
+{% endfor %}
+{% endblock %}

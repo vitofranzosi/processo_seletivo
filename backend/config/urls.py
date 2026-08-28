@@ -10,6 +10,7 @@ from processo_seletivo.shared.api.operacional import (
 urlpatterns = [
     # Endpoints operacionais ficam fora de /api/v1: não são contrato institucional.
     path("", IndexView.as_view(), name="index"),
+    path("gestao/", include("processo_seletivo.interface.urls")),
     path("health", HealthView.as_view(), name="health"),
     path("readiness", ReadinessView.as_view(), name="readiness"),
     path("metrics", MetricsView.as_view(), name="metrics"),

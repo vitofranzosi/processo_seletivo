@@ -37,10 +37,10 @@ def ator(subject, *permissoes):
     return Actor(subject, ESCOPO, frozenset(permissoes))
 
 
-def perfis():
+def perfis(numero):
     return [
         {
-            "id": "00000000-0000-0000-0000-0000000000b1",
+            "id": f"00000000-0000-0000-00{numero}-0000000000b1",
             "code": "DOC-INFO",
             "name": "Professor de Informática",
             "description": "Docência em Informática no ensino técnico e superior.",
@@ -64,7 +64,7 @@ def perfis():
             ],
         },
         {
-            "id": "00000000-0000-0000-0000-0000000000b2",
+            "id": f"00000000-0000-0000-00{numero}-0000000000b2",
             "code": "TEC-LAB",
             "name": "Técnico de Laboratório",
             "description": "Apoio técnico aos laboratórios de informática.",
@@ -77,7 +77,7 @@ def perfis():
     ]
 
 
-def cronograma(agora):
+def cronograma(agora, numero):
     marcos = [
         ("INSCRICAO", "Período de inscrições", 0, 20),
         ("PROVA", "Prova objetiva", 35, None),
@@ -85,7 +85,7 @@ def cronograma(agora):
     ]
     return [
         {
-            "id": f"00000000-0000-0000-0000-0000000000c{indice}",
+            "id": f"00000000-0000-0000-00{numero}-0000000000c{indice}",
             "type": tipo,
             "description": descricao,
             # A camada de aplicação recebe datetime; a conversão de ISO é do serializer.
@@ -105,6 +105,11 @@ class Command(BaseCommand):
             "--codigo", default="PS-DEMO-2026", help="identificação institucional do Processo"
         )
         parser.add_argument(
+            "--numero",
+            default="01",
+            help="número do Edital; precisa ser único no escopo para o mesmo ano",
+        )
+        parser.add_argument(
             "--recriar",
             action="store_true",
             help="falha se o código já existir, a menos que seja informado",
@@ -120,21 +125,22 @@ class Command(BaseCommand):
                 f"Já existe Processo com o código {codigo}. Use --codigo para outro identificador."
             )
 
+        numero = opcoes["numero"]
         agora = timezone.now()
         elaborador = ator("ana.elaboradora", "processo:criar", "edital:elaborar", "edital:submeter")
         homologador = ator("bruno.homologador", "edital:homologar")
         publicador = ator("carla.publicadora", "edital:publicar")
 
         with transaction.atomic():
-            processo, _ = self._criar(elaborador, codigo)
+            processo, _ = self._criar(elaborador, codigo, numero)
             edital = Edital.objects.get(processo=processo)
-            self._elaborar(elaborador, edital, agora)
+            self._elaborar(elaborador, edital, agora, numero)
             self._publicar(elaborador, homologador, publicador, edital)
 
         self._retificar(edital, agora)
         self._resumo(processo, edital)
 
-    def _criar(self, elaborador, codigo):
+    def _criar(self, elaborador, codigo, numero):
         self.stdout.write("Criando Processo e primeiro Edital…")
         from processo_seletivo.processos.application.commands import (
             create_process_with_first_edital,
@@ -146,17 +152,17 @@ class Command(BaseCommand):
                 "institutionalCode": codigo,
                 "title": "Processo Seletivo Simplificado 2026",
                 "firstEdital": {
-                    "number": "01",
+                    "number": numero,
                     "year": 2026,
-                    "title": "Edital 01/2026 — Professor Substituto",
+                    "title": f"Edital {numero}/2026 — Professor Substituto",
                     "description": "Seleção simplificada para professor substituto e técnico.",
                 },
             },
-            idempotency_key=f"seed-demo-{codigo}-0001",
+            idempotency_key=f"seed-demo-{codigo}-{numero}-01",
             correlation_id="seed-demo",
         )
 
-    def _elaborar(self, elaborador, edital, agora):
+    def _elaborar(self, elaborador, edital, agora, numero):
         from processo_seletivo.editais.application.draft import replace_draft
 
         self.stdout.write("Elaborando Perfis e Cronograma…")
@@ -164,8 +170,8 @@ class Command(BaseCommand):
             actor=elaborador,
             edital_id=edital.id,
             expected_revision=edital.revision,
-            profiles=perfis(),
-            schedule=cronograma(agora),
+            profiles=perfis(numero),
+            schedule=cronograma(agora, numero),
             correlation_id="seed-demo",
         )
         edital.refresh_from_db()
@@ -176,7 +182,7 @@ class Command(BaseCommand):
             actor=elaborador,
             edital_id=edital.id,
             expected_revision=edital.revision,
-            idempotency_key="seed-demo-submissao-0001",
+            idempotency_key=f"seed-demo-sub-{edital.id.hex[:12]}",
             correlation_id="seed-demo",
         )
         edital, _ = homologate_edital(
@@ -184,7 +190,7 @@ class Command(BaseCommand):
             edital_id=edital.id,
             expected_revision=edital.revision,
             reason="Conteúdo conferido pela comissão.",
-            idempotency_key="seed-demo-homologacao-01",
+            idempotency_key=f"seed-demo-hom-{edital.id.hex[:12]}",
             correlation_id="seed-demo",
         )
         publish_edital(
@@ -193,7 +199,7 @@ class Command(BaseCommand):
             expected_revision=edital.revision,
             signatory=SIGNATARIO,
             reason="Publicação do edital original.",
-            idempotency_key="seed-demo-publicacao-01",
+            idempotency_key=f"seed-demo-pub-{edital.id.hex[:12]}",
             correlation_id="seed-demo",
         )
 
