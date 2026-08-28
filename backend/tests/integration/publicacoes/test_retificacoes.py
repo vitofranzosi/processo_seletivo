@@ -1,9 +1,16 @@
+from datetime import timedelta
+
 import pytest
 from django.db import DatabaseError, connection
+from django.utils import timezone
 
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models import Publicacao
-from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
+from processo_seletivo.publicacoes.models_retificacao import (
+    ProvenienciaConteudo,
+    Retificacao,
+    VersaoConsolidada,
+)
 from tests.fixtures.edital import actor_headers, complete_draft
 
 
@@ -150,3 +157,132 @@ def test_consolidated_version_is_append_only_on_postgresql(
     version = VersaoConsolidada.objects.get(edital=edital)
     with pytest.raises(DatabaseError):
         VersaoConsolidada.objects.filter(pk=version.pk).update(content={"changed": True})
+
+
+def publish_retification(api_client, edital, changes, *, effective_at=None, suffix=""):
+    base = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    payload = {
+        "baseSnapshotId": str(base.id),
+        "justification": "Correção de vagas",
+        "changes": changes,
+    }
+    if effective_at is not None:
+        payload["effectiveAt"] = effective_at
+    create = api_client.post(
+        f"/api/v1/admin/editais/{edital.id}/retificacoes",
+        payload,
+        format="json",
+        **actor_headers(
+            "retificador", ["retificacao:elaborar"], key=f"retificacao-key-00{suffix}1"
+        ),
+    )
+    assert create.status_code == 201, create.content
+    retificacao = Retificacao.objects.get(pk=create.json()["id"])
+    api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao.id}/submissoes",
+        format="json",
+        **{
+            **actor_headers(
+                "retificador", ["retificacao:submeter"], key=f"retificacao-key-00{suffix}2"
+            ),
+            "HTTP_IF_MATCH": '"1"',
+        },
+    )
+    api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao.id}/homologacoes",
+        {"reason": "OK"},
+        format="json",
+        **{
+            **actor_headers(
+                "homologador-r", ["retificacao:homologar"], key=f"retificacao-key-00{suffix}3"
+            ),
+            "HTTP_IF_MATCH": '"2"',
+        },
+    )
+    published = api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao.id}/publicacoes",
+        {
+            "signatory": {
+                "authorityId": "00000000-0000-0000-0000-000000000602",
+                "name": "Diretora",
+                "role": "Diretora",
+            }
+        },
+        format="json",
+        **{
+            **actor_headers(
+                "publicador-r", ["retificacao:publicar"], key=f"retificacao-key-00{suffix}4"
+            ),
+            "HTTP_IF_MATCH": '"3"',
+        },
+    )
+    assert published.status_code == 201, published.content
+    return retificacao
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_retification_changes_vacancies_and_schedule_inside_snapshot_lists(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    original = VersaoConsolidada.objects.get(edital=edital).content
+    assert original["profiles"][0]["immediateVacancies"] == 1
+
+    publish_retification(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": "/profiles/0/immediateVacancies",
+                "operation": "REPLACE",
+                "newValue": 12,
+            },
+            {
+                "targetPath": "/schedule/0/description",
+                "operation": "REPLACE",
+                "newValue": "Inscrições prorrogadas",
+            },
+        ],
+    )
+
+    consolidada = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    assert consolidada.content["profiles"][0]["immediateVacancies"] == 12
+    assert consolidada.content["schedule"][0]["description"] == "Inscrições prorrogadas"
+    assert consolidada.content["profiles"][0]["code"] == "P1"
+
+    primeira = VersaoConsolidada.objects.filter(edital=edital).earliest("materialized_at")
+    assert primeira.content["profiles"][0]["immediateVacancies"] == 1
+    assert (
+        ProvenienciaConteudo.objects.filter(
+            versao=consolidada, target_path="/profiles/0/immediateVacancies"
+        ).count()
+        == 1
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_retification_with_future_effective_date_materializes_version_at_that_boundary(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    vigencia = timezone.now() + timedelta(days=30)
+
+    publish_retification(
+        api_client,
+        edital,
+        [{"targetPath": "/profiles/0/immediateVacancies", "operation": "REPLACE", "newValue": 40}],
+        effective_at=vigencia.isoformat(),
+    )
+
+    retificada = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    assert retificada.valid_from == vigencia
+    assert retificada.content["profiles"][0]["immediateVacancies"] == 40
+
+    vigente_hoje = (
+        VersaoConsolidada.objects.filter(edital=edital, valid_from__lte=timezone.now())
+        .order_by("-valid_from")
+        .first()
+    )
+    assert vigente_hoje.content["profiles"][0]["immediateVacancies"] == 1
