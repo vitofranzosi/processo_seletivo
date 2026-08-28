@@ -4,6 +4,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
+from processo_seletivo.shared.observability import log_domain_rejection
+
 
 @dataclass
 class DomainError(Exception):
@@ -29,6 +31,12 @@ def problem_exception_handler(exc, context):
     if isinstance(exc, DomainError):
         request = context.get("request")
         correlation_id = getattr(request, "correlation_id", "unknown")
+        log_domain_rejection(
+            code=exc.code,
+            status=exc.status,
+            correlation_id=correlation_id,
+            actor_subject=getattr(getattr(request, "user", None), "subject", ""),
+        )
         return Response(
             {
                 "type": f"https://processo-seletivo.cefor/errors/{exc.code}",
@@ -59,6 +67,12 @@ def problem_exception_handler(exc, context):
             if isinstance(response.data, dict)
             else "Requisição inválida"
         )
+    log_domain_rejection(
+        code=code,
+        status=response.status_code,
+        correlation_id=correlation_id,
+        actor_subject=getattr(getattr(request, "user", None), "subject", ""),
+    )
     response.data = {
         "type": f"https://processo-seletivo.cefor/errors/{code}",
         "title": "Requisição rejeitada",

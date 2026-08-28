@@ -33,7 +33,7 @@ Monólito modular em Python 3.13 / Django 5.2 LTS / DRF, sobre PostgreSQL. Cada 
 | `publicacoes` | Publicação, Retificação, versões consolidadas e consulta pública |
 | `seguranca` | Ator autenticado, permissões e autorização por objeto |
 | `auditoria` | Registro append-only e idempotência |
-| `shared` | Serialização canônica, concorrência otimista e Problem Details |
+| `shared` | Serialização canônica, concorrência otimista, Problem Details e observabilidade |
 
 Operações de workflow são commands explícitos e transacionais. O controle otimista usa `ETag` /
 `If-Match`; commands irreversíveis exigem `Idempotency-Key`. Erros usam `application/problem+json`.
@@ -90,6 +90,19 @@ ficar sem rota, se alguma rota for exposta fora do contrato ou se uma resposta d
 A autenticação atual é um adaptador de desenvolvimento: `Bearer <subject>|<escopo>|<permissões>`.
 A integração institucional será definida em incremento próprio.
 
+### Endpoints operacionais
+
+Ficam fora de `/api/v1` por não serem contrato institucional:
+
+| Rota | Uso |
+|---|---|
+| `GET /health` | Liveness — responde sem tocar no banco |
+| `GET /readiness` | Readiness — `503` se o banco não responder ou houver migration pendente |
+| `GET /metrics` | Contadores de conflito e recusa; exige `observabilidade:consultar` |
+
+Os logs saem em JSON, uma linha por evento, com o `correlationId` que liga log e auditoria. Nenhum
+campo carrega token, permissão ou conteúdo normativo.
+
 ## Estado do projeto
 
 As sete histórias da feature `001-processo-seletivo-editais` estão implementadas e rastreadas.
@@ -100,8 +113,8 @@ As sete histórias da feature `001-processo-seletivo-editais` estão implementad
   cenários do quickstart
 
 **A feature ainda não está concluída.** O documento publicado não reproduz o conteúdo normativo
-completo, então FR-023 não está atendido; observabilidade e testes de carga permanecem abertos. Os
-detalhes estão nos dois artefatos acima.
+completo, então FR-023 não está atendido, e os testes de carga permanecem abertos. Os detalhes estão
+nos dois artefatos acima.
 
 ## Documentação
 
