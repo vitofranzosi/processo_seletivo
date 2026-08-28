@@ -1,0 +1,68 @@
+<fieldset class="linha perfil">
+  <legend>Perfil de Vaga</legend>
+  <input type="hidden" name="perfil-{{ indice }}-id" value="{{ perfil.id }}">
+  <div class="campos">
+    <p class="campo curto">
+      <label for="perfil-{{ indice }}-code">Código</label>
+      <input type="text" id="perfil-{{ indice }}-code" name="perfil-{{ indice }}-code"
+             value="{{ perfil.code|default:'' }}" required>
+    </p>
+    <p class="campo largo">
+      <label for="perfil-{{ indice }}-name">Denominação</label>
+      <input type="text" id="perfil-{{ indice }}-name" name="perfil-{{ indice }}-name"
+             value="{{ perfil.name|default:'' }}" required>
+    </p>
+    <p class="campo">
+      <label for="perfil-{{ indice }}-locality">Localidade</label>
+      <input type="text" id="perfil-{{ indice }}-locality" name="perfil-{{ indice }}-locality"
+             value="{{ perfil.locality|default:'' }}">
+    </p>
+  </div>
+  <p class="campo">
+    <label for="perfil-{{ indice }}-description">Descrição</label>
+    <input type="text" id="perfil-{{ indice }}-description"
+           name="perfil-{{ indice }}-description" value="{{ perfil.description|default:'' }}">
+  </p>
+  <div class="campos">
+    <p class="campo curto">
+      <label for="perfil-{{ indice }}-immediateVacancies">Vagas imediatas</label>
+      <input type="number" min="0" id="perfil-{{ indice }}-immediateVacancies"
+             name="perfil-{{ indice }}-immediateVacancies"
+             value="{{ perfil.immediateVacancies|default:0 }}">
+    </p>
+    <p class="campo">
+      <label for="perfil-{{ indice }}-reserveType">Cadastro Reserva</label>
+      <select id="perfil-{{ indice }}-reserveType" name="perfil-{{ indice }}-reserveType">
+        {% for valor, rotulo in reservas %}
+        <option value="{{ valor }}" {% if perfil.reserveType == valor %}selected{% endif %}>{{ rotulo }}</option>
+        {% endfor %}
+      </select>
+    </p>
+    <p class="campo curto">
+      <label for="perfil-{{ indice }}-reserveLimit">Limite da reserva</label>
+      <input type="number" min="0" id="perfil-{{ indice }}-reserveLimit"
+             name="perfil-{{ indice }}-reserveLimit" value="{{ perfil.reserveLimit|default:'' }}"
+             aria-describedby="ajuda-reserva-{{ indice }}">
+      <span class="ajuda" id="ajuda-reserva-{{ indice }}">Só para reserva limitada.</span>
+    </p>
+  </div>
+  <div class="campos">
+    <p class="campo largo">
+      <label for="perfil-{{ indice }}-requirements">Requisitos</label>
+      <textarea id="perfil-{{ indice }}-requirements" name="perfil-{{ indice }}-requirements"
+                rows="3" aria-describedby="ajuda-req-{{ indice }}">{{ perfil.requirements|default:'' }}</textarea>
+      <span class="ajuda" id="ajuda-req-{{ indice }}">Um requisito por linha.</span>
+    </p>
+    <p class="campo largo">
+      <label for="perfil-{{ indice }}-modalidades">Modalidades de Concorrência</label>
+      <textarea id="perfil-{{ indice }}-modalidades" name="perfil-{{ indice }}-modalidades"
+                rows="3" aria-describedby="ajuda-mod-{{ indice }}">{{ perfil.modalidades|default:'' }}</textarea>
+      <span class="ajuda" id="ajuda-mod-{{ indice }}">Uma por linha: <code>AC — Ampla concorrência</code></span>
+    </p>
+  </div>
+  <p class="remover">
+    <button type="button" class="acao perigo"
+            hx-get="{% url 'interface:fragmento-remover' %}"
+            hx-target="closest fieldset" hx-swap="outerHTML">Remover este Perfil</button>
+  </p>
+</fieldset>

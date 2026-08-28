@@ -34,3 +34,12 @@ def contar_por_situacao(processos):
         for edital in processo.editais.all():
             contagem[edital.status] = contagem.get(edital.status, 0) + 1
     return contagem
+
+
+def obter_edital(*, actor, edital_id):
+    """Edital do escopo do ator, ou None. O escopo é aplicado aqui, como nos commands."""
+    return (
+        Edital.objects.filter(pk=edital_id, institution_scope=actor.institution_scope)
+        .select_related("processo")
+        .first()
+    )

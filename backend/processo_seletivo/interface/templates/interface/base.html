@@ -6,19 +6,19 @@
 <title>{% block titulo %}Gestão de Processos Seletivos{% endblock %} — Cefor/Ifes</title>
 <style>
 :root{
-  --azul:#1351b4; --azul-escuro:#0c326f; --azul-claro:#e8eefb;
+  --verde:#15803d; --verde-escuro:#0b5a2a; --verde-claro:#e7f5ec;
   --texto:#1c1c1c; --texto-fraco:#555; --borda:#d4d4d4; --fundo:#f8f8f8; --branco:#fff;
-  --verde:#168821; --verde-fundo:#e3f5e1; --amarelo:#a86a00; --amarelo-fundo:#fdf5e5;
-  --vermelho:#b30000; --vermelho-fundo:#fbe9e9; --cinza:#6c757d; --cinza-fundo:#eee;
+  --sucesso:#146c37; --sucesso-fundo:#e7f5ec; --amarelo:#8a5300; --amarelo-fundo:#fdf5e5;
+  --vermelho:#a91b1b; --vermelho-fundo:#fbe9e9; --cinza:#6c757d; --cinza-fundo:#eee;
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:"Open Sans","Segoe UI",system-ui,sans-serif;color:var(--texto);
   background:var(--fundo);line-height:1.5;font-size:16px}
-a{color:var(--azul)}
+a{color:var(--verde)}
 .pular{position:absolute;left:-9999px;top:0;background:var(--branco);padding:.75rem 1rem;z-index:10}
 .pular:focus{left:0}
-*:focus-visible{outline:3px solid var(--azul);outline-offset:2px}
-header.topo{background:var(--azul-escuro);color:var(--branco);padding:.85rem 1.5rem;
+*:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
+header.topo{background:var(--verde-escuro);color:var(--branco);padding:.85rem 1.5rem;
   display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
 header.topo .marca{font-weight:600;letter-spacing:.02em}
 header.topo .marca span{font-weight:300;opacity:.85}
@@ -40,7 +40,7 @@ h2{font-size:1.15rem;margin:0;font-weight:600}
 .processo>header{padding:1rem 1.25rem;border-bottom:1px solid var(--borda);
   display:flex;align-items:baseline;gap:.75rem;flex-wrap:wrap}
 .codigo{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;
-  background:var(--azul-claro);color:var(--azul-escuro);padding:.15rem .5rem;border-radius:3px}
+  background:var(--verde-claro);color:var(--verde-escuro);padding:.15rem .5rem;border-radius:3px}
 table{width:100%;border-collapse:collapse}
 caption{text-align:left;padding:.75rem 1.25rem 0;color:var(--texto-fraco);font-size:.875rem}
 th,td{text-align:left;padding:.7rem 1.25rem;border-bottom:1px solid var(--borda);
@@ -52,21 +52,58 @@ tbody tr:last-child td{border-bottom:none}
   font-weight:600;white-space:nowrap}
 .s-EM_ELABORACAO{background:var(--cinza-fundo);color:#333}
 .s-EM_REVISAO{background:var(--amarelo-fundo);color:var(--amarelo)}
-.s-HOMOLOGADO{background:var(--azul-claro);color:var(--azul-escuro)}
-.s-PUBLICADO{background:var(--verde-fundo);color:var(--verde)}
+.s-HOMOLOGADO{background:var(--verde-claro);color:var(--verde-escuro)}
+.s-PUBLICADO{background:var(--sucesso-fundo);color:var(--sucesso)}
 .s-ENCERRADO{background:var(--cinza-fundo);color:var(--texto-fraco)}
 .s-CANCELADO{background:var(--vermelho-fundo);color:var(--vermelho)}
-.s-ATIVO{background:var(--verde-fundo);color:var(--verde)}
+.s-ATIVO{background:var(--sucesso-fundo);color:var(--sucesso)}
 .acoes{display:flex;gap:.4rem;flex-wrap:wrap}
-.acao{font-size:.8125rem;padding:.25rem .7rem;border:1px solid var(--azul);color:var(--azul);
+.acao{font-size:.8125rem;padding:.25rem .7rem;border:1px solid var(--verde);color:var(--verde);
   background:var(--branco);border-radius:3px;text-decoration:none;white-space:nowrap;cursor:pointer}
-.acao:hover{background:var(--azul-claro)}
+.acao:hover{background:var(--verde-claro)}
 .nenhuma{color:var(--texto-fraco);font-size:.8125rem}
-.botao{background:var(--azul);color:var(--branco);border:none;padding:.6rem 1.1rem;
+.botao{background:var(--verde);color:var(--branco);border:none;padding:.6rem 1.1rem;
   border-radius:4px;font-size:.9375rem;cursor:pointer;text-decoration:none;display:inline-block}
-.botao:hover{background:var(--azul-escuro)}
+.botao:hover{background:var(--verde-escuro)}
 .vazio{background:var(--branco);border:1px dashed var(--borda);border-radius:6px;
   padding:2.5rem 1.5rem;text-align:center;color:var(--texto-fraco)}
+.trilha{font-size:.875rem;color:var(--texto-fraco);margin-bottom:1rem}
+.trilha a{color:var(--verde)}
+.sucesso{background:var(--sucesso-fundo);border-left:4px solid var(--sucesso);
+  padding:.75rem 1rem;margin-bottom:1.5rem;border-radius:0 4px 4px 0;color:var(--sucesso);font-weight:600}
+.pendencias{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem;margin-bottom:1.5rem}
+.pendencias h2{font-size:1rem;margin-bottom:.6rem}
+.pendencias ul{margin:0;padding-left:0;list-style:none}
+.pendencias li{padding:.35rem 0;border-bottom:1px solid var(--fundo);font-size:.9375rem}
+.pendencias li:last-child{border-bottom:none}
+.marcador{display:inline-block;font-size:.7rem;font-weight:700;text-transform:uppercase;
+  padding:.1rem .45rem;border-radius:3px;margin-right:.5rem;letter-spacing:.03em}
+.p-erro .marcador{background:var(--vermelho-fundo);color:var(--vermelho)}
+.p-aviso .marcador{background:var(--amarelo-fundo);color:var(--amarelo)}
+.tudo-certo{color:var(--sucesso);font-weight:600;margin:0}
+section[aria-labelledby]{margin-bottom:2rem}
+section h2{margin-bottom:.75rem}
+fieldset.linha{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem 0.5rem;margin-bottom:1rem}
+fieldset.linha legend{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--texto-fraco);font-weight:600}
+.campos{display:flex;gap:1rem;flex-wrap:wrap}
+.campo{flex:1 1 200px;margin:0 0 .9rem}
+.campo.curto{flex:0 1 150px}
+.campo.largo{flex:2 1 320px}
+.campo label{font-size:.8125rem;font-weight:600;margin-bottom:.25rem}
+.campo input,.campo select,.campo textarea{width:100%;padding:.5rem;border:1px solid var(--borda);
+  border-radius:4px;font-size:.9375rem;font-family:inherit}
+.campo textarea{resize:vertical}
+.ajuda{display:block;font-size:.75rem;color:var(--texto-fraco);margin-top:.25rem}
+.ajuda code{background:var(--fundo);padding:.05rem .3rem;border-radius:3px}
+.remover{margin:.25rem 0 .75rem;text-align:right}
+.acao.perigo{border-color:var(--vermelho);color:var(--vermelho)}
+.acao.perigo:hover{background:var(--vermelho-fundo)}
+.botao.secundario{background:var(--branco);color:var(--verde);border:1px solid var(--verde)}
+.botao.secundario:hover{background:var(--verde-claro)}
+.salvar{display:flex;gap:1rem;align-items:center;padding:1rem 0 2rem;border-top:1px solid var(--borda)}
 form.identificar{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1.5rem;max-width:520px}
 fieldset{border:1px solid var(--borda);border-radius:4px;padding:1rem;margin:0 0 1.25rem}

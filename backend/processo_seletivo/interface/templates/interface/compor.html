@@ -1,0 +1,81 @@
+{% extends "interface/base.html" %}{% load interface_extras static %}
+{% block titulo %}Compor Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <span>{{ edital.processo.institutional_code }}</span> ›
+  <span aria-current="page">Edital {{ edital.number }}/{{ edital.year }}</span>
+</nav>
+
+<h1>Edital {{ edital.number }}/{{ edital.year }}</h1>
+<p class="sub">{{ edital.title }}
+  <span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span></p>
+
+{% if salvo %}
+<p class="sucesso" role="status">Rascunho salvo.</p>
+{% endif %}
+
+{% if erros %}
+<div class="erro" role="alert">
+  <strong>Não foi possível salvar:</strong>
+  <ul>{% for erro in erros %}<li>{{ erro }}</li>{% endfor %}</ul>
+  <p class="ajuda">O que você digitou foi preservado abaixo.</p>
+</div>
+{% endif %}
+
+{% if not editavel %}
+<p class="aviso"><strong>Somente leitura.</strong>
+  {% if edital.status != 'EM_ELABORACAO' %}Este Edital não está mais em elaboração; alterações
+  após a Publicação ocorrem por Retificação.{% else %}Você não tem a permissão
+  <code>edital:elaborar</code>.{% endif %}</p>
+{% endif %}
+
+<section aria-labelledby="pendencias-titulo" class="pendencias">
+  <h2 id="pendencias-titulo">O que falta para submeter</h2>
+  {% if pendencias %}
+  <ul>
+    {% for item in pendencias %}
+    <li class="p-{{ item.severidade }}">
+      <span class="marcador">{% if item.severidade == 'erro' %}Impede{% else %}Aviso{% endif %}</span>
+      {{ item.mensagem }}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="tudo-certo">Nada pendente — o Edital pode ser submetido.</p>
+  {% endif %}
+</section>
+
+<form method="post" id="formulario">
+  {% csrf_token %}
+
+  <section aria-labelledby="perfis-titulo">
+    <h2 id="perfis-titulo">Perfis de Vaga</h2>
+    <div id="perfis">
+      {% for perfil in perfis %}{% include "interface/_perfil.html" with indice=forloop.counter0 %}{% endfor %}
+    </div>
+    <button type="button" class="botao secundario"
+            hx-get="{% url 'interface:fragmento-perfil' %}"
+            hx-vals='js:{indice: Date.now()}'
+            hx-target="#perfis" hx-swap="beforeend">Acrescentar Perfil</button>
+  </section>
+
+  <section aria-labelledby="cronograma-titulo">
+    <h2 id="cronograma-titulo">Cronograma</h2>
+    <div id="eventos">
+      {% for evento in eventos %}{% include "interface/_evento.html" with indice=forloop.counter0 %}{% endfor %}
+    </div>
+    <button type="button" class="botao secundario"
+            hx-get="{% url 'interface:fragmento-evento' %}"
+            hx-vals='js:{indice: Date.now()}'
+            hx-target="#eventos" hx-swap="beforeend">Acrescentar Evento</button>
+  </section>
+
+  {% if editavel %}
+  <p class="salvar"><button type="submit" class="botao">Salvar rascunho</button>
+    <a href="{% url 'interface:lista' %}" class="acao">Voltar sem salvar</a></p>
+  {% endif %}
+</form>
+
+<script src="{% static 'interface/htmx.min.js' %}" defer></script>
+{% endblock %}

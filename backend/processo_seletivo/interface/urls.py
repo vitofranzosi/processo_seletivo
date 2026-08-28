@@ -8,4 +8,8 @@ urlpatterns = [
     path("", views.lista, name="lista"),
     path("identificar", views.identificar, name="identificar"),
     path("sair", views.sair, name="sair"),
+    path("editais/<uuid:edital_id>/compor", views.compor, name="compor"),
+    path("fragmentos/perfil", views.fragmento_perfil, name="fragmento-perfil"),
+    path("fragmentos/evento", views.fragmento_evento, name="fragmento-evento"),
+    path("fragmentos/remover", views.fragmento_remover, name="fragmento-remover"),
 ]
