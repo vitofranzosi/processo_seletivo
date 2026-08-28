@@ -6,6 +6,12 @@ from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.domain.changes import apply_changes
+from processo_seletivo.publicacoes.domain.conflicts import (
+    HASH_MISMATCH,
+    TARGET_PRESENT,
+    content_conflicts,
+    requires_content_check,
+)
 from processo_seletivo.publicacoes.domain.consolidation import consolidate
 from processo_seletivo.publicacoes.infrastructure.pdf import render_edital_pdf
 from processo_seletivo.publicacoes.models import DocumentoPublicado, Publicacao
@@ -37,34 +43,35 @@ def _retificacao(actor, retificacao_id):
 
 def _changes_payload(retificacao):
     return [
-        {"targetPath": item.target_path, "operation": item.operation, "newValue": item.new_value}
+        {
+            "targetPath": item.target_path,
+            "operation": item.operation,
+            "newValue": item.new_value,
+            "expectedPreviousHash": item.expected_previous_hash,
+        }
         for item in retificacao.alteracoes.all()
     ]
 
 
-def _original_version(edital):
-    return (
-        VersaoConsolidada.objects.filter(edital=edital, source_publication__revisao__isnull=False)
-        .order_by("valid_from")
-        .first()
-    )
+CONFLICT_MESSAGES = {
+    HASH_MISMATCH: (
+        "O conteúdo anterior informado não corresponde ao vigente em: {paths}. "
+        "Refaça a Retificação sobre a versão consolidada atual."
+    ),
+    TARGET_PRESENT: (
+        "A operação ADD pressupõe caminho ausente, mas já há conteúdo vigente em: {paths}. "
+        "Use REPLACE sobre a versão consolidada atual."
+    ),
+}
 
 
-def _published_retifications(edital):
-    return list(
-        Retificacao.objects.filter(edital=edital, status=Retificacao.Status.PUBLICADA)
-        .select_related("publication")
-        .prefetch_related("alteracoes")
-    )
-
-
-def _act(retificacao):
-    return {
-        "effectiveAt": retificacao.publication.effective_at,
-        "publicationOrder": retificacao.publication.publication_order,
-        "publicationId": str(retificacao.publication_id),
-        "changes": _changes_payload(retificacao),
-    }
+def _reject_stale_changes(content, changes):
+    """Rejeita alterações cuja precondição de conteúdo já não se verifica (FR-036)."""
+    conflicts = content_conflicts(content, changes)
+    for code in (HASH_MISMATCH, TARGET_PRESENT):
+        paths = conflicts.get(code)
+        if paths:
+            raise DomainError(code, CONFLICT_MESSAGES[code].format(paths=", ".join(paths)), 409)
 
 
 def _no_effective_change():
@@ -76,11 +83,12 @@ def _no_effective_change():
 
 
 def _apply_declared_changes(base, changes):
-    """Aplica as mudanças sobre a base declarada e exige efeito prático (FR-026)."""
+    """Aplica sobre a base declarada e exige efeito prático (FR-026) e precondições (FR-036)."""
     try:
         content, _ = apply_changes(base, changes, publication_id="draft")
     except ValueError as exc:
         raise DomainError("invalid_change", str(exc), 422) from exc
+    _reject_stale_changes(base, changes)
     if canonical_sha256(content) == canonical_sha256(base):
         raise _no_effective_change()
     return content
@@ -143,11 +151,22 @@ def edit_retification(*, actor, retificacao_id, expected_revision, data):
         item = _retificacao(actor, retificacao_id)
         if item.status != Retificacao.Status.EM_ELABORACAO:
             raise DomainError("invalid_state", "Retificação não está em elaboração.", 409)
-        _apply_declared_changes(item.base_snapshot.content, data["changes"])
+        # Rebase: uma Retificação devolvida por conflito precisa poder reapontar para a
+        # versão consolidada atual, senão a correção nasce sobre a mesma base obsoleta.
+        base = item.base_snapshot
+        if data.get("baseSnapshotId") and data["baseSnapshotId"] != base.pk:
+            try:
+                base = VersaoConsolidada.objects.get(
+                    pk=data["baseSnapshotId"], edital=item.edital_id
+                )
+            except VersaoConsolidada.DoesNotExist as exc:
+                raise DomainError("not_found", "Recurso não encontrado.", 404) from exc
+        _apply_declared_changes(base.content, data["changes"])
         compare_and_swap(
             Retificacao.objects,
             pk=item.pk,
             expected_revision=expected_revision,
+            base_snapshot=base,
             justification=data["justification"],
             effective_at=data.get("effectiveAt"),
         )
@@ -156,30 +175,54 @@ def edit_retification(*, actor, retificacao_id, expected_revision, data):
         return item
 
 
+# Estados de origem admitidos e estado alvo de cada transição. `None` significa
+# "qualquer estado não final", verificado à parte.
+TRANSITIONS = {
+    "submeter": ((Retificacao.Status.EM_ELABORACAO,), Retificacao.Status.EM_REVISAO),
+    "homologar": ((Retificacao.Status.EM_REVISAO,), Retificacao.Status.HOMOLOGADA),
+    "devolver": (
+        (Retificacao.Status.EM_REVISAO, Retificacao.Status.HOMOLOGADA),
+        Retificacao.Status.EM_ELABORACAO,
+    ),
+    "cancelar": (None, Retificacao.Status.CANCELADA),
+}
+
+# Devolver desfaz revisão ou homologação: é ato de quem homologa, como a revogação de
+# homologação do Edital, que também exige `edital:homologar`.
+TRANSITION_PERMISSIONS = {"devolver": "retificacao:homologar"}
+
+
 def transition_retification(*, actor, retificacao_id, expected_revision, action, reason=""):
-    permission = f"retificacao:{action}"
+    permission = TRANSITION_PERMISSIONS.get(action, f"retificacao:{action}")
     require_permission(actor, permission)
-    states = {
-        "submeter": (Retificacao.Status.EM_ELABORACAO, Retificacao.Status.EM_REVISAO),
-        "homologar": (Retificacao.Status.EM_REVISAO, Retificacao.Status.HOMOLOGADA),
-        "cancelar": (None, Retificacao.Status.CANCELADA),
-    }
     with command_context() as now:
         item = _retificacao(actor, retificacao_id)
-        previous, target = states[action]
-        if previous and item.status != previous:
+        origins, target = TRANSITIONS[action]
+        previous = item.status
+        if origins and previous not in origins:
             raise DomainError("invalid_state", "Transição inválida para a Retificação.", 409)
-        if action == "cancelar" and item.status in {
+        if action == "cancelar" and previous in {
             Retificacao.Status.PUBLICADA,
             Retificacao.Status.CANCELADA,
         }:
             raise DomainError("invalid_state", "Retificação final não pode ser cancelada.", 409)
+        if action == "devolver" and not reason.strip():
+            raise DomainError("reason_required", "A devolução exige motivo.", 422)
         changes = {"status": target}
         if action == "submeter":
             changes.update(prepared_by=actor.subject, submitted_at=now)
         elif action == "homologar":
             changes.update(
                 homologated_by=actor.subject, homologated_at=now, homologation_reason=reason
+            )
+        elif action == "devolver":
+            # A homologação desfeita não pode continuar descrevendo um ato em elaboração;
+            # sua autoria permanece no registro de auditoria do evento HOMOLOGAR.
+            changes.update(
+                homologated_by="",
+                homologated_at=None,
+                homologation_reason="",
+                return_reason=reason,
             )
         else:
             changes["cancellation_reason"] = reason
@@ -195,35 +238,91 @@ def transition_retification(*, actor, retificacao_id, expected_revision, action,
             now=now,
             correlation_id="",
             reason=reason,
-            previous_state=previous or "",
+            previous_state=previous,
             previous_revision=expected_revision,
         )
         return item
 
 
-def _assert_effective_change(edital, retificacao, effective_at, publication_order):
-    """A Retificação só altera o conteúdo normativo na Publicação (FR-027).
+def _original_version(edital):
+    return (
+        VersaoConsolidada.objects.filter(edital=edital, source_publication__revisao__isnull=False)
+        .order_by("valid_from")
+        .first()
+    )
 
-    O efeito prático é medido no início da própria vigência: o conteúdo consolidado
-    com este ato precisa diferir do que já vigoraria sem ele. Isso captura tanto a
-    mudança declarada sem efeito quanto o ato esvaziado por outra Retificação
-    publicada no intervalo entre a homologação e esta Publicação.
+
+def _published_retifications(edital):
+    return list(
+        Retificacao.objects.filter(edital=edital, status=Retificacao.Status.PUBLICADA)
+        .select_related("publication")
+        .prefetch_related("alteracoes")
+    )
+
+
+def _acts(items):
+    return [
+        {
+            "effectiveAt": item.publication.effective_at,
+            "publicationOrder": item.publication.publication_order,
+            "publicationId": str(item.publication_id),
+            "changes": _changes_payload(item),
+        }
+        for item in items
+    ]
+
+
+def _consolidate(base_content, acts):
+    """Consolida, traduzindo alteração inaplicável em rejeição em vez de erro interno.
+
+    A composição só é conhecida ao aplicar todos os atos vigentes em ordem: uma Retificação
+    pode remover o caminho que outra, publicada antes mas com vigência posterior, substitui.
+    Nesse caso não há resultado determinístico a materializar, e a FR-039 exige que haja.
+    """
+    try:
+        return consolidate(base_content, acts)
+    except ValueError as exc:
+        raise DomainError(
+            "inconsistent_consolidation",
+            f"A composição das Retificações vigentes ficaria inconsistente: {exc}. "
+            "Refaça a Retificação sobre a versão consolidada atual.",
+            409,
+        ) from exc
+
+
+def _content_in_force(edital, moment):
+    """Conteúdo consolidado das Retificações já publicadas que vigoram em `moment`."""
+    applicable = [
+        item for item in _published_retifications(edital) if item.publication.effective_at <= moment
+    ]
+    content, _ = _consolidate(_original_version(edital).content, _acts(applicable))
+    return content
+
+
+def _assert_effective_change(edital, retificacao, effective_at, publication_order):
+    """O efeito prático é medido no início da própria vigência (FR-027).
+
+    Compara o conteúdo que já vigoraria sem este ato com o conteúdo que passa a vigorar
+    com ele. Captura tanto a mudança declarada sem efeito quanto o ato esvaziado por
+    outra Retificação publicada entre a homologação e esta Publicação.
     """
     original = _original_version(edital)
-    in_force = [
-        _act(item)
-        for item in _published_retifications(edital)
-        if item.publication.effective_at <= effective_at
-    ]
-    pending = {
+    in_force = _acts(
+        [
+            item
+            for item in _published_retifications(edital)
+            if item.publication.effective_at <= effective_at
+        ]
+    )
+    pendente = {
         "effectiveAt": effective_at,
         "publicationOrder": publication_order,
         "publicationId": "pending",
         "changes": _changes_payload(retificacao),
     }
-    before, _ = consolidate(original.content, in_force)
-    after, _ = consolidate(original.content, [*in_force, pending])
-    if canonical_sha256(before) == canonical_sha256(after):
+    antes, _ = _consolidate(original.content, in_force)
+    depois, _ = _consolidate(original.content, [*in_force, pendente])
+    if canonical_sha256(antes) == canonical_sha256(depois):
         raise _no_effective_change()
 
 
@@ -240,8 +339,8 @@ def _materialize_affected_versions(retificacao, publication, now):
     publications = {str(item.publication_id): item.publication for item in published}
     for boundary in boundaries:
         applicable = [item for item in published if item.publication.effective_at <= boundary]
-        acts = [_act(item) for item in applicable]
-        content, provenance = consolidate(original.content, acts)
+        acts = _acts(applicable)
+        content, provenance = _consolidate(original.content, acts)
         version = VersaoConsolidada.objects.create(
             edital=retificacao.edital,
             valid_from=boundary,
@@ -278,10 +377,11 @@ def publish_retification(*, actor, retificacao_id, expected_revision, signatory)
         effective_at = item.effective_at or now
         if effective_at < now:
             raise DomainError("invalid_effective_at", "Vigência não pode ser retroativa.", 422)
+        changes = _changes_payload(item)
+        if requires_content_check(changes):
+            _reject_stale_changes(_content_in_force(edital, effective_at), changes)
         _assert_effective_change(edital, item, effective_at, edital.next_publication_order)
-        content, _ = apply_changes(
-            item.base_snapshot.content, _changes_payload(item), publication_id="pending"
-        )
+        content, _ = apply_changes(item.base_snapshot.content, changes, publication_id="pending")
         canonical = canonical_bytes(content)
         pdf = render_edital_pdf(content, canonical_sha256(content))
         publication = Publicacao.objects.create(

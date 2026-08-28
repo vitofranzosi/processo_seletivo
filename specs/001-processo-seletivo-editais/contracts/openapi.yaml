@@ -268,6 +268,7 @@ paths:
       responses:
         '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Rascunho atualizado, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/RetificacaoResponse' } } } }
+        '409': { $ref: '#/components/responses/Conflict' }
         '412': { $ref: '#/components/responses/PreconditionFailed' }
         '422': { $ref: '#/components/responses/Unprocessable' }
         '428': { $ref: '#/components/responses/PreconditionRequired' }
@@ -310,6 +311,11 @@ paths:
     post:
       tags: [Retificações administrativas]
       summary: Publicar Retificação homologada
+      description: >-
+        Além das precondições declaradas em cada alteração, a Publicação verifica a composição
+        das Retificações vigentes. Quando o ato tornaria inaplicável uma alteração já publicada —
+        ou o contrário, por vigência posterior — não há resultado determinístico a materializar e
+        a Publicação responde 409 inconsistent_consolidation, sem efeito algum.
       operationId: publicarRetificacao
       security: [{ bearerAuth: [] }]
       parameters: [{ $ref: '#/components/parameters/RetificacaoId' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }]
@@ -319,6 +325,27 @@ paths:
       responses:
         '400': { $ref: '#/components/responses/BadRequest' }
         '201': { description: Retificação publicada, headers: { Location: { $ref: '#/components/headers/Location' } }, content: { application/json: { schema: { $ref: '#/components/schemas/PublicacaoResponse' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /admin/retificacoes/{retificacaoId}/devolucoes:
+    post:
+      tags: [Retificações administrativas]
+      summary: Devolver Retificação para elaboração antes da Publicação
+      description: >-
+        Retorno para correção admitido a partir de Em revisão ou Homologada, conforme a FR-027.
+        Desfaz a homologação e exige motivo. Publicada e Cancelada são finais.
+      operationId: devolverRetificacao
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/RetificacaoId' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/MotivoRequest' } } }
+      responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '200': { description: Retificação devolvida para elaboração, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/RetificacaoResponse' } } } }
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/Conflict' }
         '412': { $ref: '#/components/responses/PreconditionFailed' }
@@ -556,6 +583,12 @@ components:
       type: object
       required: [justification, changes]
       properties:
+        baseSnapshotId:
+          allOf: [{ $ref: '#/components/schemas/Id' }]
+          description: >-
+            Reaponta o rascunho para outra versão consolidada do mesmo Edital. Omitido, a versão
+            base é preservada. É o rebase necessário para corrigir uma Retificação devolvida por
+            conflito, cuja versão base ficou obsoleta.
         justification: { type: string, minLength: 1 }
         effectiveAt: { type: [string, 'null'], format: date-time }
         changes:
@@ -567,8 +600,19 @@ components:
       required: [targetPath, operation, newValue]
       properties:
         targetPath: { type: string, description: Caminho canônico com chaves estáveis }
-        operation: { type: string, enum: [ADD, REPLACE, REMOVE] }
-        expectedPreviousHash: { type: string }
+        operation:
+          type: string
+          enum: [ADD, REPLACE, REMOVE]
+          description: >-
+            ADD pressupõe targetPath ausente. Se o caminho já tiver conteúdo — inclusive por ato
+            publicado depois da elaboração — a operação responde 409 target_already_present, salvo
+            quando expectedPreviousHash declarar o conteúdo ocupante e assumir a sobrescrita.
+        expectedPreviousHash:
+          type: string
+          description: >-
+            Hash canônico do conteúdo em targetPath conhecido na elaboração. Quando informado,
+            é verificado na criação e na edição contra a versão base e, na Publicação, contra o
+            conteúdo vigente no início de vigência; divergência responde 409 expected_hash_mismatch.
         newValue: {}
     ProcessoResponse:
       type: object
