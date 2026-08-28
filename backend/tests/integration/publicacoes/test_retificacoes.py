@@ -622,3 +622,49 @@ def test_add_declaring_the_current_content_is_an_informed_overwrite(
         VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at").content["title"]
         == "Novo"
     )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_removing_and_recreating_the_same_path_in_one_act_is_accepted(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    created = create_retification(
+        api_client,
+        edital,
+        base,
+        [
+            {"targetPath": "/schedule", "operation": "REMOVE"},
+            add_change("/schedule", []),
+        ],
+    )
+    assert created.status_code == 201
+    assert homologate_and_publish(api_client, created.data["id"], suffix="a").status_code == 201
+    assert (
+        VersaoConsolidada.objects.filter(edital=edital)
+        .latest("materialized_at")
+        .content["schedule"]
+        == []
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_transition_with_a_non_textual_reason_is_rejected_as_problem_details(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    created = create_retification(api_client, edital, base, [title_change("Novo")])
+    assert homologate(api_client, created.data["id"], suffix="a").status_code == 200
+    response = api_client.post(
+        f"/api/v1/admin/retificacoes/{created.data['id']}/devolucoes",
+        {"reason": None},
+        format="json",
+        **actor_headers("homologador-d", ["retificacao:homologar"], if_match=3),
+    )
+    assert response.status_code == 400
+    assert response["Content-Type"].startswith("application/problem+json")
+    assert Retificacao.objects.get().status == Retificacao.Status.HOMOLOGADA

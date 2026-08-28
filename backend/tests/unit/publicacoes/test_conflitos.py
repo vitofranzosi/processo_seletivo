@@ -69,6 +69,24 @@ def test_declared_hash_authorizes_an_add_over_an_occupied_path():
     }
 
 
+def test_preconditions_follow_the_content_the_act_itself_produces():
+    remove_then_add = [
+        {"targetPath": "/rules", "operation": "REMOVE"},
+        add("/rules"),
+    ]
+    assert content_conflicts(BASE, remove_then_add) == {}
+    chained = [
+        replace("/title", canonical_sha256("Original")),
+        replace("/title", canonical_sha256("Novo")),
+    ]
+    assert content_conflicts(BASE, chained) == {}
+
+
+def test_precondition_of_a_path_created_by_an_earlier_change_is_verified():
+    changes = [add("/anexo"), add("/anexo")]
+    assert content_conflicts(BASE, changes) == {TARGET_PRESENT: ["/anexo"]}
+
+
 def test_content_check_is_required_only_when_some_precondition_exists():
     assert requires_content_check([replace("/title")]) is False
     assert requires_content_check([{"targetPath": "/title", "operation": "REMOVE"}]) is False

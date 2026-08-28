@@ -555,6 +555,12 @@ components:
       type: object
       required: [justification, changes]
       properties:
+        baseSnapshotId:
+          allOf: [{ $ref: '#/components/schemas/Id' }]
+          description: >-
+            Reaponta o rascunho para outra versão consolidada do mesmo Edital. Omitido, a versão
+            base é preservada. É o rebase necessário para corrigir uma Retificação devolvida por
+            conflito, cuja versão base ficou obsoleta.
         justification: { type: string, minLength: 1 }
         effectiveAt: { type: [string, 'null'], format: date-time }
         changes:
