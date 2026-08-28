@@ -139,6 +139,183 @@ def test_stale_retification_revision_is_rejected(api_client, manager_headers, pr
     )
 
 
+def create_retification(api_client, edital, base, changes, *, subject="retificador", key="k1"):
+    return api_client.post(
+        f"/api/v1/admin/editais/{edital.id}/retificacoes",
+        {
+            "baseSnapshotId": str(base.id),
+            "justification": "Correção",
+            "changes": changes,
+        },
+        format="json",
+        **actor_headers(subject, ["retificacao:elaborar"], key=key),
+    )
+
+
+def publish_retification(api_client, retificacao_id, *, suffix, authority, key="k1"):
+    api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao_id}/submissoes",
+        format="json",
+        **{
+            **actor_headers(f"retificador{suffix}", ["retificacao:submeter"], key=key),
+            "HTTP_IF_MATCH": '"1"',
+        },
+    )
+    api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao_id}/homologacoes",
+        {"reason": "OK"},
+        format="json",
+        **{
+            **actor_headers(f"homologador{suffix}", ["retificacao:homologar"], key=key),
+            "HTTP_IF_MATCH": '"2"',
+        },
+    )
+    return api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao_id}/publicacoes",
+        {"signatory": {"authorityId": authority, "name": "Diretora", "role": "Diretora"}},
+        format="json",
+        **{
+            **actor_headers(f"publicador{suffix}", ["retificacao:publicar"], key=key),
+            "HTTP_IF_MATCH": '"3"',
+        },
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_retification_without_effective_change_is_rejected_on_creation(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    assert base.content["profiles"][0]["immediateVacancies"] == 1
+    response = create_retification(
+        api_client,
+        edital,
+        base,
+        [{"targetPath": "/profiles/0/immediateVacancies", "operation": "REPLACE", "newValue": 1}],
+    )
+    assert response.status_code == 422
+    assert response["Content-Type"].startswith("application/problem+json")
+    assert response.data["code"] == "no_effective_change"
+    assert not Retificacao.objects.exists()
+
+    reasserting_the_title = create_retification(
+        api_client,
+        edital,
+        base,
+        [{"targetPath": "/title", "operation": "REPLACE", "newValue": base.content["title"]}],
+        key="k2",
+    )
+    assert reasserting_the_title.status_code == 422
+    assert reasserting_the_title.data["code"] == "no_effective_change"
+    assert not Retificacao.objects.exists()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_retification_emptied_before_its_publication_is_rejected_with_problem_details(
+    api_client, manager_headers, process_payload
+):
+    """Duas Retificações concorrentes com a mesma mudança: a segunda perde o efeito.
+
+    Regressão: antes, a segunda Publicação gerava conteúdo — e portanto PDF —
+    idêntico ao da primeira e estourava IntegrityError (HTTP 500) ao inserir o
+    DocumentoPublicado, em vez de recusar o ato sem efeito prático.
+    """
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    changes = [
+        {"targetPath": "/profiles/0/immediateVacancies", "operation": "REPLACE", "newValue": 2}
+    ]
+    first = create_retification(api_client, edital, base, changes, key="k1")
+    second = create_retification(api_client, edital, base, changes, key="k2")
+    assert (first.status_code, second.status_code) == (201, 201)
+
+    published = publish_retification(
+        api_client,
+        first.data["id"],
+        suffix="-a",
+        authority="00000000-0000-0000-0000-000000000602",
+        key="k1",
+    )
+    assert published.status_code == 201
+
+    emptied = publish_retification(
+        api_client,
+        second.data["id"],
+        suffix="-b",
+        authority="00000000-0000-0000-0000-000000000603",
+        key="k2",
+    )
+    assert emptied.status_code == 422
+    assert emptied["Content-Type"].startswith("application/problem+json")
+    assert emptied.data["code"] == "no_effective_change"
+    assert Retificacao.objects.get(pk=second.data["id"]).status == Retificacao.Status.HOMOLOGADA
+    assert Publicacao.objects.filter(edital=edital).count() == 2
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_retification_may_revert_a_previous_one_and_reproduce_the_original_document(
+    api_client, manager_headers, process_payload
+):
+    """Reverter uma Retificação tem efeito normativo e reproduz o documento original.
+
+    Regressão da unicidade global de `document_hash`: o PDF resultante é
+    byte-a-byte igual ao da Publicação original e não pode colidir.
+    """
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    original_document_hash = Publicacao.objects.get(
+        edital=edital, publication_order=1
+    ).documento.document_hash
+
+    first = create_retification(
+        api_client,
+        edital,
+        base,
+        [{"targetPath": "/profiles/0/immediateVacancies", "operation": "REPLACE", "newValue": 2}],
+        key="k1",
+    )
+    assert (
+        publish_retification(
+            api_client,
+            first.data["id"],
+            suffix="-a",
+            authority="00000000-0000-0000-0000-000000000602",
+            key="k1",
+        ).status_code
+        == 201
+    )
+
+    consolidated = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    assert consolidated.content["profiles"][0]["immediateVacancies"] == 2
+    revert = create_retification(
+        api_client,
+        edital,
+        consolidated,
+        [{"targetPath": "/profiles/0/immediateVacancies", "operation": "REPLACE", "newValue": 1}],
+        key="k2",
+    )
+    assert revert.status_code == 201
+    published = publish_retification(
+        api_client,
+        revert.data["id"],
+        suffix="-b",
+        authority="00000000-0000-0000-0000-000000000603",
+        key="k2",
+    )
+    assert published.status_code == 201
+    assert published.data["documentHash"] == original_document_hash
+    assert (
+        VersaoConsolidada.objects.filter(edital=edital)
+        .latest("materialized_at")
+        .content["profiles"][0]["immediateVacancies"]
+        == 1
+    )
+
+
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
 def test_consolidated_version_is_append_only_on_postgresql(
