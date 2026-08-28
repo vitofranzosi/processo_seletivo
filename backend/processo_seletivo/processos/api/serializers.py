@@ -34,3 +34,19 @@ class EditalResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Edital
         fields = ["id", "processoId", "status", "revision"]
+
+    def to_representation(self, instance):
+        """FR-019/FR-020: avisos e informações acompanham a resposta da submissão."""
+        data = super().to_representation(instance)
+        findings = getattr(instance, "validation_findings", None)
+        if findings is not None:
+            data["validationFindings"] = [
+                {
+                    "severity": str(item.severity),
+                    "code": item.code,
+                    "message": item.message,
+                    **({"path": item.path} if item.path else {}),
+                }
+                for item in findings
+            ]
+        return data
