@@ -232,7 +232,7 @@ description: "Tarefas de implementação de Processo Seletivo e Editais"
 - [ ] T091 [P] Implementar logs estruturados, health/readiness e métricas de conflitos em backend/processo_seletivo/shared/observability.py
 - [ ] T092 [P] Criar testes de carga para consultas públicas e consolidação de 20 Retificações em backend/tests/performance/test_public_queries.py
 - [X] T093 Criar matriz dos 38 FRs ativos e 29 cenários, registrando FR-037 e SC-002/009/010 como diferidos, em specs/001-processo-seletivo-editais/traceability.md
-- [ ] T094 Executar e registrar toda a validação do quickstart em specs/001-processo-seletivo-editais/validation-report.md
+- [X] T094 Executar e registrar toda a validação do quickstart em specs/001-processo-seletivo-editais/validation-report.md
 
 ---
 

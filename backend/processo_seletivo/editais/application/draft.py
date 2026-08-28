@@ -17,6 +17,31 @@ from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.concurrency import compare_and_swap
 
 
+def _reject_identifiers_of_other_editais(edital, profiles, schedule):
+    """FR-017: Perfil ou Evento já vinculado a outro Edital é inconsistência determinável."""
+    alheios = sorted(
+        str(identifier)
+        for identifier in (
+            set(
+                PerfilVaga.objects.filter(id__in=[item["id"] for item in profiles])
+                .exclude(edital=edital)
+                .values_list("id", flat=True)
+            )
+            | set(
+                EventoCronograma.objects.filter(id__in=[item["id"] for item in schedule])
+                .exclude(cronograma__edital=edital)
+                .values_list("id", flat=True)
+            )
+        )
+    )
+    if alheios:
+        raise DomainError(
+            "identifier_belongs_to_another_edital",
+            "Identificadores já vinculados a outro Edital: " + ", ".join(alheios),
+            409,
+        )
+
+
 def replace_draft(*, actor, edital_id, expected_revision, profiles, schedule, correlation_id):
     require_permission(actor, "edital:elaborar")
     try:
@@ -43,6 +68,7 @@ def replace_draft(*, actor, edital_id, expected_revision, profiles, schedule, co
             )
         if edital.revision != expected_revision:
             raise DomainError("stale_revision", "A revisão informada está obsoleta.", 412)
+        _reject_identifiers_of_other_editais(edital, profiles, schedule)
         PerfilVaga.objects.filter(edital=edital).delete()
         for payload in profiles:
             perfil = PerfilVaga.objects.create(

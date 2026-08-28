@@ -12,6 +12,7 @@ import pytest
 
 SPEC_DIR = Path(__file__).resolve().parents[3] / "specs" / "001-processo-seletivo-editais"
 MATRIX = SPEC_DIR / "traceability.md"
+REPORT = SPEC_DIR / "validation-report.md"
 SPEC = SPEC_DIR / "spec.md"
 TESTS_ROOT = Path(__file__).resolve().parents[1]
 
@@ -28,17 +29,21 @@ def matrix():
     return MATRIX.read_text(encoding="utf-8")
 
 
-def test_every_referenced_test_exists(matrix):
-    """Cada `arquivo::teste` citado precisa existir com esse nome."""
+@pytest.mark.parametrize("documento", [MATRIX, REPORT], ids=["matriz", "relatorio"])
+def test_every_referenced_test_exists(documento):
+    """Cada `arquivo::teste` citado nos artefatos precisa existir com esse nome."""
+    assert documento.exists(), f"artefato ausente: {documento.name}"
     ausentes = []
-    for arquivo, nome in TEST_REFERENCE.findall(matrix):
+    for arquivo, nome in TEST_REFERENCE.findall(documento.read_text(encoding="utf-8")):
         caminho = TESTS_ROOT.parent / arquivo
         if not caminho.exists():
             ausentes.append(f"{arquivo} (arquivo inexistente)")
             continue
         if not re.search(rf"^def {re.escape(nome)}\(", caminho.read_text(encoding="utf-8"), re.M):
             ausentes.append(f"{arquivo}::{nome}")
-    assert not ausentes, f"a matriz cita testes que não existem: {sorted(set(ausentes))}"
+    assert not ausentes, (
+        f"{documento.name} cita testes que não existem: {sorted(set(ausentes))}"
+    )
 
 
 def test_matrix_covers_every_requirement_of_the_current_spec(matrix):
