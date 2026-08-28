@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "processo-seletivo-cefor"
+version = "0.1.0"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "Django>=5.2,<5.3",
+  "djangorestframework>=3.16,<3.17",
+  "psycopg[binary]>=3.2,<3.4",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.4,<9",
+  "pytest-django>=4.11,<5",
+  "pytest-cov>=6.2,<7",
+  "ruff>=0.12,<0.15",
+  "PyYAML>=6,<7",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["processo_seletivo"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "--strict-markers --strict-config"
+markers = [
+  "acceptance: cenários de aceitação rastreados",
+  "contract: conformidade HTTP/OpenAPI",
+  "integration: integração com persistência",
+  "authorization: autorização contextual e anti-IDOR",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["processo_seletivo"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "DJ"]
+
