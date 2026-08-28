@@ -205,6 +205,10 @@ Operação estruturada imutável após a Publicação da Retificação.
 Caminhos iguais ou com relação ancestral/descendente conflitam. Caminhos independentes compõem.
 O PDF/texto não é usado para detectar conflito.
 
+`expectedPreviousHash` é opcional e, quando declarado, é conferido na elaboração contra a versão
+base e na Publicação contra o conteúdo vigente no início de vigência. `ADD` pressupõe caminho
+ausente mesmo sem hash declarado, porque a ausência não é declarável num campo de hash.
+
 ## Publicacao
 
 Registro imutável da efetiva Publicação do Edital original ou de uma Retificação.

@@ -5,7 +5,12 @@ from django.db.models import F
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.domain.changes import apply_changes
-from processo_seletivo.publicacoes.domain.conflicts import conflicting_paths
+from processo_seletivo.publicacoes.domain.conflicts import (
+    HASH_MISMATCH,
+    TARGET_PRESENT,
+    content_conflicts,
+    requires_content_check,
+)
 from processo_seletivo.publicacoes.domain.consolidation import consolidate
 from processo_seletivo.publicacoes.infrastructure.pdf import render_edital_pdf
 from processo_seletivo.publicacoes.models import DocumentoPublicado, Publicacao
@@ -45,17 +50,25 @@ def _changes_payload(retificacao):
     ]
 
 
+CONFLICT_MESSAGES = {
+    HASH_MISMATCH: (
+        "O conteúdo anterior informado não corresponde ao vigente em: {paths}. "
+        "Refaça a Retificação sobre a versão consolidada atual."
+    ),
+    TARGET_PRESENT: (
+        "A operação ADD pressupõe caminho ausente, mas já há conteúdo vigente em: {paths}. "
+        "Use REPLACE sobre a versão consolidada atual."
+    ),
+}
+
+
 def _reject_stale_changes(content, changes):
-    """Rejeita alterações cujo conteúdo anterior declarado já não é o vigente (FR-036)."""
-    paths = conflicting_paths(content, changes)
-    if paths:
-        raise DomainError(
-            "expected_hash_mismatch",
-            "O conteúdo anterior informado não corresponde ao vigente em: "
-            + ", ".join(paths)
-            + ". Refaça a Retificação sobre a versão consolidada atual.",
-            409,
-        )
+    """Rejeita alterações cuja precondição de conteúdo já não se verifica (FR-036)."""
+    conflicts = content_conflicts(content, changes)
+    for code in (HASH_MISMATCH, TARGET_PRESENT):
+        paths = conflicts.get(code)
+        if paths:
+            raise DomainError(code, CONFLICT_MESSAGES[code].format(paths=", ".join(paths)), 409)
 
 
 def _replace_changes(retificacao, changes):
@@ -302,7 +315,8 @@ def publish_retification(*, actor, retificacao_id, expected_revision, signatory)
         if effective_at < now:
             raise DomainError("invalid_effective_at", "Vigência não pode ser retroativa.", 422)
         changes = _changes_payload(item)
-        _reject_stale_changes(_content_in_force(edital, effective_at), changes)
+        if requires_content_check(changes):
+            _reject_stale_changes(_content_in_force(edital, effective_at), changes)
         content, _ = apply_changes(item.base_snapshot.content, changes, publication_id="pending")
         canonical = canonical_bytes(content)
         pdf = render_edital_pdf(content, canonical_sha256(content))

@@ -561,3 +561,64 @@ def test_rebasing_a_draft_to_an_unknown_snapshot_is_rejected(
     assert response.status_code == 404
     assert response.data["code"] == "not_found"
     assert Retificacao.objects.get().base_snapshot_id == base.id
+
+
+def add_change(path, new_value):
+    return {"targetPath": path, "operation": "ADD", "newValue": new_value}
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_add_cannot_silently_overwrite_a_path_created_meanwhile(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    first = create_retification(api_client, edital, base, [add_change("/anexo", "Primeiro")])
+    second = create_retification(
+        api_client, edital, base, [add_change("/anexo", "Segundo")], subject="retificador-b"
+    )
+    assert homologate_and_publish(api_client, first.data["id"], suffix="a").status_code == 201
+
+    conflict = homologate_and_publish(api_client, second.data["id"], suffix="b")
+
+    assert conflict.status_code == 409
+    assert conflict.data["code"] == "target_already_present"
+    assert "/anexo" in conflict.data["detail"]
+    assert (
+        VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at").content["anexo"]
+        == "Primeiro"
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_add_over_a_path_present_in_the_base_is_rejected_on_creation(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    response = create_retification(api_client, edital, base, [add_change("/title", "Novo")])
+    assert response.status_code == 409
+    assert response.data["code"] == "target_already_present"
+    assert not Retificacao.objects.exists()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_add_declaring_the_current_content_is_an_informed_overwrite(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    change = {
+        **add_change("/title", "Novo"),
+        "expectedPreviousHash": canonical_sha256(base.content["title"]),
+    }
+    created = create_retification(api_client, edital, base, [change])
+    assert created.status_code == 201
+    assert homologate_and_publish(api_client, created.data["id"], suffix="a").status_code == 201
+    assert (
+        VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at").content["title"]
+        == "Novo"
+    )

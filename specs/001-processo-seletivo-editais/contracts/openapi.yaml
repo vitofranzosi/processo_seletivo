@@ -566,7 +566,13 @@ components:
       required: [targetPath, operation, newValue]
       properties:
         targetPath: { type: string, description: Caminho canônico com chaves estáveis }
-        operation: { type: string, enum: [ADD, REPLACE, REMOVE] }
+        operation:
+          type: string
+          enum: [ADD, REPLACE, REMOVE]
+          description: >-
+            ADD pressupõe targetPath ausente. Se o caminho já tiver conteúdo — inclusive por ato
+            publicado depois da elaboração — a operação responde 409 target_already_present, salvo
+            quando expectedPreviousHash declarar o conteúdo ocupante e assumir a sobrescrita.
         expectedPreviousHash:
           type: string
           description: >-
