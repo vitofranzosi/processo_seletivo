@@ -1,9 +1,15 @@
 from django.urls import include, path
 
-from processo_seletivo.shared.api.operacional import HealthView, MetricsView, ReadinessView
+from processo_seletivo.shared.api.operacional import (
+    HealthView,
+    IndexView,
+    MetricsView,
+    ReadinessView,
+)
 
 urlpatterns = [
     # Endpoints operacionais ficam fora de /api/v1: não são contrato institucional.
+    path("", IndexView.as_view(), name="index"),
     path("health", HealthView.as_view(), name="health"),
     path("readiness", ReadinessView.as_view(), name="readiness"),
     path("metrics", MetricsView.as_view(), name="metrics"),

@@ -10,8 +10,48 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.observability import METRICS_PERMISSION, logger, metrics
+
+
+class IndexView(APIView):
+    """Documento de serviço: quem abre a raiz precisa descobrir o que existe."""
+
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request):
+        return Response(
+            {
+                "service": "Processo Seletivo e Editais — Cefor/IFES",
+                "publicApi": "/api/v1/public",
+                "adminApi": "/api/v1/admin",
+                "operational": {
+                    "health": "/health",
+                    "readiness": "/readiness",
+                    "metrics": "/metrics",
+                },
+                "publicEndpoints": {
+                    "versaoVigente": "/api/v1/public/editais/{editalId}/versao-vigente?em={iso}",
+                    "historico": "/api/v1/public/editais/{editalId}/historico",
+                    "publicacao": "/api/v1/public/publicacoes/{publicacaoId}",
+                    "documento": "/api/v1/public/publicacoes/{publicacaoId}/documento",
+                    "retificacao": "/api/v1/public/retificacoes/{retificacaoId}",
+                    "versaoConsolidada": "/api/v1/public/versoes/{versaoId}",
+                },
+                "editaisPublicados": [
+                    {
+                        "editalId": str(item["edital_id"]),
+                        "versaoVigente": (
+                            f"/api/v1/public/editais/{item['edital_id']}/versao-vigente"
+                        ),
+                        "historico": f"/api/v1/public/editais/{item['edital_id']}/historico",
+                    }
+                    for item in VersaoConsolidada.objects.values("edital_id").distinct()[:20]
+                ],
+            }
+        )
 
 
 class HealthView(APIView):

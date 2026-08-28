@@ -16,12 +16,12 @@ citado aqui deixar de existir.
 
 | | Total | Coberto | Parcial | Sem cobertura | Diferido |
 |---|---|---|---|---|---|
-| Requisitos Funcionais | 39 | 35 | 3 | 0 | 1 |
-| Cenários de aceitação | 29 | 26 | 3 | 0 | 0 |
+| Requisitos Funcionais | 39 | 36 | 2 | 0 | 1 |
+| Cenários de aceitação | 29 | 27 | 2 | 0 | 0 |
 | Critérios de Sucesso | 10 | 7 | 0 | 0 | 3 |
 
-Três requisitos ficam em **parcial** e estão detalhados em [Lacunas conhecidas](#lacunas-conhecidas).
-A mais relevante é FR-023: o documento publicado ainda não reproduz o conteúdo normativo completo.
+Dois requisitos ficam em **parcial** e estão detalhados em [Lacunas conhecidas](#lacunas-conhecidas),
+ambos sobre a Regra Normativa, que é registrada mas ainda não aplicada neste incremento.
 
 ## Requisitos Funcionais
 
@@ -39,7 +39,7 @@ A mais relevante é FR-023: o documento publicado ainda não reproduz o conteúd
 | FR-010 | Perfil mantém identificação, requisitos, vagas e classificação | `tests/unit/editais/test_perfis.py::test_allows_immediate_vacancies_without_reserve`, `tests/integration/editais/test_perfis.py::test_profile_code_is_unique_only_inside_its_edital` | Coberto |
 | FR-011 | Vagas e modalidades pertencem ao Perfil, sem propagação | `tests/acceptance/test_us2_perfis.py::test_us2_replaces_profiles_without_affecting_other_edital`, `tests/integration/editais/test_perfis.py::test_profile_code_is_unique_only_inside_its_edital` | Coberto |
 | FR-012 | Cadastro Reserva inexistente, limitado ou ilimitado | `tests/unit/editais/test_perfis.py::test_allows_limited_and_unlimited_reserve_without_immediate_vacancies`, `tests/unit/editais/test_perfis.py::test_rejects_incompatible_reserve_configuration`, `tests/integration/editais/test_perfis.py::test_database_rejects_incompatible_reserve_limit` | Coberto |
-| FR-013 | Regra Normativa separada do resultado, com fundamento e vigência | `tests/unit/editais/test_perfis.py::test_rejects_duplicate_competition_modality_codes` | **Parcial** — ver L1 |
+| FR-013 | Regra Normativa separada do resultado, com fundamento e vigência | `tests/unit/editais/test_perfis.py::test_rejects_duplicate_competition_modality_codes`, `tests/unit/publicacoes/test_pdf.py::test_document_reproduces_competition_modalities_and_their_normative_rule` | **Parcial** — ver L1 |
 | FR-014 | Regras configuráveis não alteram retroativamente Publicações | `tests/integration/publicacoes/test_publicar_edital.py::test_database_trigger_rejects_publication_update` | **Parcial** — ver L1 |
 | FR-015 | Cada Edital possui Cronograma próprio | `tests/acceptance/test_us3_cronograma.py::test_us3_keeps_schedules_independent`, `tests/integration/editais/test_cronograma.py::test_each_edital_has_an_independent_schedule` | Coberto |
 | FR-016 | Evento admite data pontual ou período, ordem e situação | `tests/unit/editais/test_cronograma.py::test_accepts_point_and_period_events`, `tests/contract/test_cronograma_api.py::test_openapi_event_contract_supports_point_and_period` | Coberto |
@@ -49,7 +49,7 @@ A mais relevante é FR-023: o documento publicado ainda não reproduz o conteúd
 | FR-020 | Erros impeditivos bloqueiam; avisos permanecem visíveis | `tests/contract/test_edital_draft_api.py::test_blocking_error_stops_submission_and_names_the_cause`, `tests/contract/test_edital_draft_api.py::test_submission_returns_warnings_so_the_responsible_can_decide` | Coberto |
 | FR-021 | Autorização explícita e segregação de funções na publicação | `tests/authorization/test_publicacao.py::test_one_actor_cannot_prepare_homologate_and_publish`, `tests/authorization/test_foundation.py::test_missing_permission_is_denied` | Coberto |
 | FR-022 | Publicação registra versão, responsável, Autoridade Signatária e instante | `tests/acceptance/test_us4_publicacao.py::test_us4_complete_publication_flow`, `tests/contract/test_publicacao_edital_api.py::test_openapi_has_explicit_publication_workflow_and_signatory`, `tests/contract/test_consulta_publica_api.py::test_publication_detail_matches_contract` | Coberto |
-| FR-023 | Documento corresponde integralmente ao homologado, com integridade verificável | `tests/acceptance/test_us4_publicacao.py::test_us4_complete_publication_flow`, `tests/contract/test_consulta_publica_api.py::test_publication_detail_matches_contract` | **Parcial** — ver L2 |
+| FR-023 | Documento corresponde integralmente ao homologado, com integridade verificável | `tests/acceptance/test_us4_publicacao.py::test_us4_published_document_matches_the_homologated_content`, `tests/unit/publicacoes/test_pdf.py::test_document_reproduces_every_profile_of_the_homologated_version`, `tests/unit/publicacoes/test_pdf.py::test_the_same_snapshot_always_produces_the_same_bytes` | Coberto |
 | FR-024 | Publicação imutável, não substituível por operação comum | `tests/integration/publicacoes/test_publicar_edital.py::test_database_trigger_rejects_publication_update`, `tests/integration/test_database_permissions.py::test_trigger_rejects_mutation_even_for_a_privileged_role`, `tests/integration/test_database_permissions.py::test_runtime_role_has_no_update_or_delete_privilege` | Coberto |
 | FR-025 | Preparar, revisar, homologar e publicar Retificações | `tests/acceptance/test_us5_retificacoes.py::test_us5_retification_flow`, `tests/integration/publicacoes/test_retificacoes.py::test_published_retification_preserves_original_and_creates_consolidated_version` | Coberto |
 | FR-026 | Retificação altera qualquer conteúdo, identifica mudanças, vigência não retroativa | `tests/integration/publicacoes/test_retificacoes.py::test_retification_changes_vacancies_and_schedule_inside_snapshot_lists`, `tests/integration/publicacoes/test_retificacoes.py::test_retification_with_future_effective_date_materializes_version_at_that_boundary`, `tests/unit/publicacoes/test_consolidacao.py::test_retification_replaces_vacancies_inside_profile_list` | Coberto |
@@ -101,7 +101,7 @@ A mais relevante é FR-023: o documento publicado ainda não reproduz o conteúd
 | 1 | Publicação registra versão, responsável, signatário e documento | `tests/acceptance/test_us4_publicacao.py::test_us4_complete_publication_flow` | Coberto |
 | 2 | Erro impeditivo bloqueia e separa erros de avisos | `tests/contract/test_edital_draft_api.py::test_blocking_error_stops_submission_and_names_the_cause`, `tests/unit/editais/test_publicacao.py::test_warning_does_not_make_complete_edital_invalid` | Coberto |
 | 3 | Alteração direta de versão publicada é rejeitada | `tests/integration/publicacoes/test_publicar_edital.py::test_database_trigger_rejects_publication_update` | Coberto |
-| 4 | Documento consultado corresponde ao conteúdo homologado | `tests/acceptance/test_us4_publicacao.py::test_us4_complete_publication_flow` | **Parcial** — ver L2 |
+| 4 | Documento consultado corresponde ao conteúdo homologado | `tests/acceptance/test_us4_publicacao.py::test_us4_published_document_matches_the_homologated_content` | Coberto |
 | 5 | Uma pessoa não conclui sozinha elaboração, homologação e Publicação | `tests/authorization/test_publicacao.py::test_one_actor_cannot_prepare_homologate_and_publish` | Coberto |
 
 ### US5 — Retificar sem Reescrever o Passado
@@ -163,22 +163,18 @@ registra a regra sem aplicá-la. Ele cresce quando o módulo de classificação 
 **Recomendação**: testes de domínio exigindo `foundation` e `version`, e um teste demonstrando que
 alterar uma `RegraNormativa` não altera nenhuma `VersaoConsolidada` já materializada.
 
-### L2 — Documento publicado não reproduz o conteúdo normativo (FR-023, US4 cenário 4)
+### L2 — Documento publicado — resolvido
 
-`render_edital_pdf` gera um PDF determinístico contendo apenas título, número/ano e o SHA-256 do
-snapshot. Perfis, vagas, modalidades e Cronograma **não** são renderizados. FR-023 exige que o
-documento corresponda integralmente aos dados estruturados e ao conteúdo editorial homologado, e a
-Constituição exige que a cadeia "dados estruturados → versão homologada → PDF publicado" seja
-demonstrável.
+O renderizador produzia apenas título, número/ano e hash, e codificava em ASCII, destruindo todo
+acento de um documento oficial brasileiro. Foi reescrito: imprime Perfis com vagas, Cadastro
+Reserva, requisitos, modalidades e Regra Normativa, o Cronograma com datas na zona institucional, e
+uma seção de integridade com os identificadores e o SHA-256 do conteúdo. Pagina automaticamente e
+numera cada página. O texto usa `WinAnsiEncoding`, que cobre o português.
 
-O que já está garantido: o PDF é determinístico, deriva do snapshot homologado, carrega o hash desse
-snapshot e é imutável. O que falta é o conteúdo em si.
-
-T057 previa "renderizador inicial", então a lacuna é conhecida, mas ela impede declarar FR-023
-atendido. Enquanto existir, um Edital publicado não pode ser divulgado apenas pelo PDF.
-
-**Recomendação**: tratar o renderizador completo como incremento próprio, com teste que extraia o
-texto do PDF e confronte cada Perfil e Evento do snapshot homologado.
+A cadeia "dados estruturados → versão homologada → PDF publicado" é verificada em
+`tests/acceptance/test_us4_publicacao.py::test_us4_published_document_matches_the_homologated_content`,
+que extrai o texto do documento efetivamente servido pelo endpoint público e confronta cada Perfil e
+Evento com a revisão homologada.
 
 ### L3 — Autoria não aparece na linha histórica pública (US5 cenário 2)
 

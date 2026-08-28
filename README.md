@@ -133,9 +133,10 @@ As sete histórias da feature `001-processo-seletivo-editais` estão implementad
 - [`validation-report.md`](specs/001-processo-seletivo-editais/validation-report.md) — execução dos 15
   cenários do quickstart
 
-**A feature ainda não está concluída.** O documento publicado não reproduz o conteúdo normativo
-completo, então FR-023 não está atendido. Todas as tarefas de `tasks.md` estão fechadas; o SLO de
-carga ainda precisa ser medido em ambiente implantado. Os detalhes estão nos dois artefatos acima.
+Todas as tarefas de `tasks.md` estão fechadas e os 38 requisitos ativos estão implementados. Restam
+dois pontos antes de declarar a feature concluída: o SLO de carga precisa ser medido em ambiente
+implantado, e a Regra Normativa é registrada mas ainda não aplicada — detalhes nos dois artefatos
+acima. A interface administrativa e pública é uma especificação futura, não parte deste incremento.
 
 ## Documentação
 

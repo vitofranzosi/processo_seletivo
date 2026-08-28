@@ -202,4 +202,4 @@ def test_operational_endpoints_stay_outside_the_business_contract():
         for pattern in get_resolver().url_patterns
         if not str(pattern.pattern).startswith("api/")
     }
-    assert raiz == {"health", "readiness", "metrics"}
+    assert raiz == {"", "health", "readiness", "metrics"}

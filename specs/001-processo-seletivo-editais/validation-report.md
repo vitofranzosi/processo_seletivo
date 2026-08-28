@@ -10,9 +10,9 @@
 [.github/workflows/backend.yml](../../.github/workflows/backend.yml) executa a mesma suíte contra
 `postgres:18`.
 
-**Resultado**: os 15 cenários e as 6 asserções transversais foram executados. **13 cenários passam
-integralmente**, **2 passam com ressalva** por dependerem do documento publicado, que ainda não
-reproduz o conteúdo normativo completo. Nenhum cenário falha.
+**Resultado**: os 15 cenários e as 6 asserções transversais foram executados. **14 cenários passam
+integralmente** e **1 passa com ressalva**, por descrever um caminho não observável pela API.
+Nenhum cenário falha.
 
 A execução encontrou e corrigiu dois defeitos: rascunho reusando identificador de outro Edital
 devolvia HTTP 500, e os status de erro divergiam do contrato. Ver
@@ -49,13 +49,13 @@ suíte PostgreSQL.
 | 2 | Segundo Edital independente | `tests/acceptance/test_quickstart.py::test_quickstart_s2_editing_the_second_edital_does_not_touch_the_first`, `tests/integration/editais/test_cronograma.py::test_each_edital_has_an_independent_schedule` | Passa |
 | 3 | Elaborar Perfis, vagas e Cronograma | `tests/acceptance/test_quickstart.py::test_quickstart_s3_draft_cannot_reuse_identifiers_from_another_edital`, `tests/integration/editais/test_perfis.py::test_database_rejects_incompatible_reserve_limit`, `tests/integration/editais/test_cronograma.py::test_database_rejects_event_with_end_before_start` | Passa após correção |
 | 4 | Submeter e homologar | `tests/acceptance/test_quickstart.py::test_quickstart_s4_revoked_homologation_returns_the_edital_to_review`, `tests/authorization/test_publicacao.py::test_one_actor_cannot_prepare_homologate_and_publish` | Passa com ressalva — ver R1 |
-| 5 | Publicar Edital original | `tests/acceptance/test_us4_publicacao.py::test_us4_complete_publication_flow`, `tests/integration/publicacoes/test_publicar_edital.py::test_database_trigger_rejects_publication_update` | **Ressalva** — ver R2 |
+| 5 | Publicar Edital original | `tests/acceptance/test_us4_publicacao.py::test_us4_published_document_matches_the_homologated_content`, `tests/integration/publicacoes/test_publicar_edital.py::test_database_trigger_rejects_publication_update` | Passa |
 | 6 | Retificação imediata | `tests/acceptance/test_quickstart.py::test_quickstart_s6_immediate_retification_takes_effect_on_publication` | Passa |
 | 7 | Retificação futura | `tests/acceptance/test_quickstart.py::test_quickstart_s7_retroactive_effective_date_is_rejected`, `tests/integration/publicacoes/test_consulta_temporal.py::test_future_retification_only_takes_effect_from_its_declared_instant` | Passa |
 | 8 | Publicações fora da ordem de vigência | `tests/integration/publicacoes/test_consulta_temporal.py::test_out_of_order_publications_compose_by_validity_not_by_publication_order` | Passa |
 | 9 | Mesma vigência sem conflito | `tests/acceptance/test_quickstart.py::test_quickstart_s9_same_effective_time_without_conflict_accumulates` | Passa |
 | 10 | Mesma vigência com conflito | `tests/acceptance/test_quickstart.py::test_quickstart_s10_same_effective_time_with_conflict_is_decided_by_publication_order` | Passa |
-| 11 | Reconstrução histórica | `tests/acceptance/test_quickstart.py::test_quickstart_s11_recomputed_temporal_function_matches_the_materialized_snapshot`, `tests/integration/publicacoes/test_consulta_temporal.py::test_twenty_retifications_recompose_every_requested_version` | **Ressalva** — ver R2 |
+| 11 | Reconstrução histórica | `tests/acceptance/test_quickstart.py::test_quickstart_s11_recomputed_temporal_function_matches_the_materialized_snapshot`, `tests/integration/publicacoes/test_consulta_temporal.py::test_twenty_retifications_recompose_every_requested_version` | Passa |
 | 12 | Encerramento regular do Edital | `tests/acceptance/test_us7_finalizacao.py::test_us7_closing_an_edital_is_not_treated_as_cancellation` | Passa |
 | 13 | Cancelamento inválido do Processo | `tests/acceptance/test_us7_finalizacao.py::test_us7_cancelling_a_process_is_blocked_until_every_edital_is_final` | Passa |
 | 14 | Segregação de funções e autorização | `tests/authorization/test_publicacao.py::test_one_actor_cannot_prepare_homologate_and_publish`, `tests/authorization/test_processos.py::test_cross_scope_process_is_not_revealed` | Passa |
@@ -173,21 +173,11 @@ executada foi a revogação de homologação e a recusa de publicar sem homologa
 **Recomendação**: reescrever o passo do quickstart para descrever o que é observável, ou cobrir a
 guarda por teste de unidade que monte a divergência diretamente na persistência.
 
-### R2 — Documento publicado não reproduz o conteúdo normativo
+### R2 — Documento publicado — resolvido
 
-Os cenários 5 e 11 pedem confirmar que "snapshot = revisão homologada e PDF = bytes preservados" e
-que "original, atos, consolidados e PDFs permanecem públicos e imutáveis".
-
-O que foi verificado e confere: o snapshot publicado é idêntico à revisão homologada; o PDF é
-determinístico, deriva do snapshot, carrega seu SHA-256, é servido byte a byte pelo endpoint público
-e é imutável no banco.
-
-O que **não** confere: o PDF contém apenas título, número/ano e o hash. Perfis, vagas, modalidades e
-Cronograma não são renderizados. FR-023 exige correspondência integral com os dados estruturados e o
-conteúdo editorial homologado.
-
-Esta é a mesma lacuna L2 de [traceability.md](./traceability.md). Enquanto existir, **um Edital
-publicado não pode ser divulgado apenas pelo PDF**.
+O renderizador foi reescrito e o documento passou a reproduzir Perfis, vagas, Cadastro Reserva,
+requisitos, modalidades, Regra Normativa e Cronograma, com integridade e paginação. Os cenários 5 e
+11 passam integralmente. Detalhes em [traceability.md](./traceability.md), lacuna L2.
 
 ## Desvios de ambiente
 
@@ -210,13 +200,10 @@ execução em SQLite da execução completa em PostgreSQL.
 A validação do quickstart executa por completo e sem falhas. Pelo critério de conclusão da
 [Constituição](../../.specify/memory/constitution.md) — requisitos e invariantes atendidos,
 autorização validada, migrations aplicáveis, testes aprovados, contratos atualizados, auditoria
-implementada, sem regressões conhecidas e artefatos consistentes — **a feature ainda não pode ser
-declarada concluída**, por dois motivos:
+implementada, sem regressões conhecidas e artefatos consistentes — resta um único item para a
+conclusão:
 
-1. **FR-023 não está atendido** (R2 / L2): o documento publicado não corresponde integralmente ao
-   conteúdo homologado. É o único item que impede a conclusão por mérito, e exige um incremento
-   próprio para o renderizador de PDF.
-2. **O SLO de carga não foi verificado**: T091 e T092 estão concluídas, mas o p95 ≤ 2 s sob pico de
+1. **O SLO de carga não foi verificado**: T091 e T092 estão concluídas, mas o p95 ≤ 2 s sob pico de
    500 consultas por segundo depende de ambiente implantado. O harness existe em
    `backend/scripts/carga_publica.py` e a medição precisa ser feita em homologação.
 
