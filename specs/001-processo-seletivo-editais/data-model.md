@@ -209,6 +209,10 @@ O PDF/texto não é usado para detectar conflito.
 base e na Publicação contra o conteúdo vigente no início de vigência. `ADD` pressupõe caminho
 ausente mesmo sem hash declarado, porque a ausência não é declarável num campo de hash.
 
+A Publicação também verifica a composição inteira: se o ato tornaria inaplicável uma alteração já
+publicada, ou o contrário por vigência posterior, não há versão consolidada determinística e a
+Publicação é rejeitada.
+
 ## Publicacao
 
 Registro imutável da efetiva Publicação do Edital original ou de uma Retificação.

@@ -295,6 +295,11 @@ paths:
     post:
       tags: [Retificações administrativas]
       summary: Publicar Retificação homologada
+      description: >-
+        Além das precondições declaradas em cada alteração, a Publicação verifica a composição
+        das Retificações vigentes. Quando o ato tornaria inaplicável uma alteração já publicada —
+        ou o contrário, por vigência posterior — não há resultado determinístico a materializar e
+        a Publicação responde 409 inconsistent_consolidation, sem efeito algum.
       operationId: publicarRetificacao
       security: [{ bearerAuth: [] }]
       parameters: [{ $ref: '#/components/parameters/RetificacaoId' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }]

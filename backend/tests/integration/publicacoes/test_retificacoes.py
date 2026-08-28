@@ -154,14 +154,19 @@ def test_consolidated_version_is_append_only_on_postgresql(
         VersaoConsolidada.objects.filter(pk=version.pk).update(content={"changed": True})
 
 
-def create_retification(api_client, edital, base, changes, *, subject="retificador"):
+def create_retification(
+    api_client, edital, base, changes, *, subject="retificador", effective_at=None
+):
+    payload = {
+        "baseSnapshotId": str(base.id),
+        "justification": "Correção",
+        "changes": changes,
+    }
+    if effective_at:
+        payload["effectiveAt"] = effective_at
     return api_client.post(
         f"/api/v1/admin/editais/{edital.id}/retificacoes",
-        {
-            "baseSnapshotId": str(base.id),
-            "justification": "Correção",
-            "changes": changes,
-        },
+        payload,
         format="json",
         **actor_headers(subject, ["retificacao:elaborar"]),
     )
@@ -668,3 +673,70 @@ def test_transition_with_a_non_textual_reason_is_rejected_as_problem_details(
     assert response.status_code == 400
     assert response["Content-Type"].startswith("application/problem+json")
     assert Retificacao.objects.get().status == Retificacao.Status.HOMOLOGADA
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_publication_that_would_break_the_consolidation_is_rejected(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    remover = create_retification(
+        api_client, edital, base, [{"targetPath": "/description", "operation": "REMOVE"}]
+    )
+    replacer = create_retification(
+        api_client,
+        edital,
+        base,
+        [{"targetPath": "/description", "operation": "REPLACE", "newValue": "Nova"}],
+        subject="retificador-b",
+    )
+    assert homologate_and_publish(api_client, remover.data["id"], suffix="a").status_code == 201
+
+    conflict = homologate_and_publish(api_client, replacer.data["id"], suffix="b")
+
+    assert conflict.status_code == 409
+    assert conflict.data["code"] == "inconsistent_consolidation"
+    assert "/description" in conflict.data["detail"]
+    assert Publicacao.objects.filter(edital=edital).count() == 2
+    assert Retificacao.objects.get(pk=replacer.data["id"]).status == Retificacao.Status.HOMOLOGADA
+    assert "description" not in (
+        VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at").content
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_publication_that_would_break_a_later_effective_act_is_rejected(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    future = create_retification(
+        api_client,
+        edital,
+        base,
+        [{"targetPath": "/description", "operation": "REPLACE", "newValue": "Nova"}],
+        effective_at="2027-06-01T12:00:00-03:00",
+    )
+    remover = create_retification(
+        api_client,
+        edital,
+        base,
+        [{"targetPath": "/description", "operation": "REMOVE"}],
+        subject="retificador-b",
+    )
+    assert homologate_and_publish(api_client, future.data["id"], suffix="a").status_code == 201
+
+    conflict = homologate_and_publish(api_client, remover.data["id"], suffix="b")
+
+    assert conflict.status_code == 409
+    assert conflict.data["code"] == "inconsistent_consolidation"
+    assert Publicacao.objects.filter(edital=edital).count() == 2
+    assert (
+        VersaoConsolidada.objects.filter(edital=edital)
+        .latest("materialized_at")
+        .content["description"]
+        == "Nova"
+    )

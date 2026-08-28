@@ -254,12 +254,30 @@ def _acts(items):
     ]
 
 
+def _consolidate(base_content, acts):
+    """Consolida, traduzindo alteração inaplicável em rejeição em vez de erro interno.
+
+    A composição só é conhecida ao aplicar todos os atos vigentes em ordem: uma Retificação
+    pode remover o caminho que outra, publicada antes mas com vigência posterior, substitui.
+    Nesse caso não há resultado determinístico a materializar, e a FR-039 exige que haja.
+    """
+    try:
+        return consolidate(base_content, acts)
+    except ValueError as exc:
+        raise DomainError(
+            "inconsistent_consolidation",
+            f"A composição das Retificações vigentes ficaria inconsistente: {exc}. "
+            "Refaça a Retificação sobre a versão consolidada atual.",
+            409,
+        ) from exc
+
+
 def _content_in_force(edital, moment):
     """Conteúdo consolidado das Retificações já publicadas que vigoram em `moment`."""
     applicable = [
         item for item in _published_retifications(edital) if item.publication.effective_at <= moment
     ]
-    content, _ = consolidate(_original_version(edital).content, _acts(applicable))
+    content, _ = _consolidate(_original_version(edital).content, _acts(applicable))
     return content
 
 
@@ -277,7 +295,7 @@ def _materialize_affected_versions(retificacao, publication, now):
     for boundary in boundaries:
         applicable = [item for item in published if item.publication.effective_at <= boundary]
         acts = _acts(applicable)
-        content, provenance = consolidate(original.content, acts)
+        content, provenance = _consolidate(original.content, acts)
         version = VersaoConsolidada.objects.create(
             edital=retificacao.edital,
             valid_from=boundary,
