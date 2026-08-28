@@ -110,7 +110,8 @@ def test_finalization_requires_a_reason(api_client, manager_headers, process_pay
         format="json",
         **actor_headers("gestor", GESTOR, if_match=edital.revision),
     )
-    assert response.status_code == 400
+    assert response.status_code == 422
+    assert response.json()["code"] == "invalid_payload"
     assert Edital.objects.get(pk=edital.pk).status == Edital.Status.PUBLICADO
 
 

@@ -14,17 +14,24 @@ serviço já exista e não contém implementação.
 
 ## Planned verification commands
 
-```powershell
+A implementação adotou `uv` e um Makefile em T001/T002. Os comandos abaixo substituem o esboço
+original em PowerShell/pip e são os efetivamente executados em
+[validation-report.md](./validation-report.md).
+
+```bash
 cd backend
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-python -m pip install -e ".[dev]"
-python manage.py check
-python manage.py makemigrations --check --dry-run
-python -m pytest
-python -m pytest -m acceptance
-python -m pytest -m contract
+make install
+make lint
+make check
+TEST_DB_ENGINE=postgresql DB_NAME=processo_seletivo_test DB_USER=postgres DB_PASSWORD=postgres DB_HOST=localhost DB_PORT=5432 uv run pytest
+uv run pytest -m acceptance
+uv run pytest -m contract
+uv run pytest -m integration
+uv run pytest -m authorization
 ```
+
+Sem `TEST_DB_ENGINE=postgresql` a suíte roda em SQLite e ignora os testes de lock, trigger e
+privilégio de role — que são justamente os que esta seção determina não substituir por SQLite.
 
 Os testes de contrato devem validar `contracts/openapi.yaml` como OpenAPI 3.1 e comparar status,
 headers e corpos observados na API com o contrato. Os testes de concorrência devem usar PostgreSQL,

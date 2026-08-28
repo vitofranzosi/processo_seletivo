@@ -203,6 +203,9 @@ dizer que a autoria consta da trilha administrativa, disponível em `GET /admin/
 - **Contrato alterado em T090.** `kind` foi declarado nos três schemas do histórico e `provenance`
   em `VersaoConsolidadaResponse`. Ambos já eram devolvidos pela implementação de US6; a divergência
   foi detectada por `tests/contract/test_openapi_conformance.py::test_public_responses_conform_to_the_contract`.
+- **Status de erro alinhados ao contrato.** Corpo semanticamente inválido passou de `400` para
+  `422 invalid_payload`, como o contrato e o quickstart determinam; `400` ficou reservado a metadado
+  malformado e foi declarado nas 21 operações que o validam.
 - **Defeito aberto fora desta matriz.** Publicar uma Retificação cujo conteúdo consolidado é idêntico
   ao já publicado devolve HTTP 500 por colisão em `document_hash`, em vez de um Problem Details. Não
   afeta nenhum FR diretamente, mas viola a exigência de falhas diagnosticáveis sem exposição indevida.

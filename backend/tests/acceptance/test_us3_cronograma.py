@@ -90,5 +90,5 @@ def test_us3_rejects_inverted_period_without_partial_change(
         HTTP_AUTHORIZATION="Bearer gestor-a|cefor|edital:elaborar",
         HTTP_IF_MATCH='"1"',
     )
-    assert response.status_code == 400
+    assert response.status_code == 422
     assert not EventoCronograma.objects.exists()

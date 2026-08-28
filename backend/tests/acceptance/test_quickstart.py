@@ -36,7 +36,8 @@ def test_quickstart_s1_invalid_payload_leaves_no_partial_process(api_client, man
         format="json",
         **manager_headers,
     )
-    assert resposta.status_code == 400
+    assert resposta.status_code == 422
+    assert resposta.json()["code"] == "invalid_payload"
     assert not ProcessoSeletivo.objects.exists()
     assert not Edital.objects.exists()
 

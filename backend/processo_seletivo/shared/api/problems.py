@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
@@ -9,6 +10,19 @@ class DomainError(Exception):
     code: str
     detail: str
     status: int = 422
+
+
+def _violations(detail, prefix=""):
+    """Achata os erros do serializer preservando o caminho do campo."""
+    if isinstance(detail, dict):
+        return [
+            item
+            for chave, valor in detail.items()
+            for item in _violations(valor, f"{prefix}{chave}.")
+        ]
+    if isinstance(detail, list):
+        return [item for valor in detail for item in _violations(valor, prefix)]
+    return [f"{prefix.rstrip('.')}: {detail}" if prefix else str(detail)]
 
 
 def problem_exception_handler(exc, context):
@@ -32,17 +46,25 @@ def problem_exception_handler(exc, context):
         return None
     request = context.get("request")
     correlation_id = getattr(request, "correlation_id", "unknown")
-    detail = (
-        response.data.get("detail", "Requisição inválida")
-        if isinstance(response.data, dict)
-        else "Requisição inválida"
-    )
+    if isinstance(exc, ValidationError):
+        # Corpo bem formado mas semanticamente inválido é 422, como declara o contrato;
+        # 400 fica para metadados malformados (header ou query string).
+        response.status_code = 422
+        code = "invalid_payload"
+        detail = "; ".join(_violations(exc.detail)) or "Requisição inválida"
+    else:
+        code = "request_rejected"
+        detail = str(
+            response.data.get("detail", "Requisição inválida")
+            if isinstance(response.data, dict)
+            else "Requisição inválida"
+        )
     response.data = {
-        "type": "about:blank",
+        "type": f"https://processo-seletivo.cefor/errors/{code}",
         "title": "Requisição rejeitada",
         "status": response.status_code,
-        "code": "request_rejected",
-        "detail": str(detail),
+        "code": code,
+        "detail": detail,
         "correlationId": correlation_id,
     }
     response.content_type = "application/problem+json"

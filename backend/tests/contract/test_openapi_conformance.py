@@ -317,3 +317,76 @@ def test_admin_retification_responses_conform_to_the_contract(
         path="/admin/retificacoes/{retificacaoId}/submissoes",
         method="post",
     )
+
+
+UNDECLARED_STATUS = "status {} não declarado em {} {}"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+def test_error_statuses_returned_are_declared_in_the_contract(
+    api_client, manager_headers, process_payload, contract, validator_for
+):
+    """Um status devolvido e não declarado quebra o cliente tanto quanto um corpo divergente."""
+    edital = publish_original(api_client, manager_headers, process_payload)
+    sem_permissao = actor_headers("intruso", [], key="conformance-key-0006")
+    exercicios = [
+        # corpo semanticamente inválido → 422
+        (
+            "post",
+            "/admin/processos",
+            "/api/v1/admin/processos",
+            {"institutionalCode": "X", "title": "Sem Edital"},
+            manager_headers,
+        ),
+        # Idempotency-Key ausente → 400
+        (
+            "post",
+            "/admin/editais/{editalId}/encerramentos",
+            f"/api/v1/admin/editais/{edital.id}/encerramentos",
+            {"reason": "Sem chave"},
+            {"HTTP_AUTHORIZATION": "Bearer gestor|cefor|edital:encerrar", "HTTP_IF_MATCH": '"5"'},
+        ),
+        # sem permissão → 403
+        (
+            "post",
+            "/admin/editais/{editalId}/cancelamentos",
+            f"/api/v1/admin/editais/{edital.id}/cancelamentos",
+            {"reason": "Negado"},
+            {**sem_permissao, "HTTP_IF_MATCH": '"5"'},
+        ),
+    ]
+    for metodo, path, url, corpo, headers in exercicios:
+        resposta = getattr(api_client, metodo)(url, corpo, format="json", **headers)
+        declarados = contract["paths"][path][metodo]["responses"]
+        assert str(resposta.status_code) in declarados, UNDECLARED_STATUS.format(
+            resposta.status_code, metodo.upper(), path
+        )
+        assert_conforms(validator_for, contract, resposta, path=path, method=metodo)
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+def test_query_parameter_errors_are_declared_and_conform(
+    api_client, manager_headers, process_payload, contract, validator_for
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    exercicios = [
+        (
+            "/public/editais/{editalId}/versao-vigente",
+            f"/api/v1/public/editais/{edital.id}/versao-vigente",
+            {"em": "ontem"},
+        ),
+        (
+            "/public/editais/{editalId}/historico",
+            f"/api/v1/public/editais/{edital.id}/historico",
+            {"limit": "999"},
+        ),
+    ]
+    for path, url, params in exercicios:
+        resposta = api_client.get(url, params)
+        assert resposta.status_code == 400
+        assert str(resposta.status_code) in contract["paths"][path]["get"]["responses"], (
+            UNDECLARED_STATUS.format(resposta.status_code, "GET", path)
+        )
+        assert_conforms(validator_for, contract, resposta, path=path, method="get")

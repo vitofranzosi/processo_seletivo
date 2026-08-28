@@ -14,14 +14,15 @@
 integralmente**, **2 passam com ressalva** por dependerem do documento publicado, que ainda não
 reproduz o conteúdo normativo completo. Nenhum cenário falha.
 
-A execução encontrou e corrigiu um defeito: rascunho reusando identificador de outro Edital
-devolvia HTTP 500. Ver [Defeitos encontrados](#defeitos-encontrados-durante-a-execução).
+A execução encontrou e corrigiu dois defeitos: rascunho reusando identificador de outro Edital
+devolvia HTTP 500, e os status de erro divergiam do contrato. Ver
+[Defeitos encontrados](#defeitos-encontrados-durante-a-execução).
 
 ## Comandos executados
 
-Os comandos do quickstart estão em PowerShell e pressupõem `venv` mais `pip install -e`. O projeto
-adotou `uv` em T001/T002, então a execução usou os equivalentes do
-[Makefile](../../backend/Makefile). Registrado como [D2](#desvios-de-ambiente).
+O quickstart trazia comandos em PowerShell com `venv` e `pip install -e`, incompatíveis com o `uv`
+adotado em T001/T002. A execução usou os equivalentes do [Makefile](../../backend/Makefile) e o
+quickstart foi corrigido para refletir os comandos reais — ver [D2](#desvios-de-ambiente).
 
 | Comando | Resultado |
 |---|---|
@@ -29,12 +30,12 @@ adotou `uv` em T001/T002, então a execução usou os equivalentes do
 | `uv run ruff check .` | `All checks passed!` |
 | `uv run python manage.py check` | `System check identified no issues (0 silenced).` |
 | `uv run python manage.py makemigrations --check --dry-run` | `No changes detected` |
-| `uv run pytest` (PostgreSQL) | **199 passed** |
-| `uv run pytest -m acceptance` | 24 passed, 175 deselected |
-| `uv run pytest -m contract` | 40 passed, 159 deselected |
-| `uv run pytest -m integration` | 46 passed, 153 deselected |
-| `uv run pytest -m authorization` | 31 passed, 168 deselected |
-| `uv run pytest` (SQLite) | 179 passed, 20 skipped |
+| `uv run pytest` (PostgreSQL) | **202 passed** |
+| `uv run pytest -m acceptance` | 24 passed, 178 deselected |
+| `uv run pytest -m contract` | 42 passed, 160 deselected |
+| `uv run pytest -m integration` | 46 passed, 156 deselected |
+| `uv run pytest -m authorization` | 31 passed, 171 deselected |
+| `uv run pytest` (SQLite) | 182 passed, 20 skipped |
 
 Os 20 testes ignorados em SQLite são os que exigem locks reais, triggers e privilégios de role —
 exatamente os que o quickstart determina que não sejam substituídos por SQLite. Eles executam na
@@ -118,6 +119,20 @@ falhas diagnosticáveis sem exposição indevida.
 `409 identifier_belongs_to_another_edital` nomeando os identificadores em conflito. Coberto por
 `tests/acceptance/test_quickstart.py::test_quickstart_s3_draft_cannot_reuse_identifiers_from_another_edital`.
 
+### Corrigido — status de erro divergentes do contrato
+
+A avaliação do repositório encontrou duas divergências de status. Corpo semanticamente inválido
+devolvia `400` (padrão do DRF), mas o contrato declara `422` para essas operações e o cenário 1 do
+quickstart pede `422`; o handler passou a mapear `ValidationError` para `422 invalid_payload`, com as
+violações achatadas preservando o caminho do campo. Na direção oposta, `400` por metadado malformado
+— `Idempotency-Key` fora do tamanho, `If-Match` inválido, `em` ou `limit` inaceitáveis — era
+devolvido sem estar declarado; o contrato passou a declarar `400` nas 21 operações que validam header
+ou query string, com o componente `BadRequest`.
+
+`tests/contract/test_openapi_conformance.py::test_error_statuses_returned_are_declared_in_the_contract`
+e `tests/contract/test_openapi_conformance.py::test_query_parameter_errors_are_declared_and_conform`
+travam essa classe de divergência.
+
 ### Aberto — Retificação sem efeito prático devolve HTTP 500
 
 Publicar uma Retificação cujo conteúdo consolidado é idêntico ao já publicado gera bytes de PDF
@@ -166,13 +181,12 @@ disponível na estação. Nenhum recurso exclusivo de 17 ou 18 é utilizado: as 
 são `CREATE TRIGGER`, `SELECT ... FOR UPDATE`, `gen_random_uuid()` e `GRANT/REVOKE`, todas presentes
 em 16. A CI executa a mesma suíte contra `postgres:18` e é a referência de conformidade.
 
-### D2 — Comandos adaptados de PowerShell/pip para uv
+### D2 — Comandos adaptados de PowerShell/pip para uv — resolvido
 
-O quickstart foi escrito antes da escolha de ferramentas. T001 e T002 adotaram `uv` e um Makefile. Os
-comandos executados são equivalentes e estão na tabela acima.
-
-**Recomendação**: atualizar a seção "Planned verification commands" do quickstart para os comandos
-reais do Makefile, evitando que a divergência se repita a cada validação.
+O quickstart foi escrito antes da escolha de ferramentas. T001 e T002 adotaram `uv` e um Makefile, e
+a seção "Planned verification commands" ficou descrevendo um fluxo que não executa. Ela foi
+substituída pelos comandos efetivamente usados, incluindo a variável `TEST_DB_ENGINE` que separa a
+execução em SQLite da execução completa em PostgreSQL.
 
 ## Conclusão
 
@@ -188,5 +202,5 @@ declarada concluída**, por dois motivos:
 2. **T091 e T092 permanecem abertas**: observabilidade e testes de carga. Os SLOs de p95 e de pico de
    consultas do plan.md não foram exercitados.
 
-Fora esses pontos, US1 a US7 estão implementadas, cobertas e rastreadas, com 199 testes aprovados em
+Fora esses pontos, US1 a US7 estão implementadas, cobertas e rastreadas, com 202 testes aprovados em
 PostgreSQL e conformidade verificada contra o contrato OpenAPI 3.1.
