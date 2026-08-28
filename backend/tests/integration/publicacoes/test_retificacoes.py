@@ -1,6 +1,7 @@
 import pytest
 from django.db import DatabaseError, connection
 
+from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
@@ -321,3 +322,202 @@ def test_change_without_expected_previous_hash_keeps_last_publication_winning(
         VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at").content["title"]
         == "Segundo"
     )
+
+
+def homologate(api_client, retificacao_id, *, suffix):
+    api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao_id}/submissoes",
+        format="json",
+        **actor_headers(f"retificador-{suffix}", ["retificacao:submeter"], if_match=1),
+    )
+    return api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao_id}/homologacoes",
+        {"reason": "OK"},
+        format="json",
+        **actor_headers(f"homologador-{suffix}", ["retificacao:homologar"], if_match=2),
+    )
+
+
+def devolve(api_client, retificacao_id, *, revision, reason="Conflito com a Retificação anterior"):
+    return api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao_id}/devolucoes",
+        {"reason": reason},
+        format="json",
+        **actor_headers("homologador-d", ["retificacao:homologar"], if_match=revision),
+    )
+
+
+def conflicting_pair(api_client, manager_headers, process_payload):
+    """Duas Retificações sobre o mesmo /title; a primeira publica e a segunda é rejeitada."""
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    original_hash = canonical_sha256(base.content["title"])
+    first = create_retification(api_client, edital, base, [title_change("Primeiro", original_hash)])
+    second = create_retification(
+        api_client, edital, base, [title_change("Segundo", original_hash)], subject="retificador-b"
+    )
+    assert homologate_and_publish(api_client, first.data["id"], suffix="a").status_code == 201
+    assert homologate_and_publish(api_client, second.data["id"], suffix="b").status_code == 409
+    return edital, second.data["id"]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_retification_rejected_on_publication_can_be_returned_to_drafting(
+    api_client, manager_headers, process_payload
+):
+    _, retificacao_id = conflicting_pair(api_client, manager_headers, process_payload)
+
+    returned = devolve(api_client, retificacao_id, revision=3)
+
+    assert returned.status_code == 200
+    assert returned.data["status"] == Retificacao.Status.EM_ELABORACAO
+    item = Retificacao.objects.get(pk=retificacao_id)
+    assert item.homologated_by == ""
+    assert item.homologated_at is None
+    assert item.homologation_reason == ""
+    assert item.return_reason == "Conflito com a Retificação anterior"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_returned_retification_is_rebased_and_republished(
+    api_client, manager_headers, process_payload
+):
+    edital, retificacao_id = conflicting_pair(api_client, manager_headers, process_payload)
+    assert devolve(api_client, retificacao_id, revision=3).status_code == 200
+    current = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+
+    rebased = api_client.put(
+        f"/api/v1/admin/retificacoes/{retificacao_id}/rascunho",
+        {
+            "baseSnapshotId": str(current.id),
+            "justification": "Correção sobre a versão vigente",
+            "changes": [title_change("Segundo", canonical_sha256(current.content["title"]))],
+        },
+        format="json",
+        **actor_headers("retificador-b", ["retificacao:elaborar"], if_match=4),
+    )
+
+    assert rebased.status_code == 200
+    assert Retificacao.objects.get(pk=retificacao_id).base_snapshot_id == current.id
+    api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao_id}/submissoes",
+        format="json",
+        **actor_headers("retificador-b", ["retificacao:submeter"], if_match=5),
+    )
+    api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao_id}/homologacoes",
+        {"reason": "OK"},
+        format="json",
+        **actor_headers("homologador-c", ["retificacao:homologar"], if_match=6),
+    )
+    published = api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao_id}/publicacoes",
+        {
+            "signatory": {
+                "authorityId": "00000000-0000-0000-0000-000000000602",
+                "name": "Diretora",
+                "role": "Diretora",
+            }
+        },
+        format="json",
+        **actor_headers("publicador-c", ["retificacao:publicar"], if_match=7),
+    )
+
+    assert published.status_code == 201
+    assert (
+        VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at").content["title"]
+        == "Segundo"
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_editing_a_returned_retification_without_rebasing_keeps_the_old_base(
+    api_client, manager_headers, process_payload
+):
+    edital, retificacao_id = conflicting_pair(api_client, manager_headers, process_payload)
+    assert devolve(api_client, retificacao_id, revision=3).status_code == 200
+    current = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+
+    edited = api_client.put(
+        f"/api/v1/admin/retificacoes/{retificacao_id}/rascunho",
+        {
+            "justification": "Correção",
+            "changes": [title_change("Segundo", canonical_sha256(current.content["title"]))],
+        },
+        format="json",
+        **actor_headers("retificador-b", ["retificacao:elaborar"], if_match=4),
+    )
+
+    assert edited.status_code == 409
+    assert edited.data["code"] == "expected_hash_mismatch"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_return_to_drafting_requires_reason_and_homologation_permission(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    created = create_retification(api_client, edital, base, [title_change("Novo")])
+    assert homologate(api_client, created.data["id"], suffix="a").status_code == 200
+    url = f"/api/v1/admin/retificacoes/{created.data['id']}/devolucoes"
+    assert (
+        api_client.post(
+            url,
+            {"reason": "  "},
+            format="json",
+            **actor_headers("homologador-d", ["retificacao:homologar"], if_match=3),
+        ).status_code
+        == 422
+    )
+    assert (
+        api_client.post(
+            url,
+            {"reason": "Motivo"},
+            format="json",
+            **actor_headers("retificador", ["retificacao:elaborar"], if_match=3),
+        ).status_code
+        == 403
+    )
+    assert Retificacao.objects.get().status == Retificacao.Status.HOMOLOGADA
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_return_to_drafting_is_refused_for_final_and_drafting_states(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    created = create_retification(api_client, edital, base, [title_change("Novo")])
+    drafting = devolve(api_client, created.data["id"], revision=1)
+    assert (drafting.status_code, drafting.data["code"]) == (409, "invalid_state")
+    assert homologate_and_publish(api_client, created.data["id"], suffix="a").status_code == 201
+    published = devolve(api_client, created.data["id"], revision=4)
+    assert (published.status_code, published.data["code"]) == (409, "invalid_state")
+    assert Retificacao.objects.get().status == Retificacao.Status.PUBLICADA
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_return_from_review_records_the_previous_state_in_the_audit_trail(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    created = create_retification(api_client, edital, base, [title_change("Novo")])
+    api_client.post(
+        f"/api/v1/admin/retificacoes/{created.data['id']}/submissoes",
+        format="json",
+        **actor_headers("retificador", ["retificacao:submeter"], if_match=1),
+    )
+    assert devolve(api_client, created.data["id"], revision=2).status_code == 200
+    event = RegistroAuditoria.objects.filter(operation="DEVOLVER").get()
+    assert event.previous_state == Retificacao.Status.EM_REVISAO
+    assert event.new_state == Retificacao.Status.EM_ELABORACAO
+    assert event.reason == "Conflito com a Retificação anterior"
+    assert event.permission == "retificacao:homologar"

@@ -62,6 +62,7 @@ class Retificacao(models.Model):
     homologated_by = models.CharField(max_length=255, blank=True)
     homologated_at = models.DateTimeField(null=True, blank=True)
     homologation_reason = models.TextField(blank=True)
+    return_reason = models.TextField(blank=True)
     cancellation_reason = models.TextField(blank=True)
 
     def __str__(self):

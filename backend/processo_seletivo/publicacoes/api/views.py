@@ -167,6 +167,10 @@ class HomologateRetificationView(RetificationTransitionView):
     action = "homologar"
 
 
+class ReturnRetificationView(RetificationTransitionView):
+    action = "devolver"
+
+
 class CancelRetificationView(RetificationTransitionView):
     action = "cancelar"
 

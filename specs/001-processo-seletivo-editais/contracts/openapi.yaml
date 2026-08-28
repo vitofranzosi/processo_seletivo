@@ -308,6 +308,26 @@ paths:
         '412': { $ref: '#/components/responses/PreconditionFailed' }
         '422': { $ref: '#/components/responses/Unprocessable' }
         '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /admin/retificacoes/{retificacaoId}/devolucoes:
+    post:
+      tags: [Retificações administrativas]
+      summary: Devolver Retificação para elaboração antes da Publicação
+      description: >-
+        Retorno para correção admitido a partir de Em revisão ou Homologada, conforme a FR-027.
+        Desfaz a homologação e exige motivo. Publicada e Cancelada são finais.
+      operationId: devolverRetificacao
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/RetificacaoId' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/MotivoRequest' } } }
+      responses:
+        '200': { description: Retificação devolvida para elaboração, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/RetificacaoResponse' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
   /admin/retificacoes/{retificacaoId}/cancelamentos:
     post:
       tags: [Retificações administrativas]

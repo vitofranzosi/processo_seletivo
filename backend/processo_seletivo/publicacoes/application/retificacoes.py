@@ -116,15 +116,26 @@ def edit_retification(*, actor, retificacao_id, expected_revision, data):
         item = _retificacao(actor, retificacao_id)
         if item.status != Retificacao.Status.EM_ELABORACAO:
             raise DomainError("invalid_state", "Retificação não está em elaboração.", 409)
+        # Rebase: uma Retificação devolvida por conflito precisa poder reapontar para a
+        # versão consolidada atual, senão a correção nasce sobre a mesma base obsoleta.
+        base = item.base_snapshot
+        if data.get("baseSnapshotId") and data["baseSnapshotId"] != base.pk:
+            try:
+                base = VersaoConsolidada.objects.get(
+                    pk=data["baseSnapshotId"], edital=item.edital_id
+                )
+            except VersaoConsolidada.DoesNotExist as exc:
+                raise DomainError("not_found", "Recurso não encontrado.", 404) from exc
         try:
-            apply_changes(item.base_snapshot.content, data["changes"], publication_id="draft")
+            apply_changes(base.content, data["changes"], publication_id="draft")
         except ValueError as exc:
             raise DomainError("invalid_change", str(exc), 422) from exc
-        _reject_stale_changes(item.base_snapshot.content, data["changes"])
+        _reject_stale_changes(base.content, data["changes"])
         compare_and_swap(
             Retificacao.objects,
             pk=item.pk,
             expected_revision=expected_revision,
+            base_snapshot=base,
             justification=data["justification"],
             effective_at=data.get("effectiveAt"),
         )
@@ -133,30 +144,54 @@ def edit_retification(*, actor, retificacao_id, expected_revision, data):
         return item
 
 
+# Estados de origem admitidos e estado alvo de cada transição. `None` significa
+# "qualquer estado não final", verificado à parte.
+TRANSITIONS = {
+    "submeter": ((Retificacao.Status.EM_ELABORACAO,), Retificacao.Status.EM_REVISAO),
+    "homologar": ((Retificacao.Status.EM_REVISAO,), Retificacao.Status.HOMOLOGADA),
+    "devolver": (
+        (Retificacao.Status.EM_REVISAO, Retificacao.Status.HOMOLOGADA),
+        Retificacao.Status.EM_ELABORACAO,
+    ),
+    "cancelar": (None, Retificacao.Status.CANCELADA),
+}
+
+# Devolver desfaz revisão ou homologação: é ato de quem homologa, como a revogação de
+# homologação do Edital, que também exige `edital:homologar`.
+TRANSITION_PERMISSIONS = {"devolver": "retificacao:homologar"}
+
+
 def transition_retification(*, actor, retificacao_id, expected_revision, action, reason=""):
-    permission = f"retificacao:{action}"
+    permission = TRANSITION_PERMISSIONS.get(action, f"retificacao:{action}")
     require_permission(actor, permission)
-    states = {
-        "submeter": (Retificacao.Status.EM_ELABORACAO, Retificacao.Status.EM_REVISAO),
-        "homologar": (Retificacao.Status.EM_REVISAO, Retificacao.Status.HOMOLOGADA),
-        "cancelar": (None, Retificacao.Status.CANCELADA),
-    }
     with command_context() as now:
         item = _retificacao(actor, retificacao_id)
-        previous, target = states[action]
-        if previous and item.status != previous:
+        origins, target = TRANSITIONS[action]
+        previous = item.status
+        if origins and previous not in origins:
             raise DomainError("invalid_state", "Transição inválida para a Retificação.", 409)
-        if action == "cancelar" and item.status in {
+        if action == "cancelar" and previous in {
             Retificacao.Status.PUBLICADA,
             Retificacao.Status.CANCELADA,
         }:
             raise DomainError("invalid_state", "Retificação final não pode ser cancelada.", 409)
+        if action == "devolver" and not reason.strip():
+            raise DomainError("reason_required", "A devolução exige motivo.", 422)
         changes = {"status": target}
         if action == "submeter":
             changes.update(prepared_by=actor.subject, submitted_at=now)
         elif action == "homologar":
             changes.update(
                 homologated_by=actor.subject, homologated_at=now, homologation_reason=reason
+            )
+        elif action == "devolver":
+            # A homologação desfeita não pode continuar descrevendo um ato em elaboração;
+            # sua autoria permanece no registro de auditoria do evento HOMOLOGAR.
+            changes.update(
+                homologated_by="",
+                homologated_at=None,
+                homologation_reason="",
+                return_reason=reason,
             )
         else:
             changes["cancellation_reason"] = reason
@@ -172,7 +207,7 @@ def transition_retification(*, actor, retificacao_id, expected_revision, action,
             now=now,
             correlation_id="",
             reason=reason,
-            previous_state=previous or "",
+            previous_state=previous,
             previous_revision=expected_revision,
         )
         return item

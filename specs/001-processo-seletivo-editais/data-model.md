@@ -180,13 +180,14 @@ Raiz para preparar um ato que pode alterar qualquer conteúdo do Edital.
 
 ```text
 EM_ELABORACAO --> EM_REVISAO --> HOMOLOGADA --> PUBLICADA
-      ^               |
-      +---------------+
+      ^               |               |
+      +---devolver----+---------------+
 
 estado não final --cancelar--> CANCELADA
 ```
 
-Retornos para correção só ocorrem antes da Publicação. `PUBLICADA` e `CANCELADA` são finais.
+Retornos para correção só ocorrem antes da Publicação: `devolver` parte de `EM_REVISAO` ou de
+`HOMOLOGADA`, exige motivo e desfaz a homologação. `PUBLICADA` e `CANCELADA` são finais.
 
 ## AlteracaoNormativa
 
