@@ -41,10 +41,18 @@ class ChangeSerializer(serializers.Serializer):
 
 
 class RetificacaoDraftSerializer(serializers.Serializer):
+    """Atualização de rascunho: `baseSnapshotId` é opcional e, quando vem, rebaseia."""
+
     baseSnapshotId = serializers.UUIDField(required=False)
     justification = serializers.CharField(min_length=1)
     effectiveAt = serializers.DateTimeField(required=False, allow_null=True)
     changes = ChangeSerializer(many=True, allow_empty=False)
+
+
+class CriarRetificacaoSerializer(RetificacaoDraftSerializer):
+    """Criação: a versão base é obrigatória, conforme CriarRetificacaoRequest."""
+
+    baseSnapshotId = serializers.UUIDField()
 
 
 class RetificacaoResponseSerializer(serializers.Serializer):

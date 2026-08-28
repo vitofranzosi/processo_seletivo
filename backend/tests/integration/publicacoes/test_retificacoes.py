@@ -521,3 +521,43 @@ def test_return_from_review_records_the_previous_state_in_the_audit_trail(
     assert event.new_state == Retificacao.Status.EM_ELABORACAO
     assert event.reason == "Conflito com a Retificação anterior"
     assert event.permission == "retificacao:homologar"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_creation_without_base_snapshot_is_rejected_as_problem_details(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    response = api_client.post(
+        f"/api/v1/admin/editais/{edital.id}/retificacoes",
+        {"justification": "Correção", "changes": [title_change("Novo")]},
+        format="json",
+        **actor_headers("retificador", ["retificacao:elaborar"]),
+    )
+    assert response.status_code == 400
+    assert response["Content-Type"].startswith("application/problem+json")
+    assert not Retificacao.objects.exists()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_rebasing_a_draft_to_an_unknown_snapshot_is_rejected(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    created = create_retification(api_client, edital, base, [title_change("Novo")])
+    response = api_client.put(
+        f"/api/v1/admin/retificacoes/{created.data['id']}/rascunho",
+        {
+            "baseSnapshotId": "00000000-0000-0000-0000-0000000009ff",
+            "justification": "Correção",
+            "changes": [title_change("Novo")],
+        },
+        format="json",
+        **actor_headers("retificador", ["retificacao:elaborar"], if_match=1),
+    )
+    assert response.status_code == 404
+    assert response.data["code"] == "not_found"
+    assert Retificacao.objects.get().base_snapshot_id == base.id
