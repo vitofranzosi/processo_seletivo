@@ -62,6 +62,20 @@ cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python m
 cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python manage.py runserver
 ```
 
+### Ver o sistema no ar
+
+Não há interface gráfica — ela está fora do escopo deste incremento. O sistema é uma API, e a
+consulta pública é anônima, então basta abrir as URLs no navegador. Para ter o que olhar, popule
+uma demonstração que percorre o fluxo normativo real, com atores distintos em cada etapa:
+
+```bash
+cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python manage.py seed_demo
+```
+
+O comando imprime os identificadores criados e as URLs prontas: versão vigente, histórico e
+Retificação. Ele cria um Edital publicado com dois Perfis e três Eventos, mais duas Retificações —
+uma já vigente e outra com vigência futura —, para que a consulta temporal tenha o que mostrar.
+
 ## Verificação
 
 ```bash

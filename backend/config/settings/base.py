@@ -47,6 +47,12 @@ DATABASES = {
     }
 }
 REST_FRAMEWORK = {
+    # Só JSON: o contrato declara application/json e a Browsable API do DRF exigiria
+    # engine de template e staticfiles, superfície que uma API institucional não precisa.
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
+    "DEFAULT_CONTENT_NEGOTIATION_CLASS": (
+        "processo_seletivo.shared.api.negotiation.JsonAlwaysNegotiation"
+    ),
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "processo_seletivo.seguranca.api.authentication.InstitutionalBearerAuthentication"
     ],

@@ -390,3 +390,24 @@ def test_query_parameter_errors_are_declared_and_conform(
             UNDECLARED_STATUS.format(resposta.status_code, "GET", path)
         )
         assert_conforms(validator_for, contract, resposta, path=path, method="get")
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+@pytest.mark.parametrize(
+    "accept",
+    ["text/html,application/xhtml+xml,*/*", "application/json", "*/*", "text/plain"],
+)
+def test_responses_always_use_the_declared_media_type(
+    api_client, manager_headers, process_payload, contract, validator_for, accept
+):
+    """O contrato só declara application/json; um navegador não pode receber HTML nem 406."""
+    edital = publish_original(api_client, manager_headers, process_payload)
+    path = "/public/editais/{editalId}/versao-vigente"
+    resposta = api_client.get(
+        f"/api/v1/public/editais/{edital.id}/versao-vigente", HTTP_ACCEPT=accept
+    )
+    assert resposta.status_code == 200, resposta.status_code
+    assert resposta["Content-Type"].startswith("application/json"), resposta["Content-Type"]
+    assert "application/json" in contract["paths"][path]["get"]["responses"]["200"]["content"]
+    assert_conforms(validator_for, contract, resposta, path=path, method="get")
