@@ -3,6 +3,7 @@ import hashlib
 from django.db.models import F
 
 from processo_seletivo.auditoria.application import record_event
+from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.domain.changes import apply_changes
 from processo_seletivo.publicacoes.domain.consolidation import consolidate
@@ -23,13 +24,15 @@ from processo_seletivo.shared.concurrency import compare_and_swap
 
 def _retificacao(actor, retificacao_id):
     try:
-        return (
+        item = (
             Retificacao.objects.select_for_update()
-            .select_related("edital")
+            .select_related("edital__processo")
             .get(pk=retificacao_id, edital__institution_scope=actor.institution_scope)
         )
     except Retificacao.DoesNotExist as exc:
         raise DomainError("not_found", "Recurso não encontrado.", 404) from exc
+    ensure_processo_accepts_changes(item.edital.processo)
+    return item
 
 
 def _changes_payload(retificacao):
@@ -60,10 +63,13 @@ def create_retification(*, actor, edital_id, data):
     require_permission(actor, "retificacao:elaborar")
     with command_context() as now:
         try:
-            edital = Edital.objects.get(pk=edital_id, institution_scope=actor.institution_scope)
+            edital = Edital.objects.select_related("processo").get(
+                pk=edital_id, institution_scope=actor.institution_scope
+            )
             base = VersaoConsolidada.objects.get(pk=data["baseSnapshotId"], edital=edital)
         except (Edital.DoesNotExist, VersaoConsolidada.DoesNotExist) as exc:
             raise DomainError("not_found", "Recurso não encontrado.", 404) from exc
+        ensure_processo_accepts_changes(edital.processo)
         if edital.status != Edital.Status.PUBLICADO:
             raise DomainError("invalid_state", "Somente Edital publicado pode ser retificado.", 409)
         retificacao = Retificacao.objects.create(

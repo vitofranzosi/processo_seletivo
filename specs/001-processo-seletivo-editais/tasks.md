@@ -207,17 +207,17 @@ description: "Tarefas de implementação de Processo Seletivo e Editais"
 
 ### Tests for User Story 7
 
-- [ ] T079 [P] [US7] Criar testes de domínio de encerramento, cancelamento e estados finais em backend/tests/unit/processos/test_finalizacao.py
-- [ ] T080 [P] [US7] Criar testes de contrato dos atos de encerramento e cancelamento em backend/tests/contract/test_finalizacao_api.py
-- [ ] T081 [P] [US7] Criar testes PostgreSQL do protocolo de locks Processo→Editais e TOCTOU em backend/tests/integration/processos/test_finalizacao_concorrente.py
-- [ ] T082 [P] [US7] Criar testes de autorização, motivo e auditoria dos atos finais em backend/tests/authorization/test_finalizacao.py
+- [X] T079 [P] [US7] Criar testes de domínio de encerramento, cancelamento e estados finais em backend/tests/unit/processos/test_finalizacao.py
+- [X] T080 [P] [US7] Criar testes de contrato dos atos de encerramento e cancelamento em backend/tests/contract/test_finalizacao_api.py
+- [X] T081 [P] [US7] Criar testes PostgreSQL do protocolo de locks Processo→Editais e TOCTOU em backend/tests/integration/processos/test_finalizacao_concorrente.py
+- [X] T082 [P] [US7] Criar testes de autorização, motivo e auditoria dos atos finais em backend/tests/authorization/test_finalizacao.py
 
 ### Implementation for User Story 7
 
-- [ ] T083 [US7] Implementar política de estados finais e bloqueios em backend/processo_seletivo/processos/domain/finalizacao.py
-- [ ] T084 [US7] Implementar commands de encerramento/cancelamento com locks ordenados e auditoria em backend/processo_seletivo/processos/application/finalizacao.py
-- [ ] T085 [US7] Integrar atos finais às rotas e responses administrativas em backend/processo_seletivo/processos/api/finalizacao.py
-- [ ] T086 [US7] Rastrear US7 e FR-005–FR-006 e FR-034–FR-035 nos testes de aceitação em backend/tests/acceptance/test_us7_finalizacao.py
+- [X] T083 [US7] Implementar política de estados finais e bloqueios em backend/processo_seletivo/processos/domain/finalizacao.py
+- [X] T084 [US7] Implementar commands de encerramento/cancelamento com locks ordenados e auditoria em backend/processo_seletivo/processos/application/finalizacao.py
+- [X] T085 [US7] Integrar atos finais às rotas e responses administrativas em backend/processo_seletivo/processos/api/finalizacao.py e backend/processo_seletivo/processos/api/urls.py
+- [X] T086 [US7] Rastrear US7 e FR-005–FR-006 e FR-034–FR-035 nos testes de aceitação em backend/tests/acceptance/test_us7_finalizacao.py
 
 ---
 

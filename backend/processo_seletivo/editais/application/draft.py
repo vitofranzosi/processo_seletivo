@@ -9,6 +9,7 @@ from processo_seletivo.editais.models.perfis import (
     PerfilVaga,
     RegraNormativa,
 )
+from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
@@ -35,6 +36,7 @@ def replace_draft(*, actor, edital_id, expected_revision, profiles, schedule, co
             )
         except Edital.DoesNotExist as exc:
             raise DomainError("not_found", "Recurso não encontrado.", 404) from exc
+        ensure_processo_accepts_changes(edital.processo)
         if edital.status != Edital.Status.EM_ELABORACAO:
             raise DomainError(
                 "invalid_state", "Somente Edital em elaboração pode ser editado.", 409

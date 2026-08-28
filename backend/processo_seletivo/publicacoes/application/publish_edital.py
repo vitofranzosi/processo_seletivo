@@ -2,6 +2,7 @@ import hashlib
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.domain.validation import blocking_findings, validate_for_publication
+from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.infrastructure.pdf import render_edital_pdf
 from processo_seletivo.publicacoes.models import (
@@ -100,11 +101,15 @@ def _finish_idempotency(record, result, status):
 
 def _locked_edital(actor, edital_id):
     try:
-        return Edital.objects.select_for_update().get(
-            pk=edital_id, institution_scope=actor.institution_scope
+        edital = (
+            Edital.objects.select_for_update()
+            .select_related("processo")
+            .get(pk=edital_id, institution_scope=actor.institution_scope)
         )
     except Edital.DoesNotExist as exc:
         raise DomainError("not_found", "Recurso não encontrado.", 404) from exc
+    ensure_processo_accepts_changes(edital.processo)
+    return edital
 
 
 def submit_edital(*, actor, edital_id, expected_revision, idempotency_key, correlation_id):
