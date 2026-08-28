@@ -15,13 +15,21 @@
 - Q: O frontend atende quem? → A: Somente o público administrativo. A consulta pública de Editais
   permanece atendida pela API e será objeto de especificação futura, se houver decisão nesse
   sentido. Candidatos seguem fora do produto.
-- Q: Como será a autenticação institucional? → A: Diretório LDAP do Ifes.
+- Q: Como será a autenticação institucional? → A: LDAP do Ifes, mas **não neste incremento**. A
+  prioridade é ter interface visual e funcional antes; a integração com o diretório é incremento
+  próprio. Esta feature usa o mecanismo substituível já existente no backend e define a fronteira
+  para que a troca não exija reescrever telas.
 - Q: Qual norma de acessibilidade vincula a interface? → A: Ambas — eMAG 3.1, por ser órgão público
   federal, e WCAG 2.1 nível AA, por ser a referência corrente. Onde divergirem, prevalece a
   exigência mais restritiva.
-- Q: O LDAP também autoriza, ou é preciso gestão de papéis nesta feature? → A: A opção mais simples:
-  grupos do LDAP correspondem a papéis de responsabilidade, e cada papel reúne um conjunto fixo de
-  permissões definido na configuração do sistema. Não há tela de gestão de papéis neste incremento.
+- Q: O LDAP também autoriza, ou é preciso gestão de papéis nesta feature? → A: Quando a integração
+  ocorrer, grupos do diretório corresponderão a papéis de responsabilidade, cada papel reunindo um
+  conjunto fixo de permissões na configuração do sistema. Não há tela de gestão de papéis, nem
+  neste incremento nem no de autenticação.
+- Q: A interface pode ser construída antes da autenticação real? → A: Sim, e é a ordem escolhida. A
+  interface consome permissões de quem estiver autenticado, sem depender de como a autenticação
+  acontece. **Este incremento não vai a produção sozinho**: sem autenticação institucional não há
+  fronteira de segurança.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -206,8 +214,12 @@ registrado aparece com ator, instante, situação anterior e posterior e motivo.
 
 ### Functional Requirements
 
-- **FR-001**: A interface DEVE autenticar servidores contra o diretório institucional LDAP e
-  identificar a pessoa autenticada em toda a sessão.
+- **FR-001**: A interface DEVE identificar a pessoa autenticada em toda a sessão, obtendo
+  identidade, escopo institucional e permissões do backend, sem depender de qual mecanismo de
+  autenticação está em uso.
+- **FR-001a**: O mecanismo de autenticação DEVE ser substituível sem alteração das telas. Neste
+  incremento vale o adaptador de desenvolvimento já existente no backend; a integração com o
+  diretório institucional é incremento próprio.
 - **FR-002**: A interface DEVE obter as permissões da pessoa autenticada e oferecer somente as
   ações que ela pode praticar, sem que a ocultação substitua a verificação no backend.
 - **FR-003**: A interface DEVE apresentar a lista de Processos Seletivos e Editais do escopo
@@ -259,9 +271,9 @@ registrado aparece com ator, instante, situação anterior e posterior e motivo.
 - **FR-025**: A conformidade de acessibilidade DEVE ser verificável por avaliação automatizada nos
   fluxos críticos e por inspeção manual dos critérios que a automação não cobre, como ordem de
   leitura, texto alternativo significativo e comportamento com leitor de tela.
-- **FR-026**: As permissões da pessoa autenticada DEVEM ser derivadas dos grupos que ela possui no
-  diretório institucional, por meio de papéis de responsabilidade que reúnem conjuntos fixos de
-  permissões. A interface NÃO DEVE oferecer gestão de papéis neste incremento.
+- **FR-026**: As permissões da pessoa autenticada DEVEM chegar à interface como um conjunto
+  explícito, qualquer que seja sua origem. A interface NÃO DEVE inferir permissão a partir de cargo,
+  papel ou lotação, nem oferecer gestão de papéis.
 - **FR-027**: Um papel DEVE representar responsabilidade, não cargo: a mesma pessoa PODE acumular
   papéis, e nenhum papel DEVE ser inferido de função ou lotação.
 - **FR-028**: Quando a pessoa autenticada não possuir nenhum papel reconhecido, a interface DEVE
@@ -316,17 +328,23 @@ Dois conceitos são próprios da interface:
 
 ## Assumptions
 
-- **A autenticação usa o diretório LDAP do Ifes.** Foi a decisão informada para esta feature. O
-  backend hoje usa um adaptador de desenvolvimento — `Bearer <pessoa>|<escopo>|<permissões>` — que
-  **não** é fronteira de segurança e precisa ser substituído por esta integração.
-- **A autorização deriva de grupos do diretório, agrupados em papéis.** Foi escolhido o caminho mais
-  simples que funciona: um punhado de grupos, e não dezessete, porque pedir ao administrador do
-  diretório que mantenha um grupo por permissão seria operacionalmente custoso e propenso a erro. O
-  mapa de papel para permissões vive na configuração do sistema e é versionado com ele.
-- **Consequência aceita dessa escolha**: conceder ou revogar acesso passa a depender do
-  administrador do diretório, sem autoatendimento na interface. É adequado enquanto o número de
-  servidores envolvidos for pequeno; se a operação crescer ou exigir delegação, uma gestão de papéis
-  própria deverá ser especificada em incremento futuro.
+- **A autenticação real fica para incremento próprio.** A decisão é ter interface visual e
+  funcional antes de integrar o diretório. Este incremento usa o adaptador de desenvolvimento já
+  existente no backend — `Bearer <pessoa>|<escopo>|<permissões>` —, que permite exercitar todos os
+  fluxos assumindo identidades e permissões diferentes.
+- **⚠️ Este incremento não vai a produção sozinho.** O adaptador de desenvolvimento **não** é
+  fronteira de segurança: qualquer pessoa se declara quem quiser. Publicar esta interface sem a
+  autenticação institucional exporia todos os atos normativos do Cefor a qualquer um com acesso à
+  rede. A entrega é utilizável para demonstração, validação com usuários e medição dos critérios de
+  usabilidade — não para uso institucional.
+- **Quando a autenticação for feita**, grupos do diretório corresponderão a papéis de
+  responsabilidade, cada papel reunindo um conjunto fixo de permissões na configuração do sistema —
+  um punhado de grupos, e não dezessete, porque um grupo por permissão seria operacionalmente
+  custoso e propenso a erro. Conceder acesso dependerá do administrador do diretório, sem
+  autoatendimento; se a operação crescer ou exigir delegação, uma gestão de papéis própria precisará
+  de incremento seu.
+- **A troca de mecanismo não pode custar reescrita de telas.** A interface consome identidade e
+  permissões como dado vindo do backend; como esse dado é obtido não é assunto dela.
 - Esta feature atende **somente o público administrativo**: servidores do Cefor que conduzem
   Processos e Editais. A consulta pública de Editais permanece disponível apenas pela API e será
   objeto de especificação futura, se houver decisão institucional nesse sentido.
@@ -348,8 +366,10 @@ Dois conceitos são próprios da interface:
 - Consulta pública de Editais por cidadãos, que hoje é atendida pela API pública.
 - Qualquer funcionalidade destinada a candidatos.
 - Gestão de contas e de senhas, que pertence ao diretório institucional.
-- Tela de gestão de papéis e atribuição de permissões a pessoas. A concessão de acesso ocorre no
-  diretório institucional, por decisão registrada nas clarificações.
+- Integração com o diretório institucional LDAP, adiada para incremento próprio por decisão
+  registrada nas clarificações. É **pré-requisito para produção**, não para esta entrega.
+- Tela de gestão de papéis e atribuição de permissões a pessoas. A concessão de acesso ocorrerá no
+  diretório institucional.
 - Assinatura eletrônica real do documento publicado, mantida fora de escopo como na feature 001.
 - Relatórios gerenciais e indicadores sobre Processos Seletivos.
 
@@ -357,9 +377,9 @@ Dois conceitos são próprios da interface:
 
 - Feature `001-processo-seletivo-editais` implantada e acessível, incluindo os endpoints
   administrativos e a trilha de auditoria.
-- Acesso ao diretório LDAP institucional e criação dos grupos correspondentes aos papéis de
-  responsabilidade, acordada com quem administra o diretório. Sem esses grupos, nenhuma pessoa
-  possui permissão e o sistema fica inutilizável — ver FR-028.
+- **Para produção, e não para esta entrega**: integração com o diretório LDAP institucional e
+  criação dos grupos correspondentes aos papéis de responsabilidade, acordada com quem administra o
+  diretório. Sem isso, esta interface não pode ser exposta a uso institucional.
 - Substituição do adaptador de autenticação de desenvolvimento do backend por autenticação
   institucional. **Esta dependência bloqueia a entrega em produção**, ainda que não bloqueie o
   desenvolvimento das telas.
