@@ -4,6 +4,7 @@ from django.db import DatabaseError, connection
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
+from processo_seletivo.shared.canonical import canonical_sha256
 from tests.fixtures.edital import actor_headers, complete_draft
 
 
@@ -150,3 +151,173 @@ def test_consolidated_version_is_append_only_on_postgresql(
     version = VersaoConsolidada.objects.get(edital=edital)
     with pytest.raises(DatabaseError):
         VersaoConsolidada.objects.filter(pk=version.pk).update(content={"changed": True})
+
+
+def create_retification(api_client, edital, base, changes, *, subject="retificador"):
+    return api_client.post(
+        f"/api/v1/admin/editais/{edital.id}/retificacoes",
+        {
+            "baseSnapshotId": str(base.id),
+            "justification": "Correção",
+            "changes": changes,
+        },
+        format="json",
+        **actor_headers(subject, ["retificacao:elaborar"]),
+    )
+
+
+def homologate_and_publish(api_client, retificacao_id, *, suffix):
+    api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao_id}/submissoes",
+        format="json",
+        **actor_headers(f"retificador-{suffix}", ["retificacao:submeter"], if_match=1),
+    )
+    api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao_id}/homologacoes",
+        {"reason": "OK"},
+        format="json",
+        **actor_headers(f"homologador-{suffix}", ["retificacao:homologar"], if_match=2),
+    )
+    return api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao_id}/publicacoes",
+        {
+            "signatory": {
+                "authorityId": "00000000-0000-0000-0000-000000000602",
+                "name": "Diretora",
+                "role": "Diretora",
+            }
+        },
+        format="json",
+        **actor_headers(f"publicador-{suffix}", ["retificacao:publicar"], if_match=3),
+    )
+
+
+def title_change(new_value, expected_previous_hash=None):
+    change = {"targetPath": "/title", "operation": "REPLACE", "newValue": new_value}
+    if expected_previous_hash is not None:
+        change["expectedPreviousHash"] = expected_previous_hash
+    return change
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_stale_expected_previous_hash_is_rejected_on_creation(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    response = create_retification(
+        api_client,
+        edital,
+        base,
+        [title_change("Novo", canonical_sha256("Conteúdo que não vigora"))],
+    )
+    assert response.status_code == 409
+    assert response.data["code"] == "expected_hash_mismatch"
+    assert "/title" in response.data["detail"]
+    assert not Retificacao.objects.exists()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_stale_expected_previous_hash_is_rejected_on_draft_edit(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    created = create_retification(
+        api_client, edital, base, [title_change("Novo", canonical_sha256(base.content["title"]))]
+    )
+    assert created.status_code == 201
+    response = api_client.put(
+        f"/api/v1/admin/retificacoes/{created.data['id']}/rascunho",
+        {
+            "justification": "Correção",
+            "changes": [title_change("Outro", canonical_sha256("Conteúdo que não vigora"))],
+        },
+        format="json",
+        **actor_headers("retificador", ["retificacao:elaborar"], if_match=1),
+    )
+    assert response.status_code == 409
+    assert response.data["code"] == "expected_hash_mismatch"
+    assert Retificacao.objects.get().alteracoes.get().new_value == "Novo"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_retification_cannot_silently_overwrite_a_path_changed_meanwhile(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    original_hash = canonical_sha256(base.content["title"])
+    first = create_retification(api_client, edital, base, [title_change("Primeiro", original_hash)])
+    second = create_retification(
+        api_client, edital, base, [title_change("Segundo", original_hash)], subject="retificador-b"
+    )
+    assert homologate_and_publish(api_client, first.data["id"], suffix="a").status_code == 201
+
+    conflict = homologate_and_publish(api_client, second.data["id"], suffix="b")
+
+    assert conflict.status_code == 409
+    assert conflict.data["code"] == "expected_hash_mismatch"
+    assert "/title" in conflict.data["detail"]
+    assert Retificacao.objects.get(pk=second.data["id"]).status == Retificacao.Status.HOMOLOGADA
+    assert Publicacao.objects.filter(edital=edital).count() == 2
+    assert (
+        VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at").content["title"]
+        == "Primeiro"
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_retifications_on_independent_paths_still_compose(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    first = create_retification(
+        api_client,
+        edital,
+        base,
+        [title_change("Primeiro", canonical_sha256(base.content["title"]))],
+    )
+    second = create_retification(
+        api_client,
+        edital,
+        base,
+        [
+            {
+                "targetPath": "/description",
+                "operation": "REPLACE",
+                "newValue": "Descrição retificada",
+                "expectedPreviousHash": canonical_sha256(base.content["description"]),
+            }
+        ],
+        subject="retificador-b",
+    )
+    assert homologate_and_publish(api_client, first.data["id"], suffix="a").status_code == 201
+    assert homologate_and_publish(api_client, second.data["id"], suffix="b").status_code == 201
+    consolidated = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at").content
+    assert consolidated["title"] == "Primeiro"
+    assert consolidated["description"] == "Descrição retificada"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_change_without_expected_previous_hash_keeps_last_publication_winning(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    first = create_retification(api_client, edital, base, [title_change("Primeiro")])
+    second = create_retification(
+        api_client, edital, base, [title_change("Segundo")], subject="retificador-b"
+    )
+    assert homologate_and_publish(api_client, first.data["id"], suffix="a").status_code == 201
+    assert homologate_and_publish(api_client, second.data["id"], suffix="b").status_code == 201
+    assert (
+        VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at").content["title"]
+        == "Segundo"
+    )

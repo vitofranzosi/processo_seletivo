@@ -254,6 +254,7 @@ paths:
         content: { application/json: { schema: { $ref: '#/components/schemas/AtualizarRetificacaoRequest' } } }
       responses:
         '200': { description: Rascunho atualizado, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/RetificacaoResponse' } } } }
+        '409': { $ref: '#/components/responses/Conflict' }
         '412': { $ref: '#/components/responses/PreconditionFailed' }
         '422': { $ref: '#/components/responses/Unprocessable' }
         '428': { $ref: '#/components/responses/PreconditionRequired' }
@@ -546,7 +547,12 @@ components:
       properties:
         targetPath: { type: string, description: Caminho canônico com chaves estáveis }
         operation: { type: string, enum: [ADD, REPLACE, REMOVE] }
-        expectedPreviousHash: { type: string }
+        expectedPreviousHash:
+          type: string
+          description: >-
+            Hash canônico do conteúdo em targetPath conhecido na elaboração. Quando informado,
+            é verificado na criação e na edição contra a versão base e, na Publicação, contra o
+            conteúdo vigente no início de vigência; divergência responde 409 expected_hash_mismatch.
         newValue: {}
     ProcessoResponse:
       type: object
