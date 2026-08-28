@@ -1,0 +1,69 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}{{ ato.rotulo }} — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">{{ ato.rotulo }}</span>
+</nav>
+
+<h1>{{ ato.rotulo }}</h1>
+<p class="sub">Edital {{ edital.number }}/{{ edital.year }} — {{ edital.title }}</p>
+
+{% if erro %}<p class="erro" role="alert"><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
+
+{% if impedido_por_segregacao %}
+<p class="erro" role="alert"><strong>Segregação de funções.</strong> Você elaborou e homologou
+esta revisão, então não pode publicá-la sozinho. Ao menos outra pessoa autorizada precisa
+participar do ato. O sistema recusará esta operação.</p>
+{% endif %}
+
+{% for item in pendencias %}{% if item.severidade == 'erro' %}
+<p class="erro" role="alert"><strong>Impedimento:</strong> {{ item.mensagem }}</p>
+{% endif %}{% endfor %}
+
+<section aria-labelledby="consequencias-titulo"
+         class="consequencias {% if ato.irreversivel %}irreversivel{% endif %}">
+  <h2 id="consequencias-titulo">
+    {% if ato.irreversivel %}Este ato não pode ser desfeito{% else %}O que este ato provoca{% endif %}
+  </h2>
+  <ul>{% for consequencia in ato.consequencias %}<li>{{ consequencia }}</li>{% endfor %}</ul>
+</section>
+
+<form method="post" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+
+  {% if ato.exige_signatario %}
+  <fieldset>
+    <legend>Autoridade Signatária</legend>
+    <p class="ajuda">Quem assina institucionalmente o Edital. Fica registrado na Publicação e
+      aparece no documento.</p>
+    <div class="campos">
+      <p class="campo"><label for="signatario_nome">Nome</label>
+        <input type="text" id="signatario_nome" name="signatario_nome" required></p>
+      <p class="campo"><label for="signatario_cargo">Cargo ou função</label>
+        <input type="text" id="signatario_cargo" name="signatario_cargo" required></p>
+    </div>
+    <p class="campo"><label for="signatario_id">Identificador da autoridade</label>
+      <input type="text" id="signatario_id" name="signatario_id" required
+             aria-describedby="ajuda-sig" placeholder="00000000-0000-0000-0000-000000000000">
+      <span class="ajuda" id="ajuda-sig">Identificador institucional em formato UUID.</span></p>
+  </fieldset>
+  {% endif %}
+
+  {% if ato.exige_motivo %}
+  <p class="campo largo">
+    <label for="motivo">{{ ato.rotulo_motivo }}</label>
+    <textarea id="motivo" name="motivo" rows="3" required aria-describedby="ajuda-motivo"></textarea>
+    <span class="ajuda" id="ajuda-motivo">Fica registrado na auditoria e no ato administrativo.</span>
+  </p>
+  {% endif %}
+
+  <p class="salvar">
+    <button type="submit" class="botao {% if ato.irreversivel %}perigoso{% endif %}">
+      Confirmar: {{ ato.rotulo }}</button>
+    <a href="{% url 'interface:detalhe' edital.id %}" class="acao">Cancelar e voltar</a>
+  </p>
+</form>
+{% endblock %}

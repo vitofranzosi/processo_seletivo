@@ -14,7 +14,7 @@ from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.domain.validation import validate_for_publication
-from processo_seletivo.interface import forms, identidade
+from processo_seletivo.interface import atos, forms, identidade
 from processo_seletivo.processos.application.selectors import (
     contar_por_situacao,
     listar_processos,
@@ -22,6 +22,10 @@ from processo_seletivo.processos.application.selectors import (
 )
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
+from processo_seletivo.publicacoes.application.selectors import (
+    impede_por_segregacao,
+    participantes_do_edital,
+)
 from processo_seletivo.shared.api.problems import DomainError
 
 # Ordem em que as situações aparecem: o fluxo do Edital, não a ordem alfabética.
@@ -45,6 +49,7 @@ ACOES_POR_SITUACAO = {
 
 # Ações que já têm tela; as demais aparecem sem link até serem construídas.
 ROTA_DA_ACAO = {"Elaborar": "interface:compor"}
+ROTA_PADRAO = "interface:detalhe"
 
 
 def acoes_disponiveis(ator, situacao):
@@ -220,3 +225,117 @@ def fragmento_evento(request):
 def fragmento_remover(request):
     """A linha removida é substituída por nada; o conteúdo digitado some junto."""
     return HttpResponse("")
+
+
+ETAPAS = [
+    ("EM_ELABORACAO", "Em elaboração"),
+    ("EM_REVISAO", "Em revisão"),
+    ("HOMOLOGADO", "Homologado"),
+    ("PUBLICADO", "Publicado"),
+    ("ENCERRADO", "Encerrado"),
+]
+
+
+def _trilha(edital):
+    """Onde o Edital está no fluxo ordinário. Cancelado sai da trilha, não avança nela."""
+    if edital.status == "CANCELADO":
+        return [{"chave": c, "rotulo": r, "estado": "fora"} for c, r in ETAPAS]
+    atual = [c for c, _ in ETAPAS].index(edital.status)
+    return [
+        {
+            "chave": chave,
+            "rotulo": rotulo,
+            "estado": "concluida" if i < atual else "atual" if i == atual else "futura",
+        }
+        for i, (chave, rotulo) in enumerate(ETAPAS)
+    ]
+
+
+@require_http_methods(["GET"])
+def detalhe(request, edital_id):
+    """Situação do Edital, quem já atuou e o que se pode fazer agora (US3 da 002)."""
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital = obter_edital(actor=ator, edital_id=edital_id)
+    if edital is None:
+        raise Http404
+
+    participantes = participantes_do_edital(edital)
+    return render(
+        request,
+        "interface/detalhe.html",
+        {
+            "edital": edital,
+            "trilha": _trilha(edital),
+            "participantes": participantes,
+            "pendencias": _pendencias(edital),
+            "atos": list(atos.disponiveis(edital, ator)),
+            "impedido_por_segregacao": impede_por_segregacao(participantes, ator),
+            "pode_compor": edital.status == Edital.Status.EM_ELABORACAO
+            and ator.can("edital:elaborar"),
+        },
+    )
+
+
+@require_http_methods(["GET", "POST"])
+def praticar_ato(request, edital_id, acao):
+    """FR-010: nenhum ato irreversível ocorre sem confirmação que diga o que ele provoca."""
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital = obter_edital(actor=ator, edital_id=edital_id)
+    ato = atos.ATOS.get(acao)
+    if edital is None or ato is None:
+        raise Http404
+
+    participantes = participantes_do_edital(edital)
+    contexto = {
+        "edital": edital,
+        "ato": ato,
+        "participantes": participantes,
+        "impedido_por_segregacao": ato.chave == "publicar"
+        and impede_por_segregacao(participantes, ator),
+        "pendencias": _pendencias(edital) if ato.chave in {"submeter", "publicar"} else [],
+        # A chave nasce aqui: confirmar duas vezes repete o mesmo ato, não pratica dois.
+        "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
+    }
+
+    if request.method == "GET":
+        return render(request, "interface/confirmar.html", contexto)
+
+    try:
+        _executar(ato, request, ator, edital)
+    except DomainError as exc:
+        contexto["erro"] = exc.detail
+        return render(request, "interface/confirmar.html", contexto, status=exc.status)
+    return redirect(f"{reverse('interface:detalhe', args=[edital.id])}?ato={ato.chave}")
+
+
+def _executar(ato, request, ator, edital):
+    argumentos = {
+        "actor": ator,
+        "edital_id": edital.id,
+        "expected_revision": edital.revision,
+        "idempotency_key": request.POST.get("chave_idempotencia", ""),
+        "correlation_id": request.correlation_id,
+    }
+    if ato.exige_motivo:
+        motivo = (request.POST.get("motivo") or "").strip()
+        if not motivo:
+            raise DomainError("motivo_obrigatorio", f"{ato.rotulo_motivo} é obrigatório.", 422)
+        argumentos["reason"] = motivo
+    if ato.exige_signatario:
+        argumentos["signatory"] = {
+            "authorityId": (request.POST.get("signatario_id") or "").strip(),
+            "name": (request.POST.get("signatario_nome") or "").strip(),
+            "role": (request.POST.get("signatario_cargo") or "").strip(),
+        }
+        if not all(argumentos["signatory"].values()):
+            raise DomainError(
+                "signatario_obrigatorio",
+                "Autoridade Signatária, nome e cargo são obrigatórios para publicar.",
+                422,
+            )
+        argumentos["reason"] = (request.POST.get("motivo") or "").strip()
+    return ato.command(**argumentos)
