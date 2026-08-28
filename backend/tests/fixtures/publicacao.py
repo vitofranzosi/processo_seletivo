@@ -13,8 +13,12 @@ SIGNATORY = {
 
 def publish_original(api_client, manager_headers, process_payload, *, draft=None):
     """Cria Processo e primeiro Edital e o leva até a primeira Publicação."""
-    api_client.post("/api/v1/admin/processos", process_payload, format="json", **manager_headers)
-    edital = Edital.objects.get()
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+    )
+    assert criado.status_code == 201, criado.content
+    # Escopado ao Processo: o helper precisa servir a testes com mais de um Edital.
+    edital = Edital.objects.get(processo_id=criado.json()["id"])
     preparer = actor_headers("preparador", ["edital:elaborar", "edital:submeter"])
     api_client.put(
         f"/api/v1/admin/editais/{edital.id}/rascunho",

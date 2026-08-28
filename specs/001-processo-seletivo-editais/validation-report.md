@@ -101,9 +101,26 @@ fronteiras de vigência consultadas:
 | Histórico paginado, 100 itens | 9,7 ms | — |
 
 A margem é de quatro ordens de grandeza, mas o número não representa produção: banco local, sem
-concorrência, sem latência de rede e com volume mínimo. O SLO de p95 ≤ 2 s para consultas públicas e
-o pico de 500 consultas por segundo previstos em [plan.md](./plan.md) **não** foram exercitados —
-dependem de T092, que permanece aberta.
+concorrência, sem latência de rede e com volume mínimo.
+
+T092 acrescentou duas camadas. A suíte `tests/performance/` mede **custo por consulta**, não tempo:
+verifica que o número de consultas ao banco não cresce com o histórico, que é a degradação que
+importa e a única mensurável de forma determinística em CI. Ela encontrou e corrigiu um N+1 — a
+proveniência de cada versão consolidada virava uma consulta própria, levando o histórico de 8 para
+25 consultas entre 3 e 20 Retificações; hoje são 5, constantes.
+
+O SLO de p95 ≤ 2 s e pico de 500 consultas por segundo do [plan.md](./plan.md) exige serviço
+implantado, e continua **não verificado**. O harness `backend/scripts/carga_publica.py` mede-o
+quando houver ambiente. Execução local contra `runserver`, 8 workers, 3 segundos, dataset mínimo:
+
+| Cenário | Throughput | p50 | p95 | p99 |
+|---|---|---|---|---|
+| `versao-vigente` | 748 req/s | 10,4 ms | 14,0 ms | 17,0 ms |
+| `historico` | 546 req/s | 14,3 ms | 18,8 ms | 23,8 ms |
+
+Esses números **não** validam o SLO: `runserver` não é servidor de produção, o dataset é mínimo e
+não há latência de rede. Servem para mostrar que o harness funciona e que não há gargalo evidente
+na ordem de grandeza errada.
 
 ## Defeitos encontrados durante a execução
 
@@ -199,8 +216,9 @@ declarada concluída**, por dois motivos:
 1. **FR-023 não está atendido** (R2 / L2): o documento publicado não corresponde integralmente ao
    conteúdo homologado. É o único item que impede a conclusão por mérito, e exige um incremento
    próprio para o renderizador de PDF.
-2. **T091 e T092 permanecem abertas**: observabilidade e testes de carga. Os SLOs de p95 e de pico de
-   consultas do plan.md não foram exercitados.
+2. **O SLO de carga não foi verificado**: T091 e T092 estão concluídas, mas o p95 ≤ 2 s sob pico de
+   500 consultas por segundo depende de ambiente implantado. O harness existe em
+   `backend/scripts/carga_publica.py` e a medição precisa ser feita em homologação.
 
 Fora esses pontos, US1 a US7 estão implementadas, cobertas e rastreadas, com 202 testes aprovados em
 PostgreSQL e conformidade verificada contra o contrato OpenAPI 3.1.

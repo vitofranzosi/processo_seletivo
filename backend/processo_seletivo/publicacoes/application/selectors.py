@@ -26,6 +26,7 @@ def effective_version(*, edital_id, at=None):
     moment = at or timezone.now()
     version = (
         VersaoConsolidada.objects.filter(edital_id=edital_id, valid_from__lte=moment)
+        .prefetch_related("proveniencias")
         .order_by("-valid_from", "-materialized_at")
         .first()
     )
@@ -40,14 +41,14 @@ def effective_version(*, edital_id, at=None):
 
 def consolidated_version(*, versao_id):
     try:
-        return VersaoConsolidada.objects.get(pk=versao_id)
+        return VersaoConsolidada.objects.prefetch_related("proveniencias").get(pk=versao_id)
     except VersaoConsolidada.DoesNotExist as exc:
         raise _not_found() from exc
 
 
 def published_publication(*, publicacao_id):
     try:
-        return Publicacao.objects.select_related("documento").get(pk=publicacao_id)
+        return Publicacao.objects.select_related("documento", "retificacao").get(pk=publicacao_id)
     except Publicacao.DoesNotExist as exc:
         raise _not_found() from exc
 
@@ -112,7 +113,11 @@ def public_history(*, edital_id, cursor=None, limit=DEFAULT_LIMIT):
     ]
     entries += [
         {"kind": VERSAO_CONSOLIDADA, "item": item, "occurredAt": item.valid_from}
-        for item in VersaoConsolidada.objects.filter(edital_id=edital_id)
+        # Sem o prefetch, a proveniência de cada versão vira uma consulta própria e o
+        # custo do histórico cresce com o número de Retificações.
+        for item in VersaoConsolidada.objects.filter(edital_id=edital_id).prefetch_related(
+            "proveniencias"
+        )
     ]
     entries.sort(key=_sort_key)
     if cursor:

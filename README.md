@@ -76,7 +76,14 @@ cd backend && TEST_DB_ENGINE=postgresql DB_NAME=processo_seletivo_test DB_USER=p
 ```
 
 Suítes por marcador: `acceptance` (cenários rastreados), `contract` (conformidade HTTP/OpenAPI),
-`integration` (persistência, locks e concorrência) e `authorization` (autorização e anti-IDOR).
+`integration` (persistência, locks e concorrência), `authorization` (autorização e anti-IDOR) e
+`performance` (custo de consulta e escalabilidade).
+
+O SLO de carga do `plan.md` depende de serviço implantado e não é verificado pela suíte. Meça-o com:
+
+```bash
+cd backend && uv run python scripts/carga_publica.py --base-url https://host/api/v1 --edital <uuid> --workers 50 --duracao 60
+```
 
 ## API
 
@@ -113,8 +120,8 @@ As sete histórias da feature `001-processo-seletivo-editais` estão implementad
   cenários do quickstart
 
 **A feature ainda não está concluída.** O documento publicado não reproduz o conteúdo normativo
-completo, então FR-023 não está atendido, e os testes de carga permanecem abertos. Os detalhes estão
-nos dois artefatos acima.
+completo, então FR-023 não está atendido. Todas as tarefas de `tasks.md` estão fechadas; o SLO de
+carga ainda precisa ser medido em ambiente implantado. Os detalhes estão nos dois artefatos acima.
 
 ## Documentação
 

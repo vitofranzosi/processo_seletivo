@@ -35,6 +35,7 @@ markers = [
   "contract: conformidade HTTP/OpenAPI",
   "integration: integração com persistência",
   "authorization: autorização contextual e anti-IDOR",
+  "performance: custo de consulta e escalabilidade",
 ]
 
 [tool.coverage.run]
