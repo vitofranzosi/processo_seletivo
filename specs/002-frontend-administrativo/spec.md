@@ -8,6 +8,21 @@
 
 **Input**: Interface administrativa para os servidores do Cefor conduzirem Processos Seletivos e Editais, cobrindo os requisitos diferidos da feature `001-processo-seletivo-editais` (FR-037 e SC-002/009/010). Autenticação por LDAP institucional. A consulta pública permanece fora deste incremento.
 
+## Clarifications
+
+### Session 2026-08-28
+
+- Q: O frontend atende quem? → A: Somente o público administrativo. A consulta pública de Editais
+  permanece atendida pela API e será objeto de especificação futura, se houver decisão nesse
+  sentido. Candidatos seguem fora do produto.
+- Q: Como será a autenticação institucional? → A: Diretório LDAP do Ifes.
+- Q: Qual norma de acessibilidade vincula a interface? → A: Ambas — eMAG 3.1, por ser órgão público
+  federal, e WCAG 2.1 nível AA, por ser a referência corrente. Onde divergirem, prevalece a
+  exigência mais restritiva.
+- Q: O LDAP também autoriza, ou é preciso gestão de papéis nesta feature? → A: A opção mais simples:
+  grupos do LDAP correspondem a papéis de responsabilidade, e cada papel reúne um conjunto fixo de
+  permissões definido na configuração do sistema. Não há tela de gestão de papéis neste incremento.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Entrar e Enxergar o Próprio Trabalho (Priority: P1)
@@ -239,12 +254,19 @@ registrado aparece com ator, instante, situação anterior e posterior e motivo.
   sem significado institucional, nem credenciais.
 - **FR-023**: Todos os fluxos DEVEM ser concluíveis por teclado, com ordem de navegação lógica e
   mensagens de erro associadas programaticamente aos campos. *(atende SC-010 diferido)*
-- **FR-024**: A interface DEVE atender aos critérios de acessibilidade [NEEDS CLARIFICATION: qual
-  norma vincula o Ifes — WCAG 2.1 AA, eMAG, ou ambas? — e qual nível de conformidade é exigido para
-  homologação institucional?]
-- **FR-025**: A atribuição de permissões a pessoas DEVE ocorrer [NEEDS CLARIFICATION: o LDAP fornece
-  grupos que mapeiam para as permissões do sistema, ou é preciso uma tela de gestão de papéis nesta
-  feature? A especificação 001 deixou a matriz de papéis explicitamente fora de escopo.]
+- **FR-024**: A interface DEVE atender simultaneamente ao eMAG 3.1 e ao WCAG 2.1 nível AA. Onde
+  as normas divergirem, DEVE prevalecer a exigência mais restritiva.
+- **FR-025**: A conformidade de acessibilidade DEVE ser verificável por avaliação automatizada nos
+  fluxos críticos e por inspeção manual dos critérios que a automação não cobre, como ordem de
+  leitura, texto alternativo significativo e comportamento com leitor de tela.
+- **FR-026**: As permissões da pessoa autenticada DEVEM ser derivadas dos grupos que ela possui no
+  diretório institucional, por meio de papéis de responsabilidade que reúnem conjuntos fixos de
+  permissões. A interface NÃO DEVE oferecer gestão de papéis neste incremento.
+- **FR-027**: Um papel DEVE representar responsabilidade, não cargo: a mesma pessoa PODE acumular
+  papéis, e nenhum papel DEVE ser inferido de função ou lotação.
+- **FR-028**: Quando a pessoa autenticada não possuir nenhum papel reconhecido, a interface DEVE
+  informar isso de forma compreensível e orientar a quem solicitar acesso, em vez de apresentar uma
+  área vazia.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -260,6 +282,11 @@ Dois conceitos são próprios da interface:
 - **Rascunho Local**: o conteúdo digitado que ainda não foi enviado ao domínio. Não é fonte
   normativa e não substitui o rascunho estruturado do Edital; existe apenas para que trabalho em
   andamento não se perca.
+- **Papel de Responsabilidade**: conjunto nomeado e fixo de permissões, correspondente a um grupo do
+  diretório institucional. Representa responsabilidade assumida, não cargo ou lotação. As
+  responsabilidades que o fluxo da feature 001 já distingue são: elaborar, homologar, publicar,
+  gerir o ciclo de vida de Processos e Editais, auditar e operar. Uma pessoa pode acumular papéis,
+  e a segregação de funções continua sendo imposta pelo domínio, não pelo papel.
 
 ## Success Criteria *(mandatory)*
 
@@ -277,6 +304,9 @@ Dois conceitos são próprios da interface:
   serem efetivadas. *(FR-037 diferido)*
 - **SC-005**: 100% das recusas do domínio são apresentadas em linguagem compreensível, sem
   identificador técnico nem detalhe interno de falha.
+- **SC-009**: Os fluxos críticos não apresentam violação de eMAG 3.1 nem de WCAG 2.1 nível AA em
+  avaliação automatizada, e passam em inspeção manual de ordem de leitura, texto alternativo e
+  operação por leitor de tela.
 - **SC-006**: Nenhuma ação para a qual a pessoa não tem permissão é oferecida na interface, e 100%
   das tentativas por caminho alternativo são recusadas pelo backend.
 - **SC-007**: Em teste com trabalho em andamento, 100% do conteúdo preenchido é recuperável após
@@ -289,6 +319,14 @@ Dois conceitos são próprios da interface:
 - **A autenticação usa o diretório LDAP do Ifes.** Foi a decisão informada para esta feature. O
   backend hoje usa um adaptador de desenvolvimento — `Bearer <pessoa>|<escopo>|<permissões>` — que
   **não** é fronteira de segurança e precisa ser substituído por esta integração.
+- **A autorização deriva de grupos do diretório, agrupados em papéis.** Foi escolhido o caminho mais
+  simples que funciona: um punhado de grupos, e não dezessete, porque pedir ao administrador do
+  diretório que mantenha um grupo por permissão seria operacionalmente custoso e propenso a erro. O
+  mapa de papel para permissões vive na configuração do sistema e é versionado com ele.
+- **Consequência aceita dessa escolha**: conceder ou revogar acesso passa a depender do
+  administrador do diretório, sem autoatendimento na interface. É adequado enquanto o número de
+  servidores envolvidos for pequeno; se a operação crescer ou exigir delegação, uma gestão de papéis
+  própria deverá ser especificada em incremento futuro.
 - Esta feature atende **somente o público administrativo**: servidores do Cefor que conduzem
   Processos e Editais. A consulta pública de Editais permanece disponível apenas pela API e será
   objeto de especificação futura, se houver decisão institucional nesse sentido.
@@ -310,8 +348,8 @@ Dois conceitos são próprios da interface:
 - Consulta pública de Editais por cidadãos, que hoje é atendida pela API pública.
 - Qualquer funcionalidade destinada a candidatos.
 - Gestão de contas e de senhas, que pertence ao diretório institucional.
-- Definição da matriz institucional de papéis, herdada como fora de escopo da feature 001 e
-  dependente da clarificação em FR-025.
+- Tela de gestão de papéis e atribuição de permissões a pessoas. A concessão de acesso ocorre no
+  diretório institucional, por decisão registrada nas clarificações.
 - Assinatura eletrônica real do documento publicado, mantida fora de escopo como na feature 001.
 - Relatórios gerenciais e indicadores sobre Processos Seletivos.
 
@@ -319,8 +357,9 @@ Dois conceitos são próprios da interface:
 
 - Feature `001-processo-seletivo-editais` implantada e acessível, incluindo os endpoints
   administrativos e a trilha de auditoria.
-- Acesso ao diretório LDAP institucional, com definição de como os grupos correspondem às
-  permissões do sistema — ver FR-025.
+- Acesso ao diretório LDAP institucional e criação dos grupos correspondentes aos papéis de
+  responsabilidade, acordada com quem administra o diretório. Sem esses grupos, nenhuma pessoa
+  possui permissão e o sistema fica inutilizável — ver FR-028.
 - Substituição do adaptador de autenticação de desenvolvimento do backend por autenticação
   institucional. **Esta dependência bloqueia a entrega em produção**, ainda que não bloqueie o
   desenvolvimento das telas.

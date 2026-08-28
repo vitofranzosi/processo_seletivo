@@ -15,7 +15,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [X] No [NEEDS CLARIFICATION] markers remain
 - [X] Requirements are testable and unambiguous
 - [X] Success criteria are measurable
 - [X] Success criteria are technology-agnostic (no implementation details)
@@ -33,19 +33,19 @@
 
 ## Notes
 
-Dois itens permanecem abertos e impedem seguir direto para `$speckit-plan`. Ambos foram deixados
-deliberadamente como pergunta, em vez de resolvidos por suposição, porque nenhum tem padrão razoável
-e ambos alteram escopo.
+Todos os itens verificados. As duas clarificações que bloqueavam o planejamento foram resolvidas e
+estão registradas na seção Clarifications da especificação.
 
-- **FR-024 — norma de acessibilidade.** O Ifes é órgão público federal, o que sugere eMAG, mas WCAG
-  2.1 AA é a referência corrente e a homologação institucional pode exigir uma, outra ou ambas. A
-  escolha muda os critérios de aceite de toda a interface, não apenas um requisito.
-- **FR-025 — origem das permissões.** O LDAP autentica, mas não foi informado se ele também autoriza.
-  Se os grupos do diretório mapeiam para as permissões do sistema, não há tela a construir; se não
-  mapeiam, esta feature precisa de uma gestão de papéis que a especificação 001 deixou
-  explicitamente fora de escopo. É a diferença entre uma feature e duas.
+- **Acessibilidade**: eMAG 3.1 e WCAG 2.1 nível AA simultaneamente, prevalecendo a exigência mais
+  restritiva onde divergirem. Acrescentado SC-009 para tornar a conformidade verificável, já que um
+  requisito de acessibilidade sem forma de medição não é testável.
+- **Origem das permissões**: grupos do diretório correspondem a papéis de responsabilidade, com o
+  mapa de papel para permissões na configuração do sistema. Não há tela de gestão de papéis neste
+  incremento. A consequência aceita — conceder acesso depende do administrador do diretório, sem
+  autoatendimento — está registrada nas premissas, para que a escolha possa ser revisitada quando a
+  operação crescer.
 
-A menção a LDAP em FR-001 e nas premissas é decisão institucional informada, não escolha técnica
-desta especificação, e por isso não conta como vazamento de implementação.
+A menção a LDAP em FR-001 e FR-026 é decisão institucional informada, não escolha técnica desta
+especificação, e por isso não conta como vazamento de implementação.
 
-Próximo passo recomendado: `$speckit-clarify` para resolver os dois pontos antes do planejamento.
+Especificação pronta para `$speckit-plan`.
