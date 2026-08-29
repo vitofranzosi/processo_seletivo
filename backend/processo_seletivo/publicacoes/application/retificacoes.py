@@ -10,9 +10,11 @@ from processo_seletivo.editais.domain.validation import (
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.domain.changes import (
+    AcrescimoPosicionado,
     ChaveNaoEncontrada,
     ColecaoAtomica,
     EnderecamentoPosicional,
+    EntidadeSemChave,
     SeletorInvalido,
     apply_changes,
 )
@@ -133,13 +135,15 @@ def _reject_changes_without_content_precondition(changes):
 
 # A ordem importa: `ChaveNaoEncontrada` é um `CaminhoInexistente`, e a específica precisa ser
 # reconhecida antes da genérica. `invalid_change` recebe o que é erro de forma do caminho —
-# seletor malformado e endereçamento item a item de coleção atômica —, porque o contrato declara
-# três códigos novos e não quatro.
+# seletor malformado, endereçamento item a item de coleção atômica, acréscimo em posição e item
+# sem identificador —, porque o contrato declara três códigos novos e não sete.
 RECUSAS_DE_CAMINHO = (
     (EnderecamentoPosicional, POSITIONAL_REFUSED, 422),
     (ChaveNaoEncontrada, KEY_NOT_FOUND, 409),
     (SeletorInvalido, "invalid_change", 422),
     (ColecaoAtomica, "invalid_change", 422),
+    (AcrescimoPosicionado, "invalid_change", 422),
+    (EntidadeSemChave, "invalid_change", 422),
 )
 
 

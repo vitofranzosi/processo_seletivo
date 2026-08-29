@@ -340,3 +340,92 @@ def test_two_acts_that_only_collide_at_a_later_boundary_are_refused_on_compositi
     assert recusa.status_code == 409, recusa.content
     assert recusa.data["code"] == "duplicate_key_in_collection"
     assert "/profiles/id=00000000-0000-0000-0000-0000000005ee" in recusa.data["detail"]
+
+
+# --- O que não pode entrar numa coleção com chave -------------------------------------------
+
+
+def test_appending_an_entity_without_a_key_is_refused_at_elaboration(api_client, edital):
+    """Sem `id`, o Perfil entraria no conteúdo normativo sem poder ser endereçado nunca mais."""
+    recusa = elaborar(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": "/profiles/-",
+                "operation": "ADD",
+                "newValue": {"code": "SEM", "name": "Sem identificador"},
+            }
+        ],
+    )
+
+    assert recusa.status_code == 422, recusa.content
+    assert recusa.data["code"] == "invalid_change"
+    assert "UUID" in recusa.data["detail"]
+
+
+def test_a_key_that_is_not_text_is_refused_and_not_an_internal_error(api_client, edital):
+    """Antes disto, `id` de lista chegava à verificação de unicidade e virava 500."""
+    recusa = elaborar(
+        api_client,
+        edital,
+        [{"targetPath": "/profiles/-", "operation": "ADD", "newValue": {"id": ["a"], "code": "X"}}],
+    )
+
+    assert recusa.status_code == 422, recusa.content
+    assert recusa.data["code"] == "invalid_change"
+
+
+def test_adding_at_a_specific_position_is_refused(api_client, edital):
+    """FR-006: acréscimo é ao fim. O seletor resolveria a posição de um Perfil existente."""
+    recusa = elaborar(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": f"/profiles/id={P2}",
+                "operation": "ADD",
+                "newValue": {"id": "00000000-0000-0000-0000-0000000005ff", "code": "PX"},
+            }
+        ],
+    )
+
+    assert recusa.status_code == 422, recusa.content
+    assert recusa.data["code"] == "invalid_change"
+    assert "token `-`" in recusa.data["detail"]
+
+
+def test_replacing_an_entity_under_the_same_key_is_refused_at_elaboration(api_client, edital, base):
+    """FR-009: a coleção terminaria íntegra, mas o ato trocaria uma entidade por outra."""
+    substituto = {**base.content["profiles"][1], "name": "Substituto"}
+    recusa = elaborar(
+        api_client,
+        edital,
+        [
+            {"targetPath": "/profiles/-", "operation": "ADD", "newValue": substituto},
+            {"targetPath": f"/profiles/id={P2}", "operation": "REMOVE"},
+        ],
+    )
+
+    assert recusa.status_code == 409, recusa.content
+    assert recusa.data["code"] == "duplicate_key_in_collection"
+    assert f"/profiles/id={P2}" in recusa.data["detail"]
+
+
+def test_removing_and_recreating_under_the_same_key_still_publishes(api_client, edital, base):
+    """A recíproca: apagar e recriar é ato declarado, e continua sendo admitido."""
+    recriado = {**base.content["profiles"][1], "name": "Recriado"}
+    retificacao = create_retification(
+        api_client,
+        edital,
+        [
+            {"targetPath": f"/profiles/id={P2}", "operation": "REMOVE"},
+            {"targetPath": "/profiles/-", "operation": "ADD", "newValue": recriado},
+        ],
+        suffix="a",
+    )
+    publish_retification(api_client, retificacao, suffix="a")
+
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    assert [p["id"] for p in vigente.content["profiles"]] == [P1, P3, P2]
+    assert vigente.content["profiles"][-1]["name"] == "Recriado"

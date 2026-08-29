@@ -64,7 +64,11 @@ def duplicate_keys(content):
         vistos, repetidos = set(), set()
         for elemento in lista:
             chave = elemento.get(colecoes.CAMPO_CHAVE) if isinstance(elemento, dict) else None
-            if chave is None:
+            # Só texto é chave. `changes.py` já recusa acrescentar item sem `id` UUID; aqui a
+            # exigência se repete porque esta função também lê conteúdo que ela não produziu, e
+            # um `id` que fosse lista ou objeto quebraria o conjunto com `TypeError` — erro
+            # interno onde deveria haver, no máximo, uma recusa.
+            if not isinstance(chave, str):
                 continue
             if chave in vistos:
                 repetidos.add(chave)
@@ -85,9 +89,18 @@ def content_conflicts(content, changes):
     entidade não está mais lá, dizer que o hash divergiu descreveria a consequência e esconderia
     a causa. Um caminho de objeto que deixou de existir é outro caso — ali o hash divergente é
     a resposta certa, e é o que continua sendo dito.
+
+    A unicidade é verificada **depois de cada alteração**, e não só no estado final. Verificar só
+    no fim deixava passar a substituição disfarçada: acrescentar um item com a chave de outro e
+    remover o original em seguida termina com a coleção íntegra, mas no instante do acréscimo a
+    chave já existia, e o que se publicou foi a troca de uma entidade por outra sob o mesmo
+    identificador — que é o que FR-009 recusa.
+
+    Repetição que já exista na base não é imputada ao ato: ele a encontrou, não a criou.
     """
     conflicts = {}
     current = deepcopy(content)
+    preexistentes = set(duplicate_keys(current))
     for change in changes:
         path = change["targetPath"]
         seguinte = deepcopy(current)
@@ -109,10 +122,14 @@ def content_conflicts(content, changes):
             # Alteração inaplicável ao conteúdo simulado: as seguintes partiriam de um
             # estado que não existe. A aplicabilidade é reportada por apply_changes.
             break
+        novas = [
+            repetida
+            for repetida in duplicate_keys(seguinte)
+            if repetida not in preexistentes and repetida not in conflicts.get(DUPLICATE_KEY, [])
+        ]
+        if novas:
+            conflicts.setdefault(DUPLICATE_KEY, []).extend(novas)
         current = seguinte
-    repetidas = duplicate_keys(current)
-    if repetidas:
-        conflicts.setdefault(DUPLICATE_KEY, []).extend(repetidas)
     return conflicts
 
 

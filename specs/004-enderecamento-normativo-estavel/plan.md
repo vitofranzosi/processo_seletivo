@@ -4,7 +4,7 @@
 
 **Input**: Feature specification from `/specs/004-enderecamento-normativo-estavel/spec.md`
 
-**Status**: Escopo reduzido em 2026-08-29. Desenho concluído; implementação não iniciada.
+**Status**: Escopo reduzido em 2026-08-29. Implementada em 2026-08-29, 36/36 tarefas.
 
 ## Summary
 
@@ -196,7 +196,8 @@ dentro de `changes.py` a esconderia num arquivo já denso.
 | 1 | Desenho: gramática, modelo, contrato, validação | Concluída |
 | 2 | Tarefas | Concluída |
 | 3 | Análise de consistência | Concluída |
-| 4 | Implementação | **Não iniciada** |
+| 4 | Implementação | Concluída — 36 tarefas |
+| 5 | Revisão e correção dos achados | Concluída — quatro falhas funcionais |
 
 ## Complexity Tracking
 

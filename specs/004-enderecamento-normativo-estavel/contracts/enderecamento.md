@@ -50,10 +50,20 @@ aceita identificador de outra natureza.
 | `chave` em objeto | sim |
 | `indice` em coleção **com** chave | **não** — `positional_addressing_refused` |
 | `indice` em coleção **sem** chave | não se aplica: a coleção é atômica |
-| `-` | sim, em `ADD` |
-| `id=<uuid>` | sim |
+| `-` | sim, e **só** em `ADD` |
+| `id=<uuid>` | sim, em `REPLACE` e `REMOVE`; **não** em `ADD` |
 
-Inserção em posição específica não existe nesta gramática: acréscimo é ao fim.
+**Inserção em posição específica não existe nesta gramática**: acréscimo é ao fim. Em lista, `ADD`
+aceita `-` e nada mais — um seletor resolveria a posição de um item existente e inseriria antes
+dele, que é justamente a operação que esta feature retirou. A recusa é `invalid_change`, salvo
+quando a folha é índice: aí a resposta é `positional_addressing_refused`, porque a forma errada
+já tem código próprio.
+
+**O que entra numa coleção com chave precisa trazer a sua.** `ADD` em coleção com identificador
+exige objeto com `id` no formato UUID; qualquer outro valor é `invalid_change`. Sem isso, um Perfil
+sem identificador atravessaria elaboração e Publicação e passaria a integrar o conteúdo normativo
+como entidade que nenhuma Retificação futura conseguiria endereçar — a garantia desta feature vale
+para o que já está publicado tanto quanto para o que entra agora.
 
 ## Coleções
 
@@ -77,7 +87,7 @@ No mesmo vocabulário da `003`. Cada um **nomeia o caminho envolvido**, como faz
 | --- | --- | --- | --- |
 | `positional_addressing_refused` | 422 | O caminho usa índice numérico em coleção com chave | Elaboração |
 | `target_key_not_found` | 409 | A entidade endereçada não existe | Elaboração e Publicação |
-| `duplicate_key_in_collection` | 409 | A coleção resultante teria chave repetida | Elaboração e Publicação |
+| `duplicate_key_in_collection` | 409 | Alguma alteração deixaria chave repetida na coleção | Elaboração e Publicação |
 
 Os códigos da `003` continuam valendo sem alteração: `expected_hash_mismatch`,
 `precondition_missing`, `no_effective_change`, `inconsistent_consolidation`, `blocking_findings`.
@@ -96,6 +106,13 @@ estabeleceu:
 
 `positional_addressing_refused` é exceção: só faz sentido na elaboração, porque impede o ato de
 nascer.
+
+**A unicidade é verificada depois de cada alteração, não só no estado final.** Acrescentar um item
+com a chave de outro e remover o original em seguida termina com a coleção íntegra — mas no instante
+do acréscimo a chave já existia, e o que se publicou foi a troca de uma entidade por outra sob o
+mesmo identificador. A ordem inversa, remover e recriar, é ato declarado e continua admitida.
+Repetição que já exista na base não é imputada ao ato que a encontrou: imputá-la travaria inclusive
+a Retificação que a corrige.
 
 ## Delta a aplicar no `openapi.yaml` da `001`
 

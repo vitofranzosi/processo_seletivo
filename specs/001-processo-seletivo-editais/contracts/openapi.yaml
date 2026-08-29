@@ -636,8 +636,13 @@ components:
           type: string
           enum: [ADD, REPLACE, REMOVE]
           description: >-
-            ADD em lista usa o token de acréscimo "-" e insere ao fim; índice numérico não é
-            admitido, e esta gramática não tem inserção em posição específica. ADD em objeto
+            ADD em lista usa o token de acréscimo "-" e insere ao fim. Nenhuma outra folha
+            serve: índice numérico responde 422 positional_addressing_refused, e o seletor
+            "id=<uuid>" é recusado como invalid_change, porque resolveria a posição de um item
+            existente — esta gramática não tem inserção em posição específica. Acrescentar a uma
+            coleção com identificador exige objeto com "id" no formato UUID: sem isso o item
+            entraria no conteúdo normativo sem poder ser endereçado por nenhuma Retificação
+            futura. ADD em objeto
             pressupõe targetPath ausente: se o caminho já tiver conteúdo — inclusive por ato
             publicado depois da elaboração — a operação responde 409 target_already_present, salvo
             quando expectedPreviousHash declarar o conteúdo ocupante e assumir a sobrescrita.

@@ -59,8 +59,29 @@ def test_the_contract_states_that_the_comparison_is_exact_text(target_path):
 def test_the_contract_states_the_form_of_add(contrato):
     operacao = contrato["components"]["schemas"]["NormativeChange"]["properties"]["operation"]
     assert '"-"' in operacao["description"]
-    assert "índice numérico não é admitido" in operacao["description"]
+    assert "Nenhuma outra folha serve" in operacao["description"]
     assert "inserção em posição específica" in operacao["description"]
+
+
+def test_the_contract_states_what_may_enter_a_keyed_collection(contrato):
+    """Sem esta regra escrita, um cliente montaria um Perfil sem `id` e o veria recusado sem saber
+    por quê — e a razão é a própria garantia da feature."""
+    operacao = contrato["components"]["schemas"]["NormativeChange"]["properties"]["operation"]
+    assert '"id" no formato UUID' in operacao["description"]
+
+
+def gramatica_corrida():
+    """O documento é markdown com quebra de linha por largura; as frases atravessam linhas."""
+    return " ".join(GRAMATICA.read_text(encoding="utf-8").split())
+
+
+def test_the_grammar_document_states_that_add_only_takes_the_append_token():
+    assert "`ADD` aceita `-` e nada mais" in gramatica_corrida()
+    assert "precisa trazer a sua" in gramatica_corrida()
+
+
+def test_the_grammar_document_states_when_uniqueness_is_checked():
+    assert "depois de cada alteração, não só no estado final" in gramatica_corrida()
 
 
 @pytest.mark.parametrize("codigo", CODIGOS)

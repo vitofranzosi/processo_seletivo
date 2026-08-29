@@ -46,6 +46,9 @@ para o público até a Retificação ser publicada.</p>
 <form method="post">
   {% csrf_token %}
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  {# As referências dos campos só significam alguma coisa contra o conteúdo que as gerou; sem
+     esta linha, uma Publicação no intervalo faria a mesma referência apontar para outro item. #}
+  <input type="hidden" name="base" value="{{ base.id }}">
   {% for grupo in grupos %}
   <fieldset class="linha">
     <legend>{{ grupo.titulo }}</legend>

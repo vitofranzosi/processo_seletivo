@@ -267,3 +267,98 @@ def test_a_tela_emite_alteracoes_pela_chave_da_entidade(client, seletor_ligado, 
     alteracoes = Retificacao.objects.get().alteracoes.all()
     assert [item.target_path for item in alteracoes] == [VAGAS]
     assert all("id=" in item.target_path for item in alteracoes)
+
+
+@pytest.fixture
+def edital_com_tres_perfis(api_client, manager_headers, process_payload):
+    from tests.fixtures.snapshot import rascunho_publicavel
+
+    return publish_original(
+        api_client, manager_headers, process_payload, draft=rascunho_publicavel()
+    )
+
+
+def referencia_do_campo(conteudo, caminho):
+    from processo_seletivo.interface.retificacao import campos_editaveis
+
+    return next(
+        campo["referencia"]
+        for grupo in campos_editaveis(conteudo)
+        for campo in grupo["campos"]
+        if campo["caminho"] == caminho
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_publicacao_concorrente_nao_desloca_o_alvo_do_formulario(
+    client, api_client, seletor_ligado, edital_com_tres_perfis
+):
+    """SC-002 pelo lado da tela: a referência do formulário não pode mudar de dono.
+
+    A referência `g3c1` é a posição do campo no formulário, e só significa alguma coisa contra o
+    conteúdo que a gerou. Se o POST for resolvido contra a versão vigente do momento, uma
+    Publicação que remova um Perfil anterior entre abrir a tela e confirmar faz a mesma
+    referência apontar para outra entidade — a pessoa edita o Perfil que viu e o ato sai sobre
+    outro. É o mesmo defeito que a feature veio eliminar, reaparecendo uma camada acima.
+    """
+    from tests.fixtures.publicacao import retify
+    from tests.fixtures.snapshot import PERFIL
+
+    edital = edital_com_tres_perfis
+    base = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    referencia = referencia_do_campo(base.content, f"/profiles/id={PERFIL['B']}/name")
+
+    # Entre abrir a tela e confirmar, outra pessoa remove o primeiro Perfil.
+    retify(
+        api_client,
+        edital,
+        [{"targetPath": f"/profiles/id={PERFIL['A']}", "operation": "REMOVE"}],
+        suffix="z",
+    )
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    assert [p["id"] for p in vigente.content["profiles"]] == [PERFIL["B"], PERFIL["C"]]
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    client.post(
+        reverse("interface:retificar", args=[edital.id]),
+        {
+            "base": str(base.id),
+            f"campo:{referencia}": "B editado",
+            "justificativa": "Ajuste no Perfil B",
+            "confirmar": "1",
+        },
+    )
+
+    pela_tela = Retificacao.objects.exclude(status=Retificacao.Status.PUBLICADA).get()
+    alteracao = pela_tela.alteracoes.get()
+    assert alteracao.target_path == f"/profiles/id={PERFIL['B']}/name"
+    assert PERFIL["C"] not in alteracao.target_path, (
+        "a referência do formulário passou a apontar para outro Perfil"
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_formulario_transporta_a_versao_de_que_partiu(client, seletor_ligado, edital, vigente):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo = client.get(reverse("interface:retificar", args=[edital.id])).content.decode()
+
+    assert f'name="base" value="{vigente.id}"' in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_versao_base_desconhecida_nao_e_recomposta_em_silencio(
+    client, seletor_ligado, edital, vigente
+):
+    """Cair de volta na versão vigente produziria alterações sobre conteúdo que ninguém viu."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = client.post(
+        reverse("interface:retificar", args=[edital.id]),
+        {"base": "00000000-0000-0000-0000-0000000009ff", "justificativa": "x"},
+    )
+
+    assert resposta.status_code == 409
+    assert "não está mais disponível" in resposta.content.decode()
+    assert not Retificacao.objects.exists()

@@ -88,7 +88,12 @@ Retificação.
 
 - Todo `target_path` ou nomeia a entidade (`id=`), ou acrescenta ao fim (`-`), ou é atômico. Não
   existe índice sobre coleção com chave.
-- Chave repetida numa coleção é estado impossível, recusado na elaboração e na Publicação.
+- Em lista, `ADD` aceita **apenas** a folha `-`. Não há inserção em posição.
+- Todo elemento de coleção com chave carrega `id` UUID. A regra é verificada quando o elemento
+  entra, e não só quando o snapshot é montado: `ADD` sem identificador utilizável é recusado.
+- Chave repetida numa coleção é estado impossível, recusado na elaboração e na Publicação, e
+  verificado **depois de cada alteração** — senão acrescentar sob a chave de outro e remover o
+  original em seguida terminaria íntegro e teria trocado a entidade em silêncio.
 - Identificador que apareça em duas coleções do mesmo snapshot é irrelevante: a resolução é escopada
   à coleção nomeada no caminho. Unicidade global **não** é pressuposta.
 - A precondição de conteúdo por hash continua valendo sobre todos os caminhos.

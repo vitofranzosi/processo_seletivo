@@ -15,7 +15,12 @@ esta feature elimina, e recusar na elaboração impede que o ato instável chegu
 Coleção declarada atômica não é endereçada item a item (FR-011).
 
 Em objeto, `ADD` grava a chave — criando ou substituindo. Em lista, `ADD` só acrescenta ao fim,
-com `-`. Essa distinção importa para a precondição de sobrescrita em `conflicts.py`.
+com `-`: nenhuma outra folha serve, nem índice nem seletor (FR-006). Essa distinção importa para
+a precondição de sobrescrita em `conflicts.py`.
+
+Acrescentar a uma coleção com chave exige objeto com `id` UUID. Sem isso nasceria, dentro do
+conteúdo normativo, uma entidade que nenhuma Retificação futura conseguiria endereçar — e a
+garantia desta feature vale para o que já está publicado tanto quanto para o que entra agora.
 """
 
 import re
@@ -50,6 +55,18 @@ class SeletorInvalido(ValueError):
 
 class ColecaoAtomica(ValueError):
     """Endereçamento item a item de coleção sem identificador (FR-011)."""
+
+
+class AcrescimoPosicionado(ValueError):
+    """`ADD` em lista com folha diferente de `-` (FR-006).
+
+    Inserção em posição específica não existe nesta gramática. Um seletor resolveria a posição
+    de uma entidade existente e inseriria antes dela — que é a operação que a feature retirou.
+    """
+
+
+class EntidadeSemChave(ValueError):
+    """`ADD` em coleção com chave, de valor que não é objeto com `id` UUID (FR-001, FR-012)."""
 
 
 def parse_path(path):
@@ -184,16 +201,42 @@ def _apply_to_dict(parent, leaf, operation, value, path):
         parent[leaf] = value
 
 
+def _validar_acrescimo(value, path, forma):
+    """Quem entra numa coleção com chave precisa trazer a sua (FR-001).
+
+    Sem esta verificação, `ADD /colecao/-` aceitava qualquer JSON: um Perfil sem `id` atravessava
+    elaboração e Publicação e passava a integrar o conteúdo normativo como entidade que nenhuma
+    Retificação futura poderia endereçar. Um `id` que não fosse texto era pior — quebrava a
+    verificação de unicidade com `TypeError`, que a borda devolveria como erro interno.
+    """
+    if not colecoes.tem_chave(forma):
+        return
+    chave = value.get(colecoes.CAMPO_CHAVE) if isinstance(value, dict) else None
+    if not isinstance(chave, str) or not _UUID.fullmatch(chave):
+        raise EntidadeSemChave(
+            f"O item acrescentado em {path} precisa ser um objeto com `id` no formato UUID. "
+            "Sem identificador ele não poderia ser endereçado por nenhuma Retificação futura."
+        )
+
+
 def _apply_to_list(parent, leaf, operation, value, path, forma):
-    posicao = _posicao(parent, leaf, path, forma, allow_append=operation == "ADD", estrito=True)
+    if operation == "ADD":
+        if leaf != APPEND_TOKEN:
+            # `_posicao` primeiro, porque índice sobre coleção com chave é endereçamento
+            # posicional e tem código próprio. O que sobra depois dele é o seletor.
+            _posicao(parent, leaf, path, forma, allow_append=True, estrito=False)
+            raise AcrescimoPosicionado(
+                f"{path} pede acréscimo em posição específica, que não existe nesta gramática. "
+                "Acréscimo é ao fim da coleção, com o token `-`."
+            )
+        _validar_acrescimo(value, path, forma)
+        parent.append(value)
+        return
+    posicao = _posicao(parent, leaf, path, forma, allow_append=False, estrito=True)
     if posicao is None:
         raise CaminhoInexistente(f"Caminho inexistente: {path}")
     if operation == "REMOVE":
         del parent[posicao]
-    elif operation == "ADD":
-        # Acréscimo é sempre ao fim: `-` é a única forma de ADD em lista, e inserção em
-        # posição específica não existe nesta gramática (FR-006).
-        parent.insert(posicao, value)
     else:
         parent[posicao] = value
 

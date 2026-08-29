@@ -11,10 +11,12 @@ import pytest
 
 from processo_seletivo.publicacoes.domain.changes import (
     ABSENT,
+    AcrescimoPosicionado,
     CaminhoInexistente,
     ChaveNaoEncontrada,
     ColecaoAtomica,
     EnderecamentoPosicional,
+    EntidadeSemChave,
     SeletorInvalido,
     add_overwrites,
     apply_change,
@@ -332,3 +334,90 @@ def test_an_add_whose_parent_does_not_resolve_overwrites_nothing():
     """`add_overwrites` responde sobre conteúdo existente; caminho que não resolve não o tem."""
     assert add_overwrites(conteudo_normativo(), "/inexistente/algum") is False
     assert add_overwrites(conteudo_normativo(), "/title") is True
+
+
+# --- `ADD` em lista só aceita a folha `-` (FR-006) ------------------------------------------
+
+
+def test_add_by_selector_does_not_insert_before_the_selected_item():
+    """O seletor resolveria a posição de uma entidade existente, e inserir antes dela é
+    exatamente a operação em posição que esta feature retirou da gramática."""
+    with pytest.raises(AcrescimoPosicionado) as recusa:
+        apply_change(
+            conteudo_normativo(),
+            {
+                "targetPath": f"/profiles/id={P2}",
+                "operation": "ADD",
+                "newValue": {"id": "00000000-0000-0000-0000-0000000005ff"},
+            },
+        )
+    assert "token `-`" in str(recusa.value)
+
+
+def test_add_by_index_over_a_keyed_collection_keeps_its_own_code():
+    """Índice é endereçamento posicional antes de ser acréscimo: o código específico prevalece."""
+    with pytest.raises(EnderecamentoPosicional):
+        apply_change(
+            conteudo_normativo(),
+            {"targetPath": "/profiles/1", "operation": "ADD", "newValue": {"id": P1}},
+        )
+
+
+def test_add_by_index_in_an_undeclared_list_is_refused_too():
+    """Não há inserção em posição em lista nenhuma — declarada ou não."""
+    with pytest.raises(AcrescimoPosicionado):
+        apply_change(
+            deepcopy(LIVRE),
+            {
+                "targetPath": "/classificationInformation/criterios/1",
+                "operation": "ADD",
+                "newValue": "z",
+            },
+        )
+
+
+def test_appending_to_an_undeclared_list_still_works():
+    depois = alterado(
+        LIVRE, targetPath="/classificationInformation/criterios/-", operation="ADD", newValue="d"
+    )
+    assert depois["classificationInformation"]["criterios"] == ["a", "b", "c", "d"]
+
+
+# --- Quem entra numa coleção com chave precisa trazer a sua (FR-001) ------------------------
+
+
+@pytest.mark.parametrize(
+    "valor",
+    [
+        {"code": "SEM", "name": "Sem identificador"},
+        {"id": "", "code": "VAZIO"},
+        {"id": "nao-e-uuid", "code": "TORTO"},
+        {"id": ["lista"], "code": "NAO_TEXTO"},
+        {"id": {"objeto": 1}, "code": "NAO_TEXTO"},
+        {"id": 42, "code": "NUMERO"},
+        "nem sequer é objeto",
+        None,
+    ],
+)
+def test_appending_without_a_usable_key_is_refused(valor):
+    with pytest.raises(EntidadeSemChave) as recusa:
+        apply_change(
+            conteudo_normativo(),
+            {"targetPath": "/profiles/-", "operation": "ADD", "newValue": valor},
+        )
+    assert "UUID" in str(recusa.value)
+
+
+def test_appending_with_a_well_formed_key_is_accepted():
+    novo = {"id": "00000000-0000-0000-0000-0000000005ff", "code": "PX"}
+    depois = alterado(
+        conteudo_normativo(), targetPath="/profiles/-", operation="ADD", newValue=novo
+    )
+    assert depois["profiles"][-1]["id"] == novo["id"]
+
+
+def test_an_undeclared_list_accepts_anything_because_it_has_no_key_to_demand():
+    depois = alterado(
+        LIVRE, targetPath="/classificationInformation/criterios/-", operation="ADD", newValue=42
+    )
+    assert depois["classificationInformation"]["criterios"][-1] == 42

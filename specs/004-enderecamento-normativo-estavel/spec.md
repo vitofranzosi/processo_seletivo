@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-29
 
-**Status**: Escopo reduzido em 2026-08-29. Clarificada e planejada; implementação não iniciada.
+**Status**: Escopo reduzido em 2026-08-29. Implementada e revisada em 2026-08-29.
 
 **Input**: A `003` conteve o dano do endereçamento por índice, mas registrou que a contenção não é
 a cura. Esta feature elimina a causa: Alterações Normativas passam a endereçar Perfis, Eventos e

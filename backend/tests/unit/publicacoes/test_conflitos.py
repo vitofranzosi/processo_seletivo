@@ -226,3 +226,46 @@ def test_derivation_stops_at_the_first_inapplicable_change():
         replace("/title"),
     ]
     assert derive_preconditions(BASE, changes) == ["", ""]
+
+
+def test_replacing_an_entity_under_the_same_key_is_refused():
+    """FR-009: acrescentar com a chave de outro e remover o original é substituição disfarçada.
+
+    A coleção termina íntegra — uma entidade por identificador —, mas no instante do acréscimo a
+    chave já existia, e o que foi publicado é a troca de uma entidade por outra sob o mesmo
+    identificador. Verificar só o estado final deixava isso passar.
+    """
+    disfarce = [
+        {"targetPath": "/profiles/-", "operation": "ADD", "newValue": {"id": P1, "name": "Outro"}},
+        {"targetPath": f"/profiles/id={P1}", "operation": "REMOVE"},
+    ]
+    assert content_conflicts(PERFIS, disfarce) == {DUPLICATE_KEY: [f"/profiles/id={P1}"]}
+
+
+def test_removing_and_recreating_under_the_same_key_is_legitimate():
+    """A recíproca precisa continuar passando: apagar e recriar é ato declarado, não disfarçado."""
+    recriacao = [
+        {"targetPath": f"/profiles/id={P1}", "operation": "REMOVE"},
+        {"targetPath": "/profiles/-", "operation": "ADD", "newValue": {"id": P1, "name": "Novo"}},
+    ]
+    assert content_conflicts(PERFIS, recriacao) == {}
+
+
+def test_a_duplication_already_in_the_base_is_not_charged_to_the_act():
+    """O ato encontrou a repetição; não a criou.
+
+    Imputá-la travaria qualquer Retificação sobre a base defeituosa — inclusive a que a corrige.
+    """
+    ja_repetido = {"profiles": [*PERFIS["profiles"], {"id": P2, "code": "P9", "name": "Clone"}]}
+    alheio = [{"targetPath": f"/profiles/id={P3}/name", "operation": "REPLACE", "newValue": "X"}]
+    assert content_conflicts(ja_repetido, alheio) == {}
+    corrigir = [{"targetPath": f"/profiles/id={P2}", "operation": "REMOVE"}]
+    assert content_conflicts(ja_repetido, corrigir) == {}
+
+
+def test_a_key_that_is_not_text_never_breaks_the_uniqueness_check():
+    """`id` de lista ou objeto quebrava o conjunto com TypeError — 500 onde cabia recusa."""
+    assert duplicate_keys({"profiles": [{"id": ["x"]}, {"id": ["x"]}, {"id": {"a": 1}}]}) == []
+    assert duplicate_keys({"profiles": [{"id": P1}, {"id": P1}, {"id": ["x"]}]}) == [
+        f"/profiles/id={P1}"
+    ]

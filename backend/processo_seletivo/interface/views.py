@@ -619,6 +619,22 @@ def _versao_vigente(edital):
     )
 
 
+def _base_da_composicao(edital, dados):
+    """A versão sobre a qual o formulário foi montado, e não a que estiver vigente agora.
+
+    O formulário identifica seus campos por referência de posição — `g2c3` —, que só significa
+    alguma coisa contra o conteúdo que a gerou. Resolver o POST contra a versão vigente do
+    momento fazia a mesma referência apontar para outra entidade quando uma Publicação
+    concorrente entrava no intervalo entre abrir a tela e confirmar: a pessoa editava o Perfil
+    que viu e o ato saía sobre outro. Por isso a versão base atravessa o formulário e o POST
+    volta a ela; quem publicou no intervalo é tratado pelas precondições da elaboração.
+    """
+    declarada = (dados or {}).get("base")
+    if declarada:
+        return VersaoConsolidada.objects.filter(edital=edital, pk=declarada).first()
+    return _versao_vigente(edital)
+
+
 @require_http_methods(["GET", "POST"])
 def retificar(request, edital_id):
     """Compõe uma Retificação editando o conteúdo vigente (US4 da 002)."""
@@ -628,7 +644,17 @@ def retificar(request, edital_id):
     edital = obter_edital(actor=ator, edital_id=edital_id)
     if edital is None:
         raise Http404
-    base = _versao_vigente(edital)
+    dados = request.POST if request.method == "POST" else None
+    base = _base_da_composicao(edital, dados)
+    if base is None and dados is not None:
+        # A versão declarada sumiu ou não é deste Edital: recompor sobre a vigente sem avisar
+        # produziria alterações sobre um conteúdo que a pessoa não viu.
+        raise DomainError(
+            "base_desconhecida",
+            "A versão sobre a qual esta Retificação estava sendo composta não está mais "
+            "disponível. Abra a tela novamente para partir da versão vigente.",
+            409,
+        )
     if base is None or edital.status != Edital.Status.PUBLICADO:
         # O Edital existe e está no escopo de quem pediu; dizer "não encontrado" esconderia
         # a razão real. Retificação incide sobre o que já foi publicado.
@@ -638,7 +664,7 @@ def retificar(request, edital_id):
             409,
         )
 
-    erros, resumo, dados = [], [], request.POST if request.method == "POST" else None
+    erros, resumo = [], []
     if request.method == "POST":
         if not ator.can("retificacao:elaborar"):
             erros.append("Você não tem a permissão para elaborar Retificações.")
