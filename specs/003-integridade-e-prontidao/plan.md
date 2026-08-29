@@ -183,8 +183,8 @@ backend/
 | 2 | Plano e tarefas | Este documento e `tasks.md` |
 | 3 | Análise de consistência | `checklists/requirements.md` |
 | 4 | Imutabilidade no banco (FR-023) | Concluída — migration `0007` |
-| 5 | Limites de borda e instantes (FR-020, FR-021) | Aberta |
-| 6 | Provisionamento de papéis (FR-019) | Aberta |
+| 5 | Limites de borda e instantes (FR-020, FR-021) | Concluída |
+| 6 | Provisionamento de papéis (FR-019) | Concluída — `manage.py provisionar_papeis` |
 | 7 | Lacunas funcionais da 002 (FR-025 a FR-028) | Aberta |
 | 8 | Desempenho e higiene (FR-022, FR-024) | Aberta |
 

@@ -54,6 +54,19 @@ Copie `backend/.env.example` para `backend/.env` e ajuste as credenciais. O proj
 migração da role de runtime: a de runtime não recebe `UPDATE` nem `DELETE` sobre os registros
 append-only, garantia verificada em `tests/integration/test_database_permissions.py`.
 
+Provisione os papéis com um usuário que possa criá-los — normalmente o superusuário da instalação.
+O comando é idempotente e pode rodar sobre banco vazio ou já provisionado; `--dry-run` imprime a
+política sem aplicá-la.
+
+```bash
+cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python manage.py provisionar_papeis
+```
+
+A política vive em `processo_seletivo/seguranca/papeis.py` e é a mesma que os testes de
+conformidade verificam. É a segunda camada da imutabilidade, independente das triggers: a trigger
+recusa a mutação mesmo de quem tem privilégio; o privilégio ausente recusa antes, mesmo que a
+trigger seja removida.
+
 ```bash
 cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python manage.py migrate
 ```

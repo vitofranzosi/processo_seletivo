@@ -80,21 +80,21 @@ fases 4 em diante são trabalho que resta e seguem a ordem normal.
 
 ## Phase 5: Limites de borda e instantes (FR-020, FR-021)
 
-- [ ] T036 [FR-020] Limitar `targetPath` a 1000 e `expectedPreviousHash` a 64 no serializer, com recusa de domínio em backend/processo_seletivo/publicacoes/api/serializers.py
-- [ ] T037 [FR-020] Limitar `Idempotency-Key` a 128 — já validado — e `X-Correlation-ID` a 100 em backend/processo_seletivo/shared/api/middleware.py
-- [ ] T038 [P] [FR-020] Cobrir que nenhum campo excedente produz 500, em backend/tests/contract/
-- [ ] T039 [FR-021] Recusar instante sem fuso declarado na consulta temporal em backend/processo_seletivo/publicacoes/api/public_views.py
-- [ ] T040 [P] [FR-021] Cobrir o instante ingênuo e o instante com fuso em backend/tests/contract/test_consulta_publica_api.py
-- [ ] T041 [FR-021] Documentar o formato exigido no `openapi.yaml`
+- [X] T036 [FR-020] Limitar `targetPath` a 1000 e `expectedPreviousHash` a 64 no `ChangeSerializer`, espelhando as colunas
+- [X] T037 [FR-020] Aceitar `X-Correlation-ID` só imprimível e até 100; substituir por um novo quando inutilizável, o que a resposta ecoa e o cliente enxerga
+- [X] T038 [P] [FR-020] Cobrir que nenhum campo excedente produz 500, em backend/tests/contract/test_limites_de_borda.py
+- [X] T039 [FR-021] Recusar instante sem fuso na consulta temporal em backend/processo_seletivo/publicacoes/api/public_views.py
+- [X] T040 [P] [FR-021] Cobrir o instante ingênuo e o instante com fuso
+- [X] T041 [FR-021] Documentar o deslocamento obrigatório no `openapi.yaml`
 
 ---
 
 ## Phase 6: Provisionamento de papéis (FR-019)
 
-- [ ] T042 [FR-019] Escrever o script versionado que cria os papéis de migração e de runtime e seus `GRANT`s em backend/scripts/
-- [ ] T043 [FR-019] Fazer o script ser idempotente e executável do zero, sem etapa manual
-- [ ] T044 [FR-019] Cobrir em backend/tests/integration/test_database_permissions.py que o papel de runtime não recebe `UPDATE` nem `DELETE` sobre as tabelas append-only
-- [ ] T045 [P] [FR-019] Documentar a execução no README e no `.env.example`
+- [X] T042 [FR-019] Política em backend/processo_seletivo/seguranca/papeis.py e comando `provisionar_papeis`
+- [X] T043 [FR-019] Idempotente e executável do zero, com `--dry-run` para revisar antes de aplicar
+- [X] T044 [FR-019] Provisionar a role de conformidade **pela mesma política**, e cobrir que ela não recebe `UPDATE`/`DELETE` nas append-only e recebe onde o fluxo exige
+- [X] T045 [P] [FR-019] Documentar a execução no README e no `.env.example`
 
 ---
 
@@ -131,9 +131,9 @@ fases 4 em diante são trabalho que resta e seguem a ordem normal.
 
 ## Situação
 
-35 de 58 tarefas concluídas. Cobrem os seis bloqueadores, a barreira de produção e a imutabilidade
-do histórico no banco; as 23 restantes são endurecimento de borda, provisionamento e lacunas
-funcionais, nenhuma delas emergencial.
+45 de 58 tarefas concluídas. Cobrem os seis bloqueadores, a barreira de produção, a imutabilidade
+do histórico no banco, os limites de borda e o provisionamento dos papéis. As 13 restantes são as
+lacunas funcionais herdadas da 002 e a higiene de desempenho.
 
 Fora desta feature e ainda bloqueadores de implantação: a integração com o diretório institucional
 e a feature `004-enderecamento-normativo-estavel`.

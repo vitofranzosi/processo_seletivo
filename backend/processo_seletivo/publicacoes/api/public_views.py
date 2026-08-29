@@ -1,5 +1,6 @@
 """Endpoints de consulta pública: acesso anônimo, somente leitura, sem dados de elaboração."""
 
+from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -35,12 +36,27 @@ class PublicView(APIView):
 
 
 def _instant(request):
+    """Instante consultado, ou None para agora.
+
+    Sem fuso declarado não há instante, há uma leitura de relógio de parede: `2026-03-01T10:00`
+    significa momentos diferentes conforme quem lê. Assumir o fuso do servidor faria a mesma
+    consulta devolver versões normativas distintas conforme onde o processo roda — e a FR-030
+    exige que o passado seja reproduzível. O contrato já declara `format: date-time`, que é
+    RFC 3339 e exige o deslocamento; aqui isso passa a ser fiscalizado.
+    """
     raw = request.query_params.get("em")
     if raw in (None, ""):
         return None
     moment = parse_datetime(raw)
     if moment is None:
         raise DomainError("invalid_instant", "O parâmetro 'em' deve ser ISO-8601.", 400)
+    if timezone.is_naive(moment):
+        raise DomainError(
+            "invalid_instant",
+            "O parâmetro 'em' deve declarar o fuso horário, como em "
+            "'2026-03-01T10:00:00-03:00'. Sem ele não há instante determinado.",
+            400,
+        )
     return moment
 
 

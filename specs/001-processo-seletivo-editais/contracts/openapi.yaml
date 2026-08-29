@@ -379,8 +379,13 @@ paths:
         - name: em
           in: query
           required: false
-          description: Instante ISO-8601; ausência significa agora
+          description: >-
+            Instante RFC 3339 com deslocamento de fuso obrigatório, como
+            2026-03-01T10:00:00-03:00. Ausência significa agora. Instante sem fuso é recusado com
+            400 invalid_instant: sem ele o mesmo parâmetro designaria momentos diferentes conforme
+            o fuso de quem lê, e a versão normativa reproduzida deixaria de ser determinística.
           schema: { type: string, format: date-time }
+          example: '2026-03-01T10:00:00-03:00'
       responses:
         '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Versão consolidada, content: { application/json: { schema: { $ref: '#/components/schemas/VersaoConsolidadaResponse' } } } }
