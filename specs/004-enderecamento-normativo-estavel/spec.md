@@ -137,6 +137,35 @@ caminho, chave ou índice, para que a mudança de representação não vire trab
 
 ---
 
+### User Story 4 - Atravessar a virada com trabalho em curso (Priority: P1)
+
+Como elaborador com uma Retificação já submetida quando a feature entra em produção, quero que meu
+ato seja convertido sem que eu precise refazê-lo — ou, se não der, que me digam exatamente o quê e
+por quê, para que eu não descubra o problema tentando publicar.
+
+**Why this priority**: é a única jornada em que uma pessoa perde trabalho já feito. As demais
+histórias tratam do regime permanente; esta trata do dia da mudança, que acontece uma vez e não tem
+segunda chance.
+
+**Independent Test**: preparar Retificações em cada estado não final — em elaboração, em revisão,
+homologada —, rodar a migração e verificar o desfecho de cada uma.
+
+**Acceptance Scenarios**:
+
+1. **Given** uma Retificação homologada cujas alterações têm âncora completa, única e coerente com
+   o snapshot-base, **When** a migração roda, **Then** os caminhos são convertidos, a Retificação
+   permanece homologada, e a conversão fica registrada na auditoria com o caminho antes e depois.
+2. **Given** uma Retificação cujas alterações têm âncora ausente, duplicada, divergente ou
+   incompleta, **When** a migração roda, **Then** ela é devolvida para elaboração com motivo que
+   nomeia a alteração e a condição que falhou, e nenhum caminho seu é convertido.
+3. **Given** uma Retificação cancelada antes da migração, **When** a migração roda, **Then** ela
+   não é tocada: estado final não se converte, e a leitura do histórico continua resolvendo o
+   caminho posicional dela.
+4. **Given** um Edital sem Retificação alguma em curso, **When** a migração roda, **Then** ela
+   conclui como no-op, relatando zero convertidas e zero devolvidas.
+
+---
+
 ### Edge Cases
 
 - Entidade endereçada por chave que não existe na versão vigente: recusa explícita, distinta de
@@ -148,6 +177,10 @@ caminho, chave ou índice, para que a mudança de representação não vire trab
   pretendida não é mais determinável, e o ato é recusado em vez de cair no fim da lista.
 - Retificação em curso cuja conversão não resolve de forma inequívoca: devolução explícita, com
   motivo, em vez de conversão por aproximação.
+- Identificador que apareça em mais de uma coleção do mesmo snapshot: irrelevante, porque a
+  resolução é escopada à coleção nomeada no caminho. Unicidade global NÃO é pressuposta.
+- Migração de conversão sobre Edital sem Retificação em curso: no-op explícito, relatado como zero
+  convertidas e zero devolvidas, nunca falha.
 - `requirements` substituída por lista vazia: é ato admissível, porque a validação de publicação
   não exige requisitos — diferente da remoção do último Perfil, que é erro impeditivo.
 - Duas alterações do mesmo ato inserindo com `before=` na mesma referência: a ordem entre elas é a
@@ -167,6 +200,9 @@ caminho, chave ou índice, para que a mudança de representação não vire trab
 - **FR-001b**: O contrato DEVE declarar a extensão como extensão, e não como JSON Pointer padrão.
   Ela é semântica local em ambas as formas possíveis; anunciá-la explicitamente é o que permite a
   quem audita um ato publicado saber como o caminho foi resolvido.
+- **FR-001i**: Um caminho publicado DEVE permitir identificar a entidade que o ato alterou **sem
+  consultar a versão vigente**. É a condição que torna a auditabilidade verificável em vez de
+  adjetivo: dado apenas o `targetPath` gravado, o identificador da entidade está nele.
 - **FR-001c**: Alterações Normativas **novas** NÃO DEVEM endereçar por posição uma coleção cujos
   elementos tenham identificador. A recusa acontece na elaboração, não na Publicação: um ato que
   nasce instável não deve chegar a existir.
@@ -208,6 +244,13 @@ caminho, chave ou índice, para que a mudança de representação não vire trab
 - **FR-004**: A composição DEVE recusar coleção com chave repetida, **na elaboração e na
   Publicação**. Descobrir o estado impossível ao materializar a versão consolidada seria descobrir
   tarde: o ato já teria sido homologado.
+- **FR-004b**: O endereçamento normativo alcança apenas o conteúdo do snapshot do Edital. Listas de
+  controle interno — `applied_publications` da Versão Consolidada, por exemplo — NÃO SÃO
+  endereçáveis por Alteração Normativa, em nenhuma das duas formas.
+- **FR-004c**: Toda coleção normativa nova DEVE declarar se seus elementos carregam identificador, e
+  o conjunto das coleções sem identificador DEVE ser verificado por teste. Hoje o conjunto tem um
+  elemento; sem a verificação, uma migration futura acrescentaria a segunda em silêncio e o
+  pressuposto de FR-004a passaria a ser falso sem que nada acusasse.
 - **FR-004a**: Coleção cujos elementos não tenham identificador — hoje apenas `requirements` — DEVE
   ser tratada como valor normativo atômico: alterada por `REPLACE` da lista inteira, nunca item a
   item. O `expectedPreviousHash` incide sobre a coleção completa, de modo que alteração concorrente
@@ -217,14 +260,32 @@ caminho, chave ou índice, para que a mudança de representação não vire trab
   chave, por migração determinística que parta de `AlteracaoNormativa.expected_anchors` — a
   identidade de cada índice atravessado, que a `003` já persiste. A conversão não adivinha: onde a
   resolução não for inequívoca, a Retificação DEVE ser devolvida para reelaboração.
+- **FR-005c**: A conversão é **inequívoca** somente quando **todo** segmento posicional de coleção
+  com chave, no caminho da alteração, satisfaz as três condições ao mesmo tempo:
+
+  1. existe `expected_anchor` para aquele segmento;
+  2. a âncora é única para o segmento — não há mais de um valor concorrente;
+  3. a âncora corresponde à mesma entidade encontrada naquele segmento no snapshot-base.
+
+  Ausência, duplicidade, divergência ou âncora incompleta — um caminho com dois segmentos de lista
+  e âncora para apenas um — NÃO É resolução inequívoca. Em qualquer desses casos a Retificação DEVE
+  ser devolvida, com o motivo registrado na auditoria, e NUNCA convertida por inferência. Uma
+  conversão que adivinha produz ato normativo que ninguém redigiu, que é o defeito que a `003`
+  passou duas revisões corrigindo.
+- **FR-005d**: A migração PRESSUPÕE âncoras completas nos atos criados após a migração `0006` da
+  `003` e naqueles que o backfill daquela feature cobriu. O pressuposto NÃO DEVE ser tratado como
+  garantia: ato fora dessas duas origens — restaurado de backup, criado por importação — cai na
+  regra de FR-005c e é devolvido. A migração DEVE relatar quantos converteu e quantos devolveu, por
+  origem, para que a exceção apareça em vez de passar como sucesso.
 - **FR-005b**: A conversão DEVE ser registrada na auditoria, inclusive nas Retificações já
   homologadas, com o caminho antes, o caminho depois, o momento e a identificação da migração que
   a produziu — não uma pessoa, porque não houve ato humano. O efeito do ato é idêntico por construção, mas a representação que a autoridade
   homologou muda — e mudança silenciosa em ato homologado é exatamente o que a trilha existe para
   impedir.
 - **FR-006**: A consulta histórica DEVE reproduzir corretamente atos em ambas as formas.
-- **FR-007**: A interface administrativa DEVE emitir a forma nova sem exigir conhecimento de
-  representação de quem elabora.
+- **FR-007**: A interface administrativa DEVE emitir a forma nova sem expor representação a quem
+  elabora. Verificável por duas condições: nenhum caminho normativo aparece no HTML da tela de
+  Retificação, e as alterações que ela emite usam a forma por chave.
 - **FR-008**: O contrato público DEVE documentar a forma nova, sua sintaxe e seus erros.
 - **FR-009**: A âncora de identidade introduzida pela `003` DEVE ser aposentada quando a conversão
   de FR-005a estiver concluída. **Concluída** é condição verificável, e não a migração ter rodado:
@@ -257,6 +318,55 @@ caminho, chave ou índice, para que a mudança de representação não vire trab
   ou foi devolvida com motivo registrado. Nenhuma permanece em curso na forma antiga.
 - **SC-007**: Concluída a conversão, nenhuma Retificação em estado não final tem `expected_anchors`
   preenchido — que é a condição de FR-009 e o que autoriza remover o mecanismo.
+- **SC-008**: A tela de Retificação não expõe caminho normativo algum no HTML que entrega, e as
+  alterações que ela emite usam a forma por chave — as duas condições de FR-007, verificáveis sobre
+  a página renderizada.
+- **SC-009**: O contrato publicado descreve a extensão, seus quatro códigos de recusa e a forma de
+  `ADD`, cobrindo FR-001b, FR-002a e FR-008. Um cliente que leia apenas o contrato consegue montar
+  um caminho válido e prever cada recusa.
+- **SC-010**: Toda devolução produzida pela conversão nomeia a alteração e a condição que falhou,
+  cobrindo FR-005c e FR-011 — nenhuma devolução sem motivo utilizável.
+- **SC-011**: O conjunto de coleções normativas sem identificador é verificado por teste, e a
+  proveniência registra o caminho tal como o ato o declarou — cobrindo FR-004c e FR-010. Uma
+  coleção nova sem chave, acrescentada por migration futura, aparece na execução da suíte.
+
+### Rastreabilidade
+
+Cada requisito tem ao menos um critério que o verifica, e cada critério verifica ao menos um
+requisito. O mapa existe porque citação por nome não bastava: critérios amplos como SC-004 cobrem
+vários requisitos de endereçamento sem nomeá-los, e sem a tabela a cobertura pareceria menor do que
+é — ou maior, se algum requisito ficasse órfão sem que nada acusasse.
+
+| Requisito | Verificado por |
+|---|---|
+| FR-001 | SC-001, SC-004, SC-009 |
+| FR-001a | SC-004 |
+| FR-001b | SC-009 |
+| FR-001i | SC-009 |
+| FR-001c | SC-005 |
+| FR-001d | SC-002, SC-003 |
+| FR-001e | SC-004, SC-009 |
+| FR-001f | SC-004 |
+| FR-001g | SC-004 |
+| FR-001h | SC-004 |
+| FR-002 | SC-004 |
+| FR-002a | SC-009 |
+| FR-003 | SC-004 |
+| FR-004 | SC-004 |
+| FR-004b | SC-004 |
+| FR-004c | SC-011 |
+| FR-004a | SC-004 |
+| FR-005 | SC-002 |
+| FR-005a | SC-006 |
+| FR-005c | SC-010 |
+| FR-005d | SC-006 |
+| FR-005b | SC-006, SC-010 |
+| FR-006 | SC-003 |
+| FR-007 | SC-008 |
+| FR-008 | SC-009 |
+| FR-009 | SC-007 |
+| FR-010 | SC-011 |
+| FR-011 | SC-010 |
 
 ## Assumptions
 
