@@ -1,0 +1,66 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}{{ ato.rotulo }} — Retificação{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <a href="{% url 'interface:retificacao-detalhe' retificacao.id %}">Retificação</a> ›
+  <span aria-current="page">{{ ato.rotulo }}</span>
+</nav>
+
+<h1>{{ ato.rotulo }}</h1>
+<p class="sub">{{ retificacao.justification }}</p>
+
+{% if erro %}<p class="erro" role="alert"><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
+
+<section aria-labelledby="consequencias-titulo"
+         class="consequencias {% if ato.irreversivel %}irreversivel{% endif %}">
+  <h2 id="consequencias-titulo">
+    {% if ato.irreversivel %}Este ato não pode ser desfeito{% else %}O que este ato provoca{% endif %}
+  </h2>
+  <ul>{% for consequencia in ato.consequencias %}<li>{{ consequencia }}</li>{% endfor %}</ul>
+  {% if ato.chave == 'publicar' %}
+  <p class="ajuda">{% if vigencia %}Vigência declarada: <strong>{{ vigencia|date:"d/m/Y H:i" }}</strong>.
+    {% else %}Sem data declarada: vigora imediatamente.{% endif %}</p>
+  {% endif %}
+</section>
+
+{% if ato.chave == 'publicar' %}
+<section aria-labelledby="mudancas-titulo" class="cartao">
+  <h2 id="mudancas-titulo">Conteúdo que passará a vigorar</h2>
+  <table>
+    <thead><tr><th scope="col">Caminho</th><th scope="col">Antes</th><th scope="col">Depois</th></tr></thead>
+    <tbody>{% for item in alteracoes %}
+      <tr><th scope="row"><code>{{ item.caminho }}</code></th>
+        <td class="antes">{{ item.antes }}</td><td class="depois">{{ item.depois }}</td></tr>
+    {% endfor %}</tbody>
+  </table>
+</section>
+{% endif %}
+
+<form method="post" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  {% if ato.exige_signatario %}
+  <fieldset>
+    <legend>Autoridade Signatária</legend>
+    <div class="campos">
+      <p class="campo"><label for="signatario_nome">Nome</label>
+        <input type="text" id="signatario_nome" name="signatario_nome" required></p>
+      <p class="campo"><label for="signatario_cargo">Cargo ou função</label>
+        <input type="text" id="signatario_cargo" name="signatario_cargo" required></p>
+    </div>
+    <p class="campo"><label for="signatario_id">Identificador da autoridade</label>
+      <input type="text" id="signatario_id" name="signatario_id" required></p>
+  </fieldset>
+  {% endif %}
+  {% if ato.exige_motivo %}
+  <p class="campo largo"><label for="motivo">{{ ato.rotulo_motivo }}</label>
+    <textarea id="motivo" name="motivo" rows="3" required></textarea></p>
+  {% endif %}
+  <p class="salvar">
+    <button type="submit" class="botao {% if ato.irreversivel %}perigoso{% endif %}">
+      Confirmar: {{ ato.rotulo }}</button>
+    <a href="{% url 'interface:retificacao-detalhe' retificacao.id %}" class="acao">Cancelar e voltar</a>
+  </p>
+</form>
+{% endblock %}

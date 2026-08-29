@@ -18,3 +18,9 @@ SITUACOES = {
 @register.filter
 def situacao(valor):
     return SITUACOES.get(valor, valor)
+
+
+@register.filter
+def dicionario(dados, chave):
+    """Lê `campo:<caminho>` do que foi enviado, para reexibir sem perder o digitado."""
+    return dados.get(f"campo:{chave}", "") if dados else ""

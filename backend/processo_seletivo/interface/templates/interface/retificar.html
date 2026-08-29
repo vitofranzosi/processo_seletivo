@@ -1,0 +1,90 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Retificar Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">Retificar</span>
+</nav>
+
+<h1>Retificar Edital {{ edital.number }}/{{ edital.year }}</h1>
+<p class="sub">Altere os campos que precisam mudar. O que você não tocar permanece como está.</p>
+
+<p class="aviso"><strong>Como funciona.</strong> Abaixo está o conteúdo <em>vigente</em> do Edital.
+Cada campo que você alterar vira uma Alteração Normativa; os demais não são tocados. Nada muda
+para o público até a Retificação ser publicada.</p>
+
+{% if erros %}
+<div class="erro" role="alert">
+  <strong>Não foi possível prosseguir:</strong>
+  <ul>{% for erro in erros %}<li>{{ erro }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+{% if resumo %}
+<section aria-labelledby="resumo-titulo" class="consequencias">
+  <h2 id="resumo-titulo">O que vai mudar ({{ resumo|length }})</h2>
+  <table>
+    <thead><tr>
+      <th scope="col">Onde</th><th scope="col">Campo</th>
+      <th scope="col">Vigente hoje</th><th scope="col">Passará a ser</th>
+    </tr></thead>
+    <tbody>
+      {% for item in resumo %}
+      <tr>
+        <th scope="row">{{ item.grupo }}</th>
+        <td>{{ item.rotulo }}</td>
+        <td class="antes">{{ item.antes }}</td>
+        <td class="depois">{{ item.depois }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+  {% for grupo in grupos %}
+  <fieldset class="linha">
+    <legend>{{ grupo.titulo }}</legend>
+    <div class="campos">
+      {% for campo in grupo.campos %}
+      <p class="campo{% if campo.tipo == 'inteiro' %} curto{% endif %}">
+        <label for="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}">{{ campo.rotulo }}</label>
+        <input id="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+               name="campo:{{ campo.caminho }}"
+               type="{% if campo.tipo == 'inteiro' %}number{% elif campo.tipo == 'instante' %}datetime-local{% else %}text{% endif %}"
+               value="{% if digitado %}{{ digitado|dicionario:campo.caminho }}{% else %}{{ campo.valor }}{% endif %}">
+      </p>
+      {% endfor %}
+    </div>
+  </fieldset>
+  {% endfor %}
+
+  <fieldset class="linha">
+    <legend>Sobre esta Retificação</legend>
+    <p class="campo largo">
+      <label for="justificativa">Justificativa</label>
+      <textarea id="justificativa" name="justificativa" rows="3" required
+                aria-describedby="ajuda-just">{{ justificativa }}</textarea>
+      <span class="ajuda" id="ajuda-just">Fica registrada no ato e na consulta pública.</span>
+    </p>
+    <p class="campo">
+      <label for="vigencia">Vigência (opcional)</label>
+      <input type="datetime-local" id="vigencia" name="vigencia" value="{{ vigencia }}"
+             aria-describedby="ajuda-vig">
+      <span class="ajuda" id="ajuda-vig">Vazio significa vigorar na Publicação. Data futura
+        significa que o conteúdo atual continua valendo até lá.</span>
+    </p>
+  </fieldset>
+
+  <p class="navegacao-etapa">
+    <button type="submit" class="botao secundario">Ver o que vai mudar</button>
+    {% if resumo and pode_elaborar %}
+    <button type="submit" name="confirmar" value="1" class="botao">Criar Retificação</button>
+    {% endif %}
+    <a href="{% url 'interface:detalhe' edital.id %}" class="acao">Voltar</a>
+  </p>
+</form>
+{% endblock %}

@@ -6,15 +6,19 @@ fronteira de segurança (FR-002).
 """
 
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.domain.validation import validate_for_publication
-from processo_seletivo.interface import atos, forms, identidade
+from processo_seletivo.interface import atos, atos_retificacao, forms, identidade
+from processo_seletivo.interface import retificacao as retificacao_ui
 from processo_seletivo.processos.application.selectors import (
     contar_por_situacao,
     listar_processos,
@@ -22,10 +26,12 @@ from processo_seletivo.processos.application.selectors import (
 )
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
+from processo_seletivo.publicacoes.application.retificacoes import create_retification
 from processo_seletivo.publicacoes.application.selectors import (
     impede_por_segregacao,
     participantes_do_edital,
 )
+from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.shared.api.problems import DomainError
 
 # Ordem em que as situações aparecem: o fluxo do Edital, não a ordem alfabética.
@@ -48,7 +54,7 @@ ACOES_POR_SITUACAO = {
 
 
 # Ações que já têm tela; as demais aparecem sem link até serem construídas.
-ROTA_DA_ACAO = {"Elaborar": "interface:compor"}
+ROTA_DA_ACAO = {"Elaborar": "interface:compor", "Retificar": "interface:retificar"}
 ROTA_PADRAO = "interface:detalhe"
 
 
@@ -417,3 +423,177 @@ def _executar(ato, request, ator, edital):
             )
         argumentos["reason"] = (request.POST.get("motivo") or "").strip()
     return ato.command(**argumentos)
+
+
+def _versao_vigente(edital):
+    return (
+        VersaoConsolidada.objects.filter(edital=edital)
+        .order_by("-valid_from", "-materialized_at")
+        .first()
+    )
+
+
+@require_http_methods(["GET", "POST"])
+def retificar(request, edital_id):
+    """Compõe uma Retificação editando o conteúdo vigente (US4 da 002)."""
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital = obter_edital(actor=ator, edital_id=edital_id)
+    if edital is None:
+        raise Http404
+    base = _versao_vigente(edital)
+    if base is None or edital.status != Edital.Status.PUBLICADO:
+        raise Http404
+
+    erros, resumo, dados = [], [], request.POST if request.method == "POST" else None
+    if request.method == "POST":
+        if not ator.can("retificacao:elaborar"):
+            erros.append("Você não tem a permissão para elaborar Retificações.")
+        else:
+            try:
+                alteracoes, resumo = retificacao_ui.diferencas(base.content, request.POST)
+                if not alteracoes:
+                    erros.append(
+                        "Nenhum campo foi alterado. Uma Retificação precisa mudar algum "
+                        "conteúdo para ter efeito."
+                    )
+                elif request.POST.get("confirmar") == "1":
+                    nova = create_retification(
+                        actor=ator,
+                        edital_id=edital.id,
+                        data={
+                            "baseSnapshotId": base.id,
+                            "justification": (request.POST.get("justificativa") or "").strip(),
+                            "changes": alteracoes,
+                            **_vigencia(request.POST),
+                        },
+                    )
+                    return redirect(reverse("interface:retificacao-detalhe", args=[nova.id]))
+            except ValueError as exc:
+                erros.append(str(exc))
+            except DomainError as exc:
+                erros.append(exc.detail)
+
+    return render(
+        request,
+        "interface/retificar.html",
+        {
+            "edital": edital,
+            "base": base,
+            "grupos": retificacao_ui.campos_editaveis(base.content),
+            "digitado": dados,
+            "resumo": resumo,
+            "erros": erros,
+            "justificativa": (request.POST.get("justificativa") or "") if dados else "",
+            "vigencia": (request.POST.get("vigencia") or "") if dados else "",
+            "pode_elaborar": ator.can("retificacao:elaborar"),
+        },
+    )
+
+
+def _vigencia(dados):
+    bruto = (dados.get("vigencia") or "").strip()
+    if not bruto:
+        return {}
+    momento = parse_datetime(bruto)
+    if momento is None:
+        raise ValueError(f"'{bruto}' não é uma data e hora válidas.")
+    if timezone.is_naive(momento):
+        momento = momento.replace(tzinfo=ZoneInfo("America/Sao_Paulo"))
+    return {"effectiveAt": momento}
+
+
+@require_http_methods(["GET"])
+def retificacao_detalhe(request, retificacao_id):
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    item = _retificacao_do_ator(ator, retificacao_id)
+    return render(
+        request,
+        "interface/retificacao_detalhe.html",
+        {
+            "retificacao": item,
+            "edital": item.edital,
+            "alteracoes": _alteracoes_legiveis(item),
+            "atos": list(atos_retificacao.disponiveis(item, ator)),
+            "vigencia": item.effective_at,
+            "publicada": item.publication,
+        },
+    )
+
+
+def _retificacao_do_ator(ator, retificacao_id):
+    item = (
+        Retificacao.objects.filter(
+            pk=retificacao_id, edital__institution_scope=ator.institution_scope
+        )
+        .select_related("edital__processo", "publication", "base_snapshot")
+        .prefetch_related("alteracoes")
+        .first()
+    )
+    if item is None:
+        raise Http404
+    return item
+
+
+def _alteracoes_legiveis(retificacao):
+    """Antes e depois de cada caminho alterado, lidos do snapshot que serviu de base."""
+    base = retificacao.base_snapshot.content
+    legiveis = []
+    for alteracao in retificacao.alteracoes.all():
+        anterior = retificacao_ui._ler(base, alteracao.target_path)
+        legiveis.append(
+            {
+                "caminho": alteracao.target_path,
+                "operacao": alteracao.operation,
+                "antes": anterior if anterior is not None else "—",
+                "depois": alteracao.new_value if alteracao.new_value is not None else "—",
+            }
+        )
+    return legiveis
+
+
+@require_http_methods(["GET", "POST"])
+def praticar_ato_retificacao(request, retificacao_id, acao):
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    item = _retificacao_do_ator(ator, retificacao_id)
+    ato = atos_retificacao.ATOS.get(acao)
+    if ato is None:
+        raise Http404
+
+    contexto = {
+        "retificacao": item,
+        "edital": item.edital,
+        "ato": ato,
+        "alteracoes": _alteracoes_legiveis(item),
+        "vigencia": item.effective_at,
+        "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
+    }
+    if request.method == "GET":
+        return render(request, "interface/retificacao_confirmar.html", contexto)
+
+    try:
+        if ato.exige_motivo and not (request.POST.get("motivo") or "").strip():
+            raise DomainError("motivo_obrigatorio", f"{ato.rotulo_motivo} é obrigatório.", 422)
+        signatario = None
+        if ato.exige_signatario:
+            signatario = {
+                "authorityId": (request.POST.get("signatario_id") or "").strip(),
+                "name": (request.POST.get("signatario_nome") or "").strip(),
+                "role": (request.POST.get("signatario_cargo") or "").strip(),
+            }
+            if not all(signatario.values()):
+                raise DomainError(
+                    "signatario_obrigatorio",
+                    "Autoridade Signatária, nome e cargo são obrigatórios para publicar.",
+                    422,
+                )
+        atos_retificacao.executar(ato, request, ator, item, signatario)
+    except DomainError as exc:
+        contexto["erro"] = exc.detail
+        return render(request, "interface/retificacao_confirmar.html", contexto, status=exc.status)
+    return redirect(f"{reverse('interface:retificacao-detalhe', args=[item.id])}?ato={ato.chave}")

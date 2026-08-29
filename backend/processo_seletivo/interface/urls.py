@@ -12,6 +12,17 @@ urlpatterns = [
     path("editais/<uuid:edital_id>/compor", views.compor, name="compor"),
     path("editais/<uuid:edital_id>/compor/<slug:etapa>", views.compor_etapa, name="compor-etapa"),
     path("editais/<uuid:edital_id>/atos/<slug:acao>", views.praticar_ato, name="ato"),
+    path("editais/<uuid:edital_id>/retificar", views.retificar, name="retificar"),
+    path(
+        "retificacoes/<uuid:retificacao_id>/",
+        views.retificacao_detalhe,
+        name="retificacao-detalhe",
+    ),
+    path(
+        "retificacoes/<uuid:retificacao_id>/atos/<slug:acao>",
+        views.praticar_ato_retificacao,
+        name="retificacao-ato",
+    ),
     path("fragmentos/perfil", views.fragmento_perfil, name="fragmento-perfil"),
     path("fragmentos/evento", views.fragmento_evento, name="fragmento-evento"),
     path("fragmentos/remover", views.fragmento_remover, name="fragmento-remover"),
