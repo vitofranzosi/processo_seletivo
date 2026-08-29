@@ -1,9 +1,11 @@
 from processo_seletivo.publicacoes.domain.conflicts import (
+    ANCHOR_MISMATCH,
     HASH_MISMATCH,
     TARGET_PRESENT,
     content_conflicts,
+    derive_preconditions,
+    path_anchors,
     previous_hash,
-    requires_content_check,
 )
 from processo_seletivo.shared.canonical import canonical_sha256
 
@@ -103,9 +105,80 @@ def test_precondition_of_a_path_created_by_an_earlier_change_is_verified():
     assert content_conflicts(BASE, changes) == {TARGET_PRESENT: ["/anexo"]}
 
 
-def test_content_check_is_required_only_when_some_precondition_exists():
-    assert requires_content_check([replace("/title")]) is False
-    assert requires_content_check([{"targetPath": "/title", "operation": "REMOVE"}]) is False
-    assert requires_content_check([replace("/title", canonical_sha256("Original"))]) is True
-    assert requires_content_check([add("/novo")]) is True
-    assert requires_content_check([replace("/title"), add("/novo")]) is True
+PERFIS = {
+    "profiles": [
+        {"id": "id-1", "code": "P1", "name": "A"},
+        {"id": "id-2", "code": "P2", "name": "MESMO"},
+        {"id": "id-3", "code": "P3", "name": "MESMO"},
+    ]
+}
+
+
+def sem_o_primeiro(conteudo):
+    return {"profiles": conteudo["profiles"][1:]}
+
+
+def com_precondicoes(conteudo, changes):
+    """As alterações como ficam persistidas: hash e âncoras derivados da base."""
+    derivadas = derive_preconditions(conteudo, changes)
+    return [
+        {
+            **change,
+            "expectedPreviousHash": precondition["hash"],
+            "expectedAnchors": precondition["anchors"],
+        }
+        for change, precondition in zip(changes, derivadas, strict=True)
+    ]
+
+
+def test_anchors_identify_every_list_index_the_path_crosses():
+    assert path_anchors(PERFIS, "/profiles/1/name") == {"/profiles/1": "id:id-2"}
+    assert path_anchors(PERFIS, "/profiles/2") == {"/profiles/2": "id:id-3"}
+    assert path_anchors(PERFIS, "/profiles/-") == {}
+    assert path_anchors(PERFIS, "/profiles/3") == {}
+
+
+def test_anchor_of_an_element_without_id_falls_back_to_its_content():
+    conteudo = {"requisitos": [{"texto": "a"}, {"texto": "b"}]}
+    ancoras = path_anchors(conteudo, "/requisitos/1/texto")
+    assert ancoras["/requisitos/1"].startswith("hash:")
+
+
+def test_identical_content_in_a_shifted_list_is_still_caught():
+    """O hash da folha não distingue duas entidades de mesmo valor; a âncora distingue."""
+    ato = com_precondicoes(
+        PERFIS, [{"targetPath": "/profiles/1/name", "operation": "REPLACE", "newValue": "Novo"}]
+    )
+    # O valor em /profiles/1/name continua "MESMO" depois da remoção — agora é o do P3.
+    assert previous_hash(sem_o_primeiro(PERFIS), "/profiles/1/name") == ato[0][
+        "expectedPreviousHash"
+    ]
+    assert content_conflicts(sem_o_primeiro(PERFIS), ato) == {ANCHOR_MISMATCH: ["/profiles/1"]}
+
+
+def test_positional_add_is_anchored_to_the_element_it_precedes():
+    """`ADD` não tem conteúdo anterior, mas tem posição — e posição também desloca."""
+    novo = {"id": "id-x", "code": "PX", "name": "X"}
+    ato = com_precondicoes(
+        PERFIS, [{"targetPath": "/profiles/1", "operation": "ADD", "newValue": novo}]
+    )
+    assert ato[0]["expectedPreviousHash"] == ""
+    assert content_conflicts(PERFIS, ato) == {}
+    assert content_conflicts(sem_o_primeiro(PERFIS), ato) == {ANCHOR_MISMATCH: ["/profiles/1"]}
+
+
+def test_appending_at_the_end_is_stable_and_needs_no_anchor():
+    novo = {"id": "id-x", "code": "PX", "name": "X"}
+    ato = com_precondicoes(
+        PERFIS, [{"targetPath": "/profiles/-", "operation": "ADD", "newValue": novo}]
+    )
+    assert ato[0]["expectedAnchors"] == {}
+    assert content_conflicts(sem_o_primeiro(PERFIS), ato) == {}
+
+
+def test_an_untouched_path_still_publishes_after_an_unrelated_shift():
+    """A âncora não pode transformar o caminho feliz em recusa."""
+    ato = com_precondicoes(
+        PERFIS, [{"targetPath": "/profiles/2/name", "operation": "REPLACE", "newValue": "Novo"}]
+    )
+    assert content_conflicts(PERFIS, ato) == {}

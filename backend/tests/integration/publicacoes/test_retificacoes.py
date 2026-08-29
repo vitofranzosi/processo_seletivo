@@ -7,13 +7,14 @@ from django.utils import timezone
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import (
+    AlteracaoNormativa,
     ProvenienciaConteudo,
     Retificacao,
     VersaoConsolidada,
 )
 from processo_seletivo.shared.canonical import canonical_sha256
 from tests.fixtures.edital import actor_headers
-from tests.fixtures.publicacao import publish_original, retify
+from tests.fixtures.publicacao import SIGNATORY, publish_original, retify
 
 
 @pytest.mark.django_db(transaction=True)
@@ -963,7 +964,7 @@ def test_retification_with_future_effective_date_materializes_version_at_that_bo
     assert vigente_hoje.content["profiles"][0]["immediateVacancies"] == 1
 
 
-def draft_com_tres_perfis():
+def draft_com_tres_perfis(nomes=("Perfil 1", "Perfil 2", "Perfil 3")):
     """Três Perfis, para que remover o primeiro desloque o índice dos seguintes."""
     from tests.fixtures.edital import complete_draft
 
@@ -974,9 +975,9 @@ def draft_com_tres_perfis():
             **modelo,
             "id": f"00000000-0000-0000-0000-00000000050{numero}",
             "code": f"P{numero}",
-            "name": f"Perfil {numero}",
+            "name": nome,
         }
-        for numero in (1, 2, 3)
+        for numero, nome in enumerate(nomes, 1)
     ]
     return draft
 
@@ -988,13 +989,19 @@ def test_index_shift_does_not_move_a_retification_to_another_profile(
 ):
     """FR-001 da 003: o ato atinge o item que estava à vista, ou não é publicado.
 
-    Os caminhos normativos endereçam coleções por índice, e índice não é estável. Antes da
-    precondição derivada, remover o Perfil 1 deslocava os seguintes e a Retificação elaborada
-    para renomear o Perfil 2 renomeava, em silêncio, o Perfil 3 — publicando como norma uma
-    alteração que ninguém homologou.
+    Os caminhos normativos endereçam coleções por índice, e índice não é estável. Remover o
+    Perfil 1 desloca os seguintes, e a Retificação elaborada para renomear o Perfil 2 passava a
+    renomear, em silêncio, o Perfil 3 — publicando como norma algo que ninguém homologou.
+
+    Os dois Perfis seguintes têm a **mesma denominação** de propósito: assim o hash do conteúdo
+    em `/profiles/1/name` continua conferindo depois do deslocamento, e o que recusa o ato é a
+    âncora de identidade, não o hash. Sem ela, a contenção passaria neste caso.
     """
     edital = publish_original(
-        api_client, manager_headers, process_payload, draft=draft_com_tres_perfis()
+        api_client,
+        manager_headers,
+        process_payload,
+        draft=draft_com_tres_perfis(("Perfil 1", "Mesma denominação", "Mesma denominação")),
     )
     base = VersaoConsolidada.objects.get(edital=edital)
     renomear_o_segundo = create_retification(
@@ -1022,10 +1029,14 @@ def test_index_shift_does_not_move_a_retification_to_another_profile(
     )
 
     assert conflict.status_code == 409
-    assert conflict.data["code"] == "expected_hash_mismatch"
-    assert "/profiles/1/name" in conflict.data["detail"]
+    assert conflict.data["code"] == "target_identity_mismatch"
+    assert "/profiles/1" in conflict.data["detail"]
     vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
-    assert [perfil["name"] for perfil in vigente.content["profiles"]] == ["Perfil 2", "Perfil 3"]
+    assert [perfil["code"] for perfil in vigente.content["profiles"]] == ["P2", "P3"]
+    assert [perfil["name"] for perfil in vigente.content["profiles"]] == [
+        "Mesma denominação",
+        "Mesma denominação",
+    ]
 
 
 @pytest.mark.django_db(transaction=True)
@@ -1069,7 +1080,7 @@ def test_repeating_the_idempotency_key_does_not_create_a_second_retification(
     repeated = create_retification(api_client, edital, base, [title_change("Novo")])
 
     assert first.status_code == 201
-    assert repeated.status_code == 200
+    assert repeated.status_code == 201
     assert repeated.data["id"] == first.data["id"]
     assert Retificacao.objects.count() == 1
 
@@ -1112,3 +1123,235 @@ def test_retification_audit_records_correlation_and_idempotency(
         "HOMOLOGAR",
         "PUBLICAR",
     }
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_positional_add_does_not_slide_to_another_position(
+    api_client, manager_headers, process_payload
+):
+    """FR-002 da 003: `ADD` não tem conteúdo anterior, mas tem posição — e posição desloca.
+
+    Inserir um Perfil antes do Perfil 2 é ato distinto de inseri-lo depois dele. Sem a âncora,
+    remover o Perfil 1 no intervalo mudava o lugar da inserção sem que nada acusasse.
+    """
+    edital = publish_original(
+        api_client, manager_headers, process_payload, draft=draft_com_tres_perfis()
+    )
+    base = VersaoConsolidada.objects.get(edital=edital)
+    novo = {
+        **base.content["profiles"][0],
+        "id": "00000000-0000-0000-0000-000000000599",
+        "code": "PX",
+        "name": "Perfil acrescentado",
+    }
+    inserir_antes_do_segundo = create_retification(
+        api_client,
+        edital,
+        base,
+        [{"targetPath": "/profiles/1", "operation": "ADD", "newValue": novo}],
+        subject="retificador-b",
+        key="retificacao-chave-k2",
+    )
+    remover_o_primeiro = create_retification(
+        api_client, edital, base, [{"targetPath": "/profiles/0", "operation": "REMOVE"}]
+    )
+    assert (
+        homologate_and_publish(api_client, remover_o_primeiro.data["id"], suffix="a").status_code
+        == 201
+    )
+
+    conflict = homologate_and_publish(
+        api_client,
+        inserir_antes_do_segundo.data["id"],
+        suffix="b",
+        authority="00000000-0000-0000-0000-000000000603",
+        key="retificacao-chave-k2",
+    )
+
+    assert conflict.status_code == 409
+    assert conflict.data["code"] == "target_identity_mismatch"
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    assert [perfil["code"] for perfil in vigente.content["profiles"]] == ["P2", "P3"]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_appending_at_the_end_survives_an_unrelated_removal(
+    api_client, manager_headers, process_payload
+):
+    """A recíproca: acrescentar ao fim é estável e não pode virar recusa."""
+    edital = publish_original(
+        api_client, manager_headers, process_payload, draft=draft_com_tres_perfis()
+    )
+    base = VersaoConsolidada.objects.get(edital=edital)
+    novo = {
+        **base.content["profiles"][0],
+        "id": "00000000-0000-0000-0000-000000000598",
+        "code": "PX",
+        "name": "Perfil acrescentado",
+    }
+    acrescentar = create_retification(
+        api_client,
+        edital,
+        base,
+        [{"targetPath": "/profiles/-", "operation": "ADD", "newValue": novo}],
+        subject="retificador-b",
+        key="retificacao-chave-k2",
+    )
+    remover_o_primeiro = create_retification(
+        api_client, edital, base, [{"targetPath": "/profiles/0", "operation": "REMOVE"}]
+    )
+    assert (
+        homologate_and_publish(api_client, remover_o_primeiro.data["id"], suffix="a").status_code
+        == 201
+    )
+
+    publicada = homologate_and_publish(
+        api_client,
+        acrescentar.data["id"],
+        suffix="b",
+        authority="00000000-0000-0000-0000-000000000603",
+        key="retificacao-chave-k2",
+    )
+
+    assert publicada.status_code == 201, publicada.content
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    assert [perfil["code"] for perfil in vigente.content["profiles"]] == ["P2", "P3", "PX"]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_change_without_any_precondition_cannot_be_published(
+    api_client, manager_headers, process_payload
+):
+    """FR-002 da 003: linha anterior à derivação não volta a publicar às cegas.
+
+    A migração `0006` preenche as Retificações em curso. Este é o cinto para a linha que escape
+    dela — restaurada de backup, criada por importação: publicar é recusado e o caminho de volta
+    é devolver e reenviar o rascunho, que reconstrói a precondição.
+    """
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    created = create_retification(api_client, edital, base, [title_change("Novo")])
+    AlteracaoNormativa.objects.filter(retificacao_id=created.data["id"]).update(
+        expected_previous_hash="", expected_anchors={}
+    )
+
+    refused = homologate_and_publish(api_client, created.data["id"], suffix="a")
+
+    assert refused.status_code == 409
+    assert refused.data["code"] == "precondition_missing"
+    assert "/title" in refused.data["detail"]
+    assert Publicacao.objects.filter(edital=edital).count() == 1
+
+
+def repetir(api_client, url, corpo, *, subject, permissao, revision, key, suffix=""):
+    """Envia duas vezes a mesma requisição, com a mesma chave, e devolve as duas respostas."""
+    headers = actor_headers(f"{subject}{suffix}", [permissao], if_match=revision, key=key)
+    primeira = api_client.post(url, corpo, format="json", **headers)
+    segunda = api_client.post(url, corpo, format="json", **headers)
+    return primeira, segunda
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_every_retification_act_replays_with_its_documented_status(
+    api_client, manager_headers, process_payload
+):
+    """FR-013 da 003: as seis operações honram a chave, não só a criação.
+
+    A repetição não pratica um segundo ato e responde com o status documentado no contrato para
+    aquela operação — a mesma resposta que o cliente perdeu, e não um código alternativo.
+    """
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    criada = create_retification(api_client, edital, base, [title_change("Novo")])
+    assert criada.status_code == 201
+    identificador = criada.data["id"]
+    raiz = f"/api/v1/admin/retificacoes/{identificador}"
+
+    submetida, submetida_repetida = repetir(
+        api_client,
+        f"{raiz}/submissoes",
+        {},
+        subject="retificador",
+        permissao="retificacao:submeter",
+        revision=1,
+        key="repeticao-submissao-01",
+    )
+    assert (submetida.status_code, submetida_repetida.status_code) == (200, 200)
+    assert submetida_repetida.data["status"] == Retificacao.Status.EM_REVISAO
+
+    devolvida, devolvida_repetida = repetir(
+        api_client,
+        f"{raiz}/devolucoes",
+        {"reason": "Corrigir a justificativa"},
+        subject="homologador",
+        permissao="retificacao:homologar",
+        revision=2,
+        key="repeticao-devolucao-01",
+    )
+    assert (devolvida.status_code, devolvida_repetida.status_code) == (200, 200)
+    assert devolvida_repetida.data["status"] == Retificacao.Status.EM_ELABORACAO
+
+    api_client.post(
+        f"{raiz}/submissoes",
+        {},
+        format="json",
+        **actor_headers(
+            "retificador", ["retificacao:submeter"], if_match=3, key="repeticao-submissao-02"
+        ),
+    )
+    homologada, homologada_repetida = repetir(
+        api_client,
+        f"{raiz}/homologacoes",
+        {"reason": "OK"},
+        subject="homologador",
+        permissao="retificacao:homologar",
+        revision=4,
+        key="repeticao-homologacao-01",
+    )
+    assert (homologada.status_code, homologada_repetida.status_code) == (200, 200)
+
+    publicada, publicada_repetida = repetir(
+        api_client,
+        f"{raiz}/publicacoes",
+        {"signatory": SIGNATORY},
+        subject="publicador",
+        permissao="retificacao:publicar",
+        revision=5,
+        key="repeticao-publicacao-01",
+    )
+    assert (publicada.status_code, publicada_repetida.status_code) == (201, 201)
+    assert publicada_repetida.data["id"] == publicada.data["id"]
+    assert Publicacao.objects.filter(edital=edital).count() == 2
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_cancelling_a_retification_replays_without_a_second_act(
+    api_client, manager_headers, process_payload
+):
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    criada = create_retification(api_client, edital, base, [title_change("Novo")])
+
+    primeira, segunda = repetir(
+        api_client,
+        f"/api/v1/admin/retificacoes/{criada.data['id']}/cancelamentos",
+        {"reason": "Desnecessária"},
+        subject="cancelador",
+        permissao="retificacao:cancelar",
+        revision=1,
+        key="repeticao-cancelamento-01",
+    )
+
+    assert (primeira.status_code, segunda.status_code) == (200, 200)
+    assert segunda.data["status"] == Retificacao.Status.CANCELADA
+    assert (
+        RegistroAuditoria.objects.filter(
+            aggregate_type="Retificacao", operation="CANCELAR"
+        ).count()
+        == 1
+    )

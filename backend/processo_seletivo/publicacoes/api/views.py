@@ -85,7 +85,7 @@ class PublishEditalView(APIView):
     def post(self, request, edital_id):
         serializer = PublicacaoRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        publication, created = publish_edital(
+        publication, http_status = publish_edital(
             actor=request.user,
             edital_id=edital_id,
             expected_revision=parse_if_match(request.headers.get("If-Match")),
@@ -94,9 +94,7 @@ class PublishEditalView(APIView):
             idempotency_key=idempotency_key(request),
             correlation_id=request.correlation_id,
         )
-        response = Response(
-            PublicacaoResponseSerializer(publication).data, status=201 if created else 200
-        )
+        response = Response(PublicacaoResponseSerializer(publication).data, status=http_status)
         response["Location"] = f"/api/v1/public/publicacoes/{publication.id}"
         return response
 
@@ -121,16 +119,14 @@ class CreateRetificationView(APIView):
     def post(self, request, edital_id):
         serializer = CriarRetificacaoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        item, created = create_retification(
+        item, http_status = create_retification(
             actor=request.user,
             edital_id=edital_id,
             data=serializer.validated_data,
             idempotency_key=idempotency_key(request),
             correlation_id=request.correlation_id,
         )
-        response = Response(
-            RetificacaoResponseSerializer(item).data, status=201 if created else 200
-        )
+        response = Response(RetificacaoResponseSerializer(item).data, status=http_status)
         response["ETag"] = etag(item.revision)
         return response
 
@@ -190,7 +186,7 @@ class PublishRetificationView(APIView):
     def post(self, request, retificacao_id):
         serializer = PublicacaoRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        publication, created = publish_retification(
+        publication, http_status = publish_retification(
             actor=request.user,
             retificacao_id=retificacao_id,
             expected_revision=parse_if_match(request.headers.get("If-Match")),
@@ -198,8 +194,6 @@ class PublishRetificationView(APIView):
             idempotency_key=idempotency_key(request),
             correlation_id=request.correlation_id,
         )
-        response = Response(
-            PublicacaoResponseSerializer(publication).data, status=201 if created else 200
-        )
+        response = Response(PublicacaoResponseSerializer(publication).data, status=http_status)
         response["Location"] = f"/api/v1/public/publicacoes/{publication.id}"
         return response

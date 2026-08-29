@@ -16,7 +16,7 @@ def create_process_with_first_edital(*, actor, data, idempotency_key, correlatio
     with command_context() as now:
         idem = reserve(actor=actor, operation="processo:criar", key=idempotency_key, payload=data)
         if idem.result_id:
-            return ProcessoSeletivo.objects.get(pk=idem.result_id), False
+            return ProcessoSeletivo.objects.get(pk=idem.result_id), idem.response_status
         try:
             processo = ProcessoSeletivo.objects.create(
                 institution_scope=actor.institution_scope,
@@ -54,7 +54,7 @@ def create_process_with_first_edital(*, actor, data, idempotency_key, correlatio
             idempotency_key=idempotency_key,
         )
         _finish_idempotency(idem, processo, 201)
-        return processo, True
+        return processo, 201
 
 
 def add_edital(*, actor, processo_id, data, idempotency_key, correlation_id):
@@ -73,7 +73,7 @@ def add_edital(*, actor, processo_id, data, idempotency_key, correlation_id):
             actor=actor, operation=f"edital:criar:{processo_id}", key=idempotency_key, payload=data
         )
         if idem.result_id:
-            return Edital.objects.get(pk=idem.result_id), False
+            return Edital.objects.get(pk=idem.result_id), idem.response_status
         # Depois da repetição idempotente, como nos demais comandos: reenviar a requisição que já
         # criou o Edital continua devolvendo o mesmo Edital, mesmo com o Processo já encerrado.
         ensure_processo_accepts_changes(processo)
@@ -103,7 +103,7 @@ def add_edital(*, actor, processo_id, data, idempotency_key, correlation_id):
             idempotency_key=idempotency_key,
         )
         _finish_idempotency(idem, edital, 201)
-        return edital, True
+        return edital, 201
 
 
 def activate_process(
@@ -124,7 +124,7 @@ def activate_process(
             payload={"reason": reason},
         )
         if idem.result_id:
-            return ProcessoSeletivo.objects.get(pk=idem.result_id), False
+            return ProcessoSeletivo.objects.get(pk=idem.result_id), idem.response_status
         if processo.status != ProcessoSeletivo.Status.EM_ELABORACAO:
             raise DomainError(
                 "invalid_state", "Somente Processo em elaboração pode ser ativado.", 409
@@ -159,4 +159,4 @@ def activate_process(
             idempotency_key=idempotency_key,
         )
         _finish_idempotency(idem, processo, 200)
-        return processo, True
+        return processo, 200

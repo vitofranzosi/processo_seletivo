@@ -11,11 +11,11 @@ from processo_seletivo.processos.domain.finalizacao import ensure_processo_accep
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.domain.changes import apply_changes
 from processo_seletivo.publicacoes.domain.conflicts import (
+    ANCHOR_MISMATCH,
     HASH_MISMATCH,
     TARGET_PRESENT,
     content_conflicts,
     derive_preconditions,
-    requires_content_check,
 )
 from processo_seletivo.publicacoes.domain.consolidation import consolidate
 from processo_seletivo.publicacoes.infrastructure.pdf import render_edital_pdf
@@ -55,12 +55,18 @@ def _changes_payload(retificacao):
             "operation": item.operation,
             "newValue": item.new_value,
             "expectedPreviousHash": item.expected_previous_hash,
+            "expectedAnchors": item.expected_anchors,
         }
         for item in retificacao.alteracoes.all()
     ]
 
 
 CONFLICT_MESSAGES = {
+    ANCHOR_MISMATCH: (
+        "O item normativo que ocupava {paths} já não é o mesmo: outra Retificação publicada no "
+        "intervalo alterou a composição da lista. Refaça a Retificação sobre a versão "
+        "consolidada atual."
+    ),
     HASH_MISMATCH: (
         "O conteúdo anterior informado não corresponde ao vigente em: {paths}. "
         "Refaça a Retificação sobre a versão consolidada atual."
@@ -75,10 +81,37 @@ CONFLICT_MESSAGES = {
 def _reject_stale_changes(content, changes):
     """Rejeita alterações cuja precondição de conteúdo já não se verifica (FR-036)."""
     conflicts = content_conflicts(content, changes)
-    for code in (HASH_MISMATCH, TARGET_PRESENT):
+    for code in (ANCHOR_MISMATCH, HASH_MISMATCH, TARGET_PRESENT):
         paths = conflicts.get(code)
         if paths:
             raise DomainError(code, CONFLICT_MESSAGES[code].format(paths=", ".join(paths)), 409)
+
+
+LEGACY_PRECONDITION = "precondition_missing"
+
+
+def _reject_legacy_changes_without_precondition(changes):
+    """Alterações anteriores à derivação de precondições não podem ser publicadas às cegas.
+
+    A migração `0006` preenche as Retificações ativas, mas uma linha que escape dela — restaurada
+    de backup, criada por importação — voltaria a publicar sem verificação alguma. Recusar é o
+    comportamento seguro: refazer o rascunho sobre a versão vigente reconstrói a precondição.
+    """
+    orphans = [
+        change["targetPath"]
+        for change in changes
+        if change["operation"] in {"REPLACE", "REMOVE"}
+        and not change.get("expectedPreviousHash")
+        and not change.get("expectedAnchors")
+    ]
+    if orphans:
+        raise DomainError(
+            LEGACY_PRECONDITION,
+            "Esta Retificação foi elaborada antes da verificação de precondição de conteúdo e "
+            f"não pode ser publicada sem ela em: {', '.join(orphans)}. Devolva-a para elaboração "
+            "e reenvie o rascunho sobre a versão consolidada atual.",
+            409,
+        )
 
 
 def _no_effective_change():
@@ -117,7 +150,8 @@ def _replace_changes(retificacao, changes, base_content):
                 target_path=item["targetPath"],
                 operation=item["operation"],
                 new_value=item.get("newValue"),
-                expected_previous_hash=precondition,
+                expected_previous_hash=precondition["hash"],
+                expected_anchors=precondition["anchors"],
                 order=index,
             )
             for index, (item, precondition) in enumerate(
@@ -137,7 +171,7 @@ def create_retification(*, actor, edital_id, data, idempotency_key, correlation_
             payload=data,
         )
         if idem.result_id:
-            return Retificacao.objects.get(pk=idem.result_id), False
+            return Retificacao.objects.get(pk=idem.result_id), idem.response_status
         try:
             edital = Edital.objects.select_related("processo").get(
                 pk=edital_id, institution_scope=actor.institution_scope
@@ -168,7 +202,7 @@ def create_retification(*, actor, edital_id, data, idempotency_key, correlation_
             idempotency_key=idempotency_key,
         )
         finish_idempotency(idem, retificacao, 201)
-        return retificacao, True
+        return retificacao, 201
 
 
 def edit_retification(*, actor, retificacao_id, expected_revision, data):
@@ -231,7 +265,7 @@ def transition_retification(
             payload={"reason": reason},
         )
         if idem.result_id:
-            return Retificacao.objects.get(pk=idem.result_id), False
+            return Retificacao.objects.get(pk=idem.result_id), idem.response_status
         item = _retificacao(actor, retificacao_id)
         origins, target = TRANSITIONS[action]
         previous = item.status
@@ -279,7 +313,7 @@ def transition_retification(
             idempotency_key=idempotency_key,
         )
         finish_idempotency(idem, item, 200)
-        return item, True
+        return item, 200
 
 
 def _original_version(edital):
@@ -432,7 +466,7 @@ def publish_retification(
             payload={"signatory": signatory},
         )
         if idem.result_id:
-            return Publicacao.objects.get(pk=idem.result_id), False
+            return Publicacao.objects.get(pk=idem.result_id), idem.response_status
         item = _retificacao(actor, retificacao_id)
         edital = Edital.objects.select_for_update().get(pk=item.edital_id)
         if item.status != Retificacao.Status.HOMOLOGADA:
@@ -445,8 +479,8 @@ def publish_retification(
         if effective_at < now:
             raise DomainError("invalid_effective_at", "Vigência não pode ser retroativa.", 422)
         changes = _changes_payload(item)
-        if requires_content_check(changes):
-            _reject_stale_changes(_content_in_force(edital, effective_at), changes)
+        _reject_legacy_changes_without_precondition(changes)
+        _reject_stale_changes(_content_in_force(edital, effective_at), changes)
         _assert_effective_change(edital, item, effective_at, edital.next_publication_order)
         content, _ = apply_changes(item.base_snapshot.content, changes, publication_id="pending")
         canonical = canonical_bytes(content)
@@ -492,4 +526,4 @@ def publish_retification(
             next_publication_order=F("next_publication_order") + 1
         )
         finish_idempotency(idem, publication, 201)
-        return publication, True
+        return publication, 201

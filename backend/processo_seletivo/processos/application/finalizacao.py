@@ -11,6 +11,7 @@ from processo_seletivo.seguranca.application.authorization import require_permis
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.concurrency import compare_and_swap
+from processo_seletivo.shared.idempotency import finish as _finish_idempotency
 from processo_seletivo.shared.idempotency import reserve
 
 
@@ -34,13 +35,6 @@ def _lock_edital(actor, edital_id):
         )
     except Edital.DoesNotExist as exc:
         raise _not_found() from exc
-
-
-def _finish_idempotency(record, result, status):
-    record.result_type = result.__class__.__name__
-    record.result_id = result.pk
-    record.response_status = status
-    record.save(update_fields=["result_type", "result_id", "response_status"])
 
 
 def _register(*, actor, aggregate, operation, permission, reason, previous, now, correlation_id,
@@ -87,7 +81,7 @@ def _finalize_processo(
             payload={"reason": reason},
         )
         if idem.result_id:
-            return ProcessoSeletivo.objects.get(pk=idem.result_id), False
+            return ProcessoSeletivo.objects.get(pk=idem.result_id), idem.response_status
         check(processo)
         previous = _Previous(processo)
         compare_and_swap(
@@ -110,7 +104,7 @@ def _finalize_processo(
             idempotency_key=idempotency_key,
         )
         _finish_idempotency(idem, processo, 200)
-        return processo, True
+        return processo, 200
 
 
 def close_process(*, actor, processo_id, expected_revision, reason, idempotency_key,
@@ -172,7 +166,7 @@ def _finalize_edital(
             payload={"reason": reason},
         )
         if idem.result_id:
-            return Edital.objects.get(pk=idem.result_id), False
+            return Edital.objects.get(pk=idem.result_id), idem.response_status
         finalizacao.ensure_processo_accepts_changes(edital.processo)
         check(edital)
         previous = _Previous(edital)
@@ -196,7 +190,7 @@ def _finalize_edital(
             idempotency_key=idempotency_key,
         )
         _finish_idempotency(idem, edital, 200)
-        return edital, True
+        return edital, 200
 
 
 def close_edital(*, actor, edital_id, expected_revision, reason, idempotency_key, correlation_id):

@@ -41,7 +41,9 @@ def test_idempotency_replays_and_rejects_changed_payload(
     changed = {**process_payload, "title": "Outro conteúdo"}
     conflict = api_client.post("/api/v1/admin/processos", changed, format="json", **manager_headers)
     assert first.status_code == 201
-    assert replay.status_code == 200
+    # A repetição responde com o status do ato original: o contrato documenta um único código
+    # de sucesso por operação, e 200 numa repetição de criação sugeriria que nada foi criado.
+    assert replay.status_code == 201
     assert replay.json()["id"] == first.json()["id"]
     assert conflict.status_code == 409
 

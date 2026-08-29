@@ -10,17 +10,34 @@ O adaptador `InstitutionalBearerAuthentication` aceita `subject|escopo|permissõ
 qualquer cliente declara a própria identidade e as próprias permissões. Enquanto a integração com
 o diretório institucional não existir, esta barreira é o que impede implantar sem fronteira de
 segurança alguma.
+
+Sobre o alcance dessa barreira, para que ninguém a leia como mais do que é: ela **recusa o que
+sabe ser inseguro** — o módulo de autenticação de desenvolvimento e os esquemas do DRF que não
+carregam identidade institucional — e exige que a classe escolhida exista e seja importável. Ela
+**não prova** que a classe declarada fale com o diretório do Ifes; nenhuma configuração pode
+provar isso. Quem implanta continua respondendo pela escolha; o que o módulo garante é que a
+escolha seja explícita, exista, e não seja um dos caminhos conhecidamente inseguros.
 """
 
 import os
 
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.module_loading import import_string
 
 from .base import *  # noqa: F403
 from .base import DATABASES, INTERFACE_SELETOR_IDENTIDADE, REST_FRAMEWORK, SECRET_KEY
 
-ADAPTADOR_PROVISORIO = (
-    "processo_seletivo.seguranca.api.authentication.InstitutionalBearerAuthentication"
+# Módulo inteiro, não uma classe: qualquer adaptador de desenvolvimento que nasça ao lado do
+# atual herdaria a mesma recusa sem precisar lembrar de atualizar esta lista.
+MODULO_DE_DESENVOLVIMENTO = "processo_seletivo.seguranca.api.authentication."
+# Esquemas do DRF que autenticam, mas não contra o diretório institucional: senha no cabeçalho,
+# sessão do próprio Django e token emitido por esta aplicação não são identidade do Ifes.
+ESQUEMAS_NAO_INSTITUCIONAIS = frozenset(
+    {
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+    }
 )
 SEGREDOS_INADMISSIVEIS = frozenset({"", "unsafe-development-key", "change-me"})
 
@@ -66,11 +83,31 @@ API_AUTHENTICATION_CLASSES = [
     v.strip() for v in os.getenv("API_AUTHENTICATION_CLASSES", "").split(",") if v.strip()
 ]
 _exigir(
-    API_AUTHENTICATION_CLASSES and ADAPTADOR_PROVISORIO not in API_AUTHENTICATION_CLASSES,
+    bool(API_AUTHENTICATION_CLASSES),
     "API_AUTHENTICATION_CLASSES",
-    "deve apontar para a autenticação institucional; o adaptador de desenvolvimento aceita "
-    "identidade e permissões declaradas pelo próprio cliente.",
+    "deve declarar explicitamente a autenticação institucional; sem ela não há fronteira de "
+    "segurança e o backend autoriza contra permissões que o próprio cliente declara.",
 )
+_recusadas = [
+    classe
+    for classe in API_AUTHENTICATION_CLASSES
+    if classe.startswith(MODULO_DE_DESENVOLVIMENTO) or classe in ESQUEMAS_NAO_INSTITUCIONAIS
+]
+_exigir(
+    not _recusadas,
+    "API_AUTHENTICATION_CLASSES",
+    f"{', '.join(_recusadas)} não autentica contra o diretório institucional. O adaptador de "
+    "desenvolvimento aceita identidade e permissões declaradas pelo próprio cliente; os esquemas "
+    "do DRF autenticam contra esta aplicação, não contra o Ifes.",
+)
+for _classe in API_AUTHENTICATION_CLASSES:
+    # Nome inexistente falharia só na primeira requisição autenticada, em produção, com 500.
+    try:
+        import_string(_classe)
+    except ImportError as _erro:
+        raise ImproperlyConfigured(
+            f"API_AUTHENTICATION_CLASSES: {_classe} não pôde ser importada ({_erro})."
+        ) from _erro
 REST_FRAMEWORK = {**REST_FRAMEWORK, "DEFAULT_AUTHENTICATION_CLASSES": API_AUTHENTICATION_CLASSES}
 
 _exigir(

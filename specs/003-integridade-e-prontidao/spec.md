@@ -105,6 +105,22 @@ Edital em `EM_ELABORACAO`.
   módulo de configuração de produção que **recusa iniciar** com o adaptador provisório, o seletor
   de identidade, chave secreta padrão ou HTTPS desligado. Prontidão é falhar cedo, não confiar em
   disciplina de implantação.
+- Q: A precondição de conteúdo basta para conter o endereçamento por índice? → A: Não, e a
+  primeira tentativa provou isso. Hash responde "o valor ainda é este?", não "ainda é esta
+  entidade?". Dois Perfis de denominação idêntica tornam o hash indistinguível: depois de o
+  índice deslocar, ele confere e o ato altera o Perfil errado mesmo assim. E `ADD` posicional não
+  tem valor anterior algum a comparar, embora deslocar a posição de inserção mude a ordem
+  normativa publicada. A contenção precisa de uma segunda peça: cada índice de lista atravessado
+  por um caminho carrega a **identidade** de quem o ocupava na base — `id` quando existe, hash do
+  elemento inteiro quando não. Essa âncora é sempre derivada pelo servidor e não é declarável
+  pelo cliente: ela não descreve conteúdo, descreve de quem o ato fala.
+- Q: E as Retificações elaboradas antes de a precondição existir? → A: Não é aceitável deixá-las
+  publicar sem verificação, e "reenviar o rascunho" não é caminho para uma já homologada, que
+  precisaria ser devolvida antes. A precondição é função determinística da base declarada e da
+  sequência ordenada de alterações, então há backfill exato: a migração recalcula o que teria
+  sido gravado, para as Retificações **em curso**. Publicada e Cancelada são finais e imutáveis e
+  não são tocadas. Como cinto, a Publicação recusa qualquer alteração `REPLACE`/`REMOVE` que
+  chegue sem precondição alguma.
 - Q: Qual a régua de "pronto para produção" desta feature? → A: `manage.py check --deploy` sem
   achados no módulo de produção, os seis defeitos com teste de regressão, e a suíte executada
   também contra PostgreSQL — os 20 testes hoje ignorados cobrem justamente concorrência,
@@ -298,8 +314,19 @@ de disciplina da aplicação.
 - **FR-002**: Quando o cliente não declarar `expectedPreviousHash`, o sistema DEVE derivar a
   precondição do conteúdo do `baseSnapshotId` declarado, no momento da elaboração, e persistí-la
   junto da Alteração Normativa.
+- **FR-002a**: Toda Alteração Normativa DEVE carregar, além do conteúdo, a **identidade** da
+  entidade que ocupava cada índice de lista atravessado pelo seu caminho — identificador estável
+  quando existir, hash do elemento inteiro quando não. A Publicação DEVE recusar quando essa
+  identidade tiver mudado, ainda que o conteúdo no caminho seja idêntico.
+- **FR-002b**: A verificação de identidade DEVE valer também para `ADD` com índice numérico, que
+  não tem conteúdo anterior a comparar mas define posição na ordem normativa. `ADD` na posição de
+  acréscimo (`-`) NÃO exige âncora: acrescentar ao fim é estável por definição.
+- **FR-002c**: Alterações Normativas de Retificações **em curso** anteriores a esta feature DEVEM
+  ser preenchidas por migração determinística a partir da base declarada. Retificações Publicadas
+  e Canceladas NÃO DEVEM ser tocadas. A Publicação DEVE recusar `REPLACE`/`REMOVE` que chegue sem
+  precondição alguma.
 - **FR-003**: O `expectedPreviousHash` declarado pelo cliente DEVE prevalecer sobre a precondição
-  derivada.
+  de conteúdo derivada. A âncora de identidade NÃO É declarável nem dispensável pelo cliente.
 - **FR-004**: A recusa por divergência DEVE identificar os caminhos divergentes e orientar a
   reelaboração sobre a versão consolidada atual.
 - **FR-005**: A base declarada em `baseSnapshotId` DEVE ser o conteúdo efetivamente apresentado
@@ -330,7 +357,10 @@ de disciplina da aplicação.
 **Idempotência, auditoria e correlação**
 
 - **FR-013**: Criar, submeter, homologar, devolver, cancelar e publicar Retificação DEVEM honrar
-  `Idempotency-Key`, devolvendo o resultado original quando a chave e o corpo se repetirem.
+  `Idempotency-Key`. A repetição da mesma chave com o mesmo corpo NÃO DEVE praticar um segundo
+  ato e DEVE responder com o mesmo código de sucesso do ato original — que é o único documentado
+  no contrato para aquela operação. O recurso é devolvido no estado em que se encontra, que é o
+  que o cliente obteria relendo-o.
 - **FR-014**: A mesma chave com corpo diferente DEVE ser recusada com `409 idempotency_conflict`.
 - **FR-015**: Todo evento de auditoria de Retificação DEVE gravar o identificador de correlação da
   requisição e a chave de idempotência utilizada.
@@ -340,8 +370,11 @@ de disciplina da aplicação.
 - **FR-016**: DEVE existir módulo de configuração de produção que falhe na inicialização quando
   chave secreta, hosts permitidos, HTTPS, cookies seguros ou autenticação institucional não
   estiverem corretamente configurados.
-- **FR-017**: O módulo de produção NÃO DEVE admitir o adaptador de autenticação provisório nem o
-  seletor de identidade da interface.
+- **FR-017**: O módulo de produção NÃO DEVE admitir o módulo de autenticação de desenvolvimento,
+  esquemas que autentiquem contra a própria aplicação em vez do diretório, classes não
+  importáveis, nem o seletor de identidade da interface. Esta é uma barreira contra o que se sabe
+  inseguro: ela NÃO comprova que a classe declarada fale com o diretório institucional, e a
+  documentação NÃO DEVE afirmar que comprova.
 - **FR-018**: `manage.py check --deploy` sobre o módulo de produção NÃO DEVE apresentar achados.
 - **FR-019**: O provisionamento dos papéis PostgreSQL e seus `GRANT`s DEVE ser versionado e
   executável do zero, sem etapa manual não documentada.
@@ -387,7 +420,9 @@ de disciplina da aplicação.
 - **SC-001**: Os seis defeitos reproduzidos na revisão possuem teste de regressão que falha no
   código anterior e passa no corrigido.
 - **SC-002**: Nenhuma Retificação publicada altera item normativo diferente do apresentado a quem
-  homologou, verificado por cenário de concorrência entre atos.
+  homologou, verificado por cenário de concorrência entre atos — incluindo o caso em que o
+  conteúdo no caminho deslocado é idêntico, que o hash sozinho não distingue, e o `ADD`
+  posicional, que não tem conteúdo anterior.
 - **SC-003**: Nenhum conteúdo vigente viola as invariantes estruturais exigidas na publicação.
 - **SC-004**: `manage.py check --deploy` sobre o módulo de produção retorna zero achados.
 - **SC-005**: A suíte completa executa também contra PostgreSQL, com os 20 testes hoje ignorados
@@ -402,7 +437,9 @@ do fluxo constitucional. Cada uma tem teste de regressão que falha no código a
 
 | Requisito | Estado | Onde |
 | --- | --- | --- |
-| FR-001 a FR-004 | Feito | `publicacoes/domain/conflicts.py` (`derive_preconditions`), `application/retificacoes.py` |
+| FR-001 a FR-004 | Feito | `publicacoes/domain/conflicts.py` (`derive_preconditions`, `path_anchors`), `application/retificacoes.py` |
+| FR-002a, FR-002b | Feito | Âncora de identidade por índice; migration `0005` |
+| FR-002c | Feito | Migration `0006_backfill_precondicoes`; guarda `precondition_missing` na Publicação |
 | FR-005 | Feito | Verificado por `test_out_of_order_publications_compose_by_validity_not_by_publication_order` |
 | FR-006, FR-007 | Feito | `_assert_structurally_publishable` em `application/retificacoes.py` |
 | FR-008 a FR-010 | Feito | `CsrfViewMiddleware` e `XFrameOptionsMiddleware` em `config/settings/base.py`; `tests/interface/test_csrf.py` |
@@ -428,10 +465,10 @@ barreira que impede subir sem o primeiro e a contenção que impede o dano do se
   impossível de passar em silêncio.
 - Manter `expectedPreviousHash` opcional no contrato preserva os clientes existentes; a obrigação
   passa a ser do servidor, que sempre tem a base declarada.
-- Alterações Normativas persistidas antes desta feature têm precondição vazia e seguem sem
-  verificação de conteúdo. Como só Retificações não publicadas importam, o volume é o das que
-  estiverem em elaboração, revisão ou homologadas no momento da implantação; reenviar o rascunho
-  as regulariza. Um backfill é dispensável e fica registrado como decisão, não como omissão.
+- A contenção por precondição e âncora reduz o dano do endereçamento por índice a uma recusa
+  explícita, mas **não é a cura**. Ela impede publicar o ato errado; não permite publicar o ato
+  certo sem refazê-lo quando a lista mudou de forma. Enquanto o endereçamento por chave estável
+  não existir, concorrência sobre a mesma lista custa reelaboração.
 
 ## Out of Scope
 

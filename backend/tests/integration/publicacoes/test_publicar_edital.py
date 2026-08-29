@@ -53,7 +53,8 @@ def test_publication_is_atomic_and_idempotent(api_client, manager_headers, proce
         f"/api/v1/admin/editais/{edital.id}/publicacoes", payload, format="json", **publisher
     )
     assert first.status_code == 201
-    assert replay.status_code == 200
+    assert replay.status_code == 201
+    assert replay.json()["id"] == first.json()["id"]
     assert Publicacao.objects.count() == DocumentoPublicado.objects.count() == 1
     document = DocumentoPublicado.objects.get()
     assert document.bytes.startswith(b"%PDF-")

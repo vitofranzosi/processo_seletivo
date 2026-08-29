@@ -116,7 +116,7 @@ def submit_edital(*, actor, edital_id, expected_revision, idempotency_key, corre
             payload={},
         )
         if idem.result_id:
-            return Edital.objects.get(pk=idem.result_id), [], False
+            return Edital.objects.get(pk=idem.result_id), [], idem.response_status
         edital = _locked_edital(actor, edital_id)
         if edital.status != Edital.Status.EM_ELABORACAO:
             raise DomainError("invalid_state", "Edital não está em elaboração.", 409)
@@ -156,7 +156,7 @@ def submit_edital(*, actor, edital_id, expected_revision, idempotency_key, corre
             idempotency_key=idempotency_key,
         )
         _finish_idempotency(idem, edital, 200)
-        return edital, findings, True
+        return edital, findings, 200
 
 
 def homologate_edital(
@@ -171,7 +171,7 @@ def homologate_edital(
             payload={"reason": reason},
         )
         if idem.result_id:
-            return Edital.objects.get(pk=idem.result_id), False
+            return Edital.objects.get(pk=idem.result_id), idem.response_status
         edital = _locked_edital(actor, edital_id)
         if edital.status != Edital.Status.EM_REVISAO:
             raise DomainError("invalid_state", "Edital não está em revisão.", 409)
@@ -202,7 +202,7 @@ def homologate_edital(
             idempotency_key=idempotency_key,
         )
         _finish_idempotency(idem, edital, 200)
-        return edital, True
+        return edital, 200
 
 
 def revoke_homologation(
@@ -217,7 +217,7 @@ def revoke_homologation(
             payload={"reason": reason},
         )
         if idem.result_id:
-            return Edital.objects.get(pk=idem.result_id), False
+            return Edital.objects.get(pk=idem.result_id), idem.response_status
         edital = _locked_edital(actor, edital_id)
         if edital.status != Edital.Status.HOMOLOGADO:
             raise DomainError("invalid_state", "Edital não está homologado.", 409)
@@ -248,7 +248,7 @@ def revoke_homologation(
             idempotency_key=idempotency_key,
         )
         _finish_idempotency(idem, edital, 200)
-        return edital, True
+        return edital, 200
 
 
 def publish_edital(
@@ -264,7 +264,7 @@ def publish_edital(
             payload=payload,
         )
         if idem.result_id:
-            return Publicacao.objects.get(pk=idem.result_id), False
+            return Publicacao.objects.get(pk=idem.result_id), idem.response_status
         edital = _locked_edital(actor, edital_id)
         if edital.status != Edital.Status.HOMOLOGADO:
             raise DomainError("invalid_state", "Edital não está homologado.", 409)
@@ -341,4 +341,4 @@ def publish_edital(
             idempotency_key=idempotency_key,
         )
         _finish_idempotency(idem, publication, 201)
-        return publication, True
+        return publication, 201

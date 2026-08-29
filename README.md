@@ -84,9 +84,14 @@ desligado, banco sem senha, seletor de identidade ligado ou o adaptador provisó
 autenticação impedem o processo de subir, com mensagem que nomeia a variável a corrigir.
 
 O adaptador `InstitutionalBearerAuthentication` aceita `subject|escopo|permissões` sem assinatura
-— qualquer cliente declara a própria identidade **e as próprias permissões**. Enquanto a
-integração com o diretório institucional não existir, `API_AUTHENTICATION_CLASSES` não tem valor
-admissível e o sistema não implanta. Essa é a intenção.
+— qualquer cliente declara a própria identidade **e as próprias permissões**. Por isso
+`API_AUTHENTICATION_CLASSES` é obrigatória e recusa o módulo de autenticação de desenvolvimento
+inteiro, os esquemas do DRF que autenticam contra esta aplicação em vez do diretório, e nomes que
+não sejam importáveis.
+
+O que a barreira **não** faz: provar que a classe declarada fale com o diretório do Ifes. Nenhuma
+configuração prova isso. Ela garante que a escolha seja explícita, exista, e não seja um dos
+caminhos conhecidamente inseguros — a responsabilidade pela escolha continua de quem implanta.
 
 ```bash
 cd backend && DJANGO_SETTINGS_MODULE=config.settings.production uv run python manage.py check --deploy
