@@ -17,7 +17,8 @@ fases 4 em diante são trabalho que resta e seguem a ordem normal.
 ## Formato: `[ID] [P?] [FR] Descrição`
 
 - **[P]**: executável em paralelo sem conflito de arquivo
-- **[FR]**: requisito rastreado da `spec.md` desta feature
+- **[FR]** ou **[SC]**: requisito ou critério de sucesso rastreado da `spec.md`
+- **[rito]**: tarefa sobre os próprios artefatos do Spec Kit, sem requisito de produto associado
 
 ---
 
@@ -117,7 +118,7 @@ fases 4 em diante são trabalho que resta e seguem a ordem normal.
 - [X] T055 [P] [FR-024] Cobrir que nenhuma consulta do histórico varre sem limite, e que paginar de um em um reproduz a página única
 - [X] T056 [FR-022] Rascunho expira em 24 h; sem carimbo de tempo utilizável é tratado como vencido
 - [X] T057 [P] [FR-022] Cobrir o prazo e o descarte do que não se sabe a idade
-- [X] T058 Fechar a conexão subjacente nas threads de teste e falhar em `ResourceWarning` — o filtro precisa incluir `PytestUnraisableExceptionWarning`, que é como o warning do coletor de lixo chega
+- [X] T058 [FR-029] Fechar a conexão subjacente nas threads de teste e falhar em `ResourceWarning` — o filtro precisa incluir `PytestUnraisableExceptionWarning`, que é como o warning do coletor de lixo chega
 
 ---
 
@@ -129,9 +130,37 @@ fases 4 em diante são trabalho que resta e seguem a ordem normal.
 - A Fase 7 não depende de nenhuma anterior e pode correr em paralelo com a 4, 5 e 6.
 - T053 depende da decisão em T052.
 
+---
+
+## Phase 9: Correções apontadas na revisão de fechamento
+
+**A revisão reabriu a feature.** Oito achados, dois deles P0 sobre requisito marcado como
+concluído. Cada um está reproduzido antes de corrigido.
+
+- [X] T059 [FR-019] Provisionar em banco vazio sem falhar: todo comando que toca tabela passa a ser condicional à existência dela. Reproduzido: `relation "auditoria_registroauditoria" does not exist`
+- [X] T060 [FR-019] Dar senha ao papel de migração e transferir a propriedade das tabelas e do schema — `GRANT ALL` deixa usar, mas `ALTER TABLE` exige ser dono, e a migration seguinte falharia no meio do deploy
+- [X] T061 [FR-019] Conferir, ao fim do provisionamento, que nenhuma append-only existente deu escrita ao runtime, e informar quantas foram protegidas para que a segunda passada esquecida apareça na hora
+- [X] T062 [FR-019] Ocultar as senhas em `--dry-run`. Reproduzido: `ALTER ROLE ... PASSWORD 'probe-secret'` impresso em texto puro
+- [X] T063 [FR-020] Validar na tela de criação os limites que a coluna impõe, derivados de `_meta` e não copiados à mão. Reproduzido: `institutionalCode` com 101 caracteres retornava 500 `StringDataRightTruncation`
+- [X] T064 [FR-030] Executar os scripts da interface em `node --test` contra um DOM mínimo, em vez de procurar string no fonte — 19 testes cobrindo as regras de `validacao.js` e a expiração de `rascunho.js`
+- [X] T065 [FR-030] Declarar no `quickstart.md` o que os testes de JavaScript não cobrem — foco, leitor de tela, balão do navegador — e como conferir à mão
+- [X] T066 [FR-027] Deixar de oferecer caminho para pendência que a etapa de destino não corrige; `title` e `description` só existem na criação e a Identificação é somente leitura
+- [X] T067 [SC-006] Elevar a cobertura acima de 89% nas duas execuções, medida com três casas. Cobrir `seed_demo`, que estava a 0% e é caminho documentado no README
+- [X] T068 [SC-007] Corrigir o `seed_demo`, quebrado pelo commit `41e8173` e nunca executado por teste algum, e remover a flag `--recriar`, que era declarada, documentada no `--help` e jamais lida — e que não poderia funcionar, porque apagar a demonstração exigiria excluir Publicações
+- [X] T069 [FR-019] Devolver a propriedade dos objetos antes de derrubar os papéis de conformidade, para que o teste não leve o banco junto
+- [X] T070 [rito] Produzir `research.md`, `data-model.md` e `quickstart.md`, e restaurar o bloco `Documentation` do plano — que eu havia reescrito para listar só o que produzi, apagando o lugar onde a falta apareceria
+- [X] T071 [rito] Atualizar a checklist e o README, que ainda diziam "27 concluídas, 31 abertas" e "não há interface gráfica"
+
+---
+
 ## Situação
 
-58 de 58 tarefas concluídas.
+71 de 71 tarefas concluídas.
 
-A feature está completa. Fora dela e ainda bloqueadores de implantação: a integração com o
-diretório institucional e a `004-enderecamento-normativo-estavel`.
+As treze últimas nasceram da revisão de fechamento, que recusou a declaração de conclusão anterior
+e estava certa: dois requisitos marcados como concluídos não funcionavam em banco novo. A lição
+está registrada na análise de consistência.
+
+Fora desta feature e ainda bloqueadores de implantação: a integração com o diretório institucional
+e a `004-enderecamento-normativo-estavel`, que continua sendo apenas especificação preliminar com
+cinco clarificações abertas.

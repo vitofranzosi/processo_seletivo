@@ -255,12 +255,12 @@ def test_a_validacao_antes_do_envio_e_carregada_nas_telas_que_editam(
         assert "interface/validacao.js" in corpo
 
 
-def test_as_regras_da_tela_espelham_as_do_dominio():
-    """A validação da tela não pode inventar regra que o domínio não tem, nem o contrário.
+def test_a_validacao_da_tela_se_declara_como_nao_sendo_fronteira_de_seguranca():
+    """O comportamento é verificado executando o script, em tests/javascript/validacao.test.js.
 
-    Compara o texto de `validacao.js` com o que `editais.domain` decide: o que se verifica aqui
-    é que as quatro regras espelhadas estão nomeadas no arquivo, para que remover uma delas do
-    domínio sem remover da tela apareça na revisão em vez de virar mensagem fantasma.
+    O que sobra aqui é a única coisa que um teste de fonte prova de verdade: que o arquivo diz a
+    quem for mexer nele que a decisão continua sendo do domínio. Regra de tela que se acredita
+    autoridade é como uma invariante deixa de ser verificada no servidor.
     """
     from pathlib import Path
 
@@ -269,12 +269,6 @@ def test_as_regras_da_tela_espelham_as_do_dominio():
         / "processo_seletivo/interface/static/interface/validacao.js"
     ).read_text(encoding="utf-8")
 
-    assert "Cadastro Reserva limitado exige um limite." in fonte
-    assert "não admite limite" in fonte
-    assert "Vagas imediatas não podem ser negativas." in fonte
-    assert "O término do Evento não pode ser anterior ao início." in fonte
-    assert "aparece mais de uma vez neste Perfil" in fonte
-    # A tela não é fronteira de segurança e o arquivo precisa dizer isso a quem for mexer nele.
     assert "NÃO é fronteira de segurança" in fonte
 
 
@@ -356,3 +350,25 @@ def test_cada_etapa_mostra_apenas_a_pendencia_que_resolve(client, seletor_ligado
     assert "Ao menos um Evento é obrigatório." not in em_perfis
     assert "Ao menos um Evento é obrigatório." in em_cronograma
     assert "Ao menos um Perfil é obrigatório." not in em_cronograma
+
+
+@pytest.mark.django_db(transaction=True)
+def test_pendencia_sem_onde_corrigir_nao_oferece_caminho(client, seletor_ligado, edital):
+    """FR-027: caminho que não termina em lugar nenhum é pior que caminho nenhum.
+
+    `description` só existe na criação do Edital e não tem ato de domínio que a altere depois. A
+    etapa de Identificação é somente leitura — mandar alguém até lá para corrigir era oferecer
+    uma volta inútil.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    revisao = client.get(
+        reverse("interface:compor-etapa", args=[edital.id, "revisao"])
+    ).content.decode()
+    identificacao = reverse("interface:compor-etapa", args=[edital.id, "identificacao"])
+
+    assert "O Edital não possui descrição." in revisao
+    # A navegação do assistente linka a etapa de qualquer forma; o que não pode existir é o link
+    # da pendência, que é o que carrega a âncora da seção.
+    assert f'href="{identificacao}#ident-titulo"' not in revisao
+    assert "Não corrigível aqui" in revisao

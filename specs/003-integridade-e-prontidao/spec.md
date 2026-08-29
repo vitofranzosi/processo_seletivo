@@ -397,6 +397,14 @@ de disciplina da aplicação.
 - **FR-024**: A paginação do histórico NÃO DEVE carregar o conjunto completo em memória para
   ordenar.
 
+**Higiene da verificação**
+
+- **FR-029**: A suíte NÃO DEVE deixar conexão de banco por fechar, e `ResourceWarning` DEVE
+  falhar a execução em vez de virar aviso atribuído ao teste seguinte.
+- **FR-030**: Requisito cuja implementação é JavaScript DEVE ser verificado executando o script,
+  não procurando texto no fonte. O que só o navegador exerce — foco, anúncio por leitor de tela —
+  DEVE ser declarado como verificação manual, com o roteiro registrado.
+
 **Lacunas funcionais herdadas**
 
 - **FR-025**: A interface DEVE oferecer a criação de Processo Seletivo com seu primeiro Edital
@@ -430,7 +438,8 @@ de disciplina da aplicação.
 - **SC-004**: `manage.py check --deploy` sobre o módulo de produção retorna zero achados.
 - **SC-005**: A suíte completa executa também contra PostgreSQL, com os 20 testes hoje ignorados
   ativos, cobrindo concorrência, permissões de banco e migrações.
-- **SC-006**: Cobertura com branches não regride abaixo do patamar atual de 89%.
+- **SC-006**: Cobertura com branches de ao menos 89% **em cada uma das duas execuções** —
+  SQLite e PostgreSQL —, medida com três casas e não por arredondamento.
 - **SC-007**: Nenhuma requisição malformada de borda produz erro `500`.
 
 ## Estado da implementação
@@ -456,6 +465,7 @@ do fluxo constitucional. Cada uma tem teste de regressão que falha no código a
 | FR-022 | Feito | `rascunho.js`, prazo de 24 h |
 | FR-024 | Feito | `selectors.public_history`, corte no banco por fonte |
 | FR-026, FR-027 | Feito | `validacao.js`; `DESTINO_DA_PENDENCIA` em `interface/views.py` |
+| FR-029, FR-030 | Feito | `filterwarnings` em `pyproject.toml`; `tests/javascript/` sob `node --test` |
 
 Nenhum requisito desta feature permanece aberto.
 

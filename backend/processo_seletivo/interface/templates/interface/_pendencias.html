@@ -1,15 +1,20 @@
 {% comment %}
-FR-027: a pendência aponta para onde se resolve. O domínio já informa o campo de cada achado; a
-tela só precisa não descartar essa informação.
+FR-027: a pendência aponta para onde se resolve — e diz quando não há onde, em vez de oferecer um
+caminho que não termina em lugar nenhum. O domínio já informa o campo de cada achado; a tela só
+precisa não descartar essa informação.
 {% endcomment %}
 <ul>
   {% for item in itens %}
   <li class="p-{{ item.severidade }}">
     <span class="marcador">{% if item.severidade == 'erro' %}Impede{% else %}Aviso{% endif %}</span>
     {{ item.mensagem }}
-    {% if com_link and item.etapa %}
-    <a href="{% url 'interface:compor-etapa' edital.id item.etapa %}{{ item.ancora }}"
-       class="acao">Ir para {{ item.rotulo_etapa }}</a>
+    {% if com_link %}
+      {% if item.corrigivel %}
+      <a href="{% url 'interface:compor-etapa' edital.id item.etapa %}{{ item.ancora }}"
+         class="acao">Ir para {{ item.rotulo_etapa }}</a>
+      {% elif item.motivo %}
+      <span class="ajuda">Não corrigível aqui: {{ item.motivo }}.</span>
+      {% endif %}
     {% endif %}
   </li>
   {% endfor %}

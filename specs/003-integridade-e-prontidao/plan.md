@@ -145,14 +145,23 @@ decisão desta feature que exige desenho novo, e por isso encabeça a lista de t
 
 ### Documentation (this feature)
 
-```
+```text
 specs/003-integridade-e-prontidao/
 ├── spec.md              # o que e por quê, com a evidência de cada defeito
 ├── plan.md              # este documento
-├── tasks.md             # a lista executável
+├── research.md          # Fase 0: o que foi investigado e o que foi descartado
+├── data-model.md        # Fase 1: campo novo, proteções de banco, política de privilégios
+├── quickstart.md        # Fase 1: como verificar, com o resultado esperado de cada passo
+├── contracts/           # ausente por decisão: ver abaixo
 └── checklists/
     └── requirements.md  # análise de consistência
 ```
+
+Não há `contracts/` próprio. Esta feature não introduz operação nova: corrige o comportamento das
+que a `001` já contratou, e as alterações — `Idempotency-Key` nas Retificações, remoção de
+`editorialContent`, fuso obrigatório em `em` — entraram no `openapi.yaml` daquela feature, que
+continua sendo o contrato único. Um segundo arquivo de contrato criaria duas fontes para a mesma
+API.
 
 ### Source Code (repository root)
 
@@ -187,6 +196,8 @@ backend/
 | 6 | Provisionamento de papéis (FR-019) | Concluída — `manage.py provisionar_papeis` |
 | 7 | Lacunas funcionais da 002 (FR-025 a FR-028) | Concluída |
 | 8 | Desempenho e higiene (FR-022, FR-024) | Concluída |
+| 9 | Correções da revisão de fechamento | Concluída |
+| 10 | Convergência: código conferido contra a spec | Concluída — ver `quickstart.md` |
 
 A ordem das fases 4 a 8 é por risco decrescente, não por esforço. Imutabilidade primeiro porque é a
 única garantia da feature que hoje depende de disciplina da aplicação em vez do banco.

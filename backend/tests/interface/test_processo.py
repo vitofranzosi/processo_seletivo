@@ -282,3 +282,64 @@ def test_sem_permissao_a_criacao_e_recusada_pelo_command(client, seletor_ligado)
 
     assert resposta.status_code == 403
     assert not ProcessoSeletivo.objects.exists()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize(
+    ("campo", "tamanho"),
+    [("codigo", 101), ("titulo", 256), ("numero", 51), ("titulo_edital", 256)],
+)
+def test_campo_maior_que_a_coluna_e_recusado_na_borda(client, seletor_ligado, campo, tamanho):
+    """SC-007 da 003: nenhuma requisição malformada de borda pode produzir 500.
+
+    A tela de criação entrava direto no command, sem o serializer que a API usa, e o excesso
+    chegava ao PostgreSQL como `StringDataRightTruncation` — 500 que o cliente não consegue usar
+    e cuja mensagem não deveria sair da aplicação.
+    """
+    identificar(client, "gestora", ["gestor"])
+    dados = {
+        "codigo": "PS-2027-900",
+        "titulo": "Processo Seletivo 2027",
+        "numero": "90",
+        "ano": "2027",
+        "titulo_edital": "Primeiro Edital",
+        "chave_idempotencia": "ui-borda-00000000001",
+    }
+
+    resposta = client.post(reverse("interface:processo-criar"), {**dados, campo: "X" * tamanho})
+
+    assert resposta.status_code == 422
+    assert "Encurte" in resposta.content.decode()
+    assert not ProcessoSeletivo.objects.exists()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("ano", ["1999", "10000"])
+def test_ano_fora_da_faixa_e_recusado_na_borda(client, seletor_ligado, ano):
+    """`year` é PositiveSmallIntegerField: fora da faixa estoura na coluna, não na aplicação."""
+    identificar(client, "gestora", ["gestor"])
+
+    resposta = client.post(
+        reverse("interface:processo-criar"),
+        {
+            "codigo": "PS-2027-901",
+            "titulo": "T",
+            "numero": "91",
+            "ano": ano,
+            "titulo_edital": "E",
+            "chave_idempotencia": "ui-borda-00000000002",
+        },
+    )
+
+    assert resposta.status_code == 422
+    assert "entre 2000 e 9999" in resposta.content.decode()
+    assert not ProcessoSeletivo.objects.exists()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_o_limite_vem_do_modelo_e_nao_de_um_numero_copiado(client, seletor_ligado):
+    """Se a coluna crescer, o limite da tela cresce junto — não fica para trás em silêncio."""
+    from processo_seletivo.interface.views import TEXTOS_DA_CRIACAO
+
+    for _, _, modelo, campo in TEXTOS_DA_CRIACAO:
+        assert modelo._meta.get_field(campo).max_length

@@ -77,9 +77,20 @@ cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python m
 
 ### Ver o sistema no ar
 
-Não há interface gráfica — ela está fora do escopo deste incremento. O sistema é uma API, e a
-consulta pública é anônima, então basta abrir as URLs no navegador. Para ter o que olhar, popule
-uma demonstração que percorre o fluxo normativo real, com atores distintos em cada etapa:
+Há duas superfícies. A **consulta pública** é anônima: basta abrir as URLs no navegador. A
+**interface administrativa** fica em `/gestao/` e conduz o fluxo inteiro — criar Processo e Edital,
+compor Perfis e Cronograma, submeter, homologar, publicar, retificar e consultar a auditoria.
+
+A interface exige identidade. Enquanto o diretório institucional não está integrado, o seletor de
+identidade a substitui — e **só existe fora de produção**, onde `config.settings.production` recusa
+iniciar com ele ligado:
+
+```bash
+cd backend && DJANGO_SETTINGS_MODULE=config.settings.development INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver
+```
+
+Para ter o que olhar, popule uma demonstração que percorre o fluxo normativo real, com atores
+distintos em cada etapa:
 
 ```bash
 cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python manage.py seed_demo
@@ -87,7 +98,9 @@ cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python m
 
 O comando imprime os identificadores criados e as URLs prontas: versão vigente, histórico e
 Retificação. Ele cria um Edital publicado com dois Perfis e três Eventos, mais duas Retificações —
-uma já vigente e outra com vigência futura —, para que a consulta temporal tenha o que mostrar.
+uma já vigente e outra com vigência futura —, para que a consulta temporal tenha o que mostrar. Não
+há como recriá-la sobre o mesmo código: apagar a demonstração exigiria excluir Publicações, o que a
+Constituição proíbe e as triggers de imutabilidade recusam. Use outro `--codigo`.
 
 ## Produção
 

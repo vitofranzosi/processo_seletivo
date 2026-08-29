@@ -143,8 +143,25 @@ def criar_processo(request):
     return redirect(reverse("interface:processo-detalhe", args=[processo.id]))
 
 
+# (campo do formulário, rótulo, modelo, campo do modelo). O limite vem de `_meta` em vez de ser
+# repetido aqui: campo maior que a coluna vira erro 500 no PostgreSQL, e um número copiado à mão
+# se desatualiza em silêncio na primeira migration que mudar o tamanho.
+TEXTOS_DA_CRIACAO = (
+    ("codigo", "Identificação institucional", ProcessoSeletivo, "institutional_code"),
+    ("titulo", "Título do Processo", ProcessoSeletivo, "title"),
+    ("numero", "Número do Edital", Edital, "number"),
+    ("titulo_edital", "Título do Edital", Edital, "title"),
+)
+ANO_MINIMO, ANO_MAXIMO = 2000, 9999
+
+
 def _processo_do_formulario(dados):
-    """Campos obrigatórios verificados aqui só para dar mensagem antes de ir ao command."""
+    """Traduz o formulário e recusa o que a persistência não aguentaria (FR-020/SC-007).
+
+    A tela nova entrava direto no command, sem passar pelo serializer que a API usa: o que
+    excedesse a coluna atravessava a borda e voltava como 500. Quem decide continua sendo o
+    domínio; o que se faz aqui é não deixar o erro chegar ao banco sem forma.
+    """
     campos = {
         "codigo": "Identificação institucional",
         "titulo": "Título do Processo",
@@ -155,10 +172,19 @@ def _processo_do_formulario(dados):
     vazios = [rotulo for chave, rotulo in campos.items() if not (dados.get(chave) or "").strip()]
     if vazios:
         raise ValueError("Preencha: " + ", ".join(vazios) + ".")
+    excedidos = [
+        f"{rotulo} (máximo {modelo._meta.get_field(campo).max_length} caracteres)"
+        for chave, rotulo, modelo, campo in TEXTOS_DA_CRIACAO
+        if len(dados[chave].strip()) > modelo._meta.get_field(campo).max_length
+    ]
+    if excedidos:
+        raise ValueError("Encurte: " + ", ".join(excedidos) + ".")
     try:
         ano = int(dados["ano"])
     except ValueError as exc:
         raise ValueError(f"'{dados['ano']}' não é um ano válido.") from exc
+    if not ANO_MINIMO <= ano <= ANO_MAXIMO:
+        raise ValueError(f"O ano do Edital deve estar entre {ANO_MINIMO} e {ANO_MAXIMO}.")
     return {
         "institutionalCode": dados["codigo"].strip(),
         "title": dados["titulo"].strip(),
@@ -199,22 +225,34 @@ def sair(request):
 
 SEVERIDADE = {"BLOCKING_ERROR": "erro", "WARNING": "aviso", "INFO": "informacao"}
 
-# Onde cada achado do domínio se resolve: a etapa que edita aquele conteúdo e a âncora da seção
-# dentro dela. FR-027 pede a pendência ao lado do campo, e o domínio já diz de qual campo fala —
-# a informação existia e era descartada na tradução para a tela.
+# Onde cada achado do domínio se resolve: a etapa que trata aquele conteúdo, a âncora da seção
+# dentro dela, e se a pessoa consegue de fato corrigi-lo ali. FR-027 pede a pendência ao lado do
+# campo, e o domínio já diz de qual campo fala — a informação existia e era descartada na
+# tradução para a tela.
+#
+# Para `profiles` e `schedule` a âncora é a seção, não um campo: a pendência é "não há nenhum", e
+# o lugar de agir é o botão de acrescentar, dentro da seção.
+#
+# `title` e `description` só existem na criação do Edital e não têm ato de domínio que os altere
+# depois. Levar alguém até a etapa de Identificação, que é somente leitura, seria oferecer um
+# caminho que não termina em lugar nenhum — pior do que não oferecer caminho algum.
 DESTINO_DA_PENDENCIA = {
-    "title": ("identificacao", "#ident-titulo"),
-    "description": ("identificacao", "#ident-titulo"),
-    "profiles": ("perfis", "#perfis-titulo"),
-    "schedule": ("cronograma", "#cronograma-titulo"),
+    "title": ("identificacao", "#ident-titulo", False),
+    "description": ("identificacao", "#ident-titulo", False),
+    "profiles": ("perfis", "#perfis-titulo", True),
+    "schedule": ("cronograma", "#cronograma-titulo", True),
 }
+MOTIVO_NAO_CORRIGIVEL = (
+    "definido na criação do Edital; ainda não há ato de domínio que o altere em elaboração"
+)
 
 
 def _pendencias(edital):
     """FR-008 e FR-027: o que falta para submeter, e onde cada coisa se resolve."""
+    rotulos = {chave: rotulo for chave, rotulo, _ in ETAPAS_COMPOSICAO}
     pendencias = []
     for item in validate_for_publication(edital_snapshot(edital)):
-        etapa, ancora = DESTINO_DA_PENDENCIA.get(item.path, (None, ""))
+        etapa, ancora, corrigivel = DESTINO_DA_PENDENCIA.get(item.path, (None, "", False))
         pendencias.append(
             {
                 "severidade": SEVERIDADE.get(str(item.severity), "informacao"),
@@ -222,9 +260,9 @@ def _pendencias(edital):
                 "campo": item.path,
                 "etapa": etapa,
                 "ancora": ancora,
-                "rotulo_etapa": dict(
-                    (chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO
-                ).get(etapa, ""),
+                "corrigivel": corrigivel,
+                "rotulo_etapa": rotulos.get(etapa, ""),
+                "motivo": "" if corrigivel else MOTIVO_NAO_CORRIGIVEL,
             }
         )
     return pendencias
@@ -232,7 +270,7 @@ def _pendencias(edital):
 
 def _pendencias_da_etapa(pendencias, etapa):
     """As que a pessoa consegue resolver sem sair desta tela."""
-    return [item for item in pendencias if item["etapa"] == etapa]
+    return [item for item in pendencias if item["etapa"] == etapa and item["corrigivel"]]
 
 
 # O wizard só tem as etapas que o domínio sustenta. Identificação é leitura porque não há

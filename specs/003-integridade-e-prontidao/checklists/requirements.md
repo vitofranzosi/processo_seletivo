@@ -33,37 +33,55 @@
 
 ## Análise de consistência entre artefatos
 
-Verificação cruzada de `spec.md`, `plan.md` e `tasks.md`, executada sobre os arquivos.
+Verificação cruzada de `spec.md`, `plan.md` e `tasks.md`, executada sobre os arquivos após a
+revisão de fechamento.
 
 | Verificação | Resultado |
 | --- | --- |
-| Requisitos funcionais | 32 |
+| Requisitos funcionais | 34 |
 | Critérios de sucesso | 7 |
 | Histórias de usuário | 7 |
 | Requisitos sem tarefa correspondente | nenhum |
 | Tarefas citando requisito inexistente | nenhuma |
 | Requisitos duplicados ou renumerados | nenhum |
-| Tarefas | 58 — 27 concluídas, 31 abertas |
-| Requisitos com alguma implementação | 22 |
-| Requisitos inteiramente abertos | 10 — FR-019 a FR-028 |
+| Tarefas | 71 — todas concluídas |
+| Tarefas sem rastro | nenhuma; T070 e T071 são marcadas `[rito]` por tratarem dos artefatos, não do produto |
+| Artefatos de Fase 0 e 1 | `research.md`, `data-model.md` e `quickstart.md` presentes |
 
 A numeração é contínua e não desloca em fases posteriores; cada tarefa concluída registra o commit
-em que foi implementada, para que a reconstrução retroativa da lista seja auditável em vez de
+ou a evidência correspondente, para que a reconstrução retroativa da lista seja auditável em vez de
 declarativa.
 
-### Conferência das lacunas declaradas
+### Conferência das lacunas, refeita
 
-Os requisitos declarados abertos foram verificados no código, e não apenas assumidos:
+Todas as lacunas declaradas na primeira análise foram fechadas, e cada uma foi conferida no código
+em vez de assumida:
 
-- **FR-019** — as triggers existentes cobrem `auditoria`, `publicacao`, `documento_publicado` e
-  `versao_consolidada`; não há script versionado de `GRANT` para os papéis.
-- **FR-020** — `targetPath` e `expectedPreviousHash` são `CharField` sem `max_length` em
-  `publicacoes/api/serializers.py`; o excesso chega às colunas menores do banco.
-- **FR-021** — `public_views.py` usa `parse_datetime` e aceita instante sem fuso, sem
-  `is_naive`.
-- **FR-022** — `rascunho.js` remove o rascunho por comparação de conteúdo, nunca por prazo.
-- **FR-023** — `Retificacao`, `AlteracaoNormativa`, `AtoAdministrativo` e `RevisaoEdital` não têm
-  trigger de imutabilidade.
+- **FR-019** — `seguranca/papeis.py` e `manage.py provisionar_papeis`, verificados contra banco
+  criado do zero: provisionar, migrar como o papel de migração, provisionar de novo, `6 de 6`.
+- **FR-020** — limites no `ChangeSerializer` e, na tela de criação, derivados de
+  `_meta.get_field(...).max_length`.
+- **FR-021** — `public_views._instant` recusa instante sem fuso, e o `openapi.yaml` documenta o
+  deslocamento obrigatório.
+- **FR-022** e **FR-026** — verificados executando os scripts em `node --test`, não por busca de
+  texto no fonte.
+- **FR-023** — quatro triggers novas, condicionais ou absolutas conforme a tabela.
+- **FR-025**, **FR-027**, **FR-028** — implementados; a pendência sem onde ser corrigida deixou de
+  oferecer caminho.
+
+### O que a revisão de fechamento encontrou
+
+Dois requisitos estavam marcados como concluídos e não funcionavam em banco novo:
+
+- **FR-019** falhava com `relation "auditoria_registroauditoria" does not exist` porque o `REVOKE`
+  nominal pressupunha tabelas que só existem depois das migrations. O teste de conformidade não
+  pegou porque rodava contra o banco de teste, que já tinha as tabelas — verificava a política,
+  nunca a ordem de implantação.
+- **SC-006** foi lido por arredondamento: 88,564% aparecia como "89%". A régua passou a exigir três
+  casas e as duas execuções.
+
+Além disso, um teste escrito para fechar a cobertura descobriu que o `seed_demo` estava quebrado
+desde o commit `41e8173` — caminho documentado no README, a 0% de cobertura, e ninguém percebeu.
 
 ## Notes
 

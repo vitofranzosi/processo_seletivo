@@ -130,11 +130,6 @@ class Command(BaseCommand):
         parser.add_argument(
             "--ano", type=int, default=None, help="ano do Edital (padrão: o ano corrente)"
         )
-        parser.add_argument(
-            "--recriar",
-            action="store_true",
-            help="falha se o código já existir, a menos que seja informado",
-        )
 
     def handle(self, *args, **opcoes):
         codigo = opcoes["codigo"]
@@ -142,6 +137,9 @@ class Command(BaseCommand):
             institution_scope=ESCOPO, institutional_code=codigo
         )
         if existente.exists():
+            # Não há `--recriar`, e é decisão e não esquecimento: apagar a demonstração exigiria
+            # excluir Publicações, que a Constituição proíbe e que as triggers de imutabilidade
+            # recusam. A saída é criar outra demonstração com outro código.
             raise CommandError(
                 f"Já existe Processo com o código {codigo}. Use --codigo para outro identificador."
             )
@@ -267,25 +265,34 @@ class Command(BaseCommand):
             }
             if vigencia is not None:
                 dados["effectiveAt"] = vigencia
-            retificacao = create_retification(
-                actor=elaborador, edital_id=edital.id, data=dados
+            correlacao = f"seed-demo-{sufixo}"
+            retificacao, _ = create_retification(
+                actor=elaborador,
+                edital_id=edital.id,
+                data=dados,
+                idempotency_key=f"seed-demo-{sufixo}-elaborar",
+                correlation_id=correlacao,
             )
             for acao, ator_da_vez in (
                 ("submeter", elaborador),
                 ("homologar", homologador),
             ):
-                retificacao = transition_retification(
+                retificacao, _ = transition_retification(
                     actor=ator_da_vez,
                     retificacao_id=retificacao.id,
                     expected_revision=retificacao.revision,
                     action=acao,
                     reason="Conferido.",
+                    idempotency_key=f"seed-demo-{sufixo}-{acao}",
+                    correlation_id=correlacao,
                 )
             publish_retification(
                 actor=publicador,
                 retificacao_id=retificacao.id,
                 expected_revision=retificacao.revision,
                 signatory=SIGNATARIO,
+                idempotency_key=f"seed-demo-{sufixo}-publicar",
+                correlation_id=correlacao,
             )
 
     def _resumo(self, processo, edital):
