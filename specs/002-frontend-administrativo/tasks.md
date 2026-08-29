@@ -64,9 +64,9 @@ real que resta. Uma lista que marcasse tudo como feito não valeria a pena exist
 - [X] T019 [US2] Mostrar achados de validação por severidade antes de submeter
 - [X] T020 [US2] Interpretar instantes no fuso institucional, e não em UTC
 - [X] T021 [US2] Testes de composição e wizard em backend/tests/interface/test_compor.py
-- [ ] T022 [US2] **Implementar o rascunho local no navegador** para atender FR-020: preservar o conteúdo em preenchimento diante de expiração de sessão e queda de conexão, associado ao Edital e à pessoa, descartado quando o domínio aceita. Hoje o digitado só sobrevive a uma recusa; sessão expirada perde tudo. Ver Decisão 5 do plano e research.md §4
-- [ ] T023 [US2] Distinguir na tela o que já foi enviado ao domínio do que existe apenas no navegador (depende de T022)
-- [ ] T024 [US2] Teste de retomada após expiração de sessão, cobrindo SC-007 (depende de T022)
+- [X] T022 [US2] Rascunho local no navegador em backend/processo_seletivo/interface/static/interface/rascunho.js: guarda por Edital, etapa e pessoa; oferece restaurar em vez de sobrescrever em silêncio; descarta quando o conteúdo guardado coincide com o renderizado pelo servidor
+- [X] T023 [US2] Distinguir na tela o enviado do que só existe no navegador: aviso ao reabrir com preenchimento pendente, e marcador "alterações ainda não enviadas" enquanto houver diferença
+- [X] T024 [US2] Testes do contrato entre template e script em backend/tests/interface/test_rascunho_local.py, e verificação do ciclo completo no navegador com a sessão expirada no banco
 
 ---
 
@@ -160,13 +160,11 @@ Não são tarefas desta feature. Estão aqui porque aparecem na interface e algu
 
 - Setup (T001–T005) → Foundational (T006–T010) → todas as histórias
 - US1 a US6 são independentes entre si depois da Fase 2
-- T023 e T024 dependem de T022
 - T055 depende de T057
 - T053, T054, T056, T058 e T059 não dependem de código: dependem de decisão ou de pessoas
 
 ## Situação
 
-**48 de 59 tarefas concluídas.** As 11 restantes são: um requisito funcional não implementado
-(FR-020 — T022, T023, T024), uma lacuna de cobertura da Retificação (T037), três de acessibilidade
-que dependem de ferramenta, de pessoa ou do design system (T053, T054, T055), e quatro decisões que
-não são minhas de tomar (T056 a T059).
+**51 de 59 tarefas concluídas.** As 8 restantes são: uma lacuna de cobertura da Retificação
+(T037), três de acessibilidade que dependem de ferramenta, de pessoa ou do design system (T053,
+T054, T055), e quatro decisões que não são minhas de tomar (T056 a T059).

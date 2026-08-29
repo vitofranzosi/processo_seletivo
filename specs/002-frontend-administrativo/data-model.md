@@ -141,9 +141,28 @@ Existe porque o handler de exceções do DRF só alcança views do DRF: numa vie
 
 ## 8. O que fica no navegador
 
-**Nada, hoje.** Não há `localStorage` nem `sessionStorage`. A Decisão 5 do plano previa o rascunho
-local para atender FR-020, e não foi implementada — ver [research.md](./research.md) §4 e a tarefa
-correspondente em [tasks.md](./tasks.md).
+O rascunho local do assistente, em `localStorage`, sob a chave
+`ps:rascunho:<edital>:<etapa>:<pessoa>` — a pessoa entra na chave para que quem usar o mesmo
+computador depois não veja o rascunho alheio.
+
+O valor é `{em, dados}`, onde `dados` é a forma canônica do formulário:
+
+```text
+{ simples: {campo: valor},           // campos fora de linha
+  linhas:  [{campo: valor}, ...] }   // uma entrada por Perfil ou Evento, na ordem da tela
+```
+
+**Canônica porque o nome dos campos não serve para comparar.** O índice de cada linha nasce no
+cliente e o servidor renumera ao reexibir; comparar `perfil-1788002895219-code` com `perfil-0-code`
+acusaria diferença logo depois de um salvamento bem-sucedido.
+
+O template entrega ao script o que ele precisa saber, e nada além: `data-rascunho` com a chave,
+`data-lista` com o contêiner das linhas e `data-fragmento` com a rota que reconstrói uma linha. Sem
+permissão de elaborar, os atributos não são renderizados e nada é guardado.
+
+**Não é fonte normativa** e não substitui o rascunho estruturado do Edital, que continua no backend.
+Some sozinho quando o conteúdo guardado coincide com o renderizado — isto é, quando o domínio já
+recebeu o que estava pendente.
 
 ## Divergências da estrutura desenhada no plano
 

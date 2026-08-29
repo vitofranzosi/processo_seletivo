@@ -1,7 +1,9 @@
 {% extends "interface/compor_base.html" %}{% load interface_extras %}
 {% block etapa_titulo %}Perfis de Vaga{% endblock %}
 {% block etapa %}
-<form method="post" id="formulario">
+<form method="post" id="formulario"
+      {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"
+      data-lista="#perfis" data-fragmento="{% url 'interface:fragmento-perfil' %}"{% endif %}>
   {% csrf_token %}
   <section aria-labelledby="perfis-titulo">
     <h2 id="perfis-titulo">Perfis de Vaga</h2>
@@ -21,4 +23,5 @@
 </form>
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
 <script src="{% static 'interface/assistente.js' %}" defer></script>
+<script src="{% static 'interface/rascunho.js' %}" defer></script>
 {% endblock %}

@@ -78,8 +78,20 @@ No Edital em elaboração, "Elaborar" abre o assistente em quatro etapas.
 - Cronograma: datas no horário de Brasília.
 - Revisão mostra o que falta antes de submeter.
 
-**Não verifique retomada após queda de conexão**: FR-020 não está implementado. O digitado sobrevive
-a uma recusa do domínio, não a uma sessão expirada.
+**Retomada após perder a sessão (FR-020).** Preencha um Perfil e **não salve**. Expire a sessão
+pelo banco:
+
+```bash
+psql -h localhost -U $USER -d processo_seletivo_demo -c 'delete from django_session;'
+```
+
+Recarregue: a interface manda identificar-se. Volte como a mesma pessoa e reabra a etapa. Um aviso
+diz que há preenchimento não enviado, de quando ele é, e oferece restaurar ou descartar — nada é
+restaurado em silêncio, porque o guardado pode ser mais velho que o do servidor.
+
+Restaure e salve: o aviso não volta na próxima visita, porque o servidor alcançou o que estava
+pendente. Enquanto houver diferença, o marcador "alterações ainda não enviadas" fica ao lado de
+"Salvar rascunho".
 
 ### US3 — Conduzir até a publicação
 

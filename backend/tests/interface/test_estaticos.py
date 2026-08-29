@@ -91,3 +91,20 @@ def test_contador_declara_o_que_o_script_precisa_para_reagir(
     assert item.lstrip(".") in fragmento.content.decode(), (
         "o fragmento precisa carregar a classe que o contador conta"
     )
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+@pytest.mark.parametrize("etapa", TELAS_COM_HTMX + ["identificacao", "revisao"])
+def test_nenhuma_sintaxe_de_template_chega_ao_navegador(client, seletor_ligado, edital, etapa):
+    """`{# ... #}` do Django só comenta uma linha; em duas, ele é impresso na tela.
+
+    Foi assim que um comentário sobre FR-020 apareceu para o usuário entre os botões.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo = client.get(
+        reverse("interface:compor-etapa", args=[edital.id, etapa])
+    ).content.decode()
+
+    for residuo in ("{#", "#}", "{%", "%}", "{{", "}}"):
+        assert residuo not in corpo, f"sintaxe de template não interpretada na página: {residuo}"

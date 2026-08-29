@@ -1,7 +1,9 @@
 {% extends "interface/compor_base.html" %}
 {% block etapa_titulo %}Cronograma{% endblock %}
 {% block etapa %}
-<form method="post" id="formulario">
+<form method="post" id="formulario"
+      {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"
+      data-lista="#eventos" data-fragmento="{% url 'interface:fragmento-evento' %}"{% endif %}>
   {% csrf_token %}
   <section aria-labelledby="cronograma-titulo">
     <h2 id="cronograma-titulo">Cronograma</h2>
@@ -23,4 +25,5 @@
 </form>
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
 <script src="{% static 'interface/assistente.js' %}" defer></script>
+<script src="{% static 'interface/rascunho.js' %}" defer></script>
 {% endblock %}

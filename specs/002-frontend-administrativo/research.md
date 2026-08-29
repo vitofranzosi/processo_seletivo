@@ -84,15 +84,29 @@ o que importa porque contraste só é verificável com o CSS aplicado.
 **Decisão do plano** (Decisão 5): o conteúdo em preenchimento vive no armazenamento do navegador,
 associado ao Edital e à pessoa, e é descartado quando o domínio aceita o envio.
 
-**O que aconteceu**: **não foi implementado.** Não há `localStorage` nem `sessionStorage` no código
-da interface.
+**O que aconteceu**: implementado em `static/interface/rascunho.js`, depois de este documento ter
+registrado a lacuna.
 
-O que existe é preservação no servidor: quando o domínio recusa, a view relê o que foi digitado e
-reexibe com "O que você digitou foi preservado abaixo". Isso cobre recusa, que é o caso frequente, e
-**não cobre os dois casos que FR-020 nomeia** — expiração de sessão e falha de comunicação. Nos dois,
-o conteúdo se perde.
+Já existia preservação no servidor — quando o domínio recusa, a view relê o que foi digitado e
+reexibe com "O que você digitou foi preservado abaixo". Isso cobre a recusa, que pressupõe a
+requisição ter chegado, e **não cobre os dois casos que FR-020 nomeia**: neles o envio não acontece.
 
-FR-020 e SC-007 estão, portanto, não atendidos. Consta como tarefa em [tasks.md](./tasks.md).
+**Nada é restaurado em silêncio.** O que está guardado no navegador pode ser mais velho que o do
+servidor — outra sessão pode ter salvo depois —, e sobrescrever sem perguntar trocaria uma perda por
+outra. Ao reabrir a etapa com preenchimento pendente, a pessoa vê que existe, de quando é, e escolhe
+entre restaurar e descartar. Enquanto houver diferença, um marcador diz "alterações ainda não
+enviadas", que é o que a Decisão 5 pede ao exigir distinguir o enviado do local.
+
+**A comparação é por conteúdo canônico, não pelos nomes dos campos.** O índice de cada linha nasce
+no cliente (`Date.now()`) e o servidor renumera ao reexibir; comparar nomes acusaria diferença logo
+depois de um salvamento bem-sucedido, e o aviso apareceria sempre. Como `replace_draft` preserva o
+identificador enviado de cada Perfil e Evento, a comparação por conteúdo é fiel — e é ela que
+descarta o rascunho sozinho quando o servidor alcança o que está guardado.
+
+**Onde não protege**: navegação anônima, cookies bloqueados e cota estourada. O acesso ao
+armazenamento é testado antes do uso; sem ele a tela funciona igual, só não guarda.
+
+FR-020 e SC-007 atendidos; verificação do ciclo completo em [quickstart.md](./quickstart.md).
 
 ## 5. Identidade durante o desenvolvimento
 

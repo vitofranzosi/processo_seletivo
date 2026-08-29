@@ -170,7 +170,7 @@ specs/002-frontend-administrativo/
 ├── accessibility.md         # verificação de eMAG 3.1 e WCAG 2.1 AA
 ├── checklists/
 │   └── requirements.md
-└── tasks.md                 # 48 de 59 concluídas
+└── tasks.md                 # 51 de 59 concluídas
 ```
 
 ### Source Code (repository root)
@@ -211,8 +211,9 @@ erro de domínio vira mensagem compreensível. Resultado em `data-model.md` e `q
 **Nota sobre a execução destas fases.** Elas não aconteceram nesta ordem: as seis histórias foram
 implementadas primeiro, e `research.md`, `data-model.md`, `quickstart.md` e `tasks.md` foram
 escritos depois, registrando o que de fato foi decidido — inclusive onde a realidade divergiu deste
-plano. As divergências relevantes: o design system do SUAP não foi obtido (research.md §1) e o
-rascunho local da Decisão 5 não foi implementado, deixando FR-020 em aberto (research.md §4).
+plano. A divergência que permanece: o design system do SUAP não foi obtido (research.md §1). O
+rascunho local da Decisão 5 também estava em aberto e foi implementado depois, quando a redação
+destes documentos expôs a lacuna (research.md §4).
 
 ## Riscos
 
