@@ -78,10 +78,12 @@ def perfis(numero):
 
 
 def cronograma(agora, numero):
+    # `type` é texto livre e a tela o exibe como foi escrito: "INSCRICAO" aparecia cru no
+    # Cronograma e no PDF. Aqui vale escrever como um Edital de verdade escreveria.
     marcos = [
-        ("INSCRICAO", "Período de inscrições", 0, 20),
-        ("PROVA", "Prova objetiva", 35, None),
-        ("RESULTADO", "Divulgação do resultado final", 60, None),
+        ("Inscrições", "Inscrições pelo sistema, com isenção de taxa até o 5º dia.", 0, 20),
+        ("Prova objetiva", "Aplicação da prova no Campus Vitória, em turno único.", 35, None),
+        ("Resultado final", "Resultado final e abertura do prazo recursal.", 60, None),
     ]
     return [
         {
