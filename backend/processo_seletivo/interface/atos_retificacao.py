@@ -104,3 +104,18 @@ def executar(ato, request, ator, retificacao, signatario=None):
     return transition_retification(
         **argumentos, action=ato.chave, reason=(request.POST.get("motivo") or "").strip()
     )
+
+
+def impedimento(retificacao, ator, ato):
+    """O que impede este ato agora — para dizer antes da confirmação, não depois dela.
+
+    `disponiveis` já responde isto para montar a lista de ações; a tela de confirmação,
+    alcançável por URL direta, oferecia "Confirmar" sem consultá-lo. Quem recusa continua
+    sendo o command: aqui só se explica o que ele responderia.
+    """
+    if not ator.can(ato.permissao):
+        return {"motivo": "permissao", "permissao": ato.permissao}
+    if any(cabivel.chave == ato.chave for cabivel in disponiveis(retificacao, ator)):
+        return None
+    exigidas = sorted(CANCELAVEL) if ato.chave == "cancelar" else [ato.situacao_exigida]
+    return {"motivo": "situacao", "exigidas": exigidas, "atual": retificacao.status}

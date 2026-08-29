@@ -391,6 +391,9 @@ def praticar_ato(request, edital_id, acao):
         "impedido_por_segregacao": ato.chave == "publicar"
         and impede_por_segregacao(participantes, ator),
         "pendencias": _pendencias(edital) if ato.chave in {"submeter", "publicar"} else [],
+        # Alcançável por URL direta: sem isto a tela oferece "Confirmar" para um ato que o
+        # command recusaria, e a recusa só apareceria depois do clique.
+        "impedimento": atos.impedimento(edital, ator, ato),
         # A chave nasce aqui: confirmar duas vezes repete o mesmo ato, não pratica dois.
         "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
     }
@@ -454,7 +457,13 @@ def retificar(request, edital_id):
         raise Http404
     base = _versao_vigente(edital)
     if base is None or edital.status != Edital.Status.PUBLICADO:
-        raise Http404
+        # O Edital existe e está no escopo de quem pediu; dizer "não encontrado" esconderia
+        # a razão real. Retificação incide sobre o que já foi publicado.
+        raise DomainError(
+            "edital_nao_publicado",
+            "Só é possível retificar um Edital publicado. Este ainda não foi.",
+            409,
+        )
 
     erros, resumo, dados = [], [], request.POST if request.method == "POST" else None
     if request.method == "POST":
@@ -580,6 +589,7 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
         "edital": item.edital,
         "ato": ato,
         "alteracoes": _alteracoes_legiveis(item),
+        "impedimento": atos_retificacao.impedimento(item, ator, ato),
         "vigencia": item.effective_at,
         "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
     }
@@ -612,6 +622,7 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
 # Como cada operação auditada é lida por quem responde um questionamento.
 OPERACOES = {
     "CRIAR": "Criação",
+    "ALTERAR_RASCUNHO": "Alteração do rascunho",
     "ATIVAR": "Ativação do Processo",
     "SUBMETER": "Submissão para revisão",
     "HOMOLOGAR": "Homologação",
@@ -737,6 +748,7 @@ def praticar_ato_processo(request, processo_id, acao):
         "ato": ato,
         # FR-018: o que impede é mostrado antes da tentativa, com caminho para cada pendência.
         "pendentes": pending_editais(processo) if ato.depende_dos_editais else [],
+        "impedimento": atos_processo.impedimento(processo, ator, ato),
         "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
     }
     if request.method == "GET":

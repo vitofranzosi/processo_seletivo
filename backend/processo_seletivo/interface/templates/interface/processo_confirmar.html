@@ -12,6 +12,8 @@
 
 {% if erro %}<p class="erro" role="alert"><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
 
+{% include "interface/_impedimento.html" %}
+
 {% if pendentes %}
 <div class="erro" role="alert">
   <strong>Este ato será recusado.</strong>
@@ -43,8 +45,10 @@
     <span class="ajuda" id="ajuda-motivo">Fica registrado no ato administrativo e na auditoria.</span>
   </p>
   <p class="salvar">
+    {% if not impedimento %}
     <button type="submit" class="botao {% if ato.interrupcao %}perigoso{% endif %}">
       Confirmar: {{ ato.rotulo }}</button>
+    {% endif %}
     <a href="{% url 'interface:processo-detalhe' processo.id %}" class="acao">Cancelar e voltar</a>
   </p>
 </form>

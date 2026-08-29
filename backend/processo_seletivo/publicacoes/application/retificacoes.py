@@ -407,6 +407,18 @@ def publish_retification(*, actor, retificacao_id, expected_revision, signatory)
         if updated != 1:
             raise DomainError("stale_revision", "A revisão informada está obsoleta.", 412)
         item.refresh_from_db()
+        # Publicar é o ato que muda o que o público vê; era o único da Retificação que não
+        # deixava registro, porque não passa pela transição compartilhada com os demais.
+        record_event(
+            actor=actor,
+            permission="retificacao:publicar",
+            operation="PUBLICAR",
+            aggregate=item,
+            now=now,
+            correlation_id="",
+            previous_state=Retificacao.Status.HOMOLOGADA,
+            previous_revision=expected_revision,
+        )
         _materialize_affected_versions(item, publication, now)
         Edital.objects.filter(pk=edital.pk).update(
             next_publication_order=F("next_publication_order") + 1

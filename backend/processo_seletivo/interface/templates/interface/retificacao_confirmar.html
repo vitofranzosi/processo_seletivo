@@ -12,6 +12,8 @@
 
 {% if erro %}<p class="erro" role="alert"><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
 
+{% include "interface/_impedimento.html" %}
+
 <section aria-labelledby="consequencias-titulo"
          class="consequencias {% if ato.irreversivel %}irreversivel{% endif %}">
   <h2 id="consequencias-titulo">
@@ -58,8 +60,10 @@
     <textarea id="motivo" name="motivo" rows="3" required></textarea></p>
   {% endif %}
   <p class="salvar">
+    {% if not impedimento %}
     <button type="submit" class="botao {% if ato.interrupcao %}perigoso{% endif %}">
       Confirmar: {{ ato.rotulo }}</button>
+    {% endif %}
     <a href="{% url 'interface:retificacao-detalhe' retificacao.id %}" class="acao">Cancelar e voltar</a>
   </p>
 </form>

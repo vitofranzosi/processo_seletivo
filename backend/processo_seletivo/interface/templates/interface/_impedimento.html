@@ -1,0 +1,15 @@
+{% load interface_extras %}
+{% if impedimento %}
+<p class="erro" role="alert">
+  {% if impedimento.motivo == "permissao" %}
+    <strong>Você não pode praticar este ato.</strong>
+    Ele exige a permissão <code>{{ impedimento.permissao }}</code>, que não está entre as suas.
+  {% else %}
+    <strong>Este ato não cabe na situação atual.</strong>
+    Ele só é admitido a partir de
+    {% for estado in impedimento.exigidas %}{% if not forloop.first %}{% if forloop.last %} ou {% else %}, {% endif %}{% endif %}<em>{{ estado|situacao }}</em>{% endfor %},
+    e a situação hoje é <em>{{ impedimento.atual|situacao }}</em>.
+  {% endif %}
+  Nada foi alterado.
+</p>
+{% endif %}

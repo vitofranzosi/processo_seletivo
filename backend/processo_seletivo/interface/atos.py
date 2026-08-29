@@ -136,3 +136,18 @@ def disponiveis(edital, ator):
                 yield ato
         elif edital.status == ato.situacao_exigida:
             yield ato
+
+
+def impedimento(edital, ator, ato):
+    """O que impede este ato agora — para dizer antes da confirmação, não depois dela.
+
+    `disponiveis` já responde isto para montar a lista de ações; a tela de confirmação,
+    alcançável por URL direta, oferecia "Confirmar" sem consultá-lo. Quem recusa continua
+    sendo o command: aqui só se explica o que ele responderia.
+    """
+    if not ator.can(ato.permissao):
+        return {"motivo": "permissao", "permissao": ato.permissao}
+    if any(cabivel.chave == ato.chave for cabivel in disponiveis(edital, ator)):
+        return None
+    exigidas = sorted(CANCELAVEL) if ato.chave == "cancelar" else [ato.situacao_exigida]
+    return {"motivo": "situacao", "exigidas": exigidas, "atual": edital.status}

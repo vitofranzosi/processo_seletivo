@@ -195,7 +195,12 @@ def test_retificar_exige_edital_publicado(
     api_client.post("/api/v1/admin/processos", process_payload, format="json", **manager_headers)
     em_elaboracao = Edital.objects.get()
     identificar(client, "ana.elaboradora", ["elaborador"])
-    assert client.get(reverse("interface:retificar", args=[em_elaboracao.id])).status_code == 404
+    resposta = client.get(reverse("interface:retificar", args=[em_elaboracao.id]))
+
+    # O Edital existe e está no escopo de quem pediu: 404 diria "não existe" e esconderia
+    # a razão real, que é a situação em que ele está.
+    assert resposta.status_code == 409
+    assert "Só é possível retificar um Edital publicado" in resposta.content.decode()
 
 
 @pytest.mark.django_db(transaction=True)

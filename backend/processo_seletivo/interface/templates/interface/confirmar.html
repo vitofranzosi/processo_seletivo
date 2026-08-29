@@ -12,6 +12,8 @@
 
 {% if erro %}<p class="erro" role="alert"><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
 
+{% include "interface/_impedimento.html" %}
+
 {% if impedido_por_segregacao %}
 <p class="erro" role="alert"><strong>Segregação de funções.</strong> Você elaborou e homologou
 esta revisão, então não pode publicá-la sozinho. Ao menos outra pessoa autorizada precisa
@@ -61,8 +63,10 @@ participar do ato. O sistema recusará esta operação.</p>
   {% endif %}
 
   <p class="salvar">
+    {% if not impedimento %}
     <button type="submit" class="botao {% if ato.interrupcao %}perigoso{% endif %}">
       Confirmar: {{ ato.rotulo }}</button>
+    {% endif %}
     <a href="{% url 'interface:detalhe' edital.id %}" class="acao">Cancelar e voltar</a>
   </p>
 </form>
