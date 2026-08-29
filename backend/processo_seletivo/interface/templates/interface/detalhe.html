@@ -78,7 +78,7 @@ permanecem preservados.</p>
       {% endif %}
       {% for ato in atos %}
       <li>
-        <a class="botao {% if ato.irreversivel %}perigoso{% else %}secundario{% endif %}"
+        <a class="botao {% if ato.interrupcao %}perigoso{% elif ato.irreversivel %}{% else %}secundario{% endif %}"
            href="{% url 'interface:ato' edital.id ato.chave %}">{{ ato.rotulo }}</a>
         {% if ato.irreversivel %}<span class="marca-irreversivel">irreversível</span>{% endif %}
       </li>

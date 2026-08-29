@@ -61,7 +61,7 @@ participar do ato. O sistema recusará esta operação.</p>
   {% endif %}
 
   <p class="salvar">
-    <button type="submit" class="botao {% if ato.irreversivel %}perigoso{% endif %}">
+    <button type="submit" class="botao {% if ato.interrupcao %}perigoso{% endif %}">
       Confirmar: {{ ato.rotulo }}</button>
     <a href="{% url 'interface:detalhe' edital.id %}" class="acao">Cancelar e voltar</a>
   </p>

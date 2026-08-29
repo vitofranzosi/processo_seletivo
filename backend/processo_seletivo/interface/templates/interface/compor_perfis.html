@@ -1,4 +1,4 @@
-{% extends "interface/compor_base.html" %}
+{% extends "interface/compor_base.html" %}{% load interface_extras %}
 {% block etapa_titulo %}Perfis de Vaga{% endblock %}
 {% block etapa %}
 <form method="post" id="formulario">
@@ -7,7 +7,7 @@
     <h2 id="perfis-titulo">Perfis de Vaga</h2>
     <p class="ajuda">Cada Perfil é uma oportunidade do Edital, com requisitos, vagas e modalidades
       próprios. Alterar um não afeta os demais.</p>
-    <p class="contadores"><span><strong>{{ perfis|length }}</strong> Perfil{{ perfis|length|pluralize:"is" }}</span></p>
+    <p class="contadores"><span><strong>{{ perfis|length }}</strong> {{ perfis|length|plural:"Perfil,Perfis" }}</span></p>
     <div id="perfis">
       {% for perfil in perfis %}{% include "interface/_perfil.html" with indice=forloop.counter0 %}{% endfor %}
     </div>

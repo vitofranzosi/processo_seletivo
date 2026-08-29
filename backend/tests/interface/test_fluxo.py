@@ -211,3 +211,26 @@ def test_cancelado_sai_da_trilha_em_vez_de_avancar(client, seletor_ligado, edita
     assert Edital.objects.get().status == Edital.Status.CANCELADO
     assert 'class="e-fora"' in corpo
     assert "não é o mesmo que encerramento" in corpo
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_encerrar_nao_se_parece_com_cancelar(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """Encerrado é conclusão regular; só a interrupção recebe tratamento de perigo."""
+    publicado = publish_original(api_client, manager_headers, process_payload)
+    identificar(client, "marcia.gestora", ["gestor"])
+    corpo = client.get(reverse("interface:detalhe", args=[publicado.id])).content.decode()
+
+    import re
+
+    botoes = dict(
+        (rotulo, classe)
+        for classe, rotulo in re.findall(
+            r'class="botao ([^"]*)"\s+href="[^"]*">(Encerrar|Cancelar)</a>', corpo
+        )
+    )
+    assert "perigoso" in botoes["Cancelar"], "cancelar é interrupção e recebe tratamento próprio"
+    assert "perigoso" not in botoes["Encerrar"], "encerrar é conclusão regular"
+    assert corpo.count("irreversível") >= 2, "ambos seguem marcados como irreversíveis"

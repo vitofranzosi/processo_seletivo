@@ -20,6 +20,7 @@ class AtoProcesso:
     command: object
     consequencias: list[str]
     irreversivel: bool = False
+    interrupcao: bool = False
     rotulo_motivo: str = "Motivo"
     depende_dos_editais: bool = False
 
@@ -58,6 +59,7 @@ ATOS = {
         situacoes=frozenset({"EM_ELABORACAO", "ATIVO"}),
         command=cancel_process,
         irreversivel=True,
+        interrupcao=True,
         rotulo_motivo="Motivo do cancelamento",
         depende_dos_editais=True,
         consequencias=[

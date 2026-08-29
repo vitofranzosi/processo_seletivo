@@ -27,6 +27,7 @@ class Ato:
     command: object
     consequencias: list[str]
     irreversivel: bool = False
+    interrupcao: bool = False
     exige_motivo: bool = False
     exige_signatario: bool = False
     rotulo_motivo: str = "Motivo"
@@ -109,6 +110,7 @@ ATOS = {
         situacao_exigida=None,
         command=cancel_edital,
         irreversivel=True,
+        interrupcao=True,
         exige_motivo=True,
         rotulo_motivo="Motivo do cancelamento",
         consequencias=[

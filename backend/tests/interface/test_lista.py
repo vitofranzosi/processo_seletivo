@@ -119,3 +119,24 @@ def test_seletor_de_identidade_nao_existe_com_a_configuracao_desligada(client, s
     corpo = resposta.content.decode()
     assert "Autenticação institucional não configurada" in corpo
     assert "checkbox" not in corpo, "nenhum papel pode ser escolhido"
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_plural_de_edital_em_portugues(
+    client, seletor_ligado, cenario, api_client, manager_headers
+):
+    """Plural em português não sai de sufixo: 'Editalis' apareceu na tela antes disto."""
+    identificar(client, "bruno.homologador", ["homologador"])
+    corpo = client.get(reverse("interface:lista")).content.decode()
+    assert "1 Edital neste Processo" in corpo
+    assert "Editalis" not in corpo
+
+    api_client.post(
+        f"/api/v1/admin/processos/{cenario.processo_id}/editais",
+        {"number": "31", "year": 2026, "title": "Segundo"},
+        format="json",
+        **{**manager_headers, "HTTP_IDEMPOTENCY_KEY": "plural-key-00000001"},
+    )
+    corpo = client.get(reverse("interface:lista")).content.decode()
+    assert "2 Editais neste Processo" in corpo

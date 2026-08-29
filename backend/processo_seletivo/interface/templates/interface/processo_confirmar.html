@@ -43,7 +43,7 @@
     <span class="ajuda" id="ajuda-motivo">Fica registrado no ato administrativo e na auditoria.</span>
   </p>
   <p class="salvar">
-    <button type="submit" class="botao {% if ato.irreversivel %}perigoso{% endif %}">
+    <button type="submit" class="botao {% if ato.interrupcao %}perigoso{% endif %}">
       Confirmar: {{ ato.rotulo }}</button>
     <a href="{% url 'interface:processo-detalhe' processo.id %}" class="acao">Cancelar e voltar</a>
   </p>

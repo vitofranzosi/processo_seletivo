@@ -58,7 +58,7 @@
     <textarea id="motivo" name="motivo" rows="3" required></textarea></p>
   {% endif %}
   <p class="salvar">
-    <button type="submit" class="botao {% if ato.irreversivel %}perigoso{% endif %}">
+    <button type="submit" class="botao {% if ato.interrupcao %}perigoso{% endif %}">
       Confirmar: {{ ato.rotulo }}</button>
     <a href="{% url 'interface:retificacao-detalhe' retificacao.id %}" class="acao">Cancelar e voltar</a>
   </p>

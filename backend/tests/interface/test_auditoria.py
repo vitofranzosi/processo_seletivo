@@ -147,3 +147,25 @@ def test_recusa_do_dominio_vira_pagina_e_nao_erro_de_servidor(client, seletor_li
     assert "Você não tem permissão para isto" in corpo
     assert "Nenhuma alteração foi feita" in corpo
     assert "Traceback" not in corpo, "detalhe interno não pode chegar à tela"
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_situacao_feminina_da_retificacao_e_traduzida(
+    client, seletor_ligado, api_client, edital
+):
+    """A trilha mostrava 'Em revisão → HOMOLOGADA', misturando texto e código cru."""
+    from tests.fixtures.publicacao import retify
+
+    retify(
+        api_client,
+        edital,
+        [{"targetPath": "/title", "operation": "REPLACE", "newValue": "Retificado"}],
+    )
+    identificar(client, "auditor", ["auditor"])
+    corpo = client.get(
+        reverse("interface:auditoria", args=[edital.id]), {"limit": 100}
+    ).content.decode()
+    assert "Homologada" in corpo
+    assert "HOMOLOGADA" not in corpo
+    assert "PUBLICADA" not in corpo

@@ -33,7 +33,7 @@ responsabilidade. Solicite acesso a quem administra o sistema no Cefor.</p>
   </header>
   {% if processo.editais.all %}
   <table>
-    <caption>{{ processo.editais.all|length }} Edital{{ processo.editais.all|length|pluralize:"is" }} neste Processo</caption>
+    <caption>{{ processo.editais.all|length }} {{ processo.editais.all|length|plural:"Edital,Editais" }} neste Processo</caption>
     <thead>
       <tr>
         <th scope="col">Edital</th>
