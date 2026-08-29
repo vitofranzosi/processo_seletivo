@@ -9,7 +9,7 @@ delta a aplicar lá.
 A gramática mora aqui porque OpenAPI não a expressa — `targetPath` é `string` para o schema, e a
 regra que importa (qual forma de segmento vale depende do contêiner) não é capturável por `pattern`.
 E ela precisa estar escrita: quem audita um ato publicado tem de saber como o caminho foi resolvido
-(FR-001b).
+(FR-017).
 
 ## Esta é uma extensão declarada
 
@@ -26,38 +26,34 @@ ato publicado, dialeto que se esconde é pior que dialeto anunciado.
 caminho    = *( "/" segmento )
 
 segmento   = chave           ; quando o contêiner é objeto
-           | indice          ; quando o contêiner é lista — só leitura
+           | indice          ; quando o contêiner é lista — recusado onde há chave
            | "-"             ; quando o contêiner é lista — acréscimo ao fim
            | seletor         ; quando o contêiner é lista
 
-seletor    = "id="     valor
-           | "before=" valor      ; referência de posição, só em ADD
-           | "after="  valor      ; referência de posição, só em ADD
+seletor    = "id=" uuid
 
+uuid       = 8HEXDIG "-" 4HEXDIG "-" 4HEXDIG "-" 4HEXDIG "-" 12HEXDIG
 indice     = "0" / ( %x31-39 *DIGIT )
-valor      = 1*( %x20-7E )       ; texto exato; "/" e "~" escapados como no RFC 6901
-chave      = *( %x20-7E )        ; nome literal, com o mesmo escape
+chave      = *( %x20-7E )        ; nome literal, com o escape do RFC 6901
 ```
 
 **A regra do contêiner é normativa.** Um segmento `id=algo` sobre um **objeto** é nome de chave
 literal, não seletor. É o que garante que a extensão não retire expressividade do RFC 6901.
 
-**Comparação**: o `valor` é comparado como texto exato. Sem normalização de caixa, sem interpretação
-como UUID — qualquer identificador que a entidade carregue serve.
+**Comparação**: o `uuid` é comparado como texto exato, sem normalização de caixa. O seletor não
+aceita identificador de outra natureza.
 
 ## Onde cada forma é admitida
 
-| Forma | Escrita de ato novo | Leitura e consolidação |
-| --- | --- | --- |
-| `chave` em objeto | sim | sim |
-| `indice` em coleção **com** chave | **não** — `positional_addressing_refused` | sim, permanentemente |
-| `indice` em coleção **sem** chave | não se aplica: a coleção é atômica | sim, permanentemente |
-| `-` | sim, em `ADD` | sim |
-| `id=` | sim | sim |
-| `before=` / `after=` — referência de posição | sim, em `ADD` | — |
+| Forma | Admitida |
+| --- | --- |
+| `chave` em objeto | sim |
+| `indice` em coleção **com** chave | **não** — `positional_addressing_refused` |
+| `indice` em coleção **sem** chave | não se aplica: a coleção é atômica |
+| `-` | sim, em `ADD` |
+| `id=<uuid>` | sim |
 
-A leitura aceita a forma posicional **para sempre**: atos publicados não são reescritos, então ela
-permanece no histórico por consequência da imutabilidade, não por escolha.
+Inserção em posição específica não existe nesta gramática: acréscimo é ao fim.
 
 ## Coleções
 
@@ -74,20 +70,19 @@ Coleções de controle interno — `applied_publications` — não são endereç
 
 ## Códigos de recusa
 
-No mesmo vocabulário da `003`. Cada um **nomeia o caminho envolvido**, como fazem
-`expected_hash_mismatch` e `target_identity_mismatch`.
+No mesmo vocabulário da `003`. Cada um **nomeia o caminho envolvido**, como faz
+`expected_hash_mismatch`.
 
 | Código | HTTP | Quando | Momento |
 | --- | --- | --- | --- |
-| `positional_addressing_refused` | 422 | Caminho novo usa índice numérico em coleção com chave | Elaboração |
+| `positional_addressing_refused` | 422 | O caminho usa índice numérico em coleção com chave | Elaboração |
 | `target_key_not_found` | 409 | A entidade endereçada não existe | Elaboração e Publicação |
-| `position_reference_not_found` | 409 | A referência de posição de um `before=`/`after=` não existe; a posição pretendida deixou de ser determinável | Elaboração e Publicação |
 | `duplicate_key_in_collection` | 409 | A coleção resultante teria chave repetida | Elaboração e Publicação |
 
 Os códigos da `003` continuam valendo sem alteração: `expected_hash_mismatch`,
 `precondition_missing`, `no_effective_change`, `inconsistent_consolidation`, `blocking_findings`.
 
-`target_identity_mismatch` **sai** junto com a âncora (FR-009): ele respondia "ainda é esta
+`target_identity_mismatch` **sai** junto com a âncora (FR-015): ele respondia "ainda é esta
 entidade?", pergunta que o caminho por chave passa a responder sozinho.
 
 ## Os dois momentos
@@ -105,10 +100,10 @@ nascer.
 ## Delta a aplicar no `openapi.yaml` da `001`
 
 1. **`ChangeInput.targetPath`** — trocar a descrição para apontar esta gramática, declarando que é
-   extensão local do RFC 6901 e que a forma posicional não é aceita na escrita onde há chave.
-2. **`ChangeInput.operation`** — documentar que `ADD` admite `-`, `before=` e `after=`, e não admite
-   índice numérico.
+   extensão local do RFC 6901 e que a forma posicional não é aceita onde há chave.
+2. **`ChangeInput.operation`** — documentar que `ADD` usa `-`, e não admite índice numérico.
 3. **Respostas de `criarRetificacao`, `atualizarRascunhoRetificacao` e `publicarRetificacao`** —
-   acrescentar os quatro códigos novos às respostas `409` e `422` já declaradas.
+   acrescentar os três códigos novos às respostas `409` e `422` já declaradas, e remover
+   `target_identity_mismatch`.
 4. **Nenhuma operação nova, nenhum caminho novo.** A superfície da API não cresce; o que muda é o
    conteúdo admissível de um campo que já existe.

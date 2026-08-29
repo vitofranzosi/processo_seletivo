@@ -4,7 +4,7 @@
 
 **Input**: Feature specification from `/specs/004-enderecamento-normativo-estavel/spec.md`
 
-**Status**: Fase 1 concluída. Pronta para `speckit-tasks`.
+**Status**: Escopo reduzido em 2026-08-29. Desenho concluído; implementação não iniciada.
 
 ## Summary
 
@@ -17,76 +17,70 @@ Perfil. A `003` tornou isso impossível de passar em silêncio — recusa com `4
 tudo o que ela alcança: quando a lista muda de forma, a Retificação precisa ser refeita mesmo que o
 Perfil dela não tenha sido tocado.
 
-O caminho passa a ser `/profiles/id=<uuid>/name`, com as **referências de posição** `before=` e
-`after=` para inserção, e substituição atômica para as coleções sem chave. Escrever por posição
-deixa de ser admitido onde há chave; ler continua aceitando as duas formas para sempre, porque ato
-publicado não se reescreve.
+O caminho passa a ser `/profiles/id=<uuid>/name`. Acréscimo é `/profiles/-`, ao fim. Coleção sem
+chave é substituída inteira. Endereçar por posição deixa de ser admitido onde há chave.
 
-Disso decorre o resultado que a `003` não podia entregar: **a âncora de identidade dela pode ser
-aposentada**. Com todo caminho gravável nomeando a entidade ou sendo atômico, não sobra índice para
-deslocar — que era a única pergunta que a âncora respondia. A precondição por hash fica, porque
-responde outra.
+Disso decorre o resultado que a `003` não podia entregar: **a âncora de identidade dela sai**. Com
+todo caminho nomeando a entidade ou sendo atômico, não sobra índice para deslocar — que era a única
+pergunta que a âncora respondia. A precondição por hash fica, porque responde outra.
+
+**O sistema não está em produção e não há dado a preservar.** É o que torna esta feature pequena:
+não há conversão, não há duas formas convivendo, não há migração de dados. A remoção de
+`expected_anchors` é migração de esquema e nada mais.
 
 ## Technical Context
 
 **Language/Version**: Python 3.13 — o mesmo do backend, mesmo projeto
 
 **Primary Dependencies**: nenhuma nova. Django 5.2 LTS, DRF 3.16, psycopg 3. A extensão de caminho é
-gramática própria, resolvida no domínio; não há biblioteca de JSON Pointer envolvida hoje e não
-passa a haver
+gramática própria, resolvida no domínio
 
-**Storage**: PostgreSQL 16+. Nenhuma coluna nova. Uma migração de dados que converte
-`AlteracaoNormativa.target_path` das Retificações não finais, e uma segunda que retira
-`expected_anchors` depois de a conversão se confirmar
+**Storage**: PostgreSQL 16+. Nenhuma coluna nova. Uma migração de esquema que remove
+`AlteracaoNormativa.expected_anchors`, sem conversão de dados
 
 **Testing**: pytest e pytest-django, nas duas execuções — SQLite e PostgreSQL, esta última sem
-ignorados. A migração de conversão exige teste sobre banco com dados nos três estados não finais,
-que só o PostgreSQL exercita de verdade
+ignorados
 
 **Target Platform**: mesmo processo Django do backend
 
 **Project Type**: monólito modular existente; nenhuma estrutura nova
 
 **Performance Goals**: nenhuma meta própria. A resolução por chave troca acesso por índice por
-varredura da coleção, e as coleções normativas têm dezenas de elementos, não milhares — a spec
-declara isso fora de escopo com justificativa, e inventar meta antes de haver medida seria ruído
+varredura da coleção, e as coleções normativas têm dezenas de elementos — a spec declara isso fora
+de escopo, e inventar meta antes de haver medida seria ruído
 
-**Constraints**: nenhum ato publicado pode mudar de efeito; nenhuma migração aplicada pode ser
-reescrita; a conversão nunca infere — devolve; a leitura das duas formas é permanente
+**Constraints**: a recusa do endereçamento posicional acontece na elaboração; a precondição por hash
+permanece intacta; nenhuma migração aplicada pode ser reescrita
 
-**Scale/Scope**: o mesmo da `001`. Um Edital tem dezenas de Perfis e Eventos; o número de
-Retificações não finais no dia da virada é da ordem de unidades
+**Scale/Scope**: o mesmo da `001`. Um Edital tem dezenas de Perfis e Eventos
 
-**Questões em aberto**: nenhuma. As cinco decisões pendentes foram respondidas na sessão de
-clarificação de 2026-08-29, e o portão de qualidade fechou 40 itens satisfeitos e 1 N/A antes deste
-plano existir.
+**Questões em aberto**: nenhuma.
 
 ## Constitution Check
 
 | Princípio | Situação |
 | --- | --- |
 | I — Linguagem ubíqua e integridade do domínio | **Atendido, e esta é a feature que o atende.** "Entidades DEVEM possuir identificadores estáveis" era a ressalva registrada na `003`; o endereçamento passa a usar os identificadores que as entidades já carregam. |
-| II — Integridade normativa, imutabilidade e temporalidade | **Reforçado.** Ato publicado não é reescrito (FR-005); a leitura das duas formas preserva a reprodutibilidade do passado (FR-001d, SC-002, SC-003). |
-| III — Segurança, proteção de dados e auditoria | **Reforçado.** A conversão é registrada com caminho antes e depois, inclusive em ato homologado (FR-005b) — mudança silenciosa em ato de autoridade é o que a trilha existe para impedir. |
-| IV — Regras explícitas e consistência operacional | **Reforçado.** A recusa do endereçamento posicional acontece na elaboração (FR-001c): ato que nasce instável não chega a existir. |
-| V — Qualidade, rastreabilidade e simplicidade | **Atendido.** Mapa de rastreabilidade nos dois sentidos na spec; nenhum requisito órfão, nenhum critério sem requisito. |
-| Fluxo de desenvolvimento | **Atendido, sem exceção.** Ao contrário da `003`, aqui a ordem foi respeitada: especificação, clarificação, portão de qualidade, planejamento. Nenhuma linha de código foi escrita. |
+| II — Integridade normativa, imutabilidade e temporalidade | **Atendido.** Nenhum registro publicado é reescrito — não há nenhum. A migração toca esquema, não conteúdo normativo. |
+| III — Segurança, proteção de dados e auditoria | **Neutro.** A feature não altera autorização nem trilha. Sai um código de recusa, entram três. |
+| IV — Regras explícitas e consistência operacional | **Reforçado.** A recusa acontece na elaboração: ato que nasce instável não chega a existir. |
+| V — Qualidade, rastreabilidade e simplicidade | **Atendido.** Mapa de rastreabilidade nos dois sentidos na spec. A redução de escopo é aplicação direta de "a arquitetura DEVE preferir a solução mais simples que preserve os requisitos". |
+| Fluxo de desenvolvimento | **Atendido, sem exceção.** Especificação, clarificação, portão de qualidade, plano, tarefas, análise. Nenhuma linha de código escrita. |
 
 ## Decisões técnicas
 
 ### Decisão 1 — A gramática do segmento, e onde ela é interpretada
 
-Um segmento de caminho passa a admitir quatro formas, e **qual delas vale depende do contêiner**:
+Um segmento de caminho admite quatro formas, e **qual delas vale depende do contêiner**:
 
 | Forma | Contêiner | Significado |
 | --- | --- | --- |
 | `nome` | objeto | chave literal, como sempre |
-| `0`, `1`, … | lista | índice — só na **leitura** de atos antigos |
-| `-` | lista | posição de acréscimo ao fim |
-| `id=<valor>` | lista | o elemento cujo `id` é `<valor>` |
-| `before=<valor>` / `after=<valor>` | lista | **referência de posição**: relativa ao elemento nomeado; só em `ADD` |
+| `0`, `1`, … | lista | índice — recusado na escrita sobre coleção com chave |
+| `-` | lista | acréscimo ao fim |
+| `id=<uuid>` | lista | o elemento cujo `id` é `<uuid>` |
 
-Interpretar o seletor apenas em lista (FR-001a) é o que preserva a expressividade: em objeto, uma
+Interpretar o seletor apenas em lista (FR-002) é o que preserva a expressividade: em objeto, uma
 chave chamada `id=algo` continua endereçável. Sem essa regra, a extensão tiraria do RFC 6901 algo
 que ele permitia.
 
@@ -100,44 +94,35 @@ tempo de execução — "se o elemento é dict e tem `id`" — funcionaria hoje 
 dia em que uma coleção nova nascesse sem identificador.
 
 A declaração fica explícita no domínio e é **verificada por teste** contra um snapshot real
-(FR-004c). Uma migration futura que acrescente coleção sem chave faz a suíte falhar, em vez de
-tornar o pressuposto de FR-004a falso sem que nada acuse.
+(FR-012). Uma migration futura que acrescente coleção sem chave faz a suíte falhar.
 
 ### Decisão 3 — Recusar na elaboração, verificar na Publicação
 
 São dois momentos e duas perguntas, como a `003` estabeleceu:
 
-- **Elaboração**: o caminho usa índice numérico numa coleção com chave? Recusa
+- **Elaboração**: o caminho usa índice numa coleção com chave? Recusa
   (`positional_addressing_refused`). Ato que nasce instável não chega a existir.
 - **Publicação**: a entidade endereçada ainda existe no conteúdo vigente no início da vigência?
-  Recusa (`target_key_not_found`). A referência de posição de um `before=` ainda existe?
-  (`position_reference_not_found`).
+  Recusa (`target_key_not_found`).
 
 A precondição por hash da `003` continua rodando nos dois momentos, sem alteração.
 
-### Decisão 4 — A conversão congela a própria lógica, como a `0006` da `003`
+### Decisão 4 — A âncora sai numa migração de esquema
 
-A migração que converte os caminhos das Retificações não finais reescreve ato em curso a partir de
-`expected_anchors`. Vale a mesma regra que a `003` aprendeu na revisão: **migração aplicada tem de
-continuar significando o que significava no dia em que rodou**, então a lógica de conversão é
-copiada e congelada dentro dela, e o teste que recusa migration importando domínio ou aplicação
-continua valendo.
+A versão anterior deste plano previa duas migrações: uma que convertia caminhos a partir de
+`expected_anchors`, com lógica congelada, e outra que removia a coluna sob condição comprovada. Sem
+dado a preservar, as duas colapsam numa só: `RemoveField`.
 
-O critério de inequivocidade é o de FR-005c — âncora existe, é única, corresponde à mesma entidade
-no snapshot-base — e qualquer falha devolve com motivo, nunca infere.
+Some junto tudo o que existia para sustentar a conversão — critério de inequivocidade, devolução
+auditada, relatório por origem. Nada disso tinha objeto.
 
-### Decisão 5 — A âncora sai em duas etapas, não numa
+### Decisão 5 — Não construir `before=` e `after=`
 
-Aposentar `expected_anchors` num movimento só juntaria três coisas de risco diferente: parar de
-derivar, parar de verificar, e apagar a coluna. A ordem é:
+A versão anterior previa referências de posição para inserir um Perfil antes ou depois de outro. A
+interface não oferece essa operação, e ninguém a pediu. Acréscimo é `/colecao/-`, ao fim.
 
-1. Parar de derivar para atos novos, e parar de verificar — a âncora deixa de ter função quando
-   nenhum caminho gravável tem índice.
-2. Uma migração posterior **verifica** a condição de SC-007 — nenhuma Retificação não final com
-   `expected_anchors` preenchido — e só então remove a coluna.
-
-Separar permite que a etapa 1 seja revertida sem perder dado, e faz a remoção da coluna acontecer
-sobre uma condição comprovada em vez de sobre uma expectativa.
+Vale o mesmo para o identificador: o seletor aceita **UUID**, que é o que as entidades carregam.
+Aceitar "qualquer texto" seria construir para um caso que não existe.
 
 ### Decisão 6 — A interface fica mais simples, não mais complexa
 
@@ -146,15 +131,14 @@ correção**: primeiro os `REPLACE` com os índices do vigente, depois os `REMOV
 decrescente, por último os `ADD`. Toda essa coreografia existe porque índice desloca.
 
 Com chave, ela some. `REPLACE` e `REMOVE` passam a ser independentes de ordem, e é exatamente o que
-a US3, cenário 2, pede. A tela não muda para quem usa (FR-007); o que ela emite muda, e o código que
+a US2, cenário 2, pede. A tela não muda para quem usa (FR-019); o que ela emite muda, e o código que
 emite encolhe.
 
 ### Decisão 7 — O contrato continua tendo uma fonte só
 
 Como na `003`, a alteração entra no `openapi.yaml` da `001`, que segue sendo o contrato único. O
 `contracts/` desta feature descreve a **gramática** do caminho e os códigos de recusa — o que um
-arquivo OpenAPI não expressa bem — e aponta para o que deve ser alterado lá, sem duplicar o
-documento.
+arquivo OpenAPI não expressa bem — e aponta o que alterar lá, sem duplicar o documento.
 
 ## Project Structure
 
@@ -162,15 +146,15 @@ documento.
 
 ```text
 specs/004-enderecamento-normativo-estavel/
-├── spec.md              # 28 requisitos, 11 critérios, 4 histórias, 10 casos de borda
+├── spec.md              # 19 requisitos, 7 critérios, 2 histórias
 ├── plan.md              # este documento
-├── research.md          # Fase 0: alternativas de resolvedor, migração e aposentadoria
-├── data-model.md        # Fase 1: gramática, coleções com chave, o que muda em cada tabela
+├── research.md          # Fase 0: alternativas de resolvedor e de declaração
+├── data-model.md        # Fase 1: gramática, coleções com chave, a migração de esquema
 ├── quickstart.md        # Fase 1: como validar, com o resultado esperado de cada passo
 ├── contracts/
 │   └── enderecamento.md # Fase 1: gramática do caminho, códigos de recusa, delta do openapi
 └── checklists/
-    └── normativo.md     # portão de qualidade: 40 satisfeitos, 1 N/A
+    └── normativo.md     # portão de qualidade, reavaliado após a redução de escopo
 ```
 
 ### Source Code (repository root)
@@ -181,20 +165,19 @@ backend/
 │   ├── publicacoes/
 │   │   ├── domain/
 │   │   │   ├── changes.py          # gramática do segmento e resolução por chave
-│   │   │   ├── conflicts.py        # precondição fica; derivação de âncora sai
+│   │   │   ├── conflicts.py        # precondição fica; âncora sai por completo
 │   │   │   └── colecoes.py         # NOVO: quais coleções têm chave, declarado
 │   │   ├── application/
 │   │   │   └── retificacoes.py     # recusa na elaboração; verificação na Publicação
 │   │   ├── api/serializers.py      # validação de forma do targetPath
+│   │   ├── models_retificacao.py   # remove o campo expected_anchors
 │   │   └── migrations/
-│   │       ├── 0008_converter_caminhos.py    # conversão, lógica congelada
-│   │       └── 0009_remover_ancoras.py       # remove a coluna sob condição verificada
+│   │       └── 0008_remover_ancoras.py   # RemoveField, sem conversão
 │   └── interface/
 │       └── retificacao.py          # emite por chave; a coreografia de ordem some
 └── tests/
     ├── unit/publicacoes/           # gramática, resolução, coleções declaradas
     ├── integration/publicacoes/    # os dois momentos de recusa, composição
-    ├── migrations/                 # conversão: converte, devolve, no-op, congelamento
     └── interface/                  # a tela emite por chave sem expor caminho
 ```
 
@@ -207,17 +190,17 @@ dentro de `changes.py` a esconderia num arquivo já denso.
 
 | Fase | Conteúdo | Situação |
 | --- | --- | --- |
-| — | Especificação e clarificação | Concluída — 5 decisões registradas |
-| — | Portão de qualidade dos requisitos | Concluído — 40 satisfeitos, 1 N/A |
-| 0 | Pesquisa: alternativas de resolvedor, migração, aposentadoria | Concluída — `research.md` |
-| 1 | Desenho: gramática, modelo, contrato, validação | Concluída — `data-model.md`, `contracts/`, `quickstart.md` |
-| 2 | Tarefas | Pendente — `speckit-tasks` |
+| — | Especificação e clarificação | Concluída |
+| — | Portão de qualidade dos requisitos | Concluído |
+| 0 | Pesquisa: alternativas de resolvedor e de declaração | Concluída |
+| 1 | Desenho: gramática, modelo, contrato, validação | Concluída |
+| 2 | Tarefas | Concluída |
+| 3 | Análise de consistência | Concluída |
+| 4 | Implementação | **Não iniciada** |
 
 ## Complexity Tracking
 
 | Desvio | Por quê | Alternativa descartada |
 | --- | --- | --- |
 | Extensão local do JSON Pointer | Não há seleção por atributo no RFC 6901, e alguma extensão é inevitável. A escolha foi torná-la **declarada** em vez de disfarçada: o UUID como token cru pareceria padrão e não seria, porque resolver identificador dentro de array também é semântica customizada | `/profiles/<uuid>/name`. Descartada por ser dialeto que se esconde, num campo que fica gravado para sempre no ato publicado |
-| Duas formas de caminho convivendo na leitura, para sempre | Ato publicado não se reescreve — a Constituição proíbe e as triggers da `003` recusam. A forma antiga permanece no histórico por consequência da imutabilidade, não por escolha | Migrar o histórico. Descartada: seria alterar ato normativo já produzido |
-| Migração de dados que reescreve ato em curso | Sem ela, os atos que atravessam a virada publicariam instáveis depois de a cura existir — justamente os de maior risco | Devolver todos. Descartada por custar retrabalho e, nas homologadas, desfazer ato de autoridade por motivo de representação e não de mérito |
-| Duplicação da lógica de conversão dentro da migração | Migração aplicada não pode mudar de efeito porque o domínio evoluiu. É a mesma regra que a `003` aprendeu na revisão de fechamento | Importar do domínio. Descartada: é exatamente o acoplamento que quebra a reprodutibilidade histórica |
+| Remoção de coluna sem período de convivência | Não há dado na coluna que importe preservar, e manter mecanismo sem função vira armadilha: alguém volta a preenchê-lo achando que protege algo | Depreciar e remover depois. Descartada por acrescentar etapa a um sistema sem usuários |

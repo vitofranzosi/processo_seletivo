@@ -4,13 +4,11 @@
 
 Como validar o que esta feature entrega. Cada seção diz o que rodar e **o que precisa acontecer** —
 não "deve funcionar", mas o resultado exato. Detalhes de gramática estão em
-[contracts/enderecamento.md](./contracts/enderecamento.md); o que muda em cada tabela, em
-[data-model.md](./data-model.md).
+[contracts/enderecamento.md](./contracts/enderecamento.md).
 
 ## Pré-requisitos
 
-A `003` aplicada, com as migrações até `publicacoes/0007` e os papéis provisionados. A conversão
-desta feature consome `expected_anchors`, que a `003` grava — sem ela não há insumo.
+A `003` aplicada, com as migrações até `publicacoes/0007`.
 
 ```bash
 cd backend && TEST_DB_ENGINE=postgresql DB_NAME=processo_seletivo_test DB_USER=postgres DB_PASSWORD=postgres uv run pytest
@@ -48,57 +46,35 @@ O mesmo caminho numa coleção **sem** chave é outro caso: `requirements` é at
 `REPLACE /profiles/id=…/requirements` com a lista inteira é o ato válido, e endereçar
 `/requirements/2` é recusado por não ser forma admitida.
 
-## A leitura das duas formas
+## As formas admitidas
 
-Sobre um Edital com Retificações publicadas **antes** da feature:
-
-```bash
-curl ".../public/editais/<id>/versao-vigente"
-curl ".../public/editais/<id>/historico"
+```
+/profiles/id=<uuid>/name                                    → REPLACE, REMOVE
+/profiles/id=<uuid>/competitionModalities/id=<uuid>/name     → aninhado
+/profiles/-                                                 → ADD, ao fim
+/profiles/id=<uuid>/requirements                            → REPLACE da lista inteira
 ```
 
-Esperado: idênticos ao que produziam antes. É SC-002 e SC-003 — verificáveis comparando o hash
-canônico de cada Versão Consolidada antes e depois da migração, e consultando as fronteiras de
-vigência, um segundo antes e um depois de cada.
+Esperado: `id=` com valor que não seja UUID é recusado. `id=` sobre um objeto é nome de chave
+literal, não seletor — uma chave chamada `id=algo` continua endereçável.
 
-Nenhum ato publicado é reescrito: `target_path` dos atos antigos continua posicional no banco.
+Não há inserção em posição: acréscimo vai para o fim, e é a única forma de `ADD`.
 
-## A conversão dos atos em curso
-
-É a validação que mais dá errado, porque depende de dados nos três estados não finais.
-
-Prepare, antes de migrar: uma Retificação em elaboração, uma em revisão e uma homologada, todas com
-caminhos posicionais e âncoras completas; mais uma com âncora ausente ou divergente.
+## A remoção da âncora
 
 ```bash
 cd backend && DB_ROLE=migration uv run python manage.py migrate publicacoes
 ```
 
-Esperado, no relatório da migração:
-
-- as três com âncora completa: **convertidas**, mantendo o estado — a homologada continua homologada;
-- a quarta: **devolvida** para elaboração, com motivo que nomeia a alteração e a condição que falhou;
-- contagem **por origem**, para que ato fora das duas origens previstas apareça em vez de passar
-  como sucesso.
-
-Confira a auditoria: cada conversão registra caminho antes, caminho depois, momento e a
-identificação da migração — não uma pessoa, porque não houve ato humano.
-
-Sobre Edital sem Retificação em curso: no-op explícito, relatando zero e zero, sem falhar.
-
-## A aposentadoria da âncora
-
-Só depois da conversão, e sob condição comprovada:
+Esperado: `0008_remover_ancoras` aplica sem conversão de dados e sem condição a comprovar. Depois
+dela, `expected_anchors` não existe no esquema e nenhum código a referencia — inclusive
+`target_identity_mismatch`, que deixa de ser emitido por caminho algum.
 
 ```bash
-cd backend && uv run python manage.py migrate publicacoes 0009
+cd backend && grep -rn 'expected_anchors\|target_identity_mismatch' processo_seletivo/ | grep -v migrations/
 ```
 
-Esperado: aplica **apenas** se nenhuma Retificação em estado não final tiver `expected_anchors`
-preenchido. Falha, em vez de apagar, se houver caso pendente — a evidência de que a conversão deixou
-algo para trás não pode desaparecer no mesmo movimento que remove a coluna.
-
-Depois dela, `target_identity_mismatch` não é mais emitido por caminho algum.
+Esperado: nenhuma linha.
 
 ## A interface
 
@@ -109,7 +85,7 @@ cd backend && DJANGO_SETTINGS_MODULE=config.settings.development INTERFACE_SELET
 Em `/gestao/editais/<id>/retificar`:
 
 - **Nada muda para quem usa.** Os mesmos campos, os mesmos rótulos.
-- O HTML entregue **não contém caminho normativo algum** — é uma das duas condições de FR-007.
+- O HTML entregue **não contém caminho normativo algum** — é uma das duas condições de FR-019.
 - As alterações emitidas usam `id=`. Confira pelo detalhe da Retificação criada.
 
 E a verificação que interessa ao código: acrescentar e remover Perfis na mesma edição, em qualquer
@@ -120,5 +96,4 @@ ela.
 ## O que não é verificado aqui
 
 Desempenho da resolução por chave. A spec declara fora de escopo com justificativa: as coleções
-normativas têm dezenas de elementos, e meta antes de medida seria ruído. Se um Edital com centenas
-de Perfis aparecer, é aí que a pergunta passa a valer.
+normativas têm dezenas de elementos, e meta antes de medida seria ruído.
