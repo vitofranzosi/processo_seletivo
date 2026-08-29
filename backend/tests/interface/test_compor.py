@@ -221,3 +221,19 @@ def test_identificacao_mostra_o_processo_e_diz_que_nao_e_editavel(client, seleto
     corpo = client.get(etapa(edital, "identificacao")).content.decode()
     assert ProcessoSeletivo.objects.get().institutional_code in corpo
     assert "Não é editável nesta tela" in corpo
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_modalidade_sem_sigla_volta_para_a_tela_como_foi_digitada(
+    client, seletor_ligado, edital
+):
+    """Sem separador, código e nome ficam iguais — devolver os dois só polui o campo."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(
+        client, edital, perfis(**{"perfil-0-modalidades": "Ampla concorrência"}), eventos()
+    )
+
+    corpo = client.get(etapa(edital, "perfis")).content.decode()
+    assert "Ampla concorrência — Ampla concorrência" not in corpo
+    assert "Ampla concorrência" in corpo

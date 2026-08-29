@@ -123,7 +123,9 @@ def perfis_do_edital(edital):
             "reserveLimit": perfil.reserve_limit,
             "locality": perfil.locality,
             "modalidades": "\n".join(
-                f"{m.code} — {m.name}" for m in perfil.modalidades.order_by("code")
+                # Linha sem separador vira código e nome iguais; repeti-la só faz ruído.
+                m.name if m.code == m.name else f"{m.code} — {m.name}"
+                for m in perfil.modalidades.order_by("code")
             ),
         }
         for perfil in edital.perfis.prefetch_related("modalidades").order_by("code")

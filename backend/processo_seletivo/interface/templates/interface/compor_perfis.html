@@ -7,7 +7,7 @@
     <h2 id="perfis-titulo">Perfis de Vaga</h2>
     <p class="ajuda">Cada Perfil é uma oportunidade do Edital, com requisitos, vagas e modalidades
       próprios. Alterar um não afeta os demais.</p>
-    <p class="contadores"><span><strong>{{ perfis|length }}</strong> {{ perfis|length|plural:"Perfil,Perfis" }}</span></p>
+    <p class="contadores" data-contador="#perfis" data-item=".perfil" data-singular="Perfil" data-plural="Perfis"><span><strong>{{ perfis|length }}</strong> {{ perfis|length|plural:"Perfil,Perfis" }}</span></p>
     <div id="perfis">
       {% for perfil in perfis %}{% include "interface/_perfil.html" with indice=forloop.counter0 %}{% endfor %}
     </div>
@@ -19,5 +19,6 @@
   </section>
   {% include "interface/_navegacao_etapa.html" %}
 </form>
-<script src="/static/interface/htmx.min.js" defer></script>
+{% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
+<script src="{% static 'interface/contadores.js' %}" defer></script>
 {% endblock %}
