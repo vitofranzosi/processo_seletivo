@@ -1,0 +1,25 @@
+{% extends "interface/compor_base.html" %}
+{% block etapa_titulo %}Cronograma{% endblock %}
+{% block etapa %}
+<form method="post" id="formulario">
+  {% csrf_token %}
+  <section aria-labelledby="cronograma-titulo">
+    <h2 id="cronograma-titulo">Cronograma</h2>
+    <p class="ajuda">Eventos pontuais e períodos deste Edital. A ordem segue a sequência em tela;
+      as datas usam o horário de Brasília.</p>
+    <p class="contadores">
+      <span><strong>{{ eventos|length }}</strong> Evento{{ eventos|length|pluralize:"s" }}</span>
+    </p>
+    <div id="eventos">
+      {% for evento in eventos %}{% include "interface/_evento.html" with indice=forloop.counter0 %}{% endfor %}
+    </div>
+    {% if editavel %}
+    <button type="button" class="botao secundario"
+            hx-get="{% url 'interface:fragmento-evento' %}" hx-vals='js:{indice: Date.now()}'
+            hx-target="#eventos" hx-swap="beforeend">Acrescentar Evento</button>
+    {% endif %}
+  </section>
+  {% include "interface/_navegacao_etapa.html" %}
+</form>
+<script src="/static/interface/htmx.min.js" defer></script>
+{% endblock %}

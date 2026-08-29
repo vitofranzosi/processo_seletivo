@@ -1,0 +1,23 @@
+{% extends "interface/compor_base.html" %}
+{% block etapa_titulo %}Perfis de Vaga{% endblock %}
+{% block etapa %}
+<form method="post" id="formulario">
+  {% csrf_token %}
+  <section aria-labelledby="perfis-titulo">
+    <h2 id="perfis-titulo">Perfis de Vaga</h2>
+    <p class="ajuda">Cada Perfil é uma oportunidade do Edital, com requisitos, vagas e modalidades
+      próprios. Alterar um não afeta os demais.</p>
+    <p class="contadores"><span><strong>{{ perfis|length }}</strong> Perfil{{ perfis|length|pluralize:"is" }}</span></p>
+    <div id="perfis">
+      {% for perfil in perfis %}{% include "interface/_perfil.html" with indice=forloop.counter0 %}{% endfor %}
+    </div>
+    {% if editavel %}
+    <button type="button" class="botao secundario"
+            hx-get="{% url 'interface:fragmento-perfil' %}" hx-vals='js:{indice: Date.now()}'
+            hx-target="#perfis" hx-swap="beforeend">Acrescentar Perfil</button>
+    {% endif %}
+  </section>
+  {% include "interface/_navegacao_etapa.html" %}
+</form>
+<script src="/static/interface/htmx.min.js" defer></script>
+{% endblock %}

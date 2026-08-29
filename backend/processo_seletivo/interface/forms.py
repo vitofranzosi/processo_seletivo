@@ -146,3 +146,42 @@ def eventos_do_edital(edital):
         }
         for evento in cronograma.eventos.order_by("order")
     ]
+
+
+def perfis_persistidos(edital):
+    """Perfis já salvos, no formato do command — para preservá-los ao salvar outra etapa."""
+    return [
+        {
+            "id": str(perfil.id),
+            "code": perfil.code,
+            "name": perfil.name,
+            "description": perfil.description,
+            "requirements": perfil.requirements or [],
+            "immediateVacancies": perfil.immediate_vacancies,
+            "reserveType": perfil.reserve_type,
+            "reserveLimit": perfil.reserve_limit,
+            "locality": perfil.locality,
+            "competitionModalities": [
+                {"code": m.code, "name": m.name}
+                for m in perfil.modalidades.order_by("code")
+            ],
+        }
+        for perfil in edital.perfis.prefetch_related("modalidades").order_by("code")
+    ]
+
+
+def eventos_persistidos(edital):
+    cronograma = getattr(edital, "cronograma", None)
+    if cronograma is None:
+        return []
+    return [
+        {
+            "id": str(evento.id),
+            "type": evento.type,
+            "description": evento.description,
+            "startAt": evento.start_at,
+            "endAt": evento.end_at,
+            "order": evento.order,
+        }
+        for evento in cronograma.eventos.order_by("order")
+    ]

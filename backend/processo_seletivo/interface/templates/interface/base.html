@@ -110,6 +110,31 @@ tbody tr:last-child td{border-bottom:none}
 .consequencias.irreversivel h2{color:var(--vermelho)}
 form.confirmar{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1.25rem}
+.assistente{display:flex;list-style:none;padding:0;margin:0 0 1.5rem;gap:.4rem;flex-wrap:wrap}
+.assistente li{flex:1 1 160px}
+.assistente a{display:block;padding:.6rem .85rem;border-radius:4px;text-decoration:none;
+  border:1px solid var(--borda);background:var(--branco);color:var(--texto-fraco)}
+.assistente a:hover{border-color:var(--verde)}
+.assistente .numero{display:inline-block;width:1.4rem;height:1.4rem;line-height:1.4rem;
+  text-align:center;border-radius:50%;background:var(--cinza-fundo);color:var(--texto-fraco);
+  font-size:.75rem;font-weight:700;margin-right:.4rem}
+.assistente .nome{font-size:.875rem;font-weight:600}
+.assistente .estado{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.03em;
+  margin-top:.15rem}
+.assistente .a-atual a{border-color:var(--verde);background:var(--verde-claro);color:var(--texto)}
+.assistente .a-atual .numero{background:var(--verde);color:var(--branco)}
+.assistente .a-atual .estado{color:var(--verde)}
+.assistente .a-concluida a{color:var(--texto)}
+.assistente .a-concluida .numero{background:var(--sucesso);color:var(--branco)}
+.assistente .a-concluida .estado{color:var(--sucesso)}
+.navegacao-etapa{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;
+  padding:1rem 0 2rem;border-top:1px solid var(--borda);margin-top:1.5rem}
+.navegacao-etapa .botao:last-of-type{margin-left:auto}
+.contadores{display:flex;gap:1rem;margin:0 0 1rem;font-size:.875rem;color:var(--texto-fraco)}
+.contadores strong{color:var(--texto);font-size:1.1rem}
+.resumo-lista{list-style:none;padding:0;margin:0 0 .75rem;font-size:.9375rem}
+.resumo-lista li{padding:.3rem 0;border-bottom:1px solid var(--fundo)}
+.resumo-lista li:last-child{border-bottom:none}
 .trilha{font-size:.875rem;color:var(--texto-fraco);margin-bottom:1rem}
 .trilha a{color:var(--verde)}
 .sucesso{background:var(--sucesso-fundo);border-left:4px solid var(--sucesso);

@@ -8,7 +8,7 @@ import pytest
 from django.urls import reverse
 
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
-from tests.interface.conftest import identificar
+from tests.interface.conftest import compor_rascunho, identificar
 
 PERFIL = "aaaaaaaa-0000-4000-8000-00000000e001"
 EVENTO = "aaaaaaaa-0000-4000-8000-00000000e002"
@@ -20,7 +20,7 @@ def edital(api_client, manager_headers, process_payload):
     return Edital.objects.get()
 
 
-def payload(**alteracoes):
+def perfis(**alteracoes):
     base = {
         "perfil-0-id": PERFIL,
         "perfil-0-code": "TEC-ADM",
@@ -31,6 +31,12 @@ def payload(**alteracoes):
         "perfil-0-reserveLimit": "5",
         "perfil-0-requirements": "Ensino médio\nExperiência",
         "perfil-0-modalidades": "AC — Ampla concorrência\nPCD — Pessoa com deficiência",
+    }
+    return {**base, **alteracoes}
+
+
+def eventos(**alteracoes):
+    base = {
         "evento-0-id": EVENTO,
         "evento-0-type": "INSCRICAO",
         "evento-0-description": "Período de inscrições",
@@ -40,12 +46,17 @@ def payload(**alteracoes):
     return {**base, **alteracoes}
 
 
+def etapa(edital, nome):
+    return reverse("interface:compor-etapa", args=[edital.id, nome])
+
+
 @pytest.mark.django_db
 @pytest.mark.integration
 def test_compor_salva_perfis_e_cronograma(client, seletor_ligado, edital):
     identificar(client, "ana.elaboradora", ["elaborador"])
-    resposta = client.post(reverse("interface:compor", args=[edital.id]), payload())
-    assert resposta.status_code == 302
+    compor_rascunho(client, edital, perfis(), eventos())
+    resposta = client.get(etapa(edital, "revisao"))
+    assert resposta.status_code == 200
 
     edital.refresh_from_db()
     perfil = edital.perfis.get()
@@ -68,17 +79,18 @@ def test_recusa_do_dominio_e_explicada_sem_perder_o_que_foi_digitado(
 ):
     """FR-016 e FR-020: explicar o conflito e preservar o trabalho."""
     identificar(client, "ana.elaboradora", ["elaborador"])
+    client.post(etapa(edital, "perfis"), perfis())
     resposta = client.post(
-        reverse("interface:compor", args=[edital.id]),
-        payload(**{"evento-0-startAt": "2026-11-30T09:00", "evento-0-endAt": "2026-11-01T09:00"}),
+        etapa(edital, "cronograma"),
+        eventos(**{"evento-0-startAt": "2026-11-30T09:00", "evento-0-endAt": "2026-11-01T09:00"}),
     )
     assert resposta.status_code == 200
     corpo = resposta.content.decode()
     assert "Não foi possível salvar" in corpo
     assert "posterior ao término" in corpo
-    assert "TEC-ADM" in corpo, "o Perfil digitado precisa continuar na tela"
+    assert "Período de inscrições" in corpo, "o Evento digitado precisa continuar na tela"
     assert "2026-11-30T09:00" in corpo, "a data digitada precisa continuar na tela"
-    assert not edital.perfis.exists(), "nada é gravado quando o domínio recusa"
+    assert not edital.cronograma.eventos.exists(), "nada é gravado quando o domínio recusa"
 
 
 @pytest.mark.django_db
@@ -86,8 +98,8 @@ def test_recusa_do_dominio_e_explicada_sem_perder_o_que_foi_digitado(
 def test_reserva_limitada_sem_limite_e_recusada(client, seletor_ligado, edital):
     identificar(client, "ana.elaboradora", ["elaborador"])
     resposta = client.post(
-        reverse("interface:compor", args=[edital.id]),
-        payload(**{"perfil-0-reserveType": "LIMITED", "perfil-0-reserveLimit": ""}),
+        etapa(edital, "perfis"),
+        perfis(**{"perfil-0-reserveType": "LIMITED", "perfil-0-reserveLimit": ""}),
     )
     assert "Cadastro Reserva limitado exige limite" in resposta.content.decode()
 
@@ -96,10 +108,7 @@ def test_reserva_limitada_sem_limite_e_recusada(client, seletor_ligado, edital):
 @pytest.mark.integration
 def test_data_malformada_e_explicada_antes_de_chegar_ao_dominio(client, seletor_ligado, edital):
     identificar(client, "ana.elaboradora", ["elaborador"])
-    resposta = client.post(
-        reverse("interface:compor", args=[edital.id]),
-        payload(**{"evento-0-startAt": "ontem"}),
-    )
+    resposta = client.post(etapa(edital, "cronograma"), eventos(**{"evento-0-startAt": "ontem"}))
     assert "não é uma data e hora válidas" in resposta.content.decode()
 
 
@@ -110,14 +119,14 @@ def test_pendencias_mostram_o_que_falta_e_somem_quando_resolvidas(
 ):
     """FR-008: a tela diz o que falta para submeter, separando erro impeditivo de aviso."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    url = reverse("interface:compor", args=[edital.id])
+    url = etapa(edital, "revisao")
 
     vazio = client.get(url).content.decode()
     assert "Ao menos um Perfil é obrigatório." in vazio
     assert "Ao menos um Evento é obrigatório." in vazio
     assert 'class="p-erro"' in vazio
 
-    client.post(url, payload())
+    compor_rascunho(client, edital, perfis(), eventos())
     completo = client.get(url).content.decode()
     assert "Ao menos um Perfil é obrigatório." not in completo
     assert "Ao menos um Evento é obrigatório." not in completo
@@ -129,11 +138,11 @@ def test_pendencias_mostram_o_que_falta_e_somem_quando_resolvidas(
 @pytest.mark.integration
 def test_sem_permissao_a_tela_e_somente_leitura(client, seletor_ligado, edital):
     identificar(client, "bruno.homologador", ["homologador"])
-    corpo = client.get(reverse("interface:compor", args=[edital.id])).content.decode()
+    corpo = client.get(etapa(edital, "perfis")).content.decode()
     assert "Somente leitura" in corpo
     assert "Salvar rascunho" not in corpo
 
-    resposta = client.post(reverse("interface:compor", args=[edital.id]), payload())
+    resposta = client.post(etapa(edital, "perfis"), perfis())
     assert resposta.status_code == 200
     assert "não tem permissão" in resposta.content.decode()
     assert not edital.perfis.exists()
@@ -151,7 +160,7 @@ def test_edital_de_outro_escopo_nao_e_alcancavel(client, seletor_ligado, edital)
         "papeis": ["elaborador"],
     }
     sessao.save()
-    assert client.get(reverse("interface:compor", args=[edital.id])).status_code == 404
+    assert client.get(etapa(edital, "perfis")).status_code == 404
 
 
 @pytest.mark.django_db
@@ -176,15 +185,16 @@ def test_fragmentos_htmx_trazem_linha_nova_com_identificador_proprio(
 @pytest.mark.integration
 def test_estrutura_acessivel_da_composicao(client, seletor_ligado, edital):
     identificar(client, "ana.elaboradora", ["elaborador"])
-    client.post(reverse("interface:compor", args=[edital.id]), payload())
-    corpo = client.get(reverse("interface:compor", args=[edital.id])).content.decode()
+    compor_rascunho(client, edital, perfis(), eventos())
+    corpo = client.get(etapa(edital, "perfis")).content.decode()
 
     assert corpo.count("<h1>") == 1
     assert '<nav aria-label="Trilha de navegação"' in corpo
-    assert 'aria-current="page"' in corpo
+    assert '<nav aria-label="Etapas da composição"' in corpo
+    assert 'aria-current="step"' in corpo, "a etapa atual precisa ser anunciada"
     assert "<fieldset" in corpo and "<legend>" in corpo, "grupos de campo precisam de rótulo"
     assert 'aria-describedby="ajuda-req-0"' in corpo, "texto de ajuda associado ao campo"
-    assert corpo.count("<label for=") >= 10, "todo campo precisa de rótulo associado"
+    assert corpo.count("<label for=") >= 8, "todo campo do Perfil precisa de rótulo associado"
 
 
 @pytest.mark.django_db
@@ -197,14 +207,17 @@ def test_edital_publicado_nao_e_editavel_pela_composicao(
 
     publicado = publish_original(api_client, manager_headers, process_payload)
     identificar(client, "ana.elaboradora", ["elaborador"])
-    corpo = client.get(reverse("interface:compor", args=[publicado.id])).content.decode()
+    resposta = client.get(reverse("interface:compor-etapa", args=[publicado.id, "perfis"]))
+    corpo = resposta.content.decode()
     assert "Somente leitura" in corpo
     assert "Retificação" in corpo
 
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_processo_aparece_na_trilha_de_navegacao(client, seletor_ligado, edital):
+def test_identificacao_mostra_o_processo_e_diz_que_nao_e_editavel(client, seletor_ligado, edital):
+    """Não há command que altere título ou descrição após a criação — a tela diz isso."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    corpo = client.get(reverse("interface:compor", args=[edital.id])).content.decode()
+    corpo = client.get(etapa(edital, "identificacao")).content.decode()
     assert ProcessoSeletivo.objects.get().institutional_code in corpo
+    assert "Não é editável nesta tela" in corpo

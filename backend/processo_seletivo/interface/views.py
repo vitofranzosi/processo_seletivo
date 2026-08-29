@@ -128,56 +128,112 @@ def _pendencias(edital):
     ]
 
 
-@require_http_methods(["GET", "POST"])
+# O wizard só tem as etapas que o domínio sustenta. Identificação é leitura porque não há
+# command que altere título ou descrição depois da criação — ver ETAPAS_SEM_BACKEND no plano.
+ETAPAS_COMPOSICAO = [
+    ("identificacao", "Identificação", "interface/compor_identificacao.html"),
+    ("perfis", "Perfis de Vaga", "interface/compor_perfis.html"),
+    ("cronograma", "Cronograma", "interface/compor_cronograma.html"),
+    ("revisao", "Revisão", "interface/compor_revisao.html"),
+]
+CHAVES_ETAPA = [chave for chave, _, _ in ETAPAS_COMPOSICAO]
+
+
+def _progresso(edital, atual):
+    """Cada etapa sabe se já está resolvida — o que orienta quem retoma o trabalho depois."""
+    concluidas = {
+        "identificacao": True,
+        "perfis": edital.perfis.exists(),
+        "cronograma": bool(
+            getattr(edital, "cronograma", None) and edital.cronograma.eventos.exists()
+        ),
+        "revisao": False,
+    }
+    return [
+        {
+            "chave": chave,
+            "rotulo": rotulo,
+            "numero": indice + 1,
+            "atual": chave == atual,
+            "concluida": concluidas[chave] and chave != atual,
+        }
+        for indice, (chave, rotulo, _) in enumerate(ETAPAS_COMPOSICAO)
+    ]
+
+
+def _vizinhas(atual):
+    indice = CHAVES_ETAPA.index(atual)
+    return (
+        CHAVES_ETAPA[indice - 1] if indice > 0 else None,
+        CHAVES_ETAPA[indice + 1] if indice + 1 < len(CHAVES_ETAPA) else None,
+    )
+
+
+@require_http_methods(["GET"])
 def compor(request, edital_id):
-    """Composição de Perfis e Cronograma do rascunho (US2 e US3 da 002)."""
+    return redirect(reverse("interface:compor-etapa", args=[edital_id, CHAVES_ETAPA[0]]))
+
+
+@require_http_methods(["GET", "POST"])
+def compor_etapa(request, edital_id, etapa):
+    """Composição em etapas (US2 e US3 da 002), no formato de assistente guiado."""
     ator = identidade.ator_da_sessao(request)
     if ator is None:
         return redirect(reverse("interface:identificar"))
-
+    if etapa not in CHAVES_ETAPA:
+        raise Http404
     edital = obter_edital(actor=ator, edital_id=edital_id)
     if edital is None:
         raise Http404
-    editavel = edital.status == Edital.Status.EM_ELABORACAO and ator.can("edital:elaborar")
 
-    erros, perfis, eventos = [], None, None
-    if request.method == "POST":
+    editavel = edital.status == Edital.Status.EM_ELABORACAO and ator.can("edital:elaborar")
+    anterior, proxima = _vizinhas(etapa)
+    erros, digitados = [], None
+
+    if request.method == "POST" and etapa in {"perfis", "cronograma"}:
         if not editavel:
             erros.append(
                 "Este Edital não está em elaboração ou você não tem permissão para editá-lo."
             )
         else:
             try:
-                perfis = forms.ler_perfis(request.POST)
-                eventos = forms.ler_eventos(request.POST)
-                replace_draft(
-                    actor=ator,
-                    edital_id=edital.id,
-                    expected_revision=edital.revision,
-                    profiles=perfis,
-                    schedule=eventos,
-                    correlation_id=request.correlation_id,
-                )
-                return redirect(f"{reverse('interface:compor', args=[edital.id])}?salvo=1")
+                # A leitura acontece antes da gravação para que o digitado sobreviva à recusa.
+                digitados = _ler_etapa(request, etapa)
             except ValueError as exc:
                 erros.append(str(exc))
-            except DomainError as exc:
-                erros.append(exc.detail)
+            else:
+                try:
+                    _gravar_etapa(request, ator, edital, etapa, digitados)
+                    destino = request.POST.get("destino") or etapa
+                    return redirect(
+                        f"{reverse('interface:compor-etapa', args=[edital.id, destino])}?salvo=1"
+                    )
+                except DomainError as exc:
+                    erros.append(exc.detail)
         edital.refresh_from_db()
 
+    _, _, template = ETAPAS_COMPOSICAO[CHAVES_ETAPA.index(etapa)]
     return render(
         request,
-        "interface/compor.html",
+        template,
         {
             "edital": edital,
+            "etapa": etapa,
+            "progresso": _progresso(edital, etapa),
+            "anterior": anterior,
+            "proxima": proxima,
             "editavel": editavel,
             "erros": erros,
             "salvo": request.GET.get("salvo") == "1",
             "perfis": (
-                forms.perfis_do_edital(edital) if perfis is None else _reexibir_perfis(perfis)
+                _reexibir_perfis(digitados)
+                if etapa == "perfis" and digitados is not None
+                else forms.perfis_do_edital(edital)
             ),
             "eventos": (
-                forms.eventos_do_edital(edital) if eventos is None else _reexibir_eventos(eventos)
+                _reexibir_eventos(digitados)
+                if etapa == "cronograma" and digitados is not None
+                else forms.eventos_do_edital(edital)
             ),
             "reservas": forms.RESERVA,
             "pendencias": _pendencias(edital),
@@ -201,11 +257,33 @@ def _reexibir_perfis(perfis):
 
 def _reexibir_eventos(eventos):
     return [
-        {**evento,
-         "startAt": evento["startAt"].strftime("%Y-%m-%dT%H:%M") if evento["startAt"] else "",
-         "endAt": evento["endAt"].strftime("%Y-%m-%dT%H:%M") if evento["endAt"] else ""}
+        {
+            **evento,
+            "startAt": evento["startAt"].strftime("%Y-%m-%dT%H:%M") if evento["startAt"] else "",
+            "endAt": evento["endAt"].strftime("%Y-%m-%dT%H:%M") if evento["endAt"] else "",
+        }
         for evento in eventos
     ]
+
+
+def _ler_etapa(request, etapa):
+    return forms.ler_perfis(request.POST) if etapa == "perfis" else forms.ler_eventos(request.POST)
+
+
+def _gravar_etapa(request, ator, edital, etapa, digitados):
+    """Grava uma seção preservando a outra: replace_draft substitui o rascunho inteiro."""
+    if etapa == "perfis":
+        perfis, eventos = digitados, forms.eventos_persistidos(edital)
+    else:
+        perfis, eventos = forms.perfis_persistidos(edital), digitados
+    replace_draft(
+        actor=ator,
+        edital_id=edital.id,
+        expected_revision=edital.revision,
+        profiles=perfis,
+        schedule=eventos,
+        correlation_id=request.correlation_id,
+    )
 
 
 @require_http_methods(["GET"])

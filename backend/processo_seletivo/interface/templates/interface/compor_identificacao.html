@@ -1,0 +1,28 @@
+{% extends "interface/compor_base.html" %}
+{% block etapa_titulo %}Identificação{% endblock %}
+{% block etapa %}
+<section aria-labelledby="ident-titulo" class="cartao">
+  <h2 id="ident-titulo">Identificação administrativa</h2>
+  <p class="ajuda">Definida na criação do Edital. Não é editável nesta tela — ainda não existe
+    ato de domínio que altere a identificação de um Edital em elaboração.</p>
+  <dl class="participantes">
+    <dt>Processo Seletivo</dt><dd>{{ edital.processo.title }}
+      <span class="codigo">{{ edital.processo.institutional_code }}</span></dd>
+    <dt>Número e ano</dt><dd>{{ edital.number }}/{{ edital.year }}</dd>
+    <dt>Título</dt><dd>{{ edital.title }}</dd>
+    <dt>Descrição</dt>
+    <dd>{% if edital.description %}{{ edital.description }}
+      {% else %}<span class="pendente">não informada na criação</span>{% endif %}</dd>
+  </dl>
+</section>
+
+{% if not edital.description %}
+<p class="aviso"><strong>Descrição ausente.</strong> A validação avisa sobre isso, mas ela só pode
+ser informada na criação do Edital. É uma lacuna conhecida do backend, registrada para a próxima
+evolução — o aviso não impede a submissão.</p>
+{% endif %}
+
+<p class="navegacao-etapa">
+  <a href="{% url 'interface:compor-etapa' edital.id proxima %}" class="botao">Avançar ›</a>
+</p>
+{% endblock %}

@@ -1,0 +1,11 @@
+<p class="navegacao-etapa">
+  {% if anterior %}
+  <button type="submit" name="destino" value="{{ anterior }}" class="acao">‹ Voltar</button>
+  {% endif %}
+  {% if editavel %}
+  <button type="submit" name="destino" value="{{ etapa }}" class="botao secundario">Salvar rascunho</button>
+  {% endif %}
+  {% if proxima %}
+  <button type="submit" name="destino" value="{{ proxima }}" class="botao">Avançar ›</button>
+  {% endif %}
+</p>

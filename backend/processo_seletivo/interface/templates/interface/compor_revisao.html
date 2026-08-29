@@ -1,0 +1,53 @@
+{% extends "interface/compor_base.html" %}
+{% block etapa_titulo %}Revisão{% endblock %}
+{% block etapa %}
+<section aria-labelledby="revisao-titulo" class="pendencias">
+  <h2 id="revisao-titulo">O que falta para submeter</h2>
+  {% if pendencias %}
+  <ul>
+    {% for item in pendencias %}
+    <li class="p-{{ item.severidade }}">
+      <span class="marcador">{% if item.severidade == 'erro' %}Impede{% else %}Aviso{% endif %}</span>
+      {{ item.mensagem }}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="tudo-certo">Nada pendente — o Edital pode ser submetido.</p>
+  {% endif %}
+</section>
+
+<div class="colunas">
+  <section aria-labelledby="resumo-perfis" class="cartao">
+    <h2 id="resumo-perfis">Perfis de Vaga ({{ perfis|length }})</h2>
+    {% if perfis %}
+    <ul class="resumo-lista">
+      {% for perfil in perfis %}
+      <li><strong>{{ perfil.code }}</strong> — {{ perfil.name }}
+        <span class="quando">{{ perfil.immediateVacancies }} vaga{{ perfil.immediateVacancies|pluralize }} imediata{{ perfil.immediateVacancies|pluralize }}</span></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="pendente">Nenhum Perfil.</p>{% endif %}
+    <p><a href="{% url 'interface:compor-etapa' edital.id 'perfis' %}" class="acao">Revisar Perfis</a></p>
+  </section>
+  <section aria-labelledby="resumo-cronograma" class="cartao">
+    <h2 id="resumo-cronograma">Cronograma ({{ eventos|length }})</h2>
+    {% if eventos %}
+    <ul class="resumo-lista">
+      {% for evento in eventos %}
+      <li><strong>{{ evento.type }}</strong> — {{ evento.description }}</li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="pendente">Nenhum Evento.</p>{% endif %}
+    <p><a href="{% url 'interface:compor-etapa' edital.id 'cronograma' %}" class="acao">Revisar Cronograma</a></p>
+  </section>
+</div>
+
+<p class="navegacao-etapa">
+  <a href="{% url 'interface:compor-etapa' edital.id anterior %}" class="acao">‹ Voltar</a>
+  {% if editavel %}
+  <a href="{% url 'interface:ato' edital.id 'submeter' %}" class="botao">Submeter para revisão</a>
+  {% endif %}
+  <a href="{% url 'interface:detalhe' edital.id %}" class="acao">Ver situação do Edital</a>
+</p>
+{% endblock %}

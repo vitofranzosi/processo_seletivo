@@ -11,14 +11,16 @@ from django.urls import reverse
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models import Publicacao
 from tests.fixtures.publicacao import publish_original
-from tests.interface.conftest import identificar
+from tests.interface.conftest import compor_rascunho, identificar
 
-DRAFT = {
+PERFIS = {
     "perfil-0-id": "cccccccc-0000-4000-8000-00000000f001",
     "perfil-0-code": "P1",
     "perfil-0-name": "Perfil",
     "perfil-0-immediateVacancies": "1",
     "perfil-0-reserveType": "NONE",
+}
+EVENTOS = {
     "evento-0-id": "cccccccc-0000-4000-8000-00000000f002",
     "evento-0-type": "INSCRICAO",
     "evento-0-description": "Inscrições",
@@ -50,7 +52,7 @@ def praticar(client, edital, acao, **campos):
 @pytest.mark.integration
 def test_fluxo_completo_ate_a_publicacao(client, seletor_ligado, edital):
     identificar(client, "ana.elaboradora", ["elaborador"])
-    client.post(reverse("interface:compor", args=[edital.id]), DRAFT)
+    compor_rascunho(client, edital, PERFIS, EVENTOS)
     praticar(client, Edital.objects.get(), "submeter")
     assert Edital.objects.get().status == Edital.Status.EM_REVISAO
 
@@ -87,7 +89,7 @@ def test_confirmacao_diz_o_que_o_ato_provoca_antes_de_praticar(
 def test_confirmar_duas_vezes_pratica_um_ato_so(client, seletor_ligado, edital):
     """A chave de idempotência nasce no formulário: duplo clique não publica duas vezes."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    client.post(reverse("interface:compor", args=[edital.id]), DRAFT)
+    compor_rascunho(client, edital, PERFIS, EVENTOS)
     praticar(client, Edital.objects.get(), "submeter")
     identificar(client, "bruno.homologador", ["homologador"])
     praticar(client, Edital.objects.get(), "homologar", motivo="OK")
@@ -108,7 +110,7 @@ def test_confirmar_duas_vezes_pratica_um_ato_so(client, seletor_ligado, edital):
 def test_segregacao_e_avisada_antes_da_tentativa(client, seletor_ligado, edital):
     """FR-012: comunicar a exigência antes, e não apenas depois da recusa."""
     identificar(client, "joao.sozinho", ["elaborador", "homologador", "publicador"])
-    client.post(reverse("interface:compor", args=[edital.id]), DRAFT)
+    compor_rascunho(client, edital, PERFIS, EVENTOS)
     praticar(client, Edital.objects.get(), "submeter")
     praticar(client, Edital.objects.get(), "homologar", motivo="OK")
 
@@ -130,7 +132,7 @@ def test_segregacao_e_avisada_antes_da_tentativa(client, seletor_ligado, edital)
 @pytest.mark.integration
 def test_motivo_obrigatorio_e_exigido_antes_do_command(client, seletor_ligado, edital):
     identificar(client, "ana.elaboradora", ["elaborador"])
-    client.post(reverse("interface:compor", args=[edital.id]), DRAFT)
+    compor_rascunho(client, edital, PERFIS, EVENTOS)
     praticar(client, Edital.objects.get(), "submeter")
     identificar(client, "bruno.homologador", ["homologador"])
 
@@ -144,7 +146,7 @@ def test_motivo_obrigatorio_e_exigido_antes_do_command(client, seletor_ligado, e
 @pytest.mark.integration
 def test_publicar_exige_autoridade_signataria(client, seletor_ligado, edital):
     identificar(client, "ana.elaboradora", ["elaborador"])
-    client.post(reverse("interface:compor", args=[edital.id]), DRAFT)
+    compor_rascunho(client, edital, PERFIS, EVENTOS)
     praticar(client, Edital.objects.get(), "submeter")
     identificar(client, "bruno.homologador", ["homologador"])
     praticar(client, Edital.objects.get(), "homologar", motivo="OK")
@@ -188,7 +190,7 @@ def test_edital_publicado_anuncia_imutabilidade(
 @pytest.mark.integration
 def test_ato_sem_permissao_nao_e_oferecido_nem_aceito(client, seletor_ligado, edital):
     identificar(client, "ana.elaboradora", ["elaborador"])
-    client.post(reverse("interface:compor", args=[edital.id]), DRAFT)
+    compor_rascunho(client, edital, PERFIS, EVENTOS)
     praticar(client, Edital.objects.get(), "submeter")
 
     corpo = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
