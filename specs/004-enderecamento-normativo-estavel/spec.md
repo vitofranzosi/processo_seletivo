@@ -148,6 +148,13 @@ caminho, chave ou índice, para que a mudança de representação não vire trab
   pretendida não é mais determinável, e o ato é recusado em vez de cair no fim da lista.
 - Retificação em curso cuja conversão não resolve de forma inequívoca: devolução explícita, com
   motivo, em vez de conversão por aproximação.
+- `requirements` substituída por lista vazia: é ato admissível, porque a validação de publicação
+  não exige requisitos — diferente da remoção do último Perfil, que é erro impeditivo.
+- Duas alterações do mesmo ato inserindo com `before=` na mesma referência: a ordem entre elas é a
+  ordem em que foram declaradas, que é a mesma regra que a `003` já aplica à sequência.
+- Alteração que remove uma entidade e outra, no mesmo ato, que a usa como referência de posição: a
+  referência é resolvida contra o conteúdo que a alteração encontra, então a ordem de declaração
+  decide — e a recusa é explícita se a referência já não existir naquele ponto.
 
 ## Requirements *(mandatory)*
 
@@ -166,16 +173,41 @@ caminho, chave ou índice, para que a mudança de representação não vire trab
 - **FR-001d**: A **leitura** — consolidação, consulta histórica, proveniência — DEVE continuar
   aceitando caminhos posicionais indefinidamente. Atos publicados não são reescritos, então a forma
   antiga permanece no histórico para sempre.
-- **FR-001e**: `ADD` em coleção com identidade DEVE indicar a posição por âncora relativa —
-  `/profiles/before=<uuid>` ou `/profiles/after=<uuid>` —, ou por `/profiles/-` quando a intenção
-  for acrescentar ao fim. Índice numérico NÃO DEVE ser admitido: é a forma que desloca, e `ADD` é
-  o caso em que a contenção da `003` protege pior, por não haver conteúdo anterior a comparar.
+- **FR-001e**: `ADD` em coleção com identidade DEVE indicar a posição por **referência de
+  posição** — `/profiles/before=<uuid>` ou `/profiles/after=<uuid>` —, ou por `/profiles/-` quando
+  a intenção for acrescentar ao fim. Índice numérico NÃO DEVE ser admitido: é a forma que desloca,
+  e `ADD` é o caso em que a contenção da `003` protege pior, por não haver conteúdo anterior a
+  comparar.
+
+  O termo **âncora** fica reservado ao mecanismo da `003` que esta feature aposenta (FR-009).
+  Chamar as duas coisas de âncora confundiria o que sai com o que entra.
+- **FR-001f**: Coleção aninhada com identidade DEVE ser endereçável pela forma composta, como em
+  `/profiles/id=<uuid>/competitionModalities/id=<uuid>/name`. Cada segmento de lista resolve pela
+  chave do seu próprio nível.
+- **FR-001g**: `normativeRule` é objeto, não item de lista, e DEVE continuar sendo endereçada pelo
+  nome da chave — `/profiles/id=<uuid>/competitionModalities/id=<uuid>/normativeRule/percentage`.
+  Ter `id` não a torna elemento de coleção.
+- **FR-001h**: O identificador no seletor DEVE ser comparado como texto exato, sem normalização de
+  caixa. Identificador que contenha `/` ou `~` DEVE usar o escape do RFC 6901 (`~1` e `~0`), que a
+  extensão não altera.
 - **FR-002**: A resolução por chave DEVE recusar explicitamente quando a entidade endereçada não
-  existir na versão sobre a qual o ato vigora — inclusive quando ela for a referência de um
-  `before=`/`after=`, caso em que a posição pretendida deixou de ser determinável.
-- **FR-003**: A precondição de conteúdo da `003` DEVE continuar valendo sobre o endereçamento novo:
-  identificar a entidade certa não dispensa verificar que o conteúdo dela é o que estava à vista.
-- **FR-004**: A composição DEVE recusar coleção com chave repetida.
+  existir. A verificação acontece nos **dois** momentos que a `003` estabeleceu: na elaboração,
+  contra a versão declarada em `baseSnapshotId`, e na Publicação, contra o conteúdo vigente no
+  início da vigência declarada. São perguntas distintas — "existe no que eu vi?" e "ainda existe
+  quando meu ato passa a valer?" — e ambas precisam de resposta.
+- **FR-002a**: As recusas DEVEM ter código próprio, no mesmo vocabulário da `003`:
+  `target_key_not_found` quando a entidade endereçada não existe; `position_reference_not_found`
+  quando a referência de um `before=`/`after=` não existe, caso em que a posição pretendida deixou
+  de ser determinável; `duplicate_key_in_collection` para chave repetida;
+  `positional_addressing_refused` para endereçamento por índice em coleção com identidade. Cada
+  código DEVE nomear o caminho envolvido, como fazem os da `003`.
+- **FR-003**: A precondição de conteúdo por hash da `003` NÃO DEVE ser aposentada e DEVE continuar
+  valendo sobre o endereçamento novo. Ela responde a outra pergunta — se o conteúdo ainda é o que
+  estava à vista —, e identificar a entidade certa não dispensa verificá-lo. Continua sendo a única
+  defesa contra duas Retificações que alterem o mesmo campo da mesma entidade.
+- **FR-004**: A composição DEVE recusar coleção com chave repetida, **na elaboração e na
+  Publicação**. Descobrir o estado impossível ao materializar a versão consolidada seria descobrir
+  tarde: o ato já teria sido homologado.
 - **FR-004a**: Coleção cujos elementos não tenham identificador — hoje apenas `requirements` — DEVE
   ser tratada como valor normativo atômico: alterada por `REPLACE` da lista inteira, nunca item a
   item. O `expectedPreviousHash` incide sobre a coleção completa, de modo que alteração concorrente
@@ -186,7 +218,8 @@ caminho, chave ou índice, para que a mudança de representação não vire trab
   identidade de cada índice atravessado, que a `003` já persiste. A conversão não adivinha: onde a
   resolução não for inequívoca, a Retificação DEVE ser devolvida para reelaboração.
 - **FR-005b**: A conversão DEVE ser registrada na auditoria, inclusive nas Retificações já
-  homologadas. O efeito do ato é idêntico por construção, mas a representação que a autoridade
+  homologadas, com o caminho antes, o caminho depois, o momento e a identificação da migração que
+  a produziu — não uma pessoa, porque não houve ato humano. O efeito do ato é idêntico por construção, mas a representação que a autoridade
   homologou muda — e mudança silenciosa em ato homologado é exatamente o que a trilha existe para
   impedir.
 - **FR-006**: A consulta histórica DEVE reproduzir corretamente atos em ambas as formas.
@@ -194,23 +227,36 @@ caminho, chave ou índice, para que a mudança de representação não vire trab
   representação de quem elabora.
 - **FR-008**: O contrato público DEVE documentar a forma nova, sua sintaxe e seus erros.
 - **FR-009**: A âncora de identidade introduzida pela `003` DEVE ser aposentada quando a conversão
-  de FR-005a estiver concluída. Depois dela, todo caminho gravável ou nomeia a entidade (`id=`,
+  de FR-005a estiver concluída. **Concluída** é condição verificável, e não a migração ter rodado:
+  nenhuma Retificação em estado não final possui `expected_anchors` preenchido. Depois dela, todo caminho gravável ou nomeia a entidade (`id=`,
   `before=`, `after=`) ou é atômico (FR-004a) — em nenhum dos dois casos há índice a deslocar, que
   era a única pergunta que a âncora respondia. Atos já publicados na forma antiga não precisam
   dela: a precondição só é verificada na Publicação, e a deles já ocorreu.
-- **FR-010**: A precondição de conteúdo por hash NÃO DEVE ser aposentada. Ela responde a outra
-  pergunta — se o conteúdo ainda é o que estava à vista — e continua sendo a única defesa contra
-  duas Retificações que alterem o mesmo campo da mesma entidade.
+- **FR-010**: A proveniência por caminho (`ProvenienciaConteudo.target_path`) DEVE registrar o
+  caminho na forma em que o ato o declarou, sem convertê-lo. Ela é evidência de qual Publicação
+  originou cada trecho: reescrevê-la faria o registro divergir do ato que ele documenta.
+- **FR-011**: A devolução prevista em FR-005a DEVE informar a quem elaborou qual alteração não
+  resolveu e por quê, pelo mesmo caminho das demais devoluções — `return_reason` e a trilha de
+  auditoria. Devolução sem motivo transfere para a pessoa o trabalho de descobrir o que houve.
 
 ## Success Criteria *(mandatory)*
 
 - **SC-001**: Duas Retificações sobre entidades distintas da mesma versão publicam ambas, sem
   reelaboração.
-- **SC-002**: Nenhum ato publicado antes desta feature muda de efeito depois dela.
-- **SC-003**: A consulta temporal produz, para todo instante, o mesmo conteúdo que produzia antes.
+- **SC-002**: Nenhum ato publicado antes desta feature muda de efeito depois dela. Verificável
+  comparando o hash canônico de cada Versão Consolidada existente antes e depois da migração: os
+  conjuntos precisam ser idênticos.
+- **SC-003**: A consulta temporal produz o mesmo conteúdo que produzia antes, verificada sobre um
+  conjunto definido de instantes: cada limite de vigência do Edital, mais um segundo antes e um
+  segundo depois de cada um. "Todo instante" não é verificável; as fronteiras são onde o resultado
+  muda, e é nelas que um erro apareceria.
 - **SC-004**: Nenhuma Retificação atinge entidade diferente da endereçada, em qualquer composição.
 - **SC-005**: Nenhum ato novo é criado endereçando por posição uma coleção com identidade — a
   recusa acontece na elaboração e é verificável por tentativa.
+- **SC-006**: Ao fim da migração, toda Retificação em estado não final ou está na forma por chave,
+  ou foi devolvida com motivo registrado. Nenhuma permanece em curso na forma antiga.
+- **SC-007**: Concluída a conversão, nenhuma Retificação em estado não final tem `expected_anchors`
+  preenchido — que é a condição de FR-009 e o que autoriza remover o mecanismo.
 
 ## Assumptions
 
@@ -229,9 +275,12 @@ caminho, chave ou índice, para que a mudança de representação não vire trab
 
 - Integração com o diretório institucional.
 - Qualquer mudança no ciclo de vida da Retificação ou nas regras de vigência.
-- Endereçamento de coleções de texto simples, se Q5 decidir mantê-las por posição.
+- Endereçamento item a item de coleções sem identificador: a Q5 decidiu tratá-las como valor
+  atômico (FR-004a), então dar identidade a linhas de texto está fora deste incremento.
+- Requisitos de desempenho da resolução por chave: as coleções normativas têm dezenas de elementos,
+  não milhares, e nenhuma meta própria se justifica antes de haver medida.
 
 ## Dependencies
 
-- `003-integridade-e-prontidao` concluída, incluindo os requisitos hoje abertos.
+- `003-integridade-e-prontidao` concluída — 71 tarefas, nenhum requisito aberto.
 - Clarificações concluídas em 2026-08-29; nenhuma decisão pendente bloqueia o planejamento.
