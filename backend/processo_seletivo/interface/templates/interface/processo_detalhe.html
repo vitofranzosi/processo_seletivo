@@ -1,0 +1,73 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}{{ processo.institutional_code }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <span aria-current="page">{{ processo.institutional_code }}</span>
+</nav>
+
+<h1>{{ processo.title }}</h1>
+<p class="sub"><span class="codigo">{{ processo.institutional_code }}</span>
+  <span class="situacao s-{{ processo.status }}">{{ processo.status|situacao }}</span></p>
+
+{% if request.GET.ato %}<p class="sucesso" role="status">Ato registrado.</p>{% endif %}
+
+<ol class="etapas" aria-label="Situação do Processo">
+  {% for etapa in trilha %}
+  <li class="e-{{ etapa.estado }}">
+    <span class="ponto" aria-hidden="true"></span>
+    <span class="rotulo">{{ etapa.rotulo }}</span>
+    {% if etapa.estado == 'atual' %}<span class="agora">situação atual</span>{% endif %}
+  </li>
+  {% endfor %}
+</ol>
+{% if processo.status == 'CANCELADO' %}
+<p class="aviso"><strong>Cancelado.</strong> Interrupção administrativa anterior à conclusão
+regular. Os Editais mantêm suas próprias situações e todo o histórico permanece preservado.</p>
+{% endif %}
+
+<div class="colunas">
+  <section aria-labelledby="editais-titulo" class="cartao">
+    <h2 id="editais-titulo">Editais ({{ editais|length }})</h2>
+    <ul class="resumo-lista">
+      {% for edital in editais %}
+      <li>
+        <a href="{% url 'interface:detalhe' edital.id %}">{{ edital.number }}/{{ edital.year }}</a>
+        — {{ edital.title }}
+        <span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span>
+      </li>
+      {% empty %}<li class="pendente">Nenhum Edital.</li>{% endfor %}
+    </ul>
+  </section>
+
+  <section aria-labelledby="acoes-processo" class="cartao">
+    <h2 id="acoes-processo">O que fazer agora</h2>
+
+    {% if pendentes and processo.status != 'CANCELADO' %}
+    <div class="aviso">
+      <strong>O cancelamento do Processo está impedido.</strong>
+      <p>Estes Editais precisam ser encerrados ou cancelados antes:</p>
+      <ul class="impedimentos">
+        {% for edital in pendentes %}
+        <li><a href="{% url 'interface:detalhe' edital.id %}">{{ edital.number }}/{{ edital.year }}</a>
+          <span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span></li>
+        {% endfor %}
+      </ul>
+      <p class="ajuda">Cancelar o Processo não cancela os Editais: cada um exige ato próprio.</p>
+    </div>
+    {% endif %}
+
+    <ul class="lista-acoes">
+      {% for ato in atos %}
+      <li>
+        <a class="botao {% if ato.irreversivel %}perigoso{% else %}secundario{% endif %}"
+           href="{% url 'interface:processo-ato' processo.id ato.chave %}">{{ ato.rotulo }}</a>
+        {% if ato.irreversivel %}<span class="marca-irreversivel">irreversível</span>{% endif %}
+      </li>
+      {% empty %}
+      <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}

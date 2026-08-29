@@ -3,7 +3,7 @@
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
   <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <span>{{ edital.processo.institutional_code }}</span> ›
+  <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> ›
   <span aria-current="page">Edital {{ edital.number }}/{{ edital.year }}</span>
 </nav>
 

@@ -8,6 +8,12 @@ urlpatterns = [
     path("", views.lista, name="lista"),
     path("identificar", views.identificar, name="identificar"),
     path("sair", views.sair, name="sair"),
+    path("processos/<uuid:processo_id>/", views.processo_detalhe, name="processo-detalhe"),
+    path(
+        "processos/<uuid:processo_id>/atos/<slug:acao>",
+        views.praticar_ato_processo,
+        name="processo-ato",
+    ),
     path("editais/<uuid:edital_id>/", views.detalhe, name="detalhe"),
     path("editais/<uuid:edital_id>/compor", views.compor, name="compor"),
     path("editais/<uuid:edital_id>/compor/<slug:etapa>", views.compor_etapa, name="compor-etapa"),

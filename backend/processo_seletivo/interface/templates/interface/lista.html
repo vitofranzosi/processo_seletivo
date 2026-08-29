@@ -27,7 +27,7 @@ responsabilidade. Solicite acesso a quem administra o sistema no Cefor.</p>
 {% for processo in processos %}
 <article class="processo">
   <header>
-    <h2>{{ processo.title }}</h2>
+    <h2><a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.title }}</a></h2>
     <span class="codigo">{{ processo.institutional_code }}</span>
     <span class="situacao s-{{ processo.status }}">{{ processo.status|situacao }}</span>
   </header>

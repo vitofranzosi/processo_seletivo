@@ -18,14 +18,21 @@ from django.views.decorators.http import require_http_methods
 from processo_seletivo.auditoria import selectors as auditoria_selectors
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.domain.validation import validate_for_publication
-from processo_seletivo.interface import atos, atos_retificacao, forms, identidade
+from processo_seletivo.interface import (
+    atos,
+    atos_processo,
+    atos_retificacao,
+    forms,
+    identidade,
+)
 from processo_seletivo.interface import retificacao as retificacao_ui
 from processo_seletivo.processos.application.selectors import (
     contar_por_situacao,
     listar_processos,
     obter_edital,
 )
-from processo_seletivo.processos.models import Edital
+from processo_seletivo.processos.domain.finalizacao import pending_editais
+from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
 from processo_seletivo.publicacoes.application.retificacoes import create_retification
 from processo_seletivo.publicacoes.application.selectors import (
@@ -659,3 +666,96 @@ def auditoria(request, edital_id):
             "proximo_cursor": proximo,
         },
     )
+
+
+ETAPAS_PROCESSO = [
+    ("EM_ELABORACAO", "Em elaboração"),
+    ("ATIVO", "Ativo"),
+    ("ENCERRADO", "Encerrado"),
+]
+
+
+def _trilha_processo(processo):
+    if processo.status == "CANCELADO":
+        return [{"chave": c, "rotulo": r, "estado": "fora"} for c, r in ETAPAS_PROCESSO]
+    atual = [c for c, _ in ETAPAS_PROCESSO].index(processo.status)
+    return [
+        {
+            "chave": chave,
+            "rotulo": rotulo,
+            "estado": "concluida" if i < atual else "atual" if i == atual else "futura",
+        }
+        for i, (chave, rotulo) in enumerate(ETAPAS_PROCESSO)
+    ]
+
+
+def _processo_do_ator(ator, processo_id):
+    processo = (
+        ProcessoSeletivo.objects.filter(
+            pk=processo_id, institution_scope=ator.institution_scope
+        )
+        .prefetch_related("editais")
+        .first()
+    )
+    if processo is None:
+        raise Http404
+    return processo
+
+
+@require_http_methods(["GET"])
+def processo_detalhe(request, processo_id):
+    """Situação do Processo, seus Editais e os atos do ciclo de vida (US5 da 002)."""
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    processo = _processo_do_ator(ator, processo_id)
+    return render(
+        request,
+        "interface/processo_detalhe.html",
+        {
+            "processo": processo,
+            "trilha": _trilha_processo(processo),
+            "editais": processo.editais.order_by("year", "number"),
+            "pendentes": pending_editais(processo),
+            "atos": list(atos_processo.disponiveis(processo, ator)),
+        },
+    )
+
+
+@require_http_methods(["GET", "POST"])
+def praticar_ato_processo(request, processo_id, acao):
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    processo = _processo_do_ator(ator, processo_id)
+    ato = atos_processo.ATOS.get(acao)
+    if ato is None:
+        raise Http404
+
+    contexto = {
+        "processo": processo,
+        "ato": ato,
+        # FR-018: o que impede é mostrado antes da tentativa, com caminho para cada pendência.
+        "pendentes": pending_editais(processo) if ato.depende_dos_editais else [],
+        "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
+    }
+    if request.method == "GET":
+        return render(request, "interface/processo_confirmar.html", contexto)
+
+    try:
+        motivo = (request.POST.get("motivo") or "").strip()
+        if not motivo:
+            raise DomainError("motivo_obrigatorio", f"{ato.rotulo_motivo} é obrigatório.", 422)
+        ato.command(
+            actor=ator,
+            processo_id=processo.id,
+            expected_revision=processo.revision,
+            reason=motivo,
+            idempotency_key=request.POST.get("chave_idempotencia", ""),
+            correlation_id=request.correlation_id,
+        )
+    except DomainError as exc:
+        contexto["erro"] = exc.detail
+        contexto["pendentes"] = pending_editais(processo) if ato.depende_dos_editais else []
+        return render(request, "interface/processo_confirmar.html", contexto, status=exc.status)
+    return redirect(f"{reverse('interface:processo-detalhe', args=[processo.id])}?ato={ato.chave}")
