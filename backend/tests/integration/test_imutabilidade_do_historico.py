@@ -12,6 +12,7 @@ from django.db import DatabaseError, connection, transaction
 from processo_seletivo.processos.models import AtoAdministrativo
 from processo_seletivo.publicacoes.models import RevisaoEdital
 from processo_seletivo.publicacoes.models_retificacao import AlteracaoNormativa, Retificacao
+from tests.fixtures.edital import caminho_perfil
 from tests.fixtures.publicacao import create_retification, publish_original, publish_retification
 
 postgresql_only = pytest.mark.skipif(
@@ -19,7 +20,7 @@ postgresql_only = pytest.mark.skipif(
 )
 pytestmark = [pytest.mark.integration, postgresql_only]
 
-ALTERACAO = [{"targetPath": "/profiles/0/name", "operation": "REPLACE", "newValue": "Outro"}]
+ALTERACAO = [{"targetPath": caminho_perfil("name"), "operation": "REPLACE", "newValue": "Outro"}]
 
 
 @pytest.fixture

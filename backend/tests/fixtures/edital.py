@@ -40,3 +40,18 @@ def actor_headers(subject, permissions, *, if_match=None, key="publication-key-0
     if if_match is not None:
         headers["HTTP_IF_MATCH"] = f'"{if_match}"'
     return headers
+
+
+def caminho_perfil(campo="", seed=0):
+    """Caminho por chave do Perfil de `complete_draft`, na forma que a gramática admite.
+
+    Os testes conheciam `/profiles/0`. O índice deixou de ser forma admitida onde há chave, e
+    concentrar a construção aqui evita que cada arquivo repita a montagem do seletor.
+    """
+    caminho = f"/profiles/id={identificador(401, seed)}"
+    return f"{caminho}/{campo}" if campo else caminho
+
+
+def caminho_evento(campo="", seed=0):
+    caminho = f"/schedule/id={identificador(402, seed)}"
+    return f"{caminho}/{campo}" if campo else caminho

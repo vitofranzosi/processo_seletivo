@@ -1,15 +1,35 @@
+"""Precondições de conteúdo, agora que o caminho nomeia a entidade.
+
+A `003` guardava aqui, além do hash, uma âncora de identidade por índice atravessado, e boa
+parte destes testes era sobre ela: dois Perfis de denominação idêntica tornavam o hash
+indistinguível depois de a lista mudar de forma. Com `id=<uuid>` a lista pode mudar de forma à
+vontade — o caminho continua achando o mesmo Perfil —, e o que a âncora respondia deixou de ser
+pergunta (FR-015). O hash ficou, respondendo a sua (FR-014).
+"""
+
+import pytest
+
+from processo_seletivo.publicacoes.domain.changes import EnderecamentoPosicional
 from processo_seletivo.publicacoes.domain.conflicts import (
-    ANCHOR_MISMATCH,
+    DUPLICATE_KEY,
     HASH_MISMATCH,
+    KEY_NOT_FOUND,
     TARGET_PRESENT,
     content_conflicts,
     derive_preconditions,
-    path_anchors,
+    duplicate_keys,
     previous_hash,
 )
 from processo_seletivo.shared.canonical import canonical_sha256
+from tests.fixtures.snapshot import PERFIL
 
-BASE = {"title": "Original", "rules": {"a": 1}, "profiles": [{"code": "P1"}]}
+P1, P2, P3 = PERFIL["A"], PERFIL["B"], PERFIL["C"]
+
+BASE = {
+    "title": "Original",
+    "rules": {"a": 1},
+    "profiles": [{"id": P1, "code": "P1"}],
+}
 
 
 def replace(path, expected=None):
@@ -32,21 +52,25 @@ def test_previous_hash_uses_the_canonical_value_at_the_path():
 def test_previous_hash_of_absent_path_is_empty():
     assert previous_hash(BASE, "/inexistente") == ""
     assert previous_hash(BASE, "/rules/b") == ""
-    # Índice fora da lista e posição de acréscimo não existem: nada há para sobrescrever.
-    assert previous_hash(BASE, "/profiles/9") == ""
+    # Chave que não está na coleção e posição de acréscimo não existem: nada há para sobrescrever.
+    assert previous_hash(BASE, f"/profiles/id={P2}") == ""
     assert previous_hash(BASE, "/profiles/-") == ""
-    assert previous_hash(BASE, "/profiles/0/inexistente") == ""
+    assert previous_hash(BASE, f"/profiles/id={P1}/inexistente") == ""
 
 
 def test_previous_hash_reaches_content_inside_lists():
     """A precondição vale dentro de listas; sem isso, Perfil e Evento ficariam sem proteção."""
-    assert previous_hash(BASE, "/profiles/0/code") == canonical_sha256("P1")
-    assert previous_hash(BASE, "/profiles/0") == canonical_sha256({"code": "P1"})
+    assert previous_hash(BASE, f"/profiles/id={P1}/code") == canonical_sha256("P1")
+    assert previous_hash(BASE, f"/profiles/id={P1}") == canonical_sha256({"id": P1, "code": "P1"})
 
 
-def test_add_into_a_list_is_insertion_and_never_a_silent_overwrite():
-    """RFC 6902: ADD em lista insere e desloca; só em objeto ele substitui."""
-    assert content_conflicts(BASE, [add("/profiles/0")]) == {}
+def test_previous_hash_refuses_a_positional_path_instead_of_answering_it():
+    """Ler por posição uma coleção com chave é a pergunta errada, não uma resposta vazia."""
+    with pytest.raises(EnderecamentoPosicional):
+        previous_hash(BASE, "/profiles/0/code")
+
+
+def test_add_into_a_list_is_appending_and_never_a_silent_overwrite():
     assert content_conflicts(BASE, [add("/profiles/-")]) == {}
     assert content_conflicts(BASE, [add("/title")]) == {TARGET_PRESENT: ["/title"]}
 
@@ -107,9 +131,9 @@ def test_precondition_of_a_path_created_by_an_earlier_change_is_verified():
 
 PERFIS = {
     "profiles": [
-        {"id": "id-1", "code": "P1", "name": "A"},
-        {"id": "id-2", "code": "P2", "name": "MESMO"},
-        {"id": "id-3", "code": "P3", "name": "MESMO"},
+        {"id": P1, "code": "P1", "name": "A"},
+        {"id": P2, "code": "P2", "name": "MESMO"},
+        {"id": P3, "code": "P3", "name": "MESMO"},
     ]
 }
 
@@ -119,66 +143,86 @@ def sem_o_primeiro(conteudo):
 
 
 def com_precondicoes(conteudo, changes):
-    """As alterações como ficam persistidas: hash e âncoras derivados da base."""
-    derivadas = derive_preconditions(conteudo, changes)
+    """As alterações como ficam persistidas: o hash derivado da base declarada."""
     return [
-        {
-            **change,
-            "expectedPreviousHash": precondition["hash"],
-            "expectedAnchors": precondition["anchors"],
-        }
-        for change, precondition in zip(changes, derivadas, strict=True)
+        {**change, "expectedPreviousHash": hash_}
+        for change, hash_ in zip(changes, derive_preconditions(conteudo, changes), strict=True)
     ]
 
 
-def test_anchors_identify_every_list_index_the_path_crosses():
-    assert path_anchors(PERFIS, "/profiles/1/name") == {"/profiles/1": "id:id-2"}
-    assert path_anchors(PERFIS, "/profiles/2") == {"/profiles/2": "id:id-3"}
-    assert path_anchors(PERFIS, "/profiles/-") == {}
-    assert path_anchors(PERFIS, "/profiles/3") == {}
+def test_a_shifted_list_no_longer_disturbs_an_untouched_profile():
+    """O caso que a `003` só conseguia recusar, e que esta feature deixa publicar.
 
-
-def test_anchor_of_an_element_without_id_falls_back_to_its_content():
-    conteudo = {"requisitos": [{"texto": "a"}, {"texto": "b"}]}
-    ancoras = path_anchors(conteudo, "/requisitos/1/texto")
-    assert ancoras["/requisitos/1"].startswith("hash:")
-
-
-def test_identical_content_in_a_shifted_list_is_still_caught():
-    """O hash da folha não distingue duas entidades de mesmo valor; a âncora distingue."""
+    P2 e P3 têm a mesma denominação de propósito: era esse par que tornava o hash incapaz de
+    distinguir as entidades depois do deslocamento. Com a chave no caminho, remover P1 não move
+    o alvo, e o ato sobre P2 continua sendo sobre P2.
+    """
     ato = com_precondicoes(
-        PERFIS, [{"targetPath": "/profiles/1/name", "operation": "REPLACE", "newValue": "Novo"}]
+        PERFIS,
+        [{"targetPath": f"/profiles/id={P2}/name", "operation": "REPLACE", "newValue": "Novo"}],
     )
-    # O valor em /profiles/1/name continua "MESMO" depois da remoção — agora é o do P3.
-    assert previous_hash(sem_o_primeiro(PERFIS), "/profiles/1/name") == ato[0][
-        "expectedPreviousHash"
-    ]
-    assert content_conflicts(sem_o_primeiro(PERFIS), ato) == {ANCHOR_MISMATCH: ["/profiles/1"]}
-
-
-def test_positional_add_is_anchored_to_the_element_it_precedes():
-    """`ADD` não tem conteúdo anterior, mas tem posição — e posição também desloca."""
-    novo = {"id": "id-x", "code": "PX", "name": "X"}
-    ato = com_precondicoes(
-        PERFIS, [{"targetPath": "/profiles/1", "operation": "ADD", "newValue": novo}]
-    )
-    assert ato[0]["expectedPreviousHash"] == ""
-    assert content_conflicts(PERFIS, ato) == {}
-    assert content_conflicts(sem_o_primeiro(PERFIS), ato) == {ANCHOR_MISMATCH: ["/profiles/1"]}
-
-
-def test_appending_at_the_end_is_stable_and_needs_no_anchor():
-    novo = {"id": "id-x", "code": "PX", "name": "X"}
-    ato = com_precondicoes(
-        PERFIS, [{"targetPath": "/profiles/-", "operation": "ADD", "newValue": novo}]
-    )
-    assert ato[0]["expectedAnchors"] == {}
     assert content_conflicts(sem_o_primeiro(PERFIS), ato) == {}
 
 
-def test_an_untouched_path_still_publishes_after_an_unrelated_shift():
-    """A âncora não pode transformar o caminho feliz em recusa."""
+def test_a_removed_profile_is_key_not_found_and_not_a_silent_miss():
     ato = com_precondicoes(
-        PERFIS, [{"targetPath": "/profiles/2/name", "operation": "REPLACE", "newValue": "Novo"}]
+        PERFIS,
+        [{"targetPath": f"/profiles/id={P1}/name", "operation": "REPLACE", "newValue": "Novo"}],
     )
-    assert content_conflicts(PERFIS, ato) == {}
+    assert content_conflicts(sem_o_primeiro(PERFIS), ato) == {
+        KEY_NOT_FOUND: [f"/profiles/id={P1}/name"]
+    }
+
+
+def test_two_acts_on_the_same_field_of_the_same_profile_still_collide():
+    """A chave diz de quem o ato fala; o hash, se o conteúdo ainda é o que estava à vista."""
+    ato = com_precondicoes(
+        PERFIS,
+        [{"targetPath": f"/profiles/id={P2}/name", "operation": "REPLACE", "newValue": "Novo"}],
+    )
+    ja_alterado = {
+        "profiles": [
+            perfil if perfil["id"] != P2 else {**perfil, "name": "Alterado por outra"}
+            for perfil in PERFIS["profiles"]
+        ]
+    }
+    assert content_conflicts(ja_alterado, ato) == {HASH_MISMATCH: [f"/profiles/id={P2}/name"]}
+
+
+def test_appending_at_the_end_is_stable():
+    novo = {"id": "00000000-0000-0000-0000-0000000005ff", "code": "PX", "name": "X"}
+    ato = com_precondicoes(
+        PERFIS, [{"targetPath": "/profiles/-", "operation": "ADD", "newValue": novo}]
+    )
+    assert ato[0]["expectedPreviousHash"] == ""
+    assert content_conflicts(sem_o_primeiro(PERFIS), ato) == {}
+
+
+def test_duplicate_keys_are_reported_per_collection():
+    repetido = {"profiles": [*PERFIS["profiles"], {"id": P2, "code": "P9", "name": "Clone"}]}
+    assert duplicate_keys(repetido) == [f"/profiles/id={P2}"]
+    assert duplicate_keys(PERFIS) == []
+
+
+def test_the_same_identifier_in_two_different_collections_is_not_a_duplicate():
+    """A resolução é escopada à coleção que o caminho nomeia; unicidade global não é suposta."""
+    conteudo = {
+        "profiles": [{"id": P1, "code": "P1"}],
+        "schedule": [{"id": P1, "type": "INSCRICAO"}],
+    }
+    assert duplicate_keys(conteudo) == []
+
+
+def test_an_act_that_would_duplicate_a_key_conflicts():
+    clone = {"id": P2, "code": "P9", "name": "Clone"}
+    ato = [{"targetPath": "/profiles/-", "operation": "ADD", "newValue": clone}]
+    assert content_conflicts(PERFIS, ato) == {DUPLICATE_KEY: [f"/profiles/id={P2}"]}
+
+
+def test_derivation_stops_at_the_first_inapplicable_change():
+    """As seguintes partiriam de um estado que não existe: derivar delas seria inventar."""
+    changes = [
+        {"targetPath": "/rules/inexistente/x", "operation": "REPLACE", "newValue": 1},
+        replace("/title"),
+    ]
+    assert derive_preconditions(BASE, changes) == ["", ""]

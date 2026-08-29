@@ -14,7 +14,9 @@ A `003` aplicada, com as migrações até `publicacoes/0007`.
 cd backend && TEST_DB_ENGINE=postgresql DB_NAME=processo_seletivo_test DB_USER=postgres DB_PASSWORD=postgres uv run pytest
 ```
 
-Esperado antes de começar: suíte verde, zero ignorados no PostgreSQL, zero `ResourceWarning`.
+Esperado antes de começar: suíte verde e zero `ResourceWarning`. No PostgreSQL fica **um**
+ignorado — `test_database_permissions.py`, cuja recusa por vendor só existe fora do PostgreSQL.
+Ele vem da `003` e é o par simétrico dos que o SQLite ignora.
 
 ## O ganho: duas pessoas em Perfis diferentes
 

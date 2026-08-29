@@ -1,44 +1,22 @@
-"""Acrescentar e remover Perfil e Evento por Retificação (T037).
+"""Acrescentar e remover Perfil e Evento por Retificação, agora sem coreografia de ordem.
 
-Remover desloca índices e o domínio aplica as alterações em sequência, então a ordem em que
-elas são emitidas é o que decide se o Perfil certo é apagado. Estes testes aplicam as
-alterações com o mesmo `apply_changes` do domínio, sobre o mesmo conteúdo — a comparação é com
-o resultado, não com a lista de operações.
+Este arquivo existia para provar que a ordem de emissão estava certa: REPLACE antes de REMOVE,
+REMOVE do maior índice para o menor, ADD por último. Toda essa exigência vinha de índice
+deslocar. Com o caminho nomeando a entidade, o que se prova aqui mudou: **nenhuma ordem produz
+resultado diferente de outra**, e é isso que os testes verificam.
+
+Como antes, as alterações são aplicadas com o mesmo `apply_changes` do domínio, sobre o mesmo
+conteúdo — a comparação é com o resultado, não com a lista de operações.
 """
+
+from copy import deepcopy
+from itertools import permutations
 
 import pytest
 
 from processo_seletivo.interface import retificacao
 from processo_seletivo.publicacoes.domain.changes import apply_changes
-
-
-def perfil(codigo, nome):
-    return {
-        "id": f"id-{codigo}",
-        "code": codigo,
-        "name": nome,
-        "description": "",
-        "requirements": [],
-        "immediateVacancies": 1,
-        "reserveType": "NONE",
-        "reserveLimit": None,
-        "locality": "Vitória",
-        "classificationInformation": {},
-        "callInformation": {},
-        "competitionModalities": [],
-    }
-
-
-def evento(tipo, ordem):
-    return {
-        "id": f"ev-{ordem}",
-        "type": tipo,
-        "description": tipo,
-        "startAt": "2026-10-01T12:00:00+00:00",
-        "endAt": None,
-        "order": ordem,
-        "status": "PLANEJADO",
-    }
+from tests.fixtures.snapshot import EVENTO, PERFIL, evento, perfil
 
 
 @pytest.fixture
@@ -46,9 +24,34 @@ def conteudo():
     return {
         "title": "Edital",
         "description": "",
-        "profiles": [perfil("A", "Primeiro"), perfil("B", "Segundo"), perfil("C", "Terceiro")],
-        "schedule": [evento("Inscrições", 1), evento("Prova", 2)],
+        "profiles": [
+            perfil(PERFIL["A"], "A", "Primeiro"),
+            perfil(PERFIL["B"], "B", "Segundo"),
+            perfil(PERFIL["C"], "C", "Terceiro"),
+        ],
+        "schedule": [
+            evento(EVENTO["A"], "Inscrições", 1, "2026-10-01T12:00:00+00:00"),
+            evento(EVENTO["B"], "Prova", 2, "2026-10-01T12:00:00+00:00"),
+        ],
     }
+
+
+def referencias(conteudo):
+    """Do caminho para a referência opaca que o formulário usa — o inverso do que a tela faz."""
+    grupos = retificacao.campos_editaveis(conteudo)
+    de_grupo = {grupo["caminho"]: grupo["referencia"] for grupo in grupos}
+    de_campo = {
+        campo["caminho"]: campo["referencia"] for grupo in grupos for campo in grupo["campos"]
+    }
+    return de_grupo, de_campo
+
+
+def formulario(conteudo, *, remover=(), alterar=(), **extras):
+    de_grupo, de_campo = referencias(conteudo)
+    dados = {f"remover:{de_grupo[caminho]}": "1" for caminho in remover}
+    dados.update({f"campo:{de_campo[caminho]}": valor for caminho, valor in alterar})
+    dados.update(extras)
+    return dados
 
 
 def aplicar(conteudo, dados):
@@ -58,33 +61,82 @@ def aplicar(conteudo, dados):
 
 
 def test_remover_dois_perfis_apaga_os_marcados_e_nao_os_vizinhos(conteudo):
-    """Com REMOVE em ordem crescente, apagar /profiles/0 faria /profiles/2 virar /profiles/1."""
     resultado, _, resumo = aplicar(
-        conteudo, {"remover:/profiles/0": "1", "remover:/profiles/2": "1"}
+        conteudo,
+        formulario(
+            conteudo, remover=[f"/profiles/id={PERFIL['A']}", f"/profiles/id={PERFIL['C']}"]
+        ),
     )
 
     assert [p["code"] for p in resultado["profiles"]] == ["B"]
     assert [item["rotulo"] for item in resumo] == ["Remoção", "Remoção"]
 
 
-def test_alterar_e_remover_na_mesma_retificacao_usa_os_indices_do_vigente(conteudo):
-    """O REPLACE precisa vir antes do REMOVE, senão altera o Perfil que passou a ocupar o índice."""
+def test_alterar_e_remover_na_mesma_retificacao_atinge_cada_entidade(conteudo):
+    """Antes isto dependia de o REPLACE vir antes do REMOVE. Agora não depende de nada."""
     resultado, _, _ = aplicar(
         conteudo,
-        {"campo:/profiles/2/name": "Terceiro alterado", "remover:/profiles/0": "1"},
+        formulario(
+            conteudo,
+            remover=[f"/profiles/id={PERFIL['A']}"],
+            alterar=[(f"/profiles/id={PERFIL['C']}/name", "Terceiro alterado")],
+        ),
     )
 
     assert [p["name"] for p in resultado["profiles"]] == ["Segundo", "Terceiro alterado"]
 
 
+def test_qualquer_ordem_de_emissao_produz_o_mesmo_ato(conteudo):
+    """A garantia passou da sequência para a chave: é o cenário 2 de US2.
+
+    Se alguma permutação divergir, é porque sobrou dependência de posição em algum lugar.
+    """
+    alteracoes, _ = retificacao.diferencas(
+        conteudo,
+        formulario(
+            conteudo,
+            remover=[f"/profiles/id={PERFIL['A']}"],
+            alterar=[(f"/profiles/id={PERFIL['C']}/name", "Terceiro alterado")],
+            **{"novo-perfil-9-code": "D", "novo-perfil-9-name": "Quarto"},
+        ),
+    )
+    assert len(alteracoes) == 3
+
+    resultados = [
+        apply_changes(deepcopy(conteudo), list(ordem), publication_id="p1")[0]
+        for ordem in permutations(alteracoes)
+    ]
+    assert all(resultado == resultados[0] for resultado in resultados)
+
+
 def test_campo_de_linha_removida_nao_vira_alteracao(conteudo):
     """Alterar o que será apagado não tem efeito e poluiria o resumo mostrado antes de confirmar."""
     _, alteracoes, resumo = aplicar(
-        conteudo, {"remover:/profiles/1": "1", "campo:/profiles/1/name": "irrelevante"}
+        conteudo,
+        formulario(
+            conteudo,
+            remover=[f"/profiles/id={PERFIL['B']}"],
+            alterar=[(f"/profiles/id={PERFIL['B']}/name", "irrelevante")],
+        ),
     )
 
     assert [a["operation"] for a in alteracoes] == ["REMOVE"]
     assert len(resumo) == 1
+
+
+def test_alteracoes_emitidas_nomeiam_a_entidade_e_nunca_a_posicao(conteudo):
+    """FR-019, segunda condição: o que a tela emite usa a forma por chave."""
+    _, alteracoes, _ = aplicar(
+        conteudo,
+        formulario(
+            conteudo,
+            remover=[f"/profiles/id={PERFIL['B']}"],
+            alterar=[(f"/schedule/id={EVENTO['A']}/description", "Nova descrição")],
+        ),
+    )
+
+    caminhos = [a["targetPath"] for a in alteracoes]
+    assert caminhos == [f"/schedule/id={EVENTO['A']}/description", f"/profiles/id={PERFIL['B']}"]
 
 
 def test_perfil_acrescentado_nasce_com_a_forma_do_snapshot(conteudo):
@@ -110,7 +162,11 @@ def test_perfil_acrescentado_nasce_com_a_forma_do_snapshot(conteudo):
 def test_acrescentar_e_remover_juntos_preserva_o_que_nao_foi_tocado(conteudo):
     resultado, _, _ = aplicar(
         conteudo,
-        {"remover:/profiles/1": "1", "novo-perfil-9-code": "D", "novo-perfil-9-name": "Quarto"},
+        formulario(
+            conteudo,
+            remover=[f"/profiles/id={PERFIL['B']}"],
+            **{"novo-perfil-9-code": "D", "novo-perfil-9-name": "Quarto"},
+        ),
     )
 
     assert [p["code"] for p in resultado["profiles"]] == ["A", "C", "D"]
@@ -153,15 +209,27 @@ def test_abrir_e_nao_tocar_em_nada_nao_produz_alteracao_de_instante():
         "description": "",
         "profiles": [],
         "schedule": [
-            {**evento("Inscrições", 1), "startAt": "2026-10-01T12:00:37.482913+00:00"}
+            evento(EVENTO["A"], "Inscrições", 1, "2026-10-01T12:00:37.482913+00:00"),
         ],
     }
-    campos = retificacao.campos_editaveis(conteudo)
     reenviado = {
-        f"campo:{campo['caminho']}": campo["valor"]
-        for grupo in campos
+        f"campo:{campo['referencia']}": campo["valor"]
+        for grupo in retificacao.campos_editaveis(conteudo)
         for campo in grupo["campos"]
     }
 
     alteracoes, _ = retificacao.diferencas(conteudo, reenviado)
     assert alteracoes == []
+
+
+@pytest.mark.parametrize(
+    ("caminho_do_campo", "bruto", "trecho"),
+    [
+        (f"/profiles/id={PERFIL['A']}/immediateVacancies", "muitas", "número inteiro"),
+        (f"/schedule/id={EVENTO['A']}/startAt", "ontem", "data e hora"),
+    ],
+)
+def test_valor_mal_digitado_vira_erro_legivel(conteudo, caminho_do_campo, bruto, trecho):
+    """A mensagem precisa dizer qual campo e o que foi digitado; um traceback não serve."""
+    with pytest.raises(ValueError, match=trecho):
+        retificacao.diferencas(conteudo, formulario(conteudo, alterar=[(caminho_do_campo, bruto)]))

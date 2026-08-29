@@ -49,6 +49,12 @@ markers = [
 [tool.coverage.run]
 branch = true
 source = ["processo_seletivo"]
+# A `0006` reconstruía a precondição das Retificações elaboradas antes de ela existir, com uma
+# cópia congelada da regra do domínio. A `0008` removeu a coluna que metade dessa cópia
+# preenchia, e o sistema nunca chegou a produção: numa base nova a migration percorre zero
+# linhas. Ela é história append-only que não pode ser apagada e não pode mais rodar sobre dado.
+# Medir sua cobertura não diria nada sobre a qualidade do que ainda executa.
+omit = ["processo_seletivo/publicacoes/migrations/0006_backfill_precondicoes.py"]
 
 [tool.ruff]
 target-version = "py313"

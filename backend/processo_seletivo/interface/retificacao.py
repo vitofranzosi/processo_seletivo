@@ -6,15 +6,22 @@ problema administrativo. Aqui a pessoa edita o conteúdo que está vigorando, e 
 o que ela viu e o que ela deixou é traduzida nas alterações — que é o que US4 descreve como
 "o conteúdo vigente ao lado da alteração proposta".
 
-Além de alterar valores, é possível remover e acrescentar Perfis e Eventos. Remover desloca
-índices, então a ordem em que as alterações são emitidas importa: primeiro os REPLACE, que usam
-os índices do conteúdo vigente; depois os REMOVE em ordem decrescente, para que apagar um não
-mova os seguintes; por último os ADD, que acrescentam ao fim com o token `-`.
+Além de alterar valores, é possível remover e acrescentar Perfis e Eventos. Isso já exigiu uma
+coreografia: os REPLACE primeiro, com os índices do vigente; os REMOVE em ordem decrescente,
+para que apagar um não movesse os seguintes; os ADD por último. **Ela não existe mais.** Cada
+alteração nomeia a entidade de que fala, e nenhuma ordem de emissão muda o resultado.
+
+Nada disso aparece na tela. O formulário identifica seus campos por uma **referência opaca** —
+posição no formulário que o servidor acabou de gerar, não caminho normativo —, e é aqui que a
+referência volta a ser caminho. Quem elabora um Edital tem um problema administrativo, não um
+problema de representação (FR-019).
 """
 
 from datetime import UTC, datetime
 from uuid import uuid4
 from zoneinfo import ZoneInfo
+
+from processo_seletivo.publicacoes.domain.changes import ABSENT, resolve_path
 
 ZONA = ZoneInfo("America/Sao_Paulo")
 TEXTO, INTEIRO, INSTANTE = "texto", "inteiro", "instante"
@@ -56,22 +63,11 @@ NOVO_EVENTO = [
 def _ler(conteudo, caminho):
     """Valor em `caminho`, ou None quando ele não resolve.
 
-    `-` é a posição de acréscimo do RFC 6901: nada existe ali, e é por isso que um ADD não tem
-    "antes". Índice fora da lista tem o mesmo destino — nenhum dos dois é erro de programa.
+    Delega ao próprio domínio: a resolução do seletor `id=` mora lá, e uma segunda cópia dela
+    aqui divergiria da primeira no dia em que a gramática mudasse.
     """
-    atual = conteudo
-    for token in caminho.lstrip("/").split("/"):
-        if isinstance(atual, list):
-            if not token.isdigit() or int(token) >= len(atual):
-                return None
-            atual = atual[int(token)]
-        elif isinstance(atual, dict):
-            atual = atual.get(token)
-        else:
-            return None
-        if atual is None:
-            return None
-    return atual
+    valor = resolve_path(conteudo, caminho)
+    return None if valor is ABSENT else valor
 
 
 def _para_formulario(valor, tipo):
@@ -82,55 +78,63 @@ def _para_formulario(valor, tipo):
     return str(valor)
 
 
+def _grupo(titulo, caminho, item, campos):
+    return {
+        "titulo": titulo,
+        "caminho": caminho,
+        "campos": [
+            {
+                "caminho": f"{caminho}/{chave}",
+                "rotulo": rotulo,
+                "tipo": tipo,
+                "valor": _para_formulario(item.get(chave), tipo),
+            }
+            for chave, rotulo, tipo in campos
+        ],
+    }
+
+
+def _referenciar(grupos):
+    """Dá a cada grupo e a cada campo o nome pelo qual o formulário os chama.
+
+    A referência é a posição no formulário — `g2c3` —, e não o caminho normativo. É a primeira
+    das duas condições de FR-019: o HTML entregue não contém caminho algum. Ela vale só para o
+    par requisição/resposta que a gerou, porque o POST reconstrói os mesmos grupos a partir da
+    mesma versão base.
+    """
+    for ordem_grupo, grupo in enumerate(grupos, 1):
+        grupo["referencia"] = f"g{ordem_grupo}"
+        # A tela precisa saber se a linha pode ser removida sem precisar olhar o caminho — que
+        # é justamente o que ela não deve receber.
+        grupo["removivel"] = bool(grupo["caminho"])
+        for ordem_campo, campo in enumerate(grupo["campos"], 1):
+            campo["referencia"] = f"g{ordem_grupo}c{ordem_campo}"
+    return grupos
+
+
 def campos_editaveis(conteudo):
     """Campos que uma Retificação pode alterar, agrupados como a pessoa os enxerga."""
-    grupos = [
-        {
-            "titulo": "Edital",
-            "campos": [
-                {
-                    "caminho": f"/{chave}",
-                    "rotulo": rotulo,
-                    "tipo": tipo,
-                    "valor": _para_formulario(conteudo.get(chave), tipo),
-                }
-                for chave, rotulo, tipo in CAMPOS_RAIZ
-            ],
-        }
-    ]
-    for indice, perfil in enumerate(conteudo.get("profiles") or []):
+    grupos = [{"titulo": "Edital", "caminho": "", "campos": []}]
+    grupos[0]["campos"] = _grupo("Edital", "", conteudo, CAMPOS_RAIZ)["campos"]
+    for perfil in conteudo.get("profiles") or []:
         grupos.append(
-            {
-                "titulo": f"Perfil {perfil.get('code', '')} — {perfil.get('name', '')}",
-                "caminho": f"/profiles/{indice}",
-                "campos": [
-                    {
-                        "caminho": f"/profiles/{indice}/{chave}",
-                        "rotulo": rotulo,
-                        "tipo": tipo,
-                        "valor": _para_formulario(perfil.get(chave), tipo),
-                    }
-                    for chave, rotulo, tipo in CAMPOS_PERFIL
-                ],
-            }
+            _grupo(
+                f"Perfil {perfil.get('code', '')} — {perfil.get('name', '')}",
+                f"/profiles/id={perfil.get('id', '')}",
+                perfil,
+                CAMPOS_PERFIL,
+            )
         )
-    for indice, evento in enumerate(conteudo.get("schedule") or []):
+    for evento in conteudo.get("schedule") or []:
         grupos.append(
-            {
-                "titulo": f"Evento {evento.get('order', '')} — {evento.get('type', '')}",
-                "caminho": f"/schedule/{indice}",
-                "campos": [
-                    {
-                        "caminho": f"/schedule/{indice}/{chave}",
-                        "rotulo": rotulo,
-                        "tipo": tipo,
-                        "valor": _para_formulario(evento.get(chave), tipo),
-                    }
-                    for chave, rotulo, tipo in CAMPOS_EVENTO
-                ],
-            }
+            _grupo(
+                f"Evento {evento.get('order', '')} — {evento.get('type', '')}",
+                f"/schedule/id={evento.get('id', '')}",
+                evento,
+                CAMPOS_EVENTO,
+            )
         )
-    return grupos
+    return _referenciar(grupos)
 
 
 def _converter(bruto, tipo, rotulo):
@@ -167,19 +171,17 @@ def _mesmo_instante(anterior, novo):
     return ao_minuto(anterior) == ao_minuto(novo)
 
 
-def _indices_marcados(dados, prefixo):
-    """Índices que a pessoa marcou para remover, do maior para o menor.
+def _marcados_para_remover(dados, grupos):
+    """Caminhos que a pessoa marcou para remover.
 
-    Decrescente porque as alterações são aplicadas em sequência: remover `/profiles/0` primeiro
-    faria `/profiles/2` virar `/profiles/1`, e o segundo REMOVE apagaria o Perfil errado.
+    Sem ordem nenhuma: cada caminho nomeia a entidade, e apagar um não move os outros. Era
+    exatamente essa a razão de a ordem decrescente existir.
     """
-    marcados = []
-    for chave in dados:
-        if chave.startswith(f"remover:{prefixo}/"):
-            token = chave.split("/")[-1]
-            if token.isdigit():
-                marcados.append(int(token))
-    return sorted(marcados, reverse=True)
+    return [
+        grupo["caminho"]
+        for grupo in grupos
+        if grupo["caminho"] and dados.get(f"remover:{grupo['referencia']}")
+    ]
 
 
 def _indices_novos(dados, prefixo):
@@ -269,60 +271,56 @@ def _evento_completo(valores, ordem):
 def diferencas(conteudo, dados):
     """Alterações Normativas derivadas do que mudou entre o vigente e o que foi submetido.
 
-    A ordem de emissão é a garantia de correção, porque o domínio aplica em sequência:
-    REPLACE usando os índices do vigente, REMOVE do maior índice para o menor, e ADD por
-    último, acrescentando ao fim.
+    **A ordem de emissão deixou de ser a garantia de correção.** Cada alteração nomeia a
+    entidade de que fala, então remover um Perfil não move os outros e nenhuma sequência produz
+    resultado diferente de outra. A ordem abaixo é a que fica legível no resumo, e só isso.
     """
     alteracoes, resumo = [], []
-    removidos = {
-        "/profiles": _indices_marcados(dados, "/profiles"),
-        "/schedule": _indices_marcados(dados, "/schedule"),
-    }
-    for grupo in campos_editaveis(conteudo):
-        caminho_grupo = grupo.get("caminho") or ""
-        lista, _, indice = caminho_grupo.rpartition("/")
+    grupos = campos_editaveis(conteudo)
+    removidos = _marcados_para_remover(dados, grupos)
+
+    for grupo in grupos:
         # Alterar campo de linha que será removida não tem efeito e confundiria o resumo.
-        if indice.isdigit() and int(indice) in removidos.get(lista, []):
+        if grupo["caminho"] in removidos:
             continue
         for campo in grupo["campos"]:
-            enviado = dados.get(f"campo:{campo['caminho']}")
+            enviado = dados.get(f"campo:{campo['referencia']}")
             if enviado is None:
                 continue
-            novo = _converter(enviado, campo["tipo"], campo["rotulo"])
+            novo_valor = _converter(enviado, campo["tipo"], campo["rotulo"])
             anterior = _ler(conteudo, campo["caminho"])
             if campo["tipo"] == INSTANTE:
-                if _mesmo_instante(anterior, novo):
+                if _mesmo_instante(anterior, novo_valor):
                     continue
             elif str(anterior if anterior is not None else "") == str(
-                novo if novo is not None else ""
+                novo_valor if novo_valor is not None else ""
             ):
                 continue
             alteracoes.append(
-                {"targetPath": campo["caminho"], "operation": "REPLACE", "newValue": novo}
+                {"targetPath": campo["caminho"], "operation": "REPLACE", "newValue": novo_valor}
             )
             resumo.append(
                 {
                     "grupo": grupo["titulo"],
                     "rotulo": campo["rotulo"],
-                    "caminho": campo["caminho"],
                     "antes": _para_formulario(anterior, campo["tipo"]) or "—",
-                    "depois": _para_formulario(novo, campo["tipo"]) or "—",
+                    "depois": _para_formulario(novo_valor, campo["tipo"]) or "—",
                 }
             )
 
-    for lista, rotulo, nome in (("/profiles", "Perfil", "name"), ("/schedule", "Evento", "type")):
-        for indice in removidos[lista]:
-            atual = _ler(conteudo, f"{lista}/{indice}") or {}
-            alteracoes.append({"targetPath": f"{lista}/{indice}", "operation": "REMOVE"})
-            resumo.append(
-                {
-                    "grupo": f"{rotulo} {atual.get(nome, '')}",
-                    "rotulo": "Remoção",
-                    "caminho": f"{lista}/{indice}",
-                    "antes": atual.get(nome, "") or "—",
-                    "depois": "removido do Edital",
-                }
-            )
+    for caminho in removidos:
+        atual = _ler(conteudo, caminho) or {}
+        rotulo = "Perfil" if caminho.startswith("/profiles/") else "Evento"
+        nome = atual.get("name") if rotulo == "Perfil" else atual.get("type")
+        alteracoes.append({"targetPath": caminho, "operation": "REMOVE"})
+        resumo.append(
+            {
+                "grupo": f"{rotulo} {nome or ''}".strip(),
+                "rotulo": "Remoção",
+                "antes": nome or "—",
+                "depois": "removido do Edital",
+            }
+        )
 
     for valores in _linhas_novas(dados, "perfil", NOVO_PERFIL):
         alteracoes.append(
@@ -334,15 +332,15 @@ def diferencas(conteudo, dados):
         )
         resumo.append(
             {
-                "grupo": f"Perfil {valores.get('code') or ''}",
+                "grupo": f"Perfil {valores.get('code') or ''}".strip(),
                 "rotulo": "Acréscimo",
-                "caminho": "/profiles/-",
                 "antes": "—",
                 "depois": valores.get("name") or "novo Perfil",
             }
         )
 
-    proxima_ordem = len(conteudo.get("schedule") or []) - len(removidos["/schedule"])
+    eventos_removidos = [caminho for caminho in removidos if caminho.startswith("/schedule/")]
+    proxima_ordem = len(conteudo.get("schedule") or []) - len(eventos_removidos)
     for deslocamento, valores in enumerate(_linhas_novas(dados, "evento", NOVO_EVENTO)):
         alteracoes.append(
             {
@@ -353,9 +351,8 @@ def diferencas(conteudo, dados):
         )
         resumo.append(
             {
-                "grupo": f"Evento {valores.get('type') or ''}",
+                "grupo": f"Evento {valores.get('type') or ''}".strip(),
                 "rotulo": "Acréscimo",
-                "caminho": "/schedule/-",
                 "antes": "—",
                 "depois": valores.get("description") or "novo Evento",
             }

@@ -9,13 +9,21 @@ from processo_seletivo.editais.domain.validation import (
 )
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
-from processo_seletivo.publicacoes.domain.changes import apply_changes
+from processo_seletivo.publicacoes.domain.changes import (
+    ChaveNaoEncontrada,
+    ColecaoAtomica,
+    EnderecamentoPosicional,
+    SeletorInvalido,
+    apply_changes,
+)
 from processo_seletivo.publicacoes.domain.conflicts import (
-    ANCHOR_MISMATCH,
+    DUPLICATE_KEY,
     HASH_MISMATCH,
+    KEY_NOT_FOUND,
     TARGET_PRESENT,
     content_conflicts,
     derive_preconditions,
+    duplicate_keys,
 )
 from processo_seletivo.publicacoes.domain.consolidation import consolidate
 from processo_seletivo.publicacoes.infrastructure.pdf import render_edital_pdf
@@ -55,17 +63,24 @@ def _changes_payload(retificacao):
             "operation": item.operation,
             "newValue": item.new_value,
             "expectedPreviousHash": item.expected_previous_hash,
-            "expectedAnchors": item.expected_anchors,
         }
         for item in retificacao.alteracoes.all()
     ]
 
 
+# Endereçar por posição só faz sentido recusar na elaboração: impede o ato instável de nascer,
+# e nenhum ato já elaborado pode conter essa forma (FR-007).
+POSITIONAL_REFUSED = "positional_addressing_refused"
+
 CONFLICT_MESSAGES = {
-    ANCHOR_MISMATCH: (
-        "O item normativo que ocupava {paths} já não é o mesmo: outra Retificação publicada no "
-        "intervalo alterou a composição da lista. Refaça a Retificação sobre a versão "
-        "consolidada atual."
+    KEY_NOT_FOUND: (
+        "O item normativo endereçado em {paths} não existe no conteúdo sobre o qual esta "
+        "Retificação passaria a valer: outra Retificação publicada no intervalo o removeu. "
+        "Refaça a Retificação sobre a versão consolidada atual."
+    ),
+    DUPLICATE_KEY: (
+        "A composição deixaria mais de um item com o mesmo identificador em: {paths}. "
+        "Refaça a Retificação sobre a versão consolidada atual."
     ),
     HASH_MISMATCH: (
         "O conteúdo anterior informado não corresponde ao vigente em: {paths}. "
@@ -81,7 +96,7 @@ CONFLICT_MESSAGES = {
 def _reject_stale_changes(content, changes):
     """Rejeita alterações cuja precondição de conteúdo já não se verifica (FR-036)."""
     conflicts = content_conflicts(content, changes)
-    for code in (ANCHOR_MISMATCH, HASH_MISMATCH, TARGET_PRESENT):
+    for code in (KEY_NOT_FOUND, DUPLICATE_KEY, HASH_MISMATCH, TARGET_PRESENT):
         paths = conflicts.get(code)
         if paths:
             raise DomainError(code, CONFLICT_MESSAGES[code].format(paths=", ".join(paths)), 409)
@@ -93,14 +108,13 @@ MISSING_PRECONDITION = "precondition_missing"
 def _reject_changes_without_content_precondition(changes):
     """`REPLACE` e `REMOVE` não são publicáveis sem hash do conteúdo que substituem ou apagam.
 
-    Âncora e hash protegem riscos distintos e nenhum supre o outro: a âncora garante que ainda
-    se fala da mesma entidade; o hash, que o conteúdo dela ainda é o que estava à vista. Aceitar
-    a alteração só por ter âncora deixaria passar a sobrescrita silenciosa de outra Retificação
-    que mudou o mesmo campo da mesma entidade — que é o caso original da FR-036.
+    O caminho por chave garante que o ato ainda fala da mesma entidade; ele não diz nada sobre o
+    conteúdo dela. Sem o hash, duas Retificações que alterem o mesmo campo do mesmo Perfil
+    passariam as duas, e a segunda sobrescreveria a primeira em silêncio — que é o caso original
+    da FR-036, e a razão de a precondição por hash não ter saído junto com a âncora (FR-014).
 
-    Alcança tanto o que a migração `0006` não tenha coberto quanto qualquer linha que chegue por
-    fora da elaboração. Recusar é o comportamento seguro: devolver e reenviar o rascunho sobre a
-    versão vigente reconstrói a precondição.
+    Alcança qualquer linha que chegue por fora da elaboração. Recusar é o comportamento seguro:
+    devolver e reenviar o rascunho sobre a versão vigente reconstrói a precondição.
     """
     orphans = [
         change["targetPath"]
@@ -117,6 +131,29 @@ def _reject_changes_without_content_precondition(changes):
         )
 
 
+# A ordem importa: `ChaveNaoEncontrada` é um `CaminhoInexistente`, e a específica precisa ser
+# reconhecida antes da genérica. `invalid_change` recebe o que é erro de forma do caminho —
+# seletor malformado e endereçamento item a item de coleção atômica —, porque o contrato declara
+# três códigos novos e não quatro.
+RECUSAS_DE_CAMINHO = (
+    (EnderecamentoPosicional, POSITIONAL_REFUSED, 422),
+    (ChaveNaoEncontrada, KEY_NOT_FOUND, 409),
+    (SeletorInvalido, "invalid_change", 422),
+    (ColecaoAtomica, "invalid_change", 422),
+)
+
+
+def _recusa_de_caminho(exc):
+    """Traduz a recusa do domínio no código do contrato.
+
+    A mensagem do domínio é preservada porque é ela que nomeia o caminho envolvido (FR-010).
+    """
+    for tipo, code, status in RECUSAS_DE_CAMINHO:
+        if isinstance(exc, tipo):
+            return DomainError(code, str(exc), status)
+    return DomainError("invalid_change", str(exc), 422)
+
+
 def _no_effective_change():
     return DomainError(
         "no_effective_change",
@@ -130,7 +167,7 @@ def _apply_declared_changes(base, changes):
     try:
         content, _ = apply_changes(base, changes, publication_id="draft")
     except ValueError as exc:
-        raise DomainError("invalid_change", str(exc), 422) from exc
+        raise _recusa_de_caminho(exc) from exc
     _reject_stale_changes(base, changes)
     if canonical_sha256(content) == canonical_sha256(base):
         raise _no_effective_change()
@@ -141,8 +178,8 @@ def _replace_changes(retificacao, changes, base_content):
     """Persiste as alterações já com a precondição de conteúdo que valerá na Publicação.
 
     Quem elabora vê a base declarada em `baseSnapshotId`; derivar a precondição dela aqui é o
-    que garante que o ato publicado atinja o item normativo que estava à vista, e não o que
-    ocupar aquele índice depois de outra Retificação publicada no intervalo (FR-001/FR-002).
+    que garante que o ato publicado encontre o conteúdo que estava à vista, e não o que outra
+    Retificação publicada no intervalo tenha deixado no lugar (FR-036 da `001`).
     """
     preconditions = derive_preconditions(base_content, changes)
     retificacao.alteracoes.all().delete()
@@ -153,8 +190,7 @@ def _replace_changes(retificacao, changes, base_content):
                 target_path=item["targetPath"],
                 operation=item["operation"],
                 new_value=item.get("newValue"),
-                expected_previous_hash=precondition["hash"],
-                expected_anchors=precondition["anchors"],
+                expected_previous_hash=precondition,
                 order=index,
             )
             for index, (item, precondition) in enumerate(
@@ -355,7 +391,7 @@ def _consolidate(base_content, acts):
     Nesse caso não há resultado determinístico a materializar, e a FR-039 exige que haja.
     """
     try:
-        return consolidate(base_content, acts)
+        content, provenance = consolidate(base_content, acts)
     except ValueError as exc:
         raise DomainError(
             "inconsistent_consolidation",
@@ -363,6 +399,14 @@ def _consolidate(base_content, acts):
             "Refaça a Retificação sobre a versão consolidada atual.",
             409,
         ) from exc
+    repetidas = duplicate_keys(content)
+    if repetidas:
+        raise DomainError(
+            DUPLICATE_KEY,
+            CONFLICT_MESSAGES[DUPLICATE_KEY].format(paths=", ".join(repetidas)),
+            409,
+        )
+    return content, provenance
 
 
 def _content_in_force(edital, moment):

@@ -7,9 +7,10 @@ from django.utils import timezone
 
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+from tests.fixtures.edital import caminho_perfil
 from tests.fixtures.publicacao import create_retification, publish_original, publish_retification
 
-VACANCIES = "/profiles/0/immediateVacancies"
+VACANCIES = caminho_perfil("immediateVacancies")
 
 
 def replace_vacancies(value):

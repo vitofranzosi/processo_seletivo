@@ -5,14 +5,18 @@ Normativas; o antes e o depois são apresentados; a vigência futura é dita exp
 nada muda para o público antes da Publicação.
 """
 
+import re
+
 import pytest
 from django.urls import reverse
 
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
+from tests.fixtures.edital import caminho_perfil
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
 
 TODOS = ["elaborador", "homologador", "publicador"]
+VAGAS = caminho_perfil("immediateVacancies")
 
 
 @pytest.fixture
@@ -26,15 +30,21 @@ def vigente(edital):
 
 
 def campos(vigente, **alteracoes):
-    """Todos os campos como estão hoje, com as alterações pedidas por cima."""
+    """Todos os campos como estão hoje, com as alterações pedidas por cima.
+
+    O teste fala em caminho normativo porque é o que se lê; o formulário fala em referência
+    opaca, porque é o que a tela entrega (FR-019). A tradução entre os dois é o que este helper
+    faz — e é a mesma que a tela faz, ao contrário.
+    """
     from processo_seletivo.interface.retificacao import campos_editaveis
 
-    enviados = {
-        f"campo:{campo['caminho']}": campo["valor"]
-        for grupo in campos_editaveis(vigente.content)
-        for campo in grupo["campos"]
-    }
-    enviados.update({f"campo:{caminho}": valor for caminho, valor in alteracoes.items()})
+    grupos = campos_editaveis(vigente.content)
+    campos_do_formulario = [campo for grupo in grupos for campo in grupo["campos"]]
+    enviados = {f"campo:{campo['referencia']}": campo["valor"] for campo in campos_do_formulario}
+    referencia = {campo["caminho"]: campo["referencia"] for campo in campos_do_formulario}
+    enviados.update(
+        {f"campo:{referencia[caminho]}": valor for caminho, valor in alteracoes.items()}
+    )
     return enviados
 
 
@@ -46,7 +56,7 @@ def test_editar_o_vigente_deriva_as_alteracoes(client, seletor_ligado, edital, v
     resposta = client.post(
         reverse("interface:retificar", args=[edital.id]),
         {
-            **campos(vigente, **{"/profiles/0/immediateVacancies": "9"}),
+            **campos(vigente, **{VAGAS: "9"}),
             "justificativa": "Ampliação de vagas",
         },
     )
@@ -66,7 +76,7 @@ def test_confirmar_cria_a_retificacao_com_as_alteracoes_derivadas(
     resposta = client.post(
         reverse("interface:retificar", args=[edital.id]),
         {
-            **campos(vigente, **{"/profiles/0/immediateVacancies": "9", "/title": "Novo título"}),
+            **campos(vigente, **{VAGAS: "9", "/title": "Novo título"}),
             "justificativa": "Ampliação de vagas e ajuste de título",
             "confirmar": "1",
         },
@@ -75,7 +85,7 @@ def test_confirmar_cria_a_retificacao_com_as_alteracoes_derivadas(
 
     retificacao = Retificacao.objects.get()
     caminhos = {a.target_path: a.new_value for a in retificacao.alteracoes.all()}
-    assert caminhos == {"/profiles/0/immediateVacancies": 9, "/title": "Novo título"}
+    assert caminhos == {VAGAS: 9, "/title": "Novo título"}
     assert retificacao.status == Retificacao.Status.EM_ELABORACAO
     assert retificacao.justification == "Ampliação de vagas e ajuste de título"
 
@@ -104,7 +114,7 @@ def test_vigencia_futura_e_dita_explicitamente(client, seletor_ligado, edital, v
     client.post(
         reverse("interface:retificar", args=[edital.id]),
         {
-            **campos(vigente, **{"/profiles/0/immediateVacancies": "9"}),
+            **campos(vigente, **{VAGAS: "9"}),
             "justificativa": "Vigência futura",
             "vigencia": "2027-03-01T09:00",
             "confirmar": "1",
@@ -122,14 +132,12 @@ def test_vigencia_futura_e_dita_explicitamente(client, seletor_ligado, edital, v
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_detalhe_mostra_antes_e_depois_de_cada_alteracao(
-    client, seletor_ligado, edital, vigente
-):
+def test_detalhe_mostra_antes_e_depois_de_cada_alteracao(client, seletor_ligado, edital, vigente):
     identificar(client, "ana.elaboradora", ["elaborador"])
     client.post(
         reverse("interface:retificar", args=[edital.id]),
         {
-            **campos(vigente, **{"/profiles/0/immediateVacancies": "9"}),
+            **campos(vigente, **{VAGAS: "9"}),
             "justificativa": "Ampliação",
             "confirmar": "1",
         },
@@ -137,7 +145,7 @@ def test_detalhe_mostra_antes_e_depois_de_cada_alteracao(
     corpo = client.get(
         reverse("interface:retificacao-detalhe", args=[Retificacao.objects.get().id])
     ).content.decode()
-    assert "/profiles/0/immediateVacancies" in corpo
+    assert VAGAS in corpo, "o detalhe do ato mostra o caminho, que nomeia a entidade"
     assert 'class="antes">1<' in corpo, "o valor vigente aparece como antes"
     assert 'class="depois">9<' in corpo
 
@@ -149,15 +157,15 @@ def test_fluxo_da_retificacao_ate_a_publicacao(client, seletor_ligado, edital, v
     client.post(
         reverse("interface:retificar", args=[edital.id]),
         {
-            **campos(vigente, **{"/profiles/0/immediateVacancies": "9"}),
+            **campos(vigente, **{VAGAS: "9"}),
             "justificativa": "Ampliação",
             "confirmar": "1",
         },
     )
     retificacao = Retificacao.objects.get()
-    antes = client.get(
-        f"/api/v1/public/editais/{edital.id}/versao-vigente"
-    ).json()["content"]["profiles"][0]["immediateVacancies"]
+    antes = client.get(f"/api/v1/public/editais/{edital.id}/versao-vigente").json()["content"][
+        "profiles"
+    ][0]["immediateVacancies"]
     assert antes == 1, "nada muda para o público antes da Publicação"
 
     def ato(acao, **campos_extra):
@@ -179,9 +187,9 @@ def test_fluxo_da_retificacao_ate_a_publicacao(client, seletor_ligado, edital, v
     )
     assert resposta.status_code == 302
 
-    depois = client.get(
-        f"/api/v1/public/editais/{edital.id}/versao-vigente"
-    ).json()["content"]["profiles"][0]["immediateVacancies"]
+    depois = client.get(f"/api/v1/public/editais/{edital.id}/versao-vigente").json()["content"][
+        "profiles"
+    ][0]["immediateVacancies"]
     assert depois == 9, "publicada, a Retificação passa a compor o conteúdo vigente"
 
 
@@ -212,7 +220,7 @@ def test_confirmacao_de_publicacao_mostra_o_que_passara_a_vigorar(
     client.post(
         reverse("interface:retificar", args=[edital.id]),
         {
-            **campos(vigente, **{"/profiles/0/immediateVacancies": "9"}),
+            **campos(vigente, **{VAGAS: "9"}),
             "justificativa": "Ampliação",
             "confirmar": "1",
         },
@@ -224,3 +232,38 @@ def test_confirmacao_de_publicacao_mostra_o_que_passara_a_vigorar(
     assert "Este ato não pode ser desfeito" in corpo
     assert "Conteúdo que passará a vigorar" in corpo
     assert "continuam preservadas e consultáveis" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_tela_nao_entrega_caminho_normativo_no_html(client, seletor_ligado, edital, vigente):
+    """FR-019, primeira condição (SC-004).
+
+    Quem elabora um Edital tem um problema administrativo, não um problema de representação. O
+    formulário identifica seus campos por referência opaca — `g2c3` —, e o caminho normativo é
+    reconstruído no servidor. Se um caminho voltar ao HTML, a tela terá passado a ensinar uma
+    sintaxe que ninguém pediu para aprender.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo = client.get(reverse("interface:retificar", args=[edital.id])).content.decode()
+
+    for vestigio in ("/profiles", "/schedule", "targetPath"):
+        assert vestigio not in corpo, f"a tela entregou {vestigio!r} para quem elabora"
+    # `id="conteudo"` é atributo HTML e não seletor; o que não pode aparecer é `id=<uuid>`.
+    assert re.search(r"id=[0-9a-f]{8}-", corpo) is None, "a tela entregou um seletor de identidade"
+    assert 'name="campo:g1c1"' in corpo, "os campos são identificados por referência opaca"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_tela_emite_alteracoes_pela_chave_da_entidade(client, seletor_ligado, edital, vigente):
+    """FR-019, segunda condição (SC-004): o que ela emite usa a forma por chave."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    client.post(
+        reverse("interface:retificar", args=[edital.id]),
+        {**campos(vigente, **{VAGAS: "9"}), "justificativa": "Ampliação", "confirmar": "1"},
+    )
+
+    alteracoes = Retificacao.objects.get().alteracoes.all()
+    assert [item.target_path for item in alteracoes] == [VAGAS]
+    assert all("id=" in item.target_path for item in alteracoes)
