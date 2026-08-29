@@ -13,6 +13,7 @@ urlpatterns = [
     path("editais/<uuid:edital_id>/compor/<slug:etapa>", views.compor_etapa, name="compor-etapa"),
     path("editais/<uuid:edital_id>/atos/<slug:acao>", views.praticar_ato, name="ato"),
     path("editais/<uuid:edital_id>/retificar", views.retificar, name="retificar"),
+    path("editais/<uuid:edital_id>/auditoria", views.auditoria, name="auditoria"),
     path(
         "retificacoes/<uuid:retificacao_id>/",
         views.retificacao_detalhe,

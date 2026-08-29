@@ -1,0 +1,47 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Auditoria — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">Auditoria</span>
+</nav>
+
+<h1>Trilha de auditoria</h1>
+<p class="sub">Edital {{ edital.number }}/{{ edital.year }} — {{ edital.title }}</p>
+<p class="ajuda">Todo ato praticado sobre este Edital e suas Retificações, do mais recente para o
+  mais antigo. Os registros são imutáveis: nem a aplicação nem quem opera o banco consegue
+  alterá-los.</p>
+
+{% if registros %}
+<ol class="auditoria" aria-label="Atos registrados">
+  {% for registro in registros %}
+  <li>
+    <div class="cabeca">
+      <span class="quando">{{ registro.quando|date:"d/m/Y H:i:s" }}</span>
+      <strong class="operacao">{{ registro.operacao }}</strong>
+      <span class="agregado">{{ registro.agregado }}</span>
+    </div>
+    <div class="corpo">
+      <span class="ator">por <strong>{{ registro.ator }}</strong></span>
+      {% if registro.de and registro.para %}
+      <span class="transicao">{{ registro.de|situacao }} → {{ registro.para|situacao }}</span>
+      {% elif registro.para %}
+      <span class="transicao">situação: {{ registro.para|situacao }}</span>
+      {% endif %}
+    </div>
+    {% if registro.motivo %}<p class="motivo">“{{ registro.motivo }}”</p>{% endif %}
+  </li>
+  {% endfor %}
+</ol>
+
+{% if proximo_cursor %}
+<p class="navegacao-etapa">
+  <a class="botao secundario"
+     href="?cursor={{ proximo_cursor|urlencode }}">Ver atos anteriores</a>
+</p>
+{% endif %}
+{% else %}
+<div class="vazio"><p>Nenhum ato registrado para este Edital.</p></div>
+{% endif %}
+{% endblock %}

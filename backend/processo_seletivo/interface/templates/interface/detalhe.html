@@ -67,6 +67,9 @@ permanecem preservados.</p>
     {% endif %}
 
     <ul class="lista-acoes">
+      {% if pode_auditar %}
+      <li><a class="botao secundario" href="{% url 'interface:auditoria' edital.id %}">Ver trilha de auditoria</a></li>
+      {% endif %}
       {% if edital.status == 'PUBLICADO' %}
       <li><a class="botao secundario" href="{% url 'interface:retificar' edital.id %}">Retificar</a></li>
       {% endif %}

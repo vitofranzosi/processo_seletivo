@@ -15,6 +15,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_http_methods
 
+from processo_seletivo.auditoria import selectors as auditoria_selectors
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.domain.validation import validate_for_publication
 from processo_seletivo.interface import atos, atos_retificacao, forms, identidade
@@ -32,6 +33,7 @@ from processo_seletivo.publicacoes.application.selectors import (
     participantes_do_edital,
 )
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
+from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
 
 # Ordem em que as situações aparecem: o fluxo do Edital, não a ordem alfabética.
@@ -358,6 +360,7 @@ def detalhe(request, edital_id):
             "impedido_por_segregacao": impede_por_segregacao(participantes, ator),
             "pode_compor": edital.status == Edital.Status.EM_ELABORACAO
             and ator.can("edital:elaborar"),
+            "pode_auditar": ator.can("auditoria:consultar"),
         },
     )
 
@@ -597,3 +600,62 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
         contexto["erro"] = exc.detail
         return render(request, "interface/retificacao_confirmar.html", contexto, status=exc.status)
     return redirect(f"{reverse('interface:retificacao-detalhe', args=[item.id])}?ato={ato.chave}")
+
+
+# Como cada operação auditada é lida por quem responde um questionamento.
+OPERACOES = {
+    "CRIAR": "Criação",
+    "ATIVAR": "Ativação do Processo",
+    "SUBMETER": "Submissão para revisão",
+    "HOMOLOGAR": "Homologação",
+    "REVOGAR_HOMOLOGACAO": "Revogação da homologação",
+    "PUBLICAR": "Publicação",
+    "ENCERRAR": "Encerramento",
+    "CANCELAR": "Cancelamento",
+    "DEVOLVER": "Devolução para elaboração",
+}
+AGREGADOS = {
+    "ProcessoSeletivo": "Processo Seletivo",
+    "Edital": "Edital",
+    "Retificacao": "Retificação",
+}
+
+
+@require_http_methods(["GET"])
+def auditoria(request, edital_id):
+    """Trilha do Edital e de suas Retificações (US6 da 002)."""
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital = obter_edital(actor=ator, edital_id=edital_id)
+    if edital is None:
+        raise Http404
+    require_permission(ator, "auditoria:consultar")
+
+    registros, proximo = auditoria_selectors.trilha_do_edital(
+        actor=ator,
+        edital=edital,
+        cursor=request.GET.get("cursor"),
+        limit=auditoria_selectors.parse_limit(request.GET.get("limit")),
+    )
+    return render(
+        request,
+        "interface/auditoria.html",
+        {
+            "edital": edital,
+            "registros": [
+                {
+                    "quando": registro.occurred_at,
+                    "ator": registro.actor_subject,
+                    "operacao": OPERACOES.get(registro.operation, registro.operation),
+                    "agregado": AGREGADOS.get(registro.aggregate_type, registro.aggregate_type),
+                    "de": registro.previous_state,
+                    "para": registro.new_state,
+                    "motivo": registro.reason,
+                    "correlacao": registro.correlation_id,
+                }
+                for registro in registros
+            ],
+            "proximo_cursor": proximo,
+        },
+    )

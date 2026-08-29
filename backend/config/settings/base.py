@@ -47,6 +47,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "processo_seletivo.shared.api.middleware.CorrelationIdMiddleware",
+    "processo_seletivo.interface.erros.RecusaDoDominioMiddleware",
     "django.middleware.common.CommonMiddleware",
 ]
 database_role = os.getenv("DB_ROLE", "runtime")

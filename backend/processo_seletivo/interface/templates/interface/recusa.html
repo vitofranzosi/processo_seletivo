@@ -1,0 +1,9 @@
+{% extends "interface/base.html" %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block conteudo %}
+<h1>{{ titulo }}</h1>
+<p class="erro" role="alert">{{ detalhe }}</p>
+<p class="ajuda">Se você acredita que deveria ter acesso, peça a quem administra o sistema no
+  Cefor. Nenhuma alteração foi feita.</p>
+<p><a class="botao secundario" href="{% url 'interface:lista' %}">Voltar aos Processos Seletivos</a></p>
+{% endblock %}
