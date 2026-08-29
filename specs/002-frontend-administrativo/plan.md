@@ -164,12 +164,13 @@ apenas no navegador dela.
 specs/002-frontend-administrativo/
 ├── spec.md
 ├── plan.md
-├── research.md              # a criar: design system, HTMX, ferramenta de acessibilidade
-├── data-model.md            # a criar: modelos de apresentação, não de persistência
-├── quickstart.md            # a criar: como validar a interface
+├── research.md              # design system, HTMX, ferramenta de acessibilidade
+├── data-model.md            # modelos de apresentação, não de persistência
+├── quickstart.md            # como subir e validar a interface
+├── accessibility.md         # verificação de eMAG 3.1 e WCAG 2.1 AA
 ├── checklists/
 │   └── requirements.md
-└── tasks.md                 # criado somente por $speckit-tasks
+└── tasks.md                 # 48 de 59 concluídas
 ```
 
 ### Source Code (repository root)
@@ -205,8 +206,13 @@ system. Resultado em `research.md`.
 **Fase 1 — Desenho.** Mapear as telas e os fragmentos, definir os modelos de apresentação e como cada
 erro de domínio vira mensagem compreensível. Resultado em `data-model.md` e `quickstart.md`.
 
-**Fase 2 — Tarefas.** Criadas por `$speckit-tasks`, por história, na ordem de prioridade da
-especificação.
+**Fase 2 — Tarefas.** Criadas por história, na ordem de prioridade da especificação.
+
+**Nota sobre a execução destas fases.** Elas não aconteceram nesta ordem: as seis histórias foram
+implementadas primeiro, e `research.md`, `data-model.md`, `quickstart.md` e `tasks.md` foram
+escritos depois, registrando o que de fato foi decidido — inclusive onde a realidade divergiu deste
+plano. As divergências relevantes: o design system do SUAP não foi obtido (research.md §1) e o
+rascunho local da Decisão 5 não foi implementado, deixando FR-020 em aberto (research.md §4).
 
 ## Riscos
 
