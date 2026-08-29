@@ -7,6 +7,11 @@
   {% csrf_token %}
   <section aria-labelledby="perfis-titulo">
     <h2 id="perfis-titulo">Perfis de Vaga</h2>
+    {% if pendencias_aqui %}
+    <div class="pendencias" role="status">
+      {% include "interface/_pendencias.html" with itens=pendencias_aqui com_link=False %}
+    </div>
+    {% endif %}
     <p class="ajuda">Cada Perfil é uma oportunidade do Edital, com requisitos, vagas e modalidades
       próprios. Alterar um não afeta os demais.</p>
     <p class="contadores" data-contador="#perfis" data-item=".perfil" data-singular="Perfil" data-plural="Perfis"><span><strong>{{ perfis|length }}</strong> {{ perfis|length|plural:"Perfil,Perfis" }}</span></p>
@@ -24,4 +29,5 @@
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
 <script src="{% static 'interface/assistente.js' %}" defer></script>
 <script src="{% static 'interface/rascunho.js' %}" defer></script>
+<script src="{% static 'interface/validacao.js' %}" defer></script>
 {% endblock %}

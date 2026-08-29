@@ -198,8 +198,9 @@ def test_public_queries_stay_correct_under_concurrent_readers(
     """Leitores concorrentes não podem observar versão parcial nem conteúdo trocado."""
     import threading
 
-    from django.db import connections
     from rest_framework.test import APIClient
+
+    from tests.conftest import encerrar_conexoes_da_thread
 
     edital = edital_com_retificacoes(api_client, manager_headers, process_payload, 5)
     esperado = api_client.get(f"/api/v1/public/editais/{edital.id}/versao-vigente").json()
@@ -215,7 +216,7 @@ def test_public_queries_stay_correct_under_concurrent_readers(
         except Exception as exc:  # noqa: BLE001 — avaliado no corpo do teste
             resultados.append(exc)
         finally:
-            connections.close_all()
+            encerrar_conexoes_da_thread()
 
     threads = [threading.Thread(target=consultar) for _ in range(8)]
     for thread in threads:
@@ -245,3 +246,73 @@ def test_future_versions_are_not_scanned_by_the_current_query(
     depois, resposta = queries_de(api_client, f"/api/v1/public/editais/{edital.id}/versao-vigente")
     assert antes == depois
     assert resposta.json()["content"]["profiles"][0]["immediateVacancies"] == 1
+
+
+TABELAS_DO_HISTORICO = (
+    "publicacoes_publicacao",
+    "publicacoes_retificacao",
+    "publicacoes_versaoconsolidada",
+)
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.performance
+def test_history_page_reads_a_bounded_number_of_rows(
+    api_client, manager_headers, process_payload
+):
+    """FR-024 da 003: a página não pode ser recortada de tudo o que existe.
+
+    O número de consultas já era constante, e por isso o teste anterior não via o problema: as
+    três fontes vinham inteiras para a memória, eram concatenadas, ordenadas em Python e só
+    então fatiadas. Uma consulta, volume O(histórico). Agora cada fonte ordena e corta no banco.
+    """
+    edital = edital_com_retificacoes(api_client, manager_headers, process_payload, 15)
+
+    with CaptureQueriesContext(connection) as capturadas:
+        resposta = api_client.get(
+            f"/api/v1/public/editais/{edital.id}/historico", {"limit": 2}
+        )
+    assert resposta.status_code == 200, resposta.content
+    assert len(resposta.json()["items"]) == 2
+
+    varreduras = [
+        consulta["sql"]
+        for consulta in capturadas.captured_queries
+        if any(f'FROM "{tabela}"' in consulta["sql"] for tabela in TABELAS_DO_HISTORICO)
+        and "LIMIT" not in consulta["sql"]
+        # As consultas de prefetch são limitadas pelas linhas já buscadas, não por LIMIT.
+        and " IN (" not in consulta["sql"]
+    ]
+    assert not varreduras, "consulta sem limite sobre o histórico: " + "; ".join(varreduras)
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.performance
+def test_paginating_one_by_one_covers_the_history_without_gap_or_repetition(
+    api_client, manager_headers, process_payload
+):
+    """O cursor atravessa três fontes ordenadas em separado — é onde um erro some ou duplica.
+
+    Percorrer de um em um e comparar com a página única é o que prova que o corte no banco não
+    alterou a ordem global nem perdeu o empate entre fontes no mesmo instante.
+    """
+    edital = edital_com_retificacoes(api_client, manager_headers, process_payload, 6)
+    url = f"/api/v1/public/editais/{edital.id}/historico"
+
+    inteiro = api_client.get(url, {"limit": 100}).json()["items"]
+
+    paginado, cursor, paginas = [], None, 0
+    while True:
+        params = {"limit": 1}
+        if cursor:
+            params["cursor"] = cursor
+        pagina = api_client.get(url, params).json()
+        paginado += pagina["items"]
+        paginas += 1
+        cursor = pagina.get("nextCursor")
+        if not cursor:
+            break
+        assert paginas <= len(inteiro) + 1, "a paginação não terminou"
+
+    assert paginado == inteiro
+    assert len({(item["kind"], item["id"]) for item in paginado}) == len(inteiro)

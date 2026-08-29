@@ -85,3 +85,35 @@ def test_tela_somente_leitura_nao_guarda_rascunho(
     identificar(client, "iris.auditora", ["auditor"])
 
     assert "data-rascunho=" not in corpo_da_etapa(client, edital, "perfis")
+
+
+def _fonte_do_rascunho():
+    from pathlib import Path
+
+    return (
+        Path(__file__).resolve().parents[2]
+        / "processo_seletivo/interface/static/interface/rascunho.js"
+    ).read_text(encoding="utf-8")
+
+
+def test_o_rascunho_guardado_tem_prazo():
+    """FR-022 da 003: `localStorage` não caduca sozinho.
+
+    O conteúdo de um Edital em elaboração fica no computador de quem preencheu, que num órgão
+    público costuma ser compartilhado. Sem prazo, o preenchimento de meses atrás continuaria lá,
+    oferecido a quem sentar na máquina depois.
+    """
+    fonte = _fonte_do_rascunho()
+
+    assert "VALIDADE_MS = 24 * 60 * 60 * 1000" in fonte
+    assert "function vencido(" in fonte
+    # A verificação precisa acontecer antes de oferecer a restauração, não depois.
+    assert "if (vencido(guardado) || mesmo(guardado.dados, renderizado))" in fonte
+    assert "armazem.removeItem(CHAVE)" in fonte
+
+
+def test_rascunho_sem_carimbo_de_tempo_e_tratado_como_vencido():
+    """O que não se sabe a idade é descartado — é o lado seguro num computador compartilhado."""
+    fonte = _fonte_do_rascunho()
+
+    assert "if (isNaN(gravado)) return true;" in fonte

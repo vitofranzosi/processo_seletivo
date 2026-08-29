@@ -102,10 +102,10 @@ fases 4 em diante são trabalho que resta e seguem a ordem normal.
 
 - [X] T046 [FR-025] Criação de Processo com primeiro Edital em `views.criar_processo`, rota `processos/criar` e template `processo_criar.html`
 - [X] T047 [FR-025] Cobrir criação, repetição com a mesma chave, campo ausente, identificação repetida e falta de permissão
-- [ ] T048 [FR-026] Validar datas, reserva de vagas e dependências condicionais antes do envio, em backend/processo_seletivo/interface/static/interface/
-- [ ] T049 [FR-026] Manter a validação do servidor como autoridade, com teste que confirma a recusa mesmo com a validação do cliente desligada
-- [ ] T050 [FR-027] Ligar cada pendência de revisão ao campo a que se refere, usando o `path` que o domínio já produz
-- [ ] T051 [P] [FR-027] Cobrir a associação campo-pendência em backend/tests/interface/test_compor.py
+- [X] T048 [FR-026] `validacao.js` espelha as regras do domínio pela Constraint Validation API, com `aria-invalid` acompanhando
+- [X] T049 [FR-026] POST direto ao endpoint confirma que o domínio recusa as mesmas regras, com a mensagem exata
+- [X] T050 [FR-027] `DESTINO_DA_PENDENCIA` roteia o `path` do achado para a etapa e a âncora que o resolvem
+- [X] T051 [P] [FR-027] Cobrir o link na revisão e que cada etapa mostra só a pendência que resolve
 - [X] T052 [FR-028] Decidido remover: conteúdo editorial é conteúdo normativo e exigiria fonte autoritativa, validação, vigência e presença no PDF — nada disso existe, e inventá-lo sob um campo já aceito seria decidir por omissão
 - [X] T053 [FR-028] Campo removido do serializer e do contrato; campo desconhecido no rascunho passa a ser recusado em vez de ignorado
 
@@ -113,11 +113,11 @@ fases 4 em diante são trabalho que resta e seguem a ordem normal.
 
 ## Phase 8: Desempenho e higiene
 
-- [ ] T054 [FR-024] Paginar o histórico no banco, sem carregar e ordenar o conjunto completo em memória, em backend/processo_seletivo/publicacoes/application/selectors.py
-- [ ] T055 [P] [FR-024] Cobrir o custo em backend/tests/performance/test_public_queries.py
-- [ ] T056 [FR-022] Expirar e descartar o rascunho do navegador em backend/processo_seletivo/interface/static/interface/rascunho.js
-- [ ] T057 [P] [FR-022] Cobrir a expiração em backend/tests/interface/test_rascunho_local.py
-- [ ] T058 Fechar os oito `ResourceWarning` de conexões SQLite não fechadas
+- [X] T054 [FR-024] Cada fonte ordena e corta no banco em `limit + 1`; a mescla acontece sobre no máximo três vezes isso
+- [X] T055 [P] [FR-024] Cobrir que nenhuma consulta do histórico varre sem limite, e que paginar de um em um reproduz a página única
+- [X] T056 [FR-022] Rascunho expira em 24 h; sem carimbo de tempo utilizável é tratado como vencido
+- [X] T057 [P] [FR-022] Cobrir o prazo e o descarte do que não se sabe a idade
+- [X] T058 Fechar a conexão subjacente nas threads de teste e falhar em `ResourceWarning` — o filtro precisa incluir `PytestUnraisableExceptionWarning`, que é como o warning do coletor de lixo chega
 
 ---
 
@@ -131,14 +131,7 @@ fases 4 em diante são trabalho que resta e seguem a ordem normal.
 
 ## Situação
 
-49 de 58 tarefas concluídas.
+58 de 58 tarefas concluídas.
 
-As 9 restantes são T048 a T051 (validação antes do envio e pendências ligadas ao campo, FR-026 e
-FR-027 — trabalho de interface, sem risco normativo) e a Fase 8 inteira (T054 a T058: paginação do
-histórico no banco, expiração do rascunho no navegador e os `ResourceWarning` de conexões SQLite).
-
-Nenhuma das 9 é bloqueadora de implantação. Continuam sendo, e estão fora desta feature: a
-integração com o diretório institucional e a `004-enderecamento-normativo-estavel`.
-
-Fora desta feature e ainda bloqueadores de implantação: a integração com o diretório institucional
-e a feature `004-enderecamento-normativo-estavel`.
+A feature está completa. Fora dela e ainda bloqueadores de implantação: a integração com o
+diretório institucional e a `004-enderecamento-normativo-estavel`.

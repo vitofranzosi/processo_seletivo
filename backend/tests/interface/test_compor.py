@@ -237,3 +237,122 @@ def test_modalidade_sem_sigla_volta_para_a_tela_como_foi_digitada(
     corpo = client.get(etapa(edital, "perfis")).content.decode()
     assert "Ampla concorrência — Ampla concorrência" not in corpo
     assert "Ampla concorrência" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_validacao_antes_do_envio_e_carregada_nas_telas_que_editam(
+    client, seletor_ligado, edital
+):
+    """FR-026 da 003: as regras que dão para saber na tela não precisam de ida ao servidor."""
+    from django.contrib.staticfiles import finders
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    assert finders.find("interface/validacao.js")
+    for etapa in ("perfis", "cronograma"):
+        corpo = client.get(
+            reverse("interface:compor-etapa", args=[edital.id, etapa])
+        ).content.decode()
+        assert "interface/validacao.js" in corpo
+
+
+def test_as_regras_da_tela_espelham_as_do_dominio():
+    """A validação da tela não pode inventar regra que o domínio não tem, nem o contrário.
+
+    Compara o texto de `validacao.js` com o que `editais.domain` decide: o que se verifica aqui
+    é que as quatro regras espelhadas estão nomeadas no arquivo, para que remover uma delas do
+    domínio sem remover da tela apareça na revisão em vez de virar mensagem fantasma.
+    """
+    from pathlib import Path
+
+    fonte = (
+        Path(__file__).resolve().parents[2]
+        / "processo_seletivo/interface/static/interface/validacao.js"
+    ).read_text(encoding="utf-8")
+
+    assert "Cadastro Reserva limitado exige um limite." in fonte
+    assert "não admite limite" in fonte
+    assert "Vagas imediatas não podem ser negativas." in fonte
+    assert "O término do Evento não pode ser anterior ao início." in fonte
+    assert "aparece mais de uma vez neste Perfil" in fonte
+    # A tela não é fronteira de segurança e o arquivo precisa dizer isso a quem for mexer nele.
+    assert "NÃO é fronteira de segurança" in fonte
+
+
+@pytest.mark.django_db(transaction=True)
+def test_o_servidor_recusa_mesmo_sem_a_validacao_da_tela(client, seletor_ligado, edital):
+    """FR-026: a tela pode ser burlada; o domínio é quem decide.
+
+    O POST vai direto ao endpoint, como faria qualquer cliente sem JavaScript. As duas regras
+    testadas são as que a tela verifica — e o servidor precisa recusar as duas do mesmo jeito.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    reserva = client.post(
+        reverse("interface:compor-etapa", args=[edital.id, "perfis"]),
+        {
+            "perfil-0-id": "00000000-0000-0000-0000-000000000801",
+            "perfil-0-code": "P1",
+            "perfil-0-name": "Perfil",
+            "perfil-0-immediateVacancies": "1",
+            "perfil-0-reserveType": "LIMITED",
+            "perfil-0-reserveLimit": "",
+        },
+    )
+
+    assert reserva.status_code == 200
+    # A mensagem exata do domínio, não uma palavra que o próprio formulário já contém.
+    assert "Cadastro Reserva limitado exige limite não negativo." in reserva.content.decode()
+    assert not edital.perfis.exists()
+
+    codigos = client.post(
+        reverse("interface:compor-etapa", args=[edital.id, "perfis"]),
+        {
+            "perfil-0-id": "00000000-0000-0000-0000-000000000802",
+            "perfil-0-code": "P1",
+            "perfil-0-name": "Um",
+            "perfil-0-immediateVacancies": "1",
+            "perfil-0-reserveType": "NONE",
+            "perfil-1-id": "00000000-0000-0000-0000-000000000803",
+            "perfil-1-code": "P1",
+            "perfil-1-name": "Outro",
+            "perfil-1-immediateVacancies": "1",
+            "perfil-1-reserveType": "NONE",
+        },
+    )
+
+    assert codigos.status_code == 200
+    assert "Códigos de Perfil não podem se repetir no Edital." in codigos.content.decode()
+    assert not edital.perfis.exists()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_pendencia_aponta_para_a_etapa_que_a_resolve(client, seletor_ligado, edital):
+    """FR-027 da 003: a interface descartava o campo que o domínio informa em cada achado."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    revisao = client.get(
+        reverse("interface:compor-etapa", args=[edital.id, "revisao"])
+    ).content.decode()
+
+    perfis = reverse("interface:compor-etapa", args=[edital.id, "perfis"])
+    cronograma = reverse("interface:compor-etapa", args=[edital.id, "cronograma"])
+    assert f'href="{perfis}#perfis-titulo"' in revisao
+    assert f'href="{cronograma}#cronograma-titulo"' in revisao
+
+
+@pytest.mark.django_db(transaction=True)
+def test_cada_etapa_mostra_apenas_a_pendencia_que_resolve(client, seletor_ligado, edital):
+    """Pendência exibida onde não há como agir vira ruído que a pessoa aprende a ignorar."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    em_perfis = client.get(
+        reverse("interface:compor-etapa", args=[edital.id, "perfis"])
+    ).content.decode()
+    em_cronograma = client.get(
+        reverse("interface:compor-etapa", args=[edital.id, "cronograma"])
+    ).content.decode()
+
+    assert "Ao menos um Perfil é obrigatório." in em_perfis
+    assert "Ao menos um Evento é obrigatório." not in em_perfis
+    assert "Ao menos um Evento é obrigatório." in em_cronograma
+    assert "Ao menos um Perfil é obrigatório." not in em_cronograma

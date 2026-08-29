@@ -3,7 +3,9 @@
 import base64
 import binascii
 
+from django.db.models import Q
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
@@ -80,7 +82,10 @@ def _decode_cursor(cursor):
         occurred_at, kind_rank, identifier = (
             base64.urlsafe_b64decode(cursor.encode()).decode().split("|", 2)
         )
-        return (occurred_at, int(kind_rank), identifier)
+        moment = parse_datetime(occurred_at)
+        if moment is None:
+            raise ValueError(occurred_at)
+        return (moment, int(kind_rank), identifier)
     except (ValueError, UnicodeDecodeError, binascii.Error) as exc:
         raise DomainError("invalid_cursor", "O cursor informado é inválido.", 400) from exc
 
@@ -97,36 +102,81 @@ def parse_limit(value):
     return limit
 
 
+def _after_cursor(campo, rank, after):
+    """Filtro que reproduz, no banco, a comparação `(instante, tipo, id) > cursor`.
+
+    Cada fonte tem um `rank` fixo, então o desempate por tipo é constante dentro dela: ou toda a
+    fonte vem depois do cursor no instante empatado, ou nenhuma, ou desempata pelo identificador.
+    """
+    momento, rank_do_cursor, identificador = after
+    depois = Q(**{f"{campo}__gt": momento})
+    empate = Q(**{campo: momento})
+    if rank > rank_do_cursor:
+        return depois | empate
+    if rank < rank_do_cursor:
+        return depois
+    return depois | (empate & Q(id__gt=identificador))
+
+
+def _pagina_da_fonte(queryset, *, campo, kind, cursor, limit):
+    """Os `limit + 1` primeiros desta fonte a partir do cursor, ordenados no banco.
+
+    O `+1` é o que responde "há mais?" sem contar o resto. Ordenar e cortar aqui é o ponto da
+    FR-024: antes, as três fontes vinham inteiras para a memória, eram concatenadas, ordenadas
+    em Python e só então fatiadas — o número de consultas era constante, mas o volume lido
+    crescia com todo o histórico do Edital.
+    """
+    if cursor:
+        queryset = queryset.filter(_after_cursor(campo, _KIND_ORDER[kind], cursor))
+    ordenado = queryset.order_by(campo, "id")[: limit + 1]
+    return [
+        {"kind": kind, "item": item, "occurredAt": _valor_do_campo(item, campo)}
+        for item in ordenado
+    ]
+
+
+def _valor_do_campo(item, campo):
+    valor = item
+    for parte in campo.split("__"):
+        valor = getattr(valor, parte)
+    return valor
+
+
 def public_history(*, edital_id, cursor=None, limit=DEFAULT_LIMIT):
-    """Edital original, Retificações publicadas e versões consolidadas, em ordem cronológica."""
-    entries = [
-        {"kind": PUBLICACAO, "item": item, "occurredAt": item.published_at}
-        for item in Publicacao.objects.filter(edital_id=edital_id).select_related("documento")
-    ]
-    entries += [
-        {"kind": RETIFICACAO, "item": item, "occurredAt": item.publication.published_at}
-        for item in Retificacao.objects.filter(
-            edital_id=edital_id, status=Retificacao.Status.PUBLICADA
-        )
+    """Edital original, Retificações publicadas e versões consolidadas, em ordem cronológica.
+
+    Cada fonte devolve no máximo `limit + 1` linhas já ordenadas pelo banco; a mescla acontece
+    sobre no máximo três vezes isso. Como a página global é o menor prefixo das três, os
+    `limit + 1` primeiros de cada fonte necessariamente contêm os `limit` primeiros do todo — e
+    `has_more` continua exato sem precisar contar o restante.
+    """
+    after = _decode_cursor(cursor) if cursor else None
+    entries = _pagina_da_fonte(
+        Publicacao.objects.filter(edital_id=edital_id).select_related("documento"),
+        campo="published_at",
+        kind=PUBLICACAO,
+        cursor=after,
+        limit=limit,
+    )
+    entries += _pagina_da_fonte(
+        Retificacao.objects.filter(edital_id=edital_id, status=Retificacao.Status.PUBLICADA)
         .select_related("publication")
-        .prefetch_related("alteracoes")
-    ]
-    entries += [
-        {"kind": VERSAO_CONSOLIDADA, "item": item, "occurredAt": item.valid_from}
+        .prefetch_related("alteracoes"),
+        campo="publication__published_at",
+        kind=RETIFICACAO,
+        cursor=after,
+        limit=limit,
+    )
+    entries += _pagina_da_fonte(
         # Sem o prefetch, a proveniência de cada versão vira uma consulta própria e o
         # custo do histórico cresce com o número de Retificações.
-        for item in VersaoConsolidada.objects.filter(edital_id=edital_id).prefetch_related(
-            "proveniencias"
-        )
-    ]
+        VersaoConsolidada.objects.filter(edital_id=edital_id).prefetch_related("proveniencias"),
+        campo="valid_from",
+        kind=VERSAO_CONSOLIDADA,
+        cursor=after,
+        limit=limit,
+    )
     entries.sort(key=_sort_key)
-    if cursor:
-        after = _decode_cursor(cursor)
-        entries = [
-            entry
-            for entry in entries
-            if (_sort_key(entry)[0].isoformat(), *_sort_key(entry)[1:]) > after
-        ]
     page = entries[:limit]
     has_more = len(entries) > limit
     return page, (_encode_cursor(page[-1]) if page and has_more else None)

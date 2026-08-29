@@ -199,15 +199,40 @@ def sair(request):
 
 SEVERIDADE = {"BLOCKING_ERROR": "erro", "WARNING": "aviso", "INFO": "informacao"}
 
+# Onde cada achado do domínio se resolve: a etapa que edita aquele conteúdo e a âncora da seção
+# dentro dela. FR-027 pede a pendência ao lado do campo, e o domínio já diz de qual campo fala —
+# a informação existia e era descartada na tradução para a tela.
+DESTINO_DA_PENDENCIA = {
+    "title": ("identificacao", "#ident-titulo"),
+    "description": ("identificacao", "#ident-titulo"),
+    "profiles": ("perfis", "#perfis-titulo"),
+    "schedule": ("cronograma", "#cronograma-titulo"),
+}
+
 
 def _pendencias(edital):
-    """FR-008: o que ainda falta para o Edital poder ser submetido."""
-    achados = validate_for_publication(edital_snapshot(edital))
-    return [
-        {"severidade": SEVERIDADE.get(str(item.severity), "informacao"),
-         "mensagem": item.message, "campo": item.path}
-        for item in achados
-    ]
+    """FR-008 e FR-027: o que falta para submeter, e onde cada coisa se resolve."""
+    pendencias = []
+    for item in validate_for_publication(edital_snapshot(edital)):
+        etapa, ancora = DESTINO_DA_PENDENCIA.get(item.path, (None, ""))
+        pendencias.append(
+            {
+                "severidade": SEVERIDADE.get(str(item.severity), "informacao"),
+                "mensagem": item.message,
+                "campo": item.path,
+                "etapa": etapa,
+                "ancora": ancora,
+                "rotulo_etapa": dict(
+                    (chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO
+                ).get(etapa, ""),
+            }
+        )
+    return pendencias
+
+
+def _pendencias_da_etapa(pendencias, etapa):
+    """As que a pessoa consegue resolver sem sair desta tela."""
+    return [item for item in pendencias if item["etapa"] == etapa]
 
 
 # O wizard só tem as etapas que o domínio sustenta. Identificação é leitura porque não há
@@ -295,6 +320,7 @@ def compor_etapa(request, edital_id, etapa):
         edital.refresh_from_db()
 
     _, _, template = ETAPAS_COMPOSICAO[CHAVES_ETAPA.index(etapa)]
+    pendencias = _pendencias(edital)
     return render(
         request,
         template,
@@ -318,7 +344,10 @@ def compor_etapa(request, edital_id, etapa):
                 else forms.eventos_do_edital(edital)
             ),
             "reservas": forms.RESERVA,
-            "pendencias": _pendencias(edital),
+            "pendencias": pendencias,
+            # A tela de revisão mostra tudo; as demais, só o que se resolve nelas — pendência
+            # exibida onde não há como agir vira ruído que a pessoa aprende a ignorar.
+            "pendencias_aqui": _pendencias_da_etapa(pendencias, etapa),
         },
     )
 

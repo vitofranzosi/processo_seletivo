@@ -30,6 +30,14 @@ DJANGO_SETTINGS_MODULE = "config.settings.test"
 pythonpath = ["."]
 testpaths = ["tests"]
 addopts = "--strict-markers --strict-config"
+# Conexão não fechada é vazamento silencioso: em teste vira ruído atribuído ao caso seguinte,
+# e no processo servidor vira descritor pendurado. Falhar é o que impede a volta. O segundo
+# filtro é o que de fato pega: o warning nasce no coletor de lixo, fora de qualquer frame, e o
+# pytest o reembrulha em PytestUnraisableExceptionWarning antes de reportá-lo.
+filterwarnings = [
+  "error::ResourceWarning",
+  "error::pytest.PytestUnraisableExceptionWarning",
+]
 markers = [
   "acceptance: cenários de aceitação rastreados",
   "contract: conformidade HTTP/OpenAPI",

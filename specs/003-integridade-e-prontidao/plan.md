@@ -4,7 +4,7 @@
 
 **Input**: Feature specification from `/specs/003-integridade-e-prontidao/spec.md`
 
-**Status**: Draft — Constitution Check aprovado com uma exceção registrada e justificada.
+**Status**: Concluída — Constitution Check aprovado com uma exceção registrada e justificada.
 
 ## Summary
 
@@ -185,8 +185,8 @@ backend/
 | 4 | Imutabilidade no banco (FR-023) | Concluída — migration `0007` |
 | 5 | Limites de borda e instantes (FR-020, FR-021) | Concluída |
 | 6 | Provisionamento de papéis (FR-019) | Concluída — `manage.py provisionar_papeis` |
-| 7 | Lacunas funcionais da 002 (FR-025 a FR-028) | FR-025 e FR-028 concluídos; FR-026 e FR-027 abertos |
-| 8 | Desempenho e higiene (FR-022, FR-024) | Aberta |
+| 7 | Lacunas funcionais da 002 (FR-025 a FR-028) | Concluída |
+| 8 | Desempenho e higiene (FR-022, FR-024) | Concluída |
 
 A ordem das fases 4 a 8 é por risco decrescente, não por esforço. Imutabilidade primeiro porque é a
 única garantia da feature que hoje depende de disciplina da aplicação em vez do banco.
