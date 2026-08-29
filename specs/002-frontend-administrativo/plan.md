@@ -170,7 +170,7 @@ specs/002-frontend-administrativo/
 ├── accessibility.md         # verificação de eMAG 3.1 e WCAG 2.1 AA
 ├── checklists/
 │   └── requirements.md
-└── tasks.md                 # 51 de 59 concluídas
+└── tasks.md                 # 52 de 59 concluídas
 ```
 
 ### Source Code (repository root)

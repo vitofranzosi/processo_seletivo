@@ -108,3 +108,32 @@ def test_nenhuma_sintaxe_de_template_chega_ao_navegador(client, seletor_ligado, 
 
     for residuo in ("{#", "#}", "{%", "%}", "{{", "}}"):
         assert residuo not in corpo, f"sintaxe de template não interpretada na página: {residuo}"
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+@pytest.mark.parametrize("etapa", TELAS_COM_HTMX)
+def test_pagina_nao_depende_de_eval_do_htmx(client, seletor_ligado, edital, etapa):
+    """`hx-vals='js:{...}'` exige o allowEval do HTMX e quebra sob CSP que proíba unsafe-eval.
+
+    O índice de cada linha nasce no servidor, então a página funciona com a política ativa.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo = client.get(
+        reverse("interface:compor-etapa", args=[edital.id, etapa])
+    ).content.decode()
+
+    assert "hx-vals" not in corpo
+    assert "js:" not in corpo
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_fragmentos_seguidos_nao_repetem_o_indice(client, seletor_ligado, edital):
+    """Duas linhas com o mesmo índice viram uma só ao ler o formulário."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    indices = set()
+    for _ in range(8):
+        corpo = client.get(reverse("interface:fragmento-perfil")).content.decode()
+        indices.add(re.search(r'name="perfil-(\d+)-id"', corpo).group(1))
+    assert len(indices) == 8

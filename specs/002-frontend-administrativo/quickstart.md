@@ -107,6 +107,11 @@ Com o Edital completo, "Submeter para revisão". Antes de confirmar, a tela diz 
 Em um Edital publicado, "Retificar" mostra o conteúdo vigente em campos editáveis. Altere as vagas
 imediatas de um Perfil: só esse campo vira Alteração Normativa.
 
+**Remover e acrescentar.** Marque "Remover do Edital" num Perfil e use "Acrescentar Perfil" para
+incluir outro. O resumo mostra as duas coisas antes de confirmar. Depois de publicar, confira em
+`/api/v1/public/editais/<id>/versao-vigente` que o removido saiu e o acrescentado entrou com os
+mesmos campos dos demais.
+
 Retificação também percorre elaborar → submeter → homologar → publicar, e nada muda para o público
 antes da publicação.
 

@@ -93,7 +93,7 @@ real que resta. Uma lista que marcasse tudo como feito não valeria a pena exist
 - [X] T034 [US4] Tabela de atos da Retificação e sua tela de confirmação
 - [X] T035 [US4] Recusar retificação de Edital não publicado com a razão, e não com 404
 - [X] T036 [US4] Testes de retificação em backend/tests/interface/test_retificar.py
-- [ ] T037 [US4] **Permitir acrescentar e remover Perfil e Evento por Retificação.** O domínio suporta `ADD` e `REMOVE`; a tela só edita campos de valor. Um Edital publicado não pode ganhar nem perder um Perfil pela interface
+- [X] T037 [US4] Acrescentar e remover Perfil e Evento por Retificação: marcação de remoção nos grupos existentes, fragmentos para as linhas novas, e emissão ordenada — REPLACE, REMOVE decrescente, ADD por último
 
 ---
 
@@ -140,7 +140,7 @@ real que resta. Uma lista que marcasse tudo como feito não valeria a pena exist
 
 - [ ] T056 **Integrar a autenticação institucional (LDAP).** Só `ator_da_sessao` muda; a fronteira existe para isso. **Enquanto não for feito, esta feature não é implantável em produção** — o adaptador atual aceita qualquer identidade declarada
 - [ ] T057 **Confirmar a obtenção e a licença do design system do SUAP** com quem o administra no Ifes. Sem isso, o CSS próprio permanece e os três temas não existem. Ver research.md §1
-- [ ] T058 **Definir a política de CSP** e, se ela proibir `unsafe-eval`, mover a geração do índice de linha do `hx-vals='js:{...}'` para o servidor. Ver research.md §2
+- [ ] T058 **Definir a política de CSP.** A parte de código está feita: o índice de linha nasce no servidor e nenhuma página depende de `eval`. Falta a decisão sobre a política em si e onde aplicá-la
 - [ ] T059 **Medir SC-001, SC-002 e SC-008** com servidores do Cefor: 15 minutos para montar um Edital, 90% concluindo na primeira tentativa. Nunca medidos; é o que esta entrega serve para permitir
 
 ---
@@ -165,6 +165,6 @@ Não são tarefas desta feature. Estão aqui porque aparecem na interface e algu
 
 ## Situação
 
-**51 de 59 tarefas concluídas.** As 8 restantes são: uma lacuna de cobertura da Retificação
-(T037), três de acessibilidade que dependem de ferramenta, de pessoa ou do design system (T053,
-T054, T055), e quatro decisões que não são minhas de tomar (T056 a T059).
+**52 de 59 tarefas concluídas.** As 7 restantes não dependem de escrever código: três de
+acessibilidade que exigem ferramenta, pessoa ou o design system (T053, T054, T055), e quatro
+decisões institucionais (T056 a T059) — entre elas o LDAP, sem o qual isto não é implantável.

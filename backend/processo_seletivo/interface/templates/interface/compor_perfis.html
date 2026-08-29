@@ -15,7 +15,7 @@
     </div>
     {% if editavel %}
     <button type="button" class="botao secundario"
-            hx-get="{% url 'interface:fragmento-perfil' %}" hx-vals='js:{indice: Date.now()}'
+            hx-get="{% url 'interface:fragmento-perfil' %}"
             hx-target="#perfis" hx-swap="beforeend">Acrescentar Perfil</button>
     {% endif %}
   </section>

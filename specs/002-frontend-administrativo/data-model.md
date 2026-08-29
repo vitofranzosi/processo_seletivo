@@ -113,11 +113,16 @@ alteração.
 - `diferencas(conteudo, dados)` — compara o enviado com o vigente e produz as Alterações Normativas,
   mais um resumo legível de cada mudança.
 
-**Limite conhecido**: só edita campos de valor. Acrescentar ou remover um Perfil por Retificação —
-`ADD` e `REMOVE`, que o domínio suporta — não tem tela.
+Remover e acrescentar também são possíveis: cada Perfil e Evento tem marcação de remoção, e há
+fragmentos para as linhas novas. **A ordem de emissão é o que garante a correção**, porque o
+domínio aplica as alterações em sequência: primeiro os `REPLACE`, que usam os índices do conteúdo
+vigente; depois os `REMOVE` do maior índice para o menor, para que apagar um não mova os seguintes;
+por último os `ADD`, com o token `-` que acrescenta ao fim. Um Perfil acrescentado nasce com a forma
+exata que `edital_snapshot` produz — um subconjunto quebraria a consulta pública e o documento.
 
-**`_mesmo_instante`** compara datas com tolerância: o `datetime-local` tem precisão de minuto e o
-armazenado tem microssegundos; sem isso, abrir e salvar sem mudar nada geraria alteração espúria.
+**`_mesmo_instante`** compara ao minuto, que é a precisão do campo `datetime-local`; o snapshot
+guarda segundos. Com comparação exata, abrir a tela e não tocar em nada listava como alteradas
+todas as datas cujo instante não terminasse em zero segundos.
 
 ## 6. Apresentação de valores (`templatetags/interface_extras.py`)
 

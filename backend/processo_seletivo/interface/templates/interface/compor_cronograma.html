@@ -17,7 +17,7 @@
     </div>
     {% if editavel %}
     <button type="button" class="botao secundario"
-            hx-get="{% url 'interface:fragmento-evento' %}" hx-vals='js:{indice: Date.now()}'
+            hx-get="{% url 'interface:fragmento-evento' %}"
             hx-target="#eventos" hx-swap="beforeend">Acrescentar Evento</button>
     {% endif %}
   </section>

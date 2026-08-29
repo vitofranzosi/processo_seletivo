@@ -5,6 +5,7 @@ A decisão de autorização continua no backend: ocultar uma ação na tela é c
 fronteira de segurança (FR-002).
 """
 
+import secrets
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -301,17 +302,48 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
     )
 
 
+def _indice_de_linha(request):
+    """Índice único dentro do formulário — duas linhas com o mesmo índice viram uma só ao ler.
+
+    Nasce no servidor para que a página não dependa de `hx-vals='js:{...}'`, que exige o
+    `allowEval` do HTMX e quebraria sob uma CSP que proíba `unsafe-eval`. Quem informar o
+    próprio índice continua sendo atendido: é o que a restauração do rascunho local faz.
+    """
+    informado = request.GET.get("indice", "")
+    return informado if informado.isdigit() else str(secrets.randbelow(10**15))
+
+
 @require_http_methods(["GET"])
 def fragmento_perfil(request):
     return render(request, "interface/_perfil.html",
                   {"perfil": {"id": str(uuid4()), "reserveType": "NONE"},
-                   "indice": request.GET.get("indice", "0"), "reservas": forms.RESERVA})
+                   "indice": _indice_de_linha(request), "reservas": forms.RESERVA})
 
 
 @require_http_methods(["GET"])
 def fragmento_evento(request):
     return render(request, "interface/_evento.html",
-                  {"evento": {"id": str(uuid4())}, "indice": request.GET.get("indice", "0")})
+                  {"evento": {"id": str(uuid4())}, "indice": _indice_de_linha(request)})
+
+
+def _campos_de(definicoes):
+    return [{"chave": chave, "rotulo": rotulo, "tipo": tipo} for chave, rotulo, tipo in definicoes]
+
+
+@require_http_methods(["GET"])
+def fragmento_retificacao_perfil(request):
+    """Perfil a acrescentar por Retificação (US4). Só a linha; o que ela vira é decidido na
+    composição por diferença, ao comparar com o conteúdo vigente."""
+    return render(request, "interface/_retificacao_perfil.html",
+                  {"indice": _indice_de_linha(request),
+                   "campos": _campos_de(retificacao_ui.NOVO_PERFIL)})
+
+
+@require_http_methods(["GET"])
+def fragmento_retificacao_evento(request):
+    return render(request, "interface/_retificacao_evento.html",
+                  {"indice": _indice_de_linha(request),
+                   "campos": _campos_de(retificacao_ui.NOVO_EVENTO)})
 
 
 @require_http_methods(["GET"])
@@ -510,6 +542,14 @@ def retificar(request, edital_id):
             "base": base,
             "grupos": retificacao_ui.campos_editaveis(base.content),
             "digitado": dados,
+            # As linhas acrescentadas nascem no cliente, mas precisam voltar do servidor depois
+            # do POST: sem isto, ver o resumo devolve um formulário sem elas.
+            "novos_perfis": retificacao_ui.novas_para_formulario(
+                dados or {}, "perfil", retificacao_ui.NOVO_PERFIL
+            ),
+            "novos_eventos": retificacao_ui.novas_para_formulario(
+                dados or {}, "evento", retificacao_ui.NOVO_EVENTO
+            ),
             "resumo": resumo,
             "erros": erros,
             "justificativa": (request.POST.get("justificativa") or "") if dados else "",
@@ -565,18 +605,37 @@ def _retificacao_do_ator(ator, retificacao_id):
     return item
 
 
+def _resumo_de_linha(valor):
+    """Perfil e Evento inteiros são ilegíveis como dicionário; o que identifica basta."""
+    if not isinstance(valor, dict):
+        return valor
+    for chave in ("code", "type", "name", "description"):
+        if valor.get(chave):
+            return valor[chave]
+    return "—"
+
+
 def _alteracoes_legiveis(retificacao):
-    """Antes e depois de cada caminho alterado, lidos do snapshot que serviu de base."""
+    """Antes e depois de cada caminho alterado, lidos do snapshot que serviu de base.
+
+    Acréscimo não tem antes — `/profiles/-` é a posição de acréscimo, e nada existe ali.
+    Remoção não tem depois: o que havia sai do Edital.
+    """
     base = retificacao.base_snapshot.content
     legiveis = []
     for alteracao in retificacao.alteracoes.all():
         anterior = retificacao_ui._ler(base, alteracao.target_path)
+        removendo = alteracao.operation == "REMOVE"
         legiveis.append(
             {
                 "caminho": alteracao.target_path,
                 "operacao": alteracao.operation,
-                "antes": anterior if anterior is not None else "—",
-                "depois": alteracao.new_value if alteracao.new_value is not None else "—",
+                "antes": _resumo_de_linha(anterior) if anterior is not None else "—",
+                "depois": "removido do Edital"
+                if removendo
+                else _resumo_de_linha(alteracao.new_value)
+                if alteracao.new_value is not None
+                else "—",
             }
         )
     return legiveis

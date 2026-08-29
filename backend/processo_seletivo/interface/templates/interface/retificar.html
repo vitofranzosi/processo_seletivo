@@ -59,8 +59,42 @@ para o público até a Retificação ser publicada.</p>
       </p>
       {% endfor %}
     </div>
+    {% if grupo.caminho %}
+    <p class="remover-linha">
+      <input type="checkbox" id="rm{{ forloop.counter }}" name="remover:{{ grupo.caminho }}" value="1"
+             {% if digitado|marcado:grupo.caminho %}checked{% endif %}>
+      <label for="rm{{ forloop.counter }}">Remover do Edital</label>
+      <span class="ajuda">Os campos acima passam a não ter efeito.</span>
+    </p>
+    {% endif %}
   </fieldset>
   {% endfor %}
+
+  <section aria-labelledby="novos-perfis-titulo">
+    <h2 id="novos-perfis-titulo">Acrescentar Perfis</h2>
+    <p class="ajuda">Um Perfil acrescentado passa a integrar o Edital quando a Retificação for
+      publicada. Modalidades de Concorrência ainda não são definidas por aqui.</p>
+    <div id="novos-perfis">
+      {% for linha in novos_perfis %}
+      {% include "interface/_retificacao_perfil.html" with indice=linha.indice campos=linha.campos %}
+      {% endfor %}
+    </div>
+    <button type="button" class="botao secundario"
+            hx-get="{% url 'interface:fragmento-retificacao-perfil' %}"
+            hx-target="#novos-perfis" hx-swap="beforeend">Acrescentar Perfil</button>
+  </section>
+
+  <section aria-labelledby="novos-eventos-titulo">
+    <h2 id="novos-eventos-titulo">Acrescentar Eventos</h2>
+    <div id="novos-eventos">
+      {% for linha in novos_eventos %}
+      {% include "interface/_retificacao_evento.html" with indice=linha.indice campos=linha.campos %}
+      {% endfor %}
+    </div>
+    <button type="button" class="botao secundario"
+            hx-get="{% url 'interface:fragmento-retificacao-evento' %}"
+            hx-target="#novos-eventos" hx-swap="beforeend">Acrescentar Evento</button>
+  </section>
 
   <fieldset class="linha">
     <legend>Sobre esta Retificação</legend>
@@ -87,4 +121,5 @@ para o público até a Retificação ser publicada.</p>
     <a href="{% url 'interface:detalhe' edital.id %}" class="acao">Voltar</a>
   </p>
 </form>
+{% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
 {% endblock %}

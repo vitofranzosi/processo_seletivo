@@ -36,3 +36,9 @@ def plural(quantidade, formas):
     """Plural em português não se resolve com sufixo: Edital vira Editais, não Editalis."""
     singular, _, plural_ = str(formas).partition(",")
     return singular if quantidade == 1 else (plural_ or singular)
+
+
+@register.filter
+def marcado(dados, caminho):
+    """A marcação de remoção precisa voltar marcada depois do POST, como os campos digitados."""
+    return bool(dados and dados.get(f"remover:{caminho}"))

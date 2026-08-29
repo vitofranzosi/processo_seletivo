@@ -32,5 +32,15 @@ urlpatterns = [
     ),
     path("fragmentos/perfil", views.fragmento_perfil, name="fragmento-perfil"),
     path("fragmentos/evento", views.fragmento_evento, name="fragmento-evento"),
+    path(
+        "fragmentos/retificacao/perfil",
+        views.fragmento_retificacao_perfil,
+        name="fragmento-retificacao-perfil",
+    ),
+    path(
+        "fragmentos/retificacao/evento",
+        views.fragmento_retificacao_evento,
+        name="fragmento-retificacao-evento",
+    ),
     path("fragmentos/remover", views.fragmento_remover, name="fragmento-remover"),
 ]

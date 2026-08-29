@@ -45,10 +45,12 @@ todos exercitavam os endpoints de fragmento diretamente. Hoje há teste que reso
 `<script src>` pelos finders do Django.
 
 **CSP**: o plano pedia confirmar como o HTMX convive com Content Security Policy. **Não há CSP
-configurada** neste projeto, então a questão não se colocou. Ela volta antes de produção, e há um
-ponto de atenção: `hx-vals='js:{...}'` — usado para gerar o índice de cada linha nova — exige
-`allowEval`, que uma CSP com `unsafe-eval` proibido bloquearia. A alternativa é o servidor gerar o
-índice, o que é mudança pequena mas precisa ser feita antes de haver CSP.
+configurada** neste projeto, então a questão não se colocou — mas o obstáculo que ela encontraria
+foi removido. O índice de cada linha nova vinha de `hx-vals='js:{indice: Date.now()}'`, que exige
+o `allowEval` do HTMX e quebraria sob uma política que proíba `unsafe-eval`. Hoje o índice nasce
+no servidor e nenhuma página depende de `eval`; há teste que falha se `hx-vals` voltar.
+
+Resta a decisão sobre a política em si — quais diretivas, e onde aplicá-la.
 
 **Alternativa descartada**: Alpine.js. Resolveria o mesmo com estado no cliente, mas HTMX mantém o
 servidor como fonte do fragmento, que é coerente com a Decisão 2 do plano.
