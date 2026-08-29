@@ -6,18 +6,23 @@
 <title>{% block titulo %}Gestão de Processos Seletivos{% endblock %} — Cefor/Ifes</title>
 <style>
 :root{
-  --verde:#15803d; --verde-escuro:#0b5a2a; --verde-claro:#e7f5ec;
+  /* --verde preenche (precisa contrastar com texto branco); --verde-texto escreve
+     (precisa contrastar com fundos claros). Um só token para os dois papéis fazia
+     o rótulo da etapa cair a 4,45:1 sobre o verde claro e os links a 4,28:1 sobre o
+     vermelho claro — WCAG 2.1 AA exige 4,5:1. */
+  --verde:#15803d; --verde-texto:#146c37; --verde-escuro:#0b5a2a; --verde-claro:#e7f5ec;
   --texto:#1c1c1c; --texto-fraco:#555; --borda:#d4d4d4; --fundo:#f8f8f8; --branco:#fff;
   --sucesso:#146c37; --sucesso-fundo:#e7f5ec; --amarelo:#8a5300; --amarelo-fundo:#fdf5e5;
-  --vermelho:#a91b1b; --vermelho-fundo:#fbe9e9; --cinza:#6c757d; --cinza-fundo:#eee;
+  --vermelho:#a91b1b; --vermelho-fundo:#fbe9e9; --cinza-fundo:#eee;
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:"Open Sans","Segoe UI",system-ui,sans-serif;color:var(--texto);
   background:var(--fundo);line-height:1.5;font-size:16px}
-a{color:var(--verde)}
+a{color:var(--verde-texto)}
 .pular{position:absolute;left:-9999px;top:0;background:var(--branco);padding:.75rem 1rem;z-index:10}
 .pular:focus{left:0}
 *:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
+main:focus{outline:none}
 header.topo{background:var(--verde-escuro);color:var(--branco);padding:.85rem 1.5rem;
   display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
 header.topo .marca{font-weight:600;letter-spacing:.02em}
@@ -58,7 +63,7 @@ tbody tr:last-child td{border-bottom:none}
 .s-CANCELADO{background:var(--vermelho-fundo);color:var(--vermelho)}
 .s-ATIVO{background:var(--sucesso-fundo);color:var(--sucesso)}
 .acoes{display:flex;gap:.4rem;flex-wrap:wrap}
-.acao{font-size:.8125rem;padding:.25rem .7rem;border:1px solid var(--verde);color:var(--verde);
+.acao{font-size:.8125rem;padding:.25rem .7rem;border:1px solid var(--verde);color:var(--verde-texto);
   background:var(--branco);border-radius:3px;text-decoration:none;white-space:nowrap;cursor:pointer}
 .acao:hover{background:var(--verde-claro)}
 .nenhuma{color:var(--texto-fraco);font-size:.8125rem}
@@ -74,7 +79,7 @@ tbody tr:last-child td{border-bottom:none}
 .etapas .ponto{width:12px;height:12px;border-radius:50%;background:var(--borda);
   border:2px solid var(--borda);display:block}
 .etapas .rotulo{font-size:.8125rem;color:var(--texto-fraco)}
-.etapas .agora{font-size:.7rem;font-weight:700;color:var(--verde);text-transform:uppercase;
+.etapas .agora{font-size:.7rem;font-weight:700;color:var(--verde-texto);text-transform:uppercase;
   letter-spacing:.03em}
 .etapas .e-concluida .ponto{background:var(--sucesso);border-color:var(--sucesso)}
 .etapas .e-concluida .rotulo{color:var(--texto)}
@@ -123,7 +128,7 @@ form.confirmar{background:var(--branco);border:1px solid var(--borda);border-rad
   margin-top:.15rem}
 .assistente .a-atual a{border-color:var(--verde);background:var(--verde-claro);color:var(--texto)}
 .assistente .a-atual .numero{background:var(--verde);color:var(--branco)}
-.assistente .a-atual .estado{color:var(--verde)}
+.assistente .a-atual .estado{color:var(--verde-texto)}
 .assistente .a-concluida a{color:var(--texto)}
 .assistente .a-concluida .numero{background:var(--sucesso);color:var(--branco)}
 .assistente .a-concluida .estado{color:var(--sucesso)}
@@ -155,7 +160,7 @@ form.confirmar{background:var(--branco);border:1px solid var(--borda);border-rad
 .impedimentos{list-style:none;padding:0;margin:.5rem 0}
 .impedimentos li{padding:.3rem 0;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
 .trilha{font-size:.875rem;color:var(--texto-fraco);margin-bottom:1rem}
-.trilha a{color:var(--verde)}
+.trilha a{color:var(--verde-texto)}
 .sucesso{background:var(--sucesso-fundo);border-left:4px solid var(--sucesso);
   padding:.75rem 1rem;margin-bottom:1.5rem;border-radius:0 4px 4px 0;color:var(--sucesso);font-weight:600}
 .pendencias{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
@@ -188,7 +193,7 @@ fieldset.linha legend{font-size:.75rem;text-transform:uppercase;letter-spacing:.
 .remover{margin:.25rem 0 .75rem;text-align:right}
 .acao.perigo{border-color:var(--vermelho);color:var(--vermelho)}
 .acao.perigo:hover{background:var(--vermelho-fundo)}
-.botao.secundario{background:var(--branco);color:var(--verde);border:1px solid var(--verde)}
+.botao.secundario{background:var(--branco);color:var(--verde-texto);border:1px solid var(--verde)}
 .botao.secundario:hover{background:var(--verde-claro)}
 .salvar{display:flex;gap:1rem;align-items:center;padding:1rem 0 2rem;border-top:1px solid var(--borda)}
 form.identificar{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
@@ -219,7 +224,11 @@ input[type=text]{width:100%;padding:.55rem;border:1px solid var(--borda);border-
   </div>
   {% endif %}
 </header>
-<main id="conteudo">
+<!-- tabindex="-1": sem ele o link de salto move a rolagem mas não o foco, que fica no
+     BODY — e a próxima tabulação volta ao cabeçalho, que é exatamente o que o link
+     existe para pular (WCAG 2.4.1). Verificador automatizado não pega: ele só
+     confere que o link e o alvo existem. -->
+<main id="conteudo" tabindex="-1">
 {% block conteudo %}{% endblock %}
 </main>
 </body>
