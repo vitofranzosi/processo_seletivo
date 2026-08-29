@@ -17,9 +17,10 @@ Perfil. A `003` tornou isso impossível de passar em silêncio — recusa com `4
 tudo o que ela alcança: quando a lista muda de forma, a Retificação precisa ser refeita mesmo que o
 Perfil dela não tenha sido tocado.
 
-O caminho passa a ser `/profiles/id=<uuid>/name`, com `before=`/`after=` para inserção e
-substituição atômica para as coleções sem chave. Escrever por posição deixa de ser admitido onde há
-identidade; ler continua aceitando as duas formas para sempre, porque ato publicado não se reescreve.
+O caminho passa a ser `/profiles/id=<uuid>/name`, com as **referências de posição** `before=` e
+`after=` para inserção, e substituição atômica para as coleções sem chave. Escrever por posição
+deixa de ser admitido onde há chave; ler continua aceitando as duas formas para sempre, porque ato
+publicado não se reescreve.
 
 Disso decorre o resultado que a `003` não podia entregar: **a âncora de identidade dela pode ser
 aposentada**. Com todo caminho gravável nomeando a entidade ou sendo atômico, não sobra índice para
@@ -56,7 +57,7 @@ reescrita; a conversão nunca infere — devolve; a leitura das duas formas é p
 **Scale/Scope**: o mesmo da `001`. Um Edital tem dezenas de Perfis e Eventos; o número de
 Retificações não finais no dia da virada é da ordem de unidades
 
-**NEEDS CLARIFICATION**: nenhum. As cinco decisões abertas foram respondidas na sessão de
+**Questões em aberto**: nenhuma. As cinco decisões pendentes foram respondidas na sessão de
 clarificação de 2026-08-29, e o portão de qualidade fechou 40 itens satisfeitos e 1 N/A antes deste
 plano existir.
 
@@ -83,7 +84,7 @@ Um segmento de caminho passa a admitir quatro formas, e **qual delas vale depend
 | `0`, `1`, … | lista | índice — só na **leitura** de atos antigos |
 | `-` | lista | posição de acréscimo ao fim |
 | `id=<valor>` | lista | o elemento cujo `id` é `<valor>` |
-| `before=<valor>` / `after=<valor>` | lista | posição relativa ao elemento nomeado; só em `ADD` |
+| `before=<valor>` / `after=<valor>` | lista | **referência de posição**: relativa ao elemento nomeado; só em `ADD` |
 
 Interpretar o seletor apenas em lista (FR-001a) é o que preserva a expressividade: em objeto, uma
 chave chamada `id=algo` continua endereçável. Sem essa regra, a extensão tiraria do RFC 6901 algo
@@ -109,7 +110,7 @@ São dois momentos e duas perguntas, como a `003` estabeleceu:
 - **Elaboração**: o caminho usa índice numérico numa coleção com chave? Recusa
   (`positional_addressing_refused`). Ato que nasce instável não chega a existir.
 - **Publicação**: a entidade endereçada ainda existe no conteúdo vigente no início da vigência?
-  Recusa (`target_key_not_found`). A referência de um `before=` ainda existe?
+  Recusa (`target_key_not_found`). A referência de posição de um `before=` ainda existe?
   (`position_reference_not_found`).
 
 A precondição por hash da `003` continua rodando nos dois momentos, sem alteração.

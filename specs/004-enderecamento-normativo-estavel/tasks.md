@@ -37,14 +37,14 @@ Monólito modular existente. Código em `backend/processo_seletivo/`, testes em 
 
 **⚠️ Nenhuma história funciona sem esta fase.** É a gramática e a resolução; tudo o mais consome.
 
-- [ ] T003 Declarar as coleções com chave e a única sem chave em backend/processo_seletivo/publicacoes/domain/colecoes.py, com o caminho de cada uma e o campo que serve de identificador
-- [ ] T004 [P] Cobrir a declaração contra um snapshot real em backend/tests/unit/publicacoes/test_colecoes.py — coleção nova sem identificador precisa fazer a suíte falhar, não passar em silêncio (FR-004c)
-- [ ] T005 Estender `parse_path` para reconhecer os seletores `id=`, `before=` e `after=` em backend/processo_seletivo/publicacoes/domain/changes.py, sem interpretá-los ainda
+- [ ] T003 Declarar as coleções com chave e a única sem chave em backend/processo_seletivo/publicacoes/domain/colecoes.py, com o caminho de cada uma e o campo que serve de identificador (FR-004a, FR-004c)
+- [ ] T004 [P] Cobrir a declaração contra um snapshot real em backend/tests/unit/publicacoes/test_colecoes.py — coleção nova sem identificador precisa fazer a suíte falhar, não passar em silêncio (FR-004c, SC-011)
+- [ ] T005 Estender `parse_path` para reconhecer o seletor `id=` e as referências de posição `before=` e `after=` em backend/processo_seletivo/publicacoes/domain/changes.py, sem interpretá-los ainda (FR-001)
 - [ ] T006 Resolver o seletor em `_descend` e `resolve_path` **apenas quando o contêiner for lista** em backend/processo_seletivo/publicacoes/domain/changes.py — em objeto, `id=algo` continua nome de chave literal (FR-001a)
 - [ ] T007 Aplicar `REPLACE` e `REMOVE` por `id=` em `apply_change` em backend/processo_seletivo/publicacoes/domain/changes.py (FR-001)
-- [ ] T008 Aplicar `ADD` por `before=` e `after=` em `apply_change`, preservando `-` para acréscimo ao fim e recusando índice numérico em backend/processo_seletivo/publicacoes/domain/changes.py (FR-001e)
+- [ ] T008 Aplicar `ADD` pelas referências de posição `before=` e `after=` em `apply_change`, preservando `-` para acréscimo ao fim, em backend/processo_seletivo/publicacoes/domain/changes.py (FR-001e)
 - [ ] T009 Comparar o valor do seletor como texto exato, sem normalização de caixa, e honrar o escape `~0`/`~1` do RFC 6901 em backend/processo_seletivo/publicacoes/domain/changes.py (FR-001h)
-- [ ] T010 [P] Cobrir a gramática em backend/tests/unit/publicacoes/test_changes_gramatica.py — as cinco formas de segmento, a regra do contêiner, o escape e a comparação exata
+- [ ] T010 [P] Cobrir a gramática em backend/tests/unit/publicacoes/test_changes_gramatica.py — as cinco formas de segmento, a regra do contêiner, o escape e a comparação exata (FR-001, FR-001a, FR-001h)
 - [ ] T011 [P] Cobrir o endereçamento aninhado `/profiles/id=…/competitionModalities/id=…/name` e o objeto `normativeRule`, que tem `id` e não é item de lista, em backend/tests/unit/publicacoes/test_changes_gramatica.py (FR-001f, FR-001g)
 
 ---
@@ -57,10 +57,10 @@ nenhuma precise refazer o ato.
 **Teste independente**: elaborar duas Retificações sobre Perfis distintos da mesma versão, publicar
 em sequência, e verificar que as duas são aceitas e cada uma atinge o seu Perfil.
 
-- [ ] T012 [US1] Recusar na elaboração caminho com índice numérico sobre coleção com chave, com `positional_addressing_refused`, em backend/processo_seletivo/publicacoes/application/retificacoes.py (FR-001c)
-- [ ] T013 [US1] Verificar na Publicação que a entidade endereçada existe no conteúdo vigente no início da vigência, com `target_key_not_found`, em backend/processo_seletivo/publicacoes/application/retificacoes.py (FR-002)
-- [ ] T014 [US1] Verificar que a referência de um `before=`/`after=` ainda existe, com `position_reference_not_found`, nos dois momentos, em backend/processo_seletivo/publicacoes/application/retificacoes.py (FR-002)
-- [ ] T015 [US1] Recusar coleção que ficaria com chave repetida, com `duplicate_key_in_collection`, na elaboração e na Publicação, em backend/processo_seletivo/publicacoes/domain/conflicts.py (FR-004)
+- [ ] T012 [US1] Recusar na elaboração caminho com índice numérico sobre coleção com chave, com `positional_addressing_refused`, em backend/processo_seletivo/publicacoes/application/retificacoes.py (FR-001c, FR-002a)
+- [ ] T013 [US1] Verificar na Publicação que a entidade endereçada existe no conteúdo vigente no início da vigência, com `target_key_not_found`, em backend/processo_seletivo/publicacoes/application/retificacoes.py (FR-002, FR-002a)
+- [ ] T014 [US1] Verificar que a referência de posição de um `before=`/`after=` ainda existe, com `position_reference_not_found`, nos dois momentos, em backend/processo_seletivo/publicacoes/application/retificacoes.py (FR-002, FR-002a)
+- [ ] T015 [US1] Recusar coleção que ficaria com chave repetida, com `duplicate_key_in_collection`, na elaboração e na Publicação, em backend/processo_seletivo/publicacoes/domain/conflicts.py (FR-004, FR-002a)
 - [ ] T016 [US1] Tratar `requirements` como valor atômico: aceitar apenas `REPLACE` da lista inteira e recusar endereçamento item a item, em backend/processo_seletivo/publicacoes/domain/changes.py (FR-004a)
 - [ ] T017 [US1] Recusar endereçamento de listas de controle interno, como `applied_publications`, em backend/processo_seletivo/publicacoes/domain/colecoes.py (FR-004b)
 - [ ] T018 [US1] Limitar a forma de `targetPath` no `ChangeSerializer` em backend/processo_seletivo/publicacoes/api/serializers.py, para que forma inválida vire recusa de borda e não erro de domínio
@@ -81,7 +81,7 @@ esta mudança, sem recalcular posições.
 publicadas antes da feature, e comparar com o que produziam antes.
 
 - [ ] T024 [US2] Garantir que consolidação, consulta histórica e proveniência continuam resolvendo caminho posicional, sem prazo, em backend/processo_seletivo/publicacoes/domain/consolidation.py (FR-001d)
-- [ ] T025 [US2] Registrar em `ProvenienciaConteudo.target_path` o caminho tal como o ato o declarou, sem converter, em backend/processo_seletivo/publicacoes/application/retificacoes.py (FR-010)
+- [ ] T025 [US2] Registrar em `ProvenienciaConteudo.target_path` o caminho tal como o ato o declarou, sem converter, em backend/processo_seletivo/publicacoes/application/retificacoes.py (FR-010, SC-011)
 - [ ] T026 [P] [US2] Cobrir que o hash canônico de cada Versão Consolidada existente é idêntico antes e depois da mudança, em backend/tests/integration/publicacoes/test_historico_duas_formas.py (SC-002)
 - [ ] T027 [P] [US2] Cobrir a consulta temporal sobre o conjunto definido de instantes — cada fronteira de vigência, um segundo antes e um depois — em backend/tests/integration/publicacoes/test_historico_duas_formas.py (SC-003)
 - [ ] T028 [P] [US2] Cobrir a coexistência das duas formas no **mesmo** Edital, com atos antigos posicionais e novos por chave compondo juntos, em backend/tests/integration/publicacoes/test_historico_duas_formas.py (FR-006)
@@ -124,7 +124,7 @@ caminho, chave ou índice.
 usam a chave, sem que nada tenha mudado para quem usa.
 
 - [ ] T045 [US3] Emitir `/profiles/id=<uuid>/…` e `/schedule/id=<uuid>/…` em `campos_editaveis` e `diferencas` em backend/processo_seletivo/interface/retificacao.py (FR-007)
-- [ ] T046 [US3] Emitir remoção por `id=` e acréscimo por `-`, em backend/processo_seletivo/interface/retificacao.py (FR-001e)
+- [ ] T046 [US3] Emitir remoção por `id=` e acréscimo por `-` ou por referência de posição, em backend/processo_seletivo/interface/retificacao.py (FR-001e)
 - [ ] T047 [US3] Remover a coreografia de ordem — `REPLACE` primeiro, `REMOVE` decrescente, `ADD` por último — que existia só porque índice deslocava, em backend/processo_seletivo/interface/retificacao.py (R5 do research.md)
 - [ ] T048 [US3] Garantir que nenhum caminho normativo aparece no HTML entregue pela tela de Retificação em backend/processo_seletivo/interface/templates/interface/retificar.html (FR-007)
 - [ ] T049 [P] [US3] Cobrir as duas condições de FR-007 sobre a página renderizada — sem caminho no HTML, alterações por chave — em backend/tests/interface/test_retificar.py (SC-008)

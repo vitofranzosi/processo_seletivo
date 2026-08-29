@@ -31,8 +31,8 @@ segmento   = chave           ; quando o contêiner é objeto
            | seletor         ; quando o contêiner é lista
 
 seletor    = "id="     valor
-           | "before=" valor      ; só em ADD
-           | "after="  valor      ; só em ADD
+           | "before=" valor      ; referência de posição, só em ADD
+           | "after="  valor      ; referência de posição, só em ADD
 
 indice     = "0" / ( %x31-39 *DIGIT )
 valor      = 1*( %x20-7E )       ; texto exato; "/" e "~" escapados como no RFC 6901
@@ -54,7 +54,7 @@ como UUID — qualquer identificador que a entidade carregue serve.
 | `indice` em coleção **sem** chave | não se aplica: a coleção é atômica | sim, permanentemente |
 | `-` | sim, em `ADD` | sim |
 | `id=` | sim | sim |
-| `before=` / `after=` | sim, em `ADD` | — |
+| `before=` / `after=` — referência de posição | sim, em `ADD` | — |
 
 A leitura aceita a forma posicional **para sempre**: atos publicados não são reescritos, então ela
 permanece no histórico por consequência da imutabilidade, não por escolha.
@@ -81,7 +81,7 @@ No mesmo vocabulário da `003`. Cada um **nomeia o caminho envolvido**, como faz
 | --- | --- | --- | --- |
 | `positional_addressing_refused` | 422 | Caminho novo usa índice numérico em coleção com chave | Elaboração |
 | `target_key_not_found` | 409 | A entidade endereçada não existe | Elaboração e Publicação |
-| `position_reference_not_found` | 409 | A referência de um `before=`/`after=` não existe; a posição pretendida deixou de ser determinável | Elaboração e Publicação |
+| `position_reference_not_found` | 409 | A referência de posição de um `before=`/`after=` não existe; a posição pretendida deixou de ser determinável | Elaboração e Publicação |
 | `duplicate_key_in_collection` | 409 | A coleção resultante teria chave repetida | Elaboração e Publicação |
 
 Os códigos da `003` continuam valendo sem alteração: `expected_hash_mismatch`,

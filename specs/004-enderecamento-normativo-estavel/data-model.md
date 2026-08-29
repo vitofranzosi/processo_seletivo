@@ -17,8 +17,8 @@ que muda é o que um segmento pode ser, e **qual forma vale depende do contêine
 | `0`, `1`, … | lista | índice posicional | **não**, onde há chave | sim, sempre |
 | `-` | lista | posição de acréscimo ao fim | sim, só em `ADD` | sim |
 | `id=<valor>` | lista | o elemento cujo `id` é `<valor>` | sim | sim |
-| `before=<valor>` | lista | imediatamente antes do elemento nomeado | sim, só em `ADD` | — |
-| `after=<valor>` | lista | imediatamente depois do elemento nomeado | sim, só em `ADD` | — |
+| `before=<valor>` | lista | **referência de posição**: imediatamente antes do elemento nomeado | sim, só em `ADD` | — |
+| `after=<valor>` | lista | **referência de posição**: imediatamente depois do elemento nomeado | sim, só em `ADD` | — |
 
 **A regra do contêiner é o que preserva expressividade.** Em objeto, `id=algo` é nome de chave e
 nada mais. Sem isso, a extensão retiraria do RFC 6901 algo que ele permitia.
@@ -117,8 +117,8 @@ da `003` recusariam de qualquer forma, o que é a segunda camada funcionando com
 
 ## Invariantes
 
-- Todo `target_path` gravável ou nomeia a entidade (`id=`, `before=`, `after=`) ou é atômico. Não
-  existe índice em caminho novo sobre coleção com chave.
+- Todo `target_path` gravável ou nomeia a entidade (`id=`), ou a referência de posição (`before=`,
+  `after=`), ou é atômico. Não existe índice em caminho novo sobre coleção com chave.
 - Chave repetida numa coleção é estado impossível, recusado na elaboração e na Publicação.
 - Identificador que apareça em duas coleções do mesmo snapshot é irrelevante: a resolução é escopada
   à coleção nomeada no caminho. Unicidade global **não** é pressuposta.

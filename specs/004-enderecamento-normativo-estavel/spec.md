@@ -57,8 +57,8 @@ uma correção emergencial num mesmo ciclo esconderia a segunda dentro da primei
 
 - Q: Depois desta mudança, uma Retificação nova ainda poderá endereçar um Perfil pela posição, ou
   o caminho por chave passa a ser obrigatório? → A: Obrigatório na escrita para coleções com
-  identidade. Caminhos posicionais permanecem apenas para leitura histórica e para coleções
-  genuinamente sem chave.
+  chave. Caminhos posicionais permanecem apenas para leitura histórica e para coleções genuinamente
+  sem chave.
 
   Assim nenhum ato novo instável pode ser criado, e nenhum ato já publicado precisa ser reescrito.
 
@@ -209,15 +209,15 @@ homologada —, rodar a migração e verificar o desfecho de cada uma.
 - **FR-001d**: A **leitura** — consolidação, consulta histórica, proveniência — DEVE continuar
   aceitando caminhos posicionais indefinidamente. Atos publicados não são reescritos, então a forma
   antiga permanece no histórico para sempre.
-- **FR-001e**: `ADD` em coleção com identidade DEVE indicar a posição por **referência de
-  posição** — `/profiles/before=<uuid>` ou `/profiles/after=<uuid>` —, ou por `/profiles/-` quando
-  a intenção for acrescentar ao fim. Índice numérico NÃO DEVE ser admitido: é a forma que desloca,
-  e `ADD` é o caso em que a contenção da `003` protege pior, por não haver conteúdo anterior a
-  comparar.
+- **FR-001e**: `ADD` em coleção com chave DEVE indicar a posição por **referência de posição** —
+  `/profiles/before=<uuid>` ou `/profiles/after=<uuid>` —, ou por `/profiles/-` quando a intenção
+  for acrescentar ao fim. Estas são as únicas formas admitidas; a proibição do índice numérico é a
+  de FR-001c, que vale para toda operação. `ADD` merece menção própria porque é onde a contenção da
+  `003` protegia pior, por não haver conteúdo anterior a comparar.
 
   O termo **âncora** fica reservado ao mecanismo da `003` que esta feature aposenta (FR-009).
   Chamar as duas coisas de âncora confundiria o que sai com o que entra.
-- **FR-001f**: Coleção aninhada com identidade DEVE ser endereçável pela forma composta, como em
+- **FR-001f**: Coleção aninhada com chave DEVE ser endereçável pela forma composta, como em
   `/profiles/id=<uuid>/competitionModalities/id=<uuid>/name`. Cada segmento de lista resolve pela
   chave do seu próprio nível.
 - **FR-001g**: `normativeRule` é objeto, não item de lista, e DEVE continuar sendo endereçada pelo
@@ -233,9 +233,9 @@ homologada —, rodar a migração e verificar o desfecho de cada uma.
   quando meu ato passa a valer?" — e ambas precisam de resposta.
 - **FR-002a**: As recusas DEVEM ter código próprio, no mesmo vocabulário da `003`:
   `target_key_not_found` quando a entidade endereçada não existe; `position_reference_not_found`
-  quando a referência de um `before=`/`after=` não existe, caso em que a posição pretendida deixou
-  de ser determinável; `duplicate_key_in_collection` para chave repetida;
-  `positional_addressing_refused` para endereçamento por índice em coleção com identidade. Cada
+  quando a referência de posição de um `before=`/`after=` não existe, caso em que a posição
+  pretendida deixou de ser determinável; `duplicate_key_in_collection` para chave repetida;
+  `positional_addressing_refused` para endereçamento por índice em coleção com chave. Cada
   código DEVE nomear o caminho envolvido, como fazem os da `003`.
 - **FR-003**: A precondição de conteúdo por hash da `003` NÃO DEVE ser aposentada e DEVE continuar
   valendo sobre o endereçamento novo. Ela responde a outra pergunta — se o conteúdo ainda é o que
@@ -312,8 +312,8 @@ homologada —, rodar a migração e verificar o desfecho de cada uma.
   segundo depois de cada um. "Todo instante" não é verificável; as fronteiras são onde o resultado
   muda, e é nelas que um erro apareceria.
 - **SC-004**: Nenhuma Retificação atinge entidade diferente da endereçada, em qualquer composição.
-- **SC-005**: Nenhum ato novo é criado endereçando por posição uma coleção com identidade — a
-  recusa acontece na elaboração e é verificável por tentativa.
+- **SC-005**: Nenhum ato novo é criado endereçando por posição uma coleção com chave — a recusa
+  acontece na elaboração e é verificável por tentativa.
 - **SC-006**: Ao fim da migração, toda Retificação em estado não final ou está na forma por chave,
   ou foi devolvida com motivo registrado. Nenhuma permanece em curso na forma antiga.
 - **SC-007**: Concluída a conversão, nenhuma Retificação em estado não final tem `expected_anchors`
