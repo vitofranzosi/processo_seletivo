@@ -220,3 +220,38 @@ def test_o_comando_imprime_a_politica_sem_executar():
     with connection.cursor() as cursor:
         cursor.execute("SELECT 1 FROM pg_roles WHERE rolname = 'ps_runtime_dry'")
         assert cursor.fetchone() is None
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_comando_exige_os_papeis_e_a_senha():
+    """Sem eles o provisionamento aplicaria a política a um papel que ninguém declarou."""
+    from django.core.management import CommandError, call_command
+
+    with pytest.raises(CommandError) as recusa:
+        call_command(
+            "provisionar_papeis",
+            "--migration-role=",
+            "--runtime-role=",
+            "--runtime-password=",
+        )
+
+    for esperado in ("--migration-role", "--runtime-role", "--runtime-password"):
+        assert esperado in str(recusa.value)
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+@pytest.mark.skipif(
+    connection.vendor == "postgresql", reason="a recusa por vendor só aparece fora do PostgreSQL"
+)
+def test_o_comando_recusa_banco_que_nao_seja_postgresql():
+    from django.core.management import CommandError, call_command
+
+    with pytest.raises(CommandError, match="PostgreSQL"):
+        call_command(
+            "provisionar_papeis",
+            "--migration-role=m",
+            "--runtime-role=r",
+            "--runtime-password=s",
+        )

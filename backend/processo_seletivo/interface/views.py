@@ -27,6 +27,7 @@ from processo_seletivo.interface import (
     identidade,
 )
 from processo_seletivo.interface import retificacao as retificacao_ui
+from processo_seletivo.processos.application.commands import create_process_with_first_edital
 from processo_seletivo.processos.application.selectors import (
     contar_por_situacao,
     listar_processos,
@@ -103,6 +104,71 @@ def lista(request):
             "sem_papel": not ator.permissions,
         },
     )
+
+
+@require_http_methods(["GET", "POST"])
+def criar_processo(request):
+    """FR-025 da 003 — FR-004 da 002 estava especificado e o botão apontava para `#`.
+
+    Processo e primeiro Edital nascem juntos porque o domínio não admite um sem o outro. A view
+    traduz o formulário e delega ao command, que é quem verifica permissão, unicidade e auditoria.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+
+    contexto = {
+        "digitado": request.POST if request.method == "POST" else {},
+        "ano_corrente": timezone.localtime().year,
+        # A chave atravessa o reenvio do formulário: recarregar depois de um erro de preenchimento
+        # não pode criar dois Processos quando a segunda tentativa der certo.
+        "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
+    }
+    if request.method == "GET":
+        return render(request, "interface/processo_criar.html", contexto)
+
+    try:
+        processo, _ = create_process_with_first_edital(
+            actor=ator,
+            data=_processo_do_formulario(request.POST),
+            idempotency_key=request.POST.get("chave_idempotencia", ""),
+            correlation_id=request.correlation_id,
+        )
+    except ValueError as exc:
+        contexto["erro"] = str(exc)
+        return render(request, "interface/processo_criar.html", contexto, status=422)
+    except DomainError as exc:
+        contexto["erro"] = exc.detail
+        return render(request, "interface/processo_criar.html", contexto, status=exc.status)
+    return redirect(reverse("interface:processo-detalhe", args=[processo.id]))
+
+
+def _processo_do_formulario(dados):
+    """Campos obrigatórios verificados aqui só para dar mensagem antes de ir ao command."""
+    campos = {
+        "codigo": "Identificação institucional",
+        "titulo": "Título do Processo",
+        "numero": "Número do Edital",
+        "ano": "Ano do Edital",
+        "titulo_edital": "Título do Edital",
+    }
+    vazios = [rotulo for chave, rotulo in campos.items() if not (dados.get(chave) or "").strip()]
+    if vazios:
+        raise ValueError("Preencha: " + ", ".join(vazios) + ".")
+    try:
+        ano = int(dados["ano"])
+    except ValueError as exc:
+        raise ValueError(f"'{dados['ano']}' não é um ano válido.") from exc
+    return {
+        "institutionalCode": dados["codigo"].strip(),
+        "title": dados["titulo"].strip(),
+        "firstEdital": {
+            "number": dados["numero"].strip(),
+            "year": ano,
+            "title": dados["titulo_edital"].strip(),
+            "description": (dados.get("descricao") or "").strip(),
+        },
+    }
 
 
 @require_http_methods(["GET", "POST"])

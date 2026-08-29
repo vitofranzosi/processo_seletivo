@@ -27,8 +27,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        if connection.vendor != "postgresql":
-            raise CommandError("O provisionamento de papéis só se aplica a PostgreSQL.")
         faltando = [
             nome
             for nome in ("migration_role", "runtime_role", "runtime_password")
@@ -40,6 +38,8 @@ class Command(BaseCommand):
                 + ", ".join(f"--{nome.replace('_', '-')}" for nome in faltando)
                 + " ou as variáveis DB_MIGRATION_USER, DB_RUNTIME_USER e DB_RUNTIME_PASSWORD."
             )
+        if connection.vendor != "postgresql":
+            raise CommandError("O provisionamento de papéis só se aplica a PostgreSQL.")
 
         instrucoes = comandos(
             database=connection.settings_dict["NAME"],

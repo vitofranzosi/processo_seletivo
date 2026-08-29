@@ -512,7 +512,7 @@ components:
       properties:
         profiles: { type: array, minItems: 1, items: { $ref: '#/components/schemas/PerfilInput' } }
         schedule: { type: array, items: { $ref: '#/components/schemas/EventoInput' } }
-        editorialContent: { type: object, additionalProperties: true }
+      additionalProperties: false
     PerfilInput:
       type: object
       required: [id, code, name, immediateVacancies, reserveType]

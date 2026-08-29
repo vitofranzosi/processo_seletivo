@@ -181,3 +181,104 @@ def test_processo_de_outro_escopo_nao_e_alcancavel(client, seletor_ligado, cenar
     assert client.get(
         reverse("interface:processo-detalhe", args=[processo.id])
     ).status_code == 404
+
+
+@pytest.mark.django_db(transaction=True)
+def test_criar_processo_com_o_primeiro_edital(client, seletor_ligado):
+    """FR-025 da 003 — o requisito existia na 002 e o botão apontava para `#`."""
+    identificar(client, "gestora", ["gestor"])
+
+    resposta = client.post(
+        reverse("interface:processo-criar"),
+        {
+            "codigo": "PS-2027-001",
+            "titulo": "Processo Seletivo 2027",
+            "numero": "01",
+            "ano": "2027",
+            "titulo_edital": "Primeiro Edital",
+            "descricao": "Seleção de docentes",
+            "chave_idempotencia": "ui-criacao-000000001",
+        },
+    )
+
+    assert resposta.status_code == 302
+    processo = ProcessoSeletivo.objects.get(institutional_code="PS-2027-001")
+    assert resposta["Location"] == reverse("interface:processo-detalhe", args=[processo.id])
+    edital = Edital.objects.get(processo=processo)
+    assert (edital.number, edital.year, edital.status) == ("01", 2027, Edital.Status.EM_ELABORACAO)
+    assert processo.created_by == "gestora"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_reenviar_o_formulario_com_a_mesma_chave_nao_cria_dois_processos(client, seletor_ligado):
+    identificar(client, "gestora", ["gestor"])
+    dados = {
+        "codigo": "PS-2027-002",
+        "titulo": "Processo Seletivo 2027",
+        "numero": "02",
+        "ano": "2027",
+        "titulo_edital": "Primeiro Edital",
+        "chave_idempotencia": "ui-criacao-000000002",
+    }
+
+    client.post(reverse("interface:processo-criar"), dados)
+    client.post(reverse("interface:processo-criar"), dados)
+
+    assert ProcessoSeletivo.objects.filter(institutional_code="PS-2027-002").count() == 1
+
+
+@pytest.mark.django_db(transaction=True)
+def test_campo_obrigatorio_ausente_preserva_o_que_foi_digitado(client, seletor_ligado):
+    identificar(client, "gestora", ["gestor"])
+
+    resposta = client.post(
+        reverse("interface:processo-criar"),
+        {"codigo": "", "titulo": "Processo Seletivo 2027", "numero": "03", "ano": "2027",
+         "titulo_edital": "Primeiro Edital", "chave_idempotencia": "ui-criacao-000000003"},
+    )
+
+    assert resposta.status_code == 422
+    conteudo = resposta.content.decode()
+    assert "Identificação institucional" in conteudo
+    # O que já estava preenchido volta na tela: refazer tudo por um campo é retrabalho evitável.
+    assert "Processo Seletivo 2027" in conteudo
+    assert not ProcessoSeletivo.objects.exists()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_identificacao_repetida_e_recusada_pelo_dominio(client, seletor_ligado):
+    identificar(client, "gestora", ["gestor"])
+    dados = {
+        "codigo": "PS-2027-004",
+        "titulo": "Processo Seletivo 2027",
+        "numero": "04",
+        "ano": "2027",
+        "titulo_edital": "Primeiro Edital",
+    }
+    client.post(
+        reverse("interface:processo-criar"), {**dados, "chave_idempotencia": "ui-a-00000001"}
+    )
+
+    resposta = client.post(
+        reverse("interface:processo-criar"),
+        {**dados, "titulo": "Outro", "chave_idempotencia": "ui-b-00000002"},
+    )
+
+    assert resposta.status_code == 409
+    assert "já utilizada" in resposta.content.decode()
+    assert ProcessoSeletivo.objects.count() == 1
+
+
+@pytest.mark.django_db(transaction=True)
+def test_sem_permissao_a_criacao_e_recusada_pelo_command(client, seletor_ligado):
+    """A tela não oferece o caminho, mas a URL é alcançável — quem recusa é o domínio."""
+    identificar(client, "auditora", ["auditor"])
+
+    resposta = client.post(
+        reverse("interface:processo-criar"),
+        {"codigo": "PS-2027-005", "titulo": "T", "numero": "05", "ano": "2027",
+         "titulo_edital": "E", "chave_idempotencia": "ui-criacao-000000005"},
+    )
+
+    assert resposta.status_code == 403
+    assert not ProcessoSeletivo.objects.exists()

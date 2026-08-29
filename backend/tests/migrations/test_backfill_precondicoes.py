@@ -78,3 +78,69 @@ def test_backfill_nao_toca_retificacao_publicada(
     intocada = AlteracaoNormativa.objects.get(retificacao=retificacao)
     assert intocada.expected_previous_hash == ""
     assert intocada.expected_anchors == {}
+
+
+CONTEUDO = {
+    "title": "Original",
+    "description": "Texto",
+    "rules": {"a": 1, "b": {"c": 2}},
+    "profiles": [
+        {"id": "id-1", "code": "P1", "name": "A", "requirements": ["x", "y"]},
+        {"id": "id-2", "code": "P2", "name": "B", "requirements": []},
+    ],
+    "schedule": [{"type": "INSCRICAO", "startAt": "2026-09-01T09:00:00-03:00"}],
+}
+
+CASOS = [
+    [{"targetPath": "/title", "operation": "REPLACE", "newValue": "Novo"}],
+    [{"targetPath": "/rules/b/c", "operation": "REPLACE", "newValue": 9}],
+    [{"targetPath": "/profiles/1/name", "operation": "REPLACE", "newValue": "Renomeado"}],
+    [{"targetPath": "/profiles/0/requirements/1", "operation": "REPLACE", "newValue": "z"}],
+    [{"targetPath": "/profiles/0", "operation": "REMOVE"}],
+    [{"targetPath": "/description", "operation": "REMOVE"}],
+    [{"targetPath": "/profiles/-", "operation": "ADD", "newValue": {"id": "id-3"}}],
+    [{"targetPath": "/profiles/0", "operation": "ADD", "newValue": {"id": "id-0"}}],
+    [{"targetPath": "/anexo", "operation": "ADD", "newValue": {"a": 1}}],
+    # Sequência: remover desloca, e a derivação seguinte parte do conteúdo já alterado.
+    [
+        {"targetPath": "/profiles/0", "operation": "REMOVE"},
+        {"targetPath": "/profiles/0/name", "operation": "REPLACE", "newValue": "Depois"},
+    ],
+    # Remover e recriar o mesmo caminho no mesmo ato.
+    [
+        {"targetPath": "/rules", "operation": "REMOVE"},
+        {"targetPath": "/rules", "operation": "ADD", "newValue": {"a": 3}},
+    ],
+    # Hash declarado prevalece sobre o derivado.
+    [
+        {
+            "targetPath": "/title",
+            "operation": "REPLACE",
+            "newValue": "Novo",
+            "expectedPreviousHash": "declarado-pelo-cliente",
+        }
+    ],
+    # Caminho inaplicável: a derivação para e o restante fica vazio.
+    [
+        {"targetPath": "/inexistente/0/x", "operation": "REPLACE", "newValue": 1},
+        {"targetPath": "/title", "operation": "REPLACE", "newValue": "Nunca chega"},
+    ],
+]
+
+
+@pytest.mark.parametrize("changes", CASOS, ids=range(len(CASOS)))
+def test_a_copia_congelada_produz_o_mesmo_que_a_regra_viva(changes):
+    """A duplicação da migração `0006` só é aceitável enquanto não divergir.
+
+    O teste de backfill sozinho exercita um caso; estes cobrem as formas que a derivação
+    encontra em conteúdo real — lista, objeto aninhado, remoção que desloca índice, acréscimo no
+    fim, hash declarado e caminho inaplicável. Divergência entre a cópia e o domínio aparece
+    aqui, não em produção sobre dados de gente.
+    """
+    from processo_seletivo.publicacoes.domain.conflicts import derive_preconditions
+
+    congelada = import_module(
+        "processo_seletivo.publicacoes.migrations.0006_backfill_precondicoes"
+    )._derive_preconditions
+
+    assert congelada(CONTEUDO, changes) == derive_preconditions(CONTEUDO, changes)

@@ -107,3 +107,45 @@ def test_blocking_error_stops_submission_and_names_the_cause(
     assert corpo["code"] == "blocking_findings"
     assert "Evento" in corpo["detail"]
     assert Edital.objects.get(pk=edital.pk).status == Edital.Status.EM_ELABORACAO
+
+
+@pytest.mark.contract
+@pytest.mark.django_db(transaction=True)
+def test_campo_nao_reconhecido_no_rascunho_e_recusado(
+    api_client, manager_headers, process_payload
+):
+    """FR-028 da 003: aceitar e descartar em silêncio não é comportamento admissível.
+
+    `editorialContent` era aceito pelo serializer e pelo contrato, e nenhum comando o persistia.
+    Quem o enviava recebia 200 e acreditava que o conteúdo editorial estava guardado no Edital.
+    """
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+    )
+    edital = Edital.objects.get(processo_id=criado.json()["id"])
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{edital.id}/rascunho",
+        {**complete_draft(), "editorialContent": {"preambulo": "texto livre"}},
+        format="json",
+        **{
+            **actor_headers("preparador", ["edital:elaborar"]),
+            "HTTP_IF_MATCH": f'"{edital.revision}"',
+        },
+    )
+
+    assert resposta.status_code == 422
+    assert "editorialContent" in resposta.json()["detail"]
+
+
+@pytest.mark.contract
+def test_o_contrato_nao_anuncia_mais_o_campo_descartado():
+    contrato = yaml.safe_load(
+        (
+            Path(__file__).resolve().parents[3]
+            / "specs/001-processo-seletivo-editais/contracts/openapi.yaml"
+        ).read_text(encoding="utf-8")
+    )
+    rascunho = contrato["components"]["schemas"]["EditalDraftRequest"]
+    assert "editorialContent" not in rascunho["properties"]
+    assert rascunho["additionalProperties"] is False

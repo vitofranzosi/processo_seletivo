@@ -68,7 +68,9 @@ responsabilidade. Solicite acesso a quem administra o sistema no Cefor.</p>
 {% empty %}
 <div class="vazio">
   <p>Nenhum Processo Seletivo no seu escopo institucional.</p>
-  {% if pode_criar %}<p><a class="botao" href="#">Criar Processo Seletivo</a></p>{% endif %}
+  {% if pode_criar %}
+<p><a class="botao" href="{% url 'interface:processo-criar' %}">Criar Processo Seletivo</a></p>
+{% endif %}
 </div>
 {% endfor %}
 {% endblock %}

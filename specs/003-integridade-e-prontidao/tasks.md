@@ -100,14 +100,14 @@ fases 4 em diante são trabalho que resta e seguem a ordem normal.
 
 ## Phase 7: Lacunas funcionais herdadas da 002
 
-- [ ] T046 [FR-025] Implementar a criação de Processo com primeiro Edital na interface, substituindo o `href="#"` em backend/processo_seletivo/interface/templates/interface/lista.html
-- [ ] T047 [FR-025] Cobrir o fluxo de criação em backend/tests/interface/test_processo.py
+- [X] T046 [FR-025] Criação de Processo com primeiro Edital em `views.criar_processo`, rota `processos/criar` e template `processo_criar.html`
+- [X] T047 [FR-025] Cobrir criação, repetição com a mesma chave, campo ausente, identificação repetida e falta de permissão
 - [ ] T048 [FR-026] Validar datas, reserva de vagas e dependências condicionais antes do envio, em backend/processo_seletivo/interface/static/interface/
 - [ ] T049 [FR-026] Manter a validação do servidor como autoridade, com teste que confirma a recusa mesmo com a validação do cliente desligada
 - [ ] T050 [FR-027] Ligar cada pendência de revisão ao campo a que se refere, usando o `path` que o domínio já produz
 - [ ] T051 [P] [FR-027] Cobrir a associação campo-pendência em backend/tests/interface/test_compor.py
-- [ ] T052 [FR-028] Decidir entre persistir `editorialContent` ou removê-lo do contrato, e registrar a decisão
-- [ ] T053 [FR-028] Implementar a decisão em backend/processo_seletivo/editais/ e no `openapi.yaml`
+- [X] T052 [FR-028] Decidido remover: conteúdo editorial é conteúdo normativo e exigiria fonte autoritativa, validação, vigência e presença no PDF — nada disso existe, e inventá-lo sob um campo já aceito seria decidir por omissão
+- [X] T053 [FR-028] Campo removido do serializer e do contrato; campo desconhecido no rascunho passa a ser recusado em vez de ignorado
 
 ---
 
@@ -131,9 +131,14 @@ fases 4 em diante são trabalho que resta e seguem a ordem normal.
 
 ## Situação
 
-45 de 58 tarefas concluídas. Cobrem os seis bloqueadores, a barreira de produção, a imutabilidade
-do histórico no banco, os limites de borda e o provisionamento dos papéis. As 13 restantes são as
-lacunas funcionais herdadas da 002 e a higiene de desempenho.
+49 de 58 tarefas concluídas.
+
+As 9 restantes são T048 a T051 (validação antes do envio e pendências ligadas ao campo, FR-026 e
+FR-027 — trabalho de interface, sem risco normativo) e a Fase 8 inteira (T054 a T058: paginação do
+histórico no banco, expiração do rascunho no navegador e os `ResourceWarning` de conexões SQLite).
+
+Nenhuma das 9 é bloqueadora de implantação. Continuam sendo, e estão fora desta feature: a
+integração com o diretório institucional e a `004-enderecamento-normativo-estavel`.
 
 Fora desta feature e ainda bloqueadores de implantação: a integração com o diretório institucional
 e a feature `004-enderecamento-normativo-estavel`.
