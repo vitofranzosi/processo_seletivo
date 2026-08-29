@@ -20,71 +20,110 @@ se o código faz aquilo.
 
 ## Completude dos requisitos
 
-- [ ] CHK001 O endereçamento de coleções **aninhadas** está especificado? `competitionModalities` carrega `id` e vive dentro de um Perfil, mas nenhum requisito descreve a forma composta `/profiles/id=X/competitionModalities/id=Y/...`. [Gap, Spec §FR-001]
-- [ ] CHK002 O tratamento de `normativeRule` está definido? Ela tem `id` mas é objeto, não item de lista, então FR-001a a exclui do seletor — isso está dito em algum lugar ou apenas se deduz? [Gap, Spec §FR-001a]
-- [ ] CHK003 Os códigos de erro das recusas novas estão nomeados? A `003` nomeou `expected_hash_mismatch` e `target_identity_mismatch`; FR-002 diz "recusar explicitamente" sem dar vocabulário. [Gap, Spec §FR-002]
-- [ ] CHK004 O destino de `ProvenienciaConteudo.target_path` está especificado? O contexto o menciona como afetado, mas nenhum requisito diz se a proveniência passa a misturar as duas formas nem como é lida. [Gap, Spec §Contexto]
-- [ ] CHK005 O que acontece com uma Retificação devolvida pela conversão está definido do ponto de vista de quem a elaborou? FR-005a diz que é devolvida; nada diz como a pessoa fica sabendo nem com que motivo. [Gap, Spec §FR-005a]
+- [x] CHK001 O endereçamento de coleções **aninhadas** está especificado? `competitionModalities` carrega `id` e vive dentro de um Perfil, mas nenhum requisito descreve a forma composta `/profiles/id=X/competitionModalities/id=Y/...`. [Gap, Spec §FR-001]
+- [x] CHK002 O tratamento de `normativeRule` está definido? Ela tem `id` mas é objeto, não item de lista, então FR-001a a exclui do seletor — isso está dito em algum lugar ou apenas se deduz? [Gap, Spec §FR-001a]
+- [x] CHK003 Os códigos de erro das recusas novas estão nomeados? A `003` nomeou `expected_hash_mismatch` e `target_identity_mismatch`; FR-002 diz "recusar explicitamente" sem dar vocabulário. [Gap, Spec §FR-002]
+- [x] CHK004 O destino de `ProvenienciaConteudo.target_path` está especificado? O contexto o menciona como afetado, mas nenhum requisito diz se a proveniência passa a misturar as duas formas nem como é lida. [Gap, Spec §Contexto]
+- [x] CHK005 O que acontece com uma Retificação devolvida pela conversão está definido do ponto de vista de quem a elaborou? FR-005a diz que é devolvida; nada diz como a pessoa fica sabendo nem com que motivo. [Gap, Spec §FR-005a]
 - [ ] CHK006 Existe requisito de reversão para a migração de conversão? Migração que reescreve caminho de ato em curso precisa poder ser desfeita se algo der errado no deploy. [Gap, Spec §FR-005a]
 - [ ] CHK007 O comportamento diante de coleções não normativas com listas — por exemplo `applied_publications` — está declarado como fora do alcance do endereçamento? [Gap]
-- [ ] CHK008 Está especificado se `requirements` deixa de ser endereçável item a item **também na leitura** de atos antigos, ou se caminhos posicionais dentro de `requirements` continuam resolvendo no histórico? [Gap, Spec §FR-004a]
+- [x] CHK008 Está especificado se `requirements` deixa de ser endereçável item a item **também na leitura** de atos antigos, ou se caminhos posicionais dentro de `requirements` continuam resolvendo no histórico? [Gap, Spec §FR-004a]
 
 ## Clareza e mensurabilidade
 
-- [ ] CHK009 "A entidade endereçada não existir na versão sobre a qual o ato vigora" está desambiguado? A `003` mostrou que base declarada e conteúdo vigente no início da vigência são coisas diferentes, e o requisito não diz qual das duas. [Ambiguity, Spec §FR-002]
-- [ ] CHK010 O momento da recusa por chave repetida está definido? FR-004 diz que a composição recusa, sem dizer se é na elaboração, na Publicação ou na materialização. [Clarity, Spec §FR-004]
-- [ ] CHK011 "Quando a conversão de FR-005a estiver concluída" é mensurável? Não há critério que permita afirmar que a conversão terminou — a migração ter rodado não é o mesmo que não restar ato na forma antiga. [Measurability, Spec §FR-009]
+- [x] CHK009 "A entidade endereçada não existir na versão sobre a qual o ato vigora" está desambiguado? A `003` mostrou que base declarada e conteúdo vigente no início da vigência são coisas diferentes, e o requisito não diz qual das duas. [Ambiguity, Spec §FR-002]
+- [x] CHK010 O momento da recusa por chave repetida está definido? FR-004 diz que a composição recusa, sem dizer se é na elaboração, na Publicação ou na materialização. [Clarity, Spec §FR-004]
+- [x] CHK011 "Quando a conversão de FR-005a estiver concluída" é mensurável? Não há critério que permita afirmar que a conversão terminou — a migração ter rodado não é o mesmo que não restar ato na forma antiga. [Measurability, Spec §FR-009]
 - [ ] CHK012 "Sem exigir conhecimento de representação de quem elabora" pode ser verificado objetivamente, ou é adjetivo sem métrica? [Measurability, Spec §FR-007]
-- [ ] CHK013 O formato do identificador no seletor está especificado? `id=<uuid>` aparece nos exemplos, mas nada diz se apenas UUID é aceito, como o valor é normalizado, nem o que acontece com maiúsculas. [Clarity, Spec §FR-001]
-- [ ] CHK014 O escape está definido para o caso de um identificador conter `/` ou `~`, que o RFC 6901 reserva? [Gap, Spec §FR-001]
+- [x] CHK013 O formato do identificador no seletor está especificado? `id=<uuid>` aparece nos exemplos, mas nada diz se apenas UUID é aceito, como o valor é normalizado, nem o que acontece com maiúsculas. [Clarity, Spec §FR-001]
+- [x] CHK014 O escape está definido para o caso de um identificador conter `/` ou `~`, que o RFC 6901 reserva? [Gap, Spec §FR-001]
 - [ ] CHK015 "Resolução inequívoca" está definida? FR-005a condiciona a conversão a ela sem dizer o que a torna equívoca. [Ambiguity, Spec §FR-005a]
 
 ## Consistência entre requisitos
 
-- [ ] CHK016 A diferença de momento entre FR-001c — recusa na elaboração — e FR-002 — recusa contra a versão vigente — é deliberada e está justificada, ou é divergência acidental? [Consistency, Spec §FR-001c, §FR-002]
-- [ ] CHK017 A ordem entre FR-005a e FR-009 está declarada como restrição? A conversão consome `expected_anchors`, e a aposentadoria da âncora removeria o insumo — aposentar antes de converter inviabiliza a conversão. [Consistency, Spec §FR-005a, §FR-009]
-- [ ] CHK018 FR-003 e FR-010 dizem a mesma coisa por caminhos diferentes — a precondição de conteúdo continua valendo. A duplicação é intencional, ou um dos dois deve absorver o outro? [Consistency, Spec §FR-003, §FR-010]
-- [ ] CHK019 A terminologia está estável entre "chave estável", "identidade", "identificador" e "âncora"? A `003` usa "âncora" para o mecanismo que esta feature aposenta, e FR-001e usa "âncora relativa" para o mecanismo novo — dois sentidos para a mesma palavra. [Consistency, Spec §FR-001e, §FR-009]
-- [ ] CHK020 O que a `003` chamava de contenção e o que a `004` chama de cura estão descritos sem se contradizerem quanto ao que permanece em produção? [Consistency, Spec §Assumptions]
+- [x] CHK016 A diferença de momento entre FR-001c — recusa na elaboração — e FR-002 — recusa contra a versão vigente — é deliberada e está justificada, ou é divergência acidental? [Consistency, Spec §FR-001c, §FR-002]
+- [x] CHK017 A ordem entre FR-005a e FR-009 está declarada como restrição? A conversão consome `expected_anchors`, e a aposentadoria da âncora removeria o insumo — aposentar antes de converter inviabiliza a conversão. [Consistency, Spec §FR-005a, §FR-009]
+- [x] CHK018 FR-003 e FR-010 dizem a mesma coisa por caminhos diferentes — a precondição de conteúdo continua valendo. A duplicação é intencional, ou um dos dois deve absorver o outro? [Consistency, Spec §FR-003, §FR-010]
+- [x] CHK019 A terminologia está estável entre "chave estável", "identidade", "identificador" e "âncora"? A `003` usa "âncora" para o mecanismo que esta feature aposenta, e FR-001e usa "âncora relativa" para o mecanismo novo — dois sentidos para a mesma palavra. [Consistency, Spec §FR-001e, §FR-009]
+- [x] CHK020 O que a `003` chamava de contenção e o que a `004` chama de cura estão descritos sem se contradizerem quanto ao que permanece em produção? [Consistency, Spec §Assumptions]
 
 ## Qualidade dos critérios de aceitação
 
-- [ ] CHK021 SC-002 tem método de verificação? "Nenhum ato publicado antes desta feature muda de efeito" é afirmação sobre todo o histórico, sem dizer como se comprova. [Measurability, Spec §SC-002]
-- [ ] CHK022 SC-003 é verificável na prática? "Para todo instante" precisa de um conjunto de instantes representativo definido em algum lugar. [Measurability, Spec §SC-003]
-- [ ] CHK023 Existe critério de sucesso para a conversão dos atos em curso — quantos convertidos, quantos devolvidos, e o que seria uma taxa de devolução aceitável? [Gap, Spec §FR-005a]
-- [ ] CHK024 Existe critério de sucesso para a aposentadoria da âncora, que permita afirmar que ela saiu sem deixar buraco? [Gap, Spec §FR-009]
+- [x] CHK021 SC-002 tem método de verificação? "Nenhum ato publicado antes desta feature muda de efeito" é afirmação sobre todo o histórico, sem dizer como se comprova. [Measurability, Spec §SC-002]
+- [x] CHK022 SC-003 é verificável na prática? "Para todo instante" precisa de um conjunto de instantes representativo definido em algum lugar. [Measurability, Spec §SC-003]
+- [x] CHK023 Existe critério de sucesso para a conversão dos atos em curso — quantos convertidos, quantos devolvidos, e o que seria uma taxa de devolução aceitável? [Gap, Spec §FR-005a]
+- [x] CHK024 Existe critério de sucesso para a aposentadoria da âncora, que permita afirmar que ela saiu sem deixar buraco? [Gap, Spec §FR-009]
 - [ ] CHK025 Cada critério de sucesso é rastreável a pelo menos um requisito funcional, e cada requisito a pelo menos um critério? [Traceability]
 
 ## Cobertura de cenários
 
 - [ ] CHK026 Existe cenário de aceitação para o fluxo de exceção da conversão — a Retificação que a migração não resolve? A US2 cobre leitura, a US1 cobre concorrência, e a devolução não aparece em nenhuma. [Coverage, Exception Flow, Gap]
 - [ ] CHK027 Existe cenário para a Retificação elaborada na forma antiga que é **cancelada** em vez de convertida ou devolvida? [Coverage, Gap]
-- [ ] CHK028 Os requisitos cobrem o caso de duas Retificações que inserem com `before=` na mesma referência, no mesmo intervalo? A ordem resultante é determinística? [Coverage, Gap, Spec §FR-001e]
-- [ ] CHK029 Está coberto o cenário em que a mesma Retificação remove uma entidade e usa essa entidade como âncora `before=`/`after=` em outra alteração do mesmo ato? [Coverage, Edge Case, Spec §FR-001e]
-- [ ] CHK030 Há cenário para a coexistência das duas formas dentro do **mesmo** Edital durante a transição, e não apenas em atos separados? [Coverage, Spec §FR-006]
+- [x] CHK028 Os requisitos cobrem o caso de duas Retificações que inserem com `before=` na mesma referência, no mesmo intervalo? A ordem resultante é determinística? [Coverage, Gap, Spec §FR-001e]
+- [x] CHK029 Está coberto o cenário em que a mesma Retificação remove uma entidade e usa essa entidade como âncora `before=`/`after=` em outra alteração do mesmo ato? [Coverage, Edge Case, Spec §FR-001e]
+- [x] CHK030 Há cenário para a coexistência das duas formas dentro do **mesmo** Edital durante a transição, e não apenas em atos separados? [Coverage, Spec §FR-006]
 
 ## Cobertura de casos de borda
 
 - [ ] CHK031 O caso de identificador que existe em mais de uma coleção do mesmo snapshot está considerado, ou se pressupõe unicidade global sem dizer? [Edge Case, Assumption]
-- [ ] CHK032 Está definido o comportamento quando `requirements` é substituída por lista vazia — é ato válido, ou erro impeditivo como a remoção do último Perfil na `003`? [Edge Case, Gap, Spec §FR-004a]
+- [x] CHK032 Está definido o comportamento quando `requirements` é substituída por lista vazia — é ato válido, ou erro impeditivo como a remoção do último Perfil na `003`? [Edge Case, Gap, Spec §FR-004a]
 - [ ] CHK033 O caso de um Edital sem nenhuma Retificação em curso no momento da migração está previsto, de modo que a migração seja no-op explícito e não falhe? [Edge Case, Gap, Spec §FR-005a]
 
 ## Requisitos não funcionais
 
-- [ ] CHK034 Existe requisito de desempenho para a resolução por chave? Ela troca acesso por índice por varredura da coleção, e nada diz qual tamanho de coleção o sistema precisa suportar. [Gap, Non-Functional]
-- [ ] CHK035 Existe requisito sobre o que a trilha de auditoria da conversão deve conter — ator, momento, caminho antes e depois? FR-005b exige o registro sem dizer o que registra. [Completeness, Spec §FR-005b]
+- [x] CHK034 Existe requisito de desempenho para a resolução por chave? Ela troca acesso por índice por varredura da coleção, e nada diz qual tamanho de coleção o sistema precisa suportar. [Gap, Non-Functional]
+- [x] CHK035 Existe requisito sobre o que a trilha de auditoria da conversão deve conter — ator, momento, caminho antes e depois? FR-005b exige o registro sem dizer o que registra. [Completeness, Spec §FR-005b]
 - [ ] CHK036 Os requisitos de legibilidade para quem audita estão declarados? A justificativa da sintaxe escolhida foi a auditabilidade, mas nenhum requisito a transforma em exigência verificável. [Measurability, Spec §FR-001b]
 
 ## Dependências e pressupostos
 
-- [ ] CHK037 A dependência declarada em `Dependencies` está atualizada? Ela diz "`003` concluída, incluindo os requisitos hoje abertos", e a `003` não tem mais requisitos abertos. [Conflict, Spec §Dependencies]
+- [x] CHK037 A dependência declarada em `Dependencies` está atualizada? Ela diz "`003` concluída, incluindo os requisitos hoje abertos", e a `003` não tem mais requisitos abertos. [Conflict, Spec §Dependencies]
 - [ ] CHK038 O pressuposto de que `requirements` é a única coleção sem identificador está datado e verificável, de modo que uma migration futura que acrescente coleção nova não o invalide em silêncio? [Assumption, Spec §Assumptions]
 - [ ] CHK039 A dependência da conversão em relação a `expected_anchors` está declarada como pressuposto de que **todos** os atos em curso têm âncora gravada — incluindo os criados entre a migração `0006` da `003` e esta feature? [Assumption, Spec §FR-005a]
 
 ## Ambiguidades e conflitos
 
-- [ ] CHK040 A terceira linha de `Out of Scope` ainda condiciona o escopo a uma pergunta já respondida — "se Q5 decidir mantê-las por posição" — e contradiz FR-004a, que decidiu substituição atômica. [Conflict, Spec §Out of Scope]
-- [ ] CHK041 A afirmação de que a interface "não muda" na US3 é compatível com FR-007, que exige que ela emita a forma nova? Uma diz que nada muda para quem usa; a outra, que o que ela produz muda. [Conflict, Spec §US3, §FR-007]
+- [x] CHK040 A terceira linha de `Out of Scope` ainda condiciona o escopo a uma pergunta já respondida — "se Q5 decidir mantê-las por posição" — e contradiz FR-004a, que decidiu substituição atômica. [Conflict, Spec §Out of Scope]
+- [x] CHK041 A afirmação de que a interface "não muda" na US3 é compatível com FR-007, que exige que ela emita a forma nova? Uma diz que nada muda para quem usa; a outra, que o que ela produz muda. [Conflict, Spec §US3, §FR-007]
+
+## Avaliação — 2026-08-29
+
+Avaliada a pedido de quem revisa, contra a spec no commit `449acb0`. **29 de 41 satisfeitos.**
+A marcação é assistida, não substitui o julgamento do revisor: qualquer item pode ser reaberto.
+
+O que a avaliação corrigiu na spec: coleção aninhada e `normativeRule` ganharam requisito
+(FR-001f, FR-001g); as recusas ganharam vocabulário (FR-002a); a proveniência e a comunicação da
+devolução, que nenhum requisito cobria, viraram FR-010 e FR-011; "existir na versão sobre a qual o
+ato vigora" passou a nomear os dois momentos; "conversão concluída" virou condição verificável;
+FR-003 e FR-010 deixaram de dizer a mesma coisa; e "âncora" deixou de ter dois sentidos.
+
+**CHK041 é falso positivo meu.** Reli a US3 e a FR-007: dizem a mesma coisa por ângulos diferentes
+— a pessoa não vê mudança, o que a tela emite muda. Não havia conflito; marquei satisfeito sem
+alterar a spec.
+
+### Os 12 que continuam abertos
+
+Nenhum é ambiguidade ou contradição — são lacunas que exigem decisão, e três delas provavelmente
+pertencem ao plano e não à spec.
+
+| Item | O que falta | Onde resolver |
+|---|---|---|
+| CHK006 | Reversão da migração de conversão | Plano |
+| CHK007 | Declarar `applied_publications` e afins fora do endereçamento | Spec |
+| CHK012 | "Sem exigir conhecimento de representação" não é mensurável | Spec |
+| CHK015 | "Resolução inequívoca" não está definida — é a condição que decide converter ou devolver | **Spec, e é a mais importante** |
+| CHK025 | FR-007, FR-008 e FR-011 não têm critério de sucesso correspondente | Spec |
+| CHK026 | Falta cenário de aceitação para a devolução pela conversão | Spec |
+| CHK027 | Retificação em curso que é cancelada em vez de convertida | Spec |
+| CHK031 | Identificador presente em mais de uma coleção do mesmo snapshot | Spec |
+| CHK033 | Migração sobre Edital sem Retificação em curso — no-op explícito | Plano |
+| CHK036 | Auditabilidade como exigência verificável, não justificativa | Spec |
+| CHK038 | Pressuposto de coleção única sem chave não está protegido contra migration futura | Spec |
+| CHK039 | Todos os atos em curso têm `expected_anchors`? Inclui os criados entre a `0006` e esta feature | **Spec, e afeta a conversão** |
+
+CHK015 e CHK039 merecem atenção antes do plano: as duas decidem quantas Retificações a migração
+converte e quantas devolve, e a segunda pode revelar que a conversão não tem insumo para todos os
+atos — o que mudaria a estratégia inteira.
 
 ## Notes
 
