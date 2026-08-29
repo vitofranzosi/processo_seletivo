@@ -323,8 +323,11 @@ de disciplina da aplicação.
   acréscimo (`-`) NÃO exige âncora: acrescentar ao fim é estável por definição.
 - **FR-002c**: Alterações Normativas de Retificações **em curso** anteriores a esta feature DEVEM
   ser preenchidas por migração determinística a partir da base declarada. Retificações Publicadas
-  e Canceladas NÃO DEVEM ser tocadas. A Publicação DEVE recusar `REPLACE`/`REMOVE` que chegue sem
-  precondição alguma.
+  e Canceladas NÃO DEVEM ser tocadas. A Publicação DEVE recusar todo `REPLACE`/`REMOVE` que não
+  declare o hash do conteúdo anterior: a âncora garante que ainda se fala da mesma entidade e não
+  supre o hash, que garante que o conteúdo dela ainda é o que estava à vista.
+- **FR-002d**: A lógica de derivação usada por migração de dados DEVE ser congelada dentro da
+  própria migração. Migração aplicada NÃO PODE mudar de efeito porque o domínio evoluiu.
 - **FR-003**: O `expectedPreviousHash` declarado pelo cliente DEVE prevalecer sobre a precondição
   de conteúdo derivada. A âncora de identidade NÃO É declarável nem dispensável pelo cliente.
 - **FR-004**: A recusa por divergência DEVE identificar os caminhos divergentes e orientar a

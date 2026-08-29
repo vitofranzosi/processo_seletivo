@@ -87,28 +87,31 @@ def _reject_stale_changes(content, changes):
             raise DomainError(code, CONFLICT_MESSAGES[code].format(paths=", ".join(paths)), 409)
 
 
-LEGACY_PRECONDITION = "precondition_missing"
+MISSING_PRECONDITION = "precondition_missing"
 
 
-def _reject_legacy_changes_without_precondition(changes):
-    """Alterações anteriores à derivação de precondições não podem ser publicadas às cegas.
+def _reject_changes_without_content_precondition(changes):
+    """`REPLACE` e `REMOVE` não são publicáveis sem hash do conteúdo que substituem ou apagam.
 
-    A migração `0006` preenche as Retificações ativas, mas uma linha que escape dela — restaurada
-    de backup, criada por importação — voltaria a publicar sem verificação alguma. Recusar é o
-    comportamento seguro: refazer o rascunho sobre a versão vigente reconstrói a precondição.
+    Âncora e hash protegem riscos distintos e nenhum supre o outro: a âncora garante que ainda
+    se fala da mesma entidade; o hash, que o conteúdo dela ainda é o que estava à vista. Aceitar
+    a alteração só por ter âncora deixaria passar a sobrescrita silenciosa de outra Retificação
+    que mudou o mesmo campo da mesma entidade — que é o caso original da FR-036.
+
+    Alcança tanto o que a migração `0006` não tenha coberto quanto qualquer linha que chegue por
+    fora da elaboração. Recusar é o comportamento seguro: devolver e reenviar o rascunho sobre a
+    versão vigente reconstrói a precondição.
     """
     orphans = [
         change["targetPath"]
         for change in changes
-        if change["operation"] in {"REPLACE", "REMOVE"}
-        and not change.get("expectedPreviousHash")
-        and not change.get("expectedAnchors")
+        if change["operation"] in {"REPLACE", "REMOVE"} and not change.get("expectedPreviousHash")
     ]
     if orphans:
         raise DomainError(
-            LEGACY_PRECONDITION,
-            "Esta Retificação foi elaborada antes da verificação de precondição de conteúdo e "
-            f"não pode ser publicada sem ela em: {', '.join(orphans)}. Devolva-a para elaboração "
+            MISSING_PRECONDITION,
+            "Esta Retificação não declara o conteúdo anterior de: "
+            f"{', '.join(orphans)}, e não pode ser publicada sem ele. Devolva-a para elaboração "
             "e reenvie o rascunho sobre a versão consolidada atual.",
             409,
         )
@@ -479,7 +482,7 @@ def publish_retification(
         if effective_at < now:
             raise DomainError("invalid_effective_at", "Vigência não pode ser retroativa.", 422)
         changes = _changes_payload(item)
-        _reject_legacy_changes_without_precondition(changes)
+        _reject_changes_without_content_precondition(changes)
         _reject_stale_changes(_content_in_force(edital, effective_at), changes)
         _assert_effective_change(edital, item, effective_at, edital.next_publication_order)
         content, _ = apply_changes(item.base_snapshot.content, changes, publication_id="pending")

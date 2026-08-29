@@ -1225,7 +1225,7 @@ def test_appending_at_the_end_survives_an_unrelated_removal(
 def test_a_change_without_any_precondition_cannot_be_published(
     api_client, manager_headers, process_payload
 ):
-    """FR-002 da 003: linha anterior à derivação não volta a publicar às cegas.
+    """FR-002c da 003: linha sem precondição de conteúdo não volta a publicar às cegas.
 
     A migração `0006` preenche as Retificações em curso. Este é o cinto para a linha que escape
     dela — restaurada de backup, criada por importação: publicar é recusado e o caminho de volta
@@ -1355,3 +1355,53 @@ def test_cancelling_a_retification_replays_without_a_second_act(
         ).count()
         == 1
     )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_anchor_alone_does_not_authorize_a_replace(
+    api_client, manager_headers, process_payload
+):
+    """FR-002c da 003: âncora e hash protegem riscos diferentes, e um não supre o outro.
+
+    A âncora garante que ainda se fala da mesma entidade. Não diz nada sobre o conteúdo dela: se
+    outra Retificação alterou o mesmo campo do mesmo Perfil, a entidade continua sendo aquela e a
+    âncora confere. Sem exigir também o hash, este ato sobrescreveria a alteração concorrente em
+    silêncio — que é exatamente o caso que a FR-036 existe para impedir.
+    """
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    alvo = "/profiles/0/name"
+    concorrente = create_retification(
+        api_client,
+        edital,
+        base,
+        [{"targetPath": alvo, "operation": "REPLACE", "newValue": "Alterado por outra"}],
+    )
+    assert homologate_and_publish(api_client, concorrente.data["id"], suffix="a").status_code == 201
+
+    sem_hash = create_retification(
+        api_client,
+        edital,
+        VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at"),
+        [{"targetPath": alvo, "operation": "REPLACE", "newValue": "Alterado por esta"}],
+        subject="retificador-b",
+        key="retificacao-chave-k2",
+    )
+    alteracao = AlteracaoNormativa.objects.get(retificacao_id=sem_hash.data["id"])
+    assert alteracao.expected_anchors, "a âncora é derivada — é o que o cenário precisa preservar"
+    AlteracaoNormativa.objects.filter(pk=alteracao.pk).update(expected_previous_hash="")
+
+    refused = homologate_and_publish(
+        api_client,
+        sem_hash.data["id"],
+        suffix="b",
+        authority="00000000-0000-0000-0000-000000000603",
+        key="retificacao-chave-k2",
+    )
+
+    assert refused.status_code == 409
+    assert refused.data["code"] == "precondition_missing"
+    assert alvo in refused.data["detail"]
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    assert vigente.content["profiles"][0]["name"] == "Alterado por outra"

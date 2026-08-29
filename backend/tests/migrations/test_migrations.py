@@ -105,3 +105,36 @@ def test_upgrade_from_the_previous_version_applies_only_the_new_migrations():
 
     executor.loader.build_graph()
     assert ("publicacoes", ultima) in executor.loader.applied_migrations
+
+
+DOMINIO_OU_APLICACAO = ("domain", "application")
+
+
+def _modulos_de_migration():
+    from importlib import import_module
+    from pathlib import Path
+
+    for app in APPS:
+        pacote = import_module(f"processo_seletivo.{app}.migrations")
+        pasta = Path(pacote.__file__).parent
+        for arquivo in sorted(pasta.glob("[0-9]*.py")):
+            yield f"processo_seletivo/{app}/migrations/{arquivo.name}", arquivo.read_text(
+                encoding="utf-8"
+            )
+
+
+def test_migrations_do_not_import_domain_or_application_code():
+    """Migration aplicada tem de continuar significando o que significava no dia em que rodou.
+
+    Importar uma função do domínio faz uma alteração futura nela mudar retroativamente o efeito
+    de uma migration já executada em produção. A lógica de que a migration precisa é copiada e
+    congelada dentro dela; a duplicação é o preço de a história ser fixa.
+    """
+    infratores = [
+        (caminho, linha.strip())
+        for caminho, fonte in _modulos_de_migration()
+        for linha in fonte.splitlines()
+        if linha.startswith(("import processo_seletivo", "from processo_seletivo"))
+        and any(f".{camada}" in linha for camada in DOMINIO_OU_APLICACAO)
+    ]
+    assert not infratores, f"migrations acopladas ao código vivo: {infratores}"
