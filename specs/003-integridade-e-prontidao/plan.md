@@ -182,7 +182,7 @@ backend/
 | 1 | Correção emergencial dos seis bloqueadores | Concluída — `41e8173`, `e3a6992`, `854f216` |
 | 2 | Plano e tarefas | Este documento e `tasks.md` |
 | 3 | Análise de consistência | `checklists/requirements.md` |
-| 4 | Imutabilidade no banco (FR-023) | Aberta |
+| 4 | Imutabilidade no banco (FR-023) | Concluída — migration `0007` |
 | 5 | Limites de borda e instantes (FR-020, FR-021) | Aberta |
 | 6 | Provisionamento de papéis (FR-019) | Aberta |
 | 7 | Lacunas funcionais da 002 (FR-025 a FR-028) | Aberta |

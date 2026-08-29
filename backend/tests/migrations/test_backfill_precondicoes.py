@@ -58,18 +58,20 @@ def test_backfill_recalcula_a_precondicao_de_retificacao_em_curso(
 def test_backfill_nao_toca_retificacao_publicada(
     api_client, manager_headers, process_payload
 ):
-    """Publicada é final e imutável: reescrevê-la seria falsificar histórico já produzido."""
-    from tests.fixtures.publicacao import publish_retification
+    """Estado final é imutável: reescrevê-lo seria falsificar ato já produzido.
 
+    A Retificação é esvaziada **antes** de virar final, porque depois disso nem o teste consegue
+    tocá-la — a trigger da migração `0007` recusa. Feita final, o backfill roda e a deixa como
+    está, que é o que se quer demonstrar.
+    """
     edital = publish_original(api_client, manager_headers, process_payload)
     retificacao = create_retification(
         api_client,
         edital,
         [{"targetPath": "/profiles/0/name", "operation": "REPLACE", "newValue": "Outro"}],
     )
-    publish_retification(api_client, retificacao, suffix="a")
-    assert Retificacao.objects.get(pk=retificacao.pk).status == Retificacao.Status.PUBLICADA
     _apagar_precondicoes(retificacao.id)
+    Retificacao.objects.filter(pk=retificacao.pk).update(status=Retificacao.Status.CANCELADA)
 
     backfill(registro_de_modelos, None)
 

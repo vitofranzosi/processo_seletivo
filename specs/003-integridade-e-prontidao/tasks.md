@@ -65,16 +65,16 @@ fases 4 em diante são trabalho que resta e seguem a ordem normal.
 
 ## Phase 4: Imutabilidade no banco (FR-023)
 
-**Risco mais alto entre os abertos: hoje a garantia depende de disciplina da aplicação.**
+**Risco mais alto entre os abertos: a garantia dependia de disciplina da aplicação.**
 
-- [ ] T028 [FR-023] Levantar quais campos de `Retificacao` mudam legitimamente em cada estado, para que a trigger seja condicional e não absoluta
-- [ ] T029 [FR-023] Criar trigger que recusa `UPDATE`/`DELETE` em `Retificacao` quando o estado for `PUBLICADA` ou `CANCELADA`, em migration nova
-- [ ] T030 [FR-023] Criar trigger equivalente para `AlteracaoNormativa` vinculada a Retificação em estado final
-- [ ] T031 [P] [FR-023] Criar trigger absoluta para `AtoAdministrativo`, que nasce imutável
-- [ ] T032 [P] [FR-023] Criar trigger absoluta para `RevisaoEdital`, que nasce imutável
-- [ ] T033 [FR-023] Cobrir em backend/tests/integration/test_database_permissions.py que `QuerySet.update()` sobre registro final é recusado pelo banco
-- [ ] T034 [FR-023] Cobrir que o ciclo em curso — elaborar, editar rascunho, submeter, devolver, homologar, publicar — não é bloqueado pela trigger
-- [ ] T035 [FR-023] Confirmar que as triggers sobrevivem a instalação limpa e a upgrade incremental, em backend/tests/migrations/test_migrations.py
+- [X] T028 [FR-023] Levantar quais campos de `Retificacao` mudam legitimamente em cada estado — `AtoAdministrativo` e `RevisaoEdital` só são criados; `Retificacao` e `AlteracaoNormativa` mudam enquanto o ato está em curso
+- [X] T029 [FR-023] Trigger condicional em `Retificacao` para `PUBLICADA`/`CANCELADA`, migration `0007_imutabilidade_do_historico`
+- [X] T030 [FR-023] Trigger equivalente para `AlteracaoNormativa`, consultando o estado da Retificação pai
+- [X] T031 [P] [FR-023] Trigger absoluta para `AtoAdministrativo`
+- [X] T032 [P] [FR-023] Trigger absoluta para `RevisaoEdital`
+- [X] T033 [FR-023] Cobrir `update()` e `delete()` diretos sobre registro final em backend/tests/integration/test_imutabilidade_do_historico.py
+- [X] T034 [FR-023] Cobrir que o ciclo em curso não é bloqueado, e que alteração legítima **persiste** — a primeira versão da trigger devolvia `OLD` num `BEFORE UPDATE` e descartava a mudança em silêncio
+- [X] T035 [FR-023] Confirmar que as quatro triggers novas sobrevivem a instalação limpa e a upgrade incremental
 
 ---
 
@@ -131,8 +131,9 @@ fases 4 em diante são trabalho que resta e seguem a ordem normal.
 
 ## Situação
 
-27 de 58 tarefas concluídas. As 27 cobrem os seis bloqueadores e a barreira de produção; as 31
-restantes são endurecimento e lacunas funcionais, nenhuma delas emergencial.
+35 de 58 tarefas concluídas. Cobrem os seis bloqueadores, a barreira de produção e a imutabilidade
+do histórico no banco; as 23 restantes são endurecimento de borda, provisionamento e lacunas
+funcionais, nenhuma delas emergencial.
 
 Fora desta feature e ainda bloqueadores de implantação: a integração com o diretório institucional
 e a feature `004-enderecamento-normativo-estavel`.

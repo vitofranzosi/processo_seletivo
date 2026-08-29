@@ -449,11 +449,11 @@ do fluxo constitucional. Cada uma tem teste de regressão que falha no código a
 | FR-011, FR-012 | Feito | `add_edital` em `processos/application/commands.py` |
 | FR-013 a FR-015 | Feito | `publicacoes/api/views.py` e `application/retificacoes.py` |
 | FR-016 a FR-018 | Feito | `config/settings/production.py`; `tests/test_configuracao_producao.py` |
-| FR-019 a FR-028 | Aberto | Exige plano próprio |
+| FR-023 | Feito | Migration `0007_imutabilidade_do_historico`; `tests/integration/test_imutabilidade_do_historico.py` |
+| FR-019 a FR-022, FR-024 a FR-028 | Aberto | `tasks.md`, fases 5 a 8 |
 
-Abertos por ordem de risco: FR-023 (imutabilidade no banco), FR-020/FR-021 (limites de borda e
-instante ingênuo), FR-019 (provisionamento de papéis), FR-025 a FR-028 (lacunas funcionais da
-002), FR-024 e FR-022.
+Abertos por ordem de risco: FR-020/FR-021 (limites de borda e instante ingênuo), FR-019
+(provisionamento de papéis), FR-025 a FR-028 (lacunas funcionais da 002), FR-024 e FR-022.
 
 Fora desta feature e ainda bloqueadores de implantação: a integração com o diretório institucional
 e o endereçamento normativo por chave estável. O que esta feature entrega quanto a eles é a

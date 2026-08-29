@@ -17,6 +17,12 @@ TRIGGERS = (
     "publicacao_append_only",
     "documento_publicado_append_only",
     "versao_consolidada_append_only",
+    # FR-023 da 003: as duas primeiras são condicionais ao estado final, porque Retificação e
+    # Alteração mudam legitimamente enquanto o ato está em curso; as duas últimas são absolutas.
+    "retificacao_final_imutavel",
+    "alteracao_normativa_final_imutavel",
+    "ato_administrativo_append_only",
+    "revisao_edital_append_only",
 )
 
 postgresql_only = pytest.mark.skipif(
