@@ -15,3 +15,11 @@ def reserve(*, actor, operation: str, key: str, payload) -> IdempotencyRecord:
     if not created and record.request_hash != digest:
         raise DomainError("idempotency_conflict", "A chave foi usada com outro conteúdo.", 409)
     return record
+
+
+def finish(record: IdempotencyRecord, result, status: int) -> None:
+    """Liga a reserva ao resultado, para que a repetição da chave o devolva em vez de repetir."""
+    record.result_type = result.__class__.__name__
+    record.result_id = result.pk
+    record.response_status = status
+    record.save(update_fields=["result_type", "result_id", "response_status"])

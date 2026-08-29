@@ -98,6 +98,10 @@ def executar(ato, request, ator, retificacao, signatario=None):
         "actor": ator,
         "retificacao_id": retificacao.id,
         "expected_revision": retificacao.revision,
+        # Confirmar duas vezes repete o mesmo ato, não pratica dois: a chave nasce na tela de
+        # confirmação e volta no formulário, como nos atos do Edital e do Processo.
+        "idempotency_key": request.POST.get("chave_idempotencia", ""),
+        "correlation_id": request.correlation_id,
     }
     if ato.chave == "publicar":
         return publish_retification(**argumentos, signatory=signatario)

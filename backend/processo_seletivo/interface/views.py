@@ -518,7 +518,7 @@ def retificar(request, edital_id):
                         "conteúdo para ter efeito."
                     )
                 elif request.POST.get("confirmar") == "1":
-                    nova = create_retification(
+                    nova, _ = create_retification(
                         actor=ator,
                         edital_id=edital.id,
                         data={
@@ -527,6 +527,8 @@ def retificar(request, edital_id):
                             "changes": alteracoes,
                             **_vigencia(request.POST),
                         },
+                        idempotency_key=request.POST.get("chave_idempotencia", ""),
+                        correlation_id=request.correlation_id,
                     )
                     return redirect(reverse("interface:retificacao-detalhe", args=[nova.id]))
             except ValueError as exc:
@@ -555,6 +557,9 @@ def retificar(request, edital_id):
             "justificativa": (request.POST.get("justificativa") or "") if dados else "",
             "vigencia": (request.POST.get("vigencia") or "") if dados else "",
             "pode_elaborar": ator.can("retificacao:elaborar"),
+            # Nasce no primeiro GET e atravessa o resumo até a confirmação: reenviar o mesmo
+            # formulário devolve a Retificação já criada em vez de criar uma segunda.
+            "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
         },
     )
 

@@ -126,7 +126,14 @@ def test_consolidated_version_is_append_only_on_postgresql(
 
 
 def create_retification(
-    api_client, edital, base, changes, *, subject="retificador", effective_at=None, key="k1"
+    api_client,
+    edital,
+    base,
+    changes,
+    *,
+    subject="retificador",
+    effective_at=None,
+    key="retificacao-chave-k1",
 ):
     payload = {
         "baseSnapshotId": str(base.id),
@@ -149,7 +156,7 @@ def homologate_and_publish(
     *,
     suffix,
     authority="00000000-0000-0000-0000-000000000602",
-    key="k1",
+    key="retificacao-chave-k1",
 ):
     api_client.post(
         f"/api/v1/admin/retificacoes/{retificacao_id}/submissoes",
@@ -288,9 +295,15 @@ def test_retifications_on_independent_paths_still_compose(
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_change_without_expected_previous_hash_keeps_last_publication_winning(
+def test_change_without_expected_previous_hash_is_still_verified_against_its_base(
     api_client, manager_headers, process_payload
 ):
+    """FR-002 da 003: declarar o hash é opcional; verificar não é.
+
+    Antes desta regra, duas Retificações elaboradas sobre a mesma versão sobre o mesmo caminho
+    publicavam as duas, e a última simplesmente sobrescrevia a primeira sem que ninguém fosse
+    avisado de que o conteúdo já não era o que a segunda tinha à vista.
+    """
     edital = publish_original(api_client, manager_headers, process_payload)
     base = VersaoConsolidada.objects.get(edital=edital)
     first = create_retification(api_client, edital, base, [title_change("Primeiro")])
@@ -298,14 +311,21 @@ def test_change_without_expected_previous_hash_keeps_last_publication_winning(
         api_client, edital, base, [title_change("Segundo")], subject="retificador-b"
     )
     assert homologate_and_publish(api_client, first.data["id"], suffix="a").status_code == 201
-    assert homologate_and_publish(api_client, second.data["id"], suffix="b").status_code == 201
+
+    conflict = homologate_and_publish(api_client, second.data["id"], suffix="b")
+
+    assert conflict.status_code == 409
+    assert conflict.data["code"] == "expected_hash_mismatch"
+    assert "/title" in conflict.data["detail"]
+    assert Retificacao.objects.get(pk=second.data["id"]).status == Retificacao.Status.HOMOLOGADA
+    assert Publicacao.objects.filter(edital=edital).count() == 2
     assert (
         VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at").content["title"]
-        == "Segundo"
+        == "Primeiro"
     )
 
 
-def homologate(api_client, retificacao_id, *, suffix, key="k1"):
+def homologate(api_client, retificacao_id, *, suffix, key="retificacao-chave-k1"):
     api_client.post(
         f"/api/v1/admin/retificacoes/{retificacao_id}/submissoes",
         format="json",
@@ -615,13 +635,27 @@ def test_removing_and_recreating_the_same_path_in_one_act_is_accepted(
 ):
     edital = publish_original(api_client, manager_headers, process_payload)
     base = VersaoConsolidada.objects.get(edital=edital)
+    # O Cronograma recriado precisa continuar tendo Evento: a Publicação da Retificação verifica
+    # as mesmas invariantes estruturais da Publicação original (FR-006 da 003), e um Edital
+    # vigente sem nenhum Evento é erro impeditivo, não resultado admissível.
+    novo_cronograma = [
+        {
+            "id": "00000000-0000-0000-0000-000000000412",
+            "type": "PROVA",
+            "description": "Prova objetiva",
+            "startAt": "2026-10-01T09:00:00-03:00",
+            "endAt": None,
+            "order": 1,
+            "status": "PLANEJADO",
+        }
+    ]
     created = create_retification(
         api_client,
         edital,
         base,
         [
             {"targetPath": "/schedule", "operation": "REMOVE"},
-            add_change("/schedule", []),
+            add_change("/schedule", novo_cronograma),
         ],
     )
     assert created.status_code == 201
@@ -630,7 +664,7 @@ def test_removing_and_recreating_the_same_path_in_one_act_is_accepted(
         VersaoConsolidada.objects.filter(edital=edital)
         .latest("materialized_at")
         .content["schedule"]
-        == []
+        == novo_cronograma
     )
 
 
@@ -657,9 +691,14 @@ def test_transition_with_a_non_textual_reason_is_rejected_as_problem_details(
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_publication_that_would_break_the_consolidation_is_rejected(
+def test_replacing_a_path_another_act_removed_is_rejected(
     api_client, manager_headers, process_payload
 ):
+    """O `REMOVE` publicado no intervalo esvazia o caminho que o `REPLACE` esperava encontrar.
+
+    A composição também rejeitaria, por não haver resultado determinístico; a precondição de
+    conteúdo chega antes e diz qual caminho divergiu, que é o que permite refazer o ato.
+    """
     edital = publish_original(api_client, manager_headers, process_payload)
     base = VersaoConsolidada.objects.get(edital=edital)
     remover = create_retification(
@@ -677,7 +716,7 @@ def test_publication_that_would_break_the_consolidation_is_rejected(
     conflict = homologate_and_publish(api_client, replacer.data["id"], suffix="b")
 
     assert conflict.status_code == 409
-    assert conflict.data["code"] == "inconsistent_consolidation"
+    assert conflict.data["code"] == "expected_hash_mismatch"
     assert "/description" in conflict.data["detail"]
     assert Publicacao.objects.filter(edital=edital).count() == 2
     assert Retificacao.objects.get(pk=replacer.data["id"]).status == Retificacao.Status.HOMOLOGADA
@@ -746,7 +785,7 @@ def test_retification_without_effective_change_is_rejected_on_creation(
         edital,
         base,
         [{"targetPath": "/title", "operation": "REPLACE", "newValue": base.content["title"]}],
-        key="k2",
+        key="retificacao-chave-k2",
     )
     assert reasserting_the_title.status_code == 422
     assert reasserting_the_title.data["code"] == "no_effective_change"
@@ -768,8 +807,8 @@ def test_retification_emptied_before_its_publication_is_rejected_with_problem_de
     changes = [
         {"targetPath": "/profiles/0/immediateVacancies", "operation": "REPLACE", "newValue": 2}
     ]
-    first = create_retification(api_client, edital, base, changes, key="k1")
-    second = create_retification(api_client, edital, base, changes, key="k2")
+    first = create_retification(api_client, edital, base, changes, key="retificacao-chave-k1")
+    second = create_retification(api_client, edital, base, changes, key="retificacao-chave-k2")
     assert (first.status_code, second.status_code) == (201, 201)
 
     published = homologate_and_publish(
@@ -777,7 +816,7 @@ def test_retification_emptied_before_its_publication_is_rejected_with_problem_de
         first.data["id"],
         suffix="a",
         authority="00000000-0000-0000-0000-000000000602",
-        key="k1",
+        key="retificacao-chave-k1",
     )
     assert published.status_code == 201
 
@@ -786,11 +825,14 @@ def test_retification_emptied_before_its_publication_is_rejected_with_problem_de
         second.data["id"],
         suffix="b",
         authority="00000000-0000-0000-0000-000000000603",
-        key="k2",
+        key="retificacao-chave-k2",
     )
-    assert emptied.status_code == 422
+    # A divergência de conteúdo é diagnosticada antes de o efeito ser medido: o caminho já não
+    # contém o que esta Retificação tinha à vista. `no_effective_change` segue guardando a
+    # elaboração, coberto por test_retification_without_effective_change_is_rejected_on_creation.
+    assert emptied.status_code == 409
     assert emptied["Content-Type"].startswith("application/problem+json")
-    assert emptied.data["code"] == "no_effective_change"
+    assert emptied.data["code"] == "expected_hash_mismatch"
     assert Retificacao.objects.get(pk=second.data["id"]).status == Retificacao.Status.HOMOLOGADA
     assert Publicacao.objects.filter(edital=edital).count() == 2
 
@@ -815,7 +857,7 @@ def test_retification_may_revert_a_previous_one_and_reproduce_the_original_docum
         edital,
         base,
         [{"targetPath": "/profiles/0/immediateVacancies", "operation": "REPLACE", "newValue": 2}],
-        key="k1",
+        key="retificacao-chave-k1",
     )
     assert (
         homologate_and_publish(
@@ -823,7 +865,7 @@ def test_retification_may_revert_a_previous_one_and_reproduce_the_original_docum
             first.data["id"],
             suffix="a",
             authority="00000000-0000-0000-0000-000000000602",
-            key="k1",
+            key="retificacao-chave-k1",
         ).status_code
         == 201
     )
@@ -835,7 +877,7 @@ def test_retification_may_revert_a_previous_one_and_reproduce_the_original_docum
         edital,
         consolidated,
         [{"targetPath": "/profiles/0/immediateVacancies", "operation": "REPLACE", "newValue": 1}],
-        key="k2",
+        key="retificacao-chave-k2",
     )
     assert revert.status_code == 201
     published = homologate_and_publish(
@@ -843,7 +885,7 @@ def test_retification_may_revert_a_previous_one_and_reproduce_the_original_docum
         revert.data["id"],
         suffix="b",
         authority="00000000-0000-0000-0000-000000000603",
-        key="k2",
+        key="retificacao-chave-k2",
     )
     assert published.status_code == 201
     assert published.data["documentHash"] == original_document_hash
@@ -919,3 +961,154 @@ def test_retification_with_future_effective_date_materializes_version_at_that_bo
         .first()
     )
     assert vigente_hoje.content["profiles"][0]["immediateVacancies"] == 1
+
+
+def draft_com_tres_perfis():
+    """Três Perfis, para que remover o primeiro desloque o índice dos seguintes."""
+    from tests.fixtures.edital import complete_draft
+
+    draft = complete_draft()
+    modelo = draft["profiles"][0]
+    draft["profiles"] = [
+        {
+            **modelo,
+            "id": f"00000000-0000-0000-0000-00000000050{numero}",
+            "code": f"P{numero}",
+            "name": f"Perfil {numero}",
+        }
+        for numero in (1, 2, 3)
+    ]
+    return draft
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_index_shift_does_not_move_a_retification_to_another_profile(
+    api_client, manager_headers, process_payload
+):
+    """FR-001 da 003: o ato atinge o item que estava à vista, ou não é publicado.
+
+    Os caminhos normativos endereçam coleções por índice, e índice não é estável. Antes da
+    precondição derivada, remover o Perfil 1 deslocava os seguintes e a Retificação elaborada
+    para renomear o Perfil 2 renomeava, em silêncio, o Perfil 3 — publicando como norma uma
+    alteração que ninguém homologou.
+    """
+    edital = publish_original(
+        api_client, manager_headers, process_payload, draft=draft_com_tres_perfis()
+    )
+    base = VersaoConsolidada.objects.get(edital=edital)
+    renomear_o_segundo = create_retification(
+        api_client,
+        edital,
+        base,
+        [{"targetPath": "/profiles/1/name", "operation": "REPLACE", "newValue": "RENOMEADO"}],
+        subject="retificador-b",
+        key="retificacao-chave-k2",
+    )
+    remover_o_primeiro = create_retification(
+        api_client, edital, base, [{"targetPath": "/profiles/0", "operation": "REMOVE"}]
+    )
+    assert (
+        homologate_and_publish(api_client, remover_o_primeiro.data["id"], suffix="a").status_code
+        == 201
+    )
+
+    conflict = homologate_and_publish(
+        api_client,
+        renomear_o_segundo.data["id"],
+        suffix="b",
+        authority="00000000-0000-0000-0000-000000000603",
+        key="retificacao-chave-k2",
+    )
+
+    assert conflict.status_code == 409
+    assert conflict.data["code"] == "expected_hash_mismatch"
+    assert "/profiles/1/name" in conflict.data["detail"]
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    assert [perfil["name"] for perfil in vigente.content["profiles"]] == ["Perfil 2", "Perfil 3"]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_retification_cannot_publish_a_structurally_invalid_edital(
+    api_client, manager_headers, process_payload
+):
+    """FR-006 da 003: as invariantes da Publicação valem para o que a Retificação faz vigorar.
+
+    `publish_edital` recusa Edital sem Perfil; sem esta verificação a Retificação podia remover
+    o único Perfil e deixar vigente um Edital que a Publicação original jamais aceitaria.
+    """
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    created = create_retification(
+        api_client, edital, base, [{"targetPath": "/profiles/0", "operation": "REMOVE"}]
+    )
+    assert created.status_code == 201
+
+    refused = homologate_and_publish(api_client, created.data["id"], suffix="a")
+
+    assert refused.status_code == 422
+    assert refused.data["code"] == "blocking_findings"
+    assert "Perfil" in refused.data["detail"]
+    # FR-007: recusar não pode deixar Publicação, documento ou versão materializados.
+    assert Publicacao.objects.filter(edital=edital).count() == 1
+    assert VersaoConsolidada.objects.filter(edital=edital).count() == 1
+    assert Retificacao.objects.get(pk=created.data["id"]).status == Retificacao.Status.HOMOLOGADA
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_repeating_the_idempotency_key_does_not_create_a_second_retification(
+    api_client, manager_headers, process_payload
+):
+    """FR-013 da 003: o contrato exigia a chave; os endpoints da Retificação a ignoravam."""
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+
+    first = create_retification(api_client, edital, base, [title_change("Novo")])
+    repeated = create_retification(api_client, edital, base, [title_change("Novo")])
+
+    assert first.status_code == 201
+    assert repeated.status_code == 200
+    assert repeated.data["id"] == first.data["id"]
+    assert Retificacao.objects.count() == 1
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_same_idempotency_key_with_another_body_is_refused(
+    api_client, manager_headers, process_payload
+):
+    """FR-014 da 003."""
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    create_retification(api_client, edital, base, [title_change("Novo")])
+
+    conflict = create_retification(api_client, edital, base, [title_change("Outro")])
+
+    assert conflict.status_code == 409
+    assert conflict.data["code"] == "idempotency_conflict"
+    assert Retificacao.objects.count() == 1
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_retification_audit_records_correlation_and_idempotency(
+    api_client, manager_headers, process_payload
+):
+    """FR-015 da 003: os atos de Retificação gravavam `correlation_id` vazio."""
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    created = create_retification(api_client, edital, base, [title_change("Novo")])
+    assert homologate_and_publish(api_client, created.data["id"], suffix="a").status_code == 201
+
+    registros = RegistroAuditoria.objects.filter(aggregate_type="Retificacao")
+    assert registros.exists()
+    assert not registros.filter(correlation_id="").exists()
+    assert not registros.filter(idempotency_key="").exists()
+    assert {registro.operation for registro in registros} == {
+        "CRIAR",
+        "SUBMETER",
+        "HOMOLOGAR",
+        "PUBLICAR",
+    }

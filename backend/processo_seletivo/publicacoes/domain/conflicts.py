@@ -16,6 +16,13 @@ e desloca os elementos seguintes, sem apagar nenhum: incluir um Perfil antes dos
 
 As precondições valem contra o conteúdo que cada alteração encontra, e não contra o
 conteúdo inicial: um ato pode remover um caminho e recriá-lo em seguida.
+
+Declarar o hash é opcional para o cliente, mas a verificação não é opcional para o sistema.
+Sem declaração, `derive_preconditions` extrai a precondição da própria base declarada em
+`baseSnapshotId` — que é, por construção, o conteúdo que a pessoa enxergava ao elaborar o ato.
+Sem isso, `REPLACE` e `REMOVE` passavam sem verificação alguma e, como os caminhos endereçam
+coleções por índice, uma Retificação publicada no intervalo deslocava os índices e o ato
+seguinte atingia em silêncio um item normativo diferente do homologado.
 """
 
 from copy import deepcopy
@@ -68,3 +75,35 @@ def content_conflicts(content, changes):
             # estado que não existe. A aplicabilidade é reportada por apply_changes.
             break
     return conflicts
+
+
+# `ADD` não tem "antes": inserir não sobrescreve, e a precondição própria do ADD é a ausência
+# do caminho, verificada por `add_overwrites` e indeclarável como hash de conteúdo.
+DERIVABLE_OPERATIONS = frozenset({"REPLACE", "REMOVE"})
+
+
+def derive_preconditions(content, changes):
+    """Precondição efetiva de cada alteração, na ordem em que serão aplicadas.
+
+    Devolve o hash declarado quando há um — a declaração do cliente prevalece — e, quando não há,
+    o hash do conteúdo que a alteração encontra ao ser aplicada sobre `content`. Cadeia vazia
+    para `ADD` e para caminho inexistente, que é a ausência de precondição declarável.
+    """
+    derived = []
+    current = deepcopy(content)
+    for change in changes:
+        declared = change.get("expectedPreviousHash")
+        if declared:
+            derived.append(declared)
+        elif change["operation"] in DERIVABLE_OPERATIONS:
+            derived.append(previous_hash(current, change["targetPath"]))
+        else:
+            derived.append("")
+        try:
+            apply_change(current, change)
+        except ValueError:
+            # Alteração inaplicável: as seguintes partiriam de um estado que não existe. A
+            # aplicabilidade é reportada por apply_changes; aqui só se para de derivar.
+            derived.extend([""] * (len(changes) - len(derived)))
+            break
+    return derived

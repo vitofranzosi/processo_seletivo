@@ -222,3 +222,32 @@ def test_us7_closing_an_edital_is_not_treated_as_cancellation(
     assert recusado.status_code == 409
     assert Edital.objects.get(pk=edital.pk).status == Edital.Status.ENCERRADO
     assert Publicacao.objects.filter(edital=edital).exists()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.acceptance
+def test_us7_edital_cannot_be_created_in_a_finished_processo(
+    api_client, manager_headers, process_payload
+):
+    """FR-011 da 003: encerrar precisa significar o que diz, inclusive para Editais novos.
+
+    `add_edital` não consultava a invariante de FR-035, e um Edital nascia Em elaboração dentro
+    de um Processo já encerrado — estado que nenhum ato posterior conseguiria concluir.
+    """
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+    )
+    processo = ProcessoSeletivo.objects.get(pk=criado.json()["id"])
+    for final in (ProcessoSeletivo.Status.ENCERRADO, ProcessoSeletivo.Status.CANCELADO):
+        ProcessoSeletivo.objects.filter(pk=processo.pk).update(status=final)
+
+        recusa = api_client.post(
+            f"/api/v1/admin/processos/{processo.id}/editais",
+            {"number": "99", "year": 2026, "title": "Depois do fim"},
+            format="json",
+            **actor_headers("gestor-b", ["edital:criar"], key=f"pos-{final}-000001"),
+        )
+
+        assert recusa.status_code == 409, recusa.content
+        assert recusa.json()["code"] == "invalid_state"
+        assert Edital.objects.filter(processo=processo).count() == 1

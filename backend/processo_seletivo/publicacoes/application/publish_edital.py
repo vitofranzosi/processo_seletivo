@@ -16,6 +16,7 @@ from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.canonical import SCHEMA_VERSION, canonical_bytes, canonical_sha256
 from processo_seletivo.shared.concurrency import compare_and_swap
+from processo_seletivo.shared.idempotency import finish as _finish_idempotency
 from processo_seletivo.shared.idempotency import reserve
 
 
@@ -90,13 +91,6 @@ def edital_snapshot(edital: Edital) -> dict:
         "profiles": profiles,
         "schedule": schedule,
     }
-
-
-def _finish_idempotency(record, result, status):
-    record.result_type = result.__class__.__name__
-    record.result_id = result.pk
-    record.response_status = status
-    record.save(update_fields=["result_type", "result_id", "response_status"])
 
 
 def _locked_edital(actor, edital_id):

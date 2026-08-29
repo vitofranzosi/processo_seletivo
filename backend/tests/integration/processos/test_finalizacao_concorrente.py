@@ -176,3 +176,78 @@ def test_final_states_never_return_to_a_previous_one_in_the_database(
             correlation_id="concorrencia",
         )
     assert Edital.objects.get(pk=edital_publicado.pk).status == Edital.Status.ENCERRADO
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+@postgresql_only
+def test_edital_creation_loses_to_a_concurrent_process_closure(api_client, edital_publicado):
+    """FR-012 da 003: criar Edital e encerrar o Processo decidem coisas incompatíveis.
+
+    Sem `select_for_update` no Processo, a criação lê `ATIVO`, o encerramento faz commit no
+    intervalo e o `INSERT` conclui: nasce um Edital dentro de um Processo já encerrado. Com o
+    bloqueio, a criação espera, enxerga o estado final e é recusada.
+    """
+    from processo_seletivo.processos.application.commands import add_edital
+
+    processo = ProcessoSeletivo.objects.get(pk=edital_publicado.processo_id)
+    ProcessoSeletivo.objects.filter(pk=processo.pk).update(status=ProcessoSeletivo.Status.ATIVO)
+    lock_obtido = threading.Event()
+    resultado = {}
+
+    def encerrar_segurando_o_lock():
+        try:
+            with transaction.atomic():
+                ProcessoSeletivo.objects.select_for_update().get(pk=processo.pk)
+                lock_obtido.set()
+                time.sleep(0.5)
+                ProcessoSeletivo.objects.filter(pk=processo.pk).update(
+                    status=ProcessoSeletivo.Status.ENCERRADO, revision=F("revision") + 1
+                )
+        finally:
+            connections.close_all()
+
+    encerramento = threading.Thread(target=encerrar_segurando_o_lock)
+    encerramento.start()
+    assert lock_obtido.wait(timeout=5)
+
+    try:
+        add_edital(
+            actor=Actor("gestor", "cefor", frozenset({"edital:criar"})),
+            processo_id=processo.id,
+            data={"number": "99", "year": 2026, "title": "Depois do fim"},
+            idempotency_key="concorrencia-edital-1",
+            correlation_id="concorrencia",
+        )
+        resultado["criado"] = True
+    except DomainError as exc:
+        resultado["code"] = exc.code
+    finally:
+        encerramento.join(timeout=5)
+
+    assert resultado.get("criado") is None
+    assert resultado["code"] == "invalid_state"
+    assert Edital.objects.filter(processo=processo).count() == 1
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+@postgresql_only
+def test_edital_creation_wins_when_it_holds_the_process_first(api_client, edital_publicado):
+    """A recíproca: quem chega primeiro conclui, e o outro ato enxerga o resultado."""
+    from processo_seletivo.processos.application.commands import add_edital
+
+    processo = ProcessoSeletivo.objects.get(pk=edital_publicado.processo_id)
+    ProcessoSeletivo.objects.filter(pk=processo.pk).update(status=ProcessoSeletivo.Status.ATIVO)
+
+    edital, criado = add_edital(
+        actor=Actor("gestor", "cefor", frozenset({"edital:criar"})),
+        processo_id=processo.id,
+        data={"number": "02", "year": 2026, "title": "Segundo Edital"},
+        idempotency_key="concorrencia-edital-2",
+        correlation_id="concorrencia",
+    )
+
+    assert criado
+    assert edital.status == Edital.Status.EM_ELABORACAO
+    assert Edital.objects.filter(processo=processo).count() == 2

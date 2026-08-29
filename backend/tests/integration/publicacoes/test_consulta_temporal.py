@@ -94,6 +94,10 @@ def test_out_of_order_publications_compose_by_validity_not_by_publication_order(
             replace_vacancies(20),
             effective_at=vigencia_b.isoformat(),
             suffix="b",
+            # B vigora antes de A: a versão que A materializou vale a partir de `vigencia_a` e
+            # não é o que vigora quando B começa. B se elabora sobre a versão original, que é a
+            # vigente em `vigencia_b` — e é contra ela que a precondição de conteúdo é medida.
+            base=VersaoConsolidada.objects.filter(edital=edital_publicado).earliest("valid_from"),
         ),
         suffix="b",
     )

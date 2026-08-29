@@ -3,6 +3,10 @@ import hashlib
 from django.db.models import F
 
 from processo_seletivo.auditoria.application import record_event
+from processo_seletivo.editais.domain.validation import (
+    blocking_findings,
+    validate_for_publication,
+)
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.domain.changes import apply_changes
@@ -10,6 +14,7 @@ from processo_seletivo.publicacoes.domain.conflicts import (
     HASH_MISMATCH,
     TARGET_PRESENT,
     content_conflicts,
+    derive_preconditions,
     requires_content_check,
 )
 from processo_seletivo.publicacoes.domain.consolidation import consolidate
@@ -26,6 +31,8 @@ from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.canonical import SCHEMA_VERSION, canonical_bytes, canonical_sha256
 from processo_seletivo.shared.concurrency import compare_and_swap
+from processo_seletivo.shared.idempotency import finish as finish_idempotency
+from processo_seletivo.shared.idempotency import reserve
 
 
 def _retificacao(actor, retificacao_id):
@@ -94,7 +101,14 @@ def _apply_declared_changes(base, changes):
     return content
 
 
-def _replace_changes(retificacao, changes):
+def _replace_changes(retificacao, changes, base_content):
+    """Persiste as alterações já com a precondição de conteúdo que valerá na Publicação.
+
+    Quem elabora vê a base declarada em `baseSnapshotId`; derivar a precondição dela aqui é o
+    que garante que o ato publicado atinja o item normativo que estava à vista, e não o que
+    ocupar aquele índice depois de outra Retificação publicada no intervalo (FR-001/FR-002).
+    """
+    preconditions = derive_preconditions(base_content, changes)
     retificacao.alteracoes.all().delete()
     AlteracaoNormativa.objects.bulk_create(
         [
@@ -103,17 +117,27 @@ def _replace_changes(retificacao, changes):
                 target_path=item["targetPath"],
                 operation=item["operation"],
                 new_value=item.get("newValue"),
-                expected_previous_hash=item.get("expectedPreviousHash", ""),
+                expected_previous_hash=precondition,
                 order=index,
             )
-            for index, item in enumerate(changes, 1)
+            for index, (item, precondition) in enumerate(
+                zip(changes, preconditions, strict=True), 1
+            )
         ]
     )
 
 
-def create_retification(*, actor, edital_id, data):
+def create_retification(*, actor, edital_id, data, idempotency_key, correlation_id):
     require_permission(actor, "retificacao:elaborar")
     with command_context() as now:
+        idem = reserve(
+            actor=actor,
+            operation=f"retificacao:elaborar:{edital_id}",
+            key=idempotency_key,
+            payload=data,
+        )
+        if idem.result_id:
+            return Retificacao.objects.get(pk=idem.result_id), False
         try:
             edital = Edital.objects.select_related("processo").get(
                 pk=edital_id, institution_scope=actor.institution_scope
@@ -133,16 +157,18 @@ def create_retification(*, actor, edital_id, data):
             created_at=now,
         )
         _apply_declared_changes(base.content, data["changes"])
-        _replace_changes(retificacao, data["changes"])
+        _replace_changes(retificacao, data["changes"], base.content)
         record_event(
             actor=actor,
             permission="retificacao:elaborar",
             operation="CRIAR",
             aggregate=retificacao,
             now=now,
-            correlation_id="",
+            correlation_id=correlation_id,
+            idempotency_key=idempotency_key,
         )
-        return retificacao
+        finish_idempotency(idem, retificacao, 201)
+        return retificacao, True
 
 
 def edit_retification(*, actor, retificacao_id, expected_revision, data):
@@ -170,7 +196,7 @@ def edit_retification(*, actor, retificacao_id, expected_revision, data):
             justification=data["justification"],
             effective_at=data.get("effectiveAt"),
         )
-        _replace_changes(item, data["changes"])
+        _replace_changes(item, data["changes"], base.content)
         item.refresh_from_db()
         return item
 
@@ -192,10 +218,20 @@ TRANSITIONS = {
 TRANSITION_PERMISSIONS = {"devolver": "retificacao:homologar"}
 
 
-def transition_retification(*, actor, retificacao_id, expected_revision, action, reason=""):
+def transition_retification(
+    *, actor, retificacao_id, expected_revision, action, reason="", idempotency_key, correlation_id
+):
     permission = TRANSITION_PERMISSIONS.get(action, f"retificacao:{action}")
     require_permission(actor, permission)
     with command_context() as now:
+        idem = reserve(
+            actor=actor,
+            operation=f"retificacao:{action}:{retificacao_id}",
+            key=idempotency_key,
+            payload={"reason": reason},
+        )
+        if idem.result_id:
+            return Retificacao.objects.get(pk=idem.result_id), False
         item = _retificacao(actor, retificacao_id)
         origins, target = TRANSITIONS[action]
         previous = item.status
@@ -236,12 +272,14 @@ def transition_retification(*, actor, retificacao_id, expected_revision, action,
             operation=action.upper(),
             aggregate=item,
             now=now,
-            correlation_id="",
+            correlation_id=correlation_id,
             reason=reason,
             previous_state=previous,
             previous_revision=expected_revision,
+            idempotency_key=idempotency_key,
         )
-        return item
+        finish_idempotency(idem, item, 200)
+        return item, True
 
 
 def _original_version(edital):
@@ -326,6 +364,24 @@ def _assert_effective_change(edital, retificacao, effective_at, publication_orde
         raise _no_effective_change()
 
 
+def _assert_structurally_publishable(content, boundary):
+    """As invariantes da Publicação valem também para o que a Retificação faz vigorar (FR-006).
+
+    `publish_edital` recusa Edital sem título, sem Perfil ou sem Cronograma; sem esta verificação
+    a mesma regra deixava de valer justamente no caminho pelo qual o conteúdo muda depois de
+    público, e uma Retificação podia deixar vigente um Edital sem nenhum Perfil.
+    """
+    errors = blocking_findings(validate_for_publication(content))
+    if errors:
+        raise DomainError(
+            "blocking_findings",
+            "O conteúdo que passaria a vigorar em "
+            f"{boundary.isoformat()} possui erros impeditivos: "
+            + "; ".join(item.message for item in errors),
+            422,
+        )
+
+
 def _materialize_affected_versions(retificacao, publication, now):
     original = _original_version(retificacao.edital)
     published = _published_retifications(retificacao.edital)
@@ -341,6 +397,7 @@ def _materialize_affected_versions(retificacao, publication, now):
         applicable = [item for item in published if item.publication.effective_at <= boundary]
         acts = _acts(applicable)
         content, provenance = _consolidate(original.content, acts)
+        _assert_structurally_publishable(content, boundary)
         version = VersaoConsolidada.objects.create(
             edital=retificacao.edital,
             valid_from=boundary,
@@ -363,9 +420,19 @@ def _materialize_affected_versions(retificacao, publication, now):
         )
 
 
-def publish_retification(*, actor, retificacao_id, expected_revision, signatory):
+def publish_retification(
+    *, actor, retificacao_id, expected_revision, signatory, idempotency_key, correlation_id
+):
     require_permission(actor, "retificacao:publicar")
     with command_context() as now:
+        idem = reserve(
+            actor=actor,
+            operation=f"retificacao:publicar:{retificacao_id}",
+            key=idempotency_key,
+            payload={"signatory": signatory},
+        )
+        if idem.result_id:
+            return Publicacao.objects.get(pk=idem.result_id), False
         item = _retificacao(actor, retificacao_id)
         edital = Edital.objects.select_for_update().get(pk=item.edital_id)
         if item.status != Retificacao.Status.HOMOLOGADA:
@@ -415,12 +482,14 @@ def publish_retification(*, actor, retificacao_id, expected_revision, signatory)
             operation="PUBLICAR",
             aggregate=item,
             now=now,
-            correlation_id="",
+            correlation_id=correlation_id,
             previous_state=Retificacao.Status.HOMOLOGADA,
             previous_revision=expected_revision,
+            idempotency_key=idempotency_key,
         )
         _materialize_affected_versions(item, publication, now)
         Edital.objects.filter(pk=edital.pk).update(
             next_publication_order=F("next_publication_order") + 1
         )
-        return publication
+        finish_idempotency(idem, publication, 201)
+        return publication, True

@@ -76,6 +76,22 @@ O comando imprime os identificadores criados e as URLs prontas: versão vigente,
 Retificação. Ele cria um Edital publicado com dois Perfis e três Eventos, mais duas Retificações —
 uma já vigente e outra com vigência futura —, para que a consulta temporal tenha o que mostrar.
 
+## Produção
+
+`config.settings.production` trata cada pressuposto de segurança como precondição de
+inicialização: chave secreta fraca ou ausente, `DJANGO_ALLOWED_HOSTS` vazio ou `*`, HTTPS
+desligado, banco sem senha, seletor de identidade ligado ou o adaptador provisório de
+autenticação impedem o processo de subir, com mensagem que nomeia a variável a corrigir.
+
+O adaptador `InstitutionalBearerAuthentication` aceita `subject|escopo|permissões` sem assinatura
+— qualquer cliente declara a própria identidade **e as próprias permissões**. Enquanto a
+integração com o diretório institucional não existir, `API_AUTHENTICATION_CLASSES` não tem valor
+admissível e o sistema não implanta. Essa é a intenção.
+
+```bash
+cd backend && DJANGO_SETTINGS_MODULE=config.settings.production uv run python manage.py check --deploy
+```
+
 ## Verificação
 
 ```bash
