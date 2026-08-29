@@ -99,6 +99,17 @@ def cronograma(agora, numero):
     ]
 
 
+
+# Os Perfis do seed são fixos — docência em Informática e técnico de laboratório. Fazer o
+# título variar sem variar o conteúdo produziria um Processo anunciando "Tutoria a distância"
+# cujos Perfis são outros; quem precisa de execuções distintas usa --titulo.
+AREA = "Professor Substituto e Técnico-Administrativo"
+
+
+def _titulo_do_processo(ano, titulo_informado):
+    return titulo_informado or f"Processo Seletivo Simplificado {ano}"
+
+
 class Command(BaseCommand):
     help = "Cria um Processo Seletivo demonstrativo, publicado e retificado."
 
@@ -110,6 +121,14 @@ class Command(BaseCommand):
             "--numero",
             default="01",
             help="número do Edital; precisa ser único no escopo para o mesmo ano",
+        )
+        parser.add_argument(
+            "--titulo",
+            default=None,
+            help="título do Processo (padrão: Processo Seletivo Simplificado <ano>)",
+        )
+        parser.add_argument(
+            "--ano", type=int, default=None, help="ano do Edital (padrão: o ano corrente)"
         )
         parser.add_argument(
             "--recriar",
@@ -129,12 +148,14 @@ class Command(BaseCommand):
 
         numero = opcoes["numero"]
         agora = timezone.now()
+        ano = opcoes["ano"] or agora.year
+        titulo = _titulo_do_processo(ano, opcoes["titulo"])
         elaborador = ator("ana.elaboradora", "processo:criar", "edital:elaborar", "edital:submeter")
         homologador = ator("bruno.homologador", "edital:homologar")
         publicador = ator("carla.publicadora", "edital:publicar")
 
         with transaction.atomic():
-            processo, _ = self._criar(elaborador, codigo, numero)
+            processo, _ = self._criar(elaborador, codigo, numero, ano, titulo)
             edital = Edital.objects.get(processo=processo)
             self._elaborar(elaborador, edital, agora, numero)
             self._publicar(elaborador, homologador, publicador, edital)
@@ -142,7 +163,7 @@ class Command(BaseCommand):
         self._retificar(edital, agora)
         self._resumo(processo, edital)
 
-    def _criar(self, elaborador, codigo, numero):
+    def _criar(self, elaborador, codigo, numero, ano, titulo):
         self.stdout.write("Criando Processo e primeiro Edital…")
         from processo_seletivo.processos.application.commands import (
             create_process_with_first_edital,
@@ -152,11 +173,11 @@ class Command(BaseCommand):
             actor=elaborador,
             data={
                 "institutionalCode": codigo,
-                "title": "Processo Seletivo Simplificado 2026",
+                "title": titulo,
                 "firstEdital": {
                     "number": numero,
-                    "year": 2026,
-                    "title": f"Edital {numero}/2026 — Professor Substituto",
+                    "year": ano,
+                    "title": f"Edital {numero}/{ano} — {AREA}",
                     "description": "Seleção simplificada para professor substituto e técnico.",
                 },
             },

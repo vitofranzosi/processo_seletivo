@@ -384,16 +384,24 @@ def praticar_ato(request, edital_id, acao):
         raise Http404
 
     participantes = participantes_do_edital(edital)
+    segregacao = ato.chave == "publicar" and impede_por_segregacao(participantes, ator)
+    pendencias = _pendencias(edital) if ato.chave in {"submeter", "publicar"} else []
+    # Alcançável por URL direta: sem isto a tela oferece "Confirmar" para um ato que o
+    # command recusaria, e a recusa só apareceria depois do clique.
+    impedimento = atos.impedimento(edital, ator, ato)
     contexto = {
         "edital": edital,
         "ato": ato,
         "participantes": participantes,
-        "impedido_por_segregacao": ato.chave == "publicar"
-        and impede_por_segregacao(participantes, ator),
-        "pendencias": _pendencias(edital) if ato.chave in {"submeter", "publicar"} else [],
-        # Alcançável por URL direta: sem isto a tela oferece "Confirmar" para um ato que o
-        # command recusaria, e a recusa só apareceria depois do clique.
-        "impedimento": atos.impedimento(edital, ator, ato),
+        "impedido_por_segregacao": segregacao,
+        "pendencias": pendencias,
+        "impedimento": impedimento,
+        # As três previsões usam exatamente o que o command aplica — a mesma
+        # `validate_for_publication`, a mesma regra de segregação —, então dizer que o ato será
+        # recusado e ainda oferecer o botão só adia a recusa para depois do clique.
+        "recusa_certa": bool(impedimento)
+        or segregacao
+        or any(item["severidade"] == "erro" for item in pendencias),
         # A chave nasce aqui: confirmar duas vezes repete o mesmo ato, não pratica dois.
         "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
     }
@@ -584,12 +592,14 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
     if ato is None:
         raise Http404
 
+    impedimento = atos_retificacao.impedimento(item, ator, ato)
     contexto = {
         "retificacao": item,
         "edital": item.edital,
         "ato": ato,
         "alteracoes": _alteracoes_legiveis(item),
-        "impedimento": atos_retificacao.impedimento(item, ator, ato),
+        "impedimento": impedimento,
+        "recusa_certa": bool(impedimento),
         "vigencia": item.effective_at,
         "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
     }
@@ -743,12 +753,15 @@ def praticar_ato_processo(request, processo_id, acao):
     if ato is None:
         raise Http404
 
+    pendentes = pending_editais(processo) if ato.depende_dos_editais else []
+    impedimento = atos_processo.impedimento(processo, ator, ato)
     contexto = {
         "processo": processo,
         "ato": ato,
         # FR-018: o que impede é mostrado antes da tentativa, com caminho para cada pendência.
-        "pendentes": pending_editais(processo) if ato.depende_dos_editais else [],
-        "impedimento": atos_processo.impedimento(processo, ator, ato),
+        "pendentes": pendentes,
+        "impedimento": impedimento,
+        "recusa_certa": bool(impedimento) or bool(pendentes),
         "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
     }
     if request.method == "GET":

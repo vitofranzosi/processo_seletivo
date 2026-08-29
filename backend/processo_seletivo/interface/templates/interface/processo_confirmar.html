@@ -45,7 +45,7 @@
     <span class="ajuda" id="ajuda-motivo">Fica registrado no ato administrativo e na auditoria.</span>
   </p>
   <p class="salvar">
-    {% if not impedimento %}
+    {% if not recusa_certa %}
     <button type="submit" class="botao {% if ato.interrupcao %}perigoso{% endif %}">
       Confirmar: {{ ato.rotulo }}</button>
     {% endif %}

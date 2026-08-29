@@ -122,6 +122,9 @@ def test_segregacao_e_avisada_antes_da_tentativa(client, seletor_ligado, edital)
     ).content.decode()
     assert "Segregação de funções" in confirmacao
     assert "não pode publicá-la sozinho" in confirmacao
+    # A previsão é exata — mesma regra do command —, então oferecer "Confirmar" logo abaixo
+    # do aviso só adiaria a recusa para depois do clique.
+    assert "Confirmar: " not in confirmacao
 
     resposta, _ = praticar(client, Edital.objects.get(), "publicar", **SIGNATARIO)
     assert resposta.status_code == 403, "e o domínio recusa de fato"
