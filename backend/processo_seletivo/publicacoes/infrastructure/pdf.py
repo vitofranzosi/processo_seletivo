@@ -176,6 +176,17 @@ def _perfis(composicao, snapshot):
         composicao.escrever(
             f"Vagas imediatas: {perfil.get('immediateVacancies', 0)}", tamanho=10, recuo=18
         )
+        # Atribuições, carga horária e remuneração (FR-015). Cada um é omitido quando vazio: um
+        # rótulo sobre nada não informa que não há nada — informa que alguém esqueceu de preencher.
+        # As atribuições preservam parágrafos, pelo caminho que a `006.1` abriu para as seções.
+        if perfil.get("duties"):
+            composicao.escrever("Atribuições:", tamanho=10, fonte=NEGRITO, recuo=18, antes=6)
+            for paragrafo in _paragrafos(perfil["duties"]):
+                composicao.escrever(paragrafo, tamanho=10, recuo=32, antes=3)
+        if perfil.get("workload"):
+            composicao.escrever(f"Carga horária: {perfil['workload']}", tamanho=10, recuo=18)
+        if perfil.get("compensation"):
+            composicao.escrever(f"Remuneração: {perfil['compensation']}", tamanho=10, recuo=18)
         reserva = RESERVA.get(perfil.get("reserveType"), perfil.get("reserveType", ""))
         if perfil.get("reserveLimit") is not None:
             reserva = f"{reserva} em {perfil['reserveLimit']}"
@@ -293,8 +304,18 @@ def _integridade(composicao, snapshot, content_hash):
         tamanho=10,
         antes=6,
     )
-    composicao.escrever(f"Identificador do Edital: {snapshot.get('editalId', '')}", tamanho=9)
-    composicao.escrever(f"Processo Seletivo: {snapshot.get('processoId', '')}", tamanho=9)
+    # Identificação **institucional**, não técnica (FR-004). O SHA-256 permanece porque é o que a
+    # declaração prova; o UUID sai porque não prova nada a quem lê e era a forma interna vazando
+    # para a apresentação. Os identificadores continuam no snapshot — o que muda é o que se imprime.
+    composicao.escrever(
+        f"Edital {snapshot.get('number', '')}/{snapshot.get('year', '')}", tamanho=9
+    )
+    processo = " — ".join(
+        parte
+        for parte in (snapshot.get("processoCode", ""), snapshot.get("processoTitle", ""))
+        if parte
+    )
+    composicao.escrever(f"Processo Seletivo {processo}", tamanho=9)
     composicao.escrever(f"Versão do schema: {snapshot.get('schemaVersion', '')}", tamanho=9)
     composicao.escrever(f"SHA-256 do conteúdo: {content_hash}", tamanho=9)
 

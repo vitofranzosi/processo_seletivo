@@ -48,9 +48,20 @@ class Secao:
 
 CATALOGO: tuple[Secao, ...] = (
     Secao(
+        key="apresentacao",
+        title="Apresentação",
+        order=1,
+        type=TEXTUAL,
+        default_text=(
+            "O Instituto Federal do Espírito Santo, por meio do Centro de Referência em Formação "
+            "e em Educação a Distância, torna pública a realização do processo seletivo regido "
+            "por este Edital."
+        ),
+    ),
+    Secao(
         key="disposicoes-preliminares",
         title="Disposições Preliminares",
-        order=1,
+        order=2,
         type=TEXTUAL,
         default_text=(
             "O presente Edital estabelece as normas do processo seletivo, cuja execução observará "
@@ -58,16 +69,20 @@ CATALOGO: tuple[Secao, ...] = (
         ),
     ),
     Secao(
-        key="perfis",
-        title="Perfis de Vaga",
-        order=2,
-        type=GERADA,
-        source="profiles",
+        key="requisitos-gerais",
+        title="Requisitos Gerais de Participação",
+        order=3,
+        type=TEXTUAL,
+        default_text=(
+            "Poderá participar do processo seletivo quem atender às condições estabelecidas neste "
+            "Edital e aos requisitos específicos do Perfil de Vaga pretendido, comprovados na "
+            "forma e nos prazos aqui previstos."
+        ),
     ),
     Secao(
         key="inscricao",
         title="Da Inscrição",
-        order=3,
+        order=4,
         type=TEXTUAL,
         default_text=(
             "A inscrição será realizada exclusivamente pelos meios indicados neste Edital, nos "
@@ -76,23 +91,40 @@ CATALOGO: tuple[Secao, ...] = (
         ),
     ),
     Secao(
+        key="perfis",
+        title="Perfis de Vaga",
+        order=5,
+        type=GERADA,
+        source="profiles",
+    ),
+    Secao(
         key="etapas",
         title="Etapas de Avaliação",
-        order=4,
+        order=6,
         type=GERADA,
         source="stages",
     ),
     Secao(
+        key="classificacao",
+        title="Critérios de Classificação",
+        order=7,
+        type=TEXTUAL,
+        default_text=(
+            "A classificação observará a pontuação obtida nas Etapas de Avaliação, respeitados os "
+            "pesos e as notas mínimas declarados neste Edital e as reservas de vaga previstas."
+        ),
+    ),
+    Secao(
         key="cronograma",
         title="Cronograma",
-        order=5,
+        order=8,
         type=GERADA,
         source="schedule",
     ),
     Secao(
         key="recursos",
         title="Dos Recursos",
-        order=6,
+        order=9,
         type=TEXTUAL,
         default_text=(
             "Caberá recurso contra os resultados divulgados, nos prazos do Cronograma, pelos meios "
@@ -102,7 +134,7 @@ CATALOGO: tuple[Secao, ...] = (
     Secao(
         key="disposicoes-finais",
         title="Disposições Finais",
-        order=7,
+        order=10,
         type=TEXTUAL,
         default_text=(
             "Os casos omissos serão resolvidos pela autoridade responsável pelo processo seletivo, "

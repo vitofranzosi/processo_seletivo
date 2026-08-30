@@ -78,6 +78,11 @@ PERFIL_PUBLICADO = (
     Campo("reserveType", str, valores=RESERVA),
     Campo("reserveLimit", int, admite_nulo=True, minimo=0),
     Campo("locality", str),
+    # `str` sem `admite_nulo`: os três são **sempre presentes**, com `""` quando não informados
+    # (FR-014). Declará-los assim é o que faz a versão canônica 3 identificar uma forma só.
+    Campo("duties", str),
+    Campo("workload", str),
+    Campo("compensation", str),
     Campo("classificationInformation", dict),
     Campo("callInformation", dict),
     # A forma de **dentro** de cada Modalidade não é declarada. Que cada item seja objeto, é —

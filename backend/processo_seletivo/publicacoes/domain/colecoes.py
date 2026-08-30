@@ -33,6 +33,23 @@ COLECOES_ATOMICAS = frozenset({"/profiles/*/requirements"})
 # endereça, em forma alguma (FR-013).
 LISTAS_DE_CONTROLE = frozenset({"applied_publications"})
 
+# Campos que **identificam** o conteúdo publicado. Nenhuma Retificação os endereça (FR-004).
+#
+# A exposição é anterior à `007` — `/editalId`, `/processoId` e `/schemaVersion` já eram
+# endereçáveis, e só `applied_publications` era recusado. Mas é a `007` que a **ativa**: até aqui o
+# UUID do Processo não identificava nada para quem lê o documento; a partir de `processoTitle`, ele
+# é o nome que o Edital dá ao Processo a que pertence. Sem esta recusa, uma Retificação faria o
+# documento publicado nomear outro Processo. Herdar uma exposição é aceitável; ativá-la e deixá-la
+# aberta, não.
+#
+# **Fora daqui, de propósito**: `title` e `description`, retificáveis por desenho e oferecidos pela
+# tela; e `number` e `year`, que são identidade mas já eram impressos no cabeçalho antes desta
+# feature e não são ativados por ela. Ficam como questão aberta, registrada em `research.md` D-003.1
+# — não como omissão.
+CAMPOS_DE_IDENTIDADE = frozenset(
+    {"editalId", "processoId", "processoCode", "processoTitle", "schemaVersion"}
+)
+
 
 def escapar(token):
     """Devolve o token à grafia do RFC 6901, para que a forma seja comparável ao declarado."""
@@ -49,6 +66,10 @@ def e_atomica(forma):
 
 def e_controle_interno(token):
     return token in LISTAS_DE_CONTROLE
+
+
+def e_campo_de_identidade(token):
+    return token in CAMPOS_DE_IDENTIDADE
 
 
 def e_elemento_de_colecao_com_chave(forma):

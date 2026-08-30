@@ -233,3 +233,75 @@ def test_valor_mal_digitado_vira_erro_legivel(conteudo, caminho_do_campo, bruto,
     """A mensagem precisa dizer qual campo e o que foi digitado; um traceback não serve."""
     with pytest.raises(ValueError, match=trecho):
         retificacao.diferencas(conteudo, formulario(conteudo, alterar=[(caminho_do_campo, bruto)]))
+
+
+# ---------------------------------------------------------------------------
+# 007 — o que o Edital diz sobre a vaga também se corrige depois de publicado
+# ---------------------------------------------------------------------------
+
+
+def test_retificar_alcanca_atribuicoes_carga_horaria_e_remuneracao(conteudo):
+    """FR-016: sem isto, corrigir uma remuneração publicada exigiria chamada de API.
+
+    É o mesmo defeito que o achado 03 da auditoria apontou para cotas, Etapas e seções — e que a
+    `006.1` corrigiu para aquelas três. Os campos que a `007` cria nasceriam com ele de novo.
+    """
+    perfil_a = f"/profiles/id={PERFIL['A']}"
+    resultado, _, resumo = aplicar(
+        conteudo,
+        formulario(
+            conteudo,
+            alterar=[
+                (f"{perfil_a}/duties", "Ministrar aulas.\nOrientar projetos."),
+                (f"{perfil_a}/workload", "20 horas semanais"),
+                (f"{perfil_a}/compensation", "R$ 3.000,00 mensais"),
+            ],
+        ),
+    )
+
+    alterado = next(p for p in resultado["profiles"] if p["id"] == PERFIL["A"])
+    assert alterado["duties"] == "Ministrar aulas.\nOrientar projetos."
+    assert alterado["workload"] == "20 horas semanais"
+    assert alterado["compensation"] == "R$ 3.000,00 mensais"
+    assert resumo, "a alteração precisa aparecer no resumo de quem confirma"
+
+
+def test_perfil_acrescentado_traz_os_tres_campos_ainda_que_vazios(conteudo):
+    """A forma v3 tem de estar completa, mesmo quando quem retifica não preenche nada.
+
+    `_perfil_completo` existe por isto, e seu docstring diz o porquê: um subconjunto quebraria a
+    consulta pública. A `007` acrescentou três chaves à forma — se elas não entrarem aqui, a
+    própria feature que as criou produziria conteúdo de versão 3 incompleto.
+    """
+    resultado, _, _ = aplicar(
+        conteudo,
+        {
+            "novo-perfil-01-code": "Z",
+            "novo-perfil-01-name": "Acrescentado sem os campos novos",
+            "novo-perfil-01-immediateVacancies": "1",
+        },
+    )
+
+    acrescentado = resultado["profiles"][-1]
+    for campo in ("duties", "workload", "compensation"):
+        assert campo in acrescentado, f"{campo} ausente quebraria a forma canônica v3"
+        assert acrescentado[campo] == "", "ausência se exprime por string vazia, não por null"
+
+
+def test_perfil_acrescentado_com_os_campos_novos_os_preserva(conteudo):
+    resultado, _, _ = aplicar(
+        conteudo,
+        {
+            "novo-perfil-01-code": "Z",
+            "novo-perfil-01-name": "Acrescentado",
+            "novo-perfil-01-immediateVacancies": "1",
+            "novo-perfil-01-duties": "Coordenar o laboratório.",
+            "novo-perfil-01-workload": "40 horas semanais",
+            "novo-perfil-01-compensation": "R$ 5.000,00 mensais",
+        },
+    )
+
+    acrescentado = resultado["profiles"][-1]
+    assert acrescentado["duties"] == "Coordenar o laboratório."
+    assert acrescentado["workload"] == "40 horas semanais"
+    assert acrescentado["compensation"] == "R$ 5.000,00 mensais"

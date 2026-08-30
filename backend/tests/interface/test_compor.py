@@ -808,3 +808,106 @@ def test_salvar_conteudo_sem_editar_nada_nao_congela_o_texto_do_catalogo(
     assert client.post(etapa(edital, "conteudo"), editado).status_code == 302
 
     assert [item.key for item in SecaoEdital.objects.all()] == ["recursos"]
+
+
+# ---------------------------------------------------------------------------
+# 007 — o Edital diz o que a vaga é, e tem as seções que um Edital tem
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_etapa_de_conteudo_mostra_as_dez_secoes_do_catalogo(client, seletor_ligado, edital):
+    """T013/T014: a etapa deriva do catálogo, então as três novas entram sem código de tela."""
+    from processo_seletivo.editais.domain import secoes as catalogo
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = client.get(reverse("interface:compor-etapa", args=[edital.id, "conteudo"]))
+
+    exibidas = [secao["key"] for secao in resposta.context["secoes"]]
+    assert exibidas == [secao.key for secao in catalogo.CATALOGO]
+    assert len(exibidas) == 10
+    for nova in ("apresentacao", "requisitos-gerais", "classificacao"):
+        assert nova in exibidas
+
+
+@pytest.mark.django_db(transaction=True)
+def test_texto_de_secao_nova_e_gravado_e_chega_a_previa(client, seletor_ligado, edital):
+    """T014: editar `apresentacao` e encontrá-la na prévia, na posição declarada pelo catálogo."""
+    from processo_seletivo.editais.domain import secoes as catalogo
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    texto = "Redação institucional própria deste Edital de demonstração."
+
+    # A gravação reenvia o rascunho inteiro, e o command exige ao menos um Perfil.
+    compor_rascunho(
+        client,
+        edital,
+        perfis={
+            "perfil-0-id": PERFIL,
+            "perfil-0-code": "PROF",
+            "perfil-0-name": "Professor",
+            "perfil-0-immediateVacancies": "1",
+            "perfil-0-reserveType": "NONE",
+        },
+    )
+
+    campos = {
+        f"secao-{secao.key}": (texto if secao.key == "apresentacao" else secao.default_text)
+        for secao in catalogo.CATALOGO
+        if not secao.gerada
+    }
+    resposta = client.post(
+        reverse("interface:compor-etapa", args=[edital.id, "conteudo"]), campos
+    )
+    assert resposta.status_code == 302, resposta.content
+
+    documento = client.get(reverse("interface:previa-documento", args=[edital.id]))
+    conteudo = documento.content.decode("latin-1")
+    assert "Reda" in conteudo, "a seção editada precisa chegar ao documento"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_os_tres_campos_do_perfil_sobrevivem_a_gravacao_de_outra_etapa(
+    client, seletor_ligado, edital
+):
+    """T023: o defeito que a `006` teve com as modalidades não pode renascer com estes campos.
+
+    Salvar o Cronograma relê os Perfis e os reenvia. Se `perfis_persistidos` não levar os três, a
+    ida e volta os apaga — em silêncio, como apagava a Regra Normativa antes da `006`.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    atribuicoes = "Ministrar aulas.\n\nOrientar projetos de extensão."
+
+    compor_rascunho(
+        client,
+        edital,
+        perfis={
+            "perfil-0-id": PERFIL,
+            "perfil-0-code": "PROF",
+            "perfil-0-name": "Professor",
+            "perfil-0-immediateVacancies": "1",
+            "perfil-0-reserveType": "NONE",
+            "perfil-0-duties": atribuicoes,
+            "perfil-0-workload": "20 horas semanais",
+            "perfil-0-compensation": "R$ 3.000,00 mensais",
+        },
+        eventos={
+            "evento-0-id": EVENTO,
+            "evento-0-type": "Inscrições",
+            "evento-0-description": "Inscrições pelo sistema",
+            "evento-0-startAt": "2027-03-01T10:00",
+            "evento-0-order": "1",
+        },
+    )
+
+    perfil = edital.perfis.get()
+    assert perfil.duties == atribuicoes, "gravar o Cronograma não pode apagar as atribuições"
+    assert perfil.workload == "20 horas semanais"
+    assert perfil.compensation == "R$ 3.000,00 mensais"
+
+    # E voltam à tela para quem retoma o trabalho.
+    resposta = client.get(reverse("interface:compor-etapa", args=[edital.id, "perfis"]))
+    exibido = resposta.context["perfis"][0]
+    assert exibido["duties"] == atribuicoes
+    assert exibido["workload"] == "20 horas semanais"
+    assert exibido["compensation"] == "R$ 3.000,00 mensais"

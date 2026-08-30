@@ -170,6 +170,12 @@ def _recusar_controle_interno(tokens, path):
             f"{path} endereça controle interno da Versão Consolidada, que não é conteúdo "
             "normativo e não pode ser alterado por Retificação."
         )
+    if tokens and colecoes.e_campo_de_identidade(tokens[0]):
+        raise CaminhoInexistente(
+            f"{path} endereça {tokens[0]}, que identifica o conteúdo publicado e não pode ser "
+            "alterado por Retificação. Corrigir a identificação do Edital ou do Processo é outro "
+            "ato, e não uma alteração do conteúdo normativo."
+        )
 
 
 def _parent_of(content, path):

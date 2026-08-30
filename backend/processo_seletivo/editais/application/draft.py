@@ -165,6 +165,9 @@ def replace_draft(
                 reserve_type=payload["reserveType"],
                 reserve_limit=payload.get("reserveLimit"),
                 locality=payload.get("locality", ""),
+                duties=payload.get("duties", ""),
+                workload=payload.get("workload", ""),
+                compensation=payload.get("compensation", ""),
                 classification_information=payload.get("classificationInformation", {}),
                 call_information=payload.get("callInformation", {}),
             )

@@ -36,6 +36,12 @@ DECIMAL, TEXTO_LONGO, BOOLEANO = "decimal", "texto_longo", "booleano"
 CAMPOS_PERFIL = [
     ("name", "Denominação", TEXTO),
     ("locality", "Localidade", TEXTO),
+    # O que um Edital diz sobre a vaga também se corrige depois de publicado (FR-016). Sem estes
+    # três, uma remuneração errada num Edital publicado exigiria chamada de API — o mesmo defeito
+    # que o achado 03 da auditoria apontou para cotas, Etapas e seções.
+    ("duties", "Atribuições", TEXTO_LONGO),
+    ("workload", "Carga horária", TEXTO),
+    ("compensation", "Remuneração", TEXTO),
     ("immediateVacancies", "Vagas imediatas", INTEIRO),
     ("reserveLimit", "Limite do Cadastro Reserva", INTEIRO),
 ]
@@ -74,6 +80,9 @@ NOVO_PERFIL = [
     ("name", "Denominação", TEXTO),
     ("locality", "Localidade", TEXTO),
     ("description", "Descrição", TEXTO),
+    ("duties", "Atribuições", TEXTO_LONGO),
+    ("workload", "Carga horária", TEXTO),
+    ("compensation", "Remuneração", TEXTO),
     ("immediateVacancies", "Vagas imediatas", INTEIRO),
     ("reserveLimit", "Limite do Cadastro Reserva", INTEIRO),
     ("requirements", "Requisitos", LISTA),
@@ -371,6 +380,12 @@ def _perfil_completo(valores):
         "reserveType": "NONE",
         "reserveLimit": valores.get("reserveLimit"),
         "locality": valores.get("locality") or "",
+        # Os três **precisam** estar aqui, ainda que vazios: a forma tem de ser a que
+        # `edital_snapshot` produz, e um Perfil acrescentado por Retificação sem estas chaves seria
+        # conteúdo de versão 3 incompleto — exatamente o que o docstring acima existe para impedir.
+        "duties": valores.get("duties") or "",
+        "workload": valores.get("workload") or "",
+        "compensation": valores.get("compensation") or "",
         "classificationInformation": {},
         "callInformation": {},
         "competitionModalities": [],

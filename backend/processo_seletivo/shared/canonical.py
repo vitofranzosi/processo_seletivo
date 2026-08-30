@@ -8,7 +8,18 @@ from uuid import UUID
 # `sections`. As duas entram juntas de propósito — subir a versão com uma e acrescentar a outra
 # depois produziria snapshots de versão 2 com e sem a propriedade, e a versão canônica deixaria de
 # identificar uma forma.
-SCHEMA_VERSION = 2
+#
+# 2 → 3 na `007`, também uma única vez, cobrindo **três** mudanças de forma que viajam juntas pelo
+# mesmo motivo (FR-017, FR-018):
+#   1. as três seções institucionais novas do catálogo — `sections` passa de sete para dez itens;
+#   2. `duties`, `workload` e `compensation` em cada item de `profiles`;
+#   3. `processoCode` e `processoTitle` na raiz, sem os quais o documento não teria como nomear o
+#      Processo sem expor UUID a quem lê.
+#
+# Conteúdo publicado na versão 2 torna-se irretificável, por versão **e** por topologia de seções.
+# É a integridade funcionando, e é o que a precondição de implantação da `007` admite: a feature
+# precede o primeiro Edital de produção, e os dados de demonstração são recriados.
+SCHEMA_VERSION = 3
 
 
 def _default(value):

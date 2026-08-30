@@ -24,6 +24,15 @@ class PerfilVaga(models.Model):
     )
     reserve_limit = models.PositiveIntegerField(null=True, blank=True)
     locality = models.CharField(max_length=255, blank=True)
+    # O que um Edital real diz sobre a vaga e que o sistema ainda não dizia (FR-012). Os três são
+    # texto descritivo e opcionais: um Edital descreve remuneração em prosa — "R$ 4.200,00 mensais,
+    # acrescidos de auxílio-alimentação" —, e modelar isso como objeto de moeda ou tabela salarial
+    # construiria a estrutura antes de existir a regra que a consome (FR-013).
+    # `blank=True` e nunca `null`, como `description` e `locality` acima: a ausência de um texto é a
+    # string vazia, e ter duas formas de dizer "não informado" na mesma linha seria o defeito.
+    duties = models.TextField(blank=True)
+    workload = models.CharField(max_length=255, blank=True)
+    compensation = models.CharField(max_length=255, blank=True)
     classification_information = models.JSONField(default=dict, blank=True)
     call_information = models.JSONField(default=dict, blank=True)
 

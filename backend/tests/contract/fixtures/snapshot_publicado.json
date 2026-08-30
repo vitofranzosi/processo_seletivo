@@ -1,7 +1,9 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "editalId": "11111111-1111-1111-1111-111111111111",
   "processoId": "22222222-2222-2222-2222-222222222222",
+  "processoCode": "PS-DOC-2026",
+  "processoTitle": "Processo Seletivo Docente 2026",
   "number": "07",
   "year": 2026,
   "title": "Edital 07/2026 — Professor Substituto",
@@ -20,6 +22,9 @@
       "reserveType": "LIMITED",
       "reserveLimit": 6,
       "locality": "Campus Serra",
+      "duties": "Ministrar aulas nos cursos técnicos e de graduação.\nParticipar das atividades de ensino, pesquisa e extensão do campus.",
+      "workload": "40 horas semanais",
+      "compensation": "R$ 4.200,00 mensais, acrescidos de auxílio-alimentação",
       "classificationInformation": {},
       "callInformation": {},
       "competitionModalities": [
@@ -87,42 +92,66 @@
   ],
   "sections": [
     {
+      "id": "98c0c302-bed5-5824-ae96-eb5b82132ae2",
+      "key": "apresentacao",
+      "title": "Apresentação",
+      "order": 1,
+      "type": "TEXT",
+      "content": "O Instituto Federal do Espírito Santo, por meio do Centro de Referência em Formação e em Educação a Distância, torna pública a realização do processo seletivo regido por este Edital."
+    },
+    {
       "id": "309737d2-dbee-57ef-98e6-bb17b6c42162",
       "key": "disposicoes-preliminares",
       "title": "Disposições Preliminares",
-      "order": 1,
+      "order": 2,
       "type": "TEXT",
       "content": "O presente Edital estabelece as normas do processo seletivo, cuja execução observará a legislação aplicável e os princípios que regem a Administração Pública."
     },
     {
-      "id": "9ee7f397-e5bf-552b-976b-968be61c4c23",
-      "key": "perfis",
-      "title": "Perfis de Vaga",
-      "order": 2,
-      "type": "GENERATED",
-      "source": "profiles"
+      "id": "53e12351-154c-5ebf-91cf-6403812f9571",
+      "key": "requisitos-gerais",
+      "title": "Requisitos Gerais de Participação",
+      "order": 3,
+      "type": "TEXT",
+      "content": "Poderá participar do processo seletivo quem atender às condições estabelecidas neste Edital e aos requisitos específicos do Perfil de Vaga pretendido, comprovados na forma e nos prazos aqui previstos."
     },
     {
       "id": "5b9bf816-df06-50cd-9150-c9378c1160a3",
       "key": "inscricao",
       "title": "Da Inscrição",
-      "order": 3,
+      "order": 4,
       "type": "TEXT",
       "content": "A inscrição será realizada exclusivamente pelos meios indicados neste Edital, nos prazos do Cronograma, e implica conhecimento e aceitação das condições aqui estabelecidas."
+    },
+    {
+      "id": "9ee7f397-e5bf-552b-976b-968be61c4c23",
+      "key": "perfis",
+      "title": "Perfis de Vaga",
+      "order": 5,
+      "type": "GENERATED",
+      "source": "profiles"
     },
     {
       "id": "dc485b6c-0cd0-5b1c-b302-94552fd107bf",
       "key": "etapas",
       "title": "Etapas de Avaliação",
-      "order": 4,
+      "order": 6,
       "type": "GENERATED",
       "source": "stages"
+    },
+    {
+      "id": "8d63ea40-e905-54d3-9630-abc0a1941559",
+      "key": "classificacao",
+      "title": "Critérios de Classificação",
+      "order": 7,
+      "type": "TEXT",
+      "content": "A classificação observará a pontuação obtida nas Etapas de Avaliação, respeitados os pesos e as notas mínimas declarados neste Edital e as reservas de vaga previstas."
     },
     {
       "id": "96de1f8b-6d8f-5508-9768-41df9b976d50",
       "key": "cronograma",
       "title": "Cronograma",
-      "order": 5,
+      "order": 8,
       "type": "GENERATED",
       "source": "schedule"
     },
@@ -130,7 +159,7 @@
       "id": "758beb06-c278-520b-9d92-35d4d8473d4b",
       "key": "recursos",
       "title": "Dos Recursos",
-      "order": 6,
+      "order": 9,
       "type": "TEXT",
       "content": "Caberá recurso contra o resultado de cada etapa, no prazo de 2 (dois) dias úteis contados da divulgação, exclusivamente pelo sistema.\nO recurso deve ser fundamentado e não pode conter identificação do candidato, sob pena de indeferimento liminar."
     },
@@ -138,7 +167,7 @@
       "id": "add4303f-9e28-504b-a152-782961686189",
       "key": "disposicoes-finais",
       "title": "Disposições Finais",
-      "order": 7,
+      "order": 10,
       "type": "TEXT",
       "content": "Os casos omissos serão resolvidos pela autoridade responsável pelo processo seletivo, observada a legislação aplicável."
     }

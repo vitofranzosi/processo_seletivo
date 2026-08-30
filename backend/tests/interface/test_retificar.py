@@ -479,3 +479,47 @@ def catalogo_textuais():
     from processo_seletivo.editais.domain import secoes as catalogo
 
     return [secao for secao in catalogo.CATALOGO if not secao.gerada]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+@pytest.mark.parametrize("chave", ["apresentacao", "requisitos-gerais", "classificacao"])
+def test_retificar_alcanca_as_secoes_institucionais_novas(
+    client, seletor_ligado, api_client, manager_headers, process_payload, chave
+):
+    """T015 — as três seções da `007` entram na Retificação **sozinhas**, e isto prova que sim.
+
+    A tela deriva do catálogo, então elas *deveriam* aparecer sem código novo. "Deveriam" não é
+    cobertura: sem este teste, o dia em que a derivação virar lista fixa passaria em silêncio, e
+    corrigir a apresentação de um Edital publicado voltaria a exigir chamada de API.
+    """
+    from processo_seletivo.editais.domain import secoes as catalogo
+
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    caminho = f"/sections/id={catalogo.identidade(edital.id, chave)}/content"
+    referencia = referencia_do_campo(base.content, caminho)
+    texto_novo = f"Redação institucional revista para {chave}."
+
+    resposta = client.post(
+        reverse("interface:retificar", args=[edital.id]),
+        {
+            "base": str(base.id),
+            f"campo:{referencia}": texto_novo,
+            "justificativa": f"Revisão da seção {chave}",
+        },
+    )
+
+    resumo = resposta.context["resumo"]
+    alterado = next(item for item in resumo if item["depois"] == texto_novo)
+    assert alterado["rotulo"] == "Texto da seção"
+
+    # E o caminho da seção nova é de fato editável na tela — não é o rótulo que coincide.
+    from processo_seletivo.interface import retificacao as ui
+
+    editaveis = {
+        campo["caminho"] for grupo in ui.campos_editaveis(base.content) for campo in grupo["campos"]
+    }
+    assert caminho in editaveis
