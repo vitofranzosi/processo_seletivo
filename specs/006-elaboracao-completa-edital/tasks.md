@@ -151,7 +151,7 @@ declarando a mesma versão canônica.
 - [ ] T039 [US2] Acrescentar a etapa `Etapas de Avaliação` a `ETAPAS_COMPOSICAO`, com progresso e roteamento de pendências, em `backend/processo_seletivo/interface/views.py`, e o fragmento de linha em `backend/processo_seletivo/interface/urls.py`
 - [ ] T040 [P] [US2] Criar `compor_etapas.html` e `_etapa.html` em `backend/processo_seletivo/interface/templates/interface/`, com campo oculto `order`, botões de ordem e seleção de Evento do Cronograma
 - [ ] T041 [US2] Ler e preservar Etapas em `ler_etapas` e `etapas_persistidas`, em `backend/processo_seletivo/interface/forms.py`
-- [ ] T042 [US2] Compor o documento a partir das seções do catálogo, com as Etapas na seção que as origina, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`
+- [ ] T042 [US2] Compor o documento a partir das seções do catálogo, com as Etapas na seção que as origina, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, e **regenerar a fixture de T002 no mesmo commit**, com o diff revisado — é aqui que a composição muda de propósito, e é o único lugar onde regenerá-la é legítimo
 - [ ] T043 [P] [US2] Criar Etapas na demonstração navegável, em `backend/processo_seletivo/processos/management/commands/seed_demo.py`
 
 ### Testes
@@ -232,7 +232,7 @@ gerado.
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T075 Regenerar seeds e fixtures afetados pela versão 2 do esquema, em `backend/processo_seletivo/processos/management/commands/seed_demo.py` e `backend/tests/`
+- [ ] T075 Regenerar seeds e fixtures afetados pela versão 2 do esquema, em `backend/processo_seletivo/processos/management/commands/seed_demo.py` e `backend/tests/`, **exceto a fixture do documento publicado**, que só T042 regenera
 - [ ] T076 Executar o roteiro de demonstração de `quickstart.md` de ponta a ponta, com dois atores, e corrigir o que a demonstração revelar
 - [ ] T077 [P] Reavaliar `specs/006-elaboracao-completa-edital/checklists/requirements.md` contra o que foi implementado
 - [ ] T078 [P] Conferir `backend/tests/contract/test_openapi_conformance.py` e `test_traceability.py` verdes após o delta de contrato
