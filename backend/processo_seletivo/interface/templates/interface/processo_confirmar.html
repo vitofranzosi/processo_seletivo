@@ -1,0 +1,55 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}{{ ato.rotulo }} — {{ processo.institutional_code }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
+  <span aria-current="page">{{ ato.rotulo }}</span>
+</nav>
+
+<h1>{{ ato.rotulo }}</h1>
+<p class="sub">{{ processo.title }} — <span class="codigo">{{ processo.institutional_code }}</span></p>
+
+{% if erro %}<p class="erro" role="alert"><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
+
+{% include "interface/_impedimento.html" %}
+
+{% if pendentes %}
+<div class="erro" role="alert">
+  <strong>Este ato será recusado.</strong>
+  <p>O cancelamento do Processo exige que cada Edital esteja Encerrado ou Cancelado. Ainda faltam:</p>
+  <ul class="impedimentos">
+    {% for edital in pendentes %}
+    <li><a href="{% url 'interface:detalhe' edital.id %}">{{ edital.number }}/{{ edital.year }}</a>
+      — {{ edital.title }}
+      <span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<section aria-labelledby="consequencias-titulo"
+         class="consequencias {% if ato.irreversivel %}irreversivel{% endif %}">
+  <h2 id="consequencias-titulo">
+    {% if ato.irreversivel %}Este ato não pode ser desfeito{% else %}O que este ato provoca{% endif %}
+  </h2>
+  <ul>{% for consequencia in ato.consequencias %}<li>{{ consequencia }}</li>{% endfor %}</ul>
+</section>
+
+<form method="post" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  <p class="campo largo">
+    <label for="motivo">{{ ato.rotulo_motivo }}</label>
+    <textarea id="motivo" name="motivo" rows="3" required aria-describedby="ajuda-motivo"></textarea>
+    <span class="ajuda" id="ajuda-motivo">Fica registrado no ato administrativo e na auditoria.</span>
+  </p>
+  <p class="salvar">
+    {% if not recusa_certa %}
+    <button type="submit" class="botao {% if ato.interrupcao %}perigoso{% endif %}">
+      Confirmar: {{ ato.rotulo }}</button>
+    {% endif %}
+    <a href="{% url 'interface:processo-detalhe' processo.id %}" class="acao">Cancelar e voltar</a>
+  </p>
+</form>
+{% endblock %}

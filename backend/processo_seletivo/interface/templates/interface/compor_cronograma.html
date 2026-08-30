@@ -1,0 +1,29 @@
+{% extends "interface/compor_base.html" %}
+{% block etapa_titulo %}Cronograma{% endblock %}
+{% block etapa %}
+<form method="post" id="formulario"
+      {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"
+      data-lista="#eventos" data-fragmento="{% url 'interface:fragmento-evento' %}"{% endif %}>
+  {% csrf_token %}
+  <section aria-labelledby="cronograma-titulo">
+    <h2 id="cronograma-titulo">Cronograma</h2>
+    <p class="ajuda">Eventos pontuais e períodos deste Edital. A ordem segue a sequência em tela;
+      as datas usam o horário de Brasília.</p>
+    <p class="contadores" data-contador="#eventos" data-item=".evento" data-singular="Evento" data-plural="Eventos">
+      <span><strong>{{ eventos|length }}</strong> Evento{{ eventos|length|pluralize:"s" }}</span>
+    </p>
+    <div id="eventos">
+      {% for evento in eventos %}{% include "interface/_evento.html" with indice=forloop.counter0 %}{% endfor %}
+    </div>
+    {% if editavel %}
+    <button type="button" class="botao secundario"
+            hx-get="{% url 'interface:fragmento-evento' %}"
+            hx-target="#eventos" hx-swap="beforeend">Acrescentar Evento</button>
+    {% endif %}
+  </section>
+  {% include "interface/_navegacao_etapa.html" %}
+</form>
+{% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
+<script src="{% static 'interface/assistente.js' %}" defer></script>
+<script src="{% static 'interface/rascunho.js' %}" defer></script>
+{% endblock %}

@@ -130,3 +130,45 @@ def public_history(*, edital_id, cursor=None, limit=DEFAULT_LIMIT):
     page = entries[:limit]
     has_more = len(entries) > limit
     return page, (_encode_cursor(page[-1]) if page and has_more else None)
+
+
+def participantes_do_edital(edital):
+    """Quem elaborou, homologou e publicou — base da segregação de funções (FR-012).
+
+    A regra é do domínio e é ele quem recusa; a tela precisa desses nomes para comunicar a
+    exigência **antes** da tentativa, e não só depois da recusa.
+    """
+    from processo_seletivo.publicacoes.models import Homologacao, Publicacao, RevisaoEdital
+
+    revisao = RevisaoEdital.objects.filter(edital=edital).order_by("-submitted_at").first()
+    homologacao = (
+        Homologacao.objects.filter(revisao=revisao, revoked_at__isnull=True)
+        .order_by("-homologated_at")
+        .first()
+        if revisao
+        else None
+    )
+    publicacao = (
+        Publicacao.objects.filter(edital=edital, revisao__isnull=False)
+        .order_by("-publication_order")
+        .first()
+    )
+    return {
+        "elaborou": revisao.prepared_by if revisao else "",
+        "elaborou_em": revisao.submitted_at if revisao else None,
+        "homologou": homologacao.homologated_by if homologacao else "",
+        "homologou_em": homologacao.homologated_at if homologacao else None,
+        "publicou": publicacao.published_by if publicacao else "",
+        "publicou_em": publicacao.published_at if publicacao else None,
+        "signatario": (
+            f"{publicacao.signatory_name} — {publicacao.signatory_role}" if publicacao else ""
+        ),
+    }
+
+
+def impede_por_segregacao(participantes, ator):
+    """Publicar exige que outra pessoa tenha elaborado ou homologado (FR-021 da 001)."""
+    return bool(
+        participantes["elaborou"]
+        and participantes["elaborou"] == participantes["homologou"] == ator.subject
+    )

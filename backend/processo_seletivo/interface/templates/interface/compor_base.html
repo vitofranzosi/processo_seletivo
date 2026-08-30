@@ -1,0 +1,48 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}{% block etapa_titulo %}Compor{% endblock %} — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">Compor</span>
+</nav>
+
+<h1>Edital {{ edital.number }}/{{ edital.year }}</h1>
+<p class="sub">{{ edital.title }}
+  <span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span></p>
+
+<nav aria-label="Etapas da composição">
+  <ol class="assistente">
+    {% for passo in progresso %}
+    <li class="{% if passo.atual %}a-atual{% elif passo.concluida %}a-concluida{% else %}a-pendente{% endif %}">
+      <a href="{% url 'interface:compor-etapa' edital.id passo.chave %}"
+         {% if passo.atual %}aria-current="step"{% endif %}>
+        <span class="numero" aria-hidden="true">{{ passo.numero }}</span>
+        <span class="nome">{{ passo.rotulo }}</span>
+        {% if passo.concluida %}<span class="estado">concluída</span>
+        {% elif passo.atual %}<span class="estado">etapa atual</span>{% endif %}
+      </a>
+    </li>
+    {% endfor %}
+  </ol>
+</nav>
+
+{% if salvo %}<p class="sucesso" role="status">Rascunho salvo.</p>{% endif %}
+
+{% if erros %}
+<div class="erro" role="alert">
+  <strong>Não foi possível salvar:</strong>
+  <ul>{% for erro in erros %}<li>{{ erro }}</li>{% endfor %}</ul>
+  <p class="ajuda">O que você digitou foi preservado abaixo.</p>
+</div>
+{% endif %}
+
+{% if not editavel %}
+<p class="aviso"><strong>Somente leitura.</strong>
+  {% if edital.status != 'EM_ELABORACAO' %}Este Edital não está mais em elaboração; alterações
+  após a Publicação ocorrem por Retificação.{% else %}Você não tem a permissão
+  <code>edital:elaborar</code>.{% endif %}</p>
+{% endif %}
+
+{% block etapa %}{% endblock %}
+{% endblock %}

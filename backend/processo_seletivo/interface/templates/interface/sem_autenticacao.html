@@ -1,0 +1,9 @@
+{% extends "interface/base.html" %}
+{% block titulo %}Autenticação indisponível{% endblock %}
+{% block conteudo %}
+<h1>Autenticação institucional não configurada</h1>
+<p class="erro" role="alert">Esta interface exige autenticação institucional, que ainda não foi
+integrada. O seletor de identidade existe apenas em ambiente de desenvolvimento e está desligado
+aqui.</p>
+<p>Enquanto a integração com o diretório não ocorre, esta interface não pode ser usada.</p>
+{% endblock %}

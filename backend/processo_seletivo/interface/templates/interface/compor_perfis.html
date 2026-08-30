@@ -1,0 +1,27 @@
+{% extends "interface/compor_base.html" %}{% load interface_extras %}
+{% block etapa_titulo %}Perfis de Vaga{% endblock %}
+{% block etapa %}
+<form method="post" id="formulario"
+      {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"
+      data-lista="#perfis" data-fragmento="{% url 'interface:fragmento-perfil' %}"{% endif %}>
+  {% csrf_token %}
+  <section aria-labelledby="perfis-titulo">
+    <h2 id="perfis-titulo">Perfis de Vaga</h2>
+    <p class="ajuda">Cada Perfil é uma oportunidade do Edital, com requisitos, vagas e modalidades
+      próprios. Alterar um não afeta os demais.</p>
+    <p class="contadores" data-contador="#perfis" data-item=".perfil" data-singular="Perfil" data-plural="Perfis"><span><strong>{{ perfis|length }}</strong> {{ perfis|length|plural:"Perfil,Perfis" }}</span></p>
+    <div id="perfis">
+      {% for perfil in perfis %}{% include "interface/_perfil.html" with indice=forloop.counter0 %}{% endfor %}
+    </div>
+    {% if editavel %}
+    <button type="button" class="botao secundario"
+            hx-get="{% url 'interface:fragmento-perfil' %}"
+            hx-target="#perfis" hx-swap="beforeend">Acrescentar Perfil</button>
+    {% endif %}
+  </section>
+  {% include "interface/_navegacao_etapa.html" %}
+</form>
+{% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
+<script src="{% static 'interface/assistente.js' %}" defer></script>
+<script src="{% static 'interface/rascunho.js' %}" defer></script>
+{% endblock %}

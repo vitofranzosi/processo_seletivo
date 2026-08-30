@@ -1,0 +1,16 @@
+<p class="navegacao-etapa">
+  {% if anterior %}
+  <button type="submit" name="destino" value="{{ anterior }}" class="acao">‹ Voltar</button>
+  {% endif %}
+  {% if editavel %}
+  <button type="submit" name="destino" value="{{ etapa }}" class="botao secundario">Salvar rascunho</button>
+  {% comment %}
+  FR-020: distinguir o que já foi enviado do que só existe neste navegador. Nasce oculto
+  porque o HTML recém-renderizado é, por definição, o que o servidor tem.
+  {% endcomment %}
+  <span class="nao-enviado" data-nao-enviado role="status" hidden>alterações ainda não enviadas</span>
+  {% endif %}
+  {% if proxima %}
+  <button type="submit" name="destino" value="{{ proxima }}" class="botao">Avançar ›</button>
+  {% endif %}
+</p>

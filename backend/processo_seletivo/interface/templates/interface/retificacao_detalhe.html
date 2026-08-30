@@ -1,0 +1,67 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Retificação — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">Retificação</span>
+</nav>
+
+<h1>Retificação do Edital {{ edital.number }}/{{ edital.year }}</h1>
+<p class="sub">{{ retificacao.justification }}
+  <span class="situacao s-{{ retificacao.status }}">{{ retificacao.status|situacao }}</span></p>
+
+{% if request.GET.ato %}<p class="sucesso" role="status">Ato registrado.</p>{% endif %}
+
+<div class="colunas">
+  <section aria-labelledby="vigencia-titulo" class="cartao">
+    <h2 id="vigencia-titulo">Vigência</h2>
+    {% if publicada %}
+    <p>Publicada em {{ publicada.published_at|date:"d/m/Y H:i" }}.</p>
+    <p><strong>{% if publicada.effective_at > publicada.published_at %}Passa a vigorar em
+      {{ publicada.effective_at|date:"d/m/Y H:i" }}{% else %}Vigente desde a Publicação{% endif %}.</strong></p>
+    {% elif vigencia %}
+    <p>Se publicada agora, passará a vigorar em
+      <strong>{{ vigencia|date:"d/m/Y H:i" }}</strong> — até lá, o conteúdo atual continua valendo.</p>
+    {% else %}
+    <p>Sem data declarada: passará a vigorar <strong>no momento da Publicação</strong>.</p>
+    {% endif %}
+    <p class="ajuda">Nada muda para o público antes da Publicação.</p>
+  </section>
+
+  <section aria-labelledby="acoes-titulo" class="cartao">
+    <h2 id="acoes-titulo">O que fazer agora</h2>
+    <ul class="lista-acoes">
+      {% for ato in atos %}
+      <li>
+        <a class="botao {% if ato.interrupcao %}perigoso{% elif ato.irreversivel %}{% else %}secundario{% endif %}"
+           href="{% url 'interface:retificacao-ato' retificacao.id ato.chave %}">{{ ato.rotulo }}</a>
+        {% if ato.irreversivel %}<span class="marca-irreversivel">irreversível</span>{% endif %}
+      </li>
+      {% empty %}
+      <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+
+<section aria-labelledby="alteracoes-titulo" class="consequencias">
+  <h2 id="alteracoes-titulo">Alterações declaradas ({{ alteracoes|length }})</h2>
+  <table>
+    <thead><tr>
+      <th scope="col">Caminho</th><th scope="col">Operação</th>
+      <th scope="col">Antes</th><th scope="col">Depois</th>
+    </tr></thead>
+    <tbody>
+      {% for item in alteracoes %}
+      <tr>
+        <th scope="row"><code>{{ item.caminho }}</code></th>
+        <td>{{ item.operacao }}</td>
+        <td class="antes">{{ item.antes }}</td>
+        <td class="depois">{{ item.depois }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

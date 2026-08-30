@@ -1,0 +1,35 @@
+<fieldset class="linha evento">
+  <legend>Evento do Cronograma</legend>
+  <input type="hidden" name="evento-{{ indice }}-id" value="{{ evento.id }}">
+  <div class="campos">
+    <p class="campo curto">
+      <label for="evento-{{ indice }}-type">Tipo</label>
+      <input type="text" id="evento-{{ indice }}-type" name="evento-{{ indice }}-type"
+             value="{{ evento.type|default:'' }}" required placeholder="Inscrições">
+    </p>
+    <p class="campo largo">
+      <label for="evento-{{ indice }}-description">Descrição</label>
+      <input type="text" id="evento-{{ indice }}-description"
+             name="evento-{{ indice }}-description" value="{{ evento.description|default:'' }}" required>
+    </p>
+  </div>
+  <div class="campos">
+    <p class="campo">
+      <label for="evento-{{ indice }}-startAt">Início</label>
+      <input type="datetime-local" id="evento-{{ indice }}-startAt"
+             name="evento-{{ indice }}-startAt" value="{{ evento.startAt|default:'' }}" required>
+    </p>
+    <p class="campo">
+      <label for="evento-{{ indice }}-endAt">Término</label>
+      <input type="datetime-local" id="evento-{{ indice }}-endAt"
+             name="evento-{{ indice }}-endAt" value="{{ evento.endAt|default:'' }}"
+             aria-describedby="ajuda-fim-{{ indice }}">
+      <span class="ajuda" id="ajuda-fim-{{ indice }}">Vazio para evento pontual.</span>
+    </p>
+  </div>
+  <p class="remover">
+    <button type="button" class="acao perigo"
+            hx-get="{% url 'interface:fragmento-remover' %}"
+            hx-target="closest fieldset" hx-swap="outerHTML">Remover este Evento</button>
+  </p>
+</fieldset>

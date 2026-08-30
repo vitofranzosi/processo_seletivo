@@ -37,10 +37,10 @@ def ator(subject, *permissoes):
     return Actor(subject, ESCOPO, frozenset(permissoes))
 
 
-def perfis():
+def perfis(numero):
     return [
         {
-            "id": "00000000-0000-0000-0000-0000000000b1",
+            "id": f"00000000-0000-0000-00{numero}-0000000000b1",
             "code": "DOC-INFO",
             "name": "Professor de Informática",
             "description": "Docência em Informática no ensino técnico e superior.",
@@ -64,7 +64,7 @@ def perfis():
             ],
         },
         {
-            "id": "00000000-0000-0000-0000-0000000000b2",
+            "id": f"00000000-0000-0000-00{numero}-0000000000b2",
             "code": "TEC-LAB",
             "name": "Técnico de Laboratório",
             "description": "Apoio técnico aos laboratórios de informática.",
@@ -77,15 +77,17 @@ def perfis():
     ]
 
 
-def cronograma(agora):
+def cronograma(agora, numero):
+    # `type` é texto livre e a tela o exibe como foi escrito: "INSCRICAO" aparecia cru no
+    # Cronograma e no PDF. Aqui vale escrever como um Edital de verdade escreveria.
     marcos = [
-        ("INSCRICAO", "Período de inscrições", 0, 20),
-        ("PROVA", "Prova objetiva", 35, None),
-        ("RESULTADO", "Divulgação do resultado final", 60, None),
+        ("Inscrições", "Inscrições pelo sistema, com isenção de taxa até o 5º dia.", 0, 20),
+        ("Prova objetiva", "Aplicação da prova no Campus Vitória, em turno único.", 35, None),
+        ("Resultado final", "Resultado final e abertura do prazo recursal.", 60, None),
     ]
     return [
         {
-            "id": f"00000000-0000-0000-0000-0000000000c{indice}",
+            "id": f"00000000-0000-0000-00{numero}-0000000000c{indice}",
             "type": tipo,
             "description": descricao,
             # A camada de aplicação recebe datetime; a conversão de ISO é do serializer.
@@ -97,12 +99,36 @@ def cronograma(agora):
     ]
 
 
+
+# Os Perfis do seed são fixos — docência em Informática e técnico de laboratório. Fazer o
+# título variar sem variar o conteúdo produziria um Processo anunciando "Tutoria a distância"
+# cujos Perfis são outros; quem precisa de execuções distintas usa --titulo.
+AREA = "Professor Substituto e Técnico-Administrativo"
+
+
+def _titulo_do_processo(ano, titulo_informado):
+    return titulo_informado or f"Processo Seletivo Simplificado {ano}"
+
+
 class Command(BaseCommand):
     help = "Cria um Processo Seletivo demonstrativo, publicado e retificado."
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--codigo", default="PS-DEMO-2026", help="identificação institucional do Processo"
+        )
+        parser.add_argument(
+            "--numero",
+            default="01",
+            help="número do Edital; precisa ser único no escopo para o mesmo ano",
+        )
+        parser.add_argument(
+            "--titulo",
+            default=None,
+            help="título do Processo (padrão: Processo Seletivo Simplificado <ano>)",
+        )
+        parser.add_argument(
+            "--ano", type=int, default=None, help="ano do Edital (padrão: o ano corrente)"
         )
         parser.add_argument(
             "--recriar",
@@ -120,21 +146,24 @@ class Command(BaseCommand):
                 f"Já existe Processo com o código {codigo}. Use --codigo para outro identificador."
             )
 
+        numero = opcoes["numero"]
         agora = timezone.now()
+        ano = opcoes["ano"] or agora.year
+        titulo = _titulo_do_processo(ano, opcoes["titulo"])
         elaborador = ator("ana.elaboradora", "processo:criar", "edital:elaborar", "edital:submeter")
         homologador = ator("bruno.homologador", "edital:homologar")
         publicador = ator("carla.publicadora", "edital:publicar")
 
         with transaction.atomic():
-            processo, _ = self._criar(elaborador, codigo)
+            processo, _ = self._criar(elaborador, codigo, numero, ano, titulo)
             edital = Edital.objects.get(processo=processo)
-            self._elaborar(elaborador, edital, agora)
+            self._elaborar(elaborador, edital, agora, numero)
             self._publicar(elaborador, homologador, publicador, edital)
 
         self._retificar(edital, agora)
         self._resumo(processo, edital)
 
-    def _criar(self, elaborador, codigo):
+    def _criar(self, elaborador, codigo, numero, ano, titulo):
         self.stdout.write("Criando Processo e primeiro Edital…")
         from processo_seletivo.processos.application.commands import (
             create_process_with_first_edital,
@@ -144,19 +173,19 @@ class Command(BaseCommand):
             actor=elaborador,
             data={
                 "institutionalCode": codigo,
-                "title": "Processo Seletivo Simplificado 2026",
+                "title": titulo,
                 "firstEdital": {
-                    "number": "01",
-                    "year": 2026,
-                    "title": "Edital 01/2026 — Professor Substituto",
+                    "number": numero,
+                    "year": ano,
+                    "title": f"Edital {numero}/{ano} — {AREA}",
                     "description": "Seleção simplificada para professor substituto e técnico.",
                 },
             },
-            idempotency_key=f"seed-demo-{codigo}-0001",
+            idempotency_key=f"seed-demo-{codigo}-{numero}-01",
             correlation_id="seed-demo",
         )
 
-    def _elaborar(self, elaborador, edital, agora):
+    def _elaborar(self, elaborador, edital, agora, numero):
         from processo_seletivo.editais.application.draft import replace_draft
 
         self.stdout.write("Elaborando Perfis e Cronograma…")
@@ -164,8 +193,8 @@ class Command(BaseCommand):
             actor=elaborador,
             edital_id=edital.id,
             expected_revision=edital.revision,
-            profiles=perfis(),
-            schedule=cronograma(agora),
+            profiles=perfis(numero),
+            schedule=cronograma(agora, numero),
             correlation_id="seed-demo",
         )
         edital.refresh_from_db()
@@ -176,7 +205,7 @@ class Command(BaseCommand):
             actor=elaborador,
             edital_id=edital.id,
             expected_revision=edital.revision,
-            idempotency_key="seed-demo-submissao-0001",
+            idempotency_key=f"seed-demo-sub-{edital.id.hex[:12]}",
             correlation_id="seed-demo",
         )
         edital, _ = homologate_edital(
@@ -184,7 +213,7 @@ class Command(BaseCommand):
             edital_id=edital.id,
             expected_revision=edital.revision,
             reason="Conteúdo conferido pela comissão.",
-            idempotency_key="seed-demo-homologacao-01",
+            idempotency_key=f"seed-demo-hom-{edital.id.hex[:12]}",
             correlation_id="seed-demo",
         )
         publish_edital(
@@ -193,7 +222,7 @@ class Command(BaseCommand):
             expected_revision=edital.revision,
             signatory=SIGNATARIO,
             reason="Publicação do edital original.",
-            idempotency_key="seed-demo-publicacao-01",
+            idempotency_key=f"seed-demo-pub-{edital.id.hex[:12]}",
             correlation_id="seed-demo",
         )
 

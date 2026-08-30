@@ -1,0 +1,23 @@
+<fieldset class="linha perfil-novo">
+  <legend>Perfil a acrescentar</legend>
+  <div class="campos">
+    {% for campo in campos %}
+    <p class="campo{% if campo.tipo == 'inteiro' %} curto{% elif campo.tipo == 'lista' %} largo{% endif %}">
+      <label for="np-{{ indice }}-{{ campo.chave }}">{{ campo.rotulo }}</label>
+      {% if campo.tipo == 'lista' %}
+      <textarea id="np-{{ indice }}-{{ campo.chave }}" name="novo-perfil-{{ indice }}-{{ campo.chave }}"
+                rows="2" aria-describedby="ajuda-np-{{ indice }}-{{ campo.chave }}">{{ campo.valor }}</textarea>
+      <span class="ajuda" id="ajuda-np-{{ indice }}-{{ campo.chave }}">Um por linha.</span>
+      {% else %}
+      <input id="np-{{ indice }}-{{ campo.chave }}" name="novo-perfil-{{ indice }}-{{ campo.chave }}"
+             type="{% if campo.tipo == 'inteiro' %}number{% else %}text{% endif %}"
+             value="{{ campo.valor }}">
+      {% endif %}
+    </p>
+    {% endfor %}
+  </div>
+  <p class="acoes-linha">
+    <button type="button" class="acao" hx-get="{% url 'interface:fragmento-remover' %}"
+            hx-target="closest fieldset" hx-swap="outerHTML">Não acrescentar este Perfil</button>
+  </p>
+</fieldset>

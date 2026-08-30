@@ -15,16 +15,39 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.staticfiles",
     "rest_framework",
     "processo_seletivo.processos",
     "processo_seletivo.editais",
     "processo_seletivo.publicacoes",
     "processo_seletivo.seguranca",
     "processo_seletivo.auditoria",
+    "processo_seletivo.interface",
 ]
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "processo_seletivo.interface.identidade.contexto_identidade",
+            ]
+        },
+    }
+]
+STATIC_URL = "static/"
+
+# Seletor de identidade: substitui a autenticação institucional enquanto ela não existe.
+# Nunca deve estar ligado em produção — ver specs/002-frontend-administrativo/plan.md, Decisão 4.
+INTERFACE_SELETOR_IDENTIDADE = os.getenv("INTERFACE_SELETOR_IDENTIDADE", "false").lower() == "true"
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
     "processo_seletivo.shared.api.middleware.CorrelationIdMiddleware",
+    "processo_seletivo.interface.erros.RecusaDoDominioMiddleware",
     "django.middleware.common.CommonMiddleware",
 ]
 database_role = os.getenv("DB_ROLE", "runtime")
