@@ -1,8 +1,13 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 -> 1.1.0
-- Motivo do MINOR: princípio novo acrescentado; nenhum princípio existente foi removido ou
+- Version change: 1.0.0 -> 1.1.0 -> 1.1.1
+- Motivo do MINOR (1.1.0): princípio novo acrescentado; nenhum princípio existente foi removido ou
   redefinido, e nenhuma garantia anterior foi enfraquecida.
+- Motivo do PATCH (1.1.1): "interface do produto" era leitura estreita demais. O produto tem mais
+  de um canal — a interface administrativa serve quem elabora, a API pública serve quem consulta —
+  e a redação anterior tornaria indemonstrável, por definição, qualquer jornada cujo ator não use
+  navegador. A exigência passa a ser o canal destinado ao ator daquela jornada, sem perder o dente:
+  continua vedado demonstrar por chamada manual o que o canal do ator não oferece.
 - Origem: revisão de produto de 2026-08-30 sobre as telas da `002`, verificada contra o
   repositório. As specs `003`, `004` e `005` nasceram, cada uma, do limite registrado pela
   anterior — a função objetivo que a Constituição declarava era completa em integridade e omissa
@@ -161,8 +166,10 @@ domínio sustenta mas que nenhuma interface alcança NÃO DEVE ser considerada e
 
 Uma especificação somente DEVE ser considerada concluída quando existir cenário demonstrável de
 ponta a ponta no qual o usuário realiza ação nova ou completa de maneira significativamente melhor
-uma ação existente. O cenário DEVE ser executável pela interface do produto, sem manipulação de
-banco, chamada manual de API ou shell.
+uma ação existente. O cenário DEVE ser executável pelo canal destinado ao ator daquela jornada — a
+interface administrativa para quem elabora, a API pública para quem consulta — sem manipulação de
+banco, sem shell e sem recurso a canal alheio ao ator. Demonstrar por chamada manual aquilo que o
+canal do ator não oferece NÃO satisfaz esta exigência.
 
 Trabalho exclusivamente técnico PODE existir quando necessário para desbloquear jornada já
 identificada, mas DEVE declarar explicitamente qual capacidade de produto desbloqueia e NÃO DEVE
@@ -256,4 +263,4 @@ Planos e revisões de implementação DEVEM conter verificação constitucional.
 justificativa aprovada DEVE bloquear o incremento. A conformidade DEVE ser reavaliada em cada
 análise de consistência e antes da conclusão de funcionalidade.
 
-**Version**: 1.1.0 | **Ratified**: 2026-08-27 | **Last Amended**: 2026-08-30
+**Version**: 1.1.1 | **Ratified**: 2026-08-27 | **Last Amended**: 2026-08-30

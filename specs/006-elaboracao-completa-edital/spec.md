@@ -53,6 +53,23 @@ teste que uma coleção não declarada falhe a suíte em vez de passar em silên
 Esta feature não conserta a arquitetura. Ela reorienta a arquitetura existente para completar o
 objeto central do produto: o Edital em elaboração.
 
+## Clarifications
+
+### Session 2026-08-30
+
+- Q: As Etapas de Avaliação pertencem ao Edital ou a cada Perfil de Vaga? → A: Ao Edital, nesta
+  versão. A Constituição admite Perfis com Etapas distintas, mas admitir não é exigir; sem nada
+  publicado, mover a coleção depois custa uma migration.
+- Q: O conjunto de seções do Edital é fixo ou gerenciável por quem elabora? → A: Fixo. O sistema
+  define quais seções existem e em que ordem; quem elabora edita apenas o texto das textuais.
+- Q: A prévia fica disponível só na elaboração? → A: Também com o Edital submetido e homologado, com
+  origem única de conteúdo — quem homologa e quem publica precisam ver o que decidem.
+
+**Resolvidas por verificação, sem pergunta.** A faixa do percentual: opcional, e quando informado
+maior que zero e menor ou igual a cem (FR-030). E o `SC-009`: a demonstração envolve ao menos dois
+atores, porque a publicação recusa quem elaborou, homologou e publicou sozinho
+(`publicacoes/application/publish_edital.py:275-280`).
+
 ## Princípios desta feature
 
 ### P-001 — Resultado visível antes de sofisticação
@@ -141,12 +158,14 @@ continuar editando — sem que nenhuma Publicação, Revisão ou Documento seja 
 
 1. **Given** um Edital em elaboração, **When** aciono `Visualizar Edital` na etapa de Revisão,
    **Then** recebo o documento renderizado a partir do rascunho gravado.
-2. **Given** que visualizei o documento, **When** consulto o estado do Edital, **Then** ele
-   permanece em elaboração e nenhuma `Publicacao`, `RevisaoEdital`, `VersaoConsolidada` ou
-   `DocumentoPublicado` foi criada.
-3. **Given** o documento visualizado, **When** o comparo com o documento publicado logo em seguida
+2. **Given** um Edital submetido ou homologado, **When** abro seu detalhe como quem homologa ou
+   quem publica, **Then** consigo visualizar o documento antes de decidir.
+3. **Given** que visualizei o documento, **When** consulto o estado do Edital, **Then** ele
+   permanece no mesmo estado em que estava e nenhuma `Publicacao`, `RevisaoEdital`,
+   `VersaoConsolidada` ou `DocumentoPublicado` foi criada.
+4. **Given** o documento visualizado, **When** o comparo com o documento publicado logo em seguida
    sem alterações intermediárias, **Then** o conteúdo normativo é equivalente.
-4. **Given** o documento visualizado, **When** o examino, **Then** ele se identifica
+5. **Given** o documento visualizado, **When** o examino, **Then** ele se identifica
    inequivocamente como prévia e não exibe declaração de integridade que sugira ato publicado.
 
 ---
@@ -289,8 +308,15 @@ alteração no documento junto das seções geradas a partir dos dados estrutura
 
 ### Prévia do documento (US1)
 
-- **FR-008**: A etapa de Revisão DEVE oferecer ação visível `Visualizar Edital`.
-- **FR-009**: A prévia DEVE ser produzida a partir do estado gravado do rascunho.
+- **FR-008**: A etapa de Revisão DEVE oferecer ação visível `Visualizar Edital`. A mesma ação DEVE
+  estar disponível no detalhe do Edital enquanto ele estiver submetido ou homologado, para que quem
+  homologa e quem publica vejam o documento antes de decidir. *A publicação exige ao menos dois
+  atores (`publicacoes/application/publish_edital.py:275-280`); decidir sobre um documento sem
+  poder lê-lo esvaziaria a segregação de funções.*
+- **FR-009**: A prévia DEVE ser produzida a partir do estado gravado do Edital, em qualquer dos três
+  estados. NÃO DEVE existir uma segunda origem de conteúdo: depois da submissão o rascunho não é
+  editável e a publicação já recusa divergência entre rascunho e revisão homologada
+  (`publicacoes/application/publish_edital.py:282-285`), de modo que a origem única basta.
 - **FR-010**: A prévia DEVE reutilizar o pipeline de composição e renderização já existente; NÃO
   DEVE existir um segundo layout independente para prévia e publicado.
 - **FR-011**: Visualizar NÃO PODE alterar o estado do Edital nem criar Publicação, Revisão, Versão
@@ -320,7 +346,11 @@ alteração no documento junto das seções geradas a partir dos dados estrutura
 - **FR-021**: Uma Etapa PODE referenciar um Evento existente do Cronograma; quando referencia, suas
   datas vêm do Evento e NÃO DEVEM ser digitadas de novo.
 - **FR-022**: A referência a Evento DEVE apontar para Evento existente do mesmo Edital.
-- **FR-023**: As Etapas DEVEM integrar o snapshot canônico publicado.
+- **FR-023**: As Etapas pertencem ao Edital e valem para todos os seus Perfis; DEVEM integrar o
+  snapshot canônico publicado como coleção única. *A Constituição admite que Perfis possuam Etapas
+  distintas, e admitir não é exigir. Nada está publicado, então mover a coleção para dentro do
+  Perfil depois custa uma migration e um caminho de snapshot — preço que se paga quando houver um
+  Edital real que precise disso, e não antes.*
 - **FR-024**: A coleção de Etapas DEVE ser declarada como coleção com chave estável no registro
   existente, e ser endereçável pela Retificação sem alteração da gramática.
 - **FR-025**: As Etapas DEVEM aparecer na prévia e no documento publicado.
@@ -336,10 +366,12 @@ alteração no documento junto das seções geradas a partir dos dados estrutura
   normativas; salvar o Cronograma NÃO PODE apagar o que foi configurado nos Perfis.
 - **FR-029**: Identificador de modalidade recebido na gravação DEVE ser recusado quando pertencer a
   outro Perfil ou a outro Edital, pela mesma verificação que hoje protege Perfis e Eventos.
-- **FR-030**: Percentual DEVE ter esquema explícito e faixa validada **no domínio**, não apenas no
-  serializer da API nem no formulário — a interface chama o command diretamente e não atravessa o
-  serializer. NÃO DEVE ser validada soma de percentuais entre modalidades: modalidades de reserva não
-  somam cem por cento, e a regra de composição pertence à jornada do candidato.
+- **FR-030**: Percentual é opcional; quando informado, DEVE ser maior que zero e menor ou igual a
+  cem. *Modalidade sem reserva percentual exprime-se pela ausência da regra, não por zero por
+  cento — que afirmaria uma reserva de nenhuma vaga.* A faixa DEVE ser validada **no domínio**, não
+  apenas no serializer da API nem no formulário: a interface chama o command diretamente e não
+  atravessa o serializer. NÃO DEVE ser validada soma de percentuais entre modalidades — modalidades
+  de reserva não somam cem por cento, e a regra de composição pertence à jornada do candidato.
 - **FR-031**: A configuração DEVE aparecer na prévia e no documento publicado. *O renderizador já
   imprime fundamento e percentual; o requisito é de cobertura, não de trabalho novo.*
 - **FR-032**: A configuração DEVE permanecer endereçável pela Retificação pelo caminho já existente,
@@ -351,7 +383,9 @@ alteração no documento junto das seções geradas a partir dos dados estrutura
 ### Conteúdo textual (US4)
 
 - **FR-034**: O Edital DEVE possuir uma estrutura ordenada de seções, cada uma com chave estável,
-  título, ordem e tipo.
+  título, ordem e tipo. **O conjunto de seções e a ordem entre elas são definidos pelo sistema**;
+  quem elabora edita o texto das seções textuais e NÃO acrescenta, remove nem reordena seções. *É o
+  que separa um documento institucional estruturado de um construtor de documentos.*
 - **FR-035**: DEVEM existir exatamente dois tipos nesta versão: seção **gerada**, cujo conteúdo vem
   dos dados estruturados, e seção **textual**, cujo conteúdo é redigido por quem elabora.
 - **FR-036**: Conteúdo gerado NÃO PODE ser persistido como texto duplicado; a seção gerada declara
@@ -425,10 +459,13 @@ alteração no documento junto das seções geradas a partir dos dados estrutura
   publicado.
 - **SC-008**: Etapas, modalidades e seções textuais publicadas são endereçáveis pelo mecanismo
   existente de Retificação, sem alteração da gramática de endereçamento.
-- **SC-009**: A jornada completa é demonstrável sem manipulação de banco, chamada manual de API ou
-  shell: **Painel → Novo Processo → Identificação → Perfis → Cronograma → Etapas → Modalidades →
-  Conteúdo → Revisão → Prévia → Publicação → documento publicado.** Este é o critério emblemático
-  da feature.
+- **SC-009**: A jornada completa é demonstrável pela interface administrativa, sem manipulação de
+  banco, chamada manual de API ou shell: **Painel → Novo Processo → Identificação → Perfis →
+  Cronograma → Etapas → Modalidades → Conteúdo → Revisão → Prévia → Submissão → Homologação →
+  Publicação → documento publicado.** A demonstração envolve **ao menos dois atores**, porque a
+  publicação é recusada quando uma única pessoa elabora, homologa e publica
+  (`publicacoes/application/publish_edital.py:275-280`); dois bastam, já que a recusa exige a
+  coincidência das três funções. Este é o critério emblemático da feature.
 
 ## Assumptions
 
@@ -448,6 +485,8 @@ Desta feature inteira, e sem exceção:
   convocação;
 - motor de cotas — distribuição, arredondamento, ocupação, remanejamento;
 - critérios, rubricas, planilhas de avaliação, fórmulas e dependência entre Etapas;
+- Etapas distintas por Perfil de Vaga, admitidas pela Constituição e adiadas nesta versão;
+- acrescentar, remover ou reordenar seções do Edital;
 - modelos reutilizáveis, clonagem, importação e engine de templates;
 - criar Edital adicional em Processo já existente, que permanece disponível apenas pela API;
 - editor rico, blocos arbitrários, histórico editorial, comentários, colaboração simultânea;
