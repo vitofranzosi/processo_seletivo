@@ -285,6 +285,8 @@ function montar({ formulario, armazem = new Armazem(), avisos = [], ordenaveis =
       const evento = {
         type: tipo,
         detail: detalhe,
+        // `change` lê `target`; `htmx:confirm` lê `detail`. O mesmo disparador serve aos dois.
+        target: detalhe,
         impedido: false,
         preventDefault() {
           this.impedido = true;

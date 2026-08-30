@@ -21,6 +21,10 @@
     var campos = linha.querySelectorAll("input, textarea, select");
     return [].filter.call(campos, function (campo) {
       if (IGNORADOS.indexOf(campo.type) >= 0) return false;
+      // A própria marcação de remoção não é conteúdo a perder. Na tela de Retificação o evento
+      // chega **depois** de a caixa ficar marcada, então contá-la inflava o número anunciado:
+      // "descarta 3 campos preenchidos" quando dois eram do usuário e o terceiro era o pedido.
+      if (/^remover:/.test(campo.name || "")) return false;
       if (campo.type === "checkbox" || campo.type === "radio") return campo.checked;
       // `order` é mantido pelo próprio script de ordenação e nunca está vazio.
       if (campo.name && /-order$/.test(campo.name)) return false;

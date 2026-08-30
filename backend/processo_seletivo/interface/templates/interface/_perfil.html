@@ -52,10 +52,13 @@
   <div class="campos">
     <p class="campo curto">
       <label for="perfil-{{ indice }}-immediateVacancies">Vagas imediatas</label>
+      {% recusa_de recusas "perfil" indice "immediateVacancies" as recusado %}
       <input type="number" min="0" id="perfil-{{ indice }}-immediateVacancies"
              name="perfil-{{ indice }}-immediateVacancies"
-             value="{{ perfil.immediateVacancies|default:0 }}">
-      {% recusa_de recusas "perfil" indice "immediateVacancies" as recusado %}{% if recusado %}<span class="recusa" role="alert" id="recusa-perfil-{{ indice }}-immediateVacancies">{{ recusado }}</span>{% endif %}
+             value="{{ perfil.immediateVacancies|default:0 }}"
+             {% if recusado %}aria-describedby="recusa-perfil-{{ indice }}-immediateVacancies"{% endif %}
+             {% if recusado %}aria-invalid="true"{% endif %}>
+      {% if recusado %}<span class="recusa" role="alert" id="recusa-perfil-{{ indice }}-immediateVacancies">{{ recusado }}</span>{% endif %}
     </p>
     <p class="campo">
       <label for="perfil-{{ indice }}-reserveType">Cadastro Reserva</label>
@@ -67,10 +70,12 @@
     </p>
     <p class="campo curto">
       <label for="perfil-{{ indice }}-reserveLimit">Limite da reserva</label>
+      {% recusa_de recusas "perfil" indice "reserveLimit" as recusado %}
       <input type="number" min="0" id="perfil-{{ indice }}-reserveLimit"
              name="perfil-{{ indice }}-reserveLimit" value="{{ perfil.reserveLimit|default:'' }}"
-             aria-describedby="ajuda-reserva-{{ indice }}">
-      {% recusa_de recusas "perfil" indice "reserveLimit" as recusado %}{% if recusado %}<span class="recusa" role="alert" id="recusa-perfil-{{ indice }}-reserveLimit">{{ recusado }}</span>{% endif %}
+             aria-describedby="ajuda-reserva-{{ indice }}{% if recusado %} recusa-perfil-{{ indice }}-reserveLimit{% endif %}"
+             {% if recusado %}aria-invalid="true"{% endif %}>
+      {% if recusado %}<span class="recusa" role="alert" id="recusa-perfil-{{ indice }}-reserveLimit">{{ recusado }}</span>{% endif %}
       <span class="ajuda" id="ajuda-reserva-{{ indice }}">Só para reserva limitada.</span>
     </p>
   </div>

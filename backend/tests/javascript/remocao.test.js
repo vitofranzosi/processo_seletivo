@@ -190,3 +190,56 @@ test("botão que não remove a própria linha continua fora", () => {
   assert.equal(evento.impedido, false, "acrescentar não é remover");
   assert.deepEqual(perguntas, []);
 });
+
+/* A marcação de remoção da tela de Retificação: `htmx:confirm` nunca dispara ali. */
+
+function marcarRemocao(alvo, { responder = true } = {}) {
+  montar({});
+  carregar(SCRIPT);
+  globalThis.__resposta = responder;
+  const caixa = new Elemento("input", { name: "remover:r7", type: "checkbox" });
+  caixa.type = "checkbox";
+  caixa.parentNode = alvo.linha;
+  alvo.linha.filhos.push(caixa);
+  caixa.checked = true;
+  globalThis.__documento.disparar("change", caixa);
+  return { caixa, perguntas: globalThis.__perguntas };
+}
+
+test("marcar Remover do Edital confirma antes de descartar", () => {
+  const alvo = linhaRemovivel({ valores: { "perfil-0-name": "Professor" } });
+  const { caixa, perguntas } = marcarRemocao(alvo);
+
+  assert.equal(caixa.checked, true, "confirmado, a marcação permanece");
+  assert.match(perguntas[0], /1 campo preenchido/);
+});
+
+test("cancelar desmarca a caixa em vez de deixar a remoção pedida", () => {
+  const alvo = linhaRemovivel({ valores: { "perfil-0-name": "Professor" } });
+  const { caixa } = marcarRemocao(alvo, { responder: false });
+
+  assert.equal(caixa.checked, false, "cancelar não pode deixar a linha marcada para remoção");
+});
+
+test("a própria caixa de remoção não conta como campo descartado", () => {
+  // O evento chega **depois** de a caixa ficar marcada: contá-la inflava o número anunciado.
+  const alvo = linhaRemovivel({ valores: { "perfil-0-name": "Professor" } });
+  const { perguntas } = marcarRemocao(alvo);
+
+  assert.match(perguntas[0], /1 campo preenchido/);
+  assert.ok(!/2 campos/.test(perguntas[0]), "a marcação de remoção não é conteúdo a perder");
+});
+
+test("desmarcar não pergunta, porque desfazer não perde nada", () => {
+  montar({});
+  carregar(SCRIPT);
+  const alvo = linhaRemovivel({ valores: { "perfil-0-name": "Professor" } });
+  const caixa = new Elemento("input", { name: "remover:r7", type: "checkbox" });
+  caixa.type = "checkbox";
+  caixa.parentNode = alvo.linha;
+  caixa.checked = false;
+
+  globalThis.__documento.disparar("change", caixa);
+
+  assert.deepEqual(globalThis.__perguntas, []);
+});

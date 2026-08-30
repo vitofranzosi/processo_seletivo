@@ -431,6 +431,13 @@ A correção foi a que a revisão sugeriu e é pequena: as três exceções ganh
 linha. Regras que valem para a coleção inteira — "o Edital deve possuir ao menos um Perfil" —
 continuam sem âncora, porque apontar um campo qualquer seria pior do que não apontar.
 
+**Foram precisas duas voltas.** Na primeira, o `<span>` da recusa aparecia ao lado do controle mas
+o controle não o referenciava: `role="alert"` anuncia a mensagem quando ela surge, e não cria
+vínculo — quem volta ao campo depois não tem como saber que aquela mensagem lhe pertence. A segunda
+volta acrescentou `aria-invalid` e a referência em `aria-describedby`, preservando a ajuda que já
+existia, e levou a mesma estrutura à criação de Processo, onde as recusas ainda viravam uma frase
+agregada ("Encurte: A, B.").
+
 - **Onde:** `editais/domain/{perfis,cronograma,etapas}.py` — exceções sem identidade de campo
 - **Consequência hoje:** numa recusa como "reserva limitada sem limite", a pessoa lê o resumo e
   procura a linha sozinha

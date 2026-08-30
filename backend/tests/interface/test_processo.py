@@ -308,8 +308,13 @@ def test_campo_maior_que_a_coluna_e_recusado_na_borda(client, seletor_ligado, ca
 
     resposta = client.post(reverse("interface:processo-criar"), {**dados, campo: "X" * tamanho})
 
+    corpo = resposta.content.decode()
     assert resposta.status_code == 422
-    assert "Encurte" in resposta.content.decode()
+    # A recusa deixou de ser uma frase agregada ("Encurte: A, B.") e passou a ser por campo, com
+    # âncora no resumo e marca junto do controle (FR-033).
+    assert "excede o máximo" in corpo
+    assert f'href="#{campo}"' in corpo, "o resumo precisa levar até o campo"
+    assert f'id="recusa-{campo}"' in corpo, "falta a marca junto do campo"
     assert not ProcessoSeletivo.objects.exists()
 
 
