@@ -180,13 +180,14 @@ Raiz para preparar um ato que pode alterar qualquer conteúdo do Edital.
 
 ```text
 EM_ELABORACAO --> EM_REVISAO --> HOMOLOGADA --> PUBLICADA
-      ^               |
-      +---------------+
+      ^               |               |
+      +---devolver----+---------------+
 
 estado não final --cancelar--> CANCELADA
 ```
 
-Retornos para correção só ocorrem antes da Publicação. `PUBLICADA` e `CANCELADA` são finais.
+Retornos para correção só ocorrem antes da Publicação: `devolver` parte de `EM_REVISAO` ou de
+`HOMOLOGADA`, exige motivo e desfaz a homologação. `PUBLICADA` e `CANCELADA` são finais.
 
 ## AlteracaoNormativa
 
@@ -203,6 +204,14 @@ Operação estruturada imutável após a Publicação da Retificação.
 
 Caminhos iguais ou com relação ancestral/descendente conflitam. Caminhos independentes compõem.
 O PDF/texto não é usado para detectar conflito.
+
+`expectedPreviousHash` é opcional e, quando declarado, é conferido na elaboração contra a versão
+base e na Publicação contra o conteúdo vigente no início de vigência. `ADD` pressupõe caminho
+ausente mesmo sem hash declarado, porque a ausência não é declarável num campo de hash.
+
+A Publicação também verifica a composição inteira: se o ato tornaria inaplicável uma alteração já
+publicada, ou o contrário por vigência posterior, não há versão consolidada determinística e a
+Publicação é rejeitada.
 
 ## Publicacao
 

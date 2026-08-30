@@ -9,6 +9,16 @@ class MotivoSerializer(serializers.Serializer):
     reason = serializers.CharField(min_length=1)
 
 
+class TransicaoSerializer(serializers.Serializer):
+    """Corpo comum das transições: motivo textual e opcional.
+
+    Quais transições exigem motivo é regra de domínio; aqui só se garante o tipo, para que
+    um `reason` não textual seja rejeitado como requisição inválida e não quebre o command.
+    """
+
+    reason = serializers.CharField(required=False, allow_blank=True, default="")
+
+
 class SignatorySerializer(serializers.Serializer):
     authorityId = serializers.UUIDField()
     name = serializers.CharField(min_length=1, max_length=255)
@@ -41,10 +51,18 @@ class ChangeSerializer(serializers.Serializer):
 
 
 class RetificacaoDraftSerializer(serializers.Serializer):
+    """Atualização de rascunho: `baseSnapshotId` é opcional e, quando vem, rebaseia."""
+
     baseSnapshotId = serializers.UUIDField(required=False)
     justification = serializers.CharField(min_length=1)
     effectiveAt = serializers.DateTimeField(required=False, allow_null=True)
     changes = ChangeSerializer(many=True, allow_empty=False)
+
+
+class CriarRetificacaoSerializer(RetificacaoDraftSerializer):
+    """Criação: a versão base é obrigatória, conforme CriarRetificacaoRequest."""
+
+    baseSnapshotId = serializers.UUIDField()
 
 
 class RetificacaoResponseSerializer(serializers.Serializer):

@@ -90,7 +90,10 @@ class DocumentoPublicado(models.Model):
     )
     bytes = models.BinaryField()
     content_type = models.CharField(max_length=100, default="application/pdf")
-    document_hash = models.CharField(max_length=64, unique=True)
+    # Integridade do documento (FR-023), não chave de unicidade: dois documentos
+    # idênticos são legítimos — uma Retificação pode reverter outra e reproduzir
+    # exatamente o conteúdo já publicado, e Editais distintos podem coincidir.
+    document_hash = models.CharField(max_length=64, db_index=True)
 
     def __str__(self):
         return f"Documento — {self.publicacao}"

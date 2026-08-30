@@ -6,12 +6,14 @@ from rest_framework.views import APIView
 from processo_seletivo.processos.api.serializers import EditalResponseSerializer
 from processo_seletivo.processos.api.views import idempotency_key
 from processo_seletivo.publicacoes.api.serializers import (
+    CriarRetificacaoSerializer,
     HomologacaoSerializer,
     MotivoSerializer,
     PublicacaoRequestSerializer,
     PublicacaoResponseSerializer,
     RetificacaoDraftSerializer,
     RetificacaoResponseSerializer,
+    TransicaoSerializer,
 )
 from processo_seletivo.publicacoes.application.publish_edital import (
     homologate_edital,
@@ -117,7 +119,7 @@ class PublishedDocumentView(APIView):
 
 class CreateRetificationView(APIView):
     def post(self, request, edital_id):
-        serializer = RetificacaoDraftSerializer(data=request.data)
+        serializer = CriarRetificacaoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         item = create_retification(
             actor=request.user, edital_id=edital_id, data=serializer.validated_data
@@ -146,13 +148,14 @@ class RetificationTransitionView(APIView):
     action = None
 
     def post(self, request, retificacao_id):
-        reason = request.data.get("reason", "")
+        serializer = TransicaoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         item = transition_retification(
             actor=request.user,
             retificacao_id=retificacao_id,
             expected_revision=parse_if_match(request.headers.get("If-Match")),
             action=self.action,
-            reason=reason,
+            reason=serializer.validated_data["reason"],
         )
         response = Response(RetificacaoResponseSerializer(item).data)
         response["ETag"] = etag(item.revision)
@@ -165,6 +168,10 @@ class SubmitRetificationView(RetificationTransitionView):
 
 class HomologateRetificationView(RetificationTransitionView):
     action = "homologar"
+
+
+class ReturnRetificationView(RetificationTransitionView):
+    action = "devolver"
 
 
 class CancelRetificationView(RetificationTransitionView):

@@ -1,93 +1,149 @@
-# processo_seletivo
+# Processo Seletivo e Editais — Cefor/IFES
 
+Serviço backend para gestão de Processos Seletivos e seus Editais: elaboração, homologação,
+Publicação imutável, Retificações com vigência temporal e consulta pública histórica.
 
+O projeto é conduzido por especificação, com [GitHub Spec Kit](https://github.com/github/spec-kit).
+A [Constituição](.specify/memory/constitution.md) é a autoridade de engenharia e domínio; em
+conflito, ela prevalece.
 
-## Getting started
+## O que o sistema garante
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+- **Publicação é ato imutável.** Um Edital publicado nunca é sobrescrito. Correções ocorrem por
+  Retificação, que preserva a Publicação original, cada ato e todas as versões consolidadas.
+- **O passado é reproduzível.** A consulta informa o conteúdo vigente em qualquer instante, aplicando
+  apenas as Retificações cuja vigência já havia iniciado. A precedência é determinada pelo início da
+  vigência, não pela ordem de Publicação.
+- **Nada é excluído.** Encerramento e cancelamento são atos de domínio motivados e auditados;
+  preservam Publicações, documentos e histórico.
+- **Negar por padrão.** Toda operação exige permissão explícita e verificação de escopo
+  institucional. Quem elabora um Edital não conclui sozinho elaboração, homologação e Publicação.
+- **Auditoria inviolável.** Operações críticas gravam ator, ato, estados anterior e posterior, motivo
+  e correlação, em registros que nem a aplicação nem a role de runtime conseguem alterar.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## Arquitetura
 
-## Add your files
+Monólito modular em Python 3.13 / Django 5.2 LTS / DRF, sobre PostgreSQL. Cada módulo em
+`backend/processo_seletivo/` separa domínio, aplicação, API e persistência:
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+| Módulo | Responsabilidade |
+|---|---|
+| `processos` | Processo Seletivo, Edital, atos administrativos e desfecho |
+| `editais` | Perfis de Vaga, vagas, modalidades, Cronograma e validação |
+| `publicacoes` | Publicação, Retificação, versões consolidadas e consulta pública |
+| `seguranca` | Ator autenticado, permissões e autorização por objeto |
+| `auditoria` | Registro append-only e idempotência |
+| `shared` | Serialização canônica, concorrência otimista, Problem Details e observabilidade |
 
+Operações de workflow são commands explícitos e transacionais. O controle otimista usa `ETag` /
+`If-Match`; commands irreversíveis exigem `Idempotency-Key`. Erros usam `application/problem+json`.
+
+## Requisitos
+
+- Python 3.13
+- [uv](https://docs.astral.sh/uv/)
+- PostgreSQL 16 ou superior (a CI valida contra 18)
+
+## Como rodar
+
+```bash
+cd backend && make install
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/vito.franzosi/processo_seletivo.git
-git branch -M main
-git push -uf origin main
+
+Copie `backend/.env.example` para `backend/.env` e ajuste as credenciais. O projeto separa a role de
+migração da role de runtime: a de runtime não recebe `UPDATE` nem `DELETE` sobre os registros
+append-only, garantia verificada em `tests/integration/test_database_permissions.py`.
+
+```bash
+cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python manage.py migrate
 ```
 
-## Integrate with your tools
+```bash
+cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python manage.py runserver
+```
 
-* [Set up project integrations](https://gitlab.com/vito.franzosi/processo_seletivo/-/settings/integrations)
+### Ver o sistema no ar
 
-## Collaborate with your team
+Não há interface gráfica — ela está fora do escopo deste incremento. O sistema é uma API, e a
+consulta pública é anônima, então basta abrir as URLs no navegador. Para ter o que olhar, popule
+uma demonstração que percorre o fluxo normativo real, com atores distintos em cada etapa:
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+```bash
+cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python manage.py seed_demo
+```
 
-## Test and Deploy
+O comando imprime os identificadores criados e as URLs prontas: versão vigente, histórico e
+Retificação. Ele cria um Edital publicado com dois Perfis e três Eventos, mais duas Retificações —
+uma já vigente e outra com vigência futura —, para que a consulta temporal tenha o que mostrar.
 
-Use the built-in continuous integration in GitLab.
+## Verificação
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+```bash
+cd backend && make lint check test
+```
 
-***
+A suíte roda em SQLite por padrão e ignora os testes que exigem garantias reais do banco. Para
+executar tudo, aponte para um PostgreSQL de teste:
 
-# Editing this README
+```bash
+cd backend && TEST_DB_ENGINE=postgresql DB_NAME=processo_seletivo_test DB_USER=postgres DB_PASSWORD=postgres DB_HOST=localhost DB_PORT=5432 uv run pytest
+```
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+Suítes por marcador: `acceptance` (cenários rastreados), `contract` (conformidade HTTP/OpenAPI),
+`integration` (persistência, locks e concorrência), `authorization` (autorização e anti-IDOR) e
+`performance` (custo de consulta e escalabilidade).
 
-## Suggestions for a good README
+O SLO de carga do `plan.md` depende de serviço implantado e não é verificado pela suíte. Meça-o com:
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+```bash
+cd backend && uv run python scripts/carga_publica.py --base-url https://host/api/v1 --edital <uuid> --workers 50 --duracao 60
+```
 
-## Name
-Choose a self-explaining name for your project.
+## API
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+O contrato é [`specs/001-processo-seletivo-editais/contracts/openapi.yaml`](specs/001-processo-seletivo-editais/contracts/openapi.yaml),
+em OpenAPI 3.1. `tests/contract/test_openapi_conformance.py` falha se alguma operação especificada
+ficar sem rota, se alguma rota for exposta fora do contrato ou se uma resposta divergir do schema.
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+- `/api/v1/admin/…` — commands administrativos, exigem autorização
+- `/api/v1/public/…` — consulta pública anônima, somente conteúdo publicado
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+A autenticação atual é um adaptador de desenvolvimento: `Bearer <subject>|<escopo>|<permissões>`.
+A integração institucional será definida em incremento próprio.
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+### Endpoints operacionais
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+Ficam fora de `/api/v1` por não serem contrato institucional:
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+| Rota | Uso |
+|---|---|
+| `GET /health` | Liveness — responde sem tocar no banco |
+| `GET /readiness` | Readiness — `503` se o banco não responder ou houver migration pendente |
+| `GET /metrics` | Contadores de conflito e recusa; exige `observabilidade:consultar` |
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+Os logs saem em JSON, uma linha por evento, com o `correlationId` que liga log e auditoria. Nenhum
+campo carrega token, permissão ou conteúdo normativo.
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+## Estado do projeto
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+As sete histórias da feature `001-processo-seletivo-editais` estão implementadas e rastreadas.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+- [`traceability.md`](specs/001-processo-seletivo-editais/traceability.md) — 38 requisitos ativos, 29
+  cenários e 10 critérios de sucesso, com as lacunas conhecidas
+- [`validation-report.md`](specs/001-processo-seletivo-editais/validation-report.md) — execução dos 15
+  cenários do quickstart
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+Todas as tarefas de `tasks.md` estão fechadas e os 38 requisitos ativos estão implementados. Restam
+dois pontos antes de declarar a feature concluída: o SLO de carga precisa ser medido em ambiente
+implantado, e a Regra Normativa é registrada mas ainda não aplicada — detalhes nos dois artefatos
+acima. A interface administrativa e pública é uma especificação futura, não parte deste incremento.
 
-## License
-For open source projects, say how it is licensed.
+## Documentação
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+| Artefato | Conteúdo |
+|---|---|
+| [`spec.md`](specs/001-processo-seletivo-editais/spec.md) | Requisitos, cenários e critérios de sucesso |
+| [`plan.md`](specs/001-processo-seletivo-editais/plan.md) | Decisões técnicas e verificação constitucional |
+| [`data-model.md`](specs/001-processo-seletivo-editais/data-model.md) | Entidades, invariantes e regras |
+| [`tasks.md`](specs/001-processo-seletivo-editais/tasks.md) | Tarefas por história |
+| [`quickstart.md`](specs/001-processo-seletivo-editais/quickstart.md) | Guia de validação |

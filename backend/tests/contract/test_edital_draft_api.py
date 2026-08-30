@@ -3,6 +3,9 @@ from pathlib import Path
 import pytest
 import yaml
 
+from processo_seletivo.processos.models import Edital
+from tests.fixtures.edital import actor_headers, complete_draft
+
 
 @pytest.mark.contract
 def test_openapi_declares_structured_draft_contract():
@@ -48,3 +51,59 @@ def test_draft_response_has_etag(api_client, manager_headers, process_payload):
     )
     assert response.status_code == 200
     assert response["ETag"] == '"2"'
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+def test_submission_returns_warnings_so_the_responsible_can_decide(
+    api_client, manager_headers, process_payload
+):
+    """FR-019/FR-020: avisos são classificados e permanecem visíveis na decisão de prosseguir."""
+    api_client.post("/api/v1/admin/processos", process_payload, format="json", **manager_headers)
+    edital = Edital.objects.get()
+    preparador = actor_headers("preparador", ["edital:elaborar", "edital:submeter"])
+    api_client.put(
+        f"/api/v1/admin/editais/{edital.id}/rascunho",
+        complete_draft(),
+        format="json",
+        **{**preparador, "HTTP_IF_MATCH": '"1"'},
+    )
+    resposta = api_client.post(
+        f"/api/v1/admin/editais/{edital.id}/submissoes",
+        format="json",
+        **{**preparador, "HTTP_IF_MATCH": '"2"'},
+    )
+    assert resposta.status_code == 200
+    achados = resposta.json()["validationFindings"]
+    assert achados, "o rascunho sem descrição deve produzir aviso"
+    aviso = next(item for item in achados if item["code"] == "description_missing")
+    assert aviso["severity"] == "WARNING"
+    assert aviso["path"] == "description"
+    assert not [item for item in achados if item["severity"] == "BLOCKING_ERROR"]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+def test_blocking_error_stops_submission_and_names_the_cause(
+    api_client, manager_headers, process_payload
+):
+    """FR-020: erro impeditivo bloqueia e é apresentado separadamente dos avisos."""
+    api_client.post("/api/v1/admin/processos", process_payload, format="json", **manager_headers)
+    edital = Edital.objects.get()
+    preparador = actor_headers("preparador", ["edital:elaborar", "edital:submeter"])
+    api_client.put(
+        f"/api/v1/admin/editais/{edital.id}/rascunho",
+        {**complete_draft(), "schedule": []},
+        format="json",
+        **{**preparador, "HTTP_IF_MATCH": '"1"'},
+    )
+    resposta = api_client.post(
+        f"/api/v1/admin/editais/{edital.id}/submissoes",
+        format="json",
+        **{**preparador, "HTTP_IF_MATCH": '"2"'},
+    )
+    assert resposta.status_code == 422
+    corpo = resposta.json()
+    assert corpo["code"] == "blocking_findings"
+    assert "Evento" in corpo["detail"]
+    assert Edital.objects.get(pk=edital.pk).status == Edital.Status.EM_ELABORACAO

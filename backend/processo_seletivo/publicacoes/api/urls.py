@@ -8,6 +8,7 @@ from processo_seletivo.publicacoes.api.views import (
     HomologateRetificationView,
     PublishEditalView,
     PublishRetificationView,
+    ReturnRetificationView,
     RevokeHomologationView,
     SubmitEditalView,
     SubmitRetificationView,
@@ -23,5 +24,6 @@ urlpatterns = [
     path("retificacoes/<uuid:retificacao_id>/submissoes", SubmitRetificationView.as_view()),
     path("retificacoes/<uuid:retificacao_id>/homologacoes", HomologateRetificationView.as_view()),
     path("retificacoes/<uuid:retificacao_id>/publicacoes", PublishRetificationView.as_view()),
+    path("retificacoes/<uuid:retificacao_id>/devolucoes", ReturnRetificationView.as_view()),
     path("retificacoes/<uuid:retificacao_id>/cancelamentos", CancelRetificationView.as_view()),
 ]

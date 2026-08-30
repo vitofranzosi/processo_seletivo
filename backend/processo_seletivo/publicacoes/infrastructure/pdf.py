@@ -1,36 +1,272 @@
-def _escape_pdf_text(value: str) -> str:
-    return value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+"""Renderizador do documento publicado (FR-023).
+
+O PDF é derivado exclusivamente do snapshot homologado: Perfis, vagas, Cadastro Reserva,
+modalidades, Regra Normativa e Cronograma são impressos como estão na versão, sem consultar
+o banco. A cadeia "dados estruturados → versão homologada → PDF publicado" fica demonstrável
+porque o mesmo snapshot sempre produz os mesmos bytes, e o hash do conteúdo aparece no
+documento.
+
+Sem dependência externa. O texto usa `WinAnsiEncoding`, que cobre o português — a versão
+anterior codificava em ASCII e destruía todo acento de um documento oficial brasileiro.
+"""
+
+from datetime import datetime
+
+from django.utils import timezone
+
+LARGURA, ALTURA = 595, 842  # A4 em pontos
+MARGEM = 56
+TOPO = ALTURA - 64
+RODAPE = 56
+# Helvetica tem largura média próxima de 0,5em; 0,52 evita estourar a margem.
+FATOR_LARGURA = 0.52
+
+REGULAR, NEGRITO = "F1", "F2"
+RESERVA = {
+    "NONE": "não há",
+    "LIMITED": "limitado",
+    "UNLIMITED": "ilimitado",
+}
+
+
+def _texto_pdf(valor: str) -> bytes:
+    """WinAnsi cobre o português; o que não couber vira '?' em vez de quebrar o documento."""
+    escapado = str(valor).replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+    return escapado.encode("cp1252", "replace")
+
+
+def _quebrar(texto: str, tamanho: float, recuo: float) -> list[str]:
+    disponivel = LARGURA - 2 * MARGEM - recuo
+    limite = max(int(disponivel / (tamanho * FATOR_LARGURA)), 10)
+    linhas, atual = [], ""
+    for palavra in str(texto).split():
+        candidato = f"{atual} {palavra}".strip()
+        if len(candidato) <= limite:
+            atual = candidato
+        else:
+            if atual:
+                linhas.append(atual)
+            atual = palavra
+    if atual:
+        linhas.append(atual)
+    return linhas or [""]
+
+
+def _instante(valor) -> str:
+    if not valor:
+        return "—"
+    try:
+        momento = datetime.fromisoformat(str(valor))
+    except ValueError:
+        return str(valor)
+    if timezone.is_aware(momento):
+        momento = timezone.localtime(momento)
+    return momento.strftime("%d/%m/%Y %H:%M")
+
+
+class Composicao:
+    """Acumula linhas com estilo e recuo; a paginação acontece depois, em uma passada."""
+
+    def __init__(self):
+        self.linhas: list[tuple[str, str, float, float, float]] = []
+
+    def escrever(self, texto, *, tamanho=10, fonte=REGULAR, recuo=0.0, antes=0.0):
+        for indice, parte in enumerate(_quebrar(texto, tamanho, recuo)):
+            self.linhas.append((parte, fonte, tamanho, recuo, antes if indice == 0 else 0.0))
+
+    def espaco(self, altura=8.0):
+        self.linhas.append(("", REGULAR, 0.0, 0.0, altura))
+
+    def paginar(self):
+        paginas, atual, y = [], [], TOPO
+        for texto, fonte, tamanho, recuo, antes in self.linhas:
+            altura = tamanho * 1.45 if tamanho else 0.0
+            if y - antes - altura < RODAPE + 24 and atual:
+                paginas.append(atual)
+                atual, y = [], TOPO
+                antes = 0.0
+            y -= antes + altura
+            if texto:
+                atual.append((texto, fonte, tamanho, MARGEM + recuo, y))
+        if atual:
+            paginas.append(atual)
+        return paginas or [[]]
+
+
+def _cabecalho(composicao, snapshot):
+    composicao.escrever("INSTITUTO FEDERAL DO ESPÍRITO SANTO — CEFOR", tamanho=9, fonte=NEGRITO)
+    composicao.escrever(
+        f"EDITAL {snapshot.get('number', '')}/{snapshot.get('year', '')}",
+        tamanho=18,
+        fonte=NEGRITO,
+        antes=10,
+    )
+    composicao.escrever(snapshot.get("title", ""), tamanho=13, antes=4)
+    if snapshot.get("description"):
+        composicao.escrever(snapshot["description"], tamanho=10, antes=10)
+
+
+def _modalidades(composicao, perfil):
+    modalidades = perfil.get("competitionModalities") or []
+    if not modalidades:
+        return
+    composicao.escrever(
+        "Modalidades de concorrência:", tamanho=10, fonte=NEGRITO, recuo=18, antes=6
+    )
+    for modalidade in modalidades:
+        composicao.escrever(
+            f"{modalidade.get('code', '')} — {modalidade.get('name', '')}",
+            tamanho=10,
+            recuo=32,
+        )
+        regra = modalidade.get("normativeRule")
+        if not regra:
+            continue
+        partes = [f"fundamento: {regra.get('foundation', '')}"]
+        if regra.get("version"):
+            partes.append(f"versão: {regra['version']}")
+        if regra.get("percentage"):
+            partes.append(f"percentual: {regra['percentage']}%")
+        if regra.get("effectiveFrom"):
+            partes.append(f"vigência: {_instante(regra['effectiveFrom'])}")
+        composicao.escrever("Regra Normativa — " + "; ".join(partes), tamanho=9, recuo=46)
+
+
+def _perfis(composicao, snapshot):
+    perfis = snapshot.get("profiles") or []
+    composicao.escrever("PERFIS DE VAGA", tamanho=12, fonte=NEGRITO, antes=18)
+    if not perfis:
+        composicao.escrever("Nenhum Perfil registrado nesta versão.", tamanho=10, antes=6)
+        return
+    for perfil in perfis:
+        composicao.escrever(
+            f"{perfil.get('code', '')} — {perfil.get('name', '')}",
+            tamanho=11,
+            fonte=NEGRITO,
+            antes=12,
+        )
+        if perfil.get("description"):
+            composicao.escrever(perfil["description"], tamanho=10, recuo=18, antes=3)
+        if perfil.get("locality"):
+            composicao.escrever(f"Localidade: {perfil['locality']}", tamanho=10, recuo=18)
+        composicao.escrever(
+            f"Vagas imediatas: {perfil.get('immediateVacancies', 0)}", tamanho=10, recuo=18
+        )
+        reserva = RESERVA.get(perfil.get("reserveType"), perfil.get("reserveType", ""))
+        if perfil.get("reserveLimit") is not None:
+            reserva = f"{reserva} em {perfil['reserveLimit']}"
+        composicao.escrever(f"Cadastro Reserva: {reserva}", tamanho=10, recuo=18)
+        requisitos = perfil.get("requirements") or []
+        if requisitos:
+            composicao.escrever("Requisitos:", tamanho=10, fonte=NEGRITO, recuo=18, antes=6)
+            for requisito in requisitos:
+                composicao.escrever(f"• {requisito}", tamanho=10, recuo=32)
+        _modalidades(composicao, perfil)
+
+
+def _cronograma(composicao, snapshot):
+    eventos = snapshot.get("schedule") or []
+    composicao.escrever("CRONOGRAMA", tamanho=12, fonte=NEGRITO, antes=18)
+    if not eventos:
+        composicao.escrever("Nenhum Evento registrado nesta versão.", tamanho=10, antes=6)
+        return
+    for evento in eventos:
+        composicao.escrever(
+            f"{evento.get('order', '')}. {evento.get('type', '')} — "
+            f"{evento.get('description', '')}",
+            tamanho=10,
+            fonte=NEGRITO,
+            antes=8,
+        )
+        periodo = f"Início: {_instante(evento.get('startAt'))}"
+        if evento.get("endAt"):
+            periodo += f"    Término: {_instante(evento['endAt'])}"
+        composicao.escrever(periodo, tamanho=10, recuo=18)
+        if evento.get("status"):
+            composicao.escrever(f"Situação: {evento['status']}", tamanho=9, recuo=18)
+
+
+def _integridade(composicao, snapshot, content_hash):
+    composicao.escrever("INTEGRIDADE", tamanho=12, fonte=NEGRITO, antes=18)
+    composicao.escrever(
+        "Este documento deriva integralmente da versão homologada identificada abaixo.",
+        tamanho=10,
+        antes=6,
+    )
+    composicao.escrever(f"Identificador do Edital: {snapshot.get('editalId', '')}", tamanho=9)
+    composicao.escrever(f"Processo Seletivo: {snapshot.get('processoId', '')}", tamanho=9)
+    composicao.escrever(f"Versão do schema: {snapshot.get('schemaVersion', '')}", tamanho=9)
+    composicao.escrever(f"SHA-256 do conteúdo: {content_hash}", tamanho=9)
+
+
+def _fluxo_da_pagina(linhas, rodape):
+    partes = []
+    for texto, fonte, tamanho, x, y in linhas:
+        partes.append(
+            b"BT /"
+            + fonte.encode()
+            + f" {tamanho:.1f} Tf {x:.1f} {y:.1f} Td (".encode()
+            + _texto_pdf(texto)
+            + b") Tj ET"
+        )
+    partes.append(
+        b"BT /" + REGULAR.encode() + f" 8.0 Tf {MARGEM:.1f} {RODAPE - 16:.1f} Td (".encode()
+        + _texto_pdf(rodape)
+        + b") Tj ET"
+    )
+    return b"\n".join(partes)
 
 
 def render_edital_pdf(snapshot: dict, content_hash: str) -> bytes:
-    title = _escape_pdf_text(snapshot["title"])
-    code = _escape_pdf_text(f"Edital {snapshot['number']}/{snapshot['year']}")
-    digest = _escape_pdf_text(f"SHA-256 {content_hash}")
-    stream_text = (
-        f"BT /F1 18 Tf 72 760 Td ({title}) Tj "
-        f"0 -28 Td /F1 12 Tf ({code}) Tj 0 -22 Td ({digest}) Tj ET"
+    composicao = Composicao()
+    _cabecalho(composicao, snapshot)
+    _perfis(composicao, snapshot)
+    _cronograma(composicao, snapshot)
+    _integridade(composicao, snapshot, content_hash)
+    paginas = composicao.paginar()
+
+    identificacao = (
+        f"Edital {snapshot.get('number', '')}/{snapshot.get('year', '')} · "
+        f"SHA-256 {content_hash[:16]}…"
     )
-    stream = stream_text.encode("ascii", "replace")
-    objects = [
-        b"<< /Type /Catalog /Pages 2 0 R >>",
-        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-        (
-            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] "
-            b"/Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>"
-        ),
-        b"<< /Length " + str(len(stream)).encode() + b" >>\nstream\n" + stream + b"\nendstream",
-        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    fluxos = [
+        _fluxo_da_pagina(linhas, f"{identificacao} · Página {numero} de {len(paginas)}")
+        for numero, linhas in enumerate(paginas, 1)
     ]
-    output = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
-    offsets = [0]
-    for index, obj in enumerate(objects, 1):
-        offsets.append(len(output))
-        output.extend(f"{index} 0 obj\n".encode() + obj + b"\nendobj\n")
-    xref = len(output)
-    output.extend(f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n".encode())
-    for offset in offsets[1:]:
-        output.extend(f"{offset:010d} 00000 n \n".encode())
-    output.extend(
-        f"trailer << /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode()
+
+    # Objetos: 1 catálogo, 2 páginas, 3 e 4 fontes, depois pares página/conteúdo.
+    primeiro_pagina = 5
+    ids_paginas = [primeiro_pagina + indice * 2 for indice in range(len(fluxos))]
+    objetos = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        (
+            b"<< /Type /Pages /Kids ["
+            + b" ".join(f"{identificador} 0 R".encode() for identificador in ids_paginas)
+            + f"] /Count {len(fluxos)} >>".encode()
+        ),
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
+    ]
+    for indice, fluxo in enumerate(fluxos):
+        objetos.append(
+            f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {LARGURA} {ALTURA}] ".encode()
+            + b"/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> "
+            + f"/Contents {ids_paginas[indice] + 1} 0 R >>".encode()
+        )
+        objetos.append(
+            b"<< /Length " + str(len(fluxo)).encode() + b" >>\nstream\n" + fluxo + b"\nendstream"
+        )
+
+    saida = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
+    deslocamentos = []
+    for indice, objeto in enumerate(objetos, 1):
+        deslocamentos.append(len(saida))
+        saida.extend(f"{indice} 0 obj\n".encode() + objeto + b"\nendobj\n")
+    xref = len(saida)
+    saida.extend(f"xref\n0 {len(objetos) + 1}\n0000000000 65535 f \n".encode())
+    for deslocamento in deslocamentos:
+        saida.extend(f"{deslocamento:010d} 00000 n \n".encode())
+    saida.extend(
+        f"trailer << /Size {len(objetos) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode()
     )
-    return bytes(output)
+    return bytes(saida)

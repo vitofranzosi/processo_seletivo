@@ -25,6 +25,7 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/CriarProcessoRequest' }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '201':
           description: Processo e Edital criados
           headers: { ETag: { $ref: '#/components/headers/ETag' } }
@@ -44,6 +45,7 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/CriarEditalRequest' } } }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '201': { description: Edital criado, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/EditalAdminResponse' } } } }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -62,6 +64,7 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/AtoAdministrativoRequest' } } }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Processo ativado, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/ProcessoResponse' } } } }
         '409': { $ref: '#/components/responses/Conflict' }
         '412': { $ref: '#/components/responses/PreconditionFailed' }
@@ -81,6 +84,7 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/AtoAdministrativoRequest' } } }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Processo encerrado, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/ProcessoResponse' } } } }
         '409': { $ref: '#/components/responses/Conflict' }
         '412': { $ref: '#/components/responses/PreconditionFailed' }
@@ -100,6 +104,7 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/CancelamentoRequest' } } }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Processo cancelado, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/ProcessoResponse' } } } }
         '409': { $ref: '#/components/responses/Conflict' }
         '412': { $ref: '#/components/responses/PreconditionFailed' }
@@ -118,6 +123,7 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/EditalDraftRequest' } } }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Rascunho atualizado, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/EditalAdminResponse' } } } }
         '412': { $ref: '#/components/responses/PreconditionFailed' }
         '422': { $ref: '#/components/responses/Unprocessable' }
@@ -133,6 +139,7 @@ paths:
         - $ref: '#/components/parameters/IfMatch'
         - $ref: '#/components/parameters/IdempotencyKey'
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Edital submetido, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/EditalAdminResponse' } } } }
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/Conflict' }
@@ -150,6 +157,7 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/HomologacaoRequest' } } }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Edital homologado, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/EditalAdminResponse' } } } }
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/Conflict' }
@@ -167,6 +175,7 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/MotivoRequest' } } }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Homologação revogada, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/EditalAdminResponse' } } } }
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/Conflict' }
@@ -184,6 +193,7 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/PublicacaoRequest' } } }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '201': { description: Publicação criada, headers: { Location: { $ref: '#/components/headers/Location' } }, content: { application/json: { schema: { $ref: '#/components/schemas/PublicacaoResponse' } } } }
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/Conflict' }
@@ -201,6 +211,7 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/AtoAdministrativoRequest' } } }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Edital encerrado, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/EditalAdminResponse' } } } }
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/Conflict' }
@@ -218,6 +229,7 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/CancelamentoRequest' } } }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Edital cancelado, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/EditalAdminResponse' } } } }
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/Conflict' }
@@ -237,6 +249,7 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/CriarRetificacaoRequest' } } }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '201': { description: Retificação criada, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/RetificacaoResponse' } } } }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/Unprocessable' }
@@ -253,7 +266,9 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/AtualizarRetificacaoRequest' } } }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Rascunho atualizado, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/RetificacaoResponse' } } } }
+        '409': { $ref: '#/components/responses/Conflict' }
         '412': { $ref: '#/components/responses/PreconditionFailed' }
         '422': { $ref: '#/components/responses/Unprocessable' }
         '428': { $ref: '#/components/responses/PreconditionRequired' }
@@ -268,6 +283,7 @@ paths:
         - $ref: '#/components/parameters/IfMatch'
         - $ref: '#/components/parameters/IdempotencyKey'
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Retificação submetida, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/RetificacaoResponse' } } } }
         '409': { $ref: '#/components/responses/Conflict' }
         '412': { $ref: '#/components/responses/PreconditionFailed' }
@@ -284,6 +300,7 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/HomologacaoRequest' } } }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Retificação homologada, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/RetificacaoResponse' } } } }
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/Conflict' }
@@ -294,6 +311,11 @@ paths:
     post:
       tags: [Retificações administrativas]
       summary: Publicar Retificação homologada
+      description: >-
+        Além das precondições declaradas em cada alteração, a Publicação verifica a composição
+        das Retificações vigentes. Quando o ato tornaria inaplicável uma alteração já publicada —
+        ou o contrário, por vigência posterior — não há resultado determinístico a materializar e
+        a Publicação responde 409 inconsistent_consolidation, sem efeito algum.
       operationId: publicarRetificacao
       security: [{ bearerAuth: [] }]
       parameters: [{ $ref: '#/components/parameters/RetificacaoId' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }]
@@ -301,7 +323,29 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/PublicacaoRequest' } } }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '201': { description: Retificação publicada, headers: { Location: { $ref: '#/components/headers/Location' } }, content: { application/json: { schema: { $ref: '#/components/schemas/PublicacaoResponse' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /admin/retificacoes/{retificacaoId}/devolucoes:
+    post:
+      tags: [Retificações administrativas]
+      summary: Devolver Retificação para elaboração antes da Publicação
+      description: >-
+        Retorno para correção admitido a partir de Em revisão ou Homologada, conforme a FR-027.
+        Desfaz a homologação e exige motivo. Publicada e Cancelada são finais.
+      operationId: devolverRetificacao
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/RetificacaoId' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/MotivoRequest' } } }
+      responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '200': { description: Retificação devolvida para elaboração, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/RetificacaoResponse' } } } }
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/Conflict' }
         '412': { $ref: '#/components/responses/PreconditionFailed' }
@@ -318,6 +362,7 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/CancelamentoRequest' } } }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Retificação cancelada, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/RetificacaoResponse' } } } }
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/Conflict' }
@@ -337,6 +382,7 @@ paths:
           description: Instante ISO-8601; ausência significa agora
           schema: { type: string, format: date-time }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Versão consolidada, content: { application/json: { schema: { $ref: '#/components/schemas/VersaoConsolidadaResponse' } } } }
         '404': { $ref: '#/components/responses/NoEffectiveVersion' }
   /public/editais/{editalId}/historico:
@@ -349,6 +395,7 @@ paths:
         - $ref: '#/components/parameters/Cursor'
         - $ref: '#/components/parameters/Limit'
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Página histórica, content: { application/json: { schema: { $ref: '#/components/schemas/HistoricoPage' } } } }
   /public/publicacoes/{publicacaoId}:
     get:
@@ -406,6 +453,7 @@ paths:
         - $ref: '#/components/parameters/Cursor'
         - $ref: '#/components/parameters/Limit'
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Eventos permitidos ao ator, content: { application/json: { schema: { type: object } } } }
         '403': { $ref: '#/components/responses/Forbidden' }
 components:
@@ -428,6 +476,7 @@ components:
     ETag: { description: Revisão do agregado, schema: { type: string } }
     Location: { description: URI do recurso imutável criado, schema: { type: string, format: uri-reference } }
   responses:
+    BadRequest: { description: Metadados da requisição malformados — header ou query string, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
     Forbidden: { description: Acesso negado, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
     NotFound: { description: Recurso inexistente ou não revelado ao ator, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
     Conflict: { description: Estado, idempotência ou concorrência incompatível, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
@@ -534,6 +583,12 @@ components:
       type: object
       required: [justification, changes]
       properties:
+        baseSnapshotId:
+          allOf: [{ $ref: '#/components/schemas/Id' }]
+          description: >-
+            Reaponta o rascunho para outra versão consolidada do mesmo Edital. Omitido, a versão
+            base é preservada. É o rebase necessário para corrigir uma Retificação devolvida por
+            conflito, cuja versão base ficou obsoleta.
         justification: { type: string, minLength: 1 }
         effectiveAt: { type: [string, 'null'], format: date-time }
         changes:
@@ -545,8 +600,19 @@ components:
       required: [targetPath, operation, newValue]
       properties:
         targetPath: { type: string, description: Caminho canônico com chaves estáveis }
-        operation: { type: string, enum: [ADD, REPLACE, REMOVE] }
-        expectedPreviousHash: { type: string }
+        operation:
+          type: string
+          enum: [ADD, REPLACE, REMOVE]
+          description: >-
+            ADD pressupõe targetPath ausente. Se o caminho já tiver conteúdo — inclusive por ato
+            publicado depois da elaboração — a operação responde 409 target_already_present, salvo
+            quando expectedPreviousHash declarar o conteúdo ocupante e assumir a sobrescrita.
+        expectedPreviousHash:
+          type: string
+          description: >-
+            Hash canônico do conteúdo em targetPath conhecido na elaboração. Quando informado,
+            é verificado na criação e na edição contra a versão base e, na Publicação, contra o
+            conteúdo vigente no início de vigência; divergência responde 409 expected_hash_mismatch.
         newValue: {}
     ProcessoResponse:
       type: object
@@ -578,6 +644,7 @@ components:
       type: object
       required: [id, editalId, publicationOrder, publishedAt, effectiveAt, contentHash, documentHash]
       properties:
+        kind: { type: string, enum: [PUBLICACAO], description: Discrimina o item dentro de HistoricoPage }
         id: { $ref: '#/components/schemas/Id' }
         editalId: { $ref: '#/components/schemas/Id' }
         publicationOrder: { type: integer, format: int64 }
@@ -601,6 +668,7 @@ components:
       additionalProperties: false
       required: [id, editalId, publicationId, justification, publishedAt, effectiveAt, changes]
       properties:
+        kind: { type: string, enum: [RETIFICACAO], description: Discrimina o item dentro de HistoricoPage }
         id: { $ref: '#/components/schemas/Id' }
         editalId: { $ref: '#/components/schemas/Id' }
         publicationId: { $ref: '#/components/schemas/Id' }
@@ -612,12 +680,22 @@ components:
       type: object
       required: [id, editalId, validFrom, contentHash, content, appliedPublications]
       properties:
+        kind: { type: string, enum: [VERSAO_CONSOLIDADA], description: Discrimina o item dentro de HistoricoPage }
         id: { $ref: '#/components/schemas/Id' }
         editalId: { $ref: '#/components/schemas/Id' }
         validFrom: { type: string, format: date-time }
         contentHash: { type: string }
         content: { type: object, additionalProperties: true }
         appliedPublications: { type: array, items: { $ref: '#/components/schemas/Id' } }
+        provenance:
+          type: array
+          description: Publicação que produziu cada caminho alterado, conforme FR-030
+          items:
+            type: object
+            required: [targetPath, publicationId]
+            properties:
+              targetPath: { type: string }
+              publicationId: { $ref: '#/components/schemas/Id' }
     HistoricoPage:
       type: object
       required: [items, nextCursor]

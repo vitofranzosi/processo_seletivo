@@ -161,20 +161,20 @@ description: "Tarefas de implementação de Processo Seletivo e Editais"
 
 ### Tests for User Story 5
 
-- [ ] T061 [P] [US5] Criar testes puros da composição temporal, conflitos e canonicalização em backend/tests/unit/publicacoes/test_consolidacao.py
-- [ ] T062 [P] [US5] Criar testes de contrato das rotas explícitas de criação, edição, submissão, homologação, publicação e cancelamento de Retificação em backend/tests/contract/test_retificacoes_api.py
-- [ ] T063 [P] [US5] Criar testes PostgreSQL de sequência, locks, append-only e Retificação obsoleta em backend/tests/integration/publicacoes/test_retificacoes.py
-- [ ] T064 [P] [US5] Criar testes de autorização e segregação de Retificação em backend/tests/authorization/test_retificacoes.py
+- [X] T061 [P] [US5] Criar testes puros da composição temporal, conflitos e canonicalização em backend/tests/unit/publicacoes/test_consolidacao.py
+- [X] T062 [P] [US5] Criar testes de contrato das rotas explícitas de criação, edição, submissão, homologação, publicação e cancelamento de Retificação em backend/tests/contract/test_retificacoes_api.py
+- [X] T063 [P] [US5] Criar testes PostgreSQL de sequência, locks, append-only e Retificação obsoleta em backend/tests/integration/publicacoes/test_retificacoes.py
+- [X] T064 [P] [US5] Criar testes de autorização e segregação de Retificação em backend/tests/authorization/test_retificacoes.py
 
 ### Implementation for User Story 5
 
-- [ ] T065 [P] [US5] Implementar Retificacao, AlteracaoNormativa, VersaoConsolidada e ProvenienciaConteudo em backend/processo_seletivo/publicacoes/models_retificacao.py
-- [ ] T066 [US5] Criar migration de Retificações, snapshots, proveniência e índices temporais em backend/processo_seletivo/publicacoes/migrations/0002_retificacoes.py
-- [ ] T067 [P] [US5] Implementar aplicação determinística de alterações por caminho normativo em backend/processo_seletivo/publicacoes/domain/changes.py
-- [ ] T068 [US5] Implementar consolidador por effectiveAt/publishedAt/publicationOrder em backend/processo_seletivo/publicacoes/domain/consolidation.py
-- [ ] T069 [US5] Implementar commands criar, editar, submeter, homologar, publicar e cancelar Retificação em backend/processo_seletivo/publicacoes/application/retificacoes.py
-- [ ] T070 [US5] Implementar API administrativa de Retificações com ETag e idempotência em backend/processo_seletivo/publicacoes/api/retificacoes.py
-- [ ] T071 [US5] Rastrear US5 e FR-025–FR-030 e FR-039 nos testes de aceitação em backend/tests/acceptance/test_us5_retificacoes.py
+- [X] T065 [P] [US5] Implementar Retificacao, AlteracaoNormativa, VersaoConsolidada e ProvenienciaConteudo em backend/processo_seletivo/publicacoes/models_retificacao.py
+- [X] T066 [US5] Criar migration de Retificações, snapshots, proveniência e índices temporais em backend/processo_seletivo/publicacoes/migrations/0002_retificacoes.py
+- [X] T067 [P] [US5] Implementar aplicação determinística de alterações por caminho normativo em backend/processo_seletivo/publicacoes/domain/changes.py
+- [X] T068 [US5] Implementar consolidador por effectiveAt/publishedAt/publicationOrder em backend/processo_seletivo/publicacoes/domain/consolidation.py
+- [X] T069 [US5] Implementar commands criar, editar, submeter, homologar, publicar e cancelar Retificação em backend/processo_seletivo/publicacoes/application/retificacoes.py
+- [X] T070 [US5] Implementar API administrativa de Retificações com ETag e idempotência em backend/processo_seletivo/publicacoes/api/views.py e backend/processo_seletivo/publicacoes/api/urls.py
+- [X] T071 [US5] Rastrear US5 e FR-025–FR-030 e FR-039 nos testes de aceitação em backend/tests/acceptance/test_us5_retificacoes.py
 
 ---
 
@@ -186,16 +186,16 @@ description: "Tarefas de implementação de Processo Seletivo e Editais"
 
 ### Tests for User Story 6
 
-- [ ] T072 [P] [US6] Criar testes de contrato de versão vigente, histórico paginado e consultas diretas de Publicação, Retificação e versão consolidada em backend/tests/contract/test_consulta_publica_api.py
-- [ ] T073 [P] [US6] Criar testes temporais de fronteira e recomposição de até 20 Retificações em backend/tests/integration/publicacoes/test_consulta_temporal.py
-- [ ] T074 [P] [US6] Criar testes de não exposição de drafts, auditoria e dados internos em backend/tests/authorization/test_consulta_publica.py
+- [X] T072 [P] [US6] Criar testes de contrato de versão vigente, histórico paginado e consultas diretas de Publicação, Retificação e versão consolidada em backend/tests/contract/test_consulta_publica_api.py
+- [X] T073 [P] [US6] Criar testes temporais de fronteira e recomposição de até 20 Retificações em backend/tests/integration/publicacoes/test_consulta_temporal.py
+- [X] T074 [P] [US6] Criar testes de não exposição de drafts, auditoria e dados internos em backend/tests/authorization/test_consulta_publica.py
 
 ### Implementation for User Story 6
 
-- [ ] T075 [P] [US6] Implementar selectors de versão vigente e histórico paginado em backend/processo_seletivo/publicacoes/application/selectors.py
-- [ ] T076 [P] [US6] Implementar projeções públicas versionadas e proveniência em backend/processo_seletivo/publicacoes/api/public_serializers.py
-- [ ] T077 [US6] Implementar endpoints públicos de versão vigente, histórico, Publicação, Retificação, versão consolidada e documento com cache HTTP em backend/processo_seletivo/publicacoes/api/public_views.py
-- [ ] T078 [US6] Rastrear US6 e FR-028–FR-031 e FR-039 nos testes de aceitação em backend/tests/acceptance/test_us6_consulta_publica.py
+- [X] T075 [P] [US6] Implementar selectors de versão vigente e histórico paginado em backend/processo_seletivo/publicacoes/application/selectors.py
+- [X] T076 [P] [US6] Implementar projeções públicas versionadas e proveniência em backend/processo_seletivo/publicacoes/api/public_serializers.py
+- [X] T077 [US6] Implementar endpoints públicos de versão vigente, histórico, Publicação, Retificação, versão consolidada e documento com cache HTTP em backend/processo_seletivo/publicacoes/api/public_views.py e backend/processo_seletivo/publicacoes/api/public_urls.py
+- [X] T078 [US6] Rastrear US6 e FR-028–FR-031 e FR-039 nos testes de aceitação em backend/tests/acceptance/test_us6_consulta_publica.py
 
 ---
 
@@ -207,17 +207,17 @@ description: "Tarefas de implementação de Processo Seletivo e Editais"
 
 ### Tests for User Story 7
 
-- [ ] T079 [P] [US7] Criar testes de domínio de encerramento, cancelamento e estados finais em backend/tests/unit/processos/test_finalizacao.py
-- [ ] T080 [P] [US7] Criar testes de contrato dos atos de encerramento e cancelamento em backend/tests/contract/test_finalizacao_api.py
-- [ ] T081 [P] [US7] Criar testes PostgreSQL do protocolo de locks Processo→Editais e TOCTOU em backend/tests/integration/processos/test_finalizacao_concorrente.py
-- [ ] T082 [P] [US7] Criar testes de autorização, motivo e auditoria dos atos finais em backend/tests/authorization/test_finalizacao.py
+- [X] T079 [P] [US7] Criar testes de domínio de encerramento, cancelamento e estados finais em backend/tests/unit/processos/test_finalizacao.py
+- [X] T080 [P] [US7] Criar testes de contrato dos atos de encerramento e cancelamento em backend/tests/contract/test_finalizacao_api.py
+- [X] T081 [P] [US7] Criar testes PostgreSQL do protocolo de locks Processo→Editais e TOCTOU em backend/tests/integration/processos/test_finalizacao_concorrente.py
+- [X] T082 [P] [US7] Criar testes de autorização, motivo e auditoria dos atos finais em backend/tests/authorization/test_finalizacao.py
 
 ### Implementation for User Story 7
 
-- [ ] T083 [US7] Implementar política de estados finais e bloqueios em backend/processo_seletivo/processos/domain/finalizacao.py
-- [ ] T084 [US7] Implementar commands de encerramento/cancelamento com locks ordenados e auditoria em backend/processo_seletivo/processos/application/finalizacao.py
-- [ ] T085 [US7] Integrar atos finais às rotas e responses administrativas em backend/processo_seletivo/processos/api/finalizacao.py
-- [ ] T086 [US7] Rastrear US7 e FR-005–FR-006 e FR-034–FR-035 nos testes de aceitação em backend/tests/acceptance/test_us7_finalizacao.py
+- [X] T083 [US7] Implementar política de estados finais e bloqueios em backend/processo_seletivo/processos/domain/finalizacao.py
+- [X] T084 [US7] Implementar commands de encerramento/cancelamento com locks ordenados e auditoria em backend/processo_seletivo/processos/application/finalizacao.py
+- [X] T085 [US7] Integrar atos finais às rotas e responses administrativas em backend/processo_seletivo/processos/api/finalizacao.py e backend/processo_seletivo/processos/api/urls.py
+- [X] T086 [US7] Rastrear US7 e FR-005–FR-006 e FR-034–FR-035 nos testes de aceitação em backend/tests/acceptance/test_us7_finalizacao.py
 
 ---
 
@@ -225,14 +225,14 @@ description: "Tarefas de implementação de Processo Seletivo e Editais"
 
 **Purpose**: concluir rastreabilidade, operação, segurança e validação integral.
 
-- [ ] T087 [P] Implementar consulta administrativa tipada e paginada de auditoria em backend/processo_seletivo/auditoria/api.py
-- [ ] T088 [P] Criar teste de conformidade runtime da role sem UPDATE/DELETE em backend/tests/integration/test_database_permissions.py
-- [ ] T089 [P] Criar teste de migrations do zero e upgrade da versão anterior em backend/tests/migrations/test_migrations.py
-- [ ] T090 Validar comportamento contra OpenAPI 3.1 e impedir operações divergentes em backend/tests/contract/test_openapi_conformance.py
-- [ ] T091 [P] Implementar logs estruturados, health/readiness e métricas de conflitos em backend/processo_seletivo/shared/observability.py
-- [ ] T092 [P] Criar testes de carga para consultas públicas e consolidação de 20 Retificações em backend/tests/performance/test_public_queries.py
-- [ ] T093 Criar matriz dos 38 FRs ativos e 29 cenários, registrando FR-037 e SC-002/009/010 como diferidos, em specs/001-processo-seletivo-editais/traceability.md
-- [ ] T094 Executar e registrar toda a validação do quickstart em specs/001-processo-seletivo-editais/validation-report.md
+- [X] T087 [P] Implementar consulta administrativa tipada e paginada de auditoria em backend/processo_seletivo/auditoria/api.py e backend/processo_seletivo/auditoria/urls.py
+- [X] T088 [P] Criar teste de conformidade runtime da role sem UPDATE/DELETE em backend/tests/integration/test_database_permissions.py
+- [X] T089 [P] Criar teste de migrations do zero e upgrade da versão anterior em backend/tests/migrations/test_migrations.py
+- [X] T090 Validar comportamento contra OpenAPI 3.1 e impedir operações divergentes em backend/tests/contract/test_openapi_conformance.py
+- [X] T091 [P] Implementar logs estruturados, health/readiness e métricas de conflitos em backend/processo_seletivo/shared/observability.py e backend/processo_seletivo/shared/api/operacional.py
+- [X] T092 [P] Criar testes de carga para consultas públicas e consolidação de 20 Retificações em backend/tests/performance/test_public_queries.py
+- [X] T093 Criar matriz dos 38 FRs ativos e 29 cenários, registrando FR-037 e SC-002/009/010 como diferidos, em specs/001-processo-seletivo-editais/traceability.md
+- [X] T094 Executar e registrar toda a validação do quickstart em specs/001-processo-seletivo-editais/validation-report.md
 
 ---
 

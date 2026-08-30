@@ -17,6 +17,7 @@ def test_openapi_has_explicit_retification_workflow():
         "/admin/retificacoes/{retificacaoId}/submissoes": "submeterRetificacao",
         "/admin/retificacoes/{retificacaoId}/homologacoes": "homologarRetificacao",
         "/admin/retificacoes/{retificacaoId}/publicacoes": "publicarRetificacao",
+        "/admin/retificacoes/{retificacaoId}/devolucoes": "devolverRetificacao",
         "/admin/retificacoes/{retificacaoId}/cancelamentos": "cancelarRetificacao",
     }
     for path, operation in expected.items():

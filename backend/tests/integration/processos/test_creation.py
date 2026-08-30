@@ -27,7 +27,7 @@ def test_missing_first_edital_creates_nothing(api_client, manager_headers):
         format="json",
         **manager_headers,
     )
-    assert response.status_code == 400
+    assert response.status_code == 422
     assert ProcessoSeletivo.objects.count() == 0
     assert Edital.objects.count() == 0
 

@@ -47,9 +47,30 @@ DATABASES = {
     }
 }
 REST_FRAMEWORK = {
+    # Só JSON: o contrato declara application/json e a Browsable API do DRF exigiria
+    # engine de template e staticfiles, superfície que uma API institucional não precisa.
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
+    "DEFAULT_CONTENT_NEGOTIATION_CLASS": (
+        "processo_seletivo.shared.api.negotiation.JsonAlwaysNegotiation"
+    ),
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "processo_seletivo.seguranca.api.authentication.InstitutionalBearerAuthentication"
     ],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "EXCEPTION_HANDLER": "processo_seletivo.shared.api.problems.problem_exception_handler",
+}
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {"()": "processo_seletivo.shared.observability.JsonFormatter"},
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "json"},
+    },
+    "loggers": {
+        "processo_seletivo": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "django.request": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+    },
 }
