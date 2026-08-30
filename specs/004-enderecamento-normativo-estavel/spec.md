@@ -263,6 +263,12 @@ usam a chave, sem que nada tenha mudado para quem usa.
 - Endereçamento item a item de coleções sem identificador — FR-011 as trata como valor atômico.
 - Requisitos de desempenho da resolução por chave: as coleções normativas têm dezenas de elementos,
   e nenhuma meta se justifica antes de haver medida.
+- Validação de forma do conteúdo alterado. O endereçamento garante **de quem** o ato fala, não que
+  o que ele deixa seja um Edital bem formado: `REMOVE` de um campo obrigatório e `REPLACE` de uma
+  entidade inteira omitindo campos passam pelas verificações desta feature e pelas quatro
+  condições de raiz de `validate_for_publication`. Fechar isso pede validar o snapshot resultante
+  contra o schema canônico, na elaboração e na Publicação — defeito anterior à `004`, registrado
+  aqui para quem for pegá-lo.
 - Integração com o diretório institucional.
 
 ## Dependencies

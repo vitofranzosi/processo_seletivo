@@ -9,6 +9,7 @@ from copy import deepcopy
 
 import pytest
 
+from processo_seletivo.publicacoes.domain import colecoes
 from processo_seletivo.publicacoes.domain.changes import (
     ABSENT,
     AcrescimoPosicionado,
@@ -602,41 +603,34 @@ def test_an_atomic_collection_may_still_be_replaced_by_a_list():
     assert resolve_path(depois, caminho) == []
 
 
-@pytest.mark.parametrize(
-    ("descricao", "conteudo", "change"),
-    [
-        (
-            "`-` como nome literal de chave num objeto",
-            {"rules": {}},
-            {"targetPath": "/rules/-", "operation": "ADD", "newValue": {"id": NOVO_UUID}},
-        ),
-        (
-            "seletor como nome literal de chave num objeto",
-            {"rules": {f"id={NOVO_UUID}": {"x": 1}}},
-            {"targetPath": f"/rules/id={NOVO_UUID}", "operation": "REMOVE"},
-        ),
-    ],
-)
-def test_a_path_that_only_looks_like_a_collection_earns_no_identity_permission(
-    descricao, conteudo, change
-):
-    """A permissão de mexer na topologia depende do contêiner, não da aparência do caminho.
-
-    Nada é explorável por aqui hoje, porque nenhuma coleção declarada mora nesses lugares. Mas
-    permissão concedida sobre premissa errada é o que fica esperando a próxima declaração.
-    """
-    from processo_seletivo.publicacoes.domain.changes import _identidade_permitida
-
-    assert _identidade_permitida(change, change["targetPath"], "/rules") is None, descricao
-    apply_change(conteudo, change)  # segue admitido: é chave de objeto, e não move identidade
+# Uma coleção com chave pendurada sob uma **chave de objeto** que tem a forma de um seletor. É
+# construção artificial, e é justamente o que a permissão antiga não distinguia: ela olhava o
+# último token do caminho, não o contêiner.
+CHAVE_DE_OBJETO = "id=00000000-0000-0000-0000-0000000005aa"
+COLECAO_SOB_OBJETO = f"/rules/{CHAVE_DE_OBJETO}/items"
 
 
-def test_the_permission_is_granted_where_the_container_really_is_a_keyed_collection():
-    from processo_seletivo.publicacoes.domain.changes import _identidade_permitida
-
-    acrescimo = {"targetPath": "/profiles/-", "operation": "ADD", "newValue": {"id": NOVO_UUID}}
-    assert _identidade_permitida(acrescimo, "/profiles/-", "/profiles") == (
-        f"/profiles/id={NOVO_UUID}"
+@pytest.fixture
+def colecao_declarada_sob_objeto(monkeypatch):
+    monkeypatch.setattr(
+        colecoes, "COLECOES_COM_CHAVE", colecoes.COLECOES_COM_CHAVE | {COLECAO_SOB_OBJETO}
     )
-    remocao = {"targetPath": f"/profiles/id={P1}", "operation": "REMOVE"}
-    assert _identidade_permitida(remocao, f"/profiles/id={P1}", "/profiles") == f"/profiles/id={P1}"
+    return {"rules": {CHAVE_DE_OBJETO: {"items": [{"id": P1}, {"id": P2}]}}}
+
+
+def test_removing_an_object_key_may_not_destroy_the_identities_under_it(
+    colecao_declarada_sob_objeto,
+):
+    """A consequência que a permissão por aparência deixava passar.
+
+    `/rules/id=…` é **nome de chave de um objeto**, não elemento de coleção (FR-002). A permissão
+    antiga olhava o último token do caminho e concedia a remoção de tudo o que estivesse abaixo;
+    as identidades de `items` sumiam sem que o ato as endereçasse. Com a permissão presa ao
+    contêiner, o caminho deixa de valer como remoção de entidade.
+    """
+    with pytest.raises(IdentidadeImplicita) as recusa:
+        apply_change(
+            colecao_declarada_sob_objeto,
+            {"targetPath": f"/rules/{CHAVE_DE_OBJETO}", "operation": "REMOVE"},
+        )
+    assert f"{COLECAO_SOB_OBJETO}/id={P1}" in str(recusa.value)

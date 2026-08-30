@@ -158,3 +158,7 @@ def test_the_grammar_document_says_what_the_identity_rule_does_not_cover():
     gramatica = gramatica_corrida()
     assert "O que esta regra não cobre" in gramatica
     assert "não vigia a forma dos campos" in gramatica or "não a forma dos campos" in gramatica
+    # A saída precisa estar nomeada corretamente: validar o valor de cada alteração não alcança
+    # o `REMOVE`, que não tem valor nenhum.
+    assert "validar o valor de cada alteração não fecharia a família" in gramatica
+    assert "validar o **snapshot resultante**" in gramatica

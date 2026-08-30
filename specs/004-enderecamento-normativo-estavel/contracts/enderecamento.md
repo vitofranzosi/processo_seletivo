@@ -92,9 +92,23 @@ o hash do que estava à vista; se outra Retificação acrescentou algo dentro de
 hash já não confere e a recusa é `expected_hash_mismatch` — precisa, e não um erro genérico de
 composição.
 
-**O que esta regra não cobre.** Ela vigia identidades, não a forma dos campos. Um `REPLACE` de
-entidade inteira que preserve as identidades e omita campos normativos — `name`, `requirements` —
-não é recusado aqui, porque nada no sistema valida a forma do `newValue`. É defeito anterior a
+**O que esta regra não cobre.** Ela vigia identidades, não a forma dos campos. Duas portas
+distintas produzem um Perfil mutilado e nenhuma é recusada:
+
+```
+REPLACE /profiles/id=<uuid>   com {"id": "<uuid>", "code": "X"}   ← omite os demais campos
+REMOVE  /profiles/id=<uuid>/name                                  ← apaga um campo obrigatório
+```
+
+A segunda não tem `newValue`, e por isso **validar o valor de cada alteração não fecharia a
+família**. Uma sequência de alterações individualmente plausíveis também pode terminar inválida.
+O que fecha é validar o **snapshot resultante** contra o schema canônico: depois de aplicar todas
+as alterações, na elaboração, e de novo sobre o conteúdo consolidado, na Publicação. Validar cada
+valor contra o subschema do seu caminho continua valendo, para errar cedo e com precisão, mas
+como complemento e não como substituto.
+
+Hoje `validate_for_publication` verifica quatro condições na raiz — título, ao menos um Perfil, ao
+menos um Evento, descrição — e nada sobre a forma de cada Perfil ou Evento. É defeito anterior a
 esta feature e vale para qualquer caminho de escrita.
 
 `normativeRule` tem `id` e **não** é elemento de coleção — o `id` dela é conteúdo comum e continua

@@ -253,6 +253,9 @@ def _identidade_permitida(change, path, forma):
     if operacao == "ADD" and path.endswith(f"/{APPEND_TOKEN}"):
         nova = _chave_de(change.get("newValue"))
         colecao = path[: -len(APPEND_TOKEN) - 1]
+        # `nova` vazia não chega aqui: `_recusar_entidades_sem_chave` já recusou o acréscimo sem
+        # `id` utilizável. O ramo fica porque falha para o lado seguro — sem permissão, e portanto
+        # com recusa — se a ordem dessas verificações mudar um dia.
         return f"{colecao}/{colecoes.CAMPO_CHAVE}={nova}" if nova else None
     if operacao == "REMOVE" and selector_uuid(parse_path(path)[-1]) is not None:
         return path
