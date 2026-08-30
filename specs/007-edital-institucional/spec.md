@@ -349,7 +349,7 @@ datas nos vínculos, agrupamento do caráter, confirmação ao remover e a mensa
 8. **Given** que vou publicar, **When** informo a autoridade signatária, **Then** a escolho numa
    lista conhecida e não digito identificador nenhum.
 9. **Given** um Edital recém-criado, **When** olho o assistente, **Then** a etapa de Conteúdo não se
-   declara concluída sem ter sido aberta.
+   declara concluída sem ter sido gravada ao menos uma vez.
 10. **Given** que pratiquei um ato, **When** leio a confirmação, **Then** ela nomeia o ato como a
     trilha de auditoria o nomeia, e não pela chave interna.
 11. **Given** quatro gravações de rascunho em etapas diferentes, **When** leio a trilha de
@@ -569,7 +569,8 @@ datas nos vínculos, agrupamento do caráter, confirmação ao remover e a mensa
   os campos estão vazios e que não tem filhos NÃO DEVE exigir confirmação. A confirmação DEVE dizer
   o que será descartado, ser operável por teclado e ter o cancelamento como ação padrão.
 - **FR-039**: A autoridade signatária DEVE ser escolhida em **catálogo declarado em código**, no
-  mesmo padrão do catálogo de seções: entradas com chave estável, nome e cargo, revisáveis em diff,
+  mesmo padrão do catálogo de seções: entradas com chave estável, nome, cargo e identificador
+  institucional, revisáveis em diff,
   sem migration e sem tela de gestão. NENHUM identificador DEVE ser digitado no ato de publicação.
   - Incluir ou desativar autoridade é alteração do catálogo declarado, não operação de usuário. NÃO
     DEVEM ser criados entidade persistida, tela de administração nem permissão nova.
@@ -628,7 +629,8 @@ Esta feature toca dados pessoais em **um** ponto, e a avaliação é curta porqu
   atribuições, carga horária e remuneração — e nenhuma relação nova.
 - **Autoridade Signatária**: já é registrada na Publicação, e continua sendo — o ato guarda nome,
   cargo e identificador, e esse registro é imutável. Esta feature acrescenta o **catálogo declarado**
-  de onde ela é escolhida (FR-039): entradas com chave estável, nome e cargo, no mesmo padrão do
+  de onde ela é escolhida (FR-039): entradas com chave estável, nome, cargo e identificador
+  institucional, no mesmo padrão do
   catálogo de seções. NÃO é entidade persistida, não tem tela de gestão e não tem ciclo de vida
   administrável pelo usuário.
 
@@ -657,8 +659,9 @@ Esta feature toca dados pessoais em **um** ponto, e a avaliação é curta porqu
   não é convidado a retificar.
 - **SC-009**: Depois de submeter e depois de homologar, quem agiu lê na tela qual papel age a seguir
   — e não existe fila, notificação nem atribuição no sistema.
-- **SC-009a**: A autoridade signatária é escolhida numa lista, nenhum identificador é digitado, e o
-  catálogo não guarda dado pessoal além de nome e cargo.
+- **SC-009a**: A autoridade signatária é escolhida numa lista **nos dois fluxos de publicação** — o
+  do Edital e o da Retificação —, nenhum identificador é digitado ou exibido, e o catálogo não guarda
+  dado pessoal além de nome, cargo e o identificador institucional que a Publicação já exige.
 - **SC-009b**: Um percurso completo do assistente por teclado, com leitor de tela, alcança a
   obrigatoriedade de cada campo, o motivo de cada ato desabilitado, o resumo de erros e a
   confirmação de remoção — sem depender de cor para distinguir estado.

@@ -94,6 +94,7 @@ declarada, editar o texto de uma das novas e encontrá-la no documento.
 - [ ] T012 [P] [US2] Escrever teste afirmando que `identidade(edital_id, key)` das sete seções pré-existentes **não muda** com a renumeração — a identidade deriva da chave, não da ordem (D-007)
 - [ ] T013 [US2] Verificar que a etapa `Conteúdo` do assistente exibe as dez seções sem alteração de template, por ler o catálogo; ajustar `backend/processo_seletivo/interface/templates/interface/compor_conteudo.html` apenas se a leitura for posicional
 - [ ] T014 [P] [US2] Escrever teste de interface em `backend/tests/interface/test_conteudo.py`: editar o texto de `apresentacao`, salvar, e encontrá-lo na prévia na posição 1
+- [ ] T015 [P] [US2] Escrever teste de interface em `backend/tests/interface/test_retificacao.py` retificando `/sections/id=<chave>/content` de uma **seção nova** pela tela de Retificação, e confirmando que a alteração chega ao documento consolidado (FR-010, SC-005). *As seções novas devem entrar automaticamente, por a tela derivar do catálogo — este teste é o que prova que sim, em vez de supor*
 
 ---
 
@@ -104,16 +105,19 @@ declarada, editar o texto de uma das novas e encontrá-la no documento.
 **Independent Test**: preencher os três em dois Perfis, salvar, ir a outra etapa, salvar, voltar e
 encontrá-los intactos; publicar e lê-los no documento.
 
-- [ ] T015 [US3] Acrescentar `duties` (`TextField(blank=True)`), `workload` e `compensation` (`CharField(max_length=255, blank=True)`) a `PerfilVaga` em `backend/processo_seletivo/editais/models/perfis.py`. Nenhum `null`, nenhuma constraint nova
-- [ ] T016 [US3] Criar `backend/processo_seletivo/editais/migrations/0005_perfil_institucional.py` com três `AddField` e nenhum `RunPython`
-- [ ] T017 [P] [US3] Escrever teste de migration em `backend/tests/migrations/` confirmando que a `0005` aplica e reverte sem perda
-- [ ] T018 [US3] Aceitar os três campos no serializer do rascunho em `backend/processo_seletivo/editais/api/serializers.py`, como opcionais com padrão `""`
-- [ ] T019 [US3] Gravar os três em `replace_draft` (`backend/processo_seletivo/editais/application/draft.py`), sem alterar a semântica de gravação
-- [ ] T020 [US3] Ler e reexibir os três em `backend/processo_seletivo/interface/forms.py` e em `backend/processo_seletivo/interface/templates/interface/_perfil.html`, com `duties` como área de texto multilinha
-- [ ] T021 [US3] Garantir que `perfis_persistidos` em `backend/processo_seletivo/interface/forms.py` serialize os três — sem isso, salvar o Cronograma os apagaria, que é o defeito que a `006` corrigiu para as modalidades
-- [ ] T022 [P] [US3] Escrever teste de interface em `backend/tests/interface/test_perfis.py`: preencher os três com `duties` em dois parágrafos, salvar o Cronograma em seguida, recarregar e encontrar tudo intacto com os parágrafos
-- [ ] T023 [US3] Compor os três no documento em `_perfis` de `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, usando `_paragrafos` para `duties` e omitindo cada um quando vazio
-- [ ] T024 [P] [US3] Escrever teste afirmando que Perfil sem os três campos não imprime rótulo vazio e que a publicação não é impedida
+- [ ] T016 [US3] Acrescentar `duties` (`TextField(blank=True)`), `workload` e `compensation` (`CharField(max_length=255, blank=True)`) a `PerfilVaga` em `backend/processo_seletivo/editais/models/perfis.py`. Nenhum `null`, nenhuma constraint nova
+- [ ] T017 [US3] Criar `backend/processo_seletivo/editais/migrations/0005_perfil_institucional.py` com três `AddField` e nenhum `RunPython`
+- [ ] T018 [P] [US3] Escrever teste de migration em `backend/tests/migrations/` confirmando que a `0005` aplica e reverte sem perda
+- [ ] T019 [US3] Aceitar os três campos no serializer do rascunho em `backend/processo_seletivo/editais/api/serializers.py`, como opcionais com padrão `""`
+- [ ] T020 [US3] Gravar os três em `replace_draft` (`backend/processo_seletivo/editais/application/draft.py`), sem alterar a semântica de gravação
+- [ ] T021 [US3] Ler e reexibir os três em `backend/processo_seletivo/interface/forms.py` e em `backend/processo_seletivo/interface/templates/interface/_perfil.html`, com `duties` como área de texto multilinha
+- [ ] T022 [US3] Garantir que `perfis_persistidos` em `backend/processo_seletivo/interface/forms.py` serialize os três — sem isso, salvar o Cronograma os apagaria, que é o defeito que a `006` corrigiu para as modalidades
+- [ ] T023 [P] [US3] Escrever teste de interface em `backend/tests/interface/test_perfis.py`: preencher os três com `duties` em dois parágrafos, salvar o Cronograma em seguida, recarregar e encontrar tudo intacto com os parágrafos
+- [ ] T024 [US3] Compor os três no documento em `_perfis` de `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, usando `_paragrafos` para `duties` e omitindo cada um quando vazio
+- [ ] T025 [P] [US3] Escrever teste afirmando que Perfil sem os três campos não imprime rótulo vazio e que a publicação não é impedida
+- [ ] T026 [US3] Acrescentar `duties`, `workload` e `compensation` a `CAMPOS_PERFIL` em `backend/processo_seletivo/interface/retificacao.py`, com `duties` como `TEXTO_LONGO` — sem isso, um campo publicado não teria como ser corrigido pela interface, e FR-016 falharia pelo mesmo motivo que o achado 03 da auditoria
+- [ ] T027 [US3] Acrescentar os três a `NOVO_PERFIL` **e a `_perfil_completo`** em `backend/processo_seletivo/interface/retificacao.py`. *Esta é a parte crítica: a docstring de `_perfil_completo` diz que a forma tem de ser a que `edital_snapshot` produz, porque um subconjunto quebraria a consulta pública. Acrescentar Perfil por Retificação sem as três chaves produziria conteúdo v3 incompleto*
+- [ ] T028 [P] [US3] Escrever testes em `backend/tests/interface/test_retificacao.py`: retificar `duties` de um Perfil publicado; e acrescentar Perfil por Retificação verificando que o objeto resultante tem **exatamente** as chaves da forma v3, comparando com a saída de `edital_snapshot`
 
 ---
 
@@ -126,19 +130,19 @@ Retificação pode alterar essa identidade.
 `Processo Seletivo <código> — <título>`, com SHA-256 presente e nenhum UUID; tentar retificar
 `/processoTitle` e ser recusado.
 
-- [ ] T025 [US1] Acrescentar `processoCode` e `processoTitle` à raiz de `edital_snapshot` em `backend/processo_seletivo/publicacoes/application/publish_edital.py`, lidos de `edital.processo` — que já vem por `select_related("processo")`, sem consulta adicional
-- [ ] T026 [US1] Reescrever `_integridade` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` conforme a tabela B.3 do contrato: preservar a afirmação de derivação, a versão do schema e o SHA-256; identificar o Edital por número/ano e o Processo por código e título; **deixar de escrever os dois UUIDs**
-- [ ] T027 [US1] Declarar `CAMPOS_DE_IDENTIDADE` em `backend/processo_seletivo/publicacoes/domain/colecoes.py` com `editalId`, `processoId`, `processoCode`, `processoTitle` e `schemaVersion`, ao lado de `LISTAS_DE_CONTROLE`, com o racional de D-003.1 no docstring
-- [ ] T028 [US1] Estender a recusa existente em `backend/processo_seletivo/publicacoes/domain/changes.py` para consultar o conjunto novo além de `LISTAS_DE_CONTROLE`, com mensagem que nomeie o campo. **Nenhum caminho, operador ou forma nova** — é um conjunto declarado e uma condição a mais (P-005)
-- [ ] T029 [P] [US1] Escrever `backend/tests/unit/publicacoes/test_identidade_imutavel.py`: cada um dos cinco campos é recusado; `/title` e `/description` continuam aceitos; `/number` e `/year` continuam aceitos, com comentário registrando que são questão aberta e não omissão
-- [ ] T030 [US1] Incrementar `SCHEMA_VERSION` de `2` para `3` em `backend/processo_seletivo/shared/canonical.py`, com o comentário declarando as **três** mudanças de forma que a versão cobre (FR-017)
-- [ ] T031 [US1] Acrescentar `duties`, `workload` e `compensation` à forma de `profiles` em `COLECOES_PUBLICADAS`, em `backend/processo_seletivo/editais/domain/validation.py`
-- [ ] T032 [US1] Atualizar `backend/tests/contract/test_forma_publicada.py` para a forma v3 completa: os dois escalares da raiz, os três campos de `profiles` como string sempre presente com `""`, as dez seções, **e `number` como string** — `Edital.number` é `CharField(50)` e a forma preserva `"02"`
-- [ ] T033 [P] [US1] Escrever teste afirmando que dois snapshots de versão 3 do mesmo conteúdo têm exatamente o mesmo conjunto de chaves em todos os níveis (SC-002a)
-- [ ] T034 [P] [US1] Escrever teste afirmando que um snapshot v3 basta, sozinho, para `render_edital_pdf` compor o documento — sem consulta ao banco
-- [ ] T035 [US1] Atualizar o esquema OpenAPI e os exemplos da API para a forma v3
-- [ ] T036 [US1] Regenerar seed (`seed_demo`) e a fixture de bytes — **segunda e última regeneração prevista em FR-006** —, revisando o diff do texto extraído
-- [ ] T037 [US1] Confirmar que conteúdo-base de versão 2 é recusado na consolidação por versão divergente, sem conversão, e que a mensagem é compreensível (FR-019)
+- [ ] T029 [US1] Acrescentar `processoCode` e `processoTitle` à raiz de `edital_snapshot` em `backend/processo_seletivo/publicacoes/application/publish_edital.py`, lidos de `edital.processo` — que já vem por `select_related("processo")`, sem consulta adicional
+- [ ] T030 [US1] Reescrever `_integridade` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` conforme a tabela B.3 do contrato: preservar a afirmação de derivação, a versão do schema e o SHA-256; identificar o Edital por número/ano e o Processo por código e título; **deixar de escrever os dois UUIDs**
+- [ ] T031 [US1] Declarar `CAMPOS_DE_IDENTIDADE` em `backend/processo_seletivo/publicacoes/domain/colecoes.py` com `editalId`, `processoId`, `processoCode`, `processoTitle` e `schemaVersion`, ao lado de `LISTAS_DE_CONTROLE`, com o racional de D-003.1 no docstring
+- [ ] T032 [US1] Estender a recusa existente em `backend/processo_seletivo/publicacoes/domain/changes.py` para consultar o conjunto novo além de `LISTAS_DE_CONTROLE`, com mensagem que nomeie o campo. **Nenhum caminho, operador ou forma nova** — é um conjunto declarado e uma condição a mais (P-005)
+- [ ] T033 [P] [US1] Escrever `backend/tests/unit/publicacoes/test_identidade_imutavel.py`: cada um dos cinco campos é recusado; `/title` e `/description` continuam aceitos; `/number` e `/year` continuam aceitos, com comentário registrando que são questão aberta e não omissão
+- [ ] T034 [US1] Incrementar `SCHEMA_VERSION` de `2` para `3` em `backend/processo_seletivo/shared/canonical.py`, com o comentário declarando as **três** mudanças de forma que a versão cobre (FR-017)
+- [ ] T035 [US1] Acrescentar `duties`, `workload` e `compensation` à forma de `profiles` em `COLECOES_PUBLICADAS`, em `backend/processo_seletivo/editais/domain/validation.py`
+- [ ] T036 [US1] Atualizar `backend/tests/contract/test_forma_publicada.py` para a forma v3 completa: os dois escalares da raiz, os três campos de `profiles` como string sempre presente com `""`, as dez seções, **e `number` como string** — `Edital.number` é `CharField(50)` e a forma preserva `"02"`
+- [ ] T037 [P] [US1] Escrever teste afirmando que dois snapshots de versão 3 do mesmo conteúdo têm exatamente o mesmo conjunto de chaves em todos os níveis (SC-002a)
+- [ ] T038 [P] [US1] Escrever teste afirmando que um snapshot v3 basta, sozinho, para `render_edital_pdf` compor o documento — sem consulta ao banco
+- [ ] T039 [US1] Atualizar o esquema OpenAPI e os exemplos da API para a forma v3
+- [ ] T040 [US1] Regenerar seed (`seed_demo`) e a fixture de bytes — **segunda e última regeneração prevista em FR-006** —, revisando o diff do texto extraído
+- [ ] T041 [US1] Confirmar que conteúdo-base de versão 2 é recusado na consolidação por versão divergente, sem conversão, e que a mensagem é compreensível (FR-019)
 
 **Checkpoint**: entrega 2 fechada. **Fases 4, 5 e 6 integram juntas, num único PR** (FR-018).
 
@@ -151,19 +155,19 @@ Retificação pode alterar essa identidade.
 **Independent Test**: criar Processo com Edital que repita número/ano e ler a recusa correta; ser
 levado a elaborar; ver `Submeter` desabilitado com motivo; não receber `Retificar` sem permissão.
 
-- [ ] T038 [US4] Criar `backend/processo_seletivo/interface/acoes.py` com uma função que devolve, para um Edital e um ator, o conjunto completo de ações: rótulo, rota, disponibilidade e **motivo quando indisponível**. Funde `ACOES_POR_SITUACAO`, `atos.disponiveis` e o `<li>` fixo do template, e incorpora a previsão que `praticar_ato` já calcula com `atos.impedimento` e `_pendencias` (D-006)
-- [ ] T039 [US4] Passar a usar `acoes.py` na view `detalhe` de `backend/processo_seletivo/interface/views.py`, substituindo `atos`
-- [ ] T040 [US4] Reescrever o cartão "O que fazer agora" em `backend/processo_seletivo/interface/templates/interface/detalhe.html`: iterar o conjunto único, remover o `<li>` fixo de `Retificar`, e derivar a mensagem de ausência do mesmo conjunto
-- [ ] T041 [US4] Renderizar ação indisponível como controle desabilitado com o motivo associado por vínculo programático, mantendo contraste legível (FR-024)
-- [ ] T042 [US4] Passar a usar `acoes.py` também na view `lista`, para que listagem e detalhe deixem de ter registros distintos
-- [ ] T043 [US4] Mover a checagem de permissão de `retificar()` para fora do ramo POST em `backend/processo_seletivo/interface/views.py`, e apresentar a tela em leitura para quem não tem `retificacao:elaborar` (FR-026)
-- [ ] T044 [US4] Ajustar `backend/processo_seletivo/interface/templates/interface/retificar.html` para o modo leitura: sem campos de edição, sem botão de envio, sem acrescentar Perfil
-- [ ] T045 [US4] Promover `Elaborar o Edital <n>/<ano>` a ação primária na tela seguinte à criação do Processo, em `backend/processo_seletivo/interface/templates/interface/processo_detalhe.html`, rebaixando o impedimento de cancelar
-- [ ] T046 [US4] Separar os dois `create` em blocos `try` distintos em `create_process_with_first_edital`, em `backend/processo_seletivo/processos/application/commands.py`, devolvendo `edital_identifier_conflict` para o conflito do Edital. **Nenhum código de erro novo** — o certo já existe em `create_edital`
-- [ ] T047 [P] [US4] Escrever `backend/tests/unit/processos/test_conflito_identificacao.py`: conflito do Processo devolve `institutional_identifier_conflict`; conflito de `(escopo, número, ano)` do Edital devolve `edital_identifier_conflict`
-- [ ] T048 [P] [US4] Escrever `backend/tests/interface/test_acoes.py` cobrindo as cinco situações de `ACOES_POR_SITUACAO` × papéis, afirmando que nunca coexistem uma ação listada e a mensagem de ausência
-- [ ] T049 [P] [US4] Escrever teste de interface com ator sem `retificacao:elaborar`: o detalhe não oferece `Retificar`, e a URL direta devolve tela sem campo editável nem envio
-- [ ] T050 [P] [US4] Escrever teste afirmando que `Submeter` aparece desabilitado com motivo num Edital sem dados mínimos, e que a recusa do domínio permanece independente da interface (FR-025)
+- [ ] T042 [US4] Criar `backend/processo_seletivo/interface/acoes.py` com uma função que devolve, para um Edital e um ator, o conjunto completo de ações: rótulo, rota, disponibilidade e **motivo quando indisponível**. Funde `ACOES_POR_SITUACAO`, `atos.disponiveis` e o `<li>` fixo do template, e incorpora a previsão que `praticar_ato` já calcula com `atos.impedimento` e `_pendencias` (D-006)
+- [ ] T043 [US4] Passar a usar `acoes.py` na view `detalhe` de `backend/processo_seletivo/interface/views.py`, substituindo `atos`
+- [ ] T044 [US4] Reescrever o cartão "O que fazer agora" em `backend/processo_seletivo/interface/templates/interface/detalhe.html`: iterar o conjunto único, remover o `<li>` fixo de `Retificar`, e derivar a mensagem de ausência do mesmo conjunto
+- [ ] T045 [US4] Renderizar ação indisponível como controle desabilitado com o motivo associado por vínculo programático, mantendo contraste legível (FR-024)
+- [ ] T046 [US4] Passar a usar `acoes.py` também na view `lista`, para que listagem e detalhe deixem de ter registros distintos
+- [ ] T047 [US4] Mover a checagem de permissão de `retificar()` para fora do ramo POST em `backend/processo_seletivo/interface/views.py`, e apresentar a tela em leitura para quem não tem `retificacao:elaborar` (FR-026)
+- [ ] T048 [US4] Ajustar `backend/processo_seletivo/interface/templates/interface/retificar.html` para o modo leitura: sem campos de edição, sem botão de envio, sem acrescentar Perfil
+- [ ] T049 [US4] Promover `Elaborar o Edital <n>/<ano>` a ação primária na tela seguinte à criação do Processo, em `backend/processo_seletivo/interface/templates/interface/processo_detalhe.html`, rebaixando o impedimento de cancelar
+- [ ] T050 [US4] Separar os dois `create` em blocos `try` distintos em `create_process_with_first_edital`, em `backend/processo_seletivo/processos/application/commands.py`, devolvendo `edital_identifier_conflict` para o conflito do Edital. **Nenhum código de erro novo** — o certo já existe em `create_edital`
+- [ ] T051 [P] [US4] Escrever `backend/tests/unit/processos/test_conflito_identificacao.py`: conflito do Processo devolve `institutional_identifier_conflict`; conflito de `(escopo, número, ano)` do Edital devolve `edital_identifier_conflict`
+- [ ] T052 [P] [US4] Escrever `backend/tests/interface/test_acoes.py` cobrindo as cinco situações de `ACOES_POR_SITUACAO` × papéis, afirmando que nunca coexistem uma ação listada e a mensagem de ausência
+- [ ] T053 [P] [US4] Escrever teste de interface com ator sem `retificacao:elaborar`: o detalhe não oferece `Retificar`, e a URL direta devolve tela sem campo editável nem envio
+- [ ] T054 [P] [US4] Escrever teste afirmando que `Submeter` aparece desabilitado com motivo num Edital sem dados mínimos, e que a recusa do domínio permanece independente da interface (FR-025)
 
 **Checkpoint**: entrega 3 fechada.
 
@@ -175,13 +179,13 @@ levado a elaborar; ver `Submeter` desabilitado com motivo; não receber `Retific
 
 **Independent Test**: submeter e ler quem age agora; homologar como segunda pessoa e reler.
 
-- [ ] T051 [US5] Acrescentar a `backend/processo_seletivo/interface/acoes.py` uma função de leitura que devolve situação em português e o **papel** responsável pelo próximo ato, derivada do estado e de `ACOES_POR_SITUACAO`. Nada persistido, nada atribuído a pessoa (FR-029, FR-030)
-- [ ] T052 [US5] Fazer essa função consultar também `impede_por_segregacao`: quem elaborou e homologou o mesmo Edital **não** pode ser apontado como quem publica, ainda que tenha a permissão. É o ponto delicado da entrega (FR-031)
-- [ ] T053 [US5] Exibir a indicação no detalhe do Edital, em `backend/processo_seletivo/interface/templates/interface/detalhe.html`
-- [ ] T054 [US5] Exibir a indicação também na confirmação do ato praticado, em `backend/processo_seletivo/interface/templates/interface/confirmar.html`
-- [ ] T055 [P] [US5] Escrever `backend/tests/interface/test_bastao.py`: submetido aponta quem homologa; homologado aponta quem publica
-- [ ] T056 [P] [US5] Escrever o teste do caso que separa as duas derivações: ator que elaborou **e** homologou, com permissão de publicar, **não** é apontado; o mesmo Edital homologado por outra pessoa aponta quem publica (cenários 3 e 4 da `US5`)
-- [ ] T057 [P] [US5] Escrever teste afirmando a ausência: nenhum modelo, campo persistido, fila, notificação ou designação nasce nesta entrega
+- [ ] T055 [US5] Acrescentar a `backend/processo_seletivo/interface/acoes.py` uma função de leitura que devolve situação em português e o **papel** responsável pelo próximo ato, derivada do estado e de `ACOES_POR_SITUACAO`. Nada persistido, nada atribuído a pessoa (FR-029, FR-030)
+- [ ] T056 [US5] Fazer essa função consultar também `impede_por_segregacao`: quem elaborou e homologou o mesmo Edital **não** pode ser apontado como quem publica, ainda que tenha a permissão. É o ponto delicado da entrega (FR-031)
+- [ ] T057 [US5] Exibir a indicação no detalhe do Edital, em `backend/processo_seletivo/interface/templates/interface/detalhe.html`
+- [ ] T058 [US5] Exibir a indicação também na confirmação do ato praticado, em `backend/processo_seletivo/interface/templates/interface/confirmar.html`
+- [ ] T059 [P] [US5] Escrever `backend/tests/interface/test_bastao.py`: submetido aponta quem homologa; homologado aponta quem publica
+- [ ] T060 [P] [US5] Escrever o teste do caso que separa as duas derivações: ator que elaborou **e** homologou, com permissão de publicar, **não** é apontado; o mesmo Edital homologado por outra pessoa aponta quem publica (cenários 3 e 4 da `US5`)
+- [ ] T061 [P] [US5] Escrever teste afirmando a ausência: nenhum modelo, campo persistido, fila, notificação ou designação nasce nesta entrega
 
 **Checkpoint**: entrega 4 fechada.
 
@@ -195,41 +199,43 @@ levado a elaborar; ver `Submeter` desabilitado com motivo; não receber `Retific
 
 ### Obrigatoriedade e recusa
 
-- [ ] T058 [US6] Marcar campos obrigatórios na etiqueta e expor a obrigatoriedade a tecnologia assistiva nas seis etapas do assistente, na criação de Processo, nas telas de confirmação e na tela de Retificação — a lista fechada de FR-032
-- [ ] T059 [US6] Apresentar recusa de envio em resumo no topo com âncora para cada campo, com foco ou anúncio ao ser exibido, em `backend/processo_seletivo/interface/templates/interface/`
-- [ ] T060 [US6] Associar cada campo recusado à sua mensagem por vínculo programático, não só por proximidade visual (FR-033)
-- [ ] T061 [P] [US6] Escrever teste de interface afirmando obrigatoriedade marcada e recusa em resumo **e** junto do campo
+- [ ] T062 [US6] Marcar campos obrigatórios na etiqueta e expor a obrigatoriedade a tecnologia assistiva nas seis etapas do assistente, na criação de Processo, nas telas de confirmação e na tela de Retificação — a lista fechada de FR-032
+- [ ] T063 [US6] Apresentar recusa de envio em resumo no topo com âncora para cada campo, com foco ou anúncio ao ser exibido, em `backend/processo_seletivo/interface/templates/interface/`
+- [ ] T064 [US6] Associar cada campo recusado à sua mensagem por vínculo programático, não só por proximidade visual (FR-033)
+- [ ] T065 [P] [US6] Escrever teste de interface afirmando obrigatoriedade marcada e recusa em resumo **e** junto do campo
 
 ### Aparência e ordem
 
-- [ ] T062 [P] [US6] Estender a regra de estilo além de `input[type=text]` em `backend/processo_seletivo/interface/static/interface/`, de modo que `Ano` tenha altura, fonte e borda dos vizinhos, e que a largura declarada em `Número` tenha efeito (FR-034)
-- [ ] T063 [US6] Desabilitar `↑` na primeira linha e `↓` na última em `backend/processo_seletivo/interface/static/interface/ordenacao.js`, mantendo o estado correto após cada movimento e após remoção
-- [ ] T064 [US6] Exibir a posição de cada linha na legenda — "Evento 2 de 3" — atualizada pelo mesmo caminho que renumera `order`
-- [ ] T065 [P] [US6] Escrever teste de JavaScript em `backend/tests/javascript/` para o estado dos botões nas pontas e para a numeração da legenda
+- [ ] T066 [P] [US6] Estender a regra de estilo além de `input[type=text]` em `backend/processo_seletivo/interface/static/interface/`, de modo que `Ano` tenha altura, fonte e borda dos vizinhos, e que a largura declarada em `Número` tenha efeito (FR-034)
+- [ ] T067 [US6] Desabilitar `↑` na primeira linha e `↓` na última em `backend/processo_seletivo/interface/static/interface/ordenacao.js`, mantendo o estado correto após cada movimento e após remoção
+- [ ] T068 [US6] Exibir a posição de cada linha na legenda — "Evento 2 de 3" — atualizada pelo mesmo caminho que renumera `order`
+- [ ] T069 [P] [US6] Escrever teste de JavaScript em `backend/tests/javascript/` para o estado dos botões nas pontas e para a numeração da legenda
 
 ### Etapas, remoção e escolha
 
-- [ ] T066 [US6] Compor a opção do seletor de Evento com a data herdada — "Prova didática · 10/04/2027 14:00" — em `backend/processo_seletivo/interface/views.py` e no fragmento de Etapa (FR-036)
-- [ ] T067 [US6] Agrupar Eliminatória e Classificatória sob legenda "Caráter" em `backend/processo_seletivo/interface/templates/interface/_etapa.html` (FR-037)
-- [ ] T068 [US6] Exigir confirmação ao remover linha com **qualquer campo preenchido ou item filho**; linha inteiramente vazia não confirma. A confirmação diz o que será descartado, é operável por teclado e tem o cancelamento como padrão (FR-038)
-- [ ] T069 [P] [US6] Escrever teste de JavaScript para a confirmação: linha preenchida confirma, linha vazia não
+- [ ] T070 [US6] Compor a opção do seletor de Evento com a data herdada — "Prova didática · 10/04/2027 14:00" — em `backend/processo_seletivo/interface/views.py` e no fragmento de Etapa (FR-036)
+- [ ] T071 [US6] Agrupar Eliminatória e Classificatória sob legenda "Caráter" em `backend/processo_seletivo/interface/templates/interface/_etapa.html` (FR-037)
+- [ ] T072 [US6] Exigir confirmação ao remover linha com **qualquer campo preenchido ou item filho**; linha inteiramente vazia não confirma. A confirmação diz o que será descartado, é operável por teclado e tem o cancelamento como padrão (FR-038)
+- [ ] T073 [P] [US6] Escrever teste de JavaScript para a confirmação: linha preenchida confirma, linha vazia não
 
 ### Autoridade signatária
 
-- [ ] T070 [US6] Criar `backend/processo_seletivo/publicacoes/domain/autoridades.py` com catálogo declarado — chave estável, identificador institucional, nome e cargo —, no padrão de `editais/domain/secoes.py`. Sem entidade, sem migration, sem tela de gestão, sem permissão nova (FR-039)
-- [ ] T071 [US6] Substituir os três campos de autoridade em `backend/processo_seletivo/interface/templates/interface/confirmar.html` por uma escolha no catálogo; nome, cargo e identificador vêm da entrada escolhida e **nenhum identificador é digitado, exibido ou impresso** (FR-044)
-- [ ] T072 [US6] Resolver a escolha para `signatory_id`, `signatory_name` e `signatory_role` no caminho de publicação, sem alterar o que a `Publicacao` persiste
-- [ ] T073 [P] [US6] Escrever teste afirmando que a publicação funciona pela escolha, que autoridade fora do catálogo não é aceita em novo ato, e que Publicação já praticada com autoridade depois retirada permanece íntegra (FR-046)
+- [ ] T074 [US6] Criar `backend/processo_seletivo/publicacoes/domain/autoridades.py` com catálogo declarado — chave estável, identificador institucional, nome e cargo —, no padrão de `editais/domain/secoes.py`. Sem entidade, sem migration, sem tela de gestão, sem permissão nova (FR-039)
+- [ ] T075 [US6] Substituir os três campos de autoridade em `backend/processo_seletivo/interface/templates/interface/confirmar.html` por uma escolha no catálogo; nome, cargo e identificador vêm da entrada escolhida e **nenhum identificador é digitado, exibido ou impresso** (FR-044)
+- [ ] T076 [US6] Resolver a escolha para `signatory_id`, `signatory_name` e `signatory_role` no caminho de publicação, sem alterar o que a `Publicacao` persiste
+- [ ] T077 [P] [US6] Escrever teste afirmando que a publicação funciona pela escolha, que autoridade fora do catálogo não é aceita em novo ato, e que Publicação já praticada com autoridade depois retirada permanece íntegra (FR-046)
+- [ ] T078 [US6] Aplicar a mesma escolha de autoridade em `backend/processo_seletivo/interface/templates/interface/retificacao_confirmar.html` e no ramo correspondente de `backend/processo_seletivo/interface/views.py`. **São dois fluxos de publicação** — o do Edital e o da Retificação —, e ambos pedem os três campos hoje; deixar um de fora manteria o UUID digitado exatamente onde a correção de um Edital publicado acontece
+- [ ] T079 [P] [US6] Escrever teste cobrindo os **dois** fluxos: publicar Edital e publicar Retificação, ambos com autoridade escolhida em lista e nenhum identificador digitado (SC-009a)
 
 ### Estado, nomes e auditoria
 
-- [ ] T074 [US6] Passar `_progresso` de dois para três estados em `backend/processo_seletivo/interface/views.py`: `conteudo` deixa de ser `True` fixo e passa a ser "pronta para revisar" enquanto `edital.secoes.exists()` for falso, e "concluída" depois (D-005)
-- [ ] T075 [US6] Distinguir os três estados visualmente em `backend/processo_seletivo/interface/templates/interface/compor_base.html`, sem depender apenas de cor (FR-040)
-- [ ] T076 [P] [US6] Escrever teste afirmando que Edital recém-criado mostra `Conteúdo` como "pronta para revisar" e que gravar a etapa a torna "concluída"
-- [ ] T077 [US6] Substituir `{{ request.GET.ato|situacao }}` em `backend/processo_seletivo/interface/templates/interface/detalhe.html` pelo rótulo humano que `atos.ATOS` já declara — o filtro `situacao` mapeia **situações** e por isso devolve `submeter` cru (FR-041)
-- [ ] T078 [P] [US6] Escrever teste afirmando que a faixa de confirmação diz "Submissão para revisão" e "Publicação", e nunca a chave interna
-- [ ] T079 [US6] Registrar qual etapa do assistente foi gravada no evento de auditoria da gravação do rascunho, em `backend/processo_seletivo/editais/application/draft.py` e no chamador da interface. **Registrar a área, não a diferença** (FR-043)
-- [ ] T080 [P] [US6] Escrever teste afirmando que quatro gravações em etapas diferentes produzem quatro registros distinguíveis na trilha
+- [ ] T080 [US6] Passar `_progresso` de dois para três estados em `backend/processo_seletivo/interface/views.py`: `conteudo` deixa de ser `True` fixo e passa a ser "pronta para revisar" enquanto `edital.secoes.exists()` for falso, e "concluída" depois (D-005)
+- [ ] T081 [US6] Distinguir os três estados visualmente em `backend/processo_seletivo/interface/templates/interface/compor_base.html`, sem depender apenas de cor (FR-040)
+- [ ] T082 [P] [US6] Escrever teste afirmando que Edital recém-criado mostra `Conteúdo` como "pronta para revisar" e que gravar a etapa a torna "concluída"
+- [ ] T083 [US6] Substituir `{{ request.GET.ato|situacao }}` em `backend/processo_seletivo/interface/templates/interface/detalhe.html` pelo rótulo humano que `atos.ATOS` já declara — o filtro `situacao` mapeia **situações** e por isso devolve `submeter` cru (FR-041)
+- [ ] T084 [P] [US6] Escrever teste afirmando que a faixa de confirmação diz "Submissão para revisão" e "Publicação", e nunca a chave interna
+- [ ] T085 [US6] Registrar qual etapa do assistente foi gravada no evento de auditoria da gravação do rascunho, em `backend/processo_seletivo/editais/application/draft.py` e no chamador da interface. **Registrar a área, não a diferença** (FR-043)
+- [ ] T086 [P] [US6] Escrever teste afirmando que quatro gravações em etapas diferentes produzem quatro registros distinguíveis na trilha
 
 **Checkpoint**: entrega 5 fechada.
 
@@ -237,11 +243,11 @@ levado a elaborar; ver `Submeter` desabilitado com motivo; não receber `Retific
 
 ## Phase 10: Polish & Cross-Cutting Concerns
 
-- [ ] T081 Rodar `ruff check` e `ruff format --check` e a suíte completa, comparando a contagem de testes com a registrada em T001
-- [ ] T082 Percorrer o assistente inteiro **só por teclado, com leitor de tela**, alcançando obrigatoriedade, motivo de ato desabilitado, resumo de erros e confirmação de remoção, sem depender de cor (SC-009b)
-- [ ] T083 Executar a demonstração de ponta a ponta de `quickstart.md` com **dois atores**, do painel ao documento publicado, e registrar as verificações
-- [ ] T084 Conferir a tabela de rastreabilidade da spec: os dezesseis achados abertos estão cobertos, e **nenhum requisito novo entrou** durante a implementação
-- [ ] T085 Registrar, sem corrigir, todo achado novo encontrado durante a implementação — inclusive a questão aberta de `/number` e `/year` na Retificação (D-003.1)
+- [ ] T087 Rodar `ruff check` e `ruff format --check` e a suíte completa, comparando a contagem de testes com a registrada em T001
+- [ ] T088 Percorrer o assistente inteiro **só por teclado, com leitor de tela**, alcançando obrigatoriedade, motivo de ato desabilitado, resumo de erros e confirmação de remoção, sem depender de cor (SC-009b)
+- [ ] T089 Executar a demonstração de ponta a ponta de `quickstart.md` com **dois atores**, do painel ao documento publicado, e registrar as verificações
+- [ ] T090 Conferir a tabela de rastreabilidade da spec: os dezesseis achados abertos estão cobertos, e **nenhum requisito novo entrou** durante a implementação
+- [ ] T091 Registrar, sem corrigir, todo achado novo encontrado durante a implementação — inclusive a questão aberta de `/number` e `/year` na Retificação (D-003.1)
 
 ---
 
@@ -254,7 +260,7 @@ T001 → T002 → Fase 3 (US1a)
               Fase 5 (US3) ─┼→ integram JUNTAS, um único PR (FR-018)
               Fase 6 (US1b) ┘
                  ↓
-              Fase 7 (US4) → Fase 8 (US5)     [US5 usa acoes.py, criado em T038]
+              Fase 7 (US4) → Fase 8 (US5)     [US5 usa acoes.py, criado em T042]
                  ↓
               Fase 9 (US6)  [independente das demais]
                  ↓
@@ -266,12 +272,16 @@ T001 → T002 → Fase 3 (US1a)
 - **T002 antes de qualquer mudança em `pdf.py`** — é a linha de base das duas regenerações.
 - **Fase 3 antes da Fase 6** — as duas tocam `pdf.py` e cada uma regenera a fixture. A ordem inversa
   custaria a demonstração antecipada, não uma regeneração a menos (FR-006, FR-018).
-- **T038 antes da Fase 8** — a passagem de bastão vive no módulo que a Fase 7 cria.
-- **T015/T016 antes de T025** — a forma v3 precisa das colunas existindo.
+- **T042 antes da Fase 8** — a passagem de bastão vive no módulo que a Fase 7 cria.
+- **T016/T017 antes de T029** — a forma v3 precisa das colunas existindo.
+- **T027 no mesmo PR que T029 a T036** — `_perfil_completo` precisa produzir **a forma v3**, e a
+  forma v3 nasce na Fase 6. Acrescentar Perfil por Retificação com a forma antiga produziria conteúdo
+  publicado incompleto; a integração conjunta das fases 4, 5 e 6 já garante isto, e o registro aqui
+  é para que a ordem interna do PR não o inverta.
 
 A **Fase 9 é independente de tudo** e pode correr em paralelo com as fases 7 e 8, por tocar
-majoritariamente arquivos distintos. As exceções são `views.py` (T039, T043, T066, T074) e
-`detalhe.html` (T040, T041, T053, T077), que devem ser sequenciados entre si.
+majoritariamente arquivos distintos. As exceções são `views.py` (T043, T047, T070, T080) e
+`detalhe.html` (T044, T045, T057, T083), que devem ser sequenciados entre si.
 
 ---
 
@@ -280,16 +290,18 @@ majoritariamente arquivos distintos. As exceções são `views.py` (T039, T043, 
 **Fase 3** — T003 e T004 juntas (módulo novo e seu teste), depois T005 e T006 em sequência no mesmo
 arquivo.
 
-**Fases 4 e 5** — T011, T012 e T014 em paralelo com T017, T022 e T024: apps distintos, arquivos
+**Fases 4 e 5** — T011, T012 e T014 em paralelo com T018, T023 e T025: apps distintos, arquivos
 distintos.
 
-**Fase 6** — T029, T033 e T034 em paralelo; todas são testes em arquivos próprios.
+**Fase 6** — T033, T037 e T038 em paralelo; todas são testes em arquivos próprios.
 
-**Fase 7** — T047, T048, T049 e T050 em paralelo depois que T038 a T046 estiverem prontas.
+**Fase 7** — T051, T052, T053 e T054 em paralelo depois que T042 a T050 estiverem prontas.
+
+**Fase 5** — T028 depois de T026 e T027; os três tocam `retificacao.py` e devem ser sequenciados.
 
 **Fase 9** — os quatro agrupamentos (obrigatoriedade, aparência/ordem, escolha/remoção, autoridade)
 tocam conjuntos de arquivos quase disjuntos e podem correr simultaneamente; só o estado do assistente
-(T074, T075) compete com `views.py`.
+(T080, T081) compete com `views.py`.
 
 ---
 
@@ -303,7 +315,7 @@ a que mais muda a percepção por hora gasta.
 histórias compartilham um merge, e a razão está declarada em FR-017 e FR-018: uma versão canônica
 que admite duas formas não é uma versão canônica.
 
-**Depois**: fases 7, 8 e 9, em qualquer ordem que a equipe prefira, respeitando `T038 → Fase 8`.
+**Depois**: fases 7, 8 e 9, em qualquer ordem que a equipe prefira, respeitando `T042 → Fase 8`.
 
 **Condição de merge de cada entrega**: a demonstração no navegador descrita em `quickstart.md`, não a
 contagem de testes (princípio VI).

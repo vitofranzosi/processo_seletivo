@@ -103,8 +103,9 @@ o registro declarativo já sabe expressar.
 
 ## D-004 — Autoridades signatárias: catálogo declarado, não entidade
 
-**Decisão**: `publicacoes/domain/autoridades.py`, tupla declarada com chave estável, nome e cargo,
-no mesmo padrão de `editais/domain/secoes.py`.
+**Decisão**: `publicacoes/domain/autoridades.py`, tupla declarada com chave estável, nome, cargo e o
+identificador institucional que `Publicacao.signatory_id` já exige, no mesmo padrão de
+`editais/domain/secoes.py`. O identificador nunca é digitado, exibido ao operador nem impresso.
 
 **Racional**: o achado da auditoria era estreito — "publicar exige digitar um UUID à mão". A resposta
 proporcional é oferecer uma escolha, não construir um cadastro. O catálogo declarado dá o que se
