@@ -6,9 +6,14 @@ Este documento descreve **quando** a verificação acontece, **o que** ela confe
 se apresenta. Ele não substitui o `openapi.yaml` da `001`, que continua sendo a fonte única da API:
 a seção final lista o delta a aplicar lá.
 
-A forma exigida em si não é declarada aqui — ela já está no `openapi.yaml`, em `PerfilInput` e
-`EventoInput`, e repeti-la criaria uma terceira cópia da mesma verdade. O que está em
-[data-model.md](../data-model.md) é a transcrição que o domínio guarda, com o teste que a confere.
+A forma exigida não é declarada aqui: ela passa a estar no `openapi.yaml`, em `PerfilPublicado` e
+`EventoPublicado`, esquemas de **saída** que esta feature acrescenta. Repeti-la aqui criaria uma
+terceira cópia da mesma verdade. O que está em [data-model.md](../data-model.md) é a transcrição que
+o domínio guarda, com o teste que a confere contra o contrato.
+
+**Os esquemas de entrada não servem.** `PerfilInput` exige 5 dos 12 campos que o Perfil publicado
+carrega; usá-lo deixaria `requirements`, `description`, `locality` e outros sem verificação — e um
+Perfil reduzido aos cinco é exatamente o que a feature existe para impedir.
 
 ## Os dois momentos
 
@@ -26,14 +31,16 @@ defeituosa produziria uma linha do tempo com buraco.
 
 ## O que se confere
 
-Quatro dimensões, em cada Perfil e em cada Evento do conteúdo:
+Cinco dimensões, em cada Perfil e em cada Evento do conteúdo. Todas as violações são **erro
+impeditivo** (FR-006):
 
 | Dimensão | Violação |
 | --- | --- |
 | Presença | campo declarado obrigatório está ausente |
-| Tipo | valor não é do tipo declarado — denominação como lista, vagas como texto |
-| Nulabilidade | valor é nulo onde o contrato não admite nulo |
+| Tipo | valor não é do tipo declarado — denominação como lista, vagas como texto, requisitos como texto |
+| Nulabilidade | valor é nulo onde não se admite nulo |
 | Formato | valor não satisfaz o formato declarado — `startAt` que não é data-e-hora |
+| Restrição declarada | valor fora do que o contrato já escreve — vagas negativas, tipo de reserva fora da enumeração |
 
 **Valor vazio admissível não é violação** (FR-007). Lista sem elementos continua sendo lista; texto em branco
 onde o contrato admite texto continua sendo texto. É o que distingue "não preenchido" de
@@ -44,11 +51,16 @@ não declara tornaria toda evolução de esquema uma quebra.
 
 ## O que se decide **não** conferir
 
-O contrato declara `minimum` e `enum` para alguns campos. Esta feature não os verifica: são regra de
-negócio, e decidir o que um Perfil deve exigir é discussão normativa e não de integridade.
+**Coerência entre campos.** `reserveLimit` compatível com o tipo de reserva, `endAt` posterior a
+`startAt`, soma de vagas por modalidade — nenhuma dessas regras está escrita em lugar nenhum, e
+escrevê-las aqui seria decidir por antecipação o que um Edital admissível é.
 
-**Consequência declarada**: depois desta feature, um Perfil com `immediateVacancies: -3` continua
-publicável. A garantia é sobre a **forma** do conteúdo, não sobre a admissibilidade dos valores.
+**A forma das Modalidades de Concorrência.** Conferidas como lista de objetos e nada mais. A
+Publicação original também não as verifica, então a garantia desta feature não regride por isso —
+mas ela também não as alcança, e isso está dito.
+
+A linha entre aplicar e inventar é esta: **o que o contrato já escreve, aplica-se; o que ele não
+escreve, não se escreve aqui.** Faixa e enumeração declaradas entram; coerência cruzada, não.
 
 ## A recusa
 
@@ -89,11 +101,11 @@ impeditivos: a operação é transacional e a recusa não produz efeito parcial.
 4. **Declarar `blocking_findings`** nas respostas `422` das operações que o produzem. O contrato
    nomeia `expected_hash_mismatch`, `target_already_present`, `inconsistent_consolidation` e os três
    da `004`, mas nunca nomeou este — e esta feature passa a emiti-lo num momento novo.
-5. **Nenhuma operação nova, nenhum campo novo.** A superfície da API não cresce; o que cresce é o
-   que ela diz sobre o que já fazia.
+5. **Acrescentar `PerfilPublicado` e `EventoPublicado`** aos esquemas, com os campos canônicos, os
+   tipos, a nulabilidade e as restrições. Reaproveitam o que `PerfilInput` e `EventoInput` declaram e
+   completam o resto; os de entrada continuam descrevendo entrada.
+6. **Nenhuma operação nova, nenhum campo novo em requisição ou resposta.** A superfície da API não
+   cresce; o que cresce é o que ela diz sobre o conteúdo que já publicava.
 
-### Lacuna anterior, registrada e não fechada aqui
-
-`precondition_missing` e `no_effective_change` também não aparecem no `openapi.yaml`. São recusas que
-o sistema emite e o contrato não descreve. Não são desta feature — ficam anotadas para quem for
-fechar a conformidade de códigos de erro.
+`precondition_missing` e `no_effective_change` também não aparecem no `openapi.yaml` — lacuna
+anterior, anotada aqui e não fechada por esta feature.

@@ -40,7 +40,7 @@ clarificação; o quarto e um erro editorial foram corrigidos direto.
 `immediateVacancies = "muitas"`, `immediateVacancies = None`, `startAt = {}` e `requirements = "texto"`
 atravessam a validação atual sem achado impeditivo. A decisão foi conferir presença, tipo,
 nulabilidade e formato — o que `PerfilInput` e `EventoInput` já declaram no contrato da `001` —,
-aceitando campo desconhecido e sem regra de negócio nova (FR-009).
+aceitando campo desconhecido.
 
 **Portão da Publicação (Q2).** O teste independente da US1 era inalcançável: a US2 recusa o ato na
 elaboração, então ele nunca chega à Publicação. Reescrito para partir de um ato malformado já
@@ -51,10 +51,10 @@ também FR-013, para que a razão de o portão não ser redundante fique escrita
 materializa uma versão por fronteira de vigência. O singular permitia implementar só a primeira e
 deixar a seguinte vigorar malformada semanas depois. Passou a exigir toda fronteira materializada.
 
-**`SC-006` saiu dos critérios funcionais.** Cobertura com ramos é métrica de entrega, não resultado
-observável por quem usa. Fica registrada aqui para o plano recolher: **a suíte deve permanecer verde
-nas duas execuções — SQLite e PostgreSQL — e o código escrito nesta feature deve ter cobertura com
-ramos integral.**
+**O critério de cobertura saiu dos critérios funcionais.** Cobertura com ramos é métrica de entrega,
+não resultado observável por quem usa. Foi recolhida pelo plano, na seção de critérios de entrega:
+suíte verde nas duas execuções — SQLite e PostgreSQL — e cobertura com ramos integral do código
+escrito nesta feature.
 
 **Avaliação de LGPD acrescentada.** O princípio III da Constituição exige que cada especificação
 avalie os requisitos aplicáveis, e **nenhuma das cinco specs do projeto havia feito isso** — não é
@@ -72,11 +72,11 @@ Duas passagens foram necessárias.
 `validate_for_publication`, `apply_changes` — e um critério media cobertura de arquivo. Eram
 detalhe de implementação em seção que não os admite, e foram reescritos pelo comportamento:
 "a verificação que existe hoje olha quatro condições na raiz" no Contexto, e a exigência em si
-formulada como o que o sistema deve fazer, não onde. `SC-006` fala em "código escrito nesta
-feature", que é verificável sem nomear arquivo.
+formulada como o que o sistema deve fazer, não onde. O critério de cobertura saiu dos critérios
+funcionais na reavaliação seguinte, e está no plano.
 
-**Códigos HTTP são contrato, não implementação.** `FR-009` diz `422`, e `FR-010` cita a forma de
-caminho `/profiles/id=<uuid>/name`. Ambos são superfície observável, fixada pelo contrato público
+**Códigos HTTP são contrato, não implementação.** Os requisitos da recusa dizem `422` e citam a
+forma de caminho `/profiles/id=<uuid>/name`. Ambos são superfície observável, fixada pelo contrato público
 da `001` e pela gramática da `004`; descrevê-los como "recusa apropriada" tornaria o requisito
 menos testável sem torná-lo menos técnico. Mantidos deliberadamente.
 
@@ -89,3 +89,25 @@ onde `$speckit-clarify` pode contestá-los.
 **Escopo.** O *Out of Scope* nomeia cinco exclusões e diz por que cada uma sai — incluindo a razão
 técnica de a validação por valor não substituir a validação do resultado, que é o que distingue
 esta feature de uma versão mais barata dela.
+
+
+### Reavaliação após a revisão do plano (2026-08-29)
+
+A revisão encontrou um desvio de autoridade que reduzia a garantia. Verificado antes de aceitar: o
+Perfil publicado tem **12 campos** e `PerfilInput` exige **5**; sete ficariam sem verificação,
+`requirements` entre eles — justamente o defeito que estas notas citam como medido.
+
+**A autoridade mudou de lugar.** Deixou de ser o esquema de entrada e passou a ser a forma canônica
+do conteúdo **publicado**, declarada no contrato como esquema próprio (FR-005 reescrito).
+
+**Faixa e enumeração passaram a ser aplicadas.** A versão anterior as excluía como "regra de
+negócio", e o custo apareceu no roteiro: um teste exigindo que `immediateVacancies: -3` continuasse
+publicável. Isso é congelar defeito, não evitar overengineering. A linha passou a ser entre **aplicar
+o que o contrato escreve** e **inventar o que ele não escreve** — coerência entre campos continua
+fora (FR-009 reescrito).
+
+**A recusa passou a dizer o quê, e não só onde.** FR-011 falava apenas em campo ausente; cobre agora
+as cinco violações.
+
+Os itens da checklist seguem satisfeitos: as mudanças tornaram os requisitos mais testáveis e o
+escopo mais explícito, sem introduzir marcador de clarificação nem detalhe de implementação.

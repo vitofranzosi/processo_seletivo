@@ -51,6 +51,14 @@ Retificação faz vigorar, e não só a raiz do Edital.
   Sobre quais delas a verificação incide? → A: Toda fronteira materializada; uma só malformada recusa
   o ato inteiro.
 
+**Revisão de 2026-08-29, sobre a primeira resposta.** A revisão do plano mostrou que "o que o
+contrato declara" apontava para o lugar errado: `PerfilInput` e `EventoInput` descrevem a **entrada**
+do rascunho e exigem 5 dos 12 campos que o Perfil publicado carrega. `requirements` — citado como
+defeito medido — ficaria de fora. A autoridade passou a ser a **forma canônica do conteúdo
+publicado**, declarada no contrato como esquema próprio (FR-005). E as restrições que o contrato já
+escreve — faixa e enumeração — passam a ser aplicadas: excluí-las criaria uma garantia nova para
+preservar comportamento inválido (FR-009).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Nenhum Edital malformado passa a vigorar (Priority: P1)
@@ -151,28 +159,33 @@ recusada ali, com uma mensagem que nomeia o caminho do campo ausente.
 
 ### O que conta como bem formado
 
-- **FR-005**: A forma exigida DEVE ser a que o contrato público já declara para Perfil e Evento —
-  quais campos são obrigatórios, de que tipo, quais admitem nulo e que formato têm. Descrever a forma
-  uma segunda vez criaria duas autoridades sobre a mesma pergunta, e elas divergiriam.
+- **FR-005**: A forma exigida DEVE ser a do **conteúdo publicado** — o Perfil e o Evento que o
+  sistema materializa —, declarada no contrato como esquema próprio. Os esquemas de **entrada** do
+  rascunho descrevem outra coisa e cobrem parte dos campos; usá-los deixaria de fora o que o snapshot
+  sempre carrega, `requirements` inclusive.
 - **FR-006**: DEVEM ser **erro impeditivo**, na classificação que o sistema já usa — informação,
-  aviso e erro impeditivo — as quatro violações: campo obrigatório ausente, valor de tipo diferente
-  do declarado, nulo onde o contrato não o admite, e valor que não satisfaz o formato declarado.
+  aviso e erro impeditivo — as violações da forma declarada: campo obrigatório ausente, valor de tipo
+  diferente do declarado, nulo onde não se admite nulo, valor que não satisfaz o formato declarado, e
+  valor fora da restrição que o contrato já escreve.
 - **FR-007**: Valor vazio admissível NÃO DEVE ser tratado como ausência nem como tipo errado. Lista
   sem elementos continua sendo lista, e texto em branco onde o contrato admite texto continua sendo
   texto.
 - **FR-008**: Campo que o contrato não declara NÃO DEVE ser recusado. O conteúdo normativo pode
   crescer, e recusar o desconhecido tornaria toda evolução de esquema uma quebra.
-- **FR-009**: A verificação NÃO DEVE acrescentar regra de negócio — faixa de valores, enumeração
-  admissível ou coerência entre campos. Decidir o que um Perfil *deveria* exigir é discussão
-  normativa, e não de integridade.
+- **FR-009**: A verificação DEVE aplicar as restrições que o contrato **já declara**, faixa de valor
+  e enumeração inclusive. NÃO DEVE inventar regra nova — em particular, coerência entre campos, como
+  `reserveLimit` condicionado ao tipo de reserva ou `endAt` posterior a `startAt`. Aplicar o que já
+  está escrito não é decidir; inventar seria. E não aplicar o que está escrito criaria garantia nova
+  para preservar comportamento inválido.
 
 ### A recusa
 
 - **FR-010**: A recusa DEVE responder `422`, coerente com a recusa por erro impeditivo que já existe
   na Publicação.
-- **FR-011**: A recusa DEVE nomear o **caminho** de cada campo ausente, na mesma forma que a `004`
-  estabeleceu — `/profiles/id=<uuid>/name` —, para que quem recebe saiba qual entidade corrigir sem
-  consultar a versão vigente.
+- **FR-011**: A recusa DEVE nomear o **caminho** de cada campo em violação — ausente, de tipo
+  diferente, nulo indevido, formato inválido ou fora da restrição declarada —, na forma que a `004`
+  estabeleceu (`/profiles/id=<uuid>/name`), e DEVE dizer qual das violações ocorreu. Sem isso, quem
+  recebe sabe onde e não sabe o quê.
 - **FR-012**: A recusa na Publicação NÃO DEVE deixar Publicação, documento ou versão consolidada
   materializados, como já vale para os demais erros impeditivos.
 - **FR-013**: A verificação na Publicação DEVE valer para o ato que chega por fora da elaboração —
@@ -245,10 +258,12 @@ da LGPD; a avaliação desta é curta porque a feature não os alcança:
   versionamento antes de existir a segunda seria decidir por antecipação.
 - **Migração de conteúdo histórico.** O sistema não está em produção e não há ato publicado a
   corrigir.
-- **Ampliar o que é obrigatório, e regras de negócio.** Esta feature faz valer a forma que o
-  contrato já declara. Faixas de valor, enumerações admissíveis e coerência entre campos —
-  `reserveLimit` compatível com o tipo de reserva, `endAt` depois de `startAt` — são decisão
-  normativa, e não de integridade (FR-009).
+- **Regra de negócio nova.** Esta feature aplica o que o contrato já escreve, faixa e enumeração
+  inclusive. O que fica de fora é inventar: coerência entre campos — `reserveLimit` compatível com o
+  tipo de reserva, `endAt` depois de `startAt` — é decisão normativa que ninguém tomou (FR-009).
+- **A forma das Modalidades de Concorrência.** A verificação alcança Perfil e Evento (FR-004); as
+  Modalidades são conferidas como lista de objetos e nada mais. A Publicação original também não as
+  verifica, então SC-005 continua de pé. Fechar isso é feature própria.
 
 ## Assumptions
 

@@ -13,10 +13,10 @@ não tem valor a validar, e alterações individualmente plausíveis podem compo
 Ela acontece na elaboração, sobre o resultado de aplicar tudo à base declarada (FR-002), e de novo na
 Publicação, sobre cada versão consolidada que o ato materializa (FR-003).
 
-O que se confere em cada Perfil e Evento (FR-004) são quatro dimensões que o contrato da `001` já
-declara:
-campo obrigatório presente, tipo JSON correto, nulo só onde admitido, formato satisfeito. Campo
-desconhecido é aceito. Faixa de valor e enumeração ficam de fora por decisão explícita.
+O que se confere em cada Perfil e Evento (FR-004) é a **forma canônica do conteúdo publicado**:
+campo obrigatório presente, tipo correto, nulo só onde admitido, formato satisfeito e valor dentro
+das restrições que o contrato já escreve. Campo desconhecido é aceito. Coerência entre campos fica de
+fora, porque não está escrita em lugar nenhum.
 
 **A feature é menor do que parece, e uma descoberta a encolhe mais.** O laço que materializa as
 versões já chama a verificação estrutural uma vez por fronteira de vigência. FR-003 não pede laço
@@ -61,36 +61,43 @@ materializados; nenhum código de erro novo entra no contrato; nenhuma etapa nov
 
 ## Decisões técnicas
 
-### Decisão 1 — A autoridade é o contrato; a declaração mora no domínio
+### Decisão 1 — O contrato ganha a forma do conteúdo **publicado**
 
-`PerfilInput` e `EventoInput` no `openapi.yaml` da `001` já dizem quais campos são obrigatórios, de
-que tipo, quais admitem nulo e que formato têm. É a autoridade, e a spec a nomeia (FR-005).
+A primeira versão deste plano fazia de `PerfilInput` e `EventoInput` a autoridade. Estava errado, e a
+revisão o mediu: eles descrevem a **entrada** do rascunho e exigem 5 dos 12 campos que o Perfil
+publicado carrega. Um Perfil reduzido a esses cinco passaria — e é exatamente o Perfil mutilado que a
+feature existe para impedir. `requirements`, citado como defeito medido na avaliação da spec, ficaria
+de fora.
 
-O domínio **não pode lê-lo em tempo de execução**: o arquivo vive em `specs/`, não é distribuído com
-o pacote, e fazer o domínio depender de um artefato de especificação inverteria a relação entre os
-dois. Então a forma é **declarada no domínio e verificada por teste** contra o contrato — o mesmo
-padrão que a `004` usa para as coleções com chave, onde a declaração explícita substituiu uma
+O contrato ganha então **`PerfilPublicado`** e **`EventoPublicado`**: esquemas de saída, com os
+campos canônicos, que reaproveitam o que os de entrada declaram e completam o resto. Os de entrada
+continuam descrevendo entrada, sem promoção artificial (FR-005).
+
+O domínio **não pode ler o contrato em tempo de execução**: o arquivo vive em `specs/`, não é
+distribuído com o pacote, e fazer o domínio depender de um artefato de especificação inverteria a
+relação entre os dois. A forma é **transcrita no domínio e conferida por teste** contra o contrato —
+o mesmo padrão que a `004` usa para as coleções com chave, onde a declaração explícita substituiu uma
 detecção que acertava hoje e falharia calada amanhã.
 
-O teste de guarda compara a declaração com o contrato **apenas nas quatro dimensões**. Comparar
-tudo faria a guarda exigir o que a Decisão 2 deixa de fora.
+### Decisão 2 — Aplicar o que está escrito; não escrever o que não está
 
-### Decisão 2 — Quatro dimensões, e o que o contrato declara e não se verifica
+A primeira versão deixava `minimum` e `enum` de fora por serem "regra de negócio". A revisão mostrou
+o custo disso: para preservar `immediateVacancies: -3` como publicável seria preciso **uma garantia
+nova, com teste**, congelando um defeito. Evitar overengineering não é isso.
 
-O contrato diz mais do que as quatro dimensões:
+A linha passa a ser outra, e é mais simples de sustentar:
 
-```yaml
-immediateVacancies: { type: integer, minimum: 0 }
-reserveType:        { type: string, enum: [NONE, LIMITED, UNLIMITED] }
-reserveLimit:       { type: [integer, 'null'], minimum: 0 }
-```
+| | |
+| --- | --- |
+| O contrato **já escreve** — `minimum: 0`, `enum: [NONE, LIMITED, UNLIMITED]` | aplica-se |
+| O contrato **não escreve** — `reserveLimit` conforme `reserveType`, `endAt` depois de `startAt` | não se inventa aqui |
 
-`minimum` e `enum` são **regra de negócio**, e FR-009 as mantém fora. Um Perfil com
-`immediateVacancies: -3` continua publicável depois desta feature.
+Aplicar o que já está escrito não decide nada de novo. Inventar coerência entre campos decidiria, e
+essa é a discussão normativa que fica fora (FR-009).
 
-Isso é deliberado e precisa estar escrito, porque "a autoridade é o contrato" convida a implementar
-o contrato inteiro. Decidir se um Perfil pode ter vagas negativas é discussão normativa; esta
-feature responde outra pergunta — se o conteúdo tem a **forma** de um Edital.
+Um caso de fronteira: `status` do Evento é produzido pelo sistema e nenhum esquema o declara. Entra
+como presença e tipo; a enumeração dele **não** é escrita aqui, porque transcrever o serializer para
+o contrato seria escrever regra nova, não aplicar uma.
 
 ### Decisão 3 — A Publicação já verifica cada fronteira
 
@@ -137,14 +144,8 @@ Um código novo diria a mesma coisa com outro nome. O que muda é **quando** a r
 que** ela alcança, não a sua natureza.
 
 **Achado ao conferir esta decisão**: o `openapi.yaml` **não nomeia** `blocking_findings` em lugar
-nenhum. Ele nomeia `expected_hash_mismatch`, `target_already_present`, `inconsistent_consolidation` e
-os três da `004`, mas o código mais antigo de todos ficou de fora — junto com `precondition_missing` e
-`no_effective_change`. O schema `Problem` declara `code` como texto livre, então nada quebrou; o
-cliente é que nunca soube o que esperar.
-
-Esta feature declara `blocking_findings` no contrato, porque passa a produzi-lo num momento novo e
-seria estranho documentar o momento sem documentar o código. Os outros dois ficam anotados como
-lacuna anterior, e não são desta feature.
+nenhum, embora o schema `Problem` declare `code` como texto livre. Esta feature o declara, porque
+passa a produzi-lo num momento novo. O delta do contrato registra a lacuna irmã.
 
 ### Decisão 6 — O caminho no achado usa a gramática da `004`
 
@@ -152,28 +153,18 @@ lacuna anterior, e não são desta feature.
 carregar `/profiles/id=<uuid>/name` — a forma que a `004` estabeleceu, que nomeia a entidade sem
 consultar a versão vigente (FR-011).
 
-**Consequência a vigiar**: a tela de composição usa `validate_for_publication` para listar
-pendências e mapeia `path` → etapa por `DESTINO_DA_PENDENCIA`. Caminho desconhecido cai em "não
-corrigível". Na prática os achados novos não aparecem lá, porque o snapshot de um Edital em
-composição é montado do ORM e sempre traz as entidades completas — mas isso é pressuposto, e vira
-teste.
+**Consequência a vigiar**: a tela de composição usa `validate_for_publication` para listar pendências
+e mapeia `path` → etapa por `DESTINO_DA_PENDENCIA`. Caminho desconhecido cai em "não corrigível". Na
+prática os achados novos não aparecem lá, porque o snapshot de um Edital em composição é montado do
+ORM e sempre traz as entidades completas. **A suíte de interface existente já cobre essa lista**; se
+ela acusar mudança, há regressão a entender. Teste novo só depois disso.
 
 ### Decisão 7 — Modalidades ficam opacas
 
-O contrato declara `competitionModalities: { type: array, items: { type: object } }`. Sob a Decisão
-1, a verificação confere que é lista de objetos e nada mais.
+O contrato declara `competitionModalities: { type: array, items: { type: object } }`. Sob a Decisão 1, a verificação confere que é lista de objetos e nada mais.
 
 É o próprio contrato traçando o limite, e não uma omissão nossa. Se um dia as Modalidades ganharem
 forma declarada, esta verificação passa a alcançá-las sem mudança de desenho.
-
-### Decisão 8 — Entidade sem identificador utilizável
-
-Sem `id` não há como montar o caminho por chave. A `004` já recusa isso no momento em que a
-alteração é aplicada, então o caso não chega aqui pela Retificação — mas `validate_for_publication`
-também roda no caminho da Publicação original e na tela.
-
-O achado então nomeia a posição — `/profiles/2/name` — em vez de não nomear nada. É recuo de
-legibilidade num caso que não deve ocorrer, e é melhor que um achado mudo.
 
 ## Project Structure
 
@@ -187,7 +178,7 @@ specs/005-integridade-do-snapshot/
 ├── data-model.md        # Fase 1: a forma declarada, campo a campo
 ├── quickstart.md        # Fase 1: como validar, com o resultado esperado de cada passo
 ├── contracts/
-│   └── integridade.md   # Fase 1: as quatro dimensões, os achados e o delta do openapi
+│   └── integridade.md   # Fase 1: as cinco dimensões, os achados e o delta do openapi
 └── checklists/
     └── requirements.md  # portão de qualidade da spec, com as notas da reavaliação
 ```
@@ -202,7 +193,7 @@ backend/
 │   └── publicacoes/application/
 │       └── retificacoes.py        # a chamada na elaboração; a da Publicação já existe
 └── tests/
-    ├── unit/editais/              # a forma declarada, as quatro dimensões, os achados
+    ├── unit/editais/              # a forma canônica, as cinco dimensões, os achados
     ├── contract/                  # a declaração conferida contra o openapi.yaml
     ├── integration/publicacoes/   # os dois momentos, e a recusa por fronteira posterior
     └── interface/                 # a tela de composição não regride
@@ -239,6 +230,6 @@ entrega e não resultado observável por quem usa. Fica aqui, que é o lugar del
 
 | Desvio | Por quê | Alternativa descartada |
 | --- | --- | --- |
-| A forma é declarada no domínio e não lida do contrato | O `openapi.yaml` vive em `specs/` e não é distribuído com o pacote; fazer o domínio depender de um artefato de especificação inverteria a relação entre os dois | Ler o contrato em tempo de execução. Descartada por acoplar domínio a artefato de processo, e por transformar um arquivo de documentação em dependência de produção |
+| A forma é transcrita no domínio e não lida do contrato | O `openapi.yaml` vive em `specs/` e não é distribuído com o pacote; fazer o domínio depender de um artefato de especificação inverteria a relação entre os dois | Ler o contrato em tempo de execução. Descartada por acoplar domínio a artefato de processo, e por transformar um arquivo de documentação em dependência de produção |
 | Duas fontes sobre a mesma forma | A declaração no domínio e o contrato dizem a mesma coisa, e duplicação é o que o princípio V manda evitar | Aceitar a divergência silenciosa. Descartada: o teste de guarda transforma a divergência em falha de suíte, que é o preço já pago na `004` pelo mesmo motivo |
-| `minimum` e `enum` declarados e não verificados | FR-009 mantém regra de negócio fora, e implementá-las aqui decidiria por antecipação o que um Perfil deve exigir | Verificar o contrato inteiro. Descartada por exceder o escopo acordado e misturar duas perguntas diferentes |
+| Esquemas de saída novos no contrato | Os de entrada cobrem 5 dos 12 campos, e usá-los deixaria de fora justamente o que a feature veio proteger | Promover `PerfilInput` a esquema de saída. Descartada por descrever outra coisa: o que o rascunho aceita não é o que a Publicação produz |

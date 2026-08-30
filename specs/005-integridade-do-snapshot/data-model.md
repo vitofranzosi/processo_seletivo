@@ -2,71 +2,82 @@
 
 **Feature**: `005-integridade-do-snapshot` | **Fase**: 1 | **Data**: 2026-08-29
 
-Esta feature **não cria entidade, coluna nem migração**. O que ela acrescenta é uma declaração: qual
-é a forma de um Perfil e de um Evento no conteúdo normativo, transcrita do contrato e verificada
-contra ele.
+Esta feature **não cria entidade, coluna nem migração**. O que ela acrescenta é a forma canônica do
+Perfil e do Evento **publicados**, declarada no contrato e transcrita no domínio.
 
-## A forma declarada
+## Por que não os esquemas de entrada
 
-Transcrição de `PerfilInput` e `EventoInput` do `openapi.yaml` da `001`, nas quatro dimensões que
-FR-006 exige. As colunas são o que se verifica; o que o contrato declara além delas está na seção
-seguinte.
+`PerfilInput` e `EventoInput` descrevem o que o rascunho **aceita**, e não o que a Publicação
+**produz**. A diferença é material:
 
-A verificação alcança cada Perfil e cada Evento do conteúdo (FR-004).
+| | Campos |
+| --- | --- |
+| Perfil publicado | 12 |
+| Exigidos por `PerfilInput` | 5 |
+| Ficariam sem verificação | `description`, `requirements`, `reserveLimit`, `locality`, `classificationInformation`, `callInformation`, `competitionModalities` |
 
-### Perfil — `/profiles/id=<uuid>`
+Um Perfil reduzido aos cinco campos de entrada passaria — e ele é exatamente o Perfil mutilado que
+esta feature existe para impedir. `requirements`, medido como defeito na avaliação da spec, está
+entre os que ficariam de fora.
 
-| Campo | Obrigatório | Tipo | Admite nulo | Formato |
+Por isso o contrato ganha **`PerfilPublicado`** e **`EventoPublicado`**: esquemas de saída, que
+reaproveitam o que os de entrada já declaram e completam o que eles não cobrem (FR-005).
+
+## Perfil publicado — `/profiles/id=<uuid>`
+
+| Campo | Obrigatório | Tipo | Admite nulo | Restrição declarada |
 | --- | --- | --- | --- | --- |
-| `id` | sim | texto | não | uuid |
+| `id` | sim | texto | não | formato uuid |
 | `code` | sim | texto | não | — |
 | `name` | sim | texto | não | — |
-| `immediateVacancies` | sim | inteiro | não | — |
-| `reserveType` | sim | texto | não | — |
-| `reserveLimit` | não | inteiro | **sim** | — |
-| `competitionModalities` | não | lista de objetos | não | — |
+| `description` | sim | texto | não | — |
+| `requirements` | sim | lista | não | — |
+| `immediateVacancies` | sim | inteiro | não | mínimo 0 |
+| `reserveType` | sim | texto | não | um de `NONE`, `LIMITED`, `UNLIMITED` |
+| `reserveLimit` | sim | inteiro | **sim** | mínimo 0 |
+| `locality` | sim | texto | não | — |
+| `classificationInformation` | sim | objeto | não | — |
+| `callInformation` | sim | objeto | não | — |
+| `competitionModalities` | sim | lista de objetos | não | — |
 
-### Evento — `/schedule/id=<uuid>`
+**Obrigatório aqui significa presente**, e não preenchido. `description` e `locality` podem ser texto
+vazio; `requirements`, lista vazia; `classificationInformation`, objeto vazio. É a distinção de
+FR-007 entre "não preenchido" e "malformado".
 
-| Campo | Obrigatório | Tipo | Admite nulo | Formato |
+## Evento publicado — `/schedule/id=<uuid>`
+
+| Campo | Obrigatório | Tipo | Admite nulo | Restrição declarada |
 | --- | --- | --- | --- | --- |
-| `id` | sim | texto | não | uuid |
+| `id` | sim | texto | não | formato uuid |
 | `type` | sim | texto | não | — |
 | `description` | sim | texto | não | — |
-| `startAt` | sim | texto | não | data-e-hora |
-| `endAt` | não | texto | **sim** | data-e-hora |
-| `order` | não | inteiro | não | — |
+| `startAt` | sim | texto | não | formato data-e-hora |
+| `endAt` | sim | texto | **sim** | formato data-e-hora |
+| `order` | sim | inteiro | não | mínimo 0 |
+| `status` | sim | texto | não | — |
 
-### Raiz do Edital
+`status` é produzido pelo sistema e nenhum esquema de entrada o declara. Entra como presença e tipo;
+**a enumeração dele não é declarada aqui**, porque escrevê-la seria inventar restrição, e não
+transcrever uma (FR-009).
+
+## Restrições que se aplicam, e a que não se aplica
+
+| | Situação |
+| --- | --- |
+| `minimum` e `enum` já escritos no contrato | **Aplicados.** Não aplicá-los criaria garantia nova para preservar comportamento inválido. |
+| Coerência entre campos — `reserveLimit` conforme `reserveType`, `endAt` depois de `startAt` | **Fora.** Ninguém decidiu essas regras ainda, e decidi-las aqui seria decidir por antecipação. |
+| Enumeração de `status`, que só o serializer conhece | **Fora.** Transcrever o contrato é aplicar; transcrever o serializer para o contrato é escrever regra nova. |
+
+## Raiz do Edital
 
 Sem mudança. As quatro condições que já existem continuam como estão: título obrigatório, ao menos
 um Perfil, ao menos um Evento, descrição como aviso.
 
-## O que o contrato declara e esta feature não verifica
+## O que fica sem forma declarada
 
-```yaml
-immediateVacancies: { minimum: 0 }
-reserveType:        { enum: [NONE, LIMITED, UNLIMITED] }
-reserveLimit:       { minimum: 0 }
-order:              { minimum: 0 }
-```
-
-São regra de negócio, e FR-009 as mantém fora. **Depois desta feature, um Perfil com
-`immediateVacancies: -3` ou `reserveType: "QUALQUER"` continua publicável.** Está escrito aqui para
-que a garantia não seja lida como maior do que é.
-
-O teste que confere a declaração contra o contrato compara **apenas as quatro dimensões**. Comparar
-tudo o faria exigir o que esta feature decidiu não exigir.
-
-## O que não tem forma declarada
-
-`competitionModalities` é `{ type: array, items: { type: object } }` no contrato: lista de objetos, e
-nada sobre o que há dentro. A verificação confere que é lista de objetos e para aí. É o contrato
-traçando o limite, não uma omissão — e no dia em que as Modalidades ganharem forma declarada, a
-verificação passa a alcançá-las sem mudança de desenho.
-
-`classificationInformation`, `callInformation`, `description` e `requirements` aparecem no snapshot
-publicado e **não** estão em `PerfilInput`. Seguem aceitos e não exigidos (FR-008).
+`competitionModalities` é conferido como lista de objetos, e nada sobre o que há dentro. A
+verificação alcança Perfil e Evento (FR-004); a Publicação original também não confere Modalidades,
+de modo que SC-005 continua de pé. Fechar isso é feature própria, e está no *Out of Scope*.
 
 ## O achado de validação
 
@@ -74,17 +85,17 @@ Sem campo novo. `ValidationFinding` já carrega severidade, código, mensagem e 
 
 | Elemento | Valor |
 | --- | --- |
-| Severidade | erro impeditivo, para as quatro violações |
-| Caminho | `/profiles/id=<uuid>/name` — a gramática da `004`, que nomeia a entidade sem consultar a versão vigente |
-| Caminho, sem identificador utilizável | `/profiles/2/name` — recuo de legibilidade num caso que a `004` já recusa na origem, e melhor que achado mudo |
+| Severidade | erro impeditivo |
+| Caminho | `/profiles/id=<uuid>/requirements` — a gramática da `004`, que nomeia a entidade sem consultar a versão vigente |
+| Mensagem | diz **qual** violação ocorreu: ausente, tipo diferente, nulo indevido, formato inválido, fora da restrição (FR-011) |
 
 ## Invariantes
 
-- Todo Perfil e todo Evento do conteúdo que passa a vigorar tem os campos que o contrato declara
-  obrigatórios, com o tipo declarado, nulo apenas onde admitido e formato satisfeito.
+- Todo Perfil e todo Evento do conteúdo que passa a vigorar tem os campos da forma canônica, com o
+  tipo declarado, nulo apenas onde admitido, formato satisfeito e dentro das restrições escritas.
 - A invariante vale em **cada fronteira de vigência** materializada, e não só na primeira.
-- Campo que o contrato não declara nunca é motivo de recusa.
-- A verificação não decide nada sobre valor: faixa e enumeração continuam fora.
+- Campo que a forma canônica não declara nunca é motivo de recusa.
+- Coerência entre campos não é verificada, e a garantia não a inclui.
 
 ## Estados e transições
 

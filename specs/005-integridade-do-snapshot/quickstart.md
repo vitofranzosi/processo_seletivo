@@ -3,7 +3,7 @@
 **Feature**: `005-integridade-do-snapshot` | **Fase**: 1 | **Data**: 2026-08-29
 
 Como validar o que esta feature entrega. Cada seção diz o que rodar e **o que precisa acontecer** —
-não "deve funcionar", mas o resultado exato. As quatro dimensões e os dois momentos estão em
+não "deve funcionar", mas o resultado exato. As cinco dimensões e os dois momentos estão em
 [contracts/integridade.md](./contracts/integridade.md); a forma declarada, em
 [data-model.md](./data-model.md).
 
@@ -36,14 +36,18 @@ for rotulo, ch in [
                          "newValue": {"id": PERFIL["C"], "code": "X"}}),
     ("REMOVE de campo", {"targetPath": f"{alvo}/name", "operation": "REMOVE"}),
     ("tipo trocado",    {"targetPath": f"{alvo}/name", "operation": "REPLACE", "newValue": []}),
+    ("requisitos como texto", {"targetPath": f"{alvo}/requirements", "operation": "REPLACE",
+                               "newValue": "texto"}),
+    ("vagas negativas",  {"targetPath": f"{alvo}/immediateVacancies", "operation": "REPLACE",
+                          "newValue": -3}),
 ]:
     c = conteudo_normativo(); apply_change(c, ch)
     print(rotulo, "→", [f.message for f in blocking_findings(validate_for_publication(c))] or "NENHUM")
 PY
 ```
 
-Esperado **antes**: `NENHUM` nas três. Esperado **depois**: um achado impeditivo em cada, nomeando o
-caminho do campo.
+Esperado **antes**: `NENHUM` nas cinco. Esperado **depois**: um achado impeditivo em cada, nomeando o
+caminho do campo e dizendo qual violação ocorreu.
 
 ## A recusa na elaboração
 
@@ -92,13 +96,13 @@ formada siga publicável, e FR-015 que nada da `003` e da `004` mude. Todos este
 - alterar valores de campos existentes;
 - acrescentar Perfil pela tela, com `ADD /profiles/-`;
 - remover Perfil por `REMOVE /profiles/id=<uuid>`;
-- substituir a lista de requisitos inteira, inclusive por lista vazia;
-- deixar `reserveLimit` e `endAt` nulos — o contrato admite nulo neles;
-- um Perfil sem Modalidades.
+- substituir a lista de requisitos inteira, inclusive por **lista vazia**;
+- deixar `description`, `locality` ou `classificationInformation` **vazios** — vazio não é ausente;
+- deixar `reserveLimit` e `endAt` **nulos** — a forma canônica admite nulo neles;
+- um Perfil **sem Modalidades**.
 
-E um que **não** deve ser recusado, apesar de estranho: `immediateVacancies: -3`. Faixa de valor
-ficou fora por decisão (FR-009), e o roteiro verifica isso de propósito — para que a garantia não
-seja lida como maior do que é.
+A distinção entre "não preenchido" e "malformado" é o que separa esta lista da anterior, e é onde uma
+verificação nova costuma errar recusando o legítimo.
 
 ## A declaração não pode divergir do contrato
 
@@ -106,8 +110,8 @@ seja lida como maior do que é.
 cd backend && uv run pytest tests/contract -q -k forma_declarada
 ```
 
-Esperado: a forma declarada no domínio confere com `PerfilInput` e `EventoInput` do `openapi.yaml`
-nas quatro dimensões. Alterar o contrato sem alterar a declaração faz este teste falhar — é o que
+Esperado: a forma transcrita no domínio confere com `PerfilPublicado` e `EventoPublicado` do
+`openapi.yaml`. Alterar o contrato sem alterar a transcrição faz este teste falhar — é o que
 substitui a leitura do contrato em tempo de execução.
 
 ## A tela de composição não regride
@@ -116,9 +120,9 @@ substitui a leitura do contrato em tempo de execução.
 cd backend && uv run pytest tests/interface -q
 ```
 
-Esperado: a lista de pendências de um Edital em elaboração continua igual. Os achados novos não
-aparecem lá porque o snapshot em composição é montado do ORM e traz as entidades completas — o
-teste existe para que esse pressuposto falhe alto se deixar de valer.
+Esperado: verde, sem mudança. A tela lista pendências com a mesma validação, e os achados novos não
+devem aparecer lá porque o snapshot em composição é montado do ORM e traz as entidades completas. Se
+a suíte acusar mudança, há regressão a entender — e aí sim um teste a escrever.
 
 ## Cobertura
 

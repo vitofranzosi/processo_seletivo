@@ -8,37 +8,45 @@ foi ou não escolhida.
 
 ## R1 — De onde vem a forma que se exige
 
-**Decisão**: declarada no domínio, transcrevendo `PerfilInput` e `EventoInput` do `openapi.yaml` da
-`001`, e verificada por teste contra ele.
+**Decisão**: o contrato ganha `PerfilPublicado` e `EventoPublicado` — esquemas de **saída**, com os
+campos canônicos. O domínio transcreve e um teste confere a transcrição contra o contrato.
 
 **Rationale**: o contrato é a autoridade, e a spec o nomeia. Mas o domínio não pode consultá-lo em
 execução: o arquivo vive em `specs/`, é artefato de processo e não é distribuído com o pacote. A
 declaração verificada é o mesmo arranjo que a `004` adotou para as coleções com chave, e pelo mesmo
 motivo — o que é declarado e conferido falha alto quando diverge; o que é inferido falha calado.
 
+**Por que não bastavam os esquemas de entrada**, que era o desenho anterior: `PerfilInput` exige 5
+dos 12 campos do Perfil publicado. Um Perfil reduzido a esses cinco passaria, e é exatamente o Perfil
+mutilado que a feature existe para impedir — `requirements`, medido como defeito, entre os ausentes.
+
 | Alternativa | Por que não |
 | --- | --- |
 | Ler o `openapi.yaml` em tempo de execução | Inverte a relação entre domínio e especificação, e transforma um arquivo de documentação em dependência de produção. O pacote instalado não o contém. |
 | Derivar a forma dos modelos Django | O snapshot é conteúdo canônico publicado, não espelho do ORM. Um campo pode existir num e não no outro, e a `004` já registrou essa diferença. |
-| Derivar da forma que `edital_snapshot` produz | Era a redação original de FR-005, e a revisão a apontou como insuficiente: descreve presença, não tipo nem nulabilidade, e inclui campos que o contrato não exige. |
-| Usar `jsonschema` no domínio | É dependência de **desenvolvimento**, usada pelos testes de conformidade. Promovê-la a dependência de produção para verificar quatro dimensões em duas entidades é custo maior que o próprio código. |
+| Derivar da forma que `edital_snapshot` produz, sem declarar no contrato | Descreve presença e não tipo, nulabilidade ou restrição, e deixa a autoridade num detalhe de implementação. Declarar no contrato o que ele produz é o mesmo alcance com autoridade no lugar certo. |
+| Usar `PerfilInput` e `EventoInput` como autoridade | Era o desenho da primeira versão deste plano. Descrevem entrada, exigem 5 dos 12 campos, e deixariam `requirements` sem verificação. |
+| Usar `jsonschema` no domínio | É dependência de **desenvolvimento**, usada pelos testes de conformidade. Promovê-la a dependência de produção para verificar cinco dimensões em duas entidades é custo maior que o próprio código. |
 
 ## R2 — O que se verifica, e o que o contrato declara e fica de fora
 
-**Decisão**: presença de campo obrigatório, tipo JSON, nulabilidade e formato. `minimum` e `enum`
-ficam de fora.
+**Decisão**: presença, tipo, nulabilidade, formato **e as restrições que o contrato já escreve** —
+faixa e enumeração. Coerência entre campos fica de fora.
 
-**Rationale**: FR-009. O contrato declara `minimum: 0` para vagas e `enum: [NONE, LIMITED,
-UNLIMITED]` para o tipo de reserva; são regras de negócio, e decidir se um Perfil pode ter vagas
-negativas é discussão normativa que esta feature não abre.
+**Rationale**: a linha é entre **aplicar** e **inventar**. `minimum: 0` e `enum: [NONE, LIMITED,
+UNLIMITED]` já estão escritos; não aplicá-los exigiria uma garantia nova para preservar
+comportamento inválido — um teste que obrigasse `immediateVacancies: -3` a continuar publicável.
+Congelar defeito não é o mesmo que evitar overengineering.
 
-**Consequência aceita e registrada**: depois desta feature, `immediateVacancies: -3` continua
-publicável. Está dito no contrato da feature para que ninguém leia a garantia como maior do que é.
+Coerência entre campos é outra coisa: `reserveLimit` compatível com o tipo de reserva e `endAt`
+posterior a `startAt` não estão escritos em lugar nenhum, e escrevê-los aqui seria decidir por
+antecipação.
 
 | Alternativa | Por que não |
 | --- | --- |
-| Verificar o contrato inteiro | Excede o escopo acordado e mistura "tem forma de Edital" com "é um Edital admissível", que são duas perguntas com donos diferentes. |
-| Verificar só presença | Era o escopo original, e a revisão o mediu insuficiente: `name = []`, `immediateVacancies = "muitas"` e `startAt = {}` atravessam a validação atual sem achado impeditivo. |
+| Deixar faixa e enumeração de fora | Era o desenho da primeira versão, e a revisão o desmontou: transforma limitação atual em comportamento obrigatório, com teste e tudo. |
+| Verificar também coerência entre campos | Nenhuma dessas regras existe escrita; inventá-las aqui decide normativamente o que um Edital admissível é. |
+| Verificar só presença | Era o escopo original, e a avaliação da spec o mediu insuficiente: `name = []`, `immediateVacancies = "muitas"` e `startAt = {}` atravessam sem achado impeditivo. |
 
 ## R3 — Onde a verificação é chamada na Publicação
 
@@ -74,10 +82,15 @@ redundante, e virou requisito próprio (FR-013).
 
 ## R5 — Que código de erro a recusa usa
 
-**Decisão**: `blocking_findings`, `422` — o que o contrato já declara para a Publicação.
+**Decisão**: `blocking_findings`, `422` — o código que o sistema já emite para erro impeditivo de
+publicação, em nove pontos.
 
 **Rationale**: a natureza da recusa não mudou; mudaram o momento e o alcance. Um código novo diria a
-mesma coisa com outro nome, e o contrato ganharia superfície sem ganhar informação.
+mesma coisa com outro nome.
+
+**Achado ao conferir**: o `openapi.yaml` **não nomeia** `blocking_findings`. Ele nomeia
+`expected_hash_mismatch`, `target_already_present`, `inconsistent_consolidation` e os três da `004`,
+e deixou de fora o mais antigo. Esta feature o declara, porque passa a produzi-lo num momento novo.
 
 | Alternativa | Por que não |
 | --- | --- |
@@ -86,13 +99,13 @@ mesma coisa com outro nome, e o contrato ganharia superfície sem ganhar informa
 
 ## R6 — O que acontece com a tela de composição
 
-**Decisão**: nada, e há um pressuposto a proteger.
+**Decisão**: nada, e a suíte existente responde.
 
 **Rationale**: a tela lista pendências com a mesma `validate_for_publication` e mapeia o caminho do
 achado para a etapa onde se corrige. Caminho desconhecido cai em "não corrigível". Os achados novos
 não devem aparecer lá, porque o snapshot de um Edital em composição é montado do ORM e sempre traz
 as entidades completas.
 
-**Consequência**: isso é pressuposto, não garantia, e vira teste. Se um dia deixar de valer, a tela
-passaria a exibir pendências que ninguém consegue resolver por ela — falha silenciosa de
-usabilidade, que é a espécie que este projeto vem aprendendo a transformar em falha de suíte.
+**Consequência**: a suíte de interface já cobre a lista de pendências. Se ela acusar mudança, aí sim
+há regressão a entender e um teste a escrever. Criar um teste novo antes de a suíte dizer alguma
+coisa seria proteger um pressuposto que ninguém contestou.
