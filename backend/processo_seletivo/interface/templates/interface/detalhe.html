@@ -12,7 +12,7 @@
   <span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span></p>
 
 {% if request.GET.ato %}
-<p class="sucesso" role="status">Ato registrado: {{ request.GET.ato|situacao }}.</p>
+<p class="sucesso" role="status">Ato registrado: {{ request.GET.ato|rotulo_do_ato }}.</p>
 {% endif %}
 
 <ol class="etapas" aria-label="Situação do Edital no fluxo">

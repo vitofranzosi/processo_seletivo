@@ -14,13 +14,18 @@
 <nav aria-label="Etapas da composição">
   <ol class="assistente">
     {% for passo in progresso %}
-    <li class="{% if passo.atual %}a-atual{% elif passo.concluida %}a-concluida{% else %}a-pendente{% endif %}">
+    {% comment %}
+    Três estados, distinguidos por **texto** e não só por cor (FR-040): "pendente", "pronta para
+    revisar" e "concluída". O marcador verde de concluída era visualmente igual ao da etapa atual,
+    e o passo 5 nascia concluído sem ter sido gravado.
+    {% endcomment %}
+    <li class="a-{{ passo.estado }}{% if passo.atual %} a-atual{% endif %}">
       <a href="{% url 'interface:compor-etapa' edital.id passo.chave %}"
          {% if passo.atual %}aria-current="step"{% endif %}>
         <span class="numero" aria-hidden="true">{{ passo.numero }}</span>
         <span class="nome">{{ passo.rotulo }}</span>
-        {% if passo.concluida %}<span class="estado">concluída</span>
-        {% elif passo.atual %}<span class="estado">etapa atual</span>{% endif %}
+        {% if passo.atual %}<span class="estado">etapa atual</span>
+        {% else %}<span class="estado">{{ passo.rotulo_estado }}</span>{% endif %}
       </a>
     </li>
     {% endfor %}

@@ -43,16 +43,24 @@
   {% csrf_token %}
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
   {% if ato.exige_signatario %}
+  {% comment %}
+  O mesmo catálogo do fluxo do Edital (FR-039). São dois caminhos de publicação, e este é o de
+  corrigir um Edital já publicado — deixá-lo de fora manteria o UUID digitado exatamente aqui.
+  {% endcomment %}
   <fieldset>
     <legend>Autoridade Signatária</legend>
-    <div class="campos">
-      <p class="campo"><label for="signatario_nome">Nome</label>
-        <input type="text" id="signatario_nome" name="signatario_nome" required></p>
-      <p class="campo"><label for="signatario_cargo">Cargo ou função</label>
-        <input type="text" id="signatario_cargo" name="signatario_cargo" required></p>
-    </div>
-    <p class="campo"><label for="signatario_id">Identificador da autoridade</label>
-      <input type="text" id="signatario_id" name="signatario_id" required></p>
+    <p class="campo largo">
+      <label for="signatario">Quem assina institucionalmente esta Retificação
+        <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <select id="signatario" name="signatario" required aria-required="true"
+              aria-describedby="ajuda-sig-ret">
+        <option value="">— escolha a autoridade —</option>
+        {% for autoridade in autoridades %}
+        <option value="{{ autoridade.chave }}">{{ autoridade.nome }} — {{ autoridade.cargo }}</option>
+        {% endfor %}
+      </select>
+      <span class="ajuda" id="ajuda-sig-ret">Fica registrada na Publicação da Retificação.</span>
+    </p>
   </fieldset>
   {% endif %}
   {% if ato.exige_motivo %}

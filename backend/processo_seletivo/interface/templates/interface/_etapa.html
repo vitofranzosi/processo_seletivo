@@ -19,7 +19,7 @@
         <option value="">Sem vínculo</option>
         {% for evento in eventos %}
         <option value="{{ evento.id }}"
-                {% if evento.id == etapa_linha.scheduleEventId %}selected{% endif %}>{{ evento.type }} — {{ evento.description }}</option>
+                {% if evento.id == etapa_linha.scheduleEventId %}selected{% endif %}>{{ evento.rotulo }}</option>
         {% endfor %}
       </select>
       <span class="ajuda" id="ajuda-evento-{{ indice }}">As datas vêm do Evento; não se digitam
@@ -41,7 +41,12 @@
              aria-describedby="ajuda-nota-{{ indice }}">
       <span class="ajuda" id="ajuda-nota-{{ indice }}">Vazio: não há nota mínima.</span>
     </p>
-    <p class="campo caracter">
+    {% comment %}
+    FR-037: as duas marcações não tinham rótulo de grupo. Flutuavam desalinhadas ao lado de Peso e
+    Nota mínima, e para quem usa leitor de tela eram duas caixas sem o conceito que as une.
+    {% endcomment %}
+    <fieldset class="campo caracter">
+      <legend>Caráter</legend>
       <label for="etapa-{{ indice }}-eliminatory">
         <input type="checkbox" id="etapa-{{ indice }}-eliminatory"
                name="etapa-{{ indice }}-eliminatory"
@@ -52,7 +57,7 @@
                name="etapa-{{ indice }}-classificatory"
                {% if etapa_linha.classificatory %}checked{% endif %}> Classificatória
       </label>
-    </p>
+    </fieldset>
   </div>
   <p class="remover">
     <button type="button" class="acao" data-mover="cima">↑ Subir</button>

@@ -78,9 +78,18 @@ class Elemento {
   replaceChildren() {}
 
   querySelector(seletor) {
+    /* `:scope > legend` — o rótulo da própria linha. A linha de Etapa tem um segundo `legend`,
+       o do grupo "Caráter", e o escopo é o que impede a numeração de ir parar nele. */
+    if (seletor === ":scope > legend") {
+      return this.filhos.find((filho) => filho.tagName === "legend") || null;
+    }
+    const mover = /^\[data-mover="(cima|baixo)"\]$/.exec(seletor);
+    if (mover) {
+      return this.filhos.find((filho) => filho.dataset && filho.dataset.mover === mover[1]) || null;
+    }
     const sufixo = CAMPOS_POR_SUFIXO.exec(seletor);
     if (!sufixo) return null;
-    return this.filhos.find((filho) => filho.name.endsWith("-" + sufixo[1])) || null;
+    return this.filhos.find((filho) => filho.name && filho.name.endsWith("-" + sufixo[1])) || null;
   }
 
   querySelectorAll() {
@@ -89,9 +98,15 @@ class Elemento {
 }
 
 /** Um `fieldset.linha.<classe>` com os campos indexados que o template renderiza. */
-function linha(classe, indice, campos) {
+function linha(classe, indice, campos, { rotulo = "" } = {}) {
   const elemento = new Elemento("fieldset");
   elemento.classes = ["linha", classe];
+  if (rotulo) {
+    const legenda = new Elemento("legend");
+    legenda.textContent = rotulo;
+    legenda.parentNode = elemento;
+    elemento.filhos.push(legenda);
+  }
   for (const [sufixo, valor] of Object.entries(campos)) {
     const campo = new Elemento("input", {
       name: `${classe}-${indice}-${sufixo}`,
@@ -107,6 +122,16 @@ function linha(classe, indice, campos) {
 function botaoDeMover(direcao) {
   const botao = new Elemento("button", { "data-mover": direcao });
   botao.dataset = { mover: direcao };
+  botao.disabled = false;
+  botao.focado = false;
+  // Registra que **este** botão recebeu foco, além de atualizar `activeElement`. Os dois são
+  // necessários: `activeElement` diz quem tem o foco agora; `focado` diz quem já o recebeu, que é
+  // o que distingue "o foco foi para o botão oposto" de "o foco nunca saiu do lugar".
+  const focarBase = botao.focus.bind(botao);
+  botao.focus = function () {
+    this.focado = true;
+    focarBase();
+  };
   return botao;
 }
 

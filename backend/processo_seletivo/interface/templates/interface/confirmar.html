@@ -44,20 +44,26 @@ participar do ato. O sistema recusará esta operação.</p>
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
 
   {% if ato.exige_signatario %}
+  {% comment %}
+  FR-039: escolher, não digitar. Este era o campo mais hostil do produto — um UUID de trinta e seis
+  caracteres, à mão, no ato de maior consequência do sistema —, e nome e cargo eram redigitados a
+  cada publicação. Agora os três saem da entrada escolhida, e o identificador não é sequer exibido:
+  é dado de vínculo, não de leitura.
+  {% endcomment %}
   <fieldset>
     <legend>Autoridade Signatária</legend>
-    <p class="ajuda">Quem assina institucionalmente o Edital. Fica registrado na Publicação e
-      aparece no documento.</p>
-    <div class="campos">
-      <p class="campo"><label for="signatario_nome">Nome</label>
-        <input type="text" id="signatario_nome" name="signatario_nome" required></p>
-      <p class="campo"><label for="signatario_cargo">Cargo ou função</label>
-        <input type="text" id="signatario_cargo" name="signatario_cargo" required></p>
-    </div>
-    <p class="campo"><label for="signatario_id">Identificador da autoridade</label>
-      <input type="text" id="signatario_id" name="signatario_id" required
-             aria-describedby="ajuda-sig" placeholder="00000000-0000-0000-0000-000000000000">
-      <span class="ajuda" id="ajuda-sig">Identificador institucional em formato UUID.</span></p>
+    <p class="campo largo">
+      <label for="signatario">Quem assina institucionalmente este Edital
+        <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <select id="signatario" name="signatario" required aria-required="true"
+              aria-describedby="ajuda-sig">
+        <option value="">— escolha a autoridade —</option>
+        {% for autoridade in autoridades %}
+        <option value="{{ autoridade.chave }}">{{ autoridade.nome }} — {{ autoridade.cargo }}</option>
+        {% endfor %}
+      </select>
+      <span class="ajuda" id="ajuda-sig">Fica registrada na Publicação e aparece no documento.</span>
+    </p>
   </fieldset>
   {% endif %}
 

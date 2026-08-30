@@ -26,6 +26,24 @@ def situacao(valor):
 
 
 @register.filter
+def rotulo_do_ato(chave):
+    """O nome humano do ato praticado, lido da tabela que já o declara.
+
+    A faixa dizia "Ato registrado: submeter." porque passava a chave pelo filtro `situacao`, que
+    mapeia **situações** — `submeter` não está lá, e o filtro devolve o que não conhece. A trilha
+    de auditoria, ao lado, sempre escreveu "Submissão para revisão" corretamente: o rótulo existia
+    e não era consultado.
+    """
+    from processo_seletivo.interface import atos, atos_processo, atos_retificacao
+
+    for tabela in (atos.ATOS, atos_retificacao.ATOS, atos_processo.ATOS):
+        ato = tabela.get(valor := str(chave))
+        if ato is not None:
+            return ato.rotulo
+    return SITUACOES.get(valor, valor)
+
+
+@register.filter
 def dicionario(dados, referencia):
     """Lê `campo:<referência>` do que foi enviado, para reexibir sem perder o digitado.
 

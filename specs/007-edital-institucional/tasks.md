@@ -211,36 +211,36 @@ levado a elaborar; ver `Submeter` desabilitado com motivo; não receber `Retific
 
 ### Aparência e ordem
 
-- [ ] T071 [P] [US6] Estender a regra de estilo além de `input[type=text]` em `backend/processo_seletivo/interface/static/interface/`, de modo que `Ano` tenha altura, fonte e borda dos vizinhos, e que a largura declarada em `Número` tenha efeito (FR-034)
-- [ ] T072 [US6] Desabilitar `↑` na primeira linha e `↓` na última em `backend/processo_seletivo/interface/static/interface/ordenacao.js`, mantendo o estado correto após cada movimento e após remoção
-- [ ] T073 [US6] Exibir a posição de cada linha na legenda — "Evento 2 de 3" — atualizada pelo mesmo caminho que renumera `order`
-- [ ] T074 [P] [US6] Escrever teste de JavaScript em `backend/tests/javascript/` para o estado dos botões nas pontas e para a numeração da legenda
+- [X] T071 [P] [US6] Estender a regra de estilo além de `input[type=text]` em `backend/processo_seletivo/interface/static/interface/`, de modo que `Ano` tenha altura, fonte e borda dos vizinhos, e que a largura declarada em `Número` tenha efeito (FR-034)
+- [X] T072 [US6] Desabilitar `↑` na primeira linha e `↓` na última em `backend/processo_seletivo/interface/static/interface/ordenacao.js`, mantendo o estado correto após cada movimento e após remoção
+- [X] T073 [US6] Exibir a posição de cada linha na legenda — "Evento 2 de 3" — atualizada pelo mesmo caminho que renumera `order`
+- [X] T074 [P] [US6] Escrever teste de JavaScript em `backend/tests/javascript/` para o estado dos botões nas pontas e para a numeração da legenda
 
 ### Etapas, remoção e escolha
 
-- [ ] T075 [US6] Compor a opção do seletor de Evento com a data herdada — "Prova didática · 10/04/2027 14:00" — em `backend/processo_seletivo/interface/views.py` e no fragmento de Etapa (FR-036)
-- [ ] T076 [US6] Agrupar Eliminatória e Classificatória sob legenda "Caráter" em `backend/processo_seletivo/interface/templates/interface/_etapa.html` (FR-037)
+- [X] T075 [US6] Compor a opção do seletor de Evento com a data herdada — "Prova didática · 10/04/2027 14:00" — em `backend/processo_seletivo/interface/views.py` e no fragmento de Etapa (FR-036)
+- [X] T076 [US6] Agrupar Eliminatória e Classificatória sob legenda "Caráter" em `backend/processo_seletivo/interface/templates/interface/_etapa.html` (FR-037)
 - [ ] T077 [US6] Implementar em `backend/processo_seletivo/interface/static/interface/` a regra de "linha tem conteúdo" — qualquer campo preenchido ou qualquer item filho — e a confirmação que dela decorre: diz o que será descartado, é operável por teclado e tem o cancelamento como ação padrão (FR-038)
 - [ ] T078 [US6] Ligar a confirmação aos quatro fragmentos que hoje oferecem `Remover` sem rede — `_perfil.html`, `_evento.html`, `_etapa.html` e `_modalidade.html` — e à marcação de remoção de `retificar.html`
 - [ ] T079 [P] [US6] Escrever teste de JavaScript para a confirmação: linha preenchida confirma, linha vazia não
 
 ### Autoridade signatária
 
-- [ ] T080 [US6] Criar `backend/processo_seletivo/publicacoes/domain/autoridades.py` com catálogo declarado — chave estável, identificador institucional, nome e cargo —, no padrão de `editais/domain/secoes.py`. Sem entidade, sem migration, sem tela de gestão, sem permissão nova (FR-039)
-- [ ] T081 [US6] Substituir os três campos de autoridade em `backend/processo_seletivo/interface/templates/interface/confirmar.html` por uma escolha no catálogo; nome, cargo e identificador vêm da entrada escolhida e **nenhum identificador é digitado, exibido ou impresso** (FR-044)
-- [ ] T082 [US6] Resolver a escolha para `signatory_id`, `signatory_name` e `signatory_role` no caminho de publicação, sem alterar o que a `Publicacao` persiste
-- [ ] T083 [P] [US6] Escrever teste afirmando que a publicação funciona pela escolha, que autoridade fora do catálogo não é aceita em novo ato, e que Publicação já praticada com autoridade depois retirada permanece íntegra (FR-046)
-- [ ] T084 [US6] Aplicar a mesma escolha de autoridade em `backend/processo_seletivo/interface/templates/interface/retificacao_confirmar.html` e no ramo correspondente de `backend/processo_seletivo/interface/views.py`. **São dois fluxos de publicação** — o do Edital e o da Retificação —, e ambos pedem os três campos hoje; deixar um de fora manteria o UUID digitado exatamente onde a correção de um Edital publicado acontece
-- [ ] T085 [P] [US6] Escrever teste cobrindo os **dois** fluxos: publicar Edital e publicar Retificação, ambos com autoridade escolhida em lista e nenhum identificador digitado (SC-009a)
+- [X] T080 [US6] Criar `backend/processo_seletivo/publicacoes/domain/autoridades.py` com catálogo declarado — chave estável, identificador institucional, nome e cargo —, no padrão de `editais/domain/secoes.py`. Sem entidade, sem migration, sem tela de gestão, sem permissão nova (FR-039)
+- [X] T081 [US6] Substituir os três campos de autoridade em `backend/processo_seletivo/interface/templates/interface/confirmar.html` por uma escolha no catálogo; nome, cargo e identificador vêm da entrada escolhida e **nenhum identificador é digitado, exibido ou impresso** (FR-044)
+- [X] T082 [US6] Resolver a escolha para `signatory_id`, `signatory_name` e `signatory_role` no caminho de publicação, sem alterar o que a `Publicacao` persiste
+- [X] T083 [P] [US6] Escrever teste afirmando que a publicação funciona pela escolha, que autoridade fora do catálogo não é aceita em novo ato, e que Publicação já praticada com autoridade depois retirada permanece íntegra (FR-046)
+- [X] T084 [US6] Aplicar a mesma escolha de autoridade em `backend/processo_seletivo/interface/templates/interface/retificacao_confirmar.html` e no ramo correspondente de `backend/processo_seletivo/interface/views.py`. **São dois fluxos de publicação** — o do Edital e o da Retificação —, e ambos pedem os três campos hoje; deixar um de fora manteria o UUID digitado exatamente onde a correção de um Edital publicado acontece
+- [X] T085 [P] [US6] Escrever teste cobrindo os **dois** fluxos: publicar Edital e publicar Retificação, ambos com autoridade escolhida em lista e nenhum identificador digitado (SC-009a)
 
 ### Estado, nomes e auditoria
 
-- [ ] T086 [US6] Passar `_progresso` de dois para três estados em `backend/processo_seletivo/interface/views.py`: `conteudo` deixa de ser `True` fixo e passa a ser "pronta para revisar" enquanto `edital.secoes.exists()` for falso, e "concluída" depois (D-005)
-- [ ] T087 [US6] Distinguir os três estados visualmente em `backend/processo_seletivo/interface/templates/interface/compor_base.html`, sem depender apenas de cor (FR-040)
+- [X] T086 [US6] Passar `_progresso` de dois para três estados em `backend/processo_seletivo/interface/views.py`: `conteudo` deixa de ser `True` fixo e passa a ser "pronta para revisar" enquanto `edital.secoes.exists()` for falso, e "concluída" depois (D-005)
+- [X] T087 [US6] Distinguir os três estados visualmente em `backend/processo_seletivo/interface/templates/interface/compor_base.html`, sem depender apenas de cor (FR-040)
 - [ ] T088 [P] [US6] Escrever teste afirmando que Edital recém-criado mostra `Conteúdo` como "pronta para revisar" e que gravar a etapa a torna "concluída"
-- [ ] T089 [US6] Substituir `{{ request.GET.ato|situacao }}` em `backend/processo_seletivo/interface/templates/interface/detalhe.html` pelo rótulo humano que `atos.ATOS` já declara — o filtro `situacao` mapeia **situações** e por isso devolve `submeter` cru (FR-041)
+- [X] T089 [US6] Substituir `{{ request.GET.ato|situacao }}` em `backend/processo_seletivo/interface/templates/interface/detalhe.html` pelo rótulo humano que `atos.ATOS` já declara — o filtro `situacao` mapeia **situações** e por isso devolve `submeter` cru (FR-041)
 - [ ] T090 [P] [US6] Escrever teste afirmando que a faixa de confirmação diz "Submissão para revisão" e "Publicação", e nunca a chave interna
-- [ ] T091 [US6] Registrar qual etapa do assistente foi gravada no evento de auditoria da gravação do rascunho, em `backend/processo_seletivo/editais/application/draft.py` e no chamador da interface. **Registrar a área, não a diferença** (FR-043)
+- [X] T091 [US6] Registrar qual etapa do assistente foi gravada no evento de auditoria da gravação do rascunho, em `backend/processo_seletivo/editais/application/draft.py` e no chamador da interface. **Registrar a área, não a diferença** (FR-043)
 - [ ] T092 [P] [US6] Escrever teste afirmando que quatro gravações em etapas diferentes produzem quatro registros distinguíveis na trilha
 
 **Checkpoint**: entrega 5 fechada.
