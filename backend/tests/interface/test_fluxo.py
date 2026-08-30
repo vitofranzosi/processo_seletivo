@@ -472,8 +472,8 @@ def test_etapas_aparecem_na_previa_e_no_documento_publicado_na_ordem_definida(
 
     previa = texto_do_pdf(client.get(reverse("interface:previa-documento", args=[edital.id])))
     assert previa.index("Prova didática") < previa.index("Análise de títulos")
-    assert "peso: 2.0000" in previa
-    assert "nota mínima: 7.0000" in previa
+    assert "peso: 2" in previa
+    assert "nota mínima: 7" in previa
     assert "eliminatória" in previa
 
     praticar(client, Edital.objects.get(), "submeter")
@@ -513,7 +513,7 @@ def test_modalidades_aparecem_na_previa_e_no_documento_publicado(
     compor_rascunho(client, edital, PERFIS_COM_COTA, EVENTOS)
 
     previa = texto_do_pdf(client.get(reverse("interface:previa-documento", args=[edital.id])))
-    for esperado in ("PPI", "Pessoas pretas, pardas e indígenas", "Lei 12.990/2014", "20.0000"):
+    for esperado in ("PPI", "Pessoas pretas, pardas e indígenas", "Lei 12.990/2014", "20%"):
         assert esperado in previa, esperado
 
     praticar(client, Edital.objects.get(), "submeter")
@@ -523,7 +523,7 @@ def test_modalidades_aparecem_na_previa_e_no_documento_publicado(
     praticar(client, Edital.objects.get(), "publicar", motivo="Publicação", **SIGNATARIO)
 
     publicado = texto_de_pdf_bytes(bytes(DocumentoPublicado.objects.get().bytes))
-    for esperado in ("PPI", "Lei 12.990/2014", "20.0000"):
+    for esperado in ("PPI", "Lei 12.990/2014", "20%"):
         assert esperado in publicado, esperado
 
 

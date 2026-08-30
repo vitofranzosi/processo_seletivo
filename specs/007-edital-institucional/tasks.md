@@ -41,7 +41,7 @@ jornada de autoria?** Achado novo encontrado no caminho **registra-se e não se 
 
 **Purpose**: partir de base conhecida. Não há projeto a inicializar — a feature é aditiva.
 
-- [ ] T001 Rodar a suíte na base atual com o comando de `quickstart.md` e registrar o número de testes antes de qualquer alteração
+- [X] T001 Rodar a suíte na base atual com o comando de `quickstart.md` e registrar o número de testes antes de qualquer alteração
 
 ---
 
@@ -51,7 +51,7 @@ jornada de autoria?** Achado novo encontrado no caminho **registra-se e não se 
 o script que a gera; o que falta é provar que o script reproduz **exatamente** os bytes de hoje,
 antes que `pdf.py` mude. Sem isso, as duas regenerações de FR-006 seriam atos de fé.
 
-- [ ] T002 Executar `backend/scripts/gerar_fixture_documento.py` na base intocada e confirmar que o arquivo gerado é idêntico byte a byte à fixture versionada; se divergir, corrigir o script **antes** de qualquer mudança de composição
+- [X] T002 Executar `backend/scripts/gerar_fixture_documento.py` na base intocada e confirmar que o arquivo gerado é idêntico byte a byte à fixture versionada; se divergir, corrigir o script **antes** de qualquer mudança de composição
 
 **Checkpoint**: toda regeneração posterior é verificável.
 
@@ -67,13 +67,13 @@ modalidade com percentual `20`; abrir o documento e ler `20%`, `peso 2` e `nota 
 
 **Não toca o snapshot, não muda o hash, não depende de nenhuma outra fase.**
 
-- [ ] T003 [P] [US1] Criar `backend/processo_seletivo/publicacoes/infrastructure/humano.py` com `decimal(valor)`: recebe a string canônica de quatro casas, devolve pt-BR com vírgula e zeros à direita descartados (`"20.0000"` → `"20"`, `"12.5000"` → `"12,5"`, `"0.5000"` → `"0,5"`). Sem dependência de locale nem de estado global — o mesmo documento tem de sair igual em qualquer ambiente (D-001)
-- [ ] T004 [P] [US1] Escrever `backend/tests/unit/publicacoes/test_humano.py` cobrindo a tabela B.1 do contrato, incluindo `"7.2500"` → `"7,25"` e o caso de valor ausente
-- [ ] T005 [US1] Aplicar `humano.decimal` nos três pontos que hoje escrevem o decimal cru em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`: percentual da Regra Normativa (`_modalidades`), peso e nota mínima da Etapa (`_etapas`)
-- [ ] T006 [US1] Remover a composição de `Situação: {evento['status']}` de `_cronograma` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`. **Não** introduzir mapa de tradução — o estado do Evento não é conteúdo de Edital (D-002)
-- [ ] T007 [US1] Escrever teste em `backend/tests/contract/test_documento_publicado.py` afirmando que o texto extraído do documento não contém `PLANEJADO` nem nenhum decimal de quatro casas, e contém `20%`
-- [ ] T008 [US1] Regenerar a fixture de bytes com `backend/scripts/gerar_fixture_documento.py` e revisar o diff do texto extraído — **primeira das duas regenerações previstas em FR-006**
-- [ ] T009 [US1] Verificar que o modo de prévia continua omitindo a seção de integridade e continua não lendo `content_hash`, e que as regras B.1 e B.2 valem nos dois modos
+- [X] T003 [P] [US1] Criar `backend/processo_seletivo/publicacoes/infrastructure/humano.py` com `decimal(valor)`: recebe a string canônica de quatro casas, devolve pt-BR com vírgula e zeros à direita descartados (`"20.0000"` → `"20"`, `"12.5000"` → `"12,5"`, `"0.5000"` → `"0,5"`). Sem dependência de locale nem de estado global — o mesmo documento tem de sair igual em qualquer ambiente (D-001)
+- [X] T004 [P] [US1] Escrever `backend/tests/unit/publicacoes/test_humano.py` cobrindo a tabela B.1 do contrato, incluindo `"7.2500"` → `"7,25"` e o caso de valor ausente
+- [X] T005 [US1] Aplicar `humano.decimal` nos três pontos que hoje escrevem o decimal cru em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`: percentual da Regra Normativa (`_modalidades`), peso e nota mínima da Etapa (`_etapas`)
+- [X] T006 [US1] Remover a composição de `Situação: {evento['status']}` de `_cronograma` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`. **Não** introduzir mapa de tradução — o estado do Evento não é conteúdo de Edital (D-002)
+- [X] T007 [US1] Escrever teste em `backend/tests/contract/test_documento_publicado.py` afirmando que o texto extraído do documento não contém `PLANEJADO` nem nenhum decimal de quatro casas, e contém `20%`
+- [X] T008 [US1] Regenerar a fixture de bytes com `backend/scripts/gerar_fixture_documento.py` e revisar o diff do texto extraído — **primeira das duas regenerações previstas em FR-006**
+- [X] T009 [US1] Verificar que o modo de prévia continua omitindo a seção de integridade e continua não lendo `content_hash`, e que as regras B.1 e B.2 valem nos dois modos
 
 **Checkpoint**: entrega 1 fechada e demonstrável. Pode integrar sozinha.
 

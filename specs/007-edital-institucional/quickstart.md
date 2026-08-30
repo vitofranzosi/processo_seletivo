@@ -13,8 +13,14 @@ ver.
 PostgreSQL local precisa de `LC_ALL` definido, e a role padrão da máquina não existe no cluster —
 sobrescreva `DB_USER`. Ambos são particularidades conhecidas deste ambiente, não da feature.
 
+**`TEST_DB_ENGINE=postgresql` é obrigatório e é o que se esquece.** `config/settings/test.py` só
+olha essa variável; sem ela a suíte usa sqlite em memória **sem avisar** e pula 43 testes de
+integridade — triggers de imutabilidade, privilégios, locks e validação de migrations. Nos dois
+casos a suíte fica verde, então o sinal é a contagem de skips: **894 passed, 1 skipped** com
+PostgreSQL, contra 851 passed e 44 skipped sem ele.
+
 ```bash
-cd backend && LC_ALL=en_US.UTF-8 DB_USER="$(whoami)" uv run pytest -q
+cd backend && TEST_DB_ENGINE=postgresql LC_ALL=en_US.UTF-8 DB_USER="$(whoami)" uv run pytest -q
 ```
 
 A interface exige o seletor de identidade ligado; sem a variável, `/gestao/` devolve 503:
@@ -180,9 +186,17 @@ Tudo pela interface administrativa: sem manipulação de banco, sem chamada manu
 ## Antes de abrir o PR
 
 ```bash
-cd backend && uv run ruff check . && uv run ruff format --check .
-cd backend && LC_ALL=en_US.UTF-8 DB_USER="$(whoami)" uv run pytest -q
+cd backend && uv run ruff check .
 ```
+
+```bash
+cd backend && TEST_DB_ENGINE=postgresql LC_ALL=en_US.UTF-8 DB_USER="$(whoami)" uv run pytest -q
+```
+
+**Só `ruff check`, sem `ruff format`.** A CI roda exatamente `uv run ruff check .`
+(`.github/workflows/backend.yml:40`), e o repositório **não** adota o formatador: 29 arquivos
+pré-existentes seriam reformatados por ele, `pdf.py` e `test_fluxo.py` inclusive. Rodar
+`ruff format` aqui produziria um diff enorme e alheio à feature.
 
 E a pergunta que fecha cada entrega: **isto aumentou a fidelidade do Edital real ou a fluidez da
 jornada de autoria?** Se um item da implementação não responde a nenhuma das duas, ele não pertence
