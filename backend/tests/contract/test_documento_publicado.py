@@ -97,7 +97,9 @@ def test_a_previa_traz_o_mesmo_conteudo_normativo_do_publicado():
     publicado = texto_de(render_edital_pdf(SNAPSHOT, HASH))
     previa = texto_de(render_edital_pdf(SNAPSHOT, HASH, modo=MODO_PREVIA))
 
-    for esperado in ("DOC-INFO", "Professor de Informática", "PPP", "Lei 12.990/2014", "20.0000"):
+    # `20%`, e não `20.0000`: a forma canônica continua com quatro casas no snapshot, mas o
+    # documento escreve em português nos dois modos — legibilidade não é privilégio do publicado.
+    for esperado in ("DOC-INFO", "Professor de Informática", "PPP", "Lei 12.990/2014", "20%"):
         assert esperado in publicado and esperado in previa, esperado
 
 
@@ -106,3 +108,76 @@ def test_modo_desconhecido_e_recusado_em_vez_de_cair_no_publicado():
     """Errar o nome do modo não pode produzir, em silêncio, um documento com cara de publicado."""
     with pytest.raises(ValueError):
         render_edital_pdf(SNAPSHOT, HASH, modo="PREVIEW_")
+
+
+# ---------------------------------------------------------------------------
+# 007 — O documento se lê como um Edital (FR-002, FR-003)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.contract
+def test_nenhum_estado_interno_de_entidade_aparece_no_documento():
+    """FR-002: o estado do Evento descreve a gestão do certame, não o Edital.
+
+    A fixture tem dois Eventos, ambos `PLANEJADO`. Um Edital publicado anuncia suas inscrições;
+    não informa ao candidato que elas estão "planejadas".
+    """
+    texto = texto_de(render_edital_pdf(SNAPSHOT, HASH))
+
+    for estado in ("PLANEJADO", "EM_ANDAMENTO", "CONCLUIDO", "CANCELADO"):
+        assert estado not in texto, estado
+    assert "Situação:" not in texto
+
+
+@pytest.mark.contract
+def test_nenhum_decimal_canonico_de_quatro_casas_chega_ao_documento():
+    """FR-003: a forma de quatro casas é do snapshot, não do papel."""
+    texto = texto_de(render_edital_pdf(SNAPSHOT, HASH))
+
+    assert not re.search(r"\d\.\d{4}\b", texto), "decimal canônico vazou para o documento"
+
+
+@pytest.mark.contract
+def test_percentual_peso_e_nota_saem_em_portugues():
+    """A fixture carrega percentual 20.0000, peso 2.0000 e nota mínima 7.0000."""
+    texto = texto_de(render_edital_pdf(SNAPSHOT, HASH))
+
+    assert "percentual: 20%" in texto
+    assert "peso: 2" in texto
+    assert "nota mínima: 7" in texto
+
+
+@pytest.mark.contract
+def test_decimal_com_parte_fracionaria_usa_virgula():
+    """Zeros à direita somem; a casa que informa alguma coisa permanece, com vírgula."""
+    fracionario = json.loads(json.dumps(SNAPSHOT))
+    regra = fracionario["profiles"][0]["competitionModalities"][0]["normativeRule"]
+    regra["percentage"] = "12.5000"
+    fracionario["stages"][0]["weight"] = "1.7500"
+
+    texto = texto_de(render_edital_pdf(fracionario, canonical_sha256(fracionario)))
+
+    assert "percentual: 12,5%" in texto
+    assert "peso: 1,75" in texto
+
+
+@pytest.mark.contract
+def test_a_forma_canonica_do_snapshot_nao_e_tocada_pela_apresentacao():
+    """FR-001: o compositor lê o snapshot; não o reescreve.
+
+    A garantia que sustenta o hash: renderizar não pode ter efeito colateral sobre o conteúdo.
+    """
+    antes = json.dumps(SNAPSHOT, sort_keys=True)
+    render_edital_pdf(SNAPSHOT, HASH)
+    assert json.dumps(SNAPSHOT, sort_keys=True) == antes
+    assert SNAPSHOT["stages"][0]["weight"] == "2.0000"
+
+
+@pytest.mark.contract
+def test_as_regras_de_apresentacao_valem_tambem_na_previa():
+    """T009: legibilidade não é privilégio do documento publicado."""
+    texto = texto_de(render_edital_pdf(SNAPSHOT, HASH, modo=MODO_PREVIA))
+
+    assert "PLANEJADO" not in texto
+    assert not re.search(r"\d\.\d{4}\b", texto)
+    assert "percentual: 20%" in texto

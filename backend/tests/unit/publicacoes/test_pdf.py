@@ -138,7 +138,9 @@ def test_document_reproduces_competition_modalities_and_their_normative_rule():
     assert "Pessoas pretas, pardas e indígenas" in texto
     assert "Lei 12.990/2014" in texto
     assert "2014-06-09" in texto
-    assert "20.0000" in texto
+    # `20%`: a entrada continua `"20.0000"` (linha 83) e é o documento que escreve em português.
+    assert "percentual: 20%" in texto
+    assert "20.0000" not in texto
 
 
 def test_document_reproduces_the_schedule_with_institutional_dates():
@@ -244,8 +246,10 @@ def test_etapas_aparecem_com_caracter_peso_e_nota_minima():
     texto = texto_de(render_edital_pdf(snapshot(), HASH))
     assert "1. Prova didática" in texto
     assert "eliminatória e classificatória" in texto
-    assert "peso: 2.0000" in texto
-    assert "nota mínima: 7.0000" in texto
+    assert "peso: 2" in texto
+    assert "nota mínima: 7" in texto
+    # A entrada carrega `"2.0000"` e `"7.0000"`; a forma canônica não chega ao papel (FR-003).
+    assert "2.0000" not in texto and "7.0000" not in texto
     # A data vem do Evento vinculado, e não é digitada de novo na Etapa.
     assert "Conforme o Cronograma — INSCRICAO" in texto
 

@@ -16,6 +16,7 @@ from datetime import datetime
 from django.utils import timezone
 
 from processo_seletivo.editais.domain.secoes import GERADA
+from processo_seletivo.publicacoes.infrastructure import humano
 
 LARGURA, ALTURA = 595, 842  # A4 em pontos
 MARGEM = 56
@@ -154,7 +155,7 @@ def _modalidades(composicao, perfil):
         if regra.get("version"):
             partes.append(f"versão: {regra['version']}")
         if regra.get("percentage"):
-            partes.append(f"percentual: {regra['percentage']}%")
+            partes.append(f"percentual: {humano.decimal(regra['percentage'])}%")
         if regra.get("effectiveFrom"):
             partes.append(f"vigência: {_instante(regra['effectiveFrom'])}")
         composicao.escrever("Regra Normativa — " + "; ".join(partes), tamanho=9, recuo=46)
@@ -200,8 +201,13 @@ def _cronograma(composicao, snapshot):
         if evento.get("endAt"):
             periodo += f"    Término: {_instante(evento['endAt'])}"
         composicao.escrever(periodo, tamanho=10, recuo=18)
-        if evento.get("status"):
-            composicao.escrever(f"Situação: {evento['status']}", tamanho=9, recuo=18)
+        # O estado do Evento **não é composto**, e não recebe mapa de tradução (FR-002).
+        # Existe o precedente de `RESERVA` logo acima, e a tentação de imitá-lo aqui: mas os dois
+        # casos são distintos. O tipo de cadastro reserva descreve a vaga e interessa a quem se
+        # inscreve; `PLANEJADO`, `EM_ANDAMENTO` e `CONCLUIDO` descrevem a execução do certame e são
+        # informação de gestão. Um Edital publicado não diz que suas inscrições estão "planejadas" —
+        # ele as anuncia. Traduzir o rótulo produziria uma frase correta dizendo ao candidato algo
+        # que não é matéria de Edital.
 
 
 CARATER_DA_ETAPA = (("eliminatory", "eliminatória"), ("classificatory", "classificatória"))
@@ -232,9 +238,9 @@ def _etapas(composicao, snapshot):
         if caracteres:
             partes.append("caráter: " + " e ".join(caracteres))
         if etapa.get("weight") is not None:
-            partes.append(f"peso: {etapa['weight']}")
+            partes.append(f"peso: {humano.decimal(etapa['weight'])}")
         if etapa.get("minimumScore") is not None:
-            partes.append(f"nota mínima: {etapa['minimumScore']}")
+            partes.append(f"nota mínima: {humano.decimal(etapa['minimumScore'])}")
         if partes:
             composicao.escrever("; ".join(partes), tamanho=10, recuo=18)
         # As datas são do Evento e não são copiadas: o documento as lê de lá, como o domínio.
