@@ -271,9 +271,10 @@ da LGPD; a avaliação desta é curta porque a feature não os alcança:
   mesmo, e o conteúdo produzido pela composição original já é bem formado por construção — de modo
   que aplicá-la aos dois caminhos não muda o comportamento do original e evita duas regras para a
   mesma pergunta.
-- **A autoridade é o contrato, não o montador de snapshot.** `PerfilInput` e `EventoInput` já
-  declaram obrigatoriedade, tipo, nulabilidade e formato. O montador produz também campos que o
-  contrato não declara; esses seguem aceitos, e não exigidos.
+- **A autoridade é o contrato, e o esquema é o do conteúdo publicado.** Os esquemas de entrada do
+  rascunho descrevem o que ele aceita, não o que a Publicação produz, e cobrem parte dos campos. O
+  contrato passa a declarar a forma do Perfil e do Evento **publicados**, com os campos canônicos,
+  seus tipos, sua nulabilidade e as restrições que já estavam escritas.
 - **Um conteúdo base já malformado bloqueia o ato que não o corrige.** Não há como isso existir hoje,
   e a partir desta feature não passa a haver. Preferir o bloqueio mantém a garantia de SC-005 sem
   exceção, ao custo de um caso que não ocorre.
