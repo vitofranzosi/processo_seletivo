@@ -400,3 +400,82 @@ def test_post_sem_a_versao_base_nao_cai_na_vigente(client, seletor_ligado, edita
 
     assert resposta.status_code == 409
     assert not Retificacao.objects.exists()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_retificacao_alcanca_modalidade_etapa_e_secao_pela_interface(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """A `006` publicou as três e não trouxe nenhuma para a tela.
+
+    O motor já as endereçava — `/stages/id=…`, `/sections/id=…/content` e
+    `…/normativeRule/percentage` têm teste desde a `006`. Corrigir uma cota errada depois de
+    publicada exigia chamada de API, e a Constituição não admite jornada concluída por canal
+    alheio ao ator.
+    """
+    from processo_seletivo.editais.domain import secoes as catalogo
+    from tests.fixtures.snapshot import ETAPA, MODALIDADE, PERFIL, rascunho_com_etapas
+
+    edital = publish_original(
+        api_client, manager_headers, process_payload, draft=rascunho_com_etapas()
+    )
+    base = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    caminhos = {
+        "percentual": (
+            f"/profiles/id={PERFIL['A']}/competitionModalities/id={MODALIDADE['B']}"
+            "/normativeRule/percentage"
+        ),
+        "etapa": f"/stages/id={ETAPA['A']}/name",
+        "secao": f"/sections/id={catalogo.identidade(edital.id, 'recursos')}/content",
+    }
+    referencias = {
+        nome: referencia_do_campo(base.content, caminho) for nome, caminho in caminhos.items()
+    }
+
+    resposta = client.post(
+        reverse("interface:retificar", args=[edital.id]),
+        {
+            "base": str(base.id),
+            f"campo:{referencias['percentual']}": "25",
+            f"campo:{referencias['etapa']}": "Prova didática e arguição",
+            f"campo:{referencias['secao']}": "Prazo recursal de três dias úteis.",
+            "justificativa": "Ajuste de cota, etapa e texto",
+        },
+    )
+
+    resumo = resposta.context["resumo"]
+    alterados = {item["rotulo"] for item in resumo}
+    assert {"Percentual (%)", "Nome da Etapa", "Texto da seção"} <= alterados, resumo
+    # A forma canônica do decimal é preservada: "25" digitado vira "25.0000" no conteúdo.
+    percentual = next(item for item in resumo if item["rotulo"] == "Percentual (%)")
+    assert percentual["depois"] == "25.0000"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_secao_nao_e_removivel_pela_retificacao(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """O catálogo é fixo: a topologia recusa remover seção, e a tela não pode oferecer o que a
+    publicação recusa."""
+    from processo_seletivo.interface import retificacao as ui
+
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+
+    grupos = ui.campos_editaveis(base.content)
+    secoes = [grupo for grupo in grupos if grupo["caminho"].startswith("/sections/")]
+
+    assert secoes, "as seções textuais precisam estar editáveis"
+    assert [grupo for grupo in secoes if grupo["removivel"]] == []
+    # E as geradas não aparecem: elas não têm conteúdo próprio a endereçar.
+    assert len(secoes) == len(catalogo_textuais())
+
+
+def catalogo_textuais():
+    from processo_seletivo.editais.domain import secoes as catalogo
+
+    return [secao for secao in catalogo.CATALOGO if not secao.gerada]

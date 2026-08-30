@@ -323,12 +323,15 @@ def test_previa_nao_cria_registro_publicado_nem_muda_o_estado(client, seletor_li
         VersaoConsolidada.objects.count(),
         DocumentoPublicado.objects.count(),
     )
-    resposta = client.get(reverse("interface:previa", args=[edital.id]))
+    tela = client.get(reverse("interface:previa", args=[edital.id]))
+    documento = client.get(reverse("interface:previa-documento", args=[edital.id]))
 
-    assert resposta.status_code == 200
-    assert resposta["Content-Type"] == "application/pdf"
-    assert "previa-edital-" in resposta["Content-Disposition"]
-    assert resposta.content.startswith(b"%PDF-")
+    assert tela.status_code == 200
+    assert tela["Content-Type"].startswith("text/html")
+    assert documento.status_code == 200
+    assert documento["Content-Type"] == "application/pdf"
+    assert "previa-edital-" in documento["Content-Disposition"]
+    assert documento.content.startswith(b"%PDF-")
     assert (
         Publicacao.objects.count(),
         RevisaoEdital.objects.count(),
@@ -347,13 +350,15 @@ def test_previa_reflete_o_rascunho_gravado_e_permite_continuar_editando(
     identificar(client, "ana.elaboradora", ["elaborador"])
     compor_rascunho(client, edital, PERFIS, EVENTOS)
     edital.refresh_from_db()
-    assert "Inscrições" in texto_do_pdf(client.get(reverse("interface:previa", args=[edital.id])))
+    assert "Inscrições" in texto_do_pdf(
+        client.get(reverse("interface:previa-documento", args=[edital.id]))
+    )
 
     client.post(
         reverse("interface:compor-etapa", args=[edital.id, "cronograma"]),
         dict(EVENTOS, **{"evento-0-description": "Inscrições prorrogadas"}),
     )
-    depois = texto_do_pdf(client.get(reverse("interface:previa", args=[edital.id])))
+    depois = texto_do_pdf(client.get(reverse("interface:previa-documento", args=[edital.id])))
     assert "Inscrições prorrogadas" in depois
 
     # E a composição continua aberta: a prévia não fechou nada.
@@ -419,7 +424,7 @@ def test_publicar_logo_apos_a_previa_produz_o_mesmo_conteudo_normativo(
     identificar(client, "bruno.homologador", ["homologador"])
     praticar(client, Edital.objects.get(), "homologar", motivo="Conferido")
 
-    visualizado = texto_do_pdf(client.get(reverse("interface:previa", args=[edital.id])))
+    visualizado = texto_do_pdf(client.get(reverse("interface:previa-documento", args=[edital.id])))
 
     identificar(client, "carla.publicadora", ["publicador"])
     praticar(client, Edital.objects.get(), "publicar", motivo="Publicação", **SIGNATARIO)
@@ -465,7 +470,7 @@ def test_etapas_aparecem_na_previa_e_no_documento_publicado_na_ordem_definida(
         reverse("interface:compor-etapa", args=[edital.id, "etapas"]), ETAPAS
     ).status_code == 302
 
-    previa = texto_do_pdf(client.get(reverse("interface:previa", args=[edital.id])))
+    previa = texto_do_pdf(client.get(reverse("interface:previa-documento", args=[edital.id])))
     assert previa.index("Prova didática") < previa.index("Análise de títulos")
     assert "peso: 2.0000" in previa
     assert "nota mínima: 7.0000" in previa
@@ -507,7 +512,7 @@ def test_modalidades_aparecem_na_previa_e_no_documento_publicado(
     identificar(client, "ana.elaboradora", ["elaborador"])
     compor_rascunho(client, edital, PERFIS_COM_COTA, EVENTOS)
 
-    previa = texto_do_pdf(client.get(reverse("interface:previa", args=[edital.id])))
+    previa = texto_do_pdf(client.get(reverse("interface:previa-documento", args=[edital.id])))
     for esperado in ("PPI", "Pessoas pretas, pardas e indígenas", "Lei 12.990/2014", "20.0000"):
         assert esperado in previa, esperado
 
@@ -533,7 +538,7 @@ def test_secao_textual_editada_aparece_no_documento(client, seletor_ligado, edit
         {"secao-recursos": "Recurso em até três dias úteis, pelo sistema."},
     ).status_code == 302
 
-    previa = texto_do_pdf(client.get(reverse("interface:previa", args=[edital.id])))
+    previa = texto_do_pdf(client.get(reverse("interface:previa-documento", args=[edital.id])))
     assert "DOS RECURSOS" in previa
     assert "Recurso em até três dias úteis, pelo sistema." in previa
 
@@ -550,7 +555,9 @@ def test_alterar_o_cronograma_reflete_na_secao_gerada_sem_sincronizar_nada(
     """
     identificar(client, "ana.elaboradora", ["elaborador"])
     compor_rascunho(client, edital, PERFIS, EVENTOS)
-    assert "Inscrições" in texto_do_pdf(client.get(reverse("interface:previa", args=[edital.id])))
+    assert "Inscrições" in texto_do_pdf(
+        client.get(reverse("interface:previa-documento", args=[edital.id]))
+    )
 
     edital.refresh_from_db()
     client.post(
@@ -558,6 +565,6 @@ def test_alterar_o_cronograma_reflete_na_secao_gerada_sem_sincronizar_nada(
         dict(EVENTOS, **{"evento-0-description": "Inscrições, com isenção de taxa"}),
     )
 
-    depois = texto_do_pdf(client.get(reverse("interface:previa", args=[edital.id])))
+    depois = texto_do_pdf(client.get(reverse("interface:previa-documento", args=[edital.id])))
     assert "Inscrições, com isenção de taxa" in depois
     assert "CRONOGRAMA" in depois

@@ -1,0 +1,33 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Prévia — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">Prévia</span>
+</nav>
+
+<h1>Prévia do Edital {{ edital.number }}/{{ edital.year }}</h1>
+<p class="sub">{{ edital.title }}
+  <span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span></p>
+
+<p class="aviso"><strong>Isto não é o documento publicado.</strong> É o Edital como ele ficaria se
+fosse publicado agora, a partir do que está gravado. Nada foi registrado por abrir esta tela:
+nenhuma Publicação, Revisão ou documento foi criado.</p>
+
+<p class="navegacao-etapa">
+  <a href="{{ voltar }}" class="botao">‹ {{ rotulo_voltar }}</a>
+  <a href="{% url 'interface:previa-documento' edital.id %}" class="acao"
+     target="_blank" rel="noopener">Abrir o arquivo em outra aba</a>
+</p>
+
+{% comment %}
+`object` e não `iframe`: o conteúdo alternativo dentro dele é exibido por quem não consegue
+apresentar PDF embutido — que é o caso de boa parte dos navegadores móveis.
+{% endcomment %}
+<object class="documento" data="{% url 'interface:previa-documento' edital.id %}"
+        type="application/pdf" aria-label="Prévia do Edital {{ edital.number }}/{{ edital.year }}">
+  <p class="pendente">Seu navegador não exibe PDF nesta tela.
+    <a href="{% url 'interface:previa-documento' edital.id %}">Abrir a prévia em outra aba</a>.</p>
+</object>
+{% endblock %}

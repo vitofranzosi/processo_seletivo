@@ -46,27 +46,45 @@ para o público até a Retificação ser publicada.</p>
 <form method="post">
   {% csrf_token %}
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
-  {# As referências dos campos só significam alguma coisa contra o conteúdo que as gerou; sem
-     esta linha, uma Publicação no intervalo faria a mesma referência apontar para outro item. #}
+  {% comment %}
+  As referências dos campos só significam alguma coisa contra o conteúdo que as gerou; sem esta
+  linha, uma Publicação no intervalo faria a mesma referência apontar para outro item.
+  {% endcomment %}
   <input type="hidden" name="base" value="{{ base.id }}">
   {% for grupo in grupos %}
   <fieldset class="linha">
     <legend>{{ grupo.titulo }}</legend>
     <div class="campos">
+      {% comment %}
+      `campo.valor` já traz o que a pessoa digitou quando houve POST — a reexibição é resolvida
+      antes de chegar aqui, e não por um filtro repetido em cada controle.
+      {% endcomment %}
       {% for campo in grupo.campos %}
-      <p class="campo{% if campo.tipo == 'inteiro' %} curto{% endif %}">
+      <p class="campo{% if campo.tipo == 'inteiro' or campo.tipo == 'decimal' %} curto{% elif campo.tipo == 'texto_longo' %} largo{% endif %}">
         <label for="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}">{{ campo.rotulo }}</label>
+        {% if campo.tipo == 'texto_longo' %}
+        <textarea id="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                  name="campo:{{ campo.referencia }}" rows="5">{{ campo.valor }}</textarea>
+        {% elif campo.tipo == 'booleano' %}
+        <select id="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                name="campo:{{ campo.referencia }}">
+          <option value="1" {% if campo.valor == '1' %}selected{% endif %}>Sim</option>
+          <option value="0" {% if campo.valor != '1' %}selected{% endif %}>Não</option>
+        </select>
+        {% else %}
         <input id="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
                name="campo:{{ campo.referencia }}"
-               type="{% if campo.tipo == 'inteiro' %}number{% elif campo.tipo == 'instante' %}datetime-local{% else %}text{% endif %}"
-               value="{% if digitado %}{{ digitado|dicionario:campo.referencia }}{% else %}{{ campo.valor }}{% endif %}">
+               type="{% if campo.tipo == 'inteiro' or campo.tipo == 'decimal' %}number{% elif campo.tipo == 'instante' %}datetime-local{% else %}text{% endif %}"
+               {% if campo.tipo == 'decimal' %}step="0.0001"{% endif %}
+               value="{{ campo.valor }}">
+        {% endif %}
       </p>
       {% endfor %}
     </div>
     {% if grupo.removivel %}
     <p class="remover-linha">
       <input type="checkbox" id="rm{{ forloop.counter }}" name="remover:{{ grupo.referencia }}" value="1"
-             {% if digitado|marcado:grupo.referencia %}checked{% endif %}>
+             {% if grupo.marcado_para_remover %}checked{% endif %}>
       <label for="rm{{ forloop.counter }}">Remover do Edital</label>
       <span class="ajuda">Os campos acima passam a não ter efeito.</span>
     </p>

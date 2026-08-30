@@ -37,14 +37,14 @@
       <label for="modalidade-{{ indice }}-{{ sub }}-foundation">Fundamento normativo</label>
       <input type="text" id="modalidade-{{ indice }}-{{ sub }}-foundation"
              name="modalidade-{{ indice }}-{{ sub }}-foundation"
-             value="{{ modalidade.foundation|default:'' }}" placeholder="Lei 12.990/2014">
+             value="{{ modalidade.foundation|default:'' }}" placeholder="Lei nº 0.000/0000, art. 1º">
     </p>
     <p class="campo">
       <label for="modalidade-{{ indice }}-{{ sub }}-version">Versão do fundamento</label>
       <input type="text" id="modalidade-{{ indice }}-{{ sub }}-version"
              name="modalidade-{{ indice }}-{{ sub }}-version"
              value="{{ modalidade.version|default:'' }}"
-             aria-describedby="ajuda-versao-{{ indice }}-{{ sub }}" placeholder="2014-06-09">
+             aria-describedby="ajuda-versao-{{ indice }}-{{ sub }}" placeholder="AAAA-MM-DD">
       <span class="ajuda" id="ajuda-versao-{{ indice }}-{{ sub }}">Exigida sempre que houver
         fundamento: sem ela, a norma aplicada não fica identificada.</span>
     </p>
