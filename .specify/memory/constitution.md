@@ -25,6 +25,7 @@ Sync Impact Report
 - Plano de adequação: nenhum necessário. A exigência incide sobre especificações abertas a partir
   desta data.
 - Templates dependentes: não modificados; leem a Constituição em tempo de execução.
+- Aprovação institucional: 1.1.1 aprovada em 2026-08-30, conforme exigido pela Governance.
 - Follow-up TODOs: nenhum
 -->
 # Constituição do Sistema de Gestão de Processos Seletivos
