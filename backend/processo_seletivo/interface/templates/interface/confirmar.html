@@ -30,6 +30,13 @@ participar do ato. O sistema recusará esta operação.</p>
     {% if ato.irreversivel %}Este ato não pode ser desfeito{% else %}O que este ato provoca{% endif %}
   </h2>
   <ul>{% for consequencia in ato.consequencias %}<li>{{ consequencia }}</li>{% endfor %}</ul>
+  {% if entrega_para %}
+  {% comment %}
+  FR-028: quem pratica este ato está entregando o Edital a outra pessoa. Dizer a quem, aqui,
+  é o que separa um ato de um envio às cegas.
+  {% endcomment %}
+  <p class="bastao">Depois deste ato, o Edital fica <strong>aguardando {{ entrega_para }}</strong>.</p>
+  {% endif %}
 </section>
 
 <form method="post" class="confirmar">

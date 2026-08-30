@@ -21,6 +21,7 @@ from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.application.identificacao import update_edital_identification
 from processo_seletivo.editais.domain.validation import validate_for_publication
 from processo_seletivo.interface import (
+    acoes,
     atos,
     atos_processo,
     atos_retificacao,
@@ -684,13 +685,8 @@ def _trilha(edital):
     ]
 
 
-# Onde a prévia faz sentido. Publicado tem documento de verdade, e oferecer uma prévia ao lado
-# dele criaria dois documentos concorrentes para o mesmo conteúdo.
-ESTADOS_COM_PREVIA = (
-    Edital.Status.EM_ELABORACAO,
-    Edital.Status.EM_REVISAO,
-    Edital.Status.HOMOLOGADO,
-)
+# `ESTADOS_COM_PREVIA` mora em `acoes`, junto de quem decide o que a tela oferece.
+ESTADOS_COM_PREVIA = acoes.ESTADOS_COM_PREVIA
 
 
 def _edital_com_previa(request, edital_id):
@@ -807,6 +803,12 @@ def detalhe(request, edital_id):
         raise Http404
 
     participantes = participantes_do_edital(edital)
+    pendencias = _pendencias(edital)
+    segregacao = impede_por_segregacao(participantes, ator)
+    # Um conjunto só (FR-023): a lista e a mensagem de ausência saem daqui, e a previsão de recusa
+    # é a mesma que `praticar_ato` usa. Nada de `pode_compor`, `pode_visualizar` e `pode_auditar`
+    # como bandeiras soltas — eram elas que o `{% empty %}` não enxergava.
+    conjunto = acoes.do_edital(edital, ator, pendencias=pendencias, segregacao=segregacao)
     return render(
         request,
         "interface/detalhe.html",
@@ -815,13 +817,10 @@ def detalhe(request, edital_id):
             "trilha": _trilha(edital),
             "participantes": participantes,
             "documentos": _documentos_publicados(edital),
-            "pendencias": _pendencias(edital),
-            "atos": list(atos.disponiveis(edital, ator)),
-            "impedido_por_segregacao": impede_por_segregacao(participantes, ator),
-            "pode_compor": edital.status == Edital.Status.EM_ELABORACAO
-            and ator.can("edital:elaborar"),
-            "pode_visualizar": edital.status in ESTADOS_COM_PREVIA,
-            "pode_auditar": ator.can("auditoria:consultar"),
+            "pendencias": pendencias,
+            "acoes": conjunto,
+            "impedido_por_segregacao": segregacao,
+            "proximo_passo": acoes.proximo_passo(edital, ator, segregacao=segregacao),
         },
     )
 
@@ -860,6 +859,8 @@ def praticar_ato(request, edital_id, acao):
         "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
         "pode_visualizar": edital.status in ESTADOS_COM_PREVIA,
         "rotulo_previa": ROTULO_DA_PREVIA.get(edital.status, "Ver o Edital"),
+        # Passagem de bastão dita antes do ato (FR-028): quem submete está entregando a alguém.
+        "entrega_para": acoes.entrega_para(ato),
     }
 
     if request.method == "GET":
@@ -1262,6 +1263,16 @@ def processo_detalhe(request, processo_id):
             "editais": processo.editais.order_by("year", "number"),
             "pendentes": pending_editais(processo),
             "atos": list(atos_processo.disponiveis(processo, ator)),
+            # FR-021: criado o Processo, o próximo passo é elaborar o Edital — e era só um link
+            # discreto no número, enquanto o destaque ia para o impedimento de cancelar, ato que
+            # ninguém tentou. O primeiro Edital em elaboração que este ator pode compor.
+            "elaboravel": (
+                processo.editais.filter(status=Edital.Status.EM_ELABORACAO)
+                .order_by("year", "number")
+                .first()
+                if ator.can("edital:elaborar")
+                else None
+            ),
         },
     )
 

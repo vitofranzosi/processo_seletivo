@@ -10,9 +10,20 @@
 <h1>Retificar Edital {{ edital.number }}/{{ edital.year }}</h1>
 <p class="sub">Altere os campos que precisam mudar. O que você não tocar permanece como está.</p>
 
+{% if pode_elaborar %}
 <p class="aviso"><strong>Como funciona.</strong> Abaixo está o conteúdo <em>vigente</em> do Edital.
 Cada campo que você alterar vira uma Alteração Normativa; os demais não são tocados. Nada muda
 para o público até a Retificação ser publicada.</p>
+{% else %}
+{% comment %}
+FR-026: sem a permissão, a tela é de leitura. Antes ela abria inteira — campos, acrescentar
+Perfil, justificativa — e a recusa só chegava no envio: a pessoa preenchia tudo e descobria no
+fim. Não há vazamento, porque o conteúdo vigente já é visível a quem alcança o Edital; o que se
+corrige é o caminho que não termina.
+{% endcomment %}
+<p class="aviso"><strong>Somente leitura.</strong> Você não tem a permissão
+  <code>retificacao:elaborar</code>. Abaixo está o conteúdo vigente do Edital, como referência.</p>
+{% endif %}
 
 {% if erros %}
 <div class="erro" role="alert">
@@ -43,6 +54,25 @@ para o público até a Retificação ser publicada.</p>
 </section>
 {% endif %}
 
+{% if not pode_elaborar %}
+<section aria-labelledby="vigente-titulo" class="conteudo-vigente">
+  <h2 id="vigente-titulo">Conteúdo vigente</h2>
+  {% for grupo in grupos %}
+  <section class="cartao conferencia" aria-labelledby="v-{{ forloop.counter }}">
+    <h3 id="v-{{ forloop.counter }}">{{ grupo.titulo }}</h3>
+    <ul class="resumo-lista">
+      {% for campo in grupo.campos %}
+      <li><strong>{{ campo.rotulo }}</strong>
+        <span class="detalhe">{{ campo.valor|default:"—" }}</span></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endfor %}
+  <p class="navegacao-etapa">
+    <a href="{% url 'interface:detalhe' edital.id %}" class="acao">Voltar</a>
+  </p>
+</section>
+{% else %}
 <form method="post">
   {% csrf_token %}
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
@@ -143,5 +173,6 @@ para o público até a Retificação ser publicada.</p>
     <a href="{% url 'interface:detalhe' edital.id %}" class="acao">Voltar</a>
   </p>
 </form>
+{% endif %}
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
 {% endblock %}

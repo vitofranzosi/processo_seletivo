@@ -210,6 +210,14 @@ fieldset.linha legend{font-size:.75rem;text-transform:uppercase;letter-spacing:.
 .acao.perigo{border-color:var(--vermelho);color:var(--vermelho)}
 .acao.perigo:hover{background:var(--vermelho-fundo)}
 .botao.secundario{background:var(--branco);color:var(--verde-texto);border:1px solid var(--verde)}
+/* Ação prevista como recusada: visível, legível e inoperante — FR-024. Contraste mantido
+   acima de 4.5:1 para que o motivo ao lado continue lendo-se como informação, não ruído. */
+.botao.desabilitado{background:var(--cinza-fundo);color:#4a4a4a;border:1px solid #9a9a9a;
+  cursor:not-allowed}
+.lista-acoes .motivo{display:block;font-size:.85rem;color:#4a4a4a;margin-top:.25rem}
+.bastao{background:var(--verde-claro);border-left:4px solid var(--verde);padding:.7rem 1rem;
+  margin:.8rem 0}
+.bastao .ajuda{display:block;margin-top:.3rem}
 .botao.secundario:hover{background:var(--verde-claro)}
 .salvar{display:flex;gap:1rem;align-items:center;padding:1rem 0 2rem;border-top:1px solid var(--borda)}
 form.identificar{background:var(--branco);border:1px solid var(--borda);border-radius:6px;

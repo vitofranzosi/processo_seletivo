@@ -43,9 +43,21 @@ regular. Os Editais mantêm suas próprias situações e todo o histórico perma
   <section aria-labelledby="acoes-processo" class="cartao">
     <h2 id="acoes-processo">O que fazer agora</h2>
 
+    {% comment %}
+    FR-021: o próximo passo primeiro. A tela seguinte à criação destacava, em amarelo, por que o
+    cancelamento estava impedido — um ato que ninguém tentou — enquanto elaborar o Edital, que é o
+    motivo de tudo, existia como link discreto no número, no cartão ao lado.
+    {% endcomment %}
+    {% if elaboravel %}
+    <p class="proximo-passo">
+      <a class="botao" href="{% url 'interface:compor' elaboravel.id %}">Elaborar o Edital
+        {{ elaboravel.number }}/{{ elaboravel.year }}</a>
+    </p>
+    {% endif %}
+
     {% if pendentes and processo.status != 'CANCELADO' %}
-    <div class="aviso">
-      <strong>O cancelamento do Processo está impedido.</strong>
+    <details class="aviso">
+      <summary><strong>O cancelamento do Processo está impedido.</strong></summary>
       <p>Estes Editais precisam ser encerrados ou cancelados antes:</p>
       <ul class="impedimentos">
         {% for edital in pendentes %}
@@ -54,7 +66,7 @@ regular. Os Editais mantêm suas próprias situações e todo o histórico perma
         {% endfor %}
       </ul>
       <p class="ajuda">Cancelar o Processo não cancela os Editais: cada um exige ato próprio.</p>
-    </div>
+    </details>
     {% endif %}
 
     <ul class="lista-acoes">
