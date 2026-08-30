@@ -1138,30 +1138,32 @@ def test_an_unrelated_removal_no_longer_defeats_a_retification(
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_retification_cannot_publish_a_structurally_invalid_edital(
+def test_retification_cannot_leave_a_structurally_invalid_edital(
     api_client, manager_headers, process_payload
 ):
     """FR-006 da 003: as invariantes da Publicação valem para o que a Retificação faz vigorar.
 
-    `publish_edital` recusa Edital sem Perfil; sem esta verificação a Retificação podia remover
-    o único Perfil e deixar vigente um Edital que a Publicação original jamais aceitaria.
+    A garantia é a mesma; o momento mudou. Este teste levava o ato até a Publicação, porque a
+    elaboração não olhava o resultado. Desde a `005` ela olha, e o ato que removeria o único Perfil
+    é recusado antes de existir — recusa mais cedo, mesma proteção.
+
+    O portão da Publicação continua provado, com o ato gravado direto, em
+    `test_integridade_publicacao.py`: é a linha que chega por fora da elaboração.
     """
     edital = publish_original(api_client, manager_headers, process_payload)
     base = VersaoConsolidada.objects.get(edital=edital)
-    created = create_retification(
+
+    refused = create_retification(
         api_client, edital, base, [{"targetPath": PERFIL_UNICO, "operation": "REMOVE"}]
     )
-    assert created.status_code == 201
 
-    refused = homologate_and_publish(api_client, created.data["id"], suffix="a")
-
-    assert refused.status_code == 422
+    assert refused.status_code == 422, refused.content
     assert refused.data["code"] == "blocking_findings"
     assert "Perfil" in refused.data["detail"]
-    # FR-007: recusar não pode deixar Publicação, documento ou versão materializados.
+    # Recusar na borda não pode deixar rastro: o ato não chega a existir.
+    assert not Retificacao.objects.filter(edital=edital).exists()
     assert Publicacao.objects.filter(edital=edital).count() == 1
     assert VersaoConsolidada.objects.filter(edital=edital).count() == 1
-    assert Retificacao.objects.get(pk=created.data["id"]).status == Retificacao.Status.HOMOLOGADA
 
 
 @pytest.mark.django_db(transaction=True)

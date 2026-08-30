@@ -179,6 +179,11 @@ def _apply_declared_changes(base, changes):
     except ValueError as exc:
         raise _recusa_de_caminho(exc) from exc
     _reject_stale_changes(base, changes)
+    # Depois das precondições, porque quando as duas valem a precondição é mais acionável: ela diz
+    # "outra pessoa publicou no intervalo", enquanto esta diz "o que você mandou está incompleto".
+    # Antes do efeito prático, porque "não muda nada" é queixa mais fraca que "deixaria um Perfil
+    # sem denominação" (FR-002).
+    _assert_well_formed(content, "O conteúdo que esta Retificação produz")
     if canonical_sha256(content) == canonical_sha256(base):
         raise _no_effective_change()
     return content
@@ -455,22 +460,28 @@ def _assert_effective_change(edital, retificacao, effective_at, publication_orde
         raise _no_effective_change()
 
 
-def _assert_structurally_publishable(content, boundary):
+def _assert_well_formed(content, contexto):
     """As invariantes da Publicação valem também para o que a Retificação faz vigorar (FR-006).
 
-    `publish_edital` recusa Edital sem título, sem Perfil ou sem Cronograma; sem esta verificação
-    a mesma regra deixava de valer justamente no caminho pelo qual o conteúdo muda depois de
-    público, e uma Retificação podia deixar vigente um Edital sem nenhum Perfil.
+    `publish_edital` recusa Edital sem título, sem Perfil ou sem Cronograma, e desde a `005` recusa
+    também Perfil ou Evento malformado. Sem esta verificação a mesma regra deixaria de valer
+    justamente no caminho pelo qual o conteúdo muda depois de público.
+
+    Cada mensagem de achado já nomeia o caminho do campo e diz qual violação ocorreu; `contexto`
+    diz de que conteúdo se fala, porque a mesma verificação roda em dois momentos e, na Publicação,
+    uma vez por fronteira de vigência.
     """
     errors = blocking_findings(validate_for_publication(content))
     if errors:
         raise DomainError(
             "blocking_findings",
-            "O conteúdo que passaria a vigorar em "
-            f"{boundary.isoformat()} possui erros impeditivos: "
-            + "; ".join(item.message for item in errors),
+            f"{contexto} possui erros impeditivos: " + "; ".join(item.message for item in errors),
             422,
         )
+
+
+def _assert_structurally_publishable(content, boundary):
+    _assert_well_formed(content, f"O conteúdo que passaria a vigorar em {boundary.isoformat()}")
 
 
 def _materialize_affected_versions(retificacao, publication, now):
