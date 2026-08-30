@@ -177,6 +177,22 @@ entrou por uma expressão regular, na passada anterior.
 **Resíduos documentais.** Numeração dos cenários da US3, o resumo da Entrega 1 no plano e a linha do
 contrato sobre `profiles`.
 
+### Quarta passada do `$speckit-analyze` (2026-08-30)
+
+Um único elo, e ele foi encontrado pela pergunta que fecha a classe inteira: *para cada entidade que
+o snapshot identifica, quem é o contêiner dela, e a gravação preserva e verifica a identidade nesse
+nível?*
+
+**Etapa contra Edital.** A coleção nova repetia, por omissão, o defeito que as três passadas
+anteriores corrigiram nas outras entidades: o `id` era preservado e nunca recusado quando já
+pertencesse a outro Edital, e nada mandava gerá-lo na linha nova. Entrou em FR-018, T037, T039, T040
+e T044.
+
+**A topologia ficou declarada por inteiro** em `data-model.md`, e não como uma sequência de
+correções pontuais: Perfil, Evento e Etapa contra o Edital; Modalidade contra o Perfil; Regra contra
+a Modalidade; Seção com identidade determinística, sem identificador externo. É o que permite
+verificar a completude de uma vez, em vez de descobrir o elo seguinte a cada revisão.
+
 ## Itens que permanecem em aberto
 
 Nenhum bloqueia a implementação.

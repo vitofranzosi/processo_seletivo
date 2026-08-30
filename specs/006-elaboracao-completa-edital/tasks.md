@@ -146,17 +146,17 @@ declarando a mesma versão canônica.
 
 ### Gravação e interface
 
-- [ ] T037 [US2] Gravar `stages` preservando identidade, no molde dos Eventos, em `backend/processo_seletivo/editais/application/draft.py`
+- [ ] T037 [US2] Gravar `stages` preservando o `id` recebido e **recusando identificador de Etapa que já pertença a outro Edital**, estendendo `_reject_identifiers_of_other_editais` — no molde dos Eventos, e com a mesma resposta `409` — em `backend/processo_seletivo/editais/application/draft.py`
 - [ ] T038 [US2] Aceitar `stages` no payload do rascunho em `backend/processo_seletivo/editais/api/serializers.py`
-- [ ] T039 [US2] Acrescentar a etapa `Etapas de Avaliação` a `ETAPAS_COMPOSICAO`, com progresso e roteamento de pendências, em `backend/processo_seletivo/interface/views.py`, e o fragmento de linha em `backend/processo_seletivo/interface/urls.py`
-- [ ] T040 [P] [US2] Criar `compor_etapas.html` e `_etapa.html` em `backend/processo_seletivo/interface/templates/interface/`, com campo oculto `order`, botões de ordem e seleção de Evento do Cronograma
+- [ ] T039 [US2] Acrescentar a etapa `Etapas de Avaliação` a `ETAPAS_COMPOSICAO`, com progresso e roteamento de pendências, e a view do fragmento de linha que **gera o UUID da Etapa nova**, como `fragmento_perfil` e `fragmento_evento` já fazem, em `backend/processo_seletivo/interface/views.py`, com a rota em `backend/processo_seletivo/interface/urls.py`
+- [ ] T040 [P] [US2] Criar `compor_etapas.html` e `_etapa.html` em `backend/processo_seletivo/interface/templates/interface/`, com campos ocultos `id` e `order`, botões de ordem e seleção de Evento do Cronograma
 - [ ] T041 [US2] Ler e preservar Etapas em `ler_etapas` e `etapas_persistidas`, em `backend/processo_seletivo/interface/forms.py`
 - [ ] T042 [US2] Compor o documento a partir das seções do catálogo, com as Etapas na seção que as origina, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, e **regenerar a fixture de T002 no mesmo commit**, com o diff revisado — é aqui que a composição muda de propósito, e é o único lugar onde regenerá-la é legítimo
 - [ ] T043 [P] [US2] Criar Etapas na demonstração navegável, em `backend/processo_seletivo/processos/management/commands/seed_demo.py`
 
 ### Testes
 
-- [ ] T044 [P] [US2] Invariantes da Etapa, incluindo referência a Evento de outro Edital, em `backend/tests/unit/editais/test_etapas.py`
+- [ ] T044 [P] [US2] Invariantes da Etapa, incluindo referência a Evento de outro Edital, em `backend/tests/unit/editais/test_etapas.py`, e recusa com `409` de identificador de Etapa pertencente a outro Edital, em `backend/tests/contract/test_edital_draft_api.py`
 - [ ] T045 [P] [US2] Forma publicada de `stages` e `sections` conferida contra o contrato, em `backend/tests/contract/test_forma_publicada.py`
 - [ ] T046 [US2] Teste de cobertura das declarações: toda **coleção-raiz de entidades** do snapshot tem forma em `COLECOES_PUBLICADAS` e esquema correspondente no `openapi.yaml`, com a correspondência derivada do nome declarado em `COLECOES_PUBLICADAS` e não de convenção de nomes — a cobertura que hoje não existe, em `backend/tests/contract/test_forma_publicada.py`
 - [ ] T047 [P] [US2] Retificação aceita `/stages/id=<uuid>/name` e `ADD /stages/-`, e recusa `/stages/0/name`, em `backend/tests/contract/test_enderecamento_api.py`

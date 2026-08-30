@@ -190,11 +190,13 @@ na ordem definida com suas propriedades.
    editar, remover e reordenar Etapas.
 2. **Given** duas Etapas gravadas, **When** movo a segunda para a primeira posição e salvo, **Then**
    a ordem persiste e as chaves estáveis das duas permanecem as mesmas.
-3. **Given** uma Etapa vinculada a um Evento do Cronograma, **When** consulto a Etapa, **Then** as
+3. **Given** o identificador de uma Etapa de outro Edital, **When** tento gravá-lo neste, **Then** a
+   gravação é recusada.
+4. **Given** uma Etapa vinculada a um Evento do Cronograma, **When** consulto a Etapa, **Then** as
    datas vêm do Evento e não são digitadas outra vez.
-4. **Given** Etapas definidas, **When** visualizo o Edital, **Then** elas aparecem no documento na
+5. **Given** Etapas definidas, **When** visualizo o Edital, **Then** elas aparecem no documento na
    ordem definida, com peso, caráter e nota mínima quando informados.
-5. **Given** um Edital publicado com Etapas, **When** uma Retificação endereça
+6. **Given** um Edital publicado com Etapas, **When** uma Retificação endereça
    `/stages/id=<chave>/<campo>`, **Then** o mecanismo existente a aceita sem alteração da gramática.
 
 ---
@@ -352,7 +354,11 @@ alteração no documento junto das seções geradas a partir dos dados estrutura
 
 - **FR-016**: O assistente DEVE ter uma etapa própria para Etapas de Avaliação.
 - **FR-017**: DEVE ser possível acrescentar, editar, remover e reordenar Etapas.
-- **FR-018**: Cada Etapa DEVE possuir chave estável, independente da posição.
+- **FR-018**: Cada Etapa DEVE possuir chave estável, independente da posição, atribuída no momento
+  em que a Etapa nasce na interface e preservada em toda gravação. Identificador de Etapa recebido na
+  gravação DEVE ser recusado quando já pertencer a outro Edital, pela mesma verificação que protege
+  Perfis e Eventos (FR-029). *`replace_draft` apaga e recria; sem a recusa, uma Etapa poderia ser
+  reparentada de um Edital para outro e a identidade passaria a designar outra coisa.*
 - **FR-019**: Uma Etapa DEVE registrar nome, ordem, caráter eliminatório e caráter classificatório,
   podendo ter ambos quando a regra do certame permitir.
 - **FR-020**: Peso e nota mínima DEVEM ser opcionais. Quando informados, o peso DEVE ser maior que

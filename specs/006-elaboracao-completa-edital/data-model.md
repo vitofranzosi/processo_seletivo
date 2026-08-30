@@ -19,6 +19,13 @@ ProcessoSeletivo
 `EtapaAvaliacao` pertence ao Edital, e não ao Perfil. A Constituição admite Perfis com Etapas
 distintas; esta versão não exerce a permissão (spec, FR-023).
 
+**A topologia de identidade, inteira.** Cada entidade identificada é preservada e verificada contra
+o seu contêiner, e nenhuma contra um nível acima: Perfil e Evento contra o Edital, Etapa contra o
+Edital, Modalidade contra o Perfil, Regra Normativa contra a Modalidade. Seção é a exceção e não
+recebe identificador externo — o dela é determinístico sobre `(edital.id, key)`. Como `replace_draft`
+apaga e recria, é essa verificação que impede que uma entidade seja reparentada e a identidade passe
+a designar outra coisa.
+
 ---
 
 ## EtapaAvaliacao (novo)
@@ -28,7 +35,7 @@ ordenação e de identidade.
 
 | Campo | Tipo | Regra |
 |---|---|---|
-| `id` | UUID | chave primária; **preservada** na gravação do rascunho |
+| `id` | UUID | chave primária; gerada pela view do fragmento, **preservada** na gravação e recusada quando já pertence a outro Edital |
 | `edital` | FK → `Edital` | `on_delete=CASCADE`, `related_name="etapas"` |
 | `name` | texto (200) | obrigatório, não vazio |
 | `order` | inteiro positivo | único por Edital |
