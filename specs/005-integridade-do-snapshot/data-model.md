@@ -38,7 +38,7 @@ reaproveitam o que os de entrada já declaram e completam o que eles não cobrem
 | `locality` | sim | texto | não | — |
 | `classificationInformation` | sim | objeto | não | — |
 | `callInformation` | sim | objeto | não | — |
-| `competitionModalities` | sim | lista de objetos | não | — |
+| `competitionModalities` | sim | lista de objetos | não | cada item é objeto |
 
 **Obrigatório aqui significa presente**, e não preenchido. `description` e `locality` podem ser texto
 vazio; `requirements`, lista vazia; `classificationInformation`, objeto vazio. É a distinção de
@@ -51,8 +51,8 @@ FR-007 entre "não preenchido" e "malformado".
 | `id` | sim | texto | não | formato uuid |
 | `type` | sim | texto | não | — |
 | `description` | sim | texto | não | — |
-| `startAt` | sim | texto | não | formato data-e-hora |
-| `endAt` | sim | texto | **sim** | formato data-e-hora |
+| `startAt` | sim | texto | não | data, hora **e** fuso |
+| `endAt` | sim | texto | **sim** | data, hora **e** fuso |
 | `order` | sim | inteiro | não | mínimo 0 |
 | `status` | sim | texto | não | — |
 
@@ -75,7 +75,8 @@ um Perfil, ao menos um Evento, descrição como aviso.
 
 ## O que fica sem forma declarada
 
-`competitionModalities` é conferido como lista de objetos, e nada sobre o que há dentro. A
+`competitionModalities` é conferido como lista, e cada item como objeto — que é o que o contrato
+declara em `items`. O que há **dentro** de cada Modalidade não tem forma declarada. A
 verificação alcança Perfil e Evento (FR-004); a Publicação original também não confere Modalidades,
 de modo que SC-005 continua de pé. Fechar isso é feature própria, e está no *Out of Scope*.
 
@@ -93,6 +94,9 @@ Sem campo novo. `ValidationFinding` já carrega severidade, código, mensagem e 
 
 - Todo Perfil e todo Evento do conteúdo que passa a vigorar tem os campos da forma canônica, com o
   tipo declarado, nulo apenas onde admitido, formato satisfeito e dentro das restrições escritas.
+- Uma coleção declarada que exista e não seja lista é violação, e não silêncio: um objeto no lugar
+  dela é *truthy*, de modo que a condição de raiz passava e o laço por entidade não percorria nada.
+- `date-time` é data, hora e fuso. Data isolada e instante ingênuo não satisfazem o formato.
 - A invariante vale em **cada fronteira de vigência** materializada, e não só na primeira.
 - Campo que a forma canônica não declara nunca é motivo de recusa.
 - Coerência entre campos não é verificada, e a garantia não a inclui.

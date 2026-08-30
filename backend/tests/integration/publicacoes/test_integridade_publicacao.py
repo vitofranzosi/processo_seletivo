@@ -130,48 +130,75 @@ def test_remove_de_campo_obrigatorio_e_recusado_na_publicacao(api_client, edital
 def test_a_fronteira_posterior_recusa_o_ato_inteiro(api_client, edital, base):
     """FR-003 e SC-005: verificar só a primeira fronteira deixaria a seguinte vigorar malformada.
 
-    Uma Retificação de vigência futura já publicada cria uma segunda fronteira. O ato malformado
-    vigora de imediato e, sozinho, a fronteira de hoje já bastaria para recusá-lo — o que este teste
-    acrescenta é que a mensagem nomeia **qual** fronteira, e que nada é materializado nem para a de
-    hoje nem para a futura.
+    **A primeira fronteira do ato é válida.** É isso que torna o teste discriminante: uma
+    implementação que verificasse apenas a versão que passa a vigorar de imediato publicaria este
+    ato, e o Edital ficaria sem nenhum Perfil a partir da fronteira seguinte — sem que ninguém
+    publicasse nada naquele dia.
+
+    O arranjo: uma Retificação de vigência futura, já publicada, remove o Perfil A. O ato sob teste
+    remove B e C, e vigora de imediato. Na fronteira de hoje sobra A, e o conteúdo é íntegro; na
+    fronteira futura a composição aplica as duas e não sobra Perfil nenhum.
+
+    O achado aqui é de raiz — "ao menos um Perfil" — e não por entidade, e isso não é acaso: a
+    consolidação aplica os atos em ordem de vigência, de modo que o ato sob teste é sempre aplicado
+    **antes** do futuro. Uma malformação de entidade que só aparecesse na fronteira posterior teria
+    de ser introduzida pelo ato futuro, que já passou pela mesma verificação ao ser publicado.
     """
     daqui_a_um_mes = (timezone.now() + timezone.timedelta(days=30)).isoformat()
     futura = create_retification(
         api_client,
         edital,
-        [
-            {
-                "targetPath": f"/profiles/id={P1}/locality",
-                "operation": "REPLACE",
-                "newValue": "Serra",
-            }
-        ],
+        [{"targetPath": f"/profiles/id={P1}", "operation": "REMOVE"}],
         base=base,
         effective_at=daqui_a_um_mes,
         suffix="z",
     )
     publish_retification(api_client, futura, suffix="z")
     fronteiras_antes = VersaoConsolidada.objects.filter(edital=edital).count()
-
     vigente = VersaoConsolidada.objects.filter(edital=edital).order_by("valid_from").first()
-    caminho = f"/profiles/id={P2}/name"
-    ato = ato_homologado_malformado(
+    assert [p["id"] for p in vigente.content["profiles"]] == [P1, P2, P3]
+
+    remove_os_outros_dois = create_retification(
         api_client,
         edital,
-        vigente,
-        {
-            "targetPath": caminho,
-            "operation": "REMOVE",
-            "expectedPreviousHash": precondicao(vigente, caminho),
-        },
+        [
+            {"targetPath": f"/profiles/id={P2}", "operation": "REMOVE"},
+            {"targetPath": f"/profiles/id={P3}", "operation": "REMOVE"},
+        ],
+        base=vigente,
         suffix="a",
     )
 
-    recusa = try_publish_retification(api_client, ato, suffix="a")
+    recusa = try_publish_retification(api_client, remove_os_outros_dois, suffix="a")
 
     assert recusa.status_code == 422, recusa.content
+    assert recusa.data["code"] == "blocking_findings"
+    assert "Perfil" in recusa.data["detail"]
     assert "passaria a vigorar em" in recusa.data["detail"], "a recusa nomeia a fronteira"
     assert VersaoConsolidada.objects.filter(edital=edital).count() == fronteiras_antes
+
+
+def test_o_mesmo_ato_publica_quando_nao_ha_fronteira_posterior(api_client, edital, base):
+    """A recíproca, e a segunda metade da prova.
+
+    Sem a Retificação de vigência futura, remover B e C deixa o Edital com um Perfil e é ato
+    legítimo. O que recusa no teste anterior é a fronteira posterior, e não a remoção em si.
+    """
+    retificacao = create_retification(
+        api_client,
+        edital,
+        [
+            {"targetPath": f"/profiles/id={P2}", "operation": "REMOVE"},
+            {"targetPath": f"/profiles/id={P3}", "operation": "REMOVE"},
+        ],
+        base=base,
+        suffix="a",
+    )
+
+    publish_retification(api_client, retificacao, suffix="a")
+
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    assert [p["id"] for p in vigente.content["profiles"]] == [P1]
 
 
 def test_uma_retificacao_bem_formada_continua_publicando(api_client, edital, base):

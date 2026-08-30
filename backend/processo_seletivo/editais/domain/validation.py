@@ -57,6 +57,7 @@ class Campo:
     formato: str = ""
     minimo: int | None = None
     valores: tuple[str, ...] = ()
+    tipo_do_item: type | None = None
 
 
 RESERVA = ("NONE", "LIMITED", "UNLIMITED")
@@ -73,9 +74,9 @@ PERFIL_PUBLICADO = (
     Campo("locality", str),
     Campo("classificationInformation", dict),
     Campo("callInformation", dict),
-    # A forma de cada Modalidade não é declarada: a verificação alcança Perfil e Evento, e confere
-    # esta coleção como lista e nada mais.
-    Campo("competitionModalities", list),
+    # A forma de **dentro** de cada Modalidade não é declarada. Que cada item seja objeto, é —
+    # `items: { type: object }` está escrito no contrato, e conferi-lo é aplicar, não inventar.
+    Campo("competitionModalities", list, tipo_do_item=dict),
 )
 
 EVENTO_PUBLICADO = (
@@ -108,10 +109,24 @@ def _e_do_tipo(valor, tipo):
     return isinstance(valor, tipo)
 
 
+def _instante_completo(valor):
+    """`date-time` é data, hora **e** fuso — o que o contrato declara e o snapshot materializa.
+
+    `datetime.fromisoformat` aceita `2026-08-30` e `2026-08-30T10:00:00`, que não são instantes:
+    o primeiro não tem hora e o segundo não tem fuso. Um Cronograma com data sem hora ou com
+    instante ingênuo é ambíguo justamente onde a vigência precisa ser exata, e uma Retificação
+    conseguia introduzi-lo pelo caminho normal.
+    """
+    momento = datetime.fromisoformat(valor)
+    if momento.tzinfo is None or momento.utcoffset() is None:
+        raise ValueError("instante sem fuso")
+    return momento
+
+
 # Formato declarado que não estivesse aqui levantaria `KeyError` na primeira verificação, e é o
 # comportamento desejado: erro de programação que falha alto vale mais que formato aceito em
 # silêncio por não ter quem o verifique.
-_LEITOR_DE_FORMATO = {"uuid": UUID, "date-time": datetime.fromisoformat}
+_LEITOR_DE_FORMATO = {"uuid": UUID, "date-time": _instante_completo}
 
 
 def _formato_satisfeito(valor, formato):
@@ -155,6 +170,15 @@ def _violacao(campo, entidade, caminho):
             f"O campo não satisfaz o formato {campo.formato} em {caminho}.",
             caminho,
         )
+    if campo.tipo_do_item is not None and not all(
+        isinstance(item, campo.tipo_do_item) for item in valor
+    ):
+        return ValidationFinding(
+            Severity.BLOCKING_ERROR,
+            TIPO_INVALIDO,
+            f"Todo item deveria ser {_NOME_DO_TIPO[campo.tipo_do_item]} em {caminho}.",
+            caminho,
+        )
     if campo.minimo is not None and valor < campo.minimo:
         return ValidationFinding(
             Severity.BLOCKING_ERROR,
@@ -186,10 +210,26 @@ def _caminho_da_entidade(colecao, entidade, posicao):
 
 
 def _violacoes_da_colecao(snapshot, colecao, forma):
+    """As violações de forma dentro de uma coleção do snapshot.
+
+    Coleção ausente ou vazia é assunto das condições de raiz, que já a reportam. Coleção que existe
+    e **não é lista** era silêncio: um objeto é `truthy`, então a condição de raiz passava, e o laço
+    daqui não tinha o que percorrer — zero achados para um snapshot que nenhuma consulta pública
+    conseguiria projetar.
+    """
     findings = []
     itens = snapshot.get(colecao)
-    if not isinstance(itens, list):
+    if itens is None:
         return findings
+    if not isinstance(itens, list):
+        return [
+            ValidationFinding(
+                Severity.BLOCKING_ERROR,
+                TIPO_INVALIDO,
+                f"A coleção deveria ser lista em /{colecao}.",
+                f"/{colecao}",
+            )
+        ]
     for posicao, entidade in enumerate(itens):
         caminho = _caminho_da_entidade(colecao, entidade, posicao)
         if not isinstance(entidade, dict):

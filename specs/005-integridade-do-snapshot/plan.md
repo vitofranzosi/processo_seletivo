@@ -213,9 +213,10 @@ responder uma coisa só.
 | — | Portão de qualidade dos requisitos | Concluído, 16/16 |
 | 0 | Pesquisa: autoridade, local e momento da verificação | Concluída |
 | 1 | Desenho: forma declarada, contrato dos achados, validação | Concluída |
-| 2 | Tarefas | Não iniciada |
-| 3 | Análise de consistência | Não iniciada |
-| 4 | Implementação | Não iniciada |
+| 2 | Tarefas | Concluída — 19 |
+| 3 | Análise de consistência | Concluída |
+| 4 | Implementação | Concluída — 19/19 |
+| 5 | Revisão e correção dos achados | Concluída — um crítico, três de comportamento |
 
 ## Critérios de entrega recolhidos da checklist
 

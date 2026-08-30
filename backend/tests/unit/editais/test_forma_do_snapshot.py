@@ -161,15 +161,67 @@ def test_o_caminho_nomeia_a_entidade_pela_chave():
 
 
 @pytest.mark.parametrize("colecao", ["profiles", "schedule"])
-def test_colecao_que_nao_e_lista_nao_quebra_a_verificacao(colecao):
-    """A `004` recusa isso na origem; aqui a função só não pode estourar.
+def test_colecao_que_nao_e_lista_e_violacao_e_nao_silencio(colecao):
+    """Um objeto no lugar da coleção não produzia achado nenhum.
 
-    `validate_for_publication` lê conteúdo que ela não produziu — o caminho da Publicação original,
-    a tela, um teste. Percorrer um objeto como se fosse coleção levantaria erro interno onde cabe,
-    no máximo, o achado de raiz que já existe.
+    A condição de raiz olha se a coleção é *truthy*, e um objeto não vazio é. O laço por entidade
+    não tinha o que percorrer. Resultado: zero achados para um snapshot que nenhuma consulta
+    pública conseguiria projetar — e a `004` só impede isso pelo caminho da Retificação.
     """
     conteudo = conteudo_normativo()
-    conteudo[colecao] = {"nem": "lista"}
+    conteudo[colecao] = {"truthy": "object"}
+
+    achados = impeditivos(conteudo)
+    assert [(a.code, a.path) for a in achados] == [(v.TIPO_INVALIDO, f"/{colecao}")]
+
+
+@pytest.mark.parametrize("colecao", ["profiles", "schedule"])
+def test_colecao_ausente_continua_sendo_assunto_da_raiz(colecao):
+    """Ausência já tem quem a reporte; dois achados para o mesmo defeito seriam ruído."""
+    conteudo = conteudo_normativo()
+    del conteudo[colecao]
 
     codigos = [a.code for a in impeditivos(conteudo)]
-    assert v.TIPO_INVALIDO not in codigos
+    assert codigos == [f"{colecao}_required"]
+
+
+@pytest.mark.parametrize("item", ["texto", 123, None, ["lista"]])
+def test_modalidade_que_nao_e_objeto_e_violacao(item):
+    """O contrato declara `items: { type: object }`; conferi-lo é aplicar, não inventar.
+
+    A forma de dentro da Modalidade continua sem verificação — este teste é sobre o item ser
+    objeto, e não sobre o que há nele.
+    """
+    conteudo = conteudo_normativo()
+    conteudo["profiles"][0]["competitionModalities"] = [item]
+
+    achados = impeditivos(conteudo)
+    assert achados[0].code == v.TIPO_INVALIDO
+    assert achados[0].path.endswith("/competitionModalities")
+
+
+@pytest.mark.parametrize(
+    ("valor", "por_que"),
+    [
+        ("2026-08-30", "sem hora"),
+        ("2026-08-30T10:00:00", "sem fuso"),
+        ("10:00:00", "sem data"),
+        ("ontem", "não é instante"),
+    ],
+)
+def test_instante_incompleto_e_violacao_de_formato(valor, por_que):
+    """`date-time` é data, hora e fuso.
+
+    `datetime.fromisoformat` aceita data isolada e instante ingênuo. Um Cronograma assim é ambíguo
+    justamente onde a vigência precisa ser exata, e o snapshot original nunca o produz.
+    """
+    conteudo = com_violacao(conteudo_normativo(), "schedule", 0, "startAt", valor)
+
+    assert impeditivos(conteudo)[0].code == v.FORMATO_INVALIDO, por_que
+
+
+@pytest.mark.parametrize("valor", ["2026-08-30T10:00:00+00:00", "2026-08-30T10:00:00-03:00"])
+def test_instante_com_data_hora_e_fuso_passa(valor):
+    conteudo = com_violacao(conteudo_normativo(), "schedule", 0, "startAt", valor)
+
+    assert impeditivos(conteudo) == []

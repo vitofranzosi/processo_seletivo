@@ -583,8 +583,8 @@ components:
         competitionModalities:
           type: array
           description: >-
-            A forma de cada Modalidade não é declarada: a verificação de integridade alcança Perfil e
-            Evento, e confere as Modalidades como lista de objetos e nada mais.
+            A forma de **dentro** de cada Modalidade não é declarada: a verificação de integridade
+            alcança Perfil e Evento, e confere que a coleção é lista e que cada item é objeto.
           items: { type: object }
     EventoPublicado:
       type: object
@@ -601,6 +601,8 @@ components:
         endAt: { type: [string, 'null'], format: date-time }
         order: { type: integer, minimum: 0 }
         status: { type: string }
+      # `date-time` é RFC 3339: data, hora e fuso. Data isolada e instante sem fuso não satisfazem
+      # o formato, e a verificação de integridade os recusa — o snapshot nunca os materializa.
     AtoAdministrativoRequest:
       type: object
       additionalProperties: false

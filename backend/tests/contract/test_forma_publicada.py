@@ -128,3 +128,22 @@ def test_o_contrato_diz_que_a_verificacao_alcanca_cada_fronteira(esquemas):
 
     assert "cada versão consolidada que o ato materializa" in publicar["description"]
     assert "recusa o ato inteiro" in publicar["description"]
+
+
+@pytest.mark.contract
+def test_o_tipo_do_item_da_colecao_e_transcrito(esquemas):
+    """`items: { type: object }` está escrito; conferi-lo é aplicar, não inventar."""
+    declarado_no_contrato = esquemas["PerfilPublicado"]["properties"]["competitionModalities"]
+    campo = next(c for c in validation.PERFIL_PUBLICADO if c.nome == "competitionModalities")
+
+    assert TIPO_DO_CONTRATO[declarado_no_contrato["items"]["type"]] is campo.tipo_do_item
+
+
+@pytest.mark.contract
+def test_nenhum_outro_campo_declara_tipo_de_item(esquemas):
+    """A transcrição não pode inventar restrição onde o contrato não a escreve."""
+    for nome, forma in FORMAS:
+        for campo in forma:
+            propriedade = esquemas[nome]["properties"][campo.nome]
+            tem_items = "items" in propriedade and "type" in propriedade["items"]
+            assert (campo.tipo_do_item is not None) == tem_items, campo.nome
