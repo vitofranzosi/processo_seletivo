@@ -85,3 +85,17 @@ def test_tela_somente_leitura_nao_guarda_rascunho(
     identificar(client, "iris.auditora", ["auditor"])
 
     assert "data-rascunho=" not in corpo_da_etapa(client, edital, "perfis")
+
+
+def test_a_expiracao_do_rascunho_e_verificada_executando_o_script():
+    """FR-022: o prazo e o descarte estão em tests/javascript/rascunho.test.js.
+
+    Procurar a constante no fonte provava que ela foi escrita, não que o rascunho velho é
+    descartado. O ponteiro fica aqui para que quem procurar a cobertura do requisito a encontre.
+    """
+    from pathlib import Path
+
+    suite = Path(__file__).resolve().parents[1] / "javascript/rascunho.test.js"
+
+    assert suite.exists()
+    assert "mais velho que um dia é descartado" in suite.read_text(encoding="utf-8")

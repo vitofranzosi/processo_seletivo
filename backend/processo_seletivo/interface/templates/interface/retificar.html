@@ -45,6 +45,7 @@ para o público até a Retificação ser publicada.</p>
 
 <form method="post">
   {% csrf_token %}
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
   {% for grupo in grupos %}
   <fieldset class="linha">
     <legend>{{ grupo.titulo }}</legend>

@@ -54,6 +54,19 @@ Copie `backend/.env.example` para `backend/.env` e ajuste as credenciais. O proj
 migração da role de runtime: a de runtime não recebe `UPDATE` nem `DELETE` sobre os registros
 append-only, garantia verificada em `tests/integration/test_database_permissions.py`.
 
+Provisione os papéis com um usuário que possa criá-los — normalmente o superusuário da instalação.
+O comando é idempotente e pode rodar sobre banco vazio ou já provisionado; `--dry-run` imprime a
+política sem aplicá-la.
+
+```bash
+cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python manage.py provisionar_papeis
+```
+
+A política vive em `processo_seletivo/seguranca/papeis.py` e é a mesma que os testes de
+conformidade verificam. É a segunda camada da imutabilidade, independente das triggers: a trigger
+recusa a mutação mesmo de quem tem privilégio; o privilégio ausente recusa antes, mesmo que a
+trigger seja removida.
+
 ```bash
 cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python manage.py migrate
 ```
@@ -64,9 +77,20 @@ cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python m
 
 ### Ver o sistema no ar
 
-Não há interface gráfica — ela está fora do escopo deste incremento. O sistema é uma API, e a
-consulta pública é anônima, então basta abrir as URLs no navegador. Para ter o que olhar, popule
-uma demonstração que percorre o fluxo normativo real, com atores distintos em cada etapa:
+Há duas superfícies. A **consulta pública** é anônima: basta abrir as URLs no navegador. A
+**interface administrativa** fica em `/gestao/` e conduz o fluxo inteiro — criar Processo e Edital,
+compor Perfis e Cronograma, submeter, homologar, publicar, retificar e consultar a auditoria.
+
+A interface exige identidade. Enquanto o diretório institucional não está integrado, o seletor de
+identidade a substitui — e **só existe fora de produção**, onde `config.settings.production` recusa
+iniciar com ele ligado:
+
+```bash
+cd backend && DJANGO_SETTINGS_MODULE=config.settings.development INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver
+```
+
+Para ter o que olhar, popule uma demonstração que percorre o fluxo normativo real, com atores
+distintos em cada etapa:
 
 ```bash
 cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python manage.py seed_demo
@@ -74,7 +98,30 @@ cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python m
 
 O comando imprime os identificadores criados e as URLs prontas: versão vigente, histórico e
 Retificação. Ele cria um Edital publicado com dois Perfis e três Eventos, mais duas Retificações —
-uma já vigente e outra com vigência futura —, para que a consulta temporal tenha o que mostrar.
+uma já vigente e outra com vigência futura —, para que a consulta temporal tenha o que mostrar. Não
+há como recriá-la sobre o mesmo código: apagar a demonstração exigiria excluir Publicações, o que a
+Constituição proíbe e as triggers de imutabilidade recusam. Use outro `--codigo`.
+
+## Produção
+
+`config.settings.production` trata cada pressuposto de segurança como precondição de
+inicialização: chave secreta fraca ou ausente, `DJANGO_ALLOWED_HOSTS` vazio ou `*`, HTTPS
+desligado, banco sem senha, seletor de identidade ligado ou o adaptador provisório de
+autenticação impedem o processo de subir, com mensagem que nomeia a variável a corrigir.
+
+O adaptador `InstitutionalBearerAuthentication` aceita `subject|escopo|permissões` sem assinatura
+— qualquer cliente declara a própria identidade **e as próprias permissões**. Por isso
+`API_AUTHENTICATION_CLASSES` é obrigatória e recusa o módulo de autenticação de desenvolvimento
+inteiro, os esquemas do DRF que autenticam contra esta aplicação em vez do diretório, e nomes que
+não sejam importáveis.
+
+O que a barreira **não** faz: provar que a classe declarada fale com o diretório do Ifes. Nenhuma
+configuração prova isso. Ela garante que a escolha seja explícita, exista, e não seja um dos
+caminhos conhecidamente inseguros — a responsabilidade pela escolha continua de quem implanta.
+
+```bash
+cd backend && DJANGO_SETTINGS_MODULE=config.settings.production uv run python manage.py check --deploy
+```
 
 ## Verificação
 

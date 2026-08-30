@@ -44,10 +44,20 @@ class PublicacaoResponseSerializer(serializers.Serializer):
 
 
 class ChangeSerializer(serializers.Serializer):
-    targetPath = serializers.CharField()
+    """Os limites espelham as colunas que recebem estes campos.
+
+    Sem eles o excesso atravessa a borda e estoura no PostgreSQL como erro interno: 500 não é
+    contrato, e a recusa por tamanho é informação que o cliente consegue usar.
+    """
+
+    # `AlteracaoNormativa.target_path` é CharField(max_length=1000).
+    targetPath = serializers.CharField(min_length=1, max_length=1000)
     operation = serializers.ChoiceField(choices=["ADD", "REPLACE", "REMOVE"])
     newValue = serializers.JSONField(required=False, allow_null=True)
-    expectedPreviousHash = serializers.CharField(required=False, allow_blank=True)
+    # SHA-256 em hexadecimal: 64 caracteres, o tamanho exato da coluna.
+    expectedPreviousHash = serializers.CharField(
+        required=False, allow_blank=True, max_length=64
+    )
 
 
 class RetificacaoDraftSerializer(serializers.Serializer):

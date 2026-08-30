@@ -181,3 +181,165 @@ def test_processo_de_outro_escopo_nao_e_alcancavel(client, seletor_ligado, cenar
     assert client.get(
         reverse("interface:processo-detalhe", args=[processo.id])
     ).status_code == 404
+
+
+@pytest.mark.django_db(transaction=True)
+def test_criar_processo_com_o_primeiro_edital(client, seletor_ligado):
+    """FR-025 da 003 — o requisito existia na 002 e o botão apontava para `#`."""
+    identificar(client, "gestora", ["gestor"])
+
+    resposta = client.post(
+        reverse("interface:processo-criar"),
+        {
+            "codigo": "PS-2027-001",
+            "titulo": "Processo Seletivo 2027",
+            "numero": "01",
+            "ano": "2027",
+            "titulo_edital": "Primeiro Edital",
+            "descricao": "Seleção de docentes",
+            "chave_idempotencia": "ui-criacao-000000001",
+        },
+    )
+
+    assert resposta.status_code == 302
+    processo = ProcessoSeletivo.objects.get(institutional_code="PS-2027-001")
+    assert resposta["Location"] == reverse("interface:processo-detalhe", args=[processo.id])
+    edital = Edital.objects.get(processo=processo)
+    assert (edital.number, edital.year, edital.status) == ("01", 2027, Edital.Status.EM_ELABORACAO)
+    assert processo.created_by == "gestora"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_reenviar_o_formulario_com_a_mesma_chave_nao_cria_dois_processos(client, seletor_ligado):
+    identificar(client, "gestora", ["gestor"])
+    dados = {
+        "codigo": "PS-2027-002",
+        "titulo": "Processo Seletivo 2027",
+        "numero": "02",
+        "ano": "2027",
+        "titulo_edital": "Primeiro Edital",
+        "chave_idempotencia": "ui-criacao-000000002",
+    }
+
+    client.post(reverse("interface:processo-criar"), dados)
+    client.post(reverse("interface:processo-criar"), dados)
+
+    assert ProcessoSeletivo.objects.filter(institutional_code="PS-2027-002").count() == 1
+
+
+@pytest.mark.django_db(transaction=True)
+def test_campo_obrigatorio_ausente_preserva_o_que_foi_digitado(client, seletor_ligado):
+    identificar(client, "gestora", ["gestor"])
+
+    resposta = client.post(
+        reverse("interface:processo-criar"),
+        {"codigo": "", "titulo": "Processo Seletivo 2027", "numero": "03", "ano": "2027",
+         "titulo_edital": "Primeiro Edital", "chave_idempotencia": "ui-criacao-000000003"},
+    )
+
+    assert resposta.status_code == 422
+    conteudo = resposta.content.decode()
+    assert "Identificação institucional" in conteudo
+    # O que já estava preenchido volta na tela: refazer tudo por um campo é retrabalho evitável.
+    assert "Processo Seletivo 2027" in conteudo
+    assert not ProcessoSeletivo.objects.exists()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_identificacao_repetida_e_recusada_pelo_dominio(client, seletor_ligado):
+    identificar(client, "gestora", ["gestor"])
+    dados = {
+        "codigo": "PS-2027-004",
+        "titulo": "Processo Seletivo 2027",
+        "numero": "04",
+        "ano": "2027",
+        "titulo_edital": "Primeiro Edital",
+    }
+    client.post(
+        reverse("interface:processo-criar"), {**dados, "chave_idempotencia": "ui-a-00000001"}
+    )
+
+    resposta = client.post(
+        reverse("interface:processo-criar"),
+        {**dados, "titulo": "Outro", "chave_idempotencia": "ui-b-00000002"},
+    )
+
+    assert resposta.status_code == 409
+    assert "já utilizada" in resposta.content.decode()
+    assert ProcessoSeletivo.objects.count() == 1
+
+
+@pytest.mark.django_db(transaction=True)
+def test_sem_permissao_a_criacao_e_recusada_pelo_command(client, seletor_ligado):
+    """A tela não oferece o caminho, mas a URL é alcançável — quem recusa é o domínio."""
+    identificar(client, "auditora", ["auditor"])
+
+    resposta = client.post(
+        reverse("interface:processo-criar"),
+        {"codigo": "PS-2027-005", "titulo": "T", "numero": "05", "ano": "2027",
+         "titulo_edital": "E", "chave_idempotencia": "ui-criacao-000000005"},
+    )
+
+    assert resposta.status_code == 403
+    assert not ProcessoSeletivo.objects.exists()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize(
+    ("campo", "tamanho"),
+    [("codigo", 101), ("titulo", 256), ("numero", 51), ("titulo_edital", 256)],
+)
+def test_campo_maior_que_a_coluna_e_recusado_na_borda(client, seletor_ligado, campo, tamanho):
+    """SC-007 da 003: nenhuma requisição malformada de borda pode produzir 500.
+
+    A tela de criação entrava direto no command, sem o serializer que a API usa, e o excesso
+    chegava ao PostgreSQL como `StringDataRightTruncation` — 500 que o cliente não consegue usar
+    e cuja mensagem não deveria sair da aplicação.
+    """
+    identificar(client, "gestora", ["gestor"])
+    dados = {
+        "codigo": "PS-2027-900",
+        "titulo": "Processo Seletivo 2027",
+        "numero": "90",
+        "ano": "2027",
+        "titulo_edital": "Primeiro Edital",
+        "chave_idempotencia": "ui-borda-00000000001",
+    }
+
+    resposta = client.post(reverse("interface:processo-criar"), {**dados, campo: "X" * tamanho})
+
+    assert resposta.status_code == 422
+    assert "Encurte" in resposta.content.decode()
+    assert not ProcessoSeletivo.objects.exists()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("ano", ["1999", "10000"])
+def test_ano_fora_da_faixa_e_recusado_na_borda(client, seletor_ligado, ano):
+    """`year` é PositiveSmallIntegerField: fora da faixa estoura na coluna, não na aplicação."""
+    identificar(client, "gestora", ["gestor"])
+
+    resposta = client.post(
+        reverse("interface:processo-criar"),
+        {
+            "codigo": "PS-2027-901",
+            "titulo": "T",
+            "numero": "91",
+            "ano": ano,
+            "titulo_edital": "E",
+            "chave_idempotencia": "ui-borda-00000000002",
+        },
+    )
+
+    assert resposta.status_code == 422
+    assert "entre 2000 e 9999" in resposta.content.decode()
+    assert not ProcessoSeletivo.objects.exists()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_o_limite_vem_do_modelo_e_nao_de_um_numero_copiado(client, seletor_ligado):
+    """Se a coluna crescer, o limite da tela cresce junto — não fica para trás em silêncio."""
+    from processo_seletivo.interface.views import TEXTOS_DA_CRIACAO
+
+    for _, _, modelo, campo in TEXTOS_DA_CRIACAO:
+        assert modelo._meta.get_field(campo).max_length

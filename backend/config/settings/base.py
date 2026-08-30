@@ -46,9 +46,15 @@ INTERFACE_SELETOR_IDENTIDADE = os.getenv("INTERFACE_SELETOR_IDENTIDADE", "false"
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    # A interface administrativa autentica por sessão: sem esta verificação os `{% csrf_token %}`
+    # dos formulários não são fiscalizados por ninguém e uma página externa pratica atos
+    # irreversíveis em nome de quem estiver com a sessão aberta. As views da API são
+    # `csrf_exempt` por construção do DRF e continuam autenticando por cabeçalho.
+    "django.middleware.csrf.CsrfViewMiddleware",
     "processo_seletivo.shared.api.middleware.CorrelationIdMiddleware",
     "processo_seletivo.interface.erros.RecusaDoDominioMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 database_role = os.getenv("DB_ROLE", "runtime")
 database_user = os.getenv(

@@ -176,3 +176,110 @@ def test_final_states_never_return_to_a_previous_one_in_the_database(
             correlation_id="concorrencia",
         )
     assert Edital.objects.get(pk=edital_publicado.pk).status == Edital.Status.ENCERRADO
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+@postgresql_only
+def test_edital_creation_loses_to_a_concurrent_process_closure(api_client, edital_publicado):
+    """FR-012 da 003: criar Edital e encerrar o Processo decidem coisas incompatíveis.
+
+    Sem `select_for_update` no Processo, a criação lê `ATIVO`, o encerramento faz commit no
+    intervalo e o `INSERT` conclui: nasce um Edital dentro de um Processo já encerrado. Com o
+    bloqueio, a criação espera, enxerga o estado final e é recusada.
+    """
+    from processo_seletivo.processos.application.commands import add_edital
+
+    processo = ProcessoSeletivo.objects.get(pk=edital_publicado.processo_id)
+    ProcessoSeletivo.objects.filter(pk=processo.pk).update(status=ProcessoSeletivo.Status.ATIVO)
+    lock_obtido = threading.Event()
+    resultado = {}
+
+    def encerrar_segurando_o_lock():
+        try:
+            with transaction.atomic():
+                ProcessoSeletivo.objects.select_for_update().get(pk=processo.pk)
+                lock_obtido.set()
+                time.sleep(0.5)
+                ProcessoSeletivo.objects.filter(pk=processo.pk).update(
+                    status=ProcessoSeletivo.Status.ENCERRADO, revision=F("revision") + 1
+                )
+        finally:
+            connections.close_all()
+
+    encerramento = threading.Thread(target=encerrar_segurando_o_lock)
+    encerramento.start()
+    assert lock_obtido.wait(timeout=5)
+
+    try:
+        add_edital(
+            actor=Actor("gestor", "cefor", frozenset({"edital:criar"})),
+            processo_id=processo.id,
+            data={"number": "99", "year": 2026, "title": "Depois do fim"},
+            idempotency_key="concorrencia-edital-1",
+            correlation_id="concorrencia",
+        )
+        resultado["criado"] = True
+    except DomainError as exc:
+        resultado["code"] = exc.code
+    finally:
+        encerramento.join(timeout=5)
+
+    assert resultado.get("criado") is None
+    assert resultado["code"] == "invalid_state"
+    assert Edital.objects.filter(processo=processo).count() == 1
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+@postgresql_only
+def test_process_cancellation_waits_for_a_concurrent_edital_creation(api_client, edital_publicado):
+    """A recíproca da corrida: quem cria primeiro segura o Processo e o cancelamento espera.
+
+    Sem o lock, o cancelamento leria a lista de Editais antes do `INSERT` concorrente, não veria
+    pendência e cancelaria — deixando um Edital em elaboração dentro de Processo cancelado. Com
+    ele, o cancelamento espera, enxerga o Edital recém-criado e recusa por `editais_pendentes`.
+    """
+    from processo_seletivo.processos.application.commands import add_edital
+
+    processo = ProcessoSeletivo.objects.get(pk=edital_publicado.processo_id)
+    ProcessoSeletivo.objects.filter(pk=processo.pk).update(status=ProcessoSeletivo.Status.ATIVO)
+    # O Edital que já existe precisa estar final: assim a única pendência possível é a que a
+    # transação concorrente cria, e é ela que o teste está medindo.
+    Edital.objects.filter(pk=edital_publicado.pk).update(status=Edital.Status.ENCERRADO)
+    criado = threading.Event()
+    falhas = []
+
+    def criar_segurando_o_lock():
+        try:
+            with transaction.atomic():
+                add_edital(
+                    actor=Actor("gestor", "cefor", frozenset({"edital:criar"})),
+                    processo_id=processo.id,
+                    data={"number": "02", "year": 2026, "title": "Segundo Edital"},
+                    idempotency_key="concorrencia-edital-2",
+                    correlation_id="concorrencia",
+                )
+                criado.set()
+                # Mantém a transação aberta enquanto o cancelamento tenta avançar.
+                time.sleep(0.5)
+        except Exception as exc:  # noqa: BLE001 — reportado ao thread principal
+            falhas.append(exc)
+            criado.set()
+        finally:
+            connections.close_all()
+
+    criacao = threading.Thread(target=criar_segurando_o_lock)
+    criacao.start()
+    assert criado.wait(timeout=5)
+
+    processo.refresh_from_db()
+    with pytest.raises(DomainError) as recusa:
+        cancel(processo, processo.revision, "concorrencia-cancelamento")
+    criacao.join(timeout=5)
+
+    assert not falhas
+    assert recusa.value.code == "editais_pendentes"
+    assert "02/2026" in recusa.value.detail
+    assert ProcessoSeletivo.objects.get(pk=processo.pk).status == ProcessoSeletivo.Status.ATIVO
+    assert Edital.objects.filter(processo=processo).count() == 2

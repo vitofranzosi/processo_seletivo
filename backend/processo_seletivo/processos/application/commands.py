@@ -1,19 +1,14 @@
 from django.db import IntegrityError
 
 from processo_seletivo.auditoria.application import record_event
+from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import AtoAdministrativo, Edital, ProcessoSeletivo
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.concurrency import compare_and_swap
+from processo_seletivo.shared.idempotency import finish as _finish_idempotency
 from processo_seletivo.shared.idempotency import reserve
-
-
-def _finish_idempotency(record, result, status):
-    record.result_type = result.__class__.__name__
-    record.result_id = result.pk
-    record.response_status = status
-    record.save(update_fields=["result_type", "result_id", "response_status"])
 
 
 def create_process_with_first_edital(*, actor, data, idempotency_key, correlation_id):
@@ -21,7 +16,7 @@ def create_process_with_first_edital(*, actor, data, idempotency_key, correlatio
     with command_context() as now:
         idem = reserve(actor=actor, operation="processo:criar", key=idempotency_key, payload=data)
         if idem.result_id:
-            return ProcessoSeletivo.objects.get(pk=idem.result_id), False
+            return ProcessoSeletivo.objects.get(pk=idem.result_id), idem.response_status
         try:
             processo = ProcessoSeletivo.objects.create(
                 institution_scope=actor.institution_scope,
@@ -59,14 +54,17 @@ def create_process_with_first_edital(*, actor, data, idempotency_key, correlatio
             idempotency_key=idempotency_key,
         )
         _finish_idempotency(idem, processo, 201)
-        return processo, True
+        return processo, 201
 
 
 def add_edital(*, actor, processo_id, data, idempotency_key, correlation_id):
     require_permission(actor, "edital:criar")
     with command_context() as now:
         try:
-            processo = ProcessoSeletivo.objects.get(
+            # `select_for_update` porque o desfecho do Processo e a criação de um Edital nele
+            # decidem coisas incompatíveis: sem o bloqueio, uma finalização concorrente encerra
+            # o Processo entre a leitura do estado e o `INSERT`, e o Edital nasce depois do fim.
+            processo = ProcessoSeletivo.objects.select_for_update().get(
                 pk=processo_id, institution_scope=actor.institution_scope
             )
         except ProcessoSeletivo.DoesNotExist as exc:
@@ -75,7 +73,10 @@ def add_edital(*, actor, processo_id, data, idempotency_key, correlation_id):
             actor=actor, operation=f"edital:criar:{processo_id}", key=idempotency_key, payload=data
         )
         if idem.result_id:
-            return Edital.objects.get(pk=idem.result_id), False
+            return Edital.objects.get(pk=idem.result_id), idem.response_status
+        # Depois da repetição idempotente, como nos demais comandos: reenviar a requisição que já
+        # criou o Edital continua devolvendo o mesmo Edital, mesmo com o Processo já encerrado.
+        ensure_processo_accepts_changes(processo)
         try:
             edital = Edital.objects.create(
                 processo=processo,
@@ -102,7 +103,7 @@ def add_edital(*, actor, processo_id, data, idempotency_key, correlation_id):
             idempotency_key=idempotency_key,
         )
         _finish_idempotency(idem, edital, 201)
-        return edital, True
+        return edital, 201
 
 
 def activate_process(
@@ -123,7 +124,7 @@ def activate_process(
             payload={"reason": reason},
         )
         if idem.result_id:
-            return ProcessoSeletivo.objects.get(pk=idem.result_id), False
+            return ProcessoSeletivo.objects.get(pk=idem.result_id), idem.response_status
         if processo.status != ProcessoSeletivo.Status.EM_ELABORACAO:
             raise DomainError(
                 "invalid_state", "Somente Processo em elaboração pode ser ativado.", 409
@@ -158,4 +159,4 @@ def activate_process(
             idempotency_key=idempotency_key,
         )
         _finish_idempotency(idem, processo, 200)
-        return processo, True
+        return processo, 200

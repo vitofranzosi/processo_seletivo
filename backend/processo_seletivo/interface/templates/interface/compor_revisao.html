@@ -4,14 +4,7 @@
 <section aria-labelledby="revisao-titulo" class="pendencias">
   <h2 id="revisao-titulo">O que falta para submeter</h2>
   {% if pendencias %}
-  <ul>
-    {% for item in pendencias %}
-    <li class="p-{{ item.severidade }}">
-      <span class="marcador">{% if item.severidade == 'erro' %}Impede{% else %}Aviso{% endif %}</span>
-      {{ item.mensagem }}
-    </li>
-    {% endfor %}
-  </ul>
+  {% include "interface/_pendencias.html" with itens=pendencias com_link=True %}
   {% else %}
   <p class="tudo-certo">Nada pendente — o Edital pode ser submetido.</p>
   {% endif %}

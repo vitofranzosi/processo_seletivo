@@ -1,4 +1,3 @@
-from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -33,16 +32,13 @@ class ProcessCollectionView(APIView):
     def post(self, request):
         serializer = CreateProcessSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        processo, created = create_process_with_first_edital(
+        processo, http_status = create_process_with_first_edital(
             actor=request.user,
             data=serializer.validated_data,
             idempotency_key=idempotency_key(request),
             correlation_id=request.correlation_id,
         )
-        response = Response(
-            ProcessoResponseSerializer(processo).data,
-            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
-        )
+        response = Response(ProcessoResponseSerializer(processo).data, status=http_status)
         response["ETag"] = etag(processo.revision)
         return response
 
@@ -51,17 +47,14 @@ class EditalCollectionView(APIView):
     def post(self, request, processo_id):
         serializer = CreateEditalSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        edital, created = add_edital(
+        edital, http_status = add_edital(
             actor=request.user,
             processo_id=processo_id,
             data=serializer.validated_data,
             idempotency_key=idempotency_key(request),
             correlation_id=request.correlation_id,
         )
-        response = Response(
-            EditalResponseSerializer(edital).data,
-            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
-        )
+        response = Response(EditalResponseSerializer(edital).data, status=http_status)
         response["ETag"] = etag(edital.revision)
         return response
 

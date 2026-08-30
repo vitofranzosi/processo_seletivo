@@ -1,0 +1,61 @@
+{% extends "interface/base.html" %}
+{% block titulo %}Criar Processo Seletivo{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <span aria-current="page">Criar</span>
+</nav>
+
+<h1>Criar Processo Seletivo</h1>
+<p class="sub">Um Processo Seletivo nasce com o primeiro Edital. São conceitos distintos: o
+  Processo reúne Editais que podem ter cronogramas próprios, e nenhum Edital existe sem ele.</p>
+
+{% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
+
+<form method="post" class="identificar">
+  {% csrf_token %}
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+
+  <fieldset>
+    <legend>Processo Seletivo</legend>
+
+    <label for="codigo">Identificação institucional</label>
+    <input type="text" id="codigo" name="codigo" required autofocus
+           aria-describedby="ajuda-codigo" value="{{ digitado.codigo|default:'' }}">
+    <p id="ajuda-codigo" class="nenhuma" style="margin:.35rem 0 1.25rem">
+      Como o Processo é referido nos documentos oficiais. Não pode repetir outro já criado.</p>
+
+    <label for="titulo">Título</label>
+    <input type="text" id="titulo" name="titulo" required
+           value="{{ digitado.titulo|default:'' }}">
+  </fieldset>
+
+  <fieldset>
+    <legend>Primeiro Edital</legend>
+
+    <label for="numero">Número</label>
+    <input type="text" id="numero" name="numero" required class="curto"
+           value="{{ digitado.numero|default:'' }}">
+
+    <label for="ano">Ano</label>
+    <input type="number" id="ano" name="ano" required class="curto" min="2000"
+           value="{{ digitado.ano|default:ano_corrente }}">
+
+    <label for="titulo_edital">Título do Edital</label>
+    <input type="text" id="titulo_edital" name="titulo_edital" required
+           value="{{ digitado.titulo_edital|default:'' }}">
+
+    <label for="descricao">Descrição</label>
+    <textarea id="descricao" name="descricao" rows="3"
+              aria-describedby="ajuda-descricao">{{ digitado.descricao|default:'' }}</textarea>
+    <p id="ajuda-descricao" class="nenhuma" style="margin:.35rem 0 1.25rem">
+      Opcional na criação, mas a validação avisa se ficar ausente na submissão. Depois da criação
+      não há ato que a altere.</p>
+  </fieldset>
+
+  <p class="navegacao-etapa">
+    <a href="{% url 'interface:lista' %}">Cancelar</a>
+    <button type="submit" class="botao">Criar Processo e Edital</button>
+  </p>
+</form>
+{% endblock %}

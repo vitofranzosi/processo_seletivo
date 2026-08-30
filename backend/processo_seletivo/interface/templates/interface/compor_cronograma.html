@@ -7,6 +7,11 @@
   {% csrf_token %}
   <section aria-labelledby="cronograma-titulo">
     <h2 id="cronograma-titulo">Cronograma</h2>
+    {% if pendencias_aqui %}
+    <div class="pendencias" role="status">
+      {% include "interface/_pendencias.html" with itens=pendencias_aqui com_link=False %}
+    </div>
+    {% endif %}
     <p class="ajuda">Eventos pontuais e períodos deste Edital. A ordem segue a sequência em tela;
       as datas usam o horário de Brasília.</p>
     <p class="contadores" data-contador="#eventos" data-item=".evento" data-singular="Evento" data-plural="Eventos">
@@ -26,4 +31,5 @@
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
 <script src="{% static 'interface/assistente.js' %}" defer></script>
 <script src="{% static 'interface/rascunho.js' %}" defer></script>
+<script src="{% static 'interface/validacao.js' %}" defer></script>
 {% endblock %}

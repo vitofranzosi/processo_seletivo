@@ -65,6 +65,28 @@ class EventSerializer(serializers.Serializer):
 
 
 class EditalDraftSerializer(serializers.Serializer):
+    """Rascunho normativo do Edital: Perfis e Cronograma.
+
+    `editorialContent` era aceito aqui e no contrato, e descartado em silêncio — nenhum comando o
+    persistia, nenhum snapshot o carregava, nenhum PDF o renderizava. Foi removido em vez de
+    implementado: conteúdo editorial livre num Edital é conteúdo normativo, e a Constituição exige
+    que ele tenha fonte autoritativa única, validação, vigência e presença no documento publicado.
+    Nada disso existe, e inventá-lo por baixo de um campo já aceito seria decidir por omissão.
+
+    Campo desconhecido é recusado em vez de ignorado. Ignorar é o que fazia o problema passar
+    despercebido: quem enviava `editorialContent` recebia 200 e acreditava que o conteúdo estava
+    guardado.
+    """
+
     profiles = ProfileSerializer(many=True, allow_empty=False)
     schedule = EventSerializer(many=True)
-    editorialContent = serializers.JSONField(required=False)
+
+    def validate(self, attrs):
+        desconhecidos = sorted(set(self.initial_data) - set(self.fields))
+        if desconhecidos:
+            raise serializers.ValidationError(
+                "Campos não reconhecidos no rascunho do Edital: "
+                + ", ".join(desconhecidos)
+                + ". Aceitar e descartar em silêncio faria parecer que o conteúdo foi guardado."
+            )
+        return attrs

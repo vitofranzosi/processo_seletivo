@@ -12,12 +12,21 @@
 
    A comparação é por conteúdo canônico, não pelo nome dos campos: o índice de cada linha nasce
    no cliente (`Date.now()`) e o servidor renumera ao reexibir. Comparar nomes acusaria
-   diferença logo depois de um salvamento bem-sucedido. */
+   diferença logo depois de um salvamento bem-sucedido.
+
+   O rascunho expira (FR-022 da 003). O conteúdo de um Edital em elaboração fica no computador
+   de quem preencheu, que num órgão público costuma ser compartilhado, e `localStorage` não
+   caduca sozinho: sem prazo, o preenchimento de meses atrás continuaria lá, oferecido a quem
+   sentar na máquina depois. Um dia é mais que suficiente para o caso que justifica guardar —
+   sessão expirada, conexão caída, navegador fechado por engano — e curto o bastante para não
+   virar arquivo. Vencido, é apagado sem ser oferecido: restaurar um preenchimento antigo sobre
+   um Edital que mudou no servidor trocaria uma perda por outra. */
 (function () {
   var form = document.getElementById("formulario");
   if (!form || !form.dataset.rascunho) return;
 
   var CHAVE = "ps:rascunho:" + form.dataset.rascunho;
+  var VALIDADE_MS = 24 * 60 * 60 * 1000;
   var lista = document.querySelector(form.dataset.lista);
   var fragmento = form.dataset.fragmento;
   var IGNORADOS = ["csrfmiddlewaretoken", "destino"];
@@ -115,6 +124,14 @@
     return isNaN(d) ? "" : " de " + d.toLocaleString("pt-BR");
   }
 
+  function vencido(guardado) {
+    var gravado = new Date(guardado && guardado.em);
+    // Sem carimbo de tempo utilizável não há como saber a idade — e o que não se sabe a idade
+    // é tratado como vencido, que é o lado seguro num computador compartilhado.
+    if (isNaN(gravado)) return true;
+    return Date.now() - gravado.getTime() > VALIDADE_MS;
+  }
+
   function oferecer(guardado) {
     var caixa = document.createElement("div");
     caixa.className = "aviso";
@@ -156,7 +173,7 @@
     if (bruto) {
       try {
         var guardado = JSON.parse(bruto);
-        if (mesmo(guardado.dados, renderizado)) armazem.removeItem(CHAVE);
+        if (vencido(guardado) || mesmo(guardado.dados, renderizado)) armazem.removeItem(CHAVE);
         else oferecer(guardado);
       } catch (erro) {
         armazem.removeItem(CHAVE);

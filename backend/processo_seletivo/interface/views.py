@@ -27,6 +27,7 @@ from processo_seletivo.interface import (
     identidade,
 )
 from processo_seletivo.interface import retificacao as retificacao_ui
+from processo_seletivo.processos.application.commands import create_process_with_first_edital
 from processo_seletivo.processos.application.selectors import (
     contar_por_situacao,
     listar_processos,
@@ -106,6 +107,97 @@ def lista(request):
 
 
 @require_http_methods(["GET", "POST"])
+def criar_processo(request):
+    """FR-025 da 003 — FR-004 da 002 estava especificado e o botão apontava para `#`.
+
+    Processo e primeiro Edital nascem juntos porque o domínio não admite um sem o outro. A view
+    traduz o formulário e delega ao command, que é quem verifica permissão, unicidade e auditoria.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+
+    contexto = {
+        "digitado": request.POST if request.method == "POST" else {},
+        "ano_corrente": timezone.localtime().year,
+        # A chave atravessa o reenvio do formulário: recarregar depois de um erro de preenchimento
+        # não pode criar dois Processos quando a segunda tentativa der certo.
+        "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
+    }
+    if request.method == "GET":
+        return render(request, "interface/processo_criar.html", contexto)
+
+    try:
+        processo, _ = create_process_with_first_edital(
+            actor=ator,
+            data=_processo_do_formulario(request.POST),
+            idempotency_key=request.POST.get("chave_idempotencia", ""),
+            correlation_id=request.correlation_id,
+        )
+    except ValueError as exc:
+        contexto["erro"] = str(exc)
+        return render(request, "interface/processo_criar.html", contexto, status=422)
+    except DomainError as exc:
+        contexto["erro"] = exc.detail
+        return render(request, "interface/processo_criar.html", contexto, status=exc.status)
+    return redirect(reverse("interface:processo-detalhe", args=[processo.id]))
+
+
+# (campo do formulário, rótulo, modelo, campo do modelo). O limite vem de `_meta` em vez de ser
+# repetido aqui: campo maior que a coluna vira erro 500 no PostgreSQL, e um número copiado à mão
+# se desatualiza em silêncio na primeira migration que mudar o tamanho.
+TEXTOS_DA_CRIACAO = (
+    ("codigo", "Identificação institucional", ProcessoSeletivo, "institutional_code"),
+    ("titulo", "Título do Processo", ProcessoSeletivo, "title"),
+    ("numero", "Número do Edital", Edital, "number"),
+    ("titulo_edital", "Título do Edital", Edital, "title"),
+)
+ANO_MINIMO, ANO_MAXIMO = 2000, 9999
+
+
+def _processo_do_formulario(dados):
+    """Traduz o formulário e recusa o que a persistência não aguentaria (FR-020/SC-007).
+
+    A tela nova entrava direto no command, sem passar pelo serializer que a API usa: o que
+    excedesse a coluna atravessava a borda e voltava como 500. Quem decide continua sendo o
+    domínio; o que se faz aqui é não deixar o erro chegar ao banco sem forma.
+    """
+    campos = {
+        "codigo": "Identificação institucional",
+        "titulo": "Título do Processo",
+        "numero": "Número do Edital",
+        "ano": "Ano do Edital",
+        "titulo_edital": "Título do Edital",
+    }
+    vazios = [rotulo for chave, rotulo in campos.items() if not (dados.get(chave) or "").strip()]
+    if vazios:
+        raise ValueError("Preencha: " + ", ".join(vazios) + ".")
+    excedidos = [
+        f"{rotulo} (máximo {modelo._meta.get_field(campo).max_length} caracteres)"
+        for chave, rotulo, modelo, campo in TEXTOS_DA_CRIACAO
+        if len(dados[chave].strip()) > modelo._meta.get_field(campo).max_length
+    ]
+    if excedidos:
+        raise ValueError("Encurte: " + ", ".join(excedidos) + ".")
+    try:
+        ano = int(dados["ano"])
+    except ValueError as exc:
+        raise ValueError(f"'{dados['ano']}' não é um ano válido.") from exc
+    if not ANO_MINIMO <= ano <= ANO_MAXIMO:
+        raise ValueError(f"O ano do Edital deve estar entre {ANO_MINIMO} e {ANO_MAXIMO}.")
+    return {
+        "institutionalCode": dados["codigo"].strip(),
+        "title": dados["titulo"].strip(),
+        "firstEdital": {
+            "number": dados["numero"].strip(),
+            "year": ano,
+            "title": dados["titulo_edital"].strip(),
+            "description": (dados.get("descricao") or "").strip(),
+        },
+    }
+
+
+@require_http_methods(["GET", "POST"])
 def identificar(request):
     """Seletor de identidade: substitui a autenticação institucional fora de produção."""
     if not identidade.seletor_disponivel():
@@ -133,15 +225,52 @@ def sair(request):
 
 SEVERIDADE = {"BLOCKING_ERROR": "erro", "WARNING": "aviso", "INFO": "informacao"}
 
+# Onde cada achado do domínio se resolve: a etapa que trata aquele conteúdo, a âncora da seção
+# dentro dela, e se a pessoa consegue de fato corrigi-lo ali. FR-027 pede a pendência ao lado do
+# campo, e o domínio já diz de qual campo fala — a informação existia e era descartada na
+# tradução para a tela.
+#
+# Para `profiles` e `schedule` a âncora é a seção, não um campo: a pendência é "não há nenhum", e
+# o lugar de agir é o botão de acrescentar, dentro da seção.
+#
+# `title` e `description` só existem na criação do Edital e não têm ato de domínio que os altere
+# depois. Levar alguém até a etapa de Identificação, que é somente leitura, seria oferecer um
+# caminho que não termina em lugar nenhum — pior do que não oferecer caminho algum.
+DESTINO_DA_PENDENCIA = {
+    "title": ("identificacao", "#ident-titulo", False),
+    "description": ("identificacao", "#ident-titulo", False),
+    "profiles": ("perfis", "#perfis-titulo", True),
+    "schedule": ("cronograma", "#cronograma-titulo", True),
+}
+MOTIVO_NAO_CORRIGIVEL = (
+    "definido na criação do Edital; ainda não há ato de domínio que o altere em elaboração"
+)
+
 
 def _pendencias(edital):
-    """FR-008: o que ainda falta para o Edital poder ser submetido."""
-    achados = validate_for_publication(edital_snapshot(edital))
-    return [
-        {"severidade": SEVERIDADE.get(str(item.severity), "informacao"),
-         "mensagem": item.message, "campo": item.path}
-        for item in achados
-    ]
+    """FR-008 e FR-027: o que falta para submeter, e onde cada coisa se resolve."""
+    rotulos = {chave: rotulo for chave, rotulo, _ in ETAPAS_COMPOSICAO}
+    pendencias = []
+    for item in validate_for_publication(edital_snapshot(edital)):
+        etapa, ancora, corrigivel = DESTINO_DA_PENDENCIA.get(item.path, (None, "", False))
+        pendencias.append(
+            {
+                "severidade": SEVERIDADE.get(str(item.severity), "informacao"),
+                "mensagem": item.message,
+                "campo": item.path,
+                "etapa": etapa,
+                "ancora": ancora,
+                "corrigivel": corrigivel,
+                "rotulo_etapa": rotulos.get(etapa, ""),
+                "motivo": "" if corrigivel else MOTIVO_NAO_CORRIGIVEL,
+            }
+        )
+    return pendencias
+
+
+def _pendencias_da_etapa(pendencias, etapa):
+    """As que a pessoa consegue resolver sem sair desta tela."""
+    return [item for item in pendencias if item["etapa"] == etapa and item["corrigivel"]]
 
 
 # O wizard só tem as etapas que o domínio sustenta. Identificação é leitura porque não há
@@ -229,6 +358,7 @@ def compor_etapa(request, edital_id, etapa):
         edital.refresh_from_db()
 
     _, _, template = ETAPAS_COMPOSICAO[CHAVES_ETAPA.index(etapa)]
+    pendencias = _pendencias(edital)
     return render(
         request,
         template,
@@ -252,7 +382,10 @@ def compor_etapa(request, edital_id, etapa):
                 else forms.eventos_do_edital(edital)
             ),
             "reservas": forms.RESERVA,
-            "pendencias": _pendencias(edital),
+            "pendencias": pendencias,
+            # A tela de revisão mostra tudo; as demais, só o que se resolve nelas — pendência
+            # exibida onde não há como agir vira ruído que a pessoa aprende a ignorar.
+            "pendencias_aqui": _pendencias_da_etapa(pendencias, etapa),
         },
     )
 
@@ -518,7 +651,7 @@ def retificar(request, edital_id):
                         "conteúdo para ter efeito."
                     )
                 elif request.POST.get("confirmar") == "1":
-                    nova = create_retification(
+                    nova, _ = create_retification(
                         actor=ator,
                         edital_id=edital.id,
                         data={
@@ -527,6 +660,8 @@ def retificar(request, edital_id):
                             "changes": alteracoes,
                             **_vigencia(request.POST),
                         },
+                        idempotency_key=request.POST.get("chave_idempotencia", ""),
+                        correlation_id=request.correlation_id,
                     )
                     return redirect(reverse("interface:retificacao-detalhe", args=[nova.id]))
             except ValueError as exc:
@@ -555,6 +690,9 @@ def retificar(request, edital_id):
             "justificativa": (request.POST.get("justificativa") or "") if dados else "",
             "vigencia": (request.POST.get("vigencia") or "") if dados else "",
             "pode_elaborar": ator.can("retificacao:elaborar"),
+            # Nasce no primeiro GET e atravessa o resumo até a confirmação: reenviar o mesmo
+            # formulário devolve a Retificação já criada em vez de criar uma segunda.
+            "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
         },
     )
 

@@ -47,8 +47,14 @@ def publish_original(api_client, manager_headers, process_payload, *, draft=None
     return Edital.objects.get(pk=edital.pk)
 
 
-def create_retification(api_client, edital, changes, *, effective_at=None, suffix="a"):
-    base = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+def create_retification(api_client, edital, changes, *, effective_at=None, suffix="a", base=None):
+    """`base` é a versão sobre a qual o ato é elaborado; por padrão, a mais recente.
+
+    Quando a Retificação vigora antes de outra já publicada, a versão mais recente não é a que
+    vigora no início da sua vigência — e a precondição de conteúdo é verificada contra esta,
+    não contra aquela. Nesse caso o teste declara a base explicitamente, como faria o cliente.
+    """
+    base = base or VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
     payload = {
         "baseSnapshotId": str(base.id),
         "justification": f"Retificação {suffix}",
