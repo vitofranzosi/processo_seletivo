@@ -61,6 +61,26 @@ código de erro certo já existe no mesmo arquivo (`edital_identifier_conflict`,
 Esta feature não constrói mecanismo novo. Ela paga o que separa um sistema que funciona de um
 sistema que se pode mostrar a uma banca.
 
+## Clarifications
+
+### Session 2026-08-30
+
+- Q: Como o documento deve identificar o Processo Seletivo, já que o snapshot hoje só carrega o
+  UUID dele? → A: O snapshot v3 passa a carregar o código institucional e o título do Processo na
+  raiz, entrando no hash. FR-004 deixa de ser entrega isolada e integra o incremento canônico;
+  FR-002 e FR-003 continuam sem tocar o snapshot.
+- Q: O que faz uma etapa do assistente deixar de estar "pronta para revisar" e passar a
+  "concluída"? → A: Ter sido gravada ao menos uma vez. Nenhum estado novo de visita é persistido.
+- Q: De onde vem a lista de autoridades signatárias e quem a mantém? → A: Catálogo declarado em
+  código, no mesmo padrão do catálogo de seções. Sem entidade, sem tela de gestão, sem permissão
+  nova.
+
+**Resolvidas por decisão registrada, sem pergunta.** A forma canônica dos três campos novos do
+Perfil segue o padrão já vigente no mesmo objeto — string sempre presente, `""` quando ausente
+(FR-014). A formatação decimal humana é pt-BR com zeros à direita descartados (FR-003). As duas
+seguem precedente da casa; o defeito apontado na revisão era o silêncio da spec, não a ausência de
+resposta defensável.
+
 ## Precondição de implantação
 
 **A `007` deve ser concluída antes do primeiro Edital de produção. Durante o desenvolvimento, dados
@@ -134,27 +154,45 @@ autorização de interface. Da mesma forma, nada de biblioteca de modelos, clona
 Quem lê o documento — candidato, banca, controle interno — encontra um texto normativo, não um
 despejo de dados internos.
 
-**Why this priority**: é a entrega de maior efeito por hora gasta e a única que não toca o snapshot.
-São três substituições no compositor, todas do lado da apresentação, todas verificáveis a olho no
-PDF. E é o que permite mostrar o sistema antes de qualquer outra coisa desta feature ficar pronta.
+**Why this priority**: é a entrega de maior efeito por hora gasta. E ela se divide em duas partes de
+custo muito diferente, o que a torna a primeira a começar mesmo não sendo a primeira a terminar
+inteira:
+
+- **Parte apresentacional (FR-002, FR-003)** — estado interno e decimais. Vive só no compositor, não
+  toca o snapshot, não muda o hash e é demonstrável sozinha. É a entrega 1.
+- **Parte canônica (FR-004)** — tirar o UUID do corpo exige que o documento saiba dizer o Processo
+  de outra forma, e o snapshot não carrega essa informação: a raiz leva `processoId` e mais nada
+  sobre o Processo (`publicacoes/application/publish_edital.py:141-144`), enquanto
+  `institutional_code` e `title` vivem só no modelo (`processos/models.py:15-16`) e
+  `render_edital_pdf` é função pura do snapshot. Por isso FR-004 integra o incremento canônico
+  junto de `US2` e `US3`.
+
+*Esta separação corrige uma contradição da primeira redação desta spec, que afirmava
+simultaneamente identificar o Processo em termos institucionais e não tocar o snapshot.* O ganho da
+decisão vai além do documento: o snapshot passa a bastar para renderizar o Edital sem consultar o
+banco, que é o que a Constituição pede da cadeia "dados estruturados → versão homologada → PDF".
 
 **Independent Test**: publicar um Edital com Cronograma, Etapas com peso e nota mínima e modalidade
-com percentual; abrir o documento e não encontrar `PLANEJADO`, `20.0000` nem UUID no corpo — e
-encontrar a declaração de integridade intacta com o SHA-256.
+com percentual; abrir o documento e não encontrar `PLANEJADO` nem `20.0000` (parte apresentacional),
+e — depois do incremento canônico — não encontrar UUID no corpo, com a declaração de integridade
+intacta e o SHA-256 presente.
 
 **Acceptance Scenarios**:
 
 1. **Given** um Cronograma com Eventos, **When** leio o documento, **Then** nenhum estado interno de
    Evento é impresso.
 2. **Given** uma modalidade com percentual `20.0000` e uma Etapa com peso `2.0000` e nota mínima
-   `60.0000`, **When** leio o documento, **Then** os três aparecem em forma legível, sem casas
-   decimais que a informação não tem.
+   `60.0000`, **When** leio o documento, **Then** leio `20%`, `peso 2` e `nota mínima 60`; **and**
+   um percentual `12.5000` é lido como `12,5%`.
 3. **Given** o mesmo Edital, **When** consulto o snapshot publicado, **Then** os três valores
    continuam na forma canônica de quatro casas e o hash do conteúdo não depende de como o documento
    os escreveu.
-4. **Given** um Edital publicado, **When** leio a seção de integridade, **Then** o documento se
-   identifica pelo Edital e pelo Processo em termos institucionais, declara derivar da versão
-   homologada e exibe o SHA-256 do conteúdo — **e** não exibe UUID.
+4. **Given** um Edital publicado depois do incremento canônico, **When** leio a seção de
+   integridade, **Then** o documento se identifica pelo Edital (número e ano) e pelo Processo
+   (código institucional e título), declara derivar da versão homologada e exibe o SHA-256 do
+   conteúdo — **e** não exibe UUID.
+6. **Given** o snapshot publicado desse Edital, **When** o entrego sozinho ao renderizador,
+   **Then** o documento é composto integralmente, sem consulta ao banco.
 5. **Given** uma Retificação sobre esse Edital, **When** endereço
    `/profiles/id=…/competitionModalities/id=…/normativeRule/percentage`, **Then** o valor
    endereçado e gravado continua sendo o canônico, e a tela de Retificação continua exigindo e
@@ -340,14 +378,31 @@ datas nos vínculos, agrupamento do caráter, confirmação ao remover e a mensa
   tipo de cadastro reserva já é traduzido por um mapa antes de ser escrito
   (`publicacoes/infrastructure/pdf.py:37-41`). O estado do Evento é a exceção que ficou de fora — e,
   diferentemente do cadastro reserva, ele é informação de gestão, não de edital.*
-- **FR-003**: Percentual, peso e nota mínima DEVEM ser escritos em forma legível no documento,
-  preservando as casas significativas e descartando as que a informação não tem. A conversão vive no
-  compositor.
-- **FR-004**: O corpo normativo destinado ao candidato NÃO DEVE expor identificadores técnicos.
-  A declaração de integridade DEVE ser preservada: continua afirmando derivação da versão homologada
-  e continua exibindo o SHA-256 do conteúdo, mas identifica o Edital e o Processo em termos
-  institucionais. *O SHA-256 permanece porque é o que a declaração prova; o UUID sai porque não
-  prova nada a quem lê e é a forma interna vazando para a apresentação.*
+- **FR-003**: Percentual, peso e nota mínima DEVEM ser escritos no documento em **português do
+  Brasil**: vírgula como separador decimal e zeros à direita descartados, sem casa decimal quando a
+  informação não tem nenhuma. `20.0000` → `20%`; `12.5000` → `12,5%`; `2.0000` → `peso 2`;
+  `60.0000` → `nota mínima 60`. A conversão vive no compositor.
+- **FR-004**: O corpo normativo destinado ao candidato NÃO DEVE expor identificadores técnicos —
+  nem do Edital, nem do Processo, nem de qualquer entidade. A declaração de integridade DEVE ser
+  preservada: continua afirmando derivação da versão homologada, continua exibindo o SHA-256 do
+  conteúdo e continua declarando a versão do schema, mas identifica o Edital por número e ano e o
+  Processo por código institucional e título. *O SHA-256 permanece porque é o que a declaração
+  prova; o UUID sai porque não prova nada a quem lê e é a forma interna vazando para a
+  apresentação.*
+  **Condição de possibilidade.** A raiz do snapshot DEVE passar a carregar o **código
+  institucional** e o **título** do Processo Seletivo, ao lado do identificador que já carrega. Em
+  consequência, **FR-004 integra o incremento canônico de FR-017 e NÃO é entrega isolada**.
+  *Verificado: a raiz leva `schemaVersion`, `editalId` e `processoId`
+  (`publicacoes/application/publish_edital.py:141-144`); `institutional_code` e `title` do Processo
+  (`processos/models.py:15-16`) não viajam, e o renderizador é função pura do snapshot. Sem o campo,
+  o documento não teria como nomear o Processo. Com ele, o snapshot passa a bastar para compor o
+  documento sem consultar o banco — que é o que a Constituição pede da cadeia "dados estruturados →
+  versão homologada → PDF".*
+
+  **O que não muda.** `processoId` e `editalId` permanecem no snapshot. FR-004 rege o que o
+  **documento imprime**, não o que o conteúdo publicado carrega: retirá-los quebraria a proveniência
+  sem benefício para quem lê.
+
 - **FR-005**: A distinção entre prévia e documento publicado permanece um modo explícito do
   renderizador (FR-015 da `006`); esta feature NÃO DEVE acrescentar condicionais de modo espalhadas
   pela composição.
@@ -379,7 +434,13 @@ datas nos vínculos, agrupamento do caráter, confirmação ao remover e a mensa
   Edital descreve remuneração em prosa — "R$ 4.200,00 mensais, acrescidos de auxílio-alimentação" —
   e modelar isso agora seria construir a estrutura antes de existir a regra que a consome.*
 - **FR-014**: Os três DEVEM ser preenchíveis na etapa de Perfis, preservados na ida e volta da
-  gravação do rascunho como os demais campos do Perfil, e integrar a coleção `profiles` do snapshot.
+  gravação do rascunho como os demais campos do Perfil, e integrar a coleção `profiles` do snapshot
+  como `duties`, `workload` e `compensation`. **Cada um é string sempre presente, com `""` quando
+  ausente** — nunca `null`, nunca chave omitida. *É a convenção já vigente no mesmo objeto:
+  `description` e `locality` são strings sempre presentes, e `reserveLimit` é `null` por ser
+  numérico opcional (`publicacoes/application/publish_edital.py:112-125`). Introduzir `null` para
+  texto criaria uma terceira convenção dentro do mesmo dicionário, e chave omitida faria a versão
+  canônica deixar de identificar uma forma — que é exatamente o que FR-017 existe para impedir.*
 - **FR-015**: Os três DEVEM aparecer no documento quando informados, com parágrafos preservados, e
   ser omitidos quando ausentes.
 - **FR-016**: Os três DEVEM ser retificáveis pelo caminho já existente do Perfil, sem coleção nova
@@ -388,11 +449,20 @@ datas nos vínculos, agrupamento do caráter, confirmação ao remover e a mensa
 ### Versão canônica
 
 - **FR-017**: A feature incrementa `SCHEMA_VERSION` **uma única vez** (`2` → `3`), cobrindo
-  simultaneamente as seções novas do catálogo e os campos novos do Perfil. *Pelo mesmo motivo que a
-  `006` declarou: subir a versão com uma parte e acrescentar a outra depois produziria snapshots de
-  versão 3 com e sem as propriedades, e a versão canônica deixaria de identificar uma forma.*
-- **FR-018**: Em consequência de FR-017, as entregas de `US2` e `US3` DEVEM integrar-se juntas ao
-  ramo principal.
+  simultaneamente **três** mudanças de forma: as seções novas do catálogo (FR-007), os campos novos
+  do Perfil (FR-014) e a identificação institucional do Processo na raiz (FR-004). *Pelo mesmo
+  motivo que a `006` declarou: subir a versão com uma parte e acrescentar a outra depois produziria
+  snapshots de versão 3 com e sem as propriedades, e a versão canônica deixaria de identificar uma
+  forma.*
+- **FR-018**: Em consequência de FR-017, a parte canônica de `US1` (FR-004) e as entregas de `US2` e
+  `US3` DEVEM integrar-se juntas ao ramo principal. A parte apresentacional de `US1` (FR-002,
+  FR-003) NÃO depende do incremento e integra-se antes.
+
+  **Forma determinada.** A forma canônica da versão 3 DEVE estar completamente determinada pelos
+  requisitos desta spec — nomes das chaves, tipo e representação de ausência — e a suíte DEVE falhar
+  quando um snapshot de versão 3 apresentar forma divergente da declarada. *Uma versão canônica que
+  admite duas formas não é uma versão canônica.*
+
 - **FR-019**: NÃO DEVE ser introduzido mecanismo de migração, conversão ou compatibilidade entre
   versões de esquema, nem de catálogo. A recusa de conteúdo-base com versão divergente
   (FR-047 da `006`) permanece como está e é o comportamento esperado.
@@ -415,8 +485,11 @@ datas nos vínculos, agrupamento do caráter, confirmação ao remover e a mensa
   mensagem de ausência de ações DEVE derivar desse mesmo conjunto. NÃO PODE haver duas regras
   independentes produzindo a lista e o vazio.
 - **FR-024**: Ato cuja recusa é previsível pela informação já apresentada na tela DEVE aparecer
-  **desabilitado com o motivo**, e não oferecido nem escondido. *A previsão já existe na tela de
-  confirmação; o requisito é usá-la também onde o ato é oferecido.*
+  **desabilitado com o motivo**, e não oferecido nem escondido. O motivo DEVE estar associado ao
+  controle por vínculo programático, de modo que quem usa leitor de tela receba o motivo junto do
+  estado desabilitado — e o controle desabilitado DEVE manter contraste legível. *A previsão já
+  existe na tela de confirmação; o requisito é usá-la também onde o ato é oferecido. Um botão
+  desabilitado sem motivo alcançável é o mesmo beco de antes, apenas silencioso.*
 - **FR-025**: A desabilitação é previsão de interface e NÃO substitui a verificação de domínio. A
   recusa autoritativa continua no backend, inalterada.
 - **FR-026**: A ação de retificar NÃO DEVE ser oferecida a quem não tem a permissão de elaborar
@@ -439,25 +512,47 @@ datas nos vínculos, agrupamento do caráter, confirmação ao remover e a mensa
 
 ### Atritos de operação (US6)
 
-- **FR-032**: Campos obrigatórios DEVEM ser identificados como tais na etiqueta, em todo o produto.
-- **FR-033**: Recusa de envio DEVE ser apresentada em resumo no topo, com âncora para cada campo, e
-  também junto do campo correspondente. *O resumo sozinho obriga a procurar; a marca junto do campo
-  sozinha obriga a rolar até achar.*
-- **FR-034**: Os campos da criação de Processo DEVEM ter a mesma aparência dos demais campos do
-  produto, incluindo os que não são de texto simples.
+- **FR-032**: Campos obrigatórios DEVEM ser identificados como tais na etiqueta, e a
+  obrigatoriedade DEVE ser exposta também a tecnologia assistiva. O escopo é **todo formulário
+  renderizado pela interface administrativa** — as seis etapas do assistente, a criação de Processo,
+  as telas de confirmação de ato e a tela de Retificação. *A lista é fechada e verificável; "todo o
+  produto" não era.*
+- **FR-033**: Recusa de envio DEVE ser apresentada em resumo no topo, com âncora para cada campo
+  recusado, **e** junto do campo correspondente. O resumo DEVE receber o foco ou ser anunciado ao
+  ser exibido, e cada campo recusado DEVE ser associado à sua mensagem por vínculo programático, não
+  apenas por proximidade visual. *O resumo sozinho obriga a procurar; a marca junto do campo sozinha
+  obriga a rolar até achar; nenhum dos dois, sem vínculo programático, existe para quem usa leitor
+  de tela.*
+- **FR-034**: Os campos da criação de Processo DEVEM ter altura, tamanho de fonte e borda
+  equivalentes aos dos demais campos do produto, incluindo os que não são de texto simples, e a
+  largura declarada no template DEVE ter efeito. *Medido na auditoria: `Ano` renderiza a 22px com
+  fonte de 13px e borda entalhada, ao lado de vizinhos de 39px e 16px — porque a regra de estilo
+  cobre `input[type=text]` e nada mais.*
 - **FR-035**: Em listas ordenáveis, os botões de mover DEVEM estar desabilitados onde a operação é
   impossível, e cada linha DEVE exibir sua posição na coleção.
 - **FR-036**: O seletor de Evento vinculado a uma Etapa DEVE exibir a data que a Etapa herda.
 - **FR-037**: As marcações de caráter eliminatório e classificatório DEVEM estar agrupadas sob
   legenda que as nomeie.
-- **FR-038**: Remover uma linha com conteúdo preenchido DEVE exigir confirmação. Linha vazia NÃO
-  DEVE exigir.
-- **FR-039**: A autoridade signatária DEVE ser escolhida em lista configurável de autoridades
-  conhecidas; NENHUM identificador DEVE ser digitado no ato de publicação. *A lista pode nascer
-  pequena e por configuração. Integração com diretório institucional está fora de escopo.*
-- **FR-040**: O assistente DEVE distinguir uma etapa **pronta para revisar** de uma etapa
-  **concluída** — uma etapa cujo conteúdo nasceu de padrão do sistema não pode declarar-se
-  concluída antes de ser aberta.
+- **FR-038**: Remover uma linha DEVE exigir confirmação quando a linha tiver **qualquer campo
+  preenchido ou qualquer item filho** — requisito, modalidade ou regra normativa. Linha em que todos
+  os campos estão vazios e que não tem filhos NÃO DEVE exigir confirmação. A confirmação DEVE dizer
+  o que será descartado, ser operável por teclado e ter o cancelamento como ação padrão.
+- **FR-039**: A autoridade signatária DEVE ser escolhida em **catálogo declarado em código**, no
+  mesmo padrão do catálogo de seções: entradas com chave estável, nome e cargo, revisáveis em diff,
+  sem migration e sem tela de gestão. NENHUM identificador DEVE ser digitado no ato de publicação.
+  - Incluir ou desativar autoridade é alteração do catálogo declarado, não operação de usuário. NÃO
+    DEVEM ser criados entidade persistida, tela de administração nem permissão nova.
+  - Autoridade retirada do catálogo NÃO DEVE afetar Publicação já praticada: a Publicação já
+    persiste nome, cargo e identificador da autoridade no ato, e esse registro é imutável.
+  - Autoridade retirada NÃO DEVE ser oferecida em novos atos.
+  - *Integração com diretório institucional permanece fora de escopo.*
+- **FR-040**: O assistente DEVE distinguir três estados de etapa: **pendente**, **pronta para
+  revisar** e **concluída**. Uma etapa cujo conteúdo veio de padrão do sistema e que **nunca foi
+  gravada** é "pronta para revisar"; ter sido **gravada ao menos uma vez** a torna "concluída". Os
+  três DEVEM ser visualmente distintos entre si e não DEVEM depender apenas de cor.
+  *"Aberta" seria ambíguo e caro: exigiria persistir "esta pessoa visitou esta etapa", que é estado
+  novo, por Edital e por pessoa, sem valor normativo — e afirmaria revisão onde houve apenas
+  exibição. A gravação já existe, já é auditada e já é o sinal que o servidor tem.*
 - **FR-041**: A confirmação de ato praticado DEVE nomear o ato pelo rótulo humano, o mesmo que a
   trilha de auditoria já usa, e não pela chave interna.
 - **FR-042**: A auditoria de gravação de rascunho DEVE registrar qual área do Edital foi alterada.
@@ -466,23 +561,49 @@ datas nos vínculos, agrupamento do caráter, confirmação ao remover e a mensa
 - **FR-043**: FR-042 NÃO autoriza diff de conteúdo, versionamento de rascunho nem histórico
   editorial. Registra-se a área, não a diferença.
 
+### Proteção de dados pessoais
+
+A Constituição exige que cada especificação avalie os requisitos aplicáveis da LGPD (princípio III).
+Esta feature toca dados pessoais em **um** ponto, e a avaliação é curta porque o alcance é pequeno.
+
+- **FR-044**: O catálogo de autoridades signatárias (FR-039) DEVE conter exclusivamente **nome e
+  cargo ou função no exercício de atribuição pública** — o mínimo que a Constituição já exige que o
+  ato normativo registre. NÃO DEVE conter CPF, matrícula, endereço, telefone, e-mail, foto nem
+  qualquer dado não necessário à identificação da autoridade no documento.
+- **FR-045**: O dado é tratado sob a finalidade de identificar quem assina institucionalmente um ato
+  administrativo, cuja publicidade é da natureza do ato. NÃO DEVE ser usado para nenhuma outra
+  finalidade dentro do sistema.
+- **FR-046**: Retirar uma autoridade do catálogo NÃO apaga seu registro em Publicações já
+  praticadas, e essa preservação é deliberada: o ato normativo é imutável e sua autoria é o que o
+  torna verificável. *Esta é a tensão real entre eliminação e integridade histórica, e aqui ela se
+  resolve pela imutabilidade do ato, como a Constituição já determina para registros normativos.*
+- **FR-047**: Os três campos novos do Perfil de Vaga (FR-012) descrevem a **vaga**, não pessoas, e
+  NÃO DEVEM ser usados para registrar dado de candidato ou de servidor.
+- **FR-048**: Nenhum requisito desta feature amplia o que a auditoria registra sobre pessoas.
+  FR-042 acrescenta **qual área do Edital mudou**, não quem viu o quê.
+
 ### Key Entities
 
 - **Seção do Edital**: já existe. Esta feature acrescenta três entradas textuais ao catálogo
   declarado; não altera a forma da entidade nem a natureza do catálogo.
 - **Perfil de Vaga**: já existe. Esta feature acrescenta três atributos textuais descritivos —
   atribuições, carga horária e remuneração — e nenhuma relação nova.
-- **Autoridade Signatária**: já é registrada na Publicação. Esta feature acrescenta a origem
-  conhecida de onde ela é escolhida; sua forma — configuração, seed ou catálogo declarado — é
-  decisão do `plan`, não desta spec, e não pode introduzir integração externa.
+- **Autoridade Signatária**: já é registrada na Publicação, e continua sendo — o ato guarda nome,
+  cargo e identificador, e esse registro é imutável. Esta feature acrescenta o **catálogo declarado**
+  de onde ela é escolhida (FR-039): entradas com chave estável, nome e cargo, no mesmo padrão do
+  catálogo de seções. NÃO é entidade persistida, não tem tela de gestão e não tem ciclo de vida
+  administrável pelo usuário.
 
 ## Success Criteria *(mandatory)*
 
 - **SC-001**: Um leitor do documento publicado não encontra estado interno de entidade, decimal de
-  quatro casas nem identificador técnico no corpo normativo, e encontra a declaração de integridade
-  com o SHA-256.
+  quatro casas nem identificador técnico no corpo normativo; encontra percentuais e notas em
+  português do Brasil; e encontra a declaração de integridade com o SHA-256 e o Edital e o Processo
+  nomeados institucionalmente.
 - **SC-002**: O snapshot publicado do mesmo Edital continua em forma canônica, e o hash do conteúdo
   não muda em função de como o documento foi escrito.
+- **SC-002a**: Dois snapshots de versão 3 do mesmo conteúdo têm exatamente as mesmas chaves, e um
+  snapshot de versão 3 basta, sozinho, para compor o documento sem consulta ao banco.
 - **SC-003**: Um usuário edita as dez seções previstas no catálogo e não encontra caminho para
   acrescentar, remover ou reordenar nenhuma.
 - **SC-004**: Um usuário descreve atribuições, carga horária e remuneração de um Perfil, salva outra
@@ -496,6 +617,11 @@ datas nos vínculos, agrupamento do caráter, confirmação ao remover e a mensa
   não é convidado a retificar.
 - **SC-009**: Depois de submeter e depois de homologar, quem agiu lê na tela qual papel age a seguir
   — e não existe fila, notificação nem atribuição no sistema.
+- **SC-009a**: A autoridade signatária é escolhida numa lista, nenhum identificador é digitado, e o
+  catálogo não guarda dado pessoal além de nome e cargo.
+- **SC-009b**: Um percurso completo do assistente por teclado, com leitor de tela, alcança a
+  obrigatoriedade de cada campo, o motivo de cada ato desabilitado, o resumo de erros e a
+  confirmação de remoção — sem depender de cor para distinguir estado.
 - **SC-010**: A jornada completa da `SC-009` da `006` — **Painel → Novo Processo → Identificação →
   Perfis → Cronograma → Etapas → Modalidades → Conteúdo → Revisão → Prévia → Submissão →
   Homologação → Publicação → documento publicado** — permanece demonstrável pela interface
@@ -510,8 +636,9 @@ datas nos vínculos, agrupamento do caráter, confirmação ao remover e a mensa
   sete existentes; adequá-la à redação do Cefor é trabalho editorial.
 - "Carga horária" e "remuneração" são texto descritivo por decisão declarada em FR-013, não por
   falta de definição.
-- A lista de autoridades signatárias nasce pequena e configurável; quantas e de onde é decisão do
-  `plan`, limitada por FR-039 a não introduzir integração externa.
+- O catálogo de autoridades signatárias nasce pequeno; quantas entradas é irrelevante para o
+  desenho, porque FR-039 já fixa a forma (declarada em código) e o ciclo de vida (alteração de
+  catálogo, sem tela e sem permissão).
 - Papéis e permissões existentes bastam; nenhum papel novo é criado.
 - O incremento de `SCHEMA_VERSION` invalida os dados de demonstração publicados, que são recriados
   pela seed.
@@ -541,7 +668,9 @@ Desta feature inteira, e sem exceção:
 ## Rastreabilidade com a auditoria
 
 A `006.1` corrigiu os achados 01, 02, 03, 04, 05, 06, 15, 16, 20 e 21. Restaram dezesseis, e os
-dezesseis estão cobertos aqui — nenhum a mais:
+dezesseis estão cobertos aqui — nenhum a mais. **A correspondência não é um-para-um**: o achado 11
+exige dois requisitos e os achados 18 e 19 se resolvem no mesmo. O que a tabela garante é cobertura
+e fechamento do conjunto, não bijeção:
 
 | Achado | Requisito |
 |---|---|
@@ -576,15 +705,16 @@ em vez de ser um lote de correções.
 Cada linha é uma entrega demonstrável no navegador. A condição de merge é a demonstração, não a
 contagem de testes.
 
-| Entrega | O que se abre no navegador |
-|---|---|
-| 1 | O documento sem `PLANEJADO`, sem `20.0000` e sem UUID no corpo |
-| 2 | As três seções institucionais no assistente e no documento, e os três campos do Perfil — juntas, por FR-018 |
-| 3 | O fluxo administrativo sem becos, incluindo a recusa que aponta o campo certo |
-| 4 | A passagem de bastão depois de submeter e de homologar |
-| 5 | Os atritos de operação |
+| Entrega | O que se abre no navegador | Toca o snapshot? |
+|---|---|---|
+| 1 | O documento sem `PLANEJADO` e com `20%` no lugar de `20.0000%` | Não |
+| 2 | As três seções institucionais, os três campos do Perfil e o documento sem UUID no corpo — as três juntas, por FR-018 | Sim, v3 |
+| 3 | O fluxo administrativo sem becos, incluindo a recusa que aponta o campo certo | Não |
+| 4 | A passagem de bastão depois de submeter e de homologar | Não |
+| 5 | Os atritos de operação | Não |
 
-A entrega 1 não toca o snapshot e pode começar imediatamente.
+A entrega 1 não toca o snapshot e pode começar imediatamente. A entrega 2 é a única que incrementa a
+versão canônica, e o faz uma vez só — por isso as três mudanças de forma viajam juntas.
 
 ## Instruções para o `/plan`
 
@@ -598,9 +728,13 @@ compatibilidade.
 
 Três avisos específicos, derivados do que esta spec verificou:
 
-1. **A formatação humana tem um lugar só.** FR-003 e FR-002 vivem no compositor
+1. **A formatação humana tem um lugar só.** FR-002 e FR-003 vivem no compositor
    (`publicacoes/infrastructure/pdf.py`). Qualquer proposta que resolva legibilidade alterando o
-   snapshot, o serializer da forma publicada ou o valor persistido viola P-002 e FR-001.
+   snapshot, o serializer da forma publicada ou o valor persistido viola P-002 e FR-001. **FR-004 é
+   outra coisa e não é exceção a esta regra**: ali o snapshot ganha um dado normativo que ele não
+   tinha — o código e o título do Processo — e a formatação continua no compositor. A pergunta que
+   separa os dois casos é se o dado existe no conteúdo publicado: percentual existe e está em forma
+   canônica; o nome do Processo não existia.
 2. **O catálogo cresce, a natureza dele não.** FR-007 é acrescentar três `Secao` a uma tupla
    declarada. Se a implementação precisar de tabela, migration de estrutura ou tela de gestão de
    seções, o requisito foi lido errado.
