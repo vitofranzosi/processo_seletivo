@@ -151,3 +151,10 @@ def test_the_grammar_document_states_that_identity_is_not_content():
     assert "não é endereçável" in gramatica
     assert "A topologia das identidades só muda onde o ato a endereça" in gramatica
     assert "só aparece por `ADD /colecao/-` e só desaparece por" in gramatica
+
+
+def test_the_grammar_document_says_what_the_identity_rule_does_not_cover():
+    """Declarar o limite é o que separa uma garantia de uma impressão de garantia."""
+    gramatica = gramatica_corrida()
+    assert "O que esta regra não cobre" in gramatica
+    assert "não vigia a forma dos campos" in gramatica or "não a forma dos campos" in gramatica

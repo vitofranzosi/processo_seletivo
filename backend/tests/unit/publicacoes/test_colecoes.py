@@ -83,3 +83,25 @@ def test_the_topology_skips_a_key_that_is_not_text_instead_of_breaking():
     """
     conteudo = {"profiles": [{"id": ["lista"]}, {"id": PERFIL["A"]}, {"sem": "chave"}]}
     assert colecoes.identidades(conteudo) == {f"/profiles/id={PERFIL['A']}"}
+
+
+def test_no_declared_collection_lives_under_a_collection_without_a_key():
+    """A premissa que `identidades` assume, congelada como teste.
+
+    A topologia percorre coleção com chave e para nas sem chave, porque dentro de uma coleção
+    sem identificador não há caminho concreto a registrar. Se uma declaração futura pendurar uma
+    coleção com chave sob uma sem, a topologia deixaria de enxergá-la — e a guarda de identidade
+    passaria a aprovar em silêncio o que deveria recusar.
+    """
+    declaradas = colecoes.COLECOES_COM_CHAVE | colecoes.COLECOES_ATOMICAS
+    for forma in declaradas:
+        partes = forma.strip("/").split("/")
+        ancestrais_lista = [
+            "/" + "/".join(partes[:indice])
+            for indice, parte in enumerate(partes)
+            if parte == colecoes.CURINGA
+        ]
+        for ancestral in ancestrais_lista:
+            assert colecoes.tem_chave(ancestral), (
+                f"{forma} está sob {ancestral}, que não é coleção com chave"
+            )

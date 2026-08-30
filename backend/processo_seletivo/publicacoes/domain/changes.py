@@ -234,25 +234,33 @@ def _chave_de(elemento):
     return chave if isinstance(chave, str) and _UUID.fullmatch(chave) else None
 
 
-def _identidades_permitidas(antes, depois, change, path):
+def _identidade_permitida(change, path, forma):
     """Prefixo sob o qual esta alteração pode criar ou destruir identidades. `None` se nenhum.
 
     `ADD /colecao/-` pode acrescentar a entidade nova e tudo o que vier dentro dela.
     `REMOVE /colecao/id=X` pode retirar X e tudo o que estava dentro de X. Qualquer outra
     operação precisa deixar a topologia intacta.
+
+    `forma` é a do contêiner, e a permissão depende dela: sem essa condição, um caminho que
+    apenas *pareça* endereçar uma coleção — `-` como nome literal de chave num objeto, ou um
+    seletor sobre um objeto — receberia uma permissão que não corresponde a coleção nenhuma.
+    Nada é explorável por aí hoje, mas permissão concedida sobre premissa errada é o que fica
+    esperando a próxima coleção declarada.
     """
+    if not colecoes.tem_chave(forma):
+        return None
     operacao = change["operation"]
     if operacao == "ADD" and path.endswith(f"/{APPEND_TOKEN}"):
-        colecao = path[: -len(APPEND_TOKEN) - 1]
         nova = _chave_de(change.get("newValue"))
+        colecao = path[: -len(APPEND_TOKEN) - 1]
         return f"{colecao}/{colecoes.CAMPO_CHAVE}={nova}" if nova else None
     if operacao == "REMOVE" and selector_uuid(parse_path(path)[-1]) is not None:
         return path
     return None
 
 
-def _recusar_identidades_implicitas(antes, depois, change, path):
-    permitido = _identidades_permitidas(antes, depois, change, path)
+def _recusar_identidades_implicitas(antes, depois, change, path, forma):
+    permitido = _identidade_permitida(change, path, forma)
 
     def fora(identidades):
         return sorted(
@@ -343,7 +351,7 @@ def apply_change(content, change):
     else:
         raise CaminhoInexistente(f"Caminho inexistente: {path}")
     _recusar_entidades_sem_chave(content, path)
-    _recusar_identidades_implicitas(antes, colecoes.identidades(content), change, path)
+    _recusar_identidades_implicitas(antes, colecoes.identidades(content), change, path, forma)
 
 
 def apply_changes(base, changes, *, publication_id):

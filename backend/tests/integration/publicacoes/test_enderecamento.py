@@ -583,3 +583,51 @@ def test_a_previously_valid_nested_path_keeps_resolving_after_a_whole_element_re
         suffix="b",
     )
     assert seguinte.alteracoes.get().target_path == caminho
+
+
+def test_an_identity_conflict_that_only_appears_at_publication_is_refused(api_client, edital, base):
+    """A guarda de identidade roda na elaboração; este é o caso que só existe depois dela.
+
+    O ato reescreve o Perfil inteiro preservando as Modalidades que viu. Outra Retificação
+    acrescenta uma Modalidade no intervalo, e o ato armazenado passaria a apagá-la — identidade
+    destruída sem que ele a endereçasse. Quem recusa aqui é a precondição por hash, porque o
+    conteúdo do Perfil deixou de ser o que estava à vista; a recusa é precisa, e não um erro
+    genérico de composição.
+    """
+    reescrever = create_retification(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": f"/profiles/id={P1}",
+                "operation": "REPLACE",
+                "newValue": {**base.content["profiles"][0], "name": "Reescrito"},
+            }
+        ],
+        base=base,
+        suffix="a",
+    )
+    acrescentar_modalidade = create_retification(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": f"/profiles/id={P1}/competitionModalities/-",
+                "operation": "ADD",
+                "newValue": {"id": "00000000-0000-0000-0000-0000000005ee", "code": "NOVA"},
+            }
+        ],
+        base=base,
+        suffix="b",
+    )
+    publish_retification(api_client, acrescentar_modalidade, suffix="b")
+
+    recusa = try_publish_retification(api_client, reescrever, suffix="a")
+
+    assert recusa.status_code == 409, recusa.content
+    assert recusa.data["code"] == "expected_hash_mismatch"
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    modalidades = [m["id"] for m in vigente.content["profiles"][0]["competitionModalities"]]
+    assert "00000000-0000-0000-0000-0000000005ee" in modalidades, (
+        "a Modalidade acrescentada no intervalo continua vigente"
+    )

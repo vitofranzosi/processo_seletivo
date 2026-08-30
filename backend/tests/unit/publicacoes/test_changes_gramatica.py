@@ -600,3 +600,43 @@ def test_an_atomic_collection_may_still_be_replaced_by_a_list():
     caminho = f"/profiles/id={P1}/requirements"
     depois = alterado(conteudo_normativo(), targetPath=caminho, operation="REPLACE", newValue=[])
     assert resolve_path(depois, caminho) == []
+
+
+@pytest.mark.parametrize(
+    ("descricao", "conteudo", "change"),
+    [
+        (
+            "`-` como nome literal de chave num objeto",
+            {"rules": {}},
+            {"targetPath": "/rules/-", "operation": "ADD", "newValue": {"id": NOVO_UUID}},
+        ),
+        (
+            "seletor como nome literal de chave num objeto",
+            {"rules": {f"id={NOVO_UUID}": {"x": 1}}},
+            {"targetPath": f"/rules/id={NOVO_UUID}", "operation": "REMOVE"},
+        ),
+    ],
+)
+def test_a_path_that_only_looks_like_a_collection_earns_no_identity_permission(
+    descricao, conteudo, change
+):
+    """A permissão de mexer na topologia depende do contêiner, não da aparência do caminho.
+
+    Nada é explorável por aqui hoje, porque nenhuma coleção declarada mora nesses lugares. Mas
+    permissão concedida sobre premissa errada é o que fica esperando a próxima declaração.
+    """
+    from processo_seletivo.publicacoes.domain.changes import _identidade_permitida
+
+    assert _identidade_permitida(change, change["targetPath"], "/rules") is None, descricao
+    apply_change(conteudo, change)  # segue admitido: é chave de objeto, e não move identidade
+
+
+def test_the_permission_is_granted_where_the_container_really_is_a_keyed_collection():
+    from processo_seletivo.publicacoes.domain.changes import _identidade_permitida
+
+    acrescimo = {"targetPath": "/profiles/-", "operation": "ADD", "newValue": {"id": NOVO_UUID}}
+    assert _identidade_permitida(acrescimo, "/profiles/-", "/profiles") == (
+        f"/profiles/id={NOVO_UUID}"
+    )
+    remocao = {"targetPath": f"/profiles/id={P1}", "operation": "REMOVE"}
+    assert _identidade_permitida(remocao, f"/profiles/id={P1}", "/profiles") == f"/profiles/id={P1}"

@@ -99,6 +99,10 @@ Retificação.
   identidade — nem a da entidade endereçada, nem a das que estiverem dentro dela. Sem isso, um
   caminho já publicado deixava de nomear a entidade que nomeava sem que ninguém a tivesse tocado.
 - Reordenar uma coleção é admitido: ordem é conteúdo normativo, identidade não.
+- A permissão de mexer na topologia depende do contêiner ser mesmo uma coleção com chave, e não
+  de o caminho parecer com uma: `-` e `id=<uuid>` sobre objeto são nomes de chave literais.
+- Nenhuma coleção declarada mora sob uma coleção sem chave — dentro dela não haveria caminho
+  concreto de identidade a registrar. A premissa é verificada por teste.
 - Chave repetida numa coleção é estado impossível, recusado na elaboração e na Publicação, e
   verificado **depois de cada alteração** — senão acrescentar sob a chave de outro e remover o
   original em seguida terminaria íntegro e teria trocado a entidade em silêncio.

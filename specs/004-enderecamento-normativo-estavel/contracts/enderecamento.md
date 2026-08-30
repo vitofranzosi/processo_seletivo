@@ -83,6 +83,20 @@ o `id` dele mas apagando as Modalidades de dentro, e esvaziar uma coleção anin
 Reescrever uma entidade inteira continua sendo admitido, desde que as identidades dentro dela
 permaneçam. Reordenar uma coleção também: ordem é conteúdo normativo, identidade não.
 
+**A regra vale sobre a coleção, e não sobre a aparência do caminho.** Um segmento `-` ou
+`id=<uuid>` sobre um objeto é nome de chave literal (FR-002) e não concede permissão nenhuma de
+mexer na topologia.
+
+**Na Publicação, quem recusa é a precondição por hash.** Um `REPLACE` de entidade inteira carrega
+o hash do que estava à vista; se outra Retificação acrescentou algo dentro dela no intervalo, o
+hash já não confere e a recusa é `expected_hash_mismatch` — precisa, e não um erro genérico de
+composição.
+
+**O que esta regra não cobre.** Ela vigia identidades, não a forma dos campos. Um `REPLACE` de
+entidade inteira que preserve as identidades e omita campos normativos — `name`, `requirements` —
+não é recusado aqui, porque nada no sistema valida a forma do `newValue`. É defeito anterior a
+esta feature e vale para qualquer caminho de escrita.
+
 `normativeRule` tem `id` e **não** é elemento de coleção — o `id` dela é conteúdo comum e continua
 endereçável.
 
