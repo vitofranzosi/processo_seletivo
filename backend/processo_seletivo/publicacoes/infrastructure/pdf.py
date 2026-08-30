@@ -22,6 +22,15 @@ RODAPE = 56
 FATOR_LARGURA = 0.52
 
 REGULAR, NEGRITO = "F1", "F2"
+
+# O modo do renderizador (FR-015). Um parâmetro, e não condicionais espalhadas pela composição:
+# a diferença entre o que se revisa e o que se publica precisa ter **um** lugar onde está
+# declarada, ou os dois documentos divergem sem que nada acuse.
+MODO_PUBLICADO = "PUBLISHED"
+MODO_PREVIA = "PREVIEW"
+MODOS = (MODO_PUBLICADO, MODO_PREVIA)
+
+MARCA_DE_PREVIA = "PRÉVIA — documento em elaboração, sem valor de publicação"
 RESERVA = {
     "NONE": "não há",
     "LIMITED": "limitado",
@@ -217,17 +226,31 @@ def _fluxo_da_pagina(linhas, rodape):
     return b"\n".join(partes)
 
 
-def render_edital_pdf(snapshot: dict, content_hash: str) -> bytes:
+def render_edital_pdf(snapshot: dict, content_hash: str, modo: str = MODO_PUBLICADO) -> bytes:
+    """O mesmo documento, em dois modos.
+
+    Em `MODO_PUBLICADO` o resultado é o de sempre, byte a byte — uma fixture o guarda. Em
+    `MODO_PREVIA` a seção de integridade não é composta e `content_hash` **não é lido em lugar
+    nenhum**: um documento administrativo que parece publicado sem ter sido é risco normativo, e
+    depender de o chamador passar vazio seria deixar a garantia com quem não a tem (FR-014).
+    """
+    if modo not in MODOS:
+        raise ValueError(f"Modo de renderização desconhecido: {modo!r}.")
+    previa = modo == MODO_PREVIA
+
     composicao = Composicao()
     _cabecalho(composicao, snapshot)
+    if previa:
+        composicao.escrever(MARCA_DE_PREVIA, tamanho=11, fonte=NEGRITO, antes=12)
     _perfis(composicao, snapshot)
     _cronograma(composicao, snapshot)
-    _integridade(composicao, snapshot, content_hash)
+    if not previa:
+        _integridade(composicao, snapshot, content_hash)
     paginas = composicao.paginar()
 
+    edital = f"Edital {snapshot.get('number', '')}/{snapshot.get('year', '')}"
     identificacao = (
-        f"Edital {snapshot.get('number', '')}/{snapshot.get('year', '')} · "
-        f"SHA-256 {content_hash[:16]}…"
+        f"{MARCA_DE_PREVIA} · {edital}" if previa else f"{edital} · SHA-256 {content_hash[:16]}…"
     )
     fluxos = [
         _fluxo_da_pagina(linhas, f"{identificacao} · Página {numero} de {len(paginas)}")

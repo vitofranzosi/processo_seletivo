@@ -5,14 +5,38 @@ irreversível com as consequências ditas, segregação de funções comunicada 
 e o duplo clique não praticando dois atos.
 """
 
+import re
+
 import pytest
 from django.urls import reverse
 
 from processo_seletivo.processos.models import Edital
-from processo_seletivo.publicacoes.models import Publicacao
+from processo_seletivo.publicacoes.infrastructure.pdf import MARCA_DE_PREVIA
+from processo_seletivo.publicacoes.models import (
+    DocumentoPublicado,
+    Publicacao,
+    RevisaoEdital,
+)
+from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from tests.fixtures.edital import caminho_perfil
 from tests.fixtures.publicacao import publish_original, retify
 from tests.interface.conftest import compor_rascunho, identificar
+
+TEXTO_PDF = re.compile(rb"\((.*?)\) Tj", re.DOTALL)
+
+
+def texto_de_pdf_bytes(pdf: bytes) -> str:
+    """O texto realmente desenhado — não o que se supõe ter sido escrito."""
+    return "\n".join(
+        parte.replace(b"\\(", b"(").replace(b"\\)", b")").decode("cp1252")
+        for parte in TEXTO_PDF.findall(pdf)
+    )
+
+
+def texto_do_pdf(resposta) -> str:
+    assert resposta.status_code == 200, resposta.content
+    return texto_de_pdf_bytes(resposta.content)
+
 
 PERFIS = {
     "perfil-0-id": "cccccccc-0000-4000-8000-00000000f001",
@@ -283,3 +307,126 @@ def test_detalhe_oferece_o_documento_de_cada_publicacao_sem_rotular_vigente(
     itens = lista.split("<li>")[1:]
     assert len(itens) == 2
     assert [item for item in itens if "vigente" in item.lower()] == []
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_previa_nao_cria_registro_publicado_nem_muda_o_estado(client, seletor_ligado, edital):
+    """FR-011: visualizar não é ato — e é isso que torna a prévia utilizável a qualquer hora."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    edital.refresh_from_db()
+
+    antes = (
+        Publicacao.objects.count(),
+        RevisaoEdital.objects.count(),
+        VersaoConsolidada.objects.count(),
+        DocumentoPublicado.objects.count(),
+    )
+    resposta = client.get(reverse("interface:previa", args=[edital.id]))
+
+    assert resposta.status_code == 200
+    assert resposta["Content-Type"] == "application/pdf"
+    assert "previa-edital-" in resposta["Content-Disposition"]
+    assert resposta.content.startswith(b"%PDF-")
+    assert (
+        Publicacao.objects.count(),
+        RevisaoEdital.objects.count(),
+        VersaoConsolidada.objects.count(),
+        DocumentoPublicado.objects.count(),
+    ) == antes
+    assert Edital.objects.get(pk=edital.pk).status == Edital.Status.EM_ELABORACAO
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_previa_reflete_o_rascunho_gravado_e_permite_continuar_editando(
+    client, seletor_ligado, edital
+):
+    """FR-005 e FR-012: o que se vê é o que está gravado, e voltar não custa nada."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    edital.refresh_from_db()
+    assert "Inscrições" in texto_do_pdf(client.get(reverse("interface:previa", args=[edital.id])))
+
+    client.post(
+        reverse("interface:compor-etapa", args=[edital.id, "cronograma"]),
+        dict(EVENTOS, **{"evento-0-description": "Inscrições prorrogadas"}),
+    )
+    depois = texto_do_pdf(client.get(reverse("interface:previa", args=[edital.id])))
+    assert "Inscrições prorrogadas" in depois
+
+    # E a composição continua aberta: a prévia não fechou nada.
+    voltando = client.get(reverse("interface:compor-etapa", args=[edital.id, "cronograma"]))
+    assert voltando.status_code == 200
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_previa_acompanha_o_edital_ate_a_homologacao_e_para_na_publicacao(
+    client, seletor_ligado, edital
+):
+    """FR-008: quem homologa e quem publica precisam ler o documento antes de decidir."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    assert client.get(reverse("interface:previa", args=[edital.id])).status_code == 200
+
+    praticar(client, Edital.objects.get(), "submeter")
+    identificar(client, "bruno.homologador", ["homologador"])
+    detalhe = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
+    assert "Visualizar Edital" in detalhe
+    assert client.get(reverse("interface:previa", args=[edital.id])).status_code == 200
+
+    praticar(client, Edital.objects.get(), "homologar", motivo="Conferido")
+    assert client.get(reverse("interface:previa", args=[edital.id])).status_code == 200
+
+    identificar(client, "carla.publicadora", ["publicador"])
+    praticar(client, Edital.objects.get(), "publicar", motivo="Publicação", **SIGNATARIO)
+    assert Edital.objects.get().status == Edital.Status.PUBLICADO
+    # Publicado tem documento de verdade; uma prévia ao lado dele seria um segundo documento
+    # para o mesmo conteúdo.
+    recusada = client.get(reverse("interface:previa", args=[edital.id]))
+    assert recusada.status_code == 409
+    assert "Visualizar Edital" not in client.get(
+        reverse("interface:detalhe", args=[edital.id])
+    ).content.decode()
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_previa_e_recusada_a_quem_nao_alcanca_o_edital(client, seletor_ligado, edital):
+    """Anti-IDOR: a prévia é conteúdo normativo em construção, não página pública."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    sessao = client.session
+    sessao["interface_identidade"] = {
+        "subject": "ana.elaboradora",
+        "escopo": "outra-instituicao",
+        "papeis": ["elaborador"],
+    }
+    sessao.save()
+    assert client.get(reverse("interface:previa", args=[edital.id])).status_code == 404
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_publicar_logo_apos_a_previa_produz_o_mesmo_conteudo_normativo(
+    client, seletor_ligado, edital
+):
+    """FR-013: é o que faz a prévia valer alguma coisa — e a diferença é só a moldura."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    praticar(client, Edital.objects.get(), "submeter")
+    identificar(client, "bruno.homologador", ["homologador"])
+    praticar(client, Edital.objects.get(), "homologar", motivo="Conferido")
+
+    visualizado = texto_do_pdf(client.get(reverse("interface:previa", args=[edital.id])))
+
+    identificar(client, "carla.publicadora", ["publicador"])
+    praticar(client, Edital.objects.get(), "publicar", motivo="Publicação", **SIGNATARIO)
+    publicado = texto_de_pdf_bytes(bytes(DocumentoPublicado.objects.get().bytes))
+
+    for esperado in ("P1", "Perfil", "INSCRICAO", "Inscrições"):
+        assert esperado in visualizado and esperado in publicado, esperado
+    assert MARCA_DE_PREVIA in visualizado
+    assert MARCA_DE_PREVIA not in publicado
+    assert "INTEGRIDADE" in publicado and "INTEGRIDADE" not in visualizado

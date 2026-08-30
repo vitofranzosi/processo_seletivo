@@ -98,18 +98,18 @@ continuar editando — sem que nenhum registro publicado seja criado.
 
 **Dependency**: T002 precisa estar feita, ou a regressão de bytes não tem linha de base.
 
-- [ ] T017 [US1] Acrescentar modo `PREVIEW | PUBLISHED` a `render_edital_pdf`, suprimindo a composição de integridade e trocando o rodapé pela marca de prévia em todas as páginas, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`
-- [ ] T018 [US1] Criar a view de prévia, que renderiza `edital_snapshot(edital)` e devolve os bytes sem persistir nada, em `backend/processo_seletivo/interface/views.py`, com rota em `backend/processo_seletivo/interface/urls.py` e nome de arquivo de prévia no `Content-Disposition`
-- [ ] T019 [P] [US1] Oferecer `Visualizar Edital` na etapa de Revisão, em `backend/processo_seletivo/interface/templates/interface/compor_revisao.html`
-- [ ] T020 [P] [US1] Oferecer `Visualizar Edital` no detalhe enquanto submetido ou homologado, em `backend/processo_seletivo/interface/templates/interface/detalhe.html`
+- [X] T017 [US1] Acrescentar modo `PREVIEW | PUBLISHED` a `render_edital_pdf`, suprimindo a composição de integridade e trocando o rodapé pela marca de prévia em todas as páginas, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`
+- [X] T018 [US1] Criar a view de prévia, que renderiza `edital_snapshot(edital)` e devolve os bytes sem persistir nada, em `backend/processo_seletivo/interface/views.py`, com rota em `backend/processo_seletivo/interface/urls.py` e nome de arquivo de prévia no `Content-Disposition`
+- [X] T019 [P] [US1] Oferecer `Visualizar Edital` na etapa de Revisão, em `backend/processo_seletivo/interface/templates/interface/compor_revisao.html`
+- [X] T020 [P] [US1] Oferecer `Visualizar Edital` no detalhe enquanto submetido ou homologado, em `backend/processo_seletivo/interface/templates/interface/detalhe.html`
 
 ### Testes
 
-- [ ] T021 [US1] Em modo publicado, os bytes continuam idênticos à fixture de T002, em `backend/tests/contract/test_documento_publicado.py`
-- [ ] T022 [P] [US1] Em modo prévia, nenhuma página contém hash ou afirmação de derivação de versão homologada, e todas contêm a marca, em `backend/tests/contract/test_documento_publicado.py`
-- [ ] T023 [P] [US1] Visualizar não altera o estado do Edital e não cria `Publicacao`, `RevisaoEdital`, `VersaoConsolidada` nem `DocumentoPublicado`, em `backend/tests/interface/test_fluxo.py`
-- [ ] T024 [US1] A prévia está disponível em elaboração, submetido e homologado, e é recusada a quem não pode ver o Edital, em `backend/tests/interface/test_fluxo.py`
-- [ ] T025 [US1] Publicar logo após a prévia, sem alterações, produz documento de mesmo conteúdo normativo, em `backend/tests/interface/test_fluxo.py`
+- [X] T021 [US1] Em modo publicado, os bytes continuam idênticos à fixture de T002, em `backend/tests/contract/test_documento_publicado.py`
+- [X] T022 [P] [US1] Em modo prévia, nenhuma página contém hash ou afirmação de derivação de versão homologada, e todas contêm a marca, em `backend/tests/contract/test_documento_publicado.py`
+- [X] T023 [P] [US1] Visualizar não altera o estado do Edital e não cria `Publicacao`, `RevisaoEdital`, `VersaoConsolidada` nem `DocumentoPublicado`, em `backend/tests/interface/test_fluxo.py`
+- [X] T024 [US1] A prévia está disponível em elaboração, submetido e homologado, e é recusada a quem não pode ver o Edital, em `backend/tests/interface/test_fluxo.py`
+- [X] T025 [US1] Publicar logo após a prévia, sem alterações, produz documento de mesmo conteúdo normativo, em `backend/tests/interface/test_fluxo.py`
 
 **Checkpoint**: demonstrável — editar, visualizar, voltar, editar de novo.
 

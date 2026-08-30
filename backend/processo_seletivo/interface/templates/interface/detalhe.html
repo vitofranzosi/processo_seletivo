@@ -76,6 +76,13 @@ permanecem preservados.</p>
       {% if pode_compor %}
       <li><a class="botao secundario" href="{% url 'interface:compor' edital.id %}">Compor Perfis e Cronograma</a></li>
       {% endif %}
+      {% if pode_visualizar %}
+      {% comment %}
+      Quem homologa e quem publica decidem sobre um documento; poder lê-lo antes é o que dá
+      conteúdo à segregação de funções, que exige ao menos dois atores.
+      {% endcomment %}
+      <li><a class="botao secundario" href="{% url 'interface:previa' edital.id %}">Visualizar Edital</a></li>
+      {% endif %}
       {% for ato in atos %}
       <li>
         <a class="botao {% if ato.interrupcao %}perigoso{% elif ato.irreversivel %}{% else %}secundario{% endif %}"

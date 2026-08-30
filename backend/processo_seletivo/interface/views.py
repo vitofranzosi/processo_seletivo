@@ -42,6 +42,7 @@ from processo_seletivo.publicacoes.application.selectors import (
     impede_por_segregacao,
     participantes_do_edital,
 )
+from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA, render_edital_pdf
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
@@ -533,6 +534,45 @@ def _trilha(edital):
     ]
 
 
+# Onde a prévia faz sentido. Publicado tem documento de verdade, e oferecer uma prévia ao lado
+# dele criaria dois documentos concorrentes para o mesmo conteúdo.
+ESTADOS_COM_PREVIA = (
+    Edital.Status.EM_ELABORACAO,
+    Edital.Status.EM_REVISAO,
+    Edital.Status.HOMOLOGADO,
+)
+
+
+@require_http_methods(["GET"])
+def previa(request, edital_id):
+    """O documento como ele ficará, sem praticar ato nenhum (US1).
+
+    Não é command: não altera estado, não gera ato e não tem chave de idempotência. É leitura que
+    compõe um documento a partir do snapshot atual — que nos três estados admitidos **é** o
+    conteúdo que será publicado, porque depois da submissão o rascunho não é editável e a
+    publicação já recusa divergência entre rascunho e revisão homologada. Uma segunda origem
+    existiria para reproduzir o que a primeira já garante.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital = obter_edital(actor=ator, edital_id=edital_id)
+    if edital is None:
+        raise Http404
+    if edital.status not in ESTADOS_COM_PREVIA:
+        raise DomainError(
+            "invalid_state",
+            "A prévia existe enquanto o Edital está em elaboração, submetido ou homologado. "
+            "Depois da publicação, o documento é o publicado.",
+            409,
+        )
+    documento = render_edital_pdf(edital_snapshot(edital), "", modo=MODO_PREVIA)
+    resposta = HttpResponse(documento, content_type="application/pdf")
+    nome = f"previa-edital-{edital.number}-{edital.year}.pdf".replace("/", "-")
+    resposta["Content-Disposition"] = f'inline; filename="{nome}"'
+    return resposta
+
+
 def _documentos_publicados(edital):
     """O documento de cada Publicação, na ordem, identificado pelo ato que o produziu (FR-002).
 
@@ -583,6 +623,7 @@ def detalhe(request, edital_id):
             "impedido_por_segregacao": impede_por_segregacao(participantes, ator),
             "pode_compor": edital.status == Edital.Status.EM_ELABORACAO
             and ator.can("edital:elaborar"),
+            "pode_visualizar": edital.status in ESTADOS_COM_PREVIA,
             "pode_auditar": ator.can("auditoria:consultar"),
         },
     )

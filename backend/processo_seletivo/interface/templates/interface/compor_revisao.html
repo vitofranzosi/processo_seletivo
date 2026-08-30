@@ -38,6 +38,11 @@
 
 <p class="navegacao-etapa">
   <a href="{% url 'interface:compor-etapa' edital.id anterior %}" class="acao">‹ Voltar</a>
+  {% comment %}
+  Visualizar não é ato: não altera estado nem cria registro publicado. Por isso fica ao lado de
+  "Submeter" sem confirmação, e sem a marca de irreversível.
+  {% endcomment %}
+  <a href="{% url 'interface:previa' edital.id %}" class="botao secundario">Visualizar Edital</a>
   {% if editavel %}
   <a href="{% url 'interface:ato' edital.id 'submeter' %}" class="botao">Submeter para revisão</a>
   {% endif %}
