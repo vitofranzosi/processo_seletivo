@@ -87,3 +87,23 @@ def test_pendencia_impeditiva_tambem_retira_o_confirmar(client, seletor_ligado, 
 
     assert "Impedimento:" in corpo, "um Edital recém-criado não tem Perfil nem Evento"
     assert "Confirmar: " not in corpo
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_nenhuma_pendencia_com_etapa_e_declarada_incorrigivel(client, seletor_ligado, edital):
+    """FR-007: dizer "não há como corrigir" sobre o que a etapa corrige é pior que não dizer nada.
+
+    A verificação é sobre a regra, e não sobre o dicionário: percorre as pendências que a tela
+    realmente produz e exige que toda a que tem etapa de destino seja corrigível. Um destino novo
+    que nasça sem ato de domínio cai aqui.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = client.get(reverse("interface:compor-etapa", args=[edital.id, "revisao"]))
+
+    pendencias = resposta.context["pendencias"]
+    assert pendencias, "o Edital recém-criado precisa ter pendências, ou o teste não verifica nada"
+    com_etapa = [item for item in pendencias if item["etapa"]]
+    assert com_etapa, "ao menos uma pendência precisa apontar para uma etapa"
+    assert [item for item in com_etapa if not item["corrigivel"]] == []
+    assert "Não corrigível aqui" not in resposta.content.decode()

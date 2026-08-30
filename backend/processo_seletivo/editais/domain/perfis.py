@@ -1,5 +1,35 @@
+from decimal import Decimal, InvalidOperation
+
+
 class ProfileValidationError(ValueError):
     pass
+
+
+def validate_normative_rule(rule: dict) -> None:
+    """A faixa do percentual vive aqui, e não no serializer (FR-030).
+
+    A interface administrativa invoca o command diretamente e não atravessa o serializer da API:
+    validar apenas ali deixaria sem verificação justamente o canal onde o dado é digitado.
+
+    **Zero não é reserva de nenhuma vaga: é ausência de reserva.** Modalidade sem percentual
+    exprime-se pela ausência da regra ou do campo, e um zero afirmaria uma reserva que reserva
+    nada. Não se valida soma entre modalidades — cotas não somam cem por cento (PPI 20% e PcD 5%
+    convivem), e a regra de composição pertence à jornada do candidato, que está fora de escopo.
+    """
+    bruto = rule.get("percentage")
+    if bruto is None:
+        return
+    try:
+        percentual = Decimal(str(bruto))
+    except InvalidOperation as exc:
+        raise ProfileValidationError(
+            f"'{bruto}' não é um percentual válido para a Regra Normativa."
+        ) from exc
+    if not 0 < percentual <= 100:
+        raise ProfileValidationError(
+            "O percentual da Regra Normativa, quando informado, deve ser maior que zero e "
+            "menor ou igual a cem."
+        )
 
 
 def validate_profile(profile: dict) -> None:
@@ -16,9 +46,14 @@ def validate_profile(profile: dict) -> None:
         raise ProfileValidationError("Cadastro Reserva ilimitado não admite limite.")
     if reserve_type not in {"NONE", "LIMITED", "UNLIMITED"}:
         raise ProfileValidationError("Tipo de Cadastro Reserva inválido.")
-    modality_codes = [item["code"] for item in profile.get("competitionModalities", [])]
+    modalities = profile.get("competitionModalities", [])
+    modality_codes = [item["code"] for item in modalities]
     if len(modality_codes) != len(set(modality_codes)):
         raise ProfileValidationError("Modalidades de Concorrência não podem se repetir no Perfil.")
+    for modality in modalities:
+        rule = modality.get("normativeRule")
+        if rule:
+            validate_normative_rule(rule)
 
 
 def validate_profiles(profiles: list[dict]) -> None:

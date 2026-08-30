@@ -1,16 +1,31 @@
 <!--
 Sync Impact Report
-- Version change: template (unratified) -> 1.0.0
-- Modified principles:
-  - Template Principle 1 -> I. Linguagem Ubíqua e Integridade do Domínio
-  - Template Principle 2 -> II. Integridade Normativa, Imutabilidade e Temporalidade
-  - Template Principle 3 -> III. Segurança, Proteção de Dados e Auditoria
-  - Template Principle 4 -> IV. Regras Explícitas e Consistência Operacional
-  - Template Principle 5 -> V. Qualidade, Rastreabilidade e Simplicidade
+- Version change: 1.0.0 -> 1.1.0 -> 1.1.1
+- Motivo do MINOR (1.1.0): princípio novo acrescentado; nenhum princípio existente foi removido ou
+  redefinido, e nenhuma garantia anterior foi enfraquecida.
+- Motivo do PATCH (1.1.1): "interface do produto" era leitura estreita demais. O produto tem mais
+  de um canal — a interface administrativa serve quem elabora, a API pública serve quem consulta —
+  e a redação anterior tornaria indemonstrável, por definição, qualquer jornada cujo ator não use
+  navegador. A exigência passa a ser o canal destinado ao ator daquela jornada, sem perder o dente:
+  continua vedado demonstrar por chamada manual o que o canal do ator não oferece.
+- Origem: revisão de produto de 2026-08-30 sobre as telas da `002`, verificada contra o
+  repositório. As specs `003`, `004` e `005` nasceram, cada uma, do limite registrado pela
+  anterior — a função objetivo que a Constituição declarava era completa em integridade e omissa
+  em jornada, e o processo a otimizou corretamente. O princípio VI fecha essa omissão.
 - Added sections:
-  - Restrições e Invariantes do Domínio
-  - Fluxo de Desenvolvimento e Critérios de Qualidade
+  - VI. Completude de Jornada e Valor Demonstrável
+- Modified principles: nenhum
+- Modified sections:
+  - Fluxo de Desenvolvimento e Critérios de Qualidade — a lista de conclusão de funcionalidade
+    passa a exigir o cenário demonstrável do princípio VI.
 - Removed sections: nenhuma
+- Impacto nos artefatos vigentes: `001` a `005` permanecem conformes; o princípio VI não é
+  retroativo e não reabre feature concluída. A `006` já nasce sob ele — suas entregas são
+  demonstráveis no navegador e seu `SC-009` é o cenário de ponta a ponta exigido.
+- Plano de adequação: nenhum necessário. A exigência incide sobre especificações abertas a partir
+  desta data.
+- Templates dependentes: não modificados; leem a Constituição em tempo de execução.
+- Aprovação institucional: 1.1.1 aprovada em 2026-08-30, conforme exigido pela Governance.
 - Follow-up TODOs: nenhum
 -->
 # Constituição do Sistema de Gestão de Processos Seletivos
@@ -143,6 +158,32 @@ DEVEM revelar stack traces, credenciais, tokens ou detalhes internos sensíveis.
 Racional: qualidade rastreável reduz regressões; simplicidade justificada preserva a evolução sem
 sacrificar garantias essenciais.
 
+### VI. Completude de Jornada e Valor Demonstrável
+
+Toda funcionalidade DEVE ampliar uma capacidade observável na jornada de um usuário real.
+Infraestrutura, validação, auditoria, integridade, versionamento e mecanismos internos são
+requisitos de qualidade da capacidade entregue e NÃO PODEM substituí-la. Uma capacidade que o
+domínio sustenta mas que nenhuma interface alcança NÃO DEVE ser considerada entregue.
+
+Uma especificação somente DEVE ser considerada concluída quando existir cenário demonstrável de
+ponta a ponta no qual o usuário realiza ação nova ou completa de maneira significativamente melhor
+uma ação existente. O cenário DEVE ser executável pelo canal destinado ao ator daquela jornada — a
+interface administrativa para quem elabora, a API pública para quem consulta — sem manipulação de
+banco, sem shell e sem recurso a canal alheio ao ator. Demonstrar por chamada manual aquilo que o
+canal do ator não oferece NÃO satisfaz esta exigência.
+
+Trabalho exclusivamente técnico PODE existir quando necessário para desbloquear jornada já
+identificada, mas DEVE declarar explicitamente qual capacidade de produto desbloqueia e NÃO DEVE
+gerar autonomamente a prioridade da especificação seguinte.
+
+O backlog subsequente DEVE derivar prioritariamente das jornadas e objetivos do produto, e NÃO DEVE
+derivar automaticamente dos itens `Out of Scope`, dívidas ou casos de borda da funcionalidade
+imediatamente anterior. Limites registrados são insumo de priorização, nunca a priorização em si.
+
+Racional: rigor sem jornada produz regras impecavelmente testadas sobre um fluxo principal
+inexistente; a prioridade é do produto, e a integridade é como ele se sustenta — não o que ele
+entrega.
+
 ## Restrições e Invariantes do Domínio
 
 - Um Processo Seletivo DEVE possuir ao menos um Edital e PODE possuir vários. Cada Edital DEVE
@@ -200,8 +241,10 @@ confirmação e consequências inequívocas.
 
 Uma funcionalidade somente PODE ser concluída quando, conforme aplicável: requisitos e invariantes
 forem atendidos; autorização validada; migrations aplicáveis; testes aprovados; documentação e
-contratos atualizados; auditoria implementada; inexistirem regressões críticas conhecidas; e todos
-os artefatos estiverem consistentes. Compilar ou atender apenas ao cenário principal NÃO basta.
+contratos atualizados; auditoria implementada; inexistirem regressões críticas conhecidas; existir o
+cenário demonstrável exigido pelo princípio VI; e todos os artefatos estiverem consistentes.
+Compilar ou atender apenas ao cenário principal NÃO basta, e suíte aprovada sem cenário demonstrável
+também NÃO basta.
 
 ## Governance
 
@@ -221,4 +264,4 @@ Planos e revisões de implementação DEVEM conter verificação constitucional.
 justificativa aprovada DEVE bloquear o incremento. A conformidade DEVE ser reavaliada em cada
 análise de consistência e antes da conclusão de funcionalidade.
 
-**Version**: 1.0.0 | **Ratified**: 2026-08-27 | **Last Amended**: 2026-08-27
+**Version**: 1.1.1 | **Ratified**: 2026-08-27 | **Last Amended**: 2026-08-30

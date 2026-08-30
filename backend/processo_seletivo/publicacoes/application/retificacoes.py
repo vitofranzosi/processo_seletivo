@@ -480,7 +480,28 @@ def _assert_well_formed(content, contexto):
         )
 
 
+def _assert_versao_canonica(content, contexto):
+    """A versão registrada tem de ser a versão do conteúdo (FR-047).
+
+    A Publicação de Retificação carimba a constante global sobre conteúdo derivado de uma
+    Publicação-base que carrega a própria `schemaVersion`. Depois de um incremento as duas podem
+    divergir, e o registro afirmaria uma versão que o conteúdo não tem.
+
+    A recusa é uma comparação; a alternativa seria uma máquina. Converter v1 em v2, ou atualizar em
+    massa os snapshots existentes, construiria compatibilidade para conteúdo que não existe.
+    """
+    declarada = content.get("schemaVersion")
+    if declarada != SCHEMA_VERSION:
+        raise DomainError(
+            "canonical_schema_version_mismatch",
+            f"{contexto} está na versão canônica {declarada}, e a vigente é {SCHEMA_VERSION}. "
+            "Consolidar produziria registro que afirma uma versão que o conteúdo não tem.",
+            409,
+        )
+
+
 def _assert_structurally_publishable(content, boundary):
+    _assert_versao_canonica(content, f"O conteúdo que passaria a vigorar em {boundary.isoformat()}")
     _assert_well_formed(content, f"O conteúdo que passaria a vigorar em {boundary.isoformat()}")
 
 
@@ -546,6 +567,10 @@ def publish_retification(
         effective_at = item.effective_at or now
         if effective_at < now:
             raise DomainError("invalid_effective_at", "Vigência não pode ser retroativa.", 422)
+        # Antes de aplicar: o conteúdo-base é o que a Publicação vai carimbar com a constante
+        # global, e carimbá-la sobre conteúdo de outra versão canônica seria registrar uma
+        # afirmação falsa.
+        _assert_versao_canonica(item.base_snapshot.content, "O conteúdo-base desta Retificação")
         changes = _changes_payload(item)
         _reject_changes_without_content_precondition(changes)
         _reject_stale_changes(_content_in_force(edital, effective_at), changes)

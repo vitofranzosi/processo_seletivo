@@ -25,8 +25,12 @@ que ninguém tomou.
 import re
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from uuid import UUID
+
+from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_normative_rule
+from processo_seletivo.editais.domain.secoes import CATALOGO, GERADA, TEXTUAL
 
 
 class Severity(StrEnum):
@@ -98,7 +102,41 @@ EVENTO_PUBLICADO = (
     Campo("status", str),
 )
 
-COLECOES_PUBLICADAS = (("profiles", PERFIL_PUBLICADO), ("schedule", EVENTO_PUBLICADO))
+# A forma canônica do decimal de `weight` e `minimumScore`, os dois `decimal(7,4)`: no máximo três
+# dígitos inteiros, sempre quatro casas, e **sem zeros à esquerda**, porque é assim que a
+# persistência os materializa. O sinal é admitido de propósito: o padrão descreve **forma**, e a
+# faixa é regra de domínio — fazê-lo recusar o sinal misturaria as duas coisas, e foi assim que uma
+# invariante não declarada entrou por uma expressão regular. A faixa vive em
+# `_coerencia_das_etapas`, que já percorre a coleção.
+DECIMAL = r"^-?(0|[1-9]\d{0,2})\.\d{4}$"
+
+ETAPA_PUBLICADA = (
+    Campo("id", str, formato="uuid"),
+    Campo("name", str),
+    Campo("order", int, minimo=0),
+    Campo("weight", str, admite_nulo=True, formato="decimal", padrao=DECIMAL),
+    Campo("eliminatory", bool),
+    Campo("classificatory", bool),
+    Campo("minimumScore", str, admite_nulo=True, formato="decimal", padrao=DECIMAL),
+    Campo("scheduleEventId", str, admite_nulo=True, formato="uuid"),
+)
+
+# `content` e `source` **não entram**: dependem do tipo, e `Campo` não expressa coerência entre
+# campos. A ausência é deliberada, e o que ela deixa de fora está em `_topologia_das_secoes`.
+SECAO_PUBLICADA = (
+    Campo("id", str, formato="uuid"),
+    Campo("key", str),
+    Campo("title", str),
+    Campo("order", int, minimo=0),
+    Campo("type", str, valores=(GERADA, TEXTUAL)),
+)
+
+COLECOES_PUBLICADAS = (
+    ("profiles", PERFIL_PUBLICADO),
+    ("schedule", EVENTO_PUBLICADO),
+    ("stages", ETAPA_PUBLICADA),
+    ("sections", SECAO_PUBLICADA),
+)
 
 CAMPO_AUSENTE = "field_required"
 TIPO_INVALIDO = "field_type_invalid"
@@ -106,7 +144,13 @@ NULO_INVALIDO = "field_null_invalid"
 FORMATO_INVALIDO = "field_format_invalid"
 RESTRICAO_VIOLADA = "field_constraint_violated"
 
-_NOME_DO_TIPO = {str: "texto", int: "número inteiro", list: "lista", dict: "objeto"}
+_NOME_DO_TIPO = {
+    str: "texto",
+    int: "número inteiro",
+    bool: "booleano",
+    list: "lista",
+    dict: "objeto",
+}
 
 
 def _e_do_tipo(valor, tipo):
@@ -119,7 +163,7 @@ def _e_do_tipo(valor, tipo):
 # Formato declarado que não estivesse aqui levantaria `KeyError` na primeira verificação, e é o
 # comportamento desejado: erro de programação que falha alto vale mais que formato aceito em
 # silêncio por não ter quem o verifique.
-_LEITOR_DE_FORMATO = {"uuid": UUID, "date-time": datetime.fromisoformat}
+_LEITOR_DE_FORMATO = {"uuid": UUID, "date-time": datetime.fromisoformat, "decimal": Decimal}
 
 
 def _formato_satisfeito(valor, campo):
@@ -139,7 +183,7 @@ def _formato_satisfeito(valor, campo):
         return False
     try:
         _LEITOR_DE_FORMATO[campo.formato](valor)
-    except (ValueError, AttributeError, TypeError):
+    except (ValueError, AttributeError, TypeError, InvalidOperation):
         return False
     return True
 
@@ -257,6 +301,193 @@ def _violacoes_da_colecao(snapshot, colecao, forma):
     return findings
 
 
+def _impeditivo(codigo, mensagem, caminho):
+    return ValidationFinding(Severity.BLOCKING_ERROR, codigo, mensagem, caminho)
+
+
+def _topologia_das_secoes(snapshot: dict) -> list[ValidationFinding]:
+    """O catálogo fixo tem de continuar valendo **depois** da publicação (FR-041).
+
+    A forma declarada confere um campo por vez e não expressa coerência entre campos. Sem esta
+    verificação, uma Retificação faria sobre o conteúdo publicado o que a interface impede:
+    acrescentar seção com `ADD /sections/-`, remover uma do catálogo, trocar `type`, `order`,
+    `title` ou origem, esvaziar uma textual ou dar conteúdo a uma gerada. O catálogo valeria na
+    elaboração e deixaria de valer exatamente onde mais importa.
+
+    Só o `content` das seções textuais pode variar.
+    """
+    itens = snapshot.get("sections")
+    if not isinstance(itens, list):
+        return []  # A forma declarada já reporta coleção que não é lista.
+
+    esperado = {secao.key: secao for secao in CATALOGO}
+    presentes = [item.get("key") for item in itens if isinstance(item, dict)]
+    findings = []
+    for chave in sorted(set(presentes) - set(esperado)):
+        findings.append(
+            _impeditivo(
+                RESTRICAO_VIOLADA,
+                f"A seção '{chave}' não pertence ao catálogo do Edital.",
+                "/sections",
+            )
+        )
+    for chave in sorted(set(esperado) - set(presentes)):
+        findings.append(
+            _impeditivo(
+                CAMPO_AUSENTE,
+                f"A seção obrigatória '{chave}' não está presente.",
+                "/sections",
+            )
+        )
+
+    for posicao, item in enumerate(itens):
+        if not isinstance(item, dict):
+            continue
+        secao = esperado.get(item.get("key"))
+        if secao is None:
+            continue
+        caminho = _caminho_da_entidade("sections", item, posicao)
+        for atributo, declarado in (
+            ("title", secao.title),
+            ("order", secao.order),
+            ("type", secao.type),
+        ):
+            if item.get(atributo) != declarado:
+                findings.append(
+                    _impeditivo(
+                        RESTRICAO_VIOLADA,
+                        f"O campo diverge do catálogo em {caminho}/{atributo}.",
+                        f"{caminho}/{atributo}",
+                    )
+                )
+        if secao.gerada:
+            if item.get("source") != secao.source:
+                findings.append(
+                    _impeditivo(
+                        RESTRICAO_VIOLADA,
+                        f"A origem diverge do catálogo em {caminho}/source.",
+                        f"{caminho}/source",
+                    )
+                )
+            if "content" in item:
+                findings.append(
+                    _impeditivo(
+                        RESTRICAO_VIOLADA,
+                        "A seção gerada não carrega conteúdo próprio: ele viria a divergir do "
+                        f"dado que a origina, em {caminho}/content.",
+                        f"{caminho}/content",
+                    )
+                )
+        elif not (isinstance(item.get("content"), str) and item["content"].strip()):
+            findings.append(
+                _impeditivo(
+                    CAMPO_AUSENTE,
+                    f"A seção textual precisa de conteúdo em {caminho}/content.",
+                    f"{caminho}/content",
+                )
+            )
+    return findings
+
+
+def _faixa_do_percentual(snapshot: dict) -> list[ValidationFinding]:
+    """FR-030 vale também **depois** da publicação.
+
+    A forma declarada confere que cada item de `competitionModalities` é objeto e nada dentro dele
+    — decisão registrada em `PERFIL_PUBLICADO`, e mantida. O efeito é que a faixa do percentual
+    valia na gravação do rascunho e deixava de valer na Retificação, que é justamente onde o
+    conteúdo muda depois de público: publicava-se por Retificação uma cota de zero por cento, ou de
+    cento e cinquenta, que a interface e a API de rascunho recusam.
+
+    A regra é a mesma de `validate_normative_rule`, invocada aqui e não reescrita: duas cópias da
+    faixa divergiriam, e é exatamente por não repetir a regra que esta verificação não vira um
+    segundo domínio.
+    """
+    findings = []
+    for posicao, perfil in enumerate(snapshot.get("profiles") or []):
+        if not isinstance(perfil, dict):
+            continue
+        base = _caminho_da_entidade("profiles", perfil, posicao)
+        modalidades = perfil.get("competitionModalities")
+        if not isinstance(modalidades, list):
+            continue
+        for indice, modalidade in enumerate(modalidades):
+            if not isinstance(modalidade, dict):
+                continue
+            regra = modalidade.get("normativeRule")
+            if not isinstance(regra, dict):
+                continue
+            chave = modalidade.get("id")
+            dentro = f"id={chave}" if isinstance(chave, str) and chave else str(indice)
+            caminho = f"{base}/competitionModalities/{dentro}"
+            try:
+                validate_normative_rule(regra)
+            except ProfileValidationError as exc:
+                findings.append(
+                    _impeditivo(
+                        RESTRICAO_VIOLADA,
+                        f"{exc} Em {caminho}/normativeRule/percentage.",
+                        f"{caminho}/normativeRule/percentage",
+                    )
+                )
+    return findings
+
+
+def _coerencia_das_etapas(snapshot: dict) -> list[ValidationFinding]:
+    """Uma passagem, três conferências (FR-020 e FR-022).
+
+    A forma declarada confere que `scheduleEventId` é um UUID, não que ele **exista**; e o padrão
+    decimal descreve a forma de `weight` e `minimumScore`, não a faixa. As três coisas ficam aqui,
+    onde a coleção já é percorrida.
+    """
+    itens = snapshot.get("stages")
+    if not isinstance(itens, list):
+        return []
+
+    eventos = {
+        evento.get("id")
+        for evento in (snapshot.get("schedule") or [])
+        if isinstance(evento, dict)
+    }
+    findings = []
+    for posicao, item in enumerate(itens):
+        if not isinstance(item, dict):
+            continue
+        caminho = _caminho_da_entidade("stages", item, posicao)
+        referencia = item.get("scheduleEventId")
+        if referencia is not None and referencia not in eventos:
+            findings.append(
+                _impeditivo(
+                    RESTRICAO_VIOLADA,
+                    "A Etapa referencia um Evento que não existe no Cronograma, em "
+                    f"{caminho}/scheduleEventId.",
+                    f"{caminho}/scheduleEventId",
+                )
+            )
+        for atributo, minimo, mensagem in (
+            ("weight", None, "O peso da Etapa deve ser maior que zero em"),
+            ("minimumScore", 0, "A nota mínima da Etapa não pode ser negativa em"),
+        ):
+            valor = _decimal_ou_none(item.get(atributo))
+            fora = valor is not None and (valor <= 0 if minimo is None else valor < minimo)
+            if fora:
+                findings.append(
+                    _impeditivo(
+                        RESTRICAO_VIOLADA,
+                        f"{mensagem} {caminho}/{atributo}.",
+                        f"{caminho}/{atributo}",
+                    )
+                )
+    return findings
+
+
+def _decimal_ou_none(valor):
+    """Valor fora da forma decimal não é assunto daqui: a forma declarada já o reporta."""
+    try:
+        return None if valor is None else Decimal(valor)
+    except (ValueError, TypeError, InvalidOperation):
+        return None
+
+
 def validate_for_publication(snapshot: dict) -> list[ValidationFinding]:
     findings = []
     if not snapshot.get("title"):
@@ -294,6 +525,9 @@ def validate_for_publication(snapshot: dict) -> list[ValidationFinding]:
         )
     for colecao, forma in COLECOES_PUBLICADAS:
         findings.extend(_violacoes_da_colecao(snapshot, colecao, forma))
+    findings.extend(_topologia_das_secoes(snapshot))
+    findings.extend(_coerencia_das_etapas(snapshot))
+    findings.extend(_faixa_do_percentual(snapshot))
     return findings
 
 

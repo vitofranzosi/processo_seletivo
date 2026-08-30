@@ -193,3 +193,50 @@ def test_alteracao_de_retificacao_em_curso_persiste_de_verdade(
     AlteracaoNormativa.objects.filter(retificacao=retificacao).update(new_value="Persistido")
 
     assert AlteracaoNormativa.objects.get(retificacao=retificacao).new_value == "Persistido"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_as_tabelas_append_only_sao_exatamente_as_que_recusam_mutacao_no_modelo():
+    """FR-048 e a régua da `006`: coleção nova não pode entrar por engano no histórico.
+
+    A lista de `papeis.py` governa privilégios e triggers em produção; a recusa no modelo governa
+    o processo em execução. Uma tabela em uma e não na outra é defesa pela metade — e é o modo de
+    falha que uma feature que acrescenta modelos torna provável, em qualquer direção: um modelo
+    novo de histórico que não recebe privilégio restrito, ou uma tabela editável que é declarada
+    append-only e passa a recusar a própria gravação.
+
+    `EtapaAvaliacao` e `SecaoEdital` nasceram nesta feature e são conteúdo em elaboração: são
+    apagadas e recriadas a cada gravação do rascunho, e não podem estar aqui.
+    """
+    from django.apps import apps
+
+    from processo_seletivo.editais.models.etapas import EtapaAvaliacao
+    from processo_seletivo.editais.models.secoes import SecaoEdital
+    from processo_seletivo.seguranca.papeis import TABELAS_APPEND_ONLY
+
+    recusam_no_modelo = {
+        modelo._meta.db_table for modelo in apps.get_models() if _recusa_mutacao(modelo)
+    }
+
+    # Toda recusa em código tem privilégio restrito. A volta não vale: `RevisaoEdital` é
+    # append-only pela trigger e não sobrescreve `delete`, e essa assimetria é anterior a esta
+    # feature — declará-la aqui como erro seria mudar uma decisão que não é desta spec.
+    assert recusam_no_modelo <= set(TABELAS_APPEND_ONLY), sorted(
+        recusam_no_modelo - set(TABELAS_APPEND_ONLY)
+    )
+
+    nascidas_na_006 = {EtapaAvaliacao._meta.db_table, SecaoEdital._meta.db_table}
+    assert nascidas_na_006.isdisjoint(TABELAS_APPEND_ONLY)
+    assert nascidas_na_006.isdisjoint(recusam_no_modelo)
+
+
+def _recusa_mutacao(modelo):
+    """O modelo sobrescreve `delete` para recusar? É a marca de append-only neste repositório."""
+    import inspect
+
+    try:
+        fonte = inspect.getsource(modelo.delete)
+    except (OSError, TypeError):
+        return False
+    return "append-only" in fonte

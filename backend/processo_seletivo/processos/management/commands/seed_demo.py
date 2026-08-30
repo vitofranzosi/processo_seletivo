@@ -6,6 +6,7 @@ ar; não é fixture de teste nem carga de produção.
 """
 
 from datetime import timedelta
+from decimal import Decimal
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -50,11 +51,17 @@ def perfis(numero):
             "reserveLimit": 6,
             "locality": "Campus Serra",
             "competitionModalities": [
-                {"code": "AC", "name": "Ampla concorrência"},
                 {
+                    "id": f"00000000-0000-0000-00{numero}-0000000000e1",
+                    "code": "AC",
+                    "name": "Ampla concorrência",
+                },
+                {
+                    "id": f"00000000-0000-0000-00{numero}-0000000000e2",
                     "code": "PPP",
                     "name": "Pessoas pretas, pardas e indígenas",
                     "normativeRule": {
+                        "id": f"00000000-0000-0000-00{numero}-0000000000f2",
                         "foundation": "Lei 12.990/2014",
                         "version": "2014-06-09",
                         "percentage": "20.0000",
@@ -72,7 +79,13 @@ def perfis(numero):
             "immediateVacancies": 0,
             "reserveType": "UNLIMITED",
             "locality": "Campus Vitória",
-            "competitionModalities": [{"code": "AC", "name": "Ampla concorrência"}],
+            "competitionModalities": [
+                {
+                    "id": f"00000000-0000-0000-00{numero}-0000000000e3",
+                    "code": "AC",
+                    "name": "Ampla concorrência",
+                }
+            ],
         },
     ]
 
@@ -96,6 +109,33 @@ def cronograma(agora, numero):
             "order": indice,
         }
         for indice, (tipo, descricao, inicio, fim) in enumerate(marcos, 1)
+    ]
+
+
+def etapas(numero):
+    """Duas Etapas, uma vinculada a Evento e outra não — o suficiente para a demonstração mostrar
+    que as datas vêm do Cronograma e que o vínculo é opcional."""
+    return [
+        {
+            "id": f"00000000-0000-0000-00{numero}-0000000000d1",
+            "name": "Prova objetiva",
+            "order": 1,
+            "weight": Decimal("2.0000"),
+            "eliminatory": True,
+            "classificatory": True,
+            "minimumScore": Decimal("6.0000"),
+            "scheduleEventId": f"00000000-0000-0000-00{numero}-0000000000c2",
+        },
+        {
+            "id": f"00000000-0000-0000-00{numero}-0000000000d2",
+            "name": "Análise de títulos",
+            "order": 2,
+            "weight": Decimal("1.0000"),
+            "eliminatory": False,
+            "classificatory": True,
+            "minimumScore": None,
+            "scheduleEventId": None,
+        },
     ]
 
 
@@ -185,13 +225,14 @@ class Command(BaseCommand):
     def _elaborar(self, elaborador, edital, agora, numero):
         from processo_seletivo.editais.application.draft import replace_draft
 
-        self.stdout.write("Elaborando Perfis e Cronograma…")
+        self.stdout.write("Elaborando Perfis, Cronograma e Etapas…")
         replace_draft(
             actor=elaborador,
             edital_id=edital.id,
             expected_revision=edital.revision,
             profiles=perfis(numero),
             schedule=cronograma(agora, numero),
+            stages=etapas(numero),
             correlation_id="seed-demo",
         )
         edital.refresh_from_db()

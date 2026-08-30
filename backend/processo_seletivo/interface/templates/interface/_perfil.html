@@ -53,13 +53,18 @@
                 rows="3" aria-describedby="ajuda-req-{{ indice }}">{{ perfil.requirements|default:'' }}</textarea>
       <span class="ajuda" id="ajuda-req-{{ indice }}">Um requisito por linha.</span>
     </p>
-    <p class="campo largo">
-      <label for="perfil-{{ indice }}-modalidades">Modalidades de Concorrência</label>
-      <textarea id="perfil-{{ indice }}-modalidades" name="perfil-{{ indice }}-modalidades"
-                rows="3" aria-describedby="ajuda-mod-{{ indice }}">{{ perfil.modalidades|default:'' }}</textarea>
-      <span class="ajuda" id="ajuda-mod-{{ indice }}">Uma por linha: <code>AC — Ampla concorrência</code></span>
-    </p>
   </div>
+  <section class="modalidades" aria-labelledby="mod-titulo-{{ indice }}">
+    <h3 id="mod-titulo-{{ indice }}">Modalidades de Concorrência</h3>
+    <p class="ajuda">Ampla concorrência e as reservas previstas, com o fundamento normativo de
+      cada reserva. Percentuais de modalidades distintas não somam cem por cento.</p>
+    <div id="modalidades-{{ indice }}">
+      {% for modalidade in perfil.modalidades %}{% include "interface/_modalidade.html" with sub=forloop.counter0 %}{% endfor %}
+    </div>
+    <button type="button" class="acao"
+            hx-get="{% url 'interface:fragmento-modalidade' indice %}"
+            hx-target="#modalidades-{{ indice }}" hx-swap="beforeend">Acrescentar Modalidade</button>
+  </section>
   <p class="remover">
     <button type="button" class="acao perigo"
             hx-get="{% url 'interface:fragmento-remover' %}"

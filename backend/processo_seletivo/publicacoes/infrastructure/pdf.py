@@ -14,6 +14,8 @@ from datetime import datetime
 
 from django.utils import timezone
 
+from processo_seletivo.editais.domain.secoes import GERADA
+
 LARGURA, ALTURA = 595, 842  # A4 em pontos
 MARGEM = 56
 TOPO = ALTURA - 64
@@ -22,6 +24,15 @@ RODAPE = 56
 FATOR_LARGURA = 0.52
 
 REGULAR, NEGRITO = "F1", "F2"
+
+# O modo do renderizador (FR-015). Um parâmetro, e não condicionais espalhadas pela composição:
+# a diferença entre o que se revisa e o que se publica precisa ter **um** lugar onde está
+# declarada, ou os dois documentos divergem sem que nada acuse.
+MODO_PUBLICADO = "PUBLISHED"
+MODO_PREVIA = "PREVIEW"
+MODOS = (MODO_PUBLICADO, MODO_PREVIA)
+
+MARCA_DE_PREVIA = "PRÉVIA — documento em elaboração, sem valor de publicação"
 RESERVA = {
     "NONE": "não há",
     "LIMITED": "limitado",
@@ -133,12 +144,7 @@ def _modalidades(composicao, perfil):
 
 
 def _perfis(composicao, snapshot):
-    perfis = snapshot.get("profiles") or []
-    composicao.escrever("PERFIS DE VAGA", tamanho=12, fonte=NEGRITO, antes=18)
-    if not perfis:
-        composicao.escrever("Nenhum Perfil registrado nesta versão.", tamanho=10, antes=6)
-        return
-    for perfil in perfis:
+    for perfil in snapshot.get("profiles") or []:
         composicao.escrever(
             f"{perfil.get('code', '')} — {perfil.get('name', '')}",
             tamanho=11,
@@ -165,12 +171,7 @@ def _perfis(composicao, snapshot):
 
 
 def _cronograma(composicao, snapshot):
-    eventos = snapshot.get("schedule") or []
-    composicao.escrever("CRONOGRAMA", tamanho=12, fonte=NEGRITO, antes=18)
-    if not eventos:
-        composicao.escrever("Nenhum Evento registrado nesta versão.", tamanho=10, antes=6)
-        return
-    for evento in eventos:
+    for evento in snapshot.get("schedule") or []:
         composicao.escrever(
             f"{evento.get('order', '')}. {evento.get('type', '')} — "
             f"{evento.get('description', '')}",
@@ -184,6 +185,81 @@ def _cronograma(composicao, snapshot):
         composicao.escrever(periodo, tamanho=10, recuo=18)
         if evento.get("status"):
             composicao.escrever(f"Situação: {evento['status']}", tamanho=9, recuo=18)
+
+
+CARATER_DA_ETAPA = (("eliminatory", "eliminatória"), ("classificatory", "classificatória"))
+
+
+def _etapas(composicao, snapshot):
+    """As Etapas na ordem definida, com o que estiver informado.
+
+    Peso, nota mínima e caráter só aparecem quando existem: imprimir "peso: —" afirmaria uma
+    ponderação vazia onde a ausência quer dizer que a Etapa não pondera.
+    """
+    eventos = {
+        evento.get("id"): evento
+        for evento in (snapshot.get("schedule") or [])
+        if isinstance(evento, dict)
+    }
+    for etapa in snapshot.get("stages") or []:
+        composicao.escrever(
+            f"{etapa.get('order', '')}. {etapa.get('name', '')}",
+            tamanho=11,
+            fonte=NEGRITO,
+            antes=10,
+        )
+        caracteres = [
+            rotulo for chave, rotulo in CARATER_DA_ETAPA if etapa.get(chave)
+        ]
+        partes = []
+        if caracteres:
+            partes.append("caráter: " + " e ".join(caracteres))
+        if etapa.get("weight") is not None:
+            partes.append(f"peso: {etapa['weight']}")
+        if etapa.get("minimumScore") is not None:
+            partes.append(f"nota mínima: {etapa['minimumScore']}")
+        if partes:
+            composicao.escrever("; ".join(partes), tamanho=10, recuo=18)
+        # As datas são do Evento e não são copiadas: o documento as lê de lá, como o domínio.
+        evento = eventos.get(etapa.get("scheduleEventId"))
+        if evento:
+            periodo = f"Início: {_instante(evento.get('startAt'))}"
+            if evento.get("endAt"):
+                periodo += f"    Término: {_instante(evento['endAt'])}"
+            composicao.escrever(
+                f"Conforme o Cronograma — {evento.get('type', '')}: {periodo}",
+                tamanho=9,
+                recuo=18,
+            )
+
+
+# Cada seção gerada nomeia a coleção que a origina; aqui está o que fazer com cada uma. Uma origem
+# que não estiver neste mapa não é composta — e a validação de publicação já recusa origem que
+# divirja do catálogo, então isso não é silêncio: é a consequência de uma recusa que veio antes.
+_CORPO_GERADO = {"profiles": _perfis, "schedule": _cronograma, "stages": _etapas}
+
+
+def _secoes(composicao, snapshot):
+    """O documento é composto **a partir das seções**, na ordem do conteúdo publicado (FR-038).
+
+    Antes desta feature a ordem era a do código: cabeçalho, Perfis, Cronograma, integridade. Agora
+    ela é conteúdo normativo, e o documento a respeita.
+
+    Uma seção gerada cuja fonte está vazia não é composta. Um título sobre nada não informa que não
+    há nada — informa que alguém esqueceu de preencher, e num Edital sem Etapas de Avaliação isso
+    seria falso: a coleção é opcional.
+    """
+    for secao in sorted(snapshot.get("sections") or [], key=lambda item: item.get("order", 0)):
+        titulo = secao.get("title", "")
+        if secao.get("type") == GERADA:
+            corpo = _CORPO_GERADO.get(secao.get("source"))
+            if corpo is None or not (snapshot.get(secao.get("source")) or []):
+                continue
+            composicao.escrever(titulo.upper(), tamanho=12, fonte=NEGRITO, antes=18)
+            corpo(composicao, snapshot)
+        else:
+            composicao.escrever(titulo.upper(), tamanho=12, fonte=NEGRITO, antes=18)
+            composicao.escrever(secao.get("content", ""), tamanho=10, antes=6)
 
 
 def _integridade(composicao, snapshot, content_hash):
@@ -217,17 +293,30 @@ def _fluxo_da_pagina(linhas, rodape):
     return b"\n".join(partes)
 
 
-def render_edital_pdf(snapshot: dict, content_hash: str) -> bytes:
+def render_edital_pdf(snapshot: dict, content_hash: str, modo: str = MODO_PUBLICADO) -> bytes:
+    """O mesmo documento, em dois modos.
+
+    Em `MODO_PUBLICADO` o resultado é o de sempre, byte a byte — uma fixture o guarda. Em
+    `MODO_PREVIA` a seção de integridade não é composta e `content_hash` **não é lido em lugar
+    nenhum**: um documento administrativo que parece publicado sem ter sido é risco normativo, e
+    depender de o chamador passar vazio seria deixar a garantia com quem não a tem (FR-014).
+    """
+    if modo not in MODOS:
+        raise ValueError(f"Modo de renderização desconhecido: {modo!r}.")
+    previa = modo == MODO_PREVIA
+
     composicao = Composicao()
     _cabecalho(composicao, snapshot)
-    _perfis(composicao, snapshot)
-    _cronograma(composicao, snapshot)
-    _integridade(composicao, snapshot, content_hash)
+    if previa:
+        composicao.escrever(MARCA_DE_PREVIA, tamanho=11, fonte=NEGRITO, antes=12)
+    _secoes(composicao, snapshot)
+    if not previa:
+        _integridade(composicao, snapshot, content_hash)
     paginas = composicao.paginar()
 
+    edital = f"Edital {snapshot.get('number', '')}/{snapshot.get('year', '')}"
     identificacao = (
-        f"Edital {snapshot.get('number', '')}/{snapshot.get('year', '')} · "
-        f"SHA-256 {content_hash[:16]}…"
+        f"{MARCA_DE_PREVIA} · {edital}" if previa else f"{edital} · SHA-256 {content_hash[:16]}…"
     )
     fluxos = [
         _fluxo_da_pagina(linhas, f"{identificacao} · Página {numero} de {len(paginas)}")

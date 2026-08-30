@@ -1,0 +1,57 @@
+<fieldset class="linha modalidade">
+  <legend>Modalidade de Concorrência</legend>
+  {% comment %}
+  Os dois identificadores viajam ocultos. O da Regra existe mesmo antes de a Regra existir: a
+  gravação preserva o `id` recebido, e uma linha que nascesse sem identidade não teria o que
+  preservar — era assim que cada gravação trocava a identidade de todas as modalidades.
+  {% endcomment %}
+  <input type="hidden" name="modalidade-{{ indice }}-{{ sub }}-id" value="{{ modalidade.id }}">
+  <input type="hidden" name="modalidade-{{ indice }}-{{ sub }}-ruleId" value="{{ modalidade.ruleId }}">
+  <div class="campos">
+    <p class="campo curto">
+      <label for="modalidade-{{ indice }}-{{ sub }}-code">Código</label>
+      <input type="text" id="modalidade-{{ indice }}-{{ sub }}-code"
+             name="modalidade-{{ indice }}-{{ sub }}-code"
+             value="{{ modalidade.code|default:'' }}" required placeholder="PPI">
+    </p>
+    <p class="campo largo">
+      <label for="modalidade-{{ indice }}-{{ sub }}-name">Denominação</label>
+      <input type="text" id="modalidade-{{ indice }}-{{ sub }}-name"
+             name="modalidade-{{ indice }}-{{ sub }}-name"
+             value="{{ modalidade.name|default:'' }}" required
+             placeholder="Pessoas pretas, pardas e indígenas">
+    </p>
+    <p class="campo curto">
+      <label for="modalidade-{{ indice }}-{{ sub }}-percentage">Percentual (%)</label>
+      <input type="number" step="0.0001" min="0.0001" max="100"
+             id="modalidade-{{ indice }}-{{ sub }}-percentage"
+             name="modalidade-{{ indice }}-{{ sub }}-percentage"
+             value="{{ modalidade.percentage|default:'' }}"
+             aria-describedby="ajuda-perc-{{ indice }}-{{ sub }}">
+      <span class="ajuda" id="ajuda-perc-{{ indice }}-{{ sub }}">Vazio: sem reserva
+        percentual.</span>
+    </p>
+  </div>
+  <div class="campos">
+    <p class="campo largo">
+      <label for="modalidade-{{ indice }}-{{ sub }}-foundation">Fundamento normativo</label>
+      <input type="text" id="modalidade-{{ indice }}-{{ sub }}-foundation"
+             name="modalidade-{{ indice }}-{{ sub }}-foundation"
+             value="{{ modalidade.foundation|default:'' }}" placeholder="Lei 12.990/2014">
+    </p>
+    <p class="campo">
+      <label for="modalidade-{{ indice }}-{{ sub }}-version">Versão do fundamento</label>
+      <input type="text" id="modalidade-{{ indice }}-{{ sub }}-version"
+             name="modalidade-{{ indice }}-{{ sub }}-version"
+             value="{{ modalidade.version|default:'' }}"
+             aria-describedby="ajuda-versao-{{ indice }}-{{ sub }}" placeholder="2014-06-09">
+      <span class="ajuda" id="ajuda-versao-{{ indice }}-{{ sub }}">Exigida sempre que houver
+        fundamento: sem ela, a norma aplicada não fica identificada.</span>
+    </p>
+  </div>
+  <p class="remover">
+    <button type="button" class="acao perigo"
+            hx-get="{% url 'interface:fragmento-remover' %}"
+            hx-target="closest fieldset" hx-swap="outerHTML">Remover esta Modalidade</button>
+  </p>
+</fieldset>

@@ -1,6 +1,8 @@
 import hashlib
+from decimal import Decimal
 
 from processo_seletivo.auditoria.application import record_event
+from processo_seletivo.editais.domain import secoes
 from processo_seletivo.editais.domain.validation import blocking_findings, validate_for_publication
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
@@ -18,6 +20,63 @@ from processo_seletivo.shared.canonical import SCHEMA_VERSION, canonical_bytes, 
 from processo_seletivo.shared.concurrency import compare_and_swap
 from processo_seletivo.shared.idempotency import finish as _finish_idempotency
 from processo_seletivo.shared.idempotency import reserve
+
+
+def _decimal_canonico(valor):
+    """A forma que o conteúdo publicado carrega: quatro casas, sempre, sem zero à esquerda.
+
+    Não é `str(Decimal)`: um `Decimal("2")` viraria `"2"`, e duas gravações semanticamente iguais
+    produziriam hashes diferentes. O padrão declarado em `COLECOES_PUBLICADAS` descreve exatamente
+    esta forma, e é o que impede que uma Retificação escreva `"2"` ou `"002.0000"` no lugar.
+    """
+    return None if valor is None else f"{Decimal(valor):.4f}"
+
+
+def _stages(edital: Edital) -> list[dict]:
+    return [
+        {
+            "id": str(etapa.id),
+            "name": etapa.name,
+            "order": etapa.order,
+            "weight": _decimal_canonico(etapa.weight),
+            "eliminatory": etapa.eliminatory,
+            "classificatory": etapa.classificatory,
+            "minimumScore": _decimal_canonico(etapa.minimum_score),
+            # A Etapa referencia o Evento; as datas são dele e não são copiadas (FR-021).
+            "scheduleEventId": None if etapa.evento_id is None else str(etapa.evento_id),
+        }
+        for etapa in edital.etapas.all()
+    ]
+
+
+def _sections(edital: Edital) -> list[dict]:
+    """As seções do catálogo, na ordem declarada.
+
+    A seção **gerada não carrega `content`** — declara a coleção que a origina, e o documento a
+    compõe a partir dela. Persistir o texto gerado criaria dois endereços para o mesmo conteúdo e a
+    possibilidade de retificar um deixando o outro desatualizado; não persistir resolve o problema e
+    ainda dispensa regra nova na gramática, porque endereçar um campo que não existe já falha pelo
+    erro de caminho inexistente da `004` (FR-040).
+    """
+    redigidas = {item.key: item.content for item in edital.secoes.all()}
+    return [
+        {
+            "id": str(secoes.identidade(edital.id, secao.key)),
+            "key": secao.key,
+            "title": secao.title,
+            "order": secao.order,
+            "type": secao.type,
+            **(
+                {"source": secao.source}
+                if secao.gerada
+                # Ausência de linha significa "texto padrão do catálogo", e não "seção vazia":
+                # persistir uma linha por seção só para guardar o padrão traria a estrutura de
+                # volta ao banco, que é o que a declaração do catálogo existe para evitar.
+                else {"content": redigidas.get(secao.key, secao.default_text)}
+            ),
+        }
+        for secao in secoes.CATALOGO
+    ]
 
 
 def edital_snapshot(edital: Edital) -> dict:
@@ -90,6 +149,8 @@ def edital_snapshot(edital: Edital) -> dict:
         "description": edital.description,
         "profiles": profiles,
         "schedule": schedule,
+        "stages": _stages(edital),
+        "sections": _sections(edital),
     }
 
 

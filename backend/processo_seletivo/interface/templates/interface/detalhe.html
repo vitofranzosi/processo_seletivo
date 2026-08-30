@@ -76,6 +76,13 @@ permanecem preservados.</p>
       {% if pode_compor %}
       <li><a class="botao secundario" href="{% url 'interface:compor' edital.id %}">Compor Perfis e Cronograma</a></li>
       {% endif %}
+      {% if pode_visualizar %}
+      {% comment %}
+      Quem homologa e quem publica decidem sobre um documento; poder lê-lo antes é o que dá
+      conteúdo à segregação de funções, que exige ao menos dois atores.
+      {% endcomment %}
+      <li><a class="botao secundario" href="{% url 'interface:previa' edital.id %}">Visualizar Edital</a></li>
+      {% endif %}
       {% for ato in atos %}
       <li>
         <a class="botao {% if ato.interrupcao %}perigoso{% elif ato.irreversivel %}{% else %}secundario{% endif %}"
@@ -90,6 +97,26 @@ permanecem preservados.</p>
     </ul>
   </section>
 </div>
+
+{% if documentos %}
+<section aria-labelledby="documentos-titulo" class="cartao">
+  <h2 id="documentos-titulo">Documentos publicados</h2>
+  <p class="ajuda">Um documento por ato de publicação. A vigência é da versão consolidada, que não
+    tem documento próprio — e uma Retificação pode ter vigência futura —, então nenhum destes é o
+    “documento vigente”.</p>
+  <ul class="resumo-lista">
+    {% for documento in documentos %}
+    <li>
+      <a href="{{ documento.url }}">{{ documento.ato }} nº {{ documento.ordem }}</a>
+      <span class="quando">publicado em {{ documento.publicada_em|date:"d/m/Y H:i" }}</span>
+      {% if documento.retificacao_id %}
+      <a class="acao" href="{% url 'interface:retificacao-detalhe' documento.retificacao_id %}">ver a Retificação</a>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
 
 {% if pendencias %}
 <section aria-labelledby="pendencias-titulo" class="pendencias">

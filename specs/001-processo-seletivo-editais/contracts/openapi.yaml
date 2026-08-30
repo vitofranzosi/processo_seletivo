@@ -340,6 +340,12 @@ paths:
         por fronteira de vigência, e não apenas a que passa a vigorar de imediato. Uma só fronteira
         malformada responde 422 blocking_findings e recusa o ato inteiro, sem deixar Publicação,
         documento ou versão materializados.
+        A versão canônica do conteúdo-base é comparada com a vigente antes de qualquer aplicação:
+        a Publicação carimba a constante global sobre conteúdo derivado de uma Publicação-base que
+        carrega a própria schemaVersion, e divergência faria o registro afirmar uma versão que o
+        conteúdo não tem. Divergência responde 409 canonical_schema_version_mismatch. É uma
+        comparação e uma recusa, não conversão: não há mecanismo de compatibilidade entre versões
+        de esquema.
       operationId: publicarRetificacao
       security: [{ bearerAuth: [] }]
       parameters: [{ $ref: '#/components/parameters/RetificacaoId' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }]
@@ -536,6 +542,8 @@ components:
       properties:
         profiles: { type: array, minItems: 1, items: { $ref: '#/components/schemas/PerfilInput' } }
         schedule: { type: array, items: { $ref: '#/components/schemas/EventoInput' } }
+        stages: { type: array, items: { $ref: '#/components/schemas/EtapaInput' } }
+        sections: { type: array, items: { $ref: '#/components/schemas/SecaoInput' } }
       additionalProperties: false
     PerfilInput:
       type: object
@@ -547,7 +555,47 @@ components:
         immediateVacancies: { type: integer, minimum: 0 }
         reserveType: { type: string, enum: [NONE, LIMITED, UNLIMITED] }
         reserveLimit: { type: [integer, 'null'], minimum: 0 }
-        competitionModalities: { type: array, items: { type: object } }
+        competitionModalities:
+          type: array
+          items: { $ref: '#/components/schemas/ModalidadeInput' }
+    ModalidadeInput:
+      type: object
+      description: >-
+        Modalidade de concorrência no rascunho. `id` é obrigatório e preservado na gravação, como o
+        de Perfil, Evento e Etapa: a identidade da modalidade e a da sua Regra Normativa são
+        estáveis entre gravações. Opcional, ele reabriria o defeito que a estabilidade veio fechar —
+        o servidor geraria um identificador que a resposta não devolve, e a gravação seguinte
+        trocaria a identidade de novo. Identificador que já pertença a outro contêiner — modalidade
+        de outro Perfil, Regra de outra Modalidade, inclusive irmã do mesmo Perfil — responde 409
+        identifier_belongs_to_another_edital.
+      required: [id, code, name]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        code: { type: string }
+        name: { type: string }
+        description: { type: string }
+        normativeRule: { $ref: '#/components/schemas/NormativeRuleInput' }
+    NormativeRuleInput:
+      type: object
+      description: >-
+        `version` é obrigatória: um fundamento normativo sem a versão em que ele vigora não
+        identifica a norma aplicada. `percentage` é opcional e, quando informado, deve ser maior
+        que zero e menor ou igual a cem — zero afirmaria uma reserva de nenhuma vaga, e ausência de
+        reserva exprime-se pela ausência do campo. Não há regra de soma entre modalidades: cotas
+        não somam cem por cento. A faixa é verificada no domínio, e também na publicação — de modo
+        que uma Retificação não pode fazer vigorar o percentual que a gravação do rascunho recusa.
+        `id` é obrigatório pelo mesmo motivo que o da modalidade o é.
+      required: [id, foundation, version]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        foundation: { type: string }
+        version: { type: string, maxLength: 50 }
+        percentage: { type: [string, 'null'] }
+        calculation: { type: object }
+        rounding: { type: object }
+        distribution: { type: object }
+        callRules: { type: object }
+        effectiveFrom: { type: [string, 'null'], format: date-time }
     EventoInput:
       type: object
       required: [id, type, description, startAt]
@@ -558,6 +606,36 @@ components:
         startAt: { type: string, format: date-time }
         endAt: { type: [string, 'null'], format: date-time }
         order: { type: integer, minimum: 0 }
+    EtapaInput:
+      type: object
+      description: >-
+        Etapa de Avaliação no rascunho. Pertence ao Edital e vale para todos os seus Perfis.
+        scheduleEventId referencia um Evento do Cronograma do mesmo Edital; quando informado, as
+        datas da Etapa são as do Evento e não são digitadas de novo.
+      required: [id, name]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        name: { type: string }
+        order: { type: integer, minimum: 0 }
+        weight: { type: [number, 'null'], exclusiveMinimum: 0 }
+        eliminatory: { type: boolean }
+        classificatory: { type: boolean }
+        minimumScore: { type: [number, 'null'], minimum: 0 }
+        scheduleEventId: { type: [string, 'null'], format: uuid }
+    SecaoInput:
+      type: object
+      description: >-
+        Conteúdo redigido de uma seção **textual** do catálogo. O rascunho envia apenas as que
+        tiveram o texto editado: seção ausente significa "conteúdo padrão do catálogo", e não
+        "seção vazia". Seção gerada não é enviada — o conteúdo dela vem do dado estruturado, e
+        persistir uma cópia criaria dois endereços para o mesmo conteúdo normativo. Chave fora do
+        catálogo, ou de seção gerada, responde 422 field_constraint_violated.
+        A entrada não carrega identificador: o UUID da seção é determinístico sobre (editalId,
+        key), e declará-lo aqui permitiria informar um que não corresponde à chave.
+      required: [key, content]
+      properties:
+        key: { type: string, maxLength: 60 }
+        content: { type: string, minLength: 1 }
     PerfilPublicado:
       type: object
       description: >-
@@ -583,8 +661,11 @@ components:
         competitionModalities:
           type: array
           description: >-
-            A forma de **dentro** de cada Modalidade não é declarada: a verificação de integridade
-            alcança Perfil e Evento, e confere que a coleção é lista e que cada item é objeto.
+            A forma de **dentro** de cada Modalidade não é verificada campo a campo: a verificação
+            de integridade alcança Perfil e Evento, e aqui confere que a coleção é lista e que cada
+            item é objeto. ModalidadePublicada e RegraNormativaPublicada descrevem a forma que o
+            conteúdo publicado carrega — inclusive os identificadores, que são preservados entre
+            gravações — sem promovê-la a verificação, que seria decisão de outra feature.
           items: { type: object }
     EventoPublicado:
       type: object
@@ -613,6 +694,86 @@ components:
           pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?[+-]\d{2}:\d{2}$'
         order: { type: integer, minimum: 0 }
         status: { type: string }
+    ModalidadePublicada:
+      type: object
+      description: >-
+        Forma da Modalidade de Concorrência no conteúdo normativo publicado. `id` é obrigatório e
+        **estável entre gravações**: até a `006` a modalidade era recriada sem o identificador
+        recebido, e salvar qualquer etapa do assistente trocava a identidade de todas.
+      required: [id, code, name, description, normativeRule]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        code: { type: string }
+        name: { type: string }
+        description: { type: string }
+        normativeRule:
+          oneOf:
+            - { type: 'null' }
+            - { $ref: '#/components/schemas/RegraNormativaPublicada' }
+    RegraNormativaPublicada:
+      type: object
+      description: >-
+        Forma da Regra Normativa no conteúdo publicado. O `id` dela viaja no conteúdo e por isso é
+        parte da identidade normativa, ainda que não endereçe coleção alguma — `normativeRule` é
+        objeto, e não item de lista. Preservá-lo custa o mesmo que trocá-lo e é simétrico com o
+        resto; removê-lo do conteúdo exigiria decidir que a Regra não tem identidade no domínio, o
+        que a presença de `version` e `effectiveFrom` contradiz.
+      required:
+        [id, foundation, version, percentage, calculation, rounding, distribution, callRules,
+         effectiveFrom]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        foundation: { type: string }
+        version: { type: string }
+        percentage: { type: [string, 'null'] }
+        calculation: { type: object }
+        rounding: { type: object }
+        distribution: { type: object }
+        callRules: { type: object }
+        effectiveFrom: { type: [string, 'null'], format: date-time }
+    EtapaPublicada:
+      type: object
+      description: >-
+        Forma da Etapa de Avaliação no conteúdo normativo **publicado**, na versão canônica 2.
+        Distinta de EtapaInput pela mesma razão que PerfilPublicado o é de PerfilInput.
+      required: [id, name, order, weight, eliminatory, classificatory, minimumScore, scheduleEventId]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        name: { type: string }
+        order: { type: integer, minimum: 0 }
+        # `pattern` declara a forma **canônica** de um decimal(7,4) materializado: no máximo três
+        # dígitos inteiros, sempre quatro casas, sem zeros à esquerda. Ele descreve forma, não
+        # permissão — a faixa (peso maior que zero, nota mínima não negativa) é regra de domínio,
+        # verificada na publicação. Declará-la aqui pelo sinal misturaria as duas coisas.
+        weight:
+          type: [string, 'null']
+          format: decimal
+          pattern: '^-?(0|[1-9]\d{0,2})\.\d{4}$'
+        eliminatory: { type: boolean }
+        classificatory: { type: boolean }
+        minimumScore:
+          type: [string, 'null']
+          format: decimal
+          pattern: '^-?(0|[1-9]\d{0,2})\.\d{4}$'
+        scheduleEventId: { type: [string, 'null'], format: uuid }
+    SecaoPublicada:
+      type: object
+      description: >-
+        Forma da Seção do Edital no conteúdo normativo **publicado**, na versão canônica 2. O
+        conjunto de seções e a ordem entre elas são do sistema; quem elabora edita o texto das
+        textuais. `content` e `source` NÃO são declarados aqui porque dependem do tipo — seção
+        gerada declara `source` e não carrega conteúdo próprio, seção textual carrega `content` —
+        e a verificação por campo não expressa coerência entre campos. A topologia inteira é
+        conferida contra o catálogo na validação de publicação. `id` é UUID determinístico sobre
+        (editalId, key), porque o seletor da gramática de Retificação só aceita UUID; `key` é o
+        identificador textual legível, e não endereça.
+      required: [id, key, title, order, type]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        key: { type: string }
+        title: { type: string }
+        order: { type: integer, minimum: 0 }
+        type: { type: string, enum: [GENERATED, TEXT] }
     AtoAdministrativoRequest:
       type: object
       additionalProperties: false

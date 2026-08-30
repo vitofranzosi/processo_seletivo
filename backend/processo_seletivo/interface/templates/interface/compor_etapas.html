@@ -1,0 +1,36 @@
+{% extends "interface/compor_base.html" %}
+{% block etapa_titulo %}Etapas de Avaliação{% endblock %}
+{% block etapa %}
+<form method="post" id="formulario"
+      {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"
+      data-lista="#etapas-avaliacao" data-fragmento="{% url 'interface:fragmento-etapa' edital.id %}"{% endif %}>
+  {% csrf_token %}
+  <section aria-labelledby="etapas-titulo">
+    <h2 id="etapas-titulo">Etapas de Avaliação</h2>
+    {% if pendencias_aqui %}
+    <div class="pendencias" role="status">
+      {% include "interface/_pendencias.html" with itens=pendencias_aqui com_link=False %}
+    </div>
+    {% endif %}
+    <p class="ajuda">As fases pelas quais os candidatos passam, na ordem em que ocorrem. Valem para
+      todos os Perfis deste Edital. Vincular uma Etapa a um Evento do Cronograma traz as datas de
+      lá — não há data para digitar aqui.</p>
+    <p class="contadores" data-contador="#etapas-avaliacao" data-item=".etapa" data-singular="Etapa" data-plural="Etapas">
+      <span><strong>{{ etapas_avaliacao|length }}</strong> Etapa{{ etapas_avaliacao|length|pluralize:"s" }}</span>
+    </p>
+    <div id="etapas-avaliacao" data-ordenavel>
+      {% for etapa_linha in etapas_avaliacao %}{% include "interface/_etapa.html" with indice=forloop.counter0 %}{% endfor %}
+    </div>
+    {% if editavel %}
+    <button type="button" class="botao secundario"
+            hx-get="{% url 'interface:fragmento-etapa' edital.id %}"
+            hx-target="#etapas-avaliacao" hx-swap="beforeend">Acrescentar Etapa</button>
+    {% endif %}
+  </section>
+  {% include "interface/_navegacao_etapa.html" %}
+</form>
+{% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
+<script src="{% static 'interface/assistente.js' %}" defer></script>
+<script src="{% static 'interface/ordenacao.js' %}" defer></script>
+<script src="{% static 'interface/rascunho.js' %}" defer></script>
+{% endblock %}

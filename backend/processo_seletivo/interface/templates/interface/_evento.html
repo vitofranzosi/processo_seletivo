@@ -1,6 +1,11 @@
 <fieldset class="linha evento">
   <legend>Evento do Cronograma</legend>
   <input type="hidden" name="evento-{{ indice }}-id" value="{{ evento.id }}">
+  {% comment %}
+  A ordem é dado enviado, e não a posição da linha: `_indices` ordena os índices numericamente
+  antes de a leitura acontecer, de modo que mover a linha na tela, sozinho, não mudaria nada.
+  {% endcomment %}
+  <input type="hidden" name="evento-{{ indice }}-order" value="{{ evento.order|default:'0' }}">
   <div class="campos">
     <p class="campo curto">
       <label for="evento-{{ indice }}-type">Tipo</label>
@@ -28,6 +33,8 @@
     </p>
   </div>
   <p class="remover">
+    <button type="button" class="acao" data-mover="cima">↑ Subir</button>
+    <button type="button" class="acao" data-mover="baixo">↓ Descer</button>
     <button type="button" class="acao perigo"
             hx-get="{% url 'interface:fragmento-remover' %}"
             hx-target="closest fieldset" hx-swap="outerHTML">Remover este Evento</button>

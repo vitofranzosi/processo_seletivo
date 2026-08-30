@@ -18,6 +18,7 @@ from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.auditoria import selectors as auditoria_selectors
 from processo_seletivo.editais.application.draft import replace_draft
+from processo_seletivo.editais.application.identificacao import update_edital_identification
 from processo_seletivo.editais.domain.validation import validate_for_publication
 from processo_seletivo.interface import (
     atos,
@@ -41,6 +42,7 @@ from processo_seletivo.publicacoes.application.selectors import (
     impede_por_segregacao,
     participantes_do_edital,
 )
+from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA, render_edital_pdf
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
@@ -233,18 +235,33 @@ SEVERIDADE = {"BLOCKING_ERROR": "erro", "WARNING": "aviso", "INFO": "informacao"
 # Para `profiles` e `schedule` a âncora é a seção, não um campo: a pendência é "não há nenhum", e
 # o lugar de agir é o botão de acrescentar, dentro da seção.
 #
-# `title` e `description` só existem na criação do Edital e não têm ato de domínio que os altere
-# depois. Levar alguém até a etapa de Identificação, que é somente leitura, seria oferecer um
-# caminho que não termina em lugar nenhum — pior do que não oferecer caminho algum.
+# `title` e `description` passaram a ser corrigíveis: a etapa de Identificação deixou de ser
+# somente leitura quando `update_edital_identification` nasceu (FR-006). Enquanto não havia o ato,
+# o caminho terminava numa tela que não corrigia nada — pior do que não oferecer caminho.
 DESTINO_DA_PENDENCIA = {
-    "title": ("identificacao", "#ident-titulo", False),
-    "description": ("identificacao", "#ident-titulo", False),
+    "title": ("identificacao", "#ident-titulo", True),
+    "description": ("identificacao", "#ident-titulo", True),
     "profiles": ("perfis", "#perfis-titulo", True),
     "schedule": ("cronograma", "#cronograma-titulo", True),
+    "stages": ("etapas", "#etapas-titulo", True),
 }
-MOTIVO_NAO_CORRIGIVEL = (
-    "definido na criação do Edital; ainda não há ato de domínio que o altere em elaboração"
-)
+
+
+def _destino(caminho):
+    """A etapa onde o achado se resolve.
+
+    Achado de raiz vem com o nome da coleção (`profiles`); achado de forma vem com o caminho da
+    entidade (`/profiles/id=…/name`). Os dois se resolvem no mesmo lugar, e resolver só o primeiro
+    faria a pendência mais específica — a que já diz qual campo corrigir — ser a única sem caminho.
+    """
+    if caminho in DESTINO_DA_PENDENCIA:
+        return DESTINO_DA_PENDENCIA[caminho]
+    colecao = caminho.split("/")[1] if caminho.startswith("/") else ""
+    return DESTINO_DA_PENDENCIA.get(colecao, (None, "", False))
+# Caminho que a tradução não conhece — os da forma publicada, por exemplo — não ganha destino nem
+# explicação inventada. FR-007 proíbe declarar incorrigível o que a etapa resolve; não obriga a
+# justificar o que ninguém mapeou.
+MOTIVO_SEM_DESTINO = "não há etapa do assistente que trate deste conteúdo"
 
 
 def _pendencias(edital):
@@ -252,7 +269,7 @@ def _pendencias(edital):
     rotulos = {chave: rotulo for chave, rotulo, _ in ETAPAS_COMPOSICAO}
     pendencias = []
     for item in validate_for_publication(edital_snapshot(edital)):
-        etapa, ancora, corrigivel = DESTINO_DA_PENDENCIA.get(item.path, (None, "", False))
+        etapa, ancora, corrigivel = _destino(item.path)
         pendencias.append(
             {
                 "severidade": SEVERIDADE.get(str(item.severity), "informacao"),
@@ -262,7 +279,7 @@ def _pendencias(edital):
                 "ancora": ancora,
                 "corrigivel": corrigivel,
                 "rotulo_etapa": rotulos.get(etapa, ""),
-                "motivo": "" if corrigivel else MOTIVO_NAO_CORRIGIVEL,
+                "motivo": "" if corrigivel else MOTIVO_SEM_DESTINO,
             }
         )
     return pendencias
@@ -273,15 +290,24 @@ def _pendencias_da_etapa(pendencias, etapa):
     return [item for item in pendencias if item["etapa"] == etapa and item["corrigivel"]]
 
 
-# O wizard só tem as etapas que o domínio sustenta. Identificação é leitura porque não há
-# command que altere título ou descrição depois da criação — ver ETAPAS_SEM_BACKEND no plano.
+# O wizard só tem as etapas que o domínio sustenta. A Identificação era leitura porque nenhum
+# command alterava título ou descrição depois da criação; com `update_edital_identification` ela
+# passou a ser etapa como as outras.
 ETAPAS_COMPOSICAO = [
     ("identificacao", "Identificação", "interface/compor_identificacao.html"),
     ("perfis", "Perfis de Vaga", "interface/compor_perfis.html"),
     ("cronograma", "Cronograma", "interface/compor_cronograma.html"),
+    # Depois do Cronograma porque a Etapa referencia Evento dele: pedir o vínculo antes de existir
+    # o que vincular seria oferecer uma lista vazia e chamá-la de escolha.
+    ("etapas", "Etapas de Avaliação", "interface/compor_etapas.html"),
+    # Depois de tudo o que gera conteúdo: as seções textuais complementam o que o sistema já
+    # sabe, e quem as redige precisa ver o que já está estruturado.
+    ("conteudo", "Conteúdo", "interface/compor_conteudo.html"),
     ("revisao", "Revisão", "interface/compor_revisao.html"),
 ]
 CHAVES_ETAPA = [chave for chave, _, _ in ETAPAS_COMPOSICAO]
+# As que aceitam POST. `revisao` consolida e não grava.
+ETAPAS_GRAVAVEIS = {"identificacao", "perfis", "cronograma", "etapas", "conteudo"}
 
 
 def _progresso(edital, atual):
@@ -292,6 +318,11 @@ def _progresso(edital, atual):
         "cronograma": bool(
             getattr(edital, "cronograma", None) and edital.cronograma.eventos.exists()
         ),
+        # Etapas são opcionais; "concluída" aqui quer dizer "já tem conteúdo", não "obrigatória".
+        "etapas": edital.etapas.exists(),
+        # As seções nascem com o texto do catálogo, então a etapa está "concluída" desde o
+        # início: nada falta. O que ela oferece é revisar, e não preencher do zero.
+        "conteudo": True,
         "revisao": False,
     }
     return [
@@ -335,7 +366,7 @@ def compor_etapa(request, edital_id, etapa):
     anterior, proxima = _vizinhas(etapa)
     erros, digitados = [], None
 
-    if request.method == "POST" and etapa in {"perfis", "cronograma"}:
+    if request.method == "POST" and etapa in ETAPAS_GRAVAVEIS:
         if not editavel:
             erros.append(
                 "Este Edital não está em elaboração ou você não tem permissão para editá-lo."
@@ -371,6 +402,11 @@ def compor_etapa(request, edital_id, etapa):
             "editavel": editavel,
             "erros": erros,
             "salvo": request.GET.get("salvo") == "1",
+            "identificacao": (
+                digitados
+                if etapa == "identificacao" and digitados is not None
+                else {"title": edital.title, "description": edital.description}
+            ),
             "perfis": (
                 _reexibir_perfis(digitados)
                 if etapa == "perfis" and digitados is not None
@@ -380,6 +416,16 @@ def compor_etapa(request, edital_id, etapa):
                 _reexibir_eventos(digitados)
                 if etapa == "cronograma" and digitados is not None
                 else forms.eventos_do_edital(edital)
+            ),
+            "etapas_avaliacao": (
+                _reexibir_etapas(digitados)
+                if etapa == "etapas" and digitados is not None
+                else forms.etapas_do_edital(edital)
+            ),
+            "secoes": (
+                _reexibir_secoes(edital, digitados)
+                if etapa == "conteudo" and digitados is not None
+                else forms.secoes_do_edital(edital)
             ),
             "reservas": forms.RESERVA,
             "pendencias": pendencias,
@@ -396,11 +442,49 @@ def _reexibir_perfis(perfis):
         {
             **perfil,
             "requirements": "\n".join(perfil["requirements"]),
-            "modalidades": "\n".join(
-                f"{m['code']} — {m['name']}" for m in perfil["competitionModalities"]
-            ),
+            "modalidades": [
+                _reexibir_modalidade(modalidade)
+                for modalidade in perfil["competitionModalities"]
+            ],
         }
         for perfil in perfis
+    ]
+
+
+def _reexibir_modalidade(modalidade):
+    regra = modalidade.get("normativeRule") or {}
+    percentual = regra.get("percentage")
+    return {
+        "id": modalidade.get("id", ""),
+        "code": modalidade.get("code", ""),
+        "name": modalidade.get("name", ""),
+        "description": modalidade.get("description", ""),
+        "ruleId": regra.get("id", ""),
+        "foundation": regra.get("foundation", ""),
+        "version": regra.get("version", ""),
+        "percentage": "" if percentual is None else f"{percentual:f}",
+    }
+
+
+def _reexibir_secoes(edital, digitadas):
+    """Após erro, o texto digitado por cima da estrutura do catálogo, que não vem do formulário."""
+    texto = {item["key"]: item["content"] for item in digitadas}
+    return [
+        {**secao, "content": texto.get(secao["key"], secao["content"])}
+        for secao in forms.secoes_do_edital(edital)
+    ]
+
+
+def _reexibir_etapas(etapas):
+    """Após erro, devolve o que a pessoa digitou — inclusive o valor que o domínio recusou."""
+    return [
+        {
+            **etapa,
+            "weight": "" if etapa["weight"] is None else f"{etapa['weight']:f}",
+            "minimumScore": "" if etapa["minimumScore"] is None else f"{etapa['minimumScore']:f}",
+            "scheduleEventId": etapa["scheduleEventId"] or "",
+        }
+        for etapa in etapas
     ]
 
 
@@ -415,22 +499,56 @@ def _reexibir_eventos(eventos):
     ]
 
 
+# Qual coleção do rascunho cada etapa do assistente escreve.
+COLECAO_DA_ETAPA = {
+    "perfis": "profiles",
+    "cronograma": "schedule",
+    "etapas": "stages",
+    "conteudo": "sections",
+}
+
+LEITURA_DA_ETAPA = {
+    "identificacao": forms.ler_identificacao,
+    "perfis": forms.ler_perfis,
+    "cronograma": forms.ler_eventos,
+    "etapas": forms.ler_etapas,
+    "conteudo": forms.ler_secoes,
+}
+
+
 def _ler_etapa(request, etapa):
-    return forms.ler_perfis(request.POST) if etapa == "perfis" else forms.ler_eventos(request.POST)
+    return LEITURA_DA_ETAPA[etapa](request.POST)
 
 
 def _gravar_etapa(request, ator, edital, etapa, digitados):
     """Grava uma seção preservando a outra: replace_draft substitui o rascunho inteiro."""
-    if etapa == "perfis":
-        perfis, eventos = digitados, forms.eventos_persistidos(edital)
-    else:
-        perfis, eventos = forms.perfis_persistidos(edital), digitados
-    replace_draft(
+    if etapa == "identificacao":
+        # A identificação não é conteúdo do rascunho: tem ato próprio, com auditoria própria.
+        return update_edital_identification(
+            actor=ator,
+            edital_id=edital.id,
+            expected_revision=edital.revision,
+            title=digitados["title"],
+            description=digitados["description"],
+            correlation_id=request.correlation_id,
+        )
+    # `replace_draft` substitui o rascunho inteiro: o que não for reenviado é apagado. Por isso as
+    # três coleções viajam sempre, e só a da etapa atual vem do formulário.
+    conteudo = {
+        "profiles": forms.perfis_persistidos(edital),
+        "schedule": forms.eventos_persistidos(edital),
+        "stages": forms.etapas_persistidas(edital),
+        "sections": forms.secoes_persistidas(edital),
+    }
+    conteudo[COLECAO_DA_ETAPA[etapa]] = digitados
+    return replace_draft(
         actor=ator,
         edital_id=edital.id,
         expected_revision=edital.revision,
-        profiles=perfis,
-        schedule=eventos,
+        profiles=conteudo["profiles"],
+        schedule=conteudo["schedule"],
+        stages=conteudo["stages"],
+        sections=conteudo["sections"],
         correlation_id=request.correlation_id,
     )
 
@@ -457,6 +575,53 @@ def fragmento_perfil(request):
 def fragmento_evento(request):
     return render(request, "interface/_evento.html",
                   {"evento": {"id": str(uuid4())}, "indice": _indice_de_linha(request)})
+
+
+@require_http_methods(["GET"])
+def fragmento_modalidade(request, indice):
+    """A linha nova nasce com **os dois** identificadores: o da modalidade e o da sua Regra.
+
+    A gravação preserva o `id` recebido, e uma linha sem identidade não teria o que preservar. O da
+    Regra nasce mesmo antes de a Regra existir, porque quem digitar o fundamento em seguida vai
+    criá-la, e a identidade precisa estar no formulário nesse momento.
+
+    `indice` é o do Perfil que contém a linha: os nomes dos campos são `modalidade-<perfil>-<n>-…`.
+    """
+    return render(
+        request,
+        "interface/_modalidade.html",
+        {
+            "modalidade": {"id": str(uuid4()), "ruleId": str(uuid4())},
+            "indice": indice,
+            "sub": _indice_de_linha(request),
+        },
+    )
+
+
+@require_http_methods(["GET"])
+def fragmento_etapa(request, edital_id):
+    """A linha nova nasce com identidade, como as de Perfil e Evento.
+
+    A gravação preserva o `id` recebido; sem gerá-lo aqui, a Etapa criada pela tela nasceria sem
+    identidade e não haveria o que preservar. A rota é escopada ao Edital porque o vínculo com
+    Evento precisa da lista de Eventos **daquele** Cronograma.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital = obter_edital(actor=ator, edital_id=edital_id)
+    if edital is None:
+        raise Http404
+    return render(
+        request,
+        "interface/_etapa.html",
+        {
+            "etapa_linha": {"id": str(uuid4())},
+            "indice": _indice_de_linha(request),
+            "eventos": forms.eventos_do_edital(edital),
+            "edital": edital,
+        },
+    )
 
 
 def _campos_de(definicoes):
@@ -509,6 +674,71 @@ def _trilha(edital):
     ]
 
 
+# Onde a prévia faz sentido. Publicado tem documento de verdade, e oferecer uma prévia ao lado
+# dele criaria dois documentos concorrentes para o mesmo conteúdo.
+ESTADOS_COM_PREVIA = (
+    Edital.Status.EM_ELABORACAO,
+    Edital.Status.EM_REVISAO,
+    Edital.Status.HOMOLOGADO,
+)
+
+
+@require_http_methods(["GET"])
+def previa(request, edital_id):
+    """O documento como ele ficará, sem praticar ato nenhum (US1).
+
+    Não é command: não altera estado, não gera ato e não tem chave de idempotência. É leitura que
+    compõe um documento a partir do snapshot atual — que nos três estados admitidos **é** o
+    conteúdo que será publicado, porque depois da submissão o rascunho não é editável e a
+    publicação já recusa divergência entre rascunho e revisão homologada. Uma segunda origem
+    existiria para reproduzir o que a primeira já garante.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital = obter_edital(actor=ator, edital_id=edital_id)
+    if edital is None:
+        raise Http404
+    if edital.status not in ESTADOS_COM_PREVIA:
+        raise DomainError(
+            "invalid_state",
+            "A prévia existe enquanto o Edital está em elaboração, submetido ou homologado. "
+            "Depois da publicação, o documento é o publicado.",
+            409,
+        )
+    documento = render_edital_pdf(edital_snapshot(edital), "", modo=MODO_PREVIA)
+    resposta = HttpResponse(documento, content_type="application/pdf")
+    nome = f"previa-edital-{edital.number}-{edital.year}.pdf".replace("/", "-")
+    resposta["Content-Disposition"] = f'inline; filename="{nome}"'
+    return resposta
+
+
+def _documentos_publicados(edital):
+    """O documento de cada Publicação, na ordem, identificado pelo ato que o produziu (FR-002).
+
+    **Nenhum é apresentado como vigente, e a omissão é a parte que importa.** A vigência pertence à
+    Versão Consolidada (`publicacoes/application/selectors.py:26`), que não tem documento próprio; e
+    uma Retificação pode ser publicada com vigência futura, de modo que a Publicação mais recente
+    nem sempre é a que vigora. Rotular a última como vigente seria afirmar sobre o documento uma
+    propriedade que ele não tem.
+    """
+    documentos = []
+    for publicacao in edital.publicacoes.select_related("retificacao").order_by(
+        "publication_order"
+    ):
+        retificacao = getattr(publicacao, "retificacao", None)
+        documentos.append(
+            {
+                "ordem": publicacao.publication_order,
+                "ato": "Retificação" if retificacao else "Publicação original",
+                "retificacao_id": retificacao.id if retificacao else None,
+                "publicada_em": publicacao.published_at,
+                "url": reverse("public-document", args=[publicacao.id]),
+            }
+        )
+    return documentos
+
+
 @require_http_methods(["GET"])
 def detalhe(request, edital_id):
     """Situação do Edital, quem já atuou e o que se pode fazer agora (US3 da 002)."""
@@ -527,11 +757,13 @@ def detalhe(request, edital_id):
             "edital": edital,
             "trilha": _trilha(edital),
             "participantes": participantes,
+            "documentos": _documentos_publicados(edital),
             "pendencias": _pendencias(edital),
             "atos": list(atos.disponiveis(edital, ator)),
             "impedido_por_segregacao": impede_por_segregacao(participantes, ator),
             "pode_compor": edital.status == Edital.Status.EM_ELABORACAO
             and ator.can("edital:elaborar"),
+            "pode_visualizar": edital.status in ESTADOS_COM_PREVIA,
             "pode_auditar": ator.can("auditoria:consultar"),
         },
     )
@@ -862,6 +1094,7 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
 OPERACOES = {
     "CRIAR": "Criação",
     "ALTERAR_RASCUNHO": "Alteração do rascunho",
+    "ALTERAR_IDENTIFICACAO": "Alteração da identificação",
     "ATIVAR": "Ativação do Processo",
     "SUBMETER": "Submissão para revisão",
     "HOMOLOGAR": "Homologação",

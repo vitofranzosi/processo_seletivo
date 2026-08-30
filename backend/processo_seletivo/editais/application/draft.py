@@ -1,14 +1,18 @@
 from django.db import transaction
 
 from processo_seletivo.auditoria.application import record_event
+from processo_seletivo.editais.domain import secoes as secoes_do_catalogo
 from processo_seletivo.editais.domain.cronograma import ScheduleValidationError, validate_schedule
+from processo_seletivo.editais.domain.etapas import StageValidationError, validate_stages
 from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_profiles
 from processo_seletivo.editais.models.cronograma import Cronograma, EventoCronograma
+from processo_seletivo.editais.models.etapas import EtapaAvaliacao
 from processo_seletivo.editais.models.perfis import (
     ModalidadeConcorrencia,
     PerfilVaga,
     RegraNormativa,
 )
+from processo_seletivo.editais.models.secoes import SecaoEdital
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.seguranca.application.authorization import require_permission
@@ -17,8 +21,44 @@ from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.concurrency import compare_and_swap
 
 
-def _reject_identifiers_of_other_editais(edital, profiles, schedule):
-    """FR-017: Perfil ou Evento já vinculado a outro Edital é inconsistência determinável."""
+def _identidades_aninhadas_alheias(profiles):
+    """Modalidade contra o Perfil, Regra Normativa contra a Modalidade (FR-029).
+
+    **Cada entidade é verificada no nível do seu contêiner, e nenhuma um nível acima.** A Regra
+    pertence à Modalidade, e não ao Perfil (`editais/models/perfis.py:63-66`): conferir só até o
+    Perfil deixaria duas Modalidades irmãs trocarem a identidade das suas Regras sem que nada
+    acusasse, e a identidade estável passaria a designar outra relação normativa.
+    """
+    modalidades, regras = {}, {}
+    for perfil in profiles:
+        for modalidade in perfil.get("competitionModalities", []):
+            if modalidade.get("id"):
+                modalidades[str(modalidade["id"])] = str(perfil["id"])
+            regra = modalidade.get("normativeRule") or {}
+            if regra.get("id"):
+                regras[str(regra["id"])] = str(modalidade.get("id") or "")
+
+    alheios = set()
+    for identificador, contêiner in ModalidadeConcorrencia.objects.filter(
+        id__in=list(modalidades)
+    ).values_list("id", "perfil_id"):
+        if str(contêiner) != modalidades[str(identificador)]:
+            alheios.add(str(identificador))
+    for identificador, contêiner in RegraNormativa.objects.filter(
+        id__in=list(regras)
+    ).values_list("id", "modalidade_id"):
+        if str(contêiner) != regras[str(identificador)]:
+            alheios.add(str(identificador))
+    return alheios
+
+
+def _reject_identifiers_of_other_editais(edital, profiles, schedule, stages):
+    """FR-017: Perfil, Evento ou Etapa já vinculado a outro Edital é inconsistência determinável.
+
+    `replace_draft` apaga e recria: sem esta recusa, uma entidade poderia ser reparentada de um
+    Edital para outro e a identidade estável passaria a designar outra coisa. Cada uma é verificada
+    contra o **seu** contêiner.
+    """
     alheios = sorted(
         str(identifier)
         for identifier in (
@@ -32,18 +72,55 @@ def _reject_identifiers_of_other_editais(edital, profiles, schedule):
                 .exclude(cronograma__edital=edital)
                 .values_list("id", flat=True)
             )
+            | set(
+                EtapaAvaliacao.objects.filter(id__in=[item["id"] for item in stages])
+                .exclude(edital=edital)
+                .values_list("id", flat=True)
+            )
+            | _identidades_aninhadas_alheias(profiles)
         )
     )
     if alheios:
         raise DomainError(
             "identifier_belongs_to_another_edital",
-            "Identificadores já vinculados a outro Edital: " + ", ".join(alheios),
+            "Identificadores já vinculados a outro contêiner: " + ", ".join(alheios),
             409,
         )
 
 
-def replace_draft(*, actor, edital_id, expected_revision, profiles, schedule, correlation_id):
+def _validar_secoes(sections):
+    """Só seção textual do catálogo é gravável (FR-034 e FR-036).
+
+    Chave fora do catálogo tentaria acrescentar seção onde o conjunto é fixo; chave de seção
+    gerada tentaria persistir como texto o que é derivado do dado estruturado, criando dois
+    endereços para o mesmo conteúdo normativo.
+    """
+    invalidas = sorted(
+        item["key"] for item in sections if not secoes_do_catalogo.e_textual(item["key"])
+    )
+    if invalidas:
+        raise DomainError(
+            "field_constraint_violated",
+            "Não são seções textuais do catálogo do Edital: " + ", ".join(invalidas),
+            422,
+        )
+
+
+def replace_draft(
+    *,
+    actor,
+    edital_id,
+    expected_revision,
+    profiles,
+    schedule,
+    correlation_id,
+    stages=None,
+    sections=None,
+):
     require_permission(actor, "edital:elaborar")
+    stages = list(stages or [])
+    sections = list(sections or [])
+    _validar_secoes(sections)
     try:
         validate_profiles(profiles)
     except ProfileValidationError as exc:
@@ -52,6 +129,12 @@ def replace_draft(*, actor, edital_id, expected_revision, profiles, schedule, co
         validate_schedule(schedule)
     except ScheduleValidationError as exc:
         raise DomainError("invalid_schedule", str(exc), 422) from exc
+    try:
+        # Contra o Cronograma **desta gravação**, e não contra o banco: `replace_draft` substitui o
+        # rascunho inteiro, então um Evento removido no mesmo POST já não existe.
+        validate_stages(stages, schedule=schedule)
+    except StageValidationError as exc:
+        raise DomainError("invalid_stages", str(exc), 422) from exc
     with command_context() as now:
         try:
             edital = (
@@ -68,7 +151,7 @@ def replace_draft(*, actor, edital_id, expected_revision, profiles, schedule, co
             )
         if edital.revision != expected_revision:
             raise DomainError("stale_revision", "A revisão informada está obsoleta.", 412)
-        _reject_identifiers_of_other_editais(edital, profiles, schedule)
+        _reject_identifiers_of_other_editais(edital, profiles, schedule, stages)
         PerfilVaga.objects.filter(edital=edital).delete()
         for payload in profiles:
             perfil = PerfilVaga.objects.create(
@@ -86,7 +169,11 @@ def replace_draft(*, actor, edital_id, expected_revision, profiles, schedule, co
                 call_information=payload.get("callInformation", {}),
             )
             for modality_payload in payload.get("competitionModalities", []):
+                # Com o `id` recebido, como Perfil e Evento já eram criados. Sem isto, toda
+                # gravação do rascunho trocava a identidade das modalidades — e a da Regra, que
+                # viaja no conteúdo publicado.
                 modality = ModalidadeConcorrencia.objects.create(
+                    id=modality_payload["id"],
                     perfil=perfil,
                     code=modality_payload["code"],
                     name=modality_payload["name"],
@@ -95,6 +182,7 @@ def replace_draft(*, actor, edital_id, expected_revision, profiles, schedule, co
                 rule = modality_payload.get("normativeRule")
                 if rule:
                     RegraNormativa.objects.create(
+                        id=rule["id"],
                         modalidade=modality,
                         foundation=rule["foundation"],
                         version=rule["version"],
@@ -120,6 +208,38 @@ def replace_draft(*, actor, edital_id, expected_revision, profiles, schedule, co
                     status=event.get("status", EventoCronograma.Status.PLANEJADO),
                 )
                 for event in schedule
+            ]
+        )
+        # As Etapas são recriadas depois dos Eventos porque referenciam Evento desta gravação.
+        EtapaAvaliacao.objects.filter(edital=edital).delete()
+        EtapaAvaliacao.objects.bulk_create(
+            [
+                EtapaAvaliacao(
+                    id=stage["id"],
+                    edital=edital,
+                    name=stage["name"],
+                    order=stage.get("order", 0),
+                    weight=stage.get("weight"),
+                    eliminatory=stage.get("eliminatory", False),
+                    classificatory=stage.get("classificatory", False),
+                    minimum_score=stage.get("minimumScore"),
+                    evento_id=stage.get("scheduleEventId"),
+                )
+                for stage in stages
+            ]
+        )
+        # A identidade da linha é a mesma do snapshot: uma identidade só para a seção, e não uma
+        # para o conteúdo publicado e outra para a persistência.
+        SecaoEdital.objects.filter(edital=edital).delete()
+        SecaoEdital.objects.bulk_create(
+            [
+                SecaoEdital(
+                    id=secoes_do_catalogo.identidade(edital.id, section["key"]),
+                    edital=edital,
+                    key=section["key"],
+                    content=section["content"],
+                )
+                for section in sections
             ]
         )
         compare_and_swap(

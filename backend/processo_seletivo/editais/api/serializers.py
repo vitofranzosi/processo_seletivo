@@ -5,6 +5,18 @@ from processo_seletivo.editais.domain.perfis import ProfileValidationError, vali
 
 
 class NormativeRuleSerializer(serializers.Serializer):
+    """`id` é **obrigatório**, como já é o de Perfil, Evento e Etapa.
+
+    Opcional, ele reabriria pela API o defeito que esta feature veio fechar: um payload sem
+    identificador é aceito, o servidor gera um, a resposta do rascunho devolve só o resumo do
+    Edital — e a gravação seguinte, também sem identificador, troca a identidade de novo. O cliente
+    não teria como preservar o que nunca recebeu.
+
+    Quem cria a regra escolhe o identificador dela, e a recusa de identificador pertencente a
+    outro contêiner é o que impede que essa escolha reparente conteúdo alheio.
+    """
+
+    id = serializers.UUIDField()
     foundation = serializers.CharField(min_length=1)
     version = serializers.CharField(min_length=1, max_length=50)
     percentage = serializers.DecimalField(max_digits=7, decimal_places=4, required=False)
@@ -16,6 +28,7 @@ class NormativeRuleSerializer(serializers.Serializer):
 
 
 class CompetitionModalitySerializer(serializers.Serializer):
+    id = serializers.UUIDField()
     code = serializers.CharField(min_length=1, max_length=100)
     name = serializers.CharField(min_length=1, max_length=255)
     description = serializers.CharField(required=False, allow_blank=True)
@@ -64,6 +77,43 @@ class EventSerializer(serializers.Serializer):
         return attrs
 
 
+class StageSerializer(serializers.Serializer):
+    """Etapa de Avaliação no rascunho.
+
+    A coerência — Evento existente no Cronograma da mesma gravação, faixa de peso e de nota
+    mínima — é verificada no domínio, e não aqui: a interface administrativa invoca o command
+    diretamente e não atravessa este serializer.
+    """
+
+    id = serializers.UUIDField()
+    name = serializers.CharField(min_length=1, max_length=200)
+    order = serializers.IntegerField(min_value=0, required=False, default=0)
+    weight = serializers.DecimalField(
+        max_digits=7, decimal_places=4, required=False, allow_null=True
+    )
+    eliminatory = serializers.BooleanField(required=False, default=False)
+    classificatory = serializers.BooleanField(required=False, default=False)
+    minimumScore = serializers.DecimalField(
+        max_digits=7, decimal_places=4, required=False, allow_null=True
+    )
+    scheduleEventId = serializers.UUIDField(required=False, allow_null=True)
+
+
+class SectionSerializer(serializers.Serializer):
+    """Só as seções **textuais** que tiveram o conteúdo editado.
+
+    A entrada não carrega o UUID: ele é determinístico sobre `(editalId, key)` e o snapshot o
+    deriva. Enviar um identificador aqui abriria a porta para declarar um que não corresponde à
+    chave, e não haveria como dizer qual dos dois vale.
+
+    Seção gerada não é enviada, e seção textual ausente significa "conteúdo padrão do catálogo",
+    não "seção vazia". A recusa de chave fora do catálogo é do domínio, que o command atravessa.
+    """
+
+    key = serializers.CharField(min_length=1, max_length=60)
+    content = serializers.CharField(allow_blank=False)
+
+
 class EditalDraftSerializer(serializers.Serializer):
     """Rascunho normativo do Edital: Perfis e Cronograma.
 
@@ -80,6 +130,8 @@ class EditalDraftSerializer(serializers.Serializer):
 
     profiles = ProfileSerializer(many=True, allow_empty=False)
     schedule = EventSerializer(many=True)
+    stages = StageSerializer(many=True, required=False)
+    sections = SectionSerializer(many=True, required=False)
 
     def validate(self, attrs):
         desconhecidos = sorted(set(self.initial_data) - set(self.fields))

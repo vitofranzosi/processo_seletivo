@@ -23,9 +23,34 @@ def texto_de(pdf: bytes) -> str:
     )
 
 
+def secoes(edital_id="11111111-1111-1111-1111-111111111111"):
+    """As seções do catálogo, como `edital_snapshot` as materializa.
+
+    O documento é composto a partir delas: sem `sections` não há o que compor. Construí-las aqui a
+    partir do catálogo, e não à mão, é o que impede que este arquivo e o snapshot real divirjam.
+    """
+    from processo_seletivo.editais.domain import secoes as catalogo
+
+    return [
+        {
+            "id": str(catalogo.identidade(edital_id, secao.key)),
+            "key": secao.key,
+            "title": secao.title,
+            "order": secao.order,
+            "type": secao.type,
+            **(
+                {"source": secao.source}
+                if secao.gerada
+                else {"content": secao.default_text}
+            ),
+        }
+        for secao in catalogo.CATALOGO
+    ]
+
+
 def snapshot(**alteracoes):
     base = {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "editalId": "11111111-1111-1111-1111-111111111111",
         "processoId": "22222222-2222-2222-2222-222222222222",
         "number": "07",
@@ -77,6 +102,19 @@ def snapshot(**alteracoes):
                 "status": "PLANEJADO",
             }
         ],
+        "stages": [
+            {
+                "id": "77777777-7777-7777-7777-777777777777",
+                "name": "Prova didática",
+                "order": 1,
+                "weight": "2.0000",
+                "eliminatory": True,
+                "classificatory": True,
+                "minimumScore": "7.0000",
+                "scheduleEventId": "66666666-6666-6666-6666-666666666666",
+            }
+        ],
+        "sections": secoes(),
     }
     return {**base, **alteracoes}
 
@@ -165,11 +203,51 @@ def test_long_content_paginates_and_every_page_is_numbered():
         assert f"P{indice:02d}" in texto, f"perfil P{indice:02d} não foi impresso"
 
 
-def test_empty_sections_are_declared_instead_of_omitted():
-    """Seção vazia precisa dizer que está vazia; silêncio num edital é ambíguo."""
-    texto = texto_de(render_edital_pdf(snapshot(profiles=[], schedule=[]), HASH))
-    assert "Nenhum Perfil registrado nesta versão." in texto
-    assert "Nenhum Evento registrado nesta versão." in texto
+def test_secao_gerada_sem_fonte_nao_aparece_no_documento():
+    """A regra mudou na `006`, e a razão mudou junto.
+
+    A `002` declarava "Nenhum Perfil registrado nesta versão", porque a alternativa era omitir a
+    seção em silêncio. Com o catálogo, a seção passou a ter título próprio, e um título sobre nada
+    não informa que não há nada — informa que alguém esqueceu de preencher.
+
+    Para Perfis e Cronograma o caso nem chega ao documento publicado: a validação de publicação
+    exige ao menos um de cada. Para Etapas, que são opcionais, um cabeçalho vazio seria falso.
+    """
+    texto = texto_de(render_edital_pdf(snapshot(profiles=[], schedule=[], stages=[]), HASH))
+
+    assert "PERFIS DE VAGA" not in texto
+    assert "CRONOGRAMA" not in texto
+    assert "ETAPAS DE AVALIAÇÃO" not in texto
+    # As textuais continuam lá: o texto institucional não depende de dado estruturado.
+    assert "DISPOSIÇÕES PRELIMINARES" in texto
+
+
+def test_documento_segue_a_ordem_das_secoes_do_conteudo():
+    """FR-038: a ordem do documento é conteúdo normativo, e não a ordem do código."""
+    texto = texto_de(render_edital_pdf(snapshot(), HASH))
+    posicoes = [
+        texto.index(titulo)
+        for titulo in (
+            "DISPOSIÇÕES PRELIMINARES",
+            "PERFIS DE VAGA",
+            "DA INSCRIÇÃO",
+            "ETAPAS DE AVALIAÇÃO",
+            "CRONOGRAMA",
+            "DOS RECURSOS",
+            "DISPOSIÇÕES FINAIS",
+        )
+    ]
+    assert posicoes == sorted(posicoes)
+
+
+def test_etapas_aparecem_com_caracter_peso_e_nota_minima():
+    texto = texto_de(render_edital_pdf(snapshot(), HASH))
+    assert "1. Prova didática" in texto
+    assert "eliminatória e classificatória" in texto
+    assert "peso: 2.0000" in texto
+    assert "nota mínima: 7.0000" in texto
+    # A data vem do Evento vinculado, e não é digitada de novo na Etapa.
+    assert "Conforme o Cronograma — INSCRICAO" in texto
 
 
 def test_parentheses_in_content_do_not_corrupt_the_document():
