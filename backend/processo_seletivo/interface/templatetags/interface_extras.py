@@ -26,9 +26,13 @@ def situacao(valor):
 
 
 @register.filter
-def dicionario(dados, chave):
-    """Lê `campo:<caminho>` do que foi enviado, para reexibir sem perder o digitado."""
-    return dados.get(f"campo:{chave}", "") if dados else ""
+def dicionario(dados, referencia):
+    """Lê `campo:<referência>` do que foi enviado, para reexibir sem perder o digitado.
+
+    A referência é a posição do campo no formulário, não o caminho normativo: a tela de
+    Retificação não expõe representação a quem elabora (FR-019).
+    """
+    return dados.get(f"campo:{referencia}", "") if dados else ""
 
 
 @register.filter
@@ -39,6 +43,6 @@ def plural(quantidade, formas):
 
 
 @register.filter
-def marcado(dados, caminho):
+def marcado(dados, referencia):
     """A marcação de remoção precisa voltar marcada depois do POST, como os campos digitados."""
-    return bool(dados and dados.get(f"remover:{caminho}"))
+    return bool(dados and dados.get(f"remover:{referencia}"))

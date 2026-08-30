@@ -15,10 +15,10 @@ from processo_seletivo.publicacoes.domain.consolidation import consolidate
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.shared.canonical import canonical_sha256
-from tests.fixtures.edital import actor_headers, complete_draft
+from tests.fixtures.edital import actor_headers, caminho_perfil, complete_draft
 from tests.fixtures.publicacao import SIGNATORY, create_retification, publish_original, retify
 
-VACANCIES = "/profiles/0/immediateVacancies"
+VACANCIES = caminho_perfil("immediateVacancies")
 TITLE = "/title"
 
 

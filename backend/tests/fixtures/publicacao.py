@@ -72,8 +72,12 @@ def create_retification(api_client, edital, changes, *, effective_at=None, suffi
     return Retificacao.objects.get(pk=created.json()["id"])
 
 
-def publish_retification(api_client, retificacao, *, suffix="a"):
-    """Submete, homologa e publica uma Retificação já criada."""
+def try_publish_retification(api_client, retificacao, *, suffix="a"):
+    """Submete, homologa e tenta publicar, devolvendo a resposta **sem exigir sucesso**.
+
+    Existe para os cenários que só se enxergam na Publicação: a Retificação precisa atravessar
+    o ciclo inteiro para que a recusa aconteça no momento certo, e o teste quer ler a recusa.
+    """
     api_client.post(
         f"/api/v1/admin/retificacoes/{retificacao.id}/submissoes",
         format="json",
@@ -95,7 +99,7 @@ def publish_retification(api_client, retificacao, *, suffix="a"):
             "HTTP_IF_MATCH": '"2"',
         },
     )
-    published = api_client.post(
+    return api_client.post(
         f"/api/v1/admin/retificacoes/{retificacao.id}/publicacoes",
         {"signatory": SIGNATORY},
         format="json",
@@ -106,6 +110,11 @@ def publish_retification(api_client, retificacao, *, suffix="a"):
             "HTTP_IF_MATCH": '"3"',
         },
     )
+
+
+def publish_retification(api_client, retificacao, *, suffix="a"):
+    """Submete, homologa e publica uma Retificação já criada, exigindo que ela publique."""
+    published = try_publish_retification(api_client, retificacao, suffix=suffix)
     assert published.status_code == 201, published.content
     retificacao.refresh_from_db()
     return retificacao

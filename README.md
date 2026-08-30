@@ -187,10 +187,41 @@ acima. A interface administrativa e pública é uma especificação futura, não
 
 ## Documentação
 
+O projeto usa [GitHub Spec Kit](https://github.com/github/spec-kit). Cada incremento tem sua pasta
+em `specs/`, com os mesmos artefatos:
+
 | Artefato | Conteúdo |
 |---|---|
-| [`spec.md`](specs/001-processo-seletivo-editais/spec.md) | Requisitos, cenários e critérios de sucesso |
-| [`plan.md`](specs/001-processo-seletivo-editais/plan.md) | Decisões técnicas e verificação constitucional |
-| [`data-model.md`](specs/001-processo-seletivo-editais/data-model.md) | Entidades, invariantes e regras |
-| [`tasks.md`](specs/001-processo-seletivo-editais/tasks.md) | Tarefas por história |
-| [`quickstart.md`](specs/001-processo-seletivo-editais/quickstart.md) | Guia de validação |
+| `spec.md` | Requisitos, cenários e critérios de sucesso |
+| `plan.md` | Decisões técnicas e verificação constitucional |
+| `research.md` | O que foi investigado e o que foi descartado |
+| `data-model.md` | Entidades, invariantes e regras |
+| `tasks.md` | Tarefas por história |
+| `quickstart.md` | Guia de validação |
+| `checklists/requirements.md` | Análise de consistência entre os artefatos |
+
+Incrementos: [001](specs/001-processo-seletivo-editais/spec.md) (backend),
+[002](specs/002-frontend-administrativo/spec.md) (interface),
+[003](specs/003-integridade-e-prontidao/spec.md) (integridade e prontidão) e
+[004](specs/004-enderecamento-normativo-estavel/spec.md) (endereçamento estável, ainda em
+especificação). A [Constituição](.specify/memory/constitution.md) prevalece sobre todos.
+
+### Spec Kit com dois agentes
+
+Os comandos do Spec Kit vivem em **um lugar só**, `.agents/skills/speckit-*/`, instalados pela
+integração `codex`. O Claude Code os enxerga por symlinks relativos em `.claude/skills/`, que
+apontam para lá — mesma fonte, sem duplicação e sem risco de as duas cópias divergirem.
+
+Depois de `specify integration upgrade`, refaça os symlinks caso alguma skill tenha sido
+acrescentada:
+
+```bash
+for d in .agents/skills/*/; do n=$(basename "$d"); ln -sfn "../../.agents/skills/$n" ".claude/skills/$n"; done
+```
+
+Os scripts auxiliares estão em `.specify/scripts/bash/`. `.specify/scripts/powershell/` continua
+no manifesto da ferramenta e é ignorado nesta plataforma — removê-lo à mão faria o
+`specify integration status` acusar arquivo gerenciado ausente.
+
+`.specify/feature.json` aponta para a feature ativa e é **por checkout**: não entra no git, e cada
+worktree tem o seu.

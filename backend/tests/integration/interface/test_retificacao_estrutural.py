@@ -22,10 +22,14 @@ def test_remover_e_acrescentar_perfil_chega_a_consulta_publica(
     codigos_antes = [p["code"] for p in vigente.content["profiles"]]
     assert len(codigos_antes) >= 1, "o Edital precisa ter Perfil para haver o que remover"
 
+    grupos = retificacao_ui.campos_editaveis(vigente.content)
+    primeiro_perfil = next(
+        grupo["referencia"] for grupo in grupos if grupo["caminho"].startswith("/profiles/")
+    )
     alteracoes, resumo = retificacao_ui.diferencas(
         vigente.content,
         {
-            "remover:/profiles/0": "1",
+            f"remover:{primeiro_perfil}": "1",
             "novo-perfil-42-code": "ENF-01",
             "novo-perfil-42-name": "Enfermeiro do Trabalho",
             "novo-perfil-42-locality": "Campus Serra",
@@ -33,8 +37,9 @@ def test_remover_e_acrescentar_perfil_chega_a_consulta_publica(
             "novo-perfil-42-requirements": "Graduação em Enfermagem\nCOREN ativo",
         },
     )
-    assert [a["operation"] for a in alteracoes] == ["REMOVE", "ADD"], (
-        "REMOVE antes de ADD: acrescentar primeiro deslocaria o índice a remover"
+    assert sorted(a["operation"] for a in alteracoes) == ["ADD", "REMOVE"]
+    assert all("id=" in a["targetPath"] or a["targetPath"].endswith("/-") for a in alteracoes), (
+        "a tela emite pela chave da entidade, nunca pela posição"
     )
     assert len(resumo) == 2
 

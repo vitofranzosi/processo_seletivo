@@ -99,7 +99,6 @@ def cronograma(agora, numero):
     ]
 
 
-
 # Os Perfis do seed são fixos — docência em Informática e técnico de laboratório. Fazer o
 # título variar sem variar o conteúdo produziria um Processo anunciando "Tutoria a distância"
 # cujos Perfis são outros; quem precisa de execuções distintas usa --titulo.
@@ -230,28 +229,38 @@ class Command(BaseCommand):
         homologador = ator("bruno.homologador", "retificacao:homologar")
         publicador = ator("carla.publicadora", "retificacao:publicar")
 
-        for sufixo, mudancas, vigencia, motivo in (
+        # As alterações nascem do conteúdo vigente, porque o caminho nomeia a entidade: o
+        # identificador do Perfil e o do Evento só existem depois de o Edital ter sido publicado.
+        def vagas_do_primeiro_perfil(conteudo):
+            perfil = conteudo["profiles"][0]["id"]
+            return [
+                {
+                    "targetPath": f"/profiles/id={perfil}/immediateVacancies",
+                    "operation": "REPLACE",
+                    "newValue": 3,
+                }
+            ]
+
+        def termino_do_primeiro_evento(conteudo):
+            evento = conteudo["schedule"][0]["id"]
+            return [
+                {
+                    "targetPath": f"/schedule/id={evento}/endAt",
+                    "operation": "REPLACE",
+                    "newValue": (agora + timedelta(days=30)).isoformat(),
+                }
+            ]
+
+        for sufixo, montar_mudancas, vigencia, motivo in (
             (
                 "a",
-                [
-                    {
-                        "targetPath": "/profiles/0/immediateVacancies",
-                        "operation": "REPLACE",
-                        "newValue": 3,
-                    }
-                ],
+                vagas_do_primeiro_perfil,
                 None,
                 "Ampliação de uma vaga imediata no perfil de docência.",
             ),
             (
                 "b",
-                [
-                    {
-                        "targetPath": "/schedule/0/endAt",
-                        "operation": "REPLACE",
-                        "newValue": (agora + timedelta(days=30)).isoformat(),
-                    }
-                ],
+                termino_do_primeiro_evento,
                 agora + timedelta(days=15),
                 "Prorrogação das inscrições, vigente a partir de 15 dias.",
             ),
@@ -261,7 +270,7 @@ class Command(BaseCommand):
             dados = {
                 "baseSnapshotId": base.id,
                 "justification": motivo,
-                "changes": mudancas,
+                "changes": montar_mudancas(base.content),
             }
             if vigencia is not None:
                 dados["effectiveAt"] = vigencia

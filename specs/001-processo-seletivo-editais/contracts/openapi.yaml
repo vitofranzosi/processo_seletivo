@@ -240,6 +240,12 @@ paths:
     post:
       tags: [Retificações administrativas]
       summary: Criar Retificação em elaboração
+      description: >-
+        A forma do caminho é verificada aqui, contra a versão declarada em baseSnapshotId:
+        endereçar por índice uma coleção com identificador responde 422
+        positional_addressing_refused, e um ato que nasce instável não chega a existir. Chave
+        inexistente responde 409 target_key_not_found, e coleção que ficaria com identificador
+        repetido responde 409 duplicate_key_in_collection. Cada recusa nomeia o caminho envolvido.
       operationId: criarRetificacao
       security: [{ bearerAuth: [] }]
       parameters:
@@ -257,6 +263,10 @@ paths:
     put:
       tags: [Retificações administrativas]
       summary: Substituir as alterações estruturadas da Retificação em elaboração
+      description: >-
+        As mesmas verificações de forma e de existência da criação valem aqui: 422
+        positional_addressing_refused, 409 target_key_not_found e 409
+        duplicate_key_in_collection, contra a versão base declarada.
       operationId: atualizarRascunhoRetificacao
       security: [{ bearerAuth: [] }]
       parameters:
@@ -316,6 +326,11 @@ paths:
         das Retificações vigentes. Quando o ato tornaria inaplicável uma alteração já publicada —
         ou o contrário, por vigência posterior — não há resultado determinístico a materializar e
         a Publicação responde 409 inconsistent_consolidation, sem efeito algum.
+        A existência da entidade endereçada é verificada de novo aqui, agora contra o conteúdo
+        vigente no início da vigência declarada: se outra Retificação a removeu no intervalo, a
+        resposta é 409 target_key_not_found. Identificador repetido na composição responde 409
+        duplicate_key_in_collection. A forma posicional não é verificada neste momento porque não
+        chega a ser elaborada.
       operationId: publicarRetificacao
       security: [{ bearerAuth: [] }]
       parameters: [{ $ref: '#/components/parameters/RetificacaoId' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }]
@@ -604,12 +619,33 @@ components:
       type: object
       required: [targetPath, operation, newValue]
       properties:
-        targetPath: { type: string, description: Caminho canônico com chaves estáveis }
+        targetPath:
+          type: string
+          description: >-
+            Caminho JSON Pointer (RFC 6901) com uma extensão local declarada: o segmento
+            "id=<uuid>" seleciona, dentro de uma lista, o elemento cujo id é esse. Qual forma de
+            segmento vale depende do contêiner — em objeto, "id=algo" é nome de chave literal, e
+            a extensão não retira do RFC 6901 nada que ele permitia. Coleções cujos elementos têm
+            identificador — profiles, schedule, competitionModalities — NÃO aceitam endereçamento
+            por índice na escrita: usá-lo responde 422 positional_addressing_refused já na
+            elaboração. Coleção sem identificador (requirements) é valor atômico, substituído
+            inteiro e nunca endereçado item a item. O UUID é comparado como texto exato, sem
+            normalização de caixa. Gramática completa em
+            specs/004-enderecamento-normativo-estavel/contracts/enderecamento.md.
         operation:
           type: string
           enum: [ADD, REPLACE, REMOVE]
           description: >-
-            ADD pressupõe targetPath ausente. Se o caminho já tiver conteúdo — inclusive por ato
+            ADD em lista usa o token de acréscimo "-" e insere ao fim. Nenhuma outra folha
+            serve: índice numérico responde 422 positional_addressing_refused, e o seletor
+            "id=<uuid>" é recusado como invalid_change, porque resolveria a posição de um item
+            existente — esta gramática não tem inserção em posição específica. Acrescentar a uma
+            coleção com identificador exige objeto com "id" no formato UUID: sem isso o item
+            entraria no conteúdo normativo sem poder ser endereçado por nenhuma Retificação
+            futura. Uma entidade só aparece por ADD "/colecao/-" e só desaparece por REMOVE
+            "/colecao/id=<uuid>": nenhuma outra alteração pode criar ou destruir identidades,
+            inclusive as que estiverem dentro da entidade endereçada. ADD em objeto
+            pressupõe targetPath ausente: se o caminho já tiver conteúdo — inclusive por ato
             publicado depois da elaboração — a operação responde 409 target_already_present, salvo
             quando expectedPreviousHash declarar o conteúdo ocupante e assumir a sobrescrita.
         expectedPreviousHash:

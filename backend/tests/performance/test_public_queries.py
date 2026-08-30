@@ -20,16 +20,17 @@ from django.utils import timezone
 
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
-from tests.fixtures.edital import complete_draft
+from tests.fixtures.edital import caminho_perfil, complete_draft
 from tests.fixtures.publicacao import publish_original, retify
 
-VACANCIES = "/profiles/0/immediateVacancies"
+VACANCIES = caminho_perfil("immediateVacancies")
 # Teto por consulta pública. Vale como guarda de regressão, não como SLO.
 BUDGET_SECONDS = 1.0
 
 
-def replace(valor):
-    return [{"targetPath": VACANCIES, "operation": "REPLACE", "newValue": valor}]
+def replace(valor, seed=0):
+    caminho = caminho_perfil("immediateVacancies", seed)
+    return [{"targetPath": caminho, "operation": "REPLACE", "newValue": valor}]
 
 
 def outro_processo(process_payload, sufixo):
@@ -46,7 +47,7 @@ def edital_com_retificacoes(api_client, manager_headers, process_payload, quanti
         api_client, manager_headers, process_payload, draft=complete_draft(seed)
     )
     for indice in range(1, quantidade + 1):
-        retify(api_client, edital, replace(100 + indice), suffix=f"c{seed}{indice}")
+        retify(api_client, edital, replace(100 + indice, seed), suffix=f"c{seed}{indice}")
     return edital
 
 
@@ -83,9 +84,7 @@ def test_effective_version_cost_does_not_grow_with_the_history(
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.performance
-def test_history_cost_does_not_grow_with_the_history(
-    api_client, manager_headers, process_payload
-):
+def test_history_cost_does_not_grow_with_the_history(api_client, manager_headers, process_payload):
     """Sem prefetch da proveniência, cada versão vira uma consulta e o histórico degrada."""
     curto = edital_com_retificacoes(api_client, manager_headers, process_payload, 3)
     barato, _ = queries_de(
@@ -239,7 +238,10 @@ def test_future_versions_are_not_scanned_by_the_current_query(
     for indice in range(1, 11):
         vigencia = timezone.now() + timedelta(days=30 * indice)
         retify(
-            api_client, edital, replace(200 + indice), effective_at=vigencia.isoformat(),
+            api_client,
+            edital,
+            replace(200 + indice),
+            effective_at=vigencia.isoformat(),
             suffix=f"f{indice}",
         )
 
@@ -257,9 +259,7 @@ TABELAS_DO_HISTORICO = (
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.performance
-def test_history_page_reads_a_bounded_number_of_rows(
-    api_client, manager_headers, process_payload
-):
+def test_history_page_reads_a_bounded_number_of_rows(api_client, manager_headers, process_payload):
     """FR-024 da 003: a página não pode ser recortada de tudo o que existe.
 
     O número de consultas já era constante, e por isso o teste anterior não via o problema: as
@@ -269,9 +269,7 @@ def test_history_page_reads_a_bounded_number_of_rows(
     edital = edital_com_retificacoes(api_client, manager_headers, process_payload, 15)
 
     with CaptureQueriesContext(connection) as capturadas:
-        resposta = api_client.get(
-            f"/api/v1/public/editais/{edital.id}/historico", {"limit": 2}
-        )
+        resposta = api_client.get(f"/api/v1/public/editais/{edital.id}/historico", {"limit": 2})
     assert resposta.status_code == 200, resposta.content
     assert len(resposta.json()["items"]) == 2
 

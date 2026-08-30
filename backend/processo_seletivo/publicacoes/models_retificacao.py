@@ -78,9 +78,6 @@ class AlteracaoNormativa(models.Model):
     operation = models.CharField(max_length=10)
     new_value = models.JSONField(null=True, blank=True)
     expected_previous_hash = models.CharField(max_length=64, blank=True)
-    # Identidade das entidades que o caminho atravessa, por prefixo. Derivada pelo servidor a
-    # partir da base declarada: o hash diz se o valor é o mesmo, a âncora diz se a entidade é.
-    expected_anchors = models.JSONField(default=dict, blank=True)
     order = models.PositiveIntegerField()
 
     class Meta:

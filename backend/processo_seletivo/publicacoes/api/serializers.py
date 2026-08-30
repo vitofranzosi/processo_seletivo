@@ -52,12 +52,24 @@ class ChangeSerializer(serializers.Serializer):
 
     # `AlteracaoNormativa.target_path` é CharField(max_length=1000).
     targetPath = serializers.CharField(min_length=1, max_length=1000)
+
+    def validate_targetPath(self, valor):  # noqa: N802 — o campo é camelCase no contrato.
+        """Caminho absoluto é a única regra de forma que a borda pode verificar sozinha.
+
+        A gramática de `targetPath` decide o significado de cada segmento **pelo contêiner**:
+        `id=algo` é seletor em lista e nome de chave literal em objeto (FR-002). Exigir aqui
+        que todo segmento `id=` traga um UUID recusaria também a chave literal, retirando do
+        RFC 6901 exatamente a expressividade que FR-002 manda preservar. A verificação do
+        seletor mora onde o contêiner é conhecido, no domínio.
+        """
+        if not valor.startswith("/"):
+            raise serializers.ValidationError("O caminho deve ser absoluto e começar com '/'.")
+        return valor
+
     operation = serializers.ChoiceField(choices=["ADD", "REPLACE", "REMOVE"])
     newValue = serializers.JSONField(required=False, allow_null=True)
     # SHA-256 em hexadecimal: 64 caracteres, o tamanho exato da coluna.
-    expectedPreviousHash = serializers.CharField(
-        required=False, allow_blank=True, max_length=64
-    )
+    expectedPreviousHash = serializers.CharField(required=False, allow_blank=True, max_length=64)
 
 
 class RetificacaoDraftSerializer(serializers.Serializer):

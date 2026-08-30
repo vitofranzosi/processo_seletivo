@@ -5,14 +5,18 @@ Normativas; o antes e o depois são apresentados; a vigência futura é dita exp
 nada muda para o público antes da Publicação.
 """
 
+import re
+
 import pytest
 from django.urls import reverse
 
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
+from tests.fixtures.edital import caminho_perfil
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
 
 TODOS = ["elaborador", "homologador", "publicador"]
+VAGAS = caminho_perfil("immediateVacancies")
 
 
 @pytest.fixture
@@ -26,15 +30,23 @@ def vigente(edital):
 
 
 def campos(vigente, **alteracoes):
-    """Todos os campos como estão hoje, com as alterações pedidas por cima."""
+    """Todos os campos como estão hoje, com as alterações pedidas por cima.
+
+    O teste fala em caminho normativo porque é o que se lê; o formulário fala em referência
+    opaca, porque é o que a tela entrega (FR-019). A tradução entre os dois é o que este helper
+    faz — e é a mesma que a tela faz, ao contrário.
+    """
     from processo_seletivo.interface.retificacao import campos_editaveis
 
-    enviados = {
-        f"campo:{campo['caminho']}": campo["valor"]
-        for grupo in campos_editaveis(vigente.content)
-        for campo in grupo["campos"]
-    }
-    enviados.update({f"campo:{caminho}": valor for caminho, valor in alteracoes.items()})
+    grupos = campos_editaveis(vigente.content)
+    campos_do_formulario = [campo for grupo in grupos for campo in grupo["campos"]]
+    # A versão base acompanha o formulário: sem ela as referências não significam nada.
+    enviados = {"base": str(vigente.id)}
+    enviados |= {f"campo:{campo['referencia']}": campo["valor"] for campo in campos_do_formulario}
+    referencia = {campo["caminho"]: campo["referencia"] for campo in campos_do_formulario}
+    enviados.update(
+        {f"campo:{referencia[caminho]}": valor for caminho, valor in alteracoes.items()}
+    )
     return enviados
 
 
@@ -46,7 +58,7 @@ def test_editar_o_vigente_deriva_as_alteracoes(client, seletor_ligado, edital, v
     resposta = client.post(
         reverse("interface:retificar", args=[edital.id]),
         {
-            **campos(vigente, **{"/profiles/0/immediateVacancies": "9"}),
+            **campos(vigente, **{VAGAS: "9"}),
             "justificativa": "Ampliação de vagas",
         },
     )
@@ -66,7 +78,7 @@ def test_confirmar_cria_a_retificacao_com_as_alteracoes_derivadas(
     resposta = client.post(
         reverse("interface:retificar", args=[edital.id]),
         {
-            **campos(vigente, **{"/profiles/0/immediateVacancies": "9", "/title": "Novo título"}),
+            **campos(vigente, **{VAGAS: "9", "/title": "Novo título"}),
             "justificativa": "Ampliação de vagas e ajuste de título",
             "confirmar": "1",
         },
@@ -75,7 +87,7 @@ def test_confirmar_cria_a_retificacao_com_as_alteracoes_derivadas(
 
     retificacao = Retificacao.objects.get()
     caminhos = {a.target_path: a.new_value for a in retificacao.alteracoes.all()}
-    assert caminhos == {"/profiles/0/immediateVacancies": 9, "/title": "Novo título"}
+    assert caminhos == {VAGAS: 9, "/title": "Novo título"}
     assert retificacao.status == Retificacao.Status.EM_ELABORACAO
     assert retificacao.justification == "Ampliação de vagas e ajuste de título"
 
@@ -104,7 +116,7 @@ def test_vigencia_futura_e_dita_explicitamente(client, seletor_ligado, edital, v
     client.post(
         reverse("interface:retificar", args=[edital.id]),
         {
-            **campos(vigente, **{"/profiles/0/immediateVacancies": "9"}),
+            **campos(vigente, **{VAGAS: "9"}),
             "justificativa": "Vigência futura",
             "vigencia": "2027-03-01T09:00",
             "confirmar": "1",
@@ -122,14 +134,12 @@ def test_vigencia_futura_e_dita_explicitamente(client, seletor_ligado, edital, v
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_detalhe_mostra_antes_e_depois_de_cada_alteracao(
-    client, seletor_ligado, edital, vigente
-):
+def test_detalhe_mostra_antes_e_depois_de_cada_alteracao(client, seletor_ligado, edital, vigente):
     identificar(client, "ana.elaboradora", ["elaborador"])
     client.post(
         reverse("interface:retificar", args=[edital.id]),
         {
-            **campos(vigente, **{"/profiles/0/immediateVacancies": "9"}),
+            **campos(vigente, **{VAGAS: "9"}),
             "justificativa": "Ampliação",
             "confirmar": "1",
         },
@@ -137,7 +147,7 @@ def test_detalhe_mostra_antes_e_depois_de_cada_alteracao(
     corpo = client.get(
         reverse("interface:retificacao-detalhe", args=[Retificacao.objects.get().id])
     ).content.decode()
-    assert "/profiles/0/immediateVacancies" in corpo
+    assert VAGAS in corpo, "o detalhe do ato mostra o caminho, que nomeia a entidade"
     assert 'class="antes">1<' in corpo, "o valor vigente aparece como antes"
     assert 'class="depois">9<' in corpo
 
@@ -149,15 +159,15 @@ def test_fluxo_da_retificacao_ate_a_publicacao(client, seletor_ligado, edital, v
     client.post(
         reverse("interface:retificar", args=[edital.id]),
         {
-            **campos(vigente, **{"/profiles/0/immediateVacancies": "9"}),
+            **campos(vigente, **{VAGAS: "9"}),
             "justificativa": "Ampliação",
             "confirmar": "1",
         },
     )
     retificacao = Retificacao.objects.get()
-    antes = client.get(
-        f"/api/v1/public/editais/{edital.id}/versao-vigente"
-    ).json()["content"]["profiles"][0]["immediateVacancies"]
+    antes = client.get(f"/api/v1/public/editais/{edital.id}/versao-vigente").json()["content"][
+        "profiles"
+    ][0]["immediateVacancies"]
     assert antes == 1, "nada muda para o público antes da Publicação"
 
     def ato(acao, **campos_extra):
@@ -179,9 +189,9 @@ def test_fluxo_da_retificacao_ate_a_publicacao(client, seletor_ligado, edital, v
     )
     assert resposta.status_code == 302
 
-    depois = client.get(
-        f"/api/v1/public/editais/{edital.id}/versao-vigente"
-    ).json()["content"]["profiles"][0]["immediateVacancies"]
+    depois = client.get(f"/api/v1/public/editais/{edital.id}/versao-vigente").json()["content"][
+        "profiles"
+    ][0]["immediateVacancies"]
     assert depois == 9, "publicada, a Retificação passa a compor o conteúdo vigente"
 
 
@@ -212,7 +222,7 @@ def test_confirmacao_de_publicacao_mostra_o_que_passara_a_vigorar(
     client.post(
         reverse("interface:retificar", args=[edital.id]),
         {
-            **campos(vigente, **{"/profiles/0/immediateVacancies": "9"}),
+            **campos(vigente, **{VAGAS: "9"}),
             "justificativa": "Ampliação",
             "confirmar": "1",
         },
@@ -224,3 +234,169 @@ def test_confirmacao_de_publicacao_mostra_o_que_passara_a_vigorar(
     assert "Este ato não pode ser desfeito" in corpo
     assert "Conteúdo que passará a vigorar" in corpo
     assert "continuam preservadas e consultáveis" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_tela_nao_entrega_caminho_normativo_no_html(client, seletor_ligado, edital, vigente):
+    """FR-019, primeira condição (SC-004).
+
+    Quem elabora um Edital tem um problema administrativo, não um problema de representação. O
+    formulário identifica seus campos por referência opaca — `g2c3` —, e o caminho normativo é
+    reconstruído no servidor. Se um caminho voltar ao HTML, a tela terá passado a ensinar uma
+    sintaxe que ninguém pediu para aprender.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo = client.get(reverse("interface:retificar", args=[edital.id])).content.decode()
+
+    for vestigio in ("/profiles", "/schedule", "targetPath"):
+        assert vestigio not in corpo, f"a tela entregou {vestigio!r} para quem elabora"
+    # `id="conteudo"` é atributo HTML e não seletor; o que não pode aparecer é `id=<uuid>`.
+    assert re.search(r"id=[0-9a-f]{8}-", corpo) is None, "a tela entregou um seletor de identidade"
+    assert 'name="campo:g1c1"' in corpo, "os campos são identificados por referência opaca"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_tela_emite_alteracoes_pela_chave_da_entidade(client, seletor_ligado, edital, vigente):
+    """FR-019, segunda condição (SC-004): o que ela emite usa a forma por chave."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    client.post(
+        reverse("interface:retificar", args=[edital.id]),
+        {**campos(vigente, **{VAGAS: "9"}), "justificativa": "Ampliação", "confirmar": "1"},
+    )
+
+    alteracoes = Retificacao.objects.get().alteracoes.all()
+    assert [item.target_path for item in alteracoes] == [VAGAS]
+    assert all("id=" in item.target_path for item in alteracoes)
+
+
+@pytest.fixture
+def edital_com_tres_perfis(api_client, manager_headers, process_payload):
+    from tests.fixtures.snapshot import rascunho_publicavel
+
+    return publish_original(
+        api_client, manager_headers, process_payload, draft=rascunho_publicavel()
+    )
+
+
+def referencia_do_campo(conteudo, caminho):
+    from processo_seletivo.interface.retificacao import campos_editaveis
+
+    return next(
+        campo["referencia"]
+        for grupo in campos_editaveis(conteudo)
+        for campo in grupo["campos"]
+        if campo["caminho"] == caminho
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_publicacao_concorrente_nao_desloca_o_alvo_do_formulario(
+    client, api_client, seletor_ligado, edital_com_tres_perfis
+):
+    """SC-002 pelo lado da tela: a referência do formulário não pode mudar de dono.
+
+    A referência `g3c1` é a posição do campo no formulário, e só significa alguma coisa contra o
+    conteúdo que a gerou. Se o POST for resolvido contra a versão vigente do momento, uma
+    Publicação que remova um Perfil anterior entre abrir a tela e confirmar faz a mesma
+    referência apontar para outra entidade — a pessoa edita o Perfil que viu e o ato sai sobre
+    outro. É o mesmo defeito que a feature veio eliminar, reaparecendo uma camada acima.
+    """
+    from tests.fixtures.publicacao import retify
+    from tests.fixtures.snapshot import PERFIL
+
+    edital = edital_com_tres_perfis
+    base = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    referencia = referencia_do_campo(base.content, f"/profiles/id={PERFIL['B']}/name")
+
+    # Entre abrir a tela e confirmar, outra pessoa remove o primeiro Perfil.
+    retify(
+        api_client,
+        edital,
+        [{"targetPath": f"/profiles/id={PERFIL['A']}", "operation": "REMOVE"}],
+        suffix="z",
+    )
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    assert [p["id"] for p in vigente.content["profiles"]] == [PERFIL["B"], PERFIL["C"]]
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    client.post(
+        reverse("interface:retificar", args=[edital.id]),
+        {
+            "base": str(base.id),
+            f"campo:{referencia}": "B editado",
+            "justificativa": "Ajuste no Perfil B",
+            "confirmar": "1",
+        },
+    )
+
+    pela_tela = Retificacao.objects.exclude(status=Retificacao.Status.PUBLICADA).get()
+    alteracao = pela_tela.alteracoes.get()
+    assert alteracao.target_path == f"/profiles/id={PERFIL['B']}/name"
+    assert PERFIL["C"] not in alteracao.target_path, (
+        "a referência do formulário passou a apontar para outro Perfil"
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_formulario_transporta_a_versao_de_que_partiu(client, seletor_ligado, edital, vigente):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo = client.get(reverse("interface:retificar", args=[edital.id])).content.decode()
+
+    assert f'name="base" value="{vigente.id}"' in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_versao_base_desconhecida_nao_e_recomposta_em_silencio(
+    client, seletor_ligado, edital, vigente
+):
+    """Cair de volta na versão vigente produziria alterações sobre conteúdo que ninguém viu."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = client.post(
+        reverse("interface:retificar", args=[edital.id]),
+        {"base": "00000000-0000-0000-0000-0000000009ff", "justificativa": "x"},
+    )
+
+    assert resposta.status_code == 409
+    assert "não está mais disponível" in resposta.content.decode()
+    assert not Retificacao.objects.exists()
+
+
+@pytest.mark.parametrize("base_enviada", ["", "abc", "../etc/passwd", "00000000-0000-0000-0000"])
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_versao_base_ilegivel_e_recusada_e_nao_estoura(
+    client, seletor_ligado, edital, vigente, base_enviada
+):
+    """A versão vinha do formulário, e o que vem do formulário pode chegar torto.
+
+    Consultar o banco com um texto que não é UUID levantava `ValidationError` fora de qualquer
+    tratamento — 500 onde a resposta certa é a mesma recusa da versão desconhecida.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = client.post(
+        reverse("interface:retificar", args=[edital.id]),
+        {"base": base_enviada, "justificativa": "x"},
+    )
+
+    assert resposta.status_code == 409
+    assert "não está mais disponível" in resposta.content.decode()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_post_sem_a_versao_base_nao_cai_na_vigente(client, seletor_ligado, edital, vigente):
+    """Formulário antigo que não envie a versão resolveria as referências contra outro conteúdo.
+
+    Cair para a vigente era exatamente o defeito que o campo veio impedir; a omissão precisa
+    doer tanto quanto a versão desconhecida.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = client.post(reverse("interface:retificar", args=[edital.id]), {"justificativa": "x"})
+
+    assert resposta.status_code == 409
+    assert not Retificacao.objects.exists()

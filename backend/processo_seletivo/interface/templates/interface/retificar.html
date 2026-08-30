@@ -46,6 +46,9 @@ para o público até a Retificação ser publicada.</p>
 <form method="post">
   {% csrf_token %}
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  {# As referências dos campos só significam alguma coisa contra o conteúdo que as gerou; sem
+     esta linha, uma Publicação no intervalo faria a mesma referência apontar para outro item. #}
+  <input type="hidden" name="base" value="{{ base.id }}">
   {% for grupo in grupos %}
   <fieldset class="linha">
     <legend>{{ grupo.titulo }}</legend>
@@ -54,16 +57,16 @@ para o público até a Retificação ser publicada.</p>
       <p class="campo{% if campo.tipo == 'inteiro' %} curto{% endif %}">
         <label for="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}">{{ campo.rotulo }}</label>
         <input id="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
-               name="campo:{{ campo.caminho }}"
+               name="campo:{{ campo.referencia }}"
                type="{% if campo.tipo == 'inteiro' %}number{% elif campo.tipo == 'instante' %}datetime-local{% else %}text{% endif %}"
-               value="{% if digitado %}{{ digitado|dicionario:campo.caminho }}{% else %}{{ campo.valor }}{% endif %}">
+               value="{% if digitado %}{{ digitado|dicionario:campo.referencia }}{% else %}{{ campo.valor }}{% endif %}">
       </p>
       {% endfor %}
     </div>
-    {% if grupo.caminho %}
+    {% if grupo.removivel %}
     <p class="remover-linha">
-      <input type="checkbox" id="rm{{ forloop.counter }}" name="remover:{{ grupo.caminho }}" value="1"
-             {% if digitado|marcado:grupo.caminho %}checked{% endif %}>
+      <input type="checkbox" id="rm{{ forloop.counter }}" name="remover:{{ grupo.referencia }}" value="1"
+             {% if digitado|marcado:grupo.referencia %}checked{% endif %}>
       <label for="rm{{ forloop.counter }}">Remover do Edital</label>
       <span class="ajuda">Os campos acima passam a não ter efeito.</span>
     </p>

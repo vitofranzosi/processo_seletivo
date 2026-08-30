@@ -18,7 +18,7 @@ from referencing.jsonschema import DRAFT202012
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
-from tests.fixtures.edital import actor_headers
+from tests.fixtures.edital import actor_headers, caminho_perfil
 from tests.fixtures.publicacao import create_retification, publish_original, retify
 
 CONTRACT = (
@@ -32,7 +32,7 @@ API_PREFIX = "api/v1"
 CONTRACT_URI = "urn:processo-seletivo:openapi"
 # Converte <uuid:processo_id> do Django no {processoId} do contrato.
 DJANGO_PARAM = re.compile(r"<(?:[^:>]+:)?([a-z_]+)>")
-VACANCIES = "/profiles/0/immediateVacancies"
+VACANCIES = caminho_perfil("immediateVacancies")
 
 
 @pytest.fixture(scope="module")
@@ -170,12 +170,10 @@ def test_public_responses_conform_to_the_contract(
     api_client, validator_for, contract, cenario, path
 ):
     edital = cenario["edital"]
-    url = (
-        "/api/v1"
-        + path.replace("{editalId}", str(edital.id))
-        .replace("{publicacaoId}", str(Publicacao.objects.filter(edital=edital).first().id))
-        .replace("{retificacaoId}", str(cenario["publicada"].id))
-        .replace("{versaoId}", str(VersaoConsolidada.objects.filter(edital=edital).first().id))
+    url = "/api/v1" + path.replace("{editalId}", str(edital.id)).replace(
+        "{publicacaoId}", str(Publicacao.objects.filter(edital=edital).first().id)
+    ).replace("{retificacaoId}", str(cenario["publicada"].id)).replace(
+        "{versaoId}", str(VersaoConsolidada.objects.filter(edital=edital).first().id)
     )
     response = api_client.get(url)
     assert response.status_code == 200, response.content
@@ -303,9 +301,7 @@ def test_admin_retification_responses_conform_to_the_contract(
         f"/api/v1/admin/retificacoes/{rascunho.id}/submissoes",
         format="json",
         **{
-            **actor_headers(
-                "retificador", ["retificacao:submeter"], key="conformance-key-0005"
-            ),
+            **actor_headers("retificador", ["retificacao:submeter"], key="conformance-key-0005"),
             "HTTP_IF_MATCH": f'"{rascunho.revision}"',
         },
     )
