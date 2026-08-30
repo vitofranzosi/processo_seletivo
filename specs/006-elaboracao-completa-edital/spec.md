@@ -240,12 +240,14 @@ que nenhuma coleção nova entre no snapshot.
    antes.
 3. **Given** uma modalidade sem versão do fundamento informada, **When** tento gravar a regra,
    **Then** a gravação é recusada — a versão é exigida pelo command desde a `001`.
-3. **Given** modalidades configuradas, **When** visualizo o Edital, **Then** elas aparecem no
+4. **Given** duas modalidades no mesmo Perfil, **When** tento gravar a segunda com o identificador
+   da Regra Normativa da primeira, **Then** a gravação é recusada.
+5. **Given** modalidades configuradas, **When** visualizo o Edital, **Then** elas aparecem no
    documento com percentual e fundamento.
-4. **Given** um percentual fora da faixa admissível, **When** salvo pela interface, **Then** a
+6. **Given** um percentual fora da faixa admissível, **When** salvo pela interface, **Then** a
    gravação é recusada com mensagem que indica onde corrigir — e a recusa vale também para a API,
    porque a interface chama o command sem passar pelo serializer.
-5. **Given** um Edital publicado, **When** uma Retificação endereça
+7. **Given** um Edital publicado, **When** uma Retificação endereça
    `/profiles/id=<perfil>/competitionModalities/id=<modalidade>/normativeRule/percentage`, **Then**
    o mecanismo existente a aceita sem alteração da gramática.
 
@@ -381,9 +383,13 @@ alteração no documento junto das seções geradas a partir dos dados estrutura
   identificador recebido, e a da Regra viaja no conteúdo publicado.*
 - **FR-028**: A gravação de qualquer etapa DEVE preservar integralmente as modalidades e suas regras
   normativas; salvar o Cronograma NÃO PODE apagar o que foi configurado nos Perfis.
-- **FR-029**: Identificador de modalidade ou de Regra Normativa recebido na gravação DEVE ser
-  recusado quando pertencer a outro Perfil ou a outro Edital, pela mesma verificação que hoje
-  protege Perfis e Eventos — e portanto com a mesma resposta que ela já dá.
+- **FR-029**: Identificador recebido na gravação DEVE ser recusado quando já pertencer a outro
+  contêiner, **no nível em que a entidade vive**: Perfil de outro Edital, modalidade de outro Perfil,
+  Regra Normativa de outra Modalidade — inclusive de uma Modalidade irmã, no mesmo Perfil. A recusa é
+  a mesma que hoje protege Perfis e Eventos, com a mesma resposta. *A Regra pertence à Modalidade
+  (`editais/models/perfis.py:63-66`), não ao Perfil. Verificar só até o Perfil permitiria mover a
+  identidade de uma Regra entre duas Modalidades do mesmo Perfil, fazendo-a passar a designar outra
+  relação normativa sem que nada acusasse.*
 - **FR-030**: Percentual é opcional; quando informado, DEVE ser maior que zero e menor ou igual a
   cem. *Modalidade sem reserva percentual exprime-se pela ausência da regra, não por zero por
   cento — que afirmaria uma reserva de nenhuma vaga.* A faixa DEVE ser validada **no domínio**, não

@@ -44,7 +44,8 @@ ordenação e de identidade.
 **Ordenação declarada**: `["order", "id"]`.
 
 **Invariantes de domínio** (`editais/domain/etapas.py`): nome obrigatório; ordem sem ambiguidade;
-`minimum_score` não negativo; `evento` existente e do mesmo Edital. Uma Etapa pode ser
+`weight` maior que zero quando informado; `minimum_score` não negativo; `evento` existente e do mesmo
+Edital. Uma Etapa pode ser
 eliminatória e classificatória ao mesmo tempo (FR-019) — nenhuma regra as opõe. Peso não é exigido
 por ser classificatória: exigi-lo seria inventar regra de certame.
 
@@ -99,7 +100,9 @@ recebido passa a ser verificado quanto ao pertencimento, junto dos demais.
 
 Nenhum campo novo, e a mesma correção de identidade: hoje também é criada sem o `id` recebido
 (`editais/application/draft.py:95-105`), e esse `id` viaja no conteúdo publicado
-(`publicacoes/application/publish_edital.py:36`). Passa a ser preservado e verificado.
+(`publicacoes/application/publish_edital.py:36`). Passa a ser preservado e verificado **contra a
+Modalidade**, que é o contêiner dela (`editais/models/perfis.py:63-66`) — verificar só até o Perfil
+deixaria passar a troca de identidades entre Modalidades irmãs.
 
 `percentage` ganha faixa validada no domínio: opcional e, quando informado, maior que zero e menor
 ou igual a cem (FR-030). `foundation` e `version` passam a ter interface — `version` é obrigatório no
@@ -175,16 +178,20 @@ campo declara `formato`, e o leitor é buscado em `_LEITOR_DE_FORMATO` — um fo
 leitor registrado levanta `KeyError` de propósito (`editais/domain/validation.py:119-144`).
 Portanto: `formato="decimal"` com leitor `Decimal` registrado.
 
-**O padrão descreve o que o snapshot materializa, e nada além.** Os dois campos são
-`decimal(7,4)`, o que dá no máximo três dígitos inteiros, e o valor lido do banco se materializa
-sempre com as quatro casas: `^\d{1,3}\.\d{4}$`. O padrão anterior — `^\d+(\.\d{1,4})?$` — aceitava
-inteiro de qualquer tamanho e casas de menos, formas que a persistência não produz. `edital_snapshot`
-materializa os dois com quatro casas explícitas, e não pelo `str` de um `Decimal` qualquer.
+**O padrão descreve a forma canônica, e só ela.** Os dois campos são `decimal(7,4)`: no máximo três
+dígitos inteiros, sempre quatro casas, e **sem zeros à esquerda**, porque é assim que a persistência
+os materializa. `^-?(0|[1-9]\d{0,2})\.\d{4}$`. As duas versões anteriores erravam por excesso:
+`^\d+(\.\d{1,4})?$` aceitava inteiro de qualquer tamanho e casas de menos, e `^\d{1,3}\.\d{4}$`
+ainda aceitava `001.0000` — forma que o sistema nunca escreve e que permitiria a uma Retificação
+semanticamente nula alterar o hash do conteúdo. `edital_snapshot` materializa os dois com quatro
+casas explícitas, e não pelo `str` de um `Decimal` qualquer.
 
-**Sinal e faixa são regras de domínio, não do padrão.** O padrão sem sinal recusa negativo, mas não
-distingue peso zero — que FR-020 proíbe — de nota mínima zero, que admite. Por isso a faixa dos dois
-entra na verificação direcionada das Etapas, que já percorre a coleção para conferir a referência ao
-Evento. Uma passagem, duas conferências.
+**O sinal é admitido no padrão de propósito, e a faixa é regra de domínio.** Nenhum dos dois valores
+é negativo hoje — as restrições de banco impedem —, mas o padrão descreve **forma**, não permissão.
+Deixá-lo recusar o sinal misturaria as duas coisas, e foi assim que a versão anterior deste documento
+acabou derivando de uma expressão regular uma invariante que a spec não declarava. A faixa fica onde
+pertence: na verificação direcionada das Etapas, que já percorre a coleção para conferir a referência
+ao Evento — peso maior que zero, nota mínima não negativa. Uma passagem, três conferências.
 
 `content` e `source` não entram na forma declarada porque dependem do tipo, e `Campo` não expressa
 coerência entre campos — ausência deliberada, registrada no próprio módulo.
@@ -198,7 +205,7 @@ cobre e sem elas o catálogo fixo e a fonte normativa única deixariam de valer 
 | Verificação | O que recusa |
 |---|---|
 | Topologia de `sections` contra o catálogo | seção acrescentada ou removida; `type`, `order`, `title`, `key` ou `source` alterados; textual sem `content`; gerada com `content` |
-| Coerência de cada Etapa | `scheduleEventId` que não existe em `schedule`; peso igual a zero; nota mínima negativa que o padrão não alcance |
+| Coerência de cada Etapa | `scheduleEventId` que não existe em `schedule`; peso menor ou igual a zero; nota mínima negativa |
 
 Só o `content` das seções textuais pode variar. As duas são verificações escritas para estes dois
 casos, no arquivo que já faz a verificação de publicação — não um mecanismo de regras entre campos.

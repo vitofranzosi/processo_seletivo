@@ -19,7 +19,7 @@ O corpo ganha duas coleções e uma correção:
 
 | Coleção | Situação |
 |---|---|
-| `profiles` | inalterada em forma; **cada modalidade passa a aceitar `id` e `normativeRule`** |
+| `profiles` | a coleção não ganha campo; **cada modalidade e sua Regra Normativa passam a aceitar `id`** |
 | `schedule` | inalterada |
 | `stages` | **nova** — Etapas de Avaliação |
 | `sections` | **nova** — conteúdo das seções textuais, por chave do catálogo |
@@ -56,7 +56,7 @@ Todas seguem o formato de problema já vigente e o mesmo mapeamento de estado.
 | Etapa sem nome | `field_required` | 422 |
 | Nota mínima negativa | `field_constraint_violated` | 422 |
 | Etapa referencia Evento inexistente ou de outro Edital | `field_constraint_violated` | 422 |
-| Identificador de modalidade ou de Regra Normativa pertencente a outro Perfil ou Edital | `identifier_belongs_to_another_edital`, a recusa já existente | 409 |
+| Identificador já pertencente a outro contêiner — modalidade de outro Perfil, Regra de outra Modalidade, inclusive irmã | `identifier_belongs_to_another_edital`, a recusa já existente | 409 |
 | Chave de seção fora do catálogo, ou de seção gerada | `field_constraint_violated` | 422 |
 | Consolidação sobre conteúdo-base de outra versão canônica | código próprio de versão divergente | 409 |
 

@@ -154,6 +154,29 @@ mesmo raciocínio do percentual — a ausência é que exprime "não pondera".
 mencionavam só fundamento e a identidade da modalidade. Os três passaram a provar exatamente o que a
 correção fez.
 
+### Terceira passada do `$speckit-analyze` (2026-08-30)
+
+Uma crítica e três menores. A crítica é a terceira aparição do mesmo defeito, agora um nível abaixo.
+
+**A verificação de identidade parava um nível acima do contêiner.** `RegraNormativa` é `OneToOne` com
+`ModalidadeConcorrencia` (`editais/models/perfis.py:63-66`), mas a recusa que eu tinha escrito só
+alcançava outro Perfil ou outro Edital. Duas Modalidades irmãs do mesmo Perfil poderiam trocar a
+identidade das suas Regras sem que nada acusasse, e a identidade estável passaria a designar outra
+relação normativa. FR-029 passou a exigir a verificação **no nível do contêiner de cada entidade**.
+
+**Identidade da linha nova na interface.** A gravação preserva o `id` recebido, mas nada mandava
+gerá-lo: uma modalidade criada pela tela nasceria sem identidade, e não haveria o que preservar. A
+geração dos dois UUID na view do fragmento entrou em T056, e a forma publicada da Regra em T058.
+
+**Forma decimal, terceira versão.** `^\d{1,3}\.\d{4}$` ainda aceitava `001.0000`, que o sistema
+nunca escreve — e uma Retificação semanticamente nula poderia alterar o hash. Passou a
+`^-?(0|[1-9]\d{0,2})\.\d{4}$`. O sinal voltou de propósito: o padrão descreve **forma**, e a faixa
+é regra de domínio. Deixar o padrão recusar o sinal foi exatamente como uma invariante não declarada
+entrou por uma expressão regular, na passada anterior.
+
+**Resíduos documentais.** Numeração dos cenários da US3, o resumo da Entrega 1 no plano e a linha do
+contrato sobre `profiles`.
+
 ## Itens que permanecem em aberto
 
 Nenhum bloqueia a implementação.

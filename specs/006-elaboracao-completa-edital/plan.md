@@ -134,8 +134,11 @@ seguinte.
 Três correções de exposição e um ato de domínio.
 
 O botão sai do bloco `{% empty %}` de `lista.html` e passa a viver no cabeçalho da listagem, sob o
-mesmo `pode_criar` que a view já calcula. O detalhe do Edital publicado ganha link para
-`/api/v1/public/publicacoes/{id}/documento`, que já existe e é público.
+mesmo `pode_criar` que a view já calcula. O detalhe do Edital publicado passa a listar **o documento
+de cada Publicação**, identificado pelo ato que o produziu, apontando para
+`/api/v1/public/publicacoes/{id}/documento`, que já existe e é público. Nenhum é rotulado como
+vigente: a vigência é da Versão Consolidada, que não tem documento próprio, e uma Retificação pode
+ser publicada com vigência futura.
 
 A reordenação exige uma correção no parser, e não só botões. `_indices` recolhe os índices em um
 conjunto e os devolve **ordenados numericamente** (`interface/forms.py:20-26`): a posição da linha
