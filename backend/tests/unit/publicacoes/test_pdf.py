@@ -53,6 +53,8 @@ def snapshot(**alteracoes):
         "schemaVersion": 2,
         "editalId": "11111111-1111-1111-1111-111111111111",
         "processoId": "22222222-2222-2222-2222-222222222222",
+        "processoCode": "PS-DEMO-2026",
+        "processoTitle": "Processo Seletivo Simplificado 2026",
         "number": "07",
         "year": 2026,
         "title": "Edital 07/2026 — Professor Substituto",
@@ -162,13 +164,32 @@ def test_document_preserves_portuguese_accents():
         assert mutilado not in texto, mutilado
 
 
-def test_document_carries_the_content_hash_and_identifiers():
+def test_a_declaracao_de_integridade_identifica_sem_expor_uuid():
+    """FR-004: o SHA-256 fica porque prova; o UUID sai porque não prova nada a quem lê.
+
+    O identificador continua no snapshot — o que muda é o que se **imprime**.
+    """
     pdf = render_edital_pdf(snapshot(), HASH)
     texto = texto_de(pdf)
+
     assert HASH in texto
-    assert "11111111-1111-1111-1111-111111111111" in texto
-    assert "22222222-2222-2222-2222-222222222222" in texto
     assert HASH[:16] in texto  # rodapé de cada página
+    assert "deriva integralmente da versão homologada" in texto
+    assert "Edital 07/2026" in texto
+    assert "PS-DEMO-2026" in texto
+    assert "Processo Seletivo Simplificado 2026" in texto
+
+    assert "11111111-1111-1111-1111-111111111111" not in texto
+    assert "22222222-2222-2222-2222-222222222222" not in texto
+
+
+def test_o_snapshot_basta_para_compor_o_documento():
+    """SC-002a: nenhuma consulta ao banco — o conteúdo publicado é autossuficiente."""
+    conteudo = snapshot()
+    texto = texto_de(render_edital_pdf(conteudo, HASH))
+
+    assert conteudo["processoCode"] in texto
+    assert conteudo["processoTitle"] in texto
 
 
 def test_the_same_snapshot_always_produces_the_same_bytes():
@@ -230,10 +251,13 @@ def test_documento_segue_a_ordem_das_secoes_do_conteudo():
     posicoes = [
         texto.index(titulo)
         for titulo in (
+            "APRESENTAÇÃO",
             "DISPOSIÇÕES PRELIMINARES",
-            "PERFIS DE VAGA",
+            "REQUISITOS GERAIS DE PARTICIPAÇÃO",
             "DA INSCRIÇÃO",
+            "PERFIS DE VAGA",
             "ETAPAS DE AVALIAÇÃO",
+            "CRITÉRIOS DE CLASSIFICAÇÃO",
             "CRONOGRAMA",
             "DOS RECURSOS",
             "DISPOSIÇÕES FINAIS",
@@ -296,3 +320,37 @@ def test_quebra_simples_de_linha_tambem_separa_paragrafo():
 
     assert "I — ser brasileiro;" in linhas
     assert "II — estar em dia com as obrigações eleitorais;" in linhas
+
+
+def test_perfil_sem_os_campos_institucionais_nao_imprime_rotulo_vazio():
+    """T025/FR-015: um rótulo sobre nada não informa que não há nada.
+
+    Informa que alguém esqueceu de preencher — e num Edital publicado isso seria falso, porque os
+    três são opcionais por decisão (FR-012).
+    """
+    vazio = snapshot()
+    for perfil in vazio["profiles"]:
+        perfil["duties"] = ""
+        perfil["workload"] = ""
+        perfil["compensation"] = ""
+
+    texto = texto_de(render_edital_pdf(vazio, HASH))
+
+    assert "Atribuições:" not in texto
+    assert "Carga horária:" not in texto
+    assert "Remuneração:" not in texto
+
+
+def test_perfil_com_os_campos_institucionais_os_imprime_preservando_paragrafos():
+    conteudo = snapshot()
+    conteudo["profiles"][0]["duties"] = "Ministrar aulas.\nOrientar projetos."
+    conteudo["profiles"][0]["workload"] = "40 horas semanais"
+    conteudo["profiles"][0]["compensation"] = "R$ 4.200,00 mensais"
+
+    texto = texto_de(render_edital_pdf(conteudo, HASH))
+
+    assert "Atribuições:" in texto
+    assert "Ministrar aulas." in texto
+    assert "Orientar projetos." in texto
+    assert "Carga horária: 40 horas semanais" in texto
+    assert "Remuneração: R$ 4.200,00 mensais" in texto

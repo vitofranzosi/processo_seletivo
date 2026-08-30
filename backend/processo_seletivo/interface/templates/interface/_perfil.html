@@ -23,6 +23,32 @@
     <input type="text" id="perfil-{{ indice }}-description"
            name="perfil-{{ indice }}-description" value="{{ perfil.description|default:'' }}">
   </p>
+  {% comment %}
+  O que um Edital real diz sobre a vaga (FR-012). Atribuições é área de texto porque são vários
+  parágrafos e o documento os preserva; carga horária e remuneração são frases, e não objeto de
+  moeda nem jornada estruturada — modelar isso agora construiria a estrutura antes de existir a
+  regra que a consome (FR-013).
+  {% endcomment %}
+  <p class="campo largo">
+    <label for="perfil-{{ indice }}-duties">Atribuições</label>
+    <textarea id="perfil-{{ indice }}-duties" name="perfil-{{ indice }}-duties" rows="3"
+              aria-describedby="ajuda-perfil-{{ indice }}-duties">{{ perfil.duties|default:'' }}</textarea>
+    <span class="ajuda" id="ajuda-perfil-{{ indice }}-duties">O que a pessoa fará. Uma linha em
+      branco separa parágrafos no documento.</span>
+  </p>
+  <div class="campos">
+    <p class="campo">
+      <label for="perfil-{{ indice }}-workload">Carga horária</label>
+      <input type="text" id="perfil-{{ indice }}-workload" name="perfil-{{ indice }}-workload"
+             value="{{ perfil.workload|default:'' }}" placeholder="20 horas semanais">
+    </p>
+    <p class="campo">
+      <label for="perfil-{{ indice }}-compensation">Remuneração</label>
+      <input type="text" id="perfil-{{ indice }}-compensation"
+             name="perfil-{{ indice }}-compensation" value="{{ perfil.compensation|default:'' }}"
+             placeholder="R$ 0.000,00 mensais">
+    </p>
+  </div>
   <div class="campos">
     <p class="campo curto">
       <label for="perfil-{{ indice }}-immediateVacancies">Vagas imediatas</label>

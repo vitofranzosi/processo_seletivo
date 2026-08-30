@@ -260,7 +260,9 @@ def test_remover_secao_do_catalogo_e_recusado(api_client, manager_headers, proce
     ("chave", "campo", "valor"),
     [
         ("recursos", "type", "GENERATED"),
-        ("recursos", "order", 9),
+        # 99, e não 9: `recursos` **é** a seção 9 desde a `007`, e reordená-la para a
+        # própria posição não seria alteração de topologia — o caso deixaria de testar a recusa.
+        ("recursos", "order", 99),
         ("recursos", "title", "Outro título"),
         ("cronograma", "source", "profiles"),
     ],

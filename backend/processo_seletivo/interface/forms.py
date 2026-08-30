@@ -127,6 +127,9 @@ def ler_perfis(dados):
                 "reserveType": reserva,
                 "reserveLimit": int(limite) if reserva == "LIMITED" and limite else None,
                 "locality": _texto(dados, f"{base}-locality"),
+                "duties": _texto(dados, f"{base}-duties"),
+                "workload": _texto(dados, f"{base}-workload"),
+                "compensation": _texto(dados, f"{base}-compensation"),
                 # As linhas de modalidade são indexadas dentro do índice do Perfil, e não
                 # renumeradas: `modalidade-3-…` pertence ao Perfil cujo prefixo é `perfil-3`.
                 "competitionModalities": _modalidades(dados, f"modalidade-{indice}"),
@@ -288,6 +291,9 @@ def perfis_do_edital(edital):
             "reserveType": perfil.reserve_type,
             "reserveLimit": perfil.reserve_limit,
             "locality": perfil.locality,
+            "duties": perfil.duties,
+            "workload": perfil.workload,
+            "compensation": perfil.compensation,
             "modalidades": [
                 _modalidade_para_o_formulario(m) for m in perfil.modalidades.order_by("code")
             ],
@@ -330,6 +336,9 @@ def perfis_persistidos(edital):
             "reserveType": perfil.reserve_type,
             "reserveLimit": perfil.reserve_limit,
             "locality": perfil.locality,
+            "duties": perfil.duties,
+            "workload": perfil.workload,
+            "compensation": perfil.compensation,
             # A modalidade inteira, com a Regra e os dois identificadores. Antes daqui só `code` e
             # `name` viajavam: salvar o Cronograma relia os Perfis, reenviava metade da modalidade
             # e apagava a Regra Normativa — configurar cotas e ir a outra etapa destruía o que

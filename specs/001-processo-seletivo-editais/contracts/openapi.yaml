@@ -552,6 +552,9 @@ components:
         id: { $ref: '#/components/schemas/Id' }
         code: { type: string }
         name: { type: string }
+        duties: { type: string }
+        workload: { type: string }
+        compensation: { type: string }
         immediateVacancies: { type: integer, minimum: 0 }
         reserveType: { type: string, enum: [NONE, LIMITED, UNLIMITED] }
         reserveLimit: { type: [integer, 'null'], minimum: 0 }
@@ -645,7 +648,8 @@ components:
         pode ser texto vazio e requirements, lista vazia.
       required:
         [id, code, name, description, requirements, immediateVacancies, reserveType, reserveLimit,
-         locality, classificationInformation, callInformation, competitionModalities]
+         locality, duties, workload, compensation, classificationInformation, callInformation,
+         competitionModalities]
       properties:
         id: { $ref: '#/components/schemas/Id' }
         code: { type: string }
@@ -656,6 +660,9 @@ components:
         reserveType: { type: string, enum: [NONE, LIMITED, UNLIMITED] }
         reserveLimit: { type: [integer, 'null'], minimum: 0 }
         locality: { type: string }
+        duties: { type: string }
+        workload: { type: string }
+        compensation: { type: string }
         classificationInformation: { type: object }
         callInformation: { type: object }
         competitionModalities:

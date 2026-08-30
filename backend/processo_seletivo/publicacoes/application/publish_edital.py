@@ -119,6 +119,13 @@ def edital_snapshot(edital: Edital) -> dict:
                 "reserveType": profile.reserve_type,
                 "reserveLimit": profile.reserve_limit,
                 "locality": profile.locality,
+                # String sempre presente, `""` quando ausente — nunca `null`, nunca chave omitida
+                # (FR-014). É a convenção do próprio objeto: `description` e `locality` acima são
+                # strings, e `reserveLimit` é `null` por ser numérico. Uma terceira convenção para
+                # texto faria a versão canônica admitir mais de uma forma.
+                "duties": profile.duties,
+                "workload": profile.workload,
+                "compensation": profile.compensation,
                 "classificationInformation": profile.classification_information,
                 "callInformation": profile.call_information,
                 "competitionModalities": modalities,
@@ -143,6 +150,13 @@ def edital_snapshot(edital: Edital) -> dict:
         "schemaVersion": SCHEMA_VERSION,
         "editalId": str(edital.id),
         "processoId": str(edital.processo_id),
+        # A identificação institucional do Processo, para que o documento possa nomeá-lo sem expor
+        # UUID a quem lê (FR-004). O efeito colateral é o que mais importa: com estes dois campos o
+        # snapshot **basta** para compor o documento, sem consultar o banco — que é o que a
+        # Constituição pede da cadeia "dados estruturados → versão homologada → PDF". O Processo já
+        # vem por `select_related("processo")` em `_locked_edital`; não há consulta a mais.
+        "processoCode": edital.processo.institutional_code,
+        "processoTitle": edital.processo.title,
         "number": edital.number,
         "year": edital.year,
         "title": edital.title,

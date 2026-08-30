@@ -11,6 +11,7 @@ import pytest
 import yaml
 
 from processo_seletivo.editais.domain import validation
+from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 
 CONTRATO = (
@@ -275,3 +276,41 @@ def test_a_identidade_da_secao_e_a_mesma_antes_e_depois_de_editar_e_republicar(
     assert {item["key"]: item["id"] for item in segunda.content["sections"]} == antes
     editada = next(item for item in segunda.content["sections"] if item["key"] == "recursos")
     assert editada["content"] == "Outro prazo recursal.", "o conteúdo mudou; a identidade não"
+
+
+@pytest.mark.contract
+@pytest.mark.django_db(transaction=True)
+def test_dois_snapshots_da_versao_3_do_mesmo_conteudo_tem_as_mesmas_chaves(
+    api_client, manager_headers, process_payload
+):
+    """T037/SC-002a: uma versão canônica que admite duas formas não é uma versão canônica.
+
+    Compara **chave a chave, em todos os níveis**. É a garantia que FR-017 promete e que a `007`
+    põe à prova ao mudar a forma em três lugares de uma vez: raiz, `profiles` e `sections`.
+    """
+    from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
+    from processo_seletivo.shared.canonical import SCHEMA_VERSION
+
+    def chaves(valor, prefixo=""):
+        if isinstance(valor, dict):
+            encontradas = set()
+            for chave, filho in valor.items():
+                encontradas.add(f"{prefixo}/{chave}")
+                encontradas |= chaves(filho, f"{prefixo}/{chave}")
+            return encontradas
+        if isinstance(valor, list):
+            # `*` no lugar do índice: a forma não depende de quantos itens a coleção tem.
+            if not valor:
+                return set()
+            return set().union(*(chaves(item, f"{prefixo}/*") for item in valor))
+        return set()
+
+    api_client.post("/api/v1/admin/processos", process_payload, format="json", **manager_headers)
+    edital = Edital.objects.get()
+
+    primeiro = edital_snapshot(edital)
+    segundo = edital_snapshot(edital)
+
+    assert primeiro["schemaVersion"] == SCHEMA_VERSION == 3
+    assert chaves(primeiro) == chaves(segundo)
+    assert {"/processoCode", "/processoTitle"} <= chaves(primeiro)

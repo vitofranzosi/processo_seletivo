@@ -45,6 +45,10 @@ class ProfileSerializer(serializers.Serializer):
     reserveType = serializers.ChoiceField(choices=["NONE", "LIMITED", "UNLIMITED"])
     reserveLimit = serializers.IntegerField(min_value=0, required=False, allow_null=True)
     locality = serializers.CharField(required=False, allow_blank=True)
+    # Opcionais com padrão `""` (FR-012, FR-014): a ausência é legítima no rascunho.
+    duties = serializers.CharField(required=False, allow_blank=True)
+    workload = serializers.CharField(required=False, allow_blank=True)
+    compensation = serializers.CharField(required=False, allow_blank=True)
     classificationInformation = serializers.JSONField(required=False)
     callInformation = serializers.JSONField(required=False)
     competitionModalities = CompetitionModalitySerializer(many=True)

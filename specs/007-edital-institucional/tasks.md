@@ -89,12 +89,12 @@ declarada, editar o texto de uma das novas e encontrá-la no documento.
 > **Integração conjunta.** As fases 4, 5 e 6 formam a **entrega 2** e integram-se **num único PR**
 > (FR-018). Estão separadas aqui por história, não por momento de merge.
 
-- [ ] T010 [US2] Acrescentar três `Secao` textuais ao `CATALOGO` em `backend/processo_seletivo/editais/domain/secoes.py` — `apresentacao`, `requisitos-gerais`, `classificacao` — com `default_text` institucional genérico, renumerando `order` conforme a tabela da seção 2 de `data-model.md`
-- [ ] T011 [P] [US2] Escrever teste em `backend/tests/unit/editais/test_secoes.py` afirmando as dez chaves, seus títulos, tipos e a ordem exata; e que as posições cumprem FR-008 (apresentação antes de `perfis`, requisitos gerais antes de `inscricao`, classificação depois de `etapas`)
-- [ ] T012 [P] [US2] Escrever teste afirmando que `identidade(edital_id, key)` das sete seções pré-existentes **não muda** com a renumeração — a identidade deriva da chave, não da ordem (D-007)
-- [ ] T013 [US2] Verificar que a etapa `Conteúdo` do assistente exibe as dez seções sem alteração de template, por ler o catálogo; ajustar `backend/processo_seletivo/interface/templates/interface/compor_conteudo.html` apenas se a leitura for posicional
-- [ ] T014 [P] [US2] Escrever teste de interface em `backend/tests/interface/test_conteudo.py`: editar o texto de `apresentacao`, salvar, e encontrá-lo na prévia na posição 1
-- [ ] T015 [P] [US2] Escrever teste de interface em `backend/tests/interface/test_retificacao.py` retificando `/sections/id=<chave>/content` de uma **seção nova** pela tela de Retificação, e confirmando que a alteração chega ao documento consolidado (FR-010, SC-005). *As seções novas devem entrar automaticamente, por a tela derivar do catálogo — este teste é o que prova que sim, em vez de supor*
+- [X] T010 [US2] Acrescentar três `Secao` textuais ao `CATALOGO` em `backend/processo_seletivo/editais/domain/secoes.py` — `apresentacao`, `requisitos-gerais`, `classificacao` — com `default_text` institucional genérico, renumerando `order` conforme a tabela da seção 2 de `data-model.md`
+- [X] T011 [P] [US2] Escrever teste em `backend/tests/unit/editais/test_secoes.py` afirmando as dez chaves, seus títulos, tipos e a ordem exata; e que as posições cumprem FR-008 (apresentação antes de `perfis`, requisitos gerais antes de `inscricao`, classificação depois de `etapas`)
+- [X] T012 [P] [US2] Escrever teste afirmando que `identidade(edital_id, key)` das sete seções pré-existentes **não muda** com a renumeração — a identidade deriva da chave, não da ordem (D-007)
+- [X] T013 [US2] Verificar que a etapa `Conteúdo` do assistente exibe as dez seções sem alteração de template, por ler o catálogo; ajustar `backend/processo_seletivo/interface/templates/interface/compor_conteudo.html` apenas se a leitura for posicional
+- [X] T014 [P] [US2] Escrever teste de interface em `backend/tests/interface/test_conteudo.py`: editar o texto de `apresentacao`, salvar, e encontrá-lo na prévia na posição 1
+- [X] T015 [P] [US2] Escrever teste de interface em `backend/tests/interface/test_retificacao.py` retificando `/sections/id=<chave>/content` de uma **seção nova** pela tela de Retificação, e confirmando que a alteração chega ao documento consolidado (FR-010, SC-005). *As seções novas devem entrar automaticamente, por a tela derivar do catálogo — este teste é o que prova que sim, em vez de supor*
 
 ---
 
@@ -105,19 +105,19 @@ declarada, editar o texto de uma das novas e encontrá-la no documento.
 **Independent Test**: preencher os três em dois Perfis, salvar, ir a outra etapa, salvar, voltar e
 encontrá-los intactos; publicar e lê-los no documento.
 
-- [ ] T016 [US3] Acrescentar `duties` (`TextField(blank=True)`), `workload` e `compensation` (`CharField(max_length=255, blank=True)`) a `PerfilVaga` em `backend/processo_seletivo/editais/models/perfis.py`. Nenhum `null`, nenhuma constraint nova
-- [ ] T017 [US3] Criar `backend/processo_seletivo/editais/migrations/0005_perfil_institucional.py` com três `AddField` e nenhum `RunPython`
-- [ ] T018 [P] [US3] Escrever teste de migration em `backend/tests/migrations/` confirmando que a `0005` aplica e reverte sem perda
-- [ ] T019 [US3] Aceitar os três campos no serializer do rascunho em `backend/processo_seletivo/editais/api/serializers.py`, como opcionais com padrão `""`
-- [ ] T020 [US3] Gravar os três em `replace_draft` (`backend/processo_seletivo/editais/application/draft.py`), sem alterar a semântica de gravação
-- [ ] T021 [US3] Ler e reexibir os três em `backend/processo_seletivo/interface/forms.py` e em `backend/processo_seletivo/interface/templates/interface/_perfil.html`, com `duties` como área de texto multilinha
-- [ ] T022 [US3] Garantir que `perfis_persistidos` em `backend/processo_seletivo/interface/forms.py` serialize os três — sem isso, salvar o Cronograma os apagaria, que é o defeito que a `006` corrigiu para as modalidades
-- [ ] T023 [P] [US3] Escrever teste de interface em `backend/tests/interface/test_perfis.py`: preencher os três com `duties` em dois parágrafos, salvar o Cronograma em seguida, recarregar e encontrar tudo intacto com os parágrafos
-- [ ] T024 [US3] Compor os três no documento em `_perfis` de `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, usando `_paragrafos` para `duties` e omitindo cada um quando vazio
-- [ ] T025 [P] [US3] Escrever teste afirmando que Perfil sem os três campos não imprime rótulo vazio e que a publicação não é impedida
-- [ ] T026 [US3] Acrescentar `duties`, `workload` e `compensation` a `CAMPOS_PERFIL` em `backend/processo_seletivo/interface/retificacao.py`, com `duties` como `TEXTO_LONGO` — sem isso, um campo publicado não teria como ser corrigido pela interface, e FR-016 falharia pelo mesmo motivo que o achado 03 da auditoria
-- [ ] T027 [US3] Acrescentar os três a `NOVO_PERFIL` **e a `_perfil_completo`** em `backend/processo_seletivo/interface/retificacao.py`. *Esta é a parte crítica: a docstring de `_perfil_completo` diz que a forma tem de ser a que `edital_snapshot` produz, porque um subconjunto quebraria a consulta pública. Acrescentar Perfil por Retificação sem as três chaves produziria conteúdo v3 incompleto*
-- [ ] T028 [P] [US3] Escrever testes em `backend/tests/interface/test_retificacao.py`: retificar `duties` de um Perfil publicado; e acrescentar Perfil por Retificação verificando que o objeto resultante tem **exatamente** as chaves da forma v3, comparando com a saída de `edital_snapshot`
+- [X] T016 [US3] Acrescentar `duties` (`TextField(blank=True)`), `workload` e `compensation` (`CharField(max_length=255, blank=True)`) a `PerfilVaga` em `backend/processo_seletivo/editais/models/perfis.py`. Nenhum `null`, nenhuma constraint nova
+- [X] T017 [US3] Criar `backend/processo_seletivo/editais/migrations/0005_perfil_institucional.py` com três `AddField` e nenhum `RunPython`
+- [X] T018 [P] [US3] Escrever teste de migration em `backend/tests/migrations/` confirmando que a `0005` aplica e reverte sem perda
+- [X] T019 [US3] Aceitar os três campos no serializer do rascunho em `backend/processo_seletivo/editais/api/serializers.py`, como opcionais com padrão `""`
+- [X] T020 [US3] Gravar os três em `replace_draft` (`backend/processo_seletivo/editais/application/draft.py`), sem alterar a semântica de gravação
+- [X] T021 [US3] Ler e reexibir os três em `backend/processo_seletivo/interface/forms.py` e em `backend/processo_seletivo/interface/templates/interface/_perfil.html`, com `duties` como área de texto multilinha
+- [X] T022 [US3] Garantir que `perfis_persistidos` em `backend/processo_seletivo/interface/forms.py` serialize os três — sem isso, salvar o Cronograma os apagaria, que é o defeito que a `006` corrigiu para as modalidades
+- [X] T023 [P] [US3] Escrever teste de interface em `backend/tests/interface/test_perfis.py`: preencher os três com `duties` em dois parágrafos, salvar o Cronograma em seguida, recarregar e encontrar tudo intacto com os parágrafos
+- [X] T024 [US3] Compor os três no documento em `_perfis` de `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, usando `_paragrafos` para `duties` e omitindo cada um quando vazio
+- [X] T025 [P] [US3] Escrever teste afirmando que Perfil sem os três campos não imprime rótulo vazio e que a publicação não é impedida
+- [X] T026 [US3] Acrescentar `duties`, `workload` e `compensation` a `CAMPOS_PERFIL` em `backend/processo_seletivo/interface/retificacao.py`, com `duties` como `TEXTO_LONGO` — sem isso, um campo publicado não teria como ser corrigido pela interface, e FR-016 falharia pelo mesmo motivo que o achado 03 da auditoria
+- [X] T027 [US3] Acrescentar os três a `NOVO_PERFIL` **e a `_perfil_completo`** em `backend/processo_seletivo/interface/retificacao.py`. *Esta é a parte crítica: a docstring de `_perfil_completo` diz que a forma tem de ser a que `edital_snapshot` produz, porque um subconjunto quebraria a consulta pública. Acrescentar Perfil por Retificação sem as três chaves produziria conteúdo v3 incompleto*
+- [X] T028 [P] [US3] Escrever testes em `backend/tests/interface/test_retificacao.py`: retificar `duties` de um Perfil publicado; e acrescentar Perfil por Retificação verificando que o objeto resultante tem **exatamente** as chaves da forma v3, comparando com a saída de `edital_snapshot`
 
 ---
 
@@ -130,21 +130,21 @@ Retificação pode alterar essa identidade.
 `Processo Seletivo <código> — <título>`, com SHA-256 presente e nenhum UUID; tentar retificar
 `/processoTitle` e ser recusado.
 
-- [ ] T029 [US1] Acrescentar `processoCode` e `processoTitle` à raiz de `edital_snapshot` em `backend/processo_seletivo/publicacoes/application/publish_edital.py`, lidos de `edital.processo` — que já vem por `select_related("processo")`, sem consulta adicional
-- [ ] T030 [US1] Reescrever `_integridade` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` conforme a tabela B.3 do contrato: preservar a afirmação de derivação, a versão do schema e o SHA-256; identificar o Edital por número/ano e o Processo por código e título; **deixar de escrever os dois UUIDs**
-- [ ] T031 [US1] Declarar `CAMPOS_DE_IDENTIDADE` em `backend/processo_seletivo/publicacoes/domain/colecoes.py` com `editalId`, `processoId`, `processoCode`, `processoTitle` e `schemaVersion`, ao lado de `LISTAS_DE_CONTROLE`, com o racional de D-003.1 no docstring
-- [ ] T032 [US1] Estender a recusa existente em `backend/processo_seletivo/publicacoes/domain/changes.py` para consultar o conjunto novo além de `LISTAS_DE_CONTROLE`, com mensagem que nomeie o campo. **Nenhum caminho, operador ou forma nova** — é um conjunto declarado e uma condição a mais (P-005)
-- [ ] T033 [P] [US1] Escrever `backend/tests/unit/publicacoes/test_identidade_imutavel.py`: cada um dos cinco campos é recusado; `/title` e `/description` continuam aceitos; `/number` e `/year` continuam aceitos, com comentário registrando que são questão aberta e não omissão
-- [ ] T034 [US1] Incrementar `SCHEMA_VERSION` de `2` para `3` em `backend/processo_seletivo/shared/canonical.py`, com o comentário declarando as **três** mudanças de forma que a versão cobre (FR-017)
-- [ ] T035 [US1] Acrescentar `duties`, `workload` e `compensation` à forma de `profiles` em `COLECOES_PUBLICADAS`, em `backend/processo_seletivo/editais/domain/validation.py`
-- [ ] T036 [US1] Atualizar `backend/tests/contract/test_forma_publicada.py` para a forma v3 completa: os dois escalares da raiz, os três campos de `profiles` como string sempre presente com `""`, as dez seções, **e `number` como string** — `Edital.number` é `CharField(50)` e a forma preserva `"02"`
-- [ ] T037 [P] [US1] Escrever teste afirmando que dois snapshots de versão 3 do mesmo conteúdo têm exatamente o mesmo conjunto de chaves em todos os níveis (SC-002a)
-- [ ] T038 [P] [US1] Escrever teste afirmando que um snapshot v3 basta, sozinho, para `render_edital_pdf` compor o documento — sem consulta ao banco
-- [ ] T039 [US1] Acrescentar `duties`, `workload` e `compensation` a `PerfilInput` em `specs/001-processo-seletivo-editais/contracts/openapi.yaml` (bloco `PerfilInput`, hoje em `:548`), como `type: string` opcionais — é o payload do rascunho, onde a ausência é legítima
-- [ ] T040 [US1] Acrescentar os três a `PerfilPublicado` no mesmo arquivo (bloco `PerfilPublicado`, hoje em `:639`), em `properties` **e** na lista `required` — na forma publicada eles estão sempre presentes, com `""` quando vazios (FR-014). *A raiz não exige alteração de contrato: `VersaoConsolidadaResponse.content` é `type: object, additionalProperties: true` (`:954`), de modo que `processoCode` e `processoTitle` passam sem mudança — registrar isso na tarefa evita a busca de um bloco que não existe*
-- [ ] T041 [P] [US1] Rodar `backend/tests/contract/test_openapi_conformance.py` e confirmar que nenhuma rota fica fora do contrato e nenhuma resposta real diverge do schema declarado
-- [ ] T042 [US1] Regenerar seed (`seed_demo`) e a fixture de bytes — **segunda e última regeneração prevista em FR-006** —, revisando o diff do texto extraído
-- [ ] T043 [US1] Confirmar que conteúdo-base de versão 2 é recusado na consolidação por versão divergente, sem conversão, e que a mensagem é compreensível (FR-019)
+- [X] T029 [US1] Acrescentar `processoCode` e `processoTitle` à raiz de `edital_snapshot` em `backend/processo_seletivo/publicacoes/application/publish_edital.py`, lidos de `edital.processo` — que já vem por `select_related("processo")`, sem consulta adicional
+- [X] T030 [US1] Reescrever `_integridade` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` conforme a tabela B.3 do contrato: preservar a afirmação de derivação, a versão do schema e o SHA-256; identificar o Edital por número/ano e o Processo por código e título; **deixar de escrever os dois UUIDs**
+- [X] T031 [US1] Declarar `CAMPOS_DE_IDENTIDADE` em `backend/processo_seletivo/publicacoes/domain/colecoes.py` com `editalId`, `processoId`, `processoCode`, `processoTitle` e `schemaVersion`, ao lado de `LISTAS_DE_CONTROLE`, com o racional de D-003.1 no docstring
+- [X] T032 [US1] Estender a recusa existente em `backend/processo_seletivo/publicacoes/domain/changes.py` para consultar o conjunto novo além de `LISTAS_DE_CONTROLE`, com mensagem que nomeie o campo. **Nenhum caminho, operador ou forma nova** — é um conjunto declarado e uma condição a mais (P-005)
+- [X] T033 [P] [US1] Escrever `backend/tests/unit/publicacoes/test_identidade_imutavel.py`: cada um dos cinco campos é recusado; `/title` e `/description` continuam aceitos; `/number` e `/year` continuam aceitos, com comentário registrando que são questão aberta e não omissão
+- [X] T034 [US1] Incrementar `SCHEMA_VERSION` de `2` para `3` em `backend/processo_seletivo/shared/canonical.py`, com o comentário declarando as **três** mudanças de forma que a versão cobre (FR-017)
+- [X] T035 [US1] Acrescentar `duties`, `workload` e `compensation` à forma de `profiles` em `COLECOES_PUBLICADAS`, em `backend/processo_seletivo/editais/domain/validation.py`
+- [X] T036 [US1] Atualizar `backend/tests/contract/test_forma_publicada.py` para a forma v3 completa: os dois escalares da raiz, os três campos de `profiles` como string sempre presente com `""`, as dez seções, **e `number` como string** — `Edital.number` é `CharField(50)` e a forma preserva `"02"`
+- [X] T037 [P] [US1] Escrever teste afirmando que dois snapshots de versão 3 do mesmo conteúdo têm exatamente o mesmo conjunto de chaves em todos os níveis (SC-002a)
+- [X] T038 [P] [US1] Escrever teste afirmando que um snapshot v3 basta, sozinho, para `render_edital_pdf` compor o documento — sem consulta ao banco
+- [X] T039 [US1] Acrescentar `duties`, `workload` e `compensation` a `PerfilInput` em `specs/001-processo-seletivo-editais/contracts/openapi.yaml` (bloco `PerfilInput`, hoje em `:548`), como `type: string` opcionais — é o payload do rascunho, onde a ausência é legítima
+- [X] T040 [US1] Acrescentar os três a `PerfilPublicado` no mesmo arquivo (bloco `PerfilPublicado`, hoje em `:639`), em `properties` **e** na lista `required` — na forma publicada eles estão sempre presentes, com `""` quando vazios (FR-014). *A raiz não exige alteração de contrato: `VersaoConsolidadaResponse.content` é `type: object, additionalProperties: true` (`:954`), de modo que `processoCode` e `processoTitle` passam sem mudança — registrar isso na tarefa evita a busca de um bloco que não existe*
+- [X] T041 [P] [US1] Rodar `backend/tests/contract/test_openapi_conformance.py` e confirmar que nenhuma rota fica fora do contrato e nenhuma resposta real diverge do schema declarado
+- [X] T042 [US1] Regenerar seed (`seed_demo`) e a fixture de bytes — **segunda e última regeneração prevista em FR-006** —, revisando o diff do texto extraído
+- [X] T043 [US1] Confirmar que conteúdo-base de versão 2 é recusado na consolidação por versão divergente, sem conversão, e que a mensagem é compreensível (FR-019)
 
 **Checkpoint**: entrega 2 fechada. **Fases 4, 5 e 6 integram juntas, num único PR** (FR-018).
 
