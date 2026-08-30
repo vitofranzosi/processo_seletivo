@@ -34,13 +34,7 @@
 
 {% if salvo %}<p class="sucesso" role="status">Rascunho salvo — {{ salvo }}.</p>{% endif %}
 
-{% if erros %}
-<div class="erro" role="alert">
-  <strong>Não foi possível salvar:</strong>
-  <ul>{% for erro in erros %}<li>{{ erro }}</li>{% endfor %}</ul>
-  <p class="ajuda">O que você digitou foi preservado abaixo.</p>
-</div>
-{% endif %}
+{% include "interface/_erros.html" with preserva_o_digitado=True %}
 
 {% if not editavel %}
 <p class="aviso"><strong>Somente leitura.</strong>

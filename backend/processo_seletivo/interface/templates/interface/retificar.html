@@ -25,12 +25,7 @@ corrige é o caminho que não termina.
   <code>retificacao:elaborar</code>. Abaixo está o conteúdo vigente do Edital, como referência.</p>
 {% endif %}
 
-{% if erros %}
-<div class="erro" role="alert">
-  <strong>Não foi possível prosseguir:</strong>
-  <ul>{% for erro in erros %}<li>{{ erro }}</li>{% endfor %}</ul>
-</div>
-{% endif %}
+{% include "interface/_erros.html" with titulo_da_recusa="Não foi possível prosseguir:" %}
 
 {% if resumo %}
 <section aria-labelledby="resumo-titulo" class="consequencias">
@@ -151,9 +146,9 @@ corrige é o caminho que não termina.
   <fieldset class="linha">
     <legend>Sobre esta Retificação</legend>
     <p class="campo largo">
-      <label for="justificativa">Justificativa</label>
+      <label for="justificativa">Justificativa <span class="obrigatorio" aria-hidden="true">*</span></label>
       <textarea id="justificativa" name="justificativa" rows="3" required
-                aria-describedby="ajuda-just">{{ justificativa }}</textarea>
+                aria-describedby="ajuda-just" aria-required="true">{{ justificativa }}</textarea>
       <span class="ajuda" id="ajuda-just">Fica registrada no ato e na consulta pública.</span>
     </p>
     <p class="campo">
@@ -175,4 +170,5 @@ corrige é o caminho que não termina.
 </form>
 {% endif %}
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
+<script src="{% static 'interface/remocao.js' %}" defer></script>
 {% endblock %}

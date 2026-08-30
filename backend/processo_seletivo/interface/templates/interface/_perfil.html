@@ -3,14 +3,14 @@
   <input type="hidden" name="perfil-{{ indice }}-id" value="{{ perfil.id }}">
   <div class="campos">
     <p class="campo curto">
-      <label for="perfil-{{ indice }}-code">Código</label>
+      <label for="perfil-{{ indice }}-code">Código <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="text" id="perfil-{{ indice }}-code" name="perfil-{{ indice }}-code"
-             value="{{ perfil.code|default:'' }}" required>
+             value="{{ perfil.code|default:'' }}" required aria-required="true">
     </p>
     <p class="campo largo">
-      <label for="perfil-{{ indice }}-name">Denominação</label>
+      <label for="perfil-{{ indice }}-name">Denominação <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="text" id="perfil-{{ indice }}-name" name="perfil-{{ indice }}-name"
-             value="{{ perfil.name|default:'' }}" required>
+             value="{{ perfil.name|default:'' }}" required aria-required="true">
     </p>
     <p class="campo">
       <label for="perfil-{{ indice }}-locality">Localidade</label>

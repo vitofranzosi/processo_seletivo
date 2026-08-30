@@ -29,6 +29,11 @@ class Elemento {
     this.textContent = "";
     this.nodeType = 1;
     this.parentNode = null;
+    this.classes = [];
+    // `remocao.js` só age sobre o botão destrutivo, distinguido pela classe `perigo`.
+    this.classList = {
+      contains: (nome) => this.classes.includes(nome),
+    };
   }
 
   /** O ancestral mais próximo — incluindo o próprio — que satisfaz `[atributo]` ou uma tag. */
@@ -92,7 +97,16 @@ class Elemento {
     return this.filhos.find((filho) => filho.name && filho.name.endsWith("-" + sufixo[1])) || null;
   }
 
-  querySelectorAll() {
+  querySelectorAll(seletor) {
+    // `remocao.js` conta campos preenchidos e sub-linhas; o shim responde a esses dois seletores.
+    if (seletor === "input, textarea, select") {
+      return this.filhos.filter((filho) =>
+        ["input", "textarea", "select"].includes(filho.tagName)
+      );
+    }
+    if (seletor === "fieldset") {
+      return this.filhos.filter((filho) => filho.tagName === "fieldset");
+    }
     return [];
   }
 }
@@ -252,8 +266,26 @@ let documento;
 
 /** Monta o ambiente global e devolve o que o teste precisa inspecionar. */
 function montar({ formulario, armazem = new Armazem(), avisos = [], ordenaveis = [] } = {}) {
+  const ouvintes = {};
   documento = {
     activeElement: null,
+    // `remocao.js` escuta `htmx:confirm` no documento — é o ponto em que a biblioteca oferece a
+    // decisão antes de disparar a requisição.
+    addEventListener: (tipo, ouvinte) => {
+      (ouvintes[tipo] = ouvintes[tipo] || []).push(ouvinte);
+    },
+    disparar: (tipo, detalhe) => {
+      const evento = {
+        type: tipo,
+        detail: detalhe,
+        impedido: false,
+        preventDefault() {
+          this.impedido = true;
+        },
+      };
+      (ouvintes[tipo] || []).forEach((ouvinte) => ouvinte(evento));
+      return evento;
+    },
     getElementById: (id) => (id === "formulario" ? formulario : null),
     querySelector: (seletor) => {
       if (seletor === "[data-nao-enviado]") return null;
@@ -264,11 +296,18 @@ function montar({ formulario, armazem = new Armazem(), avisos = [], ordenaveis =
   };
   globalThis.document = documento;
   globalThis.window = { localStorage: armazem };
+  globalThis.__documento = documento;
   globalThis.Node = { ELEMENT_NODE: 1 };
   globalThis.MutationObserver = class {
     observe() {}
   };
   globalThis.setTimeout = globalThis.setTimeout || ((fn) => fn());
+  // `window.confirm` decidido pelo teste, e o registro do que foi perguntado.
+  globalThis.__perguntas = [];
+  globalThis.window.confirm = (texto) => {
+    globalThis.__perguntas.push(texto);
+    return globalThis.__resposta !== false;
+  };
   globalThis.__avisos = avisos;
   return { formulario, armazem, avisos };
 }

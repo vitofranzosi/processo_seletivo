@@ -157,6 +157,16 @@ form.confirmar{background:var(--branco);border:1px solid var(--borda);border-rad
 fieldset.caracter{border:none;padding:0;margin:0}
 fieldset.caracter legend{font-size:.85rem;color:var(--texto-fraco);padding:0;
   margin-bottom:.3rem}
+/* FR-032: em todo o produto não havia asterisco, etiqueta nem marca separando o campo
+   exigido do opcional — descobria-se falhando. O asterisco é `aria-hidden` porque quem usa
+   leitor de tela recebe a informação por `aria-required`, e ouvir "asterisco" seria ruído. */
+.obrigatorio{color:var(--vermelho);font-weight:700;margin-left:.15rem}
+.legenda-obrigatorio{font-size:.8125rem;color:var(--texto-fraco);margin:0 0 1rem}
+/* Resumo de erros ancorado (FR-033): o resumo sozinho obriga a procurar; a marca junto do
+   campo sozinha obriga a rolar até achar. */
+.erro ol{margin:.4rem 0 0 1.2rem}
+.erro a{color:var(--vermelho);font-weight:600}
+.campo .recusa{display:block;color:var(--vermelho);font-size:.8125rem;margin-top:.25rem}
 .navegacao-etapa{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;
   padding:1rem 0 2rem;border-top:1px solid var(--borda);margin-top:1.5rem}
 .navegacao-etapa .botao:last-of-type{margin-left:auto}

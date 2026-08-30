@@ -8,9 +8,9 @@
   <input type="hidden" name="etapa-{{ indice }}-order" value="{{ etapa_linha.order|default:'0' }}">
   <div class="campos">
     <p class="campo largo">
-      <label for="etapa-{{ indice }}-name">Nome da Etapa</label>
+      <label for="etapa-{{ indice }}-name">Nome da Etapa <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="text" id="etapa-{{ indice }}-name" name="etapa-{{ indice }}-name"
-             value="{{ etapa_linha.name|default:'' }}" required placeholder="Prova didática">
+             value="{{ etapa_linha.name|default:'' }}" required placeholder="Prova didática" aria-required="true">
     </p>
     <p class="campo">
       <label for="etapa-{{ indice }}-scheduleEventId">Evento do Cronograma</label>

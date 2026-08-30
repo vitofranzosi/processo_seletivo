@@ -185,9 +185,9 @@ levado a elaborar; ver `Submeter` desabilitado com motivo; não receber `Retific
 - [X] T058 [US5] Fazer essa função consultar também `impede_por_segregacao`: quem elaborou e homologou o mesmo Edital **não** pode ser apontado como quem publica, ainda que tenha a permissão. É o ponto delicado da entrega (FR-031)
 - [X] T059 [US5] Exibir a indicação no detalhe do Edital, em `backend/processo_seletivo/interface/templates/interface/detalhe.html`
 - [X] T060 [US5] Exibir a indicação também na confirmação do ato praticado, em `backend/processo_seletivo/interface/templates/interface/confirmar.html`
-- [ ] T061 [P] [US5] Escrever `backend/tests/interface/test_bastao.py`: submetido aponta quem homologa; homologado aponta quem publica
-- [ ] T062 [P] [US5] Escrever o teste do caso que separa as duas derivações: ator que elaborou **e** homologou, com permissão de publicar, **não** é apontado; o mesmo Edital homologado por outra pessoa aponta quem publica (cenários 3 e 4 da `US5`)
-- [ ] T063 [P] [US5] Escrever teste afirmando a ausência: nenhum modelo, campo persistido, fila, notificação ou designação nasce nesta entrega
+- [X] T061 [P] [US5] Escrever `backend/tests/interface/test_bastao.py`: submetido aponta quem homologa; homologado aponta quem publica
+- [X] T062 [P] [US5] Escrever o teste do caso que separa as duas derivações: ator que elaborou **e** homologou, com permissão de publicar, **não** é apontado; o mesmo Edital homologado por outra pessoa aponta quem publica (cenários 3 e 4 da `US5`)
+- [X] T063 [P] [US5] Escrever teste afirmando a ausência: nenhum modelo, campo persistido, fila, notificação ou designação nasce nesta entrega
 
 **Checkpoint**: entrega 4 fechada.
 
@@ -201,13 +201,13 @@ levado a elaborar; ver `Submeter` desabilitado com motivo; não receber `Retific
 
 ### Obrigatoriedade e recusa
 
-- [ ] T064 [US6] Estabelecer a convenção de campo obrigatório — marca visível na etiqueta mais `aria-required` — e aplicá-la nas etapas do assistente e seus fragmentos: `compor_identificacao.html`, `compor_conteudo.html`, `_perfil.html`, `_evento.html`, `_etapa.html` e `_modalidade.html`, em `backend/processo_seletivo/interface/templates/interface/`. São os seis arquivos que hoje usam `required` sem dizê-lo a quem lê
-- [ ] T065 [US6] Aplicar a mesma convenção na criação de Processo e nas três telas de confirmação: `processo_criar.html`, `confirmar.html`, `processo_confirmar.html` e `retificacao_confirmar.html`
-- [ ] T066 [US6] Aplicar a mesma convenção na tela de Retificação e seus fragmentos: `retificar.html`, `_retificacao_perfil.html` e `_retificacao_evento.html`. Com estes três, a lista fechada de FR-032 está inteira
-- [ ] T067 [US6] Ampliar o bloco `{% if erros %}` de `backend/processo_seletivo/interface/templates/interface/compor_base.html`, que já lista os erros, para ancorar cada item no campo correspondente e receber foco ou ser anunciado ao aparecer
-- [ ] T068 [US6] Levar o mesmo resumo ancorado às telas que hoje mostram erro sem ele: `processo_criar.html`, `confirmar.html`, `processo_confirmar.html`, `retificar.html` e `retificacao_confirmar.html`
-- [ ] T069 [US6] Associar cada campo recusado à sua mensagem por vínculo programático, não só por proximidade visual (FR-033)
-- [ ] T070 [P] [US6] Escrever teste de interface afirmando obrigatoriedade marcada e recusa em resumo **e** junto do campo
+- [X] T064 [US6] Estabelecer a convenção de campo obrigatório — marca visível na etiqueta mais `aria-required` — e aplicá-la nas etapas do assistente e seus fragmentos: `compor_identificacao.html`, `compor_conteudo.html`, `_perfil.html`, `_evento.html`, `_etapa.html` e `_modalidade.html`, em `backend/processo_seletivo/interface/templates/interface/`. São os seis arquivos que hoje usam `required` sem dizê-lo a quem lê
+- [X] T065 [US6] Aplicar a mesma convenção na criação de Processo e nas três telas de confirmação: `processo_criar.html`, `confirmar.html`, `processo_confirmar.html` e `retificacao_confirmar.html`
+- [X] T066 [US6] Aplicar a mesma convenção na tela de Retificação e seus fragmentos: `retificar.html`, `_retificacao_perfil.html` e `_retificacao_evento.html`. Com estes três, a lista fechada de FR-032 está inteira
+- [X] T067 [US6] Ampliar o bloco `{% if erros %}` de `backend/processo_seletivo/interface/templates/interface/compor_base.html`, que já lista os erros, para ancorar cada item no campo correspondente e receber foco ou ser anunciado ao aparecer
+- [X] T068 [US6] Levar o mesmo resumo ancorado às telas que hoje mostram erro sem ele: `processo_criar.html`, `confirmar.html`, `processo_confirmar.html`, `retificar.html` e `retificacao_confirmar.html`
+- [X] T069 [US6] Associar cada campo recusado à sua mensagem por vínculo programático, não só por proximidade visual (FR-033)
+- [X] T070 [P] [US6] Escrever teste de interface afirmando obrigatoriedade marcada e recusa em resumo **e** junto do campo
 
 ### Aparência e ordem
 
@@ -220,9 +220,9 @@ levado a elaborar; ver `Submeter` desabilitado com motivo; não receber `Retific
 
 - [X] T075 [US6] Compor a opção do seletor de Evento com a data herdada — "Prova didática · 10/04/2027 14:00" — em `backend/processo_seletivo/interface/views.py` e no fragmento de Etapa (FR-036)
 - [X] T076 [US6] Agrupar Eliminatória e Classificatória sob legenda "Caráter" em `backend/processo_seletivo/interface/templates/interface/_etapa.html` (FR-037)
-- [ ] T077 [US6] Implementar em `backend/processo_seletivo/interface/static/interface/` a regra de "linha tem conteúdo" — qualquer campo preenchido ou qualquer item filho — e a confirmação que dela decorre: diz o que será descartado, é operável por teclado e tem o cancelamento como ação padrão (FR-038)
-- [ ] T078 [US6] Ligar a confirmação aos quatro fragmentos que hoje oferecem `Remover` sem rede — `_perfil.html`, `_evento.html`, `_etapa.html` e `_modalidade.html` — e à marcação de remoção de `retificar.html`
-- [ ] T079 [P] [US6] Escrever teste de JavaScript para a confirmação: linha preenchida confirma, linha vazia não
+- [X] T077 [US6] Implementar em `backend/processo_seletivo/interface/static/interface/` a regra de "linha tem conteúdo" — qualquer campo preenchido ou qualquer item filho — e a confirmação que dela decorre: diz o que será descartado, é operável por teclado e tem o cancelamento como ação padrão (FR-038)
+- [X] T078 [US6] Ligar a confirmação aos quatro fragmentos que hoje oferecem `Remover` sem rede — `_perfil.html`, `_evento.html`, `_etapa.html` e `_modalidade.html` — e à marcação de remoção de `retificar.html`
+- [X] T079 [P] [US6] Escrever teste de JavaScript para a confirmação: linha preenchida confirma, linha vazia não
 
 ### Autoridade signatária
 
@@ -237,11 +237,11 @@ levado a elaborar; ver `Submeter` desabilitado com motivo; não receber `Retific
 
 - [X] T086 [US6] Passar `_progresso` de dois para três estados em `backend/processo_seletivo/interface/views.py`: `conteudo` deixa de ser `True` fixo e passa a ser "pronta para revisar" enquanto `edital.secoes.exists()` for falso, e "concluída" depois (D-005)
 - [X] T087 [US6] Distinguir os três estados visualmente em `backend/processo_seletivo/interface/templates/interface/compor_base.html`, sem depender apenas de cor (FR-040)
-- [ ] T088 [P] [US6] Escrever teste afirmando que Edital recém-criado mostra `Conteúdo` como "pronta para revisar" e que gravar a etapa a torna "concluída"
+- [X] T088 [P] [US6] Escrever teste afirmando que Edital recém-criado mostra `Conteúdo` como "pronta para revisar" e que gravar a etapa a torna "concluída"
 - [X] T089 [US6] Substituir `{{ request.GET.ato|situacao }}` em `backend/processo_seletivo/interface/templates/interface/detalhe.html` pelo rótulo humano que `atos.ATOS` já declara — o filtro `situacao` mapeia **situações** e por isso devolve `submeter` cru (FR-041)
-- [ ] T090 [P] [US6] Escrever teste afirmando que a faixa de confirmação diz "Submissão para revisão" e "Publicação", e nunca a chave interna
+- [X] T090 [P] [US6] Escrever teste afirmando que a faixa de confirmação diz "Submissão para revisão" e "Publicação", e nunca a chave interna
 - [X] T091 [US6] Registrar qual etapa do assistente foi gravada no evento de auditoria da gravação do rascunho, em `backend/processo_seletivo/editais/application/draft.py` e no chamador da interface. **Registrar a área, não a diferença** (FR-043)
-- [ ] T092 [P] [US6] Escrever teste afirmando que quatro gravações em etapas diferentes produzem quatro registros distinguíveis na trilha
+- [X] T092 [P] [US6] Escrever teste afirmando que quatro gravações em etapas diferentes produzem quatro registros distinguíveis na trilha
 
 **Checkpoint**: entrega 5 fechada.
 
