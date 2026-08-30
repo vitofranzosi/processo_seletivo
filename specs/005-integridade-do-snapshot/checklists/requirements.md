@@ -31,6 +31,41 @@
 
 ## Notas da avaliação
 
+### Reavaliação após `$speckit-clarify` (2026-08-29)
+
+A revisão da spec apontou quatro problemas, todos verificados antes de aceitar. Três viraram
+clarificação; o quarto e um erro editorial foram corrigidos direto.
+
+**Alcance do esquema (Q1).** A spec exigia presença e não dizia nada sobre tipo. Medido: `name = []`,
+`immediateVacancies = "muitas"`, `immediateVacancies = None`, `startAt = {}` e `requirements = "texto"`
+atravessam a validação atual sem achado impeditivo. A decisão foi conferir presença, tipo,
+nulabilidade e formato — o que `PerfilInput` e `EventoInput` já declaram no contrato da `001` —,
+aceitando campo desconhecido e sem regra de negócio nova (FR-009).
+
+**Portão da Publicação (Q2).** O teste independente da US1 era inalcançável: a US2 recusa o ato na
+elaboração, então ele nunca chega à Publicação. Reescrito para partir de um ato malformado já
+homologado e gravado direto, que é o padrão da `003` para a linha que chega por fora da borda. Virou
+também FR-013, para que a razão de o portão não ser redundante fique escrita.
+
+**Fronteiras temporais (Q3).** `FR-003` dizia "o conteúdo consolidado", no singular, e a Publicação
+materializa uma versão por fronteira de vigência. O singular permitia implementar só a primeira e
+deixar a seguinte vigorar malformada semanas depois. Passou a exigir toda fronteira materializada.
+
+**`SC-006` saiu dos critérios funcionais.** Cobertura com ramos é métrica de entrega, não resultado
+observável por quem usa. Fica registrada aqui para o plano recolher: **a suíte deve permanecer verde
+nas duas execuções — SQLite e PostgreSQL — e o código escrito nesta feature deve ter cobertura com
+ramos integral.**
+
+**Avaliação de LGPD acrescentada.** O princípio III da Constituição exige que cada especificação
+avalie os requisitos aplicáveis, e **nenhuma das cinco specs do projeto havia feito isso** — não é
+lacuna só desta. A avaliação é "não aplicável", com as quatro razões escritas.
+
+**Erro editorial no relato anterior.** Eu disse "cinco exclusões" e depois "acrescentei um sexto"; o
+*Out of Scope* tem cinco itens no total — quatro vieram da definição de escopo e um foi meu.
+
+Numeração reconciliada depois das inserções: 15 requisitos e 5 critérios contíguos, todos mapeados
+na rastreabilidade nos dois sentidos.
+
 Duas passagens foram necessárias.
 
 **O que a primeira encontrou.** Três requisitos citavam nomes de função e de módulo —

@@ -37,6 +37,20 @@ classificá-las como informação, aviso ou erro impeditivo e bloquear a publica
 impeditivo."* A exigência vale para a Publicação; o que falta é ela alcançar o conteúdo que uma
 Retificação faz vigorar, e não só a raiz do Edital.
 
+## Clarifications
+
+### Session 2026-08-29
+
+- Q: O que a verificação deve conferir em cada Perfil e Evento do snapshot resultante? → A: Presença,
+  tipo, nulabilidade e formato — o que o contrato da `001` já declara. Campo desconhecido é aceito, e
+  nenhuma regra de negócio nova entra.
+- Q: Como o portão da Publicação deve ser demonstrado, se a recusa na elaboração torna o caminho
+  normal inalcançável? → A: Com o ato malformado já homologado, gravado diretamente — o mesmo padrão
+  que a `003` usa para a linha que chega por fora da elaboração.
+- Q: Uma Publicação pode materializar várias versões consolidadas, uma por fronteira de vigência.
+  Sobre quais delas a verificação incide? → A: Toda fronteira materializada; uma só malformada recusa
+  o ato inteiro.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Nenhum Edital malformado passa a vigorar (Priority: P1)
@@ -48,18 +62,30 @@ nada é materializado.
 **Why this priority**: é a razão de a feature existir. Um Edital é ato administrativo, e um Perfil
 sem denominação publicado é defeito que atinge quem se inscreve.
 
-**Independent Test**: elaborar uma Retificação que remova um campo obrigatório de um Perfil, levá-la
-até a Publicação e verificar que ela é recusada, que nenhuma Publicação ou versão consolidada é
+**Independent Test**: partir de uma Retificação malformada **já homologada, gravada diretamente**,
+publicá-la e verificar que ela é recusada, que nenhuma Publicação, documento ou versão consolidada é
 criada, e que o conteúdo vigente continua o de antes.
+
+O caminho normal não serve para testar este portão: a US2 recusa o ato na elaboração, e ele não
+chega à Publicação. A linha gravada direto é o que a `003` já usa para o mesmo tipo de cinto — o
+caso da Retificação restaurada de backup ou criada por importação, que nunca passou pela borda.
 
 **Acceptance Scenarios**:
 
-1. **Given** um Edital publicado com Perfis completos, **When** uma Retificação substitui um Perfil
-   inteiro por um objeto que omite campos obrigatórios, **Then** o ato é recusado e o conteúdo
+1. **Given** uma Retificação homologada que substitui um Perfil inteiro por um objeto que omite
+   campos obrigatórios, **When** alguém a publica, **Then** a Publicação é recusada e o conteúdo
    vigente não muda.
-2. **Given** o mesmo Edital, **When** uma Retificação remove um campo obrigatório de um Perfil,
-   **Then** o ato é recusado e o conteúdo vigente não muda.
-3. **Given** uma Retificação que altera apenas valores, mantendo o conteúdo bem formado, **When**
+2. **Given** uma Retificação homologada que remove um campo obrigatório de um Perfil, **When** alguém
+   a publica, **Then** a Publicação é recusada e o conteúdo vigente não muda.
+3. **Given** um Edital com uma Retificação de vigência futura já publicada, e portanto com mais de
+   uma fronteira a materializar, **When** um ato homologado deixaria malformada apenas a fronteira
+   posterior, **Then** a Publicação é recusada — verificar só a primeira faria o Edital vigorar
+   malformado semanas depois, sem ninguém ter publicado nada nesse dia.
+4. **Given** o mesmo Edital, **When** uma Retificação troca o tipo de um campo — denominação como
+   lista, vagas como texto, instante como objeto —, **Then** o ato é recusado como se o campo
+   estivesse ausente: um Perfil cuja denominação é `[]` chega à consulta pública e ao PDF tão
+   malformado quanto um sem denominação.
+5. **Given** uma Retificação que altera apenas valores, mantendo o conteúdo bem formado, **When**
    ela é publicada, **Then** ela publica normalmente — a verificação nova não recusa ato legítimo.
 
 ---
@@ -87,13 +113,22 @@ recusada ali, com uma mensagem que nomeia o caminho do campo ausente.
 
 ### Edge Cases
 
+- **O ato que não passou pela elaboração.** Uma Retificação restaurada de backup ou criada por
+  importação nunca atravessou a recusa da US2. O portão da Publicação é o que a alcança, e é por isso
+  que ele não é redundante.
 - **O ato encontra o defeito em vez de causá-lo.** Não há conteúdo publicado malformado hoje, e a
   partir desta feature não pode passar a haver. Se ainda assim um existir, a recusa vale: publicar
   um Edital malformado não fica admissível porque outro ato o quebrou antes.
-- **Campo desconhecido no conteúdo.** O snapshot pode ganhar campos novos. A verificação exige a
-  presença do que é obrigatório e não recusa o que não conhece.
+- **Campo desconhecido no conteúdo.** O snapshot pode ganhar campos novos. A verificação exige o que
+  o contrato declara e não recusa o que ele não conhece.
 - **Coleção vazia.** Um Perfil sem Modalidades e uma lista de requisitos vazia são estados
-  legítimos; ausência do campo é que não é.
+  legítimos; ausência do campo, ou um valor que não seja lista, é que não é.
+- **Nulo onde o contrato o admite.** `reserveLimit` e `endAt` admitem nulo declaradamente; nulo ali
+  não é violação, e é o que distingue "não preenchido" de "malformado".
+- **Fronteira posterior malformada.** Um ato pode deixar íntegra a versão que passa a vigorar hoje e
+  malformada a que vigora na semana seguinte, porque a composição naquela fronteira inclui outros
+  atos. A recusa alcança o ato inteiro, e não só a fronteira defeituosa: publicar metade produziria
+  linha do tempo com buraco.
 - **Alterações que se compensam.** Uma alteração pode remover um campo e outra recriá-lo no mesmo
   ato. O que vale é o resultado, e não os estados intermediários.
 
@@ -106,38 +141,49 @@ recusada ali, com uma mensagem que nomeia o caminho do campo ausente.
   individualmente plausíveis podem compor um resultado inválido.
 - **FR-002**: A verificação DEVE acontecer na **elaboração**, sobre o resultado de aplicar todas as
   alterações à versão declarada como base.
-- **FR-003**: A verificação DEVE acontecer de novo na **Publicação**, sobre o conteúdo consolidado
-  que passará a vigorar. São dois momentos e duas perguntas, como a `003` estabeleceu: o que eu vi
-  ficaria bem formado, e o que vai vigorar fica bem formado.
+- **FR-003**: A verificação DEVE acontecer de novo na **Publicação**, sobre **cada versão
+  consolidada que o ato materializa** — uma por fronteira de vigência, e não apenas a que passa a
+  vigorar de imediato. Uma única fronteira malformada DEVE recusar o ato inteiro. São dois momentos e
+  duas perguntas, como a `003` estabeleceu: o que eu vi ficaria bem formado, e tudo o que vai vigorar
+  fica bem formado.
 - **FR-004**: A verificação DEVE alcançar cada Perfil e cada Evento do conteúdo, e não apenas a raiz
   do Edital.
 
 ### O que conta como bem formado
 
-- **FR-005**: A forma exigida DEVE ser a que o próprio sistema produz ao montar um snapshot
-  publicado. Uma segunda descrição do que é um Perfil divergiria da primeira.
-- **FR-006**: A ausência de um campo obrigatório DEVE ser **erro impeditivo**, na classificação que
-  o sistema já usa — informação, aviso e erro impeditivo.
-- **FR-007**: Campo presente com valor vazio admissível — lista sem elementos, texto opcional em
-  branco — NÃO DEVE ser tratado como ausência.
-- **FR-008**: Campo que o sistema não conhece NÃO DEVE ser recusado. O conteúdo normativo pode
+- **FR-005**: A forma exigida DEVE ser a que o contrato público já declara para Perfil e Evento —
+  quais campos são obrigatórios, de que tipo, quais admitem nulo e que formato têm. Descrever a forma
+  uma segunda vez criaria duas autoridades sobre a mesma pergunta, e elas divergiriam.
+- **FR-006**: DEVEM ser **erro impeditivo**, na classificação que o sistema já usa — informação,
+  aviso e erro impeditivo — as quatro violações: campo obrigatório ausente, valor de tipo diferente
+  do declarado, nulo onde o contrato não o admite, e valor que não satisfaz o formato declarado.
+- **FR-007**: Valor vazio admissível NÃO DEVE ser tratado como ausência nem como tipo errado. Lista
+  sem elementos continua sendo lista, e texto em branco onde o contrato admite texto continua sendo
+  texto.
+- **FR-008**: Campo que o contrato não declara NÃO DEVE ser recusado. O conteúdo normativo pode
   crescer, e recusar o desconhecido tornaria toda evolução de esquema uma quebra.
+- **FR-009**: A verificação NÃO DEVE acrescentar regra de negócio — faixa de valores, enumeração
+  admissível ou coerência entre campos. Decidir o que um Perfil *deveria* exigir é discussão
+  normativa, e não de integridade.
 
 ### A recusa
 
-- **FR-009**: A recusa DEVE responder `422`, coerente com a recusa por erro impeditivo que já existe
+- **FR-010**: A recusa DEVE responder `422`, coerente com a recusa por erro impeditivo que já existe
   na Publicação.
-- **FR-010**: A recusa DEVE nomear o **caminho** de cada campo ausente, na mesma forma que a `004`
+- **FR-011**: A recusa DEVE nomear o **caminho** de cada campo ausente, na mesma forma que a `004`
   estabeleceu — `/profiles/id=<uuid>/name` —, para que quem recebe saiba qual entidade corrigir sem
   consultar a versão vigente.
-- **FR-011**: A recusa na Publicação NÃO DEVE deixar Publicação, documento ou versão consolidada
+- **FR-012**: A recusa na Publicação NÃO DEVE deixar Publicação, documento ou versão consolidada
   materializados, como já vale para os demais erros impeditivos.
+- **FR-013**: A verificação na Publicação DEVE valer para o ato que chega por fora da elaboração —
+  restaurado de backup, criado por importação, gravado direto. É a razão de o portão existir depois
+  de a US2 já recusar na borda: sem ela, a garantia dependeria de todo ato ter passado por lá.
 
 ### Limites
 
-- **FR-012**: Uma Retificação bem formada DEVE continuar publicável sem etapa nova, sem campo novo
+- **FR-014**: Uma Retificação bem formada DEVE continuar publicável sem etapa nova, sem campo novo
   no contrato e sem mudança no que quem elabora precisa preencher.
-- **FR-013**: A verificação NÃO DEVE alterar o endereçamento, as precondições de conteúdo nem as
+- **FR-015**: A verificação NÃO DEVE alterar o endereçamento, as precondições de conteúdo nem as
   invariantes de identidade que a `003` e a `004` estabeleceram.
 
 ### Key Entities
@@ -158,20 +204,35 @@ recusada ali, com uma mensagem que nomeia o caminho do campo ausente.
 - **SC-004**: Uma Retificação bem formada — alteração de valores, acréscimo e remoção de entidades —
   continua publicando, e o número de etapas para publicá-la não muda.
 - **SC-005**: Depois desta feature, não existe caminho pelo qual uma Retificação deixe vigente um
-  Edital que a Publicação original recusaria.
-- **SC-006**: A suíte permanece verde nas duas execuções — SQLite e PostgreSQL — e a cobertura com
-  ramos do código escrito nesta feature é integral.
+  Edital que a Publicação original recusaria — em nenhuma das fronteiras de vigência que ela
+  materializa.
 
 ### Rastreabilidade
 
 | Requisito | Critério |
 | --- | --- |
 | FR-001, FR-002 | SC-001, SC-002 |
-| FR-003, FR-011 | SC-001, SC-002, SC-005 |
+| FR-003, FR-012, FR-013 | SC-001, SC-002, SC-005 |
 | FR-004, FR-005 | SC-005 |
 | FR-006, FR-007, FR-008 | SC-004, SC-005 |
-| FR-009, FR-010 | SC-003 |
-| FR-012, FR-013 | SC-004, SC-006 |
+| FR-009 | SC-004 |
+| FR-010, FR-011 | SC-003 |
+| FR-014, FR-015 | SC-004 |
+
+## Avaliação de Proteção de Dados (LGPD)
+
+**Não aplicável.** O princípio III da Constituição exige que cada especificação avalie os requisitos
+da LGPD; a avaliação desta é curta porque a feature não os alcança:
+
+- **Nenhum dado pessoal.** O conteúdo verificado é normativo — título, descrição, Perfis, Cronograma
+  e Modalidades de um Edital. Dados de pessoas inscritas não existem neste conteúdo e não são
+  tocados.
+- **Nenhum acesso novo.** A feature não cria endpoint, permissão, papel ou consulta. Ela acrescenta
+  uma recusa a operações que já exigem `retificacao:elaborar` e `retificacao:publicar`.
+- **Nenhuma superfície nova de exposição.** As mensagens de recusa nomeiam caminho de campo
+  normativo e identificador de entidade do Edital — o mesmo vocabulário que a consulta pública já
+  publica.
+- **Nenhuma retenção nova.** Nada é persistido que já não fosse; a verificação decide e não guarda.
 
 ## Out of Scope
 
@@ -184,8 +245,10 @@ recusada ali, com uma mensagem que nomeia o caminho do campo ausente.
   versionamento antes de existir a segunda seria decidir por antecipação.
 - **Migração de conteúdo histórico.** O sistema não está em produção e não há ato publicado a
   corrigir.
-- **Ampliar o que é obrigatório.** Esta feature faz valer a forma que o sistema já produz; discutir
-  se um Perfil deveria exigir mais campos é decisão normativa, e não de integridade.
+- **Ampliar o que é obrigatório, e regras de negócio.** Esta feature faz valer a forma que o
+  contrato já declara. Faixas de valor, enumerações admissíveis e coerência entre campos —
+  `reserveLimit` compatível com o tipo de reserva, `endAt` depois de `startAt` — são decisão
+  normativa, e não de integridade (FR-009).
 
 ## Assumptions
 
@@ -193,8 +256,9 @@ recusada ali, com uma mensagem que nomeia o caminho do campo ausente.
   mesmo, e o conteúdo produzido pela composição original já é bem formado por construção — de modo
   que aplicá-la aos dois caminhos não muda o comportamento do original e evita duas regras para a
   mesma pergunta.
-- **Obrigatório é o que o sistema sempre produz.** Um campo que o montador de snapshot emite para
-  toda entidade é obrigatório; um que ele emite às vezes, não.
+- **A autoridade é o contrato, não o montador de snapshot.** `PerfilInput` e `EventoInput` já
+  declaram obrigatoriedade, tipo, nulabilidade e formato. O montador produz também campos que o
+  contrato não declara; esses seguem aceitos, e não exigidos.
 - **Um conteúdo base já malformado bloqueia o ato que não o corrige.** Não há como isso existir hoje,
   e a partir desta feature não passa a haver. Preferir o bloqueio mantém a garantia de SC-005 sem
   exceção, ao custo de um caso que não ocorre.
