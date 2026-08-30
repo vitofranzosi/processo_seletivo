@@ -243,7 +243,21 @@ DESTINO_DA_PENDENCIA = {
     "description": ("identificacao", "#ident-titulo", True),
     "profiles": ("perfis", "#perfis-titulo", True),
     "schedule": ("cronograma", "#cronograma-titulo", True),
+    "stages": ("etapas", "#etapas-titulo", True),
 }
+
+
+def _destino(caminho):
+    """A etapa onde o achado se resolve.
+
+    Achado de raiz vem com o nome da coleção (`profiles`); achado de forma vem com o caminho da
+    entidade (`/profiles/id=…/name`). Os dois se resolvem no mesmo lugar, e resolver só o primeiro
+    faria a pendência mais específica — a que já diz qual campo corrigir — ser a única sem caminho.
+    """
+    if caminho in DESTINO_DA_PENDENCIA:
+        return DESTINO_DA_PENDENCIA[caminho]
+    colecao = caminho.split("/")[1] if caminho.startswith("/") else ""
+    return DESTINO_DA_PENDENCIA.get(colecao, (None, "", False))
 # Caminho que a tradução não conhece — os da forma publicada, por exemplo — não ganha destino nem
 # explicação inventada. FR-007 proíbe declarar incorrigível o que a etapa resolve; não obriga a
 # justificar o que ninguém mapeou.
@@ -255,7 +269,7 @@ def _pendencias(edital):
     rotulos = {chave: rotulo for chave, rotulo, _ in ETAPAS_COMPOSICAO}
     pendencias = []
     for item in validate_for_publication(edital_snapshot(edital)):
-        etapa, ancora, corrigivel = DESTINO_DA_PENDENCIA.get(item.path, (None, "", False))
+        etapa, ancora, corrigivel = _destino(item.path)
         pendencias.append(
             {
                 "severidade": SEVERIDADE.get(str(item.severity), "informacao"),
@@ -283,11 +297,14 @@ ETAPAS_COMPOSICAO = [
     ("identificacao", "Identificação", "interface/compor_identificacao.html"),
     ("perfis", "Perfis de Vaga", "interface/compor_perfis.html"),
     ("cronograma", "Cronograma", "interface/compor_cronograma.html"),
+    # Depois do Cronograma porque a Etapa referencia Evento dele: pedir o vínculo antes de existir
+    # o que vincular seria oferecer uma lista vazia e chamá-la de escolha.
+    ("etapas", "Etapas de Avaliação", "interface/compor_etapas.html"),
     ("revisao", "Revisão", "interface/compor_revisao.html"),
 ]
 CHAVES_ETAPA = [chave for chave, _, _ in ETAPAS_COMPOSICAO]
 # As que aceitam POST. `revisao` consolida e não grava.
-ETAPAS_GRAVAVEIS = {"identificacao", "perfis", "cronograma"}
+ETAPAS_GRAVAVEIS = {"identificacao", "perfis", "cronograma", "etapas"}
 
 
 def _progresso(edital, atual):
@@ -298,6 +315,8 @@ def _progresso(edital, atual):
         "cronograma": bool(
             getattr(edital, "cronograma", None) and edital.cronograma.eventos.exists()
         ),
+        # Etapas são opcionais; "concluída" aqui quer dizer "já tem conteúdo", não "obrigatória".
+        "etapas": edital.etapas.exists(),
         "revisao": False,
     }
     return [
@@ -392,6 +411,11 @@ def compor_etapa(request, edital_id, etapa):
                 if etapa == "cronograma" and digitados is not None
                 else forms.eventos_do_edital(edital)
             ),
+            "etapas_avaliacao": (
+                _reexibir_etapas(digitados)
+                if etapa == "etapas" and digitados is not None
+                else forms.etapas_do_edital(edital)
+            ),
             "reservas": forms.RESERVA,
             "pendencias": pendencias,
             # A tela de revisão mostra tudo; as demais, só o que se resolve nelas — pendência
@@ -415,6 +439,19 @@ def _reexibir_perfis(perfis):
     ]
 
 
+def _reexibir_etapas(etapas):
+    """Após erro, devolve o que a pessoa digitou — inclusive o valor que o domínio recusou."""
+    return [
+        {
+            **etapa,
+            "weight": "" if etapa["weight"] is None else f"{etapa['weight']:f}",
+            "minimumScore": "" if etapa["minimumScore"] is None else f"{etapa['minimumScore']:f}",
+            "scheduleEventId": etapa["scheduleEventId"] or "",
+        }
+        for etapa in etapas
+    ]
+
+
 def _reexibir_eventos(eventos):
     return [
         {
@@ -426,12 +463,19 @@ def _reexibir_eventos(eventos):
     ]
 
 
+# Qual coleção do rascunho cada etapa do assistente escreve.
+COLECAO_DA_ETAPA = {"perfis": "profiles", "cronograma": "schedule", "etapas": "stages"}
+
+LEITURA_DA_ETAPA = {
+    "identificacao": forms.ler_identificacao,
+    "perfis": forms.ler_perfis,
+    "cronograma": forms.ler_eventos,
+    "etapas": forms.ler_etapas,
+}
+
+
 def _ler_etapa(request, etapa):
-    if etapa == "identificacao":
-        return forms.ler_identificacao(request.POST)
-    if etapa == "perfis":
-        return forms.ler_perfis(request.POST)
-    return forms.ler_eventos(request.POST)
+    return LEITURA_DA_ETAPA[etapa](request.POST)
 
 
 def _gravar_etapa(request, ator, edital, etapa, digitados):
@@ -446,16 +490,21 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
             description=digitados["description"],
             correlation_id=request.correlation_id,
         )
-    if etapa == "perfis":
-        perfis, eventos = digitados, forms.eventos_persistidos(edital)
-    else:
-        perfis, eventos = forms.perfis_persistidos(edital), digitados
+    # `replace_draft` substitui o rascunho inteiro: o que não for reenviado é apagado. Por isso as
+    # três coleções viajam sempre, e só a da etapa atual vem do formulário.
+    conteudo = {
+        "profiles": forms.perfis_persistidos(edital),
+        "schedule": forms.eventos_persistidos(edital),
+        "stages": forms.etapas_persistidas(edital),
+    }
+    conteudo[COLECAO_DA_ETAPA[etapa]] = digitados
     return replace_draft(
         actor=ator,
         edital_id=edital.id,
         expected_revision=edital.revision,
-        profiles=perfis,
-        schedule=eventos,
+        profiles=conteudo["profiles"],
+        schedule=conteudo["schedule"],
+        stages=conteudo["stages"],
         correlation_id=request.correlation_id,
     )
 
@@ -482,6 +531,32 @@ def fragmento_perfil(request):
 def fragmento_evento(request):
     return render(request, "interface/_evento.html",
                   {"evento": {"id": str(uuid4())}, "indice": _indice_de_linha(request)})
+
+
+@require_http_methods(["GET"])
+def fragmento_etapa(request, edital_id):
+    """A linha nova nasce com identidade, como as de Perfil e Evento.
+
+    A gravação preserva o `id` recebido; sem gerá-lo aqui, a Etapa criada pela tela nasceria sem
+    identidade e não haveria o que preservar. A rota é escopada ao Edital porque o vínculo com
+    Evento precisa da lista de Eventos **daquele** Cronograma.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital = obter_edital(actor=ator, edital_id=edital_id)
+    if edital is None:
+        raise Http404
+    return render(
+        request,
+        "interface/_etapa.html",
+        {
+            "etapa_linha": {"id": str(uuid4())},
+            "indice": _indice_de_linha(request),
+            "eventos": forms.eventos_do_edital(edital),
+            "edital": edital,
+        },
+    )
 
 
 def _campos_de(definicoes):

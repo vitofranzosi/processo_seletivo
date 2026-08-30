@@ -11,6 +11,7 @@ import pytest
 import yaml
 
 from processo_seletivo.editais.domain import validation
+from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 
 CONTRATO = (
     Path(__file__).resolve().parents[3]
@@ -20,7 +21,13 @@ CONTRATO = (
     / "openapi.yaml"
 )
 
-TIPO_DO_CONTRATO = {"string": str, "integer": int, "array": list, "object": dict}
+TIPO_DO_CONTRATO = {
+    "string": str,
+    "integer": int,
+    "boolean": bool,
+    "array": list,
+    "object": dict,
+}
 
 
 @pytest.fixture(scope="module")
@@ -64,9 +71,18 @@ def transcrito(campo):
     }
 
 
-FORMAS = (
-    ("PerfilPublicado", validation.PERFIL_PUBLICADO),
-    ("EventoPublicado", validation.EVENTO_PUBLICADO),
+# O nome do esquema de cada coleção declarada. É esta tabela que o teste de cobertura confronta
+# com `COLECOES_PUBLICADAS`: uma coleção nova que nasça sem entrada aqui falha lá, em vez de
+# simplesmente não ser mencionada — que era o modo de falha desta lista antes da `006`.
+ESQUEMA_DA_COLECAO = {
+    "profiles": "PerfilPublicado",
+    "schedule": "EventoPublicado",
+    "stages": "EtapaPublicada",
+    "sections": "SecaoPublicada",
+}
+
+FORMAS = tuple(
+    (ESQUEMA_DA_COLECAO[colecao], forma) for colecao, forma in validation.COLECOES_PUBLICADAS
 )
 
 
@@ -161,3 +177,60 @@ def test_o_padrao_do_instante_e_o_do_contrato(esquemas):
     """
     for campo in ("startAt", "endAt"):
         assert esquemas["EventoPublicado"]["properties"][campo]["pattern"] == validation.INSTANTE
+
+
+@pytest.mark.contract
+def test_toda_colecao_declarada_tem_esquema_no_contrato(esquemas):
+    """A ponte entre a declaração do domínio e a do contrato, nomeada e não convencionada.
+
+    Derivar o nome do esquema da chave da coleção — `stages` → `EtapaPublicada` — exigiria uma
+    convenção que o repositório não tem e que a próxima coleção quebraria. A tabela é explícita, e
+    o que este teste garante é que ela cubra tudo o que o domínio declara e aponte para esquemas
+    que existem.
+    """
+    declaradas = {colecao for colecao, _ in validation.COLECOES_PUBLICADAS}
+
+    assert declaradas <= set(ESQUEMA_DA_COLECAO), (
+        "coleção declarada no domínio sem esquema nomeado: "
+        f"{sorted(declaradas - set(ESQUEMA_DA_COLECAO))}"
+    )
+    ausentes = [ESQUEMA_DA_COLECAO[colecao] for colecao in declaradas]
+    assert [nome for nome in ausentes if nome not in esquemas] == []
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+def test_toda_colecao_de_entidades_do_snapshot_esta_declarada(
+    esquemas, api_client, manager_headers, process_payload
+):
+    """A cobertura que não existia, e cuja ausência esta feature descobriu (FR-046).
+
+    Até aqui, a conferência da forma publicada era feita contra uma lista nomeada item a item:
+    acrescentar uma coleção ao snapshot e esquecer de declará-la em `COLECOES_PUBLICADAS` não
+    fazia falhar nada — a lista simplesmente não a mencionava. Isto liga as três declarações:
+    o que o snapshot produz, o que o domínio verifica, e o que o contrato descreve.
+
+    O snapshot vem de um Edital publicado de verdade, e não de uma fixture: uma coleção nova
+    nasce em `edital_snapshot`, e é lá que ela precisa ser encontrada.
+    """
+    from tests.fixtures.publicacao import publish_original
+    from tests.fixtures.snapshot import rascunho_com_etapas
+
+    edital = publish_original(
+        api_client, manager_headers, process_payload, draft=rascunho_com_etapas()
+    )
+    conteudo = VersaoConsolidada.objects.get(edital=edital).content
+
+    de_entidades = {
+        chave
+        for chave, valor in conteudo.items()
+        if isinstance(valor, list)
+        and valor
+        and all(isinstance(item, dict) and "id" in item for item in valor)
+    }
+    declaradas = {colecao for colecao, _ in validation.COLECOES_PUBLICADAS}
+
+    assert de_entidades == declaradas, (
+        "coleção-raiz de entidades no snapshot sem forma declarada, ou o contrário: "
+        f"{sorted(de_entidades ^ declaradas)}"
+    )

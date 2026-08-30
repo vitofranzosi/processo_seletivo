@@ -64,6 +64,28 @@ class EventSerializer(serializers.Serializer):
         return attrs
 
 
+class StageSerializer(serializers.Serializer):
+    """Etapa de Avaliação no rascunho.
+
+    A coerência — Evento existente no Cronograma da mesma gravação, faixa de peso e de nota
+    mínima — é verificada no domínio, e não aqui: a interface administrativa invoca o command
+    diretamente e não atravessa este serializer.
+    """
+
+    id = serializers.UUIDField()
+    name = serializers.CharField(min_length=1, max_length=200)
+    order = serializers.IntegerField(min_value=0, required=False, default=0)
+    weight = serializers.DecimalField(
+        max_digits=7, decimal_places=4, required=False, allow_null=True
+    )
+    eliminatory = serializers.BooleanField(required=False, default=False)
+    classificatory = serializers.BooleanField(required=False, default=False)
+    minimumScore = serializers.DecimalField(
+        max_digits=7, decimal_places=4, required=False, allow_null=True
+    )
+    scheduleEventId = serializers.UUIDField(required=False, allow_null=True)
+
+
 class EditalDraftSerializer(serializers.Serializer):
     """Rascunho normativo do Edital: Perfis e Cronograma.
 
@@ -80,6 +102,7 @@ class EditalDraftSerializer(serializers.Serializer):
 
     profiles = ProfileSerializer(many=True, allow_empty=False)
     schedule = EventSerializer(many=True)
+    stages = StageSerializer(many=True, required=False)
 
     def validate(self, attrs):
         desconhecidos = sorted(set(self.initial_data) - set(self.fields))

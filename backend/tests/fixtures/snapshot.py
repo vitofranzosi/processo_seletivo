@@ -22,6 +22,10 @@ MODALIDADE = {
     "A": "00000000-0000-0000-0000-000000000541",
     "B": "00000000-0000-0000-0000-000000000542",
 }
+ETAPA = {
+    "A": "00000000-0000-0000-0000-000000000561",
+    "B": "00000000-0000-0000-0000-000000000562",
+}
 
 
 def modalidade(identificador, sigla, percentual):
@@ -134,6 +138,36 @@ def rascunho_publicavel():
                 if chave != "id" and valor not in ({}, None)
             }
     return {"profiles": base["profiles"], "schedule": base["schedule"]}
+
+
+def rascunho_com_etapas():
+    """O mesmo rascunho, com duas Etapas — uma vinculada a Evento e outra não.
+
+    Fica separado de `rascunho_publicavel` de propósito: os testes que não falam de Etapas não
+    devem passar a publicá-las só porque a coleção passou a existir, e os que falam precisam de
+    um conteúdo em que o vínculo com Evento seja verificável.
+    """
+    base = rascunho_publicavel()
+    base["stages"] = [
+        {
+            "id": ETAPA["A"],
+            "name": "Prova didática",
+            "order": 1,
+            "weight": "2.0000",
+            "eliminatory": True,
+            "classificatory": True,
+            "minimumScore": "7.0000",
+            "scheduleEventId": EVENTO["B"],
+        },
+        {
+            "id": ETAPA["B"],
+            "name": "Análise de títulos",
+            "order": 2,
+            "eliminatory": False,
+            "classificatory": True,
+        },
+    ]
+    return base
 
 
 def colecoes_nao_declaradas(conteudo):

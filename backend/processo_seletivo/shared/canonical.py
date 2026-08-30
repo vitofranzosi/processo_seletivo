@@ -4,7 +4,11 @@ import unicodedata
 from decimal import Decimal
 from uuid import UUID
 
-SCHEMA_VERSION = 1
+# 1 → 2 na `006`, uma única vez, cobrindo as duas coleções novas do conteúdo publicado: `stages` e
+# `sections`. As duas entram juntas de propósito — subir a versão com uma e acrescentar a outra
+# depois produziria snapshots de versão 2 com e sem a propriedade, e a versão canônica deixaria de
+# identificar uma forma.
+SCHEMA_VERSION = 2
 
 
 def _default(value):

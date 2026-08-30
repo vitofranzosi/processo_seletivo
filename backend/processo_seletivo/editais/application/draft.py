@@ -2,8 +2,10 @@ from django.db import transaction
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.domain.cronograma import ScheduleValidationError, validate_schedule
+from processo_seletivo.editais.domain.etapas import StageValidationError, validate_stages
 from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_profiles
 from processo_seletivo.editais.models.cronograma import Cronograma, EventoCronograma
+from processo_seletivo.editais.models.etapas import EtapaAvaliacao
 from processo_seletivo.editais.models.perfis import (
     ModalidadeConcorrencia,
     PerfilVaga,
@@ -17,8 +19,13 @@ from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.concurrency import compare_and_swap
 
 
-def _reject_identifiers_of_other_editais(edital, profiles, schedule):
-    """FR-017: Perfil ou Evento já vinculado a outro Edital é inconsistência determinável."""
+def _reject_identifiers_of_other_editais(edital, profiles, schedule, stages):
+    """FR-017: Perfil, Evento ou Etapa já vinculado a outro Edital é inconsistência determinável.
+
+    `replace_draft` apaga e recria: sem esta recusa, uma entidade poderia ser reparentada de um
+    Edital para outro e a identidade estável passaria a designar outra coisa. Cada uma é verificada
+    contra o **seu** contêiner.
+    """
     alheios = sorted(
         str(identifier)
         for identifier in (
@@ -32,6 +39,11 @@ def _reject_identifiers_of_other_editais(edital, profiles, schedule):
                 .exclude(cronograma__edital=edital)
                 .values_list("id", flat=True)
             )
+            | set(
+                EtapaAvaliacao.objects.filter(id__in=[item["id"] for item in stages])
+                .exclude(edital=edital)
+                .values_list("id", flat=True)
+            )
         )
     )
     if alheios:
@@ -42,8 +54,11 @@ def _reject_identifiers_of_other_editais(edital, profiles, schedule):
         )
 
 
-def replace_draft(*, actor, edital_id, expected_revision, profiles, schedule, correlation_id):
+def replace_draft(
+    *, actor, edital_id, expected_revision, profiles, schedule, correlation_id, stages=None
+):
     require_permission(actor, "edital:elaborar")
+    stages = list(stages or [])
     try:
         validate_profiles(profiles)
     except ProfileValidationError as exc:
@@ -52,6 +67,12 @@ def replace_draft(*, actor, edital_id, expected_revision, profiles, schedule, co
         validate_schedule(schedule)
     except ScheduleValidationError as exc:
         raise DomainError("invalid_schedule", str(exc), 422) from exc
+    try:
+        # Contra o Cronograma **desta gravação**, e não contra o banco: `replace_draft` substitui o
+        # rascunho inteiro, então um Evento removido no mesmo POST já não existe.
+        validate_stages(stages, schedule=schedule)
+    except StageValidationError as exc:
+        raise DomainError("invalid_stages", str(exc), 422) from exc
     with command_context() as now:
         try:
             edital = (
@@ -68,7 +89,7 @@ def replace_draft(*, actor, edital_id, expected_revision, profiles, schedule, co
             )
         if edital.revision != expected_revision:
             raise DomainError("stale_revision", "A revisão informada está obsoleta.", 412)
-        _reject_identifiers_of_other_editais(edital, profiles, schedule)
+        _reject_identifiers_of_other_editais(edital, profiles, schedule, stages)
         PerfilVaga.objects.filter(edital=edital).delete()
         for payload in profiles:
             perfil = PerfilVaga.objects.create(
@@ -120,6 +141,24 @@ def replace_draft(*, actor, edital_id, expected_revision, profiles, schedule, co
                     status=event.get("status", EventoCronograma.Status.PLANEJADO),
                 )
                 for event in schedule
+            ]
+        )
+        # As Etapas são recriadas depois dos Eventos porque referenciam Evento desta gravação.
+        EtapaAvaliacao.objects.filter(edital=edital).delete()
+        EtapaAvaliacao.objects.bulk_create(
+            [
+                EtapaAvaliacao(
+                    id=stage["id"],
+                    edital=edital,
+                    name=stage["name"],
+                    order=stage.get("order", 0),
+                    weight=stage.get("weight"),
+                    eliminatory=stage.get("eliminatory", False),
+                    classificatory=stage.get("classificatory", False),
+                    minimum_score=stage.get("minimumScore"),
+                    evento_id=stage.get("scheduleEventId"),
+                )
+                for stage in stages
             ]
         )
         compare_and_swap(

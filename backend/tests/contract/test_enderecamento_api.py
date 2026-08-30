@@ -15,6 +15,7 @@ from processo_seletivo.publicacoes.models_retificacao import (
     AlteracaoNormativa,
     VersaoConsolidada,
 )
+from tests.fixtures.edital import actor_headers
 from tests.fixtures.publicacao import create_retification, publish_original, publish_retification
 from tests.fixtures.snapshot import PERFIL
 from tests.fixtures.snapshot import rascunho_publicavel as rascunho
@@ -162,3 +163,103 @@ def test_the_grammar_document_says_what_the_identity_rule_does_not_cover():
     # o `REMOVE`, que não tem valor nenhum.
     assert "validar o valor de cada alteração não fecharia a família" in gramatica
     assert "validar o **snapshot resultante**" in gramatica
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_stages_e_enderecavel_por_chave_sem_alterar_a_gramatica(
+    api_client, manager_headers, process_payload
+):
+    """FR-024: a coleção nova entra pelo registro declarativo, e nada na gramática muda.
+
+    É a prova de que `stages` não precisou de código de endereçamento próprio: declarada em
+    `COLECOES_COM_CHAVE`, ela ganhou seletor por `id=<uuid>`, token de acréscimo e recusa
+    posicional pelo mesmo mecanismo que já servia a Perfis e Eventos.
+    """
+    from processo_seletivo.publicacoes.domain.conflicts import previous_hash
+    from tests.fixtures.snapshot import ETAPA, rascunho_com_etapas
+
+    edital = publish_original(
+        api_client, manager_headers, process_payload, draft=rascunho_com_etapas()
+    )
+    base = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    caminho = f"/stages/id={ETAPA['A']}/name"
+
+    retificacao = create_retification(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": caminho,
+                "operation": "REPLACE",
+                "newValue": "Prova didática e arguição",
+                "expectedPreviousHash": previous_hash(base.content, caminho),
+            }
+        ],
+        suffix="e",
+    )
+    publish_retification(api_client, retificacao, suffix="e")
+
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    etapa = next(item for item in vigente.content["stages"] if item["id"] == ETAPA["A"])
+    assert etapa["name"] == "Prova didática e arguição"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_acrescentar_etapa_usa_o_token_de_fim_de_lista(
+    api_client, manager_headers, process_payload
+):
+    from tests.fixtures.snapshot import rascunho_com_etapas
+
+    edital = publish_original(
+        api_client, manager_headers, process_payload, draft=rascunho_com_etapas()
+    )
+    nova = {
+        "id": "00000000-0000-0000-0000-000000000563",
+        "name": "Entrevista",
+        "order": 3,
+        "weight": None,
+        "eliminatory": False,
+        "classificatory": True,
+        "minimumScore": None,
+        "scheduleEventId": None,
+    }
+    retificacao = create_retification(
+        api_client,
+        edital,
+        [{"targetPath": "/stages/-", "operation": "ADD", "newValue": nova}],
+        suffix="f",
+    )
+    publish_retification(api_client, retificacao, suffix="f")
+
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    assert [item["name"] for item in vigente.content["stages"]][-1] == "Entrevista"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_enderecar_etapa_por_posicao_e_recusado(api_client, manager_headers, process_payload):
+    """A coleção tem chave; a posição deixa de ser forma admitida no mesmo instante."""
+    from tests.fixtures.snapshot import rascunho_com_etapas
+
+    edital = publish_original(
+        api_client, manager_headers, process_payload, draft=rascunho_com_etapas()
+    )
+    base = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+
+    resposta = api_client.post(
+        f"/api/v1/admin/editais/{edital.id}/retificacoes",
+        {
+            "baseSnapshotId": str(base.id),
+            "justification": "Endereçamento posicional",
+            "changes": [
+                {"targetPath": "/stages/0/name", "operation": "REPLACE", "newValue": "X"}
+            ],
+        },
+        format="json",
+        **actor_headers("retificador", ["retificacao:elaborar"], key="posicional-000001"),
+    )
+
+    assert resposta.status_code == 422, resposta.content
+    assert resposta.json()["code"] == "positional_addressing_refused"

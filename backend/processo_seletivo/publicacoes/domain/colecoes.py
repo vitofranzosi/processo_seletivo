@@ -19,6 +19,8 @@ COLECOES_COM_CHAVE = frozenset(
     {
         "/profiles",
         "/schedule",
+        "/stages",
+        "/sections",
         "/profiles/*/competitionModalities",
     }
 )

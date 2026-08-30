@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "editalId": "11111111-1111-1111-1111-111111111111",
   "processoId": "22222222-2222-2222-2222-222222222222",
   "number": "07",
@@ -61,6 +61,86 @@
       "endAt": null,
       "order": 2,
       "status": "PLANEJADO"
+    }
+  ],
+  "stages": [
+    {
+      "id": "88888888-8888-8888-8888-888888888888",
+      "name": "Prova didática",
+      "order": 1,
+      "weight": "2.0000",
+      "eliminatory": true,
+      "classificatory": true,
+      "minimumScore": "7.0000",
+      "scheduleEventId": "77777777-7777-7777-7777-777777777777"
+    },
+    {
+      "id": "99999999-9999-9999-9999-999999999999",
+      "name": "Análise de títulos",
+      "order": 2,
+      "weight": null,
+      "eliminatory": false,
+      "classificatory": true,
+      "minimumScore": null,
+      "scheduleEventId": null
+    }
+  ],
+  "sections": [
+    {
+      "id": "309737d2-dbee-57ef-98e6-bb17b6c42162",
+      "key": "disposicoes-preliminares",
+      "title": "Disposições Preliminares",
+      "order": 1,
+      "type": "TEXT",
+      "content": "O presente Edital estabelece as normas do processo seletivo, cuja execução observará a legislação aplicável e os princípios que regem a Administração Pública."
+    },
+    {
+      "id": "9ee7f397-e5bf-552b-976b-968be61c4c23",
+      "key": "perfis",
+      "title": "Perfis de Vaga",
+      "order": 2,
+      "type": "GENERATED",
+      "source": "profiles"
+    },
+    {
+      "id": "5b9bf816-df06-50cd-9150-c9378c1160a3",
+      "key": "inscricao",
+      "title": "Da Inscrição",
+      "order": 3,
+      "type": "TEXT",
+      "content": "A inscrição será realizada exclusivamente pelos meios indicados neste Edital, nos prazos do Cronograma, e implica conhecimento e aceitação das condições aqui estabelecidas."
+    },
+    {
+      "id": "dc485b6c-0cd0-5b1c-b302-94552fd107bf",
+      "key": "etapas",
+      "title": "Etapas de Avaliação",
+      "order": 4,
+      "type": "GENERATED",
+      "source": "stages"
+    },
+    {
+      "id": "96de1f8b-6d8f-5508-9768-41df9b976d50",
+      "key": "cronograma",
+      "title": "Cronograma",
+      "order": 5,
+      "type": "GENERATED",
+      "source": "schedule"
+    },
+    {
+      "id": "758beb06-c278-520b-9d92-35d4d8473d4b",
+      "key": "recursos",
+      "title": "Dos Recursos",
+      "order": 6,
+      "type": "TEXT",
+      "content": "Caberá recurso contra os resultados divulgados, nos prazos do Cronograma, pelos meios indicados neste Edital."
+    },
+    {
+      "id": "add4303f-9e28-504b-a152-782961686189",
+      "key": "disposicoes-finais",
+      "title": "Disposições Finais",
+      "order": 7,
+      "type": "TEXT",
+      "content": "Os casos omissos serão resolvidos pela autoridade responsável pelo processo seletivo, observada a legislação aplicável."
     }
   ]
 }

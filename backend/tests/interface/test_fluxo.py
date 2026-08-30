@@ -430,3 +430,53 @@ def test_publicar_logo_apos_a_previa_produz_o_mesmo_conteudo_normativo(
     assert MARCA_DE_PREVIA in visualizado
     assert MARCA_DE_PREVIA not in publicado
     assert "INTEGRIDADE" in publicado and "INTEGRIDADE" not in visualizado
+
+
+ETAPAS = {
+    "etapa-0-id": "cccccccc-0000-4000-8000-00000000f011",
+    "etapa-0-name": "Análise de títulos",
+    "etapa-0-order": "2",
+    "etapa-0-classificatory": "on",
+    "etapa-1-id": "cccccccc-0000-4000-8000-00000000f012",
+    "etapa-1-name": "Prova didática",
+    "etapa-1-order": "1",
+    "etapa-1-weight": "2",
+    "etapa-1-minimumScore": "7",
+    "etapa-1-eliminatory": "on",
+    "etapa-1-scheduleEventId": EVENTOS["evento-0-id"],
+}
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_etapas_aparecem_na_previa_e_no_documento_publicado_na_ordem_definida(
+    client, seletor_ligado, edital
+):
+    """FR-025: o conceito novo aparece no documento no mesmo dia em que nasce.
+
+    A ordem verificada não é a de digitação: a segunda linha do formulário declara ordem 1, e é
+    ela que precisa vir primeiro no documento. Fosse a ordem de leitura, o teste passaria mesmo
+    com o campo `order` sendo ignorado.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    edital.refresh_from_db()
+    assert client.post(
+        reverse("interface:compor-etapa", args=[edital.id, "etapas"]), ETAPAS
+    ).status_code == 302
+
+    previa = texto_do_pdf(client.get(reverse("interface:previa", args=[edital.id])))
+    assert previa.index("Prova didática") < previa.index("Análise de títulos")
+    assert "peso: 2.0000" in previa
+    assert "nota mínima: 7.0000" in previa
+    assert "eliminatória" in previa
+
+    praticar(client, Edital.objects.get(), "submeter")
+    identificar(client, "bruno.homologador", ["homologador"])
+    praticar(client, Edital.objects.get(), "homologar", motivo="Conferido")
+    identificar(client, "carla.publicadora", ["publicador"])
+    praticar(client, Edital.objects.get(), "publicar", motivo="Publicação", **SIGNATARIO)
+
+    publicado = texto_de_pdf_bytes(bytes(DocumentoPublicado.objects.get().bytes))
+    assert publicado.index("Prova didática") < publicado.index("Análise de títulos")
+    assert "ETAPAS DE AVALIAÇÃO" in publicado

@@ -1,0 +1,64 @@
+<fieldset class="linha etapa">
+  <legend>Etapa de Avaliação</legend>
+  <input type="hidden" name="etapa-{{ indice }}-id" value="{{ etapa_linha.id }}">
+  {% comment %}
+  A ordem é dado enviado, e não a posição da linha: a leitura descarta a posição visual antes de
+  chegar ao command. Os botões de subir e descer atualizam este campo.
+  {% endcomment %}
+  <input type="hidden" name="etapa-{{ indice }}-order" value="{{ etapa_linha.order|default:'0' }}">
+  <div class="campos">
+    <p class="campo largo">
+      <label for="etapa-{{ indice }}-name">Nome da Etapa</label>
+      <input type="text" id="etapa-{{ indice }}-name" name="etapa-{{ indice }}-name"
+             value="{{ etapa_linha.name|default:'' }}" required placeholder="Prova didática">
+    </p>
+    <p class="campo">
+      <label for="etapa-{{ indice }}-scheduleEventId">Evento do Cronograma</label>
+      <select id="etapa-{{ indice }}-scheduleEventId" name="etapa-{{ indice }}-scheduleEventId"
+              aria-describedby="ajuda-evento-{{ indice }}">
+        <option value="">Sem vínculo</option>
+        {% for evento in eventos %}
+        <option value="{{ evento.id }}"
+                {% if evento.id == etapa_linha.scheduleEventId %}selected{% endif %}>{{ evento.type }} — {{ evento.description }}</option>
+        {% endfor %}
+      </select>
+      <span class="ajuda" id="ajuda-evento-{{ indice }}">As datas vêm do Evento; não se digitam
+        aqui.</span>
+    </p>
+  </div>
+  <div class="campos">
+    <p class="campo curto">
+      <label for="etapa-{{ indice }}-weight">Peso</label>
+      <input type="number" step="0.0001" min="0.0001" id="etapa-{{ indice }}-weight"
+             name="etapa-{{ indice }}-weight" value="{{ etapa_linha.weight|default:'' }}"
+             aria-describedby="ajuda-peso-{{ indice }}">
+      <span class="ajuda" id="ajuda-peso-{{ indice }}">Vazio: a Etapa não pondera.</span>
+    </p>
+    <p class="campo curto">
+      <label for="etapa-{{ indice }}-minimumScore">Nota mínima</label>
+      <input type="number" step="0.0001" min="0" id="etapa-{{ indice }}-minimumScore"
+             name="etapa-{{ indice }}-minimumScore" value="{{ etapa_linha.minimumScore|default:'' }}"
+             aria-describedby="ajuda-nota-{{ indice }}">
+      <span class="ajuda" id="ajuda-nota-{{ indice }}">Vazio: não há nota mínima.</span>
+    </p>
+    <p class="campo caracter">
+      <label for="etapa-{{ indice }}-eliminatory">
+        <input type="checkbox" id="etapa-{{ indice }}-eliminatory"
+               name="etapa-{{ indice }}-eliminatory"
+               {% if etapa_linha.eliminatory %}checked{% endif %}> Eliminatória
+      </label>
+      <label for="etapa-{{ indice }}-classificatory">
+        <input type="checkbox" id="etapa-{{ indice }}-classificatory"
+               name="etapa-{{ indice }}-classificatory"
+               {% if etapa_linha.classificatory %}checked{% endif %}> Classificatória
+      </label>
+    </p>
+  </div>
+  <p class="remover">
+    <button type="button" class="acao" data-mover="cima">↑ Subir</button>
+    <button type="button" class="acao" data-mover="baixo">↓ Descer</button>
+    <button type="button" class="acao perigo"
+            hx-get="{% url 'interface:fragmento-remover' %}"
+            hx-target="closest fieldset" hx-swap="outerHTML">Remover esta Etapa</button>
+  </p>
+</fieldset>

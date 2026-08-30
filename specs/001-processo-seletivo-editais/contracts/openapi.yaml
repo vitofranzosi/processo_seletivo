@@ -340,6 +340,12 @@ paths:
         por fronteira de vigência, e não apenas a que passa a vigorar de imediato. Uma só fronteira
         malformada responde 422 blocking_findings e recusa o ato inteiro, sem deixar Publicação,
         documento ou versão materializados.
+        A versão canônica do conteúdo-base é comparada com a vigente antes de qualquer aplicação:
+        a Publicação carimba a constante global sobre conteúdo derivado de uma Publicação-base que
+        carrega a própria schemaVersion, e divergência faria o registro afirmar uma versão que o
+        conteúdo não tem. Divergência responde 409 canonical_schema_version_mismatch. É uma
+        comparação e uma recusa, não conversão: não há mecanismo de compatibilidade entre versões
+        de esquema.
       operationId: publicarRetificacao
       security: [{ bearerAuth: [] }]
       parameters: [{ $ref: '#/components/parameters/RetificacaoId' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }]
@@ -536,6 +542,7 @@ components:
       properties:
         profiles: { type: array, minItems: 1, items: { $ref: '#/components/schemas/PerfilInput' } }
         schedule: { type: array, items: { $ref: '#/components/schemas/EventoInput' } }
+        stages: { type: array, items: { $ref: '#/components/schemas/EtapaInput' } }
       additionalProperties: false
     PerfilInput:
       type: object
@@ -558,6 +565,22 @@ components:
         startAt: { type: string, format: date-time }
         endAt: { type: [string, 'null'], format: date-time }
         order: { type: integer, minimum: 0 }
+    EtapaInput:
+      type: object
+      description: >-
+        Etapa de Avaliação no rascunho. Pertence ao Edital e vale para todos os seus Perfis.
+        scheduleEventId referencia um Evento do Cronograma do mesmo Edital; quando informado, as
+        datas da Etapa são as do Evento e não são digitadas de novo.
+      required: [id, name]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        name: { type: string }
+        order: { type: integer, minimum: 0 }
+        weight: { type: [number, 'null'], exclusiveMinimum: 0 }
+        eliminatory: { type: boolean }
+        classificatory: { type: boolean }
+        minimumScore: { type: [number, 'null'], minimum: 0 }
+        scheduleEventId: { type: [string, 'null'], format: uuid }
     PerfilPublicado:
       type: object
       description: >-
@@ -613,6 +636,49 @@ components:
           pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?[+-]\d{2}:\d{2}$'
         order: { type: integer, minimum: 0 }
         status: { type: string }
+    EtapaPublicada:
+      type: object
+      description: >-
+        Forma da Etapa de Avaliação no conteúdo normativo **publicado**, na versão canônica 2.
+        Distinta de EtapaInput pela mesma razão que PerfilPublicado o é de PerfilInput.
+      required: [id, name, order, weight, eliminatory, classificatory, minimumScore, scheduleEventId]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        name: { type: string }
+        order: { type: integer, minimum: 0 }
+        # `pattern` declara a forma **canônica** de um decimal(7,4) materializado: no máximo três
+        # dígitos inteiros, sempre quatro casas, sem zeros à esquerda. Ele descreve forma, não
+        # permissão — a faixa (peso maior que zero, nota mínima não negativa) é regra de domínio,
+        # verificada na publicação. Declará-la aqui pelo sinal misturaria as duas coisas.
+        weight:
+          type: [string, 'null']
+          format: decimal
+          pattern: '^-?(0|[1-9]\d{0,2})\.\d{4}$'
+        eliminatory: { type: boolean }
+        classificatory: { type: boolean }
+        minimumScore:
+          type: [string, 'null']
+          format: decimal
+          pattern: '^-?(0|[1-9]\d{0,2})\.\d{4}$'
+        scheduleEventId: { type: [string, 'null'], format: uuid }
+    SecaoPublicada:
+      type: object
+      description: >-
+        Forma da Seção do Edital no conteúdo normativo **publicado**, na versão canônica 2. O
+        conjunto de seções e a ordem entre elas são do sistema; quem elabora edita o texto das
+        textuais. `content` e `source` NÃO são declarados aqui porque dependem do tipo — seção
+        gerada declara `source` e não carrega conteúdo próprio, seção textual carrega `content` —
+        e a verificação por campo não expressa coerência entre campos. A topologia inteira é
+        conferida contra o catálogo na validação de publicação. `id` é UUID determinístico sobre
+        (editalId, key), porque o seletor da gramática de Retificação só aceita UUID; `key` é o
+        identificador textual legível, e não endereça.
+      required: [id, key, title, order, type]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        key: { type: string }
+        title: { type: string }
+        order: { type: integer, minimum: 0 }
+        type: { type: string, enum: [GENERATED, TEXT] }
     AtoAdministrativoRequest:
       type: object
       additionalProperties: false

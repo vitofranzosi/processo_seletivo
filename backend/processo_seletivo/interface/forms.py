@@ -6,6 +6,7 @@ mensagens que tornam um erro de conversão compreensível antes de chegar ao dom
 """
 
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from zoneinfo import ZoneInfo
 
 ZONA = ZoneInfo("America/Sao_Paulo")
@@ -38,6 +39,21 @@ def _inteiro(dados, chave, padrao=0):
         return int(bruto)
     except ValueError as exc:
         raise ValueError(f"'{bruto}' não é um número inteiro.") from exc
+
+
+def _decimal(dados, chave):
+    """Vazio é ausência, e ausência tem significado: 'esta Etapa não pondera'."""
+    bruto = _texto(dados, chave)
+    if not bruto:
+        return None
+    try:
+        return Decimal(bruto.replace(",", "."))
+    except InvalidOperation as exc:
+        raise ValueError(f"'{bruto}' não é um número válido.") from exc
+
+
+def _marcado(dados, chave):
+    return bool(_texto(dados, chave))
 
 
 def _instante(dados, chave):
@@ -121,10 +137,41 @@ def ler_eventos(dados):
                 "order": _inteiro(dados, f"{base}-order", 0),
             }
         )
-    eventos.sort(key=lambda evento: evento["order"])
-    for ordem, evento in enumerate(eventos, 1):
-        evento["order"] = ordem
-    return eventos
+    return _renumerar(eventos)
+
+
+def _renumerar(itens):
+    """A sequência vem do formulário; os números, do servidor.
+
+    A unicidade de `(edital, order)` não admite buraco nem repetição, e o formulário pode chegar
+    com as duas coisas — uma remoção deixa buraco, e um navegador sem JavaScript manda tudo igual.
+    A ordenação é estável, então nesse último caso a ordem de leitura prevalece, que é o
+    comportamento anterior.
+    """
+    itens.sort(key=lambda item: item["order"])
+    for ordem, item in enumerate(itens, 1):
+        item["order"] = ordem
+    return itens
+
+
+def ler_etapas(dados):
+    etapas = []
+    for indice in _indices(dados, "etapa"):
+        base = f"etapa-{indice}"
+        etapas.append(
+            {
+                "id": _texto(dados, f"{base}-id"),
+                "name": _texto(dados, f"{base}-name"),
+                "order": _inteiro(dados, f"{base}-order", 0),
+                "weight": _decimal(dados, f"{base}-weight"),
+                "eliminatory": _marcado(dados, f"{base}-eliminatory"),
+                "classificatory": _marcado(dados, f"{base}-classificatory"),
+                "minimumScore": _decimal(dados, f"{base}-minimumScore"),
+                # Vazio é "não vinculada a Evento", e não Evento inexistente.
+                "scheduleEventId": _texto(dados, f"{base}-scheduleEventId") or None,
+            }
+        )
+    return _renumerar(etapas)
 
 
 def perfis_do_edital(edital):
@@ -188,6 +235,40 @@ def perfis_persistidos(edital):
             ],
         }
         for perfil in edital.perfis.prefetch_related("modalidades").order_by("code")
+    ]
+
+
+def etapas_do_edital(edital):
+    """Etapas persistidas, no formato que o formulário renderiza."""
+    return [
+        {
+            "id": str(etapa.id),
+            "name": etapa.name,
+            "order": etapa.order,
+            "weight": "" if etapa.weight is None else f"{etapa.weight:f}",
+            "eliminatory": etapa.eliminatory,
+            "classificatory": etapa.classificatory,
+            "minimumScore": "" if etapa.minimum_score is None else f"{etapa.minimum_score:f}",
+            "scheduleEventId": "" if etapa.evento_id is None else str(etapa.evento_id),
+        }
+        for etapa in edital.etapas.order_by("order")
+    ]
+
+
+def etapas_persistidas(edital):
+    """Etapas já salvas, no formato do command — para preservá-las ao salvar outra etapa."""
+    return [
+        {
+            "id": str(etapa.id),
+            "name": etapa.name,
+            "order": etapa.order,
+            "weight": etapa.weight,
+            "eliminatory": etapa.eliminatory,
+            "classificatory": etapa.classificatory,
+            "minimumScore": etapa.minimum_score,
+            "scheduleEventId": None if etapa.evento_id is None else str(etapa.evento_id),
+        }
+        for etapa in edital.etapas.order_by("order")
     ]
 
 

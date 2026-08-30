@@ -32,6 +32,13 @@ urlpatterns = [
         views.praticar_ato_retificacao,
         name="retificacao-ato",
     ),
+    # Escopado ao Edital: a linha de Etapa precisa dos Eventos daquele Cronograma para oferecer
+    # o vínculo. Os demais fragmentos não dependem de conteúdo e continuam sem escopo.
+    path(
+        "editais/<uuid:edital_id>/fragmentos/etapa",
+        views.fragmento_etapa,
+        name="fragmento-etapa",
+    ),
     path("fragmentos/perfil", views.fragmento_perfil, name="fragmento-perfil"),
     path("fragmentos/evento", views.fragmento_evento, name="fragmento-evento"),
     path(

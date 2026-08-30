@@ -129,42 +129,42 @@ declarando a mesma versão canônica.
 
 ### Domínio e persistência
 
-- [ ] T026 [P] [US2] Criar o modelo `EtapaAvaliacao` com unicidade de `order` por Edital e restrições de nota mínima não negativa e peso maior que zero, em `backend/processo_seletivo/editais/models/etapas.py`, exportando-o em `backend/processo_seletivo/editais/models/__init__.py`
-- [ ] T027 [P] [US2] Declarar o catálogo fixo de Seções — identidade determinística, chave, título, ordem, tipo, origem e texto institucional inicial — em `backend/processo_seletivo/editais/domain/secoes.py`
-- [ ] T028 [P] [US2] Escrever as invariantes da Etapa — nome obrigatório, ordem sem ambiguidade, peso maior que zero quando informado, nota mínima não negativa, Evento referenciado do mesmo Edital — em `backend/processo_seletivo/editais/domain/etapas.py`
-- [ ] T029 [US2] Gerar a migration de `EtapaAvaliacao` em `backend/processo_seletivo/editais/migrations/`
+- [X] T026 [P] [US2] Criar o modelo `EtapaAvaliacao` com unicidade de `order` por Edital e restrições de nota mínima não negativa e peso maior que zero, em `backend/processo_seletivo/editais/models/etapas.py`, exportando-o em `backend/processo_seletivo/editais/models/__init__.py`
+- [X] T027 [P] [US2] Declarar o catálogo fixo de Seções — identidade determinística, chave, título, ordem, tipo, origem e texto institucional inicial — em `backend/processo_seletivo/editais/domain/secoes.py`
+- [X] T028 [P] [US2] Escrever as invariantes da Etapa — nome obrigatório, ordem sem ambiguidade, peso maior que zero quando informado, nota mínima não negativa, Evento referenciado do mesmo Edital — em `backend/processo_seletivo/editais/domain/etapas.py`
+- [X] T029 [US2] Gerar a migration de `EtapaAvaliacao` em `backend/processo_seletivo/editais/migrations/`
 
 ### Forma canônica da versão 2
 
-- [ ] T030 [US2] Acrescentar `stages` e `sections` a `edital_snapshot`, materializando `weight` e `minimumScore` com quatro casas explícitas e montando as seções a partir do catálogo com identidade `uuid5` sobre `(edital.id, key)`, em `backend/processo_seletivo/publicacoes/application/publish_edital.py`
-- [ ] T031 [US2] Elevar `SCHEMA_VERSION` de 1 para 2 em `backend/processo_seletivo/shared/canonical.py`
-- [ ] T032 [P] [US2] Declarar `/stages` e `/sections` em `COLECOES_COM_CHAVE`, em `backend/processo_seletivo/publicacoes/domain/colecoes.py`
-- [ ] T033 [US2] Declarar `ETAPA_PUBLICADA` e `SECAO_PUBLICADA` em `COLECOES_PUBLICADAS` e registrar o formato `decimal` com leitor `Decimal` em `_LEITOR_DE_FORMATO`, aplicando a `weight` e `minimumScore` `formato="decimal"` e padrão `^-?(0|[1-9]\d{0,2})\.\d{4}$` — quatro casas, três dígitos inteiros e **sem zeros à esquerda**, que é a forma canônica de `decimal(7,4)`. O padrão descreve forma, não permissão: a faixa fica em T034 — em `backend/processo_seletivo/editais/domain/validation.py`
-- [ ] T034 [US2] Acrescentar as duas verificações que a forma declarada não alcança — topologia de `sections` contra o catálogo, e coerência de cada Etapa: `scheduleEventId` existente em `schedule`, peso maior que zero e nota mínima não negativa — em `backend/processo_seletivo/editais/domain/validation.py`. *É aqui que a faixa vive; o padrão de T033 só descreve a forma.*
-- [ ] T035 [US2] Recusar consolidação sobre conteúdo-base cuja `schemaVersion` difira da vigente, com código próprio, em `backend/processo_seletivo/publicacoes/application/retificacoes.py`
-- [ ] T036 [US2] Aplicar o delta de **saída** do contrato — `EtapaPublicada`, `SecaoPublicada`, `schemaVersion` 2, código de versão divergente — e, na entrada, apenas `stages` em `RascunhoInput`, em `specs/001-processo-seletivo-editais/contracts/openapi.yaml`. *`sections` na entrada fica para T067 e os identificadores de modalidade e regra para T058: declarar entrada que a API ainda recusa publicaria contrato falso.*
+- [X] T030 [US2] Acrescentar `stages` e `sections` a `edital_snapshot`, materializando `weight` e `minimumScore` com quatro casas explícitas e montando as seções a partir do catálogo com identidade `uuid5` sobre `(edital.id, key)`, em `backend/processo_seletivo/publicacoes/application/publish_edital.py`
+- [X] T031 [US2] Elevar `SCHEMA_VERSION` de 1 para 2 em `backend/processo_seletivo/shared/canonical.py`
+- [X] T032 [P] [US2] Declarar `/stages` e `/sections` em `COLECOES_COM_CHAVE`, em `backend/processo_seletivo/publicacoes/domain/colecoes.py`
+- [X] T033 [US2] Declarar `ETAPA_PUBLICADA` e `SECAO_PUBLICADA` em `COLECOES_PUBLICADAS` e registrar o formato `decimal` com leitor `Decimal` em `_LEITOR_DE_FORMATO`, aplicando a `weight` e `minimumScore` `formato="decimal"` e padrão `^-?(0|[1-9]\d{0,2})\.\d{4}$` — quatro casas, três dígitos inteiros e **sem zeros à esquerda**, que é a forma canônica de `decimal(7,4)`. O padrão descreve forma, não permissão: a faixa fica em T034 — em `backend/processo_seletivo/editais/domain/validation.py`
+- [X] T034 [US2] Acrescentar as duas verificações que a forma declarada não alcança — topologia de `sections` contra o catálogo, e coerência de cada Etapa: `scheduleEventId` existente em `schedule`, peso maior que zero e nota mínima não negativa — em `backend/processo_seletivo/editais/domain/validation.py`. *É aqui que a faixa vive; o padrão de T033 só descreve a forma.*
+- [X] T035 [US2] Recusar consolidação sobre conteúdo-base cuja `schemaVersion` difira da vigente, com código próprio, em `backend/processo_seletivo/publicacoes/application/retificacoes.py`
+- [X] T036 [US2] Aplicar o delta de **saída** do contrato — `EtapaPublicada`, `SecaoPublicada`, `schemaVersion` 2, código de versão divergente — e, na entrada, apenas `stages` em `RascunhoInput`, em `specs/001-processo-seletivo-editais/contracts/openapi.yaml`. *`sections` na entrada fica para T067 e os identificadores de modalidade e regra para T058: declarar entrada que a API ainda recusa publicaria contrato falso.*
 
 ### Gravação e interface
 
-- [ ] T037 [US2] Gravar `stages` preservando o `id` recebido e **recusando identificador de Etapa que já pertença a outro Edital**, estendendo `_reject_identifiers_of_other_editais` — no molde dos Eventos, e com a mesma resposta `409` — em `backend/processo_seletivo/editais/application/draft.py`
-- [ ] T038 [US2] Aceitar `stages` no payload do rascunho em `backend/processo_seletivo/editais/api/serializers.py`
-- [ ] T039 [US2] Acrescentar a etapa `Etapas de Avaliação` a `ETAPAS_COMPOSICAO`, com progresso e roteamento de pendências, e a view do fragmento de linha que **gera o UUID da Etapa nova**, como `fragmento_perfil` e `fragmento_evento` já fazem, em `backend/processo_seletivo/interface/views.py`, com a rota em `backend/processo_seletivo/interface/urls.py`
-- [ ] T040 [P] [US2] Criar `compor_etapas.html` e `_etapa.html` em `backend/processo_seletivo/interface/templates/interface/`, com campos ocultos `id` e `order`, botões de ordem e seleção de Evento do Cronograma
-- [ ] T041 [US2] Ler e preservar Etapas em `ler_etapas` e `etapas_persistidas`, em `backend/processo_seletivo/interface/forms.py`
-- [ ] T042 [US2] Compor o documento a partir das seções do catálogo, com as Etapas na seção que as origina, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, e **regenerar a fixture de T002 no mesmo commit**, com o diff revisado — é aqui que a composição muda de propósito, e é o único lugar onde regenerá-la é legítimo
-- [ ] T043 [P] [US2] Criar Etapas na demonstração navegável, em `backend/processo_seletivo/processos/management/commands/seed_demo.py`
+- [X] T037 [US2] Gravar `stages` preservando o `id` recebido e **recusando identificador de Etapa que já pertença a outro Edital**, estendendo `_reject_identifiers_of_other_editais` — no molde dos Eventos, e com a mesma resposta `409` — em `backend/processo_seletivo/editais/application/draft.py`
+- [X] T038 [US2] Aceitar `stages` no payload do rascunho em `backend/processo_seletivo/editais/api/serializers.py`
+- [X] T039 [US2] Acrescentar a etapa `Etapas de Avaliação` a `ETAPAS_COMPOSICAO`, com progresso e roteamento de pendências, e a view do fragmento de linha que **gera o UUID da Etapa nova**, como `fragmento_perfil` e `fragmento_evento` já fazem, em `backend/processo_seletivo/interface/views.py`, com a rota em `backend/processo_seletivo/interface/urls.py`
+- [X] T040 [P] [US2] Criar `compor_etapas.html` e `_etapa.html` em `backend/processo_seletivo/interface/templates/interface/`, com campos ocultos `id` e `order`, botões de ordem e seleção de Evento do Cronograma
+- [X] T041 [US2] Ler e preservar Etapas em `ler_etapas` e `etapas_persistidas`, em `backend/processo_seletivo/interface/forms.py`
+- [X] T042 [US2] Compor o documento a partir das seções do catálogo, com as Etapas na seção que as origina, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, e **regenerar a fixture de T002 no mesmo commit**, com o diff revisado — é aqui que a composição muda de propósito, e é o único lugar onde regenerá-la é legítimo
+- [X] T043 [P] [US2] Criar Etapas na demonstração navegável, em `backend/processo_seletivo/processos/management/commands/seed_demo.py`
 
 ### Testes
 
-- [ ] T044 [P] [US2] Invariantes da Etapa, incluindo referência a Evento de outro Edital, em `backend/tests/unit/editais/test_etapas.py`, e recusa com `409` de identificador de Etapa pertencente a outro Edital, em `backend/tests/contract/test_edital_draft_api.py`
-- [ ] T045 [P] [US2] Forma publicada de `stages` e `sections` conferida contra o contrato, em `backend/tests/contract/test_forma_publicada.py`
-- [ ] T046 [US2] Teste de cobertura das declarações: toda **coleção-raiz de entidades** do snapshot tem forma em `COLECOES_PUBLICADAS` e esquema correspondente no `openapi.yaml`, com a correspondência derivada do nome declarado em `COLECOES_PUBLICADAS` e não de convenção de nomes — a cobertura que hoje não existe, em `backend/tests/contract/test_forma_publicada.py`
-- [ ] T047 [P] [US2] Retificação aceita `/stages/id=<uuid>/name` e `ADD /stages/-`, e recusa `/stages/0/name`, em `backend/tests/contract/test_enderecamento_api.py`
-- [ ] T048 [P] [US2] Retificação recusa topologia divergente de `sections` — acréscimo, remoção, troca de tipo, ordem, título, origem, textual sem conteúdo, gerada com conteúdo — em `backend/tests/contract/test_limites_de_borda.py`
-- [ ] T049 [US2] Retificação recusa `scheduleEventId` inexistente; `weight` e `minimumScore` fora da forma canônica — casas a mais ou a menos, inteiro longo demais, zero à esquerda como `001.0000`; e, pela verificação de coerência, peso zero ou negativo e nota mínima negativa, em `backend/tests/contract/test_limites_de_borda.py`
-- [ ] T050 [P] [US2] Consolidação sobre conteúdo-base de outra versão canônica é recusada, e não gravada com a versão errada, em `backend/tests/contract/test_retificacoes_api.py`
-- [ ] T051 [P] [US2] Assistente: acrescentar, editar, remover e reordenar Etapas preservando identidade, e datas vindas do Evento vinculado, em `backend/tests/interface/test_compor.py`
-- [ ] T052 [P] [US2] Etapas aparecem na prévia e no documento publicado, na ordem definida, em `backend/tests/interface/test_fluxo.py`
+- [X] T044 [P] [US2] Invariantes da Etapa, incluindo referência a Evento de outro Edital, em `backend/tests/unit/editais/test_etapas.py`, e recusa com `409` de identificador de Etapa pertencente a outro Edital, em `backend/tests/contract/test_edital_draft_api.py`
+- [X] T045 [P] [US2] Forma publicada de `stages` e `sections` conferida contra o contrato, em `backend/tests/contract/test_forma_publicada.py`
+- [X] T046 [US2] Teste de cobertura das declarações: toda **coleção-raiz de entidades** do snapshot tem forma em `COLECOES_PUBLICADAS` e esquema correspondente no `openapi.yaml`, com a correspondência derivada do nome declarado em `COLECOES_PUBLICADAS` e não de convenção de nomes — a cobertura que hoje não existe, em `backend/tests/contract/test_forma_publicada.py`
+- [X] T047 [P] [US2] Retificação aceita `/stages/id=<uuid>/name` e `ADD /stages/-`, e recusa `/stages/0/name`, em `backend/tests/contract/test_enderecamento_api.py`
+- [X] T048 [P] [US2] Retificação recusa topologia divergente de `sections` — acréscimo, remoção, troca de tipo, ordem, título, origem, textual sem conteúdo, gerada com conteúdo — em `backend/tests/contract/test_limites_de_borda.py`
+- [X] T049 [US2] Retificação recusa `scheduleEventId` inexistente; `weight` e `minimumScore` fora da forma canônica — casas a mais ou a menos, inteiro longo demais, zero à esquerda como `001.0000`; e, pela verificação de coerência, peso zero ou negativo e nota mínima negativa, em `backend/tests/contract/test_limites_de_borda.py`
+- [X] T050 [P] [US2] Consolidação sobre conteúdo-base de outra versão canônica é recusada, e não gravada com a versão errada, em `backend/tests/contract/test_retificacoes_api.py`
+- [X] T051 [P] [US2] Assistente: acrescentar, editar, remover e reordenar Etapas preservando identidade, e datas vindas do Evento vinculado, em `backend/tests/interface/test_compor.py`
+- [X] T052 [P] [US2] Etapas aparecem na prévia e no documento publicado, na ordem definida, em `backend/tests/interface/test_fluxo.py`
 
 **Checkpoint**: demonstrável — duas Etapas, reordenadas, visíveis no documento.
 

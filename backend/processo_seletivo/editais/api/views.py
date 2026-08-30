@@ -17,6 +17,7 @@ class EditalDraftView(APIView):
             expected_revision=parse_if_match(request.headers.get("If-Match")),
             profiles=serializer.validated_data["profiles"],
             schedule=serializer.validated_data["schedule"],
+            stages=serializer.validated_data.get("stages", []),
             correlation_id=request.correlation_id,
         )
         response = Response(EditalResponseSerializer(edital).data)

@@ -149,3 +149,86 @@ def test_o_contrato_nao_anuncia_mais_o_campo_descartado():
     rascunho = contrato["components"]["schemas"]["EditalDraftRequest"]
     assert "editorialContent" not in rascunho["properties"]
     assert rascunho["additionalProperties"] is False
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+def test_etapa_de_outro_edital_e_recusada_com_conflito(
+    api_client, manager_headers, process_payload
+):
+    """FR-018: `replace_draft` apaga e recria, então sem esta recusa a Etapa seria reparentada.
+
+    A identidade estável passaria a designar outra coisa, em silêncio. A verificação é a mesma que
+    já protege Perfis e Eventos, e a resposta é a mesma — 409, e não 422.
+    """
+    from processo_seletivo.editais.models.etapas import EtapaAvaliacao
+
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+    )
+    api_client.post(
+        f"/api/v1/admin/processos/{criado.json()['id']}/editais",
+        {"number": "02", "year": 2026, "title": "Segundo"},
+        format="json",
+        **{**manager_headers, "HTTP_IDEMPOTENCY_KEY": "etapa-alheia-000001"},
+    )
+    primeiro, segundo = Edital.objects.order_by("number")
+    preparador = actor_headers("preparador", ["edital:elaborar"], key="etapa-alheia-000002")
+    etapa = {
+        "id": "00000000-0000-0000-0000-0000000009e1",
+        "name": "Prova didática",
+        "order": 1,
+    }
+
+    primeira = api_client.put(
+        f"/api/v1/admin/editais/{primeiro.id}/rascunho",
+        {**complete_draft(), "stages": [etapa]},
+        format="json",
+        **{**preparador, "HTTP_IF_MATCH": '"1"'},
+    )
+    assert primeira.status_code == 200, primeira.content
+
+    # O segundo Edital tem Perfil e Evento próprios, e reusa só o identificador da Etapa.
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{segundo.id}/rascunho",
+        {**complete_draft(seed=1), "stages": [etapa]},
+        format="json",
+        **{**preparador, "HTTP_IF_MATCH": '"1"'},
+    )
+
+    assert resposta.status_code == 409, resposta.content
+    assert resposta.json()["code"] == "identifier_belongs_to_another_edital"
+    assert not EtapaAvaliacao.objects.filter(edital=segundo).exists()
+    assert EtapaAvaliacao.objects.filter(edital=primeiro).count() == 1
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+def test_etapa_que_referencia_evento_inexistente_e_recusada(
+    api_client, manager_headers, process_payload
+):
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+    )
+    edital = Edital.objects.get(processo_id=criado.json()["id"])
+    preparador = actor_headers("preparador", ["edital:elaborar"], key="etapa-evento-00001")
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{edital.id}/rascunho",
+        {
+            **complete_draft(),
+            "stages": [
+                {
+                    "id": "00000000-0000-0000-0000-0000000009e2",
+                    "name": "Prova",
+                    "order": 1,
+                    "scheduleEventId": "00000000-0000-0000-0000-0000000009ff",
+                }
+            ],
+        },
+        format="json",
+        **{**preparador, "HTTP_IF_MATCH": '"1"'},
+    )
+
+    assert resposta.status_code == 422, resposta.content
+    assert resposta.json()["code"] == "invalid_stages"

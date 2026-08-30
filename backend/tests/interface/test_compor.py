@@ -4,11 +4,15 @@ O que a tela promete: compor Perfis e Cronograma, mostrar o que falta para subme
 com explicação sem perder o que a pessoa digitou. A validação real continua sendo do domínio.
 """
 
+from decimal import Decimal
+from uuid import UUID
+
 import pytest
 from django.urls import reverse
 
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.editais.models.cronograma import EventoCronograma
+from processo_seletivo.editais.models.etapas import EtapaAvaliacao
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import compor_rascunho, identificar
@@ -487,3 +491,131 @@ def test_reordenar_muda_a_ordem_persistida_e_preserva_a_identidade(
     assert {identificador for identificador, _, _ in depois} == {
         identificador for identificador, _ in antes
     }, "reordenar não pode trocar a identidade de nenhum Evento"
+
+
+def etapas_form(**alteracoes):
+    base = {
+        "etapa-0-id": "aaaaaaaa-0000-4000-8000-00000000e021",
+        "etapa-0-name": "Prova didática",
+        "etapa-0-order": "1",
+        "etapa-0-weight": "2",
+        "etapa-0-minimumScore": "7",
+        "etapa-0-eliminatory": "on",
+        "etapa-0-classificatory": "on",
+        "etapa-0-scheduleEventId": EVENTO,
+        "etapa-1-id": "aaaaaaaa-0000-4000-8000-00000000e022",
+        "etapa-1-name": "Análise de títulos",
+        "etapa-1-order": "2",
+        "etapa-1-weight": "",
+        "etapa-1-minimumScore": "",
+        "etapa-1-scheduleEventId": "",
+    }
+    return {**base, **alteracoes}
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_etapas_sao_acrescentadas_editadas_e_preservam_identidade(
+    client, seletor_ligado, edital
+):
+    """US2: o ciclo inteiro do assistente, incluindo a ida e volta por outra etapa."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, perfis(), eventos())
+    edital.refresh_from_db()
+
+    resposta = client.post(etapa(edital, "etapas"), etapas_form())
+    assert resposta.status_code == 302, resposta.content
+
+    gravadas = list(EtapaAvaliacao.objects.order_by("order"))
+    assert [item.name for item in gravadas] == ["Prova didática", "Análise de títulos"]
+    assert gravadas[0].weight == Decimal("2.0000")
+    assert gravadas[0].minimum_score == Decimal("7.0000")
+    assert gravadas[0].eliminatory and gravadas[0].classificatory
+    assert str(gravadas[0].evento_id) == EVENTO
+    # A segunda não pondera e não tem nota mínima — a ausência é que diz isso.
+    assert gravadas[1].weight is None and gravadas[1].minimum_score is None
+    assert gravadas[1].evento_id is None
+    identidades = {item.id for item in gravadas}
+
+    # Salvar outra etapa do assistente não pode apagar o que foi configurado aqui.
+    edital.refresh_from_db()
+    assert client.post(etapa(edital, "cronograma"), eventos()).status_code == 302
+    assert {item.id for item in EtapaAvaliacao.objects.all()} == identidades
+
+    corpo = client.get(etapa(edital, "etapas")).content.decode()
+    assert "Prova didática" in corpo and "Análise de títulos" in corpo
+    # As datas não são digitadas na Etapa: elas vêm do Evento vinculado.
+    assert 'name="etapa-0-startAt"' not in corpo
+    assert f'value="{EVENTO}"' in corpo
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_reordenar_etapas_preserva_identidade(client, seletor_ligado, edital):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, perfis(), eventos())
+    edital.refresh_from_db()
+    client.post(etapa(edital, "etapas"), etapas_form())
+    antes = {item.id: item.name for item in EtapaAvaliacao.objects.all()}
+
+    edital.refresh_from_db()
+    resposta = client.post(etapa(edital, "etapas"), etapas_form(**{"etapa-1-order": "0"}))
+    assert resposta.status_code == 302, resposta.content
+
+    depois = list(EtapaAvaliacao.objects.order_by("order"))
+    assert [item.name for item in depois] == ["Análise de títulos", "Prova didática"]
+    assert [item.order for item in depois] == [1, 2]
+    assert {item.id: item.name for item in depois} == antes
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_remover_etapa_e_gravar_deixa_apenas_a_restante(client, seletor_ligado, edital):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, perfis(), eventos())
+    edital.refresh_from_db()
+    client.post(etapa(edital, "etapas"), etapas_form())
+
+    edital.refresh_from_db()
+    restante = {
+        chave: valor for chave, valor in etapas_form().items() if not chave.startswith("etapa-1-")
+    }
+    assert client.post(etapa(edital, "etapas"), restante).status_code == 302
+
+    assert [item.name for item in EtapaAvaliacao.objects.all()] == ["Prova didática"]
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_peso_zero_e_recusado_sem_perder_o_digitado(client, seletor_ligado, edital):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, perfis(), eventos())
+    edital.refresh_from_db()
+
+    resposta = client.post(etapa(edital, "etapas"), etapas_form(**{"etapa-0-weight": "0"}))
+
+    assert resposta.status_code == 200
+    corpo = resposta.content.decode()
+    assert "maior que zero" in corpo
+    assert "Prova didática" in corpo, "o que foi digitado precisa sobreviver à recusa"
+    assert not EtapaAvaliacao.objects.exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_fragmento_de_etapa_nasce_com_identidade_e_com_os_eventos_do_edital(
+    client, seletor_ligado, edital
+):
+    """Sem UUID gerado aqui, a linha nova nasceria sem identidade e não haveria o que preservar."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, perfis(), eventos())
+
+    corpo = client.get(
+        reverse("interface:fragmento-etapa", args=[edital.id]), {"indice": "5"}
+    ).content.decode()
+
+    assert 'name="etapa-5-id"' in corpo
+    identificador = corpo.split('name="etapa-5-id" value="')[1].split('"')[0]
+    assert UUID(identificador)
+    assert 'name="etapa-5-order"' in corpo
+    assert EVENTO in corpo, "o vínculo precisa oferecer os Eventos deste Cronograma"
