@@ -18,9 +18,9 @@
       <dt>Número e ano</dt><dd>{{ edital.number }}/{{ edital.year }}</dd>
     </dl>
     <p class="campo largo">
-      <label for="ident-title">Título do Edital</label>
+      <label for="ident-title">Título do Edital <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="text" id="ident-title" name="title" value="{{ identificacao.title|default:'' }}"
-             required maxlength="255" {% if not editavel %}disabled{% endif %}>
+             required maxlength="255" {% if not editavel %}disabled{% endif %} aria-required="true">
     </p>
     <p class="campo largo">
       <label for="ident-description">Descrição</label>

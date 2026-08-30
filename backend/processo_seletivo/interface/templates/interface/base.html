@@ -148,6 +148,25 @@ form.confirmar{background:var(--branco);border:1px solid var(--borda);border-rad
 .assistente .a-concluida a{color:var(--texto)}
 .assistente .a-concluida .numero{background:var(--sucesso);color:var(--branco)}
 .assistente .a-concluida .estado{color:var(--sucesso)}
+/* Pronta para revisar: nasceu do catálogo e ainda não foi gravada. Marcador vazado, para
+   não se confundir com o preenchido de concluída — a distinção não pode ser só de cor. */
+.assistente .a-pronta .numero{background:var(--branco);color:var(--texto-fraco);
+  border:2px solid var(--texto-fraco)}
+.assistente .a-pronta .estado{color:var(--texto-fraco)}
+/* Caráter agrupado sob legenda (FR-037), sem a moldura pesada de um fieldset de linha. */
+fieldset.caracter{border:none;padding:0;margin:0}
+fieldset.caracter legend{font-size:.85rem;color:var(--texto-fraco);padding:0;
+  margin-bottom:.3rem}
+/* FR-032: em todo o produto não havia asterisco, etiqueta nem marca separando o campo
+   exigido do opcional — descobria-se falhando. O asterisco é `aria-hidden` porque quem usa
+   leitor de tela recebe a informação por `aria-required`, e ouvir "asterisco" seria ruído. */
+.obrigatorio{color:var(--vermelho);font-weight:700;margin-left:.15rem}
+.legenda-obrigatorio{font-size:.8125rem;color:var(--texto-fraco);margin:0 0 1rem}
+/* Resumo de erros ancorado (FR-033): o resumo sozinho obriga a procurar; a marca junto do
+   campo sozinha obriga a rolar até achar. */
+.erro ol{margin:.4rem 0 0 1.2rem}
+.erro a{color:var(--vermelho);font-weight:600}
+.campo .recusa{display:block;color:var(--vermelho);font-size:.8125rem;margin-top:.25rem}
 .navegacao-etapa{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;
   padding:1rem 0 2rem;border-top:1px solid var(--borda);margin-top:1.5rem}
 .navegacao-etapa .botao:last-of-type{margin-left:auto}
@@ -225,8 +244,18 @@ form.identificar{background:var(--branco);border:1px solid var(--borda);border-r
 fieldset{border:1px solid var(--borda);border-radius:4px;padding:1rem;margin:0 0 1.25rem}
 legend{font-weight:600;padding:0 .4rem}
 label{display:block;margin-bottom:.5rem}
-input[type=text]{width:100%;padding:.55rem;border:1px solid var(--borda);border-radius:4px;
+/* FR-034: a regra cobria só `input[type=text]`, e `Ano` — que é `number` — ficava com a aparência
+   padrão do navegador: 22px de altura e fonte de 13px ao lado de vizinhos de 39px e 16px. O mesmo
+   valia para `textarea` e `select` fora do agrupamento do assistente. */
+input[type=text],input[type=number],input[type=date],input[type=datetime-local],
+input[type=email],input[type=url],select,textarea{
+  width:100%;padding:.55rem;border:1px solid var(--borda);border-radius:4px;
   font-size:1rem;font-family:inherit}
+textarea{resize:vertical}
+/* `.curto` existia só dentro de `.campo`, e na criação de Processo a classe está no próprio
+   controle — a largura declarada no template não tinha efeito. */
+input.curto,select.curto{width:150px}
+input.largo,textarea.largo{width:100%;}
 .papel{display:flex;gap:.5rem;align-items:flex-start;margin-bottom:.6rem}
 .papel input{margin-top:.35rem}
 .papel .perms{display:block;font-size:.8125rem;color:var(--texto-fraco)}

@@ -8,21 +8,21 @@
   <input type="hidden" name="evento-{{ indice }}-order" value="{{ evento.order|default:'0' }}">
   <div class="campos">
     <p class="campo curto">
-      <label for="evento-{{ indice }}-type">Tipo</label>
+      <label for="evento-{{ indice }}-type">Tipo <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="text" id="evento-{{ indice }}-type" name="evento-{{ indice }}-type"
-             value="{{ evento.type|default:'' }}" required placeholder="Inscrições">
+             value="{{ evento.type|default:'' }}" required placeholder="Inscrições" aria-required="true">
     </p>
     <p class="campo largo">
-      <label for="evento-{{ indice }}-description">Descrição</label>
+      <label for="evento-{{ indice }}-description">Descrição <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="text" id="evento-{{ indice }}-description"
-             name="evento-{{ indice }}-description" value="{{ evento.description|default:'' }}" required>
+             name="evento-{{ indice }}-description" value="{{ evento.description|default:'' }}" required aria-required="true">
     </p>
   </div>
   <div class="campos">
     <p class="campo">
-      <label for="evento-{{ indice }}-startAt">Início</label>
+      <label for="evento-{{ indice }}-startAt">Início <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="datetime-local" id="evento-{{ indice }}-startAt"
-             name="evento-{{ indice }}-startAt" value="{{ evento.startAt|default:'' }}" required>
+             name="evento-{{ indice }}-startAt" value="{{ evento.startAt|default:'' }}" required aria-required="true">
     </p>
     <p class="campo">
       <label for="evento-{{ indice }}-endAt">Término</label>

@@ -116,6 +116,7 @@ def replace_draft(
     correlation_id,
     stages=None,
     sections=None,
+    area="",
 ):
     require_permission(actor, "edital:elaborar")
     stages = list(stages or [])
@@ -261,6 +262,14 @@ def replace_draft(
             correlation_id=correlation_id,
             previous_state=edital.status,
             previous_revision=expected_revision,
+            # Qual área do Edital mudou (FR-042). Sem isto, quatro gravações em etapas diferentes
+            # produziam quatro registros idênticos — "Alteração do rascunho · Em elaboração → Em
+            # elaboração" — e a trilha, que existe para responder questionamento, não respondia
+            # nenhum. O sistema conhecia a etapa e descartava a informação.
+            #
+            # **A área, e não a diferença** (FR-043): nada de diff, versionamento de rascunho ou
+            # histórico editorial. `reason` é o campo que a trilha já exibe, e não custa migration.
+            reason=area,
         )
         transaction.on_commit(lambda: None)
         return edital

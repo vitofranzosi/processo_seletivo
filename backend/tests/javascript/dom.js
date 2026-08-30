@@ -29,6 +29,11 @@ class Elemento {
     this.textContent = "";
     this.nodeType = 1;
     this.parentNode = null;
+    this.classes = [];
+    // `remocao.js` só age sobre o botão destrutivo, distinguido pela classe `perigo`.
+    this.classList = {
+      contains: (nome) => this.classes.includes(nome),
+    };
   }
 
   /** O ancestral mais próximo — incluindo o próprio — que satisfaz `[atributo]` ou uma tag. */
@@ -78,20 +83,44 @@ class Elemento {
   replaceChildren() {}
 
   querySelector(seletor) {
+    /* `:scope > legend` — o rótulo da própria linha. A linha de Etapa tem um segundo `legend`,
+       o do grupo "Caráter", e o escopo é o que impede a numeração de ir parar nele. */
+    if (seletor === ":scope > legend") {
+      return this.filhos.find((filho) => filho.tagName === "legend") || null;
+    }
+    const mover = /^\[data-mover="(cima|baixo)"\]$/.exec(seletor);
+    if (mover) {
+      return this.filhos.find((filho) => filho.dataset && filho.dataset.mover === mover[1]) || null;
+    }
     const sufixo = CAMPOS_POR_SUFIXO.exec(seletor);
     if (!sufixo) return null;
-    return this.filhos.find((filho) => filho.name.endsWith("-" + sufixo[1])) || null;
+    return this.filhos.find((filho) => filho.name && filho.name.endsWith("-" + sufixo[1])) || null;
   }
 
-  querySelectorAll() {
+  querySelectorAll(seletor) {
+    // `remocao.js` conta campos preenchidos e sub-linhas; o shim responde a esses dois seletores.
+    if (seletor === "input, textarea, select") {
+      return this.filhos.filter((filho) =>
+        ["input", "textarea", "select"].includes(filho.tagName)
+      );
+    }
+    if (seletor === "fieldset") {
+      return this.filhos.filter((filho) => filho.tagName === "fieldset");
+    }
     return [];
   }
 }
 
 /** Um `fieldset.linha.<classe>` com os campos indexados que o template renderiza. */
-function linha(classe, indice, campos) {
+function linha(classe, indice, campos, { rotulo = "" } = {}) {
   const elemento = new Elemento("fieldset");
   elemento.classes = ["linha", classe];
+  if (rotulo) {
+    const legenda = new Elemento("legend");
+    legenda.textContent = rotulo;
+    legenda.parentNode = elemento;
+    elemento.filhos.push(legenda);
+  }
   for (const [sufixo, valor] of Object.entries(campos)) {
     const campo = new Elemento("input", {
       name: `${classe}-${indice}-${sufixo}`,
@@ -107,6 +136,16 @@ function linha(classe, indice, campos) {
 function botaoDeMover(direcao) {
   const botao = new Elemento("button", { "data-mover": direcao });
   botao.dataset = { mover: direcao };
+  botao.disabled = false;
+  botao.focado = false;
+  // Registra que **este** botão recebeu foco, além de atualizar `activeElement`. Os dois são
+  // necessários: `activeElement` diz quem tem o foco agora; `focado` diz quem já o recebeu, que é
+  // o que distingue "o foco foi para o botão oposto" de "o foco nunca saiu do lugar".
+  const focarBase = botao.focus.bind(botao);
+  botao.focus = function () {
+    this.focado = true;
+    focarBase();
+  };
   return botao;
 }
 
@@ -227,8 +266,26 @@ let documento;
 
 /** Monta o ambiente global e devolve o que o teste precisa inspecionar. */
 function montar({ formulario, armazem = new Armazem(), avisos = [], ordenaveis = [] } = {}) {
+  const ouvintes = {};
   documento = {
     activeElement: null,
+    // `remocao.js` escuta `htmx:confirm` no documento — é o ponto em que a biblioteca oferece a
+    // decisão antes de disparar a requisição.
+    addEventListener: (tipo, ouvinte) => {
+      (ouvintes[tipo] = ouvintes[tipo] || []).push(ouvinte);
+    },
+    disparar: (tipo, detalhe) => {
+      const evento = {
+        type: tipo,
+        detail: detalhe,
+        impedido: false,
+        preventDefault() {
+          this.impedido = true;
+        },
+      };
+      (ouvintes[tipo] || []).forEach((ouvinte) => ouvinte(evento));
+      return evento;
+    },
     getElementById: (id) => (id === "formulario" ? formulario : null),
     querySelector: (seletor) => {
       if (seletor === "[data-nao-enviado]") return null;
@@ -239,11 +296,18 @@ function montar({ formulario, armazem = new Armazem(), avisos = [], ordenaveis =
   };
   globalThis.document = documento;
   globalThis.window = { localStorage: armazem };
+  globalThis.__documento = documento;
   globalThis.Node = { ELEMENT_NODE: 1 };
   globalThis.MutationObserver = class {
     observe() {}
   };
   globalThis.setTimeout = globalThis.setTimeout || ((fn) => fn());
+  // `window.confirm` decidido pelo teste, e o registro do que foi perguntado.
+  globalThis.__perguntas = [];
+  globalThis.window.confirm = (texto) => {
+    globalThis.__perguntas.push(texto);
+    return globalThis.__resposta !== false;
+  };
   globalThis.__avisos = avisos;
   return { formulario, armazem, avisos };
 }

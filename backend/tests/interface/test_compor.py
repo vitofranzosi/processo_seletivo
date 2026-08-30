@@ -4,6 +4,7 @@ O que a tela promete: compor Perfis e Cronograma, mostrar o que falta para subme
 com explicação sem perder o que a pessoa digitou. A validação real continua sendo do domínio.
 """
 
+import re
 from decimal import Decimal
 from uuid import UUID
 
@@ -911,3 +912,45 @@ def test_os_tres_campos_do_perfil_sobrevivem_a_gravacao_de_outra_etapa(
     assert exibido["duties"] == atribuicoes
     assert exibido["workload"] == "20 horas semanais"
     assert exibido["compensation"] == "R$ 3.000,00 mensais"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_o_seletor_de_evento_mostra_a_data_que_a_etapa_herda(client, seletor_ligado, edital):
+    """FR-036, e o teste que faltava.
+
+    A Etapa se vincula a um Evento **para herdar as datas** — é o que a ajuda promete. A lista
+    mostrava "tipo — descrição", cortava por falta de largura e não mostrava data nenhuma.
+
+    Este teste existe por um motivo concreto: ao trocar o texto da opção, o template passou a ler
+    `evento.rotulo` e o campo não chegou a ser criado em `forms.py`. A suíte inteira continuou
+    verde — nenhum teste olhava o texto da opção — e o defeito só apareceu no navegador, com um
+    `<option>` vazio. Uma opção sem texto é pior do que a lista truncada que existia antes.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(
+        client,
+        edital,
+        perfis={
+            "perfil-0-id": PERFIL,
+            "perfil-0-code": "P",
+            "perfil-0-name": "Perfil",
+            "perfil-0-immediateVacancies": "1",
+            "perfil-0-reserveType": "NONE",
+        },
+        eventos={
+            "evento-0-id": EVENTO,
+            "evento-0-type": "Prova didática",
+            "evento-0-description": "Aplicação da prova",
+            "evento-0-startAt": "2027-04-10T14:00",
+            "evento-0-order": "1",
+        },
+    )
+
+    resposta = client.get(reverse("interface:fragmento-etapa", args=[edital.id]))
+    corpo = resposta.content.decode()
+
+    assert "Prova didática · 10/04/2027 14:00" in corpo
+    # E nenhuma opção fica sem texto — foi assim que o defeito passou.
+    assert not re.search(r'<option value="[0-9a-f-]{36}"[^>]*>\s*</option>', corpo), (
+        "opção de Evento sem texto"
+    )

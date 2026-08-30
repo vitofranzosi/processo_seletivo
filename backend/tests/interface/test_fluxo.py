@@ -51,11 +51,9 @@ EVENTOS = {
     "evento-0-description": "Inscrições",
     "evento-0-startAt": "2026-10-01T09:00",
 }
-SIGNATARIO = {
-    "signatario_nome": "Reitora",
-    "signatario_cargo": "Reitora",
-    "signatario_id": "00000000-0000-0000-0000-0000000000a1",
-}
+# A autoridade vem do catálogo declarado: a tela oferece a escolha, e nome, cargo e identificador
+# saem da entrada. Nenhum deles é digitado (FR-039).
+SIGNATARIO = {"signatario": "reitoria"}
 
 
 @pytest.fixture
@@ -180,7 +178,8 @@ def test_publicar_exige_autoridade_signataria(client, seletor_ligado, edital):
     praticar(client, Edital.objects.get(), "homologar", motivo="OK")
     identificar(client, "carla.publicadora", ["publicador"])
 
-    resposta, _ = praticar(client, Edital.objects.get(), "publicar", signatario_nome="Reitora")
+    # Publicar sem escolher autoridade — o campo é uma escolha, e vazio não é escolha.
+    resposta, _ = praticar(client, Edital.objects.get(), "publicar", signatario="")
     assert resposta.status_code == 422
     assert "Autoridade Signatária" in resposta.content.decode()
     assert not Publicacao.objects.exists()

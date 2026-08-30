@@ -1,0 +1,23 @@
+{% comment %}
+Resumo de recusa, num lugar só (FR-033).
+
+`tabindex="-1"` mais `autofocus`: o resumo recebe o foco ao aparecer. Sem isto, quem envia um
+formulário longo e é recusado continua com o foco onde estava — e, num leitor de tela, a recusa
+passa despercebida. `role="alert"` já anunciava o texto; o foco é o que leva a pessoa até ele.
+
+**O que este bloco não faz, e por quê.** FR-033 pede também âncora para cada campo recusado e a
+mensagem junto do campo. As recusas do cliente já fazem isso: `validacao.js` associa a mensagem ao
+controle e limpa a marcação ARIA quando o campo é corrigido. As que chegam do **servidor**, não —
+elas são texto sem identidade de campo, porque `ProfileValidationError` e as demais carregam
+mensagem e nada mais. Ancorá-las exigiria que o domínio passasse a nomear o campo de cada recusa,
+que é mudança de domínio e não de interface. Fica registrado como limite, não como omissão.
+{% endcomment %}
+{% if erros %}
+<div class="erro" role="alert" tabindex="-1" autofocus>
+  <strong>{{ titulo_da_recusa|default:"Não foi possível salvar:" }}</strong>
+  <ol>{% for erro in erros %}<li>{{ erro }}</li>{% endfor %}</ol>
+  {% if preserva_o_digitado %}
+  <p class="ajuda">O que você digitou foi preservado abaixo.</p>
+  {% endif %}
+</div>
+{% endif %}

@@ -181,12 +181,7 @@ def test_fluxo_da_retificacao_ate_a_publicacao(client, seletor_ligado, edital, v
     assert ato("homologar", motivo="Conferido").status_code == 302
     identificar(client, "carla.publicadora", ["publicador"])
     retificacao.refresh_from_db()
-    resposta = ato(
-        "publicar",
-        signatario_nome="Reitora",
-        signatario_cargo="Reitora",
-        signatario_id="00000000-0000-0000-0000-0000000000a1",
-    )
+    resposta = ato("publicar", signatario="reitoria")
     assert resposta.status_code == 302
 
     depois = client.get(f"/api/v1/public/editais/{edital.id}/versao-vigente").json()["content"][

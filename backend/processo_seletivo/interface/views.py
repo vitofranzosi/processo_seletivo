@@ -44,6 +44,7 @@ from processo_seletivo.publicacoes.application.selectors import (
     impede_por_segregacao,
     participantes_do_edital,
 )
+from processo_seletivo.publicacoes.domain import autoridades
 from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA, render_edital_pdf
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.seguranca.application.authorization import require_permission
@@ -312,20 +313,38 @@ CHAVES_ETAPA = [chave for chave, _, _ in ETAPAS_COMPOSICAO]
 ETAPAS_GRAVAVEIS = {"identificacao", "perfis", "cronograma", "etapas", "conteudo"}
 
 
+# Três estados, e não dois (FR-040). O terceiro existe por um defeito preciso: `conteudo` era
+# `True` fixo, porque as seções nascem com o texto do catálogo e, tecnicamente, nada falta — então
+# um Edital recém-criado exibia o passo 5 como **concluído** sem que ninguém o tivesse aberto. O
+# sistema afirmava que a pessoa fez algo que ela não fez.
+#
+# "Aberta" seria o critério errado e caro: exigiria persistir "esta pessoa visitou esta etapa", por
+# Edital e por pessoa — estado novo, sem valor normativo, que ainda afirmaria revisão onde houve
+# exibição. Gravar já é sinal, já existe e já é auditado.
+PENDENTE, PRONTA, CONCLUIDA = "pendente", "pronta", "concluida"
+
+ROTULO_DO_ESTADO = {
+    PENDENTE: "pendente",
+    PRONTA: "pronta para revisar",
+    CONCLUIDA: "concluída",
+}
+
+
 def _progresso(edital, atual):
     """Cada etapa sabe se já está resolvida — o que orienta quem retoma o trabalho depois."""
-    concluidas = {
-        "identificacao": True,
-        "perfis": edital.perfis.exists(),
-        "cronograma": bool(
-            getattr(edital, "cronograma", None) and edital.cronograma.eventos.exists()
-        ),
+    estados = {
+        "identificacao": CONCLUIDA,
+        "perfis": CONCLUIDA if edital.perfis.exists() else PENDENTE,
+        "cronograma": CONCLUIDA
+        if getattr(edital, "cronograma", None) and edital.cronograma.eventos.exists()
+        else PENDENTE,
         # Etapas são opcionais; "concluída" aqui quer dizer "já tem conteúdo", não "obrigatória".
-        "etapas": edital.etapas.exists(),
-        # As seções nascem com o texto do catálogo, então a etapa está "concluída" desde o
-        # início: nada falta. O que ela oferece é revisar, e não preencher do zero.
-        "conteudo": True,
-        "revisao": False,
+        "etapas": CONCLUIDA if edital.etapas.exists() else PENDENTE,
+        # `SecaoEdital` só tem linha depois da primeira edição — ausência de linha significa "texto
+        # padrão do catálogo". Logo `exists()` responde exatamente "esta etapa já foi gravada",
+        # sem custar estado novo.
+        "conteudo": CONCLUIDA if edital.secoes.exists() else PRONTA,
+        "revisao": PENDENTE,
     }
     return [
         {
@@ -333,7 +352,10 @@ def _progresso(edital, atual):
             "rotulo": rotulo,
             "numero": indice + 1,
             "atual": chave == atual,
-            "concluida": concluidas[chave] and chave != atual,
+            "estado": estados[chave],
+            "rotulo_estado": ROTULO_DO_ESTADO[estados[chave]],
+            # Preservado para quem já lia `concluida`: a etapa atual não se anuncia concluída.
+            "concluida": estados[chave] == CONCLUIDA and chave != atual,
         }
         for indice, (chave, rotulo, _) in enumerate(ETAPAS_COMPOSICAO)
     ]
@@ -561,6 +583,8 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
         stages=conteudo["stages"],
         sections=conteudo["sections"],
         correlation_id=request.correlation_id,
+        # O rótulo da etapa, como quem elabora a vê no assistente (FR-042).
+        area=dict((chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO).get(etapa, ""),
     )
 
 
@@ -861,6 +885,7 @@ def praticar_ato(request, edital_id, acao):
         "rotulo_previa": ROTULO_DA_PREVIA.get(edital.status, "Ver o Edital"),
         # Passagem de bastão dita antes do ato (FR-028): quem submete está entregando a alguém.
         "entrega_para": acoes.entrega_para(ato),
+        "autoridades": autoridades.CATALOGO,
     }
 
     if request.method == "GET":
@@ -888,17 +913,20 @@ def _executar(ato, request, ator, edital):
             raise DomainError("motivo_obrigatorio", f"{ato.rotulo_motivo} é obrigatório.", 422)
         argumentos["reason"] = motivo
     if ato.exige_signatario:
-        argumentos["signatory"] = {
-            "authorityId": (request.POST.get("signatario_id") or "").strip(),
-            "name": (request.POST.get("signatario_nome") or "").strip(),
-            "role": (request.POST.get("signatario_cargo") or "").strip(),
-        }
-        if not all(argumentos["signatory"].values()):
+        # A autoridade vem do catálogo declarado (FR-039). Nome, cargo e identificador saem da
+        # entrada escolhida — nenhum deles é digitado, e o identificador não é sequer exibido.
+        autoridade = autoridades.escolher(request.POST.get("signatario"))
+        if autoridade is None:
             raise DomainError(
                 "signatario_obrigatorio",
-                "Autoridade Signatária, nome e cargo são obrigatórios para publicar.",
+                "Escolha a Autoridade Signatária que assina este Edital.",
                 422,
             )
+        argumentos["signatory"] = {
+            "authorityId": str(autoridade.identificador),
+            "name": autoridade.nome,
+            "role": autoridade.cargo,
+        }
         argumentos["reason"] = (request.POST.get("motivo") or "").strip()
     return ato.command(**argumentos)
 
@@ -1125,6 +1153,7 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
         "recusa_certa": bool(impedimento),
         "vigencia": item.effective_at,
         "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
+        "autoridades": autoridades.CATALOGO,
     }
     if request.method == "GET":
         return render(request, "interface/retificacao_confirmar.html", contexto)
@@ -1134,17 +1163,21 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
             raise DomainError("motivo_obrigatorio", f"{ato.rotulo_motivo} é obrigatório.", 422)
         signatario = None
         if ato.exige_signatario:
-            signatario = {
-                "authorityId": (request.POST.get("signatario_id") or "").strip(),
-                "name": (request.POST.get("signatario_nome") or "").strip(),
-                "role": (request.POST.get("signatario_cargo") or "").strip(),
-            }
-            if not all(signatario.values()):
+            # **São dois fluxos de publicação**, e o do Edital não é o único: corrigir um Edital
+            # publicado passa por aqui. Deixar este de fora manteria o UUID digitado exatamente
+            # onde a correção acontece (FR-039).
+            autoridade = autoridades.escolher(request.POST.get("signatario"))
+            if autoridade is None:
                 raise DomainError(
                     "signatario_obrigatorio",
-                    "Autoridade Signatária, nome e cargo são obrigatórios para publicar.",
+                    "Escolha a Autoridade Signatária que assina esta Retificação.",
                     422,
                 )
+            signatario = {
+                "authorityId": str(autoridade.identificador),
+                "name": autoridade.nome,
+                "role": autoridade.cargo,
+            }
         atos_retificacao.executar(ato, request, ator, item, signatario)
     except DomainError as exc:
         contexto["erro"] = exc.detail

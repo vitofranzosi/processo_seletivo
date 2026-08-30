@@ -19,10 +19,35 @@
     });
   }
 
+  /* A ordem é o dado que se está editando, e era o único que não aparecia: vivia num campo
+     oculto, e toda linha se anunciava igual à anterior — "EVENTO DO CRONOGRAMA", "EVENTO DO
+     CRONOGRAMA". O documento imprime "1. Inscrições"; o editor, não (FR-035). */
+  function rotular(lista, linha, indice, total) {
+    /* `:scope >`: a linha de Etapa tem um segundo `legend`, o do grupo "Caráter". Sem o escopo,
+       a numeração iria parar no rótulo errado se a ordem dos blocos mudasse. */
+    var legenda = linha.querySelector(":scope > legend");
+    if (!legenda) return;
+    var base = legenda.dataset.rotulo || legenda.textContent.trim();
+    legenda.dataset.rotulo = base;
+    legenda.textContent = base + " " + (indice + 1) + " de " + total;
+  }
+
+  /* Botão inerte é pior do que botão ausente: clicar em "Subir" na primeira linha não mudava
+     nada, não dizia nada, e o controle continuava com aparência de disponível (FR-035). */
+  function extremidades(linha, indice, total) {
+    var cima = linha.querySelector('[data-mover="cima"]');
+    var baixo = linha.querySelector('[data-mover="baixo"]');
+    if (cima) cima.disabled = indice === 0;
+    if (baixo) baixo.disabled = indice === total - 1;
+  }
+
   function renumerar(lista) {
-    linhas(lista).forEach(function (linha, indice) {
+    var atuais = linhas(lista);
+    atuais.forEach(function (linha, indice) {
       var campo = linha.querySelector('[name$="-order"]');
       if (campo) campo.value = String(indice + 1);
+      rotular(lista, linha, indice, atuais.length);
+      extremidades(linha, indice, atuais.length);
     });
   }
 
@@ -55,7 +80,18 @@
       if (mover(lista, linha, botao.dataset.mover === "cima" ? -1 : 1)) {
         // O foco acompanha o botão acionado: sem isto ele volta ao body a cada movimento, e
         // reordenar por teclado exigiria retravessar o formulário inteiro entre dois cliques.
-        botao.focus();
+        //
+        // Quando a linha chega à ponta, o próprio botão acionado fica desabilitado — e focar um
+        // controle desabilitado devolve o foco ao body, que é o defeito que esta linha evita.
+        // Nesse caso o foco vai para o botão oposto, que continua operável.
+        if (botao.disabled) {
+          var oposto = linha.querySelector(
+            botao.dataset.mover === "cima" ? '[data-mover="baixo"]' : '[data-mover="cima"]'
+          );
+          if (oposto && !oposto.disabled) oposto.focus();
+        } else {
+          botao.focus();
+        }
       }
     });
   });

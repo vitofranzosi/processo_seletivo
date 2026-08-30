@@ -9,6 +9,10 @@ import re
 from pathlib import Path
 
 import pytest
+from django.urls import reverse
+
+from processo_seletivo.processos.models import Edital
+from tests.interface.conftest import compor_rascunho, identificar
 
 BASE = (
     Path(__file__).resolve().parents[2]
@@ -16,6 +20,12 @@ BASE = (
 )
 FONTE = BASE.read_text()
 MINIMO_AA = 4.5
+
+
+@pytest.fixture
+def edital(api_client, manager_headers, process_payload):
+    api_client.post("/api/v1/admin/processos", process_payload, format="json", **manager_headers)
+    return Edital.objects.get()
 
 
 def tokens():
@@ -121,3 +131,167 @@ def test_controles_sao_nativos(template):
     assert not re.search(r'tabindex="[1-9]', corpo), (
         "tabindex positivo reordena a navegação e quebra a ordem visual"
     )
+
+
+# ---------------------------------------------------------------------------
+# 007 — os atritos que a auditoria mediu (FR-032, FR-033, FR-040, FR-041, FR-042)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize(
+    ("etapa", "obrigatorios"),
+    [("identificacao", 1), ("perfis", 0), ("cronograma", 0)],
+)
+def test_campos_obrigatorios_sao_marcados_na_etiqueta(
+    client, seletor_ligado, edital, etapa, obrigatorios
+):
+    """T070/FR-032: nada separava o campo exigido do opcional em todo o produto.
+
+    Nem asterisco, nem etiqueta, nem marca visual: descobria-se falhando. Em formulários longos,
+    falhar significa rolar de volta procurando qual campo o servidor recusou.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo = client.get(reverse("interface:compor-etapa", args=[edital.id, etapa])).content.decode()
+
+    if obrigatorios:
+        assert corpo.count('class="obrigatorio"') >= obrigatorios
+    # A marca visual é `aria-hidden`; quem usa leitor de tela recebe por `aria-required`.
+    assert corpo.count('class="obrigatorio"') == corpo.count('aria-hidden="true">*</span>')
+
+
+@pytest.mark.django_db(transaction=True)
+def test_o_controle_obrigatorio_declara_aria_required(client, seletor_ligado, edital):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo = client.get(
+        reverse("interface:compor-etapa", args=[edital.id, "identificacao"])
+    ).content.decode()
+
+    assert 'aria-required="true"' in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_recusa_recebe_foco_para_nao_passar_despercebida(client, seletor_ligado, edital):
+    """T070/FR-033: sem foco, quem envia um formulário longo e é recusado não vê a mensagem."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.post(
+        reverse("interface:compor-etapa", args=[edital.id, "perfis"]),
+        {
+            "perfil-0-id": "aaaaaaaa-0000-4000-8000-0000000000f1",
+            "perfil-0-code": "P",
+            "perfil-0-name": "Perfil",
+            "perfil-0-immediateVacancies": "1",
+            "perfil-0-reserveType": "LIMITED",  # limitada sem limite: o domínio recusa
+        },
+    )
+    corpo = resposta.content.decode()
+
+    assert 'role="alert"' in corpo
+    assert 'tabindex="-1"' in corpo, "o resumo precisa poder receber o foco"
+    assert "autofocus" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_etapa_de_conteudo_nasce_pronta_para_revisar_e_nao_concluida(
+    client, seletor_ligado, edital
+):
+    """T088/FR-040: o passo 5 se declarava concluído sem ter sido aberto.
+
+    As seções nascem com o texto do catálogo e, tecnicamente, nada falta — mas o sistema afirmava
+    que a pessoa fez algo que ela não fez.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = client.get(reverse("interface:compor-etapa", args=[edital.id, "perfis"]))
+
+    conteudo = next(p for p in resposta.context["progresso"] if p["chave"] == "conteudo")
+    assert conteudo["estado"] == "pronta"
+    assert conteudo["rotulo_estado"] == "pronta para revisar"
+    assert not conteudo["concluida"]
+    # A distinção não pode depender só de cor.
+    assert "pronta para revisar" in resposta.content.decode()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_gravar_a_etapa_de_conteudo_a_torna_concluida(client, seletor_ligado, edital):
+    from processo_seletivo.editais.domain import secoes as catalogo
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(
+        client,
+        edital,
+        perfis={
+            "perfil-0-id": "aaaaaaaa-0000-4000-8000-0000000000f2",
+            "perfil-0-code": "P",
+            "perfil-0-name": "Perfil",
+            "perfil-0-immediateVacancies": "1",
+            "perfil-0-reserveType": "NONE",
+        },
+    )
+    campos = {
+        f"secao-{s.key}": ("Texto revisto." if s.key == "apresentacao" else s.default_text)
+        for s in catalogo.CATALOGO
+        if not s.gerada
+    }
+    client.post(reverse("interface:compor-etapa", args=[edital.id, "conteudo"]), campos)
+
+    resposta = client.get(reverse("interface:compor-etapa", args=[edital.id, "perfis"]))
+    conteudo = next(p for p in resposta.context["progresso"] if p["chave"] == "conteudo")
+    assert conteudo["estado"] == "concluida"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_faixa_do_ato_usa_o_rotulo_humano_e_nao_a_chave(client, seletor_ligado, edital):
+    """T090/FR-041: "Ato registrado: submeter" saía assim porque a chave passava pelo filtro de
+    *situações*, que não a conhece — e um filtro devolve o que não reconhece.
+
+    O rótulo é o que `atos.ATOS` declara e a tela de confirmação já exibe no título: "Submeter para
+    revisão". Existia, e não era consultado.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = client.get(
+        reverse("interface:detalhe", args=[edital.id]) + "?ato=submeter"
+    ).content.decode()
+
+    assert "Ato registrado: Submeter para revisão." in corpo
+    assert "Ato registrado: submeter." not in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_auditoria_diz_qual_area_do_rascunho_mudou(client, seletor_ligado, edital):
+    """T092/FR-042: quatro gravações produziam quatro registros idênticos.
+
+    A trilha existe para responder questionamento, e "alguém mexeu no rascunho quatro vezes" não
+    responde nenhum.
+    """
+    from processo_seletivo.auditoria.models import RegistroAuditoria
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(
+        client,
+        edital,
+        perfis={
+            "perfil-0-id": "aaaaaaaa-0000-4000-8000-0000000000f3",
+            "perfil-0-code": "P",
+            "perfil-0-name": "Perfil",
+            "perfil-0-immediateVacancies": "1",
+            "perfil-0-reserveType": "NONE",
+        },
+        eventos={
+            "evento-0-id": "aaaaaaaa-0000-4000-8000-0000000000e3",
+            "evento-0-type": "Inscrições",
+            "evento-0-description": "Inscrições",
+            "evento-0-startAt": "2027-03-01T10:00",
+            "evento-0-order": "1",
+        },
+    )
+
+    areas = list(
+        RegistroAuditoria.objects.filter(
+            aggregate_id=edital.id, operation="ALTERAR_RASCUNHO"
+        ).values_list("reason", flat=True)
+    )
+    assert "Perfis de Vaga" in areas
+    assert "Cronograma" in areas
+    assert len(set(areas)) == len(areas), "registros de etapas diferentes não podem ser idênticos"

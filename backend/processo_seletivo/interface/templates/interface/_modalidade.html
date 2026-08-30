@@ -9,17 +9,17 @@
   <input type="hidden" name="modalidade-{{ indice }}-{{ sub }}-ruleId" value="{{ modalidade.ruleId }}">
   <div class="campos">
     <p class="campo curto">
-      <label for="modalidade-{{ indice }}-{{ sub }}-code">Código</label>
+      <label for="modalidade-{{ indice }}-{{ sub }}-code">Código <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="text" id="modalidade-{{ indice }}-{{ sub }}-code"
              name="modalidade-{{ indice }}-{{ sub }}-code"
-             value="{{ modalidade.code|default:'' }}" required placeholder="PPI">
+             value="{{ modalidade.code|default:'' }}" required placeholder="PPI" aria-required="true">
     </p>
     <p class="campo largo">
-      <label for="modalidade-{{ indice }}-{{ sub }}-name">Denominação</label>
+      <label for="modalidade-{{ indice }}-{{ sub }}-name">Denominação <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="text" id="modalidade-{{ indice }}-{{ sub }}-name"
              name="modalidade-{{ indice }}-{{ sub }}-name"
              value="{{ modalidade.name|default:'' }}" required
-             placeholder="Pessoas pretas, pardas e indígenas">
+             placeholder="Pessoas pretas, pardas e indígenas" aria-required="true">
     </p>
     <p class="campo curto">
       <label for="modalidade-{{ indice }}-{{ sub }}-percentage">Percentual (%)</label>
