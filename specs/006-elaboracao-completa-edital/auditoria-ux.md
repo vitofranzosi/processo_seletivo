@@ -14,6 +14,8 @@ atores. O que se viu no caminho — e o que ainda não chega ao usuário.
 
 **Placar:** 4 impedem · 9 atrapalham · 13 ajustes · 6 acertos
 
+*Achados 27 a 29 foram registrados durante a `007` e estão ao fim do documento.*
+
 As capturas de tela numeradas de 01 a 17 acompanham este relatório e seguem a ordem do percurso.
 
 ---
@@ -403,3 +405,52 @@ Uma sequência que compra mais confiança por hora gasta:
    produto sobre até onde a tela vai.
 
 Os três primeiros itens são reparo da entrega recém-integrada. O quarto e o quinto são produto.
+
+---
+
+## Achados registrados durante a `007`
+
+> Encontrados ao implementar, e **não corrigidos ali** — a trava da `007` diz que achar uma
+> necessidade plausível durante a implementação não autoriza incluí-la (P-001). Ficam como insumo
+> de priorização.
+
+### 27 · As recusas do servidor não sabem a que campo pertencem
+
+FR-033 pede resumo de erros **com âncora para cada campo** e a mensagem junto do campo. As recusas
+do cliente já fazem isso — `validacao.js` associa a mensagem ao controle e limpa a marcação ARIA
+quando o campo é corrigido. As do servidor, não: `ProfileValidationError`, `ScheduleValidationError`
+e `StageValidationError` carregam **mensagem e nada mais**.
+
+A `007` entregou o resumo focalizável e anunciado; a âncora por campo ficou de fora porque exigiria
+que o domínio passasse a nomear o campo de cada recusa. Isso é mudança de domínio, não de interface.
+
+- **Onde:** `editais/domain/{perfis,cronograma,etapas}.py` — exceções sem identidade de campo
+- **Consequência hoje:** numa recusa como "reserva limitada sem limite", a pessoa lê o resumo e
+  procura a linha sozinha
+- **Custo de corrigir:** dar às exceções de domínio um campo opcional de caminho, e propagá-lo pela
+  interface. Pequeno, mas atravessa a fronteira domínio/interface
+
+### 28 · `/number` e `/year` continuam endereçáveis por Retificação
+
+A `007` protegeu os cinco campos de identidade da raiz — `editalId`, `processoId`, `processoCode`,
+`processoTitle` e `schemaVersion` — porque passou a **depender** deles para o documento nomear o
+Processo. `number` e `year` ficaram fora: são identidade e já eram impressos no cabeçalho antes
+desta feature, e uma Retificação que corrija erro de numeração é discussão legítima.
+
+Está registrado em `research.md` D-003.1 e tem teste que documenta o estado atual — se alguém
+decidir protegê-los, é lá que a decisão aparece.
+
+- **Pergunta de produto:** corrigir o número de um Edital publicado é Retificação, ou é outro ato?
+
+### 29 · O rótulo do Evento no seletor de Etapa quase saiu vazio
+
+Não é defeito do produto: é registro de método. Ao trocar o texto da opção de `tipo — descrição`
+para incluir a data, o template passou a ler `evento.rotulo` e o campo **não chegou a ser criado**
+em `forms.py` — um script de edição falhou antes de gravar e eu conferi só o template.
+
+A suíte inteira continuou verde: nenhum teste olhava o texto da opção. O defeito apareceu no
+navegador, com um `<option>` vazio — pior do que a lista truncada que existia antes.
+
+- **Corrigido na própria `007`**, com teste que falha de verdade quando o defeito é reintroduzido
+- **A lição:** um teste que verifica "o campo existe" não substitui um que verifica "o que o
+  usuário lê". A demonstração navegável pegou o que 993 testes não pegaram

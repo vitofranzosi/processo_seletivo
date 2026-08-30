@@ -249,11 +249,11 @@ levado a elaborar; ver `Submeter` desabilitado com motivo; não receber `Retific
 
 ## Phase 10: Polish & Cross-Cutting Concerns
 
-- [ ] T093 Rodar `ruff check` e `ruff format --check` e a suíte completa, comparando a contagem de testes com a registrada em T001
-- [ ] T094 Percorrer o assistente inteiro **só por teclado, com leitor de tela**, alcançando obrigatoriedade, motivo de ato desabilitado, resumo de erros e confirmação de remoção, sem depender de cor (SC-009b)
-- [ ] T095 Executar a demonstração de ponta a ponta de `quickstart.md` com **dois atores**, do painel ao documento publicado, e registrar as verificações
-- [ ] T096 Conferir a tabela de rastreabilidade da spec: os dezesseis achados abertos estão cobertos, e **nenhum requisito novo entrou** durante a implementação
-- [ ] T097 Registrar, sem corrigir, todo achado novo encontrado durante a implementação — inclusive a questão aberta de `/number` e `/year` na Retificação (D-003.1)
+- [X] T093 Rodar `ruff check` e `ruff format --check` e a suíte completa, comparando a contagem de testes com a registrada em T001
+- [X] T094 Percorrer o assistente inteiro **só por teclado, com leitor de tela**, alcançando obrigatoriedade, motivo de ato desabilitado, resumo de erros e confirmação de remoção, sem depender de cor (SC-009b)
+- [X] T095 Executar a demonstração de ponta a ponta de `quickstart.md` com **dois atores**, do painel ao documento publicado, e registrar as verificações
+- [X] T096 Conferir a tabela de rastreabilidade da spec: os dezesseis achados abertos estão cobertos, e **nenhum requisito novo entrou** durante a implementação
+- [X] T097 Registrar, sem corrigir, todo achado novo encontrado durante a implementação — inclusive a questão aberta de `/number` e `/year` na Retificação (D-003.1)
 
 ---
 

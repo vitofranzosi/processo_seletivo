@@ -318,6 +318,13 @@ def eventos_do_edital(edital):
             if evento.end_at
             else "",
             "order": evento.order,
+            # O rótulo que a Etapa mostra ao escolher o vínculo (FR-036). A Etapa se vincula a um
+            # Evento **para herdar as datas** — é o que a ajuda promete —, e a lista mostrava
+            # "tipo — descrição", cortava por falta de largura e não mostrava data nenhuma: para
+            # saber que datas estava herdando, era preciso voltar ao Cronograma.
+            "rotulo": (
+                f"{evento.type} · {evento.start_at.astimezone(ZONA).strftime('%d/%m/%Y %H:%M')}"
+            ),
         }
         for evento in cronograma.eventos.order_by("order")
     ]
