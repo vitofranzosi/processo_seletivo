@@ -7,7 +7,10 @@ com explicação sem perder o que a pessoa digitou. A validação real continua 
 import pytest
 from django.urls import reverse
 
+from processo_seletivo.auditoria.models import RegistroAuditoria
+from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
+from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import compor_rascunho, identificar
 
 PERFIL = "aaaaaaaa-0000-4000-8000-00000000e001"
@@ -215,12 +218,19 @@ def test_edital_publicado_nao_e_editavel_pela_composicao(
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_identificacao_mostra_o_processo_e_diz_que_nao_e_editavel(client, seletor_ligado, edital):
-    """Não há command que altere título ou descrição após a criação — a tela diz isso."""
+def test_identificacao_mostra_o_processo_e_oferece_titulo_e_descricao(
+    client, seletor_ligado, edital
+):
+    """FR-006: a etapa deixou de ser somente leitura quando o ato de domínio nasceu.
+
+    O que continua imutável é o que identifica o Edital perante o Processo — número e ano.
+    """
     identificar(client, "ana.elaboradora", ["elaborador"])
     corpo = client.get(etapa(edital, "identificacao")).content.decode()
     assert ProcessoSeletivo.objects.get().institutional_code in corpo
-    assert "Não é editável nesta tela" in corpo
+    assert 'name="title"' in corpo
+    assert 'name="description"' in corpo
+    assert "Não é editável nesta tela" not in corpo
 
 
 @pytest.mark.django_db
@@ -353,12 +363,12 @@ def test_cada_etapa_mostra_apenas_a_pendencia_que_resolve(client, seletor_ligado
 
 
 @pytest.mark.django_db(transaction=True)
-def test_pendencia_sem_onde_corrigir_nao_oferece_caminho(client, seletor_ligado, edital):
-    """FR-027: caminho que não termina em lugar nenhum é pior que caminho nenhum.
+def test_pendencia_de_identificacao_passa_a_ter_caminho(client, seletor_ligado, edital):
+    """FR-007: a `002` declarava esta pendência incorrigível, e estava certa — não havia ato.
 
-    `description` só existe na criação do Edital e não tem ato de domínio que a altere depois. A
-    etapa de Identificação é somente leitura — mandar alguém até lá para corrigir era oferecer
-    uma volta inútil.
+    Com `update_edital_identification`, o caminho existe e termina em algum lugar: o link da
+    pendência leva à etapa, com a âncora da seção. Declarar incorrigível o que a etapa resolve
+    seria pior do que a situação anterior, porque agora seria falso.
     """
     identificar(client, "ana.elaboradora", ["elaborador"])
 
@@ -368,7 +378,112 @@ def test_pendencia_sem_onde_corrigir_nao_oferece_caminho(client, seletor_ligado,
     identificacao = reverse("interface:compor-etapa", args=[edital.id, "identificacao"])
 
     assert "O Edital não possui descrição." in revisao
-    # A navegação do assistente linka a etapa de qualquer forma; o que não pode existir é o link
-    # da pendência, que é o que carrega a âncora da seção.
-    assert f'href="{identificacao}#ident-titulo"' not in revisao
-    assert "Não corrigível aqui" in revisao
+    assert f'href="{identificacao}#ident-titulo"' in revisao
+    assert "Não corrigível aqui" not in revisao
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_identificacao_alterada_persiste_e_e_auditada(client, seletor_ligado, edital):
+    """FR-006: o ato existe, é do domínio, e deixa rastro como qualquer outro."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = client.post(
+        etapa(edital, "identificacao"),
+        {"title": "Edital revisado", "description": "Descrição informada depois da criação."},
+    )
+    assert resposta.status_code == 302, resposta.content
+
+    edital.refresh_from_db()
+    assert edital.title == "Edital revisado"
+    assert edital.description == "Descrição informada depois da criação."
+    assert edital.last_edited_by == "ana.elaboradora"
+
+    registro = RegistroAuditoria.objects.filter(operation="ALTERAR_IDENTIFICACAO").get()
+    assert registro.actor_subject == "ana.elaboradora"
+    assert registro.aggregate_id == edital.id
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_identificacao_sem_titulo_e_recusada_sem_perder_o_digitado(client, seletor_ligado, edital):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    anterior = edital.title
+    resposta = client.post(
+        etapa(edital, "identificacao"), {"title": "   ", "description": "Vale guardar"}
+    )
+
+    assert resposta.status_code == 200
+    corpo = resposta.content.decode()
+    assert "título do Edital é obrigatório" in corpo
+    assert "Vale guardar" in corpo, "o que foi digitado precisa sobreviver à recusa"
+    edital.refresh_from_db()
+    assert edital.title == anterior
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_identificacao_nao_e_alteravel_fora_da_elaboracao(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """A recusa é do domínio; a tela apenas deixa de oferecer o formulário."""
+    publicado = publish_original(api_client, manager_headers, process_payload)
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    anterior = publicado.title
+
+    resposta = client.post(
+        etapa(publicado, "identificacao"), {"title": "Tentativa", "description": ""}
+    )
+
+    assert resposta.status_code == 200
+    assert "não está em elaboração" in resposta.content.decode()
+    publicado.refresh_from_db()
+    assert publicado.title == anterior
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_reordenar_muda_a_ordem_persistida_e_preserva_a_identidade(
+    client, seletor_ligado, edital
+):
+    """FR-003 e FR-004, e a correção de uma afirmação errada do plano.
+
+    A primeira versão dizia que bastava mover a linha no DOM, porque a gravação derivaria a ordem
+    da posição. Não derivaria: `_indices` devolve os índices ordenados numericamente, então a
+    posição visual era descartada antes da leitura. O teste que prova isso é o da **ordem
+    persistida** — o da identidade sozinho passaria mesmo com o defeito.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    tres = {
+        f"evento-{indice}-{campo}": valor
+        for indice, (identificador, tipo) in enumerate(
+            [
+                ("aaaaaaaa-0000-4000-8000-00000000e011", "INSCRICAO"),
+                ("aaaaaaaa-0000-4000-8000-00000000e012", "PROVA"),
+                ("aaaaaaaa-0000-4000-8000-00000000e013", "RESULTADO"),
+            ]
+        )
+        for campo, valor in {
+            "id": identificador,
+            "type": tipo,
+            "description": f"Etapa {tipo}",
+            "startAt": f"2026-1{indice}-01T09:00",
+            "order": str(indice + 1),
+        }.items()
+    }
+    compor_rascunho(client, edital, perfis(), tres)
+
+    antes = list(EventoCronograma.objects.order_by("order").values_list("id", "type"))
+    assert [tipo for _, tipo in antes] == ["INSCRICAO", "PROVA", "RESULTADO"]
+
+    # O terceiro vai para a primeira posição — é o que os botões fazem ao campo `order`.
+    edital.refresh_from_db()
+    movido = dict(tres, **{"evento-2-order": "0"})
+    resposta = client.post(etapa(edital, "cronograma"), movido)
+    assert resposta.status_code == 302, resposta.content
+
+    depois = list(EventoCronograma.objects.order_by("order").values_list("id", "type", "order"))
+    assert [tipo for _, tipo, _ in depois] == ["RESULTADO", "INSCRICAO", "PROVA"]
+    assert [ordem for _, _, ordem in depois] == [1, 2, 3], "a numeração fica sem buraco"
+    assert {identificador for identificador, _, _ in depois} == {
+        identificador for identificador, _ in antes
+    }, "reordenar não pode trocar a identidade de nenhum Evento"

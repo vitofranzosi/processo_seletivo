@@ -15,6 +15,12 @@ antes da autenticação real.</p>
 responsabilidade. Solicite acesso a quem administra o sistema no Cefor.</p>
 {% endif %}
 
+{% if pode_criar %}
+<p class="acoes-do-painel">
+  <a class="botao" href="{% url 'interface:processo-criar' %}">Novo Processo Seletivo</a>
+</p>
+{% endif %}
+
 {% if resumo %}
 <ul class="resumo" aria-label="Editais por situação">
   {% for situacao_valor, quantidade in resumo %}
@@ -68,9 +74,6 @@ responsabilidade. Solicite acesso a quem administra o sistema no Cefor.</p>
 {% empty %}
 <div class="vazio">
   <p>Nenhum Processo Seletivo no seu escopo institucional.</p>
-  {% if pode_criar %}
-<p><a class="botao" href="{% url 'interface:processo-criar' %}">Criar Processo Seletivo</a></p>
-{% endif %}
 </div>
 {% endfor %}
 {% endblock %}

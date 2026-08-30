@@ -1,28 +1,47 @@
 {% extends "interface/compor_base.html" %}
 {% block etapa_titulo %}Identificação{% endblock %}
 {% block etapa %}
-<section aria-labelledby="ident-titulo" class="cartao">
-  <h2 id="ident-titulo">Identificação administrativa</h2>
-  <p class="ajuda">Definida na criação do Edital. Não é editável nesta tela — ainda não existe
-    ato de domínio que altere a identificação de um Edital em elaboração.</p>
-  <dl class="participantes">
-    <dt>Processo Seletivo</dt><dd>{{ edital.processo.title }}
-      <span class="codigo">{{ edital.processo.institutional_code }}</span></dd>
-    <dt>Número e ano</dt><dd>{{ edital.number }}/{{ edital.year }}</dd>
-    <dt>Título</dt><dd>{{ edital.title }}</dd>
-    <dt>Descrição</dt>
-    <dd>{% if edital.description %}{{ edital.description }}
-      {% else %}<span class="pendente">não informada na criação</span>{% endif %}</dd>
-  </dl>
-</section>
-
-{% if not edital.description %}
-<p class="aviso"><strong>Descrição ausente.</strong> A validação avisa sobre isso, mas ela só pode
-ser informada na criação do Edital. É uma lacuna conhecida do backend, registrada para a próxima
-evolução — o aviso não impede a submissão.</p>
-{% endif %}
-
-<p class="navegacao-etapa">
-  <a href="{% url 'interface:compor-etapa' edital.id proxima %}" class="botao">Avançar ›</a>
-</p>
+<form method="post" id="formulario">
+  {% csrf_token %}
+  <section aria-labelledby="ident-titulo" class="cartao">
+    <h2 id="ident-titulo">Identificação administrativa</h2>
+    {% if pendencias_aqui %}
+    <div class="pendencias" role="status">
+      {% include "interface/_pendencias.html" with itens=pendencias_aqui com_link=False %}
+    </div>
+    {% endif %}
+    <p class="ajuda">Número, ano e Processo Seletivo são definidos na criação e não mudam. Título e
+      descrição podem ser alterados enquanto o Edital estiver em elaboração.</p>
+    <dl class="participantes">
+      <dt>Processo Seletivo</dt><dd>{{ edital.processo.title }}
+        <span class="codigo">{{ edital.processo.institutional_code }}</span></dd>
+      <dt>Número e ano</dt><dd>{{ edital.number }}/{{ edital.year }}</dd>
+    </dl>
+    <p class="campo largo">
+      <label for="ident-title">Título do Edital</label>
+      <input type="text" id="ident-title" name="title" value="{{ identificacao.title|default:'' }}"
+             required maxlength="255" {% if not editavel %}disabled{% endif %}>
+    </p>
+    <p class="campo largo">
+      <label for="ident-description">Descrição</label>
+      <textarea id="ident-description" name="description" rows="4"
+                aria-describedby="ajuda-descricao"
+                {% if not editavel %}disabled{% endif %}>{{ identificacao.description|default:'' }}</textarea>
+      <span class="ajuda" id="ajuda-descricao">Resumo do objeto do Edital. A validação avisa quando
+        está ausente, e agora ela pode ser preenchida aqui.</span>
+    </p>
+  </section>
+  {% if editavel %}
+  {% include "interface/_navegacao_etapa.html" %}
+  {% else %}
+  {% comment %}
+  Sem o que salvar, navegar não pode passar por submissão: o POST voltaria recusado por uma
+  etapa que a pessoa nem tentou editar. Aqui a navegação é link, como era antes de a etapa
+  ganhar formulário.
+  {% endcomment %}
+  <p class="navegacao-etapa">
+    <a href="{% url 'interface:compor-etapa' edital.id proxima %}" class="botao">Avançar ›</a>
+  </p>
+  {% endif %}
+</form>
 {% endblock %}

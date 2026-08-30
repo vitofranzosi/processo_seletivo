@@ -34,7 +34,7 @@ mais `backend/processo_seletivo/interface/` para a interface administrativa e `b
 
 **Purpose**: partir de base conhecida. Não há projeto a inicializar — a feature é aditiva.
 
-- [ ] T001 Confirmar suíte verde na base, com o comando de `quickstart.md`, e registrar o número de testes antes de qualquer alteração
+- [X] T001 Confirmar suíte verde na base, com o comando de `quickstart.md`, e registrar o número de testes antes de qualquer alteração
 
 ---
 
@@ -43,7 +43,7 @@ mais `backend/processo_seletivo/interface/` para a interface administrativa e `b
 **Purpose**: uma única tarefa, e ela é bloqueante por ordem temporal — precisa acontecer **antes** de
 `pdf.py` mudar, ou a linha de base se perde.
 
-- [ ] T002 Capturar fixture com os bytes do PDF publicado gerado hoje, a partir de um snapshot fixo e versionado junto dela, em `backend/tests/contract/fixtures/documento_publicado_v1.pdf`, e o teste que o compara em `backend/tests/contract/test_documento_publicado.py`. A fixture prova **uma** coisa: que a introdução do modo de prévia não alterou o documento publicado. Regenerá-la só é legítimo na mesma tarefa que mudar a composição de propósito, com o diff revisado — T075 não a toca
+- [X] T002 Capturar fixture com os bytes do PDF publicado gerado hoje, a partir de um snapshot fixo e versionado junto dela, em `backend/tests/contract/fixtures/documento_publicado_v1.pdf`, e o teste que o compara em `backend/tests/contract/test_documento_publicado.py`. A fixture prova **uma** coisa: que a introdução do modo de prévia não alterou o documento publicado. Regenerá-la só é legítimo na mesma tarefa que mudar a composição de propósito, com o diff revisado — T075 não a toca
 
 **Checkpoint**: a regressão byte a byte de US1 tem contra o que comparar.
 
@@ -60,29 +60,29 @@ publicado — tudo pela interface.
 
 ### Exposição de capacidades existentes
 
-- [ ] T003 [P] [US0] Mover a ação `Novo Processo Seletivo` do bloco `{% empty %}` para o cabeçalho da listagem, sob o mesmo `pode_criar`, em `backend/processo_seletivo/interface/templates/interface/lista.html`
-- [ ] T004 [US0] Expor no detalhe do Edital o documento de **cada Publicação**, em ordem e identificado pelo ato que o produziu — publicação original ou Retificação —, **sem rotular nenhum como vigente**: a vigência é da Versão Consolidada, que não tem documento próprio, e uma Retificação pode ser publicada com vigência futura. Fornecer a lista no contexto em `backend/processo_seletivo/interface/views.py` e renderizá-la em `backend/processo_seletivo/interface/templates/interface/detalhe.html`
+- [X] T003 [P] [US0] Mover a ação `Novo Processo Seletivo` do bloco `{% empty %}` para o cabeçalho da listagem, sob o mesmo `pode_criar`, em `backend/processo_seletivo/interface/templates/interface/lista.html`
+- [X] T004 [US0] Expor no detalhe do Edital o documento de **cada Publicação**, em ordem e identificado pelo ato que o produziu — publicação original ou Retificação —, **sem rotular nenhum como vigente**: a vigência é da Versão Consolidada, que não tem documento próprio, e uma Retificação pode ser publicada com vigência futura. Fornecer a lista no contexto em `backend/processo_seletivo/interface/views.py` e renderizá-la em `backend/processo_seletivo/interface/templates/interface/detalhe.html`
 
 ### Alterar a identificação em elaboração
 
-- [ ] T005 [US0] Criar `update_edital_identification` em `backend/processo_seletivo/editais/application/identificacao.py`, exigindo status `EM_ELABORACAO`, `expected_revision`, permissão e registro de auditoria, no molde de `backend/processo_seletivo/processos/application/commands.py`
-- [ ] T006 [US0] Tornar a etapa `Identificação` editável e marcar `title` e `description` como corrigíveis em `DESTINO_DA_PENDENCIA`, removendo `MOTIVO_NAO_CORRIGIVEL` do caminho alcançável, em `backend/processo_seletivo/interface/views.py`
-- [ ] T007 [US0] Trocar a exibição por formulário de identificação em `backend/processo_seletivo/interface/templates/interface/compor_identificacao.html`
+- [X] T005 [US0] Criar `update_edital_identification` em `backend/processo_seletivo/editais/application/identificacao.py`, exigindo status `EM_ELABORACAO`, `expected_revision`, permissão e registro de auditoria, no molde de `backend/processo_seletivo/processos/application/commands.py`
+- [X] T006 [US0] Tornar a etapa `Identificação` editável e marcar `title` e `description` como corrigíveis em `DESTINO_DA_PENDENCIA`, removendo `MOTIVO_NAO_CORRIGIVEL` do caminho alcançável, em `backend/processo_seletivo/interface/views.py`
+- [X] T007 [US0] Trocar a exibição por formulário de identificação em `backend/processo_seletivo/interface/templates/interface/compor_identificacao.html`
 
 ### Ordem como dado explícito
 
-- [ ] T008 [US0] Fazer `ler_eventos` ordenar pelo campo `order` recebido, em vez de derivar da ordem de leitura dos índices, em `backend/processo_seletivo/interface/forms.py`
-- [ ] T009 [US0] Acrescentar campo oculto `order` e botões de subir e descer, com rótulo acessível, em `backend/processo_seletivo/interface/templates/interface/_evento.html`
-- [ ] T010 [US0] Implementar o movimento de linha e a renumeração do campo `order` em `backend/processo_seletivo/interface/static/interface/ordenacao.js`, e carregá-lo em `compor_cronograma.html`
+- [X] T008 [US0] Fazer `ler_eventos` ordenar pelo campo `order` recebido, em vez de derivar da ordem de leitura dos índices, em `backend/processo_seletivo/interface/forms.py`
+- [X] T009 [US0] Acrescentar campo oculto `order` e botões de subir e descer, com rótulo acessível, em `backend/processo_seletivo/interface/templates/interface/_evento.html`
+- [X] T010 [US0] Implementar o movimento de linha e a renumeração do campo `order` em `backend/processo_seletivo/interface/static/interface/ordenacao.js`, e carregá-lo em `compor_cronograma.html`
 
 ### Testes
 
-- [ ] T011 [P] [US0] Botão presente na listagem com Processos cadastrados e ausente para quem não tem permissão, em `backend/tests/interface/test_lista.py`
-- [ ] T012 [P] [US0] Alteração de identificação persiste, registra auditoria e é recusada fora de `EM_ELABORACAO`, em `backend/tests/interface/test_compor.py`
-- [ ] T013 [P] [US0] Nenhuma pendência aparece como não corrigível quando a etapa a resolve, em `backend/tests/interface/test_impedimentos.py`
-- [ ] T014 [US0] Reordenar **muda a ordem persistida** e preserva o `id` de cada Evento, em `backend/tests/interface/test_compor.py`
-- [ ] T015 [P] [US0] Mover linha atualiza o campo `order` no DOM, em `backend/tests/javascript/ordenacao.test.js`, registrado em `backend/tests/test_javascript.py`
-- [ ] T016 [P] [US0] Detalhe de Edital publicado oferece o documento de cada Publicação, identificado pelo ato, e nenhum é apresentado como vigente — inclusive com Retificação publicada de vigência futura, em `backend/tests/interface/test_fluxo.py`
+- [X] T011 [P] [US0] Botão presente na listagem com Processos cadastrados e ausente para quem não tem permissão, em `backend/tests/interface/test_lista.py`
+- [X] T012 [P] [US0] Alteração de identificação persiste, registra auditoria e é recusada fora de `EM_ELABORACAO`, em `backend/tests/interface/test_compor.py`
+- [X] T013 [P] [US0] Nenhuma pendência aparece como não corrigível quando a etapa a resolve, em `backend/tests/interface/test_impedimentos.py`
+- [X] T014 [US0] Reordenar **muda a ordem persistida** e preserva o `id` de cada Evento, em `backend/tests/interface/test_compor.py`
+- [X] T015 [P] [US0] Mover linha atualiza o campo `order` no DOM, em `backend/tests/javascript/ordenacao.test.js`, registrado em `backend/tests/test_javascript.py`
+- [X] T016 [P] [US0] Detalhe de Edital publicado oferece o documento de cada Publicação, identificado pelo ato, e nenhum é apresentado como vigente — inclusive com Retificação publicada de vigência futura, em `backend/tests/interface/test_fluxo.py`
 
 **Checkpoint**: demonstrável — criar Processo, editar título, mover Eventos, abrir documento
 publicado.

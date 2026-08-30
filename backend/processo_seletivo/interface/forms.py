@@ -65,6 +65,11 @@ def _modalidades(bruto):
     return modalidades
 
 
+def ler_identificacao(dados):
+    """Título e descrição; número e ano continuam sendo da criação do Edital."""
+    return {"title": _texto(dados, "title"), "description": _texto(dados, "description")}
+
+
 def ler_perfis(dados):
     perfis = []
     for indice in _indices(dados, "perfil"):
@@ -93,8 +98,18 @@ def ler_perfis(dados):
 
 
 def ler_eventos(dados):
+    """A ordem é dado enviado, e não a posição de leitura das linhas.
+
+    `_indices` devolve os índices **ordenados numericamente**, de modo que a posição da linha no
+    documento é descartada antes de chegar aqui: mover a linha na tela, sozinho, não mudaria nada, e
+    o defeito seria silencioso — a tela mostraria a ordem nova e o banco guardaria a antiga. Por
+    isso cada linha carrega o próprio `order`, que os botões de subir e descer atualizam.
+
+    A renumeração final é do servidor: o que vem do formulário estabelece a **sequência**, e não os
+    números, que precisam ser 1..n sem buraco por causa da unicidade de `(cronograma, order)`.
+    """
     eventos = []
-    for ordem, indice in enumerate(_indices(dados, "evento"), 1):
+    for indice in _indices(dados, "evento"):
         base = f"evento-{indice}"
         eventos.append(
             {
@@ -103,9 +118,12 @@ def ler_eventos(dados):
                 "description": _texto(dados, f"{base}-description"),
                 "startAt": _instante(dados, f"{base}-startAt"),
                 "endAt": _instante(dados, f"{base}-endAt"),
-                "order": ordem,
+                "order": _inteiro(dados, f"{base}-order", 0),
             }
         )
+    eventos.sort(key=lambda evento: evento["order"])
+    for ordem, evento in enumerate(eventos, 1):
+        evento["order"] = ordem
     return eventos
 
 
@@ -145,6 +163,7 @@ def eventos_do_edital(edital):
             "endAt": evento.end_at.astimezone(ZONA).strftime("%Y-%m-%dT%H:%M")
             if evento.end_at
             else "",
+            "order": evento.order,
         }
         for evento in cronograma.eventos.order_by("order")
     ]

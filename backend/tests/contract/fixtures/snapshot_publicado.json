@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "editalId": "11111111-1111-1111-1111-111111111111",
+  "processoId": "22222222-2222-2222-2222-222222222222",
+  "number": "07",
+  "year": 2026,
+  "title": "Edital 07/2026 — Professor Substituto",
+  "description": "Seleção simplificada para docência no Campus Serra.",
+  "profiles": [
+    {
+      "id": "33333333-3333-3333-3333-333333333333",
+      "code": "DOC-INFO",
+      "name": "Professor de Informática",
+      "description": "Docência em Informática, com atuação no ensino técnico e superior.",
+      "requirements": [
+        "Mestrado em Computação ou área afim",
+        "Registro profissional ativo"
+      ],
+      "immediateVacancies": 3,
+      "reserveType": "LIMITED",
+      "reserveLimit": 6,
+      "locality": "Campus Serra",
+      "classificationInformation": {},
+      "callInformation": {},
+      "competitionModalities": [
+        {
+          "id": "44444444-4444-4444-4444-444444444444",
+          "code": "PPP",
+          "name": "Pessoas pretas, pardas e indígenas",
+          "description": "Reserva de vagas nos termos da Lei 12.990/2014.",
+          "normativeRule": {
+            "id": "55555555-5555-5555-5555-555555555555",
+            "foundation": "Lei 12.990/2014",
+            "version": "2014-06-09",
+            "percentage": "20.0000",
+            "calculation": {},
+            "rounding": {},
+            "distribution": {},
+            "callRules": {},
+            "effectiveFrom": null
+          }
+        }
+      ]
+    }
+  ],
+  "schedule": [
+    {
+      "id": "66666666-6666-6666-6666-666666666666",
+      "type": "INSCRICAO",
+      "description": "Período de inscrições",
+      "startAt": "2026-09-01T09:00:00-03:00",
+      "endAt": "2026-09-20T23:59:00-03:00",
+      "order": 1,
+      "status": "PLANEJADO"
+    },
+    {
+      "id": "77777777-7777-7777-7777-777777777777",
+      "type": "PROVA",
+      "description": "Prova didática",
+      "startAt": "2026-10-05T14:00:00-03:00",
+      "endAt": null,
+      "order": 2,
+      "status": "PLANEJADO"
+    }
+  ]
+}

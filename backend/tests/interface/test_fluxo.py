@@ -10,7 +10,8 @@ from django.urls import reverse
 
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models import Publicacao
-from tests.fixtures.publicacao import publish_original
+from tests.fixtures.edital import caminho_perfil
+from tests.fixtures.publicacao import publish_original, retify
 from tests.interface.conftest import compor_rascunho, identificar
 
 PERFIS = {
@@ -237,3 +238,48 @@ def test_encerrar_nao_se_parece_com_cancelar(
     assert "perigoso" in botoes["Cancelar"], "cancelar é interrupção e recebe tratamento próprio"
     assert "perigoso" not in botoes["Encerrar"], "encerrar é conclusão regular"
     assert corpo.count("irreversível") >= 2, "ambos seguem marcados como irreversíveis"
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_detalhe_oferece_o_documento_de_cada_publicacao_sem_rotular_vigente(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """FR-002: o documento pertence ao ato, e nenhum ato produz o "documento vigente".
+
+    A Retificação abaixo é publicada com vigência **futura**, que é o caso que desfaz a tentação:
+    a Publicação mais recente existe, tem documento, e não é a que vigora. A vigência é da Versão
+    Consolidada, que não tem documento próprio — chamar qualquer um destes de vigente seria
+    afirmar sobre o documento uma propriedade que ele não tem.
+    """
+    edital = publish_original(api_client, manager_headers, process_payload)
+    retify(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": caminho_perfil("immediateVacancies"),
+                "operation": "REPLACE",
+                "newValue": 5,
+            }
+        ],
+        effective_at="2030-01-01T00:00:00-03:00",
+    )
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = client.get(reverse("interface:detalhe", args=[edital.id]))
+    corpo = resposta.content.decode()
+
+    documentos = resposta.context["documentos"]
+    assert [item["ato"] for item in documentos] == ["Publicação original", "Retificação"]
+    assert [item["ordem"] for item in documentos] == [1, 2]
+    for publicacao in Publicacao.objects.filter(edital=edital):
+        assert f"/api/v1/public/publicacoes/{publicacao.id}/documento" in corpo
+
+    # Nenhum item da lista se apresenta como vigente. A verificação é sobre os itens, e não sobre
+    # a página, porque a página **explica** que nenhum deles é o documento vigente — e essa frase
+    # é justamente o que se quer manter.
+    lista = corpo.split('id="documentos-titulo"')[1].split("</ul>")[0]
+    itens = lista.split("<li>")[1:]
+    assert len(itens) == 2
+    assert [item for item in itens if "vigente" in item.lower()] == []

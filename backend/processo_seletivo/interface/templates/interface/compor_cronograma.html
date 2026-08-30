@@ -17,7 +17,7 @@
     <p class="contadores" data-contador="#eventos" data-item=".evento" data-singular="Evento" data-plural="Eventos">
       <span><strong>{{ eventos|length }}</strong> Evento{{ eventos|length|pluralize:"s" }}</span>
     </p>
-    <div id="eventos">
+    <div id="eventos" data-ordenavel>
       {% for evento in eventos %}{% include "interface/_evento.html" with indice=forloop.counter0 %}{% endfor %}
     </div>
     {% if editavel %}
@@ -30,6 +30,7 @@
 </form>
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
 <script src="{% static 'interface/assistente.js' %}" defer></script>
+<script src="{% static 'interface/ordenacao.js' %}" defer></script>
 <script src="{% static 'interface/rascunho.js' %}" defer></script>
 <script src="{% static 'interface/validacao.js' %}" defer></script>
 {% endblock %}

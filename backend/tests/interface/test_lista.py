@@ -41,6 +41,32 @@ def test_lista_mostra_processos_e_editais_do_escopo(client, seletor_ligado, cena
 
 @pytest.mark.django_db
 @pytest.mark.integration
+def test_criar_processo_continua_visivel_com_a_lista_cheia(client, seletor_ligado, cenario):
+    """FR-001: a ação existia e o template só a renderizava dentro do bloco `{% empty %}`.
+
+    Com um Processo cadastrado ela desaparecia — a rota continuava lá, alcançável só por quem
+    soubesse a URL. É o beco sem saída mais barato de fechar, e o mais visível.
+    """
+    identificar(client, "marcia.gestora", ["gestor"])
+    corpo = client.get(reverse("interface:lista")).content.decode()
+
+    assert ProcessoSeletivo.objects.exists(), "o cenário precisa ter lista não vazia"
+    assert "Novo Processo Seletivo" in corpo
+    assert reverse("interface:processo-criar") in corpo
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_criar_processo_nao_aparece_para_quem_nao_pode_criar(client, seletor_ligado, cenario):
+    """Ocultar é conveniência, não fronteira — mas oferecer o que será recusado é ruído."""
+    identificar(client, "iris.auditora", ["auditor"])
+    corpo = client.get(reverse("interface:lista")).content.decode()
+
+    assert "Novo Processo Seletivo" not in corpo
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
 def test_lista_nao_revela_processo_de_outro_escopo(client, seletor_ligado, cenario, settings):
     """Anti-IDOR: a listagem não pode ser a brecha por onde se enxerga o que não se alcança."""
     identificar(client, "gestor.externo", ["gestor"])

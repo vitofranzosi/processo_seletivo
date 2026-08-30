@@ -27,6 +27,18 @@ class Elemento {
     this.dataset = {};
     this.className = "";
     this.textContent = "";
+    this.nodeType = 1;
+    this.parentNode = null;
+  }
+
+  /** O ancestral mais próximo — incluindo o próprio — que satisfaz `[atributo]` ou uma tag. */
+  closest(seletor) {
+    const atributo = /^\[([\w-]+)\]$/.exec(seletor);
+    for (let no = this; no; no = no.parentNode) {
+      if (atributo && no.getAttribute && no.getAttribute(atributo[1]) !== null) return no;
+      if (!atributo && no.tagName === seletor) return no;
+    }
+    return null;
   }
 
   get name() {
@@ -81,11 +93,69 @@ function linha(classe, indice, campos) {
   const elemento = new Elemento("fieldset");
   elemento.classes = ["linha", classe];
   for (const [sufixo, valor] of Object.entries(campos)) {
-    elemento.filhos.push(
-      new Elemento("input", { name: `${classe}-${indice}-${sufixo}`, value: String(valor) })
-    );
+    const campo = new Elemento("input", {
+      name: `${classe}-${indice}-${sufixo}`,
+      value: String(valor),
+    });
+    campo.parentNode = elemento;
+    elemento.filhos.push(campo);
   }
   return elemento;
+}
+
+/** Um botão de mover, como `_evento.html` o renderiza: atributo e `dataset` com a direção. */
+function botaoDeMover(direcao) {
+  const botao = new Elemento("button", { "data-mover": direcao });
+  botao.dataset = { mover: direcao };
+  return botao;
+}
+
+/** A `<div data-ordenavel>` que contém as linhas: o mínimo de DOM que `ordenacao.js` percorre. */
+class Lista extends Elemento {
+  constructor(linhas = []) {
+    super("div", { "data-ordenavel": "" });
+    this.children = [];
+    this.ouvintes = {};
+    linhas.forEach((umaLinha) => this.append(umaLinha));
+  }
+
+  append(no) {
+    no.parentNode = this;
+    this.children.push(no);
+  }
+
+  insertBefore(no, referencia) {
+    const atual = this.children.indexOf(no);
+    if (atual >= 0) this.children.splice(atual, 1);
+    const posicao = this.children.indexOf(referencia);
+    this.children.splice(posicao < 0 ? this.children.length : posicao, 0, no);
+    no.parentNode = this;
+    return no;
+  }
+
+  contains(no) {
+    for (let atual = no; atual; atual = atual.parentNode) {
+      if (atual === this) return true;
+    }
+    return false;
+  }
+
+  addEventListener(tipo, ouvinte) {
+    (this.ouvintes[tipo] = this.ouvintes[tipo] || []).push(ouvinte);
+  }
+
+  /** Um clique que borbulha até a lista, como o do navegador. */
+  clicar(alvo) {
+    (this.ouvintes.click || []).forEach((ouvinte) => ouvinte({ type: "click", target: alvo }));
+  }
+
+  /** A ordem enviada, linha a linha — é o que o servidor vai ler. */
+  ordens() {
+    return this.children.map((umaLinha) => {
+      const campo = umaLinha.querySelector('[name$="-order"]');
+      return campo ? campo.value : null;
+    });
+  }
 }
 
 class Formulario extends Elemento {
@@ -156,7 +226,7 @@ class Armazem {
 let documento;
 
 /** Monta o ambiente global e devolve o que o teste precisa inspecionar. */
-function montar({ formulario, armazem = new Armazem(), avisos = [] } = {}) {
+function montar({ formulario, armazem = new Armazem(), avisos = [], ordenaveis = [] } = {}) {
   documento = {
     activeElement: null,
     getElementById: (id) => (id === "formulario" ? formulario : null),
@@ -164,7 +234,7 @@ function montar({ formulario, armazem = new Armazem(), avisos = [] } = {}) {
       if (seletor === "[data-nao-enviado]") return null;
       return seletor.startsWith("#") ? new Elemento("div") : null;
     },
-    querySelectorAll: () => [],
+    querySelectorAll: (seletor) => (seletor === "[data-ordenavel]" ? ordenaveis : []),
     createElement: (tag) => new Elemento(tag),
   };
   globalThis.document = documento;
@@ -184,4 +254,4 @@ function carregar(caminho) {
   require(caminho);
 }
 
-module.exports = { Armazem, Elemento, Formulario, carregar, linha, montar };
+module.exports = { Armazem, Elemento, Formulario, Lista, botaoDeMover, carregar, linha, montar };

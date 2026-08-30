@@ -18,6 +18,7 @@ from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.auditoria import selectors as auditoria_selectors
 from processo_seletivo.editais.application.draft import replace_draft
+from processo_seletivo.editais.application.identificacao import update_edital_identification
 from processo_seletivo.editais.domain.validation import validate_for_publication
 from processo_seletivo.interface import (
     atos,
@@ -233,18 +234,19 @@ SEVERIDADE = {"BLOCKING_ERROR": "erro", "WARNING": "aviso", "INFO": "informacao"
 # Para `profiles` e `schedule` a âncora é a seção, não um campo: a pendência é "não há nenhum", e
 # o lugar de agir é o botão de acrescentar, dentro da seção.
 #
-# `title` e `description` só existem na criação do Edital e não têm ato de domínio que os altere
-# depois. Levar alguém até a etapa de Identificação, que é somente leitura, seria oferecer um
-# caminho que não termina em lugar nenhum — pior do que não oferecer caminho algum.
+# `title` e `description` passaram a ser corrigíveis: a etapa de Identificação deixou de ser
+# somente leitura quando `update_edital_identification` nasceu (FR-006). Enquanto não havia o ato,
+# o caminho terminava numa tela que não corrigia nada — pior do que não oferecer caminho.
 DESTINO_DA_PENDENCIA = {
-    "title": ("identificacao", "#ident-titulo", False),
-    "description": ("identificacao", "#ident-titulo", False),
+    "title": ("identificacao", "#ident-titulo", True),
+    "description": ("identificacao", "#ident-titulo", True),
     "profiles": ("perfis", "#perfis-titulo", True),
     "schedule": ("cronograma", "#cronograma-titulo", True),
 }
-MOTIVO_NAO_CORRIGIVEL = (
-    "definido na criação do Edital; ainda não há ato de domínio que o altere em elaboração"
-)
+# Caminho que a tradução não conhece — os da forma publicada, por exemplo — não ganha destino nem
+# explicação inventada. FR-007 proíbe declarar incorrigível o que a etapa resolve; não obriga a
+# justificar o que ninguém mapeou.
+MOTIVO_SEM_DESTINO = "não há etapa do assistente que trate deste conteúdo"
 
 
 def _pendencias(edital):
@@ -262,7 +264,7 @@ def _pendencias(edital):
                 "ancora": ancora,
                 "corrigivel": corrigivel,
                 "rotulo_etapa": rotulos.get(etapa, ""),
-                "motivo": "" if corrigivel else MOTIVO_NAO_CORRIGIVEL,
+                "motivo": "" if corrigivel else MOTIVO_SEM_DESTINO,
             }
         )
     return pendencias
@@ -273,8 +275,9 @@ def _pendencias_da_etapa(pendencias, etapa):
     return [item for item in pendencias if item["etapa"] == etapa and item["corrigivel"]]
 
 
-# O wizard só tem as etapas que o domínio sustenta. Identificação é leitura porque não há
-# command que altere título ou descrição depois da criação — ver ETAPAS_SEM_BACKEND no plano.
+# O wizard só tem as etapas que o domínio sustenta. A Identificação era leitura porque nenhum
+# command alterava título ou descrição depois da criação; com `update_edital_identification` ela
+# passou a ser etapa como as outras.
 ETAPAS_COMPOSICAO = [
     ("identificacao", "Identificação", "interface/compor_identificacao.html"),
     ("perfis", "Perfis de Vaga", "interface/compor_perfis.html"),
@@ -282,6 +285,8 @@ ETAPAS_COMPOSICAO = [
     ("revisao", "Revisão", "interface/compor_revisao.html"),
 ]
 CHAVES_ETAPA = [chave for chave, _, _ in ETAPAS_COMPOSICAO]
+# As que aceitam POST. `revisao` consolida e não grava.
+ETAPAS_GRAVAVEIS = {"identificacao", "perfis", "cronograma"}
 
 
 def _progresso(edital, atual):
@@ -335,7 +340,7 @@ def compor_etapa(request, edital_id, etapa):
     anterior, proxima = _vizinhas(etapa)
     erros, digitados = [], None
 
-    if request.method == "POST" and etapa in {"perfis", "cronograma"}:
+    if request.method == "POST" and etapa in ETAPAS_GRAVAVEIS:
         if not editavel:
             erros.append(
                 "Este Edital não está em elaboração ou você não tem permissão para editá-lo."
@@ -371,6 +376,11 @@ def compor_etapa(request, edital_id, etapa):
             "editavel": editavel,
             "erros": erros,
             "salvo": request.GET.get("salvo") == "1",
+            "identificacao": (
+                digitados
+                if etapa == "identificacao" and digitados is not None
+                else {"title": edital.title, "description": edital.description}
+            ),
             "perfis": (
                 _reexibir_perfis(digitados)
                 if etapa == "perfis" and digitados is not None
@@ -416,16 +426,30 @@ def _reexibir_eventos(eventos):
 
 
 def _ler_etapa(request, etapa):
-    return forms.ler_perfis(request.POST) if etapa == "perfis" else forms.ler_eventos(request.POST)
+    if etapa == "identificacao":
+        return forms.ler_identificacao(request.POST)
+    if etapa == "perfis":
+        return forms.ler_perfis(request.POST)
+    return forms.ler_eventos(request.POST)
 
 
 def _gravar_etapa(request, ator, edital, etapa, digitados):
     """Grava uma seção preservando a outra: replace_draft substitui o rascunho inteiro."""
+    if etapa == "identificacao":
+        # A identificação não é conteúdo do rascunho: tem ato próprio, com auditoria própria.
+        return update_edital_identification(
+            actor=ator,
+            edital_id=edital.id,
+            expected_revision=edital.revision,
+            title=digitados["title"],
+            description=digitados["description"],
+            correlation_id=request.correlation_id,
+        )
     if etapa == "perfis":
         perfis, eventos = digitados, forms.eventos_persistidos(edital)
     else:
         perfis, eventos = forms.perfis_persistidos(edital), digitados
-    replace_draft(
+    return replace_draft(
         actor=ator,
         edital_id=edital.id,
         expected_revision=edital.revision,
@@ -509,6 +533,32 @@ def _trilha(edital):
     ]
 
 
+def _documentos_publicados(edital):
+    """O documento de cada Publicação, na ordem, identificado pelo ato que o produziu (FR-002).
+
+    **Nenhum é apresentado como vigente, e a omissão é a parte que importa.** A vigência pertence à
+    Versão Consolidada (`publicacoes/application/selectors.py:26`), que não tem documento próprio; e
+    uma Retificação pode ser publicada com vigência futura, de modo que a Publicação mais recente
+    nem sempre é a que vigora. Rotular a última como vigente seria afirmar sobre o documento uma
+    propriedade que ele não tem.
+    """
+    documentos = []
+    for publicacao in edital.publicacoes.select_related("retificacao").order_by(
+        "publication_order"
+    ):
+        retificacao = getattr(publicacao, "retificacao", None)
+        documentos.append(
+            {
+                "ordem": publicacao.publication_order,
+                "ato": "Retificação" if retificacao else "Publicação original",
+                "retificacao_id": retificacao.id if retificacao else None,
+                "publicada_em": publicacao.published_at,
+                "url": reverse("public-document", args=[publicacao.id]),
+            }
+        )
+    return documentos
+
+
 @require_http_methods(["GET"])
 def detalhe(request, edital_id):
     """Situação do Edital, quem já atuou e o que se pode fazer agora (US3 da 002)."""
@@ -527,6 +577,7 @@ def detalhe(request, edital_id):
             "edital": edital,
             "trilha": _trilha(edital),
             "participantes": participantes,
+            "documentos": _documentos_publicados(edital),
             "pendencias": _pendencias(edital),
             "atos": list(atos.disponiveis(edital, ator)),
             "impedido_por_segregacao": impede_por_segregacao(participantes, ator),
@@ -862,6 +913,7 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
 OPERACOES = {
     "CRIAR": "Criação",
     "ALTERAR_RASCUNHO": "Alteração do rascunho",
+    "ALTERAR_IDENTIFICACAO": "Alteração da identificação",
     "ATIVAR": "Ativação do Processo",
     "SUBMETER": "Submissão para revisão",
     "HOMOLOGAR": "Homologação",
