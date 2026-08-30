@@ -15,8 +15,11 @@ from processo_seletivo.publicacoes.domain.changes import (
     CaminhoInexistente,
     ChaveNaoEncontrada,
     ColecaoAtomica,
+    ColecaoDescaracterizada,
     EnderecamentoPosicional,
     EntidadeSemChave,
+    IdentidadeNaoEnderecavel,
+    IdentidadeReatribuida,
     SeletorInvalido,
     add_overwrites,
     apply_change,
@@ -421,3 +424,116 @@ def test_an_undeclared_list_accepts_anything_because_it_has_no_key_to_demand():
         LIVRE, targetPath="/classificationInformation/criterios/-", operation="ADD", newValue=42
     )
     assert depois["classificationInformation"]["criterios"][-1] == 42
+
+
+# --- A identidade é substrato, e não conteúdo (FR-018) ---------------------------------------
+
+# A primeira rodada de correções vigiava a operação — o `ADD` — em vez do estado. A mesma
+# entidade sem chave entrava por outras quatro portas, e a identidade de uma entidade existente
+# podia ser trocada ou apagada sem que nada acusasse.
+
+NOVO_UUID = "00000000-0000-0000-0000-0000000005ff"
+
+
+def substituir(caminho, valor):
+    return {"targetPath": caminho, "operation": "REPLACE", "newValue": valor}
+
+
+@pytest.mark.parametrize(
+    "valor",
+    [
+        {"code": "SEM_ID"},
+        {"id": NOVO_UUID, "code": "OUTRA_ENTIDADE"},
+        {"id": P2, "code": "CLONE"},
+        {"id": "torto"},
+    ],
+)
+def test_replacing_a_whole_element_may_not_change_its_identity(valor):
+    with pytest.raises(IdentidadeReatribuida) as recusa:
+        apply_change(conteudo_normativo(), substituir(f"/profiles/id={P1}", valor))
+    assert "remova uma e acrescente a outra" in str(recusa.value)
+
+
+def test_replacing_a_whole_element_keeping_its_identity_is_legitimate():
+    depois = alterado(
+        conteudo_normativo(),
+        targetPath=f"/profiles/id={P1}",
+        operation="REPLACE",
+        newValue={"id": P1, "code": "REESCRITO"},
+    )
+    assert depois["profiles"][0] == {"id": P1, "code": "REESCRITO"}
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        substituir(f"/profiles/id={P1}/id", NOVO_UUID),
+        substituir(f"/profiles/id={P1}/id", "torto"),
+        substituir(f"/profiles/id={P1}/id", ["lista"]),
+        {"targetPath": f"/profiles/id={P1}/id", "operation": "REMOVE"},
+        {"targetPath": f"/profiles/id={P1}/id", "operation": "ADD", "newValue": NOVO_UUID},
+    ],
+)
+def test_the_identifier_of_an_entity_is_not_addressable(change):
+    with pytest.raises(IdentidadeNaoEnderecavel):
+        apply_change(conteudo_normativo(), change)
+
+
+def test_a_nested_modality_identifier_is_not_addressable_either():
+    with pytest.raises(IdentidadeNaoEnderecavel):
+        apply_change(
+            conteudo_normativo(),
+            substituir(f"/profiles/id={P1}/competitionModalities/id={M1}/id", NOVO_UUID),
+        )
+
+
+def test_an_identifier_of_a_plain_object_stays_ordinary_content():
+    """`normativeRule` tem `id` e não é elemento de coleção: o `id` dela não endereça nada."""
+    caminho = f"/profiles/id={P1}/competitionModalities/id={M1}/normativeRule/id"
+    depois = alterado(conteudo_normativo(), targetPath=caminho, operation="REPLACE", newValue="x")
+    assert resolve_path(depois, caminho) == "x"
+
+
+def test_replacing_a_whole_collection_may_not_drop_the_identifiers():
+    with pytest.raises(EntidadeSemChave) as recusa:
+        apply_change(conteudo_normativo(), substituir("/profiles", [{"code": "A"}, {"code": "B"}]))
+    assert "/profiles" in str(recusa.value)
+
+
+def test_replacing_a_whole_collection_with_well_formed_entities_is_legitimate():
+    depois = alterado(
+        conteudo_normativo(),
+        targetPath="/profiles",
+        operation="REPLACE",
+        newValue=[{"id": NOVO_UUID, "code": "ÚNICO"}],
+    )
+    assert [p["id"] for p in depois["profiles"]] == [NOVO_UUID]
+
+
+# --- Uma coleção declarada continua sendo uma coleção ----------------------------------------
+
+
+@pytest.mark.parametrize(
+    "caminho, valor",
+    [
+        ("/profiles", {"a": 1}),
+        ("/profiles", "nem lista"),
+        ("/schedule", 42),
+        (f"/profiles/id={P1}/requirements", "nem lista"),
+    ],
+)
+def test_a_declared_collection_may_not_stop_being_one(caminho, valor):
+    """FR-012 tem uma premissa: as coleções declaradas existem e são coleções.
+
+    Trocar `/profiles` por um objeto tornava a declaração falsa em silêncio — nada percorreria a
+    coleção, nenhum elemento seria verificado, e o caminho por chave deixaria de resolver.
+    """
+    with pytest.raises(ColecaoDescaracterizada) as recusa:
+        apply_change(conteudo_normativo(), substituir(caminho, valor))
+    assert caminho.split("/id=")[0] in str(recusa.value)
+
+
+def test_an_atomic_collection_may_still_be_replaced_by_a_list():
+    caminho = f"/profiles/id={P1}/requirements"
+    depois = alterado(conteudo_normativo(), targetPath=caminho, operation="REPLACE", newValue=[])
+    assert resolve_path(depois, caminho) == []

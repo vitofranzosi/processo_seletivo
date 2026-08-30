@@ -59,11 +59,23 @@ dele, que é justamente a operação que esta feature retirou. A recusa é `inva
 quando a folha é índice: aí a resposta é `positional_addressing_refused`, porque a forma errada
 já tem código próprio.
 
-**O que entra numa coleção com chave precisa trazer a sua.** `ADD` em coleção com identificador
-exige objeto com `id` no formato UUID; qualquer outro valor é `invalid_change`. Sem isso, um Perfil
-sem identificador atravessaria elaboração e Publicação e passaria a integrar o conteúdo normativo
-como entidade que nenhuma Retificação futura conseguiria endereçar — a garantia desta feature vale
-para o que já está publicado tanto quanto para o que entra agora.
+## A identidade é substrato, não conteúdo
+
+O `id` de uma entidade é o que faz um caminho já publicado nomeá-la sem consultar a versão vigente
+(FR-018). Ele não é conteúdo normativo alterável, e três regras decorrem disso. Todas valem sobre o
+**resultado** de cada alteração, e não sobre o valor de uma operação em particular — a mesma
+entidade sem chave entrava por `ADD`, por `REPLACE` do Perfil inteiro, por `REPLACE` ou `REMOVE` do
+campo `id`, e por `REPLACE` de `/profiles` de uma vez.
+
+| Regra | Recusa |
+| --- | --- |
+| Toda coleção declarada continua sendo uma coleção | `invalid_change` |
+| Todo elemento de coleção com chave carrega `id` UUID | `invalid_change` |
+| O `id` de um elemento de coleção com chave não é endereçável | `invalid_change` |
+| `REPLACE` de um elemento inteiro preserva o `id` que estava lá | `invalid_change` |
+
+Trocar a entidade é ato declarado: remova uma e acrescente a outra. `normativeRule` tem `id` e
+**não** é elemento de coleção — o `id` dela é conteúdo comum e continua endereçável.
 
 ## Coleções
 

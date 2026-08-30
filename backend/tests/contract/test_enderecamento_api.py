@@ -77,7 +77,6 @@ def gramatica_corrida():
 
 def test_the_grammar_document_states_that_add_only_takes_the_append_token():
     assert "`ADD` aceita `-` e nada mais" in gramatica_corrida()
-    assert "precisa trazer a sua" in gramatica_corrida()
 
 
 def test_the_grammar_document_states_when_uniqueness_is_checked():
@@ -142,3 +141,13 @@ def test_a_published_path_identifies_the_entity_without_the_current_version(
     assert "/0" not in alteracao.target_path and "/1" not in alteracao.target_path, (
         "nenhum segmento do caminho publicado é posição"
     )
+
+
+def test_the_grammar_document_states_that_identity_is_not_content():
+    """Um cliente que leia só o contrato precisa saber por que a recusa acontece."""
+    gramatica = gramatica_corrida()
+    assert "A identidade é substrato, não conteúdo" in gramatica
+    assert "carrega `id` UUID" in gramatica
+    assert "não é endereçável" in gramatica
+    assert "preserva o `id` que estava lá" in gramatica
+    assert "remova uma e acrescente a outra" in gramatica

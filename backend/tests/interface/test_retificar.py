@@ -40,7 +40,9 @@ def campos(vigente, **alteracoes):
 
     grupos = campos_editaveis(vigente.content)
     campos_do_formulario = [campo for grupo in grupos for campo in grupo["campos"]]
-    enviados = {f"campo:{campo['referencia']}": campo["valor"] for campo in campos_do_formulario}
+    # A versão base acompanha o formulário: sem ela as referências não significam nada.
+    enviados = {"base": str(vigente.id)}
+    enviados |= {f"campo:{campo['referencia']}": campo["valor"] for campo in campos_do_formulario}
     referencia = {campo["caminho"]: campo["referencia"] for campo in campos_do_formulario}
     enviados.update(
         {f"campo:{referencia[caminho]}": valor for caminho, valor in alteracoes.items()}
@@ -361,4 +363,40 @@ def test_versao_base_desconhecida_nao_e_recomposta_em_silencio(
 
     assert resposta.status_code == 409
     assert "não está mais disponível" in resposta.content.decode()
+    assert not Retificacao.objects.exists()
+
+
+@pytest.mark.parametrize("base_enviada", ["", "abc", "../etc/passwd", "00000000-0000-0000-0000"])
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_versao_base_ilegivel_e_recusada_e_nao_estoura(
+    client, seletor_ligado, edital, vigente, base_enviada
+):
+    """A versão vinha do formulário, e o que vem do formulário pode chegar torto.
+
+    Consultar o banco com um texto que não é UUID levantava `ValidationError` fora de qualquer
+    tratamento — 500 onde a resposta certa é a mesma recusa da versão desconhecida.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = client.post(
+        reverse("interface:retificar", args=[edital.id]),
+        {"base": base_enviada, "justificativa": "x"},
+    )
+
+    assert resposta.status_code == 409
+    assert "não está mais disponível" in resposta.content.decode()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_post_sem_a_versao_base_nao_cai_na_vigente(client, seletor_ligado, edital, vigente):
+    """Formulário antigo que não envie a versão resolveria as referências contra outro conteúdo.
+
+    Cair para a vigente era exatamente o defeito que o campo veio impedir; a omissão precisa
+    doer tanto quanto a versão desconhecida.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = client.post(reverse("interface:retificar", args=[edital.id]), {"justificativa": "x"})
+
+    assert resposta.status_code == 409
     assert not Retificacao.objects.exists()

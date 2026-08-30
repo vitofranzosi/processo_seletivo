@@ -6,7 +6,7 @@ fronteira de segurança (FR-002).
 """
 
 import secrets
-from uuid import uuid4
+from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 from django.http import Http404, HttpResponse
@@ -629,10 +629,16 @@ def _base_da_composicao(edital, dados):
     que viu e o ato saía sobre outro. Por isso a versão base atravessa o formulário e o POST
     volta a ela; quem publicou no intervalo é tratado pelas precondições da elaboração.
     """
-    declarada = (dados or {}).get("base")
-    if declarada:
-        return VersaoConsolidada.objects.filter(edital=edital, pk=declarada).first()
-    return _versao_vigente(edital)
+    if dados is None:
+        return _versao_vigente(edital)
+    # No POST a versão é obrigatória, e não opcional com queda para a vigente: um formulário
+    # antigo que não a envie resolveria as referências contra outro conteúdo, que é o defeito
+    # que esta função existe para impedir.
+    try:
+        declarada = UUID(str(dados.get("base", "")))
+    except ValueError:
+        return None
+    return VersaoConsolidada.objects.filter(edital=edital, pk=declarada).first()
 
 
 @require_http_methods(["GET", "POST"])

@@ -429,3 +429,63 @@ def test_removing_and_recreating_under_the_same_key_still_publishes(api_client, 
     vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
     assert [p["id"] for p in vigente.content["profiles"]] == [P1, P3, P2]
     assert vigente.content["profiles"][-1]["name"] == "Recriado"
+
+
+# --- A identidade pelas outras portas -------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("descricao", "change"),
+    [
+        (
+            "substituir o Perfil inteiro trocando o id",
+            {
+                "targetPath": f"/profiles/id={P1}",
+                "operation": "REPLACE",
+                "newValue": {"id": "00000000-0000-0000-0000-0000000005ff", "code": "OUTRO"},
+            },
+        ),
+        (
+            "editar o campo id",
+            {
+                "targetPath": f"/profiles/id={P1}/id",
+                "operation": "REPLACE",
+                "newValue": "00000000-0000-0000-0000-0000000005ff",
+            },
+        ),
+        ("apagar o campo id", {"targetPath": f"/profiles/id={P1}/id", "operation": "REMOVE"}),
+        (
+            "trocar a coleção inteira por itens sem id",
+            {"targetPath": "/profiles", "operation": "REPLACE", "newValue": [{"code": "A"}]},
+        ),
+        (
+            "trocar a coleção por um objeto",
+            {"targetPath": "/profiles", "operation": "REPLACE", "newValue": {"a": 1}},
+        ),
+    ],
+)
+def test_identity_cannot_be_forged_through_any_door(api_client, edital, descricao, change):
+    """O `ADD` era só uma das portas.
+
+    Vigiar a operação alcançava uma; vigiar o estado resultante alcança todas.
+    """
+    recusa = elaborar(api_client, edital, [change])
+
+    assert recusa.status_code == 422, f"{descricao}: {recusa.content}"
+    assert recusa.data["code"] == "invalid_change"
+
+
+def test_replacing_a_whole_profile_keeping_its_identity_publishes(api_client, edital, base):
+    """A recíproca: reescrever o Perfil inteiro é ato legítimo, desde que ele continue sendo ele."""
+    reescrito = {**base.content["profiles"][0], "name": "Reescrito por inteiro"}
+    retificacao = create_retification(
+        api_client,
+        edital,
+        [{"targetPath": f"/profiles/id={P1}", "operation": "REPLACE", "newValue": reescrito}],
+        suffix="a",
+    )
+    publish_retification(api_client, retificacao, suffix="a")
+
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    assert vigente.content["profiles"][0]["id"] == P1
+    assert vigente.content["profiles"][0]["name"] == "Reescrito por inteiro"

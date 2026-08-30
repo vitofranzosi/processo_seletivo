@@ -18,9 +18,18 @@ Em objeto, `ADD` grava a chave — criando ou substituindo. Em lista, `ADD` só 
 com `-`: nenhuma outra folha serve, nem índice nem seletor (FR-006). Essa distinção importa para
 a precondição de sobrescrita em `conflicts.py`.
 
-Acrescentar a uma coleção com chave exige objeto com `id` UUID. Sem isso nasceria, dentro do
-conteúdo normativo, uma entidade que nenhuma Retificação futura conseguiria endereçar — e a
-garantia desta feature vale para o que já está publicado tanto quanto para o que entra agora.
+**A identidade das entidades é substrato de endereçamento, não conteúdo normativo.** Três regras
+decorrem disso, e valem para qualquer operação e qualquer caminho, não só para o `ADD`:
+
+- toda coleção declarada continua sendo uma coleção;
+- todo elemento de coleção com chave carrega `id` UUID, depois de a alteração ser aplicada;
+- o `id` de um elemento de coleção com chave não é endereçável;
+- `REPLACE` de um elemento inteiro preserva o `id` que estava lá.
+
+Sem as três, a mesma entidade sem chave que o `ADD` recusa entrava por outra porta — substituindo
+o Perfil inteiro, editando o campo `id`, apagando-o, ou trocando `/profiles` de uma vez. E um `id`
+reatribuído faria um caminho já publicado deixar de nomear a entidade que ele nomeava, que é o que
+FR-018 promete.
 """
 
 import re
@@ -66,7 +75,19 @@ class AcrescimoPosicionado(ValueError):
 
 
 class EntidadeSemChave(ValueError):
-    """`ADD` em coleção com chave, de valor que não é objeto com `id` UUID (FR-001, FR-012)."""
+    """A alteração deixaria elemento de coleção com chave sem `id` UUID (FR-001, FR-012)."""
+
+
+class ColecaoDescaracterizada(ValueError):
+    """A alteração deixaria uma coleção declarada sem ser lista, tornando a declaração falsa."""
+
+
+class IdentidadeNaoEnderecavel(ValueError):
+    """O caminho endereça o `id` de uma entidade, que é substrato e não conteúdo (FR-018)."""
+
+
+class IdentidadeReatribuida(ValueError):
+    """`REPLACE` de elemento inteiro que trocaria o `id` da entidade (FR-018)."""
 
 
 def parse_path(path):
@@ -201,25 +222,45 @@ def _apply_to_dict(parent, leaf, operation, value, path):
         parent[leaf] = value
 
 
-def _validar_acrescimo(value, path, forma):
-    """Quem entra numa coleção com chave precisa trazer a sua (FR-001).
+def _chave_de(elemento):
+    chave = elemento.get(colecoes.CAMPO_CHAVE) if isinstance(elemento, dict) else None
+    return chave if isinstance(chave, str) and _UUID.fullmatch(chave) else None
 
-    Sem esta verificação, `ADD /colecao/-` aceitava qualquer JSON: um Perfil sem `id` atravessava
-    elaboração e Publicação e passava a integrar o conteúdo normativo como entidade que nenhuma
-    Retificação futura poderia endereçar. Um `id` que não fosse texto era pior — quebrava a
-    verificação de unicidade com `TypeError`, que a borda devolveria como erro interno.
+
+def _recusar_entidades_sem_chave(content, path):
+    """Nenhuma alteração pode deixar entidade que ninguém consiga endereçar depois.
+
+    Verificado sobre o **resultado**, e não sobre o valor de uma operação em particular: a mesma
+    entidade sem chave entrava por `ADD`, por `REPLACE` do Perfil inteiro, por `REPLACE` ou
+    `REMOVE` do campo `id`, e por `REPLACE` de `/profiles` de uma vez. Vigiar o estado alcança as
+    quatro portas; vigiar a operação alcançava uma.
     """
-    if not colecoes.tem_chave(forma):
-        return
-    chave = value.get(colecoes.CAMPO_CHAVE) if isinstance(value, dict) else None
-    if not isinstance(chave, str) or not _UUID.fullmatch(chave):
-        raise EntidadeSemChave(
-            f"O item acrescentado em {path} precisa ser um objeto com `id` no formato UUID. "
-            "Sem identificador ele não poderia ser endereçado por nenhuma Retificação futura."
+    descaracterizadas = colecoes.declaradas_que_nao_sao_lista(content)
+    if descaracterizadas:
+        raise ColecaoDescaracterizada(
+            f"{path} deixaria {', '.join(descaracterizadas)} sem ser uma coleção. A declaração de "
+            "quais coleções têm chave é a premissa da gramática, e alterá-la por dentro de uma "
+            "Retificação a tornaria falsa sem que nada acusasse."
         )
+    for forma, lista in colecoes.colecoes_com_chave(content):
+        for posicao, elemento in enumerate(lista):
+            if _chave_de(elemento) is None:
+                raise EntidadeSemChave(
+                    f"{path} deixaria o item {posicao} de {forma} sem `id` no formato UUID. "
+                    "Sem identificador ele não poderia ser endereçado por nenhuma Retificação "
+                    "futura."
+                )
 
 
 def _apply_to_list(parent, leaf, operation, value, path, forma):
+    if operation == "REPLACE" and colecoes.tem_chave(forma):
+        posicao = _posicao(parent, leaf, path, forma, allow_append=False, estrito=True)
+        if posicao is not None and _chave_de(value) != _chave_de(parent[posicao]):
+            raise IdentidadeReatribuida(
+                f"{path} substituiria o item inteiro trocando o seu `id`. O identificador é o que "
+                "torna um caminho já publicado capaz de nomear a entidade sem consultar a versão "
+                "vigente; para trocar a entidade, remova uma e acrescente a outra."
+            )
     if operation == "ADD":
         if leaf != APPEND_TOKEN:
             # `_posicao` primeiro, porque índice sobre coleção com chave é endereçamento
@@ -229,7 +270,6 @@ def _apply_to_list(parent, leaf, operation, value, path, forma):
                 f"{path} pede acréscimo em posição específica, que não existe nesta gramática. "
                 "Acréscimo é ao fim da coleção, com o token `-`."
             )
-        _validar_acrescimo(value, path, forma)
         parent.append(value)
         return
     posicao = _posicao(parent, leaf, path, forma, allow_append=False, estrito=True)
@@ -248,6 +288,12 @@ def apply_change(content, change):
     if operation not in OPERATIONS:
         raise ValueError(f"Operação desconhecida: {operation}")
     parent, leaf, forma = _parent_of(content, path)
+    if leaf == colecoes.CAMPO_CHAVE and colecoes.e_elemento_de_colecao_com_chave(forma):
+        raise IdentidadeNaoEnderecavel(
+            f"{path} endereça o identificador da entidade, que é o substrato do endereçamento e "
+            "não conteúdo normativo. Alterá-lo faria um caminho já publicado deixar de nomear a "
+            "entidade que ele nomeava."
+        )
     value = deepcopy(change.get("newValue"))
     if isinstance(parent, dict):
         _apply_to_dict(parent, leaf, operation, value, path)
@@ -255,6 +301,7 @@ def apply_change(content, change):
         _apply_to_list(parent, leaf, operation, value, path, forma)
     else:
         raise CaminhoInexistente(f"Caminho inexistente: {path}")
+    _recusar_entidades_sem_chave(content, path)
 
 
 def apply_changes(base, changes, *, publication_id):

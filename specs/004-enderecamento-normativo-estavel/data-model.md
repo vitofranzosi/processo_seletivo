@@ -89,8 +89,13 @@ Retificação.
 - Todo `target_path` ou nomeia a entidade (`id=`), ou acrescenta ao fim (`-`), ou é atômico. Não
   existe índice sobre coleção com chave.
 - Em lista, `ADD` aceita **apenas** a folha `-`. Não há inserção em posição.
-- Todo elemento de coleção com chave carrega `id` UUID. A regra é verificada quando o elemento
-  entra, e não só quando o snapshot é montado: `ADD` sem identificador utilizável é recusado.
+- Toda coleção declarada continua sendo uma coleção. Trocar `/profiles` por um objeto tornaria a
+  declaração de FR-012 falsa em silêncio.
+- Todo elemento de coleção com chave carrega `id` UUID. Verificado sobre o **resultado** de cada
+  alteração, e não sobre a operação: vigiar o `ADD` alcançava uma porta de quatro.
+- O `id` de um elemento de coleção com chave não é endereçável, e `REPLACE` do elemento inteiro
+  preserva o que estava lá. Identificador reatribuído faria um caminho já publicado deixar de
+  nomear a entidade que ele nomeava.
 - Chave repetida numa coleção é estado impossível, recusado na elaboração e na Publicação, e
   verificado **depois de cada alteração** — senão acrescentar sob a chave de outro e remover o
   original em seguida terminaria íntegro e teria trocado a entidade em silêncio.
