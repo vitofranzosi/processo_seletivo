@@ -66,33 +66,43 @@ permanecem preservados.</p>
     editado. Correções ocorrem por Retificação, com novo fluxo de aprovação.</p>
     {% endif %}
 
+    {% comment %}
+    Passagem de bastão (FR-028): quem acabou de agir precisa saber a quem entregou. É leitura
+    derivada do estado e do mapa de papéis — não há fila, aviso nem designação a pessoa.
+    {% endcomment %}
+    {% if proximo_passo %}
+    <p class="bastao">
+      {% if proximo_passo.sou_eu %}
+      <strong>O próximo ato é seu:</strong> {{ proximo_passo.ato }}.
+      {% else %}
+      <strong>Aguardando {{ proximo_passo.papel }}</strong> para {{ proximo_passo.ato }}.
+      {% endif %}
+      {% if proximo_passo.observacao %}<span class="ajuda">{{ proximo_passo.observacao }}</span>{% endif %}
+    </p>
+    {% endif %}
+
+    {% comment %}
+    Um conjunto só, montado em `interface/acoes.py` (FR-023). A lista e a mensagem de ausência
+    saem da mesma variável — antes eram regras independentes, e por isso o cartão conseguia
+    oferecer uma ação e, na linha seguinte, dizer que não havia nenhuma.
+
+    Ação indisponível aparece **desabilitada com o motivo** (FR-024), não escondida: esconder
+    devolve a pessoa ao mesmo beco, só que em silêncio.
+    {% endcomment %}
     <ul class="lista-acoes">
-      {% if pode_auditar %}
-      <li><a class="botao secundario" href="{% url 'interface:auditoria' edital.id %}">Ver trilha de auditoria</a></li>
-      {% endif %}
-      {% if edital.status == 'PUBLICADO' %}
-      <li><a class="botao secundario" href="{% url 'interface:retificar' edital.id %}">Retificar</a></li>
-      {% endif %}
-      {% if pode_compor %}
-      <li><a class="botao secundario" href="{% url 'interface:compor' edital.id %}">Elaborar o Edital</a></li>
-      {% endif %}
-      {% if pode_visualizar %}
-      {% comment %}
-      Quem homologa e quem publica decidem sobre um documento; poder lê-lo antes é o que dá
-      conteúdo à segregação de funções, que exige ao menos dois atores.
-      {% endcomment %}
-      <li><a class="botao secundario" href="{% url 'interface:previa' edital.id %}">Visualizar Edital</a></li>
-      {% endif %}
-      {% for ato in atos %}
+      {% for acao in acoes %}
       <li>
-        <a class="botao {% if ato.interrupcao %}perigoso{% elif ato.irreversivel %}{% else %}secundario{% endif %}"
-           href="{% url 'interface:ato' edital.id ato.chave %}">{{ ato.rotulo }}</a>
-        {% if ato.irreversivel %}<span class="marca-irreversivel">irreversível</span>{% endif %}
+        {% if acao.disponivel %}
+        <a class="botao {{ acao.estilo }}" href="{{ acao.url }}">{{ acao.rotulo }}</a>
+        {% if acao.irreversivel %}<span class="marca-irreversivel">irreversível</span>{% endif %}
+        {% else %}
+        <span class="botao desabilitado" aria-disabled="true"
+              aria-describedby="motivo-{{ acao.chave }}">{{ acao.rotulo }}</span>
+        <span class="motivo" id="motivo-{{ acao.chave }}">{{ acao.motivo }}</span>
+        {% endif %}
       </li>
       {% empty %}
-      {% if not pode_compor %}
       <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>
-      {% endif %}
       {% endfor %}
     </ul>
   </section>

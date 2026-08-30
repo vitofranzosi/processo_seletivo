@@ -157,19 +157,19 @@ Retificação pode alterar essa identidade.
 **Independent Test**: criar Processo com Edital que repita número/ano e ler a recusa correta; ser
 levado a elaborar; ver `Submeter` desabilitado com motivo; não receber `Retificar` sem permissão.
 
-- [ ] T044 [US4] Criar `backend/processo_seletivo/interface/acoes.py` com uma função que devolve, para um Edital e um ator, o conjunto completo de ações: rótulo, rota, disponibilidade e **motivo quando indisponível**. Funde `ACOES_POR_SITUACAO`, `atos.disponiveis` e o `<li>` fixo do template, e incorpora a previsão que `praticar_ato` já calcula com `atos.impedimento` e `_pendencias` (D-006)
-- [ ] T045 [US4] Passar a usar `acoes.py` na view `detalhe` de `backend/processo_seletivo/interface/views.py`, substituindo `atos`
-- [ ] T046 [US4] Reescrever o cartão "O que fazer agora" em `backend/processo_seletivo/interface/templates/interface/detalhe.html`: iterar o conjunto único, remover o `<li>` fixo de `Retificar`, e derivar a mensagem de ausência do mesmo conjunto
-- [ ] T047 [US4] Renderizar ação indisponível como controle desabilitado com o motivo associado por vínculo programático, mantendo contraste legível (FR-024)
-- [ ] T048 [US4] Passar a usar `acoes.py` também na view `lista`, para que listagem e detalhe deixem de ter registros distintos
-- [ ] T049 [US4] Mover a checagem de permissão de `retificar()` para fora do ramo POST em `backend/processo_seletivo/interface/views.py`, e apresentar a tela em leitura para quem não tem `retificacao:elaborar` (FR-026)
-- [ ] T050 [US4] Ajustar `backend/processo_seletivo/interface/templates/interface/retificar.html` para o modo leitura: sem campos de edição, sem botão de envio, sem acrescentar Perfil
-- [ ] T051 [US4] Promover `Elaborar o Edital <n>/<ano>` a ação primária na tela seguinte à criação do Processo, em `backend/processo_seletivo/interface/templates/interface/processo_detalhe.html`, rebaixando o impedimento de cancelar
-- [ ] T052 [US4] Separar os dois `create` em blocos `try` distintos em `create_process_with_first_edital`, em `backend/processo_seletivo/processos/application/commands.py`, devolvendo `edital_identifier_conflict` para o conflito do Edital. **Nenhum código de erro novo** — o certo já existe em `create_edital`
-- [ ] T053 [P] [US4] Escrever `backend/tests/unit/processos/test_conflito_identificacao.py`: conflito do Processo devolve `institutional_identifier_conflict`; conflito de `(escopo, número, ano)` do Edital devolve `edital_identifier_conflict`
-- [ ] T054 [P] [US4] Escrever `backend/tests/interface/test_acoes.py` cobrindo as cinco situações de `ACOES_POR_SITUACAO` × papéis, afirmando que nunca coexistem uma ação listada e a mensagem de ausência
-- [ ] T055 [P] [US4] Escrever teste de interface com ator sem `retificacao:elaborar`: o detalhe não oferece `Retificar`, e a URL direta devolve tela sem campo editável nem envio
-- [ ] T056 [P] [US4] Escrever teste afirmando que `Submeter` aparece desabilitado com motivo num Edital sem dados mínimos, e que a recusa do domínio permanece independente da interface (FR-025)
+- [X] T044 [US4] Criar `backend/processo_seletivo/interface/acoes.py` com uma função que devolve, para um Edital e um ator, o conjunto completo de ações: rótulo, rota, disponibilidade e **motivo quando indisponível**. Funde `ACOES_POR_SITUACAO`, `atos.disponiveis` e o `<li>` fixo do template, e incorpora a previsão que `praticar_ato` já calcula com `atos.impedimento` e `_pendencias` (D-006)
+- [X] T045 [US4] Passar a usar `acoes.py` na view `detalhe` de `backend/processo_seletivo/interface/views.py`, substituindo `atos`
+- [X] T046 [US4] Reescrever o cartão "O que fazer agora" em `backend/processo_seletivo/interface/templates/interface/detalhe.html`: iterar o conjunto único, remover o `<li>` fixo de `Retificar`, e derivar a mensagem de ausência do mesmo conjunto
+- [X] T047 [US4] Renderizar ação indisponível como controle desabilitado com o motivo associado por vínculo programático, mantendo contraste legível (FR-024)
+- [X] T048 [US4] Passar a usar `acoes.py` também na view `lista`, para que listagem e detalhe deixem de ter registros distintos
+- [X] T049 [US4] Mover a checagem de permissão de `retificar()` para fora do ramo POST em `backend/processo_seletivo/interface/views.py`, e apresentar a tela em leitura para quem não tem `retificacao:elaborar` (FR-026)
+- [X] T050 [US4] Ajustar `backend/processo_seletivo/interface/templates/interface/retificar.html` para o modo leitura: sem campos de edição, sem botão de envio, sem acrescentar Perfil
+- [X] T051 [US4] Promover `Elaborar o Edital <n>/<ano>` a ação primária na tela seguinte à criação do Processo, em `backend/processo_seletivo/interface/templates/interface/processo_detalhe.html`, rebaixando o impedimento de cancelar
+- [X] T052 [US4] Separar os dois `create` em blocos `try` distintos em `create_process_with_first_edital`, em `backend/processo_seletivo/processos/application/commands.py`, devolvendo `edital_identifier_conflict` para o conflito do Edital. **Nenhum código de erro novo** — o certo já existe em `create_edital`
+- [X] T053 [P] [US4] Escrever `backend/tests/unit/processos/test_conflito_identificacao.py`: conflito do Processo devolve `institutional_identifier_conflict`; conflito de `(escopo, número, ano)` do Edital devolve `edital_identifier_conflict`
+- [X] T054 [P] [US4] Escrever `backend/tests/interface/test_acoes.py` cobrindo as cinco situações de `ACOES_POR_SITUACAO` × papéis, afirmando que nunca coexistem uma ação listada e a mensagem de ausência
+- [X] T055 [P] [US4] Escrever teste de interface com ator sem `retificacao:elaborar`: o detalhe não oferece `Retificar`, e a URL direta devolve tela sem campo editável nem envio
+- [X] T056 [P] [US4] Escrever teste afirmando que `Submeter` aparece desabilitado com motivo num Edital sem dados mínimos, e que a recusa do domínio permanece independente da interface (FR-025)
 
 **Checkpoint**: entrega 3 fechada.
 
@@ -181,10 +181,10 @@ levado a elaborar; ver `Submeter` desabilitado com motivo; não receber `Retific
 
 **Independent Test**: submeter e ler quem age agora; homologar como segunda pessoa e reler.
 
-- [ ] T057 [US5] Acrescentar a `backend/processo_seletivo/interface/acoes.py` uma função de leitura que devolve situação em português e o **papel** responsável pelo próximo ato, derivada do estado e de `ACOES_POR_SITUACAO`. Nada persistido, nada atribuído a pessoa (FR-029, FR-030)
-- [ ] T058 [US5] Fazer essa função consultar também `impede_por_segregacao`: quem elaborou e homologou o mesmo Edital **não** pode ser apontado como quem publica, ainda que tenha a permissão. É o ponto delicado da entrega (FR-031)
-- [ ] T059 [US5] Exibir a indicação no detalhe do Edital, em `backend/processo_seletivo/interface/templates/interface/detalhe.html`
-- [ ] T060 [US5] Exibir a indicação também na confirmação do ato praticado, em `backend/processo_seletivo/interface/templates/interface/confirmar.html`
+- [X] T057 [US5] Acrescentar a `backend/processo_seletivo/interface/acoes.py` uma função de leitura que devolve situação em português e o **papel** responsável pelo próximo ato, derivada do estado e de `ACOES_POR_SITUACAO`. Nada persistido, nada atribuído a pessoa (FR-029, FR-030)
+- [X] T058 [US5] Fazer essa função consultar também `impede_por_segregacao`: quem elaborou e homologou o mesmo Edital **não** pode ser apontado como quem publica, ainda que tenha a permissão. É o ponto delicado da entrega (FR-031)
+- [X] T059 [US5] Exibir a indicação no detalhe do Edital, em `backend/processo_seletivo/interface/templates/interface/detalhe.html`
+- [X] T060 [US5] Exibir a indicação também na confirmação do ato praticado, em `backend/processo_seletivo/interface/templates/interface/confirmar.html`
 - [ ] T061 [P] [US5] Escrever `backend/tests/interface/test_bastao.py`: submetido aponta quem homologa; homologado aponta quem publica
 - [ ] T062 [P] [US5] Escrever o teste do caso que separa as duas derivações: ator que elaborou **e** homologou, com permissão de publicar, **não** é apontado; o mesmo Edital homologado por outra pessoa aponta quem publica (cenários 3 e 4 da `US5`)
 - [ ] T063 [P] [US5] Escrever teste afirmando a ausência: nenhum modelo, campo persistido, fila, notificação ou designação nasce nesta entrega

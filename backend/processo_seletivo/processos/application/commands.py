@@ -17,6 +17,11 @@ def create_process_with_first_edital(*, actor, data, idempotency_key, correlatio
         idem = reserve(actor=actor, operation="processo:criar", key=idempotency_key, payload=data)
         if idem.result_id:
             return ProcessoSeletivo.objects.get(pk=idem.result_id), idem.response_status
+        # Dois `create`, dois `except` (FR-022). Envolvê-los num bloco só devolvia sempre a
+        # mensagem do Processo, inclusive quando o conflito era do Edital: `Edital` é único por
+        # `(escopo, número, ano)` — não por Processo —, então repetir o número de qualquer outro
+        # Edital do escopo fazia o sistema culpar a identificação institucional, que estava
+        # correta. Quem recebia o erro corrigia o campo que não tinha problema.
         try:
             processo = ProcessoSeletivo.objects.create(
                 institution_scope=actor.institution_scope,
@@ -26,7 +31,15 @@ def create_process_with_first_edital(*, actor, data, idempotency_key, correlatio
                 created_by=actor.subject,
                 last_changed_at=now,
             )
-            first = data["firstEdital"]
+        except IntegrityError as exc:
+            raise DomainError(
+                "institutional_identifier_conflict",
+                "Identificação institucional já utilizada.",
+                409,
+            ) from exc
+
+        first = data["firstEdital"]
+        try:
             Edital.objects.create(
                 processo=processo,
                 institution_scope=actor.institution_scope,
@@ -39,9 +52,10 @@ def create_process_with_first_edital(*, actor, data, idempotency_key, correlatio
                 last_edited_by=actor.subject,
             )
         except IntegrityError as exc:
+            # O mesmo código que `create_edital` já devolve: nenhum erro novo é inventado.
             raise DomainError(
-                "institutional_identifier_conflict",
-                "Identificação institucional já utilizada.",
+                "edital_identifier_conflict",
+                f"Número/ano do Edital já utilizado: {first['number']}/{first['year']}.",
                 409,
             ) from exc
         record_event(
