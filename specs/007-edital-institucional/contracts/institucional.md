@@ -2,9 +2,9 @@
 
 **Feature**: 007 — Edital Institucional | **Data**: 2026-08-30
 
-Dois contratos, e a fronteira entre eles é o assunto desta feature. O primeiro é **o que o conteúdo
-publicado carrega**; o segundo é **o que o documento imprime**. Nenhuma regra do segundo pode
-atravessar para o primeiro (FR-001).
+Três contratos. A fronteira entre os dois primeiros é o assunto desta feature: **A** é o que o
+conteúdo publicado carrega, **B** é o que o documento imprime, e nenhuma regra de B pode atravessar
+para A (FR-001). **C** é o que a interface administrativa promete a quem a opera.
 
 ---
 
@@ -19,7 +19,7 @@ atravessar para o primeiro (FR-001).
 | `processoId` | string UUID | sempre | `Edital.processo_id` | não |
 | `processoCode` | string | sempre | `ProcessoSeletivo.institutional_code` | **sim** |
 | `processoTitle` | string | sempre | `ProcessoSeletivo.title` | **sim** |
-| `number` | inteiro | sempre | `Edital.number` | não |
+| `number` | **string** | sempre | `Edital.number` | não |
 | `year` | inteiro | sempre | `Edital.year` | não |
 | `title` | string | sempre | `Edital.title` | não |
 | `description` | string | sempre | `Edital.description` | não |
@@ -27,6 +27,11 @@ atravessar para o primeiro (FR-001).
 | `schedule` | lista | sempre | — | não |
 | `stages` | lista | sempre | — | não |
 | `sections` | lista | sempre | dez itens | quantidade e `order` mudam |
+
+**`number` é string, não inteiro** — `Edital.number` é `CharField(max_length=50)`
+(`processos/models.py:47`), e a forma canônica preserva zeros à esquerda: `"02"` é `"02"`. Nenhuma
+tarefa desta feature pode convertê-lo. *A primeira redação deste contrato o declarava inteiro; era
+erro de leitura, e chegaria ao teste contratual.*
 
 ### A.2 `profiles[*]` — campos novos
 
@@ -58,18 +63,35 @@ nunca `content`.
    consulta ao banco (FR-004, SC-002a).
 3. **Decimais canônicos.** `percentage`, `weight` e `minimumScore` permanecem em quatro casas com
    ponto (`"20.0000"`). Nenhuma regra de apresentação os altera (FR-001).
-4. **Endereçamento inalterado.** `COLECOES_COM_CHAVE`, `COLECOES_ATOMICAS` e `LISTAS_DE_CONTROLE`
-   não mudam. Nenhuma coleção-raiz nasce (FR-020).
+4. **Endereçamento de coleções inalterado.** `COLECOES_COM_CHAVE`, `COLECOES_ATOMICAS` e
+   `LISTAS_DE_CONTROLE` não mudam. Nenhuma coleção-raiz nasce (FR-020). `colecoes.py` **ganha** um
+   conjunto declarado de campos de identidade — ver A.5.
+6. **Identidade imutável.** `editalId`, `processoId`, `processoCode`, `processoTitle` e
+   `schemaVersion` não são endereçáveis por Retificação (FR-004).
 5. **Recusa de versão divergente.** Conteúdo-base de versão diferente da vigente continua sendo
    recusado na consolidação, sem conversão (FR-019).
 
-### A.5 Fronteira pré-existente, declarada
+### A.5 Campos de identidade — não endereçáveis
 
-A gramática não protege escalares da raiz: `/editalId`, `/processoId` e `/schemaVersion` já são
-endereçáveis por Retificação hoje — só `applied_publications` é recusado, por
-`_recusar_controle_interno`. `processoCode` e `processoTitle` herdam essa exposição **sem ampliá-la
-de classe**, e a tela de Retificação não os oferece, como já não oferece os três atuais. Corrigir
-exigiria alterar a gramática, o que P-005 proíbe nesta feature.
+| Campo | Endereçável antes da `007` | Endereçável depois |
+|---|---|---|
+| `/editalId` | sim | **não** |
+| `/processoId` | sim | **não** |
+| `/processoCode` | — | **não** |
+| `/processoTitle` | — | **não** |
+| `/schemaVersion` | sim | **não** |
+| `/applied_publications` | não | não |
+| `/title`, `/description` | sim | sim — retificáveis por desenho |
+| `/number`, `/year` | sim | sim — questão aberta, ver D-003.1 |
+
+A recusa é declarada em `colecoes.py`, num conjunto ao lado de `LISTAS_DE_CONTROLE`, e verificada
+no mesmo ponto em que o controle interno já é recusado. **Não é gramática nova**: nenhum caminho,
+operador ou forma nova — um conjunto declarado e uma condição a mais numa recusa existente, pela via
+que a `006` usou para declarar `/stages` e `/sections`.
+
+*A exposição é anterior a esta feature, mas é esta feature que a ativa: até aqui `/processoId` era
+um UUID que nada identificava para quem lê; a partir de FR-004, `processoTitle` é o nome que o
+documento dá ao Processo. Herdar a exposição seria aceitável; ativá-la e deixá-la aberta, não.*
 
 ---
 

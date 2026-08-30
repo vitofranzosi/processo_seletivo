@@ -70,13 +70,34 @@ O dado já está carregado: `_locked_edital` faz `select_related("processo")`
 - *Manter o UUID e apenas movê-lo para um rodapé técnico.* Contraria a instrução de não expor
   identificador ao candidato; apenas desloca o problema.
 
-**Fronteira pré-existente, registrada e não corrigida aqui**: a gramática de Retificação não protege
-escalares da raiz. Hoje `/editalId`, `/processoId` e `/schemaVersion` são endereçáveis — apenas
-`applied_publications` é recusado, por `_recusar_controle_interno`
-(`publicacoes/domain/changes.py:167-173`). Os dois campos novos herdam essa mesma exposição, sem
-ampliá-la de classe. A tela de Retificação não os oferece, como já não oferece os três de hoje.
-**Corrigir isso seria alterar a gramática, que P-005 proíbe nesta feature** — fica registrado como
-limite, não como tarefa.
+### D-003.1 — A identidade da raiz passa a ser protegida (revisão desta decisão)
+
+**Decisão revista**: os campos de identidade da raiz — `editalId`, `processoId`, `processoCode`,
+`processoTitle`, `schemaVersion` — deixam de ser endereçáveis por Retificação.
+
+**Por que a decisão mudou.** A primeira redação registrou a exposição como limite herdado e não a
+corrigiu. A revisão externa mostrou que o argumento não fecha: a exposição é anterior, mas **é esta
+feature que a ativa**. Até aqui, `/processoId` era um UUID que nada identificava para quem lê; a
+partir de FR-004, `processoTitle` é o nome que o documento publicado dá ao Processo. Uma Retificação
+faria o Edital nomear outro Processo — e o princípio II não estaria atendido, apenas declarado.
+
+Herdar uma exposição é aceitável. Ativá-la e deixá-la aberta não é.
+
+**Por que não é alterar a gramática (P-005).** `colecoes.py` é o registro declarativo das regras de
+endereçamento, e já contém `LISTAS_DE_CONTROLE`, consultado por `_recusar_controle_interno`
+(`publicacoes/domain/changes.py:167-173`). A correção é **um segundo conjunto declarado** no mesmo
+módulo e **uma condição a mais na recusa que já existe** — a mesma via de extensão que a `006` usou
+ao declarar `/stages` e `/sections`. Nenhum caminho novo, nenhum operador novo, nenhuma forma nova.
+
+**Escopo da proteção, e o que fica fora.** Protegidos: os cinco campos de identidade e metadado.
+Fora, deliberadamente: `title` e `description`, que são retificáveis por desenho e a tela já oferece;
+e `number` e `year`, que são identidade e já são impressos no cabeçalho desde antes desta feature —
+não são ativados por ela, e uma Retificação que corrija erro de numeração é discussão legítima que
+esta feature não precisa resolver. **Fica registrado como questão aberta, não como tarefa.**
+
+**Alternativa recusada**: *validação pós-aplicação comparando o conteúdo consolidado com a
+Publicação-base.* Recusaria mais tarde, com mensagem pior, e duplicaria em outro lugar uma regra que
+o registro declarativo já sabe expressar.
 
 ---
 
@@ -163,7 +184,7 @@ Registrado para que a implementação não os reabra:
 
 | Considerado | Recusado porque |
 |---|---|
-| Proteger escalares da raiz na Retificação | Alteraria a gramática (P-005). Limite pré-existente, registrado em D-003 |
+| Proteger `number` e `year` da raiz na Retificação | Identidade já impressa antes desta feature e **não ativada** por ela; correção de numeração é discussão legítima. Questão aberta, registrada em D-003.1 |
 | Mapa de tradução para o estado do Evento | D-002 |
 | Objeto `processo` aninhado no snapshot | D-003 |
 | Entidade de Autoridade Signatária | D-004 |
@@ -179,7 +200,7 @@ Registrado para que a implementação não os reabra:
 
 | Risco | Mitigação |
 |---|---|
-| A fixture de bytes é regenerada duas vezes (entregas 1 e 2) | Ordem declarada no plano: entrega 1 antes da 2. O script já existe desde a `006` |
+| A fixture de bytes é regenerada nas duas entregas que alteram a composição | **Não é desperdício, é consequência de FR-018**: a entrega 1 chega sem esperar o incremento canônico, e uma fixture desatualizada entre as duas seria suíte vermelha na `main`. FR-006 foi corrigido para dizer isso; o script existe desde a `006` |
 | Renumerar `order` das seções passar despercebido em algum teste que fixe números | O contrato de forma canônica v3 declara a ordem final; a suíte compara contra ele |
 | A unificação de ações regredir uma ação hoje oferecida | Teste por situação × papel, cobrindo as cinco situações de `ACOES_POR_SITUACAO` |
 | A tela de Retificação em leitura vazar campo editável | Teste de interface com ator sem `retificacao:elaborar`, verificando ausência de campo e de envio |

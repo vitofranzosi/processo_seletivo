@@ -75,9 +75,17 @@ CATALOGO: tuple[Autoridade, ...]
 POR_CHAVE: dict[str, Autoridade]
 ```
 
+**Sobre o `identificador`.** Ele é necessário e não contradiz FR-044: `Publicacao` exige
+`signatory_id` (`UUIDField`, não nulo) além de `signatory_name` e `signatory_role`
+(`publicacoes/models.py:63-65`), e é por ele que a auditoria responde quem assinou. O catálogo não
+o **introduz** — ele já era exigido, e era digitado à mão, que foi o achado 12. O que muda é a
+origem. Ele **nunca é digitado, exibido ao operador nem impresso no documento**: é dado de vínculo,
+não de leitura.
+
 | Regra | Onde |
 |---|---|
-| Contém exclusivamente nome e cargo no exercício de atribuição pública | FR-044 |
+| Contém nome, cargo e identificador institucional — nada além | FR-044 |
+| O identificador não é digitado, exibido nem impresso | FR-044 |
 | Não contém CPF, matrícula, endereço, telefone, e-mail nem foto | FR-044 |
 | Incluir ou retirar é alteração do catálogo, não operação de usuário | FR-039 |
 | Autoridade retirada não é oferecida em novos atos | FR-039 |
@@ -106,7 +114,7 @@ escolhida.
   "processoId":    "<uuid>",
   "processoCode":  "<string>",     ← NOVO
   "processoTitle": "<string>",     ← NOVO
-  "number":        <int>,
+  "number":        "<string>",     ← string, não inteiro: CharField(50), preserva "02"
   "year":          <int>,
   "title":         "<string>",
   "description":   "<string>",
@@ -155,6 +163,7 @@ A forma de cada item não muda. Muda a quantidade e o `order`, conforme a tabela
 | `COLECOES_ATOMICAS` | **Não** |
 | `LISTAS_DE_CONTROLE` | **Não** |
 | `COLECOES_PUBLICADAS` | **Sim** — a forma de `profiles` ganha os três campos textuais |
+| **`CAMPOS_DE_IDENTIDADE`** (novo) | `editalId`, `processoId`, `processoCode`, `processoTitle`, `schemaVersion` — recusados pela Retificação, no mesmo ponto que já recusa o controle interno (FR-004, D-003.1) |
 
 O teste de anti-deriva que a `006` criou continua valendo sem alteração: ele exige que toda
 coleção-raiz de entidades do snapshot esteja declarada, e nenhuma nasce aqui.
@@ -180,6 +189,6 @@ persistência.
 | Perfis existentes | Ganham três colunas vazias. Nenhuma perda |
 | Editais **publicados** na versão 2 | Tornam-se irretificáveis, por topologia de seções **e** por versão canônica. É o comportamento correto, e é o que a precondição de implantação admite |
 | Seed e fixtures | Regenerados |
-| Fixture de bytes do documento | Regenerada — uma vez na entrega 1, uma vez na entrega 2 |
+| Fixture de bytes do documento | Regenerada em cada entrega que altera a composição — a 1 e a 2 (FR-006) |
 
 Nenhum caminho de conversão é construído (FR-019).

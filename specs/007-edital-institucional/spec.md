@@ -193,6 +193,9 @@ intacta e o SHA-256 presente.
    conteúdo — **e** não exibe UUID.
 6. **Given** o snapshot publicado desse Edital, **When** o entrego sozinho ao renderizador,
    **Then** o documento é composto integralmente, sem consulta ao banco.
+7. **Given** um Edital publicado, **When** uma Retificação tenta endereçar `/processoTitle`,
+   `/processoCode`, `/editalId`, `/processoId` ou `/schemaVersion`, **Then** é recusada — o
+   documento publicado não pode passar a nomear outro Processo.
 5. **Given** uma Retificação sobre esse Edital, **When** endereço
    `/profiles/id=…/competitionModalities/id=…/normativeRule/percentage`, **Then** o valor
    endereçado e gravado continua sendo o canônico, e a tela de Retificação continua exigindo e
@@ -305,10 +308,14 @@ notificação ou atribuição exista.
    ambos dizem em que situação o Edital está e qual papel é responsável pelo próximo ato.
 2. **Given** um Edital homologado, **When** o abro como quem publica, **Then** a tela diz que o
    próximo ato é meu.
-3. **Given** um Edital homologado por mim, que também elaborei, **When** o abro, **Then** a
-   indicação do próximo responsável é compatível com a segregação de funções já avisada — não me
-   aponta como quem deve publicar sozinho.
-4. **Given** qualquer situação, **When** procuro fila, caixa de entrada, aviso ou designação de
+3. **Given** um Edital que eu elaborei **e** homologuei, e tenho também a permissão de publicar,
+   **When** o abro, **Then** a indicação do próximo responsável **não me aponta**: ela diz que falta
+   publicar e que o ato exige outra pessoa autorizada, coerente com a recusa que a publicação
+   aplicaria. *É o caso que separa "derivar do mapa de permissões" de "derivar do que o domínio
+   aceitaria": só a permissão diria que sou eu.*
+4. **Given** um Edital homologado por outra pessoa, **When** o abro tendo a permissão de publicar,
+   **Then** a indicação me aponta como responsável pelo próximo ato.
+5. **Given** qualquer situação, **When** procuro fila, caixa de entrada, aviso ou designação de
    pessoa, **Then** nada disso existe.
 
 ---
@@ -403,12 +410,36 @@ datas nos vínculos, agrupamento do caráter, confirmação ao remover e a mensa
   **documento imprime**, não o que o conteúdo publicado carrega: retirá-los quebraria a proveniência
   sem benefício para quem lê.
 
+  **Proteção da identidade da raiz.** Os campos de identidade do conteúdo publicado — `editalId`,
+  `processoId`, `processoCode`, `processoTitle` e `schemaVersion` — NÃO DEVEM ser endereçáveis por
+  Retificação. A recusa DEVE ser declarada no mesmo registro que já declara o controle interno da
+  Versão Consolidada, e verificada no mesmo ponto. *Sem isto, uma Retificação faria o documento
+  publicado nomear outro Processo. A exposição é anterior a esta feature — hoje `/editalId` e
+  `/processoId` já são endereçáveis, e só `applied_publications` é recusado —, mas **é esta feature
+  que a ativa**: até aqui o UUID do Processo não identificava nada para quem lê; a partir de FR-004,
+  `processoTitle` é o nome que o Edital dá ao Processo a que pertence. Herdar a exposição seria
+  aceitável; ativá-la e deixá-la aberta não é, e o princípio II não estaria atendido.*
+
+  *Isto não altera a gramática (P-005): `colecoes.py` já é o registro declarativo das regras de
+  endereçamento e já contém `LISTAS_DE_CONTROLE`; acrescentar um segundo conjunto declarado e
+  consultá-lo na recusa existente é a mesma via de extensão que a `006` usou para `/stages` e
+  `/sections`.*
+
+  **Fora desta proteção, deliberadamente**: `number`, `year`, `title` e `description` da raiz.
+  `title` e `description` são retificáveis por desenho e a tela já os oferece. `number` e `year` são
+  identidade, já são impressos no cabeçalho desde antes desta feature e **não** são ativados por
+  ela — ficam registrados como questão aberta, não como tarefa da `007`.
+
 - **FR-005**: A distinção entre prévia e documento publicado permanece um modo explícito do
   renderizador (FR-015 da `006`); esta feature NÃO DEVE acrescentar condicionais de modo espalhadas
   pela composição.
-- **FR-006**: A fixture de bytes do documento publicado DEVE ser regenerada uma vez, cobrindo todas
-  as mudanças de composição desta feature. *É o caso legítimo de regeneração: a fixture guarda o
-  documento correto, e o documento mudou por decisão declarada.*
+- **FR-006**: A fixture de bytes do documento publicado DEVE ser regenerada **uma vez por entrega
+  que altere a composição** — nesta feature, duas: a apresentacional (FR-002, FR-003) e a canônica
+  (FR-004). *É o caso legítimo de regeneração: a fixture guarda o documento correto, e o documento
+  mudou por decisão declarada. A redação anterior exigia regeneração única, o que só seria possível
+  integrando as duas entregas juntas — e integrá-las juntas é precisamente o que FR-018 evita, para
+  que a parte apresentacional chegue sem esperar o incremento canônico. Uma fixture desatualizada
+  entre as duas entregas seria suíte vermelha na `main`, não economia.*
 
 ### Conteúdo institucional (US2)
 
@@ -566,10 +597,17 @@ datas nos vínculos, agrupamento do caráter, confirmação ao remover e a mensa
 A Constituição exige que cada especificação avalie os requisitos aplicáveis da LGPD (princípio III).
 Esta feature toca dados pessoais em **um** ponto, e a avaliação é curta porque o alcance é pequeno.
 
-- **FR-044**: O catálogo de autoridades signatárias (FR-039) DEVE conter exclusivamente **nome e
-  cargo ou função no exercício de atribuição pública** — o mínimo que a Constituição já exige que o
-  ato normativo registre. NÃO DEVE conter CPF, matrícula, endereço, telefone, e-mail, foto nem
-  qualquer dado não necessário à identificação da autoridade no documento.
+- **FR-044**: O catálogo de autoridades signatárias (FR-039) DEVE conter exclusivamente **nome,
+  cargo ou função no exercício de atribuição pública, e o identificador institucional da
+  autoridade** — nada além. NÃO DEVE conter CPF, matrícula, endereço, telefone, e-mail, foto nem
+  qualquer outro dado.
+  - O identificador institucional é **necessário e não supérfluo**: `Publicacao` já exige
+    `signatory_id` além de `signatory_name` e `signatory_role`, e é o que a auditoria usa para
+    responder quem assinou. Ele existe hoje — a diferença é que passa a vir do catálogo em vez de
+    ser digitado.
+  - O identificador NÃO DEVE ser digitado, exibido ao operador nem impresso no documento. É dado de
+    vínculo, não de leitura. *Era exatamente a exposição que o achado 12 apontou.*
+  - Nome e cargo são o mínimo que a Constituição já exige que o ato normativo registre.
 - **FR-045**: O dado é tratado sob a finalidade de identificar quem assina institucionalmente um ato
   administrativo, cuja publicidade é da natureza do ato. NÃO DEVE ser usado para nenhuma outra
   finalidade dentro do sistema.
@@ -604,6 +642,8 @@ Esta feature toca dados pessoais em **um** ponto, e a avaliação é curta porqu
   não muda em função de como o documento foi escrito.
 - **SC-002a**: Dois snapshots de versão 3 do mesmo conteúdo têm exatamente as mesmas chaves, e um
   snapshot de versão 3 basta, sozinho, para compor o documento sem consulta ao banco.
+- **SC-002b**: Uma Retificação não consegue alterar a identidade do conteúdo publicado — nem o
+  Edital, nem o Processo, nem a versão do schema.
 - **SC-003**: Um usuário edita as dez seções previstas no catálogo e não encontra caminho para
   acrescentar, remover ou reordenar nenhuma.
 - **SC-004**: Um usuário descreve atribuições, carga horária e remuneração de um Perfil, salva outra

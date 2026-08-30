@@ -49,12 +49,23 @@ cd backend && INTERFACE_SELETOR_IDENTIDADE=true DB_USER="$(whoami)" uv run pytho
 
 ### Entrega 2 — A forma canônica v3 (FR-004, FR-007, FR-012, FR-014, FR-017)
 
-**Preparar**: banco recriado e seed regenerada — Editais publicados na versão 2 não sobrevivem a
-esta entrega, por decisão declarada.
+**Preparar**: o banco é **recriado do zero**, não migrado. Editais publicados na versão 2 não
+sobrevivem a esta entrega, por decisão declarada — e `migrate` sozinho os deixaria lá, irretificáveis
+e ocupando a demonstração. `seed_demo` também não é idempotente contra dados existentes.
 
 ```bash
-cd backend && DB_USER="$(whoami)" uv run python manage.py migrate
-cd backend && DB_USER="$(whoami)" uv run python manage.py seed_demo
+dropdb --if-exists processo_seletivo_007 && createdb processo_seletivo_007
+```
+
+```bash
+cd backend && DB_NAME=processo_seletivo_007 DB_USER="$(whoami)" uv run python manage.py migrate
+```
+
+```bash
+cd backend && DB_NAME=processo_seletivo_007 DB_USER="$(whoami)" uv run python manage.py seed_demo
+```
+
+```bash
 cd backend && uv run python scripts/gerar_fixture_documento.py
 ```
 
@@ -73,8 +84,17 @@ parágrafos preservados; e a seção de integridade dizendo `Edital 12/2027` e
 **Verificar a irretificabilidade declarada**: uma Publicação da versão 2, se ainda existir, é
 recusada na consolidação por versão divergente. É o comportamento esperado, não um defeito.
 
+**Verificar a proteção da identidade** (FR-004, SC-002b): tentar uma Retificação que enderece
+`/processoTitle`, `/processoCode`, `/editalId`, `/processoId` ou `/schemaVersion`. Todas recusadas.
+Endereçar `/title` ou `/description` continua funcionando — são retificáveis por desenho.
+
+**Verificar que `number` não virou inteiro**: um Edital `"02"/2027` mantém `"02"` no snapshot, com o
+zero à esquerda. `Edital.number` é `CharField`, e a forma canônica o preserva.
+
 **Suíte**: `tests/contract/test_forma_publicada.py` — forma v3 completa, incluindo a regra de
-ausência `""` dos três campos; `tests/migrations/` para a `0005`.
+ausência `""` dos três campos e o tipo string de `number`;
+`tests/unit/publicacoes/test_identidade_imutavel.py` (novo) para a recusa dos cinco campos;
+`tests/migrations/` para a `0005`.
 
 ---
 
@@ -103,9 +123,14 @@ Quatro verificações, todas na interface.
 ### Entrega 4 — Passagem de bastão (FR-028 a FR-031)
 
 **Ver**: submeter um Edital como quem elabora. A confirmação e o detalhe devem dizer a situação e
-qual **papel** age a seguir. Homologar como segunda pessoa e reler: o próximo ato é publicar, e a
-indicação é coerente com a segregação de funções — não aponta como próximo publicador quem o domínio
-recusaria.
+qual **papel** age a seguir. Homologar como segunda pessoa e reler: o próximo ato é publicar.
+
+**O caso que realmente testa a regra** (cenário 3 da `US5`): um ator que **elaborou e homologou o
+mesmo Edital** e que também tem a permissão de publicar. A tela deve dizer que falta publicar e que o
+ato exige outra pessoa autorizada — **sem apontá-lo**. Derivar só de `ACOES_POR_SITUACAO` diria "é
+você"; a indicação precisa consultar também a segregação de funções, que é o que a publicação
+aplicará. Verificar em seguida o contraste: com o Edital homologado por outra pessoa, a mesma tela
+aponta quem publica.
 
 **Verificar a ausência**: não existe fila, caixa de entrada, aviso, e-mail nem designação a pessoa.
 Nenhum campo novo é persistido.

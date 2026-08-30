@@ -63,7 +63,7 @@ declarado novo; nenhuma reescrita.
 | Princípio | Portão | Situação |
 |---|---|---|
 | I — Linguagem ubíqua | Termos novos existem no domínio e no código com o mesmo nome | `Autoridade Signatária` já é termo da Constituição e não é renomeado. Os campos novos do Perfil entram como `duties`, `workload` e `compensation`, e as três seções novas usam chaves do mesmo estilo do catálogo vigente. Nenhum conceito novo é criado. **Passa** |
-| II — Integridade normativa e temporalidade | Fonte única; publicado imutável | A identificação institucional do Processo passa a viajar no snapshot **derivada** do Processo no momento da publicação, como `title` e `number` do Edital já viajam. Publicado permanece imutável; Editais anteriores tornam-se irretificáveis por versão, o que é a integridade funcionando e está coberto pela precondição de implantação. **Passa** |
+| II — Integridade normativa e temporalidade | Fonte única; publicado imutável | A identificação institucional do Processo passa a viajar no snapshot **derivada** do Processo no momento da publicação, como `title` e `number` do Edital já viajam. **E passa a ser protegida**: os cinco campos de identidade da raiz deixam de ser endereçáveis por Retificação (FR-004, D-003.1), de modo que nenhum ato posterior faz o documento nomear outro Processo. Editais anteriores tornam-se irretificáveis por versão, o que é a integridade funcionando e está coberto pela precondição de implantação. **Passa** |
 | III — Segurança, dados pessoais e auditoria | Autorização explícita; LGPD avaliada; auditoria não regride | FR-026 usa a checagem de permissão existente e **não** cria camada nova. A avaliação de LGPD está na spec (FR-044 a FR-048): o catálogo guarda nome e cargo no exercício de atribuição pública, e nada além. FR-042 amplia o que a auditoria diz sobre **conteúdo**, não sobre pessoas. **Passa** |
 | IV — Regras explícitas e consistência | Regra no backend; interface não é fronteira de segurança | FR-025 declara explicitamente que a desabilitação é previsão de interface e não substitui a recusa do domínio — a mesma postura que `praticar_ato` já adota com `recusa_certa`. **Passa** |
 | V — Qualidade e simplicidade | Solução mais simples que preserve os requisitos | Nenhum padrão novo: sem repositório, sem DTO novo, sem serviço novo, sem entidade nova, sem workflow engine. O catálogo de autoridades reusa o padrão do catálogo de seções em vez de inventar um. **Passa** |
@@ -133,8 +133,8 @@ backend/tests/
 └── interface/                        # ações unificadas; permissão de retificar; acessibilidade
 ```
 
-**Structure Decision**: mantida a estrutura existente. Dois arquivos novos, ambos justificados por
-separação de responsabilidade e não por generalização:
+**Structure Decision**: mantida a estrutura existente. **Três módulos novos e uma migration**, todos
+justificados por separação de responsabilidade e não por generalização:
 
 - `publicacoes/infrastructure/humano.py` — porque FR-001 exige um lugar **declarado** onde a
   formatação humana vive. Espalhá-la pelo compositor tornaria a fronteira canônica uma convenção em
@@ -143,8 +143,11 @@ separação de responsabilidade e não por generalização:
 - `interface/acoes.py` — porque FR-023 exige que o conjunto seja calculado **uma vez**. Hoje ele
   está em três lugares (`ACOES_POR_SITUACAO`, `atos.disponiveis`, e um `<li>` no template), e é essa
   dispersão que produz o cartão que oferece uma ação e diz que não há ação.
+- `publicacoes/domain/autoridades.py` — porque FR-039 exige uma origem declarada para a escolha da
+  autoridade. Reusa o padrão do catálogo de seções em vez de inventar entidade.
 
-Nenhum app novo. Nenhum diretório novo.
+Mais `editais/migrations/0005_perfil_institucional.py`. Nenhum app novo. Nenhum diretório novo.
+`colecoes.py` **ganha um conjunto declarado**, não um arquivo.
 
 ## Abordagem por entrega
 
@@ -186,6 +189,13 @@ há consulta a mais. `_integridade` passa a escrever o Edital por número/ano e 
 e título, mantendo a afirmação de derivação, a versão do schema e o SHA-256, e deixando de escrever
 os dois UUIDs.
 
+**E a identidade da raiz passa a ser protegida na mesma entrega.** `colecoes.py` ganha um segundo
+conjunto declarado — os cinco campos de identidade —, e `_recusar_controle_interno`
+(`changes.py:167-173`) passa a consultá-lo junto de `LISTAS_DE_CONTROLE`. É um conjunto e uma
+condição, na via de extensão que a `006` já usou; não é gramática nova. Sem isto, uma Retificação
+faria o documento publicado nomear outro Processo, e seria esta feature que abriria a porta
+(D-003.1).
+
 ### Entrega 3 — O fluxo administrativo sem becos (FR-021 a FR-027)
 
 Nasce `interface/acoes.py` com **uma** função que responde, para um Edital e um ator, o conjunto
@@ -214,8 +224,13 @@ Uma função de leitura em `interface/acoes.py`: dado o estado do Edital, devolv
 português e o papel responsável pelo próximo ato, derivados de `ACOES_POR_SITUACAO`, que já mapeia
 situação → ações → permissão. Nada é persistido, nada é atribuído a pessoa.
 
-A coerência com a segregação de funções (FR-031) sai de graça: `impede_por_segregacao` já é
-calculada no `detalhe` e no `confirmar`, e a indicação a consulta em vez de repetir a regra.
+A coerência com a segregação de funções (FR-031) **não sai de graça, e este é o ponto delicado da
+entrega**. Derivar apenas de `ACOES_POR_SITUACAO` diria "você publica" a quem elaborou e homologou
+sozinho — exatamente a pessoa que o domínio recusará. A função consulta também
+`impede_por_segregacao`, que já é calculada no `detalhe` e no `confirmar`
+(`views.py`, `impede_por_segregacao(participantes, ator)`), e nesse caso nomeia o **papel** sem
+apontar o leitor. O cenário 3 da `US5` é o teste que separa "derivar do mapa de permissões" de
+"derivar do que o domínio aceitaria".
 
 ### Entrega 5 — Os atritos de operação (FR-032 a FR-043)
 
@@ -240,9 +255,12 @@ etapa foi salva.
 
 ### Encadeamento
 
-Só há uma dependência real entre entregas: **a 1 e a 2 tocam o mesmo arquivo** (`pdf.py`) e a 2
-regenera a mesma fixture. Fazer a 1 primeiro é o que permite demonstrar valor antes do incremento
-canônico; fazê-las na ordem inversa desperdiçaria uma regeneração.
+Só há uma dependência real entre entregas: **a 1 e a 2 tocam o mesmo arquivo** (`pdf.py`) e ambas
+alteram os bytes do documento, de modo que **cada uma regenera a fixture** — duas regenerações, e
+FR-006 foi corrigido para dizê-lo. Não é desperdício: é o preço de FR-018, que faz a parte
+apresentacional chegar sem esperar o incremento canônico. Fundi-las numa entrega só economizaria uma
+regeneração e custaria a demonstração antecipada; deixar a fixture desatualizada entre as duas
+deixaria a `main` vermelha.
 
 As entregas 3, 4 e 5 são independentes entre si e independentes das duas primeiras. A 4 usa a
 função que a 3 cria, e por isso vem depois dela.
