@@ -26,6 +26,7 @@ from processo_seletivo.interface import (
     atos_retificacao,
     forms,
     identidade,
+    revisao,
 )
 from processo_seletivo.interface import retificacao as retificacao_ui
 from processo_seletivo.processos.application.commands import create_process_with_first_edital
@@ -381,8 +382,11 @@ def compor_etapa(request, edital_id, etapa):
                 try:
                     _gravar_etapa(request, ator, edital, etapa, digitados)
                     destino = request.POST.get("destino") or etapa
+                    # A etapa salva viaja na confirmação porque "Avançar" grava uma e abre outra:
+                    # "Rascunho salvo" sozinho, na tela seguinte, dizia respeito à anterior.
                     return redirect(
-                        f"{reverse('interface:compor-etapa', args=[edital.id, destino])}?salvo=1"
+                        f"{reverse('interface:compor-etapa', args=[edital.id, destino])}"
+                        f"?salvo={etapa}"
                     )
                 except DomainError as exc:
                     erros.append(exc.detail)
@@ -390,6 +394,9 @@ def compor_etapa(request, edital_id, etapa):
 
     _, _, template = ETAPAS_COMPOSICAO[CHAVES_ETAPA.index(etapa)]
     pendencias = _pendencias(edital)
+    # A conferência é lida do conteúdo canônico, e não montada bloco a bloco no template: é o que
+    # impede a Revisão de envelhecer quando uma coleção nova entra no Edital.
+    conferencia = revisao.blocos(edital_snapshot(edital)) if etapa == "revisao" else []
     return render(
         request,
         template,
@@ -401,7 +408,9 @@ def compor_etapa(request, edital_id, etapa):
             "proxima": proxima,
             "editavel": editavel,
             "erros": erros,
-            "salvo": request.GET.get("salvo") == "1",
+            "salvo": dict(
+                (chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO
+            ).get(request.GET.get("salvo", "")),
             "identificacao": (
                 digitados
                 if etapa == "identificacao" and digitados is not None
@@ -428,6 +437,7 @@ def compor_etapa(request, edital_id, etapa):
                 else forms.secoes_do_edital(edital)
             ),
             "reservas": forms.RESERVA,
+            "conferencia": conferencia,
             "pendencias": pendencias,
             # A tela de revisão mostra tudo; as demais, só o que se resolve nelas — pendência
             # exibida onde não há como agir vira ruído que a pessoa aprende a ignorar.
@@ -683,19 +693,11 @@ ESTADOS_COM_PREVIA = (
 )
 
 
-@require_http_methods(["GET"])
-def previa(request, edital_id):
-    """O documento como ele ficará, sem praticar ato nenhum (US1).
-
-    Não é command: não altera estado, não gera ato e não tem chave de idempotência. É leitura que
-    compõe um documento a partir do snapshot atual — que nos três estados admitidos **é** o
-    conteúdo que será publicado, porque depois da submissão o rascunho não é editável e a
-    publicação já recusa divergência entre rascunho e revisão homologada. Uma segunda origem
-    existiria para reproduzir o que a primeira já garante.
-    """
+def _edital_com_previa(request, edital_id):
+    """O Edital cuja prévia se pode ver, ou a recusa que explica por quê."""
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return None, redirect(reverse("interface:identificar"))
     edital = obter_edital(actor=ator, edital_id=edital_id)
     if edital is None:
         raise Http404
@@ -706,6 +708,61 @@ def previa(request, edital_id):
             "Depois da publicação, o documento é o publicado.",
             409,
         )
+    return edital, None
+
+
+# De onde a pessoa veio, para onde ela volta. Sem isto, "voltar" da prévia significava o botão do
+# navegador — e, quando a prévia era um arquivo baixado, não significava nada.
+ORIGEM_DA_PREVIA = {"revisao": "revisao", "conteudo": "conteudo", "etapas": "etapas"}
+
+# O documento é o mesmo nos três estados; o que muda é o que quem lê está prestes a decidir.
+ROTULO_DA_PREVIA = {
+    Edital.Status.EM_ELABORACAO: "Ver o Edital",
+    Edital.Status.EM_REVISAO: "Ver o Edital submetido",
+    Edital.Status.HOMOLOGADO: "Ver o Edital homologado",
+}
+
+
+@require_http_methods(["GET"])
+def previa(request, edital_id):
+    """A prévia como **tela**, com o documento embutido e o caminho de volta visível.
+
+    Entregar o PDF direto fazia o navegador tratá-lo como download: o ciclo de olhar e voltar a
+    editar virava baixar, abrir noutro aplicativo e procurar a aba. FR-012 pede que se possa
+    retornar e continuar editando, e não havia para onde retornar.
+
+    O artefato continua sendo o mesmo PDF — não há representação paralela do documento.
+    """
+    edital, desvio = _edital_com_previa(request, edital_id)
+    if desvio is not None:
+        return desvio
+    origem = ORIGEM_DA_PREVIA.get(request.GET.get("origem", ""))
+    return render(
+        request,
+        "interface/previa.html",
+        {
+            "edital": edital,
+            "voltar": reverse("interface:compor-etapa", args=[edital.id, origem])
+            if origem
+            else reverse("interface:detalhe", args=[edital.id]),
+            "rotulo_voltar": "Voltar para a Revisão" if origem == "revisao" else "Voltar",
+        },
+    )
+
+
+@require_http_methods(["GET"])
+def previa_documento(request, edital_id):
+    """Os bytes da prévia, para a tela embutir e para quem quiser abrir o arquivo.
+
+    Não é command: não altera estado, não gera ato e não tem chave de idempotência. É leitura que
+    compõe um documento a partir do snapshot atual — que nos três estados admitidos **é** o
+    conteúdo que será publicado, porque depois da submissão o rascunho não é editável e a
+    publicação já recusa divergência entre rascunho e revisão homologada. Uma segunda origem
+    existiria para reproduzir o que a primeira já garante.
+    """
+    edital, desvio = _edital_com_previa(request, edital_id)
+    if desvio is not None:
+        return desvio
     documento = render_edital_pdf(edital_snapshot(edital), "", modo=MODO_PREVIA)
     resposta = HttpResponse(documento, content_type="application/pdf")
     nome = f"previa-edital-{edital.number}-{edital.year}.pdf".replace("/", "-")
@@ -801,6 +858,8 @@ def praticar_ato(request, edital_id, acao):
         or any(item["severidade"] == "erro" for item in pendencias),
         # A chave nasce aqui: confirmar duas vezes repete o mesmo ato, não pratica dois.
         "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
+        "pode_visualizar": edital.status in ESTADOS_COM_PREVIA,
+        "rotulo_previa": ROTULO_DA_PREVIA.get(edital.status, "Ver o Edital"),
     }
 
     if request.method == "GET":
@@ -939,7 +998,9 @@ def retificar(request, edital_id):
         {
             "edital": edital,
             "base": base,
-            "grupos": retificacao_ui.campos_editaveis(base.content),
+            "grupos": retificacao_ui.reexibir(
+                retificacao_ui.campos_editaveis(base.content), dados
+            ),
             "digitado": dados,
             # As linhas acrescentadas nascem no cliente, mas precisam voltar do servidor depois
             # do POST: sem isto, ver o resumo devolve um formulário sem elas.

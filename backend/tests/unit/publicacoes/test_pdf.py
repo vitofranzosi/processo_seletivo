@@ -255,3 +255,40 @@ def test_parentheses_in_content_do_not_corrupt_the_document():
     pdf = render_edital_pdf(snapshot(title="Edital (retificado) 07/2026"), HASH)
     assert b"%%EOF" in pdf
     assert "Edital (retificado) 07/2026" in texto_de(pdf)
+
+
+def test_paragrafos_da_secao_textual_sobrevivem_ao_documento():
+    """O defeito que a demonstração navegável da `006` encontrou e a suíte não pegava.
+
+    `_quebrar` reflui o texto por palavra e descartava toda a estrutura de espaço em branco: dois
+    parágrafos digitados viravam um bloco corrido, em silêncio, no único texto livre do produto.
+    """
+    secoes_editadas = [
+        {**s, "content": "Caberá recurso em dois dias úteis.\n\nO recurso será fundamentado."}
+        if s["key"] == "recursos"
+        else s
+        for s in secoes()
+    ]
+    texto = texto_de(render_edital_pdf(snapshot(sections=secoes_editadas), HASH))
+
+    linhas = texto.splitlines()
+    assert "Caberá recurso em dois dias úteis." in linhas
+    assert "O recurso será fundamentado." in linhas
+    # A prova do defeito: antes, as duas frases saíam refluídas na mesma linha.
+    assert not any(
+        "dois dias úteis. O recurso" in linha for linha in linhas
+    ), "os parágrafos foram colados de novo"
+
+
+def test_quebra_simples_de_linha_tambem_separa_paragrafo():
+    """Norma se escreve em linhas curtas; exigir linha em branco seria armadilha."""
+    secoes_editadas = [
+        {**s, "content": "I — ser brasileiro;\nII — estar em dia com as obrigações eleitorais;"}
+        if s["key"] == "requisitos" or s["key"] == "recursos"
+        else s
+        for s in secoes()
+    ]
+    linhas = texto_de(render_edital_pdf(snapshot(sections=secoes_editadas), HASH)).splitlines()
+
+    assert "I — ser brasileiro;" in linhas
+    assert "II — estar em dia com as obrigações eleitorais;" in linhas

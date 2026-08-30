@@ -9,6 +9,7 @@ que funciona sem HTMX. O que faltava era afirmar que a página consegue carregar
 """
 
 import re
+from pathlib import Path
 
 import pytest
 from django.contrib.staticfiles import finders
@@ -137,3 +138,28 @@ def test_fragmentos_seguidos_nao_repetem_o_indice(client, seletor_ligado, edital
         corpo = client.get(reverse("interface:fragmento-perfil")).content.decode()
         indices.add(re.search(r'name="perfil-(\d+)-id"', corpo).group(1))
     assert len(indices) == 8
+
+
+TEMPLATES = sorted(
+    (Path(__file__).resolve().parents[2] / "processo_seletivo/interface/templates").rglob("*.html")
+)
+
+
+def test_nenhum_template_usa_comentario_de_uma_linha_em_mais_de_uma():
+    """`{# ... #}` do Django só comenta uma linha; em duas, ele é impresso na tela.
+
+    O teste por renderização, logo acima, cobre as telas que dá para montar com um Edital em
+    elaboração — e foi por isso que o defeito voltou na tela de Retificação, que exige um Edital
+    publicado para existir. A verificação na fonte alcança todas, inclusive as que ninguém
+    lembrou de renderizar num teste.
+    """
+    assert TEMPLATES, "nenhum template encontrado — o caminho mudou?"
+    vazando = []
+    for template in TEMPLATES:
+        for numero, linha in enumerate(template.read_text(encoding="utf-8").splitlines(), 1):
+            if "{#" in linha and "#}" not in linha.split("{#", 1)[1]:
+                vazando.append(f"{template.name}:{numero}")
+    assert vazando == [], (
+        "comentário de template que atravessa linhas — o texto aparece para o usuário: "
+        + ", ".join(vazando)
+    )

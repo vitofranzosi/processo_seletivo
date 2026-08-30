@@ -18,13 +18,19 @@ problema de representação (FR-019).
 """
 
 from datetime import UTC, datetime
+from decimal import Decimal, InvalidOperation
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from processo_seletivo.editais.domain import secoes as catalogo
 from processo_seletivo.publicacoes.domain.changes import ABSENT, resolve_path
 
 ZONA = ZoneInfo("America/Sao_Paulo")
 TEXTO, INTEIRO, INSTANTE = "texto", "inteiro", "instante"
+# A `006` publicou Etapas, Seções e a Regra Normativa das modalidades, e a tela ficou para trás:
+# o motor endereçava os três, a interface alcançava nenhum. Estes três tipos são o que faltava
+# para descrevê-los — decimal canônico, texto longo e booleano.
+DECIMAL, TEXTO_LONGO, BOOLEANO = "decimal", "texto_longo", "booleano"
 
 # (sufixo do caminho, rótulo, tipo) — aplicado a cada Perfil e a cada Evento.
 CAMPOS_PERFIL = [
@@ -39,6 +45,26 @@ CAMPOS_EVENTO = [
     ("endAt", "Término", INSTANTE),
 ]
 CAMPOS_RAIZ = [("title", "Título do Edital", TEXTO), ("description", "Descrição", TEXTO)]
+
+# A modalidade sem Regra Normativa não recebe os campos dela: o caminho não existiria no
+# conteúdo, e endereçá-lo seria recusado por caminho inexistente. A tela oferece exatamente o
+# que a gramática admite.
+CAMPOS_MODALIDADE = [("name", "Denominação", TEXTO), ("description", "Descrição", TEXTO)]
+CAMPOS_REGRA = [
+    ("normativeRule/percentage", "Percentual (%)", DECIMAL),
+    ("normativeRule/foundation", "Fundamento normativo", TEXTO),
+    ("normativeRule/version", "Versão do fundamento", TEXTO),
+]
+CAMPOS_ETAPA = [
+    ("name", "Nome da Etapa", TEXTO),
+    ("weight", "Peso", DECIMAL),
+    ("minimumScore", "Nota mínima", DECIMAL),
+    ("eliminatory", "Eliminatória", BOOLEANO),
+    ("classificatory", "Classificatória", BOOLEANO),
+]
+# Só o conteúdo. O catálogo de seções é fixo: título, ordem, tipo e origem divergentes são
+# recusados pela verificação de topologia, e uma seção gerada nem campo de conteúdo tem.
+CAMPOS_SECAO = [("content", "Texto da seção", TEXTO_LONGO)]
 
 LISTA = "lista"
 # Um Perfil ou Evento acrescentado entra no snapshot publicado; precisa nascer com a mesma
@@ -70,7 +96,23 @@ def _ler(conteudo, caminho):
     return None if valor is ABSENT else valor
 
 
+def _valor(item, chave):
+    """Valor de `chave`, que pode atravessar objetos — `normativeRule/percentage`.
+
+    A Regra Normativa é objeto dentro da modalidade, e não item de lista: o caminho até ela é
+    composto por nomes de chave, e é assim que a gramática já a endereça.
+    """
+    atual = item
+    for parte in chave.split("/"):
+        if not isinstance(atual, dict):
+            return None
+        atual = atual.get(parte)
+    return atual
+
+
 def _para_formulario(valor, tipo):
+    if tipo == BOOLEANO:
+        return "1" if valor else "0"
     if valor is None:
         return ""
     if tipo == INSTANTE:
@@ -78,16 +120,17 @@ def _para_formulario(valor, tipo):
     return str(valor)
 
 
-def _grupo(titulo, caminho, item, campos):
+def _grupo(titulo, caminho, item, campos, *, removivel=True):
     return {
         "titulo": titulo,
         "caminho": caminho,
+        "removivel": removivel,
         "campos": [
             {
                 "caminho": f"{caminho}/{chave}",
                 "rotulo": rotulo,
                 "tipo": tipo,
-                "valor": _para_formulario(item.get(chave), tipo),
+                "valor": _para_formulario(_valor(item, chave), tipo),
             }
             for chave, rotulo, tipo in campos
         ],
@@ -105,26 +148,47 @@ def _referenciar(grupos):
     for ordem_grupo, grupo in enumerate(grupos, 1):
         grupo["referencia"] = f"g{ordem_grupo}"
         # A tela precisa saber se a linha pode ser removida sem precisar olhar o caminho — que
-        # é justamente o que ela não deve receber.
-        grupo["removivel"] = bool(grupo["caminho"])
+        # é justamente o que ela não deve receber. Seção não é removível: o catálogo é fixo, e
+        # oferecer a marcação seria oferecer o que a publicação recusa.
+        grupo["removivel"] = grupo["removivel"] and bool(grupo["caminho"])
         for ordem_campo, campo in enumerate(grupo["campos"], 1):
             campo["referencia"] = f"g{ordem_grupo}c{ordem_campo}"
     return grupos
 
 
 def campos_editaveis(conteudo):
-    """Campos que uma Retificação pode alterar, agrupados como a pessoa os enxerga."""
-    grupos = [{"titulo": "Edital", "caminho": "", "campos": []}]
-    grupos[0]["campos"] = _grupo("Edital", "", conteudo, CAMPOS_RAIZ)["campos"]
+    """Campos que uma Retificação pode alterar, agrupados como a pessoa os enxerga.
+
+    Cobre tudo o que o conteúdo publicado carrega e a gramática endereça. A `006` publicou
+    Etapas, Seções e a Regra Normativa e não trouxe nenhuma das três para cá; corrigir uma cota
+    depois de publicada exigia chamada de API, o que a Constituição não admite como jornada
+    concluída.
+    """
+    grupos = [_grupo("Edital", "", conteudo, CAMPOS_RAIZ, removivel=False)]
+
     for perfil in conteudo.get("profiles") or []:
+        caminho = f"/profiles/id={perfil.get('id', '')}"
         grupos.append(
             _grupo(
                 f"Perfil {perfil.get('code', '')} — {perfil.get('name', '')}",
-                f"/profiles/id={perfil.get('id', '')}",
+                caminho,
                 perfil,
                 CAMPOS_PERFIL,
             )
         )
+        for modalidade in perfil.get("competitionModalities") or []:
+            campos = CAMPOS_MODALIDADE + (
+                CAMPOS_REGRA if isinstance(modalidade.get("normativeRule"), dict) else []
+            )
+            grupos.append(
+                _grupo(
+                    f"Modalidade {modalidade.get('code', '')} — {perfil.get('code', '')}",
+                    f"{caminho}/competitionModalities/id={modalidade.get('id', '')}",
+                    modalidade,
+                    campos,
+                )
+            )
+
     for evento in conteudo.get("schedule") or []:
         grupos.append(
             _grupo(
@@ -134,13 +198,70 @@ def campos_editaveis(conteudo):
                 CAMPOS_EVENTO,
             )
         )
+
+    for etapa in conteudo.get("stages") or []:
+        grupos.append(
+            _grupo(
+                f"Etapa {etapa.get('order', '')} — {etapa.get('name', '')}",
+                f"/stages/id={etapa.get('id', '')}",
+                etapa,
+                CAMPOS_ETAPA,
+            )
+        )
+
+    for secao in conteudo.get("sections") or []:
+        # Seção gerada não tem conteúdo próprio: ela é composta a partir do dado que a origina,
+        # e é lá que se corrige.
+        if secao.get("type") == catalogo.GERADA:
+            continue
+        grupos.append(
+            _grupo(
+                f"Seção {secao.get('order', '')} — {secao.get('title', '')}",
+                f"/sections/id={secao.get('id', '')}",
+                secao,
+                CAMPOS_SECAO,
+                removivel=False,
+            )
+        )
+
     return _referenciar(grupos)
+
+
+def reexibir(grupos, dados):
+    """Devolve os grupos com o que a pessoa digitou, para o formulário voltar como ela o deixou.
+
+    Resolver isto aqui — e não com um filtro repetido em cada controle do template — é o que
+    permite que a tela trate texto, número, instante, decimal, texto longo e booleano pelo mesmo
+    caminho. O booleano é o que obriga: um `checkbox` desmarcado não é enviado, e a reexibição
+    por filtro não teria como distinguir "desmarcado" de "ausente".
+    """
+    if dados is None:
+        return grupos
+    for grupo in grupos:
+        grupo["marcado_para_remover"] = bool(dados.get(f"remover:{grupo['referencia']}"))
+        for campo in grupo["campos"]:
+            enviado = dados.get(f"campo:{campo['referencia']}")
+            if enviado is not None:
+                campo["valor"] = enviado
+    return grupos
 
 
 def _converter(bruto, tipo, rotulo):
     bruto = (bruto or "").strip()
+    if tipo == BOOLEANO:
+        return bruto == "1"
     if bruto == "":
         return None
+    if tipo == DECIMAL:
+        # **A forma canônica não é escolha de apresentação.** O conteúdo publicado materializa
+        # decimais com quatro casas e sem zero à esquerda, e a verificação de publicação recusa
+        # qualquer outra forma. Escrever "2" aqui produziria um conteúdo que a própria
+        # Publicação rejeita — e, onde não rejeitasse, faria uma Retificação semanticamente nula
+        # alterar o hash. Formatar para leitura humana é assunto da materialização, não daqui.
+        try:
+            return f"{Decimal(bruto.replace(',', '.')):.4f}"
+        except InvalidOperation as exc:
+            raise ValueError(f"{rotulo}: '{bruto}' não é um número válido.") from exc
     if tipo == INTEIRO:
         try:
             return int(bruto)
@@ -178,9 +299,9 @@ def _marcados_para_remover(dados, grupos):
     exatamente essa a razão de a ordem decrescente existir.
     """
     return [
-        grupo["caminho"]
+        grupo
         for grupo in grupos
-        if grupo["caminho"] and dados.get(f"remover:{grupo['referencia']}")
+        if grupo["removivel"] and dados.get(f"remover:{grupo['referencia']}")
     ]
 
 
@@ -277,11 +398,18 @@ def diferencas(conteudo, dados):
     """
     alteracoes, resumo = [], []
     grupos = campos_editaveis(conteudo)
-    removidos = _marcados_para_remover(dados, grupos)
+    grupos_removidos = _marcados_para_remover(dados, grupos)
+    removidos = [grupo["caminho"] for grupo in grupos_removidos]
+
+    def dentro_de_removido(caminho):
+        """Remover um Perfil leva junto as modalidades dele: alterá-las não teria efeito."""
+        return any(
+            caminho == removido or caminho.startswith(f"{removido}/") for removido in removidos
+        )
 
     for grupo in grupos:
         # Alterar campo de linha que será removida não tem efeito e confundiria o resumo.
-        if grupo["caminho"] in removidos:
+        if grupo["caminho"] and dentro_de_removido(grupo["caminho"]):
             continue
         for campo in grupo["campos"]:
             enviado = dados.get(f"campo:{campo['referencia']}")
@@ -308,14 +436,15 @@ def diferencas(conteudo, dados):
                 }
             )
 
-    for caminho in removidos:
-        atual = _ler(conteudo, caminho) or {}
-        rotulo = "Perfil" if caminho.startswith("/profiles/") else "Evento"
-        nome = atual.get("name") if rotulo == "Perfil" else atual.get("type")
-        alteracoes.append({"targetPath": caminho, "operation": "REMOVE"})
+    for grupo in grupos_removidos:
+        atual = _ler(conteudo, grupo["caminho"]) or {}
+        nome = atual.get("name") or atual.get("type") or atual.get("code")
+        alteracoes.append({"targetPath": grupo["caminho"], "operation": "REMOVE"})
         resumo.append(
             {
-                "grupo": f"{rotulo} {nome or ''}".strip(),
+                # O título do grupo já nomeia a entidade em qualquer coleção; derivar o rótulo
+                # do prefixo do caminho errava para modalidade, que também começa em /profiles.
+                "grupo": grupo["titulo"],
                 "rotulo": "Remoção",
                 "antes": nome or "—",
                 "depois": "removido do Edital",

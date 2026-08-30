@@ -10,6 +10,7 @@ Sem dependência externa. O texto usa `WinAnsiEncoding`, que cobre o português 
 anterior codificava em ASCII e destruía todo acento de um documento oficial brasileiro.
 """
 
+import re
 from datetime import datetime
 
 from django.utils import timezone
@@ -61,6 +62,22 @@ def _quebrar(texto: str, tamanho: float, recuo: float) -> list[str]:
     if atual:
         linhas.append(atual)
     return linhas or [""]
+
+
+def _paragrafos(texto) -> list[str]:
+    """Os parágrafos que a pessoa escreveu.
+
+    `_quebrar` reflui o texto por palavra e descarta toda a estrutura de espaço em branco — o que
+    fazia dois parágrafos digitados virarem um bloco corrido no documento, em silêncio, no único
+    texto livre do produto. Aqui a quebra de linha é preservada como fronteira de parágrafo antes
+    de o refluxo acontecer.
+
+    Qualquer quebra separa; linhas em branco não criam parágrafo vazio. Um Edital escrito em
+    linhas curtas — que é como se escreve norma — sai como linhas curtas, e não como um bloco.
+    """
+    return [
+        bloco.strip() for bloco in re.split(r"[\r\n]+", str(texto or "").strip()) if bloco.strip()
+    ]
 
 
 def _instante(valor) -> str:
@@ -259,7 +276,8 @@ def _secoes(composicao, snapshot):
             corpo(composicao, snapshot)
         else:
             composicao.escrever(titulo.upper(), tamanho=12, fonte=NEGRITO, antes=18)
-            composicao.escrever(secao.get("content", ""), tamanho=10, antes=6)
+            for indice, paragrafo in enumerate(_paragrafos(secao.get("content", ""))):
+                composicao.escrever(paragrafo, tamanho=10, antes=6 if indice == 0 else 7)
 
 
 def _integridade(composicao, snapshot, content_hash):

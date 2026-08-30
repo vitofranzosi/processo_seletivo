@@ -10,31 +10,32 @@
   {% endif %}
 </section>
 
-<div class="colunas">
-  <section aria-labelledby="resumo-perfis" class="cartao">
-    <h2 id="resumo-perfis">Perfis de Vaga ({{ perfis|length }})</h2>
-    {% if perfis %}
+<section aria-labelledby="conferencia-titulo">
+  <h2 id="conferencia-titulo">O que será congelado na submissão</h2>
+  <p class="ajuda">Este é o conteúdo que a submissão registra como versão candidata à Publicação.
+    É lido do próprio conteúdo normativo — o mesmo que gera o documento.</p>
+
+  {% for bloco in conferencia %}
+  <section class="cartao conferencia" aria-labelledby="bloco-{{ bloco.etapa }}">
+    <header>
+      <h3 id="bloco-{{ bloco.etapa }}">{{ bloco.titulo }} ({{ bloco.itens|length }})</h3>
+      <a href="{% url 'interface:compor-etapa' edital.id bloco.etapa %}" class="acao">Revisar</a>
+    </header>
+    {% if bloco.itens %}
     <ul class="resumo-lista">
-      {% for perfil in perfis %}
-      <li><strong>{{ perfil.code }}</strong> — {{ perfil.name }}
-        <span class="quando">{{ perfil.immediateVacancies }} vaga{{ perfil.immediateVacancies|pluralize }} imediata{{ perfil.immediateVacancies|pluralize }}</span></li>
+      {% for item in bloco.itens %}
+      <li>
+        <strong>{{ item.titulo }}</strong>
+        {% for linha in item.linhas %}{% if linha %}<span class="detalhe">{{ linha }}</span>{% endif %}{% endfor %}
+      </li>
       {% endfor %}
     </ul>
-    {% else %}<p class="pendente">Nenhum Perfil.</p>{% endif %}
-    <p><a href="{% url 'interface:compor-etapa' edital.id 'perfis' %}" class="acao">Revisar Perfis</a></p>
+    {% else %}
+    <p class="pendente">Nada declarado.</p>
+    {% endif %}
   </section>
-  <section aria-labelledby="resumo-cronograma" class="cartao">
-    <h2 id="resumo-cronograma">Cronograma ({{ eventos|length }})</h2>
-    {% if eventos %}
-    <ul class="resumo-lista">
-      {% for evento in eventos %}
-      <li><strong>{{ evento.type }}</strong> — {{ evento.description }}</li>
-      {% endfor %}
-    </ul>
-    {% else %}<p class="pendente">Nenhum Evento.</p>{% endif %}
-    <p><a href="{% url 'interface:compor-etapa' edital.id 'cronograma' %}" class="acao">Revisar Cronograma</a></p>
-  </section>
-</div>
+  {% endfor %}
+</section>
 
 <p class="navegacao-etapa">
   <a href="{% url 'interface:compor-etapa' edital.id anterior %}" class="acao">‹ Voltar</a>
@@ -42,7 +43,7 @@
   Visualizar não é ato: não altera estado nem cria registro publicado. Por isso fica ao lado de
   "Submeter" sem confirmação, e sem a marca de irreversível.
   {% endcomment %}
-  <a href="{% url 'interface:previa' edital.id %}" class="botao secundario">Visualizar Edital</a>
+  <a href="{% url 'interface:previa' edital.id %}?origem=revisao" class="botao secundario">Visualizar Edital</a>
   {% if editavel %}
   <a href="{% url 'interface:ato' edital.id 'submeter' %}" class="botao">Submeter para revisão</a>
   {% endif %}

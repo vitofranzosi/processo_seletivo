@@ -67,6 +67,13 @@ participar do ato. O sistema recusará esta operação.</p>
     <button type="submit" class="botao {% if ato.interrupcao %}perigoso{% endif %}">
       Confirmar: {{ ato.rotulo }}</button>
     {% endif %}
+    {% comment %}
+    Estes são os momentos de maior consequência do sistema, e eram os únicos em que ver o
+    conteúdo não era oferecido: quem decide precisa poder ler o que está decidindo.
+    {% endcomment %}
+    {% if pode_visualizar %}
+    <a href="{% url 'interface:previa' edital.id %}" class="acao">{{ rotulo_previa }}</a>
+    {% endif %}
     <a href="{% url 'interface:detalhe' edital.id %}" class="acao">Cancelar e voltar</a>
   </p>
 </form>
