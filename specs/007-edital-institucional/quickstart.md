@@ -1,0 +1,164 @@
+# Fase 1 — Como demonstrar e validar
+
+**Feature**: 007 — Edital Institucional | **Data**: 2026-08-30
+
+A condição de merge de cada entrega é a **demonstração no navegador**, não a contagem de testes
+(princípio VI da Constituição). Este guia diz como preparar o ambiente, o que rodar e o que se deve
+ver.
+
+---
+
+## Pré-requisitos
+
+PostgreSQL local precisa de `LC_ALL` definido, e a role padrão da máquina não existe no cluster —
+sobrescreva `DB_USER`. Ambos são particularidades conhecidas deste ambiente, não da feature.
+
+```bash
+cd backend && LC_ALL=en_US.UTF-8 DB_USER="$(whoami)" uv run pytest -q
+```
+
+A interface exige o seletor de identidade ligado; sem a variável, `/gestao/` devolve 503:
+
+```bash
+cd backend && INTERFACE_SELETOR_IDENTIDADE=true DB_USER="$(whoami)" uv run python manage.py runserver 8007
+```
+
+---
+
+## Validação por entrega
+
+### Entrega 1 — O documento se lê como um Edital (FR-002, FR-003)
+
+**Preparar**: um Edital publicado com Cronograma, ao menos uma Etapa com peso `2` e nota mínima
+`60`, e uma modalidade com percentual `20`. A seed de demonstração já produz esse conjunto.
+
+**Ver**: abrir o documento pelo detalhe do Edital publicado.
+
+| Deve aparecer | Não pode aparecer |
+|---|---|
+| `20%` | `20.0000%` |
+| `peso 2` | `peso 2.0000` |
+| `nota mínima 60` | `nota mínima 60.0000` |
+| datas dos Eventos | `Situação: PLANEJADO` |
+
+**Verificar também**: um percentual `12,5` sai como `12,5%` e não como `12.5%`.
+
+**Suíte**: `tests/unit/publicacoes/test_humano.py` (novo) e a fixture de bytes regenerada.
+
+---
+
+### Entrega 2 — A forma canônica v3 (FR-004, FR-007, FR-012, FR-014, FR-017)
+
+**Preparar**: banco recriado e seed regenerada — Editais publicados na versão 2 não sobrevivem a
+esta entrega, por decisão declarada.
+
+```bash
+cd backend && DB_USER="$(whoami)" uv run python manage.py migrate
+cd backend && DB_USER="$(whoami)" uv run python manage.py seed_demo
+cd backend && uv run python scripts/gerar_fixture_documento.py
+```
+
+**Ver, no assistente**: a etapa `Conteúdo` mostra **dez** seções, com Apresentação em primeiro,
+Requisitos Gerais antes de Da Inscrição, e Critérios de Classificação depois de Etapas de Avaliação.
+Editar o texto de uma das três novas e visualizar o Edital: a alteração aparece na posição declarada.
+
+**Ver, na etapa Perfis**: três campos novos — atribuições, carga horária e remuneração. Preencher
+atribuições com **dois parágrafos**, salvar, ir ao Cronograma, salvar, voltar aos Perfis: os três
+continuam lá, com os dois parágrafos.
+
+**Ver, no documento publicado**: os três campos impressos junto dos demais dados do Perfil, com os
+parágrafos preservados; e a seção de integridade dizendo `Edital 12/2027` e
+`Processo Seletivo <código> — <título>`, com o SHA-256 presente e **nenhum UUID**.
+
+**Verificar a irretificabilidade declarada**: uma Publicação da versão 2, se ainda existir, é
+recusada na consolidação por versão divergente. É o comportamento esperado, não um defeito.
+
+**Suíte**: `tests/contract/test_forma_publicada.py` — forma v3 completa, incluindo a regra de
+ausência `""` dos três campos; `tests/migrations/` para a `0005`.
+
+---
+
+### Entrega 3 — O fluxo administrativo sem becos (FR-021 a FR-027)
+
+Quatro verificações, todas na interface.
+
+1. **A recusa aponta o campo certo.** Com um Edital `21/2027` já existente no escopo, criar um
+   Processo novo cujo primeiro Edital repita `21/2027`. A mensagem deve falar do **número/ano do
+   Edital**, não da identificação institucional do Processo.
+2. **O próximo passo é oferecido.** Criado o Processo, a tela seguinte destaca `Elaborar o Edital
+   <n>/<ano>` como ação primária; o impedimento de cancelar deixa de ocupar o destaque.
+3. **Nada é oferecido e negado no mesmo cartão.** Num Edital publicado, o cartão "O que fazer agora"
+   nunca lista uma ação **e** a frase de ausência. Num Edital recém-criado sem dados, `Submeter`
+   aparece **desabilitado com o motivo ao lado** — não escondido, não oferecido.
+4. **Retificar respeita a permissão.** Entrar como quem homologa e publica, sem
+   `retificacao:elaborar`: o detalhe do Edital publicado não oferece `Retificar`. Alcançando
+   `/gestao/editais/<id>/retificar` por URL, a tela abre **em leitura** — sem campos de edição, sem
+   botão de envio.
+
+**Suíte**: `tests/interface/test_acoes.py` (novo), cobrindo as cinco situações de
+`ACOES_POR_SITUACAO` × papéis; `tests/unit/processos/` para o erro separado.
+
+---
+
+### Entrega 4 — Passagem de bastão (FR-028 a FR-031)
+
+**Ver**: submeter um Edital como quem elabora. A confirmação e o detalhe devem dizer a situação e
+qual **papel** age a seguir. Homologar como segunda pessoa e reler: o próximo ato é publicar, e a
+indicação é coerente com a segregação de funções — não aponta como próximo publicador quem o domínio
+recusaria.
+
+**Verificar a ausência**: não existe fila, caixa de entrada, aviso, e-mail nem designação a pessoa.
+Nenhum campo novo é persistido.
+
+**Suíte**: `tests/interface/test_bastao.py` (novo).
+
+---
+
+### Entrega 5 — Os atritos de operação (FR-032 a FR-043)
+
+Percurso único pelo assistente inteiro, observando:
+
+| Onde | O que verificar |
+|---|---|
+| Todo formulário | Campo obrigatório marcado na etiqueta e exposto a tecnologia assistiva |
+| Envio recusado | Resumo no topo com âncora **e** marca junto do campo |
+| Criar Processo | `Ano` com a mesma altura, fonte e borda dos vizinhos; `Número` respeitando a largura declarada |
+| Cronograma e Etapas | `↑` desabilitado na primeira linha, `↓` na última; cada linha diz "Evento 2 de 3" |
+| Etapas | A opção de Evento mostra a data herdada |
+| Etapas | Eliminatória e Classificatória agrupadas sob legenda "Caráter" |
+| Perfis | Remover linha preenchida pede confirmação; linha vazia não pede |
+| Publicar | Autoridade escolhida em lista; **nenhum UUID digitado** |
+| Assistente | Edital novo: `Conteúdo` aparece como "pronta para revisar", não "concluída". Depois de salvar a etapa, passa a "concluída" |
+| Depois de submeter | A faixa diz `Submissão para revisão`, não `submeter` |
+| Auditoria | Quatro gravações em etapas diferentes aparecem nomeando a área alterada |
+
+**Acessibilidade (SC-009b)**: percorrer o assistente **só pelo teclado**, com leitor de tela,
+alcançando obrigatoriedade, motivo de ato desabilitado, resumo de erros e confirmação de remoção —
+sem depender de cor para distinguir estado de etapa.
+
+---
+
+## Demonstração de ponta a ponta (SC-010)
+
+O cenário emblemático da `006` permanece o da `007`, com **dois atores**, porque a publicação recusa
+quem elaborou, homologou e publicou sozinho:
+
+> Painel → Novo Processo → **Elaborar (ação primária)** → Identificação → Perfis (**com atribuições,
+> carga horária e remuneração**) → Cronograma → Etapas → Modalidades → Conteúdo (**dez seções**) →
+> Revisão → Prévia → Submissão → **passagem de bastão** → Homologação → Publicação (**autoridade
+> escolhida em lista**) → documento publicado **que se lê como Edital**.
+
+Tudo pela interface administrativa: sem manipulação de banco, sem chamada manual de API, sem shell.
+
+---
+
+## Antes de abrir o PR
+
+```bash
+cd backend && uv run ruff check . && uv run ruff format --check .
+cd backend && LC_ALL=en_US.UTF-8 DB_USER="$(whoami)" uv run pytest -q
+```
+
+E a pergunta que fecha cada entrega: **isto aumentou a fidelidade do Edital real ou a fluidez da
+jornada de autoria?** Se um item da implementação não responde a nenhuma das duas, ele não pertence
+a esta feature — registra-se e não se corrige aqui (P-001).
