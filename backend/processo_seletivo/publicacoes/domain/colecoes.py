@@ -70,6 +70,36 @@ def colecoes_com_chave(conteudo):
     return achadas
 
 
+def identidades(conteudo):
+    """Caminho concreto de cada entidade endereçável do conteúdo.
+
+    `/profiles/id=…0501` e `/profiles/id=…0501/competitionModalities/id=…0541` — a topologia das
+    identidades, e não só o conjunto de chaves: é ela que precisa mudar apenas quando o ato
+    **endereça** a coleção em que a mudança acontece.
+
+    Coleção sem chave não é percorrida: nenhuma coleção declarada mora dentro de uma, e sem
+    identificador não haveria caminho concreto a registrar.
+    """
+    achadas = set()
+    _percorrer_identidades(conteudo, "", "", achadas)
+    return achadas
+
+
+def _percorrer_identidades(valor, forma, caminho, achadas):
+    if isinstance(valor, dict):
+        for chave, sub in valor.items():
+            escapada = escapar(chave)
+            _percorrer_identidades(sub, f"{forma}/{escapada}", f"{caminho}/{escapada}", achadas)
+    elif isinstance(valor, list) and tem_chave(forma):
+        for elemento in valor:
+            chave = elemento.get(CAMPO_CHAVE) if isinstance(elemento, dict) else None
+            if not isinstance(chave, str):
+                continue
+            concreto = f"{caminho}/{CAMPO_CHAVE}={chave}"
+            achadas.add(concreto)
+            _percorrer_identidades(elemento, f"{forma}/{CURINGA}", concreto, achadas)
+
+
 def declaradas_que_nao_sao_lista(conteudo):
     """Coleções declaradas que, no conteúdo dado, deixaram de ser lista.
 

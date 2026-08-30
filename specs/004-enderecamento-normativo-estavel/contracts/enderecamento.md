@@ -72,10 +72,19 @@ campo `id`, e por `REPLACE` de `/profiles` de uma vez.
 | Toda coleção declarada continua sendo uma coleção | `invalid_change` |
 | Todo elemento de coleção com chave carrega `id` UUID | `invalid_change` |
 | O `id` de um elemento de coleção com chave não é endereçável | `invalid_change` |
-| `REPLACE` de um elemento inteiro preserva o `id` que estava lá | `invalid_change` |
+| A topologia das identidades só muda onde o ato a endereça | `invalid_change` |
 
-Trocar a entidade é ato declarado: remova uma e acrescente a outra. `normativeRule` tem `id` e
-**não** é elemento de coleção — o `id` dela é conteúdo comum e continua endereçável.
+A última é a regra geral, e as anteriores são casos dela vistos de perto. **Uma entidade só
+aparece por `ADD /colecao/-` e só desaparece por `REMOVE /colecao/id=<uuid>`**; nenhuma outra
+alteração cria ou destrói identidade, nem a da entidade endereçada nem a das que estiverem dentro
+dela. Isso recusa trocar `/profiles` inteiro por outras entidades, reescrever um Perfil preservando
+o `id` dele mas apagando as Modalidades de dentro, e esvaziar uma coleção aninhada de uma vez.
+
+Reescrever uma entidade inteira continua sendo admitido, desde que as identidades dentro dela
+permaneçam. Reordenar uma coleção também: ordem é conteúdo normativo, identidade não.
+
+`normativeRule` tem `id` e **não** é elemento de coleção — o `id` dela é conteúdo comum e continua
+endereçável.
 
 ## Coleções
 

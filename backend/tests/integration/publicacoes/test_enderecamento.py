@@ -489,3 +489,97 @@ def test_replacing_a_whole_profile_keeping_its_identity_publishes(api_client, ed
     vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
     assert vigente.content["profiles"][0]["id"] == P1
     assert vigente.content["profiles"][0]["name"] == "Reescrito por inteiro"
+
+
+def test_an_atomic_collection_is_never_appended_to(api_client, edital):
+    """FR-011 na porta que faltava: `ADD` com `-` não passava por onde a recusa morava."""
+    recusa = elaborar(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": f"/profiles/id={P1}/requirements/-",
+                "operation": "ADD",
+                "newValue": "Requisito clandestino",
+            }
+        ],
+    )
+
+    assert recusa.status_code == 422, recusa.content
+    assert recusa.data["code"] == "invalid_change"
+    assert "substitua a lista inteira" in recusa.data["detail"]
+
+
+@pytest.mark.parametrize(
+    ("descricao", "monta"),
+    [
+        (
+            "trocar a coleção inteira por outras entidades",
+            lambda base: {
+                "targetPath": "/profiles",
+                "operation": "REPLACE",
+                "newValue": [{"id": "00000000-0000-0000-0000-0000000005ff", "code": "X"}],
+            },
+        ),
+        (
+            "preservar o Perfil e apagar as Modalidades de dentro",
+            lambda base: {
+                "targetPath": f"/profiles/id={P1}",
+                "operation": "REPLACE",
+                "newValue": {**base.content["profiles"][0], "competitionModalities": []},
+            },
+        ),
+        (
+            "esvaziar a coleção aninhada",
+            lambda base: {
+                "targetPath": f"/profiles/id={P1}/competitionModalities",
+                "operation": "REPLACE",
+                "newValue": [],
+            },
+        ),
+    ],
+)
+def test_identities_only_move_where_the_act_addresses_them(
+    api_client, edital, base, descricao, monta
+):
+    """Comparar o `id` do elemento substituído alcançava um caso; a topologia alcança todos."""
+    recusa = elaborar(api_client, edital, [monta(base)])
+
+    assert recusa.status_code == 422, f"{descricao}: {recusa.content}"
+    assert recusa.data["code"] == "invalid_change"
+    assert "não endereça" in recusa.data["detail"]
+
+
+def test_a_previously_valid_nested_path_keeps_resolving_after_a_whole_element_replace(
+    api_client, edital, base
+):
+    """O efeito que a recusa protege, dito pelo lado de quem audita.
+
+    Um caminho publicado para uma Modalidade continua nomeando-a depois de o Perfil inteiro ser
+    reescrito, porque reescrever preservando as identidades é o único jeito admitido.
+    """
+    modalidade = base.content["profiles"][0]["competitionModalities"][0]["id"]
+    caminho = f"/profiles/id={P1}/competitionModalities/id={modalidade}/name"
+    retificacao = create_retification(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": f"/profiles/id={P1}",
+                "operation": "REPLACE",
+                "newValue": {**base.content["profiles"][0], "name": "Reescrito"},
+            }
+        ],
+        suffix="a",
+    )
+    publish_retification(api_client, retificacao, suffix="a")
+
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    seguinte = create_retification(
+        api_client,
+        edital,
+        [{"targetPath": caminho, "operation": "REPLACE", "newValue": "Ainda alcançável"}],
+        base=vigente,
+        suffix="b",
+    )
+    assert seguinte.alteracoes.get().target_path == caminho

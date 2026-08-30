@@ -24,12 +24,15 @@ decorrem disso, e valem para qualquer operação e qualquer caminho, não só pa
 - toda coleção declarada continua sendo uma coleção;
 - todo elemento de coleção com chave carrega `id` UUID, depois de a alteração ser aplicada;
 - o `id` de um elemento de coleção com chave não é endereçável;
-- `REPLACE` de um elemento inteiro preserva o `id` que estava lá.
+- **a topologia das identidades só muda onde o ato a endereça**: `ADD /colecao/-` acrescenta uma,
+  `REMOVE /colecao/id=X` retira aquela e o que estava dentro dela, e nenhuma outra operação
+  cria ou destrói identidade nenhuma.
 
-Sem as três, a mesma entidade sem chave que o `ADD` recusa entrava por outra porta — substituindo
-o Perfil inteiro, editando o campo `id`, apagando-o, ou trocando `/profiles` de uma vez. E um `id`
-reatribuído faria um caminho já publicado deixar de nomear a entidade que ele nomeava, que é o que
-FR-018 promete.
+A última é a que generaliza as outras tentativas. Comparar o `id` do elemento substituído
+alcançava um caso de vários: `REPLACE /profiles` trocava a lista inteira por outras entidades, e
+`REPLACE` de um Perfil preservando o `id` dele apagava as Modalidades de dentro — em ambos, um
+caminho já publicado deixava de nomear a entidade que nomeava sem que o ato a tivesse endereçado.
+Vigiar a topologia antes e depois alcança os dois, e os que eu não pensei.
 """
 
 import re
@@ -86,8 +89,8 @@ class IdentidadeNaoEnderecavel(ValueError):
     """O caminho endereça o `id` de uma entidade, que é substrato e não conteúdo (FR-018)."""
 
 
-class IdentidadeReatribuida(ValueError):
-    """`REPLACE` de elemento inteiro que trocaria o `id` da entidade (FR-018)."""
+class IdentidadeImplicita(ValueError):
+    """A alteração criaria ou destruiria identidades sem endereçar a coleção delas (FR-018)."""
 
 
 def parse_path(path):
@@ -108,6 +111,14 @@ def selector_uuid(token):
     return valor if _UUID.fullmatch(valor) else None
 
 
+def _recusar_colecao_atomica(path, forma):
+    if colecoes.e_atomica(forma):
+        raise ColecaoAtomica(
+            f"{forma} é coleção sem identificador e vale como valor único: "
+            f"substitua a lista inteira em vez de endereçar {path}."
+        )
+
+
 def _posicao(lista, token, path, forma, *, allow_append, estrito):
     """Posição que `token` designa em `lista`, ou None quando não designa nenhuma.
 
@@ -115,11 +126,7 @@ def _posicao(lista, token, path, forma, *, allow_append, estrito):
     `estrito` separa quem aplica de quem só lê: aplicar sobre chave inexistente é recusa com
     código próprio; ler o conteúdo anterior de um caminho que não existe é apenas ausência.
     """
-    if colecoes.e_atomica(forma):
-        raise ColecaoAtomica(
-            f"{forma} é coleção sem identificador e vale como valor único: "
-            f"substitua a lista inteira em vez de endereçar {path}."
-        )
+    _recusar_colecao_atomica(path, forma)
     identificador = selector_uuid(token)
     if identificador is not None:
         for posicao, elemento in enumerate(lista):
@@ -227,6 +234,43 @@ def _chave_de(elemento):
     return chave if isinstance(chave, str) and _UUID.fullmatch(chave) else None
 
 
+def _identidades_permitidas(antes, depois, change, path):
+    """Prefixo sob o qual esta alteração pode criar ou destruir identidades. `None` se nenhum.
+
+    `ADD /colecao/-` pode acrescentar a entidade nova e tudo o que vier dentro dela.
+    `REMOVE /colecao/id=X` pode retirar X e tudo o que estava dentro de X. Qualquer outra
+    operação precisa deixar a topologia intacta.
+    """
+    operacao = change["operation"]
+    if operacao == "ADD" and path.endswith(f"/{APPEND_TOKEN}"):
+        colecao = path[: -len(APPEND_TOKEN) - 1]
+        nova = _chave_de(change.get("newValue"))
+        return f"{colecao}/{colecoes.CAMPO_CHAVE}={nova}" if nova else None
+    if operacao == "REMOVE" and selector_uuid(parse_path(path)[-1]) is not None:
+        return path
+    return None
+
+
+def _recusar_identidades_implicitas(antes, depois, change, path):
+    permitido = _identidades_permitidas(antes, depois, change, path)
+
+    def fora(identidades):
+        return sorted(
+            identidade
+            for identidade in identidades
+            if permitido is None or not identidade.startswith(permitido)
+        )
+
+    criadas, destruidas = fora(depois - antes), fora(antes - depois)
+    if criadas or destruidas:
+        raise IdentidadeImplicita(
+            f"{path} criaria ou destruiria identidades que não endereça: "
+            f"{', '.join(criadas + destruidas)}. Entidade se acrescenta com `/colecao/-` e se "
+            "retira com `/colecao/id=<uuid>`; nenhuma outra alteração pode fazer uma aparecer ou "
+            "desaparecer, senão um caminho já publicado deixaria de nomear a entidade que nomeava."
+        )
+
+
 def _recusar_entidades_sem_chave(content, path):
     """Nenhuma alteração pode deixar entidade que ninguém consiga endereçar depois.
 
@@ -253,14 +297,10 @@ def _recusar_entidades_sem_chave(content, path):
 
 
 def _apply_to_list(parent, leaf, operation, value, path, forma):
-    if operation == "REPLACE" and colecoes.tem_chave(forma):
-        posicao = _posicao(parent, leaf, path, forma, allow_append=False, estrito=True)
-        if posicao is not None and _chave_de(value) != _chave_de(parent[posicao]):
-            raise IdentidadeReatribuida(
-                f"{path} substituiria o item inteiro trocando o seu `id`. O identificador é o que "
-                "torna um caminho já publicado capaz de nomear a entidade sem consultar a versão "
-                "vigente; para trocar a entidade, remova uma e acrescente a outra."
-            )
+    # Antes de qualquer atalho: `ADD` com a folha `-` não passa por `_posicao`, e sem esta linha
+    # acrescentava item a `requirements` — a única operação que ainda alterava uma coleção
+    # atômica item a item (FR-011).
+    _recusar_colecao_atomica(path, forma)
     if operation == "ADD":
         if leaf != APPEND_TOKEN:
             # `_posicao` primeiro, porque índice sobre coleção com chave é endereçamento
@@ -294,6 +334,7 @@ def apply_change(content, change):
             "não conteúdo normativo. Alterá-lo faria um caminho já publicado deixar de nomear a "
             "entidade que ele nomeava."
         )
+    antes = colecoes.identidades(content)
     value = deepcopy(change.get("newValue"))
     if isinstance(parent, dict):
         _apply_to_dict(parent, leaf, operation, value, path)
@@ -302,6 +343,7 @@ def apply_change(content, change):
     else:
         raise CaminhoInexistente(f"Caminho inexistente: {path}")
     _recusar_entidades_sem_chave(content, path)
+    _recusar_identidades_implicitas(antes, colecoes.identidades(content), change, path)
 
 
 def apply_changes(base, changes, *, publication_id):

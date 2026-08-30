@@ -632,39 +632,86 @@ def test_add_declaring_the_current_content_is_an_informed_overwrite(
 def test_removing_and_recreating_the_same_path_in_one_act_is_accepted(
     api_client, manager_headers, process_payload
 ):
+    """A precondição de cada alteração parte do conteúdo que a anterior produziu.
+
+    Este teste usava `/schedule` inteiro — removido e recriado. Isso deixou de ser admissível
+    por outro motivo: trocar a coleção de uma vez destrói a identidade dos Eventos sem endereçar
+    nenhum. O que ele verifica continua sendo a cadeia de precondições dentro de um mesmo ato, e
+    para isso basta um caminho sem identidade.
+    """
     edital = publish_original(api_client, manager_headers, process_payload)
     base = VersaoConsolidada.objects.get(edital=edital)
-    # O Cronograma recriado precisa continuar tendo Evento: a Publicação da Retificação verifica
-    # as mesmas invariantes estruturais da Publicação original (FR-006 da 003), e um Edital
-    # vigente sem nenhum Evento é erro impeditivo, não resultado admissível.
-    novo_cronograma = [
-        {
-            "id": "00000000-0000-0000-0000-000000000412",
-            "type": "PROVA",
-            "description": "Prova objetiva",
-            "startAt": "2026-10-01T09:00:00-03:00",
-            "endAt": None,
-            "order": 1,
-            "status": "PLANEJADO",
-        }
-    ]
     created = create_retification(
         api_client,
         edital,
         base,
         [
-            {"targetPath": "/schedule", "operation": "REMOVE"},
-            add_change("/schedule", novo_cronograma),
+            {"targetPath": "/title", "operation": "REMOVE"},
+            add_change("/title", "Título recriado no mesmo ato"),
         ],
     )
     assert created.status_code == 201
     assert homologate_and_publish(api_client, created.data["id"], suffix="a").status_code == 201
     assert (
-        VersaoConsolidada.objects.filter(edital=edital)
-        .latest("materialized_at")
-        .content["schedule"]
-        == novo_cronograma
+        VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at").content["title"]
+        == "Título recriado no mesmo ato"
     )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_swapping_the_whole_schedule_is_done_entity_by_entity(
+    api_client, manager_headers, process_payload
+):
+    """Trocar o Cronograma inteiro continua possível — declarando cada entidade.
+
+    O Cronograma recriado precisa continuar tendo Evento: a Publicação da Retificação verifica
+    as mesmas invariantes estruturais da Publicação original (FR-006 da 003), e um Edital
+    vigente sem nenhum Evento é erro impeditivo, não resultado admissível.
+    """
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    novo_evento = {
+        "id": "00000000-0000-0000-0000-000000000412",
+        "type": "PROVA",
+        "description": "Prova objetiva",
+        "startAt": "2026-10-01T09:00:00-03:00",
+        "endAt": None,
+        "order": 1,
+        "status": "PLANEJADO",
+    }
+    created = create_retification(
+        api_client,
+        edital,
+        base,
+        [
+            add_change("/schedule/-", novo_evento),
+            {"targetPath": caminho_evento(), "operation": "REMOVE"},
+        ],
+    )
+    assert created.status_code == 201
+    assert homologate_and_publish(api_client, created.data["id"], suffix="a").status_code == 201
+    assert VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at").content[
+        "schedule"
+    ] == [novo_evento]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_replacing_a_whole_collection_wholesale_is_refused(
+    api_client, manager_headers, process_payload
+):
+    """A recusa que substituiu o cenário anterior, dita explicitamente."""
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+
+    recusa = create_retification(
+        api_client, edital, base, [{"targetPath": "/schedule", "operation": "REMOVE"}]
+    )
+
+    assert recusa.status_code == 422, recusa.content
+    assert recusa.data["code"] == "invalid_change"
+    assert "não endereça" in recusa.data["detail"]
 
 
 @pytest.mark.django_db(transaction=True)

@@ -16,8 +16,8 @@ from processo_seletivo.publicacoes.domain.changes import (
     ColecaoDescaracterizada,
     EnderecamentoPosicional,
     EntidadeSemChave,
+    IdentidadeImplicita,
     IdentidadeNaoEnderecavel,
-    IdentidadeReatribuida,
     SeletorInvalido,
     apply_changes,
 )
@@ -148,7 +148,7 @@ RECUSAS_DE_CAMINHO = (
     (AcrescimoPosicionado, "invalid_change", 422),
     (EntidadeSemChave, "invalid_change", 422),
     (IdentidadeNaoEnderecavel, "invalid_change", 422),
-    (IdentidadeReatribuida, "invalid_change", 422),
+    (IdentidadeImplicita, "invalid_change", 422),
     (ColecaoDescaracterizada, "invalid_change", 422),
 )
 

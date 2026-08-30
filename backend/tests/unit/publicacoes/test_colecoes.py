@@ -7,6 +7,7 @@ seja uma falha de suíte.
 
 from processo_seletivo.publicacoes.domain import colecoes
 from tests.fixtures.snapshot import (
+    MODALIDADE,
     PERFIL,
     colecoes_nao_declaradas,
     conteudo_normativo,
@@ -60,3 +61,25 @@ def test_control_lists_are_named_and_not_guessed():
 def test_the_shape_escapes_keys_so_a_slash_in_a_name_cannot_forge_a_collection():
     assert colecoes.escapar("a/b") == "a~1b"
     assert colecoes.escapar("a~b") == "a~0b"
+
+
+def test_the_identity_topology_names_every_addressable_entity():
+    """É o que a guarda compara antes e depois: caminho concreto, e não só o conjunto de chaves.
+
+    Sem o caminho, `/profiles/id=A/competitionModalities` e a coleção de outro Perfil seriam
+    indistinguíveis, e mover uma Modalidade de um Perfil para outro passaria por imutável.
+    """
+    topologia = colecoes.identidades(conteudo_normativo())
+
+    assert f"/profiles/id={PERFIL['A']}" in topologia
+    assert f"/profiles/id={PERFIL['A']}/competitionModalities/id={MODALIDADE['A']}" in topologia
+    assert len(topologia) == 3 + 2 + 2, "três Perfis, duas Modalidades do primeiro, dois Eventos"
+
+
+def test_the_topology_skips_a_key_that_is_not_text_instead_of_breaking():
+    """A função lê conteúdo que ela não produziu.
+
+    Chave estranha é para ignorar, não para estourar.
+    """
+    conteudo = {"profiles": [{"id": ["lista"]}, {"id": PERFIL["A"]}, {"sem": "chave"}]}
+    assert colecoes.identidades(conteudo) == {f"/profiles/id={PERFIL['A']}"}

@@ -642,7 +642,9 @@ components:
             existente — esta gramática não tem inserção em posição específica. Acrescentar a uma
             coleção com identificador exige objeto com "id" no formato UUID: sem isso o item
             entraria no conteúdo normativo sem poder ser endereçado por nenhuma Retificação
-            futura. ADD em objeto
+            futura. Uma entidade só aparece por ADD "/colecao/-" e só desaparece por REMOVE
+            "/colecao/id=<uuid>": nenhuma outra alteração pode criar ou destruir identidades,
+            inclusive as que estiverem dentro da entidade endereçada. ADD em objeto
             pressupõe targetPath ausente: se o caminho já tiver conteúdo — inclusive por ato
             publicado depois da elaboração — a operação responde 409 target_already_present, salvo
             quando expectedPreviousHash declarar o conteúdo ocupante e assumir a sobrescrita.

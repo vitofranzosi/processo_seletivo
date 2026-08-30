@@ -18,8 +18,8 @@ from processo_seletivo.publicacoes.domain.changes import (
     ColecaoDescaracterizada,
     EnderecamentoPosicional,
     EntidadeSemChave,
+    IdentidadeImplicita,
     IdentidadeNaoEnderecavel,
-    IdentidadeReatribuida,
     SeletorInvalido,
     add_overwrites,
     apply_change,
@@ -28,7 +28,7 @@ from processo_seletivo.publicacoes.domain.changes import (
 )
 from tests.fixtures.snapshot import MODALIDADE, PERFIL, conteudo_normativo
 
-P1, P2 = PERFIL["A"], PERFIL["B"]
+P1, P2, P3 = PERFIL["A"], PERFIL["B"], PERFIL["C"]
 M1, M2 = MODALIDADE["A"], MODALIDADE["B"]
 
 
@@ -248,10 +248,29 @@ def test_an_atomic_collection_accepts_being_emptied():
 
 
 @pytest.mark.parametrize("sufixo", ["/0", "/-", "/id=00000000-0000-0000-0000-0000000005ff"])
-def test_an_atomic_collection_is_never_addressed_item_by_item(sufixo):
+def test_an_atomic_collection_is_never_read_item_by_item(sufixo):
     with pytest.raises(ColecaoAtomica) as recusa:
         resolve_path(conteudo_normativo(), f"/profiles/id={P1}/requirements{sufixo}")
     assert "/profiles/*/requirements" in str(recusa.value)
+
+
+@pytest.mark.parametrize("operacao", ["ADD", "REPLACE", "REMOVE"])
+@pytest.mark.parametrize("sufixo", ["/0", "/-", "/id=00000000-0000-0000-0000-0000000005ff"])
+def test_an_atomic_collection_is_never_written_item_by_item(operacao, sufixo):
+    """Ler e aplicar são portas distintas, e a versão anterior só fechava a de ler.
+
+    `ADD` com a folha `-` não passava por onde a recusa morava, e acrescentava um requisito à
+    coleção que FR-011 declara atômica. Exercitar `resolve_path` dava a impressão de cobertura.
+    """
+    with pytest.raises(ColecaoAtomica):
+        apply_change(
+            conteudo_normativo(),
+            {
+                "targetPath": f"/profiles/id={P1}/requirements{sufixo}",
+                "operation": operacao,
+                "newValue": "clandestino",
+            },
+        )
 
 
 def test_internal_control_lists_are_not_addressable():
@@ -439,29 +458,39 @@ def substituir(caminho, valor):
     return {"targetPath": caminho, "operation": "REPLACE", "newValue": valor}
 
 
+def perfil_intacto(**campos):
+    return {**conteudo_normativo()["profiles"][0], **campos}
+
+
 @pytest.mark.parametrize(
-    "valor",
+    ("descricao", "valor"),
     [
-        {"code": "SEM_ID"},
-        {"id": NOVO_UUID, "code": "OUTRA_ENTIDADE"},
-        {"id": P2, "code": "CLONE"},
-        {"id": "torto"},
+        ("id trocado por outro UUID", perfil_intacto(id=NOVO_UUID)),
+        ("id trocado pelo de outro Perfil", perfil_intacto(id=P2)),
+        ("Modalidades apagadas", {"id": P1, "code": "X"}),
+        ("Modalidades com ids trocados", perfil_intacto(competitionModalities=[{"id": NOVO_UUID}])),
     ],
 )
-def test_replacing_a_whole_element_may_not_change_its_identity(valor):
-    with pytest.raises(IdentidadeReatribuida) as recusa:
+def test_replacing_a_whole_element_may_not_move_the_identities_inside_it(descricao, valor):
+    """Comparar só o `id` do elemento substituído alcançava um caso de vários.
+
+    Preservar o `id` do Perfil e apagar as Modalidades de dentro fazia um caminho já publicado
+    deixar de resolver, sem que o ato tivesse endereçado nenhuma Modalidade.
+    """
+    with pytest.raises(IdentidadeImplicita) as recusa:
         apply_change(conteudo_normativo(), substituir(f"/profiles/id={P1}", valor))
-    assert "remova uma e acrescente a outra" in str(recusa.value)
+    assert "não endereça" in str(recusa.value), descricao
 
 
-def test_replacing_a_whole_element_keeping_its_identity_is_legitimate():
+def test_replacing_a_whole_element_keeping_every_identity_is_legitimate():
     depois = alterado(
         conteudo_normativo(),
         targetPath=f"/profiles/id={P1}",
         operation="REPLACE",
-        newValue={"id": P1, "code": "REESCRITO"},
+        newValue=perfil_intacto(name="Reescrito por inteiro"),
     )
-    assert depois["profiles"][0] == {"id": P1, "code": "REESCRITO"}
+    assert depois["profiles"][0]["name"] == "Reescrito por inteiro"
+    assert [m["id"] for m in depois["profiles"][0]["competitionModalities"]] == [M1, M2]
 
 
 @pytest.mark.parametrize(
@@ -500,14 +529,48 @@ def test_replacing_a_whole_collection_may_not_drop_the_identifiers():
     assert "/profiles" in str(recusa.value)
 
 
-def test_replacing_a_whole_collection_with_well_formed_entities_is_legitimate():
+def test_replacing_a_whole_collection_may_not_swap_the_entities():
+    """Trocar a lista por outras entidades é criar e destruir identidades sem endereçá-las."""
+    with pytest.raises(IdentidadeImplicita):
+        apply_change(
+            conteudo_normativo(), substituir("/profiles", [{"id": NOVO_UUID, "code": "ÚNICO"}])
+        )
+
+
+def test_replacing_a_whole_collection_reordering_it_is_legitimate():
+    """Ordem é conteúdo normativo; identidade não. Reordenar não move entidade nenhuma."""
+    invertidos = list(reversed(conteudo_normativo()["profiles"]))
     depois = alterado(
-        conteudo_normativo(),
-        targetPath="/profiles",
-        operation="REPLACE",
-        newValue=[{"id": NOVO_UUID, "code": "ÚNICO"}],
+        conteudo_normativo(), targetPath="/profiles", operation="REPLACE", newValue=invertidos
     )
-    assert [p["id"] for p in depois["profiles"]] == [NOVO_UUID]
+    assert [p["id"] for p in depois["profiles"]] == [P3, P2, P1]
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        substituir(f"/profiles/id={P1}/competitionModalities", []),
+        {"targetPath": f"/profiles/id={P1}/competitionModalities", "operation": "REMOVE"},
+    ],
+)
+def test_emptying_a_nested_collection_wholesale_is_refused(change):
+    """Esvaziar a coleção retira identidades; retirá-las é ato declarado, uma a uma."""
+    with pytest.raises(IdentidadeImplicita):
+        apply_change(conteudo_normativo(), change)
+
+
+def test_adding_and_removing_entities_by_their_own_paths_stays_allowed():
+    """A recíproca das recusas acima: é assim que a topologia muda legitimamente."""
+    acrescido = alterado(
+        conteudo_normativo(),
+        targetPath="/profiles/-",
+        operation="ADD",
+        newValue={"id": NOVO_UUID, "competitionModalities": [{"id": M1}]},
+    )
+    assert [p["id"] for p in acrescido["profiles"]] == [P1, P2, P3, NOVO_UUID]
+
+    removido = alterado(conteudo_normativo(), targetPath=f"/profiles/id={P1}", operation="REMOVE")
+    assert [p["id"] for p in removido["profiles"]] == [P2, P3]
 
 
 # --- Uma coleção declarada continua sendo uma coleção ----------------------------------------

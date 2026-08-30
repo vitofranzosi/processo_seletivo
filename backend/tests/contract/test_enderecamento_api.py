@@ -149,5 +149,5 @@ def test_the_grammar_document_states_that_identity_is_not_content():
     assert "A identidade é substrato, não conteúdo" in gramatica
     assert "carrega `id` UUID" in gramatica
     assert "não é endereçável" in gramatica
-    assert "preserva o `id` que estava lá" in gramatica
-    assert "remova uma e acrescente a outra" in gramatica
+    assert "A topologia das identidades só muda onde o ato a endereça" in gramatica
+    assert "só aparece por `ADD /colecao/-` e só desaparece por" in gramatica

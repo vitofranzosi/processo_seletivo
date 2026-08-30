@@ -93,9 +93,12 @@ Retificação.
   declaração de FR-012 falsa em silêncio.
 - Todo elemento de coleção com chave carrega `id` UUID. Verificado sobre o **resultado** de cada
   alteração, e não sobre a operação: vigiar o `ADD` alcançava uma porta de quatro.
-- O `id` de um elemento de coleção com chave não é endereçável, e `REPLACE` do elemento inteiro
-  preserva o que estava lá. Identificador reatribuído faria um caminho já publicado deixar de
-  nomear a entidade que ele nomeava.
+- O `id` de um elemento de coleção com chave não é endereçável.
+- A topologia das identidades só muda onde o ato a endereça: entidade aparece por `ADD /colecao/-`
+  e desaparece por `REMOVE /colecao/id=<uuid>`, e nenhuma outra alteração cria ou destrói
+  identidade — nem a da entidade endereçada, nem a das que estiverem dentro dela. Sem isso, um
+  caminho já publicado deixava de nomear a entidade que nomeava sem que ninguém a tivesse tocado.
+- Reordenar uma coleção é admitido: ordem é conteúdo normativo, identidade não.
 - Chave repetida numa coleção é estado impossível, recusado na elaboração e na Publicação, e
   verificado **depois de cada alteração** — senão acrescentar sob a chave de outro e remover o
   original em seguida terminaria íntegro e teria trocado a entidade em silêncio.
