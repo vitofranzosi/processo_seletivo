@@ -44,6 +44,15 @@ tiveram. Ela é verificada aqui, e não só no `plan`.
 
 ## Notas da avaliação
 
+### Ressalva ao item "nenhum detalhe de implementação"
+
+O item permanece marcado, com esta ressalva explícita. Dois requisitos são deliberadamente técnicos —
+FR-015, que exige modo explícito no renderizador, e FR-045, que fixa o incremento da versão canônica.
+Nenhum dos dois escolhe solução para um problema de produto: os dois **protegem mecanismos que já
+existem** e cuja violação não seria observável pelo usuário até ser tarde. Um documento de prévia
+indistinguível do publicado e duas formas declarando a mesma versão canônica são defeitos que só
+aparecem depois de terem causado dano. Onde a spec podia deixar a decisão para o `plan`, deixou.
+
 ### Citações de código na especificação
 
 A spec cita `arquivo:linha` em vários requisitos. Isso normalmente seria vazamento de implementação,
@@ -93,9 +102,36 @@ estrutural do que está declarado, mas a conferência da forma publicada é feit
 nomeada item a item (`tests/contract/test_forma_publicada.py:67-70`) — acrescentar coleção e
 esquecer de declará-la não falharia nada. Criar essa cobertura virou requisito e tarefa.
 
+### Reavaliação após `$speckit-analyze` (2026-08-30)
+
+A análise encontrou uma violação constitucional e cinco inconsistências altas, todas verificadas no
+código antes de aceitas.
+
+**Identidade da Regra Normativa (constitucional).** A correção da identidade das modalidades parava
+no meio: `RegraNormativa` também é criada sem o `id` recebido, e esse `id` viaja no conteúdo
+publicado. Cada gravação continuaria trocando a identidade de um objeto normativo. Entrou em FR-027 e
+FR-029.
+
+**Versão do fundamento.** O formulário oferecia fundamento e percentual, mas `version` é obrigatório
+no serializer e no command desde a `001`: nenhuma regra nova seria gravável. Entrou em FR-026.
+
+**Contrato à frente da implementação.** O delta declarava `sections` na entrada do rascunho na
+Entrega 3, quando a API só passa a aceitá-la na Entrega 5 — contrato falso por dois PRs. A entrada
+foi separada da saída.
+
+**Dependência entre histórias.** O grafo dizia US2 e US3 independentes da US1, mas os critérios de
+aceite delas exigem a prévia. A dependência passou a ser declarada.
+
+**Recusa de identificador alheio.** O contrato dizia 422; a recusa existente é 409 e já tem teste.
+Prevaleceu o código.
+
+**Forma decimal.** "Padrão no molde de `INSTANTE`" era insuficiente: o padrão só é avaliado quando há
+formato declarado, e o formato exige leitor registrado. Ficou explícito, e o padrão sem sinal recusa
+nota mínima negativa sem verificação adicional.
+
 ## Itens que permanecem em aberto
 
-Nenhum bloqueia `$speckit-tasks`.
+Nenhum bloqueia a implementação.
 
 - A redação institucional inicial das seções textuais é genérica nesta versão. Adequá-la ao texto do
   Cefor é trabalho editorial, declarado em `Assumptions`, e não altera requisito.

@@ -27,11 +27,18 @@ O corpo ganha duas coleções e uma correção:
 ### A correção nas modalidades
 
 Hoje o command aceita `competitionModalities` com `code`, `name`, `description` e `normativeRule`,
-mas cria a modalidade **sem** o identificador recebido. Passa a criá-la com ele, como já faz com
-Perfis e Eventos. O identificador recebido é verificado quanto ao pertencimento, junto dos demais.
+mas cria a modalidade **e a Regra Normativa sem os identificadores recebidos**. Passa a criá-las com
+eles, como já faz com Perfis e Eventos, e ambos são verificados quanto ao pertencimento.
 
-Consequência de contrato: **a identidade de uma modalidade é estável entre gravações**. Quem lê o
-rascunho e o devolve preserva as modalidades, suas regras e suas identidades.
+A Regra importa tanto quanto a Modalidade: ela tem `id` próprio e esse `id` viaja no conteúdo
+publicado (`publicacoes/application/publish_edital.py:36`). Deixá-lo trocar a cada gravação
+manteria, dentro do conteúdo normativo, um identificador que não identifica nada de forma estável.
+
+Consequência de contrato: **a identidade de uma modalidade e da sua regra é estável entre
+gravações**. Quem lê o rascunho e o devolve preserva as modalidades, suas regras e suas identidades.
+
+`NormativeRuleInput` passa a aceitar `id`. `version` permanece obrigatório, como já é, e por isso
+passa a ter campo na interface — sem ele nenhuma regra nova seria gravável.
 
 ### `sections` no rascunho
 
@@ -49,7 +56,7 @@ Todas seguem o formato de problema já vigente e o mesmo mapeamento de estado.
 | Etapa sem nome | `field_required` | 422 |
 | Nota mínima negativa | `field_constraint_violated` | 422 |
 | Etapa referencia Evento inexistente ou de outro Edital | `field_constraint_violated` | 422 |
-| Identificador de modalidade pertencente a outro Perfil ou Edital | recusa já existente de identificadores alheios | 422 |
+| Identificador de modalidade ou de Regra Normativa pertencente a outro Perfil ou Edital | `identifier_belongs_to_another_edital`, a recusa já existente | 409 |
 | Chave de seção fora do catálogo, ou de seção gerada | `field_constraint_violated` | 422 |
 | Consolidação sobre conteúdo-base de outra versão canônica | código próprio de versão divergente | 409 |
 
@@ -129,8 +136,10 @@ parece publicado sem ter sido é risco normativo.
 
 ## 6. Delta a aplicar no `openapi.yaml` da `001`
 
-- `RascunhoInput`: acrescentar `stages` e `sections`; declarar `id` e `normativeRule` em
-  `ModalidadeInput`.
+- `RascunhoInput`: acrescentar `stages` **na entrada** junto da versão 2; declarar `id` em
+  `ModalidadeInput` e em `NormativeRuleInput`.
+- **`sections` na entrada chega com a interface de edição, não antes.** O esquema de saída da versão
+  2 já a descreve; declarar entrada que a API ainda recusa publicaria contrato falso.
 - **Ambos os esquemas de saída entram juntos**, no mesmo PR que produz a versão 2: `sections` não
   pode chegar depois de `stages`, sob pena de existirem dois formatos de conteúdo declarando a
   mesma versão canônica.

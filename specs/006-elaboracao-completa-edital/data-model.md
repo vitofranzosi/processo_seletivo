@@ -97,8 +97,13 @@ recebido passa a ser verificado quanto ao pertencimento, junto dos demais.
 
 ### RegraNormativa
 
-Nenhum campo novo. `percentage` ganha faixa validada no domínio: opcional e, quando informado,
-maior que zero e menor ou igual a cem (FR-030). `foundation` passa a ter interface.
+Nenhum campo novo, e a mesma correção de identidade: hoje também é criada sem o `id` recebido
+(`editais/application/draft.py:95-105`), e esse `id` viaja no conteúdo publicado
+(`publicacoes/application/publish_edital.py:36`). Passa a ser preservado e verificado.
+
+`percentage` ganha faixa validada no domínio: opcional e, quando informado, maior que zero e menor
+ou igual a cem (FR-030). `foundation` e `version` passam a ter interface — `version` é obrigatório no
+command e no contrato desde a `001`, de modo que sem campo nenhuma regra nova seria gravável.
 
 `calculation`, `rounding`, `distribution` e `call_rules` permanecem intocados e fora da interface
 (FR-032): pertencem à jornada do candidato.
@@ -165,8 +170,13 @@ padrão decimal, admite nulo), `scheduleEventId` (uuid, admite nulo).
 `SECAO_PUBLICADA`: `id` (uuid), `key`, `title`, `order` (mínimo 0), `type` (valores `GENERATED`,
 `TEXT`).
 
-O padrão decimal é transcrito como `INSTANTE` já é para o instante: sem ele, declarar `weight` como
-texto aceitaria `"banana"` depois de uma Retificação.
+**O decimal precisa de formato, não só de padrão.** `_formato_satisfeito` só é alcançado quando o
+campo declara `formato`, e o leitor é buscado em `_LEITOR_DE_FORMATO` — um formato declarado sem
+leitor registrado levanta `KeyError` de propósito
+(`editais/domain/validation.py:119-144`). Portanto: `formato="decimal"`, leitor `Decimal`
+registrado, e padrão `^\d+(\.\d{1,4})?$`. O padrão **não admite sinal**, o que recusa nota mínima
+negativa vinda de Retificação sem precisar de verificação própria — `minimo` é comparação numérica e
+não se aplica a valor materializado como texto.
 
 `content` e `source` não entram na forma declarada porque dependem do tipo, e `Campo` não expressa
 coerência entre campos — ausência deliberada, registrada no próprio módulo.

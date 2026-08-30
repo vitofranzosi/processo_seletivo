@@ -80,9 +80,10 @@ o mesmo conteúdo normativo.
 
 ## D-004 — Identidade das entidades aninhadas na gravação do rascunho
 
-**Decisão**: `ModalidadeConcorrencia` passa a ser criada com `id` recebido, como já ocorre com
-`PerfilVaga` e `EventoCronograma`; `perfis_persistidos` passa a serializar a modalidade inteira; e
-`_reject_identifiers_of_other_editais` passa a cobrir modalidades.
+**Decisão**: `ModalidadeConcorrencia` **e `RegraNormativa`** passam a ser criadas com os `id`
+recebidos, como já ocorre com `PerfilVaga` e `EventoCronograma`; `perfis_persistidos` passa a
+serializar a modalidade inteira, regra incluída; e `_reject_identifiers_of_other_editais` passa a
+cobrir as duas.
 
 **Racional**: hoje a modalidade é criada sem `id` (`editais/application/draft.py:87-92`) e a
 serialização de preservação leva só `code` e `name` (`interface/forms.py:166-169`). O efeito é que
@@ -94,8 +95,20 @@ uma tela que perde o que o usuário digitou.
 de uma coleção significa. Manter a modalidade sem identidade e reconciliar por `code` — chave de
 negócio editável não é chave estável, e renomear um código passaria a apagar e recriar a regra.
 
-**Consequência a testar**: configurar regra, salvar o Cronograma, recarregar; regra intacta e
-identidades preservadas.
+**A Regra é parte do mesmo defeito.** Ela também é criada sem o `id` recebido
+(`editais/application/draft.py:95-105`), e o `id` dela **viaja no conteúdo publicado**
+(`publicacoes/application/publish_edital.py:36`). Considerei removê-lo do snapshot da versão 2 em vez
+de preservá-lo — ele não endereça nada, como `colecoes.py` registra, e removê-lo faria o problema
+desaparecer. Recusei: subtrair campo do conteúdo publicado exige decidir que a Regra não tem
+identidade no domínio, o que a presença de `version` e `effective_from` contradiz. Preservar custa o
+mesmo e é simétrico com todo o resto.
+
+**`version` entra no formulário pelo mesmo motivo.** É obrigatório no serializer
+(`editais/api/serializers.py:9`) e lido sem padrão no command; oferecer fundamento e percentual sem
+ele produziria regra que a gravação recusa, ou obrigaria a inventar valor para um atributo normativo.
+
+**Consequência a testar**: configurar regra com fundamento, versão e percentual, salvar o Cronograma,
+recarregar; regra intacta, identidades da modalidade **e da regra** preservadas.
 
 ---
 

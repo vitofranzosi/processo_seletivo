@@ -171,9 +171,11 @@ entre rascunho e revisão homologada.
 com unicidade por Edital, e ordenação declarada no modelo. A etapa do assistente reusa os fragmentos
 HTMX e o mecanismo de índice de linha que os Perfis e Eventos já usam.
 
-O snapshot ganha `stages`; `colecoes.py` ganha `/stages`; `validation.py` ganha a tupla
-`ETAPA_PUBLICADA`. A partir daí, endereçamento, proveniência, verificação de forma e consolidação
-funcionam sem código novo.
+O snapshot ganha `stages` **e `sections`**; `colecoes.py` ganha as duas formas; `validation.py`
+ganha `ETAPA_PUBLICADA` e `SECAO_PUBLICADA`. Endereçamento, proveniência e consolidação passam a
+cobri-las sem código novo — mas a **verificação de forma não basta**: `Campo` confere um campo por
+vez, e por isso entram aqui as duas verificações direcionadas de D-011, a topologia das seções
+contra o catálogo e a existência do Evento referenciado por cada Etapa.
 
 ### Entrega 4 — Modalidades de reserva (US3)
 

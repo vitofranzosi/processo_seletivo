@@ -358,14 +358,18 @@ alteração no documento junto das seções geradas a partir dos dados estrutura
 ### Modalidades de reserva (US3)
 
 - **FR-026**: O assistente DEVE permitir configurar zero ou mais modalidades de concorrência por
-  Perfil de Vaga, em campos próprios — código, nome, percentual e fundamento normativo — e NÃO DEVE
-  continuar exigindo texto livre com separador convencionado.
-- **FR-027**: A gravação do rascunho DEVE preservar a identidade de cada modalidade, como já
-  preserva a de Perfis e Eventos.
+  Perfil de Vaga, em campos próprios — código, nome, percentual, fundamento normativo e **versão do
+  fundamento** — e NÃO DEVE continuar exigindo texto livre com separador convencionado. *A versão é
+  exigida hoje pelo command e pelo contrato; oferecer fundamento sem ela produziria regra que a
+  gravação recusa, ou um valor inventado para um atributo normativo.*
+- **FR-027**: A gravação do rascunho DEVE preservar a identidade de cada modalidade **e de sua
+  Regra Normativa**, como já preserva a de Perfis e Eventos. *As duas são criadas hoje sem o
+  identificador recebido, e a da Regra viaja no conteúdo publicado.*
 - **FR-028**: A gravação de qualquer etapa DEVE preservar integralmente as modalidades e suas regras
   normativas; salvar o Cronograma NÃO PODE apagar o que foi configurado nos Perfis.
-- **FR-029**: Identificador de modalidade recebido na gravação DEVE ser recusado quando pertencer a
-  outro Perfil ou a outro Edital, pela mesma verificação que hoje protege Perfis e Eventos.
+- **FR-029**: Identificador de modalidade ou de Regra Normativa recebido na gravação DEVE ser
+  recusado quando pertencer a outro Perfil ou a outro Edital, pela mesma verificação que hoje
+  protege Perfis e Eventos — e portanto com a mesma resposta que ela já dá.
 - **FR-030**: Percentual é opcional; quando informado, DEVE ser maior que zero e menor ou igual a
   cem. *Modalidade sem reserva percentual exprime-se pela ausência da regra, não por zero por
   cento — que afirmaria uma reserva de nenhuma vaga.* A faixa DEVE ser validada **no domínio**, não

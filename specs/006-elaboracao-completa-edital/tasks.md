@@ -43,7 +43,7 @@ mais `backend/processo_seletivo/interface/` para a interface administrativa e `b
 **Purpose**: uma única tarefa, e ela é bloqueante por ordem temporal — precisa acontecer **antes** de
 `pdf.py` mudar, ou a linha de base se perde.
 
-- [ ] T002 Capturar fixture com os bytes do PDF publicado gerado hoje, a partir de um snapshot fixo, em `backend/tests/contract/fixtures/documento_publicado_v1.pdf`, e o teste que o compara em `backend/tests/contract/test_documento_publicado.py`
+- [ ] T002 Capturar fixture com os bytes do PDF publicado gerado hoje, a partir de um snapshot fixo e versionado junto dela, em `backend/tests/contract/fixtures/documento_publicado_v1.pdf`, e o teste que o compara em `backend/tests/contract/test_documento_publicado.py`. A fixture prova **uma** coisa: que a introdução do modo de prévia não alterou o documento publicado. Regenerá-la só é legítimo na mesma tarefa que mudar a composição de propósito, com o diff revisado — T075 não a toca
 
 **Checkpoint**: a regressão byte a byte de US1 tem contra o que comparar.
 
@@ -61,7 +61,7 @@ publicado — tudo pela interface.
 ### Exposição de capacidades existentes
 
 - [ ] T003 [P] [US0] Mover a ação `Novo Processo Seletivo` do bloco `{% empty %}` para o cabeçalho da listagem, sob o mesmo `pode_criar`, em `backend/processo_seletivo/interface/templates/interface/lista.html`
-- [ ] T004 [P] [US0] Acrescentar acesso ao documento publicado no detalhe do Edital, apontando para o recurso público já existente, em `backend/processo_seletivo/interface/templates/interface/detalhe.html`
+- [ ] T004 [US0] Expor no detalhe do Edital o acesso ao documento da **publicação vigente** — a mais recente, e não a original, para que o link acompanhe as Retificações publicadas — fornecendo o identificador da Publicação no contexto em `backend/processo_seletivo/interface/views.py` e o link em `backend/processo_seletivo/interface/templates/interface/detalhe.html`
 
 ### Alterar a identificação em elaboração
 
@@ -80,7 +80,7 @@ publicado — tudo pela interface.
 - [ ] T011 [P] [US0] Botão presente na listagem com Processos cadastrados e ausente para quem não tem permissão, em `backend/tests/interface/test_lista.py`
 - [ ] T012 [P] [US0] Alteração de identificação persiste, registra auditoria e é recusada fora de `EM_ELABORACAO`, em `backend/tests/interface/test_compor.py`
 - [ ] T013 [P] [US0] Nenhuma pendência aparece como não corrigível quando a etapa a resolve, em `backend/tests/interface/test_impedimentos.py`
-- [ ] T014 [P] [US0] Reordenar **muda a ordem persistida** e preserva o `id` de cada Evento, em `backend/tests/interface/test_compor.py`
+- [ ] T014 [US0] Reordenar **muda a ordem persistida** e preserva o `id` de cada Evento, em `backend/tests/interface/test_compor.py`
 - [ ] T015 [P] [US0] Mover linha atualiza o campo `order` no DOM, em `backend/tests/javascript/ordenacao.test.js`, registrado em `backend/tests/test_javascript.py`
 - [ ] T016 [P] [US0] Detalhe de Edital publicado oferece acesso ao documento, em `backend/tests/interface/test_fluxo.py`
 
@@ -108,8 +108,8 @@ continuar editando — sem que nenhum registro publicado seja criado.
 - [ ] T021 [US1] Em modo publicado, os bytes continuam idênticos à fixture de T002, em `backend/tests/contract/test_documento_publicado.py`
 - [ ] T022 [P] [US1] Em modo prévia, nenhuma página contém hash ou afirmação de derivação de versão homologada, e todas contêm a marca, em `backend/tests/contract/test_documento_publicado.py`
 - [ ] T023 [P] [US1] Visualizar não altera o estado do Edital e não cria `Publicacao`, `RevisaoEdital`, `VersaoConsolidada` nem `DocumentoPublicado`, em `backend/tests/interface/test_fluxo.py`
-- [ ] T024 [P] [US1] A prévia está disponível em elaboração, submetido e homologado, e é recusada a quem não pode ver o Edital, em `backend/tests/interface/test_fluxo.py`
-- [ ] T025 [P] [US1] Publicar logo após a prévia, sem alterações, produz documento de mesmo conteúdo normativo, em `backend/tests/interface/test_fluxo.py`
+- [ ] T024 [US1] A prévia está disponível em elaboração, submetido e homologado, e é recusada a quem não pode ver o Edital, em `backend/tests/interface/test_fluxo.py`
+- [ ] T025 [US1] Publicar logo após a prévia, sem alterações, produz documento de mesmo conteúdo normativo, em `backend/tests/interface/test_fluxo.py`
 
 **Checkpoint**: demonstrável — editar, visualizar, voltar, editar de novo.
 
@@ -139,10 +139,10 @@ declarando a mesma versão canônica.
 - [ ] T030 [US2] Acrescentar `stages` e `sections` a `edital_snapshot`, montando as seções a partir do catálogo com identidade `uuid5` sobre `(edital.id, key)`, em `backend/processo_seletivo/publicacoes/application/publish_edital.py`
 - [ ] T031 [US2] Elevar `SCHEMA_VERSION` de 1 para 2 em `backend/processo_seletivo/shared/canonical.py`
 - [ ] T032 [P] [US2] Declarar `/stages` e `/sections` em `COLECOES_COM_CHAVE`, em `backend/processo_seletivo/publicacoes/domain/colecoes.py`
-- [ ] T033 [US2] Declarar `ETAPA_PUBLICADA` e `SECAO_PUBLICADA` em `COLECOES_PUBLICADAS`, com padrão decimal para `weight` e `minimumScore` no molde de `INSTANTE`, em `backend/processo_seletivo/editais/domain/validation.py`
+- [ ] T033 [US2] Declarar `ETAPA_PUBLICADA` e `SECAO_PUBLICADA` em `COLECOES_PUBLICADAS` e registrar o formato `decimal` com leitor `Decimal` em `_LEITOR_DE_FORMATO`, aplicando a `weight` e `minimumScore` `formato="decimal"` e padrão `^\d+(\.\d{1,4})?$` — sem sinal, o que já recusa nota mínima negativa vinda de Retificação — em `backend/processo_seletivo/editais/domain/validation.py`
 - [ ] T034 [US2] Acrescentar as duas verificações que a forma declarada não alcança — topologia de `sections` contra o catálogo, e `stages[*].scheduleEventId` existente em `schedule` — em `backend/processo_seletivo/editais/domain/validation.py`
 - [ ] T035 [US2] Recusar consolidação sobre conteúdo-base cuja `schemaVersion` difira da vigente, com código próprio, em `backend/processo_seletivo/publicacoes/application/retificacoes.py`
-- [ ] T036 [US2] Aplicar o delta de contrato — `EtapaPublicada`, `SecaoPublicada`, `stages` e `sections` em `RascunhoInput`, `id` obrigatório em `ModalidadePublicada`, `schemaVersion` 2, código de versão divergente — em `specs/001-processo-seletivo-editais/contracts/openapi.yaml`
+- [ ] T036 [US2] Aplicar o delta de **saída** do contrato — `EtapaPublicada`, `SecaoPublicada`, `schemaVersion` 2, código de versão divergente — e, na entrada, apenas `stages` em `RascunhoInput`, em `specs/001-processo-seletivo-editais/contracts/openapi.yaml`. *`sections` na entrada fica para T066: declarar entrada que a API ainda recusa publicaria contrato falso.*
 
 ### Gravação e interface
 
@@ -156,12 +156,12 @@ declarando a mesma versão canônica.
 
 ### Testes
 
-- [ ] T044 [P] [US2] Invariantes da Etapa, incluindo referência a Evento de outro Edital, em `backend/tests/unit/test_etapas.py`
+- [ ] T044 [P] [US2] Invariantes da Etapa, incluindo referência a Evento de outro Edital, em `backend/tests/unit/editais/test_etapas.py`
 - [ ] T045 [P] [US2] Forma publicada de `stages` e `sections` conferida contra o contrato, em `backend/tests/contract/test_forma_publicada.py`
-- [ ] T046 [P] [US2] Teste de cobertura das declarações: toda coleção do snapshot tem forma em `COLECOES_PUBLICADAS` e esquema no `openapi.yaml` — a cobertura que hoje não existe, em `backend/tests/contract/test_forma_publicada.py`
+- [ ] T046 [US2] Teste de cobertura das declarações: toda **coleção-raiz de entidades** do snapshot tem forma em `COLECOES_PUBLICADAS` e esquema correspondente no `openapi.yaml`, com a correspondência derivada do nome declarado em `COLECOES_PUBLICADAS` e não de convenção de nomes — a cobertura que hoje não existe, em `backend/tests/contract/test_forma_publicada.py`
 - [ ] T047 [P] [US2] Retificação aceita `/stages/id=<uuid>/name` e `ADD /stages/-`, e recusa `/stages/0/name`, em `backend/tests/contract/test_enderecamento_api.py`
 - [ ] T048 [P] [US2] Retificação recusa topologia divergente de `sections` — acréscimo, remoção, troca de tipo, ordem, título, origem, textual sem conteúdo, gerada com conteúdo — em `backend/tests/contract/test_limites_de_borda.py`
-- [ ] T049 [P] [US2] Retificação recusa `scheduleEventId` inexistente e `weight` fora da forma decimal, em `backend/tests/contract/test_limites_de_borda.py`
+- [ ] T049 [US2] Retificação recusa `scheduleEventId` inexistente e `weight` fora da forma decimal, em `backend/tests/contract/test_limites_de_borda.py`
 - [ ] T050 [P] [US2] Consolidação sobre conteúdo-base de outra versão canônica é recusada, e não gravada com a versão errada, em `backend/tests/contract/test_retificacoes_api.py`
 - [ ] T051 [P] [US2] Assistente: acrescentar, editar, remover e reordenar Etapas preservando identidade, e datas vindas do Evento vinculado, em `backend/tests/interface/test_compor.py`
 - [ ] T052 [P] [US2] Etapas aparecem na prévia e no documento publicado, na ordem definida, em `backend/tests/interface/test_fluxo.py`
@@ -180,17 +180,17 @@ novo, recarregar e encontrar tudo intacto com as mesmas identidades.
 
 ### A ida e volta sem perda
 
-- [ ] T053 [US3] Criar `ModalidadeConcorrencia` com o `id` recebido, como já se faz com Perfis e Eventos, em `backend/processo_seletivo/editais/application/draft.py`
-- [ ] T054 [US3] Estender `_reject_identifiers_of_other_editais` às modalidades, recusando identificador de outro Perfil ou Edital, em `backend/processo_seletivo/editais/application/draft.py`
-- [ ] T055 [US3] Serializar a modalidade inteira — `id`, `description` e `normativeRule` — em `perfis_persistidos`, e ler os campos estruturados em `ler_perfis`, em `backend/processo_seletivo/interface/forms.py`
-- [ ] T056 [US3] Substituir a caixa de texto livre por linhas de modalidade com código, nome, percentual e fundamento, em `backend/processo_seletivo/interface/templates/interface/_perfil.html`, com o fragmento correspondente em `backend/processo_seletivo/interface/views.py`
+- [ ] T053 [US3] Criar `ModalidadeConcorrencia` **e `RegraNormativa`** com os `id` recebidos, como já se faz com Perfis e Eventos, em `backend/processo_seletivo/editais/application/draft.py`
+- [ ] T054 [US3] Estender `_reject_identifiers_of_other_editais` às modalidades e às regras normativas, mantendo a resposta `409` que a verificação já dá, em `backend/processo_seletivo/editais/application/draft.py`
+- [ ] T055 [US3] Serializar a modalidade inteira — `id`, `description` e `normativeRule` com o `id` dela — em `perfis_persistidos`, e ler os campos estruturados em `ler_perfis`, em `backend/processo_seletivo/interface/forms.py`
+- [ ] T056 [US3] Substituir a caixa de texto livre por linhas de modalidade com código, nome, percentual, fundamento e **versão do fundamento**, criando `backend/processo_seletivo/interface/templates/interface/_modalidade.html`, referenciado por `_perfil.html`, com a rota de fragmento em `backend/processo_seletivo/interface/urls.py` e a view em `backend/processo_seletivo/interface/views.py`
 - [ ] T057 [US3] Validar a faixa do percentual — opcional; quando informado, maior que zero e menor ou igual a cem — em `backend/processo_seletivo/editais/domain/perfis.py`
 
 ### Testes
 
-- [ ] T058 [P] [US3] Configurar regra, salvar o Cronograma e recarregar: regras intactas e identidades preservadas — o defeito de linha de base do `quickstart.md`, em `backend/tests/interface/test_compor.py`
-- [ ] T059 [P] [US3] Faixa do percentual recusada pela interface **e** pela API, provando que a regra está no domínio, em `backend/tests/unit/test_perfis.py` e `backend/tests/contract/test_edital_draft_api.py`
-- [ ] T060 [P] [US3] Identificador de modalidade de outro Perfil ou Edital é recusado, em `backend/tests/contract/test_edital_draft_api.py`
+- [ ] T058 [P] [US3] Configurar regra com fundamento, versão e percentual, salvar o Cronograma e recarregar: regras intactas e identidades da modalidade **e da regra** preservadas — o defeito de linha de base do `quickstart.md`, em `backend/tests/interface/test_compor.py`
+- [ ] T059 [US3] Faixa do percentual recusada pela interface **e** pela API, provando que a regra está no domínio, em `backend/tests/unit/editais/test_perfis.py` e `backend/tests/contract/test_edital_draft_api.py`
+- [ ] T060 [US3] Identificador de modalidade ou de regra de outro Perfil ou Edital é recusado com `409`, em `backend/tests/contract/test_edital_draft_api.py`
 - [ ] T061 [P] [US3] Modalidades com percentual e fundamento aparecem na prévia e no documento publicado, em `backend/tests/interface/test_fluxo.py`
 - [ ] T062 [P] [US3] Retificação endereça `normativeRule/percentage` pelo caminho existente, em `backend/tests/contract/test_enderecamento_api.py`
 
@@ -212,7 +212,7 @@ alteração no documento junto das seções geradas.
 - [ ] T063 [US4] Criar o modelo `SecaoEdital`, cuja chave primária é o mesmo `uuid5` do snapshot, com unicidade de `key` por Edital, em `backend/processo_seletivo/editais/models/secoes.py`, e a migration em `backend/processo_seletivo/editais/migrations/`
 - [ ] T064 [US4] Fazer `edital_snapshot` usar o conteúdo persistido quando existir, e o texto do catálogo quando não, em `backend/processo_seletivo/publicacoes/application/publish_edital.py`
 - [ ] T065 [US4] Gravar as seções textuais editadas, recusando chave fora do catálogo ou de seção gerada, em `backend/processo_seletivo/editais/application/draft.py`
-- [ ] T066 [US4] Aceitar `sections` no payload do rascunho em `backend/processo_seletivo/editais/api/serializers.py`
+- [ ] T066 [US4] Aceitar `sections` no payload do rascunho em `backend/processo_seletivo/editais/api/serializers.py`, e só então declarar `sections` em `RascunhoInput` em `specs/001-processo-seletivo-editais/contracts/openapi.yaml`
 - [ ] T067 [US4] Acrescentar a etapa `Conteúdo` a `ETAPAS_COMPOSICAO`, distinguindo seções geradas de textuais, em `backend/processo_seletivo/interface/views.py`
 - [ ] T068 [P] [US4] Criar `compor_conteudo.html` em `backend/processo_seletivo/interface/templates/interface/`, com área de texto por seção textual e indicação de origem nas geradas
 - [ ] T069 [US4] Ler e preservar as seções textuais em `backend/processo_seletivo/interface/forms.py`
@@ -246,30 +246,42 @@ gerado.
 Setup (T001)
   └── Foundational (T002)  ← precisa vir antes de pdf.py mudar
         ├── US0 (T003–T016)   independente
-        ├── US1 (T017–T025)   depende de T002
-        ├── US2 (T026–T052)   independente de US0 e US1; produz a versão 2 inteira
-        │     └── US4 (T063–T074)   depende de US2 (forma de sections)
-        └── US3 (T053–T062)   independente das demais
+        └── US1 (T017–T025)   depende de T002
+              ├── US2 (T026–T052)   produz a versão 2 inteira
+              │     └── US4 (T063–T074)   depende da forma de sections, entregue pela US2
+              └── US3 (T053–T062)
 ```
 
-**US4 é a única história que não é independente**, e o motivo está declarado: a forma canônica de
-`sections` precisa entrar junto com `stages`, sob pena de existirem dois formatos declarando a mesma
-versão. US4 acrescenta a origem do texto e a interface, não a forma.
+**Duas dependências reais, e ambas foram subestimadas na primeira versão deste arquivo.**
 
-US1 se beneficia de vir antes de US2, US3 e US4 — a partir dela, cada conceito novo aparece no
-documento no mesmo dia em que nasce. Não é dependência técnica; é o que torna as fases seguintes
-verificáveis a olho.
+**US1 antecede US2, US3 e US4** — não por conveniência, como se dizia aqui antes, mas porque os
+critérios de aceite delas exigem a prévia: FR-025 pede Etapas na prévia, FR-031 pede as modalidades,
+FR-038 pede as seções, e T052, T061, T070 e T071 verificam justamente isso. Sem a US1, essas
+histórias não têm como ser concluídas nem demonstradas.
+
+**US4 depende da US2**, porque a forma canônica de `sections` entra junto com `stages`, sob pena de
+existirem dois formatos declarando a mesma versão. US4 acrescenta a origem do texto e a interface,
+não a forma.
+
+US0, US2 e US3 são independentes entre si. Nenhuma outra história é independente da US1.
 
 ## Parallel Execution Examples
 
-**US0**: T003 e T004 são templates distintos e correm juntas. Os testes T011 a T016 correm todos em
-paralelo depois que T003–T010 estiverem prontos.
+São 34 tarefas marcadas `[P]`, e a marcação foi conferida arquivo a arquivo: **duas tarefas `[P]` da
+mesma fase nunca tocam o mesmo arquivo**. Onde tocavam — testes agrupados em `test_compor.py`,
+`test_fluxo.py` e `test_limites_de_borda.py` — a marcação foi retirada em vez de os arquivos serem
+partidos, porque partir arquivo de teste por conveniência de paralelismo espalha o mesmo assunto.
+
+**US0**: T003 é template isolado e corre livre. Entre os testes, T011, T012, T013, T015 e T016 correm
+juntos; T014 fica atrás de T012, mesmo arquivo.
 
 **US2**: T026, T027, T028 e T032 tocam arquivos diferentes e correm juntas. T033 e T034 são o mesmo
-arquivo — sequenciais entre si. Os testes T044 a T052 correm em paralelo no fim da fase.
+arquivo e ficam sequenciais. Entre os testes, T044 a T048, T050, T051 e T052 correm em paralelo;
+T049 fica atrás de T048.
 
-**US3**: T053, T054 e T055 tocam dois arquivos; T053 e T054 são o mesmo arquivo e ficam sequenciais.
-Os testes T058 a T062 correm em paralelo.
+**US3**: T053 e T054 são o mesmo arquivo e ficam sequenciais; T055, T056 e T057 correm com elas. Nos
+testes, T058, T061 e T062 correm juntos; T059 e T060 compartilham `test_edital_draft_api.py` e ficam
+sequenciais.
 
 ## Implementation Strategy
 
@@ -280,7 +292,8 @@ maior valor — é a de maior valor por hora, e a única sem decisão de desenho
 estados, e as três histórias seguintes ganham verificação visual imediata.
 
 **Ordem de entrega**: US0 → US1 → US2 → US3 → US4, uma por PR, cada um com a demonstração como
-condição de merge. Suíte verde é necessária e não é suficiente: o princípio VI exige o cenário
+condição de merge. A ordem não é preferência: da US2 em diante, os critérios de aceite exigem a
+prévia entregue pela US1. Suíte verde é necessária e não é suficiente: o princípio VI exige o cenário
 navegável.
 
 **O que não fazer**: nenhuma tarefa aqui autoriza criar repositório, DTO novo, serviço novo,
