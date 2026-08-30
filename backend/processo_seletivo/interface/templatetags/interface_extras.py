@@ -25,6 +25,26 @@ def situacao(valor):
     return SITUACOES.get(valor, valor)
 
 
+@register.simple_tag
+def recusa_de(recusas, prefixo, indice, campo):
+    """A mensagem de recusa daquele controle, ou vazio.
+
+    Existe como tag, e não como filtro, porque o `id` do controle é composto de três partes —
+    `perfil-3-reserveLimit` — e `{% include ... with alvo="perfil-{{ indice }}-..." %}` não
+    interpola: dentro de uma tag, `{{ }}` é texto literal, e o alvo nunca casaria.
+    """
+    return (recusas or {}).get(f"{prefixo}-{indice}-{campo}", "")
+
+
+@register.filter
+def dicionario_simples(dados, chave):
+    """Valor de uma chave — o que o template não consegue fazer sozinho.
+
+    Existe para `_recusa.html` ler a mensagem daquele campo entre as recusas da tela.
+    """
+    return (dados or {}).get(chave, "")
+
+
 @register.filter
 def rotulo_do_ato(chave):
     """O nome humano do ato praticado, lido da tabela que já o declara.

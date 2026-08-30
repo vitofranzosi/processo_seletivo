@@ -1,7 +1,9 @@
 from django.utils import timezone
 
+from processo_seletivo.editais.domain.perfis import RecusaDeCampo
 
-class ScheduleValidationError(ValueError):
+
+class ScheduleValidationError(RecusaDeCampo):
     pass
 
 
@@ -11,7 +13,11 @@ def validate_event(event: dict) -> None:
     if not timezone.is_aware(start) or (end is not None and not timezone.is_aware(end)):
         raise ScheduleValidationError("Eventos exigem instantes com offset explícito.")
     if end is not None and start > end:
-        raise ScheduleValidationError("O início do Evento não pode ser posterior ao término.")
+        raise ScheduleValidationError(
+            "O início do Evento não pode ser posterior ao término.",
+            campo="endAt",
+            identidade=event.get("id", ""),
+        )
     if event.get("order", 0) < 0:
         raise ScheduleValidationError("A ordem do Evento não pode ser negativa.")
 

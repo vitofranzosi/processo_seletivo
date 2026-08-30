@@ -1,4 +1,4 @@
-<fieldset class="linha evento">
+{% load interface_extras %}<fieldset class="linha evento">
   <legend>Evento do Cronograma</legend>
   <input type="hidden" name="evento-{{ indice }}-id" value="{{ evento.id }}">
   {% comment %}
@@ -29,6 +29,7 @@
       <input type="datetime-local" id="evento-{{ indice }}-endAt"
              name="evento-{{ indice }}-endAt" value="{{ evento.endAt|default:'' }}"
              aria-describedby="ajuda-fim-{{ indice }}">
+      {% recusa_de recusas "evento" indice "endAt" as recusado %}{% if recusado %}<span class="recusa" role="alert" id="recusa-evento-{{ indice }}-endAt">{{ recusado }}</span>{% endif %}
       <span class="ajuda" id="ajuda-fim-{{ indice }}">Vazio para evento pontual.</span>
     </p>
   </div>

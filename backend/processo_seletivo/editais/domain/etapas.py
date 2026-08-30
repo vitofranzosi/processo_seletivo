@@ -7,23 +7,36 @@ digitado.
 """
 
 
-class StageValidationError(ValueError):
+from processo_seletivo.editais.domain.perfis import RecusaDeCampo
+
+
+class StageValidationError(RecusaDeCampo):
     pass
 
 
 def validate_stage(stage: dict, *, event_ids: frozenset[str]) -> None:
     if not (stage.get("name") or "").strip():
-        raise StageValidationError("A Etapa de Avaliação exige nome.")
+        raise StageValidationError(
+            "A Etapa de Avaliação exige nome.", campo="name", identidade=stage.get("id", "")
+        )
     if stage.get("order", 0) < 0:
         raise StageValidationError("A ordem da Etapa não pode ser negativa.")
     peso = stage.get("weight")
     # Peso zero afirmaria uma ponderação que não pondera; "esta Etapa não pondera" exprime-se
     # pela ausência, como o percentual da Regra Normativa (FR-020).
     if peso is not None and peso <= 0:
-        raise StageValidationError("O peso da Etapa, quando informado, deve ser maior que zero.")
+        raise StageValidationError(
+            "O peso da Etapa, quando informado, deve ser maior que zero.",
+            campo="weight",
+            identidade=stage.get("id", ""),
+        )
     nota = stage.get("minimumScore")
     if nota is not None and nota < 0:
-        raise StageValidationError("A nota mínima da Etapa não pode ser negativa.")
+        raise StageValidationError(
+            "A nota mínima da Etapa não pode ser negativa.",
+            campo="minimumScore",
+            identidade=stage.get("id", ""),
+        )
     evento = stage.get("scheduleEventId")
     if evento is not None and str(evento) not in event_ids:
         raise StageValidationError(

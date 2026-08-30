@@ -12,6 +12,11 @@ class DomainError(Exception):
     code: str
     detail: str
     status: int = 422
+    # Campo e entidade da recusa, quando o domínio os conhece (FR-033). São **opcionais** e não
+    # atravessam a API: existem para a interface poder ancorar o erro no controle certo, e ficam
+    # vazios nas regras que valem para a coleção inteira.
+    campo: str = ""
+    identidade: str = ""
 
 
 def _violations(detail, prefix=""):

@@ -20,7 +20,13 @@ const SCRIPT = path.join(
 );
 
 /** Uma linha com legenda, campos e o botão destrutivo, como os fragmentos a renderizam. */
-function linhaRemovivel({ valores = {}, filhas = 0, rotulo = "Perfil de Vaga" } = {}) {
+function linhaRemovivel({
+  valores = {},
+  filhas = 0,
+  rotulo = "Perfil de Vaga",
+  agrupamento = false,
+  atributos = {},
+} = {}) {
   const linha = new Elemento("fieldset");
   const legenda = new Elemento("legend");
   legenda.textContent = rotulo;
@@ -37,11 +43,20 @@ function linhaRemovivel({ valores = {}, filhas = 0, rotulo = "Perfil de Vaga" } 
   }
   for (let i = 0; i < filhas; i += 1) {
     const filha = new Elemento("fieldset");
+    filha.classes = ["linha", "modalidade"];
     filha.parentNode = linha;
     linha.filhos.push(filha);
   }
+  // Agrupamento **estrutural**, como o `fieldset.campo.caracter` da linha de Etapa. Não é item:
+  // toda Etapa tem um, inclusive a vazia. Foi contá-lo que fez a Etapa vazia pedir confirmação.
+  if (agrupamento) {
+    const grupo = new Elemento("fieldset");
+    grupo.classes = ["campo", "caracter"];
+    grupo.parentNode = linha;
+    linha.filhos.push(grupo);
+  }
 
-  const botao = new Elemento("button");
+  const botao = new Elemento("button", atributos);
   botao.classes = ["acao", "perigo"];
   botao.parentNode = linha;
   linha.filhos.push(botao);
@@ -118,5 +133,60 @@ test("botão que não é o destrutivo não dispara confirmação", () => {
   const { evento, perguntas } = remover(alvo);
 
   assert.equal(evento.impedido, false, "só o botão destrutivo confirma");
+  assert.deepEqual(perguntas, []);
+});
+
+
+/* Os dois defeitos que a revisão encontrou, e que o DOM simplificado não representava. */
+
+test("uma Etapa vazia não pergunta, apesar do agrupamento estrutural do Caráter", () => {
+  // `_etapa.html` tem um `fieldset.campo.caracter` dentro da linha. Contá-lo como item fazia
+  // **toda** Etapa — inclusive a recém-criada — pedir confirmação, contra a própria regra.
+  const alvo = linhaRemovivel({
+    valores: { "etapa-0-id": "abc", "etapa-0-name": "" },
+    rotulo: "Etapa de Avaliação",
+    agrupamento: true,
+  });
+  const { evento, perguntas } = remover(alvo);
+
+  assert.equal(evento.impedido, false, "agrupamento de rótulo não é item a perder");
+  assert.deepEqual(perguntas, []);
+});
+
+test("uma Etapa preenchida continua perguntando, e não conta o Caráter como item", () => {
+  const alvo = linhaRemovivel({
+    valores: { "etapa-0-name": "Prova didática" },
+    rotulo: "Etapa de Avaliação",
+    agrupamento: true,
+  });
+  const { perguntas } = remover(alvo);
+
+  assert.match(perguntas[0], /1 campo preenchido/);
+  assert.ok(!/item/.test(perguntas[0]), "o Caráter não pode aparecer como item descartado");
+});
+
+test("botão sem a classe perigo, mas que remove a própria linha, também confirma", () => {
+  // "Não acrescentar este Perfil" na tela de Retificação: descartava tudo em silêncio.
+  const alvo = linhaRemovivel({
+    valores: { "novo-perfil-0-code": "PROF" },
+    atributos: { "hx-target": "closest fieldset", "hx-swap": "outerHTML" },
+  });
+  alvo.botao.classes = ["acao"];
+  const { evento, disparou, perguntas } = remover(alvo);
+
+  assert.equal(evento.impedido, true);
+  assert.equal(disparou, true);
+  assert.match(perguntas[0], /1 campo preenchido/);
+});
+
+test("botão que não remove a própria linha continua fora", () => {
+  const alvo = linhaRemovivel({
+    valores: { "perfil-0-code": "PROF" },
+    atributos: { "hx-target": "#modalidades-0", "hx-swap": "beforeend" },
+  });
+  alvo.botao.classes = ["acao"];
+  const { evento, perguntas } = remover(alvo);
+
+  assert.equal(evento.impedido, false, "acrescentar não é remover");
   assert.deepEqual(perguntas, []);
 });

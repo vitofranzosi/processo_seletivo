@@ -125,17 +125,29 @@ def replace_draft(
     try:
         validate_profiles(profiles)
     except ProfileValidationError as exc:
-        raise DomainError("invalid_profiles", str(exc), 422) from exc
+        # `campo` e `identidade` seguem junto: sem eles a interface não teria como ancorar a
+        # recusa no controle que a causou, e o resumo voltaria a ser texto solto (FR-033).
+        raise DomainError(
+            "invalid_profiles", str(exc), 422, campo=exc.campo, identidade=exc.identidade
+        ) from exc
     try:
         validate_schedule(schedule)
     except ScheduleValidationError as exc:
-        raise DomainError("invalid_schedule", str(exc), 422) from exc
+        # `campo` e `identidade` seguem junto: sem eles a interface não teria como ancorar a
+        # recusa no controle que a causou, e o resumo voltaria a ser texto solto (FR-033).
+        raise DomainError(
+            "invalid_schedule", str(exc), 422, campo=exc.campo, identidade=exc.identidade
+        ) from exc
     try:
         # Contra o Cronograma **desta gravação**, e não contra o banco: `replace_draft` substitui o
         # rascunho inteiro, então um Evento removido no mesmo POST já não existe.
         validate_stages(stages, schedule=schedule)
     except StageValidationError as exc:
-        raise DomainError("invalid_stages", str(exc), 422) from exc
+        # `campo` e `identidade` seguem junto: sem eles a interface não teria como ancorar a
+        # recusa no controle que a causou, e o resumo voltaria a ser texto solto (FR-033).
+        raise DomainError(
+            "invalid_stages", str(exc), 422, campo=exc.campo, identidade=exc.identidade
+        ) from exc
     with command_context() as now:
         try:
             edital = (

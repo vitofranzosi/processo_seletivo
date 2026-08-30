@@ -193,6 +193,54 @@ def test_a_recusa_recebe_foco_para_nao_passar_despercebida(client, seletor_ligad
 
 
 @pytest.mark.django_db(transaction=True)
+def test_a_recusa_ancora_no_campo_e_aparece_junto_dele(client, seletor_ligado, edital):
+    """FR-033 por inteiro: âncora no resumo **e** mensagem junto do campo.
+
+    Ficou de fora da primeira entrega porque as exceções de domínio carregavam mensagem e nada
+    mais. Agora carregam `campo` e `identidade` — opcionais —, e a interface as resolve para o `id`
+    do controle daquela linha.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    perfil = "aaaaaaaa-0000-4000-8000-0000000000c1"
+
+    resposta = client.post(
+        reverse("interface:compor-etapa", args=[edital.id, "perfis"]),
+        {
+            "perfil-0-id": perfil,
+            "perfil-0-code": "P",
+            "perfil-0-name": "Perfil",
+            "perfil-0-immediateVacancies": "1",
+            "perfil-0-reserveType": "LIMITED",  # limitada sem limite: o domínio nomeia reserveLimit
+        },
+    )
+    corpo = resposta.content.decode()
+
+    # O resumo aponta para o campo.
+    assert 'href="#perfil-0-reserveLimit"' in corpo, "o item do resumo precisa ancorar no campo"
+    # E a mensagem aparece junto dele.
+    assert 'id="recusa-perfil-0-reserveLimit"' in corpo, "falta a marca junto do campo"
+    assert resposta.context["recusas"] == {
+        "perfil-0-reserveLimit": "Cadastro Reserva limitado exige limite não negativo."
+    }
+
+
+@pytest.mark.django_db(transaction=True)
+def test_recusa_que_nao_pertence_a_campo_nenhum_fica_em_texto(client, seletor_ligado, edital):
+    """"O Edital deve possuir ao menos um Perfil" não é de campo nenhum.
+
+    Apontar um campo qualquer seria pior do que não apontar — e é por isso que `campo` é opcional.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.post(reverse("interface:compor-etapa", args=[edital.id, "perfis"]), {})
+    corpo = resposta.content.decode()
+
+    assert "ao menos um Perfil" in corpo
+    assert resposta.context["recusas"] == {}
+    assert 'href="#perfil-' not in corpo
+
+
+@pytest.mark.django_db(transaction=True)
 def test_a_etapa_de_conteudo_nasce_pronta_para_revisar_e_nao_concluida(
     client, seletor_ligado, edital
 ):

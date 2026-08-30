@@ -57,7 +57,7 @@ responsabilidade. Solicite acesso a quem administra o sistema no Cefor.</p>
         <td>
           {% if edital.acoes %}
           <div class="acoes">
-            {% for acao in edital.acoes %}{% if acao.rota %}<a class="acao" href="{% url acao.rota edital.id %}">{{ acao.rotulo }}</a>{% else %}<span class="acao">{{ acao.rotulo }}</span>{% endif %}{% endfor %}
+            {% for acao in edital.acoes %}{% if acao.disponivel %}<a class="acao" href="{{ acao.url }}">{{ acao.rotulo }}</a>{% else %}<span class="acao desabilitado">{{ acao.rotulo }}</span>{% endif %}{% endfor %}
           </div>
           {% else %}
           <span class="nenhuma">Nenhuma ação disponível para seus papéis</span>

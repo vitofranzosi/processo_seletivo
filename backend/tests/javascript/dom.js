@@ -104,8 +104,15 @@ class Elemento {
         ["input", "textarea", "select"].includes(filho.tagName)
       );
     }
-    if (seletor === "fieldset") {
-      return this.filhos.filter((filho) => filho.tagName === "fieldset");
+    // `fieldset` e `fieldset.classe` — o segundo é o que distingue linha removível de agrupamento
+    // estrutural, e era a distinção que faltava.
+    const fieldsets = /^fieldset(?:\.([\w-]+))?$/.exec(seletor);
+    if (fieldsets) {
+      return this.filhos.filter(
+        (filho) =>
+          filho.tagName === "fieldset" &&
+          (!fieldsets[1] || (filho.classes || []).includes(fieldsets[1]))
+      );
     }
     return [];
   }

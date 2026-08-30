@@ -1,4 +1,4 @@
-<fieldset class="linha perfil">
+{% load interface_extras %}<fieldset class="linha perfil">
   <legend>Perfil de Vaga</legend>
   <input type="hidden" name="perfil-{{ indice }}-id" value="{{ perfil.id }}">
   <div class="campos">
@@ -55,6 +55,7 @@
       <input type="number" min="0" id="perfil-{{ indice }}-immediateVacancies"
              name="perfil-{{ indice }}-immediateVacancies"
              value="{{ perfil.immediateVacancies|default:0 }}">
+      {% recusa_de recusas "perfil" indice "immediateVacancies" as recusado %}{% if recusado %}<span class="recusa" role="alert" id="recusa-perfil-{{ indice }}-immediateVacancies">{{ recusado }}</span>{% endif %}
     </p>
     <p class="campo">
       <label for="perfil-{{ indice }}-reserveType">Cadastro Reserva</label>
@@ -69,6 +70,7 @@
       <input type="number" min="0" id="perfil-{{ indice }}-reserveLimit"
              name="perfil-{{ indice }}-reserveLimit" value="{{ perfil.reserveLimit|default:'' }}"
              aria-describedby="ajuda-reserva-{{ indice }}">
+      {% recusa_de recusas "perfil" indice "reserveLimit" as recusado %}{% if recusado %}<span class="recusa" role="alert" id="recusa-perfil-{{ indice }}-reserveLimit">{{ recusado }}</span>{% endif %}
       <span class="ajuda" id="ajuda-reserva-{{ indice }}">Só para reserva limitada.</span>
     </p>
   </div>
