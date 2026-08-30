@@ -6,6 +6,8 @@ DRF. Fica fora de `/api/v1` por não ser contrato institucional.
 
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
+from django.shortcuts import redirect
+from django.urls import reverse
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,13 +17,34 @@ from processo_seletivo.seguranca.application.authorization import require_permis
 from processo_seletivo.shared.observability import METRICS_PERMISSION, logger, metrics
 
 
+def _prefere_html(request):
+    """A pessoa pediu tela, ou o cliente aceita qualquer coisa?"""
+    aceito = request.headers.get("Accept", "")
+    return "text/html" in aceito
+
+
 class IndexView(APIView):
-    """Documento de serviço: quem abre a raiz precisa descobrir o que existe."""
+    """Documento de serviço: quem abre a raiz precisa descobrir o que existe.
+
+    "O que existe" depende de quem pergunta. Um cliente de API precisa dos endpoints; uma pessoa
+    que digitou o endereço no navegador precisa das telas, e recebia um JSON que não lhe diz nada.
+
+    A distinção é feita pelo `Accept`, que é o campo que existe para isso: navegador pede
+    `text/html` explicitamente, cliente de API pede `application/json` ou `*/*`. `*/*` **não**
+    redireciona — quem aceita qualquer coisa não está pedindo tela, e `curl` sem argumento algum
+    continua recebendo o documento de serviço.
+
+    O redirecionamento é temporário. A raiz não mudou de lugar: ela responde coisas diferentes a
+    pedidos diferentes, e marcá-lo permanente faria o navegador guardar uma resposta que só valia
+    para ele.
+    """
 
     permission_classes = [AllowAny]
     authentication_classes = []
 
     def get(self, request):
+        if _prefere_html(request):
+            return redirect(reverse("interface:lista"))
         return Response(
             {
                 "service": "Processo Seletivo e Editais — Cefor/IFES",
