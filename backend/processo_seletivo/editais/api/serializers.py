@@ -5,6 +5,14 @@ from processo_seletivo.editais.domain.perfis import ProfileValidationError, vali
 
 
 class NormativeRuleSerializer(serializers.Serializer):
+    """`id` é opcional na entrada e preservado na gravação.
+
+    Sem declará-lo aqui o identificador nunca chegaria ao command pela API, e a recusa de
+    identificador que pertence a outro contêiner não teria o que recusar — a preservação valeria
+    só pelo caminho da interface administrativa.
+    """
+
+    id = serializers.UUIDField(required=False)
     foundation = serializers.CharField(min_length=1)
     version = serializers.CharField(min_length=1, max_length=50)
     percentage = serializers.DecimalField(max_digits=7, decimal_places=4, required=False)
@@ -16,6 +24,7 @@ class NormativeRuleSerializer(serializers.Serializer):
 
 
 class CompetitionModalitySerializer(serializers.Serializer):
+    id = serializers.UUIDField(required=False)
     code = serializers.CharField(min_length=1, max_length=100)
     name = serializers.CharField(min_length=1, max_length=255)
     description = serializers.CharField(required=False, allow_blank=True)

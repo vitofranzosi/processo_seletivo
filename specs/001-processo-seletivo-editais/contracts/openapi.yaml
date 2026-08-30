@@ -554,7 +554,43 @@ components:
         immediateVacancies: { type: integer, minimum: 0 }
         reserveType: { type: string, enum: [NONE, LIMITED, UNLIMITED] }
         reserveLimit: { type: [integer, 'null'], minimum: 0 }
-        competitionModalities: { type: array, items: { type: object } }
+        competitionModalities:
+          type: array
+          items: { $ref: '#/components/schemas/ModalidadeInput' }
+    ModalidadeInput:
+      type: object
+      description: >-
+        Modalidade de concorrência no rascunho. `id` é opcional e, quando informado, é preservado
+        na gravação — a identidade da modalidade e a da sua Regra Normativa são estáveis entre
+        gravações. Identificador que já pertença a outro contêiner — modalidade de outro Perfil,
+        Regra de outra Modalidade, inclusive irmã do mesmo Perfil — responde 409
+        identifier_belongs_to_another_edital.
+      required: [code, name]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        code: { type: string }
+        name: { type: string }
+        description: { type: string }
+        normativeRule: { $ref: '#/components/schemas/NormativeRuleInput' }
+    NormativeRuleInput:
+      type: object
+      description: >-
+        `version` é obrigatória: um fundamento normativo sem a versão em que ele vigora não
+        identifica a norma aplicada. `percentage` é opcional e, quando informado, deve ser maior
+        que zero e menor ou igual a cem — zero afirmaria uma reserva de nenhuma vaga, e ausência de
+        reserva exprime-se pela ausência do campo. Não há regra de soma entre modalidades: cotas
+        não somam cem por cento.
+      required: [foundation, version]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        foundation: { type: string }
+        version: { type: string, maxLength: 50 }
+        percentage: { type: [string, 'null'] }
+        calculation: { type: object }
+        rounding: { type: object }
+        distribution: { type: object }
+        callRules: { type: object }
+        effectiveFrom: { type: [string, 'null'], format: date-time }
     EventoInput:
       type: object
       required: [id, type, description, startAt]
@@ -606,8 +642,11 @@ components:
         competitionModalities:
           type: array
           description: >-
-            A forma de **dentro** de cada Modalidade não é declarada: a verificação de integridade
-            alcança Perfil e Evento, e confere que a coleção é lista e que cada item é objeto.
+            A forma de **dentro** de cada Modalidade não é verificada campo a campo: a verificação
+            de integridade alcança Perfil e Evento, e aqui confere que a coleção é lista e que cada
+            item é objeto. ModalidadePublicada e RegraNormativaPublicada descrevem a forma que o
+            conteúdo publicado carrega — inclusive os identificadores, que são preservados entre
+            gravações — sem promovê-la a verificação, que seria decisão de outra feature.
           items: { type: object }
     EventoPublicado:
       type: object
@@ -636,6 +675,43 @@ components:
           pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?[+-]\d{2}:\d{2}$'
         order: { type: integer, minimum: 0 }
         status: { type: string }
+    ModalidadePublicada:
+      type: object
+      description: >-
+        Forma da Modalidade de Concorrência no conteúdo normativo publicado. `id` é obrigatório e
+        **estável entre gravações**: até a `006` a modalidade era recriada sem o identificador
+        recebido, e salvar qualquer etapa do assistente trocava a identidade de todas.
+      required: [id, code, name, description, normativeRule]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        code: { type: string }
+        name: { type: string }
+        description: { type: string }
+        normativeRule:
+          oneOf:
+            - { type: 'null' }
+            - { $ref: '#/components/schemas/RegraNormativaPublicada' }
+    RegraNormativaPublicada:
+      type: object
+      description: >-
+        Forma da Regra Normativa no conteúdo publicado. O `id` dela viaja no conteúdo e por isso é
+        parte da identidade normativa, ainda que não endereçe coleção alguma — `normativeRule` é
+        objeto, e não item de lista. Preservá-lo custa o mesmo que trocá-lo e é simétrico com o
+        resto; removê-lo do conteúdo exigiria decidir que a Regra não tem identidade no domínio, o
+        que a presença de `version` e `effectiveFrom` contradiz.
+      required:
+        [id, foundation, version, percentage, calculation, rounding, distribution, callRules,
+         effectiveFrom]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        foundation: { type: string }
+        version: { type: string }
+        percentage: { type: [string, 'null'] }
+        calculation: { type: object }
+        rounding: { type: object }
+        distribution: { type: object }
+        callRules: { type: object }
+        effectiveFrom: { type: [string, 'null'], format: date-time }
     EtapaPublicada:
       type: object
       description: >-

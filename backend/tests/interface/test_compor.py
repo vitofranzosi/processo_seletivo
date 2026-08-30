@@ -13,6 +13,7 @@ from django.urls import reverse
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.editais.models.etapas import EtapaAvaliacao
+from processo_seletivo.editais.models.perfis import ModalidadeConcorrencia
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import compor_rascunho, identificar
@@ -37,7 +38,18 @@ def perfis(**alteracoes):
         "perfil-0-reserveType": "LIMITED",
         "perfil-0-reserveLimit": "5",
         "perfil-0-requirements": "Ensino médio\nExperiência",
-        "perfil-0-modalidades": "AC — Ampla concorrência\nPCD — Pessoa com deficiência",
+        # As modalidades são linhas próprias, indexadas dentro do índice do Perfil.
+        "modalidade-0-0-id": "aaaaaaaa-0000-4000-8000-00000000e031",
+        "modalidade-0-0-ruleId": "aaaaaaaa-0000-4000-8000-00000000e041",
+        "modalidade-0-0-code": "AC",
+        "modalidade-0-0-name": "Ampla concorrência",
+        "modalidade-0-1-id": "aaaaaaaa-0000-4000-8000-00000000e032",
+        "modalidade-0-1-ruleId": "aaaaaaaa-0000-4000-8000-00000000e042",
+        "modalidade-0-1-code": "PCD",
+        "modalidade-0-1-name": "Pessoa com deficiência",
+        "modalidade-0-1-percentage": "5",
+        "modalidade-0-1-foundation": "Lei 13.146/2015",
+        "modalidade-0-1-version": "2015-07-06",
     }
     return {**base, **alteracoes}
 
@@ -239,17 +251,21 @@ def test_identificacao_mostra_o_processo_e_oferece_titulo_e_descricao(
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_modalidade_sem_sigla_volta_para_a_tela_como_foi_digitada(
-    client, seletor_ligado, edital
-):
-    """Sem separador, código e nome ficam iguais — devolver os dois só polui o campo."""
+def test_modalidade_tem_campos_proprios_e_nao_texto_livre(client, seletor_ligado, edital):
+    """A `002` lia as modalidades de uma caixa de texto no formato `CÓDIGO — Nome`.
+
+    O formato perdia tudo o que não coubesse em duas palavras: percentual, fundamento e versão do
+    fundamento não tinham onde ser digitados. O teste anterior verificava um detalhe daquele
+    formato — que um nome sem separador não fosse repetido —, e o formato deixou de existir.
+    """
     identificar(client, "ana.elaboradora", ["elaborador"])
-    compor_rascunho(
-        client, edital, perfis(**{"perfil-0-modalidades": "Ampla concorrência"}), eventos()
-    )
+    compor_rascunho(client, edital, perfis(), eventos())
 
     corpo = client.get(etapa(edital, "perfis")).content.decode()
-    assert "Ampla concorrência — Ampla concorrência" not in corpo
+    assert 'name="perfil-0-modalidades"' not in corpo, "a caixa de texto livre saiu"
+    for campo in ("code", "name", "percentage", "foundation", "version"):
+        assert f'name="modalidade-0-0-{campo}"' in corpo
+    assert 'name="modalidade-0-0-id"' in corpo and 'name="modalidade-0-0-ruleId"' in corpo
     assert "Ampla concorrência" in corpo
 
 
@@ -619,3 +635,89 @@ def test_fragmento_de_etapa_nasce_com_identidade_e_com_os_eventos_do_edital(
     assert UUID(identificador)
     assert 'name="etapa-5-order"' in corpo
     assert EVENTO in corpo, "o vínculo precisa oferecer os Eventos deste Cronograma"
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_regra_normativa_sobrevive_a_gravacao_de_outra_etapa(client, seletor_ligado, edital):
+    """O defeito de linha de base do `quickstart.md`, e o miolo da US3.
+
+    Três defeitos encadeados produziam a perda: a modalidade era criada sem o `id` recebido, a
+    serialização de preservação levava só `code` e `name`, e a leitura vinha de uma caixa de texto
+    que não tinha onde guardar fundamento nem percentual. Configurar cotas, ir ao Cronograma e
+    salvar apagava as regras.
+
+    O que se afirma aqui é a ida e volta inteira — inclusive **a identidade da Regra**, que é a
+    metade do defeito que a primeira versão desta spec não via.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, perfis(), eventos())
+
+    antes = {
+        modalidade.code: (modalidade.id, getattr(modalidade, "regra_normativa", None))
+        for modalidade in ModalidadeConcorrencia.objects.all()
+    }
+    assert antes["PCD"][1] is not None, "a regra precisa ter sido gravada"
+    assert antes["PCD"][1].percentage == Decimal("5.0000")
+    assert antes["PCD"][1].foundation == "Lei 13.146/2015"
+    assert antes["PCD"][1].version == "2015-07-06"
+    identidades = {
+        codigo: (item[0], item[1].id if item[1] else None) for codigo, item in antes.items()
+    }
+
+    # Salvar o Cronograma relê os Perfis e os reenvia. É aqui que tudo se perdia.
+    edital.refresh_from_db()
+    assert client.post(etapa(edital, "cronograma"), eventos()).status_code == 302
+
+    depois = {
+        modalidade.code: (modalidade.id, getattr(modalidade, "regra_normativa", None))
+        for modalidade in ModalidadeConcorrencia.objects.all()
+    }
+    assert set(depois) == {"AC", "PCD"}
+    assert depois["PCD"][1] is not None, "a Regra Normativa não pode desaparecer"
+    assert depois["PCD"][1].percentage == Decimal("5.0000")
+    assert {
+        codigo: (item[0], item[1].id if item[1] else None) for codigo, item in depois.items()
+    } == identidades, "as identidades da modalidade e da regra são as mesmas"
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+@pytest.mark.parametrize("percentual", ["0", "120"])
+def test_percentual_fora_da_faixa_e_recusado_pela_interface(
+    client, seletor_ligado, edital, percentual
+):
+    """FR-030: a recusa é do domínio, e a interface a atravessa como qualquer outra."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.post(
+        etapa(edital, "perfis"), perfis(**{"modalidade-0-1-percentage": percentual})
+    )
+
+    assert resposta.status_code == 200
+    corpo = resposta.content.decode()
+    assert "maior que zero e menor ou igual a cem" in corpo
+    assert "Lei 13.146/2015" in corpo, "o que foi digitado precisa sobreviver à recusa"
+    assert not ModalidadeConcorrencia.objects.exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_fragmento_de_modalidade_nasce_com_os_dois_identificadores(
+    client, seletor_ligado, edital
+):
+    """Sem os dois UUID, a linha nova nasceria sem identidade e não haveria o que preservar."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = client.get(
+        reverse("interface:fragmento-modalidade", args=["2"]), {"indice": "9"}
+    ).content.decode()
+
+    assert 'name="modalidade-2-9-id"' in corpo
+    assert 'name="modalidade-2-9-ruleId"' in corpo
+    identificadores = [
+        corpo.split(f'name="modalidade-2-9-{campo}" value="')[1].split('"')[0]
+        for campo in ("id", "ruleId")
+    ]
+    assert all(UUID(item) for item in identificadores)
+    assert identificadores[0] != identificadores[1]

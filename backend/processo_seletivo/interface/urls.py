@@ -40,6 +40,13 @@ urlpatterns = [
         name="fragmento-etapa",
     ),
     path("fragmentos/perfil", views.fragmento_perfil, name="fragmento-perfil"),
+    # O índice do Perfil vai na rota porque os campos da modalidade são nomeados por ele:
+    # `modalidade-<perfil>-<n>-…`. Sem isso a linha nova não saberia a que Perfil pertence.
+    path(
+        "fragmentos/perfil/<str:indice>/modalidade",
+        views.fragmento_modalidade,
+        name="fragmento-modalidade",
+    ),
     path("fragmentos/evento", views.fragmento_evento, name="fragmento-evento"),
     path(
         "fragmentos/retificacao/perfil",

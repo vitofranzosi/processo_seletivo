@@ -7,6 +7,7 @@ mensagens que tornam um erro de conversão compreensível antes de chegar ao dom
 
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 ZONA = ZoneInfo("America/Sao_Paulo")
@@ -67,17 +68,34 @@ def _instante(dados, chave):
         raise ValueError(f"'{bruto}' não é uma data e hora válidas.") from exc
 
 
-def _modalidades(bruto):
-    """Uma modalidade por linha, no formato `CÓDIGO — Nome`."""
+def _modalidades(dados, prefixo):
+    """As modalidades de um Perfil, em campos próprios.
+
+    Substitui a caixa de texto no formato `CÓDIGO — Nome`, que perdia tudo o que não coubesse em
+    duas palavras: percentual, fundamento e versão do fundamento não tinham onde ser digitados, e
+    a Regra Normativa era destruída a cada gravação.
+
+    A Regra só é montada quando há fundamento. Ela é opcional; o que não é opcional é a `version`
+    quando ela existe — o command a exige desde a `001`.
+    """
     modalidades = []
-    for linha in bruto.splitlines():
-        linha = linha.strip()
-        if not linha:
-            continue
-        codigo, _, nome = linha.partition("—")
-        if not nome:
-            codigo, _, nome = linha.partition("-")
-        modalidades.append({"code": codigo.strip() or linha, "name": nome.strip() or linha})
+    for indice in _indices(dados, prefixo):
+        base = f"{prefixo}-{indice}"
+        fundamento = _texto(dados, f"{base}-foundation")
+        modalidade = {
+            "id": _texto(dados, f"{base}-id"),
+            "code": _texto(dados, f"{base}-code"),
+            "name": _texto(dados, f"{base}-name"),
+            "description": _texto(dados, f"{base}-description"),
+        }
+        if fundamento or _texto(dados, f"{base}-version") or _texto(dados, f"{base}-percentage"):
+            modalidade["normativeRule"] = {
+                "id": _texto(dados, f"{base}-ruleId"),
+                "foundation": fundamento,
+                "version": _texto(dados, f"{base}-version"),
+                "percentage": _decimal(dados, f"{base}-percentage"),
+            }
+        modalidades.append(modalidade)
     return modalidades
 
 
@@ -107,7 +125,9 @@ def ler_perfis(dados):
                 "reserveType": reserva,
                 "reserveLimit": int(limite) if reserva == "LIMITED" and limite else None,
                 "locality": _texto(dados, f"{base}-locality"),
-                "competitionModalities": _modalidades(_texto(dados, f"{base}-modalidades")),
+                # As linhas de modalidade são indexadas dentro do índice do Perfil, e não
+                # renumeradas: `modalidade-3-…` pertence ao Perfil cujo prefixo é `perfil-3`.
+                "competitionModalities": _modalidades(dados, f"modalidade-{indice}"),
             }
         )
     return perfis
@@ -174,6 +194,24 @@ def ler_etapas(dados):
     return _renumerar(etapas)
 
 
+def _modalidade_para_o_formulario(modalidade):
+    regra = getattr(modalidade, "regra_normativa", None)
+    return {
+        "id": str(modalidade.id),
+        "code": modalidade.code,
+        "name": modalidade.name,
+        "description": modalidade.description,
+        # A linha carrega os dois identificadores. O da Regra existe mesmo quando ela ainda não
+        # existe: a linha nova precisa nascer com identidade, ou não há o que preservar.
+        "ruleId": str(regra.id) if regra else str(uuid4()),
+        "foundation": regra.foundation if regra else "",
+        "version": regra.version if regra else "",
+        "percentage": ""
+        if regra is None or regra.percentage is None
+        else f"{regra.percentage:f}",
+    }
+
+
 def perfis_do_edital(edital):
     """Perfis persistidos, no formato que o formulário renderiza."""
     return [
@@ -187,13 +225,13 @@ def perfis_do_edital(edital):
             "reserveType": perfil.reserve_type,
             "reserveLimit": perfil.reserve_limit,
             "locality": perfil.locality,
-            "modalidades": "\n".join(
-                # Linha sem separador vira código e nome iguais; repeti-la só faz ruído.
-                m.name if m.code == m.name else f"{m.code} — {m.name}"
-                for m in perfil.modalidades.order_by("code")
-            ),
+            "modalidades": [
+                _modalidade_para_o_formulario(m) for m in perfil.modalidades.order_by("code")
+            ],
         }
-        for perfil in edital.perfis.prefetch_related("modalidades").order_by("code")
+        for perfil in edital.perfis.prefetch_related("modalidades__regra_normativa").order_by(
+            "code"
+        )
     ]
 
 
@@ -229,13 +267,41 @@ def perfis_persistidos(edital):
             "reserveType": perfil.reserve_type,
             "reserveLimit": perfil.reserve_limit,
             "locality": perfil.locality,
+            # A modalidade inteira, com a Regra e os dois identificadores. Antes daqui só `code` e
+            # `name` viajavam: salvar o Cronograma relia os Perfis, reenviava metade da modalidade
+            # e apagava a Regra Normativa — configurar cotas e ir a outra etapa destruía o que
+            # tinha sido configurado.
             "competitionModalities": [
-                {"code": m.code, "name": m.name}
-                for m in perfil.modalidades.order_by("code")
+                _modalidade_persistida(m) for m in perfil.modalidades.order_by("code")
             ],
         }
-        for perfil in edital.perfis.prefetch_related("modalidades").order_by("code")
+        for perfil in edital.perfis.prefetch_related("modalidades__regra_normativa").order_by(
+            "code"
+        )
     ]
+
+
+def _modalidade_persistida(modalidade):
+    regra = getattr(modalidade, "regra_normativa", None)
+    persistida = {
+        "id": str(modalidade.id),
+        "code": modalidade.code,
+        "name": modalidade.name,
+        "description": modalidade.description,
+    }
+    if regra is not None:
+        persistida["normativeRule"] = {
+            "id": str(regra.id),
+            "foundation": regra.foundation,
+            "version": regra.version,
+            "percentage": regra.percentage,
+            "calculation": regra.calculation,
+            "rounding": regra.rounding,
+            "distribution": regra.distribution,
+            "callRules": regra.call_rules,
+            "effectiveFrom": regra.effective_from,
+        }
+    return persistida
 
 
 def etapas_do_edital(edital):

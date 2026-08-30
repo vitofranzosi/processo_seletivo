@@ -480,3 +480,43 @@ def test_etapas_aparecem_na_previa_e_no_documento_publicado_na_ordem_definida(
     publicado = texto_de_pdf_bytes(bytes(DocumentoPublicado.objects.get().bytes))
     assert publicado.index("Prova didática") < publicado.index("Análise de títulos")
     assert "ETAPAS DE AVALIAÇÃO" in publicado
+
+
+PERFIS_COM_COTA = {
+    **PERFIS,
+    "modalidade-0-0-id": "cccccccc-0000-4000-8000-00000000f021",
+    "modalidade-0-0-ruleId": "cccccccc-0000-4000-8000-00000000f031",
+    "modalidade-0-0-code": "PPI",
+    "modalidade-0-0-name": "Pessoas pretas, pardas e indígenas",
+    "modalidade-0-0-percentage": "20",
+    "modalidade-0-0-foundation": "Lei 12.990/2014",
+    "modalidade-0-0-version": "2014-06-09",
+}
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_modalidades_aparecem_na_previa_e_no_documento_publicado(
+    client, seletor_ligado, edital
+):
+    """FR-031: o renderizador já imprimia fundamento e percentual — o que faltava era o dado.
+
+    A cobertura é o requisito: sem ela, a correção da ida e volta poderia estar certa e o
+    documento continuar sem a cota, e ninguém saberia até publicar.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, PERFIS_COM_COTA, EVENTOS)
+
+    previa = texto_do_pdf(client.get(reverse("interface:previa", args=[edital.id])))
+    for esperado in ("PPI", "Pessoas pretas, pardas e indígenas", "Lei 12.990/2014", "20.0000"):
+        assert esperado in previa, esperado
+
+    praticar(client, Edital.objects.get(), "submeter")
+    identificar(client, "bruno.homologador", ["homologador"])
+    praticar(client, Edital.objects.get(), "homologar", motivo="Conferido")
+    identificar(client, "carla.publicadora", ["publicador"])
+    praticar(client, Edital.objects.get(), "publicar", motivo="Publicação", **SIGNATARIO)
+
+    publicado = texto_de_pdf_bytes(bytes(DocumentoPublicado.objects.get().bytes))
+    for esperado in ("PPI", "Lei 12.990/2014", "20.0000"):
+        assert esperado in publicado, esperado

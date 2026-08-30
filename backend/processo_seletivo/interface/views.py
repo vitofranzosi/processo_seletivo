@@ -431,12 +431,28 @@ def _reexibir_perfis(perfis):
         {
             **perfil,
             "requirements": "\n".join(perfil["requirements"]),
-            "modalidades": "\n".join(
-                f"{m['code']} — {m['name']}" for m in perfil["competitionModalities"]
-            ),
+            "modalidades": [
+                _reexibir_modalidade(modalidade)
+                for modalidade in perfil["competitionModalities"]
+            ],
         }
         for perfil in perfis
     ]
+
+
+def _reexibir_modalidade(modalidade):
+    regra = modalidade.get("normativeRule") or {}
+    percentual = regra.get("percentage")
+    return {
+        "id": modalidade.get("id", ""),
+        "code": modalidade.get("code", ""),
+        "name": modalidade.get("name", ""),
+        "description": modalidade.get("description", ""),
+        "ruleId": regra.get("id", ""),
+        "foundation": regra.get("foundation", ""),
+        "version": regra.get("version", ""),
+        "percentage": "" if percentual is None else f"{percentual:f}",
+    }
 
 
 def _reexibir_etapas(etapas):
@@ -531,6 +547,27 @@ def fragmento_perfil(request):
 def fragmento_evento(request):
     return render(request, "interface/_evento.html",
                   {"evento": {"id": str(uuid4())}, "indice": _indice_de_linha(request)})
+
+
+@require_http_methods(["GET"])
+def fragmento_modalidade(request, indice):
+    """A linha nova nasce com **os dois** identificadores: o da modalidade e o da sua Regra.
+
+    A gravação preserva o `id` recebido, e uma linha sem identidade não teria o que preservar. O da
+    Regra nasce mesmo antes de a Regra existir, porque quem digitar o fundamento em seguida vai
+    criá-la, e a identidade precisa estar no formulário nesse momento.
+
+    `indice` é o do Perfil que contém a linha: os nomes dos campos são `modalidade-<perfil>-<n>-…`.
+    """
+    return render(
+        request,
+        "interface/_modalidade.html",
+        {
+            "modalidade": {"id": str(uuid4()), "ruleId": str(uuid4())},
+            "indice": indice,
+            "sub": _indice_de_linha(request),
+        },
+    )
 
 
 @require_http_methods(["GET"])

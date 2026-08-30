@@ -26,6 +26,11 @@ ETAPA = {
     "A": "00000000-0000-0000-0000-000000000561",
     "B": "00000000-0000-0000-0000-000000000562",
 }
+# A Regra Normativa de cada modalidade, por identificador da modalidade.
+REGRA = {
+    MODALIDADE["A"]: "00000000-0000-0000-0000-000000000551",
+    MODALIDADE["B"]: "00000000-0000-0000-0000-000000000552",
+}
 
 
 def modalidade(identificador, sigla, percentual):
@@ -33,6 +38,11 @@ def modalidade(identificador, sigla, percentual):
 
     `normativeRule` tem `id` e **não** é item de lista: continua endereçada pelo nome da chave.
     É o caso que FR-005 distingue.
+
+    O identificador da Regra vem de `REGRA`, e não de aritmética sobre o da modalidade. A versão
+    anterior o derivava com `f"{identificador[:-1]}9"`, que produzia o **mesmo** valor para as duas
+    modalidades — inofensivo enquanto o command descartava o `id` recebido, e uma violação de
+    chave primária no instante em que ele passou a preservá-lo.
     """
     return {
         "id": identificador,
@@ -40,7 +50,7 @@ def modalidade(identificador, sigla, percentual):
         "name": f"Modalidade {sigla}",
         "description": f"Modalidade {sigla}",
         "normativeRule": {
-            "id": f"{identificador[:-1]}9",
+            "id": REGRA[identificador],
             "foundation": "Lei 12.711/2012",
             "version": "1",
             "percentage": str(percentual),
@@ -108,34 +118,26 @@ def conteudo_normativo():
     }
 
 
-# Campos que o snapshot publicado carrega e o rascunho não aceita: o servidor é que os produz.
-# `competitionModalities` e `normativeRule` nascem com identificador do servidor, então o
-# rascunho não os declara — e os testes que precisam deles leem do conteúdo já publicado.
-_FORA_DO_RASCUNHO = {"id", "status", "name"}
-
-
 def rascunho_publicavel():
     """O mesmo conteúdo, na forma que o endpoint de rascunho aceita.
 
     O rascunho carrega `profiles` e `schedule`; título e descrição vêm do Processo. Manter um
     construtor só evita que os testes de domínio e os de ponta a ponta divirjam no conteúdo.
+
+    **Os identificadores das modalidades e das Regras viajam desde a `006`.** Antes dela o rascunho
+    não os declarava porque o command os ignorava: a modalidade nascia com um identificador do
+    servidor e trocava de identidade a cada gravação, de modo que os testes que precisavam dela
+    tinham de lê-la do conteúdo já publicado. Com a identidade preservada, o conteúdo declarado e o
+    publicado passam a coincidir — que é o que torna o caminho de Retificação verificável a partir
+    daqui.
     """
     base = conteudo_normativo()
     for perfil_ in base["profiles"]:
-        perfil_["competitionModalities"] = [
-            {
-                chave: valor
-                for chave, valor in modalidade_.items()
-                if chave not in {"id", "description"}
-            }
-            | {"description": modalidade_["description"]}
-            for modalidade_ in perfil_["competitionModalities"]
-        ]
         for modalidade_ in perfil_["competitionModalities"]:
             modalidade_["normativeRule"] = {
                 chave: valor
                 for chave, valor in modalidade_["normativeRule"].items()
-                if chave != "id" and valor not in ({}, None)
+                if valor not in ({}, None)
             }
     return {"profiles": base["profiles"], "schedule": base["schedule"]}
 

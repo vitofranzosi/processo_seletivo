@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from django.db import transaction
 
 from processo_seletivo.auditoria.application import record_event
@@ -17,6 +19,37 @@ from processo_seletivo.seguranca.application.authorization import require_permis
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.concurrency import compare_and_swap
+
+
+def _identidades_aninhadas_alheias(profiles):
+    """Modalidade contra o Perfil, Regra Normativa contra a Modalidade (FR-029).
+
+    **Cada entidade é verificada no nível do seu contêiner, e nenhuma um nível acima.** A Regra
+    pertence à Modalidade, e não ao Perfil (`editais/models/perfis.py:63-66`): conferir só até o
+    Perfil deixaria duas Modalidades irmãs trocarem a identidade das suas Regras sem que nada
+    acusasse, e a identidade estável passaria a designar outra relação normativa.
+    """
+    modalidades, regras = {}, {}
+    for perfil in profiles:
+        for modalidade in perfil.get("competitionModalities", []):
+            if modalidade.get("id"):
+                modalidades[str(modalidade["id"])] = str(perfil["id"])
+            regra = modalidade.get("normativeRule") or {}
+            if regra.get("id"):
+                regras[str(regra["id"])] = str(modalidade.get("id") or "")
+
+    alheios = set()
+    for identificador, contêiner in ModalidadeConcorrencia.objects.filter(
+        id__in=list(modalidades)
+    ).values_list("id", "perfil_id"):
+        if str(contêiner) != modalidades[str(identificador)]:
+            alheios.add(str(identificador))
+    for identificador, contêiner in RegraNormativa.objects.filter(
+        id__in=list(regras)
+    ).values_list("id", "modalidade_id"):
+        if str(contêiner) != regras[str(identificador)]:
+            alheios.add(str(identificador))
+    return alheios
 
 
 def _reject_identifiers_of_other_editais(edital, profiles, schedule, stages):
@@ -44,12 +77,13 @@ def _reject_identifiers_of_other_editais(edital, profiles, schedule, stages):
                 .exclude(edital=edital)
                 .values_list("id", flat=True)
             )
+            | _identidades_aninhadas_alheias(profiles)
         )
     )
     if alheios:
         raise DomainError(
             "identifier_belongs_to_another_edital",
-            "Identificadores já vinculados a outro Edital: " + ", ".join(alheios),
+            "Identificadores já vinculados a outro contêiner: " + ", ".join(alheios),
             409,
         )
 
@@ -107,7 +141,11 @@ def replace_draft(
                 call_information=payload.get("callInformation", {}),
             )
             for modality_payload in payload.get("competitionModalities", []):
+                # Com o `id` recebido, como Perfil e Evento já eram criados. Sem isto, toda
+                # gravação do rascunho trocava a identidade das modalidades — e a da Regra, que
+                # viaja no conteúdo publicado.
                 modality = ModalidadeConcorrencia.objects.create(
+                    id=modality_payload.get("id") or uuid4(),
                     perfil=perfil,
                     code=modality_payload["code"],
                     name=modality_payload["name"],
@@ -116,6 +154,7 @@ def replace_draft(
                 rule = modality_payload.get("normativeRule")
                 if rule:
                     RegraNormativa.objects.create(
+                        id=rule.get("id") or uuid4(),
                         modalidade=modality,
                         foundation=rule["foundation"],
                         version=rule["version"],

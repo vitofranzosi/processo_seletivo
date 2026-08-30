@@ -263,3 +263,48 @@ def test_enderecar_etapa_por_posicao_e_recusado(api_client, manager_headers, pro
 
     assert resposta.status_code == 422, resposta.content
     assert resposta.json()["code"] == "positional_addressing_refused"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_percentual_da_regra_e_retificavel_pelo_caminho_ja_existente(
+    api_client, manager_headers, process_payload
+):
+    """FR-032: nenhuma coleção nova no snapshot, e nenhum caminho novo na gramática.
+
+    `/profiles/*/competitionModalities` já era coleção com chave declarada; o que faltava era a
+    identidade da modalidade ser estável entre gravações, sem o que o caminho apontaria, a cada
+    salvamento, para outra coisa.
+    """
+    from processo_seletivo.publicacoes.domain.conflicts import previous_hash
+    from tests.fixtures.snapshot import MODALIDADE, PERFIL
+    from tests.fixtures.snapshot import rascunho_publicavel as rascunho
+
+    edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho())
+    base = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    caminho = (
+        f"/profiles/id={PERFIL['A']}/competitionModalities/id={MODALIDADE['B']}"
+        "/normativeRule/percentage"
+    )
+
+    retificacao = create_retification(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": caminho,
+                "operation": "REPLACE",
+                "newValue": "25",
+                "expectedPreviousHash": previous_hash(base.content, caminho),
+            }
+        ],
+        suffix="p",
+    )
+    publish_retification(api_client, retificacao, suffix="p")
+
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    perfil = next(item for item in vigente.content["profiles"] if item["id"] == PERFIL["A"])
+    modalidade = next(
+        item for item in perfil["competitionModalities"] if item["id"] == MODALIDADE["B"]
+    )
+    assert modalidade["normativeRule"]["percentage"] == "25"

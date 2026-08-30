@@ -232,3 +232,193 @@ def test_etapa_que_referencia_evento_inexistente_e_recusada(
 
     assert resposta.status_code == 422, resposta.content
     assert resposta.json()["code"] == "invalid_stages"
+
+
+def _dois_editais(api_client, manager_headers, process_payload, chave):
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+    )
+    api_client.post(
+        f"/api/v1/admin/processos/{criado.json()['id']}/editais",
+        {"number": "02", "year": 2026, "title": "Segundo"},
+        format="json",
+        **{**manager_headers, "HTTP_IDEMPOTENCY_KEY": chave},
+    )
+    return Edital.objects.order_by("number")
+
+
+def _com_modalidades(seed, modalidades):
+    rascunho = complete_draft(seed)
+    rascunho["profiles"][0]["competitionModalities"] = modalidades
+    return rascunho
+
+
+MODALIDADE = {
+    "A": "00000000-0000-0000-0000-0000000009c1",
+    "B": "00000000-0000-0000-0000-0000000009c2",
+}
+REGRA = {
+    "A": "00000000-0000-0000-0000-0000000009d1",
+    "B": "00000000-0000-0000-0000-0000000009d2",
+}
+
+
+def _modalidade(identificador, regra_id, codigo):
+    return {
+        "id": identificador,
+        "code": codigo,
+        "name": f"Modalidade {codigo}",
+        "normativeRule": {
+            "id": regra_id,
+            "foundation": "Lei 12.990/2014",
+            "version": "2014-06-09",
+            "percentage": "20.0000",
+        },
+    }
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+def test_identidade_de_modalidade_e_de_regra_e_preservada_pela_api(
+    api_client, manager_headers, process_payload
+):
+    """FR-027: sem `id` declarado nos serializers, o identificador nunca chegaria ao command.
+
+    A preservação valeria só pelo caminho da interface administrativa, e a recusa de identificador
+    alheio não teria o que recusar.
+    """
+    from processo_seletivo.editais.models.perfis import ModalidadeConcorrencia, RegraNormativa
+
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+    )
+    edital = Edital.objects.get(processo_id=criado.json()["id"])
+    preparador = actor_headers("preparador", ["edital:elaborar"], key="identidade-mod-0001")
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{edital.id}/rascunho",
+        _com_modalidades(0, [_modalidade(MODALIDADE["A"], REGRA["A"], "PPP")]),
+        format="json",
+        **{**preparador, "HTTP_IF_MATCH": '"1"'},
+    )
+
+    assert resposta.status_code == 200, resposta.content
+    assert str(ModalidadeConcorrencia.objects.get().id) == MODALIDADE["A"]
+    assert str(RegraNormativa.objects.get().id) == REGRA["A"]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+@pytest.mark.parametrize(
+    "caso",
+    ["modalidade-de-outro-perfil", "modalidade-de-outro-edital", "regra-de-modalidade-irma",
+     "regra-de-outro-edital"],
+)
+def test_identificador_de_outro_conteiner_e_recusado_com_conflito(
+    api_client, manager_headers, process_payload, caso
+):
+    """FR-029: cada entidade é verificada no nível do **seu** contêiner, e nenhuma um acima.
+
+    `regra-de-modalidade-irma` é o caso que a verificação até o Perfil deixava passar: duas
+    Modalidades do mesmo Perfil trocando a identidade das suas Regras, sem que nada acusasse — e a
+    identidade estável passando a designar outra relação normativa.
+    """
+    primeiro, segundo = _dois_editais(api_client, manager_headers, process_payload, f"conf-{caso}")
+    preparador = actor_headers("preparador", ["edital:elaborar"], key=f"conflito-{caso[:8]}-01")
+
+    inicial = api_client.put(
+        f"/api/v1/admin/editais/{primeiro.id}/rascunho",
+        _com_modalidades(
+            0,
+            [
+                _modalidade(MODALIDADE["A"], REGRA["A"], "PPP"),
+                _modalidade(MODALIDADE["B"], REGRA["B"], "PCD"),
+            ],
+        ),
+        format="json",
+        **{**preparador, "HTTP_IF_MATCH": '"1"'},
+    )
+    assert inicial.status_code == 200, inicial.content
+
+    if caso == "modalidade-de-outro-perfil":
+        # Mesmo Edital, Perfil novo, reusando o identificador da modalidade do Perfil anterior.
+        alvo, seed, revisao = primeiro, 2, '"2"'
+        modalidades = [_modalidade(MODALIDADE["A"], REGRA["A"], "PPP")]
+    elif caso == "modalidade-de-outro-edital":
+        alvo, seed, revisao = segundo, 1, '"1"'
+        modalidades = [_modalidade(MODALIDADE["A"], "00000000-0000-0000-0000-0000000009d9", "PPP")]
+    elif caso == "regra-de-modalidade-irma":
+        # Mesmo Perfil, mesma modalidade — a Regra da irmã.
+        alvo, seed, revisao = primeiro, 0, '"2"'
+        modalidades = [
+            _modalidade(MODALIDADE["A"], REGRA["B"], "PPP"),
+            _modalidade(MODALIDADE["B"], REGRA["A"], "PCD"),
+        ]
+    else:
+        alvo, seed, revisao = segundo, 1, '"1"'
+        modalidades = [_modalidade("00000000-0000-0000-0000-0000000009c9", REGRA["A"], "PPP")]
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{alvo.id}/rascunho",
+        _com_modalidades(seed, modalidades),
+        format="json",
+        **{
+            **actor_headers("preparador", ["edital:elaborar"], key=f"conflito-{caso[:8]}-02"),
+            "HTTP_IF_MATCH": revisao,
+        },
+    )
+
+    assert resposta.status_code == 409, resposta.content
+    assert resposta.json()["code"] == "identifier_belongs_to_another_edital"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+@pytest.mark.parametrize("percentual", ["0", "0.0000", "120", "100.0001"])
+def test_percentual_fora_da_faixa_e_recusado_pela_api(
+    api_client, manager_headers, process_payload, percentual
+):
+    """A mesma regra que a interface atravessa — porque ela vive no domínio, não no serializer."""
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+    )
+    edital = Edital.objects.get(processo_id=criado.json()["id"])
+    modalidade = _modalidade(MODALIDADE["A"], REGRA["A"], "PPP")
+    modalidade["normativeRule"]["percentage"] = percentual
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{edital.id}/rascunho",
+        _com_modalidades(0, [modalidade]),
+        format="json",
+        **{
+            **actor_headers("preparador", ["edital:elaborar"], key="percentual-0000001"),
+            "HTTP_IF_MATCH": '"1"',
+        },
+    )
+
+    assert resposta.status_code == 422, resposta.content
+    assert "maior que zero e menor ou igual a cem" in resposta.json()["detail"]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+def test_percentual_de_cem_por_cento_e_aceito(api_client, manager_headers, process_payload):
+    """O limite é inclusivo: ampla concorrência com cem por cento é declaração legítima."""
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+    )
+    edital = Edital.objects.get(processo_id=criado.json()["id"])
+    modalidade = _modalidade(MODALIDADE["A"], REGRA["A"], "AC")
+    modalidade["normativeRule"]["percentage"] = "100.0000"
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{edital.id}/rascunho",
+        _com_modalidades(0, [modalidade]),
+        format="json",
+        **{
+            **actor_headers("preparador", ["edital:elaborar"], key="percentual-0000002"),
+            "HTTP_IF_MATCH": '"1"',
+        },
+    )
+
+    assert resposta.status_code == 200, resposta.content
