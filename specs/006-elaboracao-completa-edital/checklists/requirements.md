@@ -129,6 +129,31 @@ Prevaleceu o código.
 formato declarado, e o formato exige leitor registrado. Ficou explícito, e o padrão sem sinal recusa
 nota mínima negativa sem verificação adicional.
 
+### Segunda passada do `$speckit-analyze` (2026-08-30)
+
+Duas críticas e duas menores, todas verificadas.
+
+**A identidade parava na porta da API.** A correção anterior fechou o command e a interface, mas
+`CompetitionModalitySerializer` e `NormativeRuleSerializer` não declaram `id`
+(`editais/api/serializers.py:7-22`), ao contrário de `ProfileSerializer`. O identificador nunca
+chegaria ao command pela API, e o teste de recusa de identificador alheio não teria o que recusar.
+Virou tarefa própria, no mesmo PR da história.
+
+**"Publicação vigente" era conceito inexistente.** Uma Retificação pode ser publicada com vigência
+futura (`publicacoes/application/retificacoes.py:546-548`), e a vigência pertence à Versão
+Consolidada (`publicacoes/application/selectors.py:26`), que **não tem documento próprio**. O
+detalhe passa a oferecer o documento de cada Publicação, identificado pelo ato, sem rotular nenhum
+como vigente. FR-002 registra por quê, para que a ideia não volte como feature.
+
+**Forma decimal.** `^\d+(\.\d{1,4})?$` não descrevia `decimal(7,4)`: aceitava inteiro de qualquer
+tamanho e casas de menos. Passou a `^\d{1,3}\.\d{4}$`. E a proibição de sinal impunha peso não
+negativo sem que a regra existisse: agora FR-020 declara que o peso informado é maior que zero, pelo
+mesmo raciocínio do percentual — a ausência é que exprime "não pondera".
+
+**Documentação residual.** Cenários da US3, resumo da Entrega 4 no plano e o comando do quickstart
+mencionavam só fundamento e a identidade da modalidade. Os três passaram a provar exatamente o que a
+correção fez.
+
 ## Itens que permanecem em aberto
 
 Nenhum bloqueia a implementação.

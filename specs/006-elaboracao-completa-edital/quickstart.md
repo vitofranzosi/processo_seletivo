@@ -45,12 +45,15 @@ elaboração, vá a qualquer etapa do assistente e **salve sem mudar nada**. Dep
 cd backend && uv run python manage.py shell -c "
 from processo_seletivo.editais.models.perfis import ModalidadeConcorrencia
 for m in ModalidadeConcorrencia.objects.all():
-    print(m.code, m.id, getattr(m, 'regra_normativa', None))
+    r = getattr(m, 'regra_normativa', None)
+    print(m.code, m.id, r and (r.id, r.foundation, r.version, r.percentage))
 "
 ```
 
 Esperado **hoje**: as regras sumiram e os identificadores das modalidades mudaram. Esperado depois
-da Entrega 4: regras intactas e identificadores idênticos aos de antes do salvamento.
+da Entrega 4: regras intactas, e os identificadores **da modalidade e da regra** idênticos aos de
+antes do salvamento — a identidade da regra é a metade do defeito que a primeira versão deste
+documento não via.
 
 ---
 
@@ -65,7 +68,7 @@ da Entrega 4: regras intactas e identificadores idênticos aos de antes do salva
    título deixa de aparecer como não corrigível.
 4. No Cronograma, mover o terceiro Evento para a primeira posição, salvar e recarregar. A ordem
    persiste.
-5. Abrir um Edital publicado. Há acesso direto ao documento.
+5. Abrir um Edital publicado. Há acesso direto ao documento de cada Publicação, identificado pelo ato que o produziu — e nenhum é apresentado como vigente.
 
 **Verificação que o navegador não mostra**: os identificadores dos Eventos não mudaram ao reordenar.
 
@@ -125,16 +128,17 @@ recusado por endereçamento posicional.
 
 ## Entrega 4 — Modalidades de reserva
 
-1. Em um Perfil, configurar `PPI` com 20% e fundamento, e `PcD` com 5% e fundamento — em campos
-   próprios, não em caixa de texto.
+1. Em um Perfil, configurar `PPI` com 20%, fundamento e versão do fundamento, e `PcD` com 5%,
+   fundamento e versão — em campos próprios, não em caixa de texto.
 2. Salvar. Ir ao Cronograma e salvar de novo.
-3. Recarregar o Perfil: as duas modalidades continuam lá, com percentuais, fundamentos e os mesmos
-   identificadores.
+3. Recarregar o Perfil: as duas modalidades continuam lá, com percentuais, fundamentos, versões e os
+   mesmos identificadores.
 4. `Visualizar Edital`: as duas aparecem no documento com percentual e fundamento.
 5. Informar percentual `0` ou `120` e salvar: recusa com indicação de onde corrigir.
+6. Omitir a versão do fundamento e salvar: recusa — a versão é exigida pelo command desde a `001`.
 
 **Verificação que fecha a história**: repetir o comando de linha de base da seção inicial. Regras
-intactas, identidades preservadas.
+intactas, e identidades **da modalidade e da regra** preservadas.
 
 ---
 
@@ -169,7 +173,7 @@ Cerca de cinco minutos, dois atores, tudo no navegador.
 | Submeter | quem elabora |
 | `Visualizar Edital` no detalhe, depois homologar | quem homologa |
 | Publicar | quem homologa ou um terceiro |
-| Abrir o documento publicado pelo detalhe | qualquer um |
+| Abrir, pelo detalhe, o documento da Publicação | qualquer um |
 
 **Dois atores são obrigatórios**: a publicação é recusada quando a mesma pessoa elaborou, homologou
 e publicou (`publicacoes/application/publish_edital.py:275-280`). Dois bastam — a recusa exige a

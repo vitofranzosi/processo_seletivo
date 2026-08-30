@@ -135,7 +135,8 @@ Edital já publicado — tudo pela interface.
    salvo, **Then** ao recarregar a nova ordem persiste e os identificadores dos Eventos são os
    mesmos de antes.
 4. **Given** um Edital publicado, **When** abro seu detalhe administrativo, **Then** há acesso
-   direto ao documento publicado.
+   direto ao documento de cada Publicação, identificado pelo ato que o produziu, e nenhum é
+   rotulado como vigente.
 
 ---
 
@@ -232,9 +233,13 @@ que nenhuma coleção nova entre no snapshot.
 **Acceptance Scenarios**:
 
 1. **Given** um Perfil de Vaga, **When** edito suas modalidades de concorrência, **Then** informo
-   código, nome, percentual e fundamento normativo em campos próprios, não em texto livre.
+   código, nome, percentual, fundamento normativo e versão do fundamento em campos próprios, não em
+   texto livre.
 2. **Given** modalidades com regra configurada, **When** salvo o Cronograma em seguida e recarrego,
-   **Then** as regras continuam lá e as identidades das modalidades são as mesmas de antes.
+   **Then** as regras continuam lá e as identidades **da modalidade e da regra** são as mesmas de
+   antes.
+3. **Given** uma modalidade sem versão do fundamento informada, **When** tento gravar a regra,
+   **Then** a gravação é recusada — a versão é exigida pelo command desde a `001`.
 3. **Given** modalidades configuradas, **When** visualizo o Edital, **Then** elas aparecem no
    documento com percentual e fundamento.
 4. **Given** um percentual fora da faixa admissível, **When** salvo pela interface, **Then** a
@@ -294,8 +299,14 @@ alteração no documento junto das seções geradas a partir dos dados estrutura
 
 - **FR-001**: A ação `Novo Processo Seletivo` DEVE permanecer disponível a quem tem permissão,
   independentemente de a lista estar vazia.
-- **FR-002**: O detalhe administrativo de um Edital publicado DEVE dar acesso ao documento já
-  gerado, reutilizando o recurso existente.
+- **FR-002**: O detalhe administrativo de um Edital publicado DEVE dar acesso aos documentos já
+  gerados, um por Publicação, identificando o ato que produziu cada um. NENHUM deles PODE ser
+  apresentado como "documento vigente". *O documento pertence ao ato: a Publicação original tem o
+  seu, cada Retificação publicada tem o seu. A vigência é da Versão Consolidada
+  (`publicacoes/application/selectors.py:26`), que não tem documento próprio — e uma Retificação
+  pode ser publicada com vigência futura (`publicacoes/application/retificacoes.py:546-548`), de
+  modo que a publicação mais recente nem sempre é a que vigora. Um documento consolidado vigente
+  seria conceito novo, e está fora desta feature.*
 - **FR-003**: Eventos do Cronograma DEVEM poder ser movidos para cima e para baixo na interface,
   preservando a identidade de cada Evento.
 - **FR-004**: A nova ordem DEVE ser persistida pelo mecanismo atual de gravação do rascunho.
@@ -342,7 +353,10 @@ alteração no documento junto das seções geradas a partir dos dados estrutura
 - **FR-018**: Cada Etapa DEVE possuir chave estável, independente da posição.
 - **FR-019**: Uma Etapa DEVE registrar nome, ordem, caráter eliminatório e caráter classificatório,
   podendo ter ambos quando a regra do certame permitir.
-- **FR-020**: Peso e nota mínima DEVEM ser opcionais.
+- **FR-020**: Peso e nota mínima DEVEM ser opcionais. Quando informados, o peso DEVE ser maior que
+  zero e a nota mínima NÃO PODE ser negativa. *A ausência é que exprime "esta Etapa não pondera" ou
+  "não há nota mínima" — pelo mesmo motivo que vale para o percentual em FR-030. Peso zero afirmaria
+  uma ponderação que não pondera.*
 - **FR-021**: Uma Etapa PODE referenciar um Evento existente do Cronograma; quando referencia, suas
   datas vêm do Evento e NÃO DEVEM ser digitadas de novo.
 - **FR-022**: A referência a Evento DEVE apontar para Evento existente do mesmo Edital.

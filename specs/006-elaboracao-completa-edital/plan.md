@@ -179,10 +179,16 @@ contra o catálogo e a existência do Evento referenciado por cada Etapa.
 
 ### Entrega 4 — Modalidades de reserva (US3)
 
-É a entrega de fechar a ida e volta. `ModalidadeConcorrencia` passa a ser criada com `id`
-preservado; `perfis_persistidos` passa a serializar `id`, `description` e `normativeRule`;
-`_reject_identifiers_of_other_editais` passa a cobrir modalidades. O formulário substitui a caixa de
-texto livre por linhas com campos próprios, incluindo percentual e fundamento.
+É a entrega de fechar a ida e volta, e ela tem quatro pontas. `ModalidadeConcorrencia` **e
+`RegraNormativa`** passam a ser criadas com os `id` preservados; `perfis_persistidos` passa a
+serializar a modalidade inteira, regra e identificador dela incluídos;
+`_reject_identifiers_of_other_editais` passa a cobrir as duas; e os serializers passam a **aceitar**
+esses identificadores — sem isso o `id` nunca chega ao command pela API, e a recusa de identificador
+alheio não teria o que recusar.
+
+O formulário substitui a caixa de texto livre por linhas com campos próprios: código, nome,
+percentual, fundamento e **versão do fundamento**, que é obrigatória no command desde a `001` e sem a
+qual nenhuma regra nova seria gravável.
 
 A faixa do percentual entra em `editais/domain/perfis.py`, no caminho que a interface e a API
 atravessam igualmente — não no serializer.

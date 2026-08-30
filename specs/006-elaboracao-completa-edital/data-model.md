@@ -32,14 +32,14 @@ ordenação e de identidade.
 | `edital` | FK → `Edital` | `on_delete=CASCADE`, `related_name="etapas"` |
 | `name` | texto (200) | obrigatório, não vazio |
 | `order` | inteiro positivo | único por Edital |
-| `weight` | decimal(7,4) nulo | opcional |
+| `weight` | decimal(7,4) nulo | opcional; quando informado, maior que zero (FR-020) |
 | `eliminatory` | booleano | padrão falso |
 | `classificatory` | booleano | padrão falso |
 | `minimum_score` | decimal(7,4) nulo | opcional; quando informado, não negativo |
 | `evento` | FK → `EventoCronograma` nula | opcional; `on_delete=SET_NULL`; deve pertencer ao mesmo Edital |
 
 **Restrições de banco**: `UniqueConstraint(edital, order)`, no molde de
-`uq_evento_cronograma_order`; `CheckConstraint` de `minimum_score >= 0`.
+`uq_evento_cronograma_order`; `CheckConstraint` de `minimum_score >= 0` e de `weight > 0`.
 
 **Ordenação declarada**: `["order", "id"]`.
 
@@ -172,11 +172,19 @@ padrão decimal, admite nulo), `scheduleEventId` (uuid, admite nulo).
 
 **O decimal precisa de formato, não só de padrão.** `_formato_satisfeito` só é alcançado quando o
 campo declara `formato`, e o leitor é buscado em `_LEITOR_DE_FORMATO` — um formato declarado sem
-leitor registrado levanta `KeyError` de propósito
-(`editais/domain/validation.py:119-144`). Portanto: `formato="decimal"`, leitor `Decimal`
-registrado, e padrão `^\d+(\.\d{1,4})?$`. O padrão **não admite sinal**, o que recusa nota mínima
-negativa vinda de Retificação sem precisar de verificação própria — `minimo` é comparação numérica e
-não se aplica a valor materializado como texto.
+leitor registrado levanta `KeyError` de propósito (`editais/domain/validation.py:119-144`).
+Portanto: `formato="decimal"` com leitor `Decimal` registrado.
+
+**O padrão descreve o que o snapshot materializa, e nada além.** Os dois campos são
+`decimal(7,4)`, o que dá no máximo três dígitos inteiros, e o valor lido do banco se materializa
+sempre com as quatro casas: `^\d{1,3}\.\d{4}$`. O padrão anterior — `^\d+(\.\d{1,4})?$` — aceitava
+inteiro de qualquer tamanho e casas de menos, formas que a persistência não produz. `edital_snapshot`
+materializa os dois com quatro casas explícitas, e não pelo `str` de um `Decimal` qualquer.
+
+**Sinal e faixa são regras de domínio, não do padrão.** O padrão sem sinal recusa negativo, mas não
+distingue peso zero — que FR-020 proíbe — de nota mínima zero, que admite. Por isso a faixa dos dois
+entra na verificação direcionada das Etapas, que já percorre a coleção para conferir a referência ao
+Evento. Uma passagem, duas conferências.
 
 `content` e `source` não entram na forma declarada porque dependem do tipo, e `Campo` não expressa
 coerência entre campos — ausência deliberada, registrada no próprio módulo.
@@ -190,7 +198,7 @@ cobre e sem elas o catálogo fixo e a fonte normativa única deixariam de valer 
 | Verificação | O que recusa |
 |---|---|
 | Topologia de `sections` contra o catálogo | seção acrescentada ou removida; `type`, `order`, `title`, `key` ou `source` alterados; textual sem `content`; gerada com `content` |
-| `stages[*].scheduleEventId` contra `schedule` | referência a Evento que não existe no conteúdo |
+| Coerência de cada Etapa | `scheduleEventId` que não existe em `schedule`; peso igual a zero; nota mínima negativa que o padrão não alcance |
 
 Só o `content` das seções textuais pode variar. As duas são verificações escritas para estes dois
 casos, no arquivo que já faz a verificação de publicação — não um mecanismo de regras entre campos.
