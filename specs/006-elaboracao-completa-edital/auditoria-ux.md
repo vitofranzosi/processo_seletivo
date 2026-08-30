@@ -10,9 +10,9 @@ atores. O que se viu no caminho — e o que ainda não chega ao usuário.
 | **Escopo** | jornada de autoria, ponta a ponta |
 | **Método** | percurso real no navegador, a 1280px e a 375px |
 | **Base** | feature `006 — Elaboração Completa do Edital`, recém-integrada |
-| **Data** | 30/08/2026 |
+| **Data** | 30/08/2026 (achado 26 acrescentado na correção da `006.1`) |
 
-**Placar:** 4 impedem · 9 atrapalham · 12 ajustes · 6 acertos
+**Placar:** 4 impedem · 9 atrapalham · 13 ajustes · 6 acertos
 
 As capturas de tela numeradas de 01 a 17 acompanham este relatório e seguem a ordem do percurso.
 
@@ -323,6 +323,23 @@ discreto no número do Edital, no cartão ao lado.
   tela de cancelar.
 
 ---
+
+### 26 · A recusa culpa o campo errado ao criar Processo
+
+Criar um segundo Processo cujo primeiro Edital repita número e ano de **qualquer** outro Edital do
+escopo falha com “Identificação institucional já utilizada”. A identificação está correta; o
+conflito é do Edital.
+
+`Edital` é único por `(escopo, número, ano)` — não por Processo — e
+`create_process_with_first_edital` envolve os dois `create` num único `except IntegrityError` que
+sempre devolve a mensagem do Processo. Quem recebe o erro corrige o campo que não tem problema.
+
+- **Verificado:** encontrado ao montar a demonstração navegável da correção, com um Edital 21/2027
+  já existente noutro Processo
+- **Onde:** `processos/application/commands.py` — um `except` para dois `create`;
+  `processos/models.py` — `uq_edital_scope_number_year`
+- **Corrigir:** separar as duas criações no tratamento do erro e apontar o campo e a entidade
+  responsáveis pelo conflito.
 
 ## O que está bem resolvido
 
