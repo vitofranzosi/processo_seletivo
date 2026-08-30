@@ -39,7 +39,7 @@ verificação.
 
 ## Phase 1: Setup
 
-- [ ] T001 [P] Acrescentar construtores de snapshot malformado a backend/tests/fixtures/snapshot.py — uma variante por violação (campo ausente, tipo diferente, nulo indevido, formato inválido, fora da restrição declarada), reutilizadas pelas duas histórias
+- [X] T001 [P] Acrescentar construtores de snapshot malformado a backend/tests/fixtures/snapshot.py — uma variante por violação (campo ausente, tipo diferente, nulo indevido, formato inválido, fora da restrição declarada), reutilizadas pelas duas histórias
 
 ---
 
@@ -48,12 +48,12 @@ verificação.
 **⚠️ Nenhuma história funciona sem esta fase.** É a forma canônica e a verificação; tudo o mais
 consome.
 
-- [ ] T002 Acrescentar os esquemas `PerfilPublicado` e `EventoPublicado` a specs/001-processo-seletivo-editais/contracts/openapi.yaml, com os campos canônicos, tipos, nulabilidade, formatos e as restrições que os esquemas de entrada já declaram (FR-005)
-- [ ] T003 Transcrever a forma canônica e verificar cada Perfil e Evento do conteúdo em backend/processo_seletivo/editais/domain/validation.py — as cinco violações como erro impeditivo, aplicando as restrições já escritas e sem inventar coerência entre campos, com o achado nomeando o caminho na gramática da `004` e dizendo qual violação ocorreu (FR-001, FR-004, FR-005, FR-006, FR-009, FR-011)
-- [ ] T004 [P] Cobrir a transcrição contra o contrato em backend/tests/contract/test_forma_publicada.py — alterar o `openapi.yaml` sem alterar a declaração precisa fazer a suíte falhar (FR-005)
-- [ ] T005 [P] Cobrir as cinco violações em backend/tests/unit/editais/test_forma_do_snapshot.py, uma por dimensão, em Perfil e em Evento (FR-006)
-- [ ] T006 Cobrir o que **não** é violação em backend/tests/unit/editais/test_forma_do_snapshot.py — valor vazio admissível, nulo onde se admite nulo, campo não declarado — e que o achado nomeia o caminho por chave e diz a violação (FR-007, FR-008, FR-011)
-- [ ] T007 [P] Cobrir que as quatro condições de raiz que já existiam continuam valendo em backend/tests/unit/editais/test_publicacao.py — a verificação nova não substitui a antiga (FR-015)
+- [X] T002 Acrescentar os esquemas `PerfilPublicado` e `EventoPublicado` a specs/001-processo-seletivo-editais/contracts/openapi.yaml, com os campos canônicos, tipos, nulabilidade, formatos e as restrições que os esquemas de entrada já declaram (FR-005)
+- [X] T003 Transcrever a forma canônica e verificar cada Perfil e Evento do conteúdo em backend/processo_seletivo/editais/domain/validation.py — as cinco violações como erro impeditivo, aplicando as restrições já escritas e sem inventar coerência entre campos, com o achado nomeando o caminho na gramática da `004` e dizendo qual violação ocorreu (FR-001, FR-004, FR-005, FR-006, FR-009, FR-011)
+- [X] T004 [P] Cobrir a transcrição contra o contrato em backend/tests/contract/test_forma_publicada.py — alterar o `openapi.yaml` sem alterar a declaração precisa fazer a suíte falhar (FR-005)
+- [X] T005 [P] Cobrir as cinco violações em backend/tests/unit/editais/test_forma_do_snapshot.py, uma por dimensão, em Perfil e em Evento (FR-006)
+- [X] T006 Cobrir o que **não** é violação em backend/tests/unit/editais/test_forma_do_snapshot.py — valor vazio admissível, nulo onde se admite nulo, campo não declarado — e que o achado nomeia o caminho por chave e diz a violação (FR-007, FR-008, FR-011)
+- [X] T007 [P] Cobrir que as quatro condições de raiz que já existiam continuam valendo em backend/tests/unit/editais/test_publicacao.py — a verificação nova não substitui a antiga (FR-015)
 
 ---
 
@@ -69,10 +69,10 @@ publicá-la e verificar que é recusada, que nada é materializado e que o conte
 caminho normal. É o padrão que a `003` usa para a linha restaurada de backup ou criada por
 importação (FR-013).
 
-- [ ] T008 [P] [US1] Construir o cenário do ato malformado já homologado em backend/tests/integration/publicacoes/test_integridade_publicacao.py — a Alteração gravada direto, a Retificação levada a HOMOLOGADA — e cobrir a recusa da Publicação de um `REPLACE` de Perfil que omite campos obrigatórios, com o conteúdo vigente inalterado e sem Publicação, documento ou versão materializados (FR-012, FR-013, SC-001)
-- [ ] T009 [US1] Cobrir a mesma recusa para um `REMOVE` de campo obrigatório em backend/tests/integration/publicacoes/test_integridade_publicacao.py (SC-002)
-- [ ] T010 [US1] Cobrir a fronteira posterior em backend/tests/integration/publicacoes/test_integridade_publicacao.py — um Edital com Retificação de vigência futura já publicada, e um ato que deixaria malformada só a fronteira seguinte: a recusa alcança o ato inteiro e a mensagem nomeia a fronteira (FR-003, SC-005)
-- [ ] T011 [US1] Cobrir que uma Retificação bem formada continua publicando em backend/tests/integration/publicacoes/test_integridade_publicacao.py — alteração de valores, acréscimo e remoção de entidades, campos vazios e nulos admitidos (FR-014, FR-015, SC-004)
+- [X] T008 [P] [US1] Construir o cenário do ato malformado já homologado em backend/tests/integration/publicacoes/test_integridade_publicacao.py — a Alteração gravada direto, a Retificação levada a HOMOLOGADA — e cobrir a recusa da Publicação de um `REPLACE` de Perfil que omite campos obrigatórios, com o conteúdo vigente inalterado e sem Publicação, documento ou versão materializados (FR-012, FR-013, SC-001)
+- [X] T009 [US1] Cobrir a mesma recusa para um `REMOVE` de campo obrigatório em backend/tests/integration/publicacoes/test_integridade_publicacao.py (SC-002)
+- [X] T010 [US1] Cobrir a fronteira posterior em backend/tests/integration/publicacoes/test_integridade_publicacao.py — um Edital com Retificação de vigência futura já publicada, e um ato que deixaria malformada só a fronteira seguinte: a recusa alcança o ato inteiro e a mensagem nomeia a fronteira (FR-003, SC-005)
+- [X] T011 [US1] Cobrir que uma Retificação bem formada continua publicando em backend/tests/integration/publicacoes/test_integridade_publicacao.py — alteração de valores, acréscimo e remoção de entidades, campos vazios e nulos admitidos (FR-014, FR-015, SC-004)
 
 ---
 
@@ -84,19 +84,19 @@ vez de consumir um ciclo de aprovação até a Publicação.
 **Teste independente**: enviar a Retificação malformada na criação e verificar que é recusada ali,
 com mensagem que nomeia o caminho do campo e diz o que há de errado com ele.
 
-- [ ] T012 [US2] Chamar a verificação em `_apply_declared_changes` em backend/processo_seletivo/publicacoes/application/retificacoes.py, depois das precondições de conteúdo e antes da exigência de efeito prático (FR-002)
-- [ ] T013 [P] [US2] Cobrir a recusa com `422 blocking_findings` na criação da Retificação e na atualização do rascunho, em backend/tests/integration/publicacoes/test_integridade_elaboracao.py (FR-002, FR-010, SC-001)
-- [ ] T014 [US2] Cobrir que a mensagem nomeia o caminho por chave e a violação, de modo que se identifique a entidade sem consultar a versão vigente, e que corrigir e reenviar é aceito sem etapa nova, em backend/tests/integration/publicacoes/test_integridade_elaboracao.py (FR-011, FR-014, SC-003)
-- [ ] T015 [US2] Cobrir que a recusa por precondição de conteúdo continua prevalecendo quando ambas valem, em backend/tests/integration/publicacoes/test_integridade_elaboracao.py — a causa serve melhor que a consequência (FR-002)
+- [X] T012 [US2] Chamar a verificação em `_apply_declared_changes` em backend/processo_seletivo/publicacoes/application/retificacoes.py, depois das precondições de conteúdo e antes da exigência de efeito prático (FR-002)
+- [X] T013 [P] [US2] Cobrir a recusa com `422 blocking_findings` na criação da Retificação e na atualização do rascunho, em backend/tests/integration/publicacoes/test_integridade_elaboracao.py (FR-002, FR-010, SC-001)
+- [X] T014 [US2] Cobrir que a mensagem nomeia o caminho por chave e a violação, de modo que se identifique a entidade sem consultar a versão vigente, e que corrigir e reenviar é aceito sem etapa nova, em backend/tests/integration/publicacoes/test_integridade_elaboracao.py (FR-011, FR-014, SC-003)
+- [X] T015 [US2] Cobrir que a recusa por precondição de conteúdo continua prevalecendo quando ambas valem, em backend/tests/integration/publicacoes/test_integridade_elaboracao.py — a causa serve melhor que a consequência (FR-002)
 
 ---
 
 ## Phase 5: Polish e questões transversais
 
-- [ ] T016 Aplicar o delta do contrato em specs/001-processo-seletivo-editais/contracts/openapi.yaml — declarar `blocking_findings` nas respostas `422` que o produzem, e descrever nas operações de Retificação que a verificação alcança o conteúdo resultante e cada fronteira materializada (FR-003, FR-010)
-- [ ] T017 Cobrir que o contrato declara `blocking_findings` e os esquemas publicados, em backend/tests/contract/test_forma_publicada.py (FR-010)
-- [ ] T018 Rodar backend/tests/interface/test_impedimentos.py e investigar qualquer mudança na lista de pendências da tela de composição — teste novo só se ela acusar regressão
-- [ ] T019 Executar o roteiro de specs/005-integridade-do-snapshot/quickstart.md de ponta a ponta, conferindo os cenários que a spec enumera — os dois portões, a fronteira posterior e o que continua publicando — e a cobertura com ramos do código novo (SC-005)
+- [X] T016 Aplicar o delta do contrato em specs/001-processo-seletivo-editais/contracts/openapi.yaml — declarar `blocking_findings` nas respostas `422` que o produzem, e descrever nas operações de Retificação que a verificação alcança o conteúdo resultante e cada fronteira materializada (FR-003, FR-010)
+- [X] T017 Cobrir que o contrato declara `blocking_findings` e os esquemas publicados, em backend/tests/contract/test_forma_publicada.py (FR-010)
+- [X] T018 Rodar backend/tests/interface/test_impedimentos.py e investigar qualquer mudança na lista de pendências da tela de composição — teste novo só se ela acusar regressão
+- [X] T019 Executar o roteiro de specs/005-integridade-do-snapshot/quickstart.md de ponta a ponta, conferindo os cenários que a spec enumera — os dois portões, a fronteira posterior e o que continua publicando — e a cobertura com ramos do código novo (SC-005)
 
 ---
 
@@ -140,4 +140,11 @@ Publicação pelo caminho normal, e é por isso que a US1 se testa com o ato gra
 
 ## Situação
 
-19 tarefas, nenhuma iniciada. A implementação não começou.
+19 tarefas, todas concluídas.
+
+Suíte verde nas duas execuções — 711 passando com 43 ignorados no SQLite, 753 com 1 ignorado no
+PostgreSQL. `validation.py` com cobertura de linhas e de ramos integral; as linhas descobertas em
+`retificacoes.py` são anteriores a esta feature e estão fora dos trechos alterados.
+
+Cada recusa nova foi verificada removendo-a: sem a verificação na elaboração, 9 testes falham; sem
+o portão da Publicação, 4; sem a restrição de faixa, 4; sem a de enumeração, 1.

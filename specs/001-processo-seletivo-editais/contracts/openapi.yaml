@@ -246,6 +246,10 @@ paths:
         positional_addressing_refused, e um ato que nasce instável não chega a existir. Chave
         inexistente responde 409 target_key_not_found, e coleção que ficaria com identificador
         repetido responde 409 duplicate_key_in_collection. Cada recusa nomeia o caminho envolvido.
+        O **conteúdo resultante** de aplicar todas as alterações à versão base também é verificado:
+        Perfil ou Evento que violasse PerfilPublicado ou EventoPublicado — campo obrigatório
+        ausente, tipo diferente, nulo indevido, formato inválido ou valor fora da restrição
+        declarada — responde 422 blocking_findings, com o caminho de cada campo e a violação.
       operationId: criarRetificacao
       security: [{ bearerAuth: [] }]
       parameters:
@@ -266,7 +270,8 @@ paths:
       description: >-
         As mesmas verificações de forma e de existência da criação valem aqui: 422
         positional_addressing_refused, 409 target_key_not_found e 409
-        duplicate_key_in_collection, contra a versão base declarada.
+        duplicate_key_in_collection, contra a versão base declarada — e 422 blocking_findings sobre
+        o conteúdo resultante.
       operationId: atualizarRascunhoRetificacao
       security: [{ bearerAuth: [] }]
       parameters:
@@ -331,6 +336,10 @@ paths:
         resposta é 409 target_key_not_found. Identificador repetido na composição responde 409
         duplicate_key_in_collection. A forma posicional não é verificada neste momento porque não
         chega a ser elaborada.
+        A forma do conteúdo é verificada em **cada versão consolidada que o ato materializa** — uma
+        por fronteira de vigência, e não apenas a que passa a vigorar de imediato. Uma só fronteira
+        malformada responde 422 blocking_findings e recusa o ato inteiro, sem deixar Publicação,
+        documento ou versão materializados.
       operationId: publicarRetificacao
       security: [{ bearerAuth: [] }]
       parameters: [{ $ref: '#/components/parameters/RetificacaoId' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }]
@@ -549,6 +558,49 @@ components:
         startAt: { type: string, format: date-time }
         endAt: { type: [string, 'null'], format: date-time }
         order: { type: integer, minimum: 0 }
+    PerfilPublicado:
+      type: object
+      description: >-
+        Forma do Perfil no conteúdo normativo **publicado**. Distinta de PerfilInput, que descreve o
+        que o rascunho aceita: a Publicação materializa mais campos, e todos são exigidos no conteúdo
+        que passa a vigorar. Obrigatório aqui significa presente, e não preenchido — description
+        pode ser texto vazio e requirements, lista vazia.
+      required:
+        [id, code, name, description, requirements, immediateVacancies, reserveType, reserveLimit,
+         locality, classificationInformation, callInformation, competitionModalities]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        code: { type: string }
+        name: { type: string }
+        description: { type: string }
+        requirements: { type: array }
+        immediateVacancies: { type: integer, minimum: 0 }
+        reserveType: { type: string, enum: [NONE, LIMITED, UNLIMITED] }
+        reserveLimit: { type: [integer, 'null'], minimum: 0 }
+        locality: { type: string }
+        classificationInformation: { type: object }
+        callInformation: { type: object }
+        competitionModalities:
+          type: array
+          description: >-
+            A forma de cada Modalidade não é declarada: a verificação de integridade alcança Perfil e
+            Evento, e confere as Modalidades como lista de objetos e nada mais.
+          items: { type: object }
+    EventoPublicado:
+      type: object
+      description: >-
+        Forma do Evento no conteúdo normativo **publicado**. Distinta de EventoInput pela mesma razão
+        que PerfilPublicado o é de PerfilInput. `status` é produzido pelo sistema e entra como
+        presença e tipo; a enumeração dele não é declarada aqui.
+      required: [id, type, description, startAt, endAt, order, status]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        type: { type: string }
+        description: { type: string }
+        startAt: { type: string, format: date-time }
+        endAt: { type: [string, 'null'], format: date-time }
+        order: { type: integer, minimum: 0 }
+        status: { type: string }
     AtoAdministrativoRequest:
       type: object
       additionalProperties: false

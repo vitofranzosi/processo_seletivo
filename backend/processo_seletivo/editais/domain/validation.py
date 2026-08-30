@@ -1,5 +1,31 @@
+"""O que torna um Edital publicável.
+
+Duas perguntas, e as duas moram aqui. A primeira é sobre a **raiz**: há título, ao menos um Perfil,
+ao menos um Evento? A segunda é sobre a **forma de cada entidade**: o Perfil que passa a vigorar tem
+os campos que o conteúdo publicado sempre carrega, com o tipo, a nulabilidade e as restrições que o
+contrato declara?
+
+A segunda pergunta existe porque o endereçamento da `004` garante **de quem** um ato fala, e não
+que o que ele deixa seja um Edital bem formado. `REMOVE` de um campo obrigatório e `REPLACE` de um
+Perfil inteiro omitindo campos passavam sem achado impeditivo, e o Perfil mutilado chegava à
+consulta pública e ao PDF.
+
+**A forma é transcrita do contrato, não inventada aqui.** `PerfilPublicado` e `EventoPublicado` no
+`openapi.yaml` da `001` são a autoridade; um teste de contrato confere esta transcrição contra eles.
+O domínio não pode ler o contrato em execução — ele vive em `specs/`, é artefato de processo e não é
+distribuído com o pacote —, e a declaração conferida é o mesmo arranjo que a `004` usa para as
+coleções com chave: o que é declarado e conferido falha alto quando diverge.
+
+**A linha entre aplicar e inventar.** O que o contrato escreve, aplica-se — faixa de valor e
+enumeração inclusive. O que ele não escreve, não se escreve aqui: coerência entre campos, como
+`reserveLimit` condicionado ao tipo de reserva ou `endAt` posterior a `startAt`, é decisão normativa
+que ninguém tomou.
+"""
+
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
+from uuid import UUID
 
 
 class Severity(StrEnum):
@@ -14,6 +40,174 @@ class ValidationFinding:
     code: str
     message: str
     path: str = ""
+
+
+@dataclass(frozen=True)
+class Campo:
+    """Um campo da forma publicada, nas dimensões que se verificam.
+
+    `minimo` e `valores` são as restrições que o contrato já escreve. Não há campo para coerência
+    entre campos, e a ausência é deliberada: expressá-la aqui seria o primeiro passo para
+    inventá-la.
+    """
+
+    nome: str
+    tipo: type
+    admite_nulo: bool = False
+    formato: str = ""
+    minimo: int | None = None
+    valores: tuple[str, ...] = ()
+
+
+RESERVA = ("NONE", "LIMITED", "UNLIMITED")
+
+PERFIL_PUBLICADO = (
+    Campo("id", str, formato="uuid"),
+    Campo("code", str),
+    Campo("name", str),
+    Campo("description", str),
+    Campo("requirements", list),
+    Campo("immediateVacancies", int, minimo=0),
+    Campo("reserveType", str, valores=RESERVA),
+    Campo("reserveLimit", int, admite_nulo=True, minimo=0),
+    Campo("locality", str),
+    Campo("classificationInformation", dict),
+    Campo("callInformation", dict),
+    # A forma de cada Modalidade não é declarada: a verificação alcança Perfil e Evento, e confere
+    # esta coleção como lista e nada mais.
+    Campo("competitionModalities", list),
+)
+
+EVENTO_PUBLICADO = (
+    Campo("id", str, formato="uuid"),
+    Campo("type", str),
+    Campo("description", str),
+    Campo("startAt", str, formato="date-time"),
+    Campo("endAt", str, admite_nulo=True, formato="date-time"),
+    Campo("order", int, minimo=0),
+    # `status` é produzido pelo sistema e nenhum esquema declara a enumeração dele. Entra como
+    # presença e tipo; escrever os valores aqui seria inventar restrição, não transcrever uma.
+    Campo("status", str),
+)
+
+COLECOES_PUBLICADAS = (("profiles", PERFIL_PUBLICADO), ("schedule", EVENTO_PUBLICADO))
+
+CAMPO_AUSENTE = "field_required"
+TIPO_INVALIDO = "field_type_invalid"
+NULO_INVALIDO = "field_null_invalid"
+FORMATO_INVALIDO = "field_format_invalid"
+RESTRICAO_VIOLADA = "field_constraint_violated"
+
+_NOME_DO_TIPO = {str: "texto", int: "número inteiro", list: "lista", dict: "objeto"}
+
+
+def _e_do_tipo(valor, tipo):
+    """`bool` é subclasse de `int` em Python, e `True` não é um número de vagas."""
+    if tipo is int and isinstance(valor, bool):
+        return False
+    return isinstance(valor, tipo)
+
+
+# Formato declarado que não estivesse aqui levantaria `KeyError` na primeira verificação, e é o
+# comportamento desejado: erro de programação que falha alto vale mais que formato aceito em
+# silêncio por não ter quem o verifique.
+_LEITOR_DE_FORMATO = {"uuid": UUID, "date-time": datetime.fromisoformat}
+
+
+def _formato_satisfeito(valor, formato):
+    try:
+        _LEITOR_DE_FORMATO[formato](valor)
+    except (ValueError, AttributeError, TypeError):
+        return False
+    return True
+
+
+def _violacao(campo, entidade, caminho):
+    """A primeira violação do campo, ou None. Uma por campo: a primeira já diz o que corrigir."""
+    if campo.nome not in entidade:
+        return ValidationFinding(
+            Severity.BLOCKING_ERROR,
+            CAMPO_AUSENTE,
+            f"O campo obrigatório não está presente em {caminho}.",
+            caminho,
+        )
+    valor = entidade[campo.nome]
+    if valor is None:
+        if campo.admite_nulo:
+            return None
+        return ValidationFinding(
+            Severity.BLOCKING_ERROR,
+            NULO_INVALIDO,
+            f"O campo não admite valor nulo em {caminho}.",
+            caminho,
+        )
+    if not _e_do_tipo(valor, campo.tipo):
+        return ValidationFinding(
+            Severity.BLOCKING_ERROR,
+            TIPO_INVALIDO,
+            f"O campo deveria ser {_NOME_DO_TIPO[campo.tipo]} em {caminho}.",
+            caminho,
+        )
+    if campo.formato and not _formato_satisfeito(valor, campo.formato):
+        return ValidationFinding(
+            Severity.BLOCKING_ERROR,
+            FORMATO_INVALIDO,
+            f"O campo não satisfaz o formato {campo.formato} em {caminho}.",
+            caminho,
+        )
+    if campo.minimo is not None and valor < campo.minimo:
+        return ValidationFinding(
+            Severity.BLOCKING_ERROR,
+            RESTRICAO_VIOLADA,
+            f"O campo não admite valor menor que {campo.minimo} em {caminho}.",
+            caminho,
+        )
+    if campo.valores and valor not in campo.valores:
+        return ValidationFinding(
+            Severity.BLOCKING_ERROR,
+            RESTRICAO_VIOLADA,
+            f"O campo admite apenas {', '.join(campo.valores)} em {caminho}.",
+            caminho,
+        )
+    return None
+
+
+def _caminho_da_entidade(colecao, entidade, posicao):
+    """A gramática da `004`, que nomeia a entidade sem consultar a versão vigente.
+
+    Sem identificador utilizável o caminho recua para a posição: a `004` recusa entidade sem `id` no
+    momento em que a alteração é aplicada, então isto não deve ocorrer — e é melhor que um achado
+    que não nomeia nada.
+    """
+    identificador = entidade.get("id") if isinstance(entidade, dict) else None
+    if isinstance(identificador, str) and identificador:
+        return f"/{colecao}/id={identificador}"
+    return f"/{colecao}/{posicao}"
+
+
+def _violacoes_da_colecao(snapshot, colecao, forma):
+    findings = []
+    itens = snapshot.get(colecao)
+    if not isinstance(itens, list):
+        return findings
+    for posicao, entidade in enumerate(itens):
+        caminho = _caminho_da_entidade(colecao, entidade, posicao)
+        if not isinstance(entidade, dict):
+            findings.append(
+                ValidationFinding(
+                    Severity.BLOCKING_ERROR,
+                    TIPO_INVALIDO,
+                    f"O item deveria ser objeto em {caminho}.",
+                    caminho,
+                )
+            )
+            continue
+        findings.extend(
+            achado
+            for campo in forma
+            if (achado := _violacao(campo, entidade, f"{caminho}/{campo.nome}")) is not None
+        )
+    return findings
 
 
 def validate_for_publication(snapshot: dict) -> list[ValidationFinding]:
@@ -51,6 +245,8 @@ def validate_for_publication(snapshot: dict) -> list[ValidationFinding]:
                 "description",
             )
         )
+    for colecao, forma in COLECOES_PUBLICADAS:
+        findings.extend(_violacoes_da_colecao(snapshot, colecao, forma))
     return findings
 
 

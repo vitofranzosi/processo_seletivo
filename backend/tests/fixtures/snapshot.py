@@ -174,3 +174,53 @@ def elementos_sem_chave(conteudo):
             if not isinstance(elemento, dict) or not elemento.get(colecoes.CAMPO_CHAVE)
         )
     return sorted(set(sem))
+
+
+# Uma variante por violação da forma publicada, para que os testes das duas histórias falem da
+# mesma coisa. Cada entrada é (rótulo, campo, valor) e produz um Perfil malformado de um jeito só.
+VIOLACOES_DE_PERFIL = (
+    ("campo ausente", "name", ...),
+    ("tipo diferente", "name", []),
+    ("nulo indevido", "locality", None),
+    ("formato inválido", "id", "não-é-uuid"),
+    ("fora da restrição", "immediateVacancies", -3),
+)
+
+VIOLACOES_DE_EVENTO = (
+    ("campo ausente", "description", ...),
+    ("tipo diferente", "order", "primeiro"),
+    ("nulo indevido", "startAt", None),
+    ("formato inválido", "startAt", "ontem"),
+    ("fora da restrição", "order", -1),
+)
+
+AUSENTE = ...
+
+
+def com_violacao(conteudo, colecao, posicao, campo, valor):
+    """`conteudo` com um único campo de uma única entidade violado.
+
+    `AUSENTE` como valor apaga o campo; qualquer outro o substitui. Um defeito por vez é o que
+    permite afirmar qual achado corresponde a qual violação.
+    """
+    entidade = conteudo[colecao][posicao]
+    if valor is AUSENTE:
+        entidade.pop(campo, None)
+    else:
+        entidade[campo] = valor
+    return conteudo
+
+
+def perfil_mutilado(identificador):
+    """O Perfil reduzido ao que os esquemas de **entrada** exigem — cinco dos doze campos.
+
+    É o `REPLACE` parcial que a spec cita: cada campo isolado é plausível, e o conjunto não é um
+    Perfil. Era o que passava antes desta feature.
+    """
+    return {
+        "id": identificador,
+        "code": "MUTILADO",
+        "name": "Perfil sem o resto",
+        "immediateVacancies": 1,
+        "reserveType": "NONE",
+    }
