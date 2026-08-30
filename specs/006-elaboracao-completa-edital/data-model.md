@@ -61,7 +61,7 @@ existem, em que ordem, de que tipo, com que título — é declaração em
 
 | Campo | Tipo | Regra |
 |---|---|---|
-| `id` | UUID | chave primária; preservada na gravação |
+| `id` | UUID | chave primária; **é o mesmo UUID determinístico do snapshot** — `uuid5` sobre `(edital.id, key)` — para que a seção tenha uma identidade só |
 | `edital` | FK → `Edital` | `on_delete=CASCADE`, `related_name="secoes"` |
 | `key` | texto (60) | chave do catálogo; única por Edital; deve existir no catálogo e ser de seção textual |
 | `content` | texto | conteúdo redigido; nasce com o texto institucional do catálogo |
@@ -107,7 +107,7 @@ maior que zero e menor ou igual a cem (FR-030). `foundation` passa a ter interfa
 
 ## Snapshot canônico
 
-`SCHEMA_VERSION` passa de 1 para 2, uma vez, cobrindo as duas coleções novas (FR-043).
+`SCHEMA_VERSION` passa de 1 para 2, uma vez, cobrindo as duas coleções novas (FR-045).
 
 ```jsonc
 {
@@ -124,9 +124,9 @@ maior que zero e menor ou igual a cem (FR-030). `foundation` passa a ter interfa
     }
   ],
   "sections": [
-    { "key": "disposicoes-preliminares", "title": "…", "order": 1,
+    { "id": "…", "key": "disposicoes-preliminares", "title": "…", "order": 1,
       "type": "TEXT", "content": "…" },
-    { "key": "cronograma", "title": "…", "order": 5,
+    { "id": "…", "key": "cronograma", "title": "…", "order": 5,
       "type": "GENERATED", "source": "schedule" }
   ]
 }
@@ -134,6 +134,13 @@ maior que zero e menor ou igual a cem (FR-030). `foundation` passa a ter interfa
 
 A seção `GENERATED` **não tem `content`**. É essa ausência que a torna não endereçável, sem regra
 nova na gramática (D-006).
+
+**`id` e `key` são coisas diferentes, e as duas são necessárias.** O `id` é UUID porque o seletor da
+gramática só aceita UUID (`publicacoes/domain/changes.py:101-113`); a `key` é o identificador
+textual do catálogo, que dá sentido humano ao item e liga o snapshot à declaração. O `id` é
+determinístico — `uuid5` sobre `(edital.id, key)` — para que a seção tenha identidade estável antes
+de existir qualquer linha em `SecaoEdital`, o que é sempre o caso das geradas e o caso inicial das
+textuais (D-010).
 
 ### Registros a atualizar
 
@@ -143,34 +150,52 @@ nova na gramática (D-006).
 | Forma publicada | `editais/domain/validation.py` | tuplas `ETAPA_PUBLICADA` e `SECAO_PUBLICADA` em `COLECOES_PUBLICADAS` |
 | Snapshot | `publicacoes/application/publish_edital.py` | `stages` e `sections` em `edital_snapshot` |
 
-Os três são declarativos e a `005` já falha a suíte quando uma coleção do snapshot não está
-declarada — esquecer um deles aparece como falha, não como silêncio.
+Os três são declarativos, mas **a suíte hoje não acusa sozinha o esquecimento de qualquer um deles**:
+a transcrição da forma publicada é conferida contra uma lista explícita
+(`tests/contract/test_forma_publicada.py:67-70`). Por isso esta feature acrescenta um teste de
+cobertura ligando as três declarações — para cada coleção do snapshot, forma declarada em
+`COLECOES_PUBLICADAS` e esquema correspondente no `openapi.yaml` (D-005).
 
 ### Forma publicada das coleções novas
 
-`ETAPA_PUBLICADA`: `id` (uuid), `name`, `order` (mínimo 0), `weight` (texto, admite nulo),
-`eliminatory` (booleano), `classificatory` (booleano), `minimumScore` (texto, admite nulo),
-`scheduleEventId` (uuid, admite nulo).
+`ETAPA_PUBLICADA`: `id` (uuid), `name`, `order` (mínimo 0), `weight` (texto com padrão decimal,
+admite nulo), `eliminatory` (booleano), `classificatory` (booleano), `minimumScore` (texto com
+padrão decimal, admite nulo), `scheduleEventId` (uuid, admite nulo).
 
-`SECAO_PUBLICADA`: `key`, `title`, `order` (mínimo 0), `type` (valores `GENERATED`, `TEXT`).
-`content` e `source` não são declarados obrigatórios porque dependem do tipo — a coerência entre
-campos não é expressável em `Campo`, e a declaração existente registra essa ausência como
-deliberada.
+`SECAO_PUBLICADA`: `id` (uuid), `key`, `title`, `order` (mínimo 0), `type` (valores `GENERATED`,
+`TEXT`).
 
-**Chave estável das seções**: a coleção é endereçada por `id` como as demais, e o `id` da seção no
-snapshot é a `key` do catálogo — estável por construção, legível no caminho de Retificação, e
-independente de posição.
+O padrão decimal é transcrito como `INSTANTE` já é para o instante: sem ele, declarar `weight` como
+texto aceitaria `"banana"` depois de uma Retificação.
+
+`content` e `source` não entram na forma declarada porque dependem do tipo, e `Campo` não expressa
+coerência entre campos — ausência deliberada, registrada no próprio módulo.
+
+### O que a forma declarada não alcança
+
+Duas verificações próprias entram na validação de publicação, porque a forma por campo não as
+cobre e sem elas o catálogo fixo e a fonte normativa única deixariam de valer depois da publicação
+(D-011):
+
+| Verificação | O que recusa |
+|---|---|
+| Topologia de `sections` contra o catálogo | seção acrescentada ou removida; `type`, `order`, `title`, `key` ou `source` alterados; textual sem `content`; gerada com `content` |
+| `stages[*].scheduleEventId` contra `schedule` | referência a Evento que não existe no conteúdo |
+
+Só o `content` das seções textuais pode variar. As duas são verificações escritas para estes dois
+casos, no arquivo que já faz a verificação de publicação — não um mecanismo de regras entre campos.
 
 ---
 
 ## Migrations
 
-Três, todas diretas. Sem mecanismo de compatibilidade e sem migração de conteúdo (FR-046).
+Duas, ambas diretas. Sem mecanismo de compatibilidade e sem migração de conteúdo (FR-048).
 
 1. `EtapaAvaliacao` com suas restrições.
 2. `SecaoEdital` com unicidade de `key` por Edital.
-3. Nenhuma alteração de esquema é necessária para modalidades: a preservação de identidade é
-   comportamento da camada de aplicação.
+
+Modalidades **não exigem migration**: a preservação de identidade é comportamento da camada de
+aplicação, sobre um campo que já existe.
 
 Seeds e fixtures são regenerados. `seed_demo` passa a criar Etapas e a exercitar uma modalidade com
 Regra Normativa completa, para que a demonstração tenha conteúdo desde o primeiro `runserver`.

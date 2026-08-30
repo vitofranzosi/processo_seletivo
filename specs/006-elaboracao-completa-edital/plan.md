@@ -14,8 +14,9 @@ deixaram prontos (`COLECOES_COM_CHAVE`, `COLECOES_PUBLICADAS`, e o snapshot de
 que já é função pura do snapshot, ganha um modo de prévia.
 
 Nenhum command novo é necessário para reordenar, e `replace_draft` continua sendo o único caminho
-de gravação do rascunho. Dois commands nascem, e só dois: alterar a identificação do Edital em
-elaboração, e produzir a prévia.
+de gravação do rascunho. **Um command nasce**, e só um: alterar a identificação do Edital em
+elaboração. A prévia não é command — não altera estado, não gera ato e não tem chave de
+idempotência: é leitura que compõe um documento a partir do snapshot atual.
 
 ## Technical Context
 
@@ -23,7 +24,7 @@ elaboração, e produzir a prévia.
 
 **Primary Dependencies**: Django 5.2, Django REST Framework 3.16. Nenhuma dependência nova.
 
-**Storage**: PostgreSQL. Migrations diretas; sem mecanismo de compatibilidade (spec P-002, FR-046).
+**Storage**: PostgreSQL. Migrations diretas; sem mecanismo de compatibilidade (spec P-002, FR-048).
 
 **Testing**: pytest com `tests/{unit,contract,interface,integration,migrations,javascript}`. Testes
 de JavaScript rodam em Node com DOM simulado, orquestrados por `backend/tests/test_javascript.py`.
@@ -136,10 +137,17 @@ O botão sai do bloco `{% empty %}` de `lista.html` e passa a viver no cabeçalh
 mesmo `pode_criar` que a view já calcula. O detalhe do Edital publicado ganha link para
 `/api/v1/public/publicacoes/{id}/documento`, que já existe e é público.
 
-A reordenação é feita no cliente: os botões movem a linha no DOM e a gravação existente já deriva
-`order` da posição (`interface/forms.py:97`). Nenhum endpoint, nenhum command — FR-005. O
-`id` de cada Evento viaja em campo oculto e é preservado por `replace_draft`, o que satisfaz a
-exigência de identidade.
+A reordenação exige uma correção no parser, e não só botões. `_indices` recolhe os índices em um
+conjunto e os devolve **ordenados numericamente** (`interface/forms.py:20-26`): a posição da linha
+no DOM é descartada antes do `enumerate` que produz `order`. Mover a linha na tela, sozinho, não
+muda nada.
+
+A ordem passa a ser dado explícito: cada linha carrega um campo oculto `order`, que os botões
+atualizam, e `ler_eventos` ordena por ele em vez de derivar da posição. É menor do que renumerar os
+nomes dos campos no cliente, não depende de o DOM e o parser concordarem sobre convenção implícita,
+e sobrevive a buracos de índice deixados por remoções. **Continua sem endpoint e sem command novo**
+— FR-005 —, mas não sem backend: a afirmação anterior estava errada. O `id` de cada Evento viaja em
+campo oculto e é preservado por `replace_draft`, o que satisfaz a exigência de identidade.
 
 `update_edital_identification` é o único command novo desta entrega: exige status
 `EM_ELABORACAO`, `expected_revision`, permissão e registro de auditoria, como os commands vizinhos
@@ -177,21 +185,29 @@ texto livre por linhas com campos próprios, incluindo percentual e fundamento.
 A faixa do percentual entra em `editais/domain/perfis.py`, no caminho que a interface e a API
 atravessam igualmente — não no serializer.
 
-### Entrega 5 — Seções do Edital (US4)
+### Entrega 5 — Edição do conteúdo textual (US4)
 
-O catálogo de seções é declarado em `editais/domain/secoes.py`: chave, título, ordem e tipo. Seção
+A **forma** das seções já entrou na Entrega 3 (ver *Encadeamento*). Esta entrega acrescenta o que
+falta para o usuário: a etapa de conteúdo no assistente, o modelo `SecaoEdital` que persiste o texto
+editado e a composição das seções no documento a partir do catálogo.
+
+O catálogo é declarado em `editais/domain/secoes.py`: identidade, chave, título, ordem e tipo. Seção
 gerada nomeia a coleção que a origina e **não tem campo de conteúdo**; seção textual tem conteúdo,
-com texto inicial institucional vindo do catálogo. `SecaoEdital` persiste apenas o conteúdo das
-textuais, referenciado pela chave do catálogo.
-
-No snapshot, `sections` traz todas as seções em ordem; as geradas trazem `source` e nenhum
-`content`. É essa ausência que torna a seção gerada não endereçável, sem regra nova na gramática.
+com texto inicial institucional vindo do catálogo. `SecaoEdital` persiste apenas o texto das
+textuais que foram editadas — ausência de linha significa "texto padrão do catálogo".
 
 ### Encadeamento
 
-`SCHEMA_VERSION` sobe para 2 na Entrega 3, junto com a primeira coleção nova, e a guarda de versão
-canônica de FR-045 entra na mesma entrega. A Entrega 5 acrescenta `sections` sem novo incremento —
-o esquema 2 é o desta feature inteira, conforme FR-043.
+**A forma canônica da versão 2 entra inteira no primeiro PR que a produz.** `stages` e `sections`
+nascem juntas no snapshot, no esquema OpenAPI e nos três registros declarativos, na Entrega 3 —
+junto com a guarda de versão canônica de FR-047. Na Entrega 3 as seções já existem no conteúdo
+publicado, todas com o texto padrão do catálogo, porque nada ainda as edita.
+
+Isso não é preciosismo. Subir para 2 na Entrega 3 e acrescentar `sections` na Entrega 5 produziria
+snapshots de versão 2 com e sem a propriedade, e a versão canônica deixaria de identificar uma
+forma. Como as entregas são integradas verticalmente e cada uma vai a produção do ponto de vista da
+demonstração, a divergência seria real, não hipotética. O esquema 2 é o desta feature inteira
+(FR-045); a interface de edição pode chegar depois, o contrato não.
 
 ## Complexity Tracking
 

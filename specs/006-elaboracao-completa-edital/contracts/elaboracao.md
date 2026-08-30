@@ -36,8 +36,8 @@ rascunho e o devolve preserva as modalidades, suas regras e suas identidades.
 ### `sections` no rascunho
 
 O rascunho envia apenas as seções **textuais** que tiveram o conteúdo editado, identificadas pela
-chave do catálogo. Seção gerada não é enviada, e seção textual ausente significa "conteúdo padrão do
-catálogo", não "seção vazia".
+`key` do catálogo — a entrada não precisa do UUID, que o snapshot deriva. Seção gerada não é enviada,
+e seção textual ausente significa "conteúdo padrão do catálogo", não "seção vazia".
 
 ## 2. Recusas novas
 
@@ -67,8 +67,9 @@ Duas propriedades do conteúdo publicado são de contrato, e não de implementa�
 **Seção gerada não carrega `content`.** Ela declara `source`, e o documento a compõe a partir da
 coleção nomeada. Não há cópia do Cronograma, dos Perfis ou das Etapas como texto.
 
-**A chave da seção é o identificador.** `sections` é endereçada por `id` como as demais coleções, e
-esse `id` é a chave do catálogo — estável por construção e legível no caminho de Retificação.
+**A seção tem `id` e `key`.** O `id` é UUID determinístico sobre `(editalId, key)`, porque o seletor
+da gramática só aceita UUID; a `key` é o identificador textual do catálogo, legível e estável. A
+seção tem identidade desde o primeiro snapshot, antes de existir linha persistida.
 
 ## 4. Retificação — o que passa a ser endereçável
 
@@ -81,21 +82,34 @@ Aceito:
 REPLACE /stages/id=<uuid>/name
 REPLACE /stages/id=<uuid>/minimumScore
 REMOVE  /stages/id=<uuid>
-ADD     /stages
-REPLACE /sections/id=<chave>/content            # seção textual
+ADD     /stages/-                                # acréscimo é sempre no token de fim de lista
+REPLACE /sections/id=<uuid>/content              # seção textual
 REPLACE /profiles/id=<uuid>/competitionModalities/id=<uuid>/normativeRule/percentage
 ```
 
-Recusado, e por qual mecanismo já existente:
+O `id` de uma seção é UUID, não a chave textual do catálogo: o seletor da gramática recusa qualquer
+outro texto (`publicacoes/domain/changes.py:138-139`). A `key` viaja no item, como identificador
+legível, mas não endereça.
+
+Recusado, e por qual mecanismo:
 
 | Caminho | Recusa | Origem |
 |---|---|---|
-| `/stages/0/name` | endereçamento posicional em coleção com chave | `004` |
-| `/sections/id=<gerada>/content` | caminho inexistente — a seção gerada não tem esse campo | `004`, por ausência |
-| `REPLACE /stages/id=<uuid>` deixando a Etapa sem nome | resultado malformado | `005` |
+| `/stages/0/name` | endereçamento posicional em coleção com chave | `004`, já existente |
+| `/sections/id=cronograma/content` | seletor exige UUID | `004`, já existente |
+| `/sections/id=<gerada>/content` | caminho inexistente — a seção gerada não tem esse campo | `004`, por ausência do campo |
+| `REPLACE /stages/id=<uuid>` deixando a Etapa sem nome | resultado malformado | `005`, por declaração da forma |
+| `REPLACE /stages/id=<uuid>/weight` com `"banana"` | forma decimal violada | `005`, por padrão declarado |
+| `ADD /sections/-`, `REMOVE /sections/id=<uuid>` | topologia diverge do catálogo | **verificação nova** |
+| troca de `type`, `order`, `title`, `key` ou `source` de seção | topologia diverge do catálogo | **verificação nova** |
+| seção textual sem `content`, ou gerada com `content` | topologia diverge do catálogo | **verificação nova** |
+| `scheduleEventId` que não existe em `schedule` | referência quebrada | **verificação nova** |
 
-A terceira linha é consequência de declarar `ETAPA_PUBLICADA` em `COLECOES_PUBLICADAS`: a
-verificação de forma da `005` passa a cobrir Etapas sem código novo.
+As quatro últimas não decorrem da declaração de forma: `Campo` verifica um campo por vez e não
+expressa coerência entre campos. Sem elas, uma Retificação faria sobre o conteúdo publicado o que a
+interface impede — desmontar o catálogo fixo e romper a fonte normativa única, justamente onde mais
+importa. São duas verificações direcionadas, no arquivo que já faz a verificação de publicação, e
+não um mecanismo de regras (D-011).
 
 ## 5. Prévia do documento
 
@@ -117,6 +131,9 @@ parece publicado sem ter sido é risco normativo.
 
 - `RascunhoInput`: acrescentar `stages` e `sections`; declarar `id` e `normativeRule` em
   `ModalidadeInput`.
+- **Ambos os esquemas de saída entram juntos**, no mesmo PR que produz a versão 2: `sections` não
+  pode chegar depois de `stages`, sob pena de existirem dois formatos de conteúdo declarando a
+  mesma versão canônica.
 - Esquemas de saída: acrescentar `EtapaPublicada` e `SecaoPublicada`; referenciá-los em
   `EditalPublicado`.
 - `ModalidadePublicada`: declarar `id` como obrigatório.

@@ -10,22 +10,31 @@ alternativa recusada — para que não volte durante a implementação.
 
 ---
 
-## D-001 — Reordenar sem endpoint e sem command
+## D-001 — Ordem como dado explícito, sem endpoint e sem command
 
-**Decisão**: os botões de subir e descer movem a linha no DOM; a gravação existente deriva a ordem
-da posição das linhas no POST.
+**Decisão**: cada linha de Evento e de Etapa carrega um campo oculto `order`, atualizado pelos botões
+de subir e descer; `ler_eventos` passa a ordenar por esse campo em vez de derivar a ordem da posição
+de leitura.
 
-**Racional**: `interface/forms.py:97` já produz `order` por `enumerate` sobre os índices lidos, e
-`replace_draft` já preserva o `id` de cada Evento. A capacidade inteira cabe em botões, uma função
-de JavaScript e nenhuma linha de backend. FR-005 proíbe explicitamente criar endpoint enquanto isso
-bastar.
+**Racional, e correção de uma afirmação errada**: a versão anterior deste documento dizia que bastava
+mover a linha no DOM porque a gravação já derivaria a ordem da posição. **Não derivaria.** `_indices`
+recolhe os índices em um conjunto e os devolve ordenados numericamente
+(`interface/forms.py:20-26`); a ordem visual é descartada antes do `enumerate` que produz `order`.
+Mover a linha na tela, sozinho, não mudaria nada — e o defeito seria silencioso, porque a tela
+mostraria a ordem nova e o banco guardaria a antiga.
 
-**Alternativas recusadas**: `move_schedule_event` como command com posição de destino — introduz
-semântica de movimento onde a gravação já expressa a ordem final, e obrigaria a conciliar duas
-fontes de verdade sobre a mesma coisa. Reordenação por arrastar — depende de biblioteca ou de muito
-JavaScript próprio, e degrada em teclado e leitor de tela, contra o que a `002` estabeleceu.
+Tornar a ordem explícita é menor do que a alternativa e mais honesto: a ordem passa a ser dado
+enviado, e não convenção implícita que o cliente e o parser precisam manter em acordo.
 
-**Consequência a testar**: mover uma linha e salvar não pode alterar o `id` de nenhum Evento.
+**Alternativas recusadas**: renumerar os nomes dos campos no cliente ao mover a linha — mantém o
+parser intocado, mas torna a correção do formulário dependente de o JavaScript reindexar
+corretamente, e quebra em silêncio se uma remoção deixar buraco. `move_schedule_event` como command
+com posição de destino — introduz semântica de movimento onde a gravação já expressa a ordem final.
+Reordenação por arrastar — depende de biblioteca ou de muito JavaScript próprio, e degrada em
+teclado e leitor de tela, contra o que a `002` estabeleceu.
+
+**Consequência a testar**: mover uma linha e salvar muda a ordem persistida **e** não altera o `id`
+de nenhum Evento. O primeiro é o teste que a afirmação anterior teria deixado passar.
 
 ---
 
@@ -96,23 +105,34 @@ identidades preservadas.
 (`publicacoes/domain/colecoes.py`), a `COLECOES_PUBLICADAS`
 (`editais/domain/validation.py`) e ao dicionário produzido por `edital_snapshot`.
 
-**Racional**: os três registros são declarativos e existem exatamente para isto. A `005` já garante
-por teste que uma coleção presente no snapshot e ausente da declaração falhe a suíte, de modo que
-esquecer um dos registros aparece como falha, não como silêncio. Endereçamento, proveniência,
-consolidação e verificação de forma passam a cobrir as coleções novas sem código novo.
+**Racional**: os três registros são declarativos e existem exatamente para isto. Endereçamento,
+proveniência, consolidação e verificação de forma passam a cobrir as coleções novas sem código novo.
+
+**Ressalva, corrigindo afirmação anterior**: não é verdade que a suíte hoje acuse sozinha o
+esquecimento de qualquer um dos três. A `005` cobre a **coerência estrutural** do que está
+declarado, mas a transcrição da forma publicada é conferida contra uma lista explícita —
+`FORMAS` em `tests/contract/test_forma_publicada.py:67-70` nomeia `PerfilPublicado` e
+`EventoPublicado` um a um. Acrescentar uma coleção ao snapshot e esquecer de declará-la em
+`COLECOES_PUBLICADAS` não faria falhar nada: a lista simplesmente não a mencionaria.
+
+**Por isso nasce um teste de cobertura**, e ele é tarefa desta feature: para cada coleção presente no
+snapshot, exigir que exista forma declarada em `COLECOES_PUBLICADAS` e esquema correspondente no
+`openapi.yaml`. É o que transforma "esquecemos de declarar" em falha de suíte, e é o que a
+afirmação anterior deu como já existente.
 
 **Alternativas recusadas**: descobrir coleções em tempo de execução pela presença de `id` — é
 justamente o que o cabeçalho de `colecoes.py` descarta, porque acerta hoje e falha em silêncio no
-dia em que nascer coleção sem identificador.
+dia em que nascer coleção sem identificador. Continuar com a lista explícita e confiar na revisão —
+é exatamente o modo de falha que se acabou de observar neste plano.
 
 **Consequência a testar**: uma Retificação que endereça `/stages/id=<uuid>/name` é aceita sem
-alteração da gramática.
+alteração da gramática; e uma coleção acrescentada ao snapshot sem declaração falha a suíte.
 
 ---
 
 ## D-006 — Seção gerada não tem campo de conteúdo
 
-**Decisão**: no snapshot, a seção gerada carrega `key`, `title`, `order`, `type` e `source`; a
+**Decisão**: no snapshot, a seção gerada carrega `id`, `key`, `title`, `order`, `type` e `source`; a
 seção textual carrega também `content`. A recusa a retificar conteúdo gerado não é uma regra: é
 consequência de não haver caminho a endereçar.
 
@@ -159,7 +179,7 @@ versão que o conteúdo não tem. A recusa é uma comparação; a alternativa é
 
 **Alternativas recusadas**: conversão v1→v2 do conteúdo publicado, ou atualização em massa dos
 snapshots existentes — ambas constroem compatibilidade para zero linhas publicadas, contra P-002 e
-FR-046.
+FR-048.
 
 **Consequência a testar**: consolidar sobre conteúdo-base de versão anterior é recusado com erro
 próprio, e não gravado com a versão errada.
@@ -178,6 +198,70 @@ que é exatamente o canal onde o dado será digitado.
 a certeza de divergirem. `CheckConstraint` apenas — recusa correta, mensagem inútil: o usuário
 receberia erro de banco em vez de indicação de onde corrigir. A restrição de banco pode existir como
 segunda camada, mas não substitui a verificação de domínio.
+
+---
+
+## D-010 — A seção tem `id` UUID e `key` textual, não uma coisa só
+
+**Decisão**: cada item de `sections` carrega `id`, um UUID determinístico derivado de
+`(edital.id, key)` por `uuid5`, e `key`, o identificador textual do catálogo. O caminho de
+Retificação é `/sections/id=<uuid>/content`.
+
+**Racional, e correção de um erro**: a versão anterior dizia que a `key` do catálogo seria o `id` da
+coleção. **Não pode ser.** O seletor exige UUID — `selector_uuid` recusa qualquer outro texto e a
+recusa é explícita: "o seletor id= exige um UUID"
+(`publicacoes/domain/changes.py:101-113`, `:138-139`). `/sections/id=cronograma/content` seria
+recusado como seletor inválido, e a coleção ficaria inendereçável — quebrando FR-038 sem que nada
+no plano acusasse.
+
+Determinístico, e não aleatório, porque a seção precisa ter identidade **antes de existir linha em
+`SecaoEdital`**: uma seção gerada nunca tem linha, e uma textual só passa a ter depois da primeira
+edição. Derivar de `(edital.id, key)` dá identidade estável desde o primeiro snapshot, igual entre
+duas gerações do mesmo conteúdo, e distinta entre Editais.
+
+**Alternativas recusadas**: gerar linha em `SecaoEdital` para toda seção no momento da criação do
+Edital, só para ter UUID — persistiria estrutura que é declaração, e traria de volta o problema que
+D-007 evita. Alargar a gramática para aceitar seletor textual — altera `changes.py`, contra P-003, e
+por um caso que `uuid5` resolve sem tocar em nada.
+
+**Consequência a testar**: o `id` de uma seção é o mesmo antes e depois de editá-la, e antes e
+depois de republicar; e `REPLACE /sections/id=<uuid>/content` de uma seção textual é aceito.
+
+---
+
+## D-011 — Duas verificações direcionadas, e nenhum framework
+
+**Decisão**: além da forma declarada, duas verificações próprias entram na validação de publicação —
+a topologia de `sections` contra o catálogo, e a integridade de `stages[*].scheduleEventId` contra
+`schedule`. Ambas produzem erro impeditivo, pelo mecanismo de `ValidationFinding` já existente.
+
+**Racional**: `Campo` verifica presença, tipo, nulabilidade, formato e faixa **de um campo**, e o
+próprio código registra que a coerência entre campos ficou de fora de propósito. Confiar só nela
+deixaria uma Retificação fazer, sobre conteúdo publicado, o que a interface impede: acrescentar
+seção com `ADD /sections/-`, remover uma seção do catálogo, trocar `type`, `order`, `title` ou
+`source`, esvaziar o conteúdo de uma textual ou dar conteúdo a uma gerada. O catálogo fixo e a fonte
+normativa única deixariam de valer exatamente onde mais importam — depois da publicação.
+
+O mesmo vale para as Etapas: uma Retificação pode remover o Evento referenciado ou apontar
+`scheduleEventId` inexistente, porque a verificação de forma confere que é um UUID, não que ele
+exista.
+
+São **duas verificações**, escritas para estes dois casos, no arquivo que já faz a verificação de
+publicação. Não é um mecanismo de regras entre campos: expressar isso de forma genérica seria, nas
+palavras do próprio `validation.py`, o primeiro passo para inventá-lo.
+
+**Ainda pela via declarativa**: `weight` e `minimumScore` recebem `padrao` com a forma decimal
+canônica, como `INSTANTE` já faz para o instante. Sem isso, declará-los apenas como texto aceitaria
+`"banana"` depois de uma Retificação.
+
+**Alternativas recusadas**: acrescentar coerência entre campos a `Campo` — generaliza a partir de
+dois casos e contraria a nota deliberada do módulo. Recusar `sections` como coleção endereçável para
+não precisar protegê-la — tornaria o texto do Edital incorrigível depois de publicado, que é
+justamente o que a Retificação existe para permitir.
+
+**Consequência a testar**: `ADD /sections/-`, `REMOVE /sections/id=<uuid>` e a troca de `type` são
+recusados; `REPLACE` de `scheduleEventId` para UUID inexistente é recusado; `REPLACE` do `content`
+de uma seção textual é aceito.
 
 ---
 

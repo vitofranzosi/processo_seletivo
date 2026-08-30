@@ -47,8 +47,8 @@ Há ainda três becos sem saída na jornada, todos verificados:
 **A fundação não é o problema.** A interface não tem um único `ModelForm`, as views nunca escrevem
 em modelos e falam o vocabulário do snapshot canônico, não o das colunas (`interface/views.py:1-6`).
 O ponto de extensão da gramática de Retificação é declarativo: uma coleção nova entra acrescentando
-sua forma a `COLECOES_COM_CHAVE` (`publicacoes/domain/colecoes.py:18-24`), e a `005` já garante por
-teste que uma coleção não declarada falhe a suíte em vez de passar em silêncio.
+sua forma a `COLECOES_COM_CHAVE` (`publicacoes/domain/colecoes.py:18-24`), e a `005` verifica a
+coerência estrutural do que está declarado.
 
 Esta feature não conserta a arquitetura. Ela reorienta a arquitetura existente para completar o
 objeto central do produto: o Edital em elaboração.
@@ -96,7 +96,7 @@ gramática de `publicacoes/domain/changes.py` é sinal de que o conceito foi mod
 
 O assistente continua gravando o rascunho pelo mecanismo atual. Command próprio só se justifica se
 uma operação desta feature tiver semântica que "salvar o formulário" não expressa. Reordenar não
-tem: a ordem já é derivada da posição das linhas no POST (`interface/forms.py:97`).
+tem: a ordem viaja como campo do próprio formulário e a gravação existente a persiste.
 
 ### P-005 — Cotas são declarativas
 
@@ -394,7 +394,10 @@ alteração no documento junto das seções geradas a partir dos dados estrutura
   ou padrão, e quem elabora DEVE poder alterá-lo antes da publicação.
 - **FR-038**: As seções DEVEM integrar o snapshot publicado e a prévia e o documento DEVEM respeitar
   sua ordem.
-- **FR-039**: Seções textuais DEVEM ser retificáveis por chave estável.
+- **FR-039**: Seções textuais DEVEM ser retificáveis por identidade estável. *A identidade é um
+  UUID, e não a chave textual do catálogo: o seletor da gramática só aceita UUID
+  (`publicacoes/domain/changes.py:101-113`). A chave textual viaja no item, legível, mas não
+  endereça.*
 - **FR-040**: Cada conteúdo normativo DEVE ter uma única fonte. Uma seção gerada NÃO PODE carregar
   conteúdo próprio no snapshot: carrega chave, título, ordem e a indicação do dado que a origina.
   *A razão é semântica, não de restrição de banco — a proveniência é única por `(versão, caminho)`
@@ -404,29 +407,39 @@ alteração no documento junto das seções geradas a partir dos dados estrutura
   nova na gramática**: sem campo de conteúdo, endereçá-lo já falha pelo erro de caminho inexistente
   que a `004` implementou.*
 
+- **FR-041**: A topologia das seções DEVE ser preservada depois da publicação. A verificação de
+  publicação DEVE recusar conteúdo em que uma seção tenha sido acrescentada ou removida, em que
+  `type`, `order`, `title`, `key` ou origem divirjam do catálogo, em que uma seção textual esteja
+  sem conteúdo, ou em que uma seção gerada tenha conteúdo. *Só o texto das seções textuais varia.
+  A forma declarada não alcança isto — ela verifica um campo por vez — e sem a verificação o
+  catálogo fixo valeria na elaboração e deixaria de valer exatamente onde mais importa, depois de
+  publicado.*
+
 ### Revisão e publicação
 
-- **FR-041**: A Revisão DEVE consolidar o que está pronto e o que está pendente, indicando para cada
+- **FR-042**: A Revisão DEVE consolidar o que está pronto e o que está pendente, indicando para cada
   pendência a etapa onde ela se resolve e oferecendo acesso direto.
-- **FR-042**: As validações de publicação existentes DEVEM ser ampliadas apenas para os novos dados
+- **FR-043**: As validações de publicação existentes DEVEM ser ampliadas apenas para os novos dados
   obrigatórios; NÃO DEVE ser criado framework de regras.
-- **FR-043**: A publicação DEVE permanecer disponível somente quando as invariantes já definidas
+- **FR-044**: A publicação DEVE permanecer disponível somente quando as invariantes já definidas
   forem satisfeitas.
 
 ### Snapshot e versão canônica
 
-- **FR-044**: A feature incrementa `SCHEMA_VERSION` uma única vez, cobrindo as coleções novas.
-- **FR-045**: Toda coleção nova de entidades identificáveis DEVE ser declarada no registro existente
-  de coleções com chave; a suíte DEVE falhar se uma coleção do snapshot não estiver declarada — a
-  garantia já existente permanece válida.
-- **FR-046**: A versão canônica registrada em uma materialização DEVE corresponder à versão do
+- **FR-045**: A feature incrementa `SCHEMA_VERSION` uma única vez, cobrindo as coleções novas.
+- **FR-046**: Toda coleção nova de entidades identificáveis DEVE ser declarada nos registros
+  existentes de coleções com chave e de forma publicada. A suíte DEVE falhar quando uma coleção
+  presente no snapshot não estiver declarada nos dois — *essa cobertura não existe hoje: a
+  conferência da forma publicada é feita contra uma lista nomeada item a item
+  (`tests/contract/test_forma_publicada.py:67-70`), e criá-la é trabalho desta feature.*
+- **FR-047**: A versão canônica registrada em uma materialização DEVE corresponder à versão do
   conteúdo materializado. Hoje a Publicação de Retificação carimba a constante global
   (`publicacoes/application/retificacoes.py:564`) sobre conteúdo consolidado a partir de uma
   Publicação-base, que carrega sua própria `schemaVersion`
   (`publicacoes/application/publish_edital.py:84`); depois do incremento as duas podem divergir. A
   consolidação DEVE recusar conteúdo-base cuja versão difira da vigente. *Isto é uma verificação e
   uma recusa, não uma estratégia: uma comparação e um teste.*
-- **FR-047**: NÃO DEVE ser introduzido mecanismo de migração, conversão ou compatibilidade entre
+- **FR-048**: NÃO DEVE ser introduzido mecanismo de migração, conversão ou compatibilidade entre
   versões de esquema. Não há conteúdo publicado a preservar; seeds e fixtures são regenerados. *A
   alternativa — converter v1 em v2 — construiria, para um único registro de demonstração, a máquina
   que a `P-002` proíbe.*
