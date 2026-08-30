@@ -597,12 +597,22 @@ components:
         id: { $ref: '#/components/schemas/Id' }
         type: { type: string }
         description: { type: string }
-        startAt: { type: string, format: date-time }
-        endAt: { type: [string, 'null'], format: date-time }
+        # `pattern` declara a forma **canônica** que o sistema materializa, e é deliberadamente
+        # mais estreita que RFC 3339: separador `T` maiúsculo, segundos obrigatórios, fração
+        # opcional e deslocamento `±HH:MM`. Fica de fora o que o RFC permitiria e o sistema nunca
+        # produz — `Z`, minúsculas — e o que só o parser ISO 8601 aceitaria: data de semana,
+        # formato básico, espaço no lugar do `T`. Declarar a forma estreita evita implementar o
+        # RFC informalmente para validar um valor que nós mesmos escrevemos.
+        startAt:
+          type: string
+          format: date-time
+          pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?[+-]\d{2}:\d{2}$'
+        endAt:
+          type: [string, 'null']
+          format: date-time
+          pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?[+-]\d{2}:\d{2}$'
         order: { type: integer, minimum: 0 }
         status: { type: string }
-      # `date-time` é RFC 3339: data, hora e fuso. Data isolada e instante sem fuso não satisfazem
-      # o formato, e a verificação de integridade os recusa — o snapshot nunca os materializa.
     AtoAdministrativoRequest:
       type: object
       additionalProperties: false

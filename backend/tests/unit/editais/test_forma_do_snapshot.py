@@ -207,20 +207,35 @@ def test_modalidade_que_nao_e_objeto_e_violacao(item):
         ("2026-08-30T10:00:00", "sem fuso"),
         ("10:00:00", "sem data"),
         ("ontem", "não é instante"),
+        ("2026-W35-7T10:00:00+00:00", "data de semana, que o parser ISO aceita"),
+        ("2026-08-30 10:00:00+00:00", "espaço no lugar do T"),
+        ("20260830T100000+0000", "formato básico"),
+        ("2026-08-30T10:00:00Z", "Z no lugar do deslocamento — o sistema nunca o escreve"),
+        ("2026-08-30t10:00:00z", "minúsculas, que o RFC permite e o sistema não produz"),
+        ("2026-02-30T10:00:00+00:00", "forma certa, dia inexistente"),
     ],
 )
 def test_instante_incompleto_e_violacao_de_formato(valor, por_que):
-    """`date-time` é data, hora e fuso.
+    """A forma canônica do instante, e por que o parser sozinho não bastava.
 
-    `datetime.fromisoformat` aceita data isolada e instante ingênuo. Um Cronograma assim é ambíguo
-    justamente onde a vigência precisa ser exata, e o snapshot original nunca o produz.
+    `datetime.fromisoformat` é parser de ISO 8601, não validador de instante: aceita data isolada,
+    instante ingênuo, data de semana, formato básico e espaço no lugar do `T`. O padrão declarado no
+    contrato recusa tudo isso. E o padrão sozinho aceitaria `2026-02-30`, que tem a forma certa e
+    não é um dia — quem a recusa é o parser. Os dois juntos, e nenhum basta.
     """
     conteudo = com_violacao(conteudo_normativo(), "schedule", 0, "startAt", valor)
 
     assert impeditivos(conteudo)[0].code == v.FORMATO_INVALIDO, por_que
 
 
-@pytest.mark.parametrize("valor", ["2026-08-30T10:00:00+00:00", "2026-08-30T10:00:00-03:00"])
+@pytest.mark.parametrize(
+    "valor",
+    [
+        "2026-08-30T10:00:00+00:00",
+        "2026-08-30T10:00:00-03:00",
+        "2026-10-01T12:00:37.482913+00:00",
+    ],
+)
 def test_instante_com_data_hora_e_fuso_passa(valor):
     conteudo = com_violacao(conteudo_normativo(), "schedule", 0, "startAt", valor)
 

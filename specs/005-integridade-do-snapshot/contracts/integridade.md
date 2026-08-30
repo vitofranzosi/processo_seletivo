@@ -39,7 +39,7 @@ impeditivo** (FR-006):
 | Presença | campo declarado obrigatório está ausente |
 | Tipo | valor não é do tipo declarado — denominação como lista, vagas como texto, requisitos como texto |
 | Nulabilidade | valor é nulo onde não se admite nulo |
-| Formato | valor não satisfaz o formato declarado — `startAt` que não é data-e-hora |
+| Formato | valor não satisfaz o formato declarado — `startAt` fora da forma canônica do instante |
 | Restrição declarada | valor fora do que o contrato já escreve — vagas negativas, tipo de reserva fora da enumeração |
 
 **Valor vazio admissível não é violação** (FR-007). Lista sem elementos continua sendo lista; texto em branco

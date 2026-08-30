@@ -51,14 +51,20 @@ FR-007 entre "não preenchido" e "malformado".
 | `id` | sim | texto | não | formato uuid |
 | `type` | sim | texto | não | — |
 | `description` | sim | texto | não | — |
-| `startAt` | sim | texto | não | data, hora **e** fuso |
-| `endAt` | sim | texto | **sim** | data, hora **e** fuso |
+| `startAt` | sim | texto | não | forma canônica do instante |
+| `endAt` | sim | texto | **sim** | forma canônica do instante |
 | `order` | sim | inteiro | não | mínimo 0 |
 | `status` | sim | texto | não | — |
 
 `status` é produzido pelo sistema e nenhum esquema de entrada o declara. Entra como presença e tipo;
 **a enumeração dele não é declarada aqui**, porque escrevê-la seria inventar restrição, e não
 transcrever uma (FR-009).
+
+**A forma do instante é declarada por `pattern` no contrato, e transcrita.** `datetime.fromisoformat`
+é parser de ISO 8601 e não validador de instante: aceita data de semana, formato básico, espaço no
+lugar do `T`, data isolada e instante sem fuso. Nenhuma dessas formas é materializada pelo sistema, e
+declarar a forma estreita evita implementar RFC 3339 informalmente para conferir um valor que nós
+mesmos escrevemos. O parser continua sendo chamado, porque o padrão sozinho aceitaria `2026-02-30`.
 
 ## Restrições que se aplicam, e a que não se aplica
 
@@ -96,7 +102,9 @@ Sem campo novo. `ValidationFinding` já carrega severidade, código, mensagem e 
   tipo declarado, nulo apenas onde admitido, formato satisfeito e dentro das restrições escritas.
 - Uma coleção declarada que exista e não seja lista é violação, e não silêncio: um objeto no lugar
   dela é *truthy*, de modo que a condição de raiz passava e o laço por entidade não percorria nada.
-- `date-time` é data, hora e fuso. Data isolada e instante ingênuo não satisfazem o formato.
+- O instante segue a **forma canônica** que o contrato declara por `pattern`: `T` maiúsculo,
+  segundos obrigatórios, fração opcional, deslocamento `±HH:MM`. É deliberadamente mais estreita
+  que RFC 3339 — descreve o que o sistema materializa, e não tudo o que a norma permitiria.
 - A invariante vale em **cada fronteira de vigência** materializada, e não só na primeira.
 - Campo que a forma canônica não declara nunca é motivo de recusa.
 - Coerência entre campos não é verificada, e a garantia não a inclui.

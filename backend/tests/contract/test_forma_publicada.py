@@ -48,6 +48,7 @@ def declarado(esquema, nome):
         "formato": formato,
         "minimo": propriedade.get("minimum"),
         "valores": tuple(propriedade.get("enum", ())),
+        "padrao": propriedade.get("pattern", ""),
     }
 
 
@@ -59,6 +60,7 @@ def transcrito(campo):
         "formato": campo.formato,
         "minimo": campo.minimo,
         "valores": campo.valores,
+        "padrao": campo.padrao,
     }
 
 
@@ -147,3 +149,15 @@ def test_nenhum_outro_campo_declara_tipo_de_item(esquemas):
             propriedade = esquemas[nome]["properties"][campo.nome]
             tem_items = "items" in propriedade and "type" in propriedade["items"]
             assert (campo.tipo_do_item is not None) == tem_items, campo.nome
+
+
+@pytest.mark.contract
+def test_o_padrao_do_instante_e_o_do_contrato(esquemas):
+    """O padrão não é interpretação nossa da norma: é transcrição do que o contrato escreve.
+
+    Ele é deliberadamente mais estreito que RFC 3339 — descreve a forma que o sistema materializa.
+    Se um dia ele mudar no contrato sem mudar aqui, este teste falha antes de a divergência virar
+    recusa indevida.
+    """
+    for campo in ("startAt", "endAt"):
+        assert esquemas["EventoPublicado"]["properties"][campo]["pattern"] == validation.INSTANTE

@@ -22,6 +22,7 @@ enumeração inclusive. O que ele não escreve, não se escreve aqui: coerência
 que ninguém tomou.
 """
 
+import re
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
@@ -58,6 +59,7 @@ class Campo:
     minimo: int | None = None
     valores: tuple[str, ...] = ()
     tipo_do_item: type | None = None
+    padrao: str = ""
 
 
 RESERVA = ("NONE", "LIMITED", "UNLIMITED")
@@ -79,12 +81,17 @@ PERFIL_PUBLICADO = (
     Campo("competitionModalities", list, tipo_do_item=dict),
 )
 
+# A forma canônica do instante, transcrita de `EventoPublicado` no contrato: `T` maiúsculo,
+# segundos obrigatórios, fração opcional, deslocamento `±HH:MM`. É o que `datetime.isoformat()`
+# produz sobre um instante com fuso, que é o que o snapshot materializa.
+INSTANTE = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?[+-]\d{2}:\d{2}$"
+
 EVENTO_PUBLICADO = (
     Campo("id", str, formato="uuid"),
     Campo("type", str),
     Campo("description", str),
-    Campo("startAt", str, formato="date-time"),
-    Campo("endAt", str, admite_nulo=True, formato="date-time"),
+    Campo("startAt", str, formato="date-time", padrao=INSTANTE),
+    Campo("endAt", str, admite_nulo=True, formato="date-time", padrao=INSTANTE),
     Campo("order", int, minimo=0),
     # `status` é produzido pelo sistema e nenhum esquema declara a enumeração dele. Entra como
     # presença e tipo; escrever os valores aqui seria inventar restrição, não transcrever uma.
@@ -109,29 +116,29 @@ def _e_do_tipo(valor, tipo):
     return isinstance(valor, tipo)
 
 
-def _instante_completo(valor):
-    """`date-time` é data, hora **e** fuso — o que o contrato declara e o snapshot materializa.
-
-    `datetime.fromisoformat` aceita `2026-08-30` e `2026-08-30T10:00:00`, que não são instantes:
-    o primeiro não tem hora e o segundo não tem fuso. Um Cronograma com data sem hora ou com
-    instante ingênuo é ambíguo justamente onde a vigência precisa ser exata, e uma Retificação
-    conseguia introduzi-lo pelo caminho normal.
-    """
-    momento = datetime.fromisoformat(valor)
-    if momento.tzinfo is None or momento.utcoffset() is None:
-        raise ValueError("instante sem fuso")
-    return momento
-
-
 # Formato declarado que não estivesse aqui levantaria `KeyError` na primeira verificação, e é o
 # comportamento desejado: erro de programação que falha alto vale mais que formato aceito em
 # silêncio por não ter quem o verifique.
-_LEITOR_DE_FORMATO = {"uuid": UUID, "date-time": _instante_completo}
+_LEITOR_DE_FORMATO = {"uuid": UUID, "date-time": datetime.fromisoformat}
 
 
-def _formato_satisfeito(valor, formato):
+def _formato_satisfeito(valor, campo):
+    """A forma, pelo padrão declarado; a validade, pelo leitor.
+
+    Os dois são necessários e nenhum basta. `datetime.fromisoformat` é parser de ISO 8601, não
+    validador de instante: aceita data isolada, instante sem fuso, data de semana, formato básico e
+    espaço no lugar do `T` — formas que o snapshot nunca materializa e que tornariam ambígua
+    justamente a vigência. O padrão as recusa. E o padrão sozinho aceitaria `2026-02-30`, que tem a
+    forma certa e não é um dia; o leitor a recusa.
+
+    O padrão é o do contrato, e é mais estreito que RFC 3339 de propósito: descreve o que este
+    sistema escreve, e não tudo o que a norma permitiria. Validar a norma inteira seria
+    implementá-la informalmente para conferir um valor que nós mesmos produzimos.
+    """
+    if campo.padrao and not re.fullmatch(campo.padrao, valor):
+        return False
     try:
-        _LEITOR_DE_FORMATO[formato](valor)
+        _LEITOR_DE_FORMATO[campo.formato](valor)
     except (ValueError, AttributeError, TypeError):
         return False
     return True
@@ -163,7 +170,7 @@ def _violacao(campo, entidade, caminho):
             f"O campo deveria ser {_NOME_DO_TIPO[campo.tipo]} em {caminho}.",
             caminho,
         )
-    if campo.formato and not _formato_satisfeito(valor, campo.formato):
+    if campo.formato and not _formato_satisfeito(valor, campo):
         return ValidationFinding(
             Severity.BLOCKING_ERROR,
             FORMATO_INVALIDO,
