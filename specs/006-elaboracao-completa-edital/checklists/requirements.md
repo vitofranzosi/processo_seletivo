@@ -41,6 +41,7 @@ tiveram. Ela é verificada aqui, e não só no `plan`.
 - [x] O cenário é executável pelos atores que o sistema realmente exige — verificado: a publicação
       recusa quem elabora, homologa e publica sozinho, e a demonstração declara dois atores
 - [x] O backlog desta feature deriva da jornada, e não do `Out of Scope` da feature anterior
+- [x] O cenário foi **executado**, e não apenas declarado — ver a seção da demonstração abaixo
 
 ## Notas da avaliação
 
@@ -192,6 +193,29 @@ e T044.
 correções pontuais: Perfil, Evento e Etapa contra o Edital; Modalidade contra o Perfil; Regra contra
 a Modalidade; Seção com identidade determinística, sem identificador externo. É o que permite
 verificar a completude de uma vez, em vez de descobrir o elo seguinte a cada revisão.
+
+### Demonstração de ponta a ponta executada (2026-08-30)
+
+O roteiro do `quickstart.md` foi percorrido no navegador, contra um servidor real, com dois
+atores: `ana.elaboradora` elaborou e submeteu; `bruno.homologador` homologou e publicou. Painel →
+`Novo Processo Seletivo` → Identificação alterada → Perfil com duas modalidades e Regra Normativa →
+três Eventos com reordenação por botões → duas Etapas, uma vinculada a Evento → seção textual
+editada → Revisão sem pendências → `Visualizar Edital` → Submissão → Homologação → Publicação →
+documento aberto pelo detalhe.
+
+Confirmado no que não se vê na tela: a ordem movida na tela chegou ao banco (`Resultado final`
+passou a `order` 1); a Regra Normativa sobreviveu à gravação da etapa seguinte com a identidade da
+modalidade **e a dela** preservadas; a prévia trouxe as sete seções na ordem, com Etapas, cota e o
+texto editado, marcada como prévia nas duas páginas e **sem** seção de integridade; o documento
+publicado trouxe o mesmo conteúdo com `Versão do schema: 2` e a declaração de integridade.
+
+**A demonstração encontrou um defeito que a suíte não pegava.** Salvar a etapa `Conteúdo` sem
+editar nada gravava linha para as quatro seções textuais, congelando a redação institucional
+padrão: a regra "ausência de linha significa texto padrão do catálogo" deixava de valer no primeiro
+salvamento, e corrigir o texto padrão em código não alcançaria mais nenhum Edital que tivesse
+passado pela etapa. A leitura passou a enviar apenas o que difere do catálogo, e o caso virou
+teste. É exatamente o tipo de defeito que só o cenário navegável revela — e a razão de o princípio
+VI exigi-lo.
 
 ## Itens que permanecem em aberto
 

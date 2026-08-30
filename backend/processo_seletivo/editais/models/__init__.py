@@ -1,6 +1,7 @@
 from .cronograma import Cronograma, EventoCronograma
 from .etapas import EtapaAvaliacao
 from .perfis import ModalidadeConcorrencia, PerfilVaga, RegraNormativa
+from .secoes import SecaoEdital
 
 __all__ = [
     "Cronograma",
@@ -9,4 +10,5 @@ __all__ = [
     "ModalidadeConcorrencia",
     "PerfilVaga",
     "RegraNormativa",
+    "SecaoEdital",
 ]

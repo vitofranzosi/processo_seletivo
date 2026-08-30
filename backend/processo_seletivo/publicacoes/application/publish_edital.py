@@ -58,6 +58,7 @@ def _sections(edital: Edital) -> list[dict]:
     ainda dispensa regra nova na gramática, porque endereçar um campo que não existe já falha pelo
     erro de caminho inexistente da `004` (FR-040).
     """
+    redigidas = {item.key: item.content for item in edital.secoes.all()}
     return [
         {
             "id": str(secoes.identidade(edital.id, secao.key)),
@@ -65,7 +66,14 @@ def _sections(edital: Edital) -> list[dict]:
             "title": secao.title,
             "order": secao.order,
             "type": secao.type,
-            **({"source": secao.source} if secao.gerada else {"content": secao.default_text}),
+            **(
+                {"source": secao.source}
+                if secao.gerada
+                # Ausência de linha significa "texto padrão do catálogo", e não "seção vazia":
+                # persistir uma linha por seção só para guardar o padrão traria a estrutura de
+                # volta ao banco, que é o que a declaração do catálogo existe para evitar.
+                else {"content": redigidas.get(secao.key, secao.default_text)}
+            ),
         }
         for secao in secoes.CATALOGO
     ]

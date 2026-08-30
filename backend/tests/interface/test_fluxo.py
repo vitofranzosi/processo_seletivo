@@ -520,3 +520,44 @@ def test_modalidades_aparecem_na_previa_e_no_documento_publicado(
     publicado = texto_de_pdf_bytes(bytes(DocumentoPublicado.objects.get().bytes))
     for esperado in ("PPI", "Lei 12.990/2014", "20.0000"):
         assert esperado in publicado, esperado
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_secao_textual_editada_aparece_no_documento(client, seletor_ligado, edital):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    edital.refresh_from_db()
+    assert client.post(
+        reverse("interface:compor-etapa", args=[edital.id, "conteudo"]),
+        {"secao-recursos": "Recurso em até três dias úteis, pelo sistema."},
+    ).status_code == 302
+
+    previa = texto_do_pdf(client.get(reverse("interface:previa", args=[edital.id])))
+    assert "DOS RECURSOS" in previa
+    assert "Recurso em até três dias úteis, pelo sistema." in previa
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_alterar_o_cronograma_reflete_na_secao_gerada_sem_sincronizar_nada(
+    client, seletor_ligado, edital
+):
+    """FR-036 e FR-040: uma fonte por conteúdo normativo.
+
+    A seção do Cronograma não guarda cópia do Cronograma. É por isso que não existe nada a
+    sincronizar — e é por isso que retificar o Evento não pode deixar um texto desatualizado.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    assert "Inscrições" in texto_do_pdf(client.get(reverse("interface:previa", args=[edital.id])))
+
+    edital.refresh_from_db()
+    client.post(
+        reverse("interface:compor-etapa", args=[edital.id, "cronograma"]),
+        dict(EVENTOS, **{"evento-0-description": "Inscrições, com isenção de taxa"}),
+    )
+
+    depois = texto_do_pdf(client.get(reverse("interface:previa", args=[edital.id])))
+    assert "Inscrições, com isenção de taxa" in depois
+    assert "CRONOGRAMA" in depois

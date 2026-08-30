@@ -721,3 +721,90 @@ def test_fragmento_de_modalidade_nasce_com_os_dois_identificadores(
     ]
     assert all(UUID(item) for item in identificadores)
     assert identificadores[0] != identificadores[1]
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_secao_textual_editada_e_gravada_e_reexibida(client, seletor_ligado, edital):
+    """FR-037: o texto institucional nasce padrão e passa a ser o que quem elabora escreveu."""
+    from processo_seletivo.editais.domain import secoes as catalogo
+    from processo_seletivo.editais.models.secoes import SecaoEdital
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    # `replace_draft` é substituição total e exige ao menos um Perfil: gravar qualquer etapa
+    # reenvia o rascunho inteiro, e um rascunho sem Perfil é recusado pelo domínio.
+    compor_rascunho(client, edital, perfis(), eventos())
+    edital.refresh_from_db()
+
+    padrao = catalogo.POR_CHAVE["disposicoes-preliminares"].default_text
+    inicial = client.get(etapa(edital, "conteudo")).content.decode()
+    assert padrao in inicial
+    assert 'name="secao-cronograma"' not in inicial, "seção gerada não tem texto a redigir"
+    assert 'name="secao-disposicoes-preliminares"' in inicial
+
+    resposta = client.post(
+        etapa(edital, "conteudo"),
+        {"secao-disposicoes-preliminares": "Redação revisada pela Procuradoria."},
+    )
+    assert resposta.status_code == 302, resposta.content
+
+    linha = SecaoEdital.objects.get()
+    assert linha.key == "disposicoes-preliminares"
+    assert linha.content == "Redação revisada pela Procuradoria."
+    # Uma identidade só: a da linha é a mesma que o snapshot publica.
+    assert linha.id == catalogo.identidade(edital.id, "disposicoes-preliminares")
+
+    depois = client.get(etapa(edital, "conteudo")).content.decode()
+    assert "Redação revisada pela Procuradoria." in depois
+    assert padrao not in depois
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_secao_textual_sobrevive_a_gravacao_de_outra_etapa(client, seletor_ligado, edital):
+    from processo_seletivo.editais.models.secoes import SecaoEdital
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, perfis(), eventos())
+    edital.refresh_from_db()
+    client.post(etapa(edital, "conteudo"), {"secao-recursos": "Prazo de três dias úteis."})
+
+    edital.refresh_from_db()
+    assert client.post(etapa(edital, "cronograma"), eventos()).status_code == 302
+
+    assert SecaoEdital.objects.get().content == "Prazo de três dias úteis."
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_salvar_conteudo_sem_editar_nada_nao_congela_o_texto_do_catalogo(
+    client, seletor_ligado, edital
+):
+    """O que a demonstração de ponta a ponta revelou, e o `quickstart` não previa.
+
+    A tela mostra as sete seções e envia as quatro textuais preenchidas. Gravar todas criava linha
+    para seção que ninguém tocou, e "ausência de linha significa texto padrão do catálogo" deixava
+    de valer no primeiro salvamento — congelando a redação institucional, de modo que corrigi-la em
+    código não alcançaria nenhum Edital que já tivesse passado por aqui.
+    """
+    from processo_seletivo.editais.domain import secoes as catalogo
+    from processo_seletivo.editais.models.secoes import SecaoEdital
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, perfis(), eventos())
+    edital.refresh_from_db()
+
+    # Exatamente o que a tela reenviaria sem nenhuma edição.
+    intocado = {
+        f"secao-{secao.key}": secao.default_text
+        for secao in catalogo.CATALOGO
+        if not secao.gerada
+    }
+    assert client.post(etapa(edital, "conteudo"), intocado).status_code == 302
+    assert not SecaoEdital.objects.exists(), "nada foi editado; nada precisa de linha"
+
+    edital.refresh_from_db()
+    editado = dict(intocado, **{"secao-recursos": "Três dias úteis, pelo sistema."})
+    assert client.post(etapa(edital, "conteudo"), editado).status_code == 302
+
+    assert [item.key for item in SecaoEdital.objects.all()] == ["recursos"]

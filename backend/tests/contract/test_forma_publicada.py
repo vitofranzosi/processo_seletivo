@@ -234,3 +234,44 @@ def test_toda_colecao_de_entidades_do_snapshot_esta_declarada(
         "coleção-raiz de entidades no snapshot sem forma declarada, ou o contrário: "
         f"{sorted(de_entidades ^ declaradas)}"
     )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+def test_a_identidade_da_secao_e_a_mesma_antes_e_depois_de_editar_e_republicar(
+    api_client, manager_headers, process_payload
+):
+    """D-010: determinística de propósito, e não aleatória.
+
+    A seção precisa ter identidade **antes de existir linha em `SecaoEdital`** — a gerada nunca tem
+    linha, e a textual só passa a ter depois da primeira edição. Derivá-la de `(edital.id, key)` dá
+    identidade estável desde o primeiro snapshot, e é o que torna a coleção endereçável por uma
+    Retificação elaborada sobre um conteúdo anterior à edição.
+    """
+    from processo_seletivo.editais.domain import secoes as catalogo
+    from processo_seletivo.publicacoes.domain.conflicts import previous_hash
+    from tests.fixtures.publicacao import publish_original, retify
+
+    edital = publish_original(api_client, manager_headers, process_payload)
+    primeira = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    caminho = f"/sections/id={catalogo.identidade(edital.id, 'recursos')}/content"
+    antes = {item["key"]: item["id"] for item in primeira.content["sections"]}
+
+    retify(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": caminho,
+                "operation": "REPLACE",
+                "newValue": "Outro prazo recursal.",
+                "expectedPreviousHash": previous_hash(primeira.content, caminho),
+            }
+        ],
+        suffix="i",
+    )
+
+    segunda = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    assert {item["key"]: item["id"] for item in segunda.content["sections"]} == antes
+    editada = next(item for item in segunda.content["sections"] if item["key"] == "recursos")
+    assert editada["content"] == "Outro prazo recursal.", "o conteúdo mudou; a identidade não"

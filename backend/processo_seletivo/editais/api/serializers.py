@@ -95,6 +95,21 @@ class StageSerializer(serializers.Serializer):
     scheduleEventId = serializers.UUIDField(required=False, allow_null=True)
 
 
+class SectionSerializer(serializers.Serializer):
+    """Só as seções **textuais** que tiveram o conteúdo editado.
+
+    A entrada não carrega o UUID: ele é determinístico sobre `(editalId, key)` e o snapshot o
+    deriva. Enviar um identificador aqui abriria a porta para declarar um que não corresponde à
+    chave, e não haveria como dizer qual dos dois vale.
+
+    Seção gerada não é enviada, e seção textual ausente significa "conteúdo padrão do catálogo",
+    não "seção vazia". A recusa de chave fora do catálogo é do domínio, que o command atravessa.
+    """
+
+    key = serializers.CharField(min_length=1, max_length=60)
+    content = serializers.CharField(allow_blank=False)
+
+
 class EditalDraftSerializer(serializers.Serializer):
     """Rascunho normativo do Edital: Perfis e Cronograma.
 
@@ -112,6 +127,7 @@ class EditalDraftSerializer(serializers.Serializer):
     profiles = ProfileSerializer(many=True, allow_empty=False)
     schedule = EventSerializer(many=True)
     stages = StageSerializer(many=True, required=False)
+    sections = SectionSerializer(many=True, required=False)
 
     def validate(self, attrs):
         desconhecidos = sorted(set(self.initial_data) - set(self.fields))

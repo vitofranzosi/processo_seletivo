@@ -1,0 +1,41 @@
+{% extends "interface/compor_base.html" %}
+{% block etapa_titulo %}Conteúdo{% endblock %}
+{% block etapa %}
+<form method="post" id="formulario">
+  {% csrf_token %}
+  <section aria-labelledby="conteudo-titulo">
+    <h2 id="conteudo-titulo">Conteúdo do Edital</h2>
+    {% if pendencias_aqui %}
+    <div class="pendencias" role="status">
+      {% include "interface/_pendencias.html" with itens=pendencias_aqui com_link=False %}
+    </div>
+    {% endif %}
+    <p class="ajuda">As seções do Edital, na ordem em que aparecem no documento. O conjunto e a
+      ordem são do sistema; o que se edita aqui é o texto das seções institucionais. As demais são
+      compostas a partir do que você já cadastrou — corrigi-las é corrigir o dado que as origina.</p>
+
+    {% for secao in secoes %}
+    <fieldset class="linha secao{% if secao.gerada %} gerada{% endif %}">
+      <legend>{{ secao.order }}. {{ secao.title }}</legend>
+      {% if secao.gerada %}
+      <p class="ajuda">Composta automaticamente a partir de <strong>{{ secao.origem }}</strong>.
+        Não há texto a redigir: alterar aquele conteúdo altera esta seção.</p>
+      {% if secao.etapa_da_origem %}
+      <p><a class="acao" href="{% url 'interface:compor-etapa' edital.id secao.etapa_da_origem %}">Ir para {{ secao.origem }}</a></p>
+      {% endif %}
+      {% else %}
+      <p class="campo largo">
+        <label for="secao-{{ secao.key }}">Texto da seção</label>
+        <textarea id="secao-{{ secao.key }}" name="secao-{{ secao.key }}" rows="5"
+                  {% if not editavel %}disabled{% endif %}
+                  aria-describedby="ajuda-{{ secao.key }}">{{ secao.content }}</textarea>
+        <span class="ajuda" id="ajuda-{{ secao.key }}">{% if secao.editada %}Texto revisado por
+          quem elabora.{% else %}Redação institucional padrão — revise antes de submeter.{% endif %}</span>
+      </p>
+      {% endif %}
+    </fieldset>
+    {% endfor %}
+  </section>
+  {% include "interface/_navegacao_etapa.html" %}
+</form>
+{% endblock %}

@@ -3,6 +3,7 @@ from uuid import uuid4
 from django.db import transaction
 
 from processo_seletivo.auditoria.application import record_event
+from processo_seletivo.editais.domain import secoes as secoes_do_catalogo
 from processo_seletivo.editais.domain.cronograma import ScheduleValidationError, validate_schedule
 from processo_seletivo.editais.domain.etapas import StageValidationError, validate_stages
 from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_profiles
@@ -13,6 +14,7 @@ from processo_seletivo.editais.models.perfis import (
     PerfilVaga,
     RegraNormativa,
 )
+from processo_seletivo.editais.models.secoes import SecaoEdital
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.seguranca.application.authorization import require_permission
@@ -88,11 +90,39 @@ def _reject_identifiers_of_other_editais(edital, profiles, schedule, stages):
         )
 
 
+def _validar_secoes(sections):
+    """Só seção textual do catálogo é gravável (FR-034 e FR-036).
+
+    Chave fora do catálogo tentaria acrescentar seção onde o conjunto é fixo; chave de seção
+    gerada tentaria persistir como texto o que é derivado do dado estruturado, criando dois
+    endereços para o mesmo conteúdo normativo.
+    """
+    invalidas = sorted(
+        item["key"] for item in sections if not secoes_do_catalogo.e_textual(item["key"])
+    )
+    if invalidas:
+        raise DomainError(
+            "field_constraint_violated",
+            "Não são seções textuais do catálogo do Edital: " + ", ".join(invalidas),
+            422,
+        )
+
+
 def replace_draft(
-    *, actor, edital_id, expected_revision, profiles, schedule, correlation_id, stages=None
+    *,
+    actor,
+    edital_id,
+    expected_revision,
+    profiles,
+    schedule,
+    correlation_id,
+    stages=None,
+    sections=None,
 ):
     require_permission(actor, "edital:elaborar")
     stages = list(stages or [])
+    sections = list(sections or [])
+    _validar_secoes(sections)
     try:
         validate_profiles(profiles)
     except ProfileValidationError as exc:
@@ -198,6 +228,20 @@ def replace_draft(
                     evento_id=stage.get("scheduleEventId"),
                 )
                 for stage in stages
+            ]
+        )
+        # A identidade da linha é a mesma do snapshot: uma identidade só para a seção, e não uma
+        # para o conteúdo publicado e outra para a persistência.
+        SecaoEdital.objects.filter(edital=edital).delete()
+        SecaoEdital.objects.bulk_create(
+            [
+                SecaoEdital(
+                    id=secoes_do_catalogo.identidade(edital.id, section["key"]),
+                    edital=edital,
+                    key=section["key"],
+                    content=section["content"],
+                )
+                for section in sections
             ]
         )
         compare_and_swap(

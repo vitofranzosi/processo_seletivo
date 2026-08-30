@@ -210,21 +210,21 @@ alteração no documento junto das seções geradas.
 **Dependency**: US2, que já entregou a forma de `sections` no conteúdo publicado. Esta fase muda a
 **origem** do texto das seções textuais, não a forma.
 
-- [ ] T064 [US4] Criar o modelo `SecaoEdital`, cuja chave primária é o mesmo `uuid5` do snapshot, com unicidade de `key` por Edital, em `backend/processo_seletivo/editais/models/secoes.py`, e a migration em `backend/processo_seletivo/editais/migrations/`
-- [ ] T065 [US4] Fazer `edital_snapshot` usar o conteúdo persistido quando existir, e o texto do catálogo quando não, em `backend/processo_seletivo/publicacoes/application/publish_edital.py`
-- [ ] T066 [US4] Gravar as seções textuais editadas, recusando chave fora do catálogo ou de seção gerada, em `backend/processo_seletivo/editais/application/draft.py`
-- [ ] T067 [US4] Aceitar `sections` no payload do rascunho em `backend/processo_seletivo/editais/api/serializers.py`, e só então declarar `sections` em `RascunhoInput` em `specs/001-processo-seletivo-editais/contracts/openapi.yaml`
-- [ ] T068 [US4] Acrescentar a etapa `Conteúdo` a `ETAPAS_COMPOSICAO`, distinguindo seções geradas de textuais, em `backend/processo_seletivo/interface/views.py`
-- [ ] T069 [P] [US4] Criar `compor_conteudo.html` em `backend/processo_seletivo/interface/templates/interface/`, com área de texto por seção textual e indicação de origem nas geradas
-- [ ] T070 [US4] Ler e preservar as seções textuais em `backend/processo_seletivo/interface/forms.py`
+- [X] T064 [US4] Criar o modelo `SecaoEdital`, cuja chave primária é o mesmo `uuid5` do snapshot, com unicidade de `key` por Edital, em `backend/processo_seletivo/editais/models/secoes.py`, e a migration em `backend/processo_seletivo/editais/migrations/`
+- [X] T065 [US4] Fazer `edital_snapshot` usar o conteúdo persistido quando existir, e o texto do catálogo quando não, em `backend/processo_seletivo/publicacoes/application/publish_edital.py`
+- [X] T066 [US4] Gravar as seções textuais editadas, recusando chave fora do catálogo ou de seção gerada, em `backend/processo_seletivo/editais/application/draft.py`
+- [X] T067 [US4] Aceitar `sections` no payload do rascunho em `backend/processo_seletivo/editais/api/serializers.py`, e só então declarar `sections` em `RascunhoInput` em `specs/001-processo-seletivo-editais/contracts/openapi.yaml`
+- [X] T068 [US4] Acrescentar a etapa `Conteúdo` a `ETAPAS_COMPOSICAO`, distinguindo seções geradas de textuais, em `backend/processo_seletivo/interface/views.py`
+- [X] T069 [P] [US4] Criar `compor_conteudo.html` em `backend/processo_seletivo/interface/templates/interface/`, com área de texto por seção textual e indicação de origem nas geradas
+- [X] T070 [US4] Ler e preservar as seções textuais em `backend/processo_seletivo/interface/forms.py`
 
 ### Testes
 
-- [ ] T071 [P] [US4] Editar seção textual, salvar e encontrar a alteração no documento, em `backend/tests/interface/test_compor.py`
-- [ ] T072 [P] [US4] Alterar o Cronograma reflete na seção gerada sem sincronização manual, em `backend/tests/interface/test_fluxo.py`
-- [ ] T073 [P] [US4] Chave fora do catálogo ou de seção gerada é recusada na gravação, em `backend/tests/contract/test_edital_draft_api.py`
-- [ ] T074 [P] [US4] Retificação aceita `REPLACE /sections/id=<uuid>/content` de seção textual e recusa a mesma operação sobre seção gerada, por caminho inexistente, em `backend/tests/contract/test_enderecamento_api.py`
-- [ ] T075 [P] [US4] A identidade de uma seção é a mesma antes e depois da edição e de republicações, em `backend/tests/contract/test_forma_publicada.py`
+- [X] T071 [P] [US4] Editar seção textual, salvar e encontrar a alteração no documento, em `backend/tests/interface/test_compor.py`
+- [X] T072 [P] [US4] Alterar o Cronograma reflete na seção gerada sem sincronização manual, em `backend/tests/interface/test_fluxo.py`
+- [X] T073 [P] [US4] Chave fora do catálogo ou de seção gerada é recusada na gravação, em `backend/tests/contract/test_edital_draft_api.py`
+- [X] T074 [P] [US4] Retificação aceita `REPLACE /sections/id=<uuid>/content` de seção textual e recusa a mesma operação sobre seção gerada, por caminho inexistente, em `backend/tests/contract/test_enderecamento_api.py`
+- [X] T075 [P] [US4] A identidade de uma seção é a mesma antes e depois da edição e de republicações, em `backend/tests/contract/test_forma_publicada.py`
 
 **Checkpoint**: demonstrável — texto institucional editado aparece no documento junto do conteúdo
 gerado.
@@ -233,11 +233,11 @@ gerado.
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T076 Regenerar seeds e fixtures afetados pela versão 2 do esquema, em `backend/processo_seletivo/processos/management/commands/seed_demo.py` e `backend/tests/`, **exceto a fixture do documento publicado**, que só T042 regenera
-- [ ] T077 Executar o roteiro de demonstração de `quickstart.md` de ponta a ponta, com dois atores, e corrigir o que a demonstração revelar
-- [ ] T078 [P] Reavaliar `specs/006-elaboracao-completa-edital/checklists/requirements.md` contra o que foi implementado
-- [ ] T079 [P] Conferir `backend/tests/contract/test_openapi_conformance.py` e `test_traceability.py` verdes após o delta de contrato
-- [ ] T080 Conferir que nenhuma tabela append-only ganhou escrita e que o documento publicado permanece imutável, em `backend/tests/test_configuracao_producao.py`
+- [X] T076 Regenerar seeds e fixtures afetados pela versão 2 do esquema, em `backend/processo_seletivo/processos/management/commands/seed_demo.py` e `backend/tests/`, **exceto a fixture do documento publicado**, que só T042 regenera
+- [X] T077 Executar o roteiro de demonstração de `quickstart.md` de ponta a ponta, com dois atores, e corrigir o que a demonstração revelar
+- [X] T078 [P] Reavaliar `specs/006-elaboracao-completa-edital/checklists/requirements.md` contra o que foi implementado
+- [X] T079 [P] Conferir `backend/tests/contract/test_openapi_conformance.py` e `test_traceability.py` verdes após o delta de contrato
+- [X] T080 Conferir que nenhuma tabela append-only ganhou escrita e que o documento publicado permanece imutável, em `backend/tests/test_configuracao_producao.py`
 
 ---
 

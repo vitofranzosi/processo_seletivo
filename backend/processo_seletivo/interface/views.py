@@ -300,11 +300,14 @@ ETAPAS_COMPOSICAO = [
     # Depois do Cronograma porque a Etapa referencia Evento dele: pedir o vínculo antes de existir
     # o que vincular seria oferecer uma lista vazia e chamá-la de escolha.
     ("etapas", "Etapas de Avaliação", "interface/compor_etapas.html"),
+    # Depois de tudo o que gera conteúdo: as seções textuais complementam o que o sistema já
+    # sabe, e quem as redige precisa ver o que já está estruturado.
+    ("conteudo", "Conteúdo", "interface/compor_conteudo.html"),
     ("revisao", "Revisão", "interface/compor_revisao.html"),
 ]
 CHAVES_ETAPA = [chave for chave, _, _ in ETAPAS_COMPOSICAO]
 # As que aceitam POST. `revisao` consolida e não grava.
-ETAPAS_GRAVAVEIS = {"identificacao", "perfis", "cronograma", "etapas"}
+ETAPAS_GRAVAVEIS = {"identificacao", "perfis", "cronograma", "etapas", "conteudo"}
 
 
 def _progresso(edital, atual):
@@ -317,6 +320,9 @@ def _progresso(edital, atual):
         ),
         # Etapas são opcionais; "concluída" aqui quer dizer "já tem conteúdo", não "obrigatória".
         "etapas": edital.etapas.exists(),
+        # As seções nascem com o texto do catálogo, então a etapa está "concluída" desde o
+        # início: nada falta. O que ela oferece é revisar, e não preencher do zero.
+        "conteudo": True,
         "revisao": False,
     }
     return [
@@ -416,6 +422,11 @@ def compor_etapa(request, edital_id, etapa):
                 if etapa == "etapas" and digitados is not None
                 else forms.etapas_do_edital(edital)
             ),
+            "secoes": (
+                _reexibir_secoes(edital, digitados)
+                if etapa == "conteudo" and digitados is not None
+                else forms.secoes_do_edital(edital)
+            ),
             "reservas": forms.RESERVA,
             "pendencias": pendencias,
             # A tela de revisão mostra tudo; as demais, só o que se resolve nelas — pendência
@@ -455,6 +466,15 @@ def _reexibir_modalidade(modalidade):
     }
 
 
+def _reexibir_secoes(edital, digitadas):
+    """Após erro, o texto digitado por cima da estrutura do catálogo, que não vem do formulário."""
+    texto = {item["key"]: item["content"] for item in digitadas}
+    return [
+        {**secao, "content": texto.get(secao["key"], secao["content"])}
+        for secao in forms.secoes_do_edital(edital)
+    ]
+
+
 def _reexibir_etapas(etapas):
     """Após erro, devolve o que a pessoa digitou — inclusive o valor que o domínio recusou."""
     return [
@@ -480,13 +500,19 @@ def _reexibir_eventos(eventos):
 
 
 # Qual coleção do rascunho cada etapa do assistente escreve.
-COLECAO_DA_ETAPA = {"perfis": "profiles", "cronograma": "schedule", "etapas": "stages"}
+COLECAO_DA_ETAPA = {
+    "perfis": "profiles",
+    "cronograma": "schedule",
+    "etapas": "stages",
+    "conteudo": "sections",
+}
 
 LEITURA_DA_ETAPA = {
     "identificacao": forms.ler_identificacao,
     "perfis": forms.ler_perfis,
     "cronograma": forms.ler_eventos,
     "etapas": forms.ler_etapas,
+    "conteudo": forms.ler_secoes,
 }
 
 
@@ -512,6 +538,7 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
         "profiles": forms.perfis_persistidos(edital),
         "schedule": forms.eventos_persistidos(edital),
         "stages": forms.etapas_persistidas(edital),
+        "sections": forms.secoes_persistidas(edital),
     }
     conteudo[COLECAO_DA_ETAPA[etapa]] = digitados
     return replace_draft(
@@ -521,6 +548,7 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
         profiles=conteudo["profiles"],
         schedule=conteudo["schedule"],
         stages=conteudo["stages"],
+        sections=conteudo["sections"],
         correlation_id=request.correlation_id,
     )
 

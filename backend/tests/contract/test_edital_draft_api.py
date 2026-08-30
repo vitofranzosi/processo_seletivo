@@ -422,3 +422,68 @@ def test_percentual_de_cem_por_cento_e_aceito(api_client, manager_headers, proce
     )
 
     assert resposta.status_code == 200, resposta.content
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+@pytest.mark.parametrize(
+    ("chave", "razao"),
+    [
+        ("secao-inventada", "fora do catálogo: o conjunto de seções é do sistema"),
+        ("cronograma", "gerada: o conteúdo dela vem do dado que a origina"),
+    ],
+)
+def test_secao_fora_do_catalogo_ou_gerada_e_recusada_na_gravacao(
+    api_client, manager_headers, process_payload, chave, razao
+):
+    """FR-034 e FR-036, os dois no mesmo lugar.
+
+    Acrescentar seção é o que a spec exclui — é a diferença entre documento institucional
+    estruturado e construtor de documentos. E dar texto a uma seção gerada criaria dois endereços
+    para o mesmo conteúdo normativo, sem como dizer qual vigora.
+    """
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+    )
+    edital = Edital.objects.get(processo_id=criado.json()["id"])
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{edital.id}/rascunho",
+        {**complete_draft(), "sections": [{"key": chave, "content": "Texto qualquer"}]},
+        format="json",
+        **{
+            **actor_headers("preparador", ["edital:elaborar"], key=f"secao-{chave[:8]}-01"),
+            "HTTP_IF_MATCH": '"1"',
+        },
+    )
+
+    assert resposta.status_code == 422, f"{razao}: {resposta.content}"
+    assert resposta.json()["code"] == "field_constraint_violated"
+    assert chave in resposta.json()["detail"]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+def test_secao_textual_do_catalogo_e_aceita(api_client, manager_headers, process_payload):
+    from processo_seletivo.editais.domain import secoes as catalogo
+    from processo_seletivo.editais.models.secoes import SecaoEdital
+
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+    )
+    edital = Edital.objects.get(processo_id=criado.json()["id"])
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{edital.id}/rascunho",
+        {**complete_draft(), "sections": [{"key": "recursos", "content": "Três dias úteis."}]},
+        format="json",
+        **{
+            **actor_headers("preparador", ["edital:elaborar"], key="secao-aceita-000001"),
+            "HTTP_IF_MATCH": '"1"',
+        },
+    )
+
+    assert resposta.status_code == 200, resposta.content
+    linha = SecaoEdital.objects.get()
+    assert linha.content == "Três dias úteis."
+    assert linha.id == catalogo.identidade(edital.id, "recursos")

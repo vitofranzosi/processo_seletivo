@@ -308,3 +308,63 @@ def test_percentual_da_regra_e_retificavel_pelo_caminho_ja_existente(
         item for item in perfil["competitionModalities"] if item["id"] == MODALIDADE["B"]
     )
     assert modalidade["normativeRule"]["percentage"] == "25"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_conteudo_de_secao_textual_e_retificavel_e_o_de_gerada_nao(
+    api_client, manager_headers, process_payload
+):
+    """D-006: a recusa da seção gerada não é regra — é consequência de não haver campo.
+
+    `REPLACE /sections/id=<gerada>/content` falha pelo erro de caminho inexistente que a `004` já
+    implementava. Recusá-la por regra nova na gramática custaria mais código, mais um erro nomeado,
+    e contrariaria a decisão de não mexer no endereçamento.
+    """
+    from processo_seletivo.editais.domain import secoes as catalogo
+    from processo_seletivo.publicacoes.domain.conflicts import previous_hash
+
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    textual = f"/sections/id={catalogo.identidade(edital.id, 'recursos')}/content"
+    gerada = f"/sections/id={catalogo.identidade(edital.id, 'cronograma')}/content"
+
+    recusada = api_client.post(
+        f"/api/v1/admin/editais/{edital.id}/retificacoes",
+        {
+            "baseSnapshotId": str(base.id),
+            "justification": "Conteúdo de seção gerada",
+            "changes": [
+                {
+                    "targetPath": gerada,
+                    "operation": "REPLACE",
+                    "newValue": "Cronograma copiado à mão",
+                    "expectedPreviousHash": "f" * 64,
+                }
+            ],
+        },
+        format="json",
+        **actor_headers("retificador", ["retificacao:elaborar"], key="secao-gerada-00001"),
+    )
+    assert recusada.status_code == 422, recusada.content
+    assert recusada.json()["code"] == "invalid_change"
+    assert "Caminho inexistente" in recusada.json()["detail"]
+
+    retificacao = create_retification(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": textual,
+                "operation": "REPLACE",
+                "newValue": "Recurso em até três dias úteis.",
+                "expectedPreviousHash": previous_hash(base.content, textual),
+            }
+        ],
+        suffix="t",
+    )
+    publish_retification(api_client, retificacao, suffix="t")
+
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    secao = next(item for item in vigente.content["sections"] if item["key"] == "recursos")
+    assert secao["content"] == "Recurso em até três dias úteis."

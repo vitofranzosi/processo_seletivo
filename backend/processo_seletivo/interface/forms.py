@@ -10,6 +10,8 @@ from decimal import Decimal, InvalidOperation
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from processo_seletivo.editais.domain import secoes
+
 ZONA = ZoneInfo("America/Sao_Paulo")
 
 RESERVA = [
@@ -210,6 +212,67 @@ def _modalidade_para_o_formulario(modalidade):
         if regra is None or regra.percentage is None
         else f"{regra.percentage:f}",
     }
+
+
+def ler_secoes(dados):
+    """Só as textuais, e só as que **mudaram** em relação ao catálogo.
+
+    A tela mostra as sete seções e envia as quatro textuais preenchidas; gravar todas criaria linha
+    para seção que ninguém tocou, e a regra "ausência de linha significa texto padrão do catálogo"
+    deixaria de valer no primeiro salvamento desta etapa. O efeito prático seria congelar a redação
+    institucional: corrigir o texto padrão em código não alcançaria mais nenhum Edital que tivesse
+    passado por aqui, e não haveria como distinguir texto revisado de texto intocado.
+
+    A comparação é sobre o texto sem espaço nas bordas: um `\\r\\n` que o navegador acrescenta não é
+    edição.
+    """
+    editadas = []
+    for chave in sorted(secoes.CHAVES_TEXTUAIS):
+        digitado = _texto(dados, f"secao-{chave}")
+        padrao = secoes.POR_CHAVE[chave].default_text
+        if digitado and digitado != padrao.strip():
+            editadas.append({"key": chave, "content": digitado})
+    return editadas
+
+
+def secoes_do_edital(edital):
+    """O catálogo inteiro, na ordem, com o texto vigente de cada seção textual.
+
+    As geradas aparecem para que quem elabora veja a estrutura do documento — e leia, ao lado de
+    cada uma, de que dado ela vem. Elas não têm campo de texto: o conteúdo se corrige no dado que
+    o origina.
+    """
+    redigidas = {item.key: item.content for item in edital.secoes.all()}
+    return [
+        {
+            "key": secao.key,
+            "title": secao.title,
+            "order": secao.order,
+            "gerada": secao.gerada,
+            "source": secao.source,
+            "origem": ORIGEM.get(secao.source, (secao.source, ""))[0],
+            "etapa_da_origem": ORIGEM.get(secao.source, ("", ""))[1],
+            "content": redigidas.get(secao.key, secao.default_text),
+            "editada": secao.key in redigidas,
+        }
+        for secao in secoes.CATALOGO
+    ]
+
+
+# Como cada origem é lida por quem elabora, e onde ela se edita. A chave é a coleção do snapshot,
+# e o valor liga o vocabulário do conteúdo publicado ao do assistente — que é o que permite
+# oferecer, ao lado de uma seção gerada, o caminho para o dado que a origina.
+ORIGEM = {
+    "profiles": ("Perfis de Vaga", "perfis"),
+    "schedule": ("Cronograma", "cronograma"),
+    "stages": ("Etapas de Avaliação", "etapas"),
+}
+
+
+def secoes_persistidas(edital):
+    """Seções textuais já editadas, no formato do command — para preservá-las ao salvar outra
+    etapa. Ausência de linha continua significando "texto padrão do catálogo"."""
+    return [{"key": item.key, "content": item.content} for item in edital.secoes.all()]
 
 
 def perfis_do_edital(edital):
