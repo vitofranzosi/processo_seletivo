@@ -30,7 +30,13 @@ def test_us2_replaces_profiles_without_affecting_other_edital(
                     "name": "Somente cadastro reserva",
                     "immediateVacancies": 0,
                     "reserveType": "UNLIMITED",
-                    "competitionModalities": [{"code": "AC", "name": "Ampla concorrência"}],
+                    "competitionModalities": [
+                        {
+                            "id": "00000000-0000-0000-0000-000000000212",
+                            "code": "AC",
+                            "name": "Ampla concorrência",
+                        }
+                    ],
                 }
             ],
             "schedule": [],

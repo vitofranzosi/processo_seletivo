@@ -5,14 +5,18 @@ from processo_seletivo.editais.domain.perfis import ProfileValidationError, vali
 
 
 class NormativeRuleSerializer(serializers.Serializer):
-    """`id` é opcional na entrada e preservado na gravação.
+    """`id` é **obrigatório**, como já é o de Perfil, Evento e Etapa.
 
-    Sem declará-lo aqui o identificador nunca chegaria ao command pela API, e a recusa de
-    identificador que pertence a outro contêiner não teria o que recusar — a preservação valeria
-    só pelo caminho da interface administrativa.
+    Opcional, ele reabriria pela API o defeito que esta feature veio fechar: um payload sem
+    identificador é aceito, o servidor gera um, a resposta do rascunho devolve só o resumo do
+    Edital — e a gravação seguinte, também sem identificador, troca a identidade de novo. O cliente
+    não teria como preservar o que nunca recebeu.
+
+    Quem cria a regra escolhe o identificador dela, e a recusa de identificador pertencente a
+    outro contêiner é o que impede que essa escolha reparente conteúdo alheio.
     """
 
-    id = serializers.UUIDField(required=False)
+    id = serializers.UUIDField()
     foundation = serializers.CharField(min_length=1)
     version = serializers.CharField(min_length=1, max_length=50)
     percentage = serializers.DecimalField(max_digits=7, decimal_places=4, required=False)
@@ -24,7 +28,7 @@ class NormativeRuleSerializer(serializers.Serializer):
 
 
 class CompetitionModalitySerializer(serializers.Serializer):
-    id = serializers.UUIDField(required=False)
+    id = serializers.UUIDField()
     code = serializers.CharField(min_length=1, max_length=100)
     name = serializers.CharField(min_length=1, max_length=255)
     description = serializers.CharField(required=False, allow_blank=True)

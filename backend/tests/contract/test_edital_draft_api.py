@@ -487,3 +487,40 @@ def test_secao_textual_do_catalogo_e_aceita(api_client, manager_headers, process
     linha = SecaoEdital.objects.get()
     assert linha.content == "Três dias úteis."
     assert linha.id == catalogo.identidade(edital.id, "recursos")
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+@pytest.mark.parametrize("omitido", ["modalidade", "regra"])
+def test_identificador_de_modalidade_e_de_regra_e_exigido(
+    api_client, manager_headers, process_payload, omitido
+):
+    """FR-027: opcional, o identificador reabriria o defeito que a feature veio fechar.
+
+    Um payload sem `id` seria aceito, o servidor geraria um, e a resposta do rascunho devolve
+    apenas o resumo do Edital — o cliente não teria como preservar o que nunca recebeu, e a
+    gravação seguinte trocaria a identidade de novo. Perfil, Evento e Etapa já exigem o seu; a
+    regra aqui é a mesma, e não uma exceção.
+    """
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+    )
+    edital = Edital.objects.get(processo_id=criado.json()["id"])
+    modalidade = _modalidade(MODALIDADE["A"], REGRA["A"], "PPP")
+    if omitido == "modalidade":
+        del modalidade["id"]
+    else:
+        del modalidade["normativeRule"]["id"]
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{edital.id}/rascunho",
+        _com_modalidades(0, [modalidade]),
+        format="json",
+        **{
+            **actor_headers("preparador", ["edital:elaborar"], key=f"sem-id-{omitido[:6]}-01"),
+            "HTTP_IF_MATCH": '"1"',
+        },
+    )
+
+    assert resposta.status_code == 422, resposta.content
+    assert "id" in resposta.json()["detail"]

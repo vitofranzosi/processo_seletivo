@@ -1,5 +1,3 @@
-from uuid import uuid4
-
 from django.db import transaction
 
 from processo_seletivo.auditoria.application import record_event
@@ -175,7 +173,7 @@ def replace_draft(
                 # gravação do rascunho trocava a identidade das modalidades — e a da Regra, que
                 # viaja no conteúdo publicado.
                 modality = ModalidadeConcorrencia.objects.create(
-                    id=modality_payload.get("id") or uuid4(),
+                    id=modality_payload["id"],
                     perfil=perfil,
                     code=modality_payload["code"],
                     name=modality_payload["name"],
@@ -184,7 +182,7 @@ def replace_draft(
                 rule = modality_payload.get("normativeRule")
                 if rule:
                     RegraNormativa.objects.create(
-                        id=rule.get("id") or uuid4(),
+                        id=rule["id"],
                         modalidade=modality,
                         foundation=rule["foundation"],
                         version=rule["version"],

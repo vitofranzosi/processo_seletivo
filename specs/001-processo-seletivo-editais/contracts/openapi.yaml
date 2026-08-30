@@ -561,12 +561,14 @@ components:
     ModalidadeInput:
       type: object
       description: >-
-        Modalidade de concorrência no rascunho. `id` é opcional e, quando informado, é preservado
-        na gravação — a identidade da modalidade e a da sua Regra Normativa são estáveis entre
-        gravações. Identificador que já pertença a outro contêiner — modalidade de outro Perfil,
-        Regra de outra Modalidade, inclusive irmã do mesmo Perfil — responde 409
+        Modalidade de concorrência no rascunho. `id` é obrigatório e preservado na gravação, como o
+        de Perfil, Evento e Etapa: a identidade da modalidade e a da sua Regra Normativa são
+        estáveis entre gravações. Opcional, ele reabriria o defeito que a estabilidade veio fechar —
+        o servidor geraria um identificador que a resposta não devolve, e a gravação seguinte
+        trocaria a identidade de novo. Identificador que já pertença a outro contêiner — modalidade
+        de outro Perfil, Regra de outra Modalidade, inclusive irmã do mesmo Perfil — responde 409
         identifier_belongs_to_another_edital.
-      required: [code, name]
+      required: [id, code, name]
       properties:
         id: { $ref: '#/components/schemas/Id' }
         code: { type: string }
@@ -580,8 +582,10 @@ components:
         identifica a norma aplicada. `percentage` é opcional e, quando informado, deve ser maior
         que zero e menor ou igual a cem — zero afirmaria uma reserva de nenhuma vaga, e ausência de
         reserva exprime-se pela ausência do campo. Não há regra de soma entre modalidades: cotas
-        não somam cem por cento.
-      required: [foundation, version]
+        não somam cem por cento. A faixa é verificada no domínio, e também na publicação — de modo
+        que uma Retificação não pode fazer vigorar o percentual que a gravação do rascunho recusa.
+        `id` é obrigatório pelo mesmo motivo que o da modalidade o é.
+      required: [id, foundation, version]
       properties:
         id: { $ref: '#/components/schemas/Id' }
         foundation: { type: string }

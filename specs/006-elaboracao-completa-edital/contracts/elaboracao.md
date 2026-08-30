@@ -37,8 +37,15 @@ manteria, dentro do conteúdo normativo, um identificador que não identifica na
 Consequência de contrato: **a identidade de uma modalidade e da sua regra é estável entre
 gravações**. Quem lê o rascunho e o devolve preserva as modalidades, suas regras e suas identidades.
 
-`NormativeRuleInput` passa a aceitar `id`. `version` permanece obrigatório, como já é, e por isso
-passa a ter campo na interface — sem ele nenhuma regra nova seria gravável.
+`ModalidadeInput` e `NormativeRuleInput` passam a **exigir** `id`, como `PerfilInput`, `EventoInput`
+e `EtapaInput` já exigem. Aceitá-lo como opcional reabriria o defeito por outra porta: o payload sem
+identificador seria válido, o servidor geraria um, e a resposta do rascunho devolve apenas o resumo
+do Edital — o cliente não teria como preservar o que nunca recebeu, e a gravação seguinte trocaria a
+identidade de novo. Quem cria a entidade escolhe o identificador dela; a recusa por pertencimento é
+o que impede que essa escolha reparente conteúdo alheio.
+
+`version` permanece obrigatório, como já é, e por isso passa a ter campo na interface — sem ele
+nenhuma regra nova seria gravável.
 
 ### `sections` no rascunho
 
@@ -111,6 +118,7 @@ Recusado, e por qual mecanismo:
 | troca de `type`, `order`, `title`, `key` ou `source` de seção | topologia diverge do catálogo | **verificação nova** |
 | seção textual sem `content`, ou gerada com `content` | topologia diverge do catálogo | **verificação nova** |
 | `scheduleEventId` que não existe em `schedule` | referência quebrada | **verificação nova** |
+| `normativeRule/percentage` fora de `0 < p ≤ 100` | faixa de FR-030 | **verificação nova** |
 
 As quatro últimas não decorrem da declaração de forma: `Campo` verifica um campo por vez e não
 expressa coerência entre campos. Sem elas, uma Retificação faria sobre o conteúdo publicado o que a

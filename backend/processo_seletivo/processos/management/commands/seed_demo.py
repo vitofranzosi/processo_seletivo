@@ -51,11 +51,17 @@ def perfis(numero):
             "reserveLimit": 6,
             "locality": "Campus Serra",
             "competitionModalities": [
-                {"code": "AC", "name": "Ampla concorrência"},
                 {
+                    "id": f"00000000-0000-0000-00{numero}-0000000000e1",
+                    "code": "AC",
+                    "name": "Ampla concorrência",
+                },
+                {
+                    "id": f"00000000-0000-0000-00{numero}-0000000000e2",
                     "code": "PPP",
                     "name": "Pessoas pretas, pardas e indígenas",
                     "normativeRule": {
+                        "id": f"00000000-0000-0000-00{numero}-0000000000f2",
                         "foundation": "Lei 12.990/2014",
                         "version": "2014-06-09",
                         "percentage": "20.0000",
@@ -73,7 +79,13 @@ def perfis(numero):
             "immediateVacancies": 0,
             "reserveType": "UNLIMITED",
             "locality": "Campus Vitória",
-            "competitionModalities": [{"code": "AC", "name": "Ampla concorrência"}],
+            "competitionModalities": [
+                {
+                    "id": f"00000000-0000-0000-00{numero}-0000000000e3",
+                    "code": "AC",
+                    "name": "Ampla concorrência",
+                }
+            ],
         },
     ]
 

@@ -213,9 +213,19 @@ cobre e sem elas o catálogo fixo e a fonte normativa única deixariam de valer 
 |---|---|
 | Topologia de `sections` contra o catálogo | seção acrescentada ou removida; `type`, `order`, `title`, `key` ou `source` alterados; textual sem `content`; gerada com `content` |
 | Coerência de cada Etapa | `scheduleEventId` que não existe em `schedule`; peso menor ou igual a zero; nota mínima negativa |
+| Faixa do percentual da Regra Normativa | percentual fora de `0 < p ≤ 100` no conteúdo que passa a vigorar |
 
-Só o `content` das seções textuais pode variar. As duas são verificações escritas para estes dois
-casos, no arquivo que já faz a verificação de publicação — não um mecanismo de regras entre campos.
+Só o `content` das seções textuais pode variar. As três são verificações escritas para estes casos,
+no arquivo que já faz a verificação de publicação — não um mecanismo de regras entre campos.
+
+**A terceira nasceu de uma revisão, e a lacuna que ela fecha é instrutiva.** A faixa de FR-030
+estava no domínio, atravessada pela interface e pela API de rascunho — e por isso parecia resolvida.
+Mas a forma declarada de `PerfilPublicado` confere que cada modalidade é objeto e **nada dentro
+dela**, de propósito; a Retificação, que passa pela verificação de publicação e não pela gravação do
+rascunho, publicava sem obstáculo uma cota de zero ou de cento e cinquenta por cento. A regra valia
+onde o conteúdo nasce e não valia onde ele muda depois de público. A verificação **invoca**
+`validate_normative_rule` em vez de reescrever a faixa: duas cópias divergiriam, e é por não
+repetir a regra que isto não vira um segundo domínio.
 
 ---
 

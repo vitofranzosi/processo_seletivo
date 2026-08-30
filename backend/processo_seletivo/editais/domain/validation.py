@@ -29,6 +29,7 @@ from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from uuid import UUID
 
+from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_normative_rule
 from processo_seletivo.editais.domain.secoes import CATALOGO, GERADA, TEXTUAL
 
 
@@ -388,6 +389,49 @@ def _topologia_das_secoes(snapshot: dict) -> list[ValidationFinding]:
     return findings
 
 
+def _faixa_do_percentual(snapshot: dict) -> list[ValidationFinding]:
+    """FR-030 vale também **depois** da publicação.
+
+    A forma declarada confere que cada item de `competitionModalities` é objeto e nada dentro dele
+    — decisão registrada em `PERFIL_PUBLICADO`, e mantida. O efeito é que a faixa do percentual
+    valia na gravação do rascunho e deixava de valer na Retificação, que é justamente onde o
+    conteúdo muda depois de público: publicava-se por Retificação uma cota de zero por cento, ou de
+    cento e cinquenta, que a interface e a API de rascunho recusam.
+
+    A regra é a mesma de `validate_normative_rule`, invocada aqui e não reescrita: duas cópias da
+    faixa divergiriam, e é exatamente por não repetir a regra que esta verificação não vira um
+    segundo domínio.
+    """
+    findings = []
+    for posicao, perfil in enumerate(snapshot.get("profiles") or []):
+        if not isinstance(perfil, dict):
+            continue
+        base = _caminho_da_entidade("profiles", perfil, posicao)
+        modalidades = perfil.get("competitionModalities")
+        if not isinstance(modalidades, list):
+            continue
+        for indice, modalidade in enumerate(modalidades):
+            if not isinstance(modalidade, dict):
+                continue
+            regra = modalidade.get("normativeRule")
+            if not isinstance(regra, dict):
+                continue
+            chave = modalidade.get("id")
+            dentro = f"id={chave}" if isinstance(chave, str) and chave else str(indice)
+            caminho = f"{base}/competitionModalities/{dentro}"
+            try:
+                validate_normative_rule(regra)
+            except ProfileValidationError as exc:
+                findings.append(
+                    _impeditivo(
+                        RESTRICAO_VIOLADA,
+                        f"{exc} Em {caminho}/normativeRule/percentage.",
+                        f"{caminho}/normativeRule/percentage",
+                    )
+                )
+    return findings
+
+
 def _coerencia_das_etapas(snapshot: dict) -> list[ValidationFinding]:
     """Uma passagem, três conferências (FR-020 e FR-022).
 
@@ -483,6 +527,7 @@ def validate_for_publication(snapshot: dict) -> list[ValidationFinding]:
         findings.extend(_violacoes_da_colecao(snapshot, colecao, forma))
     findings.extend(_topologia_das_secoes(snapshot))
     findings.extend(_coerencia_das_etapas(snapshot))
+    findings.extend(_faixa_do_percentual(snapshot))
     return findings
 
 

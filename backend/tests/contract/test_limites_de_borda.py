@@ -387,3 +387,45 @@ def test_faixa_do_decimal_e_recusada_pela_verificacao_de_coerencia(
 
     assert resposta.status_code == 422, resposta.content
     assert mensagem in resposta.json()["detail"]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("percentual", ["0.0000", "150.0000", "-1.0000"])
+def test_retificacao_nao_contorna_a_faixa_do_percentual(
+    api_client, manager_headers, process_payload, percentual
+):
+    """FR-030 vale também depois da publicação.
+
+    A faixa era verificada só na gravação do rascunho. A Retificação passa por
+    `validate_for_publication`, que confere que cada modalidade é objeto e nada dentro dela — de
+    modo que uma cota de zero por cento, ou de cento e cinquenta, podia ser publicada pelo caminho
+    em que o conteúdo muda **depois** de público, que é justamente onde mais importa.
+    """
+    from processo_seletivo.publicacoes.domain.conflicts import previous_hash
+    from tests.fixtures.snapshot import MODALIDADE, PERFIL
+    from tests.fixtures.snapshot import rascunho_publicavel as rascunho
+
+    edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho())
+    base = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    caminho = (
+        f"/profiles/id={PERFIL['A']}/competitionModalities/id={MODALIDADE['B']}"
+        "/normativeRule/percentage"
+    )
+
+    resposta = _tentar_publicar(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": caminho,
+                "operation": "REPLACE",
+                "newValue": percentual,
+                "expectedPreviousHash": previous_hash(base.content, caminho),
+            }
+        ],
+        "q1",
+    )
+
+    assert resposta.status_code == 422, resposta.content
+    assert "maior que zero e menor ou igual a cem" in resposta.json()["detail"]
+    assert caminho in resposta.json()["detail"]

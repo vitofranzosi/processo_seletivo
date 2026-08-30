@@ -217,6 +217,29 @@ passado pela etapa. A leitura passou a enviar apenas o que difere do catálogo, 
 teste. É exatamente o tipo de defeito que só o cenário navegável revela — e a razão de o princípio
 VI exigi-lo.
 
+### Revisão da implementação (2026-08-30)
+
+Dois achados, os dois reproduzidos antes de aceitos, e os dois da mesma família: **uma regra que
+valia onde o conteúdo nasce e não valia onde ele muda ou por onde ele entra.**
+
+**A faixa do percentual não alcançava a Retificação.** FR-030 exigia a verificação no domínio, e ela
+estava lá — atravessada pela interface e pela API de rascunho, o que a fazia parecer resolvida. Mas
+a forma declarada de `PerfilPublicado` confere que cada modalidade é objeto e nada dentro dela, de
+propósito; e a Retificação passa pela verificação de publicação, não pela gravação do rascunho.
+Reproduzido: percentuais `0`, `100.0001` e `-1` produziam **zero** achados impeditivos. Virou a
+terceira verificação direcionada, que invoca `validate_normative_rule` em vez de reescrever a faixa.
+
+**Identificador opcional reabria o defeito pela API.** Os `id` de modalidade e de Regra entraram
+opcionais, e o command gerava um quando ausentes. Como a resposta do rascunho devolve apenas o
+resumo do Edital, um cliente com payload contratualmente válido nunca recebia os identificadores
+gerados — e a gravação seguinte trocava as identidades outra vez, que é exatamente o defeito que a
+US3 veio fechar. Passaram a ser obrigatórios, como os de Perfil, Evento e Etapa já eram; o fallback
+`or uuid4()` saiu.
+
+A correção recusada em ambos os casos: não nasceu validador genérico de objetos aninhados, não se
+promoveu a forma interna das modalidades para `COLECOES_PUBLICADAS`, e não se criou endpoint de
+leitura nem reconciliação por código. Duas correções, dois testes novos.
+
 ## Itens que permanecem em aberto
 
 Nenhum bloqueia a implementação.
