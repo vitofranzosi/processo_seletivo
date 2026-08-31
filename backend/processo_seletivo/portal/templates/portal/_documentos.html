@@ -1,0 +1,73 @@
+{% comment %}
+O bloco de documentos, devolvido inteiro a cada envio: a contagem "n de m" muda junto com a linha,
+e atualizar só a linha deixaria a contagem para trás.
+{% endcomment %}
+<section id="documentos" aria-labelledby="documentos-titulo">
+  <h2 id="documentos-titulo">Documentos necessários</h2>
+  {% if documentos.linhas %}
+  <p class="contagem" role="status">
+    <strong>{{ documentos.recebidos }} de {{ documentos.total }}</strong>
+    documento{{ documentos.total|pluralize:"s" }} obrigatório{{ documentos.total|pluralize:"s" }}
+    {{ documentos.total|pluralize:"enviado,enviados" }}.
+  </p>
+  <ul class="requisitos-lista">
+    {% for linha in documentos.linhas %}
+    <li class="requisito {% if linha.enviado %}completo{% endif %}">
+      <p class="nome">
+        <span class="marca" aria-hidden="true">{% if linha.enviado %}✓{% else %}○{% endif %}</span>
+        {{ linha.nome }}{% if not linha.obrigatorio %} <span class="ajuda">(facultativo)</span>{% endif %}
+      </p>
+      {% if linha.instrucao %}<p class="ajuda">{{ linha.instrucao }}</p>{% endif %}
+
+      {% if linha.enviado %}
+      <p class="arquivo">
+        <a href="{% url 'portal:documento-do-candidato' inscricao.id linha.id %}" target="_blank"
+           rel="noopener">{{ linha.enviado.nome_original }}</a>
+        <span class="ajuda">enviado em {{ linha.enviado.uploaded_at|date:"d/m/Y H\hi" }}</span>
+      </p>
+      {% endif %}
+
+      {% if requisito_recusado == linha.id and erro_do_envio %}
+      <p class="recusa" role="alert">{{ erro_do_envio }}</p>
+      {% endif %}
+
+      <div class="envio">
+        <label class="rotulo-arquivo" for="arquivo-{{ linha.id }}">
+          {% if linha.enviado %}Substituir o arquivo{% else %}Enviar PDF{% endif %}
+        </label>
+        <form hx-post="{% url 'portal:enviar-documento' inscricao.id linha.id %}"
+              hx-target="#documentos" hx-swap="outerHTML"
+              hx-encoding="multipart/form-data" enctype="multipart/form-data"
+              method="post" action="{% url 'portal:enviar-documento' inscricao.id linha.id %}"
+              data-envio>
+          {% csrf_token %}
+          <input type="file" id="arquivo-{{ linha.id }}" name="arquivo" accept="application/pdf"
+                 aria-describedby="ajuda-envio-{{ linha.id }}">
+          <button type="submit" class="acao">Enviar</button>
+          <span class="ajuda" id="ajuda-envio-{{ linha.id }}">Somente PDF, até 10 MB.</span>
+          {% comment %}
+          O progresso e o aviso de não fechar a página aparecem enquanto o envio corre (FR-048):
+          dez megabytes em rede móvel levam dezenas de segundos, e é nesse silêncio que a pessoa
+          reenvia ou desiste.
+          {% endcomment %}
+          <p class="progresso" hidden>
+            <progress max="100" value="0" aria-label="Progresso do envio"></progress>
+            <span class="ajuda">Enviando… não feche esta página.</span>
+          </p>
+        </form>
+        {% if linha.enviado %}
+        <form hx-post="{% url 'portal:remover-documento' inscricao.id linha.id %}"
+              hx-target="#documentos" hx-swap="outerHTML"
+              method="post" action="{% url 'portal:remover-documento' inscricao.id linha.id %}">
+          {% csrf_token %}
+          <button type="submit" class="acao perigo">Remover</button>
+        </form>
+        {% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="ajuda">Este Edital não exige documentos para esta vaga.</p>
+  {% endif %}
+</section>

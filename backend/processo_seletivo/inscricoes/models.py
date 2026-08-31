@@ -15,6 +15,7 @@ import uuid
 from django.db import models
 from django.db.models import Q
 
+from processo_seletivo.inscricoes.storage import ArmazenamentoPrivado, caminho_do_documento
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 
@@ -121,3 +122,46 @@ class Inscricao(models.Model):
                 if gravado not in (None, "") and gravado != getattr(self, atributo):
                     raise TypeError(f"Inscrição submetida não altera {campo}")
         return super().save(*args, **kwargs)
+
+
+class DocumentoSubmetido(models.Model):
+    """O arquivo que o candidato apresentou **para um Documento Exigido específico**.
+
+    É esta ligação — e não uma pasta com o nome da pessoa — que permitirá à comissão abrir
+    *Diploma exigido → documento apresentado*. Sem ela, o sistema teria transferido o Drive para
+    dentro de uma aplicação web em vez de substituí-lo (P-006).
+
+    `requirement_id` referencia o requisito no **conteúdo publicado**, pelo mesmo motivo que
+    `profile_id` na Inscrição: é a identidade estável que sobrevive à Retificação.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    inscricao = models.ForeignKey(
+        Inscricao, on_delete=models.CASCADE, related_name="documentos"
+    )
+    requirement_id = models.UUIDField()
+    arquivo = models.FileField(
+        storage=ArmazenamentoPrivado(), upload_to=caminho_do_documento, max_length=255
+    )
+    # O nome que a pessoa enviou, preservado para exibição e nada além: ele não decide caminho,
+    # não decide identidade e não é confiável (FR-052).
+    nome_original = models.CharField(max_length=255)
+    tamanho = models.PositiveBigIntegerField()
+    # Integridade do que foi recebido: permite afirmar depois que o arquivo consultado é o mesmo,
+    # inclusive quando houve substituição antes do envio (FR-053).
+    content_hash = models.CharField(max_length=64)
+    uploaded_at = models.DateTimeField()
+
+    class Meta:
+        ordering = ["uploaded_at", "id"]
+        constraints = [
+            # Um arquivo por requisito (FR-043). Substituir é sobrescrever este registro, e não
+            # acumular versões: a spec decidiu um arquivo, e acumular criaria a pergunta "qual
+            # vale?" que ninguém respondeu.
+            models.UniqueConstraint(
+                fields=["inscricao", "requirement_id"], name="uq_documento_inscricao_requisito"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.nome_original} — {self.inscricao_id}"

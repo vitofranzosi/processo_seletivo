@@ -195,32 +195,32 @@ concorrência recebe dois pedidos, envia dois PDFs e vê `2 de 2`; um envio recu
 
 ### Tests for User Story 4
 
-- [ ] T063 [P] [US4] Teste de unidade da aplicabilidade em `backend/tests/unit/inscricoes/test_aplicabilidade.py` — as quatro combinações, e nenhuma quinta; e um Perfil sem modalidade declarada no conteúdo publicado não faz nascer modalidade de ampla concorrência alguma (FR-039)
-- [ ] T064 [P] [US4] Teste de unidade da aceitação de arquivo em `backend/tests/unit/inscricoes/test_arquivos.py` — assinatura `%PDF-`, nome físico opaco, resumo calculado, e **limite lido da configuração**: alterar `ARQUIVOS_CANDIDATOS_LIMITE_BYTES` muda o que é aceito, provando que não está fixado em código (FR-046)
-- [ ] T065 [P] [US4] Teste em `backend/tests/unit/inscricoes/test_arquivos.py` — imagem renomeada para `.pdf` é recusada com mensagem que ensina a converter
-- [ ] T066 [P] [US4] Teste em `backend/tests/integration/inscricoes/test_envio_de_arquivo.py` — envio válido persiste sem `Salvar`; recusa não apaga arquivo nem campo já válido
-- [ ] T066a [P] [US4] Teste em `backend/tests/authorization/test_requisito_alheio.py` — envio forjado para requisito de outro Perfil ou de outra modalidade é recusado no servidor, ainda que a tela nunca o tenha oferecido (FR-044)
-- [ ] T067 [P] [US4] Teste de constraint em `backend/tests/integration/inscricoes/test_envio_de_arquivo.py` — um arquivo por requisito; substituir sobrescreve e descarta o anterior
-- [ ] T068 [P] [US4] Teste em `backend/tests/authorization/test_arquivo_do_candidato.py` — arquivo não é entregue por endereço, nem a outro candidato
-- [ ] T069 [P] [US4] Teste em `backend/tests/integration/inscricoes/test_mudanca_de_modalidade.py` — a confirmação enumera o que será descartado, e nada some sem ela
+- [X] T063 [P] [US4] Teste de unidade da aplicabilidade em `backend/tests/unit/inscricoes/test_aplicabilidade.py` — as quatro combinações, e nenhuma quinta; e um Perfil sem modalidade declarada no conteúdo publicado não faz nascer modalidade de ampla concorrência alguma (FR-039)
+- [X] T064 [P] [US4] Teste de unidade da aceitação de arquivo em `backend/tests/unit/inscricoes/test_arquivos.py` — assinatura `%PDF-`, nome físico opaco, resumo calculado, e **limite lido da configuração**: alterar `ARQUIVOS_CANDIDATOS_LIMITE_BYTES` muda o que é aceito, provando que não está fixado em código (FR-046)
+- [X] T065 [P] [US4] Teste em `backend/tests/unit/inscricoes/test_arquivos.py` — imagem renomeada para `.pdf` é recusada com mensagem que ensina a converter
+- [X] T066 [P] [US4] Teste em `backend/tests/integration/inscricoes/test_envio_de_arquivo.py` — envio válido persiste sem `Salvar`; recusa não apaga arquivo nem campo já válido
+- [X] T066a [P] [US4] Teste em `backend/tests/authorization/test_requisito_alheio.py` — envio forjado para requisito de outro Perfil ou de outra modalidade é recusado no servidor, ainda que a tela nunca o tenha oferecido (FR-044)
+- [X] T067 [P] [US4] Teste de constraint em `backend/tests/integration/inscricoes/test_envio_de_arquivo.py` — um arquivo por requisito; substituir sobrescreve e descarta o anterior
+- [X] T068 [P] [US4] Teste em `backend/tests/authorization/test_arquivo_do_candidato.py` — arquivo não é entregue por endereço, nem a outro candidato
+- [X] T069 [P] [US4] Teste em `backend/tests/integration/inscricoes/test_mudanca_de_modalidade.py` — a confirmação enumera o que será descartado, e nada some sem ela
 
-- [ ] T069a [P] [US4] Teste em `backend/tests/javascript/portal.test.js`, registrado em `backend/tests/test_javascript.py` — o script do portal não escreve em `localStorage` nem em `sessionStorage` (FR-042). *O `rascunho.js` do elaborador cobre o caso oposto e é o precedente a não imitar aqui: com CPF e documentos, nenhum prazo compensa o risco numa máquina compartilhada.*
+- [X] T069a [P] [US4] Teste em `backend/tests/javascript/portal.test.js`, registrado em `backend/tests/test_javascript.py` — o script do portal não escreve em `localStorage` nem em `sessionStorage` (FR-042). *O `rascunho.js` do elaborador cobre o caso oposto e é o precedente a não imitar aqui: com CPF e documentos, nenhum prazo compensa o risco numa máquina compartilhada.*
 
 ### Implementation for User Story 4
 
-- [ ] T070 [US4] Armazenamento privado em `backend/processo_seletivo/inscricoes/storage.py`, com raiz configurada e nome físico derivado da Inscrição e do requisito
-- [ ] T071 [US4] Modelo `DocumentoSubmetido` em `backend/processo_seletivo/inscricoes/models.py`, com a unicidade por inscrição e requisito
-- [ ] T072 [US4] Migration em `backend/processo_seletivo/inscricoes/migrations/` com a tabela `DocumentoSubmetido` e sua unicidade
-- [ ] T073 [P] [US4] `backend/processo_seletivo/inscricoes/domain/aplicabilidade.py` — função pura sobre o conteúdo publicado
-- [ ] T074 [P] [US4] `backend/processo_seletivo/inscricoes/domain/arquivos.py` — aceitação, limite, nome físico, resumo, recusas com significado
-- [ ] T075 [US4] Anexar, substituir e remover em `backend/processo_seletivo/inscricoes/application/rascunho.py`, recusando requisito que não se aplique àquela inscrição e período fechado — a aplicabilidade é conferida no servidor a cada envio, não só ao montar a tela
-- [ ] T076 [US4] Bloco de documentos com contagem `n de m` em `templates/portal/inscricao.html`, listando só o aplicável
-- [ ] T077 [US4] Envio por requisito em requisição própria, com fragmento de resposta, em `portal/views.py` e `portal/urls.py`
-- [ ] T078 [US4] Progresso de envio e aviso de não fechar a página em `backend/processo_seletivo/portal/static/portal/envio.js`, pelo evento de progresso do htmx
-- [ ] T079 [US4] Entrega do próprio documento ao titular em `backend/processo_seletivo/portal/arquivos.py` — mediada, `inline`, `no-store`, em streaming
-- [ ] T080 [US4] Confirmação de descarte na mudança de modalidade, em `portal/views.py` e template próprio
-- [ ] T081 [US4] Auditoria de anexar, substituir e remover antes do envio, em `backend/processo_seletivo/inscricoes/application/rascunho.py`
-- [ ] T082 [US4] Percorrer a entrega 4 do [quickstart.md](./quickstart.md), inclusive com rede limitada, em 375 px e por teclado
+- [X] T070 [US4] Armazenamento privado em `backend/processo_seletivo/inscricoes/storage.py`, com raiz configurada e nome físico derivado da Inscrição e do requisito
+- [X] T071 [US4] Modelo `DocumentoSubmetido` em `backend/processo_seletivo/inscricoes/models.py`, com a unicidade por inscrição e requisito
+- [X] T072 [US4] Migration em `backend/processo_seletivo/inscricoes/migrations/` com a tabela `DocumentoSubmetido` e sua unicidade
+- [X] T073 [P] [US4] `backend/processo_seletivo/inscricoes/domain/aplicabilidade.py` — função pura sobre o conteúdo publicado
+- [X] T074 [P] [US4] `backend/processo_seletivo/inscricoes/domain/arquivos.py` — aceitação, limite, nome físico, resumo, recusas com significado
+- [X] T075 [US4] Anexar, substituir e remover em `backend/processo_seletivo/inscricoes/application/rascunho.py`, recusando requisito que não se aplique àquela inscrição e período fechado — a aplicabilidade é conferida no servidor a cada envio, não só ao montar a tela
+- [X] T076 [US4] Bloco de documentos com contagem `n de m` em `templates/portal/inscricao.html`, listando só o aplicável
+- [X] T077 [US4] Envio por requisito em requisição própria, com fragmento de resposta, em `portal/views.py` e `portal/urls.py`
+- [X] T078 [US4] Progresso de envio e aviso de não fechar a página em `backend/processo_seletivo/portal/static/portal/envio.js`, pelo evento de progresso do htmx
+- [X] T079 [US4] Entrega do próprio documento ao titular em `backend/processo_seletivo/portal/arquivos.py` — mediada, `inline`, `no-store`, em streaming
+- [X] T080 [US4] Confirmação de descarte na mudança de modalidade, em `portal/views.py` e template próprio
+- [X] T081 [US4] Auditoria de anexar, substituir e remover antes do envio, em `backend/processo_seletivo/inscricoes/application/rascunho.py`
+- [X] T082 [US4] Percorrer a entrega 4 do [quickstart.md](./quickstart.md), inclusive com rede limitada, em 375 px e por teclado
 
 **Checkpoint**: o arquivo chega ligado ao requisito que atende, e o trabalho do candidato não se perde.
 

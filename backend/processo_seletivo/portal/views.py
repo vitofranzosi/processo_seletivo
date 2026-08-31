@@ -19,12 +19,18 @@ from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.inscricoes.application.rascunho import (
     abrir_inscricao,
+    anexar_documento,
+    descartar_inaplicaveis,
+    descartes_por_mudanca_de_modalidade,
     gravar_dados,
+    remover_documento,
+    requisitos_da_inscricao,
 )
 from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes, recebe_inscricoes
 from processo_seletivo.inscricoes.domain.titularidade import exigir_titularidade
-from processo_seletivo.inscricoes.models import Inscricao
+from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.portal import identidade as identidade_do_candidato
+from processo_seletivo.portal.arquivos import entregar_ao_titular
 from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.http import marcar_como_privada, resposta_privada
@@ -276,7 +282,26 @@ def inscricao(request, inscricao_id):
     perfil = _perfil_do_conteudo(conteudo, registro.profile_id)
     guardado = False
     erros = []
+    descartes = []
     if request.method == "POST":
+        # A mudança de modalidade que invalida documento já enviado é confirmada antes, com a
+        # lista do que se perde: nada some em silêncio, e nada é reaproveitado em silêncio
+        # (FR-031).
+        descartes = descartes_por_mudanca_de_modalidade(
+            conteudo, registro, request.POST.get("modalidade", "").strip() or None
+        )
+        if descartes and not request.POST.get("confirmar_descarte"):
+            return render(
+                request,
+                "portal/descarte.html",
+                {
+                    "inscricao": registro,
+                    "selecao": _selecao(versao),
+                    "descartes": descartes,
+                    "modalidade": request.POST.get("modalidade", "").strip(),
+                    "telefone": request.POST.get("telefone", "").strip(),
+                },
+            )
         try:
             registro = gravar_dados(
                 identidade=identidade,
@@ -294,6 +319,11 @@ def inscricao(request, inscricao_id):
                 correlation_id=getattr(request, "correlation_id", ""),
             )
             guardado = True
+            descartar_inaplicaveis(
+                identidade=identidade,
+                inscricao=registro,
+                correlation_id=getattr(request, "correlation_id", ""),
+            )
         except DomainError as exc:
             erros.append(exc.detail)
     return render(
@@ -308,8 +338,40 @@ def inscricao(request, inscricao_id):
             "identidade": identidade,
             "guardado": guardado,
             "erros": erros,
+            "documentos": _documentos(conteudo, registro),
+            "descartes": descartes,
         },
     )
+
+
+def _documentos(conteudo, inscricao):
+    """Cada requisito aplicável, com o arquivo que já chegou para ele — e o que falta.
+
+    A contagem é do que **falta**, e não do que existe: é a pergunta que o candidato faz, e é a
+    que decide se ele pode enviar a inscrição (FR-035, FR-056).
+    """
+    enviados = {
+        str(documento.requirement_id): documento
+        for documento in DocumentoSubmetido.objects.filter(inscricao=inscricao)
+    }
+    linhas = []
+    for requisito in requisitos_da_inscricao(conteudo, inscricao):
+        documento = enviados.get(str(requisito["id"]))
+        linhas.append(
+            {
+                "id": str(requisito["id"]),
+                "nome": requisito.get("name", ""),
+                "instrucao": requisito.get("instructions", ""),
+                "obrigatorio": requisito.get("required", True),
+                "enviado": documento,
+            }
+        )
+    obrigatorios = [linha for linha in linhas if linha["obrigatorio"]]
+    return {
+        "linhas": linhas,
+        "total": len(obrigatorios),
+        "recebidos": len([linha for linha in obrigatorios if linha["enviado"]]),
+    }
 
 
 def _perfil_do_conteudo(conteudo, profile_id):
@@ -346,3 +408,93 @@ def _modalidades_ofertadas(perfil):
         {"id": str(modalidade.get("id")), "nome": modalidade.get("name", "")}
         for modalidade in perfil.get("competitionModalities") or []
     ]
+
+
+@require_http_methods(["POST"])
+def enviar_documento(request, inscricao_id, requirement_id):
+    """Um requisito, uma requisição — e a resposta é o bloco de documentos inteiro.
+
+    Requisição própria por arquivo é o que faz o envio persistir na hora, sem `Salvar`, e o que
+    faz a recusa de um não derrubar os outros (FR-041, FR-049). A resposta devolve o bloco todo
+    porque a contagem "n de m" muda junto: devolver só a linha obrigaria a atualizar dois lugares
+    no cliente, e um deles ficaria para trás.
+    """
+    registro, identidade, versao = _inscricao_do_titular(request, inscricao_id)
+    erro = ""
+    arquivo = request.FILES.get("arquivo")
+    if arquivo is None:
+        erro = "Escolha um arquivo em PDF."
+    else:
+        try:
+            anexar_documento(
+                identidade=identidade,
+                inscricao=registro,
+                requirement_id=requirement_id,
+                arquivo=arquivo,
+                correlation_id=getattr(request, "correlation_id", ""),
+            )
+        except DomainError as exc:
+            erro = _erro_do_arquivo(exc)
+    return _bloco_de_documentos(request, registro, versao, erro=erro, requisito=requirement_id)
+
+
+@require_http_methods(["POST"])
+def remover_documento_enviado(request, inscricao_id, requirement_id):
+    registro, identidade, versao = _inscricao_do_titular(request, inscricao_id)
+    erro = ""
+    try:
+        remover_documento(
+            identidade=identidade,
+            inscricao=registro,
+            requirement_id=requirement_id,
+            correlation_id=getattr(request, "correlation_id", ""),
+        )
+    except DomainError as exc:
+        erro = _erro_do_arquivo(exc)
+    return _bloco_de_documentos(request, registro, versao, erro=erro, requisito=requirement_id)
+
+
+@require_http_methods(["GET"])
+def documento_do_candidato(request, inscricao_id, requirement_id):
+    """O candidato vê o que enviou — mediado, e recusado a qualquer outra pessoa."""
+    registro, _, _ = _inscricao_do_titular(request, inscricao_id)
+    return entregar_ao_titular(
+        inscricao=registro,
+        identidade=identidade_do_candidato.identidade_da_sessao(request),
+        requirement_id=requirement_id,
+    )
+
+
+def _erro_do_arquivo(exc):
+    """Recusa sobre o arquivo aparece junto do campo; o resto é recusa de página.
+
+    "O arquivo é uma imagem" e "o arquivo é grande demais" são sobre o que a pessoa escolheu, e o
+    lugar delas é ao lado do controle. "Este requisito não é seu" e "as inscrições fecharam" não
+    são erro de campo — mostrá-las ali sugeriria que escolher outro arquivo resolveria.
+    """
+    if exc.status != 422:
+        raise exc
+    return exc.detail
+
+
+def _inscricao_do_titular(request, inscricao_id):
+    identidade = identidade_do_candidato.identidade_da_sessao(request)
+    registro = Inscricao.objects.filter(pk=inscricao_id).select_related("edital").first()
+    if registro is None:
+        raise DomainError("not_found", "Recurso não encontrado.", 404)
+    exigir_titularidade(registro, identidade)
+    return registro, identidade, selectors.selecao_publica(edital_id=registro.edital_id)
+
+
+def _bloco_de_documentos(request, inscricao, versao, *, erro="", requisito=""):
+    resposta = render(
+        request,
+        "portal/_documentos.html",
+        {
+            "inscricao": inscricao,
+            "documentos": _documentos(versao.content, inscricao),
+            "erro_do_envio": erro,
+            "requisito_recusado": str(requisito) if erro else "",
+        },
+    )
+    return marcar_como_privada(resposta)

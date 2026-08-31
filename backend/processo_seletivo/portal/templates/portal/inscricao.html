@@ -75,4 +75,12 @@ voltar à página anterior para lembrar.
   {% endcomment %}
   <button type="submit" class="principal">Continuar</button>
 </form>
+
+{% comment %}
+Os documentos ficam **fora** do formulário dos dados: cada arquivo é enviado em requisição própria
+e persiste na hora, e é isso que faz a recusa de um não derrubar os outros (FR-041, FR-049).
+{% endcomment %}
+{% include "portal/_documentos.html" %}
+{% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
+<script src="{% static 'portal/envio.js' %}" defer></script>
 {% endblock %}

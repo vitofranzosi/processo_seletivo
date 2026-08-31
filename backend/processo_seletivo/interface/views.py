@@ -1369,6 +1369,8 @@ OPERACOES = {
     # Atos do candidato (009). Entram aqui porque a trilha é uma só: quem responde a um
     # questionamento sobre uma inscrição lê a mesma tela de quem responde sobre um Edital.
     "GRAVAR": "Preenchimento da inscrição",
+    "ANEXAR": "Envio de documento",
+    "REMOVER": "Remoção de documento",
 }
 AGREGADOS = {
     "ProcessoSeletivo": "Processo Seletivo",

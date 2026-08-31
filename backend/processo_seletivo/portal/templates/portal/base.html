@@ -60,6 +60,26 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
   margin-bottom:1rem;border-radius:0 4px 4px 0}
 .recusa{display:block;color:var(--vermelho);font-size:.9375rem;margin-top:.25rem}
 .obrigatorio{color:var(--vermelho);margin-left:.15rem}
+.contagem{font-weight:600;margin:.5rem 0 1rem}
+.requisitos-lista{list-style:none;margin:0;padding:0;display:grid;gap:1rem}
+.requisito{background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:1rem}
+.requisito.completo{border-left:4px solid var(--sucesso)}
+.requisito .nome{margin:0 0 .25rem;font-weight:600}
+/* A marca é redundante com a cor da borda, de propósito: quem não distingue as duas lê o mesmo
+   estado no símbolo e no texto da contagem (WCAG 1.4.1). */
+.requisito .marca{margin-right:.35rem}
+.requisito.completo .marca{color:var(--sucesso)}
+.requisito .arquivo{margin:.5rem 0;overflow-wrap:anywhere}
+.envio{display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-start;margin-top:.75rem}
+.envio input[type=file]{max-width:100%}
+.envio .acao{padding:.5rem .9rem;border:1px solid var(--verde);border-radius:4px;
+  background:transparent;color:var(--verde-texto);font-family:inherit;font-size:.9375rem;
+  cursor:pointer}
+.envio .acao.perigo{border-color:var(--vermelho);color:var(--vermelho)}
+.envio .acao[disabled]{opacity:.6;cursor:progress}
+.rotulo-arquivo{display:block;font-weight:600;width:100%}
+.progresso{display:flex;align-items:center;gap:.5rem;width:100%;margin:.5rem 0 0}
+.progresso progress{width:100%;max-width:16rem}
 .campo{display:grid;gap:.35rem;margin:0 0 1rem;max-width:32rem}
 .campo label{font-weight:600}
 .campo input,.campo select{width:100%;padding:.6rem;border:1px solid var(--borda);border-radius:4px;

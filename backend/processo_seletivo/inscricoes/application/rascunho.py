@@ -12,11 +12,14 @@ Três decisões estão aqui, e todas as três valem no servidor:
 """
 
 
+from django.conf import settings
 from django.db import IntegrityError, transaction
 
 from processo_seletivo.auditoria.application import record_event
+from processo_seletivo.editais.domain.documentos import aplicaveis
+from processo_seletivo.inscricoes.domain.arquivos import aceitar, resumo
 from processo_seletivo.inscricoes.domain.periodo import recebe_inscricoes
-from processo_seletivo.inscricoes.models import Inscricao
+from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.portal.identidade import normalizar_cpf
 from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.seguranca.domain import Actor
@@ -215,3 +218,186 @@ def _modalidade_escolhida(conteudo, profile_id, modality_id):
             422,
         )
     return str(modality_id)
+
+
+# ---------------------------------------------------------------------------
+# Documentos do rascunho (entrega 4)
+# ---------------------------------------------------------------------------
+
+ANEXAR = "inscricao:anexar"
+REMOVER = "inscricao:remover"
+
+
+def requisitos_da_inscricao(conteudo, inscricao) -> list[dict]:
+    """Os requisitos que valem para **esta** inscrição, e nenhum além (FR-040).
+
+    A aplicabilidade é função pura sobre o conteúdo publicado e vive no domínio dos Editais, junto
+    da regra que a declara. Chamá-la daqui é o que garante que a tela, o envio e a submissão
+    respondam a mesma coisa — três leituras da mesma função, e não três interpretações.
+    """
+    return aplicaveis(
+        conteudo.get("documentRequirements") or [],
+        profile_id=str(inscricao.profile_id),
+        modality_id=None if inscricao.modality_id is None else str(inscricao.modality_id),
+    )
+
+
+def _requisito_aplicavel(conteudo, inscricao, requirement_id):
+    return next(
+        (
+            requisito
+            for requisito in requisitos_da_inscricao(conteudo, inscricao)
+            if str(requisito.get("id")) == str(requirement_id)
+        ),
+        None,
+    )
+
+
+def anexar_documento(*, identidade, inscricao, requirement_id, arquivo, correlation_id=""):
+    """Guarda um arquivo para um requisito — imediatamente, e sem `Salvar` (FR-041).
+
+    Três recusas antes de qualquer escrita, e a ordem importa: fora do período não se anexa nada;
+    requisito que não se aplica àquela inscrição não é aceito **ainda que a tela nunca o tenha
+    oferecido** (FR-044); e o arquivo é conferido por conteúdo antes de tocar o disco.
+    """
+    versao = _versao_vigente(inscricao.edital_id)
+    conteudo = versao.content
+    with command_context() as agora:
+        if not recebe_inscricoes(status=inscricao.edital.status, conteudo=conteudo, agora=agora):
+            raise DomainError(
+                "registration_closed", "Esta seleção não está recebendo inscrições.", 409
+            )
+        if inscricao.status != Inscricao.Status.RASCUNHO:
+            raise DomainError(
+                "submission_is_final", "Uma inscrição enviada não aceita alterações.", 409
+            )
+        if _requisito_aplicavel(conteudo, inscricao, requirement_id) is None:
+            raise DomainError("not_found", "Recurso não encontrado.", 404)
+        aceitar(
+            arquivo,
+            nome_original=arquivo.name,
+            limite_em_bytes=settings.ARQUIVOS_CANDIDATOS_LIMITE_BYTES,
+        )
+        conteudo_hash = resumo(arquivo)
+        anterior = DocumentoSubmetido.objects.filter(
+            inscricao=inscricao, requirement_id=requirement_id
+        ).first()
+        if anterior is not None:
+            # Substituir é sobrescrever, e o arquivo antigo sai do disco junto: guardar versões
+            # que ninguém pediu criaria a pergunta "qual vale?" e um acervo que cresce sozinho.
+            anterior.arquivo.delete(save=False)
+            anterior.delete()
+        documento = DocumentoSubmetido(
+            inscricao=inscricao,
+            requirement_id=requirement_id,
+            nome_original=arquivo.name[:255],
+            tamanho=arquivo.size,
+            content_hash=conteudo_hash,
+            uploaded_at=agora,
+        )
+        documento.arquivo.save(arquivo.name, arquivo, save=False)
+        documento.save()
+        record_event(
+            actor=ator_do_candidato(identidade, inscricao.edital),
+            permission=ANEXAR,
+            operation="ANEXAR",
+            aggregate=inscricao,
+            now=agora,
+            correlation_id=correlation_id,
+            # O requisito atendido, e **não** o nome do arquivo: nome de arquivo carrega dado
+            # pessoal com frequência, e a auditoria não precisa dele para responder o que
+            # aconteceu (FR-078).
+            reason=f"requisito {requirement_id}",
+        )
+        return documento
+
+
+def remover_documento(*, identidade, inscricao, requirement_id, correlation_id=""):
+    versao = _versao_vigente(inscricao.edital_id)
+    with command_context() as agora:
+        if not recebe_inscricoes(
+            status=inscricao.edital.status, conteudo=versao.content, agora=agora
+        ):
+            raise DomainError(
+                "registration_closed", "Esta seleção não está recebendo inscrições.", 409
+            )
+        if inscricao.status != Inscricao.Status.RASCUNHO:
+            raise DomainError(
+                "submission_is_final", "Uma inscrição enviada não aceita alterações.", 409
+            )
+        documento = DocumentoSubmetido.objects.filter(
+            inscricao=inscricao, requirement_id=requirement_id
+        ).first()
+        if documento is None:
+            raise DomainError("not_found", "Recurso não encontrado.", 404)
+        documento.arquivo.delete(save=False)
+        documento.delete()
+        record_event(
+            actor=ator_do_candidato(identidade, inscricao.edital),
+            permission=REMOVER,
+            operation="REMOVER",
+            aggregate=inscricao,
+            now=agora,
+            correlation_id=correlation_id,
+            reason=f"requisito {requirement_id}",
+        )
+
+
+def descartes_por_mudanca_de_modalidade(conteudo, inscricao, modality_id) -> list[dict]:
+    """O que deixaria de ser exigido se a modalidade mudasse — e por isso seria descartado.
+
+    Existe para que a confirmação possa **enumerar** o que se perde antes de perder (FR-031).
+    Descartar em silêncio e reaproveitar em silêncio são os dois erros simétricos; a lista é o que
+    permite não cometer nenhum dos dois.
+    """
+    if str(modality_id or "") == str(inscricao.modality_id or ""):
+        return []
+    depois = {
+        str(requisito["id"])
+        for requisito in aplicaveis(
+            conteudo.get("documentRequirements") or [],
+            profile_id=str(inscricao.profile_id),
+            modality_id=str(modality_id) if modality_id else None,
+        )
+    }
+    enviados = {
+        str(documento.requirement_id): documento
+        for documento in DocumentoSubmetido.objects.filter(inscricao=inscricao)
+    }
+    por_id = {
+        str(requisito["id"]): requisito
+        for requisito in conteudo.get("documentRequirements") or []
+    }
+    return [
+        {
+            "requisito": por_id.get(requirement_id, {}).get("name", ""),
+            "arquivo": documento.nome_original,
+        }
+        for requirement_id, documento in enviados.items()
+        if requirement_id not in depois
+    ]
+
+
+def descartar_inaplicaveis(*, identidade, inscricao, correlation_id=""):
+    """Remove o que deixou de ser exigido depois de a modalidade mudar.
+
+    Roda **depois** da gravação, e recalcula a aplicabilidade sobre a inscrição já atualizada: é a
+    mesma função que decide o que a tela pede, e por isso não há como as duas divergirem. Cada
+    remoção é auditada como qualquer outra.
+    """
+    conteudo = _versao_vigente(inscricao.edital_id).content
+    aplicaveis_agora = {
+        str(requisito["id"]) for requisito in requisitos_da_inscricao(conteudo, inscricao)
+    }
+    descartados = []
+    for documento in DocumentoSubmetido.objects.filter(inscricao=inscricao):
+        if str(documento.requirement_id) in aplicaveis_agora:
+            continue
+        remover_documento(
+            identidade=identidade,
+            inscricao=inscricao,
+            requirement_id=documento.requirement_id,
+            correlation_id=correlation_id,
+        )
+        descartados.append(str(documento.requirement_id))
+    return descartados
