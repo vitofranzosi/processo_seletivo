@@ -20,41 +20,61 @@ continua com o foco onde estava e, num leitor de tela, a mensagem passa desperce
   {% csrf_token %}
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
 
+  {% comment %}
+  Os campos usam a grade que o resto do produto já usa — `.campos` com `.campo`, `curto` e `largo`.
+  Esta era a única tela que empilhava um campo por linha: com o cartão ocupando a largura da
+  página, "Número" e "Ano" sozinhos numa linha deixavam três quartos dela vazios.
+  {% endcomment %}
   <fieldset>
     <legend>Processo Seletivo</legend>
-
-    <label for="codigo">Identificação institucional <span class="obrigatorio" aria-hidden="true">*</span></label>
-    <input type="text" id="codigo" name="codigo" required autofocus
-           aria-describedby="ajuda-codigo" value="{{ digitado.codigo|default:'' }}" aria-required="true">
-    <p id="ajuda-codigo" class="nenhuma" style="margin:.35rem 0 1.25rem">
-      Como o Processo é referido nos documentos oficiais. Não pode repetir outro já criado.</p>
-
-    <label for="titulo">Título <span class="obrigatorio" aria-hidden="true">*</span></label>
-    <input type="text" id="titulo" name="titulo" required
-           value="{{ digitado.titulo|default:'' }}" aria-required="true">
+    <div class="campos">
+      <p class="campo largo">
+        <label for="codigo">Identificação institucional
+          <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <input type="text" id="codigo" name="codigo" required autofocus
+               aria-describedby="ajuda-codigo" value="{{ digitado.codigo|default:'' }}"
+               aria-required="true">
+        <span class="ajuda" id="ajuda-codigo">Como o Processo é referido nos documentos oficiais.
+          Não pode repetir outro já criado.</span>
+      </p>
+      <p class="campo largo">
+        <label for="titulo">Título <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <input type="text" id="titulo" name="titulo" required
+               value="{{ digitado.titulo|default:'' }}" aria-required="true">
+      </p>
+    </div>
   </fieldset>
 
   <fieldset>
     <legend>Primeiro Edital</legend>
-
-    <label for="numero">Número <span class="obrigatorio" aria-hidden="true">*</span></label>
-    <input type="text" id="numero" name="numero" required class="curto"
-           value="{{ digitado.numero|default:'' }}" aria-required="true">
-
-    <label for="ano">Ano <span class="obrigatorio" aria-hidden="true">*</span></label>
-    <input type="number" id="ano" name="ano" required class="curto" min="2000"
-           value="{{ digitado.ano|default:ano_corrente }}" aria-required="true">
-
-    <label for="titulo_edital">Título do Edital <span class="obrigatorio" aria-hidden="true">*</span></label>
-    <input type="text" id="titulo_edital" name="titulo_edital" required
-           value="{{ digitado.titulo_edital|default:'' }}" aria-required="true">
-
-    <label for="descricao">Descrição</label>
-    <textarea id="descricao" name="descricao" rows="3"
-              aria-describedby="ajuda-descricao">{{ digitado.descricao|default:'' }}</textarea>
-    <p id="ajuda-descricao" class="nenhuma" style="margin:.35rem 0 1.25rem">
-      Opcional na criação, mas a validação avisa se ficar ausente na submissão. Pode ser
-      alterada depois, na etapa de Identificação, enquanto o Edital estiver em elaboração.</p>
+    <div class="campos">
+      <p class="campo curto">
+        <label for="numero">Número <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <input type="text" id="numero" name="numero" required
+               value="{{ digitado.numero|default:'' }}" aria-required="true">
+      </p>
+      <p class="campo curto">
+        <label for="ano">Ano <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <input type="number" id="ano" name="ano" required min="2000"
+               value="{{ digitado.ano|default:ano_corrente }}" aria-required="true">
+      </p>
+      <p class="campo largo">
+        <label for="titulo_edital">Título do Edital
+          <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <input type="text" id="titulo_edital" name="titulo_edital" required
+               value="{{ digitado.titulo_edital|default:'' }}" aria-required="true">
+      </p>
+    </div>
+    <div class="campos">
+      <p class="campo largo" style="flex-basis:100%">
+        <label for="descricao">Descrição</label>
+        <textarea id="descricao" name="descricao" rows="3"
+                  aria-describedby="ajuda-descricao">{{ digitado.descricao|default:'' }}</textarea>
+        <span class="ajuda" id="ajuda-descricao">Opcional na criação, mas a validação avisa se
+          ficar ausente na submissão. Pode ser alterada depois, na etapa de Identificação,
+          enquanto o Edital estiver em elaboração.</span>
+      </p>
+    </div>
   </fieldset>
 
   <p class="navegacao-etapa">
