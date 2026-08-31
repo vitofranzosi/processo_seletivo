@@ -20,7 +20,6 @@ from django.views.decorators.http import require_http_methods
 from processo_seletivo.inscricoes.application.rascunho import (
     abrir_inscricao,
     anexar_documento,
-    descartar_inaplicaveis,
     descartes_por_mudanca_de_modalidade,
     gravar_dados,
     remover_documento,
@@ -304,6 +303,7 @@ def inscricao(request, inscricao_id):
             )
         try:
             registro = gravar_dados(
+                descartes_confirmados=[descarte["id"] for descarte in descartes],
                 identidade=identidade,
                 inscricao=registro,
                 dados={
@@ -319,11 +319,6 @@ def inscricao(request, inscricao_id):
                 correlation_id=getattr(request, "correlation_id", ""),
             )
             guardado = True
-            descartar_inaplicaveis(
-                identidade=identidade,
-                inscricao=registro,
-                correlation_id=getattr(request, "correlation_id", ""),
-            )
         except DomainError as exc:
             erros.append(exc.detail)
     return render(

@@ -20,11 +20,12 @@ from processo_seletivo.editais.domain.documentos import aplicaveis
 from processo_seletivo.inscricoes.domain.arquivos import aceitar, resumo
 from processo_seletivo.inscricoes.domain.periodo import recebe_inscricoes
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
+from processo_seletivo.inscricoes.storage import ArmazenamentoPrivado
 from processo_seletivo.portal.identidade import normalizar_cpf
 from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.seguranca.domain import Actor
 from processo_seletivo.shared.api.problems import DomainError
-from processo_seletivo.shared.application.commands import command_context
+from processo_seletivo.shared.application.commands import after_commit, command_context
 from processo_seletivo.shared.concurrency import compare_and_swap
 
 # O rótulo da operação no registro de auditoria. **Não** é permissão concedida a ninguém: o ator do
@@ -140,29 +141,50 @@ def _inscricao_existente(identidade, edital_id, profile_id):
     ).first()
 
 
-def gravar_dados(*, identidade, inscricao, dados, correlation_id=""):
-    """Grava os campos da tela, sem `Salvar` (FR-041).
+def gravar_dados(*, identidade, inscricao, dados, descartes_confirmados=(), correlation_id=""):
+    """Grava os campos da tela, sem `Salvar` — e o descarte, quando houver, vai junto (FR-041).
 
-    A gravação acontece na passagem para a revisão — quem chama é a view, no momento em que a
-    pessoa avança. Nada de gravação automática contínua: seria mecanismo novo para uma tela com
-    quatro campos.
+    **Um comando, uma transação.** Mudar a modalidade e descartar o que ela torna inaplicável são
+    a mesma decisão da pessoa, e separá-las em duas transações deixa o meio termo alcançável: a
+    modalidade nova gravada com descarte pela metade, ou o descarte feito sobre uma gravação que
+    não aconteceu. A Inscrição é travada, os dois efeitos acontecem juntos, e os arquivos só saem
+    do disco depois do commit.
+
+    **O descarte é o confirmado, e nada além.** A lista recomputada sob trava tem de coincidir com
+    a que a pessoa viu; divergindo, a confirmação está velha e a gravação é recusada em vez de
+    apagar o que ninguém confirmou.
     """
     versao = _versao_vigente(inscricao.edital_id)
     conteudo = versao.content
     with command_context() as agora:
-        if not recebe_inscricoes(status=inscricao.edital.status, conteudo=conteudo, agora=agora):
+        travada = _rascunho_travado(inscricao, conteudo, agora)
+        modalidade = _modalidade_escolhida(conteudo, travada.profile_id, dados.get("modality_id"))
+        inaplicaveis = _documentos_inaplicaveis(conteudo, travada, modalidade)
+        if set(inaplicaveis) != {str(item) for item in descartes_confirmados}:
             raise DomainError(
-                "registration_closed",
-                "Esta seleção não está recebendo inscrições.",
+                "discard_not_confirmed",
+                "A lista de documentos a descartar mudou. Revise a alteração antes de confirmar.",
                 409,
             )
-        modalidade = _modalidade_escolhida(
-            conteudo, inscricao.profile_id, dados.get("modality_id")
-        )
+        caminhos = []
+        for documento in DocumentoSubmetido.objects.filter(
+            inscricao=travada, requirement_id__in=inaplicaveis
+        ):
+            caminhos.append(documento.arquivo.name)
+            documento.delete()
+            record_event(
+                actor=ator_do_candidato(identidade, travada.edital),
+                permission=REMOVER,
+                operation="REMOVER",
+                aggregate=travada,
+                now=agora,
+                correlation_id=correlation_id,
+                reason=f"requisito {documento.requirement_id}",
+            )
         compare_and_swap(
             Inscricao.objects,
-            pk=inscricao.pk,
-            expected_revision=inscricao.revision,
+            pk=travada.pk,
+            expected_revision=travada.revision,
             nome=dados.get("nome", ""),
             cpf=dados.get("cpf", ""),
             cpf_normalizado=normalizar_cpf(dados.get("cpf", "")),
@@ -173,16 +195,43 @@ def gravar_dados(*, identidade, inscricao, dados, correlation_id=""):
             # Retificação passa a comparar com esta, e não volta a aparecer pela mesma alteração.
             versao_reconhecida=versao,
         )
-        inscricao.refresh_from_db()
+        travada.refresh_from_db()
         record_event(
-            actor=ator_do_candidato(identidade, inscricao.edital),
+            actor=ator_do_candidato(identidade, travada.edital),
             permission=GRAVAR,
             operation="GRAVAR",
-            aggregate=inscricao,
+            aggregate=travada,
             now=agora,
             correlation_id=correlation_id,
         )
-        return inscricao
+        for caminho in caminhos:
+            _apagar_depois_do_commit(caminho)
+        return travada
+
+
+def _documentos_inaplicaveis(conteudo, inscricao, modalidade_nova) -> list[str]:
+    """Os requisitos já enviados que a modalidade nova deixaria de exigir.
+
+    **Só quando a modalidade muda.** Um requisito que a Retificação removeu ou restringiu também
+    fica inaplicável, e apagá-lo aqui seria apagar arquivo em silêncio a cada `Continuar` — sem
+    que a pessoa tivesse mudado nada. A reconciliação por Retificação é decisão explícita e
+    pertence ao aviso da entrega 5 (FR-059).
+    """
+    if str(modalidade_nova or "") == str(inscricao.modality_id or ""):
+        return []
+    depois = {
+        str(requisito["id"])
+        for requisito in aplicaveis(
+            conteudo.get("documentRequirements") or [],
+            profile_id=str(inscricao.profile_id),
+            modality_id=str(modalidade_nova) if modalidade_nova else None,
+        )
+    }
+    return [
+        str(documento.requirement_id)
+        for documento in DocumentoSubmetido.objects.filter(inscricao=inscricao)
+        if str(documento.requirement_id) not in depois
+    ]
 
 
 def _modalidade_escolhida(conteudo, profile_id, modality_id):
@@ -253,25 +302,59 @@ def _requisito_aplicavel(conteudo, inscricao, requirement_id):
     )
 
 
+def _rascunho_travado(inscricao, conteudo, agora):
+    """A Inscrição relida sob trava, e as recusas conferidas sobre o estado **de agora**.
+
+    Sem a releitura, o estado vem do objeto que a view carregou antes: uma requisição que começou
+    antes do envio alteraria arquivos depois dele, porque a checagem responderia por um `status`
+    obsoleto. A trava também serializa duas requisições do mesmo candidato — dois envios, ou um
+    envio e uma mudança de modalidade — em vez de deixá-las se atropelarem.
+    """
+    travada = (
+        Inscricao.objects.select_for_update().select_related("edital").get(pk=inscricao.pk)
+    )
+    if not recebe_inscricoes(status=travada.edital.status, conteudo=conteudo, agora=agora):
+        raise DomainError(
+            "registration_closed", "Esta seleção não está recebendo inscrições.", 409
+        )
+    if travada.status != Inscricao.Status.RASCUNHO:
+        raise DomainError(
+            "submission_is_final", "Uma inscrição enviada não aceita alterações.", 409
+        )
+    return travada
+
+
+def _apagar_depois_do_commit(caminho):
+    """O arquivo sai do disco **só** quando o banco confirma.
+
+    O sistema de arquivos não participa da transação: apagar antes do commit significa que um
+    rollback devolve o registro apontando para um arquivo que não existe mais. Adiar é o que faz
+    o disco seguir o banco, e não o contrário.
+    """
+    if not caminho:
+        return
+    armazenamento = ArmazenamentoPrivado()
+    after_commit(lambda: armazenamento.delete(caminho))
+
+
 def anexar_documento(*, identidade, inscricao, requirement_id, arquivo, correlation_id=""):
     """Guarda um arquivo para um requisito — imediatamente, e sem `Salvar` (FR-041).
 
     Três recusas antes de qualquer escrita, e a ordem importa: fora do período não se anexa nada;
     requisito que não se aplica àquela inscrição não é aceito **ainda que a tela nunca o tenha
     oferecido** (FR-044); e o arquivo é conferido por conteúdo antes de tocar o disco.
+
+    **A ordem entre disco e banco também é regra.** O arquivo novo é escrito primeiro e removido
+    no `except` se a transação não chegar ao fim; o registro é atualizado no lugar, sem apagar e
+    reinserir; e o arquivo anterior só sai do disco depois do commit. As três coisas juntas são o
+    que impede um rollback deixar registro apontando para arquivo inexistente — ou arquivo órfão
+    que ninguém mais alcança.
     """
     versao = _versao_vigente(inscricao.edital_id)
     conteudo = versao.content
     with command_context() as agora:
-        if not recebe_inscricoes(status=inscricao.edital.status, conteudo=conteudo, agora=agora):
-            raise DomainError(
-                "registration_closed", "Esta seleção não está recebendo inscrições.", 409
-            )
-        if inscricao.status != Inscricao.Status.RASCUNHO:
-            raise DomainError(
-                "submission_is_final", "Uma inscrição enviada não aceita alterações.", 409
-            )
-        if _requisito_aplicavel(conteudo, inscricao, requirement_id) is None:
+        travada = _rascunho_travado(inscricao, conteudo, agora)
+        if _requisito_aplicavel(conteudo, travada, requirement_id) is None:
             raise DomainError("not_found", "Recurso não encontrado.", 404)
         aceitar(
             arquivo,
@@ -279,68 +362,61 @@ def anexar_documento(*, identidade, inscricao, requirement_id, arquivo, correlat
             limite_em_bytes=settings.ARQUIVOS_CANDIDATOS_LIMITE_BYTES,
         )
         conteudo_hash = resumo(arquivo)
-        anterior = DocumentoSubmetido.objects.filter(
-            inscricao=inscricao, requirement_id=requirement_id
-        ).first()
-        if anterior is not None:
-            # Substituir é sobrescrever, e o arquivo antigo sai do disco junto: guardar versões
-            # que ninguém pediu criaria a pergunta "qual vale?" e um acervo que cresce sozinho.
-            anterior.arquivo.delete(save=False)
-            anterior.delete()
-        documento = DocumentoSubmetido(
-            inscricao=inscricao,
-            requirement_id=requirement_id,
-            nome_original=arquivo.name[:255],
-            tamanho=arquivo.size,
-            content_hash=conteudo_hash,
-            uploaded_at=agora,
-        )
+        documento = DocumentoSubmetido.objects.filter(
+            inscricao=travada, requirement_id=requirement_id
+        ).first() or DocumentoSubmetido(inscricao=travada, requirement_id=requirement_id)
+        caminho_anterior = documento.arquivo.name if documento.pk else ""
         documento.arquivo.save(arquivo.name, arquivo, save=False)
-        documento.save()
-        record_event(
-            actor=ator_do_candidato(identidade, inscricao.edital),
-            permission=ANEXAR,
-            operation="ANEXAR",
-            aggregate=inscricao,
-            now=agora,
-            correlation_id=correlation_id,
-            # O requisito atendido, e **não** o nome do arquivo: nome de arquivo carrega dado
-            # pessoal com frequência, e a auditoria não precisa dele para responder o que
-            # aconteceu (FR-078).
-            reason=f"requisito {requirement_id}",
-        )
+        caminho_novo = documento.arquivo.name
+        try:
+            documento.nome_original = arquivo.name[:255]
+            documento.tamanho = arquivo.size
+            documento.content_hash = conteudo_hash
+            documento.uploaded_at = agora
+            documento.save()
+            record_event(
+                actor=ator_do_candidato(identidade, travada.edital),
+                permission=ANEXAR,
+                operation="ANEXAR",
+                aggregate=travada,
+                now=agora,
+                correlation_id=correlation_id,
+                # O requisito atendido, e **não** o nome do arquivo: nome de arquivo carrega dado
+                # pessoal com frequência, e a auditoria não precisa dele para responder o que
+                # aconteceu (FR-078).
+                reason=f"requisito {requirement_id}",
+            )
+        except Exception:
+            ArmazenamentoPrivado().delete(caminho_novo)
+            raise
+        if caminho_anterior and caminho_anterior != caminho_novo:
+            _apagar_depois_do_commit(caminho_anterior)
         return documento
 
 
 def remover_documento(*, identidade, inscricao, requirement_id, correlation_id=""):
     versao = _versao_vigente(inscricao.edital_id)
     with command_context() as agora:
-        if not recebe_inscricoes(
-            status=inscricao.edital.status, conteudo=versao.content, agora=agora
-        ):
-            raise DomainError(
-                "registration_closed", "Esta seleção não está recebendo inscrições.", 409
-            )
-        if inscricao.status != Inscricao.Status.RASCUNHO:
-            raise DomainError(
-                "submission_is_final", "Uma inscrição enviada não aceita alterações.", 409
-            )
+        travada = _rascunho_travado(inscricao, versao.content, agora)
         documento = DocumentoSubmetido.objects.filter(
-            inscricao=inscricao, requirement_id=requirement_id
+            inscricao=travada, requirement_id=requirement_id
         ).first()
         if documento is None:
             raise DomainError("not_found", "Recurso não encontrado.", 404)
-        documento.arquivo.delete(save=False)
+        caminho = documento.arquivo.name
         documento.delete()
         record_event(
-            actor=ator_do_candidato(identidade, inscricao.edital),
+            actor=ator_do_candidato(identidade, travada.edital),
             permission=REMOVER,
             operation="REMOVER",
-            aggregate=inscricao,
+            aggregate=travada,
             now=agora,
             correlation_id=correlation_id,
             reason=f"requisito {requirement_id}",
         )
+        # Depois do commit: se a transação voltar atrás, o registro volta — e o arquivo precisa
+        # continuar lá para que ele não aponte para o vazio.
+        _apagar_depois_do_commit(caminho)
 
 
 def descartes_por_mudanca_de_modalidade(conteudo, inscricao, modality_id) -> list[dict]:
@@ -370,34 +446,10 @@ def descartes_por_mudanca_de_modalidade(conteudo, inscricao, modality_id) -> lis
     }
     return [
         {
+            "id": requirement_id,
             "requisito": por_id.get(requirement_id, {}).get("name", ""),
             "arquivo": documento.nome_original,
         }
         for requirement_id, documento in enviados.items()
         if requirement_id not in depois
     ]
-
-
-def descartar_inaplicaveis(*, identidade, inscricao, correlation_id=""):
-    """Remove o que deixou de ser exigido depois de a modalidade mudar.
-
-    Roda **depois** da gravação, e recalcula a aplicabilidade sobre a inscrição já atualizada: é a
-    mesma função que decide o que a tela pede, e por isso não há como as duas divergirem. Cada
-    remoção é auditada como qualquer outra.
-    """
-    conteudo = _versao_vigente(inscricao.edital_id).content
-    aplicaveis_agora = {
-        str(requisito["id"]) for requisito in requisitos_da_inscricao(conteudo, inscricao)
-    }
-    descartados = []
-    for documento in DocumentoSubmetido.objects.filter(inscricao=inscricao):
-        if str(documento.requirement_id) in aplicaveis_agora:
-            continue
-        remover_documento(
-            identidade=identidade,
-            inscricao=inscricao,
-            requirement_id=documento.requirement_id,
-            correlation_id=correlation_id,
-        )
-        descartados.append(str(documento.requirement_id))
-    return descartados
