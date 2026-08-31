@@ -444,7 +444,9 @@ def test_publicar_logo_apos_a_previa_produz_o_mesmo_conteudo_normativo(
     assert "INSCRICAO" not in visualizado and "INSCRICAO" not in publicado
     assert MARCA_DE_PREVIA in visualizado
     assert MARCA_DE_PREVIA not in publicado
-    assert "INTEGRIDADE" in publicado and "INTEGRIDADE" not in visualizado
+    # **Forma atualizada**: o bloco de verificação deixou o caixa alta e virou nota subordinada.
+    assert "Verificação de integridade" in publicado
+    assert "Verificação de integridade" not in visualizado
 
 
 ETAPAS = {

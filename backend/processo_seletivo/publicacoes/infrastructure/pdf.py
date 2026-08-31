@@ -96,11 +96,14 @@ def largura(texto: str, tamanho: float, fonte: str = REGULAR) -> float:
 # texto, não corpo maior: num Edital a hierarquia vem do peso, e um título grande denuncia
 # relatório. A primeira redação tinha isto exatamente ao contrário.
 CORPO_INSTITUCIONAL = 13.0
-CORPO_ATO = 10.5
-CORPO_SECAO = 10.0
-CORPO_BLOCO = 10.0
-CORPO_TEXTO = 10.0
-CORPO_NOTA = 8.5
+CORPO_ATO = 12.0
+CORPO_SECAO = 11.0
+CORPO_BLOCO = 10.5
+CORPO_TEXTO = 10.5
+# A tabela usa corpo menor que o texto: ela é consulta, não leitura corrida, e um pouco menos de
+# corpo é o que permite à coluna caber sem apertar a célula.
+CORPO_TABELA = 9.5
+CORPO_NOTA = 7.5
 
 ESQUERDA, CENTRO, DIREITA = "esquerda", "centro", "direita"
 
@@ -353,6 +356,10 @@ class Composicao:
                 )
             )
 
+    def regua(self):
+        """Um fio de largura total, na posição corrente — o que separa o ato do seu metadado."""
+        self.itens.append(("regua",))
+
     def espaco(self, altura=8.0):
         self.itens.append(
             ("texto", "", REGULAR, 0.0, 0.0, altura, ESQUERDA, False, False, False)
@@ -495,6 +502,11 @@ class Composicao:
 
         while indice < len(self.itens):
             item = self.itens[indice]
+
+            if item[0] == "regua":
+                tracos.append(("seg", MARGEM, y - 2, LARGURA - MARGEM, y - 2))
+                indice += 1
+                continue
 
             if item[0] == "abre_tabela":
                 # O topo nasce **desconhecido**: fixá-lo aqui o poria na linha de base da legenda
@@ -662,6 +674,22 @@ def _cabecalho(composicao, snapshot):
 PADDING_DA_COLUNA = 12.0
 
 
+class _Numerador:
+    """As tabelas do documento, numeradas na ordem em que aparecem (`Tabela 1`, `Tabela 2`…).
+
+    Os Editais de referência identificam cada quadro relevante, e é assim que o texto normativo
+    consegue remetê-lo — "conforme a **TABELA 1**". Sem número, a remissão teria de descrever a
+    tabela por extenso toda vez.
+    """
+
+    def __init__(self):
+        self.contagem = 0
+
+    def legenda(self, titulo):
+        self.contagem += 1
+        return f"Tabela {self.contagem} — {titulo}"
+
+
 def _x_na_celula(texto, fonte, tamanho, recuo, coluna, alinhamento):
     """Onde a célula começa dentro da sua coluna.
 
@@ -712,8 +740,8 @@ def _larguras_das_colunas(cabecalho, linhas, tamanho, disponivel):
     return naturais
 
 
-def _tabela(composicao, cabecalho, linhas, *, recuo=18.0, tamanho=CORPO_TEXTO,
-            alinhamentos=None):
+def _tabela(composicao, cabecalho, linhas, *, recuo=18.0, tamanho=CORPO_TABELA,
+            alinhamentos=None, legenda=None):
     """Uma tabela: colunas limitadas, células que refluem dentro da sua coluna.
 
     A altura de cada linha é a da célula mais alta — sem isso, uma célula de três linhas
@@ -760,6 +788,12 @@ def _tabela(composicao, cabecalho, linhas, *, recuo=18.0, tamanho=CORPO_TEXTO,
                         primeira_da_linha = False
                     deslocamento += colunas[indice]
 
+    if legenda:
+        composicao.escrever(
+            legenda, tamanho=CORPO_TEXTO, fonte=NEGRITO, recuo=recuo,
+            antes=ANTES_DE_BLOCO, junto=True,
+        )
+
     # As divisões de coluna, em posição absoluta: é o que a grade precisa saber, e o que a
     # composição não teria como deduzir do texto já colocado.
     bordas, acumulado = [MARGEM + recuo], MARGEM + recuo
@@ -774,7 +808,7 @@ def _tabela(composicao, cabecalho, linhas, *, recuo=18.0, tamanho=CORPO_TEXTO,
             escrever_linha(linha, REGULAR)
 
 
-def _modalidades(composicao, perfil):
+def _modalidades(composicao, perfil, tabelas, nomear_perfil=False):
     """As modalidades em tabela — sem perder o que a frase corrida dizia (FR-018, FR-019).
 
     O documento anterior imprimia `Regra Normativa — fundamento: …; versão: …; percentual: …`.
@@ -804,20 +838,20 @@ def _modalidades(composicao, perfil):
     # a vaga —, não a data em que a regra foi cadastrada. Continua no conteúdo publicado.
     cabecalho = ["Modalidade", "Percentual", "Fundamento normativo"]
     presentes = [c for c in range(len(cabecalho)) if any(linha[c] for linha in linhas)]
+    titulo = "Modalidades de concorrência"
+    if nomear_perfil:
+        titulo = f"{titulo} — {perfil.get('code', '')}"
     with composicao.bloco():
-        composicao.escrever(
-            "Modalidades de concorrência", tamanho=CORPO_TEXTO, fonte=NEGRITO, recuo=18,
-            antes=ANTES_DE_BLOCO, junto=True,
-        )
         _tabela(
             composicao,
             [cabecalho[c] for c in presentes],
             [[linha[c] or "—" for c in presentes] for linha in linhas],
             alinhamentos=[ESQUERDA if c == 0 else CENTRO for c in presentes],
+            legenda=tabelas.legenda(titulo),
         )
 
 
-def _quadro_de_vagas(composicao, perfis):
+def _quadro_de_vagas(composicao, perfis, tabelas):
     """A visão global antes do detalhe — o `Quadro de vagas` dos Editais de referência.
 
     Um card por Perfil responde "como apresento esta entidade?". O Edital pergunta outra coisa:
@@ -839,19 +873,17 @@ def _quadro_de_vagas(composicao, perfis):
                 perfil.get("workload", "") or "—",
             ]
         )
-    composicao.escrever(
-        "Quadro de vagas", tamanho=CORPO_TEXTO, fonte=NEGRITO, antes=ANTES_DE_BLOCO, junto=True
-    )
     _tabela(
         composicao,
         ["Perfil", "Localidade", "Vagas", "Cadastro reserva", "Carga horária"],
         linhas,
         recuo=0.0,
         alinhamentos=[ESQUERDA, ESQUERDA, CENTRO, ESQUERDA, CENTRO],
+        legenda=tabelas.legenda("Quadro de vagas"),
     )
 
 
-def _perfis(composicao, snapshot, secao=0):
+def _perfis(composicao, snapshot, secao=0, tabelas=None):
     """O quadro de vagas, e depois cada Perfil como subseção.
 
     **Sem moldura externa.** O retângulo em volta de tudo produzia um cartão de interface
@@ -862,7 +894,7 @@ def _perfis(composicao, snapshot, secao=0):
     """
     perfis = snapshot.get("profiles") or []
     if len(perfis) > 1:
-        _quadro_de_vagas(composicao, perfis)
+        _quadro_de_vagas(composicao, perfis, tabelas)
 
     for ordem, perfil in enumerate(perfis, 1):
         with composicao.bloco(coeso=False):
@@ -920,7 +952,7 @@ def _perfis(composicao, snapshot, secao=0):
                     )
                     for requisito in requisitos:
                         composicao.escrever(f"• {requisito}", tamanho=CORPO_TEXTO, recuo=32)
-            _modalidades(composicao, perfil)
+            _modalidades(composicao, perfil, tabelas, len(perfis) > 1)
 
 
 def _reserva(perfil):
@@ -947,7 +979,7 @@ def _pares(composicao, pares, *, recuo=18.0):
         )
 
 
-def _cronograma(composicao, snapshot, secao=0):
+def _cronograma(composicao, snapshot, secao=0, tabelas=None):
     """O Cronograma em tabela, com **rótulo humano**, não com o código do tipo.
 
     `INSCRICAO — Período de inscrições` denuncia o sistema por trás do documento: `INSCRICAO` é
@@ -973,13 +1005,14 @@ def _cronograma(composicao, snapshot, secao=0):
         linhas,
         recuo=0.0,
         alinhamentos=[CENTRO, ESQUERDA, CENTRO, CENTRO],
+        legenda=tabelas.legenda("Cronograma"),
     )
 
 
 CARATER_DA_ETAPA = (("eliminatory", "eliminatória"), ("classificatory", "classificatória"))
 
 
-def _etapas(composicao, snapshot, secao=0):
+def _etapas(composicao, snapshot, secao=0, tabelas=None):
     """As Etapas na ordem definida, com o que estiver informado.
 
     Peso, nota mínima e caráter só aparecem quando existem: imprimir "peso: —" afirmaria uma
@@ -1056,13 +1089,14 @@ def _secoes(composicao, snapshot):
     revela, porque nele está tudo preenchido. O número é da materialização: ele não existe no
     conteúdo homologado e não sobrevive a uma mudança de ordem (FR-012).
     """
+    tabelas = _Numerador()
     for numero, (secao, corpo) in enumerate(_materializaveis(snapshot), 1):
         titulo = f"{numero}. {secao.get('title', '').upper()}"
         composicao.escrever(
             titulo, tamanho=CORPO_SECAO, fonte=NEGRITO, antes=ANTES_DE_SECAO, junto=True
         )
         if corpo is not None:
-            corpo(composicao, snapshot, numero)
+            corpo(composicao, snapshot, numero, tabelas)
         else:
             for indice, paragrafo in enumerate(_paragrafos(secao.get("content", ""))):
                 composicao.escrever(
@@ -1088,35 +1122,34 @@ def _autoridade(composicao, autoridade):
 
 
 def _integridade(composicao, snapshot, content_hash):
-    """A verificação, discreta e ao final (FR-038 a FR-040).
+    """A verificação, subordinada ao ato (FR-037 a FR-039).
 
-    O mecanismo não perde nada: a afirmação de derivação permanece, o SHA-256 completo permanece,
-    o abreviado permanece no rodapé. O que muda é a posição — depois da assinatura — e o peso, que
-    passa a ser o de nota. `Versão do schema` sai do corpo do ato: é forma interna, continua no
-    snapshot e no mecanismo, e não é matéria de Edital.
+    Ela precisa estar presente e precisa estar **abaixo** — em corpo de nota, separada por um fio
+    fino, compacta. Um bloco de quatro linhas em corpo de texto depois da assinatura lê-se como a
+    décima primeira seção do Edital; o que ele é, na verdade, é metadado de autenticidade.
     """
+    composicao.espaco(ANTES_DE_SECAO)
+    composicao.regua()
     composicao.escrever(
-        "VERIFICAÇÃO DE INTEGRIDADE", tamanho=CORPO_NOTA, fonte=NEGRITO,
-        antes=ANTES_DE_SECAO, junto=True,
-    )
-    composicao.escrever(
-        "Este documento deriva integralmente da versão homologada identificada abaixo.",
+        "Verificação de integridade — este documento deriva integralmente da versão homologada "
+        "identificada abaixo.",
         tamanho=CORPO_NOTA,
-        antes=ANTES_DE_LINHA,
-    )
-    composicao.escrever(
-        f"Edital {snapshot.get('number', '')}/{snapshot.get('year', '')}", tamanho=CORPO_NOTA
+        antes=ANTES_DE_LINHA + 3,
     )
     processo = " — ".join(
         parte
         for parte in (snapshot.get("processoCode", ""), snapshot.get("processoTitle", ""))
         if parte
     )
-    composicao.escrever(f"Processo Seletivo {processo}", tamanho=CORPO_NOTA)
+    composicao.escrever(
+        f"Edital {snapshot.get('number', '')}/{snapshot.get('year', '')} · "
+        f"Processo Seletivo {processo}",
+        tamanho=CORPO_NOTA,
+    )
     composicao.escrever(f"SHA-256 do conteúdo: {content_hash}", tamanho=CORPO_NOTA)
 
 
-def _fluxo_da_pagina(linhas, rodape, marca="", tracos=(), com_brasao=False):
+def _fluxo_da_pagina(linhas, rodape, pagina, marca="", tracos=(), com_brasao=False):
     partes = []
     if com_brasao:
         # `cm` põe a matriz de escala e a posição; `Do` desenha o XObject. `q`/`Q` isolam a
@@ -1171,11 +1204,18 @@ def _fluxo_da_pagina(linhas, rodape, marca="", tracos=(), com_brasao=False):
             + (b" 0 Tw" if espaco else b"")
             + b" ET"
         )
-    partes.append(
-        b"BT /" + REGULAR.encode() + f" 8.0 Tf {MARGEM:.1f} {RODAPE - 16:.1f} Td (".encode()
-        + _texto_pdf(rodape)
-        + b") Tj ET"
-    )
+    # Identificação à esquerda, página à direita: o rodapé usa a largura em vez de empilhar tudo
+    # num canto, e fica em corpo de nota para não competir com o conteúdo.
+    for texto, x in (
+        (rodape, MARGEM),
+        (pagina, LARGURA - MARGEM - largura(pagina, CORPO_NOTA, REGULAR)),
+    ):
+        partes.append(
+            b"BT /" + REGULAR.encode()
+            + f" {CORPO_NOTA:.1f} Tf {x:.1f} {RODAPE - 16:.1f} Td (".encode()
+            + _texto_pdf(texto)
+            + b") Tj ET"
+        )
     return b"\n".join(partes)
 
 
@@ -1217,13 +1257,12 @@ def render_edital_pdf(
     paginas = composicao.paginar()
 
     edital = f"Edital {snapshot.get('number', '')}/{snapshot.get('year', '')}"
-    identificacao = (
-        f"{MARCA_DE_PREVIA} · {edital}" if previa else f"{edital} · SHA-256 {content_hash[:16]}…"
-    )
+    identificacao = edital if previa else f"{edital} · Verificação {content_hash[:16]}…"
     fluxos = [
         _fluxo_da_pagina(
             linhas,
-            f"{identificacao} · Página {numero} de {len(paginas)}",
+            identificacao,
+            f"Página {numero} de {len(paginas)}",
             marca=MARCA_DE_PREVIA if previa else "",
             tracos=tracos,
             com_brasao=numero == 1,

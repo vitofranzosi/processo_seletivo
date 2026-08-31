@@ -775,7 +775,7 @@ def test_um_subbloco_maior_que_a_pagina_quebra_por_dentro_e_a_composicao_conclui
     assert len(paginas) >= 3, "o cenário extremo deveria ocupar várias páginas"
     texto = texto_de(pdf)
     assert "Atribuição 1:" in texto and "Atribuição 60:" in texto, "conteúdo perdido na quebra"
-    assert "INTEGRIDADE" in texto, "a composição não chegou ao fim"
+    assert "Verificação de integridade" in texto, "a composição não chegou ao fim"
 
 
 def test_o_quadro_de_modalidades_nao_inventa_celula_nem_perde_informacao():
@@ -1116,7 +1116,15 @@ def test_a_verificacao_vem_depois_da_assinatura_e_nao_e_secao_do_edital():
     assert HASH[:16] in texto, "e o abreviado permanece no rodapé"
     assert "deriva integralmente da versão homologada" in texto
 
-    assert linhas.index(AUTORIDADE[0]) < linhas.index("VERIFICAÇÃO DE INTEGRIDADE")
+    # **Forma atualizada**: o bloco deixou de ser um título em caixa alta seguido de quatro
+    # linhas e passou a três linhas de nota abaixo de um fio. Ele precisa estar presente e
+    # precisa estar **abaixo** — em corpo de texto, lia-se como a décima primeira seção.
+    verificacao = next(
+        indice
+        for indice, linha in enumerate(linhas)
+        if linha.startswith("Verificação de integridade")
+    )
+    assert linhas.index(AUTORIDADE[0]) < verificacao
 
     # Discreto: o bloco de verificação usa o menor corpo do documento.
     corpos = {

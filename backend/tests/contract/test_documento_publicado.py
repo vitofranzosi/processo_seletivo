@@ -113,7 +113,9 @@ def corpo_normativo(pagina: list[str], marca_de_previa: str) -> list[str]:
             ("VERIFICAÇÃO DE INTEGRIDADE", "Este documento deriva")
         ):
             fora = True
-        if marca_de_previa in linha or linha.startswith(("Edital 0", "PRÉVIA —")):
+        # O rodapé passou a duas âncoras — identificação à esquerda, página à direita —, e as
+        # duas são metadado de página, não corpo.
+        if marca_de_previa in linha or linha.startswith(("Edital 0", "PRÉVIA —", "Página ")):
             continue
         if not fora:
             corpo.append(linha)

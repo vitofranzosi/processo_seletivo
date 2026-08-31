@@ -329,9 +329,13 @@ evidência que o motivou — pertence a [research.md](./research.md) e [plan.md]
   a distância que restava contra os alvos, o brasão passou a ser o elemento isolado de maior
   impacto perceptivo, e o custo — uma imagem conhecida, constante e conferível em diff — é
   proporcional.*
+- **FR-009a**: Toda tabela institucional relevante DEVE ser identificada por legenda numerada —
+  `Tabela N — Título` —, na ordem em que aparece no documento. *É como o texto normativo remete a
+  ela: "conforme a Tabela 1". Sem número, a remissão teria de descrever a tabela por extenso.*
 - **FR-009**: A materialização DEVE definir apenas os níveis tipográficos necessários:
-  identificação institucional, título do ato, título de seção, subseção/bloco, corpo e
-  nota/metadado. Nenhum design system de documentos é criado.
+  identificação institucional, título do ato, título de seção, subseção/bloco, corpo, **célula de
+  tabela** e nota/metadado. A célula usa corpo menor que o texto — tabela é consulta, não leitura
+  corrida —, e a nota é o menor corpo do documento. Nenhum design system de documentos é criado.
 - **FR-010**: As seções normativas DEVEM ser numeradas na materialização, na ordem institucional já
   definida pelo conteúdo publicado — `1. APRESENTAÇÃO`, `2. DAS DISPOSIÇÕES PRELIMINARES`, e assim
   por diante até a última.
@@ -433,7 +437,9 @@ evidência que o motivou — pertence a [research.md](./research.md) e [plan.md]
   autoridade que já praticou o ato, e nada além.
 - **FR-038**: A declaração de integridade DEVE ser deslocada para bloco discreto **após** o bloco de
   autoridade, tipograficamente subordinado ao conteúdo normativo, sem perder nenhuma informação
-  necessária ao mecanismo. Nenhuma página nova e nenhum serviço novo são criados para isso.
+  necessária ao mecanismo. Ela usa o **menor corpo do documento** e é separada por um fio fino: em
+  corpo de texto, ela se lê como mais uma seção do Edital, e o que ela é, na verdade, é metadado de
+  autenticidade. Nenhuma página nova e nenhum serviço novo são criados para isso.
 - **FR-039**: `Versão do schema` NÃO DEVE aparecer como seção normativa do Edital. Ela permanece no
   mecanismo e no snapshot; o que muda é o que se imprime como corpo do ato.
 - **FR-040**: O SHA-256 completo permanece no bloco de verificação e o abreviado permanece no
