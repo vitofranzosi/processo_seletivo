@@ -16,7 +16,7 @@ continua com o foco onde estava e, num leitor de tela, a mensagem passa desperce
 {% endcomment %}
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus>{{ erro }}</p>{% endif %}
 
-<form method="post" class="identificar">
+<form method="post" class="cartao">
   {% csrf_token %}
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
 

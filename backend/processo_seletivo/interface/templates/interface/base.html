@@ -239,8 +239,13 @@ fieldset.linha legend{font-size:.75rem;text-transform:uppercase;letter-spacing:.
 .bastao .ajuda{display:block;margin-top:.3rem}
 .botao.secundario:hover{background:var(--verde-claro)}
 .salvar{display:flex;gap:1rem;align-items:center;padding:1rem 0 2rem;border-top:1px solid var(--borda)}
-form.identificar{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
-  padding:1.5rem;max-width:520px}
+/* O cartão de formulário. A largura estreita é da **identificação** — um formulário de duas
+   perguntas, que numa coluna larga ficaria com o rótulo longe do campo. Formulário de conteúdo usa
+   a largura da página: a criação do Processo tem dois `fieldset` e nove campos, e prendê-los em
+   520px espremia a tela inteira num terço dela. */
+form.identificar,form.cartao{background:var(--branco);border:1px solid var(--borda);
+  border-radius:6px;padding:1.5rem}
+form.identificar{max-width:520px}
 fieldset{border:1px solid var(--borda);border-radius:4px;padding:1rem;margin:0 0 1.25rem}
 legend{font-weight:600;padding:0 .4rem}
 label{display:block;margin-bottom:.5rem}
