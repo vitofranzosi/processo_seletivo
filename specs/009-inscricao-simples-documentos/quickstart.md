@@ -47,6 +47,42 @@ Em produção as três configurações são fiscalizadas antes de o processo sub
 
 ---
 
+## Antes de receber inscrição de pessoa real
+
+Três condições que não são tela e não aparecem em teste — e que, por isso, precisam estar escritas
+onde quem implanta lê.
+
+1. **Política de retenção e descarte.** O sistema guarda nome, CPF, e-mail, telefone e documentos
+   comprobatórios, inclusive de rascunhos que ninguém enviou. Esta feature **minimiza** a coleta e
+   **não** implementa expurgo automático: antes de receber dado real, a instituição precisa
+   decidir por quanto tempo cada coisa fica e o que acontece com o rascunho abandonado. Enquanto
+   isso não existir, o acervo cresce e nunca diminui.
+2. **Provedor de identidade real.** O de demonstração deixa qualquer pessoa declarar quem é. A
+   guarda de produção impede subir com ele ligado; o que ela não faz é criar o substituto.
+3. **Raiz privada de arquivos, com backup e restrição de acesso do sistema operacional.** A
+   aplicação garante que nada é servido direto; o diretório em si é responsabilidade de quem
+   implanta.
+
+---
+
+## Verificação manual de acessibilidade
+
+O que a suíte prende: marcação nativa, rótulo ligado ao campo, link de salto com alvo focável,
+contraste da paleta, ausência de largura fixa e de `tabindex` positivo.
+
+O que **não** dá para prender e precisa ser percorrido à mão, uma vez por entrega que mexa nas
+telas do candidato:
+
+- percorrer identificação → `Sua inscrição` → envio de documento → revisão → envio **só pelo
+  teclado**, conferindo que a ordem de foco segue a ordem visual e que nenhum passo exige o mouse;
+- com leitor de tela, conferir que a contagem "n de m" e cada recusa de arquivo são anunciadas
+  quando mudam — elas estão em `role="status"` e `role="alert"`, e é o anúncio que importa, não o
+  atributo;
+- em 375 px, conferir que o seletor de arquivo abre a câmera ou a galeria do aparelho e que a
+  recusa de imagem aparece inteira sem rolagem horizontal.
+
+---
+
 ## O cenário-base
 
 Um Edital que exercita as quatro combinações de aplicabilidade com o menor número de dados possível.

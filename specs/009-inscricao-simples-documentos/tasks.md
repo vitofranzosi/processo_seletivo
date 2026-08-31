@@ -301,12 +301,12 @@ visualizar cada documento sob o requisito que atende — sem baixar nada.
 
 ## Phase 10: Polish & Cross-Cutting Concerns
 
-- [ ] T109 [P] Varredura de PII em `backend/processo_seletivo/shared/observability.py` e nos pontos de log das duas jornadas — nenhum CPF completo, nenhum nome de arquivo, nenhum conteúdo
-- [ ] T110 [P] Conferir `no-store` em toda resposta com dado pessoal e sua ausência na vitrine, por teste em `backend/tests/integration/portal/test_respostas_privadas.py`
-- [ ] T111 [P] Percurso do candidato por teclado e leitor de tela em 375 px, conferido contra a rubrica de `backend/tests/interface/test_acessibilidade.py`, estendida ao portal, e registrado no [quickstart.md](./quickstart.md)
-- [ ] T112 [P] Registrar o gate de retenção de dados pessoais em `specs/009-inscricao-simples-documentos/quickstart.md` e no README do backend, como precondição de dados reais
-- [ ] T113 Rodar a suíte contra PostgreSQL — `TEST_DB_ENGINE=postgresql` — e conferir a contagem de skips
-- [ ] T114 Executar o [quickstart.md](./quickstart.md) inteiro, terminando no percurso emblemático do `SC-017`
+- [X] T109 [P] Varredura de PII em `backend/processo_seletivo/shared/observability.py` e nos pontos de log das duas jornadas — nenhum CPF completo, nenhum nome de arquivo, nenhum conteúdo
+- [X] T110 [P] Conferir `no-store` em toda resposta com dado pessoal e sua ausência na vitrine, por teste em `backend/tests/integration/portal/test_respostas_privadas.py`
+- [X] T111 [P] Percurso do candidato por teclado e leitor de tela em 375 px, conferido contra a rubrica de `backend/tests/interface/test_acessibilidade.py`, estendida ao portal, e registrado no [quickstart.md](./quickstart.md)
+- [X] T112 [P] Registrar o gate de retenção de dados pessoais em `specs/009-inscricao-simples-documentos/quickstart.md` e no README do backend, como precondição de dados reais
+- [X] T113 Rodar a suíte contra PostgreSQL — `TEST_DB_ENGINE=postgresql` — e conferir a contagem de skips
+- [X] T114 Executar o [quickstart.md](./quickstart.md) inteiro, terminando no percurso emblemático do `SC-017`
 
 ---
 

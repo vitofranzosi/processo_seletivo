@@ -102,6 +102,19 @@ uma já vigente e outra com vigência futura —, para que a consulta temporal t
 há como recriá-la sobre o mesmo código: apagar a demonstração exigiria excluir Publicações, o que a
 Constituição proíbe e as triggers de imutabilidade recusam. Use outro `--codigo`.
 
+## Antes de receber dado pessoal real
+
+A `009` abriu o sistema para inscrições, e com elas entram nome, CPF, e-mail, telefone e documentos
+comprobatórios. Três precondições, nenhuma delas de código:
+
+- **política institucional de retenção e descarte** — a feature minimiza a coleta e não implementa
+  expurgo automático; sem a política, o acervo só cresce, inclusive com rascunhos que ninguém
+  enviou;
+- **provedor de identidade real** no lugar do de demonstração, que deixa qualquer pessoa declarar
+  quem é (produção recusa subir com ele ligado);
+- **raiz privada de arquivos** declarada, absoluta, fora da árvore do código, com backup e
+  restrição de acesso no sistema operacional.
+
 ## Produção
 
 `config.settings.production` trata cada pressuposto de segurança como precondição de
