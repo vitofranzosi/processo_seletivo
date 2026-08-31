@@ -160,27 +160,27 @@ preenchidos; sair, voltar e encontrar `Continuar inscrição`.
 
 ### Tests for User Story 3
 
-- [ ] T049 [P] [US3] Teste em `backend/tests/integration/portal/test_identidade_candidato.py` — chave de sessão própria; identidade institucional não identifica no portal, e vice-versa
-- [ ] T050 [P] [US3] Teste em `backend/tests/integration/portal/test_identidade_candidato.py` — após identificar-se, o retorno é a vaga de origem
-- [ ] T051 [P] [US3] Teste em `backend/tests/integration/inscricoes/test_rascunho.py` — abrir duas vezes o mesmo Perfil leva à mesma Inscrição
-- [ ] T051a [P] [US3] Teste em `backend/tests/integration/inscricoes/test_rascunho.py` — não existe caminho que troque o Perfil de uma Inscrição, nem pela tela nem por POST forjado; concorrer a outro Perfil é abrir outra inscrição (FR-030). *É a decisão que dispensa reconciliação de documentos: violada em silêncio, T075 e T080 passam a ter um caso que ninguém desenhou.*
-- [ ] T052 [P] [US3] Teste de constraint em `backend/tests/integration/inscricoes/test_unicidade.py` — o banco recusa a segunda Inscrição da mesma identidade no mesmo Edital e Perfil, em qualquer estado
-- [ ] T053 [P] [US3] Teste em `backend/tests/authorization/test_titularidade.py` — o rascunho de outra identidade não é alcançável por endereço
-- [ ] T053a [P] [US3] Teste em `backend/tests/integration/portal/test_inicio_fora_do_periodo.py` — iniciar inscrição pelo endereço direto é recusado quando o período é futuro, está encerrado ou não foi designado; conhecer a URL não contorna FR-019
+- [X] T049 [P] [US3] Teste em `backend/tests/integration/portal/test_identidade_candidato.py` — chave de sessão própria; identidade institucional não identifica no portal, e vice-versa
+- [X] T050 [P] [US3] Teste em `backend/tests/integration/portal/test_identidade_candidato.py` — após identificar-se, o retorno é a vaga de origem
+- [X] T051 [P] [US3] Teste em `backend/tests/integration/inscricoes/test_rascunho.py` — abrir duas vezes o mesmo Perfil leva à mesma Inscrição
+- [X] T051a [P] [US3] Teste em `backend/tests/integration/inscricoes/test_rascunho.py` — não existe caminho que troque o Perfil de uma Inscrição, nem pela tela nem por POST forjado; concorrer a outro Perfil é abrir outra inscrição (FR-030). *É a decisão que dispensa reconciliação de documentos: violada em silêncio, T075 e T080 passam a ter um caso que ninguém desenhou.*
+- [X] T052 [P] [US3] Teste de constraint em `backend/tests/integration/inscricoes/test_unicidade.py` — o banco recusa a segunda Inscrição da mesma identidade no mesmo Edital e Perfil, em qualquer estado
+- [X] T053 [P] [US3] Teste em `backend/tests/authorization/test_titularidade.py` — o rascunho de outra identidade não é alcançável por endereço
+- [X] T053a [P] [US3] Teste em `backend/tests/integration/portal/test_inicio_fora_do_periodo.py` — iniciar inscrição pelo endereço direto é recusado quando o período é futuro, está encerrado ou não foi designado; conhecer a URL não contorna FR-019
 
 ### Implementation for User Story 3
 
-- [ ] T054 [US3] `backend/processo_seletivo/portal/identidade.py` — eixo próprio, chave de sessão distinta, provedor de demonstração rotulado
-- [ ] T055 [US3] Modelo `Inscricao` em `backend/processo_seletivo/inscricoes/models.py`, com as constraints e o `save()` que recusa alterar o que é imutável
-- [ ] T056 [US3] Migration em `backend/processo_seletivo/inscricoes/migrations/` com a tabela `Inscricao` e suas constraints
-- [ ] T057 [US3] `backend/processo_seletivo/inscricoes/domain/titularidade.py` — quem pode ver o quê
-- [ ] T058 [US3] `backend/processo_seletivo/inscricoes/application/rascunho.py` — abrir ou retomar, gravar campos, construir o ator do candidato com permissões vazias, e **recusar a abertura fora do período**, no servidor, antes de qualquer escrita
-- [ ] T059 [US3] View e template `Sua inscrição` com dados pessoais e bloco de concorrência condicional, em `portal/views.py` e `templates/portal/inscricao.html`
-- [ ] T045a [US1] Convite `Inscrever-se nesta vaga` por Perfil em `backend/processo_seletivo/portal/templates/portal/selecao.html`, apontando para o início da inscrição — **completa a US1**. *Viaja aqui, e não na entrega 2, porque é aqui que o destino nasce: um convite para uma rota inexistente é pior do que a ausência dele.*
-- [ ] T045b [P] [US1] Teste em `backend/tests/integration/portal/test_convite_por_vaga.py` — o convite aparece com o período aberto, não aparece fora dele, e leva ao início da inscrição já com aquele Perfil
-- [ ] T060 [US3] `Continuar inscrição` no detalhe da seleção, em `backend/processo_seletivo/portal/views.py` e `templates/portal/selecao.html`
-- [ ] T061 [US3] Auditoria da criação da Inscrição em `backend/processo_seletivo/inscricoes/application/rascunho.py`, pelo `record_event` existente
-- [ ] T062 [US3] Percorrer a entrega 3 do [quickstart.md](./quickstart.md), nas duas janelas
+- [X] T054 [US3] `backend/processo_seletivo/portal/identidade.py` — eixo próprio, chave de sessão distinta, provedor de demonstração rotulado
+- [X] T055 [US3] Modelo `Inscricao` em `backend/processo_seletivo/inscricoes/models.py`, com as constraints e o `save()` que recusa alterar o que é imutável
+- [X] T056 [US3] Migration em `backend/processo_seletivo/inscricoes/migrations/` com a tabela `Inscricao` e suas constraints
+- [X] T057 [US3] `backend/processo_seletivo/inscricoes/domain/titularidade.py` — quem pode ver o quê
+- [X] T058 [US3] `backend/processo_seletivo/inscricoes/application/rascunho.py` — abrir ou retomar, gravar campos, construir o ator do candidato com permissões vazias, e **recusar a abertura fora do período**, no servidor, antes de qualquer escrita
+- [X] T059 [US3] View e template `Sua inscrição` com dados pessoais e bloco de concorrência condicional, em `portal/views.py` e `templates/portal/inscricao.html`
+- [X] T045a [US1] Convite `Inscrever-se nesta vaga` por Perfil em `backend/processo_seletivo/portal/templates/portal/selecao.html`, apontando para o início da inscrição — **completa a US1**. *Viaja aqui, e não na entrega 2, porque é aqui que o destino nasce: um convite para uma rota inexistente é pior do que a ausência dele.*
+- [X] T045b [P] [US1] Teste em `backend/tests/integration/portal/test_convite_por_vaga.py` — o convite aparece com o período aberto, não aparece fora dele, e leva ao início da inscrição já com aquele Perfil
+- [X] T060 [US3] `Continuar inscrição` no detalhe da seleção, em `backend/processo_seletivo/portal/views.py` e `templates/portal/selecao.html`
+- [X] T061 [US3] Auditoria da criação da Inscrição em `backend/processo_seletivo/inscricoes/application/rascunho.py`, pelo `record_event` existente
+- [X] T062 [US3] Percorrer a entrega 3 do [quickstart.md](./quickstart.md), nas duas janelas
 
 **Checkpoint**: existe titular, existe rascunho, e os dois eixos de identidade não se confundem.
 

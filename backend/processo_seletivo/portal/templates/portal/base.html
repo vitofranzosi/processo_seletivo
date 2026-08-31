@@ -51,13 +51,33 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 /* A situação é a informação que decide se vale continuar lendo, e por isso tem peso próprio.
    Cor **e** palavra: quem não distingue as cores lê a mesma coisa (WCAG 1.4.1). */
 .situacao{margin:.5rem 0;font-weight:600}
-.situacao.aberta{color:var(--sucesso)}
-.situacao.futura{color:var(--amarelo)}
-.situacao.encerrada{color:var(--texto-fraco);font-weight:400}
+.situacao.aberto{color:var(--sucesso)}
+.situacao.futuro{color:var(--amarelo)}
+.situacao.encerrado{color:var(--texto-fraco);font-weight:400}
+.aviso{background:var(--amarelo-fundo);border-left:4px solid var(--amarelo);padding:.75rem 1rem;
+  margin-bottom:1.5rem;border-radius:0 4px 4px 0}
+.erro{background:var(--vermelho-fundo);border-left:4px solid var(--vermelho);padding:.75rem 1rem;
+  margin-bottom:1rem;border-radius:0 4px 4px 0}
+.recusa{display:block;color:var(--vermelho);font-size:.9375rem;margin-top:.25rem}
+.campo{display:grid;gap:.35rem;margin:0 0 1rem;max-width:32rem}
+.campo label{font-weight:600}
+.campo input,.campo select{width:100%;padding:.6rem;border:1px solid var(--borda);border-radius:4px;
+  font-size:1rem;font-family:inherit}
+.ajuda{color:var(--texto-fraco);font-size:.9375rem;margin:.25rem 0 1rem}
+.dados{display:grid;grid-template-columns:1fr;gap:.15rem .75rem;margin:0 0 1rem}
+.dados dt{color:var(--texto-fraco)}
+.dados dd{margin:0 0 .5rem;overflow-wrap:anywhere}
+button.principal{padding:.75rem 1.25rem;border:0;border-radius:4px;background:var(--verde);
+  color:var(--branco);font-weight:600;font-size:1rem;font-family:inherit;cursor:pointer;
+  width:100%;max-width:32rem}
+button.principal:hover{background:var(--verde-escuro)}
+form.convite{margin:.75rem 0 0}
 @media (min-width:600px){
   main{padding:1.5rem}
   h1{font-size:1.6rem}
   .perfil dl{grid-template-columns:auto 1fr}
+  .dados{grid-template-columns:auto 1fr}
+  button.principal{width:auto}
 }
 </style>
 </head>

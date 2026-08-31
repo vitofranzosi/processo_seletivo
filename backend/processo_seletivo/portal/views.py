@@ -11,14 +11,20 @@ lá; esta entrega é a fatia navegável dela.
 """
 
 from django.http import Http404
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.urls import Resolver404, resolve, reverse
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_http_methods
 
+from processo_seletivo.inscricoes.application.rascunho import abrir_inscricao, gravar_dados
+from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes
+from processo_seletivo.inscricoes.domain.titularidade import exigir_titularidade
+from processo_seletivo.inscricoes.models import Inscricao
+from processo_seletivo.portal import identidade as identidade_do_candidato
 from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.shared.api.problems import DomainError
-
-FUTURA, ABERTA, ENCERRADA, SEM_PERIODO = "futura", "aberta", "encerrada", "sem-periodo"
+from processo_seletivo.shared.http import resposta_privada
 
 # A mesma tradução que o documento publicado usa, e pelo mesmo motivo: `UNLIMITED` é forma
 # interna, e forma interna não é o que se lê numa página de oportunidade.
@@ -27,35 +33,6 @@ RESERVA = {
     "LIMITED": "com cadastro reserva",
     "UNLIMITED": "com cadastro reserva ilimitado",
 }
-
-
-def _periodo(conteudo, agora):
-    """A situação das inscrições, derivada do Evento designado — e de mais nada.
-
-    Três estados e uma ausência. A ausência não é um quarto estado da inscrição: é o Edital que
-    não recebe inscrição por este sistema, e a página simplesmente não fala de prazo.
-
-    Nada aqui procura texto em `type` ou `description`. O Evento designado se diz designado, e a
-    marca é dado publicado — foi essa a decisão que tornou a situação uma leitura, e não um
-    palpite sobre o que alguém digitou.
-    """
-    designado = next(
-        (evento for evento in conteudo.get("schedule") or [] if evento.get("isRegistrationPeriod")),
-        None,
-    )
-    if designado is None:
-        return {"estado": SEM_PERIODO, "inicio": None, "fim": None}
-    inicio = parse_datetime(designado.get("startAt") or "")
-    fim = parse_datetime(designado.get("endAt") or "") if designado.get("endAt") else None
-    if inicio is not None and agora < inicio:
-        estado = FUTURA
-    elif fim is not None and agora > fim:
-        estado = ENCERRADA
-    else:
-        # Sem término declarado, o período segue aberto: é o que o Evento diz, e inventar um
-        # fechamento seria o sistema criando prazo que o Edital não fixou.
-        estado = ABERTA
-    return {"estado": estado, "inicio": inicio, "fim": fim}
 
 
 def _selecao(versao):
@@ -67,7 +44,7 @@ def _selecao(versao):
     conteudo = versao.content
     return {
         "edital_id": versao.edital_id,
-        "periodo": _periodo(conteudo, timezone.now()),
+        "periodo": periodo_de_inscricoes(conteudo, timezone.now()),
         "processo_codigo": conteudo.get("processoCode", ""),
         "processo_titulo": conteudo.get("processoTitle", ""),
         "unidade": versao.edital.institution_scope.upper(),
@@ -101,6 +78,20 @@ def vitrine(request):
     return render(request, "portal/vitrine.html", {"selecoes": selecoes})
 
 
+def _destino_seguro(request, padrao):
+    """Para onde voltar depois de identificar-se (FR-025).
+
+    O destino vem da requisição, e por isso é conferido: um endereço externo aqui transformaria a
+    identificação numa ponte para fora do sistema. Só caminho deste host passa.
+    """
+    destino = request.POST.get("destino") or request.GET.get("destino") or ""
+    if destino and url_has_allowed_host_and_scheme(
+        destino, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return destino
+    return padrao
+
+
 def selecao(request, edital_id):
     """O detalhe de uma seleção, orientado à decisão de participar.
 
@@ -112,5 +103,204 @@ def selecao(request, edital_id):
     except DomainError as exc:
         raise Http404 from exc
     contexto = _selecao(versao)
-    contexto["perfis"] = [_perfil(perfil) for perfil in versao.content.get("profiles") or []]
+    iniciadas = _inscricoes_iniciadas(request, edital_id)
+    contexto["perfis"] = [
+        _perfil_da_vitrine(perfil, iniciadas) for perfil in versao.content.get("profiles") or []
+    ]
     return render(request, "portal/selecao.html", contexto)
+
+
+def _inscricoes_iniciadas(request, edital_id):
+    """As inscrições que **esta** pessoa já abriu neste Edital, por Perfil.
+
+    Sem identidade não há o que procurar, e é por isso que a consulta nem acontece: a página
+    pública continua sendo pública, e ninguém descobre inscrição de terceiro por ela.
+    """
+    identidade = identidade_do_candidato.identidade_da_sessao(request)
+    if identidade is None:
+        return {}
+    return {
+        str(registro.profile_id): registro
+        for registro in Inscricao.objects.filter(
+            identity_subject=identidade.subject, edital_id=edital_id
+        )
+    }
+
+
+def _perfil_da_vitrine(perfil, iniciadas):
+    registro = iniciadas.get(str(perfil.get("id")))
+    return {
+        **_perfil(perfil),
+        "id": str(perfil.get("id")),
+        # O convite muda de texto conforme já exista rascunho: `Continuar inscrição` para quem
+        # voltou, `Inscrever-se nesta vaga` para quem chega (FR-016, FR-029).
+        "inscricao_id": None if registro is None else registro.id,
+    }
+
+
+@require_http_methods(["GET", "POST"])
+@resposta_privada
+def identificar(request):
+    """A identificação do candidato — provedor de demonstração enquanto o real não existe.
+
+    A tela diz o que é, sem eufemismo: quem se identifica aqui declara quem é, e nada verifica a
+    declaração. Em produção o processo nem sobe com este provedor ligado (FR-024).
+    """
+    if not identidade_do_candidato.provedor_de_demonstracao():
+        raise Http404
+    destino = _destino_seguro(request, reverse("portal:vitrine"))
+    erros = []
+    dados = {"nome": "", "cpf": "", "email": ""}
+    if request.method == "POST":
+        dados = {campo: request.POST.get(campo, "").strip() for campo in dados}
+        erros = _recusas_da_identificacao(dados)
+        if not erros:
+            identidade = identidade_do_candidato.identificar(request, **dados)
+            return _retomar(request, destino, identidade)
+    return render(
+        request,
+        "portal/identificar.html",
+        {"destino": destino, "erros": erros, "dados": dados},
+    )
+
+
+def _retomar(request, destino, identidade):
+    """Volta ao ponto de origem — e, quando ele era o convite, conclui o que a pessoa pediu.
+
+    O convite é POST, porque abrir rascunho cria registro e pratica ato auditado. O retorno depois
+    da identificação é GET, e mandar a pessoa de volta a uma rota que só aceita POST a deixaria
+    numa recusa do navegador. Em vez de abrir o convite para GET — o que faria um endereço
+    compartilhado criar inscrição —, a identificação resolve a intenção que já estava declarada:
+    quem clicou em "inscrever-se" e se identificou entra na inscrição, e não numa tela a mais.
+    """
+    try:
+        rota = resolve(destino)
+    except Resolver404:
+        return redirect(destino)
+    if rota.view_name != "portal:inscrever":
+        return redirect(destino)
+    inscricao_aberta = abrir_inscricao(
+        identidade=identidade,
+        edital_id=rota.kwargs["edital_id"],
+        profile_id=rota.kwargs["profile_id"],
+        correlation_id=getattr(request, "correlation_id", ""),
+    )
+    return redirect(reverse("portal:inscricao", args=[inscricao_aberta.id]))
+
+
+def _recusas_da_identificacao(dados):
+    recusas = {}
+    if not dados["nome"]:
+        recusas["nome"] = "Informe seu nome completo."
+    if len(identidade_do_candidato.normalizar_cpf(dados["cpf"])) != 11:
+        recusas["cpf"] = "Informe um CPF com 11 dígitos."
+    if "@" not in dados["email"]:
+        recusas["email"] = "Informe um e-mail válido."
+    return recusas
+
+
+@require_http_methods(["POST"])
+def sair(request):
+    identidade_do_candidato.encerrar(request)
+    return redirect(_destino_seguro(request, reverse("portal:vitrine")))
+
+
+@require_http_methods(["POST"])
+def inscrever(request, edital_id, profile_id):
+    """Começa — ou retoma — a inscrição naquela vaga.
+
+    POST, e não link: abrir rascunho cria registro e pratica ato auditado, e isso não é o que um
+    GET significa. Quem não está identificado vai identificar-se e **volta para cá** (FR-025).
+    """
+    identidade = identidade_do_candidato.identidade_da_sessao(request)
+    aqui = reverse("portal:inscrever", args=[edital_id, profile_id])
+    if identidade is None:
+        return redirect(f"{reverse('portal:identificar')}?destino={aqui}")
+    inscricao = abrir_inscricao(
+        identidade=identidade,
+        edital_id=edital_id,
+        profile_id=profile_id,
+        correlation_id=getattr(request, "correlation_id", ""),
+    )
+    return redirect(reverse("portal:inscricao", args=[inscricao.id]))
+
+
+@require_http_methods(["GET", "POST"])
+@resposta_privada
+def inscricao(request, inscricao_id):
+    """`Sua inscrição` — uma tela, e o que ela precisa saber vem do conteúdo publicado.
+
+    Nome, CPF e e-mail chegam da identidade e aparecem como **informação**, não como campo
+    desabilitado sem explicação (FR-037). O bloco de concorrência só existe quando há escolha
+    relevante: um Perfil sem modalidade declarada não faz pergunta nenhuma (FR-038, FR-039).
+    """
+    identidade = identidade_do_candidato.identidade_da_sessao(request)
+    registro = Inscricao.objects.filter(pk=inscricao_id).select_related("edital").first()
+    if registro is None:
+        raise Http404
+    exigir_titularidade(registro, identidade)
+    versao = selectors.selecao_publica(edital_id=registro.edital_id)
+    conteudo = versao.content
+    perfil = _perfil_do_conteudo(conteudo, registro.profile_id)
+    guardado = False
+    erros = []
+    if request.method == "POST":
+        try:
+            registro = gravar_dados(
+                identidade=identidade,
+                inscricao=registro,
+                dados={
+                    "nome": identidade.nome,
+                    "cpf": identidade.cpf,
+                    "email": identidade.email,
+                    "telefone": request.POST.get("telefone", "").strip(),
+                    "modality_id": request.POST.get("modalidade", "").strip(),
+                },
+                correlation_id=getattr(request, "correlation_id", ""),
+            )
+            guardado = True
+        except DomainError as exc:
+            erros.append(exc.detail)
+    return render(
+        request,
+        "portal/inscricao.html",
+        {
+            "inscricao": registro,
+            "selecao": _selecao(versao),
+            "perfil": _perfil_legivel(perfil),
+            "modalidades": _modalidades_ofertadas(perfil),
+            "identidade": identidade,
+            "guardado": guardado,
+            "erros": erros,
+        },
+    )
+
+
+def _perfil_do_conteudo(conteudo, profile_id):
+    """O Perfil da inscrição, lido do conteúdo publicado — nunca da tabela de elaboração."""
+    return next(
+        (
+            perfil
+            for perfil in conteudo.get("profiles") or []
+            if str(perfil.get("id")) == str(profile_id)
+        ),
+        None,
+    ) or {}
+
+
+def _perfil_legivel(perfil):
+    return {"nome": perfil.get("name", ""), "codigo": perfil.get("code", "")}
+
+
+def _modalidades_ofertadas(perfil):
+    """As modalidades daquele Perfil, e nenhuma inventada (FR-039).
+
+    Duas consequências da mesma regra: um Perfil sem modalidade declarada não faz nascer "ampla
+    concorrência" nenhuma — a pergunta simplesmente não é feita —, e um Perfil que **declara**
+    ampla concorrência oferece a dele, sem que o sistema acrescente uma segunda com o mesmo
+    significado ao lado.
+    """
+    return [
+        {"id": str(modalidade.get("id")), "nome": modalidade.get("name", "")}
+        for modalidade in perfil.get("competitionModalities") or []
+    ]

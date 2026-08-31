@@ -1,0 +1,65 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Sua inscrição{% endblock %}
+{% block conteudo %}
+<h1>Sua inscrição</h1>
+{% comment %}
+O contexto permanente que FR-035 pede: para qual Edital e qual vaga, o tempo todo, sem precisar
+voltar à página anterior para lembrar.
+{% endcomment %}
+<p class="sub">{{ selecao.processo_titulo }} · Edital {{ selecao.numero }}/{{ selecao.ano }}<br>
+  <strong>{{ perfil.nome }}</strong></p>
+
+{% if guardado %}<p class="situacao aberto" role="status">Seus dados estão guardados. Você pode
+  fechar esta página e continuar depois.</p>{% endif %}
+{% if erros %}<div class="erro" role="alert">{% for erro in erros %}<p>{{ erro }}</p>{% endfor %}</div>{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+  <section aria-labelledby="seus-dados">
+    <h2 id="seus-dados">Seus dados</h2>
+    {% comment %}
+    Informação, e não campo desabilitado sem explicação (FR-037): estes três vêm da identidade e
+    não são digitados de novo. Só o telefone é pedido, porque só ele o sistema não sabe.
+    {% endcomment %}
+    <dl class="dados">
+      <dt>Nome</dt><dd>{{ identidade.nome }}</dd>
+      <dt>CPF</dt><dd>{{ inscricao.cpf }}</dd>
+      <dt>E-mail</dt><dd>{{ identidade.email }}</dd>
+    </dl>
+    <p class="ajuda">Estes dados vêm da sua identificação e não precisam ser digitados de novo.</p>
+    <p class="campo">
+      <label for="telefone">Telefone (opcional)</label>
+      <input type="tel" id="telefone" name="telefone" value="{{ inscricao.telefone }}"
+             autocomplete="tel" inputmode="tel">
+    </p>
+  </section>
+
+  {% if modalidades %}
+  <section aria-labelledby="concorrencia">
+    <h2 id="concorrencia">Concorrência</h2>
+    <p class="ajuda">Escolha como você concorre nesta vaga.</p>
+    <p class="campo">
+      <label for="modalidade">Modalidade</label>
+      <select id="modalidade" name="modalidade">
+        {% comment %}
+        A opção vazia é "ainda não escolhi", e não uma modalidade inventada: quando o Edital
+        declara ampla concorrência, é a dele que aparece na lista — o sistema não cria uma segunda
+        com o mesmo significado (FR-039).
+        {% endcomment %}
+        <option value="">Selecione a modalidade</option>
+        {% for modalidade in modalidades %}
+        <option value="{{ modalidade.id }}" {% if inscricao.modality_id|stringformat:"s" == modalidade.id %}selected{% endif %}>{{ modalidade.nome }}</option>
+        {% endfor %}
+      </select>
+    </p>
+  </section>
+  {% endif %}
+
+  {% comment %}
+  Uma ação principal, e nenhum `Salvar` (P-005, FR-081): avançar é o que guarda. Na entrega 5 este
+  botão passa a levar à revisão, que é o destino que ainda não existe — e por isso ele ainda não
+  se chama `Revisar inscrição`.
+  {% endcomment %}
+  <button type="submit" class="principal">Continuar</button>
+</form>
+{% endblock %}

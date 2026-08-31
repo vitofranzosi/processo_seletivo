@@ -1366,11 +1366,15 @@ OPERACOES = {
     "ENCERRAR": "Encerramento",
     "CANCELAR": "Cancelamento",
     "DEVOLVER": "Devolução para elaboração",
+    # Atos do candidato (009). Entram aqui porque a trilha é uma só: quem responde a um
+    # questionamento sobre uma inscrição lê a mesma tela de quem responde sobre um Edital.
+    "GRAVAR": "Preenchimento da inscrição",
 }
 AGREGADOS = {
     "ProcessoSeletivo": "Processo Seletivo",
     "Edital": "Edital",
     "Retificacao": "Retificação",
+    "Inscricao": "Inscrição",
 }
 
 

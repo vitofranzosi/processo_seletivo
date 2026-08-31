@@ -1,0 +1,40 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Identificar-se{% endblock %}
+{% block conteudo %}
+<h1>Identifique-se para se inscrever</h1>
+<div class="aviso" role="status">
+  <strong>Ambiente de demonstração.</strong> A autenticação oficial ainda não foi integrada: os
+  dados abaixo são declarados por você e nada os verifica. Numa seleção real, a identificação virá
+  do provedor oficial.
+</div>
+
+{% if erros %}
+<div class="erro" role="alert">
+  <p>Confira os campos indicados abaixo.</p>
+</div>
+{% endif %}
+
+<form method="post" novalidate>
+  {% csrf_token %}
+  <input type="hidden" name="destino" value="{{ destino }}">
+  <p class="campo">
+    <label for="nome">Nome completo</label>
+    <input type="text" id="nome" name="nome" value="{{ dados.nome }}" required autocomplete="name"
+           {% if erros.nome %}aria-invalid="true" aria-describedby="recusa-nome"{% endif %}>
+    {% if erros.nome %}<span class="recusa" role="alert" id="recusa-nome">{{ erros.nome }}</span>{% endif %}
+  </p>
+  <p class="campo">
+    <label for="cpf">CPF</label>
+    <input type="text" id="cpf" name="cpf" value="{{ dados.cpf }}" required inputmode="numeric"
+           {% if erros.cpf %}aria-invalid="true" aria-describedby="recusa-cpf"{% endif %}>
+    {% if erros.cpf %}<span class="recusa" role="alert" id="recusa-cpf">{{ erros.cpf }}</span>{% endif %}
+  </p>
+  <p class="campo">
+    <label for="email">E-mail</label>
+    <input type="email" id="email" name="email" value="{{ dados.email }}" required autocomplete="email"
+           {% if erros.email %}aria-invalid="true" aria-describedby="recusa-email"{% endif %}>
+    {% if erros.email %}<span class="recusa" role="alert" id="recusa-email">{{ erros.email }}</span>{% endif %}
+  </p>
+  <button type="submit" class="principal">Continuar</button>
+</form>
+{% endblock %}

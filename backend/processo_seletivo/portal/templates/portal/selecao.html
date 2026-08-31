@@ -28,6 +28,14 @@
       <dd>{{ perfil.modalidades|join:"; " }}</dd>
       {% endif %}
     </dl>
+    {% if perfil.inscricao_id %}
+    <p class="convite"><a class="documento" href="{% url 'portal:inscricao' perfil.inscricao_id %}">Continuar inscrição</a></p>
+    {% elif periodo.estado == "aberto" %}
+    <form class="convite" method="post" action="{% url 'portal:inscrever' edital_id perfil.id %}">
+      {% csrf_token %}
+      <button type="submit" class="principal">Inscrever-se nesta vaga</button>
+    </form>
+    {% endif %}
     {% if perfil.requisitos %}
     <p class="meta" style="margin-top:.75rem">Requisitos</p>
     <ul class="requisitos">
