@@ -42,9 +42,26 @@ import re
 
 import pytest
 
-from processo_seletivo.publicacoes.infrastructure.pdf import render_edital_pdf
+from processo_seletivo.publicacoes.infrastructure.pdf import (
+    AutoridadeSignataria,
+    render_edital_pdf,
+)
 
 HASH = "a" * 64
+
+# Depois da `008`, compor em modo publicado **exige** a autoridade signatária do ato (FR-035).
+# Ela é contexto de publicação, não conteúdo: repeti-la em quarenta chamadas só faria ruído, e
+# esconderia os poucos casos em que ela é o assunto do teste — esses chamam `render_edital_pdf`
+# diretamente.
+AUTORIDADE_DA_SUITE = AutoridadeSignataria(nome="Reitora do Ifes", cargo="Reitora")
+
+
+def documento(conteudo, content_hash=HASH, *, modo=None, **kwargs):
+    """Compõe como a publicação compõe, com a autoridade que esta suíte usa."""
+    if modo is not None:
+        return render_edital_pdf(conteudo, content_hash, modo=modo, **kwargs)
+    kwargs.setdefault("autoridade", AUTORIDADE_DA_SUITE)
+    return render_edital_pdf(conteudo, content_hash, **kwargs)
 TEXTO_PDF = re.compile(rb"\((.*?)\) Tj", re.DOTALL)
 
 
@@ -251,7 +268,7 @@ def test_document_reproduces_every_profile_of_the_homologated_version():
     """**Forma atualizada pela `008`/US2**: a identificação virou quadro, e rótulo e valor passaram
     a ser células. O que o teste guarda é o conteúdo, e ele continua todo presente.
     """
-    texto = texto_de(render_edital_pdf(snapshot(), HASH))
+    texto = texto_de(documento(snapshot(), HASH))
     perfil = snapshot()["profiles"][0]
     assert perfil["code"] in texto
     assert perfil["name"] in texto
@@ -264,7 +281,7 @@ def test_document_reproduces_every_profile_of_the_homologated_version():
 
 def test_document_reproduces_competition_modalities_and_their_normative_rule():
     """FR-013: a Regra Normativa é conteúdo do Edital e precisa constar do documento."""
-    texto = texto_de(render_edital_pdf(snapshot(), HASH))
+    texto = texto_de(documento(snapshot(), HASH))
     assert "PPP" in texto
     assert "Pessoas pretas, pardas e indígenas" in texto
     assert "Lei 12.990/2014" in texto
@@ -277,7 +294,7 @@ def test_document_reproduces_competition_modalities_and_their_normative_rule():
 
 
 def test_document_reproduces_the_schedule_with_institutional_dates():
-    texto = texto_de(render_edital_pdf(snapshot(), HASH))
+    texto = texto_de(documento(snapshot(), HASH))
     assert "Período de inscrições" in texto
     assert "INSCRICAO" in texto
     # America/Sao_Paulo, conforme a zona institucional.
@@ -287,7 +304,7 @@ def test_document_reproduces_the_schedule_with_institutional_dates():
 
 def test_document_preserves_portuguese_accents():
     """Documento oficial brasileiro não pode trocar acento por interrogação."""
-    texto = texto_de(render_edital_pdf(snapshot(), HASH))
+    texto = texto_de(documento(snapshot(), HASH))
     for esperado in ("Informática", "inscrições", "indígenas", "Seleção", "ESPÍRITO"):
         assert esperado in texto, esperado
     # A versão anterior codificava em ASCII e produzia exatamente estas formas mutiladas.
@@ -300,7 +317,7 @@ def test_a_declaracao_de_integridade_identifica_sem_expor_uuid():
 
     O identificador continua no snapshot — o que muda é o que se **imprime**.
     """
-    pdf = render_edital_pdf(snapshot(), HASH)
+    pdf = documento(snapshot(), HASH)
     texto = texto_de(pdf)
 
     assert HASH in texto
@@ -317,7 +334,7 @@ def test_a_declaracao_de_integridade_identifica_sem_expor_uuid():
 def test_o_snapshot_basta_para_compor_o_documento():
     """SC-002a: nenhuma consulta ao banco — o conteúdo publicado é autossuficiente."""
     conteudo = snapshot()
-    texto = texto_de(render_edital_pdf(conteudo, HASH))
+    texto = texto_de(documento(conteudo, HASH))
 
     assert conteudo["processoCode"] in texto
     assert conteudo["processoTitle"] in texto
@@ -325,7 +342,7 @@ def test_o_snapshot_basta_para_compor_o_documento():
 
 def test_the_same_snapshot_always_produces_the_same_bytes():
     """Determinismo é o que torna a cadeia verificável: o hash do documento não pode variar."""
-    assert render_edital_pdf(snapshot(), HASH) == render_edital_pdf(snapshot(), HASH)
+    assert documento(snapshot(), HASH) == documento(snapshot(), HASH)
 
 
 @pytest.mark.parametrize(
@@ -337,7 +354,7 @@ def test_the_same_snapshot_always_produces_the_same_bytes():
     ],
 )
 def test_any_change_in_the_version_changes_the_document(alteracao):
-    assert render_edital_pdf(snapshot(), HASH) != render_edital_pdf(snapshot(**alteracao), HASH)
+    assert documento(snapshot(), HASH) != documento(snapshot(**alteracao), HASH)
 
 
 def test_long_content_paginates_and_every_page_is_numbered():
@@ -347,7 +364,7 @@ def test_long_content_paginates_and_every_page_is_numbered():
             for indice in range(1, 26)
         ]
     )
-    pdf = render_edital_pdf(muitos, HASH)
+    pdf = documento(muitos, HASH)
     paginas = pdf.count(b"/Type /Page ")
     assert paginas >= 3, paginas
     texto = texto_de(pdf)
@@ -367,7 +384,7 @@ def test_secao_gerada_sem_fonte_nao_aparece_no_documento():
     Para Perfis e Cronograma o caso nem chega ao documento publicado: a validação de publicação
     exige ao menos um de cada. Para Etapas, que são opcionais, um cabeçalho vazio seria falso.
     """
-    texto = texto_de(render_edital_pdf(snapshot(profiles=[], schedule=[], stages=[]), HASH))
+    texto = texto_de(documento(snapshot(profiles=[], schedule=[], stages=[]), HASH))
 
     assert "PERFIS DE VAGA" not in texto
     assert "CRONOGRAMA" not in texto
@@ -378,7 +395,7 @@ def test_secao_gerada_sem_fonte_nao_aparece_no_documento():
 
 def test_documento_segue_a_ordem_das_secoes_do_conteudo():
     """FR-038: a ordem do documento é conteúdo normativo, e não a ordem do código."""
-    texto = texto_de(render_edital_pdf(snapshot(), HASH))
+    texto = texto_de(documento(snapshot(), HASH))
     posicoes = [
         texto.index(titulo)
         for titulo in (
@@ -402,7 +419,7 @@ def test_etapas_aparecem_com_caracter_peso_e_nota_minima():
     e passou a ser subseção da seção que a contém (FR-013). O que ela afirma — caráter, peso e
     nota mínima presentes — é invariante e continua.
     """
-    texto = texto_de(render_edital_pdf(snapshot(), HASH))
+    texto = texto_de(documento(snapshot(), HASH))
     mae = int(re.search(r"^(\d+)\. ETAPAS DE AVALIAÇÃO", texto, re.M).group(1))
     assert f"{mae}.1 Prova didática" in texto
     # **Forma atualizada pela `008`/US3**: a frase corrida virou pares rótulo-valor (FR-027), e a
@@ -417,7 +434,7 @@ def test_etapas_aparecem_com_caracter_peso_e_nota_minima():
 
 def test_parentheses_in_content_do_not_corrupt_the_document():
     """Parêntese é delimitador de string em PDF: sem escape, o arquivo quebra."""
-    pdf = render_edital_pdf(snapshot(title="Edital (retificado) 07/2026"), HASH)
+    pdf = documento(snapshot(title="Edital (retificado) 07/2026"), HASH)
     assert b"%%EOF" in pdf
     assert "Edital (retificado) 07/2026" in texto_de(pdf)
 
@@ -434,7 +451,7 @@ def test_paragrafos_da_secao_textual_sobrevivem_ao_documento():
         else s
         for s in secoes()
     ]
-    texto = texto_de(render_edital_pdf(snapshot(sections=secoes_editadas), HASH))
+    texto = texto_de(documento(snapshot(sections=secoes_editadas), HASH))
 
     linhas = texto.splitlines()
     assert "Caberá recurso em dois dias úteis." in linhas
@@ -453,7 +470,7 @@ def test_quebra_simples_de_linha_tambem_separa_paragrafo():
         else s
         for s in secoes()
     ]
-    linhas = texto_de(render_edital_pdf(snapshot(sections=secoes_editadas), HASH)).splitlines()
+    linhas = texto_de(documento(snapshot(sections=secoes_editadas), HASH)).splitlines()
 
     assert "I — ser brasileiro;" in linhas
     assert "II — estar em dia com as obrigações eleitorais;" in linhas
@@ -471,7 +488,7 @@ def test_perfil_sem_os_campos_institucionais_nao_imprime_rotulo_vazio():
         perfil["workload"] = ""
         perfil["compensation"] = ""
 
-    texto = texto_de(render_edital_pdf(vazio, HASH))
+    texto = texto_de(documento(vazio, HASH))
 
     assert "Atribuições" not in texto
     assert "Carga horária:" not in texto
@@ -484,7 +501,7 @@ def test_perfil_com_os_campos_institucionais_os_imprime_preservando_paragrafos()
     conteudo["profiles"][0]["workload"] = "40 horas semanais"
     conteudo["profiles"][0]["compensation"] = "R$ 4.200,00 mensais"
 
-    texto = texto_de(render_edital_pdf(conteudo, HASH))
+    texto = texto_de(documento(conteudo, HASH))
 
     # **Forma atualizada pela `008`/US2**: o rótulo perdeu os dois-pontos ao virar cabeçalho de
     # sub-bloco. O que o teste guarda — o conteúdo presente e os parágrafos preservados — é
@@ -538,7 +555,7 @@ def test_nenhuma_linha_do_documento_ultrapassa_a_margem():
     )
 
     util = LARGURA - 2 * MARGEM
-    for pdf in (render_edital_pdf(snapshot(), HASH), render_edital_pdf(dois_perfis(), HASH)):
+    for pdf in (documento(snapshot(), HASH), documento(dois_perfis(), HASH)):
         for linha, fonte, tamanho, recuo in linhas_desenhadas(pdf):
             assert largura(linha, tamanho, fonte) + recuo <= util + 0.5, linha
 
@@ -550,8 +567,8 @@ def test_a_primeira_pagina_identifica_a_instituicao_o_ato_e_o_objeto():
     tamanho: o ato está em corpo próximo ao do texto. Exigir "o maior corpo da página" produziria
     um título fora do padrão institucional.
     """
-    texto = texto_de(render_edital_pdf(snapshot(), HASH))
-    linhas = [linha for linha, _, _, _ in linhas_desenhadas(render_edital_pdf(snapshot(), HASH))]
+    texto = texto_de(documento(snapshot(), HASH))
+    linhas = [linha for linha, _, _, _ in linhas_desenhadas(documento(snapshot(), HASH))]
 
     assert "MINISTÉRIO DA EDUCAÇÃO" in texto
     assert "INSTITUTO FEDERAL DO ESPÍRITO SANTO" in texto
@@ -566,16 +583,16 @@ def test_a_primeira_pagina_identifica_a_instituicao_o_ato_e_o_objeto():
     # O ato é negrito e caixa alta; a identificação institucional é menor que o corpo do texto.
     assert any(
         linha == "EDITAL Nº 07/2026" and fonte == "F2"
-        for linha, fonte, _, _ in linhas_desenhadas(render_edital_pdf(snapshot(), HASH))
+        for linha, fonte, _, _ in linhas_desenhadas(documento(snapshot(), HASH))
     )
     corpo = next(
         tamanho
-        for linha, _, tamanho, _ in linhas_desenhadas(render_edital_pdf(snapshot(), HASH))
+        for linha, _, tamanho, _ in linhas_desenhadas(documento(snapshot(), HASH))
         if linha.startswith("O Instituto Federal")
     )
     institucional = next(
         tamanho
-        for linha, _, tamanho, _ in linhas_desenhadas(render_edital_pdf(snapshot(), HASH))
+        for linha, _, tamanho, _ in linhas_desenhadas(documento(snapshot(), HASH))
         if linha == "MINISTÉRIO DA EDUCAÇÃO"
     )
     assert institucional < corpo
@@ -597,13 +614,13 @@ def test_as_secoes_normativas_sao_numeradas_em_sequencia_continua():
         # apanharia o Cronograma, cujos Eventos também abrem com número e caixa alta.
         numeros = [
             int(_re.match(r"(\d+)\. ", linha).group(1))
-            for linha, fonte, tamanho, _ in linhas_desenhadas(render_edital_pdf(conteudo, HASH))
+            for linha, fonte, tamanho, _ in linhas_desenhadas(documento(conteudo, HASH))
             if fonte == "F2" and tamanho == CORPO_SECAO and _re.match(r"\d+\. ", linha)
         ]
         assert numeros == list(range(1, len(numeros) + 1)), numeros
         assert len(numeros) >= 9
 
-    assert "ETAPAS DE AVALIAÇÃO" not in texto_de(render_edital_pdf(sem_etapas(), HASH))
+    assert "ETAPAS DE AVALIAÇÃO" not in texto_de(documento(sem_etapas(), HASH))
 
 
 def test_as_subsecoes_derivam_do_numero_da_secao_mae_ja_resolvido():
@@ -614,13 +631,13 @@ def test_as_subsecoes_derivam_do_numero_da_secao_mae_ja_resolvido():
     """
     import re as _re
 
-    texto = texto_de(render_edital_pdf(snapshot(), HASH))
+    texto = texto_de(documento(snapshot(), HASH))
     mae = int(_re.search(r"^(\d+)\. ETAPAS DE AVALIAÇÃO", texto, _re.M).group(1))
     assert f"{mae}.1 Prova didática" in texto
 
     # Suprimir uma seção anterior desloca a seção-mãe, e a subseção acompanha.
     sem_perfis = snapshot(profiles=[])
-    outro = texto_de(render_edital_pdf(sem_perfis, HASH))
+    outro = texto_de(documento(sem_perfis, HASH))
     nova_mae = int(_re.search(r"^(\d+)\. ETAPAS DE AVALIAÇÃO", outro, _re.M).group(1))
     assert nova_mae == mae - 1
     assert f"{nova_mae}.1 Prova didática" in outro
@@ -659,7 +676,7 @@ def test_um_perfil_que_cabe_inteiro_na_pagina_seguinte_nao_e_partido():
     O documento gerado antes desta feature iniciava o segundo Perfil no rodapé e continuava seus
     dados na página seguinte — o defeito editorial mais visível depois do cabeçalho.
     """
-    paginas = paginas_de(render_edital_pdf(dois_perfis(), HASH))
+    paginas = paginas_de(documento(dois_perfis(), HASH))
     onde = [
         numero
         for numero, pagina in enumerate(paginas, 1)
@@ -686,7 +703,7 @@ def test_um_perfil_que_cabe_inteiro_na_pagina_seguinte_nao_e_partido():
 def test_nenhum_titulo_de_perfil_fecha_a_pagina_sem_conteudo_abaixo():
     """FR-022: título órfão é o defeito que mais denuncia composição automática."""
     for conteudo in (snapshot(), dois_perfis(), perfil_maior_que_a_pagina()):
-        for pagina in paginas_de(render_edital_pdf(conteudo, HASH)):
+        for pagina in paginas_de(documento(conteudo, HASH)):
             corpo = [linha for linha in pagina if not linha.startswith("Edital 07/2026 ·")]
             if not corpo:
                 continue
@@ -703,7 +720,7 @@ def test_um_subbloco_maior_que_a_pagina_quebra_por_dentro_e_a_composicao_conclui
     sub-bloco fosse partido — regra que nenhum compositor cumpre quando o sub-bloco sozinho não
     cabe numa página. O que este teste prova não é elegância: é que a composição **termina**.
     """
-    pdf = render_edital_pdf(perfil_maior_que_a_pagina(), HASH)
+    pdf = documento(perfil_maior_que_a_pagina(), HASH)
     paginas = paginas_de(pdf)
 
     assert len(paginas) >= 3, "o cenário extremo deveria ocupar várias páginas"
@@ -719,7 +736,7 @@ def test_o_quadro_de_modalidades_nao_inventa_celula_nem_perde_informacao():
     A frase sai; **os dados não**. E ampla concorrência sem percentual não ganha célula
     construída para preencher a coluna.
     """
-    texto = texto_de(render_edital_pdf(snapshot(), HASH))
+    texto = texto_de(documento(snapshot(), HASH))
 
     assert "Regra Normativa — fundamento:" not in texto
     for esperado in ("PPP", "Lei 12.990/2014", "20%", "2014-06-09"):
@@ -734,7 +751,7 @@ def test_o_quadro_de_modalidades_nao_inventa_celula_nem_perde_informacao():
         "normativeRule": None,
     }
     perfil = {**snapshot()["profiles"][0], "competitionModalities": [ampla]}
-    texto = texto_de(render_edital_pdf(snapshot(profiles=[perfil]), HASH))
+    texto = texto_de(documento(snapshot(profiles=[perfil]), HASH))
 
     assert "Ampla concorrência" in texto
     # A coluna inteira desaparece quando nenhuma modalidade tem percentual: coluna vazia é
@@ -751,7 +768,7 @@ def test_a_paginacao_por_bloco_nao_perde_nem_duplica_conteudo():
     todos produzem um documento **errado**. O que os apanha é conservação de conteúdo.
     """
     for conteudo in (snapshot(), dois_perfis(), perfil_maior_que_a_pagina(), sem_etapas()):
-        pdf = render_edital_pdf(conteudo, HASH)
+        pdf = documento(conteudo, HASH)
         paginas = paginas_de(pdf)
 
         # Nenhuma página vazia: bloco vazio na cascata produziria uma.
@@ -810,7 +827,7 @@ def test_o_cronograma_e_apresentado_em_tabela_com_colunas_alinhadas():
     O documento anterior o imprimia como parágrafos numerados. As colunas passam a existir, e
     passam a estar alinhadas — o que só é possível por causa da métrica de FR-002.
     """
-    pdf = render_edital_pdf(snapshot(), HASH)
+    pdf = documento(snapshot(), HASH)
     texto = texto_de(pdf)
 
     for coluna in ("Evento", "Início", "Término"):
@@ -844,7 +861,7 @@ def test_evento_pontual_nao_apresenta_termino_falso():
             "status": "PLANEJADO",
         }
     ]
-    texto = texto_de(render_edital_pdf(conteudo, HASH))
+    texto = texto_de(documento(conteudo, HASH))
 
     assert "05/10/2026 14:00" in texto
     assert "None" not in texto
@@ -858,7 +875,7 @@ def test_o_cabecalho_da_tabela_se_repete_na_continuacao_e_nunca_fica_orfao():
     Sem repetição, a página seguinte mostra números sem dizer de que são. E um cabeçalho sozinho
     no rodapé é o mesmo defeito do título órfão, uma linha abaixo.
     """
-    paginas = paginas_de(render_edital_pdf(cronograma_longo(), HASH))
+    paginas = paginas_de(documento(cronograma_longo(), HASH))
     com_cabecalho = [
         numero for numero, pagina in enumerate(paginas, 1) if "Evento" in pagina
     ]
@@ -883,7 +900,7 @@ def test_a_etapa_apresenta_carater_peso_e_nota_em_pares_rotulo_valor():
     `caráter: eliminatória e classificatória; peso: 2; nota mínima: 7` é escrita de banco de
     dados. O que o candidato precisa ler é um quadro.
     """
-    texto = texto_de(render_edital_pdf(snapshot(), HASH))
+    texto = texto_de(documento(snapshot(), HASH))
 
     assert "caráter: eliminatória e classificatória; peso:" not in texto
     for rotulo in ("Caráter", "Peso", "Nota mínima"):
@@ -899,7 +916,7 @@ def test_a_etapa_apresenta_carater_peso_e_nota_em_pares_rotulo_valor():
     sem_ponderacao["stages"][0] = {
         **sem_ponderacao["stages"][0], "weight": None, "minimumScore": None
     }
-    texto = texto_de(render_edital_pdf(sem_ponderacao, HASH))
+    texto = texto_de(documento(sem_ponderacao, HASH))
     assert "Peso" not in texto
     assert "Nota mínima" not in texto
 
@@ -916,7 +933,7 @@ def test_nenhum_titulo_fecha_a_pagina_sem_conteudo_abaixo():
     fácil de deixar passar, porque só aparece em certas combinações de conteúdo.
     """
     for conteudo in (snapshot(), dois_perfis(), perfil_maior_que_a_pagina(), cronograma_longo()):
-        for numero, pagina in enumerate(paginas_de(render_edital_pdf(conteudo, HASH)), 1):
+        for numero, pagina in enumerate(paginas_de(documento(conteudo, HASH)), 1):
             corpo = [linha for linha in pagina if not linha.startswith("Edital 07/2026 ·")]
             if not corpo:
                 continue
@@ -952,8 +969,114 @@ def test_nenhuma_linha_ultrapassa_a_margem_em_nenhum_cenario():
     for conteudo in (
         snapshot(), dois_perfis(), perfil_maior_que_a_pagina(), cronograma_longo(), sem_etapas()
     ):
-        pdf = render_edital_pdf(conteudo, HASH)
+        pdf = documento(conteudo, HASH)
         for linha, fonte, tamanho, recuo in linhas_desenhadas(pdf):
             assert largura(linha, tamanho, fonte) + recuo <= util + 0.5, (
                 f"{linha!r} ultrapassa a margem"
             )
+
+
+# ---------------------------------------------------------------------------
+# 008 / US5 — O documento termina como ato, não como relatório
+# ---------------------------------------------------------------------------
+
+
+AUTORIDADE = ("Reitora do Ifes", "Reitora")
+
+
+def autoridade():
+    from processo_seletivo.publicacoes.infrastructure.pdf import AutoridadeSignataria
+
+    return AutoridadeSignataria(nome=AUTORIDADE[0], cargo=AUTORIDADE[1])
+
+
+def test_o_documento_publicado_exibe_a_autoridade_registrada_na_publicacao():
+    """FR-033: nome e cargo como o ato os registrou, sem transformação.
+
+    O catálogo é a origem da escolha, não a fonte de verdade do que foi assinado — e é por isso
+    que o compositor imprime o que recebe, e não o que consultaria.
+    """
+    texto = texto_de(documento(snapshot(), HASH, autoridade=autoridade()))
+
+    assert AUTORIDADE[0] in texto
+    assert AUTORIDADE[1] in texto
+    # Sem praça e sem data: os dois exigiriam conceitos que o sistema não tem (FR-036).
+    assert "Vitória" not in texto
+    assert not re.search(r"\bde \d{4}\.", texto)
+
+
+def test_compor_publicado_sem_autoridade_e_recusado():
+    """FR-035: a garantia é do compositor, não de quem o chama.
+
+    Publicar um ato administrativo sem quem o praticou é o erro que nenhum chamador deveria poder
+    cometer por esquecimento. Mesmo desenho que a `007` deu ao hash da prévia, e pela mesma razão.
+    """
+    with pytest.raises(ValueError):
+        render_edital_pdf(snapshot(), HASH)
+
+
+def test_oferecer_autoridade_na_previa_e_recusado():
+    """FR-035, o outro sentido: prévia não decorre de Publicação, e não tem quem assine.
+
+    Ignorar em silêncio deixaria passar um chamador confuso; recusar diz o que está errado.
+    """
+    from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA
+
+    with pytest.raises(ValueError):
+        render_edital_pdf(snapshot(), HASH, modo=MODO_PREVIA, autoridade=autoridade())
+
+
+def test_a_previa_nao_compoe_bloco_de_autoridade():
+    from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA
+
+    texto = texto_de(documento(snapshot(), HASH, modo=MODO_PREVIA))
+
+    assert AUTORIDADE[0] not in texto
+    assert "INTEGRIDADE" not in texto
+    assert MARCA_DE_PREVIA_ESPERADA in texto
+
+
+MARCA_DE_PREVIA_ESPERADA = "PRÉVIA — documento em elaboração, sem valor de publicação"
+
+
+def test_a_verificacao_vem_depois_da_assinatura_e_nao_e_secao_do_edital():
+    """FR-038 a FR-040: o mecanismo fica; a posição e o peso mudam.
+
+    `Versão do schema: 3` como seção normativa era forma interna vazando para o corpo do ato. Ela
+    continua no snapshot e no mecanismo — o que muda é o que se imprime como Edital.
+    """
+    pdf = documento(snapshot(), HASH, autoridade=autoridade())
+    texto = texto_de(pdf)
+    linhas = [linha for linha, _, _, _ in linhas_desenhadas(pdf)]
+
+    assert "Versão do schema" not in texto
+    assert HASH in texto, "o SHA-256 completo permanece"
+    assert HASH[:16] in texto, "e o abreviado permanece no rodapé"
+    assert "deriva integralmente da versão homologada" in texto
+
+    assert linhas.index(AUTORIDADE[0]) < linhas.index("VERIFICAÇÃO DE INTEGRIDADE")
+
+    # Discreto: o bloco de verificação usa o menor corpo do documento.
+    corpos = {
+        tamanho
+        for linha, _, tamanho, _ in linhas_desenhadas(pdf)
+        if linha.startswith("SHA-256")
+    }
+    from processo_seletivo.publicacoes.infrastructure.pdf import CORPO_NOTA
+
+    assert corpos == {CORPO_NOTA}
+
+
+def test_o_mesmo_snapshot_com_a_mesma_autoridade_produz_os_mesmos_bytes():
+    """SC-013: o corpo normativo continua função pura do conteúdo publicado."""
+    um = documento(snapshot(), HASH, autoridade=autoridade())
+    outro = documento(snapshot(), HASH, autoridade=autoridade())
+    assert um == outro
+
+    from processo_seletivo.publicacoes.infrastructure.pdf import AutoridadeSignataria
+
+    diferente = documento(
+        snapshot(), HASH,
+        autoridade=AutoridadeSignataria(nome="Diretora do Cefor", cargo="Diretora-Geral"),
+    )
+    assert diferente != um, "trocar quem assina tem de mudar o documento"

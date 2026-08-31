@@ -40,6 +40,7 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
     MARCA_DE_PREVIA,
     MODO_PREVIA,
     MODO_PUBLICADO,
+    AutoridadeSignataria,
     render_edital_pdf,
 )
 from processo_seletivo.shared.canonical import canonical_sha256
@@ -51,6 +52,19 @@ DOCUMENTO = (FIXTURES / "documento_publicado_v1.pdf").read_bytes()
 # O hash do próprio snapshot, e não uma constante arbitrária: é o que o ato de publicação passa
 # ao renderizador, e é o que aparece na declaração de integridade do documento.
 HASH = canonical_sha256(SNAPSHOT)
+
+# A autoridade fixa da fixture, versionada ao lado do snapshot: sem ela a comparação de bytes não
+# seria reproduzível por quem não participou da mudança (`008`, FR-044).
+AUTORIDADE = AutoridadeSignataria(
+    **json.loads((FIXTURES / "autoridade_publicada.json").read_text(encoding="utf-8"))
+)
+
+
+def documento(conteudo, content_hash=HASH, *, modo=MODO_PUBLICADO, **kwargs):
+    """Compõe como a publicação compõe — em modo publicado, com a autoridade da fixture."""
+    if modo == MODO_PUBLICADO:
+        kwargs.setdefault("autoridade", AUTORIDADE)
+    return render_edital_pdf(conteudo, content_hash, modo=modo, **kwargs)
 
 PAGINA = re.compile(rb"/Type /Page /Parent")
 TEXTO_PDF = re.compile(rb"\((.*?)\) Tj", re.DOTALL)
@@ -89,7 +103,11 @@ def corpo_normativo(pagina: list[str], marca_de_previa: str) -> list[str]:
     fora = False
     corpo = []
     for linha in pagina:
-        if linha.startswith("INTEGRIDADE") or linha.startswith("Este documento deriva"):
+        # O fechamento do ato começa na autoridade signatária: dali em diante é metadado do ato,
+        # que só o publicado tem. Antes dela, os dois modos têm de coincidir linha a linha.
+        if linha == AUTORIDADE.nome or linha.startswith(
+            ("VERIFICAÇÃO DE INTEGRIDADE", "Este documento deriva")
+        ):
             fora = True
         if marca_de_previa in linha or linha.startswith(("Edital 0", "PRÉVIA —")):
             continue
@@ -100,13 +118,13 @@ def corpo_normativo(pagina: list[str], marca_de_previa: str) -> list[str]:
 
 @pytest.mark.contract
 def test_o_documento_publicado_continua_byte_a_byte_o_mesmo():
-    assert render_edital_pdf(SNAPSHOT, HASH) == DOCUMENTO
+    assert documento(SNAPSHOT, HASH) == DOCUMENTO
 
 
 @pytest.mark.contract
 def test_o_modo_publicado_explicito_e_o_mesmo_do_padrao():
     """Nomear o modo não pode mudar o documento oficial."""
-    assert render_edital_pdf(SNAPSHOT, HASH, modo=MODO_PUBLICADO) == DOCUMENTO
+    assert documento(SNAPSHOT, HASH, modo=MODO_PUBLICADO) == DOCUMENTO
 
 
 @pytest.mark.contract
@@ -117,7 +135,7 @@ def test_a_previa_nao_carrega_nenhuma_afirmacao_de_integridade():
     provar que o modo o ignora: se a garantia dependesse de o chamador lembrar de esvaziá-lo, ela
     estaria com quem não a tem.
     """
-    texto = texto_de(render_edital_pdf(SNAPSHOT, HASH, modo=MODO_PREVIA))
+    texto = texto_de(documento(SNAPSHOT, HASH, modo=MODO_PREVIA))
 
     assert HASH not in texto
     assert HASH[:16] not in texto
@@ -135,7 +153,7 @@ def test_a_previa_se_identifica_em_todas_as_paginas():
             for indice in range(1, 26)
         ],
     }
-    pdf = render_edital_pdf(muitos, HASH, modo=MODO_PREVIA)
+    pdf = documento(muitos, HASH, modo=MODO_PREVIA)
     paginas = len(PAGINA.findall(pdf))
     assert paginas >= 3, paginas
 
@@ -146,8 +164,8 @@ def test_a_previa_se_identifica_em_todas_as_paginas():
 @pytest.mark.contract
 def test_a_previa_traz_o_mesmo_conteudo_normativo_do_publicado():
     """FR-013: o que muda é a moldura, não o Edital."""
-    publicado = texto_de(render_edital_pdf(SNAPSHOT, HASH))
-    previa = texto_de(render_edital_pdf(SNAPSHOT, HASH, modo=MODO_PREVIA))
+    publicado = texto_de(documento(SNAPSHOT, HASH))
+    previa = texto_de(documento(SNAPSHOT, HASH, modo=MODO_PREVIA))
 
     # `20%`, e não `20.0000`: a forma canônica continua com quatro casas no snapshot, mas o
     # documento escreve em português nos dois modos — legibilidade não é privilégio do publicado.
@@ -174,7 +192,7 @@ def test_nenhum_estado_interno_de_entidade_aparece_no_documento():
     A fixture tem dois Eventos, ambos `PLANEJADO`. Um Edital publicado anuncia suas inscrições;
     não informa ao candidato que elas estão "planejadas".
     """
-    texto = texto_de(render_edital_pdf(SNAPSHOT, HASH))
+    texto = texto_de(documento(SNAPSHOT, HASH))
 
     for estado in ("PLANEJADO", "EM_ANDAMENTO", "CONCLUIDO", "CANCELADO"):
         assert estado not in texto, estado
@@ -184,7 +202,7 @@ def test_nenhum_estado_interno_de_entidade_aparece_no_documento():
 @pytest.mark.contract
 def test_nenhum_decimal_canonico_de_quatro_casas_chega_ao_documento():
     """FR-003: a forma de quatro casas é do snapshot, não do papel."""
-    texto = texto_de(render_edital_pdf(SNAPSHOT, HASH))
+    texto = texto_de(documento(SNAPSHOT, HASH))
 
     assert not re.search(r"\d\.\d{4}\b", texto), "decimal canônico vazou para o documento"
 
@@ -192,7 +210,7 @@ def test_nenhum_decimal_canonico_de_quatro_casas_chega_ao_documento():
 @pytest.mark.contract
 def test_percentual_peso_e_nota_saem_em_portugues():
     """A fixture carrega percentual 20.0000, peso 2.0000 e nota mínima 7.0000."""
-    texto = texto_de(render_edital_pdf(SNAPSHOT, HASH))
+    texto = texto_de(documento(SNAPSHOT, HASH))
 
     # **Forma atualizada pela `008`/US2**: o percentual saiu da frase corrida e virou célula. O
     # valor continua obrigatório, e continua em português — que é o que este teste guarda.
@@ -211,7 +229,7 @@ def test_decimal_com_parte_fracionaria_usa_virgula():
     regra["percentage"] = "12.5000"
     fracionario["stages"][0]["weight"] = "1.7500"
 
-    texto = texto_de(render_edital_pdf(fracionario, canonical_sha256(fracionario)))
+    texto = texto_de(documento(fracionario, canonical_sha256(fracionario)))
 
     assert "12,5%" in texto
     assert "1,75" in texto
@@ -224,7 +242,7 @@ def test_a_forma_canonica_do_snapshot_nao_e_tocada_pela_apresentacao():
     A garantia que sustenta o hash: renderizar não pode ter efeito colateral sobre o conteúdo.
     """
     antes = json.dumps(SNAPSHOT, sort_keys=True)
-    render_edital_pdf(SNAPSHOT, HASH)
+    documento(SNAPSHOT, HASH)
     assert json.dumps(SNAPSHOT, sort_keys=True) == antes
     assert SNAPSHOT["stages"][0]["weight"] == "2.0000"
 
@@ -232,7 +250,7 @@ def test_a_forma_canonica_do_snapshot_nao_e_tocada_pela_apresentacao():
 @pytest.mark.contract
 def test_as_regras_de_apresentacao_valem_tambem_na_previa():
     """T009: legibilidade não é privilégio do documento publicado."""
-    texto = texto_de(render_edital_pdf(SNAPSHOT, HASH, modo=MODO_PREVIA))
+    texto = texto_de(documento(SNAPSHOT, HASH, modo=MODO_PREVIA))
 
     assert "PLANEJADO" not in texto
     assert not re.search(r"\d\.\d{4}\b", texto)
@@ -253,8 +271,8 @@ def test_o_corpo_normativo_quebra_nas_mesmas_paginas_na_previa_e_no_publicado():
     revisando uma paginação que não é a que sai. É o defeito que D-011 corrige tirando a marca do
     fluxo: fora dele, a igualdade é garantida por construção, e não por coincidência de medida.
     """
-    publicado = paginas_de(render_edital_pdf(SNAPSHOT, HASH))
-    previa = paginas_de(render_edital_pdf(SNAPSHOT, HASH, modo=MODO_PREVIA))
+    publicado = paginas_de(documento(SNAPSHOT, HASH))
+    previa = paginas_de(documento(SNAPSHOT, HASH, modo=MODO_PREVIA))
 
     assert len(previa) == len(publicado), "a prévia paginou diferente do publicado"
     for numero, (uma, outra) in enumerate(zip(previa, publicado, strict=True), 1):
@@ -272,12 +290,12 @@ def test_removidas_as_diferencas_permitidas_as_composicoes_sao_equivalentes():
     """
     publicado = [
         linha
-        for pagina in paginas_de(render_edital_pdf(SNAPSHOT, HASH))
+        for pagina in paginas_de(documento(SNAPSHOT, HASH))
         for linha in corpo_normativo(pagina, MARCA_DE_PREVIA)
     ]
     previa = [
         linha
-        for pagina in paginas_de(render_edital_pdf(SNAPSHOT, HASH, modo=MODO_PREVIA))
+        for pagina in paginas_de(documento(SNAPSHOT, HASH, modo=MODO_PREVIA))
         for linha in corpo_normativo(pagina, MARCA_DE_PREVIA)
     ]
 
@@ -293,5 +311,5 @@ def test_tirar_a_marca_do_fluxo_nao_toca_os_bytes_do_documento_publicado():
     evidência que ele existe para produzir. A leitura correta de uma falha é que a região fixa
     invadiu a geometria do fluxo.
     """
-    assert render_edital_pdf(SNAPSHOT, HASH) == DOCUMENTO
+    assert documento(SNAPSHOT, HASH) == DOCUMENTO
     assert MARCA_DE_PREVIA not in texto_de(DOCUMENTO)

@@ -31,7 +31,10 @@ from processo_seletivo.publicacoes.domain.conflicts import (
     duplicate_keys,
 )
 from processo_seletivo.publicacoes.domain.consolidation import consolidate
-from processo_seletivo.publicacoes.infrastructure.pdf import render_edital_pdf
+from processo_seletivo.publicacoes.infrastructure.pdf import (
+    AutoridadeSignataria,
+    render_edital_pdf,
+)
 from processo_seletivo.publicacoes.models import DocumentoPublicado, Publicacao
 from processo_seletivo.publicacoes.models_retificacao import (
     AlteracaoNormativa,
@@ -577,7 +580,15 @@ def publish_retification(
         _assert_effective_change(edital, item, effective_at, edital.next_publication_order)
         content, _ = apply_changes(item.base_snapshot.content, changes, publication_id="pending")
         canonical = canonical_bytes(content)
-        pdf = render_edital_pdf(content, canonical_sha256(content))
+        # O documento consolidado usa a mesma composição e a autoridade da própria Publicação
+        # da Retificação (`008`, FR-043).
+        pdf = render_edital_pdf(
+            content,
+            canonical_sha256(content),
+            autoridade=AutoridadeSignataria(
+                nome=signatory["name"], cargo=signatory["role"]
+            ),
+        )
         publication = Publicacao.objects.create(
             edital=edital,
             revisao=None,

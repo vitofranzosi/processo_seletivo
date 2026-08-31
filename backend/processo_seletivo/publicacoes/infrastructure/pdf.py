@@ -12,6 +12,7 @@ anterior codificava em ASCII e destruía todo acento de um documento oficial bra
 
 import re
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import datetime
 
 from django.utils import timezone
@@ -115,6 +116,23 @@ FOLGA_APOS_TITULO = 16.0
 # O modo do renderizador (FR-015). Um parâmetro, e não condicionais espalhadas pela composição:
 # a diferença entre o que se revisa e o que se publica precisa ter **um** lugar onde está
 # declarada, ou os dois documentos divergem sem que nada acuse.
+@dataclass(frozen=True)
+class AutoridadeSignataria:
+    """Quem praticou o ato — nome e cargo, e nada além (FR-033, FR-034).
+
+    **Não é assinatura**: esta feature não constrói certificado, imagem nem ICP (FR-037). É a
+    representação documental da autoridade que a Publicação já registrou.
+
+    Chega ao compositor como contexto do ato, separado do conteúdo publicado. Não entra no
+    snapshot: o corpo normativo continua função pura do conteúdo homologado, e a autoridade é o
+    único elemento derivado de metadado do ato. Nos dois fluxos de publicação o documento é
+    composto **antes** de a `Publicacao` existir — não há o que consultar mesmo que se quisesse.
+    """
+
+    nome: str
+    cargo: str
+
+
 MODO_PUBLICADO = "PUBLISHED"
 MODO_PREVIA = "PREVIEW"
 MODOS = (MODO_PUBLICADO, MODO_PREVIA)
@@ -694,27 +712,47 @@ def _secoes(composicao, snapshot):
                 )
 
 
+def _autoridade(composicao, autoridade):
+    """O fechamento do ato (FR-033).
+
+    Sem praça e sem data: a primeira não existe no sistema e a segunda não é conteúdo normativo.
+    Introduzir qualquer uma delas para poder escrever "Vitória (ES), 30 de agosto de 2026" seria
+    criar conceito por motivo tipográfico.
+    """
+    composicao.escrever(
+        autoridade.nome, tamanho=CORPO_TEXTO, fonte=NEGRITO,
+        antes=ANTES_DE_SECAO + 16, alinhamento=CENTRO, junto=True,
+    )
+    composicao.escrever(autoridade.cargo, tamanho=CORPO_TEXTO, alinhamento=CENTRO)
+
+
 def _integridade(composicao, snapshot, content_hash):
-    composicao.escrever("INTEGRIDADE", tamanho=12, fonte=NEGRITO, antes=18)
+    """A verificação, discreta e ao final (FR-038 a FR-040).
+
+    O mecanismo não perde nada: a afirmação de derivação permanece, o SHA-256 completo permanece,
+    o abreviado permanece no rodapé. O que muda é a posição — depois da assinatura — e o peso, que
+    passa a ser o de nota. `Versão do schema` sai do corpo do ato: é forma interna, continua no
+    snapshot e no mecanismo, e não é matéria de Edital.
+    """
+    composicao.escrever(
+        "VERIFICAÇÃO DE INTEGRIDADE", tamanho=CORPO_NOTA, fonte=NEGRITO,
+        antes=ANTES_DE_SECAO, junto=True,
+    )
     composicao.escrever(
         "Este documento deriva integralmente da versão homologada identificada abaixo.",
-        tamanho=10,
-        antes=6,
+        tamanho=CORPO_NOTA,
+        antes=ANTES_DE_LINHA,
     )
-    # Identificação **institucional**, não técnica (FR-004). O SHA-256 permanece porque é o que a
-    # declaração prova; o UUID sai porque não prova nada a quem lê e era a forma interna vazando
-    # para a apresentação. Os identificadores continuam no snapshot — o que muda é o que se imprime.
     composicao.escrever(
-        f"Edital {snapshot.get('number', '')}/{snapshot.get('year', '')}", tamanho=9
+        f"Edital {snapshot.get('number', '')}/{snapshot.get('year', '')}", tamanho=CORPO_NOTA
     )
     processo = " — ".join(
         parte
         for parte in (snapshot.get("processoCode", ""), snapshot.get("processoTitle", ""))
         if parte
     )
-    composicao.escrever(f"Processo Seletivo {processo}", tamanho=9)
-    composicao.escrever(f"Versão do schema: {snapshot.get('schemaVersion', '')}", tamanho=9)
-    composicao.escrever(f"SHA-256 do conteúdo: {content_hash}", tamanho=9)
+    composicao.escrever(f"Processo Seletivo {processo}", tamanho=CORPO_NOTA)
+    composicao.escrever(f"SHA-256 do conteúdo: {content_hash}", tamanho=CORPO_NOTA)
 
 
 def _fluxo_da_pagina(linhas, rodape, marca="", tracos=()):
@@ -752,7 +790,12 @@ def _fluxo_da_pagina(linhas, rodape, marca="", tracos=()):
     return b"\n".join(partes)
 
 
-def render_edital_pdf(snapshot: dict, content_hash: str, modo: str = MODO_PUBLICADO) -> bytes:
+def render_edital_pdf(
+    snapshot: dict,
+    content_hash: str,
+    modo: str = MODO_PUBLICADO,
+    autoridade: AutoridadeSignataria | None = None,
+) -> bytes:
     """O mesmo documento, em dois modos.
 
     Em `MODO_PUBLICADO` o resultado é o de sempre, byte a byte — uma fixture o guarda. Em
@@ -763,11 +806,19 @@ def render_edital_pdf(snapshot: dict, content_hash: str, modo: str = MODO_PUBLIC
     if modo not in MODOS:
         raise ValueError(f"Modo de renderização desconhecido: {modo!r}.")
     previa = modo == MODO_PREVIA
+    # A presença da autoridade é determinada pelo **modo**, não pelo chamador (FR-035). Recusar
+    # nos dois sentidos é o que impede os dois erros: um ato publicado sem quem o praticou, e uma
+    # prévia que parece publicada.
+    if previa and autoridade is not None:
+        raise ValueError("A prévia não decorre de Publicação e não tem autoridade signatária.")
+    if not previa and autoridade is None:
+        raise ValueError("O documento publicado exige a autoridade signatária do ato.")
 
     composicao = Composicao()
     _cabecalho(composicao, snapshot)
     _secoes(composicao, snapshot)
     if not previa:
+        _autoridade(composicao, autoridade)
         _integridade(composicao, snapshot, content_hash)
     paginas = composicao.paginar()
 

@@ -174,8 +174,8 @@ página e espaço vertical sem causa.
 - [X] T051 [US4] Aplicar keep-together de título com a primeira parte do conteúdo em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-030)
 - [X] T052 [US4] Definir a escala de espaçamento semântico como constantes nomeadas e aplicá-la em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-031)
 - [X] T053 [US4] Ajustar largura de linha, entrelinha e distância entre parágrafos do corpo normativo em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-029)
-- [ ] T054 [US4] Regenerar a fixture e revisar o diff no mesmo commit (FR-044)
-- [ ] T055 [US4] Gerar a prévia do cenário longo e conferir R-06 e R-11 em **todas** as páginas
+- [X] T054 [US4] Regenerar a fixture e revisar o diff no mesmo commit (FR-044)
+- [X] T055 [US4] Gerar a prévia do cenário longo e conferir R-06 e R-11 em **todas** as páginas
 
 **Checkpoint**: o documento está composto, não apenas estruturado.
 
@@ -195,22 +195,22 @@ depende do resto estar composto para o fechamento ter onde ficar.
 
 ### Tests for User Story 5
 
-- [ ] T056 [P] [US5] Teste de que compor em modo publicado sem autoridade é recusado, em `backend/tests/contract/test_documento_publicado.py` (FR-035)
-- [ ] T057 [P] [US5] Teste de que oferecer autoridade em modo prévia é recusado, em `backend/tests/contract/test_documento_publicado.py` (FR-035)
-- [ ] T058 [P] [US5] Teste do bloco de autoridade — nome e cargo da Publicação, sem praça e sem data — em `backend/tests/unit/publicacoes/test_pdf.py` (FR-033, FR-036)
-- [ ] T059 [P] [US5] Teste do bloco de verificação — após a autoridade, sem `Versão do schema` no corpo, com SHA-256 completo e abreviado no rodapé — em `backend/tests/unit/publicacoes/test_pdf.py` (FR-038 a FR-040)
-- [ ] T060 [P] [US5] Teste de determinismo com a mesma autoridade e de que o corpo normativo continua composto sem consulta ao banco, em `backend/tests/unit/publicacoes/test_pdf.py` (SC-013)
+- [X] T056 [P] [US5] Teste de que compor em modo publicado sem autoridade é recusado, em `backend/tests/contract/test_documento_publicado.py` (FR-035)
+- [X] T057 [P] [US5] Teste de que oferecer autoridade em modo prévia é recusado, em `backend/tests/contract/test_documento_publicado.py` (FR-035)
+- [X] T058 [P] [US5] Teste do bloco de autoridade — nome e cargo da Publicação, sem praça e sem data — em `backend/tests/unit/publicacoes/test_pdf.py` (FR-033, FR-036)
+- [X] T059 [P] [US5] Teste do bloco de verificação — após a autoridade, sem `Versão do schema` no corpo, com SHA-256 completo e abreviado no rodapé — em `backend/tests/unit/publicacoes/test_pdf.py` (FR-038 a FR-040)
+- [X] T060 [P] [US5] Teste de determinismo com a mesma autoridade e de que o corpo normativo continua composto sem consulta ao banco, em `backend/tests/unit/publicacoes/test_pdf.py` (SC-013)
 
 ### Implementation for User Story 5
 
-- [ ] T061 [US5] Criar o valor congelado `AutoridadeSignataria` com nome e cargo, e a validação de presença por modo, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (D-005, FR-034, FR-035)
-- [ ] T062 [US5] Compor o bloco de autoridade após o conteúdo normativo em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-033)
-- [ ] T063 [US5] Reescrever `_integridade` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`: bloco discreto após a autoridade, sem `Versão do schema` no corpo normativo (FR-038 a FR-040)
-- [ ] T064 [US5] Passar a autoridade ao compositor em `backend/processo_seletivo/publicacoes/application/publish_edital.py`, a partir do `signatory` já resolvido
-- [ ] T065 [US5] Passar a autoridade ao compositor em `backend/processo_seletivo/publicacoes/application/retificacoes.py`, a partir do `signatory` da Publicação da Retificação (FR-043)
-- [ ] T066 [US5] Criar `backend/tests/contract/fixtures/autoridade_publicada.json` e fazer `backend/scripts/gerar_fixture_documento.py` usá-la (D-009, FR-044)
-- [ ] T067 [US5] Regenerar a fixture e revisar o diff no mesmo commit (FR-044)
-- [ ] T068 [US5] Publicar um Edital e uma Retificação pela interface administrativa e conferir R-12, R-13 e R-14, e que o documento consolidado tem a mesma composição (FR-043)
+- [X] T061 [US5] Criar o valor congelado `AutoridadeSignataria` com nome e cargo, e a validação de presença por modo, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (D-005, FR-034, FR-035)
+- [X] T062 [US5] Compor o bloco de autoridade após o conteúdo normativo em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-033)
+- [X] T063 [US5] Reescrever `_integridade` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`: bloco discreto após a autoridade, sem `Versão do schema` no corpo normativo (FR-038 a FR-040)
+- [X] T064 [US5] Passar a autoridade ao compositor em `backend/processo_seletivo/publicacoes/application/publish_edital.py`, a partir do `signatory` já resolvido
+- [X] T065 [US5] Passar a autoridade ao compositor em `backend/processo_seletivo/publicacoes/application/retificacoes.py`, a partir do `signatory` da Publicação da Retificação (FR-043)
+- [X] T066 [US5] Criar `backend/tests/contract/fixtures/autoridade_publicada.json` e fazer `backend/scripts/gerar_fixture_documento.py` usá-la (D-009, FR-044)
+- [X] T067 [US5] Regenerar a fixture e revisar o diff no mesmo commit (FR-044)
+- [X] T068 [US5] Publicar um Edital e uma Retificação pela interface administrativa e conferir R-12, R-13 e R-14, e que o documento consolidado tem a mesma composição (FR-043)
 
 **Checkpoint**: o documento termina como ato administrativo.
 

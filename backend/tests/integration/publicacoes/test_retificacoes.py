@@ -161,6 +161,7 @@ def homologate_and_publish(
     *,
     suffix,
     authority="00000000-0000-0000-0000-000000000602",
+    role="Diretora",
     key="retificacao-chave-k1",
 ):
     api_client.post(
@@ -176,7 +177,7 @@ def homologate_and_publish(
     )
     return api_client.post(
         f"/api/v1/admin/retificacoes/{retificacao_id}/publicacoes",
-        {"signatory": {"authorityId": authority, "name": "Diretora", "role": "Diretora"}},
+        {"signatory": {"authorityId": authority, "name": "Diretora", "role": role}},
         format="json",
         **actor_headers(f"publicador-{suffix}", ["retificacao:publicar"], if_match=3, key=key),
     )
@@ -891,6 +892,13 @@ def test_retification_may_revert_a_previous_one_and_reproduce_the_original_docum
 
     Regressão da unicidade global de `document_hash`: o PDF resultante é
     byte-a-byte igual ao da Publicação original e não pode colidir.
+
+    **A reversão publica sob a mesma autoridade da original, e isso passou a importar.** Desde a
+    `008` o documento registra quem praticou o ato (FR-033), de modo que dois atos de conteúdo
+    idêntico assinados por autoridades diferentes produzem documentos diferentes — o que está
+    certo, e é fidelidade que o documento não tinha. Para a regressão continuar sendo o que ela
+    é — dois documentos byte a byte iguais, que não podem colidir —, o que precisa coincidir agora
+    é o conteúdo **e** quem assina.
     """
     edital = publish_original(api_client, manager_headers, process_payload)
     base = VersaoConsolidada.objects.get(edital=edital)
@@ -930,7 +938,8 @@ def test_retification_may_revert_a_previous_one_and_reproduce_the_original_docum
         api_client,
         revert.data["id"],
         suffix="b",
-        authority="00000000-0000-0000-0000-000000000603",
+        authority="00000000-0000-0000-0000-000000000602",
+        role="Diretora-Geral",
         key="retificacao-chave-k2",
     )
     assert published.status_code == 201
