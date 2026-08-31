@@ -16,7 +16,7 @@
 
     {% for secao in secoes %}
     <fieldset class="linha secao{% if secao.gerada %} gerada{% endif %}">
-      <legend>{{ secao.order }}. {{ secao.title }}</legend>
+      <legend id="titulo-{{ secao.key }}">{{ secao.order }}. {{ secao.title }}</legend>
       {% if secao.gerada %}
       <p class="ajuda">Composta automaticamente a partir de <strong>{{ secao.origem }}</strong>.
         Não há texto a redigir: alterar aquele conteúdo altera esta seção.</p>
@@ -24,10 +24,16 @@
       <p><a class="acao" href="{% url 'interface:compor-etapa' edital.id secao.etapa_da_origem %}">Ir para {{ secao.origem }}</a></p>
       {% endif %}
       {% else %}
+      {% comment %}
+      O campo é nomeado pela **legenda da própria seção**, e não por um rótulo repetido. "Texto da
+      seção" dez vezes seguidas, cada uma sob uma legenda que já diz qual seção é, não informava
+      nada — e num leitor de tela dizia menos que o título: agora o campo se anuncia como
+      "1. Apresentação", que é o que distingue um dos dez.
+      {% endcomment %}
       <p class="campo largo">
-        <label for="secao-{{ secao.key }}">Texto da seção</label>
         <textarea id="secao-{{ secao.key }}" name="secao-{{ secao.key }}" rows="5"
                   {% if not editavel %}disabled{% endif %}
+                  aria-labelledby="titulo-{{ secao.key }}"
                   aria-describedby="ajuda-{{ secao.key }}">{{ secao.content }}</textarea>
         <span class="ajuda" id="ajuda-{{ secao.key }}">{% if secao.editada %}Texto revisado por
           quem elabora.{% else %}Redação institucional padrão — revise antes de submeter.{% endif %}</span>

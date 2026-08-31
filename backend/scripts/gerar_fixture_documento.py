@@ -23,7 +23,10 @@ import django  # noqa: E402
 
 django.setup()
 
-from processo_seletivo.publicacoes.infrastructure.pdf import render_edital_pdf  # noqa: E402
+from processo_seletivo.publicacoes.infrastructure.pdf import (  # noqa: E402
+    AutoridadeSignataria,
+    render_edital_pdf,
+)
 from processo_seletivo.shared.canonical import canonical_sha256  # noqa: E402
 
 FIXTURES = RAIZ / "tests" / "contract" / "fixtures"
@@ -31,8 +34,18 @@ FIXTURES = RAIZ / "tests" / "contract" / "fixtures"
 
 def main():
     snapshot = json.loads((FIXTURES / "snapshot_publicado.json").read_text(encoding="utf-8"))
+    # A autoridade fica versionada ao lado do snapshot pela mesma razão que ele fica: sem ela a
+    # fixture seria um arquivo binário que ninguém consegue reproduzir. Depois da `008`, compor
+    # em modo publicado sem autoridade é recusado — o gerador não roda sem ela.
+    assinante = json.loads((FIXTURES / "autoridade_publicada.json").read_text(encoding="utf-8"))
     destino = FIXTURES / "documento_publicado_v1.pdf"
-    destino.write_bytes(render_edital_pdf(snapshot, canonical_sha256(snapshot)))
+    destino.write_bytes(
+        render_edital_pdf(
+            snapshot,
+            canonical_sha256(snapshot),
+            autoridade=AutoridadeSignataria(**assinante),
+        )
+    )
     print(f"{destino.relative_to(RAIZ)}: {destino.stat().st_size} bytes")
 
 

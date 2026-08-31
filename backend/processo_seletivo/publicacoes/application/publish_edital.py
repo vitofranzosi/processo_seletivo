@@ -6,7 +6,10 @@ from processo_seletivo.editais.domain import secoes
 from processo_seletivo.editais.domain.validation import blocking_findings, validate_for_publication
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
-from processo_seletivo.publicacoes.infrastructure.pdf import render_edital_pdf
+from processo_seletivo.publicacoes.infrastructure.pdf import (
+    AutoridadeSignataria,
+    render_edital_pdf,
+)
 from processo_seletivo.publicacoes.models import (
     DocumentoPublicado,
     Homologacao,
@@ -361,7 +364,15 @@ def publish_edital(
         findings = validate_for_publication(current_snapshot)
         if blocking_findings(findings):
             raise DomainError("blocking_findings", "O Edital possui erros impeditivos.", 422)
-        pdf = render_edital_pdf(revisao.content, revisao.content_hash)
+        # A autoridade é contexto do ato, não conteúdo publicado: ela chega por parâmetro
+        # porque o documento é composto **antes** de a `Publicacao` existir (`008`, FR-034).
+        pdf = render_edital_pdf(
+            revisao.content,
+            revisao.content_hash,
+            autoridade=AutoridadeSignataria(
+                nome=signatory["name"], cargo=signatory["role"]
+            ),
+        )
         document_hash = hashlib.sha256(pdf).hexdigest()
         publication = Publicacao.objects.create(
             edital=edital,

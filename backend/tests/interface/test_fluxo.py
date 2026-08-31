@@ -23,13 +23,20 @@ from tests.fixtures.publicacao import publish_original, retify
 from tests.interface.conftest import compor_rascunho, identificar
 
 TEXTO_PDF = re.compile(rb"\((.*?)\) Tj", re.DOTALL)
+# Só os fluxos de conteúdo das páginas. Desde que o documento embute o brasão, varrer o arquivo
+# inteiro alcançaria os bytes da imagem — que não são texto e não decodificam como tal.
+CONTEUDO_DA_PAGINA = re.compile(rb"<< /Length \d+ >>\nstream\n(.*?)\nendstream", re.DOTALL)
+
+
+def conteudo_das_paginas(pdf: bytes) -> bytes:
+    return b"\n".join(CONTEUDO_DA_PAGINA.findall(pdf))
 
 
 def texto_de_pdf_bytes(pdf: bytes) -> str:
     """O texto realmente desenhado — não o que se supõe ter sido escrito."""
     return "\n".join(
         parte.replace(b"\\(", b"(").replace(b"\\)", b")").decode("cp1252")
-        for parte in TEXTO_PDF.findall(pdf)
+        for parte in TEXTO_PDF.findall(conteudo_das_paginas(pdf))
     )
 
 
@@ -429,11 +436,17 @@ def test_publicar_logo_apos_a_previa_produz_o_mesmo_conteudo_normativo(
     praticar(client, Edital.objects.get(), "publicar", motivo="Publicação", **SIGNATARIO)
     publicado = texto_de_pdf_bytes(bytes(DocumentoPublicado.objects.get().bytes))
 
-    for esperado in ("P1", "Perfil", "INSCRICAO", "Inscrições"):
+    # **Materialização atualizada pela `008`**: o rótulo humano do Evento vai ao papel; a chave
+    # do tipo, não. `INSCRICAO` é enumeração, e num Edital publicado não diz nada além do que a
+    # descrição já diz.
+    for esperado in ("P1", "Perfil", "Inscrições"):
         assert esperado in visualizado and esperado in publicado, esperado
+    assert "INSCRICAO" not in visualizado and "INSCRICAO" not in publicado
     assert MARCA_DE_PREVIA in visualizado
     assert MARCA_DE_PREVIA not in publicado
-    assert "INTEGRIDADE" in publicado and "INTEGRIDADE" not in visualizado
+    # **Forma atualizada**: o bloco de verificação deixou o caixa alta e virou nota subordinada.
+    assert "Verificação de integridade" in publicado
+    assert "Verificação de integridade" not in visualizado
 
 
 ETAPAS = {
@@ -471,8 +484,10 @@ def test_etapas_aparecem_na_previa_e_no_documento_publicado_na_ordem_definida(
 
     previa = texto_do_pdf(client.get(reverse("interface:previa-documento", args=[edital.id])))
     assert previa.index("Prova didática") < previa.index("Análise de títulos")
-    assert "peso: 2" in previa
-    assert "nota mínima: 7" in previa
+    # **Forma atualizada pela `008`/US3**: peso e nota mínima viraram pares rótulo-valor da Etapa
+    # (FR-027). O que esta jornada guarda é que a ponderação chega à prévia — e continua chegando.
+    assert "Peso" in previa and "2" in previa
+    assert "Nota mínima" in previa and "7" in previa
     assert "eliminatória" in previa
 
     praticar(client, Edital.objects.get(), "submeter")

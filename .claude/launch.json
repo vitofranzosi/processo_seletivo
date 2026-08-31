@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "gestao",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "--directory", "backend", "python", "manage.py", "runserver", "8008"],
+      "port": 8008
+    }
+  ]
+}
