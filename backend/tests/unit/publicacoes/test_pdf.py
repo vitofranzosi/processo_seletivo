@@ -1158,3 +1158,27 @@ def test_o_cabecalho_de_uma_tabela_nao_vaza_para_o_que_vem_depois_dela():
         assert len(cabecalhos) <= len(modalidades), (
             f"cabeçalho de modalidades sem tabela na página {numero}"
         )
+
+
+def test_o_fechamento_do_ato_nao_se_parte_entre_paginas():
+    """Autoridade e verificação são um bloco só (FR-033, FR-038).
+
+    Quem assinou e a prova do que assinou não se separam por acidente de paginação. O cenário de
+    referência cabia e escondia o caso; um Edital com dois Perfis termina perto do fim da página e
+    deixava o SHA-256 sozinho na seguinte.
+    """
+    conteudo = dois_perfis()
+    conteudo["profiles"][1]["duties"] = "\n".join(
+        f"Preparar, manter e acompanhar os laboratórios da área {n}." for n in range(1, 12)
+    )
+    paginas = paginas_de(documento(conteudo))
+
+    fechamento = [
+        numero
+        for numero, pagina in enumerate(paginas, 1)
+        for linha in pagina
+        if linha == AUTORIDADE[0] or linha.startswith(("VERIFICAÇÃO", "SHA-256 do conteúdo"))
+    ]
+    assert len(set(fechamento)) == 1, (
+        f"o fechamento do ato ficou espalhado pelas páginas {sorted(set(fechamento))}"
+    )

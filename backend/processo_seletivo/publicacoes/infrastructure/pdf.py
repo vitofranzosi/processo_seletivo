@@ -893,8 +893,13 @@ def render_edital_pdf(
     _cabecalho(composicao, snapshot)
     _secoes(composicao, snapshot)
     if not previa:
-        _autoridade(composicao, autoridade)
-        _integridade(composicao, snapshot, content_hash)
+        # Autoridade e verificação são **um** bloco: quem assinou e a prova do que assinou não se
+        # separam por acidente de paginação. Sem isso, um documento que termina perto do fim da
+        # página deixa o SHA-256 sozinho na seguinte — que foi o que o primeiro exemplo com dois
+        # Perfis mostrou, e que o cenário de referência escondia por caber.
+        with composicao.bloco():
+            _autoridade(composicao, autoridade)
+            _integridade(composicao, snapshot, content_hash)
     paginas = composicao.paginar()
 
     edital = f"Edital {snapshot.get('number', '')}/{snapshot.get('year', '')}"
