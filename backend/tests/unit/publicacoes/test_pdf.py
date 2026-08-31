@@ -198,20 +198,20 @@ def sem_etapas():
 
 
 def dois_perfis():
-    """Dois Perfis, o segundo dimensionado para não caber no espaço restante (T008, FR-020).
+    """Dois Perfis, o segundo caindo no rodapé da primeira página (T008, FR-020).
 
-    O primeiro Perfil recebe texto suficiente para empurrar o segundo para o fim da página. Sem a
-    paginação por bloco, o segundo começa no rodapé e continua na página seguinte — que é o
-    defeito editorial observado no documento gerado antes desta feature.
+    Os dois são enxutos de propósito: é essa proporção que faz o título do segundo caber no fim da
+    página e o corpo dele não. Sem a paginação por bloco, `TEC-LAB` abre no rodapé da página 1 com
+    duas linhas abaixo e continua na página 2 — que é o defeito editorial observado no documento
+    gerado antes desta feature.
     """
     base = snapshot()
     primeiro = {
         **base["profiles"][0],
-        "duties": "\n".join(
-            f"Ministrar aulas, orientar e participar das atividades de ensino, "
-            f"pesquisa e extensão do campus, na área {n}."
-            for n in range(1, 9)
-        ),
+        "duties": "",
+        "workload": "",
+        "compensation": "",
+        "requirements": ["Mestrado em Computação ou área afim"],
     }
     segundo = {
         **base["profiles"][0],
@@ -219,8 +219,11 @@ def dois_perfis():
         "code": "TEC-LAB",
         "name": "Técnico de Laboratório",
         "description": "Apoio técnico aos laboratórios de Informática.",
-        "requirements": ["Ensino médio técnico em Informática", "Registro profissional ativo"],
-        "duties": "Preparar e manter os laboratórios; apoiar as aulas práticas.",
+        "requirements": ["Ensino médio técnico em Informática"],
+        "duties": "",
+        "workload": "",
+        "compensation": "",
+        "competitionModalities": [],
     }
     return snapshot(profiles=[primeiro, segundo])
 
@@ -245,6 +248,9 @@ def perfil_maior_que_a_pagina():
 
 
 def test_document_reproduces_every_profile_of_the_homologated_version():
+    """**Forma atualizada pela `008`/US2**: a identificação virou quadro, e rótulo e valor passaram
+    a ser células. O que o teste guarda é o conteúdo, e ele continua todo presente.
+    """
     texto = texto_de(render_edital_pdf(snapshot(), HASH))
     perfil = snapshot()["profiles"][0]
     assert perfil["code"] in texto
@@ -252,7 +258,7 @@ def test_document_reproduces_every_profile_of_the_homologated_version():
     assert perfil["description"] in texto
     assert perfil["locality"] in texto
     assert perfil["requirements"][0] in texto
-    assert "Vagas imediatas: 3" in texto
+    assert "Vagas imediatas" in texto and "3" in texto
     assert "limitado em 6" in texto
 
 
@@ -263,8 +269,10 @@ def test_document_reproduces_competition_modalities_and_their_normative_rule():
     assert "Pessoas pretas, pardas e indígenas" in texto
     assert "Lei 12.990/2014" in texto
     assert "2014-06-09" in texto
-    # `20%`: a entrada continua `"20.0000"` (linha 83) e é o documento que escreve em português.
-    assert "percentual: 20%" in texto
+    # **Forma atualizada pela `008`/US2**: a frase corrida `Regra Normativa — fundamento: …;
+    # versão: …; percentual: …` virou tabela. O valor continua obrigatório e continua em
+    # português — a entrada é `"20.0000"` e é o documento que a escreve.
+    assert "20%" in texto
     assert "20.0000" not in texto
 
 
@@ -464,7 +472,7 @@ def test_perfil_sem_os_campos_institucionais_nao_imprime_rotulo_vazio():
 
     texto = texto_de(render_edital_pdf(vazio, HASH))
 
-    assert "Atribuições:" not in texto
+    assert "Atribuições" not in texto
     assert "Carga horária:" not in texto
     assert "Remuneração:" not in texto
 
@@ -477,7 +485,10 @@ def test_perfil_com_os_campos_institucionais_os_imprime_preservando_paragrafos()
 
     texto = texto_de(render_edital_pdf(conteudo, HASH))
 
-    assert "Atribuições:" in texto
+    # **Forma atualizada pela `008`/US2**: o rótulo perdeu os dois-pontos ao virar cabeçalho de
+    # sub-bloco. O que o teste guarda — o conteúdo presente e os parágrafos preservados — é
+    # invariante e não mudou.
+    assert "Atribuições" in texto
     assert "Ministrar aulas." in texto
     assert "Orientar projetos." in texto
     assert "Carga horária: 40 horas semanais" in texto
@@ -622,3 +633,148 @@ def test_a_numeracao_nao_e_persistida_no_texto_da_secao():
         if not secao.gerada:
             assert not secao.default_text.lstrip().startswith(("1.", "2.", "3.", "4.", "5."))
         assert not secao.title[0].isdigit()
+
+
+# ---------------------------------------------------------------------------
+# 008 / US2 — Perfil como quadro, e paginação que respeita fronteiras
+# ---------------------------------------------------------------------------
+
+
+def paginas_de(pdf: bytes) -> list[list[str]]:
+    """O texto de cada página, na ordem — onde a paginação fica observável."""
+    fluxos = re.findall(rb"stream\n(.*?)\nendstream", pdf, re.DOTALL)
+    return [
+        [
+            parte.replace(b"\\(", b"(").replace(b"\\)", b")").decode("cp1252")
+            for parte in TEXTO_PDF.findall(fluxo)
+        ]
+        for fluxo in fluxos
+    ]
+
+
+def test_um_perfil_que_cabe_inteiro_na_pagina_seguinte_nao_e_partido():
+    """FR-020: mover é melhor que partir, quando mover resolve.
+
+    O documento gerado antes desta feature iniciava o segundo Perfil no rodapé e continuava seus
+    dados na página seguinte — o defeito editorial mais visível depois do cabeçalho.
+    """
+    paginas = paginas_de(render_edital_pdf(dois_perfis(), HASH))
+    onde = [
+        numero
+        for numero, pagina in enumerate(paginas, 1)
+        for linha in pagina
+        if linha.startswith("TEC-LAB")
+    ]
+    assert len(onde) == 1, "o título do Perfil aparece em mais de uma página"
+    pagina_do_titulo = onde[0]
+
+    # **Tudo** o que é do segundo Perfil está na mesma página do seu título — inclusive o que hoje
+    # cai na página seguinte. Conferir só a descrição deixaria o defeito passar: é justamente ela
+    # que ainda cabe no rodapé, junto do título, enquanto vagas e requisitos escorregam.
+    for marca in (
+        "Apoio técnico aos laboratórios",
+        "Campus Serra",
+        "Vagas imediatas",
+        "Ensino médio técnico em Informática",
+    ):
+        assert any(marca in linha for linha in paginas[pagina_do_titulo - 1]), (
+            f"{marca!r} ficou fora da página do seu Perfil"
+        )
+
+
+def test_nenhum_titulo_de_perfil_fecha_a_pagina_sem_conteudo_abaixo():
+    """FR-022: título órfão é o defeito que mais denuncia composição automática."""
+    for conteudo in (snapshot(), dois_perfis(), perfil_maior_que_a_pagina()):
+        for pagina in paginas_de(render_edital_pdf(conteudo, HASH)):
+            corpo = [linha for linha in pagina if not linha.startswith("Edital 07/2026 ·")]
+            if not corpo:
+                continue
+            ultima = corpo[-1]
+            assert not re.match(r"^[A-Z]{3}-[A-Z]+ — ", ultima), (
+                f"título de Perfil sozinho no fim da página: {ultima!r}"
+            )
+
+
+def test_um_subbloco_maior_que_a_pagina_quebra_por_dentro_e_a_composicao_conclui():
+    """FR-021: a cascata precisa terminar sempre em alternativa exequível.
+
+    Atribuições são texto livre e não têm limite. A primeira redação da spec exigia que nenhum
+    sub-bloco fosse partido — regra que nenhum compositor cumpre quando o sub-bloco sozinho não
+    cabe numa página. O que este teste prova não é elegância: é que a composição **termina**.
+    """
+    pdf = render_edital_pdf(perfil_maior_que_a_pagina(), HASH)
+    paginas = paginas_de(pdf)
+
+    assert len(paginas) >= 3, "o cenário extremo deveria ocupar várias páginas"
+    texto = texto_de(pdf)
+    assert "Atribuição 1:" in texto and "Atribuição 60:" in texto, "conteúdo perdido na quebra"
+    assert "INTEGRIDADE" in texto, "a composição não chegou ao fim"
+
+
+def test_o_quadro_de_modalidades_nao_inventa_celula_nem_perde_informacao():
+    """FR-018 e FR-019: tabular não pode virar perder.
+
+    O documento anterior imprimia `Regra Normativa — fundamento: …; versão: …; percentual: …`.
+    A frase sai; **os dados não**. E ampla concorrência sem percentual não ganha célula
+    construída para preencher a coluna.
+    """
+    texto = texto_de(render_edital_pdf(snapshot(), HASH))
+
+    assert "Regra Normativa — fundamento:" not in texto
+    for esperado in ("PPP", "Lei 12.990/2014", "20%", "2014-06-09"):
+        assert esperado in texto, esperado
+
+    # Ampla concorrência: sem regra normativa, e portanto sem percentual.
+    ampla = {
+        "id": "44444444-4444-4444-4444-4444444444aa",
+        "code": "AC",
+        "name": "Ampla concorrência",
+        "description": "",
+        "normativeRule": None,
+    }
+    perfil = {**snapshot()["profiles"][0], "competitionModalities": [ampla]}
+    texto = texto_de(render_edital_pdf(snapshot(profiles=[perfil]), HASH))
+
+    assert "Ampla concorrência" in texto
+    # A coluna inteira desaparece quando nenhuma modalidade tem percentual: coluna vazia é
+    # informação inexistente ocupando espaço (FR-019).
+    assert "Percentual" not in texto
+    assert "None" not in texto and "—%" not in texto
+
+
+def test_a_paginacao_por_bloco_nao_perde_nem_duplica_conteudo():
+    """Os modos de falha silenciosa de D-004, no único lugar em que se manifestam juntos.
+
+    Medir com uma métrica e colocar com outra, bloco que cabe medido e não cabe colocado, cascata
+    sobre bloco vazio, unidade indivisível maior que a página: nenhum desses quebra o documento —
+    todos produzem um documento **errado**. O que os apanha é conservação de conteúdo.
+    """
+    for conteudo in (snapshot(), dois_perfis(), perfil_maior_que_a_pagina(), sem_etapas()):
+        pdf = render_edital_pdf(conteudo, HASH)
+        paginas = paginas_de(pdf)
+
+        # Nenhuma página vazia: bloco vazio na cascata produziria uma.
+        for numero, pagina in enumerate(paginas, 1):
+            corpo = [linha for linha in pagina if not linha.startswith("Edital 07/2026 ·")]
+            assert corpo, f"página {numero} saiu vazia"
+
+        # Nada é recolocado ao mover um bloco: no cenário extremo cada atribuição é única, e
+        # duplicá-la ou perdê-la é exatamente o que a decisão "cabe / não cabe" erra em silêncio.
+        if conteudo is not snapshot():
+            atribuicoes = [
+                linha
+                for pagina in paginas
+                for linha in pagina
+                if linha.startswith("Atribuição ")
+            ]
+            assert len(atribuicoes) == len(set(atribuicoes)), "atribuição repetida entre páginas"
+
+        # Todo Perfil do conteúdo aparece exatamente uma vez.
+        for perfil in conteudo["profiles"]:
+            ocorrencias = sum(
+                1
+                for pagina in paginas
+                for linha in pagina
+                if linha.startswith(f"{perfil['code']} — ")
+            )
+            assert ocorrencias == 1, f"{perfil['code']} apareceu {ocorrencias} vezes"

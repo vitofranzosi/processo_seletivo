@@ -84,7 +84,11 @@ def test_us4_published_document_matches_the_homologated_content(
     for perfil in revisao.content["profiles"]:
         assert perfil["code"] in texto, perfil["code"]
         assert perfil["name"] in texto
-        assert f"Vagas imediatas: {perfil['immediateVacancies']}" in texto
+        # **Forma atualizada pela `008`/US2**: a identificação do Perfil virou quadro, e rótulo e
+        # valor passaram a ser células distintas. O que esta aceitação guarda é que o número de
+        # vagas do conteúdo homologado chega ao documento — e continua chegando.
+        assert "Vagas imediatas" in texto
+        assert str(perfil["immediateVacancies"]) in texto
     for evento in revisao.content["schedule"]:
         assert evento["description"] in texto, evento["description"]
     assert revisao.content_hash in texto, "o documento carrega o hash da versão homologada"

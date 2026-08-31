@@ -194,7 +194,9 @@ def test_percentual_peso_e_nota_saem_em_portugues():
     """A fixture carrega percentual 20.0000, peso 2.0000 e nota mínima 7.0000."""
     texto = texto_de(render_edital_pdf(SNAPSHOT, HASH))
 
-    assert "percentual: 20%" in texto
+    # **Forma atualizada pela `008`/US2**: o percentual saiu da frase corrida e virou célula. O
+    # valor continua obrigatório, e continua em português — que é o que este teste guarda.
+    assert "20%" in texto
     assert "peso: 2" in texto
     assert "nota mínima: 7" in texto
 
@@ -209,7 +211,7 @@ def test_decimal_com_parte_fracionaria_usa_virgula():
 
     texto = texto_de(render_edital_pdf(fracionario, canonical_sha256(fracionario)))
 
-    assert "percentual: 12,5%" in texto
+    assert "12,5%" in texto
     assert "peso: 1,75" in texto
 
 
@@ -232,7 +234,7 @@ def test_as_regras_de_apresentacao_valem_tambem_na_previa():
 
     assert "PLANEJADO" not in texto
     assert not re.search(r"\d\.\d{4}\b", texto)
-    assert "percentual: 20%" in texto
+    assert "20%" in texto
 
 
 # ---------------------------------------------------------------------------

@@ -103,22 +103,22 @@ sub-bloco.
 
 ### Tests for User Story 2
 
-- [ ] T024 [P] [US2] Teste do cenário de dois Perfis em `backend/tests/unit/publicacoes/test_pdf.py`: o segundo Perfil não começa no fim da página 1 (FR-020)
-- [ ] T025 [P] [US2] Teste do cenário extremo em `backend/tests/unit/publicacoes/test_pdf.py`: a composição conclui e a quebra ocorre dentro do sub-bloco, por parágrafo (FR-021)
-- [ ] T026 [P] [US2] Teste de que nenhum título de Perfil fica isolado no fim de página em `backend/tests/unit/publicacoes/test_pdf.py` (FR-022)
-- [ ] T027 [P] [US2] Teste do quadro de modalidades em `backend/tests/unit/publicacoes/test_pdf.py`: sem percentual não inventa célula, e versão e vigência da Regra Normativa continuam no documento (FR-018, FR-019)
-- [ ] T028 [P] [US2] Testes dos seis modos de falha silenciosa da tabela de interações de D-004, em `backend/tests/unit/publicacoes/test_pdf.py`
+- [X] T024 [P] [US2] Teste do cenário de dois Perfis em `backend/tests/unit/publicacoes/test_pdf.py`: o segundo Perfil não começa no fim da página 1 (FR-020)
+- [X] T025 [P] [US2] Teste do cenário extremo em `backend/tests/unit/publicacoes/test_pdf.py`: a composição conclui e a quebra ocorre dentro do sub-bloco, por parágrafo (FR-021)
+- [X] T026 [P] [US2] Teste de que nenhum título de Perfil fica isolado no fim de página em `backend/tests/unit/publicacoes/test_pdf.py` (FR-022)
+- [X] T027 [P] [US2] Teste do quadro de modalidades em `backend/tests/unit/publicacoes/test_pdf.py`: sem percentual não inventa célula, e versão e vigência da Regra Normativa continuam no documento (FR-018, FR-019)
+- [X] T028 [P] [US2] Testes dos seis modos de falha silenciosa da tabela de interações de D-004, em `backend/tests/unit/publicacoes/test_pdf.py`
 
 ### Implementation for User Story 2
 
-- [ ] T029 [US2] Transformar o item de composição em união marcada `Texto | Traço` e fazer `_fluxo_da_pagina` emitir os traços antes dos textos em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (D-002, FR-003)
-- [ ] T030 [US2] Acrescentar abertura e fechamento de bloco à `Composicao` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, com os três níveis da cascata (D-004)
-- [ ] T031 [US2] Reescrever `Composicao.paginar` em duas passadas — medir o bloco, decidir, colocar — implementando os cinco degraus da cascata em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-004, FR-020 a FR-022, D-004)
-- [ ] T032 [US2] Resolver a moldura após a paginação, uma por página de continuação, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (D-003, FR-014)
-- [ ] T033 [US2] Reescrever `_perfis` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`: bloco com moldura, identificação tabular, descrição e atribuições como sub-blocos, requisitos em lista (FR-014 a FR-017)
-- [ ] T034 [US2] Reescrever `_modalidades` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` como tabela com modalidade, percentual, fundamento, versão e vigência, eliminando a frase `Regra Normativa — fundamento: …` (FR-018, FR-019)
-- [ ] T035 [US2] Regenerar a fixture e revisar o diff no mesmo commit (FR-044)
-- [ ] T036 [US2] Gerar a prévia e conferir R-04, R-05 e R-06 da rubrica
+- [X] T029 [US2] Transformar o item de composição em união marcada `Texto | Traço` e fazer `_fluxo_da_pagina` emitir os traços antes dos textos em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (D-002, FR-003)
+- [X] T030 [US2] Acrescentar abertura e fechamento de bloco à `Composicao` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, com os três níveis da cascata (D-004)
+- [X] T031 [US2] Reescrever `Composicao.paginar` em duas passadas — medir o bloco, decidir, colocar — implementando os cinco degraus da cascata em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-004, FR-020 a FR-022, D-004)
+- [X] T032 [US2] Resolver a moldura após a paginação, uma por página de continuação, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (D-003, FR-014)
+- [X] T033 [US2] Reescrever `_perfis` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`: bloco com moldura, identificação tabular, descrição e atribuições como sub-blocos, requisitos em lista (FR-014 a FR-017)
+- [X] T034 [US2] Reescrever `_modalidades` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` como tabela com modalidade, percentual, fundamento, versão e vigência, eliminando a frase `Regra Normativa — fundamento: …` (FR-018, FR-019)
+- [X] T035 [US2] Regenerar a fixture e revisar o diff no mesmo commit (FR-044)
+- [X] T036 [US2] Gerar a prévia e conferir R-04, R-05 e R-06 da rubrica
 
 **Checkpoint**: Perfis em quadro, sem quebra ruim. US1 e US2 funcionam juntas.
 

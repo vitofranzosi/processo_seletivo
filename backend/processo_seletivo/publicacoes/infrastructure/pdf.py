@@ -11,6 +11,7 @@ anterior codificava em ASCII e destruía todo acento de um documento oficial bra
 """
 
 import re
+from contextlib import contextmanager
 from datetime import datetime
 
 from django.utils import timezone
@@ -97,6 +98,12 @@ CORPO_NOTA = 8.5
 
 ESQUERDA, CENTRO, DIREITA = "esquerda", "centro", "direita"
 
+# Quanto o contorno de um bloco abre acima da primeira linha (FR-014).
+FOLGA_DA_MOLDURA = 6.0
+# E quanto ele desce quando um título veio junto na quebra: o fio precisa passar abaixo das
+# descidas do título, não rente a elas.
+FOLGA_APOS_TITULO = 16.0
+
 # O modo do renderizador (FR-015). Um parâmetro, e não condicionais espalhadas pela composição:
 # a diferença entre o que se revisa e o que se publica precisa ter **um** lugar onde está
 # declarada, ou os dois documentos divergem sem que nada acuse.
@@ -179,38 +186,176 @@ def _x(texto, fonte, tamanho, recuo, alinhamento):
 
 
 class Composicao:
-    """Acumula linhas com estilo e recuo; a paginação acontece depois, em uma passada."""
+    """Acumula itens com estilo, recuo e fronteira de bloco; a paginação acontece depois.
+
+    O item deixou de ser sempre texto: `Traço` é a primitiva gráfica de FR-003, e o bloco é a
+    fronteira que FR-004 pede. Nada disso é motor de layout — são três conceitos, e a decisão de
+    quebra é uma cascata de cinco degraus que sempre termina em alternativa exequível.
+    """
+
+    ESPESSURA_DO_FIO = 0.6
 
     def __init__(self):
-        self.linhas: list[tuple[str, str, float, float, float, str]] = []
+        self.itens: list = []
 
     def escrever(
         self, texto, *, tamanho=CORPO_TEXTO, fonte=REGULAR, recuo=0.0, antes=0.0,
-        alinhamento=ESQUERDA,
+        alinhamento=ESQUERDA, junto=False,
     ):
-        for indice, parte in enumerate(_quebrar(texto, tamanho, recuo, fonte)):
-            self.linhas.append(
-                (parte, fonte, tamanho, recuo, antes if indice == 0 else 0.0, alinhamento)
+        """`junto` é o "não me deixe sozinho no rodapé" de FR-022 e FR-030.
+
+        Um título que fecha a página sem nada abaixo é o defeito que mais denuncia composição
+        automática. A regra é local — a linha exige espaço para si **e** para a próxima —, e não
+        um algoritmo de viúvas e órfãs.
+        """
+        partes = _quebrar(texto, tamanho, recuo, fonte)
+        for indice, parte in enumerate(partes):
+            self.itens.append(
+                (
+                    "texto", parte, fonte, tamanho, recuo,
+                    antes if indice == 0 else 0.0, alinhamento,
+                    junto or indice < len(partes) - 1,
+                )
             )
 
     def espaco(self, altura=8.0):
-        self.linhas.append(("", REGULAR, 0.0, 0.0, altura, ESQUERDA))
+        self.itens.append(("texto", "", REGULAR, 0.0, 0.0, altura, ESQUERDA, False))
+
+    @contextmanager
+    def bloco(self, *, moldura=False, coeso=True):
+        """Uma fronteira que a paginação enxerga (FR-004).
+
+        `coeso` diz que o bloco prefere não começar sem caber; `moldura` pede o contorno de FR-014.
+        Blocos aninham — Perfil contém sub-blocos, sub-blocos contêm unidades —, e é o aninhamento
+        que dá os degraus da cascata de FR-021.
+        """
+        self.itens.append(("abre", moldura, coeso))
+        try:
+            yield
+        finally:
+            self.itens.append(("fecha", moldura, coeso))
+
+    # -- medição -------------------------------------------------------------
+
+    @staticmethod
+    def _altura(item):
+        if item[0] != "texto":
+            return 0.0
+        _, texto, _, tamanho, _, antes, _, _ = item
+        return antes + (tamanho * 1.45 if tamanho else 0.0)
+
+    @classmethod
+    def _extensao(cls, itens, inicio):
+        """Onde termina o bloco aberto em `inicio`, e quanto ele mede."""
+        profundidade, fim = 0, inicio
+        for indice in range(inicio, len(itens)):
+            if itens[indice][0] == "abre":
+                profundidade += 1
+            elif itens[indice][0] == "fecha":
+                profundidade -= 1
+                if profundidade == 0:
+                    fim = indice
+                    break
+        else:
+            fim = len(itens) - 1
+        return fim, sum(cls._altura(item) for item in itens[inicio : fim + 1])
+
+    # -- paginação -----------------------------------------------------------
 
     def paginar(self):
-        paginas, atual, y = [], [], TOPO
-        for texto, fonte, tamanho, recuo, antes, alinhamento in self.linhas:
-            altura = tamanho * 1.45 if tamanho else 0.0
-            if y - antes - altura < RODAPE + 24 and atual:
-                paginas.append(atual)
-                atual, y = [], TOPO
-                antes = 0.0
-            y -= antes + altura
+        """Duas passadas: mede o bloco, decide se cabe, depois coloca (D-004).
+
+        A cascata, na ordem, parando no primeiro degrau exequível: cabe no que resta → coloca;
+        cabe numa página inteira → começa na próxima; não cabe numa página → abre o bloco e repete
+        para cada sub-bloco; sub-bloco isolado não cabe → repete para suas unidades; unidade
+        isolada não cabe → quebra entre linhas. **O último degrau é o que torna a regra sempre
+        cumprível** — foi a ausência dele que tornou impossível a primeira redação da spec.
+        """
+        util = TOPO - (RODAPE + 24)
+        paginas, atual, tracos, y = [], [], [], TOPO
+        pilha = []
+        indice = 0
+
+        def nova_pagina():
+            """Fecha a página — **levando junto** o rastro de linhas que pediram companhia.
+
+            Marcar a linha não basta: o título é colocado e só depois o bloco seguinte descobre que
+            não cabe. Quem quebra a página é quem tem de devolver o título, senão ele fica para
+            trás sozinho — que é o defeito de composição automática mais visível de todos.
+            """
+            nonlocal atual, tracos, y
+            rastro = []
+            while atual and atual[-1][5]:
+                rastro.insert(0, atual.pop())
+            for aberto in pilha:
+                if aberto["moldura"] and aberto["topo"] is not None:
+                    tracos.append((aberto["topo"], rastro[0][4] if rastro else y))
+            paginas.append((atual, tracos))
+            atual, tracos, y = [], [], TOPO
+            for texto, fonte, tamanho, x, _, junto in rastro:
+                y -= tamanho * 1.45
+                atual.append((texto, fonte, tamanho, x, y, junto))
+            # Um bloco que já estava aberto reabre a moldura abaixo do rastro, pela mesma razão.
+            for aberto in pilha:
+                if aberto["moldura"] and aberto["topo"] is not None:
+                    aberto["topo"] = (y - FOLGA_APOS_TITULO) if rastro else y
+
+        while indice < len(self.itens):
+            item = self.itens[indice]
+
+            if item[0] == "abre":
+                _, moldura, coeso = item
+                fim, altura = self._extensao(self.itens, indice)
+                cabe_aqui = y - altura >= RODAPE + 24
+                if coeso and not cabe_aqui and altura <= util and atual:
+                    nova_pagina()
+                # Não cabendo nem numa página inteira, o bloco é aberto e a mesma decisão desce
+                # para os sub-blocos — que é o degrau seguinte da cascata, não um caso especial.
+                # Se a última linha da página já ocupa este `y` — é o caso do título que veio
+                # junto na quebra —, o contorno precisa começar **abaixo** dela: senão o fio sobe
+                # pela altura-x do título que apenas anuncia o quadro.
+                ocupado = bool(atual) and atual[-1][4] >= y
+                topo = (y - FOLGA_APOS_TITULO) if ocupado else y
+                pilha.append({"moldura": moldura, "topo": topo if moldura else None})
+                indice += 1
+                continue
+
+            if item[0] == "fecha":
+                aberto = pilha.pop()
+                if aberto["moldura"] and aberto["topo"] is not None:
+                    tracos.append((aberto["topo"], y))
+                indice += 1
+                continue
+
+            _, texto, fonte, tamanho, recuo, antes, alinhamento, junto = item
+            altura = self._altura(item)
+            # Uma linha "junto" precisa de espaço para si e para a seguinte: é o que impede o
+            # título de fechar a página sozinho.
+            necessario = altura
+            if junto:
+                proxima = next(
+                    (
+                        outro
+                        for outro in self.itens[indice + 1 :]
+                        if outro[0] == "texto" and outro[1]
+                    ),
+                    None,
+                )
+                if proxima is not None:
+                    necessario += self._altura(proxima)
+            if y - necessario < RODAPE + 24 and atual:
+                nova_pagina()
+                antes, altura = 0.0, altura - antes
+            y -= altura
             if texto:
                 x = _x(texto, fonte, tamanho, recuo, alinhamento)
-                atual.append((texto, fonte, tamanho, x, y))
-        if atual:
-            paginas.append(atual)
-        return paginas or [[]]
+                atual.append((texto, fonte, tamanho, x, y, junto))
+            indice += 1
+
+        paginas.append((atual, tracos))
+        return [
+            ([linha[:5] for linha in linhas], fios) for linhas, fios in paginas
+        ] or [([], [])]
 
 
 # A identificação do órgão é constante do documento, como já era — o que muda é a forma, não a
@@ -254,68 +399,136 @@ def _cabecalho(composicao, snapshot):
         composicao.escrever(snapshot["description"], tamanho=CORPO_TEXTO, antes=16)
 
 
+def _tabela(composicao, cabecalho, linhas, *, recuo=18.0, tamanho=CORPO_TEXTO):
+    """Colunas medidas pelo conteúdo, com a folga na coluna mais larga (D-007).
+
+    Proporção fixa quebraria no primeiro dado real — uma localidade longa ou um fundamento
+    normativo por extenso estoura a coluna ou deixa metade da página vazia. Medir só é possível
+    por causa de FR-002.
+    """
+    if not linhas:
+        return
+    colunas = len(linhas[0])
+    minimas = [
+        max(
+            largura(cabecalho[c], tamanho, NEGRITO) if cabecalho else 0,
+            *(largura(linha[c], tamanho, REGULAR) for linha in linhas),
+        )
+        + 12
+        for c in range(colunas)
+    ]
+    disponivel = LARGURA - 2 * MARGEM - recuo
+    sobra = disponivel - sum(minimas)
+    if sobra > 0:
+        minimas[minimas.index(max(minimas))] += sobra
+
+    def escrever_linha(celulas, fonte):
+        deslocamento = recuo
+        for indice, celula in enumerate(celulas):
+            composicao.escrever(
+                celula, tamanho=tamanho, fonte=fonte, recuo=deslocamento,
+                antes=3.0 if indice == 0 else -(tamanho * 1.45),
+            )
+            deslocamento += minimas[indice]
+
+    if cabecalho:
+        escrever_linha(cabecalho, NEGRITO)
+    for linha in linhas:
+        escrever_linha(linha, REGULAR)
+
+
 def _modalidades(composicao, perfil):
+    """As modalidades em tabela — sem perder o que a frase corrida dizia (FR-018, FR-019).
+
+    O documento anterior imprimia `Regra Normativa — fundamento: …; versão: …; percentual: …`.
+    A frase sai; versão e vigência **permanecem**, porque tabular não pode virar perder. E
+    modalidade sem percentual não ganha célula construída para preencher a coluna: a ausência é
+    materializada como ausência.
+    """
     modalidades = perfil.get("competitionModalities") or []
     if not modalidades:
         return
-    composicao.escrever(
-        "Modalidades de concorrência:", tamanho=10, fonte=NEGRITO, recuo=18, antes=6
-    )
+    linhas = []
     for modalidade in modalidades:
-        composicao.escrever(
-            f"{modalidade.get('code', '')} — {modalidade.get('name', '')}",
-            tamanho=10,
-            recuo=32,
+        regra = modalidade.get("normativeRule") or {}
+        percentual = regra.get("percentage")
+        vigencia = regra.get("effectiveFrom")
+        linhas.append(
+            [
+                f"{modalidade.get('code', '')} — {modalidade.get('name', '')}",
+                f"{humano.decimal(percentual)}%" if percentual else "",
+                regra.get("foundation", "") or "",
+                regra.get("version", "") or (_instante(vigencia) if vigencia else ""),
+            ]
         )
-        regra = modalidade.get("normativeRule")
-        if not regra:
-            continue
-        partes = [f"fundamento: {regra.get('foundation', '')}"]
-        if regra.get("version"):
-            partes.append(f"versão: {regra['version']}")
-        if regra.get("percentage"):
-            partes.append(f"percentual: {humano.decimal(regra['percentage'])}%")
-        if regra.get("effectiveFrom"):
-            partes.append(f"vigência: {_instante(regra['effectiveFrom'])}")
-        composicao.escrever("Regra Normativa — " + "; ".join(partes), tamanho=9, recuo=46)
+    # Coluna em que **nenhuma** modalidade tem valor não é impressa. Um Edital só de ampla
+    # concorrência não deve exibir uma coluna de percentual inteira vazia: seria informação
+    # inexistente ocupando espaço para preencher a tabela (FR-019).
+    cabecalho = ["Modalidade", "Percentual", "Fundamento", "Versão"]
+    presentes = [c for c in range(len(cabecalho)) if any(linha[c] for linha in linhas)]
+    with composicao.bloco():
+        composicao.escrever(
+            "Modalidades de concorrência", tamanho=CORPO_TEXTO, fonte=NEGRITO, recuo=18, antes=8
+        )
+        _tabela(
+            composicao,
+            [cabecalho[c] for c in presentes],
+            [[linha[c] or "—" for c in presentes] for linha in linhas],
+        )
 
 
 def _perfis(composicao, snapshot, secao=0):
+    """Cada Perfil como bloco delimitado, com a identificação em disposição tabular.
+
+    A estrutura é a da cascata de FR-021: o Perfil é um bloco coeso com moldura; dentro dele,
+    identificação, descrição, atribuições, requisitos e modalidades são sub-blocos que só quebram
+    entre si — e, quando um deles sozinho não cabe numa página, por dentro.
+
+    Nenhum rótulo sobre nada: um campo ausente não é impresso. Um rótulo vazio não informa que não
+    há informação, informa que alguém esqueceu de preencher.
+    """
     for perfil in snapshot.get("profiles") or []:
-        composicao.escrever(
-            f"{perfil.get('code', '')} — {perfil.get('name', '')}",
-            tamanho=11,
-            fonte=NEGRITO,
-            antes=12,
-        )
-        if perfil.get("description"):
-            composicao.escrever(perfil["description"], tamanho=10, recuo=18, antes=3)
-        if perfil.get("locality"):
-            composicao.escrever(f"Localidade: {perfil['locality']}", tamanho=10, recuo=18)
-        composicao.escrever(
-            f"Vagas imediatas: {perfil.get('immediateVacancies', 0)}", tamanho=10, recuo=18
-        )
-        # Atribuições, carga horária e remuneração (FR-015). Cada um é omitido quando vazio: um
-        # rótulo sobre nada não informa que não há nada — informa que alguém esqueceu de preencher.
-        # As atribuições preservam parágrafos, pelo caminho que a `006.1` abriu para as seções.
-        if perfil.get("duties"):
-            composicao.escrever("Atribuições:", tamanho=10, fonte=NEGRITO, recuo=18, antes=6)
-            for paragrafo in _paragrafos(perfil["duties"]):
-                composicao.escrever(paragrafo, tamanho=10, recuo=32, antes=3)
-        if perfil.get("workload"):
-            composicao.escrever(f"Carga horária: {perfil['workload']}", tamanho=10, recuo=18)
-        if perfil.get("compensation"):
-            composicao.escrever(f"Remuneração: {perfil['compensation']}", tamanho=10, recuo=18)
-        reserva = RESERVA.get(perfil.get("reserveType"), perfil.get("reserveType", ""))
-        if perfil.get("reserveLimit") is not None:
-            reserva = f"{reserva} em {perfil['reserveLimit']}"
-        composicao.escrever(f"Cadastro Reserva: {reserva}", tamanho=10, recuo=18)
-        requisitos = perfil.get("requirements") or []
-        if requisitos:
-            composicao.escrever("Requisitos:", tamanho=10, fonte=NEGRITO, recuo=18, antes=6)
-            for requisito in requisitos:
-                composicao.escrever(f"• {requisito}", tamanho=10, recuo=32)
-        _modalidades(composicao, perfil)
+        with composicao.bloco(moldura=True):
+            with composicao.bloco():
+                composicao.escrever(
+                    f"{perfil.get('code', '')} — {perfil.get('name', '')}",
+                    tamanho=CORPO_BLOCO,
+                    fonte=NEGRITO,
+                    antes=14,
+                    junto=True,
+                )
+                identificacao = [["Localidade", perfil.get("locality", "") or "—",
+                                  "Vagas imediatas", str(perfil.get("immediateVacancies", 0))]]
+                reserva = RESERVA.get(perfil.get("reserveType"), perfil.get("reserveType", ""))
+                if perfil.get("reserveLimit") is not None:
+                    reserva = f"{reserva} em {perfil['reserveLimit']}"
+                identificacao.append(["Cadastro Reserva", reserva, "", ""])
+                # Sem cabeçalho de coluna: aqui o rótulo **é** a primeira célula. Um cabeçalho
+                # sobre pares rótulo-valor não nomearia nada.
+                _tabela(composicao, None, identificacao)
+
+            if perfil.get("description"):
+                with composicao.bloco():
+                    composicao.escrever(perfil["description"], tamanho=CORPO_TEXTO, recuo=18,
+                                        antes=6)
+            if perfil.get("duties"):
+                with composicao.bloco():
+                    composicao.escrever("Atribuições", tamanho=CORPO_TEXTO, fonte=NEGRITO,
+                                        recuo=18, antes=8)
+                    for paragrafo in _paragrafos(perfil["duties"]):
+                        composicao.escrever(paragrafo, tamanho=CORPO_TEXTO, recuo=32, antes=3)
+            for rotulo, chave in (("Carga horária", "workload"), ("Remuneração", "compensation")):
+                if perfil.get(chave):
+                    composicao.escrever(f"{rotulo}: {perfil[chave]}", tamanho=CORPO_TEXTO,
+                                        recuo=18, antes=3)
+            requisitos = perfil.get("requirements") or []
+            if requisitos:
+                with composicao.bloco():
+                    composicao.escrever("Requisitos", tamanho=CORPO_TEXTO, fonte=NEGRITO,
+                                        recuo=18, antes=8)
+                    for requisito in requisitos:
+                        composicao.escrever(f"• {requisito}", tamanho=CORPO_TEXTO, recuo=32)
+            _modalidades(composicao, perfil)
 
 
 def _cronograma(composicao, snapshot, secao=0):
@@ -424,7 +637,7 @@ def _secoes(composicao, snapshot):
     """
     for numero, (secao, corpo) in enumerate(_materializaveis(snapshot), 1):
         titulo = f"{numero}. {secao.get('title', '').upper()}"
-        composicao.escrever(titulo, tamanho=CORPO_SECAO, fonte=NEGRITO, antes=18)
+        composicao.escrever(titulo, tamanho=CORPO_SECAO, fonte=NEGRITO, antes=18, junto=True)
         if corpo is not None:
             corpo(composicao, snapshot, numero)
         else:
@@ -457,8 +670,18 @@ def _integridade(composicao, snapshot, content_hash):
     composicao.escrever(f"SHA-256 do conteúdo: {content_hash}", tamanho=9)
 
 
-def _fluxo_da_pagina(linhas, rodape, marca=""):
+def _fluxo_da_pagina(linhas, rodape, marca="", tracos=()):
     partes = []
+    # Os fios primeiro: no PDF, o que é emitido depois cobre o que veio antes. Emitir contorno
+    # antes de letra garante que nenhum fio passe por cima de um glifo — sem precisar de camada,
+    # z-index ou qualquer conceito de composição gráfica (D-002).
+    for topo, base in tracos:
+        largura_util = LARGURA - 2 * MARGEM
+        altura = topo - base + FOLGA_DA_MOLDURA + 4
+        partes.append(
+            f"{Composicao.ESPESSURA_DO_FIO} w "
+            f"{MARGEM - 6:.1f} {base - 4:.1f} {largura_util + 12:.1f} {altura:.1f} re S".encode()
+        )
     if marca:
         partes.append(
             b"BT /" + NEGRITO.encode()
@@ -510,8 +733,9 @@ def render_edital_pdf(snapshot: dict, content_hash: str, modo: str = MODO_PUBLIC
             linhas,
             f"{identificacao} · Página {numero} de {len(paginas)}",
             marca=MARCA_DE_PREVIA if previa else "",
+            tracos=tracos,
         )
-        for numero, linhas in enumerate(paginas, 1)
+        for numero, (linhas, tracos) in enumerate(paginas, 1)
     ]
 
     # Objetos: 1 catálogo, 2 páginas, 3 e 4 fontes, depois pares página/conteúdo.
