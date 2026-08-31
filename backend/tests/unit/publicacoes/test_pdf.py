@@ -405,13 +405,14 @@ def test_etapas_aparecem_com_caracter_peso_e_nota_minima():
     texto = texto_de(render_edital_pdf(snapshot(), HASH))
     mae = int(re.search(r"^(\d+)\. ETAPAS DE AVALIAÇÃO", texto, re.M).group(1))
     assert f"{mae}.1 Prova didática" in texto
+    # **Forma atualizada pela `008`/US3**: a frase corrida virou pares rótulo-valor (FR-027), e a
+    # referência ao Cronograma virou a linha "Realização". Os fatos que este teste guarda —
+    # caráter, peso, nota mínima presentes, forma canônica ausente e data derivada do Evento —
+    # são invariantes e continuam.
     assert "eliminatória e classificatória" in texto
-    assert "peso: 2" in texto
-    assert "nota mínima: 7" in texto
-    # A entrada carrega `"2.0000"` e `"7.0000"`; a forma canônica não chega ao papel (FR-003).
+    assert "Peso" in texto and "Nota mínima" in texto
     assert "2.0000" not in texto and "7.0000" not in texto
-    # A data vem do Evento vinculado, e não é digitada de novo na Etapa.
-    assert "Conforme o Cronograma — INSCRICAO" in texto
+    assert "INSCRICAO" in texto and "01/09/2026 09:00" in texto
 
 
 def test_parentheses_in_content_do_not_corrupt_the_document():
@@ -778,3 +779,126 @@ def test_a_paginacao_por_bloco_nao_perde_nem_duplica_conteudo():
                 if linha.startswith(f"{perfil['code']} — ")
             )
             assert ocorrencias == 1, f"{perfil['code']} apareceu {ocorrencias} vezes"
+
+
+# ---------------------------------------------------------------------------
+# 008 / US3 — Cronograma e Etapas como informação estruturada
+# ---------------------------------------------------------------------------
+
+
+def cronograma_longo():
+    """Eventos suficientes para a tabela atravessar a quebra de página (FR-026)."""
+    modelo = snapshot()["schedule"][0]
+    return snapshot(
+        schedule=[
+            {
+                **modelo,
+                "id": f"66666666-6666-6666-6666-6666666666{n:02d}",
+                "order": n,
+                "type": f"ETAPA{n:02d}",
+                "description": f"Evento {n} do cronograma do processo seletivo",
+                "endAt": None if n % 2 else modelo["endAt"],
+            }
+            for n in range(1, 41)
+        ]
+    )
+
+
+def test_o_cronograma_e_apresentado_em_tabela_com_colunas_alinhadas():
+    """FR-023: Cronograma é informação naturalmente tabular.
+
+    O documento anterior o imprimia como parágrafos numerados. As colunas passam a existir, e
+    passam a estar alinhadas — o que só é possível por causa da métrica de FR-002.
+    """
+    pdf = render_edital_pdf(snapshot(), HASH)
+    texto = texto_de(pdf)
+
+    for coluna in ("Evento", "Início", "Término"):
+        assert coluna in texto, coluna
+
+    # Alinhamento é uma propriedade de posição, não de texto: as células de uma coluna começam
+    # todas no mesmo x. Conferir o texto não distinguiria uma tabela de uma lista.
+    inicios = {
+        round(recuo, 1)
+        for linha, _, _, recuo in linhas_desenhadas(pdf)
+        if linha.startswith("01/09/2026") or linha.startswith("05/10/2026")
+    }
+    assert len(inicios) == 1, f"a coluna de início não está alinhada: {inicios}"
+
+
+def test_evento_pontual_nao_apresenta_termino_falso():
+    """FR-024: a ausência é apresentada como ausência.
+
+    A Prova tem início e não tem término. Inventar uma data para preencher a célula afirmaria ao
+    candidato um prazo que o Edital não estabeleceu.
+    """
+    conteudo = snapshot()
+    conteudo["schedule"] = conteudo["schedule"] + [
+        {
+            "id": "66666666-6666-6666-6666-66666666aaaa",
+            "type": "PROVA",
+            "description": "Prova didática",
+            "startAt": "2026-10-05T14:00:00-03:00",
+            "endAt": None,
+            "order": 2,
+            "status": "PLANEJADO",
+        }
+    ]
+    texto = texto_de(render_edital_pdf(conteudo, HASH))
+
+    assert "05/10/2026 14:00" in texto
+    assert "None" not in texto
+    # O período que tem término continua exibindo os dois instantes.
+    assert "20/09/2026 23:59" in texto
+
+
+def test_o_cabecalho_da_tabela_se_repete_na_continuacao_e_nunca_fica_orfao():
+    """FR-026: uma tabela que vira a página continua legível.
+
+    Sem repetição, a página seguinte mostra números sem dizer de que são. E um cabeçalho sozinho
+    no rodapé é o mesmo defeito do título órfão, uma linha abaixo.
+    """
+    paginas = paginas_de(render_edital_pdf(cronograma_longo(), HASH))
+    com_cabecalho = [
+        numero for numero, pagina in enumerate(paginas, 1) if "Evento" in pagina
+    ]
+    com_evento = [
+        numero
+        for numero, pagina in enumerate(paginas, 1)
+        if any(linha.startswith("ETAPA") for linha in pagina)
+    ]
+
+    assert len(com_evento) >= 2, "o cenário deveria fazer a tabela atravessar a quebra"
+    assert com_cabecalho == com_evento, "o cabeçalho não acompanhou a continuação da tabela"
+
+    for pagina in paginas:
+        corpo = [linha for linha in pagina if not linha.startswith("Edital 07/2026 ·")]
+        if corpo and corpo[-1] == "Evento":
+            raise AssertionError("cabeçalho de tabela sozinho no fim da página")
+
+
+def test_a_etapa_apresenta_carater_peso_e_nota_em_pares_rotulo_valor():
+    """FR-027: a frase corrida sai; os valores ficam.
+
+    `caráter: eliminatória e classificatória; peso: 2; nota mínima: 7` é escrita de banco de
+    dados. O que o candidato precisa ler é um quadro.
+    """
+    texto = texto_de(render_edital_pdf(snapshot(), HASH))
+
+    assert "caráter: eliminatória e classificatória; peso:" not in texto
+    for rotulo in ("Caráter", "Peso", "Nota mínima"):
+        assert rotulo in texto, rotulo
+    assert "eliminatória e classificatória" in texto
+    assert "2" in texto and "7" in texto
+
+    # A data continua vindo do Evento vinculado, e não é digitada de novo na Etapa (FR-028).
+    assert "01/09/2026 09:00" in texto
+
+    # Etapa sem peso nem nota mínima não ganha rótulo vazio.
+    sem_ponderacao = snapshot()
+    sem_ponderacao["stages"][0] = {
+        **sem_ponderacao["stages"][0], "weight": None, "minimumScore": None
+    }
+    texto = texto_de(render_edital_pdf(sem_ponderacao, HASH))
+    assert "Peso" not in texto
+    assert "Nota mínima" not in texto

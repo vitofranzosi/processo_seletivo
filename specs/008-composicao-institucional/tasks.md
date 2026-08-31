@@ -135,17 +135,17 @@ alinhadas, que o Evento pontual não exibe término e que a Etapa não traz a fr
 
 ### Tests for User Story 3
 
-- [ ] T037 [P] [US3] Teste do Cronograma em tabela com colunas alinhadas em `backend/tests/unit/publicacoes/test_pdf.py` (FR-023)
-- [ ] T038 [P] [US3] Teste de Evento pontual sem término em `backend/tests/unit/publicacoes/test_pdf.py` (FR-024)
-- [ ] T039 [P] [US3] Teste de cabeçalho de tabela repetido na continuação e nunca isolado no fim da página em `backend/tests/unit/publicacoes/test_pdf.py` (FR-026)
-- [ ] T040 [P] [US3] Reescrever `test_etapas_aparecem_com_caracter_peso_e_nota_minima` em `backend/tests/unit/publicacoes/test_pdf.py` para afirmar pares rótulo-valor em vez da frase corrida (FR-027, D-010)
+- [X] T037 [P] [US3] Teste do Cronograma em tabela com colunas alinhadas em `backend/tests/unit/publicacoes/test_pdf.py` (FR-023)
+- [X] T038 [P] [US3] Teste de Evento pontual sem término em `backend/tests/unit/publicacoes/test_pdf.py` (FR-024)
+- [X] T039 [P] [US3] Teste de cabeçalho de tabela repetido na continuação e nunca isolado no fim da página em `backend/tests/unit/publicacoes/test_pdf.py` (FR-026)
+- [X] T040 [P] [US3] Reescrever `test_etapas_aparecem_com_caracter_peso_e_nota_minima` em `backend/tests/unit/publicacoes/test_pdf.py` para afirmar pares rótulo-valor em vez da frase corrida (FR-027, D-010)
 
 ### Implementation for User Story 3
 
-- [ ] T041 [US3] Implementar o cálculo de largura de coluna — mínimo por coluna, folga na coluna de texto livre, célula que quebra em mais de uma linha — em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (D-007)
-- [ ] T042 [US3] Modelar a tabela como bloco cujas unidades internas são linhas, com o cabeçalho marcado para repetição, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-026)
-- [ ] T043 [US3] Reescrever `_cronograma` como tabela com ordem, evento, início e término em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-023 a FR-025)
-- [ ] T044 [US3] Reescrever `_etapas` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` com pares rótulo-valor alinhados, mantendo a data derivada do Evento vinculado (FR-027, FR-028)
+- [X] T041 [US3] Implementar o cálculo de largura de coluna — mínimo por coluna, folga na coluna de texto livre, célula que quebra em mais de uma linha — em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (D-007)
+- [X] T042 [US3] Modelar a tabela como bloco cujas unidades internas são linhas, com o cabeçalho marcado para repetição, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-026)
+- [X] T043 [US3] Reescrever `_cronograma` como tabela com ordem, evento, início e término em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-023 a FR-025)
+- [X] T044 [US3] Reescrever `_etapas` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` com pares rótulo-valor alinhados, mantendo a data derivada do Evento vinculado (FR-027, FR-028)
 - [ ] T045 [US3] Regenerar a fixture e revisar o diff no mesmo commit (FR-044)
 - [ ] T046 [US3] Gerar a prévia e conferir R-07 a R-10 da rubrica
 

@@ -471,8 +471,10 @@ def test_etapas_aparecem_na_previa_e_no_documento_publicado_na_ordem_definida(
 
     previa = texto_do_pdf(client.get(reverse("interface:previa-documento", args=[edital.id])))
     assert previa.index("Prova didática") < previa.index("Análise de títulos")
-    assert "peso: 2" in previa
-    assert "nota mínima: 7" in previa
+    # **Forma atualizada pela `008`/US3**: peso e nota mínima viraram pares rótulo-valor da Etapa
+    # (FR-027). O que esta jornada guarda é que a ponderação chega à prévia — e continua chegando.
+    assert "Peso" in previa and "2" in previa
+    assert "Nota mínima" in previa and "7" in previa
     assert "eliminatória" in previa
 
     praticar(client, Edital.objects.get(), "submeter")

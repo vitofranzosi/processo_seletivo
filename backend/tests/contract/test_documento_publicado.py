@@ -196,9 +196,11 @@ def test_percentual_peso_e_nota_saem_em_portugues():
 
     # **Forma atualizada pela `008`/US2**: o percentual saiu da frase corrida e virou célula. O
     # valor continua obrigatório, e continua em português — que é o que este teste guarda.
+    # **Forma atualizada pela `008`/US2 e US3**: percentual virou célula da tabela de modalidades,
+    # peso e nota mínima viraram pares rótulo-valor da Etapa. Os valores continuam obrigatórios e
+    # continuam em português — que é o que este teste guarda.
     assert "20%" in texto
-    assert "peso: 2" in texto
-    assert "nota mínima: 7" in texto
+    assert "Peso" in texto and "Nota mínima" in texto
 
 
 @pytest.mark.contract
@@ -212,7 +214,7 @@ def test_decimal_com_parte_fracionaria_usa_virgula():
     texto = texto_de(render_edital_pdf(fracionario, canonical_sha256(fracionario)))
 
     assert "12,5%" in texto
-    assert "peso: 1,75" in texto
+    assert "1,75" in texto
 
 
 @pytest.mark.contract

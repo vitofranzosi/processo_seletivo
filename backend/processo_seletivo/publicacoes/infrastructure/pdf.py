@@ -200,7 +200,7 @@ class Composicao:
 
     def escrever(
         self, texto, *, tamanho=CORPO_TEXTO, fonte=REGULAR, recuo=0.0, antes=0.0,
-        alinhamento=ESQUERDA, junto=False,
+        alinhamento=ESQUERDA, junto=False, repetir=False,
     ):
         """`junto` é o "não me deixe sozinho no rodapé" de FR-022 e FR-030.
 
@@ -214,12 +214,12 @@ class Composicao:
                 (
                     "texto", parte, fonte, tamanho, recuo,
                     antes if indice == 0 else 0.0, alinhamento,
-                    junto or indice < len(partes) - 1,
+                    junto or indice < len(partes) - 1, repetir,
                 )
             )
 
     def espaco(self, altura=8.0):
-        self.itens.append(("texto", "", REGULAR, 0.0, 0.0, altura, ESQUERDA, False))
+        self.itens.append(("texto", "", REGULAR, 0.0, 0.0, altura, ESQUERDA, False, False))
 
     @contextmanager
     def bloco(self, *, moldura=False, coeso=True):
@@ -235,13 +235,22 @@ class Composicao:
         finally:
             self.itens.append(("fecha", moldura, coeso))
 
+    @contextmanager
+    def tabela(self):
+        """Um bloco cujo cabeçalho se repete na continuação (FR-026)."""
+        self.itens.append(("abre", False, False))
+        try:
+            yield
+        finally:
+            self.itens.append(("fecha", "tabela", False))
+
     # -- medição -------------------------------------------------------------
 
     @staticmethod
     def _altura(item):
         if item[0] != "texto":
             return 0.0
-        _, texto, _, tamanho, _, antes, _, _ = item
+        _, texto, _, tamanho, _, antes, _, _, _ = item
         return antes + (tamanho * 1.45 if tamanho else 0.0)
 
     @classmethod
@@ -275,6 +284,9 @@ class Composicao:
         paginas, atual, tracos, y = [], [], [], TOPO
         pilha = []
         indice = 0
+        # O cabeçalho da tabela aberta agora. Guardá-lo é o que permite repeti-lo na continuação
+        # (FR-026): sem isso, a página seguinte mostra números sem dizer de que são.
+        cabecalho_ativo: list = []
 
         def nova_pagina():
             """Fecha a página — **levando junto** o rastro de linhas que pediram companhia.
@@ -295,6 +307,10 @@ class Composicao:
             for texto, fonte, tamanho, x, _, junto in rastro:
                 y -= tamanho * 1.45
                 atual.append((texto, fonte, tamanho, x, y, junto))
+            if cabecalho_ativo:
+                y -= max(tamanho for _, _, tamanho, _ in cabecalho_ativo) * 1.45
+                for texto, fonte, tamanho, x in cabecalho_ativo:
+                    atual.append((texto, fonte, tamanho, x, y, False))
             # Um bloco que já estava aberto reabre a moldura abaixo do rastro, pela mesma razão.
             for aberto in pilha:
                 if aberto["moldura"] and aberto["topo"] is not None:
@@ -321,13 +337,15 @@ class Composicao:
                 continue
 
             if item[0] == "fecha":
+                if item[1] == "tabela":
+                    cabecalho_ativo = []
                 aberto = pilha.pop()
                 if aberto["moldura"] and aberto["topo"] is not None:
                     tracos.append((aberto["topo"], y))
                 indice += 1
                 continue
 
-            _, texto, fonte, tamanho, recuo, antes, alinhamento, junto = item
+            _, texto, fonte, tamanho, recuo, antes, alinhamento, junto, repetir = item
             altura = self._altura(item)
             # Uma linha "junto" precisa de espaço para si e para a seguinte: é o que impede o
             # título de fechar a página sozinho.
@@ -350,6 +368,8 @@ class Composicao:
             if texto:
                 x = _x(texto, fonte, tamanho, recuo, alinhamento)
                 atual.append((texto, fonte, tamanho, x, y, junto))
+                if repetir:
+                    cabecalho_ativo.append((texto, fonte, tamanho, x))
             indice += 1
 
         paginas.append((atual, tracos))
@@ -422,17 +442,19 @@ def _tabela(composicao, cabecalho, linhas, *, recuo=18.0, tamanho=CORPO_TEXTO):
     if sobra > 0:
         minimas[minimas.index(max(minimas))] += sobra
 
-    def escrever_linha(celulas, fonte):
+    def escrever_linha(celulas, fonte, repetir=False):
         deslocamento = recuo
         for indice, celula in enumerate(celulas):
             composicao.escrever(
                 celula, tamanho=tamanho, fonte=fonte, recuo=deslocamento,
                 antes=3.0 if indice == 0 else -(tamanho * 1.45),
+                junto=repetir and indice == len(celulas) - 1,
+                repetir=repetir,
             )
             deslocamento += minimas[indice]
 
     if cabecalho:
-        escrever_linha(cabecalho, NEGRITO)
+        escrever_linha(cabecalho, NEGRITO, repetir=True)
     for linha in linhas:
         escrever_linha(linha, REGULAR)
 
@@ -532,25 +554,32 @@ def _perfis(composicao, snapshot, secao=0):
 
 
 def _cronograma(composicao, snapshot, secao=0):
-    for evento in snapshot.get("schedule") or []:
-        composicao.escrever(
-            f"{evento.get('order', '')}. {evento.get('type', '')} — "
-            f"{evento.get('description', '')}",
-            tamanho=10,
-            fonte=NEGRITO,
-            antes=8,
-        )
-        periodo = f"Início: {_instante(evento.get('startAt'))}"
-        if evento.get("endAt"):
-            periodo += f"    Término: {_instante(evento['endAt'])}"
-        composicao.escrever(periodo, tamanho=10, recuo=18)
-        # O estado do Evento **não é composto**, e não recebe mapa de tradução (FR-002).
-        # Existe o precedente de `RESERVA` logo acima, e a tentação de imitá-lo aqui: mas os dois
-        # casos são distintos. O tipo de cadastro reserva descreve a vaga e interessa a quem se
-        # inscreve; `PLANEJADO`, `EM_ANDAMENTO` e `CONCLUIDO` descrevem a execução do certame e são
-        # informação de gestão. Um Edital publicado não diz que suas inscrições estão "planejadas" —
-        # ele as anuncia. Traduzir o rótulo produziria uma frase correta dizendo ao candidato algo
-        # que não é matéria de Edital.
+    """O Cronograma em tabela (FR-023 a FR-026).
+
+    Era três parágrafos numerados por Evento. É informação naturalmente tabular — ordem, evento,
+    início e término —, e é assim que os Editais reais a apresentam.
+
+    Evento pontual não exibe término: inventar uma data para preencher a célula afirmaria ao
+    candidato um prazo que o Edital não estabeleceu (FR-024).
+    """
+    eventos = snapshot.get("schedule") or []
+    if not eventos:
+        return
+    linhas = [
+        [
+            str(evento.get("order", "")),
+            " — ".join(
+                parte
+                for parte in (evento.get("type", ""), evento.get("description", ""))
+                if parte
+            ),
+            _instante(evento.get("startAt")),
+            _instante(evento["endAt"]) if evento.get("endAt") else "—",
+        ]
+        for evento in eventos
+    ]
+    with composicao.tabela():
+        _tabela(composicao, ["Nº", "Evento", "Início", "Término"], linhas, recuo=0.0)
 
 
 CARATER_DA_ETAPA = (("eliminatory", "eliminatória"), ("classificatory", "classificatória"))
@@ -571,35 +600,30 @@ def _etapas(composicao, snapshot, secao=0):
         if isinstance(evento, dict)
     }
     for ordem, etapa in enumerate(snapshot.get("stages") or [], 1):
-        composicao.escrever(
-            f"{secao}.{ordem} {etapa.get('name', '')}",
-            tamanho=CORPO_BLOCO,
-            fonte=NEGRITO,
-            antes=10,
-        )
-        caracteres = [
-            rotulo for chave, rotulo in CARATER_DA_ETAPA if etapa.get(chave)
-        ]
-        partes = []
-        if caracteres:
-            partes.append("caráter: " + " e ".join(caracteres))
-        if etapa.get("weight") is not None:
-            partes.append(f"peso: {humano.decimal(etapa['weight'])}")
-        if etapa.get("minimumScore") is not None:
-            partes.append(f"nota mínima: {humano.decimal(etapa['minimumScore'])}")
-        if partes:
-            composicao.escrever("; ".join(partes), tamanho=10, recuo=18)
-        # As datas são do Evento e não são copiadas: o documento as lê de lá, como o domínio.
-        evento = eventos.get(etapa.get("scheduleEventId"))
-        if evento:
-            periodo = f"Início: {_instante(evento.get('startAt'))}"
-            if evento.get("endAt"):
-                periodo += f"    Término: {_instante(evento['endAt'])}"
+        with composicao.bloco():
             composicao.escrever(
-                f"Conforme o Cronograma — {evento.get('type', '')}: {periodo}",
-                tamanho=9,
-                recuo=18,
+                f"{secao}.{ordem} {etapa.get('name', '')}",
+                tamanho=CORPO_BLOCO,
+                fonte=NEGRITO,
+                antes=12,
+                junto=True,
             )
+            caracteres = [rotulo for chave, rotulo in CARATER_DA_ETAPA if etapa.get(chave)]
+            pares = []
+            if caracteres:
+                pares.append(["Caráter", " e ".join(caracteres)])
+            if etapa.get("weight") is not None:
+                pares.append(["Peso", humano.decimal(etapa["weight"])])
+            if etapa.get("minimumScore") is not None:
+                pares.append(["Nota mínima", humano.decimal(etapa["minimumScore"])])
+            # As datas são do Evento e não são copiadas: o documento as lê de lá, como o domínio.
+            evento = eventos.get(etapa.get("scheduleEventId"))
+            if evento:
+                periodo = _instante(evento.get("startAt"))
+                if evento.get("endAt"):
+                    periodo += f" a {_instante(evento['endAt'])}"
+                pares.append(["Realização", f"{evento.get('type', '')} — {periodo}"])
+            _tabela(composicao, None, pares, recuo=18.0)
 
 
 # Cada seção gerada nomeia a coleção que a origina; aqui está o que fazer com cada uma. Uma origem
