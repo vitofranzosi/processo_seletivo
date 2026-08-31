@@ -336,9 +336,15 @@ evidência que o motivou — pertence a [research.md](./research.md) e [plan.md]
   identificação institucional, título do ato, título de seção, subseção/bloco, corpo, **célula de
   tabela** e nota/metadado. A célula usa corpo menor que o texto — tabela é consulta, não leitura
   corrida —, e a nota é o menor corpo do documento. Nenhum design system de documentos é criado.
-- **FR-010**: As seções normativas DEVEM ser numeradas na materialização, na ordem institucional já
-  definida pelo conteúdo publicado — `1. APRESENTAÇÃO`, `2. DAS DISPOSIÇÕES PRELIMINARES`, e assim
-  por diante até a última.
+- **FR-010**: A **abertura** do Edital — a seção que enuncia o ato — DEVE ser materializada como
+  **preâmbulo**: sem número e sem cabeçalho, logo abaixo do título do ato, como texto normativo
+  corrido. As demais seções DEVEM ser numeradas na materialização, na ordem institucional já
+  definida pelo conteúdo publicado — `1. DAS DISPOSIÇÕES PRELIMINARES`, `2. DOS REQUISITOS GERAIS`,
+  e assim por diante até a última. *Correção da primeira redação, que exigia numeração de **todas**
+  as seções. Nos três Editais de referência a abertura vem sem número e sem título, e a numeração
+  começa nas disposições preliminares — numerá-la como `1.` faz o documento anunciar uma seção onde
+  há uma abertura. A escolha de qual seção é a abertura é do compositor e segue o catálogo; ela não
+  é configurável e não cria tipo novo de seção.*
 - **FR-011**: A numeração DEVE ser atribuída **depois** de determinadas quais seções serão
   efetivamente materializadas. *O compositor já suprime seção gerada cuja coleção está vazia; numerar
   antes da supressão produziria `5.`, `7.`, `8.` num Edital sem Etapas — um defeito que só apareceria
@@ -485,8 +491,9 @@ compositor, que ganha um parâmetro de contexto do ato.
   órgão, instituição, unidade, ato, Processo e título; órgão, instituição e unidade estão
   centralizados em corpo menor que o do texto; o ato está em negrito, caixa alta e centralizado; e a
   descrição não excede o título em peso nem em corpo.
-- **SC-002**: Todas as seções normativas materializadas são numeradas, e a numeração é contínua —
-  inclusive num Edital em que alguma seção gerada não é materializada.
+- **SC-002**: A abertura do Edital aparece sem número e sem cabeçalho; todas as demais seções
+  materializadas são numeradas, e a numeração é contínua a partir de 1 — inclusive num Edital em que
+  alguma seção gerada não é materializada, e inclusive quando a própria abertura não existe.
 - **SC-003**: Nenhum número de seção aparece no conteúdo homologado; alterar a ordem produz
   numeração coerente sem editar texto.
 - **SC-004**: Cada Perfil é um bloco delimitado com identificação tabular, e não uma sequência
@@ -572,7 +579,7 @@ hoje, depois da `007`.
 | Ato e objeto numa **sentença só**, em negrito, caixa alta e centralizados, em corpo próximo ao do texto | FR-006, corrigido por esta calibração |
 | Título de seção em negrito **no corpo do texto**, não em corpo maior | FR-009 |
 | Célula de cabeçalho de quadro sombreada | FR-003, ampliado por esta calibração |
-| Parágrafo de preâmbulo não numerado, antes da seção 1 | Já existe como seção de Apresentação |
+| Parágrafo de preâmbulo não numerado, antes da seção 1 | **Incorporado** — FR-010, corrigido |
 | Seções `1. DAS DISPOSIÇÕES PRELIMINARES`, negrito e caixa alta | FR-010 |
 | Itens numerados `1.1`, `2.1`, `3.2.1` e alíneas `a)`, `b)` dentro da seção | **Diferença aceita** — o conteúdo das seções textuais é texto livre, e numerar parágrafo automaticamente seria engine normativa, vedada por P-003 |
 | Vagas numa **tabela única** (`TABELA 1 — Quadro de vagas`), não em ficha por Perfil | **Diferença aceita** — FR-016 proíbe tabela única com todos os campos do Perfil, e o nosso Perfil carrega mais do que caberia em cinco colunas |

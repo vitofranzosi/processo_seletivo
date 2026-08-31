@@ -1081,8 +1081,15 @@ def _materializaveis(snapshot):
     return materializaveis
 
 
+# A seção que abre o Edital não é seção: é preâmbulo (FR-010). Nos Editais de referência o ato
+# enunciativo da autoridade — "A Diretora [...] faz saber [...]" — vem logo abaixo do título, sem
+# número e sem cabeçalho, e a numeração começa nas disposições preliminares. Numerá-lo como "1."
+# faria o documento anunciar uma seção onde há uma abertura.
+SECAO_DE_PREAMBULO = "apresentacao"
+
+
 def _secoes(composicao, snapshot):
-    """O documento numerado, em dois passos: selecionar, depois enumerar (FR-010 a FR-012).
+    """Preâmbulo, e depois as seções numeradas em dois passos (FR-010 a FR-012).
 
     **A ordem dos dois passos é o requisito.** Numerar durante a iteração produziria `5.`, `7.`,
     `8.` no primeiro Edital sem Etapas de Avaliação — um defeito que o cenário de demonstração não
@@ -1090,7 +1097,26 @@ def _secoes(composicao, snapshot):
     conteúdo homologado e não sobrevive a uma mudança de ordem (FR-012).
     """
     tabelas = _Numerador()
-    for numero, (secao, corpo) in enumerate(_materializaveis(snapshot), 1):
+    materializaveis = _materializaveis(snapshot)
+
+    preambulo = [
+        secao for secao, _ in materializaveis if secao.get("key") == SECAO_DE_PREAMBULO
+    ]
+    for secao in preambulo:
+        for indice, paragrafo in enumerate(_paragrafos(secao.get("content", ""))):
+            composicao.escrever(
+                paragrafo,
+                tamanho=CORPO_TEXTO,
+                antes=ANTES_DE_SECAO if indice == 0 else ANTES_DE_PARAGRAFO,
+                justificar=True,
+            )
+
+    numeraveis = [
+        (secao, corpo)
+        for secao, corpo in materializaveis
+        if secao.get("key") != SECAO_DE_PREAMBULO
+    ]
+    for numero, (secao, corpo) in enumerate(numeraveis, 1):
         titulo = f"{numero}. {secao.get('title', '').upper()}"
         composicao.escrever(
             titulo, tamanho=CORPO_SECAO, fonte=NEGRITO, antes=ANTES_DE_SECAO, junto=True

@@ -415,7 +415,9 @@ def test_documento_segue_a_ordem_das_secoes_do_conteudo():
     posicoes = [
         texto.index(titulo)
         for titulo in (
-            "APRESENTAÇÃO",
+            # **Forma atualizada pela `008`**: a Apresentação virou preâmbulo — sem número e
+            # sem cabeçalho —, como o ato enunciativo dos Editais de referência. O que ela diz
+            # continua no documento; o que sai é o título dela.
             "DISPOSIÇÕES PRELIMINARES",
             "REQUISITOS GERAIS DE PARTICIPAÇÃO",
             "DA INSCRIÇÃO",
@@ -641,7 +643,8 @@ def test_as_secoes_normativas_sao_numeradas_em_sequencia_continua():
             if fonte == "F2" and tamanho == CORPO_SECAO and _re.match(r"\d+\. ", linha)
         ]
         assert numeros == list(range(1, len(numeros) + 1)), numeros
-        assert len(numeros) >= 9
+        # Nove numeradas: as dez do catálogo menos a Apresentação, que é preâmbulo.
+        assert len(numeros) >= 8
 
     assert "ETAPAS DE AVALIAÇÃO" not in texto_de(documento(sem_etapas(), HASH))
 
@@ -1414,3 +1417,44 @@ def test_o_documento_abre_com_o_brasao_da_republica():
 def test_o_brasao_nao_torna_o_documento_indeterministico():
     """A imagem é constante, e comprimida uma vez na importação (SC-013)."""
     assert documento(snapshot(), HASH) == documento(snapshot(), HASH)
+
+
+def test_a_apresentacao_e_preambulo_e_nao_a_primeira_secao():
+    """FR-010: o ato enunciativo abre o Edital, sem número e sem cabeçalho.
+
+    Nos três Editais de referência a abertura — "A Diretora [...] faz saber [...]" — vem logo
+    abaixo do título do ato, e a numeração começa nas disposições preliminares. Numerá-la como
+    `1.` faz o documento anunciar uma seção onde há uma abertura.
+    """
+    pdf = documento(snapshot(), HASH)
+    texto = texto_de(pdf)
+    linhas = [linha for linha, _, _, _ in linhas_desenhadas(pdf)]
+
+    # O conteúdo da Apresentação continua no documento; o que sai é o cabeçalho dela.
+    assert "O Instituto Federal do Espírito Santo, por meio do Centro de Referência" in texto
+    assert "APRESENTAÇÃO" not in texto
+    assert "1. APRESENTAÇÃO" not in texto
+
+    # A numeração começa na seção seguinte, e o preâmbulo vem antes dela.
+    assert "1. DISPOSIÇÕES PRELIMINARES" in texto
+    preambulo = next(i for i, linha in enumerate(linhas) if linha.startswith("O Instituto Federal"))
+    assert preambulo < linhas.index("1. DISPOSIÇÕES PRELIMINARES")
+
+    # E o preâmbulo é texto normativo: justificado como o resto do corpo.
+    justificadas = {
+        texto_da_linha.replace(b"\\(", b"(").decode("cp1252")
+        for _, _, _, _, texto_da_linha in JUSTIFICADA.findall(conteudo_das_paginas(pdf))
+    }
+    assert any(linha.startswith("O Instituto Federal") for linha in justificadas)
+
+
+def test_suprimir_o_preambulo_nao_abre_lacuna_na_numeracao():
+    """A regra de FR-011 continua valendo com o preâmbulo fora da contagem."""
+    import re as _re
+
+    sem_apresentacao = [
+        secao for secao in snapshot()["sections"] if secao.get("key") != "apresentacao"
+    ]
+    texto = texto_de(documento(snapshot(sections=sem_apresentacao), HASH))
+    numeros = [int(m.group(1)) for m in _re.finditer(r"^(\d+)\. [A-ZÀ-Ú]", texto, _re.M)]
+    assert numeros == list(range(1, len(numeros) + 1)), numeros
