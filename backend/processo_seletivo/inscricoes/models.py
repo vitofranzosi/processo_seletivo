@@ -101,26 +101,26 @@ class Inscricao(models.Model):
         return f"Inscrição {self.protocolo or self.id}"
 
     def save(self, *args, **kwargs):
-        """O que o envio fixa não se altera depois (FR-064, FR-054).
+        """Enviada, não muda mais (FR-054, FR-064).
 
-        A Inscrição inteira não é imutável — `revision` avança até o envio. O que é imutável é o
-        que o ato produziu: instante, protocolo e versão aceita. Mesmo padrão de `Publicacao` e
-        `VersaoConsolidada`, restrito aos campos que carregam efeito.
+        Antes do envio a Inscrição muda o tempo todo — é um rascunho, e `revision` avança a cada
+        gravação. Depois dele, nada: nem instante, nem protocolo, nem versão aceita, nem os dados
+        pessoais. É o mesmo padrão de `Publicacao` e `VersaoConsolidada`, e vale para o registro
+        inteiro porque é o registro inteiro que passa a ser peça de um ato administrativo.
+
+        A transição em si não passa por aqui: ela acontece por `compare_and_swap`, que atualiza
+        pelo queryset — e é justamente por isso que esta guarda pode ser total sem impedir o
+        próprio envio.
+
+        **O que ela não é**: garantia de banco. `Inscricao` muda legitimamente enquanto está em
+        rascunho, então ela não entra nas tabelas append-only da `003` — pela mesma razão que
+        `Retificacao` ficou de fora: imutabilidade condicional ao estado não cabe em privilégio de
+        tabela.
         """
         if not self._state.adding:
-            anterior = (
-                Inscricao.objects.filter(pk=self.pk)
-                .values("submitted_at", "protocolo", "versao_aceita")
-                .first()
-            )
-            for campo, atributo in (
-                ("submitted_at", "submitted_at"),
-                ("protocolo", "protocolo"),
-                ("versao_aceita", "versao_aceita_id"),
-            ):
-                gravado = (anterior or {}).get(campo)
-                if gravado not in (None, "") and gravado != getattr(self, atributo):
-                    raise TypeError(f"Inscrição submetida não altera {campo}")
+            anterior = Inscricao.objects.filter(pk=self.pk).values("status").first()
+            if anterior and anterior["status"] == self.Status.SUBMETIDA:
+                raise TypeError("Inscrição submetida não é alterada.")
         return super().save(*args, **kwargs)
 
 
@@ -165,3 +165,25 @@ class DocumentoSubmetido(models.Model):
 
     def __str__(self):
         return f"{self.nome_original} — {self.inscricao_id}"
+
+    def save(self, *args, **kwargs):
+        self._recusar_se_enviada("alterado")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        self._recusar_se_enviada("removido")
+        return super().delete(*args, **kwargs)
+
+    def _recusar_se_enviada(self, verbo):
+        """Documento de inscrição enviada não muda nem sai (FR-054).
+
+        A camada de aplicação já recusa — `_rascunho_travado` para quem tenta pela tela. Esta
+        guarda vale para o resto: um comando de manutenção, um shell, um caminho que ninguém
+        escreveu ainda. O que sustenta a afirmação "o que a comissão abriu é o que o candidato
+        enviou" não pode depender de todo caminho futuro lembrar de conferir.
+        """
+        estado = (
+            Inscricao.objects.filter(pk=self.inscricao_id).values_list("status", flat=True).first()
+        )
+        if estado == Inscricao.Status.SUBMETIDA:
+            raise TypeError(f"Documento de inscrição enviada não é {verbo}.")

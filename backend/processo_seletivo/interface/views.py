@@ -27,7 +27,6 @@ from processo_seletivo.inscricoes.application.consulta import (
     inscricao_para_consulta,
     inscricoes_do_edital,
 )
-from processo_seletivo.inscricoes.domain.arquivos import resumo
 from processo_seletivo.interface import (
     acoes,
     atos,
@@ -38,7 +37,7 @@ from processo_seletivo.interface import (
     revisao,
 )
 from processo_seletivo.interface import retificacao as retificacao_ui
-from processo_seletivo.portal.arquivos import entregar
+from processo_seletivo.portal.arquivos import copia_verificada, entregar
 from processo_seletivo.processos.application.commands import create_process_with_first_edital
 from processo_seletivo.processos.application.selectors import (
     contar_por_situacao,
@@ -1587,15 +1586,18 @@ def documento_da_inscricao(request, inscricao_id, requirement_id):
     documento = documento_para_consulta(
         actor=ator, inscricao_id=inscricao_id, requirement_id=requirement_id
     )
-    _exigir_integridade(ator, documento, request)
-    return entregar(documento, anexo=bool(request.GET.get("baixar")))
+    # Uma passagem só: a cópia é conferida e é **ela** que vai para a resposta. Conferir o
+    # arquivo e depois reabri-lo pelo caminho deixaria uma janela entre as duas leituras — e uma
+    # verificação que aprova um conteúdo e serve outro é pior do que verificação nenhuma, porque
+    # produz a afirmação de integridade que ninguém checou.
+    copia, calculado = copia_verificada(documento)
+    if calculado != documento.content_hash:
+        copia.close()
+        _registrar_divergencia(ator, documento, request)
+    return entregar(documento, anexo=bool(request.GET.get("baixar")), verificado=copia)
 
 
-def _exigir_integridade(ator, documento, request):
-    with documento.arquivo.open("rb") as conteudo:
-        calculado = resumo(conteudo)
-    if calculado == documento.content_hash:
-        return
+def _registrar_divergencia(ator, documento, request):
     with command_context() as agora:
         record_event(
             actor=ator,

@@ -19,6 +19,14 @@ pedi-la sobre o que a pessoa não viu. Seus dados e arquivos continuam onde esta
     regras antes de enviar sua inscrição — seus dados e documentos continuam guardados.</p>
   <p><a href="{% url 'public-document' selecao.publicacao_id %}" target="_blank" rel="noopener">Ler
     o Edital vigente (PDF)</a></p>
+  {% if descartes_da_retificacao %}
+  <p><strong>Estes documentos deixaram de ser exigidos e serão removidos ao continuar:</strong></p>
+  <ul>
+    {% for descarte in descartes_da_retificacao %}
+    <li>{{ descarte.requisito }} — {{ descarte.arquivo }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
   <form method="post">
     {% csrf_token %}
     <input type="hidden" name="reconhecer_versao" value="1">

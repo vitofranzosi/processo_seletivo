@@ -57,15 +57,18 @@ def inscricoes_do_edital(*, actor, edital_id):
     "2 de 3" por causa de um requisito que não é dele diria que falta algo que não falta.
     """
     edital = _edital_no_escopo(actor, edital_id)
-    versao = selectors.selecao_publica(edital_id=edital.id)
-    conteudo = versao.content
+    vigente = selectors.selecao_publica(edital_id=edital.id)
     enviados = {}
     for documento in DocumentoSubmetido.objects.filter(inscricao__edital=edital):
         enviados.setdefault(documento.inscricao_id, set()).add(str(documento.requirement_id))
     linhas = []
-    for inscricao in Inscricao.objects.filter(edital=edital).order_by(
-        "-submitted_at", "-created_at"
-    ):
+    consulta = Inscricao.objects.filter(edital=edital).select_related("versao_aceita")
+    for inscricao in consulta.order_by("-submitted_at", "-created_at"):
+        # **A versão de cada inscrição, e não a vigente para todas.** Uma inscrição enviada
+        # responde à versão que ela aceitou: usar a vigente faria Perfil, modalidade e contagem de
+        # documentos mudarem retroativamente na lista a cada Retificação — o passado sendo
+        # reescrito na tela de quem confere (princípio II).
+        conteudo = _conteudo_da_inscricao(inscricao, vigente)
         perfil, modalidade = _nome_no_conteudo(conteudo, inscricao)
         obrigatorios = [
             str(requisito["id"])
@@ -89,6 +92,15 @@ def inscricoes_do_edital(*, actor, edital_id):
             }
         )
     return edital, linhas
+
+
+def _conteudo_da_inscricao(inscricao, vigente):
+    """O conteúdo sob o qual aquela inscrição existe.
+
+    Enviada, é a versão aceita — congelada no ato. Em preenchimento, é a vigente, porque é a ela
+    que o candidato ainda está respondendo.
+    """
+    return (inscricao.versao_aceita or vigente).content
 
 
 def inscricao_para_consulta(*, actor, inscricao_id):

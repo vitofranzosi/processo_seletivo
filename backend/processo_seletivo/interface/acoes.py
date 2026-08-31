@@ -23,6 +23,7 @@ from dataclasses import dataclass
 
 from django.urls import reverse
 
+from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.interface import atos
 from processo_seletivo.processos.models import Edital
 
@@ -56,6 +57,11 @@ class Acao:
         return not self.motivo
 
 
+# Estados em que existe inscrição a consultar. Em elaboração e em revisão não existe; publicado,
+# encerrado e cancelado, sim — e o cancelado é justamente o que mais precisa ser consultável.
+ESTADOS_COM_INSCRICOES = ("PUBLICADO", "ENCERRADO", "CANCELADO")
+
+
 def _navegacao(edital, ator):
     """Ações que levam a outra tela. Não são atos: não confirmam, não registram, não alteram."""
     if ator.can("edital:elaborar") and edital.status == "EM_ELABORACAO":
@@ -73,11 +79,17 @@ def _navegacao(edital, ator):
     if edital.status == "PUBLICADO" and ator.can("retificacao:elaborar"):
         yield Acao("retificar", "Retificar", reverse("interface:retificar", args=[edital.id]))
     # Só depois de publicado: antes disso não há inscrição a consultar, e oferecer a tela vazia
-    # seria oferecer um beco — exatamente o que a `007` tirou desta página.
-    if edital.status in ("PUBLICADO", "ENCERRADO") and ator.can("inscricao:consultar"):
+    # seria oferecer um beco — exatamente o que a `007` tirou desta página. Cancelado entra na
+    # lista pelo motivo oposto: ele **tem** inscrições, e quem as recebeu continua respondendo por
+    # elas; tirar o caminho deixaria a tela alcançável só por URL decorada.
+    if edital.status in ESTADOS_COM_INSCRICOES and ator.can("inscricao:consultar"):
+        recebidas = Inscricao.objects.filter(edital=edital).count()
         yield Acao(
             "inscricoes",
-            "Inscrições recebidas",
+            # O total no próprio rótulo (FR-066): "há inscrições e quantas" é a informação que
+            # decide se vale abrir, e obrigar a abrir para descobrir é o atrito que a `007`
+            # passou a feature inteira tirando.
+            f"Inscrições recebidas ({recebidas})",
             reverse("interface:inscricoes", args=[edital.id]),
         )
     if ator.can("auditoria:consultar"):

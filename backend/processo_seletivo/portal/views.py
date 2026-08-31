@@ -26,6 +26,7 @@ from processo_seletivo.inscricoes.application.rascunho import (
     requisitos_da_inscricao,
 )
 from processo_seletivo.inscricoes.application.submissao import (
+    documentos_que_a_retificacao_invalida,
     edital_foi_retificado,
     enviar_inscricao,
     pendencias_para_enviar,
@@ -523,7 +524,12 @@ def revisao(request, inscricao_id):
     erros = []
     if request.method == "POST":
         if request.POST.get("reconhecer_versao"):
-            registro = reconhecer_versao(inscricao=registro, versao=versao)
+            registro = reconhecer_versao(
+                identidade=identidade,
+                inscricao=registro,
+                versao=versao,
+                correlation_id=getattr(request, "correlation_id", ""),
+            )
             retificado = False
         else:
             try:
@@ -556,6 +562,12 @@ def revisao(request, inscricao_id):
             "documentos": _documentos(conteudo, registro),
             "pendencias": pendencias_para_enviar(conteudo, registro),
             "retificado": retificado,
+            # O que a Retificação deixou de exigir, listado **antes** de a pessoa confirmar: sem
+            # isso, o descarte seria silencioso, e sem descarte nenhum ela ficaria presa numa
+            # recusa de envio sem saída (FR-031).
+            "descartes_da_retificacao": (
+                documentos_que_a_retificacao_invalida(registro, versao) if retificado else []
+            ),
             "erros": erros,
         },
     )
@@ -572,6 +584,10 @@ def comprovante(request, inscricao_id):
     registro, identidade, versao = _inscricao_do_titular(request, inscricao_id)
     if registro.status != Inscricao.Status.SUBMETIDA:
         return redirect(reverse("portal:inscricao", args=[registro.id]))
+    # O comprovante é a prova de um ato, e o ato aconteceu sob uma versão. Ler a vigente faria o
+    # Perfil e a modalidade impressos mudarem depois de uma Retificação — um comprovante que se
+    # reescreve não prova nada (FR-058, FR-063).
+    versao = registro.versao_aceita or versao
     conteudo = versao.content
     return render(
         request,

@@ -139,8 +139,15 @@ spec proíbe introduzi-lo sem necessidade concreta.
 
 **Decisão**: view mediada nos dois canais — no `portal` para o titular, no `interface` para o ator
 institucional autorizado. Resposta em streaming, `Content-Disposition: inline`, `Cache-Control:
-no-store`. Na entrega administrativa, o resumo criptográfico é recalculado durante o streaming e
-comparado ao registrado; divergindo, a resposta é recusada e o fato é registrado (`FR-053a`).
+no-store`. Na entrega administrativa, o conteúdo é copiado uma vez, o resumo é calculado
+**sobre a cópia**, e é a cópia verificada que vai para a resposta; divergindo, nada é servido e o
+fato é registrado (`FR-053a`).
+
+*Corrigido durante a entrega 6.* A primeira redação dizia "recalculado durante o streaming", e isso
+não se sustenta: bytes enviados não voltam, e descobrir a divergência no meio do arquivo deixaria
+quem consulta com meio documento e nenhuma explicação. Verificar antes e **reabrir o arquivo pelo
+caminho** também não serve — foi assim que a primeira implementação aprovou um conteúdo e serviu
+outro. O que fecha a janela é conferir e servir os mesmos bytes.
 
 **Racional**: calcular na leitura administrativa é onde a integridade importa — é o momento em que o
 arquivo vira evidência. Fazê-lo em toda leitura do candidato dobraria o custo de cada visualização do

@@ -731,8 +731,12 @@ comprovante; repetir com um rascunho e reencontrar `Continuar inscrição`.
   compositor do documento, e está tratada na precondição 2.
 - O provedor de identidade de demonstração basta para toda a feature; a integração real é jornada
   posterior e não altera nenhum requisito acima.
-- Papéis e permissões institucionais existentes bastam para a consulta administrativa; nenhum papel
-  novo é criado.
+- Nenhum papel institucional novo é criado. A consulta administrativa, porém, ganhou permissão
+  própria — `inscricao:consultar`, dentro do papel Gestor que já existia: nenhuma das permissões
+  anteriores significa "pode ler dado pessoal de candidato", e reaproveitar uma delas para abrir
+  documento comprobatório seria decidir por omissão o que o princípio III manda decidir
+  explicitamente. *A premissa original dizia que as existentes bastavam; a entrega 6 mostrou que
+  não, e a correção é menor privilégio, não mais papel.*
 - O volume esperado por seleção é de centenas a poucos milhares de inscrições, com um punhado de
   arquivos cada. Nada nesta spec pressupõe escala além disso.
 - O primeiro Processo real escolhido para piloto pode revelar campo pessoal obrigatório que esta

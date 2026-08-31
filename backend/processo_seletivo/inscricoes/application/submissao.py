@@ -11,7 +11,9 @@ from django.conf import settings
 from django.db import IntegrityError, transaction
 
 from processo_seletivo.auditoria.application import record_event
+from processo_seletivo.editais.domain.documentos import aplicaveis
 from processo_seletivo.inscricoes.application.rascunho import (
+    _apagar_depois_do_commit,
     _modalidade_escolhida,
     _rascunho_travado,
     _versao_vigente,
@@ -40,16 +42,76 @@ def edital_foi_retificado(inscricao, versao_vigente) -> bool:
     return inscricao.versao_reconhecida_id != versao_vigente.pk
 
 
-def reconhecer_versao(*, inscricao, versao):
-    """Registra que a pessoa viu a alteração — o que faz o aviso parar de aparecer."""
-    compare_and_swap(
-        Inscricao.objects,
-        pk=inscricao.pk,
-        expected_revision=inscricao.revision,
-        versao_reconhecida=versao,
-    )
-    inscricao.refresh_from_db()
-    return inscricao
+def documentos_que_a_retificacao_invalida(inscricao, versao):
+    """O que a Retificação deixou de exigir — e que, por isso, precisa sair.
+
+    Enquanto ele estiver lá, o envio é recusado por documento inaplicável e o candidato não tem o
+    que fazer: a tela lista os requisitos **vigentes**, e o arquivo órfão não aparece em nenhum
+    deles. É um beco, e a saída não pode ser apagar em silêncio — daí a lista, mostrada antes de
+    a pessoa confirmar (FR-031, FR-059).
+    """
+    aplicaveis_agora = {
+        str(requisito["id"])
+        for requisito in aplicaveis(
+            versao.content.get("documentRequirements") or [],
+            profile_id=str(inscricao.profile_id),
+            modality_id=None if inscricao.modality_id is None else str(inscricao.modality_id),
+        )
+    }
+    por_id = {
+        str(requisito.get("id")): requisito
+        for requisito in versao.content.get("documentRequirements") or []
+    }
+    return [
+        {
+            "id": str(documento.requirement_id),
+            "requisito": por_id.get(str(documento.requirement_id), {}).get(
+                "name", "documento que deixou de ser exigido"
+            ),
+            "arquivo": documento.nome_original,
+        }
+        for documento in DocumentoSubmetido.objects.filter(inscricao=inscricao)
+        if str(documento.requirement_id) not in aplicaveis_agora
+    ]
+
+
+def reconhecer_versao(*, identidade, inscricao, versao, correlation_id=""):
+    """Registra que a pessoa viu a alteração — e descarta o que a alteração tornou inaplicável.
+
+    As duas coisas juntas, numa transação: confirmar que leu e ficar com um documento que o Edital
+    não exige mais deixaria a inscrição num estado que só o envio revelaria, e revelaria como
+    recusa sem saída.
+    """
+    with command_context() as agora:
+        travada = _rascunho_travado(inscricao, versao.content, agora)
+        caminhos = []
+        for documento in DocumentoSubmetido.objects.filter(
+            inscricao=travada,
+            requirement_id__in=[
+                item["id"] for item in documentos_que_a_retificacao_invalida(travada, versao)
+            ],
+        ):
+            caminhos.append(documento.arquivo.name)
+            documento.delete()
+            record_event(
+                actor=ator_do_candidato(identidade, travada.edital),
+                permission="inscricao:remover",
+                operation="REMOVER",
+                aggregate=travada,
+                now=agora,
+                correlation_id=correlation_id,
+                reason=f"requisito {documento.requirement_id}",
+            )
+        compare_and_swap(
+            Inscricao.objects,
+            pk=travada.pk,
+            expected_revision=travada.revision,
+            versao_reconhecida=versao,
+        )
+        travada.refresh_from_db()
+        for caminho in caminhos:
+            _apagar_depois_do_commit(caminho)
+        return travada
 
 
 def pendencias_para_enviar(conteudo, inscricao) -> list[str]:
@@ -72,8 +134,6 @@ def enviar_inscricao(*, identidade, inscricao, declaracoes, idempotency_key, cor
     reservam a mesma chave e devolvem o mesmo resultado. A unicidade persistente é a segunda
     barreira, e é ela que responde se duas requisições escaparem por caminhos diferentes (FR-061).
     """
-    versao = _versao_vigente(inscricao.edital_id)
-    conteudo = versao.content
     ator = ator_do_candidato(identidade, inscricao.edital)
     with command_context() as agora:
         idem = reserve(
@@ -84,6 +144,12 @@ def enviar_inscricao(*, identidade, inscricao, declaracoes, idempotency_key, cor
         )
         if idem.result_id:
             return Inscricao.objects.get(pk=idem.result_id)
+        # A versão é lida **dentro** da transação e depois da trava. Lida antes, uma Retificação
+        # publicada no intervalo faria a inscrição registrar como aceita uma versão que já não
+        # vigorava no instante do ato — e é exatamente essa a pergunta que FR-058 existe para
+        # responder depois.
+        versao = _versao_vigente(inscricao.edital_id)
+        conteudo = versao.content
         # 1 e 2 — período aberto e Edital recebendo; e a trava, que resolve o estado obsoleto.
         travada = _rascunho_travado(inscricao, conteudo, agora)
         # 3 — a versão aceita é a que a pessoa reconheceu; se mudou, ela revê antes de confirmar.
@@ -121,24 +187,7 @@ def enviar_inscricao(*, identidade, inscricao, declaracoes, idempotency_key, cor
                 422,
             )
         # 10 — unicidade, garantida pelo banco; aqui só se transforma em recusa legível.
-        protocolo = _protocolo_inedito(agora.year)
-        try:
-            with transaction.atomic():
-                compare_and_swap(
-                    Inscricao.objects,
-                    pk=travada.pk,
-                    expected_revision=travada.revision,
-                    status=Inscricao.Status.SUBMETIDA,
-                    modality_id=modalidade,
-                    submitted_at=agora,
-                    protocolo=protocolo,
-                    versao_aceita=versao,
-                    declaracoes_aceitas_em=agora,
-                )
-        except IntegrityError as exc:
-            raise DomainError(
-                "duplicate_submission", "Esta inscrição já foi enviada.", 409
-            ) from exc
+        _gravar_o_ato(travada, modalidade=modalidade, versao=versao, agora=agora)
         travada.refresh_from_db()
         record_event(
             actor=ator,
@@ -160,6 +209,44 @@ def enviar_inscricao(*, identidade, inscricao, declaracoes, idempotency_key, cor
         idem.response_status = 201
         idem.save()
         return travada
+
+
+def _gravar_o_ato(inscricao, *, modalidade, versao, agora):
+    """A gravação, com o protocolo sorteado de novo se colidir.
+
+    Duas unicidades protegem esta tabela, e elas não significam a mesma coisa: a de identidade,
+    Edital e Perfil diz "esta pessoa já enviou"; a do protocolo diz "sorteei um número que já
+    existe". Traduzir as duas na mesma recusa faria o candidato ler que já se inscreveu quando o
+    que aconteceu foi um sorteio infeliz — e ele não teria o que fazer com essa informação.
+    """
+    for tentativa in range(TENTATIVAS_DE_PROTOCOLO):
+        protocolo = _protocolo_inedito(agora.year)
+        try:
+            with transaction.atomic():
+                compare_and_swap(
+                    Inscricao.objects,
+                    pk=inscricao.pk,
+                    expected_revision=inscricao.revision,
+                    status=Inscricao.Status.SUBMETIDA,
+                    modality_id=modalidade,
+                    submitted_at=agora,
+                    protocolo=protocolo,
+                    versao_aceita=versao,
+                    declaracoes_aceitas_em=agora,
+                )
+            return
+        except IntegrityError as exc:
+            if Inscricao.objects.filter(protocolo=protocolo).exclude(pk=inscricao.pk).exists():
+                if tentativa < TENTATIVAS_DE_PROTOCOLO - 1:
+                    continue
+                raise DomainError(
+                    "protocol_generation_failed",
+                    "Não foi possível gerar o protocolo. Tente novamente.",
+                    500,
+                ) from exc
+            raise DomainError(
+                "duplicate_submission", "Esta inscrição já foi enviada.", 409
+            ) from exc
 
 
 def _perfil_existe(conteudo, profile_id) -> bool:

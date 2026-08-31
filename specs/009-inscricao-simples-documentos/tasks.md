@@ -291,7 +291,7 @@ visualizar cada documento sob o requisito que atende — sem baixar nada.
 
 - [X] T104 [US6] Lista `Inscrições` no contexto do Edital, em `backend/processo_seletivo/interface/views.py`, `urls.py` e `templates/interface/inscricoes.html`
 - [X] T105 [US6] Detalhe da inscrição, com documentos agrupados por requisito e a versão aceita visível, em `templates/interface/inscricao_detalhe.html`
-- [X] T106 [US6] Entrega institucional do documento em `backend/processo_seletivo/interface/views.py` — exibição `inline` com verificação do resumo em streaming, e **baixar como ação secundária individual** (`attachment`), sem download em lote (FR-069)
+- [X] T106 [US6] Entrega institucional do documento em `backend/processo_seletivo/interface/views.py` — exibição `inline` da **cópia verificada** (conferir e servir os mesmos bytes; ver D-007), e **baixar como ação secundária individual** (`attachment`), sem download em lote (FR-069)
 - [X] T107 [US6] Aplicar o decorador de `backend/processo_seletivo/shared/http.py` às duas telas e à entrega do arquivo em `backend/processo_seletivo/interface/views.py`
 - [X] T108 [US6] Percorrer a entrega 6 do [quickstart.md](./quickstart.md)
 
