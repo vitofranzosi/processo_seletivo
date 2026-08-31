@@ -285,7 +285,10 @@ def test_document_reproduces_competition_modalities_and_their_normative_rule():
     assert "PPP" in texto
     assert "Pessoas pretas, pardas e indígenas" in texto
     assert "Lei 12.990/2014" in texto
-    assert "2014-06-09" in texto
+    # **Materialização atualizada**: a versão da Regra Normativa saiu do ato. É proveniência, e
+    # sai pela mesma razão que `schemaVersion` e os UUIDs saíram — o candidato lê o fundamento,
+    # não a data de cadastro da regra. Continua no conteúdo publicado.
+    assert "2014-06-09" not in texto
     # **Forma atualizada pela `008`/US2**: a frase corrida `Regra Normativa — fundamento: …;
     # versão: …; percentual: …` virou tabela. O valor continua obrigatório e continua em
     # português — a entrada é `"20.0000"` e é o documento que a escreve.
@@ -295,11 +298,14 @@ def test_document_reproduces_competition_modalities_and_their_normative_rule():
 
 def test_document_reproduces_the_schedule_with_institutional_dates():
     texto = texto_de(documento(snapshot(), HASH))
+    # **Materialização atualizada**: o rótulo humano vai ao papel; a chave do tipo, não.
+    # `INSCRICAO` é enumeração — no documento publicado ela não diz nada que a descrição já não
+    # diga, e denuncia o sistema por trás do ato. Mesma decisão que tirou `PLANEJADO` na `007`.
     assert "Período de inscrições" in texto
-    assert "INSCRICAO" in texto
+    assert "INSCRICAO" not in texto
     # America/Sao_Paulo, conforme a zona institucional.
-    assert "01/09/2026 09:00" in texto
-    assert "20/09/2026 23:59" in texto
+    assert "01/09/2026, às 9h" in texto
+    assert "20/09/2026, às 23h59" in texto
 
 
 def test_document_preserves_portuguese_accents():
@@ -432,7 +438,8 @@ def test_etapas_aparecem_com_caracter_peso_e_nota_minima():
     assert "eliminatória e classificatória" in texto
     assert "Peso" in texto and "Nota mínima" in texto
     assert "2.0000" not in texto and "7.0000" not in texto
-    assert "INSCRICAO" in texto and "01/09/2026 09:00" in texto
+    assert "INSCRICAO" not in texto
+    assert "01/09/2026, às 9h" in texto
 
 
 def test_parentheses_in_content_do_not_corrupt_the_document():
@@ -679,34 +686,60 @@ def paginas_de(pdf: bytes) -> list[list[str]]:
     ]
 
 
-def test_um_perfil_que_cabe_inteiro_na_pagina_seguinte_nao_e_partido():
-    """FR-020: mover é melhor que partir, quando mover resolve.
+ALTURA_DA_LINHA = re.compile(
+    rb"BT (?:[\d.]+ Tw )?/F\d [\d.]+ Tf [\d.]+ ([\d.]+) Td \(.*?\) Tj", re.DOTALL
+)
 
-    O documento gerado antes desta feature iniciava o segundo Perfil no rodapé e continuava seus
-    dados na página seguinte — o defeito editorial mais visível depois do cabeçalho.
+
+def alturas_por_pagina(pdf: bytes) -> list[list[float]]:
+    """As alturas em que cada página desenhou texto — onde a densidade fica observável."""
+    return [
+        [float(y) for y in ALTURA_DA_LINHA.findall(fluxo)]
+        for fluxo in re.findall(rb"stream\n(.*?)\nendstream", pdf, re.DOTALL)
+    ]
+
+
+def test_o_titulo_do_perfil_nunca_se_separa_do_que_ele_apresenta():
+    """FR-020, na granularidade que a auditoria pediu.
+
+    Manter o Perfil **inteiro** indivisível era proteção demais: com um Perfil longo, a seção
+    inteira era empurrada e a página anterior terminava com um terço em branco. A unidade coesa é
+    o título com o que ele apresenta; atribuições, requisitos e modalidades são fronteiras
+    semânticas por onde a quebra pode passar.
     """
     paginas = paginas_de(documento(dois_perfis(), HASH))
     onde = [
         numero
         for numero, pagina in enumerate(paginas, 1)
         for linha in pagina
-        if linha.startswith("TEC-LAB")
+        if "TEC-LAB — " in linha and re.match(r"^\d+\.\d+ ", linha)
     ]
     assert len(onde) == 1, "o título do Perfil aparece em mais de uma página"
-    pagina_do_titulo = onde[0]
+    assert any(
+        "Apoio técnico aos laboratórios" in linha for linha in paginas[onde[0] - 1]
+    ), "o título ficou separado da descrição que ele apresenta"
 
-    # **Tudo** o que é do segundo Perfil está na mesma página do seu título — inclusive o que hoje
-    # cai na página seguinte. Conferir só a descrição deixaria o defeito passar: é justamente ela
-    # que ainda cabe no rodapé, junto do título, enquanto vagas e requisitos escorregam.
-    for marca in (
-        "Apoio técnico aos laboratórios",
-        "Campus Serra",
-        "Vagas imediatas",
-        "Ensino médio técnico em Informática",
-    ):
-        assert any(marca in linha for linha in paginas[pagina_do_titulo - 1]), (
-            f"{marca!r} ficou fora da página do seu Perfil"
-        )
+
+def test_a_paginacao_nao_deixa_um_terco_da_pagina_em_branco():
+    """O critério de densidade da auditoria.
+
+    `keep-together` protege o bloco; protegendo demais, ele deixa a página anterior quase vazia
+    para preservar uma unidade que poderia ter sido quebrada numa fronteira semântica. Um Edital
+    ocupa a página.
+    """
+    from processo_seletivo.publicacoes.infrastructure.pdf import RODAPE, TOPO
+
+    util = TOPO - (RODAPE + 24)
+    for conteudo in (snapshot(), dois_perfis(), cronograma_longo()):
+        paginas = alturas_por_pagina(documento(conteudo, HASH))
+        for numero, ys in list(enumerate(paginas, 1))[:-1]:
+            corpo = [y for y in ys if y > RODAPE]
+            if not corpo:
+                continue
+            ocupado = TOPO - min(corpo)
+            assert ocupado >= util * 2 / 3, (
+                f"a página {numero} usou só {ocupado / util:.0%} da área útil"
+            )
 
 
 def test_nenhum_titulo_de_perfil_fecha_a_pagina_sem_conteudo_abaixo():
@@ -748,8 +781,9 @@ def test_o_quadro_de_modalidades_nao_inventa_celula_nem_perde_informacao():
     texto = texto_de(documento(snapshot(), HASH))
 
     assert "Regra Normativa — fundamento:" not in texto
-    for esperado in ("PPP", "Lei 12.990/2014", "20%", "2014-06-09"):
+    for esperado in ("PPP", "Lei 12.990/2014", "20%"):
         assert esperado in texto, esperado
+    assert "2014-06-09" not in texto, "a versão da regra é proveniência, não matéria de Edital"
 
     # Ampla concorrência: sem regra normativa, e portanto sem percentual.
     ampla = {
@@ -802,7 +836,9 @@ def test_a_paginacao_por_bloco_nao_perde_nem_duplica_conteudo():
                 1
                 for pagina in paginas
                 for linha in pagina
-                if linha.startswith(f"{perfil['code']} — ")
+                # O código aparece duas vezes de propósito — no quadro de vagas e no
+                # subtítulo. O que não pode repetir é o subtítulo, onde o Perfil é descrito.
+                if re.match(rf"^\d+\.\d+ {perfil['code']} — ", linha)
             )
             assert ocorrencias == 1, f"{perfil['code']} apareceu {ocorrencias} vezes"
 
@@ -844,12 +880,16 @@ def test_o_cronograma_e_apresentado_em_tabela_com_colunas_alinhadas():
 
     # Alinhamento é uma propriedade de posição, não de texto: as células de uma coluna começam
     # todas no mesmo x. Conferir o texto não distinguiria uma tabela de uma lista.
-    inicios = {
-        round(recuo, 1)
-        for linha, _, _, recuo in linhas_desenhadas(pdf)
-        if linha.startswith("01/09/2026") or linha.startswith("05/10/2026")
+    from processo_seletivo.publicacoes.infrastructure.pdf import largura
+
+    # Uma coluna só se prova alinhada com várias células nela: o cenário-base tem um Evento, e
+    # `01/09` e `20/09` são de colunas diferentes — início e término.
+    centros = {
+        round(recuo + largura(linha, tamanho, fonte) / 2)
+        for linha, fonte, tamanho, recuo in linhas_desenhadas(documento(cronograma_longo(), HASH))
+        if linha == "01/09/2026, às 9h"
     }
-    assert len(inicios) == 1, f"a coluna de início não está alinhada: {inicios}"
+    assert len(centros) == 1, f"a coluna de início não está alinhada: {centros}"
 
 
 def test_evento_pontual_nao_apresenta_termino_falso():
@@ -872,10 +912,10 @@ def test_evento_pontual_nao_apresenta_termino_falso():
     ]
     texto = texto_de(documento(conteudo, HASH))
 
-    assert "05/10/2026 14:00" in texto
+    assert "05/10/2026, às 14h" in texto
     assert "None" not in texto
     # O período que tem término continua exibindo os dois instantes.
-    assert "20/09/2026 23:59" in texto
+    assert "20/09/2026, às 23h59" in texto
 
 
 def test_o_cabecalho_da_tabela_se_repete_na_continuacao_e_nunca_fica_orfao():
@@ -918,13 +958,13 @@ def test_a_etapa_apresenta_carater_peso_e_nota_em_pares_rotulo_valor():
     texto = texto_de(documento(snapshot(), HASH))
 
     assert "caráter: eliminatória e classificatória; peso:" not in texto
-    for rotulo in ("Caráter", "Peso", "Nota mínima"):
+    for rotulo in ("Caráter:", "Peso:", "Nota mínima:"):
         assert rotulo in texto, rotulo
     assert "eliminatória e classificatória" in texto
     assert "2" in texto and "7" in texto
 
     # A data continua vindo do Evento vinculado, e não é digitada de novo na Etapa (FR-028).
-    assert "01/09/2026 09:00" in texto
+    assert "01/09/2026, às 9h" in texto
 
     # Etapa sem peso nem nota mínima não ganha rótulo vazio.
     sem_ponderacao = snapshot()
@@ -1129,7 +1169,7 @@ def test_uma_celula_longa_nao_empurra_as_colunas_para_fora_da_pagina():
 
     # E o conteúdo continua lá: limitar a coluna quebra a célula, não a descarta.
     texto = texto_de(pdf)
-    assert "01/09/2026 09:00" in texto and "20/09/2026 23:59" in texto
+    assert "01/09/2026, às 9h" in texto and "20/09/2026, às 23h59" in texto
     assert "DDDDD" in texto
 
 

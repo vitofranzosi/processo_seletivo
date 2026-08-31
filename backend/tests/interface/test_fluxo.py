@@ -429,8 +429,12 @@ def test_publicar_logo_apos_a_previa_produz_o_mesmo_conteudo_normativo(
     praticar(client, Edital.objects.get(), "publicar", motivo="Publicação", **SIGNATARIO)
     publicado = texto_de_pdf_bytes(bytes(DocumentoPublicado.objects.get().bytes))
 
-    for esperado in ("P1", "Perfil", "INSCRICAO", "Inscrições"):
+    # **Materialização atualizada pela `008`**: o rótulo humano do Evento vai ao papel; a chave
+    # do tipo, não. `INSCRICAO` é enumeração, e num Edital publicado não diz nada além do que a
+    # descrição já diz.
+    for esperado in ("P1", "Perfil", "Inscrições"):
         assert esperado in visualizado and esperado in publicado, esperado
+    assert "INSCRICAO" not in visualizado and "INSCRICAO" not in publicado
     assert MARCA_DE_PREVIA in visualizado
     assert MARCA_DE_PREVIA not in publicado
     assert "INTEGRIDADE" in publicado and "INTEGRIDADE" not in visualizado

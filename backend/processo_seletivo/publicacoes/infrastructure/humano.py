@@ -48,3 +48,19 @@ def decimal(valor) -> str:
     if "." in texto:
         texto = texto.rstrip("0").rstrip(".")
     return texto.replace(".", ",")
+
+
+def instante(momento) -> str:
+    """Data e hora como um Edital as escreve — não como um banco as armazena.
+
+    `05/10/2026 14:00` é registro; `05/10/2026, às 14h` é ato administrativo. A hora cheia perde
+    os minutos porque num Edital ela não os tem: um prazo que termina "às 23h59" se escreve assim,
+    e um que começa "às 14h" não vira "às 14h00".
+    """
+    if momento is None:
+        return ""
+    data = momento.strftime("%d/%m/%Y")
+    if momento.hour == 0 and momento.minute == 0:
+        return data
+    hora = f"{momento.hour}h" + (f"{momento.minute:02d}" if momento.minute else "")
+    return f"{data}, às {hora}"

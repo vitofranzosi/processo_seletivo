@@ -218,7 +218,7 @@ def test_percentual_peso_e_nota_saem_em_portugues():
     # peso e nota mínima viraram pares rótulo-valor da Etapa. Os valores continuam obrigatórios e
     # continuam em português — que é o que este teste guarda.
     assert "20%" in texto
-    assert "Peso" in texto and "Nota mínima" in texto
+    assert "Peso:" in texto and "Nota mínima:" in texto
 
 
 @pytest.mark.contract

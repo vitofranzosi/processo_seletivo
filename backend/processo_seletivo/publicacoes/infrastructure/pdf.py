@@ -212,6 +212,11 @@ def _paragrafos(texto) -> list[str]:
 
 
 def _instante(valor) -> str:
+    """O instante em linguagem de Edital (`008`).
+
+    `05/10/2026 14:00` é como um banco guarda; `05/10/2026, às 14h` é como um ato administrativo
+    escreve. A conversão vive em `humano`, onde vive toda formatação humana.
+    """
     if not valor:
         return "—"
     try:
@@ -220,7 +225,7 @@ def _instante(valor) -> str:
         return str(valor)
     if timezone.is_aware(momento):
         momento = timezone.localtime(momento)
-    return momento.strftime("%d/%m/%Y %H:%M")
+    return humano.instante(momento)
 
 
 FOLGA_DA_CELULA = 3.0
@@ -250,10 +255,13 @@ def _grade(quadro, base):
     # O sombreado vem primeiro: no PDF o que se emite depois cobre o que veio antes, e o fio da
     # grade precisa ficar por cima do cinza.
     if quadro.get("cabecalho"):
-        inicio, fim = quadro["cabecalho"]
+        _, fim = quadro["cabecalho"]
+        base_do_cabecalho = fim - FOLGA_DA_CELULA - 3
+        # O topo do sombreado é o **topo da grade**, não o início da linha: aquele é a linha de
+        # base da legenda escrita acima, e o cinza subiria até encostar nela.
         formas.append(
-            ("fundo", bordas[0], fim - FOLGA_DA_CELULA - 3, bordas[-1] - bordas[0],
-             inicio - fim + FOLGA_DA_CELULA * 2)
+            ("fundo", bordas[0], base_do_cabecalho, bordas[-1] - bordas[0],
+             topo - base_do_cabecalho)
         )
     formas.append(("ret", bordas[0], fundo, bordas[-1] - bordas[0], topo - fundo))
     # Um fio abaixo de cada linha, menos a última: aquela fecha no contorno.
@@ -695,7 +703,8 @@ def _larguras_das_colunas(cabecalho, linhas, tamanho, disponivel):
     return naturais
 
 
-def _tabela(composicao, cabecalho, linhas, *, recuo=18.0, tamanho=CORPO_TEXTO):
+def _tabela(composicao, cabecalho, linhas, *, recuo=18.0, tamanho=CORPO_TEXTO,
+            alinhamentos=None):
     """Uma tabela: colunas limitadas, células que refluem dentro da sua coluna.
 
     A altura de cada linha é a da célula mais alta — sem isso, uma célula de três linhas
@@ -706,7 +715,9 @@ def _tabela(composicao, cabecalho, linhas, *, recuo=18.0, tamanho=CORPO_TEXTO):
     disponivel = LARGURA - 2 * MARGEM - recuo
     colunas = _larguras_das_colunas(cabecalho, linhas, tamanho, disponivel)
 
-    def escrever_linha(celulas, fonte, repetir=False, alinhamento=ESQUERDA):
+    por_coluna = alinhamentos or [ESQUERDA] * len(linhas[0])
+
+    def escrever_linha(celulas, fonte, repetir=False, alinhamento=None):
         refluidas = [
             # O teto do refluxo é a largura da coluna menos o mesmo padding com que ela foi
             # medida. Descontar mais do que se somou faria a célula que **definiu** a coluna
@@ -721,7 +732,8 @@ def _tabela(composicao, cabecalho, linhas, *, recuo=18.0, tamanho=CORPO_TEXTO):
                     texto = partes[altura] if altura < len(partes) else ""
                     if texto:
                         celula = _x_na_celula(
-                            texto, fonte, tamanho, deslocamento, colunas[indice], alinhamento
+                            texto, fonte, tamanho, deslocamento, colunas[indice],
+                            alinhamento or por_coluna[indice],
                         )
                         composicao.escrever(
                             texto,
@@ -768,19 +780,20 @@ def _modalidades(composicao, perfil):
     for modalidade in modalidades:
         regra = modalidade.get("normativeRule") or {}
         percentual = regra.get("percentage")
-        vigencia = regra.get("effectiveFrom")
         linhas.append(
             [
                 f"{modalidade.get('code', '')} — {modalidade.get('name', '')}",
                 f"{humano.decimal(percentual)}%" if percentual else "",
                 regra.get("foundation", "") or "",
-                regra.get("version", "") or (_instante(vigencia) if vigencia else ""),
             ]
         )
     # Coluna em que **nenhuma** modalidade tem valor não é impressa. Um Edital só de ampla
     # concorrência não deve exibir uma coluna de percentual inteira vazia: seria informação
     # inexistente ocupando espaço para preencher a tabela (FR-019).
-    cabecalho = ["Modalidade", "Percentual", "Fundamento", "Versão"]
+    # **A versão da Regra Normativa não é matéria de Edital.** Ela é proveniência, e sai pela mesma
+    # razão que `schemaVersion` e os UUIDs saíram: o candidato lê o fundamento — a lei que reserva
+    # a vaga —, não a data em que a regra foi cadastrada. Continua no conteúdo publicado.
+    cabecalho = ["Modalidade", "Percentual", "Fundamento normativo"]
     presentes = [c for c in range(len(cabecalho)) if any(linha[c] for linha in linhas)]
     with composicao.bloco():
         composicao.escrever(
@@ -791,49 +804,81 @@ def _modalidades(composicao, perfil):
             composicao,
             [cabecalho[c] for c in presentes],
             [[linha[c] or "—" for c in presentes] for linha in linhas],
+            alinhamentos=[ESQUERDA if c == 0 else CENTRO for c in presentes],
         )
 
 
-def _perfis(composicao, snapshot, secao=0):
-    """Cada Perfil como bloco delimitado, com a identificação em disposição tabular.
+def _quadro_de_vagas(composicao, perfis):
+    """A visão global antes do detalhe — o `Quadro de vagas` dos Editais de referência.
 
-    A estrutura é a da cascata de FR-021: o Perfil é um bloco coeso com moldura; dentro dele,
-    identificação, descrição, atribuições, requisitos e modalidades são sub-blocos que só quebram
-    entre si — e, quando um deles sozinho não cabe numa página, por dentro.
-
-    Nenhum rótulo sobre nada: um campo ausente não é impresso. Um rótulo vazio não informa que não
-    há informação, informa que alguém esqueceu de preencher.
+    Um card por Perfil responde "como apresento esta entidade?". O Edital pergunta outra coisa:
+    "qual a melhor composição para comunicar esta matéria?" — e a resposta, para dados comparáveis
+    entre si, é uma tabela que os põe lado a lado. Com dez Perfis, dez fichas obrigam o leitor a
+    percorrer o documento inteiro para saber quantas vagas existem.
     """
-    for perfil in snapshot.get("profiles") or []:
-        with composicao.bloco(moldura=True):
+    linhas = []
+    for perfil in perfis:
+        reserva = RESERVA.get(perfil.get("reserveType"), perfil.get("reserveType", ""))
+        if perfil.get("reserveLimit") is not None:
+            reserva = f"{reserva} em {perfil['reserveLimit']}"
+        linhas.append(
+            [
+                f"{perfil.get('code', '')} — {perfil.get('name', '')}",
+                perfil.get("locality", "") or "—",
+                str(perfil.get("immediateVacancies", 0)),
+                reserva or "—",
+                perfil.get("workload", "") or "—",
+            ]
+        )
+    composicao.escrever(
+        "Quadro de vagas", tamanho=CORPO_TEXTO, fonte=NEGRITO, antes=ANTES_DE_BLOCO, junto=True
+    )
+    _tabela(
+        composicao,
+        ["Perfil", "Localidade", "Vagas", "Cadastro reserva", "Carga horária"],
+        linhas,
+        recuo=0.0,
+        alinhamentos=[ESQUERDA, ESQUERDA, CENTRO, ESQUERDA, CENTRO],
+    )
+
+
+def _perfis(composicao, snapshot, secao=0):
+    """O quadro de vagas, e depois cada Perfil como subseção.
+
+    **Sem moldura externa.** O retângulo em volta de tudo produzia um cartão de interface
+    impresso: tabela dentro de caixa dentro de caixa. Um Edital descreve a vaga em prosa e
+    subtítulo numerado, e reserva a grade para o que é matriz.
+
+    A subseção é numerada a partir da seção-mãe já resolvida, como as Etapas (FR-013).
+    """
+    perfis = snapshot.get("profiles") or []
+    if len(perfis) > 1:
+        _quadro_de_vagas(composicao, perfis)
+
+    for ordem, perfil in enumerate(perfis, 1):
+        with composicao.bloco(coeso=False):
             with composicao.bloco():
                 composicao.escrever(
-                    f"{perfil.get('code', '')} — {perfil.get('name', '')}",
+                    f"{secao}.{ordem} {perfil.get('code', '')} — {perfil.get('name', '')}",
                     tamanho=CORPO_BLOCO,
                     fonte=NEGRITO,
                     antes=ANTES_DE_BLOCO + 4,
                     junto=True,
                 )
-                reserva = RESERVA.get(perfil.get("reserveType"), perfil.get("reserveType", ""))
-                if perfil.get("reserveLimit") is not None:
-                    reserva = f"{reserva} em {perfil['reserveLimit']}"
-                # Rótulo-valor em duas colunas, e não pares lado a lado: um quadro de quatro
-                # colunas deixaria células vazias quando o número de campos fosse ímpar, e célula
-                # vazia num quadro parece dado faltando.
-                identificacao = [
-                    ["Localidade", perfil.get("locality", "") or "—"],
-                    ["Vagas imediatas", str(perfil.get("immediateVacancies", 0))],
-                    ["Cadastro Reserva", reserva],
-                ]
-                # Sem cabeçalho de coluna: aqui o rótulo **é** a primeira célula. Um cabeçalho
-                # sobre pares rótulo-valor não nomearia nada.
-                _tabela(composicao, None, identificacao)
-
-            if perfil.get("description"):
-                with composicao.bloco():
+                if perfil.get("description"):
                     composicao.escrever(
                         perfil["description"], tamanho=CORPO_TEXTO, recuo=18,
-                        antes=ANTES_DE_BLOCO, justificar=True,
+                        antes=ANTES_DE_PARAGRAFO, justificar=True,
+                    )
+            if len(perfis) == 1:
+                with composicao.bloco():
+                    _pares(
+                        composicao,
+                        [
+                            ["Localidade", perfil.get("locality", "") or "—"],
+                            ["Vagas imediatas", str(perfil.get("immediateVacancies", 0))],
+                            ["Cadastro reserva", _reserva(perfil)],
+                        ],
                     )
             if perfil.get("duties"):
                 with composicao.bloco():
@@ -847,11 +892,16 @@ def _perfis(composicao, snapshot, secao=0):
                             justificar=True,
                         )
             for rotulo, chave in (("Carga horária", "workload"), ("Remuneração", "compensation")):
-                if perfil.get(chave):
+                if perfil.get(chave) and len(perfis) == 1:
                     composicao.escrever(
                         f"{rotulo}: {perfil[chave]}", tamanho=CORPO_TEXTO, recuo=18,
                         antes=ANTES_DE_LINHA,
                     )
+            if perfil.get("compensation") and len(perfis) > 1:
+                composicao.escrever(
+                    f"Remuneração: {perfil['compensation']}", tamanho=CORPO_TEXTO, recuo=18,
+                    antes=ANTES_DE_LINHA,
+                )
             requisitos = perfil.get("requirements") or []
             if requisitos:
                 with composicao.bloco():
@@ -864,14 +914,37 @@ def _perfis(composicao, snapshot, secao=0):
             _modalidades(composicao, perfil)
 
 
+def _reserva(perfil):
+    reserva = RESERVA.get(perfil.get("reserveType"), perfil.get("reserveType", ""))
+    if perfil.get("reserveLimit") is not None:
+        reserva = f"{reserva} em {perfil['reserveLimit']}"
+    return reserva or "—"
+
+
+def _pares(composicao, pares, *, recuo=18.0):
+    """Rótulo em negrito e valor na mesma linha — tipografia, não grade.
+
+    Tabela é para comparar muitas linhas; poucos atributos de um único objeto se descrevem com
+    peso tipográfico. Emoldurar quatro pares produz ficha administrativa, não Edital.
+    """
+    for rotulo, valor in pares:
+        largura_do_rotulo = largura(f"{rotulo}: ", CORPO_TEXTO, NEGRITO)
+        composicao.escrever(
+            f"{rotulo}:", tamanho=CORPO_TEXTO, fonte=NEGRITO, recuo=recuo, antes=ANTES_DE_LINHA
+        )
+        composicao.escrever(
+            valor, tamanho=CORPO_TEXTO, recuo=recuo + largura_do_rotulo,
+            antes=-(CORPO_TEXTO * 1.45),
+        )
+
+
 def _cronograma(composicao, snapshot, secao=0):
-    """O Cronograma em tabela (FR-023 a FR-026).
+    """O Cronograma em tabela, com **rótulo humano**, não com o código do tipo.
 
-    Era três parágrafos numerados por Evento. É informação naturalmente tabular — ordem, evento,
-    início e término —, e é assim que os Editais reais a apresentam.
-
-    Evento pontual não exibe término: inventar uma data para preencher a célula afirmaria ao
-    candidato um prazo que o Edital não estabeleceu (FR-024).
+    `INSCRICAO — Período de inscrições` denuncia o sistema por trás do documento: `INSCRICAO` é
+    chave de enumeração, e num Edital publicado ela não significa nada a mais do que a descrição
+    que a acompanha. O código continua no conteúdo publicado; o que muda é o que se imprime — a
+    mesma decisão que tirou `PLANEJADO` do documento na `007`.
     """
     eventos = snapshot.get("schedule") or []
     if not eventos:
@@ -879,17 +952,19 @@ def _cronograma(composicao, snapshot, secao=0):
     linhas = [
         [
             str(evento.get("order", "")),
-            " — ".join(
-                parte
-                for parte in (evento.get("type", ""), evento.get("description", ""))
-                if parte
-            ),
+            evento.get("description") or evento.get("type", ""),
             _instante(evento.get("startAt")),
             _instante(evento["endAt"]) if evento.get("endAt") else "—",
         ]
         for evento in eventos
     ]
-    _tabela(composicao, ["Nº", "Evento", "Início", "Término"], linhas, recuo=0.0)
+    _tabela(
+        composicao,
+        ["Nº", "Evento", "Início", "Término"],
+        linhas,
+        recuo=0.0,
+        alinhamentos=[CENTRO, ESQUERDA, CENTRO, CENTRO],
+    )
 
 
 CARATER_DA_ETAPA = (("eliminatory", "eliminatória"), ("classificatory", "classificatória"))
@@ -927,13 +1002,16 @@ def _etapas(composicao, snapshot, secao=0):
             if etapa.get("minimumScore") is not None:
                 pares.append(["Nota mínima", humano.decimal(etapa["minimumScore"])])
             # As datas são do Evento e não são copiadas: o documento as lê de lá, como o domínio.
+            # E o rótulo humano é que vai para o papel, não a chave do tipo.
             evento = eventos.get(etapa.get("scheduleEventId"))
             if evento:
                 periodo = _instante(evento.get("startAt"))
                 if evento.get("endAt"):
                     periodo += f" a {_instante(evento['endAt'])}"
-                pares.append(["Realização", f"{evento.get('type', '')} — {periodo}"])
-            _tabela(composicao, None, pares, recuo=18.0)
+                pares.append(["Realização", periodo])
+            # Poucos atributos de um único objeto se descrevem com peso tipográfico, não com
+            # grade: emoldurá-los produzia ficha administrativa, não Edital.
+            _pares(composicao, pares)
 
 
 # Cada seção gerada nomeia a coleção que a origina; aqui está o que fazer com cada uma. Uma origem
