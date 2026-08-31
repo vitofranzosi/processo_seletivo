@@ -52,10 +52,11 @@ independentes (`Composicao.paginar`) e é uma função pura de `(snapshot, conte
 
 Disso decorrem seis decisões, e elas são o núcleo desta spec:
 
-1. **Assinatura é metadado do ato, não conteúdo normativo.** `signatory_name` e `signatory_role`
-   vivem em `Publicacao`, não no snapshot. O snapshot **não** ganha autoridade signatária para que
-   o PDF possa desenhá-la. O compositor passa a aceitar um contexto de assinatura opcional, e os
-   dois fluxos de publicação já o têm em mãos no momento em que chamam o renderizador.
+1. **A autoridade signatária é metadado do ato, não conteúdo normativo.** `signatory_name` e
+   `signatory_role` vivem em `Publicacao`, não no snapshot. O snapshot **não** ganha autoridade
+   signatária para que o PDF possa desenhá-la: ela chega ao compositor como contexto do ato,
+   separado do conteúdo, e os dois fluxos de publicação já o têm em mãos no momento em que chamam o
+   renderizador. A presença é **determinada pelo modo** (FR-036), não pelo chamador.
 2. **Prévia não tem assinatura.** Ela não decorre de uma Publicação. Essa é a segunda — e última —
    diferença admitida entre prévia e publicado.
 3. **Sem praça, sem data, sem cadastro de pessoas.** "Vitória (ES), 30 de agosto de 2026" exigiria
@@ -167,8 +168,11 @@ Perfil pequeno aparece partido entre duas páginas.
 é a informação que o candidato de fato procura. É também a entrega que precisa da paginação por
 bloco, e por isso a traz.
 
-**Independent Test**: gerar o cenário-base, que hoje inicia `TEC-LAB` no fim da página 1 e o
-continua na página 2, e verificar que o Perfil passa inteiro para a página seguinte.
+**Independent Test**: gerar um cenário com dois Perfis dimensionado para que o segundo não caiba no
+espaço restante da página, e verificar que ele passa inteiro para a página seguinte em vez de
+começar no rodapé. *A referência versionada tem um Perfil só e não exibe a quebra; o cenário de dois
+Perfis é montado para a demonstração desta entrega, e o comportamento defeituoso foi observado no
+`documento2.pdf`.*
 
 **Acceptance Scenarios**:
 
@@ -177,9 +181,11 @@ continua na página 2, e verificar que o Perfil passa inteiro para a página seg
 2. **Given** um Perfil que não cabe no espaço restante da página mas cabe inteiro na seguinte,
    **When** o documento é composto, **Then** ele é movido integralmente.
 3. **Given** um Perfil maior que uma página, **When** o documento é composto, **Then** a quebra
-   ocorre entre sub-blocos — identificação, descrição, atribuições, requisitos, modalidades — e
-   nunca no meio de um deles.
-4. **Given** uma modalidade de ampla concorrência sem percentual, **When** leio o quadro de
+   ocorre entre sub-blocos — identificação, descrição, atribuições, requisitos, modalidades.
+4. **Given** um sub-bloco que sozinho não cabe em uma página inteira, **When** o documento é
+   composto, **Then** a quebra desce para dentro dele, por parágrafo, item ou linha de tabela, e a
+   composição conclui.
+5. **Given** uma modalidade de ampla concorrência sem percentual, **When** leio o quadro de
    modalidades, **Then** não encontro célula inventada nem frase tecnicamente estranha.
 
 ---
@@ -364,7 +370,10 @@ registrá-las lá com a alternativa considerada e a razão da escolha. O que apa
   atribuições, requisitos e modalidades permanecem blocos próprios.
 - **FR-018**: Requisitos permanecem em lista.
 - **FR-019**: Modalidades de concorrência DEVEM ser apresentadas em tabela simples com modalidade,
-  percentual e fundamento.
+  percentual e fundamento. Versão e vigência da Regra Normativa, quando existirem, DEVEM permanecer
+  no documento — em coluna ou em linha secundária —, e a frase técnica atual
+  `Regra Normativa — fundamento: …; versão: …; percentual: …` deixa de ser composta. *Tabular não
+  pode virar perder: o estado atual imprime esses dois campos, e a composição nova os mantém.*
 - **FR-020**: Nenhuma célula DEVE ser preenchida com informação inexistente. Modalidade sem
   percentual apresenta a célula vazia ou o traço de ausência já usado no documento, nunca um valor
   construído nem uma frase técnica.
@@ -526,8 +535,8 @@ compositor, que ganha um parâmetro de contexto do ato.
 editorial de um documento não se afirma por asserção automatizada, e tentar fazê-lo produziria teste
 frágil e caro.*
 
-Ao final de cada entrega, gerar o documento do **cenário-base** — os mesmos dados do
-`documento2.pdf`, reproduzíveis pela seed — e inspecionar as páginas. Ao final da feature, o
+Ao final de cada entrega, gerar o documento do **cenário-base** — reproduzível pela seed — e
+inspecionar as páginas, comparando com `referencias/estado-inicial-apos-007.pdf`. Ao final da feature, o
 percurso completo deve ler-se como documento institucional coerente:
 
 > cabeçalho institucional → ato → conteúdo numerado → Perfis estruturados → Etapas → Cronograma
@@ -558,10 +567,13 @@ não é aceita com item da sua faixa respondido "não".
 ### Referências visuais
 
 A comparação com Editais reais é parte da demonstração e, para ser repetível, precisa de referência
-disponível. Antes da entrega 1, os documentos de referência DEVEM ser **versionados no diretório
-desta feature** — o `documento2.pdf` como estado inicial, e ao menos um Edital oficial do Cefor
-como alvo. Não sendo possível versioná-los, cada referência DEVE ser identificada por fonte, número,
-ano e página, com a lista das características observáveis que se está comparando.
+disponível no repositório.
+
+O **estado inicial** está versionado em `referencias/estado-inicial-apos-007.pdf` — o documento que
+o sistema produz hoje, depois da `007`. O **alvo** — ao menos um Edital oficial do Cefor — DEVE ser
+versionado no mesmo diretório **antes da entrega 1**, que ele bloqueia. Não sendo possível
+versioná-lo, ele DEVE ser identificado por fonte, número, ano e página, com a lista das
+características observáveis que se está comparando.
 
 *Sem isso a demonstração é reproduzível apenas por quem já viu os documentos, e o critério
 emblemático da feature vira memória.*

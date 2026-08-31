@@ -81,8 +81,9 @@ requisito normativo é sempre a frase antes delas. Lendo só as frases normativa
 itálicos, obtém-se uma spec de produto.
 
 **O que continua proibido, e é o que o item realmente protege.** A spec não escolhe biblioteca (e
-FR-005 proíbe trocar a atual), não desenha classe, não define assinatura de função — FR-035 exige um
-*contexto de publicação explícito e opcional*, não uma assinatura específica —, não escolhe
+FR-005 proíbe trocar a atual), não desenha classe, não define assinatura de função — FR-035 exige que a
+autoridade chegue como *contexto do ato, separado do conteúdo normativo*, e FR-036 fixa sua presença
+pelo modo — nenhum dos dois desenha função —, não escolhe
 estratégia de persistência e não prescreve estrutura de arquivos. As "Instruções para o `/plan`"
 declaram limites, não desenho.
 
@@ -115,11 +116,13 @@ conjunto de quebras do corpo normativo entre prévia e publicado. Foi acrescenta
 para que a demonstração visual seja repetível por quem não escreveu a spec. Só com isso o item
 "Success criteria are measurable" permanece marcado.
 
-**Sobre as referências visuais.** `documento2.pdf` e os Editais 62/73 do Cefor não estão no
-repositório, o que tornava a comparação irreprodutível. A seção `### Referências visuais` passa a
-exigir que sejam versionadas no diretório da feature antes da entrega 1 ou, não sendo possível,
-identificadas por fonte, número, ano, página e características observáveis. **Este é o único item
-pendente de ação externa: os arquivos precisam ser fornecidos.**
+**Sobre as referências visuais.** O **estado inicial já está versionado** em
+`referencias/estado-inicial-apos-007.pdf` — o documento que o sistema produz hoje —, e o cenário-base
+do `quickstart.md` foi reescrito para descrever esse arquivo, e não o `documento2.pdf`, que não está
+no repositório. **Continua pendente o alvo**: ao menos um Edital oficial do Cefor. A seção
+`### Referências visuais` o exige versionado antes da entrega 1, que ele bloqueia, ou identificado
+por fonte, número, ano, página e características observáveis. É o único item pendente de ação
+externa, e não bloqueia o `$speckit-tasks`.
 
 **Sobre o antigo SC-015.** Era um roteiro de conferência visual, não um critério mensurável. Virou a
 seção `## Demonstração visual obrigatória`, que declara explicitamente o que é verificado por
