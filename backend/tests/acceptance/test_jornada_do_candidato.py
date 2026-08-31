@@ -5,11 +5,13 @@ este acrescenta é que as peças se encaixam na ordem em que uma pessoa real as 
 critério do princípio VI da Constituição — capacidade que o domínio sustenta mas que nenhuma
 interface alcança não está entregue.
 
-O que ainda falta aqui é a última parte do SC-017: a equipe abrindo `Inscrições` e visualizando os
-documentos. Ela chega na entrega 6, e este arquivo cresce com ela.
+O percurso inteiro do `SC-017` está aqui: o gestor publica, a candidata se inscreve e recebe
+protocolo, e a equipe abre `Inscrições` e visualiza cada documento sob o requisito que ele atende.
+Sem banco, sem shell, sem API manual — e sem Drive, planilha ou download em lote.
 """
 
 import pytest
+from django.test import Client
 from django.urls import reverse
 
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
@@ -19,11 +21,12 @@ from tests.fixtures.selecao import (
     DOCUMENTO_DE_TODOS,
     DOCUMENTO_DO_PERFIL,
 )
+from tests.interface.conftest import identificar
 
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.acceptance
-def test_do_edital_publicado_ao_protocolo_do_candidato(client, selecao):
+def test_do_edital_publicado_ate_a_equipe_abrir_os_documentos(client, selecao, settings):
     """Gestor publica; candidata encontra, se inscreve e recebe protocolo — só pelo navegador.
 
     `selecao` é o Edital publicado pelo canal administrativo, com três atores distintos —
@@ -110,3 +113,36 @@ def test_do_edital_publicado_ao_protocolo_do_candidato(client, selecao):
     de_volta = client.get(reverse("portal:selecao", args=[selecao.id])).content.decode()
     assert "Inscrição enviada" in de_volta
     assert "Ver comprovante" in de_volta
+
+    # 9. Do outro lado: a equipe abre `Inscrições` e encontra a candidata.
+    equipe = Client()
+    settings.INTERFACE_SELETOR_IDENTIDADE = True
+    identificar(equipe, "bruno.gestor", ["gestor"])
+
+    lista = equipe.get(reverse("interface:inscricoes", args=[selecao.id])).content.decode()
+    assert inscricao.protocolo in lista
+    assert "Maria Silva" in lista
+    assert "***.456.789-**" in lista, "CPF mascarado na listagem"
+    assert "3 de 3" in lista
+
+    # 10. E visualiza cada documento **sob o requisito que ele atende**, dentro do sistema.
+    detalhe = equipe.get(
+        reverse("interface:inscricao-recebida", args=[inscricao.id])
+    ).content.decode()
+    for requisito, arquivo in (
+        ("Documento de identificação", "identidade.pdf"),
+        ("Diploma de graduação", "diploma.pdf"),
+        ("Autodeclaração étnico-racial", "autodeclaracao.pdf"),
+    ):
+        assert requisito in detalhe and arquivo in detalhe
+
+    for requisito in (DOCUMENTO_DE_TODOS, DOCUMENTO_DO_PERFIL, DOCUMENTO_DA_MODALIDADE):
+        aberto = equipe.get(
+            reverse("interface:documento-da-inscricao", args=[inscricao.id, requisito])
+        )
+        assert aberto.status_code == 200
+        assert aberto.headers["Content-Type"] == "application/pdf"
+        assert "inline" in aberto.headers["Content-Disposition"]
+        aberto.close()
+
+    assert "Baixar todos" not in detalhe and "Exportar" not in detalhe

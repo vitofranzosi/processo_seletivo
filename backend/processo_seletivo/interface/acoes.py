@@ -72,6 +72,14 @@ def _navegacao(edital, ator):
     # A permissão que `ACOES_POR_SITUACAO` já declarava desde a `002` e que o template ignorava.
     if edital.status == "PUBLICADO" and ator.can("retificacao:elaborar"):
         yield Acao("retificar", "Retificar", reverse("interface:retificar", args=[edital.id]))
+    # Só depois de publicado: antes disso não há inscrição a consultar, e oferecer a tela vazia
+    # seria oferecer um beco — exatamente o que a `007` tirou desta página.
+    if edital.status in ("PUBLICADO", "ENCERRADO") and ator.can("inscricao:consultar"):
+        yield Acao(
+            "inscricoes",
+            "Inscrições recebidas",
+            reverse("interface:inscricoes", args=[edital.id]),
+        )
     if ator.can("auditoria:consultar"):
         yield Acao(
             "auditoria",

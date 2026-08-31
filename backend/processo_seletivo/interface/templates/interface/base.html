@@ -258,6 +258,16 @@ input.largo,textarea.largo{width:100%;}
 .papel .perms{display:block;font-size:.8125rem;color:var(--texto-fraco)}
 .erro{background:var(--vermelho-fundo);border-left:4px solid var(--vermelho);
   padding:.75rem 1rem;margin-bottom:1rem;border-radius:0 4px 4px 0}
+/* Consulta das inscrições recebidas (009). Reaproveita a tabela e o cartão que já existem; o que
+   é novo é a lista de requisitos, onde o arquivo aparece **dentro** do requisito que ele atende. */
+.dados-da-inscricao{display:grid;grid-template-columns:auto 1fr;gap:.35rem .75rem;margin:0}
+.dados-da-inscricao dt{color:var(--texto-fraco)}
+.dados-da-inscricao dd{margin:0}
+.requisitos-apresentados{list-style:none;margin:0;padding:0;display:grid;gap:.75rem}
+.requisitos-apresentados>li{border:1px solid var(--borda);border-radius:4px;padding:.75rem 1rem;
+  background:var(--branco)}
+.requisito-nome{margin:0 0 .25rem}
+.acoes-do-documento{margin:.5rem 0 0;display:flex;gap:.5rem;flex-wrap:wrap}
 </style>
 </head>
 <body>

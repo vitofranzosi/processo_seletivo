@@ -1,0 +1,48 @@
+{% extends "interface/base.html" %}
+{% block titulo %}Inscrições — {{ edital }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">Inscrições</span>
+</nav>
+
+<h1>Inscrições — {{ total }}</h1>
+<p class="sub">{{ edital.title }}</p>
+
+{% if inscricoes %}
+<table>
+  <caption>Inscrições recebidas neste Edital</caption>
+  <thead>
+    <tr>
+      <th scope="col">Protocolo</th>
+      <th scope="col">Candidato</th>
+      <th scope="col">CPF</th>
+      <th scope="col">Perfil</th>
+      <th scope="col">Concorrência</th>
+      <th scope="col">Documentos</th>
+      <th scope="col">Situação</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for inscricao in inscricoes %}
+    <tr>
+      <td><a href="{% url 'interface:inscricao-recebida' inscricao.id %}">{{ inscricao.protocolo|default:"—" }}</a></td>
+      <td>{{ inscricao.candidato|default:"—" }}</td>
+      {% comment %}
+      Mascarado (FR-073): seis dígitos bastam para conferir contra um documento em mãos, e não
+      bastam para reusar o número em outro lugar.
+      {% endcomment %}
+      <td>{{ inscricao.cpf }}</td>
+      <td>{{ inscricao.perfil }}</td>
+      <td>{{ inscricao.modalidade|default:"—" }}</td>
+      <td>{{ inscricao.recebidos }} de {{ inscricao.esperados }}</td>
+      <td>{% if inscricao.enviada %}Enviada em {{ inscricao.quando|date:"d/m/Y H\hi" }}{% else %}Em preenchimento{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="aviso">Nenhuma inscrição recebida até agora.</p>
+{% endif %}
+{% endblock %}

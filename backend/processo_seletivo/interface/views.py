@@ -17,9 +17,17 @@ from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.auditoria import selectors as auditoria_selectors
+from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.application.identificacao import update_edital_identification
 from processo_seletivo.editais.domain.validation import validate_for_publication
+from processo_seletivo.inscricoes.application.consulta import (
+    CONSULTAR,
+    documento_para_consulta,
+    inscricao_para_consulta,
+    inscricoes_do_edital,
+)
+from processo_seletivo.inscricoes.domain.arquivos import resumo
 from processo_seletivo.interface import (
     acoes,
     atos,
@@ -30,6 +38,7 @@ from processo_seletivo.interface import (
     revisao,
 )
 from processo_seletivo.interface import retificacao as retificacao_ui
+from processo_seletivo.portal.arquivos import entregar
 from processo_seletivo.processos.application.commands import create_process_with_first_edital
 from processo_seletivo.processos.application.selectors import (
     contar_por_situacao,
@@ -49,6 +58,8 @@ from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA, render
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.shared.application.commands import command_context
+from processo_seletivo.shared.http import marcar_como_privada
 
 # Ordem em que as situações aparecem: o fluxo do Edital, não a ordem alfabética.
 ORDEM_SITUACAO = [
@@ -1371,6 +1382,7 @@ OPERACOES = {
     "GRAVAR": "Preenchimento da inscrição",
     "ANEXAR": "Envio de documento",
     "REMOVER": "Remoção de documento",
+    "INTEGRIDADE": "Falha de integridade de documento",
 }
 AGREGADOS = {
     "ProcessoSeletivo": "Processo Seletivo",
@@ -1525,3 +1537,78 @@ def praticar_ato_processo(request, processo_id, acao):
         contexto["pendentes"] = pending_editais(processo) if ato.depende_dos_editais else []
         return render(request, "interface/processo_confirmar.html", contexto, status=exc.status)
     return redirect(f"{reverse('interface:processo-detalhe', args=[processo.id])}?ato={ato.chave}")
+
+
+@require_http_methods(["GET"])
+def inscricoes_recebidas(request, edital_id):
+    """`Inscrições` no contexto do Edital (US6 da 009, FR-066, FR-067).
+
+    A tela que substitui a planilha: quantas chegaram, de quem, para qual Perfil, e quantos
+    documentos vieram dos que aquela inscrição exige. Nada de avaliação — a `009` termina em
+    "recebido e consultável", e a próxima jornada é que transforma isso em avaliável.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital, linhas = inscricoes_do_edital(actor=ator, edital_id=edital_id)
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/inscricoes.html",
+            {"edital": edital, "inscricoes": linhas, "total": len(linhas)},
+        )
+    )
+
+
+@require_http_methods(["GET"])
+def inscricao_recebida(request, inscricao_id):
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    contexto = inscricao_para_consulta(actor=ator, inscricao_id=inscricao_id)
+    return marcar_como_privada(render(request, "interface/inscricao_detalhe.html", contexto))
+
+
+@require_http_methods(["GET"])
+def documento_da_inscricao(request, inscricao_id, requirement_id):
+    """O documento apresentado, conferido **antes** de sair um byte (FR-053a, FR-069).
+
+    A conferência não pode acontecer durante o streaming: uma vez enviados, os bytes não voltam, e
+    descobrir a divergência no meio do arquivo deixaria a pessoa com meio documento e nenhuma
+    explicação. Ler para conferir e depois servir custa uma leitura a mais por consulta — o preço
+    de poder afirmar que o que a comissão abriu é o que o candidato enviou.
+
+    `inline` para ver; `?baixar=1` para guardar. Baixar é ação secundária e individual: não existe
+    download em lote, porque é dele que a feature existe para tirar a equipe (FR-069, FR-084).
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    documento = documento_para_consulta(
+        actor=ator, inscricao_id=inscricao_id, requirement_id=requirement_id
+    )
+    _exigir_integridade(ator, documento, request)
+    return entregar(documento, anexo=bool(request.GET.get("baixar")))
+
+
+def _exigir_integridade(ator, documento, request):
+    with documento.arquivo.open("rb") as conteudo:
+        calculado = resumo(conteudo)
+    if calculado == documento.content_hash:
+        return
+    with command_context() as agora:
+        record_event(
+            actor=ator,
+            permission=CONSULTAR,
+            operation="INTEGRIDADE",
+            aggregate=documento.inscricao,
+            now=agora,
+            correlation_id=getattr(request, "correlation_id", ""),
+            reason=f"requisito {documento.requirement_id}",
+        )
+    raise DomainError(
+        "document_integrity_failed",
+        "O arquivo guardado não confere com o que foi recebido. O documento não pode ser "
+        "apresentado como íntegro; registre a ocorrência e solicite novo envio ao candidato.",
+        409,
+    )

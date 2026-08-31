@@ -4,9 +4,21 @@ import pytest
 from django.urls import reverse
 
 
-def identificar(client, subject, papeis):
+def identificar(client, subject, papeis, escopo=None):
+    """Identidade institucional pela própria tela.
+
+    `escopo` existe para os testes de isolamento: o seletor não o oferece — ele identifica sempre
+    no escopo padrão —, e forçá-lo aqui é o que permite exercitar o que acontece quando o ator é
+    de outra unidade.
+    """
     resposta = client.post(reverse("interface:identificar"), {"subject": subject, "papeis": papeis})
     assert resposta.status_code == 302, resposta.content
+    if escopo is not None:
+        from processo_seletivo.interface.identidade import CHAVE_SESSAO
+
+        sessao = client.session
+        sessao[CHAVE_SESSAO] = {**sessao[CHAVE_SESSAO], "escopo": escopo}
+        sessao.save()
     return resposta
 
 

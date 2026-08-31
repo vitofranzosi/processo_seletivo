@@ -281,19 +281,19 @@ visualizar cada documento sob o requisito que atende — sem baixar nada.
 
 ### Tests for User Story 6
 
-- [ ] T099 [P] [US6] Teste em `backend/tests/integration/interface/test_inscricoes_recebidas.py` — total, colunas mínimas e CPF na máscara canônica `***.456.789-**`, com os dígitos ocultos ausentes do HTML
-- [ ] T100 [P] [US6] Teste em `backend/tests/integration/interface/test_inscricoes_recebidas.py` — o detalhe agrupa cada documento sob o requisito, com o nome original
-- [ ] T101 [P] [US6] Teste em `backend/tests/authorization/test_consulta_administrativa.py` — ator sem permissão ou de outro escopo não alcança lista, detalhe nem arquivo
-- [ ] T102 [P] [US6] Teste em `backend/tests/integration/inscricoes/test_integridade_do_arquivo.py` — resumo divergente recusa a entrega como íntegra e registra o fato
-- [ ] T103 [P] [US6] Teste em `backend/tests/integration/interface/test_sem_avaliacao.py` — nenhuma tela oferece deferimento, nota, parecer, classificação ou download em lote
+- [X] T099 [P] [US6] Teste em `backend/tests/integration/interface/test_inscricoes_recebidas.py` — total, colunas mínimas e CPF na máscara canônica `***.456.789-**`, com os dígitos ocultos ausentes do HTML
+- [X] T100 [P] [US6] Teste em `backend/tests/integration/interface/test_inscricoes_recebidas.py` — o detalhe agrupa cada documento sob o requisito, com o nome original
+- [X] T101 [P] [US6] Teste em `backend/tests/authorization/test_consulta_administrativa.py` — ator sem permissão ou de outro escopo não alcança lista, detalhe nem arquivo
+- [X] T102 [P] [US6] Teste em `backend/tests/integration/inscricoes/test_integridade_do_arquivo.py` — resumo divergente recusa a entrega como íntegra e registra o fato
+- [X] T103 [P] [US6] Teste em `backend/tests/integration/interface/test_sem_avaliacao.py` — nenhuma tela oferece deferimento, nota, parecer, classificação ou download em lote
 
 ### Implementation for User Story 6
 
-- [ ] T104 [US6] Lista `Inscrições` no contexto do Edital, em `backend/processo_seletivo/interface/views.py`, `urls.py` e `templates/interface/inscricoes.html`
-- [ ] T105 [US6] Detalhe da inscrição, com documentos agrupados por requisito e a versão aceita visível, em `templates/interface/inscricao_detalhe.html`
-- [ ] T106 [US6] Entrega institucional do documento em `backend/processo_seletivo/interface/views.py` — exibição `inline` com verificação do resumo em streaming, e **baixar como ação secundária individual** (`attachment`), sem download em lote (FR-069)
-- [ ] T107 [US6] Aplicar o decorador de `backend/processo_seletivo/shared/http.py` às duas telas e à entrega do arquivo em `backend/processo_seletivo/interface/views.py`
-- [ ] T108 [US6] Percorrer a entrega 6 do [quickstart.md](./quickstart.md)
+- [X] T104 [US6] Lista `Inscrições` no contexto do Edital, em `backend/processo_seletivo/interface/views.py`, `urls.py` e `templates/interface/inscricoes.html`
+- [X] T105 [US6] Detalhe da inscrição, com documentos agrupados por requisito e a versão aceita visível, em `templates/interface/inscricao_detalhe.html`
+- [X] T106 [US6] Entrega institucional do documento em `backend/processo_seletivo/interface/views.py` — exibição `inline` com verificação do resumo em streaming, e **baixar como ação secundária individual** (`attachment`), sem download em lote (FR-069)
+- [X] T107 [US6] Aplicar o decorador de `backend/processo_seletivo/shared/http.py` às duas telas e à entrega do arquivo em `backend/processo_seletivo/interface/views.py`
+- [X] T108 [US6] Percorrer a entrega 6 do [quickstart.md](./quickstart.md)
 
 **Checkpoint**: o Drive e a planilha deixam de ser necessários para conferir o que chegou.
 

@@ -27,6 +27,12 @@ PAPEIS = {
     "gestor": (
         "Gestor",
         [
+            # Ler o que os candidatos enviaram é permissão própria, e não efeito colateral de
+            # outra: nenhuma das existentes significa "pode ler dado pessoal de candidato", e
+            # reaproveitar uma para abrir documento comprobatório seria decidir por omissão o que
+            # a Constituição manda decidir explicitamente. O papel é o que já existia — quem
+            # conduz a seleção é quem confere o que chegou (009, FR-072).
+            "inscricao:consultar",
             "processo:criar",
             "processo:ativar",
             "processo:encerrar",

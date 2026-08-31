@@ -28,6 +28,21 @@ urlpatterns = [
     path("editais/<uuid:edital_id>/retificar", views.retificar, name="retificar"),
     path("editais/<uuid:edital_id>/auditoria", views.auditoria, name="auditoria"),
     path(
+        "editais/<uuid:edital_id>/inscricoes",
+        views.inscricoes_recebidas,
+        name="inscricoes",
+    ),
+    path(
+        "inscricoes/<uuid:inscricao_id>/",
+        views.inscricao_recebida,
+        name="inscricao-recebida",
+    ),
+    path(
+        "inscricoes/<uuid:inscricao_id>/documentos/<uuid:requirement_id>",
+        views.documento_da_inscricao,
+        name="documento-da-inscricao",
+    ),
+    path(
         "retificacoes/<uuid:retificacao_id>/",
         views.retificacao_detalhe,
         name="retificacao-detalhe",

@@ -1,0 +1,180 @@
+"""A consulta administrativa do que chegou (US6 da 009, FR-066 a FR-070).
+
+É a metade institucional do objetivo: sem ela o sistema recebe e a equipe continua baixando tudo
+para o Drive. O que se prova aqui é o que substitui a planilha — e o que **não** aparece, porque a
+`009` termina em "recebido e consultável".
+"""
+
+import pytest
+from django.urls import reverse
+
+from processo_seletivo.inscricoes.application.rascunho import anexar_documento, gravar_dados
+from processo_seletivo.inscricoes.application.submissao import enviar_inscricao
+from processo_seletivo.inscricoes.models import DocumentoSubmetido
+from tests.fixtures.candidato import MARIA, MODALIDADE_AC, pdf
+from tests.fixtures.selecao import DOCUMENTO_DE_TODOS, DOCUMENTO_DO_PERFIL
+from tests.interface.conftest import identificar
+
+
+@pytest.fixture
+def inscricao_enviada(inscricao_de_maria):
+    inscricao = gravar_dados(
+        identidade=MARIA, inscricao=inscricao_de_maria, dados={"modality_id": MODALIDADE_AC}
+    )
+    for requisito, nome in ((DOCUMENTO_DE_TODOS, "rg.pdf"), (DOCUMENTO_DO_PERFIL, "diploma.pdf")):
+        anexar_documento(
+            identidade=MARIA, inscricao=inscricao, requirement_id=requisito, arquivo=pdf(nome)
+        )
+    inscricao.refresh_from_db()
+    return enviar_inscricao(
+        identidade=MARIA,
+        inscricao=inscricao,
+        declaracoes={"veracidade": True, "ciencia": True},
+        idempotency_key="envio-consulta",
+    )
+
+
+@pytest.fixture
+def gestor(client, settings):
+    settings.INTERFACE_SELETOR_IDENTIDADE = True
+    identificar(client, "bruno.gestor", ["gestor"])
+    return client
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_lista_mostra_o_total_e_as_colunas_minimas(gestor, selecao, inscricao_enviada):
+    corpo = gestor.get(reverse("interface:inscricoes", args=[selecao.id])).content.decode()
+
+    assert "Inscrições — 1" in corpo
+    assert inscricao_enviada.protocolo in corpo
+    assert "Maria Silva" in corpo
+    assert "Professor de Informática" in corpo
+    assert "Ampla concorrência" in corpo
+    assert "2 de 2" in corpo, "recebidos dos esperados **daquela** inscrição"
+    assert "Enviada em" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_cpf_aparece_mascarado_e_os_digitos_ocultos_nao_estao_no_html(
+    gestor, selecao, inscricao_enviada
+):
+    """FR-073: seis dígitos bastam para conferir contra um documento em mãos."""
+    corpo = gestor.get(reverse("interface:inscricoes", args=[selecao.id])).content.decode()
+
+    assert "***.456.789-**" in corpo
+    assert "123.456.789-09" not in corpo
+    assert "12345678909" not in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_detalhe_agrupa_cada_documento_sob_o_requisito(gestor, inscricao_enviada):
+    corpo = gestor.get(
+        reverse("interface:inscricao-recebida", args=[inscricao_enviada.id])
+    ).content.decode()
+
+    identificacao = corpo.index("Documento de identificação")
+    diploma = corpo.index("Diploma de graduação")
+    assert identificacao < corpo.index("rg.pdf") < diploma, "cada arquivo sob o seu requisito"
+    assert "diploma.pdf" in corpo
+    assert "Versão do Edital aceita" in corpo, "sob qual regra a pessoa se inscreveu (FR-068)"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_requisito_sem_arquivo_aparece_como_nao_apresentado(gestor, inscricao_de_maria):
+    """Requisito sem arquivo é informação — não uma linha que some."""
+    corpo = gestor.get(
+        reverse("interface:inscricao-recebida", args=[inscricao_de_maria.id])
+    ).content.decode()
+
+    assert "Não apresentado" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_documento_abre_no_navegador_e_o_download_e_secundario(gestor, inscricao_enviada):
+    endereco = reverse(
+        "interface:documento-da-inscricao", args=[inscricao_enviada.id, DOCUMENTO_DE_TODOS]
+    )
+
+    inline = gestor.get(endereco)
+    anexo = gestor.get(f"{endereco}?baixar=1")
+
+    assert inline.headers["Content-Type"] == "application/pdf"
+    assert "inline" in inline.headers["Content-Disposition"]
+    assert "no-store" in inline.headers["Cache-Control"]
+    assert "attachment" in anexo.headers["Content-Disposition"]
+    inline.close()
+    anexo.close()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_as_telas_nao_sao_armazenaveis_pelo_navegador(gestor, selecao, inscricao_enviada):
+    lista = gestor.get(reverse("interface:inscricoes", args=[selecao.id]))
+    detalhe = gestor.get(reverse("interface:inscricao-recebida", args=[inscricao_enviada.id]))
+
+    assert "no-store" in lista.headers["Cache-Control"]
+    assert "no-store" in detalhe.headers["Cache-Control"]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_edital_oferece_inscricoes_depois_de_publicado(gestor, selecao, inscricao_enviada):
+    corpo = gestor.get(reverse("interface:detalhe", args=[selecao.id])).content.decode()
+
+    assert "Inscrições recebidas" in corpo
+    assert reverse("interface:inscricoes", args=[selecao.id]) in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_nenhuma_tela_oferece_avaliacao(gestor, selecao, inscricao_enviada):
+    """FR-070: a `009` termina em "recebido e consultável"; a próxima jornada é que avalia."""
+    proibidos = (
+        "Deferir",
+        "Indeferir",
+        "deferimento",
+        "Nota",
+        "Parecer",
+        "Classificação",
+        "Baixar todos",
+        "Exportar",
+    )
+    telas = (
+        gestor.get(reverse("interface:inscricoes", args=[selecao.id])),
+        gestor.get(reverse("interface:inscricao-recebida", args=[inscricao_enviada.id])),
+    )
+
+    for tela in telas:
+        corpo = tela.content.decode()
+        for proibido in proibidos:
+            assert proibido not in corpo, f"{proibido} pertence à jornada da comissão, não a esta"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_arquivo_corrompido_no_disco_nao_e_entregue_como_integro(
+    gestor, inscricao_enviada, raiz_de_arquivos
+):
+    """FR-053a: o resumo é verificado, e a conferência acontece **antes** de sair um byte.
+
+    Uma vez enviados, os bytes não voltam: descobrir a divergência no meio do arquivo deixaria
+    quem consulta com meio documento e nenhuma explicação.
+    """
+    from processo_seletivo.auditoria.models import RegistroAuditoria
+
+    documento = DocumentoSubmetido.objects.get(requirement_id=DOCUMENTO_DE_TODOS)
+    (raiz_de_arquivos / documento.arquivo.name).write_bytes(b"%PDF-1.4\noutro conteudo")
+
+    resposta = gestor.get(
+        reverse("interface:documento-da-inscricao", args=[inscricao_enviada.id, DOCUMENTO_DE_TODOS])
+    )
+
+    assert resposta.status_code == 409
+    assert b"%PDF" not in resposta.content, "nem um byte do arquivo divergente"
+    assert "não confere" in resposta.content.decode()
+    assert RegistroAuditoria.objects.filter(operation="INTEGRIDADE").exists(), "o fato é registrado"

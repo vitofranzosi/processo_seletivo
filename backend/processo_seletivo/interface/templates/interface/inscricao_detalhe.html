@@ -1,0 +1,59 @@
+{% extends "interface/base.html" %}
+{% block titulo %}Inscrição {{ inscricao.protocolo }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' inscricao.edital_id %}">Edital {{ inscricao.edital.number }}/{{ inscricao.edital.year }}</a> ›
+  <a href="{% url 'interface:inscricoes' inscricao.edital_id %}">Inscrições</a> ›
+  <span aria-current="page">{{ inscricao.protocolo|default:"Em preenchimento" }}</span>
+</nav>
+
+<h1>{{ inscricao.nome|default:"Inscrição em preenchimento" }}</h1>
+<p class="sub">{% if inscricao.protocolo %}Protocolo {{ inscricao.protocolo }} ·
+  enviada em {{ inscricao.submitted_at|date:"d/m/Y" }} às {{ inscricao.submitted_at|date:"H\hi" }}{% else %}Ainda não enviada{% endif %}</p>
+
+<section class="conferencia" aria-labelledby="dados-da-inscricao">
+  <h2 id="dados-da-inscricao">Dados da inscrição</h2>
+  <dl class="dados-da-inscricao">
+    <dt>CPF</dt><dd>{{ cpf }}</dd>
+    <dt>E-mail</dt><dd>{{ inscricao.email }}</dd>
+    {% if inscricao.telefone %}<dt>Telefone</dt><dd>{{ inscricao.telefone }}</dd>{% endif %}
+    <dt>Perfil</dt><dd>{{ perfil }}</dd>
+    {% if modalidade %}<dt>Concorrência</dt><dd>{{ modalidade }}</dd>{% endif %}
+    {% comment %}
+    Sob qual regra a pessoa se inscreveu — o que a Constituição exige que se possa responder para
+    cada Inscrição, e o que a comissão vai precisar quando avaliar (FR-068).
+    {% endcomment %}
+    <dt>Versão do Edital aceita</dt>
+    <dd>{% if inscricao.versao_aceita %}vigente desde {{ inscricao.versao_aceita.valid_from|date:"d/m/Y H\hi" }}{% else %}—{% endif %}</dd>
+  </dl>
+</section>
+
+<section class="conferencia" aria-labelledby="documentos-apresentados">
+  <h2 id="documentos-apresentados">Documentos apresentados</h2>
+  {% comment %}
+  A lista é a dos **requisitos**, e o arquivo aparece dentro do seu. É a diferença entre este
+  sistema e uma pasta de arquivos: requisito sem arquivo aparece como requisito sem arquivo, que
+  é informação — não uma linha que some (FR-068).
+  {% endcomment %}
+  <ul class="requisitos-apresentados">
+    {% for documento in documentos %}
+    <li>
+      <p class="requisito-nome"><strong>{{ documento.nome }}</strong>
+        {% if not documento.obrigatorio %}<span class="ajuda">(facultativo)</span>{% endif %}</p>
+      {% if documento.enviado %}
+      <p>{{ documento.enviado.nome_original }}
+        <span class="ajuda">· {{ documento.enviado.uploaded_at|date:"d/m/Y H\hi" }}</span></p>
+      <p class="acoes-do-documento">
+        <a class="acao" href="{% url 'interface:documento-da-inscricao' inscricao.id documento.id %}"
+           target="_blank" rel="noopener">Visualizar</a>
+        <a class="acao" href="{% url 'interface:documento-da-inscricao' inscricao.id documento.id %}?baixar=1">Baixar</a>
+      </p>
+      {% else %}
+      <p class="ajuda">Não apresentado.</p>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}
