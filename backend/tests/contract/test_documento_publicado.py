@@ -68,16 +68,20 @@ def documento(conteudo, content_hash=HASH, *, modo=MODO_PUBLICADO, **kwargs):
 
 PAGINA = re.compile(rb"/Type /Page /Parent")
 TEXTO_PDF = re.compile(rb"\((.*?)\) Tj", re.DOTALL)
+# Só os fluxos de conteúdo das páginas. Desde que o documento embute o brasão, varrer o arquivo
+# inteiro alcançaria os bytes da imagem — que não são texto e não decodificam como tal.
+CONTEUDO_DA_PAGINA = re.compile(rb"<< /Length \d+ >>\nstream\n(.*?)\nendstream", re.DOTALL)
+
+
+def conteudo_das_paginas(pdf: bytes) -> bytes:
+    return b"\n".join(CONTEUDO_DA_PAGINA.findall(pdf))
 
 
 def texto_de(pdf: bytes) -> str:
     return "\n".join(
         parte.replace(b"\\(", b"(").replace(b"\\)", b")").decode("cp1252")
-        for parte in TEXTO_PDF.findall(pdf)
+        for parte in TEXTO_PDF.findall(conteudo_das_paginas(pdf))
     )
-
-
-FLUXO = re.compile(rb"stream\n(.*?)\nendstream", re.DOTALL)
 
 
 def paginas_de(pdf: bytes) -> list[list[str]]:
@@ -92,7 +96,7 @@ def paginas_de(pdf: bytes) -> list[list[str]]:
             parte.replace(b"\\(", b"(").replace(b"\\)", b")").decode("cp1252")
             for parte in TEXTO_PDF.findall(fluxo)
         ]
-        for fluxo in FLUXO.findall(pdf)
+        for fluxo in CONTEUDO_DA_PAGINA.findall(pdf)
     ]
 
 

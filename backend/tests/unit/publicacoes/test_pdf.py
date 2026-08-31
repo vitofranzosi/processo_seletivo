@@ -63,13 +63,20 @@ def documento(conteudo, content_hash=HASH, *, modo=None, **kwargs):
     kwargs.setdefault("autoridade", AUTORIDADE_DA_SUITE)
     return render_edital_pdf(conteudo, content_hash, **kwargs)
 TEXTO_PDF = re.compile(rb"\((.*?)\) Tj", re.DOTALL)
+# Só os fluxos de conteúdo das páginas. Desde que o documento embute o brasão, varrer o arquivo
+# inteiro alcançaria os bytes da imagem — que não são texto e não decodificam como tal.
+CONTEUDO_DA_PAGINA = re.compile(rb"<< /Length \d+ >>\nstream\n(.*?)\nendstream", re.DOTALL)
+
+
+def conteudo_das_paginas(pdf: bytes) -> bytes:
+    return b"\n".join(CONTEUDO_DA_PAGINA.findall(pdf))
 
 
 def texto_de(pdf: bytes) -> str:
     """Extrai o texto realmente desenhado, não o que se supõe ter sido escrito."""
     return "\n".join(
         parte.replace(b"\\(", b"(").replace(b"\\)", b")").decode("cp1252")
-        for parte in TEXTO_PDF.findall(pdf)
+        for parte in TEXTO_PDF.findall(conteudo_das_paginas(pdf))
     )
 
 
@@ -93,7 +100,7 @@ def linhas_desenhadas(pdf: bytes) -> list[tuple[str, str, float, float]]:
             float(tamanho),
             float(x) - MARGEM,
         )
-        for fonte, tamanho, x, texto in DESENHADA.findall(pdf)
+        for fonte, tamanho, x, texto in DESENHADA.findall(conteudo_das_paginas(pdf))
     ]
 
 
@@ -676,7 +683,7 @@ def test_a_numeracao_nao_e_persistida_no_texto_da_secao():
 
 def paginas_de(pdf: bytes) -> list[list[str]]:
     """O texto de cada página, na ordem — onde a paginação fica observável."""
-    fluxos = re.findall(rb"stream\n(.*?)\nendstream", pdf, re.DOTALL)
+    fluxos = CONTEUDO_DA_PAGINA.findall(pdf)
     return [
         [
             parte.replace(b"\\(", b"(").replace(b"\\)", b")").decode("cp1252")
@@ -695,7 +702,7 @@ def alturas_por_pagina(pdf: bytes) -> list[list[float]]:
     """As alturas em que cada página desenhou texto — onde a densidade fica observável."""
     return [
         [float(y) for y in ALTURA_DA_LINHA.findall(fluxo)]
-        for fluxo in re.findall(rb"stream\n(.*?)\nendstream", pdf, re.DOTALL)
+        for fluxo in CONTEUDO_DA_PAGINA.findall(pdf)
     ]
 
 
@@ -1309,7 +1316,7 @@ def test_o_texto_normativo_alcanca_as_duas_margens():
             float(x) - MARGEM,
             float(espaco),
         )
-        for espaco, fonte, corpo, x, texto in JUSTIFICADA.findall(pdf)
+        for espaco, fonte, corpo, x, texto in JUSTIFICADA.findall(conteudo_das_paginas(pdf))
     ]
 
     assert justificadas, "nenhuma linha foi justificada"
@@ -1357,3 +1364,45 @@ def test_a_medicao_de_um_bloco_atravessa_os_quadros_que_ele_contem():
             or (codigo == "DOC-INFO" and linha == "Mestrado em Computação ou área afim")
         }
         assert len(onde) == 1, f"o Perfil {codigo} ficou partido entre as páginas {sorted(onde)}"
+
+
+def test_o_documento_abre_com_o_brasao_da_republica():
+    """FR-008, reaberto: um asset institucional fixo, e nada além.
+
+    O brasão foi recortado do cabeçalho do Edital 146/2025 do Cefor — mesmo símbolo, mesma
+    resolução, mesmo tamanho que os Editais publicados usam. Não há branding configurável, imagem
+    por Processo nem engine de assets: o documento tem um símbolo, e ele é o da República.
+    """
+    from processo_seletivo.publicacoes.infrastructure import brasao
+
+    pdf = documento(snapshot(), HASH)
+
+    # A imagem existe como objeto do documento, com as dimensões do arquivo versionado.
+    assert b"/Subtype /Image" in pdf
+    assert f"/Width {brasao.LARGURA} /Height {brasao.ALTURA}".encode() in pdf
+    assert brasao.FLUXO in pdf, "o fluxo da imagem não foi embutido"
+
+    # E é desenhada **só na primeira página**: repeti-la seria papel timbrado, não ato.
+    fluxos = CONTEUDO_DA_PAGINA.findall(pdf)
+    assert b"Do" in fluxos[0]
+    for seguinte in fluxos[1:]:
+        assert b"Do" not in seguinte
+
+    # O órgão começa abaixo do brasão, e não por baixo dele.
+    from processo_seletivo.publicacoes.infrastructure.pdf import ALTURA_DO_BRASAO, TOPO
+
+    altura_do_ministerio = next(
+        y
+        for linha, y in zip(
+            [texto for texto, _, _, _ in linhas_desenhadas(pdf)],
+            alturas_por_pagina(pdf)[0],
+            strict=False,
+        )
+        if linha == "Ministério da Educação"
+    )
+    assert altura_do_ministerio < TOPO - ALTURA_DO_BRASAO
+
+
+def test_o_brasao_nao_torna_o_documento_indeterministico():
+    """A imagem é constante, e comprimida uma vez na importação (SC-013)."""
+    assert documento(snapshot(), HASH) == documento(snapshot(), HASH)

@@ -23,13 +23,20 @@ from tests.fixtures.publicacao import publish_original, retify
 from tests.interface.conftest import compor_rascunho, identificar
 
 TEXTO_PDF = re.compile(rb"\((.*?)\) Tj", re.DOTALL)
+# Só os fluxos de conteúdo das páginas. Desde que o documento embute o brasão, varrer o arquivo
+# inteiro alcançaria os bytes da imagem — que não são texto e não decodificam como tal.
+CONTEUDO_DA_PAGINA = re.compile(rb"<< /Length \d+ >>\nstream\n(.*?)\nendstream", re.DOTALL)
+
+
+def conteudo_das_paginas(pdf: bytes) -> bytes:
+    return b"\n".join(CONTEUDO_DA_PAGINA.findall(pdf))
 
 
 def texto_de_pdf_bytes(pdf: bytes) -> str:
     """O texto realmente desenhado — não o que se supõe ter sido escrito."""
     return "\n".join(
         parte.replace(b"\\(", b"(").replace(b"\\)", b")").decode("cp1252")
-        for parte in TEXTO_PDF.findall(pdf)
+        for parte in TEXTO_PDF.findall(conteudo_das_paginas(pdf))
     )
 
 

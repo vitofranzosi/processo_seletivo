@@ -55,8 +55,9 @@ resultado; a evidência técnica que as motivou e o desenho que as cumpre estão
    última — diferença admitida entre prévia e publicado.
 3. **Sem praça, sem data e sem cadastro de pessoas.** Uma linha como "Vitória (ES), 30 de agosto de
    2026" exigiria conceitos que o sistema não tem. A V1 materializa o que existe.
-4. **Identidade visual gráfica fica fora da V1.** O reconhecimento institucional é obtido pelo
-   cabeçalho tipográfico; imagem é custo desproporcional ao ganho remanescente (FR-007).
+4. **Identidade visual gráfica: um asset institucional fixo, e nada além.** *Decisão revista.* O
+   brasão da República abre o documento; o que continua fora é **sistema** de identidade visual —
+   branding configurável, imagem por Processo, tema, engine de assets (FR-008).
 
 ## Princípios desta feature
 
@@ -320,11 +321,14 @@ evidência que o motivou — pertence a [research.md](./research.md) e [plan.md]
   tipográfico", que produziria um título fora do padrão institucional.*
 - **FR-007**: O título/objeto do Edital DEVE aparecer imediatamente associado ao ato, e a descrição
   curta NÃO DEVE competir tipograficamente com ele.
-- **FR-008**: Brasão, logotipo e qualquer elemento gráfico de identidade visual ficam **fora da V1**.
-  Nenhuma imagem é embutida no documento, nenhum recurso binário é acrescentado ao repositório e
-  nenhum sistema de branding é criado. *O cabeçalho tipográfico entrega a maior parte do
-  reconhecimento institucional a uma fração do custo de embutir imagem. Se a diferença continuar
-  incomodando depois desta feature, ela se trata especificamente.*
+- **FR-008**: A primeira página DEVE abrir com o **brasão da República**, acima da identificação do
+  órgão. É **um** asset institucional fixo, constante e versionado; nenhum outro elemento gráfico
+  entra, e ele não se repete nas demais páginas. **Limites**: nada de branding configurável,
+  logotipo por Processo ou por campus, tema, escolha de imagem pelo operador ou engine de assets.
+  *Decisão revista. A primeira redação punha a identidade gráfica fora da V1 por velocidade; vista
+  a distância que restava contra os alvos, o brasão passou a ser o elemento isolado de maior
+  impacto perceptivo, e o custo — uma imagem conhecida, constante e conferível em diff — é
+  proporcional.*
 - **FR-009**: A materialização DEVE definir apenas os níveis tipográficos necessários:
   identificação institucional, título do ato, título de seção, subseção/bloco, corpo e
   nota/metadado. Nenhum design system de documentos é criado.
@@ -556,7 +560,7 @@ hoje, depois da `007`.
 
 | Observado nos dois alvos | Consequência para a `008` |
 |---|---|
-| Brasão centralizado no topo | **Diferença aceita** — FR-008 põe imagem fora da V1 |
+| Brasão centralizado no topo | **Incorporado** — FR-008, decisão revista |
 | Órgão, instituição e unidade centralizados, em corpo menor que o do texto | FR-005 |
 | Órgão em quatro linhas, caixa mista, **maior** que o corpo do texto | FR-005, corrigido pelo Edital 146/2025 — era o menor, e a abertura parecia nota de rodapé |
 | Ato e objeto numa **sentença só**, em negrito, caixa alta e centralizados, em corpo próximo ao do texto | FR-006, corrigido por esta calibração |
@@ -603,8 +607,8 @@ Desta feature inteira, e sem exceção:
 - **Exportação**: DOCX, ODT, LaTeX, HTML público alternativo;
 - **Assinatura**: certificado, ICP-Brasil, gov.br, QR code, carimbo eletrônico, imagem de
   assinatura;
-- **Identidade visual**: brasão, logotipo, tema, branding por campus, editor de cabeçalho, escolha
-  de fonte, personalização de cor;
+- **Identidade visual**: logotipo, tema, branding por campus, editor de cabeçalho, escolha de
+  fonte, personalização de cor, e qualquer imagem além do brasão fixo de FR-008;
 - **Domínio**: Processo, estados, homologação, publicação, Retificação, snapshot, hash, Perfis,
   Cronograma, Etapas, modalidades, conteúdo textual, catálogo de seções, regras de submissão;
 - **Produto**: candidato, inscrição, documentos do candidato, comissão, avaliação.

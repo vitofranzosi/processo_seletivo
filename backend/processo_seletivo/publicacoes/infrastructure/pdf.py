@@ -18,7 +18,7 @@ from datetime import datetime
 from django.utils import timezone
 
 from processo_seletivo.editais.domain.secoes import GERADA
-from processo_seletivo.publicacoes.infrastructure import humano
+from processo_seletivo.publicacoes.infrastructure import brasao, humano
 
 LARGURA, ALTURA = 595, 842  # A4 em pontos
 MARGEM = 56
@@ -26,6 +26,7 @@ TOPO = ALTURA - 64
 RODAPE = 56
 
 REGULAR, NEGRITO = "F1", "F2"
+NOME_DO_BRASAO = "Im1"
 
 # Larguras em milésimos de em, para ASCII 32 a 126, na ordem do código (`008`, D-001).
 #
@@ -608,6 +609,11 @@ class Composicao:
 # código e o título do Processo justamente para que o documento possa nomeá-lo.
 # Quatro linhas, em caixa mista, como nos três Editais de referência — a unidade quebra em duas
 # porque o nome é longo, e quebrá-la no lugar certo é decisão editorial, não refluxo.
+# O brasão abre a primeira página, acima do órgão. Altura em pontos; a largura acompanha a
+# proporção do arquivo, para que o símbolo nunca saia deformado.
+ALTURA_DO_BRASAO = 42.0
+LARGURA_DO_BRASAO = ALTURA_DO_BRASAO * brasao.LARGURA / brasao.ALTURA
+
 ORGAO = (
     "Ministério da Educação",
     "Instituto Federal do Espírito Santo",
@@ -623,12 +629,15 @@ def _cabecalho(composicao, snapshot):
     e centralização**, não de corpo grande. Nos dois alvos o ato está em corpo próximo ao do texto,
     e destacar por tamanho produziria um título fora do padrão institucional.
     """
+    # O brasão é desenhado fora do fluxo, em posição fixa na primeira página; aqui só se reserva
+    # a altura dele, para que o órgão comece abaixo e não por baixo.
+    composicao.espaco(ALTURA_DO_BRASAO + 6)
     for indice, linha in enumerate(ORGAO):
         composicao.escrever(
             linha,
             tamanho=CORPO_INSTITUCIONAL,
             alinhamento=CENTRO,
-            antes=0.0 if indice else 6.0,
+            antes=0.0 if indice else 4.0,
         )
     # Ato e objeto numa frase só, em negrito e caixa alta, como nos três Editais de referência.
     # Separá-los em linhas de corpos diferentes é o que fazia o documento parecer capa de
@@ -1107,8 +1116,17 @@ def _integridade(composicao, snapshot, content_hash):
     composicao.escrever(f"SHA-256 do conteúdo: {content_hash}", tamanho=CORPO_NOTA)
 
 
-def _fluxo_da_pagina(linhas, rodape, marca="", tracos=()):
+def _fluxo_da_pagina(linhas, rodape, marca="", tracos=(), com_brasao=False):
     partes = []
+    if com_brasao:
+        # `cm` põe a matriz de escala e a posição; `Do` desenha o XObject. `q`/`Q` isolam a
+        # transformação para que nada depois dela herde a escala da imagem.
+        x = (LARGURA - LARGURA_DO_BRASAO) / 2
+        y = TOPO - ALTURA_DO_BRASAO + 4
+        partes.append(
+            f"q {LARGURA_DO_BRASAO:.2f} 0 0 {ALTURA_DO_BRASAO:.2f} {x:.2f} {y:.2f} cm "
+            f"/{NOME_DO_BRASAO} Do Q".encode()
+        )
     # Os fios primeiro: no PDF, o que é emitido depois cobre o que veio antes. Emitir contorno
     # antes de letra garante que nenhum fio passe por cima de um glifo — sem precisar de camada,
     # z-index ou qualquer conceito de composição gráfica (D-002).
@@ -1208,12 +1226,13 @@ def render_edital_pdf(
             f"{identificacao} · Página {numero} de {len(paginas)}",
             marca=MARCA_DE_PREVIA if previa else "",
             tracos=tracos,
+            com_brasao=numero == 1,
         )
         for numero, (linhas, tracos) in enumerate(paginas, 1)
     ]
 
-    # Objetos: 1 catálogo, 2 páginas, 3 e 4 fontes, depois pares página/conteúdo.
-    primeiro_pagina = 5
+    # Objetos: 1 catálogo, 2 páginas, 3 e 4 fontes, 5 brasão, depois pares página/conteúdo.
+    primeiro_pagina = 6
     ids_paginas = [primeiro_pagina + indice * 2 for indice in range(len(fluxos))]
     objetos = [
         b"<< /Type /Catalog /Pages 2 0 R >>",
@@ -1224,11 +1243,19 @@ def render_edital_pdf(
         ),
         b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
         b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
+        (
+            f"<< /Type /XObject /Subtype /Image /Width {brasao.LARGURA} "
+            f"/Height {brasao.ALTURA} /ColorSpace /DeviceRGB /BitsPerComponent 8 "
+            f"/Filter /FlateDecode /Length {len(brasao.FLUXO)} >>\nstream\n".encode()
+            + brasao.FLUXO
+            + b"\nendstream"
+        ),
     ]
     for indice, fluxo in enumerate(fluxos):
         objetos.append(
             f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {LARGURA} {ALTURA}] ".encode()
-            + b"/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> "
+            + b"/Resources << /Font << /F1 3 0 R /F2 4 0 R >> "
+            + f"/XObject << /{NOME_DO_BRASAO} 5 0 R >> >> ".encode()
             + f"/Contents {ids_paginas[indice] + 1} 0 R >>".encode()
         )
         objetos.append(

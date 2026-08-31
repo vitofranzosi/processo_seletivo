@@ -206,7 +206,6 @@ requisito, e a quarta é dado, não composição.*
 
 | Diferença | Situação | Onde está decidida |
 |---|---|---|
-| **Brasão** no topo, como nos Editais 62 e 73 | fora da V1 | FR-008 — exigiria embutir imagem no documento |
 | **Numeração de item** dentro da seção (`1.1`, `3.2.1`) | fora da V1 | P-003 — o conteúdo das seções textuais é texto livre, e numerar parágrafo automaticamente seria engine normativa |
 | Autoridade impressa como `Reitora do Ifes — Reitora` | dado, não composição | Assumptions — o catálogo de demonstração traz cargo no campo de nome; corrigir a redação é trabalho editorial |
 
