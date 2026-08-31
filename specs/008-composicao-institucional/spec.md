@@ -8,7 +8,8 @@
 
 **Input**: Leitura do documento produzido pelo sistema após a integração da `007`
 (`documento2.pdf`), comparado com Editais reais do Cefor, e reconciliação dessa leitura com o
-compositor real (`publicacoes/infrastructure/pdf.py`) antes do planejamento.
+compositor existente antes do planejamento. As evidências técnicas dessa reconciliação estão
+registradas em [research.md](./research.md).
 
 ## A frase que governa esta feature
 
@@ -38,35 +39,24 @@ tabular.
 
 Esta feature é a distância entre as duas coisas, e só ela.
 
-## Reconciliação com o compositor real
+## Decisões fechadas antes do planejamento
 
-*Esta seção existe porque a primeira redação desta spec foi escrita olhando o PDF, e não o código.
-Ela produziu requisitos já satisfeitos, requisitos que colidiam com invariantes vigentes e
-requisitos cuja pré-condição técnica não existe. As decisões abaixo estão fechadas: o `/plan` as
-executa, não as negocia.*
+*A primeira redação desta spec foi escrita olhando o documento, e não o sistema que o produz. Ela
+propôs requisitos já satisfeitos, requisitos que colidiam com garantias vigentes e requisitos cuja
+condição de possibilidade não existia. As quatro decisões abaixo fecham isso em termos de
+resultado; a evidência técnica que as motivou e o desenho que as cumpre estão em
+[research.md](./research.md).*
 
-O compositor é artesanal e não tem dependência externa (`publicacoes/infrastructure/pdf.py`). Ele
-emite **exclusivamente** operadores de texto (`BT … Tj ET`), quebra linha contando **caracteres**
-(`_quebrar`, com um fator médio de largura de `0,52`), pagina uma lista **plana** de linhas
-independentes (`Composicao.paginar`) e é uma função pura de `(snapshot, content_hash, modo)`.
-
-Disso decorrem seis decisões, e elas são o núcleo desta spec:
-
-1. **A autoridade signatária é metadado do ato, não conteúdo normativo.** `signatory_name` e
-   `signatory_role` vivem em `Publicacao`, não no snapshot. O snapshot **não** ganha autoridade
-   signatária para que o PDF possa desenhá-la: ela chega ao compositor como contexto do ato,
-   separado do conteúdo, e os dois fluxos de publicação já o têm em mãos no momento em que chamam o
-   renderizador. A presença é **determinada pelo modo** (FR-036), não pelo chamador.
-2. **Prévia não tem assinatura.** Ela não decorre de uma Publicação. Essa é a segunda — e última —
-   diferença admitida entre prévia e publicado.
-3. **Sem praça, sem data, sem cadastro de pessoas.** "Vitória (ES), 30 de agosto de 2026" exigiria
-   um conceito que o sistema não tem. A V1 materializa o que existe.
-4. **Brasão fica fora da V1.** Embutir imagem num PDF artesanal significa XObject, recurso binário
-   e compressão — muita mecânica para um ganho que o cabeçalho tipográfico entrega em boa parte.
-5. **Métrica de fonte e primitivas gráficas são autorizadas explicitamente.** Não se pode exigir
-   centralização, colunas e tabelas de um compositor proibido de medir texto e de desenhar linha.
-6. **A paginação evolui de linha para bloco.** Não se pode exigir "Perfil não partido no meio" de
-   um paginador que só conhece linhas independentes.
+1. **A autoridade signatária é metadado do ato, não conteúdo normativo.** Ela não passa a integrar o
+   conteúdo publicado para que o documento possa exibi-la: chega à materialização como contexto do
+   ato, separado do conteúdo, e sua presença é determinada pelo modo do documento (FR-034), não por
+   quem o solicita.
+2. **A prévia não tem autoridade**, porque não decorre de uma Publicação. Essa é a segunda — e
+   última — diferença admitida entre prévia e publicado.
+3. **Sem praça, sem data e sem cadastro de pessoas.** Uma linha como "Vitória (ES), 30 de agosto de
+   2026" exigiria conceitos que o sistema não tem. A V1 materializa o que existe.
+4. **Identidade visual gráfica fica fora da V1.** O reconhecimento institucional é obtido pelo
+   cabeçalho tipográfico; imagem é custo desproporcional ao ganho remanescente (FR-007).
 
 ## Princípios desta feature
 
@@ -74,7 +64,7 @@ Disso decorrem seis decisões, e elas são o núcleo desta spec:
 
 **Formatação humana é responsabilidade exclusiva da materialização. A representação canônica do
 snapshot, inclusive decimais, não é alterada pela `008`.** Nenhum requisito desta feature toca
-`edital_snapshot`, `SCHEMA_VERSION`, o cálculo do hash, a forma publicada ou a gramática de
+o conteúdo publicado, sua versão canônica, o cálculo do hash, a forma publicada ou a gramática de
 endereçamento da Retificação. Este é o mesmo guardrail da `007`, reafirmado porque uma feature
 puramente visual é exatamente o lugar onde ele seria abandonado por conveniência.
 
@@ -88,12 +78,12 @@ nenhuma apresentação estruturada e não guarda no domínio nada que exista ape
 Não existe editor visual, tema, template builder, linguagem de template, HTML/CSS configurável,
 escolha de fonte, cor personalizável, DOCX nem importação. Existe **um layout institucional V1**.
 
-### P-004 — Capacidade técnica estreita, autorizada nominalmente
+### P-004 — Os limites são nomeados, não deduzidos
 
-Os requisitos visuais desta feature exigem três capacidades que o compositor não tem: medir texto,
-desenhar linha e paginar por bloco. As três estão autorizadas em FR-002, FR-003 e FR-004, **e
-nenhuma outra está**. Autorizar nominalmente é o que impede tanto a paralisia ("§ diz para não criar
-framework, então finjo tabela com espaço") quanto a expansão ("já que vou mexer no paginador…").
+Um requisito visual sem limite escrito é aberto por omissão, e uma proibição genérica de "não criar
+framework" paralisa o trabalho que ela deveria apenas conter. Por isso FR-002, FR-003 e FR-004
+declaram **o resultado exigido e a fronteira de cada um**, e nenhum outro resultado visual é exigido
+por esta feature. Como cada fronteira é cumprida é decisão do plano.
 
 ### P-005 — Estruturado vira apresentação estruturada
 
@@ -270,18 +260,18 @@ aparece ao final do documento; gerar a prévia do mesmo Edital e conferir que n�
 ### Edge Cases
 
 - **Seção materializada vazia.** Uma seção gerada cuja coleção está vazia continua não sendo
-  materializada, e a numeração é atribuída depois dessa supressão (FR-012).
-- **Perfil maior que uma página inteira.** A quebra desce a cascata de FR-022 até a primeira
-  alternativa exequível, e o título do Perfil nunca fica sozinho (FR-023).
+  materializada, e a numeração é atribuída depois dessa supressão (FR-011).
+- **Perfil maior que uma página inteira.** A quebra desce a cascata de FR-021 até a primeira
+  alternativa exequível, e o título do Perfil nunca fica sozinho (FR-022).
 - **Sub-bloco maior que uma página inteira.** Atribuições, descrição, lista de requisitos ou tabela
   de modalidades que não caibam sozinhas em uma página quebram internamente, por parágrafo, item ou
-  linha (FR-022, alternativas 2 e 3). Nenhuma configuração de conteúdo pode tornar a composição
+  linha (FR-021, alternativas 2 e 3). Nenhuma configuração de conteúdo pode tornar a composição
   impossível.
-- **Tabela maior que uma página.** O cabeçalho se repete na continuação e nunca fica órfão (FR-027).
+- **Tabela maior que uma página.** O cabeçalho se repete na continuação e nunca fica órfão (FR-026).
 - **Texto mais largo que a coluna da tabela.** A célula quebra em mais de uma linha; a linha da
   tabela cresce; a coluna não estoura a margem.
 - **Autoridade cujo nome registrado é uma designação de cargo.** O documento imprime o que a
-  Publicação registrou, sem inventar nome próprio (FR-034 e Assumptions).
+  Publicação registrou, sem inventar nome próprio (FR-033 e Assumptions).
 - **Prévia de Edital ainda incompleto.** Continua compondo o que existe, sem assinatura e sem
   afirmação de integridade.
 - **Publicação já existente.** Conserva seus bytes e seu `document_hash`; a composição nova vale
@@ -289,100 +279,83 @@ aparece ao final do documento; gerar a prévia do mesmo Edital e conferir que n�
 
 ## Requirements *(mandatory)*
 
-### Capacidades técnicas autorizadas
+### Fronteiras da materialização
 
-*Este bloco declara **resultados e limites**, não desenho. Ele existe porque a diretriz "não crie
-framework" — correta — precisa de um limite escrito para não virar proibição de fazer o trabalho, e
-porque um requisito visual sem limite declarado é aberto por omissão.*
-
-*As decisões técnicas que fecham cada limite — como medir texto, como a composição representa um
-fio, como o paginador reconhece um bloco — **pertencem ao `research.md`/`plan.md`**, e o `/plan` DEVE
-registrá-las lá com a alternativa considerada e a razão da escolha. O que aparece abaixo em itálico
-é a evidência que motivou o limite, não a solução.*
+*Este bloco declara **resultados e limites observáveis**. Como cada limite é cumprido — e a
+evidência que o motivou — pertence a [research.md](./research.md) e [plan.md](./plan.md).*
 
 - **FR-001**: **Formatação humana é responsabilidade exclusiva da materialização. A representação
   canônica do snapshot, inclusive decimais, não é alterada pela `008`.** Nenhum requisito desta
-  feature altera `edital_snapshot`, `SCHEMA_VERSION`, o cálculo do hash, a forma publicada ou o
-  endereçamento da Retificação.
-- **FR-002**: A materialização DEVE posicionar texto pela largura real que ele ocupa, e não por
-  estimativa: linha centralizada fica centralizada, coluna alinhada fica alinhada e nenhuma linha
-  estoura a margem. Esta capacidade é limitada ao necessário para esta feature — **sem hifenização,
-  sem justificação, sem fonte nova e sem fonte embutida**; as fontes continuam sendo as duas que o
-  documento já usa. *A quebra atual conta caracteres e assume um fator médio de largura de 0,52
-  (`_quebrar`), o que é conservador para refluxo e inservível para centralizar ou alinhar coluna.
-  Sem esta autorização, os requisitos de cabeçalho e de tabela seriam cumpridos com espaço em
-  branco, que é o defeito que esta feature existe para corrigir.*
-- **FR-003**: A materialização DEVE poder delimitar visualmente um bloco e separar as colunas de
-  uma tabela. O vocabulário visual do documento está limitado a **texto, fio e contorno**: ficam
-  fora ícone, sombra, cartão, gradiente, imagem, fundo e paleta — o documento é preto sobre branco.
-  Essa capacidade NÃO DEVE ser generalizada para outros tipos de documento nem resultar em framework
-  de layout. *Hoje a composição só sabe escrever texto; quadro e tabela são impossíveis sem isto.*
-- **FR-004**: A paginação DEVE decidir onde quebrar considerando o conteúdo como blocos com
-  fronteiras conhecidas, e não como linhas independentes. **Somente** as regras de FR-021, FR-022,
-  FR-023, FR-027 e FR-031 justificam essa capacidade, e nenhum algoritmo geral de composição
-  tipográfica DEVE ser construído. *Hoje a paginação percorre uma lista plana de linhas, e por isso
-  "não partir o Perfil" e "não deixar título órfão" são inexprimíveis.*
-- **FR-005**: Nenhuma outra capacidade nova é autorizada. O mecanismo de geração do documento NÃO
-  DEVE ser substituído e nenhuma dependência de renderização DEVE ser introduzida, salvo impedimento
-  concreto e demonstrado para cumprir um requisito desta spec — caso em que o impedimento se
-  registra no `research.md` antes de a substituição começar.
+  feature altera o conteúdo publicado, sua versão canônica, o cálculo do hash, a forma publicada ou
+  o endereçamento da Retificação.
+- **FR-002**: Texto centralizado DEVE ficar visualmente centralizado, coluna alinhada DEVE ficar
+  alinhada e nenhuma linha DEVE ultrapassar a margem — em qualquer conteúdo do Edital, inclusive com
+  acentuação. **Limites**: o documento não hifeniza, não justifica, não introduz tipografia nova e
+  mantém as duas famílias que já usa.
+- **FR-003**: Um bloco DEVE ser visualmente delimitado e as colunas de uma tabela DEVEM ser
+  visualmente separadas. **Limites**: o vocabulário visual do documento é **texto, fio e contorno**,
+  preto sobre branco; ficam fora ícone, sombra, cartão, gradiente, imagem, fundo e paleta. Nada
+  disso DEVE ser generalizado para outros tipos de documento.
+- **FR-004**: A quebra de página DEVE respeitar as fronteiras do conteúdo, e não apenas o fim do
+  espaço disponível. **Limites**: as únicas fronteiras que o documento reconhece são as de FR-020,
+  FR-021, FR-022, FR-026 e FR-030; nenhuma outra regra de composição tipográfica é exigida por esta
+  feature.
 
 ### Identidade institucional e hierarquia (US1)
 
-- **FR-006**: A primeira página DEVE abrir com cabeçalho institucional tipográfico composto por
+- **FR-005**: A primeira página DEVE abrir com cabeçalho institucional tipográfico composto por
   `MINISTÉRIO DA EDUCAÇÃO`, `INSTITUTO FEDERAL DO ESPÍRITO SANTO` e a denominação da unidade
   responsável, seguidos do ato, do Processo Seletivo e do título do Edital. *Órgão, instituição e
   unidade são constantes do compositor — a unidade já é hoje, escrita em linha única. Ato, Processo
   e título vêm do snapshot, que desde a `007` carrega `processoCode` e `processoTitle`.*
-- **FR-007**: O ato — `EDITAL Nº <número>/<ano>` — DEVE ser destacado por **peso, caixa alta e
+- **FR-006**: O ato — `EDITAL Nº <número>/<ano>` — DEVE ser destacado por **peso, caixa alta e
   centralização**, e não por corpo tipográfico grande. *Correção calibrada contra os alvos: nos
   Editais 62 e 73 o ato é negrito, maiúsculo e centralizado, em corpo próximo ao do texto — a
   hierarquia vem da forma, não do tamanho. A primeira redação exigia "o maior destaque
   tipográfico", que produziria um título fora do padrão institucional.*
-- **FR-008**: O título/objeto do Edital DEVE aparecer imediatamente associado ao ato, e a descrição
+- **FR-007**: O título/objeto do Edital DEVE aparecer imediatamente associado ao ato, e a descrição
   curta NÃO DEVE competir tipograficamente com ele.
-- **FR-009**: Brasão, logotipo e qualquer elemento gráfico de identidade visual ficam **fora da V1**.
+- **FR-008**: Brasão, logotipo e qualquer elemento gráfico de identidade visual ficam **fora da V1**.
   Nenhuma imagem é embutida no documento, nenhum recurso binário é acrescentado ao repositório e
-  nenhum sistema de branding é criado. *Embutir imagem exigiria XObject, compressão e recurso
-  binário determinístico num compositor que hoje só escreve texto; o cabeçalho tipográfico entrega a
-  maior parte do reconhecimento institucional a uma fração do custo. Se a diferença continuar
+  nenhum sistema de branding é criado. *O cabeçalho tipográfico entrega a maior parte do
+  reconhecimento institucional a uma fração do custo de embutir imagem. Se a diferença continuar
   incomodando depois desta feature, ela se trata especificamente.*
-- **FR-010**: A materialização DEVE definir apenas os níveis tipográficos necessários:
+- **FR-009**: A materialização DEVE definir apenas os níveis tipográficos necessários:
   identificação institucional, título do ato, título de seção, subseção/bloco, corpo e
   nota/metadado. Nenhum design system de documentos é criado.
-- **FR-011**: As seções normativas DEVEM ser numeradas na materialização, na ordem institucional já
+- **FR-010**: As seções normativas DEVEM ser numeradas na materialização, na ordem institucional já
   definida pelo conteúdo publicado — `1. APRESENTAÇÃO`, `2. DAS DISPOSIÇÕES PRELIMINARES`, e assim
   por diante até a última.
-- **FR-012**: A numeração DEVE ser atribuída **depois** de determinadas quais seções serão
+- **FR-011**: A numeração DEVE ser atribuída **depois** de determinadas quais seções serão
   efetivamente materializadas. *O compositor já suprime seção gerada cuja coleção está vazia; numerar
   antes da supressão produziria `5.`, `7.`, `8.` num Edital sem Etapas — um defeito que só apareceria
   em produção, no Edital que não tem tudo.*
-- **FR-013**: A numeração NÃO DEVE ser persistida como parte do texto da seção. Alterar a ordem ou o
+- **FR-012**: A numeração NÃO DEVE ser persistida como parte do texto da seção. Alterar a ordem ou o
   catálogo no futuro DEVE produzir numeração coerente sem edição de conteúdo.
-- **FR-014**: Subseções — Etapas de Avaliação, e Perfis quando couber — DEVEM ser numeradas a partir
-  do número da seção-mãe (`6.1`, `6.2`), sob a mesma regra de FR-012.
+- **FR-013**: Subseções — Etapas de Avaliação, e Perfis quando couber — DEVEM ser numeradas a partir
+  do número da seção-mãe (`6.1`, `6.2`), sob a mesma regra de FR-011.
 
 ### Perfil de Vaga como quadro (US2)
 
-- **FR-015**: Cada Perfil DEVE ser materializado como bloco visualmente delimitado, distinguível do
+- **FR-014**: Cada Perfil DEVE ser materializado como bloco visualmente delimitado, distinguível do
   Perfil seguinte sem que o leitor precise reler.
-- **FR-016**: A identificação do Perfil — código, denominação, localidade, vagas imediatas e
+- **FR-015**: A identificação do Perfil — código, denominação, localidade, vagas imediatas e
   cadastro reserva — DEVE usar disposição tabular curta, e não uma sequência de linhas
   `rótulo: valor`.
-- **FR-017**: NÃO DEVE ser criada uma tabela única contendo todos os campos do Perfil. Descrição,
+- **FR-016**: NÃO DEVE ser criada uma tabela única contendo todos os campos do Perfil. Descrição,
   atribuições, requisitos e modalidades permanecem blocos próprios.
-- **FR-018**: Requisitos permanecem em lista.
-- **FR-019**: Modalidades de concorrência DEVEM ser apresentadas em tabela simples com modalidade,
+- **FR-017**: Requisitos permanecem em lista.
+- **FR-018**: Modalidades de concorrência DEVEM ser apresentadas em tabela simples com modalidade,
   percentual e fundamento. Versão e vigência da Regra Normativa, quando existirem, DEVEM permanecer
   no documento — em coluna ou em linha secundária —, e a frase técnica atual
   `Regra Normativa — fundamento: …; versão: …; percentual: …` deixa de ser composta. *Tabular não
   pode virar perder: o estado atual imprime esses dois campos, e a composição nova os mantém.*
-- **FR-020**: Nenhuma célula DEVE ser preenchida com informação inexistente. Modalidade sem
+- **FR-019**: Nenhuma célula DEVE ser preenchida com informação inexistente. Modalidade sem
   percentual apresenta a célula vazia ou o traço de ausência já usado no documento, nunca um valor
   construído nem uma frase técnica.
-- **FR-021**: Um Perfil que não couber no espaço restante da página, mas couber inteiro na página
+- **FR-020**: Um Perfil que não couber no espaço restante da página, mas couber inteiro na página
   seguinte, DEVE ser movido integralmente.
-- **FR-022**: Um Perfil grande demais para uma página DEVE quebrar segundo esta cascata, na ordem,
+- **FR-021**: Um Perfil grande demais para uma página DEVE quebrar segundo esta cascata, na ordem,
   parando na primeira alternativa exequível:
   1. entre seus sub-blocos — identificação, descrição, atribuições, requisitos, modalidades —,
      mantendo cada sub-bloco inteiro;
@@ -395,47 +368,46 @@ registrá-las lá com a alternativa considerada e a razão da escolha. O que apa
   de texto livre não tem limite de tamanho, e atribuições de três páginas tornariam a regra
   impossível de cumprir. A cascata preserva a intenção — quebrar no lugar menos ruim disponível — e
   termina sempre em uma alternativa que existe.*
-- **FR-023**: O título de um Perfil NÃO DEVE ficar isolado no fim de uma página.
+- **FR-022**: O título de um Perfil NÃO DEVE ficar isolado no fim de uma página.
 
 ### Cronograma e Etapas (US3)
 
-- **FR-024**: O Cronograma DEVE ser apresentado em tabela, com ordem, evento, início e término.
-- **FR-025**: Evento pontual NÃO DEVE apresentar término. A ausência é apresentada como ausência.
-- **FR-026**: A descrição do Evento PODE permanecer junto do evento quando curta, ou em linha
+- **FR-023**: O Cronograma DEVE ser apresentado em tabela, com ordem, evento, início e término.
+- **FR-024**: Evento pontual NÃO DEVE apresentar término. A ausência é apresentada como ausência.
+- **FR-025**: A descrição do Evento PODE permanecer junto do evento quando curta, ou em linha
   secundária quando longa.
-- **FR-027**: O cabeçalho de uma tabela NÃO DEVE ser separado de sua primeira linha, e DEVE ser
+- **FR-026**: O cabeçalho de uma tabela NÃO DEVE ser separado de sua primeira linha, e DEVE ser
   repetido quando a tabela atravessar a quebra de página. *Com FR-004 isso deixa de ser custoso, e
   por isso a spec o exige em vez de deixá-lo como evolução posterior.*
-- **FR-028**: As Etapas de Avaliação DEVEM apresentar caráter, peso e nota mínima em pares
+- **FR-027**: As Etapas de Avaliação DEVEM apresentar caráter, peso e nota mínima em pares
   rótulo-valor alinhados, substituindo a frase corrida
   `caráter: …; peso: …; nota mínima: …`. Cada um continua omitido quando não existe.
-- **FR-029**: A referência da Etapa ao Cronograma continua derivada do vínculo existente. Datas NÃO
+- **FR-028**: A referência da Etapa ao Cronograma continua derivada do vínculo existente. Datas NÃO
   DEVEM ser duplicadas no domínio nem no snapshot.
 
 ### Tipografia, espaçamento e paginação (US4)
 
-- **FR-030**: O texto normativo DEVE ter largura de linha adequada, entrelinha consistente,
+- **FR-029**: O texto normativo DEVE ter largura de linha adequada, entrelinha consistente,
   distância previsível entre parágrafos e alinhamento coerente com documento institucional.
-- **FR-031**: Um título de seção NÃO DEVE terminar sozinho no rodapé; ele desce junto de ao menos
+- **FR-030**: Um título de seção NÃO DEVE terminar sozinho no rodapé; ele desce junto de ao menos
   parte do primeiro conteúdo da seção. A regra vale igualmente para subtítulos de Perfil e de Etapa.
-- **FR-032**: O espaçamento DEVE distinguir seção nova, bloco dentro da seção, parágrafo e tabela.
+- **FR-031**: O espaçamento DEVE distinguir seção nova, bloco dentro da seção, parágrafo e tabela.
   O objetivo é espaço semântico, não compactação.
-- **FR-033**: A quebra de linha DEVE passar a usar a largura real do texto (FR-002), substituindo a
+- **FR-032**: A quebra de linha DEVE passar a usar a largura real do texto (FR-002), substituindo a
   contagem de caracteres.
 
 ### Autoridade e integridade (US5)
 
-- **FR-034**: Após o conteúdo normativo, o documento **publicado** DEVE exibir bloco de autoridade
+- **FR-033**: Após o conteúdo normativo, o documento **publicado** DEVE exibir bloco de autoridade
   signatária com o nome e o cargo **registrados na própria Publicação**, sem consulta a catálogo e
   sem transformação. *O que a Publicação registrou é o que o ato afirma; o catálogo é a origem da
   escolha, não a fonte de verdade do que foi assinado.*
-- **FR-035**: A autoridade signatária NÃO DEVE entrar no snapshot. Ela DEVE chegar ao compositor
+- **FR-034**: A autoridade signatária NÃO DEVE entrar no snapshot. Ela DEVE chegar ao compositor
   como **contexto do ato, explícito e separado do conteúdo normativo**. O corpo normativo continua
   sendo função pura do snapshot; o bloco de autoridade é o único elemento derivado de metadado do
-  ato. *Os dois fluxos de publicação — o do Edital (`publicacoes/application/publish_edital.py`) e o
-  da Retificação (`publicacoes/application/retificacoes.py`) — já têm a autoridade em mãos no
-  momento em que chamam o renderizador; nenhum deles precisa de consulta nova.*
-- **FR-036**: A presença da autoridade é **determinada pelo modo**, e não pelo chamador:
+  ato. *Os dois fluxos de publicação — o do Edital e o da Retificação — já dispõem da autoridade no
+  momento em que o documento é materializado.*
+- **FR-035**: A presença da autoridade é **determinada pelo modo**, e não pelo chamador:
   - em modo publicado ela é **obrigatória**, e compor sem ela DEVE ser recusado;
   - em modo prévia ela é **proibida**, e ainda que seja oferecida NÃO DEVE ser composta.
 
@@ -444,27 +416,27 @@ registrá-las lá com a alternativa considerada e a razão da escolha. O que apa
   autoridade, o que tornava possível emitir um ato administrativo sem quem o praticou — e a
   opcionalidade do parâmetro na interface interna não é a mesma coisa que opcionalidade da
   informação no documento.*
-- **FR-037**: O bloco de autoridade NÃO DEVE conter praça nem data. *Praça não existe no sistema, e
+- **FR-036**: O bloco de autoridade NÃO DEVE conter praça nem data. *Praça não existe no sistema, e
   a data do ato não é conteúdo normativo. Introduzir qualquer um dos dois para poder escrever a
   linha "Vitória (ES), 30 de agosto de 2026" seria criar conceito por motivo tipográfico.*
-- **FR-038**: NÃO DEVEM ser criados assinatura digital, imagem de assinatura, certificado,
+- **FR-037**: NÃO DEVEM ser criados assinatura digital, imagem de assinatura, certificado,
   ICP-Brasil, gov.br, QR code nem carimbo eletrônico. Esta é a representação documental da
   autoridade que já praticou o ato, e nada além.
-- **FR-039**: A declaração de integridade DEVE ser deslocada para bloco discreto **após** o bloco de
+- **FR-038**: A declaração de integridade DEVE ser deslocada para bloco discreto **após** o bloco de
   autoridade, tipograficamente subordinado ao conteúdo normativo, sem perder nenhuma informação
   necessária ao mecanismo. Nenhuma página nova e nenhum serviço novo são criados para isso.
-- **FR-040**: `Versão do schema` NÃO DEVE aparecer como seção normativa do Edital. Ela permanece no
+- **FR-039**: `Versão do schema` NÃO DEVE aparecer como seção normativa do Edital. Ela permanece no
   mecanismo e no snapshot; o que muda é o que se imprime como corpo do ato.
-- **FR-041**: O SHA-256 completo permanece no bloco de verificação e o abreviado permanece no
+- **FR-040**: O SHA-256 completo permanece no bloco de verificação e o abreviado permanece no
   rodapé. A afirmação de derivação da versão homologada permanece.
 
 ### Prévia e publicado
 
-- **FR-042**: Prévia e publicado DEVEM utilizar o mesmo compositor e a mesma composição normativa.
+- **FR-041**: Prévia e publicado DEVEM utilizar o mesmo compositor e a mesma composição normativa.
   As diferenças admitidas são **exclusivamente** a identificação de prévia e os metadados próprios
   do ato de Publicação — autoridade signatária e declaração de integridade. Nenhuma regra visual
   DEVE existir só na prévia.
-- **FR-043**: A marca de prévia NÃO DEVE alterar as quebras de página do conteúdo normativo: para
+- **FR-042**: A marca de prévia NÃO DEVE alterar as quebras de página do conteúdo normativo: para
   o mesmo snapshot, o conjunto de quebras do corpo normativo é o mesmo na prévia e no publicado.
   *"Não alterar significativamente" era inverificável e deixava a decisão para quem implementa. O
   corpo normativo é a parte comum aos dois modos, e por isso é sobre ele que a igualdade se afirma —
@@ -473,20 +445,18 @@ registrá-las lá com a alternativa considerada e a razão da escolha. O que apa
 
 ### Retificação
 
-- **FR-044**: Todo documento consolidado produzido após Retificação DEVE usar exatamente a mesma
+- **FR-043**: Todo documento consolidado produzido após Retificação DEVE usar exatamente a mesma
   composição institucional definida nesta feature, e recebe a autoridade signatária da própria
   Publicação da Retificação. Nenhum caminho visual paralelo é criado.
 
 ### Fixture documental
 
-- **FR-045**: Cada entrega que alterar intencionalmente a composição DEVE regenerar a fixture
-  contratual do documento publicado pelo script existente, **no mesmo commit** da alteração do
-  compositor, com o diff do documento gerado revisado como parte da implementação. Alterar a fixture
-  sem alteração intencional da composição continua sendo erro. A partir de FR-036, o gerador da
-  fixture e os testes do modo publicado DEVEM passar uma **autoridade fixa e versionada** ao lado do
-  snapshot de referência, pela mesma razão que o snapshot é versionado: sem ela a fixture deixaria
-  de ser reproduzível. *A fixture compara bytes e existe para acusar mudança não intencional; sem
-  esta regra, toda entrega desta feature pareceria estar apagando a evidência que a fixture guarda.*
+- **FR-044**: A evidência de que o documento publicado não mudou por acidente DEVE ser refeita
+  **apenas junto de uma mudança intencional de composição, na mesma revisão que a produz**, com a
+  diferença resultante conferida. Refazê-la para calar um teste que falhou continua sendo erro. Essa
+  evidência DEVE permanecer reproduzível por quem não participou da mudança — o que exige que tudo
+  de que ela depende, inclusive a autoridade signatária exigida por FR-035, esteja versionado ao
+  lado dela.
 
 ### Key Entities
 
@@ -522,8 +492,8 @@ compositor, que ganha um parâmetro de contexto do ato.
 - **SC-011**: `Versão do schema` não figura como seção normativa; o bloco de verificação está após a
   assinatura e é tipograficamente discreto; o SHA-256 completo e o abreviado permanecem onde o
   mecanismo os exige.
-- **SC-012**: Nenhuma alteração de `edital_snapshot`, `SCHEMA_VERSION`, forma canônica, cálculo de
-  hash ou gramática de endereçamento é necessária para cumprir a feature.
+- **SC-012**: Nenhuma alteração do conteúdo publicado, da sua versão canônica, da forma canônica,
+  do cálculo de hash ou da gramática de endereçamento é necessária para cumprir a feature.
 - **SC-013**: O mesmo snapshot com a mesma autoridade produz os mesmos bytes em modo publicado; o
   mesmo snapshot produz os mesmos bytes em modo prévia; compor um publicado sem autoridade é
   recusado; e o corpo normativo continua composto sem consulta ao banco.
@@ -581,11 +551,11 @@ oficiais do Cefor. As características observáveis contra as quais a rubrica é
 
 | Observado nos dois alvos | Consequência para a `008` |
 |---|---|
-| Brasão centralizado no topo | **Diferença aceita** — FR-009 põe imagem fora da V1 |
-| Órgão, instituição e unidade centralizados, em corpo menor que o do texto | FR-006 |
-| Ato em negrito, caixa alta e centralizado, em corpo próximo ao do texto | FR-007, corrigido por esta calibração |
+| Brasão centralizado no topo | **Diferença aceita** — FR-008 põe imagem fora da V1 |
+| Órgão, instituição e unidade centralizados, em corpo menor que o do texto | FR-005 |
+| Ato em negrito, caixa alta e centralizado, em corpo próximo ao do texto | FR-006, corrigido por esta calibração |
 | Parágrafo de preâmbulo não numerado, antes da seção 1 | Já existe como seção de Apresentação |
-| Seções `1. DAS DISPOSIÇÕES PRELIMINARES`, negrito e caixa alta | FR-011 |
+| Seções `1. DAS DISPOSIÇÕES PRELIMINARES`, negrito e caixa alta | FR-010 |
 | Itens numerados `1.1`, `2.1`, `3.2.1` dentro da seção | **Diferença aceita** — o conteúdo das seções textuais é texto livre, e numerar parágrafo automaticamente seria engine normativa, vedada por P-003 |
 | Corpo **justificado** nos dois alvos | **Diferença aceita e declarada** — FR-002 exclui justificação da V1. É a maior diferença remanescente depois do brasão |
 
@@ -646,38 +616,8 @@ não a contagem de testes.
 | 2 (US2) | Perfis em quadro e Perfil que não parte no meio | Primitivas gráficas (FR-003) e paginação por bloco (FR-004) |
 | 3 (US3) | Cronograma em tabela e Etapas em pares rótulo-valor | — |
 | 4 (US4) | Órfãos, quebras, espaçamento e refinamento tipográfico | — |
-| 5 (US5) | Autoridade signatária e integridade discreta ao final | Contexto de publicação no compositor (FR-035) |
+| 5 (US5) | Autoridade signatária e integridade discreta ao final | Contexto de publicação no compositor (FR-034) |
 
 **A entrega 1 precisa mudar visivelmente a primeira página.** Não é aceitável uma primeira entrega
 que introduza capacidade sem resultado visual — a métrica de fonte viaja *dentro* do cabeçalho
 centralizado, não antes dele.
-
-## Instruções para o `/plan`
-
-**Objetivo: chegar à implementação pelo menor caminho.** O compositor atual funciona; esta feature o
-evolui incrementalmente. Havendo uma solução simples específica para o Edital e uma solução genérica
-para documentos futuros, usar a específica.
-
-Seis avisos derivados do que esta spec verificou no código:
-
-1. **As três capacidades de FR-002, FR-003 e FR-004 são autorizadas e necessárias.** Não as evite
-   por causa de "não crie framework": tabela fingida com espaço, cabeçalho centralizado por
-   contagem de caractere e Perfil partido no meio são o resultado de evitá-las. O que continua
-   proibido é generalizar para outros tipos de documento, criar camada de abstração para documento
-   futuro e construir design system.
-2. **A assinatura entra por parâmetro, nunca pelo snapshot.** Qualquer proposta que acrescente
-   autoridade signatária a `edital_snapshot` viola P-001, FR-001 e FR-035 — e quebraria hash,
-   reprodutibilidade e endereçamento de Retificação de uma vez. Os dois chamadores já têm o dado.
-3. **A numeração é atribuída depois da filtragem.** É o único defeito desta feature que não
-   aparece no cenário-base: ele só se manifesta num Edital sem Etapas de Avaliação. Cubra-o com
-   teste.
-4. **A fixture de bytes vai mudar, e isso é previsto.** Regenerá-la é parte da entrega, no mesmo
-   commit, com diff revisado (FR-045). O que continua sendo erro é regenerá-la para fazer um teste
-   passar.
-5. **Três chamadores, uma composição.** Publicação, Retificação e prévia usam o mesmo compositor.
-   A Retificação é fácil de esquecer porque não tem tela própria de prévia.
-6. **Nada aqui é migration.** Se aparecer campo persistido, tabela, migration ou permissão nova, o
-   requisito foi lido errado.
-
-Não há questão de desenho aberta. As seis decisões da seção "Reconciliação com o compositor real"
-foram fechadas antes desta redação justamente para que o `/plan` não as renegocie a cada retângulo.

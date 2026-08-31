@@ -21,7 +21,7 @@ porque a `008` é uma feature de apresentação sobre mecanismos já consolidado
 
 **O corpo normativo é função pura do conteúdo publicado.** Nenhuma consulta ao banco, nenhuma
 leitura de relógio, nenhuma variável de ambiente e nenhum estado global participam da sua composição
-(FR-035, SC-013). O contexto do ato é o **único** elemento externo, e materializa apenas o bloco de
+(FR-034, SC-013). O contexto do ato é o **único** elemento externo, e materializa apenas o bloco de
 autoridade.
 
 ### A.2 Regra de presença, por modo
@@ -41,7 +41,7 @@ publicado sem quem o praticou.*
 | Chamador | Modo | `AutoridadeSignataria` | Observação |
 |---|---|---|---|
 | `publicacoes/application/publish_edital.py` | `PUBLISHED` | do `signatory` já resolvido | compõe **antes** de `Publicacao.objects.create` — por isso o contexto chega por parâmetro |
-| `publicacoes/application/retificacoes.py` | `PUBLISHED` | idem, da Publicação da Retificação | documento consolidado usa a **mesma** composição (FR-044) |
+| `publicacoes/application/retificacoes.py` | `PUBLISHED` | idem, da Publicação da Retificação | documento consolidado usa a **mesma** composição (FR-043) |
 | `interface/views.py` (prévia) | `PREVIEW` | nenhuma | não decorre de Publicação |
 | `scripts/gerar_fixture_documento.py` | `PUBLISHED` | fixa e versionada | sem ela a fixture não gera (D-009) |
 
@@ -52,7 +52,7 @@ publicado sem quem o praticou.*
 ### B.1 Ordem do documento
 
 ```text
-FLUXO NORMATIVO — geometria idêntica nos dois modos (FR-043)
+FLUXO NORMATIVO — geometria idêntica nos dois modos (FR-042)
   cabeçalho institucional      órgão · instituição · unidade   (constantes)
   ato                          EDITAL Nº <número>/<ano>        (maior corpo da página)
   Processo e título            do snapshot
@@ -66,41 +66,41 @@ REGIÃO FIXA — fora do fluxo, em toda página, não participa da paginação
 ```
 
 *A marca de prévia está **fora** do fluxo por decisão D-011: dentro dele ela empurraria o conteúdo e
-faria a prévia quebrar em lugares diferentes do publicado, que é o que FR-043 proíbe. Fora dele, a
+faria a prévia quebrar em lugares diferentes do publicado, que é o que FR-042 proíbe. Fora dele, a
 igualdade das quebras é garantida por construção, e a marca passa a aparecer em todas as páginas.*
 
 ### B.2 Vocabulário visual
 
 Fechado: **texto, fio e contorno**. Ficam fora ícone, sombra, cartão, gradiente, imagem, fundo e
-paleta. O documento é preto sobre branco (FR-003, FR-009).
+paleta. O documento é preto sobre branco (FR-003, FR-008).
 
-Níveis tipográficos, e apenas estes (FR-010): identificação institucional · título do ato · título
+Níveis tipográficos, e apenas estes (FR-009): identificação institucional · título do ato · título
 de seção · subseção/bloco · corpo · nota/metadado.
 
 ### B.3 Materialização por tipo de conteúdo
 
 | Conteúdo | Forma | Requisito |
 |---|---|---|
-| Seção textual | parágrafos preservados, numerada | FR-011, invariante da `006.1` |
-| Perfil de Vaga | bloco com moldura; identificação tabular; requisitos em lista; modalidades em tabela | FR-015 a FR-020 |
-| Cronograma | tabela — ordem, evento, início, término | FR-024 a FR-027 |
-| Etapa de Avaliação | subseção numerada com pares rótulo-valor alinhados | FR-014, FR-028 |
-| Autoridade | nome e cargo, sem praça e sem data | FR-034, FR-037 |
-| Verificação | após a autoridade, corpo de nota | FR-039 a FR-041 |
+| Seção textual | parágrafos preservados, numerada | FR-010, invariante da `006.1` |
+| Perfil de Vaga | bloco com moldura; identificação tabular; requisitos em lista; modalidades em tabela | FR-014 a FR-019 |
+| Cronograma | tabela — ordem, evento, início, término | FR-023 a FR-026 |
+| Etapa de Avaliação | subseção numerada com pares rótulo-valor alinhados | FR-013, FR-027 |
+| Autoridade | nome e cargo, sem praça e sem data | FR-033, FR-036 |
+| Verificação | após a autoridade, corpo de nota | FR-038 a FR-040 |
 
 ### B.4 Regras de quebra
 
 | Regra | Requisito |
 |---|---|
-| Título — de seção, Perfil ou Etapa — nunca fecha página sem conteúdo abaixo | FR-023, FR-031 |
-| Perfil que cabe inteiro na página seguinte não é partido | FR-021 |
-| Perfil grande desce a cascata: sub-bloco → unidade interna → linha | FR-022 |
-| Cabeçalho de tabela não se separa da primeira linha e se repete na continuação | FR-027 |
-| As quebras do corpo normativo são idênticas entre prévia e publicado | FR-043 |
+| Título — de seção, Perfil ou Etapa — nunca fecha página sem conteúdo abaixo | FR-022, FR-030 |
+| Perfil que cabe inteiro na página seguinte não é partido | FR-020 |
+| Perfil grande desce a cascata: sub-bloco → unidade interna → linha | FR-021 |
+| Cabeçalho de tabela não se separa da primeira linha e se repete na continuação | FR-026 |
+| As quebras do corpo normativo são idênticas entre prévia e publicado | FR-042 |
 
 ### B.5 Ausência
 
-Nenhuma célula, rótulo ou linha é preenchida com informação inexistente (FR-020, FR-025). A ausência
+Nenhuma célula, rótulo ou linha é preenchida com informação inexistente (FR-019, FR-024). A ausência
 é materializada como ausência, na forma que o documento já usa.
 
 ---
@@ -118,7 +118,7 @@ Nenhuma célula, rótulo ou linha é preenchida com informação inexistente (FR
 | Snapshot: mesmas chaves, mesma forma canônica, mesmo hash | suíte canônica existente |
 | Representação decimal canônica intocada; formatação humana só no compositor | FR-001, `humano.py` |
 | Gramática de endereçamento da Retificação intocada | suíte de `changes.py` |
-| Declaração de integridade preserva o SHA-256 completo e a afirmação de derivação | FR-041 |
+| Declaração de integridade preserva o SHA-256 completo e a afirmação de derivação | FR-040 |
 | Corpo normativo composto sem consulta ao banco | `test_o_snapshot_basta_para_compor_o_documento` |
 | Mesma entrada produz os mesmos bytes | `test_the_same_snapshot_always_produces_the_same_bytes` |
 

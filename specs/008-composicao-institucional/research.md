@@ -9,6 +9,31 @@ plano diz como.
 
 Todo o desenho abaixo cabe em um arquivo de produção, `publicacoes/infrastructure/pdf.py`.
 
+## O ponto de partida — a reconciliação que originou as decisões
+
+*Esta descrição estava na spec e foi movida para cá: é evidência técnica, e a Constituição manda que
+a spec fique com resultado e limite. Ela é o que torna cada decisão abaixo contestável com o código
+na mão.*
+
+O compositor é artesanal e não tem dependência externa. Ele emite **exclusivamente** operadores de
+texto (`BT … Tj ET`), quebra linha contando **caracteres** (`_quebrar`, com um fator médio de largura
+de `0,52`), pagina uma lista **plana** de linhas independentes (`Composicao.paginar`) e é função pura
+de `(snapshot, content_hash, modo)`.
+
+Disso decorre por que cada fronteira da spec precisou ser escrita:
+
+| Fronteira na spec | O que o compositor não tinha | Decisão |
+|---|---|---|
+| FR-002 — texto posicionado por largura real | métrica de fonte | D-001 |
+| FR-003 — bloco delimitado, colunas separadas | qualquer primitiva gráfica | D-002, D-003 |
+| FR-004 — quebra respeita fronteiras do conteúdo | noção de bloco | D-004 |
+| FR-034, FR-035 — autoridade no publicado | canal para metadado do ato | D-005 |
+| FR-042 — prévia não altera as quebras | marca fora do fluxo | D-011 |
+
+E a autoridade signatária, concretamente: `signatory_name` e `signatory_role` vivem em `Publicacao`,
+não no snapshot; o documento é composto **antes** de a `Publicacao` existir; e os dois chamadores já
+têm o `signatory` em mãos nesse ponto.
+
 ---
 
 ## D-001 — Como o compositor passa a medir texto
@@ -88,7 +113,7 @@ linha.* Duplica a medição, desalinha por arredondamento e obriga o desenho a a
 ## D-004 — Como a paginação passa a enxergar blocos
 
 **Decisão**: a composição ganha **abertura e fechamento de bloco**, com um nível de aninhamento que
-reflete a cascata de FR-022: Perfil → sub-bloco → unidade interna. A paginação passa a duas
+reflete a cascata de FR-021: Perfil → sub-bloco → unidade interna. A paginação passa a duas
 passadas: mede a altura do bloco aberto e decide se ele cabe no espaço restante antes de começar a
 colocá-lo.
 
@@ -125,7 +150,7 @@ Cada uma vira teste antes de virar código.
 **Alternativas recusadas**:
 
 - *Marcar linhas com um rótulo "não separar da próxima" e paginar em uma passada.* Resolve título
-  órfão (FR-031) e não resolve "o Perfil inteiro cabe na página seguinte" (FR-021), porque decidir
+  órfão (FR-030) e não resolve "o Perfil inteiro cabe na página seguinte" (FR-020), porque decidir
   isso exige conhecer a altura total antes de começar.
 - *Motor de layout genérico com caixas, fluxos e restrições.* É precisamente o que FR-004 proíbe, e
   cinco regras de quebra não justificam.
@@ -138,7 +163,7 @@ Cada uma vira teste antes de virar código.
 parâmetro nomeado do renderizador, separado do snapshot.
 
 *O nome importa. `Assinatura` — que era como este documento o chamava — descreveria um mecanismo
-que a feature explicitamente não constrói (FR-038: sem certificado, sem imagem, sem ICP), e
+que a feature explicitamente não constrói (FR-037: sem certificado, sem imagem, sem ICP), e
 colidiria com a linguagem ubíqua. `Autoridade Signatária` é o termo que a Constituição já usa para
 exatamente isto: quem praticou o ato, com nome e cargo.* A presença é validada **pelo modo**: publicado exige e recusa se
 faltar; prévia recusa se for oferecida.
@@ -156,12 +181,12 @@ publicado sem quem o praticou.
 
 **Alternativas recusadas**:
 
-- *Pôr a autoridade no snapshot.* Viola FR-001 e FR-035, muda `SCHEMA_VERSION`, muda o hash, torna
+- *Pôr a autoridade no snapshot.* Viola FR-001 e FR-034, muda `SCHEMA_VERSION`, muda o hash, torna
   Editais publicados irretificáveis e faz a Retificação poder endereçar quem assinou. Um custo
   enorme por um bloco de duas linhas no rodapé do documento.
 - *O compositor consultar a `Publicacao`.* Impossível pela ordem de criação, e quebraria a pureza
   que `test_o_snapshot_basta_para_compor_o_documento` guarda.
-- *Um segundo renderizador para o publicado.* Viola FR-042 e recria a divergência silenciosa que o
+- *Um segundo renderizador para o publicado.* Viola FR-041 e recria a divergência silenciosa que o
   parâmetro de modo existe para impedir.
 - *Parâmetro opcional sem validação por modo.* Era a primeira redação, e admitia publicar sem
   autoridade. A opcionalidade do argumento na interface interna não é a mesma coisa que a
@@ -178,10 +203,10 @@ seção-mãe já resolvido.
 **Racional**: o compositor já suprime seção gerada cuja coleção está vazia. Numerar durante a
 iteração produziria `5.`, `7.`, `8.` num Edital sem Etapas de Avaliação — um defeito que **não
 aparece no cenário-base**, porque ele tem tudo preenchido, e que só se manifestaria no primeiro
-Edital real incompleto. Por isso FR-012 é explícito e por isso o teste é obrigatório.
+Edital real incompleto. Por isso FR-011 é explícito e por isso o teste é obrigatório.
 
 **Alternativa recusada**: *numerar no catálogo de seções.* Poria numeração de apresentação no
-domínio, violaria FR-013 e faria o número sobreviver à supressão.
+domínio, violaria FR-012 e faria o número sobreviver à supressão.
 
 ---
 
@@ -192,8 +217,11 @@ distribuída na coluna de texto livre. Célula que ainda assim não couber quebr
 e a linha da tabela cresce.
 
 **Racional**: proporção fixa quebra no primeiro dado real — uma localidade longa ou um fundamento
-normativo por extenso estoura a coluna ou deixa metade da página vazia. Medir é possível porque
-D-001 existe; sem ele esta decisão não teria alternativa boa.
+normativo por extenso estoura a coluna ou deixa metade da página vazia.
+
+**Esta decisão não introduz capacidade nova.** Ela é aplicação direta de FR-002, já entregue em
+D-001: medir uma célula é a mesma operação de medir uma linha. Por isso a tabela de ordem de entrega
+da spec não registra capacidade nova na entrega 3 — não há nenhuma.
 
 **Alternativas recusadas**:
 
@@ -216,7 +244,7 @@ o documento possa nomear o Processo sem UUID; o cabeçalho é o segundo consumid
 **Alternativas recusadas**:
 
 - *Unidade configurável por Processo.* Fora de escopo, e criaria dado de domínio por motivo visual.
-- *Brasão como imagem.* FR-009 põe fora da V1: exigiria XObject, compressão e recurso binário
+- *Brasão como imagem.* FR-008 põe fora da V1: exigiria XObject, compressão e recurso binário
   determinístico num compositor que hoje só escreve texto, para um ganho que o cabeçalho tipográfico
   entrega em boa parte.
 
@@ -227,14 +255,14 @@ o documento possa nomear o Processo sem UUID; o cabeçalho é o segundo consumid
 **Decisão**: a fixture é regenerada **no mesmo commit** de cada entrega que muda a composição, pelo
 script existente, com o diff do documento revisado. Ela conserva o nome; o que muda é o conteúdo. E
 o gerador passa a receber uma **autoridade fixa, versionada** ao lado do snapshot de referência, em
-`tests/contract/fixtures/assinatura_publicada.json`.
+`tests/contract/fixtures/autoridade_publicada.json`.
 
 **Racional**: a fixture prova ausência de mudança **desde a última mudança intencional** — não
 ausência de mudança para sempre. O nome do arquivo é o do contrato do documento publicado, não o da
 versão da composição, e renomeá-lo a cada entrega criaria cinco arquivos binários e nenhuma
 informação nova.
 
-A autoridade fixa é obrigatória por D-005: depois de FR-036, compor em modo publicado sem autoridade
+A autoridade fixa é obrigatória por D-005: depois de FR-035, compor em modo publicado sem autoridade
 é recusado, então o gerador não roda sem ela. Versioná-la ao lado do snapshot é a mesma razão pela
 qual o snapshot é versionado — *"sem ele a fixture seria um arquivo binário que ninguém consegue
 reproduzir, e a comparação viraria fé"*.
@@ -262,7 +290,7 @@ reproduzir, e a comparação viraria fé"*.
 **Racional**: é a distinção que impede os dois erros simétricos — quebrar um invariante achando que
 era forma, e preservar uma forma achando que era invariante. O teste
 `test_etapas_aparecem_com_caracter_peso_e_nota_minima` é o caso limite: o **fato** que ele afirma
-continua verdadeiro e obrigatório (FR-028); a **frase** que ele procura deixa de existir. Ele é
+continua verdadeiro e obrigatório (FR-027); a **frase** que ele procura deixa de existir. Ele é
 reescrito, não removido.
 
 **Alternativa recusada**: *marcar os testes de forma como `xfail` durante a feature.* Transformaria
@@ -275,29 +303,29 @@ cinco entregas em uma dívida silenciosa e esconderia regressão real atrás de 
 **Decisão**: a marca de prévia **sai do fluxo normativo** e passa a ser emitida em posição fixa da
 página, na mesma passada que já emite o rodapé — em toda página, e não apenas na primeira.
 
-**Racional**: FR-043 exige que o conjunto de quebras do corpo normativo seja idêntico entre prévia e
+**Racional**: FR-042 exige que o conjunto de quebras do corpo normativo seja idêntico entre prévia e
 publicado. Hoje a marca é escrita **dentro** do fluxo, entre o cabeçalho e as seções
 (`pdf.py:353`), e portanto empurra todo o conteúdo para baixo: a prévia e o publicado quebram em
 lugares diferentes, e quem revisa a prévia não vê a paginação que vai publicar. Reservar espaço
 equivalente no publicado "para compensar" seria pior — poria um vazio inexplicável num ato
 administrativo.
 
-Tirar a marca do fluxo cumpre FR-043 **por construção**, e não por coincidência de medida: se ela
+Tirar a marca do fluxo cumpre FR-042 **por construção**, e não por coincidência de medida: se ela
 não participa da geometria do fluxo, não há como ela alterá-la. O ganho colateral é que a marca
 passa a aparecer em todas as páginas, que é o comportamento correto para um documento sem valor de
 publicação — hoje a página 2 de uma prévia não se identifica como prévia em lugar nenhum do corpo.
 
 **Consequência**: a região fixa é a mesma nos dois modos, ocupada na prévia e vazia no publicado.
-Nenhuma regra visual passa a existir só na prévia (FR-042); o que existe só na prévia é o **texto**
+Nenhuma regra visual passa a existir só na prévia (FR-041); o que existe só na prévia é o **texto**
 da marca.
 
 **Alternativas recusadas**:
 
-- *Manter no fluxo e aceitar a diferença de quebra.* Viola FR-043 e derrota o propósito da prévia:
+- *Manter no fluxo e aceitar a diferença de quebra.* Viola FR-042 e derrota o propósito da prévia:
   revisar um documento cuja paginação não é a que será publicada.
-- *Manter no fluxo e reservar espaço equivalente no publicado.* Cumpre a letra de FR-043 e produz um
-  espaço em branco sem causa no documento oficial — o oposto de FR-032.
+- *Manter no fluxo e reservar espaço equivalente no publicado.* Cumpre a letra de FR-042 e produz um
+  espaço em branco sem causa no documento oficial — o oposto de FR-031.
 - *Marca d'água diagonal atrás do texto.* Exigiria estado gráfico e transparência, fora do
   vocabulário de FR-003, e prejudicaria a leitura da prévia.
-- *Marca só na primeira página, fora do fluxo.* Cumpre FR-043 e mantém o defeito de a página 2 de
+- *Marca só na primeira página, fora do fluxo.* Cumpre FR-042 e mantém o defeito de a página 2 de
   uma prévia não se identificar.

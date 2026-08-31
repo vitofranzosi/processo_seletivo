@@ -68,10 +68,10 @@ O **cenário longo** — usado nas entregas 2 e 4 — é o cenário-base com Per
 documento passar de três páginas. Ele já existe na suíte (`test_long_content_paginates_and_every_page_is_numbered`).
 
 O **cenário incompleto** — usado na entrega 1 — é um Edital **sem Etapas de Avaliação**, para provar
-que a numeração não tem lacuna (FR-012). É o único defeito da feature que o cenário-base não revela.
+que a numeração não tem lacuna (FR-011). É o único defeito da feature que o cenário-base não revela.
 
 O **cenário extremo** — usado na entrega 2 — é um Perfil cujas atribuições passam de uma página
-inteira, para provar que a cascata de FR-022 termina em alternativa exequível.
+inteira, para provar que a cascata de FR-021 termina em alternativa exequível.
 
 ---
 
@@ -86,7 +86,7 @@ inteira, para provar que a cascata de FR-022 termina em alternativa exequível.
 **Publicado** (entrega 5), no detalhe do Edital publicado, depois de escolher a autoridade
 signatária no ato de publicar.
 
-*Prévia e publicado usam o mesmo compositor (FR-042); é por isso que as quatro primeiras entregas se
+*Prévia e publicado usam o mesmo compositor (FR-041); é por isso que as quatro primeiras entregas se
 demonstram sem publicar nada.*
 
 ---
@@ -108,7 +108,7 @@ faixa anterior pode ter regredido.
 | numeração contínua no **cenário incompleto** | lacuna do tipo `5.`, `7.`, `8.` |
 
 **Também verificar**: o número não está no conteúdo homologado — abrir a edição da seção e conferir
-que o texto não o contém (FR-013).
+que o texto não o contém (FR-012).
 
 ### Entrega 2 — Perfis em quadro e paginação por bloco (US2)
 
@@ -122,7 +122,7 @@ que o texto não o contém (FR-013).
 | no cenário de dois Perfis, o segundo **inteiro** na página 2 | o segundo Perfil começando no fim da página 1 |
 
 **Também verificar**: no cenário extremo, o documento é composto sem erro e a quebra ocorre dentro do
-sub-bloco, por parágrafo (FR-022).
+sub-bloco, por parágrafo (FR-021).
 
 ### Entrega 3 — Cronograma e Etapas (US3)
 
@@ -136,7 +136,7 @@ sub-bloco, por parágrafo (FR-022).
 | `Caráter`, `Peso`, `Nota mínima` em pares alinhados | `caráter: …; peso: …; nota mínima: …` |
 
 **Também verificar**: a data da Etapa continua vindo do Evento vinculado, e nenhuma data foi
-duplicada no domínio (FR-029).
+duplicada no domínio (FR-028).
 
 ### Entrega 4 — Tipografia, órfãos e espaçamento (US4)
 
@@ -162,21 +162,21 @@ duplicada no domínio (FR-029).
 | prévia **sem** autoridade e **sem** integridade | prévia que pareça publicada |
 
 **Também verificar**: publicar uma Retificação e conferir que o documento consolidado tem a mesma
-composição e a autoridade da própria Publicação da Retificação (FR-044).
+composição e a autoridade da própria Publicação da Retificação (FR-043).
 
 ---
 
 ## Regeneração da fixture
 
 Toda entrega que muda a composição regenera a fixture contratual **no mesmo commit**, com o diff
-revisado (FR-045):
+revisado (FR-044):
 
 ```bash
 cd backend && uv run python scripts/gerar_fixture_documento.py
 ```
 
 A partir da entrega 5 o gerador exige a autoridade fixa versionada em
-`tests/contract/fixtures/assinatura_publicada.json` — sem ela, compor em modo publicado é recusado
+`tests/contract/fixtures/autoridade_publicada.json` — sem ela, compor em modo publicado é recusado
 (D-005, D-009).
 
 **Regenerar para fazer um teste passar continua sendo erro.** A fixture existe para acusar mudança

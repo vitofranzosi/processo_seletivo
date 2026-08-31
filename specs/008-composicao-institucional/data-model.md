@@ -45,9 +45,9 @@ Vivem em `publicacoes/infrastructure/pdf.py`. Nenhuma atravessa a fronteira do m
 | `cargo` | string | sempre | `Publicacao.signatory_role`, idem |
 
 Valor congelado, sem identificador. **`signatory_id` não entra**: ele é dado de vínculo para a
-auditoria, e a `007` já decidiu que nunca é digitado, exibido nem impresso (FR-044 da `007`).
+auditoria, e a `007` já decidiu que nunca é digitado, exibido nem impresso (FR-043 da `007`).
 
-**Regra de presença, validada pelo modo e não pelo chamador** (FR-036):
+**Regra de presença, validada pelo modo e não pelo chamador** (FR-035):
 
 | Modo | `AutoridadeSignataria` | Compositor |
 |---|---|---|
@@ -74,7 +74,7 @@ institucional.
 
 | Atributo | Significado |
 |---|---|
-| nível | `Perfil` → `sub-bloco` → `unidade interna`, na cascata de FR-022 |
+| nível | `Perfil` → `sub-bloco` → `unidade interna`, na cascata de FR-021 |
 | moldura | se o bloco pede contorno (quadro de Perfil) ou não |
 | coesão | se o bloco não pode ser iniciado sem que caiba, e em que nível ele pode ser aberto |
 
@@ -84,7 +84,7 @@ itens, e existe apenas durante a paginação.
 ### 2.4 Tabela — não é estrutura nova
 
 Uma tabela é um bloco cujas unidades internas são linhas, e cuja primeira unidade é o cabeçalho com
-a marca de repetição (FR-027). As larguras de coluna são calculadas por D-007 e não são
+a marca de repetição (FR-026). As larguras de coluna são calculadas por D-007 e não são
 persistidas.
 
 ---
@@ -95,12 +95,12 @@ Todas incidem sobre a composição, e nenhuma sobre dado persistido.
 
 | Regra | Origem | Efeito quando violada |
 |---|---|---|
-| Publicado exige `AutoridadeSignataria` | FR-036 | composição recusada |
-| Prévia proíbe `AutoridadeSignataria` | FR-036 | composição recusada |
+| Publicado exige `AutoridadeSignataria` | FR-035 | composição recusada |
+| Prévia proíbe `AutoridadeSignataria` | FR-035 | composição recusada |
 | Modo desconhecido | já existente | composição recusada |
-| Numeração atribuída após a filtragem das seções | FR-012 | numeração com lacuna — coberta por teste |
-| Nenhuma linha ultrapassa a margem | FR-002, FR-030 | texto fora da área útil — coberta por teste |
-| Cascata de quebra sempre termina em alternativa exequível | FR-022 | composição impossível — coberta por teste com sub-bloco maior que uma página |
+| Numeração atribuída após a filtragem das seções | FR-011 | numeração com lacuna — coberta por teste |
+| Nenhuma linha ultrapassa a margem | FR-002, FR-029 | texto fora da área útil — coberta por teste |
+| Cascata de quebra sempre termina em alternativa exequível | FR-021 | composição impossível — coberta por teste com sub-bloco maior que uma página |
 
 ---
 
@@ -109,8 +109,8 @@ Todas incidem sobre a composição, e nenhuma sobre dado persistido.
 | Arquivo | Situação | Papel |
 |---|---|---|
 | `tests/contract/fixtures/snapshot_publicado.json` | existente, intocado | conteúdo de referência |
-| `tests/contract/fixtures/assinatura_publicada.json` | **novo** | autoridade fixa da fixture, sem a qual o documento publicado não compõe mais (D-009) |
-| `tests/contract/fixtures/documento_publicado_v1.pdf` | existente, **regenerado por entrega** | bytes de referência (FR-045) |
+| `tests/contract/fixtures/autoridade_publicada.json` | **novo** | autoridade fixa da fixture, sem a qual o documento publicado não compõe mais (D-009) |
+| `tests/contract/fixtures/documento_publicado_v1.pdf` | existente, **regenerado por entrega** | bytes de referência (FR-044) |
 
 *O arquivo novo é fixture de teste, não dado de produção: nome e cargo fictícios, versionados para
 que a comparação de bytes seja reproduzível por quem não escreveu a feature.*
