@@ -294,10 +294,13 @@ evidência que o motivou — pertence a [research.md](./research.md) e [plan.md]
   NÃO DEVE ser esticada. **Limites**: o documento não hifeniza, não introduz tipografia nova e
   mantém as duas famílias que já usa. *A justificação estava fora da V1 e entrou por decisão
   posterior, depois de os Editais 62 e 73 mostrarem que era a maior diferença remanescente.*
-- **FR-003**: Um bloco DEVE ser visualmente delimitado e as colunas de uma tabela DEVEM ser
-  visualmente separadas. **Limites**: o vocabulário visual do documento é **texto, fio e contorno**,
-  preto sobre branco; ficam fora ícone, sombra, cartão, gradiente, imagem, fundo e paleta. Nada
-  disso DEVE ser generalizado para outros tipos de documento.
+- **FR-003**: Um bloco DEVE ser visualmente delimitado, as colunas de uma tabela DEVEM ser
+  visualmente separadas e a linha que **nomeia** as colunas DEVE distinguir-se das que trazem dado.
+  **Limites**: o vocabulário visual do documento é **texto, fio, contorno e um único tom de cinza
+  para célula de cabeçalho**; ficam fora ícone, sombra, cartão, gradiente, imagem e paleta. Nada
+  disso DEVE ser generalizado para outros tipos de documento. *O cinza entrou por calibração: os
+  três Editais de referência sombreiam a célula de cabeçalho, e é o que separa quem nomeia de quem
+  informa.*
 - **FR-004**: A quebra de página DEVE respeitar as fronteiras do conteúdo, e não apenas o fim do
   espaço disponível. **Limites**: as únicas fronteiras que o documento reconhece são as de FR-020,
   FR-021, FR-022, FR-026 e FR-030; nenhuma outra regra de composição tipográfica é exigida por esta
@@ -548,18 +551,23 @@ disponível no repositório.
 **Estado inicial**: `referencias/estado-inicial-apos-007.pdf` — o documento que o sistema produz
 hoje, depois da `007`.
 
-**Alvos**: `referencias/alvo-edital-62-2026.pdf` e `referencias/alvo-edital-73-2026.pdf` — Editais
-oficiais do Cefor. As características observáveis contra as quais a rubrica é conferida:
+**Alvos**: `referencias/alvo-edital-62-2026.pdf`, `referencias/alvo-edital-73-2026.pdf` e
+`referencias/alvo-edital-146-2025.pdf` — Editais oficiais do Cefor. As características observáveis contra as quais a rubrica é conferida:
 
 | Observado nos dois alvos | Consequência para a `008` |
 |---|---|
 | Brasão centralizado no topo | **Diferença aceita** — FR-008 põe imagem fora da V1 |
 | Órgão, instituição e unidade centralizados, em corpo menor que o do texto | FR-005 |
-| Ato em negrito, caixa alta e centralizado, em corpo próximo ao do texto | FR-006, corrigido por esta calibração |
+| Órgão em quatro linhas, caixa mista, **maior** que o corpo do texto | FR-005, corrigido pelo Edital 146/2025 — era o menor, e a abertura parecia nota de rodapé |
+| Ato e objeto numa **sentença só**, em negrito, caixa alta e centralizados, em corpo próximo ao do texto | FR-006, corrigido por esta calibração |
+| Título de seção em negrito **no corpo do texto**, não em corpo maior | FR-009 |
+| Célula de cabeçalho de quadro sombreada | FR-003, ampliado por esta calibração |
 | Parágrafo de preâmbulo não numerado, antes da seção 1 | Já existe como seção de Apresentação |
 | Seções `1. DAS DISPOSIÇÕES PRELIMINARES`, negrito e caixa alta | FR-010 |
-| Itens numerados `1.1`, `2.1`, `3.2.1` dentro da seção | **Diferença aceita** — o conteúdo das seções textuais é texto livre, e numerar parágrafo automaticamente seria engine normativa, vedada por P-003 |
-| Corpo **justificado** nos dois alvos | **Diferença aceita e declarada** — FR-002 exclui justificação da V1. É a maior diferença remanescente depois do brasão |
+| Itens numerados `1.1`, `2.1`, `3.2.1` e alíneas `a)`, `b)` dentro da seção | **Diferença aceita** — o conteúdo das seções textuais é texto livre, e numerar parágrafo automaticamente seria engine normativa, vedada por P-003 |
+| Vagas numa **tabela única** (`TABELA 1 — Quadro de vagas`), não em ficha por Perfil | **Diferença aceita** — FR-016 proíbe tabela única com todos os campos do Perfil, e o nosso Perfil carrega mais do que caberia em cinco colunas |
+| Cronograma em **anexo**, com o cabeçalho institucional repetido na página dele | **Diferença aceita** — anexos estão fora de escopo |
+| Corpo **justificado** nos alvos | **Incorporado** — FR-002 |
 
 *As três diferenças aceitas são deliberadas e estão declaradas nos requisitos que as excluem. O
 critério emblemático não é identidade de diagramação (§3): é reconhecer os dois documentos como da
