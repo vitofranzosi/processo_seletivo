@@ -236,9 +236,15 @@ def test_campo_maior_que_a_coluna_e_recusado_com_explicacao(client, settings, ca
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_telefone_gigante_e_aparado_em_vez_de_estourar(
+def test_telefone_que_nao_e_telefone_e_recusado_em_vez_de_estourar(
     client, settings, api_client, manager_headers, process_payload
 ):
+    """Recusado, e não aparado.
+
+    Aparar duzentos noves produzia um telefone de trinta dígitos gravado como se fosse válido — e
+    um número errado custa a vaga: a comissão liga, não encontra ninguém e conclui que a pessoa
+    desistiu. O que a pessoa digitou volta ao campo (SC-UX-007).
+    """
     settings.PORTAL_IDENTIDADE_DEMO = True
     edital = _publicar(api_client, manager_headers, process_payload)
     inscricao = abrir_inscricao(identidade=MARIA, edital_id=edital.id, profile_id=PERFIL_TECNICO)
@@ -250,9 +256,31 @@ def test_telefone_gigante_e_aparado_em_vez_de_estourar(
         reverse("portal:inscricao", args=[inscricao.id]), {"telefone": "9" * 200}
     )
 
-    assert resposta.status_code == 302, "aparado e gravado, seguindo para a revisão"
+    assert resposta.status_code == 200
+    corpo = resposta.content.decode()
+    assert "Informe o telefone com DDD" in corpo
+    assert "9" * 200 in corpo, "o que foi digitado volta ao campo"
     inscricao.refresh_from_db()
-    assert len(inscricao.telefone) <= 30
+    assert inscricao.telefone == "", "nada de meio-telefone no banco"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_telefone_e_guardado_numa_forma_so(
+    client, settings, api_client, manager_headers, process_payload
+):
+    """`27999990000`, `(27) 99999-0000` e `27 99999 0000` são o mesmo telefone."""
+    settings.PORTAL_IDENTIDADE_DEMO = True
+    edital = _publicar(api_client, manager_headers, process_payload)
+    inscricao = abrir_inscricao(identidade=MARIA, edital_id=edital.id, profile_id=PERFIL_TECNICO)
+    sessao = client.session
+    sessao["portal_identidade"] = MARIA.__dict__
+    sessao.save()
+
+    client.post(reverse("portal:inscricao", args=[inscricao.id]), {"telefone": "27999990000"})
+
+    inscricao.refresh_from_db()
+    assert inscricao.telefone == "(27) 99999-0000"
 
 
 # ---------------------------------------------------------------------------

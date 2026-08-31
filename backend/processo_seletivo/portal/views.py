@@ -34,6 +34,12 @@ from processo_seletivo.inscricoes.application.submissao import (
     reconhecer_versao,
 )
 from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes, recebe_inscricoes
+from processo_seletivo.inscricoes.domain.pessoais import (
+    cpf_valido,
+    formatar_cpf,
+    formatar_telefone,
+    telefone_valido,
+)
 from processo_seletivo.inscricoes.domain.titularidade import exigir_titularidade
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.portal import identidade as identidade_do_candidato
@@ -240,6 +246,9 @@ def identificar(request):
         dados = {campo: request.POST.get(campo, "").strip() for campo in dados}
         erros = _recusas_da_identificacao(dados)
         if not erros:
+            # Uma forma só: o CPF entra como a pessoa digitou e é guardado sempre igual. Sem isto
+            # a mesma pessoa aparece de três jeitos nas telas de quem confere.
+            dados["cpf"] = formatar_cpf(dados["cpf"])
             identidade = identidade_do_candidato.identificar(request, **dados)
             return _retomar(request, destino, identidade)
     return render(
@@ -286,10 +295,20 @@ def _recusas_da_identificacao(dados):
         recusas["nome"] = "Informe seu nome completo."
     elif len(dados["nome"]) > limites["nome"]:
         recusas["nome"] = f"O nome pode ter no máximo {limites['nome']} caracteres."
+    elif len([parte for parte in dados["nome"].split() if len(parte) > 1]) < 2:
+        # O rótulo pede o nome **completo**, e "Joao" passava. O nome vai no comprovante e é por
+        # ele que a comissão confere o documento apresentado: um primeiro nome sozinho obriga a
+        # conferência manual que esta feature existe para tirar.
+        recusas["nome"] = "Informe o nome completo, com sobrenome."
     if len(identidade_do_candidato.normalizar_cpf(dados["cpf"])) != 11:
         recusas["cpf"] = "Informe um CPF com 11 dígitos."
     elif len(dados["cpf"]) > limites["cpf"]:
         recusas["cpf"] = "Informe o CPF apenas com números ou na forma 000.000.000-00."
+    elif not cpf_valido(dados["cpf"]):
+        # Contar onze dígitos aceitava qualquer número inventado. O CPF decide de quem é a
+        # inscrição e alimenta o `subject` da auditoria: digitado errado, produz uma identidade
+        # que ninguém reencontra — a pessoa volta, digita certo, e sua inscrição "sumiu".
+        recusas["cpf"] = "Este CPF não existe. Confira os números digitados."
     if "@" not in dados["email"]:
         recusas["email"] = "Informe um e-mail válido."
     elif len(dados["email"]) > limites["email"]:
@@ -345,6 +364,9 @@ def inscricao(request, inscricao_id):
     perfil = _perfil_do_conteudo(conteudo, registro.profile_id)
     guardado = False
     erros = []
+    # O que a pessoa digitou volta ao campo mesmo quando recusado (SC-UX-007): ler o valor do
+    # banco depois de uma recusa apagaria o que ela acabou de escrever.
+    telefone_no_campo = registro.telefone
     descartes = []
     if request.method == "POST":
         # A mudança de modalidade que invalida documento já enviado é confirmada antes, com a
@@ -365,26 +387,30 @@ def inscricao(request, inscricao_id):
                     "telefone": request.POST.get("telefone", "").strip(),
                 },
             )
-        try:
-            registro = gravar_dados(
-                descartes_confirmados=[descarte["id"] for descarte in descartes],
-                identidade=identidade,
-                inscricao=registro,
-                dados={
-                    "nome": identidade.nome,
-                    "cpf": identidade.cpf,
-                    "email": identidade.email,
-                    # Truncado, e não recusado: telefone é opcional e nenhum telefone real passa
-                    # de trinta caracteres — o que passa é colagem acidental, e recusar por isso
-                    # custaria à pessoa mais do que aparar.
-                    "telefone": request.POST.get("telefone", "").strip()[:LIMITE_DO_TELEFONE],
-                    "modality_id": request.POST.get("modalidade", "").strip(),
-                },
-                correlation_id=getattr(request, "correlation_id", ""),
-            )
-            return redirect(reverse("portal:revisao", args=[registro.id]))
-        except DomainError as exc:
-            erros.append(exc.detail)
+        telefone_no_campo = telefone = request.POST.get("telefone", "").strip()
+        if not telefone_valido(telefone):
+            # Recusado, e não aparado: um telefone truncado é pior do que nenhum — a equipe liga
+            # para um número que não existe e conclui que a pessoa desistiu.
+            erros.append("Informe o telefone com DDD, como (27) 99999-0000 — ou deixe em branco.")
+        else:
+            try:
+                registro = gravar_dados(
+                    descartes_confirmados=[descarte["id"] for descarte in descartes],
+                    identidade=identidade,
+                    inscricao=registro,
+                    dados={
+                        "nome": identidade.nome,
+                        "cpf": identidade.cpf,
+                        "email": identidade.email,
+                        # Guardado numa forma só, como o CPF: `(27) 99999-0000`, venha como vier.
+                        "telefone": formatar_telefone(telefone)[:LIMITE_DO_TELEFONE],
+                        "modality_id": request.POST.get("modalidade", "").strip(),
+                    },
+                    correlation_id=getattr(request, "correlation_id", ""),
+                )
+                return redirect(reverse("portal:revisao", args=[registro.id]))
+            except DomainError as exc:
+                erros.append(exc.detail)
     return render(
         request,
         "portal/inscricao.html",
@@ -392,6 +418,7 @@ def inscricao(request, inscricao_id):
             "inscricao": registro,
             "selecao": _selecao(versao),
             "perfil": _perfil_legivel(perfil),
+            "telefone_no_campo": telefone_no_campo,
             "modalidades": _modalidades_ofertadas(perfil),
             "modalidade_unica": _modalidade_unica(perfil),
             "identidade": identidade,

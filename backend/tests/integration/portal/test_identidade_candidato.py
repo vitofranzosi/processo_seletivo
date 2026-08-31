@@ -94,7 +94,7 @@ def test_apos_identificar_se_a_pessoa_volta_para_a_vaga(
 
     resposta = client.post(
         reverse("portal:identificar"),
-        {"nome": "Maria", "cpf": "12345678909", "email": "m@ex.br", "destino": vaga},
+        {"nome": "Maria Silva", "cpf": "12345678909", "email": "m@ex.br", "destino": vaga},
     )
 
     # O retorno é GET e o convite é POST: em vez de devolver a pessoa a uma rota que recusaria o
@@ -113,7 +113,7 @@ def test_destino_para_fora_do_sistema_e_ignorado(client, provedor_ligado):
     resposta = client.post(
         reverse("portal:identificar"),
         {
-            "nome": "Maria",
+            "nome": "Maria Silva",
             "cpf": "12345678909",
             "email": "m@ex.br",
             "destino": "https://exemplo-malicioso.invalid/",
@@ -147,3 +147,56 @@ def test_a_identificacao_nao_e_armazenavel_pelo_navegador(client, provedor_ligad
     resposta = client.get(reverse("portal:identificar"))
 
     assert "no-store" in resposta.headers["Cache-Control"]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_cpf_inventado_e_recusado_na_identificacao(client, settings):
+    """Contar onze dígitos aceitava `11111111111`.
+
+    O CPF decide de quem é a inscrição e alimenta o `subject` da auditoria: digitado errado,
+    produz uma identidade que ninguém reencontra — a pessoa volta, digita certo, e sua inscrição
+    "sumiu".
+    """
+    settings.PORTAL_IDENTIDADE_DEMO = True
+
+    resposta = client.post(
+        reverse("portal:identificar"),
+        {"nome": "Joao Souza", "cpf": "111.111.111-11", "email": "j@ex.br"},
+    )
+
+    corpo = resposta.content.decode()
+    assert resposta.status_code == 200
+    assert "Este CPF não existe" in corpo
+    assert "111.111.111-11" in corpo, "o que foi digitado volta ao campo"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_primeiro_nome_sozinho_e_recusado(client, settings):
+    """O rótulo pede o nome completo, e `Joao` passava.
+
+    O nome vai no comprovante, e é por ele que a comissão confere o documento apresentado.
+    """
+    settings.PORTAL_IDENTIDADE_DEMO = True
+
+    resposta = client.post(
+        reverse("portal:identificar"),
+        {"nome": "Joao", "cpf": "123.456.789-09", "email": "j@ex.br"},
+    )
+
+    assert "Informe o nome completo, com sobrenome." in resposta.content.decode()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_cpf_e_guardado_numa_forma_so(client, settings):
+    """Digitado sem pontuação, guardado com ela: a mesma pessoa não aparece de dois jeitos."""
+    settings.PORTAL_IDENTIDADE_DEMO = True
+
+    client.post(
+        reverse("portal:identificar"),
+        {"nome": "Maria Silva", "cpf": "12345678909", "email": "m@ex.br"},
+    )
+
+    assert client.session["portal_identidade"]["cpf"] == "123.456.789-09"

@@ -37,8 +37,9 @@ e `role=alert` sozinho não anuncia o que já veio no HTML da resposta.
     <p class="ajuda">Estes dados vêm da sua identificação e não precisam ser digitados de novo.</p>
     <p class="campo">
       <label for="telefone">Telefone (opcional)</label>
-      <input type="tel" id="telefone" name="telefone" value="{{ inscricao.telefone }}"
-             autocomplete="tel" inputmode="tel">
+      <input type="tel" id="telefone" name="telefone" value="{{ telefone_no_campo }}"
+             autocomplete="tel" inputmode="tel" maxlength="16"
+             placeholder="(27) 99999-0000">
     </p>
   </section>
 
@@ -96,4 +97,5 @@ de enviar arquivo nenhum — quem obedecia à página era recusado por ela.
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
 <script src="{% static 'portal/envio.js' %}" defer></script>
 <script src="{% static 'portal/recusa.js' %}" defer></script>
+<script src="{% static 'portal/telefone.js' %}" defer></script>
 {% endblock %}

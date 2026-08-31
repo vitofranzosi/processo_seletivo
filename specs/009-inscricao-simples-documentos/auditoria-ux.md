@@ -197,6 +197,43 @@ inscrições recebidas e podem nunca ser enviados. Travado por
 continuam visíveis para a gestão, agora sob rótulo honesto. Ocultá-los é decisão de produto, não
 de implementação, e depende da política de retenção que L11 registra.
 
+### D6 — CPF e telefone aceitavam qualquer coisa (alta)
+
+Encontrado por quem usou o sistema, não por este percurso — e é a prova de que uma auditoria feita
+por quem escreveu o código tem ponto cego. Três campos passavam lixo:
+
+- **CPF**: só a contagem de dígitos era conferida, e `11111111111` entrava. O CPF decide de quem é
+  a inscrição e alimenta o `subject` da auditoria: digitado errado, produz uma identidade que
+  ninguém reencontra — a pessoa volta, digita certo, e sua inscrição "sumiu".
+- **Telefone**: `28934` era gravado como telefone. Pior, o campo **truncava** entradas longas em
+  vez de recusá-las, gravando meio número como se fosse válido. Um número errado custa a vaga: a
+  comissão liga, não encontra ninguém e conclui que a pessoa desistiu.
+- **Nome**: o rótulo pede o nome completo, e `Joao` passava. O nome vai no comprovante e é por ele
+  que a comissão confere o documento apresentado.
+
+Nenhum dos três tinha máscara, o que também não dizia o formato esperado.
+
+**Corrigido.** Os dígitos verificadores do CPF passaram a ser conferidos no domínio
+(`inscricoes/domain/pessoais.cpf_valido`), com sequências de dígito repetido recusadas à parte —
+elas passam no cálculo e nunca foram atribuídas a ninguém. O telefone exige DDD e dez ou onze
+dígitos, ou fica em branco. O nome exige sobrenome. **Os três guardam uma forma só**: o CPF vira
+`123.456.789-09` e o telefone `(27) 99999-0000`, venham como vierem — sem isso a mesma pessoa
+aparece de dois jeitos nas telas de quem confere.
+
+As máscaras são escritas enquanto a pessoa digita, e o cálculo do CPF é espelhado no cliente com a
+mesma mensagem do servidor. Apagar continua funcionando: a máscara é recalculada a partir dos
+dígitos, e o cursor nunca fica preso atrás de um parêntese. Sem JavaScript nada se perde — quem
+decide é o servidor.
+
+Verificado no navegador: `11111111111` → *"Este CPF não existe. Confira os números digitados."*;
+`28934` → recusa com o valor preservado no campo (`(28) 934`) e foco no aviso. Travado por
+`test_cpf_inventado_e_recusado_na_identificacao`, `test_primeiro_nome_sozinho_e_recusado`,
+`test_telefone_que_nao_e_telefone_e_recusado_em_vez_de_estourar` e mais dez casos de unidade em
+`tests/unit/inscricoes/test_pessoais.py`.
+
+**O que isto não é:** prova de titularidade. Um CPF válido continua podendo ser de outra pessoa —
+é o que L12 registra, e o que só o provedor de identidade real resolve.
+
 ## Lacunas e oportunidades, por prioridade
 
 > **Estado em 31/08/2026:** L1 a L10 foram corrigidas e travadas por teste. L11 e L12 continuam

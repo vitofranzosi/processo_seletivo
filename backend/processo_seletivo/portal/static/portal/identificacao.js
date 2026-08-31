@@ -30,17 +30,67 @@
     }
   }
 
+  function digitosDe(valor) {
+    return (valor || "").replace(/\D/g, "").slice(0, 11);
+  }
+
+  function mascarar(numero) {
+    if (numero.length <= 3) {
+      return numero;
+    }
+    if (numero.length <= 6) {
+      return numero.slice(0, 3) + "." + numero.slice(3);
+    }
+    if (numero.length <= 9) {
+      return numero.slice(0, 3) + "." + numero.slice(3, 6) + "." + numero.slice(6);
+    }
+    return (
+      numero.slice(0, 3) + "." + numero.slice(3, 6) + "." + numero.slice(6, 9) + "-" + numero.slice(9)
+    );
+  }
+
+  /* Os dígitos verificadores, e não só a contagem — o mesmo cálculo de
+     `inscricoes/domain/pessoais.cpf_valido`, e a mesma mensagem. Contar onze dígitos aceitava
+     `11111111111`, e um CPF inventado produz uma identidade que a pessoa não reencontra depois. */
+  function eCpf(numero) {
+    if (numero.length !== 11 || /^(\d)\1{10}$/.test(numero)) {
+      return false;
+    }
+    for (var tamanho = 9; tamanho <= 10; tamanho++) {
+      var soma = 0;
+      for (var i = 0; i < tamanho; i++) {
+        soma += parseInt(numero.charAt(i), 10) * (tamanho + 1 - i);
+      }
+      var resto = (soma * 10) % 11;
+      if ((resto === 10 ? 0 : resto) !== parseInt(numero.charAt(tamanho), 10)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   function conferirCpf() {
-    var digitos = (cpf.value || "").replace(/\D/g, "");
+    var numero = digitosDe(cpf.value);
     if (!cpf.value.trim()) {
       marcar(cpf, "");
       return;
     }
-    marcar(cpf, digitos.length === 11 ? "" : "Informe um CPF com 11 dígitos.");
+    if (numero.length !== 11) {
+      marcar(cpf, "Informe um CPF com 11 dígitos.");
+      return;
+    }
+    marcar(cpf, eCpf(numero) ? "" : "Este CPF não existe. Confira os números digitados.");
   }
 
   if (cpf) {
-    cpf.addEventListener("input", conferirCpf);
+    cpf.addEventListener("input", function () {
+      var noFim = cpf.selectionStart === cpf.value.length;
+      cpf.value = mascarar(digitosDe(cpf.value));
+      if (noFim) {
+        cpf.setSelectionRange(cpf.value.length, cpf.value.length);
+      }
+      conferirCpf();
+    });
     cpf.addEventListener("blur", conferirCpf);
   }
   formulario.addEventListener("submit", conferirCpf);
