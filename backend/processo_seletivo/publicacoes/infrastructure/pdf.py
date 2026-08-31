@@ -1134,17 +1134,35 @@ def _secoes(composicao, snapshot):
 
 
 def _autoridade(composicao, autoridade):
-    """O fechamento do ato (FR-033).
+    """Quem praticou o ato — anunciado como registro, não como assinatura (FR-033).
 
-    Sem praça e sem data: a primeira não existe no sistema e a segunda não é conteúdo normativo.
-    Introduzir qualquer uma delas para poder escrever "Vitória (ES), 30 de agosto de 2026" seria
-    criar conceito por motivo tipográfico.
+    **A rubrica é deliberada.** Um nome centralizado sozinho ao pé de um Edital lê-se como
+    assinatura, e este documento não tem assinatura: não há certificado, não há ICP, não há
+    rubrica digitalizada (FR-036). O que ele tem é o registro imutável de quem praticou o ato, que
+    a Publicação guardou. Anunciar isso — "Autoridade responsável pelo ato" — é a diferença entre
+    informar e simular.
+
+    O cargo só é composto quando diz algo além do nome. O catálogo de demonstração traz cargo no
+    campo de nome, e repetir `Reitora do Ifes / Reitora` faria o documento parecer defeituoso onde
+    ele apenas reflete o dado que existe.
     """
     composicao.escrever(
-        autoridade.nome, tamanho=CORPO_TEXTO, fonte=NEGRITO,
-        antes=ANTES_DE_SECAO + 16, alinhamento=CENTRO, junto=True,
+        "Autoridade responsável pelo ato",
+        tamanho=CORPO_NOTA,
+        antes=ANTES_DE_SECAO + 16,
+        alinhamento=CENTRO,
+        junto=True,
     )
-    composicao.escrever(autoridade.cargo, tamanho=CORPO_TEXTO, alinhamento=CENTRO)
+    composicao.escrever(
+        autoridade.nome,
+        tamanho=CORPO_TEXTO,
+        fonte=NEGRITO,
+        antes=ANTES_DE_LINHA + 2,
+        alinhamento=CENTRO,
+    )
+    cargo = str(autoridade.cargo or "").strip()
+    if cargo and cargo.casefold() not in str(autoridade.nome or "").casefold():
+        composicao.escrever(cargo, tamanho=CORPO_TEXTO, alinhamento=CENTRO)
 
 
 def _integridade(composicao, snapshot, content_hash):

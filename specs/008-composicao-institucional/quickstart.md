@@ -207,7 +207,7 @@ requisito, e a quarta é dado, não composição.*
 | Diferença | Situação | Onde está decidida |
 |---|---|---|
 | **Numeração de item** dentro da seção (`1.1`, `3.2.1`) | fora da V1 | P-003 — o conteúdo das seções textuais é texto livre, e numerar parágrafo automaticamente seria engine normativa |
-| Autoridade impressa como `Reitora do Ifes — Reitora` | dado, não composição | Assumptions — o catálogo de demonstração traz cargo no campo de nome; corrigir a redação é trabalho editorial |
+| Nome próprio da autoridade no fechamento | dado, não composição | O catálogo de demonstração traz cargo no campo de nome. O bloco anuncia-se como **registro** — "Autoridade responsável pelo ato" —, e não como assinatura, justamente para não afirmar o que o dado não sustenta (FR-033) |
 
 **A justificação foi incorporada** por decisão posterior: era a maior diferença remanescente, e com
 a métrica de largura já no lugar coube em distribuir a folga da linha entre os seus espaços. Restam

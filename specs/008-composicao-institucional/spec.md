@@ -598,9 +598,12 @@ existe no publicado e não existe na prévia.
 ## Assumptions
 
 - **O nome registrado na Publicação pode ser uma designação de cargo.** O catálogo declarado hoje
-  traz entradas como `Reitora do Ifes — Reitora`, e é isso que a V1 materializa. Corrigir a redação
+  traz entradas como `Reitora do Ifes / Reitora`, e é isso que a V1 materializa. Corrigir a redação
   do catálogo é trabalho editorial, e está **fora** desta feature: a `008` não inventa nome próprio
-  nem cria cadastro de pessoas.
+  nem cria cadastro de pessoas. *É por isso que o fechamento se anuncia como registro e não como
+  assinatura (FR-033): com o dado que existe, uma rubrica centralizada afirmaria mais do que o
+  documento pode afirmar. Quando o catálogo passar a trazer nome próprio, o mesmo bloco o exibe sem
+  mudança nenhuma.*
 - A unidade responsável continua sendo constante do compositor, como já é hoje. Nenhuma unidade
   configurável por Processo é introduzida.
 - O cenário-base de demonstração é reproduzível pela seed; nenhum dado publicado precisa ser

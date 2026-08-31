@@ -1063,8 +1063,10 @@ def test_o_documento_publicado_exibe_a_autoridade_registrada_na_publicacao():
     """
     texto = texto_de(documento(snapshot(), HASH, autoridade=autoridade()))
 
+    # **O bloco se anuncia como registro, não como assinatura.** Um nome centralizado sozinho ao
+    # pé de um Edital lê-se como rubrica, e este documento não tem rubrica (FR-036).
+    assert "Autoridade responsável pelo ato" in texto
     assert AUTORIDADE[0] in texto
-    assert AUTORIDADE[1] in texto
     # Sem praça e sem data: os dois exigiriam conceitos que o sistema não tem (FR-036).
     assert "Vitória" not in texto
     assert not re.search(r"\bde \d{4}\.", texto)
@@ -1458,3 +1460,32 @@ def test_suprimir_o_preambulo_nao_abre_lacuna_na_numeracao():
     texto = texto_de(documento(snapshot(sections=sem_apresentacao), HASH))
     numeros = [int(m.group(1)) for m in _re.finditer(r"^(\d+)\. [A-ZÀ-Ú]", texto, _re.M)]
     assert numeros == list(range(1, len(numeros) + 1)), numeros
+
+
+def test_o_cargo_nao_e_repetido_quando_ja_esta_no_nome_registrado():
+    """O catálogo de demonstração traz cargo no campo de nome (FR-033).
+
+    `Reitora do Ifes / Reitora` faria o documento parecer defeituoso onde ele apenas reflete o
+    dado que existe. Quando o cargo acrescenta informação, ele é composto.
+    """
+    from processo_seletivo.publicacoes.infrastructure.pdf import AutoridadeSignataria
+
+    repetido = texto_de(
+        documento(
+            snapshot(), HASH,
+            autoridade=AutoridadeSignataria(nome="Reitora do Ifes", cargo="Reitora"),
+        )
+    )
+    assert repetido.count("Reitora") == 1
+
+    distinto = texto_de(
+        documento(
+            snapshot(), HASH,
+            autoridade=AutoridadeSignataria(
+                nome="Aline Freitas da Silva de Carvalho",
+                cargo="Diretora do Centro de Referência em Formação e em Educação a Distância",
+            ),
+        )
+    )
+    assert "Aline Freitas da Silva de Carvalho" in distinto
+    assert "Diretora do Centro de Referência" in distinto

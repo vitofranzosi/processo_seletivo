@@ -110,7 +110,7 @@ def corpo_normativo(pagina: list[str], marca_de_previa: str) -> list[str]:
         # O fechamento do ato começa na autoridade signatária: dali em diante é metadado do ato,
         # que só o publicado tem. Antes dela, os dois modos têm de coincidir linha a linha.
         if linha == AUTORIDADE.nome or linha.startswith(
-            ("VERIFICAÇÃO DE INTEGRIDADE", "Este documento deriva")
+            ("Autoridade responsável pelo ato", "Verificação de integridade")
         ):
             fora = True
         # O rodapé passou a duas âncoras — identificação à esquerda, página à direita —, e as
