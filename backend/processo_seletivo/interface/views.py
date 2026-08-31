@@ -1382,6 +1382,7 @@ OPERACOES = {
     "ANEXAR": "Envio de documento",
     "REMOVER": "Remoção de documento",
     "INTEGRIDADE": "Falha de integridade de documento",
+    "CONSULTAR_DOCUMENTO": "Consulta a documento do candidato",
 }
 AGREGADOS = {
     "ProcessoSeletivo": "Processo Seletivo",
@@ -1602,7 +1603,31 @@ def documento_da_inscricao(request, inscricao_id, requirement_id):
     if calculado != documento.content_hash:
         copia.close()
         _registrar_divergencia(ator, documento, request)
+    _registrar_consulta(ator, documento, request)
     return entregar(documento, anexo=bool(request.GET.get("baixar")), verificado=copia)
+
+
+def _registrar_consulta(ator, documento, request):
+    """Quem abriu o documento de quem, e quando (L10 da auditoria de percurso).
+
+    FR-077 audita os atos do candidato e dispensa a consulta pública; sobre a consulta
+    **administrativa** a spec é silenciosa, e o silêncio deixava o sistema sem resposta para a
+    pergunta que uma auditoria de dados pessoais faz primeiro. Documento de candidato inclui
+    autodeclaração étnico-racial: é dado sensível, e acesso a dado sensível deixa rastro.
+
+    Registra a leitura, e não o conteúdo — nem o nome do arquivo, que é do candidato (FR-074). O
+    requisito basta para saber o que foi aberto.
+    """
+    with command_context() as agora:
+        record_event(
+            actor=ator,
+            permission=CONSULTAR,
+            operation="CONSULTAR_DOCUMENTO",
+            aggregate=documento.inscricao,
+            now=agora,
+            correlation_id=getattr(request, "correlation_id", ""),
+            reason=f"requisito {documento.requirement_id}",
+        )
 
 
 def _registrar_divergencia(ator, documento, request):

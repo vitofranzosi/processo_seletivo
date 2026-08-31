@@ -96,3 +96,48 @@ def test_ler_o_edital_nao_disputa_a_decisao_com_inscrever_se(
     assert 'class="documento secundaria"' in corpo
     assert ".documento.secundaria{background:var(--branco)" in corpo
     assert corpo.count('class="documento secundaria"') == 1, "só o PDF é secundário"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_os_documentos_exigidos_aparecem_antes_da_identificacao(
+    client, api_client, manager_headers, process_payload
+):
+    """L7 da auditoria de percurso: saber o que preparar antes de começar.
+
+    A página listava requisitos de titulação e nada sobre arquivos. Descobrir que precisaria do
+    diploma digitalizado custava identificar-se e abrir uma inscrição — e quem lê no ônibus, sem
+    os arquivos à mão, desiste no meio.
+    """
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from tests.fixtures.selecao import rascunho_aberto_com_documentos
+
+    edital = publicar_selecao(
+        api_client,
+        manager_headers,
+        process_payload,
+        rascunho=rascunho_aberto_com_documentos(timezone.now() - timedelta(seconds=1)),
+    )
+
+    corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
+
+    assert "Documentos que serão pedidos" in corpo
+    assert "Documento de identificação" in corpo, "o que vale para todo mundo"
+    assert "Diploma de graduação" in corpo, "o que vale para o Perfil"
+    assert "Se concorrer em" in corpo, "e o que a modalidade reservada acrescenta"
+    assert "Autodeclaração étnico-racial" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_cartao_da_vitrine_e_alvo_inteiro(client, api_client, manager_headers, process_payload):
+    """L8: num celular, mirar duas palavras de título é o tipo de precisão que faz errar."""
+    publicar_selecao(api_client, manager_headers, process_payload)
+
+    corpo = client.get(reverse("portal:vitrine")).content.decode()
+
+    assert '.selecao a.titulo::after{content:"";position:absolute;inset:0}' in corpo
+    assert ".selecao:focus-within{outline:" in corpo, "o teclado continua vendo o foco"

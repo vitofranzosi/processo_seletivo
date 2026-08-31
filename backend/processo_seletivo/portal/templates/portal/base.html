@@ -28,13 +28,33 @@ h1{font-size:1.4rem;margin:0 0 .25rem;font-weight:600;line-height:1.3}
 h2{font-size:1.1rem;margin:1.75rem 0 .5rem;font-weight:600}
 h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .sub{color:var(--texto-fraco);margin:0 0 1.5rem}
+/* As etapas da inscrição (L3). Uma linha em 375px, e por isso números e não rótulos longos: o
+   rótulo da etapa atual fica visível, os demais encolhem. Estado por forma **e** cor. */
+.etapas{margin:0 0 1.25rem}
+.etapas ol{list-style:none;display:flex;gap:.5rem;margin:0;padding:0;align-items:flex-start}
+.etapas li{flex:1;display:grid;justify-items:center;gap:.2rem;text-align:center;
+  font-size:.75rem;color:var(--texto-fraco);border-top:3px solid var(--borda);padding-top:.4rem}
+.etapas .numero{display:grid;place-items:center;width:1.6rem;height:1.6rem;border-radius:50%;
+  background:var(--cinza-fundo);color:var(--texto-fraco);font-weight:700;font-size:.8125rem}
+.etapas li.concluida{border-top-color:var(--sucesso);color:var(--sucesso)}
+.etapas li.concluida .numero{background:var(--sucesso);color:var(--branco)}
+.etapas li.atual{border-top-color:var(--verde);color:var(--texto);font-weight:600}
+.etapas li.atual .numero{background:var(--verde);color:var(--branco)}
+.etapas .posicao{font-weight:400;color:var(--texto-fraco)}
 /* Sem `width` fixa e sem tabela em nenhum ponto: é o que sustenta 375px sem rolagem
    horizontal. Números longos e códigos ganham quebra explícita mais abaixo. */
 .selecoes{list-style:none;margin:0;padding:0;display:grid;gap:1rem}
 .selecao{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1rem;display:grid;gap:.35rem}
+.selecao{position:relative}
 .selecao a.titulo{font-weight:600;font-size:1.05rem;text-decoration:none}
 .selecao a.titulo:hover{text-decoration:underline}
+/* O cartão inteiro é alvo do toque (L8): num celular, mirar duas palavras de título é o tipo de
+   precisão que faz errar. O link continua sendo um só — o pseudo-elemento estende a área dele, e
+   por isso o teclado e o leitor de tela continuam vendo exatamente um destino. */
+.selecao a.titulo::after{content:"";position:absolute;inset:0}
+.selecao:hover{border-color:var(--verde-texto)}
+.selecao:focus-within{outline:3px solid var(--verde);outline-offset:2px}
 .selecao .meta{color:var(--texto-fraco);font-size:.9375rem;overflow-wrap:anywhere}
 .perfis{list-style:none;margin:0;padding:0;display:grid;gap:.75rem}
 .perfil{background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:1rem}
@@ -70,6 +90,14 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .erro ul{margin:.35rem 0 0;padding-left:1.25rem}
 .erro a{color:var(--vermelho)}
 .recusa{display:block;color:var(--vermelho);font-size:.9375rem;margin-top:.25rem}
+/* Instrução e formulário de substituição ficam recolhidos: presentes para quem precisa, fora do
+   caminho de quem não precisa (L5 e L6). `summary` é alvo de toque, e por isso tem altura. */
+details.como-converter, details.envio-de-novo{margin-top:.5rem}
+details.como-converter summary, details.envio-de-novo summary{cursor:pointer;padding:.4rem 0;
+  font-weight:600;color:var(--verde-texto);font-size:.9375rem}
+details.como-converter ul{margin:.35rem 0 .5rem;padding-left:1.25rem;font-size:.9375rem;
+  color:var(--texto-fraco)}
+details.como-converter li{margin-bottom:.4rem}
 .obrigatorio{color:var(--vermelho);margin-left:.15rem}
 .contagem{font-weight:600;margin:.5rem 0 1rem}
 .requisitos-lista{list-style:none;margin:0;padding:0;display:grid;gap:1rem}

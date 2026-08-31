@@ -9,12 +9,17 @@
 </div>
 
 {% if erros %}
-<div class="erro" role="alert">
+<div class="erro" role="alert" tabindex="-1" data-recusa>
   <p>Confira os campos indicados abaixo.</p>
 </div>
 {% endif %}
 
-<form method="post" novalidate>
+{% comment %}
+Sem `novalidate` no HTML (L9 da auditoria): sem JavaScript, o navegador volta a exigir os campos
+obrigatórios e o formato do e-mail sozinho, o que é mais do que havia. Com JavaScript, o script
+assume — mesma API nativa, mesmas mensagens do servidor, uma gramática de erro só.
+{% endcomment %}
+<form method="post" data-identificacao>
   {% csrf_token %}
   <input type="hidden" name="destino" value="{{ destino }}">
   <p class="campo">
@@ -37,4 +42,6 @@
   </p>
   <button type="submit" class="principal">Continuar</button>
 </form>
+{% load static %}<script src="{% static 'portal/recusa.js' %}" defer></script>
+<script src="{% static 'portal/identificacao.js' %}" defer></script>
 {% endblock %}

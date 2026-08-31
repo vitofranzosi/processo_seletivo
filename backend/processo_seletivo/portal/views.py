@@ -17,6 +17,7 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods
 
+from processo_seletivo.editais.domain.documentos import aplicaveis
 from processo_seletivo.inscricoes.application.rascunho import (
     abrir_inscricao,
     anexar_documento,
@@ -74,6 +75,25 @@ def _selecao(versao):
     }
 
 
+ETAPAS = ("Seus dados e documentos", "Revisão", "Comprovante")
+
+
+def etapas_ate(atual: int) -> list[dict]:
+    """Onde a pessoa está, e quanto falta (L3 da auditoria de percurso).
+
+    Três, e não cinco: a identificação já passou quando esta lista aparece, e os documentos
+    acontecem **dentro** da primeira etapa — anunciá-los como etapa própria prometeria uma tela
+    que não existe.
+    """
+    return [
+        {
+            "nome": nome,
+            "estado": "concluida" if indice < atual else "atual" if indice == atual else "pendente",
+        }
+        for indice, nome in enumerate(ETAPAS)
+    ]
+
+
 def _perfil(perfil):
     vagas = perfil.get("immediateVacancies") or 0
     return {
@@ -87,6 +107,39 @@ def _perfil(perfil):
         "modalidades": [
             modalidade.get("name", "") for modalidade in perfil.get("competitionModalities") or []
         ],
+    }
+
+
+def _documentos_anunciados(conteudo, perfil):
+    """O que será pedido, dito **antes** da identificação (L7 da auditoria de percurso).
+
+    A página pública listava requisitos de titulação e nada sobre arquivos: para descobrir que
+    precisaria do diploma digitalizado, a pessoa tinha de se identificar e abrir uma inscrição.
+    Quem lê no ônibus e não tem os arquivos à mão desiste no meio — e volta, se souber o que
+    preparar.
+
+    A modalidade ainda não foi escolhida, então a lista se divide: o que vale para todo mundo
+    naquele Perfil, e o que cada modalidade acrescenta. É a mesma função de aplicabilidade que
+    decide o que a inscrição pede — três leituras da mesma regra, e não três interpretações.
+    """
+    exigidos = conteudo.get("documentRequirements") or []
+    perfil_id = str(perfil.get("id"))
+    sempre = aplicaveis(exigidos, profile_id=perfil_id, modality_id=None)
+    nomes_de_sempre = {str(item.get("id")) for item in sempre}
+    por_modalidade = []
+    for modalidade in perfil.get("competitionModalities") or []:
+        com_ela = [
+            item.get("name", "")
+            for item in aplicaveis(
+                exigidos, profile_id=perfil_id, modality_id=str(modalidade.get("id"))
+            )
+            if str(item.get("id")) not in nomes_de_sempre
+        ]
+        if com_ela:
+            por_modalidade.append({"modalidade": modalidade.get("name", ""), "documentos": com_ela})
+    return {
+        "sempre": [item.get("name", "") for item in sempre],
+        "por_modalidade": por_modalidade,
     }
 
 
@@ -123,7 +176,8 @@ def selecao(request, edital_id):
     contexto = _selecao(versao)
     iniciadas = _inscricoes_iniciadas(request, edital_id)
     contexto["perfis"] = [
-        _perfil_da_vitrine(perfil, iniciadas) for perfil in versao.content.get("profiles") or []
+        _perfil_da_vitrine(perfil, iniciadas, versao.content)
+        for perfil in versao.content.get("profiles") or []
     ]
     # Consultável e recebendo inscrição são decisões diferentes: um Edital cancelado continua
     # legível — o ato publicado não se apaga — e não convida ninguém a se inscrever no que não
@@ -155,10 +209,11 @@ def _inscricoes_iniciadas(request, edital_id):
     }
 
 
-def _perfil_da_vitrine(perfil, iniciadas):
+def _perfil_da_vitrine(perfil, iniciadas, conteudo):
     registro = iniciadas.get(str(perfil.get("id")))
     return {
         **_perfil(perfil),
+        "documentos_anunciados": _documentos_anunciados(conteudo, perfil),
         "id": str(perfil.get("id")),
         # O convite muda de texto conforme o estado: `Inscrever-se nesta vaga` para quem chega,
         # `Continuar inscrição` para quem voltou, `Ver comprovante` para quem já enviou (FR-016,
@@ -344,6 +399,7 @@ def inscricao(request, inscricao_id):
             "erros": erros,
             "documentos": _documentos(conteudo, registro),
             "descartes": descartes,
+            "etapas": etapas_ate(0),
         },
     )
 
@@ -427,6 +483,7 @@ def enviar_documento(request, inscricao_id, requirement_id):
     """
     registro, identidade, versao = _inscricao_do_titular(request, inscricao_id)
     erro = ""
+    codigo = ""
     arquivo = request.FILES.get("arquivo")
     if arquivo is None:
         erro = "Escolha um arquivo em PDF."
@@ -441,7 +498,10 @@ def enviar_documento(request, inscricao_id, requirement_id):
             )
         except DomainError as exc:
             erro = _erro_do_arquivo(exc)
-    return _bloco_de_documentos(request, registro, versao, erro=erro, requisito=requirement_id)
+            codigo = exc.code
+    return _bloco_de_documentos(
+        request, registro, versao, erro=erro, requisito=requirement_id, codigo=codigo
+    )
 
 
 @require_http_methods(["POST"])
@@ -492,7 +552,7 @@ def _inscricao_do_titular(request, inscricao_id):
     return registro, identidade, selectors.selecao_publica(edital_id=registro.edital_id)
 
 
-def _bloco_de_documentos(request, inscricao, versao, *, erro="", requisito=""):
+def _bloco_de_documentos(request, inscricao, versao, *, erro="", requisito="", codigo=""):
     resposta = render(
         request,
         "portal/_documentos.html",
@@ -501,6 +561,9 @@ def _bloco_de_documentos(request, inscricao, versao, *, erro="", requisito=""):
             "documentos": _documentos(versao.content, inscricao),
             "erro_do_envio": erro,
             "requisito_recusado": str(requisito) if erro else "",
+            # Foto de celular é o erro mais comum de candidato, e a mensagem explica a causa sem
+            # explicar o caminho. Quem não sabe converter continua sem saber (L5 da auditoria).
+            "erro_de_imagem": codigo == "file_is_an_image",
             # Resposta de envio, e não render inicial: só aqui o resumo do cabeçalho viaja junto.
             "fragmento": True,
         },
@@ -577,6 +640,7 @@ def revisao(request, inscricao_id):
             ),
             "erros": erros,
             "declaracoes": declaracoes,
+            "etapas": etapas_ate(1),
         },
     )
 
@@ -607,6 +671,7 @@ def comprovante(request, inscricao_id):
             "modalidade": _modalidade_da_inscricao(conteudo, registro),
             "identidade": identidade,
             "documentos": _documentos(conteudo, registro),
+            "etapas": etapas_ate(2),
         },
     )
 

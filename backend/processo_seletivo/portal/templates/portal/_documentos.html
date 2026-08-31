@@ -1,3 +1,4 @@
+{% load arquivos_do_candidato %}
 {% comment %}
 O bloco de documentos, devolvido inteiro a cada envio: a contagem "n de m" muda junto com a linha,
 e atualizar só a linha deixaria a contagem para trás.
@@ -34,8 +35,34 @@ exige.
 
       {% if requisito_recusado == linha.id and erro_do_envio %}
       <p class="recusa" role="alert">{{ erro_do_envio }}</p>
+      {% if erro_de_imagem %}
+      {% comment %}
+      A mensagem explica a causa; isto explica o caminho (L5 da auditoria). Fotografar o documento
+      é o que a maior parte das pessoas faz, e "converta em PDF" não ajuda quem nunca converteu.
+      Fechado por padrão: quem já sabe não precisa ler.
+      {% endcomment %}
+      <details class="como-converter">
+        <summary>Como transformar uma foto em PDF</summary>
+        <ul>
+          <li><strong>iPhone:</strong> abra a foto, toque em Compartilhar, escolha Imprimir e, na
+            tela de impressão, toque de novo em Compartilhar e escolha Salvar em Arquivos — o que
+            for salvo já é um PDF.</li>
+          <li><strong>Android:</strong> abra a foto, toque em Compartilhar, escolha Imprimir e
+            selecione Salvar como PDF.</li>
+          <li><strong>Vários documentos num arquivo só:</strong> use o aplicativo de digitalização
+            do celular (no Android, o Google Drive tem Digitalizar; no iPhone, o app Arquivos
+            digitaliza pela câmera).</li>
+        </ul>
+      </details>
+      {% endif %}
       {% endif %}
 
+      {% comment %}
+      Depois do envio o formulário some para dentro de um `details` (L6 da auditoria): aberto, cada
+      requisito completo ocupava cerca de 850px, e três documentos custavam 2.500px de rolagem para
+      quem já tinha terminado. Substituir é exceção; o estado normal é "está enviado".
+      {% endcomment %}
+      {% if linha.enviado %}<details class="envio-de-novo" {% if requisito_recusado == linha.id and erro_do_envio %}open{% endif %}><summary>Substituir ou remover</summary>{% endif %}
       <div class="envio">
         <label class="rotulo-arquivo" for="arquivo-{{ linha.id }}">
           {% if linha.enviado %}Substituir o arquivo{% else %}Enviar PDF{% endif %}
@@ -49,7 +76,7 @@ exige.
           <input type="file" id="arquivo-{{ linha.id }}" name="arquivo" accept="application/pdf"
                  aria-describedby="ajuda-envio-{{ linha.id }}">
           <button type="submit" class="acao">Enviar</button>
-          <span class="ajuda" id="ajuda-envio-{{ linha.id }}">Somente PDF, até 10 MB.</span>
+          <span class="ajuda" id="ajuda-envio-{{ linha.id }}">Somente PDF, até {% limite_de_arquivo %}.</span>
           {% comment %}
           O progresso e o aviso de não fechar a página aparecem enquanto o envio corre (FR-048):
           dez megabytes em rede móvel levam dezenas de segundos, e é nesse silêncio que a pessoa
@@ -69,6 +96,7 @@ exige.
         </form>
         {% endif %}
       </div>
+      {% if linha.enviado %}</details>{% endif %}
     </li>
     {% endfor %}
   </ul>

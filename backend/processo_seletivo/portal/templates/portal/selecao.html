@@ -1,5 +1,6 @@
 {% extends "portal/base.html" %}
 {% block titulo %}{{ processo_titulo }}{% endblock %}
+{% load arquivos_do_candidato %}
 {% block conteudo %}
 <h1>{{ processo_titulo }}</h1>
 <p class="sub">{{ processo_codigo }} · Edital {{ numero }}/{{ ano }} · Unidade: {{ unidade }}</p>
@@ -42,6 +43,29 @@ inscrição. Ler o Edital continua a um toque — só não disputa mais a decis�
       {% csrf_token %}
       <button type="submit" class="principal">Inscrever-se nesta vaga</button>
     </form>
+    {% endif %}
+    {% comment %}
+    O que será pedido, antes de a pessoa se identificar (L7 da auditoria de percurso). Sem isto, a
+    página listava requisitos de titulação e nada sobre arquivos: descobrir que precisaria do
+    diploma digitalizado custava identificar-se e abrir uma inscrição. Quem lê no ônibus e não tem
+    os arquivos à mão desiste no meio — e volta, se souber o que preparar.
+    {% endcomment %}
+    {% if perfil.documentos_anunciados.sempre or perfil.documentos_anunciados.por_modalidade %}
+    <details class="documentos-anunciados">
+      <summary>Documentos que serão pedidos</summary>
+      {% if perfil.documentos_anunciados.sempre %}
+      <ul>
+        {% for documento in perfil.documentos_anunciados.sempre %}<li>{{ documento }}</li>{% endfor %}
+      </ul>
+      {% endif %}
+      {% for grupo in perfil.documentos_anunciados.por_modalidade %}
+      <p class="meta">Se concorrer em <strong>{{ grupo.modalidade }}</strong>, também:</p>
+      <ul>
+        {% for documento in grupo.documentos %}<li>{{ documento }}</li>{% endfor %}
+      </ul>
+      {% endfor %}
+      <p class="meta">Cada um em PDF, até {% limite_de_arquivo %}.</p>
+    </details>
     {% endif %}
     {% if perfil.requisitos %}
     <p class="meta" style="margin-top:.75rem">Requisitos</p>

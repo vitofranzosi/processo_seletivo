@@ -231,3 +231,35 @@ def test_o_comprovante_pode_ser_impresso_e_reencontrado(client, inscricao_de_mar
     assert "portal/comprovante.js" in corpo
     assert "Guarde o número do protocolo" in corpo
     assert "identifique-se com o mesmo CPF" in corpo, "diz como voltar a este comprovante"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_as_tres_etapas_dizem_onde_a_pessoa_esta(client, inscricao_de_maria):
+    """L3: identificação, dados, documentos, revisão e comprovante eram cinco momentos sem nome.
+
+    Quem se inscreve num concurso costuma fazê-lo uma vez na vida, e a incerteza sobre "quanto
+    ainda falta" é o que faz fechar a aba.
+    """
+    from processo_seletivo.inscricoes.application.submissao import enviar_inscricao
+
+    completa = _completar(inscricao_de_maria)
+    identificar(client, MARIA)
+
+    inscricao = client.get(reverse("portal:inscricao", args=[completa.id])).content.decode()
+    assert "Etapa 1 de 3" in inscricao
+    assert 'aria-label="Etapas da inscrição"' in inscricao
+
+    revisao = client.get(reverse("portal:revisao", args=[completa.id])).content.decode()
+    assert "Etapa 2 de 3" in revisao
+    assert revisao.count('class="concluida"') == 1, "a primeira já passou"
+
+    enviada = enviar_inscricao(
+        identidade=MARIA,
+        inscricao=completa,
+        declaracoes={"veracidade": True, "ciencia": True},
+        idempotency_key="envio-etapas",
+    )
+    comprovante = client.get(reverse("portal:comprovante", args=[enviada.id])).content.decode()
+    assert "Etapa 3 de 3" in comprovante
+    assert comprovante.count('class="concluida"') == 2

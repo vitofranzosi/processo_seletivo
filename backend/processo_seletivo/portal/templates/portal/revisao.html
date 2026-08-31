@@ -1,6 +1,7 @@
 {% extends "portal/base.html" %}
 {% block titulo %}Revisar e enviar{% endblock %}
 {% block conteudo %}
+{% include "portal/_etapas.html" %}
 <h1>Revisar e enviar</h1>
 <p class="sub">{{ selecao.processo_titulo }} · Edital {{ selecao.numero }}/{{ selecao.ano }}</p>
 

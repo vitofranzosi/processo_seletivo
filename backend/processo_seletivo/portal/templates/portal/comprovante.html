@@ -1,6 +1,7 @@
 {% extends "portal/base.html" %}
 {% block titulo %}Inscrição realizada{% endblock %}
 {% block conteudo %}
+{% include "portal/_etapas.html" %}
 <p class="situacao aberto" role="status">✓ Inscrição realizada</p>
 <h1>Protocolo {{ inscricao.protocolo }}</h1>
 

@@ -224,3 +224,30 @@ def test_a_tabela_larga_rola_dentro_de_si_mesma(gestor, selecao, inscricao_envia
 
     assert '<div class="tabela-rolavel">' in corpo
     assert ".tabela-rolavel{overflow-x:auto}" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_abrir_documento_de_candidato_deixa_rastro(gestor, inscricao_enviada):
+    """L10 da auditoria de percurso: quem abriu o documento de quem.
+
+    FR-077 audita os atos do candidato e dispensa a consulta pública; sobre a consulta
+    administrativa a spec é silenciosa, e o silêncio deixava o sistema sem resposta para a
+    pergunta que uma auditoria de dados pessoais faz primeiro. Documento de candidato inclui
+    autodeclaração étnico-racial — dado sensível, e acesso a dado sensível deixa rastro.
+    """
+    from processo_seletivo.auditoria.models import RegistroAuditoria
+
+    resposta = gestor.get(
+        reverse("interface:documento-da-inscricao", args=[inscricao_enviada.id, DOCUMENTO_DE_TODOS])
+    )
+
+    assert resposta.status_code == 200
+    conteudo = b"".join(resposta.streaming_content)
+    resposta.close()
+
+    assert conteudo.startswith(b"%PDF")
+    registro = RegistroAuditoria.objects.get(operation="CONSULTAR_DOCUMENTO")
+    assert registro.aggregate_id == inscricao_enviada.id
+    assert str(DOCUMENTO_DE_TODOS) in registro.reason
+    assert "rg.pdf" not in registro.reason, "o nome do arquivo é do candidato, não da trilha"

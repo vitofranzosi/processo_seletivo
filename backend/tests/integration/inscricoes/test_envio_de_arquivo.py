@@ -213,3 +213,77 @@ def test_o_aviso_de_nao_fechar_a_pagina_fica_escondido_em_repouso(client, inscri
 
     assert '<p class="progresso" hidden>' in corpo
     assert ".progresso[hidden]{display:none}" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_recusa_de_imagem_ensina_a_converter(client, inscricao_de_maria):
+    """L5: a mensagem explicava a causa e não o caminho.
+
+    Fotografar o documento é o que a maior parte das pessoas faz, e "converta em PDF" não ajuda
+    quem nunca converteu. É o erro mais comum de candidato.
+    """
+    identificar(client, MARIA)
+
+    corpo = _enviar(
+        client, inscricao_de_maria, DOCUMENTO_DE_TODOS, imagem("foto.jpg")
+    ).content.decode()
+
+    assert "Converta a imagem em PDF" in corpo
+    assert "Como transformar uma foto em PDF" in corpo
+    assert "iPhone" in corpo and "Android" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_recusa_de_formato_nao_ensina_a_converter(client, inscricao_de_maria):
+    """A instrução é da recusa que a exige — noutra recusa seria ruído."""
+    identificar(client, MARIA)
+
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    nao_e_pdf = SimpleUploadedFile("documento.pdf", b"texto qualquer", content_type="text/plain")
+    corpo = _enviar(client, inscricao_de_maria, DOCUMENTO_DE_TODOS, nao_e_pdf).content.decode()
+
+    assert "não é um PDF" in corpo, "houve recusa"
+    assert "Como transformar uma foto em PDF" not in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_requisito_enviado_recolhe_o_formulario_de_substituicao(client, inscricao_de_maria):
+    """L6: aberto, cada requisito completo custava cerca de 850px de rolagem.
+
+    Substituir é exceção; o estado normal de um requisito atendido é "está enviado". Mas quando a
+    substituição é recusada, o formulário precisa estar à vista — senão a pessoa lê o motivo e não
+    encontra onde tentar de novo.
+    """
+    identificar(client, MARIA)
+    _enviar(client, inscricao_de_maria, DOCUMENTO_DE_TODOS, pdf("rg.pdf"))
+
+    corpo = client.get(
+        reverse("portal:inscricao", args=[inscricao_de_maria.id])
+    ).content.decode()
+    assert '<details class="envio-de-novo"' in corpo
+    assert "Substituir ou remover" in corpo
+    assert "<details class=\"envio-de-novo\" open>" not in corpo, "recolhido quando está tudo bem"
+
+    recusado = _enviar(
+        client, inscricao_de_maria, DOCUMENTO_DE_TODOS, imagem("foto.jpg")
+    ).content.decode()
+    assert "open" in recusado[recusado.index('class="envio-de-novo"') :][:60], (
+        "aberto quando a substituição foi recusada"
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_limite_exibido_e_o_limite_aplicado(client, inscricao_de_maria, settings):
+    """A tela dizia "10 MB" enquanto o limite é configurável — mudá-lo faria a página mentir."""
+    settings.ARQUIVOS_CANDIDATOS_LIMITE_BYTES = 5 * 1024 * 1024
+    identificar(client, MARIA)
+
+    corpo = client.get(reverse("portal:inscricao", args=[inscricao_de_maria.id])).content.decode()
+
+    assert "até 5 MB" in corpo
+    assert "10 MB" not in corpo

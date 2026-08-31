@@ -199,8 +199,10 @@ de implementação, e depende da política de retenção que L11 registra.
 
 ## Lacunas e oportunidades, por prioridade
 
-> **Estado em 31/08/2026:** as três de maior impacto — L1, L2 e L4 — foram corrigidas e travadas
-> por teste. As demais seguem abertas.
+> **Estado em 31/08/2026:** L1 a L10 foram corrigidas e travadas por teste. L11 e L12 continuam
+> abertas, e a razão é a mesma nas duas: não são trabalho de implementação — são, respectivamente,
+> uma decisão de política institucional e uma integração externa. Corrigi-las aqui seria simular
+> que estão resolvidas.
 
 **L1 — O comprovante não era levável (alta). Corrigido.** A tela final oferecia apenas `Voltar à
 seleção`: nenhum `Imprimir / salvar em PDF`, nenhuma frase dizendo como reencontrar o protocolo.
@@ -232,9 +234,14 @@ marcada** — quem marcava uma das duas reencontrava as duas em branco, contra S
 correções estão travadas por `test_a_recusa_das_declaracoes_recebe_o_foco_e_aponta_o_que_falta` e
 `test_a_recusa_nao_apaga_a_declaracao_ja_marcada`.
 
-**L3 — Nenhum indicador de etapa (média).** O candidato nunca sabe em que ponto está nem quanto
-falta. Identificação → dados → documentos → revisão → comprovante são cinco momentos sem nome. Um
-indicador de três passos reduz abandono num público que se inscreve uma vez na vida.
+**L3 — Nenhum indicador de etapa (média). Corrigido.** Identificação, dados, documentos, revisão e
+comprovante eram cinco momentos sem nome, e ninguém sabia se estava no começo ou no fim.
+
+Agora três etapas no topo — *Seus dados e documentos · Revisão · Comprovante* — com a atual marcada
+por `aria-current="step"` e o texto "Etapa N de 3", que diz o mesmo a quem não distingue as cores.
+Três e não cinco: a identificação já passou quando a lista aparece, e os documentos acontecem
+**dentro** da primeira etapa — anunciá-los à parte prometeria uma tela que não existe. Travado por
+`test_as_tres_etapas_dizem_onde_a_pessoa_esta`.
 
 **L4 — O CTA dominante da página era o PDF (média). Corrigido.** Na tela da seleção, `Ler o Edital
 completo (PDF)` usava o mesmo verde sólido (`rgb(21,128,61)`) dos botões de inscrição e era o
@@ -249,42 +256,90 @@ Travado por `test_ler_o_edital_nao_disputa_a_decisao_com_inscrever_se`.
 para cima exigiria decidir o que fazer quando o Edital tem vários Perfis — é decisão de produto, não
 de estilo.
 
-**L5 — A recusa de imagem não diz como converter (média).** A mensagem é boa: nomeia o formato,
-explica a causa e diz o que fazer. Falta o **como** para quem não sabe — em iPhone, `Compartilhar →
-Imprimir → Salvar em PDF`; em Android, o próprio app de Arquivos ou a câmera do Google Drive. Duas
-linhas atrás de um `<details>` resolvem, e este é o erro mais comum de candidato.
+**L5 — A recusa de imagem não dizia como converter (média). Corrigido.** A mensagem nomeava o
+formato, explicava a causa e dizia o que fazer — mas não o **como**, e "converta em PDF" não ajuda
+quem nunca converteu. É o erro mais comum de candidato.
 
-**L6 — Requisito já enviado ocupa a tela como se não estivesse (média).** Depois do envio, o bloco
-continua exibindo o formulário de substituição aberto: ~850 px por requisito, ~2 500 px de rolagem
-com três documentos completos. **Correção:** colapsar para arquivo + ações discretas.
+Agora, e **só** nessa recusa, um `Como transformar uma foto em PDF` recolhido traz o caminho no
+iPhone, no Android e o de juntar vários documentos num arquivo só. Noutras recusas não aparece, o
+que evita transformar a instrução em ruído. Travado por `test_a_recusa_de_imagem_ensina_a_converter`
+e `test_a_recusa_de_formato_nao_ensina_a_converter`.
 
-**L7 — Documentos exigidos são invisíveis antes de se identificar (média).** A tela pública lista
-requisitos de titulação, mas não diz quais **arquivos** serão pedidos. Quem quer saber o que
-preparar precisa se identificar primeiro. Uma linha por Perfil — "serão pedidos: identidade,
-diploma" — reduz a inscrição interrompida na metade.
+**L6 — Requisito já enviado ocupava a tela como se não estivesse (média). Corrigido.** Depois do
+envio o formulário de substituição continuava aberto: ~850 px por requisito, ~2.500 px de rolagem
+com três documentos completos.
 
-**L8 — Cartão da vaga clicável só no botão (baixa).** Nome do Perfil e cartão inteiro não são
-alvo; em celular isso custa toques.
+Agora o formulário some para dentro de um `Substituir ou remover` recolhido — medido depois:
+**225 px** por requisito atendido. Substituir é exceção; o estado normal é "está enviado". Quando a
+substituição é recusada o bloco volta aberto, senão a pessoa leria o motivo sem encontrar onde
+tentar de novo. Travado por `test_o_requisito_enviado_recolhe_o_formulario_de_substituicao`.
 
-**L9 — `novalidate` desliga a validação nativa (baixa).** A decisão é defensável — uma única
-gramática de erro, no servidor —, mas custa o retorno imediato de campo. Vale reavaliar para os
-campos triviais (e-mail, obrigatórios), mantendo o servidor como autoridade.
+**L7 — Documentos exigidos eram invisíveis antes da identificação (média). Corrigido.** A tela
+pública listava requisitos de titulação e nada sobre arquivos: descobrir que precisaria do diploma
+digitalizado custava identificar-se e abrir uma inscrição. Quem lê no ônibus, sem os arquivos à
+mão, desiste no meio.
 
-**L10 — Acesso administrativo a documento não é auditado (média, decisão de produto).** FR-077 audita
-os atos do candidato e dispensa a consulta pública; sobre a **consulta administrativa** a spec é
-silenciosa, e não há registro. Hoje não é possível responder quem abriu o documento de quem. Para
-dado sensível de candidato — inclusive autodeclaração étnico-racial — isso costuma ser exigido em
-auditoria. Não é defeito da implementação: é requisito ausente.
+Cada Perfil ganhou um `Documentos que serão pedidos` recolhido, com o que vale para todo mundo e o
+que cada modalidade acrescenta — *"Se concorrer em Pessoas pretas, pardas e indígenas, também:
+Autodeclaração étnico-racial"* —, mais formato e limite. Sai da mesma função de aplicabilidade que
+decide o que a inscrição pede: três leituras da mesma regra, e não três interpretações. Travado por
+`test_os_documentos_exigidos_aparecem_antes_da_identificacao`.
 
-**L11 — Retenção e descarte continuam sendo precondição não implementada (média).** A própria spec
-declara (FR-076, linha 80) que a política de retenção fica fora desta feature. O percurso mostra o
-custo concreto: rascunhos com CPF e e-mail já se acumulam a partir do primeiro dia. Antes da
-implantação real, alguém precisa decidir prazo e rotina.
+No caminho apareceu um defeito pequeno e real: **o limite "10 MB" estava escrito à mão em dois
+templates** enquanto `ARQUIVOS_CANDIDATOS_LIMITE_BYTES` é configurável. Mudar o limite deixaria a
+tela mentindo para o candidato. Agora é uma tag que lê a configuração
+(`test_o_limite_exibido_e_o_limite_aplicado`).
 
-**L12 — Uma pessoa pode declarar-se outra (conhecido, declarado).** O provedor de demonstração
-aceita qualquer CPF sem prova de titularidade. Está corretamente rotulado na tela, e
-`config/settings/production.py` recusa a subida com ele ligado. Registrado aqui só para que a
-integração com o provedor real permaneça visível como bloqueio de implantação, não como melhoria.
+**L8 — Cartão da vitrine clicável só no título (baixa). Corrigido.** Num celular, mirar duas
+palavras de título é o tipo de precisão que faz errar. O cartão inteiro virou alvo — medido: de
+**8.304 px²** para **86.725 px²**, dez vezes mais. O link continua sendo **um só**: o pseudo-elemento
+estende a área dele, então teclado e leitor de tela seguem vendo exatamente um destino, e o cartão
+ganhou `:focus-within` para que o foco continue visível.
+
+**L9 — `novalidate` desligava a validação nativa (baixa). Corrigido.** A decisão original era
+defensável — uma gramática de erro só, no servidor —, mas custava o retorno imediato de campo.
+
+O `novalidate` saiu do HTML e passou para o script: **sem** JavaScript o navegador volta a exigir os
+obrigatórios e o formato do e-mail sozinho, que é mais do que havia antes; **com** JavaScript o
+script assume, usando a mesma Constraint Validation API que a interface administrativa já usa
+(`interface/validacao.js`) e repetindo **a mensagem do servidor**, palavra por palavra. Verificado
+no navegador ao digitar um CPF curto: `{aria_invalid: "true", mensagem: "Informe um CPF com 11
+dígitos.", valido: false}` — a mesma frase que `_recusas_da_identificacao` devolveria. A gramática
+de erro continua sendo uma só; o que mudou é quando ela chega.
+
+**L10 — Acesso administrativo a documento não era auditado (média). Corrigido.** FR-077 audita os
+atos do candidato e dispensa a consulta pública; sobre a **consulta administrativa** a spec era
+silenciosa, e o silêncio deixava o sistema sem resposta para a pergunta que uma auditoria de dados
+pessoais faz primeiro. Documento de candidato inclui autodeclaração étnico-racial: é dado sensível,
+e acesso a dado sensível deixa rastro.
+
+Cada entrega de arquivo passou a registrar `CONSULTAR_DOCUMENTO`, com ator, inscrição, requisito e
+instante — e **sem** o nome do arquivo, que é do candidato (FR-074). Verificado no banco após uma
+consulta real: `Ana Coordenadora | inscricao=afc6f2cc | requisito 0000…00d1`. Travado por
+`test_abrir_documento_de_candidato_deixa_rastro`.
+
+**Isto é acréscimo ao que a spec pedia**, e não cumprimento dela: FR-077 não exige este registro.
+Vale registrá-lo na próxima revisão da spec para que não pareça acidente.
+
+**L11 — Retenção e descarte (média). Não corrigida, e de propósito.** A spec não é omissa aqui: ela
+**proíbe** (FR-076) que esta feature implemente rotina automática de expurgo, e declara a política
+de retenção como precondição de implantação. Escrever um expurgo agora seria decidir por conta
+própria quanto tempo o CPF de um candidato fica guardado — decisão institucional, não técnica, e
+que uma vez em código passa a parecer resolvida.
+
+O percurso mostra o custo concreto de deixá-la em aberto: rascunhos com CPF e e-mail se acumulam a
+partir do primeiro dia, e a correção de D5 os tornou mais visíveis, não menos numerosos. **O que
+falta é a decisão**: por quanto tempo, sob que responsável, com que rotina. Depois dela, o código é
+pequeno.
+
+**L12 — Uma pessoa pode declarar-se outra. Não corrigível aqui.** O provedor de demonstração aceita
+qualquer CPF sem prova de titularidade. Não há o que consertar no código: o que falta é o provedor
+real (gov.br ou equivalente institucional), que é integração externa e depende de credenciamento.
+
+O que o sistema já faz é o que lhe cabe: a tela declara-se demonstração sem eufemismo, e
+`config/settings/production.py:94` **recusa a subida** com o provedor de demonstração ligado — a
+barreira existe e é executável. FR-026 garante que trocar o provedor não altera a semântica da
+Inscrição. Continua sendo bloqueio de implantação, e não melhoria de experiência.
 
 ## O que não foi verificado neste percurso
 
