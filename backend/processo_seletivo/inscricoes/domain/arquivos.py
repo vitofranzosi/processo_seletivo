@@ -104,3 +104,17 @@ def resumo(arquivo) -> str:
 
 def _megabytes(quantidade: int) -> str:
     return f"{quantidade / (1024 * 1024):.1f} MB".replace(".", ",")
+
+
+def tamanho_legivel(quantidade: int) -> str:
+    """`184320` vira `180 KB`.
+
+    O tamanho vai para o comprovante porque é o segundo sinal de que o arquivo certo chegou: o
+    nome pode coincidir entre duas versões do mesmo documento, o tamanho quase nunca. Quem
+    confere, confere os dois — e o resumo criptográfico decide quando os dois baterem.
+    """
+    if quantidade < 1024:
+        return f"{quantidade} bytes"
+    if quantidade < 1024 * 1024:
+        return f"{round(quantidade / 1024)} KB"
+    return _megabytes(quantidade)

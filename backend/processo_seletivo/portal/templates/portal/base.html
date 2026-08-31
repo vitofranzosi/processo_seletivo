@@ -252,19 +252,76 @@ form.convite{margin:.75rem 0 0}
   font-size:.9375rem;color:var(--texto-fraco)}
 .atestado p{margin:0 0 .5rem}
 .atestado .conferencia{overflow-wrap:anywhere}
+.atestado code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.875em;
+  background:var(--cinza-fundo);padding:.05rem .3rem;border-radius:3px}
+.atestado .emissao{margin-top:.75rem;font-size:.875rem}
+
+/* Os documentos do comprovante: lista numerada e densa, e não os cartões da tela de envio. Aqui
+   não há ação nenhuma a oferecer — o que importa é caber, e caber junto, para que a conferência
+   aconteça sem virar a página. */
+.documentos-do-comprovante{list-style:none;margin:0 0 1rem;padding:0;display:grid;gap:.75rem}
+.documentos-do-comprovante>li{border:1px solid var(--borda);border-left:3px solid var(--sucesso);
+  border-radius:4px;padding:.6rem .8rem}
+.documentos-do-comprovante .requisito-nome{margin:0;font-weight:600}
+.documentos-do-comprovante .marca{color:var(--sucesso);margin-right:.3rem}
+.arquivo-linha{margin:.15rem 0 .3rem;display:flex;flex-wrap:wrap;gap:.15rem .5rem;
+  align-items:baseline;overflow-wrap:anywhere}
+.arquivo-linha .arquivo-nome{font-weight:600}
+.arquivo-linha .arquivo-meta{color:var(--texto-fraco);font-size:.875rem}
+/* O resumo é longo por natureza: 64 caracteres que precisam ser lidos um a um quando alguém
+   confere. Monoespaçada e quebra em qualquer ponto — cortá-lo tornaria a conferência impossível,
+   que é o oposto do que ele existe para permitir. */
+.resumo-do-arquivo{margin:0;display:flex;flex-wrap:wrap;gap:.35rem;align-items:baseline;
+  font-size:.8125rem;color:var(--texto-fraco)}
+.resumo-do-arquivo .rotulo{text-transform:uppercase;letter-spacing:.04em;font-size:.6875rem;
+  flex:0 0 auto}
+.resumo-do-arquivo code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  overflow-wrap:anywhere;word-break:break-all;line-height:1.4}
+/* O comprovante em uma página.
+
+   Duas páginas fazem um documento de uma dobra virar dois papéis que se separam — e o que ficava
+   na segunda era justamente o que diz o que ele atesta. Aqui o papel é tratado como o meio que é:
+   corpo menor, entrelinha menor, dados em duas colunas, e nada de sombra ou raio de canto, que
+   custam tinta e não dizem nada impressos.
+
+   O cabeçalho e o rodapé com a URL são do **navegador**, não desta página, e nenhuma regra de CSS
+   os remove — quem imprime os desliga em Imprimir → Cabeçalhos e rodapés. É por isso que o
+   documento carrega o próprio timbre e a própria data de emissão: para não depender deles. */
 @media print{
   /* Navegação, ações e etapas não são o documento: no papel, um "Etapa 3 de 3" faz o comprovante
      parecer a captura de uma tela pela metade. */
   header.topo, .nao-imprime, .pular, .etapas{display:none}
+  @page{margin:12mm 14mm}
+  html,body{font-size:10.5pt;line-height:1.35;background:#fff}
   main{max-width:none;padding:0}
   a{text-decoration:none;color:var(--texto)}
-  .timbre{display:block;border-bottom:2px solid var(--texto);padding-bottom:.5rem;
-    margin-bottom:1.25rem}
-  .timbre .orgao{margin:0;font-weight:700;font-size:1rem}
-  .timbre .unidade{margin:.1rem 0 0;font-size:.875rem}
-  .protocolo{background:none;border:1px solid #000;border-left:4px solid #000}
+  h1{font-size:14pt;margin:0 0 .5rem}
+  h2{font-size:11pt;margin:.9rem 0 .35rem}
+  .timbre{display:block;border-bottom:2px solid var(--texto);padding-bottom:.35rem;
+    margin-bottom:.75rem}
+  .timbre .orgao{margin:0;font-weight:700;font-size:11pt}
+  .timbre .unidade{margin:.05rem 0 0;font-size:9pt}
+  .protocolo{background:none;border:1px solid #000;border-left:4px solid #000;border-radius:0;
+    margin:0 0 .75rem;padding:.4rem .6rem}
+  .protocolo .rotulo{font-size:7.5pt}
+  .protocolo strong{font-size:13pt}
+  /* Duas colunas de rótulo e valor: o que ocupava dez linhas ocupa cinco, e nenhuma delas fica
+     larga demais para ser lida. */
+  .dados{grid-template-columns:auto 1fr auto 1fr;gap:.2rem .6rem;margin:0 0 .5rem}
+  .dados dt{font-size:9pt}
+  .dados dd{margin:0;font-size:9.5pt}
+  .documentos-do-comprovante{gap:.4rem;margin-bottom:.6rem}
+  .documentos-do-comprovante>li{padding:.35rem .55rem;border-radius:0;
+    break-inside:avoid;page-break-inside:avoid}
+  .documentos-do-comprovante .requisito-nome{font-size:9.5pt}
+  .arquivo-linha{margin:.05rem 0 .15rem}
+  .arquivo-linha .arquivo-meta{font-size:8.5pt}
+  .resumo-do-arquivo{font-size:7.5pt}
+  .resumo-do-arquivo .rotulo{font-size:6.5pt}
+  .atestado{color:var(--texto);margin:.6rem 0 0;padding-top:.5rem;font-size:8.5pt}
+  .atestado p{margin:0 0 .25rem}
+  .atestado code{background:none;padding:0}
   .requisito{break-inside:avoid;page-break-inside:avoid}
-  .atestado{color:var(--texto)}
 }
 @media (min-width:600px){
   main{padding:1.5rem}

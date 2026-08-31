@@ -251,3 +251,23 @@ def test_abrir_documento_de_candidato_deixa_rastro(gestor, inscricao_enviada):
     assert registro.aggregate_id == inscricao_enviada.id
     assert str(DOCUMENTO_DE_TODOS) in registro.reason
     assert "rg.pdf" not in registro.reason, "o nome do arquivo é do candidato, não da trilha"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_quem_confere_ve_tamanho_e_resumo_de_cada_arquivo(gestor, inscricao_enviada):
+    """O sistema já confere sozinho a cada abertura e recusa o que divergir.
+
+    Isto é o que permite a quem confere afirmar o mesmo **por fora**: comparar o arquivo que tem em
+    mãos com o que foi recebido, sem depender do sistema — e é o mesmo resumo que vai no
+    comprovante do candidato.
+    """
+    documento = DocumentoSubmetido.objects.get(requirement_id=DOCUMENTO_DE_TODOS)
+
+    corpo = gestor.get(
+        reverse("interface:inscricao-recebida", args=[inscricao_enviada.id])
+    ).content.decode()
+
+    assert documento.content_hash in corpo
+    assert "SHA-256" in corpo
+    assert "bytes" in corpo or "KB" in corpo

@@ -43,7 +43,17 @@
         {% if not documento.obrigatorio %}<span class="ajuda">(facultativo)</span>{% endif %}</p>
       {% if documento.enviado %}
       <p>{{ documento.enviado.nome_original }}
-        <span class="ajuda">· {{ documento.enviado.uploaded_at|date:"d/m/Y H\hi" }}</span></p>
+        <span class="ajuda">· {{ documento.tamanho }}
+          · {{ documento.enviado.uploaded_at|date:"d/m/Y H\hi" }}</span></p>
+      {% comment %}
+      O mesmo resumo que vai no comprovante do candidato (D9). O sistema já confere sozinho a cada
+      abertura e recusa o que divergir; isto é o que permite a **quem confere** afirmar o mesmo por
+      fora — comparar o arquivo que tem em mãos com o que foi recebido, sem depender do sistema.
+      {% endcomment %}
+      <p class="resumo-do-arquivo">
+        <span class="rotulo">SHA-256</span>
+        <code>{{ documento.enviado.content_hash }}</code>
+      </p>
       <p class="acoes-do-documento">
         <a class="acao" href="{% url 'interface:documento-da-inscricao' inscricao.id documento.id %}"
            target="_blank" rel="noopener">Visualizar</a>

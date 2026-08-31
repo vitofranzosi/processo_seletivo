@@ -11,6 +11,7 @@ inexistente para quem pergunta — a mesma resposta que `require_permission` já
 """
 
 from processo_seletivo.inscricoes.application.rascunho import requisitos_da_inscricao
+from processo_seletivo.inscricoes.domain.arquivos import tamanho_legivel
 from processo_seletivo.inscricoes.domain.pessoais import mascarar_cpf
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.processos.models import Edital
@@ -130,6 +131,13 @@ def inscricao_para_consulta(*, actor, inscricao_id):
             "nome": requisito.get("name", ""),
             "obrigatorio": requisito.get("required", True),
             "enviado": enviados.get(str(requisito["id"])),
+            # O tamanho legível acompanha o nome porque dois arquivos com o mesmo nome quase nunca
+            # têm o mesmo tamanho; o resumo, que vem do próprio documento, decide quando têm.
+            "tamanho": (
+                None
+                if enviados.get(str(requisito["id"])) is None
+                else tamanho_legivel(enviados[str(requisito["id"])].tamanho)
+            ),
         }
         for requisito in requisitos_da_inscricao(conteudo, inscricao)
     ]

@@ -309,3 +309,57 @@ def test_o_papel_nao_leva_navegacao_nem_botao(client, inscricao_de_maria):
     for fora_do_papel in ("header.topo", ".nao-imprime", ".pular", ".etapas"):
         assert fora_do_papel in impressao.split("}")[0], f"{fora_do_papel} não vai para o papel"
     assert ".timbre{display:block" in impressao, "e o timbre só existe nele"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_comprovante_permite_verificar_cada_arquivo(client, inscricao_de_maria):
+    """D9: o que transforma o comprovante de lista em prova.
+
+    Com o resumo criptográfico, o candidato demonstra depois que o arquivo em mãos é o que
+    entregou, e a comissão afirma que o arquivo que abriu é o que foi recebido. Sem ele,
+    "documento2.pdf" identifica tanto quanto um nome de arquivo identifica — quase nada.
+    """
+    from processo_seletivo.inscricoes.application.submissao import enviar_inscricao
+    from processo_seletivo.inscricoes.models import DocumentoSubmetido
+
+    completa = _completar(inscricao_de_maria)
+    enviada = enviar_inscricao(
+        identidade=MARIA,
+        inscricao=completa,
+        declaracoes={"veracidade": True, "ciencia": True},
+        idempotency_key="envio-verificavel",
+    )
+    identificar(client, MARIA)
+
+    corpo = client.get(reverse("portal:comprovante", args=[enviada.id])).content.decode()
+
+    for documento in DocumentoSubmetido.objects.filter(inscricao=enviada):
+        assert documento.content_hash in corpo, "o resumo inteiro, não um prefixo"
+    assert "SHA-256" in corpo
+    assert "shasum -a 256" in corpo, "e como conferi-lo"
+    assert "certutil -hashfile" in corpo, "inclusive em Windows"
+    assert "bytes" in corpo or "KB" in corpo, "o tamanho de cada arquivo"
+    assert "Comprovante emitido em" in corpo, "o documento diz de quando é"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_comprovante_cabe_em_uma_pagina(client, inscricao_de_maria):
+    """Duas páginas separam o documento do que ele atesta.
+
+    O que caía na segunda folha era justamente o parágrafo que diz o que o comprovante prova. O
+    papel é tratado como o meio que é: corpo menor, dados em duas colunas, e nenhum documento
+    partido ao meio.
+    """
+    corpo = (
+        __import__("pathlib")
+        .Path("processo_seletivo/portal/templates/portal/base.html")
+        .read_text(encoding="utf-8")
+    )
+
+    impressao = corpo[corpo.index("@media print{") :]
+    assert "@page{margin:" in impressao, "margem do papel definida pelo documento"
+    assert "font-size:10.5pt" in impressao, "corpo dimensionado para papel, não para tela"
+    assert ".dados{grid-template-columns:auto 1fr auto 1fr" in impressao, "dados em duas colunas"
+    assert "break-inside:avoid" in impressao, "nenhum documento partido entre folhas"

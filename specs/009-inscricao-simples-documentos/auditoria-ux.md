@@ -319,6 +319,53 @@ Travado por `test_o_campo_de_arquivo_do_navegador_nao_aparece_cru` e
 `test_o_progresso_dos_documentos_e_barra_e_nao_segunda_frase`; a ausência de rolagem horizontal em
 375 px e a ordem entre documentos e ação principal seguem cobertas pelos testes de D2 e SC-UX-004.
 
+### D9 — O comprovante listava arquivos sem permitir verificá-los (alta)
+
+O comprovante já se identificava como documento (D7), mas ainda não servia à pergunta que importa
+quando alguém precisa confiar nele: **este arquivo é o que foi entregue?** Listar
+`documento2.pdf` identifica tanto quanto um nome de arquivo identifica — quase nada. Dois arquivos
+com o mesmo nome são indistinguíveis no papel, e é exatamente aí que uma contestação começa.
+
+Além disso o documento passou a ocupar **duas páginas**, e o que caía na segunda folha era
+justamente o parágrafo que diz o que ele atesta — a parte que dá valor à primeira.
+
+**Corrigido: cada arquivo passou a ser verificável.**
+
+O resumo SHA-256 já era calculado no envio e guardado com o documento; o que faltava era estar à
+vista. Agora cada arquivo aparece com **nome, tamanho, horário de recebimento e o resumo inteiro**
+— 64 caracteres, sem prefixo abreviado, porque um prefixo não serve para conferir. Junto vai o
+comando que faz a conferência: `shasum -a 256 arquivo.pdf` no macOS e Linux,
+`certutil -hashfile arquivo.pdf SHA256` no Windows.
+
+Isso fecha os dois lados da confiança:
+
+- **o candidato** demonstra, meses depois, que o arquivo que tem em mãos é o que entregou;
+- **quem confere** afirma que o arquivo que abriu é o que foi recebido — por fora, sem depender do
+  sistema. O mesmo resumo passou a aparecer também no detalhe administrativo, ao lado de
+  `Visualizar` e `Baixar`.
+
+O sistema já recusava servir arquivo divergente (FR-053a); o que não existia era o meio de **outra
+pessoa** chegar à mesma conclusão sozinha. Verificação que só o próprio sistema pode fazer não é
+verificação — é uma afirmação sobre si mesmo.
+
+**Corrigido: cabe em uma página.** O papel passou a ser tratado como o meio que é — corpo em
+10,5 pt, entrelinha menor, margem de página declarada, dados em **duas colunas**, documentos em
+lista densa, e `break-inside: avoid` para que nenhum arquivo seja partido entre folhas. Medido com
+três documentos e três resumos: **663 px de conteúdo contra 1032 px** de área útil de uma A4 —
+cabe com folga.
+
+**Corrigido: o documento diz de quando é.** Entrou a linha `Comprovante emitido em …`, que não
+depende do rodapé do navegador.
+
+**O que não pude corrigir, e por quê.** O cabeçalho com o endereço da página e o rodapé com a data
+são do **navegador**, não desta página: nenhuma regra de CSS os remove, nem `@page`. É decisão de
+quem imprime. O que dava para fazer, foi feito — o documento carrega o próprio timbre e a própria
+data, para não depender deles, e a tela ganhou a linha que diz onde desligá-los (*na janela de
+impressão, desmarque Cabeçalhos e rodapés*).
+
+Travado por `test_o_comprovante_permite_verificar_cada_arquivo`,
+`test_o_comprovante_cabe_em_uma_pagina` e `test_quem_confere_ve_tamanho_e_resumo_de_cada_arquivo`.
+
 ## Lacunas e oportunidades, por prioridade
 
 > **Estado em 31/08/2026:** L1 a L10 foram corrigidas e travadas por teste. L11 e L12 continuam

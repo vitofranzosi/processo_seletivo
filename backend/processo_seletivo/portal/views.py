@@ -33,6 +33,7 @@ from processo_seletivo.inscricoes.application.submissao import (
     pendencias_para_enviar,
     reconhecer_versao,
 )
+from processo_seletivo.inscricoes.domain.arquivos import tamanho_legivel
 from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes, recebe_inscricoes
 from processo_seletivo.inscricoes.domain.pessoais import (
     cpf_valido,
@@ -452,6 +453,9 @@ def _documentos(conteudo, inscricao):
                 "instrucao": requisito.get("instructions", ""),
                 "obrigatorio": requisito.get("required", True),
                 "enviado": documento,
+                # Tamanho e resumo criptográfico vão para o comprovante (D9): são o que permite a
+                # alguém, depois, afirmar que o arquivo em mãos é o que foi entregue.
+                "tamanho": None if documento is None else tamanho_legivel(documento.tamanho),
             }
         )
     obrigatorios = [linha for linha in linhas if linha["obrigatorio"]]
@@ -703,6 +707,9 @@ def comprovante(request, inscricao_id):
             # A versão sob a qual a inscrição foi feita, no próprio comprovante: é ela que diz a
             # que regras a pessoa respondeu, e uma Retificação posterior não a altera (FR-058).
             "versao_aceita": registro.versao_aceita,
+            # O documento diz quando foi emitido: o cabeçalho do navegador não é parte dele, e
+            # quem imprime meses depois precisa saber de quando é o papel que tem em mãos.
+            "agora": timezone.now(),
             # Formatado na saída, e não só na entrada: inscrições anteriores a esta correção
             # guardaram o CPF como a pessoa digitou.
             "cpf_do_candidato": formatar_cpf(registro.cpf),
