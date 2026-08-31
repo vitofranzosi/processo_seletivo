@@ -157,18 +157,35 @@ def _texto_pdf(valor: str) -> bytes:
     return escapado.encode("cp1252", "replace")
 
 
-def _quebrar(texto: str, tamanho: float, recuo: float, fonte: str = REGULAR) -> list[str]:
-    """Reflui por largura real, e não por contagem de caracteres (FR-002, FR-032)."""
-    disponivel = LARGURA - 2 * MARGEM - recuo
+def _quebrar(
+    texto: str, tamanho: float, recuo: float, fonte: str = REGULAR, limite: float | None = None
+) -> list[str]:
+    """Reflui por largura real, e não por contagem de caracteres (FR-002, FR-032).
+
+    `limite` é a largura da coluna, quando o texto é célula de tabela: sem ele o refluxo usaria a
+    página inteira e a célula atravessaria as colunas vizinhas.
+    """
+    # A tolerância existe porque a largura de uma coluna é calculada a partir da largura do seu
+    # próprio conteúdo: sem ela, a igualdade exata falha por arredondamento e a célula que definiu
+    # a coluna é a primeira a quebrar dentro dela — foi assim que um `40` virou `4` e `0`.
+    disponivel = (limite if limite is not None else LARGURA - 2 * MARGEM - recuo) + 0.01
     linhas, atual = [], ""
     for palavra in str(texto).split():
         candidato = f"{atual} {palavra}".strip()
         if largura(candidato, tamanho, fonte) <= disponivel:
             atual = candidato
-        else:
-            if atual:
-                linhas.append(atual)
-            atual = palavra
+            continue
+        if atual:
+            linhas.append(atual)
+        # Uma palavra sozinha mais larga que o espaço disponível não tem onde quebrar por espaço.
+        # Parti-la é feio; deixá-la atravessar a margem é pior, e é o que acontecia.
+        while largura(palavra, tamanho, fonte) > disponivel and len(palavra) > 1:
+            corte = len(palavra)
+            while corte > 1 and largura(palavra[:corte], tamanho, fonte) > disponivel:
+                corte -= 1
+            linhas.append(palavra[:corte])
+            palavra = palavra[corte:]
+        atual = palavra
     if atual:
         linhas.append(atual)
     return linhas or [""]
@@ -234,13 +251,17 @@ class Composicao:
         automática. A regra é local — a linha exige espaço para si **e** para a próxima —, e não
         um algoritmo de viúvas e órfãs.
         """
-        partes = _quebrar(texto, tamanho, recuo, fonte)
-        for indice, parte in enumerate(partes):
+        # **Todas as partes herdam o `junto` pedido, e nenhuma o ganha sozinha.** A primeira
+        # redação marcava toda parte intermediária de um refluxo como "não me separe da próxima",
+        # para manter unidas as linhas de um parágrafo. Isso é cortesia, não requisito — e vira
+        # laço quando o parágrafo é maior que a página: o paginador devolve a cadeia à página
+        # nova, ela não cabe de novo, e o documento cresce em páginas vazias. Quebrar entre linhas
+        # é o quinto degrau da cascata, e é o comportamento normal de um parágrafo longo.
+        for indice, parte in enumerate(_quebrar(texto, tamanho, recuo, fonte)):
             self.itens.append(
                 (
                     "texto", parte, fonte, tamanho, recuo,
-                    antes if indice == 0 else 0.0, alinhamento,
-                    junto or indice < len(partes) - 1, repetir,
+                    antes if indice == 0 else 0.0, alinhamento, junto, repetir,
                 )
             )
 
@@ -313,6 +334,10 @@ class Composicao:
         # O cabeçalho da tabela aberta agora. Guardá-lo é o que permite repeti-lo na continuação
         # (FR-026): sem isso, a página seguinte mostra números sem dizer de que são.
         cabecalho_ativo: list = []
+        # A repetição é **pendente**, não imediata: emitido na quebra, o cabeçalho apareceria
+        # sozinho numa página em que a tabela já terminou — o mesmo defeito do título órfão, uma
+        # linha abaixo. Ele só se materializa quando há linha para encabeçar.
+        cabecalho_pendente = False
 
         def nova_pagina():
             """Fecha a página — **levando junto** o rastro de linhas que pediram companhia.
@@ -321,9 +346,16 @@ class Composicao:
             não cabe. Quem quebra a página é quem tem de devolver o título, senão ele fica para
             trás sozinho — que é o defeito de composição automática mais visível de todos.
             """
-            nonlocal atual, tracos, y
-            rastro = []
+            nonlocal atual, tracos, y, cabecalho_pendente
+            # O rastro é o que a quebra devolve à página nova. Ele tem de caber lá com folga
+            # para o que vem em seguida: um título que arrastasse meia página deixaria de ser
+            # cortesia e viraria a causa da quebra seguinte.
+            rastro, altura_do_rastro = [], 0.0
             while atual and atual[-1][5]:
+                candidato = atual[-1]
+                altura_do_rastro += candidato[2] * 1.45
+                if altura_do_rastro > util / 3:
+                    break
                 rastro.insert(0, atual.pop())
             for aberto in pilha:
                 if aberto["moldura"] and aberto["topo"] is not None:
@@ -333,10 +365,7 @@ class Composicao:
             for texto, fonte, tamanho, x, _, junto in rastro:
                 y -= tamanho * 1.45
                 atual.append((texto, fonte, tamanho, x, y, junto))
-            if cabecalho_ativo:
-                y -= max(tamanho for _, _, tamanho, _ in cabecalho_ativo) * 1.45
-                for texto, fonte, tamanho, x in cabecalho_ativo:
-                    atual.append((texto, fonte, tamanho, x, y, False))
+            cabecalho_pendente = bool(cabecalho_ativo)
             # Um bloco que já estava aberto reabre a moldura abaixo do rastro, pela mesma razão.
             for aberto in pilha:
                 if aberto["moldura"] and aberto["topo"] is not None:
@@ -364,7 +393,7 @@ class Composicao:
 
             if item[0] == "fecha":
                 if item[1] == "tabela":
-                    cabecalho_ativo = []
+                    cabecalho_ativo, cabecalho_pendente = [], False
                 aberto = pilha.pop()
                 if aberto["moldura"] and aberto["topo"] is not None:
                     tracos.append((aberto["topo"], y))
@@ -390,6 +419,11 @@ class Composicao:
             if y - necessario < RODAPE + 24 and atual:
                 nova_pagina()
                 antes, altura = 0.0, altura - antes
+            if texto and cabecalho_pendente:
+                cabecalho_pendente = False
+                y -= max(corpo for _, _, corpo, _ in cabecalho_ativo) * 1.45
+                for repetido, sua_fonte, seu_corpo, seu_x in cabecalho_ativo:
+                    atual.append((repetido, sua_fonte, seu_corpo, seu_x, y, False))
             y -= altura
             if texto:
                 x = _x(texto, fonte, tamanho, recuo, alinhamento)
@@ -445,44 +479,86 @@ def _cabecalho(composicao, snapshot):
         composicao.escrever(snapshot["description"], tamanho=CORPO_TEXTO, antes=16)
 
 
-def _tabela(composicao, cabecalho, linhas, *, recuo=18.0, tamanho=CORPO_TEXTO):
-    """Colunas medidas pelo conteúdo, com a folga na coluna mais larga (D-007).
+PADDING_DA_COLUNA = 12.0
 
-    Proporção fixa quebraria no primeiro dado real — uma localidade longa ou um fundamento
-    normativo por extenso estoura a coluna ou deixa metade da página vazia. Medir só é possível
-    por causa de FR-002.
+
+def _larguras_das_colunas(cabecalho, linhas, tamanho, disponivel):
+    """A largura de cada coluna, medida pelo conteúdo **e limitada à área útil** (D-007).
+
+    Medir pelo conteúdo é o que evita a proporção fixa que quebra no primeiro dado real. Mas
+    medida sem teto, uma descrição longa soma além da página e empurra as colunas seguintes para
+    fora do papel — o documento sai sem as datas, e nada acusa.
+
+    O excesso é tirado sempre da coluna mais larga, e não distribuído: quem estoura a linha é a
+    célula longa, e encolher a coluna do `Nº` para acomodá-la não ajudaria ninguém.
+    """
+    colunas = len(linhas[0])
+    naturais = [
+        max(
+            largura(cabecalho[c], tamanho, NEGRITO) if cabecalho else 0.0,
+            *(largura(linha[c], tamanho, REGULAR) for linha in linhas),
+        )
+        + PADDING_DA_COLUNA
+        for c in range(colunas)
+    ]
+    piso = largura("MMMM", tamanho, REGULAR) + PADDING_DA_COLUNA
+    while sum(naturais) > disponivel:
+        maior = max(range(colunas), key=lambda c: naturais[c])
+        sobra = disponivel - (sum(naturais) - naturais[maior])
+        if sobra < piso:
+            # Nem encolhendo a maior cabe: todas cedem na mesma proporção, e o refluxo por célula
+            # cuida do resto. É o caso extremo, e sair da página não é alternativa.
+            fator = disponivel / sum(naturais)
+            return [n * fator for n in naturais]
+        naturais[maior] = sobra
+    sobra = disponivel - sum(naturais)
+    if sobra > 0:
+        naturais[naturais.index(max(naturais))] += sobra
+    return naturais
+
+
+def _tabela(composicao, cabecalho, linhas, *, recuo=18.0, tamanho=CORPO_TEXTO):
+    """Uma tabela: colunas limitadas, células que refluem dentro da sua coluna.
+
+    A altura de cada linha é a da célula mais alta — sem isso, uma célula de três linhas
+    escreveria por cima da linha seguinte.
     """
     if not linhas:
         return
-    colunas = len(linhas[0])
-    minimas = [
-        max(
-            largura(cabecalho[c], tamanho, NEGRITO) if cabecalho else 0,
-            *(largura(linha[c], tamanho, REGULAR) for linha in linhas),
-        )
-        + 12
-        for c in range(colunas)
-    ]
     disponivel = LARGURA - 2 * MARGEM - recuo
-    sobra = disponivel - sum(minimas)
-    if sobra > 0:
-        minimas[minimas.index(max(minimas))] += sobra
+    colunas = _larguras_das_colunas(cabecalho, linhas, tamanho, disponivel)
 
     def escrever_linha(celulas, fonte, repetir=False):
-        deslocamento = recuo
-        for indice, celula in enumerate(celulas):
-            composicao.escrever(
-                celula, tamanho=tamanho, fonte=fonte, recuo=deslocamento,
-                antes=ANTES_DE_LINHA if indice == 0 else -(tamanho * 1.45),
-                junto=repetir and indice == len(celulas) - 1,
-                repetir=repetir,
-            )
-            deslocamento += minimas[indice]
+        refluidas = [
+            _quebrar(celula, tamanho, 0.0, fonte, limite=colunas[c] - PADDING_DA_COLUNA)
+            for c, celula in enumerate(celulas)
+        ]
+        for altura in range(max(len(parte) for parte in refluidas)):
+            deslocamento, primeira_da_linha = recuo, True
+            for indice, partes in enumerate(refluidas):
+                texto = partes[altura] if altura < len(partes) else ""
+                if texto:
+                    composicao.escrever(
+                        texto,
+                        tamanho=tamanho,
+                        fonte=fonte,
+                        recuo=deslocamento,
+                        antes=(
+                            (ANTES_DE_LINHA if altura == 0 else 0.0)
+                            if primeira_da_linha
+                            else -(tamanho * 1.45)
+                        ),
+                        junto=repetir,
+                        repetir=repetir,
+                    )
+                    primeira_da_linha = False
+                deslocamento += colunas[indice]
 
-    if cabecalho:
-        escrever_linha(cabecalho, NEGRITO, repetir=True)
-    for linha in linhas:
-        escrever_linha(linha, REGULAR)
+    with composicao.tabela():
+        if cabecalho:
+            escrever_linha(cabecalho, NEGRITO, repetir=True)
+        for linha in linhas:
+            escrever_linha(linha, REGULAR)
 
 
 def _modalidades(composicao, perfil):
@@ -615,8 +691,7 @@ def _cronograma(composicao, snapshot, secao=0):
         ]
         for evento in eventos
     ]
-    with composicao.tabela():
-        _tabela(composicao, ["Nº", "Evento", "Início", "Término"], linhas, recuo=0.0)
+    _tabela(composicao, ["Nº", "Evento", "Início", "Término"], linhas, recuo=0.0)
 
 
 CARATER_DA_ETAPA = (("eliminatory", "eliminatória"), ("classificatory", "classificatória"))

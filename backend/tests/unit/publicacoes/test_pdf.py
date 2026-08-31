@@ -879,10 +879,16 @@ def test_o_cabecalho_da_tabela_se_repete_na_continuacao_e_nunca_fica_orfao():
     com_cabecalho = [
         numero for numero, pagina in enumerate(paginas, 1) if "Evento" in pagina
     ]
+    # A célula do evento reflui dentro da sua coluna, então a continuação de uma linha da tabela
+    # não começa por `ETAPA`. O que identifica uma página com tabela é ter célula de qualquer
+    # coluna — inclusive a continuação, que é justamente quem precisa do cabeçalho repetido.
     com_evento = [
         numero
         for numero, pagina in enumerate(paginas, 1)
-        if any(linha.startswith("ETAPA") for linha in pagina)
+        if any(
+            linha.startswith("ETAPA") or linha.startswith("01/09/2026") or linha == "seletivo"
+            for linha in pagina
+        )
     ]
 
     assert len(com_evento) >= 2, "o cenário deveria fazer a tabela atravessar a quebra"
@@ -1080,3 +1086,75 @@ def test_o_mesmo_snapshot_com_a_mesma_autoridade_produz_os_mesmos_bytes():
         autoridade=AutoridadeSignataria(nome="Diretora do Cefor", cargo="Diretora-Geral"),
     )
     assert diferente != um, "trocar quem assina tem de mudar o documento"
+
+
+# ---------------------------------------------------------------------------
+# 008 — Regressões de composição encontradas em revisão
+#
+# Os três casos abaixo são entrada **válida**: descrição de Evento, conteúdo de seção e
+# atribuições são texto livre sem limite de tamanho. Nenhum deles quebrava o documento — os três
+# produziam um documento errado, que é o modo de falha que a tabela de interações de D-004 previa
+# e que nenhum cenário anterior exercitava.
+# ---------------------------------------------------------------------------
+
+
+def test_uma_celula_longa_nao_empurra_as_colunas_para_fora_da_pagina():
+    """Coluna medida pelo conteúdo precisa de teto (FR-002, FR-023).
+
+    Sem limite, a largura natural de uma descrição de quinhentos caracteres soma além da área
+    útil e joga as colunas seguintes para fora do papel: o Edital publicado perde início e
+    término sem que nada acuse.
+    """
+    from processo_seletivo.publicacoes.infrastructure.pdf import LARGURA, MARGEM, largura
+
+    conteudo = snapshot()
+    conteudo["schedule"] = [{**conteudo["schedule"][0], "description": "D" * 500}]
+    pdf = documento(conteudo)
+
+    util = LARGURA - 2 * MARGEM
+    for linha, fonte, tamanho, recuo in linhas_desenhadas(pdf):
+        assert recuo >= 0, f"{linha!r} começa antes da margem esquerda"
+        assert largura(linha, tamanho, fonte) + recuo <= util + 0.5, (
+            f"{linha!r} ultrapassa a margem direita"
+        )
+
+    # E o conteúdo continua lá: limitar a coluna quebra a célula, não a descarta.
+    texto = texto_de(pdf)
+    assert "01/09/2026 09:00" in texto and "20/09/2026 23:59" in texto
+    assert "DDDDD" in texto
+
+
+def test_um_paragrafo_maior_que_a_pagina_quebra_entre_linhas_sem_criar_pagina_vazia():
+    """O quinto degrau da cascata: quando nada mais cabe, quebra-se entre linhas (FR-021).
+
+    Manter unidas as linhas de um parágrafo é cortesia; quando o parágrafo é maior que a página,
+    a cortesia vira laço — o paginador devolvia a cadeia inteira à página nova, ela não cabia de
+    novo, e o documento crescia em páginas vazias.
+    """
+    secoes_longas = [dict(secao) for secao in snapshot()["sections"]]
+    for secao in secoes_longas:
+        if secao.get("key") == "apresentacao":
+            secao["content"] = " ".join(["palavra"] * 1200)
+
+    paginas = paginas_de(documento(snapshot(sections=secoes_longas)))
+
+    assert len(paginas) < 12, f"{len(paginas)} páginas para um parágrafo longo"
+    for numero, pagina in enumerate(paginas, 1):
+        corpo = [linha for linha in pagina if not linha.startswith("Edital 07/2026 ·")]
+        assert corpo, f"página {numero} saiu vazia"
+
+
+def test_o_cabecalho_de_uma_tabela_nao_vaza_para_o_que_vem_depois_dela():
+    """O cabeçalho repetível vale enquanto a tabela existir, e nem um bloco a mais (FR-026).
+
+    O quadro de modalidades fecha dentro do Perfil; o Cronograma, páginas adiante, não é
+    continuação dele. Repetir ali `Modalidade / Percentual / Fundamento / Versão` seria anunciar
+    uma tabela que acabou.
+    """
+    paginas = paginas_de(documento(dois_perfis()))
+    for numero, pagina in enumerate(paginas, 1):
+        cabecalhos = [linha for linha in pagina if linha == "Modalidade"]
+        modalidades = [linha for linha in pagina if linha.startswith("PPP — ")]
+        assert len(cabecalhos) <= len(modalidades), (
+            f"cabeçalho de modalidades sem tabela na página {numero}"
+        )
