@@ -70,8 +70,9 @@ institucional; nenhuma resposta com dado pessoal é armazenável pelo navegador;
 alcançável por conhecer o endereço.
 
 **Scale/Scope**: centenas a poucos milhares de inscrições por seleção, com até 10 MB por documento.
-Dois modelos novos, dois apps novos, uma coleção nova no conteúdo publicado, uma seção nova no
-catálogo, seis entregas navegáveis.
+Três modelos novos — `DocumentoExigido` em `editais`, `Inscricao` e `DocumentoSubmetido` em
+`inscricoes` —, dois apps novos, uma coleção nova no conteúdo publicado, uma seção nova no catálogo,
+seis entregas navegáveis.
 
 ## Constitution Check
 

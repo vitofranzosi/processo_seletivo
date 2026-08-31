@@ -83,7 +83,7 @@ versão consolidada vigente (`FR-011`).
 
 | Superfície | Garantia verificável |
 |---|---|
-| `Inscrições` do Edital | Total e lista com protocolo, candidato, CPF mascarado, Perfil, modalidade, situação, recebidos/esperados e data; `no-store` |
+| `Inscrições` do Edital | Total e lista com protocolo, candidato, CPF na máscara canônica `***.456.789-**`, Perfil, modalidade, situação, recebidos/esperados e data; `no-store` |
 | Detalhe da inscrição | Documentos agrupados **sob o requisito que atendem**; versão aceita visível; `no-store` |
 | Documento | Mediado por permissão e escopo; `inline`; resumo recalculado e comparado; recusa em caso de divergência |
 
@@ -104,6 +104,7 @@ Nenhuma dessas telas apresenta deferimento, nota, parecer, classificação ou do
 | Configuração | Guarda |
 |---|---|
 | Raiz privada de arquivos | Obrigatória, absoluta e fora da árvore estática; produção não sobe sem ela |
+| Limite de tamanho por arquivo | Lido da configuração da aplicação, com 10 MB por padrão (`FR-046`). Nunca fixado em código, nunca por documento exigido |
 | Provedor de identidade de demonstração | Produção não sobe com ele habilitado |
 
 As duas seguem o formato da guarda já existente para o seletor de identidade institucional.

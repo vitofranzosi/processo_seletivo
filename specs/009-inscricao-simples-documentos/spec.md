@@ -588,7 +588,10 @@ comprovante; repetir com um rascunho e reencontrar `Continuar inscrição`.
 - **FR-072**: O acesso administrativo à inscrição e aos documentos DEVE exigir permissão e escopo
   institucional do Processo, negando por padrão.
 - **FR-073**: O CPF NÃO DEVE aparecer em endereço de página, DEVE ser exibido mascarado em
-  listagens e DEVE ser armazenado também em forma normalizada, para comparação.
+  listagens e DEVE ser armazenado também em forma normalizada, para comparação. A máscara é
+  **`***.456.789-**`** — ocultos os três primeiros dígitos e os dois verificadores, visíveis os seis
+  do meio. *Fixar o formato é decisão de produto: sem ele, implementação e teste concordam entre si
+  sem que ninguém tenha decidido quanto do documento aparece na tela de quem consulta.*
 - **FR-074**: Registros de diagnóstico e de auditoria NÃO DEVEM conter CPF completo, conteúdo de
   documento nem dado pessoal desnecessário à investigação.
 - **FR-075**: A entrega de um arquivo de candidato DEVE usar cabeçalhos próprios de conteúdo
