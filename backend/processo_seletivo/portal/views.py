@@ -419,6 +419,7 @@ def inscricao(request, inscricao_id):
             "selecao": _selecao(versao),
             "perfil": _perfil_legivel(perfil),
             "telefone_no_campo": telefone_no_campo,
+            "cpf_do_candidato": formatar_cpf(registro.cpf),
             "modalidades": _modalidades_ofertadas(perfil),
             "modalidade_unica": _modalidade_unica(perfil),
             "identidade": identidade,

@@ -287,3 +287,44 @@ def test_o_limite_exibido_e_o_limite_aplicado(client, inscricao_de_maria, settin
 
     assert "até 5 MB" in corpo
     assert "10 MB" not in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_campo_de_arquivo_do_navegador_nao_aparece_cru(client, inscricao_de_maria):
+    """O `input[type=file]` é o elemento mais feio de qualquer formulário.
+
+    Texto do sistema operacional, altura própria, "Nenhum arquivo selecionado" em cinza no meio da
+    página. Ele continua existindo e continua sendo o que envia — sai de vista, mantendo foco e
+    rótulo, e o `label` assume a aparência de botão.
+    """
+    identificar(client, MARIA)
+
+    corpo = client.get(reverse("portal:inscricao", args=[inscricao_de_maria.id])).content.decode()
+
+    assert 'class="botao-arquivo"' in corpo
+    assert "Escolher arquivo PDF" in corpo
+    assert "data-nome-do-arquivo" in corpo, "o nome do escolhido tem onde aparecer"
+    assert ".escolher input[type=file]{position:absolute" in corpo, "escondido, não removido"
+    assert 'type="file"' in corpo and 'name="arquivo"' in corpo, "e continua sendo o que envia"
+    assert "portal/arquivo.js" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_progresso_dos_documentos_e_barra_e_nao_segunda_frase(client, inscricao_de_maria):
+    """O resumo do cabeçalho já diz em palavras quantos faltam.
+
+    Repetir a mesma frase dentro do bloco era ruído; a barra diz o mesmo de relance, e o texto ao
+    lado mantém o número para quem lê com leitor de tela.
+    """
+    identificar(client, MARIA)
+    _enviar(client, inscricao_de_maria, DOCUMENTO_DE_TODOS, pdf("rg.pdf"))
+
+    corpo = client.get(reverse("portal:inscricao", args=[inscricao_de_maria.id])).content.decode()
+
+    assert 'class="progresso-documentos' in corpo
+    assert 'class="feito" style="width:50%"' in corpo, "metade da barra, sem modalidade escolhida"
+    texto = " ".join(corpo.split())
+    assert "1 de 2 documentos obrigatórios enviados." in texto
+    assert texto.count("documentos obrigatórios enviados.") == 1, "uma contagem, não duas"

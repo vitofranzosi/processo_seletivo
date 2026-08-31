@@ -23,19 +23,22 @@ e `role=alert` sozinho não anuncia o que já veio no HTML da resposta.
 
 <form method="post" id="dados-da-inscricao">
   {% csrf_token %}
-  <section aria-labelledby="seus-dados">
+  <section class="painel" aria-labelledby="seus-dados">
     <h2 id="seus-dados">Seus dados</h2>
     {% comment %}
     Informação, e não campo desabilitado sem explicação (FR-037): estes três vêm da identidade e
     não são digitados de novo. Só o telefone é pedido, porque só ele o sistema não sabe.
+
+    Rótulo pequeno em cima do valor, e não par lado a lado: o olho encontra o valor sem atravessar
+    o rótulo, e em 375px nada precisa de duas colunas para caber.
     {% endcomment %}
-    <dl class="dados">
-      <dt>Nome</dt><dd>{{ identidade.nome }}</dd>
-      <dt>CPF</dt><dd>{{ inscricao.cpf }}</dd>
-      <dt>E-mail</dt><dd>{{ identidade.email }}</dd>
+    <dl class="identificacao">
+      <div><dt>Nome</dt><dd>{{ identidade.nome }}</dd></div>
+      <div><dt>CPF</dt><dd>{{ cpf_do_candidato }}</dd></div>
+      <div><dt>E-mail</dt><dd>{{ identidade.email }}</dd></div>
     </dl>
     <p class="ajuda">Estes dados vêm da sua identificação e não precisam ser digitados de novo.</p>
-    <p class="campo">
+    <p class="campo curto">
       <label for="telefone">Telefone (opcional)</label>
       <input type="tel" id="telefone" name="telefone" value="{{ telefone_no_campo }}"
              autocomplete="tel" inputmode="tel" maxlength="16"
@@ -48,15 +51,15 @@ e `role=alert` sozinho não anuncia o que já veio no HTML da resposta.
   Uma modalidade só não é escolha — é a condição de todo mundo naquele Perfil. Ela é informada,
   e não perguntada: pedir que a pessoa confirme o óbvio é exatamente o atrito que P-001 recusa.
   {% endcomment %}
-  <section aria-labelledby="concorrencia">
+  <section class="painel" aria-labelledby="concorrencia">
     <h2 id="concorrencia">Concorrência</h2>
-    <dl class="dados">
-      <dt>Modalidade</dt><dd>{{ modalidade_unica.nome }}</dd>
+    <dl class="identificacao">
+      <div><dt>Modalidade</dt><dd>{{ modalidade_unica.nome }}</dd></div>
     </dl>
     <p class="ajuda">É a única modalidade prevista para esta vaga.</p>
   </section>
   {% elif modalidades %}
-  <section aria-labelledby="concorrencia">
+  <section class="painel" aria-labelledby="concorrencia">
     <h2 id="concorrencia">Concorrência</h2>
     <p class="ajuda">Escolha como você concorre nesta vaga. A escolha decide quais documentos
       serão pedidos a você.</p>
@@ -93,9 +96,18 @@ Ele fica **depois** dos documentos, e é `form=` que permite isso: aninhar formu
 HTML, e enquanto o botão era renderizado antes do bloco a hierarquia visual mandava acioná-lo antes
 de enviar arquivo nenhum — quem obedecia à página era recusado por ela.
 {% endcomment %}
-<button type="submit" form="dados-da-inscricao" class="principal">Revisar inscrição</button>
+<div class="barra-de-acao">
+  <button type="submit" form="dados-da-inscricao" class="principal">Revisar inscrição</button>
+  {% if documentos.faltam %}
+  <p class="ajuda">Você poderá enviar a inscrição depois de anexar
+    {% if documentos.faltam == 1 %}o documento que falta{% else %}os {{ documentos.faltam }} documentos que faltam{% endif %}.</p>
+  {% else %}
+  <p class="ajuda">Na próxima tela você confere tudo antes de enviar.</p>
+  {% endif %}
+</div>
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
 <script src="{% static 'portal/envio.js' %}" defer></script>
 <script src="{% static 'portal/recusa.js' %}" defer></script>
+<script src="{% static 'portal/arquivo.js' %}" defer></script>
 <script src="{% static 'portal/telefone.js' %}" defer></script>
 {% endblock %}

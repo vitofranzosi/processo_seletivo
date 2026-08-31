@@ -274,6 +274,51 @@ compara byte a byte a recusa de inscrição alheia com a de inscrição inexiste
 ruído aleatório. O token é normalizado antes da comparação — a propriedade que importa (não existir
 oráculo de existência) continua sendo verificada.
 
+### D8 — A tela da inscrição não tinha desenho (alta)
+
+O julgamento veio de quem olhou a tela pronta: *"está amadora"*. Estava, e o diagnóstico é
+específico — não era falta de enfeite, era falta de estrutura.
+
+**O que havia.** Texto corrido do começo ao fim: títulos soltos, pares de rótulo e valor sem
+contenção nenhuma, e o campo de arquivo do navegador no meio — *"Procurar… Nenhum arquivo
+selecionado"*, com a tipografia do sistema operacional, ao lado de um botão com a tipografia da
+página. Nada agrupava nada. Somava-se a isso:
+
+- **duas contagens dizendo a mesma coisa** com palavras diferentes — *"Falta 1 de 1 documento
+  obrigatório"* no topo e *"0 de 1 documento obrigatório enviado"* oito centímetros abaixo;
+- o campo de telefone com **32 rem de largura** para caber onze dígitos;
+- o CPF exibido **sem máscara** (`11111111111`);
+- o botão principal encostado no último cartão, sem dizer o que falta para acioná-lo.
+
+**O que mudou.**
+
+Cada seção virou **painel** — fundo, borda, título com linha de base própria. Não é decoração: é o
+que permite ler um formulário longo por varredura, que é como se lê no celular.
+
+Os dados da identidade ganharam **rótulo pequeno acima do valor**, em vez de pares lado a lado: o
+olho encontra o valor sem atravessar o rótulo, e em 375 px nada precisa de duas colunas.
+
+A contagem de dentro do bloco virou **barra de progresso**. O resumo do cabeçalho continua dizendo
+em palavras quantos faltam; a barra diz o mesmo de relance, e o número segue no texto para quem usa
+leitor de tela. Uma frase, não duas.
+
+**O campo de arquivo deixou de aparecer cru.** O `input` continua existindo e continua sendo o que
+envia — sai de vista mantendo foco e rótulo, e o `label` assume a aparência de botão
+(*"Escolher arquivo PDF"*), com o nome do arquivo escolhido ao lado. Verificado no navegador:
+`{input_focavel_por_teclado: true, tabindex_efetivo: 0, nome_mostrado: "diploma-2024.pdf"}`.
+
+**`Enviar` nasce secundário e ganha peso quando há o que enviar.** Antes, dois botões verdes
+sólidos disputavam a mesma tela; agora o contorno vira sólido no momento em que o arquivo é
+escolhido (SC-UX-008).
+
+O telefone ganhou largura proporcional ao que se escreve nele, o CPF passou a ser formatado também
+na exibição, e o botão principal ganhou a linha que diz o que falta: *"Você poderá enviar a
+inscrição depois de anexar o documento que falta."*
+
+Travado por `test_o_campo_de_arquivo_do_navegador_nao_aparece_cru` e
+`test_o_progresso_dos_documentos_e_barra_e_nao_segunda_frase`; a ausência de rolagem horizontal em
+375 px e a ordem entre documentos e ação principal seguem cobertas pelos testes de D2 e SC-UX-004.
+
 ## Lacunas e oportunidades, por prioridade
 
 > **Estado em 31/08/2026:** L1 a L10 foram corrigidas e travadas por teste. L11 e L12 continuam

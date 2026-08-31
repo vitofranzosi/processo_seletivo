@@ -106,23 +106,14 @@ details.como-converter ul{margin:.35rem 0 .5rem;padding-left:1.25rem;font-size:.
   color:var(--texto-fraco)}
 details.como-converter li{margin-bottom:.4rem}
 .obrigatorio{color:var(--vermelho);margin-left:.15rem}
-.contagem{font-weight:600;margin:.5rem 0 1rem}
-.requisitos-lista{list-style:none;margin:0;padding:0;display:grid;gap:1rem}
-.requisito{background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:1rem}
-.requisito.completo{border-left:4px solid var(--sucesso)}
-.requisito .nome{margin:0 0 .25rem;font-weight:600}
 /* A marca é redundante com a cor da borda, de propósito: quem não distingue as duas lê o mesmo
-   estado no símbolo e no texto da contagem (WCAG 1.4.1). */
-.requisito .marca{margin-right:.35rem}
-.requisito.completo .marca{color:var(--sucesso)}
-.requisito .arquivo{margin:.5rem 0;overflow-wrap:anywhere}
-.envio{display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-start;margin-top:.75rem}
-.envio input[type=file]{max-width:100%}
-.envio .acao{padding:.5rem .9rem;border:1px solid var(--verde);border-radius:4px;
-  background:transparent;color:var(--verde-texto);font-family:inherit;font-size:.9375rem;
-  cursor:pointer}
-.envio .acao.perigo{border-color:var(--vermelho);color:var(--vermelho)}
+   estado no símbolo e no texto da contagem (WCAG 1.4.1). As regras destes elementos estão mais
+   abaixo, junto do redesenho da tela da inscrição. */
+.envio{display:grid;gap:.6rem;margin-top:.75rem}
+.envio .acao.perigo{border-color:var(--vermelho);color:var(--vermelho);background:var(--branco)}
+.envio .acao.perigo:hover{background:var(--vermelho-fundo)}
 .envio .acao[disabled]{opacity:.6;cursor:progress}
+.envio .linha{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
 .rotulo-arquivo{display:block;font-weight:600;width:100%}
 /* O resumo dos documentos junto ao cabeçalho (SC-UX-003). Discreto: informa estado, não
    compete com a ação principal. A marca ✓/○ acompanha a cor porque cor sozinha não distingue
@@ -142,11 +133,105 @@ details.como-converter li{margin-bottom:.4rem}
 .campo{display:grid;gap:.35rem;margin:0 0 1rem;max-width:32rem}
 .campo label{font-weight:600}
 .campo input,.campo select{width:100%;padding:.6rem;border:1px solid var(--borda);border-radius:4px;
-  font-size:1rem;font-family:inherit}
+  font-size:1rem;font-family:inherit;background:var(--branco)}
+/* Um telefone não precisa de trinta e dois rem: campo com a largura do que se escreve nele diz,
+   sozinho, quanto se espera — e um campo largo demais parece formulário mal montado. */
+.campo.curto{max-width:15rem}
 .ajuda{color:var(--texto-fraco);font-size:.9375rem;margin:.25rem 0 1rem}
 .dados{display:grid;grid-template-columns:1fr;gap:.15rem .75rem;margin:0 0 1rem}
 .dados dt{color:var(--texto-fraco)}
 .dados dd{margin:0 0 .5rem;overflow-wrap:anywhere}
+
+/* --------------------------------------------------------------------------------------------
+   A tela da inscrição, redesenhada.
+
+   O que havia era texto corrido: títulos soltos, pares de rótulo e valor sem contenção, e o campo
+   de arquivo do navegador no meio — "Procurar… Nenhum arquivo selecionado", com o estilo do
+   sistema operacional, ao lado de um botão com o estilo da página. Nada agrupava nada, e a página
+   parecia um rascunho.
+
+   Cada seção passa a ser um painel: fundo próprio, borda, título com a mesma linha de base. Não é
+   decoração — é o que permite ler a tela por varredura, que é como se lê um formulário longo no
+   celular.
+   -------------------------------------------------------------------------------------------- */
+.painel{background:var(--branco);border:1px solid var(--borda);border-radius:8px;
+  padding:1rem;margin:0 0 1rem}
+.painel>h2{margin:0 0 .75rem;font-size:1.05rem;padding-bottom:.6rem;
+  border-bottom:1px solid var(--borda)}
+.painel>.ajuda:last-child{margin-bottom:0}
+.painel .campo:last-child{margin-bottom:0}
+
+/* Rótulo pequeno em cima do valor: o olho encontra o valor sem atravessar o rótulo, e em 375px
+   nada precisa de duas colunas para caber. */
+.identificacao{display:grid;gap:.75rem;margin:0 0 .75rem}
+.identificacao>div{display:grid;gap:.1rem}
+.identificacao dt,.identificacao .rotulo{font-size:.8125rem;color:var(--texto-fraco);
+  text-transform:uppercase;letter-spacing:.03em}
+.identificacao dd,.identificacao .valor{margin:0;font-weight:600;overflow-wrap:anywhere}
+@media (min-width:520px){
+  .identificacao{grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1.25rem}
+}
+
+/* O progresso dos documentos como barra, e não como segunda frase: o resumo do cabeçalho já diz
+   quantos faltam em palavras, e repetir a mesma frase aqui era ruído. A barra diz o mesmo de
+   relance, e o texto ao lado mantém o número para quem lê com leitor de tela. */
+.progresso-documentos{display:grid;gap:.35rem;margin:0 0 1rem}
+.progresso-documentos .trilha{height:.5rem;border-radius:999px;background:var(--cinza-fundo);
+  overflow:hidden}
+.progresso-documentos .feito{height:100%;background:var(--verde);border-radius:999px;
+  transition:width .2s ease}
+.progresso-documentos .contagem{font-weight:600;margin:0;font-size:.9375rem}
+.progresso-documentos.completo .feito{background:var(--sucesso)}
+
+/* Cada requisito é um cartão com estado legível por forma, cor e palavra (SC-UX-005). */
+.requisitos-lista{list-style:none;margin:0;padding:0;display:grid;gap:.75rem}
+.requisito{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:.85rem 1rem}
+.requisito .nome{display:flex;align-items:baseline;gap:.5rem;margin:0 0 .2rem;font-weight:600}
+.requisito .marca{display:inline-grid;place-items:center;flex:0 0 1.35rem;height:1.35rem;
+  border-radius:50%;border:2px solid var(--borda);color:var(--texto-fraco);
+  font-size:.8125rem;line-height:1}
+.requisito.completo{border-color:var(--sucesso);border-left:4px solid var(--sucesso)}
+.requisito.completo .marca{background:var(--sucesso);border-color:var(--sucesso);
+  color:var(--branco)}
+.requisito .instrucao{color:var(--texto-fraco);font-size:.9375rem;margin:0 0 .5rem}
+.requisito .arquivo{display:flex;align-items:baseline;gap:.4rem;flex-wrap:wrap;
+  margin:.5rem 0 0;padding:.5rem .65rem;border-radius:4px;background:var(--sucesso-fundo);
+  overflow-wrap:anywhere}
+.requisito .arquivo .quando{color:var(--texto-fraco);font-size:.875rem}
+
+/* O campo de arquivo do navegador é o elemento mais feio de qualquer formulário: texto do sistema
+   operacional, altura própria, e "Nenhum arquivo selecionado" em cinza no meio da página. Aqui o
+   `input` continua existindo e continua sendo o que envia — ele é só tirado de vista, mantendo
+   foco e rótulo —, e o `label` assume a aparência de botão. Sem JavaScript o nome do arquivo
+   escolhido não aparece, e é por isso que o texto padrão diz o que fazer em vez de descrever
+   estado. */
+.escolher{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}
+.escolher input[type=file]{position:absolute;width:0;height:0;padding:0;margin:0;opacity:0;
+  border:0}
+.escolher .botao-arquivo{display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;
+  padding:.55rem .9rem;border:1px solid var(--verde-texto);border-radius:4px;
+  color:var(--verde-texto);background:var(--branco);font-weight:600;font-size:.9375rem}
+.escolher .botao-arquivo:hover{background:var(--verde-claro)}
+.escolher input[type=file]:focus-visible+.botao-arquivo{outline:3px solid var(--verde);
+  outline-offset:2px}
+.escolher .nome-do-arquivo{color:var(--texto-fraco);font-size:.9375rem;overflow-wrap:anywhere;
+  flex:1 1 8rem;min-width:0}
+.escolher .nome-do-arquivo.escolhido{color:var(--texto);font-weight:600}
+/* `Enviar` nasce secundário: quem manda na tela é o botão que leva à revisão, e dois botões
+   sólidos em verde disputariam a mesma decisão (SC-UX-008). Escolhido o arquivo, ele vira sólido —
+   aí a ação seguinte é mesmo enviar, e o botão diz isso. */
+.envio .acao{padding:.55rem 1rem;border-radius:4px;border:1px solid var(--verde-texto);
+  background:var(--branco);color:var(--verde-texto);font:inherit;font-size:.9375rem;
+  font-weight:600;cursor:pointer}
+.envio .acao:hover{background:var(--verde-claro)}
+.envio .acao.pronta{background:var(--verde);border-color:var(--verde);color:var(--branco)}
+.envio .acao.pronta:hover{background:var(--verde-escuro)}
+.envio .limite{display:block;color:var(--texto-fraco);font-size:.875rem;margin-top:.4rem}
+
+/* A ação principal ganha ar em volta e diz o que falta antes de ser acionada. */
+.barra-de-acao{margin:1.5rem 0 0;display:grid;gap:.5rem;justify-items:start}
+.barra-de-acao .ajuda{margin:0}
 button.principal{padding:.75rem 1.25rem;border:0;border-radius:4px;background:var(--verde);
   color:var(--branco);font-weight:600;font-size:1rem;font-family:inherit;cursor:pointer;
   width:100%;max-width:32rem}
