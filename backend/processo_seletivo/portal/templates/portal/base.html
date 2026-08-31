@@ -78,7 +78,20 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .envio .acao.perigo{border-color:var(--vermelho);color:var(--vermelho)}
 .envio .acao[disabled]{opacity:.6;cursor:progress}
 .rotulo-arquivo{display:block;font-weight:600;width:100%}
+/* O resumo dos documentos junto ao cabeçalho (SC-UX-003). Discreto: informa estado, não
+   compete com a ação principal. A marca ✓/○ acompanha a cor porque cor sozinha não distingue
+   estado para quem não a enxerga (SC-UX-005). */
+.resumo-documentos{display:flex;align-items:baseline;gap:.4rem;flex-wrap:wrap;
+  margin:.75rem 0 0;padding:.6rem .75rem;border-radius:4px;font-size:.9375rem;
+  background:var(--branco);border:1px solid var(--borda);border-left:4px solid var(--borda)}
+.resumo-documentos.completo{background:var(--sucesso-fundo);border-color:var(--sucesso);
+  border-left-color:var(--sucesso);color:var(--sucesso)}
+.resumo-documentos .marca{font-weight:700}
 .progresso{display:flex;align-items:center;gap:.5rem;width:100%;margin:.5rem 0 0}
+/* `display` de classe vence o `[hidden]` da folha do navegador, e sem esta linha o aviso de
+   não fechar a página fica visível em repouso, sob cada requisito — o oposto do que FR-048
+   pede: em vez de tranquilizar durante o envio, alarma quem ainda nem escolheu o arquivo. */
+.progresso[hidden]{display:none}
 .progresso progress{width:100%;max-width:16rem}
 .campo{display:grid;gap:.35rem;margin:0 0 1rem;max-width:32rem}
 .campo label{font-weight:600}

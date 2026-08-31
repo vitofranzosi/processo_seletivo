@@ -1550,11 +1550,19 @@ def inscricoes_recebidas(request, edital_id):
     if ator is None:
         return redirect(reverse("interface:identificar"))
     edital, linhas = inscricoes_do_edital(actor=ator, edital_id=edital_id)
+    # Recebido é o que foi entregue. O rascunho continua na tela — em seção própria e sob o nome do
+    # que é —, mas fora do total: contá-lo diria à gestão que recebeu inscrição que ninguém enviou.
+    recebidas = [linha for linha in linhas if linha["enviada"]]
     return marcar_como_privada(
         render(
             request,
             "interface/inscricoes.html",
-            {"edital": edital, "inscricoes": linhas, "total": len(linhas)},
+            {
+                "edital": edital,
+                "recebidas": recebidas,
+                "em_preenchimento": [linha for linha in linhas if not linha["enviada"]],
+                "total": len(recebidas),
+            },
         )
     )
 

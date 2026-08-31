@@ -371,10 +371,12 @@ def _documentos(conteudo, inscricao):
             }
         )
     obrigatorios = [linha for linha in linhas if linha["obrigatorio"]]
+    recebidos = len([linha for linha in obrigatorios if linha["enviado"]])
     return {
         "linhas": linhas,
         "total": len(obrigatorios),
-        "recebidos": len([linha for linha in obrigatorios if linha["enviado"]]),
+        "recebidos": recebidos,
+        "faltam": len(obrigatorios) - recebidos,
     }
 
 
@@ -499,6 +501,8 @@ def _bloco_de_documentos(request, inscricao, versao, *, erro="", requisito=""):
             "documentos": _documentos(versao.content, inscricao),
             "erro_do_envio": erro,
             "requisito_recusado": str(requisito) if erro else "",
+            # Resposta de envio, e não render inicial: só aqui o resumo do cabeçalho viaja junto.
+            "fragmento": True,
         },
     )
     return marcar_como_privada(resposta)

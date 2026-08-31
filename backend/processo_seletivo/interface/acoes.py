@@ -83,7 +83,11 @@ def _navegacao(edital, ator):
     # lista pelo motivo oposto: ele **tem** inscrições, e quem as recebeu continua respondendo por
     # elas; tirar o caminho deixaria a tela alcançável só por URL decorada.
     if edital.status in ESTADOS_COM_INSCRICOES and ator.can("inscricao:consultar"):
-        recebidas = Inscricao.objects.filter(edital=edital).count()
+        # Só as submetidas: o rótulo diz "recebidas", e rascunho aberto não foi recebido por
+        # ninguém. Contá-lo faria a página anunciar um volume que a lista não confirma.
+        recebidas = Inscricao.objects.filter(
+            edital=edital, status=Inscricao.Status.SUBMETIDA
+        ).count()
         yield Acao(
             "inscricoes",
             # O total no próprio rótulo (FR-066): "há inscrições e quantas" é a informação que

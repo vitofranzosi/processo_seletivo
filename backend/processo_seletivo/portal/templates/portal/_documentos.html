@@ -1,7 +1,12 @@
 {% comment %}
 O bloco de documentos, devolvido inteiro a cada envio: a contagem "n de m" muda junto com a linha,
 e atualizar só a linha deixaria a contagem para trás.
+
+Quando volta como resposta do htmx, leva junto o resumo do cabeçalho — que vive fora deste bloco e
+por isso não seria alcançado pela troca normal. Elemento de topo da resposta, como o `hx-swap-oob`
+exige.
 {% endcomment %}
+{% if fragmento %}{% include "portal/_resumo_documentos.html" with oob=True %}{% endif %}
 <section id="documentos" aria-labelledby="documentos-titulo">
   <h2 id="documentos-titulo">Documentos necessários</h2>
   {% if documentos.linhas %}

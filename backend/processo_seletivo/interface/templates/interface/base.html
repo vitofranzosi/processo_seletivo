@@ -48,6 +48,10 @@ h2{font-size:1.15rem;margin:0;font-weight:600}
 .codigo{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;
   background:var(--verde-claro);color:var(--verde-escuro);padding:.15rem .5rem;border-radius:3px}
 table{width:100%;border-collapse:collapse}
+/* Sete colunas não cabem em 375px, e sem um contêiner que role a tabela empurra a **página**
+   inteira na horizontal — o cabeçalho e o texto passam a fugir da tela junto com ela. Quem
+   confere inscrições pelo celular estava lendo um layout quebrado. */
+.tabela-rolavel{overflow-x:auto}
 caption{text-align:left;padding:.75rem 1.25rem 0;color:var(--texto-fraco);font-size:.875rem}
 th,td{text-align:left;padding:.7rem 1.25rem;border-bottom:1px solid var(--borda);
   vertical-align:top;font-size:.9375rem}

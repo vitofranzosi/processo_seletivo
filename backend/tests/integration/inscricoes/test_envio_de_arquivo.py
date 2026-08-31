@@ -160,3 +160,56 @@ def test_documento_de_modalidade_nao_pedida_nao_e_aceito(client, inscricao_de_ma
 
     assert resposta.status_code == 404
     assert DocumentoSubmetido.objects.count() == 0
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_quantos_documentos_faltam_aparece_junto_ao_cabecalho(client, inscricao_de_maria):
+    """SC-UX-003: sem rolagem adicional.
+
+    A contagem do bloco começa abaixo da dobra em 375px — medido em 969px, contra 812px de altura
+    útil. "Quantos faltam" é a pergunta que decide se a pessoa continua agora ou volta depois com
+    os arquivos, e ela não pode custar uma rolagem para ser respondida.
+    """
+    identificar(client, MARIA)
+
+    corpo = client.get(reverse("portal:inscricao", args=[inscricao_de_maria.id])).content.decode()
+
+    assert 'id="resumo-documentos"' in corpo
+    assert corpo.index("resumo-documentos") < corpo.index("Seus dados"), "acima da dobra"
+    assert "Faltam" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_resumo_do_cabecalho_acompanha_o_envio(client, inscricao_de_maria):
+    """Ele vive fora do `#documentos` e não seria alcançado pela troca normal do htmx.
+
+    Sem a atualização fora de banda, o topo continuaria anunciando o que faltava antes do envio —
+    um número errado num lugar de destaque é pior do que número nenhum.
+    """
+    identificar(client, MARIA)
+
+    resposta = _enviar(client, inscricao_de_maria, DOCUMENTO_DE_TODOS, pdf("rg.pdf"))
+
+    fragmento = resposta.content.decode()
+    assert 'hx-swap-oob="true"' in fragmento, "o resumo do topo volta junto com o bloco"
+    resumo = fragmento[fragmento.index('id="resumo-documentos"') :][:400]
+    assert "Falta" in resumo and "1" in resumo, "o topo já conta o que acabou de chegar"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_aviso_de_nao_fechar_a_pagina_fica_escondido_em_repouso(client, inscricao_de_maria):
+    """FR-048: o aviso é do envio em curso.
+
+    `display` de classe vence o `[hidden]` da folha do navegador. Sem a regra explícita, uma barra
+    vazia e um "não feche esta página" apareciam sob **cada** requisito de quem ainda nem tinha
+    escolhido o arquivo — o oposto de tranquilizar.
+    """
+    identificar(client, MARIA)
+
+    corpo = client.get(reverse("portal:inscricao", args=[inscricao_de_maria.id])).content.decode()
+
+    assert '<p class="progresso" hidden>' in corpo
+    assert ".progresso[hidden]{display:none}" in corpo

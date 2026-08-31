@@ -1,0 +1,38 @@
+{% comment %}
+A tabela das inscrições, usada duas vezes: as recebidas e os rascunhos em preenchimento. Mesmas
+colunas nas duas, porque a pergunta de quem confere é a mesma — o que muda é o que cada seção
+significa, e isso a legenda diz.
+{% endcomment %}
+<div class="tabela-rolavel">
+<table>
+  <caption>{{ legenda }}</caption>
+  <thead>
+    <tr>
+      <th scope="col">Protocolo</th>
+      <th scope="col">Candidato</th>
+      <th scope="col">CPF</th>
+      <th scope="col">Perfil</th>
+      <th scope="col">Concorrência</th>
+      <th scope="col">Documentos</th>
+      <th scope="col">Situação</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for inscricao in inscricoes %}
+    <tr>
+      <td><a href="{% url 'interface:inscricao-recebida' inscricao.id %}">{{ inscricao.protocolo|default:"—" }}</a></td>
+      <td>{{ inscricao.candidato|default:"—" }}</td>
+      {% comment %}
+      Mascarado (FR-073): seis dígitos bastam para conferir contra um documento em mãos, e não
+      bastam para reusar o número em outro lugar.
+      {% endcomment %}
+      <td>{{ inscricao.cpf }}</td>
+      <td>{{ inscricao.perfil }}</td>
+      <td>{{ inscricao.modalidade|default:"—" }}</td>
+      <td>{{ inscricao.recebidos }} de {{ inscricao.esperados }}</td>
+      <td>{% if inscricao.enviada %}Enviada em {{ inscricao.quando|date:"d/m/Y H\hi" }}{% else %}Em preenchimento{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>

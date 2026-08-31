@@ -178,3 +178,49 @@ def test_arquivo_corrompido_no_disco_nao_e_entregue_como_integro(
     assert b"%PDF" not in resposta.content, "nem um byte do arquivo divergente"
     assert "não confere" in resposta.content.decode()
     assert RegistroAuditoria.objects.filter(operation="INTEGRIDADE").exists(), "o fato é registrado"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_rascunho_nao_conta_como_inscricao_recebida(
+    gestor, selecao, inscricao_enviada, inscricao_de_maria
+):
+    """FR-066: o total é do que foi **entregue**.
+
+    Um rascunho aberto e abandonado não foi recebido por ninguém. Somá-lo faria o painel anunciar
+    centenas de inscrições numa seleção que recebeu dezenas — e a decisão de quem conduz a seleção
+    ("já dá para começar a conferir?") passa por esse número.
+    """
+    from processo_seletivo.inscricoes.application.rascunho import abrir_inscricao
+    from tests.fixtures.candidato import JOAO, PERFIL_DOCENTE
+
+    abrir_inscricao(identidade=JOAO, edital_id=selecao.id, profile_id=PERFIL_DOCENTE)
+    corpo = gestor.get(reverse("interface:inscricoes", args=[selecao.id])).content.decode()
+
+    assert "Inscrições — 1" in corpo, "uma enviada, um rascunho — o total é das enviadas"
+    assert "Em preenchimento — 1" in corpo, "o rascunho continua visível, sob o nome do que é"
+    assert corpo.index("Inscrições recebidas neste Edital") < corpo.index(
+        "Rascunhos em preenchimento"
+    ), "o que chegou vem primeiro"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_acao_do_edital_conta_apenas_as_inscricoes_enviadas(
+    gestor, selecao, inscricao_enviada, inscricao_de_maria
+):
+    """O rótulo diz "recebidas", e o número precisa concordar com a lista que ele abre."""
+    corpo = gestor.get(reverse("interface:lista")).content.decode()
+
+    assert "Inscrições recebidas (1)" in corpo
+    assert "Inscrições recebidas (2)" not in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_tabela_larga_rola_dentro_de_si_mesma(gestor, selecao, inscricao_enviada):
+    """Sete colunas não cabem em 375px, e sem contêiner a **página** inteira rola na horizontal."""
+    corpo = gestor.get(reverse("interface:inscricoes", args=[selecao.id])).content.decode()
+
+    assert '<div class="tabela-rolavel">' in corpo
+    assert ".tabela-rolavel{overflow-x:auto}" in corpo

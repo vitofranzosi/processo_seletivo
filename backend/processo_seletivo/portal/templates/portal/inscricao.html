@@ -8,6 +8,7 @@ voltar à página anterior para lembrar.
 {% endcomment %}
 <p class="sub">{{ selecao.processo_titulo }} · Edital {{ selecao.numero }}/{{ selecao.ano }}<br>
   <strong>{{ perfil.nome }}</strong></p>
+{% include "portal/_resumo_documentos.html" %}
 
 {% if guardado %}<p class="situacao aberto" role="status">Seus dados estão guardados. Você pode
   fechar esta página e continuar depois.</p>{% endif %}
@@ -15,7 +16,7 @@ voltar à página anterior para lembrar.
   Você pode sair e voltar quantas vezes precisar.</p>
 {% if erros %}<div class="erro" role="alert">{% for erro in erros %}<p>{{ erro }}</p>{% endfor %}</div>{% endif %}
 
-<form method="post">
+<form method="post" id="dados-da-inscricao">
   {% csrf_token %}
   <section aria-labelledby="seus-dados">
     <h2 id="seus-dados">Seus dados</h2>
@@ -70,11 +71,6 @@ voltar à página anterior para lembrar.
   </section>
   {% endif %}
 
-  {% comment %}
-  Uma ação principal, e nenhum `Salvar` (P-005, FR-081): avançar é o que guarda. Agora que a
-  revisão existe, o botão diz para onde leva.
-  {% endcomment %}
-  <button type="submit" class="principal">Revisar inscrição</button>
 </form>
 
 {% comment %}
@@ -82,6 +78,16 @@ Os documentos ficam **fora** do formulário dos dados: cada arquivo é enviado e
 e persiste na hora, e é isso que faz a recusa de um não derrubar os outros (FR-041, FR-049).
 {% endcomment %}
 {% include "portal/_documentos.html" %}
+
+{% comment %}
+Uma ação principal, e nenhum `Salvar` (P-005, FR-081): avançar é o que guarda. Agora que a revisão
+existe, o botão diz para onde leva.
+
+Ele fica **depois** dos documentos, e é `form=` que permite isso: aninhar formulários é proibido em
+HTML, e enquanto o botão era renderizado antes do bloco a hierarquia visual mandava acioná-lo antes
+de enviar arquivo nenhum — quem obedecia à página era recusado por ela.
+{% endcomment %}
+<button type="submit" form="dados-da-inscricao" class="principal">Revisar inscrição</button>
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
 <script src="{% static 'portal/envio.js' %}" defer></script>
 {% endblock %}

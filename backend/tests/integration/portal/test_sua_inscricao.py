@@ -157,3 +157,19 @@ def test_o_endereco_da_inscricao_nao_carrega_dado_pessoal(client, selecao_aberta
 
     assert "12345678909" not in endereco
     assert "maria" not in endereco.lower()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_acao_principal_vem_depois_dos_documentos(client, selecao_aberta):
+    """A hierarquia visual não pode mandar acionar antes de fazer o trabalho.
+
+    Enquanto o botão era renderizado antes do bloco de documentos, quem obedecia à página pedia a
+    revisão sem ter enviado arquivo nenhum — e era recusado por ela. Aninhar formulários é proibido
+    em HTML; `form=` associa o botão ao formulário dos dados sem exigir que ele esteja dentro dele.
+    """
+    corpo = client.get(_abrir(client, selecao_aberta)).content.decode()
+
+    assert corpo.index("Documentos necessários") < corpo.index("Revisar inscrição")
+    assert 'form="dados-da-inscricao"' in corpo, "o botão continua submetendo os dados"
+    assert 'id="dados-da-inscricao"' in corpo
