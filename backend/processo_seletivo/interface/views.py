@@ -60,26 +60,10 @@ ORDEM_SITUACAO = [
     "CANCELADO",
 ]
 
-# O que cada situação permite fazer, e com qual permissão. A tela oferece; o domínio decide.
-ACOES_POR_SITUACAO = {
-    "EM_ELABORACAO": [("Elaborar", "edital:elaborar"), ("Submeter", "edital:submeter")],
-    "EM_REVISAO": [("Homologar", "edital:homologar")],
-    "HOMOLOGADO": [("Publicar", "edital:publicar"), ("Revogar homologação", "edital:homologar")],
-    "PUBLICADO": [("Retificar", "retificacao:elaborar"), ("Encerrar", "edital:encerrar")],
-}
-
-
-# Ações que já têm tela; as demais aparecem sem link até serem construídas.
-ROTA_DA_ACAO = {"Elaborar": "interface:compor", "Retificar": "interface:retificar"}
-ROTA_PADRAO = "interface:detalhe"
-
-
-def acoes_disponiveis(ator, situacao):
-    return [
-        {"rotulo": rotulo, "rota": ROTA_DA_ACAO.get(rotulo)}
-        for rotulo, permissao in ACOES_POR_SITUACAO.get(situacao, [])
-        if ator.can(permissao)
-    ]
+# `ACOES_POR_SITUACAO` foi removido: era a segunda fonte de verdade que FR-023 proíbe, e ela **já
+# divergia**. O mapa não conhecia `Cancelar`, então um gestor via a ação no detalhe do Edital e a
+# listagem, ao lado, afirmava que não havia nenhuma — a mesma contradição do achado 08, um nível
+# acima. `acoes.do_edital` é agora o único lugar que responde à pergunta.
 
 
 @require_http_methods(["GET"])
@@ -91,7 +75,12 @@ def lista(request):
     processos = list(listar_processos(actor=ator))
     for processo in processos:
         for edital in processo.editais.all():
-            edital.acoes = acoes_disponiveis(ator, edital.status)
+            # Sem pendências nem segregação: a listagem não as exibe, e prever recusa onde o
+            # motivo não cabe transformaria a linha da tabela numa tela de detalhe. O conjunto é o
+            # mesmo; o que muda é quanto dele a tela mostra.
+            edital.acoes = [
+                acao for acao in acoes.do_edital(edital, ator) if acao.chave != "auditoria"
+            ]
 
     contagem = contar_por_situacao(processos)
     return render(
@@ -139,12 +128,29 @@ def criar_processo(request):
             idempotency_key=request.POST.get("chave_idempotencia", ""),
             correlation_id=request.correlation_id,
         )
+    except RecusaDoFormulario as exc:
+        return render(
+            request,
+            "interface/processo_criar.html",
+            _com_recusas(contexto, exc.recusas),
+            status=422,
+        )
     except ValueError as exc:
-        contexto["erro"] = str(exc)
-        return render(request, "interface/processo_criar.html", contexto, status=422)
+        # Recusa sem campo conhecido continua em texto: apontar um campo qualquer seria pior.
+        return render(
+            request,
+            "interface/processo_criar.html",
+            _com_recusas(contexto, [{"mensagem": str(exc), "ancora": ""}]),
+            status=422,
+        )
     except DomainError as exc:
-        contexto["erro"] = exc.detail
-        return render(request, "interface/processo_criar.html", contexto, status=exc.status)
+        recusas = [{"mensagem": exc.detail, "ancora": CAMPO_DO_CONFLITO.get(exc.code, "")}]
+        return render(
+            request,
+            "interface/processo_criar.html",
+            _com_recusas(contexto, recusas),
+            status=exc.status,
+        )
     return redirect(reverse("interface:processo-detalhe", args=[processo.id]))
 
 
@@ -158,6 +164,34 @@ TEXTOS_DA_CRIACAO = (
     ("titulo_edital", "Título do Edital", Edital, "title"),
 )
 ANO_MINIMO, ANO_MAXIMO = 2000, 9999
+
+# O campo a que cada recusa do domínio pertence, na criação. `edital_identifier_conflict` nasceu na
+# `007` apontando o Edital; aqui a interface o leva até o controle que a pessoa precisa corrigir.
+CAMPO_DO_CONFLITO = {
+    "institutional_identifier_conflict": "codigo",
+    "edital_identifier_conflict": "numero",
+}
+
+
+def _com_recusas(contexto, recusas):
+    """O contexto com o resumo e o mapa por campo — a mesma forma das etapas do assistente."""
+    return {
+        **contexto,
+        "erros": recusas,
+        "recusas": {r["ancora"]: r["mensagem"] for r in recusas if r["ancora"]},
+    }
+
+
+class RecusaDoFormulario(ValueError):
+    """Recusas da tela de criação, uma por campo.
+
+    Existe para que o resumo possa ancorar e a mensagem aparecer junto do controle — o mesmo que
+    as etapas do assistente fazem com as recusas do domínio.
+    """
+
+    def __init__(self, recusas):
+        super().__init__("; ".join(item["mensagem"] for item in recusas))
+        self.recusas = recusas
 
 
 def _processo_do_formulario(dados):
@@ -174,22 +208,45 @@ def _processo_do_formulario(dados):
         "ano": "Ano do Edital",
         "titulo_edital": "Título do Edital",
     }
-    vazios = [rotulo for chave, rotulo in campos.items() if not (dados.get(chave) or "").strip()]
-    if vazios:
-        raise ValueError("Preencha: " + ", ".join(vazios) + ".")
-    excedidos = [
-        f"{rotulo} (máximo {modelo._meta.get_field(campo).max_length} caracteres)"
+    # Uma recusa **por campo**, e não uma frase agregada (FR-033). "Preencha: A, B, C." obriga a
+    # pessoa a reencontrar cada um dos três; com a recusa presa ao campo, o resumo leva até ele.
+    recusas = [
+        {"mensagem": f"{rotulo} é obrigatório.", "ancora": chave}
+        for chave, rotulo in campos.items()
+        if not (dados.get(chave) or "").strip()
+    ]
+    if recusas:
+        raise RecusaDoFormulario(recusas)
+    recusas = [
+        {
+            "mensagem": (
+                f"{rotulo} excede o máximo de "
+                f"{modelo._meta.get_field(campo).max_length} caracteres."
+            ),
+            "ancora": chave,
+        }
         for chave, rotulo, modelo, campo in TEXTOS_DA_CRIACAO
         if len(dados[chave].strip()) > modelo._meta.get_field(campo).max_length
     ]
-    if excedidos:
-        raise ValueError("Encurte: " + ", ".join(excedidos) + ".")
+    if recusas:
+        raise RecusaDoFormulario(recusas)
     try:
         ano = int(dados["ano"])
     except ValueError as exc:
-        raise ValueError(f"'{dados['ano']}' não é um ano válido.") from exc
+        raise RecusaDoFormulario(
+            [{"mensagem": f"'{dados['ano']}' não é um ano válido.", "ancora": "ano"}]
+        ) from exc
     if not ANO_MINIMO <= ano <= ANO_MAXIMO:
-        raise ValueError(f"O ano do Edital deve estar entre {ANO_MINIMO} e {ANO_MAXIMO}.")
+        raise RecusaDoFormulario(
+            [
+                {
+                    "mensagem": (
+                        f"O ano do Edital deve estar entre {ANO_MINIMO} e {ANO_MAXIMO}."
+                    ),
+                    "ancora": "ano",
+                }
+            ]
+        )
     return {
         "institutionalCode": dados["codigo"].strip(),
         "title": dados["titulo"].strip(),
@@ -330,6 +387,35 @@ ROTULO_DO_ESTADO = {
 }
 
 
+# Prefixo do nome dos campos de cada etapa, para reconstruir o `id` do controle recusado.
+PREFIXO_DA_ETAPA = {"perfis": "perfil", "cronograma": "evento", "etapas": "etapa"}
+
+
+def _recusa(exc, digitados, etapa):
+    """A recusa do domínio, com a âncora do campo quando ele é conhecido (FR-033).
+
+    O domínio nomeia o campo e a entidade; a interface sabe em que **linha** aquela entidade foi
+    digitada. Juntando os dois sai o `id` do controle — `perfil-3-reserveLimit` —, que é o que a
+    âncora do resumo e a marcação junto do campo precisam.
+
+    Quando a recusa não pertence a campo nenhum — "o Edital deve possuir ao menos um Perfil" — a
+    âncora fica vazia e o resumo a mostra como texto. Apontar um campo qualquer seria pior.
+    """
+    campo = getattr(exc, "campo", "")
+    identidade = getattr(exc, "identidade", "")
+    mensagem = getattr(exc, "detail", None) or str(exc)
+    prefixo = PREFIXO_DA_ETAPA.get(etapa, "")
+    if not (campo and identidade and prefixo):
+        return {"mensagem": mensagem, "ancora": ""}
+
+    # `digitados` é a lista de linhas na ordem em que o formulário as enviou; o índice do
+    # formulário é o que compõe o `id` do controle.
+    for indice, linha in enumerate(digitados or []):
+        if str(linha.get("id", "")) == identidade:
+            return {"mensagem": mensagem, "ancora": f"{prefixo}-{indice}-{campo}"}
+    return {"mensagem": mensagem, "ancora": ""}
+
+
 def _progresso(edital, atual):
     """Cada etapa sabe se já está resolvida — o que orienta quem retoma o trabalho depois."""
     estados = {
@@ -393,14 +479,20 @@ def compor_etapa(request, edital_id, etapa):
     if request.method == "POST" and etapa in ETAPAS_GRAVAVEIS:
         if not editavel:
             erros.append(
-                "Este Edital não está em elaboração ou você não tem permissão para editá-lo."
+                {
+                    "mensagem": (
+                        "Este Edital não está em elaboração ou você não tem permissão "
+                        "para editá-lo."
+                    ),
+                    "ancora": "",
+                }
             )
         else:
             try:
                 # A leitura acontece antes da gravação para que o digitado sobreviva à recusa.
                 digitados = _ler_etapa(request, etapa)
             except ValueError as exc:
-                erros.append(str(exc))
+                erros.append(_recusa(exc, digitados, etapa))
             else:
                 try:
                     _gravar_etapa(request, ator, edital, etapa, digitados)
@@ -412,7 +504,7 @@ def compor_etapa(request, edital_id, etapa):
                         f"?salvo={etapa}"
                     )
                 except DomainError as exc:
-                    erros.append(exc.detail)
+                    erros.append(_recusa(exc, digitados, etapa))
         edital.refresh_from_db()
 
     _, _, template = ETAPAS_COMPOSICAO[CHAVES_ETAPA.index(etapa)]
@@ -426,6 +518,12 @@ def compor_etapa(request, edital_id, etapa):
         {
             "edital": edital,
             "etapa": etapa,
+            # A outra metade de FR-033: a mensagem junto do campo, por `id` do controle.
+            "recusas": {
+                erro["ancora"]: erro["mensagem"]
+                for erro in erros
+                if isinstance(erro, dict) and erro.get("ancora")
+            },
             "progresso": _progresso(edital, etapa),
             "anterior": anterior,
             "proxima": proxima,

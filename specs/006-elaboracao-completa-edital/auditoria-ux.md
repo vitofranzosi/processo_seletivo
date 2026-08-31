@@ -414,15 +414,29 @@ Os três primeiros itens são reparo da entrega recém-integrada. O quarto e o q
 > necessidade plausível durante a implementação não autoriza incluí-la (P-001). Ficam como insumo
 > de priorização.
 
-### 27 · As recusas do servidor não sabem a que campo pertencem
+### 27 · ~~As recusas do servidor não sabem a que campo pertencem~~ — CORRIGIDO
 
 FR-033 pede resumo de erros **com âncora para cada campo** e a mensagem junto do campo. As recusas
 do cliente já fazem isso — `validacao.js` associa a mensagem ao controle e limpa a marcação ARIA
 quando o campo é corrigido. As do servidor, não: `ProfileValidationError`, `ScheduleValidationError`
 e `StageValidationError` carregam **mensagem e nada mais**.
 
-A `007` entregou o resumo focalizável e anunciado; a âncora por campo ficou de fora porque exigiria
-que o domínio passasse a nomear o campo de cada recusa. Isso é mudança de domínio, não de interface.
+A `007` entregou primeiro só o resumo focalizável e anunciado, e eu registrei a âncora por campo
+como achado — **erradamente**. Revisão de código apontou que FR-033 é requisito aprovado *antes* da
+implementação, não necessidade descoberta depois: registrá-lo aqui era reclassificar um débito como
+descoberta. Corrigido na mesma feature.
+
+A correção foi a que a revisão sugeriu e é pequena: as três exceções ganharam `campo` e `identidade`
+**opcionais**, `DomainError` os propaga, e a interface os resolve para o `id` do controle daquela
+linha. Regras que valem para a coleção inteira — "o Edital deve possuir ao menos um Perfil" —
+continuam sem âncora, porque apontar um campo qualquer seria pior do que não apontar.
+
+**Foram precisas duas voltas.** Na primeira, o `<span>` da recusa aparecia ao lado do controle mas
+o controle não o referenciava: `role="alert"` anuncia a mensagem quando ela surge, e não cria
+vínculo — quem volta ao campo depois não tem como saber que aquela mensagem lhe pertence. A segunda
+volta acrescentou `aria-invalid` e a referência em `aria-describedby`, preservando a ajuda que já
+existia, e levou a mesma estrutura à criação de Processo, onde as recusas ainda viravam uma frase
+agregada ("Encurte: A, B.").
 
 - **Onde:** `editais/domain/{perfis,cronograma,etapas}.py` — exceções sem identidade de campo
 - **Consequência hoje:** numa recusa como "reserva limitada sem limite", a pessoa lê o resumo e

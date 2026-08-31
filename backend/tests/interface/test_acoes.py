@@ -215,3 +215,38 @@ def test_ato_sem_impedimento_permanece_disponivel(
         None,
     )
     assert publicar is not None and publicar.disponivel, "publicar deveria estar oferecido"
+
+
+# ---------------------------------------------------------------------------
+# A listagem e o detalhe respondem à mesma pergunta (FR-023)
+# ---------------------------------------------------------------------------
+
+
+def test_listagem_e_detalhe_nao_divergem(client, seletor_ligado, edital):
+    """A segunda fonte de verdade que sobreviveu à primeira correção.
+
+    `ACOES_POR_SITUACAO` não conhecia `Cancelar`: um gestor via a ação no detalhe do Edital e a
+    listagem, ao lado, afirmava que não havia nenhuma. É o achado 08 um nível acima.
+    """
+    identificar(client, "gestora", ["gestor", "elaborador"])
+
+    do_detalhe = {a.chave for a in cartao_de_acoes(client, edital).context["acoes"]}
+    listagem = client.get(reverse("interface:lista"))
+    processo = listagem.context["processos"][0]
+    da_lista = {a.chave for a in list(processo.editais.all())[0].acoes}
+
+    # A auditoria é a única ausência deliberada: a listagem não a oferece por linha.
+    assert da_lista == do_detalhe - {"auditoria"}, (
+        f"listagem {da_lista} diverge do detalhe {do_detalhe}"
+    )
+
+
+def test_cancelar_aparece_na_listagem_para_quem_pode(client, seletor_ligado, edital):
+    """O caso concreto da divergência: `Cancelar` não estava no mapa antigo."""
+    identificar(client, "gestora", ["gestor"])
+
+    listagem = client.get(reverse("interface:lista"))
+    processo = listagem.context["processos"][0]
+    rotulos_da_linha = {a.rotulo for a in list(processo.editais.all())[0].acoes}
+
+    assert "Cancelar" in rotulos_da_linha

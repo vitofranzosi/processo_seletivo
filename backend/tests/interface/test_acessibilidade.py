@@ -22,6 +22,20 @@ FONTE = BASE.read_text()
 MINIMO_AA = 4.5
 
 
+def _controle(corpo, identificador):
+    """A tag do controle daquele `id` — para afirmar sobre os atributos dele, e não sobre o HTML."""
+    achado = re.search(
+        r"<(?:input|textarea|select)[^>]*?id=\"" + re.escape(identificador) + r"\"[^>]*?>", corpo
+    )
+    assert achado, f"controle {identificador} não encontrado"
+    return achado.group(0)
+
+
+def _descrito_por(controle):
+    achado = re.search(r'aria-describedby="([^"]*)"', controle)
+    return achado.group(1) if achado else ""
+
+
 @pytest.fixture
 def edital(api_client, manager_headers, process_payload):
     api_client.post("/api/v1/admin/processos", process_payload, format="json", **manager_headers)
@@ -190,6 +204,63 @@ def test_a_recusa_recebe_foco_para_nao_passar_despercebida(client, seletor_ligad
     assert 'role="alert"' in corpo
     assert 'tabindex="-1"' in corpo, "o resumo precisa poder receber o foco"
     assert "autofocus" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_recusa_ancora_no_campo_e_aparece_junto_dele(client, seletor_ligado, edital):
+    """FR-033 por inteiro: âncora no resumo **e** mensagem junto do campo.
+
+    Ficou de fora da primeira entrega porque as exceções de domínio carregavam mensagem e nada
+    mais. Agora carregam `campo` e `identidade` — opcionais —, e a interface as resolve para o `id`
+    do controle daquela linha.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    perfil = "aaaaaaaa-0000-4000-8000-0000000000c1"
+
+    resposta = client.post(
+        reverse("interface:compor-etapa", args=[edital.id, "perfis"]),
+        {
+            "perfil-0-id": perfil,
+            "perfil-0-code": "P",
+            "perfil-0-name": "Perfil",
+            "perfil-0-immediateVacancies": "1",
+            "perfil-0-reserveType": "LIMITED",  # limitada sem limite: o domínio nomeia reserveLimit
+        },
+    )
+    corpo = resposta.content.decode()
+
+    # O resumo aponta para o campo.
+    assert 'href="#perfil-0-reserveLimit"' in corpo, "o item do resumo precisa ancorar no campo"
+    # E a mensagem aparece junto dele.
+    assert 'id="recusa-perfil-0-reserveLimit"' in corpo, "falta a marca junto do campo"
+    assert resposta.context["recusas"] == {
+        "perfil-0-reserveLimit": "Cadastro Reserva limitado exige limite não negativo."
+    }
+
+    # **O vínculo programático**, que é o que FR-033 pede e o que `role="alert"` não dá: o alerta
+    # anuncia a mensagem quando ela aparece, mas quem volta ao controle depois não tem como saber
+    # que aquela mensagem lhe pertence.
+    controle = _controle(corpo, "perfil-0-reserveLimit")
+    assert 'aria-invalid="true"' in controle, controle
+    assert "recusa-perfil-0-reserveLimit" in _descrito_por(controle), controle
+    # E a ajuda que já existia não pode ter sido substituída pela recusa.
+    assert "ajuda-reserva-0" in _descrito_por(controle), controle
+
+
+@pytest.mark.django_db(transaction=True)
+def test_recusa_que_nao_pertence_a_campo_nenhum_fica_em_texto(client, seletor_ligado, edital):
+    """"O Edital deve possuir ao menos um Perfil" não é de campo nenhum.
+
+    Apontar um campo qualquer seria pior do que não apontar — e é por isso que `campo` é opcional.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.post(reverse("interface:compor-etapa", args=[edital.id, "perfis"]), {})
+    corpo = resposta.content.decode()
+
+    assert "ao menos um Perfil" in corpo
+    assert resposta.context["recusas"] == {}
+    assert 'href="#perfil-' not in corpo
 
 
 @pytest.mark.django_db(transaction=True)
