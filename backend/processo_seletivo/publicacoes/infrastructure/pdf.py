@@ -98,6 +98,14 @@ CORPO_NOTA = 8.5
 
 ESQUERDA, CENTRO, DIREITA = "esquerda", "centro", "direita"
 
+# A escala de espaço vertical (FR-031). Nomeá-la é o que a torna uma decisão: com números
+# literais espalhados pela composição, a distinção entre seção, bloco e parágrafo vira acidente.
+# A ordem é o requisito — o leitor distingue os três níveis pelo ar que os separa.
+ANTES_DE_SECAO = 20.0
+ANTES_DE_BLOCO = 10.0
+ANTES_DE_PARAGRAFO = 5.0
+ANTES_DE_LINHA = 3.0
+
 # Quanto o contorno de um bloco abre acima da primeira linha (FR-014).
 FOLGA_DA_MOLDURA = 6.0
 # E quanto ele desce quando um título veio junto na quebra: o fio precisa passar abaixo das
@@ -447,7 +455,7 @@ def _tabela(composicao, cabecalho, linhas, *, recuo=18.0, tamanho=CORPO_TEXTO):
         for indice, celula in enumerate(celulas):
             composicao.escrever(
                 celula, tamanho=tamanho, fonte=fonte, recuo=deslocamento,
-                antes=3.0 if indice == 0 else -(tamanho * 1.45),
+                antes=ANTES_DE_LINHA if indice == 0 else -(tamanho * 1.45),
                 junto=repetir and indice == len(celulas) - 1,
                 repetir=repetir,
             )
@@ -490,7 +498,8 @@ def _modalidades(composicao, perfil):
     presentes = [c for c in range(len(cabecalho)) if any(linha[c] for linha in linhas)]
     with composicao.bloco():
         composicao.escrever(
-            "Modalidades de concorrência", tamanho=CORPO_TEXTO, fonte=NEGRITO, recuo=18, antes=8
+            "Modalidades de concorrência", tamanho=CORPO_TEXTO, fonte=NEGRITO, recuo=18,
+            antes=ANTES_DE_BLOCO, junto=True,
         )
         _tabela(
             composicao,
@@ -516,7 +525,7 @@ def _perfis(composicao, snapshot, secao=0):
                     f"{perfil.get('code', '')} — {perfil.get('name', '')}",
                     tamanho=CORPO_BLOCO,
                     fonte=NEGRITO,
-                    antes=14,
+                    antes=ANTES_DE_BLOCO + 4,
                     junto=True,
                 )
                 identificacao = [["Localidade", perfil.get("locality", "") or "—",
@@ -531,23 +540,33 @@ def _perfis(composicao, snapshot, secao=0):
 
             if perfil.get("description"):
                 with composicao.bloco():
-                    composicao.escrever(perfil["description"], tamanho=CORPO_TEXTO, recuo=18,
-                                        antes=6)
+                    composicao.escrever(
+                        perfil["description"], tamanho=CORPO_TEXTO, recuo=18,
+                        antes=ANTES_DE_BLOCO,
+                    )
             if perfil.get("duties"):
                 with composicao.bloco():
-                    composicao.escrever("Atribuições", tamanho=CORPO_TEXTO, fonte=NEGRITO,
-                                        recuo=18, antes=8)
+                    composicao.escrever(
+                        "Atribuições", tamanho=CORPO_TEXTO, fonte=NEGRITO, recuo=18,
+                        antes=ANTES_DE_BLOCO, junto=True,
+                    )
                     for paragrafo in _paragrafos(perfil["duties"]):
-                        composicao.escrever(paragrafo, tamanho=CORPO_TEXTO, recuo=32, antes=3)
+                        composicao.escrever(
+                            paragrafo, tamanho=CORPO_TEXTO, recuo=32, antes=ANTES_DE_LINHA
+                        )
             for rotulo, chave in (("Carga horária", "workload"), ("Remuneração", "compensation")):
                 if perfil.get(chave):
-                    composicao.escrever(f"{rotulo}: {perfil[chave]}", tamanho=CORPO_TEXTO,
-                                        recuo=18, antes=3)
+                    composicao.escrever(
+                        f"{rotulo}: {perfil[chave]}", tamanho=CORPO_TEXTO, recuo=18,
+                        antes=ANTES_DE_LINHA,
+                    )
             requisitos = perfil.get("requirements") or []
             if requisitos:
                 with composicao.bloco():
-                    composicao.escrever("Requisitos", tamanho=CORPO_TEXTO, fonte=NEGRITO,
-                                        recuo=18, antes=8)
+                    composicao.escrever(
+                        "Requisitos", tamanho=CORPO_TEXTO, fonte=NEGRITO, recuo=18,
+                        antes=ANTES_DE_BLOCO, junto=True,
+                    )
                     for requisito in requisitos:
                         composicao.escrever(f"• {requisito}", tamanho=CORPO_TEXTO, recuo=32)
             _modalidades(composicao, perfil)
@@ -605,7 +624,7 @@ def _etapas(composicao, snapshot, secao=0):
                 f"{secao}.{ordem} {etapa.get('name', '')}",
                 tamanho=CORPO_BLOCO,
                 fonte=NEGRITO,
-                antes=12,
+                antes=ANTES_DE_BLOCO + 2,
                 junto=True,
             )
             caracteres = [rotulo for chave, rotulo in CARATER_DA_ETAPA if etapa.get(chave)]
@@ -661,13 +680,17 @@ def _secoes(composicao, snapshot):
     """
     for numero, (secao, corpo) in enumerate(_materializaveis(snapshot), 1):
         titulo = f"{numero}. {secao.get('title', '').upper()}"
-        composicao.escrever(titulo, tamanho=CORPO_SECAO, fonte=NEGRITO, antes=18, junto=True)
+        composicao.escrever(
+            titulo, tamanho=CORPO_SECAO, fonte=NEGRITO, antes=ANTES_DE_SECAO, junto=True
+        )
         if corpo is not None:
             corpo(composicao, snapshot, numero)
         else:
             for indice, paragrafo in enumerate(_paragrafos(secao.get("content", ""))):
                 composicao.escrever(
-                    paragrafo, tamanho=CORPO_TEXTO, antes=6 if indice == 0 else 7
+                    paragrafo,
+                    tamanho=CORPO_TEXTO,
+                    antes=ANTES_DE_BLOCO if indice == 0 else ANTES_DE_PARAGRAFO,
                 )
 
 

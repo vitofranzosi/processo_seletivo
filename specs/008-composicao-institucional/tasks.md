@@ -146,8 +146,8 @@ alinhadas, que o Evento pontual não exibe término e que a Etapa não traz a fr
 - [X] T042 [US3] Modelar a tabela como bloco cujas unidades internas são linhas, com o cabeçalho marcado para repetição, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-026)
 - [X] T043 [US3] Reescrever `_cronograma` como tabela com ordem, evento, início e término em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-023 a FR-025)
 - [X] T044 [US3] Reescrever `_etapas` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` com pares rótulo-valor alinhados, mantendo a data derivada do Evento vinculado (FR-027, FR-028)
-- [ ] T045 [US3] Regenerar a fixture e revisar o diff no mesmo commit (FR-044)
-- [ ] T046 [US3] Gerar a prévia e conferir R-07 a R-10 da rubrica
+- [X] T045 [US3] Regenerar a fixture e revisar o diff no mesmo commit (FR-044)
+- [X] T046 [US3] Gerar a prévia e conferir R-07 a R-10 da rubrica
 
 **Checkpoint**: as três seções geradas estão estruturadas.
 
@@ -164,16 +164,16 @@ página e espaço vertical sem causa.
 
 ### Tests for User Story 4
 
-- [ ] T047 [P] [US4] Teste de que nenhum título — de seção, Perfil ou Etapa — fecha página sem conteúdo abaixo, em `backend/tests/unit/publicacoes/test_pdf.py` (FR-030, SC-008)
-- [ ] T048 [P] [US4] Teste ordinal do espaçamento — antes de seção > antes de bloco > antes de parágrafo — em `backend/tests/unit/publicacoes/test_pdf.py` (FR-031, SC-008)
-- [ ] T049 [P] [US4] Teste de que nenhuma linha ultrapassa a margem em nenhuma página do cenário longo, em `backend/tests/unit/publicacoes/test_pdf.py` (FR-029)
-- [ ] T050 [P] [US4] Teste de que o conjunto de quebras do corpo normativo é idêntico entre prévia e publicado, em `backend/tests/contract/test_documento_publicado.py` (FR-042)
+- [X] T047 [P] [US4] Teste de que nenhum título — de seção, Perfil ou Etapa — fecha página sem conteúdo abaixo, em `backend/tests/unit/publicacoes/test_pdf.py` (FR-030, SC-008)
+- [X] T048 [P] [US4] Teste ordinal do espaçamento — antes de seção > antes de bloco > antes de parágrafo — em `backend/tests/unit/publicacoes/test_pdf.py` (FR-031, SC-008)
+- [X] T049 [P] [US4] Teste de que nenhuma linha ultrapassa a margem em nenhuma página do cenário longo, em `backend/tests/unit/publicacoes/test_pdf.py` (FR-029)
+- [X] T050 [P] [US4] Teste de que o conjunto de quebras do corpo normativo é idêntico entre prévia e publicado, em `backend/tests/contract/test_documento_publicado.py` (FR-042)
 
 ### Implementation for User Story 4
 
-- [ ] T051 [US4] Aplicar keep-together de título com a primeira parte do conteúdo em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-030)
-- [ ] T052 [US4] Definir a escala de espaçamento semântico como constantes nomeadas e aplicá-la em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-031)
-- [ ] T053 [US4] Ajustar largura de linha, entrelinha e distância entre parágrafos do corpo normativo em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-029)
+- [X] T051 [US4] Aplicar keep-together de título com a primeira parte do conteúdo em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-030)
+- [X] T052 [US4] Definir a escala de espaçamento semântico como constantes nomeadas e aplicá-la em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-031)
+- [X] T053 [US4] Ajustar largura de linha, entrelinha e distância entre parágrafos do corpo normativo em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-029)
 - [ ] T054 [US4] Regenerar a fixture e revisar o diff no mesmo commit (FR-044)
 - [ ] T055 [US4] Gerar a prévia do cenário longo e conferir R-06 e R-11 em **todas** as páginas
 

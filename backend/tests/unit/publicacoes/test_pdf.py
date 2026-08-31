@@ -902,3 +902,58 @@ def test_a_etapa_apresenta_carater_peso_e_nota_em_pares_rotulo_valor():
     texto = texto_de(render_edital_pdf(sem_ponderacao, HASH))
     assert "Peso" not in texto
     assert "Nota mínima" not in texto
+
+
+# ---------------------------------------------------------------------------
+# 008 / US4 — O documento sem acidentes editoriais
+# ---------------------------------------------------------------------------
+
+
+def test_nenhum_titulo_fecha_a_pagina_sem_conteudo_abaixo():
+    """FR-030: vale para título de seção, de Perfil e de Etapa.
+
+    Um título sozinho no rodapé é o defeito que mais denuncia composição automática — e é o mais
+    fácil de deixar passar, porque só aparece em certas combinações de conteúdo.
+    """
+    for conteudo in (snapshot(), dois_perfis(), perfil_maior_que_a_pagina(), cronograma_longo()):
+        for numero, pagina in enumerate(paginas_de(render_edital_pdf(conteudo, HASH)), 1):
+            corpo = [linha for linha in pagina if not linha.startswith("Edital 07/2026 ·")]
+            if not corpo:
+                continue
+            ultima = corpo[-1]
+            titulo = (
+                re.match(r"^\d+\. [A-ZÀ-Ú]", ultima)
+                or re.match(r"^\d+\.\d+ ", ultima)
+                or re.match(r"^[A-Z]{3}-[A-Z]+ — ", ultima)
+            )
+            assert not titulo, f"título sozinho no fim da página {numero}: {ultima!r}"
+
+
+def test_o_espaco_antes_de_secao_bloco_e_paragrafo_e_decrescente():
+    """FR-031: espaço semântico, não compactação.
+
+    O leitor distingue seção nova, bloco dentro da seção e parágrafo pelo ar que os separa. Se os
+    três forem iguais, o documento vira uma coluna indiferenciada de texto.
+    """
+    from processo_seletivo.publicacoes.infrastructure.pdf import (
+        ANTES_DE_BLOCO,
+        ANTES_DE_PARAGRAFO,
+        ANTES_DE_SECAO,
+    )
+
+    assert ANTES_DE_SECAO > ANTES_DE_BLOCO > ANTES_DE_PARAGRAFO
+
+
+def test_nenhuma_linha_ultrapassa_a_margem_em_nenhum_cenario():
+    """FR-029: inclusive no cenário longo, e inclusive nas células das tabelas."""
+    from processo_seletivo.publicacoes.infrastructure.pdf import LARGURA, MARGEM, largura
+
+    util = LARGURA - 2 * MARGEM
+    for conteudo in (
+        snapshot(), dois_perfis(), perfil_maior_que_a_pagina(), cronograma_longo(), sem_etapas()
+    ):
+        pdf = render_edital_pdf(conteudo, HASH)
+        for linha, fonte, tamanho, recuo in linhas_desenhadas(pdf):
+            assert largura(linha, tamanho, fonte) + recuo <= util + 0.5, (
+                f"{linha!r} ultrapassa a margem"
+            )
