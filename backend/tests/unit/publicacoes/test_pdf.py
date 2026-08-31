@@ -74,7 +74,7 @@ def texto_de(pdf: bytes) -> str:
 
 
 DESENHADA = re.compile(
-    rb"BT /(F\d) ([\d.]+) Tf ([\d.]+) [\d.]+ Td \((.*?)\) Tj ET", re.DOTALL
+    rb"BT (?:[\d.]+ Tw )?/(F\d) ([\d.]+) Tf ([\d.]+) [\d.]+ Td \((.*?)\) Tj", re.DOTALL
 )
 
 
@@ -1235,3 +1235,76 @@ def test_uma_linha_de_tabela_com_celula_refluida_nao_se_parte_entre_paginas():
     assert len(set(onde)) == 1, (
         f"a linha da tabela ficou dividida entre as páginas {sorted(set(onde))}"
     )
+
+
+JUSTIFICADA = re.compile(
+    rb"BT ([\d.]+) Tw /(F\d) ([\d.]+) Tf ([\d.]+) [\d.]+ Td \((.*?)\) Tj", re.DOTALL
+)
+
+
+def test_o_texto_normativo_alcanca_as_duas_margens():
+    """A justificação dos Editais de referência (FR-002, FR-029).
+
+    Só é possível porque a largura é real: a folga da linha é distribuída entre os seus espaços,
+    e sem medir não há folga a distribuir.
+    """
+    from processo_seletivo.publicacoes.infrastructure.pdf import LARGURA, MARGEM, largura
+
+    pdf = documento(snapshot())
+    util = LARGURA - 2 * MARGEM
+    justificadas = [
+        (
+            texto.replace(b"\\(", b"(").replace(b"\\)", b")").decode("cp1252"),
+            fonte.decode(),
+            float(corpo),
+            float(x) - MARGEM,
+            float(espaco),
+        )
+        for espaco, fonte, corpo, x, texto in JUSTIFICADA.findall(pdf)
+    ]
+
+    assert justificadas, "nenhuma linha foi justificada"
+    for texto, fonte, corpo, recuo, espaco in justificadas:
+        alcancado = largura(texto, corpo, fonte) + espaco * texto.count(" ") + recuo
+        assert abs(alcancado - util) < 0.5, f"{texto!r} não alcançou a margem: {alcancado:.1f}"
+
+    # A última linha de um parágrafo não é esticada, e título, célula e assinatura também não.
+    ultimas = [
+        linha
+        for linha, _, _, _ in linhas_desenhadas(pdf)
+        if linha.startswith(("Distância, torna pública", "aplicável e os princípios"))
+    ]
+    assert ultimas, "o cenário deveria ter parágrafos de duas linhas"
+    for ultima in ultimas:
+        assert not any(ultima == texto for texto, _, _, _, _ in justificadas)
+
+
+def test_a_medicao_de_um_bloco_atravessa_os_quadros_que_ele_contem():
+    """Um Perfil com quadros dentro é medido inteiro — senão ele é partido (FR-021).
+
+    O quadro abre um bloco e fecha com o mesmo marcador dos demais. Não contá-lo como abertura
+    fazia a profundidade zerar cedo: a extensão do Perfil terminava no seu primeiro quadro, a
+    altura medida saía muito menor que a real, e a cascata o colocava numa página onde não cabia.
+    """
+    base = snapshot()
+    completo = {
+        **base["profiles"][0],
+        "duties": "Ministrar aulas nos cursos técnicos e de graduação.\n"
+                  "Participar das atividades de ensino, pesquisa e extensão do campus.",
+        "workload": "40 horas semanais",
+        "compensation": "R$ 4.200,00 mensais, acrescidos de auxílio-alimentação",
+        "requirements": ["Mestrado em Computação ou área afim", "Registro profissional ativo"],
+    }
+    segundo = {**completo, "id": "33333333-3333-3333-3333-33333333aaaa", "code": "TEC-LAB",
+               "name": "Técnico de Laboratório"}
+    paginas = paginas_de(documento(snapshot(profiles=[completo, segundo])))
+
+    for codigo in ("DOC-INFO", "TEC-LAB"):
+        onde = {
+            numero
+            for numero, pagina in enumerate(paginas, 1)
+            for linha in pagina
+            if linha.startswith(f"{codigo} — ")
+            or (codigo == "DOC-INFO" and linha == "Mestrado em Computação ou área afim")
+        }
+        assert len(onde) == 1, f"o Perfil {codigo} ficou partido entre as páginas {sorted(onde)}"

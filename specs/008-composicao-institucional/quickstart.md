@@ -207,10 +207,9 @@ requisito, e a quarta é dado, não composição.*
 | Diferença | Situação | Onde está decidida |
 |---|---|---|
 | **Brasão** no topo, como nos Editais 62 e 73 | fora da V1 | FR-008 — exigiria embutir imagem no documento |
-| **Corpo justificado** nos dois alvos; o nosso é alinhado à esquerda | fora da V1 | FR-002 — e é a maior diferença visual remanescente |
 | **Numeração de item** dentro da seção (`1.1`, `3.2.1`) | fora da V1 | P-003 — o conteúdo das seções textuais é texto livre, e numerar parágrafo automaticamente seria engine normativa |
 | Autoridade impressa como `Reitora do Ifes — Reitora` | dado, não composição | Assumptions — o catálogo de demonstração traz cargo no campo de nome; corrigir a redação é trabalho editorial |
 
-**A justificação é a candidata natural a uma próxima passada**, se houver uma. Com a métrica de
-largura já no lugar, distribuir a folga da linha entre os espaços é trabalho localizado — mas está
-**fora do escopo por decisão explícita**, e não deve ser incorporada sem que essa decisão mude.
+**A justificação foi incorporada** por decisão posterior: era a maior diferença remanescente, e com
+a métrica de largura já no lugar coube em distribuir a folga da linha entre os seus espaços. Restam
+as duas diferenças acima, ambas exclusões declaradas por requisito.

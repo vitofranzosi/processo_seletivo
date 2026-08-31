@@ -289,9 +289,11 @@ evidência que o motivou — pertence a [research.md](./research.md) e [plan.md]
   feature altera o conteúdo publicado, sua versão canônica, o cálculo do hash, a forma publicada ou
   o endereçamento da Retificação.
 - **FR-002**: Texto centralizado DEVE ficar visualmente centralizado, coluna alinhada DEVE ficar
-  alinhada e nenhuma linha DEVE ultrapassar a margem — em qualquer conteúdo do Edital, inclusive com
-  acentuação. **Limites**: o documento não hifeniza, não justifica, não introduz tipografia nova e
-  mantém as duas famílias que já usa.
+  alinhada, texto normativo corrido DEVE alcançar as duas margens e nenhuma linha DEVE ultrapassar a
+  margem — em qualquer conteúdo do Edital, inclusive com acentuação. A última linha de um parágrafo
+  NÃO DEVE ser esticada. **Limites**: o documento não hifeniza, não introduz tipografia nova e
+  mantém as duas famílias que já usa. *A justificação estava fora da V1 e entrou por decisão
+  posterior, depois de os Editais 62 e 73 mostrarem que era a maior diferença remanescente.*
 - **FR-003**: Um bloco DEVE ser visualmente delimitado e as colunas de uma tabela DEVEM ser
   visualmente separadas. **Limites**: o vocabulário visual do documento é **texto, fio e contorno**,
   preto sobre branco; ficam fora ícone, sombra, cartão, gradiente, imagem, fundo e paleta. Nada

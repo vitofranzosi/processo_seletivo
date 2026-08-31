@@ -259,6 +259,23 @@ def _moldura(topo, base):
     )
 
 
+def _espacamento(texto, fonte, tamanho, recuo):
+    """Quanto acrescentar a cada espaço para a linha alcançar a margem direita.
+
+    É a justificação dos Editais de referência, e ela só é possível por causa de FR-002: sem
+    largura real não há folga a distribuir. Linha de um espaço só, ou já cheia, não é esticada —
+    espaço enorme entre duas palavras é pior que a margem irregular que ele tentaria corrigir.
+    """
+    espacos = str(texto).count(" ")
+    if not espacos:
+        return 0.0
+    folga = (LARGURA - 2 * MARGEM - recuo) - largura(texto, tamanho, fonte)
+    if folga <= 0:
+        return 0.0
+    por_espaco = folga / espacos
+    return por_espaco if por_espaco <= tamanho * 0.35 else 0.0
+
+
 def _x(texto, fonte, tamanho, recuo, alinhamento):
     """Onde a linha começa. Centralizar e alinhar à direita só é possível por causa de FR-002."""
     if alinhamento == ESQUERDA:
@@ -283,7 +300,7 @@ class Composicao:
 
     def escrever(
         self, texto, *, tamanho=CORPO_TEXTO, fonte=REGULAR, recuo=0.0, antes=0.0,
-        alinhamento=ESQUERDA, junto=False, repetir=False,
+        alinhamento=ESQUERDA, junto=False, repetir=False, justificar=False,
     ):
         """`junto` é o "não me deixe sozinho no rodapé" de FR-022 e FR-030.
 
@@ -297,16 +314,23 @@ class Composicao:
         # laço quando o parágrafo é maior que a página: o paginador devolve a cadeia à página
         # nova, ela não cabe de novo, e o documento cresce em páginas vazias. Quebrar entre linhas
         # é o quinto degrau da cascata, e é o comportamento normal de um parágrafo longo.
-        for indice, parte in enumerate(_quebrar(texto, tamanho, recuo, fonte)):
+        # A última linha de um parágrafo **não** se justifica: esticar os espaços de uma linha
+        # curta produz o rio de branco que denuncia justificação feita sem cuidado. É a regra que
+        # todo texto normativo segue, e é o que os Editais de referência fazem.
+        partes = _quebrar(texto, tamanho, recuo, fonte)
+        for indice, parte in enumerate(partes):
             self.itens.append(
                 (
                     "texto", parte, fonte, tamanho, recuo,
                     antes if indice == 0 else 0.0, alinhamento, junto, repetir,
+                    justificar and indice < len(partes) - 1,
                 )
             )
 
     def espaco(self, altura=8.0):
-        self.itens.append(("texto", "", REGULAR, 0.0, 0.0, altura, ESQUERDA, False, False))
+        self.itens.append(
+            ("texto", "", REGULAR, 0.0, 0.0, altura, ESQUERDA, False, False, False)
+        )
 
     @contextmanager
     def bloco(self, *, moldura=False, coeso=True):
@@ -357,7 +381,7 @@ class Composicao:
     def _altura(item):
         if item[0] != "texto":
             return 0.0
-        _, texto, _, tamanho, _, antes, _, _, _ = item
+        _, texto, _, tamanho, _, antes, _, _, _, _ = item
         return antes + (tamanho * 1.45 if tamanho else 0.0)
 
     @classmethod
@@ -365,7 +389,11 @@ class Composicao:
         """Onde termina o bloco aberto em `inicio`, e quanto ele mede."""
         profundidade, fim = 0, inicio
         for indice in range(inicio, len(itens)):
-            if itens[indice][0] == "abre":
+            # `abre_tabela` também abre — e fecha com o mesmo `fecha` dos demais. Não contá-lo
+            # fazia a profundidade zerar cedo: a extensão do Perfil terminava no primeiro quadro
+            # dele, a altura medida saía muito menor que a real, e o bloco era colocado numa
+            # página onde não cabia. Era por isso que o Perfil aparecia partido.
+            if itens[indice][0] in ("abre", "abre_tabela"):
                 profundidade += 1
             elif itens[indice][0] == "fecha":
                 profundidade -= 1
@@ -428,9 +456,9 @@ class Composicao:
                 tracos.extend(_grade(quadro, rastro[0][4] if rastro else y))
             paginas.append((atual, tracos))
             atual, tracos, y = [], [], TOPO
-            for texto, fonte, tamanho, x, _, junto in rastro:
+            for texto, fonte, tamanho, x, _, junto, espaco in rastro:
                 y -= tamanho * 1.45
-                atual.append((texto, fonte, tamanho, x, y, junto))
+                atual.append((texto, fonte, tamanho, x, y, junto, espaco))
             cabecalho_pendente = bool(cabecalho_ativo)
             if quadro is not None:
                 quadro = {"bordas": quadro["bordas"], "topo": None, "linhas": []}
@@ -499,7 +527,9 @@ class Composicao:
                 indice += 1
                 continue
 
-            _, texto, fonte, tamanho, recuo, antes, alinhamento, junto, repetir = item
+            (
+                _, texto, fonte, tamanho, recuo, antes, alinhamento, junto, repetir, justificar
+            ) = item
             altura = self._altura(item)
             # Uma linha "junto" precisa de espaço para si e para a seguinte: é o que impede o
             # título de fechar a página sozinho.
@@ -523,7 +553,7 @@ class Composicao:
                 antes_do_cabecalho = y
                 y -= max(corpo for _, _, corpo, _ in cabecalho_ativo) * 1.45
                 for repetido, sua_fonte, seu_corpo, seu_x in cabecalho_ativo:
-                    atual.append((repetido, sua_fonte, seu_corpo, seu_x, y, False))
+                    atual.append((repetido, sua_fonte, seu_corpo, seu_x, y, False, 0.0))
                 if quadro is not None:
                     # O cabeçalho repetido é a primeira linha do quadro nesta página: ele abre a
                     # grade e ganha o seu fio, como qualquer outra.
@@ -533,14 +563,15 @@ class Composicao:
             y -= altura
             if texto:
                 x = _x(texto, fonte, tamanho, recuo, alinhamento)
-                atual.append((texto, fonte, tamanho, x, y, junto))
+                espaco = _espacamento(texto, fonte, tamanho, recuo) if justificar else 0.0
+                atual.append((texto, fonte, tamanho, x, y, junto, espaco))
                 if repetir:
                     cabecalho_ativo.append((texto, fonte, tamanho, x))
             indice += 1
 
         paginas.append((atual, tracos))
         return [
-            ([linha[:5] for linha in linhas], fios) for linhas, fios in paginas
+            ([(*linha[:5], linha[6]) for linha in linhas], fios) for linhas, fios in paginas
         ] or [([], [])]
 
 
@@ -776,7 +807,7 @@ def _perfis(composicao, snapshot, secao=0):
                 with composicao.bloco():
                     composicao.escrever(
                         perfil["description"], tamanho=CORPO_TEXTO, recuo=18,
-                        antes=ANTES_DE_BLOCO,
+                        antes=ANTES_DE_BLOCO, justificar=True,
                     )
             if perfil.get("duties"):
                 with composicao.bloco():
@@ -786,7 +817,8 @@ def _perfis(composicao, snapshot, secao=0):
                     )
                     for paragrafo in _paragrafos(perfil["duties"]):
                         composicao.escrever(
-                            paragrafo, tamanho=CORPO_TEXTO, recuo=32, antes=ANTES_DE_LINHA
+                            paragrafo, tamanho=CORPO_TEXTO, recuo=32, antes=ANTES_DE_LINHA,
+                            justificar=True,
                         )
             for rotulo, chave in (("Carga horária", "workload"), ("Remuneração", "compensation")):
                 if perfil.get(chave):
@@ -924,6 +956,7 @@ def _secoes(composicao, snapshot):
                     paragrafo,
                     tamanho=CORPO_TEXTO,
                     antes=ANTES_DE_BLOCO if indice == 0 else ANTES_DE_PARAGRAFO,
+                    justificar=True,
                 )
 
 
@@ -995,13 +1028,20 @@ def _fluxo_da_pagina(linhas, rodape, marca="", tracos=()):
             + _texto_pdf(marca)
             + b") Tj ET"
         )
-    for texto, fonte, tamanho, x, y in linhas:
+    for texto, fonte, tamanho, x, y, espaco in linhas:
+        # `Tw` acrescenta largura a cada espaço da linha: é como o PDF justifica, sem que o
+        # compositor precise posicionar palavra por palavra. Fora do bloco de texto ele volta a
+        # zero, para não vazar para a linha seguinte.
         partes.append(
-            b"BT /"
+            b"BT "
+            + (f"{espaco:.3f} Tw ".encode() if espaco else b"")
+            + b"/"
             + fonte.encode()
             + f" {tamanho:.1f} Tf {x:.1f} {y:.1f} Td (".encode()
             + _texto_pdf(texto)
-            + b") Tj ET"
+            + b") Tj"
+            + (b" 0 Tw" if espaco else b"")
+            + b" ET"
         )
     partes.append(
         b"BT /" + REGULAR.encode() + f" 8.0 Tf {MARGEM:.1f} {RODAPE - 16:.1f} Td (".encode()
