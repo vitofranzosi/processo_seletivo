@@ -34,18 +34,31 @@ voltar à página anterior para lembrar.
     </p>
   </section>
 
-  {% if modalidades %}
+  {% if modalidade_unica %}
+  {% comment %}
+  Uma modalidade só não é escolha — é a condição de todo mundo naquele Perfil. Ela é informada,
+  e não perguntada: pedir que a pessoa confirme o óbvio é exatamente o atrito que P-001 recusa.
+  {% endcomment %}
   <section aria-labelledby="concorrencia">
     <h2 id="concorrencia">Concorrência</h2>
-    <p class="ajuda">Escolha como você concorre nesta vaga.</p>
+    <dl class="dados">
+      <dt>Modalidade</dt><dd>{{ modalidade_unica.nome }}</dd>
+    </dl>
+    <p class="ajuda">É a única modalidade prevista para esta vaga.</p>
+  </section>
+  {% elif modalidades %}
+  <section aria-labelledby="concorrencia">
+    <h2 id="concorrencia">Concorrência</h2>
+    <p class="ajuda">Escolha como você concorre nesta vaga. A escolha decide quais documentos
+      serão pedidos a você.</p>
     <p class="campo">
-      <label for="modalidade">Modalidade</label>
-      <select id="modalidade" name="modalidade">
-        {% comment %}
-        A opção vazia é "ainda não escolhi", e não uma modalidade inventada: quando o Edital
-        declara ampla concorrência, é a dele que aparece na lista — o sistema não cria uma segunda
-        com o mesmo significado (FR-039).
-        {% endcomment %}
+      <label for="modalidade">Modalidade <span class="obrigatorio" aria-hidden="true">*</span></label>
+      {% comment %}
+      A opção vazia não é uma modalidade inventada: quando o Edital declara ampla concorrência, é
+      a dele que aparece na lista (FR-039). E ela não é aceita como resposta — o servidor recusa,
+      porque a aplicabilidade dos documentos depende desta escolha.
+      {% endcomment %}
+      <select id="modalidade" name="modalidade" required aria-required="true">
         <option value="">Selecione a modalidade</option>
         {% for modalidade in modalidades %}
         <option value="{{ modalidade.id }}" {% if inscricao.modality_id|stringformat:"s" == modalidade.id %}selected{% endif %}>{{ modalidade.nome }}</option>

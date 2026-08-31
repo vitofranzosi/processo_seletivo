@@ -30,7 +30,7 @@
     </dl>
     {% if perfil.inscricao_id %}
     <p class="convite"><a class="documento" href="{% url 'portal:inscricao' perfil.inscricao_id %}">Continuar inscrição</a></p>
-    {% elif periodo.estado == "aberto" %}
+    {% elif recebe_inscricoes %}
     <form class="convite" method="post" action="{% url 'portal:inscrever' edital_id perfil.id %}">
       {% csrf_token %}
       <button type="submit" class="principal">Inscrever-se nesta vaga</button>

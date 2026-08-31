@@ -61,3 +61,24 @@ def periodo_de_inscricoes(conteudo: dict, agora: datetime) -> Periodo:
     if fim is not None and agora > fim:
         return Periodo(ENCERRADO, inicio, fim)
     return Periodo(ABERTO, inicio, fim)
+
+
+# Os estados do Edital que admitem receber inscrição. Publicado, e só. Encerrado e cancelado
+# continuam **consultáveis** — o ato publicado não se apaga —, mas consultar e receber são
+# decisões diferentes, e confundi-las faria o sistema convidar alguém a se inscrever no que não
+# existe mais.
+ESTADOS_QUE_RECEBEM = frozenset({"PUBLICADO"})
+
+
+def edital_recebe_inscricoes(status: str) -> bool:
+    return status in ESTADOS_QUE_RECEBEM
+
+
+def recebe_inscricoes(*, status: str, conteudo: dict, agora) -> bool:
+    """A pergunta inteira: este Edital, agora, aceita alguém começando uma inscrição?
+
+    Duas condições independentes, e é a independência que importa: o período pode estar aberto
+    num Edital cancelado, e o Edital pode estar publicado fora do período. Só as duas juntas
+    autorizam (FR-019).
+    """
+    return edital_recebe_inscricoes(status) and periodo_de_inscricoes(conteudo, agora).aberto

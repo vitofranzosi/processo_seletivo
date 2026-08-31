@@ -17,14 +17,20 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods
 
-from processo_seletivo.inscricoes.application.rascunho import abrir_inscricao, gravar_dados
-from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes
+from processo_seletivo.inscricoes.application.rascunho import (
+    abrir_inscricao,
+    gravar_dados,
+)
+from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes, recebe_inscricoes
 from processo_seletivo.inscricoes.domain.titularidade import exigir_titularidade
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.portal import identidade as identidade_do_candidato
 from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.shared.api.problems import DomainError
-from processo_seletivo.shared.http import resposta_privada
+from processo_seletivo.shared.http import marcar_como_privada, resposta_privada
+
+# O limite da coluna, aplicado antes de a gravação chegar ao banco.
+LIMITE_DO_TELEFONE = 30
 
 # A mesma tradução que o documento publicado usa, e pelo mesmo motivo: `UNLIMITED` é forma
 # interna, e forma interna não é o que se lê numa página de oportunidade.
@@ -107,7 +113,17 @@ def selecao(request, edital_id):
     contexto["perfis"] = [
         _perfil_da_vitrine(perfil, iniciadas) for perfil in versao.content.get("profiles") or []
     ]
-    return render(request, "portal/selecao.html", contexto)
+    # Consultável e recebendo inscrição são decisões diferentes: um Edital cancelado continua
+    # legível — o ato publicado não se apaga — e não convida ninguém a se inscrever no que não
+    # existe mais.
+    contexto["recebe_inscricoes"] = recebe_inscricoes(
+        status=versao.edital.status, conteudo=versao.content, agora=timezone.now()
+    )
+    resposta = render(request, "portal/selecao.html", contexto)
+    # A página é pública, mas deixa de ser genérica quando quem lê já começou uma inscrição: o
+    # `Continuar inscrição` diz que aquela pessoa se inscreveu. Num computador compartilhado, o
+    # histórico entregaria isso a quem sentar depois (FR-075a).
+    return marcar_como_privada(resposta) if iniciadas else resposta
 
 
 def _inscricoes_iniciadas(request, edital_id):
@@ -189,13 +205,26 @@ def _retomar(request, destino, identidade):
 
 
 def _recusas_da_identificacao(dados):
+    """As recusas que a pessoa lê, e os limites que a persistência impõe.
+
+    O comprimento entra aqui porque sem ele o campo grande demais atravessa a aplicação inteira e
+    estoura na gravação — em PostgreSQL, como erro de servidor. Recusar antes é a diferença entre
+    "o nome é longo demais" e uma página de erro sem explicação.
+    """
     recusas = {}
+    limites = identidade_do_candidato.LIMITES
     if not dados["nome"]:
         recusas["nome"] = "Informe seu nome completo."
+    elif len(dados["nome"]) > limites["nome"]:
+        recusas["nome"] = f"O nome pode ter no máximo {limites['nome']} caracteres."
     if len(identidade_do_candidato.normalizar_cpf(dados["cpf"])) != 11:
         recusas["cpf"] = "Informe um CPF com 11 dígitos."
+    elif len(dados["cpf"]) > limites["cpf"]:
+        recusas["cpf"] = "Informe o CPF apenas com números ou na forma 000.000.000-00."
     if "@" not in dados["email"]:
         recusas["email"] = "Informe um e-mail válido."
+    elif len(dados["email"]) > limites["email"]:
+        recusas["email"] = f"O e-mail pode ter no máximo {limites['email']} caracteres."
     return recusas
 
 
@@ -237,7 +266,10 @@ def inscricao(request, inscricao_id):
     identidade = identidade_do_candidato.identidade_da_sessao(request)
     registro = Inscricao.objects.filter(pk=inscricao_id).select_related("edital").first()
     if registro is None:
-        raise Http404
+        # A **mesma** recusa que a titularidade produz, e não um 404 do framework: dois corpos
+        # diferentes com o mesmo status continuam dizendo qual identificador existe. Indistinguível
+        # é o requisito; igual status não basta (FR-071).
+        raise DomainError("not_found", "Recurso não encontrado.", 404)
     exigir_titularidade(registro, identidade)
     versao = selectors.selecao_publica(edital_id=registro.edital_id)
     conteudo = versao.content
@@ -253,7 +285,10 @@ def inscricao(request, inscricao_id):
                     "nome": identidade.nome,
                     "cpf": identidade.cpf,
                     "email": identidade.email,
-                    "telefone": request.POST.get("telefone", "").strip(),
+                    # Truncado, e não recusado: telefone é opcional e nenhum telefone real passa
+                    # de trinta caracteres — o que passa é colagem acidental, e recusar por isso
+                    # custaria à pessoa mais do que aparar.
+                    "telefone": request.POST.get("telefone", "").strip()[:LIMITE_DO_TELEFONE],
                     "modality_id": request.POST.get("modalidade", "").strip(),
                 },
                 correlation_id=getattr(request, "correlation_id", ""),
@@ -269,6 +304,7 @@ def inscricao(request, inscricao_id):
             "selecao": _selecao(versao),
             "perfil": _perfil_legivel(perfil),
             "modalidades": _modalidades_ofertadas(perfil),
+            "modalidade_unica": _modalidade_unica(perfil),
             "identidade": identidade,
             "guardado": guardado,
             "erros": erros,
@@ -290,6 +326,12 @@ def _perfil_do_conteudo(conteudo, profile_id):
 
 def _perfil_legivel(perfil):
     return {"nome": perfil.get("name", ""), "codigo": perfil.get("code", "")}
+
+
+def _modalidade_unica(perfil):
+    """A modalidade que o Perfil declara sozinha — informada, e não perguntada (FR-038)."""
+    modalidades = _modalidades_ofertadas(perfil)
+    return modalidades[0] if len(modalidades) == 1 else None
 
 
 def _modalidades_ofertadas(perfil):

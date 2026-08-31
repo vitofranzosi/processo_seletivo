@@ -14,12 +14,17 @@ rotulado como tal na tela e recusado em produção pela guarda de `production.py
 Quando o provedor real chegar, só este módulo muda — como a `002` decidiu para o outro eixo.
 """
 
+import hashlib
+import hmac
 from dataclasses import dataclass
 
 from django.conf import settings
 
 CHAVE_SESSAO = "portal_identidade"
 PREFIXO_DEMONSTRACAO = "demo"
+# Limites que a persistência impõe. Conferi-los aqui é o que impede um campo grande demais virar
+# erro de banco na gravação — em SQLite ele passa truncado, em PostgreSQL ele estoura.
+LIMITES = {"nome": 255, "cpf": 20, "email": 254}
 
 
 @dataclass(frozen=True)
@@ -48,15 +53,35 @@ def identidade_da_sessao(request) -> IdentidadeDoCandidato | None:
     return IdentidadeDoCandidato(**dados)
 
 
+def subject_de(cpf: str) -> str:
+    """Identificador estável e **opaco**, derivado do CPF sem carregá-lo.
+
+    O `subject` viaja para a auditoria como autor do ato, e FR-078 proíbe CPF completo ali. Derivar
+    por HMAC preserva as duas propriedades que importam — a mesma pessoa é o mesmo subject entre
+    visitas, e pessoas distintas não colidem — sem que o documento fique gravado em cada registro
+    de auditoria, em cada inscrição e em cada log que mencione o ator.
+
+    *A primeira redação usava `demo:<cpf>`, o que era legível e errado: o identificador que existe
+    para não depender de dado pessoal não pode ser feito de dado pessoal.*
+
+    Trocar a chave secreta troca os identificadores desta demonstração. É aceitável porque o
+    provedor real trará os seus próprios, e o prefixo mantém os dois conjuntos separados.
+    """
+    digest = hmac.new(
+        settings.SECRET_KEY.encode(), normalizar_cpf(cpf).encode(), hashlib.sha256
+    ).hexdigest()
+    return f"{PREFIXO_DEMONSTRACAO}:{digest[:32]}"
+
+
 def identificar(request, *, nome, cpf, email):
     """Registra a identidade na sessão do portal.
 
-    O `subject` deriva do CPF normalizado porque é o que identifica a mesma pessoa entre visitas —
-    e é ele, não o nome, que decide de quem é a inscrição. O prefixo diz de onde a identidade veio:
-    quando o provedor real chegar, os dois conjuntos não se confundem.
+    O `subject` deriva do CPF porque é o que identifica a mesma pessoa entre visitas — e é ele,
+    não o nome, que decide de quem é a inscrição. O prefixo diz de onde a identidade veio: quando
+    o provedor real chegar, os dois conjuntos não se confundem.
     """
     identidade = IdentidadeDoCandidato(
-        subject=f"{PREFIXO_DEMONSTRACAO}:{normalizar_cpf(cpf)}",
+        subject=subject_de(cpf),
         nome=nome.strip(),
         cpf=cpf.strip(),
         email=email.strip(),

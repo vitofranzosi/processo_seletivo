@@ -12,8 +12,10 @@ Três decisões estão aqui, e todas as três valem no servidor:
 """
 
 
+from django.db import IntegrityError, transaction
+
 from processo_seletivo.auditoria.application import record_event
-from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes
+from processo_seletivo.inscricoes.domain.periodo import recebe_inscricoes
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.portal.identidade import normalizar_cpf
 from processo_seletivo.publicacoes.application import selectors
@@ -41,6 +43,28 @@ def _versao_vigente(edital_id):
     return selectors.selecao_publica(edital_id=edital_id)
 
 
+def modalidades_publicadas(conteudo, profile_id) -> list[dict]:
+    """As modalidades declaradas para aquele Perfil, na ordem do conteúdo publicado."""
+    perfil = _perfil_publicado(conteudo, profile_id) or {}
+    return [
+        modalidade
+        for modalidade in perfil.get("competitionModalities") or []
+        if isinstance(modalidade, dict) and modalidade.get("id")
+    ]
+
+
+def modalidade_assumida(conteudo, profile_id) -> str | None:
+    """A modalidade que não se pergunta.
+
+    Uma única modalidade publicada não é uma escolha — é a condição de todo mundo naquele Perfil.
+    Perguntar seria pedir à pessoa que confirme o óbvio, e deixar em branco seria pior: a
+    aplicabilidade dos documentos depende dela, e uma inscrição sem modalidade num Perfil que só
+    tem uma deixaria de pedir o que aquela modalidade exige (FR-038, FR-040).
+    """
+    modalidades = modalidades_publicadas(conteudo, profile_id)
+    return str(modalidades[0]["id"]) if len(modalidades) == 1 else None
+
+
 def _perfil_publicado(conteudo, profile_id):
     return next(
         (
@@ -65,29 +89,37 @@ def abrir_inscricao(*, identidade, edital_id, profile_id, correlation_id=""):
     if perfil is None:
         raise DomainError("not_found", "Recurso não encontrado.", 404)
     with command_context() as agora:
-        existente = Inscricao.objects.filter(
-            identity_subject=identidade.subject, edital_id=edital_id, profile_id=profile_id
-        ).first()
+        existente = _inscricao_existente(identidade, edital_id, profile_id)
         if existente is not None:
             return existente
-        periodo = periodo_de_inscricoes(conteudo, agora)
-        if not periodo.aberto:
+        if not recebe_inscricoes(
+            status=versao.edital.status, conteudo=conteudo, agora=agora
+        ):
             raise DomainError(
                 "registration_closed",
-                "As inscrições não estão abertas para esta seleção.",
+                "Esta seleção não está recebendo inscrições.",
                 409,
             )
-        inscricao = Inscricao.objects.create(
-            identity_subject=identidade.subject,
-            edital=versao.edital,
-            profile_id=profile_id,
-            nome=identidade.nome,
-            cpf=identidade.cpf,
-            cpf_normalizado=normalizar_cpf(identidade.cpf),
-            email=identidade.email,
-            versao_reconhecida=versao,
-            created_at=agora,
-        )
+        try:
+            # Savepoint próprio: sem ele, a violação de unicidade envenenaria a transação inteira
+            # e nem a leitura seguinte seria possível. Duas requisições simultâneas do mesmo
+            # convite — dois cliques, duas abas — chegam aqui juntas, e a promessa de FR-029 é que
+            # as duas terminem na mesma inscrição, não que uma receba erro de servidor.
+            with transaction.atomic():
+                inscricao = Inscricao.objects.create(
+                    identity_subject=identidade.subject,
+                    edital=versao.edital,
+                    profile_id=profile_id,
+                    modality_id=modalidade_assumida(conteudo, profile_id),
+                    nome=identidade.nome,
+                    cpf=identidade.cpf,
+                    cpf_normalizado=normalizar_cpf(identidade.cpf),
+                    email=identidade.email,
+                    versao_reconhecida=versao,
+                    created_at=agora,
+                )
+        except IntegrityError:
+            return _inscricao_existente(identidade, edital_id, profile_id)
         record_event(
             actor=ator_do_candidato(identidade, versao.edital),
             permission=ABRIR,
@@ -97,6 +129,12 @@ def abrir_inscricao(*, identidade, edital_id, profile_id, correlation_id=""):
             correlation_id=correlation_id,
         )
         return inscricao
+
+
+def _inscricao_existente(identidade, edital_id, profile_id):
+    return Inscricao.objects.filter(
+        identity_subject=identidade.subject, edital_id=edital_id, profile_id=profile_id
+    ).first()
 
 
 def gravar_dados(*, identidade, inscricao, dados, correlation_id=""):
@@ -109,13 +147,15 @@ def gravar_dados(*, identidade, inscricao, dados, correlation_id=""):
     versao = _versao_vigente(inscricao.edital_id)
     conteudo = versao.content
     with command_context() as agora:
-        if not periodo_de_inscricoes(conteudo, agora).aberto:
+        if not recebe_inscricoes(status=inscricao.edital.status, conteudo=conteudo, agora=agora):
             raise DomainError(
                 "registration_closed",
-                "As inscrições não estão abertas para esta seleção.",
+                "Esta seleção não está recebendo inscrições.",
                 409,
             )
-        _validar_modalidade(conteudo, inscricao.profile_id, dados.get("modality_id"))
+        modalidade = _modalidade_escolhida(
+            conteudo, inscricao.profile_id, dados.get("modality_id")
+        )
         compare_and_swap(
             Inscricao.objects,
             pk=inscricao.pk,
@@ -125,7 +165,7 @@ def gravar_dados(*, identidade, inscricao, dados, correlation_id=""):
             cpf_normalizado=normalizar_cpf(dados.get("cpf", "")),
             email=dados.get("email", ""),
             telefone=dados.get("telefone", ""),
-            modality_id=dados.get("modality_id") or None,
+            modality_id=modalidade,
             # Confirmar os dados é reconhecer a versão que está na tela (FR-059a): o aviso de
             # Retificação passa a comparar com esta, e não volta a aparecer pela mesma alteração.
             versao_reconhecida=versao,
@@ -142,20 +182,36 @@ def gravar_dados(*, identidade, inscricao, dados, correlation_id=""):
         return inscricao
 
 
-def _validar_modalidade(conteudo, profile_id, modality_id):
-    """A modalidade escolhida tem de ser do Perfil da inscrição — conferido no servidor.
+def _modalidade_escolhida(conteudo, profile_id, modality_id):
+    """Qual modalidade fica gravada — e quando a ausência dela é recusa.
 
-    A tela só oferece as do Perfil; isto é o que responde ao POST forjado, e é onde a regra vale.
+    Três casos, e a diferença entre eles é o que separa "não perguntar o óbvio" de "aceitar
+    inscrição incompleta":
+
+    - **nenhuma publicada**: não há o que escolher, e escolher seria inventar (FR-039);
+    - **uma publicada**: é assumida, com ou sem envio do formulário — a pergunta não existe;
+    - **duas ou mais**: a escolha é obrigatória. Deixar em branco pareceria inofensivo e não é:
+      a aplicabilidade dos documentos depende dela, e o candidato deixaria de receber o que a sua
+      modalidade exige, sem que nada acusasse (FR-040).
+
+    A tela só oferece as do Perfil; esta função é o que responde ao POST forjado, e é onde a regra
+    vale.
     """
+    modalidades = modalidades_publicadas(conteudo, profile_id)
+    if not modalidades:
+        return None
+    if len(modalidades) == 1:
+        return str(modalidades[0]["id"])
     if not modality_id:
-        return
-    perfil = _perfil_publicado(conteudo, profile_id) or {}
-    disponiveis = {
-        str(modalidade.get("id")) for modalidade in perfil.get("competitionModalities") or []
-    }
-    if str(modality_id) not in disponiveis:
+        raise DomainError(
+            "modality_required",
+            "Escolha como você concorre nesta vaga.",
+            422,
+        )
+    if str(modality_id) not in {str(modalidade["id"]) for modalidade in modalidades}:
         raise DomainError(
             "modality_not_available",
             "A modalidade escolhida não é deste Perfil.",
             422,
         )
+    return str(modality_id)
