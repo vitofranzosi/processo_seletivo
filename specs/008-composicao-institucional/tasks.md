@@ -218,12 +218,12 @@ depende do resto estar composto para o fechamento ter onde ficar.
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T069 Conferir a rubrica de catorze itens inteira sobre o cenário-base, o cenário longo e o cenário sem Etapas, comparando com os dois alvos
-- [ ] T070 Percorrer a `## Matriz de rastreabilidade SC → verificação` deste arquivo e confirmar que cada um dos quinze SC tem sua verificação executada e verde
-- [ ] T071 Confirmar que **todos** os invariantes de não regressão da spec seguem verdes — determinismo, acentuação, ausência de UUID, suficiência do snapshot, prévia sem integridade, parágrafos preservados, rodapé, omissão de dado inexistente
-- [ ] T072 Conferir nominalmente os requisitos de proibição, que só se verificam por ausência: FR-001 (nada do conteúdo publicado, da versão canônica, do hash ou do endereçamento foi alterado), FR-008 (nenhuma imagem embutida e nenhum recurso binário novo no documento), FR-037 (nenhum certificado, assinatura digital, QR code ou carimbo) e R-T1 do plano (nenhuma dependência de renderização introduzida)
-- [ ] T073 Rodar a suíte completa com PostgreSQL e `ruff check`, conforme `specs/008-composicao-institucional/quickstart.md`
-- [ ] T074 Registrar em `specs/008-composicao-institucional/quickstart.md` as diferenças remanescentes observadas contra os alvos, para que a próxima decisão sobre o documento parta de fato, não de memória
+- [X] T069 Conferir a rubrica de catorze itens inteira sobre o cenário-base, o cenário longo e o cenário sem Etapas, comparando com os dois alvos
+- [X] T070 Percorrer a `## Matriz de rastreabilidade SC → verificação` deste arquivo e confirmar que cada um dos quinze SC tem sua verificação executada e verde
+- [X] T071 Confirmar que **todos** os invariantes de não regressão da spec seguem verdes — determinismo, acentuação, ausência de UUID, suficiência do snapshot, prévia sem integridade, parágrafos preservados, rodapé, omissão de dado inexistente
+- [X] T072 Conferir nominalmente os requisitos de proibição, que só se verificam por ausência: FR-001 (nada do conteúdo publicado, da versão canônica, do hash ou do endereçamento foi alterado), FR-008 (nenhuma imagem embutida e nenhum recurso binário novo no documento), FR-037 (nenhum certificado, assinatura digital, QR code ou carimbo) e R-T1 do plano (nenhuma dependência de renderização introduzida)
+- [X] T073 Rodar a suíte completa com PostgreSQL e `ruff check`, conforme `specs/008-composicao-institucional/quickstart.md`
+- [X] T074 Registrar em `specs/008-composicao-institucional/quickstart.md` as diferenças remanescentes observadas contra os alvos, para que a próxima decisão sobre o documento parta de fato, não de memória
 
 ---
 
