@@ -71,8 +71,8 @@ publicado (FR-042). A `### Rubrica de inspeção` dá catorze itens de resposta 
 SC-012, SC-013 e SC-015, que não são visuais e não poderiam ser cobertos pela rubrica.
 
 **Sobre as referências visuais.** Resolvidas. `referencias/` traz o estado inicial
-(`estado-inicial-apos-007.pdf`) e os dois alvos (`alvo-edital-62-2026.pdf`,
-`alvo-edital-73-2026.pdf`). A leitura dos alvos corrigiu FR-006 — o ato é destacado por peso, caixa
+(`estado-inicial-apos-007.pdf`) e as páginas dos Editais 62/2026 e 73/2026 renderizadas em
+`referencias/`. A leitura dos alvos corrigiu FR-006 — o ato é destacado por peso, caixa
 alta e centralização, não por corpo grande — e nomeou três diferenças que a V1 aceita e declara:
 identidade visual gráfica, numeração de item dentro da seção e corpo justificado.
 

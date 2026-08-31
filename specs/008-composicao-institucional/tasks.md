@@ -32,7 +32,7 @@ Aplicação web Django. A feature vive quase inteira em
 **Purpose**: ter contra o que comparar. Concluída durante o planejamento.
 
 - [x] T001 Versionar o estado inicial em `specs/008-composicao-institucional/referencias/estado-inicial-apos-007.pdf`
-- [x] T002 Versionar os alvos em `specs/008-composicao-institucional/referencias/alvo-edital-62-2026.pdf` e `alvo-edital-73-2026.pdf`
+- [x] T002 Versionar os alvos em `specs/008-composicao-institucional/referencias/` — as páginas que interessam dos Editais 62/2026 e 73/2026, renderizadas; os PDFs originais somavam 14 MB e ficam fora do histórico
 - [x] T003 Registrar as características observáveis dos alvos e as três diferenças aceitas na seção `### Referências visuais` de `specs/008-composicao-institucional/spec.md`
 
 **Checkpoint**: a rubrica de inspeção tem alvo. A entrega 1 está desbloqueada.
@@ -63,7 +63,7 @@ cenários de demonstração existem.
 largura, que as histórias seguintes consomem.
 
 **Independent Test**: gerar a prévia do cenário-base e conferir R-01 a R-03 contra
-`referencias/alvo-edital-62-2026.pdf`; gerar o cenário sem Etapas e conferir que a numeração não tem
+`referencias/alvo-edital-62-2026-p1.jpg`; gerar o cenário sem Etapas e conferir que a numeração não tem
 lacuna.
 
 ### Tests for User Story 1
@@ -269,7 +269,7 @@ menor do que a construída quebra essa rastreabilidade no sentido mais enganoso.
 
 ### Referências e verificação
 
-- [X] T094 Versionar `specs/008-composicao-institucional/referencias/alvo-edital-146-2025.pdf` e registrar as características observáveis dele na spec
+- [X] T094 Versionar as páginas do Edital 146/2025 em `specs/008-composicao-institucional/referencias/` e registrar as características observáveis dele na spec
 - [X] T095 Conferir os itens R-15 a R-18 da rubrica sobre o cenário rico e o cenário-base
 
 **Checkpoint**: o documento pertence à mesma família visual dos Editais do Cefor, com as diferenças

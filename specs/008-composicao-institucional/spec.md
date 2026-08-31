@@ -576,8 +576,10 @@ disponível no repositório.
 **Estado inicial**: `referencias/estado-inicial-apos-007.pdf` — o documento que o sistema produz
 hoje, depois da `007`.
 
-**Alvos**: `referencias/alvo-edital-62-2026.pdf`, `referencias/alvo-edital-73-2026.pdf` e
-`referencias/alvo-edital-146-2025.pdf` — Editais oficiais do Cefor. As características observáveis contra as quais a rubrica é conferida:
+**Alvos**: as páginas que interessam dos Editais 62/2026, 73/2026 e 146/2025 do Cefor,
+renderizadas a 120 dpi em `referencias/`. Os PDFs originais **não** são versionados — somavam 14 MB
+e entrariam no histórico para sempre; cada página está identificada por Edital, número, ano e
+página em `referencias/referencias.md`, como esta seção admite. As características observáveis contra as quais a rubrica é conferida:
 
 | Observado nos dois alvos | Consequência para a `008` |
 |---|---|

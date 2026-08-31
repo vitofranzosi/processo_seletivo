@@ -41,10 +41,11 @@ Perfil e Cronograma em prosa, Etapa com `caráter: …; peso: …; nota mínima:
 `Versão do schema: 3` no corpo e nenhum bloco de autoridade. É exatamente o conjunto de defeitos que
 as cinco entregas atacam, e serve de linha de base para todo "antes e depois".
 
-**O "alvo" falta**: ao menos um Edital oficial do Cefor, versionado no mesmo diretório. **É a
-primeira tarefa da entrega 1 e a bloqueia** — sem alvo, R-01 a R-03 não têm contra o quê ser
-conferidos. Não sendo possível versioná-lo, registrar `referencias/referencias.md` identificando-o
-por fonte, número, ano e página, com a lista das características observáveis comparadas.
+**Os alvos** são páginas dos Editais 62/2026, 73/2026 e 146/2025 do Cefor, renderizadas a 120 dpi
+no mesmo diretório. `referencias/referencias.md` diz de qual Edital e de qual página cada imagem
+veio, e o que se compara nela. Os PDFs originais não são versionados: somavam 14 MB, e a página
+renderizada serve melhor à comparação — é o que se olha, não reflui e não carrega as fontes
+embutidas do original.
 
 ---
 
