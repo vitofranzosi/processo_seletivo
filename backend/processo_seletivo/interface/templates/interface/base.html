@@ -132,16 +132,23 @@ tbody tr:last-child td{border-bottom:none}
 form.confirmar{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1.25rem}
 .assistente{display:flex;list-style:none;padding:0;margin:0 0 1.5rem;gap:.4rem;flex-wrap:wrap}
-.assistente li{flex:1 1 160px}
-.assistente a{display:block;padding:.6rem .85rem;border-radius:4px;text-decoration:none;
+/* Cartões de altura igual. O `li` já esticava — `stretch` é o padrão do flex —, mas quem desenha
+   o cartão é o `a`, que tomava só a altura do próprio conteúdo: "Etapas de Avaliação" quebra em
+   duas linhas e ficava vinte e quatro pixels mais alto que os cinco vizinhos, com os rótulos de
+   estado em três linhas de base diferentes. */
+.assistente li{flex:1 1 160px;display:flex}
+.assistente a{display:flex;flex-direction:column;width:100%;box-sizing:border-box;
+  padding:.6rem .85rem;border-radius:4px;text-decoration:none;
   border:1px solid var(--borda);background:var(--branco);color:var(--texto-fraco)}
 .assistente a:hover{border-color:var(--verde)}
 .assistente .numero{display:inline-block;width:1.4rem;height:1.4rem;line-height:1.4rem;
   text-align:center;border-radius:50%;background:var(--cinza-fundo);color:var(--texto-fraco);
   font-size:.75rem;font-weight:700;margin-right:.4rem}
 .assistente .nome{font-size:.875rem;font-weight:600}
+/* `margin-top:auto` empurra o estado para a base do cartão: os seis rótulos ficam na mesma linha
+   independentemente de o nome da etapa ocupar uma ou duas linhas. */
 .assistente .estado{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.03em;
-  margin-top:.15rem}
+  margin-top:auto;padding-top:.15rem}
 .assistente .a-atual a{border-color:var(--verde);background:var(--verde-claro);color:var(--texto)}
 .assistente .a-atual .numero{background:var(--verde);color:var(--branco)}
 .assistente .a-atual .estado{color:var(--verde-texto)}
