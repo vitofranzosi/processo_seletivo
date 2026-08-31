@@ -3,6 +3,39 @@
 A cadeia "dados estruturados → versão homologada → PDF publicado" precisa ser demonstrável:
 cada Perfil, vaga, modalidade e Evento do snapshot tem de aparecer no documento, o mesmo
 snapshot tem de produzir os mesmos bytes, e qualquer mudança tem de mudar o documento.
+
+**Duas naturezas, tratadas de forma oposta (`008`, D-010).** A `008` muda a composição do
+documento em cinco entregas, e a distinção abaixo é o que impede os dois erros simétricos:
+quebrar uma garantia achando que era forma, e preservar uma forma achando que era garantia.
+
+*Invariante* — o que a `008` **não pode** quebrar. Se um destes falhar, a entrega está errada:
+
+- `test_the_same_snapshot_always_produces_the_same_bytes` — determinismo
+- `test_any_change_in_the_version_changes_the_document` — sensibilidade ao conteúdo
+- `test_document_preserves_portuguese_accents` — acentuação
+- `test_o_snapshot_basta_para_compor_o_documento` — corpo normativo autossuficiente
+- `test_a_declaracao_de_integridade_identifica_sem_expor_uuid` — nenhum identificador técnico
+- `test_parentheses_in_content_do_not_corrupt_the_document` — escape do fluxo
+- `test_paragrafos_da_secao_textual_sobrevivem_ao_documento` e
+  `test_quebra_simples_de_linha_tambem_separa_paragrafo` — parágrafos da `006.1`
+- `test_secao_gerada_sem_fonte_nao_aparece_no_documento` — supressão de seção vazia
+- `test_perfil_sem_os_campos_institucionais_nao_imprime_rotulo_vazio` — omissão do inexistente
+- `test_long_content_paginates_and_every_page_is_numbered` — rodapé e paginação
+
+*Forma da apresentação* — o que a `008` **muda de propósito**. Cada um é atualizado na entrega
+que o torna falso, nunca antes e nunca depois:
+
+- `test_etapas_aparecem_com_caracter_peso_e_nota_minima` — a frase corrida vira pares
+  rótulo-valor (entrega 3, FR-027)
+- `test_document_reproduces_the_schedule_with_institutional_dates` — o parágrafo vira tabela
+  (entrega 3, FR-023)
+- `test_document_reproduces_every_profile_of_the_homologated_version` e
+  `test_document_reproduces_competition_modalities_and_their_normative_rule` — as linhas viram
+  quadro e tabela (entrega 2, FR-014 a FR-019)
+- `test_documento_segue_a_ordem_das_secoes_do_conteudo` — os títulos ganham numeração
+  (entrega 1, FR-010)
+- `test_perfil_com_os_campos_institucionais_os_imprime_preservando_paragrafos` — o conteúdo é
+  invariante; a disposição é forma (entrega 2)
 """
 
 import re
@@ -119,6 +152,72 @@ def snapshot(**alteracoes):
         "sections": secoes(),
     }
     return {**base, **alteracoes}
+
+
+# ---------------------------------------------------------------------------
+# 008 — Os cenários que revelam o que o cenário-base esconde
+#
+# O cenário-base tem tudo preenchido e cabe em duas páginas, e por isso não exibe três defeitos
+# que só aparecem em Edital real: numeração com lacuna, Perfil partido entre páginas e conteúdo
+# maior que a página. Cada cenário abaixo existe para tornar um deles observável.
+# ---------------------------------------------------------------------------
+
+
+def sem_etapas():
+    """Um Edital sem Etapas de Avaliação — a coleção é opcional (T007, FR-011).
+
+    A seção gerada correspondente não é materializada, e é aí que a numeração atribuída durante a
+    iteração produziria `5.`, `7.`, `8.`. É o único defeito desta feature que o cenário-base não
+    revela: ele só se manifesta no Edital que não tem tudo.
+    """
+    return snapshot(stages=[])
+
+
+def dois_perfis():
+    """Dois Perfis, o segundo dimensionado para não caber no espaço restante (T008, FR-020).
+
+    O primeiro Perfil recebe texto suficiente para empurrar o segundo para o fim da página. Sem a
+    paginação por bloco, o segundo começa no rodapé e continua na página seguinte — que é o
+    defeito editorial observado no documento gerado antes desta feature.
+    """
+    base = snapshot()
+    primeiro = {
+        **base["profiles"][0],
+        "duties": "\n".join(
+            f"Ministrar aulas, orientar e participar das atividades de ensino, "
+            f"pesquisa e extensão do campus, na área {n}."
+            for n in range(1, 9)
+        ),
+    }
+    segundo = {
+        **base["profiles"][0],
+        "id": "33333333-3333-3333-3333-33333333aaaa",
+        "code": "TEC-LAB",
+        "name": "Técnico de Laboratório",
+        "description": "Apoio técnico aos laboratórios de Informática.",
+        "requirements": ["Ensino médio técnico em Informática", "Registro profissional ativo"],
+        "duties": "Preparar e manter os laboratórios; apoiar as aulas práticas.",
+    }
+    return snapshot(profiles=[primeiro, segundo])
+
+
+def perfil_maior_que_a_pagina():
+    """Um sub-bloco que sozinho não cabe em uma página inteira (T009, FR-021).
+
+    Atribuições são texto livre e não têm limite de tamanho. É o caso que tornava inexequível a
+    primeira redação da spec — "nenhum sub-bloco é partido" — e que a cascata resolve descendo até
+    a quebra entre linhas. O que este cenário prova não é elegância: é que a composição **conclui**.
+    """
+    base = snapshot()
+    enorme = {
+        **base["profiles"][0],
+        "duties": "\n".join(
+            f"Atribuição {n}: ministrar, orientar, avaliar, registrar e acompanhar as "
+            f"atividades acadêmicas correspondentes, observada a legislação vigente."
+            for n in range(1, 61)
+        ),
+    }
+    return snapshot(profiles=[enorme])
 
 
 def test_document_reproduces_every_profile_of_the_homologated_version():

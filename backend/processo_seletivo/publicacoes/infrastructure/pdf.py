@@ -35,6 +35,12 @@ MODO_PREVIA = "PREVIEW"
 MODOS = (MODO_PUBLICADO, MODO_PREVIA)
 
 MARCA_DE_PREVIA = "PRÉVIA — documento em elaboração, sem valor de publicação"
+# A marca vive **fora** do fluxo normativo, numa faixa fixa acima da área útil (`008`, D-011).
+# Escrita dentro do fluxo, ela empurrava todo o conteúdo e fazia a prévia quebrar em páginas
+# diferentes daquelas em que o documento seria publicado — quem revisava a prévia revisava uma
+# paginação que não era a que sai. Fora do fluxo, a igualdade das quebras é garantida por
+# construção (FR-042), e a marca passa a aparecer em **todas** as páginas, e não só na primeira.
+FAIXA_DE_PREVIA = ALTURA - 40
 RESERVA = {
     "NONE": "não há",
     "LIMITED": "limitado",
@@ -320,8 +326,15 @@ def _integridade(composicao, snapshot, content_hash):
     composicao.escrever(f"SHA-256 do conteúdo: {content_hash}", tamanho=9)
 
 
-def _fluxo_da_pagina(linhas, rodape):
+def _fluxo_da_pagina(linhas, rodape, marca=""):
     partes = []
+    if marca:
+        partes.append(
+            b"BT /" + NEGRITO.encode()
+            + f" 9.0 Tf {MARGEM:.1f} {FAIXA_DE_PREVIA:.1f} Td (".encode()
+            + _texto_pdf(marca)
+            + b") Tj ET"
+        )
     for texto, fonte, tamanho, x, y in linhas:
         partes.append(
             b"BT /"
@@ -352,8 +365,6 @@ def render_edital_pdf(snapshot: dict, content_hash: str, modo: str = MODO_PUBLIC
 
     composicao = Composicao()
     _cabecalho(composicao, snapshot)
-    if previa:
-        composicao.escrever(MARCA_DE_PREVIA, tamanho=11, fonte=NEGRITO, antes=12)
     _secoes(composicao, snapshot)
     if not previa:
         _integridade(composicao, snapshot, content_hash)
@@ -364,7 +375,11 @@ def render_edital_pdf(snapshot: dict, content_hash: str, modo: str = MODO_PUBLIC
         f"{MARCA_DE_PREVIA} · {edital}" if previa else f"{edital} · SHA-256 {content_hash[:16]}…"
     )
     fluxos = [
-        _fluxo_da_pagina(linhas, f"{identificacao} · Página {numero} de {len(paginas)}")
+        _fluxo_da_pagina(
+            linhas,
+            f"{identificacao} · Página {numero} de {len(paginas)}",
+            marca=MARCA_DE_PREVIA if previa else "",
+        )
         for numero, linhas in enumerate(paginas, 1)
     ]
 

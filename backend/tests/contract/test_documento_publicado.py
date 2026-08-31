@@ -11,6 +11,23 @@ diff revisado. Regenerá-la para fazer um teste passar é apagar a única evidê
 
 O snapshot fica versionado ao lado dos bytes: sem ele a fixture seria um arquivo binário que
 ninguém consegue reproduzir, e a comparação viraria fé.
+
+**Duas naturezas, tratadas de forma oposta (`008`, D-010).**
+
+*Invariante* — o que a `008` não pode quebrar:
+`test_o_modo_publicado_explicito_e_o_mesmo_do_padrao`,
+`test_a_previa_nao_carrega_nenhuma_afirmacao_de_integridade`,
+`test_modo_desconhecido_e_recusado_em_vez_de_cair_no_publicado`,
+`test_nenhum_estado_interno_de_entidade_aparece_no_documento`,
+`test_nenhum_decimal_canonico_de_quatro_casas_chega_ao_documento`,
+`test_a_forma_canonica_do_snapshot_nao_e_tocada_pela_apresentacao`,
+`test_as_regras_de_apresentacao_valem_tambem_na_previa`.
+
+*Forma da apresentação* — atualizados junto da entrega que os torna falsos:
+`test_o_documento_publicado_continua_byte_a_byte_o_mesmo` (a fixture é regenerada a cada entrega
+que muda a composição de propósito, FR-044), `test_percentual_peso_e_nota_saem_em_portugues` e
+`test_decimal_com_parte_fracionaria_usa_virgula` (os valores continuam obrigatórios; a frase que
+os cerca muda na entrega 3).
 """
 
 import json
@@ -44,6 +61,41 @@ def texto_de(pdf: bytes) -> str:
         parte.replace(b"\\(", b"(").replace(b"\\)", b")").decode("cp1252")
         for parte in TEXTO_PDF.findall(pdf)
     )
+
+
+FLUXO = re.compile(rb"stream\n(.*?)\nendstream", re.DOTALL)
+
+
+def paginas_de(pdf: bytes) -> list[list[str]]:
+    """O texto de cada página, na ordem — que é onde a paginação fica observável.
+
+    Comparar o documento inteiro como uma cadeia só não enxerga quebra: dois documentos com o
+    mesmo texto distribuído em páginas diferentes seriam indistinguíveis. A `008` precisa afirmar
+    exatamente essa distribuição (FR-042), e por isso a extração é por fluxo de página.
+    """
+    return [
+        [
+            parte.replace(b"\\(", b"(").replace(b"\\)", b")").decode("cp1252")
+            for parte in TEXTO_PDF.findall(fluxo)
+        ]
+        for fluxo in FLUXO.findall(pdf)
+    ]
+
+
+# O que legitimamente distingue os dois modos. Tudo o mais tem de ser igual — é isso que FR-041
+# promete, e é a diferença entre "a prévia mostra o que será publicado" e "a prévia mostra outra
+# coisa parecida". Cresce com a `008`: a autoridade signatária entra aqui na entrega 5.
+def corpo_normativo(pagina: list[str], marca_de_previa: str) -> list[str]:
+    fora = False
+    corpo = []
+    for linha in pagina:
+        if linha.startswith("INTEGRIDADE") or linha.startswith("Este documento deriva"):
+            fora = True
+        if marca_de_previa in linha or linha.startswith(("Edital 0", "PRÉVIA —")):
+            continue
+        if not fora:
+            corpo.append(linha)
+    return corpo
 
 
 @pytest.mark.contract
@@ -181,3 +233,61 @@ def test_as_regras_de_apresentacao_valem_tambem_na_previa():
     assert "PLANEJADO" not in texto
     assert not re.search(r"\d\.\d{4}\b", texto)
     assert "percentual: 20%" in texto
+
+
+# ---------------------------------------------------------------------------
+# 008 — Prévia e publicado são o mesmo documento (FR-041, FR-042)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.contract
+def test_o_corpo_normativo_quebra_nas_mesmas_paginas_na_previa_e_no_publicado():
+    """FR-042: a marca de prévia não pode deslocar o conteúdo.
+
+    Enquanto ela for escrita **dentro** do fluxo, tudo desce — e a prévia passa a quebrar em
+    lugares diferentes daqueles em que o documento será publicado. Quem revisa a prévia estaria
+    revisando uma paginação que não é a que sai. É o defeito que D-011 corrige tirando a marca do
+    fluxo: fora dele, a igualdade é garantida por construção, e não por coincidência de medida.
+    """
+    publicado = paginas_de(render_edital_pdf(SNAPSHOT, HASH))
+    previa = paginas_de(render_edital_pdf(SNAPSHOT, HASH, modo=MODO_PREVIA))
+
+    assert len(previa) == len(publicado), "a prévia paginou diferente do publicado"
+    for numero, (uma, outra) in enumerate(zip(previa, publicado, strict=True), 1):
+        assert corpo_normativo(uma, MARCA_DE_PREVIA) == corpo_normativo(
+            outra, MARCA_DE_PREVIA
+        ), f"o corpo normativo da página {numero} difere entre prévia e publicado"
+
+
+@pytest.mark.contract
+def test_removidas_as_diferencas_permitidas_as_composicoes_sao_equivalentes():
+    """As diferenças entre os dois modos são as declaradas, e nenhuma outra.
+
+    O teste acima compara página a página; este compara o documento inteiro, e por isso pega o que
+    aquele não pegaria: uma linha que só existisse num dos modos sem mudar quebra nenhuma.
+    """
+    publicado = [
+        linha
+        for pagina in paginas_de(render_edital_pdf(SNAPSHOT, HASH))
+        for linha in corpo_normativo(pagina, MARCA_DE_PREVIA)
+    ]
+    previa = [
+        linha
+        for pagina in paginas_de(render_edital_pdf(SNAPSHOT, HASH, modo=MODO_PREVIA))
+        for linha in corpo_normativo(pagina, MARCA_DE_PREVIA)
+    ]
+
+    assert previa == publicado
+
+
+@pytest.mark.contract
+def test_tirar_a_marca_do_fluxo_nao_toca_os_bytes_do_documento_publicado():
+    """A marca nunca foi composta no publicado, e movê-la não pode passar a compô-la.
+
+    **Se este teste falhar, a fixture não está velha.** Ele afirma que uma mudança que só deveria
+    afetar a prévia não afetou o publicado; regenerar a fixture aqui apagaria exatamente a
+    evidência que ele existe para produzir. A leitura correta de uma falha é que a região fixa
+    invadiu a geometria do fluxo.
+    """
+    assert render_edital_pdf(SNAPSHOT, HASH) == DOCUMENTO
+    assert MARCA_DE_PREVIA not in texto_de(DOCUMENTO)

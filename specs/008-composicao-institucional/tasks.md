@@ -45,12 +45,12 @@ Aplicação web Django. A feature vive quase inteira em
 
 **⚠️ CRITICAL**: nenhuma história começa antes desta fase.
 
-- [ ] T004 Classificar cada teste de `backend/tests/unit/publicacoes/test_pdf.py` e `backend/tests/contract/test_documento_publicado.py` como **invariante** ou **forma da apresentação**, registrando a classificação em comentário no topo de cada arquivo, conforme D-010 de `specs/008-composicao-institucional/research.md`
-- [ ] T005 Escrever, **antes** de T006, o teste de equivalência entre prévia e publicado em `backend/tests/contract/test_documento_publicado.py`, afirmando as três coisas: (a) o corpo normativo e o conjunto de suas quebras são iguais nos dois modos para o mesmo snapshot; (b) removidas as diferenças permitidas — marca de prévia, bloco de autoridade e bloco de verificação —, as composições são equivalentes; (c) a mudança da marca **não altera os bytes do documento publicado**, comparando com a fixture vigente **sem regenerá-la** (FR-041, FR-042)
-- [ ] T006 Tirar a marca de prévia do fluxo normativo em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` e emiti-la em região fixa, junto do rodapé, em todas as páginas, com T005 passando a verde (D-011, FR-042)
-- [ ] T007 [P] Criar o cenário **sem Etapas de Avaliação** em `backend/tests/unit/publicacoes/test_pdf.py`, para provar numeração sem lacuna (FR-011)
-- [ ] T008 [P] Criar o cenário **de dois Perfis**, dimensionado para o segundo não caber no espaço restante da primeira página, em `backend/tests/unit/publicacoes/test_pdf.py` (FR-020)
-- [ ] T009 [P] Criar o cenário **extremo** — Perfil cujas atribuições passam de uma página inteira — em `backend/tests/unit/publicacoes/test_pdf.py` (FR-021)
+- [X] T004 Classificar cada teste de `backend/tests/unit/publicacoes/test_pdf.py` e `backend/tests/contract/test_documento_publicado.py` como **invariante** ou **forma da apresentação**, registrando a classificação em comentário no topo de cada arquivo, conforme D-010 de `specs/008-composicao-institucional/research.md`
+- [X] T005 Escrever, **antes** de T006, o teste de equivalência entre prévia e publicado em `backend/tests/contract/test_documento_publicado.py`, afirmando as três coisas: (a) o corpo normativo e o conjunto de suas quebras são iguais nos dois modos para o mesmo snapshot; (b) removidas as diferenças permitidas — marca de prévia, bloco de autoridade e bloco de verificação —, as composições são equivalentes; (c) a mudança da marca **não altera os bytes do documento publicado**, comparando com a fixture vigente **sem regenerá-la** (FR-041, FR-042)
+- [X] T006 Tirar a marca de prévia do fluxo normativo em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` e emiti-la em região fixa, junto do rodapé, em todas as páginas, com T005 passando a verde (D-011, FR-042)
+- [X] T007 [P] Criar o cenário **sem Etapas de Avaliação** em `backend/tests/unit/publicacoes/test_pdf.py`, para provar numeração sem lacuna (FR-011)
+- [X] T008 [P] Criar o cenário **de dois Perfis**, dimensionado para o segundo não caber no espaço restante da primeira página, em `backend/tests/unit/publicacoes/test_pdf.py` (FR-020)
+- [X] T009 [P] Criar o cenário **extremo** — Perfil cujas atribuições passam de uma página inteira — em `backend/tests/unit/publicacoes/test_pdf.py` (FR-021)
 
 **Checkpoint**: a suíte sabe o que é invariante, a prévia deixa de deslocar o conteúdo e os três
 cenários de demonstração existem.
