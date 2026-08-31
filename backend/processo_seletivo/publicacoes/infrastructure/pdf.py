@@ -90,10 +90,14 @@ def largura(texto: str, tamanho: float, fonte: str = REGULAR) -> float:
 
 # Os níveis tipográficos do documento, e apenas estes (FR-009). Nomeá-los é o que impede que a
 # hierarquia volte a ser um punhado de números literais espalhados pela composição.
-CORPO_INSTITUCIONAL = 9.0
-CORPO_ATO = 14.0
-CORPO_SECAO = 11.5
-CORPO_BLOCO = 10.5
+# Calibrados contra os Editais 62/2026, 73/2026 e 146/2025 do Cefor. A identificação do órgão é
+# o **maior** texto da página — não o ato —, e os títulos de seção são negrito no mesmo corpo do
+# texto, não corpo maior: num Edital a hierarquia vem do peso, e um título grande denuncia
+# relatório. A primeira redação tinha isto exatamente ao contrário.
+CORPO_INSTITUCIONAL = 13.0
+CORPO_ATO = 10.5
+CORPO_SECAO = 10.0
+CORPO_BLOCO = 10.0
 CORPO_TEXTO = 10.0
 CORPO_NOTA = 8.5
 
@@ -223,6 +227,10 @@ FOLGA_DA_CELULA = 3.0
 # O quadro abre logo abaixo da legenda que o anuncia: o bastante para o fio passar sob as descidas
 # dela, e pouco o bastante para não invadir a primeira linha do próprio quadro.
 FOLGA_ANTES_DO_QUADRO = 8.0
+# O cinza da célula de cabeçalho. Os três Editais de referência o usam, e é o que separa a linha
+# que **nomeia** as colunas das que trazem dado. Não é decoração nem paleta: é um tom, e é o único
+# preenchimento do documento.
+CINZA_DO_CABECALHO = "0.85"
 
 
 def _grade(quadro, base):
@@ -238,7 +246,16 @@ def _grade(quadro, base):
     topo = quadro["topo"] + FOLGA_DA_CELULA
     fundo = min(base, linhas[-1][1]) - FOLGA_DA_CELULA - 3
     bordas = quadro["bordas"]
-    formas = [("ret", bordas[0], fundo, bordas[-1] - bordas[0], topo - fundo)]
+    formas = []
+    # O sombreado vem primeiro: no PDF o que se emite depois cobre o que veio antes, e o fio da
+    # grade precisa ficar por cima do cinza.
+    if quadro.get("cabecalho"):
+        inicio, fim = quadro["cabecalho"]
+        formas.append(
+            ("fundo", bordas[0], fim - FOLGA_DA_CELULA - 3, bordas[-1] - bordas[0],
+             inicio - fim + FOLGA_DA_CELULA * 2)
+        )
+    formas.append(("ret", bordas[0], fundo, bordas[-1] - bordas[0], topo - fundo))
     # Um fio abaixo de cada linha, menos a última: aquela fecha no contorno.
     for _, fim in linhas[:-1]:
         altura = fim - FOLGA_DA_CELULA - 3
@@ -495,6 +512,8 @@ class Composicao:
             if item[0] == "fecha_linha":
                 if quadro is not None and "inicio" in quadro:
                     quadro["linhas"].append((quadro["inicio"], y))
+                    if len(quadro["linhas"]) == 1 and cabecalho_ativo:
+                        quadro["cabecalho"] = (quadro["inicio"], y)
                 indice += 1
                 continue
 
@@ -556,10 +575,11 @@ class Composicao:
                     atual.append((repetido, sua_fonte, seu_corpo, seu_x, y, False, 0.0))
                 if quadro is not None:
                     # O cabeçalho repetido é a primeira linha do quadro nesta página: ele abre a
-                    # grade e ganha o seu fio, como qualquer outra.
+                    # grade, ganha o seu fio e o seu sombreado, como qualquer outra.
                     if quadro["topo"] is None:
                         quadro["topo"] = antes_do_cabecalho
                     quadro["linhas"].append((antes_do_cabecalho, y))
+                    quadro["cabecalho"] = (antes_do_cabecalho, y)
             y -= altura
             if texto:
                 x = _x(texto, fonte, tamanho, recuo, alinhamento)
@@ -578,8 +598,14 @@ class Composicao:
 # A identificação do órgão é constante do documento, como já era — o que muda é a forma, não a
 # origem (FR-005). O Processo e o objeto vêm do conteúdo publicado, que desde a `007` carrega o
 # código e o título do Processo justamente para que o documento possa nomeá-lo.
-ORGAO = ("MINISTÉRIO DA EDUCAÇÃO", "INSTITUTO FEDERAL DO ESPÍRITO SANTO")
-UNIDADE = "CENTRO DE REFERÊNCIA EM FORMAÇÃO E EM EDUCAÇÃO A DISTÂNCIA"
+# Quatro linhas, em caixa mista, como nos três Editais de referência — a unidade quebra em duas
+# porque o nome é longo, e quebrá-la no lugar certo é decisão editorial, não refluxo.
+ORGAO = (
+    "Ministério da Educação",
+    "Instituto Federal do Espírito Santo",
+    "Centro de Referência em Formação",
+    "e em Educação a Distância",
+)
 
 
 def _cabecalho(composicao, snapshot):
@@ -589,31 +615,31 @@ def _cabecalho(composicao, snapshot):
     e centralização**, não de corpo grande. Nos dois alvos o ato está em corpo próximo ao do texto,
     e destacar por tamanho produziria um título fora do padrão institucional.
     """
-    for linha in ORGAO:
+    for indice, linha in enumerate(ORGAO):
         composicao.escrever(
-            linha, tamanho=CORPO_INSTITUCIONAL, fonte=NEGRITO, alinhamento=CENTRO
-        )
-    composicao.escrever(UNIDADE, tamanho=CORPO_INSTITUCIONAL, alinhamento=CENTRO)
-    composicao.escrever(
-        f"EDITAL Nº {snapshot.get('number', '')}/{snapshot.get('year', '')}",
-        tamanho=CORPO_ATO,
-        fonte=NEGRITO,
-        antes=22,
-        alinhamento=CENTRO,
-    )
-    if snapshot.get("processoTitle"):
-        composicao.escrever(
-            snapshot["processoTitle"].upper(),
-            tamanho=CORPO_SECAO,
-            fonte=NEGRITO,
-            antes=4,
+            linha,
+            tamanho=CORPO_INSTITUCIONAL,
             alinhamento=CENTRO,
+            antes=0.0 if indice else 6.0,
         )
+    # Ato e objeto numa frase só, em negrito e caixa alta, como nos três Editais de referência.
+    # Separá-los em linhas de corpos diferentes é o que fazia o documento parecer capa de
+    # relatório: lá, o que identifica o ato é uma sentença, não um título.
+    titulo = str(snapshot.get("title", "")).strip()
+    ato = f"EDITAL Nº {snapshot.get('number', '')}/{snapshot.get('year', '')}"
+    # **Uma linha só.** Nos três Editais de referência o ato e o objeto são uma sentença. Quando o
+    # título já abre por "Edital" — que é como se costuma escrevê-lo —, ele **é** essa sentença, e
+    # imprimir os dois faria o documento anunciar o mesmo ato duas vezes.
+    anuncio = titulo if titulo.upper().startswith("EDITAL") else (
+        f"{ato} — {titulo}" if titulo else ato
+    )
     composicao.escrever(
-        snapshot.get("title", ""), tamanho=CORPO_BLOCO, antes=4, alinhamento=CENTRO
+        anuncio.upper(), tamanho=CORPO_ATO, fonte=NEGRITO, antes=24, alinhamento=CENTRO
     )
     if snapshot.get("description"):
-        composicao.escrever(snapshot["description"], tamanho=CORPO_TEXTO, antes=16)
+        composicao.escrever(
+            snapshot["description"], tamanho=CORPO_TEXTO, antes=20, justificar=True
+        )
 
 
 PADDING_DA_COLUNA = 12.0
@@ -1009,7 +1035,13 @@ def _fluxo_da_pagina(linhas, rodape, marca="", tracos=()):
     # antes de letra garante que nenhum fio passe por cima de um glifo — sem precisar de camada,
     # z-index ou qualquer conceito de composição gráfica (D-002).
     for forma in tracos:
-        if forma[0] == "ret":
+        if forma[0] == "fundo":
+            _, x, y, largura_do_traco, altura = forma
+            partes.append(
+                f"{CINZA_DO_CABECALHO} g "
+                f"{x:.1f} {y:.1f} {largura_do_traco:.1f} {altura:.1f} re f 0 g".encode()
+            )
+        elif forma[0] == "ret":
             _, x, y, largura_do_traco, altura = forma
             partes.append(
                 f"{Composicao.ESPESSURA_DO_FIO} w "

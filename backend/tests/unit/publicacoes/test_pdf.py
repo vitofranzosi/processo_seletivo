@@ -305,7 +305,10 @@ def test_document_reproduces_the_schedule_with_institutional_dates():
 def test_document_preserves_portuguese_accents():
     """Documento oficial brasileiro não pode trocar acento por interrogação."""
     texto = texto_de(documento(snapshot(), HASH))
-    for esperado in ("Informática", "inscrições", "indígenas", "Seleção", "ESPÍRITO"):
+    # **Forma atualizada pela calibração contra o Edital 146/2025**: a identificação do órgão
+    # passou a caixa mista, como nos três alvos. O que este teste guarda é a **acentuação**, e
+    # `Espírito` a exercita igualmente bem.
+    for esperado in ("Informática", "inscrições", "indígenas", "Seleção", "Espírito"):
         assert esperado in texto, esperado
     # A versão anterior codificava em ASCII e produzia exatamente estas formas mutiladas.
     for mutilado in ("Inform?tica", "inscri??es", "ind?genas", "Sele??o", "ESP?RITO"):
@@ -436,7 +439,8 @@ def test_parentheses_in_content_do_not_corrupt_the_document():
     """Parêntese é delimitador de string em PDF: sem escape, o arquivo quebra."""
     pdf = documento(snapshot(title="Edital (retificado) 07/2026"), HASH)
     assert b"%%EOF" in pdf
-    assert "Edital (retificado) 07/2026" in texto_de(pdf)
+    # O ato vai em caixa alta, como nos alvos; o parêntese é que não pode corromper o fluxo.
+    assert "EDITAL (RETIFICADO) 07/2026" in texto_de(pdf)
 
 
 def test_paragrafos_da_secao_textual_sobrevivem_ao_documento():
@@ -570,19 +574,22 @@ def test_a_primeira_pagina_identifica_a_instituicao_o_ato_e_o_objeto():
     texto = texto_de(documento(snapshot(), HASH))
     linhas = [linha for linha, _, _, _ in linhas_desenhadas(documento(snapshot(), HASH))]
 
-    assert "MINISTÉRIO DA EDUCAÇÃO" in texto
-    assert "INSTITUTO FEDERAL DO ESPÍRITO SANTO" in texto
-    assert "EDITAL Nº 07/2026" in texto
+    assert "Ministério da Educação" in texto
+    assert "Instituto Federal do Espírito Santo" in texto
+    # O ato e o objeto são **uma** sentença, como nos três alvos: o título do cenário já abre por
+    # "Edital", então é ele que anuncia o ato — imprimir os dois anunciaria o mesmo ato duas vezes.
+    assert "EDITAL 07/2026 — PROFESSOR SUBSTITUTO" in texto
+    assert texto.count("EDITAL") == 1
 
     # A ordem: identificação institucional antes do ato, ato antes de qualquer conteúdo normativo.
-    ministerio = linhas.index("MINISTÉRIO DA EDUCAÇÃO")
-    ato = linhas.index("EDITAL Nº 07/2026")
+    ministerio = linhas.index("Ministério da Educação")
+    ato = linhas.index("EDITAL 07/2026 — PROFESSOR SUBSTITUTO")
     primeira_secao = next(i for i, linha in enumerate(linhas) if linha.startswith("1. "))
     assert ministerio < ato < primeira_secao
 
-    # O ato é negrito e caixa alta; a identificação institucional é menor que o corpo do texto.
+    # O ato é negrito e caixa alta; a identificação do órgão é o **maior** texto da página.
     assert any(
-        linha == "EDITAL Nº 07/2026" and fonte == "F2"
+        linha.startswith("EDITAL 07/2026") and fonte == "F2"
         for linha, fonte, _, _ in linhas_desenhadas(documento(snapshot(), HASH))
     )
     corpo = next(
@@ -593,9 +600,11 @@ def test_a_primeira_pagina_identifica_a_instituicao_o_ato_e_o_objeto():
     institucional = next(
         tamanho
         for linha, _, tamanho, _ in linhas_desenhadas(documento(snapshot(), HASH))
-        if linha == "MINISTÉRIO DA EDUCAÇÃO"
+        if linha == "Ministério da Educação"
     )
-    assert institucional < corpo
+    # **Calibração corrigida pelo Edital 146/2025**: a primeira redação tinha isto ao contrário, e
+    # era o que fazia a abertura parecer nota de rodapé sob um título de relatório.
+    assert institucional > corpo
 
 
 def test_as_secoes_normativas_sao_numeradas_em_sequencia_continua():
