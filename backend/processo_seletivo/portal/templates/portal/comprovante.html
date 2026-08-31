@@ -1,22 +1,49 @@
 {% extends "portal/base.html" %}
-{% block titulo %}Inscrição realizada{% endblock %}
+{% block titulo %}Comprovante de inscrição{% endblock %}
 {% block conteudo %}
-{% include "portal/_etapas.html" %}
-<p class="situacao aberto" role="status">✓ Inscrição realizada</p>
-<h1>Protocolo {{ inscricao.protocolo }}</h1>
-
 {% comment %}
-Tudo o que a pessoa precisa provar que se inscreveu, numa página que o navegador imprime — não há
-PDF a gerar (FR-063). O comprovante não é ato normativo: é a prova de que a inscrição chegou.
+O comprovante é a única prova que o candidato leva, e é lido por quem não estava na tela: pode ser
+apresentado numa banca, anexado a um recurso, guardado por um ano. Por isso ele é escrito como
+**documento**, e não como a última tela de um fluxo.
+
+O que o distingue de uma página qualquer: identifica o órgão que o emitiu, diz o que atesta, diz
+sob qual versão do Edital a inscrição foi feita, e diz como conferi-lo. Sem isso é um texto verde
+com um código no meio — bonito na tela, sem valor no papel.
+
+Continua sendo página imprimível, e não PDF gerado (FR-063): o comprovante não é ato normativo.
 {% endcomment %}
+<div class="timbre" aria-hidden="true">
+  <p class="orgao">Instituto Federal do Espírito Santo</p>
+  <p class="unidade">Cefor — Centro de Referência em Formação e em Educação a Distância</p>
+</div>
+
+{% include "portal/_etapas.html" %}
+<p class="situacao aberto nao-imprime" role="status">✓ Inscrição realizada</p>
+<h1>Comprovante de inscrição</h1>
+
+<p class="protocolo">
+  <span class="rotulo">Protocolo</span>
+  <strong>{{ inscricao.protocolo }}</strong>
+</p>
+
 <dl class="dados">
-  <dt>Processo</dt><dd>{{ selecao.processo_titulo }} ({{ selecao.processo_codigo }})</dd>
+  <dt>Processo Seletivo</dt><dd>{{ selecao.processo_titulo }} ({{ selecao.processo_codigo }})</dd>
   <dt>Edital</dt><dd>{{ selecao.numero }}/{{ selecao.ano }}</dd>
-  <dt>Perfil</dt><dd>{{ perfil.nome }}</dd>
+  <dt>Perfil de Vaga</dt><dd>{{ perfil.nome }}</dd>
   {% if modalidade %}<dt>Concorrência</dt><dd>{{ modalidade }}</dd>{% endif %}
   <dt>Candidato</dt><dd>{{ inscricao.nome }}</dd>
-  <dt>CPF</dt><dd>{{ inscricao.cpf }}</dd>
+  <dt>CPF</dt><dd>{{ cpf_do_candidato }}</dd>
+  {% if inscricao.email %}<dt>E-mail</dt><dd>{{ inscricao.email }}</dd>{% endif %}
+  {% if inscricao.telefone %}<dt>Telefone</dt><dd>{{ inscricao.telefone }}</dd>{% endif %}
   <dt>Enviada em</dt><dd>{{ inscricao.submitted_at|date:"d/m/Y" }} às {{ inscricao.submitted_at|date:"H\hi" }}</dd>
+  {% if versao_aceita %}
+  {% comment %}
+  A que regras esta inscrição respondeu. Uma Retificação posterior não a altera, e sem esta linha
+  o comprovante não permitiria dizer isso a ninguém (FR-058, FR-059a).
+  {% endcomment %}
+  <dt>Versão do Edital</dt>
+  <dd>vigente desde {{ versao_aceita.valid_from|date:"d/m/Y" }} às {{ versao_aceita.valid_from|date:"H\hi" }}</dd>
+  {% endif %}
 </dl>
 
 <h2>Documentos apresentados</h2>
@@ -25,23 +52,34 @@ PDF a gerar (FR-063). O comprovante não é ato normativo: é a prova de que a i
   {% if linha.enviado %}
   <li class="requisito completo">
     <p class="nome"><span class="marca" aria-hidden="true">✓</span> {{ linha.nome }}</p>
-    <p class="arquivo">{{ linha.enviado.nome_original }}</p>
+    <p class="arquivo">{{ linha.enviado.nome_original }}
+      <span class="ajuda">· recebido em {{ linha.enviado.uploaded_at|date:"d/m/Y H\hi" }}</span>
+    </p>
   </li>
   {% endif %}
   {% endfor %}
 </ul>
 
 {% comment %}
-O comprovante precisa ser levável (L1 da auditoria de percurso). Sem isto, quem fechava a aba
-ficava com a sensação de ter perdido a prova de que se inscreveu — e é o ponto de maior ansiedade
-da jornada. Três coisas resolvem: um botão que chama a impressão do navegador (de onde sai o PDF),
-a orientação de guardar o protocolo, e a frase que diz como voltar aqui.
+O que o documento atesta, e o que não atesta. A segunda frase é a que evita o mal-entendido mais
+caro da jornada: recebida não é deferida, e ninguém deve chegar à divulgação do resultado achando
+que o comprovante garantia alguma coisa sobre o mérito.
 {% endcomment %}
+<div class="atestado">
+  <p>Este comprovante atesta que a inscrição acima foi <strong>recebida</strong> pelo sistema na
+    data e hora indicadas, com os documentos listados.</p>
+  <p>O recebimento não implica deferimento: a conferência dos documentos e a análise dos requisitos
+    são feitas pela comissão, nos prazos do Edital.</p>
+  <p class="conferencia">Para conferir este comprovante, acesse
+    <strong>{{ request.scheme }}://{{ request.get_host }}{% url 'portal:vitrine' %}</strong>
+    e identifique-se com o mesmo CPF.</p>
+</div>
+
 <p class="nao-imprime">
   <button type="button" class="principal" data-imprimir hidden>Imprimir ou salvar em PDF</button>
 </p>
-<p class="nao-imprime ajuda">Guarde o número do protocolo. Para reencontrar este comprovante,
-  volte a <a href="{% url 'portal:vitrine' %}">Seleções</a> e identifique-se com o mesmo CPF.</p>
+<p class="nao-imprime ajuda">Guarde o número do protocolo. Este comprovante fica disponível
+  enquanto as inscrições deste Processo Seletivo estiverem sob análise.</p>
 
 <p class="nao-imprime"><a href="{% url 'portal:selecao' inscricao.edital_id %}">Voltar à seleção</a></p>
 {% load static %}<script src="{% static 'portal/comprovante.js' %}" defer></script>

@@ -46,6 +46,17 @@ def normalizar_cpf(valor: str) -> str:
     return "".join(caractere for caractere in valor if caractere.isdigit())
 
 
+def contexto_candidato(request):
+    """A identidade do candidato em todo template do portal, para o cabeçalho poder oferecer `Sair`.
+
+    Separado de `contexto_identidade`, que é da interface administrativa: são dois eixos, com
+    chaves de sessão distintas, e um não identifica no outro (FR-020, FR-021). Sem isto o portal
+    não tinha como oferecer a saída — quem se identificasse num computador compartilhado ficava,
+    e a pessoa seguinte se inscrevia com o CPF de quem estava antes.
+    """
+    return {"candidato": identidade_da_sessao(request)}
+
+
 def identidade_da_sessao(request) -> IdentidadeDoCandidato | None:
     dados = request.session.get(CHAVE_SESSAO)
     if not dados:

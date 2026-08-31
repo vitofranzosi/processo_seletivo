@@ -19,7 +19,14 @@ a{color:var(--verde-texto)}
 .pular:focus{left:0}
 *:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
 main:focus{outline:none}
-header.topo{background:var(--verde-escuro);color:var(--branco);padding:.85rem 1rem}
+header.topo{background:var(--verde-escuro);color:var(--branco);padding:.85rem 1rem;
+  display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
+.quem-esta{display:flex;align-items:center;gap:.6rem;font-size:.875rem}
+.quem-esta .nome{opacity:.9;overflow-wrap:anywhere}
+.quem-esta form{margin:0}
+button.sair{background:transparent;color:var(--branco);border:1px solid rgba(255,255,255,.6);
+  border-radius:4px;padding:.3rem .7rem;font:inherit;font-size:.875rem;cursor:pointer}
+button.sair:hover{background:rgba(255,255,255,.15)}
 header.topo a{color:var(--branco);text-decoration:none}
 header.topo .marca{font-weight:600;letter-spacing:.02em;font-size:1rem}
 header.topo .marca span{font-weight:300;opacity:.85}
@@ -146,10 +153,33 @@ button.principal{padding:.75rem 1.25rem;border:0;border-radius:4px;background:va
 button.principal:hover{background:var(--verde-escuro)}
 form.convite{margin:.75rem 0 0}
 /* O comprovante é impresso: fora o conteúdo, nada mais precisa ir para o papel. */
+/* O timbre existe **só** no papel: na tela o cabeçalho verde já diz de quem é o sistema, e
+   repetir o nome do órgão seria ocupar a primeira dobra com o que a pessoa já sabe. Impresso,
+   ele é o que separa um comprovante institucional de uma captura de tela. */
+.timbre{display:none}
+.protocolo{margin:.25rem 0 1.5rem;padding:.75rem 1rem;border:1px solid var(--borda);
+  border-left:4px solid var(--verde);border-radius:4px;background:var(--branco)}
+.protocolo .rotulo{display:block;font-size:.8125rem;color:var(--texto-fraco);
+  text-transform:uppercase;letter-spacing:.04em}
+.protocolo strong{font-size:1.35rem;letter-spacing:.02em;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.atestado{margin:1.5rem 0;padding-top:1rem;border-top:1px solid var(--borda);
+  font-size:.9375rem;color:var(--texto-fraco)}
+.atestado p{margin:0 0 .5rem}
+.atestado .conferencia{overflow-wrap:anywhere}
 @media print{
-  header.topo, .nao-imprime, .pular{display:none}
+  /* Navegação, ações e etapas não são o documento: no papel, um "Etapa 3 de 3" faz o comprovante
+     parecer a captura de uma tela pela metade. */
+  header.topo, .nao-imprime, .pular, .etapas{display:none}
   main{max-width:none;padding:0}
   a{text-decoration:none;color:var(--texto)}
+  .timbre{display:block;border-bottom:2px solid var(--texto);padding-bottom:.5rem;
+    margin-bottom:1.25rem}
+  .timbre .orgao{margin:0;font-weight:700;font-size:1rem}
+  .timbre .unidade{margin:.1rem 0 0;font-size:.875rem}
+  .protocolo{background:none;border:1px solid #000;border-left:4px solid #000}
+  .requisito{break-inside:avoid;page-break-inside:avoid}
+  .atestado{color:var(--texto)}
 }
 @media (min-width:600px){
   main{padding:1.5rem}
@@ -164,11 +194,24 @@ form.convite{margin:.75rem 0 0}
 <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 <header class="topo">
   <span class="marca"><a href="{% url 'portal:vitrine' %}">Cefor<span>/Ifes</span> · Seleções</a></span>
+  {% comment %}
+  A identidade aqui é a **do candidato**, de chave de sessão própria — nunca o `ator` da interface
+  administrativa, que é outro eixo (FR-020, FR-021).
+
+  E ela aparece por uma razão prática: sem `Sair`, quem se identificasse num computador
+  compartilhado — laboratório, lan house, biblioteca — ficava identificado, e a pessoa seguinte
+  começava a inscrição dela com o CPF de quem estava antes.
+  {% endcomment %}
+  {% if candidato %}
+  <span class="quem-esta">
+    <span class="nome">{{ candidato.nome }}</span>
+    <form method="post" action="{% url 'portal:sair' %}">
+      {% csrf_token %}
+      <button type="submit" class="sair">Sair</button>
+    </form>
+  </span>
+  {% endif %}
 </header>
-<!-- Nada de identidade neste cabeçalho: na entrega 1 o canal é anônimo, e a sessão do candidato
-     é outro eixo, com chave própria (FR-020, FR-021). O processador de contexto da interface
-     administrativa injeta `ator` em todo template, inclusive neste — e é por isso que nenhuma
-     página do portal o lê. -->
 <main id="conteudo" tabindex="-1">
 {% block conteudo %}{% endblock %}
 </main>

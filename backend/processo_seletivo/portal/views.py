@@ -699,6 +699,12 @@ def comprovante(request, inscricao_id):
             "identidade": identidade,
             "documentos": _documentos(conteudo, registro),
             "etapas": etapas_ate(2),
+            # A versão sob a qual a inscrição foi feita, no próprio comprovante: é ela que diz a
+            # que regras a pessoa respondeu, e uma Retificação posterior não a altera (FR-058).
+            "versao_aceita": registro.versao_aceita,
+            # Formatado na saída, e não só na entrada: inscrições anteriores a esta correção
+            # guardaram o CPF como a pessoa digitou.
+            "cpf_do_candidato": formatar_cpf(registro.cpf),
         },
     )
 

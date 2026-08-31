@@ -263,3 +263,49 @@ def test_as_tres_etapas_dizem_onde_a_pessoa_esta(client, inscricao_de_maria):
     comprovante = client.get(reverse("portal:comprovante", args=[enviada.id])).content.decode()
     assert "Etapa 3 de 3" in comprovante
     assert comprovante.count('class="concluida"') == 2
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_comprovante_se_identifica_como_documento(client, inscricao_de_maria):
+    """O comprovante é lido por quem não estava na tela.
+
+    Pode ser apresentado numa banca, anexado a um recurso, guardado por um ano. Sem dizer de quem
+    é, o que atesta e sob qual versão do Edital, é um texto com um código no meio.
+    """
+    from processo_seletivo.inscricoes.application.submissao import enviar_inscricao
+
+    completa = _completar(inscricao_de_maria)
+    enviada = enviar_inscricao(
+        identidade=MARIA,
+        inscricao=completa,
+        declaracoes={"veracidade": True, "ciencia": True},
+        idempotency_key="envio-documento",
+    )
+    identificar(client, MARIA)
+
+    corpo = client.get(reverse("portal:comprovante", args=[enviada.id])).content.decode()
+
+    assert "Instituto Federal do Espírito Santo" in corpo, "o órgão que emitiu"
+    assert "Comprovante de inscrição" in corpo
+    assert enviada.protocolo in corpo
+    assert "Versão do Edital" in corpo, "a que regras esta inscrição respondeu"
+    assert "recebida</strong> pelo sistema" in corpo, "o que o documento atesta"
+    assert "não implica deferimento" in corpo, "e o que ele não atesta"
+    assert "recebido em" in corpo, "cada documento com a hora em que chegou"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_papel_nao_leva_navegacao_nem_botao(client, inscricao_de_maria):
+    """No papel, um "Etapa 3 de 3" faz o comprovante parecer a captura de uma tela pela metade."""
+    corpo = (
+        __import__("pathlib")
+        .Path("processo_seletivo/portal/templates/portal/base.html")
+        .read_text(encoding="utf-8")
+    )
+
+    impressao = corpo[corpo.index("@media print{") :]
+    for fora_do_papel in ("header.topo", ".nao-imprime", ".pular", ".etapas"):
+        assert fora_do_papel in impressao.split("}")[0], f"{fora_do_papel} não vai para o papel"
+    assert ".timbre{display:block" in impressao, "e o timbre só existe nele"

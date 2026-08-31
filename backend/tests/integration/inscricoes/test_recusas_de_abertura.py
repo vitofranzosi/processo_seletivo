@@ -5,6 +5,7 @@ regressão estão aqui. O que eles têm em comum é o modo de falhar: nenhum que
 todos produzem uma inscrição que parece válida.
 """
 
+import re
 from datetime import timedelta
 
 import pytest
@@ -167,6 +168,10 @@ def test_perfil_sem_modalidade_publicada_fica_sem_modalidade(
 # ---------------------------------------------------------------------------
 
 
+def _sem_csrf(corpo: bytes) -> bytes:
+    return re.sub(rb'value="[A-Za-z0-9]{32,}"', b'value="TOKEN"', corpo)
+
+
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.authorization
 def test_inexistente_e_alheia_produzem_a_mesma_resposta(
@@ -187,7 +192,9 @@ def test_inexistente_e_alheia_produzem_a_mesma_resposta(
     )
 
     assert de_outro.status_code == inexistente.status_code == 404
-    assert de_outro.content == inexistente.content
+    # O token CSRF do `Sair` no cabeçalho é aleatório a cada render e não distingue uma resposta
+    # da outra — compará-lo seria comparar ruído, não conteúdo.
+    assert _sem_csrf(de_outro.content) == _sem_csrf(inexistente.content)
 
 
 @pytest.mark.django_db(transaction=True)

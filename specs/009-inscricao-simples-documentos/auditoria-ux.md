@@ -234,6 +234,46 @@ Verificado no navegador: `11111111111` → *"Este CPF não existe. Confira os n�
 **O que isto não é:** prova de titularidade. Um CPF válido continua podendo ser de outra pessoa —
 é o que L12 registra, e o que só o provedor de identidade real resolve.
 
+### D7 — O comprovante não parecia um documento, e a sessão não tinha saída (alta)
+
+Os dois vieram de quem usou o sistema, com o PDF impresso na mão.
+
+**O comprovante impresso.** Saía sem qualquer identificação do órgão — o cabeçalho verde da tela é
+escondido na impressão, e nada tomava o lugar dele —, com o indicador de etapas impresso junto
+(*"Etapa 3 de 3"*, que faz o documento parecer a captura de uma tela pela metade), sem dizer o que
+atesta, sem dizer sob qual versão do Edital a inscrição foi feita e sem dizer como conferi-lo. Um
+comprovante é lido por quem **não** estava na tela: pode ser apresentado numa banca, anexado a um
+recurso, guardado por um ano.
+
+**Corrigido.** No papel aparece um timbre com o Instituto e o Cefor, e some tudo que é navegação.
+O protocolo ganhou bloco próprio em monoespaçada. Entraram a versão do Edital aceita, o horário de
+recebimento de **cada** documento, e o parágrafo que diz o que o documento prova — e o que não
+prova:
+
+> Este comprovante atesta que a inscrição acima foi **recebida** pelo sistema na data e hora
+> indicadas, com os documentos listados. O recebimento não implica deferimento: a conferência dos
+> documentos e a análise dos requisitos são feitas pela comissão, nos prazos do Edital.
+
+A segunda frase evita o mal-entendido mais caro da jornada — ninguém deve chegar à divulgação do
+resultado achando que o comprovante garantia algo sobre o mérito. Fecha com onde conferir o
+comprovante. Travado por `test_o_comprovante_se_identifica_como_documento` e
+`test_o_papel_nao_leva_navegacao_nem_botao`.
+
+**A sessão sem saída.** O portal nunca ofereceu `Sair`. A rota existia desde a entrega 3 e **nenhum
+template a expunha** — quem se identificasse ficava identificado até o cookie expirar. Num
+computador compartilhado — laboratório, biblioteca, lan house — a pessoa seguinte começava a
+inscrição dela com o CPF de quem estava antes, e a inscrição ia para a identidade errada.
+
+**Corrigido.** O cabeçalho do portal passou a mostrar quem está identificado e a oferecer `Sair`,
+por um processador de contexto próprio do candidato — nunca o `ator` da interface administrativa,
+que é outro eixo (FR-020, FR-021). Travado por `test_quem_se_identificou_encontra_a_saida` e
+`test_quem_nao_se_identificou_nao_ve_saida_nenhuma`.
+
+**Uma correção de teste veio junto:** o `Sair` traz um token CSRF ao cabeçalho, e o teste que
+compara byte a byte a recusa de inscrição alheia com a de inscrição inexistente passou a comparar
+ruído aleatório. O token é normalizado antes da comparação — a propriedade que importa (não existir
+oráculo de existência) continua sendo verificada.
+
 ## Lacunas e oportunidades, por prioridade
 
 > **Estado em 31/08/2026:** L1 a L10 foram corrigidas e travadas por teste. L11 e L12 continuam

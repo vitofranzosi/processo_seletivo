@@ -200,3 +200,32 @@ def test_o_cpf_e_guardado_numa_forma_so(client, settings):
     )
 
     assert client.session["portal_identidade"]["cpf"] == "123.456.789-09"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_quem_se_identificou_encontra_a_saida(client, provedor_ligado):
+    """Sem `Sair`, um computador compartilhado guarda a identidade de quem passou.
+
+    Laboratório, biblioteca, lan house: a pessoa seguinte começava a inscrição dela com o CPF de
+    quem estava antes — e a inscrição ia para a identidade errada.
+    """
+    identificar_candidato(client)
+
+    corpo = client.get(reverse("portal:vitrine")).content.decode()
+    assert "Maria Silva" in corpo, "quem está identificado aparece"
+    assert reverse("portal:sair") in corpo
+
+    client.post(reverse("portal:sair"))
+
+    depois = client.get(reverse("portal:vitrine")).content.decode()
+    assert "Maria Silva" not in depois
+    assert "portal_identidade" not in client.session
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_quem_nao_se_identificou_nao_ve_saida_nenhuma(client, provedor_ligado):
+    corpo = client.get(reverse("portal:vitrine")).content.decode()
+
+    assert reverse("portal:sair") not in corpo

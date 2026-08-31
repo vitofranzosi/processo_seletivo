@@ -42,6 +42,7 @@ TEMPLATES = [
             "context_processors": [
                 "django.template.context_processors.request",
                 "processo_seletivo.interface.identidade.contexto_identidade",
+                "processo_seletivo.portal.identidade.contexto_candidato",
             ]
         },
     }
