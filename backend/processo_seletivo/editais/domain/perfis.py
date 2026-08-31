@@ -1,7 +1,25 @@
 from decimal import Decimal, InvalidOperation
 
 
-class ProfileValidationError(ValueError):
+class RecusaDeCampo(ValueError):
+    """Uma recusa do domínio que sabe **a que campo pertence**.
+
+    FR-033 pede que a recusa apareça em resumo ancorado e junto do campo. A interface não tinha
+    como fazer isso porque estas exceções carregavam mensagem e nada mais — e ancorar exige saber
+    qual campo, de qual linha.
+
+    `campo` é o nome canônico (`name`, `startAt`, `reserveLimit`); `identidade` é o `id` da entidade
+    quando ela tem um, para que a interface encontre a linha certa. Os dois são **opcionais**: as
+    regras que valem para a coleção inteira — "o Edital deve possuir ao menos um Perfil" — não
+    pertencem a campo nenhum, e forçá-las a apontar um seria pior do que não apontar.
+    """
+
+    def __init__(self, mensagem, *, campo="", identidade=""):
+        super().__init__(mensagem)
+        self.campo = campo
+        self.identidade = str(identidade or "")
+
+class ProfileValidationError(RecusaDeCampo):
     pass
 
 
@@ -37,13 +55,29 @@ def validate_profile(profile: dict) -> None:
     reserve_type = profile.get("reserveType")
     reserve_limit = profile.get("reserveLimit")
     if immediate < 0:
-        raise ProfileValidationError("Vagas imediatas não podem ser negativas.")
+        raise ProfileValidationError(
+            "Vagas imediatas não podem ser negativas.",
+            campo="immediateVacancies",
+            identidade=profile.get("id", ""),
+        )
     if reserve_type == "NONE" and reserve_limit is not None:
-        raise ProfileValidationError("Cadastro Reserva inexistente não admite limite.")
+        raise ProfileValidationError(
+            "Cadastro Reserva inexistente não admite limite.",
+            campo="reserveLimit",
+            identidade=profile.get("id", ""),
+        )
     if reserve_type == "LIMITED" and (reserve_limit is None or reserve_limit < 0):
-        raise ProfileValidationError("Cadastro Reserva limitado exige limite não negativo.")
+        raise ProfileValidationError(
+            "Cadastro Reserva limitado exige limite não negativo.",
+            campo="reserveLimit",
+            identidade=profile.get("id", ""),
+        )
     if reserve_type == "UNLIMITED" and reserve_limit is not None:
-        raise ProfileValidationError("Cadastro Reserva ilimitado não admite limite.")
+        raise ProfileValidationError(
+            "Cadastro Reserva ilimitado não admite limite.",
+            campo="reserveLimit",
+            identidade=profile.get("id", ""),
+        )
     if reserve_type not in {"NONE", "LIMITED", "UNLIMITED"}:
         raise ProfileValidationError("Tipo de Cadastro Reserva inválido.")
     modalities = profile.get("competitionModalities", [])

@@ -10,52 +10,85 @@
 <p class="sub">Um Processo Seletivo nasce com o primeiro Edital. São conceitos distintos: o
   Processo reúne Editais que podem ter cronogramas próprios, e nenhum Edital existe sem ele.</p>
 
-{% comment %}
-Uma recusa só, mas focalizável como o resumo das demais telas (FR-033): sem isto, quem é recusado
-continua com o foco onde estava e, num leitor de tela, a mensagem passa despercebida.
-{% endcomment %}
-{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus>{{ erro }}</p>{% endif %}
+{% include "interface/_erros.html" with titulo_da_recusa="Não foi possível criar:" %}
 
-<form method="post" class="identificar">
+<form method="post">
   {% csrf_token %}
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
 
-  <fieldset>
-    <legend>Processo Seletivo</legend>
+  {% comment %}
+  O mesmo agrupamento das demais telas — `section.cartao` com `p.campo` — e não o cartão estreito
+  de `form.identificar`, que é o da tela de login.
 
-    <label for="codigo">Identificação institucional <span class="obrigatorio" aria-hidden="true">*</span></label>
-    <input type="text" id="codigo" name="codigo" required autofocus
-           aria-describedby="ajuda-codigo" value="{{ digitado.codigo|default:'' }}" aria-required="true">
-    <p id="ajuda-codigo" class="nenhuma" style="margin:.35rem 0 1.25rem">
-      Como o Processo é referido nos documentos oficiais. Não pode repetir outro já criado.</p>
+  Era a segunda metade do achado 14. Estender o estilo aos tipos de campo que faltavam consertou a
+  aparência do `Ano`, mas deixou `Número` e `Ano` como duas caixas de 150px sozinhas em linhas
+  próprias, num cartão de 520px — cada campo empilhado sob o anterior, sem relação visível entre os
+  dois que formam a identificação do Edital. Com `.campos`, eles ficam lado a lado, que é o que a
+  informação pede.
+  {% endcomment %}
+  <section aria-labelledby="processo-titulo" class="cartao">
+    <h2 id="processo-titulo">Processo Seletivo</h2>
+    <div class="campos">
+      <p class="campo">
+        <label for="codigo">Identificação institucional
+          <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <input type="text" id="codigo" name="codigo" required autofocus
+               aria-describedby="ajuda-codigo{% if recusas.codigo %} recusa-codigo{% endif %}" value="{{ digitado.codigo|default:'' }}"
+               aria-required="true"
+           {% if recusas.codigo %}aria-invalid="true"{% endif %}>
+    {% if recusas.codigo %}<span class="recusa" role="alert" id="recusa-codigo">{{ recusas.codigo }}</span>{% endif %}
+        <span class="ajuda" id="ajuda-codigo">Como o Processo é referido nos documentos oficiais.
+          Não pode repetir outro já criado.</span>
+      </p>
+      <p class="campo largo">
+        <label for="titulo">Título <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <input type="text" id="titulo" name="titulo" required
+               value="{{ digitado.titulo|default:'' }}" aria-required="true"
+           {% if recusas.titulo %}aria-describedby="recusa-titulo"{% endif %}
+           {% if recusas.titulo %}aria-invalid="true"{% endif %}>
+    {% if recusas.titulo %}<span class="recusa" role="alert" id="recusa-titulo">{{ recusas.titulo }}</span>{% endif %}
+      </p>
+    </div>
+  </section>
 
-    <label for="titulo">Título <span class="obrigatorio" aria-hidden="true">*</span></label>
-    <input type="text" id="titulo" name="titulo" required
-           value="{{ digitado.titulo|default:'' }}" aria-required="true">
-  </fieldset>
-
-  <fieldset>
-    <legend>Primeiro Edital</legend>
-
-    <label for="numero">Número <span class="obrigatorio" aria-hidden="true">*</span></label>
-    <input type="text" id="numero" name="numero" required class="curto"
-           value="{{ digitado.numero|default:'' }}" aria-required="true">
-
-    <label for="ano">Ano <span class="obrigatorio" aria-hidden="true">*</span></label>
-    <input type="number" id="ano" name="ano" required class="curto" min="2000"
-           value="{{ digitado.ano|default:ano_corrente }}" aria-required="true">
-
-    <label for="titulo_edital">Título do Edital <span class="obrigatorio" aria-hidden="true">*</span></label>
-    <input type="text" id="titulo_edital" name="titulo_edital" required
-           value="{{ digitado.titulo_edital|default:'' }}" aria-required="true">
-
-    <label for="descricao">Descrição</label>
-    <textarea id="descricao" name="descricao" rows="3"
-              aria-describedby="ajuda-descricao">{{ digitado.descricao|default:'' }}</textarea>
-    <p id="ajuda-descricao" class="nenhuma" style="margin:.35rem 0 1.25rem">
-      Opcional na criação, mas a validação avisa se ficar ausente na submissão. Pode ser
-      alterada depois, na etapa de Identificação, enquanto o Edital estiver em elaboração.</p>
-  </fieldset>
+  <section aria-labelledby="edital-titulo" class="cartao">
+    <h2 id="edital-titulo">Primeiro Edital</h2>
+    <div class="campos">
+      <p class="campo curto">
+        <label for="numero">Número <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <input type="text" id="numero" name="numero" required
+               value="{{ digitado.numero|default:'' }}" aria-required="true"
+           {% if recusas.numero %}aria-describedby="recusa-numero"{% endif %}
+           {% if recusas.numero %}aria-invalid="true"{% endif %}>
+    {% if recusas.numero %}<span class="recusa" role="alert" id="recusa-numero">{{ recusas.numero }}</span>{% endif %}
+      </p>
+      <p class="campo curto">
+        <label for="ano">Ano <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <input type="number" id="ano" name="ano" required min="2000"
+               value="{{ digitado.ano|default:ano_corrente }}" aria-required="true"
+           {% if recusas.ano %}aria-describedby="recusa-ano"{% endif %}
+           {% if recusas.ano %}aria-invalid="true"{% endif %}>
+    {% if recusas.ano %}<span class="recusa" role="alert" id="recusa-ano">{{ recusas.ano }}</span>{% endif %}
+      </p>
+      <p class="campo largo">
+        <label for="titulo_edital">Título do Edital
+          <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <input type="text" id="titulo_edital" name="titulo_edital" required
+               value="{{ digitado.titulo_edital|default:'' }}" aria-required="true"
+           {% if recusas.titulo_edital %}aria-describedby="recusa-titulo_edital"{% endif %}
+           {% if recusas.titulo_edital %}aria-invalid="true"{% endif %}>
+    {% if recusas.titulo_edital %}<span class="recusa" role="alert" id="recusa-titulo_edital">{{ recusas.titulo_edital }}</span>{% endif %}
+      </p>
+    </div>
+    <p class="campo largo">
+      <label for="descricao">Descrição</label>
+      <textarea id="descricao" name="descricao" rows="3"
+                aria-describedby="ajuda-descricao">{{ digitado.descricao|default:'' }}</textarea>
+      <span class="ajuda" id="ajuda-descricao">Opcional na criação, mas a validação avisa se ficar
+        ausente na submissão. Pode ser alterada depois, na etapa de Identificação, enquanto o Edital
+        estiver em elaboração.</span>
+    </p>
+  </section>
 
   <p class="navegacao-etapa">
     <a href="{% url 'interface:lista' %}">Cancelar</a>

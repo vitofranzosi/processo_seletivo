@@ -36,4 +36,4 @@ def test_scripts_da_interface_se_comportam_como_especificado():
     assert resultado.returncode == 0, resultado.stdout + resultado.stderr
     # O runner reporta sucesso mesmo sem encontrar arquivo algum; sem isto, renomear a pasta
     # transformaria a suíte de JavaScript em silêncio aprovado.
-    assert "# pass 37" in resultado.stdout or "pass 37" in resultado.stdout, resultado.stdout
+    assert "# pass 45" in resultado.stdout or "pass 45" in resultado.stdout, resultado.stdout

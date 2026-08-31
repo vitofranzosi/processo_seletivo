@@ -1,4 +1,4 @@
-<fieldset class="linha etapa">
+{% load interface_extras %}<fieldset class="linha etapa">
   <legend>Etapa de Avaliação</legend>
   <input type="hidden" name="etapa-{{ indice }}-id" value="{{ etapa_linha.id }}">
   {% comment %}
@@ -9,8 +9,12 @@
   <div class="campos">
     <p class="campo largo">
       <label for="etapa-{{ indice }}-name">Nome da Etapa <span class="obrigatorio" aria-hidden="true">*</span></label>
+      {% recusa_de recusas "etapa" indice "name" as recusado %}
       <input type="text" id="etapa-{{ indice }}-name" name="etapa-{{ indice }}-name"
-             value="{{ etapa_linha.name|default:'' }}" required placeholder="Prova didática" aria-required="true">
+             value="{{ etapa_linha.name|default:'' }}" required placeholder="Prova didática" aria-required="true"
+             {% if recusado %}aria-describedby="recusa-etapa-{{ indice }}-name"{% endif %}
+             {% if recusado %}aria-invalid="true"{% endif %}>
+      {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-name">{{ recusado }}</span>{% endif %}
     </p>
     <p class="campo">
       <label for="etapa-{{ indice }}-scheduleEventId">Evento do Cronograma</label>
@@ -29,16 +33,22 @@
   <div class="campos">
     <p class="campo curto">
       <label for="etapa-{{ indice }}-weight">Peso</label>
+      {% recusa_de recusas "etapa" indice "weight" as recusado %}
       <input type="number" step="0.0001" min="0.0001" id="etapa-{{ indice }}-weight"
              name="etapa-{{ indice }}-weight" value="{{ etapa_linha.weight|default:'' }}"
-             aria-describedby="ajuda-peso-{{ indice }}">
+             aria-describedby="ajuda-peso-{{ indice }}{% if recusado %} recusa-etapa-{{ indice }}-weight{% endif %}"
+             {% if recusado %}aria-invalid="true"{% endif %}>
+      {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-weight">{{ recusado }}</span>{% endif %}
       <span class="ajuda" id="ajuda-peso-{{ indice }}">Vazio: a Etapa não pondera.</span>
     </p>
     <p class="campo curto">
       <label for="etapa-{{ indice }}-minimumScore">Nota mínima</label>
+      {% recusa_de recusas "etapa" indice "minimumScore" as recusado %}
       <input type="number" step="0.0001" min="0" id="etapa-{{ indice }}-minimumScore"
              name="etapa-{{ indice }}-minimumScore" value="{{ etapa_linha.minimumScore|default:'' }}"
-             aria-describedby="ajuda-nota-{{ indice }}">
+             aria-describedby="ajuda-nota-{{ indice }}{% if recusado %} recusa-etapa-{{ indice }}-minimumScore{% endif %}"
+             {% if recusado %}aria-invalid="true"{% endif %}>
+      {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-minimumScore">{{ recusado }}</span>{% endif %}
       <span class="ajuda" id="ajuda-nota-{{ indice }}">Vazio: não há nota mínima.</span>
     </p>
     {% comment %}
