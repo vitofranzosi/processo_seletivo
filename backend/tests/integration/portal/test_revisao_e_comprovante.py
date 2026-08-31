@@ -162,3 +162,72 @@ def test_o_comprovante_alheio_nao_e_alcancavel(client, inscricao_de_maria):
     identificar(client, JOAO)
 
     assert client.get(reverse("portal:comprovante", args=[completa.id])).status_code == 404
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_recusa_das_declaracoes_recebe_o_foco_e_aponta_o_que_falta(client, inscricao_de_maria):
+    """SC-UX-005: alcançar o motivo da recusa.
+
+    Quem acionou o botão estava no fim da página, e `role=alert` anuncia o que **muda** numa página
+    já carregada — não o que já veio no HTML da resposta. Sem mover o foco, para quem usa leitor de
+    tela o envio simplesmente não acontece e nada é dito.
+    """
+    completa = _completar(inscricao_de_maria)
+    identificar(client, MARIA)
+
+    corpo = client.post(
+        reverse("portal:revisao", args=[completa.id]), {"veracidade": "on"}
+    ).content.decode()
+
+    assert 'data-recusa' in corpo and 'tabindex="-1"' in corpo
+    assert 'href="#ciencia"' in corpo, "o resumo leva à declaração que falta"
+    assert 'href="#veracidade"' not in corpo, "a que foi marcada não é cobrada"
+    assert "portal/recusa.js" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_recusa_nao_apaga_a_declaracao_ja_marcada(client, inscricao_de_maria):
+    """SC-UX-007: nenhuma recusa obriga a repetir o que já estava certo."""
+    completa = _completar(inscricao_de_maria)
+    identificar(client, MARIA)
+
+    corpo = client.post(
+        reverse("portal:revisao", args=[completa.id]), {"veracidade": "on"}
+    ).content.decode()
+
+    marcada = corpo[corpo.index('id="veracidade"') :][:220]
+    esquecida = corpo[corpo.index('id="ciencia"') :][:220]
+    assert "checked" in marcada, "volta marcada"
+    assert "checked" not in esquecida
+    assert 'aria-invalid="true"' in esquecida, "e a que falta é anunciada como inválida"
+    assert 'aria-invalid="true"' not in marcada
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_comprovante_pode_ser_impresso_e_reencontrado(client, inscricao_de_maria):
+    """L1 da auditoria de percurso: o comprovante precisa ser levável.
+
+    Num celular, "imprimir ou salvar em PDF" está atrás do menu do navegador, e quem acabou de se
+    inscrever não vai procurá-lo. O protocolo é a única prova que a pessoa leva.
+    """
+    from processo_seletivo.inscricoes.application.submissao import enviar_inscricao
+
+    completa = _completar(inscricao_de_maria)
+    enviada = enviar_inscricao(
+        identidade=MARIA,
+        inscricao=completa,
+        declaracoes={"veracidade": True, "ciencia": True},
+        idempotency_key="envio-comprovante-imprimivel",
+    )
+    identificar(client, MARIA)
+
+    corpo = client.get(reverse("portal:comprovante", args=[enviada.id])).content.decode()
+
+    assert "Imprimir ou salvar em PDF" in corpo
+    assert "data-imprimir" in corpo and "hidden" in corpo, "sem JS não fica botão morto na tela"
+    assert "portal/comprovante.js" in corpo
+    assert "Guarde o número do protocolo" in corpo
+    assert "identifique-se com o mesmo CPF" in corpo, "diz como voltar a este comprovante"

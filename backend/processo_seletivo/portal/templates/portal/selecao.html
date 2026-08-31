@@ -8,7 +8,11 @@
 
 {% if descricao %}<p>{{ descricao }}</p>{% endif %}
 
-<a class="documento" href="{% url 'public-document' publicacao_id %}">Ler o Edital completo (PDF)</a>
+{% comment %}
+Secundária de propósito: quem chega a esta página vem para se inscrever, e o verde sólido é da
+inscrição. Ler o Edital continua a um toque — só não disputa mais a decisão (SC-UX-008).
+{% endcomment %}
+<a class="documento secundaria" href="{% url 'public-document' publicacao_id %}">Ler o Edital completo (PDF)</a>
 
 <h2>Perfis e vagas</h2>
 <ul class="perfis">

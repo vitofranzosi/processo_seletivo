@@ -46,6 +46,12 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .documento{display:inline-block;margin-top:.5rem;padding:.6rem 1rem;border-radius:4px;
   background:var(--verde);color:var(--branco);text-decoration:none;font-weight:600}
 .documento:hover{background:var(--verde-escuro)}
+/* Ler o Edital é ação secundária, e precisa parecer uma. Enquanto usava o mesmo verde sólido dos
+   botões de inscrição, era o único botão preenchido na primeira dobra em 375px — a página
+   anunciava "baixe um PDF" onde queria anunciar "inscreva-se" (SC-UX-008). */
+.documento.secundaria{background:var(--branco);color:var(--verde-texto);
+  border:1px solid var(--verde-texto);font-weight:600}
+.documento.secundaria:hover{background:var(--verde-claro)}
 .vazio{background:var(--branco);border:1px dashed var(--borda);border-radius:6px;padding:1.5rem;
   color:var(--texto-fraco)}
 /* A situação é a informação que decide se vale continuar lendo, e por isso tem peso próprio.
@@ -58,6 +64,11 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
   margin-bottom:1.5rem;border-radius:0 4px 4px 0}
 .erro{background:var(--vermelho-fundo);border-left:4px solid var(--vermelho);padding:.75rem 1rem;
   margin-bottom:1rem;border-radius:0 4px 4px 0}
+/* Recebe o foco por script depois de uma recusa, e por isso precisa de contorno próprio: sem ele
+   o foco existiria sem aparecer, que é pior do que não movê-lo. */
+.erro:focus{outline:3px solid var(--vermelho);outline-offset:2px}
+.erro ul{margin:.35rem 0 0;padding-left:1.25rem}
+.erro a{color:var(--vermelho)}
 .recusa{display:block;color:var(--vermelho);font-size:.9375rem;margin-top:.25rem}
 .obrigatorio{color:var(--vermelho);margin-left:.15rem}
 .contagem{font-weight:600;margin:.5rem 0 1rem}

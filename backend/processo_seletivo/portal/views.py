@@ -526,6 +526,12 @@ def revisao(request, inscricao_id):
     conteudo = versao.content
     retificado = edital_foi_retificado(registro, versao)
     erros = []
+    # O que a pessoa marcou volta marcado. Uma recusa não pode custar o que já estava certo
+    # (SC-UX-007): quem marca uma das duas e esquece a outra reencontrava as duas em branco.
+    declaracoes = {
+        "veracidade": bool(request.POST.get("veracidade")),
+        "ciencia": bool(request.POST.get("ciencia")),
+    }
     if request.method == "POST":
         if request.POST.get("reconhecer_versao"):
             registro = reconhecer_versao(
@@ -540,10 +546,7 @@ def revisao(request, inscricao_id):
                 registro = enviar_inscricao(
                     identidade=identidade,
                     inscricao=registro,
-                    declaracoes={
-                        "veracidade": bool(request.POST.get("veracidade")),
-                        "ciencia": bool(request.POST.get("ciencia")),
-                    },
+                    declaracoes=declaracoes,
                     # A chave é da Inscrição e da revisão dela: o mesmo botão apertado duas vezes
                     # reserva a mesma chave, e a segunda tentativa devolve o mesmo resultado.
                     idempotency_key=f"envio-{registro.id}-{registro.revision}",
@@ -573,6 +576,7 @@ def revisao(request, inscricao_id):
                 documentos_que_a_retificacao_invalida(registro, versao) if retificado else []
             ),
             "erros": erros,
+            "declaracoes": declaracoes,
         },
     )
 

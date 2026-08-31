@@ -30,5 +30,18 @@ PDF a gerar (FR-063). O comprovante não é ato normativo: é a prova de que a i
   {% endfor %}
 </ul>
 
+{% comment %}
+O comprovante precisa ser levável (L1 da auditoria de percurso). Sem isto, quem fechava a aba
+ficava com a sensação de ter perdido a prova de que se inscreveu — e é o ponto de maior ansiedade
+da jornada. Três coisas resolvem: um botão que chama a impressão do navegador (de onde sai o PDF),
+a orientação de guardar o protocolo, e a frase que diz como voltar aqui.
+{% endcomment %}
+<p class="nao-imprime">
+  <button type="button" class="principal" data-imprimir hidden>Imprimir ou salvar em PDF</button>
+</p>
+<p class="nao-imprime ajuda">Guarde o número do protocolo. Para reencontrar este comprovante,
+  volte a <a href="{% url 'portal:vitrine' %}">Seleções</a> e identifique-se com o mesmo CPF.</p>
+
 <p class="nao-imprime"><a href="{% url 'portal:selecao' inscricao.edital_id %}">Voltar à seleção</a></p>
+{% load static %}<script src="{% static 'portal/comprovante.js' %}" defer></script>
 {% endblock %}

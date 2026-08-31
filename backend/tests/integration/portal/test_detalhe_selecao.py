@@ -76,3 +76,23 @@ def test_o_detalhe_nao_expoe_identificador_tecnico_no_corpo(
     corpo_visivel = corpo.split("<main")[1]
 
     assert str(edital.processo_id) not in corpo_visivel
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_ler_o_edital_nao_disputa_a_decisao_com_inscrever_se(
+    client, api_client, manager_headers, process_payload
+):
+    """SC-UX-008: duas chamadas de ação não disputam a mesma decisão.
+
+    Enquanto usava o mesmo verde sólido dos botões de inscrição, `Ler o Edital completo (PDF)` era
+    o único botão preenchido na primeira dobra em 375px — a página anunciava "baixe um PDF" onde
+    queria anunciar "inscreva-se".
+    """
+    edital = publicar_selecao(api_client, manager_headers, process_payload)
+
+    corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
+
+    assert 'class="documento secundaria"' in corpo
+    assert ".documento.secundaria{background:var(--branco)" in corpo
+    assert corpo.count('class="documento secundaria"') == 1, "só o PDF é secundário"

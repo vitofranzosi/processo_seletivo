@@ -199,29 +199,55 @@ de implementação, e depende da política de retenção que L11 registra.
 
 ## Lacunas e oportunidades, por prioridade
 
-**L1 — O comprovante não é levável (alta).** A tela final oferece apenas `Voltar à seleção`. Não há
-`Imprimir / salvar em PDF`, não há envio por e-mail, não há sequer a frase que diga como reencontrar
-o protocolo depois. Quem fecha a aba fica com a sensação de ter perdido o comprovante — mesmo que
-consiga voltar identificando-se de novo. É o ponto de maior ansiedade do fluxo e o mais barato de
-resolver: um botão de impressão, uma linha explicando a retomada e, quando houver serviço de
-e-mail, a cópia automática.
+> **Estado em 31/08/2026:** as três de maior impacto — L1, L2 e L4 — foram corrigidas e travadas
+> por teste. As demais seguem abertas.
 
-**L2 — A recusa não é anunciada a quem não vê (alta).** A recusa das declarações aparece no topo,
-mas o elemento não tem `tabindex`, não recebe foco e não tem `aria-live` — medido:
-`{focado: false, aria_live: null, activeElement: "BODY"}`. As caixas recusadas também não recebem
-`aria-invalid`. Para leitor de tela, o envio simplesmente não acontece e nada é dito. SC-UX-005 fala
-em alcançar "o motivo de cada recusa"; alcançar por rolagem não é o mesmo que ser avisado.
-**Correção:** foco programático no resumo, `aria-invalid` nos campos e links do resumo para eles.
+**L1 — O comprovante não era levável (alta). Corrigido.** A tela final oferecia apenas `Voltar à
+seleção`: nenhum `Imprimir / salvar em PDF`, nenhuma frase dizendo como reencontrar o protocolo.
+Quem fechava a aba ficava com a sensação de ter perdido o comprovante.
+
+A página já era imprimível — `@media print` na base tira cabeçalho e ações. O que faltava era o
+caminho: num celular, "imprimir ou salvar em PDF" está atrás do menu do navegador, e quem acabou de
+se inscrever não vai procurá-lo. Agora há o botão, a orientação de guardar o protocolo e a frase
+que diz como voltar (`identifique-se com o mesmo CPF`). O botão nasce `hidden` e só aparece quando
+o script carrega: sem JavaScript não fica botão morto na tela. Travado por
+`test_o_comprovante_pode_ser_impresso_e_reencontrado`.
+
+**O que continua faltando:** a cópia por e-mail, que depende de serviço de envio ainda inexistente
+no projeto.
+
+**L2 — A recusa não era anunciada a quem não vê (alta). Corrigido.** A recusa das declarações
+aparecia no topo, mas o elemento não recebia foco — medido:
+`{focado: false, aria_live: null, activeElement: "BODY"}`. `role=alert` anuncia o que **muda** numa
+página já carregada, não o que já veio no HTML da resposta; para leitor de tela o envio
+simplesmente não acontecia e nada era dito.
+
+Agora o resumo recebe o foco por script, lista **apenas** a declaração que falta com link para ela,
+e a caixa faltante ganha `aria-invalid`. Verificado no navegador:
+`{foco_no_alerta: true, ciencia_invalida: "true", veracidade_invalida: null,
+links: ["#ciencia → Declaração de ciência do Edital"]}`.
+
+No caminho apareceu um segundo defeito, do mesmo ponto: **a recusa apagava a declaração já
+marcada** — quem marcava uma das duas reencontrava as duas em branco, contra SC-UX-007. As duas
+correções estão travadas por `test_a_recusa_das_declaracoes_recebe_o_foco_e_aponta_o_que_falta` e
+`test_a_recusa_nao_apaga_a_declaracao_ja_marcada`.
 
 **L3 — Nenhum indicador de etapa (média).** O candidato nunca sabe em que ponto está nem quanto
 falta. Identificação → dados → documentos → revisão → comprovante são cinco momentos sem nome. Um
 indicador de três passos reduz abandono num público que se inscreve uma vez na vida.
 
-**L4 — O CTA dominante da página é o PDF (média).** Na tela da seleção, `Ler o Edital completo
-(PDF)` usa o mesmo verde sólido (`rgb(21,128,61)`) dos botões de inscrição e é o **único** botão
-visível na primeira dobra — o de inscrever-se está a 795 px. Quem chega pelo celular vê como ação
-principal "baixar um PDF de cem páginas". É o inverso do que a página quer.
-**Correção:** ação secundária em estilo secundário; e uma chamada de inscrição na dobra.
+**L4 — O CTA dominante da página era o PDF (média). Corrigido.** Na tela da seleção, `Ler o Edital
+completo (PDF)` usava o mesmo verde sólido (`rgb(21,128,61)`) dos botões de inscrição e era o
+**único** botão preenchido na primeira dobra — o de inscrever-se está a 795 px. Quem chegava pelo
+celular via como ação principal "baixar um PDF de cem páginas".
+
+Agora é ação secundária de verdade: contorno verde sobre fundo branco (`rgb(255,255,255)` com borda
+e texto em `rgb(20,108,55)`), e o único elemento preenchido da página passa a ser a inscrição.
+Travado por `test_ler_o_edital_nao_disputa_a_decisao_com_inscrever_se`.
+
+**O que continua faltando:** a chamada de inscrição ainda começa fora da dobra em 375 px. Trazê-la
+para cima exigiria decidir o que fazer quando o Edital tem vários Perfis — é decisão de produto, não
+de estilo.
 
 **L5 — A recusa de imagem não diz como converter (média).** A mensagem é boa: nomeia o formato,
 explica a causa e diz o que fazer. Falta o **como** para quem não sabe — em iPhone, `Compartilhar →

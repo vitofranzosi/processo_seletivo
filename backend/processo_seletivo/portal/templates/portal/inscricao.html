@@ -14,7 +14,11 @@ voltar à página anterior para lembrar.
   fechar esta página e continuar depois.</p>{% endif %}
 <p class="ajuda">Seus dados e arquivos ficam guardados enquanto as inscrições estiverem abertas.
   Você pode sair e voltar quantas vezes precisar.</p>
-{% if erros %}<div class="erro" role="alert">{% for erro in erros %}<p>{{ erro }}</p>{% endfor %}</div>{% endif %}
+{% comment %}
+Recebe o foco depois de uma recusa (L2 da auditoria): quem acionou o botão estava no fim da página,
+e `role=alert` sozinho não anuncia o que já veio no HTML da resposta.
+{% endcomment %}
+{% if erros %}<div class="erro" role="alert" tabindex="-1" data-recusa>{% for erro in erros %}<p>{{ erro }}</p>{% endfor %}</div>{% endif %}
 
 <form method="post" id="dados-da-inscricao">
   {% csrf_token %}
@@ -90,4 +94,5 @@ de enviar arquivo nenhum — quem obedecia à página era recusado por ela.
 <button type="submit" form="dados-da-inscricao" class="principal">Revisar inscrição</button>
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
 <script src="{% static 'portal/envio.js' %}" defer></script>
+<script src="{% static 'portal/recusa.js' %}" defer></script>
 {% endblock %}

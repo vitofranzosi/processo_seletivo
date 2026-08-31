@@ -5,7 +5,22 @@
 <p class="sub">{{ selecao.processo_titulo }} · Edital {{ selecao.numero }}/{{ selecao.ano }}</p>
 
 {% if erros %}
-<div class="erro" role="alert">{% for erro in erros %}<p>{{ erro }}</p>{% endfor %}</div>
+{% comment %}
+`tabindex=-1` e o foco por script (L2 da auditoria): quem acionou o botão estava no fim da página,
+e sem mover o foco a recusa não é anunciada a quem usa leitor de tela. Os links levam à declaração
+que falta — um resumo que só descreve o erro obriga a procurá-lo.
+{% endcomment %}
+<div class="erro" role="alert" tabindex="-1" data-recusa>
+  {% for erro in erros %}<p>{{ erro }}</p>{% endfor %}
+  {% if not declaracoes.veracidade or not declaracoes.ciencia %}
+  <ul>
+    {% if not declaracoes.veracidade %}<li><a href="#veracidade">Declaração de veracidade das
+      informações</a></li>{% endif %}
+    {% if not declaracoes.ciencia %}<li><a href="#ciencia">Declaração de ciência do Edital</a></li>
+    {% endif %}
+  </ul>
+  {% endif %}
+</div>
 {% endif %}
 
 {% if retificado %}
@@ -90,11 +105,15 @@ pedi-la sobre o que a pessoa não viu. Seus dados e arquivos continuam onde esta
     pessoa aprende a ignorar — e é justamente o aceite que precisa significar alguma coisa.
     {% endcomment %}
     <p class="papel">
-      <input type="checkbox" id="veracidade" name="veracidade" required aria-required="true">
+      <input type="checkbox" id="veracidade" name="veracidade" required aria-required="true"
+             {% if declaracoes.veracidade %}checked{% endif %}
+             {% if erros and not declaracoes.veracidade %}aria-invalid="true"{% endif %}>
       <label for="veracidade">Declaro serem verdadeiras as informações prestadas.</label>
     </p>
     <p class="papel">
-      <input type="checkbox" id="ciencia" name="ciencia" required aria-required="true">
+      <input type="checkbox" id="ciencia" name="ciencia" required aria-required="true"
+             {% if declaracoes.ciencia %}checked{% endif %}
+             {% if erros and not declaracoes.ciencia %}aria-invalid="true"{% endif %}>
       <label for="ciencia">Declaro ter lido e estar de acordo com o Edital e os atos vigentes.</label>
     </p>
   </section>
@@ -102,4 +121,5 @@ pedi-la sobre o que a pessoa não viu. Seus dados e arquivos continuam onde esta
   <p class="ajuda">Depois de enviada, a inscrição não pode ser alterada.</p>
 </form>
 {% endif %}
+{% load static %}<script src="{% static 'portal/recusa.js' %}" defer></script>
 {% endblock %}
