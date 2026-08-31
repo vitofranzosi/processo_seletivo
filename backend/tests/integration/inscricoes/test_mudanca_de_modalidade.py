@@ -33,7 +33,8 @@ def test_a_mudanca_que_nao_descarta_nada_nao_pede_confirmacao(client, inscricao_
         reverse("portal:inscricao", args=[inscricao_de_maria.id]), {"modalidade": MODALIDADE_PPP}
     )
 
-    assert "Seus dados estão guardados" in resposta.content.decode()
+    assert resposta.status_code == 302, "avançar leva à revisão, sem parada de confirmação"
+    assert reverse("portal:revisao", args=[inscricao_de_maria.id]) in resposta["Location"]
     assert DocumentoSubmetido.objects.count() == 1, "o documento de todos continua exigido"
 
 

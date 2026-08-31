@@ -93,6 +93,12 @@ button.principal{padding:.75rem 1.25rem;border:0;border-radius:4px;background:va
   width:100%;max-width:32rem}
 button.principal:hover{background:var(--verde-escuro)}
 form.convite{margin:.75rem 0 0}
+/* O comprovante é impresso: fora o conteúdo, nada mais precisa ir para o papel. */
+@media print{
+  header.topo, .nao-imprime, .pular{display:none}
+  main{max-width:none;padding:0}
+  a{text-decoration:none;color:var(--texto)}
+}
 @media (min-width:600px){
   main{padding:1.5rem}
   h1{font-size:1.6rem}

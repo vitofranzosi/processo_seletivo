@@ -185,15 +185,11 @@ def gravar_dados(*, identidade, inscricao, dados, descartes_confirmados=(), corr
             Inscricao.objects,
             pk=travada.pk,
             expected_revision=travada.revision,
-            nome=dados.get("nome", ""),
-            cpf=dados.get("cpf", ""),
-            cpf_normalizado=normalizar_cpf(dados.get("cpf", "")),
-            email=dados.get("email", ""),
-            telefone=dados.get("telefone", ""),
             modality_id=modalidade,
             # Confirmar os dados é reconhecer a versão que está na tela (FR-059a): o aviso de
             # Retificação passa a comparar com esta, e não volta a aparecer pela mesma alteração.
             versao_reconhecida=versao,
+            **_campos_informados(dados),
         )
         travada.refresh_from_db()
         record_event(
@@ -207,6 +203,22 @@ def gravar_dados(*, identidade, inscricao, dados, descartes_confirmados=(), corr
         for caminho in caminhos:
             _apagar_depois_do_commit(caminho)
         return travada
+
+
+def _campos_informados(dados) -> dict:
+    """Só o que veio é gravado.
+
+    Sobrescrever o que não foi informado é o defeito silencioso desta camada: uma chamada que só
+    muda a modalidade apagaria nome, CPF e e-mail, e a tela seguinte mostraria os campos vazios
+    sem que nada tivesse falhado.
+    """
+    campos = {}
+    for chave in ("nome", "cpf", "email", "telefone"):
+        if chave in dados:
+            campos[chave] = dados[chave] or ""
+    if "cpf" in dados:
+        campos["cpf_normalizado"] = normalizar_cpf(dados["cpf"] or "")
+    return campos
 
 
 def _documentos_inaplicaveis(conteudo, inscricao, modalidade_nova) -> list[str]:

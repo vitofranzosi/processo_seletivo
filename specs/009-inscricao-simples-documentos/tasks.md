@@ -235,25 +235,25 @@ produzir a segunda; retificar o Edital com rascunho aberto e ver o aviso — uma
 
 ### Tests for User Story 5
 
-- [ ] T083 [P] [US5] Teste em `backend/tests/integration/inscricoes/test_submissao.py` — a revalidação do envio percorre os dez eixos de FR-060: período, Edital publicamente válido, versão, Perfil, modalidade, aplicabilidade dos documentos, obrigatórios presentes, formato e tamanho dos arquivos, unicidade e declarações
-- [ ] T083a [P] [US5] Teste em `backend/tests/integration/inscricoes/test_submissao.py` — estado que se tornou inválido **entre o envio do arquivo e o envio da inscrição** é recusado: Edital que deixou de ser publicamente válido, requisito que deixou de ser aplicável e arquivo cujo registro não corresponde mais ao que o conteúdo vigente exige
-- [ ] T084 [P] [US5] Teste em `backend/tests/integration/inscricoes/test_submissao.py` — o mesmo envio repetido produz uma única Inscrição enviada
-- [ ] T085 [P] [US5] Teste de unidade em `backend/tests/unit/inscricoes/test_protocolo.py` — formato, alfabeto sem caracteres ambíguos, e unicidade sob colisão forçada
-- [ ] T086 [P] [US5] Teste em `backend/tests/integration/inscricoes/test_versao_reconhecida.py` — Retificação vigente avisa e exige confirmação; confirmada, não avisa de novo; nova versão volta a avisar
-- [ ] T086a [P] [US5] Teste em `backend/tests/integration/inscricoes/test_versao_reconhecida.py` — a Retificação **preserva** dados e arquivos ainda aplicáveis e **confirma** o descarte dos que deixaram de ser exigidos, pela mesma regra de FR-031; nada some em silêncio e nada é reaproveitado em silêncio
-- [ ] T087 [P] [US5] Teste em `backend/tests/integration/inscricoes/test_imutabilidade.py` — enviada, a Inscrição e seus arquivos não mudam
-- [ ] T088 [P] [US5] Teste de aceitação em `backend/tests/acceptance/test_jornada_do_candidato.py` — o percurso do `SC-017`, com dois atores
+- [X] T083 [P] [US5] Teste em `backend/tests/integration/inscricoes/test_submissao.py` — a revalidação do envio percorre os dez eixos de FR-060: período, Edital publicamente válido, versão, Perfil, modalidade, aplicabilidade dos documentos, obrigatórios presentes, formato e tamanho dos arquivos, unicidade e declarações
+- [X] T083a [P] [US5] Teste em `backend/tests/integration/inscricoes/test_submissao.py` — estado que se tornou inválido **entre o envio do arquivo e o envio da inscrição** é recusado: Edital que deixou de ser publicamente válido, requisito que deixou de ser aplicável e arquivo cujo registro não corresponde mais ao que o conteúdo vigente exige
+- [X] T084 [P] [US5] Teste em `backend/tests/integration/inscricoes/test_submissao.py` — o mesmo envio repetido produz uma única Inscrição enviada
+- [X] T085 [P] [US5] Teste de unidade em `backend/tests/unit/inscricoes/test_protocolo.py` — formato, alfabeto sem caracteres ambíguos, e unicidade sob colisão forçada
+- [X] T086 [P] [US5] Teste em `backend/tests/integration/inscricoes/test_versao_reconhecida.py` — Retificação vigente avisa e exige confirmação; confirmada, não avisa de novo; nova versão volta a avisar
+- [X] T086a [P] [US5] Teste em `backend/tests/integration/inscricoes/test_versao_reconhecida.py` — a Retificação **preserva** dados e arquivos ainda aplicáveis e **confirma** o descarte dos que deixaram de ser exigidos, pela mesma regra de FR-031; nada some em silêncio e nada é reaproveitado em silêncio
+- [X] T087 [P] [US5] Teste em `backend/tests/integration/inscricoes/test_imutabilidade.py` — enviada, a Inscrição e seus arquivos não mudam
+- [X] T088 [P] [US5] Teste de aceitação em `backend/tests/acceptance/test_jornada_do_candidato.py` — o percurso do `SC-017`, com dois atores
 
 ### Implementation for User Story 5
 
-- [ ] T089 [P] [US5] `backend/processo_seletivo/inscricoes/domain/protocolo.py`
-- [ ] T090 [US5] `backend/processo_seletivo/inscricoes/application/submissao.py` — revalidação integral, idempotência por `reserve()`, `compare_and_swap`, protocolo, versão aceita e declarações
-- [ ] T091 [US5] Versão reconhecida atualizada a cada confirmação, em `application/rascunho.py`
-- [ ] T092 [US5] View e template da revisão, com `Editar` por bloco, em `portal/views.py` e `templates/portal/revisao.html`
-- [ ] T093 [US5] Aviso de Edital atualizado, com preservação do que continua aplicável, em `templates/portal/revisao.html`
-- [ ] T094 [US5] Envio e comprovante imprimível em `portal/views.py` e `templates/portal/comprovante.html`, com `no-store`
-- [ ] T095 [US5] Auditoria do envio em `backend/processo_seletivo/inscricoes/application/submissao.py` — Inscrição, Edital e versão, Perfil e instante, sem CPF completo
-- [ ] T096 [US5] Percorrer a entrega 5 do [quickstart.md](./quickstart.md)
+- [X] T089 [P] [US5] `backend/processo_seletivo/inscricoes/domain/protocolo.py`
+- [X] T090 [US5] `backend/processo_seletivo/inscricoes/application/submissao.py` — revalidação integral, idempotência por `reserve()`, `compare_and_swap`, protocolo, versão aceita e declarações
+- [X] T091 [US5] Versão reconhecida atualizada a cada confirmação, em `application/rascunho.py`
+- [X] T092 [US5] View e template da revisão, com `Editar` por bloco, em `portal/views.py` e `templates/portal/revisao.html`
+- [X] T093 [US5] Aviso de Edital atualizado, com preservação do que continua aplicável, em `templates/portal/revisao.html`
+- [X] T094 [US5] Envio e comprovante imprimível em `portal/views.py` e `templates/portal/comprovante.html`, com `no-store`
+- [X] T095 [US5] Auditoria do envio em `backend/processo_seletivo/inscricoes/application/submissao.py` — Inscrição, Edital e versão, Perfil e instante, sem CPF completo
+- [X] T096 [US5] Percorrer a entrega 5 do [quickstart.md](./quickstart.md)
 
 **Checkpoint**: a inscrição produz efeito administrativo, uma vez só, sob versão conhecida.
 
@@ -265,8 +265,8 @@ produzir a segunda; retificar o Edital com rascunho aberto e ver o aviso — uma
 
 **Independent Test**: enviar, sair, voltar identificado à seleção e alcançar o comprovante.
 
-- [ ] T097 [P] [US7] Teste em `backend/tests/integration/portal/test_retorno.py` — enviada oferece o comprovante; rascunho com período encerrado abre só para consulta
-- [ ] T098 [US7] Estado do candidato no detalhe da seleção — `Continuar inscrição`, `Ver comprovante` ou nada — em `portal/views.py` e `templates/portal/selecao.html`
+- [X] T097 [P] [US7] Teste em `backend/tests/integration/portal/test_retorno.py` — enviada oferece o comprovante; rascunho com período encerrado abre só para consulta
+- [X] T098 [US7] Estado do candidato no detalhe da seleção — `Continuar inscrição`, `Ver comprovante` ou nada — em `portal/views.py` e `templates/portal/selecao.html`
 
 **Checkpoint**: o candidato reencontra o que fez, sem portal do candidato.
 

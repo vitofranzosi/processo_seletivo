@@ -11,6 +11,8 @@ voltar à página anterior para lembrar.
 
 {% if guardado %}<p class="situacao aberto" role="status">Seus dados estão guardados. Você pode
   fechar esta página e continuar depois.</p>{% endif %}
+<p class="ajuda">Seus dados e arquivos ficam guardados enquanto as inscrições estiverem abertas.
+  Você pode sair e voltar quantas vezes precisar.</p>
 {% if erros %}<div class="erro" role="alert">{% for erro in erros %}<p>{{ erro }}</p>{% endfor %}</div>{% endif %}
 
 <form method="post">
@@ -69,11 +71,10 @@ voltar à página anterior para lembrar.
   {% endif %}
 
   {% comment %}
-  Uma ação principal, e nenhum `Salvar` (P-005, FR-081): avançar é o que guarda. Na entrega 5 este
-  botão passa a levar à revisão, que é o destino que ainda não existe — e por isso ele ainda não
-  se chama `Revisar inscrição`.
+  Uma ação principal, e nenhum `Salvar` (P-005, FR-081): avançar é o que guarda. Agora que a
+  revisão existe, o botão diz para onde leva.
   {% endcomment %}
-  <button type="submit" class="principal">Continuar</button>
+  <button type="submit" class="principal">Revisar inscrição</button>
 </form>
 
 {% comment %}

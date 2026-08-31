@@ -28,7 +28,10 @@
       <dd>{{ perfil.modalidades|join:"; " }}</dd>
       {% endif %}
     </dl>
-    {% if perfil.inscricao_id %}
+    {% if perfil.enviada %}
+    <p class="convite"><span class="situacao aberto">✓ Inscrição enviada</span>
+      <a class="documento" href="{% url 'portal:comprovante' perfil.inscricao_id %}">Ver comprovante</a></p>
+    {% elif perfil.inscricao_id %}
     <p class="convite"><a class="documento" href="{% url 'portal:inscricao' perfil.inscricao_id %}">Continuar inscrição</a></p>
     {% elif recebe_inscricoes %}
     <form class="convite" method="post" action="{% url 'portal:inscrever' edital_id perfil.id %}">

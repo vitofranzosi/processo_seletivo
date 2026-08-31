@@ -1,0 +1,34 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Inscrição realizada{% endblock %}
+{% block conteudo %}
+<p class="situacao aberto" role="status">✓ Inscrição realizada</p>
+<h1>Protocolo {{ inscricao.protocolo }}</h1>
+
+{% comment %}
+Tudo o que a pessoa precisa provar que se inscreveu, numa página que o navegador imprime — não há
+PDF a gerar (FR-063). O comprovante não é ato normativo: é a prova de que a inscrição chegou.
+{% endcomment %}
+<dl class="dados">
+  <dt>Processo</dt><dd>{{ selecao.processo_titulo }} ({{ selecao.processo_codigo }})</dd>
+  <dt>Edital</dt><dd>{{ selecao.numero }}/{{ selecao.ano }}</dd>
+  <dt>Perfil</dt><dd>{{ perfil.nome }}</dd>
+  {% if modalidade %}<dt>Concorrência</dt><dd>{{ modalidade }}</dd>{% endif %}
+  <dt>Candidato</dt><dd>{{ inscricao.nome }}</dd>
+  <dt>CPF</dt><dd>{{ inscricao.cpf }}</dd>
+  <dt>Enviada em</dt><dd>{{ inscricao.submitted_at|date:"d/m/Y" }} às {{ inscricao.submitted_at|date:"H\hi" }}</dd>
+</dl>
+
+<h2>Documentos apresentados</h2>
+<ul class="requisitos-lista">
+  {% for linha in documentos.linhas %}
+  {% if linha.enviado %}
+  <li class="requisito completo">
+    <p class="nome"><span class="marca" aria-hidden="true">✓</span> {{ linha.nome }}</p>
+    <p class="arquivo">{{ linha.enviado.nome_original }}</p>
+  </li>
+  {% endif %}
+  {% endfor %}
+</ul>
+
+<p class="nao-imprime"><a href="{% url 'portal:selecao' inscricao.edital_id %}">Voltar à seleção</a></p>
+{% endblock %}

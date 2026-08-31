@@ -250,7 +250,7 @@ def test_telefone_gigante_e_aparado_em_vez_de_estourar(
         reverse("portal:inscricao", args=[inscricao.id]), {"telefone": "9" * 200}
     )
 
-    assert resposta.status_code == 200
+    assert resposta.status_code == 302, "aparado e gravado, seguindo para a revisão"
     inscricao.refresh_from_db()
     assert len(inscricao.telefone) <= 30
 

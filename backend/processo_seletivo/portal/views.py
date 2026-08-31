@@ -25,6 +25,12 @@ from processo_seletivo.inscricoes.application.rascunho import (
     remover_documento,
     requisitos_da_inscricao,
 )
+from processo_seletivo.inscricoes.application.submissao import (
+    edital_foi_retificado,
+    enviar_inscricao,
+    pendencias_para_enviar,
+    reconhecer_versao,
+)
 from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes, recebe_inscricoes
 from processo_seletivo.inscricoes.domain.titularidade import exigir_titularidade
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
@@ -153,9 +159,11 @@ def _perfil_da_vitrine(perfil, iniciadas):
     return {
         **_perfil(perfil),
         "id": str(perfil.get("id")),
-        # O convite muda de texto conforme já exista rascunho: `Continuar inscrição` para quem
-        # voltou, `Inscrever-se nesta vaga` para quem chega (FR-016, FR-029).
+        # O convite muda de texto conforme o estado: `Inscrever-se nesta vaga` para quem chega,
+        # `Continuar inscrição` para quem voltou, `Ver comprovante` para quem já enviou (FR-016,
+        # FR-029, FR-065). Três estados numa linha, e nenhum portal do candidato.
         "inscricao_id": None if registro is None else registro.id,
+        "enviada": registro is not None and registro.status == Inscricao.Status.SUBMETIDA,
     }
 
 
@@ -318,7 +326,7 @@ def inscricao(request, inscricao_id):
                 },
                 correlation_id=getattr(request, "correlation_id", ""),
             )
-            guardado = True
+            return redirect(reverse("portal:revisao", args=[registro.id]))
         except DomainError as exc:
             erros.append(exc.detail)
     return render(
@@ -493,3 +501,101 @@ def _bloco_de_documentos(request, inscricao, versao, *, erro="", requisito=""):
         },
     )
     return marcar_como_privada(resposta)
+
+
+@require_http_methods(["GET", "POST"])
+@resposta_privada
+def revisao(request, inscricao_id):
+    """A segunda e última tela antes do envio (US5, FR-055 a FR-057).
+
+    Resumo legível, com `Editar` em cada bloco — e voltar não apaga nada, porque não há nada a
+    perder: os dados já foram gravados na passagem para cá e os arquivos persistiram no envio de
+    cada um.
+
+    O aviso de Retificação aparece **aqui**, antes das declarações: confirmar que leu o Edital
+    atualizado é parte do ato, e mostrá-lo depois seria pedir concordância com o que ela não viu.
+    """
+    registro, identidade, versao = _inscricao_do_titular(request, inscricao_id)
+    if registro.status == Inscricao.Status.SUBMETIDA:
+        return redirect(reverse("portal:comprovante", args=[registro.id]))
+    conteudo = versao.content
+    retificado = edital_foi_retificado(registro, versao)
+    erros = []
+    if request.method == "POST":
+        if request.POST.get("reconhecer_versao"):
+            registro = reconhecer_versao(inscricao=registro, versao=versao)
+            retificado = False
+        else:
+            try:
+                registro = enviar_inscricao(
+                    identidade=identidade,
+                    inscricao=registro,
+                    declaracoes={
+                        "veracidade": bool(request.POST.get("veracidade")),
+                        "ciencia": bool(request.POST.get("ciencia")),
+                    },
+                    # A chave é da Inscrição e da revisão dela: o mesmo botão apertado duas vezes
+                    # reserva a mesma chave, e a segunda tentativa devolve o mesmo resultado.
+                    idempotency_key=f"envio-{registro.id}-{registro.revision}",
+                    correlation_id=getattr(request, "correlation_id", ""),
+                )
+                return redirect(reverse("portal:comprovante", args=[registro.id]))
+            except DomainError as exc:
+                erros.append(exc.detail)
+                registro.refresh_from_db()
+                retificado = edital_foi_retificado(registro, versao)
+    return render(
+        request,
+        "portal/revisao.html",
+        {
+            "inscricao": registro,
+            "selecao": _selecao(versao),
+            "perfil": _perfil_legivel(_perfil_do_conteudo(conteudo, registro.profile_id)),
+            "modalidade": _modalidade_da_inscricao(conteudo, registro),
+            "identidade": identidade,
+            "documentos": _documentos(conteudo, registro),
+            "pendencias": pendencias_para_enviar(conteudo, registro),
+            "retificado": retificado,
+            "erros": erros,
+        },
+    )
+
+
+@require_http_methods(["GET"])
+@resposta_privada
+def comprovante(request, inscricao_id):
+    """O que a pessoa leva embora (FR-063).
+
+    Imprimível pelo navegador, e não PDF gerado: o comprovante não é ato normativo — é a prova de
+    que a inscrição chegou, e o navegador já sabe imprimir uma página.
+    """
+    registro, identidade, versao = _inscricao_do_titular(request, inscricao_id)
+    if registro.status != Inscricao.Status.SUBMETIDA:
+        return redirect(reverse("portal:inscricao", args=[registro.id]))
+    conteudo = versao.content
+    return render(
+        request,
+        "portal/comprovante.html",
+        {
+            "inscricao": registro,
+            "selecao": _selecao(versao),
+            "perfil": _perfil_legivel(_perfil_do_conteudo(conteudo, registro.profile_id)),
+            "modalidade": _modalidade_da_inscricao(conteudo, registro),
+            "identidade": identidade,
+            "documentos": _documentos(conteudo, registro),
+        },
+    )
+
+
+def _modalidade_da_inscricao(conteudo, inscricao):
+    if inscricao.modality_id is None:
+        return ""
+    perfil = _perfil_do_conteudo(conteudo, inscricao.profile_id)
+    return next(
+        (
+            modalidade.get("name", "")
+            for modalidade in perfil.get("competitionModalities") or []
+            if str(modalidade.get("id")) == str(inscricao.modality_id)
+        ),
+        "",
+    )

@@ -105,10 +105,11 @@ def test_perfil_sem_modalidade_declarada_nao_pergunta_nada(
 def test_o_telefone_e_a_modalidade_sao_guardados_sem_botao_salvar(client, selecao_aberta):
     endereco = _abrir(client, selecao_aberta)
 
+    assert "Salvar" not in client.get(endereco).content.decode(), "avançar é o que guarda (P-005)"
+
     resposta = client.post(endereco, {"telefone": "(27) 99999-0000", "modalidade": MODALIDADE_PPP})
 
-    assert resposta.status_code == 200
-    assert "Salvar" not in resposta.content.decode(), "avançar é o que guarda (P-005)"
+    assert resposta.status_code == 302, "e avançar leva à revisão"
     inscricao = Inscricao.objects.get()
     assert inscricao.telefone == "(27) 99999-0000"
     assert str(inscricao.modality_id) == MODALIDADE_PPP
