@@ -56,6 +56,30 @@ def texto_de(pdf: bytes) -> str:
     )
 
 
+DESENHADA = re.compile(
+    rb"BT /(F\d) ([\d.]+) Tf ([\d.]+) [\d.]+ Td \((.*?)\) Tj ET", re.DOTALL
+)
+
+
+def linhas_desenhadas(pdf: bytes) -> list[tuple[str, str, float, float]]:
+    """Cada linha com a fonte, o corpo e o recuo com que foi desenhada.
+
+    `texto_de` responde "o que está escrito"; a `008` também precisa responder "com que forma" —
+    negrito, corpo tipográfico e posição são requisito, não decoração.
+    """
+    from processo_seletivo.publicacoes.infrastructure.pdf import MARGEM
+
+    return [
+        (
+            texto.replace(b"\\(", b"(").replace(b"\\)", b")").decode("cp1252"),
+            fonte.decode(),
+            float(tamanho),
+            float(x) - MARGEM,
+        )
+        for fonte, tamanho, x, texto in DESENHADA.findall(pdf)
+    ]
+
+
 def secoes(edital_id="11111111-1111-1111-1111-111111111111"):
     """As seções do catálogo, como `edital_snapshot` as materializa.
 
@@ -366,8 +390,13 @@ def test_documento_segue_a_ordem_das_secoes_do_conteudo():
 
 
 def test_etapas_aparecem_com_caracter_peso_e_nota_minima():
+    """**Forma da apresentação, atualizada pela `008`/US1**: a Etapa deixou de ter número próprio
+    e passou a ser subseção da seção que a contém (FR-013). O que ela afirma — caráter, peso e
+    nota mínima presentes — é invariante e continua.
+    """
     texto = texto_de(render_edital_pdf(snapshot(), HASH))
-    assert "1. Prova didática" in texto
+    mae = int(re.search(r"^(\d+)\. ETAPAS DE AVALIAÇÃO", texto, re.M).group(1))
+    assert f"{mae}.1 Prova didática" in texto
     assert "eliminatória e classificatória" in texto
     assert "peso: 2" in texto
     assert "nota mínima: 7" in texto
@@ -453,3 +482,143 @@ def test_perfil_com_os_campos_institucionais_os_imprime_preservando_paragrafos()
     assert "Orientar projetos." in texto
     assert "Carga horária: 40 horas semanais" in texto
     assert "Remuneração: R$ 4.200,00 mensais" in texto
+
+
+# ---------------------------------------------------------------------------
+# 008 / US1 — Identidade institucional, hierarquia e numeração normativa
+# ---------------------------------------------------------------------------
+
+
+def test_a_largura_de_texto_usa_metrica_real_e_nao_estimativa():
+    """FR-002: sem largura real não há centralização, coluna nem alinhamento possíveis.
+
+    As larguras conferidas são as métricas das fontes base-14, que são fixas — é a mesma razão
+    pela qual o documento pode declarar Helvetica sem embutir arquivo de fonte. Se a tabela for
+    transcrita errada, é aqui que se vê: `M` é largo, `i` é estreito, e o espaço fica entre os dois.
+    """
+    from processo_seletivo.publicacoes.infrastructure.pdf import NEGRITO, REGULAR, largura
+
+    assert largura("M", 1000, REGULAR) == 833
+    assert largura("i", 1000, REGULAR) == 222
+    assert largura(" ", 1000, REGULAR) == 278
+    assert largura("M", 1000, NEGRITO) == 833
+
+    # Acentuação não muda o avanço: em Helvetica o glifo composto tem a largura da base. É o que
+    # permite medir português sem uma tabela paralela — e o que uma estimativa por caractere
+    # também acertaria por acaso, mas pelas razões erradas.
+    assert largura("a", 1000, REGULAR) == largura("á", 1000, REGULAR)
+    assert largura("c", 1000, REGULAR) == largura("ç", 1000, REGULAR)
+
+    # A propriedade que interessa ao documento: proporcionalidade ao corpo tipográfico.
+    assert largura("Edital", 20, REGULAR) == 2 * largura("Edital", 10, REGULAR)
+
+
+def test_nenhuma_linha_do_documento_ultrapassa_a_margem():
+    """FR-002 e FR-029: a linha mais larga do cenário-base cabe na área útil.
+
+    A estimativa anterior — contar caracteres e multiplicar por um fator médio — errava por
+    excesso em texto com muitas letras largas. Este teste é o que torna o erro visível.
+    """
+    from processo_seletivo.publicacoes.infrastructure.pdf import (
+        LARGURA,
+        MARGEM,
+        largura,
+    )
+
+    util = LARGURA - 2 * MARGEM
+    for pdf in (render_edital_pdf(snapshot(), HASH), render_edital_pdf(dois_perfis(), HASH)):
+        for linha, fonte, tamanho, recuo in linhas_desenhadas(pdf):
+            assert largura(linha, tamanho, fonte) + recuo <= util + 0.5, linha
+
+
+def test_a_primeira_pagina_identifica_a_instituicao_o_ato_e_o_objeto():
+    """FR-005 a FR-007, calibrados contra os Editais 62 e 73 do Cefor.
+
+    Nos dois alvos a hierarquia vem da **forma** — negrito, caixa alta, centralização — e não do
+    tamanho: o ato está em corpo próximo ao do texto. Exigir "o maior corpo da página" produziria
+    um título fora do padrão institucional.
+    """
+    texto = texto_de(render_edital_pdf(snapshot(), HASH))
+    linhas = [linha for linha, _, _, _ in linhas_desenhadas(render_edital_pdf(snapshot(), HASH))]
+
+    assert "MINISTÉRIO DA EDUCAÇÃO" in texto
+    assert "INSTITUTO FEDERAL DO ESPÍRITO SANTO" in texto
+    assert "EDITAL Nº 07/2026" in texto
+
+    # A ordem: identificação institucional antes do ato, ato antes de qualquer conteúdo normativo.
+    ministerio = linhas.index("MINISTÉRIO DA EDUCAÇÃO")
+    ato = linhas.index("EDITAL Nº 07/2026")
+    primeira_secao = next(i for i, linha in enumerate(linhas) if linha.startswith("1. "))
+    assert ministerio < ato < primeira_secao
+
+    # O ato é negrito e caixa alta; a identificação institucional é menor que o corpo do texto.
+    assert any(
+        linha == "EDITAL Nº 07/2026" and fonte == "F2"
+        for linha, fonte, _, _ in linhas_desenhadas(render_edital_pdf(snapshot(), HASH))
+    )
+    corpo = next(
+        tamanho
+        for linha, _, tamanho, _ in linhas_desenhadas(render_edital_pdf(snapshot(), HASH))
+        if linha.startswith("O Instituto Federal")
+    )
+    institucional = next(
+        tamanho
+        for linha, _, tamanho, _ in linhas_desenhadas(render_edital_pdf(snapshot(), HASH))
+        if linha == "MINISTÉRIO DA EDUCAÇÃO"
+    )
+    assert institucional < corpo
+
+
+def test_as_secoes_normativas_sao_numeradas_em_sequencia_continua():
+    """FR-010 e FR-011: a numeração é atribuída **depois** da filtragem.
+
+    O cenário-base tem todas as seções e não revelaria o defeito. O cenário sem Etapas revela: a
+    seção gerada não é materializada, e numerar durante a iteração produziria `5.`, `7.`, `8.` —
+    no primeiro Edital real que não tivesse tudo preenchido.
+    """
+    import re as _re
+
+    from processo_seletivo.publicacoes.infrastructure.pdf import CORPO_SECAO
+
+    for conteudo in (snapshot(), sem_etapas()):
+        # Título de seção tem forma própria — negrito, no corpo da seção. Casar só pelo texto
+        # apanharia o Cronograma, cujos Eventos também abrem com número e caixa alta.
+        numeros = [
+            int(_re.match(r"(\d+)\. ", linha).group(1))
+            for linha, fonte, tamanho, _ in linhas_desenhadas(render_edital_pdf(conteudo, HASH))
+            if fonte == "F2" and tamanho == CORPO_SECAO and _re.match(r"\d+\. ", linha)
+        ]
+        assert numeros == list(range(1, len(numeros) + 1)), numeros
+        assert len(numeros) >= 9
+
+    assert "ETAPAS DE AVALIAÇÃO" not in texto_de(render_edital_pdf(sem_etapas(), HASH))
+
+
+def test_as_subsecoes_derivam_do_numero_da_secao_mae_ja_resolvido():
+    """FR-013: `6.1`, `6.2` — e acompanham quando a seção-mãe muda de número.
+
+    A Etapa não tem número próprio: ela tem posição dentro de uma seção cuja numeração só existe
+    depois da filtragem. Fixar `6.` seria repetir, uma camada abaixo, o defeito que FR-011 corrige.
+    """
+    import re as _re
+
+    texto = texto_de(render_edital_pdf(snapshot(), HASH))
+    mae = int(_re.search(r"^(\d+)\. ETAPAS DE AVALIAÇÃO", texto, _re.M).group(1))
+    assert f"{mae}.1 Prova didática" in texto
+
+    # Suprimir uma seção anterior desloca a seção-mãe, e a subseção acompanha.
+    sem_perfis = snapshot(profiles=[])
+    outro = texto_de(render_edital_pdf(sem_perfis, HASH))
+    nova_mae = int(_re.search(r"^(\d+)\. ETAPAS DE AVALIAÇÃO", outro, _re.M).group(1))
+    assert nova_mae == mae - 1
+    assert f"{nova_mae}.1 Prova didática" in outro
+
+
+def test_a_numeracao_nao_e_persistida_no_texto_da_secao():
+    """FR-012: o número é da materialização, não do conteúdo homologado."""
+    from processo_seletivo.editais.domain import secoes as catalogo
+
+    for secao in catalogo.CATALOGO:
+        if not secao.gerada:
+            assert not secao.default_text.lstrip().startswith(("1.", "2.", "3.", "4.", "5."))
+        assert not secao.title[0].isdigit()

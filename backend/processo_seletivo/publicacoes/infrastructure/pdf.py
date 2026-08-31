@@ -22,10 +22,80 @@ LARGURA, ALTURA = 595, 842  # A4 em pontos
 MARGEM = 56
 TOPO = ALTURA - 64
 RODAPE = 56
-# Helvetica tem largura média próxima de 0,5em; 0,52 evita estourar a margem.
-FATOR_LARGURA = 0.52
 
 REGULAR, NEGRITO = "F1", "F2"
+
+# Larguras em milésimos de em, para ASCII 32 a 126, na ordem do código (`008`, D-001).
+#
+# São as métricas das fontes base-14, que são fixas e não dependem de instalação — a mesma razão
+# pela qual o documento pode declarar Helvetica sem embutir arquivo de fonte. Antes desta feature a
+# quebra contava **caracteres** e multiplicava por um fator médio de 0,52: conservador o bastante
+# para refluir parágrafo, e inservível para centralizar um cabeçalho ou alinhar uma coluna.
+_ASCII_REGULAR = (
+    278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278,
+    556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278, 584, 584, 584, 556,
+    1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833, 722, 778,
+    667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 278, 278, 278, 469, 556,
+    333, 556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556,
+    556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584,
+)
+_ASCII_NEGRITO = (
+    278, 333, 474, 556, 556, 889, 722, 238, 333, 333, 389, 584, 278, 333, 278, 278,
+    556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 333, 584, 584, 584, 611,
+    975, 722, 722, 722, 722, 667, 611, 778, 722, 278, 556, 722, 611, 833, 722, 778,
+    667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 333, 278, 333, 584, 556,
+    333, 556, 611, 556, 611, 556, 333, 611, 611, 278, 278, 556, 278, 889, 611, 611,
+    611, 611, 389, 556, 333, 611, 556, 778, 556, 556, 500, 389, 280, 389, 584,
+)
+
+# Em Helvetica o glifo acentuado é composto e **tem o avanço da letra-base**. Derivar daí, em vez
+# de transcrever uma segunda tabela, elimina a classe inteira de erro de transcrição — e é o que
+# permite medir português sem tabela paralela.
+_BASE_ACENTUADA = str.maketrans(
+    "ÀÁÂÃÄÅÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝÑÇàáâãäåèéêëìíîïòóôõöùúûüýÿñç",
+    "AAAAAAEEEEIIIIOOOOOUUUUYNCaaaaaaeeeeiiiiooooouuuuyync",
+)
+
+# O punhado de sinais que o documento usa e que não são letras nem ASCII.
+_SINAIS = {
+    "—": (1000, 1000), "–": (556, 556), "·": (278, 278), "•": (350, 350),
+    "§": (556, 556), "°": (400, 400), "º": (365, 330), "ª": (370, 300),
+    "“": (333, 500), "”": (333, 500), "‘": (222, 278), "’": (222, 278),
+}
+
+# Um caractere fora da tabela é medido como o glifo mais largo possível. É deliberadamente
+# conservador: erra fazendo a linha quebrar cedo, nunca fazendo-a estourar a margem — que é o
+# único dos dois erros que aparece no documento impresso.
+_LARGURA_DESCONHECIDA = 1000
+
+
+def largura(texto: str, tamanho: float, fonte: str = REGULAR) -> float:
+    """A largura que `texto` ocupa, em pontos, quando desenhado naquele corpo (FR-002)."""
+    tabela = _ASCII_NEGRITO if fonte == NEGRITO else _ASCII_REGULAR
+    indice = 1 if fonte == NEGRITO else 0
+    total = 0
+    for caractere in str(texto):
+        base = caractere.translate(_BASE_ACENTUADA)
+        codigo = ord(base)
+        if 32 <= codigo <= 126:
+            total += tabela[codigo - 32]
+        elif caractere in _SINAIS:
+            total += _SINAIS[caractere][indice]
+        else:
+            total += _LARGURA_DESCONHECIDA
+    return total * tamanho / 1000
+
+
+# Os níveis tipográficos do documento, e apenas estes (FR-009). Nomeá-los é o que impede que a
+# hierarquia volte a ser um punhado de números literais espalhados pela composição.
+CORPO_INSTITUCIONAL = 9.0
+CORPO_ATO = 14.0
+CORPO_SECAO = 11.5
+CORPO_BLOCO = 10.5
+CORPO_TEXTO = 10.0
+CORPO_NOTA = 8.5
+
+ESQUERDA, CENTRO, DIREITA = "esquerda", "centro", "direita"
 
 # O modo do renderizador (FR-015). Um parâmetro, e não condicionais espalhadas pela composição:
 # a diferença entre o que se revisa e o que se publica precisa ter **um** lugar onde está
@@ -54,13 +124,13 @@ def _texto_pdf(valor: str) -> bytes:
     return escapado.encode("cp1252", "replace")
 
 
-def _quebrar(texto: str, tamanho: float, recuo: float) -> list[str]:
+def _quebrar(texto: str, tamanho: float, recuo: float, fonte: str = REGULAR) -> list[str]:
+    """Reflui por largura real, e não por contagem de caracteres (FR-002, FR-032)."""
     disponivel = LARGURA - 2 * MARGEM - recuo
-    limite = max(int(disponivel / (tamanho * FATOR_LARGURA)), 10)
     linhas, atual = [], ""
     for palavra in str(texto).split():
         candidato = f"{atual} {palavra}".strip()
-        if len(candidato) <= limite:
+        if largura(candidato, tamanho, fonte) <= disponivel:
             atual = candidato
         else:
             if atual:
@@ -99,22 +169,36 @@ def _instante(valor) -> str:
     return momento.strftime("%d/%m/%Y %H:%M")
 
 
+def _x(texto, fonte, tamanho, recuo, alinhamento):
+    """Onde a linha começa. Centralizar e alinhar à direita só é possível por causa de FR-002."""
+    if alinhamento == ESQUERDA:
+        return MARGEM + recuo
+    util = LARGURA - 2 * MARGEM
+    sobra = util - largura(texto, tamanho, fonte)
+    return MARGEM + (sobra / 2 if alinhamento == CENTRO else sobra)
+
+
 class Composicao:
     """Acumula linhas com estilo e recuo; a paginação acontece depois, em uma passada."""
 
     def __init__(self):
-        self.linhas: list[tuple[str, str, float, float, float]] = []
+        self.linhas: list[tuple[str, str, float, float, float, str]] = []
 
-    def escrever(self, texto, *, tamanho=10, fonte=REGULAR, recuo=0.0, antes=0.0):
-        for indice, parte in enumerate(_quebrar(texto, tamanho, recuo)):
-            self.linhas.append((parte, fonte, tamanho, recuo, antes if indice == 0 else 0.0))
+    def escrever(
+        self, texto, *, tamanho=CORPO_TEXTO, fonte=REGULAR, recuo=0.0, antes=0.0,
+        alinhamento=ESQUERDA,
+    ):
+        for indice, parte in enumerate(_quebrar(texto, tamanho, recuo, fonte)):
+            self.linhas.append(
+                (parte, fonte, tamanho, recuo, antes if indice == 0 else 0.0, alinhamento)
+            )
 
     def espaco(self, altura=8.0):
-        self.linhas.append(("", REGULAR, 0.0, 0.0, altura))
+        self.linhas.append(("", REGULAR, 0.0, 0.0, altura, ESQUERDA))
 
     def paginar(self):
         paginas, atual, y = [], [], TOPO
-        for texto, fonte, tamanho, recuo, antes in self.linhas:
+        for texto, fonte, tamanho, recuo, antes, alinhamento in self.linhas:
             altura = tamanho * 1.45 if tamanho else 0.0
             if y - antes - altura < RODAPE + 24 and atual:
                 paginas.append(atual)
@@ -122,23 +206,52 @@ class Composicao:
                 antes = 0.0
             y -= antes + altura
             if texto:
-                atual.append((texto, fonte, tamanho, MARGEM + recuo, y))
+                x = _x(texto, fonte, tamanho, recuo, alinhamento)
+                atual.append((texto, fonte, tamanho, x, y))
         if atual:
             paginas.append(atual)
         return paginas or [[]]
 
 
+# A identificação do órgão é constante do documento, como já era — o que muda é a forma, não a
+# origem (FR-005). O Processo e o objeto vêm do conteúdo publicado, que desde a `007` carrega o
+# código e o título do Processo justamente para que o documento possa nomeá-lo.
+ORGAO = ("MINISTÉRIO DA EDUCAÇÃO", "INSTITUTO FEDERAL DO ESPÍRITO SANTO")
+UNIDADE = "CENTRO DE REFERÊNCIA EM FORMAÇÃO E EM EDUCAÇÃO A DISTÂNCIA"
+
+
 def _cabecalho(composicao, snapshot):
-    composicao.escrever("INSTITUTO FEDERAL DO ESPÍRITO SANTO — CEFOR", tamanho=9, fonte=NEGRITO)
+    """A abertura de um ato administrativo (FR-005 a FR-007).
+
+    Calibrado contra os Editais 62/2026 e 73/2026 do Cefor: a hierarquia vem de **peso, caixa alta
+    e centralização**, não de corpo grande. Nos dois alvos o ato está em corpo próximo ao do texto,
+    e destacar por tamanho produziria um título fora do padrão institucional.
+    """
+    for linha in ORGAO:
+        composicao.escrever(
+            linha, tamanho=CORPO_INSTITUCIONAL, fonte=NEGRITO, alinhamento=CENTRO
+        )
+    composicao.escrever(UNIDADE, tamanho=CORPO_INSTITUCIONAL, alinhamento=CENTRO)
     composicao.escrever(
-        f"EDITAL {snapshot.get('number', '')}/{snapshot.get('year', '')}",
-        tamanho=18,
+        f"EDITAL Nº {snapshot.get('number', '')}/{snapshot.get('year', '')}",
+        tamanho=CORPO_ATO,
         fonte=NEGRITO,
-        antes=10,
+        antes=22,
+        alinhamento=CENTRO,
     )
-    composicao.escrever(snapshot.get("title", ""), tamanho=13, antes=4)
+    if snapshot.get("processoTitle"):
+        composicao.escrever(
+            snapshot["processoTitle"].upper(),
+            tamanho=CORPO_SECAO,
+            fonte=NEGRITO,
+            antes=4,
+            alinhamento=CENTRO,
+        )
+    composicao.escrever(
+        snapshot.get("title", ""), tamanho=CORPO_BLOCO, antes=4, alinhamento=CENTRO
+    )
     if snapshot.get("description"):
-        composicao.escrever(snapshot["description"], tamanho=10, antes=10)
+        composicao.escrever(snapshot["description"], tamanho=CORPO_TEXTO, antes=16)
 
 
 def _modalidades(composicao, perfil):
@@ -167,7 +280,7 @@ def _modalidades(composicao, perfil):
         composicao.escrever("Regra Normativa — " + "; ".join(partes), tamanho=9, recuo=46)
 
 
-def _perfis(composicao, snapshot):
+def _perfis(composicao, snapshot, secao=0):
     for perfil in snapshot.get("profiles") or []:
         composicao.escrever(
             f"{perfil.get('code', '')} — {perfil.get('name', '')}",
@@ -205,7 +318,7 @@ def _perfis(composicao, snapshot):
         _modalidades(composicao, perfil)
 
 
-def _cronograma(composicao, snapshot):
+def _cronograma(composicao, snapshot, secao=0):
     for evento in snapshot.get("schedule") or []:
         composicao.escrever(
             f"{evento.get('order', '')}. {evento.get('type', '')} — "
@@ -230,21 +343,24 @@ def _cronograma(composicao, snapshot):
 CARATER_DA_ETAPA = (("eliminatory", "eliminatória"), ("classificatory", "classificatória"))
 
 
-def _etapas(composicao, snapshot):
+def _etapas(composicao, snapshot, secao=0):
     """As Etapas na ordem definida, com o que estiver informado.
 
     Peso, nota mínima e caráter só aparecem quando existem: imprimir "peso: —" afirmaria uma
     ponderação vazia onde a ausência quer dizer que a Etapa não pondera.
+
+    A subseção é numerada a partir do número da seção-mãe **já resolvido** (FR-013). Fixar `6.`
+    repetiria, uma camada abaixo, o defeito que a numeração em dois passos corrige.
     """
     eventos = {
         evento.get("id"): evento
         for evento in (snapshot.get("schedule") or [])
         if isinstance(evento, dict)
     }
-    for etapa in snapshot.get("stages") or []:
+    for ordem, etapa in enumerate(snapshot.get("stages") or [], 1):
         composicao.escrever(
-            f"{etapa.get('order', '')}. {etapa.get('name', '')}",
-            tamanho=11,
+            f"{secao}.{ordem} {etapa.get('name', '')}",
+            tamanho=CORPO_BLOCO,
             fonte=NEGRITO,
             antes=10,
         )
@@ -279,28 +395,43 @@ def _etapas(composicao, snapshot):
 _CORPO_GERADO = {"profiles": _perfis, "schedule": _cronograma, "stages": _etapas}
 
 
-def _secoes(composicao, snapshot):
-    """O documento é composto **a partir das seções**, na ordem do conteúdo publicado (FR-038).
-
-    Antes desta feature a ordem era a do código: cabeçalho, Perfis, Cronograma, integridade. Agora
-    ela é conteúdo normativo, e o documento a respeita.
+def _materializaveis(snapshot):
+    """As seções que **serão** compostas, na ordem do conteúdo publicado (FR-038).
 
     Uma seção gerada cuja fonte está vazia não é composta. Um título sobre nada não informa que não
     há nada — informa que alguém esqueceu de preencher, e num Edital sem Etapas de Avaliação isso
     seria falso: a coleção é opcional.
     """
+    materializaveis = []
     for secao in sorted(snapshot.get("sections") or [], key=lambda item: item.get("order", 0)):
-        titulo = secao.get("title", "")
         if secao.get("type") == GERADA:
             corpo = _CORPO_GERADO.get(secao.get("source"))
             if corpo is None or not (snapshot.get(secao.get("source")) or []):
                 continue
-            composicao.escrever(titulo.upper(), tamanho=12, fonte=NEGRITO, antes=18)
-            corpo(composicao, snapshot)
+            materializaveis.append((secao, corpo))
         else:
-            composicao.escrever(titulo.upper(), tamanho=12, fonte=NEGRITO, antes=18)
+            materializaveis.append((secao, None))
+    return materializaveis
+
+
+def _secoes(composicao, snapshot):
+    """O documento numerado, em dois passos: selecionar, depois enumerar (FR-010 a FR-012).
+
+    **A ordem dos dois passos é o requisito.** Numerar durante a iteração produziria `5.`, `7.`,
+    `8.` no primeiro Edital sem Etapas de Avaliação — um defeito que o cenário de demonstração não
+    revela, porque nele está tudo preenchido. O número é da materialização: ele não existe no
+    conteúdo homologado e não sobrevive a uma mudança de ordem (FR-012).
+    """
+    for numero, (secao, corpo) in enumerate(_materializaveis(snapshot), 1):
+        titulo = f"{numero}. {secao.get('title', '').upper()}"
+        composicao.escrever(titulo, tamanho=CORPO_SECAO, fonte=NEGRITO, antes=18)
+        if corpo is not None:
+            corpo(composicao, snapshot, numero)
+        else:
             for indice, paragrafo in enumerate(_paragrafos(secao.get("content", ""))):
-                composicao.escrever(paragrafo, tamanho=10, antes=6 if indice == 0 else 7)
+                composicao.escrever(
+                    paragrafo, tamanho=CORPO_TEXTO, antes=6 if indice == 0 else 7
+                )
 
 
 def _integridade(composicao, snapshot, content_hash):

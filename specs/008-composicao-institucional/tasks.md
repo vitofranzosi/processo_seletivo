@@ -68,23 +68,23 @@ lacuna.
 
 ### Tests for User Story 1
 
-- [ ] T010 [P] [US1] Teste da métrica em `backend/tests/unit/publicacoes/test_pdf.py`: larguras de referência de glifos conhecidos e a linha mais larga do cenário-base não ultrapassa a margem (FR-002)
-- [ ] T011 [P] [US1] Teste do cabeçalho em `backend/tests/unit/publicacoes/test_pdf.py`: órgão, instituição e unidade centralizados em corpo menor que o texto; ato em negrito e caixa alta; ordem antes de qualquer conteúdo normativo (FR-005, FR-006, SC-001)
-- [ ] T012 [P] [US1] Teste de numeração contínua sobre o cenário sem Etapas em `backend/tests/unit/publicacoes/test_pdf.py` (FR-010, FR-011)
-- [ ] T013 [P] [US1] Teste de numeração de subseção em `backend/tests/unit/publicacoes/test_pdf.py`: as Etapas aparecem como `6.1`, `6.2`, derivadas do número da seção-mãe **já resolvido após a filtragem**, e num Edital em que a seção-mãe mude de número as subseções acompanham (FR-013)
-- [ ] T014 [P] [US1] Teste de que o número não está no conteúdo da seção em `backend/tests/unit/publicacoes/test_pdf.py` (FR-012)
+- [X] T010 [P] [US1] Teste da métrica em `backend/tests/unit/publicacoes/test_pdf.py`: larguras de referência de glifos conhecidos e a linha mais larga do cenário-base não ultrapassa a margem (FR-002)
+- [X] T011 [P] [US1] Teste do cabeçalho em `backend/tests/unit/publicacoes/test_pdf.py`: órgão, instituição e unidade centralizados em corpo menor que o texto; ato em negrito e caixa alta; ordem antes de qualquer conteúdo normativo (FR-005, FR-006, SC-001)
+- [X] T012 [P] [US1] Teste de numeração contínua sobre o cenário sem Etapas em `backend/tests/unit/publicacoes/test_pdf.py` (FR-010, FR-011)
+- [X] T013 [P] [US1] Teste de numeração de subseção em `backend/tests/unit/publicacoes/test_pdf.py`: as Etapas aparecem como `6.1`, `6.2`, derivadas do número da seção-mãe **já resolvido após a filtragem**, e num Edital em que a seção-mãe mude de número as subseções acompanham (FR-013)
+- [X] T014 [P] [US1] Teste de que o número não está no conteúdo da seção em `backend/tests/unit/publicacoes/test_pdf.py` (FR-012)
 
 ### Implementation for User Story 1
 
-- [ ] T015 [US1] Acrescentar a tabela de larguras indexada por byte cp1252 para Helvetica e Helvetica-Bold em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (D-001)
-- [ ] T016 [US1] Implementar a função de largura de cadeia e o atributo de alinhamento — esquerda, centro, direita — no item de composição de `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (D-001)
-- [ ] T017 [US1] Substituir a contagem de caracteres de `_quebrar` pela largura real e remover `FATOR_LARGURA` de `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-032)
-- [ ] T018 [US1] Reescrever `_cabecalho` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`: `MINISTÉRIO DA EDUCAÇÃO`, `INSTITUTO FEDERAL DO ESPÍRITO SANTO` e a unidade, centralizados; ato em negrito, caixa alta e centralizado; Processo e título (FR-005 a FR-007, D-008)
-- [ ] T019 [US1] Definir os seis níveis tipográficos como constantes nomeadas em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` e aplicá-los, substituindo os tamanhos literais espalhados (FR-009)
-- [ ] T020 [US1] Reescrever `_secoes` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` em dois passos — selecionar as seções que serão materializadas, depois enumerar (FR-010 a FR-012, D-006)
-- [ ] T021 [US1] Numerar as Etapas a partir do número da seção-mãe já resolvido em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-013)
-- [ ] T022 [US1] Regenerar `backend/tests/contract/fixtures/documento_publicado_v1.pdf` com `backend/scripts/gerar_fixture_documento.py` e revisar o diff do documento no mesmo commit (FR-044)
-- [ ] T023 [US1] Gerar a prévia pela interface administrativa e conferir R-01, R-02 e R-03 da rubrica contra os alvos, conforme `specs/008-composicao-institucional/quickstart.md`
+- [X] T015 [US1] Acrescentar a tabela de larguras indexada por byte cp1252 para Helvetica e Helvetica-Bold em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (D-001)
+- [X] T016 [US1] Implementar a função de largura de cadeia e o atributo de alinhamento — esquerda, centro, direita — no item de composição de `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (D-001)
+- [X] T017 [US1] Substituir a contagem de caracteres de `_quebrar` pela largura real e remover `FATOR_LARGURA` de `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-032)
+- [X] T018 [US1] Reescrever `_cabecalho` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`: `MINISTÉRIO DA EDUCAÇÃO`, `INSTITUTO FEDERAL DO ESPÍRITO SANTO` e a unidade, centralizados; ato em negrito, caixa alta e centralizado; Processo e título (FR-005 a FR-007, D-008)
+- [X] T019 [US1] Definir os seis níveis tipográficos como constantes nomeadas em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` e aplicá-los, substituindo os tamanhos literais espalhados (FR-009)
+- [X] T020 [US1] Reescrever `_secoes` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` em dois passos — selecionar as seções que serão materializadas, depois enumerar (FR-010 a FR-012, D-006)
+- [X] T021 [US1] Numerar as Etapas a partir do número da seção-mãe já resolvido em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-013)
+- [X] T022 [US1] Regenerar `backend/tests/contract/fixtures/documento_publicado_v1.pdf` com `backend/scripts/gerar_fixture_documento.py` e revisar o diff do documento no mesmo commit (FR-044)
+- [X] T023 [US1] Gerar a prévia pela interface administrativa e conferir R-01, R-02 e R-03 da rubrica contra os alvos, conforme `specs/008-composicao-institucional/quickstart.md`
 
 **Checkpoint**: a primeira página mudou visivelmente e as seções estão numeradas. **Este é o MVP.**
 
