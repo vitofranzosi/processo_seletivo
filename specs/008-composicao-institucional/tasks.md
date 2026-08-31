@@ -113,7 +113,7 @@ sub-bloco.
 
 - [ ] T029 [US2] Transformar o item de composição em união marcada `Texto | Traço` e fazer `_fluxo_da_pagina` emitir os traços antes dos textos em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (D-002, FR-003)
 - [ ] T030 [US2] Acrescentar abertura e fechamento de bloco à `Composicao` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, com os três níveis da cascata (D-004)
-- [ ] T031 [US2] Reescrever `Composicao.paginar` em duas passadas — medir o bloco, decidir, colocar — implementando os cinco degraus da cascata em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-020 a FR-022, D-004)
+- [ ] T031 [US2] Reescrever `Composicao.paginar` em duas passadas — medir o bloco, decidir, colocar — implementando os cinco degraus da cascata em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-004, FR-020 a FR-022, D-004)
 - [ ] T032 [US2] Resolver a moldura após a paginação, uma por página de continuação, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (D-003, FR-014)
 - [ ] T033 [US2] Reescrever `_perfis` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`: bloco com moldura, identificação tabular, descrição e atribuições como sub-blocos, requisitos em lista (FR-014 a FR-017)
 - [ ] T034 [US2] Reescrever `_modalidades` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` como tabela com modalidade, percentual, fundamento, versão e vigência, eliminando a frase `Regra Normativa — fundamento: …` (FR-018, FR-019)
