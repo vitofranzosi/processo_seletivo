@@ -817,7 +817,7 @@ def test_salvar_conteudo_sem_editar_nada_nao_congela_o_texto_do_catalogo(
 
 
 @pytest.mark.django_db(transaction=True)
-def test_a_etapa_de_conteudo_mostra_as_dez_secoes_do_catalogo(client, seletor_ligado, edital):
+def test_a_etapa_de_conteudo_mostra_todas_as_secoes_do_catalogo(client, seletor_ligado, edital):
     """T013/T014: a etapa deriva do catálogo, então as três novas entram sem código de tela."""
     from processo_seletivo.editais.domain import secoes as catalogo
 
@@ -826,7 +826,7 @@ def test_a_etapa_de_conteudo_mostra_as_dez_secoes_do_catalogo(client, seletor_li
 
     exibidas = [secao["key"] for secao in resposta.context["secoes"]]
     assert exibidas == [secao.key for secao in catalogo.CATALOGO]
-    assert len(exibidas) == 10
+    assert len(exibidas) == len(catalogo.CATALOGO)
     for nova in ("apresentacao", "requisitos-gerais", "classificacao"):
         assert nova in exibidas
 

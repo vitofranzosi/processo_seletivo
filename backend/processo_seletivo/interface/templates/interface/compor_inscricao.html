@@ -1,0 +1,53 @@
+{% extends "interface/compor_base.html" %}
+{% block etapa_titulo %}Inscrição{% endblock %}
+{% block etapa %}
+<form method="post" id="formulario"
+      {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"
+      data-lista="#documentos" data-fragmento="{% url 'interface:fragmento-documento' edital.id %}"{% endif %}>
+  {% csrf_token %}
+  <section aria-labelledby="inscricao-periodo">
+    <h2 id="inscricao-periodo">Período de inscrições</h2>
+    {% if pendencias_aqui %}
+    <div class="pendencias" role="status">
+      {% include "interface/_pendencias.html" with itens=pendencias_aqui com_link=False %}
+    </div>
+    {% endif %}
+    <p class="ajuda">Qual Evento do Cronograma é o período em que as inscrições ficam abertas. As
+      datas continuam sendo as do Evento — nada é digitado duas vezes.</p>
+    <p class="campo largo">
+      <label for="periodo-inscricoes">Evento do Cronograma</label>
+      <select id="periodo-inscricoes" name="periodo-inscricoes" aria-describedby="ajuda-periodo">
+        <option value="">Este Edital não recebe inscrições pelo sistema</option>
+        {% for evento in eventos %}
+        <option value="{{ evento.id }}" {% if periodo_escolhido == evento.id %}selected{% endif %}>{{ evento.rotulo }} — {{ evento.description }}</option>
+        {% endfor %}
+      </select>
+      <span class="ajuda" id="ajuda-periodo">Sem Evento designado, o Edital é publicado normalmente
+        e apenas não recebe inscrições.</span>
+    </p>
+  </section>
+  <section aria-labelledby="inscricao-documentos">
+    <h2 id="inscricao-documentos">Documentos exigidos</h2>
+    <p class="ajuda">O que o candidato precisa apresentar. Um documento pode valer para todos, ou
+      só para um Perfil, ou só para uma modalidade, ou para a combinação dos dois.</p>
+    <p class="contadores" data-contador="#documentos" data-item=".documento" data-singular="documento" data-plural="documentos">
+      <span><strong>{{ documentos|length }}</strong> documento{{ documentos|length|pluralize:"s" }}</span>
+    </p>
+    <div id="documentos" data-ordenavel>
+      {% for documento in documentos %}{% include "interface/_documento.html" with indice=forloop.counter0 %}{% endfor %}
+    </div>
+    {% if editavel %}
+    <button type="button" class="botao secundario"
+            hx-get="{% url 'interface:fragmento-documento' edital.id %}"
+            hx-target="#documentos" hx-swap="beforeend">Acrescentar documento</button>
+    {% endif %}
+  </section>
+  {% include "interface/_navegacao_etapa.html" %}
+</form>
+{% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
+<script src="{% static 'interface/assistente.js' %}" defer></script>
+<script src="{% static 'interface/ordenacao.js' %}" defer></script>
+<script src="{% static 'interface/rascunho.js' %}" defer></script>
+<script src="{% static 'interface/validacao.js' %}" defer></script>
+<script src="{% static 'interface/remocao.js' %}" defer></script>
+{% endblock %}

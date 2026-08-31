@@ -26,6 +26,10 @@ ETAPA = {
     "A": "00000000-0000-0000-0000-000000000561",
     "B": "00000000-0000-0000-0000-000000000562",
 }
+DOCUMENTO = {
+    "A": "00000000-0000-0000-0000-000000000581",
+    "B": "00000000-0000-0000-0000-000000000582",
+}
 # A Regra Normativa de cada modalidade, por identificador da modalidade.
 REGRA = {
     MODALIDADE["A"]: "00000000-0000-0000-0000-000000000551",
@@ -92,6 +96,9 @@ def evento(identificador, tipo, ordem, inicio):
         "endAt": None,
         "order": ordem,
         "status": "PLANEJADO",
+        # A forma publicada exige o campo em todo Evento; a marca em si é de um só, e os testes
+        # que falam dela a ligam explicitamente.
+        "isRegistrationPeriod": False,
     }
 
 
@@ -170,6 +177,38 @@ def rascunho_com_etapas():
             "order": 2,
             "eliminatory": False,
             "classificatory": True,
+        },
+    ]
+    return base
+
+
+def rascunho_completo():
+    """O rascunho em que **toda** coleção-raiz de entidades está presente e não vazia.
+
+    Existe para o guarda de cobertura: uma coleção declarada mas ausente do conteúdo publicado
+    passaria despercebida, porque o guarda só enxerga o que o snapshot materializa. Os demais
+    construtores continuam mínimos de propósito — um teste que não fala de documento exigido não
+    deve passar a publicar um só porque a coleção nasceu.
+
+    Os dois requisitos cobrem duas das quatro aplicabilidades: um para todos, um restrito a Perfil.
+    """
+    base = rascunho_com_etapas()
+    base["documentRequirements"] = [
+        {
+            "id": DOCUMENTO["A"],
+            "key": "identificacao",
+            "name": "Documento de identificação",
+            "instructions": "Frente e verso, em arquivo único.",
+            "required": True,
+            "order": 1,
+        },
+        {
+            "id": DOCUMENTO["B"],
+            "key": "diploma",
+            "name": "Diploma de graduação",
+            "required": True,
+            "order": 2,
+            "profileId": PERFIL["A"],
         },
     ]
     return base

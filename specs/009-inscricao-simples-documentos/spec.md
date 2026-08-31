@@ -139,12 +139,15 @@ divide em duas partes de dependência diferente, e a divisão governa a ordem de
 - **Parte consultável (cenários 1 e 2; FR-012, FR-014, FR-017 e FR-018, e a listagem de FR-013 sem
   as colunas de período e situação)** — a seleção, os Perfis e o documento oficial, derivados da
   versão vigente. Não depende de nada que a US2 acrescente, e é a entrega 1.
-- **Parte temporal e convite (cenários 3, 4 e 5; FR-015, FR-016, FR-019 e as duas colunas restantes
-  de FR-013)** — situação futura, aberta ou encerrada, com data, e o convite por vaga. Dependem do
-  período apontado, que só existe depois da US2, e por isso chegam na entrega 2.
+- **Parte temporal (cenários 3 e 4; FR-015, FR-019 e as duas colunas restantes de FR-013)** —
+  situação futura, aberta ou encerrada, com data. Depende do período apontado, que só existe depois
+  da US2, e por isso chega na entrega 2.
+- **Convite por vaga (cenário 5; FR-016)** — chega na entrega 3, junto do seu destino. Um convite
+  para uma tela que ainda não existe seria pior do que a ausência dele, e a divisão por dependência
+  é a mesma que separa as duas partes acima.
 
-*A US1 se conclui na entrega 2. A entrega 1 é uma fatia navegável dela, não a história inteira — e
-esta spec diz isso em vez de afirmar independência que não existe.*
+*A US1 se conclui na entrega 3, em três fatias navegáveis. Dizer isso é mais honesto do que
+afirmar uma independência que ela não tem — e cada fatia continua valendo sozinha.*
 
 **Independent Test**: na entrega 1, publicar um Edital com dois Perfis, abrir a página pública em
 uma janela anônima e ler título, unidade, Perfis, vagas, localidade e requisitos, além do documento
@@ -769,8 +772,8 @@ contagem de testes.
 | Entrega | O que se abre no navegador | Toca a camada canônica? |
 |---|---|---|
 | 1 | Canal público: listagem e detalhe da seleção, Perfis, vagas e documento oficial, derivados da versão vigente — **sem situação temporal e sem convite por vaga** (US1, parte consultável) | Não |
-| 2 | Contrato de inscrição: Evento apontado e documentos exigidos, na composição, no conteúdo publicado e no documento — **e a US1 se completa**: a página passa a dizer futura, aberta ou encerrada, com data, e a oferecer a vaga | Sim, uma vez |
-| 3 | Identidade do candidato, retorno ao ponto de origem e a tela `Sua inscrição` com dados e modalidade, retomável | Não |
+| 2 | Contrato de inscrição: Evento apontado e documentos exigidos, na composição, no conteúdo publicado e no documento; a página pública passa a dizer futura, aberta ou encerrada, com data | Sim, uma vez |
+| 3 | Identidade do candidato, retorno ao ponto de origem, o convite por vaga — **e a US1 se completa** — e a tela `Sua inscrição` com dados e modalidade, retomável | Não |
 | 4 | Envio de documentos com armazenamento privado, progresso, substituição e contagem do que falta | Não |
 | 5 | Revisão, declarações, envio, protocolo e comprovante imprimível | Não |
 | 6 | `Inscrições` no contexto do Edital e cada documento aberto sob o seu requisito | Não |

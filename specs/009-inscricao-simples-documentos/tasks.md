@@ -115,37 +115,37 @@ encontrar os três no documento e no conteúdo publicado, e alcançá-los por Re
 
 ### Tests for User Story 2
 
-- [ ] T021 [US2] Confirmar a base: ramo rebaseado sobre `origin/main` **e** `008` integrada, com o compositor em sua forma final — verificação de base, não código
-- [ ] T022 [P] [US2] Teste de contrato em `backend/tests/contract/test_forma_publicada.py` — `DocumentoExigidoPublicado` conferido contra `specs/001-processo-seletivo-editais/contracts/openapi.yaml`
-- [ ] T023 [P] [US2] Teste de contrato do campo `isRegistrationPeriod` em `EventoPublicado`, em `backend/tests/contract/test_forma_publicada.py`
-- [ ] T024 [P] [US2] Teste de endereçamento em `backend/tests/contract/test_enderecamento_api.py` — `/documentRequirements/id=<uuid>/required` e `/schedule/id=<uuid>/isRegistrationPeriod` aceitos; endereçamento por posição recusado
-- [ ] T025 [P] [US2] Teste em `backend/tests/unit/editais/test_validacao_inscricao.py` — dois Eventos marcados produzem achado impeditivo
-- [ ] T026 [P] [US2] Teste em `backend/tests/unit/editais/test_validacao_inscricao.py` — nenhum Evento marcado produz **aviso**, e a publicação segue (FR-004)
-- [ ] T027 [P] [US2] Teste em `backend/tests/unit/editais/test_validacao_inscricao.py` — requisito cuja modalidade não pertence ao Perfil declarado produz achado impeditivo
-- [ ] T028 [P] [US2] Teste da constraint parcial em `backend/tests/integration/editais/test_periodo_inscricoes.py` — o banco recusa a segunda marca no mesmo Cronograma
-- [ ] T029 [P] [US2] Teste de composição em `backend/tests/unit/publicacoes/test_pdf.py` — a seção enuncia os três documentos, identifica os adicionais por modalidade, e não é composta quando a coleção está vazia
-- [ ] T030 [P] [US2] Teste de integração da etapa do assistente em `backend/tests/integration/interface/test_compor_inscricao.py` — adicionar, editar, remover, ordenar e indicar aplicabilidade
+- [X] T021 [US2] Confirmar a base: ramo rebaseado sobre `origin/main` **e** `008` integrada, com o compositor em sua forma final — verificação de base, não código
+- [X] T022 [P] [US2] Teste de contrato em `backend/tests/contract/test_forma_publicada.py` — `DocumentoExigidoPublicado` conferido contra `specs/001-processo-seletivo-editais/contracts/openapi.yaml`
+- [X] T023 [P] [US2] Teste de contrato do campo `isRegistrationPeriod` em `EventoPublicado`, em `backend/tests/contract/test_forma_publicada.py`
+- [X] T024 [P] [US2] Teste de endereçamento em `backend/tests/contract/test_enderecamento_api.py` — `/documentRequirements/id=<uuid>/required` e `/schedule/id=<uuid>/isRegistrationPeriod` aceitos; endereçamento por posição recusado
+- [X] T025 [P] [US2] Teste em `backend/tests/unit/editais/test_validacao_inscricao.py` — dois Eventos marcados produzem achado impeditivo
+- [X] T026 [P] [US2] Teste em `backend/tests/unit/editais/test_validacao_inscricao.py` — nenhum Evento marcado produz **aviso**, e a publicação segue (FR-004)
+- [X] T027 [P] [US2] Teste em `backend/tests/unit/editais/test_validacao_inscricao.py` — requisito cuja modalidade não pertence ao Perfil declarado produz achado impeditivo
+- [X] T028 [P] [US2] Teste da constraint parcial em `backend/tests/integration/editais/test_periodo_inscricoes.py` — o banco recusa a segunda marca no mesmo Cronograma
+- [X] T029 [P] [US2] Teste de composição em `backend/tests/unit/publicacoes/test_pdf.py` — a seção enuncia os três documentos, identifica os adicionais por modalidade, e não é composta quando a coleção está vazia
+- [X] T030 [P] [US2] Teste de integração da etapa do assistente em `backend/tests/integration/interface/test_compor_inscricao.py` — adicionar, editar, remover, ordenar e indicar aplicabilidade
 
 ### Implementation for User Story 2
 
-- [ ] T031 [US2] Acrescentar os esquemas `DocumentoExigidoPublicado` e o campo do Evento em `specs/001-processo-seletivo-editais/contracts/openapi.yaml`
-- [ ] T032 [P] [US2] Campo `is_registration_period` com `UniqueConstraint` parcial em `backend/processo_seletivo/editais/models/cronograma.py`
-- [ ] T033 [P] [US2] Modelo `DocumentoExigido` em `backend/processo_seletivo/editais/models/documentos.py`, exportado em `models/__init__.py`
-- [ ] T034 [US2] Migration em `backend/processo_seletivo/editais/migrations/` com o campo, a tabela e as constraints
-- [ ] T035 [P] [US2] Validação de forma e de aplicabilidade em `backend/processo_seletivo/editais/domain/documentos.py`
-- [ ] T036 [P] [US2] `DOCUMENTO_EXIGIDO_PUBLICADO`, `Campo("isRegistrationPeriod", bool)` e as duas conferências novas em `backend/processo_seletivo/editais/domain/validation.py`
-- [ ] T037 [P] [US2] Entrada `documentos-exigidos` no catálogo de `backend/processo_seletivo/editais/domain/secoes.py`, gerada, com origem em `documentRequirements`, após a seção `inscricao`
-- [ ] T038 [US2] `replace_draft` grava a coleção nova e recusa identidade alheia, em `backend/processo_seletivo/editais/application/draft.py`
-- [ ] T039 [US2] Leitura da etapa em `backend/processo_seletivo/interface/forms.py` e registro em `ETAPAS_COMPOSICAO`, `ETAPAS_GRAVAVEIS`, `COLECAO_DA_ETAPA` e `LEITURA_DA_ETAPA` de `backend/processo_seletivo/interface/views.py`
-- [ ] T040 [US2] Template `backend/processo_seletivo/interface/templates/interface/compor_inscricao.html` — designação do Evento e linhas de documento
-- [ ] T041 [US2] Fragmento de linha de documento em `interface/views.py` e `interface/urls.py`, reusando `fragmentos/remover` e `ordenacao.js`
-- [ ] T042 [US2] Snapshot ganha `isRegistrationPeriod` e `documentRequirements`, e `SCHEMA_VERSION` passa a 4, em `backend/processo_seletivo/publicacoes/application/publish_edital.py` e `backend/processo_seletivo/shared/canonical.py`
-- [ ] T043 [US2] `/documentRequirements` em `COLECOES_COM_CHAVE` de `backend/processo_seletivo/publicacoes/domain/colecoes.py`
-- [ ] T044 [US2] Compositor `_documentos_exigidos` e registro em `_CORPO_GERADO` de `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`
-- [ ] T045 [US1] Situação futura, aberta e encerrada, com data, e convite `Inscrever-se nesta vaga` por Perfil, em `backend/processo_seletivo/portal/views.py`, `templates/portal/vitrine.html` **e** `templates/portal/selecao.html` — período e situação são colunas da listagem por FR-013, não só do detalhe; **completa a US1**
-- [ ] T046 [P] [US1] Teste em `backend/tests/integration/portal/test_situacao_inscricoes.py` — os três estados derivam do Evento marcado, **na listagem e no detalhe**; sem marca, a seleção não recebe inscrições; e, encerrado o período, a página continua consultável (FR-017)
-- [ ] T047 [US2] Atualizar `backend/processo_seletivo/processos/management/commands/seed_demo.py` para declarar período e os três documentos, e regenerar as fixtures de snapshot dos testes
-- [ ] T048 [US2] Percorrer a entrega 2 do [quickstart.md](./quickstart.md), inclusive a Retificação sobre as duas formas novas
+- [X] T031 [US2] Acrescentar os esquemas `DocumentoExigidoPublicado` e o campo do Evento em `specs/001-processo-seletivo-editais/contracts/openapi.yaml`
+- [X] T032 [P] [US2] Campo `is_registration_period` com `UniqueConstraint` parcial em `backend/processo_seletivo/editais/models/cronograma.py`
+- [X] T033 [P] [US2] Modelo `DocumentoExigido` em `backend/processo_seletivo/editais/models/documentos.py`, exportado em `models/__init__.py`
+- [X] T034 [US2] Migration em `backend/processo_seletivo/editais/migrations/` com o campo, a tabela e as constraints
+- [X] T035 [P] [US2] Validação de forma e de aplicabilidade em `backend/processo_seletivo/editais/domain/documentos.py`
+- [X] T036 [P] [US2] `DOCUMENTO_EXIGIDO_PUBLICADO`, `Campo("isRegistrationPeriod", bool)` e as duas conferências novas em `backend/processo_seletivo/editais/domain/validation.py`
+- [X] T037 [P] [US2] Entrada `documentos-exigidos` no catálogo de `backend/processo_seletivo/editais/domain/secoes.py`, gerada, com origem em `documentRequirements`, após a seção `inscricao`
+- [X] T038 [US2] `replace_draft` grava a coleção nova e recusa identidade alheia, em `backend/processo_seletivo/editais/application/draft.py`
+- [X] T039 [US2] Leitura da etapa em `backend/processo_seletivo/interface/forms.py` e registro em `ETAPAS_COMPOSICAO`, `ETAPAS_GRAVAVEIS`, `COLECAO_DA_ETAPA` e `LEITURA_DA_ETAPA` de `backend/processo_seletivo/interface/views.py`
+- [X] T040 [US2] Template `backend/processo_seletivo/interface/templates/interface/compor_inscricao.html` — designação do Evento e linhas de documento
+- [X] T041 [US2] Fragmento de linha de documento em `interface/views.py` e `interface/urls.py`, reusando `fragmentos/remover` e `ordenacao.js`
+- [X] T042 [US2] Snapshot ganha `isRegistrationPeriod` e `documentRequirements`, e `SCHEMA_VERSION` passa a 4, em `backend/processo_seletivo/publicacoes/application/publish_edital.py` e `backend/processo_seletivo/shared/canonical.py`
+- [X] T043 [US2] `/documentRequirements` em `COLECOES_COM_CHAVE` de `backend/processo_seletivo/publicacoes/domain/colecoes.py`
+- [X] T044 [US2] Compositor `_documentos_exigidos` e registro em `_CORPO_GERADO` de `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`
+- [X] T045 [US1] Situação futura, aberta e encerrada, com data, em `backend/processo_seletivo/portal/views.py`, `templates/portal/vitrine.html` **e** `templates/portal/selecao.html` — período e situação são colunas da listagem por FR-013, não só do detalhe
+- [X] T046 [P] [US1] Teste em `backend/tests/integration/portal/test_situacao_inscricoes.py` — os três estados derivam do Evento marcado, **na listagem e no detalhe**; sem marca, a seleção não recebe inscrições; e, encerrado o período, a página continua consultável (FR-017)
+- [X] T047 [US2] Atualizar `backend/processo_seletivo/processos/management/commands/seed_demo.py` para declarar período e os três documentos, e regenerar as fixtures de snapshot dos testes
+- [X] T048 [US2] Percorrer a entrega 2 do [quickstart.md](./quickstart.md), inclusive a Retificação sobre as duas formas novas
 
 **Checkpoint**: o Edital governa a inscrição, e a US1 está inteira.
 
@@ -176,6 +176,8 @@ preenchidos; sair, voltar e encontrar `Continuar inscrição`.
 - [ ] T057 [US3] `backend/processo_seletivo/inscricoes/domain/titularidade.py` — quem pode ver o quê
 - [ ] T058 [US3] `backend/processo_seletivo/inscricoes/application/rascunho.py` — abrir ou retomar, gravar campos, construir o ator do candidato com permissões vazias, e **recusar a abertura fora do período**, no servidor, antes de qualquer escrita
 - [ ] T059 [US3] View e template `Sua inscrição` com dados pessoais e bloco de concorrência condicional, em `portal/views.py` e `templates/portal/inscricao.html`
+- [ ] T045a [US1] Convite `Inscrever-se nesta vaga` por Perfil em `backend/processo_seletivo/portal/templates/portal/selecao.html`, apontando para o início da inscrição — **completa a US1**. *Viaja aqui, e não na entrega 2, porque é aqui que o destino nasce: um convite para uma rota inexistente é pior do que a ausência dele.*
+- [ ] T045b [P] [US1] Teste em `backend/tests/integration/portal/test_convite_por_vaga.py` — o convite aparece com o período aberto, não aparece fora dele, e leva ao início da inscrição já com aquele Perfil
 - [ ] T060 [US3] `Continuar inscrição` no detalhe da seleção, em `backend/processo_seletivo/portal/views.py` e `templates/portal/selecao.html`
 - [ ] T061 [US3] Auditoria da criação da Inscrição em `backend/processo_seletivo/inscricoes/application/rascunho.py`, pelo `record_event` existente
 - [ ] T062 [US3] Percorrer a entrega 3 do [quickstart.md](./quickstart.md), nas duas janelas

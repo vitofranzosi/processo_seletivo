@@ -35,20 +35,198 @@ NOME_DO_BRASAO = "Im1"
 # quebra contava **caracteres** e multiplicava por um fator médio de 0,52: conservador o bastante
 # para refluir parágrafo, e inservível para centralizar um cabeçalho ou alinhar uma coluna.
 _ASCII_REGULAR = (
-    278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278,
-    556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278, 584, 584, 584, 556,
-    1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833, 722, 778,
-    667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 278, 278, 278, 469, 556,
-    333, 556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556,
-    556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584,
+    278,
+    278,
+    355,
+    556,
+    556,
+    889,
+    667,
+    191,
+    333,
+    333,
+    389,
+    584,
+    278,
+    333,
+    278,
+    278,
+    556,
+    556,
+    556,
+    556,
+    556,
+    556,
+    556,
+    556,
+    556,
+    556,
+    278,
+    278,
+    584,
+    584,
+    584,
+    556,
+    1015,
+    667,
+    667,
+    722,
+    722,
+    667,
+    611,
+    778,
+    722,
+    278,
+    500,
+    667,
+    556,
+    833,
+    722,
+    778,
+    667,
+    778,
+    722,
+    667,
+    611,
+    722,
+    667,
+    944,
+    667,
+    667,
+    611,
+    278,
+    278,
+    278,
+    469,
+    556,
+    333,
+    556,
+    556,
+    500,
+    556,
+    556,
+    278,
+    556,
+    556,
+    222,
+    222,
+    500,
+    222,
+    833,
+    556,
+    556,
+    556,
+    556,
+    333,
+    500,
+    278,
+    556,
+    500,
+    722,
+    500,
+    500,
+    500,
+    334,
+    260,
+    334,
+    584,
 )
 _ASCII_NEGRITO = (
-    278, 333, 474, 556, 556, 889, 722, 238, 333, 333, 389, 584, 278, 333, 278, 278,
-    556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 333, 584, 584, 584, 611,
-    975, 722, 722, 722, 722, 667, 611, 778, 722, 278, 556, 722, 611, 833, 722, 778,
-    667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 333, 278, 333, 584, 556,
-    333, 556, 611, 556, 611, 556, 333, 611, 611, 278, 278, 556, 278, 889, 611, 611,
-    611, 611, 389, 556, 333, 611, 556, 778, 556, 556, 500, 389, 280, 389, 584,
+    278,
+    333,
+    474,
+    556,
+    556,
+    889,
+    722,
+    238,
+    333,
+    333,
+    389,
+    584,
+    278,
+    333,
+    278,
+    278,
+    556,
+    556,
+    556,
+    556,
+    556,
+    556,
+    556,
+    556,
+    556,
+    556,
+    333,
+    333,
+    584,
+    584,
+    584,
+    611,
+    975,
+    722,
+    722,
+    722,
+    722,
+    667,
+    611,
+    778,
+    722,
+    278,
+    556,
+    722,
+    611,
+    833,
+    722,
+    778,
+    667,
+    778,
+    722,
+    667,
+    611,
+    722,
+    667,
+    944,
+    667,
+    667,
+    611,
+    333,
+    278,
+    333,
+    584,
+    556,
+    333,
+    556,
+    611,
+    556,
+    611,
+    556,
+    333,
+    611,
+    611,
+    278,
+    278,
+    556,
+    278,
+    889,
+    611,
+    611,
+    611,
+    611,
+    389,
+    556,
+    333,
+    611,
+    556,
+    778,
+    556,
+    556,
+    500,
+    389,
+    280,
+    389,
+    584,
 )
 
 # Em Helvetica o glifo acentuado é composto e **tem o avanço da letra-base**. Derivar daí, em vez
@@ -61,9 +239,18 @@ _BASE_ACENTUADA = str.maketrans(
 
 # O punhado de sinais que o documento usa e que não são letras nem ASCII.
 _SINAIS = {
-    "—": (1000, 1000), "–": (556, 556), "·": (278, 278), "•": (350, 350),
-    "§": (556, 556), "°": (400, 400), "º": (365, 330), "ª": (370, 300),
-    "“": (333, 500), "”": (333, 500), "‘": (222, 278), "’": (222, 278),
+    "—": (1000, 1000),
+    "–": (556, 556),
+    "·": (278, 278),
+    "•": (350, 350),
+    "§": (556, 556),
+    "°": (400, 400),
+    "º": (365, 330),
+    "ª": (370, 300),
+    "“": (333, 500),
+    "”": (333, 500),
+    "‘": (222, 278),
+    "’": (222, 278),
 }
 
 # Um caractere fora da tabela é medido como o glifo mais largo possível. É deliberadamente
@@ -120,6 +307,7 @@ FOLGA_DA_MOLDURA = 6.0
 # E quanto ele desce quando um título veio junto na quebra: o fio precisa passar abaixo das
 # descidas do título, não rente a elas.
 FOLGA_APOS_TITULO = 16.0
+
 
 # O modo do renderizador (FR-015). Um parâmetro, e não condicionais espalhadas pela composição:
 # a diferença entre o que se revisa e o que se publica precisa ter **um** lugar onde está
@@ -264,8 +452,13 @@ def _grade(quadro, base):
         # O topo do sombreado é o **topo da grade**, não o início da linha: aquele é a linha de
         # base da legenda escrita acima, e o cinza subiria até encostar nela.
         formas.append(
-            ("fundo", bordas[0], base_do_cabecalho, bordas[-1] - bordas[0],
-             topo - base_do_cabecalho)
+            (
+                "fundo",
+                bordas[0],
+                base_do_cabecalho,
+                bordas[-1] - bordas[0],
+                topo - base_do_cabecalho,
+            )
         )
     formas.append(("ret", bordas[0], fundo, bordas[-1] - bordas[0], topo - fundo))
     # Um fio abaixo de cada linha, menos a última: aquela fecha no contorno.
@@ -328,8 +521,17 @@ class Composicao:
         self.itens: list = []
 
     def escrever(
-        self, texto, *, tamanho=CORPO_TEXTO, fonte=REGULAR, recuo=0.0, antes=0.0,
-        alinhamento=ESQUERDA, junto=False, repetir=False, justificar=False,
+        self,
+        texto,
+        *,
+        tamanho=CORPO_TEXTO,
+        fonte=REGULAR,
+        recuo=0.0,
+        antes=0.0,
+        alinhamento=ESQUERDA,
+        junto=False,
+        repetir=False,
+        justificar=False,
     ):
         """`junto` é o "não me deixe sozinho no rodapé" de FR-022 e FR-030.
 
@@ -350,8 +552,15 @@ class Composicao:
         for indice, parte in enumerate(partes):
             self.itens.append(
                 (
-                    "texto", parte, fonte, tamanho, recuo,
-                    antes if indice == 0 else 0.0, alinhamento, junto, repetir,
+                    "texto",
+                    parte,
+                    fonte,
+                    tamanho,
+                    recuo,
+                    antes if indice == 0 else 0.0,
+                    alinhamento,
+                    junto,
+                    repetir,
                     justificar and indice < len(partes) - 1,
                 )
             )
@@ -361,9 +570,7 @@ class Composicao:
         self.itens.append(("regua",))
 
     def espaco(self, altura=8.0):
-        self.itens.append(
-            ("texto", "", REGULAR, 0.0, 0.0, altura, ESQUERDA, False, False, False)
-        )
+        self.itens.append(("texto", "", REGULAR, 0.0, 0.0, altura, ESQUERDA, False, False, False))
 
     @contextmanager
     def bloco(self, *, moldura=False, coeso=True):
@@ -567,9 +774,7 @@ class Composicao:
                 indice += 1
                 continue
 
-            (
-                _, texto, fonte, tamanho, recuo, antes, alinhamento, junto, repetir, justificar
-            ) = item
+            (_, texto, fonte, tamanho, recuo, antes, alinhamento, junto, repetir, justificar) = item
             altura = self._altura(item)
             # Uma linha "junto" precisa de espaço para si e para a seguinte: é o que impede o
             # título de fechar a página sozinho.
@@ -659,16 +864,14 @@ def _cabecalho(composicao, snapshot):
     # **Uma linha só.** Nos três Editais de referência o ato e o objeto são uma sentença. Quando o
     # título já abre por "Edital" — que é como se costuma escrevê-lo —, ele **é** essa sentença, e
     # imprimir os dois faria o documento anunciar o mesmo ato duas vezes.
-    anuncio = titulo if titulo.upper().startswith("EDITAL") else (
-        f"{ato} — {titulo}" if titulo else ato
+    anuncio = (
+        titulo if titulo.upper().startswith("EDITAL") else (f"{ato} — {titulo}" if titulo else ato)
     )
     composicao.escrever(
         anuncio.upper(), tamanho=CORPO_ATO, fonte=NEGRITO, antes=24, alinhamento=CENTRO
     )
     if snapshot.get("description"):
-        composicao.escrever(
-            snapshot["description"], tamanho=CORPO_TEXTO, antes=20, justificar=True
-        )
+        composicao.escrever(snapshot["description"], tamanho=CORPO_TEXTO, antes=20, justificar=True)
 
 
 PADDING_DA_COLUNA = 12.0
@@ -740,8 +943,16 @@ def _larguras_das_colunas(cabecalho, linhas, tamanho, disponivel):
     return naturais
 
 
-def _tabela(composicao, cabecalho, linhas, *, recuo=18.0, tamanho=CORPO_TABELA,
-            alinhamentos=None, legenda=None):
+def _tabela(
+    composicao,
+    cabecalho,
+    linhas,
+    *,
+    recuo=18.0,
+    tamanho=CORPO_TABELA,
+    alinhamentos=None,
+    legenda=None,
+):
     """Uma tabela: colunas limitadas, células que refluem dentro da sua coluna.
 
     A altura de cada linha é a da célula mais alta — sem isso, uma célula de três linhas
@@ -769,7 +980,11 @@ def _tabela(composicao, cabecalho, linhas, *, recuo=18.0, tamanho=CORPO_TABELA,
                     texto = partes[altura] if altura < len(partes) else ""
                     if texto:
                         celula = _x_na_celula(
-                            texto, fonte, tamanho, deslocamento, colunas[indice],
+                            texto,
+                            fonte,
+                            tamanho,
+                            deslocamento,
+                            colunas[indice],
                             alinhamento or por_coluna[indice],
                         )
                         composicao.escrever(
@@ -790,8 +1005,12 @@ def _tabela(composicao, cabecalho, linhas, *, recuo=18.0, tamanho=CORPO_TABELA,
 
     if legenda:
         composicao.escrever(
-            legenda, tamanho=CORPO_TEXTO, fonte=NEGRITO, recuo=recuo,
-            antes=ANTES_DE_BLOCO, junto=True,
+            legenda,
+            tamanho=CORPO_TEXTO,
+            fonte=NEGRITO,
+            recuo=recuo,
+            antes=ANTES_DE_BLOCO,
+            junto=True,
         )
 
     # As divisões de coluna, em posição absoluta: é o que a grade precisa saber, e o que a
@@ -908,8 +1127,11 @@ def _perfis(composicao, snapshot, secao=0, tabelas=None):
                 )
                 if perfil.get("description"):
                     composicao.escrever(
-                        perfil["description"], tamanho=CORPO_TEXTO, recuo=18,
-                        antes=ANTES_DE_PARAGRAFO, justificar=True,
+                        perfil["description"],
+                        tamanho=CORPO_TEXTO,
+                        recuo=18,
+                        antes=ANTES_DE_PARAGRAFO,
+                        justificar=True,
                     )
             if len(perfis) == 1:
                 with composicao.bloco():
@@ -924,31 +1146,46 @@ def _perfis(composicao, snapshot, secao=0, tabelas=None):
             if perfil.get("duties"):
                 with composicao.bloco():
                     composicao.escrever(
-                        "Atribuições", tamanho=CORPO_TEXTO, fonte=NEGRITO, recuo=18,
-                        antes=ANTES_DE_BLOCO, junto=True,
+                        "Atribuições",
+                        tamanho=CORPO_TEXTO,
+                        fonte=NEGRITO,
+                        recuo=18,
+                        antes=ANTES_DE_BLOCO,
+                        junto=True,
                     )
                     for paragrafo in _paragrafos(perfil["duties"]):
                         composicao.escrever(
-                            paragrafo, tamanho=CORPO_TEXTO, recuo=32, antes=ANTES_DE_LINHA,
+                            paragrafo,
+                            tamanho=CORPO_TEXTO,
+                            recuo=32,
+                            antes=ANTES_DE_LINHA,
                             justificar=True,
                         )
             for rotulo, chave in (("Carga horária", "workload"), ("Remuneração", "compensation")):
                 if perfil.get(chave) and len(perfis) == 1:
                     composicao.escrever(
-                        f"{rotulo}: {perfil[chave]}", tamanho=CORPO_TEXTO, recuo=18,
+                        f"{rotulo}: {perfil[chave]}",
+                        tamanho=CORPO_TEXTO,
+                        recuo=18,
                         antes=ANTES_DE_LINHA,
                     )
             if perfil.get("compensation") and len(perfis) > 1:
                 composicao.escrever(
-                    f"Remuneração: {perfil['compensation']}", tamanho=CORPO_TEXTO, recuo=18,
+                    f"Remuneração: {perfil['compensation']}",
+                    tamanho=CORPO_TEXTO,
+                    recuo=18,
                     antes=ANTES_DE_LINHA,
                 )
             requisitos = perfil.get("requirements") or []
             if requisitos:
                 with composicao.bloco():
                     composicao.escrever(
-                        "Requisitos", tamanho=CORPO_TEXTO, fonte=NEGRITO, recuo=18,
-                        antes=ANTES_DE_BLOCO, junto=True,
+                        "Requisitos",
+                        tamanho=CORPO_TEXTO,
+                        fonte=NEGRITO,
+                        recuo=18,
+                        antes=ANTES_DE_BLOCO,
+                        junto=True,
                     )
                     for requisito in requisitos:
                         composicao.escrever(f"• {requisito}", tamanho=CORPO_TEXTO, recuo=32)
@@ -974,7 +1211,9 @@ def _pares(composicao, pares, *, recuo=18.0):
             f"{rotulo}:", tamanho=CORPO_TEXTO, fonte=NEGRITO, recuo=recuo, antes=ANTES_DE_LINHA
         )
         composicao.escrever(
-            valor, tamanho=CORPO_TEXTO, recuo=recuo + largura_do_rotulo,
+            valor,
+            tamanho=CORPO_TEXTO,
+            recuo=recuo + largura_do_rotulo,
             antes=-(CORPO_TEXTO * 1.45),
         )
 
@@ -1056,10 +1295,90 @@ def _etapas(composicao, snapshot, secao=0, tabelas=None):
             _pares(composicao, pares)
 
 
+def _alinea(indice):
+    """`a)`, `b)`, … e depois `aa)`, como um ato normativo enumera alíneas."""
+    letras = ""
+    indice += 1
+    while indice:
+        indice, resto = divmod(indice - 1, 26)
+        letras = chr(ord("a") + resto) + letras
+    return f"{letras})"
+
+
+def _nomes_do_alcance(snapshot):
+    perfis, modalidades = {}, {}
+    for perfil in snapshot.get("profiles") or []:
+        perfis[perfil.get("id")] = perfil.get("name") or perfil.get("code", "")
+        for modalidade in perfil.get("competitionModalities") or []:
+            modalidades[modalidade.get("id")] = modalidade.get("name") or modalidade.get("code", "")
+    return perfis, modalidades
+
+
+def _titulo_do_grupo(perfil_id, modalidade_id, perfis, modalidades):
+    """O cabeçalho que diz **a quem** aquele bloco de documentos se dirige.
+
+    A aplicabilidade é dado estruturado; aqui ela vira a frase que o candidato lê para saber se
+    aquela alínea é com ele. Sem este cabeçalho, um laudo exigido só de uma modalidade pareceria
+    exigido de todo mundo — que é exatamente o erro que a lista única de documentos produz nos
+    Editais escritos à mão.
+    """
+    if perfil_id is None and modalidade_id is None:
+        return "De todos os candidatos:"
+    if modalidade_id is None:
+        return f"Dos candidatos ao perfil {perfis.get(perfil_id, '')}:"
+    if perfil_id is None:
+        return f"Dos candidatos concorrentes na modalidade {modalidades.get(modalidade_id, '')}:"
+    return (
+        f"Dos candidatos ao perfil {perfis.get(perfil_id, '')} concorrentes na modalidade "
+        f"{modalidades.get(modalidade_id, '')}:"
+    )
+
+
+def _documentos_exigidos(composicao, snapshot, secao=0, tabelas=None):
+    """Os documentos que o candidato precisa apresentar, agrupados por a quem se aplicam.
+
+    Alíneas, e não tabela: é lista normativa curta, do tipo que um Edital escreve em prosa
+    enumerada. A numeração recomeça em cada grupo porque cada grupo é a lista de uma pessoa — quem
+    concorre na ampla concorrência não precisa saber que a alínea `d)` existe para outra.
+
+    A ordem dos grupos é a do conteúdo publicado, e dentro de cada um, a ordem declarada. Nada é
+    reordenado aqui: a ordem é decisão de quem elaborou, e o documento a reproduz.
+    """
+    requisitos = snapshot.get("documentRequirements") or []
+    if not requisitos:
+        return
+    perfis, modalidades = _nomes_do_alcance(snapshot)
+    grupos = {}
+    for requisito in sorted(requisitos, key=lambda item: item.get("order", 0)):
+        chave = (requisito.get("profileId"), requisito.get("modalityId"))
+        grupos.setdefault(chave, []).append(requisito)
+    for (perfil_id, modalidade_id), documentos in grupos.items():
+        with composicao.bloco():
+            composicao.escrever(
+                _titulo_do_grupo(perfil_id, modalidade_id, perfis, modalidades),
+                tamanho=CORPO_TEXTO,
+                fonte=NEGRITO,
+                antes=ANTES_DE_BLOCO,
+                junto=True,
+            )
+            for indice, documento in enumerate(documentos):
+                texto = f"{_alinea(indice)} {documento.get('name', '')}"
+                if documento.get("instructions"):
+                    texto += f" — {documento['instructions']}"
+                if not documento.get("required", True):
+                    texto += " (facultativo)"
+                composicao.escrever(texto, tamanho=CORPO_TEXTO, recuo=18.0, antes=ANTES_DE_LINHA)
+
+
 # Cada seção gerada nomeia a coleção que a origina; aqui está o que fazer com cada uma. Uma origem
 # que não estiver neste mapa não é composta — e a validação de publicação já recusa origem que
 # divirja do catálogo, então isso não é silêncio: é a consequência de uma recusa que veio antes.
-_CORPO_GERADO = {"profiles": _perfis, "schedule": _cronograma, "stages": _etapas}
+_CORPO_GERADO = {
+    "profiles": _perfis,
+    "schedule": _cronograma,
+    "stages": _etapas,
+    "documentRequirements": _documentos_exigidos,
+}
 
 
 def _materializaveis(snapshot):
@@ -1099,9 +1418,7 @@ def _secoes(composicao, snapshot):
     tabelas = _Numerador()
     materializaveis = _materializaveis(snapshot)
 
-    preambulo = [
-        secao for secao, _ in materializaveis if secao.get("key") == SECAO_DE_PREAMBULO
-    ]
+    preambulo = [secao for secao, _ in materializaveis if secao.get("key") == SECAO_DE_PREAMBULO]
     for secao in preambulo:
         for indice, paragrafo in enumerate(_paragrafos(secao.get("content", ""))):
             composicao.escrever(
@@ -1112,9 +1429,7 @@ def _secoes(composicao, snapshot):
             )
 
     numeraveis = [
-        (secao, corpo)
-        for secao, corpo in materializaveis
-        if secao.get("key") != SECAO_DE_PREAMBULO
+        (secao, corpo) for secao, corpo in materializaveis if secao.get("key") != SECAO_DE_PREAMBULO
     ]
     for numero, (secao, corpo) in enumerate(numeraveis, 1):
         titulo = f"{numero}. {secao.get('title', '').upper()}"
@@ -1228,7 +1543,8 @@ def _fluxo_da_pagina(linhas, rodape, pagina, marca="", tracos=(), com_brasao=Fal
             )
     if marca:
         partes.append(
-            b"BT /" + NEGRITO.encode()
+            b"BT /"
+            + NEGRITO.encode()
             + f" 9.0 Tf {MARGEM:.1f} {FAIXA_DE_PREVIA:.1f} Td (".encode()
             + _texto_pdf(marca)
             + b") Tj ET"
@@ -1255,7 +1571,8 @@ def _fluxo_da_pagina(linhas, rodape, pagina, marca="", tracos=(), com_brasao=Fal
         (pagina, LARGURA - MARGEM - largura(pagina, CORPO_NOTA, REGULAR)),
     ):
         partes.append(
-            b"BT /" + REGULAR.encode()
+            b"BT /"
+            + REGULAR.encode()
             + f" {CORPO_NOTA:.1f} Tf {x:.1f} {RODAPE - 16:.1f} Td (".encode()
             + _texto_pdf(texto)
             + b") Tj ET"

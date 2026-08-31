@@ -680,7 +680,7 @@ components:
         Forma do Evento no conteúdo normativo **publicado**. Distinta de EventoInput pela mesma razão
         que PerfilPublicado o é de PerfilInput. `status` é produzido pelo sistema e entra como
         presença e tipo; a enumeração dele não é declarada aqui.
-      required: [id, type, description, startAt, endAt, order, status]
+      required: [id, type, description, startAt, endAt, order, status, isRegistrationPeriod]
       properties:
         id: { $ref: '#/components/schemas/Id' }
         type: { type: string }
@@ -701,6 +701,28 @@ components:
           pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?[+-]\d{2}:\d{2}$'
         order: { type: integer, minimum: 0 }
         status: { type: string }
+        # Qual Evento é o período de inscrições. Sempre presente: a ausência de marca é `false`,
+        # e não "não informado". Quantos podem ser verdadeiros é coerência entre itens, verificada
+        # na publicação, e não forma de um item.
+        isRegistrationPeriod: { type: boolean }
+    DocumentoExigidoPublicado:
+      type: object
+      description: >-
+        O que o Edital exige que o candidato apresente na inscrição. `profileId` e `modalityId`
+        são anuláveis por semântica: `null` significa "não restringe", e é a ausência dos dois que
+        faz o requisito valer para todos. As quatro combinações de aplicabilidade — todos, Perfil,
+        modalidade, Perfil e modalidade — se leem daí, e não há uma quinta forma nem operador.
+      required: [id, key, name, instructions, required, order, profileId, modalityId]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        key: { type: string }
+        name: { type: string }
+        # Texto sempre presente e `""` quando ausente, como `description` no Perfil.
+        instructions: { type: string }
+        required: { type: boolean }
+        order: { type: integer, minimum: 0 }
+        profileId: { type: [string, 'null'], format: uuid }
+        modalityId: { type: [string, 'null'], format: uuid }
     ModalidadePublicada:
       type: object
       description: >-

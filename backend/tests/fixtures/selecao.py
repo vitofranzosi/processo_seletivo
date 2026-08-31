@@ -72,8 +72,8 @@ def rascunho_de_selecao(seed=0):
     }
 
 
-def publicar_selecao(api_client, manager_headers, process_payload, *, seed=0):
+def publicar_selecao(api_client, manager_headers, process_payload, *, seed=0, rascunho=None):
     """Cria, elabora, submete, homologa e publica a seleção — pelo canal administrativo."""
     return publish_original(
-        api_client, manager_headers, process_payload, draft=rascunho_de_selecao(seed)
+        api_client, manager_headers, process_payload, draft=rascunho or rascunho_de_selecao(seed)
     )

@@ -12,9 +12,13 @@ lá; esta entrega é a fatia navegável dela.
 
 from django.http import Http404
 from django.shortcuts import render
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.shared.api.problems import DomainError
+
+FUTURA, ABERTA, ENCERRADA, SEM_PERIODO = "futura", "aberta", "encerrada", "sem-periodo"
 
 # A mesma tradução que o documento publicado usa, e pelo mesmo motivo: `UNLIMITED` é forma
 # interna, e forma interna não é o que se lê numa página de oportunidade.
@@ -23,6 +27,35 @@ RESERVA = {
     "LIMITED": "com cadastro reserva",
     "UNLIMITED": "com cadastro reserva ilimitado",
 }
+
+
+def _periodo(conteudo, agora):
+    """A situação das inscrições, derivada do Evento designado — e de mais nada.
+
+    Três estados e uma ausência. A ausência não é um quarto estado da inscrição: é o Edital que
+    não recebe inscrição por este sistema, e a página simplesmente não fala de prazo.
+
+    Nada aqui procura texto em `type` ou `description`. O Evento designado se diz designado, e a
+    marca é dado publicado — foi essa a decisão que tornou a situação uma leitura, e não um
+    palpite sobre o que alguém digitou.
+    """
+    designado = next(
+        (evento for evento in conteudo.get("schedule") or [] if evento.get("isRegistrationPeriod")),
+        None,
+    )
+    if designado is None:
+        return {"estado": SEM_PERIODO, "inicio": None, "fim": None}
+    inicio = parse_datetime(designado.get("startAt") or "")
+    fim = parse_datetime(designado.get("endAt") or "") if designado.get("endAt") else None
+    if inicio is not None and agora < inicio:
+        estado = FUTURA
+    elif fim is not None and agora > fim:
+        estado = ENCERRADA
+    else:
+        # Sem término declarado, o período segue aberto: é o que o Evento diz, e inventar um
+        # fechamento seria o sistema criando prazo que o Edital não fixou.
+        estado = ABERTA
+    return {"estado": estado, "inicio": inicio, "fim": fim}
 
 
 def _selecao(versao):
@@ -34,6 +67,7 @@ def _selecao(versao):
     conteudo = versao.content
     return {
         "edital_id": versao.edital_id,
+        "periodo": _periodo(conteudo, timezone.now()),
         "processo_codigo": conteudo.get("processoCode", ""),
         "processo_titulo": conteudo.get("processoTitle", ""),
         "unidade": versao.edital.institution_scope.upper(),

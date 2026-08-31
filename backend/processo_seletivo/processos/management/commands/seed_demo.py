@@ -107,8 +107,49 @@ def cronograma(agora, numero):
             "startAt": agora + timedelta(days=inicio),
             "endAt": None if fim is None else agora + timedelta(days=fim),
             "order": indice,
+            # O primeiro marco é o período de inscrições, e a demonstração precisa que ele **se
+            # diga** período: sem a marca, a vitrine não teria situação a anunciar e o candidato
+            # não teria prazo. Chamar-se "Inscrições" não basta, e é essa a diferença.
+            "isRegistrationPeriod": indice == 1,
         }
         for indice, (tipo, descricao, inicio, fim) in enumerate(marcos, 1)
+    ]
+
+
+def documentos_exigidos(numero):
+    """As quatro aplicabilidades numa demonstração só.
+
+    Identificação de todos, diploma do Perfil docente, autodeclaração de quem concorre na
+    modalidade reservada. É o cenário do critério emblemático da `009`: o candidato de ampla
+    concorrência recebe dois pedidos, e o da modalidade, três.
+    """
+    return [
+        {
+            "id": f"00000000-0000-0000-00{numero}-0000000000d1",
+            "key": "identificacao",
+            "name": "Documento de identificação com foto",
+            "instructions": "Frente e verso em arquivo único.",
+            "required": True,
+            "order": 1,
+        },
+        {
+            "id": f"00000000-0000-0000-00{numero}-0000000000d2",
+            "key": "diploma",
+            "name": "Diploma de graduação",
+            "instructions": "Diploma ou certidão de conclusão, com histórico.",
+            "required": True,
+            "order": 2,
+            "profileId": f"00000000-0000-0000-00{numero}-0000000000b1",
+        },
+        {
+            "id": f"00000000-0000-0000-00{numero}-0000000000d3",
+            "key": "autodeclaracao",
+            "name": "Autodeclaração étnico-racial",
+            "instructions": "Conforme o modelo do Anexo do Edital.",
+            "required": True,
+            "order": 3,
+            "modalityId": f"00000000-0000-0000-00{numero}-0000000000e2",
+        },
     ]
 
 
@@ -225,7 +266,7 @@ class Command(BaseCommand):
     def _elaborar(self, elaborador, edital, agora, numero):
         from processo_seletivo.editais.application.draft import replace_draft
 
-        self.stdout.write("Elaborando Perfis, Cronograma e Etapas…")
+        self.stdout.write("Elaborando Perfis, Cronograma, Etapas e contrato de inscrição…")
         replace_draft(
             actor=elaborador,
             edital_id=edital.id,
@@ -233,6 +274,7 @@ class Command(BaseCommand):
             profiles=perfis(numero),
             schedule=cronograma(agora, numero),
             stages=etapas(numero),
+            document_requirements=documentos_exigidos(numero),
             correlation_id="seed-demo",
         )
         edital.refresh_from_db()

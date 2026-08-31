@@ -4,6 +4,8 @@
 <h1>{{ processo_titulo }}</h1>
 <p class="sub">{{ processo_codigo }} · Edital {{ numero }}/{{ ano }} · Unidade: {{ unidade }}</p>
 
+{% include "portal/_periodo.html" %}
+
 {% if descricao %}<p>{{ descricao }}</p>{% endif %}
 
 <a class="documento" href="{% url 'public-document' publicacao_id %}">Ler o Edital completo (PDF)</a>

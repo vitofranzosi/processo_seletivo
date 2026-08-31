@@ -432,3 +432,100 @@ def eventos_persistidos(edital):
         }
         for evento in cronograma.eventos.order_by("order")
     ]
+
+
+def ler_inscricao(dados):
+    """O contrato operacional de inscrição: qual Evento é o período, e o que se exige do candidato.
+
+    Duas coisas numa etapa só porque são uma coisa só para quem elabora — "como este Edital recebe
+    inscrição" —, embora vivam em coleções diferentes do rascunho. Partir isso em duas etapas
+    obrigaria a procurar metade do contrato em cada lugar.
+
+    Vazio em `periodo` é decisão legítima: o Edital não recebe inscrições por este sistema, e a
+    publicação avisa sem impedir.
+    """
+    documentos = []
+    for indice in _indices(dados, "documento"):
+        base = f"documento-{indice}"
+        documentos.append(
+            {
+                "id": _texto(dados, f"{base}-id"),
+                "key": _texto(dados, f"{base}-key"),
+                "name": _texto(dados, f"{base}-name"),
+                "instructions": _texto(dados, f"{base}-instructions"),
+                "required": _marcado(dados, f"{base}-required"),
+                "order": _inteiro(dados, f"{base}-order", 0),
+                # Vazio é "não restringe", e é a ausência dos dois que faz o requisito valer para
+                # todos. `None` e não `""`: o command grava chave estrangeira.
+                "profileId": _texto(dados, f"{base}-profileId") or None,
+                "modalityId": _texto(dados, f"{base}-modalityId") or None,
+            }
+        )
+    return {"periodo": _texto(dados, "periodo-inscricoes"), "documentos": _renumerar(documentos)}
+
+
+def documentos_do_edital(edital):
+    """As linhas de Documento Exigido, no formato do formulário."""
+    return [
+        {
+            "id": str(documento.id),
+            "key": documento.key,
+            "name": documento.name,
+            "instructions": documento.instructions,
+            "required": documento.required,
+            "order": documento.order,
+            "profileId": "" if documento.perfil_id is None else str(documento.perfil_id),
+            "modalityId": "" if documento.modalidade_id is None else str(documento.modalidade_id),
+        }
+        for documento in edital.documentos_exigidos.order_by("order")
+    ]
+
+
+def documentos_persistidos(edital):
+    """Como o command os espera — para preservá-los ao gravar outra etapa."""
+    return [
+        {
+            "id": str(documento.id),
+            "key": documento.key,
+            "name": documento.name,
+            "instructions": documento.instructions,
+            "required": documento.required,
+            "order": documento.order,
+            "profileId": None if documento.perfil_id is None else str(documento.perfil_id),
+            "modalityId": None if documento.modalidade_id is None else str(documento.modalidade_id),
+        }
+        for documento in edital.documentos_exigidos.order_by("order")
+    ]
+
+
+def periodo_do_edital(edital):
+    """O identificador do Evento marcado como período de inscrições, ou vazio."""
+    cronograma = getattr(edital, "cronograma", None)
+    if cronograma is None:
+        return ""
+    evento = cronograma.eventos.filter(is_registration_period=True).first()
+    return "" if evento is None else str(evento.id)
+
+
+def alcance_da_aplicabilidade(edital):
+    """Perfis e modalidades a que um Documento Exigido pode se restringir.
+
+    A modalidade carrega o Perfil a que pertence porque a tela precisa recusar a combinação
+    impossível antes do servidor — e o servidor recusa de novo, que é onde a regra vale.
+    """
+    perfis = []
+    for perfil in edital.perfis.order_by("code"):
+        perfis.append(
+            {
+                "id": str(perfil.id),
+                "rotulo": f"{perfil.code} — {perfil.name}",
+                "modalidades": [
+                    {
+                        "id": str(modalidade.id),
+                        "rotulo": f"{modalidade.code} — {modalidade.name}",
+                    }
+                    for modalidade in perfil.modalidades.order_by("code")
+                ],
+            }
+        )
+    return perfis

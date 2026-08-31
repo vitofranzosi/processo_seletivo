@@ -48,6 +48,12 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .documento:hover{background:var(--verde-escuro)}
 .vazio{background:var(--branco);border:1px dashed var(--borda);border-radius:6px;padding:1.5rem;
   color:var(--texto-fraco)}
+/* A situação é a informação que decide se vale continuar lendo, e por isso tem peso próprio.
+   Cor **e** palavra: quem não distingue as cores lê a mesma coisa (WCAG 1.4.1). */
+.situacao{margin:.5rem 0;font-weight:600}
+.situacao.aberta{color:var(--sucesso)}
+.situacao.futura{color:var(--amarelo)}
+.situacao.encerrada{color:var(--texto-fraco);font-weight:400}
 @media (min-width:600px){
   main{padding:1.5rem}
   h1{font-size:1.6rem}

@@ -105,6 +105,24 @@ EVENTO_PUBLICADO = (
     # `status` é produzido pelo sistema e nenhum esquema declara a enumeração dele. Entra como
     # presença e tipo; escrever os valores aqui seria inventar restrição, não transcrever uma.
     Campo("status", str),
+    # Sempre presente, nunca nulo: a ausência de marca é `false`, e não "não informado". A regra
+    # de quantos podem ser verdadeiros é de coerência entre itens e vive em
+    # `_um_periodo_de_inscricoes`, porque a forma confere um campo por vez.
+    Campo("isRegistrationPeriod", bool),
+)
+
+# Os dois identificadores são anuláveis por semântica: `null` é "não restringe". É a ausência
+# deles que produz as quatro combinações de aplicabilidade, e declará-los assim é o que impede
+# uma quinta forma de existir no conteúdo publicado.
+DOCUMENTO_EXIGIDO_PUBLICADO = (
+    Campo("id", str, formato="uuid"),
+    Campo("key", str),
+    Campo("name", str),
+    Campo("instructions", str),
+    Campo("required", bool),
+    Campo("order", int, minimo=0),
+    Campo("profileId", str, admite_nulo=True, formato="uuid"),
+    Campo("modalityId", str, admite_nulo=True, formato="uuid"),
 )
 
 # A forma canônica do decimal de `weight` e `minimumScore`, os dois `decimal(7,4)`: no máximo três
@@ -141,6 +159,7 @@ COLECOES_PUBLICADAS = (
     ("schedule", EVENTO_PUBLICADO),
     ("stages", ETAPA_PUBLICADA),
     ("sections", SECAO_PUBLICADA),
+    ("documentRequirements", DOCUMENTO_EXIGIDO_PUBLICADO),
 )
 
 CAMPO_AUSENTE = "field_required"
@@ -449,9 +468,7 @@ def _coerencia_das_etapas(snapshot: dict) -> list[ValidationFinding]:
         return []
 
     eventos = {
-        evento.get("id")
-        for evento in (snapshot.get("schedule") or [])
-        if isinstance(evento, dict)
+        evento.get("id") for evento in (snapshot.get("schedule") or []) if isinstance(evento, dict)
     }
     findings = []
     for posicao, item in enumerate(itens):
@@ -533,6 +550,103 @@ def validate_for_publication(snapshot: dict) -> list[ValidationFinding]:
     findings.extend(_topologia_das_secoes(snapshot))
     findings.extend(_coerencia_das_etapas(snapshot))
     findings.extend(_faixa_do_percentual(snapshot))
+    findings.extend(_periodo_de_inscricoes(snapshot))
+    findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
+    return findings
+
+
+def _periodo_de_inscricoes(snapshot: dict) -> list[ValidationFinding]:
+    """Um período, no máximo — e nenhum é aviso, não impedimento (FR-004 da 009).
+
+    A constraint do banco garante um por Cronograma na elaboração. Ela não alcança o conteúdo
+    publicado: duas Retificações sucessivas marcam dois Eventos, cada uma partindo de uma versão
+    em que só o outro estava marcado, e o resultado passaria sem que nada acusasse. A publicação é
+    onde esse estado para.
+
+    A ausência de marca é caso legítimo: nem todo Edital abre inscrição por este sistema nesta
+    versão. Ele continua publicável, e simplesmente não recebe inscrições.
+    """
+    eventos = snapshot.get("schedule")
+    if not isinstance(eventos, list):
+        return []
+    # Item malformado é assunto da forma declarada, que já o reporta. Aqui ele é ignorado para
+    # que a coerência não vire um segundo relato do mesmo defeito — nem uma exceção.
+    marcados = [
+        evento
+        for evento in eventos
+        if isinstance(evento, dict) and evento.get("isRegistrationPeriod") is True
+    ]
+    if len(marcados) > 1:
+        return [
+            _impeditivo(
+                "registration_period_ambiguous",
+                "Mais de um Evento do Cronograma está marcado como período de inscrições. "
+                f"São {len(marcados)}, e o Edital precisa de um só.",
+                "/schedule",
+            )
+        ]
+    if not marcados:
+        return [
+            ValidationFinding(
+                Severity.WARNING,
+                "registration_period_missing",
+                "Nenhum Evento do Cronograma está marcado como período de inscrições. "
+                "O Edital será publicado, mas não receberá inscrições pelo sistema.",
+                "/schedule",
+            )
+        ]
+    return []
+
+
+def _coerencia_dos_documentos_exigidos(snapshot: dict) -> list[ValidationFinding]:
+    """Requisito inaplicável nunca seria pedido a ninguém — e ninguém perceberia (FR-006 da 009).
+
+    A elaboração já recusa Perfil e modalidade alheios. Aqui a mesma regra vale sobre o conteúdo
+    que passa a vigorar, porque uma Retificação alcança tanto o requisito quanto o Perfil que ele
+    aponta: remover o Perfil deixaria para trás um documento restrito a nada.
+    """
+    requisitos = snapshot.get("documentRequirements")
+    if not isinstance(requisitos, list):
+        return []
+    perfis = {
+        str(perfil.get("id")): perfil
+        for perfil in snapshot.get("profiles") or []
+        if isinstance(perfil, dict) and perfil.get("id")
+    }
+    findings = []
+    for indice, documento in enumerate(requisitos):
+        if not isinstance(documento, dict):
+            continue
+        caminho = f"/documentRequirements/{indice}"
+        perfil_id = documento.get("profileId")
+        modalidade_id = documento.get("modalityId")
+        if perfil_id is not None and str(perfil_id) not in perfis:
+            findings.append(
+                _impeditivo(
+                    "document_requirement_profile_unknown",
+                    f"O Documento Exigido '{documento.get('name', '')}' restringe-se a um Perfil "
+                    "que não existe neste Edital.",
+                    caminho,
+                )
+            )
+            continue
+        if modalidade_id is None:
+            continue
+        alcance = [perfis[str(perfil_id)]] if perfil_id is not None else perfis.values()
+        modalidades = {
+            str(modalidade.get("id"))
+            for perfil in alcance
+            for modalidade in perfil.get("competitionModalities") or []
+        }
+        if str(modalidade_id) not in modalidades:
+            findings.append(
+                _impeditivo(
+                    "document_requirement_modality_unknown",
+                    f"O Documento Exigido '{documento.get('name', '')}' restringe-se a uma "
+                    "modalidade que não existe no alcance declarado.",
+                    caminho,
+                )
+            )
     return findings
 
 

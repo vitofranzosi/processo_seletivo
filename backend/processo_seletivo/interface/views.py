@@ -304,6 +304,11 @@ DESTINO_DA_PENDENCIA = {
     "profiles": ("perfis", "#perfis-titulo", True),
     "schedule": ("cronograma", "#cronograma-titulo", True),
     "stages": ("etapas", "#etapas-titulo", True),
+    # A designação do período é achado sobre `/schedule`, mas se resolve na etapa `Inscrição`, que
+    # é onde existe o controle. Chave exata, e por isso vence a busca por coleção logo abaixo —
+    # mandar quem lê para o Cronograma seria mandá-lo a uma tela sem o que corrigir.
+    "/schedule": ("inscricao", "#inscricao-periodo", True),
+    "documentRequirements": ("inscricao", "#inscricao-documentos", True),
 }
 
 
@@ -360,6 +365,10 @@ ETAPAS_COMPOSICAO = [
     # Depois do Cronograma porque a Etapa referencia Evento dele: pedir o vínculo antes de existir
     # o que vincular seria oferecer uma lista vazia e chamá-la de escolha.
     ("etapas", "Etapas de Avaliação", "interface/compor_etapas.html"),
+    # Depois dos Perfis, das Modalidades e do Cronograma: a designação do período escolhe um
+    # Evento que precisa existir, e a aplicabilidade de cada documento referencia Perfil e
+    # modalidade que precisam existir. Pedir antes seria oferecer listas vazias.
+    ("inscricao", "Inscrição", "interface/compor_inscricao.html"),
     # Depois de tudo o que gera conteúdo: as seções textuais complementam o que o sistema já
     # sabe, e quem as redige precisa ver o que já está estruturado.
     ("conteudo", "Conteúdo", "interface/compor_conteudo.html"),
@@ -367,7 +376,7 @@ ETAPAS_COMPOSICAO = [
 ]
 CHAVES_ETAPA = [chave for chave, _, _ in ETAPAS_COMPOSICAO]
 # As que aceitam POST. `revisao` consolida e não grava.
-ETAPAS_GRAVAVEIS = {"identificacao", "perfis", "cronograma", "etapas", "conteudo"}
+ETAPAS_GRAVAVEIS = {"identificacao", "perfis", "cronograma", "etapas", "inscricao", "conteudo"}
 
 
 # Três estados, e não dois (FR-040). O terceiro existe por um defeito preciso: `conteudo` era
@@ -388,7 +397,12 @@ ROTULO_DO_ESTADO = {
 
 
 # Prefixo do nome dos campos de cada etapa, para reconstruir o `id` do controle recusado.
-PREFIXO_DA_ETAPA = {"perfis": "perfil", "cronograma": "evento", "etapas": "etapa"}
+PREFIXO_DA_ETAPA = {
+    "perfis": "perfil",
+    "cronograma": "evento",
+    "etapas": "etapa",
+    "inscricao": "documento",
+}
 
 
 def _recusa(exc, digitados, etapa):
@@ -409,8 +423,10 @@ def _recusa(exc, digitados, etapa):
         return {"mensagem": mensagem, "ancora": ""}
 
     # `digitados` é a lista de linhas na ordem em que o formulário as enviou; o índice do
-    # formulário é o que compõe o `id` do controle.
-    for indice, linha in enumerate(digitados or []):
+    # formulário é o que compõe o `id` do controle. A etapa `Inscrição` envia duas coisas — a
+    # designação do período e as linhas —, e são as linhas que têm campo a ancorar.
+    linhas = digitados.get("documentos", []) if isinstance(digitados, dict) else (digitados or [])
+    for indice, linha in enumerate(linhas):
         if str(linha.get("id", "")) == identidade:
             return {"mensagem": mensagem, "ancora": f"{prefixo}-{indice}-{campo}"}
     return {"mensagem": mensagem, "ancora": ""}
@@ -429,6 +445,11 @@ def _progresso(edital, atual):
         # `SecaoEdital` só tem linha depois da primeira edição — ausência de linha significa "texto
         # padrão do catálogo". Logo `exists()` responde exatamente "esta etapa já foi gravada",
         # sem custar estado novo.
+        # Como `etapas`: o contrato de inscrição é opcional nesta versão — um Edital pode ser
+        # publicado sem receber inscrições pelo sistema —, e "concluída" diz "já tem conteúdo".
+        "inscricao": CONCLUIDA
+        if edital.documentos_exigidos.exists() or forms.periodo_do_edital(edital)
+        else PENDENTE,
         "conteudo": CONCLUIDA if edital.secoes.exists() else PRONTA,
         "revisao": PENDENTE,
     }
@@ -547,6 +568,19 @@ def compor_etapa(request, edital_id, etapa):
                 if etapa == "cronograma" and digitados is not None
                 else forms.eventos_do_edital(edital)
             ),
+            # Após recusa, o que a pessoa digitou; fora disso, o que está gravado — a mesma regra
+            # das demais etapas, e o que impede a recusa apagar o preenchimento.
+            "documentos": (
+                digitados["documentos"]
+                if etapa == "inscricao" and digitados is not None
+                else forms.documentos_do_edital(edital)
+            ),
+            "periodo_escolhido": (
+                digitados["periodo"]
+                if etapa == "inscricao" and digitados is not None
+                else forms.periodo_do_edital(edital)
+            ),
+            "alcance": forms.alcance_da_aplicabilidade(edital) if etapa == "inscricao" else [],
             "etapas_avaliacao": (
                 _reexibir_etapas(digitados)
                 if etapa == "etapas" and digitados is not None
@@ -643,6 +677,7 @@ LEITURA_DA_ETAPA = {
     "perfis": forms.ler_perfis,
     "cronograma": forms.ler_eventos,
     "etapas": forms.ler_etapas,
+    "inscricao": forms.ler_inscricao,
     "conteudo": forms.ler_secoes,
 }
 
@@ -670,8 +705,19 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
         "schedule": forms.eventos_persistidos(edital),
         "stages": forms.etapas_persistidas(edital),
         "sections": forms.secoes_persistidas(edital),
+        "documentRequirements": forms.documentos_persistidos(edital),
     }
-    conteudo[COLECAO_DA_ETAPA[etapa]] = digitados
+    if etapa == "inscricao":
+        # A única etapa que escreve em duas coleções, porque a designação do período mora **no**
+        # Evento: para quem elabora é uma decisão só — como este Edital recebe inscrição —, e
+        # separá-la em duas telas partiria o contrato ao meio.
+        conteudo["documentRequirements"] = digitados["documentos"]
+        conteudo["schedule"] = [
+            {**evento, "isRegistrationPeriod": str(evento["id"]) == digitados["periodo"]}
+            for evento in conteudo["schedule"]
+        ]
+    else:
+        conteudo[COLECAO_DA_ETAPA[etapa]] = digitados
     return replace_draft(
         actor=ator,
         edital_id=edital.id,
@@ -680,6 +726,7 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
         schedule=conteudo["schedule"],
         stages=conteudo["stages"],
         sections=conteudo["sections"],
+        document_requirements=conteudo["documentRequirements"],
         correlation_id=request.correlation_id,
         # O rótulo da etapa, como quem elabora a vê no assistente (FR-042).
         area=dict((chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO).get(etapa, ""),
@@ -708,6 +755,29 @@ def fragmento_perfil(request):
 def fragmento_evento(request):
     return render(request, "interface/_evento.html",
                   {"evento": {"id": str(uuid4())}, "indice": _indice_de_linha(request)})
+
+
+@require_http_methods(["GET"])
+def fragmento_documento(request, edital_id):
+    """A linha nova de Documento Exigido.
+
+    Escopada ao Edital, como a da Etapa: os dois `select` de aplicabilidade precisam dos Perfis e
+    das modalidades **daquele** Edital para oferecer a escolha. Sem escopo, a linha nasceria com
+    duas listas vazias e a restrição só poderia ser declarada recarregando a página.
+    """
+    ator = identidade.ator_da_sessao(request)
+    edital = obter_edital(actor=ator, edital_id=edital_id) if ator else None
+    if edital is None:
+        raise Http404
+    return render(
+        request,
+        "interface/_documento.html",
+        {
+            "documento": {"id": str(uuid4()), "required": True},
+            "indice": _indice_de_linha(request),
+            "alcance": forms.alcance_da_aplicabilidade(edital),
+        },
+    )
 
 
 @require_http_methods(["GET"])

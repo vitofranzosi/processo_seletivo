@@ -16,10 +16,16 @@ from uuid import UUID
 #   3. `processoCode` e `processoTitle` na raiz, sem os quais o documento não teria como nomear o
 #      Processo sem expor UUID a quem lê.
 #
+# 3 → 4 na `009`, uma vez, cobrindo o contrato operacional de inscrição (FR-008):
+#   1. `isRegistrationPeriod` em cada item de `schedule` — qual Evento é o período de inscrições;
+#   2. `documentRequirements` na raiz — o que o candidato precisa apresentar;
+#   3. a seção gerada `documentos-exigidos` no catálogo — `sections` passa de dez para onze itens.
+#
 # Conteúdo publicado na versão 2 torna-se irretificável, por versão **e** por topologia de seções.
 # É a integridade funcionando, e é o que a precondição de implantação da `007` admite: a feature
-# precede o primeiro Edital de produção, e os dados de demonstração são recriados.
-SCHEMA_VERSION = 3
+# precede o primeiro Edital de produção, e os dados de demonstração são recriados. A `009` repete
+# a mesma precondição pela mesma razão, e ela vale igual para o conteúdo da versão 3.
+SCHEMA_VERSION = 4
 
 
 def _default(value):

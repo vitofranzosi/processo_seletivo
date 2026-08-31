@@ -80,6 +80,7 @@ ESQUEMA_DA_COLECAO = {
     "schedule": "EventoPublicado",
     "stages": "EtapaPublicada",
     "sections": "SecaoPublicada",
+    "documentRequirements": "DocumentoExigidoPublicado",
 }
 
 FORMAS = tuple(
@@ -215,10 +216,10 @@ def test_toda_colecao_de_entidades_do_snapshot_esta_declarada(
     nasce em `edital_snapshot`, e é lá que ela precisa ser encontrada.
     """
     from tests.fixtures.publicacao import publish_original
-    from tests.fixtures.snapshot import rascunho_com_etapas
+    from tests.fixtures.snapshot import rascunho_completo
 
     edital = publish_original(
-        api_client, manager_headers, process_payload, draft=rascunho_com_etapas()
+        api_client, manager_headers, process_payload, draft=rascunho_completo()
     )
     conteudo = VersaoConsolidada.objects.get(edital=edital).content
 
@@ -280,7 +281,7 @@ def test_a_identidade_da_secao_e_a_mesma_antes_e_depois_de_editar_e_republicar(
 
 @pytest.mark.contract
 @pytest.mark.django_db(transaction=True)
-def test_dois_snapshots_da_versao_3_do_mesmo_conteudo_tem_as_mesmas_chaves(
+def test_dois_snapshots_da_versao_vigente_do_mesmo_conteudo_tem_as_mesmas_chaves(
     api_client, manager_headers, process_payload
 ):
     """T037/SC-002a: uma versão canônica que admite duas formas não é uma versão canônica.
@@ -311,6 +312,6 @@ def test_dois_snapshots_da_versao_3_do_mesmo_conteudo_tem_as_mesmas_chaves(
     primeiro = edital_snapshot(edital)
     segundo = edital_snapshot(edital)
 
-    assert primeiro["schemaVersion"] == SCHEMA_VERSION == 3
+    assert primeiro["schemaVersion"] == SCHEMA_VERSION == 4
     assert chaves(primeiro) == chaves(segundo)
     assert {"/processoCode", "/processoTitle"} <= chaves(primeiro)

@@ -72,6 +72,8 @@ class EventSerializer(serializers.Serializer):
         choices=["PLANEJADO", "EM_ANDAMENTO", "CONCLUIDO", "CANCELADO"],
         required=False,
     )
+    # Ausente significa "não é o período de inscrições", que é a verdade para quase todo Evento.
+    isRegistrationPeriod = serializers.BooleanField(required=False, default=False)
 
     def validate(self, attrs):
         try:
@@ -118,6 +120,24 @@ class SectionSerializer(serializers.Serializer):
     content = serializers.CharField(allow_blank=False)
 
 
+class DocumentRequirementSerializer(serializers.Serializer):
+    """O que o Edital exige do candidato.
+
+    `profileId` e `modalityId` ausentes ou nulos significam "não restringe" — é a ausência que
+    produz as quatro combinações de aplicabilidade, e por isso os dois são anuláveis em vez de
+    obrigatórios com valor especial.
+    """
+
+    id = serializers.UUIDField()
+    key = serializers.CharField(min_length=1, max_length=100)
+    name = serializers.CharField(min_length=1, max_length=255)
+    instructions = serializers.CharField(required=False, allow_blank=True, default="")
+    required = serializers.BooleanField(required=False, default=True)
+    order = serializers.IntegerField(min_value=0, required=False, default=0)
+    profileId = serializers.UUIDField(required=False, allow_null=True)
+    modalityId = serializers.UUIDField(required=False, allow_null=True)
+
+
 class EditalDraftSerializer(serializers.Serializer):
     """Rascunho normativo do Edital: Perfis e Cronograma.
 
@@ -136,6 +156,7 @@ class EditalDraftSerializer(serializers.Serializer):
     schedule = EventSerializer(many=True)
     stages = StageSerializer(many=True, required=False)
     sections = SectionSerializer(many=True, required=False)
+    documentRequirements = DocumentRequirementSerializer(many=True, required=False)
 
     def validate(self, attrs):
         desconhecidos = sorted(set(self.initial_data) - set(self.fields))

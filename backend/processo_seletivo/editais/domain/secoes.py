@@ -90,24 +90,35 @@ CATALOGO: tuple[Secao, ...] = (
             "estabelecidas."
         ),
     ),
+    # Gerada, e ao lado da textual `inscricao` em vez de dentro dela: uma entrada do catálogo é
+    # textual **ou** gerada, e o híbrido pediria um terceiro tipo para atender um caso. O que a
+    # seção enuncia — os documentos que o candidato precisa apresentar — deriva dos dados
+    # estruturados, como Perfis, Etapas e Cronograma já derivam (FR-010 da 009).
+    Secao(
+        key="documentos-exigidos",
+        title="Documentos Exigidos para a Inscrição",
+        order=5,
+        type=GERADA,
+        source="documentRequirements",
+    ),
     Secao(
         key="perfis",
         title="Perfis de Vaga",
-        order=5,
+        order=6,
         type=GERADA,
         source="profiles",
     ),
     Secao(
         key="etapas",
         title="Etapas de Avaliação",
-        order=6,
+        order=7,
         type=GERADA,
         source="stages",
     ),
     Secao(
         key="classificacao",
         title="Critérios de Classificação",
-        order=7,
+        order=8,
         type=TEXTUAL,
         default_text=(
             "A classificação observará a pontuação obtida nas Etapas de Avaliação, respeitados os "
@@ -117,14 +128,14 @@ CATALOGO: tuple[Secao, ...] = (
     Secao(
         key="cronograma",
         title="Cronograma",
-        order=8,
+        order=9,
         type=GERADA,
         source="schedule",
     ),
     Secao(
         key="recursos",
         title="Dos Recursos",
-        order=9,
+        order=10,
         type=TEXTUAL,
         default_text=(
             "Caberá recurso contra os resultados divulgados, nos prazos do Cronograma, pelos meios "
@@ -134,7 +145,7 @@ CATALOGO: tuple[Secao, ...] = (
     Secao(
         key="disposicoes-finais",
         title="Disposições Finais",
-        order=10,
+        order=11,
         type=TEXTUAL,
         default_text=(
             "Os casos omissos serão resolvidos pela autoridade responsável pelo processo seletivo, "

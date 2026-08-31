@@ -44,6 +44,11 @@ urlpatterns = [
         views.fragmento_etapa,
         name="fragmento-etapa",
     ),
+    path(
+        "editais/<uuid:edital_id>/fragmentos/documento",
+        views.fragmento_documento,
+        name="fragmento-documento",
+    ),
     path("fragmentos/perfil", views.fragmento_perfil, name="fragmento-perfil"),
     # O índice do Perfil vai na rota porque os campos da modalidade são nomeados por ele:
     # `modalidade-<perfil>-<n>-…`. Sem isso a linha nova não saberia a que Perfil pertence.

@@ -3,9 +3,14 @@ from django.db import transaction
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.domain import secoes as secoes_do_catalogo
 from processo_seletivo.editais.domain.cronograma import ScheduleValidationError, validate_schedule
+from processo_seletivo.editais.domain.documentos import (
+    DocumentRequirementValidationError,
+    validate_document_requirements,
+)
 from processo_seletivo.editais.domain.etapas import StageValidationError, validate_stages
 from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_profiles
 from processo_seletivo.editais.models.cronograma import Cronograma, EventoCronograma
+from processo_seletivo.editais.models.documentos import DocumentoExigido
 from processo_seletivo.editais.models.etapas import EtapaAvaliacao
 from processo_seletivo.editais.models.perfis import (
     ModalidadeConcorrencia,
@@ -116,11 +121,13 @@ def replace_draft(
     correlation_id,
     stages=None,
     sections=None,
+    document_requirements=None,
     area="",
 ):
     require_permission(actor, "edital:elaborar")
     stages = list(stages or [])
     sections = list(sections or [])
+    document_requirements = list(document_requirements or [])
     _validar_secoes(sections)
     try:
         validate_profiles(profiles)
@@ -147,6 +154,18 @@ def replace_draft(
         # recusa no controle que a causou, e o resumo voltaria a ser texto solto (FR-033).
         raise DomainError(
             "invalid_stages", str(exc), 422, campo=exc.campo, identidade=exc.identidade
+        ) from exc
+    try:
+        # Contra os Perfis desta gravação, pela mesma razão das Etapas: um Perfil removido no
+        # mesmo envio já não existe, e conferir contra o banco recusaria o que a pessoa fez.
+        validate_document_requirements(document_requirements, profiles=profiles)
+    except DocumentRequirementValidationError as exc:
+        raise DomainError(
+            "invalid_document_requirements",
+            str(exc),
+            422,
+            campo=exc.campo,
+            identidade=exc.identidade,
         ) from exc
     with command_context() as now:
         try:
@@ -222,6 +241,7 @@ def replace_draft(
                     end_at=event.get("endAt"),
                     order=event.get("order", 0),
                     status=event.get("status", EventoCronograma.Status.PLANEJADO),
+                    is_registration_period=event.get("isRegistrationPeriod", False),
                 )
                 for event in schedule
             ]
@@ -256,6 +276,25 @@ def replace_draft(
                     content=section["content"],
                 )
                 for section in sections
+            ]
+        )
+        # Depois dos Perfis e das Modalidades, porque a aplicabilidade os referencia — mesma razão
+        # que já ordenava as Etapas depois dos Eventos.
+        DocumentoExigido.objects.filter(edital=edital).delete()
+        DocumentoExigido.objects.bulk_create(
+            [
+                DocumentoExigido(
+                    id=requirement["id"],
+                    edital=edital,
+                    key=requirement["key"],
+                    name=requirement["name"],
+                    instructions=requirement.get("instructions", ""),
+                    required=requirement.get("required", True),
+                    order=requirement.get("order", 0),
+                    perfil_id=requirement.get("profileId"),
+                    modalidade_id=requirement.get("modalityId"),
+                )
+                for requirement in document_requirements
             ]
         )
         compare_and_swap(

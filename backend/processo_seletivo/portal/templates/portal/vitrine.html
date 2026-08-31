@@ -12,6 +12,7 @@ o Edital completo.</p>
     <a class="titulo" href="{% url 'portal:selecao' selecao.edital_id %}">{{ selecao.processo_titulo }}</a>
     <p class="meta">{{ selecao.processo_codigo }} · Edital {{ selecao.numero }}/{{ selecao.ano }}</p>
     <p class="meta">Unidade: {{ selecao.unidade }}</p>
+    {% include "portal/_periodo.html" with periodo=selecao.periodo %}
   </li>
   {% endfor %}
 </ul>
