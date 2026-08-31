@@ -274,11 +274,19 @@ def test_o_corpo_normativo_quebra_nas_mesmas_paginas_na_previa_e_no_publicado():
     publicado = paginas_de(documento(SNAPSHOT, HASH))
     previa = paginas_de(documento(SNAPSHOT, HASH, modo=MODO_PREVIA))
 
-    assert len(previa) == len(publicado), "a prévia paginou diferente do publicado"
-    for numero, (uma, outra) in enumerate(zip(previa, publicado, strict=True), 1):
+    # O publicado pode ter **mais** páginas: o fechamento do ato — autoridade e verificação — só
+    # existe nele, e é um bloco coeso que pode não caber na última página do corpo. O que FR-041
+    # promete é que o **corpo normativo** quebre igual, e é isso que se compara.
+    assert len(publicado) >= len(previa), "o publicado paginou o corpo em menos páginas"
+    for numero, uma in enumerate(previa, 1):
+        outra = publicado[numero - 1]
         assert corpo_normativo(uma, MARCA_DE_PREVIA) == corpo_normativo(
             outra, MARCA_DE_PREVIA
         ), f"o corpo normativo da página {numero} difere entre prévia e publicado"
+    for excedente in publicado[len(previa) :]:
+        assert not corpo_normativo(excedente, MARCA_DE_PREVIA), (
+            "a página a mais do publicado deveria conter só o fechamento do ato"
+        )
 
 
 @pytest.mark.contract

@@ -219,6 +219,46 @@ def _instante(valor) -> str:
     return momento.strftime("%d/%m/%Y %H:%M")
 
 
+FOLGA_DA_CELULA = 3.0
+# O quadro abre logo abaixo da legenda que o anuncia: o bastante para o fio passar sob as descidas
+# dela, e pouco o bastante para não invadir a primeira linha do próprio quadro.
+FOLGA_ANTES_DO_QUADRO = 8.0
+
+
+def _grade(quadro, base):
+    """Os fios de um quadro: contorno, divisão entre linhas e divisão entre colunas.
+
+    Desenhada só depois de o texto estar colocado, pela mesma razão da moldura do Perfil (D-003):
+    a altura de uma linha é a da sua célula mais alta, e medir antes seria medir duas vezes e
+    aceitar que as duas medidas divirjam.
+    """
+    linhas = quadro["linhas"]
+    if not linhas or quadro["topo"] is None:
+        return []
+    topo = quadro["topo"] + FOLGA_DA_CELULA
+    fundo = min(base, linhas[-1][1]) - FOLGA_DA_CELULA - 3
+    bordas = quadro["bordas"]
+    formas = [("ret", bordas[0], fundo, bordas[-1] - bordas[0], topo - fundo)]
+    # Um fio abaixo de cada linha, menos a última: aquela fecha no contorno.
+    for _, fim in linhas[:-1]:
+        altura = fim - FOLGA_DA_CELULA - 3
+        formas.append(("seg", bordas[0], altura, bordas[-1], altura))
+    for borda in bordas[1:-1]:
+        formas.append(("seg", borda, fundo, borda, topo))
+    return formas
+
+
+def _moldura(topo, base):
+    """O contorno de um bloco, da primeira à última linha que ele colocou na página."""
+    return (
+        "ret",
+        MARGEM - 6,
+        base - 4,
+        LARGURA - 2 * MARGEM + 12,
+        topo - base + FOLGA_DA_MOLDURA + 4,
+    )
+
+
 def _x(texto, fonte, tamanho, recuo, alinhamento):
     """Onde a linha começa. Centralizar e alinhar à direita só é possível por causa de FR-002."""
     if alinhamento == ESQUERDA:
@@ -283,13 +323,33 @@ class Composicao:
             self.itens.append(("fecha", moldura, coeso))
 
     @contextmanager
-    def tabela(self):
-        """Um bloco cujo cabeçalho se repete na continuação (FR-026)."""
-        self.itens.append(("abre", False, False))
+    def tabela(self, bordas=()):
+        """Um quadro: cabeçalho que se repete e grade desenhada (FR-023, FR-026).
+
+        `bordas` são as posições horizontais das divisões de coluna, da esquerda da tabela à
+        direita. É o que falta a uma "tabela" que é só um alinhamento de texto — e é o que os
+        Editais reais usam: fio em cada célula, não colunas soltas no branco.
+        """
+        self.itens.append(("abre_tabela", tuple(bordas)))
         try:
             yield
         finally:
             self.itens.append(("fecha", "tabela", False))
+
+    @contextmanager
+    def linha_de_tabela(self):
+        """Uma linha do quadro — unidade da grade e **unidade segura de quebra** (FR-021).
+
+        Coesa: uma célula que reflui em sete linhas não deixa a oitava sozinha na página seguinte.
+        A cascata só quebra por dentro dela quando a própria linha for maior que uma página.
+        """
+        self.itens.append(("abre_linha",))
+        self.itens.append(("abre", False, True))
+        try:
+            yield
+        finally:
+            self.itens.append(("fecha", False, True))
+            self.itens.append(("fecha_linha",))
 
     # -- medição -------------------------------------------------------------
 
@@ -338,6 +398,10 @@ class Composicao:
         # sozinho numa página em que a tabela já terminou — o mesmo defeito do título órfão, uma
         # linha abaixo. Ele só se materializa quando há linha para encabeçar.
         cabecalho_pendente = False
+        # A geometria do quadro só existe depois de o texto ser colocado: a altura de uma linha é
+        # a da sua célula mais alta, e isso depende do refluxo. Por isso a grade é acumulada aqui
+        # e emitida ao fechar a tabela — ou na quebra, para o trecho que ficou nesta página.
+        quadro: dict | None = None
 
         def nova_pagina():
             """Fecha a página — **levando junto** o rastro de linhas que pediram companhia.
@@ -346,7 +410,7 @@ class Composicao:
             não cabe. Quem quebra a página é quem tem de devolver o título, senão ele fica para
             trás sozinho — que é o defeito de composição automática mais visível de todos.
             """
-            nonlocal atual, tracos, y, cabecalho_pendente
+            nonlocal atual, tracos, y, cabecalho_pendente, quadro
             # O rastro é o que a quebra devolve à página nova. Ele tem de caber lá com folga
             # para o que vem em seguida: um título que arrastasse meia página deixaria de ser
             # cortesia e viraria a causa da quebra seguinte.
@@ -359,13 +423,17 @@ class Composicao:
                 rastro.insert(0, atual.pop())
             for aberto in pilha:
                 if aberto["moldura"] and aberto["topo"] is not None:
-                    tracos.append((aberto["topo"], rastro[0][4] if rastro else y))
+                    tracos.append(_moldura(aberto["topo"], rastro[0][4] if rastro else y))
+            if quadro is not None:
+                tracos.extend(_grade(quadro, rastro[0][4] if rastro else y))
             paginas.append((atual, tracos))
             atual, tracos, y = [], [], TOPO
             for texto, fonte, tamanho, x, _, junto in rastro:
                 y -= tamanho * 1.45
                 atual.append((texto, fonte, tamanho, x, y, junto))
             cabecalho_pendente = bool(cabecalho_ativo)
+            if quadro is not None:
+                quadro = {"bordas": quadro["bordas"], "topo": None, "linhas": []}
             # Um bloco que já estava aberto reabre a moldura abaixo do rastro, pela mesma razão.
             for aberto in pilha:
                 if aberto["moldura"] and aberto["topo"] is not None:
@@ -373,6 +441,34 @@ class Composicao:
 
         while indice < len(self.itens):
             item = self.itens[indice]
+
+            if item[0] == "abre_tabela":
+                # O topo nasce **desconhecido**: fixá-lo aqui o poria na linha de base da legenda
+                # escrita logo acima, e o fio cortaria o texto que apenas anuncia o quadro. Ele é
+                # a posição em que a primeira linha do quadro começa, e não antes dela.
+                quadro = {"bordas": item[1], "topo": None, "linhas": []}
+                pilha.append({"moldura": False, "topo": None})
+                indice += 1
+                continue
+
+            if item[0] == "abre_linha":
+                if quadro is not None:
+                    quadro["inicio"] = y
+                    if quadro["topo"] is None:
+                        # `y` aqui é a linha de base da legenda escrita logo acima, não um cursor
+                        # livre: sem o desconto, o fio de topo sobe pela altura-x dela. É o mesmo
+                        # ajuste que a moldura do Perfil precisou, pela mesma razão.
+                        quadro["topo"] = y - (
+                            FOLGA_ANTES_DO_QUADRO if atual and atual[-1][4] >= y else 0.0
+                        )
+                indice += 1
+                continue
+
+            if item[0] == "fecha_linha":
+                if quadro is not None and "inicio" in quadro:
+                    quadro["linhas"].append((quadro["inicio"], y))
+                indice += 1
+                continue
 
             if item[0] == "abre":
                 _, moldura, coeso = item
@@ -394,9 +490,12 @@ class Composicao:
             if item[0] == "fecha":
                 if item[1] == "tabela":
                     cabecalho_ativo, cabecalho_pendente = [], False
+                    if quadro is not None:
+                        tracos.extend(_grade(quadro, y))
+                        quadro = None
                 aberto = pilha.pop()
                 if aberto["moldura"] and aberto["topo"] is not None:
-                    tracos.append((aberto["topo"], y))
+                    tracos.append(_moldura(aberto["topo"], y))
                 indice += 1
                 continue
 
@@ -421,9 +520,16 @@ class Composicao:
                 antes, altura = 0.0, altura - antes
             if texto and cabecalho_pendente:
                 cabecalho_pendente = False
+                antes_do_cabecalho = y
                 y -= max(corpo for _, _, corpo, _ in cabecalho_ativo) * 1.45
                 for repetido, sua_fonte, seu_corpo, seu_x in cabecalho_ativo:
                     atual.append((repetido, sua_fonte, seu_corpo, seu_x, y, False))
+                if quadro is not None:
+                    # O cabeçalho repetido é a primeira linha do quadro nesta página: ele abre a
+                    # grade e ganha o seu fio, como qualquer outra.
+                    if quadro["topo"] is None:
+                        quadro["topo"] = antes_do_cabecalho
+                    quadro["linhas"].append((antes_do_cabecalho, y))
             y -= altura
             if texto:
                 x = _x(texto, fonte, tamanho, recuo, alinhamento)
@@ -482,6 +588,17 @@ def _cabecalho(composicao, snapshot):
 PADDING_DA_COLUNA = 12.0
 
 
+def _x_na_celula(texto, fonte, tamanho, recuo, coluna, alinhamento):
+    """Onde a célula começa dentro da sua coluna.
+
+    Centralizar o cabeçalho é o que os Editais de referência fazem — e só é possível porque a
+    largura da coluna e a do texto são ambas conhecidas (FR-002).
+    """
+    if alinhamento != CENTRO:
+        return recuo
+    return recuo + max((coluna - PADDING_DA_COLUNA - largura(texto, tamanho, fonte)) / 2, 0.0)
+
+
 def _larguras_das_colunas(cabecalho, linhas, tamanho, disponivel):
     """A largura de cada coluna, medida pelo conteúdo **e limitada à área útil** (D-007).
 
@@ -513,7 +630,11 @@ def _larguras_das_colunas(cabecalho, linhas, tamanho, disponivel):
         naturais[maior] = sobra
     sobra = disponivel - sum(naturais)
     if sobra > 0:
-        naturais[naturais.index(max(naturais))] += sobra
+        # A folga é distribuída **em proporção**, e não entregue à coluna mais larga. Num quadro de
+        # rótulo e valor, a coluna mais larga é a dos rótulos, e dar-lhe tudo empurra o valor para
+        # a beira direita com um vão no meio — o quadro passa a parecer mal preenchido.
+        total = sum(naturais)
+        naturais = [n + sobra * n / total for n in naturais]
     return naturais
 
 
@@ -528,35 +649,49 @@ def _tabela(composicao, cabecalho, linhas, *, recuo=18.0, tamanho=CORPO_TEXTO):
     disponivel = LARGURA - 2 * MARGEM - recuo
     colunas = _larguras_das_colunas(cabecalho, linhas, tamanho, disponivel)
 
-    def escrever_linha(celulas, fonte, repetir=False):
+    def escrever_linha(celulas, fonte, repetir=False, alinhamento=ESQUERDA):
         refluidas = [
+            # O teto do refluxo é a largura da coluna menos o mesmo padding com que ela foi
+            # medida. Descontar mais do que se somou faria a célula que **definiu** a coluna
+            # quebrar dentro dela — `Campus Serra` virava duas linhas.
             _quebrar(celula, tamanho, 0.0, fonte, limite=colunas[c] - PADDING_DA_COLUNA)
             for c, celula in enumerate(celulas)
         ]
-        for altura in range(max(len(parte) for parte in refluidas)):
-            deslocamento, primeira_da_linha = recuo, True
-            for indice, partes in enumerate(refluidas):
-                texto = partes[altura] if altura < len(partes) else ""
-                if texto:
-                    composicao.escrever(
-                        texto,
-                        tamanho=tamanho,
-                        fonte=fonte,
-                        recuo=deslocamento,
-                        antes=(
-                            (ANTES_DE_LINHA if altura == 0 else 0.0)
-                            if primeira_da_linha
-                            else -(tamanho * 1.45)
-                        ),
-                        junto=repetir,
-                        repetir=repetir,
-                    )
-                    primeira_da_linha = False
-                deslocamento += colunas[indice]
+        with composicao.linha_de_tabela():
+            for altura in range(max(len(parte) for parte in refluidas)):
+                deslocamento, primeira_da_linha = recuo + FOLGA_DA_CELULA + 2, True
+                for indice, partes in enumerate(refluidas):
+                    texto = partes[altura] if altura < len(partes) else ""
+                    if texto:
+                        celula = _x_na_celula(
+                            texto, fonte, tamanho, deslocamento, colunas[indice], alinhamento
+                        )
+                        composicao.escrever(
+                            texto,
+                            tamanho=tamanho,
+                            fonte=fonte,
+                            recuo=celula,
+                            antes=(
+                                (ANTES_DE_LINHA if altura == 0 else ANTES_DE_LINHA / 2)
+                                if primeira_da_linha
+                                else -(tamanho * 1.45)
+                            ),
+                            junto=repetir,
+                            repetir=repetir,
+                        )
+                        primeira_da_linha = False
+                    deslocamento += colunas[indice]
 
-    with composicao.tabela():
+    # As divisões de coluna, em posição absoluta: é o que a grade precisa saber, e o que a
+    # composição não teria como deduzir do texto já colocado.
+    bordas, acumulado = [MARGEM + recuo], MARGEM + recuo
+    for coluna in colunas:
+        acumulado += coluna
+        bordas.append(acumulado)
+
+    with composicao.tabela(bordas=bordas):
         if cabecalho:
-            escrever_linha(cabecalho, NEGRITO, repetir=True)
+            escrever_linha(cabecalho, NEGRITO, repetir=True, alinhamento=CENTRO)
         for linha in linhas:
             escrever_linha(linha, REGULAR)
 
@@ -622,12 +757,17 @@ def _perfis(composicao, snapshot, secao=0):
                     antes=ANTES_DE_BLOCO + 4,
                     junto=True,
                 )
-                identificacao = [["Localidade", perfil.get("locality", "") or "—",
-                                  "Vagas imediatas", str(perfil.get("immediateVacancies", 0))]]
                 reserva = RESERVA.get(perfil.get("reserveType"), perfil.get("reserveType", ""))
                 if perfil.get("reserveLimit") is not None:
                     reserva = f"{reserva} em {perfil['reserveLimit']}"
-                identificacao.append(["Cadastro Reserva", reserva, "", ""])
+                # Rótulo-valor em duas colunas, e não pares lado a lado: um quadro de quatro
+                # colunas deixaria células vazias quando o número de campos fosse ímpar, e célula
+                # vazia num quadro parece dado faltando.
+                identificacao = [
+                    ["Localidade", perfil.get("locality", "") or "—"],
+                    ["Vagas imediatas", str(perfil.get("immediateVacancies", 0))],
+                    ["Cadastro Reserva", reserva],
+                ]
                 # Sem cabeçalho de coluna: aqui o rótulo **é** a primeira célula. Um cabeçalho
                 # sobre pares rótulo-valor não nomearia nada.
                 _tabela(composicao, None, identificacao)
@@ -835,13 +975,19 @@ def _fluxo_da_pagina(linhas, rodape, marca="", tracos=()):
     # Os fios primeiro: no PDF, o que é emitido depois cobre o que veio antes. Emitir contorno
     # antes de letra garante que nenhum fio passe por cima de um glifo — sem precisar de camada,
     # z-index ou qualquer conceito de composição gráfica (D-002).
-    for topo, base in tracos:
-        largura_util = LARGURA - 2 * MARGEM
-        altura = topo - base + FOLGA_DA_MOLDURA + 4
-        partes.append(
-            f"{Composicao.ESPESSURA_DO_FIO} w "
-            f"{MARGEM - 6:.1f} {base - 4:.1f} {largura_util + 12:.1f} {altura:.1f} re S".encode()
-        )
+    for forma in tracos:
+        if forma[0] == "ret":
+            _, x, y, largura_do_traco, altura = forma
+            partes.append(
+                f"{Composicao.ESPESSURA_DO_FIO} w "
+                f"{x:.1f} {y:.1f} {largura_do_traco:.1f} {altura:.1f} re S".encode()
+            )
+        else:
+            _, x1, y1, x2, y2 = forma
+            partes.append(
+                f"{Composicao.ESPESSURA_DO_FIO} w "
+                f"{x1:.1f} {y1:.1f} m {x2:.1f} {y2:.1f} l S".encode()
+            )
     if marca:
         partes.append(
             b"BT /" + NEGRITO.encode()

@@ -1182,3 +1182,56 @@ def test_o_fechamento_do_ato_nao_se_parte_entre_paginas():
     assert len(set(fechamento)) == 1, (
         f"o fechamento do ato ficou espalhado pelas páginas {sorted(set(fechamento))}"
     )
+
+
+def test_uma_linha_de_tabela_com_celula_refluida_nao_se_parte_entre_paginas():
+    """FR-021 define a linha da tabela como unidade segura de quebra.
+
+    Transformar cada linha visual da célula em item independente fazia a linha lógica escorregar:
+    sete linhas de uma modalidade ficavam numa página e a última, sozinha, na seguinte — mesmo
+    cabendo inteira lá. `foundation` é texto livre, então é entrada válida.
+    """
+    curtas = [
+        {
+            "id": f"44444444-4444-4444-4444-4444444444{n:02d}",
+            "code": f"M{n:02d}",
+            "name": f"Modalidade {n}",
+            "description": "",
+            "normativeRule": {
+                "id": f"55555555-5555-5555-5555-5555555555{n:02d}",
+                "foundation": "Lei 12.990/2014",
+                "version": "2014-06-09",
+                "percentage": "20.0000",
+                "calculation": {}, "rounding": {}, "distribution": {}, "callRules": {},
+                "effectiveFrom": None,
+            },
+        }
+        for n in range(1, 34)
+    ]
+    longa = {
+        **curtas[0],
+        "id": "44444444-4444-4444-4444-4444444444ff",
+        "code": "MLONGA",
+        "name": "Modalidade de fundamento extenso",
+        "normativeRule": {
+            **curtas[0]["normativeRule"],
+            "id": "55555555-5555-5555-5555-5555555555ff",
+            "foundation": (
+                "Lei nº 12.990, de 9 de junho de 2014, combinada com a Portaria Normativa "
+                "que dispõe sobre a reserva de vagas e com as demais normas aplicáveis ao "
+                "certame, observado o disposto neste Edital e na legislação vigente"
+            ),
+        },
+    }
+    perfil = {**snapshot()["profiles"][0], "competitionModalities": curtas + [longa]}
+    paginas = paginas_de(documento(snapshot(profiles=[perfil])))
+
+    onde = [
+        numero
+        for numero, pagina in enumerate(paginas, 1)
+        for linha in pagina
+        if "MLONGA" in linha or "reserva de vagas" in linha or "certame, observado" in linha
+    ]
+    assert len(set(onde)) == 1, (
+        f"a linha da tabela ficou dividida entre as páginas {sorted(set(onde))}"
+    )
