@@ -334,8 +334,11 @@ registrá-las lá com a alternativa considerada e a razão da escolha. O que apa
   responsável, seguidos do ato, do Processo Seletivo e do título do Edital. *Órgão, instituição e
   unidade são constantes do compositor — a unidade já é hoje, escrita em linha única. Ato, Processo
   e título vêm do snapshot, que desde a `007` carrega `processoCode` e `processoTitle`.*
-- **FR-007**: O ato — `EDITAL Nº <número>/<ano>` — DEVE ser o elemento de maior destaque
-  tipográfico da primeira página.
+- **FR-007**: O ato — `EDITAL Nº <número>/<ano>` — DEVE ser destacado por **peso, caixa alta e
+  centralização**, e não por corpo tipográfico grande. *Correção calibrada contra os alvos: nos
+  Editais 62 e 73 o ato é negrito, maiúsculo e centralizado, em corpo próximo ao do texto — a
+  hierarquia vem da forma, não do tamanho. A primeira redação exigia "o maior destaque
+  tipográfico", que produziria um título fora do padrão institucional.*
 - **FR-008**: O título/objeto do Edital DEVE aparecer imediatamente associado ao ato, e a descrição
   curta NÃO DEVE competir tipograficamente com ele.
 - **FR-009**: Brasão, logotipo e qualquer elemento gráfico de identidade visual ficam **fora da V1**.
@@ -494,8 +497,9 @@ compositor, que ganha um parâmetro de contexto do ato.
 ## Success Criteria *(mandatory)*
 
 - **SC-001**: A primeira página apresenta, nesta ordem e antes de qualquer conteúdo normativo,
-  órgão, instituição, unidade, ato, Processo e título; o ato tem o maior corpo tipográfico da
-  página; e a descrição tem corpo menor que o do título.
+  órgão, instituição, unidade, ato, Processo e título; órgão, instituição e unidade estão
+  centralizados em corpo menor que o do texto; o ato está em negrito, caixa alta e centralizado; e a
+  descrição não excede o título em peso nem em corpo.
 - **SC-002**: Todas as seções normativas materializadas são numeradas, e a numeração é contínua —
   inclusive num Edital em que alguma seção gerada não é materializada.
 - **SC-003**: Nenhum número de seção aparece no conteúdo homologado; alterar a ordem produz
@@ -550,7 +554,7 @@ não é aceita com item da sua faixa respondido "não".
 | # | Observável na página | Faixa |
 |---|---|---|
 | R-01 | Órgão, instituição e unidade abrem a página 1, antes de qualquer conteúdo normativo | 1 |
-| R-02 | O ato é o texto de maior corpo da página 1 | 1 |
+| R-02 | O ato está em negrito, caixa alta e centralizado, destacado do texto ao redor | 1 |
 | R-03 | Toda seção exibe número, e a sequência vai de 1 até a última sem lacuna | 1 |
 | R-04 | Cada Perfil está delimitado por fio e separado do seguinte | 2 |
 | R-05 | Nenhum Perfil que caberia inteiro na página seguinte aparece partido | 2 |
@@ -569,14 +573,25 @@ não é aceita com item da sua faixa respondido "não".
 A comparação com Editais reais é parte da demonstração e, para ser repetível, precisa de referência
 disponível no repositório.
 
-O **estado inicial** está versionado em `referencias/estado-inicial-apos-007.pdf` — o documento que
-o sistema produz hoje, depois da `007`. O **alvo** — ao menos um Edital oficial do Cefor — DEVE ser
-versionado no mesmo diretório **antes da entrega 1**, que ele bloqueia. Não sendo possível
-versioná-lo, ele DEVE ser identificado por fonte, número, ano e página, com a lista das
-características observáveis que se está comparando.
+**Estado inicial**: `referencias/estado-inicial-apos-007.pdf` — o documento que o sistema produz
+hoje, depois da `007`.
 
-*Sem isso a demonstração é reproduzível apenas por quem já viu os documentos, e o critério
-emblemático da feature vira memória.*
+**Alvos**: `referencias/alvo-edital-62-2026.pdf` e `referencias/alvo-edital-73-2026.pdf` — Editais
+oficiais do Cefor. As características observáveis contra as quais a rubrica é conferida:
+
+| Observado nos dois alvos | Consequência para a `008` |
+|---|---|
+| Brasão centralizado no topo | **Diferença aceita** — FR-009 põe imagem fora da V1 |
+| Órgão, instituição e unidade centralizados, em corpo menor que o do texto | FR-006 |
+| Ato em negrito, caixa alta e centralizado, em corpo próximo ao do texto | FR-007, corrigido por esta calibração |
+| Parágrafo de preâmbulo não numerado, antes da seção 1 | Já existe como seção de Apresentação |
+| Seções `1. DAS DISPOSIÇÕES PRELIMINARES`, negrito e caixa alta | FR-011 |
+| Itens numerados `1.1`, `2.1`, `3.2.1` dentro da seção | **Diferença aceita** — o conteúdo das seções textuais é texto livre, e numerar parágrafo automaticamente seria engine normativa, vedada por P-003 |
+| Corpo **justificado** nos dois alvos | **Diferença aceita e declarada** — FR-002 exclui justificação da V1. É a maior diferença remanescente depois do brasão |
+
+*As três diferenças aceitas são deliberadas e estão declaradas nos requisitos que as excluem. O
+critério emblemático não é identidade de diagramação (§3): é reconhecer os dois documentos como da
+mesma organização.*
 
 **Sem teste pixel-perfect e sem screenshot test.** Os testes automatizados verificam propriedades
 semânticas: o conteúdo está presente, as páginas existem e são numeradas, o hash é preservado,
