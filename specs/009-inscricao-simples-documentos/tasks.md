@@ -47,15 +47,15 @@ administrativo continua em `interface`.
 
 **Purpose**: os dois canais existirem, com configuração e linguagem visual compartilhada.
 
-- [ ] T001 [P] Criar o esqueleto do app em `backend/processo_seletivo/inscricoes/` — `__init__.py`, `apps.py`, `models.py`, `domain/__init__.py`, `application/__init__.py`, `migrations/__init__.py`
-- [ ] T002 [P] Criar o esqueleto do app em `backend/processo_seletivo/portal/` — `__init__.py`, `apps.py`, `urls.py`, `views.py`, `templates/portal/`, `static/portal/`
-- [ ] T003 Registrar `processo_seletivo.inscricoes` e `processo_seletivo.portal` em `INSTALLED_APPS` de `backend/config/settings/base.py`
-- [ ] T004 Incluir o roteamento público sob `selecoes/` em `backend/config/urls.py`, fora de `gestao/` e de `api/v1/`
-- [ ] T005 Declarar `ARQUIVOS_CANDIDATOS_RAIZ`, `ARQUIVOS_CANDIDATOS_LIMITE_BYTES` (padrão 10 MB) e `PORTAL_IDENTIDADE_DEMO` em `backend/config/settings/base.py`, no formato das configurações existentes lidas de ambiente
-- [ ] T006 Acrescentar as duas guardas `_exigir` em `backend/config/settings/production.py` — raiz de arquivos declarada, absoluta e fora da árvore estática; provedor de demonstração desligado
-- [ ] T007 [P] Teste das guardas em `backend/tests/unit/test_configuracao_producao.py`, no padrão das que já cobrem o seletor institucional
-- [ ] T008 [P] Extrair o bloco de tokens de `backend/processo_seletivo/interface/templates/interface/base.html` para `backend/processo_seletivo/shared/templates/shared/_tokens.css.html` e incluí-lo no `<style>` da base administrativa, sem mudar nenhuma regra
-- [ ] T009 [P] Criar `backend/processo_seletivo/portal/templates/portal/base.html` incluindo a parcial de tokens, com consultas de mídia, link de pular, foco visível e nenhum elemento de gestão
+- [X] T001 [P] Criar o esqueleto do app em `backend/processo_seletivo/inscricoes/` — `__init__.py`, `apps.py`, `models.py`, `domain/__init__.py`, `application/__init__.py`, `migrations/__init__.py`
+- [X] T002 [P] Criar o esqueleto do app em `backend/processo_seletivo/portal/` — `__init__.py`, `apps.py`, `urls.py`, `views.py`, `templates/portal/`, `static/portal/`
+- [X] T003 Registrar `processo_seletivo.inscricoes` e `processo_seletivo.portal` em `INSTALLED_APPS` de `backend/config/settings/base.py`
+- [X] T004 Incluir o roteamento público sob `selecoes/` em `backend/config/urls.py`, fora de `gestao/` e de `api/v1/`
+- [X] T005 Declarar `ARQUIVOS_CANDIDATOS_RAIZ`, `ARQUIVOS_CANDIDATOS_LIMITE_BYTES` (padrão 10 MB) e `PORTAL_IDENTIDADE_DEMO` em `backend/config/settings/base.py`, no formato das configurações existentes lidas de ambiente
+- [X] T006 Acrescentar as duas guardas `_exigir` em `backend/config/settings/production.py` — raiz de arquivos declarada, absoluta e fora da árvore estática; provedor de demonstração desligado
+- [X] T007 [P] Teste das guardas em `backend/tests/unit/test_configuracao_producao.py`, no padrão das que já cobrem o seletor institucional
+- [X] T008 [P] Extrair o bloco de tokens de `backend/processo_seletivo/interface/templates/interface/base.html` para `backend/processo_seletivo/shared/templates/shared/_tokens.css.html` e incluí-lo no `<style>` da base administrativa, sem mudar nenhuma regra
+- [X] T009 [P] Criar `backend/processo_seletivo/portal/templates/portal/base.html` incluindo a parcial de tokens, com consultas de mídia, link de pular, foco visível e nenhum elemento de gestão
 
 **Checkpoint**: o canal público responde, ainda vazio, e as duas bases compartilham a mesma paleta.
 
@@ -67,10 +67,10 @@ administrativo continua em `interface`.
 
 **⚠️ CRITICAL**: bloqueia as entregas 1 a 6.
 
-- [ ] T010 Seletor de leitura pública em `backend/processo_seletivo/publicacoes/application/selectors.py` — Editais publicamente consultáveis com a respectiva versão consolidada vigente, sem tocar tabela de elaboração
-- [ ] T011 [P] Decorador de resposta privada (`no-store`) em `backend/processo_seletivo/shared/http.py`, aplicável a view de template e a resposta de arquivo
-- [ ] T012 [P] Fixture compartilhada de Edital publicado com dois Perfis e uma modalidade reservada em `backend/tests/fixtures/`, reutilizável por integração e aceitação
-- [ ] T013 [P] Teste do seletor em `backend/tests/integration/publicacoes/test_selecoes_publicas.py` — Edital não publicado não aparece; alteração no rascunho não muda o que o seletor devolve (FR-011)
+- [X] T010 Seletor de leitura pública em `backend/processo_seletivo/publicacoes/application/selectors.py` — Editais publicamente consultáveis com a respectiva versão consolidada vigente, sem tocar tabela de elaboração
+- [X] T011 [P] Decorador de resposta privada (`no-store`) em `backend/processo_seletivo/shared/http.py`, aplicável a view de template e a resposta de arquivo
+- [X] T012 [P] Fixture compartilhada de Edital publicado com dois Perfis e uma modalidade reservada em `backend/tests/fixtures/`, reutilizável por integração e aceitação
+- [X] T013 [P] Teste do seletor em `backend/tests/integration/publicacoes/test_selecoes_publicas.py` — Edital não publicado não aparece; alteração no rascunho não muda o que o seletor devolve (FR-011)
 
 **Checkpoint**: fundação pronta. As entregas podem começar.
 
@@ -88,16 +88,16 @@ e abrir o documento oficial — sem `/gestao/` e sem identificação.
 
 ### Tests for User Story 1
 
-- [ ] T014 [P] [US1] Teste de integração da vitrine em `backend/tests/integration/portal/test_vitrine.py` — lista só o publicamente consultável, sem identificação, sem dado administrativo
-- [ ] T015 [P] [US1] Teste do detalhe em `backend/tests/integration/portal/test_detalhe_selecao.py` — Perfis, vagas, localidade e requisitos vêm da versão vigente; alterar o rascunho não muda a página
-- [ ] T016 [P] [US1] Teste em `backend/tests/integration/portal/test_documento_oficial.py` — o link do documento publicado é alcançável do detalhe
+- [X] T014 [P] [US1] Teste de integração da vitrine em `backend/tests/integration/portal/test_vitrine.py` — lista só o publicamente consultável, sem identificação, sem dado administrativo
+- [X] T015 [P] [US1] Teste do detalhe em `backend/tests/integration/portal/test_detalhe_selecao.py` — Perfis, vagas, localidade e requisitos vêm da versão vigente; alterar o rascunho não muda a página
+- [X] T016 [P] [US1] Teste em `backend/tests/integration/portal/test_documento_oficial.py` — o link do documento publicado é alcançável do detalhe
 
 ### Implementation for User Story 1
 
-- [ ] T017 [US1] View e template da vitrine em `backend/processo_seletivo/portal/views.py` e `templates/portal/vitrine.html`
-- [ ] T018 [US1] View e template do detalhe da seleção em `backend/processo_seletivo/portal/views.py` e `templates/portal/selecao.html`
-- [ ] T019 [P] [US1] Regras responsivas da vitrine e do detalhe em `templates/portal/base.html` — 375 px sem rolagem horizontal
-- [ ] T020 [US1] Percorrer a entrega 1 do [quickstart.md](./quickstart.md) no navegador, em janela anônima
+- [X] T017 [US1] View e template da vitrine em `backend/processo_seletivo/portal/views.py` e `templates/portal/vitrine.html`
+- [X] T018 [US1] View e template do detalhe da seleção em `backend/processo_seletivo/portal/views.py` e `templates/portal/selecao.html`
+- [X] T019 [P] [US1] Regras responsivas da vitrine e do detalhe em `templates/portal/base.html` — 375 px sem rolagem horizontal
+- [X] T020 [US1] Percorrer a entrega 1 do [quickstart.md](./quickstart.md) no navegador, em janela anônima
 
 **Checkpoint**: a porta existe. Uma pessoa de fora encontra a seleção e lê o Edital.
 

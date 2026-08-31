@@ -1,0 +1,21 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Seleções abertas{% endblock %}
+{% block conteudo %}
+<h1>Processos seletivos</h1>
+<p class="sub">Seleções publicadas pelo Cefor/Ifes. Escolha uma para ver os perfis, os requisitos e
+o Edital completo.</p>
+
+{% if selecoes %}
+<ul class="selecoes">
+  {% for selecao in selecoes %}
+  <li class="selecao">
+    <a class="titulo" href="{% url 'portal:selecao' selecao.edital_id %}">{{ selecao.processo_titulo }}</a>
+    <p class="meta">{{ selecao.processo_codigo }} · Edital {{ selecao.numero }}/{{ selecao.ano }}</p>
+    <p class="meta">Unidade: {{ selecao.unidade }}</p>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="vazio">Nenhuma seleção publicada no momento.</p>
+{% endif %}
+{% endblock %}

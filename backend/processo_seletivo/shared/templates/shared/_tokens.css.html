@@ -1,0 +1,18 @@
+{% comment %}
+Os tokens visuais do produto, num lugar só.
+
+Duas bases os incluem — a administrativa e a do portal — e é isso que impede as duas paletas de
+divergirem na primeira mudança de cor. O que está aqui é **só** token: as regras de cada canal
+continuam em cada base, porque o que o candidato lê num celular não é o que quem elabora lê num
+formulário de dez campos.
+{% endcomment %}
+:root{
+  /* --verde preenche (precisa contrastar com texto branco); --verde-texto escreve
+     (precisa contrastar com fundos claros). Um só token para os dois papéis fazia
+     o rótulo da etapa cair a 4,45:1 sobre o verde claro e os links a 4,28:1 sobre o
+     vermelho claro — WCAG 2.1 AA exige 4,5:1. */
+  --verde:#15803d; --verde-texto:#146c37; --verde-escuro:#0b5a2a; --verde-claro:#e7f5ec;
+  --texto:#1c1c1c; --texto-fraco:#555; --borda:#d4d4d4; --fundo:#f8f8f8; --branco:#fff;
+  --sucesso:#146c37; --sucesso-fundo:#e7f5ec; --amarelo:#8a5300; --amarelo-fundo:#fdf5e5;
+  --vermelho:#a91b1b; --vermelho-fundo:#fbe9e9; --cinza-fundo:#eee;
+}

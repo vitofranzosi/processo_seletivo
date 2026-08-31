@@ -222,3 +222,53 @@ def impede_por_segregacao(participantes, ator):
         participantes["elaborou"]
         and participantes["elaborou"] == participantes["homologou"] == ator.subject
     )
+
+
+def selecoes_publicas(*, at=None):
+    """As seleções que uma pessoa de fora pode consultar, com a versão vigente de cada uma.
+
+    "Publicamente consultável" é o que já significava na API pública: existe versão consolidada
+    cuja vigência começou. Não há estado novo a inventar — a `001` já decidiu o que é público
+    quando decidiu o que a consulta anônima devolve.
+
+    **Cancelado não entra na vitrine, e continua alcançável pelo endereço.** A Publicação é
+    imutável e o histórico não se apaga (princípio II), mas listar como oportunidade uma seleção
+    cancelada convidaria alguém a se inscrever no que não existe mais. A distinção é entre
+    *anunciar* e *preservar*.
+
+    Duas consultas, e a primeira não carrega o conteúdo: `values_list` decide qual versão vence
+    por Edital lendo só identificador e vigência, e a segunda materializa apenas as vencedoras.
+    Ordenar e escolher em memória sobre o conteúdo inteiro faria a vitrine crescer com o
+    histórico, não com o número de seleções.
+    """
+    from processo_seletivo.processos.models import Edital
+
+    moment = at or timezone.now()
+    vigentes = {}
+    for edital_id, versao_id in (
+        VersaoConsolidada.objects.filter(valid_from__lte=moment)
+        .exclude(edital__status=Edital.Status.CANCELADO)
+        .order_by("edital_id", "-valid_from", "-materialized_at")
+        .values_list("edital_id", "id")
+    ):
+        vigentes.setdefault(edital_id, versao_id)
+    return list(
+        VersaoConsolidada.objects.filter(id__in=list(vigentes.values()))
+        .select_related("edital", "edital__processo")
+        .order_by("-valid_from", "-materialized_at")
+    )
+
+
+def selecao_publica(*, edital_id, at=None):
+    """A versão vigente de uma seleção, para o canal público.
+
+    Diferente de `selecoes_publicas`, **não** exclui o cancelado: a página de um Edital publicado
+    continua consultável depois de encerrado (FR-017) e depois de cancelado, porque o que foi
+    publicado permanece. O que muda é ser anunciado, não ser lido.
+    """
+    versao = effective_version(edital_id=edital_id, at=at)
+    return (
+        VersaoConsolidada.objects.select_related("edital", "edital__processo")
+        .filter(pk=versao.pk)
+        .first()
+    )

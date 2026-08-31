@@ -197,7 +197,11 @@ def test_operational_endpoints_stay_outside_the_business_contract():
     """Health, readiness e métricas não são API institucional e não entram no openapi.yaml.
 
     A interface administrativa também vive fora de /api/v1, pelo mesmo motivo: ela consome o
-    domínio pelos commands, não pelo contrato HTTP.
+    domínio pelos commands, não pelo contrato HTTP. O canal público do candidato (`selecoes/`,
+    009) entra na mesma lista e pela mesma razão — é página, não contrato —, e a diferença entre
+    ele e a interface administrativa é o ator, não a natureza.
+
+    A asserção é exata de propósito: superfície nova na raiz é decisão, e decisão passa por aqui.
     """
     from django.urls import get_resolver
 
@@ -206,4 +210,4 @@ def test_operational_endpoints_stay_outside_the_business_contract():
         for pattern in get_resolver().url_patterns
         if not str(pattern.pattern).startswith("api/")
     }
-    assert raiz == {"", "health", "readiness", "metrics", "gestao/"}
+    assert raiz == {"", "health", "readiness", "metrics", "gestao/", "selecoes/"}

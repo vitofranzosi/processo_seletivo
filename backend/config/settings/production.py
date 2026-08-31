@@ -20,12 +20,21 @@ escolha seja explícita, exista, e não seja um dos caminhos conhecidamente inse
 """
 
 import os
+from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
 
 from .base import *  # noqa: F403
-from .base import DATABASES, INTERFACE_SELETOR_IDENTIDADE, REST_FRAMEWORK, SECRET_KEY
+from .base import (
+    ARQUIVOS_CANDIDATOS_RAIZ,
+    BASE_DIR,
+    DATABASES,
+    INTERFACE_SELETOR_IDENTIDADE,
+    PORTAL_IDENTIDADE_DEMO,
+    REST_FRAMEWORK,
+    SECRET_KEY,
+)
 
 # Módulo inteiro, não uma classe: qualquer adaptador de desenvolvimento que nasça ao lado do
 # atual herdaria a mesma recusa sem precisar lembrar de atualizar esta lista.
@@ -76,6 +85,31 @@ _exigir(
     not INTERFACE_SELETOR_IDENTIDADE,
     "INTERFACE_SELETOR_IDENTIDADE",
     "o seletor de identidade permite escolher quem se é e não pode existir em produção.",
+)
+
+# A mesma barreira, para o outro eixo de identidade (FR-024 da 009). O provedor de demonstração
+# do portal deixa qualquer pessoa dizer quem é; em produção, uma inscrição atribuída assim não
+# vale nada — e não seria descoberta por quem a recebe.
+_exigir(
+    not PORTAL_IDENTIDADE_DEMO,
+    "PORTAL_IDENTIDADE_DEMO",
+    "o provedor de identidade de demonstração deixa qualquer pessoa declarar-se candidato e não "
+    "pode existir em produção.",
+)
+
+# Onde os documentos do candidato ficam (FR-051 da 009). Três exigências, e cada uma cobre um
+# jeito conhecido de vazar arquivo: declarada, porque o padrão vazio significa "esta máquina não
+# recebe arquivo" e em produção ela recebe; absoluta, porque relativa depende do diretório de
+# onde o processo subiu; e fora da árvore do código, porque é ali que mora o que o servidor web
+# publica sem perguntar a ninguém.
+_raiz_de_arquivos = Path(ARQUIVOS_CANDIDATOS_RAIZ) if ARQUIVOS_CANDIDATOS_RAIZ else None
+_exigir(
+    _raiz_de_arquivos is not None
+    and _raiz_de_arquivos.is_absolute()
+    and not _raiz_de_arquivos.is_relative_to(Path(BASE_DIR)),
+    "ARQUIVOS_CANDIDATOS_RAIZ",
+    "deve declarar um diretório absoluto para os documentos do candidato, fora da árvore do "
+    "código; documento de candidato não pode ser servido diretamente pelo servidor web.",
 )
 
 # A autenticação institucional é incremento próprio; até lá, produção não sobe.

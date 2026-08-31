@@ -5,16 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block titulo %}Gestão de Processos Seletivos{% endblock %} — Cefor/Ifes</title>
 <style>
-:root{
-  /* --verde preenche (precisa contrastar com texto branco); --verde-texto escreve
-     (precisa contrastar com fundos claros). Um só token para os dois papéis fazia
-     o rótulo da etapa cair a 4,45:1 sobre o verde claro e os links a 4,28:1 sobre o
-     vermelho claro — WCAG 2.1 AA exige 4,5:1. */
-  --verde:#15803d; --verde-texto:#146c37; --verde-escuro:#0b5a2a; --verde-claro:#e7f5ec;
-  --texto:#1c1c1c; --texto-fraco:#555; --borda:#d4d4d4; --fundo:#f8f8f8; --branco:#fff;
-  --sucesso:#146c37; --sucesso-fundo:#e7f5ec; --amarelo:#8a5300; --amarelo-fundo:#fdf5e5;
-  --vermelho:#a91b1b; --vermelho-fundo:#fbe9e9; --cinza-fundo:#eee;
-}
+{% include "shared/_tokens.css.html" %}
 *{box-sizing:border-box}
 body{margin:0;font-family:"Open Sans","Segoe UI",system-ui,sans-serif;color:var(--texto);
   background:var(--fundo);line-height:1.5;font-size:16px}

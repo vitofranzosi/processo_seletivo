@@ -21,8 +21,15 @@ essa variável; sem ela a suíte usa sqlite em memória **sem avisar**. Nesta fe
 específico: as constraints parciais e condicionais do modelo (uma marca de período por Cronograma,
 protocolo único quando presente) não são exercidas, e o sinal é a contagem de skips.
 
+**Um banco de teste por worktree.** O nome do banco de teste é `test_` mais `DB_NAME`, que por
+padrão é o mesmo em todo worktree — então duas suítes rodando em paralelo, em features diferentes,
+disputam o mesmo banco e se destroem mutuamente. O sintoma não parece disputa: dá recusa de domínio
+("o Processo está em estado final"), erro de conexão na finalização, e uma contagem de falhas
+diferente a cada execução. Declare um nome próprio:
+
 ```bash
-cd backend && TEST_DB_ENGINE=postgresql LC_ALL=en_US.UTF-8 DB_USER="$(whoami)" uv run pytest -q
+cd backend && TEST_DB_ENGINE=postgresql LC_ALL=en_US.UTF-8 DB_USER="$(whoami)" DB_NAME=ps009 \
+  uv run pytest -q
 ```
 
 **A interface administrativa exige o seletor de identidade ligado**; sem a variável, `/gestao/`
