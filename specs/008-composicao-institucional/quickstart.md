@@ -60,6 +60,13 @@ momento.
 paginação que a entrega 2 corrige. Esse arquivo não está no repositório; o cenário de dois Perfis é
 montado para a demonstração da entrega 2, abaixo.*
 
+O **cenário rico** — usado nas auditorias de composição da fase 9 — acrescenta ao cenário-base um
+segundo Perfil completo, quatro Eventos (dois deles pontuais, um com descrição longa) e uma segunda
+Etapa sem nota mínima. É ele que exercita ao mesmo tempo o quadro de vagas, as subseções de Perfil,
+a grade com célula refluída e o fechamento do ato. **Ao gerá-lo, use o hash canônico do próprio
+conteúdo**: um exemplo que exibe a constante da suíte no lugar da verificação ensina a ler errado o
+que o documento afirma.
+
 O **cenário de dois Perfis** — usado na entrega 2 — acrescenta um segundo Perfil dimensionado para
 não caber no espaço restante da primeira página. É o que reproduz o defeito observado no
 `documento2.pdf`.

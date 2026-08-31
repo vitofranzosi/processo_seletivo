@@ -110,7 +110,7 @@ A `008` DEVE preservar:
 - a marca de prévia e a ausência de qualquer afirmação de integridade na prévia;
 - o compositor único, parametrizado por modo, para prévia e publicado;
 - a identificação do Edital e a paginação `Página N de M` no rodapé de toda página;
-- o SHA-256 abreviado no rodapé;
+- o hash abreviado no rodapé, anunciado como verificação;
 - a ausência de identificador técnico no corpo normativo;
 - a omissão de rótulo cujo dado não existe — inclusive ampla concorrência sem percentual;
 - o determinismo da composição e a acentuação do português;
@@ -417,10 +417,14 @@ evidência que o motivou — pertence a [research.md](./research.md) e [plan.md]
 
 ### Autoridade e integridade (US5)
 
-- **FR-033**: Após o conteúdo normativo, o documento **publicado** DEVE exibir bloco de autoridade
-  signatária com o nome e o cargo **registrados na própria Publicação**, sem consulta a catálogo e
-  sem transformação. *O que a Publicação registrou é o que o ato afirma; o catálogo é a origem da
-  escolha, não a fonte de verdade do que foi assinado.*
+- **FR-033**: Após o conteúdo normativo, o documento **publicado** DEVE exibir a autoridade
+  responsável pelo ato, com o nome e o cargo **registrados na própria Publicação**, sem consulta a
+  catálogo e sem transformação. O bloco DEVE **anunciar-se como registro** — "Autoridade responsável
+  pelo ato" — e NÃO DEVE ser composto na forma de assinatura. O cargo é omitido quando não
+  acrescenta informação ao nome registrado. *O que a Publicação registrou é o que o ato afirma; o
+  catálogo é a origem da escolha, não a fonte de verdade do que foi assinado. E um nome centralizado
+  sozinho ao pé de um Edital lê-se como rubrica — este documento não tem rubrica (FR-036), e
+  simulá-la afirmaria o que ele não pode afirmar.*
 - **FR-034**: A autoridade signatária NÃO DEVE entrar no snapshot. Ela DEVE chegar ao compositor
   como **contexto do ato, explícito e separado do conteúdo normativo**. O corpo normativo continua
   sendo função pura do snapshot; o bloco de autoridade é o único elemento derivado de metadado do
@@ -559,6 +563,10 @@ não é aceita com item da sua faixa respondido "não".
 | R-12 | O publicado termina com autoridade e, depois dela, o bloco de verificação discreto | 5 |
 | R-13 | `Versão do schema` não aparece como seção do Edital | 5 |
 | R-14 | A prévia do mesmo Edital não exibe autoridade nem integridade | 5 |
+| R-15 | O brasão da República abre a página 1, e só ela | 6 |
+| R-16 | A abertura do Edital vem sem número e sem cabeçalho, antes da seção 1 | 6 |
+| R-17 | Todo quadro tem grade, cabeçalho sombreado e legenda `Tabela N — Título` | 6 |
+| R-18 | O texto normativo alcança as duas margens, e a última linha de cada parágrafo não é esticada | 6 |
 
 ### Referências visuais
 

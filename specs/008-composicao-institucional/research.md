@@ -329,3 +329,121 @@ da marca.
   vocabulário de FR-003, e prejudicaria a leitura da prévia.
 - *Marca só na primeira página, fora do fluxo.* Cumpre FR-042 e mantém o defeito de a página 2 de
   uma prévia não se identificar.
+
+---
+
+# Decisões da calibração editorial
+
+*As onze primeiras decisões vieram da reconciliação com o compositor, antes da implementação. As
+seguintes vieram de **auditorias sobre o documento gerado** — cada uma corrige algo que só apareceu
+quando houve um PDF real para comparar com um Edital real. Elas estão aqui pela mesma razão que as
+outras: para que a alternativa recusada não seja reaberta.*
+
+## D-012 — A grade é desenhada depois da paginação
+
+**Decisão**: a tabela acumula, durante a paginação, o topo do quadro e o intervalo vertical de cada
+linha; a grade — contorno, fios entre linhas, fios entre colunas — é emitida ao fechar a tabela, ou
+na quebra, para o trecho que ficou na página.
+
+**Racional**: a altura de uma linha é a da sua célula mais alta, e isso só existe depois do refluxo.
+É a mesma razão de D-003, e a consequência é a mesma: medir antes seria medir duas vezes e aceitar
+que as duas medidas divirjam.
+
+**Alternativa recusada**: *colunas alinhadas sem fio.* Foi o que a primeira implementação fez, e uma
+"tabela" sem fio é um alinhamento de texto. Os três Editais de referência têm fio em cada célula.
+
+---
+
+## D-013 — Um asset institucional fixo, lido de um PNG
+
+**Decisão**: o brasão é um PNG versionado ao lado do compositor, recortado do cabeçalho do Edital
+146/2025. Um leitor mínimo o decodifica na importação — 8 bits, RGB, sem entrelaçamento — e o
+compositor o embute como XObject, desenhado só na primeira página.
+
+**Racional**: PNG é formato padrão, que qualquer pessoa abre e confere em diff; um `.bin` opaco no
+repositório não seria revisável. O leitor trata **um** caso e recusa qualquer outro, em vez de
+produzir um documento com a imagem errada.
+
+**Alternativas recusadas**:
+
+- *Usar a imagem inteira do alvo, com brasão e texto juntos.* É o que o Edital 146 faz, mas texto em
+  raster não é selecionável, não é pesquisável e borra na impressão.
+- *Manter a identidade gráfica fora da V1.* Era a decisão original, e a comparação com os alvos
+  mostrou que o brasão era o elemento isolado de maior impacto perceptivo.
+
+---
+
+## D-014 — A abertura é preâmbulo, não seção 1
+
+**Decisão**: a seção de chave `apresentacao` é materializada sem número e sem cabeçalho, antes das
+demais; a numeração começa na seguinte.
+
+**Racional**: nos três alvos o ato enunciativo da autoridade vem logo abaixo do título, sem número.
+Numerá-lo como `1.` faz o documento anunciar uma seção onde há uma abertura.
+
+**Alternativa recusada**: *tornar a escolha configurável.* Criaria campo, tela e tipo novo de seção
+para uma decisão que é do compositor e segue o catálogo.
+
+---
+
+## D-015 — Quadro de vagas, e o Perfil como subseção
+
+**Decisão**: os Perfis são resumidos numa tabela única no início da seção, e cada um vira subseção
+numerada — `5.1`, `5.2` — **sem moldura externa**.
+
+**Racional**: a moldura em volta de tabela dentro de caixa produzia cartão de interface impresso. E
+com dez Perfis, dez fichas obrigariam o leitor a percorrer o documento inteiro para saber quantas
+vagas existem. A pergunta certa não é "como apresento esta entidade?", é "qual a melhor composição
+para comunicar esta matéria?".
+
+**Alternativa recusada**: *uma tabela única com todos os campos do Perfil.* É o que o Edital 146 faz,
+mas o Perfil dele tem cinco atributos e o nosso tem dez — FR-016 proíbe, e perderia informação.
+
+---
+
+## D-016 — Justificação por espaçamento de palavra
+
+**Decisão**: a folga da linha é distribuída entre os seus espaços pelo operador `Tw` do PDF. A última
+linha de um parágrafo não é esticada, nem a linha que precisaria de espaço maior que 35% do corpo.
+
+**Racional**: `Tw` justifica sem que o compositor posicione palavra por palavra. As duas exceções são
+o que separa justificação boa de ruim: esticar linha curta produz rio de branco, e vão enorme entre
+duas palavras é pior que a margem irregular que corrigiria.
+
+**Alternativa recusada**: *manter o alinhamento à esquerda.* Era a decisão original; os três alvos
+justificam, e com a métrica de FR-002 já pronta o custo virou pequeno.
+
+---
+
+## D-017 — As tabelas são numeradas na ordem em que aparecem
+
+**Decisão**: um contador por documento produz `Tabela N — Título`. Quando há mais de um Perfil, a
+legenda das modalidades nomeia a qual delas pertence.
+
+**Racional**: é como o texto normativo remete ao quadro — "conforme a Tabela 1". Sem número, a
+remissão teria de descrever a tabela por extenso toda vez.
+
+---
+
+## D-018 — Keep-together por granularidade, não por bloco inteiro
+
+**Decisão**: a unidade coesa do Perfil é o título com o que ele apresenta. Atribuições, requisitos e
+modalidades são fronteiras semânticas por onde a quebra pode passar.
+
+**Racional**: proteger o Perfil inteiro deixava a página anterior com um terço em branco para
+preservar uma unidade que podia ter quebrado sem prejuízo. Um Edital ocupa a página. Há teste que
+reprova página com menos de dois terços de ocupação quando havia fronteira disponível.
+
+---
+
+## D-019 — O fechamento anuncia registro, não assinatura
+
+**Decisão**: o bloco final se rotula "Autoridade responsável pelo ato" e omite o cargo quando ele não
+acrescenta nada ao nome registrado.
+
+**Racional**: um nome centralizado sozinho ao pé de um Edital lê-se como rubrica, e o documento não
+tem rubrica (FR-036). Com o dado que existe — o catálogo de demonstração traz cargo no campo de
+nome —, uma assinatura centralizada afirmaria mais do que o documento pode afirmar.
+
+**Alternativa recusada**: *acrescentar nome próprio ao catálogo para que a assinatura pareça real.*
+Seria inventar dado para melhorar a aparência do documento.

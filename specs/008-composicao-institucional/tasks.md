@@ -227,6 +227,56 @@ depende do resto estar composto para o fechamento ter onde ficar.
 
 ---
 
+## Phase 9: Calibração editorial (auditorias sobre o documento gerado)
+
+**Purpose**: o que só apareceu quando houve um PDF real para comparar com um Edital real.
+
+*Estas tarefas não estavam no plano original. Elas nasceram de quatro revisões sucessivas sobre o
+documento gerado, e estão registradas aqui porque a Constituição exige rastreabilidade entre
+especificação, plano, tarefas, implementação e testes — e um `tasks.md` que descreve uma feature
+menor do que a construída quebra essa rastreabilidade no sentido mais enganoso.*
+
+### Defeitos de composição encontrados em revisão
+
+- [X] T075 Limitar a largura das colunas e refluir cada célula dentro da sua, com a altura da linha vinda da célula mais alta, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (D-007)
+- [X] T076 Deixar de marcar linha de corpo como coesa e limitar o rastro devolvido na quebra, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-021)
+- [X] T077 Restringir o cabeçalho repetível ao escopo da própria tabela e torná-lo pendente, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-026)
+- [X] T078 Tornar coesa a linha lógica da tabela e o fechamento do ato, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-021, FR-033)
+- [X] T079 Contar `abre_tabela` na medição de bloco, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` — sem isso o Perfil era medido menor que a realidade e saía partido
+
+### Gramática documental
+
+- [X] T080 Desenhar a grade dos quadros — contorno, fios de linha e de coluna — resolvida após a paginação, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (D-012)
+- [X] T081 Sombrear a célula de cabeçalho e centralizá-la, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-003)
+- [X] T082 Numerar as tabelas com `Tabela N — Título`, nomeando o Perfil quando houver mais de um, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-009a, D-017)
+- [X] T083 Substituir a ficha por Perfil pelo quadro de vagas consolidado e subseções numeradas sem moldura, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-015, D-015)
+- [X] T084 Devolver as Etapas à tipografia, em pares rótulo-valor sem grade, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-027)
+- [X] T085 Materializar a abertura do Edital como preâmbulo, sem número e sem cabeçalho, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-010, D-014)
+
+### Identidade e tipografia
+
+- [X] T086 Versionar `backend/processo_seletivo/publicacoes/infrastructure/brasao.png`, recortado do Edital 146/2025, e o leitor mínimo em `brasao.py` (FR-008, D-013)
+- [X] T087 Embutir o brasão como XObject na primeira página, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-008)
+- [X] T088 Recalibrar os níveis tipográficos contra os alvos — órgão maior que o corpo, ato e seções em negrito no corpo do texto, célula menor, nota mínima — em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-005 a FR-009)
+- [X] T089 Justificar o texto normativo pelo espaçamento de palavra, poupando a última linha do parágrafo, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-002, D-016)
+
+### Materialização sem vazamento
+
+- [X] T090 Humanizar instantes em `backend/processo_seletivo/publicacoes/infrastructure/humano.py` e usá-los no compositor (FR-024)
+- [X] T091 Retirar do documento a chave do tipo de Evento e a versão da Regra Normativa, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-018, FR-023)
+- [X] T092 Compor o fechamento como registro — "Autoridade responsável pelo ato", com o cargo omitido quando redundante — em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-033, D-019)
+- [X] T093 Subordinar a verificação de integridade e aliviar o rodapé, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-038, FR-040)
+
+### Referências e verificação
+
+- [X] T094 Versionar `specs/008-composicao-institucional/referencias/alvo-edital-146-2025.pdf` e registrar as características observáveis dele na spec
+- [X] T095 Conferir os itens R-15 a R-18 da rubrica sobre o cenário rico e o cenário-base
+
+**Checkpoint**: o documento pertence à mesma família visual dos Editais do Cefor, com as diferenças
+estruturais remanescentes declaradas.
+
+---
+
 ## Matriz de rastreabilidade SC → verificação
 
 *Cada critério de sucesso da spec e onde ele é verificado. Os três últimos não são visuais e não

@@ -2,7 +2,8 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-08-30
-**Revalidated**: 2026-08-31, após a análise de consistência e a remoção da divergência constitucional
+**Revalidated**: 2026-08-31, após a análise de consistência, a remoção da divergência
+constitucional e a calibração editorial contra três Editais de referência
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality
@@ -81,6 +82,14 @@ proibida na prévia.
 
 **Sobre a cobertura.** 44 FR e 15 SC contra 74 tarefas. Os requisitos que só se verificam por
 ausência — FR-001, FR-008, FR-037 — são conferidos nominalmente em T073.
+
+**Sobre a calibração editorial e a rastreabilidade.** Quatro auditorias sobre o documento gerado
+produziram sete commits que o `tasks.md` não descrevia: a spec era atualizada a cada rodada e as
+tarefas não. A segunda análise de consistência apanhou isso, e a fase 9 fecha a lacuna com as vinte
+e uma tarefas efetivamente executadas, as decisões D-012 a D-019 e os itens R-15 a R-18 da rubrica.
+**A lição não é que faltou disciplina no fim, e sim que trabalho vindo de revisão precisa voltar
+para o plano na mesma passada** — senão o artefato afirma que tudo foi feito enquanto descreve menos
+do que existe, que é a forma mais enganosa de a rastreabilidade quebrar.
 
 **Trava de escopo declarada.** Depois desta feature a autoria fica congelada salvo bug bloqueante, e
 a próxima spec muda de ator: inscrição do candidato e documentos.
