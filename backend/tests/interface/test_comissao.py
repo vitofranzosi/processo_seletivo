@@ -69,21 +69,23 @@ def test_so_o_segundo_envio_cria_o_membro(client, seletor_ligado, processo_a):
     assert MembroComissao.objects.filter(identity_subject="joao.silva", ativo=True).count() == 1
 
 
-def test_as_duas_remocoes_tem_nomes_acessiveis_distintos(
+def test_a_remocao_da_comissao_e_a_da_etapa_nao_se_confundem(
     client, seletor_ligado, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
 ):
-    """SC-UX-002 e FR-077: "da comissão" e "desta Etapa" não podem se confundir."""
+    """SC-UX-002 com a matriz: sair da comissão é um botão; sair de uma Etapa é desmarcar."""
     from tests.fixtures.comissao import alocar_em
 
     alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
     identificar(client, "carlos", ["gestor"])
 
     da_comissao = client.get(url(processo_a)).content.decode()
-    da_etapa = client.get(reverse("interface:alocacoes", args=[processo_a.id])).content.decode()
+    distribuicao = client.get(
+        reverse("interface:alocacoes", args=[processo_a.id])
+    ).content.decode()
 
-    assert "Remover da comissão" in da_comissao
-    assert "Remover desta Etapa" not in da_comissao
-    assert "Remover desta Etapa" in da_etapa
+    assert 'aria-label="Remover joao da comissão"' in da_comissao
+    assert "Remover da comissão" not in distribuicao
+    assert 'aria-label="joao em Análise documental' in distribuicao
 
 
 def test_a_tela_mostra_as_etapas_de_cada_membro(
@@ -135,24 +137,24 @@ def test_alteracao_bem_sucedida_produz_aviso_perceptivel(client, seletor_ligado,
     assert 'role="status"' in corpo
 
 
-def test_alocacao_bem_sucedida_produz_aviso_perceptivel(
-    client, seletor_ligado, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
+def test_distribuicao_salva_produz_aviso_perceptivel(
+    client, seletor_ligado, processo_a, edital_a, comissao_de_a, etapa_a1
 ):
     identificar(client, "carlos", ["gestor"])
 
     resposta = client.post(
         reverse("interface:alocacoes", args=[processo_a.id]),
         {
-            "acao": "incluir",
-            "membro_id": str(comissao_de_a["joao"].id),
-            "edital_id": str(edital_a.id),
-            "etapa_id": etapa_a1,
-            "chave_idempotencia": "interface-aloca-sucesso-0001",
+            "acao": "distribuir",
+            "escopo_membro": [str(m.id) for m in comissao_de_a.values()],
+            "escopo_etapa": [f"{edital_a.id}:{etapa_a1}"],
+            "celula": [f"{edital_a.id}:{etapa_a1}:{comissao_de_a['joao'].id}"],
+            "chave_idempotencia": "interface-distribuir-sucesso-0001",
         },
         follow=True,
     )
 
-    assert "Alocação registrada" in resposta.content.decode()
+    assert "Distribuição salva" in resposta.content.decode()
 
 
 def test_formulario_sem_o_campo_funcao_nao_rebaixa_ninguem(

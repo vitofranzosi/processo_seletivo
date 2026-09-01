@@ -268,3 +268,62 @@ def resumo_da_organizacao(organizacao, membros_ativos):
         "sem_atribuicao": sum(1 for m in membros_ativos if m.id not in alocados),
         "editais_sem_publicacao": sum(1 for g in organizacao if not g["publicado"]),
     }
+
+
+def matriz(processo, *, busca=""):
+    """A distribuição inteira: pessoas nas linhas, Etapas nas colunas, alocação no cruzamento.
+
+    A organização por Etapa repetia a lista de avaliadores dentro de cada uma — com cinquenta
+    pessoas e quatro Etapas eram duzentos rótulos para cinquenta nomes, e o presidente procurava
+    os mesmos doze quatro vezes. A matriz inverte o índice: a tela passa a ser indexada por
+    pessoa, que é como o trabalho é pensado, e o estado inteiro fica visível de uma vez — coisa
+    que nenhuma tela mostrava.
+
+    `busca` filtra **linhas**. Quem some da tela não pode ser afetado pelo envio, e é por isso
+    que o comando recebe o escopo do que foi desenhado em vez de deduzir a distribuição inteira.
+    """
+    colunas = []
+    for grupo in organizacao(processo):
+        for etapa in grupo["etapas"]:
+            colunas.append(
+                {
+                    "edital": grupo["edital"],
+                    "etapa_id": etapa["id"],
+                    "nome": etapa["nome"],
+                    "chave": f"{grupo['edital'].id}:{etapa['id']}",
+                    "total": etapa["total"],
+                    "sem_membros": etapa["sem_membros"],
+                }
+            )
+    alocadas = {
+        (a.edital_id, a.etapa_id, a.membro_id)
+        for a in AlocacaoEtapa.objects.filter(membro__processo=processo, ativo=True)
+    }
+    alvo = chave_de_leitura(busca) if busca else ""
+    linhas = []
+    for membro in membros(processo):
+        if alvo and alvo not in chave_de_leitura(
+            f"{membro.display_label} {membro.identity_subject}"
+        ):
+            continue
+        celulas = [
+            {
+                "coluna": coluna,
+                "chave": f"{coluna['chave']}:{membro.id}",
+                "marcada": (coluna["edital"].id, coluna["etapa_id"], membro.id) in alocadas,
+            }
+            for coluna in colunas
+        ]
+        linhas.append(
+            {
+                "membro": membro,
+                "celulas": celulas,
+                "total": sum(1 for c in celulas if c["marcada"]),
+            }
+        )
+    return {
+        "colunas": colunas,
+        "linhas": linhas,
+        "editais": {c["edital"].id: c["edital"] for c in colunas}.values(),
+        "busca": busca,
+    }

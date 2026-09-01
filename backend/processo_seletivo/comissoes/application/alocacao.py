@@ -306,3 +306,182 @@ def remover_varias_alocacoes(
             )
         ctx.concluir(alocacoes[0], 200)
         return alocacoes
+
+
+def definir_distribuicao(
+    *,
+    actor,
+    processo_id,
+    escopo_membros,
+    escopo_etapas,
+    marcadas,
+    idempotency_key,
+    correlation_id,
+    coluna_todos=None,
+    coluna_nenhum=None,
+):
+    """Grava a distribuição desenhada na matriz: o que faltava entra, o que sobrava sai.
+
+    **O escopo é explícito, e essa é a decisão que impede perda de dado.** A matriz filtra linhas
+    por busca; se o comando deduzisse a distribuição inteira a partir do que veio marcado, filtrar
+    por “Ana” e salvar removeria todo mundo que não se chama Ana. O que a tela desenhou é o que o
+    comando considera — o resto fica intocado.
+
+    A unidade continua `membro → Etapa`: isto é o mesmo par, gravado em conjunto. Cada mudança
+    gera o seu evento, porque a trilha responde por agregado (FR-070).
+
+    Devolve `(criadas, removidas)`.
+    """
+    membros_no_escopo = [identificador(m) for m in escopo_membros]
+    if not membros_no_escopo or not escopo_etapas:
+        raise DomainError(
+            "escopo_ausente",
+            "A distribuição enviada não descreve o que estava na tela. Recarregue a página.",
+            422,
+        )
+    alvo = set()
+    for chave in marcadas:
+        try:
+            edital_bruto, etapa_bruto, membro_bruto = chave.split(":")
+        except ValueError as exc:
+            raise nao_encontrado() from exc
+        alvo.add(
+            (identificador(edital_bruto), identificador(etapa_bruto), identificador(membro_bruto))
+        )
+    coluna_toda = _par(coluna_todos) if coluna_todos else None
+    coluna_vazia = _par(coluna_nenhum) if coluna_nenhum else None
+    pares = set()
+    for chave in escopo_etapas:
+        try:
+            edital_bruto, etapa_bruto = chave.split(":")
+        except ValueError as exc:
+            raise nao_encontrado() from exc
+        pares.add((identificador(edital_bruto), identificador(etapa_bruto)))
+    if not alvo <= {(e, s, m) for e, s in pares for m in membros_no_escopo}:
+        # Marcação fora do que a tela desenhou não é engano de quem opera: é envio forjado.
+        raise nao_encontrado()
+    # A coluna inteira, e o seu inverso. Marcar cinquenta caixas para pôr a banca toda numa
+    # etapa documental — o caso mais comum — seria trocar cinquenta e dois cliques por outros
+    # cinquenta; e desmarcar precisa custar o mesmo que marcar.
+    if coluna_toda is not None:
+        if coluna_toda not in pares:
+            raise nao_encontrado()
+        alvo |= {(*coluna_toda, m) for m in membros_no_escopo}
+    if coluna_vazia is not None:
+        if coluna_vazia not in pares:
+            raise nao_encontrado()
+        alvo -= {(*coluna_vazia, m) for m in membros_no_escopo}
+
+    with comando_de_comissao(
+        actor=actor,
+        processo_id=processo_id,
+        operation="comissao:definir-distribuicao",
+        payload={
+            "escopo": sorted(f"{e}:{s}" for e, s in pares),
+            "membros": sorted(str(m) for m in membros_no_escopo),
+            "marcadas": sorted(f"{e}:{s}:{m}" for e, s, m in alvo),
+        },
+        idempotency_key=idempotency_key,
+    ) as ctx:
+        if ctx.repetido:
+            return [], []
+        membros = {
+            m.id: m
+            for m in MembroComissao.objects.filter(
+                pk__in=membros_no_escopo, processo=ctx.processo, ativo=True
+            )
+        }
+        if len(membros) != len(set(membros_no_escopo)):
+            raise DomainError(
+                "selecao_desatualizada",
+                "A comissão mudou enquanto você trabalhava. Recarregue a página e refaça a "
+                "distribuição.",
+                409,
+                campo="celula",
+            )
+        editais = {
+            e.id: e
+            for e in Edital.objects.filter(
+                pk__in={edital for edital, _ in pares},
+                processo=ctx.processo,
+                institution_scope=ctx.processo.institution_scope,
+            )
+        }
+        if len(editais) != len({edital for edital, _ in pares}):
+            raise nao_encontrado()
+        vigentes = {edital.id: etapas_vigentes(edital) for edital in editais.values()}
+        for edital_id, etapa_id in pares:
+            if etapa_id not in vigentes[edital_id]:
+                raise nao_encontrado()
+        if alvo and not funcoes.tem_presidente(ctx.processo):
+            raise DomainError(
+                "comissao_sem_presidente",
+                "Esta comissão ainda não tem presidente. "
+                "Designe a presidência antes de distribuir trabalho.",
+                409,
+            )
+
+        atuais = {
+            (a.edital_id, a.etapa_id, a.membro_id): a
+            for a in AlocacaoEtapa.objects.filter(
+                membro_id__in=membros, edital_id__in=editais, ativo=True
+            ).select_related("membro", "edital")
+            if (a.edital_id, a.etapa_id) in pares
+        }
+        criadas, removidas = [], []
+        for edital_id, etapa_id in sorted(pares, key=str):
+            nome = vigentes[edital_id][etapa_id].get("name") or str(etapa_id)
+            for membro_id, membro in membros.items():
+                celula = (edital_id, etapa_id, membro_id)
+                if celula in alvo and celula not in atuais:
+                    alocacao = AlocacaoEtapa.objects.create(
+                        membro=membro,
+                        edital=editais[edital_id],
+                        etapa_id=etapa_id,
+                        criado_em=ctx.now,
+                        criado_por=actor.subject,
+                    )
+                    _auditar_celula(
+                        ctx, actor, "ALOCACAO_INCLUIR", alocacao, membro, nome, correlation_id
+                    )
+                    criadas.append(alocacao)
+                elif celula not in alvo and celula in atuais:
+                    alocacao = atuais[celula]
+                    alocacao.ativo = False
+                    alocacao.inativado_em = ctx.now
+                    alocacao.inativado_por = actor.subject
+                    alocacao.save(update_fields=["ativo", "inativado_em", "inativado_por"])
+                    _auditar_celula(
+                        ctx, actor, "ALOCACAO_REMOVER", alocacao, membro, nome, correlation_id
+                    )
+                    removidas.append(alocacao)
+        if criadas:
+            ctx.concluir(criadas[0], 200)
+        elif removidas:
+            ctx.concluir(removidas[0], 200)
+        else:
+            ctx.concluir_sem_resultado(200)
+        return criadas, removidas
+
+
+def _auditar_celula(ctx, actor, operacao, alocacao, membro, nome_da_etapa, correlation_id):
+    auditar(
+        ctx=ctx,
+        actor=actor,
+        operation=operacao,
+        aggregate=alocacao,
+        reason=(
+            f"{membro.identity_subject} — Etapa “{nome_da_etapa}” do Edital "
+            f"{alocacao.edital.number}/{alocacao.edital.year}; pela distribuição"
+        ),
+        correlation_id=correlation_id,
+    )
+
+
+def _par(chave):
+    """`edital:etapa` — a identidade de uma coluna da matriz."""
+    try:
+        edital_bruto, etapa_bruto = chave.split(":")
+    except ValueError as exc:
+        raise nao_encontrado() from exc
+    return identificador(edital_bruto), identificador(etapa_bruto)

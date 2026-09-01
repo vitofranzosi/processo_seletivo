@@ -1854,6 +1854,23 @@ def alocacoes(request, processo_id):
         dados = forms.ler_alocacao(request.POST)
         chave = request.POST.get("chave_idempotencia") or uuid4().hex
         try:
+            if acao == "distribuir":
+                alocacao_app.definir_distribuicao(
+                    actor=ator,
+                    processo_id=processo.id,
+                    # O escopo é o que a tela desenhou. Sem ele, salvar com a busca ativa
+                    # removeria todo mundo que o filtro escondeu.
+                    escopo_membros=request.POST.getlist("escopo_membro"),
+                    escopo_etapas=request.POST.getlist("escopo_etapa"),
+                    marcadas=request.POST.getlist("celula"),
+                    coluna_todos=request.POST.get("coluna_todos"),
+                    coluna_nenhum=request.POST.get("coluna_nenhum"),
+                    idempotency_key=chave,
+                    correlation_id=getattr(request, "correlation_id", ""),
+                )
+                destino = reverse("interface:alocacoes", args=[processo.id])
+                busca = (request.POST.get("q") or "").strip()
+                return redirect(f"{destino}?feito=distribuir" + (f"&q={busca}" if busca else ""))
             if acao == "incluir":
                 # `todos` escolhe **quais** pessoas, dentro da inclusão — não é uma ação
                 # concorrente. Como ramo irmão, ele decidia sozinho: um envio com
@@ -1890,11 +1907,14 @@ def alocacoes(request, processo_id):
 
     organizacao = comissao_selectors.organizacao(processo)
     membros_ativos = comissao_selectors.membros(processo)
+    busca = (request.GET.get("q") or "").strip()
     return render(
         request,
         "interface/alocacoes.html",
         {
             "processo": processo,
+            "matriz": comissao_selectors.matriz(processo, busca=busca),
+            "busca": busca,
             "organizacao": organizacao,
             "membros": membros_ativos,
             "orfas": comissao_selectors.orfas(processo),

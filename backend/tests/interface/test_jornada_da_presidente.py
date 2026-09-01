@@ -69,24 +69,24 @@ def test_quem_nao_tem_nada_continua_recebendo_a_orientacao_em_minhas_etapas(
     assert "não possui papel de responsabilidade nem atribuição" in corpo
 
 
-def test_a_escolha_nao_oferece_quem_ja_esta_alocado(
+def test_quem_ja_esta_alocado_aparece_marcado(
     presidente, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
 ):
-    """L4: oferecer quem já está era a tela produzindo o próprio 409."""
+    """Na matriz não há o que "oferecer": o estado atual é o que a caixa mostra."""
     alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
 
     corpo = presidente.get(
         reverse("interface:alocacoes", args=[processo_a.id])
     ).content.decode()
 
-    bloco = corpo.split(f'value="{etapa_a1}"')[1].split("</form>")[0]
-    assert f'value="{comissao_de_a["joao"].id}"' not in bloco
-    assert f'value="{comissao_de_a["maria"].id}"' in bloco
+    marcada = f'value="{edital_a.id}:{etapa_a1}:{comissao_de_a["joao"].id}"'
+    assert "checked" in corpo.split(marcada)[1].split(">")[0]
 
 
-def test_etapa_com_a_comissao_toda_alocada_diz_isso(
+def test_a_coluna_conta_quantos_atuam_na_etapa(
     presidente, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
 ):
+    """O que antes era uma frase por Etapa virou um número no cabeçalho da coluna."""
     for membro in comissao_de_a.values():
         alocar_em(gestor, processo_a, membro, edital_a, etapa_a1)
 
@@ -94,29 +94,24 @@ def test_etapa_com_a_comissao_toda_alocada_diz_isso(
         reverse("interface:alocacoes", args=[processo_a.id])
     ).content.decode()
 
-    assert "Toda a comissão já está alocada nesta Etapa" in corpo
+    cabecalho = corpo.split("Análise documental")[1].split("</th>")[0]
+    assert ">2<" in cabecalho
 
 
-def test_as_remocoes_dizem_de_quem_e_de_onde(
+def test_cada_celula_da_matriz_diz_de_quem_e_de_onde(
     presidente, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
 ):
-    """L5: rótulos repetidos são indistinguíveis por leitor de tela.
-
-    Na Alocação isso deixou de ser um botão por linha: a caixa nomeia a pessoa e o botão nomeia
-    a Etapa, o que resolve a distinção e a remoção em lote de uma vez.
-    """
+    """Duzentas caixas idênticas seriam indistinguíveis por leitor de tela."""
     alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
 
-    alocacoes = presidente.get(
+    distribuicao = presidente.get(
         reverse("interface:alocacoes", args=[processo_a.id])
     ).content.decode()
     comissao = presidente.get(
         reverse("interface:comissao", args=[processo_a.id])
     ).content.decode()
 
-    assert f'name="alocacao_id" value="{comissao_de_a["joao"].alocacoes.get().id}"' in alocacoes
-    assert 'aria-label="Remover as pessoas marcadas da Etapa Análise documental"' in alocacoes
-    assert "Quem atua em Análise documental" in alocacoes
+    assert 'aria-label="joao em Análise documental' in distribuicao
     assert 'aria-label="Remover joao da comissão"' in comissao
 
 
@@ -138,16 +133,18 @@ def test_a_confirmacao_de_atribuicao_nao_usa_estilo_de_alerta(
 def test_alocar_a_comissao_inteira_numa_submissao(
     presidente, processo_a, edital_a, comissao_de_a, etapa_a1
 ):
-    """O item que corta 160 envios a 4: uma submissão, várias pessoas."""
+    """A distribuição inteira num envio — agora pela matriz."""
     from processo_seletivo.comissoes.models import AlocacaoEtapa
 
     resposta = presidente.post(
         reverse("interface:alocacoes", args=[processo_a.id]),
         {
-            "acao": "incluir",
-            "edital_id": str(edital_a.id),
-            "etapa_id": etapa_a1,
-            "membro_id": [str(m.id) for m in comissao_de_a.values()],
+            "acao": "distribuir",
+            "escopo_membro": [str(m.id) for m in comissao_de_a.values()],
+            "escopo_etapa": [f"{edital_a.id}:{etapa_a1}"],
+            "celula": [
+                f"{edital_a.id}:{etapa_a1}:{m.id}" for m in comissao_de_a.values()
+            ],
             "chave_idempotencia": "interface-lote-0001",
         },
         follow=True,
@@ -407,37 +404,16 @@ def test_o_disclosure_nao_esconde_a_acao_do_teclado(presidente, processo_a, comi
     assert comissao_de_a["joao"].funcao == Funcao.PRESIDENTE
 
 
-def test_o_botao_de_alocar_todos_nao_depende_da_ordem_do_markup(
+def test_a_coluna_inteira_e_o_seu_inverso_existem_na_tela(
     presidente, processo_a, edital_a, comissao_de_a, etapa_a1
 ):
-    """Duas chaves `acao` no mesmo envio só funcionavam porque a última vence.
-
-    Este teste manda exatamente o que o formulário manda — `acao=incluir` do campo oculto e
-    `todos` do botão — e é o que impede que reordenar o markup mude o comportamento em silêncio.
-    """
-    from processo_seletivo.comissoes.models import AlocacaoEtapa
-
+    """Marcar a coluna e limpá-la custam o mesmo — a assimetria que a tela antiga tinha."""
     corpo = presidente.get(
         reverse("interface:alocacoes", args=[processo_a.id])
     ).content.decode()
-    assert 'name="todos" value="1"' in corpo
-    assert 'name="acao" value="incluir_todos"' not in corpo
 
-    presidente.post(
-        reverse("interface:alocacoes", args=[processo_a.id]),
-        {
-            "acao": "incluir",
-            "todos": "1",
-            "edital_id": str(edital_a.id),
-            "etapa_id": etapa_a1,
-            "disponivel": [str(m.id) for m in comissao_de_a.values()],
-            "membro_id": [],
-            "chave_idempotencia": "interface-todos-ordem-0001",
-        },
-        follow=True,
-    )
-
-    assert AlocacaoEtapa.objects.filter(ativo=True, etapa_id=etapa_a1).count() == 2
+    assert f'name="coluna_todos" value="{edital_a.id}:{etapa_a1}"' in corpo
+    assert f'name="coluna_nenhum" value="{edital_a.id}:{etapa_a1}"' in corpo
 
 
 def test_o_filtro_de_pessoa_da_trilha_e_escolha_e_nao_digitacao(
