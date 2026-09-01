@@ -68,32 +68,40 @@
     <p class="ajuda">Sem Etapas atribuídas.</p>
     {% endif %}
 
-    <form method="post" class="linha-de-acoes">
-      {% csrf_token %}
-      <input type="hidden" name="membro_id" value="{{ item.membro.id }}">
-      <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-f{{ forloop.counter }}">
-      <input type="hidden" name="acao" value="alterar_funcao">
-      <label class="campo" for="funcao-{{ forloop.counter }}">Função de
-        {{ item.membro.display_label|default:item.membro.identity_subject }}</label>
-      <select id="funcao-{{ forloop.counter }}" name="funcao">
-        <option value="MEMBRO" {% if item.membro.funcao == "MEMBRO" %}selected{% endif %}>Membro</option>
-        <option value="PRESIDENTE" {% if item.membro.funcao == "PRESIDENTE" %}selected{% endif %}>Presidente</option>
-      </select>
-      <button type="submit" class="acao"
-              aria-label="Alterar a função de {{ item.membro.display_label|default:item.membro.identity_subject }}">
-        Alterar função</button>
-    </form>
+    {% comment %} Sob demanda: a leitura corrente é “quem está aqui e onde atua”, e o seletor de
+       função aberto em cada cartão fazia uma comissão de quarenta virar uma coluna de controles.
+       `details` é o mesmo recurso nativo que o Processo e o portal já usam — abre pelo teclado e
+       o resumo nomeia a pessoa, para quem navega sem ver a lista. {% endcomment %}
+    <details class="gerir-membro">
+      <summary>Gerir {{ item.membro.display_label|default:item.membro.identity_subject }}</summary>
 
-    <form method="post" class="linha-de-acoes">
-      {% csrf_token %}
-      <input type="hidden" name="membro_id" value="{{ item.membro.id }}">
-      <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-r{{ forloop.counter }}">
-      <input type="hidden" name="acao" value="remover">
-      {# UX-003: o nome acessível diz de onde a pessoa sai — da comissão inteira, e não de uma Etapa. #}
-      <button type="submit" class="acao perigoso"
-              aria-label="Remover {{ item.membro.display_label|default:item.membro.identity_subject }} da comissão">
-        Remover da comissão</button>
-    </form>
+      <form method="post" class="linha-de-acoes">
+        {% csrf_token %}
+        <input type="hidden" name="membro_id" value="{{ item.membro.id }}">
+        <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-f{{ forloop.counter }}">
+        <input type="hidden" name="acao" value="alterar_funcao">
+        <label class="campo" for="funcao-{{ forloop.counter }}">Função de
+          {{ item.membro.display_label|default:item.membro.identity_subject }}</label>
+        <select id="funcao-{{ forloop.counter }}" name="funcao">
+          <option value="MEMBRO" {% if item.membro.funcao == "MEMBRO" %}selected{% endif %}>Membro</option>
+          <option value="PRESIDENTE" {% if item.membro.funcao == "PRESIDENTE" %}selected{% endif %}>Presidente</option>
+        </select>
+        <button type="submit" class="acao"
+                aria-label="Alterar a função de {{ item.membro.display_label|default:item.membro.identity_subject }}">
+          Alterar função</button>
+      </form>
+
+      <form method="post" class="linha-de-acoes">
+        {% csrf_token %}
+        <input type="hidden" name="membro_id" value="{{ item.membro.id }}">
+        <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-r{{ forloop.counter }}">
+        <input type="hidden" name="acao" value="remover">
+        {# UX-003: o nome acessível diz de onde a pessoa sai — da comissão inteira, e não de uma Etapa. #}
+        <button type="submit" class="acao perigoso"
+                aria-label="Remover {{ item.membro.display_label|default:item.membro.identity_subject }} da comissão">
+          Remover da comissão</button>
+      </form>
+    </details>
   </li>
   {% endfor %}
 </ul>

@@ -365,3 +365,39 @@ def test_a_lista_atravessa_a_conferencia_sem_perder_as_linhas(presidente, proces
         )
     )
     assert {"ana.costa", "joao.souza", "bia.lima"} <= incluidos
+
+
+def test_os_controles_de_cada_membro_ficam_sob_demanda(presidente, processo_a, comissao_de_a):
+    """A leitura corrente é quem está aqui e onde atua; o resto abre quando se pede.
+
+    O que **não** pode ficar escondido é a informação — nome, identificador, função e Etapas
+    continuam na leitura direta.
+    """
+    corpo = presidente.get(
+        reverse("interface:comissao", args=[processo_a.id])
+    ).content.decode()
+
+    assert "<summary>Gerir joao</summary>" in corpo
+    assert "<summary>Gerir maria</summary>" in corpo
+    # A informação continua fora do disclosure.
+    for membro in comissao_de_a.values():
+        antes_do_details = corpo.split(f"Gerir {membro.identity_subject}")[0]
+        assert membro.identity_subject in antes_do_details
+
+
+def test_o_disclosure_nao_esconde_a_acao_do_teclado(presidente, processo_a, comissao_de_a):
+    """`details` é nativo: abre por teclado e o formulário continua submetível."""
+    from processo_seletivo.comissoes.models import Funcao
+
+    presidente.post(
+        reverse("interface:comissao", args=[processo_a.id]),
+        {
+            "acao": "alterar_funcao",
+            "membro_id": str(comissao_de_a["joao"].id),
+            "funcao": "PRESIDENTE",
+            "chave_idempotencia": "interface-details-0001",
+        },
+    )
+
+    comissao_de_a["joao"].refresh_from_db()
+    assert comissao_de_a["joao"].funcao == Funcao.PRESIDENTE
