@@ -26,6 +26,15 @@
     {% endcomment %}
     <dt>Versão do Edital aceita</dt>
     <dd>{% if inscricao.versao_aceita %}vigente desde {{ inscricao.versao_aceita.valid_from|date:"d/m/Y H\hi" }}{% else %}—{% endif %}</dd>
+  {% if codigo_de_verificacao %}
+  {% comment %}
+  O mesmo código impresso no comprovante do candidato. É comparando os dois que se recusa um papel
+  alterado: o comprovante é um HTML impresso, e qualquer pessoa edita a página antes de imprimir.
+  {% endcomment %}
+  <dt>Código de verificação</dt>
+  <dd><code class="codigo-de-verificacao">{{ codigo_de_verificacao }}</code>
+    <span class="ajuda">confira contra o comprovante apresentado</span></dd>
+  {% endif %}
   </dl>
 </section>
 

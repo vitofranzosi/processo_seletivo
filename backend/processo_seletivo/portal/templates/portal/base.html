@@ -262,11 +262,17 @@ form.convite{margin:.75rem 0 0}
    ele é o que separa um comprovante institucional de uma captura de tela. */
 .timbre{display:none}
 .protocolo{margin:.25rem 0 1.5rem;padding:.75rem 1rem;border:1px solid var(--borda);
-  border-left:4px solid var(--verde);border-radius:4px;background:var(--branco)}
+  border-left:4px solid var(--verde);border-radius:4px;background:var(--branco);
+  display:grid;gap:.6rem}
+@media (min-width:520px){.protocolo{grid-template-columns:1fr auto;align-items:end}}
+.linha-protocolo{margin:0}
 .protocolo .rotulo{display:block;font-size:.8125rem;color:var(--texto-fraco);
   text-transform:uppercase;letter-spacing:.04em}
 .protocolo strong{font-size:1.35rem;letter-spacing:.02em;
   font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+/* O código de verificação acompanha o protocolo, e não o rodapé: são as duas coisas que alguém
+   compara ao receber o papel, e separá-las obrigaria a procurar a segunda. */
+.verificacao strong{font-size:1rem;color:var(--verde-escuro)}
 .atestado{margin:1.5rem 0;padding-top:1rem;border-top:1px solid var(--borda);
   font-size:.9375rem;color:var(--texto-fraco)}
 .atestado p{margin:0 0 .5rem}
@@ -324,6 +330,7 @@ form.convite{margin:.75rem 0 0}
     margin:0 0 .75rem;padding:.4rem .6rem}
   .protocolo .rotulo{font-size:7.5pt}
   .protocolo strong{font-size:13pt}
+  .verificacao strong{font-size:10pt}
   /* Duas colunas de rótulo e valor: o que ocupava dez linhas ocupa cinco, e nenhuma delas fica
      larga demais para ser lida. */
   .dados{grid-template-columns:auto 1fr auto 1fr;gap:.2rem .6rem;margin:0 0 .5rem}

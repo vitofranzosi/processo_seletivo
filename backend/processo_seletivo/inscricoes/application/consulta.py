@@ -12,6 +12,7 @@ inexistente para quem pergunta — a mesma resposta que `require_permission` já
 
 from processo_seletivo.inscricoes.application.rascunho import requisitos_da_inscricao
 from processo_seletivo.inscricoes.domain.arquivos import tamanho_legivel
+from processo_seletivo.inscricoes.domain.autenticidade import codigo_de_verificacao
 from processo_seletivo.inscricoes.domain.pessoais import mascarar_cpf
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.processos.models import Edital
@@ -145,6 +146,13 @@ def inscricao_para_consulta(*, actor, inscricao_id):
         "inscricao": inscricao,
         "perfil": perfil,
         "modalidade": modalidade,
+        # O mesmo código impresso no comprovante do candidato: é comparando os dois que quem
+        # confere recusa um papel alterado, sem ter de conferir linha por linha.
+        "codigo_de_verificacao": (
+            codigo_de_verificacao(inscricao, enviados.values())
+            if inscricao.protocolo
+            else ""
+        ),
         "cpf": mascarar_cpf(inscricao.cpf),
         "versao": versao,
         "documentos": documentos,

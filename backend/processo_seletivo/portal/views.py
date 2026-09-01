@@ -34,6 +34,7 @@ from processo_seletivo.inscricoes.application.submissao import (
     reconhecer_versao,
 )
 from processo_seletivo.inscricoes.domain.arquivos import tamanho_legivel
+from processo_seletivo.inscricoes.domain.autenticidade import codigo_de_verificacao
 from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes, recebe_inscricoes
 from processo_seletivo.inscricoes.domain.pessoais import (
     cpf_valido,
@@ -772,6 +773,11 @@ def comprovante(request, inscricao_id):
             # O documento diz quando foi emitido: o cabeçalho do navegador não é parte dele, e
             # quem imprime meses depois precisa saber de quando é o papel que tem em mãos.
             "agora": timezone.now(),
+            # O código que prova que **este papel** é o que o sistema emitiu. O resumo de cada
+            # arquivo responde pelos anexos; este responde pelo comprovante.
+            "codigo_de_verificacao": codigo_de_verificacao(
+                registro, DocumentoSubmetido.objects.filter(inscricao=registro)
+            ),
             # Formatado na saída, e não só na entrada: inscrições anteriores a esta correção
             # guardaram o CPF como a pessoa digitou.
             "cpf_do_candidato": formatar_cpf(registro.cpf),

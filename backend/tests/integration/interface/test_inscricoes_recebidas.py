@@ -271,3 +271,25 @@ def test_quem_confere_ve_tamanho_e_resumo_de_cada_arquivo(gestor, inscricao_envi
     assert documento.content_hash in corpo
     assert "SHA-256" in corpo
     assert "bytes" in corpo or "KB" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_quem_confere_ve_o_mesmo_codigo_do_comprovante(gestor, inscricao_enviada):
+    """É comparando os dois que se recusa um papel alterado.
+
+    O comprovante é um HTML impresso: qualquer pessoa edita a página antes de imprimir. Sem um
+    código calculado pelo servidor, conferir significaria ler linha por linha.
+    """
+    from processo_seletivo.inscricoes.domain.autenticidade import codigo_de_verificacao
+
+    esperado = codigo_de_verificacao(
+        inscricao_enviada, DocumentoSubmetido.objects.filter(inscricao=inscricao_enviada)
+    )
+
+    corpo = gestor.get(
+        reverse("interface:inscricao-recebida", args=[inscricao_enviada.id])
+    ).content.decode()
+
+    assert esperado in corpo
+    assert "Código de verificação" in corpo

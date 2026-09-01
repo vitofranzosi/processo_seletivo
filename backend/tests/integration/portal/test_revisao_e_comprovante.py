@@ -363,3 +363,59 @@ def test_o_comprovante_cabe_em_uma_pagina(client, inscricao_de_maria):
     assert "font-size:10.5pt" in impressao, "corpo dimensionado para papel, não para tela"
     assert ".dados{grid-template-columns:auto 1fr auto 1fr" in impressao, "dados em duas colunas"
     assert "break-inside:avoid" in impressao, "nenhum documento partido entre folhas"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_comprovante_se_identifica_pelo_protocolo_no_titulo(client, inscricao_de_maria):
+    """O navegador usa o `<title>` como nome do arquivo ao salvar em PDF.
+
+    Sem o protocolo ali, o candidato termina com "Comprovante de inscrição — Cefor_Ifes.pdf" na
+    pasta de downloads, indistinguível do comprovante de qualquer outra seleção — e é justamente o
+    protocolo que identifica este.
+    """
+    from processo_seletivo.inscricoes.application.submissao import enviar_inscricao
+
+    completa = _completar(inscricao_de_maria)
+    enviada = enviar_inscricao(
+        identidade=MARIA,
+        inscricao=completa,
+        declaracoes={"veracidade": True, "ciencia": True},
+        idempotency_key="envio-titulo",
+    )
+    identificar(client, MARIA)
+
+    corpo = client.get(reverse("portal:comprovante", args=[enviada.id])).content.decode()
+
+    assert f"<title>Comprovante {enviada.protocolo} — Cefor/Ifes</title>" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_comprovante_traz_o_codigo_que_prova_que_e_ele(client, inscricao_de_maria):
+    """O resumo de cada arquivo responde pelos anexos; este responde pelo papel.
+
+    E o mesmo código aparece na consulta administrativa, porque é comparando os dois que se recusa
+    um comprovante alterado.
+    """
+    from processo_seletivo.inscricoes.application.submissao import enviar_inscricao
+    from processo_seletivo.inscricoes.domain.autenticidade import codigo_de_verificacao
+    from processo_seletivo.inscricoes.models import DocumentoSubmetido
+
+    completa = _completar(inscricao_de_maria)
+    enviada = enviar_inscricao(
+        identidade=MARIA,
+        inscricao=completa,
+        declaracoes={"veracidade": True, "ciencia": True},
+        idempotency_key="envio-codigo",
+    )
+    identificar(client, MARIA)
+
+    corpo = client.get(reverse("portal:comprovante", args=[enviada.id])).content.decode()
+
+    esperado = codigo_de_verificacao(
+        enviada, DocumentoSubmetido.objects.filter(inscricao=enviada)
+    )
+    assert esperado in corpo
+    assert "Código de verificação" in corpo
+    assert "para confirmar que\n    nada foi alterado" in corpo or "nada foi alterado" in corpo

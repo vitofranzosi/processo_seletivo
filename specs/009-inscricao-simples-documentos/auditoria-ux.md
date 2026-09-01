@@ -405,6 +405,62 @@ já está na página da seleção.
 Travado por `test_o_cartao_diz_para_qual_vaga_e_quantas` e
 `test_as_abertas_vem_primeiro_e_em_secao_propria`.
 
+### D11 — Faltava provar que o **papel** é o que o sistema emitiu (alta)
+
+D9 deu ao comprovante o resumo de cada anexo, que responde *"este arquivo é o que foi entregue?"*.
+Ficou de fora a outra metade, e é a que uma comissão precisa primeiro: *"este papel é o que o
+sistema emitiu?"*. Um comprovante é um HTML impresso — qualquer pessoa abre as ferramentas do
+navegador, troca o nome, o protocolo ou a lista de documentos, e imprime.
+
+Junto com isso, dois incômodos concretos de quem imprimiu:
+
+- o arquivo salvo chamava-se `Comprovante de inscrição — Cefor_Ifes.pdf`, indistinguível do
+  comprovante de qualquer outra seleção;
+- o cabeçalho do navegador, com `localhost:8009/...`, continuava impresso.
+
+**Corrigido: código de verificação.** Um HMAC-SHA256 sobre o que o comprovante afirma — protocolo,
+titular, instante do envio, Edital, Perfil, modalidade e o resumo de cada documento —, exibido ao
+lado do protocolo em dezesseis dígitos hexadecimais: `0A49-4F81-A48D-5DEF`. O **mesmo** código
+aparece na consulta administrativa: quem recebe o papel abre a inscrição no sistema e compara dois
+números, em vez de conferir linha por linha.
+
+HMAC, e não um resumo simples, porque um SHA-256 do texto qualquer pessoa recalcula — e então
+qualquer pessoa forja: altera o comprovante e recalcula o número. O HMAC depende de uma chave que
+só o servidor tem.
+
+Dezesseis dígitos e não sessenta e quatro porque este número é **transcrito por pessoas**: alguém
+lê no papel e compara na tela. Sessenta e quatro caracteres nessa situação produzem erro de
+leitura, não segurança — e o que se defende é a alteração de um comprovante por quem o apresenta,
+não um ataque de colisão.
+
+**O que ele não é**, e está dito no código: não é assinatura digital com valor jurídico próprio —
+não há certificado, não há ICP-Brasil, e trocar a `SECRET_KEY` invalida os códigos emitidos. É
+verificação interna.
+
+**Corrigido: o nome do arquivo é o protocolo.** O `<title>` passou a ser
+`Comprovante INS-2026-6N5SFREZ`, e é dele que o navegador tira o nome do PDF salvo — e o texto do
+cabeçalho impresso.
+
+**O cabeçalho do navegador continua lá, e a razão é definitiva.** Ele é desenhado pelo navegador
+fora da página; nenhuma regra de CSS o alcança, nem `@page`. Só quem imprime pode desligá-lo. O que
+dava para fazer, foi feito: o documento carrega timbre, data de emissão e agora protocolo no
+próprio cabeçalho impresso, e a tela ganhou instruções **por navegador** — Firefox
+(*Mais configurações → Imprimir cabeçalhos e rodapés*), Chrome, Edge e Safari.
+
+**A alternativa que resolveria de vez, e que é decisão de produto.** Gerar o PDF no servidor
+elimina o cabeçalho, fixa o nome do arquivo e produz bytes idênticos a cada emissão — o que
+permitiria publicar também o resumo do próprio PDF. O projeto **já tem** o gerador
+(`publicacoes/infrastructure/pdf.py`, escrito à mão e sem dependências novas), então o custo é de
+composição, não de infraestrutura. O que impede é a spec: **FR-063 proíbe** gerar PDF de
+comprovante. A restrição foi decidida quando o comprovante era entendido como tela; depois de D7,
+D9 e D11 ele é um documento, e vale reabrir a decisão — mas não sozinho, e não por dentro de uma
+correção de UX.
+
+Travado por `test_o_comprovante_se_identifica_pelo_protocolo_no_titulo`,
+`test_o_comprovante_traz_o_codigo_que_prova_que_e_ele`,
+`test_quem_confere_ve_o_mesmo_codigo_do_comprovante` e
+`test_o_codigo_de_verificacao_muda_quando_o_comprovante_muda`.
+
 ## Lacunas e oportunidades, por prioridade
 
 > **Estado em 31/08/2026:** L1 a L10 foram corrigidas e travadas por teste. L11 e L12 continuam
