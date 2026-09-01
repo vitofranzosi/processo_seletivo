@@ -66,9 +66,9 @@ def test_identificador_vazio_e_recusado(gestor, processo_a):
 
 def test_pessoa_de_outro_escopo_nao_alcanca_o_processo(processo_a):
     """FR-056: escopo divergente responde como recurso inexistente, e não como proibido."""
-    from tests.integration.comissoes.conftest import ator
+    from tests.conftest import ator_institucional
 
-    de_fora = ator("carlos", "comissao:gerir", escopo="outra-unidade")
+    de_fora = ator_institucional("carlos", "comissao:gerir", escopo="outra-unidade")
     with pytest.raises(DomainError) as recusa:
         incluir(de_fora, processo_a, "joao")
 

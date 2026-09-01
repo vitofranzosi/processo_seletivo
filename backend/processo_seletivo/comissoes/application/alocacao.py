@@ -3,6 +3,8 @@
 A Etapa é sempre lida do conteúdo vigente, nunca de `edital.etapas` — ver `domain/etapas.py`.
 """
 
+from uuid import UUID
+
 from django.db import IntegrityError
 
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
@@ -17,6 +19,10 @@ from processo_seletivo.shared.api.problems import DomainError
 def alocar(
     *, actor, processo_id, membro_id, edital_id, etapa_id, idempotency_key, correlation_id
 ):
+    try:
+        etapa_id = UUID(str(etapa_id))
+    except (TypeError, ValueError) as exc:
+        raise nao_encontrado() from exc
     with comando_de_comissao(
         actor=actor,
         processo_id=processo_id,
@@ -93,9 +99,10 @@ def remover_alocacao(*, actor, processo_id, alocacao_id, idempotency_key, correl
         payload={"alocacao": str(alocacao_id)},
         idempotency_key=idempotency_key,
     ) as ctx:
-        alocacao = AlocacaoEtapa.objects.filter(
-            pk=alocacao_id, membro__processo=ctx.processo, ativo=True
-        ).first()
+        # Sem `ativo=True` quando é repetição: a segunda chamada com a mesma chave chega
+        # depois da inativação, e responder 404 ali faria o duplo clique virar erro.
+        consulta = AlocacaoEtapa.objects.filter(pk=alocacao_id, membro__processo=ctx.processo)
+        alocacao = (consulta if ctx.repetido else consulta.filter(ativo=True)).first()
         if alocacao is None:
             raise nao_encontrado()
         if ctx.repetido:

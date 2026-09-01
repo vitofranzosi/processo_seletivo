@@ -13,8 +13,15 @@ from processo_seletivo.comissoes.models import AlocacaoEtapa, Funcao, MembroComi
 from processo_seletivo.shared.api.problems import DomainError
 
 
-def _membro_do_processo(processo, membro_id):
-    membro = MembroComissao.objects.filter(pk=membro_id, processo=processo, ativo=True).first()
+def _membro_do_processo(processo, membro_id, *, exigir_ativo=True):
+    """O membro deste Processo. `exigir_ativo=False` serve à repetição de uma remoção.
+
+    A segunda chamada com a mesma chave de idempotência chega quando a linha já está inativa —
+    e devolver 404 ali transformaria o duplo clique em erro, que é o oposto do que a
+    idempotência existe para fazer.
+    """
+    consulta = MembroComissao.objects.filter(pk=membro_id, processo=processo)
+    membro = consulta.filter(ativo=True).first() if exigir_ativo else consulta.first()
     if membro is None:
         # Membro de outro Processo responde como inexistente: quem não gere aquele Processo não
         # pode descobrir sua composição alterando o identificador (FR-057).
@@ -138,7 +145,7 @@ def remover_membro(*, actor, processo_id, membro_id, idempotency_key, correlatio
         payload={"membro": str(membro_id)},
         idempotency_key=idempotency_key,
     ) as ctx:
-        membro = _membro_do_processo(ctx.processo, membro_id)
+        membro = _membro_do_processo(ctx.processo, membro_id, exigir_ativo=not ctx.repetido)
         if ctx.repetido:
             return membro, 200
         _exigir_presidencia_apos(ctx.processo, membro, nova_funcao=None)

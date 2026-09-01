@@ -41,3 +41,36 @@ def publicar_processo_com_etapas(api_client, manager_headers, process_payload, *
     return publish_original(
         api_client, manager_headers, process_payload, draft=rascunho_com_etapas(seed)
     )
+
+
+def constituir(gestor, processo, pessoas):
+    """Constitui a comissão pelo command, e devolve `{subject: membro}`."""
+    from processo_seletivo.comissoes.application.comissao import adicionar_membro
+
+    membros = {}
+    for indice, (subject, funcao) in enumerate(pessoas):
+        membro, _ = adicionar_membro(
+            actor=gestor,
+            processo_id=processo.id,
+            identity_subject=subject,
+            funcao=funcao,
+            idempotency_key=f"constituir-{processo.id}-{indice}",
+            correlation_id="fixture",
+        )
+        membros[subject] = membro
+    return membros
+
+
+def alocar_em(gestor, processo, membro, edital, etapa_id, *, chave=None):
+    from processo_seletivo.comissoes.application.alocacao import alocar
+
+    alocacao, _ = alocar(
+        actor=gestor,
+        processo_id=processo.id,
+        membro_id=membro.id,
+        edital_id=edital.id,
+        etapa_id=etapa_id,
+        idempotency_key=chave or f"alocar-{membro.id}-{etapa_id}",
+        correlation_id="fixture",
+    )
+    return alocacao
