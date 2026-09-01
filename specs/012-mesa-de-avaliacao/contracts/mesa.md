@@ -48,7 +48,13 @@ atribuição por submissão como caminho normal (FR-047).
 ### `POST editais/<id>/impedimentos`
 
 ```text
-membro_id, inscricao_id, motivo (obrigatório)
+membro_id, inscricao_id, motivo (obrigatório), idempotency_key (obrigatório)
+```
+
+### `POST editais/<id>/distribuicao/<etapa_id>/remover`
+
+```text
+atribuicao_id (um ou vários), idempotency_key (obrigatório)
 ```
 
 ### `POST .../avaliacao` e `.../avaliacao/concluir`
@@ -63,8 +69,17 @@ reconhecimento explícito da mudança de versão quando houver (FR-073).
 ### `POST avaliacoes/<id>/reabrir`
 
 ```text
-motivo (obrigatório)
+motivo (obrigatório), expected_revision (obrigatório), idempotency_key (obrigatório)
 ```
+
+**`idempotency_key` é obrigatória em todo comando que passa por `comando_de_comissao`** — o lote, a
+remoção, o impedimento e a reabertura —, porque a reserva é parte do invólucro e não um extra da
+rota mais movimentada. Reenviar qualquer um deles devolve o desfecho original, sem ato novo e sem
+evento novo (FR-084, FR-086).
+
+A gravação e a conclusão da Avaliação **não** levam chave de idempotência: são linha própria do
+avaliador, protegidas por `expected_revision`, e reenviar com revisão obsoleta é recusa, não
+repetição (FR-081).
 
 ---
 

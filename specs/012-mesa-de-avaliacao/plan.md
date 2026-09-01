@@ -26,10 +26,18 @@ O trabalho tem três naturezas, e elas não têm o mesmo tamanho:
 **A descoberta que mais determina o desenho** é a que a spec mandou confrontar. Elevar conteúdo da
 versão canônica anterior é possível, e é possível **porque este incremento é aditivo e a spec já
 declara o que a ausência significa** — coisa que não era verdade dos incrementos de 007 e 009, que
-acrescentavam coleções inteiras. Uma função pura na fronteira que carrega conteúdo para compor ou
-consolidar Retificação resolve tudo, sem tocar em uma linha gravada e sem inventar proveniência
-(T-001). O Edital publicado antes do incremento continua retificável, e a Publicação original
-continua sendo byte a byte o que foi publicado.
+acrescentavam coleções inteiras.
+
+Mas elevar só a base **não** resolve, e essa é a correção que a revisão do plano trouxe. A
+consolidação não parte da última versão: parte do conteúdo original e **reaplica todos os atos
+publicados**, que carregam o valor literal gravado quando foram elaborados. Um ato v4 que
+acrescentou uma Etapa reintroduziria essa Etapa fora de forma, e o Edital ficaria inconsolidável.
+A elevação precisa, portanto, alcançar também o `newValue` de cada ato, e ser **path-aware** — um
+`REPLACE` de nota mínima carrega um decimal, não uma Etapa. Como a função é idempotente, ela é
+aplicada incondicionalmente e dispensa etiquetar cada ato com a versão em que nasceu (T-001).
+
+Nada disso escreve: o Edital publicado antes do incremento continua retificável, e a Publicação
+original continua sendo byte a byte o que foi publicado.
 
 **A que mais economiza**: quase nada desta feature é mecanismo novo. A entrega de arquivo com
 conferência de integridade antes do primeiro byte já existe na 009; o invólucro de comando com
@@ -72,7 +80,7 @@ submissão por atribuição.
 uma Etapa custa **uma** escrita — a alocação —, e zero escritas em Atribuição.
 
 **Scale/Scope**: um Edital com mil inscritos, quarenta avaliadores, quatro Etapas. Quatro modelos
-novos, dois campos normativos novos, cinco telas.
+novos, dois campos normativos novos, cinco telas servidas por dez rotas.
 
 ## Constitution Check
 
@@ -84,17 +92,28 @@ novos, dois campos normativos novos, cinco telas.
 | II — Integridade normativa e temporalidade | Fonte única; publicado imutável; estado vigente reproduzível | A Avaliação aponta para a `VersaoConsolidada` sob a qual foi concluída e **não copia** limite nenhum, que é o que mantém a versão como fonte única (FR-071, FR-072). A elevação de esquema não escreve em `Publicacao` nem em `VersaoConsolidada`, ambas append-only e protegidas por trigger; a Publicação original permanece o que foi publicado (T-001). A conclusão lê a versão dentro da transação que grava, de modo que a regra validada é a regra registrada (FR-096). **Passa** |
 | III — Segurança, dados pessoais e auditoria | Negar por padrão; menor privilégio; sem IDOR; LGPD avaliada; auditoria de ato sensível | Esta é a primeira feature em que membro de comissão lê dado pessoal de candidato em volume, e a autorização é composta: alocação **e** atribuição, no servidor, em toda rota, com 404 uniforme. Menor privilégio literal: a permissão da consulta administrativa da 009 alcança o Edital inteiro e por isso **não** é reutilizada (T-006). Cada abertura de documento é registrada; a trilha não guarda parecer nem pontuação. Resposta com dado pessoal é não armazenável pelo navegador. **Passa** |
 | IV — Regras explícitas e consistência | Regra no backend; estados explícitos; transação; concorrência | A Avaliação tem ciclo de vida real e por isso tem estados explícitos — `RASCUNHO` e `CONCLUIDA`, com transição de reabertura que só parte de `CONCLUIDA`. Os quatro riscos que a Constituição nomeia estão mapeados a mecanismo existente na tabela de T-010, e a seção 18 da spec diz o resultado observável de cada um. Nenhuma regra vive na tela. **Passa** |
-| V — Qualidade, rastreabilidade e simplicidade | Rastreável; testado no nível certo; solução mais simples | Cada FR tem cenário previsto em [quickstart.md](./quickstart.md). Nada de motor genérico de avaliação: a spec mandou preferir o estreito, e o desenho tem quatro modelos e nenhuma abstração especulativa. Barema estruturado, avaliação cega e distribuição automática ficaram fora, cada um com a razão escrita. **Passa** |
+| V — Qualidade, rastreabilidade e simplicidade | Rastreável; testado no nível certo; solução mais simples | O [quickstart.md](./quickstart.md) demonstra **37 dos 99 requisitos** — os observáveis pelo canal do ator, que é o que o princípio VI exige dele. Os outros 62 são invariantes de banco, de comando e de não-regressão, e a cobertura deles é responsabilidade de `tasks.md`, com a rastreabilidade fechada em `traceability.md` ao final da implementação, como a 011 fez. Afirmar aqui que "cada FR tem cenário no quickstart" seria falso, e foi o que a primeira redação deste gate afirmou. Nada de motor genérico de avaliação: quatro modelos, nenhuma abstração especulativa. **Passa, com a cobertura declarada e não presumida** |
 | VI — Completude de jornada e valor demonstrável | Capacidade observável pelo canal do ator | A vertical inteira é navegável no `interface`: presidente distribui, avaliador abre a Mesa, abre a inscrição, registra e conclui, e quem não recebeu aquela inscrição recebe 404. A negação faz parte da entrega, não é nota de rodapé. **Passa** |
 
 Duas exceções vão para `Complexity Tracking`: o app novo e a tripla copiada na Avaliação.
 
-**Reavaliação após a Fase 1**: o desenho não introduziu violação nova e fechou o ponto que o gate
-inicial deixava em aberto — o princípio II, que dependia inteiramente de a elevação ser possível sem
-tocar em artefato publicado. T-001 mostrou que é, e mostrou o preço: precondição por hash de
-Retificação em voo no momento do deploy precisa ser reconstruída, o que o próprio código já nomeia
-como saída. O princípio I ganhou a garantia de banco para FR-074, ao custo de três colunas copiadas
-cuja divergência é impossível por construção. Nenhuma dependência nova.
+**Reavaliação após a Fase 1, e o que a revisão do plano corrigiu.** A primeira passagem deste gate
+aprovou dois princípios sobre premissa errada, e o registro fica porque o erro é instrutivo:
+
+- **II** — dava-se por resolvido com a elevação do conteúdo-base. A consolidação reaplica todos os
+  atos publicados, e um ato v4 que acrescentou Etapa reintroduziria conteúdo fora de forma. A
+  elevação passa a alcançar o `newValue` de cada ato, path-aware, e quatro cenários de histórico
+  misto viram teste obrigatório (T-001). **Agora passa.**
+- **I** — a garantia de FR-074 estava ancorada em `membro_id`, que é vínculo e não pessoa: remover
+  e readicionar alguém liberaria uma segunda conclusão sobre a mesma inscrição. O índice passa a
+  usar a identidade institucional estável, e o Impedimento, pela mesma razão, acompanha a pessoa
+  (FR-099). **Agora passa.**
+
+Além disso, o vocabulário de elegibilidade foi fechado na spec — "invalidar" estava significando
+duas coisas —, e o contrato passou a declarar `idempotency_key` em todo comando que reutiliza
+`comando_de_comissao`, e não só no lote.
+
+Nenhuma dependência nova. As duas exceções de complexidade permanecem duas.
 
 ## Project Structure
 
@@ -135,14 +154,14 @@ backend/processo_seletivo/
 │   └── migrations/               # uma migration
 ├── publicacoes/
 │   ├── application/publish_edital.py   # + os dois campos em _stages()
-│   ├── application/retificacoes.py     # conteúdo-base e conteúdo em vigor passam por elevar()
-│   ├── domain/elevacao.py              # NOVO — a função pura de T-001
+│   ├── application/retificacoes.py     # base, conteúdo em vigor e cada newValue passam por elevar
+│   ├── domain/elevacao.py              # NOVO — elevar() e elevar_valor(), as funções puras de T-001
 │   └── infrastructure/pdf.py           # + as duas linhas na Etapa do documento
 ├── shared/canonical.py           # SCHEMA_VERSION 4 -> 5, com o comentário do incremento
 ├── interface/
 │   ├── views.py                  # + distribuicao, mesa, inscricao_da_mesa, documento_da_mesa, impedimentos
 │   ├── forms.py                  # + lote, avaliação, impedimento, reabertura
-│   ├── urls.py                   # + cinco rotas; atribuicao -> minha_etapa (T-012)
+│   ├── urls.py                   # + dez rotas; atribuicao -> minha_etapa (T-012)
 │   └── templates/interface/
 │       ├── distribuicao.html
 │       ├── mesa.html
@@ -157,7 +176,7 @@ specs/001-processo-seletivo-editais/contracts/openapi.yaml
 backend/tests/
 ├── unit/avaliacoes/              # a leitura da ausência, a validação da pontuação, a elevação
 ├── integration/avaliacoes/       # os comandos, com constraint, concorrência e idempotência
-├── integration/publicacoes/      # retificar Edital publicado antes do incremento
+├── integration/publicacoes/      # histórico misto v4/v5: os quatro cenários de T-001
 ├── authorization/                # alocado sem atribuição, atribuição de outro, alocação removida
 ├── contract/                     # a forma publicada nova, contra o openapi.yaml
 ├── interface/                    # as cinco telas
@@ -179,10 +198,11 @@ sempre morou.
 
 ## Restrições técnicas desta feature
 
-1. **A elevação nunca escreve.** `elevar()` é função pura, aplicada só na fronteira que carrega
-   conteúdo para compor ou consolidar Retificação. Nenhuma linha de `VersaoConsolidada` ou
-   `Publicacao` é atualizada, e o caminho de leitura pública continua servindo o conteúdo que o
-   `content_hash` cobre (T-001, T-002).
+1. **A elevação nunca escreve, e alcança os atos.** `elevar()` e `elevar_valor()` são funções puras,
+   aplicadas na leitura: o conteúdo-base, o conteúdo em vigor e o `newValue` de cada ato reaplicado.
+   Nenhuma linha de `VersaoConsolidada`, `Publicacao` ou `AlteracaoNormativa` é atualizada, e o
+   caminho de leitura pública continua servindo o conteúdo que o `content_hash` cobre (T-001, T-002).
+   Consolidar Edital com histórico misto v4/v5 é teste obrigatório, não caso de borda.
 2. **A ausência tem um leitor só.** Nenhum consumidor testa presença de chave por conta própria:
    `avaliacoes_previstas()` e `pontuacao_maxima()` são o lugar onde FR-009 e FR-066 vivem.
 3. **A revogação é computada.** Nenhum ato da 011 — alocar, desalocar, remover membro — pode
@@ -199,6 +219,11 @@ sempre morou.
    verificada.
 8. **Inativar Atribuição sob Avaliação concluída não é caminho comum.** O comando de redistribuição
    recusa; só impedimento e anulação declarada alcançam, e os dois gravam `AtoAdministrativo` com
-   motivo (FR-092).
+   motivo (FR-092). O efeito sobre a Avaliação é o par de FR-075: **preservada e tornada
+   inelegível**. Em código, nome de campo e mensagem de tela vale o termo preciso — `elegivel`,
+   "inelegível" —, e nunca um nome que sugira que o registro foi alterado.
+8a. **A identidade estável é a âncora do que é fato sobre a pessoa** — conclusão única (FR-074) e
+   impedimento (FR-099). O vínculo de comissão é a âncora do que é trabalho distribuído — a
+   Atribuição (D-004). Confundir os dois eixos reabre o contorno de remover-e-readicionar.
 9. **Nenhuma tela da 012 mostra média, quórum, divergência, situação ou resultado**, e nenhuma
    consulta desta feature agrega avaliações de avaliadores diferentes.

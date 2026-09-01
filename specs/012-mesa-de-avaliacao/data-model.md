@@ -98,7 +98,7 @@ nenhum além. Não escreve linha, não altera hash gravado, não cria `Provenien
 1. `membro` tem alocação ativa em `(edital, etapa_id)` — FR-011.
 2. `etapa_id` existe na Versão Consolidada vigente do Edital — a mesma verificação da 011.
 3. `inscricao.edital == edital` e `inscricao.status == SUBMETIDA` — FR-002, FR-012.
-4. não há `Impedimento` ativo para `(membro, inscricao)` — FR-040.
+4. não existe `Impedimento` para `(identity_subject do membro, inscricao)` — FR-040, FR-099.
 5. Atribuições ativas de `(inscricao, edital, etapa_id)` < `avaliacoes_previstas(etapa)` — FR-065, e
    a contagem é de **elegíveis**, não de histórico (FR-090).
 6. não existe `Avaliacao` concluída de `(membro, etapa_id, inscricao)` — FR-074.
@@ -113,18 +113,20 @@ nenhum além. Não escreve linha, não altera hash gravado, não cria `Provenien
 |---|---|---|
 | `id` | UUID | |
 | `atribuicao` | `OneToOneField`, PROTECT | FR-005, garantia de banco |
-| `membro_id` / `etapa_id` / `inscricao_id` | cópia | escrita uma vez, na criação; nunca atualizada |
+| `identity_subject` / `etapa_id` / `inscricao_id` | cópia | escrita uma vez, na criação; nunca atualizada. **A identidade é a da pessoa, não a do vínculo** (T-007) |
 | `estado` | `RASCUNHO` \| `CONCLUIDA` | |
 | `pontuacao` | `Decimal(7,4)`, nulo | |
 | `parecer` | texto | |
 | `versao` | FK `VersaoConsolidada`, PROTECT, nulo | preenchida na conclusão (FR-071) |
 | `revision` | inteiro | `compare_and_swap` |
-| `concluida_em` / `concluida_por` | nulos | `concluida_por` é o identificador estável (FR-006) |
+| `concluida_em` / `concluida_por` | nulos | `concluida_por` é o identificador estável (FR-006), e coincide com `identity_subject` |
 
 **Constraints**
 
-- `UniqueIndex(membro_id, etapa_id, inscricao_id) WHERE estado = 'CONCLUIDA'` — FR-074. É a razão
-  da tripla copiada, e está justificada em `Complexity Tracking` do plano.
+- `UniqueIndex(identity_subject, etapa_id, inscricao_id) WHERE estado = 'CONCLUIDA'` — FR-074. É a
+  razão da tripla copiada, e está justificada em `Complexity Tracking` do plano. **Não** é
+  `membro_id`: vínculo é linha que a remoção inativa e a readmissão recria, e a garantia cairia
+  justamente no caso que ela existe para cobrir.
 - `CheckConstraint` de completude: `CONCLUIDA` exige `pontuacao`, `versao`, `concluida_em` e
   `concluida_por` presentes — o mesmo padrão de `ck_inscricao_submetida_completa`.
 - `CheckConstraint`: parecer não vazio quando `CONCLUIDA` e a Etapa for eliminatória com nota abaixo
@@ -177,15 +179,16 @@ no domínio (FR-054).
 
 | campo | nota |
 |---|---|
-| `membro` | FK `MembroComissao`, PROTECT |
-| `inscricao` | FK `Inscricao`, PROTECT |
+| `identity_subject` | a **pessoa**, não o vínculo (FR-099) |
+| `inscricao` | FK `Inscricao`, PROTECT — ela já determina Edital e Processo |
 | `motivo` | texto, **obrigatório** (FR-039) |
 | `criado_em` / `criado_por` | |
 
-`UniqueConstraint(membro, inscricao)`.
+`UniqueConstraint(identity_subject, inscricao)`.
 
-Sem `ativo`: revogar impedimento não está na spec, e criar o campo agora seria inventar ciclo de
-vida sem caso de uso (research, "o que esta pesquisa não decidiu").
+**Sem coluna `ativo`**, e a consulta é "existe Impedimento para este par". Revogar impedimento não
+está na spec; criar o campo agora seria inventar ciclo de vida sem caso de uso, e se a operação
+real pedir revogação isso volta à spec em vez de virar booleano acrescentado em silêncio.
 
 O comando que registra impedimento faz duas coisas na mesma transação: cria a linha e inativa as
 Atribuições ativas do par, uma `AtoAdministrativo` por Atribuição inativada. A confirmação declara

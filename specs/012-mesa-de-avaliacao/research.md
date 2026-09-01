@@ -48,22 +48,60 @@ ausência **declarada na própria spec** — sem a declaração, uma avaliação
 o limite, limite não declarado (FR-066). A função de elevação não escolhe nada: ela escreve na forma
 nova o que o conteúdo já dizia por omissão.
 
+### O que uma primeira leitura deixou passar, e que muda a decisão
+
+Elevar o conteúdo-base **não basta**, e a razão está em como a consolidação funciona.
+`_materialize_affected_versions` e `_content_in_force` não partem da última versão consolidada:
+partem de `_original_version(edital).content` e **reaplicam todos os atos publicados**, em ordem, a
+cada fronteira de vigência. Os atos são reaplicados sempre, e o que eles carregam é o valor
+literal — `AlteracaoNormativa.new_value`, gravado quando o ato foi elaborado.
+
+Disso decorrem dois históricos mistos que uma elevação só da base não cobre:
+
+1. **Ato v4 que acrescenta ou substitui Etapa.** `newValue` é o objeto Etapa como ele era antes do
+   incremento, sem as duas propriedades. Reaplicá-lo sobre base elevada **reintroduz** uma Etapa
+   fora de forma, e a materialização passa a falhar por campo obrigatório ausente — o Edital fica
+   inconsolidável, que é pior do que o problema original.
+2. **Ato v5 sobre conteúdo v4 não elevado.** Um ato que endereça `/stages/id=X/maximumScore` não
+   encontra o caminho, e a alteração é rejeitada.
+
 ### A decisão
 
-Uma função pura em `publicacoes/domain/`, sem efeito colateral e sem autoria:
+Uma função pura em `publicacoes/domain/elevacao.py`, sem efeito colateral e sem autoria, em duas
+formas:
 
 ```text
 elevar(conteúdo) -> conteúdo'
   schemaVersion: 4 -> 5
   stages[*].evaluationsPerRegistration: ausente -> 1
   stages[*].maximumScore:               ausente -> null
+
+elevar_valor(targetPath, valor) -> valor'
+  o caminho endereça uma Etapa ou a coleção /stages  -> eleva a entidade
+  qualquer outro caminho                             -> devolve intacto
 ```
 
-Aplicada **em um único lugar**: a fronteira que carrega conteúdo **para compor ou consolidar uma
-Retificação** — `item.base_snapshot.content`, `_original_version(...).content` e
-`_content_in_force(...)`. As linhas gravadas não mudam: `VersaoConsolidada` e `Publicacao`
-continuam append-only e com trigger no banco, e a Publicação original permanece byte a byte o que
-foi publicado.
+**A segunda forma é o que torna a consolidação consciente dos atos.** Ela é aplicada a cada
+`newValue` no momento em que o ato entra na consolidação, e é **path-aware** de propósito: um
+`REPLACE` de `/stages/id=X/minimumScore` carrega um decimal, não uma Etapa, e elevar um escalar
+seria corrompê-lo.
+
+Não é preciso etiquetar cada ato com a versão em que nasceu, e essa é a simplificação que sustenta o
+desenho: **a elevação é idempotente**. Entidade que já tem as duas propriedades atravessa a função
+inalterada, e `null` continua `null` — porque ausente e nulo significam a mesma coisa (T-002).
+Aplicá-la incondicionalmente a toda base e a todo `newValue` de Etapa produz o mesmo resultado que
+uma consolidação etiquetada por versão produziria, sem armazenar versão por ato nem manter uma
+tabela de conversões entre pares de versões.
+
+Os três pontos de aplicação, e nenhum além: `item.base_snapshot.content`,
+`_original_version(...).content` e cada `newValue` que entra em `_acts(...)`. Como `_content_in_force`
+e `_materialize_affected_versions` passam pelos mesmos dois primeiros e pelo terceiro, ficam
+cobertos sem alteração própria.
+
+As linhas gravadas não mudam: `VersaoConsolidada`, `Publicacao` e `AlteracaoNormativa` continuam
+append-only e com trigger no banco, e a Publicação original permanece byte a byte o que foi
+publicado. A elevação acontece **na leitura**, e o que ela produz vai para uma Versão Consolidada
+nova — que é artefato novo, com hash próprio, como toda Versão Consolidada já é.
 
 A nova `VersaoConsolidada` nasce em v5, com hash próprio — como toda Versão Consolidada nova já
 nasce. Os dois campos elevados **não entram em `ProvenienciaConteudo`**, porque proveniência mapeia
@@ -78,8 +116,27 @@ novos; depois do incremento, a mesma Etapa elevada tem outro hash, e a publicaç
 
 Isso não é defeito: é a proteção de FR-036 fazendo o que existe para fazer, e o próprio código já
 nomeia a saída — "devolver e reenviar o rascunho sobre a versão vigente reconstrói a precondição".
-O efeito é limitado à janela de implantação e alcança apenas Retificação **em elaboração ou
-homologada** no momento do deploy. Retificação já publicada não é afetada, porque não é reaplicada.
+
+O alcance é a janela de implantação, e só ela: Retificação **em elaboração ou homologada** no
+momento do deploy. Retificação **já publicada** é reaplicada a cada materialização — e é por isso
+que a elevação alcança os atos —, mas as precondições dela não são reconferidas na reaplicação:
+`_reject_stale_changes` roda em `publish_retification`, e não em `_materialize_affected_versions`.
+Ato já publicado, portanto, não é derrubado retroativamente por hash.
+
+### Os testes que esta decisão obriga
+
+Histórico misto não é hipótese; é o caso normal de qualquer Edital publicado antes do incremento e
+retificado depois. São quatro cenários, e nenhum deles é opcional:
+
+1. Edital v4 **sem** Retificação, retificado pela primeira vez depois do incremento.
+2. Edital v4 **com** Retificação publicada que **acrescentou** Etapa, retificado de novo depois.
+3. Edital v4 com Retificação publicada que **substituiu** Etapa inteira, idem.
+4. Edital v4 com Retificação publicada que substituiu **um campo** de Etapa — o caso que prova que
+   `elevar_valor` não toca escalar.
+
+Em todos: a Versão Consolidada nova nasce na versão vigente e bem formada, e o `content_hash` de
+toda `Publicacao` e de toda `VersaoConsolidada` anterior permanece idêntico ao que era antes do
+deploy.
 
 **Alternativas recusadas.** Migrar as linhas de `VersaoConsolidada` para v5 — reescreve artefato
 publicado e seu hash, contra a Constituição e contra as triggers de `0007`. Aceitar a
@@ -199,16 +256,24 @@ Avaliacao
   parecer     text
   versao      FK VersaoConsolidada null   # preenchida na conclusão (FR-071)
   revision    PositiveBigInteger          # compare_and_swap
-  membro_id / etapa_id / inscricao_id     # cópia imutável da identidade da Atribuição
+  identity_subject / etapa_id / inscricao_id   # cópia imutável, e a identidade é a da pessoa
   concluida_em / concluida_por
 ```
 
-**Por que a tripla copiada.** FR-074 exige, como garantia e não como disciplina de tela, no máximo
-uma Avaliação **concluída** por pessoa, inscrição e Etapa. Essa condição atravessa
-`Avaliacao → Atribuicao → membro`, e índice não atravessa junção. A cópia torna a garantia um índice
-único parcial `(membro_id, etapa_id, inscricao_id) WHERE estado = 'CONCLUIDA'`. O risco usual de
-denormalizar — divergir — não existe aqui: a quádrupla da Atribuição nunca muda depois de criada, e
-a cópia é escrita uma vez, na criação, e nunca atualizada.
+**Por que a tripla copiada, e por que ela não usa `membro_id`.** FR-074 exige, como garantia e não
+como disciplina de tela, no máximo uma Avaliação **concluída** por pessoa, inscrição e Etapa. A
+condição atravessa `Avaliacao → Atribuicao → membro`, e índice não atravessa junção — daí a cópia.
+
+Mas a coluna copiada é `identity_subject`, e **não** `membro_id`, porque `MembroComissao` é
+**vínculo**, não pessoa: remover alguém inativa a linha e readicionar cria outra, pelo padrão que a
+011 adotou de propósito. Um índice sobre `membro_id` deixaria remover-e-readicionar liberar uma
+segunda conclusão da mesma pessoa sobre a mesma inscrição — exatamente o contorno que FR-074 fecha.
+
+`(identity_subject, etapa_id, inscricao_id) WHERE estado = 'CONCLUIDA'` é a garantia certa, e ela
+conversa com FR-006: a autoria já é histórica e já se registra pelo identificador estável.
+
+O risco usual de denormalizar — divergir — não existe: os três valores são escritos uma vez, na
+criação, a partir da Atribuição, cuja quádrupla nunca muda.
 
 **A reabertura não destrói o que foi concluído** (FR-094). Cada conclusão grava uma linha
 append-only:
@@ -251,13 +316,28 @@ Entidade própria, porque é consultada como regra antes de cada distribuição:
 
 ```text
 Impedimento
-  membro FK, inscricao FK, motivo (obrigatório), criado_em/por, ativo
+  identity_subject, inscricao FK, motivo (obrigatório), criado_em/por
 ```
+
+**Ancorado na pessoa, não no vínculo** (FR-099). Um impedimento preso a `MembroComissao` morreria
+quando a pessoa saísse da comissão, e readicioná-la seria o caminho para contorná-lo — o mesmo
+buraco que FR-074 fecha, pela mesma razão. Impedimento nomeia o que não muda por reorganização
+administrativa; ele não pode depender de uma linha que a reorganização recria.
+
+**Sem coluna `ativo`.** Revogar impedimento não está na spec, e criar o campo agora seria inventar
+ciclo de vida sem caso de uso. A consulta é "existe Impedimento para este par", e não "existe
+Impedimento ativo".
 
 O ato de registrar impedimento faz **duas** coisas na mesma transação: cria o Impedimento e inativa
 as Atribuições ativas daquele par, gravando `AtoAdministrativo` por Atribuição inativada (FR-041). A
 confirmação declara antes quantas serão inativadas — a contagem é uma consulta, e retirar trabalho
 de alguém não pode ser efeito colateral silencioso de registrar um motivo.
+
+O efeito sobre a Avaliação já concluída é o de FR-079, no vocabulário de FR-075: **preservada e
+tornada inelegível**. Preservada porque nada nela é apagado ou alterado, e ela continua consultável
+com o ato ao lado; inelegível porque deixa de integrar o conjunto que a 013 consome, o que libera a
+vaga (FR-090). A 012 não se pronuncia sobre o mérito da nota — tirar do conjunto quem não podia
+estar nele não é julgar o que ele escreveu.
 
 A autorização continua com **duas** condições (FR-080): o impedimento age removendo a Atribuição, e
 não somando verificação por linha. Isso é o que impede que FR-048 seja violado justamente na
@@ -349,8 +429,8 @@ declarada. O que continua valendo é o resto — nenhuma outra coleção do cont
 - **A forma da tela de distribuição.** Se é matriz de pessoas por faixa, seleção de conjunto e
   destino, ou as duas, é decisão de UX que os requisitos não fixam. O que eles fixam é o custo:
   nenhuma submissão por atribuição.
-- **Se `Impedimento.ativo` é necessário.** Revogar impedimento não está na spec, e inventar o campo
-  agora seria criar ciclo de vida sem caso de uso. Fica como coluna a **não** criar até que alguém
-  peça revogação.
+- **Se impedimento deve poder ser revogado.** A spec não pede, e por isso `Impedimento` nasce sem
+  coluna de estado (T-009). Se a operação real pedir revogação, é ciclo de vida novo e volta à spec
+  — não vira booleano acrescentado em silêncio.
 - **A ordenação padrão da Mesa.** Por protocolo, por instante de atribuição ou por perfil — decidida
   na implementação, com o filtro de FR-021 valendo em qualquer uma.

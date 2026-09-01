@@ -415,12 +415,30 @@ obedecer a uma regra contra a qual nunca foi verificada — que é pior do que n
 alguma.
 
 **FR-074** — Existe **no máximo uma Avaliação concluída** por pessoa, inscrição e Etapa, qualquer
-que seja o número de Atribuições que tenham existido ali. Reatribuir a inscrição a quem já concluiu
-a avaliação dela naquela Etapa é recusado, e a recusa nomeia o único caminho de volta: a reabertura
-da presidência (FR-036).
+que seja o número de Atribuições — ou de vínculos de comissão — que tenham existido ali. Reatribuir
+a inscrição a quem já concluiu a avaliação dela naquela Etapa é recusado, e a recusa nomeia o único
+caminho de volta: a reabertura da presidência (FR-036).
 
-**FR-075** — São **três** coisas distintas, e confundi-las foi um erro que esta spec já cometeu uma
-vez:
+**"Pessoa" aqui é a identidade institucional estável, e nunca o vínculo de comissão.** Vínculo é
+linha que a remoção inativa e a readmissão recria; ancorar a garantia nele permitiria que remover e
+readicionar alguém liberasse uma segunda conclusão sua sobre a mesma inscrição — que é precisamente
+o contorno que este requisito existe para fechar.
+
+**FR-075** — São **três** coisas distintas, e confundi-las foi um erro que esta spec já cometeu
+duas vezes. A segunda foi de vocabulário: "invalidar" chegou a significar, no mesmo documento,
+*apagar ou alterar o registro* e *tirar do conjunto que a 013 consome*. **Passa a ter um sentido
+só, e ele é o segundo:**
+
+| termo | significa, aqui e em todo lugar |
+|---|---|
+| **preservar** | o registro não é apagado, não é alterado, e continua consultável |
+| **tornar inelegível**, ou **invalidar** | o registro deixa de integrar o conjunto de avaliações válidas, por ato nomeado, com autor e motivo |
+
+As duas coisas acontecem **juntas** no caso desta seção: uma Avaliação sob Atribuição inativa é
+preservada **e** inelegível. Invalidar nunca significa mexer no registro, e preservar nunca
+significa continuar valendo.
+
+Dito isso, as três colunas:
 
 | | Avaliação sob Atribuição inativa |
 |---|---|
@@ -655,7 +673,7 @@ terminar.
 **FR-032** — Concluir é ato explícito, distinto de salvar.
 
 **FR-033** — A pontuação é validada contra o que o Edital publicou para aquela Etapa: a pontuação
-máxima, a forma decimal do conteúdo publicado e a não-negatividade. **A nota mínima não invalida
+máxima, a forma decimal do conteúdo publicado e a não-negatividade. **A nota mínima não recusa
 pontuação nenhuma** — nota abaixo do mínimo é registro válido, é justamente o que o avaliador
 precisa poder afirmar, e a consequência dela é da 013. O que a nota mínima produz aqui é uma coisa
 só: torna o parecer obrigatório (FR-034).
@@ -706,6 +724,14 @@ Como presidente, quero registrar que uma pessoa não pode avaliar determinada in
 
 **FR-039** — A presidência pode registrar impedimento entre avaliador e inscrição, com motivo.
 
+**FR-099** — O impedimento acompanha a **pessoa**, pela identidade institucional estável, e não o
+vínculo de comissão. Quem é impedido de avaliar uma inscrição não deixa de ser por ter saído da
+comissão e voltado: se o impedimento morresse com o vínculo, remover e readicionar seria o caminho
+para contorná-lo, e ele nomeia justamente as razões que não mudam por reorganização administrativa.
+
+É a mesma identidade de FR-074, e pelo mesmo motivo. A Atribuição continua ancorada no vínculo
+(D-004): ela é trabalho distribuído sob uma composição de comissão, e não um fato sobre a pessoa.
+
 **FR-040** — Impedimento bloqueia a **atribuição nova**, e a recusa nomeia o motivo registrado.
 
 **FR-041** — Impedimento registrado sobre uma Atribuição **ativa** a inativa no mesmo ato, que é da
@@ -715,9 +741,15 @@ por qualquer um (FR-075). O ato declara, antes de ser confirmado, quantas Atribu
 inativará — retirar trabalho de alguém não pode ser efeito colateral silencioso de registrar um
 motivo.
 
-**FR-079** — A Avaliação **concluída** antes do impedimento permanece, e o impedimento fica visível
-ao lado dela na organização do trabalho. A 012 não a invalida: invalidar avaliação por impedimento
-superveniente é decidir sobre o valor de uma avaliação, e isso é da 013.
+**FR-079** — A Avaliação **concluída** antes do impedimento é **preservada e tornada inelegível**,
+nos dois sentidos exatos de FR-075: ela não é apagada nem alterada, continua consultável com o ato,
+o autor e o motivo ao lado (FR-091, FR-093), e deixa de integrar o conjunto que a 013 consome — o
+que libera a vaga que ocupava (FR-090).
+
+O que a 012 **não** faz é pronunciar-se sobre o mérito dela: não afirma que a nota estava errada,
+não a corrige, não a recalcula e não a substitui por outra. Ela apenas registra que quem a produziu
+estava impedido, e que por isso aquela avaliação não pode ser uma das previstas. Julgar o conteúdo é
+da 013 — tirar do conjunto quem não podia estar nele é desta.
 
 **FR-080** — A autorização continua tendo **duas** condições, e o impedimento não vira uma terceira.
 Ele age removendo a Atribuição, não somando uma verificação por linha — que é o que FR-048 proíbe.
