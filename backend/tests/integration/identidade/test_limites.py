@@ -61,3 +61,21 @@ def test_nao_existe_teto_global():
     for indice in range(servico.LIMITE_POR_ORIGEM + 5):
         _, codigo = pedir(f"pessoa{indice}@exemplo.test", origem=f"192.0.2.{indice}")
         assert codigo, "origens distintas continuam sendo atendidas"
+
+
+def test_a_espera_e_por_endereco_e_finalidade():
+    """Quem acaba de entrar e clica em vincular a participação anterior não pode ficar sem código.
+
+    A espera de um minuto existe para não transformar clique repetido em enxurrada de mensagens
+    iguais. Prendê-la só ao endereço confundia duas proteções: o pedido de `ENTRAR`, feito segundos
+    antes, ocupava a janela do `RETOMAR` — e a pessoa era mandada para a tela do código sem código
+    nenhum. O teto por hora continua sendo por endereço, e é ele que contém quem varre.
+    """
+    _, entrar = pedir("maria@exemplo.test")
+    assert entrar
+    _, retomar = servico.solicitar(
+        email_canonico="maria@exemplo.test",
+        finalidade=DesafioDeAcesso.Finalidade.RETOMAR,
+        origem="203.0.113.7",
+    )
+    assert retomar, "outra finalidade tem a sua própria janela"

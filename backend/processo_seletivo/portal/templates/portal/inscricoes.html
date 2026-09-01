@@ -15,5 +15,22 @@
    primeiro acesso (FR-061). {% endcomment %}
 <p class="sub">Você ainda não possui inscrições.</p>
 <p><a class="principal" href="{% url 'portal:vitrine' %}">Ver processos seletivos</a></p>
+{% if pode_retomar %}
+{% comment %}
+Só aparece para quem pode aceitar: identidade sem inscrição alguma e com um endereço que consta de
+participação anterior. A janela fecha sozinha na primeira inscrição — e é isso que torna a
+movimentação segura, porque não há o que fundir.
+
+Nada aqui diz de quem era a participação anterior: quem chegou até esta tela provou uma caixa de
+e-mail, e isso não basta para saber de quem ela era.
+{% endcomment %}
+<h2>Já participou antes?</h2>
+<p class="sub">Encontramos participação anterior associada a um dos seus e-mails. Você pode
+vinculá-la a este acesso confirmando seu CPF.</p>
+<form method="post" action="{% url 'portal:acesso-retomar' %}">
+  {% csrf_token %}
+  <button type="submit" class="secundario">Vincular participação anterior</button>
+</form>
+{% endif %}
 {% endif %}
 {% endblock %}

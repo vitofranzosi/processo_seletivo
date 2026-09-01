@@ -130,24 +130,25 @@ confirmar o CPF e ver a inscrição — sem que nenhum dado dela tenha mudado.
 
 ### Testes da US2
 
-- [ ] T037 [P] [US2] Teste de contrato de `GET|POST /acesso/reconciliar` e `POST /acesso/reconciliar/retomar` em `backend/tests/contract/portal/test_reconciliacao.py`
-- [ ] T038 [P] [US2] Teste de que o convite aparece só com correspondência anterior, e de que o CPF desempata entre identidades distintas, em `backend/tests/integration/identidade/test_correspondencia.py`
-- [ ] T039 [P] [US2] Teste de que recusa, CPF errado e tentativas esgotadas produzem identidade própria com sessão válida — nunca beco sem saída — e de que quem **já tem** identidade e prova endereço novo sem correspondência recebe outra identidade, jamais uma fusão, em `backend/tests/integration/identidade/test_sem_beco.py`
-- [ ] T040 [P] [US2] Teste de que as tentativas de CPF são cinco, contadas no desafio, não zeradas por nova sessão, e de que tentativas de terceiro **não** impedem o titular legítimo de reconciliar depois, em `backend/tests/integration/identidade/test_tentativas_cpf.py`
-- [ ] T041 [P] [US2] Teste de que a reconciliação pendente expira dez minutos após o consumo e leva a identidade própria em `backend/tests/integration/identidade/test_reconciliacao_expira.py`
-- [ ] T042 [P] [US2] Teste da retomada — disponível enquanto a identidade estiver vazia, indisponível depois de qualquer inscrição, movendo **todas** as credenciais e descartando a identidade vazia — em `backend/tests/integration/identidade/test_retomada.py`
-- [ ] T043 [P] [US2] Teste de concorrência entre a retomada e a abertura de rascunho: ou a movimentação acontece inteira, ou não acontece; nunca credencial para trás nem inscrição órfã, em `backend/tests/integration/identidade/test_retomada_concorrente.py`
-- [ ] T044 [P] [US2] Teste de que nenhuma inscrição muda de `identity_subject` em qualquer desfecho da reconciliação em `backend/tests/authorization/test_titularidade_preservada.py`
-- [ ] T045 [P] [US2] Teste de aceitação do percurso da Entrega 2, incluindo recusar o convite e retomá-lo, em `backend/tests/acceptance/portal/test_reencontrar_participacao.py`
+- [X] T037 [P] [US2] Teste de contrato de `GET|POST /acesso/reconciliar` e `POST /acesso/reconciliar/retomar` em `backend/tests/contract/portal/test_reconciliacao.py`
+- [X] T038 [P] [US2] Teste de que o convite aparece só com correspondência anterior, e de que o CPF desempata entre identidades distintas, em `backend/tests/integration/identidade/test_correspondencia.py`
+- [X] T039 [P] [US2] Teste de que recusa, CPF errado e tentativas esgotadas produzem identidade própria com sessão válida — nunca beco sem saída — e de que quem **já tem** identidade e prova endereço novo sem correspondência recebe outra identidade, jamais uma fusão, em `backend/tests/integration/identidade/test_sem_beco.py`
+- [X] T040 [P] [US2] Teste de que as tentativas de CPF são cinco, contadas no desafio, não zeradas por nova sessão, e de que tentativas de terceiro **não** impedem o titular legítimo de reconciliar depois, em `backend/tests/integration/identidade/test_tentativas_cpf.py`
+- [X] T041 [P] [US2] Teste de que a reconciliação pendente expira dez minutos após o consumo e leva a identidade própria em `backend/tests/integration/identidade/test_reconciliacao_expira.py`
+- [X] T042 [P] [US2] Teste da retomada — disponível enquanto a identidade estiver vazia, indisponível depois de qualquer inscrição, movendo **todas** as credenciais e descartando a identidade vazia — em `backend/tests/integration/identidade/test_retomada.py`
+- [X] T043a [P] [US2] Teste de que a espera de reenvio é por endereço **e finalidade**, para que retomar logo depois de entrar não caia na janela do código anterior, em `backend/tests/integration/identidade/test_limites.py`
+- [X] T043 [P] [US2] Teste de concorrência entre a retomada e a abertura de rascunho: ou a movimentação acontece inteira, ou não acontece; nunca credencial para trás nem inscrição órfã, em `backend/tests/integration/identidade/test_retomada_concorrente.py`
+- [X] T044 [P] [US2] Teste de que nenhuma inscrição muda de `identity_subject` em qualquer desfecho da reconciliação em `backend/tests/authorization/test_titularidade_preservada.py`
+- [X] T045 [P] [US2] Teste de aceitação do percurso da Entrega 2, incluindo recusar o convite e retomá-lo, em `backend/tests/acceptance/portal/test_reencontrar_participacao.py`
 
 ### Implementação da US2
 
 - [X] T046 [US2] Implementar a busca de correspondência histórica por endereço, sem consumir o convite, em `backend/processo_seletivo/identidade/application/associacao.py`
-- [ ] T047 [US2] Implementar o porte da reconciliação pendente sobre os campos que `T014` já criou — abrir o prazo no consumo, contar as tentativas de CPF por atualização condicional e encerrar nos quatro desfechos — em `backend/processo_seletivo/identidade/application/associacao.py`
+- [X] T047 [US2] Implementar o porte da reconciliação pendente sobre os campos que `T014` já criou — abrir o prazo no consumo, contar as tentativas de CPF por atualização condicional e encerrar nos quatro desfechos — em `backend/processo_seletivo/identidade/application/associacao.py`
 - [X] T048 [US2] Implementar a confirmação por CPF, com desempate e contagem condicional de tentativas, em `backend/processo_seletivo/identidade/application/associacao.py`
-- [ ] T049 [US2] Implementar a retomada — verificar vazia, mover todas as credenciais e descartar, em uma operação única sob bloqueio de linha — em `backend/processo_seletivo/identidade/application/associacao.py`
-- [ ] T050 [US2] Fazer a abertura de rascunho tomar o mesmo bloqueio de linha sobre a identidade antes de criar a Inscrição em `backend/processo_seletivo/inscricoes/application/rascunho.py`
-- [ ] T051 [US2] Implementar as views do convite e da retomada em `backend/processo_seletivo/portal/views.py` e as rotas em `backend/processo_seletivo/portal/urls.py`
+- [X] T049 [US2] Implementar a retomada — verificar vazia, mover todas as credenciais e descartar, em uma operação única sob bloqueio de linha — em `backend/processo_seletivo/identidade/application/associacao.py`
+- [X] T050 [US2] Fazer a abertura de rascunho tomar o mesmo bloqueio de linha sobre a identidade antes de criar a Inscrição em `backend/processo_seletivo/inscricoes/application/rascunho.py`
+- [X] T051 [US2] Implementar as views do convite e da retomada em `backend/processo_seletivo/portal/views.py` e as rotas em `backend/processo_seletivo/portal/urls.py`
 - [X] T052 [US2] Criar o convite, sem revelar nome, CPF, protocolo ou quantidade da identidade anterior, e a recusa que aponta o procedimento institucional de recuperação em vez de um beco, em `backend/processo_seletivo/portal/templates/portal/acesso_reconciliar.html`
 
 **Checkpoint**: o percurso da Entrega 2 roda, e a suíte prova que nenhuma inscrição mudou de titular.

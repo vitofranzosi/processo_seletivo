@@ -11,6 +11,7 @@ urlpatterns = [
     path("acesso", views.acesso, name="acesso"),
     path("acesso/codigo", views.acesso_codigo, name="acesso-codigo"),
     path("acesso/reconciliar", views.acesso_reconciliar, name="acesso-reconciliar"),
+    path("acesso/reconciliar/retomar", views.acesso_retomar, name="acesso-retomar"),
     path("inscricoes/", views.inscricoes, name="inscricoes"),
     path("sair", views.sair, name="sair"),
     # A Inscrição fora do caminho do Edital: ela pertence a quem a abriu, e o endereço não carrega

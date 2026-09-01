@@ -112,6 +112,9 @@ class DesafioDeAcesso(models.Model):
     class Finalidade(models.TextChoices):
         ENTRAR = "ENTRAR"
         ADICIONAR_CREDENCIAL = "ADICIONAR_CREDENCIAL"
+        # A retomada é finalidade própria, e não um `ENTRAR` com outro nome: ela move credenciais e
+        # descarta uma identidade. Um código pedido para entrar não pode autorizar isso (FR-028).
+        RETOMAR = "RETOMAR"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email_canonico = models.CharField(max_length=254)

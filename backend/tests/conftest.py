@@ -87,3 +87,22 @@ def inscricao_de_maria(selecao):
     from tests.fixtures.candidato import MARIA, PERFIL_DOCENTE
 
     return abrir_inscricao(identidade=MARIA, edital_id=selecao.id, profile_id=PERFIL_DOCENTE)
+
+
+@pytest.fixture
+def desafio_consumido():
+    """Um desafio já validado, portando a decisão pendente da reconciliação (010).
+
+    Fica aqui, e não num conftest de diretório, pelo mesmo motivo das *fixtures* da `009`:
+    integração e autorização exercitam as mesmas precondições.
+    """
+    from processo_seletivo.identidade.application import desafio as servico
+    from processo_seletivo.identidade.models import DesafioDeAcesso
+
+    endereco = "maria@exemplo.test"
+    _, codigo = servico.solicitar(
+        email_canonico=endereco, finalidade=DesafioDeAcesso.Finalidade.ENTRAR
+    )
+    return servico.validar(
+        email_canonico=endereco, finalidade=DesafioDeAcesso.Finalidade.ENTRAR, codigo=codigo
+    )

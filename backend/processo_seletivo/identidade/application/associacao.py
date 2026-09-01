@@ -150,3 +150,54 @@ def confirmar_cpf(desafio: DesafioDeAcesso, cpf: str) -> CandidateIdentity | Non
 
 def encerrar_reconciliacao(desafio: DesafioDeAcesso) -> None:
     DesafioDeAcesso.objects.filter(pk=desafio.pk).update(reconciliacao_ate=None)
+
+
+def esta_vazia(identidade: CandidateIdentity) -> bool:
+    return not Inscricao.objects.filter(identity_subject=identidade.subject).exists()
+
+
+def credencial_com_correspondencia(identidade: CandidateIdentity) -> CandidateEmail | None:
+    """A credencial desta identidade que aparece em inscrição de **outra** — se houver.
+
+    É o que torna a retomada oferecível: sem endereço com correspondência, não há o que retomar.
+    """
+    for credencial in identidade.credenciais.all():
+        correspondentes = [
+            candidata
+            for candidata in correspondencia_historica(credencial.email_canonico)
+            if candidata.pk != identidade.pk
+        ]
+        if correspondentes:
+            return credencial
+    return None
+
+
+def retomar(*, vazia: CandidateIdentity, destino: CandidateIdentity) -> bool:
+    """Move todas as credenciais e descarta a identidade vazia — numa operação só (FR-054, FR-055).
+
+    **Por que atômica, e por que sob bloqueio.** Verificar "está vazia" e descartar depois deixaria
+    um rascunho nascer no intervalo, e ele ficaria órfão de uma identidade que deixou de existir —
+    `Inscricao` não referencia a identidade por chave estrangeira, então nada além deste bloqueio
+    impede isso. A abertura de rascunho toma a mesma linha (`rascunho._travar_a_identidade`).
+
+    **Por que todas as credenciais.** Cada uma já foi provada por desafio, e a identidade não tem
+    inscrição alguma: mover só a que carregava a correspondência perderia o que a pessoa comprovou,
+    sem ganho nenhum de segurança.
+
+    Devolve `False` quando a premissa deixou de valer dentro do bloqueio — que é exatamente o caso
+    que o bloqueio existe para pegar.
+    """
+    with transaction.atomic():
+        travada = (
+            CandidateIdentity.objects.select_for_update().filter(pk=vazia.pk).first()
+        )
+        if travada is None or not esta_vazia(travada):
+            return False
+        principal_do_destino = destino.credenciais.filter(principal=True).exists()
+        travada.credenciais.update(identidade=destino, principal=False)
+        if not principal_do_destino:
+            primeira = destino.credenciais.order_by("created_at").first()
+            if primeira is not None:
+                destino.credenciais.filter(pk=primeira.pk).update(principal=True)
+        travada.delete()
+    return True

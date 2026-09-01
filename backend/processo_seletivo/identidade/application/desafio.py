@@ -64,9 +64,19 @@ def _resumir_origem(origem: str) -> str:
     return hashlib.sha256(origem.encode()).hexdigest()
 
 
-def _espera_restante(email_canonico: str, agora) -> int:
+def _espera_restante(email_canonico: str, finalidade: str, agora) -> int:
+    """A espera é por endereço **e finalidade**, e o teto por hora é por endereço.
+
+    São duas proteções com alvos distintos. A espera de um minuto existe para não transformar um
+    clique repetido em enxurrada de mensagens iguais; o teto por hora existe para conter quem varre.
+    Prender a espera só ao endereço confundia as duas: quem acabava de entrar e clicava em vincular
+    a participação anterior era mandado para a tela do código sem código nenhum, porque o pedido
+    anterior — de outra finalidade, feito segundos antes — ainda ocupava a janela.
+
+    Alternar finalidades não é atalho para quem ataca: a única alcançável sem sessão é `ENTRAR`.
+    """
     ultimo = (
-        DesafioDeAcesso.objects.filter(email_canonico=email_canonico)
+        DesafioDeAcesso.objects.filter(email_canonico=email_canonico, finalidade=finalidade)
         .order_by("-criado_em")
         .values_list("criado_em", flat=True)
         .first()
@@ -103,7 +113,7 @@ def solicitar(*, email_canonico: str, finalidade: str, origem: str = "") -> tupl
     """
     agora = timezone.now()
     origem_hash = _resumir_origem(origem)
-    espera = _espera_restante(email_canonico, agora)
+    espera = _espera_restante(email_canonico, finalidade, agora)
     if espera > 0 or _excedeu_limites(email_canonico, origem_hash, agora):
         return Recibo(proxima_tentativa_em=espera or int(ESPERA_ENTRE_ENVIOS.total_seconds())), ""
 

@@ -396,6 +396,9 @@ def _recusas_da_identificacao(dados):
 
 CHAVE_DO_ENDERECO = "portal_acesso_email"
 CHAVE_DO_DESAFIO = "portal_acesso_desafio"
+# Qual desafio está em curso. Sem isto, um código pedido para retomar seria validado como se fosse
+# de entrar, e a finalidade da FR-028 seria decorativa.
+CHAVE_DA_FINALIDADE = "portal_acesso_finalidade"
 # A mesma frase nos quatro casos que poderiam revelar existência: endereço com identidade, sem
 # identidade, limite esgotado e falha de envio (FR-020, FR-021, FR-083).
 AVISO_NEUTRO = "Se este endereço puder ser utilizado, enviaremos um código de acesso."
@@ -437,6 +440,7 @@ def acesso(request):
     )
     enviar_codigo(para=informado, codigo=codigo)
     request.session[CHAVE_DO_ENDERECO] = informado
+    request.session[CHAVE_DA_FINALIDADE] = DesafioDeAcesso.Finalidade.ENTRAR
     request.session["portal_acesso_espera"] = recibo.proxima_tentativa_em
     return redirect(reverse("portal:acesso-codigo"))
 
@@ -456,22 +460,39 @@ def acesso_codigo(request):
         return render(request, "portal/acesso_codigo.html", contexto)
 
     canonico = canonizar(informado)
+    finalidade = request.session.get(
+        CHAVE_DA_FINALIDADE, DesafioDeAcesso.Finalidade.ENTRAR
+    )
     digitado = request.POST.get("codigo", "")
     if not codigo_de_acesso.formato_aceitavel(digitado):
         contexto["erro"] = "O código tem seis dígitos."
         return render(request, "portal/acesso_codigo.html", contexto)
 
     desafio = desafio_de_acesso.validar(
-        email_canonico=canonico,
-        finalidade=DesafioDeAcesso.Finalidade.ENTRAR,
-        codigo=digitado,
+        email_canonico=canonico, finalidade=finalidade, codigo=digitado
     )
     if desafio is None:
         # Uma frase para quatro motivos — errado, expirado, já usado e acima do teto (FR-031).
         contexto["erro"] = "Código inválido ou expirado. Peça um novo código."
         return render(request, "portal/acesso_codigo.html", contexto)
 
+    if finalidade == DesafioDeAcesso.Finalidade.RETOMAR:
+        return _abrir_retomada(request, desafio)
     return _decidir_a_quem_pertence(request, desafio, informado)
+
+
+def _abrir_retomada(request, desafio):
+    """Provado o endereço de novo, o convite volta — agora a partir de dentro."""
+    correspondentes = [
+        candidata
+        for candidata in associacao.correspondencia_historica(desafio.email_canonico)
+        if not associacao.esta_vazia(candidata)
+    ]
+    if not correspondentes:
+        return redirect(reverse("portal:inscricoes"))
+    associacao.abrir_reconciliacao(desafio, correspondentes)
+    request.session[CHAVE_DO_DESAFIO] = str(desafio.pk)
+    return redirect(reverse("portal:acesso-reconciliar"))
 
 
 def _decidir_a_quem_pertence(request, desafio, email_como_informado):
@@ -493,7 +514,12 @@ def _decidir_a_quem_pertence(request, desafio, email_como_informado):
 
 
 def _entrar(request, identidade):
-    for chave in (CHAVE_DO_ENDERECO, CHAVE_DO_DESAFIO, "portal_acesso_espera"):
+    for chave in (
+        CHAVE_DO_ENDERECO,
+        CHAVE_DO_DESAFIO,
+        CHAVE_DA_FINALIDADE,
+        "portal_acesso_espera",
+    ):
         request.session.pop(chave, None)
     identidade_do_candidato.abrir_sessao(request, identidade)
     return redirect(reverse("portal:inscricoes"))
@@ -531,7 +557,17 @@ def acesso_reconciliar(request):
 
     identidade = associacao.confirmar_cpf(desafio, request.POST.get("cpf", ""))
     if identidade is not None:
-        associacao.associar_credencial(identidade, desafio.email_canonico, informado)
+        vazia = identidade_do_candidato.identidade_autenticada(request)
+        if desafio.finalidade == DesafioDeAcesso.Finalidade.RETOMAR and vazia is not None:
+            if not associacao.retomar(vazia=vazia, destino=identidade):
+                # A premissa caiu dentro do bloqueio: nasceu inscrição no intervalo. Nada se move.
+                contexto["erro"] = (
+                    "Não foi possível concluir agora. Sua inscrição em andamento permanece como "
+                    "está."
+                )
+                return render(request, "portal/acesso_reconciliar.html", contexto)
+        else:
+            associacao.associar_credencial(identidade, desafio.email_canonico, informado)
         associacao.encerrar_reconciliacao(desafio)
         return _entrar(request, identidade)
 
@@ -547,13 +583,58 @@ def acesso_reconciliar(request):
     return render(request, "portal/acesso_reconciliar.html", contexto)
 
 
+def acesso_retomar(request):
+    """Retomar a reconciliação recusada por engano — enquanto a identidade estiver vazia (FR-053).
+
+    A janela fecha sozinha assim que a pessoa abre qualquer inscrição, e é isso que torna a
+    movimentação segura: não há o que fundir, porque a origem não tem nada.
+
+    Passa por desafio novo, e não pela sessão que já está aberta. São duas razões: a contagem de
+    tentativas de CPF mora no desafio, e uma regra só vale para os dois caminhos; e o ato que move
+    credenciais e descarta uma identidade merece ser reprovado no instante em que acontece.
+    """
+    identidade = identidade_do_candidato.identidade_autenticada(request)
+    if identidade is None:
+        return redirect(reverse("portal:acesso"))
+    if not associacao.esta_vazia(identidade):
+        # Deixou de ser oferecida. `404` e não `403`: a ação não existe mais para esta identidade.
+        raise Http404
+    credencial = associacao.credencial_com_correspondencia(identidade)
+    if credencial is None:
+        raise Http404
+    if request.method != "POST":
+        return redirect(reverse("portal:inscricoes"))
+
+    recibo, codigo = desafio_de_acesso.solicitar(
+        email_canonico=credencial.email_canonico,
+        finalidade=DesafioDeAcesso.Finalidade.RETOMAR,
+        origem=_origem(request),
+    )
+    enviar_codigo(para=credencial.email_como_informado, codigo=codigo)
+    request.session[CHAVE_DO_ENDERECO] = credencial.email_como_informado
+    request.session[CHAVE_DA_FINALIDADE] = DesafioDeAcesso.Finalidade.RETOMAR
+    request.session["portal_acesso_espera"] = recibo.proxima_tentativa_em
+    return redirect(reverse("portal:acesso-codigo"))
+
+
 def inscricoes(request):
     """Minhas inscrições — nesta entrega, o estado vazio e a porta de saída dele."""
     identidade = identidade_do_candidato.identidade_autenticada(request)
     if identidade is None:
         return redirect(reverse("portal:acesso"))
     minhas = Inscricao.objects.filter(identity_subject=identidade.subject).order_by("-created_at")
-    return render(request, "portal/inscricoes.html", {"inscricoes": list(minhas)})
+    return render(
+        request,
+        "portal/inscricoes.html",
+        {
+            "inscricoes": list(minhas),
+            # O convite de retomada só aparece para quem pode aceitá-lo: identidade sem inscrição
+            # alguma e com um endereço que consta de participação anterior de outra identidade.
+            "pode_retomar": bool(
+                not minhas.exists() and associacao.credencial_com_correspondencia(identidade)
+            ),
+        },
+    )
 
 
 @require_http_methods(["POST"])
