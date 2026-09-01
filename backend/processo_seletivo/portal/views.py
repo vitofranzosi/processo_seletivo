@@ -14,13 +14,14 @@ from hashlib import sha256
 
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
-from django.urls import Resolver404, resolve, reverse
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.editais.domain.documentos import aplicaveis
 from processo_seletivo.identidade.application import associacao
+from processo_seletivo.identidade.application import credenciais as nucleo_da_identidade
 from processo_seletivo.identidade.application import desafio as desafio_de_acesso
 from processo_seletivo.identidade.application.mensagem import enviar_codigo
 from processo_seletivo.identidade.domain import codigo as codigo_de_acesso
@@ -45,7 +46,6 @@ from processo_seletivo.inscricoes.domain.arquivos import tamanho_legivel
 from processo_seletivo.inscricoes.domain.autenticidade import codigo_de_verificacao
 from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes, recebe_inscricoes
 from processo_seletivo.inscricoes.domain.pessoais import (
-    cpf_valido,
     formatar_cpf,
     formatar_telefone,
     telefone_valido,
@@ -302,92 +302,6 @@ def _perfil_da_vitrine(perfil, iniciadas, conteudo):
     }
 
 
-@require_http_methods(["GET", "POST"])
-@resposta_privada
-def identificar(request):
-    """A identificação do candidato — provedor de demonstração enquanto o real não existe.
-
-    A tela diz o que é, sem eufemismo: quem se identifica aqui declara quem é, e nada verifica a
-    declaração. Em produção o processo nem sobe com este provedor ligado (FR-024).
-    """
-    if not identidade_do_candidato.provedor_de_demonstracao():
-        raise Http404
-    destino = _destino_seguro(request, reverse("portal:vitrine"))
-    erros = []
-    dados = {"nome": "", "cpf": "", "email": ""}
-    if request.method == "POST":
-        dados = {campo: request.POST.get(campo, "").strip() for campo in dados}
-        erros = _recusas_da_identificacao(dados)
-        if not erros:
-            # Uma forma só: o CPF entra como a pessoa digitou e é guardado sempre igual. Sem isto
-            # a mesma pessoa aparece de três jeitos nas telas de quem confere.
-            dados["cpf"] = formatar_cpf(dados["cpf"])
-            identidade = identidade_do_candidato.identificar(request, **dados)
-            return _retomar(request, destino, identidade)
-    return render(
-        request,
-        "portal/identificar.html",
-        {"destino": destino, "erros": erros, "dados": dados},
-    )
-
-
-def _retomar(request, destino, identidade):
-    """Volta ao ponto de origem — e, quando ele era o convite, conclui o que a pessoa pediu.
-
-    O convite é POST, porque abrir rascunho cria registro e pratica ato auditado. O retorno depois
-    da identificação é GET, e mandar a pessoa de volta a uma rota que só aceita POST a deixaria
-    numa recusa do navegador. Em vez de abrir o convite para GET — o que faria um endereço
-    compartilhado criar inscrição —, a identificação resolve a intenção que já estava declarada:
-    quem clicou em "inscrever-se" e se identificou entra na inscrição, e não numa tela a mais.
-    """
-    try:
-        rota = resolve(destino)
-    except Resolver404:
-        return redirect(destino)
-    if rota.view_name != "portal:inscrever":
-        return redirect(destino)
-    inscricao_aberta = abrir_inscricao(
-        identidade=identidade,
-        edital_id=rota.kwargs["edital_id"],
-        profile_id=rota.kwargs["profile_id"],
-        correlation_id=getattr(request, "correlation_id", ""),
-    )
-    return redirect(reverse("portal:inscricao", args=[inscricao_aberta.id]))
-
-
-def _recusas_da_identificacao(dados):
-    """As recusas que a pessoa lê, e os limites que a persistência impõe.
-
-    O comprimento entra aqui porque sem ele o campo grande demais atravessa a aplicação inteira e
-    estoura na gravação — em PostgreSQL, como erro de servidor. Recusar antes é a diferença entre
-    "o nome é longo demais" e uma página de erro sem explicação.
-    """
-    recusas = {}
-    limites = identidade_do_candidato.LIMITES
-    if not dados["nome"]:
-        recusas["nome"] = "Informe seu nome completo."
-    elif len(dados["nome"]) > limites["nome"]:
-        recusas["nome"] = f"O nome pode ter no máximo {limites['nome']} caracteres."
-    elif len([parte for parte in dados["nome"].split() if len(parte) > 1]) < 2:
-        # O rótulo pede o nome **completo**, e "Joao" passava. O nome vai no comprovante e é por
-        # ele que a comissão confere o documento apresentado: um primeiro nome sozinho obriga a
-        # conferência manual que esta feature existe para tirar.
-        recusas["nome"] = "Informe o nome completo, com sobrenome."
-    if len(identidade_do_candidato.normalizar_cpf(dados["cpf"])) != 11:
-        recusas["cpf"] = "Informe um CPF com 11 dígitos."
-    elif len(dados["cpf"]) > limites["cpf"]:
-        recusas["cpf"] = "Informe o CPF apenas com números ou na forma 000.000.000-00."
-    elif not cpf_valido(dados["cpf"]):
-        # Contar onze dígitos aceitava qualquer número inventado. O CPF decide de quem é a
-        # inscrição e alimenta o `subject` da auditoria: digitado errado, produz uma identidade
-        # que ninguém reencontra — a pessoa volta, digita certo, e sua inscrição "sumiu".
-        recusas["cpf"] = "Este CPF não existe. Confira os números digitados."
-    if "@" not in dados["email"]:
-        recusas["email"] = "Informe um e-mail válido."
-    elif len(dados["email"]) > limites["email"]:
-        recusas["email"] = f"O e-mail pode ter no máximo {limites['email']} caracteres."
-    return recusas
-
 
 # ---------------------------------------------------------------------------
 # Acesso sem senha (010). Três telas curtas, e a decisão de a qual identidade o endereço pertence
@@ -399,6 +313,9 @@ CHAVE_DO_DESAFIO = "portal_acesso_desafio"
 # Qual desafio está em curso. Sem isto, um código pedido para retomar seria validado como se fosse
 # de entrar, e a finalidade da FR-028 seria decorativa.
 CHAVE_DA_FINALIDADE = "portal_acesso_finalidade"
+# Para onde voltar depois de informar nome e CPF: quem chegou a caminho de uma vaga não pode ser
+# despejado numa lista vazia e obrigado a procurar tudo de novo.
+CHAVE_DO_DESTINO = "portal_acesso_destino"
 # A mesma frase nos quatro casos que poderiam revelar existência: endereço com identidade, sem
 # identidade, limite esgotado e falha de envio (FR-020, FR-021, FR-083).
 AVISO_NEUTRO = "Se este endereço puder ser utilizado, enviaremos um código de acesso."
@@ -418,6 +335,9 @@ def _origem(request) -> str:
 
 def acesso(request):
     """Informe seu e-mail — e a resposta é a mesma para todo mundo."""
+    destino = _destino_seguro(request, "")
+    if destino:
+        request.session[CHAVE_DO_DESTINO] = destino
     if identidade_do_candidato.identidade_autenticada(request):
         return redirect(reverse("portal:inscricoes"))
     if request.method != "POST":
@@ -514,15 +434,25 @@ def _decidir_a_quem_pertence(request, desafio, email_como_informado):
 
 
 def _entrar(request, identidade):
+    destino = request.session.get(CHAVE_DO_DESTINO, "")
     for chave in (
         CHAVE_DO_ENDERECO,
         CHAVE_DO_DESAFIO,
         CHAVE_DA_FINALIDADE,
+        CHAVE_DO_DESTINO,
         "portal_acesso_espera",
     ):
         request.session.pop(chave, None)
     identidade_do_candidato.abrir_sessao(request, identidade)
-    return redirect(reverse("portal:inscricoes"))
+    if not destino:
+        return redirect(reverse("portal:inscricoes"))
+    request.session[CHAVE_DO_DESTINO] = destino
+    if nucleo_da_identidade.falta_o_nucleo(identidade):
+        # Quem veio a caminho de uma vaga e ainda não tem nome nem CPF informa os dois agora, e
+        # volta para a vaga em seguida. Mandá-la primeiro ao convite e só depois ao formulário
+        # acrescentaria uma tela sem acrescentar nada.
+        return redirect(reverse("portal:meus-dados"))
+    return render(request, "portal/retomar_convite.html", {"destino": destino})
 
 
 def _desafio_pendente(request):
@@ -617,8 +547,73 @@ def acesso_retomar(request):
     return redirect(reverse("portal:acesso-codigo"))
 
 
+def _item_da_lista(registro):
+    """O que decide a próxima ação de uma inscrição, e nada além disso.
+
+    Perfil e Edital vêm do **conteúdo publicado**, como em toda tela do candidato: é o que foi
+    publicado que governa a inscrição, e não a linha de elaboração que a Retificação altera depois.
+
+    A ação principal é uma só por item, e é inequívoca: rascunho se continua, enviada se acompanha
+    (`SC-UX-005`). Duas ações lado a lado devolveriam à pessoa a decisão que a lista existe para
+    tomar por ela.
+    """
+    enviada = registro.status == Inscricao.Status.SUBMETIDA
+    try:
+        conteudo = selectors.selecao_publica(edital_id=registro.edital_id).conteudo
+        perfil = _perfil_legivel(_perfil_do_conteudo(conteudo, registro.profile_id))
+        edital = f"Edital {conteudo.get('number', '')}/{conteudo.get('year', '')}".strip("/ ")
+    except Exception:
+        # Seleção despublicada ou conteúdo indisponível não apaga a inscrição da lista: a pessoa
+        # continua tendo o que enviou, e o protocolo continua valendo.
+        perfil, edital = {"nome": "", "codigo": ""}, ""
+    return {
+        "id": registro.id,
+        "perfil": perfil["nome"],
+        "edital": edital,
+        "enviada": enviada,
+        "protocolo": registro.protocolo,
+        "acao": "Acompanhar" if enviada else "Continuar inscrição",
+    }
+
+
+@require_http_methods(["GET", "POST"])
+@resposta_privada
+def meus_dados(request):
+    """Nome e CPF, uma vez na vida da identidade — e corrigíveis depois (FR-005, FR-008).
+
+    Vive fora da jornada de inscrição de propósito: a `009` não é reaberta, e o que mudou foi de
+    onde vêm os dados que ela consome, não a jornada que os usa (P-008).
+    """
+    registro = identidade_do_candidato.identidade_autenticada(request)
+    if registro is None:
+        return redirect(reverse("portal:acesso"))
+    editavel = not nucleo_da_identidade.cpf_congelado(registro)
+    dados = {
+        "nome": registro.nome,
+        "cpf": formatar_cpf(registro.cpf_normalizado) if registro.cpf_normalizado else "",
+    }
+    contexto = {"dados": dados, "erros": {}, "cpf_editavel": editavel}
+    if request.method != "POST":
+        return render(request, "portal/meus_dados.html", contexto)
+
+    dados = {campo: request.POST.get(campo, "").strip() for campo in ("nome", "cpf")}
+    erros = nucleo_da_identidade.recusas(dados, cpf_editavel=editavel)
+    if erros:
+        contexto.update({"dados": dados, "erros": erros})
+        return render(request, "portal/meus_dados.html", contexto)
+
+    nucleo_da_identidade.gravar_nucleo(registro, nome=dados["nome"], cpf=dados["cpf"])
+    destino = request.session.pop(CHAVE_DO_DESTINO, "")
+    if destino:
+        # O convite é POST porque abrir rascunho cria registro e pratica ato auditado — a mesma
+        # razão da `009`. Reenviar por formulário é o que evita um endereço compartilhado virar
+        # criador de inscrições.
+        return render(request, "portal/retomar_convite.html", {"destino": destino})
+    return redirect(reverse("portal:inscricoes"))
+
+
 def inscricoes(request):
-    """Minhas inscrições — nesta entrega, o estado vazio e a porta de saída dele."""
+    """Minhas inscrições — a lista, o estado vazio, e a porta de saída dele."""
     identidade = identidade_do_candidato.identidade_autenticada(request)
     if identidade is None:
         return redirect(reverse("portal:acesso"))
@@ -627,7 +622,7 @@ def inscricoes(request):
         request,
         "portal/inscricoes.html",
         {
-            "inscricoes": list(minhas),
+            "inscricoes": [_item_da_lista(registro) for registro in minhas],
             # O convite de retomada só aparece para quem pode aceitá-lo: identidade sem inscrição
             # alguma e com um endereço que consta de participação anterior de outra identidade.
             "pode_retomar": bool(
@@ -650,10 +645,16 @@ def inscrever(request, edital_id, profile_id):
     POST, e não link: abrir rascunho cria registro e pratica ato auditado, e isso não é o que um
     GET significa. Quem não está identificado vai identificar-se e **volta para cá** (FR-025).
     """
-    identidade = identidade_do_candidato.identidade_da_sessao(request)
+    registro = identidade_do_candidato.identidade_autenticada(request)
     aqui = reverse("portal:inscrever", args=[edital_id, profile_id])
-    if identidade is None:
-        return redirect(f"{reverse('portal:identificar')}?destino={aqui}")
+    if registro is None:
+        return redirect(f"{reverse('portal:acesso')}?destino={aqui}")
+    if nucleo_da_identidade.falta_o_nucleo(registro):
+        # Nome e CPF são pedidos aqui, e só aqui: quem veio olhar a vitrine não precisa entregar
+        # dado pessoal, e quem veio da `009` nunca chega a ver esta tela (FR-005).
+        request.session[CHAVE_DO_DESTINO] = aqui
+        return redirect(reverse("portal:meus-dados"))
+    identidade = identidade_do_candidato.contrato_de(registro)
     inscricao = abrir_inscricao(
         identidade=identidade,
         edital_id=edital_id,

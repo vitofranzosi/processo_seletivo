@@ -9,6 +9,11 @@ dia em que uma permissão fosse concedida a mais, ele praticaria ato institucion
 `interface_identidade`; esta fica em `portal_identidade`. As duas coexistem sem se confundir, e
 cada canal lê apenas a sua: quem está identificado no `/gestao/` não é candidato, e vice-versa.
 
+**A identificação por declaração saiu.** Quem entra prova o controle de um endereço de e-mail; o
+provedor que deixava qualquer pessoa dizer quem era foi removido com a `010`, e com ele o
+identificador derivado do CPF pela chave secreta — a dependência que tornava a propriedade de cada
+inscrição refém da rotação de um segredo de configuração.
+
 **O que a 010 mudou aqui.** A sessão guarda o **identificador da identidade**, e nada mais. Nome,
 CPF e endereço vêm do registro a cada requisição (D-008). A `009` guardava os três na sessão, o que
 era correto quando eram declarados e efêmeros; guardá-los agora deixaria a sessão exibir dado
@@ -68,10 +73,6 @@ def identidade_da_sessao(request) -> IdentidadeDoCandidato | None:
     guardado = request.session.get(CHAVE_SESSAO)
     if not guardado:
         return None
-    # Forma transitória, e datada: enquanto a identificação por declaração existir, ela guarda o
-    # dicionário inteiro porque não tem registro para apontar. Sai junto com ela (T064).
-    if isinstance(guardado, dict):
-        return IdentidadeDoCandidato(**guardado)
     return contrato_de(_registro(guardado))
 
 
@@ -119,7 +120,7 @@ def abrir_sessao(request, registro: CandidateIdentity) -> IdentidadeDoCandidato:
 def identidade_autenticada(request) -> CandidateIdentity | None:
     """O registro, para quem precisa dele — e não do contrato."""
     guardado = request.session.get(CHAVE_SESSAO)
-    if not guardado or isinstance(guardado, dict):
+    if not guardado:
         return None
     return _registro(guardado)
 
@@ -135,37 +136,15 @@ def criar_identidade(*, nome: str = "", cpf_normalizado: str = "") -> CandidateI
     )
 
 
-def subject_de(cpf: str) -> str:
-    """Identificador derivado do CPF — o provedor de demonstração, e nada além dele.
-
-    Está datado: a `010` deu à identidade um identificador próprio, que não deve nada a segredo de
-    configuração (FR-002). Esta função sobrevive apenas enquanto a identificação por declaração
-    sobrevive, e sai com ela.
-    """
-    import hashlib
-    import hmac
-
-    digest = hmac.new(
-        settings.SECRET_KEY.encode(), normalizar_cpf(cpf).encode(), hashlib.sha256
-    ).hexdigest()
-    return f"{PREFIXO_DEMONSTRACAO}:{digest[:32]}"
-
-
-def identificar(request, *, nome, cpf, email):
-    """Registra a identidade declarada na sessão — provedor de demonstração, em vias de sair."""
-    identidade = IdentidadeDoCandidato(
-        subject=subject_de(cpf),
-        nome=nome.strip(),
-        cpf=cpf.strip(),
-        email=email.strip(),
-    )
-    request.session[CHAVE_SESSAO] = identidade.__dict__
-    return identidade
-
-
 def encerrar(request):
     request.session.pop(CHAVE_SESSAO, None)
 
 
 def provedor_de_demonstracao() -> bool:
+    """Sobrevive apenas como armadilha, e nunca devolve verdade em produção.
+
+    A tela que esta variável habilitava **não existe mais** (FR-048). A recusa de inicialização que
+    ela dispara em `production.py` continua ativa de propósito: se a identificação por declaração
+    voltar, por descuido ou por atalho de alguém com pressa, produção não sobe.
+    """
     return bool(getattr(settings, "PORTAL_IDENTIDADE_DEMO", False))

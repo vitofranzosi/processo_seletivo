@@ -28,13 +28,27 @@ Três particularidades do ambiente, todas conhecidas, nenhuma da feature. Valem 
 cd backend && TEST_DB_ENGINE=postgresql LC_ALL=en_US.UTF-8 DB_USER="$(whoami)" DB_NAME=ps010 uv run pytest -q
 ```
 
-Uma particularidade nova: **o envio de mensagem precisa de mecanismo declarado**. Em
-desenvolvimento, o mecanismo de console imprime o código no terminal — que é exatamente o que a
-recusa de inicialização impede em produção (`FR-081`).
+Uma particularidade nova: **o envio de mensagem precisa de mecanismo declarado**, e em
+desenvolvimento ele é um servidor de verdade — o [Mailpit](https://mailpit.axllent.org), que recebe
+por SMTP e mostra numa página o que chegou.
 
 ```bash
-cd backend && INTERFACE_SELETOR_IDENTIDADE=true DJANGO_EMAIL_BACKEND=console DEFAULT_FROM_EMAIL=nao-responda@exemplo.test ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos DB_USER="$(whoami)" uv run python manage.py runserver 8010
+mailpit --smtp 0.0.0.0:1025 --listen 0.0.0.0:8025
 ```
+
+*Por que um servidor, e não o mecanismo de console.* O console imprime a mensagem no terminal sem
+nunca exercer o caminho de entrega — e é justamente esse caminho que a `FR-081` recusa em produção.
+Com o Mailpit, desenvolvimento usa **a mesma classe de mecanismo que a produção exige**, e a
+demonstração passa a provar que a mensagem sai, não apenas que foi formatada. As mensagens ficam em
+`http://localhost:8025`.
+
+```bash
+cd backend && INTERFACE_SELETOR_IDENTIDADE=true DJANGO_EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend EMAIL_HOST=localhost EMAIL_PORT=1025 EMAIL_USE_TLS=false DEFAULT_FROM_EMAIL=nao-responda@exemplo.test ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos DB_USER="$(whoami)" uv run python manage.py runserver 8010
+```
+
+A suíte automatizada **não** usa o Mailpit: ela usa o mecanismo em memória, que é isolado por teste
+e não depende de haver um servidor no ar. O Mailpit serve à demonstração no navegador, onde o que
+importa é ver a mensagem chegar.
 
 Note o que **não** está aí: `PORTAL_IDENTIDADE_DEMO`. A partir desta feature a identificação por
 declaração não existe, e a variável permanece apenas como armadilha na recusa de produção (D-011).
@@ -67,7 +81,8 @@ e isso é o comportamento correto (`FR-046`).
 
 1. Informe um endereço qualquer que não tenha participação anterior. A tela responde que, *se* o
    endereço puder ser utilizado, um código será enviado — sem dizer se existe (`FR-020`).
-2. Copie o código do terminal do servidor e cole-o **inteiro** no campo único (`UX-005`).
+2. Abra `http://localhost:8025`, copie o código da mensagem e cole-o **inteiro** no campo único
+   (`UX-005`).
 3. **Deve-se ver**: a área pessoal, vazia, convidando a consultar os processos seletivos — sem
    aparência de erro (`FR-061`).
 

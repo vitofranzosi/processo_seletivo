@@ -12,18 +12,15 @@ from django.urls import reverse
 from django.utils import timezone
 
 from processo_seletivo.inscricoes.application.rascunho import abrir_inscricao
-from processo_seletivo.portal.identidade import IdentidadeDoCandidato
+from tests.fixtures.candidato import JOAO, MARIA, registrar
 from tests.fixtures.edital import identificador
 from tests.fixtures.selecao import publicar_selecao, rascunho_de_selecao
 
-MARIA = IdentidadeDoCandidato("demo:12345678909", "Maria Silva", "123.456.789-09", "m@ex.br")
-JOAO = IdentidadeDoCandidato("demo:98765432100", "João Souza", "987.654.321-00", "j@ex.br")
 PERFIL = identificador(401, 0)
 
 
 @pytest.fixture
 def inscricao_de_maria(api_client, manager_headers, process_payload, settings):
-    settings.PORTAL_IDENTIDADE_DEMO = True
     agora = timezone.now()
     rascunho = rascunho_de_selecao()
     rascunho["schedule"][0]["startAt"] = (agora - timedelta(days=1)).isoformat()
@@ -35,7 +32,7 @@ def inscricao_de_maria(api_client, manager_headers, process_payload, settings):
 
 def _identificar(client, identidade):
     sessao = client.session
-    sessao["portal_identidade"] = identidade.__dict__
+    sessao["portal_identidade"] = str(registrar(identidade).pk)
     sessao.save()
 
 

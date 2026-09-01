@@ -8,10 +8,20 @@
         "DB_USER=saymoncastro",
         "DB_NAME=ps010_dev",
         "LC_ALL=en_US.UTF-8",
-        "DJANGO_EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend",
         "DEFAULT_FROM_EMAIL=nao-responda@exemplo.test",
         "ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos",
-        "uv", "run", "--directory", "backend", "python", "manage.py", "runserver", "8010"
+        "DJANGO_EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend",
+        "EMAIL_HOST=localhost",
+        "EMAIL_PORT=1025",
+        "EMAIL_USE_TLS=false",
+        "uv",
+        "run",
+        "--directory",
+        "backend",
+        "python",
+        "manage.py",
+        "runserver",
+        "8010"
       ],
       "port": 8010
     }

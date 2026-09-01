@@ -51,7 +51,7 @@ def test_as_paginas_publicas_continuam_cacheaveis(client, selecao):
 def test_toda_tela_do_candidato_com_dado_pessoal_e_privada(client, enviada, selecao):
     identificar(client, MARIA)
     enderecos = (
-        reverse("portal:identificar"),
+        reverse("portal:meus-dados"),
         reverse("portal:inscricao", args=[enviada.id]),
         reverse("portal:revisao", args=[enviada.id]),
         reverse("portal:comprovante", args=[enviada.id]),

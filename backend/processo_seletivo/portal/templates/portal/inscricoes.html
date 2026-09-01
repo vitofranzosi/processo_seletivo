@@ -3,10 +3,22 @@
 {% block conteudo %}
 <h1>Minhas inscrições</h1>
 {% if inscricoes %}
+{% comment %}
+Mais recente primeiro, e uma ação principal por item. A situação aparece por texto **e** por
+símbolo: cor sozinha não informa quem não a distingue.
+{% endcomment %}
 <ul class="selecoes">
   {% for inscricao in inscricoes %}
   <li class="selecao">
-    <a class="titulo" href="{% url 'portal:inscricao' inscricao.id %}">{{ inscricao }}</a>
+    <a class="titulo" href="{% url 'portal:inscricao' inscricao.id %}">{{ inscricao.perfil|default:"Inscrição" }}</a>
+    {% if inscricao.edital %}<span class="meta">{{ inscricao.edital }}</span>{% endif %}
+    {% if inscricao.enviada %}
+    <span class="situacao enviada">✓ Inscrição enviada</span>
+    <span class="protocolo">{{ inscricao.protocolo }}</span>
+    {% else %}
+    <span class="situacao">Inscrição não enviada</span>
+    {% endif %}
+    <a class="principal" href="{% url 'portal:inscricao' inscricao.id %}">{{ inscricao.acao }}</a>
   </li>
   {% endfor %}
 </ul>

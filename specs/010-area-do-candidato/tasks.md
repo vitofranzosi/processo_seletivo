@@ -166,24 +166,30 @@ existente com o rascunho como estava.
 
 ### Testes da US3
 
-- [ ] T053 [P] [US3] Teste de que a lista mostra todas e somente as inscrições da identidade, mais recente primeiro, com a ação principal correta em `backend/tests/integration/portal/test_minhas_inscricoes.py`
-- [ ] T054 [P] [US3] Teste de que nome e CPF são pedidos uma única vez e reusados nas inscrições seguintes, e nunca a quem veio da `009`, em `backend/tests/integration/identidade/test_nucleo_minimo.py`
-- [ ] T055 [P] [US3] Teste de que o rascunho é alimentado pelo endereço **principal** da identidade, e não pelo endereço que autenticou a sessão, em `backend/tests/integration/identidade/test_email_do_rascunho.py`
-- [ ] T056 [P] [US3] Teste de que uma identidade não enxerga inscrição de outra, com resposta que não permite descobrir existência, em `backend/tests/authorization/test_inscricao_alheia.py`
-- [ ] T057 [P] [US3] Teste de que a restrição de uma inscrição por identidade, Edital e Perfil continua intacta em `backend/tests/integration/inscricoes/test_idempotencia_preservada.py`
-- [ ] T058 [P] [US3] Teste de aceitação do percurso da Entrega 3 — pedir nome e CPF uma vez, não pedir de novo, retomar o rascunho — em `backend/tests/acceptance/portal/test_minhas_inscricoes.py`
+- [X] T053 [P] [US3] Teste de que a lista mostra todas e somente as inscrições da identidade, mais recente primeiro, com a ação principal correta em `backend/tests/integration/portal/test_minhas_inscricoes.py`
+- [X] T054 [P] [US3] Teste de que nome e CPF são pedidos uma única vez e reusados nas inscrições seguintes, e nunca a quem veio da `009`, em `backend/tests/integration/identidade/test_nucleo_minimo.py`
+- [X] T055 [P] [US3] Teste de que o rascunho é alimentado pelo endereço **principal** da identidade, e não pelo endereço que autenticou a sessão, em `backend/tests/integration/identidade/test_email_do_rascunho.py`
+- [X] T056 [P] [US3] Teste de que uma identidade não enxerga inscrição de outra, com resposta que não permite descobrir existência, em `backend/tests/authorization/test_inscricao_alheia.py`
+- [X] T057 [P] [US3] Teste de que a restrição de uma inscrição por identidade, Edital e Perfil continua intacta em `backend/tests/integration/inscricoes/test_idempotencia_preservada.py`
+- [X] T058 [P] [US3] Teste de aceitação do percurso da Entrega 3 — pedir nome e CPF uma vez, não pedir de novo, retomar o rascunho — em `backend/tests/acceptance/portal/test_minhas_inscricoes.py`
 
 ### Implementação da US3
 
-- [ ] T059 [US3] Implementar a captura única de nome e CPF, com validação de formação, em `backend/processo_seletivo/identidade/application/credenciais.py`
-- [ ] T060 [US3] Fazer a abertura de rascunho consumir nome, CPF e endereço principal a partir do registro da identidade em `backend/processo_seletivo/inscricoes/application/rascunho.py`
-- [ ] T061 [US3] Implementar a listagem das inscrições da identidade em `backend/processo_seletivo/portal/views.py`
-- [ ] T062 [US3] Completar a lista, com Edital, Perfil, situação, protocolo e ação principal, em `backend/processo_seletivo/portal/templates/portal/inscricoes.html`
-- [ ] T063 [US3] Migrar as fixtures e os testes existentes da `009` que criavam candidato pela identificação declarada para o acesso por desafio em `backend/tests/`
-- [ ] T064 [US3] Remover a rota, a view e o template da identificação por declaração, e a derivação do `subject` a partir do CPF, em `backend/processo_seletivo/portal/urls.py`, `backend/processo_seletivo/portal/views.py`, `backend/processo_seletivo/portal/identidade.py` e `backend/processo_seletivo/portal/templates/portal/identificar.html`
-- [ ] T065 [US3] Manter a variável e a recusa de inicialização como armadilha, com o comentário que explica por que ela sobrevive ao caminho que ela guardava, em `backend/config/settings/production.py`
+- [X] T059 [US3] Implementar a captura única de nome e CPF, com validação de formação, em `backend/processo_seletivo/identidade/application/credenciais.py`
+- [X] T060 [US3] Fazer a abertura de rascunho consumir nome, CPF e endereço principal a partir do registro da identidade em `backend/processo_seletivo/inscricoes/application/rascunho.py`
+- [X] T061 [US3] Implementar a listagem das inscrições da identidade em `backend/processo_seletivo/portal/views.py`
+- [X] T062 [US3] Completar a lista, com Edital, Perfil, situação, protocolo e ação principal, em `backend/processo_seletivo/portal/templates/portal/inscricoes.html`
+- [X] T063 [US3] Migrar as fixtures e os testes existentes da `009` que criavam candidato pela identificação declarada para o acesso por desafio em `backend/tests/`
+- [X] T064 [US3] Remover a rota, a view e o template da identificação por declaração, e a derivação do `subject` a partir do CPF, em `backend/processo_seletivo/portal/urls.py`, `backend/processo_seletivo/portal/views.py`, `backend/processo_seletivo/portal/identidade.py` e `backend/processo_seletivo/portal/templates/portal/identificar.html`
+- [X] T065 [US3] Manter a variável e a recusa de inicialização como armadilha, com o comentário que explica por que ela sobrevive ao caminho que ela guardava, em `backend/config/settings/production.py`
 
 **Checkpoint**: a jornada de inscrição da `009` funciona inteira sem a identificação por declaração.
+
+> **O que `T063` custou, registrado.** Migrar as *fixtures* alcançou dez arquivos de teste, três
+> definições locais de identidade com prefixo `demo:`, e exigiu uma *fixture* de registro com
+> escopo por diretório — na raiz ela poluiria os testes que **contam** identidades, e contagem
+> poluída é teste que passa a medir a *fixture*. Era a tarefa de maior risco da lista, e a
+> estimativa estava certa.
 
 ---
 

@@ -14,13 +14,11 @@ from django.utils import timezone
 
 from processo_seletivo.inscricoes.application.rascunho import abrir_inscricao
 from processo_seletivo.inscricoes.models import Inscricao
-from processo_seletivo.portal.identidade import IdentidadeDoCandidato
 from processo_seletivo.shared.api.problems import DomainError
+from tests.fixtures.candidato import MARIA, registrar
 from tests.fixtures.edital import identificador
 from tests.fixtures.selecao import publicar_selecao, rascunho_de_selecao
 
-MARIA = IdentidadeDoCandidato("demo:12345678909", "Maria Silva", "123.456.789-09", "m@ex.br")
-JOAO = IdentidadeDoCandidato("demo:98765432100", "João Souza", "987.654.321-00", "j@ex.br")
 PERFIL_DOCENTE = identificador(401, 0)
 PERFIL_TECNICO = identificador(406, 0)
 
@@ -89,13 +87,12 @@ def test_o_perfil_nao_muda_dentro_da_inscricao(
     outro Perfil é abrir outra inscrição, e é por isso que o campo não aparece em formulário
     nenhum.
     """
-    settings.PORTAL_IDENTIDADE_DEMO = True
     edital = _publicar(api_client, manager_headers, process_payload)
     inscricao = abrir_inscricao(
         identidade=MARIA, edital_id=edital.id, profile_id=PERFIL_DOCENTE
     )
     sessao = client.session
-    sessao["portal_identidade"] = MARIA.__dict__
+    sessao["portal_identidade"] = str(registrar(MARIA).pk)
     sessao.save()
 
     resposta = client.post(

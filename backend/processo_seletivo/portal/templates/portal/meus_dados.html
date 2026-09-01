@@ -1,0 +1,37 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Seus dados{% endblock %}
+{% block conteudo %}
+<h1>Seus dados</h1>
+{% comment %}
+Pedidos uma vez na vida da identidade, e reusados em todas as inscrições seguintes. Quem veio da
+`009` nunca vê esta tela: a reconciliação já trouxe nome e CPF.
+{% endcomment %}
+<p class="sub">Pedimos uma única vez. Nas próximas inscrições, não perguntamos de novo.</p>
+
+<form method="post" action="{% url 'portal:meus-dados' %}" novalidate>
+  {% csrf_token %}
+  <div class="campo">
+    <label for="nome">Nome completo</label>
+    <input type="text" id="nome" name="nome" value="{{ dados.nome }}" autocomplete="name"
+           autofocus required
+           {% if erros.nome %}aria-invalid="true" aria-describedby="erro-nome"{% endif %}>
+    {% if erros.nome %}<span class="recusa" id="erro-nome">{{ erros.nome }}</span>{% endif %}
+  </div>
+  <div class="campo curto">
+    <label for="cpf">CPF</label>
+    <input type="text" id="cpf" name="cpf" value="{{ dados.cpf }}" inputmode="numeric"
+           autocomplete="off" {% if not cpf_editavel %}readonly{% endif %}
+           {% if erros.cpf %}aria-invalid="true" aria-describedby="erro-cpf"{% endif %}>
+    {% if erros.cpf %}<span class="recusa" id="erro-cpf">{{ erros.cpf }}</span>{% endif %}
+    {% if not cpf_editavel %}
+    {% comment %}
+    A partir da primeira inscrição enviada o CPF já constou de um comprovante que alguém tem em
+    mãos. Corrigi-lo deixa de ser ato de quem se inscreve.
+    {% endcomment %}
+    <span class="sub">Você já enviou uma inscrição com este CPF. Para corrigi-lo, procure o
+    atendimento institucional.</span>
+    {% endif %}
+  </div>
+  <button type="submit" class="principal">Continuar</button>
+</form>
+{% endblock %}

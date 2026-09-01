@@ -90,7 +90,9 @@ def test_a_retomada_tambem_nao_troca_o_titular(client, legada):
     antes = titulares()
     ate_o_convite(client)
     client.post(reverse("portal:acesso-reconciliar"), {"acao": "continuar"})
-    propria = CandidateIdentity.objects.exclude(pk=legada.pk).get()
+    from processo_seletivo.identidade.models import CandidateEmail
+
+    propria = CandidateEmail.objects.get(email_canonico=ENDERECO).identidade
 
     associacao.retomar(vazia=propria, destino=legada)
 

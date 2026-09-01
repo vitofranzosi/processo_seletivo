@@ -60,7 +60,6 @@ def raiz_de_arquivos(settings, tmp_path):
     propriedade, `override_settings` não teria efeito e os testes escreveriam todos no mesmo lugar.
     """
     settings.ARQUIVOS_CANDIDATOS_RAIZ = str(tmp_path)
-    settings.PORTAL_IDENTIDADE_DEMO = True
     return tmp_path
 
 
@@ -82,7 +81,21 @@ def selecao(raiz_de_arquivos, api_client, manager_headers, process_payload):
 
 
 @pytest.fixture
-def inscricao_de_maria(selecao):
+def candidatos_registrados():
+    """Maria e João existem como identidades persistidas, e não como declarações (010).
+
+    Não é *autouse*, e a razão é dupla. A abertura de rascunho passou a exigir que a linha da
+    identidade exista — sem isso uma inscrição poderia nascer órfã de uma identidade descartada —,
+    então os testes da jornada precisam delas. Mas registrá-las em **todo** teste de banco poluiria
+    os que contam identidades, e contagem poluída é teste que passa a medir a *fixture*.
+    """
+    from tests.fixtures.candidato import JOAO, MARIA, registrar
+
+    return [registrar(identidade) for identidade in (MARIA, JOAO)]
+
+
+@pytest.fixture
+def inscricao_de_maria(selecao, candidatos_registrados):
     from processo_seletivo.inscricoes.application.rascunho import abrir_inscricao
     from tests.fixtures.candidato import MARIA, PERFIL_DOCENTE
 

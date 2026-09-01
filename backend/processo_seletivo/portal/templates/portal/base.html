@@ -283,6 +283,13 @@ a.principal{display:inline-block;width:auto;text-align:center;text-decoration:no
   background:var(--branco);color:var(--verde-texto);font-weight:600;font-size:1rem;
   font-family:inherit;cursor:pointer}
 .secundario:hover{background:var(--verde-claro)}
+/* A lista de inscrições (010). Situação por texto e símbolo — cor sozinha não informa quem não a
+   distingue —, e o protocolo com quebra explícita, porque é um código longo em 375px. */
+.selecao .situacao{color:var(--texto-fraco);font-size:.9375rem}
+.selecao .situacao.enviada{color:var(--sucesso);font-weight:600}
+.selecao .protocolo{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.875rem;
+  color:var(--texto-fraco);overflow-wrap:anywhere}
+.selecao .principal{margin-top:.5rem;justify-self:start}
 form.convite{margin:.75rem 0 0}
 /* O comprovante é impresso: fora o conteúdo, nada mais precisa ir para o papel. */
 /* O timbre existe **só** no papel: na tela o cabeçalho verde já diz de quem é o sistema, e

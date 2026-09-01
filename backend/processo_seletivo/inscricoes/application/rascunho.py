@@ -154,11 +154,10 @@ def _travar_a_identidade(identidade):
     concorrência encontrou. Exigir a linha fecha os dois lados: quem chega depois do descarte é
     recusado, e quem chega antes faz a retomada esperar e encontrar a inscrição.
 
-    A identificação por declaração não tem registro, e por isso é deixada passar pelo prefixo. Ela
-    sai em `T064`, e esta exceção sai junto.
+    A exceção que existia aqui — deixar passar a identidade sem registro, da identificação por
+    declaração — saiu junto com ela: toda identidade agora tem linha.
     """
     from processo_seletivo.identidade.models import CandidateIdentity
-    from processo_seletivo.portal.identidade import PREFIXO_DEMONSTRACAO
 
     travada = (
         CandidateIdentity.objects.select_for_update()
@@ -166,7 +165,7 @@ def _travar_a_identidade(identidade):
         .values_list("pk", flat=True)
         .first()
     )
-    if travada is None and not identidade.subject.startswith(f"{PREFIXO_DEMONSTRACAO}:"):
+    if travada is None:
         raise DomainError("not_found", "Recurso não encontrado.", 404)
 
 

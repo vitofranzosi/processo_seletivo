@@ -19,8 +19,12 @@ PERFIL_DOCENTE = identificador(401, 0)
 
 
 @pytest.fixture
-def provedor_ligado(settings):
-    settings.PORTAL_IDENTIDADE_DEMO = True
+def provedor_ligado():
+    """Não liga mais nada: a identificação por declaração deixou de existir na 010.
+
+    A *fixture* sobrevive porque os testes abaixo a pedem, e removê-la seria reescrever o que eles
+    afirmam sobre a jornada — que continua valendo.
+    """
 
 
 def _publicar(api_client, manager_headers, process_payload, *, aberto=True):
@@ -34,11 +38,9 @@ def _publicar(api_client, manager_headers, process_payload, *, aberto=True):
 
 
 def _identificar(client):
-    resposta = client.post(
-        reverse("portal:identificar"),
-        {"nome": "Maria Silva", "cpf": "123.456.789-09", "email": "m@ex.br"},
-    )
-    assert resposta.status_code == 302
+    from tests.fixtures.candidato import MARIA, identificar
+
+    identificar(client, MARIA)
 
 
 @pytest.mark.django_db(transaction=True)
@@ -96,7 +98,7 @@ def test_sem_identidade_o_convite_leva_a_identificacao_e_volta(
 
     resposta = client.post(vaga)
 
-    assert resposta["Location"] == f"{reverse('portal:identificar')}?destino={vaga}"
+    assert resposta["Location"] == f"{reverse('portal:acesso')}?destino={vaga}"
     assert Inscricao.objects.count() == 0, "sem identidade, nada é criado"
 
 
