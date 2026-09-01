@@ -298,7 +298,7 @@ antigo, e receber recusa ao tentar remover o último.
 - [X] T096 [P] Verificar 375 px sem rolagem horizontal e percurso completo por teclado nas telas novas em `backend/tests/interface/test_acessibilidade_portal.py`
 - [X] T097 [P] Teste de custo de consulta da lista de inscrições e da área, marcado como `performance`, em `backend/tests/performance/test_area_do_candidato.py`
 - [X] T098 Escrever a matriz de rastreabilidade de `FR` e `SC` até os testes em `specs/010-area-do-candidato/rastreabilidade.md`
-- [ ] T099 Percorrer o [quickstart.md](./quickstart.md) de ponta a ponta no navegador e registrar o que a demonstração mudou em `specs/010-area-do-candidato/quickstart.md`
+- [X] T099 Percorrer o [quickstart.md](./quickstart.md) de ponta a ponta no navegador e registrar o que a demonstração mudou em `specs/010-area-do-candidato/quickstart.md`
 
 ---
 

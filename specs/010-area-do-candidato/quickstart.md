@@ -207,4 +207,39 @@ E a verificação que só a produção responde:
 cd backend && DJANGO_SETTINGS_MODULE=config.settings.production DJANGO_EMAIL_BACKEND=console uv run python manage.py check
 ```
 
-**Deve-se ver** a recusa de inicialização nomeando a variável a corrigir (`SC-017`).
+**Deve-se ver** a recusa de inicialização nomeando a variável a corrigir (`SC-017`). Com
+`django.core.mail.backends.smtp.EmailBackend`, ela sobe.
+
+---
+
+## O que a demonstração mudou
+
+Registrado depois de percorrer tudo no navegador, porque a Constituição pede a demonstração e não a
+contagem de testes — e porque, aqui, olhar encontrou o que a suíte não encontrava.
+
+**Três defeitos de apresentação vieram de reusar nome de classe.** `.sair` era o botão do cabeçalho
+escuro e ficou branco sobre cinza no corpo claro; `.protocolo` já era a caixa de destaque do
+comprovante e deu ao protocolo da lista aparência de campo de formulário; `.documento` é o botão
+verde de baixar o Edital, e o cartão herdou fundo sólido e texto branco — **o nome do requisito
+sumiu, branco sobre branco**. Nos três casos os testes passavam: eles afirmavam o texto, e o texto
+estava lá. Antes de reusar classe da `009`, vale checar colisão de nome.
+
+**Comentário `{# #}` do Django é de uma linha só.** Os multilinha vazaram para a página, e um deles
+saía dentro do cabeçalho verde. Um teste de segurança o pegou por acidente: a asserção de que a
+recusa do código não revela nada falhou porque a página continha "não existe" — vindo do
+comentário. Todos os multilinha viraram `{% comment %}`.
+
+**A lista nunca mostrou Edital e Perfil.** Uma revisão pediu para estreitar um `except Exception`
+para `DomainError`; ao fazê-lo, quatro testes quebraram e apareceu a causa: o código lia `.conteudo`
+num objeto cujo atributo se chama `content`. A captura larga engolia o `AttributeError`, e a
+listagem degradava em silêncio. Os testes afirmavam situação e ação, que continuavam certas.
+
+**Um desvio de autenticação completo.** `/acesso/reconciliar` criava identidade a partir do endereço
+guardado na sessão — que é apenas o que alguém digitou, gravado antes de qualquer prova. Informar o
+e-mail de outra pessoa e abrir a rota entrava em nome dela. A suíte não o pegou porque **todo teste
+seguia o fluxo**, e quem ataca pula. O caso 7 da tabela acima nasceu disso, e a varredura de
+`tests/authorization/test_acesso_sem_prova.py` generaliza a forma.
+
+**E a retomada ficava sem código.** Ela caía na espera de reenvio do próprio código que a pessoa
+acabara de usar, e mandava para a tela do código sem código nenhum. A espera passou a ser por
+endereço **e** finalidade.
