@@ -82,6 +82,13 @@ EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() == "true"
 # cabeçalho aleatório por requisição. O padrão é não confiar.
 PORTAL_ATRAS_DE_PROXY = os.getenv("PORTAL_ATRAS_DE_PROXY", "false").lower() == "true"
 
+# Para onde mandar quem o sistema não consegue mais atender sozinho (010). Duas telas dizem
+# "procure o atendimento institucional" — o CPF congelado depois da primeira inscrição enviada, e a
+# participação anterior que a pessoa não conseguiu confirmar —, e ambas eram becos sem saída: nem
+# e-mail, nem telefone, nem link. São justamente os dois pontos em que ela já está travada.
+# Vazio em desenvolvimento; em produção a ausência impede subir.
+PORTAL_ATENDIMENTO = os.getenv("PORTAL_ATENDIMENTO", "").strip()
+
 # Documentos do candidato (009). A raiz é privada: fica fora da árvore estática e nunca é servida
 # pelo servidor web — todo acesso passa pela aplicação, que confere titularidade ou permissão
 # (FR-051). Vazia em desenvolvimento significa "esta máquina não recebe arquivo"; em produção a

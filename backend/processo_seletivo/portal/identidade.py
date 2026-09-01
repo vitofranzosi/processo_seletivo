@@ -59,7 +59,12 @@ def contexto_candidato(request):
     Separado de `contexto_identidade`, que é da interface administrativa: são dois eixos, com
     chaves de sessão distintas, e um não identifica no outro (FR-039).
     """
-    return {"candidato": identidade_da_sessao(request)}
+    return {
+        "candidato": identidade_da_sessao(request),
+        # Onde pedir ajuda quando o sistema não resolve sozinho. No contexto, e não em cada view,
+        # porque quem escreve a próxima tela de beco sem saída não vai lembrar de passá-lo.
+        "atendimento": getattr(settings, "PORTAL_ATENDIMENTO", ""),
+    }
 
 
 def identidade_da_sessao(request) -> IdentidadeDoCandidato | None:

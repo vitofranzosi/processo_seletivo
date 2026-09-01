@@ -508,3 +508,91 @@ endereço de cor. E, com sessão aberta, o cabeçalho trazia só o nome e o bot�
 **Bloco, e não variável de contexto**: as três telas do acesso o esvaziam declarando o bloco vazio, e
 nenhuma view precisa lembrar de passar bandeira — que é exatamente o tipo de coisa que se esquece na
 quarta tela.
+
+## D-028 — A escolha de modalidade é guardada quando é feita
+
+**Decisão**: o campo submete o formulário que já existe com `acao=guardar`; a view grava e devolve a
+página, em vez de avançar para a revisão (`FR-039a`).
+
+**Racional**: a tela promete que "a escolha decide quais documentos serão pedidos a você", e a
+promessa não valia no instante da escolha — a lista continuava com dois documentos e o aviso verde
+continuava dizendo "todos os obrigatórios foram enviados". O terceiro aparecia na revisão, quando a
+pessoa já se considerava pronta; e quem saía e voltava reencontrava o campo em branco, porque a
+escolha não era gravada até ali.
+
+**Formulário, e não htmx.** Trocar de modalidade pode descartar documento já enviado, e esse descarte
+é confirmado numa tela própria desde a `009`. Um `hx-post` no campo teria de reproduzir aquela
+confirmação dentro de um fragmento; submeter o formulário aproveita o caminho que já existe, e o
+único acréscimo é para onde voltar depois — que é o que `acao` diz, e o que a confirmação de descarte
+carrega adiante.
+
+**Sem JavaScript nada muda**: escolher e clicar em "Revisar inscrição" continua funcionando, e
+`test_sem_javascript_nada_muda` guarda isso.
+
+## D-029 — Mexer em quem alcança a conta pergunta antes e avisa depois
+
+**Decisão**: a remoção de credencial passa por uma tela de confirmação (`GET` na mesma rota), e
+adicionar e remover avisam a credencial principal por mensagem (`FR-018a`, `FR-018b`).
+
+**Racional**: sem senha, a lista de credenciais **é** a conta. "Remover" ficava ao lado de "Tornar
+principal" e apagava no primeiro clique, sem perguntar e sem dizer nada — errar o alvo custava uma
+via de acesso, descoberta só na vez seguinte em que a pessoa tentasse entrar por ali. E ninguém era
+avisado: quem conseguisse anexar um endereço à conta alheia entraria por ele indefinidamente, e a
+titular não teria sinal nenhum disso.
+
+**A confirmação é a mesma forma do descarte de documento** — enunciar o que se perde antes de perder.
+Repetir um padrão que já existe é mais barato de manter e mais fácil de reconhecer.
+
+**O aviso da remoção é lido depois do ato**: removida a principal, outra é promovida, e é a que
+resta que precisa saber. Ler antes mandaria a mensagem justamente para a caixa que acabou de sair.
+
+## D-030 — O texto do código depende da finalidade
+
+**Decisão**: `enviar_codigo` recebe a finalidade e escolhe o corpo (`FR-082a`).
+
+**Racional**: a mensagem de "adicionar credencial" era idêntica à de entrar, e dizia "se não foi você
+que pediu este código, ignore esta mensagem: ninguém entra sem ele". No login isso é verdade e
+tranquiliza. Aqui é o contrário do risco: quem obtiver o código não entra na conta de quem recebeu a
+mensagem — anexa a caixa de quem recebeu à conta **dele**, e passa a entrar por ela. As duas
+finalidades já eram distintas no modelo desde a `FR-028`; só o texto não distinguia.
+
+## D-031 — O atendimento é declarado, e aparece
+
+**Decisão**: `PORTAL_ATENDIMENTO` é exigida em produção e exibida nas duas telas que remetem a ele
+(`UX-010a`).
+
+**Racional**: "procure o atendimento institucional" aparecia duas vezes sem dizer qual — nem e-mail,
+nem telefone, nem link —, e são justamente os dois pontos em que a pessoa já está travada: o CPF
+congelado depois da primeira inscrição enviada, e a participação anterior que ela não conseguiu
+confirmar. Mandar procurar sem dizer onde é abandonar quem pediu ajuda.
+
+**Exigida em produção**, pela mesma linha da `FR-030a`: é dado que só quem implanta conhece, não tem
+padrão que sirva, e a ausência não aparece como erro — aparece como candidato sem saída. Em
+desenvolvimento pode faltar, e a frase genérica é o que sobra.
+
+## D-032 — Todo ato responde, e a resposta é lida uma vez
+
+**Decisão**: um par de chaves de sessão para todo o portal (`portal_aviso`, `portal_recusa`), lido
+por quem exibe (`UX-010b`).
+
+**Racional**: quatro atos mudavam a página sem uma palavra — reconciliar a participação anterior, que
+é o momento mais aliviante da jornada; corrigir o nome; adicionar um e-mail; esgotar as tentativas de
+CPF. Cada um sozinho é pequeno; juntos formam a impressão de um sistema que não responde.
+
+**Lido nas views, e não num processador de contexto.** O processador roda também para os fragmentos
+que o htmx devolve, e a confirmação seria consumida por um envio de arquivo feito logo depois — some
+sem nunca ter sido lida. As telas que recebem confirmação são quatro, e nelas a leitura é explícita.
+
+## D-033 — A falha do envio aparece
+
+**Decisão**: `htmx:responseError` e `htmx:sendError` escrevem uma frase junto do documento
+(`UX-010c`).
+
+**Racional**: o htmx só troca conteúdo em resposta bem-sucedida, o que está certo — e por isso uma
+resposta de erro deixava a tela exatamente como estava: o nome do arquivo ali, a contagem igual, nada
+acusando. Aconteceu no percurso: a sessão havia caído noutra aba, o envio voltou `404`, e a página
+não piscou. A pessoa acredita ter anexado, e descobre na revisão — ou não descobre.
+
+**Não reenvia sozinho**: repetir dez megabytes em rede móvel sem a pessoa pedir é decisão dela. A
+mensagem diz o que houve, o que fazer, e que o que já foi enviado continua guardado — sem essa última
+frase, quem lê "não foi possível enviar" recomeça tudo.

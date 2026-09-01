@@ -53,6 +53,11 @@ importa é ver a mensagem chegar.
 Note o que **não** está aí: `PORTAL_IDENTIDADE_DEMO`. A partir desta feature a identificação por
 declaração não existe, e a variável permanece apenas como armadilha na recusa de produção (D-011).
 
+`PORTAL_ATENDIMENTO` também é obrigatória em produção, e vale declará-la aqui para ver as duas
+telas que a exibem — o CPF congelado e o convite de reconciliação. Sem ela, elas voltam a dizer
+apenas "o atendimento institucional", que é o beco sem saída que a `UX-010a` fechou:
+`PORTAL_ATENDIMENTO=selecao@cefor.ifes.edu.br` na linha do `runserver`.
+
 Também não está aí `PORTAL_ATRAS_DE_PROXY`: em desenvolvimento ela é `false` por omissão, que é o
 correto para o `runserver`, ligado direto ao navegador. Só ligue-a se puser um proxy à frente — e,
 aqui, isso não acontece. Em produção, porém, ela é **obrigatória** e não tem valor por omissão: a
@@ -228,7 +233,7 @@ que produção exige.
 Registrado depois de percorrer tudo no navegador, porque a Constituição pede a demonstração e não a
 contagem de testes — e porque, aqui, olhar encontrou o que a suíte não encontrava.
 
-**Seis defeitos vieram de percorrer a jornada inteira, e nenhum deles era regra violada.** O código
+**Catorze defeitos vieram de percorrer a jornada inteira, e nenhum deles era regra violada.** O código
 certo era recusado como errado depois de cinco tentativas; o botão de reenviar não enviava e não
 avisava; o comprovante e a tela de conferência discordavam em três horas sobre a hora do envio; o
 envio não deixava recibo na caixa de entrada; a vitrine não tinha porta de entrada; e o comprovante
@@ -240,6 +245,12 @@ Para vê-los corrigidos no navegador: peça um código, erre cinco vezes e entã
 recusa diz que o código foi cancelado, e não que está errado; clique em **Reenviar** antes dos
 sessenta segundos e leia a resposta; envie uma inscrição e confira, no Mailpit, a mensagem com o
 protocolo; compare a hora em `Minha inscrição` e no comprovante.
+
+Os oito restantes, na mesma sessão: escolha a modalidade reservada e veja o terceiro documento
+aparecer na hora; adicione um e-mail e leia, no Mailpit, o aviso que chega à caixa principal e o
+texto próprio do código de vínculo; clique em **Remover** e encontre a pergunta antes do ato; abra
+`/selecoes/meus-dados` depois de enviar uma inscrição e veja o endereço de atendimento; digite um
+CPF de dígito errado e leia que os números não formam um CPF válido — e não que ele "não existe".
 
 **Três defeitos de apresentação vieram de reusar nome de classe.** `.sair` era o botão do cabeçalho
 escuro e ficou branco sobre cinza no corpo claro; `.protocolo` já era a caixa de destaque do

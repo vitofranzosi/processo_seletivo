@@ -3,6 +3,7 @@
 {% block conteudo %}
 <h1>Minhas inscrições</h1>
 <p class="sub"><a href="{% url 'portal:conta' %}">Acesso à conta</a></p>
+{% include "portal/_mensagens.html" %}
 {% if inscricoes %}
 {% comment %}
 Mais recente primeiro, e uma ação principal por item. A situação aparece por texto **e** por
@@ -12,7 +13,11 @@ símbolo: cor sozinha não informa quem não a distingue.
   {% for inscricao in inscricoes %}
   <li class="selecao">
     <a class="titulo" href="{% url 'portal:inscricao' inscricao.id %}">{{ inscricao.perfil|default:"Inscrição" }}</a>
-    {% if inscricao.edital %}<span class="meta">{{ inscricao.edital }}</span>{% endif %}
+    {% comment %}
+    O Processo e o Edital, e não só o número: com três processos abertos ao mesmo tempo — a
+    situação normal de um instituto — "Edital 01/2026" não identifica qual é qual.
+    {% endcomment %}
+    {% if inscricao.processo or inscricao.edital %}<span class="meta">{{ inscricao.processo }}{% if inscricao.processo and inscricao.edital %} · {% endif %}{{ inscricao.edital }}</span>{% endif %}
     {% if inscricao.enviada %}
     <span class="situacao enviada">✓ Inscrição enviada</span>
     <span class="codigo">{{ inscricao.protocolo }}</span>

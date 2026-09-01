@@ -10,6 +10,7 @@ voltar à página anterior para lembrar.
 <p class="sub">{{ selecao.processo_titulo }} · Edital {{ selecao.numero }}/{{ selecao.ano }}<br>
   <strong>{{ perfil.nome }}</strong></p>
 {% include "portal/_resumo_documentos.html" %}
+{% include "portal/_mensagens.html" %}
 
 {% if guardado %}<p class="situacao aberto" role="status">Seus dados estão guardados. Você pode
   fechar esta página e continuar depois.</p>{% endif %}
@@ -70,7 +71,14 @@ e `role=alert` sozinho não anuncia o que já veio no HTML da resposta.
       a dele que aparece na lista (FR-039). E ela não é aceita como resposta — o servidor recusa,
       porque a aplicabilidade dos documentos depende desta escolha.
       {% endcomment %}
-      <select id="modalidade" name="modalidade" required aria-required="true">
+      {% comment %}
+      `data-guardar` liga o campo ao script que submete a escolha na hora, com `acao=guardar`: a
+      lista de documentos é recalculada e a escolha persiste. Sem JavaScript nada muda — a pessoa
+      escolhe e clica em "Revisar inscrição", como sempre —, e por isso a promessa da linha acima
+      ("a escolha decide quais documentos serão pedidos") passa a valer nos dois casos: com script,
+      na hora; sem script, no passo seguinte.
+      {% endcomment %}
+      <select id="modalidade" name="modalidade" required aria-required="true" data-guardar>
         <option value="">Selecione a modalidade</option>
         {% for modalidade in modalidades %}
         <option value="{{ modalidade.id }}" {% if inscricao.modality_id|stringformat:"s" == modalidade.id %}selected{% endif %}>{{ modalidade.nome }}</option>
@@ -107,6 +115,7 @@ de enviar arquivo nenhum — quem obedecia à página era recusado por ela.
 </div>
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
 <script src="{% static 'portal/envio.js' %}" defer></script>
+<script src="{% static 'portal/modalidade.js' %}" defer></script>
 <script src="{% static 'portal/recusa.js' %}" defer></script>
 <script src="{% static 'portal/arquivo.js' %}" defer></script>
 <script src="{% static 'portal/telefone.js' %}" defer></script>

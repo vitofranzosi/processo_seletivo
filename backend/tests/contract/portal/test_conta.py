@@ -38,14 +38,24 @@ def test_a_conta_nao_e_armazenavel_pelo_navegador(client, dentro):
     assert "no-store" in client.get(reverse("portal:conta"))["Cache-Control"]
 
 
-def test_as_acoes_sao_post(client, dentro):
+def test_os_atos_sao_post(client, dentro):
+    """Ato acontece em POST, sempre.
+
+    `conta-remover` responde a `GET` desde que a remoção passou a perguntar antes — e o `GET` só
+    pergunta: quem o abre encontra a confirmação, e a credencial continua onde estava.
+    """
     credencial = CandidateEmail.objects.get(identidade=dentro, email_canonico=SEGUNDO)
     for rota, args in (
         ("portal:conta-adicionar", []),
         ("portal:conta-principal", [credencial.id]),
-        ("portal:conta-remover", [credencial.id]),
     ):
         assert client.get(reverse(rota, args=args)).status_code == 405, rota
+
+    pergunta = client.get(reverse("portal:conta-remover", args=[credencial.id]))
+
+    assert pergunta.status_code == 200
+    assert "Remover este e-mail?" in pergunta.content.decode()
+    assert CandidateEmail.objects.filter(pk=credencial.pk).exists(), "perguntar não remove"
 
 
 def test_adicionar_redireciona_para_o_codigo(client, dentro):

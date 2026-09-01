@@ -5,8 +5,7 @@
 <p class="sub">Você entra por qualquer um destes e-mails. O <strong>principal</strong> é o que a
 instituição usa para se dirigir a você nas inscrições.</p>
 
-{% if erro %}<p class="aviso recusa-em-destaque">{{ erro }}</p>{% endif %}
-{% if aviso %}<p class="aviso">{{ aviso }}</p>{% endif %}
+{% include "portal/_mensagens.html" %}
 
 <h2>Seus e-mails</h2>
 <ul class="credenciais">
@@ -26,10 +25,7 @@ instituição usa para se dirigir a você nas inscrições.</p>
       jeito. Esconder não é fronteira de segurança; é só não oferecer o que não pode acontecer.
       {% endcomment %}
       {% if credenciais|length > 1 %}
-      <form method="post" action="{% url 'portal:conta-remover' credencial.id %}">
-        {% csrf_token %}
-        <button type="submit" class="secundario">Remover</button>
-      </form>
+      <a class="secundario" href="{% url 'portal:conta-remover' credencial.id %}">Remover</a>
       {% endif %}
     </span>
     {% endif %}

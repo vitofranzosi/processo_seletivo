@@ -1,0 +1,32 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Remover e-mail{% endblock %}
+{% block conteudo %}
+<h1>Remover este e-mail?</h1>
+
+{% comment %}
+Mesmo formato da confirmação de descarte de documento: enunciar o que se perde antes de perder. O
+botão ficava ao lado de "Tornar principal" e apagava no primeiro clique — errar o alvo custava uma
+via de acesso, e a pessoa só descobria na vez seguinte em que tentasse entrar por ele.
+{% endcomment %}
+<div class="aviso" role="alert">
+  {% if e_a_ultima %}
+  {% comment %}
+  A tela não oferece o botão quando há uma credencial só, e o servidor recusa de todo jeito — mas
+  quem chegar aqui pelo endereço direto merece ler o porquê, e não uma pergunta cuja resposta não
+  vai ser aceita (FR-018).
+  {% endcomment %}
+  <p>Este é o seu único e-mail: é por ele que você entra. Adicione outro antes de remover este.</p>
+  {% else %}
+  <p>Você deixará de entrar por <strong>{{ credencial.email_como_informado }}</strong>. Suas
+    inscrições não mudam, e você continua entrando pelos outros e-mails da sua conta.</p>
+  {% endif %}
+</div>
+
+{% if not e_a_ultima %}
+<form method="post" action="{% url 'portal:conta-remover' credencial.id %}">
+  {% csrf_token %}
+  <button type="submit" class="principal">Remover este e-mail</button>
+</form>
+{% endif %}
+<p><a href="{% url 'portal:conta' %}">Voltar sem remover</a></p>
+{% endblock %}

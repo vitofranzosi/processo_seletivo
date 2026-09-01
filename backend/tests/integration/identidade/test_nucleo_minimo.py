@@ -82,7 +82,11 @@ def test_cpf_invalido_e_recusado_com_explicacao(client, nova):
     resposta = client.post(
         reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": "111.111.111-11"}
     )
-    assert "Este CPF não existe" in resposta.content.decode()
+    corpo = resposta.content.decode()
+    # A recusa afirma o que o sistema confere — os dígitos verificadores —, e não a existência do
+    # número: nenhuma consulta à Receita acontece aqui.
+    assert "não formam um CPF válido" in corpo
+    assert "não existe" not in corpo
 
 
 def test_primeiro_nome_sozinho_e_recusado(client, nova):

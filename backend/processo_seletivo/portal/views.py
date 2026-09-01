@@ -25,7 +25,10 @@ from processo_seletivo.editais.domain.documentos import aplicaveis
 from processo_seletivo.identidade.application import associacao
 from processo_seletivo.identidade.application import credenciais as nucleo_da_identidade
 from processo_seletivo.identidade.application import desafio as desafio_de_acesso
-from processo_seletivo.identidade.application.mensagem import enviar_codigo
+from processo_seletivo.identidade.application.mensagem import (
+    avisar_mudanca_de_credencial,
+    enviar_codigo,
+)
 from processo_seletivo.identidade.domain import codigo as codigo_de_acesso
 from processo_seletivo.identidade.domain.enderecos import canonizar, endereco_aceitavel
 from processo_seletivo.identidade.models import DesafioDeAcesso
@@ -322,9 +325,36 @@ CHAVE_DO_DESTINO = "portal_acesso_destino"
 # O que dizer sobre o último pedido de código — inclusive "nada foi enviado". Sobrevive ao
 # redirecionamento porque a tela que precisa da notícia é a seguinte, e é lida uma vez só.
 CHAVE_DO_ENVIO = "portal_acesso_envio"
+# O que dizer na tela seguinte sobre o ato que acabou de acontecer. Um par de chaves para todo o
+# portal, e não uma por tela: quatro atos mudavam a página em silêncio, e silêncio depois de uma
+# ação é indistinguível de falha.
+CHAVE_DO_AVISO = "portal_aviso"
+CHAVE_DA_RECUSA = "portal_recusa"
 # A mesma frase nos quatro casos que poderiam revelar existência: endereço com identidade, sem
 # identidade, limite esgotado e falha de envio (FR-020, FR-021, FR-083).
 AVISO_NEUTRO = "Se este endereço puder ser utilizado, enviaremos um código de acesso."
+
+
+def _avisar(request, texto: str) -> None:
+    """Guarda a confirmação para a tela em que a pessoa vai cair."""
+    request.session[CHAVE_DO_AVISO] = texto
+
+
+def _recusar(request, texto: str) -> None:
+    request.session[CHAVE_DA_RECUSA] = texto
+
+
+def _mensagens(request) -> dict:
+    """Lidas uma vez só, e por quem as exibe.
+
+    Lidas aqui, e não num processador de contexto: aquele roda também para os fragmentos que o
+    htmx devolve, e a confirmação seria consumida por um envio de arquivo que aconteceu logo
+    depois — some sem nunca ter sido lida.
+    """
+    return {
+        "aviso": request.session.pop(CHAVE_DO_AVISO, ""),
+        "recusa": request.session.pop(CHAVE_DA_RECUSA, ""),
+    }
 
 
 def _origem(request) -> str:
@@ -375,7 +405,7 @@ def acesso(request):
         finalidade=DesafioDeAcesso.Finalidade.ENTRAR,
         origem=_origem(request),
     )
-    enviar_codigo(para=informado, codigo=codigo)
+    enviar_codigo(para=informado, codigo=codigo, finalidade=DesafioDeAcesso.Finalidade.ENTRAR)
     request.session[CHAVE_DO_ENDERECO] = informado
     request.session[CHAVE_DA_FINALIDADE] = DesafioDeAcesso.Finalidade.ENTRAR
     request.session[CHAVE_DO_ENVIO] = _noticia_do_envio(enviado=bool(codigo), reenvio=reenvio)
@@ -591,6 +621,11 @@ def acesso_reconciliar(request):
 
     if request.POST.get("acao") == "continuar":
         associacao.encerrar_reconciliacao(desafio)
+        _avisar(
+            request,
+            "Tudo certo. Se mudar de ideia, você pode vincular a participação anterior enquanto "
+            "não abrir nenhuma inscrição.",
+        )
         return _entrar(
             request, associacao.criar_identidade_com(desafio.email_canonico, informado)
         )
@@ -609,10 +644,21 @@ def acesso_reconciliar(request):
         else:
             associacao.associar_credencial(identidade, desafio.email_canonico, informado)
         associacao.encerrar_reconciliacao(desafio)
+        # O momento mais aliviante da jornada acontecia em silêncio: a pessoa confirmava o CPF e
+        # caía numa lista que, para ela, podia ser a de sempre. Dizer o que aconteceu é o mínimo.
+        _avisar(request, "Pronto: sua participação anterior está aqui.")
         return _entrar(request, identidade)
 
     if not associacao.reconciliacao_pendente(desafio):
         # Tentativas esgotadas: entra na própria identidade, e o convite morre com o desafio.
+        #
+        # Com uma frase antes: a pessoa digitava o CPF, apertava confirmar e caía noutra tela sem
+        # nenhuma explicação do que tinha acontecido — o desfecho mais confuso do percurso todo.
+        _avisar(
+            request,
+            "Não conseguimos confirmar o CPF desta vez. Sua área está aqui, e você pode tentar "
+            "vincular a participação anterior de novo abaixo.",
+        )
         return _entrar(
             request, associacao.criar_identidade_com(desafio.email_canonico, informado)
         )
@@ -650,7 +696,11 @@ def acesso_retomar(request):
         finalidade=DesafioDeAcesso.Finalidade.RETOMAR,
         origem=_origem(request),
     )
-    enviar_codigo(para=credencial.email_como_informado, codigo=codigo)
+    enviar_codigo(
+        para=credencial.email_como_informado,
+        codigo=codigo,
+        finalidade=DesafioDeAcesso.Finalidade.RETOMAR,
+    )
     request.session[CHAVE_DO_ENDERECO] = credencial.email_como_informado
     request.session[CHAVE_DA_FINALIDADE] = DesafioDeAcesso.Finalidade.RETOMAR
     request.session[CHAVE_DO_ENVIO] = _noticia_do_envio(enviado=bool(codigo), reenvio=False)
@@ -693,13 +743,18 @@ def _item_da_lista(registro, conteudo):
     """
     enviada = registro.status == Inscricao.Status.SUBMETIDA
     if conteudo is None:
-        perfil, edital = {"nome": "", "codigo": ""}, ""
+        perfil, edital, processo = {"nome": "", "codigo": ""}, "", ""
     else:
         perfil = _perfil_legivel(_perfil_do_conteudo(conteudo, registro.profile_id))
         edital = f"Edital {conteudo.get('number', '')}/{conteudo.get('year', '')}".strip("/ ")
+        # O nome do processo, e não só o número do Edital. Com uma inscrição, "Edital 01/2026"
+        # bastava; com três processos abertos ao mesmo tempo — que é a situação normal de um
+        # instituto — ele deixa de identificar qualquer coisa.
+        processo = conteudo.get("processoTitle", "")
     return {
         "id": registro.id,
         "perfil": perfil["nome"],
+        "processo": processo,
         "edital": edital,
         "enviada": enviada,
         "protocolo": registro.protocolo,
@@ -734,6 +789,7 @@ def meus_dados(request):
         return render(request, "portal/meus_dados.html", contexto)
 
     nucleo_da_identidade.gravar_nucleo(registro, nome=dados["nome"], cpf=dados["cpf"])
+    _avisar(request, "Seus dados foram guardados.")
     destino = request.session.pop(CHAVE_DO_DESTINO, "")
     if destino:
         # O convite é POST porque abrir rascunho cria registro e pratica ato auditado — a mesma
@@ -753,11 +809,7 @@ def conta(request):
     return render(
         request,
         "portal/conta.html",
-        {
-            "credenciais": list(registro.credenciais.order_by("created_at")),
-            "erro": request.session.pop("portal_conta_erro", ""),
-            "aviso": request.session.pop("portal_conta_aviso", ""),
-        },
+        {"credenciais": list(registro.credenciais.order_by("created_at")), **_mensagens(request)},
     )
 
 
@@ -774,16 +826,14 @@ def conta_adicionar(request):
         return redirect(reverse("portal:acesso"))
     informado = request.POST.get("email", "").strip()
     if not endereco_aceitavel(informado):
-        request.session["portal_conta_erro"] = "Informe um e-mail válido."
+        _recusar(request, "Informe um e-mail válido.")
         return redirect(reverse("portal:conta"))
     canonico = canonizar(informado)
     if nucleo_da_identidade.pertence_a_outra(registro, canonico):
-        request.session["portal_conta_erro"] = (
-            "Não foi possível usar este endereço. Tente outro."
-        )
+        _recusar(request, "Não foi possível usar este endereço. Tente outro.")
         return redirect(reverse("portal:conta"))
     if canonico in {item.email_canonico for item in registro.credenciais.all()}:
-        request.session["portal_conta_aviso"] = "Este endereço já é seu."
+        _avisar(request, "Este endereço já é seu.")
         return redirect(reverse("portal:conta"))
 
     _, codigo = desafio_de_acesso.solicitar(
@@ -791,7 +841,11 @@ def conta_adicionar(request):
         finalidade=DesafioDeAcesso.Finalidade.ADICIONAR_CREDENCIAL,
         origem=_origem(request),
     )
-    enviar_codigo(para=informado, codigo=codigo)
+    enviar_codigo(
+        para=informado,
+        codigo=codigo,
+        finalidade=DesafioDeAcesso.Finalidade.ADICIONAR_CREDENCIAL,
+    )
     request.session[CHAVE_DO_ENDERECO] = informado
     request.session[CHAVE_DA_FINALIDADE] = DesafioDeAcesso.Finalidade.ADICIONAR_CREDENCIAL
     request.session[CHAVE_DO_ENVIO] = _noticia_do_envio(enviado=bool(codigo), reenvio=False)
@@ -807,16 +861,26 @@ def _concluir_adicao(request, desafio):
         # O endereço passou a ser de outra identidade entre o pedido e a confirmação. Antes isto
         # era recusa silenciosa: o código era gasto, nada acontecia, e a pessoa via a lista sem o
         # endereço e sem explicação. A mensagem é a mesma do pedido — não diz a quem pertence.
-        request.session["portal_conta_erro"] = (
-            "Não foi possível usar este endereço. Tente outro."
-        )
+        _recusar(request, "Não foi possível usar este endereço. Tente outro.")
     else:
+        endereco = _endereco_do_desafio(request, desafio)
         nucleo_da_identidade.adicionar(
             registro,
             email_canonico=desafio.email_canonico,
-            email_como_informado=_endereco_do_desafio(request, desafio),
+            email_como_informado=endereco,
             correlation_id=getattr(request, "correlation_id", ""),
         )
+        _avisar(request, f"{endereco} foi adicionado. Você já pode entrar por ele.")
+        # Sem senha, a lista de credenciais **é** a conta: quem consegue anexar um endereço entra
+        # por ele para sempre. Este aviso é o único sinal que a titular teria disso.
+        principal = next((item for item in registro.credenciais.all() if item.principal), None)
+        if principal and principal.email_canonico != desafio.email_canonico:
+            avisar_mudanca_de_credencial(
+                para=principal.email_como_informado,
+                endereco=endereco,
+                acao="adicionado",
+                atendimento=getattr(settings, "PORTAL_ATENDIMENTO", ""),
+            )
     for chave in (CHAVE_DO_ENDERECO, CHAVE_DA_FINALIDADE, CHAVE_DO_ENVIO):
         request.session.pop(chave, None)
     return redirect(reverse("portal:conta"))
@@ -829,14 +893,38 @@ def conta_principal(request, credencial_id):
         return redirect(reverse("portal:acesso"))
     if not nucleo_da_identidade.tornar_principal(registro, credencial_id):
         raise Http404
+    _avisar(request, "Pronto: é por este endereço que a instituição vai falar com você.")
     return redirect(reverse("portal:conta"))
 
 
-@require_http_methods(["POST"])
+@require_http_methods(["GET", "POST"])
+@resposta_privada
 def conta_remover(request, credencial_id):
+    """Remover pergunta antes — e avisa a caixa principal depois.
+
+    O botão ficava ao lado de "Tornar principal" e apagava a credencial no primeiro clique, sem
+    perguntar e sem dizer nada. Errar o alvo custava uma via de acesso, e a pessoa só descobria na
+    vez seguinte em que tentasse entrar por aquele endereço.
+
+    A pergunta é um `GET` na mesma rota, no mesmo formato da confirmação de descarte de documento:
+    a tela enuncia o que se perde, e só o `POST` executa.
+    """
     registro = identidade_do_candidato.identidade_autenticada(request)
     if registro is None:
         return redirect(reverse("portal:acesso"))
+    alvo = registro.credenciais.filter(pk=credencial_id).first()
+    if alvo is None:
+        # Credencial de outra identidade não existe para esta — a mesma recusa que a titularidade
+        # produz em toda a área.
+        raise Http404
+    if request.method == "GET":
+        return render(
+            request,
+            "portal/conta_remover.html",
+            {"credencial": alvo, "e_a_ultima": registro.credenciais.count() == 1},
+        )
+
+    endereco = alvo.email_como_informado
     desfecho = nucleo_da_identidade.remover(
         registro, credencial_id, correlation_id=getattr(request, "correlation_id", "")
     )
@@ -847,9 +935,18 @@ def conta_remover(request, credencial_id):
     if desfecho == nucleo_da_identidade.E_A_ULTIMA:
         # A última não sai: removê-la é apagar o próprio acesso (FR-018). A tela não oferece o
         # botão, e o servidor recusa mesmo assim — esconder não é fronteira de segurança.
-        request.session["portal_conta_erro"] = (
-            "Você não pode remover seu último e-mail: é por ele que você entra."
-        )
+        _recusar(request, "Você não pode remover seu último e-mail: é por ele que você entra.")
+        return redirect(reverse("portal:conta"))
+    _avisar(request, f"{endereco} foi removido. Você não entra mais por ele.")
+    # Lida **depois** do ato: removida a principal, outra foi promovida, e é a que resta que
+    # precisa saber. Ler antes mandaria o aviso justamente para a caixa que acabou de sair.
+    principal = registro.credenciais.filter(principal=True).first()
+    avisar_mudanca_de_credencial(
+        para=principal.email_como_informado if principal else "",
+        endereco=endereco,
+        acao="removido",
+        atendimento=getattr(settings, "PORTAL_ATENDIMENTO", ""),
+    )
     return redirect(reverse("portal:conta"))
 
 
@@ -876,6 +973,7 @@ def inscricoes(request):
             "pode_retomar": bool(
                 not minhas and associacao.credencial_com_correspondencia(identidade)
             ),
+            **_mensagens(request),
         },
     )
 
@@ -959,6 +1057,10 @@ def inscricao(request, inscricao_id):
                     "descartes": descartes,
                     "modalidade": request.POST.get("modalidade", "").strip(),
                     "telefone": request.POST.get("telefone", "").strip(),
+                    # Levada adiante para que confirmar o descarte devolva a pessoa para onde ela
+                    # estava indo: guardar a escolha volta à tela da inscrição; avançar vai à
+                    # revisão. Perder isto na confirmação mandaria todo mundo para a revisão.
+                    "acao": request.POST.get("acao", ""),
                 },
             )
         telefone_no_campo = telefone = request.POST.get("telefone", "").strip()
@@ -982,6 +1084,15 @@ def inscricao(request, inscricao_id):
                     },
                     correlation_id=getattr(request, "correlation_id", ""),
                 )
+                if request.POST.get("acao") == "guardar":
+                    # A escolha da modalidade era guardada só ao avançar, e a lista de documentos
+                    # só era recalculada ali. Quem escolhia a modalidade reservada continuava
+                    # vendo dois documentos e o aviso verde de "todos enviados" — e descobria o
+                    # terceiro na revisão, quando já se considerava pronta; quem saía e voltava
+                    # reencontrava o campo em branco. Guardar na hora e recarregar resolve as duas
+                    # coisas, e o redirecionamento evita que atualizar a página reenvie o POST.
+                    _avisar(request, "Escolha guardada. A lista de documentos foi atualizada.")
+                    return redirect(reverse("portal:inscricao", args=[registro.id]))
                 return redirect(reverse("portal:revisao", args=[registro.id]))
             except DomainError as exc:
                 erros.append(exc.detail)
@@ -1002,6 +1113,7 @@ def inscricao(request, inscricao_id):
             "documentos": _documentos(conteudo, registro),
             "descartes": descartes,
             "etapas": etapas_ate(0),
+            **_mensagens(request),
         },
     )
 

@@ -214,6 +214,12 @@ razão que `identidade/application/mensagem.py`: compor uma mensagem não é reg
 que o servidor já dá por escrito; e `tests/integration/portal/test_hora_do_envio.py`, que guarda a
 conversão de fuso que faltava em `comprovante_pdf.instante`.
 
+**E mais três, do segundo lote** (D-028 a D-033): `portal/static/portal/modalidade.js`, que submete a
+escolha de modalidade ao mudá-la; `portal/templates/portal/_mensagens.html`, o par de frases que toda
+tela de chegada exibe; e `portal/templates/portal/conta_remover.html`, a pergunta que a remoção de
+credencial passou a fazer. `portal/templates/portal/_atendimento.html` acompanha, e é onde vive o
+canal que as duas telas de beco sem saída passaram a nomear.
+
 ## Complexity Tracking
 
 > Sem violações a justificar. Nenhuma dependência nova, nenhum serviço novo, nenhuma abstração

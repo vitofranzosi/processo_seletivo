@@ -1,0 +1,13 @@
+{% comment %}
+O que acabou de acontecer, dito onde a pessoa chega.
+
+Quatro atos mudavam a página sem uma palavra: reconciliar a participação anterior — o momento mais
+aliviante da jornada —, corrigir o nome, adicionar um e-mail e esgotar as tentativas de CPF. Cada um
+sozinho é pequeno; juntos formam a impressão de um sistema que não responde, que é exatamente o que
+faz alguém tentar de novo, desconfiar, e desistir.
+
+`role="status"` e não `alert`: é confirmação do que a pessoa pediu, e leitor de tela anuncia sem
+interromper o que ela estiver fazendo. A recusa usa `alert`, porque exige atenção agora.
+{% endcomment %}
+{% if recusa %}<p class="aviso recusa-em-destaque" role="alert" tabindex="-1" data-recusa>{{ recusa }}</p>{% endif %}
+{% if aviso %}<p class="aviso" role="status">{{ aviso }}</p>{% endif %}

@@ -170,6 +170,19 @@ _exigir(
     "depende da topologia, que só quem implanta conhece.",
 )
 
+# Sem canal de atendimento declarado, duas telas do candidato viram beco sem saída: o CPF congelado
+# depois da primeira inscrição enviada só se corrige por ato institucional, e a participação
+# anterior que a pessoa não conseguiu confirmar só se recupera por atendimento. Mandar "procure o
+# atendimento" sem dizer qual é abandonar quem já está travado.
+PORTAL_ATENDIMENTO = os.getenv("PORTAL_ATENDIMENTO", "").strip()
+_exigir(
+    bool(PORTAL_ATENDIMENTO),
+    "PORTAL_ATENDIMENTO",
+    "declare o canal de atendimento ao candidato — um e-mail, um telefone ou o endereço de uma "
+    "página. Duas telas mandam procurá-lo, e são os dois pontos em que o sistema não resolve "
+    "sozinho: CPF congelado e participação anterior não confirmada.",
+)
+
 # A autenticação institucional é incremento próprio; até lá, produção não sobe.
 API_AUTHENTICATION_CLASSES = [
     v.strip() for v in os.getenv("API_AUTHENTICATION_CLASSES", "").split(",") if v.strip()

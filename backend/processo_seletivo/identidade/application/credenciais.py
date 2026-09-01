@@ -67,7 +67,12 @@ def recusas(dados: dict, *, cpf_editavel: bool) -> dict:
         elif not cpf_valido(cpf):
             # Contar onze dígitos aceitava qualquer número inventado — e um CPF digitado errado
             # produz uma inscrição que a equipe não consegue conferir contra documento nenhum.
-            recusado["cpf"] = "Este CPF não existe. Confira os números digitados."
+            #
+            # A frase diz o que o sistema **confere**, e não mais do que isso: o cálculo é o dos
+            # dígitos verificadores, e nenhuma consulta à Receita acontece aqui. "Este CPF não
+            # existe" soava como afirmação sobre a pessoa, e era a resposta que ela lia depois de
+            # digitar um número que existe e que ela errou por um dígito.
+            recusado["cpf"] = "Estes números não formam um CPF válido. Confira o que digitou."
     return recusado
 
 

@@ -37,6 +37,11 @@ Caminhos são relativos a `backend/`.
 | FR-022 a FR-027 forma, prazo, uso único, resumo | `identidade/domain/codigo.py`, `identidade/application/desafio.py` | `tests/unit/identidade/test_codigo.py`, `tests/integration/identidade/test_desafio.py`, `tests/integration/identidade/test_consumo_atomico.py` |
 | FR-028 endereço **e** finalidade | `identidade/application/desafio.py` | `tests/integration/identidade/test_finalidade.py` |
 | FR-029 a FR-031 tetos e recusa indistinguível | `identidade/application/desafio.py` | `tests/integration/identidade/test_limites.py`, `tests/integration/identidade/test_teto_concorrente.py` |
+| FR-031a recusa nomeia a causa, sem revelar quem existe | `identidade/application/desafio.py`, `portal/views.py` | `tests/integration/identidade/test_recusa_do_codigo.py`, `tests/contract/portal/test_acesso.py` |
+| FR-031b reenvio recusado responde por escrito | `portal/views.py`, `portal/templates/portal/acesso_codigo.html` | `tests/integration/identidade/test_reenvio.py` |
+| FR-018a, FR-018b remoção pergunta antes; adição e remoção avisam a principal | `portal/views.py`, `identidade/application/mensagem.py` | `tests/integration/identidade/test_mudanca_de_credencial.py` |
+| FR-039a escolha de modalidade guardada na hora | `portal/views.py`, `portal/static/portal/modalidade.js` | `tests/integration/portal/test_escolha_de_modalidade.py` |
+| FR-082a a mensagem do código corresponde à finalidade | `identidade/application/mensagem.py` | `tests/integration/identidade/test_mudanca_de_credencial.py` |
 | FR-030 origem não escolhida por quem é contado | `portal/views.py` | `tests/integration/identidade/test_origem_da_solicitacao.py` |
 | FR-030a topologia declarada, nunca adivinhada | `config/settings/production.py` | `tests/test_configuracao_producao.py` |
 | FR-032, FR-033 estado compartilhado e limpeza por estado | `identidade/application/desafio.py` | `tests/integration/identidade/test_limpeza.py` |
@@ -49,7 +54,7 @@ Caminhos são relativos a `backend/`.
 | FR-040 a FR-043 na implantação, preservando o titular | `identidade/migrations/0002_reconciliacao.py` | `tests/migrations/test_reconciliacao.py` |
 | FR-044 a FR-047 grupos irreconciliáveis e interrupção | `identidade/migrations/0002_reconciliacao.py` | `tests/migrations/test_reconciliacao_recusas.py` |
 | FR-048 identificação por declaração aposentada | `portal/urls.py`, `config/settings/production.py` | `tests/acceptance/portal/test_minhas_inscricoes.py`, `tests/test_configuracao_producao.py` |
-| FR-049 a FR-052c convite, decisão antes do vínculo, tentativas | `identidade/application/associacao.py` | `tests/integration/identidade/test_correspondencia.py`, `tests/integration/identidade/test_sem_beco.py`, `tests/integration/identidade/test_tentativas_cpf.py` |
+| FR-049 a FR-052c (inclusive FR-052a e FR-052b) convite, decisão antes do vínculo, tentativas | `identidade/application/associacao.py` | `tests/integration/identidade/test_correspondencia.py`, `tests/integration/identidade/test_sem_beco.py`, `tests/integration/identidade/test_tentativas_cpf.py` |
 | FR-053 a FR-055 retomada limitada, atômica, sob bloqueio | `identidade/application/associacao.py`, `inscricoes/application/rascunho.py` | `tests/integration/identidade/test_retomada.py`, `tests/integration/identidade/test_retomada_concorrente.py` |
 | FR-056, FR-057 não funde; indício não vira autoridade | `identidade/application/associacao.py` | `tests/integration/identidade/test_sem_beco.py`, `tests/authorization/test_demonstracao_de_seguranca.py` |
 
@@ -69,7 +74,7 @@ Caminhos são relativos a `backend/`.
 | Requisito | Onde vive | Testes |
 |---|---|---|
 | FR-080 a FR-083 mecanismo, recusa de boot, conteúdo da mensagem do desafio | `config/settings/production.py`, `identidade/application/mensagem.py` | `tests/test_configuracao_producao.py`, `tests/integration/identidade/test_mensagem.py` |
-| FR-084 a FR-084b confirmação do envio: uma só, sem CPF, fora da transação | `inscricoes/application/mensagem.py`, `portal/views.py` | `tests/integration/portal/test_confirmacao_de_inscricao.py` |
+| FR-084, FR-084a, FR-084b confirmação do envio: uma só, sem CPF, fora da transação | `inscricoes/application/mensagem.py`, `portal/views.py` | `tests/integration/portal/test_confirmacao_de_inscricao.py` |
 | FR-085 a FR-087 titularidade, recusa que não enumera, nada por afirmação | `inscricoes/domain/titularidade.py`, `portal/views.py` | `tests/authorization/test_idor_area.py`, `tests/authorization/test_acesso_sem_prova.py` |
 | FR-088, FR-089 auditoria dos atos, e o que não vira evento | `identidade/application/credenciais.py` | `tests/integration/identidade/test_auditoria_de_credencial.py` |
 | FR-090 recuperação fora da V1, com caminho nomeado | `portal/templates/portal/acesso_reconciliar.html` | `tests/contract/portal/test_reconciliacao.py` |
@@ -81,6 +86,11 @@ Caminhos são relativos a `backend/`.
 | UX-001 a UX-004 percurso curto, sem CPF, sem redigitação | `tests/acceptance/portal/test_entrar_sem_senha.py`, `tests/acceptance/portal/test_minhas_inscricoes.py` |
 | UX-005 a UX-008 campo único, reenvio informado, erro que não apaga | `tests/interface/test_acessibilidade_do_portal.py`, `tests/acceptance/portal/test_entrar_sem_senha.py` |
 | UX-006a porta de entrada em toda página pública | `tests/integration/portal/test_porta_de_entrada.py` |
+| UX-010a o atendimento é declarado e aparece | `tests/integration/portal/test_saidas_e_falhas.py`, `tests/test_configuracao_producao.py` |
+| UX-010b todo ato responde | `tests/integration/portal/test_atos_que_respondem.py` |
+| UX-010c a falha do envio aparece | `tests/integration/portal/test_saidas_e_falhas.py` |
+| UX-010d a recusa não afirma mais do que se confere | `tests/integration/identidade/test_nucleo_minimo.py` |
+| UX-010e o item nomeia o Processo Seletivo | `tests/integration/portal/test_minhas_inscricoes.py` |
 | UX-009, UX-010 375 px e teclado | `tests/interface/test_acessibilidade_do_portal.py` |
 
 ## Critérios de sucesso
@@ -88,9 +98,10 @@ Caminhos são relativos a `backend/`.
 | Critério | Testes |
 |---|---|
 | SC-001 a SC-006 acesso recorrente, tetos, equivalência, sem CPF | `tests/acceptance/portal/test_entrar_sem_senha.py`, `tests/integration/identidade/test_equivalencia.py`, `tests/integration/identidade/test_teto_concorrente.py` |
-| SC-007 a SC-011c preservação do titular e do que foi submetido | `tests/migrations/test_reconciliacao.py`, `tests/authorization/test_titularidade_preservada.py`, `tests/integration/identidade/test_correcao.py` |
+| SC-007 a SC-011c (inclusive SC-010a) preservação do titular e do que foi submetido | `tests/migrations/test_reconciliacao.py`, `tests/authorization/test_titularidade_preservada.py`, `tests/integration/identidade/test_correcao.py` |
 | SC-012 a SC-017a proteção, concorrência, recusa de produção | `tests/authorization/test_idor_area.py`, `tests/authorization/test_acesso_sem_prova.py`, `tests/integration/identidade/test_credencial_concorrente.py`, `tests/test_configuracao_producao.py` |
 | SC-028 a SC-032 recusa nomeada, reenvio que responde, recibo do envio, instante único, porta de entrada | `tests/integration/identidade/test_recusa_do_codigo.py`, `tests/integration/identidade/test_reenvio.py`, `tests/integration/portal/test_confirmacao_de_inscricao.py`, `tests/integration/portal/test_hora_do_envio.py`, `tests/integration/portal/test_porta_de_entrada.py` |
+| SC-033 a SC-037 modalidade na hora, credencial confirmada e avisada, atendimento nomeado, atos que respondem, falha visível | `tests/integration/portal/test_escolha_de_modalidade.py`, `tests/integration/identidade/test_mudanca_de_credencial.py`, `tests/integration/portal/test_saidas_e_falhas.py`, `tests/integration/portal/test_atos_que_respondem.py` |
 | SC-018 a SC-026 valor para o candidato | `tests/acceptance/portal/` (todas), `tests/interface/test_acessibilidade_do_portal.py` |
 | SC-027 duplicidade não recusa e é assinalada | `tests/integration/inscricoes/test_cpf_coincidente.py` |
 

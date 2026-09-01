@@ -81,17 +81,30 @@ Lista as credenciais verificadas, indica a principal, e oferece as ações abaix
 
 CPF não é pedido em nenhum momento (`FR-016`).
 
+**A mensagem do código é a da finalidade** (`FR-082a`): aqui ela diz que quem obtiver o código passa
+a entrar numa conta **por este endereço** — o oposto do que a mensagem de login diz, e o que é
+verdade neste caso.
+
+**Confirmada a adição**, a credencial principal recebe aviso da mudança (`FR-018b`).
+
 ## `POST /conta/emails/{id}/principal` — escolher a principal
 
 Passa a alimentar a Inscrição. Os rascunhos abertos acompanham; as enviadas não mudam (`FR-014`).
 
-## `POST /conta/emails/{id}/remover` — remover credencial
+## `GET|POST /conta/emails/{id}/remover` — remover credencial
+
+O `GET` **pergunta**, e o `POST` executa. A pergunta enuncia o que se perde, no mesmo formato da
+confirmação de descarte de documento (`FR-018a`): o botão apagava no primeiro clique, e errar o alvo
+custava uma via de acesso descoberta só na tentativa seguinte de entrar.
 
 | Situação | Resposta |
 |---|---|
+| `GET`, credencial própria | `200` com a pergunta; nada é removido |
+| `GET`, credencial única | `200` explicando que é por ela que a pessoa entra, sem oferecer o botão |
+| `GET` ou `POST`, credencial de outra identidade | `404`, a mesma recusa da titularidade |
 | Há outra credencial, e a removida não é a última | remove; nenhuma inscrição é alterada (`FR-019`) |
 | É a última credencial | recusa (`FR-018`) |
-| É a principal, havendo outras | exige que outra assuma antes (`FR-018`) |
+| É a principal, havendo outras | outra é promovida, e é ela que recebe o aviso (`FR-018b`) |
 
 ## `GET|POST /meus-dados` — o núcleo mínimo, pedido uma vez
 
@@ -124,3 +137,19 @@ o ato não pertence a Edital algum. Consequência declarada: **não aparecem** n
 de auditoria, que filtra por escopo (`FR-089`, D-012). Código inválido não gera evento de negócio;
 tentativas excessivas, bloqueios e autenticação bem-sucedida são registrados como segurança técnica,
 sem código, sem CPF completo e sem conteúdo de documento (`FR-088`).
+
+
+---
+
+## `POST /inscricoes/{id}/` — guardar ou avançar
+
+A mesma rota da tela da inscrição, com um campo a mais decidindo para onde ir depois.
+
+| Situação | Resposta |
+|---|---|
+| `acao=guardar` | grava e `302` de volta à própria tela, com a lista de documentos recalculada e uma confirmação (`FR-039a`) |
+| Sem `acao` | grava e `302` para a revisão — o comportamento de sempre, e o que acontece sem JavaScript |
+| A modalidade escolhida invalida documento já enviado | a confirmação de descarte vem antes, em qualquer dos dois casos, e leva `acao` adiante |
+
+O campo de modalidade submete com `acao=guardar` ao mudar. Sem JavaScript ele não submete nada, e a
+escolha é gravada ao clicar em "Revisar inscrição": os dois caminhos gravam, e só o momento difere.
