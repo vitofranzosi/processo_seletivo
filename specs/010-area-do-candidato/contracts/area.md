@@ -138,7 +138,6 @@ de auditoria, que filtra por escopo (`FR-089`, D-012). Código inválido não ge
 tentativas excessivas, bloqueios e autenticação bem-sucedida são registrados como segurança técnica,
 sem código, sem CPF completo e sem conteúdo de documento (`FR-088`).
 
-
 ---
 
 ## `POST /inscricoes/{id}/` — guardar ou avançar

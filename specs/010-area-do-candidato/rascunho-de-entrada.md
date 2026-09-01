@@ -1,7 +1,18 @@
-# SPEC 010 — Área do Candidato e Acesso sem Senha
+# SPEC 010 — Área do Candidato e Acesso sem Senha (rascunho de entrada)
 
 **Input para `/speckit-specify`.** Redação consolidada após avaliação da proposta original verificada
 contra o repositório em `55caa29`, com a `009` já mergeada (`a872b54`).
+
+> **Registro histórico. Não é a especificação vigente** — essa é [spec.md](./spec.md), e é ela que
+> governa. Este arquivo fica porque a `spec.md` o cita como a fonte que as três rodadas de avaliação
+> verificaram, e apagá-lo tiraria o chão daquela citação.
+>
+> **Os identificadores daqui não correspondem aos de lá.** A numeração deste rascunho foi
+> reorganizada ao virar especificação, e alguns identificadores passaram a designar coisas
+> diferentes — `UX-011` e `UX-012`, por exemplo, tratam aqui de erro no código e de mensagens de
+> segurança, e na `spec.md` tratam de atendimento e de confirmação de atos. `SC-011a`, `SC-011b` e
+> `SC-011c` existem só aqui: o que eles diziam virou `FR-013`, `FR-014` e `SC-011`. Ao procurar um
+> requisito, procure na `spec.md`.
 
 ## 1. Visão
 

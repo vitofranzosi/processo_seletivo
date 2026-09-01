@@ -1,4 +1,4 @@
-"""O rascunho é alimentado pelo e-mail **principal**, e não pelo que autenticou a sessão (SC-011c).
+"""O rascunho é alimentado pelo e-mail **principal**, e não pelo que autenticou a sessão (FR-013).
 
 Não é detalhe: `Inscricao.email` é o registro de contato do ato administrativo. "O endereço da
 sessão" faria a mesma pessoa constar de duas inscrições com contatos diferentes conforme a caixa

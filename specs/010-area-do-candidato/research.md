@@ -294,7 +294,6 @@ Nenhum componente novo de front-end.
 aceitar colagem integral e digitação natural (`UX-005`), o que um único campo de texto entrega — e
 seis campos independentes não entregariam.
 
-
 ---
 
 ## D-016 — Onde o contador de tentativas de CPF persiste
@@ -345,7 +344,6 @@ existe no texto é pior que garantia nenhuma, porque ninguém a verifica.
   dependente de um objeto de banco que nada mais usa.
 - *Deixar a restrição só com "não vazio"*: aceitaria `"1"` numa inscrição enviada, e a `FR-063` existe
   justamente para que a coluna seja utilizável pela reconciliação e pela marcação de coincidência.
-
 
 ---
 

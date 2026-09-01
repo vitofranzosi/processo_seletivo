@@ -5,8 +5,12 @@ comunicação por e-mail, e a razão era boa: o canal passar a existir não torn
 transacional escopo implícito. Percorrer a jornada mostrou o custo concreto dessa fronteira — a
 pessoa conclui o ato mais importante do ano dela, o sistema mostra o comprovante na tela, e a caixa
 de entrada não registra nada. Fechada a aba antes de baixar o PDF, ela fica sem o protocolo, que é
-justamente o que a página manda guardar. Uma mensagem, e só esta: o recibo do ato que a própria
-pessoa praticou.
+justamente o que a página manda guardar.
+
+A `FR-084` passou então a nomear **duas** exceções, e esta é uma delas; a outra é o aviso de mudança
+de credencial, em `identidade/application/mensagem.py`. As duas são recibo de ato que a própria
+pessoa praticou, e é essa a fronteira: aviso de resultado, de retificação e lembrete continuam fora,
+e uma terceira exigiria revisar a regra em vez de acrescentar um remetente.
 
 **Não é a mensagem do desafio.** Lá a caixa ainda não se sabe de quem é, e por isso a `FR-082`
 proíbe CPF e dado de inscrição. Aqui o endereço é credencial provada da identidade que praticou o

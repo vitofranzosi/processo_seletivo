@@ -43,7 +43,7 @@ def correspondencia_historica(email_canonico: str) -> list[CandidateIdentity]:
     """As identidades cujas inscrições anteriores trazem aquele endereço.
 
     É **indício**, e não autoridade: o endereço foi digitado num formulário, pode ter erro, pode
-    pertencer a terceiro e pode ter sido reciclado pelo provedor anos depois (FR-040a). O que ele
+    pertencer a terceiro e pode ter sido reciclado pelo provedor anos depois (`FR-015`). O que ele
     permite é oferecer o convite; quem confirma é o CPF.
     """
     subjects = (

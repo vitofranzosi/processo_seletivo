@@ -10,7 +10,9 @@
 enviado por e-mail. Substitui o provedor de identidade de demonstração da `009`, preserva a
 titularidade de tudo o que já foi submetido, e entrega a reconferência dos dados, dos documentos e do
 comprovante mais o acompanhamento do certame. Redação consolidada após três rodadas de avaliação
-verificadas contra o repositório em `55caa29` (`SPEC-010-DRAFT.md`, commit `cb3214a`).
+verificadas contra o repositório em `55caa29` — o rascunho que entrou no `/speckit-specify` está em
+[rascunho-de-entrada.md](./rascunho-de-entrada.md), como estava no commit `cb3214a`. Ele é registro
+histórico, e a numeração dele **não** corresponde à desta especificação.
 
 ## A frase que governa esta feature
 
@@ -673,6 +675,8 @@ remover o antigo e corrigir o nome.
   entregar, ou sem remetente definido; e continua recusando a identificação por declaração.
 - **SC-017a**: Em produção, a aplicação recusa iniciar enquanto a topologia de proxy não for
   declarada — nem `true`, nem `false`, nem valor que não seja um dos dois.
+- **SC-017b**: Em produção, a aplicação recusa inicializar sem canal de atendimento declarado, e
+  nomeia a variável — as duas telas de saída do candidato dependem dela para dizer com quem falar.
 
 ### Medidas de valor para o candidato
 
@@ -704,7 +708,7 @@ remover o antigo e corrigir o nome.
 - **SC-033**: Escolher a modalidade reservada mostra o documento a mais na mesma resposta, e a
   escolha sobrevive a sair e voltar.
 - **SC-034**: Remover credencial pergunta antes; adicionar e remover avisam a credencial principal.
-- **SC-035**: As duas telas de atendimento nomeiam o canal, e produção não sobe sem ele declarado.
+- **SC-035**: As duas telas que remetem ao atendimento nomeiam o canal.
 - **SC-036**: Reconciliar, corrigir dados, adicionar e remover credencial e esgotar as tentativas de
   CPF produzem, cada um, uma frase na tela seguinte.
 - **SC-037**: Falha no envio de documento aparece junto do documento, com o que fazer.
