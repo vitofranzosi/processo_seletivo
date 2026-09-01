@@ -3,6 +3,9 @@
 Ela é rota de conveniência e não está no `openapi.yaml` — serve para quem chega sem saber o que
 existe. Quem chega, porém, é de dois tipos: um cliente de API, que precisa dos endpoints, e uma
 pessoa que digitou o endereço no navegador, que precisa das telas e recebia um JSON.
+
+A tela para onde essa pessoa vai é a **vitrine pública**: quem chega pela raiz procura vaga, não
+elabora Edital, e a gestão a receberia com um seletor de identidade que não lhe diz respeito.
 """
 
 import pytest
@@ -21,7 +24,7 @@ def test_o_navegador_e_levado_para_as_telas(client):
     resposta = client.get("/", headers={"Accept": NAVEGADOR})
 
     assert resposta.status_code == 302
-    assert resposta["Location"] == reverse("interface:lista")
+    assert resposta["Location"] == reverse("portal:vitrine")
 
 
 @pytest.mark.contract

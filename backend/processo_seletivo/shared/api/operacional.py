@@ -34,6 +34,12 @@ class IndexView(APIView):
     redireciona — quem aceita qualquer coisa não está pedindo tela, e `curl` sem argumento algum
     continua recebendo o documento de serviço.
 
+    **Para qual tela.** A primeira redação levava à gestão, e isso era verdade enquanto `/gestao/`
+    era a única que existia. Depois da `009` existem duas, e quem digita o endereço no navegador
+    quase nunca é quem elabora Edital: é quem procura vaga. O destino é a vitrine pública, que não
+    pede identificação nenhuma; mandar essa pessoa para a gestão a receberia com um seletor de
+    identidade institucional que não lhe diz respeito.
+
     O redirecionamento é temporário. A raiz não mudou de lugar: ela responde coisas diferentes a
     pedidos diferentes, e marcá-lo permanente faria o navegador guardar uma resposta que só valia
     para ele.
@@ -44,7 +50,7 @@ class IndexView(APIView):
 
     def get(self, request):
         if _prefere_html(request):
-            return redirect(reverse("interface:lista"))
+            return redirect(reverse("portal:vitrine"))
         return Response(
             {
                 "service": "Processo Seletivo e Editais — Cefor/IFES",
