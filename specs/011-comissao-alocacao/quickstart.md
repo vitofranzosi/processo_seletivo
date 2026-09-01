@@ -19,9 +19,11 @@ Quatro particularidades do ambiente, todas conhecidas, nenhuma da feature.
 sobrescreva `DB_USER`.
 
 **`TEST_DB_ENGINE=postgresql` é obrigatório e é o que se esquece.** Sem ela a suíte cai para SQLite
-em memória **sem avisar**. Nesta feature o custo é preciso: as duas `UniqueConstraint` parciais — o
-vínculo ativo único por Processo e a alocação ativa única por membro e Etapa — não são exercidas, e
-`EC-001` e `EC-002` passam sem teste.
+em memória **sem avisar**. Nesta feature o custo é preciso e não é sobre as constraints — SQLite cria
+índice único parcial e as exerce: é sobre **concorrência**. `select_for_update` é inócuo em SQLite, e
+os testes marcados `postgresql_only` são pulados em silêncio. O que deixa de ser verificado é
+justamente o que D-016 decidiu: o bloqueio do Processo, a reavaliação da autorização dentro da
+transação e a remoção simultânea do último presidente.
 
 **Um banco de teste por worktree**, senão duas suítes em paralelo se destroem:
 
@@ -115,10 +117,11 @@ fronteira da seção 50 é feita nesta mesma tela, olhando o que **não** existe
 6. abrir `/gestao/minhas-etapas` e conferir que `maria` vê apenas as Etapas em que **está alocada**:
    presidir não injeta Etapa nenhuma (`FR-012`, `SC-008`).
 
-**Como auditor**, na trilha do Processo:
+**Como auditor** (identidade com o papel Auditor), em `/gestao/processos/<A>/auditoria`:
 
-7. conferir os cinco eventos, e conferir que o `permission` de cada um diz a base real —
-   `comissao:gerir` nos atos de `carlos`, `comissao:presidir` nos de `maria` (`FR-016`).
+7. conferir os cinco eventos na mesma linha do tempo — membros e alocações —, e conferir que o
+   `permission` de cada um diz a base real: `comissao:gerir` nos atos de `carlos`,
+   `comissao:presidir` nos de `maria` (`FR-016`, `SC-013`).
 
 ---
 
@@ -135,9 +138,13 @@ fronteira da seção 50 é feita nesta mesma tela, olhando o que **não** existe
 4. **Escopo institucional**: com identidade de outro escopo, abrir a comissão de A: **404**, e não
    403 (`SC-016`).
 5. **Reenvio**: apertar duas vezes o botão de adicionar o mesmo membro, e de alocar a mesma Etapa.
-   Nada duplica e nada quebra (`EC-001`, `EC-002`).
+   Nada duplica e nada quebra (`EC-001`, `EC-002`). Em seguida, tentar adicionar a mesma pessoa por
+   um formulário novo — chave diferente, mesmo vínculo: aí a recusa é 409, e a distinção entre
+   repetição e conflito é o que o contrato separa.
 6. **Edital não publicado**: num Processo cujo Edital está em elaboração, abrir as alocações. A tela
    explica por que não há o que alocar, em vez de listar Etapas desabilitadas (`EC-014`).
+7. **Remoção em cascata**: remover da comissão alguém com duas alocações e conferir, na janela dele,
+   que as duas somem juntas — e que a trilha registra a remoção do membro.
 
 ---
 

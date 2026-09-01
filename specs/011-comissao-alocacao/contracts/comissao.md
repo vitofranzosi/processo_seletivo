@@ -22,6 +22,11 @@ significa *passo do compositor* em `editais/<uuid>/compor/<slug:etapa>` (D-009, 
 | `processos/<uuid:processo_id>/alocacoes` | POST | gestor ou presidente | `pode_gerir_comissao` |
 | `minhas-etapas` | GET | qualquer identidade institucional | nenhuma; a lista é derivada das alocações |
 | `minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>` | GET | alocado, gestor ou presidente | `pode_atuar_na_etapa` **ou** `pode_gerir_comissao` |
+| `processos/<uuid:processo_id>/auditoria` | GET | auditor | `auditoria:consultar` |
+
+A rota de auditoria é a trilha da comissão daquele Processo — membros e alocações na mesma linha do
+tempo —, ao lado da trilha do Edital que já existe. Sem ela, `SC-013` não seria demonstrável pelo
+canal do ator (D-018).
 
 `minhas-etapas` não exige permissão porque não revela nada: para quem não tem alocação, ela é o
 estado vazio da seção 26 da spec, e não uma recusa.
@@ -68,11 +73,18 @@ recusa.
 | Edital sem versão publicada | 409, com a razão nomeada na tela | `FR-032`, `EC-014` |
 | Comissão sem presidente ativo, ao alocar | 409, nomeando o caminho | `FR-030` |
 | Remover o último presidente com alocação ativa | 409, nomeando o caminho | `FR-030` |
-| Vínculo ou alocação ativa já existente | 409 idempotente: nada é criado e nada falha para o usuário | `FR-064`, `FR-065`, `EC-001`, `EC-002` |
+| Mesma `idempotency_key`, mesmo corpo | O resultado e o status originais, sem criar nada | `FR-064`, `EC-001`, `EC-002` |
+| Mesma `idempotency_key`, corpo diferente | 409 `idempotency_conflict` | mecanismo existente, `shared/idempotency.py` |
+| Chave nova tentando criar vínculo ou alocação equivalente | 409, da constraint parcial | `FR-065` |
 | Pessoa que não é membro ativo, ao alocar | 422 | `FR-033`, `FR-034`, `EC-005` |
 
 **Uma única resposta para tudo que o ator não alcança.** Distinguir 403 de 404 já revelaria a
 existência do objeto, que é o que `FR-057` proíbe.
+
+**Idempotência e unicidade são coisas diferentes**, e o contrato não as mistura. A primeira responde
+por "o mesmo pedido chegou duas vezes" e devolve o resultado original; a segunda, por "dois pedidos
+diferentes querem criar o mesmo vínculo" e recusa o segundo. Confundi-las faria o duplo clique
+parecer erro, ou o conflito real parecer sucesso.
 
 ## 4. O contrato que a 012 herda
 

@@ -45,7 +45,8 @@ base visual. Tudo o que se vê nasce em `interface`.
 API: a feature inteira é servida pelo canal HTML institucional, com os fragmentos htmx já
 embarcados.
 
-**Storage**: PostgreSQL. Uma migration nova, em `comissoes`, com dois modelos e quatro constraints.
+**Storage**: PostgreSQL. Uma migration nova, em `comissoes`, com dois modelos, duas unicidades
+parciais e dois checks.
 **Nenhuma migration altera `editais`, `publicacoes` ou `auditoria`** — a única mudança fora do app
 novo é a assinatura de `record_event`, que não toca esquema.
 
@@ -55,7 +56,7 @@ novo é a assinatura de `record_event`, que não toca esquema.
 sem ser testada.
 
 **Target Platform**: servidor Linux; navegador do servidor institucional, incluindo celular — a
-organização por Etapa precisa caber em 375 px sem tabela horizontal (`FR-081`).
+organização por Etapa precisa caber em 375 px sem tabela horizontal (`FR-078`).
 
 **Project Type**: aplicação web renderizada no servidor, com fragmentos htmx. Um canal só, o
 `interface`.
@@ -69,8 +70,8 @@ a autorização é sempre verificada no servidor e sempre sobre o objeto pedido;
 para Etapa de Edital publicado; e nenhuma tela desta feature mostra dado de candidato.
 
 **Scale/Scope**: dezenas de membros por Processo e poucas Etapas por Edital — a escala é de ata, não
-de tráfego. Dois modelos novos, um app novo, quatro rotas novas, uma permissão nova, três entregas
-navegáveis.
+de tráfego, e é o que torna barato bloquear o Processo inteiro a cada alteração. Dois modelos novos,
+um app novo, cinco rotas novas, uma permissão nova, três entregas navegáveis.
 
 ## Constitution Check
 
@@ -78,9 +79,9 @@ navegáveis.
 
 | Princípio | Exigência | Como esta feature responde |
 |---|---|---|
-| I — Linguagem ubíqua e integridade | Conceitos distintos; identificadores estáveis; identificador público não autoriza; invariantes em constraint | `Comissão` e `Presidente da Comissão` já são termos da Constituição e nascem com esse nome. As quatro unicidades vão para o banco como constraint parcial (D-013). Identificador não autoriza: o guard verifica o vínculo, e a URL de uma atribuição não carrega pessoa (D-015). A integridade referencial da Etapa é preservada no comando, pela mesma razão e com o mesmo precedente da `Inscricao` (D-002). **Passa** |
+| I — Linguagem ubíqua e integridade | Conceitos distintos; identificadores estáveis; identificador público não autoriza; invariantes em constraint | `Comissão` e `Presidente da Comissão` já são termos da Constituição e nascem com esse nome. As duas unicidades vão para o banco como `UniqueConstraint` parcial, com dois `CheckConstraint` dizendo o que "inativo" significa (D-013). Identificador não autoriza: o guard verifica o vínculo, e a URL de uma atribuição não carrega pessoa (D-015). A integridade referencial da Etapa é preservada no comando, pela mesma razão e com o mesmo precedente da `Inscricao` (D-002). **Passa** |
 | II — Integridade normativa e temporalidade | Fonte única; publicado imutável; estado vigente reproduzível | A fonte das Etapas é a Versão Consolidada vigente, por um resolvedor único (D-012). Nada da 011 entra no conteúdo publicado, na consolidação ou no hash; nenhuma migration toca `editais` ou `publicacoes` (`FR-083`, `SC-018`). **Passa** |
-| III — Segurança, dados pessoais e auditoria | Negar por padrão; menor privilégio; sem IDOR; LGPD avaliada; auditoria de ato sensível | Autorização por objeto, verificada no servidor, com 404 uniforme para tudo que o ator não alcança (D-017). Menor privilégio: participar não é administrar, e alocação numa Etapa não alcança outra. Dado pessoal é mínimo por construção — a feature guarda um identificador institucional e um rótulo opcional, e nenhum dado de candidato. As cinco operações vão para a trilha existente (D-014). **Passa** |
+| III — Segurança, dados pessoais e auditoria | Negar por padrão; menor privilégio; sem IDOR; LGPD avaliada; auditoria de ato sensível | Autorização por objeto, verificada no servidor, com 404 uniforme para tudo que o ator não alcança (D-017). Menor privilégio: participar não é administrar, e alocação numa Etapa não alcança outra. Dado pessoal é mínimo por construção — a feature guarda um identificador institucional e um rótulo opcional, e nenhum dado de candidato. As cinco operações vão para a trilha existente, com tela própria para consultá-la (D-014, D-018). **Passa** |
 | IV — Regras explícitas e consistência | Regra no backend; estados explícitos; transação; concorrência | Toda regra vive no comando; a tela não decide nada. Não há máquina de estados porque não há ciclo de vida: há presença, e ela é booleana com histórico (D-013) — a Constituição pede estados para workflow, e inventar um aqui seria o oposto do que ela quer. Concorrência tratada onde ela existe de fato: constraint parcial para duplicidade, `select_for_update` para o invariante de presidência, `reserve()` para reenvio (D-016). **Passa** |
 | V — Qualidade, rastreabilidade e simplicidade | Rastreável; testado no nível certo; solução mais simples | Cada FR tem cenário previsto em [quickstart.md](./quickstart.md), e os quatro grupos de teste são os que a feature exige: autorização, integração, aceitação e regressão de Retificação. Nenhum mecanismo genérico de permissões: uma função de duas linhas responde pela autorização contextual, e é a mais simples que preserva os requisitos. **Passa** |
 | VI — Completude de jornada e valor demonstrável | Capacidade observável pelo canal do ator | As três entregas terminam em comportamento navegável no `interface`, que é o canal dos dois atores. A entrega 1 é a jornada inteira no caminho feliz, e a negação faz parte dela: sem o 404 demonstrado, a feature não entregou o que promete. **Passa** |
@@ -102,7 +103,7 @@ dependência nova, nenhum modelo além dos dois, nenhuma coluna nova em tabela e
 ```text
 specs/011-comissao-alocacao/
 ├── plan.md              # Este arquivo
-├── research.md          # Fase 0 — a reconciliação (D-001 a D-009) e as decisões de implementação (D-010 a D-017)
+├── research.md          # Fase 0 — a reconciliação (D-001 a D-009) e as decisões de implementação (D-010 a D-018)
 ├── data-model.md        # Fase 1 — entidades, invariantes e o resolvedor de Etapas
 ├── quickstart.md        # Fase 1 — como demonstrar cada entrega
 ├── contracts/
@@ -122,22 +123,24 @@ backend/processo_seletivo/
 │   │   ├── etapas.py             # etapas_vigentes(): o resolvedor único, sobre effective_version
 │   │   └── funcoes.py            # PRESIDENTE e MEMBRO, e o invariante de presidência
 │   ├── application/
-│   │   ├── comissao.py           # adicionar, alterar função, remover membro
+│   │   ├── comissao.py           # adicionar, alterar função, remover membro (com as alocações dele)
 │   │   ├── alocacao.py           # alocar, remover alocação
-│   │   └── selectors.py          # a visão administrativa e Minhas Etapas, com as órfãs derivadas
+│   │   └── selectors.py          # a visão administrativa, Minhas Etapas e a trilha da comissão
 │   └── migrations/               # uma migration
 ├── auditoria/
-│   └── application.py            # + new_state e new_revision opcionais (D-014); nenhuma migration
+│   ├── application.py            # + new_state e new_revision com sentinela (D-014); nenhuma migration
+│   └── selectors.py              # + trilha_da_comissao(), sobre o consultar() existente (D-018)
 ├── interface/
 │   ├── identidade.py             # + "comissao:gerir" no papel gestor
-│   ├── views.py                  # + comissao, alocacoes, minhas_etapas, atribuicao
+│   ├── views.py                  # + comissao, alocacoes, minhas_etapas, atribuicao, auditoria do Processo
 │   ├── forms.py                  # + membro e alocação
-│   ├── urls.py                   # + quatro rotas (D-015)
+│   ├── urls.py                   # + cinco rotas (D-015, D-018)
 │   └── templates/interface/
 │       ├── comissao.html
 │       ├── alocacoes.html
 │       ├── minhas_etapas.html
 │       ├── atribuicao.html
+│       ├── auditoria.html        # reusado; + as cinco operações novas em OPERACOES
 │       └── _membro.html          # fragmento htmx da linha de membro
 └── processos/                    # inalterado
 
@@ -166,13 +169,19 @@ assinatura, não de esquema.
 1. **A alocação nunca referencia `EtapaAvaliacao`.** Nem por chave estrangeira, nem por consulta:
    `edital.etapas.all()` responde pela coleção de elaboração e diverge do conteúdo vigente depois de
    uma Retificação. Toda leitura de Etapa passa por `etapas_vigentes()` (D-012).
-2. **Nenhuma escrita fora de `comissoes`.** Nenhuma migration em `editais`, `publicacoes` ou
-   `auditoria`; nenhum comando desta feature grava em tabela que não seja sua.
+2. **Nenhuma migration fora de `comissoes`.** As únicas escritas fora do app são as que todo
+   comando do projeto já faz pelos mecanismos existentes: o `INSERT` append-only na trilha de
+   auditoria e a reserva de idempotência. Nenhuma tabela de `editais` ou `publicacoes` é escrita, e
+   a mudança em `auditoria/application.py` é de assinatura.
 3. **A presidência não vira papel.** `comissao:presidir` existe como rótulo de trilha e não pode
    aparecer em `PAPEIS` (D-011, D-014).
-4. **A autorização é uma função só, chamada por todos.** Duplicar a regra na view e no comando é
-   como ela passa a divergir; a view chama a mesma função do domínio, para decidir o que desenhar.
+4. **A autorização é uma função só, chamada por todos** — e o comando a reavalia **depois** de
+   bloquear o Processo, porque a base contextual é dado que esta mesma feature altera (D-016). A
+   view chama a mesma função, mas só para decidir o que desenhar.
 5. **Alocação exige Edital publicado e comissão com presidente.** As duas recusas são do comando, e
    a tela as antecipa em vez de deixar o usuário descobrir no envio.
-6. **Nenhuma tela desta feature mostra dado de candidato**, e nenhuma consulta desta feature toca
+6. **Remover membro inativa as alocações dele na mesma transação.** Alocação ativa sob membro
+   inativo é relação contraditória, e a janela entre as duas operações é acesso sobrevivendo à
+   remoção.
+7. **Nenhuma tela desta feature mostra dado de candidato**, e nenhuma consulta desta feature toca
    `inscricoes`.

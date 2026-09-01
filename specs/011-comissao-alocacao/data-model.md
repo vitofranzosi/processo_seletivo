@@ -141,7 +141,32 @@ Devolve qual delas autorizou, porque é isso que a trilha registra.
 privilégio administrativo não injeta Etapa em `Minhas Etapas` (`FR-012`, D-006). As duas portas são
 essas duas funções, e nenhuma view decide por conta própria.
 
-## 6. Estados
+## 6. Transação e ordem das operações
+
+Todo comando mutável desta feature segue a mesma ordem, e a ordem é a regra (D-016):
+
+```text
+command_context()                      # transação
+  ↓
+ProcessoSeletivo.objects.select_for_update().get(...)    # bloqueia o contêiner
+  ↓
+pode_gerir_comissao(ator, processo)    # reavalia a base DEPOIS do bloqueio
+  ↓
+verifica invariantes que leem várias linhas (presidência)
+  ↓
+grava, e audita com a base que autorizou
+```
+
+**A reavaliação depois do bloqueio não é redundante.** A base contextual é dado mutável desta mesma
+feature: entre a verificação da view e a gravação, outro gestor pode ter rebaixado o presidente, e
+ele executaria a alteração com autorização que já não existe.
+
+**Remover membro inativa as alocações dele na mesma transação.** Alocação ativa sob membro inativo é
+relação contraditória, deixaria o acesso sobrevivendo à remoção por uma janela e atrapalharia a
+própria regra do último presidente, que pergunta se há alocação ativa na comissão (`FR-025`,
+`EC-003`).
+
+## 7. Estados
 
 Não há máquina de estados. `MembroComissao` e `AlocacaoEtapa` têm **presença**, não ciclo de vida:
 existem ativos, deixam de existir ativos, e a linha permanece para a trilha. A Constituição pede
@@ -154,19 +179,27 @@ A transição possível é uma só, e é irreversível na mesma linha:
 ativo=True  ──remover──▶  ativo=False   (readicionar cria linha nova)
 ```
 
-## 7. A adaptação de `record_event`
+## 8. A adaptação de `record_event`
 
 ```python
+_UNSET = object()
+
 def record_event(*, actor, permission, operation, aggregate, now, correlation_id,
                  reason="", previous_state="", previous_revision=None, idempotency_key="",
-                 new_state=None, new_revision=None):
+                 new_state=_UNSET, new_revision=_UNSET):
     ...
-    new_state=aggregate.status if new_state is None else new_state,
-    new_revision=aggregate.revision if new_revision is None else new_revision,
+    new_state=aggregate.status if new_state is _UNSET else new_state,
+    new_revision=aggregate.revision if new_revision is _UNSET else new_revision,
 ```
 
 Dois parâmetros opcionais; quem já chama não muda. É a menor adaptação que evita dar estado e
 revisão a agregados que não os têm (D-014).
+
+**A sentinela não é preciosismo.** `None` é valor legítimo — `new_revision` é coluna anulável — e
+usá-lo também como marcador de "leia do agregado" tornaria impossível gravar revisão nula de
+propósito: a chamada cairia em `aggregate.revision`, que `MembroComissao` não tem, e o defeito
+apareceria como `AttributeError`. Os comandos desta feature passam `new_state=""` e
+`new_revision=None` explicitamente.
 
 ### O que cada evento grava
 
@@ -184,11 +217,22 @@ revisão a agregados que não os têm (D-014).
 `institution_scope` e `actor_subject` vêm do ator, como em todo evento. O `display_label` nunca é
 gravado: não é identidade (`FR-075`).
 
-A consulta "o que mudou na comissão deste Processo" reúne os identificadores dos membros e de suas
-alocações e usa o mesmo caminho de `trilha_do_edital`, que já consulta por conjunto de agregados
-(`auditoria/selectors.py:64`).
+### A consulta, e a tela
 
-## 8. Permissão
+```python
+def trilha_da_comissao(*, actor, processo, cursor=None, limit=LIMITE_PADRAO):
+    """Tudo que aconteceu com a comissão deste Processo, membros e alocações na mesma linha."""
+```
+
+Reúne os identificadores dos membros do Processo e de suas alocações e chama o `consultar` existente
+por conjunto de agregados — o mesmo caminho de `trilha_do_edital` (`auditoria/selectors.py:64`),
+sem consulta nova.
+
+Ela é servida por `/gestao/processos/<uuid:processo_id>/auditoria`, sob `auditoria:consultar`,
+reusando `interface/auditoria.html`. Sem essa tela a auditoria da 011 só seria verificável por
+consulta ao banco, e o princípio VI da Constituição não a consideraria entregue (D-018).
+
+## 9. Permissão
 
 Uma entrada nova no papel `gestor` de `interface/identidade.py`:
 

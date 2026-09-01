@@ -200,8 +200,9 @@ espaço sem desambiguar o termo.
 
 # Decisões de implementação
 
-*Fase 0 do `/plan`. As nove decisões acima reconciliaram a spec com o domínio; as abaixo escolhem
-como ela é construída, e cada uma foi verificada contra o código que vai receber a mudança.*
+*Fase 0 do `/plan`. As nove decisões acima reconciliaram a spec com o domínio; as nove abaixo
+escolhem como ela é construída, e cada uma foi verificada contra o código que vai receber a
+mudança.*
 
 ## D-010 — Onde o código vive
 
@@ -273,10 +274,15 @@ que D-008 proíbe.
 
 ## D-014 — A adaptação mínima do registrador
 
-**Decisão**: `record_event` ganha dois parâmetros opcionais, `new_state` e `new_revision`, que por
-padrão continuam vindo de `aggregate.status` e `aggregate.revision`
-(`auditoria/application.py:26`). Nenhum campo novo em tabela nenhuma, nenhuma mudança em quem já o
-chama.
+**Decisão**: `record_event` ganha `new_state` e `new_revision` com **sentinela `_UNSET`**, e não
+`None` como padrão. Ausente o argumento, o valor continua vindo de `aggregate.status` e
+`aggregate.revision` (`auditoria/application.py:26`); presente, é usado como veio — inclusive
+`None`. Nenhum campo novo em tabela nenhuma, nenhuma mudança em quem já chama.
+
+`None` como padrão não serve: ele é valor legítimo — `new_revision` é coluna anulável — e usá-lo
+também como marcador de "leia do agregado" faria o registrador tentar `aggregate.revision` num
+`MembroComissao`, que não tem o atributo. O defeito só apareceria no dia em que alguém quisesse
+gravar revisão nula de propósito, e apareceria como `AttributeError` em produção.
 
 **Por quê**: é a menor adaptação que atende D-008. A alternativa — dar `status` e `revision` a
 `MembroComissao` — foi o que a 009 fez na `Inscricao`, e lá havia dois estados reais; aqui não há.
@@ -312,15 +318,32 @@ o checklist exige identificador sensível fora da URL, e o ator já vem da sess�
 
 ## D-016 — Concorrência
 
-**Decisão**: as constraints parciais de D-013 respondem por duplicidade; `reserve()`
-(`shared/idempotency.py:6`) responde por reenvio do mesmo formulário; e o invariante de presidência
-(FR-029, FR-030) é verificado sob `select_for_update` no Processo, dentro do `command_context()` que
-já abre transação (`shared/application/commands.py:8`).
+**Decisão, em três partes**:
 
-**Por quê**: o invariante de presidência é o único que envolve mais de uma linha — "não deixar sem
-presidente uma comissão com alocação ativa" lê membros e alocações antes de decidir. Sem o bloqueio,
-duas remoções simultâneas passam pela verificação e deixam o estado que ambas recusariam
-isoladamente.
+1. **Todo comando mutável bloqueia o Processo** com `select_for_update`, logo ao abrir o
+   `command_context()` (`shared/application/commands.py:8`), e **reavalia a base de autorização
+   dentro da transação** — depois do bloqueio, nunca antes.
+2. As constraints parciais de D-013 respondem por duplicidade, e `reserve()`
+   (`shared/idempotency.py:6`) por reenvio do mesmo formulário.
+3. **Remover membro inativa as alocações dele na mesma transação**, e não em duas operações.
+
+**Por que reavaliar a autorização depois do bloqueio**: a base contextual é um dado mutável desta
+mesma feature. Entre a verificação na view e a gravação, outro gestor pode ter rebaixado o
+presidente — e ele executaria a alteração com uma autorização que já não existe. Verificar antes do
+bloqueio é verificar um estado que a transação seguinte pode desmentir. A permissão sistêmica não
+tem esse problema; a presidência tem, e a regra vale para as duas porque uma função só responde
+pelas duas (D-011).
+
+**Por que a inativação em cascata**: alocação ativa sob membro inativo é relação contraditória —
+`FR-025` e `EC-003` exigem que os acessos derivados do vínculo sejam revogados de forma consistente,
+e uma alocação órfã de membro atrapalharia a própria regra do último presidente, que lê "há alocação
+ativa nesta comissão". Fazer isso fora da transação deixa uma janela em que o acesso sobrevive à
+remoção.
+
+**Por que o bloqueio no Processo, e não nas linhas**: o invariante de presidência lê membros e
+alocações antes de decidir, e não há linha única a bloquear. O Processo é o contêiner de tudo que
+a feature escreve, e é a menor granularidade que fecha a leitura inteira. A escala da feature é de
+ata: dezenas de membros, alterações esporádicas — nenhuma contenção real.
 
 **Não usado**: `compare_and_swap`. Ele existe para agregado com `revision`, e D-013 decidiu não dar
 revisão a estes modelos.
@@ -335,13 +358,36 @@ Etapa de outro Processo produzem **a mesma** resposta.
 **Por quê**: FR-057 pede que a existência não seja enumerável, e responder 403 em um caso e 404 em
 outro já é enumerar.
 
+## D-018 — A trilha da comissão precisa de tela
+
+**O fato**: a trilha de auditoria só é navegável por Edital hoje — `trilha_do_edital`
+(`auditoria/selectors.py:64`), servida por `editais/<uuid>/auditoria`
+(`interface/urls.py:29`). Os eventos desta feature têm por agregado `MembroComissao` e
+`AlocacaoEtapa`, que não aparecem em tela nenhuma.
+
+**Por que isso é bloqueio, e não detalhe**: o princípio VI da Constituição diz que capacidade que
+nenhuma interface alcança não está entregue, e `SC-013` exige demonstrar que as alterações ficam
+registradas. Sem superfície, a auditoria da 011 seria verificável só por consulta ao banco — que é
+exatamente o que o princípio recusa.
+
+**Decisão**: um seletor `trilha_da_comissao(processo)`, que reúne os identificadores dos membros do
+Processo e de suas alocações e chama o `consultar` existente por conjunto de agregados — o mesmo
+caminho de `trilha_do_edital`, sem consulta nova. E uma rota,
+`/gestao/processos/<uuid:processo_id>/auditoria`, sob `auditoria:consultar`, reusando o template
+`interface/auditoria.html` e acrescentando as cinco operações novas ao dicionário `OPERACOES` que
+ele já usa para traduzir nomes de operação.
+
+**Alternativa descartada**: demonstrar pela API de auditoria. Ela existe, mas o canal do auditor
+neste produto é a interface — é onde a trilha do Edital já mora, e ter a do Processo em outro canal
+faria a mesma pessoa trocar de ferramenta no meio da mesma investigação.
+
 ## O que esta pesquisa não decidiu
 
-- A forma física de `MembroComissao` e `AlocacaoEtapa` — colunas, chaves, constraints.
-- Como o registrador de auditoria é adaptado (D-008).
-- Se a inativação é campo booleano, data ou linha histórica; a spec exige apenas que a auditoria
-  sobreviva à remoção.
-- Onde `Minhas Etapas` mora na navegação.
+- A forma dos fragmentos htmx das telas — quais trechos recarregam e quais recarregam a página.
+- O texto exato de cada recusa. As três de governança precisam nomear o caminho, e isso é redação
+  de produto, decidida com a tela na frente.
+- Se a remoção de alocação órfã é ação por linha ou em lote; depende de quantas aparecem juntas na
+  prática, e uma por linha é o começo seguro.
+- Os rótulos das cinco operações novas na tela de auditoria.
 
-Todas são decisões do `/plan`, e nenhuma delas pode violar os invariantes de D-002, D-004, D-005 e
-D-007.
+Nenhuma dessas escolhas pode violar os invariantes de D-002, D-004, D-005, D-007 e D-016.
