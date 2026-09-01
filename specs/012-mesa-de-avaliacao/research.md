@@ -579,15 +579,36 @@ atribuir, remover, impedir, reabrir — o ator é a presidência, e o avaliador 
 Perguntar "o que aconteceu com o trabalho da Ana" pelo `actor_subject` devolveria só o que a Ana
 mesma fez, e nada do que fizeram com ela — que é metade da pergunta.
 
-**A decisão** é a mesma que a 011 tomou em `trilha_da_comissao`, e por isso não custa mecanismo
-novo: um seletor que **resolve os identificadores pelas relações** e entrega o conjunto ao
-`consultar` que já existe. Por inscrição, reúne a própria `Inscricao` mais as `Atribuicao` e
-`Avaliacao` dela; por avaliador, reúne as `Atribuicao` e `Avaliacao` daquela identidade estável —
-não do vínculo, pela razão de T-007.
+**A decisão** parte de `trilha_da_comissao` — um seletor que **resolve os identificadores pelas
+relações** e entrega o conjunto ao `consultar` que já existe —, mas ela não cabe inteira nesse
+molde, e as três diferenças importam.
 
-A alternativa seria carimbar a inscrição em cada evento, criando uma coluna de conveniência na
-trilha para uma pergunta que a relação já responde. `record_event` não ganha campo nesta feature
-(FR-070).
+**Primeira: `Impedimento` é agregado próprio.** Impedir alguém que **não tem** Atribuição ativa é
+ato legítimo e auditável — é o caso preventivo, registrado antes de distribuir —, e ali não há
+Atribuição a que ancorar o evento. O agregado é o `Impedimento`, e ele entra nas duas relações: por
+inscrição e por identidade.
+
+**Segunda: abrir documento não se filtra por relação.** Esse evento tem por agregado a `Inscricao`,
+herdado da 009. Pelo filtro de inscrição isso basta — todas as aberturas daquela inscrição são
+dela. Mas pelo filtro de **avaliador** não: o identificador da inscrição é o mesmo para todos os
+avaliadores dela, e resolver só por relação devolveria as aberturas feitas pelos colegas sob o nome
+de quem se pesquisou. Aqui, e só aqui, `actor_subject` **é** o avaliador — foi ele quem abriu — e
+precisa entrar na condição junto com a inscrição.
+
+**Terceira, que decorre das duas: a consulta é composta.**
+
+| filtro | atos administrativos | abertura de documento |
+|---|---|---|
+| por inscrição | agregados relacionados: `Inscricao`, `Atribuicao`, `Avaliacao`, `Impedimento` daquela inscrição | os eventos daquela `Inscricao` |
+| por avaliador | agregados relacionados: `Atribuicao`, `Avaliacao`, `Impedimento` daquela identidade estável | eventos de `Inscricao` **com `actor_subject` igual àquela identidade** |
+| combinado | interseção das duas | interseção das duas |
+
+A identidade é a estável, e nunca o vínculo, pela razão de T-007.
+
+`consultar` não filtra por ator hoje; ganha um parâmetro opcional, como `record_event` ganhou dois
+na 011 — assinatura, e não esquema. A alternativa seria carimbar a inscrição em cada evento,
+criando coluna de conveniência para uma pergunta que a relação já responde. `record_event` não
+ganha campo nesta feature (FR-070).
 
 ---
 
@@ -604,14 +625,27 @@ propôs a não criar. E aceitar a recusa como comportamento esperado transformar
 em caso de erro.
 
 **A decisão**: para os caminhos que a elevação alcança, a precondição é satisfeita pelo hash da
-entidade em **qualquer uma das duas formas**. Não é afrouxamento — é a precondição significando o
-que sempre significou. Ela existe para detectar que **o conteúdo mudou**; elevar não muda conteúdo
-normativo nenhum, apenas escreve na forma nova o que a ausência já dizia. Duas grafias da mesma
-norma têm de satisfazer a mesma precondição.
+entidade em **qualquer uma das duas formas** — mas apenas **enquanto as duas formas disserem a
+mesma coisa**, e essa condição não pode ficar implícita.
 
-O alcance é estreito e verificável: só as entidades de `/stages`, só enquanto existir conteúdo em
-versão anterior, e só para as duas propriedades do incremento. Qualquer diferença real no conteúdo
-continua produzindo divergência, e a recusa de FR-036 continua inteira.
+**Por que a condição é indispensável.** A implementação óbvia — remover as duas propriedades da
+entidade atual e comparar o hash do que sobra — está errada, e erra em silêncio. Se uma Retificação
+publicada no intervalo tiver declarado `maximumScore: "100.0000"`, remover o campo devolve
+exatamente a grafia v4 anterior, e o hash antigo **passaria**. A precondição teria aprovado um ato
+escrito contra um conteúdo que já não existe, mascarando alteração normativa real — que é o oposto
+do que FR-036 existe para fazer.
+
+**A condição, então**: a grafia literal só é candidata quando os campos novos da entidade atual
+ainda **exprimem os valores legados** — `evaluationsPerRegistration` igual a `1` ou ausente, e
+`maximumScore` nulo ou ausente. Fora disso há declaração normativa nova, as duas grafias deixam de
+denotar a mesma norma, e vale só o hash da forma vigente.
+
+Assim a regra continua sendo o que sempre foi: detectar que **o conteúdo mudou**. Elevar não muda
+norma; declarar máxima ou quantidade, sim.
+
+O alcance é estreito e verificável: só as entidades de `/stages`, só enquanto os campos novos
+carregarem os valores da ausência, e só para as duas propriedades do incremento. Qualquer diferença
+real continua produzindo divergência, e a recusa de FR-036 continua inteira.
 
 ---
 
