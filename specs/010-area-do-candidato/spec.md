@@ -602,6 +602,8 @@ remover o antigo e corrigir o nome.
   consegue retomá-lo e recuperar o acesso à participação anterior.
 - **SC-026**: Todo fluxo principal se conclui em tela de 375 px, sem rolagem horizontal, e somente
   pelo teclado.
+- **SC-027**: Nenhum candidato é recusado no envio por causa de CPF declarado por outra identidade, e
+  a coincidência aparece assinalada, e não apenas legível, para quem conduz o certame.
 
 ## Assumptions
 
