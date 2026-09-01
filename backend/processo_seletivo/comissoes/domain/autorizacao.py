@@ -7,7 +7,7 @@ dentro da transação, para decidir se grava (D-006, D-016).
 
 from dataclasses import dataclass
 
-from processo_seletivo.comissoes.domain.etapas import etapa_vigente
+from processo_seletivo.comissoes.domain.etapas import etapa_vigente, etapas_vigentes
 from processo_seletivo.comissoes.models import AlocacaoEtapa, Funcao, MembroComissao
 from processo_seletivo.shared.api.problems import DomainError
 
@@ -80,3 +80,35 @@ def pode_atuar_na_etapa(ator, edital, etapa_id):
         return etapa_vigente(edital, etapa_id) is not None
     except DomainError:
         return False
+
+
+def etapas_autorizadas(ator, edital):
+    """Todas as Etapas deste Edital em que esta identidade pode atuar, numa leitura só.
+
+    `pode_atuar_na_etapa` responde por uma Etapa e custa duas a três consultas. A 012 vai
+    desenhar listas — candidatos às dezenas, cada linha precisando saber se o ator alcança a
+    Etapa dela — e chamar o guard por linha faria dele o gargalo da feature seguinte. Esta é a
+    mesma regra, respondida para o conjunto: quem constrói uma lista chama isto uma vez e
+    filtra em memória.
+
+    Devolve um `set` de identificadores. Conjunto vazio significa "nenhuma", e nunca "todas".
+    """
+    processo = edital.processo
+    if ator is None or ator.institution_scope != processo.institution_scope:
+        return set()
+    membro = membro_ativo(ator, processo)
+    if membro is None:
+        return set()
+    alocadas = set(
+        AlocacaoEtapa.objects.filter(membro=membro, edital=edital, ativo=True).values_list(
+            "etapa_id", flat=True
+        )
+    )
+    if not alocadas:
+        return set()
+    try:
+        vigentes = set(etapas_vigentes(edital))
+    except DomainError:
+        return set()
+    # A alocação órfã não concede acesso, aqui pela mesma razão que lá (FR-047).
+    return alocadas & vigentes

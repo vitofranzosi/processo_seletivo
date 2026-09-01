@@ -1765,12 +1765,34 @@ def comissao(request, processo_id):
     # Em lote: por membro, a leitura custava cinco consultas, e a tela não terminava numa
     # comissão do tamanho que mil candidatos exigem.
     por_membro = comissao_selectors.etapas_por_membro(processo)
+    total = len(membros)
+    busca = (request.GET.get("q") or "").strip()
+    so_sem_etapa = request.GET.get("sem_etapa") == "1"
+    linhas = [{"membro": m, "etapas": por_membro.get(m.id, [])} for m in membros]
+    sem_etapa = sum(1 for linha in linhas if not linha["etapas"])
+    # Filtrar em memória: a lista já foi lida inteira para contar, e uma banca cabe na memória
+    # com folga — o que não cabe é a pessoa rolando cento e vinte cartões atrás de um nome.
+    if busca:
+        alvo = busca.casefold()
+        linhas = [
+            linha
+            for linha in linhas
+            if alvo in linha["membro"].identity_subject.casefold()
+            or alvo in (linha["membro"].display_label or "").casefold()
+        ]
+    if so_sem_etapa:
+        linhas = [linha for linha in linhas if not linha["etapas"]]
     return render(
         request,
         "interface/comissao.html",
         {
             "processo": processo,
-            "membros": [{"membro": m, "etapas": por_membro.get(m.id, [])} for m in membros],
+            "membros": linhas,
+            "total_de_membros": total,
+            "sem_etapa": sem_etapa,
+            "busca": busca,
+            "so_sem_etapa": so_sem_etapa,
+            "filtrando": bool(busca or so_sem_etapa),
             "tem_presidente": comissao_selectors.tem_presidente(processo),
             "erro": erro,
             "chave_idempotencia": uuid4().hex,
@@ -1792,10 +1814,11 @@ def alocacoes(request, processo_id):
         chave = request.POST.get("chave_idempotencia") or uuid4().hex
         try:
             if acao == "incluir":
-                alocacao_app.alocar(
+                selecionados = request.POST.getlist("membro_id")
+                alocacao_app.alocar_varios(
                     actor=ator,
                     processo_id=processo.id,
-                    membro_id=dados["membro_id"],
+                    membro_ids=selecionados,
                     edital_id=dados["edital_id"],
                     etapa_id=dados["etapa_id"],
                     idempotency_key=chave,
@@ -1817,14 +1840,17 @@ def alocacoes(request, processo_id):
                 raise Http404 from recusa
             erro = recusa.detail
 
+    organizacao = comissao_selectors.organizacao(processo)
+    membros_ativos = comissao_selectors.membros(processo)
     return render(
         request,
         "interface/alocacoes.html",
         {
             "processo": processo,
-            "organizacao": comissao_selectors.organizacao(processo),
-            "membros": comissao_selectors.membros(processo),
+            "organizacao": organizacao,
+            "membros": membros_ativos,
             "orfas": comissao_selectors.orfas(processo),
+            "resumo": comissao_selectors.resumo_da_organizacao(organizacao, membros_ativos),
             "tem_presidente": comissao_selectors.tem_presidente(processo),
             "erro": erro,
             "chave_idempotencia": uuid4().hex,
@@ -1927,11 +1953,15 @@ def auditoria_da_comissao(request, processo_id):
         return redirect(reverse("interface:identificar"))
     processo = _processo_do_ator(ator, processo_id)
     require_permission(ator, "auditoria:consultar")
+    operacao = (request.GET.get("operacao") or "").strip()
+    pessoa = (request.GET.get("pessoa") or "").strip()
     registros, proximo = auditoria_selectors.trilha_da_comissao(
         actor=ator,
         processo=processo,
         cursor=request.GET.get("cursor"),
         limit=auditoria_selectors.parse_limit(request.GET.get("limit")),
+        operation=operacao or None,
+        pessoa=pessoa or None,
     )
     return render(
         request,
@@ -1939,6 +1969,15 @@ def auditoria_da_comissao(request, processo_id):
         {
             "processo": processo,
             "da_comissao": True,
+            "operacao_filtro": operacao,
+            "pessoa_filtro": pessoa,
+            "operacoes_da_comissao": [
+                ("COMISSAO_INCLUIR_MEMBRO", OPERACOES["COMISSAO_INCLUIR_MEMBRO"]),
+                ("COMISSAO_ALTERAR_FUNCAO", OPERACOES["COMISSAO_ALTERAR_FUNCAO"]),
+                ("COMISSAO_REMOVER_MEMBRO", OPERACOES["COMISSAO_REMOVER_MEMBRO"]),
+                ("ALOCACAO_INCLUIR", OPERACOES["ALOCACAO_INCLUIR"]),
+                ("ALOCACAO_REMOVER", OPERACOES["ALOCACAO_REMOVER"]),
+            ],
             "registros": [
                 {
                     "quando": registro.occurred_at,

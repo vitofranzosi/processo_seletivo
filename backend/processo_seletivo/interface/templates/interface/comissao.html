@@ -25,6 +25,27 @@
   ninguém responder pelo trabalho distribuído.</p>
 {% endif %}
 
+<form method="get" class="filtro" role="search">
+  <p class="campo">
+    <label for="q">Procurar na comissão</label>
+    <input id="q" name="q" type="search" value="{{ busca }}"
+           aria-describedby="ajuda-busca" placeholder="nome ou identificador">
+    <span class="ajuda" id="ajuda-busca">Numa banca grande, achar uma pessoa não pode depender de rolar.</span>
+  </p>
+  <p class="campo escolha">
+    <label><input type="checkbox" name="sem_etapa" value="1" {% if so_sem_etapa %}checked{% endif %}>
+      Só quem está sem Etapa ({{ sem_etapa }} de {{ total_de_membros }})</label>
+  </p>
+  <p class="salvar">
+    <button type="submit" class="acao">Filtrar</button>
+    {% if filtrando %}<a class="acao" href="{% url 'interface:comissao' processo.id %}">Limpar</a>{% endif %}
+  </p>
+</form>
+
+{% if filtrando %}
+<p class="ajuda" role="status">{{ membros|length }} de {{ total_de_membros }} membros.</p>
+{% endif %}
+
 {% if membros %}
 <ul class="comissao" aria-label="Membros da comissão">
   {% for item in membros %}
@@ -77,7 +98,8 @@
   {% endfor %}
 </ul>
 {% else %}
-<p class="vazio" role="status">Esta comissão ainda não tem membros.</p>
+<p class="vazio" role="status">
+  {% if filtrando %}Nenhum membro corresponde ao filtro.{% else %}Esta comissão ainda não tem membros.{% endif %}</p>
 {% endif %}
 
 <section aria-labelledby="adicionar-titulo" class="adicionar">

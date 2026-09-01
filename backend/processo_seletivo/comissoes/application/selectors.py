@@ -200,3 +200,23 @@ def _numero(valor):
     """`number` é texto, então "11" viria antes de "2" numa ordenação lexicográfica."""
     bruto = (valor or "").strip()
     return (0, int(bruto), "") if bruto.isdigit() else (1, 0, bruto)
+
+
+def resumo_da_organizacao(organizacao, membros_ativos):
+    """As três contagens que a tela existe para dar, antes do detalhe.
+
+    O responsável abre a Alocação para saber onde falta gente. Fazê-lo contar cartões numa banca
+    de quarenta é entregar o dado e esconder a resposta.
+    """
+    etapas = [e for grupo in organizacao if grupo["publicado"] for e in grupo["etapas"]]
+    alocados = {
+        alocacao.membro_id for etapa in etapas for alocacao in etapa["alocacoes"]
+    }
+    return {
+        "etapas": len(etapas),
+        "com_equipe": sum(1 for e in etapas if not e["sem_membros"]),
+        "sem_equipe": sum(1 for e in etapas if e["sem_membros"]),
+        "membros": len(membros_ativos),
+        "sem_atribuicao": sum(1 for m in membros_ativos if m.id not in alocados),
+        "editais_sem_publicacao": sum(1 for g in organizacao if not g["publicado"]),
+    }

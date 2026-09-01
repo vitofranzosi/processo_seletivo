@@ -69,7 +69,7 @@ def test_quem_nao_tem_nada_continua_recebendo_a_orientacao_em_minhas_etapas(
     assert "não possui papel de responsabilidade nem atribuição" in corpo
 
 
-def test_o_seletor_nao_oferece_quem_ja_esta_alocado(
+def test_a_escolha_nao_oferece_quem_ja_esta_alocado(
     presidente, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
 ):
     """L4: oferecer quem já está era a tela produzindo o próprio 409."""
@@ -79,9 +79,9 @@ def test_o_seletor_nao_oferece_quem_ja_esta_alocado(
         reverse("interface:alocacoes", args=[processo_a.id])
     ).content.decode()
 
-    seletor = corpo.split(f'id="membro-{etapa_a1}"')[1].split("</select>")[0]
-    assert str(comissao_de_a["joao"].id) not in seletor
-    assert str(comissao_de_a["maria"].id) in seletor
+    bloco = corpo.split(f'value="{etapa_a1}"')[1].split("</form>")[0]
+    assert f'value="{comissao_de_a["joao"].id}"' not in bloco
+    assert f'value="{comissao_de_a["maria"].id}"' in bloco
 
 
 def test_etapa_com_a_comissao_toda_alocada_diz_isso(
@@ -127,3 +127,82 @@ def test_a_confirmacao_de_atribuicao_nao_usa_estilo_de_alerta(
 
     trecho = corpo.split("Você está alocado nesta Etapa")[0][-120:]
     assert 'class="sucesso"' in trecho
+
+
+def test_alocar_a_comissao_inteira_numa_submissao(
+    presidente, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    """O item que corta 160 envios a 4: uma submissão, várias pessoas."""
+    from processo_seletivo.comissoes.models import AlocacaoEtapa
+
+    resposta = presidente.post(
+        reverse("interface:alocacoes", args=[processo_a.id]),
+        {
+            "acao": "incluir",
+            "edital_id": str(edital_a.id),
+            "etapa_id": etapa_a1,
+            "membro_id": [str(m.id) for m in comissao_de_a.values()],
+            "chave_idempotencia": "interface-lote-0001",
+        },
+        follow=True,
+    )
+
+    assert resposta.status_code == 200
+    assert AlocacaoEtapa.objects.filter(ativo=True).count() == 2
+
+
+def test_a_alocacao_abre_com_o_resumo(presidente, processo_a, comissao_de_a):
+    """Sem ele, a resposta que a tela existe para dar tem de ser contada nos cartões."""
+    corpo = presidente.get(
+        reverse("interface:alocacoes", args=[processo_a.id])
+    ).content.decode()
+
+    assert "Etapas com equipe" in corpo or "Etapa com equipe" in corpo
+    assert "sem ninguém" in corpo
+    assert "sem atribuição" in corpo
+
+
+def test_a_comissao_pode_ser_filtrada_por_nome(presidente, processo_a, comissao_de_a):
+    corpo = presidente.get(
+        reverse("interface:comissao", args=[processo_a.id]) + "?q=joao"
+    ).content.decode()
+
+    assert "joao" in corpo
+    assert "maria" not in corpo.split("Membros da comissão")[1].split("Adicionar membro")[0]
+
+
+def test_a_comissao_pode_mostrar_so_quem_esta_sem_etapa(
+    presidente, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    """A pergunta que o presidente faz de verdade numa banca grande."""
+    alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
+
+    corpo = presidente.get(
+        reverse("interface:comissao", args=[processo_a.id]) + "?sem_etapa=1"
+    ).content.decode()
+
+    lista = corpo.split("Membros da comissão")[1].split("Adicionar membro")[0]
+    assert "maria" in lista
+    assert "joao" not in lista
+
+
+def test_a_trilha_filtra_por_pessoa_e_por_operacao(
+    client, seletor_ligado, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    """19 páginas de vinte não respondem “quem perdeu acesso a esta Etapa”."""
+    alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
+    identificar(client, "auditora", ["auditor"])
+    url = reverse("interface:auditoria-comissao", args=[processo_a.id])
+
+    def atos(corpo):
+        # Só a lista: o seletor de filtro contém todos os rótulos, e procurá-los na página
+        # inteira testaria o formulário em vez do filtro.
+        return corpo.split('aria-label="Atos registrados"')[1]
+
+    por_operacao = atos(client.get(url + "?operacao=ALOCACAO_INCLUIR").content.decode())
+    por_pessoa = atos(client.get(url + "?pessoa=maria").content.decode())
+
+    assert "Alocação em Etapa" in por_operacao
+    assert "Inclusão na comissão" not in por_operacao
+    assert "maria" in por_pessoa
+    assert "joao" not in por_pessoa

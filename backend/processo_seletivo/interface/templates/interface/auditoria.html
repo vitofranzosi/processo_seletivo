@@ -25,6 +25,30 @@
   alterá-los.</p>
 {% endif %}
 
+{% if da_comissao %}
+<form method="get" class="filtro">
+  <p class="campo">
+    <label for="pessoa">Pessoa afetada</label>
+    <input id="pessoa" name="pessoa" type="search" value="{{ pessoa_filtro }}"
+           placeholder="identificador institucional">
+  </p>
+  <p class="campo">
+    <label for="operacao">Operação</label>
+    <select id="operacao" name="operacao">
+      <option value="">Todas</option>
+      {% for chave, rotulo in operacoes_da_comissao %}
+      <option value="{{ chave }}" {% if chave == operacao_filtro %}selected{% endif %}>{{ rotulo }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  <p class="salvar">
+    <button type="submit" class="acao">Filtrar</button>
+    {% if pessoa_filtro or operacao_filtro %}
+    <a class="acao" href="{% url 'interface:auditoria-comissao' processo.id %}">Limpar</a>{% endif %}
+  </p>
+</form>
+{% endif %}
+
 {% if registros %}
 <ol class="auditoria" aria-label="Atos registrados">
   {% for registro in registros %}
@@ -57,6 +81,14 @@
 </p>
 {% endif %}
 {% else %}
-<div class="vazio"><p>Nenhum ato registrado para este Edital.</p></div>
+<div class="vazio">
+  {% if pessoa_filtro or operacao_filtro %}
+  <p>Nenhum ato corresponde ao filtro.</p>
+  {% elif da_comissao %}
+  <p>Nenhum ato registrado para esta comissão.</p>
+  {% else %}
+  <p>Nenhum ato registrado para este Edital.</p>
+  {% endif %}
+</div>
 {% endif %}
 {% endblock %}

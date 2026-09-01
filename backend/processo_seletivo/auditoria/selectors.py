@@ -42,13 +42,31 @@ def decode_cursor(cursor):
         raise DomainError("invalid_cursor", "O cursor informado é inválido.", 400) from exc
 
 
-def consultar(*, actor, aggregate_type=None, aggregate_ids=None, cursor=None, limit=LIMITE_PADRAO):
-    """Registros do escopo do ator, do mais recente para o mais antigo, com cursor estável."""
+def consultar(
+    *,
+    actor,
+    aggregate_type=None,
+    aggregate_ids=None,
+    cursor=None,
+    limit=LIMITE_PADRAO,
+    operation=None,
+    reason_contem=None,
+):
+    """Registros do escopo do ator, do mais recente para o mais antigo, com cursor estável.
+
+    `operation` e `reason_contem` existem para a trilha de uma comissão grande: constituir uma
+    banca de cento e vinte e alocá-la produz centenas de eventos, e “quem perdeu acesso a esta
+    Etapa, e quando” não se responde folheando dezenove páginas de vinte.
+    """
     registros = RegistroAuditoria.objects.filter(institution_scope=actor.institution_scope)
     if aggregate_type:
         registros = registros.filter(aggregate_type=aggregate_type)
     if aggregate_ids is not None:
         registros = registros.filter(aggregate_id__in=list(aggregate_ids))
+    if operation:
+        registros = registros.filter(operation=operation)
+    if reason_contem:
+        registros = registros.filter(reason__icontains=reason_contem)
     if cursor:
         occurred_at, event_id = decode_cursor(cursor)
         # O cursor aponta para o último item já entregue, na mesma ordem decrescente.
@@ -71,7 +89,9 @@ def trilha_do_edital(*, actor, edital, cursor=None, limit=LIMITE_PADRAO):
     return consultar(actor=actor, aggregate_ids=identificadores, cursor=cursor, limit=limit)
 
 
-def trilha_da_comissao(*, actor, processo, cursor=None, limit=LIMITE_PADRAO):
+def trilha_da_comissao(
+    *, actor, processo, cursor=None, limit=LIMITE_PADRAO, operation=None, pessoa=None
+):
     """Tudo que aconteceu com a comissão deste Processo — membros e alocações na mesma linha.
 
     Os eventos da 011 têm por agregado o membro e a alocação, e não o Processo: é assim que a
@@ -87,5 +107,11 @@ def trilha_da_comissao(*, actor, processo, cursor=None, limit=LIMITE_PADRAO):
         AlocacaoEtapa.objects.filter(membro__processo=processo).values_list("id", flat=True)
     )
     return consultar(
-        actor=actor, aggregate_ids=[*membros, *alocacoes], cursor=cursor, limit=limit
+        actor=actor,
+        aggregate_ids=[*membros, *alocacoes],
+        cursor=cursor,
+        limit=limit,
+        operation=operation,
+        # A pessoa afetada vive no motivo do evento — é lá que o comando a escreve.
+        reason_contem=pessoa,
     )

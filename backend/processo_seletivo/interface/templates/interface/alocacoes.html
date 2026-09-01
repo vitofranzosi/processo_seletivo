@@ -27,6 +27,17 @@
   ele. Designe a presidência na tela da Comissão.</p>
 {% endif %}
 
+{% if resumo.etapas or resumo.editais_sem_publicacao %}
+<ul class="resumo" aria-label="Situação da organização">
+  <li><strong>{{ resumo.com_equipe }}</strong>Etapa{{ resumo.com_equipe|pluralize:"s" }} com equipe</li>
+  <li><strong>{{ resumo.sem_equipe }}</strong>sem ninguém</li>
+  <li><strong>{{ resumo.sem_atribuicao }}</strong>de {{ resumo.membros }} sem atribuição</li>
+  {% if resumo.editais_sem_publicacao %}
+  <li><strong>{{ resumo.editais_sem_publicacao }}</strong>Edital{{ resumo.editais_sem_publicacao|pluralize:",is" }} não publicado{{ resumo.editais_sem_publicacao|pluralize:"s" }}</li>
+  {% endif %}
+</ul>
+{% endif %}
+
 {% if orfas %}
 <section aria-labelledby="orfas-titulo" class="consequencias irreversivel">
   <h2 id="orfas-titulo">Alocações sem Etapa correspondente</h2>
@@ -105,22 +116,31 @@
 
       {% if tem_presidente %}
       {% if etapa.alocaveis %}
-      <form method="post" class="linha-de-acoes">
+      {% comment %} Em lote, e uma submissão só: pessoa a pessoa, montar a distribuição de uma
+         banca de quarenta em quatro Etapas eram cento e sessenta envios, cada um recarregando a
+         página. Continua sendo membro → Etapa — é agrupamento de envio, e não distribuição. {% endcomment %}
+      <form method="post" class="alocar-em-lote">
         {% csrf_token %}
         <input type="hidden" name="acao" value="incluir">
         <input type="hidden" name="edital_id" value="{{ grupo.edital.id }}">
         <input type="hidden" name="etapa_id" value="{{ etapa.id }}">
         <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-i{{ etapa.id }}">
-        <label class="campo" for="membro-{{ etapa.id }}">Alocar em {{ etapa.nome }}</label>
-        {% comment %} Só quem ainda não está aqui: oferecer quem já está era a tela produzindo o
-           próprio 409. {% endcomment %}
-        <select id="membro-{{ etapa.id }}" name="membro_id">
-          {% for membro in etapa.alocaveis %}
-          <option value="{{ membro.id }}">{{ membro.display_label|default:membro.identity_subject }}</option>
-          {% endfor %}
-        </select>
-        <button type="submit" class="acao"
-                aria-label="Alocar membro na Etapa {{ etapa.nome }}">Alocar nesta Etapa</button>
+        <fieldset>
+          <legend>Alocar em {{ etapa.nome }}
+            <span class="ajuda">{{ etapa.alocaveis|length }} disponíve{{ etapa.alocaveis|length|pluralize:"l,is" }}</span></legend>
+          <div class="escolhas">
+            {% for membro in etapa.alocaveis %}
+            <label class="escolha">
+              <input type="checkbox" name="membro_id" value="{{ membro.id }}">
+              {{ membro.display_label|default:membro.identity_subject }}</label>
+            {% endfor %}
+          </div>
+        </fieldset>
+        <p class="salvar">
+          <button type="submit" class="acao"
+                  aria-label="Alocar as pessoas marcadas na Etapa {{ etapa.nome }}">
+            Alocar selecionados</button>
+        </p>
       </form>
       {% elif membros %}
       <p class="ajuda">Toda a comissão já está alocada nesta Etapa.</p>
