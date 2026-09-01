@@ -66,8 +66,14 @@ naquele momento.
 
 O que a spec fixa é o invariante, e não o mecanismo:
 
-> Gravar o rascunho de um Edital nunca apaga alocação nem falha por causa dela; e uma alocação nunca
-> concede acesso a Etapa que não exista na versão vigente do Edital.
+> A alocação nunca concede acesso a Etapa ausente da Versão Consolidada vigente do Edital, e nada
+> do que a 011 grava pode impedir a elaboração ou a Retificação de um Edital.
+
+**A fonte é uma só: a Versão Consolidada vigente.** Disso decorre que a alocação existe apenas para
+Etapa de Edital publicado. Alocar durante a elaboração seria alocar contra uma coleção que o próprio
+elaborador recria a cada salvamento: a alocação nasceria órfã pelas edições legítimas de quem monta o
+Edital, e `Minhas Etapas` mostraria o resultado de um acidente. Constituir a comissão continua
+possível a qualquer momento; distribuir trabalho pressupõe que o trabalho exista publicamente.
 
 A integridade referencial que a Constituição exige é preservada no command, que verifica existência
 e pertinência a cada operação e a cada acesso. O precedente é `Inscricao.profile_id`, adotado pela
@@ -90,7 +96,7 @@ Logo, na V1:
   quando decidiu materializar o Edital sem cadastro de pessoas.
 
 O gate de PC-005 permanece explícito e é a condição para produção. Quando o diretório existir, a
-mudança é nesta camada e nos requisitos FR-016 a FR-020, e em nada mais.
+mudança é nesta camada e nos requisitos FR-016 a FR-021, e em nada mais.
 
 ### D-004 — Isolamento por escopo institucional
 
@@ -127,8 +133,11 @@ Existem dois caminhos legítimos até a página de uma Etapa, e eles não se mis
 - **A visão administrativa** do Processo mostra todas as Etapas e seus membros, e depende de
   permissão de gestão da comissão, não de alocação.
 
-A página da Etapa pode ser alcançada pelas duas, e informa por qual atribuição o ator chegou.
-Sem esta separação, "todos e somente" (FR-041) seria indemonstrável.
+A porta administrativa tem duas bases, e cada uma autoriza sozinha: permissão sistêmica de gerir
+comissão, ou vínculo ativo como `PRESIDENTE` daquele Processo (FR-016).
+
+A página da Etapa pode ser alcançada pelas duas portas, e informa por qual atribuição o ator chegou.
+Sem esta separação, "todos e somente" (FR-040) seria indemonstrável.
 
 ### D-007 — Alocar exige presidente; constituir, não
 
@@ -203,10 +212,14 @@ Etapas.
 **PC-004** — A Área do Candidato não é dependência conceitual de autorização institucional.
 Identidade de candidato e identidade institucional permanecem eixos distintos.
 
-**PC-005** — O acesso a dados reais de candidatos por membros de comissão permanece condicionado à
-existência de autenticação institucional confiável. A 011 pode ser desenvolvida e demonstrada com o
-mecanismo institucional disponível no ambiente — hoje, o seletor de identidade fora de produção —
-mas esse gate permanece explícito para produção (D-003).
+**PC-005** — As decisões de autorização da 011 valem o que valer a identidade que as sustenta. A
+feature pode ser desenvolvida e demonstrada com o mecanismo institucional disponível no ambiente —
+hoje, o seletor de identidade fora de produção —, mas subir a 011 em produção com ele permitiria a
+qualquer pessoa declarar-se presidente e redistribuir a banca, sem tocar em um único dado de
+candidato. Autenticação institucional confiável é gate de produção **desta** feature (D-003).
+
+O gate correlato — abrir dados reais de candidatos a membros de comissão — pertence à 012, que é
+onde esses dados aparecem.
 
 **PC-006** — Toda consulta e toda alteração da 011 são limitadas pelo escopo institucional do
 Processo (D-004).
@@ -397,8 +410,8 @@ Processo.
 
 **FR-012** — Não inferir autorização de Etapa a partir da função na comissão. O presidente não
 recebe alocação implícita: para aparecer em `Minhas Etapas`, ele precisa estar alocado como
-qualquer outro (D-006). O que a função lhe dá é o poder de gerir a composição, e a visão
-administrativa que decorre dele.
+qualquer outro (D-006). O que a função lhe dá é uma das duas bases de autorização para gerir a
+composição (FR-016), e a visão administrativa que decorre dela.
 
 ---
 
@@ -416,9 +429,20 @@ conforme as regras existentes de gestão do Processo.
 **FR-015** — Depois de constituída, a gestão operacional da comissão pode ser exercida pelo
 presidente conforme definido nesta spec.
 
-**FR-016** — Toda autorização privilegiada adicional já existente no sistema continua explícita e
-não é reproduzida por atalhos locais da 011. A permissão de gerir comissão é nomeada, entra no
-conjunto de permissões do papel responsável e é a mesma registrada na trilha de auditoria.
+**FR-016** — A gestão da comissão é autorizada por **uma de duas bases, cada uma suficiente
+sozinha**:
+
+- **permissão sistêmica nomeada** de gerir comissão — é como a comissão é constituída (FR-014) e
+  como a administração superior intervém depois; ou
+- **vínculo ativo como `PRESIDENTE`** daquele Processo (FR-015).
+
+O presidente não precisa acumular a permissão sistêmica para gerir a própria comissão, e quem tem a
+permissão sistêmica não precisa ser membro (FR-013). Nenhuma das duas cria papel novo: a primeira é
+permissão nomeada no papel responsável, a segunda é contextual e vive no vínculo. Nenhuma das duas
+injeta Etapa em `Minhas Etapas` (D-006). A base utilizada é registrada na trilha de auditoria.
+
+**FR-017** — Toda autorização privilegiada adicional já existente no sistema continua explícita e não
+é reproduzida por atalhos locais da 011.
 
 ---
 
@@ -462,22 +486,22 @@ selecionar função
 confirmar
 ```
 
-**FR-017** — O sistema identifica a pessoa pelo identificador institucional informado. Enquanto não
+**FR-018** — O sistema identifica a pessoa pelo identificador institucional informado. Enquanto não
 houver diretório, não existe busca por nome, sugestão nem lista de pessoas (D-003).
 
-**FR-018** — Não criar cadastro de pessoa dentro da 011. O rótulo de exibição é campo de leitura
+**FR-019** — Não criar cadastro de pessoa dentro da 011. O rótulo de exibição é campo de leitura
 humana da própria lista, e não um registro de pessoa: ele não é pesquisável, não participa de
 nenhuma comparação e não é usado para identificar ninguém.
 
-**FR-019** — A interface declara explicitamente que o identificador é a chave e que o rótulo não é
+**FR-020** — A interface declara explicitamente que o identificador é a chave e que o rótulo não é
 verificado pelo sistema.
 
-**FR-020** — Nome ou rótulo exibido isoladamente nunca é chave de identidade.
+**FR-021** — Nome ou rótulo exibido isoladamente nunca é chave de identidade.
 
-**FR-021** — Antes de confirmar, a tela mostra o identificador exatamente como será gravado, para
+**FR-022** — Antes de confirmar, a tela mostra o identificador exatamente como será gravado, para
 que o erro de digitação apareça antes da gravação e não depois.
 
-**FR-022** — Quando o diretório institucional existir, FR-017 a FR-021 são substituídos por busca e
+**FR-023** — Quando o diretório institucional existir, FR-018 a FR-022 são substituídos por busca e
 desambiguação reais. Até lá, não simular essa capacidade.
 
 Não é requisito da 011 criar um diretório institucional.
@@ -505,11 +529,9 @@ Ações mínimas: alterar função; remover membro.
 
 ### Alteração de função
 
-**FR-023** — Usuário autorizado pode alterar a função de um membro.
+**FR-024** — Usuário autorizado pode alterar a função de um membro.
 
-**FR-024** — Alteração produz efeito de autorização imediatamente após persistida.
-
-**FR-025** — A alteração é auditável.
+**FR-025** — Alteração produz efeito de autorização imediatamente após persistida.
 
 ### Remoção
 
@@ -547,8 +569,9 @@ duplicado, alocação para Etapa de outro Processo ou alocação de pessoa que n
 Como presidente/responsável, quero indicar em quais Etapas cada membro atuará para que cada pessoa
 receba somente o trabalho correspondente.
 
-A organização é apresentada **por Edital**, porque a Etapa pertence ao Edital e dois Editais do
-mesmo Processo podem ter Etapas homônimas (D-001):
+A organização é apresentada **por Edital publicado**, porque a Etapa pertence ao Edital, dois
+Editais do mesmo Processo podem ter Etapas homônimas (D-001) e só há alocação a partir da publicação
+(D-002):
 
 > **Edital 07/2027**
 >
@@ -570,8 +593,9 @@ mesmo Processo podem ter Etapas homônimas (D-001):
 
 ## 18. Alocação
 
-**FR-032** — Usuário autorizado pode alocar um membro da comissão a uma ou mais Etapas de qualquer
-Edital do mesmo Processo.
+**FR-032** — Usuário autorizado pode alocar um membro da comissão a uma ou mais Etapas de Editais
+**publicados** do mesmo Processo. Etapa de Edital ainda não publicado não é alocável, porque a fonte
+da alocação é a Versão Consolidada vigente (D-002).
 
 **FR-033** — Somente membros ativos de comissão que possua presidente ativo podem receber novas
 alocações (FR-030).
@@ -605,13 +629,11 @@ comissão.
 
 **FR-036** — A remoção revoga imediatamente o acesso contextual decorrente daquela alocação.
 
-**FR-037** — A alteração é auditável.
-
 ---
 
 ## 20. Uma pessoa em várias Etapas
 
-**FR-038** — O mesmo membro pode ser alocado em múltiplas Etapas do Processo, inclusive em Etapas de
+**FR-037** — O mesmo membro pode ser alocado em múltiplas Etapas do Processo, inclusive em Etapas de
 Editais diferentes do mesmo Processo. Isso não exige duplicar o membro da comissão.
 
 ---
@@ -642,11 +664,11 @@ A interface responde com pouco esforço cognitivo:
 
 Uma Etapa sem alocação é visivelmente distinguível.
 
-**FR-039** — A tela permite navegar da Etapa para a gestão de suas alocações.
+**FR-038** — A tela permite navegar da Etapa para a gestão de suas alocações.
 
-**FR-040** — Não exigir abrir cada membro individualmente para descobrir a distribuição.
+**FR-039** — Não exigir abrir cada membro individualmente para descobrir a distribuição.
 
-**FR-041** — Também é possível enxergar as Etapas atribuídas a determinado membro, com o Edital de
+**FR-040** — Também é possível enxergar as Etapas atribuídas a determinado membro, com o Edital de
 cada uma:
 
 > **Maria Silva**
@@ -666,7 +688,7 @@ A 011 não conhece candidatos como unidades de trabalho. Portanto não criar rou
 balanceamento, sorteio, lote, carga máxima, distribuição por perfil, por candidato ou por
 modalidade.
 
-**FR-042** — A unidade de alocação da 011 é:
+**FR-041** — A unidade de alocação da 011 é:
 
 > **membro → Etapa**
 
@@ -683,7 +705,7 @@ A quantidade necessária de avaliações por candidato pode representar regra no
 operacional, propriedade da Etapa, regra do resultado ou característica da modalidade de avaliação.
 Ainda não existe evidência suficiente para fixá-la na 011.
 
-**FR-043** — Não adicionar `avaliadores_exigidos`, `numero_avaliadores`, `quorum` ou equivalente à
+**FR-042** — Não adicionar `avaliadores_exigidos`, `numero_avaliadores`, `quorum` ou equivalente à
 Etapa como consequência desta feature. Isso também é consequência de D-005: acrescentar campo a
 `EtapaAvaliacao` alteraria conteúdo normativo publicável a partir de uma necessidade operacional.
 
@@ -714,19 +736,20 @@ atribuição.
 
 ## 25. Regra de seleção
 
-**FR-044** — `Minhas Etapas` mostra todos e somente os objetos aos quais a identidade institucional
+**FR-043** — `Minhas Etapas` mostra todos e somente os objetos aos quais a identidade institucional
 possui alocação ativa, no escopo institucional do ator. A regra não tem exceção por papel:
 privilégio administrativo não injeta Etapa nesta lista (D-006).
 
-**FR-045** — Etapas de outros Processos não aparecem porque o usuário possui papel global.
+**FR-044** — Etapas de outros Processos não aparecem porque o usuário possui papel global.
 
-**FR-046** — Etapa cuja alocação foi removida deixa de aparecer.
+**FR-045** — Etapa cuja alocação foi removida deixa de aparecer.
 
-**FR-047** — O usuário pode possuir Etapas em vários Processos e Editais simultaneamente.
+**FR-046** — O usuário pode possuir Etapas em vários Processos e Editais simultaneamente.
 
-**FR-048** — Etapa cuja identidade não existe mais na versão vigente do Edital não é listada. A
-condição é derivada na leitura, comparando a alocação com essa versão: não há campo, sincronizador
-nem cópia da Etapa (EC-011).
+**FR-047** — Etapa cuja identidade não existe na Versão Consolidada vigente do Edital não é
+listada. A condição é derivada na leitura, comparando a alocação com essa versão: não há campo,
+sincronizador nem cópia da Etapa (EC-011). Criação, listagem e autorização consultam a mesma fonte,
+pelo mesmo caminho.
 
 ---
 
@@ -757,18 +780,18 @@ página mostra somente informações necessárias para contextualizar a atribui�
 > A avaliação dos candidatos será disponibilizada quando a etapa correspondente estiver habilitada
 > no sistema.
 
-**FR-049** — A página da Etapa mostra metadados institucionais já públicos ou necessários à
+**FR-048** — A página da Etapa mostra metadados institucionais já públicos ou necessários à
 identificação do trabalho.
 
-**FR-050** — A página declara por qual atribuição o ator chegou até ela: alocação ou gestão
+**FR-049** — A página declara por qual atribuição o ator chegou até ela: alocação ou gestão
 (D-006).
 
-**FR-051** — A 011 não apresenta documentos dos candidatos como material de avaliação.
+**FR-050** — A 011 não apresenta documentos dos candidatos como material de avaliação.
 
-**FR-052** — A 011 não apresenta controles para avaliar, pontuar, emitir parecer, marcar candidato
+**FR-051** — A 011 não apresenta controles para avaliar, pontuar, emitir parecer, marcar candidato
 como apto/inapto ou concluir avaliação.
 
-**FR-053** — Não criar UI falsa/desabilitada antecipando a 012.
+**FR-052** — Não criar UI falsa/desabilitada antecipando a 012.
 
 ---
 
@@ -796,22 +819,21 @@ O caminho administrativo é o outro, e é explícito: permissão de gestão da c
 
 ## 29. Guards no servidor
 
-**FR-054** — Toda rota protegida da comissão valida autorização no servidor.
+**FR-053** — Toda rota protegida da comissão valida autorização no servidor, sobre o objeto pedido.
+Que ocultar controle não é segurança e que identificador não confere autorização a Constituição já
+diz; a 011 não reenuncia a regra — verifica-a nos casos concretos abaixo, que são os passos da
+demonstração da seção 49 mais a convenção de resposta que os torna indistinguíveis de inexistência.
 
-**FR-055** — Ocultar botão não é mecanismo de segurança.
-
-**FR-056** — IDs, UUIDs ou URLs não constituem autorização.
-
-**FR-057** — Pessoa alocada ao Processo A não acessa Etapa do Processo B alterando o identificador
+**FR-054** — Pessoa alocada ao Processo A não acessa Etapa do Processo B alterando o identificador
 na URL.
 
-**FR-058** — Pessoa alocada à Etapa A não recebe acesso à Etapa B do mesmo Edital ou do mesmo
+**FR-055** — Pessoa alocada à Etapa A não recebe acesso à Etapa B do mesmo Edital ou do mesmo
 Processo.
 
-**FR-059** — Escopo institucional divergente responde como recurso inexistente, conforme a
+**FR-056** — Escopo institucional divergente responde como recurso inexistente, conforme a
 convenção já vigente no projeto.
 
-**FR-060** — Para objetos cuja existência não deva ser enumerável pelo usuário sem acesso, preferir
+**FR-057** — Para objetos cuja existência não deva ser enumerável pelo usuário sem acesso, preferir
 `404` conforme convenção existente da aplicação.
 
 ---
@@ -822,7 +844,7 @@ Pode existir papel sistêmico semelhante a `AVALIADOR` ou outra capacidade insti
 responde: esta pessoa pertence à classe de usuários que pode exercer determinada capacidade. Ele
 não responde: neste Processo?
 
-**FR-061** — Papel global necessário, caso exista, é condição de capacidade e não fonte de
+**FR-058** — Papel global necessário, caso exista, é condição de capacidade e não fonte de
 autorização sobre Processo/Etapa:
 
 ```text
@@ -840,10 +862,10 @@ pelo command, e não grupos por objeto.
 
 ## 31. Usuários desabilitados/inválidos
 
-**FR-062** — Identidade institucional indisponível, desativada ou sem condição de autenticar não
+**FR-059** — Identidade institucional indisponível, desativada ou sem condição de autenticar não
 obtém acesso apenas porque existe registro histórico de comissão.
 
-**FR-063** — A 011 não implementa gestão de ciclo de vida de contas institucionais. Ela respeita o
+**FR-060** — A 011 não implementa gestão de ciclo de vida de contas institucionais. Ela respeita o
 estado fornecido pelo mecanismo de identidade existente — que hoje não informa estado algum, o que
 é exatamente o conteúdo do gate de PC-005 (D-003). Nenhuma verificação de conta é simulada
 localmente.
@@ -855,11 +877,11 @@ localmente.
 Uma pessoa física pode ser, em contextos distintos, servidor/membro de comissão e candidato em
 outro certame. Esses contextos não se contaminam.
 
-**FR-064** — A identidade de candidato usada pela inscrição não concede autorização na 011.
+**FR-061** — A identidade de candidato usada pela inscrição não concede autorização na 011.
 
-**FR-065** — Identidade institucional da 011 não concede ownership sobre inscrições.
+**FR-062** — Identidade institucional da 011 não concede ownership sobre inscrições.
 
-**FR-066** — Não fundir automaticamente os dois eixos porque CPF ou e-mail coincidam.
+**FR-063** — Não fundir automaticamente os dois eixos porque CPF ou e-mail coincidam.
 
 ---
 
@@ -881,14 +903,14 @@ Como gestor da comissão, quero que mudanças de alocação produzam efeito real
 
 ## 34. Concorrência e consistência
 
-**FR-067** — Não permitir duplicidades decorrentes de submissões repetidas. A idempotência reutiliza
+**FR-064** — Não permitir duplicidades decorrentes de submissões repetidas. A idempotência reutiliza
 o mecanismo existente do projeto, com chave por escopo, ator, operação e chave da requisição; não se
 cria mecanismo novo.
 
-**FR-068** — Repetir acidentalmente a ação de adicionar o mesmo membro/alocação não produz registros
+**FR-065** — Repetir acidentalmente a ação de adicionar o mesmo membro/alocação não produz registros
 ativos duplicados.
 
-**FR-069** — Operações concorrentes não produzem configuração estruturalmente inválida.
+**FR-066** — Operações concorrentes não produzem configuração estruturalmente inválida.
 
 ---
 
@@ -896,14 +918,15 @@ ativos duplicados.
 
 A 011 não inventa nova máquina de estados.
 
-**FR-070** — Respeitar as restrições de edição já definidas pelo domínio para o Processo em estado
+**FR-067** — Respeitar as restrições de edição já definidas pelo domínio para o Processo em estado
 final.
 
-**FR-071** — Comissão e alocação são operacionais e permanecem alteráveis enquanto o Processo admite
-alteração, inclusive depois de o Edital estar publicado — é justamente aí que o trabalho acontece.
-Alterar comissão nunca exige Retificação.
+**FR-068** — Comissão e alocação são operacionais e permanecem alteráveis enquanto o Processo admite
+alteração — inclusive, e sobretudo, depois de o Edital estar publicado, que é quando o trabalho
+acontece e quando a alocação passa a ser possível (D-002). Alterar comissão nunca exige
+Retificação.
 
-**FR-072** — Nenhuma operação da 011 altera revisão, versão normativa, snapshot ou hash de Edital
+**FR-069** — Nenhuma operação da 011 altera revisão, versão normativa, snapshot ou hash de Edital
 (D-005).
 
 ---
@@ -913,11 +936,11 @@ Alterar comissão nunca exige Retificação.
 Uma Portaria pode dizer formalmente quem compõe uma comissão; o sistema precisa saber quem possui
 acesso operacional a determinada Etapa.
 
-**FR-073** — Não existe hoje representação normativa da comissão no conteúdo do Edital: o catálogo
+**FR-070** — Não existe hoje representação normativa da comissão no conteúdo do Edital: o catálogo
 de seções não a contém. `MembroComissao` é a única representação de comissão do sistema, e é
 operacional (D-005).
 
-**FR-074** — Se um dia a comissão nominal integrar o conteúdo normativo, a relação entre os dois
+**FR-071** — Se um dia a comissão nominal integrar o conteúdo normativo, a relação entre os dois
 registros é decidida naquela feature, e não por efeito colateral desta. A 011 não cria a segunda
 fonte.
 
@@ -928,12 +951,12 @@ fonte.
 Alterações de autorização sobre Processos Seletivos são atos relevantes. São auditáveis: inclusão de
 membro; remoção de membro; alteração de função; inclusão de alocação; remoção de alocação.
 
-**FR-075** — Reutilizar a trilha de auditoria já existente, com sua permissão nomeada, seu escopo
+**FR-072** — Reutilizar a trilha de auditoria já existente, com sua permissão nomeada, seu escopo
 institucional e sua natureza append-only.
 
-**FR-076** — Não criar subsistema paralelo de logs de negócio.
+**FR-073** — Não criar subsistema paralelo de logs de negócio.
 
-**FR-077** — A trilha deve responder, sem recorrer a outro subsistema: quem alterou; em que
+**FR-074** — A trilha deve responder, sem recorrer a outro subsistema: quem alterou; em que
 Processo; qual pessoa foi afetada; qual Etapa, quando aplicável; qual operação; e quando. A consulta
 "o que mudou na comissão deste Processo" deve ser respondível.
 
@@ -942,7 +965,7 @@ inverso: **não acrescentar estado, revisão ou ciclo de vida a membro ou aloca�
 satisfazer a forma do registrador**. Se a adaptação exigir criar registro paralelo, a decisão volta
 à spec.
 
-**FR-078** — Auditoria não registra dados de candidatos, pois esta feature não opera sobre eles, nem
+**FR-075** — Auditoria não registra dados de candidatos, pois esta feature não opera sobre eles, nem
 o rótulo de exibição, que não é identidade.
 
 ---
@@ -985,25 +1008,21 @@ pessoal daquele usuário.
 
 ## 40. Acessibilidade
 
-A 011 herda os critérios institucionais de acessibilidade já adotados pelo projeto.
+A 011 herda os critérios institucionais de acessibilidade já adotados pelo projeto e não os
+reenuncia: teclado, rótulos acessíveis e conformidade eMAG/WCAG são verificados item a item em
+[checklist-ux.md](./checklist-ux.md), antes da entrega. Ficam aqui os dois critérios que são desta
+feature e que a herança não cobre.
 
-**FR-079** — Todo fluxo crítico é concluível somente pelo teclado.
+**FR-076** — Estado "sem membros alocados" não depende exclusivamente de cor.
 
-**FR-080** — Componentes de seleção de pessoas e Etapas possuem rótulos acessíveis e estados
-perceptíveis.
-
-**FR-081** — Estado "sem membros alocados" não depende exclusivamente de cor.
-
-**FR-082** — Ações destrutivas possuem nome acessível inequívoco.
-
-**FR-083** — Interface mantém conformidade com os critérios eMAG/WCAG vigentes adotados pelo
-projeto.
+**FR-077** — As duas remoções possuem nome acessível inequívoco que as distingue: remover da Etapa
+não pode ser confundido com remover da comissão.
 
 ---
 
 ## 41. Responsividade
 
-**FR-084** — Fluxos principais funcionam em viewport de 375 px sem rolagem horizontal da página.
+**FR-078** — Fluxos principais funcionam em viewport de 375 px sem rolagem horizontal da página.
 Matrizes administrativas largas não são a única interface: em mobile, agrupamento por Etapa ou por
 membro é preferível à tabela horizontal inviável.
 
@@ -1011,12 +1030,13 @@ membro é preferível à tabela horizontal inviável.
 
 ## 42. Segurança de dados
 
-**FR-085** — Não expor atributos institucionais além dos necessários para identificação e operação.
+A minimização de dado pessoal, a ausência de identificador sensível em URL e a contenção de log são
+critérios institucionais herdados, verificados no [checklist-ux.md](./checklist-ux.md). Fica aqui o
+que é desta feature.
 
-**FR-086** — Não colocar identificadores sensíveis desnecessários em URL.
-
-**FR-087** — Não registrar dados pessoais completos em logs técnicos quando um identificador estável
-for suficiente.
+**FR-079** — Não expor atributo institucional além do necessário para identificar a pessoa e operar
+a comissão. O rótulo de exibição é o limite: ele existe para leitura humana da lista e não é
+identidade (D-003).
 
 ---
 
@@ -1024,7 +1044,7 @@ for suficiente.
 
 Fora da 011. Adicionar alguém a uma comissão ou Etapa não implica e-mail, SMS, push ou WhatsApp.
 
-**FR-088** — A 011 registra a atribuição no sistema. Comunicação transacional pode ser tratada
+**FR-080** — A 011 registra a atribuição no sistema. Comunicação transacional pode ser tratada
 posteriormente como capability própria.
 
 ---
@@ -1066,15 +1086,16 @@ Processo/Edital; publicação; vitrine pública; inscrição; documentos do cand
 comprovante; Área do Candidato; ownership por identidade de candidato; storage privado; versão
 normativa aceita.
 
-**FR-089** — Nenhuma autorização institucional é implementada reutilizando ownership de candidato.
+**FR-081** — Nenhuma autorização institucional é implementada reutilizando ownership de candidato.
 
-**FR-090** — Nenhuma mudança de comissão altera dados de inscrições.
+**FR-082** — Nenhuma mudança de comissão altera dados de inscrições.
 
-**FR-091** — Nenhuma migration da 011 altera `editais_etapaavaliacao`, o Cronograma ou qualquer
+**FR-083** — Nenhuma migration da 011 altera `editais_etapaavaliacao`, o Cronograma ou qualquer
 tabela de `publicacoes`; nenhum código da 011 escreve nelas.
 
-**FR-092** — Gravar o rascunho de um Edital continua funcionando exatamente como antes, com ou sem
-alocações existentes. Este é o teste de regressão que prova D-002.
+**FR-084** — Uma Retificação que remova ou altere Etapa alocada é aplicada normalmente, não falha e
+não apaga alocação: a alocação passa a ser órfã, derivada na leitura (EC-011). Este é o teste de
+regressão que prova D-002.
 
 ---
 
@@ -1085,8 +1106,8 @@ Processo.
 
 **SC-002** — A mesma pessoa não pode possuir vínculo ativo duplicado na mesma comissão.
 
-**SC-003** — Membro da comissão pode ser alocado a uma ou várias Etapas de Editais do próprio
-Processo.
+**SC-003** — Membro da comissão pode ser alocado a uma ou várias Etapas de Editais publicados do
+próprio Processo, e não a Etapa de Edital não publicado.
 
 **SC-004** — Não é possível alocar membro de Processo A em Etapa de Edital do Processo B.
 
@@ -1125,6 +1146,12 @@ função de qualquer operação da 011.
 
 **SC-019** — Não é possível criar alocação em comissão sem presidente ativo, nem deixar sem
 presidente uma comissão que possua alocação ativa.
+
+**SC-020** — O presidente gere a composição da própria comissão sem possuir a permissão sistêmica, e
+quem possui a permissão sistêmica gere sem ser membro.
+
+**SC-021** — Criação, listagem e autorização de alocação decidem pela mesma fonte: uma Etapa alocável
+é uma Etapa que aparece em `Minhas Etapas` de quem foi alocado.
 
 ---
 
@@ -1258,12 +1285,14 @@ Etapas".
 
 **EC-010 — membro sem Etapas.** Continua membro; `Minhas Etapas` fica vazia.
 
-**EC-011 — a Etapa alocada desaparece ou muda.** Uma Retificação pode remover a Etapa do conteúdo
-publicado, e a gravação do rascunho recria a coleção inteira: a alocação pode passar a designar
-identidade que não existe mais na versão vigente. A condição é **derivada na leitura** — sem flag,
-sem sincronizador, sem cópia da Etapa. A alocação não concede acesso, não aparece em `Minhas
-Etapas` e é exibida ao gestor com a ação de removê-la. Não apagar em silêncio: a auditoria já
-registrou que ela existiu.
+**EC-011 — a Etapa alocada desaparece.** Uma Retificação pode remover a Etapa do conteúdo publicado:
+a alocação passa a designar identidade ausente da Versão Consolidada vigente. A condição é **derivada
+na leitura** — sem flag, sem sincronizador, sem cópia da Etapa. A alocação não concede acesso, não
+aparece em `Minhas Etapas` e é exibida ao gestor com a ação de removê-la. Não apagar em silêncio: a
+auditoria já registrou que ela existiu.
+
+**EC-014 — Edital ainda não publicado.** A comissão pode ser constituída, mas suas Etapas não são
+alocáveis e a tela diz por quê, em vez de listá-las desabilitadas (D-002, FR-032).
 
 **EC-012 — Processo com dois Editais.** A visão administrativa nomeia o Edital de cada Etapa, e
 Etapas homônimas de Editais distintos são objetos distintos para alocação e para acesso.
@@ -1278,19 +1307,17 @@ verificado (D-003).
 
 ## 52. Ordem de implementação sugerida
 
+Nenhuma entrega desta feature é um modelo sem tela. P-004 diz que alocação sem efeito observável não
+é entrega, e isso vale também para a ordem em que se constrói.
+
 | Slice | Entrega observável |
 |---|---|
-| **S0** | `MembroComissao` isolado por escopo + permissão de gestão nomeada |
-| **S1** | Tela de Comissão + adicionar/remover/alterar função |
-| **S2** | `AlocacaoEtapa` por identidade estável + presidente exigido + gestão por Edital/Etapa |
-| **S3** | Guards contextuais por Processo/Edital/Etapa, com escopo |
-| **S4** | `Minhas Etapas` + detalhe mínimo da atribuição |
-| **S5** | Auditoria + hardening + edge cases + acessibilidade |
+| **S1** | **A vertical inteira, no caminho feliz**: constituir comissão → designar presidente → alocar à Etapa de Edital publicado → o membro entra e vê a Etapa em `Minhas Etapas` → quem não foi alocado recebe 404 na mesma URL |
+| **S2** | Alterar função, remover da Etapa, remover da comissão; visão administrativa com Etapas sem membros; auditoria das cinco operações |
+| **S3** | Múltiplos Editais, alocações órfãs, concorrência e idempotência, escopo institucional, acessibilidade e 375 px |
 
-A primeira vertical significativa chega rapidamente a:
-
-> adicionar Maria à comissão → alocar Maria à Etapa → Maria entrar → Etapa aparecer em
-> `Minhas Etapas`.
+S1 é a demonstração da seção 49 reduzida ao essencial, e é o que prova o contrato arquitetural da
+feature. Se ela não couber numa entrega, o corte da spec está errado — não a ordem.
 
 ---
 
@@ -1304,9 +1331,14 @@ A primeira vertical significativa chega rapidamente a:
 > as motivou está em [research.md](./research.md). Não as reabra sem evidência nova; se abrir,
 > registre lá.
 >
-> A alocação designa a Etapa pela identidade estável. Antes de escolher a forma, escreva o teste que
-> grava o rascunho de um Edital com alocações existentes: ele não pode apagar alocação nem falhar. O
-> precedente é `Inscricao.profile_id`.
+> A alocação designa a Etapa pela identidade estável, e a fonte é uma só: a Versão Consolidada
+> vigente. Só há alocação para Etapa de Edital publicado, e criação, listagem e autorização passam
+> pelo mesmo resolvedor — uma Etapa alocável é exatamente uma Etapa que aparecerá em `Minhas Etapas`.
+> Antes de escolher a forma, escreva o teste da Retificação que remove Etapa alocada: ela não pode
+> falhar nem apagar alocação. O precedente é `Inscricao.profile_id`.
+>
+> Gerir a comissão é autorizado por duas bases independentes: permissão sistêmica nomeada, ou vínculo
+> ativo como `PRESIDENTE` daquele Processo. Não exija as duas, e não transforme a segunda em papel.
 >
 > Toda consulta e toda alteração são limitadas pelo escopo do Processo. Não duplique o escopo em cada
 > tabela nova por reflexo: o contêiner já o carrega.

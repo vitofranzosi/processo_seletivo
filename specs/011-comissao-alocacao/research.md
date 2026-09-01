@@ -118,7 +118,7 @@ da 011 entra no conteúdo publicado, na Versão Consolidada, no hash ou no docum
 da 011 altera `editais_etapaavaliacao` nem tabelas de `publicacoes`.
 
 Isto é a P-001 da 008 reafirmada. A tentação concreta que ela bloqueia tem nome:
-`avaliadores_exigidos` na Etapa (FR-043). Acrescentar esse campo seria mudar conteúdo normativo
+`avaliadores_exigidos` na Etapa (FR-042). Acrescentar esse campo seria mudar conteúdo normativo
 publicável por necessidade operacional.
 
 **Nota de infraestrutura**: as tabelas de publicação e a trilha de auditoria são append-only também
