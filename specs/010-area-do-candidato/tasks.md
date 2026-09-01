@@ -62,7 +62,7 @@ seguinte tem onde apoiar.
 
 - [ ] T012 [P] Implementar a forma canônica do endereço em `backend/processo_seletivo/identidade/domain/enderecos.py`
 - [ ] T013 [P] Implementar geração, resumo e verificação do código em `backend/processo_seletivo/identidade/domain/codigo.py`
-- [ ] T014 Implementar `CandidateIdentity`, `CandidateEmail` e `DesafioDeAcesso`, com as restrições do data-model, em `backend/processo_seletivo/identidade/models.py`
+- [ ] T014 Implementar `CandidateIdentity`, `CandidateEmail` e `DesafioDeAcesso` com **todos os campos e todas as restrições** do [data-model.md](./data-model.md) — incluindo `tentativas_cpf` e `reconciliacao_ate`, que a US2 usa e não cria — em `backend/processo_seletivo/identidade/models.py`
 - [ ] T015 Criar a migração das três tabelas em `backend/processo_seletivo/identidade/migrations/0001_identidade.py`
 - [ ] T016 Criar a migração de dados que verifica, reconcilia, interrompe e relata em `backend/processo_seletivo/identidade/migrations/0002_reconciliacao.py`
 - [ ] T017 Criar a restrição de CPF com onze dígitos em inscrição enviada, declarando dependência de `identidade.0002`, em `backend/processo_seletivo/inscricoes/migrations/0003_cpf_na_submetida.py`
@@ -83,9 +83,10 @@ servidor, colá-lo inteiro e chegar a uma área pessoal vazia, sem que CPF seja 
 ### Testes da US1
 
 - [ ] T019 [P] [US1] Teste de contrato de `GET|POST /acesso` e `GET|POST /acesso/codigo`, conforme `contracts/acesso.md`, em `backend/tests/contract/portal/test_acesso.py`
-- [ ] T020 [P] [US1] Teste de que a resposta, o texto e a janela de reenvio são idênticos para endereço com e sem identidade em `backend/tests/integration/identidade/test_equivalencia.py`
+- [ ] T020 [P] [US1] Teste de que a resposta, o código de estado, o texto e a janela de reenvio são idênticos nos quatro casos que poderiam revelar existência — endereço com identidade, sem identidade, limite esgotado e **falha de envio** — em `backend/tests/integration/identidade/test_equivalencia.py`
 - [ ] T021 [P] [US1] Teste de que duas requisições simultâneas com o mesmo código produzem **um** consumo em `backend/tests/integration/identidade/test_consumo_atomico.py`
 - [ ] T022 [P] [US1] Teste do ciclo do desafio — expiração por instante absoluto, uso único, novo código invalidando anteriores, teto de cinco tentativas — em `backend/tests/integration/identidade/test_desafio.py`
+- [ ] T022a [P] [US1] Teste de finalidade cruzada: um código pedido para **entrar** não confirma adição de credencial, e um pedido para **adicionar** não autentica — em `backend/tests/integration/identidade/test_finalidade.py`
 - [ ] T023 [P] [US1] Teste dos limites por endereço e por origem, com origem guardada como resumo e nunca em claro, em `backend/tests/integration/identidade/test_limites.py`
 - [ ] T024 [P] [US1] Teste de que o identificador de sessão após a autenticação difere do anterior em `backend/tests/authorization/test_rotacao_de_sessao.py`
 - [ ] T025 [P] [US1] Teste de que a sessão de candidato não concede nenhuma ação institucional em `backend/tests/authorization/test_sessao_candidata.py`
@@ -102,7 +103,7 @@ servidor, colá-lo inteiro e chegar a uma área pessoal vazia, sem que CPF seja 
 - [ ] T032 [US1] Acrescentar as rotas de acesso e de saída em `backend/processo_seletivo/portal/urls.py`
 - [ ] T033 [US1] Implementar as views de acesso em `backend/processo_seletivo/portal/views.py`
 - [ ] T034 [P] [US1] Criar o formulário de endereço em `backend/processo_seletivo/portal/templates/portal/acesso_email.html`
-- [ ] T035 [P] [US1] Criar o formulário do código, com campo único que aceita colagem integral e preserva o endereço em caso de erro, em `backend/processo_seletivo/portal/templates/portal/acesso_codigo.html`
+- [ ] T035 [P] [US1] Criar o formulário do código — campo único que aceita colagem integral, endereço preservado em caso de erro, e ação de reenviar que informa quando a próxima tentativa é possível — em `backend/processo_seletivo/portal/templates/portal/acesso_codigo.html`
 - [ ] T036 [US1] Criar a área pessoal com o estado vazio — convite a consultar processos seletivos, sem aparência de erro — em `backend/processo_seletivo/portal/templates/portal/inscricoes.html`
 
 **Checkpoint**: o percurso da Entrega 1 do [quickstart.md](./quickstart.md) roda no navegador.
@@ -120,7 +121,7 @@ confirmar o CPF e ver a inscrição — sem que nenhum dado dela tenha mudado.
 
 - [ ] T037 [P] [US2] Teste de contrato de `GET|POST /acesso/reconciliar` e `POST /acesso/reconciliar/retomar` em `backend/tests/contract/portal/test_reconciliacao.py`
 - [ ] T038 [P] [US2] Teste de que o convite aparece só com correspondência anterior, e de que o CPF desempata entre identidades distintas, em `backend/tests/integration/identidade/test_correspondencia.py`
-- [ ] T039 [P] [US2] Teste de que recusa, CPF errado e tentativas esgotadas produzem identidade própria com sessão válida — nunca beco sem saída — em `backend/tests/integration/identidade/test_sem_beco.py`
+- [ ] T039 [P] [US2] Teste de que recusa, CPF errado e tentativas esgotadas produzem identidade própria com sessão válida — nunca beco sem saída — e de que quem **já tem** identidade e prova endereço novo sem correspondência recebe outra identidade, jamais uma fusão, em `backend/tests/integration/identidade/test_sem_beco.py`
 - [ ] T040 [P] [US2] Teste de que as tentativas de CPF são cinco, contadas no desafio, não zeradas por nova sessão, e de que tentativas de terceiro **não** impedem o titular legítimo de reconciliar depois, em `backend/tests/integration/identidade/test_tentativas_cpf.py`
 - [ ] T041 [P] [US2] Teste de que a reconciliação pendente expira dez minutos após o consumo e leva a identidade própria em `backend/tests/integration/identidade/test_reconciliacao_expira.py`
 - [ ] T042 [P] [US2] Teste da retomada — disponível enquanto a identidade estiver vazia, indisponível depois de qualquer inscrição, movendo **todas** as credenciais e descartando a identidade vazia — em `backend/tests/integration/identidade/test_retomada.py`
@@ -136,7 +137,7 @@ confirmar o CPF e ver a inscrição — sem que nenhum dado dela tenha mudado.
 - [ ] T049 [US2] Implementar a retomada — verificar vazia, mover todas as credenciais e descartar, em uma operação única sob bloqueio de linha — em `backend/processo_seletivo/identidade/application/associacao.py`
 - [ ] T050 [US2] Fazer a abertura de rascunho tomar o mesmo bloqueio de linha sobre a identidade antes de criar a Inscrição em `backend/processo_seletivo/inscricoes/application/rascunho.py`
 - [ ] T051 [US2] Implementar as views do convite e da retomada em `backend/processo_seletivo/portal/views.py` e as rotas em `backend/processo_seletivo/portal/urls.py`
-- [ ] T052 [US2] Criar o convite, sem revelar nome, CPF, protocolo ou quantidade da identidade anterior, em `backend/processo_seletivo/portal/templates/portal/acesso_reconciliar.html`
+- [ ] T052 [US2] Criar o convite, sem revelar nome, CPF, protocolo ou quantidade da identidade anterior, e a recusa que aponta o procedimento institucional de recuperação em vez de um beco, em `backend/processo_seletivo/portal/templates/portal/acesso_reconciliar.html`
 
 **Checkpoint**: o percurso da Entrega 2 roda, e a suíte prova que nenhuma inscrição mudou de titular.
 
@@ -304,7 +305,7 @@ templates. Dentro de cada bloco, o que está marcado `[P]` toca arquivos diferen
 ### Parallel Opportunities
 
 - Fase 2: T005 a T011a são nove testes em oito arquivos.
-- Fase 3: T019 a T026 em paralelo, incluindo T025a; depois T034 e T035, que são templates distintos.
+- Fase 3: T019 a T026 em paralelo, incluindo T022a e T025a; depois T034 e T035, que são templates distintos.
 - Fase 4: T037 a T045 em paralelo.
 - Fases 6, 7 e 8 podem correr em três frentes depois da fase 5.
 - Fase 9: quase tudo é paralelo, exceto T093 — que depende do seu teste, T092 — e T098 e T099, que
@@ -320,6 +321,7 @@ T019  tests/contract/portal/test_acesso.py
 T020  tests/integration/identidade/test_equivalencia.py
 T021  tests/integration/identidade/test_consumo_atomico.py
 T022  tests/integration/identidade/test_desafio.py
+T022a tests/integration/identidade/test_finalidade.py
 T023  tests/integration/identidade/test_limites.py
 T024  tests/authorization/test_rotacao_de_sessao.py
 T025  tests/authorization/test_sessao_candidata.py
