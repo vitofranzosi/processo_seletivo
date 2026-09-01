@@ -144,3 +144,21 @@ def test_migrations_do_not_import_domain_or_application_code():
         and any(f".{camada}" in linha for camada in DOMINIO_OU_APLICACAO)
     ]
     assert not infratores, f"migrations acopladas ao código vivo: {infratores}"
+
+
+def test_a_011_nao_altera_o_esquema_de_outros_apps():
+    """FR-083 e SC-018: a comissão é operacional, e não toca o normativo.
+
+    A tentação concreta que isto bloqueia tem nome — acrescentar `avaliadores_exigidos` à Etapa —
+    e ela mudaria conteúdo normativo publicável por necessidade operacional (011, D-005).
+    """
+    import pathlib as _pathlib
+
+    raiz = _pathlib.Path(__file__).resolve().parents[2] / "processo_seletivo"
+    migrations = sorted((raiz / "comissoes" / "migrations").glob("[0-9]*.py"))
+    assert migrations, "a 011 precisa ter ao menos uma migration"
+
+    for arquivo in migrations:
+        corpo = arquivo.read_text()
+        for app_alheio in ("editais", "publicacoes", "auditoria", "inscricoes"):
+            assert f'"{app_alheio}' not in corpo.lower(), f"{arquivo.name} toca {app_alheio}"

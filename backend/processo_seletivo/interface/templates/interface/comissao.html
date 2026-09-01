@@ -1,0 +1,171 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Comissão — {{ processo.institutional_code }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
+  <span aria-current="page">Comissão</span>
+</nav>
+
+<h1>Comissão do Processo</h1>
+<p class="sub">{{ processo.title }} — <span class="codigo">{{ processo.institutional_code }}</span></p>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
+{% if request.GET.feito == "incluir" %}<p class="sucesso" role="status">Membro incluído na comissão.</p>{% endif %}
+{% if request.GET.feito == "alterar_funcao" %}<p class="sucesso" role="status">Função alterada.</p>{% endif %}
+{% if request.GET.feito == "remover" %}<p class="sucesso" role="status">Membro removido da comissão.</p>{% endif %}
+
+<p class="acoes-do-painel">
+  <a class="acao" href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a>
+</p>
+
+{% if not tem_presidente %}
+<p class="aviso" role="status"><strong>Esta comissão ainda não tem presidente.</strong>
+  Constituir sem presidência é permitido, mas nenhuma Etapa pode receber alocação enquanto
+  ninguém responder pelo trabalho distribuído.</p>
+{% endif %}
+
+<form method="get" class="filtro" role="search">
+  <p class="campo">
+    <label for="q">Procurar na comissão</label>
+    <input id="q" name="q" type="search" value="{{ busca }}"
+           aria-describedby="ajuda-busca" placeholder="nome ou identificador">
+    <span class="ajuda" id="ajuda-busca">Numa banca grande, achar uma pessoa não pode depender de rolar.</span>
+  </p>
+  <p class="campo escolha">
+    <label><input type="checkbox" name="sem_etapa" value="1" {% if so_sem_etapa %}checked{% endif %}>
+      Só quem está sem Etapa ({{ sem_etapa }} de {{ total_de_membros }})</label>
+  </p>
+  <p class="salvar">
+    <button type="submit" class="acao">Filtrar</button>
+    {% if filtrando %}<a class="acao" href="{% url 'interface:comissao' processo.id %}">Limpar</a>{% endif %}
+  </p>
+</form>
+
+{% if filtrando %}
+<p class="ajuda" role="status">{{ membros|length }} de {{ total_de_membros }} membros.</p>
+{% endif %}
+
+{% if membros %}
+<ul class="comissao" aria-label="Membros da comissão">
+  {% for item in membros %}
+  <li>
+    <div class="cabeca">
+      <strong class="pessoa">{{ item.membro.display_label|default:item.membro.identity_subject }}</strong>
+      <span class="codigo">{{ item.membro.identity_subject }}</span>
+      <span class="situacao s-{{ item.membro.funcao }}">
+        {% if item.membro.funcao == "PRESIDENTE" %}Presidente{% else %}Membro{% endif %}</span>
+    </div>
+
+    {% if item.etapas %}
+    <p class="atua">Atua em:</p>
+    <ul class="atribuicoes">
+      {% for atribuicao in item.etapas %}
+      <li>{{ atribuicao.nome }} — Edital {{ atribuicao.edital.number }}/{{ atribuicao.edital.year }}</li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="ajuda">Sem Etapas atribuídas.</p>
+    {% endif %}
+
+    {% comment %} Sob demanda: a leitura corrente é “quem está aqui e onde atua”, e o seletor de
+       função aberto em cada cartão fazia uma comissão de quarenta virar uma coluna de controles.
+       `details` é o mesmo recurso nativo que o Processo e o portal já usam — abre pelo teclado e
+       o resumo nomeia a pessoa, para quem navega sem ver a lista. {% endcomment %}
+    <details class="gerir-membro">
+      <summary>Gerir {{ item.membro.display_label|default:item.membro.identity_subject }}</summary>
+
+      <form method="post" class="linha-de-acoes">
+        {% csrf_token %}
+        <input type="hidden" name="membro_id" value="{{ item.membro.id }}">
+        <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-f{{ forloop.counter }}">
+        <input type="hidden" name="acao" value="alterar_funcao">
+        <label class="campo" for="funcao-{{ forloop.counter }}">Função de
+          {{ item.membro.display_label|default:item.membro.identity_subject }}</label>
+        <select id="funcao-{{ forloop.counter }}" name="funcao">
+          <option value="MEMBRO" {% if item.membro.funcao == "MEMBRO" %}selected{% endif %}>Membro</option>
+          <option value="PRESIDENTE" {% if item.membro.funcao == "PRESIDENTE" %}selected{% endif %}>Presidente</option>
+        </select>
+        <button type="submit" class="acao"
+                aria-label="Alterar a função de {{ item.membro.display_label|default:item.membro.identity_subject }}">
+          Alterar função</button>
+      </form>
+
+      <form method="post" class="linha-de-acoes">
+        {% csrf_token %}
+        <input type="hidden" name="membro_id" value="{{ item.membro.id }}">
+        <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-r{{ forloop.counter }}">
+        <input type="hidden" name="acao" value="remover">
+        {# UX-003: o nome acessível diz de onde a pessoa sai — da comissão inteira, e não de uma Etapa. #}
+        <button type="submit" class="acao perigoso"
+                aria-label="Remover {{ item.membro.display_label|default:item.membro.identity_subject }} da comissão">
+          Remover da comissão</button>
+      </form>
+    </details>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="vazio" role="status">
+  {% if filtrando %}Nenhum membro corresponde ao filtro.{% else %}Esta comissão ainda não tem membros.{% endif %}</p>
+{% endif %}
+
+<section aria-labelledby="adicionar-titulo" class="adicionar">
+  <h2 id="adicionar-titulo">Adicionar membro</h2>
+  <p class="aviso"><strong>O identificador não é verificado pelo sistema.</strong> Não existe
+    diretório institucional integrado: o que for digitado aqui é gravado como está, e é ele — e
+    não o nome — que dá acesso à pessoa. Confira antes de confirmar.</p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="acao" value="incluir">
+    <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+    <p class="campo">
+      <label for="identity_subject">Identificador institucional
+        <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <input id="identity_subject" name="identity_subject" required aria-required="true"
+             aria-describedby="ajuda-subject">
+      <span class="ajuda" id="ajuda-subject">É a chave da pessoa no provedor de identidade.</span>
+    </p>
+    <p class="campo">
+      <label for="display_label">Nome para exibição</label>
+      <input id="display_label" name="display_label" aria-describedby="ajuda-label">
+      <span class="ajuda" id="ajuda-label">Opcional, e apenas para leitura desta lista. Não
+        identifica ninguém e não é usado em nenhuma verificação.</span>
+    </p>
+    <p class="campo">
+      <label for="funcao">Função</label>
+      <select id="funcao" name="funcao">
+        <option value="MEMBRO">Membro</option>
+        <option value="PRESIDENTE">Presidente</option>
+      </select>
+    </p>
+    <p class="salvar"><button type="submit" class="botao">Continuar</button></p>
+  </form>
+</section>
+
+<section aria-labelledby="lote-titulo" class="adicionar">
+  <h2 id="lote-titulo">Adicionar vários de uma vez</h2>
+  <p class="ajuda">Uma pessoa por linha. Só o identificador, ou
+    <code>identificador, Nome de exibição</code>. É assim que a lista chega — de uma portaria, de
+    uma planilha —, e a conferência é da lista inteira, antes de gravar.</p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="acao" value="incluir_lote">
+    <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-lote">
+    <p class="campo largo">
+      <label for="lista">Identificadores institucionais</label>
+      <textarea id="lista" name="lista" rows="6" aria-describedby="ajuda-lista"
+                placeholder="joao.souza, João Souza&#10;ana.costa"></textarea>
+      <span class="ajuda" id="ajuda-lista">Nenhum deles é verificado pelo sistema.</span>
+    </p>
+    <p class="campo">
+      <label for="funcao-lote">Função de todos</label>
+      <select id="funcao-lote" name="funcao">
+        <option value="MEMBRO">Membro</option>
+        <option value="PRESIDENTE">Presidente</option>
+      </select>
+    </p>
+    <p class="salvar"><button type="submit" class="botao">Conferir a lista</button></p>
+  </form>
+</section>
+{% endblock %}

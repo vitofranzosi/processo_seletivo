@@ -42,13 +42,28 @@ def decode_cursor(cursor):
         raise DomainError("invalid_cursor", "O cursor informado é inválido.", 400) from exc
 
 
-def consultar(*, actor, aggregate_type=None, aggregate_ids=None, cursor=None, limit=LIMITE_PADRAO):
-    """Registros do escopo do ator, do mais recente para o mais antigo, com cursor estável."""
+def consultar(
+    *,
+    actor,
+    aggregate_type=None,
+    aggregate_ids=None,
+    cursor=None,
+    limit=LIMITE_PADRAO,
+    operation=None,
+):
+    """Registros do escopo do ator, do mais recente para o mais antigo, com cursor estável.
+
+    `operation` existe para a trilha de uma comissão grande: constituir uma banca de cento e
+    vinte e alocá-la produz centenas de eventos, e “quem perdeu acesso a esta Etapa, e quando”
+    não se responde folheando dezenove páginas de vinte.
+    """
     registros = RegistroAuditoria.objects.filter(institution_scope=actor.institution_scope)
     if aggregate_type:
         registros = registros.filter(aggregate_type=aggregate_type)
     if aggregate_ids is not None:
         registros = registros.filter(aggregate_id__in=list(aggregate_ids))
+    if operation:
+        registros = registros.filter(operation=operation)
     if cursor:
         occurred_at, event_id = decode_cursor(cursor)
         # O cursor aponta para o último item já entregue, na mesma ordem decrescente.
@@ -69,3 +84,35 @@ def trilha_do_edital(*, actor, edital, cursor=None, limit=LIMITE_PADRAO):
     """
     identificadores = [edital.id, *edital.retificacoes.values_list("id", flat=True)]
     return consultar(actor=actor, aggregate_ids=identificadores, cursor=cursor, limit=limit)
+
+
+def trilha_da_comissao(
+    *, actor, processo, cursor=None, limit=LIMITE_PADRAO, operation=None, pessoa=None
+):
+    """Tudo que aconteceu com a comissão deste Processo — membros e alocações na mesma linha.
+
+    Os eventos da 011 têm por agregado o membro e a alocação, e não o Processo: é assim que a
+    trilha responde "qual Etapa foi afetada". Reunir os dois pelo mesmo `consultar` que já busca
+    por conjunto de identificadores é o que evita um subsistema paralelo de log (011, D-018).
+    """
+    from processo_seletivo.comissoes.models import AlocacaoEtapa, MembroComissao
+
+    da_comissao = MembroComissao.objects.filter(processo=processo)
+    if pessoa:
+        # Por identificador exato, e não por pedaço do motivo: o motivo é texto livre, e filtrar
+        # “ana” trazia os atos de “susana.lima” e as Etapas com “análise” no nome. Numa trilha,
+        # mostrar atos de terceiros sob o rótulo de um filtro é pior que não filtrar.
+        da_comissao = da_comissao.filter(identity_subject=pessoa)
+    membros = list(da_comissao.values_list("id", flat=True))
+    alocacoes = list(
+        AlocacaoEtapa.objects.filter(membro_id__in=membros).values_list("id", flat=True)
+    )
+    if pessoa and not membros:
+        return [], None
+    return consultar(
+        actor=actor,
+        aggregate_ids=[*membros, *alocacoes],
+        cursor=cursor,
+        limit=limit,
+        operation=operation,
+    )

@@ -84,3 +84,20 @@ def plural(quantidade, formas):
 def marcado(dados, referencia):
     """A marcação de remoção precisa voltar marcada depois do POST, como os campos digitados."""
     return bool(dados and dados.get(f"remover:{referencia}"))
+
+
+BASES_DE_AUTORIZACAO = {
+    "comissao:presidir": "presidência desta comissão",
+    "comissao:gerir": "permissão de gerir comissões",
+}
+
+
+@register.filter
+def base_de_autorizacao(permissao):
+    """O nome humano da base que autorizou o ato (011, FR-016).
+
+    A trilha guarda o codename porque é ele que identifica a base sem ambiguidade; quem lê a
+    tela precisa da frase. Permissão desconhecida cai no próprio codename, que é melhor do que
+    esconder de onde veio a autorização.
+    """
+    return BASES_DE_AUTORIZACAO.get(permissao, permissao)

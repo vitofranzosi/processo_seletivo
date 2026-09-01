@@ -10,6 +10,12 @@ manualmente e não vem do diretório institucional. Esta interface não pode ser
 antes da autenticação real.</p>
 {% endif %}
 
+{% if vinculos %}
+<p class="sucesso" role="status">Você integra a comissão de
+  {{ vinculos|length }} Processo{{ vinculos|length|pluralize:"s" }}.
+  <a href="{% url 'interface:minhas-etapas' %}">Ver minhas atribuições</a>.</p>
+{% endif %}
+
 {% if sem_papel %}
 <p class="aviso"><strong>Sem permissões.</strong> Sua conta não possui nenhum papel de
 responsabilidade. Solicite acesso a quem administra o sistema no Cefor.</p>
@@ -35,6 +41,12 @@ responsabilidade. Solicite acesso a quem administra o sistema no Cefor.</p>
   <header>
     <h2><a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.title }}</a></h2>
     <span class="codigo">{{ processo.institutional_code }}</span>
+    {% if processo.vinculo %}
+    <span class="situacao s-{{ processo.vinculo.funcao }}">
+      {% if processo.vinculo.funcao == "PRESIDENTE" %}Você preside a comissão{% else %}Você integra a comissão{% endif %}</span>
+    <a class="acao" href="{% url 'interface:comissao' processo.id %}">Comissão</a>
+    <a class="acao" href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a>
+    {% endif %}
     <span class="situacao s-{{ processo.status }}">{{ processo.status|situacao }}</span>
   </header>
   {% if processo.editais.all %}

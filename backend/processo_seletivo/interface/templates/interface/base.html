@@ -107,6 +107,10 @@ tbody tr:last-child td{border-bottom:none}
 .lista-acoes li{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
 .botao.perigoso{background:var(--vermelho);color:var(--branco);border:none}
 .botao.perigoso:hover{background:#8a1515}
+/* A mesma advertência na escala de uma ação de linha: `.perigoso` só existia para `.botao`, e
+   remover uma pessoa saía com a aparência de uma ação segura (UX-004). */
+.acao.perigoso{color:var(--vermelho);border-color:var(--vermelho)}
+.acao.perigoso:hover{background:var(--vermelho);color:var(--branco)}
 .marca-irreversivel{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
   color:var(--vermelho);background:var(--vermelho-fundo);padding:.1rem .45rem;border-radius:3px}
 .remover-linha{margin:.75rem 0 0;padding-top:.75rem;border-top:1px solid var(--borda);
@@ -199,6 +203,77 @@ fieldset.caracter legend{font-size:.85rem;color:var(--texto-fraco);padding:0;
 .trilha a{color:var(--verde-texto)}
 .sucesso{background:var(--sucesso-fundo);border-left:4px solid var(--sucesso);
   padding:.75rem 1rem;margin-bottom:1.5rem;border-radius:0 4px 4px 0;color:var(--sucesso);font-weight:600}
+/* A organização do trabalho (011). `.etapas` já existia e é o indicador de passos do
+   compositor — uma fileira horizontal de pontos —, e reusá-la aqui empilhava as Etapas em
+   colunas e cortava o rótulo "Sem membros alocados" em 375px. */
+.organizacao-etapas,.comissao,.atribuicoes{list-style:none;padding:0;margin:0}
+.organizacao-etapas>li,.comissao>li{background:var(--branco);border:1px solid var(--borda);
+  border-radius:6px;padding:1rem 1.25rem;margin-bottom:.75rem}
+.organizacao-etapas .cabeca,.comissao .cabeca{display:flex;gap:.5rem;align-items:center;
+  flex-wrap:wrap;margin-bottom:.5rem}
+.atribuicoes li{padding:.35rem 0;border-bottom:1px solid var(--fundo);font-size:.9375rem}
+.atribuicoes li:last-child{border-bottom:0}
+.linha-de-acoes{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin:.5rem 0 0}
+.linha-de-acoes .campo{margin:0}
+.atua{font-size:.875rem;color:var(--texto-fraco);margin:.5rem 0 .25rem}
+.adicionar{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem;margin-top:1.5rem}
+/* Seleção em lote (011). Quarenta caixas empilhadas viram uma coluna de rolagem infinita: a
+   grade as põe em colunas e o limite de altura mantém o botão ao alcance. */
+/* A matriz da distribuição: pessoas nas linhas, Etapas nas colunas.
+
+   **A moldura não pode ser um contêiner de rolagem em tela larga.** `overflow-x:auto` faz o
+   `overflow-y` computar para `auto` também, e aí o `position:sticky` do cabeçalho passa a valer
+   contra a moldura em vez da janela — como a moldura tem a altura do conteúdo, ela nunca rola por
+   dentro, e o cabeçalho simplesmente sai da tela. Com cinquenta linhas isso significa olhar duas
+   colunas de caixas sem saber de que Etapa é cada uma, que é a informação de que a tela inteira
+   depende. Em tela estreita a rolagem horizontal é necessária, e ali o que fixa é a coluna de
+   nomes. */
+.distribuicao-moldura{overflow-x:visible}
+@media (max-width:60rem){
+  .distribuicao-moldura{overflow-x:auto}
+}
+.distribuicao{border-collapse:collapse;width:100%;background:var(--branco);
+  border:1px solid var(--borda);border-radius:6px;font-size:.9375rem}
+.distribuicao th,.distribuicao td{padding:.5rem .75rem;border-bottom:1px solid var(--fundo);
+  text-align:left;vertical-align:middle}
+.distribuicao thead th{position:sticky;top:0;background:var(--branco);border-bottom:2px solid var(--borda);
+  font-size:.875rem;line-height:1.3;vertical-align:bottom;z-index:2;
+  box-shadow:0 1px 0 var(--borda)}
+.distribuicao thead th .codigo,.distribuicao thead th .situacao{display:block;margin-top:.2rem}
+.distribuicao tbody th{font-weight:600;position:sticky;left:0;background:var(--branco);
+  min-width:14rem;box-shadow:1px 0 0 var(--fundo)}
+.distribuicao tbody th .codigo,.distribuicao tbody th .situacao{margin-left:.4rem;font-weight:400}
+.distribuicao tbody tr:hover th,.distribuicao tbody tr:hover td{background:var(--fundo)}
+.coluna-toda{display:flex;gap:.25rem;margin-top:.3rem}
+.coluna-toda .acao{padding:.1rem .4rem;font-size:.75rem;font-weight:400}
+.distribuicao td.marca{text-align:center}
+.distribuicao td.marca input{width:1.15rem;height:1.15rem;margin:0;cursor:pointer}
+.distribuicao td.num,.distribuicao th.num{text-align:right;font-variant-numeric:tabular-nums;
+  color:var(--texto-fraco)}
+.distribuicao tbody tr:last-child th,.distribuicao tbody tr:last-child td{border-bottom:0}
+.gerir-membro{margin-top:.5rem}
+.gerir-membro>summary{display:inline-block;cursor:pointer;font-size:.875rem;
+  color:var(--verde-texto);border:1px solid var(--borda);border-radius:4px;padding:.25rem .6rem}
+.gerir-membro>summary:hover{border-color:var(--verde-texto)}
+.gerir-membro[open]>summary{margin-bottom:.5rem}
+.escolhas{display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:.35rem .75rem;
+  max-height:16rem;overflow-y:auto;padding:.25rem 0}
+.escolha{display:flex;gap:.5rem;align-items:baseline;font-size:.9375rem;line-height:1.4}
+.escolha input{margin:0;flex:none}
+.alocar-em-lote fieldset,.remover-em-lote fieldset{border:1px solid var(--borda);border-radius:4px;
+  padding:.75rem 1rem;margin:.75rem 0 0}
+.alocar-em-lote legend,.remover-em-lote legend{font-weight:600;font-size:.9375rem;padding:0 .35rem}
+.alocar-em-lote legend .ajuda,.remover-em-lote legend .ajuda{font-weight:400;margin-left:.35rem}
+.filtro{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;gap:1rem 1.5rem;flex-wrap:wrap;
+  align-items:flex-end}
+.filtro .campo,.filtro .salvar{margin:0}
+.conferencia-lote{border-collapse:collapse;width:100%;font-size:.9375rem}
+.conferencia-lote caption{text-align:left;color:var(--texto-fraco);padding-bottom:.5rem}
+.conferencia-lote th,.conferencia-lote td{text-align:left;padding:.5rem .75rem;
+  border-bottom:1px solid var(--fundo)}
+.rolagem{overflow-x:auto}
 .pendencias{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1rem 1.25rem;margin-bottom:1.5rem}
 .pendencias h2{font-size:1rem;margin-bottom:.6rem}
@@ -289,6 +364,9 @@ input.largo,textarea.largo{width:100%;}
   <span class="marca">Cefor<span>/Ifes</span> · Processos Seletivos</span>
   {% if ator %}
   <div class="identidade">
+    {% comment %} UX-008: quem só executa trabalho futuro chega às próprias Etapas sem passar por tela
+       administrativa nenhuma. O link não depende de papel — depende de estar identificado. {% endcomment %}
+    <a href="{% url 'interface:minhas-etapas' %}">Minhas Etapas</a>
     <span>{{ ator.subject }}{% if papeis_do_ator %} — {{ papeis_do_ator|join:", " }}{% endif %}</span>
     <form method="post" action="{% url 'interface:sair' %}" style="margin:0">
       {% csrf_token %}

@@ -87,3 +87,104 @@ def inscricao_de_maria(selecao):
     from tests.fixtures.candidato import MARIA, PERFIL_DOCENTE
 
     return abrir_inscricao(identidade=MARIA, edital_id=selecao.id, profile_id=PERFIL_DOCENTE)
+
+
+# ---------------------------------------------------------------------------
+# A organização do trabalho (011). Ficam aqui pela mesma razão das fixtures da 009: integração,
+# autorização, interface e aceitação exercitam as mesmas precondições, e fixture só é vista do
+# conftest da raiz ou do próprio diretório.
+# ---------------------------------------------------------------------------
+
+
+def ator_institucional(subject, *permissoes, escopo="cefor"):
+    from processo_seletivo.seguranca.domain import Actor
+
+    return Actor(subject, escopo, frozenset(permissoes))
+
+
+@pytest.fixture
+def gestor():
+    return ator_institucional("carlos", "comissao:gerir")
+
+
+@pytest.fixture
+def auditor():
+    return ator_institucional("auditora", "auditoria:consultar")
+
+
+@pytest.fixture
+def sem_nada():
+    return ator_institucional("estranho")
+
+
+@pytest.fixture
+def edital_a(db, api_client, manager_headers, process_payload):
+    """Processo A publicado, com duas Etapas — A1 e A2."""
+    from tests.fixtures.comissao import publicar_processo_com_etapas
+
+    return publicar_processo_com_etapas(api_client, manager_headers, process_payload)
+
+
+@pytest.fixture
+def processo_a(edital_a):
+    return edital_a.processo
+
+
+@pytest.fixture
+def edital_b(db, api_client, manager_headers):
+    """Processo B, para que "Etapa de outro Processo" seja demonstrável."""
+    from tests.fixtures.comissao import publicar_processo_com_etapas
+
+    return publicar_processo_com_etapas(
+        api_client,
+        {**manager_headers, "HTTP_IDEMPOTENCY_KEY": "mvp-test-key-0002"},
+        {
+            "institutionalCode": "PS-2026-002",
+            "title": "Outro Processo",
+            "firstEdital": {"number": "02", "year": 2026, "title": "Segundo Edital"},
+        },
+        seed=1,
+    )
+
+
+@pytest.fixture
+def etapa_a1():
+    from tests.fixtures.comissao import ETAPA_A1
+    from tests.fixtures.edital import identificador
+
+    return identificador(ETAPA_A1, 0)
+
+
+@pytest.fixture
+def etapa_a2():
+    from tests.fixtures.comissao import ETAPA_A2
+    from tests.fixtures.edital import identificador
+
+    return identificador(ETAPA_A2, 0)
+
+
+@pytest.fixture
+def etapa_b1():
+    from tests.fixtures.comissao import ETAPA_A1
+    from tests.fixtures.edital import identificador
+
+    return identificador(ETAPA_A1, 1)
+
+
+@pytest.fixture
+def comissao_de_a(gestor, processo_a):
+    """Maria presidente, João membro — a composição dos cenários da spec."""
+    from tests.fixtures.comissao import constituir
+
+    return constituir(gestor, processo_a, [("maria", "PRESIDENTE"), ("joao", "MEMBRO")])
+
+
+@pytest.fixture
+def seletor_ligado(settings):
+    """O seletor de identidade institucional, que só existe fora de produção.
+
+    Estava no conftest da interface; subiu para cá quando os testes de autorização da 011
+    passaram a exercitar as mesmas telas — a autorização por objeto só é demonstrável pelo canal
+    do ator, e o canal exige identidade.
+    """
+    settings.INTERFACE_SELETOR_IDENTIDADE = True

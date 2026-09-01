@@ -84,4 +84,27 @@ urlpatterns = [
         name="fragmento-retificacao-evento",
     ),
     path("fragmentos/remover", views.fragmento_remover, name="fragmento-remover"),
+    # A organização do trabalho (011). Nenhuma rota usa `etapas/` como segmento: a palavra já
+    # significa "passo do compositor" em `editais/<uuid>/compor/<slug:etapa>` (D-009, D-015).
+    path(
+        "processos/<uuid:processo_id>/comissao",
+        views.comissao,
+        name="comissao",
+    ),
+    path(
+        "processos/<uuid:processo_id>/alocacoes",
+        views.alocacoes,
+        name="alocacoes",
+    ),
+    path(
+        "processos/<uuid:processo_id>/auditoria",
+        views.auditoria_da_comissao,
+        name="auditoria-comissao",
+    ),
+    path("minhas-etapas", views.minhas_etapas, name="minhas-etapas"),
+    path(
+        "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>",
+        views.atribuicao,
+        name="atribuicao",
+    ),
 ]

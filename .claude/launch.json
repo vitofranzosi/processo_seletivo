@@ -2,9 +2,36 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "gestao-011",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "INTERFACE_SELETOR_IDENTIDADE=true",
+        "LC_ALL=en_US.UTF-8",
+        "DB_USER=saymoncastro",
+        "DB_NAME=ps011dev",
+        "uv",
+        "run",
+        "--directory",
+        "backend",
+        "python",
+        "manage.py",
+        "runserver",
+        "8011"
+      ],
+      "port": 8011
+    },
+    {
       "name": "gestao",
       "runtimeExecutable": "uv",
-      "runtimeArgs": ["run", "--directory", "backend", "python", "manage.py", "runserver", "8008"],
+      "runtimeArgs": [
+        "run",
+        "--directory",
+        "backend",
+        "python",
+        "manage.py",
+        "runserver",
+        "8008"
+      ],
       "port": 8008
     }
   ]

@@ -1,17 +1,58 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
-{% block titulo %}Auditoria — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block titulo %}{% if da_comissao %}Auditoria da comissão — {{ processo.institutional_code }}{% else %}Auditoria — Edital {{ edital.number }}/{{ edital.year }}{% endif %}{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
   <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  {% if da_comissao %}
+  <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
+  <span aria-current="page">Auditoria da comissão</span>
+  {% else %}
   <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
   <span aria-current="page">Auditoria</span>
+  {% endif %}
 </nav>
 
 <h1>Trilha de auditoria</h1>
+{% if da_comissao %}
+<p class="sub">Comissão de {{ processo.title }} — <span class="codigo">{{ processo.institutional_code }}</span></p>
+<p class="ajuda">Toda inclusão, alteração de função, remoção e alocação da comissão deste Processo,
+  do mais recente para o mais antigo. Cada registro diz por qual base a pessoa estava autorizada —
+  a permissão de gestão ou a presidência desta comissão.</p>
+{% else %}
 <p class="sub">Edital {{ edital.number }}/{{ edital.year }} — {{ edital.title }}</p>
 <p class="ajuda">Todo ato praticado sobre este Edital e suas Retificações, do mais recente para o
   mais antigo. Os registros são imutáveis: nem a aplicação nem quem opera o banco consegue
   alterá-los.</p>
+{% endif %}
+
+{% if da_comissao %}
+<form method="get" class="filtro">
+  <p class="campo">
+    <label for="pessoa">Pessoa afetada</label>
+    <select id="pessoa" name="pessoa">
+      <option value="">Todas</option>
+      {% for pessoa in pessoas_da_trilha %}
+      <option value="{{ pessoa.subject }}" {% if pessoa.subject == pessoa_filtro %}selected{% endif %}>
+        {% if pessoa.rotulo %}{{ pessoa.rotulo }} — {% endif %}{{ pessoa.subject }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  <p class="campo">
+    <label for="operacao">Operação</label>
+    <select id="operacao" name="operacao">
+      <option value="">Todas</option>
+      {% for chave, rotulo in operacoes_da_comissao %}
+      <option value="{{ chave }}" {% if chave == operacao_filtro %}selected{% endif %}>{{ rotulo }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  <p class="salvar">
+    <button type="submit" class="acao">Filtrar</button>
+    {% if pessoa_filtro or operacao_filtro %}
+    <a class="acao" href="{% url 'interface:auditoria-comissao' processo.id %}">Limpar</a>{% endif %}
+  </p>
+</form>
+{% endif %}
 
 {% if registros %}
 <ol class="auditoria" aria-label="Atos registrados">
@@ -24,6 +65,9 @@
     </div>
     <div class="corpo">
       <span class="ator">por <strong>{{ registro.ator }}</strong></span>
+      {% if registro.permissao %}
+      <span class="base">autorizado por <strong>{{ registro.permissao|base_de_autorizacao }}</strong></span>
+      {% endif %}
       {% if registro.de and registro.para %}
       <span class="transicao">{{ registro.de|situacao }} → {{ registro.para|situacao }}</span>
       {% elif registro.para %}
@@ -42,6 +86,14 @@
 </p>
 {% endif %}
 {% else %}
-<div class="vazio"><p>Nenhum ato registrado para este Edital.</p></div>
+<div class="vazio">
+  {% if pessoa_filtro or operacao_filtro %}
+  <p>Nenhum ato corresponde ao filtro.</p>
+  {% elif da_comissao %}
+  <p>Nenhum ato registrado para esta comissão.</p>
+  {% else %}
+  <p>Nenhum ato registrado para este Edital.</p>
+  {% endif %}
+</div>
 {% endif %}
 {% endblock %}
