@@ -506,10 +506,19 @@ def acesso_reconciliar(request):
 
     informado = _endereco_do_desafio(request, desafio)
     if not associacao.reconciliacao_pendente(desafio):
-        # Expirou ou esgotou — mas o código **foi** validado. Aqui a identidade própria é o
-        # desfecho correto, e não beco sem saída (FR-052b).
+        # Expirou ou esgotou — mas o código **foi** validado, e nenhum desfecho aqui é beco sem
+        # saída (FR-052b).
+        #
+        # A pergunta é a mesma que a primeira associação já faz: aquele endereço **já** pertence a
+        # alguém? Na retomada pertence — é uma credencial da identidade em que a pessoa está — e a
+        # resposta é reentrar nela. A versão anterior chamava direto a criação de identidade e só
+        # não errava porque a violação de unicidade era capturada e devolvia a dona. Correção por
+        # acidente: bastava alguém tornar aquela captura estrita para esta linha passar a criar
+        # identidade órfã e trocar a sessão da pessoa por ela, sem que nada acusasse.
+        dona = associacao.identidade_da_credencial(desafio.email_canonico)
         return _entrar(
-            request, associacao.criar_identidade_com(desafio.email_canonico, informado)
+            request,
+            dona or associacao.criar_identidade_com(desafio.email_canonico, informado),
         )
 
     contexto = {"erro": ""}

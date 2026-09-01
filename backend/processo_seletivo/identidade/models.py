@@ -131,11 +131,17 @@ class DesafioDeAcesso(models.Model):
     reconciliacao_ate = models.DateTimeField(null=True, blank=True)
     # A identidade que a reconciliação criaria vínculo — anotada no consumo, para que a
     # confirmação do CPF não precise refazer a busca e não possa ser desviada para outra.
+    # `SET_NULL`, e não `CASCADE`: este campo **anota** qual identidade o convite anunciou, e não
+    # compõe nada com ela. Com `CASCADE`, apagar uma identidade levaria junto os desafios que a
+    # apontam — inclusive os que contam tentativas de CPF, que é registro de segurança. Hoje não
+    # dispararia, porque alvo vem sempre de identidade com inscrição e `retomar()` só descarta as
+    # vazias; mas isso é proteção do fluxo, não do modelo. Perdido o alvo, a anotação deixa de
+    # valer e o desafio permanece.
     reconciliacao_alvo = models.ForeignKey(
         CandidateIdentity,
         null=True,
         blank=True,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name="+",
     )
     criado_em = models.DateTimeField()

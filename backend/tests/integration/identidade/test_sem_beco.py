@@ -134,3 +134,40 @@ def test_o_convite_expirado_ainda_da_sessao(client, legada):
     assert identidade_do_candidato.CHAVE_SESSAO in client.session
     propria = CandidateEmail.objects.get(email_canonico=ENDERECO).identidade
     assert propria.pk != legada.pk, "identidade própria, e não a anterior"
+
+
+def test_o_convite_expirado_na_retomada_reentra_na_propria_identidade(client, legada, selecao):
+    """A retomada expirada devolve a pessoa à identidade dela — e não a uma órfã (revisão).
+
+    A versão anterior chamava direto a criação de identidade, e só não errava porque a violação de
+    unicidade era capturada e devolvia a dona do endereço. Correção por acidente: tornada estrita
+    aquela captura, esta linha passaria a trocar a identidade da pessoa por uma vazia.
+    """
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    entrar_ate_o_convite(client)
+    client.post(reverse("portal:acesso-reconciliar"), {"acao": "continuar"})
+    propria = CandidateEmail.objects.get(email_canonico=ENDERECO).identidade
+    quantas = CandidateIdentity.objects.count()
+
+    client.post(reverse("portal:acesso-retomar"))
+    codigo = servico.solicitar(
+        email_canonico=ENDERECO, finalidade=DesafioDeAcesso.Finalidade.RETOMAR
+    )[1]
+    if not codigo:
+        DesafioDeAcesso.objects.filter(finalidade="RETOMAR").delete()
+        _, codigo = servico.solicitar(
+            email_canonico=ENDERECO, finalidade=DesafioDeAcesso.Finalidade.RETOMAR
+        )
+    client.post(reverse("portal:acesso-codigo"), {"codigo": codigo})
+    DesafioDeAcesso.objects.filter(finalidade="RETOMAR").update(
+        reconciliacao_ate=timezone.now() - timedelta(seconds=1)
+    )
+
+    resposta = client.get(reverse("portal:acesso-reconciliar"))
+
+    assert resposta["Location"] == reverse("portal:inscricoes")
+    assert CandidateIdentity.objects.count() == quantas, "nenhuma identidade a mais"
+    assert CandidateEmail.objects.get(email_canonico=ENDERECO).identidade_id == propria.pk
