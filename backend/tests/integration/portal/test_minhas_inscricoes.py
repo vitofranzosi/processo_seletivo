@@ -96,6 +96,22 @@ def test_a_acao_principal_e_uma_so_e_e_inequivoca(client, selecao):
     assert "✓ Inscrição enviada" in corpo
 
 
+def test_cada_item_diz_de_qual_Edital_e_de_qual_Perfil_e(client, selecao):
+    """O que a lista promete: reencontrar sem procurar o certame de novo.
+
+    Sem Edital e sem Perfil, a lista devolve à pessoa a pergunta que ela existe para responder — e
+    foi assim que ela ficou por uma versão inteira, porque o nome do atributo estava errado e a
+    captura larga demais engolia o erro.
+    """
+    inscricao(selecao, MARIA)
+    identificar(client, MARIA)
+
+    corpo = client.get(reverse("portal:inscricoes")).content.decode()
+
+    assert "Edital 01/2026" in corpo
+    assert "Professor" in corpo or "Docente" in corpo, corpo[corpo.find("selecao"):][:400]
+
+
 def test_o_rascunho_diz_que_nao_foi_enviado(client, selecao):
     inscricao(selecao, MARIA)
     identificar(client, MARIA)

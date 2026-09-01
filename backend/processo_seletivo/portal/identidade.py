@@ -24,16 +24,12 @@ obsoleto até a pessoa sair e entrar — e a regra é que corrigir o nome alcanc
 from dataclasses import dataclass
 
 from django.conf import settings
-from django.utils import timezone
 
 from processo_seletivo.identidade.models import CandidateIdentity
 from processo_seletivo.inscricoes.domain.pessoais import digitos, formatar_cpf
 
 CHAVE_SESSAO = "portal_identidade"
 PREFIXO_DEMONSTRACAO = "demo"
-# Limites que a persistência impõe. Conferi-los aqui é o que impede um campo grande demais virar
-# erro de banco na gravação — em SQLite ele passa truncado, em PostgreSQL ele estoura.
-LIMITES = {"nome": 255, "cpf": 20, "email": 254}
 
 
 @dataclass(frozen=True)
@@ -55,9 +51,6 @@ def normalizar_cpf(valor: str) -> str:
     """O CPF só com dígitos. Continua exposto daqui porque `rascunho.py` e as views o consomem."""
     return digitos(valor)
 
-
-def normalizar_email(valor: str) -> str:
-    return valor.strip().lower()
 
 
 def contexto_candidato(request):
@@ -123,17 +116,6 @@ def identidade_autenticada(request) -> CandidateIdentity | None:
     if not guardado:
         return None
     return _registro(guardado)
-
-
-def criar_identidade(*, nome: str = "", cpf_normalizado: str = "") -> CandidateIdentity:
-    from processo_seletivo.identidade.models import novo_subject
-
-    return CandidateIdentity.objects.create(
-        subject=novo_subject(),
-        nome=nome,
-        cpf_normalizado=cpf_normalizado,
-        created_at=timezone.now(),
-    )
 
 
 def encerrar(request):

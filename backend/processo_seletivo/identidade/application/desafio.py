@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from django.db import transaction
-from django.db.models import F
+from django.db.models import F, Q
 from django.utils import timezone
 
 from processo_seletivo.identidade.domain import codigo as codigo_de_acesso
@@ -119,12 +119,20 @@ def solicitar(*, email_canonico: str, finalidade: str, origem: str = "") -> tupl
 
     codigo = codigo_de_acesso.gerar()
     with transaction.atomic():
-        # Um novo código invalida os anteriores ainda utilizáveis daquele endereço (FR-026). Vale
-        # apenas para os que ainda não foram consumidos: o consumido pode estar portando uma
-        # reconciliação pendente, e derrubá-lo faria a pessoa perder o convite ao pedir outro
-        # código por engano.
+        # Um novo código invalida os anteriores ainda utilizáveis **daquele endereço e daquela
+        # finalidade** (FR-026 lida junto com a FR-028). Antes o escopo era só o endereço, e ficava
+        # assimétrico com a espera de reenvio, que já era por finalidade: pedir um código para
+        # adicionar credencial derrubaria, calado, o código de acesso pedido noutra aba — e a
+        # pessoa leria "código inválido" sem ter feito nada errado. Como finalidade nenhuma valida
+        # a de outra, restringir o escopo não afrouxa nada.
+        #
+        # Só os não consumidos: o consumido pode estar portando uma reconciliação pendente, e
+        # derrubá-lo faria a pessoa perder o convite ao pedir outro código por engano.
         DesafioDeAcesso.objects.filter(
-            email_canonico=email_canonico, consumido_em__isnull=True, expira_em__gt=agora
+            email_canonico=email_canonico,
+            finalidade=finalidade,
+            consumido_em__isnull=True,
+            expira_em__gt=agora,
         ).update(expira_em=agora)
         DesafioDeAcesso.objects.create(
             email_canonico=email_canonico,
@@ -201,6 +209,24 @@ def limpar_terminais(*, ate=None) -> int:
 
     Consumido, expirado ou morto por tentativas: nada disso precisa sobreviver à investigação, que
     lê a trilha de auditoria, não esta tabela.
+
+    **O filtro nomeia o estado, e não a idade.** Apagar tudo o que fosse mais velho que uma hora
+    coincidia com o resultado certo apenas porque validade e reconciliação pendente cabem em dez
+    minutos — e `VALIDADE_EM_MINUTOS` é constante editável. Crescido qualquer um dos dois prazos, a
+    rotina passaria a apagar desafio vivo e a derrubar reconciliação de quem está no meio do fluxo.
     """
-    limite = ate or timezone.now() - JANELA
-    return DesafioDeAcesso.objects.filter(criado_em__lt=limite).delete()[0]
+    agora = timezone.now()
+    limite = ate or agora - JANELA
+    terminais = (
+        Q(consumido_em__isnull=False)
+        | Q(expira_em__lte=agora)
+        | Q(tentativas_codigo__gte=TETO_DE_TENTATIVAS)
+    )
+    # A reconciliação pendente sobrevive mesmo em desafio consumido: é ela que carrega o convite.
+    pendente = Q(reconciliacao_ate__isnull=False, reconciliacao_ate__gt=agora)
+    return (
+        DesafioDeAcesso.objects.filter(terminais)
+        .filter(criado_em__lt=limite)
+        .exclude(pendente)
+        .delete()[0]
+    )

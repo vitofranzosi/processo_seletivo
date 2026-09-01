@@ -584,7 +584,31 @@ def acesso_retomar(request):
     return redirect(reverse("portal:acesso-codigo"))
 
 
-def _item_da_lista(registro):
+def _conteudos_publicados(inscricoes):
+    """O conteúdo vigente de cada Edital da lista — uma leitura por Edital, e não por inscrição.
+
+    Quem tem três inscrições no mesmo Edital lia a versão consolidada três vezes, e cada leitura
+    traz o conteúdo publicado inteiro.
+
+    A exceção capturada é **nomeada**: `DomainError` é o que a ausência de versão vigente produz.
+    Capturar `Exception` fazia toda a lista degradar em silêncio diante de qualquer defeito de
+    leitura — e escondeu um: a primeira versão lia `.conteudo` num objeto cujo atributo se chama
+    `content`, e **toda** linha da lista saía sem Edital e sem Perfil, sem que nada acusasse. Os
+    testes não pegaram porque afirmavam a situação e a ação, que continuavam certas. Estreitar a
+    captura foi o que revelou o defeito.
+    """
+    conteudos = {}
+    for edital_id in {registro.edital_id for registro in inscricoes}:
+        try:
+            conteudos[edital_id] = selectors.selecao_publica(edital_id=edital_id).content
+        except DomainError:
+            # Seleção sem versão vigente não apaga a inscrição da lista: a pessoa continua tendo o
+            # que enviou, e o protocolo continua valendo.
+            conteudos[edital_id] = None
+    return conteudos
+
+
+def _item_da_lista(registro, conteudo):
     """O que decide a próxima ação de uma inscrição, e nada além disso.
 
     Perfil e Edital vêm do **conteúdo publicado**, como em toda tela do candidato: é o que foi
@@ -595,14 +619,11 @@ def _item_da_lista(registro):
     tomar por ela.
     """
     enviada = registro.status == Inscricao.Status.SUBMETIDA
-    try:
-        conteudo = selectors.selecao_publica(edital_id=registro.edital_id).conteudo
+    if conteudo is None:
+        perfil, edital = {"nome": "", "codigo": ""}, ""
+    else:
         perfil = _perfil_legivel(_perfil_do_conteudo(conteudo, registro.profile_id))
         edital = f"Edital {conteudo.get('number', '')}/{conteudo.get('year', '')}".strip("/ ")
-    except Exception:
-        # Seleção despublicada ou conteúdo indisponível não apaga a inscrição da lista: a pessoa
-        # continua tendo o que enviou, e o protocolo continua valendo.
-        perfil, edital = {"nome": "", "codigo": ""}, ""
     return {
         "id": registro.id,
         "perfil": perfil["nome"],
@@ -654,16 +675,23 @@ def inscricoes(request):
     identidade = identidade_do_candidato.identidade_autenticada(request)
     if identidade is None:
         return redirect(reverse("portal:acesso"))
-    minhas = Inscricao.objects.filter(identity_subject=identidade.subject).order_by("-created_at")
+    minhas = list(
+        Inscricao.objects.filter(identity_subject=identidade.subject).order_by("-created_at")
+    )
+    conteudos = _conteudos_publicados(minhas)
     return render(
         request,
         "portal/inscricoes.html",
         {
-            "inscricoes": [_item_da_lista(registro) for registro in minhas],
+            "inscricoes": [
+                _item_da_lista(registro, conteudos.get(registro.edital_id))
+                for registro in minhas
+            ],
             # O convite de retomada só aparece para quem pode aceitá-lo: identidade sem inscrição
-            # alguma e com um endereço que consta de participação anterior de outra identidade.
+            # alguma e com um endereço que consta de participação anterior de outra identidade. A
+            # lista já foi materializada acima; perguntar de novo ao banco seria consulta a mais.
             "pode_retomar": bool(
-                not minhas.exists() and associacao.credencial_com_correspondencia(identidade)
+                not minhas and associacao.credencial_com_correspondencia(identidade)
             ),
         },
     )

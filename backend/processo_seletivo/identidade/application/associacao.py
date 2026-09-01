@@ -13,8 +13,9 @@ beco sem saída.
 import uuid
 from datetime import timedelta
 
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import F
+from django.db.models.functions import Lower
 from django.utils import timezone
 
 from processo_seletivo.identidade.models import (
@@ -56,21 +57,35 @@ def correspondencia_historica(email_canonico: str) -> list[CandidateIdentity]:
 
 
 def criar_identidade_com(email_canonico: str, email_como_informado: str) -> CandidateIdentity:
-    """Identidade nova, com a credencial que acabou de ser provada como principal (FR-013)."""
+    """Identidade nova, com a credencial que acabou de ser provada como principal (FR-013).
+
+    **Perder a corrida não é erro.** Duas abas validando o código quase juntas leem, as duas, que o
+    endereço ainda não tem credencial; a segunda esbarra na restrição de unicidade. Deixar a
+    exceção subir devolvia erro de servidor a quem tinha acabado de acertar o código — quando o
+    desfecho que ela esperava já existe. Quem chega depois entra na identidade que passou a existir.
+    """
     agora = timezone.now()
-    with transaction.atomic():
-        identidade = CandidateIdentity.objects.create(
-            subject=novo_subject(), created_at=agora
-        )
-        CandidateEmail.objects.create(
-            id=uuid.uuid4(),
-            identidade=identidade,
-            email_canonico=email_canonico,
-            email_como_informado=email_como_informado,
-            principal=True,
-            verified_at=agora,
-            created_at=agora,
-        )
+    try:
+        with transaction.atomic():
+            identidade = CandidateIdentity.objects.create(
+                subject=novo_subject(), created_at=agora
+            )
+            CandidateEmail.objects.create(
+                id=uuid.uuid4(),
+                identidade=identidade,
+                email_canonico=email_canonico,
+                email_como_informado=email_como_informado,
+                principal=True,
+                verified_at=agora,
+                created_at=agora,
+            )
+    except IntegrityError:
+        vencedora = identidade_da_credencial(email_canonico)
+        if vencedora is None:
+            # A violação não foi a que se esperava: não há credencial para aquele endereço, então
+            # esconder a exceção seria esconder outro defeito.
+            raise
+        return vencedora
     return identidade
 
 
@@ -139,6 +154,17 @@ def confirmar_cpf(desafio: DesafioDeAcesso, cpf: str) -> CandidateIdentity | Non
     informado = digitos(cpf)
     if len(informado) != 11:
         return None
+
+    # O alvo anotado quando o convite abriu **decide**, e não apenas informa. Refazer a busca
+    # deixava o conjunto de candidatas mudar sob um desafio já aberto — uma inscrição nova com
+    # aquele endereço, criada noutra sessão, e a identidade reconciliada podia não ser a que o
+    # convite anunciou. Quando havia mais de uma candidata, nenhum alvo foi anotado, porque
+    # escolher ali seria escolher antes de saber: aí o CPF desempata entre as candidatas de agora,
+    # que é o que a FR-051 pede.
+    if desafio.reconciliacao_alvo_id is not None:
+        alvo = desafio.reconciliacao_alvo
+        return alvo if alvo.cpf_normalizado == informado else None
+
     candidatas = correspondencia_historica(desafio.email_canonico)
     conferem = [
         identidade for identidade in candidatas if identidade.cpf_normalizado == informado
@@ -161,13 +187,29 @@ def credencial_com_correspondencia(identidade: CandidateIdentity) -> CandidateEm
 
     É o que torna a retomada oferecível: sem endereço com correspondência, não há o que retomar.
     """
-    for credencial in identidade.credenciais.all():
-        correspondentes = [
-            candidata
-            for candidata in correspondencia_historica(credencial.email_canonico)
-            if candidata.pk != identidade.pk
-        ]
-        if correspondentes:
+    credenciais = list(identidade.credenciais.all())
+    if not credenciais:
+        return None
+    # Uma consulta para todos os endereços, e não uma por credencial: `Lower` sobre a coluna é o
+    # que permite comparar em conjunto, já que `iexact` não aceita lista.
+    enderecos = {credencial.email_canonico for credencial in credenciais}
+    subjects = set(
+        Inscricao.objects.annotate(canonico=Lower("email"))
+        .filter(canonico__in=enderecos)
+        .exclude(identity_subject=identidade.subject)
+        .values_list("identity_subject", flat=True)
+        .distinct()
+    )
+    if not subjects:
+        return None
+    com_correspondencia = set(
+        Inscricao.objects.annotate(canonico=Lower("email"))
+        .filter(canonico__in=enderecos, identity_subject__in=subjects)
+        .values_list("canonico", flat=True)
+        .distinct()
+    )
+    for credencial in credenciais:
+        if credencial.email_canonico in com_correspondencia:
             return credencial
     return None
 
