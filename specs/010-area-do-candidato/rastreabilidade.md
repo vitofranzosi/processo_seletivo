@@ -79,6 +79,17 @@ Caminhos são relativos a `backend/`.
 | FR-088, FR-089 auditoria dos atos, e o que não vira evento | `identidade/application/credenciais.py` | `tests/integration/identidade/test_auditoria_de_credencial.py` |
 | FR-090 recuperação fora da V1, com caminho nomeado | `portal/templates/portal/acesso_reconciliar.html` | `tests/contract/portal/test_reconciliacao.py` |
 
+## A própria rastreabilidade
+
+| O que é guardado | Testes |
+|---|---|
+| Toda citação de requisito aponta para requisito que existe; toda decisão citada está no `research.md` da própria feature; e nenhum requisito fica sem linha nesta matriz | `tests/test_citacoes_de_requisito.py` |
+
+Três revisões seguidas encontraram, cada uma, uma citação a identificador inventado que a revisão
+anterior não tinha visto — sempre porque a varredura usava o padrão do que já se sabia procurar. O
+teste extrai os identificadores existentes de **todas** as specs e denuncia o que estiver fora desse
+conjunto; ele não depende de quem o roda já saber o que está errado.
+
 ## Experiência
 
 | Requisito | Testes |

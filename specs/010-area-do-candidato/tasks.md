@@ -339,7 +339,8 @@ trabalho pendente.
 ### Registro
 
 - [X] T115 Registrar as decisões do percurso em [research.md](./research.md) (D-023 a D-033) e atualizar spec, contratos, [plan.md](./plan.md) e [quickstart.md](./quickstart.md)
-- [X] T116 Estender a matriz de rastreabilidade aos requisitos novos em [rastreabilidade.md](./rastreabilidade.md) — 158 requisitos, todos cobertos
+- [X] T116 Estender a matriz de rastreabilidade aos requisitos novos em [rastreabilidade.md](./rastreabilidade.md) — 159 requisitos, todos cobertos
+- [X] T117 Transformar a varredura de citações em teste — nenhum identificador citado sem requisito que o defina, nenhuma decisão citada fora do `research.md` da própria feature, e nenhuma linha perdida na matriz — em `backend/tests/test_citacoes_de_requisito.py`
 
 **Checkpoint**: a jornada roda de ponta a ponta, e cada ato do candidato responde por escrito.
 
