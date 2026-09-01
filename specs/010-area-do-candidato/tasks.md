@@ -289,15 +289,15 @@ antigo, e receber recusa ao tentar remover o último.
 
 ## Phase 9: Polish & Cross-Cutting Concerns
 
-- [ ] T091a [P] Estender a varredura anti-desvio a **toda** rota do fluxo de acesso — alcançá-la por fora, sem prova, e verificar que ela não concede nada — em `backend/tests/authorization/test_acesso_sem_prova.py`
-- [ ] T091 [P] Consolidar a demonstração de segurança do §25 em seis casos executáveis — endereçamento direto, endereço arbitrário com CPF conhecido, precedência, endereço reciclado, engano no convite e sessão conhecida — em `backend/tests/authorization/test_demonstracao_de_seguranca.py`
-- [ ] T092 [P] Teste de que duas inscrições enviadas com o mesmo CPF no mesmo Perfil são aceitas e aparecem **assinaladas**, e de que nenhuma é recusada no envio, em `backend/tests/integration/inscricoes/test_cpf_coincidente.py`
-- [ ] T093 Marcar a coincidência de CPF por subconsulta de existência na consulta administrativa em `backend/processo_seletivo/inscricoes/application/consulta.py`
+- [X] T091a [P] Estender a varredura anti-desvio a **toda** rota do fluxo de acesso — alcançá-la por fora, sem prova, e verificar que ela não concede nada — em `backend/tests/authorization/test_acesso_sem_prova.py`
+- [X] T091 [P] Consolidar a demonstração de segurança do §25 em seis casos executáveis — endereçamento direto, endereço arbitrário com CPF conhecido, precedência, endereço reciclado, engano no convite e sessão conhecida — em `backend/tests/authorization/test_demonstracao_de_seguranca.py`
+- [X] T092 [P] Teste de que duas inscrições enviadas com o mesmo CPF no mesmo Perfil são aceitas e aparecem **assinaladas**, e de que nenhuma é recusada no envio, em `backend/tests/integration/inscricoes/test_cpf_coincidente.py`
+- [X] T093 Marcar a coincidência de CPF por subconsulta de existência na consulta administrativa em `backend/processo_seletivo/inscricoes/application/consulta.py`
 - [X] T094 [P] Implementar a limpeza operacional de desafios terminais em `backend/processo_seletivo/identidade/application/desafio.py`
-- [ ] T095 [P] Teste de higiene de registro técnico — nem código, nem CPF completo, nem conteúdo de documento em log ou auditoria — em `backend/tests/integration/identidade/test_higiene_de_log.py`
-- [ ] T096 [P] Verificar 375 px sem rolagem horizontal e percurso completo por teclado nas telas novas em `backend/tests/interface/test_acessibilidade_portal.py`
-- [ ] T097 [P] Teste de custo de consulta da lista de inscrições e da área, marcado como `performance`, em `backend/tests/performance/test_area_do_candidato.py`
-- [ ] T098 Escrever a matriz de rastreabilidade de `FR` e `SC` até os testes em `specs/010-area-do-candidato/rastreabilidade.md`
+- [X] T095 [P] Teste de higiene de registro técnico — nem código, nem CPF completo, nem conteúdo de documento em log ou auditoria — em `backend/tests/integration/identidade/test_higiene_de_log.py`
+- [X] T096 [P] Verificar 375 px sem rolagem horizontal e percurso completo por teclado nas telas novas em `backend/tests/interface/test_acessibilidade_portal.py`
+- [X] T097 [P] Teste de custo de consulta da lista de inscrições e da área, marcado como `performance`, em `backend/tests/performance/test_area_do_candidato.py`
+- [X] T098 Escrever a matriz de rastreabilidade de `FR` e `SC` até os testes em `specs/010-area-do-candidato/rastreabilidade.md`
 - [ ] T099 Percorrer o [quickstart.md](./quickstart.md) de ponta a ponta no navegador e registrar o que a demonstração mudou em `specs/010-area-do-candidato/quickstart.md`
 
 ---

@@ -92,6 +92,37 @@ def test_a_retomada_nao_se_alcanca_por_fora(client):
     assert not autenticado(client)
 
 
+ROTAS_DO_ACESSO = (
+    ("portal:acesso-reconciliar", "GET"),
+    ("portal:acesso-reconciliar", "POST"),
+    ("portal:acesso-retomar", "POST"),
+    ("portal:inscricoes", "GET"),
+    ("portal:meus-dados", "GET"),
+    ("portal:meus-dados", "POST"),
+    ("portal:conta", "GET"),
+    ("portal:conta-adicionar", "POST"),
+)
+
+
+@pytest.mark.parametrize(("rota", "metodo"), ROTAS_DO_ACESSO)
+def test_nenhuma_rota_do_acesso_concede_nada_sem_prova(client, rota, metodo):
+    """A varredura que a revisão pediu (T091a): alcançar cada tela por fora, e verificar.
+
+    A suíte não pegou o desvio original porque **todo teste seguia o fluxo**. Quem ataca não segue:
+    pula. Esta é a forma que generaliza — para cada rota do acesso, chegar nela sem ter validado
+    código nenhum, e afirmar que nada é concedido.
+    """
+    client.post(reverse("portal:acesso"), {"email": DA_VITIMA})
+
+    resposta = getattr(client, metodo.lower())(reverse(rota))
+
+    assert not autenticado(client), f"{metodo} {rota}"
+    assert resposta.status_code in (302, 404), f"{metodo} {rota} -> {resposta.status_code}"
+    if resposta.status_code == 302:
+        assert resposta["Location"] == reverse("portal:acesso"), f"{metodo} {rota}"
+    assert not CandidateEmail.objects.filter(email_canonico=DA_VITIMA).exists()
+
+
 def test_a_tela_do_codigo_sozinha_nao_autentica(client):
     sessao = client.session
     sessao[CHAVE_DO_ENDERECO] = DA_VITIMA

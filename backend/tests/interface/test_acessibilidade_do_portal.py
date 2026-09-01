@@ -91,3 +91,80 @@ def test_o_estado_nao_depende_so_de_cor():
 
     assert "✓" in documentos and "○" in documentos
     assert "de {{ documentos.total }}" in documentos, "a contagem diz em texto o que a cor mostra"
+
+
+# ---------------------------------------------------------------------------
+# As telas que a 010 acrescentou (T096). A varredura por `TEMPLATES` acima já as alcança; o que
+# vem abaixo prende o que é específico delas.
+# ---------------------------------------------------------------------------
+
+TELAS_DA_010 = (
+    "acesso_email.html",
+    "acesso_codigo.html",
+    "acesso_reconciliar.html",
+    "meus_dados.html",
+    "inscricoes.html",
+    "inscricao_enviada.html",
+    "acompanhamento.html",
+    "conta.html",
+)
+
+
+@pytest.mark.parametrize("nome", TELAS_DA_010)
+def test_as_telas_da_010_existem_e_estendem_a_base(nome):
+    corpo = (PORTAL / nome).read_text()
+    assert '{% extends "portal/base.html" %}' in corpo, nome
+
+
+@pytest.mark.parametrize("nome", TELAS_DA_010)
+def test_todo_campo_da_010_tem_rotulo_ligado(nome):
+    """Rótulo solto é rótulo que o leitor de tela não associa a campo nenhum."""
+    corpo = (PORTAL / nome).read_text()
+
+    for identificador in re.findall(r'<input[^>]*\sid="([\w-]+)"', corpo):
+        assert f'<label for="{identificador}"' in corpo, f"{nome}: {identificador}"
+
+
+def test_o_campo_do_codigo_e_um_so_e_aceita_colagem():
+    """Seis campos independentes obrigariam a navegar entre eles.
+
+    E quebrariam a colagem, que é o que a `UX-005` pede.
+    """
+    corpo = (PORTAL / "acesso_codigo.html").read_text()
+
+    assert len(re.findall(r'<input[^>]*name="codigo"', corpo)) == 1
+    assert 'inputmode="numeric"' in corpo
+    assert 'autocomplete="one-time-code"' in corpo
+
+
+def test_a_situacao_da_inscricao_nao_depende_so_de_cor():
+    corpo = (PORTAL / "inscricoes.html").read_text()
+
+    assert "✓ Inscrição enviada" in corpo
+    assert "Inscrição não enviada" in corpo, "o texto diz o que a cor mostra"
+
+
+def test_o_acompanhamento_distingue_os_blocos_por_texto():
+    """A distinção entre o que é seu e o que é do processo precisa sobreviver ao preto e branco."""
+    corpo = (PORTAL / "acompanhamento.html").read_text()
+
+    assert "Sua participação" in corpo and "Cronograma do processo" in corpo
+    assert "✓" in corpo
+
+
+def test_a_integridade_fica_recolhida_em_elemento_nativo():
+    """`<details>` abre por teclado sem uma linha de script (FR-073, UX-010)."""
+    corpo = (PORTAL / "inscricao_enviada.html").read_text()
+
+    assert "<details" in corpo and "<summary>" in corpo
+    assert "onclick" not in corpo
+
+
+def test_nenhuma_acao_da_010_depende_de_script():
+    """Toda ação é `form` com `method` e `button` — teclado alcança tudo, sem JavaScript."""
+    for nome in TELAS_DA_010:
+        corpo = (PORTAL / nome).read_text()
+        assert "onclick" not in corpo, nome
+        for acao in re.findall(r"<form([^>]*)>", corpo):
+            if "method" in acao:
+                assert 'method="post"' in acao, f"{nome}: {acao}"
