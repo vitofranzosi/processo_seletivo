@@ -203,9 +203,11 @@ sem precondição:
    pode ser reelaborada sem devolver, e por isso a que mais dói se falhar.
 7. Retificação **criada depois** do incremento sobre `baseSnapshot` v4: as precondições nascem
    sobre base elevada e batem na publicação.
-8. A mesma criação, mas com `expectedPreviousHash` **declarado pelo cliente** sobre a Etapa que a
-   projeção lhe entregou: o hash declarado bate com o que o servidor confere na publicação (T-015).
-   É o cenário que prova que autor e servidor olham o mesmo conteúdo.
+8. A mesma criação, mas com `expectedPreviousHash` **declarado** sobre a Etapa que a projeção
+   entregou ao autor: o hash declarado bate com o que o servidor confere na publicação. E o
+   simétrico, no mesmo teste: hash declarado sobre a Etapa v4 literal **não** bate, e a recusa é a
+   de precondição, com a mensagem que já existe. É o par que prova que autor e servidor olham o
+   mesmo conteúdo (T-015).
 
 Em todos os oito: a `Publicacao` e a Versão Consolidada nova nascem na versão vigente **e bem
 formadas** — nenhuma Etapa sem as duas propriedades —, e o `content_hash` de toda `Publicacao` e de
@@ -521,9 +523,8 @@ mudado nada. O erro seria pior que o original: incompreensível, e culpando o au
 **O autor compõe sobre a projeção elevada, e o hash sai dela.** Uma regra só, aplicada aos dois
 lados da mesma moeda:
 
-- **a superfície de autoria** — o formulário do editor, o diff que ele mostra, a tela que exibe a
-  Retificação em elaboração e a resposta da API que entrega o conteúdo-base para composição — serve
-  o resultado de `elevar(base.content)`;
+- **a superfície de autoria** — o formulário do editor, o diff que ele mostra e a tela que exibe a
+  Retificação em elaboração — serve o resultado de `elevar(base.content)`;
 - **a conferência** — `derive_preconditions` em `_replace_changes`, e `_reject_stale_changes` na
   publicação — roda sobre a mesma projeção elevada.
 
@@ -540,6 +541,19 @@ literal, que é o que o `content_hash` cobre (T-002).
 A projeção existe em um lugar e para um público: quem está compondo um ato normativo novo, que vai
 nascer na versão vigente de qualquer maneira. Entregar-lhe a forma antiga para depois conferir a
 nova seria pedir que ele acertasse um alvo que não lhe foi mostrado.
+
+### O que a API entrega hoje, e por que a regra não a alcança
+
+**Nenhuma superfície da API devolve conteúdo-base.** `RetificacaoResponseSerializer` carrega id,
+Edital, estado, vigência e revisão, e nenhuma view de `publicacoes/api/` emite `content`. O cliente
+que declara `expectedPreviousHash` obteve o conteúdo de outro lugar — hoje, do canal HTML ou da
+consulta pública.
+
+A primeira redação de T-015 prometia elevar "a resposta da API que entrega o conteúdo-base para
+composição", e essa resposta não existe. A promessa foi retirada: a regra alcança o que existe — o
+editor HTML — e **fica valendo como contrato para qualquer superfície de autoria que venha a
+existir**. Endpoint novo que devolva conteúdo-base para composição devolve a projeção; a alternativa
+seria reabrir esta decisão.
 
 ### Consequência para o plano
 

@@ -171,3 +171,19 @@ comissão.
 - **Retirada de inscrição**: não existe estado de retirada no sistema (D-006 da spec, EC-006).
 - **Identidade institucional confiável**: continua sendo o gate herdado da 011, e esta é a feature
   em que ele deixa de ser teórico (FR-058).
+
+---
+
+## Gates de implantação, conferidos e registrados
+
+Não são demonstrações: são condições que precisam estar **respondidas por escrito** antes de a 012
+subir com dado real, e a conferência final registra o estado de cada uma.
+
+| gate | origem | o que registrar |
+|---|---|---|
+| identidade institucional confiável | 011, FR-058 | se o mecanismo de produção existe, ou a pendência declarada |
+| retenção e descarte do acervo | FR-057 | qual é o prazo, quem descarta e por qual ato — a 012 torna a pergunta urgente e não a responde |
+
+**FR-057 não tem tarefa de implementação de propósito**: resolvê-lo é decisão institucional sobre
+dado pessoal, não código desta feature. O que a 012 deve entregar é a pergunta registrada e visível,
+e não uma resposta inventada pela engenharia.

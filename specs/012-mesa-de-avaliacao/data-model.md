@@ -137,7 +137,7 @@ nenhum além. Não escreve linha, não altera hash gravado, não cria `Provenien
 **Estados**
 
 ```text
-                    gravar (idempotente, revisão a cada gravação)
+                    gravar (revisão avança a cada gravação)
                          ↺
 (nasce) ──────────► RASCUNHO ──── concluir ────► CONCLUIDA
                          ▲                            │
