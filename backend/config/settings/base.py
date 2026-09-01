@@ -29,6 +29,11 @@ INSTALLED_APPS = [
     # `interface`: a autenticação, a sessão, a base visual e o alvo de dispositivo são outros.
     "processo_seletivo.inscricoes",
     "processo_seletivo.portal",
+    # A identidade do candidato (010): domínio próprio, pela mesma linha que separa `inscricoes`
+    # de `portal`. Os modelos e a reconciliação com o legado moram aqui; o `portal` continua
+    # sendo o canal, e não ganha `models.py` — pôr a identidade lá o transformaria em canal e
+    # domínio ao mesmo tempo, que é o que a separação anterior evitou.
+    "processo_seletivo.identidade",
 ]
 TEMPLATES = [
     {
@@ -56,6 +61,20 @@ INTERFACE_SELETOR_IDENTIDADE = os.getenv("INTERFACE_SELETOR_IDENTIDADE", "false"
 # Identidade do candidato (009): eixo próprio, e enquanto o provedor institucional não existir,
 # um de demonstração. Como o seletor acima, nunca em produção — ver `production.py`.
 PORTAL_IDENTIDADE_DEMO = os.getenv("PORTAL_IDENTIDADE_DEMO", "false").lower() == "true"
+
+# O canal de e-mail que a 010 inaugura: até ela, o projeto não enviava mensagem nenhuma. O
+# mecanismo vem do ambiente porque desenvolvimento imprime no terminal e produção entrega de
+# verdade — e é justamente por isso que `production.py` recusa subir com um mecanismo que não
+# entrega: seria imprimir o código de acesso no log e chamar isso de autenticação.
+EMAIL_BACKEND = os.getenv(
+    "DJANGO_EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
+)
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() == "true"
 
 # Documentos do candidato (009). A raiz é privada: fica fora da árvore estática e nunca é servida
 # pelo servidor web — todo acesso passa pela aplicação, que confere titularidade ou permissão

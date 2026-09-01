@@ -1,24 +1,28 @@
-"""A identidade do candidato — eixo próprio, e não mais um papel institucional.
+"""A identidade do candidato na sessão — agora lida de um registro, e não mais declarada.
 
 O ator institucional tem escopo e permissões; o candidato não tem nem uma coisa nem outra. Ele é
 titular de uma Inscrição, e titularidade é outra pergunta (`inscricoes/domain/titularidade.py`).
 Acrescentar `CANDIDATO` ao mapa de papéis faria o candidato atravessar `require_permission` — e o
 dia em que uma permissão fosse concedida a mais, ele praticaria ato institucional.
 
-**Chave de sessão própria** (FR-021). A interface administrativa guarda a dela em
+**Chave de sessão própria** (FR-039). A interface administrativa guarda a dela em
 `interface_identidade`; esta fica em `portal_identidade`. As duas coexistem sem se confundir, e
 cada canal lê apenas a sua: quem está identificado no `/gestao/` não é candidato, e vice-versa.
 
-Enquanto o provedor institucional não existir, a identidade vem de um provedor de demonstração,
-rotulado como tal na tela e recusado em produção pela guarda de `production.py` (FR-023, FR-024).
-Quando o provedor real chegar, só este módulo muda — como a `002` decidiu para o outro eixo.
+**O que a 010 mudou aqui.** A sessão guarda o **identificador da identidade**, e nada mais. Nome,
+CPF e endereço vêm do registro a cada requisição (D-008). A `009` guardava os três na sessão, o que
+era correto quando eram declarados e efêmeros; guardá-los agora deixaria a sessão exibir dado
+obsoleto até a pessoa sair e entrar — e a regra é que corrigir o nome alcance os rascunhos abertos
+(FR-014). O custo é uma consulta por requisição do portal, na ordem das que a página já faz.
 """
 
-import hashlib
-import hmac
 from dataclasses import dataclass
 
 from django.conf import settings
+from django.utils import timezone
+
+from processo_seletivo.identidade.models import CandidateIdentity
+from processo_seletivo.inscricoes.domain.pessoais import digitos, formatar_cpf
 
 CHAVE_SESSAO = "portal_identidade"
 PREFIXO_DEMONSTRACAO = "demo"
@@ -29,11 +33,11 @@ LIMITES = {"nome": 255, "cpf": 20, "email": 254}
 
 @dataclass(frozen=True)
 class IdentidadeDoCandidato:
-    """O que o provedor afirma sobre quem está ali.
+    """O que o sistema afirma sobre quem está ali.
 
     `subject` é o identificador estável, e é o único campo que decide propriedade de inscrição
-    (FR-022). Nome, CPF e e-mail são o que a identidade **fornece** — e por isso não são pedidos
-    de novo (FR-037).
+    (FR-001). Nome, CPF e e-mail são o que a identidade **fornece** — e por isso não são pedidos de
+    novo a cada inscrição (FR-005).
     """
 
     subject: str
@@ -43,41 +47,104 @@ class IdentidadeDoCandidato:
 
 
 def normalizar_cpf(valor: str) -> str:
-    return "".join(caractere for caractere in valor if caractere.isdigit())
+    """O CPF só com dígitos. Continua exposto daqui porque `rascunho.py` e as views o consomem."""
+    return digitos(valor)
+
+
+def normalizar_email(valor: str) -> str:
+    return valor.strip().lower()
 
 
 def contexto_candidato(request):
     """A identidade do candidato em todo template do portal, para o cabeçalho poder oferecer `Sair`.
 
     Separado de `contexto_identidade`, que é da interface administrativa: são dois eixos, com
-    chaves de sessão distintas, e um não identifica no outro (FR-020, FR-021). Sem isto o portal
-    não tinha como oferecer a saída — quem se identificasse num computador compartilhado ficava,
-    e a pessoa seguinte se inscrevia com o CPF de quem estava antes.
+    chaves de sessão distintas, e um não identifica no outro (FR-039).
     """
     return {"candidato": identidade_da_sessao(request)}
 
 
 def identidade_da_sessao(request) -> IdentidadeDoCandidato | None:
-    dados = request.session.get(CHAVE_SESSAO)
-    if not dados:
+    guardado = request.session.get(CHAVE_SESSAO)
+    if not guardado:
         return None
-    return IdentidadeDoCandidato(**dados)
+    # Forma transitória, e datada: enquanto a identificação por declaração existir, ela guarda o
+    # dicionário inteiro porque não tem registro para apontar. Sai junto com ela (T064).
+    if isinstance(guardado, dict):
+        return IdentidadeDoCandidato(**guardado)
+    return contrato_de(_registro(guardado))
+
+
+def _registro(identidade_id) -> CandidateIdentity | None:
+    return (
+        CandidateIdentity.objects.filter(pk=identidade_id)
+        .prefetch_related("credenciais")
+        .first()
+    )
+
+
+def contrato_de(registro: CandidateIdentity | None) -> IdentidadeDoCandidato | None:
+    """O que a jornada da `009` consome, montado a partir do que a `010` persiste (P-008).
+
+    O e-mail é o da credencial **principal**, e não o endereço que autenticou a sessão: é ele que
+    vai para a Inscrição, e trocar de caixa não pode trocar o contato de um certame em andamento
+    (FR-013).
+    """
+    if registro is None:
+        return None
+    principal = next(
+        (item for item in registro.credenciais.all() if item.principal),
+        None,
+    )
+    return IdentidadeDoCandidato(
+        subject=registro.subject,
+        nome=registro.nome,
+        cpf=formatar_cpf(registro.cpf_normalizado) if registro.cpf_normalizado else "",
+        email=principal.email_como_informado if principal else "",
+    )
+
+
+def abrir_sessao(request, registro: CandidateIdentity) -> IdentidadeDoCandidato:
+    """Autentica — e a primeira coisa que faz é trocar o identificador da sessão (FR-035).
+
+    Sem a rotação, quem induzir a pessoa a usar uma sessão conhecida antes de entrar continua
+    dentro dela depois: o desafio inteiro é contornado sem ser tocado. `cycle_key` troca o
+    identificador e preserva o conteúdo, que é o necessário para não perder o destino de retorno.
+    """
+    request.session.cycle_key()
+    request.session[CHAVE_SESSAO] = str(registro.pk)
+    return contrato_de(registro)
+
+
+def identidade_autenticada(request) -> CandidateIdentity | None:
+    """O registro, para quem precisa dele — e não do contrato."""
+    guardado = request.session.get(CHAVE_SESSAO)
+    if not guardado or isinstance(guardado, dict):
+        return None
+    return _registro(guardado)
+
+
+def criar_identidade(*, nome: str = "", cpf_normalizado: str = "") -> CandidateIdentity:
+    from processo_seletivo.identidade.models import novo_subject
+
+    return CandidateIdentity.objects.create(
+        subject=novo_subject(),
+        nome=nome,
+        cpf_normalizado=cpf_normalizado,
+        created_at=timezone.now(),
+    )
 
 
 def subject_de(cpf: str) -> str:
-    """Identificador estável e **opaco**, derivado do CPF sem carregá-lo.
+    """Identificador derivado do CPF — o provedor de demonstração, e nada além dele.
 
-    O `subject` viaja para a auditoria como autor do ato, e FR-078 proíbe CPF completo ali. Derivar
-    por HMAC preserva as duas propriedades que importam — a mesma pessoa é o mesmo subject entre
-    visitas, e pessoas distintas não colidem — sem que o documento fique gravado em cada registro
-    de auditoria, em cada inscrição e em cada log que mencione o ator.
-
-    *A primeira redação usava `demo:<cpf>`, o que era legível e errado: o identificador que existe
-    para não depender de dado pessoal não pode ser feito de dado pessoal.*
-
-    Trocar a chave secreta troca os identificadores desta demonstração. É aceitável porque o
-    provedor real trará os seus próprios, e o prefixo mantém os dois conjuntos separados.
+    Está datado: a `010` deu à identidade um identificador próprio, que não deve nada a segredo de
+    configuração (FR-002). Esta função sobrevive apenas enquanto a identificação por declaração
+    sobrevive, e sai com ela.
     """
+    import hashlib
+    import hmac
+
     digest = hmac.new(
         settings.SECRET_KEY.encode(), normalizar_cpf(cpf).encode(), hashlib.sha256
     ).hexdigest()
@@ -85,12 +152,7 @@ def subject_de(cpf: str) -> str:
 
 
 def identificar(request, *, nome, cpf, email):
-    """Registra a identidade na sessão do portal.
-
-    O `subject` deriva do CPF porque é o que identifica a mesma pessoa entre visitas — e é ele,
-    não o nome, que decide de quem é a inscrição. O prefixo diz de onde a identidade veio: quando
-    o provedor real chegar, os dois conjuntos não se confundem.
-    """
+    """Registra a identidade declarada na sessão — provedor de demonstração, em vias de sair."""
     identidade = IdentidadeDoCandidato(
         subject=subject_de(cpf),
         nome=nome.strip(),

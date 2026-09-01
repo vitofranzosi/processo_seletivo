@@ -34,10 +34,10 @@ localizadas.
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 Criar o app `identidade` com `apps.py`, `__init__.py`, `domain/`, `application/` e `migrations/` em `backend/processo_seletivo/identidade/`
-- [ ] T002 Registrar `processo_seletivo.identidade` em `INSTALLED_APPS`, com o comentário que explica a separação domínio/canal, em `backend/config/settings/base.py`
-- [ ] T003 [P] Declarar mecanismo de envio e remetente por ambiente (`DJANGO_EMAIL_BACKEND`, `DEFAULT_FROM_EMAIL`) em `backend/config/settings/base.py`
-- [ ] T004 [P] Criar os diretórios de teste com `__init__.py`: `backend/tests/unit/identidade/`, `backend/tests/integration/identidade/`, `backend/tests/acceptance/portal/` e `backend/tests/migrations/`
+- [X] T001 Criar o app `identidade` com `apps.py`, `__init__.py`, `domain/`, `application/` e `migrations/` em `backend/processo_seletivo/identidade/`
+- [X] T002 Registrar `processo_seletivo.identidade` em `INSTALLED_APPS`, com o comentário que explica a separação domínio/canal, em `backend/config/settings/base.py`
+- [X] T003 [P] Declarar mecanismo de envio e remetente por ambiente (`DJANGO_EMAIL_BACKEND`, `DEFAULT_FROM_EMAIL`) em `backend/config/settings/base.py`
+- [X] T004 [P] Criar os diretórios de teste com `__init__.py`: `backend/tests/unit/identidade/`, `backend/tests/integration/identidade/`, `backend/tests/acceptance/portal/` e `backend/tests/migrations/`
 
 ---
 
@@ -48,25 +48,25 @@ seguinte tem onde apoiar.
 
 ### Testes da fundação
 
-- [ ] T005 [P] Teste da forma canônica do endereço — caixa baixa no endereço inteiro, sem remover pontos nem cortar sufixo, endereço informado preservado — em `backend/tests/unit/identidade/test_enderecos.py`
-- [ ] T006 [P] Teste da geração e do resumo do código — seis dígitos, distribuição sobre todo o intervalo, resumo não recuperável — em `backend/tests/unit/identidade/test_codigo.py`
-- [ ] T007 [P] Teste dos invariantes dos modelos — endereço canônico único por restrição de banco, e identidade **que tenha credencial** com exatamente um principal — em `backend/tests/integration/identidade/test_modelos.py`
-- [ ] T007a [P] Teste de que uma identidade **sem credencial alguma** é estado válido, porque é o que a reconciliação produz, em `backend/tests/integration/identidade/test_modelos.py`
-- [ ] T008 [P] Teste de que o `subject` de identidade nova é opaco, prefixado e independente de `SECRET_KEY` em `backend/tests/unit/identidade/test_subject.py`
-- [ ] T009 [P] Teste da reconciliação: preserva o `subject`, não reescreve `identity_subject`, não marca endereço como verificado, traz o nome da inscrição mais recente — em `backend/tests/migrations/test_reconciliacao.py`
-- [ ] T010 [P] Teste de que a reconciliação **interrompe** com inscrição enviada sem CPF utilizável, e **relata sem interromper** tanto o grupo de CPF com mais de um `subject` quanto o rascunho sem CPF utilizável — que fica intacto e não reconciliado —, sem CPF em log, em `backend/tests/migrations/test_reconciliacao_recusas.py`
-- [ ] T011 [P] Teste de que produção recusa iniciar com mecanismo de envio que não entrega e sem remetente, acrescentado a `backend/tests/test_configuracao_producao.py`
-- [ ] T011a [P] Teste de que o **banco** recusa gravar inscrição enviada cujo `cpf_normalizado` não tenha exatamente onze dígitos, e aceita rascunho na mesma condição, em `backend/tests/integration/inscricoes/test_cpf_na_submetida.py`
+- [X] T005 [P] Teste da forma canônica do endereço — caixa baixa no endereço inteiro, sem remover pontos nem cortar sufixo, endereço informado preservado — em `backend/tests/unit/identidade/test_enderecos.py`
+- [X] T006 [P] Teste da geração e do resumo do código — seis dígitos, distribuição sobre todo o intervalo, resumo não recuperável — em `backend/tests/unit/identidade/test_codigo.py`
+- [X] T007 [P] Teste dos invariantes dos modelos — endereço canônico único por restrição de banco, e identidade **que tenha credencial** com exatamente um principal — em `backend/tests/integration/identidade/test_modelos.py`
+- [X] T007a [P] Teste de que uma identidade **sem credencial alguma** é estado válido, porque é o que a reconciliação produz, em `backend/tests/integration/identidade/test_modelos.py`
+- [X] T008 [P] Teste de que o `subject` de identidade nova é opaco, prefixado e independente de `SECRET_KEY` em `backend/tests/unit/identidade/test_subject.py`
+- [X] T009 [P] Teste da reconciliação: preserva o `subject`, não reescreve `identity_subject`, não marca endereço como verificado, traz o nome da inscrição mais recente — em `backend/tests/migrations/test_reconciliacao.py`
+- [X] T010 [P] Teste de que a reconciliação **interrompe** com inscrição enviada sem CPF utilizável, e **relata sem interromper** tanto o grupo de CPF com mais de um `subject` quanto o rascunho sem CPF utilizável — que fica intacto e não reconciliado —, sem CPF em log, em `backend/tests/migrations/test_reconciliacao_recusas.py`
+- [X] T011 [P] Teste de que produção recusa iniciar com mecanismo de envio que não entrega e sem remetente, acrescentado a `backend/tests/test_configuracao_producao.py`
+- [X] T011a [P] Teste de que o **banco** recusa gravar inscrição enviada cujo `cpf_normalizado` não tenha exatamente onze dígitos, e aceita rascunho na mesma condição, em `backend/tests/integration/inscricoes/test_cpf_na_submetida.py`
 
 ### Implementação da fundação
 
-- [ ] T012 [P] Implementar a forma canônica do endereço em `backend/processo_seletivo/identidade/domain/enderecos.py`
-- [ ] T013 [P] Implementar geração, resumo e verificação do código em `backend/processo_seletivo/identidade/domain/codigo.py`
-- [ ] T014 Implementar `CandidateIdentity`, `CandidateEmail` e `DesafioDeAcesso` com **todos os campos e todas as restrições** do [data-model.md](./data-model.md) — incluindo `tentativas_cpf` e `reconciliacao_ate`, que a US2 usa e não cria — em `backend/processo_seletivo/identidade/models.py`
-- [ ] T015 Criar a migração das três tabelas em `backend/processo_seletivo/identidade/migrations/0001_identidade.py`
-- [ ] T016 Criar a migração de dados que verifica, reconcilia, interrompe e relata em `backend/processo_seletivo/identidade/migrations/0002_reconciliacao.py`
-- [ ] T017 Criar a restrição de CPF com onze dígitos em inscrição enviada, declarando dependência de `identidade.0002`, em `backend/processo_seletivo/inscricoes/migrations/0003_cpf_na_submetida.py`
-- [ ] T018 Acrescentar a recusa de inicialização para mecanismo de envio conhecido por não entregar e para remetente ausente em `backend/config/settings/production.py`
+- [X] T012 [P] Implementar a forma canônica do endereço em `backend/processo_seletivo/identidade/domain/enderecos.py`
+- [X] T013 [P] Implementar geração, resumo e verificação do código em `backend/processo_seletivo/identidade/domain/codigo.py`
+- [X] T014 Implementar `CandidateIdentity`, `CandidateEmail` e `DesafioDeAcesso` com **todos os campos e todas as restrições** do [data-model.md](./data-model.md) — incluindo `tentativas_cpf` e `reconciliacao_ate`, que a US2 usa e não cria — em `backend/processo_seletivo/identidade/models.py`
+- [X] T015 Criar a migração das três tabelas em `backend/processo_seletivo/identidade/migrations/0001_identidade.py`
+- [X] T016 Criar a migração de dados que verifica, reconcilia, interrompe e relata em `backend/processo_seletivo/identidade/migrations/0002_reconciliacao.py`
+- [X] T017 Criar a restrição de CPF com onze dígitos em inscrição enviada, declarando dependência de `identidade.0002`, em `backend/processo_seletivo/inscricoes/migrations/0003_cpf_na_submetida.py`
+- [X] T018 Acrescentar a recusa de inicialização para mecanismo de envio conhecido por não entregar e para remetente ausente em `backend/config/settings/production.py`
 
 **Checkpoint**: `make check` passa, a suíte da fundação passa contra PostgreSQL, e `migrate` reconcilia
 uma base com dados da `009` sem alterar nenhum `identity_subject`.

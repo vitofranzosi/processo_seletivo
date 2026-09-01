@@ -23,6 +23,11 @@ AMBIENTE_MINIMO = {
     "DB_RUNTIME_PASSWORD": "segredo-do-runtime",
     # A 009 acrescenta uma precondição de armazenamento: absoluta e fora da árvore do código.
     "ARQUIVOS_CANDIDATOS_RAIZ": "/var/lib/processo-seletivo/arquivos",
+    # A 010 acrescenta o canal de e-mail. Sem mecanismo que entregue, o código de acesso do
+    # candidato fica no log do servidor — e sem remetente ele não sai. Mecanismo real aqui porque
+    # o ambiente mínimo é o que **deve** subir; os que não entregam são exercidos abaixo.
+    "DJANGO_EMAIL_BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+    "DEFAULT_FROM_EMAIL": "nao-responda@cefor.ifes.edu.br",
 }
 RAIZ_DO_CODIGO = pathlib.Path(__file__).resolve().parents[1]
 ADAPTADOR_PROVISORIO = (
@@ -100,6 +105,26 @@ def test_ambiente_completo_carrega_com_transporte_seguro():
         ({"DB_RUNTIME_PASSWORD": None}, "DB_RUNTIME_PASSWORD"),
         ({"DJANGO_SECURE_SSL_REDIRECT": "false"}, "DJANGO_SECURE_SSL_REDIRECT"),
         ({"DJANGO_SECURE_HSTS_SECONDS": "60"}, "DJANGO_SECURE_HSTS_SECONDS"),
+        # A 010: cada mecanismo que se sabe não entregar, um a um. Não é excesso — a lista é a
+        # barreira, e um mecanismo que entrasse na plataforma sem entrar aqui passaria calado.
+        (
+            {"DJANGO_EMAIL_BACKEND": "django.core.mail.backends.console.EmailBackend"},
+            "DJANGO_EMAIL_BACKEND",
+        ),
+        (
+            {"DJANGO_EMAIL_BACKEND": "django.core.mail.backends.dummy.EmailBackend"},
+            "DJANGO_EMAIL_BACKEND",
+        ),
+        (
+            {"DJANGO_EMAIL_BACKEND": "django.core.mail.backends.locmem.EmailBackend"},
+            "DJANGO_EMAIL_BACKEND",
+        ),
+        (
+            {"DJANGO_EMAIL_BACKEND": "django.core.mail.backends.filebased.EmailBackend"},
+            "DJANGO_EMAIL_BACKEND",
+        ),
+        ({"DEFAULT_FROM_EMAIL": None}, "DEFAULT_FROM_EMAIL"),
+        ({"DEFAULT_FROM_EMAIL": "   "}, "DEFAULT_FROM_EMAIL"),
     ],
 )
 def test_configuracao_insegura_impede_a_inicializacao(alteracoes, variavel):
