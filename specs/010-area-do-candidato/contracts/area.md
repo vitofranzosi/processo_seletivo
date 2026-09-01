@@ -147,7 +147,7 @@ A mesma rota da tela da inscrição, com um campo a mais decidindo para onde ir 
 
 | Situação | Resposta |
 |---|---|
-| `acao=guardar` | grava e `302` de volta à própria tela, com a lista de documentos recalculada e uma confirmação (`FR-039a`) |
+| `acao=guardar` | grava e `302` de volta à própria tela, com a lista de documentos recalculada e uma confirmação (`FR-061a`) |
 | Sem `acao` | grava e `302` para a revisão — o comportamento de sempre, e o que acontece sem JavaScript |
 | A modalidade escolhida invalida documento já enviado | a confirmação de descarte vem antes, em qualquer dos dois casos, e leva `acao` adiante |
 

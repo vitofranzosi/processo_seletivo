@@ -338,6 +338,14 @@ remover o antigo e corrigir o nome.
   DEVE revelar a quem ele pertence.
 - **FR-018**: O candidato autenticado DEVE poder remover endereço associado. O sistema NÃO PODE
   permitir remover a última credencial, nem deixar a identidade sem endereço principal.
+- **FR-018a**: A remoção de credencial DEVE ser confirmada numa tela que enuncia o que se perde,
+  antes de acontecer. O botão ficava ao lado de "Tornar principal" e apagava no primeiro clique;
+  errar o alvo custava uma via de acesso, e a pessoa só descobria na vez seguinte em que tentasse
+  entrar por aquele endereço.
+- **FR-018b**: Adicionar e remover credencial DEVEM avisar a credencial principal por mensagem. Sem
+  senha, a lista de credenciais **é** a conta: quem consegue anexar um endereço entra por ele para
+  sempre, e este aviso é o único sinal que a titular teria disso.
+
 - **FR-019**: Remover credencial NÃO PODE alterar nenhuma inscrição. Trocar qual credencial é a
   principal alcança os rascunhos abertos, e apenas eles, pela regra única da FR-014 — nunca uma
   inscrição enviada.
@@ -372,12 +380,6 @@ remover o antigo e corrigir o nome.
   prazo. Qual dos dois acontece depende da topologia, que só quem implanta conhece.
 - **FR-031**: Esgotado o limite, o desafio DEVE morrer, e a mensagem NÃO PODE distinguir código
   errado de endereço inexistente.
-- **FR-039a**: A escolha de modalidade DEVE ser guardada quando é feita, e a lista de documentos
-  exigidos DEVE ser recalculada na mesma resposta. Guardá-la só ao avançar fazia a tela prometer que
-  "a escolha decide quais documentos serão pedidos" e não cumprir: o candidato via a lista antiga e o
-  aviso de "todos enviados", e descobria o documento a mais na revisão — quando já se considerava
-  pronto. Sem JavaScript, o comportamento anterior permanece válido.
-
 - **FR-031a**: A recusa DEVE nomear a causa **relativa ao desafio** — código incorreto com o saldo
   de tentativas, tentativas esgotadas, prazo vencido, código já usado. Isso não fere a `FR-031`: o
   desafio é criado de forma idêntica exista ou não identidade, e por isso motivo e saldo são os
@@ -468,6 +470,11 @@ remover o antigo e corrigir o nome.
 - **FR-060**: Uma identidade NÃO PODE visualizar inscrição pertencente a outra.
 - **FR-061**: Sem inscrições, a área DEVE apresentar convite a consultar os processos seletivos
   disponíveis, sem aparência de erro.
+- **FR-061a**: A escolha de modalidade DEVE ser guardada quando é feita, e a lista de documentos
+  exigidos DEVE ser recalculada na mesma resposta. Guardá-la só ao avançar fazia a tela prometer que
+  "a escolha decide quais documentos serão pedidos" e não cumprir: o candidato via a lista antiga e o
+  aviso de "todos enviados", e descobria o documento a mais na revisão — quando já se considerava
+  pronto. Sem JavaScript, o comportamento anterior permanece válido.
 
 ### CPF coincidente (US3, US4)
 
@@ -499,12 +506,12 @@ remover o antigo e corrigir o nome.
   comprovante — DEVEM ser preservadas integralmente.
 - **FR-073**: A tela principal NÃO DEVE transformar evidências de integridade em conteúdo
   protagonista; pode oferecê-las sob ação própria.
+- **FR-074**: "Baixar comprovante" DEVE devolver o comprovante já produzido no envio. NÃO PODE
+  existir segunda modalidade de comprovante.
 - **FR-074a**: Todo instante exibido ao candidato DEVE estar no fuso da instituição, e o mesmo
   instante DEVE ser escrito igual na tela, no comprovante e no PDF. Divergência aqui não é detalhe de
   apresentação: perto do fim do prazo, três horas mudam o dia do envio no documento que a pessoa
   guarda para provar que enviou a tempo.
-- **FR-074**: "Baixar comprovante" DEVE devolver o comprovante já produzido no envio. NÃO PODE
-  existir segunda modalidade de comprovante.
 - **FR-075**: Esta feature NÃO PODE permitir editar inscrição enviada, substituir ou excluir
   documento enviado, nem cancelar inscrição.
 
@@ -529,31 +536,29 @@ remover o antigo e corrigir o nome.
   inicialização pode prová-lo.
 - **FR-082**: A mensagem DEVE conter o código, o prazo de validade e a orientação de ignorá-la se não
   foi a pessoa que solicitou. NÃO PODE conter link que autentica, CPF nem dado da inscrição.
-- **FR-083**: Falha de envio DEVE produzir mensagem neutra, idêntica à do caminho feliz, e registro
-  técnico no servidor.
-- **FR-018a**: A remoção de credencial DEVE ser confirmada numa tela que enuncia o que se perde,
-  antes de acontecer. O botão ficava ao lado de "Tornar principal" e apagava no primeiro clique;
-  errar o alvo custava uma via de acesso, e a pessoa só descobria na vez seguinte em que tentasse
-  entrar por aquele endereço.
-- **FR-018b**: Adicionar e remover credencial DEVEM avisar a credencial principal por mensagem. Sem
-  senha, a lista de credenciais **é** a conta: quem consegue anexar um endereço entra por ele para
-  sempre, e este aviso é o único sinal que a titular teria disso.
-
 - **FR-082a**: A mensagem do código DEVE corresponder à finalidade do desafio. Em "adicionar
   credencial", quem obtém o código não entra na conta de quem recebeu a mensagem — anexa a caixa de
   quem recebeu à conta dele —, e repetir ali "ignore, ninguém entra sem ele" afirma o oposto do
   risco.
 
-- **FR-084**: Além do desafio, esta feature envia **uma única** outra mensagem: a confirmação do
-  envio da inscrição, endereçada à credencial que praticou o ato. O canal passar a existir não torna
-  comunicação transacional escopo implícito — aviso de retificação, de resultado, lembrete e
-  campanha continuam fora. A exceção é nominal porque o custo de não tê-la é nominal e concreto: sem
-  ela, quem fecha a aba antes de baixar o PDF fica sem o protocolo que a própria página manda
-  guardar.
-- **FR-084a**: A confirmação DEVE conter protocolo, código de verificação, a oportunidade, o instante
-  do envio e o que foi recebido. NÃO PODE conter CPF, telefone nem link que autentica.
-- **FR-084b**: O envio da mensagem DEVE acontecer com a inscrição já gravada, e a sua falha NÃO PODE
-  desfazer nem impedir o ato. Amarrar um ato administrativo à disponibilidade de um servidor de SMTP
+- **FR-083**: Falha de envio DEVE produzir mensagem neutra, idêntica à do caminho feliz, e registro
+  técnico no servidor.
+- **FR-084**: Além do desafio, esta feature envia mensagem em exatamente **duas** situações, e as
+  duas são recibo de ato que a própria pessoa praticou: a confirmação do envio da inscrição,
+  endereçada à credencial que praticou o ato; e o aviso de que um endereço passou a alcançar — ou
+  deixou de alcançar — a conta, endereçado à credencial principal (`FR-018b`). O canal passar a
+  existir não torna comunicação transacional escopo implícito: aviso de retificação, de resultado,
+  lembrete e campanha continuam fora, e acrescentar uma terceira situação exige revisar esta regra.
+  As duas exceções são nominais porque o custo de não tê-las é concreto e verificado — sem a
+  primeira, quem fecha a aba antes de baixar o PDF fica sem o protocolo que a própria página manda
+  guardar; sem a segunda, quem anexa um endereço à conta alheia não deixa sinal nenhum para a
+  titular.
+- **FR-084a**: A confirmação de inscrição DEVE conter protocolo, código de verificação, a
+  oportunidade, o instante do envio e o que foi recebido. O aviso de mudança de credencial DEVE
+  conter o endereço afetado, o que aconteceu com ele e o canal de atendimento. Nenhuma das duas PODE
+  conter CPF, telefone nem link que autentica.
+- **FR-084b**: O envio DEVE acontecer com o ato já gravado, e a sua falha NÃO PODE desfazer nem
+  impedir o ato. Amarrar um ato administrativo à disponibilidade de um servidor de SMTP
   faria uma queda de rede custar o prazo de um candidato (Princípio IV).
 
 ### Acesso, proteção de dados e auditoria
@@ -588,19 +593,6 @@ remover o antigo e corrigir o nome.
 - **UX-006**: Reenviar DEVE ser ação clara, informando quando a próxima tentativa é possível. A
   contagem DEVE refletir o tempo restante no instante em que é lida, e não o apurado quando a página
   foi montada.
-- **UX-010a**: Toda tela que remete o candidato ao atendimento institucional DEVE dizer **qual** —
-  e a implantação DEVE declarar esse canal, sob recusa de inicialização em produção. São os pontos em
-  que o sistema não resolve sozinho: CPF congelado e participação anterior não confirmada.
-- **UX-010b**: Todo ato do candidato DEVE produzir confirmação visível na tela em que ele cai.
-  Silêncio depois de uma ação é indistinguível de falha.
-- **UX-010c**: Falha em requisição de envio de documento DEVE produzir mensagem visível junto do
-  documento. Sem tratamento, uma resposta de erro não troca conteúdo algum: o nome do arquivo
-  continua na tela, a contagem continua igual, e a pessoa acredita ter anexado.
-- **UX-010d**: Mensagem de recusa NÃO PODE afirmar mais do que o sistema confere. O CPF é validado
-  pelos dígitos verificadores, e não consultado em base alguma.
-- **UX-010e**: Cada item de "Minhas inscrições" DEVE identificar o Processo Seletivo, e não apenas o
-  número do Edital.
-
 - **UX-006a**: A área do candidato DEVE ser alcançável a partir de qualquer página pública: quem tem
   sessão encontra o caminho para as próprias inscrições, e quem não tem encontra a porta de entrada.
   Sem isso, a única porta é iniciar uma inscrição — e quem só quer conferir a sua não a encontra.
@@ -608,6 +600,18 @@ remover o antigo e corrigir o nome.
 - **UX-008**: Mensagens de segurança NÃO DEVEM expor detalhe interno de identidade.
 - **UX-009**: Todo fluxo principal DEVE funcionar em tela de 375 px sem rolagem horizontal.
 - **UX-010**: Todo fluxo principal DEVE ser concluível somente pelo teclado.
+- **UX-011**: Toda tela que remete o candidato ao atendimento institucional DEVE dizer **qual** —
+  e a implantação DEVE declarar esse canal, sob recusa de inicialização em produção. São os pontos em
+  que o sistema não resolve sozinho: CPF congelado e participação anterior não confirmada.
+- **UX-012**: Todo ato do candidato DEVE produzir confirmação visível na tela em que ele cai.
+  Silêncio depois de uma ação é indistinguível de falha.
+- **UX-013**: Falha em requisição de envio de documento DEVE produzir mensagem visível junto do
+  documento. Sem tratamento, uma resposta de erro não troca conteúdo algum: o nome do arquivo
+  continua na tela, a contagem continua igual, e a pessoa acredita ter anexado.
+- **UX-014**: Mensagem de recusa NÃO PODE afirmar mais do que o sistema confere. O CPF é validado
+  pelos dígitos verificadores, e não consultado em base alguma.
+- **UX-015**: Cada item de "Minhas inscrições" DEVE identificar o Processo Seletivo, e não apenas o
+  número do Edital.
 
 ### Key Entities
 
@@ -687,13 +691,8 @@ remover o antigo e corrigir o nome.
   consegue retomá-lo e recuperar o acesso à participação anterior.
 - **SC-026**: Todo fluxo principal se conclui em tela de 375 px, sem rolagem horizontal, e somente
   pelo teclado.
-- **SC-033**: Escolher a modalidade reservada mostra o documento a mais na mesma resposta, e a
-  escolha sobrevive a sair e voltar.
-- **SC-034**: Remover credencial pergunta antes; adicionar e remover avisam a credencial principal.
-- **SC-035**: As duas telas de atendimento nomeiam o canal, e produção não sobe sem ele declarado.
-- **SC-036**: Reconciliar, corrigir dados, adicionar e remover credencial e esgotar as tentativas de
-  CPF produzem, cada um, uma frase na tela seguinte.
-- **SC-037**: Falha no envio de documento aparece junto do documento, com o que fazer.
+- **SC-027**: Nenhum candidato é recusado no envio por causa de CPF declarado por outra identidade, e
+  a coincidência aparece assinalada, e não apenas legível, para quem conduz o certame.
 - **SC-028**: Depois de esgotadas as tentativas, o código correto é recusado com uma mensagem que
   diz que o código foi cancelado — e nunca com a de código incorreto.
 - **SC-029**: Pedir outro código durante a janela de espera produz resposta escrita dizendo que nada
@@ -702,8 +701,13 @@ remover o antigo e corrigir o nome.
   verificação, e a sua falha não impede o envio.
 - **SC-031**: O instante do envio é o mesmo na tela, no comprovante e no PDF.
 - **SC-032**: A área do candidato é alcançável a partir da vitrine, com e sem sessão.
-- **SC-027**: Nenhum candidato é recusado no envio por causa de CPF declarado por outra identidade, e
-  a coincidência aparece assinalada, e não apenas legível, para quem conduz o certame.
+- **SC-033**: Escolher a modalidade reservada mostra o documento a mais na mesma resposta, e a
+  escolha sobrevive a sair e voltar.
+- **SC-034**: Remover credencial pergunta antes; adicionar e remover avisam a credencial principal.
+- **SC-035**: As duas telas de atendimento nomeiam o canal, e produção não sobe sem ele declarado.
+- **SC-036**: Reconciliar, corrigir dados, adicionar e remover credencial e esgotar as tentativas de
+  CPF produzem, cada um, uma frase na tela seguinte.
+- **SC-037**: Falha no envio de documento aparece junto do documento, com o que fazer.
 
 ## Assumptions
 

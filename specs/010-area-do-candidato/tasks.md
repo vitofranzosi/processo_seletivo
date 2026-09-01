@@ -302,6 +302,49 @@ antigo, e receber recusa ao tentar remover o último.
 
 ---
 
+## Phase 10: Pós-percurso
+
+A jornada foi percorrida inteira no navegador depois do checkpoint da fase 9 — dois candidatos, um
+novo e um com participação legada, do cartaz da vaga ao comprovante assinado, com Mailpit entregando.
+Catorze defeitos apareceram, e **nenhum era regra violada**: são coisas que o sistema fazia
+corretamente sem dizer, ou dizendo o que não era verdade. Duas decisões de produto foram revistas
+por causa deles — a `FR-031`, que era lida como "nenhuma recusa se distingue de nenhuma", e a
+`FR-084`, que proibia qualquer mensagem além do desafio.
+
+Esta fase existe para que a rastreabilidade acompanhe o que aconteceu depois do último checkpoint,
+como a `009` fez na sua fase 11. Todas as tarefas abaixo estão concluídas; a fase é registro, e não
+trabalho pendente.
+
+### Primeiro lote — o que perdia candidato (commit `559211b`)
+
+- [X] T100 Nomear a causa da recusa do código, com o saldo de tentativas, em `backend/processo_seletivo/identidade/application/desafio.py` e `backend/processo_seletivo/portal/views.py` (**FR-031a**, **SC-028**, D-023); testes em `backend/tests/integration/identidade/test_recusa_do_codigo.py`
+- [X] T101 Responder por escrito ao reenvio recusado pela espera, e recalcular a contagem a cada renderização — `backend/processo_seletivo/portal/views.py`, `backend/processo_seletivo/portal/templates/portal/acesso_codigo.html` e `backend/processo_seletivo/portal/static/portal/reenvio.js` (**FR-031b**, **UX-006**, **SC-029**, D-024); testes em `backend/tests/integration/identidade/test_reenvio.py`
+- [X] T102 [P] Converter o instante para o fuso da instituição antes de formatá-lo em `backend/processo_seletivo/inscricoes/infrastructure/comprovante_pdf.py` (**FR-074a**, **SC-031**, D-026); testes em `backend/tests/integration/portal/test_hora_do_envio.py`
+- [X] T103 [P] Confirmação do envio da inscrição por e-mail, depois do commit, em `backend/processo_seletivo/inscricoes/application/mensagem.py` e `backend/processo_seletivo/portal/views.py` (**FR-084**, **FR-084a**, **FR-084b**, **SC-030**, D-025); testes em `backend/tests/integration/portal/test_confirmacao_de_inscricao.py`
+- [X] T104 [P] Porta de entrada no cabeçalho — inscrições com sessão, entrar sem ela — em `backend/processo_seletivo/portal/templates/portal/base.html` (**UX-006a**, **SC-032**, D-027); testes em `backend/tests/integration/portal/test_porta_de_entrada.py`
+- [X] T105 [P] Corrigir a instrução de retorno do comprovante — e-mail e código, e não CPF — em `backend/processo_seletivo/portal/templates/portal/comprovante.html` e `backend/processo_seletivo/inscricoes/infrastructure/comprovante_pdf.py`; teste em `backend/tests/integration/portal/test_revisao_e_comprovante.py`
+
+### Segundo lote — atrito evitável e acabamento (commit `f8af717`)
+
+- [X] T106 Guardar a escolha de modalidade quando ela é feita, recalculando os documentos exigidos — `backend/processo_seletivo/portal/views.py`, `backend/processo_seletivo/portal/templates/portal/inscricao.html`, `backend/processo_seletivo/portal/templates/portal/descarte.html` e `backend/processo_seletivo/portal/static/portal/modalidade.js` (**FR-061a**, **SC-033**, D-028); testes em `backend/tests/integration/portal/test_escolha_de_modalidade.py`
+- [X] T107 Perguntar antes de remover credencial — `backend/processo_seletivo/portal/templates/portal/conta_remover.html` e `backend/processo_seletivo/portal/views.py` (**FR-018a**, **SC-034**, D-029); testes em `backend/tests/integration/identidade/test_mudanca_de_credencial.py`
+- [X] T108 Avisar a credencial principal quando um endereço passa a alcançar ou deixa de alcançar a conta — `backend/processo_seletivo/identidade/application/mensagem.py` e `backend/processo_seletivo/portal/views.py` (**FR-018b**, **FR-084**, D-029); testes no mesmo arquivo de T107
+- [X] T109 [P] Texto próprio para o código de vincular endereço, correspondente à finalidade do desafio, em `backend/processo_seletivo/identidade/application/mensagem.py` (**FR-082a**, D-030); testes no mesmo arquivo de T107
+- [X] T110 Declarar o canal de atendimento e exibi-lo nas duas telas de saída — `backend/config/settings/base.py`, `backend/config/settings/production.py`, `backend/processo_seletivo/portal/templates/portal/_atendimento.html`, `backend/processo_seletivo/portal/templates/portal/meus_dados.html` e `backend/processo_seletivo/portal/templates/portal/acesso_reconciliar.html` (**UX-011**, **SC-035**, D-031); testes em `backend/tests/integration/portal/test_saidas_e_falhas.py` e `backend/tests/test_configuracao_producao.py`
+- [X] T111 Confirmação visível depois de cada ato, num par de chaves para todo o portal — `backend/processo_seletivo/portal/views.py` e `backend/processo_seletivo/portal/templates/portal/_mensagens.html` (**UX-012**, **SC-036**, D-032); testes em `backend/tests/integration/portal/test_atos_que_respondem.py`
+- [X] T112 [P] Tratar `htmx:responseError` e `htmx:sendError` no envio de documento em `backend/processo_seletivo/portal/static/portal/envio.js` (**UX-013**, **SC-037**, D-033); testes em `backend/tests/integration/portal/test_saidas_e_falhas.py`
+- [X] T113 [P] Recusa do CPF que afirma só o que o sistema confere, em `backend/processo_seletivo/identidade/application/credenciais.py` (**UX-014**); teste em `backend/tests/integration/identidade/test_nucleo_minimo.py`
+- [X] T114 [P] Nomear o Processo Seletivo no item da lista — `backend/processo_seletivo/portal/views.py` e `backend/processo_seletivo/portal/templates/portal/inscricoes.html` (**UX-015**); teste em `backend/tests/integration/portal/test_minhas_inscricoes.py`
+
+### Registro
+
+- [X] T115 Registrar as decisões do percurso em [research.md](./research.md) (D-023 a D-033) e atualizar spec, contratos, [plan.md](./plan.md) e [quickstart.md](./quickstart.md)
+- [X] T116 Estender a matriz de rastreabilidade aos requisitos novos em [rastreabilidade.md](./rastreabilidade.md) — 158 requisitos, todos cobertos
+
+**Checkpoint**: a jornada roda de ponta a ponta, e cada ato do candidato responde por escrito.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -322,6 +365,8 @@ Phase 7 (US5) ──┤ dependem da US3 (a lista é o caminho até elas)
 Phase 8 (US6) ──┘ depende apenas da US1
      ↓
 Phase 9 (Polish)
+     ↓
+Phase 10 (Pós-percurso) — não planejada: nasceu de percorrer a jornada inteira depois do checkpoint
 ```
 
 ### User Story Dependencies

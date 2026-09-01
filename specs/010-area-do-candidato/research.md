@@ -512,7 +512,7 @@ quarta tela.
 ## D-028 — A escolha de modalidade é guardada quando é feita
 
 **Decisão**: o campo submete o formulário que já existe com `acao=guardar`; a view grava e devolve a
-página, em vez de avançar para a revisão (`FR-039a`).
+página, em vez de avançar para a revisão (`FR-061a`).
 
 **Racional**: a tela promete que "a escolha decide quais documentos serão pedidos a você", e a
 promessa não valia no instante da escolha — a lista continuava com dois documentos e o aviso verde
@@ -559,7 +559,7 @@ finalidades já eram distintas no modelo desde a `FR-028`; só o texto não dist
 ## D-031 — O atendimento é declarado, e aparece
 
 **Decisão**: `PORTAL_ATENDIMENTO` é exigida em produção e exibida nas duas telas que remetem a ele
-(`UX-010a`).
+(`UX-011`).
 
 **Racional**: "procure o atendimento institucional" aparecia duas vezes sem dizer qual — nem e-mail,
 nem telefone, nem link —, e são justamente os dois pontos em que a pessoa já está travada: o CPF
@@ -573,7 +573,7 @@ desenvolvimento pode faltar, e a frase genérica é o que sobra.
 ## D-032 — Todo ato responde, e a resposta é lida uma vez
 
 **Decisão**: um par de chaves de sessão para todo o portal (`portal_aviso`, `portal_recusa`), lido
-por quem exibe (`UX-010b`).
+por quem exibe (`UX-012`).
 
 **Racional**: quatro atos mudavam a página sem uma palavra — reconciliar a participação anterior, que
 é o momento mais aliviante da jornada; corrigir o nome; adicionar um e-mail; esgotar as tentativas de
@@ -586,7 +586,7 @@ sem nunca ter sido lida. As telas que recebem confirmação são quatro, e nelas
 ## D-033 — A falha do envio aparece
 
 **Decisão**: `htmx:responseError` e `htmx:sendError` escrevem uma frase junto do documento
-(`UX-010c`).
+(`UX-013`).
 
 **Racional**: o htmx só troca conteúdo em resposta bem-sucedida, o que está certo — e por isso uma
 resposta de erro deixava a tela exatamente como estava: o nome do arquivo ali, a contagem igual, nada

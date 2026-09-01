@@ -220,6 +220,27 @@ tela de chegada exibe; e `portal/templates/portal/conta_remover.html`, a pergunt
 credencial passou a fazer. `portal/templates/portal/_atendimento.html` acompanha, e é onde vive o
 canal que as duas telas de beco sem saída passaram a nomear.
 
+Um arquivo da `009` também mudou de responsabilidade: `portal/static/portal/envio.js`, que cuidava
+só do progresso do envio, passou a tratar `htmx:responseError` e `htmx:sendError` (D-033). Fica ali,
+e não em script próprio, porque é o mesmo evento e o mesmo alvo — quem mostra o progresso de um
+envio é quem precisa mostrar a falha dele.
+
+### O que a implantação passou a exigir
+
+Quatro variáveis, todas com recusa de inicialização em produção nomeando o que falta. Estão
+espalhadas pelas decisões que as criaram, e aqui ficam juntas porque é assim que quem implanta
+precisa lê-las:
+
+| Variável | Por que produção não sobe sem ela |
+|---|---|
+| `DJANGO_EMAIL_BACKEND` | mecanismo que não entrega deixa o código de acesso no log do servidor, com aparência de autenticação (`FR-081`, D-014) |
+| `DEFAULT_FROM_EMAIL` | sem remetente a mensagem não sai, e a falha é silenciosa por exigência da `FR-083` |
+| `PORTAL_ATRAS_DE_PROXY` | não há padrão seguro: ou o limite por origem é contornável por cabeçalho forjado, ou recusa candidatos legítimos em bloco (`FR-030a`, D-018) |
+| `PORTAL_ATENDIMENTO` | duas telas mandam procurar o atendimento, e sem ela não dizem qual — nos dois pontos em que o sistema não resolve sozinho (`UX-011`, D-031) |
+
+Nenhuma tem padrão que sirva, e nenhuma falha aparece como erro: aparece como candidato sem saída,
+ou como proteção que não protege. É por isso que a recusa é de inicialização, e não um aviso em log.
+
 ## Complexity Tracking
 
 > Sem violações a justificar. Nenhuma dependência nova, nenhum serviço novo, nenhuma abstração

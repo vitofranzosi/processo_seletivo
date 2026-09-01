@@ -40,7 +40,6 @@ Caminhos são relativos a `backend/`.
 | FR-031a recusa nomeia a causa, sem revelar quem existe | `identidade/application/desafio.py`, `portal/views.py` | `tests/integration/identidade/test_recusa_do_codigo.py`, `tests/contract/portal/test_acesso.py` |
 | FR-031b reenvio recusado responde por escrito | `portal/views.py`, `portal/templates/portal/acesso_codigo.html` | `tests/integration/identidade/test_reenvio.py` |
 | FR-018a, FR-018b remoção pergunta antes; adição e remoção avisam a principal | `portal/views.py`, `identidade/application/mensagem.py` | `tests/integration/identidade/test_mudanca_de_credencial.py` |
-| FR-039a escolha de modalidade guardada na hora | `portal/views.py`, `portal/static/portal/modalidade.js` | `tests/integration/portal/test_escolha_de_modalidade.py` |
 | FR-082a a mensagem do código corresponde à finalidade | `identidade/application/mensagem.py` | `tests/integration/identidade/test_mudanca_de_credencial.py` |
 | FR-030 origem não escolhida por quem é contado | `portal/views.py` | `tests/integration/identidade/test_origem_da_solicitacao.py` |
 | FR-030a topologia declarada, nunca adivinhada | `config/settings/production.py` | `tests/test_configuracao_producao.py` |
@@ -63,6 +62,7 @@ Caminhos são relativos a `backend/`.
 | Requisito | Onde vive | Testes |
 |---|---|---|
 | FR-058 a FR-061 lista, continuidade, estado vazio | `portal/views.py` | `tests/integration/portal/test_minhas_inscricoes.py` |
+| FR-061a escolha de modalidade guardada na hora | `portal/views.py`, `portal/static/portal/modalidade.js` | `tests/integration/portal/test_escolha_de_modalidade.py` |
 | FR-062, FR-063 restrições preservada e acrescentada | `inscricoes/models.py` | `tests/integration/inscricoes/test_idempotencia_preservada.py`, `tests/integration/inscricoes/test_cpf_na_submetida.py` |
 | FR-064 a FR-066 duplicidade aceita, assinalada, não decidida | `inscricoes/application/consulta.py` | `tests/integration/inscricoes/test_cpf_coincidente.py` |
 | FR-067 a FR-075 conferência, documentos, comprovante, imutabilidade | `portal/views.py` | `tests/integration/portal/test_conferir_inscricao.py`, `tests/integration/portal/test_comprovante_preservado.py` |
@@ -86,11 +86,11 @@ Caminhos são relativos a `backend/`.
 | UX-001 a UX-004 percurso curto, sem CPF, sem redigitação | `tests/acceptance/portal/test_entrar_sem_senha.py`, `tests/acceptance/portal/test_minhas_inscricoes.py` |
 | UX-005 a UX-008 campo único, reenvio informado, erro que não apaga | `tests/interface/test_acessibilidade_do_portal.py`, `tests/acceptance/portal/test_entrar_sem_senha.py` |
 | UX-006a porta de entrada em toda página pública | `tests/integration/portal/test_porta_de_entrada.py` |
-| UX-010a o atendimento é declarado e aparece | `tests/integration/portal/test_saidas_e_falhas.py`, `tests/test_configuracao_producao.py` |
-| UX-010b todo ato responde | `tests/integration/portal/test_atos_que_respondem.py` |
-| UX-010c a falha do envio aparece | `tests/integration/portal/test_saidas_e_falhas.py` |
-| UX-010d a recusa não afirma mais do que se confere | `tests/integration/identidade/test_nucleo_minimo.py` |
-| UX-010e o item nomeia o Processo Seletivo | `tests/integration/portal/test_minhas_inscricoes.py` |
+| UX-011 o atendimento é declarado e aparece | `tests/integration/portal/test_saidas_e_falhas.py`, `tests/test_configuracao_producao.py` |
+| UX-012 todo ato responde | `tests/integration/portal/test_atos_que_respondem.py` |
+| UX-013 a falha do envio aparece | `tests/integration/portal/test_saidas_e_falhas.py` |
+| UX-014 a recusa não afirma mais do que se confere | `tests/integration/identidade/test_nucleo_minimo.py` |
+| UX-015 o item nomeia o Processo Seletivo | `tests/integration/portal/test_minhas_inscricoes.py` |
 | UX-009, UX-010 375 px e teclado | `tests/interface/test_acessibilidade_do_portal.py` |
 
 ## Critérios de sucesso
@@ -98,7 +98,7 @@ Caminhos são relativos a `backend/`.
 | Critério | Testes |
 |---|---|
 | SC-001 a SC-006 acesso recorrente, tetos, equivalência, sem CPF | `tests/acceptance/portal/test_entrar_sem_senha.py`, `tests/integration/identidade/test_equivalencia.py`, `tests/integration/identidade/test_teto_concorrente.py` |
-| SC-007 a SC-011c (inclusive SC-010a) preservação do titular e do que foi submetido | `tests/migrations/test_reconciliacao.py`, `tests/authorization/test_titularidade_preservada.py`, `tests/integration/identidade/test_correcao.py` |
+| SC-007 a SC-011 (inclusive SC-010a) preservação do titular e do que foi submetido | `tests/migrations/test_reconciliacao.py`, `tests/authorization/test_titularidade_preservada.py`, `tests/integration/identidade/test_correcao.py` |
 | SC-012 a SC-017a proteção, concorrência, recusa de produção | `tests/authorization/test_idor_area.py`, `tests/authorization/test_acesso_sem_prova.py`, `tests/integration/identidade/test_credencial_concorrente.py`, `tests/test_configuracao_producao.py` |
 | SC-028 a SC-032 recusa nomeada, reenvio que responde, recibo do envio, instante único, porta de entrada | `tests/integration/identidade/test_recusa_do_codigo.py`, `tests/integration/identidade/test_reenvio.py`, `tests/integration/portal/test_confirmacao_de_inscricao.py`, `tests/integration/portal/test_hora_do_envio.py`, `tests/integration/portal/test_porta_de_entrada.py` |
 | SC-033 a SC-037 modalidade na hora, credencial confirmada e avisada, atendimento nomeado, atos que respondem, falha visível | `tests/integration/portal/test_escolha_de_modalidade.py`, `tests/integration/identidade/test_mudanca_de_credencial.py`, `tests/integration/portal/test_saidas_e_falhas.py`, `tests/integration/portal/test_atos_que_respondem.py` |

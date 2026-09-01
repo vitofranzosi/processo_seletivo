@@ -43,7 +43,7 @@ demonstração passa a provar que a mensagem sai, não apenas que foi formatada.
 `http://localhost:8025`.
 
 ```bash
-cd backend && INTERFACE_SELETOR_IDENTIDADE=true DJANGO_EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend EMAIL_HOST=localhost EMAIL_PORT=1025 EMAIL_USE_TLS=false DEFAULT_FROM_EMAIL=nao-responda@exemplo.test ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos DB_USER="$(whoami)" uv run python manage.py runserver 8010
+cd backend && INTERFACE_SELETOR_IDENTIDADE=true DJANGO_EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend EMAIL_HOST=localhost EMAIL_PORT=1025 EMAIL_USE_TLS=false DEFAULT_FROM_EMAIL=nao-responda@exemplo.test PORTAL_ATENDIMENTO=selecao@cefor.ifes.edu.br ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos DB_USER="$(whoami)" uv run python manage.py runserver 8010
 ```
 
 A suíte automatizada **não** usa o Mailpit: ela usa o mecanismo em memória, que é isolado por teste
@@ -53,10 +53,10 @@ importa é ver a mensagem chegar.
 Note o que **não** está aí: `PORTAL_IDENTIDADE_DEMO`. A partir desta feature a identificação por
 declaração não existe, e a variável permanece apenas como armadilha na recusa de produção (D-011).
 
-`PORTAL_ATENDIMENTO` também é obrigatória em produção, e vale declará-la aqui para ver as duas
-telas que a exibem — o CPF congelado e o convite de reconciliação. Sem ela, elas voltam a dizer
-apenas "o atendimento institucional", que é o beco sem saída que a `UX-010a` fechou:
-`PORTAL_ATENDIMENTO=selecao@cefor.ifes.edu.br` na linha do `runserver`.
+`PORTAL_ATENDIMENTO` está no comando acima porque é ela que faz as duas telas de saída dizerem
+**com quem** falar — o CPF congelado e o convite de reconciliação. Sem ela, as duas voltam a dizer
+apenas "o atendimento institucional", que é o beco sem saída que a `UX-011` fechou. Em produção ela
+é obrigatória.
 
 Também não está aí `PORTAL_ATRAS_DE_PROXY`: em desenvolvimento ela é `false` por omissão, que é o
 correto para o `runserver`, ligado direto ao navegador. Só ligue-a se puser um proxy à frente — e,
@@ -130,7 +130,7 @@ tente retomar. A ação não é mais oferecida (`FR-053`).
    (`SC-020`).
 3. Volte a um rascunho por `Continuar inscrição`: o conteúdo está como estava (`SC-019`).
 4. Confira que o e-mail gravado no rascunho é o **principal** da identidade, e não necessariamente o
-   que autenticou a sessão (`SC-011c`).
+   que autenticou a sessão (`FR-013`).
 
 A correção de nome e CPF é da Entrega 6, e não desta — é lá que `/conta` existe.
 
@@ -165,7 +165,7 @@ Em `/conta`: adicione um segundo endereço e prove-o por código — sem que CPF
 principal. Remova o primeiro. Tente remover o último: recusado (`FR-018`).
 
 Corrija o nome. **Deve-se ver** o nome corrigido no rascunho aberto, e inalterado em qualquer
-inscrição já enviada (`SC-011a`, `SC-011b`, `FR-014`). Tente corrigir o CPF havendo inscrição
+inscrição já enviada (`FR-014`, `SC-011`). Tente corrigir o CPF havendo inscrição
 enviada: recusado (`FR-008`).
 
 Verifique que nenhuma inscrição enviada mudou (`SC-011`).
