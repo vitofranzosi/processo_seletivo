@@ -29,6 +29,10 @@ INSTALLED_APPS = [
     # `interface`: a autenticação, a sessão, a base visual e o alvo de dispositivo são outros.
     "processo_seletivo.inscricoes",
     "processo_seletivo.portal",
+    # A organização do trabalho (011): quem integra a comissão do Processo e quem atua em cada
+    # Etapa. App próprio porque é autorização operacional sobre Processo e Edital, e não o ciclo
+    # de vida normativo deles — as telas continuam em `interface`, que já é o canal dos dois atores.
+    "processo_seletivo.comissoes",
 ]
 TEMPLATES = [
     {

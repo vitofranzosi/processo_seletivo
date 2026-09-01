@@ -529,3 +529,26 @@ def alcance_da_aplicabilidade(edital):
             }
         )
     return perfis
+
+
+# ---------------------------------------------------------------------------
+# A comissão e a alocação (011). Leitura, e nada além: quem decide se a pessoa existe, se pode
+# ser alocada e se a Etapa é vigente é o command.
+# ---------------------------------------------------------------------------
+
+
+def ler_membro(dados):
+    """Identificador, rótulo e função. O rótulo é leitura humana e não identifica ninguém."""
+    return {
+        "identity_subject": _texto(dados, "identity_subject"),
+        "display_label": _texto(dados, "display_label"),
+        "funcao": _texto(dados, "funcao") or "MEMBRO",
+    }
+
+
+def ler_alocacao(dados):
+    return {
+        "membro_id": _texto(dados, "membro_id"),
+        "edital_id": _texto(dados, "edital_id"),
+        "etapa_id": _texto(dados, "etapa_id"),
+    }

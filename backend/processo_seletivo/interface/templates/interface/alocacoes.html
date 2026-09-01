@@ -1,0 +1,125 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Alocação por Etapa — {{ processo.institutional_code }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
+  <span aria-current="page">Alocação por Etapa</span>
+</nav>
+
+<h1>Organização por Etapa</h1>
+<p class="sub">{{ processo.title }} — <span class="codigo">{{ processo.institutional_code }}</span></p>
+<p class="ajuda">Quem atua em cada Etapa. A Etapa pertence ao Edital, então a organização começa
+  por ele: dois Editais do mesmo Processo podem ter Etapas de mesmo nome, e elas são objetos
+  distintos.</p>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
+
+<p class="acoes-do-painel">
+  <a class="acao" href="{% url 'interface:comissao' processo.id %}">Comissão</a>
+</p>
+
+{% if not tem_presidente %}
+<p class="aviso" role="status"><strong>Nenhuma Etapa pode receber alocação.</strong>
+  Esta comissão ainda não tem presidente, e distribuir trabalho pressupõe alguém respondendo por
+  ele. Designe a presidência na tela da Comissão.</p>
+{% endif %}
+
+{% if orfas %}
+<section aria-labelledby="orfas-titulo" class="consequencias irreversivel">
+  <h2 id="orfas-titulo">Alocações sem Etapa correspondente</h2>
+  <p class="ajuda">A Etapa destas alocações não existe mais no conteúdo vigente do Edital — uma
+    Retificação a removeu. Elas não concedem acesso nenhum e não aparecem para quem foi alocado,
+    mas continuam aqui porque foram atos reais e a auditoria os registrou.</p>
+  <ul class="atribuicoes">
+    {% for alocacao in orfas %}
+    <li>
+      {{ alocacao.membro.display_label|default:alocacao.membro.identity_subject }}
+      — Etapa <span class="codigo">{{ alocacao.etapa_id }}</span>
+      do Edital {{ alocacao.edital.number }}/{{ alocacao.edital.year }}
+      <form method="post" class="linha-de-acoes">
+        {% csrf_token %}
+        <input type="hidden" name="acao" value="remover">
+        <input type="hidden" name="alocacao_id" value="{{ alocacao.id }}">
+        <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-o{{ forloop.counter }}">
+        <button type="submit" class="acao perigoso">Remover esta alocação sem Etapa</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% for grupo in organizacao %}
+<section aria-labelledby="edital-{{ grupo.edital.id }}" class="processo">
+  <h2 id="edital-{{ grupo.edital.id }}">Edital {{ grupo.edital.number }}/{{ grupo.edital.year }}</h2>
+  <p class="sub">{{ grupo.edital.title }}</p>
+
+  {% if not grupo.publicado %}
+  {% comment %} EC-014: não há conteúdo vigente, então não há Etapa alocável. Dizer por quê é melhor do que
+     listar controles desabilitados. {% endcomment %}
+  <p class="vazio" role="status"><strong>Este Edital ainda não foi publicado.</strong>
+    As Etapas só passam a ser alocáveis quando o Edital é publicado, porque a alocação designa a
+    Etapa do conteúdo vigente.</p>
+  {% elif not grupo.etapas %}
+  {# EC-008, o outro estado vazio: publicado, e sem Etapa nenhuma declarada. #}
+  <p class="vazio" role="status"><strong>Este Edital não declara Etapas de Avaliação.</strong>
+    Não há trabalho a distribuir aqui.</p>
+  {% else %}
+  <ul class="etapas" aria-label="Etapas do Edital {{ grupo.edital.number }}/{{ grupo.edital.year }}">
+    {% for etapa in grupo.etapas %}
+    <li>
+      <div class="cabeca">
+        <strong class="operacao">{{ etapa.nome }}</strong>
+        {% if etapa.sem_membros %}
+        {# FR-076: a marca é texto, e não só cor — em escala de cinza ela continua legível. #}
+        <span class="situacao s-CANCELADO">Sem membros alocados</span>
+        {% else %}
+        <span class="situacao s-PUBLICADO">{{ etapa.total }} alocado{{ etapa.total|pluralize:"s" }}</span>
+        {% endif %}
+      </div>
+
+      {% if etapa.alocacoes %}
+      <ul class="atribuicoes">
+        {% for alocacao in etapa.alocacoes %}
+        <li>
+          {{ alocacao.membro.display_label|default:alocacao.membro.identity_subject }}
+          <form method="post" class="linha-de-acoes">
+            {% csrf_token %}
+            <input type="hidden" name="acao" value="remover">
+            <input type="hidden" name="alocacao_id" value="{{ alocacao.id }}">
+            <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-a{{ alocacao.id }}">
+            {% comment %} UX-003: sai desta Etapa, e continua na comissão. O outro botão, o de sair da
+               comissão, mora na tela da Comissão e tem outro nome. {% endcomment %}
+            <button type="submit" class="acao perigoso">Remover desta Etapa</button>
+          </form>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+
+      {% if membros and tem_presidente %}
+      <form method="post" class="linha-de-acoes">
+        {% csrf_token %}
+        <input type="hidden" name="acao" value="incluir">
+        <input type="hidden" name="edital_id" value="{{ grupo.edital.id }}">
+        <input type="hidden" name="etapa_id" value="{{ etapa.id }}">
+        <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-i{{ etapa.id }}">
+        <label class="campo" for="membro-{{ etapa.id }}">Alocar em {{ etapa.nome }}</label>
+        <select id="membro-{{ etapa.id }}" name="membro_id">
+          {% for membro in membros %}
+          <option value="{{ membro.id }}">{{ membro.display_label|default:membro.identity_subject }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="acao">Alocar nesta Etapa</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% empty %}
+<p class="vazio" role="status">Este Processo ainda não tem Editais.</p>
+{% endfor %}
+{% endblock %}

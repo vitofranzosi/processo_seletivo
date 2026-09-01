@@ -18,8 +18,17 @@ from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.auditoria import selectors as auditoria_selectors
 from processo_seletivo.auditoria.application import record_event
+from processo_seletivo.comissoes.application import alocacao as alocacao_app
+from processo_seletivo.comissoes.application import comissao as comissao_app
+from processo_seletivo.comissoes.application import selectors as comissao_selectors
+from processo_seletivo.comissoes.domain.autorizacao import (
+    pode_atuar_na_etapa,
+    pode_gerir_comissao,
+)
+from processo_seletivo.comissoes.domain.etapas import etapa_vigente
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.application.identificacao import update_edital_identification
+from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.editais.domain.validation import validate_for_publication
 from processo_seletivo.inscricoes.application.consulta import (
     CONSULTAR,
@@ -1383,12 +1392,21 @@ OPERACOES = {
     "REMOVER": "Remoção de documento",
     "INTEGRIDADE": "Falha de integridade de documento",
     "CONSULTAR_DOCUMENTO": "Consulta a documento do candidato",
+    # A organização do trabalho (011). Mesma trilha, pela mesma razão: quem investiga quem
+    # perdeu acesso a uma Etapa lê a mesma tela de quem investiga uma publicação.
+    "COMISSAO_INCLUIR_MEMBRO": "Inclusão na comissão",
+    "COMISSAO_ALTERAR_FUNCAO": "Alteração de função na comissão",
+    "COMISSAO_REMOVER_MEMBRO": "Remoção da comissão",
+    "ALOCACAO_INCLUIR": "Alocação em Etapa",
+    "ALOCACAO_REMOVER": "Remoção de alocação",
 }
 AGREGADOS = {
     "ProcessoSeletivo": "Processo Seletivo",
     "Edital": "Edital",
     "Retificacao": "Retificação",
     "Inscricao": "Inscrição",
+    "MembroComissao": "Membro da comissão",
+    "AlocacaoEtapa": "Alocação em Etapa",
 }
 
 
@@ -1482,6 +1500,7 @@ def processo_detalhe(request, processo_id):
             "editais": processo.editais.order_by("year", "number"),
             "pendentes": pending_editais(processo),
             "atos": list(atos_processo.disponiveis(processo, ator)),
+            "pode_auditar": ator.can("auditoria:consultar"),
             # FR-021: criado o Processo, o próximo passo é elaborar o Edital — e era só um link
             # discreto no número, enquanto o destaque ia para o impedimento de cancelar, ato que
             # ninguém tentou. O primeiro Edital em elaboração que este ator pode compor.
@@ -1646,4 +1665,252 @@ def _registrar_divergencia(ator, documento, request):
         "O arquivo guardado não confere com o que foi recebido. O documento não pode ser "
         "apresentado como íntegro; registre a ocorrência e solicite novo envio ao candidato.",
         409,
+    )
+
+
+# ---------------------------------------------------------------------------
+# A comissão e a alocação por Etapa (011).
+#
+# Duas portas, e elas não se misturam: `comissao` e `alocacoes` dependem de **gerir**;
+# `minhas_etapas` e `atribuicao` dependem de **atuar**. A página da Etapa aceita as duas e diz
+# por qual delas o ator chegou (D-006).
+# ---------------------------------------------------------------------------
+
+
+def _processo_para_gerir(request, processo_id):
+    """Processo, ator e base — ou 404 para tudo que este ator não alcança (D-017)."""
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return None, None, None
+    processo = _processo_do_ator(ator, processo_id)
+    base = pode_gerir_comissao(ator, processo)
+    if base is None:
+        raise Http404
+    return ator, processo, base
+
+
+@require_http_methods(["GET", "POST"])
+def comissao(request, processo_id):
+    """Quem integra a comissão deste Processo (US1 e US2 da 011)."""
+    ator, processo, _ = _processo_para_gerir(request, processo_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+
+    erro = None
+    if request.method == "POST":
+        acao = (request.POST.get("acao") or "").strip()
+        dados = forms.ler_membro(request.POST)
+        chave = request.POST.get("chave_idempotencia") or uuid4().hex
+        try:
+            if acao == "incluir":
+                # FR-022: o primeiro envio não grava — devolve a conferência do identificador.
+                if not request.POST.get("confirmado"):
+                    return render(
+                        request,
+                        "interface/comissao_confirmar.html",
+                        {
+                            "processo": processo,
+                            "membro": dados,
+                            "chave_idempotencia": chave,
+                        },
+                    )
+                comissao_app.adicionar_membro(
+                    actor=ator,
+                    processo_id=processo.id,
+                    identity_subject=dados["identity_subject"],
+                    display_label=dados["display_label"],
+                    funcao=dados["funcao"],
+                    idempotency_key=chave,
+                    correlation_id=getattr(request, "correlation_id", ""),
+                )
+            elif acao == "alterar_funcao":
+                comissao_app.alterar_funcao(
+                    actor=ator,
+                    processo_id=processo.id,
+                    membro_id=request.POST.get("membro_id"),
+                    funcao=dados["funcao"],
+                    idempotency_key=chave,
+                    correlation_id=getattr(request, "correlation_id", ""),
+                )
+            elif acao == "remover":
+                comissao_app.remover_membro(
+                    actor=ator,
+                    processo_id=processo.id,
+                    membro_id=request.POST.get("membro_id"),
+                    idempotency_key=chave,
+                    correlation_id=getattr(request, "correlation_id", ""),
+                )
+            return redirect(reverse("interface:comissao", args=[processo.id]))
+        except DomainError as recusa:
+            if recusa.status == 404:
+                raise Http404 from recusa
+            erro = recusa.detail
+
+    membros = comissao_selectors.membros(processo)
+    return render(
+        request,
+        "interface/comissao.html",
+        {
+            "processo": processo,
+            "membros": [
+                {"membro": m, "etapas": comissao_selectors.etapas_do_membro(m)} for m in membros
+            ],
+            "tem_presidente": comissao_selectors.tem_presidente(processo),
+            "erro": erro,
+            "chave_idempotencia": uuid4().hex,
+        },
+    )
+
+
+@require_http_methods(["GET", "POST"])
+def alocacoes(request, processo_id):
+    """Quem atua em cada Etapa, por Edital (US3 e US4 da 011)."""
+    ator, processo, _ = _processo_para_gerir(request, processo_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+
+    erro = None
+    if request.method == "POST":
+        acao = (request.POST.get("acao") or "").strip()
+        dados = forms.ler_alocacao(request.POST)
+        chave = request.POST.get("chave_idempotencia") or uuid4().hex
+        try:
+            if acao == "incluir":
+                alocacao_app.alocar(
+                    actor=ator,
+                    processo_id=processo.id,
+                    membro_id=dados["membro_id"],
+                    edital_id=dados["edital_id"],
+                    etapa_id=dados["etapa_id"],
+                    idempotency_key=chave,
+                    correlation_id=getattr(request, "correlation_id", ""),
+                )
+            elif acao == "remover":
+                alocacao_app.remover_alocacao(
+                    actor=ator,
+                    processo_id=processo.id,
+                    alocacao_id=request.POST.get("alocacao_id"),
+                    idempotency_key=chave,
+                    correlation_id=getattr(request, "correlation_id", ""),
+                )
+            return redirect(reverse("interface:alocacoes", args=[processo.id]))
+        except DomainError as recusa:
+            if recusa.status == 404:
+                raise Http404 from recusa
+            erro = recusa.detail
+
+    return render(
+        request,
+        "interface/alocacoes.html",
+        {
+            "processo": processo,
+            "organizacao": comissao_selectors.organizacao(processo),
+            "membros": comissao_selectors.membros(processo),
+            "orfas": comissao_selectors.orfas(processo),
+            "tem_presidente": comissao_selectors.tem_presidente(processo),
+            "erro": erro,
+            "chave_idempotencia": uuid4().hex,
+        },
+    )
+
+
+@require_http_methods(["GET"])
+def minhas_etapas(request):
+    """A área pessoal de quem trabalha (US5 da 011).
+
+    Não exige permissão nenhuma: para quem não tem alocação, ela é o estado vazio — e não uma
+    recusa. Mostrar as Etapas alheias como bloqueadas seria dizer que existem (UX-011).
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    return render(
+        request,
+        "interface/minhas_etapas.html",
+        {"atribuicoes": comissao_selectors.minhas_etapas(ator)},
+    )
+
+
+@require_http_methods(["GET"])
+def atribuicao(request, edital_id, etapa_id):
+    """A Etapa como contexto de trabalho — e nada além disso (§27 e §50 da spec)."""
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital = (
+        Edital.objects.filter(pk=edital_id, institution_scope=ator.institution_scope)
+        .select_related("processo")
+        .first()
+    )
+    if edital is None:
+        raise Http404
+    por_alocacao = pode_atuar_na_etapa(ator, edital, etapa_id)
+    por_gestao = pode_gerir_comissao(ator, edital.processo) is not None
+    if not (por_alocacao or por_gestao):
+        # A mesma resposta para Etapa não alocada, de outro Processo ou de outro escopo: a
+        # existência não é enumerável por quem não tem acesso (FR-057).
+        raise Http404
+    try:
+        etapa = etapa_vigente(edital, etapa_id)
+    except DomainError:
+        etapa = None
+    if etapa is None:
+        raise Http404
+    evento = None
+    if etapa.get("scheduleEventId"):
+        evento = EventoCronograma.objects.filter(pk=etapa["scheduleEventId"]).first()
+    return render(
+        request,
+        "interface/atribuicao.html",
+        {
+            "edital": edital,
+            "processo": edital.processo,
+            "etapa": etapa,
+            "evento": evento,
+            "por_alocacao": por_alocacao,
+            "por_gestao": por_gestao and not por_alocacao,
+        },
+    )
+
+
+@require_http_methods(["GET"])
+def auditoria_da_comissao(request, processo_id):
+    """A trilha da comissão deste Processo, ao lado da trilha do Edital que já existia.
+
+    Sem esta tela a auditoria da 011 só seria verificável por consulta ao banco, e o princípio VI
+    da Constituição não a consideraria entregue (D-018).
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    processo = _processo_do_ator(ator, processo_id)
+    require_permission(ator, "auditoria:consultar")
+    registros, proximo = auditoria_selectors.trilha_da_comissao(
+        actor=ator,
+        processo=processo,
+        cursor=request.GET.get("cursor"),
+        limit=auditoria_selectors.parse_limit(request.GET.get("limit")),
+    )
+    return render(
+        request,
+        "interface/auditoria.html",
+        {
+            "processo": processo,
+            "da_comissao": True,
+            "registros": [
+                {
+                    "quando": registro.occurred_at,
+                    "ator": registro.actor_subject,
+                    "operacao": OPERACOES.get(registro.operation, registro.operation),
+                    "agregado": AGREGADOS.get(
+                        registro.aggregate_type, registro.aggregate_type
+                    ),
+                    "identificador": registro.aggregate_id,
+                    "permissao": registro.permission,
+                    "motivo": registro.reason,
+                }
+                for registro in registros
+            ],
+            "proximo_cursor": proximo,
+        },
     )

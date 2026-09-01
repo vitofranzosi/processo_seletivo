@@ -69,3 +69,23 @@ def trilha_do_edital(*, actor, edital, cursor=None, limit=LIMITE_PADRAO):
     """
     identificadores = [edital.id, *edital.retificacoes.values_list("id", flat=True)]
     return consultar(actor=actor, aggregate_ids=identificadores, cursor=cursor, limit=limit)
+
+
+def trilha_da_comissao(*, actor, processo, cursor=None, limit=LIMITE_PADRAO):
+    """Tudo que aconteceu com a comissão deste Processo — membros e alocações na mesma linha.
+
+    Os eventos da 011 têm por agregado o membro e a alocação, e não o Processo: é assim que a
+    trilha responde "qual Etapa foi afetada". Reunir os dois pelo mesmo `consultar` que já busca
+    por conjunto de identificadores é o que evita um subsistema paralelo de log (011, D-018).
+    """
+    from processo_seletivo.comissoes.models import AlocacaoEtapa, MembroComissao
+
+    membros = list(
+        MembroComissao.objects.filter(processo=processo).values_list("id", flat=True)
+    )
+    alocacoes = list(
+        AlocacaoEtapa.objects.filter(membro__processo=processo).values_list("id", flat=True)
+    )
+    return consultar(
+        actor=actor, aggregate_ids=[*membros, *alocacoes], cursor=cursor, limit=limit
+    )

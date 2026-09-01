@@ -289,6 +289,9 @@ input.largo,textarea.largo{width:100%;}
   <span class="marca">Cefor<span>/Ifes</span> · Processos Seletivos</span>
   {% if ator %}
   <div class="identidade">
+    {% comment %} UX-008: quem só executa trabalho futuro chega às próprias Etapas sem passar por tela
+       administrativa nenhuma. O link não depende de papel — depende de estar identificado. {% endcomment %}
+    <a href="{% url 'interface:minhas-etapas' %}">Minhas Etapas</a>
     <span>{{ ator.subject }}{% if papeis_do_ator %} — {{ papeis_do_ator|join:", " }}{% endif %}</span>
     <form method="post" action="{% url 'interface:sair' %}" style="margin:0">
       {% csrf_token %}
