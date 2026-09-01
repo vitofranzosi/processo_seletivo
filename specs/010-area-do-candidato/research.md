@@ -411,3 +411,100 @@ pedisse a remoção de credencial alheia — resposta que descreve errado o que 
 investigação aponta para o lado errado. E a captura larga escondeu um defeito real por uma fase
 inteira: a lista lia `.conteudo` num objeto cujo atributo é `content`, e **toda** linha saía sem
 Edital e sem Perfil, sem que nada acusasse.
+
+---
+
+# Decisões tomadas depois de percorrer a jornada
+
+Um percurso completo no navegador — do cartaz da vaga ao comprovante, com um candidato novo e duas
+participações legadas — encontrou seis defeitos que a suíte não pegava, porque nenhum deles é uma
+regra violada: são coisas que o sistema faz corretamente **sem dizer**, ou dizendo o que não é
+verdade. As decisões abaixo são a resposta a eles.
+
+## D-023 — A recusa do código nomeia a causa
+
+**Decisão**: `estado_atual` classifica o desafio depois de uma tentativa recusada, e a tela diz qual
+dos quatro motivos foi, com o saldo de tentativas quando ele existe (`FR-031a`).
+
+**Racional**: a frase única era a leitura mais larga possível da `FR-031`, e cobrava caro por isso.
+Esgotadas as cinco tentativas, o desafio morre — e quem então encontrava o código **certo** na caixa
+de entrada e o digitava corretamente lia exatamente "código inválido ou expirado". Do lado do
+servidor tudo estava certo; do lado da pessoa o sistema estava mentindo sobre a causa, e a saída que
+a frase indicava estava bloqueada pela janela de espera, sem aviso (D-024). Reproduzido no percurso
+e depois em teste: `test_o_codigo_certo_depois_do_teto_diz_que_o_codigo_foi_cancelado`.
+
+**O que a FR-031 realmente proíbe** é distinguir código errado de **endereço inexistente** — e nada
+disso distingue: `solicitar` cria o desafio de forma idêntica exista ou não identidade, então motivo
+e saldo são os mesmos nos dois casos. O que se lê é o estado do desafio que a própria sessão pediu, e
+que ela já conhece por ter contado os próprios erros. `test_a_recusa_nao_distingue_quem_existe`
+guarda a fronteira.
+
+**Alternativa rejeitada**: manter a frase única e só melhorar o texto. Não resolve — o problema não é
+a redação, é a informação ausente.
+
+## D-024 — Reenviar responde por escrito, mesmo quando não envia
+
+**Decisão**: `_noticia_do_envio` produz uma frase para cada desfecho, inclusive "nada foi enviado", e
+a contagem ao lado do botão é recalculada a cada renderização (`FR-031b`, `UX-006`).
+
+**Racional**: o botão estava sempre clicável e, dentro da janela de espera, não enviava nada e não
+dizia nada. Pior: a recusa que estava na tela sumia junto com o recarregamento, então o clique
+**parecia** ter funcionado. Silêncio é a pior resposta possível aqui, porque é indistinguível de
+sucesso — a pessoa passava a esperar um e-mail que nunca saiu.
+
+**O botão continua habilitado no servidor**, e é decisão, não descuido: desabilitá-lo na renderização
+prenderia quem está sem JavaScript, porque a página não se atualiza sozinha e o botão nunca voltaria.
+Quem tem JavaScript vê a contagem correr e o botão liberar; quem não tem clica e recebe a resposta
+por escrito. Nenhum dos dois fica sem saber.
+
+**Um número só para a mesma espera.** A primeira versão repetia na notícia o valor apurado no POST, e
+a tela mostrava "59 segundos" numa linha e "56 segundos" na outra — dois números para a mesma coisa.
+A contagem ao lado do botão é a única fonte.
+
+## D-025 — O envio da inscrição deixa recibo, e é a única exceção
+
+**Decisão**: `inscricoes/application/mensagem.py` envia uma mensagem, depois do commit, e a `FR-084`
+passa a nomear essa exceção em vez de proibir tudo.
+
+**Racional**: a proibição original estava certa no princípio — canal existir não torna comunicação
+transacional escopo implícito — e errada no caso. A pessoa conclui o ato mais importante do ano dela,
+o comprovante aparece na tela, e a caixa de entrada não registra nada; fechada a aba antes de baixar
+o PDF, ela fica sem o protocolo que a própria página manda guardar. A exceção é nominal: uma
+mensagem, disparada por um ato que a própria pessoa praticou.
+
+**Depois do commit, e fora do domínio.** Enviar de dentro da transação amarraria um ato
+administrativo à disponibilidade de um servidor de SMTP: uma falha de rede desfaria uma inscrição
+válida, e um rollback posterior deixaria na caixa da pessoa a confirmação de algo que não aconteceu
+(Princípio IV, `FR-084b`). `test_falha_no_envio_da_mensagem_nao_custa_a_inscricao` força a falha.
+
+**Sem CPF e sem telefone** (`FR-084a`). Aqui a caixa é credencial provada — não é o caso da `FR-082`,
+em que ainda não se sabe de quem ela é —, mas dado que não ajuda quem lê viaja junto quando a
+mensagem é encaminhada.
+
+## D-026 — O instante é convertido antes de ser escrito
+
+**Decisão**: `comprovante_pdf.instante` converte para o fuso da instituição antes de chamar
+`humano.instante`, e `humano.instante` documenta que escreve o que recebe (`FR-074a`).
+
+**Racional**: o comprovante em HTML passa pelo filtro `date`, que localiza; a tela de conferência e o
+PDF liam `comprovante_pdf.instante`, que formatava o valor cru — e o banco devolve UTC. A mesma
+inscrição aparecia enviada às 16h03 no comprovante e às 19h03 na conferência, com os documentos
+datados às 16h01 três linhas abaixo, na mesma página. `publicacoes/pdf.py` já convertia; este caminho
+não, e a assimetria só aparecia olhando as duas telas juntas.
+
+**A conversão fica no chamador**, e não em `humano`: aquele módulo existe para não depender de estado
+global do processo, e `localtime` lê `TIME_ZONE`. A docstring passou a dizer isso, para que o próximo
+chamador não repita o esquecimento.
+
+## D-027 — A área tem porta, e a porta aparece
+
+**Decisão**: o cabeçalho leva a "Minhas inscrições" quando há sessão e a "Entrar" quando não há, por
+bloco de *template* que as telas do próprio acesso esvaziam (`UX-006a`).
+
+**Racional**: a vitrine não oferecia entrada nenhuma. Quem já se inscreveu e volta para conferir
+precisava clicar em "Inscrever-se nesta vaga" numa vaga qualquer — a única porta — ou saber o
+endereço de cor. E, com sessão aberta, o cabeçalho trazia só o nome e o botão *Sair*.
+
+**Bloco, e não variável de contexto**: as três telas do acesso o esvaziam declarando o bloco vazio, e
+nenhuma view precisa lembrar de passar bandeira — que é exatamente o tipo de coisa que se esquece na
+quarta tela.

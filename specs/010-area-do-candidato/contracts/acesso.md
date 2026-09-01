@@ -30,6 +30,12 @@ Formulário com um campo de e-mail.
 **Efeitos**: cria um `DesafioDeAcesso` de finalidade `entrar` e invalida os anteriores ainda
 utilizáveis daquele endereço (`FR-026`).
 
+**Reenviar é este mesmo `POST`**, feito de dentro da tela do código. Recusado pela janela de espera,
+ele responde por escrito na tela seguinte — "ainda não enviamos outro código" —, e nunca em silêncio
+(`FR-031b`, D-024). O botão permanece habilitado no servidor de propósito: desabilitá-lo prenderia
+quem está sem JavaScript, porque a página não se atualiza sozinha. A contagem ao lado dele é
+recalculada a cada renderização e é o **único** número da espera na tela (`UX-006`).
+
 **Nunca**: nos **três** casos que poderiam revelar a existência do endereço — existe, não existe,
 limite esgotado — e também na falha de envio, a resposta, o código de estado, o texto e a janela de
 reenvio são idênticos.
@@ -53,10 +59,19 @@ endereço informado permanece visível e não é perdido em erro (`UX-007`).
 | Código correto, endereço já verificado | `302` para `/inscricoes`; sessão rotacionada (`FR-035`) |
 | Código correto, endereço sem correspondência anterior | cria identidade sem pedir CPF e `302` para `/inscricoes` (`FR-049`) |
 | Código correto, endereço com correspondência anterior | `302` para `/acesso/reconciliar` (`FR-050`) |
-| Código errado, expirado, já usado, ou acima de cinco tentativas | `200`, com recusa que **não** distingue os quatro casos (`FR-031`) |
+| Código errado, ainda com saldo | `200`, "Código incorreto" e quantas tentativas restam (`FR-031a`) |
+| Cinco tentativas esgotadas | `200`, diz que o código foi **cancelado** e que nem o correto vale mais |
+| Prazo vencido | `200`, diz que expirou |
+| Código já usado | `200`, diz que já foi usado |
 
 **Efeitos**: o consumo do código é atômico — duas requisições simultâneas com o mesmo código
 produzem exatamente um consumo (`FR-025`, `SC-003`).
+
+**As quatro recusas não distinguem quem existe** (`FR-031`). O desafio é criado de forma idêntica
+exista ou não identidade, então motivo e saldo são os mesmos nos dois casos; o que a mensagem lê é o
+estado do desafio que a própria sessão pediu. A frase única que havia antes cobria os quatro casos e
+mentia no pior deles: esgotadas as tentativas, o código **certo** era recusado como se estivesse
+errado (D-023).
 
 ---
 

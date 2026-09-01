@@ -29,6 +29,7 @@ from processo_seletivo.identidade.application.mensagem import enviar_codigo
 from processo_seletivo.identidade.domain import codigo as codigo_de_acesso
 from processo_seletivo.identidade.domain.enderecos import canonizar, endereco_aceitavel
 from processo_seletivo.identidade.models import DesafioDeAcesso
+from processo_seletivo.inscricoes.application.mensagem import enviar_comprovante
 from processo_seletivo.inscricoes.application.rascunho import (
     abrir_inscricao,
     anexar_documento,
@@ -318,6 +319,9 @@ CHAVE_DA_FINALIDADE = "portal_acesso_finalidade"
 # Para onde voltar depois de informar nome e CPF: quem chegou a caminho de uma vaga não pode ser
 # despejado numa lista vazia e obrigado a procurar tudo de novo.
 CHAVE_DO_DESTINO = "portal_acesso_destino"
+# O que dizer sobre o último pedido de código — inclusive "nada foi enviado". Sobrevive ao
+# redirecionamento porque a tela que precisa da notícia é a seguinte, e é lida uma vez só.
+CHAVE_DO_ENVIO = "portal_acesso_envio"
 # A mesma frase nos quatro casos que poderiam revelar existência: endereço com identidade, sem
 # identidade, limite esgotado e falha de envio (FR-020, FR-021, FR-083).
 AVISO_NEUTRO = "Se este endereço puder ser utilizado, enviaremos um código de acesso."
@@ -363,7 +367,10 @@ def acesso(request):
         )
 
     canonico = canonizar(informado)
-    recibo, codigo = desafio_de_acesso.solicitar(
+    # Reenviar é pedir de novo o mesmo endereço estando já na tela do código. A distinção não muda
+    # nada do que acontece — muda o que a tela diz depois, e é justamente isso que faltava.
+    reenvio = request.session.get(CHAVE_DO_ENDERECO, "") == informado
+    _, codigo = desafio_de_acesso.solicitar(
         email_canonico=canonico,
         finalidade=DesafioDeAcesso.Finalidade.ENTRAR,
         origem=_origem(request),
@@ -371,8 +378,30 @@ def acesso(request):
     enviar_codigo(para=informado, codigo=codigo)
     request.session[CHAVE_DO_ENDERECO] = informado
     request.session[CHAVE_DA_FINALIDADE] = DesafioDeAcesso.Finalidade.ENTRAR
-    request.session["portal_acesso_espera"] = recibo.proxima_tentativa_em
+    request.session[CHAVE_DO_ENVIO] = _noticia_do_envio(enviado=bool(codigo), reenvio=reenvio)
     return redirect(reverse("portal:acesso-codigo"))
+
+
+def _noticia_do_envio(*, enviado: bool, reenvio: bool) -> str:
+    """O que dizer sobre o pedido que acabou de acontecer — inclusive quando nada aconteceu.
+
+    O botão de reenviar estava sempre clicável e, dentro da janela de espera, não enviava nada e
+    não dizia nada: a página recarregava idêntica e a recusa que estava na tela sumia junto, o que
+    fazia o clique **parecer** ter dado certo. A pessoa passava a esperar um e-mail que nunca foi
+    enviado. Silêncio é a pior resposta possível aqui, porque é indistinguível de sucesso.
+
+    Nenhuma das frases depende de existir identidade: o que decide é a contagem de pedidos daquele
+    endereço e daquela origem, que avança igual para quem existe e para quem não existe (FR-021).
+    """
+    if enviado:
+        return "Enviamos um código novo. Use o mais recente." if reenvio else ""
+    # Sem número aqui de propósito: a contagem ao lado do botão é recalculada a cada renderização
+    # e corre em tempo real. Repetir o valor apurado no instante do POST punha dois números
+    # diferentes para a mesma espera na mesma tela.
+    return (
+        "Ainda não enviamos outro código — o pedido anterior foi há pouco. "
+        "Veja abaixo quando será possível pedir de novo."
+    )
 
 
 def acesso_codigo(request):
@@ -380,19 +409,22 @@ def acesso_codigo(request):
     informado = request.session.get(CHAVE_DO_ENDERECO, "")
     if not informado:
         return redirect(reverse("portal:acesso"))
+    canonico = canonizar(informado)
+    finalidade = request.session.get(CHAVE_DA_FINALIDADE, DesafioDeAcesso.Finalidade.ENTRAR)
     contexto = {
         "email": informado,
         "erro": "",
-        "espera": request.session.get("portal_acesso_espera", 60),
+        # Recalculada a cada renderização: guardada na sessão, a espera envelhecia junto com a
+        # página e anunciava sessenta segundos depois de dois minutos parada ali (UX-006).
+        "espera": desafio_de_acesso.espera_de_reenvio(
+            email_canonico=canonico, finalidade=finalidade
+        ),
         "aviso": AVISO_NEUTRO,
+        "noticia": request.session.pop(CHAVE_DO_ENVIO, ""),
     }
     if request.method != "POST":
         return render(request, "portal/acesso_codigo.html", contexto)
 
-    canonico = canonizar(informado)
-    finalidade = request.session.get(
-        CHAVE_DA_FINALIDADE, DesafioDeAcesso.Finalidade.ENTRAR
-    )
     digitado = request.POST.get("codigo", "")
     if not codigo_de_acesso.formato_aceitavel(digitado):
         contexto["erro"] = "O código tem seis dígitos."
@@ -402,8 +434,7 @@ def acesso_codigo(request):
         email_canonico=canonico, finalidade=finalidade, codigo=digitado
     )
     if desafio is None:
-        # Uma frase para quatro motivos — errado, expirado, já usado e acima do teto (FR-031).
-        contexto["erro"] = "Código inválido ou expirado. Peça um novo código."
+        contexto["erro"] = _recusa_do_codigo(canonico, finalidade)
         return render(request, "portal/acesso_codigo.html", contexto)
 
     if finalidade == DesafioDeAcesso.Finalidade.RETOMAR:
@@ -411,6 +442,36 @@ def acesso_codigo(request):
     if finalidade == DesafioDeAcesso.Finalidade.ADICIONAR_CREDENCIAL:
         return _concluir_adicao(request, desafio)
     return _decidir_a_quem_pertence(request, desafio, informado)
+
+
+def _recusa_do_codigo(email_canonico: str, finalidade: str) -> str:
+    """Diz qual dos motivos foi — e é a correção de um defeito que perdia candidato.
+
+    A frase única ("código inválido ou expirado") cobria quatro situações, e uma delas é fatal:
+    esgotadas as cinco tentativas, o desafio morre, mas quem depois encontrava o código **certo**
+    na caixa de entrada e o digitava corretamente lia exatamente a mesma recusa. Do lado de cá o
+    sistema estava correto; do lado de lá ele estava mentindo. A pessoa parava ali.
+
+    A FR-031 continua respeitada: ela proíbe distinguir código errado de endereço inexistente, e
+    nenhuma destas frases faz isso — `solicitar` cria desafio para qualquer endereço de forma
+    aceitável, então motivo e saldo são idênticos exista ou não identidade (ver `estado_atual`).
+    """
+    estado = desafio_de_acesso.estado_atual(email_canonico=email_canonico, finalidade=finalidade)
+    if estado.motivo == desafio_de_acesso.CODIGO_ERRADO:
+        if estado.tentativas_restantes == 1:
+            return "Código incorreto. Resta 1 tentativa antes de este código ser cancelado."
+        return (
+            f"Código incorreto. Restam {estado.tentativas_restantes} tentativas "
+            "antes de este código ser cancelado."
+        )
+    if estado.motivo == desafio_de_acesso.ESGOTADO:
+        return (
+            "As tentativas deste código acabaram e ele foi cancelado — mesmo o código certo não "
+            "vale mais. Peça um novo código abaixo."
+        )
+    if estado.motivo == desafio_de_acesso.EXPIRADO:
+        return "Este código expirou. Peça um novo código abaixo."
+    return "Este código já foi usado. Peça um novo código abaixo."
 
 
 def _abrir_retomada(request, desafio):
@@ -452,7 +513,7 @@ def _entrar(request, identidade):
         CHAVE_DO_DESAFIO,
         CHAVE_DA_FINALIDADE,
         CHAVE_DO_DESTINO,
-        "portal_acesso_espera",
+        CHAVE_DO_ENVIO,
     ):
         request.session.pop(chave, None)
     identidade_do_candidato.abrir_sessao(request, identidade)
@@ -584,7 +645,7 @@ def acesso_retomar(request):
     if request.method != "POST":
         return redirect(reverse("portal:inscricoes"))
 
-    recibo, codigo = desafio_de_acesso.solicitar(
+    _, codigo = desafio_de_acesso.solicitar(
         email_canonico=credencial.email_canonico,
         finalidade=DesafioDeAcesso.Finalidade.RETOMAR,
         origem=_origem(request),
@@ -592,7 +653,7 @@ def acesso_retomar(request):
     enviar_codigo(para=credencial.email_como_informado, codigo=codigo)
     request.session[CHAVE_DO_ENDERECO] = credencial.email_como_informado
     request.session[CHAVE_DA_FINALIDADE] = DesafioDeAcesso.Finalidade.RETOMAR
-    request.session["portal_acesso_espera"] = recibo.proxima_tentativa_em
+    request.session[CHAVE_DO_ENVIO] = _noticia_do_envio(enviado=bool(codigo), reenvio=False)
     return redirect(reverse("portal:acesso-codigo"))
 
 
@@ -725,7 +786,7 @@ def conta_adicionar(request):
         request.session["portal_conta_aviso"] = "Este endereço já é seu."
         return redirect(reverse("portal:conta"))
 
-    recibo, codigo = desafio_de_acesso.solicitar(
+    _, codigo = desafio_de_acesso.solicitar(
         email_canonico=canonico,
         finalidade=DesafioDeAcesso.Finalidade.ADICIONAR_CREDENCIAL,
         origem=_origem(request),
@@ -733,7 +794,7 @@ def conta_adicionar(request):
     enviar_codigo(para=informado, codigo=codigo)
     request.session[CHAVE_DO_ENDERECO] = informado
     request.session[CHAVE_DA_FINALIDADE] = DesafioDeAcesso.Finalidade.ADICIONAR_CREDENCIAL
-    request.session["portal_acesso_espera"] = recibo.proxima_tentativa_em
+    request.session[CHAVE_DO_ENVIO] = _noticia_do_envio(enviado=bool(codigo), reenvio=False)
     return redirect(reverse("portal:acesso-codigo"))
 
 
@@ -756,7 +817,7 @@ def _concluir_adicao(request, desafio):
             email_como_informado=_endereco_do_desafio(request, desafio),
             correlation_id=getattr(request, "correlation_id", ""),
         )
-    for chave in (CHAVE_DO_ENDERECO, CHAVE_DA_FINALIDADE, "portal_acesso_espera"):
+    for chave in (CHAVE_DO_ENDERECO, CHAVE_DA_FINALIDADE, CHAVE_DO_ENVIO):
         request.session.pop(chave, None)
     return redirect(reverse("portal:conta"))
 
@@ -1282,6 +1343,7 @@ def revisao(request, inscricao_id):
                     idempotency_key=f"envio-{registro.id}-{registro.revision}",
                     correlation_id=getattr(request, "correlation_id", ""),
                 )
+                _confirmar_por_email(request, registro)
                 return redirect(reverse("portal:comprovante", args=[registro.id]))
             except DomainError as exc:
                 erros.append(exc.detail)
@@ -1308,6 +1370,36 @@ def revisao(request, inscricao_id):
             "erros": erros,
             "declaracoes": declaracoes,
             "etapas": etapas_ate(1),
+        },
+    )
+
+
+def _confirmar_por_email(request, registro):
+    """O recibo do envio, na caixa de quem enviou — depois de a inscrição estar gravada.
+
+    Chamado aqui, e não dentro de `enviar_inscricao`: o ato é do domínio, a mensagem é do canal, e
+    amarrar um ao outro faria uma falha de SMTP desfazer uma inscrição válida (ver `mensagem.py`).
+
+    Lê a **versão aceita**, como o comprovante: a mensagem e o papel precisam dizer a mesma coisa,
+    e a vigente pode já ter mudado por Retificação no instante seguinte.
+    """
+    aceita = registro.versao_aceita
+    if aceita is None:
+        return
+    dados = _dados_do_comprovante(request, registro, aceita.content, aceita)
+    campos = dict(dados["campos"])
+    enviar_comprovante(
+        para=registro.email,
+        dados={
+            "protocolo": dados["protocolo"],
+            "verificacao": dados["codigo_de_verificacao"],
+            "endereco": dados["endereco"],
+            # Sem CPF e sem telefone: não ajudam quem lê, e viajam com a mensagem encaminhada.
+            "selecao": f"{campos['Processo Seletivo']}\nEdital {campos['Edital']}",
+            "perfil": campos["Perfil de Vaga"],
+            "modalidade": campos["Concorrência"],
+            "quando": campos["Enviada em"],
+            "documentos": dados["documentos"],
         },
     )
 

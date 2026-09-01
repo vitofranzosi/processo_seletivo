@@ -372,6 +372,15 @@ remover o antigo e corrigir o nome.
   prazo. Qual dos dois acontece depende da topologia, que só quem implanta conhece.
 - **FR-031**: Esgotado o limite, o desafio DEVE morrer, e a mensagem NÃO PODE distinguir código
   errado de endereço inexistente.
+- **FR-031a**: A recusa DEVE nomear a causa **relativa ao desafio** — código incorreto com o saldo
+  de tentativas, tentativas esgotadas, prazo vencido, código já usado. Isso não fere a `FR-031`: o
+  desafio é criado de forma idêntica exista ou não identidade, e por isso motivo e saldo são os
+  mesmos nos dois casos. A frase única custava candidato de forma verificável — esgotadas as cinco
+  tentativas, quem digitava o código **certo** lia a mesma recusa de quem digitava errado, e
+  concluía que o sistema estava quebrado.
+- **FR-031b**: Solicitação de código recusada pela janela de espera DEVE ser respondida por escrito,
+  dizendo que nada foi enviado. Recarregar a tela sem mensagem é indistinguível de sucesso, e faz a
+  pessoa esperar por um e-mail que não existe.
 - **FR-032**: Desafios e contadores DEVEM ser guardados de forma compartilhada entre os processos que
   atendem a aplicação, de modo que os limites valham de fato.
 - **FR-033**: Desafios expirados NÃO SÃO dado permanente de domínio, e o sistema DEVE permitir sua
@@ -484,6 +493,10 @@ remover o antigo e corrigir o nome.
   comprovante — DEVEM ser preservadas integralmente.
 - **FR-073**: A tela principal NÃO DEVE transformar evidências de integridade em conteúdo
   protagonista; pode oferecê-las sob ação própria.
+- **FR-074a**: Todo instante exibido ao candidato DEVE estar no fuso da instituição, e o mesmo
+  instante DEVE ser escrito igual na tela, no comprovante e no PDF. Divergência aqui não é detalhe de
+  apresentação: perto do fim do prazo, três horas mudam o dia do envio no documento que a pessoa
+  guarda para provar que enviou a tempo.
 - **FR-074**: "Baixar comprovante" DEVE devolver o comprovante já produzido no envio. NÃO PODE
   existir segunda modalidade de comprovante.
 - **FR-075**: Esta feature NÃO PODE permitir editar inscrição enviada, substituir ou excluir
@@ -512,8 +525,17 @@ remover o antigo e corrigir o nome.
   foi a pessoa que solicitou. NÃO PODE conter link que autentica, CPF nem dado da inscrição.
 - **FR-083**: Falha de envio DEVE produzir mensagem neutra, idêntica à do caminho feliz, e registro
   técnico no servidor.
-- **FR-084**: Esta feature NÃO PODE acrescentar qualquer outra comunicação por e-mail. O canal passar
-  a existir não torna comunicação transacional escopo implícito.
+- **FR-084**: Além do desafio, esta feature envia **uma única** outra mensagem: a confirmação do
+  envio da inscrição, endereçada à credencial que praticou o ato. O canal passar a existir não torna
+  comunicação transacional escopo implícito — aviso de retificação, de resultado, lembrete e
+  campanha continuam fora. A exceção é nominal porque o custo de não tê-la é nominal e concreto: sem
+  ela, quem fecha a aba antes de baixar o PDF fica sem o protocolo que a própria página manda
+  guardar.
+- **FR-084a**: A confirmação DEVE conter protocolo, código de verificação, a oportunidade, o instante
+  do envio e o que foi recebido. NÃO PODE conter CPF, telefone nem link que autentica.
+- **FR-084b**: O envio da mensagem DEVE acontecer com a inscrição já gravada, e a sua falha NÃO PODE
+  desfazer nem impedir o ato. Amarrar um ato administrativo à disponibilidade de um servidor de SMTP
+  faria uma queda de rede custar o prazo de um candidato (Princípio IV).
 
 ### Acesso, proteção de dados e auditoria
 
@@ -544,7 +566,12 @@ remover o antigo e corrigir o nome.
 - **UX-004**: Nenhum dado ou arquivo já submetido PODE precisar ser reenviado para ser conferido.
 - **UX-005**: O campo do código DEVE aceitar colagem integral e digitação natural, sem obrigar a
   navegar entre campos independentes.
-- **UX-006**: Reenviar DEVE ser ação clara, informando quando a próxima tentativa é possível.
+- **UX-006**: Reenviar DEVE ser ação clara, informando quando a próxima tentativa é possível. A
+  contagem DEVE refletir o tempo restante no instante em que é lida, e não o apurado quando a página
+  foi montada.
+- **UX-006a**: A área do candidato DEVE ser alcançável a partir de qualquer página pública: quem tem
+  sessão encontra o caminho para as próprias inscrições, e quem não tem encontra a porta de entrada.
+  Sem isso, a única porta é iniciar uma inscrição — e quem só quer conferir a sua não a encontra.
 - **UX-007**: Erro no código NÃO PODE apagar o endereço informado nem obrigar a reiniciar o fluxo.
 - **UX-008**: Mensagens de segurança NÃO DEVEM expor detalhe interno de identidade.
 - **UX-009**: Todo fluxo principal DEVE funcionar em tela de 375 px sem rolagem horizontal.
@@ -628,6 +655,14 @@ remover o antigo e corrigir o nome.
   consegue retomá-lo e recuperar o acesso à participação anterior.
 - **SC-026**: Todo fluxo principal se conclui em tela de 375 px, sem rolagem horizontal, e somente
   pelo teclado.
+- **SC-028**: Depois de esgotadas as tentativas, o código correto é recusado com uma mensagem que
+  diz que o código foi cancelado — e nunca com a de código incorreto.
+- **SC-029**: Pedir outro código durante a janela de espera produz resposta escrita dizendo que nada
+  foi enviado.
+- **SC-030**: A inscrição enviada gera uma mensagem na caixa da credencial, com protocolo e código de
+  verificação, e a sua falha não impede o envio.
+- **SC-031**: O instante do envio é o mesmo na tela, no comprovante e no PDF.
+- **SC-032**: A área do candidato é alcançável a partir da vitrine, com e sem sessão.
 - **SC-027**: Nenhum candidato é recusado no envio por causa de CPF declarado por outra identidade, e
   a coincidência aparece assinalada, e não apenas legível, para quem conduz o certame.
 

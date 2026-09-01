@@ -76,11 +76,9 @@ def test_a_mais_recente_vem_primeiro(client, selecao):
 
     corpo = client.get(reverse("portal:inscricoes")).content.decode()
 
-    itens = [
-        bloco
-        for bloco in corpo.split('<li class="selecao">')
-        if "/inscricoes/" in bloco
-    ]
+    # A partir do primeiro `<li>`: o cabeçalho passou a levar um link para a própria lista, e um
+    # filtro por "/inscricoes/" recolhia o topo da página como se fosse um item.
+    itens = corpo.split('<li class="selecao">')[1:]
     assert str(recente.id) in itens[0], "a mais recente encabeça a lista"
 
 

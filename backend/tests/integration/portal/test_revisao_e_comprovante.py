@@ -234,7 +234,12 @@ def test_o_comprovante_pode_ser_baixado_e_reencontrado(client, inscricao_de_mari
         "o link é estilizado como ação principal — `button.principal` o deixava sem estilo"
     )
     assert "Guarde o número do protocolo" in corpo
-    assert "identifique-se com o mesmo CPF" in corpo, "diz como voltar a este comprovante"
+    # Diz como voltar — e diz o que é verdade desde a 010: entra-se por e-mail e código, não por
+    # CPF. O texto herdado da 009 mandava o candidato procurar um campo que não existe mais.
+    assert "entre com o e-mail acima" in corpo, "diz como voltar a este comprovante"
+    assert "CPF" not in corpo.split("Para conferir este comprovante")[1][:400], (
+        "a instrução de retorno não pode mencionar CPF: ele não identifica ninguém aqui"
+    )
 
 
 @pytest.mark.django_db(transaction=True)

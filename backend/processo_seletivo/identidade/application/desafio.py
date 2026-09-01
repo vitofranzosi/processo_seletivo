@@ -87,6 +87,18 @@ def _espera_restante(email_canonico: str, finalidade: str, agora) -> int:
     return max(0, int(restante))
 
 
+def espera_de_reenvio(*, email_canonico: str, finalidade: str) -> int:
+    """Quantos segundos ainda faltam para outro envio ser possível — agora, e não quando a página
+    foi montada.
+
+    A tela guardava o valor devolvido pelo recibo e o repetia a cada renderização, então ele
+    envelhecia: depois de dois minutos parados na página, ela ainda anunciava sessenta segundos de
+    espera. Recalcular na leitura é o que permite ao botão dizer a verdade e ao contador chegar a
+    zero (UX-006).
+    """
+    return _espera_restante(email_canonico, finalidade, timezone.now())
+
+
 def _excedeu_limites(email_canonico: str, origem_hash: str, agora) -> bool:
     desde = agora - JANELA
     por_endereco = DesafioDeAcesso.objects.filter(
@@ -202,6 +214,55 @@ def validar(*, email_canonico: str, finalidade: str, codigo: str) -> DesafioDeAc
         return None
     desafio.refresh_from_db()
     return desafio
+
+
+SEM_DESAFIO = "sem_desafio"
+ESGOTADO = "esgotado"
+EXPIRADO = "expirado"
+CODIGO_ERRADO = "codigo_errado"
+
+
+@dataclass(frozen=True)
+class Estado:
+    """Por que a última tentativa não valeu — e quantas ainda restam."""
+
+    motivo: str
+    tentativas_restantes: int
+
+
+def estado_atual(*, email_canonico: str, finalidade: str) -> Estado:
+    """Classifica o desafio pendente depois de uma tentativa recusada.
+
+    **Isto não afrouxa a FR-031.** O que aquela regra proíbe é distinguir *código errado de
+    endereço inexistente* — e nada aqui distingue: `solicitar` cria desafio para qualquer endereço
+    de forma aceitável, exista identidade ou não, então os quatro motivos e a contagem restante são
+    exatamente os mesmos nos dois casos. O que se lê é o estado do desafio que **esta própria
+    sessão** pediu, e que ela já conhece por ter contado os próprios erros.
+
+    O que a mensagem única custava era concreto: esgotadas as cinco tentativas, quem finalmente
+    achava o código certo na caixa de entrada e o digitava corretamente lia "código inválido" —
+    a mesma frase de quando ele estava errado. A pessoa concluía que o sistema estava quebrado, e
+    parava. Uma recusa que mente sobre a causa não protege ninguém; só perde candidato.
+
+    Lido **depois** de `validar`, de propósito: a tentativa recusada já foi contabilizada, e é o
+    saldo posterior a ela que a tela precisa anunciar.
+    """
+    agora = timezone.now()
+    desafio = (
+        DesafioDeAcesso.objects.filter(email_canonico=email_canonico, finalidade=finalidade)
+        .order_by("-criado_em")
+        .first()
+    )
+    if desafio is None or desafio.consumido_em is not None:
+        return Estado(motivo=SEM_DESAFIO, tentativas_restantes=0)
+    if desafio.tentativas_codigo >= TETO_DE_TENTATIVAS:
+        return Estado(motivo=ESGOTADO, tentativas_restantes=0)
+    if desafio.expira_em <= agora:
+        return Estado(motivo=EXPIRADO, tentativas_restantes=0)
+    return Estado(
+        motivo=CODIGO_ERRADO,
+        tentativas_restantes=TETO_DE_TENTATIVAS - desafio.tentativas_codigo,
+    )
 
 
 def limpar_terminais(*, ate=None) -> int:

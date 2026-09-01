@@ -29,6 +29,7 @@ header.topo{background:var(--verde-escuro);color:var(--branco);padding:.85rem 1r
 .quem-esta .nome{opacity:.9;min-width:0;max-width:14rem;overflow:hidden;
   text-overflow:ellipsis;white-space:nowrap}
 .quem-esta form{margin:0}
+a.no-topo{color:var(--branco);white-space:nowrap;text-decoration:underline;text-underline-offset:3px}
 button.sair{background:transparent;color:var(--branco);border:1px solid rgba(255,255,255,.6);
   border-radius:4px;padding:.3rem .7rem;font:inherit;font-size:.875rem;cursor:pointer}
 button.sair:hover{background:rgba(255,255,255,.15)}
@@ -283,6 +284,10 @@ a.principal{display:inline-block;width:auto;text-align:center;text-decoration:no
   background:var(--branco);color:var(--verde-texto);font-weight:600;font-size:1rem;
   font-family:inherit;cursor:pointer}
 .secundario:hover{background:var(--verde-claro)}
+/* Desabilitado enquanto a espera corre. Cinza e sem cursor de ação: o botão continua visível,
+   porque some-lo faria a página saltar quando ele voltasse. */
+.secundario[disabled]{border-color:var(--borda);color:var(--texto-fraco);cursor:not-allowed}
+.secundario[disabled]:hover{background:transparent}
 /* A lista de inscrições (010). Situação por texto e símbolo — cor sozinha não informa quem não a
    distingue —, e o protocolo com quebra explícita, porque é um código longo em 375px. */
 .selecao .situacao{color:var(--texto-fraco);font-size:.9375rem}
@@ -453,8 +458,15 @@ form.convite{margin:.75rem 0 0}
   compartilhado — laboratório, lan house, biblioteca — ficava identificado, e a pessoa seguinte
   começava a inscrição dela com o CPF de quem estava antes.
   {% endcomment %}
+  {% comment %}
+  A porta de entrada. Sem ela, quem já se inscreveu e volta para conferir não tinha por onde: a
+  vitrine não oferecia "Entrar", e o único caminho para a área era clicar em "Inscrever-se nesta
+  vaga" numa vaga qualquer — ou saber o endereço de cor. Com sessão, o link leva ao lugar onde a
+  pessoa quer chegar; sem sessão, à porta. As telas do próprio acesso não repetem o convite.
+  {% endcomment %}
   {% if candidato %}
   <span class="quem-esta">
+    <a class="no-topo" href="{% url 'portal:inscricoes' %}">Minhas inscrições</a>
   {% comment %}
   Quem acabou de entrar pela primeira vez ainda não tem nome: ele só é pedido na primeira
   inscrição. O endereço identifica a pessoa para ela mesma até lá — e um cabeçalho vazio deixaria
@@ -466,6 +478,17 @@ form.convite{margin:.75rem 0 0}
       <button type="submit" class="sair">Sair</button>
     </form>
   </span>
+  {% else %}
+  {% comment %}
+  Bloco, e não variável de contexto: as telas do próprio acesso o esvaziam declarando
+  `{% block convite_de_entrar %}{% endblock %}`, e nenhuma view precisa lembrar de passar bandeira.
+  Ele fica fora do `{% if candidato %}` porque, quando há sessão, o cabeçalho já leva à área.
+  {% endcomment %}
+  {% block convite_de_entrar %}
+  <span class="quem-esta">
+    <a class="no-topo" href="{% url 'portal:acesso' %}">Entrar</a>
+  </span>
+  {% endblock %}
   {% endif %}
 </header>
 <main id="conteudo" tabindex="-1">

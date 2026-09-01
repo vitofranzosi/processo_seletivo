@@ -57,13 +57,20 @@ def test_codigo_valido_leva_a_minhas_inscricoes(client):
     assert resposta["Location"] == reverse("portal:inscricoes")
 
 
-def test_codigo_invalido_responde_200_sem_dizer_o_motivo(client):
+def test_codigo_invalido_responde_200_sem_revelar_quem_existe(client):
+    """A recusa nomeia a causa **do desafio**, e nunca diz nada sobre a identidade.
+
+    A frase única cobria quatro motivos e, com isso, mentia no pior deles: esgotadas as tentativas,
+    o código certo era recusado como se estivesse errado (ver `test_recusa_do_codigo`). O que a
+    FR-031 proíbe é outra coisa — distinguir código errado de endereço inexistente —, e é isso que
+    continua verificado aqui e em `test_a_recusa_nao_distingue_quem_existe`.
+    """
     client.post(reverse("portal:acesso"), {"email": ENDERECO})
     resposta = client.post(reverse("portal:acesso-codigo"), {"codigo": "000000"})
     assert resposta.status_code == 200
     corpo = resposta.content.decode()
-    assert "Código inválido ou expirado" in corpo
-    for revelador in ("não encontrado", "não existe", "tentativas restantes"):
+    assert "Código incorreto" in corpo
+    for revelador in ("não encontrado", "não existe", "não cadastrado", "sem identidade"):
         assert revelador not in corpo
 
 

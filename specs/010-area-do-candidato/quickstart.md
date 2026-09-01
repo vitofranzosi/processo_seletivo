@@ -228,6 +228,19 @@ que produção exige.
 Registrado depois de percorrer tudo no navegador, porque a Constituição pede a demonstração e não a
 contagem de testes — e porque, aqui, olhar encontrou o que a suíte não encontrava.
 
+**Seis defeitos vieram de percorrer a jornada inteira, e nenhum deles era regra violada.** O código
+certo era recusado como errado depois de cinco tentativas; o botão de reenviar não enviava e não
+avisava; o comprovante e a tela de conferência discordavam em três horas sobre a hora do envio; o
+envio não deixava recibo na caixa de entrada; a vitrine não tinha porta de entrada; e o comprovante
+mandava voltar "com o mesmo CPF", instrução da `009` que esta feature substituiu. São coisas que o
+sistema fazia corretamente **sem dizer**, ou dizendo o que não era verdade — e nenhuma suíte pega
+isso sem alguém percorrer. As decisões estão em D-023 a D-027.
+
+Para vê-los corrigidos no navegador: peça um código, erre cinco vezes e então digite o correto — a
+recusa diz que o código foi cancelado, e não que está errado; clique em **Reenviar** antes dos
+sessenta segundos e leia a resposta; envie uma inscrição e confira, no Mailpit, a mensagem com o
+protocolo; compare a hora em `Minha inscrição` e no comprovante.
+
 **Três defeitos de apresentação vieram de reusar nome de classe.** `.sair` era o botão do cabeçalho
 escuro e ficou branco sobre cinza no corpo claro; `.protocolo` já era a caixa de destaque do
 comprovante e deu ao protocolo da lista aparência de campo de formulário; `.documento` é o botão

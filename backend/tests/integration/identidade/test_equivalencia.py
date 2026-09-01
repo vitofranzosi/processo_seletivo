@@ -14,6 +14,9 @@ from django.urls import reverse
 
 from processo_seletivo.identidade.application import associacao
 from processo_seletivo.identidade.application import desafio as servico
+from processo_seletivo.identidade.models import DesafioDeAcesso
+
+ENTRAR = DesafioDeAcesso.Finalidade.ENTRAR
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
@@ -38,7 +41,11 @@ def ler(client, endereco):
     """
     pedir(client, endereco)
     corpo = client.get(reverse("portal:acesso-codigo")).content.decode()
-    return re.sub(r'name="csrfmiddlewaretoken" value="[^"]+"', "TOKEN", corpo)
+    corpo = re.sub(r'name="csrfmiddlewaretoken" value="[^"]+"', "TOKEN", corpo)
+    # A contagem regressiva cai um segundo entre uma leitura e a outra por passagem do relógio, e
+    # não por quem existe. Normalizada aqui, o teste continua comparando o que ele investiga — e
+    # `test_a_janela_de_espera_e_a_mesma` confere o número em si, que é o mesmo dos dois lados.
+    return re.sub(r"\b\d+ segundos", "N segundos", corpo)
 
 
 def test_o_estado_da_resposta_e_o_mesmo(client, identidade_conhecida):
@@ -57,12 +64,19 @@ def test_o_texto_da_tela_e_o_mesmo(client, identidade_conhecida):
 
 
 def test_a_janela_de_espera_e_a_mesma(client, identidade_conhecida):
-    """A UX-006 pede que o reenvio informe quando — e o "quando" não pode depender de existir."""
-    pedir(client, CONHECIDO)
-    com = client.session["portal_acesso_espera"]
-    client.session.flush()
-    pedir(client, DESCONHECIDO)
-    assert client.session["portal_acesso_espera"] == com
+    """A UX-006 pede que o reenvio informe quando — e o "quando" não pode depender de existir.
+
+    Lido da tela, e não da sessão: a espera passou a ser recalculada a cada renderização, e é o que
+    a pessoa lê que precisa ser idêntico nos dois casos.
+    """
+    com = servico.solicitar(email_canonico=CONHECIDO, finalidade=ENTRAR)[0]
+    sem = servico.solicitar(email_canonico=DESCONHECIDO, finalidade=ENTRAR)[0]
+    assert com.proxima_tentativa_em == sem.proxima_tentativa_em
+
+    # E o que a tela anuncia também: a espera é recalculada na renderização, e o cálculo não
+    # consulta identidade nenhuma.
+    assert "segundos" in ler(client, CONHECIDO)
+    assert ler(client, CONHECIDO) == ler(client, DESCONHECIDO).replace(DESCONHECIDO, CONHECIDO)
 
 
 def test_o_limite_esgotado_responde_como_o_caminho_feliz(client):

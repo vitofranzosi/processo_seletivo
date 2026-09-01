@@ -61,13 +61,15 @@ Caminhos são relativos a `backend/`.
 | FR-062, FR-063 restrições preservada e acrescentada | `inscricoes/models.py` | `tests/integration/inscricoes/test_idempotencia_preservada.py`, `tests/integration/inscricoes/test_cpf_na_submetida.py` |
 | FR-064 a FR-066 duplicidade aceita, assinalada, não decidida | `inscricoes/application/consulta.py` | `tests/integration/inscricoes/test_cpf_coincidente.py` |
 | FR-067 a FR-075 conferência, documentos, comprovante, imutabilidade | `portal/views.py` | `tests/integration/portal/test_conferir_inscricao.py`, `tests/integration/portal/test_comprovante_preservado.py` |
+| FR-074a instante único, no fuso da instituição | `inscricoes/infrastructure/comprovante_pdf.py` | `tests/integration/portal/test_hora_do_envio.py` |
 | FR-076 a FR-079 acompanhamento e aviso de versão | `portal/views.py` | `tests/integration/portal/test_acompanhamento.py`, `tests/integration/portal/test_aviso_de_versao.py` |
 
 ## Canal de e-mail, acesso e auditoria
 
 | Requisito | Onde vive | Testes |
 |---|---|---|
-| FR-080 a FR-084 mecanismo, recusa de boot, conteúdo, só o desafio | `config/settings/production.py`, `identidade/application/mensagem.py` | `tests/test_configuracao_producao.py`, `tests/integration/identidade/test_mensagem.py` |
+| FR-080 a FR-083 mecanismo, recusa de boot, conteúdo da mensagem do desafio | `config/settings/production.py`, `identidade/application/mensagem.py` | `tests/test_configuracao_producao.py`, `tests/integration/identidade/test_mensagem.py` |
+| FR-084 a FR-084b confirmação do envio: uma só, sem CPF, fora da transação | `inscricoes/application/mensagem.py`, `portal/views.py` | `tests/integration/portal/test_confirmacao_de_inscricao.py` |
 | FR-085 a FR-087 titularidade, recusa que não enumera, nada por afirmação | `inscricoes/domain/titularidade.py`, `portal/views.py` | `tests/authorization/test_idor_area.py`, `tests/authorization/test_acesso_sem_prova.py` |
 | FR-088, FR-089 auditoria dos atos, e o que não vira evento | `identidade/application/credenciais.py` | `tests/integration/identidade/test_auditoria_de_credencial.py` |
 | FR-090 recuperação fora da V1, com caminho nomeado | `portal/templates/portal/acesso_reconciliar.html` | `tests/contract/portal/test_reconciliacao.py` |
@@ -78,6 +80,7 @@ Caminhos são relativos a `backend/`.
 |---|---|
 | UX-001 a UX-004 percurso curto, sem CPF, sem redigitação | `tests/acceptance/portal/test_entrar_sem_senha.py`, `tests/acceptance/portal/test_minhas_inscricoes.py` |
 | UX-005 a UX-008 campo único, reenvio informado, erro que não apaga | `tests/interface/test_acessibilidade_do_portal.py`, `tests/acceptance/portal/test_entrar_sem_senha.py` |
+| UX-006a porta de entrada em toda página pública | `tests/integration/portal/test_porta_de_entrada.py` |
 | UX-009, UX-010 375 px e teclado | `tests/interface/test_acessibilidade_do_portal.py` |
 
 ## Critérios de sucesso
@@ -87,6 +90,7 @@ Caminhos são relativos a `backend/`.
 | SC-001 a SC-006 acesso recorrente, tetos, equivalência, sem CPF | `tests/acceptance/portal/test_entrar_sem_senha.py`, `tests/integration/identidade/test_equivalencia.py`, `tests/integration/identidade/test_teto_concorrente.py` |
 | SC-007 a SC-011c preservação do titular e do que foi submetido | `tests/migrations/test_reconciliacao.py`, `tests/authorization/test_titularidade_preservada.py`, `tests/integration/identidade/test_correcao.py` |
 | SC-012 a SC-017a proteção, concorrência, recusa de produção | `tests/authorization/test_idor_area.py`, `tests/authorization/test_acesso_sem_prova.py`, `tests/integration/identidade/test_credencial_concorrente.py`, `tests/test_configuracao_producao.py` |
+| SC-028 a SC-032 recusa nomeada, reenvio que responde, recibo do envio, instante único, porta de entrada | `tests/integration/identidade/test_recusa_do_codigo.py`, `tests/integration/identidade/test_reenvio.py`, `tests/integration/portal/test_confirmacao_de_inscricao.py`, `tests/integration/portal/test_hora_do_envio.py`, `tests/integration/portal/test_porta_de_entrada.py` |
 | SC-018 a SC-026 valor para o candidato | `tests/acceptance/portal/` (todas), `tests/interface/test_acessibilidade_do_portal.py` |
 | SC-027 duplicidade não recusa e é assinalada | `tests/integration/inscricoes/test_cpf_coincidente.py` |
 

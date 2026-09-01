@@ -56,6 +56,11 @@ def instante(momento) -> str:
     `05/10/2026 14:00` é registro; `05/10/2026, às 14h` é ato administrativo. A hora cheia perde
     os minutos porque num Edital ela não os tem: um prazo que termina "às 23h59" se escreve assim,
     e um que começa "às 14h" não vira "às 14h00".
+
+    **Escreve o que recebe, e não converte fuso.** É o mesmo compromisso do módulo: nada aqui
+    depende de estado global do processo. Quem chama entrega o instante já no fuso em que ele deve
+    ser lido — `timezone.localtime` antes, quando o valor vier do banco, que devolve UTC. Um
+    chamador que esqueceu essa conversão publicou um comprovante três horas adiantado.
     """
     if momento is None:
         return ""

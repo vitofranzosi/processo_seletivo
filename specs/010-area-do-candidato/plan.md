@@ -207,6 +207,13 @@ o plano registra o que se pensou, e a nota registra o que se construiu.
 Nada disso muda a decisão de estrutura: o domínio continua em `identidade`, o canal em `portal`, e
 `inscricoes` recebeu exatamente as duas alterações previstas.
 
+**Mais três arquivos, vindos do percurso da jornada** (D-023 a D-027):
+`inscricoes/application/mensagem.py`, que envia a confirmação do envio — no mesmo lugar e pela mesma
+razão que `identidade/application/mensagem.py`: compor uma mensagem não é regra de domínio;
+`portal/static/portal/reenvio.js`, a contagem regressiva do reenvio, que é enfeite sobre uma resposta
+que o servidor já dá por escrito; e `tests/integration/portal/test_hora_do_envio.py`, que guarda a
+conversão de fuso que faltava em `comprovante_pdf.instante`.
+
 ## Complexity Tracking
 
 > Sem violações a justificar. Nenhuma dependência nova, nenhum serviço novo, nenhuma abstração

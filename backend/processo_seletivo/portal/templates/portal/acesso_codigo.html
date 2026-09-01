@@ -1,11 +1,19 @@
 {% extends "portal/base.html" %}
+{% load static %}
 {% block titulo %}Informe o código{% endblock %}
+{% block convite_de_entrar %}{% endblock %}
 {% block conteudo %}
 <h1>Informe o código</h1>
 {% comment %} A mesma frase para quem existe e para quem não existe — e o endereço fica à vista para a pessoa
    conferir se digitou certo, sem que ela precise voltar (UX-007). {% endcomment %}
 <p class="sub">{{ aviso }}</p>
 <p class="sub">Enviado para <strong>{{ email }}</strong>. <a href="{% url 'portal:acesso' %}">Usar outro e-mail</a></p>
+{% comment %}
+O que aconteceu com o último pedido — inclusive quando não aconteceu nada. Clicar em "Reenviar"
+dentro da janela de espera recarregava a página idêntica, sem enviar e sem avisar, e o clique
+parecia ter funcionado: a pessoa passava a esperar um e-mail que nunca saiu.
+{% endcomment %}
+{% if noticia %}<p class="sub aviso-do-envio">{{ noticia }}</p>{% endif %}
 
 <form method="post" action="{% url 'portal:acesso-codigo' %}" novalidate>
   {% csrf_token %}
@@ -21,11 +29,25 @@
   <button type="submit" class="principal">Entrar</button>
 </form>
 
-<form method="post" action="{% url 'portal:acesso' %}" class="convite">
+<form method="post" action="{% url 'portal:acesso' %}" class="convite"
+      id="reenvio" data-espera="{{ espera }}">
   {% csrf_token %}
   <input type="hidden" name="email" value="{{ email }}">
-  {# Quando a próxima tentativa é possível — e a espera é a mesma para todo mundo (UX-006). #}
-  <button type="submit" class="secundario">Reenviar código</button>
-  <span class="sub">Você poderá pedir outro código em até {{ espera }} segundos.</span>
+  {% comment %}
+  Quando a próxima tentativa é possível — e a espera é a mesma para todo mundo (UX-006).
+
+  O botão continua habilitado de propósito, mesmo durante a espera: desabilitá-lo no servidor
+  prenderia quem está sem JavaScript, porque a página não se atualiza sozinha. Quem clicar cedo
+  recebe a resposta por escrito acima; quem tem JavaScript vê a contagem correr e o botão liberar.
+
+  O texto diz "daqui a", e não "em até": a redação anterior se lia como *dentro de* sessenta
+  segundos — o oposto do que a espera significa.
+  {% endcomment %}
+  <button type="submit" class="secundario" aria-describedby="espera-do-reenvio">Reenviar código</button>
+  <span class="sub" id="espera-do-reenvio" role="status" data-modelo="Você poderá pedir outro código daqui a {n} segundos.">
+    {% if espera %}Você poderá pedir outro código daqui a {{ espera }} segundos.
+    {% else %}Não recebeu? Pode pedir outro código agora.{% endif %}
+  </span>
 </form>
+<script src="{% static 'portal/reenvio.js' %}" defer></script>
 {% endblock %}
