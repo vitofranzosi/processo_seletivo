@@ -1615,18 +1615,34 @@ def render_edital_pdf(
         with composicao.bloco():
             _autoridade(composicao, autoridade)
             _integridade(composicao, snapshot, content_hash)
-    paginas = composicao.paginar()
-
     edital = f"Edital {snapshot.get('number', '')}/{snapshot.get('year', '')}"
     identificacao = edital if previa else f"{edital} · Verificação {content_hash[:16]}…"
+    return render_documento(
+        composicao,
+        identificacao=identificacao,
+        marca=MARCA_DE_PREVIA if previa else "",
+    )
+
+
+def render_documento(composicao, *, identificacao, marca="", com_brasao=True) -> bytes:
+    """Pagina uma composição e monta o arquivo PDF.
+
+    Extraída de `render_edital_pdf` quando o comprovante de inscrição passou a ser gerado no
+    servidor: os dois documentos são diferentes em tudo o que dizem e idênticos em como viram
+    arquivo. O que estava embutido num deles era, na verdade, a infraestrutura dos dois.
+
+    O resultado é determinístico — não há data de criação embutida, nem identificador aleatório —,
+    e é isso que permite publicar o resumo de um documento gerado e esperar que ele confira.
+    """
+    paginas = composicao.paginar()
     fluxos = [
         _fluxo_da_pagina(
             linhas,
             identificacao,
             f"Página {numero} de {len(paginas)}",
-            marca=MARCA_DE_PREVIA if previa else "",
+            marca=marca,
             tracos=tracos,
-            com_brasao=numero == 1,
+            com_brasao=com_brasao and numero == 1,
         )
         for numero, (linhas, tracos) in enumerate(paginas, 1)
     ]

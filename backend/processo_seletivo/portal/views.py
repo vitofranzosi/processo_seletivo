@@ -10,7 +10,9 @@ Os dois dependem da designação do período, que o Edital ainda não sabe fazer
 lá; esta entrega é a fatia navegável dela.
 """
 
-from django.http import Http404
+from hashlib import sha256
+
+from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import Resolver404, resolve, reverse
 from django.utils import timezone
@@ -43,6 +45,7 @@ from processo_seletivo.inscricoes.domain.pessoais import (
     telefone_valido,
 )
 from processo_seletivo.inscricoes.domain.titularidade import exigir_titularidade
+from processo_seletivo.inscricoes.infrastructure import comprovante_pdf
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.portal import identidade as identidade_do_candidato
 from processo_seletivo.portal.arquivos import entregar_ao_titular
@@ -740,6 +743,80 @@ def revisao(request, inscricao_id):
     )
 
 
+def _dados_do_comprovante(request, registro, conteudo, versao):
+    """Os fatos do comprovante, num lugar só.
+
+    A página e o PDF são duas apresentações do mesmo documento, e montá-los de fontes diferentes
+    faria os dois divergirem na primeira mudança — o candidato teria uma tela e um papel que não
+    dizem a mesma coisa.
+    """
+    documentos = _documentos(conteudo, registro)
+    enviados = DocumentoSubmetido.objects.filter(inscricao=registro)
+    perfil = _perfil_legivel(_perfil_do_conteudo(conteudo, registro.profile_id))
+    selecao = _selecao(versao)
+    modalidade = _modalidade_da_inscricao(conteudo, registro)
+    aceita = registro.versao_aceita
+    return {
+        "protocolo": registro.protocolo,
+        "codigo_de_verificacao": codigo_de_verificacao(registro, enviados),
+        "endereco": request.build_absolute_uri(reverse("portal:vitrine")),
+        "campos": [
+            ("Processo Seletivo", f"{selecao['processo_titulo']} ({selecao['processo_codigo']})"),
+            ("Edital", f"{selecao['numero']}/{selecao['ano']}"),
+            ("Perfil de Vaga", perfil["nome"]),
+            ("Concorrência", modalidade),
+            ("Candidato", registro.nome),
+            ("CPF", formatar_cpf(registro.cpf)),
+            ("E-mail", registro.email),
+            ("Telefone", registro.telefone),
+            ("Enviada em", comprovante_pdf.instante(registro.submitted_at)),
+            (
+                "Versão do Edital",
+                (
+                    f"vigente desde {comprovante_pdf.instante(aceita.valid_from)}"
+                    if aceita
+                    else ""
+                ),
+            ),
+        ],
+        "documentos": [
+            {
+                "requisito": linha["nome"],
+                "arquivo": linha["enviado"].nome_original,
+                "tamanho": linha["tamanho"],
+                "quando": comprovante_pdf.instante(linha["enviado"].uploaded_at),
+                "resumo": linha["enviado"].content_hash,
+            }
+            for linha in documentos["linhas"]
+            if linha["enviado"]
+        ],
+    }
+
+
+@require_http_methods(["GET"])
+def comprovante_em_pdf(request, inscricao_id):
+    """O comprovante como arquivo, e não como página impressa (FR-063).
+
+    Gerado no servidor porque é documento: nome de arquivo próprio, sem o endereço que o navegador
+    escreve na folha, e **bytes determinísticos** — o mesmo comprovante gera sempre o mesmo
+    arquivo, e é isso que permite publicar o resumo do próprio documento.
+
+    Titularidade decide o acesso, como em toda página da inscrição: conhecer o identificador não
+    autoriza (FR-071).
+    """
+    registro, _identidade, versao = _inscricao_do_titular(request, inscricao_id)
+    if registro.status != Inscricao.Status.SUBMETIDA:
+        raise DomainError("not_found", "Recurso não encontrado.", 404)
+    versao = registro.versao_aceita or versao
+    dados = _dados_do_comprovante(request, registro, versao.content, versao)
+    arquivo = comprovante_pdf.render_comprovante_pdf(dados)
+    resposta = HttpResponse(arquivo, content_type="application/pdf")
+    # `attachment`, e não `inline`: o candidato veio buscar um arquivo para guardar, e abrir no
+    # visualizador do navegador o devolveria à mesma tela de onde saiu.
+    resposta["Content-Disposition"] = f'attachment; filename="Comprovante {registro.protocolo}.pdf"'
+    return marcar_como_privada(resposta)
+
+
 @require_http_methods(["GET"])
 @resposta_privada
 def comprovante(request, inscricao_id):
@@ -778,6 +855,14 @@ def comprovante(request, inscricao_id):
             "codigo_de_verificacao": codigo_de_verificacao(
                 registro, DocumentoSubmetido.objects.filter(inscricao=registro)
             ),
+            # O resumo do **arquivo** que o botão baixa. Só é possível publicá-lo porque o PDF é
+            # determinístico: gerado agora para calcular o resumo, ele sairá idêntico quando o
+            # candidato clicar, e idêntico de novo daqui a um ano.
+            "resumo_do_pdf": sha256(
+                comprovante_pdf.render_comprovante_pdf(
+                    _dados_do_comprovante(request, registro, conteudo, versao)
+                )
+            ).hexdigest(),
             # Formatado na saída, e não só na entrada: inscrições anteriores a esta correção
             # guardaram o CPF como a pessoa digitou.
             "cpf_do_candidato": formatar_cpf(registro.cpf),

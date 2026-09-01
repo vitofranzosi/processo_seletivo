@@ -226,7 +226,9 @@ def test_o_comprovante_pode_ser_impresso_e_reencontrado(client, inscricao_de_mar
 
     corpo = client.get(reverse("portal:comprovante", args=[enviada.id])).content.decode()
 
-    assert "Imprimir ou salvar em PDF" in corpo
+    assert "Baixar o comprovante em PDF" in corpo, "o arquivo é a ação principal"
+    assert reverse("portal:comprovante-pdf", args=[enviada.id]) in corpo
+    assert "Imprimir esta página" in corpo, "imprimir continua, em segundo plano"
     assert "data-imprimir" in corpo and "hidden" in corpo, "sem JS não fica botão morto na tela"
     assert "portal/comprovante.js" in corpo
     assert "Guarde o número do protocolo" in corpo
@@ -419,3 +421,112 @@ def test_o_comprovante_traz_o_codigo_que_prova_que_e_ele(client, inscricao_de_ma
     assert esperado in corpo
     assert "Código de verificação" in corpo
     assert "para confirmar que\n    nada foi alterado" in corpo or "nada foi alterado" in corpo
+
+
+@pytest.fixture
+def enviada(inscricao_de_maria):
+    from processo_seletivo.inscricoes.application.submissao import enviar_inscricao
+
+    return enviar_inscricao(
+        identidade=MARIA,
+        inscricao=_completar(inscricao_de_maria),
+        declaracoes={"veracidade": True, "ciencia": True},
+        idempotency_key="envio-pdf",
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_comprovante_em_pdf_e_um_arquivo_com_nome_proprio(client, enviada):
+    """FR-063: gerado no servidor, e não impresso pelo navegador.
+
+    Nome de arquivo próprio, sem o endereço que o navegador escreve na folha, e sem depender de
+    quem imprime lembrar de desligar cabeçalhos.
+    """
+    identificar(client, MARIA)
+
+    resposta = client.get(reverse("portal:comprovante-pdf", args=[enviada.id]))
+
+    assert resposta.status_code == 200
+    assert resposta["Content-Type"] == "application/pdf"
+    assert f'filename="Comprovante {enviada.protocolo}.pdf"' in resposta["Content-Disposition"]
+    assert "attachment" in resposta["Content-Disposition"], "veio buscar arquivo para guardar"
+    assert "no-store" in resposta["Cache-Control"]
+    assert resposta.content.startswith(b"%PDF-")
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_mesmo_comprovante_gera_sempre_o_mesmo_arquivo(client, enviada):
+    """Determinismo é o que permite publicar o resumo do próprio documento.
+
+    Se o arquivo mudasse a cada download — por um relógio lido na geração, por exemplo —, o resumo
+    publicado deixaria de conferir na segunda vez, e a verificação viraria uma promessa quebrada.
+    """
+    from hashlib import sha256
+
+    identificar(client, MARIA)
+    endereco = reverse("portal:comprovante-pdf", args=[enviada.id])
+
+    primeiro = client.get(endereco).content
+    segundo = client.get(endereco).content
+
+    assert primeiro == segundo
+    pagina = client.get(reverse("portal:comprovante", args=[enviada.id])).content.decode()
+    assert sha256(primeiro).hexdigest() in pagina, "e a página publica o resumo do arquivo"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_pdf_do_comprovante_diz_o_que_o_papel_precisa_dizer(client, enviada):
+    """O que se lê num visualizador — protocolo, código, resumos e o que o documento atesta."""
+    from processo_seletivo.inscricoes.models import DocumentoSubmetido
+
+    identificar(client, MARIA)
+
+    conteudo = client.get(reverse("portal:comprovante-pdf", args=[enviada.id])).content
+
+    assert enviada.protocolo.encode() in conteudo
+    assert b"COMPROVANTE DE INSCRI" in conteudo
+    assert b"Instituto Federal do Esp" in conteudo
+    for documento in DocumentoSubmetido.objects.filter(inscricao=enviada):
+        assert documento.content_hash.encode() in conteudo, "o resumo de cada anexo"
+    assert b"deferimento" in conteudo, "o que o documento não prova"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_pdf_de_outro_candidato_nao_e_entregue(client, enviada):
+    """Titularidade decide, como em toda página da inscrição: conhecer o id não autoriza."""
+    from tests.fixtures.candidato import JOAO
+
+    identificar(client, JOAO)
+
+    assert client.get(reverse("portal:comprovante-pdf", args=[enviada.id])).status_code == 404
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_rascunho_nao_tem_comprovante_em_pdf(client, inscricao_de_maria):
+    """Não há o que comprovar antes do envio."""
+    identificar(client, MARIA)
+
+    resposta = client.get(reverse("portal:comprovante-pdf", args=[inscricao_de_maria.id]))
+
+    assert resposta.status_code == 404
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_pdf_cabe_em_uma_pagina_no_caso_de_referencia(client, enviada):
+    """Um comprovante de duas folhas se separa, e o que ia na segunda era o que ele atesta.
+
+    O caso de referência tem três documentos e três resumos de 64 caracteres. Com muitos anexos o
+    documento cresce, e aí a paginação é legítima — o rodapé de cada folha traz protocolo e código.
+    """
+    identificar(client, MARIA)
+
+    conteudo = client.get(reverse("portal:comprovante-pdf", args=[enviada.id])).content
+
+    assert conteudo.count(b"/Type /Page ") == 1
+    assert b"P\\341gina 1 de 1" in conteudo or b"gina 1 de 1" in conteudo

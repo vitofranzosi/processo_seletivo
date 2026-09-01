@@ -563,7 +563,26 @@ comprovante; repetir com um rascunho e reencontrar `Continuar inscrição`.
   garantida no armazenamento. NÃO DEVE haver sequência numérica global. O ano que compõe o protocolo
   é o do envio.
 - **FR-063**: A conclusão DEVE exibir protocolo, Edital, Perfil, modalidade, data e hora e o nome do
-  candidato, numa página imprimível pelo navegador. NÃO DEVE ser gerado PDF de comprovante.
+  candidato, numa página imprimível pelo navegador, e DEVE oferecer o mesmo comprovante como **PDF
+  gerado no servidor**, com nome de arquivo derivado do protocolo. *Redação revista em 31/08/2026,
+  depois da demonstração: a primeira proibia gerar PDF, e a proibição fazia sentido enquanto o
+  comprovante era entendido como a última tela de um fluxo. Ele não é — é a única prova que o
+  candidato leva e o papel que a comissão recebe, apresentado numa banca, anexado a um recurso,
+  guardado por um ano. Impresso pelo navegador ele sai com `localhost:8009/...` no alto da folha,
+  com nome de arquivo tirado do título da aba e com bytes diferentes a cada impressão. O custo da
+  mudança é baixo porque a infraestrutura de PDF já existe desde a `006` e não tem dependência
+  externa: o que muda é a composição, não o mecanismo.*
+- **FR-063a**: O PDF do comprovante DEVE ser **determinístico** — o mesmo comprovante gera sempre os
+  mesmos bytes —, e a página DEVE publicar o resumo SHA-256 do arquivo. *Sem determinismo o resumo
+  publicado deixaria de conferir na segunda emissão, e a verificação viraria promessa quebrada.
+  Nada na composição pode ler o relógio: a data que o documento carrega é a do envio, que é fato
+  passado.*
+- **FR-063b**: O comprovante DEVE trazer um **código de verificação** calculado pelo servidor sobre
+  o que ele afirma — protocolo, titular, instante do envio, Edital, Perfil, modalidade e o resumo
+  de cada documento —, e o mesmo código DEVE aparecer na consulta administrativa. *É o que permite
+  a quem recebe o papel recusar um comprovante alterado comparando dois números, em vez de conferir
+  linha por linha. NÃO DEVE ser apresentado como assinatura digital: não há certificado nem
+  ICP-Brasil, e trocar a chave do servidor invalida os códigos emitidos.*
 - **FR-064**: O instante do envio DEVE ser imutável.
 - **FR-065**: De volta à seleção, o candidato identificado DEVE encontrar `Continuar inscrição`
   quando houver rascunho e o comprovante quando já tiver enviado. NÃO DEVE ser construído portal do
@@ -674,8 +693,11 @@ comprovante; repetir com um rascunho e reencontrar `Continuar inscrição`.
   identidade não consegue ter duas inscrições no mesmo Perfil do mesmo Edital em nenhum estado.
 - **SC-011**: Faltando documento obrigatório, o envio é recusado e o candidato lê exatamente o que
   falta.
-- **SC-012**: A inscrição enviada produz protocolo único e legível e um comprovante imprimível pelo
-  navegador.
+- **SC-012**: A inscrição enviada produz protocolo único e legível e um comprovante em PDF gerado
+  pelo servidor, com nome de arquivo derivado do protocolo, que sai idêntico a cada emissão e cujo
+  resumo SHA-256 é publicado na página. A mesma conclusão continua imprimível pelo navegador.
+- **SC-012a**: Um comprovante alterado por quem o apresenta é reconhecível: o código de verificação
+  impresso deixa de coincidir com o que a consulta administrativa exibe.
 - **SC-013**: Quem conduz a seleção encontra uma inscrição específica pela interface administrativa,
   sem exportar nada.
 - **SC-014**: Cada documento apresentado abre no navegador **sob o requisito que atende**, com o

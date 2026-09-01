@@ -13,6 +13,13 @@ urlpatterns = [
     path("inscricoes/<uuid:inscricao_id>/", views.inscricao, name="inscricao"),
     path("inscricoes/<uuid:inscricao_id>/revisao", views.revisao, name="revisao"),
     path("inscricoes/<uuid:inscricao_id>/comprovante", views.comprovante, name="comprovante"),
+    # O mesmo documento, como arquivo. `.pdf` no endereço porque é o que ele devolve, e porque um
+    # endereço que termina em `.pdf` é o que uma pessoa reconhece como arquivo para guardar.
+    path(
+        "inscricoes/<uuid:inscricao_id>/comprovante.pdf",
+        views.comprovante_em_pdf,
+        name="comprovante-pdf",
+    ),
     path(
         "inscricoes/<uuid:inscricao_id>/documentos/<uuid:requirement_id>",
         views.enviar_documento,

@@ -461,6 +461,60 @@ Travado por `test_o_comprovante_se_identifica_pelo_protocolo_no_titulo`,
 `test_quem_confere_ve_o_mesmo_codigo_do_comprovante` e
 `test_o_codigo_de_verificacao_muda_quando_o_comprovante_muda`.
 
+### D12 — O comprovante passou a ser gerado pelo servidor (decisão de produto revista)
+
+D11 terminou dizendo que o cabeçalho do navegador não tinha solução dentro da página, e que a
+solução real — gerar o PDF no servidor — esbarrava em **FR-063**, que a proibia. A decisão foi
+reaberta e revista em 31/08/2026.
+
+**Por que a proibição fazia sentido, e por que deixou de fazer.** Ela foi escrita quando o
+comprovante era entendido como a última tela de um fluxo — e para uma tela, gerar arquivo é
+excesso. Ele não é uma tela. É a única prova que o candidato leva e o papel que a comissão recebe:
+apresentado numa banca, anexado a um recurso, guardado por um ano. É documento do candidato **e**
+do Ifes.
+
+Impresso pelo navegador, ele saía com `localhost:8009/...` no alto da folha, com o nome de arquivo
+tirado do título da aba, e com bytes diferentes a cada impressão — o que impedia publicar o resumo
+do próprio documento.
+
+**O que foi feito.**
+
+`render_documento` foi **extraída** de `render_edital_pdf`: os dois documentos são diferentes em
+tudo o que dizem e idênticos em como viram arquivo, e o que estava embutido num deles era, na
+verdade, a infraestrutura dos dois. O gerador do Edital continua produzindo bytes idênticos — a
+fixture que o guarda passa sem alteração.
+
+O comprovante em PDF traz brasão e timbre do Ministério, o protocolo e o código de verificação num
+quadro, os dados da inscrição, cada documento com tamanho, horário e resumo, e o atestado. Rodapé
+com protocolo e código em **todas** as páginas. Uma página no caso de referência — três documentos
+e três resumos de 64 caracteres.
+
+**Determinismo, e o que ele compra.** Nada na composição lê o relógio: a data que o documento
+carrega é a do envio, que é fato passado. Por isso o mesmo comprovante gera sempre os mesmos bytes,
+e por isso a página pode publicar o **resumo do próprio arquivo**. Verificado de ponta a ponta —
+resumo publicado na página e `shasum` do arquivo baixado por outro cliente:
+
+```
+288de0b75dfff354430a7ba6004649f3726267923635e32ca20cf2ca1aa93252
+```
+
+O nome do arquivo é `Comprovante INS-2026-6N5SFREZ.pdf`, entregue como `attachment`: quem clicou
+veio buscar um arquivo para guardar, e abrir no visualizador o devolveria à tela de onde saiu.
+
+**A impressão da página continua**, como ação secundária — quem prefere o papel direto não precisa
+baixar antes.
+
+**A spec foi alterada, e não contornada.** FR-063 passou a exigir o PDF gerado; FR-063a fixa o
+determinismo e a publicação do resumo; FR-063b descreve o código de verificação e declara o que ele
+**não** é. SC-012 acompanhou, e SC-012a passou a exigir que um comprovante alterado seja
+reconhecível.
+
+Travado por `test_o_comprovante_em_pdf_e_um_arquivo_com_nome_proprio`,
+`test_o_mesmo_comprovante_gera_sempre_o_mesmo_arquivo`,
+`test_o_pdf_do_comprovante_diz_o_que_o_papel_precisa_dizer`,
+`test_o_pdf_de_outro_candidato_nao_e_entregue`, `test_rascunho_nao_tem_comprovante_em_pdf` e
+`test_o_pdf_cabe_em_uma_pagina_no_caso_de_referencia`.
+
 ## Lacunas e oportunidades, por prioridade
 
 > **Estado em 31/08/2026:** L1 a L10 foram corrigidas e travadas por teste. L11 e L12 continuam

@@ -119,8 +119,24 @@ que o comprovante garantia alguma coisa sobre o mérito.
   <p class="emissao">Comprovante emitido em {{ agora|date:"d/m/Y \à\s H\hi" }}.</p>
 </div>
 
-<p class="nao-imprime">
-  <button type="button" class="principal" data-imprimir hidden>Imprimir ou salvar em PDF</button>
+{% comment %}
+O arquivo, e não a impressão da página (FR-063). O PDF é gerado pelo servidor: tem nome próprio,
+não carrega o endereço que o navegador escreve na folha, e sai idêntico a cada download — o que
+permite publicar o resumo dele aqui e esperar que confira.
+
+O botão de imprimir continua, em segundo plano: quem prefere o papel direto não precisa baixar
+antes.
+{% endcomment %}
+<p class="nao-imprime acoes-do-comprovante">
+  <a class="principal como-botao" href="{% url 'portal:comprovante-pdf' inscricao.id %}">
+    Baixar o comprovante em PDF</a>
+  <button type="button" class="acao" data-imprimir hidden>Imprimir esta página</button>
+</p>
+<p class="nao-imprime ajuda resumo-do-pdf">
+  <span class="rotulo">SHA-256 do arquivo</span>
+  <code>{{ resumo_do_pdf }}</code>
+  <span class="explica">O arquivo baixado deve ter exatamente este resumo. Ele é o mesmo a cada
+    download.</span>
 </p>
 <p class="nao-imprime ajuda">Guarde o número do protocolo. Este comprovante fica disponível
   enquanto as inscrições deste Processo Seletivo estiverem sob análise.</p>
@@ -130,10 +146,10 @@ desta página os remove. Dizer onde desligá-los custa uma linha e evita que o c
 um `localhost` impresso em cima.
 {% endcomment %}
 <details class="nao-imprime como-converter">
-  <summary>O navegador escreve um endereço no alto da folha — como tirar</summary>
-  <p class="ajuda">Esse cabeçalho e o rodapé com a data são acrescentados pelo <strong>navegador</strong>,
-    e não fazem parte do comprovante — que já traz a própria identificação e a própria data de
-    emissão. Para imprimir sem eles:</p>
+  <summary>Prefere imprimir esta página? Como tirar o endereço do alto da folha</summary>
+  <p class="ajuda">O PDF acima já sai limpo — este aviso é só para quem imprime a página direto.
+    O cabeçalho com o endereço e o rodapé com a data são acrescentados pelo
+    <strong>navegador</strong>, e não fazem parte do comprovante. Para imprimir sem eles:</p>
   <ul>
     <li><strong>Firefox:</strong> na janela de impressão, abra <em>Mais configurações</em> e
       desmarque <em>Imprimir cabeçalhos e rodapés</em>.</li>
