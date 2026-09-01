@@ -476,6 +476,13 @@ errou pode reconciliar depois, de dentro da área, **enquanto a identidade nova 
 inscrição — nem rascunho**. Aceita a reconciliação, o endereço migra para a identidade legada e a
 identidade nova, que nada contém, é descartada.
 
+**FR-040b — A identidade vazia pode ter mais de uma credencial, e todas vão junto.** Aceita a
+reconciliação, **todos** os e-mails verificados da identidade vazia passam a ser credenciais da
+identidade legada, e não apenas o que carregava a correspondência histórica. Cada um deles já foi
+provado por desafio, e o CPF foi confirmado: nada é concedido que a pessoa já não tivesse. Descartar
+a identidade movendo só um endereço perderia credenciais que ela provou. O principal da identidade
+legada não muda por isso; trocá-lo é ação do §12.
+
 *Por que limitada, e por que não é fusão.* Sem limite, a retomada exigiria transferir credencial de
 uma identidade que já tem inscrições, abandoná-las ou fundir identidades — e a FR-041 proíbe a
 terceira, a FR-012 proíbe reescrever titularidade, e a primeira é um modelo de conta com acesso a
@@ -1022,6 +1029,10 @@ separada: ela chega junto com a porta que a torna visível.
 >
 > A única movimentação de credencial permitida é a da FR-040, e só a partir de identidade vazia:
 > nada mais transfere, funde ou abandona identidade.
+>
+> Essa movimentação é **atômica**: verificar que a identidade está vazia, mover as credenciais e
+> descartá-la acontecem numa operação só. Verificado antes e movido depois, o rascunho que nasce no
+> intervalo transforma "identidade vazia" em premissa falsa no instante em que ela é usada.
 >
 > Segurança contra IDOR e takeover é requisito funcional, e a demonstração do §25 é condição de
 > merge.
