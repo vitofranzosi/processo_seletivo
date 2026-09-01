@@ -148,17 +148,37 @@ def validar(*, email_canonico: str, finalidade: str, codigo: str) -> DesafioDeAc
     if desafio is None:
         return None
 
+    # **A tentativa é reservada antes de o código ser conferido**, e a reserva é que impõe o teto.
+    #
+    # A primeira versão incrementava depois, filtrando só pelo `pk` — e por isso não impunha nada:
+    # dez requisições simultâneas liam `tentativas_codigo = 0`, todas erravam, e todas
+    # incrementavam. O contador terminava em dez, e as dez tinham sido avaliadas. O teto existia no
+    # texto e não no banco.
+    #
+    # Reservar primeiro inverte isso: quem não consegue a reserva não chega a conferir código
+    # nenhum. O `UPDATE` condicional é o ponto de serialização, e ele vale para acerto e erro —
+    # tentativa é tentativa (FR-029).
+    reservada = DesafioDeAcesso.objects.filter(
+        pk=desafio.pk,
+        consumido_em__isnull=True,
+        expira_em__gt=agora,
+        tentativas_codigo__lt=TETO_DE_TENTATIVAS,
+    ).update(tentativas_codigo=F("tentativas_codigo") + 1)
+    if reservada != 1:
+        return None
+
     if not codigo_de_acesso.confere(codigo_de_acesso.normalizar(codigo), desafio.codigo_hash):
-        # Incremento condicional: duas abas não dividem o mesmo orçamento de tentativas por engano.
-        DesafioDeAcesso.objects.filter(pk=desafio.pk).update(
-            tentativas_codigo=F("tentativas_codigo") + 1
-        )
         return None
 
     # O consumo inteiro numa instrução: só vale se afetar exatamente uma linha. É o que impede duas
-    # requisições simultâneas aproveitarem o mesmo código (FR-025).
+    # requisições simultâneas aproveitarem o mesmo código (FR-025). O teto entra aqui de novo, e
+    # não por desconfiança da reserva: é o invariante escrito onde ele é lido — nenhuma linha sai
+    # daqui consumida tendo passado do quinto ensaio.
     consumidos = DesafioDeAcesso.objects.filter(
-        pk=desafio.pk, consumido_em__isnull=True, expira_em__gt=agora
+        pk=desafio.pk,
+        consumido_em__isnull=True,
+        expira_em__gt=agora,
+        tentativas_codigo__lte=TETO_DE_TENTATIVAS,
     ).update(consumido_em=agora)
     if consumidos != 1:
         return None

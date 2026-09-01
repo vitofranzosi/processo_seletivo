@@ -14,6 +14,7 @@ import uuid
 from datetime import timedelta
 
 from django.db import transaction
+from django.db.models import F
 from django.utils import timezone
 
 from processo_seletivo.identidade.models import (
@@ -122,7 +123,17 @@ def confirmar_cpf(desafio: DesafioDeAcesso, cpf: str) -> CandidateIdentity | Non
     informação. E a contagem incide sobre **quem tenta**, através do desafio, nunca sobre o alvo
     (FR-052c).
     """
-    DesafioDeAcesso.objects.filter(pk=desafio.pk).update(tentativas_cpf=desafio.tentativas_cpf + 1)
+    # Reserva condicional, e não `valor lido + 1`: o segundo perde a corrida do mesmo jeito que o
+    # contador de tentativas do código perdia — duas requisições que leem `tentativas_cpf = 4`
+    # gravam as duas `5`, e a quinta e a sexta tentativas custam uma só. Quem não reserva não
+    # confere CPF nenhum.
+    reservada = DesafioDeAcesso.objects.filter(
+        pk=desafio.pk,
+        tentativas_cpf__lt=TETO_DE_TENTATIVAS,
+        reconciliacao_ate__gt=timezone.now(),
+    ).update(tentativas_cpf=F("tentativas_cpf") + 1)
+    if reservada != 1:
+        return None
     desafio.refresh_from_db()
 
     informado = digitos(cpf)

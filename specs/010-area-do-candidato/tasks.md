@@ -87,6 +87,7 @@ servidor, colá-lo inteiro e chegar a uma área pessoal vazia, sem que CPF seja 
 - [X] T021 [P] [US1] Teste de que duas requisições simultâneas com o mesmo código produzem **um** consumo em `backend/tests/integration/identidade/test_consumo_atomico.py`
 - [X] T022 [P] [US1] Teste do ciclo do desafio — expiração por instante absoluto, uso único, novo código invalidando anteriores, teto de cinco tentativas — em `backend/tests/integration/identidade/test_desafio.py`
 - [X] T022a [P] [US1] Teste de finalidade cruzada: um código pedido para **entrar** não confirma adição de credencial, e um pedido para **adicionar** não autentica — em `backend/tests/integration/identidade/test_finalidade.py`
+- [X] T022b [P] [US1] Teste de que o teto de cinco tentativas resiste a requisições simultâneas, para o código e para o CPF, em `backend/tests/integration/identidade/test_teto_concorrente.py`
 - [X] T023 [P] [US1] Teste dos limites por endereço e por origem, com origem guardada como resumo e nunca em claro, em `backend/tests/integration/identidade/test_limites.py`
 - [X] T024 [P] [US1] Teste de que o identificador de sessão após a autenticação difere do anterior em `backend/tests/authorization/test_rotacao_de_sessao.py`
 - [X] T025 [P] [US1] Teste de que a sessão de candidato não concede nenhuma ação institucional em `backend/tests/authorization/test_sessao_candidata.py`
@@ -108,13 +109,15 @@ servidor, colá-lo inteiro e chegar a uma área pessoal vazia, sem que CPF seja 
 
 **Checkpoint**: o percurso da Entrega 1 do [quickstart.md](./quickstart.md) roda no navegador.
 
-> **Antecipadas para cá, e o motivo.** `T046`, `T048`, `T051` e `T052` — a busca de correspondência
+> **Antecipadas para cá, e o motivo.** `T046`, `T048` e `T052` — a busca de correspondência
 > histórica, a confirmação por CPF e a tela do convite — foram implementadas junto com a US1. Sem
 > elas, um endereço com participação anterior cairia na criação de identidade nova e **consumiria**
 > a correspondência, tornando a reconciliação da US2 impossível para aquela pessoa. A US1 não é
-> correta sem esse desvio; ela é apenas demonstrável. O que permanece na US2 é a retomada
-> (`T042`, `T049`) e o bloqueio compartilhado (`T050`), que dependem de haver inscrição para
-> proteger.
+> correta sem esse desvio; ela é apenas demonstrável.
+>
+> `T051` **continua aberta**: dela veio só a view do convite. A rota da retomada não existe, e ela
+> é o par de `T049` e `T050` — a movimentação de credenciais sob bloqueio compartilhado. As três
+> ficam na Fase 4, porque só fazem sentido quando há inscrição para proteger.
 
 ---
 
@@ -144,7 +147,7 @@ confirmar o CPF e ver a inscrição — sem que nenhum dado dela tenha mudado.
 - [X] T048 [US2] Implementar a confirmação por CPF, com desempate e contagem condicional de tentativas, em `backend/processo_seletivo/identidade/application/associacao.py`
 - [ ] T049 [US2] Implementar a retomada — verificar vazia, mover todas as credenciais e descartar, em uma operação única sob bloqueio de linha — em `backend/processo_seletivo/identidade/application/associacao.py`
 - [ ] T050 [US2] Fazer a abertura de rascunho tomar o mesmo bloqueio de linha sobre a identidade antes de criar a Inscrição em `backend/processo_seletivo/inscricoes/application/rascunho.py`
-- [X] T051 [US2] Implementar as views do convite e da retomada em `backend/processo_seletivo/portal/views.py` e as rotas em `backend/processo_seletivo/portal/urls.py`
+- [ ] T051 [US2] Implementar as views do convite e da retomada em `backend/processo_seletivo/portal/views.py` e as rotas em `backend/processo_seletivo/portal/urls.py`
 - [X] T052 [US2] Criar o convite, sem revelar nome, CPF, protocolo ou quantidade da identidade anterior, e a recusa que aponta o procedimento institucional de recuperação em vez de um beco, em `backend/processo_seletivo/portal/templates/portal/acesso_reconciliar.html`
 
 **Checkpoint**: o percurso da Entrega 2 roda, e a suíte prova que nenhuma inscrição mudou de titular.
