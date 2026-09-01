@@ -18,7 +18,11 @@ símbolo: cor sozinha não informa quem não a distingue.
     {% else %}
     <span class="situacao">Inscrição não enviada</span>
     {% endif %}
+    {% if inscricao.enviada %}
+    <a class="principal" href="{% url 'portal:acompanhamento' inscricao.id %}">{{ inscricao.acao }}</a>
+    {% else %}
     <a class="principal" href="{% url 'portal:inscricao' inscricao.id %}">{{ inscricao.acao }}</a>
+    {% endif %}
   </li>
   {% endfor %}
 </ul>

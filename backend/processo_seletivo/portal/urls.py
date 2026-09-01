@@ -18,6 +18,11 @@ urlpatterns = [
     # nada sobre a pessoa — nem CPF, nem nome (FR-073).
     path("inscricoes/<uuid:inscricao_id>/", views.inscricao, name="inscricao"),
     path("inscricoes/<uuid:inscricao_id>/revisao", views.revisao, name="revisao"),
+    path(
+        "inscricoes/<uuid:inscricao_id>/acompanhamento",
+        views.acompanhamento,
+        name="acompanhamento",
+    ),
     path("inscricoes/<uuid:inscricao_id>/comprovante", views.comprovante, name="comprovante"),
     # O mesmo documento, como arquivo. `.pdf` no endereço porque é o que ele devolve, e porque um
     # endereço que termina em `.pdf` é o que uma pessoa reconhece como arquivo para guardar.

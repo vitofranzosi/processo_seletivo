@@ -233,17 +233,21 @@ participação dos eventos do cronograma.
 
 ### Testes da US5
 
-- [ ] T074 [P] [US5] Teste de que fato pessoal e evento de cronograma são distinguíveis e de que nenhuma afirmação pessoal decorre apenas de uma data alcançada em `backend/tests/integration/portal/test_acompanhamento.py`
-- [ ] T075 [P] [US5] Teste de que o aviso de Edital atualizado aparece sem alterar a versão aceita e sem reabrir a inscrição em `backend/tests/integration/portal/test_aviso_de_versao.py`
-- [ ] T076 [P] [US5] Teste de aceitação do percurso da Entrega 5, com retificação posterior ao envio, em `backend/tests/acceptance/portal/test_acompanhar.py`
+- [X] T074 [P] [US5] Teste de que fato pessoal e evento de cronograma são distinguíveis e de que nenhuma afirmação pessoal decorre apenas de uma data alcançada em `backend/tests/integration/portal/test_acompanhamento.py`
+- [X] T075 [P] [US5] Teste de que o aviso de Edital atualizado aparece sem alterar a versão aceita e sem reabrir a inscrição em `backend/tests/integration/portal/test_aviso_de_versao.py`
+- [X] T076 [P] [US5] Teste de aceitação do percurso da Entrega 5, com retificação posterior ao envio, em `backend/tests/acceptance/portal/test_acompanhar.py`
 
 ### Implementação da US5
 
-- [ ] T077 [US5] Derivar os fatos da participação e o cronograma da versão consolidada vigente em `backend/processo_seletivo/portal/views.py`
-- [ ] T078 [US5] Acrescentar a rota do acompanhamento em `backend/processo_seletivo/portal/urls.py`
-- [ ] T079 [US5] Criar a página com os dois blocos visualmente distintos e o aviso de versão em `backend/processo_seletivo/portal/templates/portal/acompanhamento.html`
+- [X] T077 [US5] Derivar os fatos da participação e o cronograma da versão consolidada vigente em `backend/processo_seletivo/portal/views.py`
+- [X] T078 [US5] Acrescentar a rota do acompanhamento em `backend/processo_seletivo/portal/urls.py`
+- [X] T079 [US5] Criar a página com os dois blocos visualmente distintos e o aviso de versão em `backend/processo_seletivo/portal/templates/portal/acompanhamento.html`
 
 **Checkpoint**: o percurso da Entrega 5 roda.
+
+> **Decisão de navegação tomada aqui.** `Acompanhar`, na lista, leva ao acompanhamento; a
+> conferência fica a um clique dele, e ele a um clique dela. Cada tela com um trabalho só — a
+> mesma linha da `009` — em vez de uma página que responde duas perguntas ao mesmo tempo.
 
 ---
 

@@ -17,6 +17,7 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods
 
@@ -869,6 +870,83 @@ def _conferencia(request, registro, versao):
             "campos": dados["campos"],
             "documentos": documentos,
             "codigo_de_verificacao": dados["codigo_de_verificacao"],
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
+# Acompanhamento (010). Duas linhas de informação que não se confundem: o que aconteceu **com a
+# pessoa** e o que está marcado **para o processo** (FR-076).
+# ---------------------------------------------------------------------------
+
+
+def _fatos_da_participacao(registro):
+    """O que aconteceu com **esta** inscrição — e só o que aconteceu (FR-077).
+
+    Hoje há um fato, e é o envio. Resultado de etapa, deferimento e convocação são de features que
+    ainda não existem, e a `010` não os inventa: uma linha que diz "sua análise foi concluída"
+    porque o Cronograma chegou à data final da Etapa é uma afirmação sobre a pessoa que ninguém
+    fez. É o erro que a `FR-077` nomeia, e a forma desta função é o que o impede — ela lê a
+    Inscrição, e não o calendário.
+    """
+    fatos = []
+    if registro.submitted_at:
+        fatos.append({"rotulo": "Inscrição enviada", "quando": registro.submitted_at})
+    return fatos
+
+
+def _cronograma(conteudo, agora):
+    """Os Eventos do processo, na ordem publicada, com a situação **do evento**.
+
+    Concluído, em curso ou por vir descrevem o Evento — nunca a pessoa. É a mesma distinção da
+    `FR-076`, dita em dado: nada aqui sabe quem está lendo.
+    """
+    eventos = []
+    for evento in sorted(
+        conteudo.get("schedule") or [], key=lambda item: item.get("order") or 0
+    ):
+        inicio = parse_datetime(evento.get("startAt") or "")
+        fim = parse_datetime(evento.get("endAt") or "") if evento.get("endAt") else None
+        if fim is not None and agora > fim:
+            situacao = "concluido"
+        elif inicio is not None and agora < inicio:
+            situacao = "futuro"
+        else:
+            situacao = "em_curso"
+        eventos.append(
+            {
+                "nome": evento.get("description") or evento.get("type") or "",
+                "inicio": inicio,
+                "fim": fim,
+                "situacao": situacao,
+            }
+        )
+    return eventos
+
+
+@require_http_methods(["GET"])
+@resposta_privada
+def acompanhamento(request, inscricao_id):
+    """O que já aconteceu, e o que vem agora — sem inventar o que ninguém disse.
+
+    O Cronograma vem da versão **vigente**, porque ele é o calendário de hoje: uma data remarcada
+    por Retificação precisa aparecer remarcada. Os dados da inscrição continuam vindo da versão
+    **aceita**, e é justamente por lerem versões diferentes que o aviso da `FR-078` existe.
+    """
+    registro, _identidade, versao = _inscricao_do_titular(request, inscricao_id)
+    if registro.status != Inscricao.Status.SUBMETIDA:
+        return redirect(reverse("portal:inscricao", args=[registro.id]))
+    return render(
+        request,
+        "portal/acompanhamento.html",
+        {
+            "inscricao": registro,
+            "selecao": _selecao(versao),
+            "fatos": _fatos_da_participacao(registro),
+            "cronograma": _cronograma(versao.content, timezone.now()),
+            # A versão aceita deixou de ser a vigente: o Edital mudou depois do envio. O aviso
+            # informa; ele **não** altera a versão aceita nem reabre coisa alguma (FR-079).
+            "retificado": registro.versao_aceita_id != versao.pk,
         },
     )
 

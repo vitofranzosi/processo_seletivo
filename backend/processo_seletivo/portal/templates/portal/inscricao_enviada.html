@@ -22,6 +22,7 @@
 {% endif %}
 
 <p><a class="principal" href="{% url 'portal:comprovante' inscricao.id %}">Baixar comprovante</a></p>
+<p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Acompanhar esta inscrição</a></p>
 
 {% comment %}
 As evidências de integridade existem e continuam disponíveis, mas não são o assunto desta tela: a

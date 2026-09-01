@@ -313,6 +313,20 @@ dl.campos dd{margin:0 0 .6rem;overflow-wrap:anywhere}
 details.integridade{margin:1.5rem 0 0}
 details.integridade summary{cursor:pointer;font-weight:600}
 details.integridade .resumos{list-style:none;margin:.75rem 0 0;padding:0;display:grid;gap:.75rem}
+/* O acompanhamento (010). Os dois blocos precisam ser distinguíveis **sem depender de cor**: o
+   pessoal é o único com marcador preenchido, e a situação de cada evento aparece por forma e por
+   texto. Cor sozinha não informa quem não a distingue (FR-076). */
+.linha-do-tempo{list-style:none;margin:0 0 1.5rem;padding:0;display:grid;gap:.85rem}
+.linha-do-tempo .marco{display:grid;gap:.1rem;padding-left:1rem;
+  border-left:3px solid var(--borda)}
+.linha-do-tempo.pessoal .marco{border-left-color:var(--sucesso);background:var(--branco);
+  border:1px solid var(--borda);border-left:3px solid var(--sucesso);
+  border-radius:0 6px 6px 0;padding:.75rem 1rem}
+.linha-do-tempo .marco.em_curso{border-left-color:var(--verde)}
+.linha-do-tempo .marco.em_curso .rotulo{font-weight:700}
+.linha-do-tempo .rotulo{font-weight:600}
+.linha-do-tempo .marco.futuro .rotulo{font-weight:400;color:var(--texto-fraco)}
+.linha-do-tempo .quando{color:var(--texto-fraco);font-size:.9375rem}
 form.convite{margin:.75rem 0 0}
 /* O comprovante é impresso: fora o conteúdo, nada mais precisa ir para o papel. */
 /* O timbre existe **só** no papel: na tela o cabeçalho verde já diz de quem é o sistema, e
