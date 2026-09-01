@@ -94,6 +94,16 @@ class Inscricao(models.Model):
                 ),
                 name="ck_inscricao_submetida_completa",
             ),
+            # O CPF que a `010` precisa poder ler: a reconciliação agrupa por ele, e a marcação de
+            # coincidência compara por ele. Onze dígitos é **tudo** o que uma restrição
+            # declarativa consegue afirmar — o algoritmo dos dígitos verificadores não cabe aqui,
+            # e continua onde já estava: na captura, e na verificação que a implantação faz antes
+            # de instalar esta restrição. Prometer no texto o que o banco não entrega é pior que
+            # não prometer, porque ninguém confere (FR-063).
+            models.CheckConstraint(
+                condition=Q(status="RASCUNHO") | Q(cpf_normalizado__regex=r"^[0-9]{11}$"),
+                name="ck_inscricao_submetida_com_cpf",
+            ),
         ]
         indexes = [models.Index(fields=["edital", "status"])]
 

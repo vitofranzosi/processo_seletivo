@@ -26,7 +26,19 @@ significa, e isso a legenda diz.
       Mascarado (FR-073): seis dígitos bastam para conferir contra um documento em mãos, e não
       bastam para reusar o número em outro lugar.
       {% endcomment %}
-      <td>{{ inscricao.cpf }}</td>
+      <td>
+        {{ inscricao.cpf }}
+        {% if inscricao.cpf_coincidente %}
+        {% comment %}
+        Assinalado, e não deixado para o olho: a coluna mostra seis dígitos mascarados, e comparar
+        máscaras numa listagem não é detecção (FR-065). O sistema não decide qual das duas vale —
+        essa decisão é institucional, e a regra pertence à feature que avaliar inscrições.
+        {% endcomment %}
+        <span class="coincidencia" title="Há outra inscrição enviada com este CPF neste Perfil">
+          ⚠ CPF repetido neste Perfil
+        </span>
+        {% endif %}
+      </td>
       <td>{{ inscricao.perfil }}</td>
       <td>{{ inscricao.modalidade|default:"—" }}</td>
       <td>{{ inscricao.recebidos }} de {{ inscricao.esperados }}</td>

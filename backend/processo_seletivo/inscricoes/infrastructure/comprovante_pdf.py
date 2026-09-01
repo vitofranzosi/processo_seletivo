@@ -22,6 +22,8 @@ fato passado — usar o instante da emissão faria o mesmo comprovante gerar arq
 cada download, e o resumo publicado deixaria de conferir na segunda vez.
 """
 
+from django.utils import timezone
+
 from processo_seletivo.publicacoes.infrastructure import humano
 from processo_seletivo.publicacoes.infrastructure.pdf import (
     ALTURA_DO_BRASAO,
@@ -180,9 +182,10 @@ def _atestado(composicao, dados):
         justificar=True,
     )
     composicao.escrever(
-        f"Para conferir este comprovante, acesse {dados['endereco']} e identifique-se com o mesmo "
-        "CPF. O código de verificação é calculado sobre o conteúdo deste documento: a comissão o "
-        "compara com o do sistema para confirmar que nada foi alterado.",
+        f"Para conferir este comprovante, acesse {dados['endereco']} e entre com o e-mail acima — "
+        "enviamos um código de acesso a cada entrada, e não há senha. O código de verificação é "
+        "calculado sobre o conteúdo deste documento: a comissão o compara com o do sistema para "
+        "confirmar que nada foi alterado.",
         tamanho=CORPO_NOTA,
         antes=ANTES_DE_LINHA,
         justificar=True,
@@ -197,5 +200,15 @@ def _atestado(composicao, dados):
 
 
 def instante(valor) -> str:
-    """`31/08/2026, às 19h03` — como um ato administrativo escreve, e não como um banco guarda."""
-    return humano.instante(valor) if valor else "—"
+    """`31/08/2026, às 16h03` — como um ato administrativo escreve, e não como um banco guarda.
+
+    **Convertido para o fuso da instituição antes de formatado.** `humano.instante` escreve o que
+    recebe, e o banco devolve UTC: sem a conversão, o mesmo envio saía às 16h03 no comprovante em
+    HTML — que passa pelo filtro `date`, e esse localiza — e às 19h03 aqui e na tela de
+    conferência, que leem esta função. Três horas de diferença no documento que a pessoa guarda
+    para provar que enviou dentro do prazo, e o erro cresce justamente perto da meia-noite do
+    último dia. `publicacoes/pdf.py` já convertia; este caminho não.
+    """
+    if not valor:
+        return "—"
+    return humano.instante(timezone.localtime(valor) if timezone.is_aware(valor) else valor)

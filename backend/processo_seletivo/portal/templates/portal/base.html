@@ -21,9 +21,15 @@ a{color:var(--verde-texto)}
 main:focus{outline:none}
 header.topo{background:var(--verde-escuro);color:var(--branco);padding:.85rem 1rem;
   display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
-.quem-esta{display:flex;align-items:center;gap:.6rem;font-size:.875rem}
-.quem-esta .nome{opacity:.9;overflow-wrap:anywhere}
+.quem-esta{display:flex;align-items:center;gap:.6rem;font-size:.875rem;min-width:0}
+/* Cortado com reticências, e não quebrado letra a letra. `overflow-wrap:anywhere` resolvia o
+   transbordo de um nome longo empilhando caracteres numa coluna de um caractere — em 375px, com
+   um e-mail no lugar do nome, o cabeçalho virava seis linhas. Cortar diz a mesma coisa: quem
+   está aqui reconhece o começo do próprio endereço. */
+.quem-esta .nome{opacity:.9;min-width:0;max-width:14rem;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
 .quem-esta form{margin:0}
+a.no-topo{color:var(--branco);white-space:nowrap;text-decoration:underline;text-underline-offset:3px}
 button.sair{background:transparent;color:var(--branco);border:1px solid rgba(255,255,255,.6);
   border-radius:4px;padding:.3rem .7rem;font:inherit;font-size:.875rem;cursor:pointer}
 button.sair:hover{background:rgba(255,255,255,.15)}
@@ -270,6 +276,73 @@ details.como-converter li{margin-bottom:.4rem}
   width:100%;max-width:32rem}
 .principal:hover{background:var(--verde-escuro)}
 a.principal{display:inline-block;width:auto;text-align:center;text-decoration:none}
+/* A ação secundária de uma página clara (010). `button.sair` não servia: ela é branca sobre o
+   verde do cabeçalho, e no corpo da página ficava branco sobre cinza — visível apenas para quem
+   já sabia que estava lá. Contorno e texto verdes, com a mesma altura de alvo do botão
+   principal, porque em 375px o dedo não distingue hierarquia. */
+.secundario{padding:.7rem 1.1rem;border:1px solid var(--verde);border-radius:4px;
+  background:var(--branco);color:var(--verde-texto);font-weight:600;font-size:1rem;
+  font-family:inherit;cursor:pointer}
+.secundario:hover{background:var(--verde-claro)}
+/* Desabilitado enquanto a espera corre. Cinza e sem cursor de ação: o botão continua visível,
+   porque some-lo faria a página saltar quando ele voltasse. */
+.secundario[disabled]{border-color:var(--borda);color:var(--texto-fraco);cursor:not-allowed}
+.secundario[disabled]:hover{background:transparent}
+/* A lista de inscrições (010). Situação por texto e símbolo — cor sozinha não informa quem não a
+   distingue —, e o protocolo com quebra explícita, porque é um código longo em 375px. */
+.selecao .situacao{color:var(--texto-fraco);font-size:.9375rem}
+.selecao .situacao.enviada{color:var(--sucesso);font-weight:600}
+/* `.codigo`, e não `.protocolo`: esta última já tinha significado visual próprio na `009` — a
+   caixa de destaque do comprovante —, e reusar o nome fazia o protocolo da lista aparecer com
+   aparência de campo de formulário. Aqui ele é informação de apoio, não o assunto da tela. */
+.codigo{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.875rem;
+  color:var(--texto-fraco);overflow-wrap:anywhere}
+.selecao .principal{margin-top:.5rem;justify-self:start}
+/* A conferência do que foi enviado (010). Sem tabela e sem largura fixa, como o resto da base do
+   candidato: é o que sustenta 375px sem rolagem horizontal. */
+dl.campos{display:grid;gap:.15rem;margin:0 0 1.5rem}
+dl.campos dt{font-weight:600;font-size:.875rem;color:var(--texto-fraco)}
+dl.campos dd{margin:0 0 .6rem;overflow-wrap:anywhere}
+/* `.enviado`, e **não** `.documento`: esta última já é o botão verde de baixar o Edital, com fundo
+   sólido e texto branco. Reusar o nome fazia o cartão herdar `display:inline-block` e a cor do
+   texto, e o nome do requisito sumia — branco sobre branco. Era o segundo caso do mesmo tipo nesta
+   feature, e a lição é a mesma: nome de classe carrega significado, e reusá-lo herda o significado
+   junto. O nome do requisito importa porque um documento **é** o requisito que ele atende. */
+.enviados{list-style:none;margin:0;padding:0;display:grid;gap:1rem}
+.enviados .enviado{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem}
+.enviados .enviado h3{margin:0 0 .25rem;color:var(--texto)}
+.enviados .meta{margin:.25rem 0 .5rem;color:var(--texto-fraco);font-size:.9375rem}
+.enviados .arquivo{overflow-wrap:anywhere}
+.enviados .acoes{margin:0}
+details.integridade{margin:1.5rem 0 0}
+details.integridade summary{cursor:pointer;font-weight:600}
+details.integridade .resumos{list-style:none;margin:.75rem 0 0;padding:0;display:grid;gap:.75rem}
+/* O acompanhamento (010). Os dois blocos precisam ser distinguíveis **sem depender de cor**: o
+   pessoal é o único com marcador preenchido, e a situação de cada evento aparece por forma e por
+   texto. Cor sozinha não informa quem não a distingue (FR-076). */
+.linha-do-tempo{list-style:none;margin:0 0 1.5rem;padding:0;display:grid;gap:.85rem}
+.linha-do-tempo .marco{display:grid;gap:.1rem;padding-left:1rem;
+  border-left:3px solid var(--borda)}
+.linha-do-tempo.pessoal .marco{border-left-color:var(--sucesso);background:var(--branco);
+  border:1px solid var(--borda);border-left:3px solid var(--sucesso);
+  border-radius:0 6px 6px 0;padding:.75rem 1rem}
+.linha-do-tempo .marco.em_curso{border-left-color:var(--verde)}
+.linha-do-tempo .marco.em_curso .rotulo{font-weight:700}
+.linha-do-tempo .rotulo{font-weight:600}
+.linha-do-tempo .marco.futuro .rotulo{font-weight:400;color:var(--texto-fraco)}
+.linha-do-tempo .quando{color:var(--texto-fraco);font-size:.9375rem}
+/* As credenciais (010). Endereço com quebra explícita, porque em 375px um e-mail longo é a coisa
+   mais fácil de transbordar; e as ações empilham no celular e alinham quando há espaço. */
+.credenciais{list-style:none;margin:0 0 1.5rem;padding:0;display:grid;gap:.75rem}
+.credencial{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:.85rem 1rem;display:grid;gap:.5rem}
+.credencial .endereco{font-weight:600;overflow-wrap:anywhere}
+.credencial .marca{justify-self:start;font-size:.8125rem;font-weight:700;color:var(--sucesso);
+  border:1px solid var(--sucesso);border-radius:4px;padding:.1rem .5rem}
+.credencial .acoes{display:flex;gap:.5rem;flex-wrap:wrap}
+.credencial .acoes form{margin:0}
+.recusa-em-destaque{border-left-color:var(--vermelho);background:var(--branco)}
 form.convite{margin:.75rem 0 0}
 /* O comprovante é impresso: fora o conteúdo, nada mais precisa ir para o papel. */
 /* O timbre existe **só** no papel: na tela o cabeçalho verde já diz de quem é o sistema, e
@@ -385,14 +458,37 @@ form.convite{margin:.75rem 0 0}
   compartilhado — laboratório, lan house, biblioteca — ficava identificado, e a pessoa seguinte
   começava a inscrição dela com o CPF de quem estava antes.
   {% endcomment %}
+  {% comment %}
+  A porta de entrada. Sem ela, quem já se inscreveu e volta para conferir não tinha por onde: a
+  vitrine não oferecia "Entrar", e o único caminho para a área era clicar em "Inscrever-se nesta
+  vaga" numa vaga qualquer — ou saber o endereço de cor. Com sessão, o link leva ao lugar onde a
+  pessoa quer chegar; sem sessão, à porta. As telas do próprio acesso não repetem o convite.
+  {% endcomment %}
   {% if candidato %}
   <span class="quem-esta">
-    <span class="nome">{{ candidato.nome }}</span>
+    <a class="no-topo" href="{% url 'portal:inscricoes' %}">Minhas inscrições</a>
+  {% comment %}
+  Quem acabou de entrar pela primeira vez ainda não tem nome: ele só é pedido na primeira
+  inscrição. O endereço identifica a pessoa para ela mesma até lá — e um cabeçalho vazio deixaria
+  a dúvida de se ela está mesmo dentro.
+  {% endcomment %}
+    <span class="nome">{{ candidato.nome|default:candidato.email }}</span>
     <form method="post" action="{% url 'portal:sair' %}">
       {% csrf_token %}
       <button type="submit" class="sair">Sair</button>
     </form>
   </span>
+  {% else %}
+  {% comment %}
+  Bloco, e não variável de contexto: as telas do próprio acesso o esvaziam declarando
+  `{% block convite_de_entrar %}{% endblock %}`, e nenhuma view precisa lembrar de passar bandeira.
+  Ele fica fora do `{% if candidato %}` porque, quando há sessão, o cabeçalho já leva à área.
+  {% endcomment %}
+  {% block convite_de_entrar %}
+  <span class="quem-esta">
+    <a class="no-topo" href="{% url 'portal:acesso' %}">Entrar</a>
+  </span>
+  {% endblock %}
   {% endif %}
 </header>
 <main id="conteudo" tabindex="-1">

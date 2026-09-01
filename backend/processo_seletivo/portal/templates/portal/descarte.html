@@ -22,6 +22,7 @@ simétricos, e enumerar o que se perde antes de perder é o que evita os dois (F
   <input type="hidden" name="modalidade" value="{{ modalidade }}">
   <input type="hidden" name="telefone" value="{{ telefone }}">
   <input type="hidden" name="confirmar_descarte" value="1">
+  <input type="hidden" name="acao" value="{{ acao }}">
   <button type="submit" class="principal">Confirmar e descartar</button>
 </form>
 <p><a href="{% url 'portal:inscricao' inscricao.id %}">Voltar sem mudar</a></p>

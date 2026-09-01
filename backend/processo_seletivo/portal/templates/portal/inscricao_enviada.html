@@ -1,0 +1,41 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Minha inscrição{% endblock %}
+{% block conteudo %}
+<h1>Minha inscrição</h1>
+<p class="sub">{{ selecao.processo_titulo }}</p>
+
+<p class="situacao enviada">✓ Inscrição enviada</p>
+<p class="codigo">{{ inscricao.protocolo }}</p>
+
+<h2>O que você informou</h2>
+<dl class="campos">
+  {% for rotulo, valor in campos %}{% if valor %}
+  <dt>{{ rotulo }}</dt><dd>{{ valor }}</dd>
+  {% endif %}{% endfor %}
+</dl>
+
+<h2>Documentos enviados</h2>
+{% if documentos %}
+{% include "portal/_documentos_submetidos.html" %}
+{% else %}
+<p class="sub">Esta inscrição não exigiu documentos.</p>
+{% endif %}
+
+<p><a class="principal" href="{% url 'portal:comprovante' inscricao.id %}">Baixar comprovante</a></p>
+<p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Acompanhar esta inscrição</a></p>
+
+{% comment %}
+As evidências de integridade existem e continuam disponíveis, mas não são o assunto desta tela: a
+pessoa veio conferir o que enviou, e não auditar o sistema. Ficam recolhidas, a um clique (FR-073).
+{% endcomment %}
+<details class="integridade">
+  <summary>Ver dados de integridade</summary>
+  <p class="sub">Código de verificação desta inscrição:</p>
+  <p class="codigo">{{ codigo_de_verificacao }}</p>
+  <ul class="resumos">
+    {% for documento in documentos %}
+    <li><strong>{{ documento.arquivo }}</strong><br><span class="codigo">{{ documento.resumo }}</span></li>
+    {% endfor %}
+  </ul>
+</details>
+{% endblock %}

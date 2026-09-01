@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from processo_seletivo.inscricoes.models import Inscricao
+from tests.fixtures.candidato import MARIA
 from tests.fixtures.edital import identificador
 from tests.fixtures.selecao import publicar_selecao, rascunho_de_selecao
 
@@ -23,7 +24,6 @@ MODALIDADE_DE_OUTRO_PERFIL = identificador(407, 0)
 
 @pytest.fixture
 def selecao_aberta(settings, api_client, manager_headers, process_payload):
-    settings.PORTAL_IDENTIDADE_DEMO = True
     agora = timezone.now()
     rascunho = rascunho_de_selecao()
     rascunho["schedule"][0]["startAt"] = (agora - timedelta(days=1)).isoformat()
@@ -33,10 +33,11 @@ def selecao_aberta(settings, api_client, manager_headers, process_payload):
 
 
 def _abrir(client, edital, perfil=PERFIL_DOCENTE):
-    client.post(
-        reverse("portal:identificar"),
-        {"nome": "Maria Silva", "cpf": "123.456.789-09", "email": "maria@exemplo.br"},
-    )
+    # A 010 trocou a declaração pelo registro: quem entra prova o controle de um endereço, e nome
+    # e CPF vêm da identidade. O helper reflete isso; a jornada testada abaixo é a mesma.
+    from tests.fixtures.candidato import identificar
+
+    identificar(client, MARIA)
     resposta = client.post(reverse("portal:inscrever", args=[edital.id, perfil]))
     return resposta["Location"]
 
@@ -47,8 +48,10 @@ def test_os_dados_da_identidade_aparecem_como_informacao(client, selecao_aberta)
     """FR-037: informação, e não campo desabilitado sem explicação."""
     corpo = client.get(_abrir(client, selecao_aberta)).content.decode()
 
-    assert "Maria Silva" in corpo
-    assert "maria@exemplo.br" in corpo
+    assert MARIA.nome in corpo
+    # O endereço exibido é o da credencial **principal** da identidade, e não mais um valor
+    # digitado no formulário: é ele que alimenta a Inscrição (FR-013).
+    assert MARIA.email in corpo
     assert 'name="nome"' not in corpo, "o nome não é pedido de novo"
     assert 'name="cpf"' not in corpo
     assert 'name="email"' not in corpo
@@ -83,7 +86,6 @@ def test_perfil_sem_modalidade_declarada_nao_pergunta_nada(
     client, settings, api_client, manager_headers, process_payload
 ):
     """FR-038 e FR-039: sem escolha relevante, nenhuma pergunta — e nenhuma entidade inventada."""
-    settings.PORTAL_IDENTIDADE_DEMO = True
     agora = timezone.now()
     rascunho = rascunho_de_selecao()
     rascunho["schedule"][0]["startAt"] = (agora - timedelta(days=1)).isoformat()

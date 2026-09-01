@@ -93,6 +93,7 @@ def abrir_inscricao(*, identidade, edital_id, profile_id, correlation_id=""):
     if perfil is None:
         raise DomainError("not_found", "Recurso não encontrado.", 404)
     with command_context() as agora:
+        _travar_a_identidade(identidade)
         existente = _inscricao_existente(identidade, edital_id, profile_id)
         if existente is not None:
             return existente
@@ -133,6 +134,39 @@ def abrir_inscricao(*, identidade, edital_id, profile_id, correlation_id=""):
             correlation_id=correlation_id,
         )
         return inscricao
+
+
+def _travar_a_identidade(identidade):
+    """Serializa a abertura de rascunho contra a retomada da reconciliação (FR-055, D-010).
+
+    `Inscricao` não referencia a identidade por chave estrangeira — e não passa a referenciar, que
+    a `010` tem proibição expressa de tocar naquele campo. Sem integridade referencial, nada
+    impediria este rascunho de nascer entre a verificação de "identidade vazia" e o descarte dela,
+    deixando uma inscrição órfã de uma identidade que deixou de existir.
+
+    Os dois caminhos tomam **a mesma** linha, e é isso que os serializa. O custo é nulo aqui: a
+    abertura de rascunho já é uma escrita, e já está numa transação.
+
+    **E travar não basta: é preciso exigir que a linha exista.** Um `select_for_update` sobre um
+    filtro que não casa com nada não trava nada. Se a retomada chegar primeiro, ela descarta a
+    identidade e libera; a abertura então encontra zero linhas, não espera por ninguém, e cria a
+    inscrição apontando para um `subject` que não é mais de ninguém. Foi o que o teste de
+    concorrência encontrou. Exigir a linha fecha os dois lados: quem chega depois do descarte é
+    recusado, e quem chega antes faz a retomada esperar e encontrar a inscrição.
+
+    A exceção que existia aqui — deixar passar a identidade sem registro, da identificação por
+    declaração — saiu junto com ela: toda identidade agora tem linha.
+    """
+    from processo_seletivo.identidade.models import CandidateIdentity
+
+    travada = (
+        CandidateIdentity.objects.select_for_update()
+        .filter(subject=identidade.subject)
+        .values_list("pk", flat=True)
+        .first()
+    )
+    if travada is None:
+        raise DomainError("not_found", "Recurso não encontrado.", 404)
 
 
 def _inscricao_existente(identidade, edital_id, profile_id):

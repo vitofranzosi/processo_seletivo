@@ -26,7 +26,7 @@ def _enviar(client, inscricao, requisito):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.authorization
-def test_requisito_de_outro_perfil_e_recusado(client, selecao):
+def test_requisito_de_outro_perfil_e_recusado(client, selecao, candidatos_registrados):
     """O diploma é exigido do Perfil docente; quem se inscreveu no técnico não o envia."""
     inscricao = abrir_inscricao(identidade=MARIA, edital_id=selecao.id, profile_id=PERFIL_TECNICO)
     identificar(client, MARIA)

@@ -1,0 +1,58 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Minhas inscrições{% endblock %}
+{% block conteudo %}
+<h1>Minhas inscrições</h1>
+<p class="sub"><a href="{% url 'portal:conta' %}">Acesso à conta</a></p>
+{% include "portal/_mensagens.html" %}
+{% if inscricoes %}
+{% comment %}
+Mais recente primeiro, e uma ação principal por item. A situação aparece por texto **e** por
+símbolo: cor sozinha não informa quem não a distingue.
+{% endcomment %}
+<ul class="selecoes">
+  {% for inscricao in inscricoes %}
+  <li class="selecao">
+    <a class="titulo" href="{% url 'portal:inscricao' inscricao.id %}">{{ inscricao.perfil|default:"Inscrição" }}</a>
+    {% comment %}
+    O Processo e o Edital, e não só o número: com três processos abertos ao mesmo tempo — a
+    situação normal de um instituto — "Edital 01/2026" não identifica qual é qual.
+    {% endcomment %}
+    {% if inscricao.processo or inscricao.edital %}<span class="meta">{{ inscricao.processo }}{% if inscricao.processo and inscricao.edital %} · {% endif %}{{ inscricao.edital }}</span>{% endif %}
+    {% if inscricao.enviada %}
+    <span class="situacao enviada">✓ Inscrição enviada</span>
+    <span class="codigo">{{ inscricao.protocolo }}</span>
+    {% else %}
+    <span class="situacao">Inscrição não enviada</span>
+    {% endif %}
+    {% if inscricao.enviada %}
+    <a class="principal" href="{% url 'portal:acompanhamento' inscricao.id %}">{{ inscricao.acao }}</a>
+    {% else %}
+    <a class="principal" href="{% url 'portal:inscricao' inscricao.id %}">{{ inscricao.acao }}</a>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+{% comment %} Estado vazio, e não erro: é o estado normal de todo candidato novo, no minuto seguinte ao
+   primeiro acesso (FR-061). {% endcomment %}
+<p class="sub">Você ainda não possui inscrições.</p>
+<p><a class="principal" href="{% url 'portal:vitrine' %}">Ver processos seletivos</a></p>
+{% if pode_retomar %}
+{% comment %}
+Só aparece para quem pode aceitar: identidade sem inscrição alguma e com um endereço que consta de
+participação anterior. A janela fecha sozinha na primeira inscrição — e é isso que torna a
+movimentação segura, porque não há o que fundir.
+
+Nada aqui diz de quem era a participação anterior: quem chegou até esta tela provou uma caixa de
+e-mail, e isso não basta para saber de quem ela era.
+{% endcomment %}
+<h2>Já participou antes?</h2>
+<p class="sub">Encontramos participação anterior associada a um dos seus e-mails. Você pode
+vinculá-la a este acesso confirmando seu CPF.</p>
+<form method="post" action="{% url 'portal:acesso-retomar' %}">
+  {% csrf_token %}
+  <button type="submit" class="secundario">Vincular participação anterior</button>
+</form>
+{% endif %}
+{% endif %}
+{% endblock %}

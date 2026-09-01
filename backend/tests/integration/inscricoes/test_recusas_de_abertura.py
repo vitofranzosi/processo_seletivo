@@ -15,14 +15,13 @@ from django.utils import timezone
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.inscricoes.application.rascunho import abrir_inscricao
 from processo_seletivo.inscricoes.models import Inscricao
-from processo_seletivo.portal.identidade import IdentidadeDoCandidato, subject_de
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.shared.api.problems import DomainError
+from tests.fixtures.candidato import JOAO, MARIA, registrar
 from tests.fixtures.edital import actor_headers, identificador
 from tests.fixtures.selecao import publicar_selecao, rascunho_de_selecao
 
 CPF = "123.456.789-09"
-MARIA = IdentidadeDoCandidato(subject_de(CPF), "Maria Silva", CPF, "m@ex.br")
 PERFIL_DOCENTE = identificador(401, 0)
 PERFIL_TECNICO = identificador(406, 0)
 MODALIDADE_AC = identificador(403, 0)
@@ -64,9 +63,20 @@ def test_o_subject_nao_contem_o_cpf(api_client, manager_headers, process_payload
     assert registro.actor_subject == MARIA.subject
 
 
+@pytest.mark.django_db
 def test_o_subject_e_estavel_para_a_mesma_pessoa():
-    assert subject_de("123.456.789-09") == subject_de("12345678909")
-    assert subject_de("123.456.789-09") != subject_de("987.654.321-00")
+    """Estável por ser persistido, e não por ser derivado (FR-001, FR-002).
+
+    A `009` derivava o identificador do CPF pela chave secreta, e a estabilidade vinha da função. A
+    `010` a tira do registro: a mesma identidade é o mesmo `subject` porque é a mesma linha — e
+    rotacionar qualquer segredo deixou de significar coisa alguma para a propriedade da inscrição.
+    """
+    from processo_seletivo.identidade.models import CandidateIdentity
+
+    registro = registrar(MARIA)
+    assert CandidateIdentity.objects.get(pk=registro.pk).subject == MARIA.subject
+    assert registrar(MARIA).subject == MARIA.subject
+    assert registrar(JOAO).subject != MARIA.subject
 
 
 # ---------------------------------------------------------------------------
@@ -80,7 +90,6 @@ def test_edital_cancelado_nao_recebe_inscricao(
     client, settings, api_client, manager_headers, process_payload
 ):
     """A página continua legível — o ato publicado não se apaga — e não convida mais ninguém."""
-    settings.PORTAL_IDENTIDADE_DEMO = True
     edital = _publicar(api_client, manager_headers, process_payload)
     api_client.post(
         f"/api/v1/admin/editais/{edital.id}/cancelamentos",
@@ -114,11 +123,10 @@ def test_com_duas_modalidades_a_escolha_e_obrigatoria(
 ):
     """Deixar em branco pareceria inofensivo: o candidato deixaria de receber o que a modalidade
     dele exige, e nada acusaria (FR-040)."""
-    settings.PORTAL_IDENTIDADE_DEMO = True
     edital = _publicar(api_client, manager_headers, process_payload)
     inscricao = abrir_inscricao(identidade=MARIA, edital_id=edital.id, profile_id=PERFIL_DOCENTE)
     sessao = client.session
-    sessao["portal_identidade"] = MARIA.__dict__
+    sessao["portal_identidade"] = str(registrar(MARIA).pk)
     sessao.save()
 
     resposta = client.post(reverse("portal:inscricao", args=[inscricao.id]), {"modalidade": ""})
@@ -134,14 +142,13 @@ def test_com_uma_modalidade_publicada_ela_e_assumida_sem_pergunta(
     client, settings, api_client, manager_headers, process_payload
 ):
     """Uma modalidade só não é escolha — e deixá-la em branco tiraria documentos da lista."""
-    settings.PORTAL_IDENTIDADE_DEMO = True
     edital = _publicar(api_client, manager_headers, process_payload)
 
     inscricao = abrir_inscricao(identidade=MARIA, edital_id=edital.id, profile_id=PERFIL_TECNICO)
 
     assert str(inscricao.modality_id) == identificador(407, 0)
     sessao = client.session
-    sessao["portal_identidade"] = MARIA.__dict__
+    sessao["portal_identidade"] = str(registrar(MARIA).pk)
     sessao.save()
     corpo = client.get(reverse("portal:inscricao", args=[inscricao.id])).content.decode()
     assert "<select" not in corpo, "não se pergunta o que não é escolha"
@@ -178,12 +185,10 @@ def test_inexistente_e_alheia_produzem_a_mesma_resposta(
     client, settings, api_client, manager_headers, process_payload
 ):
     """Mesmo status não basta: dois corpos diferentes continuam dizendo qual id existe."""
-    settings.PORTAL_IDENTIDADE_DEMO = True
     edital = _publicar(api_client, manager_headers, process_payload)
     alheia = abrir_inscricao(identidade=MARIA, edital_id=edital.id, profile_id=PERFIL_DOCENTE)
-    outro = IdentidadeDoCandidato(subject_de("98765432100"), "João", "987.654.321-00", "j@ex.br")
     sessao = client.session
-    sessao["portal_identidade"] = outro.__dict__
+    sessao["portal_identidade"] = str(registrar(JOAO).pk)
     sessao.save()
 
     de_outro = client.get(reverse("portal:inscricao", args=[alheia.id]))
@@ -226,14 +231,24 @@ def test_abrir_apos_a_criacao_concorrente_devolve_a_mesma_inscricao(
 @pytest.mark.integration
 @pytest.mark.parametrize(
     ("campo", "valor"),
-    [("nome", "M" * 300), ("email", "a" * 250 + "@exemplo.br"), ("cpf", "1" * 40)],
+    [("nome", "M" * 300), ("cpf", "1" * 40)],
 )
-def test_campo_maior_que_a_coluna_e_recusado_com_explicacao(client, settings, campo, valor):
-    settings.PORTAL_IDENTIDADE_DEMO = True
-    dados = {"nome": "Maria", "cpf": "123.456.789-09", "email": "m@ex.br"}
+def test_campo_maior_que_a_coluna_e_recusado_com_explicacao(client, campo, valor):
+    """O campo grande demais é recusado antes de chegar ao banco — agora em `meus-dados`.
+
+    O e-mail saiu da lista porque deixou de ser digitado aqui: ele é a credencial, e a sua forma é
+    conferida no acesso. O que sobrou é o núcleo mínimo, que é o que ainda se digita.
+    """
+    from processo_seletivo.identidade.application.associacao import criar_identidade_com
+
+    identidade = criar_identidade_com("nova@exemplo.test", "nova@exemplo.test")
+    sessao = client.session
+    sessao["portal_identidade"] = str(identidade.pk)
+    sessao.save()
+    dados = {"nome": "Maria Silva", "cpf": "123.456.789-09"}
     dados[campo] = valor
 
-    resposta = client.post(reverse("portal:identificar"), dados)
+    resposta = client.post(reverse("portal:meus-dados"), dados)
 
     assert resposta.status_code == 200, "recusa legível, e não erro de servidor"
     corpo = resposta.content.decode()
@@ -252,11 +267,10 @@ def test_telefone_que_nao_e_telefone_e_recusado_em_vez_de_estourar(
     um número errado custa a vaga: a comissão liga, não encontra ninguém e conclui que a pessoa
     desistiu. O que a pessoa digitou volta ao campo (SC-UX-007).
     """
-    settings.PORTAL_IDENTIDADE_DEMO = True
     edital = _publicar(api_client, manager_headers, process_payload)
     inscricao = abrir_inscricao(identidade=MARIA, edital_id=edital.id, profile_id=PERFIL_TECNICO)
     sessao = client.session
-    sessao["portal_identidade"] = MARIA.__dict__
+    sessao["portal_identidade"] = str(registrar(MARIA).pk)
     sessao.save()
 
     resposta = client.post(
@@ -277,11 +291,10 @@ def test_telefone_e_guardado_numa_forma_so(
     client, settings, api_client, manager_headers, process_payload
 ):
     """`27999990000`, `(27) 99999-0000` e `27 99999 0000` são o mesmo telefone."""
-    settings.PORTAL_IDENTIDADE_DEMO = True
     edital = _publicar(api_client, manager_headers, process_payload)
     inscricao = abrir_inscricao(identidade=MARIA, edital_id=edital.id, profile_id=PERFIL_TECNICO)
     sessao = client.session
-    sessao["portal_identidade"] = MARIA.__dict__
+    sessao["portal_identidade"] = str(registrar(MARIA).pk)
     sessao.save()
 
     client.post(reverse("portal:inscricao", args=[inscricao.id]), {"telefone": "27999990000"})
@@ -300,7 +313,6 @@ def test_telefone_e_guardado_numa_forma_so(
 def test_a_selecao_e_privada_para_quem_ja_se_inscreveu(
     client, settings, api_client, manager_headers, process_payload
 ):
-    settings.PORTAL_IDENTIDADE_DEMO = True
     edital = _publicar(api_client, manager_headers, process_payload)
 
     anonima = client.get(reverse("portal:selecao", args=[edital.id]))
@@ -308,7 +320,7 @@ def test_a_selecao_e_privada_para_quem_ja_se_inscreveu(
 
     abrir_inscricao(identidade=MARIA, edital_id=edital.id, profile_id=PERFIL_DOCENTE)
     sessao = client.session
-    sessao["portal_identidade"] = MARIA.__dict__
+    sessao["portal_identidade"] = str(registrar(MARIA).pk)
     sessao.save()
 
     identificada = client.get(reverse("portal:selecao", args=[edital.id]))

@@ -14,14 +14,19 @@ pytestmark = [pytest.mark.django_db, pytest.mark.authorization]
 
 
 @pytest.fixture
-def sessao_de_candidato(client, settings):
-    """Identidade do canal público, e nada mais."""
-    settings.PORTAL_IDENTIDADE_DEMO = True
-    resposta = client.post(
-        reverse("portal:identificar"),
-        {"nome": "Maria Candidata", "cpf": "111.444.777-35", "email": "m@exemplo.br"},
-    )
-    assert resposta.status_code in (302, 200), resposta.content
+def sessao_de_candidato(client):
+    """Identidade do canal público, e nada mais.
+
+    Montada pelo mecanismo da `010`: uma identidade persistida e o identificador dela na sessão.
+    A versão anterior usava `portal:identificar` com `PORTAL_IDENTIDADE_DEMO`, e aquela rota
+    **deixou de existir** — a identificação por declaração saiu com a `FR-048`, e a variável
+    sobrevive só como armadilha que impede produção de subir com ela ligada. O teste continua
+    afirmando exatamente a mesma coisa; o que mudou foi como se obtém uma sessão de candidato.
+    """
+    from tests.fixtures.candidato import MARIA
+    from tests.fixtures.candidato import identificar as identificar_candidata
+
+    identificar_candidata(client, MARIA)
     return client
 
 
