@@ -65,7 +65,10 @@ def test_mesma_chave_com_conteudo_diferente_e_conflito(gestor, processo_a):
     assert recusa.value.code == "idempotency_conflict"
 
 
-def test_alocar_duas_vezes_com_a_mesma_chave(  # FR-065gestor, processo_a, edital_a, comissao_de_a, etapa_a1):
+def test_alocar_duas_vezes_com_a_mesma_chave(
+    gestor, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    """FR-065: repetir a ação de alocar não produz registros ativos duplicados."""
     primeira = alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1, chave="k")
     segunda = alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1, chave="k")
 
