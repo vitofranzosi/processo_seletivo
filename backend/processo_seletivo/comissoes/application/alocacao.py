@@ -3,12 +3,10 @@
 A Etapa é sempre lida do conteúdo vigente, nunca de `edital.etapas` — ver `domain/etapas.py`.
 """
 
-from uuid import UUID
-
 from django.db import IntegrityError
 
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
-from processo_seletivo.comissoes.application.comissao import auditar
+from processo_seletivo.comissoes.application.comissao import auditar, identificador
 from processo_seletivo.comissoes.domain import funcoes
 from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
 from processo_seletivo.comissoes.models import AlocacaoEtapa, MembroComissao
@@ -17,10 +15,7 @@ from processo_seletivo.shared.api.problems import DomainError
 
 
 def alocar(*, actor, processo_id, membro_id, edital_id, etapa_id, idempotency_key, correlation_id):
-    try:
-        etapa_id = UUID(str(etapa_id))
-    except (TypeError, ValueError) as exc:
-        raise nao_encontrado() from exc
+    etapa_id = identificador(etapa_id)
     with comando_de_comissao(
         actor=actor,
         processo_id=processo_id,
@@ -29,7 +24,7 @@ def alocar(*, actor, processo_id, membro_id, edital_id, etapa_id, idempotency_ke
         idempotency_key=idempotency_key,
     ) as ctx:
         membro = MembroComissao.objects.filter(
-            pk=membro_id, processo=ctx.processo, ativo=True
+            pk=identificador(membro_id), processo=ctx.processo, ativo=True
         ).first()
         if membro is None:
             # Pessoa que não é membro ativo não recebe alocação: a jornada é
@@ -43,7 +38,9 @@ def alocar(*, actor, processo_id, membro_id, edital_id, etapa_id, idempotency_ke
         # A coerência percorre `etapa → edital → processo`: alocar em Etapa de Edital de outro
         # Processo é inconsistência determinável, e responde como inexistente (FR-004, EC-004).
         edital = Edital.objects.filter(
-            pk=edital_id, processo=ctx.processo, institution_scope=ctx.processo.institution_scope
+            pk=identificador(edital_id),
+            processo=ctx.processo,
+            institution_scope=ctx.processo.institution_scope,
         ).first()
         if edital is None:
             raise nao_encontrado()
@@ -99,7 +96,9 @@ def remover_alocacao(*, actor, processo_id, alocacao_id, idempotency_key, correl
     ) as ctx:
         # Sem `ativo=True` quando é repetição: a segunda chamada com a mesma chave chega
         # depois da inativação, e responder 404 ali faria o duplo clique virar erro.
-        consulta = AlocacaoEtapa.objects.filter(pk=alocacao_id, membro__processo=ctx.processo)
+        consulta = AlocacaoEtapa.objects.filter(
+            pk=identificador(alocacao_id), membro__processo=ctx.processo
+        )
         alocacao = (consulta if ctx.repetido else consulta.filter(ativo=True)).first()
         if alocacao is None:
             raise nao_encontrado()

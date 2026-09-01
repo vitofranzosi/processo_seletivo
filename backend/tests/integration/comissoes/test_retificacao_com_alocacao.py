@@ -85,3 +85,42 @@ def test_mudar_o_nome_preservando_a_identidade_nao_produz_orfa(
     assert selectors.orfas(processo_a) == []
     assert pode_atuar_na_etapa(joao, edital_a, etapa_a1) is True
     assert [a["nome"] for a in selectors.minhas_etapas(joao)] == ["Análise de títulos"]
+
+
+def test_o_periodo_da_atribuicao_vem_do_conteudo_vigente(
+    api_client, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    """Uma Retificação que muda a data do Evento precisa mudar o que o membro lê.
+
+    `EventoCronograma` é a linha de elaboração e a Retificação não escreve nela: ler a linha
+    mostraria ao alocado o período superado, sob o rótulo "Período previsto", enquanto o Edital
+    publicado diz outra coisa.
+    """
+    from processo_seletivo.comissoes.domain.etapas import etapas_vigentes, evento_vigente
+    from tests.fixtures.edital import identificador
+
+    evento_id = identificador(402, 0)
+    alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
+    assert etapas_vigentes(edital_a)[__import__("uuid").UUID(etapa_a1)]["scheduleEventId"]
+
+    retify(
+        api_client,
+        edital_a,
+        [
+            {
+                "targetPath": f"/schedule/id={evento_id}/startAt",
+                "operation": "REPLACE",
+                "newValue": "2027-03-15T09:00:00-03:00",
+            }
+        ],
+    )
+
+    evento = evento_vigente(edital_a, evento_id)
+    assert evento["startAt"].startswith("2027-03-15")
+
+    from processo_seletivo.editais.models.cronograma import EventoCronograma
+
+    linha = EventoCronograma.objects.get(pk=evento_id)
+    assert not str(linha.start_at).startswith("2027-03-15"), (
+        "a linha de elaboração continua com a data antiga — é por isso que ela não serve"
+    )

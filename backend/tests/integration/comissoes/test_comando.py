@@ -78,3 +78,41 @@ def test_os_cinco_comandos_recusam_processo_em_estado_final(
         with pytest.raises(DomainError) as recusa:
             chamada()
         assert recusa.value.status in (409, 422), recusa.value.code
+
+
+@pytest.mark.parametrize("malformado", ["", "nao-e-uuid", "123"])
+def test_identificador_malformado_responde_como_inexistente(
+    gestor, processo_a, edital_a, cenario, etapa_a1, malformado
+):
+    """Identificador sem forma de identificador não identifica nada — e não pode virar 500.
+
+    `filter(pk="")` levanta `ValidationError`, que não é `DomainError` e sobe até o servidor.
+    O contrato promete 404 para o que o ator não alcança; 500 é resposta de defeito, não de
+    autorização.
+    """
+    chamadas = [
+        lambda: alocar(
+            actor=gestor, processo_id=processo_a.id, membro_id=malformado,
+            edital_id=edital_a.id, etapa_id=etapa_a1, idempotency_key="m1", correlation_id="c",
+        ),
+        lambda: alocar(
+            actor=gestor, processo_id=processo_a.id, membro_id=cenario["membros"]["joao"].id,
+            edital_id=malformado, etapa_id=etapa_a1, idempotency_key="m2", correlation_id="c",
+        ),
+        lambda: remover_alocacao(
+            actor=gestor, processo_id=processo_a.id, alocacao_id=malformado,
+            idempotency_key="m3", correlation_id="c",
+        ),
+        lambda: alterar_funcao(
+            actor=gestor, processo_id=processo_a.id, membro_id=malformado,
+            funcao="PRESIDENTE", idempotency_key="m4", correlation_id="c",
+        ),
+        lambda: remover_membro(
+            actor=gestor, processo_id=processo_a.id, membro_id=malformado,
+            idempotency_key="m5", correlation_id="c",
+        ),
+    ]
+    for chamada in chamadas:
+        with pytest.raises(DomainError) as recusa:
+            chamada()
+        assert recusa.value.status == 404, recusa.value.code

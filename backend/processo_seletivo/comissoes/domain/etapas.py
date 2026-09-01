@@ -29,15 +29,39 @@ def sem_versao_vigente():
     )
 
 
-def etapas_vigentes(edital, *, at=None):
-    """As Etapas do conteúdo vigente, por identidade. Devolve `{UUID: dados}`."""
+def conteudo_vigente(edital, *, at=None):
+    """A Versão Consolidada vigente, ou a recusa de Edital não publicado."""
     try:
-        versao = effective_version(edital_id=edital.id, at=at)
+        return effective_version(edital_id=edital.id, at=at).content
     except DomainError as exc:
         if exc.code == "no_effective_version":
             raise sem_versao_vigente() from exc
         raise
-    return {UUID(etapa["id"]): etapa for etapa in (versao.content.get("stages") or [])}
+
+
+def etapas_vigentes(edital, *, at=None):
+    """As Etapas do conteúdo vigente, por identidade. Devolve `{UUID: dados}`."""
+    return {
+        UUID(etapa["id"]): etapa
+        for etapa in (conteudo_vigente(edital, at=at).get("stages") or [])
+    }
+
+
+def evento_vigente(edital, evento_id, *, at=None):
+    """O Evento de Cronograma do conteúdo vigente, ou `None`.
+
+    Pela mesma razão que a Etapa: `EventoCronograma` é a linha de elaboração, e uma Retificação
+    que mude as datas grava na Versão Consolidada sem escrever de volta nela. Ler a linha faria
+    a tela mostrar o período superado — e Evento acrescentado por Retificação não tem linha
+    nenhuma (D-012).
+    """
+    if not evento_id:
+        return None
+    alvo = str(evento_id)
+    for evento in conteudo_vigente(edital, at=at).get("schedule") or []:
+        if str(evento.get("id")) == alvo:
+            return evento
+    return None
 
 
 def etapa_vigente(edital, etapa_id, *, at=None):

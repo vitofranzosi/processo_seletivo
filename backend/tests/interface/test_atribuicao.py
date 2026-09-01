@@ -71,3 +71,11 @@ def test_minhas_etapas_prioriza_etapa_edital_e_processo(
     assert "Análise documental" in corpo
     assert f"Edital {edital_a.number}/{edital_a.year}" in corpo
     assert processo_a.title in corpo
+
+
+def test_o_periodo_aparece_em_data_brasileira(pagina):
+    """O conteúdo publicado guarda ISO; a tela mostra dd/mm/aaaa, como as demais."""
+    import re
+
+    corpo = pagina.content.decode()
+    assert re.search(r"\d{2}/\d{2}/\d{4}", corpo), corpo[:400]

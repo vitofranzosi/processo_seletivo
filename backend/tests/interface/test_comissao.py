@@ -153,3 +153,22 @@ def test_alocacao_bem_sucedida_produz_aviso_perceptivel(
     )
 
     assert "Alocação registrada" in resposta.content.decode()
+
+
+def test_formulario_sem_o_campo_funcao_nao_rebaixa_ninguem(
+    client, seletor_ligado, processo_a, comissao_de_a
+):
+    """"Não informado" e "informado como MEMBRO" são coisas diferentes.
+
+    Um formulário truncado — cliente próprio, campo renomeado num refactor — não pode rebaixar
+    a presidente por omissão.
+    """
+    identificar(client, "carlos", ["gestor"])
+
+    client.post(
+        url(processo_a),
+        {"acao": "alterar_funcao", "membro_id": str(comissao_de_a["maria"].id)},
+    )
+
+    comissao_de_a["maria"].refresh_from_db()
+    assert comissao_de_a["maria"].funcao == "PRESIDENTE"

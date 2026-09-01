@@ -4,6 +4,8 @@ Todo comando entra pelo invólucro de `application/__init__.py`, que impõe a or
 autorizar, conferir o estado do Processo, reservar. O que fica aqui é só a regra de negócio.
 """
 
+from uuid import UUID
+
 from django.db import IntegrityError
 
 from processo_seletivo.auditoria.application import record_event
@@ -13,6 +15,19 @@ from processo_seletivo.comissoes.models import AlocacaoEtapa, Funcao, MembroComi
 from processo_seletivo.shared.api.problems import DomainError
 
 
+def identificador(valor):
+    """Um UUID, ou a recusa de sempre.
+
+    Sem isto, um `membro_id` vazio ou malformado chega a `filter(pk=...)` e levanta
+    `ValidationError` — que não é `DomainError`, não é tratada por ninguém e vira 500 onde o
+    contrato promete 404. Identificador que não tem forma de identificador não identifica nada.
+    """
+    try:
+        return UUID(str(valor))
+    except (TypeError, ValueError) as exc:
+        raise nao_encontrado() from exc
+
+
 def _membro_do_processo(processo, membro_id, *, exigir_ativo=True):
     """O membro deste Processo. `exigir_ativo=False` serve à repetição de uma remoção.
 
@@ -20,7 +35,7 @@ def _membro_do_processo(processo, membro_id, *, exigir_ativo=True):
     e devolver 404 ali transformaria o duplo clique em erro, que é o oposto do que a
     idempotência existe para fazer.
     """
-    consulta = MembroComissao.objects.filter(pk=membro_id, processo=processo)
+    consulta = MembroComissao.objects.filter(pk=identificador(membro_id), processo=processo)
     membro = consulta.filter(ativo=True).first() if exigir_ativo else consulta.first()
     if membro is None:
         # Membro de outro Processo responde como inexistente: quem não gere aquele Processo não
@@ -122,7 +137,11 @@ def alterar_funcao(*, actor, processo_id, membro_id, funcao, idempotency_key, co
             return membro, 200
         anterior = membro.funcao
         if anterior != funcao:
-            _exigir_presidencia_apos(ctx.processo, membro, nova_funcao=funcao)
+            # As alocações dela **sobrevivem** ao rebaixamento — ao contrário da remoção, onde
+            # são inativadas na mesma transação. Por isso elas contam aqui.
+            _exigir_presidencia_apos(
+                ctx.processo, membro, nova_funcao=funcao, alocacoes_sobrevivem=True
+            )
             membro.funcao = funcao
             membro.save(update_fields=["funcao"])
         auditar(
@@ -148,7 +167,9 @@ def remover_membro(*, actor, processo_id, membro_id, idempotency_key, correlatio
         membro = _membro_do_processo(ctx.processo, membro_id, exigir_ativo=not ctx.repetido)
         if ctx.repetido:
             return membro, 200
-        _exigir_presidencia_apos(ctx.processo, membro, nova_funcao=None)
+        _exigir_presidencia_apos(
+            ctx.processo, membro, nova_funcao=None, alocacoes_sobrevivem=False
+        )
         # A cascata é atômica: alocação ativa sob membro inativo deixaria o acesso sobrevivendo
         # à remoção por uma janela, e atrapalharia a própria regra do último presidente, que
         # pergunta se há alocação ativa na comissão (EC-003).
@@ -184,18 +205,25 @@ def remover_membro(*, actor, processo_id, membro_id, idempotency_key, correlatio
         return ctx.concluir(membro, 200)
 
 
-def _exigir_presidencia_apos(processo, membro, *, nova_funcao):
+def _exigir_presidencia_apos(processo, membro, *, nova_funcao, alocacoes_sobrevivem):
     """A comissão não fica sem presidente enquanto houver trabalho distribuído (FR-029, FR-030).
 
     Constituir sem presidente é estado transitório legítimo — é o que evita obrigar que o
     primeiro membro adicionado seja o presidente. O que não pode é sobrar alocação ativa sem
     ninguém respondendo por ela.
+
+    **`alocacoes_sobrevivem` é a diferença entre os dois caminhos, e ignorá-la era um defeito.**
+    Na remoção, as alocações do próprio membro são inativadas na mesma transação, então não
+    contam para "sobrou trabalho distribuído". No rebaixamento elas ficam — e excluí-las deixava
+    passar o caso da única presidente que também era a única alocada, exatamente o estado que
+    esta função existe para impedir.
     """
     if membro.funcao != Funcao.PRESIDENTE or nova_funcao == Funcao.PRESIDENTE:
         return
     if funcoes.tem_presidente(processo, exceto=membro):
         return
-    if not funcoes.tem_alocacao_ativa(processo, exceto=membro):
+    exceto = None if alocacoes_sobrevivem else membro
+    if not funcoes.tem_alocacao_ativa(processo, exceto=exceto):
         return
     raise DomainError(
         "comissao_ficaria_sem_presidente",

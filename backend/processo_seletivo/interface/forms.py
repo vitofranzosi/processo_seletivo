@@ -542,7 +542,10 @@ def ler_membro(dados):
     return {
         "identity_subject": _texto(dados, "identity_subject"),
         "display_label": _texto(dados, "display_label"),
-        "funcao": _texto(dados, "funcao") or "MEMBRO",
+        # Sem padrão: "não informado" e "informado como MEMBRO" são coisas diferentes, e
+        # confundi-las rebaixaria uma presidente em silêncio num formulário truncado. Quem
+        # valida é o command, que recusa função fora do conjunto.
+        "funcao": _texto(dados, "funcao"),
     }
 
 

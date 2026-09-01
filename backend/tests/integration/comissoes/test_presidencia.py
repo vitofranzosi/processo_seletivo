@@ -97,3 +97,66 @@ def test_sem_alocacao_ativa_o_presidente_pode_sair(gestor, processo_a, comissao_
     )
 
     assert status == 200 and membro.ativo is False
+
+
+def test_rebaixar_a_unica_presidente_que_tambem_e_a_unica_alocada_e_recusado(
+    gestor, processo_a, edital_a, etapa_a1
+):
+    """O caso que a guarda deixava passar.
+
+    Quando a presidente é a única pessoa alocada, excluir as alocações **dela** da conta fazia a
+    verificação concluir que não havia trabalho distribuído — e o rebaixamento deixava a comissão
+    com alocação ativa e zero presidentes. Na remoção a exclusão é correta, porque ali as
+    alocações caem junto; no rebaixamento elas sobrevivem.
+    """
+    membros = constituir(gestor, processo_a, [("maria", "PRESIDENTE")])
+    alocar_em(gestor, processo_a, membros["maria"], edital_a, etapa_a1)
+
+    with pytest.raises(DomainError) as recusa:
+        alterar_funcao(
+            actor=gestor,
+            processo_id=processo_a.id,
+            membro_id=membros["maria"].id,
+            funcao="MEMBRO",
+            idempotency_key="k-unica",
+            correlation_id="c",
+        )
+
+    assert recusa.value.code == "comissao_ficaria_sem_presidente"
+    membros["maria"].refresh_from_db()
+    assert membros["maria"].funcao == "PRESIDENTE"
+
+
+def test_nenhuma_operacao_deixa_alocacao_ativa_sem_presidente(
+    gestor, processo_a, edital_a, etapa_a1, etapa_a2
+):
+    """SC-019, afirmado sobre o estado e não sobre o caminho que levaria a ele."""
+    from processo_seletivo.comissoes.models import AlocacaoEtapa, Funcao, MembroComissao
+
+    membros = constituir(gestor, processo_a, [("maria", "PRESIDENTE"), ("joao", "MEMBRO")])
+    alocar_em(gestor, processo_a, membros["maria"], edital_a, etapa_a1)
+    alocar_em(gestor, processo_a, membros["joao"], edital_a, etapa_a2)
+
+    for membro_id, funcao in (
+        (membros["maria"].id, "MEMBRO"),
+        (membros["joao"].id, "MEMBRO"),
+    ):
+        try:
+            alterar_funcao(
+                actor=gestor,
+                processo_id=processo_a.id,
+                membro_id=membro_id,
+                funcao=funcao,
+                idempotency_key=f"k-{membro_id}",
+                correlation_id="c",
+            )
+        except DomainError:
+            pass
+
+    sem_presidente = not MembroComissao.objects.filter(
+        processo=processo_a, ativo=True, funcao=Funcao.PRESIDENTE
+    ).exists()
+    com_alocacao = AlocacaoEtapa.objects.filter(
+        membro__processo=processo_a, ativo=True
+    ).exists()
+    assert not (sem_presidente and com_alocacao)

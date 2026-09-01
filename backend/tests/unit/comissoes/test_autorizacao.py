@@ -64,3 +64,15 @@ def test_escopo_divergente_nao_autoriza(processo_a, edital_a, comissao_de_a, eta
 
     assert pode_gerir_comissao(de_fora, processo_a) is None
     assert pode_atuar_na_etapa(de_fora, edital_a, etapa_a1) is False
+
+
+def test_minhas_etapas_ordena_o_numero_do_edital_como_numero(
+    gestor, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    """`number` é texto: sem conversão, o Edital 11 apareceria antes do 2."""
+    from processo_seletivo.comissoes.application.selectors import _numero
+
+    assert _numero("2") < _numero("11")
+    assert _numero("07") < _numero("11")
+    # Número não numérico não pode quebrar a ordenação — vai para o fim, em ordem alfabética.
+    assert _numero("11") < _numero("11-A")

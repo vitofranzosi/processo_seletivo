@@ -25,11 +25,10 @@ from processo_seletivo.comissoes.domain.autorizacao import (
     pode_atuar_na_etapa,
     pode_gerir_comissao,
 )
-from processo_seletivo.comissoes.domain.etapas import etapa_vigente
+from processo_seletivo.comissoes.domain.etapas import etapa_vigente, evento_vigente
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.application.identificacao import update_edital_identification
 from processo_seletivo.editais.domain.validation import validate_for_publication
-from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.inscricoes.application.consulta import (
     CONSULTAR,
     documento_para_consulta,
@@ -1874,9 +1873,20 @@ def atribuicao(request, edital_id, etapa_id):
         etapa = None
     if etapa is None:
         raise Http404
-    evento = None
-    if etapa.get("scheduleEventId"):
-        evento = EventoCronograma.objects.filter(pk=etapa["scheduleEventId"]).first()
+    try:
+        publicado = evento_vigente(edital, etapa.get("scheduleEventId"))
+    except DomainError:
+        publicado = None
+    # O conteúdo publicado guarda instantes em texto ISO; a tela mostra data brasileira, como
+    # todas as outras. A conversão é aqui para o template não conhecer o formato canônico.
+    evento = (
+        {
+            "inicio": parse_datetime(publicado["startAt"]),
+            "fim": parse_datetime(publicado["endAt"]) if publicado.get("endAt") else None,
+        }
+        if publicado
+        else None
+    )
     return render(
         request,
         "interface/atribuicao.html",

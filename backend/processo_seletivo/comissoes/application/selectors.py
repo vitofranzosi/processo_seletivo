@@ -141,5 +141,11 @@ def _atribuicoes(alocacoes):
                 "ordem": dados.get("order", 0),
             }
         )
-    itens.sort(key=lambda i: (i["edital"].year, i["edital"].number, i["ordem"]))
+    itens.sort(key=lambda i: (i["edital"].year, _numero(i["edital"].number), i["ordem"]))
     return itens
+
+
+def _numero(valor):
+    """`number` é texto, então "11" viria antes de "2" numa ordenação lexicográfica."""
+    bruto = (valor or "").strip()
+    return (0, int(bruto), "") if bruto.isdigit() else (1, 0, bruto)
