@@ -945,6 +945,17 @@ hash ou documento materializado.
 **FR-062** — A identidade do candidato continua sem conceder qualquer autorização institucional, e
 vice-versa.
 
+**FR-100** — **A Retificação continua se comportando exatamente como antes para conteúdo já na
+versão vigente.** O incremento do FR-007 obrigou a 012 a tocar o mecanismo de Retificação em mais de
+um ponto — a leitura do conteúdo-base, a reaplicação dos atos, a projeção que o autor compõe e a
+comparação da precondição —, e o alcance da última é toda Retificação, e não apenas as de base
+anterior. FR-061 protege o conteúdo, a versão, o hash e o documento; este protege o **comportamento**.
+
+Precondição, detecção de conflito, consolidação, verificação de efeito prático e materialização
+produzem, para Edital inteiramente na versão vigente, o mesmo resultado que produziam antes desta
+feature. É invariante demonstrável, e não intenção: sem ele, a feature que promete não quebrar o que
+já existe não tem como provar que não quebrou.
+
 ---
 
 ## 23. Success Criteria

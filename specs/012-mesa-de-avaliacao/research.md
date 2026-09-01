@@ -183,7 +183,7 @@ Ato já publicado, portanto, não é derrubado retroativamente por hash.
 ### Os testes que esta decisão obriga
 
 Histórico misto não é hipótese; é o caso normal de qualquer Edital publicado antes do incremento e
-retificado depois. São oito cenários, em dois grupos, e nenhum deles é opcional.
+retificado depois. São **oito cenários e três contraprovas**, e nenhum deles é opcional.
 
 **Histórico misto** — Edital publicado antes do incremento e retificado depois:
 
@@ -205,10 +205,17 @@ sem precondição:
    sobre base elevada e batem na publicação.
 8. A mesma criação, com `expectedPreviousHash` **declarado**, nas duas grafias: sobre a Etapa que a
    projeção entregou ao autor, e sobre a Etapa v4 literal que a consulta pública serve. **As duas
-   são aceitas**, porque denotam a mesma norma (T-017). E o contraprova no mesmo teste: hash de uma
-   Etapa realmente diferente continua sendo recusado, com a mensagem de precondição que já existe.
+   são aceitas**, porque denotam a mesma norma (T-017).
 
-Em todos os oito: a `Publicacao` e a Versão Consolidada nova nascem na versão vigente **e bem
+**Contraprovas** — as três exigem `HASH_MISMATCH`, e são elas que impedem a equivalência de virar
+buraco (T-017):
+
+9. Retificação publicada no intervalo declarou `maximumScore`: a grafia literal deixa de ser
+   candidata, e o hash antigo é recusado.
+10. A mesma coisa com `evaluationsPerRegistration` diferente de 1.
+11. Alteração num campo que já existia em v4: recusa pela regra de sempre, que continua inteira.
+
+Nos oito primeiros: a `Publicacao` e a Versão Consolidada nova nascem na versão vigente **e bem
 formadas** — nenhuma Etapa sem as duas propriedades —, e o `content_hash` de toda `Publicacao` e de
 toda `VersaoConsolidada` anterior permanece idêntico ao que era antes do deploy.
 

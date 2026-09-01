@@ -11,8 +11,8 @@ description: "Task list for feature implementation"
 
 **Tests**: **sim, exigidos**, e por três razões que a spec já fixou. O princípio V da Constituição
 nomeia autorização e concorrência entre o que precisa de cobertura específica, e a 012 entrega as
-duas. Metade do que ela promete só se prova pela recusa. E os oito cenários de elevação de T-001 são
-a condição para que Editais já publicados continuem retificáveis — se falharem, a feature quebra o
+duas. Metade do que ela promete só se prova pela recusa. E os oito cenários e três contraprovas de
+elevação de T-001 são a condição para que Editais já publicados continuem retificáveis — se falharem, a feature quebra o
 que já existe.
 
 **Organization**: por história de usuário, na ordem das seis fatias da §24 da spec — e não em ordem
@@ -106,7 +106,7 @@ as histórias usam — autorização composta e emissão de trilha. **Nenhuma hi
 - [ ] T023 [P] Teste de contrato da forma publicada nova em `backend/tests/contract/test_forma_publicada.py`, conferindo a transcrição contra o `openapi.yaml`
 - [ ] T024 [P] Testes unitários da elevação em `backend/tests/unit/avaliacoes/test_elevacao.py`: idempotência, `null` preservado, escalar intocado e cada linha da tabela de caminhos
 - [ ] T025 [P] Testes unitários da leitura da ausência em `backend/tests/unit/avaliacoes/test_previsao.py`: ausente, nulo e declarado
-- [ ] T026 Os **oito cenários** de T-001 em `backend/tests/integration/publicacoes/test_elevacao_de_versao.py` — quatro de histórico misto (sem retificação; `ADD` por `/stages/-`; `REPLACE` de Etapa inteira; `REPLACE` de campo) e quatro de deploy (v4 em elaboração; v4 homologada; criada depois sobre base v4; a mesma com `expectedPreviousHash` declarado nas duas grafias — projeção e literal —, **ambas aceitas**). Mais **três contraprovas**, cada uma exigindo `HASH_MISMATCH`: Retificação publicada no intervalo declarou `maximumScore`; declarou `evaluationsPerRegistration` diferente de 1; e alterou um campo que já existia em v4. Em todos, afirmar que o `content_hash` de toda `Publicacao` e `VersaoConsolidada` anterior permanece idêntico
+- [ ] T026 Os **oito cenários e as três contraprovas** de T-001 em `backend/tests/integration/publicacoes/test_elevacao_de_versao.py` — quatro de histórico misto (sem retificação; `ADD` por `/stages/-`; `REPLACE` de Etapa inteira; `REPLACE` de campo) e quatro de deploy (v4 em elaboração; v4 homologada; criada depois sobre base v4; a mesma com `expectedPreviousHash` declarado nas duas grafias — projeção e literal —, **ambas aceitas**). Mais **três contraprovas**, cada uma exigindo `HASH_MISMATCH`: Retificação publicada no intervalo declarou `maximumScore`; declarou `evaluationsPerRegistration` diferente de 1; e alterou um campo que já existia em v4. Em todos, afirmar que o `content_hash` de toda `Publicacao` e `VersaoConsolidada` anterior permanece idêntico
 - [ ] T027 [P] Teste de regressão em `backend/tests/integration/publicacoes/test_leitura_publica_literal.py`: consulta pública, comprovante e documento de Publicação existente continuam servindo o conteúdo literal, não elevado (T-002)
 - [ ] T028 [P] Testes das garantias de banco em `backend/tests/integration/avaliacoes/test_constraints.py`, marcados `postgresql_only`: a unicidade parcial da Atribuição ativa; o índice único parcial de FR-074; e a trigger de `ConclusaoAvaliacao` recusando `UPDATE` e `DELETE` **direto no banco**, além do `save`/`delete` do modelo
 
@@ -242,9 +242,10 @@ preserva o que havia sido concluído.
 - [ ] T083 Acrescentar a tela da trilha da 012 em `backend/processo_seletivo/interface/views.py`, `urls.py` e `backend/processo_seletivo/interface/templates/interface/auditoria.html`, com os três filtros de FR-050 — inscrição, avaliador e operação — e as sete operações novas na lista
 - [ ] T084 [P] Teste em `backend/tests/interface/test_trilha_da_012.py`: cada um dos **sete** atos aparece sob o filtro por inscrição e sob o filtro por avaliador, isolados e combinados; um ato praticado pela presidência sobre a atribuição de alguém aparece no filtro **daquele avaliador**, e não no de quem o praticou; **dois avaliadores abrindo a mesma inscrição** aparecem cada um sob o seu filtro, e nenhum sob o do outro; e **impedimento registrado sem Atribuição ativa** — o caso preventivo — aparece nos dois filtros, porque o agregado é o próprio `Impedimento`
 - [ ] T085 [P] Teste de não-regressão em `backend/tests/integration/comissoes/test_011_intocada.py`: comissão, alocação e guard da 011 seguem idênticos
-- [ ] T086 Executar `specs/012-mesa-de-avaliacao/quickstart.md` inteiro, as seis entregas, e registrar o que divergiu
-- [ ] T087 Registrar os dois gates de implantação do quickstart em `specs/012-mesa-de-avaliacao/quickstart.md` — identidade institucional (FR-058) e retenção/descarte do acervo (FR-057) —, com o estado de cada um. **FR-057 não tem tarefa de implementação de propósito**: a resposta é institucional, e o que a 012 entrega é a pergunta registrada
-- [ ] T088 Escrever `specs/012-mesa-de-avaliacao/traceability.md`, fechando os 99 FR e os 31 SC contra tarefa e teste — os 37 demonstrados pelo quickstart e os demais cobertos por suíte
+- [ ] T086 [P] Teste de não-regressão do pipeline de Retificação em `backend/tests/integration/publicacoes/test_retificacao_intocada.py`, exigido por FR-100: para Edital **inteiramente na versão vigente**, a precondição, a detecção de conflito, a consolidação, a verificação de efeito prático e a materialização produzem o mesmo resultado que produziam antes desta feature. É a guarda sobre a superfície que a 012 passou a tocar em quatro módulos
+- [ ] T087 Executar `specs/012-mesa-de-avaliacao/quickstart.md` inteiro, as seis entregas, e registrar o que divergiu
+- [ ] T088 Registrar os dois gates de implantação do quickstart em `specs/012-mesa-de-avaliacao/quickstart.md` — identidade institucional (FR-058) e retenção/descarte do acervo (FR-057) —, com o estado de cada um. **FR-057 não tem tarefa de implementação de propósito**: a resposta é institucional, e o que a 012 entrega é a pergunta registrada
+- [ ] T089 Escrever `specs/012-mesa-de-avaliacao/traceability.md`, fechando os 100 FR e os 31 SC contra tarefa e teste — os 37 demonstrados pelo quickstart e os demais cobertos por suíte
 
 ---
 
@@ -288,8 +289,8 @@ entregas 1 a 5 e valide.
 
 1. Fases 1–2 → o Edital declara e publica as duas propriedades, o que já estava publicado continua
    retificável, e as quatro tabelas existem com suas garantias. **É a única fase que toca conteúdo
-   normativo, e a que mais pode quebrar o que já existe** — os oito cenários de T026 são a condição
-   para seguir.
+   normativo, e a que mais pode quebrar o que já existe** — os oito cenários e as três contraprovas
+   de T026, mais a regressão de T087, são a condição para seguir.
 2. Fase 3 → distribuição com autoria, auditada.
 3. Fases 4–5 → a Mesa e o documento.
 4. Fase 6 → **MVP**.

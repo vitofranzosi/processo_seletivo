@@ -99,7 +99,7 @@ novos, dois campos normativos novos, cinco telas servidas por dez rotas.
 | II — Integridade normativa e temporalidade | Fonte única; publicado imutável; estado vigente reproduzível | A Avaliação aponta para a `VersaoConsolidada` sob a qual foi concluída e **não copia** limite nenhum, que é o que mantém a versão como fonte única (FR-071, FR-072). A elevação de esquema não escreve em `Publicacao` nem em `VersaoConsolidada`, ambas append-only e protegidas por trigger; a Publicação original permanece o que foi publicado (T-001). A conclusão lê a versão dentro da transação que grava, de modo que a regra validada é a regra registrada (FR-096). **Passa** |
 | III — Segurança, dados pessoais e auditoria | Negar por padrão; menor privilégio; sem IDOR; LGPD avaliada; auditoria de ato sensível | Esta é a primeira feature em que membro de comissão lê dado pessoal de candidato em volume, e a autorização é composta: alocação **e** atribuição, no servidor, em toda rota, com 404 uniforme. Menor privilégio literal: a permissão da consulta administrativa da 009 alcança o Edital inteiro e por isso **não** é reutilizada (T-006). Cada abertura de documento é registrada; a trilha não guarda parecer nem pontuação. Resposta com dado pessoal é não armazenável pelo navegador. **Passa** |
 | IV — Regras explícitas e consistência | Regra no backend; estados explícitos; transação; concorrência | A Avaliação tem ciclo de vida real e por isso tem estados explícitos — `RASCUNHO` e `CONCLUIDA`, com transição de reabertura que só parte de `CONCLUIDA`. Os quatro riscos que a Constituição nomeia estão mapeados a mecanismo existente na tabela de T-010, e a seção 18 da spec diz o resultado observável de cada um. Nenhuma regra vive na tela. **Passa** |
-| V — Qualidade, rastreabilidade e simplicidade | Rastreável; testado no nível certo; solução mais simples | O [quickstart.md](./quickstart.md) demonstra **37 dos 99 requisitos** — os observáveis pelo canal do ator, que é o que o princípio VI exige dele. Os outros 62 são invariantes de banco, de comando e de não-regressão, e a cobertura deles é responsabilidade de `tasks.md`, com a rastreabilidade fechada em `traceability.md` ao final da implementação, como a 011 fez. Afirmar aqui que "cada FR tem cenário no quickstart" seria falso, e foi o que a primeira redação deste gate afirmou. Nada de motor genérico de avaliação: quatro modelos, nenhuma abstração especulativa. **Passa, com a cobertura declarada e não presumida** |
+| V — Qualidade, rastreabilidade e simplicidade | Rastreável; testado no nível certo; solução mais simples | O [quickstart.md](./quickstart.md) demonstra **37 dos 100 requisitos** — os observáveis pelo canal do ator, que é o que o princípio VI exige dele. Os outros 63 são invariantes de banco, de comando e de não-regressão, e a cobertura deles é responsabilidade de `tasks.md`, com a rastreabilidade fechada em `traceability.md` ao final da implementação, como a 011 fez. Afirmar aqui que "cada FR tem cenário no quickstart" seria falso, e foi o que a primeira redação deste gate afirmou. Nada de motor genérico de avaliação: quatro modelos, nenhuma abstração especulativa. **Passa, com a cobertura declarada e não presumida** |
 | VI — Completude de jornada e valor demonstrável | Capacidade observável pelo canal do ator | A vertical inteira é navegável no `interface`: presidente distribui, avaliador abre a Mesa, abre a inscrição, registra e conclui, e quem não recebeu aquela inscrição recebe 404. A negação faz parte da entrega, não é nota de rodapé. **Passa** |
 
 Duas exceções vão para `Complexity Tracking`: o app novo e a tripla copiada na Avaliação.
@@ -166,7 +166,10 @@ backend/processo_seletivo/
 │   ├── application/publish_edital.py   # + os dois campos em _stages()
 │   ├── application/retificacoes.py     # base, conteúdo em vigor e cada newValue passam por elevar
 │   ├── domain/elevacao.py              # NOVO — elevar() e elevar_alteracoes(), as puras de T-001
+│   ├── domain/conflicts.py             # a precondição aceita as duas grafias, sob condição (T-017)
 │   └── infrastructure/pdf.py           # + as duas linhas na Etapa do documento
+├── auditoria/
+│   └── selectors.py              # + actor_subject opcional e trilha_da_avaliacao() (T-016)
 ├── shared/canonical.py           # SCHEMA_VERSION 4 -> 5, com o comentário do incremento
 ├── interface/
 │   ├── views.py                  # + distribuicao, mesa, inscricao_da_mesa, documento_da_mesa, impedimentos
@@ -187,7 +190,7 @@ specs/001-processo-seletivo-editais/contracts/openapi.yaml
 backend/tests/
 ├── unit/avaliacoes/              # a leitura da ausência, a validação da pontuação, a elevação
 ├── integration/avaliacoes/       # os comandos, com constraint, concorrência e idempotência
-├── integration/publicacoes/      # os oito cenários de elevação de T-001
+├── integration/publicacoes/      # os oito cenários e as três contraprovas de T-001
 ├── authorization/                # alocado sem atribuição, atribuição de outro, alocação removida
 ├── contract/                     # a forma publicada nova, contra o openapi.yaml
 ├── interface/                    # as cinco telas
@@ -217,7 +220,8 @@ sempre morou.
    Listar "três pontos", como a primeira redação fez, deixava descoberto o caso sem precondição —
    `ADD` não tem hash a conferir, e uma Retificação v4 em voo montaria `Publicacao` carimbada v5 com
    Etapa em forma v4 (T-001). Nenhuma linha de `VersaoConsolidada`, `Publicacao` ou
-   `AlteracaoNormativa` é atualizada. Os oito cenários de T-001 são teste obrigatório.
+   `AlteracaoNormativa` é atualizada. Os oito cenários e as três contraprovas de T-001 são teste
+   obrigatório, e FR-100 exige a regressão do que **não** pode mudar.
 1a. **O autor compõe sobre a projeção elevada**, e é dela que sai `expectedPreviousHash`. O editor
    deixa de montar formulário e diff sobre `base.content` cru; autor e servidor passam a conferir o
    mesmo objeto (T-015). Projetar não é persistir nem publicar.
