@@ -90,13 +90,26 @@ def gravar_nucleo(identidade: CandidateIdentity, *, nome: str, cpf: str = "") ->
 # ---------------------------------------------------------------------------
 
 
-def adicionar(identidade, *, email_canonico: str, email_como_informado: str) -> CandidateEmail:
-    """Liga um endereço já provado à identidade (FR-016).
+def adicionar(
+    identidade, *, email_canonico: str, email_como_informado: str, correlation_id: str = ""
+) -> CandidateEmail:
+    """Liga um endereço já provado à identidade, **e registra o ato junto** (FR-016, FR-089).
 
     Não pede CPF: quem já está dentro não precisa provar de novo quem é — precisa provar que
     controla **aquela** caixa, e isso o desafio já fez.
+
+    O registro fica **dentro** da mesma transação, e não depois dela. A primeira versão gravava a
+    credencial, comitava, e só então escrevia na trilha: uma falha entre as duas deixaria a
+    credencial existindo sem evento nenhum que a explicasse. É o padrão que a `009` já segue —
+    `command_context()` abre a transação e `record_event` é chamado lá dentro — e sair do auxiliar
+    fez perder, sem anunciar, a garantia que vinha com ele (Princípio IV).
     """
-    return associar_credencial(identidade, email_canonico, email_como_informado)
+    with transaction.atomic():
+        credencial = associar_credencial(identidade, email_canonico, email_como_informado)
+        registrar_ato(
+            identidade, operacao="ASSOCIAR_CREDENCIAL", correlation_id=correlation_id
+        )
+    return credencial
 
 
 def pertence_a_outra(identidade, email_canonico: str) -> bool:
@@ -120,7 +133,16 @@ def tornar_principal(identidade, credencial_id) -> bool:
     return True
 
 
-def remover(identidade, credencial_id) -> bool:
+# Os três desfechos de uma remoção, e eles não se confundem. A primeira versão devolvia um
+# booleano, e a view traduzia qualquer recusa em "você não pode remover seu último e-mail" — quem
+# pedisse a remoção de credencial alheia lia isso, sobre algo que não é dela. Nada era apagado, mas
+# a resposta descrevia errado o que aconteceu, e numa investigação apontaria para o lado errado.
+REMOVIDA = "removida"
+E_A_ULTIMA = "e_a_ultima"
+NAO_E_SUA = "nao_e_sua"
+
+
+def remover(identidade, credencial_id, *, correlation_id: str = "") -> str:
     """Remove uma credencial — nunca a última, e nunca deixando a identidade sem principal.
 
     Remover a última é apagar o próprio acesso (FR-018), e nenhuma tela deveria oferecer isso. A
@@ -128,21 +150,27 @@ def remover(identidade, credencial_id) -> bool:
 
     E **não toca inscrição alguma** (FR-019): o que foi submetido registrou o endereço que constava
     no ato, e credencial é como se entra, não o que se enviou.
+
+    O registro do ato fica dentro da mesma transação, pela razão de `adicionar`.
     """
     with transaction.atomic():
         credenciais = list(identidade.credenciais.select_for_update())
-        if len(credenciais) <= 1:
-            return False
         alvo = next((item for item in credenciais if str(item.pk) == str(credencial_id)), None)
         if alvo is None:
-            return False
+            # Perguntado **antes** da contagem: não ser sua é uma recusa, ser a última é outra.
+            return NAO_E_SUA
+        if len(credenciais) <= 1:
+            return E_A_ULTIMA
         era_principal = alvo.principal
         alvo.delete()
         if era_principal:
             # A identidade não fica sem principal: a mais antiga das que restam assume.
             herdeira = identidade.credenciais.order_by("created_at").first()
             identidade.credenciais.filter(pk=herdeira.pk).update(principal=True)
-    return True
+        registrar_ato(
+            identidade, operacao="REMOVER_CREDENCIAL", correlation_id=correlation_id
+        )
+    return REMOVIDA
 
 
 def registrar_ato(identidade, *, operacao: str, correlation_id: str = "") -> None:

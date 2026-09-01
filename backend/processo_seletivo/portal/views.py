@@ -742,15 +742,18 @@ def _concluir_adicao(request, desafio):
     registro = identidade_do_candidato.identidade_autenticada(request)
     if registro is None:
         return redirect(reverse("portal:acesso"))
-    if not nucleo_da_identidade.pertence_a_outra(registro, desafio.email_canonico):
+    if nucleo_da_identidade.pertence_a_outra(registro, desafio.email_canonico):
+        # O endereço passou a ser de outra identidade entre o pedido e a confirmação. Antes isto
+        # era recusa silenciosa: o código era gasto, nada acontecia, e a pessoa via a lista sem o
+        # endereço e sem explicação. A mensagem é a mesma do pedido — não diz a quem pertence.
+        request.session["portal_conta_erro"] = (
+            "Não foi possível usar este endereço. Tente outro."
+        )
+    else:
         nucleo_da_identidade.adicionar(
             registro,
             email_canonico=desafio.email_canonico,
             email_como_informado=_endereco_do_desafio(request, desafio),
-        )
-        nucleo_da_identidade.registrar_ato(
-            registro,
-            operacao="ASSOCIAR_CREDENCIAL",
             correlation_id=getattr(request, "correlation_id", ""),
         )
     for chave in (CHAVE_DO_ENDERECO, CHAVE_DA_FINALIDADE, "portal_acesso_espera"):
@@ -773,18 +776,19 @@ def conta_remover(request, credencial_id):
     registro = identidade_do_candidato.identidade_autenticada(request)
     if registro is None:
         return redirect(reverse("portal:acesso"))
-    if not nucleo_da_identidade.remover(registro, credencial_id):
-        # A última credencial não sai: removê-la é apagar o próprio acesso (FR-018). A tela não
-        # oferece o botão, e o servidor recusa mesmo assim — esconder não é fronteira de segurança.
+    desfecho = nucleo_da_identidade.remover(
+        registro, credencial_id, correlation_id=getattr(request, "correlation_id", "")
+    )
+    if desfecho == nucleo_da_identidade.NAO_E_SUA:
+        # Credencial de outra identidade não existe para esta — a mesma recusa que a titularidade
+        # produz em toda a área, e não uma mensagem sobre a última credencial dela.
+        raise Http404
+    if desfecho == nucleo_da_identidade.E_A_ULTIMA:
+        # A última não sai: removê-la é apagar o próprio acesso (FR-018). A tela não oferece o
+        # botão, e o servidor recusa mesmo assim — esconder não é fronteira de segurança.
         request.session["portal_conta_erro"] = (
             "Você não pode remover seu último e-mail: é por ele que você entra."
         )
-        return redirect(reverse("portal:conta"))
-    nucleo_da_identidade.registrar_ato(
-        registro,
-        operacao="REMOVER_CREDENCIAL",
-        correlation_id=getattr(request, "correlation_id", ""),
-    )
     return redirect(reverse("portal:conta"))
 
 

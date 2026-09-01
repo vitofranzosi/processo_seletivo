@@ -115,6 +115,19 @@ def test_a_recusa_acontece_antes_de_qualquer_mensagem(client, dentro, canal):
     assert canal == []
 
 
+def test_o_endereco_tomado_no_meio_do_caminho_recusa_com_mensagem(client, dentro, canal):
+    """Antes o código era gasto e nada acontecia, sem explicação nenhuma (revisão)."""
+    client.post(reverse("portal:conta-adicionar"), {"email": NOVO})
+    associacao.criar_identidade_com(NOVO, NOVO)
+
+    resposta = client.post(reverse("portal:acesso-codigo"), {"codigo": codigo(canal)})
+
+    assert resposta["Location"] == reverse("portal:conta")
+    corpo = client.get(reverse("portal:conta")).content.decode()
+    assert "Não foi possível usar este endereço" in corpo
+    assert CandidateEmail.objects.filter(identidade=dentro).count() == 1
+
+
 def test_adicionar_o_proprio_endereco_nao_duplica(client, dentro, canal):
     resposta = client.post(reverse("portal:conta-adicionar"), {"email": MEU})
 

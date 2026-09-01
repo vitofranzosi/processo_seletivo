@@ -113,3 +113,42 @@ def test_codigo_invalido_nao_vira_ato_de_negocio(client, dentro, canal):
         client.post(reverse("portal:acesso-codigo"), {"codigo": "000000"})
 
     assert atos() == []
+
+
+def test_o_ato_e_o_registro_commitam_juntos(client, dentro, monkeypatch):
+    """Auditoria dentro da transação do ato (revisão, Princípio IV).
+
+    A primeira versão gravava a credencial, comitava, e só então escrevia na trilha. Uma falha
+    entre as duas deixaria a credencial existindo sem evento nenhum que a explicasse. Aqui a falha
+    é forçada no registro: se as duas coisas estiverem na mesma transação, nem a credencial fica.
+    """
+    from processo_seletivo.identidade.application import credenciais as nucleo
+
+    def explodir(*_args, **_kwargs):
+        raise RuntimeError("trilha indisponível")
+
+    monkeypatch.setattr(nucleo, "registrar_ato", explodir)
+
+    with pytest.raises(RuntimeError):
+        nucleo.adicionar(dentro, email_canonico=NOVO, email_como_informado=NOVO)
+
+    assert not CandidateEmail.objects.filter(email_canonico=NOVO).exists(), (
+        "a credencial não pode sobreviver ao registro que a explica"
+    )
+
+
+def test_a_remocao_tambem_desfaz_quando_a_trilha_falha(client, dentro, monkeypatch):
+    from processo_seletivo.identidade.application import credenciais as nucleo
+
+    associacao.associar_credencial(dentro, NOVO, NOVO)
+    credencial = CandidateEmail.objects.get(identidade=dentro, email_canonico=NOVO)
+
+    def explodir(*_args, **_kwargs):
+        raise RuntimeError("trilha indisponível")
+
+    monkeypatch.setattr(nucleo, "registrar_ato", explodir)
+
+    with pytest.raises(RuntimeError):
+        nucleo.remover(dentro, credencial.pk)
+
+    assert CandidateEmail.objects.filter(pk=credencial.pk).exists()

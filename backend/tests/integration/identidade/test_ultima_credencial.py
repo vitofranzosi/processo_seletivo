@@ -41,6 +41,24 @@ def test_o_servidor_recusa_mesmo_assim(client, com_uma_so):
     assert "não pode remover seu último e-mail" in corpo
 
 
+def test_credencial_alheia_responde_404_e_nao_a_mensagem_da_ultima(client, com_uma_so):
+    """As duas recusas não se confundem (revisão).
+
+    A versão anterior devolvia um booleano, e a view traduzia qualquer recusa em "você não pode
+    remover seu último e-mail" — quem pedisse a remoção de credencial alheia lia isso, sobre algo
+    que não é dela. Nada era apagado, mas a resposta descrevia errado o que aconteceu.
+    """
+    alheia = associacao.criar_identidade_com("alheia@exemplo.test", "alheia@exemplo.test")
+    de_outra = CandidateEmail.objects.get(identidade=alheia)
+
+    resposta = client.post(reverse("portal:conta-remover", args=[de_outra.id]))
+
+    assert resposta.status_code == 404
+    assert CandidateEmail.objects.filter(pk=de_outra.pk).exists()
+    corpo = client.get(reverse("portal:conta")).content.decode()
+    assert "último e-mail" not in corpo
+
+
 def test_a_identidade_com_credencial_nunca_fica_sem_principal(client, com_uma_so):
     credencial = CandidateEmail.objects.get(identidade=com_uma_so)
     client.post(reverse("portal:conta-remover", args=[credencial.id]))
