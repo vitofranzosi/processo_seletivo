@@ -58,11 +58,13 @@ refaz a comissão. Mas a coerência da alocação é verificada percorrendo `eta
 a visão administrativa é organizada por Edital antes de por Etapa, porque dois Editais do mesmo
 Processo podem ter Etapas homônimas; e `Minhas Etapas` sempre identifica o Edital.
 
-### D-002 — A alocação sobrevive à recriação da coleção de Etapas
+### D-002 — A alocação designa a Etapa publicada, e não a linha que a originou
 
-Gravar o rascunho de um Edital recria toda a sua coleção de Etapas, preservando os identificadores.
-A alocação é feita, portanto, pela **identidade estável da Etapa**, e não pela linha que a carrega
-naquele momento.
+A alocação é feita pela **identidade estável da Etapa** no conteúdo publicado, e não pela linha de
+elaboração que lhe deu origem. A razão é que as duas podem não coincidir: uma Retificação pode
+acrescentar Etapa ao conteúdo publicado sem que exista linha de elaboração correspondente, e essa
+Etapa é tão real quanto as outras — está no Edital vigente e o trabalho dela precisa ser
+distribuído.
 
 O que a spec fixa é o invariante, e não o mecanismo:
 
@@ -71,9 +73,10 @@ O que a spec fixa é o invariante, e não o mecanismo:
 
 **A fonte é uma só: a Versão Consolidada vigente.** Disso decorre que a alocação existe apenas para
 Etapa de Edital publicado. Alocar durante a elaboração seria alocar contra uma coleção que o próprio
-elaborador recria a cada salvamento: a alocação nasceria órfã pelas edições legítimas de quem monta o
-Edital, e `Minhas Etapas` mostraria o resultado de um acidente. Constituir a comissão continua
-possível a qualquer momento; distribuir trabalho pressupõe que o trabalho exista publicamente.
+elaborador recria inteira a cada salvamento do rascunho: a alocação nasceria órfã pelas edições
+legítimas de quem monta o Edital, e `Minhas Etapas` mostraria o resultado de um acidente. Constituir
+a comissão continua possível a qualquer momento; distribuir trabalho pressupõe que o trabalho exista
+publicamente.
 
 A integridade referencial que a Constituição exige é preservada no command, que verifica existência
 e pertinência a cada operação e a cada acesso. O precedente é `Inscricao.profile_id`, adotado pela
@@ -1093,9 +1096,10 @@ normativa aceita.
 **FR-083** — Nenhuma migration da 011 altera `editais_etapaavaliacao`, o Cronograma ou qualquer
 tabela de `publicacoes`; nenhum código da 011 escreve nelas.
 
-**FR-084** — Uma Retificação que remova ou altere Etapa alocada é aplicada normalmente, não falha e
-não apaga alocação: a alocação passa a ser órfã, derivada na leitura (EC-011). Este é o teste de
-regressão que prova D-002.
+**FR-084** — Uma Retificação que remova a Etapa alocada, ou substitua sua identidade, é aplicada
+normalmente, não falha e não apaga alocação: a alocação passa a ser órfã, derivada na leitura
+(EC-011). Alterar nome, peso ou nota mínima preservando a identidade não produz órfã e não afeta
+quem está alocado. Este é o teste de regressão que prova D-002.
 
 ---
 
@@ -1139,7 +1143,9 @@ existente, sem tabela nova.
 **SC-016** — Ator de outro escopo institucional não enxerga nem alcança comissão, alocação ou Etapa
 deste escopo, e recebe a mesma resposta que receberia se o objeto não existisse.
 
-**SC-017** — Gravar o rascunho de um Edital com Etapas alocadas não apaga alocações nem falha.
+**SC-017** — Uma Retificação que remova a Etapa alocada, ou substitua sua identidade, é aplicada sem
+falhar e sem apagar alocação; alterar nome ou peso preservando a identidade não afeta quem está
+alocado.
 
 **SC-018** — Nenhum artefato publicado — snapshot, Versão Consolidada, hash ou documento — muda em
 função de qualquer operação da 011.
@@ -1291,9 +1297,6 @@ na leitura** — sem flag, sem sincronizador, sem cópia da Etapa. A alocação 
 aparece em `Minhas Etapas` e é exibida ao gestor com a ação de removê-la. Não apagar em silêncio: a
 auditoria já registrou que ela existiu.
 
-**EC-014 — Edital ainda não publicado.** A comissão pode ser constituída, mas suas Etapas não são
-alocáveis e a tela diz por quê, em vez de listá-las desabilitadas (D-002, FR-032).
-
 **EC-012 — Processo com dois Editais.** A visão administrativa nomeia o Edital de cada Etapa, e
 Etapas homônimas de Editais distintos são objetos distintos para alocação e para acesso.
 
@@ -1302,6 +1305,9 @@ afirmar que uma pessoa não existe. Ele valida o formato mínimo, grava o identi
 compara exatamente com a identidade autenticada. Um identificador digitado errado produz um membro
 que nunca autenticará: o gestor pode removê-lo, e a interface avisa que o identificador não é
 verificado (D-003).
+
+**EC-014 — Edital ainda não publicado.** A comissão pode ser constituída, mas suas Etapas não são
+alocáveis e a tela diz por quê, em vez de listá-las desabilitadas (D-002, FR-032).
 
 ---
 
@@ -1350,8 +1356,10 @@ feature. Se ela não couber numa entrega, o corte da spec está errado — não 
 > sistêmica; comissão e alocação são autorização sobre objetos concretos. Isso vale igualmente para
 > `Django Group`, que o projeto não usa como fonte de autorização.
 >
-> A permissão de gerir comissão é nomeada, entra no papel responsável e é a que aparece na trilha de
-> auditoria — que é reutilizada como está, sem tabela nem coluna nova.
+> A permissão sistêmica de gerir comissão é nomeada e entra no papel responsável. Mas o que a trilha
+> registra é a **base efetivamente usada** na operação — permissão sistêmica ou presidência daquele
+> Processo —, e nunca a permissão sistêmica por padrão. A trilha é reutilizada como está, sem tabela
+> nem coluna nova.
 >
 > Não reimplemente diretório institucional, não reimplemente autenticação e não simule busca de
 > pessoas enquanto não houver diretório.

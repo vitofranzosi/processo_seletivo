@@ -42,23 +42,36 @@ organizada por Edital antes de por Etapa, e `Minhas Etapas` sempre nomeia o Edit
 
 ## D-002 — Por que a alocação não pode depender da linha da Etapa
 
-**O fato**: `replace_draft` executa `EtapaAvaliacao.objects.filter(edital=edital).delete()` seguido
-de `bulk_create` (`editais/application/draft.py:250`). A identidade é preservada — os `id` vêm do
-payload e o snapshot os publica como estão (`publicacoes/application/publish_edital.py:41`) —, mas a
-linha não.
+**O fato que decide**: a linha de elaboração e a Etapa publicada não são a mesma coisa, e podem nem
+existir juntas. `EtapaAvaliacao` é lida uma única vez fora da elaboração — para montar o snapshot no
+momento da publicação (`publicacoes/application/publish_edital.py:41`). Depois disso, o conteúdo
+vigente evolui por Retificação, que opera sobre a Versão Consolidada e **não escreve de volta** nas
+tabelas de `editais`. E a Retificação sabe acrescentar item a coleção com chave: `/stages` está entre
+as coleções endereçáveis por `id` (`publicacoes/domain/colecoes.py:22`) e a aplicação de uma
+Alteração admite acréscimo (`publicacoes/domain/changes.py:325`).
+
+Logo, uma Retificação pode criar Etapa que existe no Edital vigente e não tem linha em
+`EtapaAvaliacao`. Essa Etapa é tão real quanto as outras — o trabalho dela precisa ser distribuído —
+e nenhuma chave estrangeira para a linha de elaboração conseguiria designá-la.
+
+**O fato correlato**, que sustenta a regra de "só alocar depois de publicado" (D-002 na spec):
+`replace_draft` apaga e recria toda a coleção de Etapas do Edital a cada gravação do rascunho
+(`editais/application/draft.py:250`). Alocar durante a elaboração seria alocar contra uma coleção
+que o elaborador refaz a cada salvamento.
 
 **Alternativas descartadas**:
 
 | Alternativa | Por que não |
 |---|---|
-| `ForeignKey(EtapaAvaliacao, on_delete=CASCADE)` | Gravar o rascunho apagaria alocações em silêncio. |
-| `ForeignKey(..., on_delete=PROTECT)` | Gravar o rascunho passaria a falhar: regressão da 006, proibida pela seção 45 da spec. |
+| `ForeignKey(EtapaAvaliacao, ...)` | Não consegue designar Etapa criada por Retificação, que não tem linha. E, em qualquer `on_delete`, acopla autorização operacional à tabela de elaboração. |
+| Criar linha de elaboração para a Etapa que a Retificação acrescentou | A 011 passaria a escrever em `editais_etapaavaliacao`, o que D-005 e FR-083 proíbem. |
 | Copiar nome e dados da Etapa para a alocação | Segunda fonte do conteúdo normativo; contraria D-005 e a exigência constitucional de fonte autoritativa única. |
-| Sincronizador que reconcilia alocações após cada gravação | Máquina de estados inventada para um problema que a leitura derivada resolve. |
+| Sincronizador que reconcilia alocações a cada publicação ou Retificação | Máquina de estados inventada para um problema que a leitura derivada resolve. |
 
-**Decisão**: a alocação designa a Etapa pela identidade estável, e a spec fixa o invariante em vez do
-mecanismo — gravar o rascunho nunca apaga alocação nem falha por causa dela, e alocação nunca concede
-acesso a Etapa ausente da versão vigente.
+**Decisão**: a alocação designa a Etapa pela identidade que o conteúdo publicado carrega, e a spec
+fixa o invariante em vez do mecanismo — alocação nunca concede acesso a Etapa ausente da Versão
+Consolidada vigente, e nada que a 011 grave pode impedir a elaboração ou a Retificação de um
+Edital.
 
 **Sobre a integridade referencial**: a Constituição exige que "relacionamentos DEVEM preservar
 integridade referencial" (`.specify/memory/constitution.md:50`). Ela é preservada — no command, que
@@ -66,9 +79,11 @@ verifica existência e pertinência a cada operação e a cada acesso. O precede
 adotou `Inscricao.profile_id` como `UUIDField` e documentou o motivo — amarrar à linha de elaboração
 faria o vínculo depender de um registro que a Retificação altera depois (`inscricoes/models.py:9`).
 
-**Consequência**: a alocação órfã existe e é legítima. A Retificação endereça `/stages` por `id`
-(`publicacoes/domain/colecoes.py:22`), portanto pode remover a Etapa do conteúdo publicado. A
-condição é derivada na leitura, comparando a alocação com a versão vigente; não é campo.
+**Consequência**: a alocação órfã existe e é legítima. Assim como acrescenta, a Retificação pode
+remover a Etapa do conteúdo publicado, e a alocação passa a designar identidade ausente. A condição é
+derivada na leitura, comparando a alocação com a Versão Consolidada vigente; não é campo. Alterar
+nome, peso ou nota mínima preservando o `id` não produz órfã — o que a torna órfã é a identidade sair
+do conteúdo vigente, e não o conteúdo da Etapa mudar.
 
 ## D-003 — O que existe de identidade, e o que não existe
 
