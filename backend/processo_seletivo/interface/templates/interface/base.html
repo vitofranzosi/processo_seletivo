@@ -220,14 +220,26 @@ fieldset.caracter legend{font-size:.85rem;color:var(--texto-fraco);padding:0;
   padding:1rem 1.25rem;margin-top:1.5rem}
 /* Seleção em lote (011). Quarenta caixas empilhadas viram uma coluna de rolagem infinita: a
    grade as põe em colunas e o limite de altura mantém o botão ao alcance. */
-/* A matriz da distribuição: pessoas nas linhas, Etapas nas colunas. A leitura corrente é
-   horizontal — "onde esta pessoa atua" —, então a coluna de nomes fica fixa na rolagem. */
+/* A matriz da distribuição: pessoas nas linhas, Etapas nas colunas.
+
+   **A moldura não pode ser um contêiner de rolagem em tela larga.** `overflow-x:auto` faz o
+   `overflow-y` computar para `auto` também, e aí o `position:sticky` do cabeçalho passa a valer
+   contra a moldura em vez da janela — como a moldura tem a altura do conteúdo, ela nunca rola por
+   dentro, e o cabeçalho simplesmente sai da tela. Com cinquenta linhas isso significa olhar duas
+   colunas de caixas sem saber de que Etapa é cada uma, que é a informação de que a tela inteira
+   depende. Em tela estreita a rolagem horizontal é necessária, e ali o que fixa é a coluna de
+   nomes. */
+.distribuicao-moldura{overflow-x:visible}
+@media (max-width:60rem){
+  .distribuicao-moldura{overflow-x:auto}
+}
 .distribuicao{border-collapse:collapse;width:100%;background:var(--branco);
   border:1px solid var(--borda);border-radius:6px;font-size:.9375rem}
 .distribuicao th,.distribuicao td{padding:.5rem .75rem;border-bottom:1px solid var(--fundo);
   text-align:left;vertical-align:middle}
 .distribuicao thead th{position:sticky;top:0;background:var(--branco);border-bottom:2px solid var(--borda);
-  font-size:.875rem;line-height:1.3;vertical-align:bottom;z-index:1}
+  font-size:.875rem;line-height:1.3;vertical-align:bottom;z-index:2;
+  box-shadow:0 1px 0 var(--borda)}
 .distribuicao thead th .codigo,.distribuicao thead th .situacao{display:block;margin-top:.2rem}
 .distribuicao tbody th{font-weight:600;position:sticky;left:0;background:var(--branco);
   min-width:14rem;box-shadow:1px 0 0 var(--fundo)}
