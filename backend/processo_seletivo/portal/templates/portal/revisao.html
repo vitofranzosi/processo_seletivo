@@ -1,0 +1,126 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Revisar e enviar{% endblock %}
+{% block conteudo %}
+{% include "portal/_etapas.html" %}
+<h1>Revisar e enviar</h1>
+<p class="sub">{{ selecao.processo_titulo }} · Edital {{ selecao.numero }}/{{ selecao.ano }}</p>
+
+{% if erros %}
+{% comment %}
+`tabindex=-1` e o foco por script (L2 da auditoria): quem acionou o botão estava no fim da página,
+e sem mover o foco a recusa não é anunciada a quem usa leitor de tela. Os links levam à declaração
+que falta — um resumo que só descreve o erro obriga a procurá-lo.
+{% endcomment %}
+<div class="erro" role="alert" tabindex="-1" data-recusa>
+  {% for erro in erros %}<p>{{ erro }}</p>{% endfor %}
+  {% if not declaracoes.veracidade or not declaracoes.ciencia %}
+  <ul>
+    {% if not declaracoes.veracidade %}<li><a href="#veracidade">Declaração de veracidade das
+      informações</a></li>{% endif %}
+    {% if not declaracoes.ciencia %}<li><a href="#ciencia">Declaração de ciência do Edital</a></li>
+    {% endif %}
+  </ul>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if retificado %}
+{% comment %}
+FR-059: o envio não acontece em silêncio depois de uma Retificação. O aviso vem antes das
+declarações porque concordar com o Edital é parte do ato — pedir a concordância depois seria
+pedi-la sobre o que a pessoa não viu. Seus dados e arquivos continuam onde estavam.
+{% endcomment %}
+<div class="aviso" role="alert">
+  <p><strong>O Edital foi atualizado.</strong> Houve alteração desde que você começou. Revise as
+    regras antes de enviar sua inscrição — seus dados e documentos continuam guardados.</p>
+  <p><a href="{% url 'public-document' selecao.publicacao_id %}" target="_blank" rel="noopener">Ler
+    o Edital vigente (PDF)</a></p>
+  {% if descartes_da_retificacao %}
+  <p><strong>Estes documentos deixaram de ser exigidos e serão removidos ao continuar:</strong></p>
+  <ul>
+    {% for descarte in descartes_da_retificacao %}
+    <li>{{ descarte.requisito }} — {{ descarte.arquivo }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="reconhecer_versao" value="1">
+    <button type="submit" class="principal">Li as alterações e quero continuar</button>
+  </form>
+</div>
+{% endif %}
+
+<section aria-labelledby="oportunidade">
+  <h2 id="oportunidade">Oportunidade</h2>
+  <dl class="dados">
+    <dt>Perfil</dt><dd>{{ perfil.nome }}</dd>
+    {% if modalidade %}<dt>Concorrência</dt><dd>{{ modalidade }}</dd>{% endif %}
+  </dl>
+  <p><a href="{% url 'portal:inscricao' inscricao.id %}">Editar</a></p>
+</section>
+
+<section aria-labelledby="dados">
+  <h2 id="dados">Seus dados</h2>
+  <dl class="dados">
+    <dt>Nome</dt><dd>{{ inscricao.nome }}</dd>
+    <dt>CPF</dt><dd>{{ inscricao.cpf }}</dd>
+    <dt>E-mail</dt><dd>{{ inscricao.email }}</dd>
+    {% if inscricao.telefone %}<dt>Telefone</dt><dd>{{ inscricao.telefone }}</dd>{% endif %}
+  </dl>
+  <p><a href="{% url 'portal:inscricao' inscricao.id %}">Editar</a></p>
+</section>
+
+<section aria-labelledby="documentos-revisao">
+  <h2 id="documentos-revisao">Documentos</h2>
+  <ul class="requisitos-lista">
+    {% for linha in documentos.linhas %}
+    <li class="requisito {% if linha.enviado %}completo{% endif %}">
+      <p class="nome">
+        <span class="marca" aria-hidden="true">{% if linha.enviado %}✓{% else %}○{% endif %}</span>
+        {{ linha.nome }}
+      </p>
+      {% if linha.enviado %}
+      <p class="arquivo"><a href="{% url 'portal:documento-do-candidato' inscricao.id linha.id %}"
+        target="_blank" rel="noopener">{{ linha.enviado.nome_original }}</a></p>
+      {% else %}
+      <p class="recusa">Ainda não enviado.</p>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  <p><a href="{% url 'portal:inscricao' inscricao.id %}">Editar</a></p>
+</section>
+
+{% if pendencias %}
+<div class="erro" role="alert">
+  <p>Falta enviar: {{ pendencias|join:", " }}.</p>
+</div>
+{% else %}
+<form method="post">
+  {% csrf_token %}
+  <section aria-labelledby="declaracoes">
+    <h2 id="declaracoes">Declarações</h2>
+    {% comment %}
+    Uma vez só, no envio (FR-057). Repeti-las em cada tela transformaria o aceite em ruído que a
+    pessoa aprende a ignorar — e é justamente o aceite que precisa significar alguma coisa.
+    {% endcomment %}
+    <p class="papel">
+      <input type="checkbox" id="veracidade" name="veracidade" required aria-required="true"
+             {% if declaracoes.veracidade %}checked{% endif %}
+             {% if erros and not declaracoes.veracidade %}aria-invalid="true"{% endif %}>
+      <label for="veracidade">Declaro serem verdadeiras as informações prestadas.</label>
+    </p>
+    <p class="papel">
+      <input type="checkbox" id="ciencia" name="ciencia" required aria-required="true"
+             {% if declaracoes.ciencia %}checked{% endif %}
+             {% if erros and not declaracoes.ciencia %}aria-invalid="true"{% endif %}>
+      <label for="ciencia">Declaro ter lido e estar de acordo com o Edital e os atos vigentes.</label>
+    </p>
+  </section>
+  <button type="submit" class="principal">Enviar inscrição</button>
+  <p class="ajuda">Depois de enviada, a inscrição não pode ser alterada.</p>
+</form>
+{% endif %}
+{% load static %}<script src="{% static 'portal/recusa.js' %}" defer></script>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% load arquivos_do_candidato %}
+{% comment %}
+O bloco de documentos, devolvido inteiro a cada envio: o progresso muda junto com a linha, e
+atualizar só a linha o deixaria para trás.
+
+Quando volta como resposta do htmx, leva junto o resumo do cabeçalho — que vive fora deste bloco e
+por isso não seria alcançado pela troca normal. Elemento de topo da resposta, como o `hx-swap-oob`
+exige.
+{% endcomment %}
+{% if fragmento %}{% include "portal/_resumo_documentos.html" with oob=True %}{% endif %}
+<section id="documentos" class="painel" aria-labelledby="documentos-titulo">
+  <h2 id="documentos-titulo">Documentos necessários</h2>
+  {% if documentos.linhas %}
+  {% comment %}
+  Barra, e não uma segunda frase: o resumo do cabeçalho já diz em palavras quantos faltam, e
+  repetir a mesma frase aqui era ruído. A barra diz o mesmo de relance; o texto ao lado mantém o
+  número para quem lê com leitor de tela.
+  {% endcomment %}
+  <div class="progresso-documentos{% if not documentos.faltam %} completo{% endif %}">
+    <div class="trilha" aria-hidden="true">
+      <div class="feito" style="width:{% widthratio documentos.recebidos documentos.total 100 %}%"></div>
+    </div>
+    <p class="contagem" role="status">
+      {{ documentos.recebidos }} de {{ documentos.total }}
+      documento{{ documentos.total|pluralize:"s" }} obrigatório{{ documentos.total|pluralize:"s" }}
+      {{ documentos.total|pluralize:"enviado,enviados" }}.
+    </p>
+  </div>
+  <ul class="requisitos-lista">
+    {% for linha in documentos.linhas %}
+    <li class="requisito {% if linha.enviado %}completo{% endif %}">
+      <p class="nome">
+        <span class="marca" aria-hidden="true">{% if linha.enviado %}✓{% else %}○{% endif %}</span>
+        <span>{{ linha.nome }}{% if not linha.obrigatorio %} <span class="ajuda">(facultativo)</span>{% endif %}</span>
+      </p>
+      {% if linha.instrucao %}<p class="instrucao">{{ linha.instrucao }}</p>{% endif %}
+
+      {% if linha.enviado %}
+      <p class="arquivo">
+        <span class="marca" aria-hidden="true">✓</span>
+        <a href="{% url 'portal:documento-do-candidato' inscricao.id linha.id %}" target="_blank"
+           rel="noopener">{{ linha.enviado.nome_original }}</a>
+        <span class="quando">enviado em {{ linha.enviado.uploaded_at|date:"d/m/Y H\hi" }}</span>
+      </p>
+      {% endif %}
+
+      {% if requisito_recusado == linha.id and erro_do_envio %}
+      <p class="recusa" role="alert">{{ erro_do_envio }}</p>
+      {% if erro_de_imagem %}
+      {% comment %}
+      A mensagem explica a causa; isto explica o caminho (L5 da auditoria). Fotografar o documento
+      é o que a maior parte das pessoas faz, e "converta em PDF" não ajuda quem nunca converteu.
+      Fechado por padrão: quem já sabe não precisa ler.
+      {% endcomment %}
+      <details class="como-converter">
+        <summary>Como transformar uma foto em PDF</summary>
+        <ul>
+          <li><strong>iPhone:</strong> abra a foto, toque em Compartilhar, escolha Imprimir e, na
+            tela de impressão, toque de novo em Compartilhar e escolha Salvar em Arquivos — o que
+            for salvo já é um PDF.</li>
+          <li><strong>Android:</strong> abra a foto, toque em Compartilhar, escolha Imprimir e
+            selecione Salvar como PDF.</li>
+          <li><strong>Vários documentos num arquivo só:</strong> use o aplicativo de digitalização
+            do celular (no Android, o Google Drive tem Digitalizar; no iPhone, o app Arquivos
+            digitaliza pela câmera).</li>
+        </ul>
+      </details>
+      {% endif %}
+      {% endif %}
+
+      {% comment %}
+      Depois do envio o formulário some para dentro de um `details` (L6 da auditoria): aberto, cada
+      requisito completo ocupava cerca de 850px, e três documentos custavam 2.500px de rolagem para
+      quem já tinha terminado. Substituir é exceção; o estado normal é "está enviado".
+      {% endcomment %}
+      {% if linha.enviado %}<details class="envio-de-novo" {% if requisito_recusado == linha.id and erro_do_envio %}open{% endif %}><summary>Substituir ou remover</summary>{% endif %}
+      <div class="envio">
+        <form hx-post="{% url 'portal:enviar-documento' inscricao.id linha.id %}"
+              hx-target="#documentos" hx-swap="outerHTML"
+              hx-encoding="multipart/form-data" enctype="multipart/form-data"
+              method="post" action="{% url 'portal:enviar-documento' inscricao.id linha.id %}"
+              data-envio>
+          {% csrf_token %}
+          {% comment %}
+          O campo de arquivo do navegador é o elemento mais feio de qualquer formulário — texto do
+          sistema operacional, altura própria, "Nenhum arquivo selecionado" em cinza no meio da
+          página. O `input` continua existindo e continua sendo o que envia: só sai de vista,
+          mantendo foco e rótulo, e o `label` assume a aparência de botão.
+          {% endcomment %}
+          <div class="escolher">
+            <input type="file" id="arquivo-{{ linha.id }}" name="arquivo" accept="application/pdf"
+                   aria-describedby="ajuda-envio-{{ linha.id }}" data-arquivo>
+            <label class="botao-arquivo" for="arquivo-{{ linha.id }}">
+              {% if linha.enviado %}Escolher outro PDF{% else %}Escolher arquivo PDF{% endif %}
+            </label>
+            <span class="nome-do-arquivo" data-nome-do-arquivo>Nenhum arquivo escolhido</span>
+          </div>
+          <div class="linha">
+            <button type="submit" class="acao">Enviar</button>
+            <span class="ajuda limite" id="ajuda-envio-{{ linha.id }}">Somente PDF, até {% limite_de_arquivo %}.</span>
+          </div>
+          {% comment %}
+          O progresso e o aviso de não fechar a página aparecem enquanto o envio corre (FR-048):
+          dez megabytes em rede móvel levam dezenas de segundos, e é nesse silêncio que a pessoa
+          reenvia ou desiste.
+          {% endcomment %}
+          <p class="progresso" hidden>
+            <progress max="100" value="0" aria-label="Progresso do envio"></progress>
+            <span class="ajuda">Enviando… não feche esta página.</span>
+          </p>
+        </form>
+        {% if linha.enviado %}
+        <form hx-post="{% url 'portal:remover-documento' inscricao.id linha.id %}"
+              hx-target="#documentos" hx-swap="outerHTML"
+              method="post" action="{% url 'portal:remover-documento' inscricao.id linha.id %}">
+          {% csrf_token %}
+          <button type="submit" class="acao perigo">Remover</button>
+        </form>
+        {% endif %}
+      </div>
+      {% if linha.enviado %}</details>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="ajuda">Este Edital não exige documentos para esta vaga.</p>
+  {% endif %}
+</section>

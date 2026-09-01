@@ -1,0 +1,11 @@
+{% extends "portal/base.html" %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block conteudo %}
+{% comment %}
+A recusa que o candidato lê. O código do domínio não aparece: para quem se inscreve ele não
+significa nada, e o que resolve a situação é a frase, não a etiqueta.
+{% endcomment %}
+<h1>{{ titulo }}</h1>
+<p>{{ detalhe }}</p>
+<p><a href="{% url 'portal:vitrine' %}">Voltar às seleções</a></p>
+{% endblock %}

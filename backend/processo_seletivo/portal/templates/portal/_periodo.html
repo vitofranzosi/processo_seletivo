@@ -1,0 +1,24 @@
+{% comment %}
+A situação das inscrições, com o período **inteiro** e o tempo que resta. Três estados e uma
+ausência — e a ausência não vira "encerrada": um Edital que não recebe inscrição por este sistema
+não tem prazo a anunciar.
+
+O prazo restante existe porque uma data sozinha não informa urgência: "até 20/09" e "faltam 3 dias"
+são a mesma informação e produzem decisões diferentes. `dias_restantes` só é passado onde faz
+sentido calculá-lo; sem ele, o bloco continua dizendo a data.
+{% endcomment %}
+{% if periodo.estado == "aberto" %}
+<p class="situacao aberto">
+  Inscrições abertas{% if periodo.inicio %} desde {{ periodo.inicio|date:"d/m/Y" }}{% endif %}{% if periodo.fim %},
+  até {{ periodo.fim|date:"d/m/Y" }} às {{ periodo.fim|date:"H\hi" }}{% endif %}.
+  {% if dias_restantes is not None %}
+  <span class="prazo{% if dias_restantes < 3 %} urgente{% endif %}">
+    {% if dias_restantes == 0 %}Último dia.{% elif dias_restantes == 1 %}Falta 1 dia.{% else %}Faltam {{ dias_restantes }} dias.{% endif %}
+  </span>
+  {% endif %}
+</p>
+{% elif periodo.estado == "futuro" %}
+<p class="situacao futuro">Inscrições começam em {{ periodo.inicio|date:"d/m/Y" }}{% if periodo.inicio %} às {{ periodo.inicio|date:"H\hi" }}{% endif %}{% if periodo.fim %} e vão até {{ periodo.fim|date:"d/m/Y" }}{% endif %}.</p>
+{% elif periodo.estado == "encerrado" %}
+<p class="situacao encerrado">Inscrições encerradas em {{ periodo.fim|date:"d/m/Y" }}.</p>
+{% endif %}

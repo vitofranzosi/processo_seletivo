@@ -1,0 +1,76 @@
+{% load interface_extras %}<fieldset class="linha documento">
+  <legend>Documento exigido</legend>
+  <input type="hidden" name="documento-{{ indice }}-id" value="{{ documento.id }}">
+  <input type="hidden" name="documento-{{ indice }}-order" value="{{ documento.order|default:'0' }}">
+  <div class="campos">
+    <p class="campo curto">
+      <label for="documento-{{ indice }}-key">Chave <span class="obrigatorio" aria-hidden="true">*</span></label>
+      {% recusa_de recusas "documento" indice "key" as recusado_key %}
+      <input type="text" id="documento-{{ indice }}-key" name="documento-{{ indice }}-key"
+             value="{{ documento.key|default:'' }}" required aria-required="true"
+             placeholder="diploma"
+             aria-describedby="ajuda-chave-{{ indice }}{% if recusado_key %} recusa-documento-{{ indice }}-key{% endif %}"
+             {% if recusado_key %}aria-invalid="true"{% endif %}>
+      {% if recusado_key %}<span class="recusa" role="alert" id="recusa-documento-{{ indice }}-key">{{ recusado_key }}</span>{% endif %}
+      <span class="ajuda" id="ajuda-chave-{{ indice }}">Identificação estável, sem espaços.</span>
+    </p>
+    <p class="campo largo">
+      <label for="documento-{{ indice }}-name">Nome <span class="obrigatorio" aria-hidden="true">*</span></label>
+      {% recusa_de recusas "documento" indice "name" as recusado_name %}
+      <input type="text" id="documento-{{ indice }}-name" name="documento-{{ indice }}-name"
+             value="{{ documento.name|default:'' }}" required aria-required="true"
+             placeholder="Diploma de graduação"
+             {% if recusado_name %}aria-invalid="true" aria-describedby="recusa-documento-{{ indice }}-name"{% endif %}>
+      {% if recusado_name %}<span class="recusa" role="alert" id="recusa-documento-{{ indice }}-name">{{ recusado_name }}</span>{% endif %}
+    </p>
+  </div>
+  <p class="campo largo">
+    <label for="documento-{{ indice }}-instructions">Instrução ao candidato</label>
+    <input type="text" id="documento-{{ indice }}-instructions"
+           name="documento-{{ indice }}-instructions" value="{{ documento.instructions|default:'' }}"
+           placeholder="Frente e verso, em arquivo único."
+           aria-describedby="ajuda-instrucao-{{ indice }}">
+    <span class="ajuda" id="ajuda-instrucao-{{ indice }}">Aparece ao candidato e no Edital publicado.</span>
+  </p>
+  <div class="campos">
+    <p class="campo">
+      <label for="documento-{{ indice }}-profileId">Exigido apenas do Perfil</label>
+      {% recusa_de recusas "documento" indice "profileId" as recusado_perfil %}
+      <select id="documento-{{ indice }}-profileId" name="documento-{{ indice }}-profileId"
+              aria-describedby="ajuda-alcance-{{ indice }}"
+              {% if recusado_perfil %}aria-invalid="true"{% endif %}>
+        <option value="">Todos os Perfis</option>
+        {% for perfil in alcance %}
+        <option value="{{ perfil.id }}" {% if documento.profileId == perfil.id %}selected{% endif %}>{{ perfil.rotulo }}</option>
+        {% endfor %}
+      </select>
+      {% if recusado_perfil %}<span class="recusa" role="alert">{{ recusado_perfil }}</span>{% endif %}
+      <span class="ajuda" id="ajuda-alcance-{{ indice }}">Deixe em "todos" quando o documento vale para qualquer candidato.</span>
+    </p>
+    <p class="campo">
+      <label for="documento-{{ indice }}-modalityId">Exigido apenas da modalidade</label>
+      {% recusa_de recusas "documento" indice "modalityId" as recusado_modalidade %}
+      <select id="documento-{{ indice }}-modalityId" name="documento-{{ indice }}-modalityId"
+              {% if recusado_modalidade %}aria-invalid="true"{% endif %}>
+        <option value="">Todas as modalidades</option>
+        {% for perfil in alcance %}{% for modalidade in perfil.modalidades %}
+        <option value="{{ modalidade.id }}" {% if documento.modalityId == modalidade.id %}selected{% endif %}>{{ perfil.rotulo }} · {{ modalidade.rotulo }}</option>
+        {% endfor %}{% endfor %}
+      </select>
+      {% if recusado_modalidade %}<span class="recusa" role="alert">{{ recusado_modalidade }}</span>{% endif %}
+    </p>
+  </div>
+  <p class="papel">
+    <input type="checkbox" id="documento-{{ indice }}-required" name="documento-{{ indice }}-required"
+           {% if documento.required|default_if_none:True %}checked{% endif %}>
+    <label for="documento-{{ indice }}-required">Obrigatório
+      <span class="perms">Sem ele, a inscrição não pode ser enviada.</span></label>
+  </p>
+  <p class="remover">
+    <button type="button" class="acao" data-mover="cima">↑ Subir</button>
+    <button type="button" class="acao" data-mover="baixo">↓ Descer</button>
+    <button type="button" class="acao perigo"
+            hx-get="{% url 'interface:fragmento-remover' %}"
+            hx-target="closest fieldset" hx-swap="outerHTML">Remover este documento</button>
+  </p>
+</fieldset>

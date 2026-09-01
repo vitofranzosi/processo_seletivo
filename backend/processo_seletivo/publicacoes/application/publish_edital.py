@@ -146,6 +146,11 @@ def edital_snapshot(edital: Edital) -> dict:
                 "endAt": None if event.end_at is None else event.end_at.isoformat(),
                 "order": event.order,
                 "status": event.status,
+                # Qual Evento é o período de inscrições (FR-008 da 009). Booleano sempre presente,
+                # dentro do Evento: o candidato precisa saber quando as inscrições abrem, e a
+                # Retificação já alcança o campo por `/schedule/id=…/isRegistrationPeriod`, sem
+                # nenhuma gramática nova.
+                "isRegistrationPeriod": event.is_registration_period,
             }
             for event in cronograma.eventos.all()
         ]
@@ -166,9 +171,34 @@ def edital_snapshot(edital: Edital) -> dict:
         "description": edital.description,
         "profiles": profiles,
         "schedule": schedule,
+        "documentRequirements": _document_requirements(edital),
         "stages": _stages(edital),
         "sections": _sections(edital),
     }
+
+
+def _document_requirements(edital: Edital) -> list[dict]:
+    """Os documentos que o Edital exige do candidato, na ordem declarada (FR-008 da 009).
+
+    `profileId` e `modalityId` são anuláveis por semântica, e não por conveniência: `null` significa
+    "não restringe", e é a ausência dos dois que faz o requisito valer para todo mundo. As quatro
+    combinações de aplicabilidade se leem daqui, sem operador e sem expressão.
+    """
+    return [
+        {
+            "id": str(documento.id),
+            "key": documento.key,
+            "name": documento.name,
+            "instructions": documento.instructions,
+            "required": documento.required,
+            "order": documento.order,
+            "profileId": None if documento.perfil_id is None else str(documento.perfil_id),
+            "modalityId": (
+                None if documento.modalidade_id is None else str(documento.modalidade_id)
+            ),
+        }
+        for documento in edital.documentos_exigidos.all()
+    ]
 
 
 def _locked_edital(actor, edital_id):

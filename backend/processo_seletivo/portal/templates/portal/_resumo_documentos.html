@@ -1,0 +1,27 @@
+{% comment %}
+O estado dos documentos junto ao cabeçalho, e não só no bloco lá embaixo (SC-UX-003): em 375 px a
+contagem do bloco começa abaixo da dobra, e "quantos faltam" é a pergunta que decide se a pessoa
+continua agora ou volta depois com os arquivos.
+
+Fica fora do `#documentos` para sobreviver ao envio, e por isso é atualizado fora de banda
+(`hx-swap-oob`) quando o bloco volta do servidor. Sem `role=status`: quem anuncia a mudança é a
+contagem do próprio bloco, onde a ação aconteceu — anunciar nos dois lugares seria dizer a mesma
+coisa duas vezes a quem usa leitor de tela.
+{% endcomment %}
+{% if documentos.total %}
+<p id="resumo-documentos"
+   class="resumo-documentos{% if not documentos.faltam %} completo{% endif %}"
+   {% if oob %}hx-swap-oob="true"{% endif %}>
+  <span class="marca" aria-hidden="true">{% if documentos.faltam %}○{% else %}✓{% endif %}</span>
+  {% if documentos.faltam %}
+  Falta{{ documentos.faltam|pluralize:"m" }} <strong>{{ documentos.faltam }}</strong>
+  de {{ documentos.total }} documento{{ documentos.total|pluralize:"s" }}
+  obrigatório{{ documentos.total|pluralize:"s" }}.
+  <a href="#documentos">Ver quais</a>
+  {% elif documentos.total == 1 %}
+  O documento obrigatório foi enviado.
+  {% else %}
+  Todos os {{ documentos.total }} documentos obrigatórios foram enviados.
+  {% endif %}
+</p>
+{% endif %}

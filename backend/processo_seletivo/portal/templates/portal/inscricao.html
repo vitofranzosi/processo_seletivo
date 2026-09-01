@@ -1,0 +1,113 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Sua inscrição{% endblock %}
+{% block conteudo %}
+{% include "portal/_etapas.html" %}
+<h1>Sua inscrição</h1>
+{% comment %}
+O contexto permanente que FR-035 pede: para qual Edital e qual vaga, o tempo todo, sem precisar
+voltar à página anterior para lembrar.
+{% endcomment %}
+<p class="sub">{{ selecao.processo_titulo }} · Edital {{ selecao.numero }}/{{ selecao.ano }}<br>
+  <strong>{{ perfil.nome }}</strong></p>
+{% include "portal/_resumo_documentos.html" %}
+
+{% if guardado %}<p class="situacao aberto" role="status">Seus dados estão guardados. Você pode
+  fechar esta página e continuar depois.</p>{% endif %}
+<p class="ajuda">Seus dados e arquivos ficam guardados enquanto as inscrições estiverem abertas.
+  Você pode sair e voltar quantas vezes precisar.</p>
+{% comment %}
+Recebe o foco depois de uma recusa (L2 da auditoria): quem acionou o botão estava no fim da página,
+e `role=alert` sozinho não anuncia o que já veio no HTML da resposta.
+{% endcomment %}
+{% if erros %}<div class="erro" role="alert" tabindex="-1" data-recusa>{% for erro in erros %}<p>{{ erro }}</p>{% endfor %}</div>{% endif %}
+
+<form method="post" id="dados-da-inscricao">
+  {% csrf_token %}
+  <section class="painel" aria-labelledby="seus-dados">
+    <h2 id="seus-dados">Seus dados</h2>
+    {% comment %}
+    Informação, e não campo desabilitado sem explicação (FR-037): estes três vêm da identidade e
+    não são digitados de novo. Só o telefone é pedido, porque só ele o sistema não sabe.
+
+    Rótulo pequeno em cima do valor, e não par lado a lado: o olho encontra o valor sem atravessar
+    o rótulo, e em 375px nada precisa de duas colunas para caber.
+    {% endcomment %}
+    <dl class="identificacao">
+      <div><dt>Nome</dt><dd>{{ identidade.nome }}</dd></div>
+      <div><dt>CPF</dt><dd>{{ cpf_do_candidato }}</dd></div>
+      <div><dt>E-mail</dt><dd>{{ identidade.email }}</dd></div>
+    </dl>
+    <p class="ajuda">Estes dados vêm da sua identificação e não precisam ser digitados de novo.</p>
+    <p class="campo curto">
+      <label for="telefone">Telefone (opcional)</label>
+      <input type="tel" id="telefone" name="telefone" value="{{ telefone_no_campo }}"
+             autocomplete="tel" inputmode="tel" maxlength="16"
+             placeholder="(27) 99999-0000">
+    </p>
+  </section>
+
+  {% if modalidade_unica %}
+  {% comment %}
+  Uma modalidade só não é escolha — é a condição de todo mundo naquele Perfil. Ela é informada,
+  e não perguntada: pedir que a pessoa confirme o óbvio é exatamente o atrito que P-001 recusa.
+  {% endcomment %}
+  <section class="painel" aria-labelledby="concorrencia">
+    <h2 id="concorrencia">Concorrência</h2>
+    <dl class="identificacao">
+      <div><dt>Modalidade</dt><dd>{{ modalidade_unica.nome }}</dd></div>
+    </dl>
+    <p class="ajuda">É a única modalidade prevista para esta vaga.</p>
+  </section>
+  {% elif modalidades %}
+  <section class="painel" aria-labelledby="concorrencia">
+    <h2 id="concorrencia">Concorrência</h2>
+    <p class="ajuda">Escolha como você concorre nesta vaga. A escolha decide quais documentos
+      serão pedidos a você.</p>
+    <p class="campo">
+      <label for="modalidade">Modalidade <span class="obrigatorio" aria-hidden="true">*</span></label>
+      {% comment %}
+      A opção vazia não é uma modalidade inventada: quando o Edital declara ampla concorrência, é
+      a dele que aparece na lista (FR-039). E ela não é aceita como resposta — o servidor recusa,
+      porque a aplicabilidade dos documentos depende desta escolha.
+      {% endcomment %}
+      <select id="modalidade" name="modalidade" required aria-required="true">
+        <option value="">Selecione a modalidade</option>
+        {% for modalidade in modalidades %}
+        <option value="{{ modalidade.id }}" {% if inscricao.modality_id|stringformat:"s" == modalidade.id %}selected{% endif %}>{{ modalidade.nome }}</option>
+        {% endfor %}
+      </select>
+    </p>
+  </section>
+  {% endif %}
+
+</form>
+
+{% comment %}
+Os documentos ficam **fora** do formulário dos dados: cada arquivo é enviado em requisição própria
+e persiste na hora, e é isso que faz a recusa de um não derrubar os outros (FR-041, FR-049).
+{% endcomment %}
+{% include "portal/_documentos.html" %}
+
+{% comment %}
+Uma ação principal, e nenhum `Salvar` (P-005, FR-081): avançar é o que guarda. Agora que a revisão
+existe, o botão diz para onde leva.
+
+Ele fica **depois** dos documentos, e é `form=` que permite isso: aninhar formulários é proibido em
+HTML, e enquanto o botão era renderizado antes do bloco a hierarquia visual mandava acioná-lo antes
+de enviar arquivo nenhum — quem obedecia à página era recusado por ela.
+{% endcomment %}
+<div class="barra-de-acao">
+  <button type="submit" form="dados-da-inscricao" class="principal">Revisar inscrição</button>
+  {% if documentos.faltam %}
+  <p class="ajuda">Você poderá enviar a inscrição depois de anexar
+    {% if documentos.faltam == 1 %}o documento que falta{% else %}os {{ documentos.faltam }} documentos que faltam{% endif %}.</p>
+  {% else %}
+  <p class="ajuda">Na próxima tela você confere tudo antes de enviar.</p>
+  {% endif %}
+</div>
+{% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
+<script src="{% static 'portal/envio.js' %}" defer></script>
+<script src="{% static 'portal/recusa.js' %}" defer></script>
+<script src="{% static 'portal/arquivo.js' %}" defer></script>
+<script src="{% static 'portal/telefone.js' %}" defer></script>
+{% endblock %}

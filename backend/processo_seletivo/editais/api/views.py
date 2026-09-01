@@ -19,6 +19,7 @@ class EditalDraftView(APIView):
             schedule=serializer.validated_data["schedule"],
             stages=serializer.validated_data.get("stages", []),
             sections=serializer.validated_data.get("sections", []),
+            document_requirements=serializer.validated_data.get("documentRequirements", []),
             correlation_id=request.correlation_id,
         )
         response = Response(EditalResponseSerializer(edital).data)

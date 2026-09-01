@@ -28,6 +28,21 @@ urlpatterns = [
     path("editais/<uuid:edital_id>/retificar", views.retificar, name="retificar"),
     path("editais/<uuid:edital_id>/auditoria", views.auditoria, name="auditoria"),
     path(
+        "editais/<uuid:edital_id>/inscricoes",
+        views.inscricoes_recebidas,
+        name="inscricoes",
+    ),
+    path(
+        "inscricoes/<uuid:inscricao_id>/",
+        views.inscricao_recebida,
+        name="inscricao-recebida",
+    ),
+    path(
+        "inscricoes/<uuid:inscricao_id>/documentos/<uuid:requirement_id>",
+        views.documento_da_inscricao,
+        name="documento-da-inscricao",
+    ),
+    path(
         "retificacoes/<uuid:retificacao_id>/",
         views.retificacao_detalhe,
         name="retificacao-detalhe",
@@ -43,6 +58,11 @@ urlpatterns = [
         "editais/<uuid:edital_id>/fragmentos/etapa",
         views.fragmento_etapa,
         name="fragmento-etapa",
+    ),
+    path(
+        "editais/<uuid:edital_id>/fragmentos/documento",
+        views.fragmento_documento,
+        name="fragmento-documento",
     ),
     path("fragmentos/perfil", views.fragmento_perfil, name="fragmento-perfil"),
     # O índice do Perfil vai na rota porque os campos da modalidade são nomeados por ele:

@@ -19,6 +19,13 @@ BASE = (
     / "processo_seletivo/interface/templates/interface/base.html"
 )
 FONTE = BASE.read_text()
+# Os tokens saíram da base para uma parcial compartilhada quando o canal público nasceu (009,
+# T008). A rubrica de contraste segue a paleta para onde ela foi — e passa a valer para os dois
+# canais de uma vez, que é o ganho de tê-la num lugar só.
+TOKENS = (
+    Path(__file__).resolve().parents[2]
+    / "processo_seletivo/shared/templates/shared/_tokens.css.html"
+).read_text()
 MINIMO_AA = 4.5
 
 
@@ -43,8 +50,8 @@ def edital(api_client, manager_headers, process_payload):
 
 
 def tokens():
-    """Cada `--nome:#rrggbb` declarado no :root."""
-    return dict(re.findall(r"(--[\w-]+):\s*(#[0-9a-fA-F]{3,6})", FONTE))
+    """Cada `--nome:#rrggbb` declarado no :root, hoje na parcial compartilhada."""
+    return dict(re.findall(r"(--[\w-]+):\s*(#[0-9a-fA-F]{3,6})", TOKENS))
 
 
 def luminancia(cor):

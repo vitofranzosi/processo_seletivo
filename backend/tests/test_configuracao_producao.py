@@ -21,7 +21,10 @@ AMBIENTE_MINIMO = {
     # justamente a falha que ela passou a detectar.
     "API_AUTHENTICATION_CLASSES": "rest_framework.authentication.RemoteUserAuthentication",
     "DB_RUNTIME_PASSWORD": "segredo-do-runtime",
+    # A 009 acrescenta uma precondição de armazenamento: absoluta e fora da árvore do código.
+    "ARQUIVOS_CANDIDATOS_RAIZ": "/var/lib/processo-seletivo/arquivos",
 }
+RAIZ_DO_CODIGO = pathlib.Path(__file__).resolve().parents[1]
 ADAPTADOR_PROVISORIO = (
     "processo_seletivo.seguranca.api.authentication.InstitutionalBearerAuthentication"
 )
@@ -85,6 +88,15 @@ def test_ambiente_completo_carrega_com_transporte_seguro():
             "API_AUTHENTICATION_CLASSES",
         ),
         ({"INTERFACE_SELETOR_IDENTIDADE": "true"}, "INTERFACE_SELETOR_IDENTIDADE"),
+        # Os dois eixos de identidade têm a mesma barreira, e o do candidato não é menos grave:
+        # uma inscrição atribuída a quem se declarou candidato não vale nada.
+        ({"PORTAL_IDENTIDADE_DEMO": "true"}, "PORTAL_IDENTIDADE_DEMO"),
+        ({"ARQUIVOS_CANDIDATOS_RAIZ": None}, "ARQUIVOS_CANDIDATOS_RAIZ"),
+        ({"ARQUIVOS_CANDIDATOS_RAIZ": "arquivos-dos-candidatos"}, "ARQUIVOS_CANDIDATOS_RAIZ"),
+        (
+            {"ARQUIVOS_CANDIDATOS_RAIZ": str(RAIZ_DO_CODIGO / "arquivos")},
+            "ARQUIVOS_CANDIDATOS_RAIZ",
+        ),
         ({"DB_RUNTIME_PASSWORD": None}, "DB_RUNTIME_PASSWORD"),
         ({"DJANGO_SECURE_SSL_REDIRECT": "false"}, "DJANGO_SECURE_SSL_REDIRECT"),
         ({"DJANGO_SECURE_HSTS_SECONDS": "60"}, "DJANGO_SECURE_HSTS_SECONDS"),

@@ -11,6 +11,9 @@ urlpatterns = [
     # Endpoints operacionais ficam fora de /api/v1: não são contrato institucional.
     path("", IndexView.as_view(), name="index"),
     path("gestao/", include("processo_seletivo.interface.urls")),
+    # O canal do candidato (009). Fora de `gestao/` porque é outro ator, com outra sessão e
+    # nenhuma capacidade de gestão — e fora de `api/` porque é página, não contrato.
+    path("selecoes/", include("processo_seletivo.portal.urls")),
     path("health", HealthView.as_view(), name="health"),
     path("readiness", ReadinessView.as_view(), name="readiness"),
     path("metrics", MetricsView.as_view(), name="metrics"),

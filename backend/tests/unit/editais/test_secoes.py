@@ -1,7 +1,8 @@
 """T011 e T012 — o catálogo de Seções, declarado e fixo.
 
-A `007` acrescenta três seções institucionais e renumera a ordem. O que estes testes protegem é
-que o catálogo continua sendo **catálogo**: conjunto e ordem definidos pelo sistema (FR-009), e
+A `007` acrescenta três seções institucionais e renumera a ordem; a `009` acrescenta a décima
+primeira, gerada, com os documentos exigidos do candidato. O que estes testes protegem é que o
+catálogo continua sendo **catálogo**: conjunto e ordem definidos pelo sistema (FR-009), e
 identidade derivada da chave — não da posição (D-007).
 """
 
@@ -17,6 +18,7 @@ ORDEM_ESPERADA = [
     ("disposicoes-preliminares", "Disposições Preliminares", secoes.TEXTUAL),
     ("requisitos-gerais", "Requisitos Gerais de Participação", secoes.TEXTUAL),
     ("inscricao", "Da Inscrição", secoes.TEXTUAL),
+    ("documentos-exigidos", "Documentos Exigidos para a Inscrição", secoes.GERADA),
     ("perfis", "Perfis de Vaga", secoes.GERADA),
     ("etapas", "Etapas de Avaliação", secoes.GERADA),
     ("classificacao", "Critérios de Classificação", secoes.TEXTUAL),
@@ -26,13 +28,13 @@ ORDEM_ESPERADA = [
 ]
 
 
-def test_o_catalogo_tem_as_dez_secoes_na_ordem_declarada():
+def test_o_catalogo_tem_as_onze_secoes_na_ordem_declarada():
     assert [(s.key, s.title, s.type) for s in secoes.CATALOGO] == ORDEM_ESPERADA
 
 
-def test_a_ordem_declarada_e_uma_sequencia_de_um_a_dez_sem_buraco():
+def test_a_ordem_declarada_e_uma_sequencia_sem_buraco():
     """`order` é conteúdo normativo e o documento o respeita; buraco ou repetição seria defeito."""
-    assert [s.order for s in secoes.CATALOGO] == list(range(1, 11))
+    assert [s.order for s in secoes.CATALOGO] == list(range(1, len(ORDEM_ESPERADA) + 1))
 
 
 def test_as_posicoes_cumprem_a_leitura_de_um_edital():

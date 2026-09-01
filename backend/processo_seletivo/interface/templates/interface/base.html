@@ -5,16 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block titulo %}Gestão de Processos Seletivos{% endblock %} — Cefor/Ifes</title>
 <style>
-:root{
-  /* --verde preenche (precisa contrastar com texto branco); --verde-texto escreve
-     (precisa contrastar com fundos claros). Um só token para os dois papéis fazia
-     o rótulo da etapa cair a 4,45:1 sobre o verde claro e os links a 4,28:1 sobre o
-     vermelho claro — WCAG 2.1 AA exige 4,5:1. */
-  --verde:#15803d; --verde-texto:#146c37; --verde-escuro:#0b5a2a; --verde-claro:#e7f5ec;
-  --texto:#1c1c1c; --texto-fraco:#555; --borda:#d4d4d4; --fundo:#f8f8f8; --branco:#fff;
-  --sucesso:#146c37; --sucesso-fundo:#e7f5ec; --amarelo:#8a5300; --amarelo-fundo:#fdf5e5;
-  --vermelho:#a91b1b; --vermelho-fundo:#fbe9e9; --cinza-fundo:#eee;
-}
+{% include "shared/_tokens.css.html" %}
 *{box-sizing:border-box}
 body{margin:0;font-family:"Open Sans","Segoe UI",system-ui,sans-serif;color:var(--texto);
   background:var(--fundo);line-height:1.5;font-size:16px}
@@ -57,6 +48,10 @@ h2{font-size:1.15rem;margin:0;font-weight:600}
 .codigo{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;
   background:var(--verde-claro);color:var(--verde-escuro);padding:.15rem .5rem;border-radius:3px}
 table{width:100%;border-collapse:collapse}
+/* Sete colunas não cabem em 375px, e sem um contêiner que role a tabela empurra a **página**
+   inteira na horizontal — o cabeçalho e o texto passam a fugir da tela junto com ela. Quem
+   confere inscrições pelo celular estava lendo um layout quebrado. */
+.tabela-rolavel{overflow-x:auto}
 caption{text-align:left;padding:.75rem 1.25rem 0;color:var(--texto-fraco);font-size:.875rem}
 th,td{text-align:left;padding:.7rem 1.25rem;border-bottom:1px solid var(--borda);
   vertical-align:top;font-size:.9375rem}
@@ -267,6 +262,25 @@ input.largo,textarea.largo{width:100%;}
 .papel .perms{display:block;font-size:.8125rem;color:var(--texto-fraco)}
 .erro{background:var(--vermelho-fundo);border-left:4px solid var(--vermelho);
   padding:.75rem 1rem;margin-bottom:1rem;border-radius:0 4px 4px 0}
+/* Consulta das inscrições recebidas (009). Reaproveita a tabela e o cartão que já existem; o que
+   é novo é a lista de requisitos, onde o arquivo aparece **dentro** do requisito que ele atende. */
+.dados-da-inscricao{display:grid;grid-template-columns:auto 1fr;gap:.35rem .75rem;margin:0}
+.dados-da-inscricao dt{color:var(--texto-fraco)}
+.dados-da-inscricao dd{margin:0}
+.requisitos-apresentados{list-style:none;margin:0;padding:0;display:grid;gap:.75rem}
+.requisitos-apresentados>li{border:1px solid var(--borda);border-radius:4px;padding:.75rem 1rem;
+  background:var(--branco)}
+.requisito-nome{margin:0 0 .25rem}
+.acoes-do-documento{margin:.5rem 0 0;display:flex;gap:.5rem;flex-wrap:wrap}
+/* O resumo criptográfico do arquivo: 64 caracteres que precisam ser lidos um a um quando alguém
+   confere, e por isso monoespaçados e com quebra em qualquer ponto. */
+.resumo-do-arquivo{margin:.3rem 0 0;display:flex;flex-wrap:wrap;gap:.35rem;align-items:baseline;
+  font-size:.8125rem;color:var(--texto-fraco)}
+.resumo-do-arquivo .rotulo{text-transform:uppercase;letter-spacing:.04em;font-size:.6875rem}
+.resumo-do-arquivo code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  word-break:break-all;line-height:1.4}
+.codigo-de-verificacao{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600;
+  letter-spacing:.03em}
 </style>
 </head>
 <body>

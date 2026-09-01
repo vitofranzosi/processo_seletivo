@@ -1,0 +1,35 @@
+{% extends "interface/base.html" %}
+{% block titulo %}Inscrições — {{ edital }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">Inscrições</span>
+</nav>
+
+<h1>Inscrições — {{ total }}</h1>
+<p class="sub">{{ edital.title }}</p>
+{% comment %}
+`total` conta o que foi **entregue**. Um rascunho aberto e abandonado não é inscrição recebida: o
+candidato não submeteu nada, e somá-lo aqui faria o painel anunciar centenas de inscrições numa
+seleção que recebeu dezenas (FR-066). Ele continua visível — abaixo, e sob o nome do que é.
+{% endcomment %}
+
+{% if recebidas %}
+{% include "interface/_tabela_de_inscricoes.html" with inscricoes=recebidas legenda="Inscrições recebidas neste Edital" %}
+{% else %}
+<p class="aviso">Nenhuma inscrição recebida até agora.</p>
+{% endif %}
+
+{% if em_preenchimento %}
+{% comment %}
+Seção própria, e não linhas misturadas às recebidas: quem confere precisa distinguir de relance o
+que chegou do que ainda pode não chegar. Continua na tela porque FR-067 pede a coluna `situação`,
+e quem conduz a seleção precisa saber que há gente no meio do caminho quando o prazo se aproxima.
+{% endcomment %}
+<h2>Em preenchimento — {{ em_preenchimento|length }}</h2>
+<p class="aviso">Rascunhos abertos e ainda não enviados. Não são inscrições recebidas, e podem
+  nunca ser enviados.</p>
+{% include "interface/_tabela_de_inscricoes.html" with inscricoes=em_preenchimento legenda="Rascunhos em preenchimento neste Edital" %}
+{% endif %}
+{% endblock %}

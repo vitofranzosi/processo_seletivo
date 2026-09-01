@@ -17,9 +17,16 @@ from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.auditoria import selectors as auditoria_selectors
+from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.application.identificacao import update_edital_identification
 from processo_seletivo.editais.domain.validation import validate_for_publication
+from processo_seletivo.inscricoes.application.consulta import (
+    CONSULTAR,
+    documento_para_consulta,
+    inscricao_para_consulta,
+    inscricoes_do_edital,
+)
 from processo_seletivo.interface import (
     acoes,
     atos,
@@ -30,6 +37,7 @@ from processo_seletivo.interface import (
     revisao,
 )
 from processo_seletivo.interface import retificacao as retificacao_ui
+from processo_seletivo.portal.arquivos import copia_verificada, entregar
 from processo_seletivo.processos.application.commands import create_process_with_first_edital
 from processo_seletivo.processos.application.selectors import (
     contar_por_situacao,
@@ -49,6 +57,8 @@ from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA, render
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.shared.application.commands import command_context
+from processo_seletivo.shared.http import marcar_como_privada
 
 # Ordem em que as situações aparecem: o fluxo do Edital, não a ordem alfabética.
 ORDEM_SITUACAO = [
@@ -304,6 +314,11 @@ DESTINO_DA_PENDENCIA = {
     "profiles": ("perfis", "#perfis-titulo", True),
     "schedule": ("cronograma", "#cronograma-titulo", True),
     "stages": ("etapas", "#etapas-titulo", True),
+    # A designação do período é achado sobre `/schedule`, mas se resolve na etapa `Inscrição`, que
+    # é onde existe o controle. Chave exata, e por isso vence a busca por coleção logo abaixo —
+    # mandar quem lê para o Cronograma seria mandá-lo a uma tela sem o que corrigir.
+    "/schedule": ("inscricao", "#inscricao-periodo", True),
+    "documentRequirements": ("inscricao", "#inscricao-documentos", True),
 }
 
 
@@ -360,6 +375,10 @@ ETAPAS_COMPOSICAO = [
     # Depois do Cronograma porque a Etapa referencia Evento dele: pedir o vínculo antes de existir
     # o que vincular seria oferecer uma lista vazia e chamá-la de escolha.
     ("etapas", "Etapas de Avaliação", "interface/compor_etapas.html"),
+    # Depois dos Perfis, das Modalidades e do Cronograma: a designação do período escolhe um
+    # Evento que precisa existir, e a aplicabilidade de cada documento referencia Perfil e
+    # modalidade que precisam existir. Pedir antes seria oferecer listas vazias.
+    ("inscricao", "Inscrição", "interface/compor_inscricao.html"),
     # Depois de tudo o que gera conteúdo: as seções textuais complementam o que o sistema já
     # sabe, e quem as redige precisa ver o que já está estruturado.
     ("conteudo", "Conteúdo", "interface/compor_conteudo.html"),
@@ -367,7 +386,7 @@ ETAPAS_COMPOSICAO = [
 ]
 CHAVES_ETAPA = [chave for chave, _, _ in ETAPAS_COMPOSICAO]
 # As que aceitam POST. `revisao` consolida e não grava.
-ETAPAS_GRAVAVEIS = {"identificacao", "perfis", "cronograma", "etapas", "conteudo"}
+ETAPAS_GRAVAVEIS = {"identificacao", "perfis", "cronograma", "etapas", "inscricao", "conteudo"}
 
 
 # Três estados, e não dois (FR-040). O terceiro existe por um defeito preciso: `conteudo` era
@@ -388,7 +407,12 @@ ROTULO_DO_ESTADO = {
 
 
 # Prefixo do nome dos campos de cada etapa, para reconstruir o `id` do controle recusado.
-PREFIXO_DA_ETAPA = {"perfis": "perfil", "cronograma": "evento", "etapas": "etapa"}
+PREFIXO_DA_ETAPA = {
+    "perfis": "perfil",
+    "cronograma": "evento",
+    "etapas": "etapa",
+    "inscricao": "documento",
+}
 
 
 def _recusa(exc, digitados, etapa):
@@ -409,8 +433,10 @@ def _recusa(exc, digitados, etapa):
         return {"mensagem": mensagem, "ancora": ""}
 
     # `digitados` é a lista de linhas na ordem em que o formulário as enviou; o índice do
-    # formulário é o que compõe o `id` do controle.
-    for indice, linha in enumerate(digitados or []):
+    # formulário é o que compõe o `id` do controle. A etapa `Inscrição` envia duas coisas — a
+    # designação do período e as linhas —, e são as linhas que têm campo a ancorar.
+    linhas = digitados.get("documentos", []) if isinstance(digitados, dict) else (digitados or [])
+    for indice, linha in enumerate(linhas):
         if str(linha.get("id", "")) == identidade:
             return {"mensagem": mensagem, "ancora": f"{prefixo}-{indice}-{campo}"}
     return {"mensagem": mensagem, "ancora": ""}
@@ -429,6 +455,11 @@ def _progresso(edital, atual):
         # `SecaoEdital` só tem linha depois da primeira edição — ausência de linha significa "texto
         # padrão do catálogo". Logo `exists()` responde exatamente "esta etapa já foi gravada",
         # sem custar estado novo.
+        # Como `etapas`: o contrato de inscrição é opcional nesta versão — um Edital pode ser
+        # publicado sem receber inscrições pelo sistema —, e "concluída" diz "já tem conteúdo".
+        "inscricao": CONCLUIDA
+        if edital.documentos_exigidos.exists() or forms.periodo_do_edital(edital)
+        else PENDENTE,
         "conteudo": CONCLUIDA if edital.secoes.exists() else PRONTA,
         "revisao": PENDENTE,
     }
@@ -547,6 +578,19 @@ def compor_etapa(request, edital_id, etapa):
                 if etapa == "cronograma" and digitados is not None
                 else forms.eventos_do_edital(edital)
             ),
+            # Após recusa, o que a pessoa digitou; fora disso, o que está gravado — a mesma regra
+            # das demais etapas, e o que impede a recusa apagar o preenchimento.
+            "documentos": (
+                digitados["documentos"]
+                if etapa == "inscricao" and digitados is not None
+                else forms.documentos_do_edital(edital)
+            ),
+            "periodo_escolhido": (
+                digitados["periodo"]
+                if etapa == "inscricao" and digitados is not None
+                else forms.periodo_do_edital(edital)
+            ),
+            "alcance": forms.alcance_da_aplicabilidade(edital) if etapa == "inscricao" else [],
             "etapas_avaliacao": (
                 _reexibir_etapas(digitados)
                 if etapa == "etapas" and digitados is not None
@@ -643,6 +687,7 @@ LEITURA_DA_ETAPA = {
     "perfis": forms.ler_perfis,
     "cronograma": forms.ler_eventos,
     "etapas": forms.ler_etapas,
+    "inscricao": forms.ler_inscricao,
     "conteudo": forms.ler_secoes,
 }
 
@@ -670,8 +715,19 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
         "schedule": forms.eventos_persistidos(edital),
         "stages": forms.etapas_persistidas(edital),
         "sections": forms.secoes_persistidas(edital),
+        "documentRequirements": forms.documentos_persistidos(edital),
     }
-    conteudo[COLECAO_DA_ETAPA[etapa]] = digitados
+    if etapa == "inscricao":
+        # A única etapa que escreve em duas coleções, porque a designação do período mora **no**
+        # Evento: para quem elabora é uma decisão só — como este Edital recebe inscrição —, e
+        # separá-la em duas telas partiria o contrato ao meio.
+        conteudo["documentRequirements"] = digitados["documentos"]
+        conteudo["schedule"] = [
+            {**evento, "isRegistrationPeriod": str(evento["id"]) == digitados["periodo"]}
+            for evento in conteudo["schedule"]
+        ]
+    else:
+        conteudo[COLECAO_DA_ETAPA[etapa]] = digitados
     return replace_draft(
         actor=ator,
         edital_id=edital.id,
@@ -680,6 +736,7 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
         schedule=conteudo["schedule"],
         stages=conteudo["stages"],
         sections=conteudo["sections"],
+        document_requirements=conteudo["documentRequirements"],
         correlation_id=request.correlation_id,
         # O rótulo da etapa, como quem elabora a vê no assistente (FR-042).
         area=dict((chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO).get(etapa, ""),
@@ -708,6 +765,29 @@ def fragmento_perfil(request):
 def fragmento_evento(request):
     return render(request, "interface/_evento.html",
                   {"evento": {"id": str(uuid4())}, "indice": _indice_de_linha(request)})
+
+
+@require_http_methods(["GET"])
+def fragmento_documento(request, edital_id):
+    """A linha nova de Documento Exigido.
+
+    Escopada ao Edital, como a da Etapa: os dois `select` de aplicabilidade precisam dos Perfis e
+    das modalidades **daquele** Edital para oferecer a escolha. Sem escopo, a linha nasceria com
+    duas listas vazias e a restrição só poderia ser declarada recarregando a página.
+    """
+    ator = identidade.ator_da_sessao(request)
+    edital = obter_edital(actor=ator, edital_id=edital_id) if ator else None
+    if edital is None:
+        raise Http404
+    return render(
+        request,
+        "interface/_documento.html",
+        {
+            "documento": {"id": str(uuid4()), "required": True},
+            "indice": _indice_de_linha(request),
+            "alcance": forms.alcance_da_aplicabilidade(edital),
+        },
+    )
 
 
 @require_http_methods(["GET"])
@@ -1296,11 +1376,19 @@ OPERACOES = {
     "ENCERRAR": "Encerramento",
     "CANCELAR": "Cancelamento",
     "DEVOLVER": "Devolução para elaboração",
+    # Atos do candidato (009). Entram aqui porque a trilha é uma só: quem responde a um
+    # questionamento sobre uma inscrição lê a mesma tela de quem responde sobre um Edital.
+    "GRAVAR": "Preenchimento da inscrição",
+    "ANEXAR": "Envio de documento",
+    "REMOVER": "Remoção de documento",
+    "INTEGRIDADE": "Falha de integridade de documento",
+    "CONSULTAR_DOCUMENTO": "Consulta a documento do candidato",
 }
 AGREGADOS = {
     "ProcessoSeletivo": "Processo Seletivo",
     "Edital": "Edital",
     "Retificacao": "Retificação",
+    "Inscricao": "Inscrição",
 }
 
 
@@ -1449,3 +1537,113 @@ def praticar_ato_processo(request, processo_id, acao):
         contexto["pendentes"] = pending_editais(processo) if ato.depende_dos_editais else []
         return render(request, "interface/processo_confirmar.html", contexto, status=exc.status)
     return redirect(f"{reverse('interface:processo-detalhe', args=[processo.id])}?ato={ato.chave}")
+
+
+@require_http_methods(["GET"])
+def inscricoes_recebidas(request, edital_id):
+    """`Inscrições` no contexto do Edital (US6 da 009, FR-066, FR-067).
+
+    A tela que substitui a planilha: quantas chegaram, de quem, para qual Perfil, e quantos
+    documentos vieram dos que aquela inscrição exige. Nada de avaliação — a `009` termina em
+    "recebido e consultável", e a próxima jornada é que transforma isso em avaliável.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital, linhas = inscricoes_do_edital(actor=ator, edital_id=edital_id)
+    # Recebido é o que foi entregue. O rascunho continua na tela — em seção própria e sob o nome do
+    # que é —, mas fora do total: contá-lo diria à gestão que recebeu inscrição que ninguém enviou.
+    recebidas = [linha for linha in linhas if linha["enviada"]]
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/inscricoes.html",
+            {
+                "edital": edital,
+                "recebidas": recebidas,
+                "em_preenchimento": [linha for linha in linhas if not linha["enviada"]],
+                "total": len(recebidas),
+            },
+        )
+    )
+
+
+@require_http_methods(["GET"])
+def inscricao_recebida(request, inscricao_id):
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    contexto = inscricao_para_consulta(actor=ator, inscricao_id=inscricao_id)
+    return marcar_como_privada(render(request, "interface/inscricao_detalhe.html", contexto))
+
+
+@require_http_methods(["GET"])
+def documento_da_inscricao(request, inscricao_id, requirement_id):
+    """O documento apresentado, conferido **antes** de sair um byte (FR-053a, FR-069).
+
+    A conferência não pode acontecer durante o streaming: uma vez enviados, os bytes não voltam, e
+    descobrir a divergência no meio do arquivo deixaria a pessoa com meio documento e nenhuma
+    explicação. Ler para conferir e depois servir custa uma leitura a mais por consulta — o preço
+    de poder afirmar que o que a comissão abriu é o que o candidato enviou.
+
+    `inline` para ver; `?baixar=1` para guardar. Baixar é ação secundária e individual: não existe
+    download em lote, porque é dele que a feature existe para tirar a equipe (FR-069, FR-084).
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    documento = documento_para_consulta(
+        actor=ator, inscricao_id=inscricao_id, requirement_id=requirement_id
+    )
+    # Uma passagem só: a cópia é conferida e é **ela** que vai para a resposta. Conferir o
+    # arquivo e depois reabri-lo pelo caminho deixaria uma janela entre as duas leituras — e uma
+    # verificação que aprova um conteúdo e serve outro é pior do que verificação nenhuma, porque
+    # produz a afirmação de integridade que ninguém checou.
+    copia, calculado = copia_verificada(documento)
+    if calculado != documento.content_hash:
+        copia.close()
+        _registrar_divergencia(ator, documento, request)
+    _registrar_consulta(ator, documento, request)
+    return entregar(documento, anexo=bool(request.GET.get("baixar")), verificado=copia)
+
+
+def _registrar_consulta(ator, documento, request):
+    """Quem abriu o documento de quem, e quando (L10 da auditoria de percurso).
+
+    FR-077 audita os atos do candidato e dispensa a consulta pública; sobre a consulta
+    **administrativa** a spec é silenciosa, e o silêncio deixava o sistema sem resposta para a
+    pergunta que uma auditoria de dados pessoais faz primeiro. Documento de candidato inclui
+    autodeclaração étnico-racial: é dado sensível, e acesso a dado sensível deixa rastro.
+
+    Registra a leitura, e não o conteúdo — nem o nome do arquivo, que é do candidato (FR-074). O
+    requisito basta para saber o que foi aberto.
+    """
+    with command_context() as agora:
+        record_event(
+            actor=ator,
+            permission=CONSULTAR,
+            operation="CONSULTAR_DOCUMENTO",
+            aggregate=documento.inscricao,
+            now=agora,
+            correlation_id=getattr(request, "correlation_id", ""),
+            reason=f"requisito {documento.requirement_id}",
+        )
+
+
+def _registrar_divergencia(ator, documento, request):
+    with command_context() as agora:
+        record_event(
+            actor=ator,
+            permission=CONSULTAR,
+            operation="INTEGRIDADE",
+            aggregate=documento.inscricao,
+            now=agora,
+            correlation_id=getattr(request, "correlation_id", ""),
+            reason=f"requisito {documento.requirement_id}",
+        )
+    raise DomainError(
+        "document_integrity_failed",
+        "O arquivo guardado não confere com o que foi recebido. O documento não pode ser "
+        "apresentado como íntegro; registre a ocorrência e solicite novo envio ao candidato.",
+        409,
+    )

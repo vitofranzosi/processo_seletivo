@@ -24,15 +24,25 @@ INSTALLED_APPS = [
     "processo_seletivo.seguranca",
     "processo_seletivo.auditoria",
     "processo_seletivo.interface",
+    # A jornada do candidato (009): o domínio em `inscricoes`, o canal do ator externo em
+    # `portal`. São dois apps porque são duas coisas — e `portal` não é uma tela a mais de
+    # `interface`: a autenticação, a sessão, a base visual e o alvo de dispositivo são outros.
+    "processo_seletivo.inscricoes",
+    "processo_seletivo.portal",
 ]
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
+        # `shared/templates` não pertence a app nenhum: guarda o que os dois canais compartilham
+        # sem que um dependa do outro — hoje, os tokens visuais. `APP_DIRS` continua encontrando
+        # o resto.
+        "DIRS": [BASE_DIR / "processo_seletivo" / "shared" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.request",
                 "processo_seletivo.interface.identidade.contexto_identidade",
+                "processo_seletivo.portal.identidade.contexto_candidato",
             ]
         },
     }
@@ -42,6 +52,21 @@ STATIC_URL = "static/"
 # Seletor de identidade: substitui a autenticação institucional enquanto ela não existe.
 # Nunca deve estar ligado em produção — ver specs/002-frontend-administrativo/plan.md, Decisão 4.
 INTERFACE_SELETOR_IDENTIDADE = os.getenv("INTERFACE_SELETOR_IDENTIDADE", "false").lower() == "true"
+
+# Identidade do candidato (009): eixo próprio, e enquanto o provedor institucional não existir,
+# um de demonstração. Como o seletor acima, nunca em produção — ver `production.py`.
+PORTAL_IDENTIDADE_DEMO = os.getenv("PORTAL_IDENTIDADE_DEMO", "false").lower() == "true"
+
+# Documentos do candidato (009). A raiz é privada: fica fora da árvore estática e nunca é servida
+# pelo servidor web — todo acesso passa pela aplicação, que confere titularidade ou permissão
+# (FR-051). Vazia em desenvolvimento significa "esta máquina não recebe arquivo"; em produção a
+# ausência impede subir.
+ARQUIVOS_CANDIDATOS_RAIZ = os.getenv("ARQUIVOS_CANDIDATOS_RAIZ", "")
+# O limite é da aplicação, e não do documento exigido (FR-046): um Edital não negocia tamanho de
+# arquivo. Lê-se daqui para que mudá-lo não seja mexer em código.
+ARQUIVOS_CANDIDATOS_LIMITE_BYTES = int(
+    os.getenv("ARQUIVOS_CANDIDATOS_LIMITE_BYTES", str(10 * 1024 * 1024))
+)
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

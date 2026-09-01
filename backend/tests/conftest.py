@@ -43,3 +43,47 @@ def process_payload():
         "title": "Processo Seletivo 2026",
         "firstEdital": {"number": "01", "year": 2026, "title": "Primeiro Edital"},
     }
+
+
+# ---------------------------------------------------------------------------
+# A jornada do candidato (009). Ficam aqui, e não num conftest de diretório, porque integração e
+# autorização exercitam as mesmas precondições — e fixture só é vista do conftest da raiz ou do
+# próprio diretório.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def raiz_de_arquivos(settings, tmp_path):
+    """Cada teste com a sua raiz de arquivos.
+
+    O armazenamento resolve a configuração a cada operação justamente para isto: sem resolver por
+    propriedade, `override_settings` não teria efeito e os testes escreveriam todos no mesmo lugar.
+    """
+    settings.ARQUIVOS_CANDIDATOS_RAIZ = str(tmp_path)
+    settings.PORTAL_IDENTIDADE_DEMO = True
+    return tmp_path
+
+
+@pytest.fixture
+def selecao(raiz_de_arquivos, api_client, manager_headers, process_payload):
+    """Seleção publicada, período aberto, três documentos exigidos com alcances distintos."""
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from tests.fixtures.selecao import publicar_selecao, rascunho_aberto_com_documentos
+
+    return publicar_selecao(
+        api_client,
+        manager_headers,
+        process_payload,
+        rascunho=rascunho_aberto_com_documentos(timezone.now() - timedelta(seconds=1)),
+    )
+
+
+@pytest.fixture
+def inscricao_de_maria(selecao):
+    from processo_seletivo.inscricoes.application.rascunho import abrir_inscricao
+    from tests.fixtures.candidato import MARIA, PERFIL_DOCENTE
+
+    return abrir_inscricao(identidade=MARIA, edital_id=selecao.id, profile_id=PERFIL_DOCENTE)

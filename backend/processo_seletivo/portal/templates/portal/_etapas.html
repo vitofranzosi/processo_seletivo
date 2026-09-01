@@ -1,0 +1,25 @@
+{% comment %}
+Onde a pessoa está, e quanto falta (L3 da auditoria de percurso).
+
+Sem isto, identificação, dados, documentos, revisão e comprovante eram cinco momentos sem nome:
+ninguém sabia se estava no começo ou no fim. Quem se inscreve num concurso costuma fazê-lo uma vez
+na vida, e a incerteza sobre "quanto ainda falta" é o que faz fechar a aba.
+
+Três etapas, e não cinco: a identificação já passou quando esta lista aparece, e os documentos
+acontecem **dentro** da primeira etapa, junto dos dados — anunciá-los como etapa própria sugeriria
+uma tela que não existe.
+
+`aria-current="step"` marca a atual, e o texto "Etapa N de 3" diz o mesmo a quem lê com leitor de
+tela sem depender da cor (SC-UX-005).
+{% endcomment %}
+<nav class="etapas" aria-label="Etapas da inscrição">
+  <ol>
+    {% for etapa in etapas %}
+    <li class="{{ etapa.estado }}"{% if etapa.estado == "atual" %} aria-current="step"{% endif %}>
+      <span class="numero" aria-hidden="true">{% if etapa.estado == "concluida" %}✓{% else %}{{ forloop.counter }}{% endif %}</span>
+      <span class="rotulo">{{ etapa.nome }}</span>
+      {% if etapa.estado == "atual" %}<span class="posicao">Etapa {{ forloop.counter }} de {{ etapas|length }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</nav>

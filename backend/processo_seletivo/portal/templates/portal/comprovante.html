@@ -1,0 +1,142 @@
+{% extends "portal/base.html" %}
+{% comment %}
+O protocolo no título da página, e primeiro. O navegador usa o título como **nome do arquivo** ao
+salvar em PDF e o imprime no cabeçalho da folha: sem isto, o candidato termina com
+"Comprovante de inscrição — Cefor_Ifes.pdf" na pasta de downloads, indistinguível do comprovante
+de qualquer outra seleção — e é justamente o protocolo que identifica este.
+{% endcomment %}
+{% block titulo %}Comprovante {{ inscricao.protocolo }}{% endblock %}
+{% block conteudo %}
+{% comment %}
+O comprovante é a única prova que o candidato leva, e é lido por quem não estava na tela: pode ser
+apresentado numa banca, anexado a um recurso, guardado por um ano. Por isso ele é escrito como
+**documento**, e não como a última tela de um fluxo.
+
+O que o distingue de uma página qualquer: identifica o órgão que o emitiu, diz o que atesta, diz
+sob qual versão do Edital a inscrição foi feita, e diz como conferi-lo. Sem isso é um texto verde
+com um código no meio — bonito na tela, sem valor no papel.
+
+Continua sendo página imprimível, e não PDF gerado (FR-063): o comprovante não é ato normativo.
+{% endcomment %}
+<div class="timbre" aria-hidden="true">
+  <p class="orgao">Instituto Federal do Espírito Santo</p>
+  <p class="unidade">Cefor — Centro de Referência em Formação e em Educação a Distância</p>
+</div>
+
+{% include "portal/_etapas.html" %}
+<p class="situacao aberto nao-imprime" role="status">✓ Inscrição realizada</p>
+<h1>Comprovante de inscrição</h1>
+
+<div class="protocolo">
+  <p class="linha-protocolo">
+    <span class="rotulo">Protocolo</span>
+    <strong>{{ inscricao.protocolo }}</strong>
+  </p>
+  {% comment %}
+  O código que prova que **este papel** é o que o sistema emitiu. O resumo de cada arquivo responde
+  pelos anexos; este responde pelo comprovante, que é um HTML impresso e que qualquer pessoa
+  editaria antes de imprimir.
+  {% endcomment %}
+  <p class="linha-protocolo verificacao">
+    <span class="rotulo">Código de verificação</span>
+    <strong>{{ codigo_de_verificacao }}</strong>
+  </p>
+</div>
+
+<dl class="dados">
+  <dt>Processo Seletivo</dt><dd>{{ selecao.processo_titulo }} ({{ selecao.processo_codigo }})</dd>
+  <dt>Edital</dt><dd>{{ selecao.numero }}/{{ selecao.ano }}</dd>
+  <dt>Perfil de Vaga</dt><dd>{{ perfil.nome }}</dd>
+  {% if modalidade %}<dt>Concorrência</dt><dd>{{ modalidade }}</dd>{% endif %}
+  <dt>Candidato</dt><dd>{{ inscricao.nome }}</dd>
+  <dt>CPF</dt><dd>{{ cpf_do_candidato }}</dd>
+  {% if inscricao.email %}<dt>E-mail</dt><dd>{{ inscricao.email }}</dd>{% endif %}
+  {% if inscricao.telefone %}<dt>Telefone</dt><dd>{{ inscricao.telefone }}</dd>{% endif %}
+  <dt>Enviada em</dt><dd>{{ inscricao.submitted_at|date:"d/m/Y" }} às {{ inscricao.submitted_at|date:"H\hi" }}</dd>
+  {% if versao_aceita %}
+  {% comment %}
+  A que regras esta inscrição respondeu. Uma Retificação posterior não a altera, e sem esta linha
+  o comprovante não permitiria dizer isso a ninguém (FR-058, FR-059a).
+  {% endcomment %}
+  <dt>Versão do Edital</dt>
+  <dd>vigente desde {{ versao_aceita.valid_from|date:"d/m/Y" }} às {{ versao_aceita.valid_from|date:"H\hi" }}</dd>
+  {% endif %}
+</dl>
+
+<h2>Documentos apresentados</h2>
+{% comment %}
+Nome, tamanho, horário e **resumo criptográfico** de cada arquivo (D9 da auditoria).
+
+O SHA-256 é o que transforma o comprovante de lista em prova: com ele, o candidato consegue
+demonstrar mais tarde que o arquivo que tem em mãos é exatamente o que entregou, e a comissão
+consegue afirmar que o arquivo que abriu é o que foi recebido. Sem ele, "documento2.pdf" identifica
+tanto quanto um nome de arquivo identifica — ou seja, quase nada.
+
+Já era calculado no envio e guardado com o documento; o que faltava era estar aqui.
+{% endcomment %}
+<ol class="documentos-do-comprovante">
+  {% for linha in documentos.linhas %}
+  {% if linha.enviado %}
+  <li>
+    <p class="requisito-nome"><span class="marca" aria-hidden="true">✓</span> {{ linha.nome }}</p>
+    <p class="arquivo-linha">
+      <span class="arquivo-nome">{{ linha.enviado.nome_original }}</span>
+      <span class="arquivo-meta">{{ linha.tamanho }} · recebido em
+        {{ linha.enviado.uploaded_at|date:"d/m/Y \à\s H\hi" }}</span>
+    </p>
+    <p class="resumo-do-arquivo">
+      <span class="rotulo">SHA-256</span>
+      <code>{{ linha.enviado.content_hash }}</code>
+    </p>
+  </li>
+  {% endif %}
+  {% endfor %}
+</ol>
+
+{% comment %}
+O que o documento atesta, e o que não atesta. A segunda frase é a que evita o mal-entendido mais
+caro da jornada: recebida não é deferida, e ninguém deve chegar à divulgação do resultado achando
+que o comprovante garantia alguma coisa sobre o mérito.
+{% endcomment %}
+<div class="atestado">
+  <p>Este comprovante atesta que a inscrição acima foi <strong>recebida</strong> pelo sistema na
+    data e hora indicadas, com os documentos listados.</p>
+  <p>O recebimento não implica deferimento: a conferência dos documentos e a análise dos requisitos
+    são feitas pela comissão, nos prazos do Edital.</p>
+  <p class="conferencia">Para conferir este comprovante, acesse
+    <strong>{{ request.scheme }}://{{ request.get_host }}{% url 'portal:vitrine' %}</strong>
+    e identifique-se com o mesmo CPF. O <strong>código de verificação</strong> acima é calculado
+    sobre o conteúdo deste comprovante: a comissão o compara com o do sistema para confirmar que
+    nada foi alterado no papel.</p>
+  {% comment %}
+  Como usar o resumo. É a diferença entre publicar um número e entregar uma verificação: quem tem o
+  arquivo e o comando roda a conferência sozinho, sem depender de ninguém.
+  {% endcomment %}
+  <p class="conferencia">Para verificar que um arquivo é o mesmo que foi entregue, calcule o resumo
+    SHA-256 dele e compare com o desta página — no macOS ou Linux,
+    <code>shasum -a 256 arquivo.pdf</code>; no Windows,
+    <code>certutil -hashfile arquivo.pdf SHA256</code>.</p>
+  <p class="emissao">Comprovante emitido em {{ agora|date:"d/m/Y \à\s H\hi" }}.</p>
+</div>
+
+{% comment %}
+Uma ação só (FR-063). Enquanto havia duas — baixar o arquivo e imprimir a página —, elas dividiam
+a decisão, e a segunda era pior em tudo o que importa: a impressão sai com o endereço que o
+navegador escreve na folha, com o nome de arquivo tirado do título da aba, e com bytes diferentes
+a cada vez. A página continua imprimível por quem apertar Ctrl+P; o que saiu foi o convite.
+{% endcomment %}
+<p class="nao-imprime acoes-do-comprovante">
+  <a class="principal" href="{% url 'portal:comprovante-pdf' inscricao.id %}">
+    Baixar o comprovante em PDF</a>
+</p>
+<p class="nao-imprime ajuda resumo-do-pdf">
+  <span class="rotulo">SHA-256 do arquivo</span>
+  <code>{{ resumo_do_pdf }}</code>
+  <span class="explica">O arquivo baixado deve ter exatamente este resumo. Ele é o mesmo a cada
+    download.</span>
+</p>
+<p class="nao-imprime ajuda">Guarde o número do protocolo. Este comprovante fica disponível
+  enquanto as inscrições deste Processo Seletivo estiverem sob análise.</p>
+
+<p class="nao-imprime"><a href="{% url 'portal:selecao' inscricao.edital_id %}">Voltar à seleção</a></p>
+{% endblock %}

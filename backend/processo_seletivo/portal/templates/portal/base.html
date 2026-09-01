@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block titulo %}Seleções abertas{% endblock %} — Cefor/Ifes</title>
+<style>
+{% include "shared/_tokens.css.html" %}
+/* A base do candidato é escrita para o celular primeiro, e alarga depois. É o inverso da base
+   administrativa, que nasceu para uma tela larga e não tem nenhuma consulta de mídia: quem
+   elabora um Edital está sentado; quem se inscreve, não necessariamente (FR-079). */
+*{box-sizing:border-box}
+body{margin:0;font-family:"Open Sans","Segoe UI",system-ui,sans-serif;color:var(--texto);
+  background:var(--fundo);line-height:1.6;font-size:16px}
+a{color:var(--verde-texto)}
+/* Herdado da base administrativa, e não reinventado: link de salto, foco visível e alvo do
+   salto capaz de receber o foco. Vale para os dois canais porque a exigência é a mesma. */
+.pular{position:absolute;left:-9999px;top:0;background:var(--branco);padding:.75rem 1rem;z-index:10}
+.pular:focus{left:0}
+*:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
+main:focus{outline:none}
+header.topo{background:var(--verde-escuro);color:var(--branco);padding:.85rem 1rem;
+  display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
+.quem-esta{display:flex;align-items:center;gap:.6rem;font-size:.875rem}
+.quem-esta .nome{opacity:.9;overflow-wrap:anywhere}
+.quem-esta form{margin:0}
+button.sair{background:transparent;color:var(--branco);border:1px solid rgba(255,255,255,.6);
+  border-radius:4px;padding:.3rem .7rem;font:inherit;font-size:.875rem;cursor:pointer}
+button.sair:hover{background:rgba(255,255,255,.15)}
+header.topo a{color:var(--branco);text-decoration:none}
+header.topo .marca{font-weight:600;letter-spacing:.02em;font-size:1rem}
+header.topo .marca span{font-weight:300;opacity:.85}
+main{max-width:820px;margin:0 auto;padding:1rem}
+h1{font-size:1.4rem;margin:0 0 .25rem;font-weight:600;line-height:1.3}
+h2{font-size:1.1rem;margin:1.75rem 0 .5rem;font-weight:600}
+h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
+.sub{color:var(--texto-fraco);margin:0 0 1.5rem}
+/* As etapas da inscrição (L3). Uma linha em 375px, e por isso números e não rótulos longos: o
+   rótulo da etapa atual fica visível, os demais encolhem. Estado por forma **e** cor. */
+.etapas{margin:0 0 1.25rem}
+.etapas ol{list-style:none;display:flex;gap:.5rem;margin:0;padding:0;align-items:flex-start}
+.etapas li{flex:1;display:grid;justify-items:center;gap:.2rem;text-align:center;
+  font-size:.75rem;color:var(--texto-fraco);border-top:3px solid var(--borda);padding-top:.4rem}
+.etapas .numero{display:grid;place-items:center;width:1.6rem;height:1.6rem;border-radius:50%;
+  background:var(--cinza-fundo);color:var(--texto-fraco);font-weight:700;font-size:.8125rem}
+.etapas li.concluida{border-top-color:var(--sucesso);color:var(--sucesso)}
+.etapas li.concluida .numero{background:var(--sucesso);color:var(--branco)}
+.etapas li.atual{border-top-color:var(--verde);color:var(--texto);font-weight:600}
+.etapas li.atual .numero{background:var(--verde);color:var(--branco)}
+.etapas .posicao{font-weight:400;color:var(--texto-fraco)}
+/* Sem `width` fixa e sem tabela em nenhum ponto: é o que sustenta 375px sem rolagem
+   horizontal. Números longos e códigos ganham quebra explícita mais abaixo. */
+.selecoes{list-style:none;margin:0;padding:0;display:grid;gap:1rem}
+.selecao{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem;display:grid;gap:.35rem}
+.selecao{position:relative}
+.selecao a.titulo{font-weight:600;font-size:1.05rem;text-decoration:none;line-height:1.35}
+.selecao a.titulo:hover{text-decoration:underline}
+/* O cartão da vitrine passou a carregar o que decide clicar: vaga, quantidade, prazo e urgência.
+   Cada linha tem peso próprio — o título domina, a chamada explica, a meta some no cinza. */
+.secao-vitrine{margin:1.75rem 0 .75rem;font-size:1rem;color:var(--texto-fraco);
+  text-transform:uppercase;letter-spacing:.05em}
+.selecao .chamada{margin:0;font-size:.9375rem;line-height:1.4}
+.selecao .vagas{margin:.35rem 0 0;font-size:.9375rem;display:grid;gap:.1rem}
+.selecao .vagas .rotulo{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--texto-fraco)}
+.selecao .vagas .quantas{color:var(--texto-fraco)}
+/* Urgência é informação, não enfeite: uma data sozinha não diz se dá tempo. */
+.situacao .prazo{display:inline-block;margin-left:.35rem;padding:.05rem .45rem;border-radius:999px;
+  background:var(--verde-claro);color:var(--verde-escuro);font-size:.8125rem}
+.situacao .prazo.urgente{background:var(--amarelo-fundo);color:var(--amarelo)}
+/* Parece botão e não é: o alvo continua sendo o link do título, estendido a todo o cartão. Um
+   segundo elemento clicável aqui daria dois destinos ao teclado para uma decisão só. */
+.convite-da-vitrine{margin:.6rem 0 0}
+.acao-aparente{display:inline-block;padding:.5rem .9rem;border-radius:4px;background:var(--verde);
+  color:var(--branco);font-weight:600;font-size:.9375rem}
+.selecao:hover .acao-aparente{background:var(--verde-escuro)}
+/* O cartão inteiro é alvo do toque (L8): num celular, mirar duas palavras de título é o tipo de
+   precisão que faz errar. O link continua sendo um só — o pseudo-elemento estende a área dele, e
+   por isso o teclado e o leitor de tela continuam vendo exatamente um destino. */
+.selecao a.titulo::after{content:"";position:absolute;inset:0}
+.selecao:hover{border-color:var(--verde-texto)}
+.selecao:focus-within{outline:3px solid var(--verde);outline-offset:2px}
+.selecao .meta{color:var(--texto-fraco);font-size:.9375rem;overflow-wrap:anywhere}
+.perfis{list-style:none;margin:0;padding:0;display:grid;gap:.75rem}
+.perfil{background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:1rem}
+.perfil dl{margin:.5rem 0 0;display:grid;grid-template-columns:1fr;gap:.25rem .75rem;
+  font-size:.9375rem}
+.perfil dt{color:var(--texto-fraco)}
+.perfil dd{margin:0}
+.requisitos{margin:.5rem 0 0;padding-left:1.25rem}
+.documento{display:inline-block;margin-top:.5rem;padding:.6rem 1rem;border-radius:4px;
+  background:var(--verde);color:var(--branco);text-decoration:none;font-weight:600}
+.documento:hover{background:var(--verde-escuro)}
+/* Ler o Edital é ação secundária, e precisa parecer uma. Enquanto usava o mesmo verde sólido dos
+   botões de inscrição, era o único botão preenchido na primeira dobra em 375px — a página
+   anunciava "baixe um PDF" onde queria anunciar "inscreva-se" (SC-UX-008). */
+.documento.secundaria{background:var(--branco);color:var(--verde-texto);
+  border:1px solid var(--verde-texto);font-weight:600}
+.documento.secundaria:hover{background:var(--verde-claro)}
+.vazio{background:var(--branco);border:1px dashed var(--borda);border-radius:6px;padding:1.5rem;
+  color:var(--texto-fraco)}
+/* A situação é a informação que decide se vale continuar lendo, e por isso tem peso próprio.
+   Cor **e** palavra: quem não distingue as cores lê a mesma coisa (WCAG 1.4.1). */
+.situacao{margin:.5rem 0;font-weight:600}
+.situacao.aberto{color:var(--sucesso)}
+.situacao.futuro{color:var(--amarelo)}
+.situacao.encerrado{color:var(--texto-fraco);font-weight:400}
+.aviso{background:var(--amarelo-fundo);border-left:4px solid var(--amarelo);padding:.75rem 1rem;
+  margin-bottom:1.5rem;border-radius:0 4px 4px 0}
+.erro{background:var(--vermelho-fundo);border-left:4px solid var(--vermelho);padding:.75rem 1rem;
+  margin-bottom:1rem;border-radius:0 4px 4px 0}
+/* Recebe o foco por script depois de uma recusa, e por isso precisa de contorno próprio: sem ele
+   o foco existiria sem aparecer, que é pior do que não movê-lo. */
+.erro:focus{outline:3px solid var(--vermelho);outline-offset:2px}
+.erro ul{margin:.35rem 0 0;padding-left:1.25rem}
+.erro a{color:var(--vermelho)}
+.recusa{display:block;color:var(--vermelho);font-size:.9375rem;margin-top:.25rem}
+/* Instrução e formulário de substituição ficam recolhidos: presentes para quem precisa, fora do
+   caminho de quem não precisa (L5 e L6). `summary` é alvo de toque, e por isso tem altura. */
+details.como-converter, details.envio-de-novo{margin-top:.5rem}
+details.como-converter summary, details.envio-de-novo summary{cursor:pointer;padding:.4rem 0;
+  font-weight:600;color:var(--verde-texto);font-size:.9375rem}
+details.como-converter ul{margin:.35rem 0 .5rem;padding-left:1.25rem;font-size:.9375rem;
+  color:var(--texto-fraco)}
+details.como-converter li{margin-bottom:.4rem}
+.obrigatorio{color:var(--vermelho);margin-left:.15rem}
+/* A marca é redundante com a cor da borda, de propósito: quem não distingue as duas lê o mesmo
+   estado no símbolo e no texto da contagem (WCAG 1.4.1). As regras destes elementos estão mais
+   abaixo, junto do redesenho da tela da inscrição. */
+.envio{display:grid;gap:.6rem;margin-top:.75rem}
+.envio .acao.perigo{border-color:var(--vermelho);color:var(--vermelho);background:var(--branco)}
+.envio .acao.perigo:hover{background:var(--vermelho-fundo)}
+.envio .acao[disabled]{opacity:.6;cursor:progress}
+.envio .linha{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.rotulo-arquivo{display:block;font-weight:600;width:100%}
+/* O resumo dos documentos junto ao cabeçalho (SC-UX-003). Discreto: informa estado, não
+   compete com a ação principal. A marca ✓/○ acompanha a cor porque cor sozinha não distingue
+   estado para quem não a enxerga (SC-UX-005). */
+.resumo-documentos{display:flex;align-items:baseline;gap:.4rem;flex-wrap:wrap;
+  margin:.75rem 0 0;padding:.6rem .75rem;border-radius:4px;font-size:.9375rem;
+  background:var(--branco);border:1px solid var(--borda);border-left:4px solid var(--borda)}
+.resumo-documentos.completo{background:var(--sucesso-fundo);border-color:var(--sucesso);
+  border-left-color:var(--sucesso);color:var(--sucesso)}
+.resumo-documentos .marca{font-weight:700}
+.progresso{display:flex;align-items:center;gap:.5rem;width:100%;margin:.5rem 0 0}
+/* `display` de classe vence o `[hidden]` da folha do navegador, e sem esta linha o aviso de
+   não fechar a página fica visível em repouso, sob cada requisito — o oposto do que FR-048
+   pede: em vez de tranquilizar durante o envio, alarma quem ainda nem escolheu o arquivo. */
+.progresso[hidden]{display:none}
+.progresso progress{width:100%;max-width:16rem}
+.campo{display:grid;gap:.35rem;margin:0 0 1rem;max-width:32rem}
+.campo label{font-weight:600}
+.campo input,.campo select{width:100%;padding:.6rem;border:1px solid var(--borda);border-radius:4px;
+  font-size:1rem;font-family:inherit;background:var(--branco)}
+/* Um telefone não precisa de trinta e dois rem: campo com a largura do que se escreve nele diz,
+   sozinho, quanto se espera — e um campo largo demais parece formulário mal montado. */
+.campo.curto{max-width:15rem}
+.ajuda{color:var(--texto-fraco);font-size:.9375rem;margin:.25rem 0 1rem}
+.dados{display:grid;grid-template-columns:1fr;gap:.15rem .75rem;margin:0 0 1rem}
+.dados dt{color:var(--texto-fraco)}
+.dados dd{margin:0 0 .5rem;overflow-wrap:anywhere}
+
+/* --------------------------------------------------------------------------------------------
+   A tela da inscrição, redesenhada.
+
+   O que havia era texto corrido: títulos soltos, pares de rótulo e valor sem contenção, e o campo
+   de arquivo do navegador no meio — "Procurar… Nenhum arquivo selecionado", com o estilo do
+   sistema operacional, ao lado de um botão com o estilo da página. Nada agrupava nada, e a página
+   parecia um rascunho.
+
+   Cada seção passa a ser um painel: fundo próprio, borda, título com a mesma linha de base. Não é
+   decoração — é o que permite ler a tela por varredura, que é como se lê um formulário longo no
+   celular.
+   -------------------------------------------------------------------------------------------- */
+.painel{background:var(--branco);border:1px solid var(--borda);border-radius:8px;
+  padding:1rem;margin:0 0 1rem}
+.painel>h2{margin:0 0 .75rem;font-size:1.05rem;padding-bottom:.6rem;
+  border-bottom:1px solid var(--borda)}
+.painel>.ajuda:last-child{margin-bottom:0}
+.painel .campo:last-child{margin-bottom:0}
+
+/* Rótulo pequeno em cima do valor: o olho encontra o valor sem atravessar o rótulo, e em 375px
+   nada precisa de duas colunas para caber. */
+.identificacao{display:grid;gap:.75rem;margin:0 0 .75rem}
+.identificacao>div{display:grid;gap:.1rem}
+.identificacao dt,.identificacao .rotulo{font-size:.8125rem;color:var(--texto-fraco);
+  text-transform:uppercase;letter-spacing:.03em}
+.identificacao dd,.identificacao .valor{margin:0;font-weight:600;overflow-wrap:anywhere}
+@media (min-width:520px){
+  .identificacao{grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1.25rem}
+}
+
+/* O progresso dos documentos como barra, e não como segunda frase: o resumo do cabeçalho já diz
+   quantos faltam em palavras, e repetir a mesma frase aqui era ruído. A barra diz o mesmo de
+   relance, e o texto ao lado mantém o número para quem lê com leitor de tela. */
+.progresso-documentos{display:grid;gap:.35rem;margin:0 0 1rem}
+.progresso-documentos .trilha{height:.5rem;border-radius:999px;background:var(--cinza-fundo);
+  overflow:hidden}
+.progresso-documentos .feito{height:100%;background:var(--verde);border-radius:999px;
+  transition:width .2s ease}
+.progresso-documentos .contagem{font-weight:600;margin:0;font-size:.9375rem}
+.progresso-documentos.completo .feito{background:var(--sucesso)}
+
+/* Cada requisito é um cartão com estado legível por forma, cor e palavra (SC-UX-005). */
+.requisitos-lista{list-style:none;margin:0;padding:0;display:grid;gap:.75rem}
+.requisito{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:.85rem 1rem}
+.requisito .nome{display:flex;align-items:baseline;gap:.5rem;margin:0 0 .2rem;font-weight:600}
+.requisito .marca{display:inline-grid;place-items:center;flex:0 0 1.35rem;height:1.35rem;
+  border-radius:50%;border:2px solid var(--borda);color:var(--texto-fraco);
+  font-size:.8125rem;line-height:1}
+.requisito.completo{border-color:var(--sucesso);border-left:4px solid var(--sucesso)}
+.requisito.completo .marca{background:var(--sucesso);border-color:var(--sucesso);
+  color:var(--branco)}
+.requisito .instrucao{color:var(--texto-fraco);font-size:.9375rem;margin:0 0 .5rem}
+.requisito .arquivo{display:flex;align-items:baseline;gap:.4rem;flex-wrap:wrap;
+  margin:.5rem 0 0;padding:.5rem .65rem;border-radius:4px;background:var(--sucesso-fundo);
+  overflow-wrap:anywhere}
+.requisito .arquivo .quando{color:var(--texto-fraco);font-size:.875rem}
+
+/* O campo de arquivo do navegador é o elemento mais feio de qualquer formulário: texto do sistema
+   operacional, altura própria, e "Nenhum arquivo selecionado" em cinza no meio da página. Aqui o
+   `input` continua existindo e continua sendo o que envia — ele é só tirado de vista, mantendo
+   foco e rótulo —, e o `label` assume a aparência de botão. Sem JavaScript o nome do arquivo
+   escolhido não aparece, e é por isso que o texto padrão diz o que fazer em vez de descrever
+   estado. */
+.escolher{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}
+.escolher input[type=file]{position:absolute;width:0;height:0;padding:0;margin:0;opacity:0;
+  border:0}
+.escolher .botao-arquivo{display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;
+  padding:.55rem .9rem;border:1px solid var(--verde-texto);border-radius:4px;
+  color:var(--verde-texto);background:var(--branco);font-weight:600;font-size:.9375rem}
+.escolher .botao-arquivo:hover{background:var(--verde-claro)}
+.escolher input[type=file]:focus-visible+.botao-arquivo{outline:3px solid var(--verde);
+  outline-offset:2px}
+.escolher .nome-do-arquivo{color:var(--texto-fraco);font-size:.9375rem;overflow-wrap:anywhere;
+  flex:1 1 8rem;min-width:0}
+.escolher .nome-do-arquivo.escolhido{color:var(--texto);font-weight:600}
+/* `Enviar` nasce secundário: quem manda na tela é o botão que leva à revisão, e dois botões
+   sólidos em verde disputariam a mesma decisão (SC-UX-008). Escolhido o arquivo, ele vira sólido —
+   aí a ação seguinte é mesmo enviar, e o botão diz isso. */
+.envio .acao{padding:.55rem 1rem;border-radius:4px;border:1px solid var(--verde-texto);
+  background:var(--branco);color:var(--verde-texto);font:inherit;font-size:.9375rem;
+  font-weight:600;cursor:pointer}
+.envio .acao:hover{background:var(--verde-claro)}
+.envio .acao.pronta{background:var(--verde);border-color:var(--verde);color:var(--branco)}
+.envio .acao.pronta:hover{background:var(--verde-escuro)}
+.envio .limite{display:block;color:var(--texto-fraco);font-size:.875rem;margin-top:.4rem}
+
+/* Uma ação só no comprovante: baixar o arquivo. Enquanto existiam duas, elas dividiam a decisão —
+   e o PDF é melhor do que a impressão da página em tudo o que importa aqui (nome próprio, folha
+   limpa, bytes verificáveis). A página continua imprimível pelo navegador para quem apertar
+   Ctrl+P; o que saiu foi o convite a fazê-lo. */
+.acoes-do-comprovante{margin:1.25rem 0 .5rem}
+/* O resumo do próprio arquivo: só existe porque o PDF é determinístico. */
+.resumo-do-pdf{display:grid;gap:.15rem;margin:0 0 1rem}
+.resumo-do-pdf .rotulo{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}
+.resumo-do-pdf code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8125rem;
+  word-break:break-all;color:var(--texto)}
+
+/* A ação principal ganha ar em volta e diz o que falta antes de ser acionada. */
+.barra-de-acao{margin:1.5rem 0 0;display:grid;gap:.5rem;justify-items:start}
+.barra-de-acao .ajuda{margin:0}
+/* `.principal` e não `button.principal`: o comprovante oferece a ação como link — é um arquivo a
+   buscar, não um formulário a submeter —, e o seletor por elemento deixava o link sem estilo
+   nenhum, parecendo texto no meio da página. */
+.principal{padding:.75rem 1.25rem;border:0;border-radius:4px;background:var(--verde);
+  color:var(--branco);font-weight:600;font-size:1rem;font-family:inherit;cursor:pointer;
+  width:100%;max-width:32rem}
+.principal:hover{background:var(--verde-escuro)}
+a.principal{display:inline-block;width:auto;text-align:center;text-decoration:none}
+form.convite{margin:.75rem 0 0}
+/* O comprovante é impresso: fora o conteúdo, nada mais precisa ir para o papel. */
+/* O timbre existe **só** no papel: na tela o cabeçalho verde já diz de quem é o sistema, e
+   repetir o nome do órgão seria ocupar a primeira dobra com o que a pessoa já sabe. Impresso,
+   ele é o que separa um comprovante institucional de uma captura de tela. */
+.timbre{display:none}
+.protocolo{margin:.25rem 0 1.5rem;padding:.75rem 1rem;border:1px solid var(--borda);
+  border-left:4px solid var(--verde);border-radius:4px;background:var(--branco);
+  display:grid;gap:.6rem}
+@media (min-width:520px){.protocolo{grid-template-columns:1fr auto;align-items:end}}
+.linha-protocolo{margin:0}
+.protocolo .rotulo{display:block;font-size:.8125rem;color:var(--texto-fraco);
+  text-transform:uppercase;letter-spacing:.04em}
+.protocolo strong{font-size:1.35rem;letter-spacing:.02em;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+/* O código de verificação acompanha o protocolo, e não o rodapé: são as duas coisas que alguém
+   compara ao receber o papel, e separá-las obrigaria a procurar a segunda. */
+.verificacao strong{font-size:1rem;color:var(--verde-escuro)}
+.atestado{margin:1.5rem 0;padding-top:1rem;border-top:1px solid var(--borda);
+  font-size:.9375rem;color:var(--texto-fraco)}
+.atestado p{margin:0 0 .5rem}
+.atestado .conferencia{overflow-wrap:anywhere}
+.atestado code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.875em;
+  background:var(--cinza-fundo);padding:.05rem .3rem;border-radius:3px}
+.atestado .emissao{margin-top:.75rem;font-size:.875rem}
+
+/* Os documentos do comprovante: lista numerada e densa, e não os cartões da tela de envio. Aqui
+   não há ação nenhuma a oferecer — o que importa é caber, e caber junto, para que a conferência
+   aconteça sem virar a página. */
+.documentos-do-comprovante{list-style:none;margin:0 0 1rem;padding:0;display:grid;gap:.75rem}
+.documentos-do-comprovante>li{border:1px solid var(--borda);border-left:3px solid var(--sucesso);
+  border-radius:4px;padding:.6rem .8rem}
+.documentos-do-comprovante .requisito-nome{margin:0;font-weight:600}
+.documentos-do-comprovante .marca{color:var(--sucesso);margin-right:.3rem}
+.arquivo-linha{margin:.15rem 0 .3rem;display:flex;flex-wrap:wrap;gap:.15rem .5rem;
+  align-items:baseline;overflow-wrap:anywhere}
+.arquivo-linha .arquivo-nome{font-weight:600}
+.arquivo-linha .arquivo-meta{color:var(--texto-fraco);font-size:.875rem}
+/* O resumo é longo por natureza: 64 caracteres que precisam ser lidos um a um quando alguém
+   confere. Monoespaçada e quebra em qualquer ponto — cortá-lo tornaria a conferência impossível,
+   que é o oposto do que ele existe para permitir. */
+.resumo-do-arquivo{margin:0;display:flex;flex-wrap:wrap;gap:.35rem;align-items:baseline;
+  font-size:.8125rem;color:var(--texto-fraco)}
+.resumo-do-arquivo .rotulo{text-transform:uppercase;letter-spacing:.04em;font-size:.6875rem;
+  flex:0 0 auto}
+.resumo-do-arquivo code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  overflow-wrap:anywhere;word-break:break-all;line-height:1.4}
+/* O comprovante em uma página.
+
+   Duas páginas fazem um documento de uma dobra virar dois papéis que se separam — e o que ficava
+   na segunda era justamente o que diz o que ele atesta. Aqui o papel é tratado como o meio que é:
+   corpo menor, entrelinha menor, dados em duas colunas, e nada de sombra ou raio de canto, que
+   custam tinta e não dizem nada impressos.
+
+   O cabeçalho e o rodapé com a URL são do **navegador**, não desta página, e nenhuma regra de CSS
+   os remove — quem imprime os desliga em Imprimir → Cabeçalhos e rodapés. É por isso que o
+   documento carrega o próprio timbre e a própria data de emissão: para não depender deles. */
+@media print{
+  /* Navegação, ações e etapas não são o documento: no papel, um "Etapa 3 de 3" faz o comprovante
+     parecer a captura de uma tela pela metade. */
+  header.topo, .nao-imprime, .pular, .etapas{display:none}
+  @page{margin:12mm 14mm}
+  html,body{font-size:10.5pt;line-height:1.35;background:#fff}
+  main{max-width:none;padding:0}
+  a{text-decoration:none;color:var(--texto)}
+  h1{font-size:14pt;margin:0 0 .5rem}
+  h2{font-size:11pt;margin:.9rem 0 .35rem}
+  .timbre{display:block;border-bottom:2px solid var(--texto);padding-bottom:.35rem;
+    margin-bottom:.75rem}
+  .timbre .orgao{margin:0;font-weight:700;font-size:11pt}
+  .timbre .unidade{margin:.05rem 0 0;font-size:9pt}
+  .protocolo{background:none;border:1px solid #000;border-left:4px solid #000;border-radius:0;
+    margin:0 0 .75rem;padding:.4rem .6rem}
+  .protocolo .rotulo{font-size:7.5pt}
+  .protocolo strong{font-size:13pt}
+  .verificacao strong{font-size:10pt}
+  /* Duas colunas de rótulo e valor: o que ocupava dez linhas ocupa cinco, e nenhuma delas fica
+     larga demais para ser lida. */
+  .dados{grid-template-columns:auto 1fr auto 1fr;gap:.2rem .6rem;margin:0 0 .5rem}
+  .dados dt{font-size:9pt}
+  .dados dd{margin:0;font-size:9.5pt}
+  .documentos-do-comprovante{gap:.4rem;margin-bottom:.6rem}
+  .documentos-do-comprovante>li{padding:.35rem .55rem;border-radius:0;
+    break-inside:avoid;page-break-inside:avoid}
+  .documentos-do-comprovante .requisito-nome{font-size:9.5pt}
+  .arquivo-linha{margin:.05rem 0 .15rem}
+  .arquivo-linha .arquivo-meta{font-size:8.5pt}
+  .resumo-do-arquivo{font-size:7.5pt}
+  .resumo-do-arquivo .rotulo{font-size:6.5pt}
+  .atestado{color:var(--texto);margin:.6rem 0 0;padding-top:.5rem;font-size:8.5pt}
+  .atestado p{margin:0 0 .25rem}
+  .atestado code{background:none;padding:0}
+  .requisito{break-inside:avoid;page-break-inside:avoid}
+}
+@media (min-width:600px){
+  main{padding:1.5rem}
+  h1{font-size:1.6rem}
+  .perfil dl{grid-template-columns:auto 1fr}
+  .dados{grid-template-columns:auto 1fr}
+  button.principal{width:auto}
+}
+</style>
+</head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+<header class="topo">
+  <span class="marca"><a href="{% url 'portal:vitrine' %}">Cefor<span>/Ifes</span> · Seleções</a></span>
+  {% comment %}
+  A identidade aqui é a **do candidato**, de chave de sessão própria — nunca o `ator` da interface
+  administrativa, que é outro eixo (FR-020, FR-021).
+
+  E ela aparece por uma razão prática: sem `Sair`, quem se identificasse num computador
+  compartilhado — laboratório, lan house, biblioteca — ficava identificado, e a pessoa seguinte
+  começava a inscrição dela com o CPF de quem estava antes.
+  {% endcomment %}
+  {% if candidato %}
+  <span class="quem-esta">
+    <span class="nome">{{ candidato.nome }}</span>
+    <form method="post" action="{% url 'portal:sair' %}">
+      {% csrf_token %}
+      <button type="submit" class="sair">Sair</button>
+    </form>
+  </span>
+  {% endif %}
+</header>
+<main id="conteudo" tabindex="-1">
+{% block conteudo %}{% endblock %}
+</main>
+</body>
+</html>
