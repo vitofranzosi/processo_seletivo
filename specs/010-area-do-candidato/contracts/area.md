@@ -93,13 +93,27 @@ Passa a alimentar a Inscrição. Os rascunhos abertos acompanham; as enviadas n�
 | É a última credencial | recusa (`FR-018`) |
 | É a principal, havendo outras | exige que outra assuma antes (`FR-018`) |
 
-## `POST /conta/dados` — corrigir nome e CPF
+## `GET|POST /meus-dados` — o núcleo mínimo, pedido uma vez
+
+Esta é a rota que a implementação deu à correção de nome e CPF. Ela vive fora da jornada de
+inscrição de propósito: a `009` não é reaberta, e o que mudou foi de onde vêm os dados que ela
+consome, não a jornada que os usa.
 
 | Situação | Resposta |
 |---|---|
-| Nome | aceito a qualquer momento; rascunhos acompanham, enviadas não mudam (`FR-008`, `FR-014`) |
-| CPF, sem nenhuma inscrição enviada | aceito, validada a formação (`FR-006`, `FR-008`) |
-| CPF, havendo inscrição enviada | recusado — congelou, e corrigir passou a ser ato institucional (`FR-008`) |
+| Sem sessão | `302` para `/acesso` |
+| `GET` | `200`, com o que a identidade já sabe; sem `no-store` seria dado pessoal no cache de um computador compartilhado |
+| `POST` com nome | aceito a qualquer momento; rascunhos acompanham, enviadas não mudam (`FR-008`, `FR-014`) |
+| `POST` com CPF, sem nenhuma inscrição enviada | aceito, validada a formação (`FR-006`) |
+| `POST` com CPF, havendo inscrição enviada | ignorado — congelou, e corrigi-lo passou a ser ato institucional |
+| Nome ou CPF malformado | `200`, com a recusa junto do campo e o que foi digitado preservado |
+
+Quem chega aqui a caminho de uma vaga volta para ela ao terminar; quem chega pela conta volta para a
+lista.
+
+> **A rota `/conta/dados` prevista no desenho não existe**: a correção acontece em `/meus-dados`,
+> acima, que é a mesma tela onde o núcleo é pedido pela primeira vez. Duas rotas para o mesmo
+> formulário seriam duas telas a manter dizendo a mesma coisa.
 
 ---
 

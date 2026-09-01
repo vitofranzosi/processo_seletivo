@@ -364,6 +364,12 @@ remover o antigo e corrigir o nome.
   constantes da aplicação, não configuração de usuário. NÃO DEVE existir teto global de envio: um
   teto global converte abuso distribuído em indisponibilidade para todos os candidatos, no dia em que
   ela mais custa.
+- **FR-030a**: A implantação DEVE **declarar** se há proxy à frente da aplicação, e a inicialização
+  em produção DEVE ser recusada enquanto isso não for declarado. Não existe padrão seguro: confiar
+  no cabeçalho de proxy sem proxy torna o limite por origem contornável com um valor forjado a cada
+  requisição; não confiar havendo proxy faz todas as origens colapsarem numa só, e o teto por origem
+  passa a valer para a instituição inteira — recusando candidato legítimo em bloco no último dia do
+  prazo. Qual dos dois acontece depende da topologia, que só quem implanta conhece.
 - **FR-031**: Esgotado o limite, o desafio DEVE morrer, e a mensagem NÃO PODE distinguir código
   errado de endereço inexistente.
 - **FR-032**: Desafios e contadores DEVEM ser guardados de forma compartilhada entre os processos que
@@ -602,6 +608,8 @@ remover o antigo e corrigir o nome.
   estado em que a identidade tenha sido descartada e alguma credencial tenha ficado para trás.
 - **SC-017**: Em produção, a aplicação recusa iniciar com mecanismo de envio conhecido por não
   entregar, ou sem remetente definido; e continua recusando a identificação por declaração.
+- **SC-017a**: Em produção, a aplicação recusa iniciar enquanto a topologia de proxy não for
+  declarada — nem `true`, nem `false`, nem valor que não seja um dos dois.
 
 ### Medidas de valor para o candidato
 

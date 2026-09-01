@@ -28,6 +28,8 @@ AMBIENTE_MINIMO = {
     # o ambiente mínimo é o que **deve** subir; os que não entregam são exercidos abaixo.
     "DJANGO_EMAIL_BACKEND": "django.core.mail.backends.smtp.EmailBackend",
     "DEFAULT_FROM_EMAIL": "nao-responda@cefor.ifes.edu.br",
+    # A topologia precisa ser declarada: nenhum padrão serve para as duas (ver `production.py`).
+    "PORTAL_ATRAS_DE_PROXY": "true",
 }
 RAIZ_DO_CODIGO = pathlib.Path(__file__).resolve().parents[1]
 ADAPTADOR_PROVISORIO = (
@@ -125,6 +127,10 @@ def test_ambiente_completo_carrega_com_transporte_seguro():
         ),
         ({"DEFAULT_FROM_EMAIL": None}, "DEFAULT_FROM_EMAIL"),
         ({"DEFAULT_FROM_EMAIL": "   "}, "DEFAULT_FROM_EMAIL"),
+        # Não declarar é o caso perigoso, e é o padrão de quem não sabe que precisa declarar.
+        ({"PORTAL_ATRAS_DE_PROXY": None}, "PORTAL_ATRAS_DE_PROXY"),
+        ({"PORTAL_ATRAS_DE_PROXY": "sim"}, "PORTAL_ATRAS_DE_PROXY"),
+        ({"PORTAL_ATRAS_DE_PROXY": ""}, "PORTAL_ATRAS_DE_PROXY"),
     ],
 )
 def test_configuracao_insegura_impede_a_inicializacao(alteracoes, variavel):

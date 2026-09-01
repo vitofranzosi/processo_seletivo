@@ -53,6 +53,12 @@ importa é ver a mensagem chegar.
 Note o que **não** está aí: `PORTAL_IDENTIDADE_DEMO`. A partir desta feature a identificação por
 declaração não existe, e a variável permanece apenas como armadilha na recusa de produção (D-011).
 
+Também não está aí `PORTAL_ATRAS_DE_PROXY`: em desenvolvimento ela é `false` por omissão, que é o
+correto para o `runserver`, ligado direto ao navegador. Só ligue-a se puser um proxy à frente — e,
+aqui, isso não acontece. Em produção, porém, ela é **obrigatória** e não tem valor por omissão: a
+aplicação recusa subir sem saber a própria topologia, porque adivinhar significa ou confiar num
+cabeçalho forjável, ou contar todo o tráfego como vindo de uma única origem (`FR-030a`, D-018).
+
 ---
 
 ## Preparação dos dados
@@ -207,8 +213,13 @@ E a verificação que só a produção responde:
 cd backend && DJANGO_SETTINGS_MODULE=config.settings.production DJANGO_EMAIL_BACKEND=console uv run python manage.py check
 ```
 
-**Deve-se ver** a recusa de inicialização nomeando a variável a corrigir (`SC-017`). Com
-`django.core.mail.backends.smtp.EmailBackend`, ela sobe.
+**Deve-se ver** a recusa de inicialização nomeando a variável a corrigir (`SC-017`) — uma por vez,
+na ordem em que as barreiras aparecem em `production.py`, de `DJANGO_SECRET_KEY` em diante. Três
+delas são desta feature: o mecanismo que não entrega, `DEFAULT_FROM_EMAIL` ausente e
+`PORTAL_ATRAS_DE_PROXY` não declarada (`SC-017a`) — esta última exige literalmente `true` ou `false`,
+e nem a ausência nem um `sim` bastam. Com o ambiente completo, a verificação passa; é
+`tests/test_configuracao_producao.py` que percorre todas elas, e `AMBIENTE_MINIMO`, lá, é a lista do
+que produção exige.
 
 ---
 

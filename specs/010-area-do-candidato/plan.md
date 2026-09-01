@@ -178,6 +178,35 @@ telas e passa a ler a identidade de um registro em vez de uma declaração. As a
 `inscricoes` são deliberadamente duas, ambas pequenas: o bloqueio na abertura de rascunho e a marca
 de coincidência na consulta administrativa. Nada da jornada de inscrição é reimplementado.
 
+**Seis correções à árvore acima, feitas depois da implementação**, pela mesma prática da `009`:
+o plano registra o que se pensou, e a nota registra o que se construiu.
+
+1. **`identidade/application/mensagem.py`**, não previsto. A composição do e-mail que leva o código
+   saiu de `desafio.py` assim que a segunda finalidade apareceu: solicitar um desafio e redigir a
+   mensagem que o anuncia são duas responsabilidades, e só a primeira é regra de domínio. A separação
+   é o que permite testar o limite de envio sem inspecionar texto, e o texto sem tocar no limite.
+2. **Duas migrações a mais**: `0003_retomar` acrescenta a finalidade `retomar` e o campo
+   `reconciliacao_alvo`, ambos nascidos da retomada (`FR-055` a `FR-057`), que o plano tratava como
+   caso da reconciliação e mostrou-se ato distinto; `0004_alvo_sobrevive` troca a cascata do alvo por
+   `SET_NULL` (D-020). Migrações separadas, e não uma reescrita da `0001`: a `0002` já é migração de
+   dados que pode interromper implantação, e reescrever uma migração publicada é o que a `FR-040`
+   proíbe na prática.
+3. **`credenciais.html` chama-se `conta.html`.** O nome da tela é o que o candidato lê no menu —
+   "Minha conta" — e não o nome da tabela que ela mostra.
+4. **`meus_dados.html`**, não previsto: o núcleo mínimo (nome e CPF) ganhou tela própria porque é
+   pedido **antes** da primeira inscrição, e não dentro da conta. Documentada em
+   [contracts/area.md](./contracts/area.md).
+5. **`retomar_convite.html`**, não previsto: a retomada precisa de convite recusável próprio, pelo
+   mesmo motivo do `acesso_reconciliar.html` — ninguém move credencial de alguém sem que a pessoa veja
+   o que vai acontecer e possa dizer não.
+6. **`inscricao_enviada.html` e `_documentos_submetidos.html`**, não previstos: o acompanhamento da
+   `US5` mostra a inscrição enviada em leitura, com seus documentos, e a tela de rascunho não servia —
+   ela oferece ações que uma inscrição enviada não aceita. Some-se `acompanhamento.html`, a lista de
+   fatos e prazos da mesma fatia.
+
+Nada disso muda a decisão de estrutura: o domínio continua em `identidade`, o canal em `portal`, e
+`inscricoes` recebeu exatamente as duas alterações previstas.
+
 ## Complexity Tracking
 
 > Sem violações a justificar. Nenhuma dependência nova, nenhum serviço novo, nenhuma abstração

@@ -150,6 +150,26 @@ _exigir(
     "fica sem caminho para entrar.",
 )
 
+# Há proxy à frente? (FR-030 da 010) A pergunta precisa ser **respondida**, e não assumida.
+#
+# O limite por origem existe para conter quem varre endereços. Atrás de um proxy, `REMOTE_ADDR` é
+# o mesmo para todo mundo — e sem declarar isso, o teto de trinta pedidos por hora deixa de valer
+# por origem e passa a valer para a instituição inteira. No último dia do prazo, isso recusa
+# candidato legítimo em bloco, com a mesma mensagem neutra de sempre, e ninguém entende por quê.
+#
+# Não há padrão seguro para adivinhar: confiar no cabeçalho sem proxy torna o limite contornável
+# com um valor aleatório por requisição; não confiar com proxy transforma o limite em teto global.
+# Quem implanta sabe qual é a topologia, e é essa a única resposta que serve.
+_atras_de_proxy = os.getenv("PORTAL_ATRAS_DE_PROXY", "").strip().lower()
+_exigir(
+    _atras_de_proxy in {"true", "false"},
+    "PORTAL_ATRAS_DE_PROXY",
+    "declare 'true' quando houver proxy ou balanceador à frente da aplicação, e 'false' quando ela "
+    "receber a conexão diretamente. Sem a declaração, o limite de solicitações por origem ou é "
+    "contornável por cabeçalho forjado, ou recusa candidatos legítimos em bloco — e qual dos dois "
+    "depende da topologia, que só quem implanta conhece.",
+)
+
 # A autenticação institucional é incremento próprio; até lá, produção não sobe.
 API_AUTHENTICATION_CLASSES = [
     v.strip() for v in os.getenv("API_AUTHENTICATION_CLASSES", "").split(",") if v.strip()

@@ -345,3 +345,69 @@ existe no texto é pior que garantia nenhuma, porque ninguém a verifica.
   dependente de um objeto de banco que nada mais usa.
 - *Deixar a restrição só com "não vazio"*: aceitaria `"1"` numa inscrição enviada, e a `FR-063` existe
   justamente para que a coluna seja utilizável pela reconciliação e pela marcação de coincidência.
+
+
+---
+
+# Decisões tomadas em revisão
+
+As quinze acima antecederam a implementação. As cinco abaixo nasceram das revisões de código, e
+estão aqui pelo mesmo motivo que as outras: comportamento acidental não pode virar regra sem
+decisão documentada (Princípio V). Cada uma corrigiu algo que a suíte não pegava.
+
+## D-018 — A topologia de proxy é declarada, não adivinhada
+
+**Decisão**: `PORTAL_ATRAS_DE_PROXY` decide se `X-Forwarded-For` é lido, e `production.py` recusa
+iniciar enquanto ela não for declarada como `true` ou `false`.
+
+**Racional**: a primeira versão lia o cabeçalho sempre, e ele é escrito pelo cliente — trocá-lo a
+cada requisição fazia cada uma parecer vir de outro lugar, e o teto por origem nunca era alcançado.
+Deixar de lê-lo por padrão fechou esse buraco e abriu outro, pior: atrás de um proxy, `REMOTE_ADDR`
+é o mesmo para todo mundo, e o teto de trinta por hora passaria a valer para a instituição inteira —
+recusando candidato legítimo em bloco no último dia do prazo, com a mensagem neutra de sempre.
+
+Nenhum padrão serve para as duas topologias. Exigir a declaração é o que este projeto já faz com
+segredo, host e mecanismo de envio: transformar pressuposto em precondição de inicialização.
+
+**Alternativas consideradas**: *ler o cabeçalho só quando `REMOTE_ADDR` é privado* — heurística que
+acerta na maioria das redes e falha em silêncio nas demais, que é o pior desfecho possível para um
+limite de segurança.
+
+## D-019 — Sem prova, nada acontece
+
+**Decisão**: só um desafio **consumido**, apontado pela sessão, autoriza seguir na reconciliação. O
+endereço guardado na sessão serve para exibição, nunca para decidir a quem uma credencial pertence.
+
+**Racional**: a versão anterior criava identidade a partir do endereço do formulário, gravado antes
+de qualquer prova. Informar o e-mail de outra pessoa e abrir a rota entrava em nome dela — e prendia
+aquele endereço à identidade do atacante pela restrição de unicidade, impedindo a dona de usá-lo
+para sempre. A suíte não pegou porque todo teste seguia o fluxo, e quem ataca pula.
+
+## D-020 — O alvo anotado decide, e sobrevive ao descarte
+
+**Decisão**: `confirmar_cpf` lê `reconciliacao_alvo` quando ele existe, e o campo usa `SET_NULL`.
+
+**Racional**: gravado e nunca lido, ele prometia uma garantia que ninguém impunha — refazer a busca
+deixava o conjunto de candidatas mudar sob um convite já aberto. E com `CASCADE`, apagar uma
+identidade levaria junto os desafios que a apontam, inclusive o contador de tentativas de CPF, que é
+registro de segurança. Anotação não compõe: ela deixa de valer, e o desafio permanece.
+
+## D-021 — O ato e o registro que o explica commitam juntos
+
+**Decisão**: `registrar_ato` é chamado **dentro** da transação de `adicionar` e `remover`.
+
+**Racional**: escrevi `registrar_ato` porque `record_event` lê `status` e `revision`, e a identidade
+do candidato não é máquina de estados. Ao sair do auxiliar, larguei junto a garantia que vinha com
+ele — a `009` chama `record_event` dentro de `command_context()`. Uma falha entre gravar a credencial
+e escrever na trilha deixaria a credencial existindo sem evento que a explicasse (Princípio IV).
+
+## D-022 — Recusa nomeada, e captura estreita
+
+**Decisão**: `remover` devolve três desfechos distintos, e a leitura do conteúdo publicado captura
+`DomainError`, não `Exception`.
+
+**Racional**: o booleano fazia a view responder "você não pode remover seu último e-mail" a quem
+pedisse a remoção de credencial alheia — resposta que descreve errado o que aconteceu, e que numa
+investigação aponta para o lado errado. E a captura larga escondeu um defeito real por uma fase
+inteira: a lista lia `.conteudo` num objeto cujo atributo é `content`, e **toda** linha saía sem
+Edital e sem Perfil, sem que nada acusasse.

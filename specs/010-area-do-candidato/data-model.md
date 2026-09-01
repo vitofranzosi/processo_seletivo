@@ -45,7 +45,7 @@ Um endereço cujo controle foi provado.
 | Campo | Tipo | Regra |
 |---|---|---|
 | `id` | UUID, chave primária | |
-| `candidate_identity` | referência | em cascata com a identidade |
+| `identidade` | referência | em cascata com a identidade: credencial sem dona não é nada |
 | `email_canonico` | texto, **único no sistema** | forma canônica conservadora (D-006) |
 | `email_como_informado` | texto | preservado para exibição; nunca decide identidade |
 | `principal` | booleano | exatamente um por identidade que tenha credencial |
@@ -71,7 +71,7 @@ Não é dado permanente de domínio (`FR-033`).
 |---|---|---|
 | `id` | UUID, chave primária | |
 | `email_canonico` | texto, indexado | o endereço a que o desafio se refere |
-| `finalidade` | texto | `entrar` ou `adicionar_credencial` (`FR-028`) |
+| `finalidade` | texto | `entrar`, `adicionar_credencial` ou `retomar` (`FR-028`) |
 | `codigo_hash` | texto | resumo salgado; nunca o código (`FR-027`, D-003) |
 | `origem_hash` | texto, indexado | resumo da origem da solicitação; nunca o endereço de rede em claro (D-005) |
 | `expira_em` | instante | criação + 10 minutos (`FR-024`) |
@@ -79,6 +79,7 @@ Não é dado permanente de domínio (`FR-033`).
 | `tentativas_cpf` | inteiro | teto de 5 na confirmação da reconciliação (`FR-052a`, D-016) |
 | `consumido_em` | instante, opcional | marca o uso único do código |
 | `reconciliacao_ate` | instante, opcional | enquanto presente e futuro, esta linha porta a reconciliação pendente (`FR-052b`) |
+| `reconciliacao_alvo` | referência opcional | a identidade que o convite anunciou, quando havia uma só; é ela que a confirmação de CPF confere, e não o resultado de uma busca refeita (D-020) |
 | `criado_em` | instante, indexado | base das janelas de limite |
 
 **Invariantes e transições**
@@ -112,6 +113,13 @@ nenhum deles é beco sem saída (`FR-052`, P-009).
 - Os limites por endereço e por origem são contagens sobre `criado_em`, na própria tabela (D-005).
 - Os dois contadores são incrementados por atualização condicional, como o consumo (D-004): duas abas
   não dividem o mesmo orçamento de tentativas por engano.
+- `reconciliacao_alvo` referencia a identidade com `SET_NULL`, e não em cascata: ele **anota** o que
+  o convite anunciou, e não compõe nada com ela. Apagar uma identidade não pode levar junto o
+  desafio que a aponta — nem o contador de tentativas que ele guarda (D-020).
+
+**A finalidade `retomar`** existe porque a retomada não é um `entrar` com outro nome: ela move
+credenciais e descarta uma identidade. Um código pedido para entrar não pode autorizar isso, e a
+contagem de tentativas de CPF vale igual nos dois caminhos (D-016).
 - Linhas terminais são descartáveis por rotina operacional (`FR-033`).
 
 ---
