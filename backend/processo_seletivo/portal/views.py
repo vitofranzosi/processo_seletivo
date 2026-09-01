@@ -12,6 +12,7 @@ lá; esta entrega é a fatia navegável dela.
 
 from hashlib import sha256
 
+from django.conf import settings
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -324,12 +325,20 @@ AVISO_NEUTRO = "Se este endereço puder ser utilizado, enviaremos um código de 
 def _origem(request) -> str:
     """O que distingue uma origem da outra, sem guardar de onde veio.
 
-    Cabeçalho de proxy antes do endereço direto, porque atrás de um balanceador o segundo é sempre
-    o mesmo. O valor é resumido antes de ser gravado (D-005).
+    **O cabeçalho de proxy só é lido quando a implantação declara que existe um proxy.** Ele é
+    escrito pelo cliente: lê-lo sempre tornava o limite por origem decorativo — quem varre
+    endereços mandava um valor diferente a cada requisição, cada uma parecia vir de outro lugar, e
+    o teto nunca era alcançado. Sobrava só o limite por endereço, que não contém exatamente o caso
+    que o limite por origem existe para conter.
+
+    Atrás de um proxy que sobrescreve o cabeçalho, `REMOTE_ADDR` é sempre o mesmo e não distingue
+    ninguém — daí a variável. Quem implanta declara o que é verdade na sua topologia; o padrão é
+    não confiar. O valor é resumido antes de ser gravado (D-005).
     """
-    encaminhado = request.META.get("HTTP_X_FORWARDED_FOR", "")
-    if encaminhado:
-        return encaminhado.split(",")[0].strip()
+    if getattr(settings, "PORTAL_ATRAS_DE_PROXY", False):
+        encaminhado = request.META.get("HTTP_X_FORWARDED_FOR", "")
+        if encaminhado:
+            return encaminhado.split(",")[0].strip()
     return request.META.get("REMOTE_ADDR", "")
 
 
@@ -455,25 +464,53 @@ def _entrar(request, identidade):
     return render(request, "portal/retomar_convite.html", {"destino": destino})
 
 
-def _desafio_pendente(request):
+def _desafio_provado(request):
+    """O desafio cujo código **já foi validado nesta sessão** — a única prova que existe aqui.
+
+    A distinção é a correção de um desvio de autenticação. `CHAVE_DO_ENDERECO` é gravada no POST do
+    formulário de acesso, **antes** de qualquer prova: ela diz apenas o que alguém digitou. Só
+    `CHAVE_DO_DESAFIO` é gravada depois de o código conferir, e só ela autoriza seguir. Exigir
+    `consumido_em` fecha a porta também contra uma sessão forjada com um identificador qualquer.
+    """
     identificador = request.session.get(CHAVE_DO_DESAFIO)
     if not identificador:
         return None
-    desafio = DesafioDeAcesso.objects.filter(pk=identificador).first()
-    return desafio if associacao.reconciliacao_pendente(desafio) else None
+    return DesafioDeAcesso.objects.filter(
+        pk=identificador, consumido_em__isnull=False
+    ).first()
+
+
+def _endereco_do_desafio(request, desafio):
+    """O endereço como a pessoa o informou — mas só se for o mesmo que ela provou.
+
+    O valor da sessão serve para exibição; a identidade é sempre construída sobre o canônico do
+    desafio. Divergindo, o canônico ganha: nenhum dado de sessão decide a quem uma credencial
+    pertence.
+    """
+    informado = request.session.get(CHAVE_DO_ENDERECO, "")
+    if informado and canonizar(informado) == desafio.email_canonico:
+        return informado
+    return desafio.email_canonico
 
 
 def acesso_reconciliar(request):
     """O convite: encontramos participação anterior — e ele é recusável (FR-050)."""
-    desafio = _desafio_pendente(request)
-    informado = request.session.get(CHAVE_DO_ENDERECO, "")
+    desafio = _desafio_provado(request)
     if desafio is None:
-        # Expirou ou esgotou. Nunca beco sem saída: segue com identidade própria (FR-052b).
-        if informado:
-            return _entrar(
-                request, associacao.criar_identidade_com(canonizar(informado), informado)
-            )
+        # **Sem prova, nada acontece.** A versão anterior criava identidade a partir do endereço
+        # guardado na sessão, que é apenas o que alguém digitou no formulário — bastava informar o
+        # e-mail de outra pessoa e abrir esta rota para entrar em nome dela, e ainda prender aquele
+        # endereço à identidade do atacante pela restrição de unicidade. Quem não validou código
+        # nenhum volta para o começo.
         return redirect(reverse("portal:acesso"))
+
+    informado = _endereco_do_desafio(request, desafio)
+    if not associacao.reconciliacao_pendente(desafio):
+        # Expirou ou esgotou — mas o código **foi** validado. Aqui a identidade própria é o
+        # desfecho correto, e não beco sem saída (FR-052b).
+        return _entrar(
+            request, associacao.criar_identidade_com(desafio.email_canonico, informado)
+        )
 
     contexto = {"erro": ""}
     if request.method != "POST":

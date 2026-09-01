@@ -113,3 +113,24 @@ def test_nao_funde_identidades(client):
     assert primeira.pk != segunda.pk
     assert CandidateEmail.objects.filter(identidade=primeira).count() == 1
     assert CandidateEmail.objects.filter(identidade=segunda).count() == 1
+
+
+def test_o_convite_expirado_ainda_da_sessao(client, legada):
+    """O outro lado da correção: quem **provou** o endereço não pode ficar de fora (FR-052b).
+
+    Recusar a rota sem prova era necessário; recusá-la a quem provou e só demorou a decidir teria
+    trocado um desvio de autenticação por um beco sem saída.
+    """
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    entrar_ate_o_convite(client)
+    DesafioDeAcesso.objects.update(reconciliacao_ate=timezone.now() - timedelta(seconds=1))
+
+    resposta = client.get(reverse("portal:acesso-reconciliar"))
+
+    assert resposta["Location"] == reverse("portal:inscricoes")
+    assert identidade_do_candidato.CHAVE_SESSAO in client.session
+    propria = CandidateEmail.objects.get(email_canonico=ENDERECO).identidade
+    assert propria.pk != legada.pk, "identidade própria, e não a anterior"

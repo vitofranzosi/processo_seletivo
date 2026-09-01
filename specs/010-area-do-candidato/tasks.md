@@ -272,6 +272,7 @@ antigo, e receber recusa ao tentar remover o último.
 
 ## Phase 9: Polish & Cross-Cutting Concerns
 
+- [ ] T091a [P] Estender a varredura anti-desvio a **toda** rota do fluxo de acesso — alcançá-la por fora, sem prova, e verificar que ela não concede nada — em `backend/tests/authorization/test_acesso_sem_prova.py`
 - [ ] T091 [P] Consolidar a demonstração de segurança do §25 em seis casos executáveis — endereçamento direto, endereço arbitrário com CPF conhecido, precedência, endereço reciclado, engano no convite e sessão conhecida — em `backend/tests/authorization/test_demonstracao_de_seguranca.py`
 - [ ] T092 [P] Teste de que duas inscrições enviadas com o mesmo CPF no mesmo Perfil são aceitas e aparecem **assinaladas**, e de que nenhuma é recusada no envio, em `backend/tests/integration/inscricoes/test_cpf_coincidente.py`
 - [ ] T093 Marcar a coincidência de CPF por subconsulta de existência na consulta administrativa em `backend/processo_seletivo/inscricoes/application/consulta.py`

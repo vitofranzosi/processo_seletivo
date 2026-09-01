@@ -174,6 +174,11 @@ documentos; João, com os seus.
 | 4 | Provar um endereço que Maria digitou por engano anos atrás | entra na própria identidade, sem ver nada de Maria; a identidade dela permanece intacta |
 | 5 | Recusar o convite por engano, ainda sem inscrição, e retomá-lo | recupera o acesso à participação anterior (`SC-025`) |
 | 6 | Anotar o identificador de sessão antes de entrar e conferir depois | é outro (`SC-004`) |
+| 7 | Informar o e-mail de outra pessoa e abrir `/acesso/reconciliar`, `/inscricoes`, `/meus-dados` e `/acesso/reconciliar/retomar` **sem digitar código** | nenhuma concede sessão, e nenhuma credencial é criada |
+
+> **O caso 7 nasceu de um desvio real**, encontrado em revisão e não pela suíte: todo teste seguia
+> o fluxo, e quem ataca pula. A forma dele é a que vale generalizar — alcançar cada tela por fora e
+> verificar que ela não concede nada.
 
 ---
 
