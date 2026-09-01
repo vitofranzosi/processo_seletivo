@@ -120,8 +120,8 @@ tentar alocar num Edital em elaboração, recebendo a recusa nomeada.
 - [ ] T034 [US3] Implementar o formulário de alocação em `backend/processo_seletivo/interface/forms.py`
 - [ ] T035 [US3] Implementar a view `alocacoes` (GET e POST) em `backend/processo_seletivo/interface/views.py`
 - [ ] T036 [US3] Registrar a rota `processos/<uuid:processo_id>/alocacoes` em `backend/processo_seletivo/interface/urls.py`
-- [ ] T037 [US3] Criar `interface/templates/interface/alocacoes.html` — agrupado por Edital publicado, com a razão explícita quando não há Edital publicado (`UX-007`, `EC-014`)
-- [ ] T038 [P] [US3] Teste de interface em `backend/tests/interface/test_alocacoes.py` — agrupamento por Edital, e Etapas homônimas de Editais distintos como objetos distintos (`EC-012`)
+- [ ] T037 [US3] Criar `interface/templates/interface/alocacoes.html` — agrupado por Edital publicado, com **dois** estados vazios distintos: não há Edital publicado, e o Edital publicado não tem Etapas (`UX-007`, `EC-008`, `EC-014`)
+- [ ] T038 [P] [US3] Teste de interface em `backend/tests/interface/test_alocacoes.py` — agrupamento por Edital; Etapas homônimas de Editais distintos como objetos distintos (`EC-012`); e os dois estados vazios do `EC-008` distinguíveis um do outro
 
 **Checkpoint**: existe distribuição registrada. Ela ainda não produz efeito para o alocado — a
 próxima fase é a que fecha a vertical.
@@ -143,6 +143,7 @@ devolve 404; UUID adulterado devolve 404.
 - [ ] T044 [US5] Criar `interface/templates/interface/atribuicao.html` — contexto da Etapa e **nenhum** controle de avaliação (`FR-051`, `FR-052`)
 - [ ] T045 [US5] Ligar `Minhas Etapas` à navegação da base administrativa em `interface/templates/interface/base.html`, visível a qualquer identidade institucional (`UX-008`)
 - [ ] T046 [P] [US5] Teste de autorização em `backend/tests/authorization/test_acesso_a_etapa.py` — os quatro 404 da demonstração, mais o do escopo alheio (`SC-009`, `SC-010`, `SC-016`)
+- [ ] T046a [P] [US5] Teste da separação dos dois eixos de identidade em `backend/tests/authorization/test_eixos_de_identidade.py` — sessão de candidato do `portal` recebe 404 nas cinco rotas da comissão, e `MembroComissao` não concede ownership sobre `Inscricao` nem acesso a documento (`FR-061`, `FR-062`, `FR-081`, `SC-012`)
 - [ ] T047 [US5] Teste de que privilégio administrativo **não** injeta Etapa em `Minhas Etapas`, em `backend/tests/authorization/test_acesso_a_etapa.py` (`FR-044`, `SC-008`)
 - [ ] T048 [P] [US5] Teste de aceitação do percurso inteiro em `backend/tests/acceptance/test_comissao_e_alocacao.py`, com dois atores
 - [ ] T049 [P] [US5] Teste de fronteira em `backend/tests/interface/test_atribuicao.py` — a página não contém documento, nota, parecer nem botão de avaliar (§50 da spec)
@@ -220,7 +221,9 @@ identificar a lacuna sem abrir membro nenhum.
 - [ ] T074 [P] Teste de acessibilidade das quatro telas em `backend/tests/interface/test_acessibilidade.py`, no padrão existente
 - [ ] T075 Percorrer o [checklist-ux.md](./checklist-ux.md) em `interface/templates/interface/{comissao,alocacoes,minhas_etapas,atribuicao}.html`, incluindo teclado e 375 px (`FR-078`)
 - [ ] T076 [P] Conferir que nenhuma tela da feature consulta `inscricoes` nem exibe dado de candidato, em `backend/tests/interface/test_fronteira_012.py`
+- [ ] T076a Conferir em `backend/tests/interface/test_fronteira_012.py` que os cinco comandos não alteram `Inscricao` — contagem, `revision` e `status` inalterados depois de constituir, alocar e remover (`FR-082`)
 - [ ] T077 [P] Conferir que nenhuma migration da 011 toca `editais`, `publicacoes` ou `auditoria`, em `backend/tests/migrations/test_migrations.py` (`FR-083`, `SC-018`)
+- [ ] T077a [P] Conferir em `backend/tests/integration/comissoes/test_fronteira_de_escrita.py` que, em **runtime**, os cinco comandos escrevem apenas em `comissoes_*`, na trilha de auditoria e na reserva de idempotência — e que revisão, snapshot e hash do Edital ficam idênticos (`FR-069`, `SC-018`)
 - [ ] T078 Escrever a matriz de rastreabilidade em `specs/011-comissao-alocacao/traceability.md`, ligando cada FR ao teste que o prova (princípio V)
 
 ---
@@ -238,7 +241,7 @@ US1 (T020–T028a)
    ↓
 US3 (T029–T038)             ← precisa de comissão com presidente
    ↓
-US5 (T039–T049)             ← MVP: a vertical fecha aqui
+US5 (T039–T049, com T046a)  ← MVP: a vertical fecha aqui
    ↓
 US6 (T050–T053)
    ↓
@@ -264,7 +267,8 @@ ordem horizontal que a seção 52 da spec recusa:
 - Foundational: T011, T013, T016, T018 e T019a juntas depois de T006–T009; T012 e T014 tocam arquivos
   diferentes e podem seguir em paralelo.
 - Dentro de cada história, todo teste marcado `[P]` roda em paralelo com os demais da mesma fase.
-- T047 e T073a **não** são `[P]`: cada uma escreve no mesmo arquivo da tarefa anterior (T046 e T073). T053 toca o mesmo arquivo, mas em
+- T047, T073a e T076a **não** são `[P]`: cada uma escreve no mesmo arquivo da tarefa anterior (T046,
+  T073 e T076). T053 toca o mesmo arquivo, mas em
   outra fase, e por isso mantém a marca.
 - US2 e US4 podem ser tocadas por duas pessoas ao mesmo tempo — atenção só a `alocacoes.html`, que
   T065 e T066 compartilham.
