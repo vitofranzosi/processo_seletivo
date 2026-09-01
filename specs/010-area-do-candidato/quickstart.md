@@ -103,8 +103,10 @@ tente retomar. A ação não é mais oferecida (`FR-053`).
 2. Saia, entre de novo, inicie outra inscrição em outro Perfil. **Não** são pedidos de novo
    (`SC-020`).
 3. Volte a um rascunho por `Continuar inscrição`: o conteúdo está como estava (`SC-019`).
-4. Em `/conta`, corrija o nome. **Deve-se ver** o nome corrigido no rascunho aberto, e inalterado em
-   qualquer inscrição já enviada (`SC-011`, `FR-014`).
+4. Confira que o e-mail gravado no rascunho é o **principal** da identidade, e não necessariamente o
+   que autenticou a sessão (`SC-011c`).
+
+A correção de nome e CPF é da Entrega 6, e não desta — é lá que `/conta` existe.
 
 ---
 
@@ -136,7 +138,11 @@ aceita **não** muda, e nada é reaberto (`SC-024`).
 Em `/conta`: adicione um segundo endereço e prove-o por código — sem que CPF seja pedido. Torne-o
 principal. Remova o primeiro. Tente remover o último: recusado (`FR-018`).
 
-Verifique que nenhuma inscrição mudou (`SC-011`).
+Corrija o nome. **Deve-se ver** o nome corrigido no rascunho aberto, e inalterado em qualquer
+inscrição já enviada (`SC-011a`, `SC-011b`, `FR-014`). Tente corrigir o CPF havendo inscrição
+enviada: recusado (`FR-008`).
+
+Verifique que nenhuma inscrição enviada mudou (`SC-011`).
 
 ---
 

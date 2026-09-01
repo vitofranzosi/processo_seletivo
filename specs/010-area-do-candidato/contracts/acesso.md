@@ -30,8 +30,12 @@ Formulário com um campo de e-mail.
 **Efeitos**: cria um `DesafioDeAcesso` de finalidade `entrar` e invalida os anteriores ainda
 utilizáveis daquele endereço (`FR-026`).
 
-**Nunca**: a resposta, o código de estado, o texto e a janela de reenvio são os mesmos nos quatro
-casos observáveis pelo visitante.
+**Nunca**: nos **três** casos que poderiam revelar a existência do endereço — existe, não existe,
+limite esgotado — e também na falha de envio, a resposta, o código de estado, o texto e a janela de
+reenvio são idênticos.
+
+O endereço malformado é caso distinto e responde `200` com a recusa do formulário. Ele não revela
+nada: a recusa fala da forma do que foi digitado, e é anterior a qualquer consulta.
 
 ---
 

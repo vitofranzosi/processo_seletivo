@@ -21,6 +21,8 @@ comportamento observável no navegador do candidato (princípio VI).
 
 - **[P]**: pode rodar em paralelo — arquivos diferentes, sem dependência de tarefa incompleta
 - **[Story]**: US1 a US6, conforme a spec
+- **Sufixo de letra** (`T011a`): tarefa acrescentada por revisão, inserida na posição de execução a
+  que pertence. Mantém estáveis os identificadores já referenciados
 
 ## Path Conventions
 
@@ -48,11 +50,13 @@ seguinte tem onde apoiar.
 
 - [ ] T005 [P] Teste da forma canônica do endereço — caixa baixa no endereço inteiro, sem remover pontos nem cortar sufixo, endereço informado preservado — em `backend/tests/unit/identidade/test_enderecos.py`
 - [ ] T006 [P] Teste da geração e do resumo do código — seis dígitos, distribuição sobre todo o intervalo, resumo não recuperável — em `backend/tests/unit/identidade/test_codigo.py`
-- [ ] T007 [P] Teste dos invariantes dos modelos — endereço canônico único por restrição de banco, um principal por identidade, identidade nunca sem credencial — em `backend/tests/integration/identidade/test_modelos.py`
+- [ ] T007 [P] Teste dos invariantes dos modelos — endereço canônico único por restrição de banco, e identidade **que tenha credencial** com exatamente um principal — em `backend/tests/integration/identidade/test_modelos.py`
+- [ ] T007a [P] Teste de que uma identidade **sem credencial alguma** é estado válido, porque é o que a reconciliação produz, em `backend/tests/integration/identidade/test_modelos.py`
 - [ ] T008 [P] Teste de que o `subject` de identidade nova é opaco, prefixado e independente de `SECRET_KEY` em `backend/tests/unit/identidade/test_subject.py`
 - [ ] T009 [P] Teste da reconciliação: preserva o `subject`, não reescreve `identity_subject`, não marca endereço como verificado, traz o nome da inscrição mais recente — em `backend/tests/migrations/test_reconciliacao.py`
-- [ ] T010 [P] Teste de que a reconciliação **interrompe** com inscrição enviada sem CPF utilizável e **relata sem interromper** o grupo de CPF com mais de um `subject`, sem CPF em log — em `backend/tests/migrations/test_reconciliacao_recusas.py`
+- [ ] T010 [P] Teste de que a reconciliação **interrompe** com inscrição enviada sem CPF utilizável, e **relata sem interromper** tanto o grupo de CPF com mais de um `subject` quanto o rascunho sem CPF utilizável — que fica intacto e não reconciliado —, sem CPF em log, em `backend/tests/migrations/test_reconciliacao_recusas.py`
 - [ ] T011 [P] Teste de que produção recusa iniciar com mecanismo de envio que não entrega e sem remetente, acrescentado a `backend/tests/test_configuracao_producao.py`
+- [ ] T011a [P] Teste de que o **banco** recusa gravar inscrição enviada cujo `cpf_normalizado` não tenha exatamente onze dígitos, e aceita rascunho na mesma condição, em `backend/tests/integration/inscricoes/test_cpf_na_submetida.py`
 
 ### Implementação da fundação
 
@@ -85,6 +89,7 @@ servidor, colá-lo inteiro e chegar a uma área pessoal vazia, sem que CPF seja 
 - [ ] T023 [P] [US1] Teste dos limites por endereço e por origem, com origem guardada como resumo e nunca em claro, em `backend/tests/integration/identidade/test_limites.py`
 - [ ] T024 [P] [US1] Teste de que o identificador de sessão após a autenticação difere do anterior em `backend/tests/authorization/test_rotacao_de_sessao.py`
 - [ ] T025 [P] [US1] Teste de que a sessão de candidato não concede nenhuma ação institucional em `backend/tests/authorization/test_sessao_candidata.py`
+- [ ] T025a [P] [US1] Teste do conteúdo da mensagem — código, prazo de validade e orientação de ignorar; **sem** link que autentica, sem CPF e sem dado de inscrição — em `backend/tests/integration/identidade/test_mensagem.py`
 - [ ] T026 [P] [US1] Teste de aceitação do percurso endereço → código → área vazia, sem pedir CPF, em `backend/tests/acceptance/portal/test_entrar_sem_senha.py`
 
 ### Implementação da US1
@@ -126,7 +131,7 @@ confirmar o CPF e ver a inscrição — sem que nenhum dado dela tenha mudado.
 ### Implementação da US2
 
 - [ ] T046 [US2] Implementar a busca de correspondência histórica por endereço, sem consumir o convite, em `backend/processo_seletivo/identidade/application/associacao.py`
-- [ ] T047 [US2] Acrescentar ao `DesafioDeAcesso` o porte da reconciliação pendente — contador próprio de tentativas de CPF e prazo contado do consumo — em `backend/processo_seletivo/identidade/models.py` e migração correspondente em `backend/processo_seletivo/identidade/migrations/`
+- [ ] T047 [US2] Implementar o porte da reconciliação pendente sobre os campos que `T014` já criou — abrir o prazo no consumo, contar as tentativas de CPF por atualização condicional e encerrar nos quatro desfechos — em `backend/processo_seletivo/identidade/application/associacao.py`
 - [ ] T048 [US2] Implementar a confirmação por CPF, com desempate e contagem condicional de tentativas, em `backend/processo_seletivo/identidade/application/associacao.py`
 - [ ] T049 [US2] Implementar a retomada — verificar vazia, mover todas as credenciais e descartar, em uma operação única sob bloqueio de linha — em `backend/processo_seletivo/identidade/application/associacao.py`
 - [ ] T050 [US2] Fazer a abertura de rascunho tomar o mesmo bloqueio de linha sobre a identidade antes de criar a Inscrição em `backend/processo_seletivo/inscricoes/application/rascunho.py`
@@ -150,10 +155,10 @@ existente com o rascunho como estava.
 
 - [ ] T053 [P] [US3] Teste de que a lista mostra todas e somente as inscrições da identidade, mais recente primeiro, com a ação principal correta em `backend/tests/integration/portal/test_minhas_inscricoes.py`
 - [ ] T054 [P] [US3] Teste de que nome e CPF são pedidos uma única vez e reusados nas inscrições seguintes, e nunca a quem veio da `009`, em `backend/tests/integration/identidade/test_nucleo_minimo.py`
-- [ ] T055 [P] [US3] Teste de que corrigir nome alcança os rascunhos abertos e não altera nenhuma inscrição enviada, e de que o CPF congela na primeira enviada, em `backend/tests/integration/identidade/test_correcao.py`
+- [ ] T055 [P] [US3] Teste de que o rascunho é alimentado pelo endereço **principal** da identidade, e não pelo endereço que autenticou a sessão, em `backend/tests/integration/identidade/test_email_do_rascunho.py`
 - [ ] T056 [P] [US3] Teste de que uma identidade não enxerga inscrição de outra, com resposta que não permite descobrir existência, em `backend/tests/authorization/test_inscricao_alheia.py`
 - [ ] T057 [P] [US3] Teste de que a restrição de uma inscrição por identidade, Edital e Perfil continua intacta em `backend/tests/integration/inscricoes/test_idempotencia_preservada.py`
-- [ ] T058 [P] [US3] Teste de aceitação do percurso da Entrega 3, incluindo a correção de nome refletida no rascunho, em `backend/tests/acceptance/portal/test_minhas_inscricoes.py`
+- [ ] T058 [P] [US3] Teste de aceitação do percurso da Entrega 3 — pedir nome e CPF uma vez, não pedir de novo, retomar o rascunho — em `backend/tests/acceptance/portal/test_minhas_inscricoes.py`
 
 ### Implementação da US3
 
@@ -230,13 +235,14 @@ antigo, e receber recusa ao tentar remover o último.
 - [ ] T081 [P] [US6] Teste de que adicionar exige desafio e não pede CPF, e de que endereço de outra identidade é recusado sem revelar a quem pertence, em `backend/tests/integration/identidade/test_adicionar_credencial.py`
 - [ ] T082 [P] [US6] Teste de que duas confirmações simultâneas do mesmo endereço produzem uma única credencial, recusada pelo banco e não por consulta prévia, em `backend/tests/integration/identidade/test_credencial_concorrente.py`
 - [ ] T083 [P] [US6] Teste de que trocar o principal alcança os rascunhos abertos e nunca uma enviada, e de que remover não altera inscrição alguma, em `backend/tests/integration/identidade/test_principal_e_remocao.py`
-- [ ] T084 [P] [US6] Teste de que a última credencial não pode ser removida e de que a identidade nunca fica sem principal em `backend/tests/integration/identidade/test_ultima_credencial.py`
+- [ ] T084 [P] [US6] Teste de que a última credencial não pode ser removida e de que uma identidade **que tenha credencial** nunca fica sem principal em `backend/tests/integration/identidade/test_ultima_credencial.py`
+- [ ] T084a [P] [US6] Teste de que corrigir nome alcança os rascunhos abertos e não altera nenhuma inscrição enviada, e de que o CPF congela na primeira enviada, em `backend/tests/integration/identidade/test_correcao.py`
 - [ ] T085 [P] [US6] Teste de que associação e remoção de credencial entram na trilha existente com escopo vazio, e de que código inválido **não** vira evento de negócio, em `backend/tests/integration/identidade/test_auditoria_de_credencial.py`
-- [ ] T086 [P] [US6] Teste de aceitação do percurso da Entrega 6 em `backend/tests/acceptance/portal/test_credenciais.py`
+- [ ] T086 [P] [US6] Teste de aceitação do percurso da Entrega 6, incluindo a correção de nome refletida no rascunho, em `backend/tests/acceptance/portal/test_credenciais.py`
 
 ### Implementação da US6
 
-- [ ] T087 [US6] Implementar adicionar, escolher principal e remover credencial em `backend/processo_seletivo/identidade/application/credenciais.py`
+- [ ] T087 [US6] Implementar adicionar, escolher principal, remover credencial **e corrigir nome e CPF** — nome sempre, CPF enquanto não houver inscrição enviada — em `backend/processo_seletivo/identidade/application/credenciais.py`
 - [ ] T088 [US6] Registrar associação e remoção de credencial na trilha existente, com o comentário que explica o escopo vazio e a consequência para a consulta por escopo, em `backend/processo_seletivo/identidade/application/credenciais.py`
 - [ ] T089 [US6] Implementar as views de conta e as rotas em `backend/processo_seletivo/portal/views.py` e `backend/processo_seletivo/portal/urls.py`
 - [ ] T090 [US6] Criar a página de acesso à conta, com credenciais, principal e correção de nome e CPF, em `backend/processo_seletivo/portal/templates/portal/conta.html`
@@ -248,8 +254,8 @@ antigo, e receber recusa ao tentar remover o último.
 ## Phase 9: Polish & Cross-Cutting Concerns
 
 - [ ] T091 [P] Consolidar a demonstração de segurança do §25 em seis casos executáveis — endereçamento direto, endereço arbitrário com CPF conhecido, precedência, endereço reciclado, engano no convite e sessão conhecida — em `backend/tests/authorization/test_demonstracao_de_seguranca.py`
-- [ ] T092 [P] Marcar a coincidência de CPF por subconsulta de existência na consulta administrativa em `backend/processo_seletivo/inscricoes/application/consulta.py`
-- [ ] T093 [P] Teste de que duas inscrições enviadas com o mesmo CPF no mesmo Perfil são aceitas e aparecem assinaladas, e de que nenhuma é recusada no envio, em `backend/tests/integration/inscricoes/test_cpf_coincidente.py`
+- [ ] T092 [P] Teste de que duas inscrições enviadas com o mesmo CPF no mesmo Perfil são aceitas e aparecem **assinaladas**, e de que nenhuma é recusada no envio, em `backend/tests/integration/inscricoes/test_cpf_coincidente.py`
+- [ ] T093 Marcar a coincidência de CPF por subconsulta de existência na consulta administrativa em `backend/processo_seletivo/inscricoes/application/consulta.py`
 - [ ] T094 [P] Implementar a limpeza operacional de desafios terminais em `backend/processo_seletivo/identidade/application/desafio.py`
 - [ ] T095 [P] Teste de higiene de registro técnico — nem código, nem CPF completo, nem conteúdo de documento em log ou auditoria — em `backend/tests/integration/identidade/test_higiene_de_log.py`
 - [ ] T096 [P] Verificar 375 px sem rolagem horizontal e percurso completo por teclado nas telas novas em `backend/tests/interface/test_acessibilidade_portal.py`
@@ -297,11 +303,12 @@ templates. Dentro de cada bloco, o que está marcado `[P]` toca arquivos diferen
 
 ### Parallel Opportunities
 
-- Fase 2: T005 a T011 são sete testes em sete arquivos.
-- Fase 3: T019 a T026 em paralelo; depois T034 e T035, que são templates distintos.
+- Fase 2: T005 a T011a são nove testes em oito arquivos.
+- Fase 3: T019 a T026 em paralelo, incluindo T025a; depois T034 e T035, que são templates distintos.
 - Fase 4: T037 a T045 em paralelo.
 - Fases 6, 7 e 8 podem correr em três frentes depois da fase 5.
-- Fase 9: quase tudo é paralelo, exceto T098 e T099, que fecham.
+- Fase 9: quase tudo é paralelo, exceto T093 — que depende do seu teste, T092 — e T098 e T099, que
+  fecham.
 
 ---
 
