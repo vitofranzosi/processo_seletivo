@@ -40,9 +40,9 @@ API de e-mail da própria plataforma; o resumo do código usa os *hashers* que j
 D-014).
 
 **Storage**: PostgreSQL. Três tabelas novas — identidade, credencial de e-mail e desafio de acesso —
-e nenhuma alteração destrutiva nas existentes. A única alteração em tabela existente é a restrição de
-integridade que passa a exigir CPF utilizável em inscrição enviada (`FR-063`), instalada pela mesma
-migração que reconcilia.
+e nenhuma alteração destrutiva nas existentes. A única alteração em tabela existente é a restrição que
+passa a exigir CPF utilizável em inscrição enviada (`FR-063`). Ela mora no app que define `Inscricao`,
+e portanto é **uma segunda migração**, que depende da que reconcilia (D-007).
 
 **Testing**: pytest com pytest-django e os marcadores já registrados em `pyproject.toml` —
 `acceptance`, `contract`, `integration`, `authorization`, `performance`. Esta feature usa
@@ -158,7 +158,7 @@ backend/processo_seletivo/
 │   ├── application/
 │   │   ├── rascunho.py             # toma o bloqueio da identidade antes de criar (D-010)
 │   │   └── consulta.py             # marca coincidência de CPF (D-013)
-│   └── migrations/000X_cpf_na_submetida.py   # restrição da FR-063
+│   └── migrations/0003_cpf_na_submetida.py   # restrição da FR-063; depende de identidade.0002
 │
 └── config/settings/
     ├── base.py                     # mecanismo e remetente de e-mail, por ambiente
@@ -192,6 +192,14 @@ por conta própria. A mensagem enumera o que precisa de tratamento. Pelo caminho
 situação não existe — a identificação valida os dígitos antes de gravar —, mas base de demonstração e
 carga manual existem.
 
+**E são duas migrações, nesta ordem**: `identidade.0002_reconciliacao` verifica e cria; depois
+`inscricoes.0003_cpf_na_submetida` instala a restrição, declarando dependência da primeira. Invertê-las
+faria a implantação falhar no `ALTER TABLE`, com a mensagem do banco no lugar do relatório.
+
+**A restrição afirma onze dígitos, não CPF válido.** D-017. O algoritmo dos dígitos verificadores não
+cabe em restrição declarativa; a conferência permanece na captura e na verificação da implantação.
+Prometer no texto o que o banco não entrega é pior que não prometer, porque ninguém confere.
+
 **Nada de reescrever `identity_subject`.** `FR-042`. A migração copia; nunca atribui. Isso vale
 inclusive para os conjuntos que ela não consegue reconciliar, que ficam intactos e sem novo dono.
 
@@ -203,6 +211,11 @@ no intervalo e fica órfão.
 
 **A auditoria de credencial não aparece na consulta por escopo.** D-012. É consequência de o ato não
 pertencer a Edital algum, está declarada, e a alternativa — inventar um escopo — faria o campo mentir.
+
+**O desafio consumido continua vivo enquanto houver reconciliação pendente.** D-016. É ele que conta
+as tentativas de CPF, porque a sessão não resiste a uma aba nova e a identidade alvo viraria alvo —
+um terceiro esgotaria as tentativas e bloquearia o titular legítimo. A retomada da `FR-053` passa
+pelo mesmo caminho: prova o endereço de novo, e a contagem vale igual.
 
 **O código de acesso não vai para lugar nenhum além do e-mail.** Nem log, nem auditoria, nem mensagem
 de erro, nem endereço de página.

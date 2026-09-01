@@ -133,6 +133,18 @@ que roda antes de tudo, uma vez, em toda implantação. Interromper é o comport
 CPF utilizável, a restrição da `FR-063` não se instala, e prosseguir exigiria escolher um dado por
 conta própria.
 
+**Duas migrações, e a ordem entre elas.** A restrição da `FR-063` incide sobre `Inscricao`, e
+restrição de modelo mora no app que o define. Logo são duas, e a segunda depende da primeira:
+
+```text
+identidade.0002_reconciliacao      cria as identidades, interrompe se precisar
+              ↓  (depends_on)
+inscricoes.0003_cpf_na_submetida   instala a restrição sobre inscrição enviada
+```
+
+A ordem não é preferência: instalar a restrição antes da verificação faria a implantação falhar no
+`ALTER TABLE`, com a mensagem do banco em vez do relatório que enumera o que precisa de tratamento.
+
 **Alternativas consideradas**:
 
 - *Comando de gestão executado à parte*: dependeria de alguém lembrar de executá-lo, e a janela entre
@@ -281,3 +293,55 @@ Nenhum componente novo de front-end.
 `009` já estabeleceu a base, o padrão de acessibilidade e o alvo de 375 px. O campo do código precisa
 aceitar colagem integral e digitação natural (`UX-005`), o que um único campo de texto entrega — e
 seis campos independentes não entregariam.
+
+
+---
+
+## D-016 — Onde o contador de tentativas de CPF persiste
+
+**Decisão**: no próprio `DesafioDeAcesso`, em contador separado do de tentativas do código. A linha
+**deixa de ser terminal no consumo**: ela passa a portar a reconciliação pendente até que esta seja
+decidida ou expire, dez minutos após o consumo. O incremento usa a mesma atualização condicional de
+D-004.
+
+**Racional**: o contrato previa esgotamento sem dizer onde ele é contado, e nenhum dos lugares óbvios
+serve. A sessão não serve — uma aba nova zera. A identidade alvo não serve, e essa é a parte que
+importa: um contador preso ao alvo deixaria um terceiro esgotar as tentativas e **impedir o titular
+legítimo de reconciliar**, que é a mesma classe de bloqueio que a `FR-036` e a `FR-064` foram
+escritas para evitar. O desafio é o único portador que é, ao mesmo tempo, do lado de quem tenta,
+persistente entre requisições, e naturalmente descartável.
+
+**A composição que isso produz** é a proteção real: cinco tentativas por desafio, e desafios limitados
+por endereço e por origem (`FR-030`). Quem quiser tentar de novo paga o preço de pedir outro código.
+
+**Alternativas consideradas**:
+
+- *Contador na sessão*: não resiste a aba nova, que é o caminho de quem está tentando adivinhar.
+- *Contador na identidade alvo*: cria bloqueio do titular legítimo por ação de terceiro.
+- *Tabela própria de tentativas*: a informação já cabe na linha que existe, e uma segunda tabela seria
+  a mesma verdade em dois lugares.
+
+**Consequência para a retomada da `FR-053`**: ela também passa por desafio. Quem retoma prova de novo
+o endereço que carrega a correspondência, e a contagem vale igual nos dois caminhos — uma regra só. O
+custo de experiência é baixo (a retomada é rara) e o ganho é direto: o ato que move credenciais e
+descarta uma identidade é reprovado no instante em que acontece.
+
+---
+
+## D-017 — O que a restrição de banco consegue afirmar sobre o CPF
+
+**Decisão**: a restrição sobre inscrição enviada exige `cpf_normalizado` com exatamente onze dígitos.
+A conferência dos dígitos verificadores permanece no domínio — na captura (`FR-006`) e na verificação
+que a implantação faz antes de instalar a restrição (`FR-046`).
+
+**Racional**: o algoritmo dos dígitos verificadores não cabe numa restrição declarativa. Escrever
+"válido, garantido pela persistência" era prometer mais do que o banco entrega, e uma garantia que só
+existe no texto é pior que garantia nenhuma, porque ninguém a verifica.
+
+**Alternativas consideradas**:
+
+- *Função em PL/pgSQL chamada pela restrição*: expressa o algoritmo, mas exige função imutável
+  mantida fora do código da aplicação, duplica uma regra que já existe no domínio, e torna a migração
+  dependente de um objeto de banco que nada mais usa.
+- *Deixar a restrição só com "não vazio"*: aceitaria `"1"` numa inscrição enviada, e a `FR-063` existe
+  justamente para que a coluna seja utilizável pela reconciliação e pela marcação de coincidência.

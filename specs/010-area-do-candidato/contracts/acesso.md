@@ -71,12 +71,19 @@ O texto não revela nome, CPF, protocolo nem quantidade de inscrições da ident
 | Situação | Resposta |
 |---|---|
 | CPF confere com exatamente uma identidade correspondente | associa o endereço a ela e `302` para `/inscricoes` (`FR-050`, `FR-051`) |
-| CPF não confere | `200`, com recusa que não diz de quem é o quê; conta tentativa (`FR-052`) |
-| Tentativas esgotadas | cria identidade própria e `302` para `/inscricoes` — **nunca** beco sem saída (`FR-052`, P-009) |
+| CPF não confere | `200`, com recusa que não diz de quem é o quê; conta tentativa no desafio (`FR-052a`) |
+| Quinta tentativa errada | cria identidade própria e `302` para `/inscricoes` — **nunca** beco sem saída (`FR-052`, P-009) |
 | **Continuar sem isso** | cria identidade própria e `302` para `/inscricoes` (`FR-052`) |
+| Dez minutos após o consumo do código | o convite expira; a pessoa segue com identidade própria (`FR-052b`) |
 
 **Efeitos**: a decisão ocorre **antes** de o vínculo entre endereço e identidade existir. Em nenhum
 desfecho o visitante fica sem sessão.
+
+**Onde as tentativas são contadas**: no desafio que provou o endereço, que permanece o portador da
+reconciliação pendente depois de consumido (`FR-052a`, D-016). Não na sessão, que uma aba nova
+zeraria; e nunca na identidade alvo, o que permitiria a um terceiro esgotar as tentativas e impedir o
+titular legítimo de reconciliar (`FR-052c`). Tentar de novo exige novo código, sob o limite da
+`FR-030`.
 
 ---
 
@@ -84,6 +91,10 @@ desfecho o visitante fica sem sessão.
 
 Disponível de dentro da área, e **somente enquanto a identidade atual não tiver nenhuma inscrição,
 nem rascunho** (`FR-053`).
+
+Passa por um desafio novo ao endereço que carrega a correspondência: é uma regra só de contagem nos
+dois caminhos (D-016), e o ato que move credenciais e descarta uma identidade merece ser reprovado no
+instante em que acontece.
 
 | Situação | Resposta |
 |---|---|

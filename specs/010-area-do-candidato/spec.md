@@ -338,7 +338,9 @@ remover o antigo e corrigir o nome.
   DEVE revelar a quem ele pertence.
 - **FR-018**: O candidato autenticado DEVE poder remover endereço associado. O sistema NÃO PODE
   permitir remover a última credencial, nem deixar a identidade sem endereço principal.
-- **FR-019**: Remover ou trocar credencial NÃO PODE alterar nenhuma inscrição.
+- **FR-019**: Remover credencial NÃO PODE alterar nenhuma inscrição. Trocar qual credencial é a
+  principal alcança os rascunhos abertos, e apenas eles, pela regra única da FR-014 — nunca uma
+  inscrição enviada.
 
 ### Desafio de acesso (US1)
 
@@ -413,6 +415,15 @@ remover o antigo e corrigir o nome.
 - **FR-052**: A decisão do convite DEVE ocorrer **antes** de o vínculo entre endereço e identidade
   existir. Recusa, CPF errado ou tentativas esgotadas DEVEM produzir identidade própria e sessão
   utilizável.
+- **FR-052a**: As tentativas de confirmar o CPF DEVEM ser limitadas a cinco, contadas **no mesmo
+  desafio** que provou o endereço — e não na sessão, que uma aba nova zeraria. O desafio permanece o
+  portador da reconciliação pendente depois de consumido, até que ela seja decidida ou expire.
+- **FR-052b**: A reconciliação pendente DEVE expirar dez minutos após o consumo do código, e expirar
+  significa continuar com identidade própria — nunca ficar sem sessão.
+- **FR-052c**: O limite DEVE incidir sobre quem tenta, e nunca sobre a identidade alvo. Um contador
+  preso ao alvo permitiria a um terceiro esgotar as tentativas e impedir o titular legítimo de
+  reconciliar. Quem quiser tentar de novo precisa de novo desafio, e o custo disso é o limite de
+  solicitações da FR-030.
 - **FR-053**: A retomada da reconciliação DEVE continuar disponível de dentro da área **enquanto a
   identidade nova não tiver nenhuma inscrição, nem rascunho**. Aceita, as credenciais passam à
   identidade anterior e a identidade vazia é descartada.
@@ -441,8 +452,11 @@ remover o antigo e corrigir o nome.
 
 - **FR-062**: A restrição existente de uma inscrição por identidade, Edital e Perfil, em qualquer
   estado, DEVE permanecer intacta: é ela que sustenta a idempotência de abertura de rascunho.
-- **FR-063**: Uma inscrição enviada DEVE ter CPF normalizado não vazio e válido, garantido pela
-  persistência.
+- **FR-063**: Uma inscrição enviada DEVE ter CPF normalizado não vazio e com onze dígitos,
+  garantido por restrição de banco. A conferência dos dígitos verificadores **não** cabe numa
+  restrição declarativa: ela permanece no domínio, no momento da captura (FR-006), e na verificação
+  que a implantação faz antes de instalar a restrição (FR-046). Dizer que o banco garante o CPF
+  "válido" seria prometer mais do que ele consegue.
 - **FR-064**: Duas inscrições enviadas com o mesmo CPF no mesmo Perfil DEVEM ser aceitas. Nenhum
   candidato PODE ser recusado no envio por causa de CPF que outra identidade declarou.
 - **FR-065**: A consulta administrativa existente DEVE **assinalar** as inscrições que compartilham
@@ -569,7 +583,11 @@ remover o antigo e corrigir o nome.
 - **SC-009**: Um conjunto irreconciliável é relatado, não gera identidade, e suas inscrições
   permanecem intactas.
 - **SC-010**: Uma inscrição enviada com CPF inutilizável interrompe a implantação com relatório; um
-  rascunho na mesma condição é relatado e fica intacto.
+  rascunho na mesma condição é relatado e fica intacto. Depois disso, o banco recusa gravar inscrição
+  enviada sem onze dígitos de CPF.
+- **SC-010a**: Cinco confirmações de CPF erradas encerram a reconciliação daquele desafio, e a pessoa
+  segue com identidade própria; um contador não é zerado por abrir outra aba, e nenhuma tentativa de
+  terceiro impede o titular legítimo de reconciliar depois.
 - **SC-011**: Nenhuma alteração de credencial, nome ou CPF altera qualquer inscrição enviada.
 
 ### Medidas de proteção

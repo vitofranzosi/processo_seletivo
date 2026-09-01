@@ -75,24 +75,43 @@ Não é dado permanente de domínio (`FR-033`).
 | `codigo_hash` | texto | resumo salgado; nunca o código (`FR-027`, D-003) |
 | `origem_hash` | texto, indexado | resumo da origem da solicitação; nunca o endereço de rede em claro (D-005) |
 | `expira_em` | instante | criação + 10 minutos (`FR-024`) |
-| `tentativas` | inteiro | teto de 5 (`FR-029`) |
-| `consumido_em` | instante, opcional | marca o uso único |
+| `tentativas_codigo` | inteiro | teto de 5 (`FR-029`) |
+| `tentativas_cpf` | inteiro | teto de 5 na confirmação da reconciliação (`FR-052a`, D-016) |
+| `consumido_em` | instante, opcional | marca o uso único do código |
+| `reconciliacao_ate` | instante, opcional | enquanto presente e futuro, esta linha porta a reconciliação pendente (`FR-052b`) |
 | `criado_em` | instante, indexado | base das janelas de limite |
 
 **Invariantes e transições**
 
 ```text
-criado ──(código correto, dentro do prazo, tentativas < 5)──► consumido   [terminal]
-   │
-   ├──(tentativas = 5)──────────────────────────────────────► morto       [terminal]
-   ├──(prazo vencido)───────────────────────────────────────► expirado    [terminal]
-   └──(novo desafio para o mesmo endereço)──────────────────► invalidado  [terminal]
+criado ──(código correto, no prazo, tentativas_codigo < 5)──► consumido
+   │                                                             │
+   ├──(tentativas_codigo = 5)───────────────► morto  [terminal]  │
+   ├──(prazo vencido)───────────────────────► expirado [terminal]│
+   └──(novo desafio no mesmo endereço)──────► invalidado [terminal]
+                                                                 │
+        sem correspondência anterior ────────────────────────────┤──► encerrado [terminal]
+                                                                 │
+        com correspondência anterior: reconciliação pendente ────┘
+                    │
+                    ├──(CPF confere)──────────────────► reconciliado [terminal]
+                    ├──(tentativas_cpf = 5)───────────► encerrado    [terminal]
+                    ├──(recusa explícita)─────────────► encerrado    [terminal]
+                    └──(reconciliacao_ate vencido)────► encerrado    [terminal]
 ```
+
+Consumir o código **não** é o fim da linha quando há correspondência anterior: é ela que porta a
+decisão pendente, porque a sessão não serve de portador — uma aba nova zeraria a contagem — e a
+identidade alvo serviria de alvo, permitindo a um terceiro esgotar as tentativas e bloquear o titular
+legítimo (D-016). Todo desfecho `encerrado` leva a pessoa à própria identidade, com sessão válida:
+nenhum deles é beco sem saída (`FR-052`, P-009).
 
 - O consumo é atômico: uma atualização condicional que só vale se afetar exatamente uma linha
   (`FR-025`, D-004). Ler, verificar e gravar depois deixaria duas abas usarem o mesmo código.
 - Um novo desafio invalida os anteriores ainda utilizáveis do mesmo endereço (`FR-026`).
 - Os limites por endereço e por origem são contagens sobre `criado_em`, na própria tabela (D-005).
+- Os dois contadores são incrementados por atualização condicional, como o consumo (D-004): duas abas
+  não dividem o mesmo orçamento de tentativas por engano.
 - Linhas terminais são descartáveis por rotina operacional (`FR-033`).
 
 ---
@@ -101,9 +120,13 @@ criado ──(código correto, dentro do prazo, tentativas < 5)──► consumi
 
 Nada muda em `identity_subject`, em estados, em protocolo ou em imutabilidade. Acrescenta-se:
 
-- **Restrição de verificação**: inscrição no estado enviado tem `cpf_normalizado` não vazio e de
-  formação válida (`FR-063`). Ela entra no mesmo bloco que já exige instante, protocolo, versão
-  aceita e aceite das declarações.
+- **Restrição de verificação**: inscrição no estado enviado tem `cpf_normalizado` com exatamente
+  onze dígitos (`FR-063`). Ela entra no mesmo bloco que já exige instante, protocolo, versão aceita e
+  aceite das declarações.
+- **O que a restrição não afirma**: os dígitos verificadores. O algoritmo não cabe em restrição
+  declarativa, e a conferência permanece onde já está — na captura, e na verificação que a
+  implantação faz antes de instalar a restrição (D-017). A restrição garante que a coluna é
+  utilizável; o domínio garante que o número é um CPF possível.
 - **Nada de restrição de unicidade por CPF.** `FR-064` é explícita: duas inscrições enviadas com o
   mesmo CPF no mesmo Perfil são aceitas. A restrição existente por identidade, Edital e Perfil
   permanece intacta (`FR-062`).
@@ -114,12 +137,24 @@ Nada muda em `identity_subject`, em estados, em protocolo ou em imutabilidade. A
 
 Roda uma vez, na implantação, antes de qualquer acesso (`FR-040`, D-007).
 
-**O que ela faz**
+**Duas migrações, nesta ordem**
+
+```text
+identidade.0002_reconciliacao      verifica, cria as identidades, interrompe se precisar
+              ↓  (depends_on)
+inscricoes.0003_cpf_na_submetida   instala a restrição da FR-063
+```
+
+São duas porque a restrição incide sobre `Inscricao`, e restrição de modelo mora no app que o define.
+A ordem não é preferência: instalar antes de verificar faria a implantação falhar no `ALTER TABLE`,
+com a mensagem do banco em vez do relatório que enumera o que precisa de tratamento.
+
+**O que a primeira faz**
 
 1. Agrupa as inscrições existentes por `cpf_normalizado`.
-2. Para cada grupo com **um único** `identity_subject`: cria a identidade com aquele `subject`, aquele
+2. Verifica as enviadas: encontrando CPF inutilizável, **interrompe** (`FR-046`).
+3. Para cada grupo com **um único** `identity_subject`: cria a identidade com aquele `subject`, aquele
    CPF, e o `nome` da inscrição mais recente do grupo (`FR-041`).
-3. Instala a restrição da `FR-063`.
 
 **O que ela nunca faz**
 
