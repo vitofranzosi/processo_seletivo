@@ -12,6 +12,18 @@ urlpatterns = [
     path("acesso/reconciliar", views.acesso_reconciliar, name="acesso-reconciliar"),
     path("acesso/reconciliar/retomar", views.acesso_retomar, name="acesso-retomar"),
     path("meus-dados", views.meus_dados, name="meus-dados"),
+    path("conta", views.conta, name="conta"),
+    path("conta/emails", views.conta_adicionar, name="conta-adicionar"),
+    path(
+        "conta/emails/<uuid:credencial_id>/principal",
+        views.conta_principal,
+        name="conta-principal",
+    ),
+    path(
+        "conta/emails/<uuid:credencial_id>/remover",
+        views.conta_remover,
+        name="conta-remover",
+    ),
     path("inscricoes/", views.inscricoes, name="inscricoes"),
     path("sair", views.sair, name="sair"),
     # A Inscrição fora do caminho do Edital: ela pertence a quem a abriu, e o endereço não carrega

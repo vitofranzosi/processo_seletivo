@@ -327,6 +327,17 @@ details.integridade .resumos{list-style:none;margin:.75rem 0 0;padding:0;display
 .linha-do-tempo .rotulo{font-weight:600}
 .linha-do-tempo .marco.futuro .rotulo{font-weight:400;color:var(--texto-fraco)}
 .linha-do-tempo .quando{color:var(--texto-fraco);font-size:.9375rem}
+/* As credenciais (010). Endereço com quebra explícita, porque em 375px um e-mail longo é a coisa
+   mais fácil de transbordar; e as ações empilham no celular e alinham quando há espaço. */
+.credenciais{list-style:none;margin:0 0 1.5rem;padding:0;display:grid;gap:.75rem}
+.credencial{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:.85rem 1rem;display:grid;gap:.5rem}
+.credencial .endereco{font-weight:600;overflow-wrap:anywhere}
+.credencial .marca{justify-self:start;font-size:.8125rem;font-weight:700;color:var(--sucesso);
+  border:1px solid var(--sucesso);border-radius:4px;padding:.1rem .5rem}
+.credencial .acoes{display:flex;gap:.5rem;flex-wrap:wrap}
+.credencial .acoes form{margin:0}
+.recusa-em-destaque{border-left-color:var(--vermelho);background:var(--branco)}
 form.convite{margin:.75rem 0 0}
 /* O comprovante é impresso: fora o conteúdo, nada mais precisa ir para o papel. */
 /* O timbre existe **só** no papel: na tela o cabeçalho verde já diz de quem é o sistema, e

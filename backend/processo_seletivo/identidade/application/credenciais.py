@@ -14,7 +14,15 @@ novo informa na primeira inscrição, e não antes — pedir dado pessoal a quem
 rígida do que o estado que ela substitui (FR-008).
 """
 
-from processo_seletivo.identidade.models import CandidateIdentity
+from django.db import transaction
+from django.utils import timezone
+
+from processo_seletivo.auditoria.models import RegistroAuditoria
+from processo_seletivo.identidade.application.associacao import (
+    associar_credencial,
+    identidade_da_credencial,
+)
+from processo_seletivo.identidade.models import CandidateEmail, CandidateIdentity
 from processo_seletivo.inscricoes.domain.pessoais import cpf_valido, digitos
 from processo_seletivo.inscricoes.models import Inscricao
 
@@ -75,3 +83,88 @@ def gravar_nucleo(identidade: CandidateIdentity, *, nome: str, cpf: str = "") ->
     CandidateIdentity.objects.filter(pk=identidade.pk).update(**campos)
     identidade.refresh_from_db()
     return identidade
+
+
+# ---------------------------------------------------------------------------
+# As credenciais da identidade: acrescentar, escolher a principal, remover.
+# ---------------------------------------------------------------------------
+
+
+def adicionar(identidade, *, email_canonico: str, email_como_informado: str) -> CandidateEmail:
+    """Liga um endereço já provado à identidade (FR-016).
+
+    Não pede CPF: quem já está dentro não precisa provar de novo quem é — precisa provar que
+    controla **aquela** caixa, e isso o desafio já fez.
+    """
+    return associar_credencial(identidade, email_canonico, email_como_informado)
+
+
+def pertence_a_outra(identidade, email_canonico: str) -> bool:
+    dona = identidade_da_credencial(email_canonico)
+    return dona is not None and dona.pk != identidade.pk
+
+
+def tornar_principal(identidade, credencial_id) -> bool:
+    """Troca qual credencial alimenta a Inscrição (FR-013).
+
+    Numa transação só: entre baixar a antiga e levantar a nova existe um instante em que a
+    identidade não teria principal — e é justamente o estado que a restrição parcial de banco
+    recusa. Fazer as duas coisas juntas é o que impede a troca de falhar pela metade.
+    """
+    with transaction.atomic():
+        nova = identidade.credenciais.select_for_update().filter(pk=credencial_id).first()
+        if nova is None:
+            return False
+        identidade.credenciais.filter(principal=True).update(principal=False)
+        identidade.credenciais.filter(pk=nova.pk).update(principal=True)
+    return True
+
+
+def remover(identidade, credencial_id) -> bool:
+    """Remove uma credencial — nunca a última, e nunca deixando a identidade sem principal.
+
+    Remover a última é apagar o próprio acesso (FR-018), e nenhuma tela deveria oferecer isso. A
+    conferência é do servidor porque esconder o botão não é fronteira de segurança.
+
+    E **não toca inscrição alguma** (FR-019): o que foi submetido registrou o endereço que constava
+    no ato, e credencial é como se entra, não o que se enviou.
+    """
+    with transaction.atomic():
+        credenciais = list(identidade.credenciais.select_for_update())
+        if len(credenciais) <= 1:
+            return False
+        alvo = next((item for item in credenciais if str(item.pk) == str(credencial_id)), None)
+        if alvo is None:
+            return False
+        era_principal = alvo.principal
+        alvo.delete()
+        if era_principal:
+            # A identidade não fica sem principal: a mais antiga das que restam assume.
+            herdeira = identidade.credenciais.order_by("created_at").first()
+            identidade.credenciais.filter(pk=herdeira.pk).update(principal=True)
+    return True
+
+
+def registrar_ato(identidade, *, operacao: str, correlation_id: str = "") -> None:
+    """Associação e remoção de credencial entram na trilha existente (FR-089).
+
+    **Sem `record_event`, e o motivo é honesto**: aquele auxiliar lê `status` e `revision` do
+    agregado, e a identidade do candidato não tem nem um nem outro — ela não é máquina de estados.
+    Acrescentar os dois campos só para caber no auxiliar seria modelar para a ferramenta.
+
+    **`institution_scope` fica vazio**, e a consequência está declarada em D-012: este evento não
+    aparece na consulta administrativa de auditoria, que filtra por escopo. Ele não pertence a
+    Edital nenhum. É investigável por inspeção direta da trilha, que é append-only e preserva ator,
+    ato, momento e correlação — e essa é a decisão, tomada de frente, e não um campo em branco
+    descoberto depois.
+    """
+    RegistroAuditoria.objects.create(
+        occurred_at=timezone.now(),
+        actor_subject=identidade.subject,
+        permission="",
+        institution_scope="",
+        operation=operacao,
+        aggregate_type=CandidateIdentity.__name__,
+        aggregate_id=identidade.pk,
+        correlation_id=correlation_id,
+    )

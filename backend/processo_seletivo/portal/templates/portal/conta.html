@@ -1,0 +1,58 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Acesso à conta{% endblock %}
+{% block conteudo %}
+<h1>Acesso à conta</h1>
+<p class="sub">Você entra por qualquer um destes e-mails. O <strong>principal</strong> é o que a
+instituição usa para se dirigir a você nas inscrições.</p>
+
+{% if erro %}<p class="aviso recusa-em-destaque">{{ erro }}</p>{% endif %}
+{% if aviso %}<p class="aviso">{{ aviso }}</p>{% endif %}
+
+<h2>Seus e-mails</h2>
+<ul class="credenciais">
+  {% for credencial in credenciais %}
+  <li class="credencial">
+    <span class="endereco">{{ credencial.email_como_informado }}</span>
+    {% if credencial.principal %}
+    <span class="marca">Principal</span>
+    {% else %}
+    <span class="acoes">
+      <form method="post" action="{% url 'portal:conta-principal' credencial.id %}">
+        {% csrf_token %}
+        <button type="submit" class="secundario">Tornar principal</button>
+      </form>
+      {% comment %}
+      O botão de remover só aparece quando há mais de uma credencial — e o servidor recusa de todo
+      jeito. Esconder não é fronteira de segurança; é só não oferecer o que não pode acontecer.
+      {% endcomment %}
+      {% if credenciais|length > 1 %}
+      <form method="post" action="{% url 'portal:conta-remover' credencial.id %}">
+        {% csrf_token %}
+        <button type="submit" class="secundario">Remover</button>
+      </form>
+      {% endif %}
+    </span>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+
+<h2>Adicionar e-mail</h2>
+{% comment %}
+Prevenir a perda de acesso antes que ela aconteça: quem troca de provedor entre um certame e outro
+é o caso real, e a hora de resolver é agora, com a caixa antiga ainda funcionando. Não se pede CPF
+aqui — quem já está dentro precisa provar que controla **aquela** caixa, e nada além disso.
+{% endcomment %}
+<p class="sub">Enviaremos um código para confirmar que a caixa é sua.</p>
+<form method="post" action="{% url 'portal:conta-adicionar' %}" novalidate>
+  {% csrf_token %}
+  <div class="campo">
+    <label for="email">Novo e-mail</label>
+    <input type="email" id="email" name="email" autocomplete="email" inputmode="email" required>
+  </div>
+  <button type="submit" class="principal">Enviar código</button>
+</form>
+
+<h2>Seus dados</h2>
+<p><a href="{% url 'portal:meus-dados' %}">Corrigir nome e CPF</a></p>
+{% endblock %}

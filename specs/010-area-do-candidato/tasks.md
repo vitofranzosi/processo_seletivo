@@ -260,23 +260,30 @@ antigo, e receber recusa ao tentar remover o último.
 
 ### Testes da US6
 
-- [ ] T080 [P] [US6] Teste de contrato das rotas de conta, conforme `contracts/area.md`, em `backend/tests/contract/portal/test_conta.py`
-- [ ] T081 [P] [US6] Teste de que adicionar exige desafio e não pede CPF, e de que endereço de outra identidade é recusado sem revelar a quem pertence, em `backend/tests/integration/identidade/test_adicionar_credencial.py`
-- [ ] T082 [P] [US6] Teste de que duas confirmações simultâneas do mesmo endereço produzem uma única credencial, recusada pelo banco e não por consulta prévia, em `backend/tests/integration/identidade/test_credencial_concorrente.py`
-- [ ] T083 [P] [US6] Teste de que trocar o principal alcança os rascunhos abertos e nunca uma enviada, e de que remover não altera inscrição alguma, em `backend/tests/integration/identidade/test_principal_e_remocao.py`
-- [ ] T084 [P] [US6] Teste de que a última credencial não pode ser removida e de que uma identidade **que tenha credencial** nunca fica sem principal em `backend/tests/integration/identidade/test_ultima_credencial.py`
-- [ ] T084a [P] [US6] Teste de que corrigir nome alcança os rascunhos abertos e não altera nenhuma inscrição enviada, e de que o CPF congela na primeira enviada, em `backend/tests/integration/identidade/test_correcao.py`
-- [ ] T085 [P] [US6] Teste de que associação e remoção de credencial entram na trilha existente com escopo vazio, e de que código inválido **não** vira evento de negócio, em `backend/tests/integration/identidade/test_auditoria_de_credencial.py`
-- [ ] T086 [P] [US6] Teste de aceitação do percurso da Entrega 6, incluindo a correção de nome refletida no rascunho, em `backend/tests/acceptance/portal/test_credenciais.py`
+- [X] T080 [P] [US6] Teste de contrato das rotas de conta, conforme `contracts/area.md`, em `backend/tests/contract/portal/test_conta.py`
+- [X] T081 [P] [US6] Teste de que adicionar exige desafio e não pede CPF, e de que endereço de outra identidade é recusado sem revelar a quem pertence, em `backend/tests/integration/identidade/test_adicionar_credencial.py`
+- [X] T082 [P] [US6] Teste de que duas confirmações simultâneas do mesmo endereço produzem uma única credencial, recusada pelo banco e não por consulta prévia, em `backend/tests/integration/identidade/test_credencial_concorrente.py`
+- [X] T083 [P] [US6] Teste de que trocar o principal alcança os rascunhos abertos e nunca uma enviada, e de que remover não altera inscrição alguma, em `backend/tests/integration/identidade/test_principal_e_remocao.py`
+- [X] T084 [P] [US6] Teste de que a última credencial não pode ser removida e de que uma identidade **que tenha credencial** nunca fica sem principal em `backend/tests/integration/identidade/test_ultima_credencial.py`
+- [X] T084a [P] [US6] Teste de que corrigir nome alcança os rascunhos abertos e não altera nenhuma inscrição enviada, e de que o CPF congela na primeira enviada, em `backend/tests/integration/identidade/test_correcao.py`
+- [X] T085 [P] [US6] Teste de que associação e remoção de credencial entram na trilha existente com escopo vazio, e de que código inválido **não** vira evento de negócio, em `backend/tests/integration/identidade/test_auditoria_de_credencial.py`
+- [X] T086 [P] [US6] Teste de aceitação do percurso da Entrega 6, incluindo a correção de nome refletida no rascunho, em `backend/tests/acceptance/portal/test_credenciais.py`
 
 ### Implementação da US6
 
-- [ ] T087 [US6] Implementar adicionar, escolher principal, remover credencial **e corrigir nome e CPF** — nome sempre, CPF enquanto não houver inscrição enviada — em `backend/processo_seletivo/identidade/application/credenciais.py`
-- [ ] T088 [US6] Registrar associação e remoção de credencial na trilha existente, com o comentário que explica o escopo vazio e a consequência para a consulta por escopo, em `backend/processo_seletivo/identidade/application/credenciais.py`
-- [ ] T089 [US6] Implementar as views de conta e as rotas em `backend/processo_seletivo/portal/views.py` e `backend/processo_seletivo/portal/urls.py`
-- [ ] T090 [US6] Criar a página de acesso à conta, com credenciais, principal e correção de nome e CPF, em `backend/processo_seletivo/portal/templates/portal/conta.html`
+- [X] T087 [US6] Implementar adicionar, escolher principal, remover credencial **e corrigir nome e CPF** — nome sempre, CPF enquanto não houver inscrição enviada — em `backend/processo_seletivo/identidade/application/credenciais.py`
+- [X] T088 [US6] Registrar associação e remoção de credencial na trilha existente, com o comentário que explica o escopo vazio e a consequência para a consulta por escopo, em `backend/processo_seletivo/identidade/application/credenciais.py`
+- [X] T089 [US6] Implementar as views de conta e as rotas em `backend/processo_seletivo/portal/views.py` e `backend/processo_seletivo/portal/urls.py`
+- [X] T090 [US6] Criar a página de acesso à conta, com credenciais, principal e correção de nome e CPF, em `backend/processo_seletivo/portal/templates/portal/conta.html`
 
 **Checkpoint**: o percurso da Entrega 6 roda.
+
+> **Duas decisões tomadas aqui, e registradas.** A recusa de endereço que pertence a outra
+> identidade acontece **antes** de qualquer mensagem: enviar o código e recusar depois já teria
+> contado àquela pessoa que alguém tentou usar o endereço dela. E a auditoria de credencial não
+> passa por `record_event` — o auxiliar lê `status` e `revision` do agregado, e a identidade do
+> candidato não é máquina de estados; acrescentar os dois campos só para caber nele seria modelar
+> para a ferramenta.
 
 ---
 

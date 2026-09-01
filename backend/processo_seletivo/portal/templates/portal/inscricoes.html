@@ -2,6 +2,7 @@
 {% block titulo %}Minhas inscrições{% endblock %}
 {% block conteudo %}
 <h1>Minhas inscrições</h1>
+<p class="sub"><a href="{% url 'portal:conta' %}">Acesso à conta</a></p>
 {% if inscricoes %}
 {% comment %}
 Mais recente primeiro, e uma ação principal por item. A situação aparece por texto **e** por

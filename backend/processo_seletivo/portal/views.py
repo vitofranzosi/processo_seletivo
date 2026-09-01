@@ -408,6 +408,8 @@ def acesso_codigo(request):
 
     if finalidade == DesafioDeAcesso.Finalidade.RETOMAR:
         return _abrir_retomada(request, desafio)
+    if finalidade == DesafioDeAcesso.Finalidade.ADICIONAR_CREDENCIAL:
+        return _concluir_adicao(request, desafio)
     return _decidir_a_quem_pertence(request, desafio, informado)
 
 
@@ -678,6 +680,112 @@ def meus_dados(request):
         # criador de inscrições.
         return render(request, "portal/retomar_convite.html", {"destino": destino})
     return redirect(reverse("portal:inscricoes"))
+
+
+@require_http_methods(["GET"])
+@resposta_privada
+def conta(request):
+    """Acesso à conta: as credenciais provadas, e qual delas a instituição usa."""
+    registro = identidade_do_candidato.identidade_autenticada(request)
+    if registro is None:
+        return redirect(reverse("portal:acesso"))
+    return render(
+        request,
+        "portal/conta.html",
+        {
+            "credenciais": list(registro.credenciais.order_by("created_at")),
+            "erro": request.session.pop("portal_conta_erro", ""),
+            "aviso": request.session.pop("portal_conta_aviso", ""),
+        },
+    )
+
+
+@require_http_methods(["POST"])
+def conta_adicionar(request):
+    """Pede o código para um endereço novo — e não pede CPF (FR-016).
+
+    A recusa de endereço que já pertence a outra identidade não diz **a quem** (FR-017), e por isso
+    ela acontece aqui, antes de qualquer mensagem: enviar código para um endereço alheio e recusar
+    depois já teria contado a essa pessoa que alguém tentou.
+    """
+    registro = identidade_do_candidato.identidade_autenticada(request)
+    if registro is None:
+        return redirect(reverse("portal:acesso"))
+    informado = request.POST.get("email", "").strip()
+    if not endereco_aceitavel(informado):
+        request.session["portal_conta_erro"] = "Informe um e-mail válido."
+        return redirect(reverse("portal:conta"))
+    canonico = canonizar(informado)
+    if nucleo_da_identidade.pertence_a_outra(registro, canonico):
+        request.session["portal_conta_erro"] = (
+            "Não foi possível usar este endereço. Tente outro."
+        )
+        return redirect(reverse("portal:conta"))
+    if canonico in {item.email_canonico for item in registro.credenciais.all()}:
+        request.session["portal_conta_aviso"] = "Este endereço já é seu."
+        return redirect(reverse("portal:conta"))
+
+    recibo, codigo = desafio_de_acesso.solicitar(
+        email_canonico=canonico,
+        finalidade=DesafioDeAcesso.Finalidade.ADICIONAR_CREDENCIAL,
+        origem=_origem(request),
+    )
+    enviar_codigo(para=informado, codigo=codigo)
+    request.session[CHAVE_DO_ENDERECO] = informado
+    request.session[CHAVE_DA_FINALIDADE] = DesafioDeAcesso.Finalidade.ADICIONAR_CREDENCIAL
+    request.session["portal_acesso_espera"] = recibo.proxima_tentativa_em
+    return redirect(reverse("portal:acesso-codigo"))
+
+
+def _concluir_adicao(request, desafio):
+    """Provado o endereço, ele passa a ser credencial de quem está na sessão (FR-016)."""
+    registro = identidade_do_candidato.identidade_autenticada(request)
+    if registro is None:
+        return redirect(reverse("portal:acesso"))
+    if not nucleo_da_identidade.pertence_a_outra(registro, desafio.email_canonico):
+        nucleo_da_identidade.adicionar(
+            registro,
+            email_canonico=desafio.email_canonico,
+            email_como_informado=_endereco_do_desafio(request, desafio),
+        )
+        nucleo_da_identidade.registrar_ato(
+            registro,
+            operacao="ASSOCIAR_CREDENCIAL",
+            correlation_id=getattr(request, "correlation_id", ""),
+        )
+    for chave in (CHAVE_DO_ENDERECO, CHAVE_DA_FINALIDADE, "portal_acesso_espera"):
+        request.session.pop(chave, None)
+    return redirect(reverse("portal:conta"))
+
+
+@require_http_methods(["POST"])
+def conta_principal(request, credencial_id):
+    registro = identidade_do_candidato.identidade_autenticada(request)
+    if registro is None:
+        return redirect(reverse("portal:acesso"))
+    if not nucleo_da_identidade.tornar_principal(registro, credencial_id):
+        raise Http404
+    return redirect(reverse("portal:conta"))
+
+
+@require_http_methods(["POST"])
+def conta_remover(request, credencial_id):
+    registro = identidade_do_candidato.identidade_autenticada(request)
+    if registro is None:
+        return redirect(reverse("portal:acesso"))
+    if not nucleo_da_identidade.remover(registro, credencial_id):
+        # A última credencial não sai: removê-la é apagar o próprio acesso (FR-018). A tela não
+        # oferece o botão, e o servidor recusa mesmo assim — esconder não é fronteira de segurança.
+        request.session["portal_conta_erro"] = (
+            "Você não pode remover seu último e-mail: é por ele que você entra."
+        )
+        return redirect(reverse("portal:conta"))
+    nucleo_da_identidade.registrar_ato(
+        registro,
+        operacao="REMOVER_CREDENCIAL",
+        correlation_id=getattr(request, "correlation_id", ""),
+    )
+    return redirect(reverse("portal:conta"))
 
 
 def inscricoes(request):
