@@ -137,6 +137,24 @@ def etapas_do_membro(membro):
     )
 
 
+def etapas_por_membro(processo):
+    """O mesmo que `etapas_do_membro`, para a comissão inteira — em consulta única.
+
+    Chamar a versão por pessoa dentro do laço da tela custava cinco consultas por membro: uma
+    das alocações e as da Versão Consolidada, que não se aproveitavam entre iterações. Numa
+    comissão de quarenta — o tamanho que mil candidatos pedem — eram mais de duzentas consultas
+    para desenhar uma lista. Aqui a leitura é uma, e o conteúdo vigente de cada Edital é aberto
+    uma vez só.
+    """
+    alocacoes = AlocacaoEtapa.objects.filter(
+        membro__processo=processo, ativo=True
+    ).select_related("edital", "edital__processo", "membro")
+    por_membro = {}
+    for item in _atribuicoes(alocacoes):
+        por_membro.setdefault(item["alocacao"].membro_id, []).append(item)
+    return por_membro
+
+
 def minhas_etapas(ator):
     """Todos e somente os objetos com alocação ativa desta identidade, no escopo dela (FR-043).
 

@@ -1762,14 +1762,15 @@ def comissao(request, processo_id):
             erro = recusa.detail
 
     membros = comissao_selectors.membros(processo)
+    # Em lote: por membro, a leitura custava cinco consultas, e a tela não terminava numa
+    # comissão do tamanho que mil candidatos exigem.
+    por_membro = comissao_selectors.etapas_por_membro(processo)
     return render(
         request,
         "interface/comissao.html",
         {
             "processo": processo,
-            "membros": [
-                {"membro": m, "etapas": comissao_selectors.etapas_do_membro(m)} for m in membros
-            ],
+            "membros": [{"membro": m, "etapas": por_membro.get(m.id, [])} for m in membros],
             "tem_presidente": comissao_selectors.tem_presidente(processo),
             "erro": erro,
             "chave_idempotencia": uuid4().hex,
