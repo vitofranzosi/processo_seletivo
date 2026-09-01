@@ -134,4 +134,30 @@
     <p class="salvar"><button type="submit" class="botao">Continuar</button></p>
   </form>
 </section>
+
+<section aria-labelledby="lote-titulo" class="adicionar">
+  <h2 id="lote-titulo">Adicionar vários de uma vez</h2>
+  <p class="ajuda">Uma pessoa por linha. Só o identificador, ou
+    <code>identificador, Nome de exibição</code>. É assim que a lista chega — de uma portaria, de
+    uma planilha —, e a conferência é da lista inteira, antes de gravar.</p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="acao" value="incluir_lote">
+    <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-lote">
+    <p class="campo largo">
+      <label for="lista">Identificadores institucionais</label>
+      <textarea id="lista" name="lista" rows="6" aria-describedby="ajuda-lista"
+                placeholder="joao.souza, João Souza&#10;ana.costa"></textarea>
+      <span class="ajuda" id="ajuda-lista">Nenhum deles é verificado pelo sistema.</span>
+    </p>
+    <p class="campo">
+      <label for="funcao-lote">Função de todos</label>
+      <select id="funcao-lote" name="funcao">
+        <option value="MEMBRO">Membro</option>
+        <option value="PRESIDENTE">Presidente</option>
+      </select>
+    </p>
+    <p class="salvar"><button type="submit" class="botao">Conferir a lista</button></p>
+  </form>
+</section>
 {% endblock %}

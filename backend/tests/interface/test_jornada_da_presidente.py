@@ -100,7 +100,11 @@ def test_etapa_com_a_comissao_toda_alocada_diz_isso(
 def test_as_remocoes_dizem_de_quem_e_de_onde(
     presidente, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
 ):
-    """L5: quatro botões com o mesmo nome acessível são indistinguíveis por leitor de tela."""
+    """L5: rótulos repetidos são indistinguíveis por leitor de tela.
+
+    Na Alocação isso deixou de ser um botão por linha: a caixa nomeia a pessoa e o botão nomeia
+    a Etapa, o que resolve a distinção e a remoção em lote de uma vez.
+    """
     alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
 
     alocacoes = presidente.get(
@@ -110,7 +114,9 @@ def test_as_remocoes_dizem_de_quem_e_de_onde(
         reverse("interface:comissao", args=[processo_a.id])
     ).content.decode()
 
-    assert 'aria-label="Remover joao da Etapa Análise documental"' in alocacoes
+    assert f'name="alocacao_id" value="{comissao_de_a["joao"].alocacoes.get().id}"' in alocacoes
+    assert 'aria-label="Remover as pessoas marcadas da Etapa Análise documental"' in alocacoes
+    assert "Quem atua em Análise documental" in alocacoes
     assert 'aria-label="Remover joao da comissão"' in comissao
 
 
@@ -206,3 +212,156 @@ def test_a_trilha_filtra_por_pessoa_e_por_operacao(
     assert "Inclusão na comissão" not in por_operacao
     assert "maria" in por_pessoa
     assert "joao" not in por_pessoa
+
+
+def test_constituir_a_comissao_pela_lista_colada(presidente, processo_a):
+    """Oitenta passos para uma banca de quarenta: dois envios por pessoa era o custo real."""
+    from processo_seletivo.comissoes.models import MembroComissao
+
+    url = reverse("interface:comissao", args=[processo_a.id])
+    conferencia = presidente.post(
+        url,
+        {
+            "acao": "incluir_lote",
+            "lista": "ana.costa, Ana Costa\njoao.souza\nbia.lima, Bia Lima",
+            "funcao": "MEMBRO",
+        },
+    )
+
+    assert conferencia.status_code == 200
+    corpo = conferencia.content.decode()
+    assert "ana.costa" in corpo and "joao.souza" in corpo and "bia.lima" in corpo
+    assert "3 pessoas" in corpo
+    # Nada foi gravado ainda: a conferência confere a lista inteira antes.
+    assert MembroComissao.objects.filter(identity_subject="ana.costa").count() == 0
+
+    presidente.post(
+        url,
+        {
+            "acao": "incluir_lote",
+            "confirmado": "1",
+            "lista": "ana.costa, Ana Costa\njoao.souza\nbia.lima, Bia Lima",
+            "funcao": "MEMBRO",
+            "chave_idempotencia": "interface-lote-membros-0001",
+        },
+    )
+
+    assert MembroComissao.objects.filter(processo=processo_a, ativo=True).count() == 5
+
+
+def test_a_conferencia_marca_quem_ja_integra_a_comissao(presidente, processo_a, comissao_de_a):
+    corpo = presidente.post(
+        reverse("interface:comissao", args=[processo_a.id]),
+        {"acao": "incluir_lote", "lista": "joao\nana.nova", "funcao": "MEMBRO"},
+    ).content.decode()
+
+    assert "já integra a comissão" in corpo
+    assert "será incluída" in corpo
+
+
+def test_remover_varias_alocacoes_numa_submissao_pela_tela(
+    presidente, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    from processo_seletivo.comissoes.models import AlocacaoEtapa
+
+    alocacoes = [
+        alocar_em(gestor, processo_a, membro, edital_a, etapa_a1)
+        for membro in comissao_de_a.values()
+    ]
+
+    presidente.post(
+        reverse("interface:alocacoes", args=[processo_a.id]),
+        {
+            "acao": "remover",
+            "alocacao_id": [str(a.id) for a in alocacoes],
+            "chave_idempotencia": "interface-remocao-lote-0001",
+        },
+        follow=True,
+    )
+
+    assert AlocacaoEtapa.objects.filter(ativo=True).count() == 0
+
+
+def test_alocar_toda_a_comissao_disponivel_num_botao(
+    presidente, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    """O caso mais comum numa etapa documental é a banca inteira entrar."""
+    from processo_seletivo.comissoes.models import AlocacaoEtapa
+
+    presidente.post(
+        reverse("interface:alocacoes", args=[processo_a.id]),
+        {
+            "acao": "incluir_todos",
+            "edital_id": str(edital_a.id),
+            "etapa_id": etapa_a1,
+            "disponivel": [str(m.id) for m in comissao_de_a.values()],
+            "chave_idempotencia": "interface-todos-0001",
+        },
+        follow=True,
+    )
+
+    assert AlocacaoEtapa.objects.filter(ativo=True, etapa_id=etapa_a1).count() == 2
+
+
+def test_a_comissao_e_ordenada_pelo_que_se_le(presidente, gestor, processo_a):
+    """Mostrar "Maria Silva" e ordenar por "maria.presidente" embaralha uma lista de quarenta."""
+    from processo_seletivo.comissoes.application.comissao import adicionar_varios
+    from processo_seletivo.comissoes.application.selectors import membros
+
+    adicionar_varios(
+        actor=gestor,
+        processo_id=processo_a.id,
+        entradas=[
+            ("zeca", "Ana Primeira"),
+            ("ana", "Zulmira Última"),
+            ("bea", "Bruno Meio"),
+            # Acentuada no meio: por codepoint ela cairia depois de Zulmira.
+            ("iri", "Íris Melo"),
+        ],
+        funcao="MEMBRO",
+        idempotency_key="ordem-de-leitura-0001",
+        correlation_id="c",
+    )
+
+    lidos = [m.display_label for m in membros(processo_a) if m.display_label]
+
+    assert lidos == ["Ana Primeira", "Bruno Meio", "Íris Melo", "Zulmira Última"]
+
+
+def test_a_lista_atravessa_a_conferencia_sem_perder_as_linhas(presidente, processo_a):
+    """O caminho real passa a lista por um campo oculto — e atributo HTML não é textarea.
+
+    O teste anterior reenviava a lista que ele mesmo montou. Este pega a que a tela devolveu,
+    que é a única forma de saber se a conferência preserva o que a pessoa colou.
+    """
+    import re
+
+    from processo_seletivo.comissoes.models import MembroComissao
+
+    url = reverse("interface:comissao", args=[processo_a.id])
+    lista = "ana.costa, Ana Costa\njoao.souza\nbia.lima, Bia Lima"
+    corpo = presidente.post(
+        url, {"acao": "incluir_lote", "lista": lista, "funcao": "MEMBRO"}
+    ).content.decode()
+
+    campo = re.search(r'name="lista" value="(.*?)"', corpo, re.S)
+    assert campo, "a conferência precisa devolver a lista para o envio final"
+    devolvida = campo.group(1).replace("&#x0A;", "\n").replace("&amp;", "&")
+
+    presidente.post(
+        url,
+        {
+            "acao": "incluir_lote",
+            "confirmado": "1",
+            "lista": devolvida,
+            "funcao": "MEMBRO",
+            "chave_idempotencia": "interface-roundtrip-0001",
+        },
+    )
+
+    incluidos = set(
+        MembroComissao.objects.filter(processo=processo_a, ativo=True).values_list(
+            "identity_subject", flat=True
+        )
+    )
+    assert {"ana.costa", "joao.souza", "bia.lima"} <= incluidos

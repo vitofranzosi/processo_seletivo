@@ -4,6 +4,8 @@ Toda Etapa vem de `etapas_vigentes()`, e a alocação órfã é **derivada na le
 alocação com o conteúdo vigente, sem campo, sem sincronizador e sem cópia da Etapa (FR-047).
 """
 
+import unicodedata
+
 from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
 from processo_seletivo.comissoes.models import AlocacaoEtapa, Funcao, MembroComissao
 from processo_seletivo.processos.models import Edital
@@ -48,11 +50,26 @@ def preside(ator, processo):
 
 
 def membros(processo):
-    return list(
-        MembroComissao.objects.filter(processo=processo, ativo=True).order_by(
-            "funcao", "identity_subject"
-        )
-    )
+    """A comissão, na ordem em que a tela é lida: presidência primeiro, depois pelo nome.
+
+    Ordenar por `identity_subject` mostrava “Maria Silva” e ordenava por “maria.presidente”.
+    Com cinco pessoas ninguém nota; com quarenta, a lista parece embaralhada. A ordenação é em
+    memória porque a chave é a que se exibe, e ela mistura dois campos.
+    """
+    ativos = list(MembroComissao.objects.filter(processo=processo, ativo=True))
+    ativos.sort(key=lambda m: (m.funcao != Funcao.PRESIDENTE, _chave_de_leitura(m)))
+    return ativos
+
+
+def _chave_de_leitura(membro):
+    """A chave de ordenação ignora acento, senão “Íris” cai depois de “Léo”.
+
+    Ordenar por codepoint joga todo nome acentuado para o fim da lista — numa comissão
+    brasileira isso não parece uma escolha de ordenação, parece defeito.
+    """
+    nome = membro.display_label or membro.identity_subject
+    sem_acento = unicodedata.normalize("NFKD", nome)
+    return "".join(c for c in sem_acento if not unicodedata.combining(c)).casefold()
 
 
 def tem_presidente(processo):

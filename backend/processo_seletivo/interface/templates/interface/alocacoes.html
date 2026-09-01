@@ -93,25 +93,30 @@
       </div>
 
       {% if etapa.alocacoes %}
-      <ul class="atribuicoes">
-        {% for alocacao in etapa.alocacoes %}
-        <li>
-          {{ alocacao.membro.display_label|default:alocacao.membro.identity_subject }}
-          <form method="post" class="linha-de-acoes">
-            {% csrf_token %}
-            <input type="hidden" name="acao" value="remover">
-            <input type="hidden" name="alocacao_id" value="{{ alocacao.id }}">
-            <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-a{{ alocacao.id }}">
-            {% comment %} UX-003: sai desta Etapa, e continua na comissão. O outro botão, o de sair da
-               comissão, mora na tela da Comissão e tem outro nome. O `aria-label` diz de quem e de
-               onde: sem ele, quem navega por botões ouve o mesmo rótulo em todas as linhas. {% endcomment %}
-            <button type="submit" class="acao perigoso"
-                    aria-label="Remover {{ alocacao.membro.display_label|default:alocacao.membro.identity_subject }} da Etapa {{ etapa.nome }}">
-              Remover desta Etapa</button>
-          </form>
-        </li>
-        {% endfor %}
-      </ul>
+      {% comment %} Desfazer pelo mesmo preço de fazer: alocar a Etapa inteira virou uma submissão,
+         e remover continuava custando uma por pessoa — a assimetria é o que torna a ida
+         arriscada. A caixa nomeia a pessoa, o que também resolve o rótulo repetido que um leitor
+         de tela ouvia em todas as linhas (UX-003). {% endcomment %}
+      <form method="post" class="remover-em-lote">
+        {% csrf_token %}
+        <input type="hidden" name="acao" value="remover">
+        <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-r{{ etapa.id }}">
+        <fieldset>
+          <legend>Quem atua em {{ etapa.nome }}</legend>
+          <div class="escolhas">
+            {% for alocacao in etapa.alocacoes %}
+            <label class="escolha">
+              <input type="checkbox" name="alocacao_id" value="{{ alocacao.id }}">
+              {{ alocacao.membro.display_label|default:alocacao.membro.identity_subject }}</label>
+            {% endfor %}
+          </div>
+        </fieldset>
+        <p class="salvar">
+          <button type="submit" class="acao perigoso"
+                  aria-label="Remover as pessoas marcadas da Etapa {{ etapa.nome }}">
+            Remover desta Etapa</button>
+        </p>
+      </form>
       {% endif %}
 
       {% if tem_presidente %}
@@ -136,10 +141,18 @@
             {% endfor %}
           </div>
         </fieldset>
+        {% for membro in etapa.alocaveis %}
+        <input type="hidden" name="disponivel" value="{{ membro.id }}">
+        {% endfor %}
         <p class="salvar">
           <button type="submit" class="acao"
                   aria-label="Alocar as pessoas marcadas na Etapa {{ etapa.nome }}">
             Alocar selecionados</button>
+          {% comment %} Um segundo botão, e não um "marcar todos" em JavaScript: o caso mais comum
+             numa etapa documental é toda a banca entrar, e ele resolve isso sem script. {% endcomment %}
+          <button type="submit" name="acao" value="incluir_todos" class="acao"
+                  aria-label="Alocar toda a comissão disponível na Etapa {{ etapa.nome }}">
+            Alocar {{ etapa.alocaveis|length }} disponíve{{ etapa.alocaveis|length|pluralize:"l,is" }}</button>
         </p>
       </form>
       {% elif membros %}

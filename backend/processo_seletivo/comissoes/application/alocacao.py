@@ -228,3 +228,56 @@ def _nome_da_etapa(alocacao):
     except DomainError:
         dados = None
     return (dados or {}).get("name") or str(alocacao.etapa_id)
+
+
+def remover_varias_alocacoes(
+    *, actor, processo_id, alocacao_ids, idempotency_key, correlation_id
+):
+    """Desfaz em lote o que se faz em lote.
+
+    Alocar a Etapa inteira virou uma submissão; desfazer continuava custando uma por pessoa. A
+    assimetria é o que torna a ida arriscada — quem aloca quarenta na Etapa errada precisa de
+    volta pelo mesmo preço.
+    """
+    ids = [identificador(i) for i in alocacao_ids]
+    if not ids:
+        raise DomainError(
+            "nenhuma_alocacao_selecionada",
+            "Selecione ao menos uma alocação para remover.",
+            422,
+            campo="alocacao_id",
+        )
+    with comando_de_comissao(
+        actor=actor,
+        processo_id=processo_id,
+        operation="comissao:remover-alocacoes",
+        payload={"alocacoes": sorted(str(i) for i in ids)},
+        idempotency_key=idempotency_key,
+    ) as ctx:
+        if ctx.repetido:
+            return []
+        alocacoes = list(
+            AlocacaoEtapa.objects.filter(
+                pk__in=ids, membro__processo=ctx.processo, ativo=True
+            ).select_related("membro", "edital")
+        )
+        if not alocacoes:
+            raise nao_encontrado()
+        for alocacao in alocacoes:
+            alocacao.ativo = False
+            alocacao.inativado_em = ctx.now
+            alocacao.inativado_por = actor.subject
+            alocacao.save(update_fields=["ativo", "inativado_em", "inativado_por"])
+            auditar(
+                ctx=ctx,
+                actor=actor,
+                operation="ALOCACAO_REMOVER",
+                aggregate=alocacao,
+                reason=(
+                    f"{alocacao.membro.identity_subject} — Etapa “{_nome_da_etapa(alocacao)}” do "
+                    f"Edital {alocacao.edital.number}/{alocacao.edital.year}; em lote"
+                ),
+                correlation_id=correlation_id,
+            )
+        ctx.concluir(alocacoes[0], 200)
+        return alocacoes

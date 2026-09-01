@@ -123,6 +123,80 @@ def adicionar_membro(
         return ctx.concluir(membro, 201)
 
 
+def adicionar_varios(*, actor, processo_id, entradas, funcao, idempotency_key, correlation_id):
+    """Inclui muitas pessoas de uma vez, com a mesma função.
+
+    Incluir pessoa a pessoa eram dois envios por servidor — o formulário e a conferência —, e
+    oitenta passos para montar uma banca de quarenta. Isso é pior que o custo de alocar, que já
+    foi resolvido, e a razão é a mesma: a operação real é coletiva.
+
+    `entradas` é uma lista de `(identificador, rótulo)`. Quem já integra a comissão não faz o
+    conjunto falhar: numa inclusão em lote, recusar oitenta porque uma pessoa já estava seria
+    punir o caminho normal.
+
+    Devolve `(criados, ja_eram)`.
+    """
+    if funcao not in Funcao.values:
+        raise DomainError("funcao_invalida", "Função inválida.", 422, campo="funcao")
+    limpas = [
+        ((subject or "").strip(), (rotulo or "").strip())
+        for subject, rotulo in entradas
+        if (subject or "").strip()
+    ]
+    if not limpas:
+        raise DomainError(
+            "identificador_ausente",
+            "Informe ao menos um identificador institucional.",
+            422,
+            campo="identity_subject",
+        )
+    vistos = {}
+    for subject, rotulo in limpas:
+        # A mesma pessoa repetida na lista colada é engano de quem colou, e não conflito: a
+        # primeira ocorrência vale, e o rótulo dela também.
+        vistos.setdefault(subject, rotulo)
+    with comando_de_comissao(
+        actor=actor,
+        processo_id=processo_id,
+        operation="comissao:incluir-varios",
+        payload={"subjects": sorted(vistos), "funcao": funcao},
+        idempotency_key=idempotency_key,
+    ) as ctx:
+        if ctx.repetido:
+            return [], []
+        ja = set(
+            MembroComissao.objects.filter(
+                processo=ctx.processo, ativo=True, identity_subject__in=list(vistos)
+            ).values_list("identity_subject", flat=True)
+        )
+        criados = []
+        for subject, rotulo in vistos.items():
+            if subject in ja:
+                continue
+            membro = MembroComissao.objects.create(
+                processo=ctx.processo,
+                identity_subject=subject,
+                display_label=rotulo,
+                funcao=funcao,
+                criado_em=ctx.now,
+                criado_por=actor.subject,
+            )
+            # Um evento por pessoa: a trilha responde por agregado, e um evento de lote não
+            # diria quem entrou na comissão (FR-070).
+            auditar(
+                ctx=ctx,
+                actor=actor,
+                operation="COMISSAO_INCLUIR_MEMBRO",
+                aggregate=membro,
+                reason=f"{subject} incluído como {funcao}; em lote",
+                correlation_id=correlation_id,
+            )
+            criados.append(membro)
+        if criados:
+            ctx.concluir(criados[0], 201)
+        return criados, sorted(ja)
+
+
 def alterar_funcao(*, actor, processo_id, membro_id, funcao, idempotency_key, correlation_id):
     if funcao not in Funcao.values:
         raise DomainError("funcao_invalida", "Função inválida.", 422, campo="funcao")

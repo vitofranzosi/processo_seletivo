@@ -44,3 +44,52 @@ def test_remover_uma_etapa_nao_toca_a_outra(
     )
 
     assert joao.alocacoes.filter(ativo=True).count() == 1
+
+
+def test_remove_varias_alocacoes_numa_submissao(
+    gestor, processo_a, edital_a, comissao_de_a, etapa_a1, etapa_a2
+):
+    """Desfazer pelo mesmo preço de fazer: a assimetria é o que tornava a ida arriscada."""
+    from processo_seletivo.comissoes.application.alocacao import remover_varias_alocacoes
+    from processo_seletivo.comissoes.models import AlocacaoEtapa
+
+    joao = comissao_de_a["joao"]
+    alocacoes = [
+        alocar_em(gestor, processo_a, joao, edital_a, etapa)
+        for etapa in (etapa_a1, etapa_a2)
+    ]
+
+    removidas = remover_varias_alocacoes(
+        actor=gestor,
+        processo_id=processo_a.id,
+        alocacao_ids=[a.id for a in alocacoes],
+        idempotency_key="remocao-lote-1",
+        correlation_id="c",
+    )
+
+    assert len(removidas) == 2
+    assert AlocacaoEtapa.objects.filter(ativo=True).count() == 0
+    joao.refresh_from_db()
+    assert joao.ativo is True
+
+
+def test_remocao_em_lote_de_alocacao_alheia_e_recusada(
+    gestor, processo_a, edital_b, comissao_de_a, etapa_b1
+):
+    from processo_seletivo.comissoes.application.alocacao import remover_varias_alocacoes
+    from processo_seletivo.shared.api.problems import DomainError
+    from tests.fixtures.comissao import constituir
+
+    alheia = constituir(gestor, edital_b.processo, [("ana", "PRESIDENTE")])["ana"]
+    da_outra = alocar_em(gestor, edital_b.processo, alheia, edital_b, etapa_b1)
+
+    with pytest.raises(DomainError) as recusa:
+        remover_varias_alocacoes(
+            actor=gestor,
+            processo_id=processo_a.id,
+            alocacao_ids=[da_outra.id],
+            idempotency_key="remocao-alheia",
+            correlation_id="c",
+        )
+
+    assert recusa.value.status == 404

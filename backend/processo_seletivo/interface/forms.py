@@ -555,3 +555,22 @@ def ler_alocacao(dados):
         "edital_id": _texto(dados, "edital_id"),
         "etapa_id": _texto(dados, "etapa_id"),
     }
+
+
+def ler_membros_em_lote(dados):
+    """Uma pessoa por linha: `identificador` ou `identificador, Nome de exibição`.
+
+    Colar a lista é como a informação chega de verdade — de uma portaria, de uma planilha, de um
+    e-mail. Exigir um formulário por pessoa era transformar quarenta linhas em oitenta envios.
+    """
+    bruto = dados.get("lista") or ""
+    entradas = []
+    for linha in bruto.splitlines():
+        linha = linha.strip()
+        if not linha:
+            continue
+        identificador, separador, rotulo = linha.partition(",")
+        if not separador:
+            identificador, separador, rotulo = linha.partition(";")
+        entradas.append((identificador.strip(), rotulo.strip()))
+    return {"entradas": entradas, "funcao": _texto(dados, "funcao"), "lista": bruto}

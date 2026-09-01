@@ -1736,6 +1736,47 @@ def comissao(request, processo_id):
                     idempotency_key=chave,
                     correlation_id=getattr(request, "correlation_id", ""),
                 )
+            elif acao == "incluir_lote":
+                lote = forms.ler_membros_em_lote(request.POST)
+                # A conferência confere a lista inteira: sem diretório, ela é a única defesa
+                # contra o identificador errado — e conferir quarenta um a um não é conferir.
+                if not request.POST.get("confirmado"):
+                    if not lote["entradas"]:
+                        raise DomainError(
+                            "identificador_ausente",
+                            "Informe ao menos um identificador institucional.",
+                            422,
+                        )
+                    ja = {
+                        m.identity_subject
+                        for m in comissao_selectors.membros(processo)
+                    }
+                    return render(
+                        request,
+                        "interface/comissao_confirmar.html",
+                        {
+                            "processo": processo,
+                            "lote": [
+                                {
+                                    "identity_subject": subject,
+                                    "display_label": rotulo,
+                                    "ja_integra": subject in ja,
+                                }
+                                for subject, rotulo in lote["entradas"]
+                            ],
+                            "funcao": lote["funcao"],
+                            "lista": lote["lista"],
+                            "chave_idempotencia": chave,
+                        },
+                    )
+                comissao_app.adicionar_varios(
+                    actor=ator,
+                    processo_id=processo.id,
+                    entradas=lote["entradas"],
+                    funcao=lote["funcao"],
+                    idempotency_key=chave,
+                    correlation_id=getattr(request, "correlation_id", ""),
+                )
             elif acao == "alterar_funcao":
                 comissao_app.alterar_funcao(
                     actor=ator,
@@ -1824,11 +1865,21 @@ def alocacoes(request, processo_id):
                     idempotency_key=chave,
                     correlation_id=getattr(request, "correlation_id", ""),
                 )
-            elif acao == "remover":
-                alocacao_app.remover_alocacao(
+            elif acao == "incluir_todos":
+                alocacao_app.alocar_varios(
                     actor=ator,
                     processo_id=processo.id,
-                    alocacao_id=request.POST.get("alocacao_id"),
+                    membro_ids=request.POST.getlist("disponivel"),
+                    edital_id=dados["edital_id"],
+                    etapa_id=dados["etapa_id"],
+                    idempotency_key=chave,
+                    correlation_id=getattr(request, "correlation_id", ""),
+                )
+            elif acao == "remover":
+                alocacao_app.remover_varias_alocacoes(
+                    actor=ator,
+                    processo_id=processo.id,
+                    alocacao_ids=request.POST.getlist("alocacao_id"),
                     idempotency_key=chave,
                     correlation_id=getattr(request, "correlation_id", ""),
                 )

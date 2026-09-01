@@ -14,6 +14,46 @@
 {% comment %} FR-022: o identificador aparece exatamente como será gravado, e nada foi gravado ainda. Sem
    diretório para conferir contra, esta tela é a única defesa contra o erro de digitação — e um
    erro aqui produz um membro que nunca vai conseguir entrar. {% endcomment %}
+{% if lote %}
+<section aria-labelledby="conferencia-titulo" class="consequencias">
+  <h2 id="conferencia-titulo">O que será gravado — {{ lote|length }} pessoa{{ lote|length|pluralize:"s" }}</h2>
+  <div class="rolagem">
+    <table class="conferencia-lote">
+      <caption>Todas entram como
+        {% if funcao == "PRESIDENTE" %}Presidente{% else %}Membro{% endif %}.</caption>
+      <thead>
+        <tr><th scope="col">Identificador</th><th scope="col">Nome para exibição</th>
+          <th scope="col">Situação</th></tr>
+      </thead>
+      <tbody>
+        {% for pessoa in lote %}
+        <tr>
+          <td><span class="codigo">{{ pessoa.identity_subject }}</span></td>
+          <td>{% if pessoa.display_label %}{{ pessoa.display_label }}{% else %}<span class="ajuda">não informado</span>{% endif %}</td>
+          <td>{% if pessoa.ja_integra %}<span class="situacao s-CANCELADO">já integra a comissão</span>
+            {% else %}<span class="situacao s-PUBLICADO">será incluída</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="ajuda">O sistema não verifica se esses identificadores existem: não há diretório
+    institucional integrado. Quem já integra a comissão é ignorado — não impede as demais.</p>
+</section>
+
+<form method="post" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="acao" value="incluir_lote">
+  <input type="hidden" name="confirmado" value="1">
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  <input type="hidden" name="lista" value="{{ lista }}">
+  <input type="hidden" name="funcao" value="{{ funcao }}">
+  <p class="salvar">
+    <button type="submit" class="botao">Confirmar inclusão de {{ lote|length }}</button>
+    <a href="{% url 'interface:comissao' processo.id %}" class="acao">Cancelar e voltar</a>
+  </p>
+</form>
+{% else %}
 <section aria-labelledby="conferencia-titulo" class="consequencias">
   <h2 id="conferencia-titulo">O que será gravado</h2>
   <dl class="conferencia">
@@ -42,4 +82,5 @@
     <a href="{% url 'interface:comissao' processo.id %}" class="acao">Cancelar e voltar</a>
   </p>
 </form>
+{% endif %}
 {% endblock %}

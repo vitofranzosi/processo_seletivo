@@ -107,6 +107,10 @@ tbody tr:last-child td{border-bottom:none}
 .lista-acoes li{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
 .botao.perigoso{background:var(--vermelho);color:var(--branco);border:none}
 .botao.perigoso:hover{background:#8a1515}
+/* A mesma advertência na escala de uma ação de linha: `.perigoso` só existia para `.botao`, e
+   remover uma pessoa saía com a aparência de uma ação segura (UX-004). */
+.acao.perigoso{color:var(--vermelho);border-color:var(--vermelho)}
+.acao.perigoso:hover{background:var(--vermelho);color:var(--branco)}
 .marca-irreversivel{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
   color:var(--vermelho);background:var(--vermelho-fundo);padding:.1rem .45rem;border-radius:3px}
 .remover-linha{margin:.75rem 0 0;padding-top:.75rem;border-top:1px solid var(--borda);
@@ -214,6 +218,25 @@ fieldset.caracter legend{font-size:.85rem;color:var(--texto-fraco);padding:0;
 .atua{font-size:.875rem;color:var(--texto-fraco);margin:.5rem 0 .25rem}
 .adicionar{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1rem 1.25rem;margin-top:1.5rem}
+/* Seleção em lote (011). Quarenta caixas empilhadas viram uma coluna de rolagem infinita: a
+   grade as põe em colunas e o limite de altura mantém o botão ao alcance. */
+.escolhas{display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:.35rem .75rem;
+  max-height:16rem;overflow-y:auto;padding:.25rem 0}
+.escolha{display:flex;gap:.5rem;align-items:baseline;font-size:.9375rem;line-height:1.4}
+.escolha input{margin:0;flex:none}
+.alocar-em-lote fieldset,.remover-em-lote fieldset{border:1px solid var(--borda);border-radius:4px;
+  padding:.75rem 1rem;margin:.75rem 0 0}
+.alocar-em-lote legend,.remover-em-lote legend{font-weight:600;font-size:.9375rem;padding:0 .35rem}
+.alocar-em-lote legend .ajuda,.remover-em-lote legend .ajuda{font-weight:400;margin-left:.35rem}
+.filtro{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;gap:1rem 1.5rem;flex-wrap:wrap;
+  align-items:flex-end}
+.filtro .campo,.filtro .salvar{margin:0}
+.conferencia-lote{border-collapse:collapse;width:100%;font-size:.9375rem}
+.conferencia-lote caption{text-align:left;color:var(--texto-fraco);padding-bottom:.5rem}
+.conferencia-lote th,.conferencia-lote td{text-align:left;padding:.5rem .75rem;
+  border-bottom:1px solid var(--fundo)}
+.rolagem{overflow-x:auto}
 .pendencias{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1rem 1.25rem;margin-bottom:1.5rem}
 .pendencias h2{font-size:1rem;margin-bottom:.6rem}
