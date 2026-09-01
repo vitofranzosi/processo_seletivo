@@ -130,7 +130,7 @@ CandidateIdentity
 - id
 - subject            # opaco, estável, próprio da identidade
 - nome               # núcleo mínimo exigido pela Inscrição
-- cpf_normalizado    # vinculado por prova, nunca por afirmação; pode estar vazio
+- cpf_normalizado    # declarado pelo titular; nunca decide propriedade nem acesso
 - created_at
 ```
 
@@ -152,6 +152,14 @@ não são "perfil cadastral": o Out of Scope do §21 continua valendo integralme
 **FR-005** — `nome` e `cpf_normalizado` são pedidos **uma única vez**, no primeiro rascunho, e
 reusados em todas as inscrições seguintes daquela identidade. Quem veio da 009 nunca os informa: a
 migração do §7 já os trouxe.
+
+**FR-005a — Uma regra só para os três campos do núcleo.** `nome`, `cpf_normalizado` e o e-mail
+principal (FR-008b) alimentam a Inscrição. Enquanto ela for **rascunho**, acompanham a identidade:
+corrigir o nome corrige os rascunhos abertos. Na **submissão**, congelam — o que foi submetido é o
+que constava naquele ato, e nenhuma correção posterior o alcança (P-005).
+
+Sem esta regra, um campo seguiria a identidade e outro não, e a diferença só apareceria no
+comprovante de alguém.
 
 **FR-006** — CPF informado é validado (dígitos verificadores), como a 009 já valida. E a validação
 prova apenas que o número é um CPF possível — o próprio domínio já diz isso
@@ -175,6 +183,7 @@ CandidateEmail
 - candidate_identity
 - email_canonico      # único no sistema, por constraint de banco
 - email_como_informado
+- principal           # o que alimenta a Inscrição; um por identidade
 - verified_at
 - created_at
 ```
@@ -190,6 +199,25 @@ nenhuma regra específica de provedor: essas equivalências valem no Gmail e sã
 servidores, e fundir dois endereços distintos numa credencial só é indistinguível de takeover depois
 que já aconteceu. O endereço como a pessoa informou é preservado para exibição, e nunca decide
 identidade.
+
+*A suposição que isto embute, declarada.* A RFC torna a parte anterior ao `@` sensível a caixa, e
+baixá-la é, a rigor, uma equivalência que o padrão não garante. A aplicação **assume a parte local
+insensível a caixa**, porque nenhum provedor em uso prático distingue `Maria@` de `maria@`, e tratá-
+las como credenciais distintas multiplicaria identidades por erro de digitação — um problema
+frequente trocado por um problema teórico. Fica registrado como suposição, e não como fato.
+
+**FR-008b — Qual endereço vira `Inscricao.email`.** A identidade tem **um e-mail principal**,
+escolhido pelo titular, e é ele que preenche a Inscrição pela regra da FR-005a. O primeiro endereço
+verificado é o principal por padrão; adicionar outro não muda essa escolha sozinho.
+
+*Por que explícito, e não derivado.* "O endereço da sessão atual" faria a mesma pessoa constar de
+duas inscrições com contatos diferentes conforme a caixa que ela abriu naquele dia; "o mais recente"
+mudaria o contato de um certame em andamento por causa de uma credencial adicionada para outro fim.
+O campo é o registro de um ato administrativo: quem escolhe é o titular, uma vez, e a escolha fica
+visível.
+
+**FR-008c** — Remover o e-mail principal exige que outro assuma o lugar; a identidade nunca fica sem
+principal enquanto tiver credencial (FR-051).
 
 **FR-009** — E-mail que consta de uma Inscrição histórica **não** é verificado por ter sido digitado.
 Só o desafio da 010 prova controle.
@@ -234,8 +262,21 @@ distinto — situação possível apenas se a `SECRET_KEY` tiver rotacionado dur
 **não gera identidade** e é relatado na saída da migração, para tratamento operacional. Falhar aqui é
 falhar onde alguém está olhando.
 
-**FR-015** — Inscrição sem `cpf_normalizado`, ou com CPF que não passa na validação de
-dígitos, é relatada e ignorada, sem gerar identidade.
+**FR-015 — CPF inválido separa dois destinos, e um deles é parar.**
+
+- **Rascunho** sem `cpf_normalizado`, ou com CPF que não passa na validação de dígitos, é relatado,
+  fica **intacto** e não é reconciliado.
+- **Inscrição submetida** nessa condição **aborta a migração**, com relatório do que a impediu.
+
+*Por que abortar.* A FR-042 instala uma check constraint que exige CPF válido em toda submetida. Uma
+submetida inválida no banco torna a constraint impossível de instalar — e o único jeito de seguir
+seria a migração escolher um dado por conta própria, que é exatamente o que a FR-015a proíbe. Parar
+com relatório é o que mantém a `SC-010` verdadeira para o banco inteiro, e não só para as linhas que
+a migração conseguiu ler.
+
+Pelo caminho normal da 009 isso não existe: a identificação valida os dígitos antes de gravar. Existe
+em base de demonstração e em carga manual — e abortar com relatório é mais barato que falhar no
+`ALTER TABLE`.
 
 **FR-015a — O que acontece com as inscrições de um grupo não reconciliado: nada.** Elas
 mantêm seu `identity_subject`, ninguém muda de dono, nenhum dado é escolhido arbitrariamente
@@ -386,9 +427,9 @@ e-mail → código válido
    │        │
    │        ├─ confirma o CPF agora ───────────────────────────► reconcilia e entra
    │        │
-   │        └─ recusa, erra ou adia ──────────────────────────► entra em identidade
-   │                                                             própria; o convite
-   │                                                             permanece disponível
+   │        └─ recusa, erra ou esgota ───────────────────────► entra em identidade
+   │                                                             própria; retomável
+   │                                                             enquanto ela estiver vazia
    │
    └─ nenhuma correspondência histórica ─────────────────────► cria identidade
                                                                 sem CPF e entra
@@ -403,7 +444,7 @@ vínculo que qualquer pessoa fabrica: bastaria conhecer o CPF alheio e provar um
 ocupar aquele CPF antes do titular. Quando o titular chegasse, a recusa o deixaria permanentemente
 fora do próprio documento, sem rota de recuperação. A tela que existia para proteger seria a tela que
 sequestra. Removê-la elimina o ataque, remove um passo do fluxo e torna a `SC-UX-002` verdadeira
-também para quem chega pela primeira vez.
+também para quem chega pela primeira vez sem participação anterior.
 
 **FR-037 — Correspondência histórica é indício, e o convite é opcional.** Quando o endereço provado
 consta de inscrições de identidade legada, oferece-se a reconciliação: *"encontramos participação
@@ -419,26 +460,42 @@ tornam-se imediatamente visíveis — sem que nenhuma delas tenha mudado de dono
 **FR-038** — Se o mesmo endereço constar de inscrições de identidades diferentes, o CPF desempata:
 reconcilia com a identidade cujo `cpf_normalizado` confere, e com nenhuma outra.
 
-**FR-039 — Provar o e-mail sempre dá sessão.** Recusar o convite, errar o CPF ou esgotar as
-tentativas **não** produz beco sem saída: a pessoa entra numa identidade própria, com sua área
-vazia. O limite de tentativas do §9 vale para a confirmação, e a recusa não diz de quem é o quê.
+**FR-039 — A decisão acontece antes de a identidade existir, e provar o e-mail sempre dá sessão.**
+O convite é resolvido **entre o código válido e a criação do vínculo**, e não depois dele:
 
-**FR-040 — O convite não se consome, e o indício não vira autoridade.** Um endereço que consta de
-inscrições da 009 foi apenas **digitado** — pode ter erro, pode pertencer a terceiro, pode ter sido
-reciclado pelo provedor anos depois. Ele não pode, por isso, bloquear para sempre a identidade de
-quem hoje controla aquela caixa. Logo:
+- **Confirmar agora**, com CPF conferido → o endereço vira credencial verificada da identidade
+  legada, e a pessoa entra nela;
+- **Continuar sem isso**, CPF errado ou tentativas esgotadas → cria-se uma identidade própria, o
+  endereço é verificado para ela, e a pessoa entra na sua área vazia.
 
-- a reconciliação continua disponível de dentro da área, a qualquer momento, para quem provar aquele
-  endereço e confirmar o CPF;
-- verificar o endereço para uma identidade **não apaga** a correspondência histórica nem consome o
-  convite;
-- uma identidade legada só deixa de ser reconciliável quando alguém confirma o CPF dela.
+O limite de tentativas do §9 vale para a confirmação, e a recusa não diz de quem é o quê. Nenhum
+caminho termina em beco sem saída.
+
+**FR-040 — A retomada existe, e vale enquanto a identidade nova estiver vazia.** Quem recusou ou
+errou pode reconciliar depois, de dentro da área, **enquanto a identidade nova não tiver nenhuma
+inscrição — nem rascunho**. Aceita a reconciliação, o endereço migra para a identidade legada e a
+identidade nova, que nada contém, é descartada.
+
+*Por que limitada, e por que não é fusão.* Sem limite, a retomada exigiria transferir credencial de
+uma identidade que já tem inscrições, abandoná-las ou fundir identidades — e a FR-041 proíbe a
+terceira, a FR-012 proíbe reescrever titularidade, e a primeira é um modelo de conta com acesso a
+várias identidades, que é outra feature. Com o limite, não há nada a fundir: a origem está vazia por
+definição, e o que se move é uma credencial.
+
+*E por que não encerrar de vez.* Porque o caso realista não é o ataque: é a Maria clicando em
+"Continuar sem isso" sem ler. Encerrar o convite no clique põe a perda definitiva do que ela
+submeteu atrás de um engano de um segundo, e ela é a usuária mais importante deste fluxo. A janela
+"enquanto vazia" cobre o engano e fecha sozinha assim que a pessoa começa a usar a identidade nova.
+
+**FR-040a — O indício não vira autoridade.** Um endereço que consta de inscrições da 009 foi apenas
+**digitado** — pode ter erro, pode pertencer a terceiro, pode ter sido reciclado pelo provedor anos
+depois. Ele nunca impede quem hoje controla aquela caixa de ter a própria identidade (FR-039), e a
+identidade legada que ninguém reconciliou permanece intacta, com suas inscrições e seu `subject`.
 
 *O que isto aceita, dito de frente.* Quem controla um endereço que a identidade legada usou **e**
 conhece o CPF correspondente alcança aquela identidade. É a consequência direta do P-002 — e-mail é
 a credencial — e o preço de não exigir prova de identidade mais forte numa V1 sem provedor
-governamental. A alternativa que eu havia escrito antes trocava esse risco estreito por um lockout
-permanente do dono legítimo de um endereço reciclado, o que é pior e mais provável.
+governamental.
 
 **FR-041 — A 010 não funde identidades.** Quem tem identidade e prova um endereço novo, sem
 correspondência histórica, ganha uma identidade nova e vazia. A forma de agregar credenciais é o §12,
@@ -478,10 +535,17 @@ produzir comportamento acidental para o valor vazio.
 `cpf_normalizado` no mesmo Perfil são aceitas pelo sistema. Nenhum candidato é recusado no envio por
 causa de um CPF que outra identidade declarou.
 
-**FR-044 — Duplicidade é detectável.** A coincidência é visível na consulta administrativa já
-entregue pela 009, para quem conduz o certame. O sistema não decide qual das duas vale — essa decisão
-é institucional, e a regra pertence à feature que for avaliar inscrições, junto com o estado, o
-contraditório e o ato que a acompanham.
+**FR-044 — Duplicidade é marcada, não apenas "visível".** A consulta administrativa entregue pela
+009 **assinala** as inscrições que compartilham `cpf_normalizado` dentro do mesmo Perfil. Um
+marcador calculado no servidor, e nada além disso — nem painel, nem relatório, nem fluxo.
+
+*Por que não bastava dizer "é visível".* A listagem exibe o CPF mascarado — `***.456.789-**`, seis
+dígitos do meio (`inscricoes/domain/pessoais.py`). Comparar máscaras a olho, numa lista, não é
+detecção: duas pessoas podem coincidir nos seis dígitos exibidos, e ninguém varre uma listagem
+inteira em busca de repetição. Prometer detectabilidade sem entregar a marcação é prometer nada.
+
+O sistema não decide qual das duas vale — essa decisão é institucional, e a regra pertence à feature
+que for avaliar inscrições, junto com o estado, o contraditório e o ato que a acompanham.
 
 **FR-045 — Vincular CPF já declarado por outra identidade não é impedido**, e não concede acesso
 algum a nada daquela outra. Uma pessoa que perdeu o e-mail antigo continua podendo participar de
@@ -611,8 +675,9 @@ aceita quando o mecanismo atual a disponibiliza.
 **UX-002** — CPF aparece só no convite de reconciliação histórica (FR-037), que é opcional e
 recusável, e nunca no login recorrente.
 
-**UX-003** — Código válido leva a `Minhas inscrições` sem passo intermediário — inclusive para quem
-está entrando pela primeira vez (FR-036).
+**UX-003** — Código válido leva a `Minhas inscrições` sem passo intermediário no acesso recorrente
+e no primeiro acesso de quem não tem participação anterior (FR-036). Quem **tem** participação
+anterior vê um passo, e apenas um: o convite de reconciliação, que é recusável (FR-037).
 
 **UX-004** — Nenhum dado da Inscrição precisa ser redigitado para consultá-la.
 
@@ -743,6 +808,9 @@ Desta feature inteira, e sem exceção:
 **SC-004** — Grupo de CPF com mais de um `subject` histórico é relatado pela migração, não gera
 identidade, e suas inscrições permanecem intactas e sem novo dono.
 
+**SC-004a** — Uma inscrição submetida com CPF vazio ou inválido aborta a migração com relatório; um
+rascunho na mesma condição é relatado e fica intacto.
+
 **SC-005** — Após a migração, rotacionar a `SECRET_KEY` não altera a propriedade de nenhuma inscrição
 existente.
 
@@ -751,8 +819,11 @@ existente.
 **SC-007** — Candidato da 009 reconcilia seu e-mail histórico confirmando o CPF, e passa a ver todas
 as inscrições daquele `subject`.
 
-**SC-007a** — Recusar o convite ou errar o CPF ainda produz sessão numa identidade própria, e o
-convite continua disponível depois.
+**SC-007a** — Recusar o convite ou errar o CPF ainda produz sessão numa identidade própria.
+
+**SC-007b** — A retomada da reconciliação funciona enquanto a identidade nova estiver vazia, move o
+endereço, descarta a identidade vazia, e deixa de ser oferecida depois que ela tiver qualquer
+inscrição.
 
 **SC-008** — Nenhum `subject` novo depende da `SECRET_KEY`.
 
@@ -760,8 +831,8 @@ convite continua disponível depois.
 
 **SC-010** — Uma inscrição `SUBMETIDA` sem `cpf_normalizado` válido é recusada pelo banco.
 
-**SC-010a** — Duas inscrições submetidas com o mesmo CPF no mesmo Perfil são aceitas e ficam visíveis
-como coincidência na consulta administrativa; nenhuma delas é recusada no envio.
+**SC-010a** — Duas inscrições submetidas com o mesmo CPF no mesmo Perfil são aceitas e aparecem
+**assinaladas** como coincidência na consulta administrativa; nenhuma delas é recusada no envio.
 
 **SC-010b** — Dois pedidos simultâneos de verificação do mesmo endereço canônico resultam em um
 único vínculo, recusado pelo banco e não por consulta prévia.
@@ -771,6 +842,12 @@ como coincidência na consulta administrativa; nenhuma delas é recusada no envi
 
 **SC-011a** — O titular corrige o próprio nome a qualquer momento, e o CPF enquanto não houver
 inscrição submetida; o que já foi submetido não muda.
+
+**SC-011b** — Corrigir nome, CPF ou e-mail principal atualiza os rascunhos abertos da identidade e
+não altera nenhuma inscrição submetida.
+
+**SC-011c** — `Inscricao.email` recebe o e-mail principal da identidade, e não o endereço que
+autenticou a sessão.
 
 **SC-012** — Em produção, a aplicação recusa iniciar com backend de e-mail conhecido por não entregar
 ou sem remetente definido.
@@ -802,7 +879,9 @@ ou sem remetente definido.
 
 **SC-UX-001** — Login recorrente exige no máximo: informar e-mail → informar código.
 
-**SC-UX-002** — Código válido leva a `Minhas inscrições` imediatamente, inclusive no primeiro acesso.
+**SC-UX-002** — Código válido leva a `Minhas inscrições` imediatamente no acesso recorrente e no
+primeiro acesso sem participação anterior. Com participação anterior, intercala-se exatamente um
+passo — o convite da FR-037.
 
 **SC-UX-003** — CPF não é solicitado no login recorrente, nem no primeiro acesso de candidato novo.
 
@@ -874,9 +953,13 @@ para quem conduz o certame (FR-044), e nenhum candidato legítimo é bloqueado n
 
 **Caso 4 — Endereço reciclado.** Maria digitou `joao@gmail.com` por engano numa inscrição de 2027.
 Em 2029, o João real prova aquele endereço. Ele não sabe o CPF de Maria — e **entra normalmente**, na
-sua própria identidade vazia, sem ver nada de Maria (FR-039). O endereço não foi capturado nem
-bloqueado: o convite de reconciliação de Maria continua disponível para quem confirmar o CPF dela
-(FR-040).
+sua própria identidade vazia, sem ver nada de Maria (FR-039). O endereço não o bloqueia, e a
+identidade legada de Maria permanece intacta, com suas inscrições e seu `subject` (FR-040a).
+
+**Caso 4a — Engano no convite.** Maria clica em "Continuar sem isso" sem ler. Ela entra numa
+identidade vazia, percebe que suas inscrições não estão ali, e reconcilia de dentro da área: o
+endereço migra e a identidade vazia é descartada (FR-040). Depois de abrir qualquer inscrição na
+identidade nova, a retomada deixa de ser oferecida.
 
 **Caso 5 — Fixação de sessão.** Uma sessão conhecida antes do login não continua válida depois dele:
 o identificador é rotacionado na autenticação (FR-032a).
@@ -934,7 +1017,11 @@ separada: ela chega junto com a porta que a torna visível.
 >
 > Não use Django Group para representar candidato.
 >
-> Nenhum caminho de credencial termina em beco sem saída: provar um endereço sempre produz sessão.
+> Nenhum caminho de credencial termina em beco sem saída: provar um endereço sempre produz sessão, e
+> a decisão de reconciliar acontece antes de o vínculo existir.
+>
+> A única movimentação de credencial permitida é a da FR-040, e só a partir de identidade vazia:
+> nada mais transfere, funde ou abandona identidade.
 >
 > Segurança contra IDOR e takeover é requisito funcional, e a demonstração do §25 é condição de
 > merge.
