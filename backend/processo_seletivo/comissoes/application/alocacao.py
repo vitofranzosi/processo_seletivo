@@ -16,9 +16,7 @@ from processo_seletivo.processos.models import Edital
 from processo_seletivo.shared.api.problems import DomainError
 
 
-def alocar(
-    *, actor, processo_id, membro_id, edital_id, etapa_id, idempotency_key, correlation_id
-):
+def alocar(*, actor, processo_id, membro_id, edital_id, etapa_id, idempotency_key, correlation_id):
     try:
         etapa_id = UUID(str(etapa_id))
     except (TypeError, ValueError) as exc:

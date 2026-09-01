@@ -28,8 +28,8 @@ from processo_seletivo.comissoes.domain.autorizacao import (
 from processo_seletivo.comissoes.domain.etapas import etapa_vigente
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.application.identificacao import update_edital_identification
-from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.editais.domain.validation import validate_for_publication
+from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.inscricoes.application.consulta import (
     CONSULTAR,
     documento_para_consulta,
@@ -286,13 +286,19 @@ def identificar(request):
     if request.method == "POST":
         papeis = request.POST.getlist("papeis")
         subject = (request.POST.get("subject") or "").strip()
-        if subject and papeis:
+        if subject:
+            # Papel deixou de ser obrigatório com a 011: quem integra uma comissão pode não ter
+            # capacidade sistêmica nenhuma — sua autorização vem do vínculo, objeto a objeto — e
+            # ainda assim precisa entrar para ver `Minhas Etapas`. Exigir papel aqui tornava esse
+            # ator, que é metade da feature, impossível de representar.
             identidade.identificar(request, subject=subject, papeis=papeis)
-            return redirect(reverse("interface:lista"))
+            return redirect(
+                reverse("interface:lista") if papeis else reverse("interface:minhas-etapas")
+            )
         return render(
             request,
             "interface/identificar.html",
-            {"papeis": identidade.PAPEIS, "erro": "Informe um nome e ao menos um papel."},
+            {"papeis": identidade.PAPEIS, "erro": "Informe um nome."},
             status=422,
         )
     return render(request, "interface/identificar.html", {"papeis": identidade.PAPEIS})

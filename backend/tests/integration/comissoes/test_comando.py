@@ -35,24 +35,43 @@ def test_os_cinco_comandos_recusam_processo_em_estado_final(
 
     chamadas = [
         lambda: adicionar_membro(
-            actor=gestor, processo_id=processo_a.id, identity_subject="ana",
-            funcao="MEMBRO", idempotency_key="k1", correlation_id="c",
+            actor=gestor,
+            processo_id=processo_a.id,
+            identity_subject="ana",
+            funcao="MEMBRO",
+            idempotency_key="k1",
+            correlation_id="c",
         ),
         lambda: alterar_funcao(
-            actor=gestor, processo_id=processo_a.id, membro_id=membros["joao"].id,
-            funcao="PRESIDENTE", idempotency_key="k2", correlation_id="c",
+            actor=gestor,
+            processo_id=processo_a.id,
+            membro_id=membros["joao"].id,
+            funcao="PRESIDENTE",
+            idempotency_key="k2",
+            correlation_id="c",
         ),
         lambda: remover_membro(
-            actor=gestor, processo_id=processo_a.id, membro_id=membros["joao"].id,
-            idempotency_key="k3", correlation_id="c",
+            actor=gestor,
+            processo_id=processo_a.id,
+            membro_id=membros["joao"].id,
+            idempotency_key="k3",
+            correlation_id="c",
         ),
         lambda: alocar(
-            actor=gestor, processo_id=processo_a.id, membro_id=membros["joao"].id,
-            edital_id=edital_a.id, etapa_id=etapa_a2, idempotency_key="k4", correlation_id="c",
+            actor=gestor,
+            processo_id=processo_a.id,
+            membro_id=membros["joao"].id,
+            edital_id=edital_a.id,
+            etapa_id=etapa_a2,
+            idempotency_key="k4",
+            correlation_id="c",
         ),
         lambda: remover_alocacao(
-            actor=gestor, processo_id=processo_a.id, alocacao_id=alocacao.id,
-            idempotency_key="k5", correlation_id="c",
+            actor=gestor,
+            processo_id=processo_a.id,
+            alocacao_id=alocacao.id,
+            idempotency_key="k5",
+            correlation_id="c",
         ),
     ]
     for chamada in chamadas:

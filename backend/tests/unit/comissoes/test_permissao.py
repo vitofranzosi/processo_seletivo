@@ -5,8 +5,6 @@ Fazer isso transformaria a presidência em papel global — a pessoa presidiria 
 de todos os Processos —, que é exatamente o que P-003 e o SC-011 proíbem.
 """
 
-import pytest
-
 from processo_seletivo.comissoes.domain.autorizacao import BASE_PRESIDENCIA, PERMISSAO_SISTEMICA
 from processo_seletivo.interface.identidade import PAPEIS, permissoes_de
 

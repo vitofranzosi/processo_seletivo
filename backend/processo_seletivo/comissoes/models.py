@@ -77,9 +77,7 @@ class AlocacaoEtapa(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     # A alocação existe **através** do vínculo, nunca ao lado dele: não há alocação de quem não
     # é membro da comissão (FR-034).
-    membro = models.ForeignKey(
-        MembroComissao, on_delete=models.PROTECT, related_name="alocacoes"
-    )
+    membro = models.ForeignKey(MembroComissao, on_delete=models.PROTECT, related_name="alocacoes")
     edital = models.ForeignKey(Edital, on_delete=models.PROTECT, related_name="alocacoes")
     # A identidade da Etapa no conteúdo publicado. Ver o docstring do módulo.
     etapa_id = models.UUIDField()

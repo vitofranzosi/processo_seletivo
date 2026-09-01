@@ -177,3 +177,14 @@ def comissao_de_a(gestor, processo_a):
     from tests.fixtures.comissao import constituir
 
     return constituir(gestor, processo_a, [("maria", "PRESIDENTE"), ("joao", "MEMBRO")])
+
+
+@pytest.fixture
+def seletor_ligado(settings):
+    """O seletor de identidade institucional, que só existe fora de produção.
+
+    Estava no conftest da interface; subiu para cá quando os testes de autorização da 011
+    passaram a exercitar as mesmas telas — a autorização por objeto só é demonstrável pelo canal
+    do ator, e o canal exige identidade.
+    """
+    settings.INTERFACE_SELETOR_IDENTIDADE = True

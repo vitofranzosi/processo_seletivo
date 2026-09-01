@@ -7,7 +7,7 @@ querendo criar o mesmo vínculo é conflito de unicidade.
 
 import pytest
 
-from processo_seletivo.comissoes.application.alocacao import alocar, remover_alocacao
+from processo_seletivo.comissoes.application.alocacao import remover_alocacao
 from processo_seletivo.comissoes.application.comissao import (
     adicionar_membro,
     alterar_funcao,
@@ -22,12 +22,20 @@ pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
 def test_incluir_duas_vezes_com_a_mesma_chave(gestor, processo_a):
     primeiro, _ = adicionar_membro(
-        actor=gestor, processo_id=processo_a.id, identity_subject="joao",
-        funcao="MEMBRO", idempotency_key="k", correlation_id="c",
+        actor=gestor,
+        processo_id=processo_a.id,
+        identity_subject="joao",
+        funcao="MEMBRO",
+        idempotency_key="k",
+        correlation_id="c",
     )
     segundo, status = adicionar_membro(
-        actor=gestor, processo_id=processo_a.id, identity_subject="joao",
-        funcao="MEMBRO", idempotency_key="k", correlation_id="c",
+        actor=gestor,
+        processo_id=processo_a.id,
+        identity_subject="joao",
+        funcao="MEMBRO",
+        idempotency_key="k",
+        correlation_id="c",
     )
 
     assert segundo.pk == primeiro.pk and status == 201
@@ -36,22 +44,28 @@ def test_incluir_duas_vezes_com_a_mesma_chave(gestor, processo_a):
 
 def test_mesma_chave_com_conteudo_diferente_e_conflito(gestor, processo_a):
     adicionar_membro(
-        actor=gestor, processo_id=processo_a.id, identity_subject="joao",
-        funcao="MEMBRO", idempotency_key="k", correlation_id="c",
+        actor=gestor,
+        processo_id=processo_a.id,
+        identity_subject="joao",
+        funcao="MEMBRO",
+        idempotency_key="k",
+        correlation_id="c",
     )
 
     with pytest.raises(DomainError) as recusa:
         adicionar_membro(
-            actor=gestor, processo_id=processo_a.id, identity_subject="ana",
-            funcao="MEMBRO", idempotency_key="k", correlation_id="c",
+            actor=gestor,
+            processo_id=processo_a.id,
+            identity_subject="ana",
+            funcao="MEMBRO",
+            idempotency_key="k",
+            correlation_id="c",
         )
 
     assert recusa.value.code == "idempotency_conflict"
 
 
-def test_alocar_duas_vezes_com_a_mesma_chave(
-    gestor, processo_a, edital_a, comissao_de_a, etapa_a1
-):
+def test_alocar_duas_vezes_com_a_mesma_chave(  # FR-065gestor, processo_a, edital_a, comissao_de_a, etapa_a1):
     primeira = alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1, chave="k")
     segunda = alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1, chave="k")
 
@@ -62,8 +76,12 @@ def test_alocar_duas_vezes_com_a_mesma_chave(
 def test_alterar_funcao_e_idempotente(gestor, processo_a, comissao_de_a):
     for _ in range(2):
         alterar_funcao(
-            actor=gestor, processo_id=processo_a.id, membro_id=comissao_de_a["joao"].id,
-            funcao="PRESIDENTE", idempotency_key="k", correlation_id="c",
+            actor=gestor,
+            processo_id=processo_a.id,
+            membro_id=comissao_de_a["joao"].id,
+            funcao="PRESIDENTE",
+            idempotency_key="k",
+            correlation_id="c",
         )
 
     comissao_de_a["joao"].refresh_from_db()
@@ -73,22 +91,26 @@ def test_alterar_funcao_e_idempotente(gestor, processo_a, comissao_de_a):
 def test_remover_membro_e_idempotente(gestor, processo_a, comissao_de_a):
     for _ in range(2):
         remover_membro(
-            actor=gestor, processo_id=processo_a.id, membro_id=comissao_de_a["joao"].id,
-            idempotency_key="k", correlation_id="c",
+            actor=gestor,
+            processo_id=processo_a.id,
+            membro_id=comissao_de_a["joao"].id,
+            idempotency_key="k",
+            correlation_id="c",
         )
 
     comissao_de_a["joao"].refresh_from_db()
     assert comissao_de_a["joao"].ativo is False
 
 
-def test_remover_alocacao_e_idempotente(
-    gestor, processo_a, edital_a, comissao_de_a, etapa_a1
-):
+def test_remover_alocacao_e_idempotente(gestor, processo_a, edital_a, comissao_de_a, etapa_a1):
     alocacao = alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
     for _ in range(2):
         remover_alocacao(
-            actor=gestor, processo_id=processo_a.id, alocacao_id=alocacao.id,
-            idempotency_key="k", correlation_id="c",
+            actor=gestor,
+            processo_id=processo_a.id,
+            alocacao_id=alocacao.id,
+            idempotency_key="k",
+            correlation_id="c",
         )
 
     alocacao.refresh_from_db()
@@ -102,8 +124,12 @@ def test_a_reserva_acontece_depois_da_autorizacao(processo_a):
 
     with pytest.raises(DomainError):
         adicionar_membro(
-            actor=ator_institucional("estranho"), processo_id=processo_a.id,
-            identity_subject="joao", funcao="MEMBRO", idempotency_key="k", correlation_id="c",
+            actor=ator_institucional("estranho"),
+            processo_id=processo_a.id,
+            identity_subject="joao",
+            funcao="MEMBRO",
+            idempotency_key="k",
+            correlation_id="c",
         )
 
     assert IdempotencyRecord.objects.filter(actor_subject="estranho").count() == 0

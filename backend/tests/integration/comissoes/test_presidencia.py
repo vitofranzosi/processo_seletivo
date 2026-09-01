@@ -10,7 +10,7 @@ pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
 
 def test_comissao_sem_presidente_pode_ser_constituida(gestor, processo_a):
-    """D-007: o estado transitório é legítimo — senão o primeiro membro teria de ser o presidente."""
+    """D-007: estado transitório legítimo — senão o primeiro membro teria de ser presidente."""
     membros = constituir(gestor, processo_a, [("joao", "MEMBRO"), ("ana", "MEMBRO")])
 
     assert len(membros) == 2

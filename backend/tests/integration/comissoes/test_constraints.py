@@ -4,8 +4,6 @@ Constraint parcial é o que faz EC-001 e EC-002 serem impossíveis mesmo sob cor
 Python deixaria a janela entre a leitura e a gravação.
 """
 
-import uuid
-
 import pytest
 from django.db import IntegrityError, transaction
 from django.utils import timezone

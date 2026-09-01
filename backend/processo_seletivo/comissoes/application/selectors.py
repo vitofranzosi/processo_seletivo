@@ -34,9 +34,7 @@ def tem_presidente(processo):
 
 def editais_alocaveis(processo):
     """Os Editais do Processo que já têm conteúdo vigente, na ordem da tela."""
-    return list(
-        Edital.objects.filter(processo=processo).order_by("year", "number")
-    )
+    return list(Edital.objects.filter(processo=processo).order_by("year", "number"))
 
 
 def organizacao(processo):

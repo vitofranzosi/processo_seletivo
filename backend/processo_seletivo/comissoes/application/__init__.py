@@ -31,8 +31,8 @@ from contextlib import contextmanager
 from processo_seletivo.comissoes.domain.autorizacao import pode_gerir_comissao
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import ProcessoSeletivo
-from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.idempotency import finish as finalizar_idempotencia
 from processo_seletivo.shared.idempotency import reserve
 
@@ -59,9 +59,7 @@ def comando_de_comissao(*, actor, processo_id, operation, payload, idempotency_k
         if base is None:
             raise nao_encontrado()
         ensure_processo_accepts_changes(processo)
-        reserva = reserve(
-            actor=actor, operation=operation, key=idempotency_key, payload=payload
-        )
+        reserva = reserve(actor=actor, operation=operation, key=idempotency_key, payload=payload)
         yield Contexto(now=now, processo=processo, base=base, reserva=reserva)
 
 

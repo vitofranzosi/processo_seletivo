@@ -11,7 +11,9 @@ from tests.fixtures.comissao import alocar_em, constituir
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
 
-def test_aloca_membro_a_etapa_do_proprio_processo(gestor, processo_a, edital_a, comissao_de_a, etapa_a1):
+def test_aloca_membro_a_etapa_do_proprio_processo(
+    gestor, processo_a, edital_a, comissao_de_a, etapa_a1
+):
     alocacao = alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
 
     assert alocacao.ativo
@@ -48,7 +50,9 @@ def test_etapa_de_edital_de_outro_processo_e_recusada(
     assert AlocacaoEtapa.objects.count() == 0
 
 
-def test_pessoa_que_nao_e_membro_e_recusada(gestor, processo_a, edital_a, comissao_de_a, etapa_a1, edital_b):
+def test_pessoa_que_nao_e_membro_e_recusada(
+    gestor, processo_a, edital_a, comissao_de_a, etapa_a1, edital_b
+):
     """EC-005: a jornada é pessoa → comissão → Etapa, e nunca pessoa → Etapa."""
     de_outra_comissao = constituir(gestor, edital_b.processo, [("ana", "PRESIDENTE")])["ana"]
 
@@ -83,7 +87,9 @@ def test_etapa_inexistente_no_conteudo_vigente_e_recusada(
     assert recusa.value.status == 404
 
 
-def test_edital_sem_versao_publicada_e_recusado(gestor, api_client, manager_headers, processo_a, comissao_de_a, etapa_a1):
+def test_edital_sem_versao_publicada_e_recusado(
+    gestor, api_client, manager_headers, processo_a, comissao_de_a, etapa_a1
+):
     """FR-032 e EC-014: a fonte é a Versão Consolidada vigente, e ela não existe ainda."""
     api_client.post(
         f"/api/v1/admin/processos/{processo_a.id}/editais",
