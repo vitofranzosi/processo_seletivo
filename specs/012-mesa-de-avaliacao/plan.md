@@ -31,13 +31,18 @@ acrescentavam coleções inteiras.
 Mas elevar só a base **não** resolve, e essa é a correção que a revisão do plano trouxe. A
 consolidação não parte da última versão: parte do conteúdo original e **reaplica todos os atos
 publicados**, que carregam o valor literal gravado quando foram elaborados. Um ato v4 que
-acrescentou uma Etapa reintroduziria essa Etapa fora de forma, e o Edital ficaria inconsolidável.
-A elevação precisa, portanto, alcançar também o `newValue` de cada ato, e ser **path-aware** — um
-`REPLACE` de nota mínima carrega um decimal, não uma Etapa. Como a função é idempotente, ela é
-aplicada incondicionalmente e dispensa etiquetar cada ato com a versão em que nasceu (T-001).
+acrescentou uma Etapa reintroduziria essa Etapa fora de forma, e a publicação inteira falharia na
+materialização — nada inválido fica gravado, porque a transação reverte, mas um ato legítimo e já
+homologado se torna impublicável. A elevação precisa, portanto, alcançar também o `newValue` de
+cada ato, e ser **path-aware**: um `REPLACE` de nota mínima carrega um decimal, não uma Etapa. Como
+a função é idempotente, ela é aplicada incondicionalmente e dispensa etiquetar cada ato com a versão
+em que nasceu (T-001).
 
-Nada disso escreve: o Edital publicado antes do incremento continua retificável, e a Publicação
-original continua sendo byte a byte o que foi publicado.
+E o que o autor vê tem de ser o que o servidor confere: o editor passa a compor sobre a projeção
+elevada, senão `expectedPreviousHash` falaria de uma Etapa e a conferência de outra (T-015).
+
+Nada disso escreve, e nada disso alcança a leitura pública: o Edital publicado antes do incremento
+continua retificável, e a Publicação original continua sendo byte a byte o que foi publicado.
 
 **A que mais economiza**: quase nada desta feature é mecanismo novo. A entrega de arquivo com
 conferência de integridade antes do primeiro byte já existe na 009; o invólucro de comando com
@@ -101,9 +106,11 @@ Duas exceções vão para `Complexity Tracking`: o app novo e a tripla copiada n
 aprovou dois princípios sobre premissa errada, e o registro fica porque o erro é instrutivo:
 
 - **II** — dava-se por resolvido com a elevação do conteúdo-base. A consolidação reaplica todos os
-  atos publicados, e um ato v4 que acrescentou Etapa reintroduziria conteúdo fora de forma. A
-  elevação passa a alcançar o `newValue` de cada ato, path-aware, e quatro cenários de histórico
-  misto viram teste obrigatório (T-001). **Agora passa.**
+  atos publicados, e um ato v4 que acrescentou Etapa reintroduziria conteúdo fora de forma,
+  tornando impublicável um ato legítimo. A elevação passa a alcançar o `newValue` de cada ato,
+  path-aware, restrita ao fluxo de Retificação para não romper o `content_hash` da leitura pública,
+  e estendida à projeção que o autor compõe (T-015). Oito cenários viram teste obrigatório.
+  **Agora passa.**
 - **I** — a garantia de FR-074 estava ancorada em `membro_id`, que é vínculo e não pessoa: remover
   e readicionar alguém liberaria uma segunda conclusão sobre a mesma inscrição. O índice passa a
   usar a identidade institucional estável, e o Impedimento, pela mesma razão, acompanha a pessoa
@@ -155,12 +162,13 @@ backend/processo_seletivo/
 ├── publicacoes/
 │   ├── application/publish_edital.py   # + os dois campos em _stages()
 │   ├── application/retificacoes.py     # base, conteúdo em vigor e cada newValue passam por elevar
-│   ├── domain/elevacao.py              # NOVO — elevar() e elevar_valor(), as funções puras de T-001
+│   ├── domain/elevacao.py              # NOVO — elevar() e elevar_alteracoes(), as puras de T-001
 │   └── infrastructure/pdf.py           # + as duas linhas na Etapa do documento
 ├── shared/canonical.py           # SCHEMA_VERSION 4 -> 5, com o comentário do incremento
 ├── interface/
 │   ├── views.py                  # + distribuicao, mesa, inscricao_da_mesa, documento_da_mesa, impedimentos
 │   ├── forms.py                  # + lote, avaliação, impedimento, reabertura
+│   ├── retificacao.py            # campos_editaveis e diferencas recebem a projeção (T-015)
 │   ├── urls.py                   # + dez rotas; atribuicao -> minha_etapa (T-012)
 │   └── templates/interface/
 │       ├── distribuicao.html
@@ -198,15 +206,18 @@ sempre morou.
 
 ## Restrições técnicas desta feature
 
-1. **A elevação nunca escreve, e a regra é de fronteira, não de ponto.** Todo conteúdo lido da
-   persistência passa por `elevar()`, e todo conjunto de alterações — do banco ou da requisição —
-   passa por `elevar_alteracoes()`, antes de qualquer uso. São sete fronteiras: criar, editar ou
-   rebasear, publicar, gerar o documento, verificar efeito e conflito, reconstruir o conteúdo
-   vigente e materializar. Listar "três pontos", como a primeira redação fez, deixava descoberto o
-   caso sem precondição — `ADD` não tem hash a conferir, e uma Retificação v4 em voo produziria
-   `Publicacao` carimbada v5 com Etapa em forma v4 (T-001). Nenhuma linha de `VersaoConsolidada`,
-   `Publicacao` ou `AlteracaoNormativa` é atualizada, e a leitura pública continua servindo o
-   conteúdo que o `content_hash` cobre. Os sete cenários de T-001 são teste obrigatório.
+1. **A elevação nunca escreve, e vale dentro do fluxo de Retificação — só ali.** Na elaboração, na
+   composição e na consolidação, todo conteúdo lido da persistência passa por `elevar()` e todo
+   conjunto de alterações — do banco ou da requisição — passa por `elevar_alteracoes()`, antes de
+   qualquer uso. **Fora desse fluxo nada é elevado**: consulta pública, comprovante e documento de
+   Publicação já existente servem o conteúdo literal, que é o que o `content_hash` cobre (T-002).
+   Listar "três pontos", como a primeira redação fez, deixava descoberto o caso sem precondição —
+   `ADD` não tem hash a conferir, e uma Retificação v4 em voo montaria `Publicacao` carimbada v5 com
+   Etapa em forma v4 (T-001). Nenhuma linha de `VersaoConsolidada`, `Publicacao` ou
+   `AlteracaoNormativa` é atualizada. Os oito cenários de T-001 são teste obrigatório.
+1a. **O autor compõe sobre a projeção elevada**, e é dela que sai `expectedPreviousHash`. O editor
+   deixa de montar formulário e diff sobre `base.content` cru; autor e servidor passam a conferir o
+   mesmo objeto (T-015). Projetar não é persistir nem publicar.
 2. **A ausência tem um leitor só.** Nenhum consumidor testa presença de chave por conta própria:
    `avaliacoes_previstas()` e `pontuacao_maxima()` são o lugar onde FR-009 e FR-066 vivem.
 3. **A revogação é computada.** Nenhum ato da 011 — alocar, desalocar, remover membro — pode

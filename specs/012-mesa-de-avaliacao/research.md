@@ -117,21 +117,35 @@ descoberta. O conteúdo e as alterações são lidos em mais lugares do que a co
 **O caso perigoso, e ele não é teórico.** `derive_preconditions` devolve cadeia vazia para `ADD` —
 acréscimo não tem conteúdo anterior a hashear, e a spec da 004 diz isso de propósito. Logo, uma
 Retificação v4 **em voo** com `ADD` de Etapa **não tem precondição que a recuse**. Sem elevar as
-alterações antes de aplicá-las, `publish_retification` produziria conteúdo com Etapa em forma v4 e
-criaria a `Publicacao` carimbando `canonical_schema_version = 5` — um registro afirmando uma versão
-que o conteúdo não tem, que é exatamente o que `_assert_versao_canonica` existe para impedir. E não
-há conferência de forma entre `apply_changes` e a criação da `Publicacao`: quem valida é
-`_materialize_affected_versions`, que roda depois.
+alterações antes de aplicá-las, `publish_retification` monta conteúdo com Etapa em forma v4 e chega
+a criar a `Publicacao` carimbando `canonical_schema_version = 5` — um registro afirmando uma versão
+que o conteúdo não tem —, porque entre `apply_changes` e a criação não há conferência de forma
+nenhuma: quem valida é `_materialize_affected_versions`, que roda depois.
 
-**A regra, então, é de fronteira e não de ponto**, e cabe em duas linhas:
+**O que acontece então, com precisão.** `command_context()` é `transaction.atomic()`, e a
+materialização roda dentro dela. A falha desfaz tudo: nenhuma `Publicacao` inválida fica gravada, e
+o banco não guarda contradição. **O defeito não é registro corrompido — é ato legítimo que se torna
+impublicável.** Uma Retificação homologada, correta quando foi elaborada, passa a falhar na
+publicação por um erro de forma que ninguém introduziu e cuja mensagem aponta para uma Etapa que o
+autor não escreveu. É uma falha honesta e péssima, e é ela que a elevação das alterações evita.
 
-> Todo conteúdo lido da persistência passa por `elevar()` antes de qualquer uso.
-> Todo conjunto de alterações — vindo do banco ou da requisição — passa por `elevar_alteracoes()`
-> antes de qualquer uso.
+**A regra, então, é de fronteira e não de ponto** — e a fronteira tem um lado de dentro bem
+definido, que é o **fluxo de Retificação**:
 
-Concretamente, isso alcança as sete fronteiras do fluxo: criar Retificação, editar ou rebasear,
-publicar, gerar o documento da publicação, verificar efeito prático e conflito, reconstruir o
-conteúdo vigente, e materializar as versões futuras reaplicando os atos publicados.
+> Dentro da elaboração, da composição e da consolidação de Retificação, todo conteúdo lido da
+> persistência passa por `elevar()`, e todo conjunto de alterações — do banco ou da requisição —
+> passa por `elevar_alteracoes()`, antes de qualquer uso.
+
+**Fora desse fluxo, nada é elevado**, e isso não é omissão: é T-002. A consulta pública, o
+comprovante, o documento materializado de uma Publicação já existente e qualquer outra leitura
+servem o conteúdo **literal**, porque é ele que o `content_hash` cobre e é sobre ele que a
+verificação de integridade da 005 se pronuncia. Elevar ali faria a tela mostrar uma coisa e o hash
+provar outra.
+
+Concretamente, o lado de dentro são estas fronteiras: criar Retificação, editar ou rebasear,
+**projetar o conteúdo para o autor compor** (T-015), publicar, gerar o documento **daquela**
+publicação, verificar efeito prático e conflito, reconstruir o conteúdo vigente para conferência de
+precondição, e materializar as versões futuras reaplicando os atos publicados.
 
 A economia que torna isso viável é que os dois pontos de leitura são poucos e nomeados:
 `_changes_payload` já é o único lugar que carrega alterações do banco — e é chamado tanto por
@@ -189,6 +203,9 @@ sem precondição:
    pode ser reelaborada sem devolver, e por isso a que mais dói se falhar.
 7. Retificação **criada depois** do incremento sobre `baseSnapshot` v4: as precondições nascem
    sobre base elevada e batem na publicação.
+8. A mesma criação, mas com `expectedPreviousHash` **declarado pelo cliente** sobre a Etapa que a
+   projeção lhe entregou: o hash declarado bate com o que o servidor confere na publicação (T-015).
+   É o cenário que prova que autor e servidor olham o mesmo conteúdo.
 
 Em todos os sete: a `Publicacao` e a Versão Consolidada nova nascem na versão vigente **e bem
 formadas** — nenhuma Etapa sem as duas propriedades —, e o `content_hash` de toda `Publicacao` e de
@@ -479,6 +496,56 @@ incremento, portanto, alcança também `specs/001-processo-seletivo-editais/cont
 
 Não é exceção a FR-061: é a mesma mudança do FR-007 chegando ao lugar onde a forma publicada é
 declarada. O que continua valendo é o resto — nenhuma outra coleção do conteúdo publicado muda.
+
+---
+
+## T-015 — A projeção que o autor compõe, e de onde sai a precondição
+
+A elevação resolve o que o servidor aplica. Falta dizer o que o **autor da Retificação** vê — e sem
+isso o contrato fica ambíguo justamente onde ele é conferido.
+
+### O problema
+
+`expectedPreviousHash` é o hash do conteúdo que o autor encontrou no caminho endereçado, e o
+domínio é explícito: **o declarado pelo cliente prevalece**; a derivação existe para quando ele não
+declara. Hoje o editor da interface monta o formulário e as diferenças sobre `base.content` **cru**
+— `campos_editaveis(base.content)` e `diferencas(base.content, …)` —, e a mesma leitura crua está
+na tela que exibe a Retificação.
+
+Se o servidor passar a conferir contra a Etapa **elevada** e o autor tiver visto a Etapa **v4
+literal**, os dois hashes falam de objetos diferentes, e a precondição falha sem que ninguém tenha
+mudado nada. O erro seria pior que o original: incompreensível, e culpando o autor.
+
+### A decisão
+
+**O autor compõe sobre a projeção elevada, e o hash sai dela.** Uma regra só, aplicada aos dois
+lados da mesma moeda:
+
+- **a superfície de autoria** — o formulário do editor, o diff que ele mostra, a tela que exibe a
+  Retificação em elaboração e a resposta da API que entrega o conteúdo-base para composição — serve
+  o resultado de `elevar(base.content)`;
+- **a conferência** — `derive_preconditions` em `_replace_changes`, e `_reject_stale_changes` na
+  publicação — roda sobre a mesma projeção elevada.
+
+Autor e servidor passam a olhar o mesmo objeto, e `expectedPreviousHash` volta a significar o que
+sempre significou: *o conteúdo que eu vi quando escrevi este ato*.
+
+### O que a decisão **não** autoriza
+
+Projeção não é persistência e não é publicação. `base.content` continua gravado como está;
+`VersaoConsolidada` e `Publicacao` continuam intocadas; e a **leitura pública** — consulta,
+comprovante, documento materializado de Publicação existente — continua servindo o conteúdo
+literal, que é o que o `content_hash` cobre (T-002).
+
+A projeção existe em um lugar e para um público: quem está compondo um ato normativo novo, que vai
+nascer na versão vigente de qualquer maneira. Entregar-lhe a forma antiga para depois conferir a
+nova seria pedir que ele acertasse um alvo que não lhe foi mostrado.
+
+### Consequência para o plano
+
+Duas chamadas da interface mudam de argumento — `campos_editaveis` e `diferencas` passam a receber
+a projeção, não `base.content` —, e a tela que exibe a Retificação faz o mesmo. Nenhuma delas muda
+de assinatura, e nenhuma sabe o que é elevação: quem eleva é a fronteira que carrega o conteúdo.
 
 ---
 
