@@ -1,0 +1,19 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Minhas inscrições{% endblock %}
+{% block conteudo %}
+<h1>Minhas inscrições</h1>
+{% if inscricoes %}
+<ul class="selecoes">
+  {% for inscricao in inscricoes %}
+  <li class="selecao">
+    <a class="titulo" href="{% url 'portal:inscricao' inscricao.id %}">{{ inscricao }}</a>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+{% comment %} Estado vazio, e não erro: é o estado normal de todo candidato novo, no minuto seguinte ao
+   primeiro acesso (FR-061). {% endcomment %}
+<p class="sub">Você ainda não possui inscrições.</p>
+<p><a class="principal" href="{% url 'portal:vitrine' %}">Ver processos seletivos</a></p>
+{% endif %}
+{% endblock %}

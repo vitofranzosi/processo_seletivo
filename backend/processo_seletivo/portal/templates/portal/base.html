@@ -21,8 +21,13 @@ a{color:var(--verde-texto)}
 main:focus{outline:none}
 header.topo{background:var(--verde-escuro);color:var(--branco);padding:.85rem 1rem;
   display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
-.quem-esta{display:flex;align-items:center;gap:.6rem;font-size:.875rem}
-.quem-esta .nome{opacity:.9;overflow-wrap:anywhere}
+.quem-esta{display:flex;align-items:center;gap:.6rem;font-size:.875rem;min-width:0}
+/* Cortado com reticências, e não quebrado letra a letra. `overflow-wrap:anywhere` resolvia o
+   transbordo de um nome longo empilhando caracteres numa coluna de um caractere — em 375px, com
+   um e-mail no lugar do nome, o cabeçalho virava seis linhas. Cortar diz a mesma coisa: quem
+   está aqui reconhece o começo do próprio endereço. */
+.quem-esta .nome{opacity:.9;min-width:0;max-width:14rem;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
 .quem-esta form{margin:0}
 button.sair{background:transparent;color:var(--branco);border:1px solid rgba(255,255,255,.6);
   border-radius:4px;padding:.3rem .7rem;font:inherit;font-size:.875rem;cursor:pointer}
@@ -270,6 +275,14 @@ details.como-converter li{margin-bottom:.4rem}
   width:100%;max-width:32rem}
 .principal:hover{background:var(--verde-escuro)}
 a.principal{display:inline-block;width:auto;text-align:center;text-decoration:none}
+/* A ação secundária de uma página clara (010). `button.sair` não servia: ela é branca sobre o
+   verde do cabeçalho, e no corpo da página ficava branco sobre cinza — visível apenas para quem
+   já sabia que estava lá. Contorno e texto verdes, com a mesma altura de alvo do botão
+   principal, porque em 375px o dedo não distingue hierarquia. */
+.secundario{padding:.7rem 1.1rem;border:1px solid var(--verde);border-radius:4px;
+  background:var(--branco);color:var(--verde-texto);font-weight:600;font-size:1rem;
+  font-family:inherit;cursor:pointer}
+.secundario:hover{background:var(--verde-claro)}
 form.convite{margin:.75rem 0 0}
 /* O comprovante é impresso: fora o conteúdo, nada mais precisa ir para o papel. */
 /* O timbre existe **só** no papel: na tela o cabeçalho verde já diz de quem é o sistema, e
@@ -387,7 +400,12 @@ form.convite{margin:.75rem 0 0}
   {% endcomment %}
   {% if candidato %}
   <span class="quem-esta">
-    <span class="nome">{{ candidato.nome }}</span>
+  {% comment %}
+  Quem acabou de entrar pela primeira vez ainda não tem nome: ele só é pedido na primeira
+  inscrição. O endereço identifica a pessoa para ela mesma até lá — e um cabeçalho vazio deixaria
+  a dúvida de se ela está mesmo dentro.
+  {% endcomment %}
+    <span class="nome">{{ candidato.nome|default:candidato.email }}</span>
     <form method="post" action="{% url 'portal:sair' %}">
       {% csrf_token %}
       <button type="submit" class="sair">Sair</button>

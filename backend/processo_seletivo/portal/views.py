@@ -20,6 +20,12 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.editais.domain.documentos import aplicaveis
+from processo_seletivo.identidade.application import associacao
+from processo_seletivo.identidade.application import desafio as desafio_de_acesso
+from processo_seletivo.identidade.application.mensagem import enviar_codigo
+from processo_seletivo.identidade.domain import codigo as codigo_de_acesso
+from processo_seletivo.identidade.domain.enderecos import canonizar, endereco_aceitavel
+from processo_seletivo.identidade.models import DesafioDeAcesso
 from processo_seletivo.inscricoes.application.rascunho import (
     abrir_inscricao,
     anexar_documento,
@@ -381,6 +387,173 @@ def _recusas_da_identificacao(dados):
     elif len(dados["email"]) > limites["email"]:
         recusas["email"] = f"O e-mail pode ter no máximo {limites['email']} caracteres."
     return recusas
+
+
+# ---------------------------------------------------------------------------
+# Acesso sem senha (010). Três telas curtas, e a decisão de a qual identidade o endereço pertence
+# acontece entre a validação do código e a criação de qualquer vínculo (FR-052).
+# ---------------------------------------------------------------------------
+
+CHAVE_DO_ENDERECO = "portal_acesso_email"
+CHAVE_DO_DESAFIO = "portal_acesso_desafio"
+# A mesma frase nos quatro casos que poderiam revelar existência: endereço com identidade, sem
+# identidade, limite esgotado e falha de envio (FR-020, FR-021, FR-083).
+AVISO_NEUTRO = "Se este endereço puder ser utilizado, enviaremos um código de acesso."
+
+
+def _origem(request) -> str:
+    """O que distingue uma origem da outra, sem guardar de onde veio.
+
+    Cabeçalho de proxy antes do endereço direto, porque atrás de um balanceador o segundo é sempre
+    o mesmo. O valor é resumido antes de ser gravado (D-005).
+    """
+    encaminhado = request.META.get("HTTP_X_FORWARDED_FOR", "")
+    if encaminhado:
+        return encaminhado.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR", "")
+
+
+def acesso(request):
+    """Informe seu e-mail — e a resposta é a mesma para todo mundo."""
+    if identidade_do_candidato.identidade_autenticada(request):
+        return redirect(reverse("portal:inscricoes"))
+    if request.method != "POST":
+        return render(request, "portal/acesso_email.html", {"email": "", "erro": ""})
+
+    informado = request.POST.get("email", "").strip()
+    if not endereco_aceitavel(informado):
+        # Recusa da **forma**, anterior a qualquer consulta: ela não revela nada sobre quem existe.
+        return render(
+            request,
+            "portal/acesso_email.html",
+            {"email": informado, "erro": "Informe um e-mail válido."},
+        )
+
+    canonico = canonizar(informado)
+    recibo, codigo = desafio_de_acesso.solicitar(
+        email_canonico=canonico,
+        finalidade=DesafioDeAcesso.Finalidade.ENTRAR,
+        origem=_origem(request),
+    )
+    enviar_codigo(para=informado, codigo=codigo)
+    request.session[CHAVE_DO_ENDERECO] = informado
+    request.session["portal_acesso_espera"] = recibo.proxima_tentativa_em
+    return redirect(reverse("portal:acesso-codigo"))
+
+
+def acesso_codigo(request):
+    """Informe o código — um campo só, que aceita a colagem inteira (UX-005)."""
+    informado = request.session.get(CHAVE_DO_ENDERECO, "")
+    if not informado:
+        return redirect(reverse("portal:acesso"))
+    contexto = {
+        "email": informado,
+        "erro": "",
+        "espera": request.session.get("portal_acesso_espera", 60),
+        "aviso": AVISO_NEUTRO,
+    }
+    if request.method != "POST":
+        return render(request, "portal/acesso_codigo.html", contexto)
+
+    canonico = canonizar(informado)
+    digitado = request.POST.get("codigo", "")
+    if not codigo_de_acesso.formato_aceitavel(digitado):
+        contexto["erro"] = "O código tem seis dígitos."
+        return render(request, "portal/acesso_codigo.html", contexto)
+
+    desafio = desafio_de_acesso.validar(
+        email_canonico=canonico,
+        finalidade=DesafioDeAcesso.Finalidade.ENTRAR,
+        codigo=digitado,
+    )
+    if desafio is None:
+        # Uma frase para quatro motivos — errado, expirado, já usado e acima do teto (FR-031).
+        contexto["erro"] = "Código inválido ou expirado. Peça um novo código."
+        return render(request, "portal/acesso_codigo.html", contexto)
+
+    return _decidir_a_quem_pertence(request, desafio, informado)
+
+
+def _decidir_a_quem_pertence(request, desafio, email_como_informado):
+    """A decisão da FR-052, tomada **antes** de qualquer vínculo existir."""
+    canonico = desafio.email_canonico
+    ja_verificado = associacao.identidade_da_credencial(canonico)
+    if ja_verificado is not None:
+        return _entrar(request, ja_verificado)
+
+    correspondentes = associacao.correspondencia_historica(canonico)
+    if correspondentes:
+        associacao.abrir_reconciliacao(desafio, correspondentes)
+        request.session[CHAVE_DO_DESAFIO] = str(desafio.pk)
+        return redirect(reverse("portal:acesso-reconciliar"))
+
+    return _entrar(
+        request, associacao.criar_identidade_com(canonico, email_como_informado)
+    )
+
+
+def _entrar(request, identidade):
+    for chave in (CHAVE_DO_ENDERECO, CHAVE_DO_DESAFIO, "portal_acesso_espera"):
+        request.session.pop(chave, None)
+    identidade_do_candidato.abrir_sessao(request, identidade)
+    return redirect(reverse("portal:inscricoes"))
+
+
+def _desafio_pendente(request):
+    identificador = request.session.get(CHAVE_DO_DESAFIO)
+    if not identificador:
+        return None
+    desafio = DesafioDeAcesso.objects.filter(pk=identificador).first()
+    return desafio if associacao.reconciliacao_pendente(desafio) else None
+
+
+def acesso_reconciliar(request):
+    """O convite: encontramos participação anterior — e ele é recusável (FR-050)."""
+    desafio = _desafio_pendente(request)
+    informado = request.session.get(CHAVE_DO_ENDERECO, "")
+    if desafio is None:
+        # Expirou ou esgotou. Nunca beco sem saída: segue com identidade própria (FR-052b).
+        if informado:
+            return _entrar(
+                request, associacao.criar_identidade_com(canonizar(informado), informado)
+            )
+        return redirect(reverse("portal:acesso"))
+
+    contexto = {"erro": ""}
+    if request.method != "POST":
+        return render(request, "portal/acesso_reconciliar.html", contexto)
+
+    if request.POST.get("acao") == "continuar":
+        associacao.encerrar_reconciliacao(desafio)
+        return _entrar(
+            request, associacao.criar_identidade_com(desafio.email_canonico, informado)
+        )
+
+    identidade = associacao.confirmar_cpf(desafio, request.POST.get("cpf", ""))
+    if identidade is not None:
+        associacao.associar_credencial(identidade, desafio.email_canonico, informado)
+        associacao.encerrar_reconciliacao(desafio)
+        return _entrar(request, identidade)
+
+    if not associacao.reconciliacao_pendente(desafio):
+        # Tentativas esgotadas: entra na própria identidade, e o convite morre com o desafio.
+        return _entrar(
+            request, associacao.criar_identidade_com(desafio.email_canonico, informado)
+        )
+    contexto["erro"] = (
+        "Não foi possível confirmar. Confira os números e tente novamente, ou continue sem "
+        "vincular sua participação anterior."
+    )
+    return render(request, "portal/acesso_reconciliar.html", contexto)
+
+
+def inscricoes(request):
+    """Minhas inscrições — nesta entrega, o estado vazio e a porta de saída dele."""
+    identidade = identidade_do_candidato.identidade_autenticada(request)
+    if identidade is None:
+        return redirect(reverse("portal:acesso"))
+    minhas = Inscricao.objects.filter(identity_subject=identidade.subject).order_by("-created_at")
+    return render(request, "portal/inscricoes.html", {"inscricoes": list(minhas)})
 
 
 @require_http_methods(["POST"])

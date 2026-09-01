@@ -1,0 +1,31 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Informe o código{% endblock %}
+{% block conteudo %}
+<h1>Informe o código</h1>
+{% comment %} A mesma frase para quem existe e para quem não existe — e o endereço fica à vista para a pessoa
+   conferir se digitou certo, sem que ela precise voltar (UX-007). {% endcomment %}
+<p class="sub">{{ aviso }}</p>
+<p class="sub">Enviado para <strong>{{ email }}</strong>. <a href="{% url 'portal:acesso' %}">Usar outro e-mail</a></p>
+
+<form method="post" action="{% url 'portal:acesso-codigo' %}" novalidate>
+  {% csrf_token %}
+  <div class="campo curto">
+    <label for="codigo">Código de seis dígitos</label>
+    {% comment %} Um controle só, e não seis: colar o código inteiro precisa funcionar, e seis campos
+       independentes obrigariam a navegar entre eles (UX-005). {% endcomment %}
+    <input type="text" id="codigo" name="codigo" inputmode="numeric" autocomplete="one-time-code"
+           maxlength="9" autofocus required
+           {% if erro %}aria-invalid="true" aria-describedby="erro-codigo"{% endif %}>
+    {% if erro %}<span class="recusa" id="erro-codigo">{{ erro }}</span>{% endif %}
+  </div>
+  <button type="submit" class="principal">Entrar</button>
+</form>
+
+<form method="post" action="{% url 'portal:acesso' %}" class="convite">
+  {% csrf_token %}
+  <input type="hidden" name="email" value="{{ email }}">
+  {# Quando a próxima tentativa é possível — e a espera é a mesma para todo mundo (UX-006). #}
+  <button type="submit" class="secundario">Reenviar código</button>
+  <span class="sub">Você poderá pedir outro código em até {{ espera }} segundos.</span>
+</form>
+{% endblock %}

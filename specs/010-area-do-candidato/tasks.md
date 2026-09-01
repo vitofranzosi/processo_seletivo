@@ -82,31 +82,39 @@ servidor, colá-lo inteiro e chegar a uma área pessoal vazia, sem que CPF seja 
 
 ### Testes da US1
 
-- [ ] T019 [P] [US1] Teste de contrato de `GET|POST /acesso` e `GET|POST /acesso/codigo`, conforme `contracts/acesso.md`, em `backend/tests/contract/portal/test_acesso.py`
-- [ ] T020 [P] [US1] Teste de que a resposta, o código de estado, o texto e a janela de reenvio são idênticos nos quatro casos que poderiam revelar existência — endereço com identidade, sem identidade, limite esgotado e **falha de envio** — em `backend/tests/integration/identidade/test_equivalencia.py`
-- [ ] T021 [P] [US1] Teste de que duas requisições simultâneas com o mesmo código produzem **um** consumo em `backend/tests/integration/identidade/test_consumo_atomico.py`
-- [ ] T022 [P] [US1] Teste do ciclo do desafio — expiração por instante absoluto, uso único, novo código invalidando anteriores, teto de cinco tentativas — em `backend/tests/integration/identidade/test_desafio.py`
-- [ ] T022a [P] [US1] Teste de finalidade cruzada: um código pedido para **entrar** não confirma adição de credencial, e um pedido para **adicionar** não autentica — em `backend/tests/integration/identidade/test_finalidade.py`
-- [ ] T023 [P] [US1] Teste dos limites por endereço e por origem, com origem guardada como resumo e nunca em claro, em `backend/tests/integration/identidade/test_limites.py`
-- [ ] T024 [P] [US1] Teste de que o identificador de sessão após a autenticação difere do anterior em `backend/tests/authorization/test_rotacao_de_sessao.py`
-- [ ] T025 [P] [US1] Teste de que a sessão de candidato não concede nenhuma ação institucional em `backend/tests/authorization/test_sessao_candidata.py`
-- [ ] T025a [P] [US1] Teste do conteúdo da mensagem — código, prazo de validade e orientação de ignorar; **sem** link que autentica, sem CPF e sem dado de inscrição — em `backend/tests/integration/identidade/test_mensagem.py`
-- [ ] T026 [P] [US1] Teste de aceitação do percurso endereço → código → área vazia, sem pedir CPF, em `backend/tests/acceptance/portal/test_entrar_sem_senha.py`
+- [X] T019 [P] [US1] Teste de contrato de `GET|POST /acesso` e `GET|POST /acesso/codigo`, conforme `contracts/acesso.md`, em `backend/tests/contract/portal/test_acesso.py`
+- [X] T020 [P] [US1] Teste de que a resposta, o código de estado, o texto e a janela de reenvio são idênticos nos quatro casos que poderiam revelar existência — endereço com identidade, sem identidade, limite esgotado e **falha de envio** — em `backend/tests/integration/identidade/test_equivalencia.py`
+- [X] T021 [P] [US1] Teste de que duas requisições simultâneas com o mesmo código produzem **um** consumo em `backend/tests/integration/identidade/test_consumo_atomico.py`
+- [X] T022 [P] [US1] Teste do ciclo do desafio — expiração por instante absoluto, uso único, novo código invalidando anteriores, teto de cinco tentativas — em `backend/tests/integration/identidade/test_desafio.py`
+- [X] T022a [P] [US1] Teste de finalidade cruzada: um código pedido para **entrar** não confirma adição de credencial, e um pedido para **adicionar** não autentica — em `backend/tests/integration/identidade/test_finalidade.py`
+- [X] T023 [P] [US1] Teste dos limites por endereço e por origem, com origem guardada como resumo e nunca em claro, em `backend/tests/integration/identidade/test_limites.py`
+- [X] T024 [P] [US1] Teste de que o identificador de sessão após a autenticação difere do anterior em `backend/tests/authorization/test_rotacao_de_sessao.py`
+- [X] T025 [P] [US1] Teste de que a sessão de candidato não concede nenhuma ação institucional em `backend/tests/authorization/test_sessao_candidata.py`
+- [X] T025a [P] [US1] Teste do conteúdo da mensagem — código, prazo de validade e orientação de ignorar; **sem** link que autentica, sem CPF e sem dado de inscrição — em `backend/tests/integration/identidade/test_mensagem.py`
+- [X] T026 [P] [US1] Teste de aceitação do percurso endereço → código → área vazia, sem pedir CPF, em `backend/tests/acceptance/portal/test_entrar_sem_senha.py`
 
 ### Implementação da US1
 
-- [ ] T027 [US1] Implementar solicitação de desafio, com invalidação dos anteriores e limites, em `backend/processo_seletivo/identidade/application/desafio.py`
-- [ ] T028 [US1] Implementar validação do código com consumo atômico e contagem condicional de tentativas em `backend/processo_seletivo/identidade/application/desafio.py`
-- [ ] T029 [US1] Implementar o envio da mensagem — código, prazo e orientação, sem link que autentica, sem CPF, sem dado de inscrição — em `backend/processo_seletivo/identidade/application/mensagem.py`
-- [ ] T030 [US1] Implementar a criação de identidade sem CPF para endereço sem correspondência anterior em `backend/processo_seletivo/identidade/application/associacao.py`
-- [ ] T031 [US1] Reescrever `portal/identidade.py` para guardar na sessão apenas o identificador da identidade e montar `IdentidadeDoCandidato` a partir do registro, com rotação de sessão na autenticação, em `backend/processo_seletivo/portal/identidade.py`
-- [ ] T032 [US1] Acrescentar as rotas de acesso e de saída em `backend/processo_seletivo/portal/urls.py`
-- [ ] T033 [US1] Implementar as views de acesso em `backend/processo_seletivo/portal/views.py`
-- [ ] T034 [P] [US1] Criar o formulário de endereço em `backend/processo_seletivo/portal/templates/portal/acesso_email.html`
-- [ ] T035 [P] [US1] Criar o formulário do código — campo único que aceita colagem integral, endereço preservado em caso de erro, e ação de reenviar que informa quando a próxima tentativa é possível — em `backend/processo_seletivo/portal/templates/portal/acesso_codigo.html`
-- [ ] T036 [US1] Criar a área pessoal com o estado vazio — convite a consultar processos seletivos, sem aparência de erro — em `backend/processo_seletivo/portal/templates/portal/inscricoes.html`
+- [X] T027 [US1] Implementar solicitação de desafio, com invalidação dos anteriores e limites, em `backend/processo_seletivo/identidade/application/desafio.py`
+- [X] T028 [US1] Implementar validação do código com consumo atômico e contagem condicional de tentativas em `backend/processo_seletivo/identidade/application/desafio.py`
+- [X] T029 [US1] Implementar o envio da mensagem — código, prazo e orientação, sem link que autentica, sem CPF, sem dado de inscrição — em `backend/processo_seletivo/identidade/application/mensagem.py`
+- [X] T030 [US1] Implementar a criação de identidade sem CPF para endereço sem correspondência anterior em `backend/processo_seletivo/identidade/application/associacao.py`
+- [X] T031 [US1] Reescrever `portal/identidade.py` para guardar na sessão apenas o identificador da identidade e montar `IdentidadeDoCandidato` a partir do registro, com rotação de sessão na autenticação, em `backend/processo_seletivo/portal/identidade.py`
+- [X] T032 [US1] Acrescentar as rotas de acesso e de saída em `backend/processo_seletivo/portal/urls.py`
+- [X] T033 [US1] Implementar as views de acesso em `backend/processo_seletivo/portal/views.py`
+- [X] T034 [P] [US1] Criar o formulário de endereço em `backend/processo_seletivo/portal/templates/portal/acesso_email.html`
+- [X] T035 [P] [US1] Criar o formulário do código — campo único que aceita colagem integral, endereço preservado em caso de erro, e ação de reenviar que informa quando a próxima tentativa é possível — em `backend/processo_seletivo/portal/templates/portal/acesso_codigo.html`
+- [X] T036 [US1] Criar a área pessoal com o estado vazio — convite a consultar processos seletivos, sem aparência de erro — em `backend/processo_seletivo/portal/templates/portal/inscricoes.html`
 
 **Checkpoint**: o percurso da Entrega 1 do [quickstart.md](./quickstart.md) roda no navegador.
+
+> **Antecipadas para cá, e o motivo.** `T046`, `T048`, `T051` e `T052` — a busca de correspondência
+> histórica, a confirmação por CPF e a tela do convite — foram implementadas junto com a US1. Sem
+> elas, um endereço com participação anterior cairia na criação de identidade nova e **consumiria**
+> a correspondência, tornando a reconciliação da US2 impossível para aquela pessoa. A US1 não é
+> correta sem esse desvio; ela é apenas demonstrável. O que permanece na US2 é a retomada
+> (`T042`, `T049`) e o bloqueio compartilhado (`T050`), que dependem de haver inscrição para
+> proteger.
 
 ---
 
@@ -131,13 +139,13 @@ confirmar o CPF e ver a inscrição — sem que nenhum dado dela tenha mudado.
 
 ### Implementação da US2
 
-- [ ] T046 [US2] Implementar a busca de correspondência histórica por endereço, sem consumir o convite, em `backend/processo_seletivo/identidade/application/associacao.py`
+- [X] T046 [US2] Implementar a busca de correspondência histórica por endereço, sem consumir o convite, em `backend/processo_seletivo/identidade/application/associacao.py`
 - [ ] T047 [US2] Implementar o porte da reconciliação pendente sobre os campos que `T014` já criou — abrir o prazo no consumo, contar as tentativas de CPF por atualização condicional e encerrar nos quatro desfechos — em `backend/processo_seletivo/identidade/application/associacao.py`
-- [ ] T048 [US2] Implementar a confirmação por CPF, com desempate e contagem condicional de tentativas, em `backend/processo_seletivo/identidade/application/associacao.py`
+- [X] T048 [US2] Implementar a confirmação por CPF, com desempate e contagem condicional de tentativas, em `backend/processo_seletivo/identidade/application/associacao.py`
 - [ ] T049 [US2] Implementar a retomada — verificar vazia, mover todas as credenciais e descartar, em uma operação única sob bloqueio de linha — em `backend/processo_seletivo/identidade/application/associacao.py`
 - [ ] T050 [US2] Fazer a abertura de rascunho tomar o mesmo bloqueio de linha sobre a identidade antes de criar a Inscrição em `backend/processo_seletivo/inscricoes/application/rascunho.py`
-- [ ] T051 [US2] Implementar as views do convite e da retomada em `backend/processo_seletivo/portal/views.py` e as rotas em `backend/processo_seletivo/portal/urls.py`
-- [ ] T052 [US2] Criar o convite, sem revelar nome, CPF, protocolo ou quantidade da identidade anterior, e a recusa que aponta o procedimento institucional de recuperação em vez de um beco, em `backend/processo_seletivo/portal/templates/portal/acesso_reconciliar.html`
+- [X] T051 [US2] Implementar as views do convite e da retomada em `backend/processo_seletivo/portal/views.py` e as rotas em `backend/processo_seletivo/portal/urls.py`
+- [X] T052 [US2] Criar o convite, sem revelar nome, CPF, protocolo ou quantidade da identidade anterior, e a recusa que aponta o procedimento institucional de recuperação em vez de um beco, em `backend/processo_seletivo/portal/templates/portal/acesso_reconciliar.html`
 
 **Checkpoint**: o percurso da Entrega 2 roda, e a suíte prova que nenhuma inscrição mudou de titular.
 
@@ -257,7 +265,7 @@ antigo, e receber recusa ao tentar remover o último.
 - [ ] T091 [P] Consolidar a demonstração de segurança do §25 em seis casos executáveis — endereçamento direto, endereço arbitrário com CPF conhecido, precedência, endereço reciclado, engano no convite e sessão conhecida — em `backend/tests/authorization/test_demonstracao_de_seguranca.py`
 - [ ] T092 [P] Teste de que duas inscrições enviadas com o mesmo CPF no mesmo Perfil são aceitas e aparecem **assinaladas**, e de que nenhuma é recusada no envio, em `backend/tests/integration/inscricoes/test_cpf_coincidente.py`
 - [ ] T093 Marcar a coincidência de CPF por subconsulta de existência na consulta administrativa em `backend/processo_seletivo/inscricoes/application/consulta.py`
-- [ ] T094 [P] Implementar a limpeza operacional de desafios terminais em `backend/processo_seletivo/identidade/application/desafio.py`
+- [X] T094 [P] Implementar a limpeza operacional de desafios terminais em `backend/processo_seletivo/identidade/application/desafio.py`
 - [ ] T095 [P] Teste de higiene de registro técnico — nem código, nem CPF completo, nem conteúdo de documento em log ou auditoria — em `backend/tests/integration/identidade/test_higiene_de_log.py`
 - [ ] T096 [P] Verificar 375 px sem rolagem horizontal e percurso completo por teclado nas telas novas em `backend/tests/interface/test_acessibilidade_portal.py`
 - [ ] T097 [P] Teste de custo de consulta da lista de inscrições e da área, marcado como `performance`, em `backend/tests/performance/test_area_do_candidato.py`

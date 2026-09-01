@@ -2,10 +2,18 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "gestao",
-      "runtimeExecutable": "uv",
-      "runtimeArgs": ["run", "--directory", "backend", "python", "manage.py", "runserver", "8008"],
-      "port": 8008
+      "name": "portal-010",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DB_USER=saymoncastro",
+        "DB_NAME=ps010_dev",
+        "LC_ALL=en_US.UTF-8",
+        "DJANGO_EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend",
+        "DEFAULT_FROM_EMAIL=nao-responda@exemplo.test",
+        "ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos",
+        "uv", "run", "--directory", "backend", "python", "manage.py", "runserver", "8010"
+      ],
+      "port": 8010
     }
   ]
 }

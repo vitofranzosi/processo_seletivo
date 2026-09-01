@@ -7,6 +7,11 @@ app_name = "portal"
 urlpatterns = [
     path("", views.vitrine, name="vitrine"),
     path("identificar", views.identificar, name="identificar"),
+    # Acesso sem senha (010). Três telas curtas e nenhuma delas carrega dado pessoal no endereço.
+    path("acesso", views.acesso, name="acesso"),
+    path("acesso/codigo", views.acesso_codigo, name="acesso-codigo"),
+    path("acesso/reconciliar", views.acesso_reconciliar, name="acesso-reconciliar"),
+    path("inscricoes/", views.inscricoes, name="inscricoes"),
     path("sair", views.sair, name="sair"),
     # A Inscrição fora do caminho do Edital: ela pertence a quem a abriu, e o endereço não carrega
     # nada sobre a pessoa — nem CPF, nem nome (FR-073).
