@@ -76,3 +76,69 @@ def test_minhas_etapas_ordena_o_numero_do_edital_como_numero(
     assert _numero("07") < _numero("11")
     # Número não numérico não pode quebrar a ordenação — vai para o fim, em ordem alfabética.
     assert _numero("11") < _numero("11-A")
+
+
+def test_a_chave_de_leitura_e_uma_so_para_toda_a_feature(
+    gestor, processo_a, comissao_de_a
+):
+    """Duas ordenações por nome no mesmo arquivo foi o que reintroduziu o defeito do acento.
+
+    A lista da Comissão e o filtro da trilha ordenam pela mesma função — se alguém criar uma
+    terceira ordenação por nome, este teste não a pega, mas a ausência de `casefold()` solto
+    no módulo, sim.
+    """
+    import inspect
+
+    from processo_seletivo.comissoes.application import selectors
+
+    fonte = inspect.getsource(selectors)
+    assert fonte.count(".casefold()") == 1, "a normalização de nome vive em `chave_de_leitura`"
+    assert "unicodedata" in fonte
+
+
+def test_o_filtro_da_trilha_ordena_ignorando_acento(gestor, processo_a):
+    """“Íris” não pode cair depois de “Léo” num seletor que alguém vai percorrer com os olhos."""
+    from processo_seletivo.comissoes.application.comissao import adicionar_varios
+    from processo_seletivo.comissoes.application.selectors import pessoas_da_trilha
+
+    adicionar_varios(
+        actor=gestor,
+        processo_id=processo_a.id,
+        entradas=[("iri", "Íris Melo"), ("leo", "Léo Braga"), ("ana", "Ana Costa")],
+        funcao="MEMBRO",
+        idempotency_key="acento-na-trilha-0001",
+        correlation_id="c",
+    )
+
+    lidos = [p["rotulo"] for p in pessoas_da_trilha(processo_a) if p["rotulo"]]
+
+    assert lidos == ["Ana Costa", "Íris Melo", "Léo Braga"]
+
+
+def test_o_filtro_da_trilha_mostra_o_rotulo_mais_recente(gestor, processo_a):
+    """Quem saiu e voltou com outro nome é procurado pelo nome de agora."""
+    from processo_seletivo.comissoes.application.comissao import (
+        adicionar_varios,
+        remover_membro,
+    )
+    from processo_seletivo.comissoes.application.selectors import pessoas_da_trilha
+    from processo_seletivo.comissoes.models import MembroComissao
+
+    adicionar_varios(
+        actor=gestor, processo_id=processo_a.id, entradas=[("joao.souza", "João S.")],
+        funcao="MEMBRO", idempotency_key="rotulo-antigo", correlation_id="c",
+    )
+    antigo = MembroComissao.objects.get(identity_subject="joao.souza")
+    remover_membro(
+        actor=gestor, processo_id=processo_a.id, membro_id=antigo.id,
+        idempotency_key="rotulo-saida", correlation_id="c",
+    )
+    adicionar_varios(
+        actor=gestor, processo_id=processo_a.id, entradas=[("joao.souza", "João Souza Neto")],
+        funcao="MEMBRO", idempotency_key="rotulo-novo", correlation_id="c",
+    )
+
+    pessoas = {p["subject"]: p["rotulo"] for p in pessoas_da_trilha(processo_a)}
+
+    assert pessoas["joao.souza"] == "João Souza Neto"
+    assert len([p for p in pessoas_da_trilha(processo_a) if p["subject"] == "joao.souza"]) == 1

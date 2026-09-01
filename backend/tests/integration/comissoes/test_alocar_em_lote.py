@@ -105,3 +105,25 @@ def test_repetir_o_lote_com_a_mesma_chave_nao_duplica(
 
     assert criadas == []
     assert AlocacaoEtapa.objects.filter(ativo=True).count() == 2
+
+
+def test_pagina_velha_diz_o_que_aconteceu_em_vez_de_repetir_a_regra(
+    gestor, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    """Corrida e caminho lateral são problemas diferentes, e a recusa passou a distingui-los."""
+    from processo_seletivo.comissoes.application.comissao import remover_membro
+
+    remover_membro(
+        actor=gestor,
+        processo_id=processo_a.id,
+        membro_id=comissao_de_a["joao"].id,
+        idempotency_key="saiu-durante",
+        correlation_id="c",
+    )
+
+    with pytest.raises(DomainError) as recusa:
+        lote(gestor, processo_a, comissao_de_a.values(), edital_a, etapa_a1)
+
+    assert recusa.value.code == "selecao_desatualizada"
+    assert recusa.value.status == 409
+    assert "Recarregue" in recusa.value.detail

@@ -143,10 +143,21 @@ def alocar_varios(
                 409,
             )
         nome_da_etapa = vigentes[etapa_id].get("name") or str(etapa_id)
-        membros = list(
-            MembroComissao.objects.filter(pk__in=ids, processo=ctx.processo, ativo=True)
-        )
+        do_processo = list(MembroComissao.objects.filter(pk__in=ids, processo=ctx.processo))
+        membros = [m for m in do_processo if m.ativo]
         if len(membros) != len(set(ids)):
+            # Duas recusas diferentes, porque são dois problemas diferentes. Quem nunca integrou
+            # esta comissão é tentativa de alocar por fora da jornada; quem integrava e saiu com
+            # a tela aberta é corrida — e dizer "só membros ativos podem ser alocados" a quem vê
+            # quarenta nomes disponíveis descreve a regra sem dizer o que aconteceu.
+            if len(do_processo) == len(set(ids)):
+                raise DomainError(
+                    "selecao_desatualizada",
+                    "Parte da seleção já não integra esta comissão — provavelmente alguém a "
+                    "alterou enquanto você trabalhava. Recarregue a página e refaça a seleção.",
+                    409,
+                    campo="membro_id",
+                )
             raise DomainError(
                 "pessoa_nao_e_membro_ativo",
                 "Só membros ativos da comissão podem ser alocados.",

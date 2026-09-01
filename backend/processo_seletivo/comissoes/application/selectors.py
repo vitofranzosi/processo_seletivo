@@ -49,15 +49,18 @@ def pessoas_da_trilha(processo):
     e voltou tem duas linhas de vínculo e uma entrada só aqui.
     """
     vistos = {}
-    for membro in MembroComissao.objects.filter(processo=processo):
-        atual = vistos.get(membro.identity_subject)
-        # O rótulo mais recente é o que a pessoa reconhece; o identificador é o que filtra.
-        if atual is None or (not atual["rotulo"] and membro.display_label):
-            vistos[membro.identity_subject] = {
-                "subject": membro.identity_subject,
-                "rotulo": membro.display_label,
-            }
-    return sorted(vistos.values(), key=lambda p: (p["rotulo"] or p["subject"]).casefold())
+    # Em ordem de criação, deixando o vínculo mais novo sobrescrever: quem saiu e voltou com
+    # outro rótulo é procurado pelo nome de agora, não pelo de antes. Rótulo vazio não apaga um
+    # que existia — a ausência não é informação mais recente, é ausência.
+    for membro in MembroComissao.objects.filter(processo=processo).order_by("criado_em"):
+        anterior = vistos.get(membro.identity_subject, {}).get("rotulo", "")
+        vistos[membro.identity_subject] = {
+            "subject": membro.identity_subject,
+            "rotulo": membro.display_label or anterior,
+        }
+    return sorted(
+        vistos.values(), key=lambda p: chave_de_leitura(p["rotulo"] or p["subject"])
+    )
 
 
 def preside(ator, processo):
@@ -76,18 +79,27 @@ def membros(processo):
     memória porque a chave é a que se exibe, e ela mistura dois campos.
     """
     ativos = list(MembroComissao.objects.filter(processo=processo, ativo=True))
-    ativos.sort(key=lambda m: (m.funcao != Funcao.PRESIDENTE, _chave_de_leitura(m)))
+    ativos.sort(
+        key=lambda m: (
+            m.funcao != Funcao.PRESIDENTE,
+            chave_de_leitura(m.display_label or m.identity_subject),
+        )
+    )
     return ativos
 
 
-def _chave_de_leitura(membro):
-    """A chave de ordenação ignora acento, senão “Íris” cai depois de “Léo”.
+def chave_de_leitura(nome):
+    """A chave de ordenação de qualquer nome exibido nesta feature.
 
-    Ordenar por codepoint joga todo nome acentuado para o fim da lista — numa comissão
-    brasileira isso não parece uma escolha de ordenação, parece defeito.
+    Ignora acento: ordenar por codepoint joga todo nome acentuado para o fim da lista, e numa
+    comissão brasileira isso não parece uma escolha de ordenação, parece defeito.
+
+    **Recebe o texto, e não o membro**, de propósito. A versão anterior recebia `MembroComissao`,
+    e por isso o filtro da trilha — que trabalha com dicionários — não pôde reusá-la e ordenou
+    com `casefold()` puro, reintroduzindo o mesmo defeito nove linhas abaixo da correção. Duas
+    ordenações por nome no mesmo arquivo é que era o problema; agora é uma.
     """
-    nome = membro.display_label or membro.identity_subject
-    sem_acento = unicodedata.normalize("NFKD", nome)
+    sem_acento = unicodedata.normalize("NFKD", nome or "")
     return "".join(c for c in sem_acento if not unicodedata.combining(c)).casefold()
 
 
