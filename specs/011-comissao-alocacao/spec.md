@@ -99,7 +99,7 @@ Logo, na V1:
   quando decidiu materializar o Edital sem cadastro de pessoas.
 
 O gate de PC-005 permanece explícito e é a condição para produção. Quando o diretório existir, a
-mudança é nesta camada e nos requisitos FR-016 a FR-021, e em nada mais.
+mudança é nesta camada e nos requisitos FR-018 a FR-022, e em nada mais.
 
 ### D-004 — Isolamento por escopo institucional
 

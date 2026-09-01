@@ -70,7 +70,8 @@ nasce nesta feature — `comissoes` (domínio, persistência e comandos) — e a
 - [ ] T016 [P] Teste unitário das duas funções em `backend/tests/unit/comissoes/test_autorizacao.py`, incluindo o caso do presidente **não** alocado, que gere e não atua (`FR-012`)
 - [ ] T017 Trocar o padrão de `new_state` e `new_revision` por sentinela `_UNSET` em `backend/processo_seletivo/auditoria/application.py`, mantendo o comportamento de quem já chama (D-014)
 - [ ] T018 [P] Teste da sentinela em `backend/tests/unit/test_record_event.py` — agregado sem `status`/`revision` grava com valores explícitos, e `new_revision=None` é gravado como nulo em vez de causar `AttributeError`
-- [ ] T019 Implementar o invólucro de comando em `backend/processo_seletivo/comissoes/application/__init__.py` — abre `command_context()`, faz `select_for_update` no Processo, **reavalia** `pode_gerir_comissao` dentro da transação e devolve a base usada (D-016)
+- [ ] T019 Implementar o invólucro de comando em `backend/processo_seletivo/comissoes/application/__init__.py` — abre `command_context()`, faz `select_for_update` no Processo, **reavalia** `pode_gerir_comissao` dentro da transação, chama `ensure_processo_accepts_changes` e só então reserva a idempotência, devolvendo a base usada (D-016, `FR-067`)
+- [ ] T019a [P] Teste do invólucro em `backend/tests/integration/comissoes/test_comando.py` — Processo encerrado e cancelado recusam os cinco comandos; e a reserva de idempotência acontece **depois** da autorização, não antes
 
 **Checkpoint**: o domínio responde às duas perguntas e o banco recusa duplicidade. Nada é navegável
 ainda — e é por isso que esta fase não é entrega.
@@ -87,13 +88,16 @@ alguma.
 
 - [ ] T020 [US1] Implementar `adicionar_membro` em `backend/processo_seletivo/comissoes/application/comissao.py` — reserva idempotência, valida função, grava e audita com a base que autorizou
 - [ ] T021 [P] [US1] Teste do comando em `backend/tests/integration/comissoes/test_adicionar_membro.py` — inclusão, recusa de duplicidade ativa, e repetição da mesma `idempotency_key` devolvendo o resultado original (`FR-064`)
+- [ ] T021a [P] [US1] Teste de idempotência dos **cinco** comandos em `backend/tests/integration/comissoes/test_idempotencia.py` — mesma chave e mesmo corpo devolve o resultado original; mesma chave com corpo diferente devolve `idempotency_conflict`; chave nova para vínculo equivalente recai na constraint (contrato §3)
 - [ ] T022 [P] [US1] Teste de autorização em `backend/tests/authorization/test_gestao_da_comissao.py` — ator sem base nenhuma recebe 404; ator de outro escopo recebe 404 e não 403 (`SC-016`)
 - [ ] T023 [US1] Implementar o formulário de membro em `backend/processo_seletivo/interface/forms.py` — identificador, rótulo opcional e função
 - [ ] T024 [US1] Implementar a view `comissao` (GET e POST) em `backend/processo_seletivo/interface/views.py`, no padrão de `processo_detalhe`
 - [ ] T025 [US1] Registrar a rota `processos/<uuid:processo_id>/comissao` em `backend/processo_seletivo/interface/urls.py`
-- [ ] T026 [US1] Criar `backend/processo_seletivo/interface/templates/interface/comissao.html` — lista com função, aviso de que o identificador **não** é verificado, e o formulário de inclusão (`FR-020`, `FR-022`)
+- [ ] T026 [US1] Criar `backend/processo_seletivo/interface/templates/interface/comissao.html` — lista com função, aviso de que o identificador **não** é verificado, e o formulário de inclusão (`FR-020`)
+- [ ] T026a [US1] Criar a etapa de confirmação em `backend/processo_seletivo/interface/templates/interface/comissao_confirmar.html`, no padrão de `processo_confirmar.html` — mostra o identificador **exatamente como será gravado**, a função e o rótulo, e só o envio dessa tela grava (`FR-022`)
 - [ ] T027 [US1] Ligar a Comissão à navegação a partir de `interface/templates/interface/processo_detalhe.html`
 - [ ] T028 [P] [US1] Teste de interface em `backend/tests/interface/test_comissao.py` — a tela lista, inclui, e mostra o aviso do identificador não verificado
+- [ ] T028a [US1] Teste da confirmação em `backend/tests/interface/test_comissao.py` — o primeiro envio **não** grava nada e devolve a tela de conferência com o identificador; só o segundo cria o membro (`FR-022`, `SC-UX-008`)
 
 **Checkpoint**: a comissão existe e é navegável. Ninguém ganhou acesso a nada — que é o resultado
 correto (§13 da spec).
@@ -108,7 +112,7 @@ autorização.
 **Independent Test**: com a comissão da US1, alocar o Membro à Etapa A1 de um Edital publicado; e
 tentar alocar num Edital em elaboração, recebendo a recusa nomeada.
 
-- [ ] T029 [US3] Implementar `alocar` em `backend/processo_seletivo/comissoes/application/alocacao.py` — membro ativo, Edital publicado, Etapa em `etapas_vigentes`, comissão com presidente ativo (`FR-030`, `FR-032`, `FR-033`)
+- [ ] T029 [US3] Implementar `alocar` em `backend/processo_seletivo/comissoes/application/alocacao.py` — pelo invólucro de T019, com `reserve()`: membro ativo, Edital publicado, Etapa em `etapas_vigentes`, comissão com presidente ativo (`FR-030`, `FR-032`, `FR-033`)
 - [ ] T030 [US3] Implementar a verificação de coerência `etapa → edital → processo` em `backend/processo_seletivo/comissoes/application/alocacao.py` (`FR-004`), com o Edital já carregado
 - [ ] T031 [P] [US3] Teste do comando em `backend/tests/integration/comissoes/test_alocar.py` — sucesso; Etapa de Edital de outro Processo recusada (`EC-004`); pessoa que não é membro recusada (`EC-005`); Edital sem versão publicada recusado (`EC-014`)
 - [ ] T032 [P] [US3] Teste do invariante de presidência em `backend/tests/integration/comissoes/test_presidencia.py` — comissão sem presidente não aloca, e a recusa nomeia o caminho (`FR-029`, `FR-030`, `EC-006`)
@@ -139,7 +143,7 @@ devolve 404; UUID adulterado devolve 404.
 - [ ] T044 [US5] Criar `interface/templates/interface/atribuicao.html` — contexto da Etapa e **nenhum** controle de avaliação (`FR-051`, `FR-052`)
 - [ ] T045 [US5] Ligar `Minhas Etapas` à navegação da base administrativa em `interface/templates/interface/base.html`, visível a qualquer identidade institucional (`UX-008`)
 - [ ] T046 [P] [US5] Teste de autorização em `backend/tests/authorization/test_acesso_a_etapa.py` — os quatro 404 da demonstração, mais o do escopo alheio (`SC-009`, `SC-010`, `SC-016`)
-- [ ] T047 [P] [US5] Teste de que privilégio administrativo **não** injeta Etapa em `Minhas Etapas`, em `backend/tests/authorization/test_acesso_a_etapa.py` (`FR-044`, `SC-008`)
+- [ ] T047 [US5] Teste de que privilégio administrativo **não** injeta Etapa em `Minhas Etapas`, em `backend/tests/authorization/test_acesso_a_etapa.py` (`FR-044`, `SC-008`)
 - [ ] T048 [P] [US5] Teste de aceitação do percurso inteiro em `backend/tests/acceptance/test_comissao_e_alocacao.py`, com dois atores
 - [ ] T049 [P] [US5] Teste de fronteira em `backend/tests/interface/test_atribuicao.py` — a página não contém documento, nota, parecer nem botão de avaliar (§50 da spec)
 
@@ -155,7 +159,7 @@ contrato arquitetural da feature, e é o que a 012 vai herdar.
 **Independent Test**: remover o membro da Etapa A1 e ver, na janela dele, `Minhas Etapas` esvaziar e
 a URL de A1 passar a devolver 404.
 
-- [ ] T050 [US6] Implementar `remover_alocacao` em `backend/processo_seletivo/comissoes/application/alocacao.py` — inativa, grava quem e quando, audita
+- [ ] T050 [US6] Implementar `remover_alocacao` em `backend/processo_seletivo/comissoes/application/alocacao.py` — pelo invólucro de T019, com `reserve()`: inativa, grava quem e quando, audita
 - [ ] T051 [US6] Acrescentar a ação de remoção em `backend/processo_seletivo/interface/views.py` e `interface/templates/interface/alocacoes.html`, com rótulo **Remover desta Etapa** (`UX-003`)
 - [ ] T052 [P] [US6] Teste de integração em `backend/tests/integration/comissoes/test_remover_alocacao.py` — o vínculo de comissão permanece (`SC-006`)
 - [ ] T053 [P] [US6] Teste de revogação em `backend/tests/authorization/test_acesso_a_etapa.py` — depois da remoção, `Minhas Etapas` não lista e a URL devolve 404 (`FR-036`, `SC-007`)
@@ -171,8 +175,8 @@ a URL de A1 passar a devolver 404.
 **Independent Test**: promover outro presidente, rebaixar o anterior, e remover um membro com duas
 alocações — vendo as duas sumirem juntas.
 
-- [ ] T054 [US2] Implementar `alterar_funcao` em `backend/processo_seletivo/comissoes/application/comissao.py`, recusando rebaixar o último presidente havendo alocação ativa (`FR-030`)
-- [ ] T055 [US2] Implementar `remover_membro` em `backend/processo_seletivo/comissoes/application/comissao.py`, **inativando as alocações dele na mesma transação** (D-016, `EC-003`)
+- [ ] T054 [US2] Implementar `alterar_funcao` em `backend/processo_seletivo/comissoes/application/comissao.py`, pelo invólucro de T019 e com `reserve()`, recusando rebaixar o último presidente havendo alocação ativa (`FR-030`)
+- [ ] T055 [US2] Implementar `remover_membro` em `backend/processo_seletivo/comissoes/application/comissao.py`, pelo invólucro de T019 e com `reserve()`, **inativando as alocações dele na mesma transação** e gravando **um evento `ALOCACAO_REMOVER` por alocação inativada** (D-016, `EC-003`, `FR-074`)
 - [ ] T056 [P] [US2] Teste de integração em `backend/tests/integration/comissoes/test_remover_membro.py` — cascata atômica, e nenhuma alocação ativa sob membro inativo
 - [ ] T057 [P] [US2] Teste da recusa do último presidente em `backend/tests/integration/comissoes/test_presidencia.py`, incluindo o caminho feliz de designar outro antes
 - [ ] T058 [US2] Acrescentar as duas ações a `interface/templates/interface/comissao.html`, com rótulos distintos — **Remover da comissão** versus **Remover desta Etapa** (`UX-003`, `SC-UX-002`)
@@ -210,8 +214,9 @@ identificar a lacuna sem abrir membro nenhum.
 - [ ] T069 Implementar a view de auditoria do Processo em `backend/processo_seletivo/interface/views.py`, sob `auditoria:consultar`, no padrão da view `auditoria` do Edital
 - [ ] T070 Registrar a rota `processos/<uuid:processo_id>/auditoria` em `backend/processo_seletivo/interface/urls.py` e ligá-la a partir de `processo_detalhe.html`
 - [ ] T071 Acrescentar as cinco operações novas ao dicionário `OPERACOES` de `backend/processo_seletivo/interface/views.py`
-- [ ] T072 [P] Teste da trilha em `backend/tests/integration/comissoes/test_auditoria.py` — os cinco eventos aparecem, e o `permission` de cada um diz a base real (`FR-016`, `SC-013`)
-- [ ] T073 [P] Teste de concorrência em `backend/tests/integration/comissoes/test_concorrencia.py`, marcado `postgresql_only`, no padrão de `test_finalizacao_concorrente.py` — duas remoções simultâneas do último presidente, e alteração por presidente rebaixado concorrentemente (D-016)
+- [ ] T072 [P] Teste da trilha em `backend/tests/integration/comissoes/test_auditoria.py` — os cinco eventos aparecem, o `permission` de cada um diz a base real, e remover um membro com três alocações grava **quatro** eventos: um do membro e três de alocação (`FR-016`, `FR-074`, `SC-013`)
+- [ ] T073 [P] Teste de concorrência em `backend/tests/integration/comissoes/test_concorrencia.py`, marcado `postgresql_only`, no padrão de `test_finalizacao_concorrente.py` — **dois** presidentes e alocação ativa; remover ou rebaixar os dois concorrentemente, e exatamente uma das operações vence: a comissão nunca fica com zero presidentes (`SC-019`)
+- [ ] T073a Teste da reavaliação de autorização em `backend/tests/integration/comissoes/test_concorrencia.py` — um presidente rebaixado concorrentemente não conclui a alteração que começou, porque a base é reavaliada depois do bloqueio (D-016)
 - [ ] T074 [P] Teste de acessibilidade das quatro telas em `backend/tests/interface/test_acessibilidade.py`, no padrão existente
 - [ ] T075 Percorrer o [checklist-ux.md](./checklist-ux.md) em `interface/templates/interface/{comissao,alocacoes,minhas_etapas,atribuicao}.html`, incluindo teclado e 375 px (`FR-078`)
 - [ ] T076 [P] Conferir que nenhuma tela da feature consulta `inscricoes` nem exibe dado de candidato, em `backend/tests/interface/test_fronteira_012.py`
@@ -227,13 +232,13 @@ identificar a lacuna sem abrir membro nenhum.
 ```text
 Setup (T001–T005)
    ↓
-Foundational (T006–T019)   ← bloqueia tudo
+Foundational (T006–T019a)   ← bloqueia tudo
    ↓
-US1 (T020–T028)
+US1 (T020–T028a)
    ↓
-US3 (T029–T038)            ← precisa de comissão com presidente
+US3 (T029–T038)             ← precisa de comissão com presidente
    ↓
-US5 (T039–T049)            ← MVP: a vertical fecha aqui
+US5 (T039–T049)             ← MVP: a vertical fecha aqui
    ↓
 US6 (T050–T053)
    ↓
@@ -256,9 +261,11 @@ ordem horizontal que a seção 52 da spec recusa:
 ### Parallel Opportunities
 
 - Setup: T001, T004 e T005 juntas.
-- Foundational: T011, T013, T016 e T018 juntas depois de T006–T009; T012 e T014 tocam arquivos
+- Foundational: T011, T013, T016, T018 e T019a juntas depois de T006–T009; T012 e T014 tocam arquivos
   diferentes e podem seguir em paralelo.
 - Dentro de cada história, todo teste marcado `[P]` roda em paralelo com os demais da mesma fase.
+- T047 e T073a **não** são `[P]`: cada uma escreve no mesmo arquivo da tarefa anterior (T046 e T073). T053 toca o mesmo arquivo, mas em
+  outra fase, e por isso mantém a marca.
 - US2 e US4 podem ser tocadas por duas pessoas ao mesmo tempo — atenção só a `alocacoes.html`, que
   T065 e T066 compartilham.
 
@@ -278,7 +285,7 @@ percorrida no navegador, com as quatro URLs recusadas.
 
 ### Entrega incremental
 
-1. **Entrega 1** — fases 1 a 5 (T001–T049): a vertical e a demonstração de segurança.
+1. **Entrega 1** — fases 1 a 5 (T001–T049, com os sufixos): a vertical e a demonstração de segurança.
 2. **Entrega 2** — fases 6 a 8 (T050–T067): gestão, revogação, visão administrativa e as órfãs.
 3. **Entrega 3** — fase 9 (T068–T078): trilha navegável, concorrência, acessibilidade e
    rastreabilidade.

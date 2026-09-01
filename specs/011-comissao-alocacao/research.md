@@ -321,11 +321,28 @@ o checklist exige identificador sensível fora da URL, e o ator já vem da sess�
 **Decisão, em três partes**:
 
 1. **Todo comando mutável bloqueia o Processo** com `select_for_update`, logo ao abrir o
-   `command_context()` (`shared/application/commands.py:8`), e **reavalia a base de autorização
-   dentro da transação** — depois do bloqueio, nunca antes.
+   `command_context()` (`shared/application/commands.py:8`), **reavalia a base de autorização
+   dentro da transação** — depois do bloqueio, nunca antes — e só então chama
+   `ensure_processo_accepts_changes` (`processos/domain/finalizacao.py:70`), como todo comando
+   mutável do projeto já faz.
 2. As constraints parciais de D-013 respondem por duplicidade, e `reserve()`
-   (`shared/idempotency.py:6`) por reenvio do mesmo formulário.
-3. **Remover membro inativa as alocações dele na mesma transação**, e não em duas operações.
+   (`shared/idempotency.py:6`) por reenvio do mesmo formulário — nos **cinco** comandos, e não só
+   na inclusão de membro.
+3. **Remover membro inativa as alocações dele na mesma transação**, e não em duas operações, com
+   **um evento de auditoria por alocação inativada**.
+
+**A ordem entre autorização e idempotência é deliberada, e inverte a de `processos/commands.py`.**
+Lá, `reserve()` é a primeira coisa dentro da transação, e a repetição devolve o resultado memorizado
+sem reexecutar nada — o que é seguro porque `require_permission` já correu antes, fora dela. Aqui a
+base pode ser contextual e só é confiável depois do bloqueio: reservar primeiro faria a repetição
+devolver o resultado a quem perdeu a presidência nesse meio-tempo. Por isso a ordem é bloquear,
+autorizar, conferir o estado do Processo e **depois** reservar.
+
+**Por que a cascata gera um evento por alocação**: a trilha responde por agregado, e `FR-074` exige
+saber qual Etapa foi afetada. Um único evento de remoção de membro não nomeia N Etapas de forma
+consultável — quem investiga "quem perdeu acesso à Etapa X, e quando" não encontraria a resposta.
+São N+1 eventos, com a mesma operação `ALOCACAO_REMOVER` que a remoção avulsa usa, e o `reason`
+dizendo que a causa foi a saída do membro.
 
 **Por que reavaliar a autorização depois do bloqueio**: a base contextual é um dado mutável desta
 mesma feature. Entre a verificação na view e a gravação, outro gestor pode ter rebaixado o

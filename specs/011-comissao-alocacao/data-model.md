@@ -152,10 +152,24 @@ ProcessoSeletivo.objects.select_for_update().get(...)    # bloqueia o contêiner
   ↓
 pode_gerir_comissao(ator, processo)    # reavalia a base DEPOIS do bloqueio
   ↓
+ensure_processo_accepts_changes(processo)   # Processo final não recebe alteração (FR-067)
+  ↓
+reserve(...)                           # idempotência, DEPOIS de autorizar
+  ↓
 verifica invariantes que leem várias linhas (presidência)
   ↓
-grava, e audita com a base que autorizou
+grava, audita com a base que autorizou, e finish() na reserva
 ```
+
+**A ordem entre autorizar e reservar inverte a de `processos/application/commands.py`**, e a
+inversão é o ponto. Lá `reserve()` vem primeiro e a repetição devolve o resultado memorizado sem
+reexecutar nada — seguro, porque `require_permission` correu antes, fora da transação. Aqui a base
+pode ser contextual e só é confiável depois do bloqueio: reservar primeiro faria a repetição
+responder a quem perdeu a presidência nesse meio-tempo.
+
+**Os cinco comandos são idempotentes**, e não só a inclusão de membro: alterar função, remover
+membro, alocar e remover alocação recebem `idempotency_key` pelo formulário, como o
+[contrato](./contracts/comissao.md) §2 exige.
 
 **A reavaliação depois do bloqueio não é redundante.** A base contextual é dado mutável desta mesma
 feature: entre a verificação da view e a gravação, outro gestor pode ter rebaixado o presidente, e
@@ -208,11 +222,17 @@ apareceria como `AttributeError`. Os comandos desta feature passam `new_state=""
 | `COMISSAO_INCLUIR_MEMBRO` | `MembroComissao` | base usada | identificador da pessoa e função |
 | `COMISSAO_ALTERAR_FUNCAO` | `MembroComissao` | base usada | função anterior → nova |
 | `COMISSAO_REMOVER_MEMBRO` | `MembroComissao` | base usada | identificador da pessoa |
+| `ALOCACAO_REMOVER` (cascata) | `AlocacaoEtapa` | base usada | Edital, Etapa, pessoa e a causa: saída do membro |
 | `ALOCACAO_INCLUIR` | `AlocacaoEtapa` | base usada | Edital, Etapa e pessoa |
 | `ALOCACAO_REMOVER` | `AlocacaoEtapa` | base usada | Edital, Etapa e pessoa |
 
 `permission` recebe `comissao:gerir` ou `comissao:presidir` (`FR-016`). **Só a primeira existe em
 `PAPEIS`**; a segunda é rótulo de trilha, e acrescentá-la a um papel desfaria D-011.
+
+**A cascata audita por alocação, e não em bloco.** Remover um membro com três alocações grava
+quatro eventos: um `COMISSAO_REMOVER_MEMBRO` e três `ALOCACAO_REMOVER`. A trilha responde por
+agregado, e `FR-074` exige saber qual Etapa foi afetada — um evento único não nomearia as três de
+forma consultável, e quem investiga "quem perdeu acesso à Etapa X" não acharia resposta.
 
 `institution_scope` e `actor_subject` vêm do ator, como em todo evento. O `display_label` nunca é
 gravado: não é identidade (`FR-075`).

@@ -178,6 +178,11 @@ assinatura, não de esquema.
 4. **A autorização é uma função só, chamada por todos** — e o comando a reavalia **depois** de
    bloquear o Processo, porque a base contextual é dado que esta mesma feature altera (D-016). A
    view chama a mesma função, mas só para decidir o que desenhar.
+4a. **Processo em estado final não recebe alteração de comissão.** Os cinco comandos chamam
+   `ensure_processo_accepts_changes`, como todo comando mutável do projeto já faz (`FR-067`).
+4b. **Os cinco comandos são idempotentes**, e a reserva vem **depois** da autorização — ao
+   contrário da ordem de `processos/application/commands.py`, porque aqui a base pode ser
+   contextual e só é confiável depois do bloqueio.
 5. **Alocação exige Edital publicado e comissão com presidente.** As duas recusas são do comando, e
    a tela as antecipa em vez de deixar o usuário descobrir no envio.
 6. **Remover membro inativa as alocações dele na mesma transação.** Alocação ativa sob membro
