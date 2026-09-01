@@ -37,8 +37,7 @@
     <div class="corpo">
       <span class="ator">por <strong>{{ registro.ator }}</strong></span>
       {% if registro.permissao %}
-      <span class="base">autorizado por
-        <strong>{% if registro.permissao == "comissao:presidir" %}presidência desta comissão{% else %}{{ registro.permissao }}{% endif %}</strong></span>
+      <span class="base">autorizado por <strong>{{ registro.permissao|base_de_autorizacao }}</strong></span>
       {% endif %}
       {% if registro.de and registro.para %}
       <span class="transicao">{{ registro.de|situacao }} → {{ registro.para|situacao }}</span>

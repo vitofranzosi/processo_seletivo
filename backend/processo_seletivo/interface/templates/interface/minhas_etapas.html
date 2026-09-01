@@ -4,6 +4,28 @@
 <h1>Minhas Etapas</h1>
 <p class="sub">As Etapas em que você tem atribuição.</p>
 
+{% if vinculos %}
+<section aria-labelledby="comissoes-titulo" class="pendencias">
+  <h2 id="comissoes-titulo">Comissões que você integra</h2>
+  <ul>
+    {% for vinculo in vinculos %}
+    <li>
+      <strong>{{ vinculo.processo.title }}</strong>
+      <span class="codigo">{{ vinculo.processo.institutional_code }}</span>
+      <span class="situacao s-{{ vinculo.funcao }}">
+        {% if vinculo.funcao == "PRESIDENTE" %}Presidente{% else %}Membro{% endif %}</span>
+      {% if vinculo.funcao == "PRESIDENTE" %}
+      {% comment %} Quem preside precisa de rota até a própria comissão: o acesso existia desde
+         sempre, e o caminho não — a pessoa tinha de achar o Processo na lista geral. {% endcomment %}
+      <a class="acao" href="{% url 'interface:comissao' vinculo.processo_id %}">Gerir comissão</a>
+      <a class="acao" href="{% url 'interface:alocacoes' vinculo.processo_id %}">Alocação por Etapa</a>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
 {% if atribuicoes %}
 <ul class="comissao" aria-label="Etapas atribuídas a você">
   {% for item in atribuicoes %}

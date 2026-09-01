@@ -92,15 +92,19 @@
             <input type="hidden" name="alocacao_id" value="{{ alocacao.id }}">
             <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-a{{ alocacao.id }}">
             {% comment %} UX-003: sai desta Etapa, e continua na comissão. O outro botão, o de sair da
-               comissão, mora na tela da Comissão e tem outro nome. {% endcomment %}
-            <button type="submit" class="acao perigoso">Remover desta Etapa</button>
+               comissão, mora na tela da Comissão e tem outro nome. O `aria-label` diz de quem e de
+               onde: sem ele, quem navega por botões ouve o mesmo rótulo em todas as linhas. {% endcomment %}
+            <button type="submit" class="acao perigoso"
+                    aria-label="Remover {{ alocacao.membro.display_label|default:alocacao.membro.identity_subject }} da Etapa {{ etapa.nome }}">
+              Remover desta Etapa</button>
           </form>
         </li>
         {% endfor %}
       </ul>
       {% endif %}
 
-      {% if membros and tem_presidente %}
+      {% if tem_presidente %}
+      {% if etapa.alocaveis %}
       <form method="post" class="linha-de-acoes">
         {% csrf_token %}
         <input type="hidden" name="acao" value="incluir">
@@ -108,13 +112,21 @@
         <input type="hidden" name="etapa_id" value="{{ etapa.id }}">
         <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-i{{ etapa.id }}">
         <label class="campo" for="membro-{{ etapa.id }}">Alocar em {{ etapa.nome }}</label>
+        {% comment %} Só quem ainda não está aqui: oferecer quem já está era a tela produzindo o
+           próprio 409. {% endcomment %}
         <select id="membro-{{ etapa.id }}" name="membro_id">
-          {% for membro in membros %}
+          {% for membro in etapa.alocaveis %}
           <option value="{{ membro.id }}">{{ membro.display_label|default:membro.identity_subject }}</option>
           {% endfor %}
         </select>
-        <button type="submit" class="acao">Alocar nesta Etapa</button>
+        <button type="submit" class="acao"
+                aria-label="Alocar membro na Etapa {{ etapa.nome }}">Alocar nesta Etapa</button>
       </form>
+      {% elif membros %}
+      <p class="ajuda">Toda a comissão já está alocada nesta Etapa.</p>
+      {% else %}
+      <p class="ajuda">A comissão ainda não tem membros para alocar.</p>
+      {% endif %}
       {% endif %}
     </li>
     {% endfor %}

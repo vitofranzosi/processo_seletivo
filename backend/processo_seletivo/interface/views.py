@@ -100,12 +100,19 @@ def lista(request):
                 acao for acao in acoes.do_edital(edital, ator) if acao.chave != "auditoria"
             ]
 
+    # A base contextual da 011: sem isto a tela decide só por `ator.permissions` e diz a quem
+    # preside uma comissão que sua conta não possui papel algum.
+    vinculos = {v.processo_id: v for v in comissao_selectors.comissoes_da_pessoa(ator)}
+    for processo in processos:
+        processo.vinculo = vinculos.get(processo.id)
+
     contagem = contar_por_situacao(processos)
     return render(
         request,
         "interface/lista.html",
         {
             "processos": processos,
+            "vinculos": list(vinculos.values()),
             "total_editais": sum(contagem.values()),
             "resumo": [
                 (situacao, contagem[situacao])
@@ -113,7 +120,8 @@ def lista(request):
                 if situacao in contagem
             ],
             "pode_criar": ator.can("processo:criar"),
-            "sem_papel": not ator.permissions,
+            # Quem preside uma comissão tem o que fazer, mesmo sem papel sistêmico.
+            "sem_papel": not ator.permissions and not vinculos,
         },
     )
 
@@ -1834,16 +1842,21 @@ def minhas_etapas(request):
     if ator is None:
         return redirect(reverse("interface:identificar"))
     atribuicoes = comissao_selectors.minhas_etapas(ator)
+    vinculos = comissao_selectors.comissoes_da_pessoa(ator)
     return render(
         request,
         "interface/minhas_etapas.html",
         {
             "atribuicoes": atribuicoes,
-            # Quem entra sem papel sistêmico cai aqui, e a área vazia sozinha não diz o que
-            # fazer. A orientação da 002 existia só na lista de Processos, que essa pessoa não
-            # tem motivo para abrir — então ela precisa estar no fim da jornada, e não ao lado
-            # dela (FR-028 da 002).
-            "sem_papel_nem_atribuicao": not atribuicoes and not ator.permissions,
+            # As comissões que a pessoa integra, com destaque para as que ela preside: sem isto,
+            # quem preside não tinha rota nenhuma até a própria comissão — o acesso existia, o
+            # caminho não.
+            "vinculos": vinculos,
+            # A orientação da 002 é para quem não tem nada. Mostrá-la a quem já integra uma
+            # comissão mandava a pessoa pedir exatamente o que ela já tem (FR-028 da 002).
+            "sem_papel_nem_atribuicao": (
+                not atribuicoes and not ator.permissions and not vinculos
+            ),
         },
     )
 

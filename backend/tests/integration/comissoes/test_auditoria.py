@@ -106,3 +106,33 @@ def test_a_trilha_nao_grava_o_rotulo_de_exibicao(gestor, auditor, processo_a):
 
     registros, _ = trilha_da_comissao(actor=auditor, processo=processo_a, limit=100)
     assert all("João da Silva" not in (r.reason or "") for r in registros)
+
+
+def test_a_trilha_nomeia_a_etapa_e_nao_so_o_identificador(
+    gestor, auditor, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    """L6: "Etapa 00000000-...-d1" identifica sem informar. Quem audita precisa do nome."""
+    alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
+
+    registros, _ = trilha_da_comissao(actor=auditor, processo=processo_a, limit=100)
+    inclusao = next(r for r in registros if r.operation == "ALOCACAO_INCLUIR")
+
+    assert "Análise documental" in inclusao.reason
+    assert str(etapa_a1) not in inclusao.reason
+
+
+def test_a_cascata_tambem_nomeia_a_etapa(
+    gestor, auditor, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
+    remover_membro(
+        actor=gestor, processo_id=processo_a.id, membro_id=comissao_de_a["joao"].id,
+        idempotency_key="k-cascata", correlation_id="c",
+    )
+
+    registros, _ = trilha_da_comissao(actor=auditor, processo=processo_a, limit=100)
+    remocoes = [r for r in registros if r.operation == "ALOCACAO_REMOVER"]
+
+    assert any(
+        "Análise documental" in r.reason and "saída da comissão" in r.reason for r in remocoes
+    )

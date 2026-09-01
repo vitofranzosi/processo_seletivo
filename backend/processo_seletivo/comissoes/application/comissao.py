@@ -11,6 +11,7 @@ from django.db import IntegrityError
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
 from processo_seletivo.comissoes.domain import funcoes
+from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
 from processo_seletivo.comissoes.models import AlocacaoEtapa, Funcao, MembroComissao
 from processo_seletivo.shared.api.problems import DomainError
 
@@ -184,8 +185,9 @@ def remover_membro(*, actor, processo_id, membro_id, idempotency_key, correlatio
                 operation="ALOCACAO_REMOVER",
                 aggregate=alocacao,
                 reason=(
-                    f"{membro.identity_subject} — Etapa {alocacao.etapa_id} do Edital "
-                    f"{alocacao.edital_id}; causa: saída da comissão"
+                    f"{membro.identity_subject} — Etapa “{_nome_da_etapa(alocacao)}” do Edital "
+                    f"{alocacao.edital.number}/{alocacao.edital.year}; "
+                    f"causa: saída da comissão"
                 ),
                 correlation_id=correlation_id,
             )
@@ -232,3 +234,12 @@ def _exigir_presidencia_apos(processo, membro, *, nova_funcao, alocacoes_sobrevi
         409,
         campo="funcao",
     )
+
+
+def _nome_da_etapa(alocacao):
+    """O nome no conteúdo vigente, ou o identificador quando a Etapa já não existe (órfã)."""
+    try:
+        dados = etapas_vigentes(alocacao.edital).get(alocacao.etapa_id)
+    except DomainError:
+        dados = None
+    return (dados or {}).get("name") or str(alocacao.etapa_id)

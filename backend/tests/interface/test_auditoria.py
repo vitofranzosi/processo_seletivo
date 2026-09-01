@@ -169,3 +169,21 @@ def test_situacao_feminina_da_retificacao_e_traduzida(
     assert "Homologada" in corpo
     assert "HOMOLOGADA" not in corpo
     assert "PUBLICADA" not in corpo
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_tela_traduz_a_base_de_autorizacao(
+    client, seletor_ligado, gestor, processo_a, comissao_de_a
+):
+    """L7: `comissao:gerir` é codename — quem lê a trilha precisa da frase."""
+    from django.urls import reverse
+
+    identificar(client, "auditora", ["auditor"])
+
+    corpo = client.get(
+        reverse("interface:auditoria-comissao", args=[processo_a.id])
+    ).content.decode()
+
+    assert "permissão de gerir comissões" in corpo
+    assert "comissao:gerir" not in corpo

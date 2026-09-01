@@ -18,6 +18,35 @@ def _etapas_ou_nada(edital):
         return None
 
 
+def comissoes_da_pessoa(ator):
+    """Os vínculos ativos desta identidade, com o Processo de cada um.
+
+    É o que faltava para as telas herdadas: elas decidiam por `ator.permissions`, e a base
+    contextual da 011 não existia para elas. Quem preside uma comissão sem papel sistêmico lia
+    "sua conta não possui nenhum papel de responsabilidade" — verdade sobre a capacidade
+    sistêmica, e falsa sobre o que a pessoa pode fazer.
+    """
+    if ator is None or not getattr(ator, "subject", ""):
+        return []
+    return list(
+        MembroComissao.objects.filter(
+            ativo=True,
+            identity_subject=ator.subject,
+            processo__institution_scope=ator.institution_scope,
+        )
+        .select_related("processo")
+        .order_by("processo__institutional_code")
+    )
+
+
+def preside(ator, processo):
+    """Se esta identidade preside **este** Processo. Usado pelas telas herdadas."""
+    return any(
+        v.processo_id == processo.id and v.funcao == Funcao.PRESIDENTE
+        for v in comissoes_da_pessoa(ator)
+    )
+
+
 def membros(processo):
     return list(
         MembroComissao.objects.filter(processo=processo, ativo=True).order_by(
@@ -60,9 +89,11 @@ def organizacao(processo):
             # tem Etapas" (EC-008, EC-014).
             resultado.append({"edital": edital, "publicado": False, "etapas": []})
             continue
+        ativos = membros(processo)
         etapas = []
         for etapa_id, dados in vigentes.items():
             do_grupo = por_etapa.get((edital.id, etapa_id), [])
+            ja_alocados = {a.membro_id for a in do_grupo}
             etapas.append(
                 {
                     "id": etapa_id,
@@ -71,6 +102,8 @@ def organizacao(processo):
                     "alocacoes": do_grupo,
                     "total": len(do_grupo),
                     "sem_membros": not do_grupo,
+                    # Oferecer quem já está alocado é a tela produzindo o próprio 409.
+                    "alocaveis": [m for m in ativos if m.id not in ja_alocados],
                 }
             )
         etapas.sort(key=lambda e: (e["ordem"], e["nome"]))

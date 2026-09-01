@@ -47,8 +47,10 @@ def alocar(*, actor, processo_id, membro_id, edital_id, etapa_id, idempotency_ke
         if ctx.repetido:
             return AlocacaoEtapa.objects.get(pk=ctx.reserva.result_id), 201
         # Levanta `edital_sem_versao_vigente` quando o Edital nunca foi publicado (FR-032).
-        if etapa_id not in etapas_vigentes(edital):
+        vigentes = etapas_vigentes(edital)
+        if etapa_id not in vigentes:
             raise nao_encontrado()
+        nome_da_etapa = vigentes[etapa_id].get("name") or str(etapa_id)
         if not funcoes.tem_presidente(ctx.processo):
             raise DomainError(
                 "comissao_sem_presidente",
@@ -76,9 +78,11 @@ def alocar(*, actor, processo_id, membro_id, edital_id, etapa_id, idempotency_ke
             actor=actor,
             operation="ALOCACAO_INCLUIR",
             aggregate=alocacao,
+            # O nome **de então**: quem audita precisa saber que Etapa era, e o identificador
+            # sozinho não informa. O nome pode mudar depois; o registro guarda o que valia no ato.
             reason=(
-                f"{membro.identity_subject} — Etapa {etapa_id} do Edital {edital.number}/"
-                f"{edital.year}"
+                f"{membro.identity_subject} — Etapa “{nome_da_etapa}” do Edital "
+                f"{edital.number}/{edital.year}"
             ),
             correlation_id=correlation_id,
             idempotency_key=idempotency_key,
@@ -114,10 +118,19 @@ def remover_alocacao(*, actor, processo_id, alocacao_id, idempotency_key, correl
             operation="ALOCACAO_REMOVER",
             aggregate=alocacao,
             reason=(
-                f"{alocacao.membro.identity_subject} — Etapa {alocacao.etapa_id} do Edital "
-                f"{alocacao.edital_id}"
+                f"{alocacao.membro.identity_subject} — Etapa “{_nome_da_etapa(alocacao)}” do "
+                f"Edital {alocacao.edital.number}/{alocacao.edital.year}"
             ),
             correlation_id=correlation_id,
             idempotency_key=idempotency_key,
         )
         return ctx.concluir(alocacao, 200)
+
+
+def _nome_da_etapa(alocacao):
+    """O nome no conteúdo vigente, ou o identificador quando a Etapa já não existe (órfã)."""
+    try:
+        dados = etapas_vigentes(alocacao.edital).get(alocacao.etapa_id)
+    except DomainError:
+        dados = None
+    return (dados or {}).get("name") or str(alocacao.etapa_id)
