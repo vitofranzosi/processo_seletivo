@@ -747,6 +747,10 @@ def inscricao(request, inscricao_id):
         raise DomainError("not_found", "Recurso não encontrado.", 404)
     exigir_titularidade(registro, identidade)
     versao = selectors.selecao_publica(edital_id=registro.edital_id)
+    if registro.status == Inscricao.Status.SUBMETIDA:
+        # Enviada não se edita (FR-075). O que esta tela passa a fazer é o que a `010` prometeu:
+        # mostrar exatamente o que o sistema recebeu.
+        return _conferencia(request, registro, versao)
     conteudo = versao.content
     perfil = _perfil_do_conteudo(conteudo, registro.profile_id)
     guardado = False
@@ -815,6 +819,47 @@ def inscricao(request, inscricao_id):
             "documentos": _documentos(conteudo, registro),
             "descartes": descartes,
             "etapas": etapas_ate(0),
+        },
+    )
+
+
+def _conferencia(request, registro, versao):
+    """`Minha inscrição` — o que o sistema recebeu, sem redigitar e sem reenviar nada (FR-067).
+
+    **Lida da versão aceita, e não da vigente.** O ato aconteceu sob uma versão; ler a de hoje
+    faria o Perfil e a modalidade conferidos mudarem depois de uma Retificação, e uma conferência
+    que se reescreve não confere coisa alguma — é a mesma razão pela qual o comprovante já lê a
+    aceita.
+
+    **Reusa `_dados_do_comprovante`.** A página de conferência e o comprovante são duas
+    apresentações do mesmo ato; montá-los de fontes diferentes faria os dois divergirem na primeira
+    mudança, e o candidato teria uma tela e um papel que não dizem a mesma coisa. O que esta tela
+    acrescenta é o acesso ao arquivo, que o comprovante não oferece.
+    """
+    aceita = registro.versao_aceita or versao
+    conteudo = aceita.content
+    dados = _dados_do_comprovante(request, registro, conteudo, aceita)
+    documentos = [
+        {
+            "requisito": linha["nome"],
+            "requisito_id": linha["id"],
+            "arquivo": linha["enviado"].nome_original,
+            "tamanho": linha["tamanho"],
+            "quando": linha["enviado"].uploaded_at,
+            "resumo": linha["enviado"].content_hash,
+        }
+        for linha in _documentos(conteudo, registro)["linhas"]
+        if linha["enviado"]
+    ]
+    return render(
+        request,
+        "portal/inscricao_enviada.html",
+        {
+            "inscricao": registro,
+            "selecao": _selecao(aceita),
+            "campos": dados["campos"],
+            "documentos": documentos,
+            "codigo_de_verificacao": dados["codigo_de_verificacao"],
         },
     )
 
@@ -940,12 +985,17 @@ def remover_documento_enviado(request, inscricao_id, requirement_id):
 
 @require_http_methods(["GET"])
 def documento_do_candidato(request, inscricao_id, requirement_id):
-    """O candidato vê o que enviou — mediado, e recusado a qualquer outra pessoa."""
+    """O candidato vê o que enviou — mediado, e recusado a qualquer outra pessoa.
+
+    `?baixar=1` entrega o mesmo arquivo como anexo. É uma decisão de apresentação, e não de
+    conteúdo: os bytes são os mesmos, e nenhuma das duas formas altera a inscrição (FR-070).
+    """
     registro, _, _ = _inscricao_do_titular(request, inscricao_id)
     return entregar_ao_titular(
         inscricao=registro,
         identidade=identidade_do_candidato.identidade_da_sessao(request),
         requirement_id=requirement_id,
+        anexo=bool(request.GET.get("baixar")),
     )
 
 

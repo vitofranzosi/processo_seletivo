@@ -202,19 +202,25 @@ documentos, com visualizar, baixar e comprovante funcionando.
 
 ### Testes da US4
 
-- [ ] T066 [P] [US4] Teste de contrato da página da inscrição enviada, conforme `contracts/area.md`, em `backend/tests/contract/portal/test_inscricao_enviada.py`
-- [ ] T067 [P] [US4] Teste de que o arquivo entregue é o documento vigente daquela inscrição e de que visualizar ou baixar não a altera em `backend/tests/integration/portal/test_documentos_do_titular.py`
-- [ ] T068 [P] [US4] Teste anti-IDOR de inscrição e de documento de outro candidato, com resposta que não enumera, em `backend/tests/authorization/test_idor_area.py`
-- [ ] T069 [P] [US4] Teste de que comprovante e evidências de integridade permanecem disponíveis e inalterados em `backend/tests/integration/portal/test_comprovante_preservado.py`
-- [ ] T070 [P] [US4] Teste de aceitação do percurso da Entrega 4 em `backend/tests/acceptance/portal/test_conferir_inscricao.py`
+- [X] T066 [P] [US4] Teste de contrato da página da inscrição enviada, conforme `contracts/area.md`, em `backend/tests/contract/portal/test_inscricao_enviada.py`
+- [X] T067 [P] [US4] Teste de que o arquivo entregue é o documento vigente daquela inscrição e de que visualizar ou baixar não a altera em `backend/tests/integration/portal/test_documentos_do_titular.py`
+- [X] T068 [P] [US4] Teste anti-IDOR de inscrição e de documento de outro candidato, com resposta que não enumera, em `backend/tests/authorization/test_idor_area.py`
+- [X] T069 [P] [US4] Teste de que comprovante e evidências de integridade permanecem disponíveis e inalterados em `backend/tests/integration/portal/test_comprovante_preservado.py`
+- [X] T070 [P] [US4] Teste de aceitação do percurso da Entrega 4 em `backend/tests/acceptance/portal/test_conferir_inscricao.py`
 
 ### Implementação da US4
 
-- [ ] T071 [US4] Montar os dados de conferência — oportunidade, envio, dados informados e documentos submetidos — em `backend/processo_seletivo/portal/views.py`
-- [ ] T072 [US4] Apresentar a inscrição enviada, com os documentos e a ação de integridade recolhida, em `backend/processo_seletivo/portal/templates/portal/inscricao.html`
-- [ ] T073 [P] [US4] Criar o bloco de documentos submetidos, com nome de arquivo, tamanho, instante, visualizar e baixar, em `backend/processo_seletivo/portal/templates/portal/_documentos_submetidos.html`
+- [X] T071 [US4] Montar os dados de conferência — oportunidade, envio, dados informados e documentos submetidos — em `backend/processo_seletivo/portal/views.py`
+- [X] T072 [US4] Apresentar a inscrição enviada, com os documentos e a ação de integridade recolhida, em `backend/processo_seletivo/portal/templates/portal/inscricao.html`
+- [X] T073 [P] [US4] Criar o bloco de documentos submetidos, com nome de arquivo, tamanho, instante, visualizar e baixar, em `backend/processo_seletivo/portal/templates/portal/_documentos_submetidos.html`
 
 **Checkpoint**: o percurso da Entrega 4 roda, e nada da `009` mudou de comportamento.
+
+> **Padrão que apareceu duas vezes nesta feature**: reusar um nome de classe herda o significado
+> visual que ele já tinha. `.sair` era o botão do cabeçalho escuro e ficou invisível no corpo
+> claro; `.documento` é o botão verde de baixar o Edital, e o nome do requisito sumiu em branco
+> sobre branco. Nos dois casos os testes passavam — eles afirmavam o texto, e o texto estava lá.
+> Vale checar colisão de nome antes de reusar classe da `009`.
 
 ---
 

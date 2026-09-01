@@ -287,9 +287,32 @@ a.principal{display:inline-block;width:auto;text-align:center;text-decoration:no
    distingue —, e o protocolo com quebra explícita, porque é um código longo em 375px. */
 .selecao .situacao{color:var(--texto-fraco);font-size:.9375rem}
 .selecao .situacao.enviada{color:var(--sucesso);font-weight:600}
-.selecao .protocolo{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.875rem;
+/* `.codigo`, e não `.protocolo`: esta última já tinha significado visual próprio na `009` — a
+   caixa de destaque do comprovante —, e reusar o nome fazia o protocolo da lista aparecer com
+   aparência de campo de formulário. Aqui ele é informação de apoio, não o assunto da tela. */
+.codigo{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.875rem;
   color:var(--texto-fraco);overflow-wrap:anywhere}
 .selecao .principal{margin-top:.5rem;justify-self:start}
+/* A conferência do que foi enviado (010). Sem tabela e sem largura fixa, como o resto da base do
+   candidato: é o que sustenta 375px sem rolagem horizontal. */
+dl.campos{display:grid;gap:.15rem;margin:0 0 1.5rem}
+dl.campos dt{font-weight:600;font-size:.875rem;color:var(--texto-fraco)}
+dl.campos dd{margin:0 0 .6rem;overflow-wrap:anywhere}
+/* `.enviado`, e **não** `.documento`: esta última já é o botão verde de baixar o Edital, com fundo
+   sólido e texto branco. Reusar o nome fazia o cartão herdar `display:inline-block` e a cor do
+   texto, e o nome do requisito sumia — branco sobre branco. Era o segundo caso do mesmo tipo nesta
+   feature, e a lição é a mesma: nome de classe carrega significado, e reusá-lo herda o significado
+   junto. O nome do requisito importa porque um documento **é** o requisito que ele atende. */
+.enviados{list-style:none;margin:0;padding:0;display:grid;gap:1rem}
+.enviados .enviado{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem}
+.enviados .enviado h3{margin:0 0 .25rem;color:var(--texto)}
+.enviados .meta{margin:.25rem 0 .5rem;color:var(--texto-fraco);font-size:.9375rem}
+.enviados .arquivo{overflow-wrap:anywhere}
+.enviados .acoes{margin:0}
+details.integridade{margin:1.5rem 0 0}
+details.integridade summary{cursor:pointer;font-weight:600}
+details.integridade .resumos{list-style:none;margin:.75rem 0 0;padding:0;display:grid;gap:.75rem}
 form.convite{margin:.75rem 0 0}
 /* O comprovante é impresso: fora o conteúdo, nada mais precisa ir para o papel. */
 /* O timbre existe **só** no papel: na tela o cabeçalho verde já diz de quem é o sistema, e
