@@ -61,8 +61,10 @@ antecipando esta feature. A 012 substitui o aviso pela lista.
 API nova: a feature inteira é servida pelo canal HTML institucional, com os fragmentos htmx já
 embarcados.
 
-**Storage**: PostgreSQL. Uma migration no app novo `avaliacoes` — quatro modelos, duas unicidades
-parciais, um índice único parcial e os checks de completude de estado. Uma migration em `editais`,
+**Storage**: PostgreSQL. Uma migration no app novo `avaliacoes` — quatro modelos, **uma** unicidade
+parcial (a Atribuição ativa), duas totais (a ordem da conclusão e o par do impedimento), um índice
+único parcial (a conclusão única de FR-074), os checks de completude de estado e a trigger
+append-only da conclusão. Uma migration em `editais`,
 com dois campos na Etapa de elaboração. **Nenhuma migration em `publicacoes` ou `auditoria`**: a
 elevação de versão canônica é função pura sobre conteúdo lido, e não escrita em linha gravada.
 
@@ -151,7 +153,8 @@ backend/processo_seletivo/
 │   │   ├── distribuicao.py       # o lote, sobre comando_de_comissao da 011
 │   │   ├── avaliacao.py          # gravar, concluir, reabrir
 │   │   ├── impedimento.py        # registrar, e a inativação no mesmo ato
-│   │   └── selectors.py          # a Mesa, a organização do trabalho e as invalidadas
+│   │   ├── trilha.py             # auditar(): record_event, e AtoAdministrativo quando há motivo
+│   │   └── selectors.py          # a Mesa, a organização do trabalho, elegíveis e inelegíveis
 │   └── migrations/               # uma migration
 ├── editais/
 │   ├── models/etapas.py          # + evaluations_per_registration, maximum_score
