@@ -1854,22 +1854,19 @@ def alocacoes(request, processo_id):
         dados = forms.ler_alocacao(request.POST)
         chave = request.POST.get("chave_idempotencia") or uuid4().hex
         try:
-            if acao == "incluir" and not request.POST.get("todos"):
-                selecionados = request.POST.getlist("membro_id")
+            if acao == "incluir":
+                # `todos` escolhe **quais** pessoas, dentro da inclusão — não é uma ação
+                # concorrente. Como ramo irmão, ele decidia sozinho: um envio com
+                # `acao=remover` e `todos=1` alocava.
+                selecionados = (
+                    request.POST.getlist("disponivel")
+                    if request.POST.get("todos")
+                    else request.POST.getlist("membro_id")
+                )
                 alocacao_app.alocar_varios(
                     actor=ator,
                     processo_id=processo.id,
                     membro_ids=selecionados,
-                    edital_id=dados["edital_id"],
-                    etapa_id=dados["etapa_id"],
-                    idempotency_key=chave,
-                    correlation_id=getattr(request, "correlation_id", ""),
-                )
-            elif request.POST.get("todos"):
-                alocacao_app.alocar_varios(
-                    actor=ator,
-                    processo_id=processo.id,
-                    membro_ids=request.POST.getlist("disponivel"),
                     edital_id=dados["edital_id"],
                     etapa_id=dados["etapa_id"],
                     idempotency_key=chave,
@@ -2022,6 +2019,10 @@ def auditoria_da_comissao(request, processo_id):
             "da_comissao": True,
             "operacao_filtro": operacao,
             "pessoa_filtro": pessoa,
+            # Escolha, e não digitação: o filtro compara identificador exato, e um campo livre
+            # transformaria "maria" — quando o identificador é "maria.presidente" — em "nenhum
+            # ato encontrado". Falso negativo numa trilha é pior que falso positivo.
+            "pessoas_da_trilha": comissao_selectors.pessoas_da_trilha(processo),
             "operacoes_da_comissao": [
                 ("COMISSAO_INCLUIR_MEMBRO", OPERACOES["COMISSAO_INCLUIR_MEMBRO"]),
                 ("COMISSAO_ALTERAR_FUNCAO", OPERACOES["COMISSAO_ALTERAR_FUNCAO"]),

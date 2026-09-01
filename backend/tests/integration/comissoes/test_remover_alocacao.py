@@ -92,7 +92,7 @@ def test_remocao_em_lote_de_alocacao_alheia_e_recusada(
             correlation_id="c",
         )
 
-    assert recusa.value.status == 404
+    assert recusa.value.status == 409
 
 
 def test_id_que_nao_e_do_processo_recusa_o_lote_inteiro(
@@ -116,7 +116,11 @@ def test_id_que_nao_e_do_processo_recusa_o_lote_inteiro(
             correlation_id="c",
         )
 
-    assert recusa.value.status == 404
+    # 409, e não 404: a causa quase sempre é concorrência, e recusa de estado não pode derrubar
+    # a página inteira nem esconder de quem opera o que aconteceu.
+    assert recusa.value.status == 409
+    assert recusa.value.code == "selecao_desatualizada"
+    assert "Recarregue" in recusa.value.detail
     valida.refresh_from_db()
     assert valida.ativo is True
     assert AlocacaoEtapa.objects.filter(ativo=True).count() == 1

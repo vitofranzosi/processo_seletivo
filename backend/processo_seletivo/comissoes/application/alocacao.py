@@ -202,7 +202,7 @@ def remover_alocacao(*, actor, processo_id, alocacao_id, idempotency_key, correl
         # depois da inativação, e responder 404 ali faria o duplo clique virar erro.
         consulta = AlocacaoEtapa.objects.filter(
             pk=identificador(alocacao_id), membro__processo=ctx.processo
-        )
+        ).select_related("membro", "edital")
         alocacao = (consulta if ctx.repetido else consulta.filter(ativo=True)).first()
         if alocacao is None:
             raise nao_encontrado()
@@ -262,8 +262,19 @@ def remover_varias_alocacoes(
         # Recusa o conjunto quando algum identificador não corresponde, como `alocar_varios` faz:
         # remover quatro de cinco e responder sucesso deixa a quinta pessoa com acesso, e quem
         # operou acreditando que a tirou.
+        #
+        # **409, e não 404.** A causa quase sempre é concorrência — duas pessoas gerindo a mesma
+        # comissão, e uma delas com a tela de antes. Responder "recurso não encontrado" derruba a
+        # página inteira e não diz o que fazer; aqui a recusa é do estado, e a tela a exibe sem
+        # perder o resto da seleção.
         if len(alocacoes) != len(set(ids)):
-            raise nao_encontrado()
+            raise DomainError(
+                "selecao_desatualizada",
+                "Parte da seleção já não está ativa — provavelmente alguém alterou esta comissão "
+                "enquanto você trabalhava. Recarregue a página e refaça a seleção.",
+                409,
+                campo="alocacao_id",
+            )
         nomes = nomes_das_etapas(alocacoes)
         for alocacao in alocacoes:
             alocacao.ativo = False

@@ -41,6 +41,25 @@ def comissoes_da_pessoa(ator):
     )
 
 
+def pessoas_da_trilha(processo):
+    """Quem já integrou a comissão, para o filtro da auditoria — inclusive quem saiu.
+
+    A trilha existe para responder sobre atos passados, então excluir quem foi removido
+    esconderia justamente o caso que se investiga. A lista é única por identificador: quem saiu
+    e voltou tem duas linhas de vínculo e uma entrada só aqui.
+    """
+    vistos = {}
+    for membro in MembroComissao.objects.filter(processo=processo):
+        atual = vistos.get(membro.identity_subject)
+        # O rótulo mais recente é o que a pessoa reconhece; o identificador é o que filtra.
+        if atual is None or (not atual["rotulo"] and membro.display_label):
+            vistos[membro.identity_subject] = {
+                "subject": membro.identity_subject,
+                "rotulo": membro.display_label,
+            }
+    return sorted(vistos.values(), key=lambda p: (p["rotulo"] or p["subject"]).casefold())
+
+
 def preside(ator, processo):
     """Se esta identidade preside **este** Processo. Usado pelas telas herdadas."""
     return any(

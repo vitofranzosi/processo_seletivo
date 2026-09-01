@@ -29,8 +29,13 @@
 <form method="get" class="filtro">
   <p class="campo">
     <label for="pessoa">Pessoa afetada</label>
-    <input id="pessoa" name="pessoa" type="search" value="{{ pessoa_filtro }}"
-           placeholder="identificador institucional">
+    <select id="pessoa" name="pessoa">
+      <option value="">Todas</option>
+      {% for pessoa in pessoas_da_trilha %}
+      <option value="{{ pessoa.subject }}" {% if pessoa.subject == pessoa_filtro %}selected{% endif %}>
+        {% if pessoa.rotulo %}{{ pessoa.rotulo }} — {% endif %}{{ pessoa.subject }}</option>
+      {% endfor %}
+    </select>
   </p>
   <p class="campo">
     <label for="operacao">Operação</label>

@@ -438,3 +438,94 @@ def test_o_botao_de_alocar_todos_nao_depende_da_ordem_do_markup(
     )
 
     assert AlocacaoEtapa.objects.filter(ativo=True, etapa_id=etapa_a1).count() == 2
+
+
+def test_o_filtro_de_pessoa_da_trilha_e_escolha_e_nao_digitacao(
+    client, seletor_ligado, gestor, processo_a, comissao_de_a
+):
+    """Exatidão num campo livre vira "nenhum ato encontrado" para quem digitou meio nome.
+
+    O filtro compara identificador exato; oferecer um campo de texto seria pedir ao auditor que
+    adivinhasse a grafia — e o silêncio dele seria lido como ausência de atos.
+    """
+    identificar(client, "auditora", ["auditor"])
+
+    corpo = client.get(
+        reverse("interface:auditoria-comissao", args=[processo_a.id])
+    ).content.decode()
+
+    assert '<select id="pessoa" name="pessoa">' in corpo
+    assert 'id="pessoa" name="pessoa" type="search"' not in corpo
+    for membro in comissao_de_a.values():
+        assert f'value="{membro.identity_subject}"' in corpo
+
+
+def test_quem_saiu_da_comissao_continua_no_filtro_da_trilha(
+    client, seletor_ligado, gestor, processo_a, comissao_de_a
+):
+    """Excluir quem saiu esconderia justamente o caso que se investiga."""
+    from processo_seletivo.comissoes.application.comissao import remover_membro
+
+    remover_membro(
+        actor=gestor,
+        processo_id=processo_a.id,
+        membro_id=comissao_de_a["joao"].id,
+        idempotency_key="saiu-da-comissao-0001",
+        correlation_id="c",
+    )
+    identificar(client, "auditora", ["auditor"])
+
+    corpo = client.get(
+        reverse("interface:auditoria-comissao", args=[processo_a.id])
+    ).content.decode()
+
+    assert 'value="joao"' in corpo
+
+
+def test_selecao_desatualizada_nao_derruba_a_tela(
+    presidente, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    """Concorrência não é recurso inexistente: a recusa aparece na página, e não no lugar dela."""
+    import uuid
+
+    alocacao = alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
+
+    resposta = presidente.post(
+        reverse("interface:alocacoes", args=[processo_a.id]),
+        {
+            "acao": "remover",
+            "alocacao_id": [str(alocacao.id), str(uuid.uuid4())],
+            "chave_idempotencia": "interface-selecao-velha-0001",
+        },
+    )
+
+    assert resposta.status_code == 200
+    assert "Recarregue a página" in resposta.content.decode()
+    alocacao.refresh_from_db()
+    assert alocacao.ativo is True
+
+
+def test_todos_nao_transforma_uma_remocao_em_alocacao(
+    presidente, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    """`todos` escolhe quais pessoas dentro da inclusão — não é uma ação concorrente."""
+    from processo_seletivo.comissoes.models import AlocacaoEtapa
+
+    alocacao = alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
+
+    presidente.post(
+        reverse("interface:alocacoes", args=[processo_a.id]),
+        {
+            "acao": "remover",
+            "todos": "1",
+            "alocacao_id": [str(alocacao.id)],
+            "edital_id": str(edital_a.id),
+            "etapa_id": etapa_a1,
+            "disponivel": [str(m.id) for m in comissao_de_a.values()],
+            "chave_idempotencia": "interface-remover-com-todos-0001",
+        },
+        follow=True,
+    )
+
+    # A ação declarada é remover, e é ela que acontece.
+    assert AlocacaoEtapa.objects.filter(ativo=True).count() == 0
