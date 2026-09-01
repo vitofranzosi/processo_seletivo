@@ -163,8 +163,19 @@ Abrir o canal público **em janela anônima**, sem identificação.
 
 - A revisão mostra oportunidade, dados e documentos, com `Editar` por bloco; voltar não perde nada.
 - Faltando obrigatório, o envio é recusado nomeando o que falta.
-- Aceitas as duas declarações, o envio produz protocolo `INS-<ano>-XXXXXXXX` e um comprovante
-  imprimível pelo navegador.
+- Aceitas as duas declarações, o envio produz protocolo `INS-<ano>-XXXXXXXX` e o comprovante.
+- O comprovante identifica-se como documento: traz o protocolo, o **código de verificação**, a
+  versão do Edital aceita e, para cada anexo, tamanho, horário de recebimento e resumo SHA-256.
+- `Baixar o comprovante em PDF` entrega um arquivo chamado `Comprovante <protocolo>.pdf`, com brasão
+  e timbre, em **uma página** no caso de referência — três documentos e três resumos.
+- Baixar duas vezes produz **arquivos idênticos**, e o resumo SHA-256 publicado na página confere
+  com o do arquivo salvo. É a verificação que o determinismo compra:
+
+  ```bash
+  shasum -a 256 "Comprovante INS-2026-XXXXXXXX.pdf"
+  ```
+
+- O PDF de outro candidato não é entregue, e um rascunho não tem comprovante.
 - Acionar o envio duas vezes seguidas produz **uma** inscrição.
 - Publicar uma Retificação com o rascunho aberto faz o envio seguinte avisar e pedir confirmação
   nova — e confirmar uma vez não faz o aviso voltar na tentativa seguinte.
@@ -179,6 +190,10 @@ Na janela institucional, no Edital:
   recebidos/esperados e data.
 - O detalhe agrupa cada documento **sob o requisito que ele atende**, com o nome original.
 - Cada documento abre no navegador; baixar existe como ação secundária individual.
+- Cada documento exibe **tamanho e resumo SHA-256** — o mesmo que o candidato tem no comprovante,
+  e é comparando os dois que se afirma que o arquivo aberto é o que foi recebido.
+- O detalhe exibe o **código de verificação** da inscrição. Confrontado com o do comprovante
+  apresentado em papel, ele responde se o documento foi alterado — sem conferir linha por linha.
 - Não há deferimento, nota, parecer, classificação nem `Baixar todos`.
 - Um ator sem permissão no Processo não alcança nem a lista nem o arquivo.
 
@@ -190,8 +205,9 @@ Fim a fim, em duas janelas, sem banco, sem shell, sem API manual:
 
 > Gestor publica o Edital com Perfil, modalidade reservada, período e três documentos →
 > candidato chega pela vaga, identifica-se, volta à mesma vaga, encontra seus dados, recebe
-> exatamente os documentos que lhe cabem, envia os PDFs, revisa, envia e recebe protocolo →
-> gestor abre `Inscrições`, encontra a pessoa e visualiza cada documento sob o seu requisito.
+> exatamente os documentos que lhe cabem, envia os PDFs, revisa, envia, recebe protocolo e **baixa
+> o comprovante em PDF** → gestor abre `Inscrições`, encontra a pessoa, visualiza cada documento sob
+> o seu requisito e **confere o código de verificação contra o do papel**.
 
 É este percurso, e não a suíte, que fecha a feature.
 

@@ -125,24 +125,30 @@ backend/processo_seletivo/
 │   │   └── documentos.py        # NOVO — DocumentoExigido do Edital
 │   ├── domain/
 │   │   ├── secoes.py            # + seção gerada "documentos-exigidos"
-│   │   ├── documentos.py        # NOVO — validação da forma e da aplicabilidade
+│   │   ├── documentos.py        # NOVO — forma, e a aplicabilidade em quatro combinações
 │   │   └── validation.py        # + forma publicada e coerência da marca única
 │   ├── application/draft.py     # + a coleção nova no rascunho
 │   └── migrations/              # + uma migration
 ├── publicacoes/
 │   ├── application/publish_edital.py   # + as duas mudanças no snapshot; SCHEMA_VERSION 4
 │   ├── domain/colecoes.py             # + /documentRequirements como coleção com chave
-│   └── infrastructure/pdf.py          # + composição da seção gerada (conflita com a 008)
+│   └── infrastructure/pdf.py          # + composição da seção gerada (conflita com a 008);
+│                                       # + `render_documento` extraída para o comprovante usar
 ├── inscricoes/                  # NOVO — o domínio da jornada
 │   ├── models.py                # Inscricao, DocumentoSubmetido
 │   ├── domain/
-│   │   ├── aplicabilidade.py    # quais requisitos valem para (Perfil, modalidade)
-│   │   ├── arquivos.py          # aceitação de PDF, limite, nome físico, resumo
+│   │   ├── arquivos.py          # aceitação de PDF, limite, nome físico, resumo, tamanho legível
+│   │   ├── autenticidade.py     # código de verificação do comprovante (HMAC)
+│   │   ├── periodo.py           # os três estados do período, e a ausência de marca
+│   │   ├── pessoais.py          # máscara, verificadores de CPF e telefone, forma canônica
 │   │   ├── protocolo.py         # geração e alfabeto
 │   │   └── titularidade.py      # quem pode ver o quê
 │   ├── application/
+│   │   ├── consulta.py          # o que a equipe lê, e sob qual autorização
 │   │   ├── rascunho.py          # abrir, gravar campos, anexar e substituir arquivo
 │   │   └── submissao.py         # revalidação integral, protocolo, auditoria
+│   ├── infrastructure/
+│   │   └── comprovante_pdf.py   # composição do comprovante, sobre a infraestrutura da `006`
 │   ├── storage.py               # armazenamento privado configurado
 │   └── migrations/
 ├── portal/                      # NOVO — o canal público e do candidato
@@ -170,6 +176,20 @@ backend/tests/
 `publicacoes`: `inscricoes` guarda domínio e persistência da jornada; `portal` é o canal do ator
 externo, espelhando o papel que `interface` cumpre para o ator institucional. As telas
 administrativas da US6 ficam em `interface`, onde o Edital já é administrado.
+
+**Duas correções à árvore acima, feitas depois da implementação.** Este plano previa
+`inscricoes/domain/aplicabilidade.py`, e a regra acabou em `editais/domain/documentos.py`. A troca é
+deliberada: a aplicabilidade é função pura sobre o conteúdo publicado, e ela pertence ao domínio que
+**declara** o Documento Exigido, não ao que o consome. Deixá-la em `inscricoes` faria o Edital
+depender da inscrição para saber o que ele mesmo exige — e são três leituras da mesma função (a tela
+pública que anuncia, a inscrição que pede, a submissão que confere) que precisam responder a mesma
+coisa.
+
+A segunda correção é o `inscricoes/infrastructure/`, que não estava previsto: ele nasce com o
+comprovante em PDF, quando `FR-063` foi revista. A composição vive em `infrastructure` pela razão de
+sempre — é onde o domínio vira formato — e reusa `render_documento`, extraída de
+`publicacoes/infrastructure/pdf.py`: os dois documentos são diferentes em tudo o que dizem e
+idênticos em como viram arquivo.
 
 ## Complexity Tracking
 

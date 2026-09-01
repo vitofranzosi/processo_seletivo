@@ -180,7 +180,7 @@ Nenhum operador, nenhuma expressão, nenhuma quinta linha.
 | Perfil pertence ao Edital publicado | ✓ | — | ✓ | — |
 | Modalidade pertence ao Perfil | ✓ | — | ✓ | — |
 | Requisito se aplica àquela inscrição | ✓ | ✓ | ✓ | — |
-| PDF e limite de 10 MB | — | ✓ | ✓ | — |
+| PDF e limite configurável (`ARQUIVOS_CANDIDATOS_LIMITE_BYTES`) | — | ✓ | ✓ | — |
 | Obrigatório presente | ✓ | — | ✓ | — |
 | Período aberto | ✓ | ✓ | ✓ | — |
 | Versão vigente reconhecida | ✓ | — | ✓ | — |

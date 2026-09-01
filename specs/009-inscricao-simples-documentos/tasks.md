@@ -21,6 +21,9 @@ vêm antes da implementação em cada história.
 - **[Story]**: US1 a US7, conforme a spec
 - **Sufixo de letra** (`T053a`): tarefa acrescentada por revisão, inserida na posição de execução
   a que pertence. Mantém estáveis os identificadores já referenciados pela matriz de rastreabilidade
+- **Fase 11**: acrescentada depois da demonstração, e por isso numerada em sequência (T115 em
+  diante) em vez de sufixada — o que ela registra não pertence à posição de execução de nenhuma
+  fase anterior
 
 ## Path Conventions
 
@@ -310,6 +313,63 @@ visualizar cada documento sob o requisito que atende — sem baixar nada.
 
 ---
 
+## Phase 11: Pós-demonstração
+
+A feature foi demonstrada de ponta a ponta num navegador, com um Edital semeado e uma inscrição
+real, e o registro está em [auditoria-ux.md](./auditoria-ux.md). O que a demonstração revelou não
+cabia como ajuste silencioso: cinco defeitos, dez lacunas de experiência e **uma decisão de produto
+revista** — FR-063, que proibia gerar PDF de comprovante e passou a exigi-lo.
+
+Esta fase existe para que a rastreabilidade acompanhe o que aconteceu depois do checkpoint da
+entrega 6. Todas as tarefas abaixo estão concluídas; a fase é registro, e não trabalho pendente.
+
+### Defeitos encontrados na demonstração (D1 a D5)
+
+- [X] T115 [P] Esconder o aviso de envio em repouso — `.progresso[hidden]` em `backend/processo_seletivo/portal/templates/portal/base.html` (D1); teste em `backend/tests/integration/inscricoes/test_envio_de_arquivo.py`
+- [X] T116 [P] Mover a ação principal para depois do bloco de documentos com o atributo `form=` em `backend/processo_seletivo/portal/templates/portal/inscricao.html` (D2, SC-UX-008); teste em `backend/tests/integration/portal/test_sua_inscricao.py`
+- [X] T117 Resumo dos documentos junto ao cabeçalho, atualizado fora de banda pelo htmx — `backend/processo_seletivo/portal/templates/portal/_resumo_documentos.html` (D3, **SC-UX-003**); testes em `backend/tests/integration/inscricoes/test_envio_de_arquivo.py`
+- [X] T118 [P] Contêiner de rolagem na tabela de inscrições recebidas em `backend/processo_seletivo/interface/templates/interface/_tabela_de_inscricoes.html` (D4)
+- [X] T119 Separar recebidas de rascunhos na contagem e na lista — `backend/processo_seletivo/interface/acoes.py` e `backend/processo_seletivo/interface/views.py` (D5, **FR-066**); testes em `backend/tests/integration/interface/test_inscricoes_recebidas.py`
+
+### Experiência do candidato (L1 a L10)
+
+- [X] T120 Comprovante levável e reencontrável em `backend/processo_seletivo/portal/templates/portal/comprovante.html` (L1)
+- [X] T121 Foco e ligação campo a campo na recusa — `backend/processo_seletivo/portal/static/portal/recusa.js` e a revisão (L2, **SC-UX-005**, **SC-UX-007**: a recusa deixou de apagar a declaração já marcada)
+- [X] T122 [P] Indicador de três etapas em `backend/processo_seletivo/portal/templates/portal/_etapas.html` (L3)
+- [X] T123 [P] Ação secundária para o PDF do Edital na tela da seleção (L4, **SC-UX-008**)
+- [X] T124 [P] Instrução de conversão de foto em PDF, presente só na recusa que a exige, em `backend/processo_seletivo/portal/templates/portal/_documentos.html` (L5)
+- [X] T125 [P] Recolher o formulário de substituição do requisito atendido (L6)
+- [X] T126 Anunciar os documentos exigidos na tela pública da seleção, pela mesma função de aplicabilidade (L7, **FR-040**); teste em `backend/tests/integration/portal/test_detalhe_selecao.py`
+- [X] T127 [P] Cartão da vitrine como alvo inteiro do toque, com um único destino (L8)
+- [X] T128 Validação no cliente pela Constraint Validation API, com as mensagens do servidor — `backend/processo_seletivo/portal/static/portal/identificacao.js` (L9)
+- [X] T129 Auditar a consulta administrativa a documento — `CONSULTAR_DOCUMENTO` em `backend/processo_seletivo/interface/views.py` (L10; **acréscimo ao que FR-077 exigia**, e não cumprimento dela)
+- [X] T130 [P] Tag de limite de arquivo lendo a configuração em `backend/processo_seletivo/portal/templatetags/arquivos_do_candidato.py` — a tela dizia "10 MB" fixo enquanto **FR-046** o torna configurável
+
+### Dados pessoais e integridade (D6 a D9)
+
+- [X] T131 Verificadores de CPF, telefone com DDD e nome completo em `backend/processo_seletivo/inscricoes/domain/pessoais.py`, com forma canônica de gravação (D6); testes em `backend/tests/unit/inscricoes/test_pessoais.py`
+- [X] T132 [P] Máscaras de CPF e telefone no cliente, espelhando as mensagens do servidor (D6)
+- [X] T133 Saída do portal no cabeçalho, por processador de contexto próprio do candidato (D7, **FR-021**); testes em `backend/tests/integration/portal/test_identidade_candidato.py`
+- [X] T134 Comprovante como documento — timbre, versão aceita, horário de cada anexo e o que ele atesta (D7)
+- [X] T135 Redesenho da tela da inscrição em painéis, com progresso e campo de arquivo próprio (D8)
+- [X] T136 Tamanho e resumo SHA-256 de cada anexo no comprovante e na consulta administrativa (D9, **SC-014a**)
+- [X] T137 Vitrine com vagas, período completo e prazo restante (D10)
+
+### O comprovante como documento gerado (D11 e D12)
+
+- [X] T138 Código de verificação HMAC em `backend/processo_seletivo/inscricoes/domain/autenticidade.py`, exibido no comprovante e na consulta administrativa (**FR-063b**, **SC-012a**); testes em `backend/tests/unit/inscricoes/test_pessoais.py` e `backend/tests/integration/interface/test_inscricoes_recebidas.py`
+- [X] T139 Extrair `render_documento` de `render_edital_pdf` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` — os dois documentos viram arquivo do mesmo jeito; a fixture de bytes do Edital passa sem alteração
+- [X] T140 Compor o comprovante em `backend/processo_seletivo/inscricoes/infrastructure/comprovante_pdf.py` — brasão, protocolo, código, dados, anexos com resumo e atestado, em uma página no caso de referência (**FR-063**)
+- [X] T141 Rota `comprovante.pdf` com titularidade, nome de arquivo derivado do protocolo e entrega como anexo em `backend/processo_seletivo/portal/views.py` (**FR-063**, **FR-071**)
+- [X] T142 Publicar na página o resumo SHA-256 do próprio arquivo, sustentado pelo determinismo da composição (**FR-063a**); testes em `backend/tests/integration/portal/test_revisao_e_comprovante.py`
+- [X] T143 Uma ação só no comprovante, e `.principal` alcançando o link — o seletor por elemento deixava a ação principal sem estilo (**SC-UX-008**)
+
+**Checkpoint**: o comprovante deixou de ser uma tela impressa e passou a ser documento — do candidato
+e do Ifes — com três camadas de verificação: o resumo de cada anexo, o código que responde pelo papel
+e o resumo do próprio arquivo.
+
+---
+
 ## Matriz de rastreabilidade SC → verificação
 
 | Critério | Onde é provado |
@@ -325,19 +385,25 @@ visualizar cada documento sob o requisito que atende — sem baixar nada.
 | SC-009, SC-009a | T086, T086a |
 | SC-010 | T052, T084 |
 | SC-011 | T083, T083a |
-| SC-012 | T085, T094 |
+| SC-012 | T085, T094, T140, T141, T142 |
+| SC-012a | T138 |
+| FR-063 — comprovante em PDF gerado no servidor | T140, T141 |
+| FR-063a — determinismo e resumo do arquivo | T142 |
+| FR-063b — código de verificação | T138 |
 | SC-013, SC-014 | T099, T100 |
-| SC-014a | T102 |
+| SC-014a | T102, T136 |
 | SC-015 | T068, T066a, T101 |
 | FR-042 — nada do candidato no navegador | T069a |
 | FR-017 — consultável depois de encerrada | T046 |
 | FR-069 — baixar como ação secundária | T106 |
 | SC-016, SC-017 | T088, T114 |
-| SC-UX-001 a SC-UX-003 | T059, T076, T092 |
+| SC-UX-001 a SC-UX-003 | T059, T076, T092, T117 |
 | SC-UX-004, SC-UX-005 | T019, T082, T111 |
 | SC-UX-006 | T078, T082 |
-| SC-UX-007 | T066, T092 |
-| SC-UX-008 | T111 |
+| SC-UX-007 | T066, T092, T121 |
+| SC-UX-008 | T111, T116, T123, T143 |
+| FR-066 — o total é do que foi recebido | T119 |
+| FR-046 — o limite exibido é o limite aplicado | T130 |
 
 ---
 
@@ -357,6 +423,9 @@ visualizar cada documento sob o requisito que atende — sem baixar nada.
 - **Entrega 6 / US6 (Fase 9)**: depende da Fase 7 — é preciso haver inscrição enviada para
   consultar.
 - **Polish (Fase 10)**: depende de tudo.
+- **Pós-demonstração (Fase 11)**: depende da Fase 10 e da própria demonstração. É a única fase que
+  não foi planejada: ela nasce do que a jornada revelou quando alguém a percorreu inteira num
+  navegador — e é registro do que já foi feito, não trabalho pendente.
 
 ### O grafo real
 

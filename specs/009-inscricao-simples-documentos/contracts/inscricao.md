@@ -73,11 +73,27 @@ Rotas sob o prefixo público, sem identidade institucional em nenhuma delas.
 | Envio de arquivo | Uma requisição por requisito; recusa não afeta o que já é válido; progresso visível |
 | Revisão | Resumo com retorno por bloco; obrigatório ausente impede o envio |
 | Envio | Revalidação integral; idempotente; protocolo único |
-| Comprovante | Protocolo, Edital, Perfil, modalidade, instante e nome; imprimível; `no-store` |
+| Comprovante | Protocolo, Edital, Perfil, modalidade, instante, nome, versão aceita e o resumo de cada anexo; código de verificação; publica o resumo do próprio PDF; `no-store` |
+| Comprovante em PDF | Gerado no servidor; nome de arquivo derivado do protocolo; entregue como anexo; **determinístico** — a mesma inscrição devolve sempre os mesmos bytes; recusado a quem não é titular e a rascunho |
 | Documento do titular | Mediado; `inline`; `no-store`; recusado a quem não é titular |
 
 **Regra transversal**: nenhuma dessas superfícies consulta tabela de elaboração. A fonte é sempre a
 versão consolidada vigente (`FR-011`).
+
+**Sobre o comprovante em PDF** (`FR-063`, `FR-063a`, `FR-063b`). A primeira redação deste contrato
+descrevia um comprovante "imprimível", porque a spec proibia gerar PDF. A decisão foi revista depois
+da demonstração: impresso pelo navegador, o documento sai com o endereço da página no alto da folha,
+com o nome de arquivo tirado do título da aba e com bytes diferentes a cada impressão — e nada disso
+é verificável. Três garantias passam a valer:
+
+| Garantia | Como se verifica |
+|---|---|
+| O anexo é o que foi entregue | Resumo SHA-256 de cada documento, impresso no comprovante e exibido na consulta administrativa |
+| O papel é o que o sistema emitiu | Código de verificação (HMAC do servidor sobre o que o comprovante afirma), impresso e conferível contra a consulta administrativa |
+| O arquivo é o que a página anuncia | Resumo SHA-256 do próprio PDF, publicado na página — só possível porque a composição é determinística e não lê o relógio |
+
+O código de verificação **não é assinatura digital**: não há certificado nem ICP-Brasil, e trocar a
+chave do servidor invalida os códigos já emitidos.
 
 ## 4. Superfícies HTML — canal institucional
 
