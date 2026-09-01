@@ -129,7 +129,7 @@ Nenhuma dependência nova. As duas exceções de complexidade permanecem duas.
 ```text
 specs/012-mesa-de-avaliacao/
 ├── plan.md              # Este arquivo
-├── research.md          # Fase 0 — as decisões técnicas (T-001 a T-014)
+├── research.md          # Fase 0 — as decisões técnicas (T-001 a T-015)
 ├── data-model.md        # Fase 1 — entidades, invariantes, estados e o incremento normativo
 ├── quickstart.md        # Fase 1 — como demonstrar cada entrega
 ├── contracts/
@@ -184,7 +184,7 @@ specs/001-processo-seletivo-editais/contracts/openapi.yaml
 backend/tests/
 ├── unit/avaliacoes/              # a leitura da ausência, a validação da pontuação, a elevação
 ├── integration/avaliacoes/       # os comandos, com constraint, concorrência e idempotência
-├── integration/publicacoes/      # histórico misto v4/v5: os quatro cenários de T-001
+├── integration/publicacoes/      # os oito cenários de elevação de T-001
 ├── authorization/                # alocado sem atribuição, atribuição de outro, alocação removida
 ├── contract/                     # a forma publicada nova, contra o openapi.yaml
 ├── interface/                    # as cinco telas

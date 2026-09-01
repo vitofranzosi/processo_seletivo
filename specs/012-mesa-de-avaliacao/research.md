@@ -183,7 +183,7 @@ Ato já publicado, portanto, não é derrubado retroativamente por hash.
 ### Os testes que esta decisão obriga
 
 Histórico misto não é hipótese; é o caso normal de qualquer Edital publicado antes do incremento e
-retificado depois. São quatro cenários, e nenhum deles é opcional:
+retificado depois. São oito cenários, em dois grupos, e nenhum deles é opcional.
 
 **Histórico misto** — Edital publicado antes do incremento e retificado depois:
 
@@ -207,7 +207,7 @@ sem precondição:
    projeção lhe entregou: o hash declarado bate com o que o servidor confere na publicação (T-015).
    É o cenário que prova que autor e servidor olham o mesmo conteúdo.
 
-Em todos os sete: a `Publicacao` e a Versão Consolidada nova nascem na versão vigente **e bem
+Em todos os oito: a `Publicacao` e a Versão Consolidada nova nascem na versão vigente **e bem
 formadas** — nenhuma Etapa sem as duas propriedades —, e o `content_hash` de toda `Publicacao` e de
 toda `VersaoConsolidada` anterior permanece idêntico ao que era antes do deploy.
 
