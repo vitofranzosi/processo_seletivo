@@ -1,0 +1,60 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Minhas Etapas{% endblock %}
+{% block conteudo %}
+<h1>Minhas Etapas</h1>
+<p class="sub">As Etapas em que você tem atribuição.</p>
+
+{% if vinculos %}
+<section aria-labelledby="comissoes-titulo" class="pendencias">
+  <h2 id="comissoes-titulo">Comissões que você integra</h2>
+  <ul>
+    {% for vinculo in vinculos %}
+    <li>
+      <strong>{{ vinculo.processo.title }}</strong>
+      <span class="codigo">{{ vinculo.processo.institutional_code }}</span>
+      <span class="situacao s-{{ vinculo.funcao }}">
+        {% if vinculo.funcao == "PRESIDENTE" %}Presidente{% else %}Membro{% endif %}</span>
+      {% if vinculo.funcao == "PRESIDENTE" %}
+      {% comment %} Quem preside precisa de rota até a própria comissão: o acesso existia desde
+         sempre, e o caminho não — a pessoa tinha de achar o Processo na lista geral. {% endcomment %}
+      <a class="acao" href="{% url 'interface:comissao' vinculo.processo_id %}">Gerir comissão</a>
+      <a class="acao" href="{% url 'interface:alocacoes' vinculo.processo_id %}">Alocação por Etapa</a>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if atribuicoes %}
+<ul class="comissao" aria-label="Etapas atribuídas a você">
+  {% for item in atribuicoes %}
+  <li>
+    <div class="cabeca">
+      <strong class="operacao">{{ item.nome }}</strong>
+    </div>
+    <div class="corpo">
+      <span class="agregado">Edital {{ item.edital.number }}/{{ item.edital.year }}</span>
+      <span class="ator">{{ item.processo.title }}</span>
+    </div>
+    <p class="salvar">
+      <a class="botao" href="{% url 'interface:atribuicao' item.edital.id item.etapa_id %}">Abrir</a>
+    </p>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+{% comment %} §26 da spec: estado válido, e não erro. Quem não tem atribuição não vê Etapa alheia
+   bloqueada — ela simplesmente não pertence a esta área. {% endcomment %}
+<p class="vazio" role="status">Você não possui Etapas atribuídas no momento.</p>
+{% if sem_papel_nem_atribuicao %}
+{% comment %} FR-028 da 002: sem papel reconhecido, orientar a quem pedir acesso. Quem entra sem
+   papel nenhum termina aqui, e não na lista de Processos — então é aqui que a orientação precisa
+   estar, e não a uma tela de distância. {% endcomment %}
+<p class="aviso"><strong>Sua conta não possui papel de responsabilidade nem atribuição.</strong>
+  Se você deveria integrar a comissão de um Processo Seletivo, peça a quem o conduz que o
+  registre. Se precisa elaborar, homologar ou publicar Editais, solicite acesso a quem administra
+  o sistema no Cefor.</p>
+{% endif %}
+{% endif %}
+{% endblock %}

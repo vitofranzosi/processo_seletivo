@@ -40,6 +40,10 @@ PAPEIS = {
             "edital:criar",
             "edital:encerrar",
             "edital:cancelar",
+            # Constituir a comissão é ato de quem conduz o Processo (011, FR-016). É a base
+            # **sistêmica** de gestão; a outra base é a presidência, que não é papel e por isso
+            # não aparece aqui — ela é verificada contra o vínculo, objeto a objeto.
+            "comissao:gerir",
         ],
     ),
     "auditor": ("Auditor", ["auditoria:consultar"]),

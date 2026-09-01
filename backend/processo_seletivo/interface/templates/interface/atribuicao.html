@@ -1,0 +1,45 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}{{ etapa.name }} — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  {% if por_gestao %}
+  <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> ›
+  {% else %}
+  <a href="{% url 'interface:minhas-etapas' %}">Minhas Etapas</a> ›
+  {% endif %}
+  <span aria-current="page">{{ etapa.name }}</span>
+</nav>
+
+<h1>{{ etapa.name }}</h1>
+<p class="sub">Edital {{ edital.number }}/{{ edital.year }} — {{ processo.title }}</p>
+
+{% if por_alocacao %}
+<p class="sucesso" role="status">Você está alocado nesta Etapa.</p>
+{% else %}
+{% comment %} D-006: a página é alcançável pelas duas portas, e diz por qual delas o ator chegou. Sem isso,
+   quem gere confundiria a própria visão administrativa com uma atribuição sua. {% endcomment %}
+<p class="aviso" role="status"><strong>Você chegou aqui pela gestão da comissão</strong>, e não
+  por atribuição: você não está alocado nesta Etapa.</p>
+{% endif %}
+
+<dl class="conferencia">
+  {% if evento %}
+  <dt>Período previsto</dt>
+  <dd>{{ evento.inicio|date:"d/m/Y" }}{% if evento.fim %} a {{ evento.fim|date:"d/m/Y" }}{% endif %}</dd>
+  {% endif %}
+  <dt>Caráter</dt>
+  <dd>
+    {% if etapa.eliminatory and etapa.classificatory %}Eliminatória e classificatória
+    {% elif etapa.eliminatory %}Eliminatória
+    {% elif etapa.classificatory %}Classificatória
+    {% else %}Não declarado{% endif %}
+  </dd>
+</dl>
+
+{% comment %} §50 da spec — a demonstração de fronteira é o que NÃO existe nesta página: nenhuma lista de
+   candidatos, nenhum documento, nenhuma nota, nenhum parecer e nenhum botão de avaliar, nem
+   mesmo desabilitado. A avaliação é a 012, e antecipá-la aqui em forma de controle inerte seria
+   prometer o que esta entrega não cumpre. {% endcomment %}
+<p class="ajuda">A avaliação dos candidatos será disponibilizada quando a etapa correspondente
+  estiver habilitada no sistema.</p>
+{% endblock %}

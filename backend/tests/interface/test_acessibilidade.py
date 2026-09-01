@@ -373,3 +373,30 @@ def test_a_auditoria_diz_qual_area_do_rascunho_mudou(client, seletor_ligado, edi
     assert "Perfis de Vaga" in areas
     assert "Cronograma" in areas
     assert len(set(areas)) == len(areas), "registros de etapas diferentes não podem ser idênticos"
+
+
+ALOCACOES = BASE.parent / "alocacoes.html"
+
+
+def test_o_cabecalho_da_matriz_nao_e_fixado_dentro_de_um_contentor_de_rolagem():
+    """`position:sticky` se prende ao ancestral que rola, e não à janela.
+
+    A moldura da matriz nasceu com a classe `.rolagem` (`overflow-x:auto`), que faz o
+    `overflow-y` computar para `auto` junto. Com isso o cabeçalho passava a ser fixado contra a
+    moldura — que tem a altura do conteúdo e nunca rola por dentro — e sumia da tela na primeira
+    rolagem. Numa comissão de cinquenta, sobravam colunas de caixas sem o nome da Etapa.
+
+    Em tela estreita a rolagem horizontal é necessária; ali quem fixa é a coluna de nomes.
+    """
+    moldura = re.search(
+        r'<div class="([\w-]+)">\s*<table class="distribuicao">', ALOCACOES.read_text()
+    )
+    assert moldura, "a matriz precisa estar dentro de uma moldura identificável"
+    classe = moldura.group(1)
+
+    fora_de_media = re.sub(r"@media[^{]*\{(?:[^{}]|\{[^{}]*\})*\}", "", FONTE)
+    regra = re.search(rf"\.{classe}\{{([^}}]*)\}}", fora_de_media)
+    assert regra, f".{classe} precisa declarar seu overflow fora de qualquer @media"
+    assert "overflow-x:visible" in regra.group(1).replace(" ", ""), (
+        f".{classe} rola em tela larga: o cabeçalho da matriz deixa de ser fixado pela janela"
+    )

@@ -102,12 +102,27 @@ def test_acoes_seguem_a_permissao_de_quem_olha(client, seletor_ligado, cenario):
 @pytest.mark.django_db
 @pytest.mark.integration
 def test_pessoa_sem_papel_recebe_orientacao_e_nao_area_vazia(client, seletor_ligado, cenario):
-    """FR-028: sem papel reconhecido, orientar a quem pedir acesso."""
+    """FR-028 da 002: sem papel reconhecido, orientar a quem pedir acesso.
+
+    **A forma mudou com a 011, e a garantia não.** Antes, quem não escolhia papel era barrado na
+    identificação com 422 — e o aviso "Sem permissões" do template era inalcançável. A 011 trouxe
+    um ator que é exatamente esse: quem integra uma comissão sem capacidade sistêmica nenhuma,
+    cuja autorização vem do vínculo e que precisa entrar para ver `Minhas Etapas`. Barrá-lo na
+    porta o tornaria irrepresentável. A orientação, que é o que o requisito pede, passou a ser
+    dada onde ela sempre esteve escrita.
+    """
     resposta = client.post(
-        reverse("interface:identificar"), {"subject": "servidor.novo", "papeis": []}
+        reverse("interface:identificar"),
+        {"subject": "servidor.novo", "papeis": []},
+        follow=True,
     )
-    assert resposta.status_code == 422
-    assert "ao menos um papel" in resposta.content.decode()
+
+    assert resposta.status_code == 200
+    corpo = resposta.content.decode()
+    # A orientação precisa estar **onde a pessoa chega**, e não numa tela que ela não tem motivo
+    # para abrir: seguir o redirecionamento é o que torna este teste sobre a jornada.
+    assert "não possui papel de responsabilidade nem atribuição" in corpo
+    assert "solicite acesso" in corpo.lower()
 
 
 @pytest.mark.django_db

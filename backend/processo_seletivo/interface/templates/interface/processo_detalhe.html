@@ -10,6 +10,14 @@
 <p class="sub"><span class="codigo">{{ processo.institutional_code }}</span>
   <span class="situacao s-{{ processo.status }}">{{ processo.status|situacao }}</span></p>
 
+<p class="acoes-do-painel">
+  <a class="acao" href="{% url 'interface:comissao' processo.id %}">Comissão</a>
+  <a class="acao" href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a>
+  {% if pode_auditar %}
+  <a class="acao" href="{% url 'interface:auditoria-comissao' processo.id %}">Auditoria da comissão</a>
+  {% endif %}
+</p>
+
 {% if request.GET.ato %}<p class="sucesso" role="status">Ato registrado.</p>{% endif %}
 
 <ol class="etapas" aria-label="Situação do Processo">

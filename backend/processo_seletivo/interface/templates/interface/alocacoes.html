@@ -1,0 +1,159 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Distribuição — {{ processo.institutional_code }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
+  <span aria-current="page">Distribuição</span>
+</nav>
+
+<h1>Distribuição</h1>
+<p class="sub">{{ processo.title }} — <span class="codigo">{{ processo.institutional_code }}</span></p>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
+{% if request.GET.feito == "distribuir" %}<p class="sucesso" role="status">Distribuição salva.</p>{% endif %}
+{% if request.GET.feito == "remover" %}<p class="sucesso" role="status">Alocação removida.</p>{% endif %}
+
+<p class="acoes-do-painel">
+  <a class="acao" href="{% url 'interface:comissao' processo.id %}">Comissão</a>
+</p>
+
+{% if not tem_presidente %}
+<p class="aviso" role="status"><strong>Designe a presidência antes de distribuir.</strong>
+  <a href="{% url 'interface:comissao' processo.id %}">Ir para a Comissão</a></p>
+{% endif %}
+
+{% if resumo.etapas or resumo.editais_sem_publicacao %}
+<ul class="resumo" aria-label="Situação da distribuição">
+  <li><strong>{{ resumo.com_equipe }}</strong>Etapa{{ resumo.com_equipe|pluralize:"s" }} com equipe</li>
+  <li><strong>{{ resumo.sem_equipe }}</strong>sem ninguém</li>
+  <li><strong>{{ resumo.sem_atribuicao }}</strong>de {{ resumo.membros }} sem atribuição</li>
+  {% if resumo.editais_sem_publicacao %}
+  <li><strong>{{ resumo.editais_sem_publicacao }}</strong>Edital{{ resumo.editais_sem_publicacao|pluralize:",is" }} não publicado{{ resumo.editais_sem_publicacao|pluralize:"s" }}</li>
+  {% endif %}
+</ul>
+{% endif %}
+
+{% if orfas %}
+<section aria-labelledby="orfas-titulo" class="consequencias irreversivel">
+  <h2 id="orfas-titulo">Alocações sem Etapa correspondente</h2>
+  <p class="ajuda">Uma Retificação removeu a Etapa destas alocações. Elas não concedem acesso e não
+    aparecem para quem foi alocado.</p>
+  <ul class="atribuicoes">
+    {% for alocacao in orfas %}
+    <li>
+      {{ alocacao.membro.display_label|default:alocacao.membro.identity_subject }}
+      — <span class="codigo">{{ alocacao.etapa_id }}</span>
+      · Edital {{ alocacao.edital.number }}/{{ alocacao.edital.year }}
+      <form method="post" class="linha-de-acoes">
+        {% csrf_token %}
+        <input type="hidden" name="acao" value="remover">
+        <input type="hidden" name="alocacao_id" value="{{ alocacao.id }}">
+        <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-o{{ forloop.counter }}">
+        <button type="submit" class="acao perigoso"
+                aria-label="Remover a alocação sem Etapa de {{ alocacao.membro.display_label|default:alocacao.membro.identity_subject }}">
+          Remover</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if matriz.colunas %}
+<form method="get" class="filtro" role="search">
+  <p class="campo">
+    <label for="q">Procurar</label>
+    <input id="q" name="q" type="search" value="{{ busca }}" placeholder="nome ou identificador">
+  </p>
+  <p class="salvar">
+    <button type="submit" class="acao">Filtrar</button>
+    {% if busca %}<a class="acao" href="{% url 'interface:alocacoes' processo.id %}">Limpar</a>{% endif %}
+  </p>
+</form>
+
+{% if busca %}
+{% comment %} O envio só afeta quem está na tela, porque o escopo vai declarado no formulário.
+   Dizer isso aqui responde a única dúvida legítima de quem filtra antes de salvar. {% endcomment %}
+<p class="ajuda" role="status">{{ matriz.linhas|length }} de {{ resumo.membros }} — salvar altera
+  apenas quem está listado.</p>
+{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="acao" value="distribuir">
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  <input type="hidden" name="q" value="{{ busca }}">
+  {% for linha in matriz.linhas %}
+  <input type="hidden" name="escopo_membro" value="{{ linha.membro.id }}">
+  {% endfor %}
+  {% for coluna in matriz.colunas %}
+  <input type="hidden" name="escopo_etapa" value="{{ coluna.chave }}">
+  {% endfor %}
+
+  <div class="distribuicao-moldura">
+    <table class="distribuicao">
+      <thead>
+        <tr>
+          <th scope="col">Avaliador</th>
+          {% for coluna in matriz.colunas %}
+          <th scope="col">
+            {{ coluna.nome }}
+            <span class="codigo">{{ coluna.edital.number }}/{{ coluna.edital.year }}</span>
+            {% if coluna.sem_membros %}
+            <span class="situacao s-CANCELADO">sem ninguém</span>
+            {% else %}
+            <span class="situacao s-PUBLICADO">{{ coluna.total }}</span>
+            {% endif %}
+            {% if matriz.linhas and tem_presidente %}
+            <span class="coluna-toda">
+              <button type="submit" name="coluna_todos" value="{{ coluna.chave }}" class="acao"
+                      aria-label="Marcar todos em {{ coluna.nome }}">todos</button>
+              <button type="submit" name="coluna_nenhum" value="{{ coluna.chave }}" class="acao"
+                      aria-label="Desmarcar todos em {{ coluna.nome }}">nenhum</button>
+            </span>
+            {% endif %}
+          </th>
+          {% endfor %}
+          <th scope="col" class="num">Etapas</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for linha in matriz.linhas %}
+        <tr>
+          <th scope="row">
+            {{ linha.membro.display_label|default:linha.membro.identity_subject }}
+            {% if linha.membro.funcao == "PRESIDENTE" %}
+            <span class="situacao s-PRESIDENTE">Presidente</span>{% endif %}
+            <span class="codigo">{{ linha.membro.identity_subject }}</span>
+          </th>
+          {% for celula in linha.celulas %}
+          <td class="marca">
+            <input type="checkbox" name="celula" value="{{ celula.chave }}"
+                   {% if celula.marcada %}checked{% endif %}
+                   {% if not tem_presidente %}disabled{% endif %}
+                   aria-label="{{ linha.membro.display_label|default:linha.membro.identity_subject }} em {{ celula.coluna.nome }}, Edital {{ celula.coluna.edital.number }}/{{ celula.coluna.edital.year }}">
+          </td>
+          {% endfor %}
+          <td class="num">{{ linha.total }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="{{ matriz.colunas|length|add:2 }}" class="vazio">
+          {% if busca %}Nenhum membro corresponde ao filtro.{% else %}Esta comissão ainda não tem membros.{% endif %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if matriz.linhas and tem_presidente %}
+  <p class="salvar"><button type="submit" class="botao">Salvar distribuição</button></p>
+  {% endif %}
+</form>
+{% else %}
+<p class="vazio" role="status">
+  {% if resumo.editais_sem_publicacao %}<strong>Nenhum Edital publicado.</strong>
+  As Etapas passam a ser alocáveis quando o Edital é publicado.
+  {% else %}<strong>Nenhum Edital declara Etapas de Avaliação.</strong>
+  Não há trabalho a distribuir.{% endif %}</p>
+{% endif %}
+{% endblock %}

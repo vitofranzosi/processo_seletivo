@@ -34,6 +34,10 @@ INSTALLED_APPS = [
     # sendo o canal, e não ganha `models.py` — pôr a identidade lá o transformaria em canal e
     # domínio ao mesmo tempo, que é o que a separação anterior evitou.
     "processo_seletivo.identidade",
+    # A organização do trabalho (011): quem integra a comissão do Processo e quem atua em cada
+    # Etapa. App próprio porque é autorização operacional sobre Processo e Edital, e não o ciclo
+    # de vida normativo deles — as telas continuam em `interface`, que já é o canal dos dois atores.
+    "processo_seletivo.comissoes",
 ]
 TEMPLATES = [
     {

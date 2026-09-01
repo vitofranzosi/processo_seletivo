@@ -529,3 +529,48 @@ def alcance_da_aplicabilidade(edital):
             }
         )
     return perfis
+
+
+# ---------------------------------------------------------------------------
+# A comissão e a alocação (011). Leitura, e nada além: quem decide se a pessoa existe, se pode
+# ser alocada e se a Etapa é vigente é o command.
+# ---------------------------------------------------------------------------
+
+
+def ler_membro(dados):
+    """Identificador, rótulo e função. O rótulo é leitura humana e não identifica ninguém."""
+    return {
+        "identity_subject": _texto(dados, "identity_subject"),
+        "display_label": _texto(dados, "display_label"),
+        # Sem padrão: "não informado" e "informado como MEMBRO" são coisas diferentes, e
+        # confundi-las rebaixaria uma presidente em silêncio num formulário truncado. Quem
+        # valida é o command, que recusa função fora do conjunto.
+        "funcao": _texto(dados, "funcao"),
+    }
+
+
+def ler_alocacao(dados):
+    return {
+        "membro_id": _texto(dados, "membro_id"),
+        "edital_id": _texto(dados, "edital_id"),
+        "etapa_id": _texto(dados, "etapa_id"),
+    }
+
+
+def ler_membros_em_lote(dados):
+    """Uma pessoa por linha: `identificador` ou `identificador, Nome de exibição`.
+
+    Colar a lista é como a informação chega de verdade — de uma portaria, de uma planilha, de um
+    e-mail. Exigir um formulário por pessoa era transformar quarenta linhas em oitenta envios.
+    """
+    bruto = dados.get("lista") or ""
+    entradas = []
+    for linha in bruto.splitlines():
+        linha = linha.strip()
+        if not linha:
+            continue
+        identificador, separador, rotulo = linha.partition(",")
+        if not separador:
+            identificador, separador, rotulo = linha.partition(";")
+        entradas.append((identificador.strip(), rotulo.strip()))
+    return {"entradas": entradas, "funcao": _texto(dados, "funcao"), "lista": bruto}
