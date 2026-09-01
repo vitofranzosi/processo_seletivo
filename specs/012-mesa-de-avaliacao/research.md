@@ -203,11 +203,10 @@ sem precondição:
    pode ser reelaborada sem devolver, e por isso a que mais dói se falhar.
 7. Retificação **criada depois** do incremento sobre `baseSnapshot` v4: as precondições nascem
    sobre base elevada e batem na publicação.
-8. A mesma criação, mas com `expectedPreviousHash` **declarado** sobre a Etapa que a projeção
-   entregou ao autor: o hash declarado bate com o que o servidor confere na publicação. E o
-   simétrico, no mesmo teste: hash declarado sobre a Etapa v4 literal **não** bate, e a recusa é a
-   de precondição, com a mensagem que já existe. É o par que prova que autor e servidor olham o
-   mesmo conteúdo (T-015).
+8. A mesma criação, com `expectedPreviousHash` **declarado**, nas duas grafias: sobre a Etapa que a
+   projeção entregou ao autor, e sobre a Etapa v4 literal que a consulta pública serve. **As duas
+   são aceitas**, porque denotam a mesma norma (T-017). E o contraprova no mesmo teste: hash de uma
+   Etapa realmente diferente continua sendo recusado, com a mensagem de precondição que já existe.
 
 Em todos os oito: a `Publicacao` e a Versão Consolidada nova nascem na versão vigente **e bem
 formadas** — nenhuma Etapa sem as duas propriedades —, e o `content_hash` de toda `Publicacao` e de
@@ -542,24 +541,77 @@ A projeção existe em um lugar e para um público: quem está compondo um ato n
 nascer na versão vigente de qualquer maneira. Entregar-lhe a forma antiga para depois conferir a
 nova seria pedir que ele acertasse um alvo que não lhe foi mostrado.
 
-### O que a API entrega hoje, e por que a regra não a alcança
+### O que a API entrega hoje, e por que retirar a promessa não bastou
 
 **Nenhuma superfície da API devolve conteúdo-base.** `RetificacaoResponseSerializer` carrega id,
-Edital, estado, vigência e revisão, e nenhuma view de `publicacoes/api/` emite `content`. O cliente
-que declara `expectedPreviousHash` obteve o conteúdo de outro lugar — hoje, do canal HTML ou da
-consulta pública.
+Edital, estado, vigência e revisão, e nenhuma view de `publicacoes/api/` emite `content`.
 
-A primeira redação de T-015 prometia elevar "a resposta da API que entrega o conteúdo-base para
-composição", e essa resposta não existe. A promessa foi retirada: a regra alcança o que existe — o
-editor HTML — e **fica valendo como contrato para qualquer superfície de autoria que venha a
-existir**. Endpoint novo que devolva conteúdo-base para composição devolve a projeção; a alternativa
-seria reabrir esta decisão.
+A primeira redação prometia elevar "a resposta da API que entrega o conteúdo-base para composição",
+e essa resposta não existe. Mas **retirar a promessa não resolveu o problema, só o deixou de fora**:
+a API continua aceitando criar e editar Retificação com `baseSnapshotId` e `expectedPreviousHash`, e
+o único conteúdo que um cliente consegue ler é o **literal**, pela consulta pública. Depois do
+incremento, esse cliente calcularia o hash sobre a Etapa v4 — corretamente, sobre o que ele viu — e
+seria recusado. Codificar isso como recusa esperada contradiz o que o próprio domínio documenta:
+`expectedPreviousHash` é o hash **do conteúdo que o autor encontrou**. Ver T-017.
 
 ### Consequência para o plano
 
 Duas chamadas da interface mudam de argumento — `campos_editaveis` e `diferencas` passam a receber
 a projeção, não `base.content` —, e a tela que exibe a Retificação faz o mesmo. Nenhuma delas muda
 de assinatura, e nenhuma sabe o que é elevação: quem eleva é a fronteira que carrega o conteúdo.
+
+---
+
+## T-016 — A trilha da 012 não se resolve por `aggregate_id` nem por `actor_subject`
+
+FR-050 pede a trilha filtrável por inscrição, por avaliador e por operação. A primeira redação
+supôs que as duas primeiras saíssem de graça — `aggregate_id` para a inscrição, o filtro de pessoa
+da 011 para o avaliador. **As duas suposições são falsas**, e cada uma pelo seu motivo.
+
+**`aggregate_id` não é a inscrição.** Os sete atos de FR-052 têm agregados diferentes: abrir
+documento registra sobre `Inscricao`, como a 009 já faz; atribuir e remover registram sobre
+`Atribuicao`; gravar, concluir e reabrir sobre `Avaliacao`; impedir sobre a Atribuição inativada.
+Filtrar por `aggregate_id = <inscrição>` traria um sétimo dos eventos e esconderia o resto — pior
+que não filtrar, porque parece completo.
+
+**`actor_subject` não é o avaliador.** Ele é quem praticou o ato. Nos atos da presidência —
+atribuir, remover, impedir, reabrir — o ator é a presidência, e o avaliador é o **afetado**.
+Perguntar "o que aconteceu com o trabalho da Ana" pelo `actor_subject` devolveria só o que a Ana
+mesma fez, e nada do que fizeram com ela — que é metade da pergunta.
+
+**A decisão** é a mesma que a 011 tomou em `trilha_da_comissao`, e por isso não custa mecanismo
+novo: um seletor que **resolve os identificadores pelas relações** e entrega o conjunto ao
+`consultar` que já existe. Por inscrição, reúne a própria `Inscricao` mais as `Atribuicao` e
+`Avaliacao` dela; por avaliador, reúne as `Atribuicao` e `Avaliacao` daquela identidade estável —
+não do vínculo, pela razão de T-007.
+
+A alternativa seria carimbar a inscrição em cada evento, criando uma coluna de conveniência na
+trilha para uma pergunta que a relação já responde. `record_event` não ganha campo nesta feature
+(FR-070).
+
+---
+
+## T-017 — A precondição vale sobre as duas formas da mesma norma
+
+`expectedPreviousHash` significa, nas palavras do próprio domínio, o hash do conteúdo que o autor
+encontrou no caminho endereçado. Depois do incremento, a mesma Etapa tem duas grafias: a literal,
+que a consulta pública serve e que o `content_hash` cobre, e a elevada, que a autoria compõe. Um
+cliente que leia o público e declare o hash de lá está fazendo exatamente o que o contrato manda —
+e seria recusado.
+
+Servir a projeção por um endpoint novo resolveria, ao custo de superfície de API que o plano se
+propôs a não criar. E aceitar a recusa como comportamento esperado transformaria o cliente cuidadoso
+em caso de erro.
+
+**A decisão**: para os caminhos que a elevação alcança, a precondição é satisfeita pelo hash da
+entidade em **qualquer uma das duas formas**. Não é afrouxamento — é a precondição significando o
+que sempre significou. Ela existe para detectar que **o conteúdo mudou**; elevar não muda conteúdo
+normativo nenhum, apenas escreve na forma nova o que a ausência já dizia. Duas grafias da mesma
+norma têm de satisfazer a mesma precondição.
+
+O alcance é estreito e verificável: só as entidades de `/stages`, só enquanto existir conteúdo em
+versão anterior, e só para as duas propriedades do incremento. Qualquer diferença real no conteúdo
+continua produzindo divergência, e a recusa de FR-036 continua inteira.
 
 ---
 
