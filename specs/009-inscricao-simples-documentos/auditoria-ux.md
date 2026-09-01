@@ -501,8 +501,18 @@ resumo publicado na página e `shasum` do arquivo baixado por outro cliente:
 O nome do arquivo é `Comprovante INS-2026-6N5SFREZ.pdf`, entregue como `attachment`: quem clicou
 veio buscar um arquivo para guardar, e abrir no visualizador o devolveria à tela de onde saiu.
 
-**A impressão da página continua**, como ação secundária — quem prefere o papel direto não precisa
-baixar antes.
+**Uma ação só, e o link estava sem estilo.** A primeira versão desta tela oferecia duas — baixar o
+arquivo e imprimir a página —, e o link de baixar aparecia como **texto simples** no meio do
+parágrafo enquanto o botão de imprimir tinha contorno: o CSS dizia `button.principal`, e o seletor
+por elemento não alcança um `<a>`. O resultado é o pior arranjo possível — a ação errada era a que
+parecia botão.
+
+Corrigido nos dois níveis. O seletor virou `.principal`, e o botão de imprimir **saiu**: com o PDF
+disponível, ele dividia a decisão sendo pior em tudo o que importa aqui — a impressão sai com o
+endereço que o navegador escreve na folha, com o nome de arquivo tirado do título da aba, e com
+bytes diferentes a cada vez. Junto saíram o script que o acionava e as instruções de como desligar
+o cabeçalho do navegador, que só existiam por causa dele. A página continua imprimível por quem
+apertar Ctrl+P; o que saiu foi o convite.
 
 **A spec foi alterada, e não contornada.** FR-063 passou a exigir o PDF gerado; FR-063a fixa o
 determinismo e a publicação do resumo; FR-063b descreve o código de verificação e declara o que ele

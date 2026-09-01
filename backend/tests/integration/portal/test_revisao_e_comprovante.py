@@ -207,11 +207,12 @@ def test_a_recusa_nao_apaga_a_declaracao_ja_marcada(client, inscricao_de_maria):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_o_comprovante_pode_ser_impresso_e_reencontrado(client, inscricao_de_maria):
+def test_o_comprovante_pode_ser_baixado_e_reencontrado(client, inscricao_de_maria):
     """L1 da auditoria de percurso: o comprovante precisa ser levável.
 
-    Num celular, "imprimir ou salvar em PDF" está atrás do menu do navegador, e quem acabou de se
-    inscrever não vai procurá-lo. O protocolo é a única prova que a pessoa leva.
+    O protocolo é a única prova que a pessoa leva, e sair da tela não pode significar perdê-la.
+    Uma ação só: enquanto havia duas, elas dividiam a decisão — e a impressão da página era pior
+    em tudo o que importa aqui.
     """
     from processo_seletivo.inscricoes.application.submissao import enviar_inscricao
 
@@ -226,11 +227,12 @@ def test_o_comprovante_pode_ser_impresso_e_reencontrado(client, inscricao_de_mar
 
     corpo = client.get(reverse("portal:comprovante", args=[enviada.id])).content.decode()
 
-    assert "Baixar o comprovante em PDF" in corpo, "o arquivo é a ação principal"
+    assert "Baixar o comprovante em PDF" in corpo, "e é a única ação"
     assert reverse("portal:comprovante-pdf", args=[enviada.id]) in corpo
-    assert "Imprimir esta página" in corpo, "imprimir continua, em segundo plano"
-    assert "data-imprimir" in corpo and "hidden" in corpo, "sem JS não fica botão morto na tela"
-    assert "portal/comprovante.js" in corpo
+    assert "Imprimir esta página" not in corpo, "duas ações dividiam a mesma decisão"
+    assert 'class="principal"' in corpo and "a.principal{display:inline-block" in corpo, (
+        "o link é estilizado como ação principal — `button.principal` o deixava sem estilo"
+    )
     assert "Guarde o número do protocolo" in corpo
     assert "identifique-se com o mesmo CPF" in corpo, "diz como voltar a este comprovante"
 

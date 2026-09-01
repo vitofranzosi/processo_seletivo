@@ -120,17 +120,14 @@ que o comprovante garantia alguma coisa sobre o mérito.
 </div>
 
 {% comment %}
-O arquivo, e não a impressão da página (FR-063). O PDF é gerado pelo servidor: tem nome próprio,
-não carrega o endereço que o navegador escreve na folha, e sai idêntico a cada download — o que
-permite publicar o resumo dele aqui e esperar que confira.
-
-O botão de imprimir continua, em segundo plano: quem prefere o papel direto não precisa baixar
-antes.
+Uma ação só (FR-063). Enquanto havia duas — baixar o arquivo e imprimir a página —, elas dividiam
+a decisão, e a segunda era pior em tudo o que importa: a impressão sai com o endereço que o
+navegador escreve na folha, com o nome de arquivo tirado do título da aba, e com bytes diferentes
+a cada vez. A página continua imprimível por quem apertar Ctrl+P; o que saiu foi o convite.
 {% endcomment %}
 <p class="nao-imprime acoes-do-comprovante">
-  <a class="principal como-botao" href="{% url 'portal:comprovante-pdf' inscricao.id %}">
+  <a class="principal" href="{% url 'portal:comprovante-pdf' inscricao.id %}">
     Baixar o comprovante em PDF</a>
-  <button type="button" class="acao" data-imprimir hidden>Imprimir esta página</button>
 </p>
 <p class="nao-imprime ajuda resumo-do-pdf">
   <span class="rotulo">SHA-256 do arquivo</span>
@@ -140,26 +137,6 @@ antes.
 </p>
 <p class="nao-imprime ajuda">Guarde o número do protocolo. Este comprovante fica disponível
   enquanto as inscrições deste Processo Seletivo estiverem sob análise.</p>
-{% comment %}
-O cabeçalho com o endereço da página e o rodapé com a data são do **navegador**, e nenhuma regra
-desta página os remove. Dizer onde desligá-los custa uma linha e evita que o comprovante saia com
-um `localhost` impresso em cima.
-{% endcomment %}
-<details class="nao-imprime como-converter">
-  <summary>Prefere imprimir esta página? Como tirar o endereço do alto da folha</summary>
-  <p class="ajuda">O PDF acima já sai limpo — este aviso é só para quem imprime a página direto.
-    O cabeçalho com o endereço e o rodapé com a data são acrescentados pelo
-    <strong>navegador</strong>, e não fazem parte do comprovante. Para imprimir sem eles:</p>
-  <ul>
-    <li><strong>Firefox:</strong> na janela de impressão, abra <em>Mais configurações</em> e
-      desmarque <em>Imprimir cabeçalhos e rodapés</em>.</li>
-    <li><strong>Chrome e Edge:</strong> abra <em>Mais definições</em> e desmarque
-      <em>Cabeçalhos e rodapés</em>.</li>
-    <li><strong>Safari:</strong> no menu da janela de impressão, desmarque
-      <em>Imprimir cabeçalhos e rodapés</em>.</li>
-  </ul>
-</details>
 
 <p class="nao-imprime"><a href="{% url 'portal:selecao' inscricao.edital_id %}">Voltar à seleção</a></p>
-{% load static %}<script src="{% static 'portal/comprovante.js' %}" defer></script>
 {% endblock %}

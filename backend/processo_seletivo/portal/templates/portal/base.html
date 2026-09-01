@@ -248,14 +248,11 @@ details.como-converter li{margin-bottom:.4rem}
 .envio .acao.pronta:hover{background:var(--verde-escuro)}
 .envio .limite{display:block;color:var(--texto-fraco);font-size:.875rem;margin-top:.4rem}
 
-/* O comprovante oferece duas ações de pesos diferentes: baixar o arquivo é o que quase todo mundo
-   quer, imprimir a página é a alternativa de quem prefere o papel direto. */
-.acoes-do-comprovante{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin:1.25rem 0 .5rem}
-a.como-botao{display:inline-block;text-align:center;text-decoration:none;width:auto}
-.acoes-do-comprovante .acao{padding:.55rem 1rem;border-radius:4px;border:1px solid var(--verde-texto);
-  background:var(--branco);color:var(--verde-texto);font:inherit;font-size:.9375rem;
-  font-weight:600;cursor:pointer}
-.acoes-do-comprovante .acao:hover{background:var(--verde-claro)}
+/* Uma ação só no comprovante: baixar o arquivo. Enquanto existiam duas, elas dividiam a decisão —
+   e o PDF é melhor do que a impressão da página em tudo o que importa aqui (nome próprio, folha
+   limpa, bytes verificáveis). A página continua imprimível pelo navegador para quem apertar
+   Ctrl+P; o que saiu foi o convite a fazê-lo. */
+.acoes-do-comprovante{margin:1.25rem 0 .5rem}
 /* O resumo do próprio arquivo: só existe porque o PDF é determinístico. */
 .resumo-do-pdf{display:grid;gap:.15rem;margin:0 0 1rem}
 .resumo-do-pdf .rotulo{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}
@@ -265,10 +262,14 @@ a.como-botao{display:inline-block;text-align:center;text-decoration:none;width:a
 /* A ação principal ganha ar em volta e diz o que falta antes de ser acionada. */
 .barra-de-acao{margin:1.5rem 0 0;display:grid;gap:.5rem;justify-items:start}
 .barra-de-acao .ajuda{margin:0}
-button.principal{padding:.75rem 1.25rem;border:0;border-radius:4px;background:var(--verde);
+/* `.principal` e não `button.principal`: o comprovante oferece a ação como link — é um arquivo a
+   buscar, não um formulário a submeter —, e o seletor por elemento deixava o link sem estilo
+   nenhum, parecendo texto no meio da página. */
+.principal{padding:.75rem 1.25rem;border:0;border-radius:4px;background:var(--verde);
   color:var(--branco);font-weight:600;font-size:1rem;font-family:inherit;cursor:pointer;
   width:100%;max-width:32rem}
-button.principal:hover{background:var(--verde-escuro)}
+.principal:hover{background:var(--verde-escuro)}
+a.principal{display:inline-block;width:auto;text-align:center;text-decoration:none}
 form.convite{margin:.75rem 0 0}
 /* O comprovante é impresso: fora o conteúdo, nada mais precisa ir para o papel. */
 /* O timbre existe **só** no papel: na tela o cabeçalho verde já diz de quem é o sistema, e
