@@ -1854,7 +1854,7 @@ def alocacoes(request, processo_id):
         dados = forms.ler_alocacao(request.POST)
         chave = request.POST.get("chave_idempotencia") or uuid4().hex
         try:
-            if acao == "incluir":
+            if acao == "incluir" and not request.POST.get("todos"):
                 selecionados = request.POST.getlist("membro_id")
                 alocacao_app.alocar_varios(
                     actor=ator,
@@ -1865,7 +1865,7 @@ def alocacoes(request, processo_id):
                     idempotency_key=chave,
                     correlation_id=getattr(request, "correlation_id", ""),
                 )
-            elif acao == "incluir_todos":
+            elif request.POST.get("todos"):
                 alocacao_app.alocar_varios(
                     actor=ator,
                     processo_id=processo.id,

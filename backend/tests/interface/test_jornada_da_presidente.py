@@ -291,10 +291,14 @@ def test_alocar_toda_a_comissao_disponivel_num_botao(
     presidente.post(
         reverse("interface:alocacoes", args=[processo_a.id]),
         {
-            "acao": "incluir_todos",
+            # Como o formulário real envia: `acao=incluir` no campo oculto e `todos` do botão.
+            # Antes eram duas chaves `acao` competindo, e o teste mandava só a segunda.
+            "acao": "incluir",
+            "todos": "1",
             "edital_id": str(edital_a.id),
             "etapa_id": etapa_a1,
             "disponivel": [str(m.id) for m in comissao_de_a.values()],
+            "membro_id": [],
             "chave_idempotencia": "interface-todos-0001",
         },
         follow=True,
@@ -401,3 +405,36 @@ def test_o_disclosure_nao_esconde_a_acao_do_teclado(presidente, processo_a, comi
 
     comissao_de_a["joao"].refresh_from_db()
     assert comissao_de_a["joao"].funcao == Funcao.PRESIDENTE
+
+
+def test_o_botao_de_alocar_todos_nao_depende_da_ordem_do_markup(
+    presidente, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    """Duas chaves `acao` no mesmo envio só funcionavam porque a última vence.
+
+    Este teste manda exatamente o que o formulário manda — `acao=incluir` do campo oculto e
+    `todos` do botão — e é o que impede que reordenar o markup mude o comportamento em silêncio.
+    """
+    from processo_seletivo.comissoes.models import AlocacaoEtapa
+
+    corpo = presidente.get(
+        reverse("interface:alocacoes", args=[processo_a.id])
+    ).content.decode()
+    assert 'name="todos" value="1"' in corpo
+    assert 'name="acao" value="incluir_todos"' not in corpo
+
+    presidente.post(
+        reverse("interface:alocacoes", args=[processo_a.id]),
+        {
+            "acao": "incluir",
+            "todos": "1",
+            "edital_id": str(edital_a.id),
+            "etapa_id": etapa_a1,
+            "disponivel": [str(m.id) for m in comissao_de_a.values()],
+            "membro_id": [],
+            "chave_idempotencia": "interface-todos-ordem-0001",
+        },
+        follow=True,
+    )
+
+    assert AlocacaoEtapa.objects.filter(ativo=True, etapa_id=etapa_a1).count() == 2

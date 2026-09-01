@@ -8,7 +8,11 @@ from django.db import IntegrityError
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
 from processo_seletivo.comissoes.application.comissao import auditar, identificador
 from processo_seletivo.comissoes.domain import funcoes
-from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
+from processo_seletivo.comissoes.domain.etapas import (
+    etapas_vigentes,
+    nome_da_etapa,
+    nomes_das_etapas,
+)
 from processo_seletivo.comissoes.models import AlocacaoEtapa, MembroComissao
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.shared.api.problems import DomainError
@@ -181,6 +185,8 @@ def alocar_varios(
             criadas.append(alocacao)
         if criadas:
             ctx.concluir(criadas[0], 201)
+        else:
+            ctx.concluir_sem_resultado(200)
         return criadas, [m for m in membros if m.id in ja]
 
 
@@ -212,22 +218,14 @@ def remover_alocacao(*, actor, processo_id, alocacao_id, idempotency_key, correl
             operation="ALOCACAO_REMOVER",
             aggregate=alocacao,
             reason=(
-                f"{alocacao.membro.identity_subject} — Etapa “{_nome_da_etapa(alocacao)}” do "
-                f"Edital {alocacao.edital.number}/{alocacao.edital.year}"
+                f"{alocacao.membro.identity_subject} — Etapa "
+                f"“{nome_da_etapa(alocacao, nomes_das_etapas([alocacao]))}” do Edital "
+                f"{alocacao.edital.number}/{alocacao.edital.year}"
             ),
             correlation_id=correlation_id,
             idempotency_key=idempotency_key,
         )
         return ctx.concluir(alocacao, 200)
-
-
-def _nome_da_etapa(alocacao):
-    """O nome no conteúdo vigente, ou o identificador quando a Etapa já não existe (órfã)."""
-    try:
-        dados = etapas_vigentes(alocacao.edital).get(alocacao.etapa_id)
-    except DomainError:
-        dados = None
-    return (dados or {}).get("name") or str(alocacao.etapa_id)
 
 
 def remover_varias_alocacoes(
@@ -261,8 +259,12 @@ def remover_varias_alocacoes(
                 pk__in=ids, membro__processo=ctx.processo, ativo=True
             ).select_related("membro", "edital")
         )
-        if not alocacoes:
+        # Recusa o conjunto quando algum identificador não corresponde, como `alocar_varios` faz:
+        # remover quatro de cinco e responder sucesso deixa a quinta pessoa com acesso, e quem
+        # operou acreditando que a tirou.
+        if len(alocacoes) != len(set(ids)):
             raise nao_encontrado()
+        nomes = nomes_das_etapas(alocacoes)
         for alocacao in alocacoes:
             alocacao.ativo = False
             alocacao.inativado_em = ctx.now
@@ -274,8 +276,9 @@ def remover_varias_alocacoes(
                 operation="ALOCACAO_REMOVER",
                 aggregate=alocacao,
                 reason=(
-                    f"{alocacao.membro.identity_subject} — Etapa “{_nome_da_etapa(alocacao)}” do "
-                    f"Edital {alocacao.edital.number}/{alocacao.edital.year}; em lote"
+                    f"{alocacao.membro.identity_subject} — Etapa "
+                    f"“{nome_da_etapa(alocacao, nomes)}” do Edital "
+                    f"{alocacao.edital.number}/{alocacao.edital.year}; em lote"
                 ),
                 correlation_id=correlation_id,
             )

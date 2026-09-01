@@ -11,7 +11,7 @@ from django.db import IntegrityError
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
 from processo_seletivo.comissoes.domain import funcoes
-from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
+from processo_seletivo.comissoes.domain.etapas import nome_da_etapa, nomes_das_etapas
 from processo_seletivo.comissoes.models import AlocacaoEtapa, Funcao, MembroComissao
 from processo_seletivo.shared.api.problems import DomainError
 
@@ -194,6 +194,8 @@ def adicionar_varios(*, actor, processo_id, entradas, funcao, idempotency_key, c
             criados.append(membro)
         if criados:
             ctx.concluir(criados[0], 201)
+        else:
+            ctx.concluir_sem_resultado(200)
         return criados, sorted(ja)
 
 
@@ -248,7 +250,11 @@ def remover_membro(*, actor, processo_id, membro_id, idempotency_key, correlatio
         # A cascata é atômica: alocação ativa sob membro inativo deixaria o acesso sobrevivendo
         # à remoção por uma janela, e atrapalharia a própria regra do último presidente, que
         # pergunta se há alocação ativa na comissão (EC-003).
-        for alocacao in AlocacaoEtapa.objects.filter(membro=membro, ativo=True):
+        da_pessoa = list(
+            AlocacaoEtapa.objects.filter(membro=membro, ativo=True).select_related("edital")
+        )
+        nomes = nomes_das_etapas(da_pessoa)
+        for alocacao in da_pessoa:
             alocacao.ativo = False
             alocacao.inativado_em = ctx.now
             alocacao.inativado_por = actor.subject
@@ -259,8 +265,8 @@ def remover_membro(*, actor, processo_id, membro_id, idempotency_key, correlatio
                 operation="ALOCACAO_REMOVER",
                 aggregate=alocacao,
                 reason=(
-                    f"{membro.identity_subject} — Etapa “{_nome_da_etapa(alocacao)}” do Edital "
-                    f"{alocacao.edital.number}/{alocacao.edital.year}; "
+                    f"{membro.identity_subject} — Etapa “{nome_da_etapa(alocacao, nomes)}” do "
+                    f"Edital {alocacao.edital.number}/{alocacao.edital.year}; "
                     f"causa: saída da comissão"
                 ),
                 correlation_id=correlation_id,
@@ -308,12 +314,3 @@ def _exigir_presidencia_apos(processo, membro, *, nova_funcao, alocacoes_sobrevi
         409,
         campo="funcao",
     )
-
-
-def _nome_da_etapa(alocacao):
-    """O nome no conteúdo vigente, ou o identificador quando a Etapa já não existe (órfã)."""
-    try:
-        dados = etapas_vigentes(alocacao.edital).get(alocacao.etapa_id)
-    except DomainError:
-        dados = None
-    return (dados or {}).get("name") or str(alocacao.etapa_id)

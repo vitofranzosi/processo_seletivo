@@ -136,3 +136,24 @@ def test_a_reserva_acontece_depois_da_autorizacao(processo_a):
         )
 
     assert IdempotencyRecord.objects.filter(actor_subject="estranho").count() == 0
+
+
+def test_lote_sem_nada_a_criar_fecha_a_reserva(gestor, processo_a, comissao_de_a):
+    """Sem fechar, a repetição refazia consulta e laço inteiros para chegar ao mesmo nada."""
+    from processo_seletivo.auditoria.models import IdempotencyRecord
+    from processo_seletivo.comissoes.application.comissao import adicionar_varios
+
+    entradas = [("joao", ""), ("maria", "")]
+    adicionar_varios(
+        actor=gestor, processo_id=processo_a.id, entradas=entradas,
+        funcao="MEMBRO", idempotency_key="k-vazio", correlation_id="c",
+    )
+
+    reserva = IdempotencyRecord.objects.get(key="k-vazio")
+    assert reserva.response_status is not None
+
+    criados, _ = adicionar_varios(
+        actor=gestor, processo_id=processo_a.id, entradas=entradas,
+        funcao="MEMBRO", idempotency_key="k-vazio", correlation_id="c",
+    )
+    assert criados == []

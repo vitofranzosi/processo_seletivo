@@ -136,3 +136,37 @@ def test_a_cascata_tambem_nomeia_a_etapa(
     assert any(
         "Análise documental" in r.reason and "saída da comissão" in r.reason for r in remocoes
     )
+
+
+def test_o_filtro_por_pessoa_e_exato_e_nao_por_pedaco_do_motivo(
+    gestor, auditor, processo_a, edital_a, etapa_a1
+):
+    """Filtrar “ana” trazia os atos de “susana.lima” — numa trilha isso é pior que não filtrar."""
+    from processo_seletivo.comissoes.application.comissao import adicionar_varios
+
+    adicionar_varios(
+        actor=gestor,
+        processo_id=processo_a.id,
+        entradas=[("ana", "Ana Costa"), ("susana.lima", "Susana Lima")],
+        funcao="PRESIDENTE",
+        idempotency_key="filtro-exato",
+        correlation_id="c",
+    )
+
+    registros, _ = trilha_da_comissao(
+        actor=auditor, processo=processo_a, pessoa="ana", limit=100
+    )
+
+    assert registros
+    assert all("susana" not in r.reason for r in registros)
+    assert all("ana incluído" in r.reason for r in registros)
+
+
+def test_filtrar_por_quem_nao_integra_a_comissao_devolve_vazio(
+    gestor, auditor, processo_a, comissao_de_a
+):
+    registros, _ = trilha_da_comissao(
+        actor=auditor, processo=processo_a, pessoa="ninguem", limit=100
+    )
+
+    assert registros == []

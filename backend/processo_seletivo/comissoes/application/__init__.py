@@ -72,9 +72,19 @@ class Contexto:
 
     @property
     def repetido(self):
-        """Se esta chave já produziu resultado: a repetição devolve o original."""
-        return self.reserva.result_id is not None
+        """Se esta chave já foi concluída: a repetição devolve o desfecho original.
+
+        O critério é o **status**, e não o resultado: um lote em que tudo já existia conclui sem
+        criar objeto nenhum, e checar `result_id` faria a repetição refazer consulta e laço
+        inteiros para chegar ao mesmo nada.
+        """
+        return self.reserva.response_status is not None
 
     def concluir(self, resultado, status):
         finalizar_idempotencia(self.reserva, resultado, status)
         return resultado, status
+
+    def concluir_sem_resultado(self, status):
+        """Fecha a reserva de um lote que não criou nada — o desfecho existe, o objeto não."""
+        self.reserva.response_status = status
+        self.reserva.save(update_fields=["response_status"])

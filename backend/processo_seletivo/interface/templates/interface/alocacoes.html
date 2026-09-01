@@ -149,8 +149,11 @@
                   aria-label="Alocar as pessoas marcadas na Etapa {{ etapa.nome }}">
             Alocar selecionados</button>
           {% comment %} Um segundo botão, e não um "marcar todos" em JavaScript: o caso mais comum
-             numa etapa documental é toda a banca entrar, e ele resolve isso sem script. {% endcomment %}
-          <button type="submit" name="acao" value="incluir_todos" class="acao"
+             numa etapa documental é toda a banca entrar, e ele resolve isso sem script. O nome é
+             próprio — `todos` — e não um segundo `acao`: duas chaves iguais no mesmo envio só
+             funcionavam porque o último vence, e reordenar o markup mudaria o comportamento em
+             silêncio. {% endcomment %}
+          <button type="submit" name="todos" value="1" class="acao"
                   aria-label="Alocar toda a comissão disponível na Etapa {{ etapa.nome }}">
             Alocar {{ etapa.alocaveis|length }} disponíve{{ etapa.alocaveis|length|pluralize:"l,is" }}</button>
         </p>

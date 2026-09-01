@@ -93,3 +93,49 @@ def test_remocao_em_lote_de_alocacao_alheia_e_recusada(
         )
 
     assert recusa.value.status == 404
+
+
+def test_id_que_nao_e_do_processo_recusa_o_lote_inteiro(
+    gestor, processo_a, edital_a, edital_b, comissao_de_a, etapa_a1, etapa_b1
+):
+    """Remover quatro de cinco e responder sucesso deixa a quinta pessoa com acesso."""
+    import uuid
+
+    from processo_seletivo.comissoes.application.alocacao import remover_varias_alocacoes
+    from processo_seletivo.comissoes.models import AlocacaoEtapa
+    from processo_seletivo.shared.api.problems import DomainError
+
+    valida = alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
+
+    with pytest.raises(DomainError) as recusa:
+        remover_varias_alocacoes(
+            actor=gestor,
+            processo_id=processo_a.id,
+            alocacao_ids=[valida.id, uuid.uuid4()],
+            idempotency_key="lote-com-id-alheio",
+            correlation_id="c",
+        )
+
+    assert recusa.value.status == 404
+    valida.refresh_from_db()
+    assert valida.ativo is True
+    assert AlocacaoEtapa.objects.filter(ativo=True).count() == 1
+
+
+def test_remover_a_mesma_alocacao_duas_vezes_no_lote_nao_e_conflito(
+    gestor, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    """Repetir um id na seleção é engano de quem marcou, e o conjunto é o que importa."""
+    from processo_seletivo.comissoes.application.alocacao import remover_varias_alocacoes
+
+    alocacao = alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
+
+    removidas = remover_varias_alocacoes(
+        actor=gestor,
+        processo_id=processo_a.id,
+        alocacao_ids=[alocacao.id, alocacao.id],
+        idempotency_key="lote-repetido",
+        correlation_id="c",
+    )
+
+    assert len(removidas) == 1

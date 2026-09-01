@@ -71,3 +71,29 @@ def etapa_vigente(edital, etapa_id, *, at=None):
 
 def _uuid(valor):
     return valor if isinstance(valor, UUID) else UUID(str(valor))
+
+
+def nomes_das_etapas(alocacoes, *, at=None):
+    """`{(edital_id, etapa_id): nome}` para um conjunto de alocações, uma leitura por Edital.
+
+    Resolver o nome dentro do laço custava uma leitura da Versão Consolidada **por alocação** —
+    o mesmo N+1 que a leitura das telas já não faz. Numa remoção em lote de quarenta pessoas
+    eram quarenta leituras da mesma versão, dentro da transação que segura o Processo.
+
+    Alocação órfã não tem nome no conteúdo vigente: ela fica de fora do mapa, e quem chama
+    resolve com o identificador.
+    """
+    nomes = {}
+    for edital in {a.edital for a in alocacoes}:
+        try:
+            vigentes = etapas_vigentes(edital, at=at)
+        except DomainError:
+            continue
+        for etapa_id, dados in vigentes.items():
+            nomes[(edital.id, etapa_id)] = dados.get("name") or str(etapa_id)
+    return nomes
+
+
+def nome_da_etapa(alocacao, nomes):
+    """O nome resolvido, ou o identificador quando a Etapa saiu do conteúdo vigente."""
+    return nomes.get((alocacao.edital_id, alocacao.etapa_id)) or str(alocacao.etapa_id)
