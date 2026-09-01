@@ -199,6 +199,21 @@ fieldset.caracter legend{font-size:.85rem;color:var(--texto-fraco);padding:0;
 .trilha a{color:var(--verde-texto)}
 .sucesso{background:var(--sucesso-fundo);border-left:4px solid var(--sucesso);
   padding:.75rem 1rem;margin-bottom:1.5rem;border-radius:0 4px 4px 0;color:var(--sucesso);font-weight:600}
+/* A organização do trabalho (011). `.etapas` já existia e é o indicador de passos do
+   compositor — uma fileira horizontal de pontos —, e reusá-la aqui empilhava as Etapas em
+   colunas e cortava o rótulo "Sem membros alocados" em 375px. */
+.organizacao-etapas,.comissao,.atribuicoes{list-style:none;padding:0;margin:0}
+.organizacao-etapas>li,.comissao>li{background:var(--branco);border:1px solid var(--borda);
+  border-radius:6px;padding:1rem 1.25rem;margin-bottom:.75rem}
+.organizacao-etapas .cabeca,.comissao .cabeca{display:flex;gap:.5rem;align-items:center;
+  flex-wrap:wrap;margin-bottom:.5rem}
+.atribuicoes li{padding:.35rem 0;border-bottom:1px solid var(--fundo);font-size:.9375rem}
+.atribuicoes li:last-child{border-bottom:0}
+.linha-de-acoes{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin:.5rem 0 0}
+.linha-de-acoes .campo{margin:0}
+.atua{font-size:.875rem;color:var(--texto-fraco);margin:.5rem 0 .25rem}
+.adicionar{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem;margin-top:1.5rem}
 .pendencias{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1rem 1.25rem;margin-bottom:1.5rem}
 .pendencias h2{font-size:1rem;margin-bottom:.6rem}

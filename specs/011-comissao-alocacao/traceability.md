@@ -61,9 +61,29 @@ declará-los aqui evita que voltem como achado numa próxima análise.
 | **FR-063** | Proíbe fundir os dois eixos por coincidência de CPF ou e-mail. Nada no código funde; `tests/authorization/test_eixos_de_identidade.py` cobre a consequência observável. |
 | **FR-080** | Notificação está fora de escopo. A 011 registra a atribuição, e isso é o que os testes de auditoria prendem. |
 
-## O que continua pendente de verificação humana
+## O percurso manual — T075/T082, executado em 2026-09-01
 
-**T075** — o percurso manual do [checklist-ux.md](./checklist-ux.md) nas quatro telas: teclado do
-início ao fim, leitor de tela nos anúncios de sucesso e recusa, e 375 px em aparelho real. A suíte
-prende marcação nativa, rótulo associado, contraste da paleta e ausência de largura fixa; o resto
-depende de alguém percorrer. **Não foi feito nesta entrega.**
+Percorrido no navegador, com o servidor de desenvolvimento e o banco semeado, em viewport de
+375×812.
+
+| Item | Resultado |
+|---|---|
+| Ordem de foco na Comissão | Segue a ordem visual: salto → Minhas Etapas → Sair → trilha → Alocação → campos → Continuar |
+| Envio pelo teclado | Constituir membro do começo ao fim sem mouse, incluindo a etapa de conferência |
+| 375 px, quatro telas | Sem rolagem horizontal em nenhuma delas |
+| Conteúdo cortado | Nenhum, depois da correção abaixo |
+| Estado "sem membros" sem depender de cor | O rótulo é texto e permanece legível em escala de cinza |
+| Fronteira da 012 na página da atribuição | Único controle da página é "Sair" |
+| Orientação de quem entra sem papel | Aparece onde a pessoa chega, e não a uma tela de distância |
+
+**Um defeito foi encontrado aqui e em nenhum teste automatizado.** A lista de Etapas da tela de
+Alocação reusava a classe `.etapas`, que é o indicador de passos do compositor — uma fileira
+horizontal. Em 375 px isso punha as Etapas lado a lado em duas colunas e **cortava** o rótulo "Sem
+membros alocados" pela metade. Não havia rolagem horizontal, então a letra do `FR-078` estava
+satisfeita e o defeito passava. A classe passou a ser `.organizacao-etapas`, com estilo próprio.
+
+### O que continua fora do alcance desta verificação
+
+**Leitor de tela.** Os anúncios de sucesso e de recusa usam `role="status"` e `role="alert"`, e a
+marcação foi conferida; o que não foi conferido é o **anúncio de fato** em VoiceOver ou NVDA. Isso
+exige uma pessoa com o leitor ligado, e continua pendente.

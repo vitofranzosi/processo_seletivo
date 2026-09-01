@@ -107,3 +107,49 @@ def _chave(corpo):
     achado = re.search(r'name="chave_idempotencia" value="([^"]+)"', corpo)
     assert achado, corpo[:400]
     return achado.group(1)
+
+
+def test_alteracao_bem_sucedida_produz_aviso_perceptivel(client, seletor_ligado, processo_a):
+    """UX-006: sem o sinal, a única evidência de que deu certo é a lista ter mudado."""
+    identificar(client, "carlos", ["gestor"])
+    primeiro = client.post(
+        url(processo_a),
+        {"acao": "incluir", "identity_subject": "joao.silva", "funcao": "MEMBRO"},
+    )
+    chave = _chave(primeiro.content.decode())
+
+    resposta = client.post(
+        url(processo_a),
+        {
+            "acao": "incluir",
+            "confirmado": "1",
+            "identity_subject": "joao.silva",
+            "funcao": "MEMBRO",
+            "chave_idempotencia": chave,
+        },
+        follow=True,
+    )
+
+    corpo = resposta.content.decode()
+    assert "Membro incluído na comissão" in corpo
+    assert 'role="status"' in corpo
+
+
+def test_alocacao_bem_sucedida_produz_aviso_perceptivel(
+    client, seletor_ligado, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    identificar(client, "carlos", ["gestor"])
+
+    resposta = client.post(
+        reverse("interface:alocacoes", args=[processo_a.id]),
+        {
+            "acao": "incluir",
+            "membro_id": str(comissao_de_a["joao"].id),
+            "edital_id": str(edital_a.id),
+            "etapa_id": etapa_a1,
+            "chave_idempotencia": "interface-aloca-sucesso-0001",
+        },
+        follow=True,
+    )
+
+    assert "Alocação registrada" in resposta.content.decode()

@@ -14,6 +14,8 @@
   distintos.</p>
 
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
+{% if request.GET.feito == "incluir" %}<p class="sucesso" role="status">Alocação registrada.</p>{% endif %}
+{% if request.GET.feito == "remover" %}<p class="sucesso" role="status">Alocação removida.</p>{% endif %}
 
 <p class="acoes-do-painel">
   <a class="acao" href="{% url 'interface:comissao' processo.id %}">Comissão</a>
@@ -66,7 +68,7 @@
   <p class="vazio" role="status"><strong>Este Edital não declara Etapas de Avaliação.</strong>
     Não há trabalho a distribuir aqui.</p>
   {% else %}
-  <ul class="etapas" aria-label="Etapas do Edital {{ grupo.edital.number }}/{{ grupo.edital.year }}">
+  <ul class="organizacao-etapas" aria-label="Etapas do Edital {{ grupo.edital.number }}/{{ grupo.edital.year }}">
     {% for etapa in grupo.etapas %}
     <li>
       <div class="cabeca">

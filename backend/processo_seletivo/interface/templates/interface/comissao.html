@@ -11,6 +11,9 @@
 <p class="sub">{{ processo.title }} — <span class="codigo">{{ processo.institutional_code }}</span></p>
 
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
+{% if request.GET.feito == "incluir" %}<p class="sucesso" role="status">Membro incluído na comissão.</p>{% endif %}
+{% if request.GET.feito == "alterar_funcao" %}<p class="sucesso" role="status">Função alterada.</p>{% endif %}
+{% if request.GET.feito == "remover" %}<p class="sucesso" role="status">Membro removido da comissão.</p>{% endif %}
 
 <p class="acoes-do-painel">
   <a class="acao" href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a>

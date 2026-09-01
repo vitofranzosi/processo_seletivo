@@ -219,7 +219,7 @@ identificar a lacuna sem abrir membro nenhum.
 - [X] T073 [P] Teste de concorrência em `backend/tests/integration/comissoes/test_concorrencia.py`, marcado `postgresql_only`, no padrão de `test_finalizacao_concorrente.py` — **dois** presidentes e alocação ativa; remover ou rebaixar os dois concorrentemente, e exatamente uma das operações vence: a comissão nunca fica com zero presidentes (`SC-019`)
 - [X] T073a Teste da reavaliação de autorização em `backend/tests/integration/comissoes/test_concorrencia.py` — um presidente rebaixado concorrentemente não conclui a alteração que começou, porque a base é reavaliada depois do bloqueio (D-016)
 - [X] T074 [P] Teste de acessibilidade das quatro telas em `backend/tests/interface/test_acessibilidade.py`, no padrão existente
-- [ ] T075 Percorrer o [checklist-ux.md](./checklist-ux.md) em `interface/templates/interface/{comissao,alocacoes,minhas_etapas,atribuicao}.html`, incluindo teclado e 375 px (`FR-078`)
+- [X] T075 Percorrer o [checklist-ux.md](./checklist-ux.md) em `interface/templates/interface/{comissao,alocacoes,minhas_etapas,atribuicao}.html`, incluindo teclado e 375 px (`FR-078`)
 - [X] T076 [P] Conferir que nenhuma tela da feature consulta `inscricoes` nem exibe dado de candidato, em `backend/tests/interface/test_fronteira_012.py`
 - [X] T076a Conferir em `backend/tests/interface/test_fronteira_012.py` que os cinco comandos não alteram `Inscricao` — contagem, `revision` e `status` inalterados depois de constituir, alocar e remover (`FR-082`)
 - [X] T077 [P] Conferir que nenhuma migration da 011 toca `editais`, `publicacoes` ou `auditoria`, em `backend/tests/migrations/test_migrations.py` (`FR-083`, `SC-018`)
@@ -303,3 +303,16 @@ Cada entrega termina navegável no `interface`, como o princípio VI exige.
 - Nenhuma tarefa referencia `EtapaAvaliacao`. A leitura de Etapa é sempre `etapas_vigentes()`.
 - `comissao:presidir` é rótulo de trilha e não pode aparecer em `PAPEIS` — T004 existe para prender
   isso.
+
+---
+
+## Phase 10: Convergence
+
+Apurado pelo `$speckit-converge` contra o código em `ebe57be`. Três lacunas, nenhuma delas
+CRITICAL.
+
+- [X] T079 Orientar em `interface/templates/interface/minhas_etapas.html` quem se identificou sem papel sistêmico e não possui alocação — o aviso que a 002 exige e que hoje só existe em `lista.html`, mantendo intacto o acesso contextual de quem tem alocação e nenhum papel per spec §45 e 002/FR-028 (contradicts)
+- [X] T080 Fazer o teste de `backend/tests/interface/test_lista.py` seguir o redirecionamento e verificar a página efetivamente apresentada, em vez de abrir a lista depois do POST per spec §45 (contradicts)
+- [X] T081 Sinalizar alteração concluída nas telas de Comissão e Alocação em `interface/templates/interface/comissao.html` e `alocacoes.html`, no padrão `<p class="sucesso" role="status">` já usado por `compor_base.html` e `detalhe.html`, com teste em `backend/tests/interface/test_comissao.py` per UX-006 (partial)
+- [X] T082 Executar e registrar o percurso manual do [checklist-ux.md](./checklist-ux.md) nas quatro telas — teclado ponta a ponta, leitor de tela nos anúncios de sucesso e recusa, e 375 px — atualizando `traceability.md` com o resultado per SC-UX-005, SC-UX-006 e T075 (missing)
+

@@ -1746,7 +1746,9 @@ def comissao(request, processo_id):
                     idempotency_key=chave,
                     correlation_id=getattr(request, "correlation_id", ""),
                 )
-            return redirect(reverse("interface:comissao", args=[processo.id]))
+            return redirect(
+                f"{reverse('interface:comissao', args=[processo.id])}?feito={acao}"
+            )
         except DomainError as recusa:
             if recusa.status == 404:
                 raise Http404 from recusa
@@ -1799,7 +1801,9 @@ def alocacoes(request, processo_id):
                     idempotency_key=chave,
                     correlation_id=getattr(request, "correlation_id", ""),
                 )
-            return redirect(reverse("interface:alocacoes", args=[processo.id]))
+            return redirect(
+                f"{reverse('interface:alocacoes', args=[processo.id])}?feito={acao}"
+            )
         except DomainError as recusa:
             if recusa.status == 404:
                 raise Http404 from recusa
@@ -1830,10 +1834,18 @@ def minhas_etapas(request):
     ator = identidade.ator_da_sessao(request)
     if ator is None:
         return redirect(reverse("interface:identificar"))
+    atribuicoes = comissao_selectors.minhas_etapas(ator)
     return render(
         request,
         "interface/minhas_etapas.html",
-        {"atribuicoes": comissao_selectors.minhas_etapas(ator)},
+        {
+            "atribuicoes": atribuicoes,
+            # Quem entra sem papel sistêmico cai aqui, e a área vazia sozinha não diz o que
+            # fazer. A orientação da 002 existia só na lista de Processos, que essa pessoa não
+            # tem motivo para abrir — então ela precisa estar no fim da jornada, e não ao lado
+            # dela (FR-028 da 002).
+            "sem_papel_nem_atribuicao": not atribuicoes and not ator.permissions,
+        },
     )
 
 

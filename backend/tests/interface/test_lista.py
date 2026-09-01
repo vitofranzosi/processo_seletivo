@@ -112,13 +112,17 @@ def test_pessoa_sem_papel_recebe_orientacao_e_nao_area_vazia(client, seletor_lig
     dada onde ela sempre esteve escrita.
     """
     resposta = client.post(
-        reverse("interface:identificar"), {"subject": "servidor.novo", "papeis": []}
+        reverse("interface:identificar"),
+        {"subject": "servidor.novo", "papeis": []},
+        follow=True,
     )
-    assert resposta.status_code == 302
 
-    corpo = client.get(reverse("interface:lista")).content.decode()
-    assert "Sem permissões" in corpo
-    assert "Solicite acesso" in corpo
+    assert resposta.status_code == 200
+    corpo = resposta.content.decode()
+    # A orientação precisa estar **onde a pessoa chega**, e não numa tela que ela não tem motivo
+    # para abrir: seguir o redirecionamento é o que torna este teste sobre a jornada.
+    assert "não possui papel de responsabilidade nem atribuição" in corpo
+    assert "solicite acesso" in corpo.lower()
 
 
 @pytest.mark.django_db

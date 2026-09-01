@@ -25,5 +25,14 @@
 {% comment %} §26 da spec: estado válido, e não erro. Quem não tem atribuição não vê Etapa alheia
    bloqueada — ela simplesmente não pertence a esta área. {% endcomment %}
 <p class="vazio" role="status">Você não possui Etapas atribuídas no momento.</p>
+{% if sem_papel_nem_atribuicao %}
+{% comment %} FR-028 da 002: sem papel reconhecido, orientar a quem pedir acesso. Quem entra sem
+   papel nenhum termina aqui, e não na lista de Processos — então é aqui que a orientação precisa
+   estar, e não a uma tela de distância. {% endcomment %}
+<p class="aviso"><strong>Sua conta não possui papel de responsabilidade nem atribuição.</strong>
+  Se você deveria integrar a comissão de um Processo Seletivo, peça a quem o conduz que o
+  registre. Se precisa elaborar, homologar ou publicar Editais, solicite acesso a quem administra
+  o sistema no Cefor.</p>
+{% endif %}
 {% endif %}
 {% endblock %}
