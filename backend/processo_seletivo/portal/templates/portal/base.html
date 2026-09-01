@@ -54,8 +54,27 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .selecao{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1rem;display:grid;gap:.35rem}
 .selecao{position:relative}
-.selecao a.titulo{font-weight:600;font-size:1.05rem;text-decoration:none}
+.selecao a.titulo{font-weight:600;font-size:1.05rem;text-decoration:none;line-height:1.35}
 .selecao a.titulo:hover{text-decoration:underline}
+/* O cartão da vitrine passou a carregar o que decide clicar: vaga, quantidade, prazo e urgência.
+   Cada linha tem peso próprio — o título domina, a chamada explica, a meta some no cinza. */
+.secao-vitrine{margin:1.75rem 0 .75rem;font-size:1rem;color:var(--texto-fraco);
+  text-transform:uppercase;letter-spacing:.05em}
+.selecao .chamada{margin:0;font-size:.9375rem;line-height:1.4}
+.selecao .vagas{margin:.35rem 0 0;font-size:.9375rem;display:grid;gap:.1rem}
+.selecao .vagas .rotulo{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--texto-fraco)}
+.selecao .vagas .quantas{color:var(--texto-fraco)}
+/* Urgência é informação, não enfeite: uma data sozinha não diz se dá tempo. */
+.situacao .prazo{display:inline-block;margin-left:.35rem;padding:.05rem .45rem;border-radius:999px;
+  background:var(--verde-claro);color:var(--verde-escuro);font-size:.8125rem}
+.situacao .prazo.urgente{background:var(--amarelo-fundo);color:var(--amarelo)}
+/* Parece botão e não é: o alvo continua sendo o link do título, estendido a todo o cartão. Um
+   segundo elemento clicável aqui daria dois destinos ao teclado para uma decisão só. */
+.convite-da-vitrine{margin:.6rem 0 0}
+.acao-aparente{display:inline-block;padding:.5rem .9rem;border-radius:4px;background:var(--verde);
+  color:var(--branco);font-weight:600;font-size:.9375rem}
+.selecao:hover .acao-aparente{background:var(--verde-escuro)}
 /* O cartão inteiro é alvo do toque (L8): num celular, mirar duas palavras de título é o tipo de
    precisão que faz errar. O link continua sendo um só — o pseudo-elemento estende a área dele, e
    por isso o teclado e o leitor de tela continuam vendo exatamente um destino. */

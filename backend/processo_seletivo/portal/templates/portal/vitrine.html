@@ -2,21 +2,29 @@
 {% block titulo %}Seleções abertas{% endblock %}
 {% block conteudo %}
 <h1>Processos seletivos</h1>
-<p class="sub">Seleções publicadas pelo Cefor/Ifes. Escolha uma para ver os perfis, os requisitos e
-o Edital completo.</p>
+<p class="sub">Seleções publicadas pelo Cefor/Ifes. Cada uma abre a lista de vagas, os requisitos e
+  o Edital completo.</p>
 
-{% if selecoes %}
+{% comment %}
+Abertas em seção própria, e primeiro. Quem chega aqui quer saber onde ainda dá para se inscrever —
+misturar o que já fechou com o que está aberto obriga a ler tudo para descobrir o que interessa.
+{% endcomment %}
+{% if abertas %}
+<h2 class="secao-vitrine">Inscrições abertas</h2>
 <ul class="selecoes">
-  {% for selecao in selecoes %}
-  <li class="selecao">
-    <a class="titulo" href="{% url 'portal:selecao' selecao.edital_id %}">{{ selecao.processo_titulo }}</a>
-    <p class="meta">{{ selecao.processo_codigo }} · Edital {{ selecao.numero }}/{{ selecao.ano }}</p>
-    <p class="meta">Unidade: {{ selecao.unidade }}</p>
-    {% include "portal/_periodo.html" with periodo=selecao.periodo %}
-  </li>
-  {% endfor %}
+  {% for selecao in abertas %}{% include "portal/_cartao_da_selecao.html" %}{% endfor %}
 </ul>
-{% else %}
-<p class="vazio">Nenhuma seleção publicada no momento.</p>
+{% endif %}
+
+{% if outras %}
+<h2 class="secao-vitrine">{% if abertas %}Outras seleções publicadas{% else %}Seleções publicadas{% endif %}</h2>
+<ul class="selecoes">
+  {% for selecao in outras %}{% include "portal/_cartao_da_selecao.html" %}{% endfor %}
+</ul>
+{% endif %}
+
+{% if not selecoes %}
+<p class="vazio">Nenhuma seleção publicada no momento. Quando houver, ela aparece aqui — não é
+  preciso se cadastrar para acompanhar.</p>
 {% endif %}
 {% endblock %}

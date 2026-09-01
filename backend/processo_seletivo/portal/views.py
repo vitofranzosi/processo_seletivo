@@ -151,9 +151,64 @@ def _documentos_anunciados(conteudo, perfil):
 
 
 def vitrine(request):
-    """As seleções que estão publicadas, sem nada de gestão e sem pedir identificação."""
-    selecoes = [_selecao(versao) for versao in selectors.selecoes_publicas()]
-    return render(request, "portal/vitrine.html", {"selecoes": selecoes})
+    """As seleções que estão publicadas, sem nada de gestão e sem pedir identificação.
+
+    O cartão diz o que decide entrar ou não entrar: para qual vaga, quantas, até quando e quanto
+    tempo resta. Antes dizia o nome do processo e a data-limite, e descobrir se havia vaga para si
+    custava abrir a página — o que quem procura emprego faz uma vez, não dez.
+
+    Abertas primeiro, e entre elas a que fecha antes: a ordem da página é a ordem da urgência de
+    quem lê, e não a de criação de quem publicou.
+    """
+    agora = timezone.now()
+    selecoes = [_selecao_da_vitrine(versao, agora) for versao in selectors.selecoes_publicas()]
+    ordem = {"aberto": 0, "futuro": 1}
+    selecoes.sort(
+        key=lambda item: (
+            ordem.get(item["periodo"].estado, 2),
+            item["periodo"].fim or item["periodo"].inicio or agora,
+        )
+    )
+    return render(
+        request,
+        "portal/vitrine.html",
+        {
+            "selecoes": selecoes,
+            "abertas": [s for s in selecoes if s["periodo"].estado == "aberto"],
+            "outras": [s for s in selecoes if s["periodo"].estado != "aberto"],
+        },
+    )
+
+
+def _selecao_da_vitrine(versao, agora):
+    """O cartão da vitrine: o da página da seleção, mais o que decide clicar.
+
+    Perfis e vagas vêm do conteúdo publicado, e não de uma contagem própria: é o mesmo número que
+    a página da seleção mostra, lido do mesmo lugar.
+    """
+    dados = _selecao(versao)
+    perfis = versao.content.get("profiles") or []
+    periodo = dados["periodo"]
+    return {
+        **dados,
+        "perfis": [perfil.get("name", "") for perfil in perfis if perfil.get("name")],
+        "vagas": sum(perfil.get("immediateVacancies") or 0 for perfil in perfis),
+        "tem_reserva": any(
+            (perfil.get("reserveType") or "NONE") != "NONE" for perfil in perfis
+        ),
+        "dias_restantes": _dias_ate(periodo.fim, agora) if periodo.estado == "aberto" else None,
+    }
+
+
+def _dias_ate(quando, agora):
+    """Quantos dias faltam, arredondado para baixo — `None` quando não há prazo declarado.
+
+    Arredondado para baixo porque a pessoa precisa saber de quanto tempo **dispõe**, e dizer
+    "faltam 3 dias" para 2 dias e 20 horas empurraria alguém a deixar para depois do prazo.
+    """
+    if quando is None:
+        return None
+    return max((quando - agora).days, 0)
 
 
 def _destino_seguro(request, padrao):
@@ -189,6 +244,13 @@ def selecao(request, edital_id):
     # Consultável e recebendo inscrição são decisões diferentes: um Edital cancelado continua
     # legível — o ato publicado não se apaga — e não convida ninguém a se inscrever no que não
     # existe mais.
+    # A urgência também aqui, e não só na vitrine: é nesta página que a pessoa decide se começa
+    # agora ou depois, e "faltam 3 dias" decide isso melhor do que uma data.
+    contexto["dias_restantes"] = (
+        _dias_ate(contexto["periodo"].fim, timezone.now())
+        if contexto["periodo"].estado == "aberto"
+        else None
+    )
     contexto["recebe_inscricoes"] = recebe_inscricoes(
         status=versao.edital.status, conteudo=versao.content, agora=timezone.now()
     )

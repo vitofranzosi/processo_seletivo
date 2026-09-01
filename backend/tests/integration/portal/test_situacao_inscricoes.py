@@ -38,8 +38,10 @@ def test_inscricoes_abertas_dizem_ate_quando(client, api_client, manager_headers
     )
 
     for endereco in (reverse("portal:vitrine"), reverse("portal:selecao", args=[edital.id])):
-        corpo = client.get(endereco).content.decode()
-        assert "Inscrições abertas até" in corpo, endereco
+        texto = " ".join(client.get(endereco).content.decode().split())
+        assert "Inscrições abertas desde" in texto, endereco
+        assert "até" in texto, endereco
+        assert "Faltam 9 dias." in texto, "uma data sozinha não diz se dá tempo"
 
 
 @pytest.mark.django_db(transaction=True)

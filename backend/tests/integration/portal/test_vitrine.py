@@ -71,3 +71,58 @@ def test_a_vitrine_e_cacheavel(client, api_client, manager_headers, process_payl
     resposta = client.get(reverse("portal:vitrine"))
 
     assert "no-store" not in resposta.headers.get("Cache-Control", "")
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_cartao_diz_para_qual_vaga_e_quantas(
+    client, api_client, manager_headers, process_payload
+):
+    """"Existe uma seleção" e "existe uma seleção para mim" são coisas diferentes.
+
+    Descobrir se havia vaga para si custava abrir a página — o que quem procura emprego faz uma
+    vez, não dez.
+    """
+    _publicar_aberta(api_client, manager_headers, process_payload)
+
+    texto = " ".join(client.get(reverse("portal:vitrine")).content.decode().split())
+
+    assert "Professor de Informática" in texto
+    assert "Técnico de Laboratório" in texto
+    assert "vagas imediatas" in texto
+    assert "cadastro reserva" in texto
+    assert "Ver vagas e inscrever-se" in texto, "o cartão convida, em vez de esperar adivinhação"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_as_abertas_vem_primeiro_e_em_secao_propria(
+    client, api_client, manager_headers, process_payload
+):
+    """Quem chega quer saber onde ainda dá para se inscrever.
+
+    Misturar o que fechou com o que está aberto obriga a ler tudo para descobrir o que interessa.
+    """
+    _publicar_aberta(api_client, manager_headers, process_payload)
+
+    texto = " ".join(client.get(reverse("portal:vitrine")).content.decode().split())
+
+    assert "Inscrições abertas" in texto
+    assert texto.index("Inscrições abertas") < texto.index('class="selecoes"'), (
+        "a seção nomeia o que vem depois dela"
+    )
+
+
+def _publicar_aberta(api_client, manager_headers, process_payload):
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from tests.fixtures.selecao import rascunho_aberto_com_documentos
+
+    return publicar_selecao(
+        api_client,
+        manager_headers,
+        process_payload,
+        rascunho=rascunho_aberto_com_documentos(timezone.now() - timedelta(seconds=1)),
+    )

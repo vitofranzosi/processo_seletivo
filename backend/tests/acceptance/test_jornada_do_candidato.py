@@ -37,7 +37,7 @@ def test_do_edital_publicado_ate_a_equipe_abrir_os_documentos(client, selecao, s
     assert "Processo Seletivo 2026" in vitrine
 
     detalhe = client.get(reverse("portal:selecao", args=[selecao.id])).content.decode()
-    assert "Inscrições abertas até" in detalhe
+    assert "Inscrições abertas" in detalhe and "até" in detalhe
     assert "Inscrever-se nesta vaga" in detalhe
 
     # 2. Aciona o convite da vaga e é levada a identificar-se — voltando para a mesma vaga.

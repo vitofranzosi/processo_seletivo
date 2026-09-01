@@ -366,6 +366,45 @@ impressão, desmarque Cabeçalhos e rodapés*).
 Travado por `test_o_comprovante_permite_verificar_cada_arquivo`,
 `test_o_comprovante_cabe_em_uma_pagina` e `test_quem_confere_ve_tamanho_e_resumo_de_cada_arquivo`.
 
+### D10 — A vitrine não dizia se havia vaga para quem estava lendo (média)
+
+Comparada com o que o Cefor publica hoje no site institucional, a vitrine dizia menos do que a
+página que ela substitui. O cartão trazia o nome do processo, o código, a unidade e a data-limite —
+e mais nada. Para descobrir **se havia vaga para si**, a pessoa tinha de abrir a seleção. Quem
+procura emprego faz isso uma vez, não dez.
+
+Faltavam quatro coisas, e a referência real tem todas: o **título do Edital** (que é onde o cargo
+aparece), **quais vagas** e **quantas**, o **período inteiro** — só o fim era exibido, e "até
+20/09" não diz se já começou — e alguma noção de **urgência**.
+
+**Corrigido.** O cartão passou a trazer:
+
+- o título do Edital abaixo do nome do processo — *"Edital 01/2026 — Professor Substituto e
+  Técnico-Administrativo"*;
+- a linha `VAGAS`, com os Perfis e o total: *"Professor de Informática · Técnico de Laboratório —
+  3 vagas imediatas, com cadastro reserva"*;
+- o período completo, com início **e** fim;
+- o prazo restante em destaque — *"Faltam 19 dias."* —, que vira aviso âmbar nos últimos dois dias
+  e *"Último dia"* no fim. Uma data sozinha e um contador são a mesma informação e produzem
+  decisões diferentes;
+- um convite visível, *"Ver vagas e inscrever-se"*, que **parece** botão e não é: o alvo continua
+  sendo o link do título estendido a todo o cartão, porque um segundo elemento clicável daria dois
+  destinos ao teclado para uma decisão só.
+
+As seleções passaram a ser **agrupadas por situação**, abertas primeiro, e ordenadas pela que fecha
+antes: a ordem da página é a da urgência de quem lê, e não a de criação de quem publicou. O prazo
+restante entrou também na página da seleção, que é onde a decisão de começar agora ou depois
+acontece.
+
+**O que não foi feito, e por quê.** A referência agrupa por público (alunos, bolsistas,
+substitutos, tutores) e lista todos os anexos do Edital com formato e tamanho. O primeiro depende
+de uma classificação que o Edital ainda não declara — inventá-la aqui seria decidir taxonomia
+institucional numa tela. O segundo depende da 008, que trata dos anexos: hoje há um PDF só, e ele
+já está na página da seleção.
+
+Travado por `test_o_cartao_diz_para_qual_vaga_e_quantas` e
+`test_as_abertas_vem_primeiro_e_em_secao_propria`.
+
 ## Lacunas e oportunidades, por prioridade
 
 > **Estado em 31/08/2026:** L1 a L10 foram corrigidas e travadas por teste. L11 e L12 continuam

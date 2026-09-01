@@ -1,0 +1,33 @@
+{% comment %}
+O cartão diz o que decide entrar ou não entrar: para qual vaga, quantas, até quando e quanto tempo
+resta. Antes dizia o nome do processo e a data-limite, e descobrir se havia vaga para si custava
+abrir a página — o que quem procura emprego faz uma vez, não dez.
+
+O cartão inteiro é alvo do toque; o link é um só, estendido pelo pseudo-elemento (L8).
+{% endcomment %}
+<li class="selecao">
+  <a class="titulo" href="{% url 'portal:selecao' selecao.edital_id %}">{{ selecao.processo_titulo }}</a>
+  {% if selecao.titulo %}<p class="chamada">{{ selecao.titulo }}</p>{% endif %}
+  <p class="meta">{{ selecao.processo_codigo }} · Edital {{ selecao.numero }}/{{ selecao.ano }}
+    · Unidade: {{ selecao.unidade }}</p>
+
+  {% if selecao.perfis %}
+  {% comment %}
+  Para qual vaga, e quantas. É o que separa "existe uma seleção" de "existe uma seleção para mim".
+  {% endcomment %}
+  <p class="vagas">
+    <span class="rotulo">Vagas</span>
+    {{ selecao.perfis|join:" · " }}
+    <span class="quantas">
+      {% if selecao.vagas %}{{ selecao.vagas }} vaga{{ selecao.vagas|pluralize }} imediata{{ selecao.vagas|pluralize }}{% if selecao.tem_reserva %}, com cadastro reserva{% endif %}
+      {% elif selecao.tem_reserva %}cadastro reserva{% endif %}
+    </span>
+  </p>
+  {% endif %}
+
+  {% include "portal/_periodo.html" with periodo=selecao.periodo dias_restantes=selecao.dias_restantes %}
+
+  {% if selecao.periodo.estado == "aberto" %}
+  <p class="convite-da-vitrine"><span class="acao-aparente">Ver vagas e inscrever-se</span></p>
+  {% endif %}
+</li>
