@@ -81,10 +81,18 @@ elevar_valor(targetPath, valor) -> valor'
   qualquer outro caminho                             -> devolve intacto
 ```
 
-**A segunda forma é o que torna a consolidação consciente dos atos.** Ela é aplicada a cada
-`newValue` no momento em que o ato entra na consolidação, e é **path-aware** de propósito: um
-`REPLACE` de `/stages/id=X/minimumScore` carrega um decimal, não uma Etapa, e elevar um escalar
-seria corrompê-lo.
+**A segunda forma é o que torna a consolidação consciente dos atos.** Ela é **path-aware** de
+propósito, e a classificação é explícita — descobrir "é dict, então é entidade" acertaria hoje e
+falharia em silêncio amanhã, que é exatamente o que `colecoes.py` já recusa fazer:
+
+| caminho | o que `newValue` é | eleva? |
+|---|---|---|
+| `/stages/-` | uma Etapa nova — **é assim que o ADD endereça**, com o token de acréscimo, e não por `id=` | sim |
+| `/stages/id=<uuid>` | uma Etapa inteira, substituída | sim |
+| `/stages` | a coleção inteira, se algum dia for admitida | sim, item a item |
+| `/stages/id=<uuid>/<campo>` | um escalar — decimal, booleano, texto | **não** |
+| qualquer outro caminho | outra coleção do conteúdo | não |
+| `REMOVE`, em qualquer caminho | não há `newValue` | nada a fazer |
 
 Não é preciso etiquetar cada ato com a versão em que nasceu, e essa é a simplificação que sustenta o
 desenho: **a elevação é idempotente**. Entidade que já tem as duas propriedades atravessa a função
@@ -93,10 +101,45 @@ Aplicá-la incondicionalmente a toda base e a todo `newValue` de Etapa produz o 
 uma consolidação etiquetada por versão produziria, sem armazenar versão por ato nem manter uma
 tabela de conversões entre pares de versões.
 
-Os três pontos de aplicação, e nenhum além: `item.base_snapshot.content`,
-`_original_version(...).content` e cada `newValue` que entra em `_acts(...)`. Como `_content_in_force`
-e `_materialize_affected_versions` passam pelos mesmos dois primeiros e pelo terceiro, ficam
-cobertos sem alteração própria.
+### Onde ela é aplicada — e por que "três pontos" era pouco
+
+A primeira redação desta decisão listou três pontos de aplicação, e isso deixava metade do fluxo
+descoberta. O conteúdo e as alterações são lidos em mais lugares do que a consolidação:
+
+- `create_retification` e `edit_retification` usam `base.content` diretamente, em
+  `_apply_declared_changes` e em `_replace_changes` — e é `_replace_changes` que **deriva as
+  precondições** por `derive_preconditions`. Precondição derivada sobre base não elevada é
+  precondição que não vai bater quando a publicação usar a base elevada;
+- `publish_retification` aplica `_changes_payload(item)` **diretamente** sobre
+  `item.base_snapshot.content`, e não pelo caminho de `_acts`;
+- `_content_in_force` e `_materialize_affected_versions` partem de `_original_version(...)`.
+
+**O caso perigoso, e ele não é teórico.** `derive_preconditions` devolve cadeia vazia para `ADD` —
+acréscimo não tem conteúdo anterior a hashear, e a spec da 004 diz isso de propósito. Logo, uma
+Retificação v4 **em voo** com `ADD` de Etapa **não tem precondição que a recuse**. Sem elevar as
+alterações antes de aplicá-las, `publish_retification` produziria conteúdo com Etapa em forma v4 e
+criaria a `Publicacao` carimbando `canonical_schema_version = 5` — um registro afirmando uma versão
+que o conteúdo não tem, que é exatamente o que `_assert_versao_canonica` existe para impedir. E não
+há conferência de forma entre `apply_changes` e a criação da `Publicacao`: quem valida é
+`_materialize_affected_versions`, que roda depois.
+
+**A regra, então, é de fronteira e não de ponto**, e cabe em duas linhas:
+
+> Todo conteúdo lido da persistência passa por `elevar()` antes de qualquer uso.
+> Todo conjunto de alterações — vindo do banco ou da requisição — passa por `elevar_alteracoes()`
+> antes de qualquer uso.
+
+Concretamente, isso alcança as sete fronteiras do fluxo: criar Retificação, editar ou rebasear,
+publicar, gerar o documento da publicação, verificar efeito prático e conflito, reconstruir o
+conteúdo vigente, e materializar as versões futuras reaplicando os atos publicados.
+
+A economia que torna isso viável é que os dois pontos de leitura são poucos e nomeados:
+`_changes_payload` já é o único lugar que carrega alterações do banco — e é chamado tanto por
+`_acts` quanto por `publish_retification` —, e a base sempre chega como `VersaoConsolidada.content`.
+Elevar dentro desses dois é o que faz nenhuma fronteira depender de alguém lembrar. As alterações
+que chegam pela requisição, em criar e editar, passam pela mesma função antes de serem derivadas e
+gravadas: idempotente, é inócua quando o cliente já mandou a forma nova, e fecha a lacuna quando não
+mandou.
 
 As linhas gravadas não mudam: `VersaoConsolidada`, `Publicacao` e `AlteracaoNormativa` continuam
 append-only e com trigger no banco, e a Publicação original permanece byte a byte o que foi
@@ -128,15 +171,28 @@ Ato já publicado, portanto, não é derrubado retroativamente por hash.
 Histórico misto não é hipótese; é o caso normal de qualquer Edital publicado antes do incremento e
 retificado depois. São quatro cenários, e nenhum deles é opcional:
 
-1. Edital v4 **sem** Retificação, retificado pela primeira vez depois do incremento.
-2. Edital v4 **com** Retificação publicada que **acrescentou** Etapa, retificado de novo depois.
-3. Edital v4 com Retificação publicada que **substituiu** Etapa inteira, idem.
-4. Edital v4 com Retificação publicada que substituiu **um campo** de Etapa — o caso que prova que
-   `elevar_valor` não toca escalar.
+**Histórico misto** — Edital publicado antes do incremento e retificado depois:
 
-Em todos: a Versão Consolidada nova nasce na versão vigente e bem formada, e o `content_hash` de
-toda `Publicacao` e de toda `VersaoConsolidada` anterior permanece idêntico ao que era antes do
-deploy.
+1. Edital v4 **sem** Retificação, retificado pela primeira vez depois do incremento.
+2. Edital v4 **com** Retificação publicada que **acrescentou** Etapa por `/stages/-`, retificado de
+   novo depois.
+3. Edital v4 com Retificação publicada que **substituiu** Etapa inteira por `/stages/id=<uuid>`,
+   idem.
+4. Edital v4 com Retificação publicada que substituiu **um campo** de Etapa — o caso que prova que
+   a elevação não toca escalar.
+
+**Retificação atravessando o deploy** — os três que a lista original não tinha, e que cobrem o caso
+sem precondição:
+
+5. Retificação v4 **em elaboração** com `ADD` de Etapa, publicada depois do incremento.
+6. Retificação v4 **homologada** com `ADD` de Etapa, publicada depois do incremento — a que não
+   pode ser reelaborada sem devolver, e por isso a que mais dói se falhar.
+7. Retificação **criada depois** do incremento sobre `baseSnapshot` v4: as precondições nascem
+   sobre base elevada e batem na publicação.
+
+Em todos os sete: a `Publicacao` e a Versão Consolidada nova nascem na versão vigente **e bem
+formadas** — nenhuma Etapa sem as duas propriedades —, e o `content_hash` de toda `Publicacao` e de
+toda `VersaoConsolidada` anterior permanece idêntico ao que era antes do deploy.
 
 **Alternativas recusadas.** Migrar as linhas de `VersaoConsolidada` para v5 — reescreve artefato
 publicado e seu hash, contra a Constituição e contra as triggers de `0007`. Aceitar a
@@ -353,14 +409,16 @@ Nenhum mecanismo novo. Os três que existem, e onde cada um entra:
 |---|---|---|
 | perda de atualização, julgamento conflitante | `compare_and_swap` sobre `revision` | gravar e concluir Avaliação (FR-081, FR-087) |
 | conclusão sobre estado que mudou | a mesma comparação | concluir contra reabertura (FR-082) |
-| duplicidade por reenvio | `reserve()` / `IdempotencyRecord` | lote de distribuição (FR-084) |
-| autorização obsoleta | `comando_de_comissao` da 011 | distribuir, impedir, reabrir (FR-086) |
+| duplicidade por reenvio | `reserve()` / `IdempotencyRecord` | os quatro atos da presidência (FR-084) |
+| autorização obsoleta | `comando_de_comissao` da 011 | distribuir, **remover Atribuição**, impedir, reabrir (FR-086) |
 | dado normativo obsoleto | leitura da versão **dentro** da transação | conclusão (FR-088, FR-096) |
 
-A distribuição, o impedimento e a reabertura são atos de quem gere a comissão, então reutilizam
-`comando_de_comissao` inteiro: transação, `select_for_update` no Processo, reavaliação de
+Os **quatro** atos de quem gere a comissão — distribuir, remover Atribuição, impedir e reabrir —
+reutilizam `comando_de_comissao` inteiro: transação, `select_for_update` no Processo, reavaliação de
 `pode_gerir_comissao` **depois** do bloqueio, recusa de Processo final e reserva de idempotência
-depois de autorizar. Herdar isso é herdar a razão de cada passo, que a 011 documentou.
+depois de autorizar. Herdar isso é herdar a razão de cada passo, que a 011 documentou. A remoção
+entra na lista pelo mesmo motivo dos outros três: ela altera quem tem acesso a quê, e concluí-la sob
+autorização que deixou de existir durante a transação seria retirar trabalho sem poder para tal.
 
 A gravação do avaliador não bloqueia contêiner nenhum: é linha própria, e `compare_and_swap` basta.
 

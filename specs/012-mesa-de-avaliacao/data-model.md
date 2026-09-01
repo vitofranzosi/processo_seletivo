@@ -101,7 +101,8 @@ nenhum além. Não escreve linha, não altera hash gravado, não cria `Provenien
 4. não existe `Impedimento` para `(identity_subject do membro, inscricao)` — FR-040, FR-099.
 5. Atribuições ativas de `(inscricao, edital, etapa_id)` < `avaliacoes_previstas(etapa)` — FR-065, e
    a contagem é de **elegíveis**, não de histórico (FR-090).
-6. não existe `Avaliacao` concluída de `(membro, etapa_id, inscricao)` — FR-074.
+6. não existe `Avaliacao` concluída de `(identity_subject do membro, etapa_id, inscricao)` —
+   FR-074. A identidade é a da **pessoa**, e não a do vínculo, pela razão de T-007.
 
 ---
 

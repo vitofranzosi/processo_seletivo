@@ -72,10 +72,10 @@ reconhecimento explícito da mudança de versão quando houver (FR-073).
 motivo (obrigatório), expected_revision (obrigatório), idempotency_key (obrigatório)
 ```
 
-**`idempotency_key` é obrigatória em todo comando que passa por `comando_de_comissao`** — o lote, a
-remoção, o impedimento e a reabertura —, porque a reserva é parte do invólucro e não um extra da
-rota mais movimentada. Reenviar qualquer um deles devolve o desfecho original, sem ato novo e sem
-evento novo (FR-084, FR-086).
+**`idempotency_key` é obrigatória nos quatro comandos que passam por `comando_de_comissao`** — o
+lote, a remoção, o impedimento e a reabertura —, porque a reserva é parte do invólucro e não um
+extra da rota mais movimentada. Reenviar qualquer um deles devolve o desfecho original, sem ato novo
+e sem evento novo (FR-084, FR-086).
 
 A gravação e a conclusão da Avaliação **não** levam chave de idempotência: são linha própria do
 avaliador, protegidas por `expected_revision`, e reenviar com revisão obsoleta é recusa, não

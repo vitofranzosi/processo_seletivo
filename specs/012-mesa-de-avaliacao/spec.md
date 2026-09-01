@@ -824,9 +824,14 @@ deixou de existir enquanto ele escrevia.
 
 **FR-083** — Reabrir Avaliação que não está concluída é transição inválida, e é recusada.
 
-**FR-084** — A distribuição em lote é idempotente por chave: repetir o mesmo lote — por timeout,
-duplo clique ou reenvio — devolve o desfecho original, sem criar Atribuição nova e **sem gravar
-evento de auditoria novo**. Chave repetida com conteúdo diferente é conflito, e responde como tal.
+**FR-084** — **Os quatro atos da presidência são idempotentes por chave** — distribuir em lote,
+remover Atribuição, registrar impedimento e reabrir. Repetir qualquer um deles — por timeout, duplo
+clique ou reenvio — devolve o desfecho original, sem criar registro novo e **sem gravar evento de
+auditoria novo**. Chave repetida com conteúdo diferente é conflito, e responde como tal.
+
+A gravação e a conclusão da Avaliação ficam de fora, e não por esquecimento: são linha própria do
+avaliador, protegidas pela revisão esperada (FR-081), e ali reenvio com revisão obsoleta é recusa —
+não repetição a ser absorvida.
 
 **FR-097** — O resultado do lote é **declarado, e não inferido**: quantas foram atribuídas, quantas
 recusadas e o motivo de cada recusa, nomeando a linha. Sucesso parcial que não se anuncia vira
@@ -844,10 +849,12 @@ tamanhos:
   Edital, inscrição não submetida — desfaz o lote inteiro e nomeia a causa. Aqui o pedido está
   errado, e distribuir a parte válida dele seria adivinhar a intenção.
 
-**FR-086** — A distribuição segue o mesmo invólucro de comando da 011, e pela mesma razão:
+**FR-086** — **Os mesmos quatro atos** seguem o invólucro de comando da 011, e pela mesma razão:
 bloquear o contêiner, **reavaliar a autorização depois do bloqueio** e reservar a idempotência
 depois de autorizar. Quem perdeu a presidência entre a tela e a gravação não conclui o ato, e a
-repetição não responde a quem já não pode.
+repetição não responde a quem já não pode. Isso vale tanto para distribuir quanto para remover,
+impedir e reabrir — os três últimos alteram quem tem acesso a quê, e nenhum pode ser concluído sob
+autorização que deixou de existir durante a transação.
 
 **FR-087** — Duas conclusões simultâneas da mesma Avaliação: uma vence e a outra é recusada por
 revisão obsoleta. Duas conclusões de avaliadores diferentes sobre a mesma inscrição não competem —

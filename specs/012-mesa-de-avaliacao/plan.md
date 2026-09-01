@@ -194,15 +194,19 @@ sempre morou.
 | Violação | Por que é necessária | Alternativa mais simples rejeitada porque |
 |---|---|---|
 | App novo (`avaliacoes`) | A execução do trabalho tem persistência, comandos e ciclo próprios, e nenhuma relação com o ciclo normativo do Edital | Pôr os modelos em `comissoes` misturaria organizar o trabalho com executá-lo — as duas coisas que a 011 e a 012 existem para manter separadas — e faria a 013 herdar a confusão |
-| Tripla `(membro, etapa, inscrição)` copiada na Avaliação | FR-074 exige garantia de banco para "no máximo uma conclusão por pessoa, inscrição e Etapa", e a condição atravessa uma junção que índice não atravessa | Verificar só no comando deixaria a invariante que protege a 013 de contar duas vezes dependendo de todo caminho futuro lembrar de conferir. A divergência que costuma condenar denormalização é impossível aqui: a quádrupla da Atribuição nunca muda, e a cópia é escrita uma vez e nunca atualizada |
+| Tripla `(identity_subject, etapa, inscrição)` copiada na Avaliação | FR-074 exige garantia de banco para "no máximo uma conclusão por pessoa, inscrição e Etapa", e a condição atravessa uma junção que índice não atravessa | Verificar só no comando deixaria a invariante que protege a 013 de contar duas vezes dependendo de todo caminho futuro lembrar de conferir. Copiar `membro_id` em vez da identidade estável seria pior que não copiar: a garantia cairia justamente no caso de remover e readicionar. A divergência que costuma condenar denormalização é impossível aqui — os três valores são escritos uma vez, na criação, e nunca atualizados |
 
 ## Restrições técnicas desta feature
 
-1. **A elevação nunca escreve, e alcança os atos.** `elevar()` e `elevar_valor()` são funções puras,
-   aplicadas na leitura: o conteúdo-base, o conteúdo em vigor e o `newValue` de cada ato reaplicado.
-   Nenhuma linha de `VersaoConsolidada`, `Publicacao` ou `AlteracaoNormativa` é atualizada, e o
-   caminho de leitura pública continua servindo o conteúdo que o `content_hash` cobre (T-001, T-002).
-   Consolidar Edital com histórico misto v4/v5 é teste obrigatório, não caso de borda.
+1. **A elevação nunca escreve, e a regra é de fronteira, não de ponto.** Todo conteúdo lido da
+   persistência passa por `elevar()`, e todo conjunto de alterações — do banco ou da requisição —
+   passa por `elevar_alteracoes()`, antes de qualquer uso. São sete fronteiras: criar, editar ou
+   rebasear, publicar, gerar o documento, verificar efeito e conflito, reconstruir o conteúdo
+   vigente e materializar. Listar "três pontos", como a primeira redação fez, deixava descoberto o
+   caso sem precondição — `ADD` não tem hash a conferir, e uma Retificação v4 em voo produziria
+   `Publicacao` carimbada v5 com Etapa em forma v4 (T-001). Nenhuma linha de `VersaoConsolidada`,
+   `Publicacao` ou `AlteracaoNormativa` é atualizada, e a leitura pública continua servindo o
+   conteúdo que o `content_hash` cobre. Os sete cenários de T-001 são teste obrigatório.
 2. **A ausência tem um leitor só.** Nenhum consumidor testa presença de chave por conta própria:
    `avaliacoes_previstas()` e `pontuacao_maxima()` são o lugar onde FR-009 e FR-066 vivem.
 3. **A revogação é computada.** Nenhum ato da 011 — alocar, desalocar, remover membro — pode
@@ -211,9 +215,11 @@ sempre morou.
    individual serve rota individual. Um teste exige que as duas nunca divirjam.
 5. **A permissão da 009 não é reutilizada.** Nada em `avaliacoes` chama `inscricao:consultar`, e
    nada em `inscricoes/application/consulta.py` muda.
-6. **Distribuir, impedir e reabrir passam por `comando_de_comissao`.** Bloqueio do Processo,
-   reavaliação da autorização depois do bloqueio, recusa de Processo final e reserva de idempotência
-   depois de autorizar — herdados inteiros, com as razões que a 011 documentou.
+6. **Os quatro atos da presidência passam por `comando_de_comissao`** — distribuir, **remover
+   Atribuição**, impedir e reabrir. Bloqueio do Processo, reavaliação da autorização depois do
+   bloqueio, recusa de Processo final e reserva de idempotência depois de autorizar — herdados
+   inteiros, com as razões que a 011 documentou. `idempotency_key` é obrigatória nos quatro
+   (FR-084, FR-086).
 7. **A conclusão lê a versão dentro da transação que grava**, e a versão validada é a versão
    gravada. Duas leituras seriam uma Avaliação que afirma obedecer a regra contra a qual nunca foi
    verificada.
