@@ -123,7 +123,7 @@ def test_a_confirmacao_de_atribuicao_nao_usa_estilo_de_alerta(
     identificar(client, "joao", [])
 
     corpo = client.get(
-        reverse("interface:atribuicao", args=[edital_a.id, etapa_a1])
+        reverse("interface:minha-etapa", args=[edital_a.id, etapa_a1])
     ).content.decode()
 
     trecho = corpo.split("Você está alocado nesta Etapa")[0][-120:]

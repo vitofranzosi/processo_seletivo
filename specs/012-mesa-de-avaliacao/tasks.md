@@ -57,10 +57,10 @@ morou, e as telas ficam em `interface`.
 
 **Purpose**: o app novo existe, e o vocabulário deixa de colidir.
 
-- [ ] T001 Criar o app em `backend/processo_seletivo/avaliacoes/` com `__init__.py`, `apps.py`, `models.py`, `domain/`, `application/` e `migrations/`
-- [ ] T002 Registrar `processo_seletivo.avaliacoes` em `backend/config/settings/base.py`, com o comentário que diz por que é app próprio e não parte de `comissoes` (T-003)
-- [ ] T003 [P] Criar `backend/tests/unit/avaliacoes/` e `backend/tests/integration/avaliacoes/` com `__init__.py`
-- [ ] T004 [P] Renomear a rota da 011 em `backend/processo_seletivo/interface/urls.py` e `views.py`: `atribuicao` → `minha_etapa`, mantendo o caminho `minhas-etapas/<edital>/<etapa>` intacto, e ajustar as referências em `backend/processo_seletivo/interface/templates/interface/` (T-012)
+- [X] T001 Criar o app em `backend/processo_seletivo/avaliacoes/` com `__init__.py`, `apps.py`, `models.py`, `domain/`, `application/` e `migrations/`
+- [X] T002 Registrar `processo_seletivo.avaliacoes` em `backend/config/settings/base.py`, com o comentário que diz por que é app próprio e não parte de `comissoes` (T-003)
+- [X] T003 [P] Criar `backend/tests/unit/avaliacoes/` e `backend/tests/integration/avaliacoes/` com `__init__.py`
+- [X] T004 [P] Renomear a rota da 011 em `backend/processo_seletivo/interface/urls.py` e `views.py`: `atribuicao` → `minha_etapa`, mantendo o caminho `minhas-etapas/<edital>/<etapa>` intacto, e ajustar as referências em `backend/processo_seletivo/interface/templates/interface/` (T-012)
 
 ---
 
@@ -73,42 +73,42 @@ as histórias usam — autorização composta e emissão de trilha. **Nenhuma hi
 
 ### O incremento canônico
 
-- [ ] T005 [P] Acrescentar `evaluations_per_registration` e `maximum_score` a `EtapaAvaliacao` em `backend/processo_seletivo/editais/models/etapas.py`, com os dois `CheckConstraint` de faixa, e gerar a migration em `backend/processo_seletivo/editais/migrations/`
-- [ ] T006 [P] Acrescentar as duas propriedades a `EtapaPublicada` e `EtapaInput` em `specs/001-processo-seletivo-editais/contracts/openapi.yaml`, e atualizar a descrição da versão canônica que elas carregam
-- [ ] T007 Transcrever as duas em `ETAPA_PUBLICADA` em `backend/processo_seletivo/editais/domain/validation.py` (depende de T006: o teste de contrato falha se divergirem)
-- [ ] T008 [P] Aceitar os dois campos no serializer em `backend/processo_seletivo/editais/api/serializers.py` e na gravação do rascunho em `backend/processo_seletivo/editais/application/draft.py`
-- [ ] T009 Emitir os dois em `_stages()` em `backend/processo_seletivo/publicacoes/application/publish_edital.py` e subir `SCHEMA_VERSION` para 5 em `backend/processo_seletivo/shared/canonical.py`, com o comentário do incremento no padrão dos anteriores
-- [ ] T010 [P] Imprimir as duas linhas na Etapa do documento materializado em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`
-- [ ] T011 Verificar a coerência `minimumScore ≤ maximumScore` na validação de publicação em `backend/processo_seletivo/editais/domain/validation.py`, junto das outras faixas de Etapa
+- [X] T005 [P] Acrescentar `evaluations_per_registration` e `maximum_score` a `EtapaAvaliacao` em `backend/processo_seletivo/editais/models/etapas.py`, com os dois `CheckConstraint` de faixa, e gerar a migration em `backend/processo_seletivo/editais/migrations/`
+- [X] T006 [P] Acrescentar as duas propriedades a `EtapaPublicada` e `EtapaInput` em `specs/001-processo-seletivo-editais/contracts/openapi.yaml`, e atualizar a descrição da versão canônica que elas carregam
+- [X] T007 Transcrever as duas em `ETAPA_PUBLICADA` em `backend/processo_seletivo/editais/domain/validation.py` (depende de T006: o teste de contrato falha se divergirem)
+- [X] T008 [P] Aceitar os dois campos no serializer em `backend/processo_seletivo/editais/api/serializers.py` e na gravação do rascunho em `backend/processo_seletivo/editais/application/draft.py`
+- [X] T009 Emitir os dois em `_stages()` em `backend/processo_seletivo/publicacoes/application/publish_edital.py` e subir `SCHEMA_VERSION` para 5 em `backend/processo_seletivo/shared/canonical.py`, com o comentário do incremento no padrão dos anteriores
+- [X] T010 [P] Imprimir as duas linhas na Etapa do documento materializado em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`
+- [X] T011 Verificar a coerência `minimumScore ≤ maximumScore` na validação de publicação em `backend/processo_seletivo/editais/domain/validation.py`, junto das outras faixas de Etapa
 
 ### A elevação (T-001, T-015)
 
-- [ ] T012 Criar `backend/processo_seletivo/publicacoes/domain/elevacao.py` com `elevar(conteudo)` e `elevar_alteracoes(changes)`, implementando a tabela de classificação de caminho de T-001 — `/stages/-`, `/stages/id=<uuid>`, `/stages`, `/stages/id=<uuid>/<campo>`, demais, `REMOVE`
-- [ ] T013 Aplicar a elevação nas fronteiras do fluxo de Retificação em `backend/processo_seletivo/publicacoes/application/retificacoes.py`: conteúdo-base em `create_retification`, `edit_retification` e `publish_retification`; `_original_version`; `_content_in_force`; e `_changes_payload`, que cobre `_acts` e a publicação de uma vez (depende de T012)
-- [ ] T014 Servir a projeção elevada à superfície de autoria (T-015): `campos_editaveis` e `diferencas` em `backend/processo_seletivo/interface/retificacao.py`, e as leituras de `base_snapshot.content` em `backend/processo_seletivo/interface/views.py` (depende de T012)
-- [ ] T015 Aceitar `expectedPreviousHash` nas **duas grafias** da mesma Etapa — literal e elevada — em `backend/processo_seletivo/publicacoes/domain/conflicts.py`, para os caminhos que a elevação alcança e **somente enquanto as duas denotarem a mesma norma**: a grafia literal só é candidata quando os campos novos da entidade atual ainda exprimem os valores legados — `evaluationsPerRegistration` igual a `1` ou ausente, e `maximumScore` nulo ou ausente. Declarada máxima ou quantidade, vale só o hash da forma vigente. Sem essa condição, remover os campos e comparar aceitaria o hash antigo depois de uma Retificação ter declarado a máxima, mascarando alteração normativa real (T-017) (depende de T012)
+- [X] T012 Criar `backend/processo_seletivo/publicacoes/domain/elevacao.py` com `elevar(conteudo)` e `elevar_alteracoes(changes)`, implementando a tabela de classificação de caminho de T-001 — `/stages/-`, `/stages/id=<uuid>`, `/stages`, `/stages/id=<uuid>/<campo>`, demais, `REMOVE`
+- [X] T013 Aplicar a elevação nas fronteiras do fluxo de Retificação em `backend/processo_seletivo/publicacoes/application/retificacoes.py`: conteúdo-base em `create_retification`, `edit_retification` e `publish_retification`; `_original_version`; `_content_in_force`; e `_changes_payload`, que cobre `_acts` e a publicação de uma vez (depende de T012)
+- [X] T014 Servir a projeção elevada à superfície de autoria (T-015): `campos_editaveis` e `diferencas` em `backend/processo_seletivo/interface/retificacao.py`, e as leituras de `base_snapshot.content` em `backend/processo_seletivo/interface/views.py` (depende de T012)
+- [X] T015 Aceitar `expectedPreviousHash` nas **duas grafias** da mesma Etapa — literal e elevada — em `backend/processo_seletivo/publicacoes/domain/conflicts.py`, para os caminhos que a elevação alcança e **somente enquanto as duas denotarem a mesma norma**: a grafia literal só é candidata quando os campos novos da entidade atual ainda exprimem os valores legados — `evaluationsPerRegistration` igual a `1` ou ausente, e `maximumScore` nulo ou ausente. Declarada máxima ou quantidade, vale só o hash da forma vigente. Sem essa condição, remover os campos e comparar aceitaria o hash antigo depois de uma Retificação ter declarado a máxima, mascarando alteração normativa real (T-017) (depende de T012)
 
 ### Os quatro modelos, numa migration só
 
-- [ ] T016 Criar `Atribuicao` em `backend/processo_seletivo/avaliacoes/models.py`, com a unicidade parcial sobre ativo, o check de completude de inativação e os dois índices de §2 do data-model
-- [ ] T017 Criar `Avaliacao` e `ConclusaoAvaliacao` em `backend/processo_seletivo/avaliacoes/models.py`: `OneToOne` com a Atribuição, a tripla `identity_subject`/`etapa_id`/`inscricao_id`, o índice único parcial de FR-074, o check de completude de `CONCLUIDA`, e o `save`/`delete` append-only da conclusão
-- [ ] T018 Criar `Impedimento` em `backend/processo_seletivo/avaliacoes/models.py`, ancorado em `identity_subject`, com `motivo` obrigatório e **sem** coluna de estado (FR-099, T-009)
-- [ ] T019 Gerar a migration única de `avaliacoes` em `backend/processo_seletivo/avaliacoes/migrations/0001_initial.py`, com os quatro modelos e a trigger append-only de `ConclusaoAvaliacao` no estilo de `publicacoes/migrations/0007_imutabilidade_do_historico.py` (depende de T016, T017, T018)
+- [X] T016 Criar `Atribuicao` em `backend/processo_seletivo/avaliacoes/models.py`, com a unicidade parcial sobre ativo, o check de completude de inativação e os dois índices de §2 do data-model
+- [X] T017 Criar `Avaliacao` e `ConclusaoAvaliacao` em `backend/processo_seletivo/avaliacoes/models.py`: `OneToOne` com a Atribuição, a tripla `identity_subject`/`etapa_id`/`inscricao_id`, o índice único parcial de FR-074, o check de completude de `CONCLUIDA`, e o `save`/`delete` append-only da conclusão
+- [X] T018 Criar `Impedimento` em `backend/processo_seletivo/avaliacoes/models.py`, ancorado em `identity_subject`, com `motivo` obrigatório e **sem** coluna de estado (FR-099, T-009)
+- [X] T019 Gerar a migration única de `avaliacoes` em `backend/processo_seletivo/avaliacoes/migrations/0001_initial.py`, com os quatro modelos e a trigger append-only de `ConclusaoAvaliacao` no estilo de `publicacoes/migrations/0007_imutabilidade_do_historico.py` (depende de T016, T017, T018)
 
 ### As duas funções que todas as histórias usam
 
-- [ ] T020 Criar `backend/processo_seletivo/avaliacoes/domain/previsao.py` com `avaliacoes_previstas()` e `pontuacao_maxima()` — o único lugar onde a ausência é interpretada (T-002)
-- [ ] T021 Criar `backend/processo_seletivo/avaliacoes/domain/autorizacao.py` com `pode_avaliar_inscricao()`, compondo `pode_atuar_na_etapa` da 011 com a existência de Atribuição ativa — **sem** reimplementar a primeira metade (depende de T016)
-- [ ] T022 Criar `auditar()` em `backend/processo_seletivo/avaliacoes/application/trilha.py` — módulo próprio, porque a 012 não traz invólucro de comando novo e o `__init__.py` da 011 existe para guardar o dela —, no molde de `comissoes/application/comissao.py`: grava `record_event` com a base efetivamente usada, `new_state=""` e `new_revision=None` para agregados sem ciclo, e grava `AtoAdministrativo` quando o ato exige motivo. **Nunca recebe pontuação nem parecer** (FR-054)
+- [X] T020 Criar `backend/processo_seletivo/avaliacoes/domain/previsao.py` com `avaliacoes_previstas()` e `pontuacao_maxima()` — o único lugar onde a ausência é interpretada (T-002)
+- [X] T021 Criar `backend/processo_seletivo/avaliacoes/domain/autorizacao.py` com `pode_avaliar_inscricao()`, compondo `pode_atuar_na_etapa` da 011 com a existência de Atribuição ativa — **sem** reimplementar a primeira metade (depende de T016)
+- [X] T022 Criar `auditar()` em `backend/processo_seletivo/avaliacoes/application/trilha.py` — módulo próprio, porque a 012 não traz invólucro de comando novo e o `__init__.py` da 011 existe para guardar o dela —, no molde de `comissoes/application/comissao.py`: grava `record_event` com a base efetivamente usada, `new_state=""` e `new_revision=None` para agregados sem ciclo, e grava `AtoAdministrativo` quando o ato exige motivo. **Nunca recebe pontuação nem parecer** (FR-054)
 
 ### Os testes que esta fase obriga
 
-- [ ] T023 [P] Teste de contrato da forma publicada nova em `backend/tests/contract/test_forma_publicada.py`, conferindo a transcrição contra o `openapi.yaml`
-- [ ] T024 [P] Testes unitários da elevação em `backend/tests/unit/avaliacoes/test_elevacao.py`: idempotência, `null` preservado, escalar intocado e cada linha da tabela de caminhos
-- [ ] T025 [P] Testes unitários da leitura da ausência em `backend/tests/unit/avaliacoes/test_previsao.py`: ausente, nulo e declarado
-- [ ] T026 Os **oito cenários e as três contraprovas** de T-001 em `backend/tests/integration/publicacoes/test_elevacao_de_versao.py` — quatro de histórico misto (sem retificação; `ADD` por `/stages/-`; `REPLACE` de Etapa inteira; `REPLACE` de campo) e quatro de deploy (v4 em elaboração; v4 homologada; criada depois sobre base v4; a mesma com `expectedPreviousHash` declarado nas duas grafias — projeção e literal —, **ambas aceitas**). Mais **três contraprovas**, cada uma exigindo `HASH_MISMATCH`: Retificação publicada no intervalo declarou `maximumScore`; declarou `evaluationsPerRegistration` diferente de 1; e alterou um campo que já existia em v4. Em todos, afirmar que o `content_hash` de toda `Publicacao` e `VersaoConsolidada` anterior permanece idêntico
-- [ ] T027 [P] Teste de regressão em `backend/tests/integration/publicacoes/test_leitura_publica_literal.py`: consulta pública, comprovante e documento de Publicação existente continuam servindo o conteúdo literal, não elevado (T-002)
-- [ ] T028 [P] Testes das garantias de banco em `backend/tests/integration/avaliacoes/test_constraints.py`, marcados `postgresql_only`: a unicidade parcial da Atribuição ativa; o índice único parcial de FR-074; e a trigger de `ConclusaoAvaliacao` recusando `UPDATE` e `DELETE` **direto no banco**, além do `save`/`delete` do modelo
+- [X] T023 [P] Teste de contrato da forma publicada nova em `backend/tests/contract/test_forma_publicada.py`, conferindo a transcrição contra o `openapi.yaml`
+- [X] T024 [P] Testes unitários da elevação em `backend/tests/unit/avaliacoes/test_elevacao.py`: idempotência, `null` preservado, escalar intocado e cada linha da tabela de caminhos
+- [X] T025 [P] Testes unitários da leitura da ausência em `backend/tests/unit/avaliacoes/test_previsao.py`: ausente, nulo e declarado
+- [X] T026 Os **oito cenários e as três contraprovas** de T-001 em `backend/tests/integration/publicacoes/test_elevacao_de_versao.py` — quatro de histórico misto (sem retificação; `ADD` por `/stages/-`; `REPLACE` de Etapa inteira; `REPLACE` de campo) e quatro de deploy (v4 em elaboração; v4 homologada; criada depois sobre base v4; a mesma com `expectedPreviousHash` declarado nas duas grafias — projeção e literal —, **ambas aceitas**). Mais **três contraprovas**, cada uma exigindo `HASH_MISMATCH`: Retificação publicada no intervalo declarou `maximumScore`; declarou `evaluationsPerRegistration` diferente de 1; e alterou um campo que já existia em v4. Em todos, afirmar que o `content_hash` de toda `Publicacao` e `VersaoConsolidada` anterior permanece idêntico
+- [X] T027 [P] Teste de regressão em `backend/tests/integration/publicacoes/test_leitura_publica_literal.py`: consulta pública, comprovante e documento de Publicação existente continuam servindo o conteúdo literal, não elevado (T-002)
+- [X] T028 [P] Testes das garantias de banco em `backend/tests/integration/avaliacoes/test_constraints.py`, marcados `postgresql_only`: a unicidade parcial da Atribuição ativa; o índice único parcial de FR-074; e a trigger de `ConclusaoAvaliacao` recusando `UPDATE` e `DELETE` **direto no banco**, além do `save`/`delete` do modelo
 
 **Checkpoint**: o Edital declara e publica as duas propriedades, Editais antigos continuam
 retificáveis, as quatro tabelas existem com suas garantias, e a autorização composta responde.

@@ -102,6 +102,14 @@ class StageSerializer(serializers.Serializer):
     minimumScore = serializers.DecimalField(
         max_digits=7, decimal_places=4, required=False, allow_null=True
     )
+    # As duas do incremento da `012`. Opcionais e anuláveis: rascunho que não as informa declara
+    # ausência, e ausência é uma avaliação por inscrição e limite não declarado (FR-009, FR-066).
+    evaluationsPerRegistration = serializers.IntegerField(
+        min_value=1, required=False, allow_null=True
+    )
+    maximumScore = serializers.DecimalField(
+        max_digits=7, decimal_places=4, required=False, allow_null=True
+    )
     scheduleEventId = serializers.UUIDField(required=False, allow_null=True)
 
 

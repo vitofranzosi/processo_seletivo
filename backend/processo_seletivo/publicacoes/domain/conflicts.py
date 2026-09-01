@@ -30,7 +30,7 @@ continua de pé (FR-014).
 
 from copy import deepcopy
 
-from processo_seletivo.publicacoes.domain import colecoes
+from processo_seletivo.publicacoes.domain import colecoes, elevacao
 from processo_seletivo.publicacoes.domain.changes import (
     ABSENT,
     ChaveNaoEncontrada,
@@ -50,6 +50,37 @@ def previous_hash(content, target_path):
     """Hash canônico do conteúdo em `target_path`; vazio quando o caminho não existe."""
     value = resolve_path(content, target_path)
     return "" if value is ABSENT else canonical_sha256(value)
+
+
+def _grafias_aceitas(content, target_path):
+    """Os hashes que satisfazem a precondição neste caminho — em regra um, às vezes dois.
+
+    Depois do incremento da `012`, a mesma Etapa tem duas grafias: a **literal**, que a consulta
+    pública serve e que o `content_hash` da Publicação cobre, e a **elevada**, que a autoria compõe.
+    Um cliente que leia o público e declare o hash de lá está fazendo exatamente o que o contrato
+    manda — `expectedPreviousHash` é o hash do conteúdo que o autor encontrou — e recusá-lo
+    transformaria o cuidadoso em caso de erro (012, T-017).
+
+    **A condição, sem a qual isto vira buraco.** A grafia literal só é candidata enquanto as duas
+    disserem a mesma coisa: os campos novos ainda exprimindo os valores que a ausência denota. Se
+    uma Retificação publicada no intervalo declarou `maximumScore`, remover o campo devolveria a
+    grafia antiga e o hash velho **passaria** — a precondição aprovando um ato escrito contra
+    conteúdo que já não existe, que é o oposto de FR-036. Declarada máxima ou quantidade, vale só o
+    hash da forma vigente.
+    """
+    valor = resolve_path(content, target_path)
+    if valor is ABSENT:
+        return {""}
+    vigente = canonical_sha256(valor)
+    if not isinstance(valor, dict):
+        return {vigente}
+    legado = {chave: valor.get(chave) for chave in elevacao.AUSENCIA if chave in valor}
+    if not legado or any(
+        valor.get(chave) != esperado for chave, esperado in elevacao.AUSENCIA.items()
+    ):
+        return {vigente}
+    literal = {chave: item for chave, item in valor.items() if chave not in elevacao.AUSENCIA}
+    return {vigente, canonical_sha256(literal)}
 
 
 def duplicate_keys(content):
@@ -114,7 +145,7 @@ def content_conflicts(content, changes):
         else:
             declared = change.get("expectedPreviousHash")
             if declared:
-                if declared != previous_hash(current, path):
+                if declared not in _grafias_aceitas(current, path):
                     conflicts.setdefault(HASH_MISMATCH, []).append(path)
             elif change["operation"] == "ADD" and add_overwrites(current, path):
                 conflicts.setdefault(TARGET_PRESENT, []).append(path)

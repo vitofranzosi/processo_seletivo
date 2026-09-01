@@ -64,21 +64,21 @@ def test_o_percurso_completo_da_organizacao_do_trabalho(
     assert "Prova didática" not in minhas
 
     assert (
-        do_joao.get(reverse("interface:atribuicao", args=[edital_a.id, etapa_a1])).status_code
+        do_joao.get(reverse("interface:minha-etapa", args=[edital_a.id, etapa_a1])).status_code
         == 200
     )
 
     # --- E não acessa o que não é dele ---------------------------------------------------
     assert (
-        do_joao.get(reverse("interface:atribuicao", args=[edital_a.id, etapa_a2])).status_code
+        do_joao.get(reverse("interface:minha-etapa", args=[edital_a.id, etapa_a2])).status_code
         == 404
     )
     assert (
-        do_joao.get(reverse("interface:atribuicao", args=[edital_b.id, etapa_b1])).status_code
+        do_joao.get(reverse("interface:minha-etapa", args=[edital_b.id, etapa_b1])).status_code
         == 404
     )
     adulterada = reverse(
-        "interface:atribuicao", args=[edital_a.id, "00000000-0000-0000-0000-000000000999"]
+        "interface:minha-etapa", args=[edital_a.id, "00000000-0000-0000-0000-000000000999"]
     )
     assert do_joao.get(adulterada).status_code == 404
 
@@ -99,7 +99,7 @@ def test_o_percurso_completo_da_organizacao_do_trabalho(
     )
 
     assert (
-        do_joao.get(reverse("interface:atribuicao", args=[edital_a.id, etapa_a1])).status_code
+        do_joao.get(reverse("interface:minha-etapa", args=[edital_a.id, etapa_a1])).status_code
         == 404
     )
     depois = do_joao.get(reverse("interface:minhas-etapas")).content.decode()

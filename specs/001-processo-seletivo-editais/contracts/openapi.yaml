@@ -624,6 +624,12 @@ components:
         eliminatory: { type: boolean }
         classificatory: { type: boolean }
         minimumScore: { type: [number, 'null'], minimum: 0 }
+        # Quantas avaliações cada inscrição recebe nesta Etapa, e a pontuação máxima. As duas são
+        # normativas: a primeira decide se uma nota isolada elimina ou se há segunda leitura, a
+        # segunda é o limite contra o qual a pontuação é validada (012, FR-007). `null` significa
+        # "não declarado", e a ausência é lida como uma avaliação e limite não declarado.
+        evaluationsPerRegistration: { type: [integer, 'null'], minimum: 1 }
+        maximumScore: { type: [number, 'null'], exclusiveMinimum: 0 }
         scheduleEventId: { type: [string, 'null'], format: uuid }
     SecaoInput:
       type: object
@@ -763,9 +769,15 @@ components:
     EtapaPublicada:
       type: object
       description: >-
-        Forma da Etapa de Avaliação no conteúdo normativo **publicado**, na versão canônica 2.
+        Forma da Etapa de Avaliação no conteúdo normativo **publicado**, na versão canônica 5.
         Distinta de EtapaInput pela mesma razão que PerfilPublicado o é de PerfilInput.
-      required: [id, name, order, weight, eliminatory, classificatory, minimumScore, scheduleEventId]
+        `evaluationsPerRegistration` e `maximumScore` entram na versão 5, juntas, pelo mesmo motivo
+        que as coleções da 2 entraram juntas: a versão canônica identifica **uma** forma (012,
+        FR-007, FR-008). Conteúdo publicado em versão anterior não carrega as duas chaves, e a
+        ausência é lida como uma avaliação por inscrição e limite não declarado (FR-009, FR-066).
+      required:
+        [id, name, order, weight, eliminatory, classificatory, minimumScore,
+         evaluationsPerRegistration, maximumScore, scheduleEventId]
       properties:
         id: { $ref: '#/components/schemas/Id' }
         name: { type: string }
@@ -781,6 +793,15 @@ components:
         eliminatory: { type: boolean }
         classificatory: { type: boolean }
         minimumScore:
+          type: [string, 'null']
+          format: decimal
+          pattern: '^-?(0|[1-9]\d{0,2})\.\d{4}$'
+        # Inteiro, e não decimal: contagem de avaliações não tem casas.
+        evaluationsPerRegistration: { type: [integer, 'null'], minimum: 1 }
+        # A mesma forma canônica de `weight` e `minimumScore`, pelo mesmo motivo: os três são
+        # `decimal(7,4)` materializado. A faixa — máxima maior que zero, e não menor que a nota
+        # mínima — é regra de domínio, verificada na publicação.
+        maximumScore:
           type: [string, 'null']
           format: decimal
           pattern: '^-?(0|[1-9]\d{0,2})\.\d{4}$'

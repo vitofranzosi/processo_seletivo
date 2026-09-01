@@ -1282,6 +1282,15 @@ def _etapas(composicao, snapshot, secao=0, tabelas=None):
                 pares.append(["Peso", humano.decimal(etapa["weight"])])
             if etapa.get("minimumScore") is not None:
                 pares.append(["Nota mínima", humano.decimal(etapa["minimumScore"])])
+            # O incremento da `012`. Impressos só quando declarados: Edital publicado antes dele
+            # não os carrega, e imprimir "1 avaliação" onde o Edital nada disse seria o documento
+            # afirmando regra que a Publicação não contém (FR-009, FR-066).
+            if etapa.get("maximumScore") is not None:
+                pares.append(["Pontuação máxima", humano.decimal(etapa["maximumScore"])])
+            previstas = etapa.get("evaluationsPerRegistration")
+            if previstas is not None:
+                quantas = "1 avaliação" if previstas == 1 else f"{previstas} avaliações"
+                pares.append(["Avaliações por inscrição", quantas])
             # As datas são do Evento e não são copiadas: o documento as lê de lá, como o domínio.
             # E o rótulo humano é que vai para o papel, não a chave do tipo.
             evento = eventos.get(etapa.get("scheduleEventId"))

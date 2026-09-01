@@ -104,7 +104,7 @@ urlpatterns = [
     path("minhas-etapas", views.minhas_etapas, name="minhas-etapas"),
     path(
         "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>",
-        views.atribuicao,
-        name="atribuicao",
+        views.minha_etapa,
+        name="minha-etapa",
     ),
 ]

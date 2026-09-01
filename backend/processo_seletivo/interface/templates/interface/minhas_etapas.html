@@ -38,7 +38,7 @@
       <span class="ator">{{ item.processo.title }}</span>
     </div>
     <p class="salvar">
-      <a class="botao" href="{% url 'interface:atribuicao' item.edital.id item.etapa_id %}">Abrir</a>
+      <a class="botao" href="{% url 'interface:minha-etapa' item.edital.id item.etapa_id %}">Abrir</a>
     </p>
   </li>
   {% endfor %}
