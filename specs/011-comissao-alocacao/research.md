@@ -198,6 +198,143 @@ Etapa de Avaliação (`interface/urls.py:20`). A Constituição exige significad
 entre spec, código, URL e interface. O `/plan` não deve pendurar rota de Etapa de Avaliação nesse
 espaço sem desambiguar o termo.
 
+# Decisões de implementação
+
+*Fase 0 do `/plan`. As nove decisões acima reconciliaram a spec com o domínio; as abaixo escolhem
+como ela é construída, e cada uma foi verificada contra o código que vai receber a mudança.*
+
+## D-010 — Onde o código vive
+
+**Decisão**: um app novo, `comissoes`, com domínio, persistência e comandos. As telas ficam em
+`interface`, onde o Processo já é administrado.
+
+**Por quê**: `processos` guarda o ciclo de vida normativo — Processo, Edital, Ato Administrativo — e
+a comissão é autorização operacional sobre esses objetos. Misturar as duas coisas faria o agregado
+normativo carregar `related_name` de autorização, e a 012 herdaria essa confusão ao acrescentar
+`Avaliacao`.
+
+**Alternativa descartada**: um app novo também para o canal, como a 009 fez com `portal`. Aqui não
+há ator novo nem canal novo: quem gere a comissão e quem recebe alocação são atores institucionais,
+autenticados pelo mesmo mecanismo, na mesma base visual. O que a 009 separou foi um *canal*, não uma
+*feature*.
+
+## D-011 — A capacidade sistêmica e a base contextual
+
+**Decisão**: uma permissão nomeada nova, `comissao:gerir`, acrescentada ao papel `gestor`
+(`interface/identidade.py:20`). A presidência **não** entra em `PAPEIS`: é verificada contra o
+vínculo, por uma função de domínio única.
+
+```text
+pode_gerir_comissao(ator, processo) =
+    ator.can("comissao:gerir")                       # base sistêmica
+    or membro_ativo(ator.subject, processo).e_presidente()   # base contextual
+```
+
+**Por quê**: `require_permission` responde a permissão de conjunto fixo e não sabe olhar objeto. A
+autorização contextual precisa de uma segunda função — e uma só, chamada por todo comando e por toda
+view, para que a regra não se duplique em oito lugares.
+
+**Alternativa descartada**: acrescentar `comissao:presidir` a `PAPEIS`. Faria da presidência um papel
+global — a pessoa presidiria todas as comissões —, que é exatamente o que P-003 e o SC-011 proíbem.
+
+## D-012 — O resolvedor de Etapas, e a fonte única
+
+**Decisão**: uma função só, `etapas_vigentes(edital)`, que lê `effective_version(edital_id=...)`
+(`publicacoes/application/selectors.py:26`) e devolve as Etapas de `content["stages"]` indexadas por
+`id`. Criação de alocação, listagem administrativa, `Minhas Etapas` e o guard de acesso chamam essa
+função e mais nenhuma.
+
+**Por quê**: é o que torna o SC-021 verdadeiro por construção — uma Etapa alocável é exatamente uma
+Etapa que aparecerá para quem foi alocado, porque as duas perguntas passam pelo mesmo código. E é o
+que impede o desvio natural do `/plan`: consultar `edital.etapas.all()`, que é a coleção de
+elaboração e responderia diferente depois de uma Retificação (D-002).
+
+**Consequência conhecida**: `effective_version` levanta `no_effective_version` com 404 quando o
+Edital nunca foi publicado. É esse erro que sustenta FR-032 e EC-014 — não é preciso consultar
+`Edital.status` para saber que não há o que alocar, embora a tela o consulte para explicar por quê.
+
+## D-013 — Remover é inativar, e a unicidade é parcial
+
+**Decisão**: `ativo` booleano nos dois modelos; remover grava `ativo=False`, `inativado_em` e
+`inativado_por`; readicionar cria linha nova. A unicidade é `UniqueConstraint` **parcial**, com
+`condition=Q(ativo=True)`.
+
+**Por quê**: a Constituição proíbe excluir fisicamente registro cuja remoção comprometa
+rastreabilidade, e a trilha de auditoria referencia o agregado pelo `id` — apagar a linha deixaria o
+evento apontando para o nada. A constraint parcial é o que faz EC-001 e EC-002 serem recusados pelo
+banco, e não por conferência em código sujeita a corrida.
+
+**Verificado**: `UniqueConstraint(condition=...)` funciona em PostgreSQL e em SQLite; a suíte roda
+nos dois, e só exercita as constraints parciais com `TEST_DB_ENGINE=postgresql`.
+
+**Alternativa descartada**: máquina de estados com `status`. Membro de comissão não tem ciclo de
+vida — tem presença. Inventar estados só para reusar a assinatura do registrador de auditoria é o
+que D-008 proíbe.
+
+## D-014 — A adaptação mínima do registrador
+
+**Decisão**: `record_event` ganha dois parâmetros opcionais, `new_state` e `new_revision`, que por
+padrão continuam vindo de `aggregate.status` e `aggregate.revision`
+(`auditoria/application.py:26`). Nenhum campo novo em tabela nenhuma, nenhuma mudança em quem já o
+chama.
+
+**Por quê**: é a menor adaptação que atende D-008. A alternativa — dar `status` e `revision` a
+`MembroComissao` — foi o que a 009 fez na `Inscricao`, e lá havia dois estados reais; aqui não há.
+
+**O que a trilha registra**: no campo `permission`, a **base efetivamente usada** — `comissao:gerir`
+quando a autorização veio da permissão sistêmica, `comissao:presidir` quando veio do vínculo
+(FR-016). Só a primeira existe em `PAPEIS`; a segunda é rótulo de trilha, e acrescentá-la a um papel
+seria desfazer D-011.
+
+**O que a trilha responde** (FR-074): o Processo sai de `MembroComissao.processo_id`; a pessoa
+afetada, do `subject` do membro, gravado em `reason` de forma legível; a Etapa afetada, do
+`etapa_id` da alocação. A consulta "o que mudou na comissão deste Processo" reúne os agregados da
+comissão pelo mesmo caminho de `trilha_do_edital` (`auditoria/selectors.py:64`), que já consulta por
+conjunto de identificadores.
+
+## D-015 — Rotas, e o vocabulário que já estava ocupado
+
+**Decisão**:
+
+```text
+/gestao/processos/<uuid:processo_id>/comissao            # composição
+/gestao/processos/<uuid:processo_id>/alocacoes           # organização por Edital e Etapa
+/gestao/minhas-etapas                                    # área pessoal
+/gestao/minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>   # a atribuição
+```
+
+**Por quê**: `editais/<uuid>/compor/<slug:etapa>` já significa *passo do compositor*
+(`interface/urls.py:20`), e D-009 registrou a colisão. Nenhuma rota nova usa `etapas/` como segmento
+solto: a administrativa fala de `alocacoes`, a pessoal de `minhas-etapas`.
+
+**Consequência**: a URL de uma atribuição carrega Edital e Etapa, e nenhum identificador de pessoa —
+o checklist exige identificador sensível fora da URL, e o ator já vem da sessão.
+
+## D-016 — Concorrência
+
+**Decisão**: as constraints parciais de D-013 respondem por duplicidade; `reserve()`
+(`shared/idempotency.py:6`) responde por reenvio do mesmo formulário; e o invariante de presidência
+(FR-029, FR-030) é verificado sob `select_for_update` no Processo, dentro do `command_context()` que
+já abre transação (`shared/application/commands.py:8`).
+
+**Por quê**: o invariante de presidência é o único que envolve mais de uma linha — "não deixar sem
+presidente uma comissão com alocação ativa" lê membros e alocações antes de decidir. Sem o bloqueio,
+duas remoções simultâneas passam pela verificação e deixam o estado que ambas recusariam
+isoladamente.
+
+**Não usado**: `compare_and_swap`. Ele existe para agregado com `revision`, e D-013 decidiu não dar
+revisão a estes modelos.
+
+## D-017 — Como a recusa se apresenta
+
+**Decisão**: `Http404` nas views, `DomainError("not_found", ..., 404)` nos comandos — os dois
+padrões que o `interface` e o `application` já usam (`interface/views.py:1456`,
+`seguranca/application/authorization.py:8`). Escopo divergente, Processo alheio, Etapa não alocada e
+Etapa de outro Processo produzem **a mesma** resposta.
+
+**Por quê**: FR-057 pede que a existência não seja enumerável, e responder 403 em um caso e 404 em
+outro já é enumerar.
+
 ## O que esta pesquisa não decidiu
 
 - A forma física de `MembroComissao` e `AlocacaoEtapa` — colunas, chaves, constraints.
