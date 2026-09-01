@@ -39,6 +39,13 @@ AUSENCIA = {"evaluationsPerRegistration": 1, "maximumScore": None}
 
 COLECAO_DE_ETAPAS = "/stages"
 
+# **A única conversão que existe.** Elevar não é um mecanismo genérico de compatibilidade: é este
+# incremento, e só ele. Conteúdo em versão anterior à 4 continua recusado por
+# `_assert_versao_canonica`, como a 007 e a 009 decidiram — ali a conversão inventaria norma, e a
+# recusa é a resposta certa. Sem esta guarda, um snapshot v3 sairia carimbado como 5 e a
+# verificação de versão deixaria de verificar coisa alguma (D-002).
+VERSAO_DE_ORIGEM = 4
+
 
 def elevar_etapa(etapa):
     """A Etapa na forma vigente. Idempotente: o que já está na forma nova atravessa igual."""
@@ -56,10 +63,15 @@ def elevar(conteudo):
     """
     if not isinstance(conteudo, dict):
         return conteudo
+    declarada = conteudo.get("schemaVersion")
+    if declarada not in (VERSAO_DE_ORIGEM, SCHEMA_VERSION):
+        # Versão que esta conversão não conhece atravessa **intacta**, para ser recusada onde a
+        # recusa é dita: em `_assert_versao_canonica`. Carimbá-la aqui seria afirmar uma forma que
+        # o conteúdo não tem — exatamente o que aquela verificação existe para impedir.
+        return conteudo
     etapas = conteudo.get("stages")
     elevadas = [elevar_etapa(item) for item in etapas] if isinstance(etapas, list) else etapas
-    ja_vigente = conteudo.get("schemaVersion") == SCHEMA_VERSION and elevadas == etapas
-    if ja_vigente:
+    if declarada == SCHEMA_VERSION and elevadas == etapas:
         return conteudo
     elevado = {**conteudo, "schemaVersion": SCHEMA_VERSION}
     if isinstance(etapas, list):
@@ -89,6 +101,15 @@ def _e_entidade_de_etapa(target_path):
     if "/" in resto:
         return None
     return "entidade"
+
+
+def endereca_etapa(target_path):
+    """Se o caminho endereça a **entidade** Etapa — a mesma classificação que a elevação usa.
+
+    Exposta porque a precondição de conteúdo precisa exatamente dela: a equivalência de grafias vale
+    onde a elevação alcança, e em lugar nenhum além (T-017).
+    """
+    return _e_entidade_de_etapa(target_path or "") == "entidade"
 
 
 def elevar_valor(target_path, valor):

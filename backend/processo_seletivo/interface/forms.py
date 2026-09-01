@@ -34,6 +34,21 @@ def _texto(dados, chave):
     return (dados.get(chave) or "").strip()
 
 
+def _inteiro_opcional(dados, chave):
+    """Vazio é `None` — "não declarado" —, e não zero.
+
+    `_inteiro` tem padrão porque `order` sempre existe; aqui a ausência é significativa: ela é o
+    que a `012` lê como uma avaliação por inscrição (FR-009).
+    """
+    bruto = _texto(dados, chave)
+    if not bruto:
+        return None
+    try:
+        return int(bruto)
+    except ValueError as exc:
+        raise ValueError(f"'{bruto}' não é um número inteiro.") from exc
+
+
 def _inteiro(dados, chave, padrao=0):
     bruto = _texto(dados, chave)
     if not bruto:
@@ -192,6 +207,13 @@ def ler_etapas(dados):
                 "eliminatory": _marcado(dados, f"{base}-eliminatory"),
                 "classificatory": _marcado(dados, f"{base}-classificatory"),
                 "minimumScore": _decimal(dados, f"{base}-minimumScore"),
+                # As duas do incremento da `012`. Vazio é "não declarado", e o assistente precisa
+                # devolvê-las porque ele reenvia o rascunho inteiro a cada passo: campo que ele não
+                # lê vira `null` na próxima gravação de qualquer outra Etapa (FR-007).
+                "evaluationsPerRegistration": _inteiro_opcional(
+                    dados, f"{base}-evaluationsPerRegistration"
+                ),
+                "maximumScore": _decimal(dados, f"{base}-maximumScore"),
                 # Vazio é "não vinculada a Evento", e não Evento inexistente.
                 "scheduleEventId": _texto(dados, f"{base}-scheduleEventId") or None,
             }
@@ -211,9 +233,7 @@ def _modalidade_para_o_formulario(modalidade):
         "ruleId": str(regra.id) if regra else str(uuid4()),
         "foundation": regra.foundation if regra else "",
         "version": regra.version if regra else "",
-        "percentage": ""
-        if regra is None or regra.percentage is None
-        else f"{regra.percentage:f}",
+        "percentage": "" if regra is None or regra.percentage is None else f"{regra.percentage:f}",
     }
 
 
@@ -394,6 +414,12 @@ def etapas_do_edital(edital):
             "eliminatory": etapa.eliminatory,
             "classificatory": etapa.classificatory,
             "minimumScore": "" if etapa.minimum_score is None else f"{etapa.minimum_score:f}",
+            "evaluationsPerRegistration": (
+                ""
+                if etapa.evaluations_per_registration is None
+                else etapa.evaluations_per_registration
+            ),
+            "maximumScore": "" if etapa.maximum_score is None else f"{etapa.maximum_score:f}",
             "scheduleEventId": "" if etapa.evento_id is None else str(etapa.evento_id),
         }
         for etapa in edital.etapas.order_by("order")
@@ -411,6 +437,8 @@ def etapas_persistidas(edital):
             "eliminatory": etapa.eliminatory,
             "classificatory": etapa.classificatory,
             "minimumScore": etapa.minimum_score,
+            "evaluationsPerRegistration": etapa.evaluations_per_registration,
+            "maximumScore": etapa.maximum_score,
             "scheduleEventId": None if etapa.evento_id is None else str(etapa.evento_id),
         }
         for etapa in edital.etapas.order_by("order")

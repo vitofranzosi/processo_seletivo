@@ -127,8 +127,14 @@ maximumScore:
   pattern: '^-?(0|[1-9]\d{0,2})\.\d{4}$'
 ```
 
-`EtapaInput` ganha os dois correspondentes na elaboração. `required` passa a incluí-los, com
-`null` significando "não declarado" — que é a forma que `weight` e `minimumScore` já usam.
+`EtapaInput` ganha os dois correspondentes na elaboração, e ali eles são **opcionais** — como
+`weight` e `minimumScore` já são. A assimetria é deliberada e é a mesma que o contrato já pratica: o
+rascunho admite o Edital pela metade, e o **publicado** exige forma completa. `required` de
+`EtapaPublicada` passa a incluí-los, com `null` significando "não declarado".
+
+A faixa — quantidade maior que zero, máxima maior que zero, mínima não superior à máxima — é regra
+de domínio, verificada no command que os dois canais atravessam, e não só no serializer da API nem
+só no `CheckConstraint`.
 
 **Leitura da ausência**: conteúdo em versão anterior não carrega as chaves. `null` e ausência têm o
 mesmo significado, e ele está em um lugar só (`avaliacoes_previstas`, `pontuacao_maxima`).

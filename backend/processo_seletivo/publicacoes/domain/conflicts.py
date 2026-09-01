@@ -72,12 +72,14 @@ def _grafias_aceitas(content, target_path):
     if valor is ABSENT:
         return {""}
     vigente = canonical_sha256(valor)
-    if not isinstance(valor, dict):
+    # **Só a entidade de `/stages`**, pela classificação declarada da elevação — e não "qualquer
+    # objeto que por acaso tenha os dois nomes". Sem isso, um objeto de outra coleção que carregasse
+    # `maximumScore` ganharia uma segunda grafia e um hash obsoleto passaria por ali (T-001, T-017).
+    if not elevacao.endereca_etapa(target_path) or not isinstance(valor, dict):
         return {vigente}
-    legado = {chave: valor.get(chave) for chave in elevacao.AUSENCIA if chave in valor}
-    if not legado or any(
-        valor.get(chave) != esperado for chave, esperado in elevacao.AUSENCIA.items()
-    ):
+    if any(chave not in valor for chave in elevacao.AUSENCIA):
+        return {vigente}
+    if any(valor[chave] != esperado for chave, esperado in elevacao.AUSENCIA.items()):
         return {vigente}
     literal = {chave: item for chave, item in valor.items() if chave not in elevacao.AUSENCIA}
     return {vigente, canonical_sha256(literal)}

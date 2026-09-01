@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from rest_framework import serializers
 
 from processo_seletivo.editais.domain.cronograma import ScheduleValidationError, validate_event
@@ -108,7 +110,7 @@ class StageSerializer(serializers.Serializer):
         min_value=1, required=False, allow_null=True
     )
     maximumScore = serializers.DecimalField(
-        max_digits=7, decimal_places=4, required=False, allow_null=True
+        max_digits=7, decimal_places=4, required=False, allow_null=True, min_value=Decimal("0.0001")
     )
     scheduleEventId = serializers.UUIDField(required=False, allow_null=True)
 

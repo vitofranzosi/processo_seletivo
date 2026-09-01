@@ -51,6 +51,27 @@
       {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-minimumScore">{{ recusado }}</span>{% endif %}
       <span class="ajuda" id="ajuda-nota-{{ indice }}">Vazio: não há nota mínima.</span>
     </p>
+    <p class="campo curto">
+      <label for="etapa-{{ indice }}-maximumScore">Pontuação máxima</label>
+      {% recusa_de recusas "etapa" indice "maximumScore" as recusado %}
+      <input type="number" step="0.0001" min="0.0001" id="etapa-{{ indice }}-maximumScore"
+             name="etapa-{{ indice }}-maximumScore" value="{{ etapa_linha.maximumScore|default:'' }}"
+             aria-describedby="ajuda-maxima-{{ indice }}{% if recusado %} recusa-etapa-{{ indice }}-maximumScore{% endif %}"
+             {% if recusado %}aria-invalid="true"{% endif %}>
+      {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-maximumScore">{{ recusado }}</span>{% endif %}
+      <span class="ajuda" id="ajuda-maxima-{{ indice }}">Vazio: o Edital não declara limite.</span>
+    </p>
+    <p class="campo curto">
+      <label for="etapa-{{ indice }}-evaluationsPerRegistration">Avaliações por inscrição</label>
+      {% recusa_de recusas "etapa" indice "evaluationsPerRegistration" as recusado %}
+      <input type="number" step="1" min="1" id="etapa-{{ indice }}-evaluationsPerRegistration"
+             name="etapa-{{ indice }}-evaluationsPerRegistration"
+             value="{{ etapa_linha.evaluationsPerRegistration|default:'' }}"
+             aria-describedby="ajuda-avaliacoes-{{ indice }}{% if recusado %} recusa-etapa-{{ indice }}-evaluationsPerRegistration{% endif %}"
+             {% if recusado %}aria-invalid="true"{% endif %}>
+      {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-evaluationsPerRegistration">{{ recusado }}</span>{% endif %}
+      <span class="ajuda" id="ajuda-avaliacoes-{{ indice }}">Vazio: uma avaliação por inscrição.</span>
+    </p>
     {% comment %}
     FR-037: as duas marcações não tinham rótulo de grupo. Flutuavam desalinhadas ao lado de Peso e
     Nota mínima, e para quem usa leitor de tela eram duas caixas sem o conceito que as une.

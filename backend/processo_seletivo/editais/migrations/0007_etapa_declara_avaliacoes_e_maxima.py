@@ -17,29 +17,40 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('editais', '0006_documentos_exigidos'),
-        ('processos', '0001_initial'),
+        ("editais", "0006_documentos_exigidos"),
+        ("processos", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='etapaavaliacao',
-            name='evaluations_per_registration',
+            model_name="etapaavaliacao",
+            name="evaluations_per_registration",
             field=models.PositiveSmallIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='etapaavaliacao',
-            name='maximum_score',
+            model_name="etapaavaliacao",
+            name="maximum_score",
             field=models.DecimalField(blank=True, decimal_places=4, max_digits=7, null=True),
         ),
         migrations.AddConstraint(
-            model_name='etapaavaliacao',
-            constraint=models.CheckConstraint(condition=models.Q(('evaluations_per_registration__isnull', True), ('evaluations_per_registration__gt', 0), _connector='OR'), name='ck_etapa_avaliacoes_positivas'),
+            model_name="etapaavaliacao",
+            constraint=models.CheckConstraint(
+                condition=models.Q(
+                    ("evaluations_per_registration__isnull", True),
+                    ("evaluations_per_registration__gt", 0),
+                    _connector="OR",
+                ),
+                name="ck_etapa_avaliacoes_positivas",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='etapaavaliacao',
-            constraint=models.CheckConstraint(condition=models.Q(('maximum_score__isnull', True), ('maximum_score__gt', 0), _connector='OR'), name='ck_etapa_maximum_score_positiva'),
+            model_name="etapaavaliacao",
+            constraint=models.CheckConstraint(
+                condition=models.Q(
+                    ("maximum_score__isnull", True), ("maximum_score__gt", 0), _connector="OR"
+                ),
+                name="ck_etapa_maximum_score_positiva",
+            ),
         ),
     ]

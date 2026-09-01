@@ -101,3 +101,33 @@ def test_o_ato_que_acrescenta_etapa_chega_na_forma_vigente():
 
     assert elevadas[0]["newValue"]["evaluationsPerRegistration"] == 1
     assert elevadas[0]["newValue"]["maximumScore"] is None
+
+
+def test_versao_anterior_a_quatro_nao_e_elevada():
+    """A conversão é 4→5, e só. Carimbar v3 como 5 neutralizaria a verificação de versão.
+
+    Conteúdo que esta elevação não conhece atravessa intacto, para ser recusado onde a recusa é
+    dita — como a 007 e a 009 decidiram para os incrementos delas (D-002).
+    """
+    v3 = conteudo(3, [ETAPA_V4])
+
+    assert elevar(v3) is v3
+    assert elevar(v3)["schemaVersion"] == 3
+
+
+def test_versao_posterior_desconhecida_tambem_atravessa_intacta():
+    futuro = conteudo(SCHEMA_VERSION + 1, [ETAPA_V4])
+
+    assert elevar(futuro)["schemaVersion"] == SCHEMA_VERSION + 1
+
+
+def test_a_entidade_de_etapa_e_a_unica_que_a_precondicao_reconhece():
+    """A classificação é compartilhada com a precondição de conteúdo (T-017)."""
+    from processo_seletivo.publicacoes.domain.elevacao import endereca_etapa
+
+    assert endereca_etapa("/stages/-")
+    assert endereca_etapa("/stages/id=00000000-0000-0000-0000-0000000000e1")
+    assert not endereca_etapa("/stages")
+    assert not endereca_etapa("/stages/id=00000000-0000-0000-0000-0000000000e1/minimumScore")
+    assert not endereca_etapa("/other")
+    assert not endereca_etapa("/profiles/-")
