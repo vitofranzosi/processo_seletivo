@@ -1,0 +1,52 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Inscrição {{ inscricao.protocolo|default:inscricao.id }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:minhas-etapas' %}">Minhas Etapas</a> ›
+  <a href="{% url 'interface:minha-etapa' edital.id etapa_id %}">Minha Mesa</a> ›
+  <span aria-current="page">Inscrição {{ inscricao.protocolo|default:inscricao.id }}</span>
+</nav>
+
+<h1>Inscrição {{ inscricao.protocolo|default:inscricao.id }}</h1>
+<p class="sub">Edital {{ edital.number }}/{{ edital.year }} — {{ processo.title }}</p>
+
+{% comment %}
+FR-030: o necessário ao trabalho, e nada além. E-mail e telefone ficam de fora porque não decidem
+avaliação nenhuma. O nome **fica**: avaliação cega está fora do escopo desta feature, e esconder
+metade da identidade produziria a meia anonimização que é pior que nenhuma.
+{% endcomment %}
+<dl class="conferencia">
+  <dt>Candidato</dt><dd>{{ inscricao.nome }}</dd>
+  <dt>CPF</dt><dd>{{ cpf }}</dd>
+  <dt>Perfil</dt><dd>{{ perfil }}{% if modalidade %} — {{ modalidade }}{% endif %}</dd>
+</dl>
+
+<section aria-labelledby="documentos">
+  <h2 id="documentos">Documentos apresentados</h2>
+
+  {% comment %}
+  A lista é a dos **requisitos**, e o arquivo aparece dentro do seu (FR-025). É a diferença entre
+  este sistema e uma pasta compartilhada: requisito sem arquivo aparece como requisito sem
+  arquivo, que é informação para quem avalia — e não uma linha que some.
+  {% endcomment %}
+  <ul class="documentos">
+    {% for documento in documentos %}
+    <li>
+      <span class="requisito">{{ documento.nome }}{% if documento.obrigatorio %} <span class="marca">obrigatório</span>{% endif %}</span>
+      {% if documento.enviado %}
+      <a href="{% url 'interface:mesa-documento' edital.id etapa_id inscricao.id documento.id %}">
+        Abrir</a>
+      <span class="tamanho">{{ documento.tamanho }}</span>
+      {% else %}
+      <span class="vazio">Não apresentado</span>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+
+  {% comment %}
+  FR-028: não existe download em lote, exportação do acervo nem navegação por inscrição alheia.
+  A ausência é o requisito — e é por isso que não há "baixar todos" aqui.
+  {% endcomment %}
+</section>
+{% endblock %}

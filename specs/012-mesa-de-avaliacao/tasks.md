@@ -167,13 +167,13 @@ atende, e cada abertura fica registrada.
 **Independent Test**: abrir documento de inscrição atribuída funciona e deixa rastro; trocar o UUID
 na URL responde 404; arquivo corrompido é recusa registrada.
 
-- [ ] T046 [US3] Criar a view da inscrição em `backend/processo_seletivo/interface/views.py`, autorizada por `pode_avaliar_inscricao`, montando os documentos por `requisitos_da_inscricao` sobre o conteúdo da **versão que a inscrição aceitou** (T-006), e marcando a resposta com `marcar_como_privada` — a página carrega dado pessoal, e não só o arquivo (FR-056)
-- [ ] T047 [US3] Criar a view do documento em `backend/processo_seletivo/interface/views.py`, reutilizando `copia_verificada`, `entregar`, `marcar_como_privada` e o registro de `CONSULTAR_DOCUMENTO`/`INTEGRIDADE` — **sem** chamar `inscricao:consultar` (D-005)
-- [ ] T048 [P] [US3] Criar `backend/processo_seletivo/interface/templates/interface/mesa_inscricao.html`, com identificação mínima e o CPF mascarado (FR-030)
-- [ ] T049 [US3] Acrescentar as duas rotas em `backend/processo_seletivo/interface/urls.py`
-- [ ] T050 [P] [US3] Teste de autorização em `backend/tests/authorization/test_documento_da_mesa.py`: inscrição não atribuída 404; alocação removida revoga; escopo divergente 404
-- [ ] T051 [P] [US3] Teste de integração em `backend/tests/integration/avaliacoes/test_documento.py`: a trilha registra ator, inscrição e requisito; hash divergente é recusa registrada; não há rota de lote; **as duas respostas — página e arquivo — trazem `no-store`**
-- [ ] T052 [P] [US3] Teste de regressão em `backend/tests/integration/inscricoes/test_consulta_administrativa_intocada.py`, nas **duas** direções de SC-017: a porta da 009 continua exatamente como era, e a autorização da Mesa não abre a consulta administrativa — avaliador com atribuição não lista as inscrições do Edital
+- [X] T046 [US3] Criar a view da inscrição em `backend/processo_seletivo/interface/views.py`, autorizada por `pode_avaliar_inscricao`, montando os documentos por `requisitos_da_inscricao` sobre o conteúdo da **versão que a inscrição aceitou** (T-006), e marcando a resposta com `marcar_como_privada` — a página carrega dado pessoal, e não só o arquivo (FR-056)
+- [X] T047 [US3] Criar a view do documento em `backend/processo_seletivo/interface/views.py`, reutilizando `copia_verificada`, `entregar`, `marcar_como_privada` e o registro de `CONSULTAR_DOCUMENTO`/`INTEGRIDADE` — **sem** chamar `inscricao:consultar` (D-005)
+- [X] T048 [P] [US3] Criar `backend/processo_seletivo/interface/templates/interface/mesa_inscricao.html`, com identificação mínima e o CPF mascarado (FR-030)
+- [X] T049 [US3] Acrescentar as duas rotas em `backend/processo_seletivo/interface/urls.py`
+- [X] T050 [P] [US3] Teste de autorização em `backend/tests/authorization/test_documento_da_mesa.py`: inscrição não atribuída 404; alocação removida revoga; escopo divergente 404
+- [X] T051 [P] [US3] Teste de integração em `backend/tests/integration/avaliacoes/test_documento.py`: a trilha registra ator, inscrição e requisito; hash divergente é recusa registrada; não há rota de lote; **as duas respostas — página e arquivo — trazem `no-store`**
+- [X] T052 [P] [US3] Teste de regressão em `backend/tests/integration/inscricoes/test_consulta_administrativa_intocada.py`, nas **duas** direções de SC-017: a porta da 009 continua exatamente como era, e a autorização da Mesa não abre a consulta administrativa — avaliador com atribuição não lista as inscrições do Edital
 
 **Checkpoint**: o documento é instrumento de trabalho, mediado e auditado.
 

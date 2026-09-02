@@ -19,7 +19,13 @@ from django.views.decorators.http import require_http_methods
 from processo_seletivo.auditoria import selectors as auditoria_selectors
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.avaliacoes.application import distribuicao as distribuicao_app
+from processo_seletivo.avaliacoes.application import mesa as mesa_app
 from processo_seletivo.avaliacoes.application import selectors as avaliacao_selectors
+from processo_seletivo.avaliacoes.application.mesa import (
+    BASE_DA_MESA,
+    CONSULTAR_DOCUMENTO,
+    INTEGRIDADE,
+)
 from processo_seletivo.comissoes.application import alocacao as alocacao_app
 from processo_seletivo.comissoes.application import comissao as comissao_app
 from processo_seletivo.comissoes.application import selectors as comissao_selectors
@@ -2055,6 +2061,105 @@ def distribuicao(request, edital_id, etapa_id):
             },
         )
     )
+
+
+def _mesa_do_avaliador(request, edital_id, etapa_id):
+    """Ator e Edital para as rotas da Mesa — a primeira metade da autorização composta.
+
+    A segunda metade é por inscrição, e vive em `avaliacoes.application.mesa`: aqui só se resolve
+    o Edital e o ator, e tudo o que o ator não alcança responde como inexistente (FR-044).
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return None, None
+    edital = (
+        Edital.objects.filter(pk=edital_id, institution_scope=ator.institution_scope)
+        .select_related("processo")
+        .first()
+    )
+    if edital is None:
+        raise Http404
+    return ator, edital
+
+
+@require_http_methods(["GET"])
+def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
+    """O que o candidato enviou, sob a Atribuição que autoriza abrir (US3 da `012`)."""
+    ator, edital = _mesa_do_avaliador(request, edital_id, etapa_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    try:
+        contexto = mesa_app.inscricao_para_avaliar(
+            ator=ator, edital=edital, etapa_id=etapa_id, inscricao_id=inscricao_id
+        )
+    except DomainError as recusa:
+        raise Http404 from recusa
+    # A **página** carrega dado pessoal, e não só o arquivo: protocolo, nome e CPF mascarado não
+    # podem ficar no cache do navegador (FR-056).
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/mesa_inscricao.html",
+            {**contexto, "edital": edital, "processo": edital.processo, "etapa_id": etapa_id},
+        )
+    )
+
+
+@require_http_methods(["GET"])
+def documento_da_mesa(request, edital_id, etapa_id, inscricao_id, requirement_id):
+    """O documento do candidato, conferido **antes** de sair um byte.
+
+    A mecânica é a mesma da consulta administrativa da 009 — e a autorização não é: aqui vale a
+    Atribuição, e nunca a permissão que alcança o Edital inteiro (D-005).
+    """
+    ator, edital = _mesa_do_avaliador(request, edital_id, etapa_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    try:
+        documento, _ = mesa_app.documento_para_avaliar(
+            ator=ator,
+            edital=edital,
+            etapa_id=etapa_id,
+            inscricao_id=inscricao_id,
+            requirement_id=requirement_id,
+        )
+    except DomainError as recusa:
+        raise Http404 from recusa
+    # Uma passagem só: a cópia é conferida e é **ela** que vai para a resposta. Verificar um
+    # conteúdo e servir outro é pior do que não verificar, porque produz a afirmação de
+    # integridade que ninguém checou (FR-029).
+    copia, calculado = copia_verificada(documento)
+    if calculado != documento.content_hash:
+        copia.close()
+        _registrar_na_mesa(ator, documento, request, INTEGRIDADE)
+        raise DomainError(
+            "document_integrity_failed",
+            "O arquivo guardado não confere com o que foi recebido. O documento não pode ser "
+            "apresentado como íntegro; registre a ocorrência à presidência.",
+            409,
+        )
+    _registrar_na_mesa(ator, documento, request, CONSULTAR_DOCUMENTO)
+    return entregar(documento, anexo=bool(request.GET.get("baixar")), verificado=copia)
+
+
+def _registrar_na_mesa(ator, documento, request, operacao):
+    """Cada abertura fica registrada, com ator, inscrição e requisito (FR-027).
+
+    A base registrada é a da Mesa, e não a permissão da consulta administrativa: é ela que diz
+    **por que** o acesso foi concedido — a Atribuição, e não um papel (FR-051, FR-053).
+
+    A trilha guarda que o ato aconteceu, e nunca o nome do arquivo, que é do candidato (FR-054).
+    """
+    with command_context() as agora:
+        record_event(
+            actor=ator,
+            permission=BASE_DA_MESA,
+            operation=operacao,
+            aggregate=documento.inscricao,
+            now=agora,
+            correlation_id=getattr(request, "correlation_id", ""),
+            reason=f"requisito {documento.requirement_id}",
+        )
 
 
 @require_http_methods(["GET"])

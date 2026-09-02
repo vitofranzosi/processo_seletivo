@@ -126,6 +126,16 @@ def edital_a(db, api_client, manager_headers, process_payload):
 
 
 @pytest.fixture
+def edital_com_documentos(db, raiz_de_arquivos, api_client, manager_headers, process_payload):
+    """O mesmo Processo A, com Documentos Exigidos — a `012` abre a inscrição por requisito."""
+    from tests.fixtures.comissao import publicar_processo_com_etapas
+
+    return publicar_processo_com_etapas(
+        api_client, manager_headers, process_payload, com_documentos=True
+    )
+
+
+@pytest.fixture
 def processo_a(edital_a):
     return edital_a.processo
 

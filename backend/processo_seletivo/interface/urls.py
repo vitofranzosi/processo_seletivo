@@ -114,6 +114,20 @@ urlpatterns = [
         name="distribuicao-remover",
     ),
     path("minhas-etapas", views.minhas_etapas, name="minhas-etapas"),
+    # A inscrição como instrumento de trabalho, sob a Mesa que a autoriza (012, US3). O caminho
+    # pende de `minhas-etapas` porque é dali que ele é alcançado, e porque a autorização é a
+    # mesma: a Etapa pela alocação, a inscrição pela Atribuição.
+    path(
+        "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>",
+        views.inscricao_da_mesa,
+        name="mesa-inscricao",
+    ),
+    path(
+        "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>"
+        "/documentos/<uuid:requirement_id>",
+        views.documento_da_mesa,
+        name="mesa-documento",
+    ),
     path(
         "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>",
         views.minha_etapa,

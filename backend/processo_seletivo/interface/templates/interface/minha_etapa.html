@@ -68,7 +68,10 @@ executa, e a página continua dizendo por qual porta ele veio (011, D-006).
     <tbody>
       {% for linha in linhas %}
       <tr>
-        <td>{{ linha.inscricao.protocolo|default:linha.inscricao.id }}</td>
+        <td>
+          <a href="{% url 'interface:mesa-inscricao' edital.id etapa.id linha.inscricao.id %}">
+            {{ linha.inscricao.protocolo|default:linha.inscricao.id }}</a>
+        </td>
         <td>{% if linha.concluida %}Concluída{% else %}Pendente{% endif %}</td>
       </tr>
       {% endfor %}
