@@ -36,10 +36,68 @@
   </dd>
 </dl>
 
-{% comment %} §50 da spec — a demonstração de fronteira é o que NÃO existe nesta página: nenhuma lista de
-   candidatos, nenhum documento, nenhuma nota, nenhum parecer e nenhum botão de avaliar, nem
-   mesmo desabilitado. A avaliação é a 012, e antecipá-la aqui em forma de controle inerte seria
-   prometer o que esta entrega não cumpre. {% endcomment %}
-<p class="ajuda">A avaliação dos candidatos será disponibilizada quando a etapa correspondente
-  estiver habilitada no sistema.</p>
+{% comment %}
+A Mesa (012, US2). Ela substitui o aviso que a 011 deixou aqui — e é por isso que aquele aviso
+existia em vez de um controle desabilitado: prometer em forma de botão inerte o que a entrega não
+cumpre seria pior do que dizer que viria depois.
+
+Só quem chegou por **alocação** tem Mesa. Quem chegou pela gestão organiza o trabalho e não o
+executa, e a página continua dizendo por qual porta ele veio (011, D-006).
+{% endcomment %}
+{% if por_alocacao %}
+<section aria-labelledby="mesa">
+  <h2 id="mesa">Minha Mesa</h2>
+
+  {% if contagens.total %}
+  <p class="contagens" role="status">
+    {{ contagens.total }} atribuiç{{ contagens.total|pluralize:"ão,ões" }} ·
+    <strong>{{ contagens.pendentes }} pendente{{ contagens.pendentes|pluralize:"s" }}</strong> ·
+    {{ contagens.concluidas }} concluída{{ contagens.concluidas|pluralize:"s" }}
+  </p>
+
+  <nav class="filtros" aria-label="Filtrar a Mesa">
+    <a href="?filtro=pendentes" {% if filtro == "pendentes" %}aria-current="page"{% endif %}>Pendentes</a>
+    <a href="?filtro=concluidas" {% if filtro == "concluidas" %}aria-current="page"{% endif %}>Concluídas</a>
+    <a href="?" {% if not filtro %}aria-current="page"{% endif %}>Todas</a>
+  </nav>
+
+  {% if linhas %}
+  <table class="tabela">
+    <caption class="oculto">Inscrições atribuídas a você nesta Etapa</caption>
+    <thead><tr><th scope="col">Inscrição</th><th scope="col">Situação</th></tr></thead>
+    <tbody>
+      {% for linha in linhas %}
+      <tr>
+        <td>{{ linha.inscricao.protocolo|default:linha.inscricao.id }}</td>
+        <td>{% if linha.concluida %}Concluída{% else %}Pendente{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% comment %} Quarenta e oito é comum; quinhentas não pode quebrar a tela (FR-022). {% endcomment %}
+  {% if pagina.has_other_pages %}
+  <nav class="paginacao" aria-label="Páginas da Mesa">
+    {% if pagina.has_previous %}<a href="?pagina={{ pagina.previous_page_number }}{% if filtro %}&filtro={{ filtro }}{% endif %}">Anterior</a>{% endif %}
+    <span aria-current="page">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    {% if pagina.has_next %}<a href="?pagina={{ pagina.next_page_number }}{% if filtro %}&filtro={{ filtro }}{% endif %}">Próxima</a>{% endif %}
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <p class="vazio">Nenhuma inscrição sua corresponde a este filtro.</p>
+  {% endif %}
+
+  {% else %}
+  {% comment %}
+  FR-023: alocação abre a porta da Etapa; a Atribuição abre a inscrição. Quem está alocado e ainda
+  não recebeu nada **alcança** a Mesa e a encontra vazia — responder como inexistente negaria o que
+  a 011 concedeu, e falar em permissão diria a coisa errada: não falta autorização, falta trabalho
+  distribuído.
+  {% endcomment %}
+  <p class="vazio">Nenhuma inscrição foi distribuída a você nesta Etapa ainda.
+    Quando a presidência distribuir, elas aparecerão aqui.</p>
+  {% endif %}
+</section>
+{% endif %}
 {% endblock %}

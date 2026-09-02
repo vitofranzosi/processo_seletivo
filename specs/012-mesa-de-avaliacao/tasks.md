@@ -147,13 +147,13 @@ atribuídas.
 **Independent Test**: avaliador com atribuições vê a lista paginada com contagens; alocado sem
 atribuição abre a Mesa **vazia**; inscrição de outro responde 404.
 
-- [ ] T039 [US2] Implementar `mesa()` em `backend/processo_seletivo/avaliacoes/application/selectors.py`: uma chamada a `etapas_autorizadas`, uma consulta paginada com `select_related`, uma de contagens
-- [ ] T040 [US2] Ligar a Mesa à view em `backend/processo_seletivo/interface/views.py`: `minha_etapa` passa a chamar `mesa()`, aplicar filtro e paginação, e marcar a resposta com `marcar_como_privada` (FR-056)
-- [ ] T041 [US2] Substituir o aviso da 011 pela lista em `backend/processo_seletivo/interface/templates/interface/minha_etapa.html`, com filtro de pendentes/concluídas, contagens e o período previsto da Etapa (FR-078)
-- [ ] T042 [US2] Implementar o estado vazio de FR-023 em `backend/processo_seletivo/interface/templates/interface/minha_etapa.html` — explicando que ainda não há inscrições distribuídas, e nunca como falta de permissão
-- [ ] T043 [P] [US2] Teste de interface em `backend/tests/interface/test_mesa.py`: contagem, filtro, paginação, estado vazio e o cabeçalho `no-store`
-- [ ] T044 [P] [US2] Teste de autorização em `backend/tests/authorization/test_mesa.py`: alocado sem atribuição recebe a Mesa vazia com 200; sem alocação recebe 404; remover a alocação faz a Mesa sumir e devolvê-la restaura as mesmas atribuições
-- [ ] T045 [P] [US2] Teste em `backend/tests/integration/avaliacoes/test_revogacao_computada.py`: alocar, desalocar e remover membro **não escrevem em nenhuma linha de `Atribuicao`** (FR-069); e Atribuição cuja Etapa não está na Versão Consolidada vigente não concede acesso, pela mesma regra da alocação órfã (EC-011)
+- [X] T039 [US2] Implementar `mesa()` em `backend/processo_seletivo/avaliacoes/application/selectors.py`: uma chamada a `etapas_autorizadas`, uma consulta paginada com `select_related`, uma de contagens
+- [X] T040 [US2] Ligar a Mesa à view em `backend/processo_seletivo/interface/views.py`: `minha_etapa` passa a chamar `mesa()`, aplicar filtro e paginação, e marcar a resposta com `marcar_como_privada` (FR-056)
+- [X] T041 [US2] Substituir o aviso da 011 pela lista em `backend/processo_seletivo/interface/templates/interface/minha_etapa.html`, com filtro de pendentes/concluídas, contagens e o período previsto da Etapa (FR-078)
+- [X] T042 [US2] Implementar o estado vazio de FR-023 em `backend/processo_seletivo/interface/templates/interface/minha_etapa.html` — explicando que ainda não há inscrições distribuídas, e nunca como falta de permissão
+- [X] T043 [P] [US2] Teste de interface em `backend/tests/interface/test_mesa.py`: contagem, filtro, paginação, estado vazio e o cabeçalho `no-store`
+- [X] T044 [P] [US2] Teste de autorização em `backend/tests/authorization/test_mesa.py`: alocado sem atribuição recebe a Mesa vazia com 200; sem alocação recebe 404; remover a alocação faz a Mesa sumir e devolvê-la restaura as mesmas atribuições
+- [X] T045 [P] [US2] Teste em `backend/tests/integration/avaliacoes/test_revogacao_computada.py`: alocar, desalocar e remover membro **não escrevem em nenhuma linha de `Atribuicao`** (FR-069); e Atribuição cuja Etapa não está na Versão Consolidada vigente não concede acesso, pela mesma regra da alocação órfã (EC-011)
 
 **Checkpoint**: o avaliador enxerga o seu trabalho, e só o dele.
 

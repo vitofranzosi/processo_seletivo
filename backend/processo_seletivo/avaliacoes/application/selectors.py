@@ -163,3 +163,53 @@ def resumo_da_etapa(*, edital, etapa):
             edital=edital, etapa_id=etapa["id"], ativo=True
         ).count(),
     }
+
+
+# Os dois filtros da Mesa. São derivados do estado da Avaliação, e não colunas: "pendente" é a
+# ausência de conclusão, e persistí-la criaria estado a manter a cada gravação (FR-021).
+PENDENTES = "pendentes"
+CONCLUIDAS = "concluidas"
+
+
+def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None):
+    """A lista de trabalho de quem avalia: **todas e somente** as inscrições dela (FR-020).
+
+    A autorização vem da forma **em lote** que a 011 entregou — `etapas_autorizadas` responde a
+    mesma regra do guard para o conjunto, numa leitura só. Chamar `pode_atuar_na_etapa` aqui faria
+    dele o gargalo da feature: com quinhentas atribuições seriam quinhentas verificações para
+    responder uma pergunta que já foi respondida (FR-024, FR-048).
+
+    Devolve `(linhas, pagina, contagens)`. `None` no lugar da página significa que esta pessoa não
+    atua nesta Etapa — quem chama decide se isso é 404 ou estado vazio, porque a distinção é da
+    tela: alcançar a Etapa é da alocação, alcançar a inscrição é da Atribuição (FR-023).
+    """
+    from processo_seletivo.comissoes.domain.autorizacao import etapas_autorizadas, membro_ativo
+
+    if etapa_id not in etapas_autorizadas(ator, edital):
+        return None, None, None
+    membro = membro_ativo(ator, edital.processo)
+    minhas = Atribuicao.objects.filter(
+        membro=membro, edital=edital, etapa_id=etapa_id, ativo=True
+    ).select_related("inscricao", "avaliacao")
+    contagens = minhas.aggregate(
+        total=Count("id"),
+        concluidas=Count("id", filter=Q(avaliacao__estado=Avaliacao.Estado.CONCLUIDA)),
+    )
+    contagens["pendentes"] = contagens["total"] - contagens["concluidas"]
+    if filtro == CONCLUIDAS:
+        minhas = minhas.filter(avaliacao__estado=Avaliacao.Estado.CONCLUIDA)
+    elif filtro == PENDENTES:
+        minhas = minhas.exclude(avaliacao__estado=Avaliacao.Estado.CONCLUIDA)
+    paginas = Paginator(minhas.order_by("inscricao__protocolo", "inscricao_id"), POR_PAGINA)
+    pagina_atual = paginas.get_page(pagina)
+    linhas = [
+        {
+            "atribuicao": atribuicao,
+            "inscricao": atribuicao.inscricao,
+            "avaliacao": getattr(atribuicao, "avaliacao", None),
+            "concluida": getattr(atribuicao, "avaliacao", None) is not None
+            and atribuicao.avaliacao.estado == Avaliacao.Estado.CONCLUIDA,
+        }
+        for atribuicao in pagina_atual
+    ]
+    return linhas, pagina_atual, contagens

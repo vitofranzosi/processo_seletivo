@@ -2124,17 +2124,38 @@ def minha_etapa(request, edital_id, etapa_id):
         if publicado
         else None
     )
-    return render(
-        request,
-        "interface/minha_etapa.html",
-        {
-            "edital": edital,
-            "processo": edital.processo,
-            "etapa": etapa,
-            "evento": evento,
-            "por_alocacao": por_alocacao,
-            "por_gestao": por_gestao and not por_alocacao,
-        },
+    # A Mesa: **todas e somente** as inscrições atribuídas a esta pessoa nesta Etapa (FR-020).
+    # Quem chegou por gestão não tem Mesa — organizar o trabalho não é executá-lo —, e a página
+    # continua sendo a da Etapa, dizendo por qual atribuição o ator chegou (011, D-006).
+    linhas, pagina, contagens = (
+        avaliacao_selectors.mesa(
+            ator=ator,
+            edital=edital,
+            etapa_id=etapa_id,
+            pagina=request.GET.get("pagina") or 1,
+            filtro=request.GET.get("filtro") or None,
+        )
+        if por_alocacao
+        else (None, None, None)
+    )
+    # A resposta carrega protocolo de candidato: é dado pessoal, e não fica no cache (FR-056).
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/minha_etapa.html",
+            {
+                "edital": edital,
+                "processo": edital.processo,
+                "etapa": etapa,
+                "evento": evento,
+                "por_alocacao": por_alocacao,
+                "por_gestao": por_gestao and not por_alocacao,
+                "linhas": linhas,
+                "pagina": pagina,
+                "contagens": contagens,
+                "filtro": request.GET.get("filtro") or "",
+            },
+        )
     )
 
 
