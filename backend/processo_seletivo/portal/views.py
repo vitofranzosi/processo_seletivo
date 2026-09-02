@@ -312,7 +312,6 @@ def _perfil_da_vitrine(perfil, iniciadas, conteudo):
     }
 
 
-
 # ---------------------------------------------------------------------------
 # Acesso sem senha (010). Três telas curtas, e a decisão de a qual identidade o endereço pertence
 # acontece entre a validação do código e a criação de qualquer vínculo (FR-052).
@@ -535,9 +534,7 @@ def _decidir_a_quem_pertence(request, desafio, email_como_informado):
         request.session[CHAVE_DO_DESAFIO] = str(desafio.pk)
         return redirect(reverse("portal:acesso-reconciliar"))
 
-    return _entrar(
-        request, associacao.criar_identidade_com(canonico, email_como_informado)
-    )
+    return _entrar(request, associacao.criar_identidade_com(canonico, email_como_informado))
 
 
 def _entrar(request, identidade):
@@ -573,9 +570,7 @@ def _desafio_provado(request):
     identificador = request.session.get(CHAVE_DO_DESAFIO)
     if not identificador:
         return None
-    return DesafioDeAcesso.objects.filter(
-        pk=identificador, consumido_em__isnull=False
-    ).first()
+    return DesafioDeAcesso.objects.filter(pk=identificador, consumido_em__isnull=False).first()
 
 
 def _endereco_do_desafio(request, desafio):
@@ -630,9 +625,7 @@ def acesso_reconciliar(request):
             "Tudo certo. Se mudar de ideia, você pode vincular a participação anterior enquanto "
             "não abrir nenhuma inscrição.",
         )
-        return _entrar(
-            request, associacao.criar_identidade_com(desafio.email_canonico, informado)
-        )
+        return _entrar(request, associacao.criar_identidade_com(desafio.email_canonico, informado))
 
     identidade = associacao.confirmar_cpf(desafio, request.POST.get("cpf", ""))
     if identidade is not None:
@@ -663,9 +656,7 @@ def acesso_reconciliar(request):
             "Não conseguimos confirmar o CPF desta vez. Sua área está aqui, e você pode tentar "
             "vincular a participação anterior de novo abaixo.",
         )
-        return _entrar(
-            request, associacao.criar_identidade_com(desafio.email_canonico, informado)
-        )
+        return _entrar(request, associacao.criar_identidade_com(desafio.email_canonico, informado))
     contexto["erro"] = (
         "Não foi possível confirmar. Confira os números e tente novamente, ou continue sem "
         "vincular sua participação anterior."
@@ -968,8 +959,7 @@ def inscricoes(request):
         "portal/inscricoes.html",
         {
             "inscricoes": [
-                _item_da_lista(registro, conteudos.get(registro.edital_id))
-                for registro in minhas
+                _item_da_lista(registro, conteudos.get(registro.edital_id)) for registro in minhas
             ],
             # O convite de retomada só aparece para quem pode aceitá-lo: identidade sem inscrição
             # alguma e com um endereço que consta de participação anterior de outra identidade. A
@@ -1191,9 +1181,7 @@ def _cronograma(conteudo, agora):
     `FR-076`, dita em dado: nada aqui sabe quem está lendo.
     """
     eventos = []
-    for evento in sorted(
-        conteudo.get("schedule") or [], key=lambda item: item.get("order") or 0
-    ):
+    for evento in sorted(conteudo.get("schedule") or [], key=lambda item: item.get("order") or 0):
         inicio = parse_datetime(evento.get("startAt") or "")
         fim = parse_datetime(evento.get("endAt") or "") if evento.get("endAt") else None
         if fim is not None and agora > fim:

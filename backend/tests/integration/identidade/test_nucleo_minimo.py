@@ -65,7 +65,9 @@ def test_o_rascunho_recebe_o_nucleo_da_identidade(client, nova, selecao):
 def test_quem_veio_da_009_nunca_ve_o_formulario(client, selecao):
     """A reconciliação já trouxe nome e CPF: pedi-los seria pedir o que o sistema já sabe."""
     legada = CandidateIdentity.objects.create(
-        subject=novo_subject(), nome="Maria Silva", cpf_normalizado="12345678909",
+        subject=novo_subject(),
+        nome="Maria Silva",
+        cpf_normalizado="12345678909",
         created_at=timezone.now(),
     )
     associacao.associar_credencial(legada, "maria@exemplo.test", "maria@exemplo.test")

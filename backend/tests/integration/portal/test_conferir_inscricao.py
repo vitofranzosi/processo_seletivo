@@ -71,8 +71,7 @@ def test_cada_documento_diz_qual_requisito_atende(client, enviada):
 
     versao = enviada.versao_aceita
     nomes = [
-        requisito.get("name", "")
-        for requisito in requisitos_da_inscricao(versao.content, enviada)
+        requisito.get("name", "") for requisito in requisitos_da_inscricao(versao.content, enviada)
     ]
     corpo = abrir(client, enviada)
 

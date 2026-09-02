@@ -106,9 +106,7 @@ def test_caso_2_conhecer_o_cpf_alheio_nao_da_acesso(client, canal, selecao):
     corpo = client.get(reverse("portal:inscricoes")).content.decode()
     assert "Você ainda não possui inscrições" in corpo
     assert str(de_maria.id) not in corpo
-    do_atacante = CandidateEmail.objects.get(
-        email_canonico="atacante@exemplo.test"
-    ).identidade
+    do_atacante = CandidateEmail.objects.get(email_canonico="atacante@exemplo.test").identidade
     assert do_atacante.cpf_normalizado == "", "nenhum vínculo com o CPF de ninguém"
     assert client.get(reverse("portal:inscricao", args=[de_maria.id])).status_code == 404
 
@@ -121,7 +119,9 @@ def test_caso_2_conhecer_o_cpf_alheio_nao_da_acesso(client, canal, selecao):
 def test_caso_3_agir_antes_nao_reserva_o_cpf_alheio(client, canal, selecao):
     """E a inscrição legítima **não** é recusada por causa do CPF que o terceiro declarou."""
     do_terceiro = CandidateIdentity.objects.create(
-        subject=novo_subject(), nome="Terceiro Qualquer", cpf_normalizado=CPF_DE_MARIA,
+        subject=novo_subject(),
+        nome="Terceiro Qualquer",
+        cpf_normalizado=CPF_DE_MARIA,
         created_at=timezone.now(),
     )
     Inscricao.objects.create(
@@ -150,7 +150,9 @@ def test_caso_3_agir_antes_nao_reserva_o_cpf_alheio(client, canal, selecao):
 def test_caso_4_quem_controla_a_caixa_hoje_entra_na_propria_identidade(client, canal, selecao):
     """Maria digitou por engano um endereço que hoje é de outra pessoa."""
     legada = CandidateIdentity.objects.create(
-        subject=novo_subject(), nome="Maria", cpf_normalizado=CPF_DE_MARIA,
+        subject=novo_subject(),
+        nome="Maria",
+        cpf_normalizado=CPF_DE_MARIA,
         created_at=timezone.now(),
     )
     Inscricao.objects.create(
@@ -182,7 +184,9 @@ def test_caso_4_quem_controla_a_caixa_hoje_entra_na_propria_identidade(client, c
 
 def test_caso_5_recusar_por_engano_e_retomar(client, canal, selecao):
     legada = CandidateIdentity.objects.create(
-        subject=novo_subject(), nome="Maria", cpf_normalizado=CPF_DE_MARIA,
+        subject=novo_subject(),
+        nome="Maria",
+        cpf_normalizado=CPF_DE_MARIA,
         created_at=timezone.now(),
     )
     Inscricao.objects.create(

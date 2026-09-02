@@ -97,9 +97,7 @@ def test_endereco_de_outra_identidade_e_recusado_sem_dizer_de_quem(client, dentr
     # palavras que nada têm a ver com identidade, e afirmar sobre a página toda mediria o CSS.
     import re as _re
 
-    mensagem = _re.search(
-        r'class="aviso recusa-em-destaque"[^>]*>(.*?)</p>', corpo, _re.S
-    ).group(1)
+    mensagem = _re.search(r'class="aviso recusa-em-destaque"[^>]*>(.*?)</p>', corpo, _re.S).group(1)
     assert "Não foi possível usar este endereço" in mensagem
     # "Tente outro" é convite, não revelação — o que não pode aparecer é atribuição de dono.
     for revelador in ("pertence", "existe", "cadastrad", "outra conta", "outro candidato"):

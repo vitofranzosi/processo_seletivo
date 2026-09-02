@@ -107,7 +107,7 @@ def test_cada_item_diz_de_qual_Edital_e_de_qual_Perfil_e(client, selecao):
     corpo = client.get(reverse("portal:inscricoes")).content.decode()
 
     assert "Edital 01/2026" in corpo
-    assert "Professor" in corpo or "Docente" in corpo, corpo[corpo.find("selecao"):][:400]
+    assert "Professor" in corpo or "Docente" in corpo, corpo[corpo.find("selecao") :][:400]
 
 
 def test_o_rascunho_diz_que_nao_foi_enviado(client, selecao):
