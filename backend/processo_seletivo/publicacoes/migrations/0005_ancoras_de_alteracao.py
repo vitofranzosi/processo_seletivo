@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('publicacoes', '0004_devolucao_retificacao'),
+        ("publicacoes", "0004_devolucao_retificacao"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='alteracaonormativa',
-            name='expected_anchors',
+            model_name="alteracaonormativa",
+            name="expected_anchors",
             field=models.JSONField(blank=True, default=dict),
         ),
     ]

@@ -59,9 +59,7 @@ def test_minhas_etapas_leva_a_presidente_ate_a_comissao_dela(presidente, process
     assert reverse("interface:alocacoes", args=[processo_a.id]) in corpo
 
 
-def test_quem_nao_tem_nada_continua_recebendo_a_orientacao_em_minhas_etapas(
-    client, seletor_ligado
-):
+def test_quem_nao_tem_nada_continua_recebendo_a_orientacao_em_minhas_etapas(client, seletor_ligado):
     identificar(client, "servidor.novo", [])
 
     corpo = client.get(reverse("interface:minhas-etapas")).content.decode()
@@ -75,9 +73,7 @@ def test_quem_ja_esta_alocado_aparece_marcado(
     """Na matriz não há o que "oferecer": o estado atual é o que a caixa mostra."""
     alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
 
-    corpo = presidente.get(
-        reverse("interface:alocacoes", args=[processo_a.id])
-    ).content.decode()
+    corpo = presidente.get(reverse("interface:alocacoes", args=[processo_a.id])).content.decode()
 
     marcada = f'value="{edital_a.id}:{etapa_a1}:{comissao_de_a["joao"].id}"'
     assert "checked" in corpo.split(marcada)[1].split(">")[0]
@@ -90,9 +86,7 @@ def test_a_coluna_conta_quantos_atuam_na_etapa(
     for membro in comissao_de_a.values():
         alocar_em(gestor, processo_a, membro, edital_a, etapa_a1)
 
-    corpo = presidente.get(
-        reverse("interface:alocacoes", args=[processo_a.id])
-    ).content.decode()
+    corpo = presidente.get(reverse("interface:alocacoes", args=[processo_a.id])).content.decode()
 
     cabecalho = corpo.split("Análise documental")[1].split("</th>")[0]
     assert ">2<" in cabecalho
@@ -107,9 +101,7 @@ def test_cada_celula_da_matriz_diz_de_quem_e_de_onde(
     distribuicao = presidente.get(
         reverse("interface:alocacoes", args=[processo_a.id])
     ).content.decode()
-    comissao = presidente.get(
-        reverse("interface:comissao", args=[processo_a.id])
-    ).content.decode()
+    comissao = presidente.get(reverse("interface:comissao", args=[processo_a.id])).content.decode()
 
     assert 'aria-label="joao em Análise documental' in distribuicao
     assert 'aria-label="Remover joao da comissão"' in comissao
@@ -142,9 +134,7 @@ def test_alocar_a_comissao_inteira_numa_submissao(
             "acao": "distribuir",
             "escopo_membro": [str(m.id) for m in comissao_de_a.values()],
             "escopo_etapa": [f"{edital_a.id}:{etapa_a1}"],
-            "celula": [
-                f"{edital_a.id}:{etapa_a1}:{m.id}" for m in comissao_de_a.values()
-            ],
+            "celula": [f"{edital_a.id}:{etapa_a1}:{m.id}" for m in comissao_de_a.values()],
             "chave_idempotencia": "interface-lote-0001",
         },
         follow=True,
@@ -156,9 +146,7 @@ def test_alocar_a_comissao_inteira_numa_submissao(
 
 def test_a_alocacao_abre_com_o_resumo(presidente, processo_a, comissao_de_a):
     """Sem ele, a resposta que a tela existe para dar tem de ser contada nos cartões."""
-    corpo = presidente.get(
-        reverse("interface:alocacoes", args=[processo_a.id])
-    ).content.decode()
+    corpo = presidente.get(reverse("interface:alocacoes", args=[processo_a.id])).content.decode()
 
     assert "Etapas com equipe" in corpo or "Etapa com equipe" in corpo
     assert "sem ninguém" in corpo
@@ -374,9 +362,7 @@ def test_os_controles_de_cada_membro_ficam_sob_demanda(presidente, processo_a, c
     O que **não** pode ficar escondido é a informação — nome, identificador, função e Etapas
     continuam na leitura direta.
     """
-    corpo = presidente.get(
-        reverse("interface:comissao", args=[processo_a.id])
-    ).content.decode()
+    corpo = presidente.get(reverse("interface:comissao", args=[processo_a.id])).content.decode()
 
     assert "<summary>Gerir joao</summary>" in corpo
     assert "<summary>Gerir maria</summary>" in corpo
@@ -408,9 +394,7 @@ def test_a_coluna_inteira_e_o_seu_inverso_existem_na_tela(
     presidente, processo_a, edital_a, comissao_de_a, etapa_a1
 ):
     """Marcar a coluna e limpá-la custam o mesmo — a assimetria que a tela antiga tinha."""
-    corpo = presidente.get(
-        reverse("interface:alocacoes", args=[processo_a.id])
-    ).content.decode()
+    corpo = presidente.get(reverse("interface:alocacoes", args=[processo_a.id])).content.decode()
 
     assert f'name="coluna_todos" value="{edital_a.id}:{etapa_a1}"' in corpo
     assert f'name="coluna_nenhum" value="{edital_a.id}:{etapa_a1}"' in corpo

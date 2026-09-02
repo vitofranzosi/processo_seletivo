@@ -32,9 +32,7 @@ def _anexar(inscricao, requisito=DOCUMENTO_DE_TODOS, nome="rg.pdf"):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_falha_apos_a_escrita_nao_deixa_arquivo_orfao(
-    inscricao_de_maria, raiz_de_arquivos
-):
+def test_falha_apos_a_escrita_nao_deixa_arquivo_orfao(inscricao_de_maria, raiz_de_arquivos):
     """Primeiro envio: se a transação não chega ao fim, o arquivo escrito não fica para trás."""
     with mock.patch.object(rascunho, "record_event", side_effect=RuntimeError("falha injetada")):
         with pytest.raises(RuntimeError):
@@ -46,9 +44,7 @@ def test_falha_apos_a_escrita_nao_deixa_arquivo_orfao(
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_falha_na_substituicao_preserva_o_arquivo_anterior(
-    inscricao_de_maria, raiz_de_arquivos
-):
+def test_falha_na_substituicao_preserva_o_arquivo_anterior(inscricao_de_maria, raiz_de_arquivos):
     """Substituição: o registro que volta pelo rollback aponta para um arquivo que existe."""
     _anexar(inscricao_de_maria, nome="primeiro.pdf")
     original = DocumentoSubmetido.objects.get()
@@ -66,9 +62,7 @@ def test_falha_na_substituicao_preserva_o_arquivo_anterior(
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_a_substituicao_confirmada_apaga_o_anterior_do_disco(
-    inscricao_de_maria, raiz_de_arquivos
-):
+def test_a_substituicao_confirmada_apaga_o_anterior_do_disco(inscricao_de_maria, raiz_de_arquivos):
     _anexar(inscricao_de_maria, nome="primeiro.pdf")
     caminho_original = raiz_de_arquivos / DocumentoSubmetido.objects.get().arquivo.name
 

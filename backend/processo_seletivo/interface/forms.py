@@ -211,9 +211,7 @@ def _modalidade_para_o_formulario(modalidade):
         "ruleId": str(regra.id) if regra else str(uuid4()),
         "foundation": regra.foundation if regra else "",
         "version": regra.version if regra else "",
-        "percentage": ""
-        if regra is None or regra.percentage is None
-        else f"{regra.percentage:f}",
+        "percentage": "" if regra is None or regra.percentage is None else f"{regra.percentage:f}",
     }
 
 

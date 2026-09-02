@@ -79,9 +79,7 @@ def test_a_remocao_da_comissao_e_a_da_etapa_nao_se_confundem(
     identificar(client, "carlos", ["gestor"])
 
     da_comissao = client.get(url(processo_a)).content.decode()
-    distribuicao = client.get(
-        reverse("interface:alocacoes", args=[processo_a.id])
-    ).content.decode()
+    distribuicao = client.get(reverse("interface:alocacoes", args=[processo_a.id])).content.decode()
 
     assert 'aria-label="Remover joao da comissão"' in da_comissao
     assert "Remover da comissão" not in distribuicao
@@ -160,7 +158,7 @@ def test_distribuicao_salva_produz_aviso_perceptivel(
 def test_formulario_sem_o_campo_funcao_nao_rebaixa_ninguem(
     client, seletor_ligado, processo_a, comissao_de_a
 ):
-    """"Não informado" e "informado como MEMBRO" são coisas diferentes.
+    """ "Não informado" e "informado como MEMBRO" são coisas diferentes.
 
     Um formulário truncado — cliente próprio, campo renomeado num refactor — não pode rebaixar
     a presidente por omissão.

@@ -49,9 +49,9 @@ def _identidades_aninhadas_alheias(profiles):
     ).values_list("id", "perfil_id"):
         if str(contêiner) != modalidades[str(identificador)]:
             alheios.add(str(identificador))
-    for identificador, contêiner in RegraNormativa.objects.filter(
-        id__in=list(regras)
-    ).values_list("id", "modalidade_id"):
+    for identificador, contêiner in RegraNormativa.objects.filter(id__in=list(regras)).values_list(
+        "id", "modalidade_id"
+    ):
         if str(contêiner) != regras[str(identificador)]:
             alheios.add(str(identificador))
     return alheios

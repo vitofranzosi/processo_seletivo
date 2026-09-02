@@ -52,7 +52,6 @@ def normalizar_cpf(valor: str) -> str:
     return digitos(valor)
 
 
-
 def contexto_candidato(request):
     """A identidade do candidato em todo template do portal, para o cabeçalho poder oferecer `Sair`.
 
@@ -76,9 +75,7 @@ def identidade_da_sessao(request) -> IdentidadeDoCandidato | None:
 
 def _registro(identidade_id) -> CandidateIdentity | None:
     return (
-        CandidateIdentity.objects.filter(pk=identidade_id)
-        .prefetch_related("credenciais")
-        .first()
+        CandidateIdentity.objects.filter(pk=identidade_id).prefetch_related("credenciais").first()
     )
 
 

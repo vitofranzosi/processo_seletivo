@@ -16,12 +16,8 @@ pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
 
 def test_abrir_duas_vezes_produz_uma_inscricao(selecao):
-    primeira = abrir_inscricao(
-        identidade=MARIA, edital_id=selecao.id, profile_id=PERFIL_DOCENTE
-    )
-    segunda = abrir_inscricao(
-        identidade=MARIA, edital_id=selecao.id, profile_id=PERFIL_DOCENTE
-    )
+    primeira = abrir_inscricao(identidade=MARIA, edital_id=selecao.id, profile_id=PERFIL_DOCENTE)
+    segunda = abrir_inscricao(identidade=MARIA, edital_id=selecao.id, profile_id=PERFIL_DOCENTE)
     assert primeira.id == segunda.id
     assert Inscricao.objects.count() == 1
 

@@ -6,7 +6,6 @@ API, de modo que validar apenas ali deixaria sem verificação justamente o cana
 digitado.
 """
 
-
 from processo_seletivo.editais.domain.perfis import RecusaDeCampo
 
 

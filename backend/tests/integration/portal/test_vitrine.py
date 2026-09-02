@@ -78,7 +78,7 @@ def test_a_vitrine_e_cacheavel(client, api_client, manager_headers, process_payl
 def test_o_cartao_diz_para_qual_vaga_e_quantas(
     client, api_client, manager_headers, process_payload
 ):
-    """"Existe uma seleção" e "existe uma seleção para mim" são coisas diferentes.
+    """ "Existe uma seleção" e "existe uma seleção para mim" são coisas diferentes.
 
     Descobrir se havia vaga para si custava abrir a página — o que quem procura emprego faz uma
     vez, não dez.

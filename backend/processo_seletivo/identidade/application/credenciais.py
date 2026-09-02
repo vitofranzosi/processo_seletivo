@@ -111,9 +111,7 @@ def adicionar(
     """
     with transaction.atomic():
         credencial = associar_credencial(identidade, email_canonico, email_como_informado)
-        registrar_ato(
-            identidade, operacao="ASSOCIAR_CREDENCIAL", correlation_id=correlation_id
-        )
+        registrar_ato(identidade, operacao="ASSOCIAR_CREDENCIAL", correlation_id=correlation_id)
     return credencial
 
 
@@ -172,9 +170,7 @@ def remover(identidade, credencial_id, *, correlation_id: str = "") -> str:
             # A identidade não fica sem principal: a mais antiga das que restam assume.
             herdeira = identidade.credenciais.order_by("created_at").first()
             identidade.credenciais.filter(pk=herdeira.pk).update(principal=True)
-        registrar_ato(
-            identidade, operacao="REMOVER_CREDENCIAL", correlation_id=correlation_id
-        )
+        registrar_ato(identidade, operacao="REMOVER_CREDENCIAL", correlation_id=correlation_id)
     return REMOVIDA
 
 

@@ -36,9 +36,7 @@ def test_a_pagina_da_enviada_responde_200(client, enviada):
 
 def test_o_rascunho_continua_abrindo_a_jornada_existente(client, inscricao_de_maria):
     identificar(client, MARIA)
-    corpo = client.get(
-        reverse("portal:inscricao", args=[inscricao_de_maria.id])
-    ).content.decode()
+    corpo = client.get(reverse("portal:inscricao", args=[inscricao_de_maria.id])).content.decode()
     assert 'name="telefone"' in corpo, "rascunho ainda se preenche"
 
 
@@ -62,7 +60,5 @@ def test_o_documento_responde_200_para_o_titular(client, enviada):
 def test_requisito_sem_documento_responde_404(client, enviada):
     identificar(client, MARIA)
     inexistente = "00000000-0000-0000-0000-0000000009ff"
-    resposta = client.get(
-        reverse("portal:documento-do-candidato", args=[enviada.id, inexistente])
-    )
+    resposta = client.get(reverse("portal:documento-do-candidato", args=[enviada.id, inexistente]))
     assert resposta.status_code == 404

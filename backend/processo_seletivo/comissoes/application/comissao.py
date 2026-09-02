@@ -244,9 +244,7 @@ def remover_membro(*, actor, processo_id, membro_id, idempotency_key, correlatio
         membro = _membro_do_processo(ctx.processo, membro_id, exigir_ativo=not ctx.repetido)
         if ctx.repetido:
             return membro, 200
-        _exigir_presidencia_apos(
-            ctx.processo, membro, nova_funcao=None, alocacoes_sobrevivem=False
-        )
+        _exigir_presidencia_apos(ctx.processo, membro, nova_funcao=None, alocacoes_sobrevivem=False)
         # A cascata é atômica: alocação ativa sob membro inativo deixaria o acesso sobrevivendo
         # à remoção por uma janela, e atrapalharia a própria regra do último presidente, que
         # pergunta se há alocação ativa na comissão (EC-003).

@@ -20,9 +20,7 @@ from processo_seletivo.processos.models import Edital
 
 class DocumentoExigido(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    edital = models.ForeignKey(
-        Edital, on_delete=models.PROTECT, related_name="documentos_exigidos"
-    )
+    edital = models.ForeignKey(Edital, on_delete=models.PROTECT, related_name="documentos_exigidos")
     key = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
     # Instrução curta, do tipo "frente e verso, em arquivo único". Texto sempre presente e `""`

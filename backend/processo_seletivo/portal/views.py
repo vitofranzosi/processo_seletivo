@@ -209,9 +209,7 @@ def _selecao_da_vitrine(versao, agora):
         **dados,
         "perfis": [perfil.get("name", "") for perfil in perfis if perfil.get("name")],
         "vagas": sum(perfil.get("immediateVacancies") or 0 for perfil in perfis),
-        "tem_reserva": any(
-            (perfil.get("reserveType") or "NONE") != "NONE" for perfil in perfis
-        ),
+        "tem_reserva": any((perfil.get("reserveType") or "NONE") != "NONE" for perfil in perfis),
         "dias_restantes": _dias_ate(periodo.fim, agora) if periodo.estado == "aberto" else None,
     }
 
@@ -306,7 +304,6 @@ def _perfil_da_vitrine(perfil, iniciadas, conteudo):
         "inscricao_id": None if registro is None else registro.id,
         "enviada": registro is not None and registro.status == Inscricao.Status.SUBMETIDA,
     }
-
 
 
 # ---------------------------------------------------------------------------
@@ -531,9 +528,7 @@ def _decidir_a_quem_pertence(request, desafio, email_como_informado):
         request.session[CHAVE_DO_DESAFIO] = str(desafio.pk)
         return redirect(reverse("portal:acesso-reconciliar"))
 
-    return _entrar(
-        request, associacao.criar_identidade_com(canonico, email_como_informado)
-    )
+    return _entrar(request, associacao.criar_identidade_com(canonico, email_como_informado))
 
 
 def _entrar(request, identidade):
@@ -569,9 +564,7 @@ def _desafio_provado(request):
     identificador = request.session.get(CHAVE_DO_DESAFIO)
     if not identificador:
         return None
-    return DesafioDeAcesso.objects.filter(
-        pk=identificador, consumido_em__isnull=False
-    ).first()
+    return DesafioDeAcesso.objects.filter(pk=identificador, consumido_em__isnull=False).first()
 
 
 def _endereco_do_desafio(request, desafio):
@@ -626,9 +619,7 @@ def acesso_reconciliar(request):
             "Tudo certo. Se mudar de ideia, você pode vincular a participação anterior enquanto "
             "não abrir nenhuma inscrição.",
         )
-        return _entrar(
-            request, associacao.criar_identidade_com(desafio.email_canonico, informado)
-        )
+        return _entrar(request, associacao.criar_identidade_com(desafio.email_canonico, informado))
 
     identidade = associacao.confirmar_cpf(desafio, request.POST.get("cpf", ""))
     if identidade is not None:
@@ -659,9 +650,7 @@ def acesso_reconciliar(request):
             "Não conseguimos confirmar o CPF desta vez. Sua área está aqui, e você pode tentar "
             "vincular a participação anterior de novo abaixo.",
         )
-        return _entrar(
-            request, associacao.criar_identidade_com(desafio.email_canonico, informado)
-        )
+        return _entrar(request, associacao.criar_identidade_com(desafio.email_canonico, informado))
     contexto["erro"] = (
         "Não foi possível confirmar. Confira os números e tente novamente, ou continue sem "
         "vincular sua participação anterior."
@@ -964,8 +953,7 @@ def inscricoes(request):
         "portal/inscricoes.html",
         {
             "inscricoes": [
-                _item_da_lista(registro, conteudos.get(registro.edital_id))
-                for registro in minhas
+                _item_da_lista(registro, conteudos.get(registro.edital_id)) for registro in minhas
             ],
             # O convite de retomada só aparece para quem pode aceitá-lo: identidade sem inscrição
             # alguma e com um endereço que consta de participação anterior de outra identidade. A
@@ -1187,9 +1175,7 @@ def _cronograma(conteudo, agora):
     `FR-076`, dita em dado: nada aqui sabe quem está lendo.
     """
     eventos = []
-    for evento in sorted(
-        conteudo.get("schedule") or [], key=lambda item: item.get("order") or 0
-    ):
+    for evento in sorted(conteudo.get("schedule") or [], key=lambda item: item.get("order") or 0):
         inicio = parse_datetime(evento.get("startAt") or "")
         fim = parse_datetime(evento.get("endAt") or "") if evento.get("endAt") else None
         if fim is not None and agora > fim:
@@ -1273,14 +1259,17 @@ def _documentos(conteudo, inscricao):
 
 def _perfil_do_conteudo(conteudo, profile_id):
     """O Perfil da inscrição, lido do conteúdo publicado — nunca da tabela de elaboração."""
-    return next(
-        (
-            perfil
-            for perfil in conteudo.get("profiles") or []
-            if str(perfil.get("id")) == str(profile_id)
-        ),
-        None,
-    ) or {}
+    return (
+        next(
+            (
+                perfil
+                for perfil in conteudo.get("profiles") or []
+                if str(perfil.get("id")) == str(profile_id)
+            ),
+            None,
+        )
+        or {}
+    )
 
 
 def _perfil_legivel(perfil):
@@ -1545,11 +1534,7 @@ def _dados_do_comprovante(request, registro, conteudo, versao):
             ("Enviada em", comprovante_pdf.instante(registro.submitted_at)),
             (
                 "Versão do Edital",
-                (
-                    f"vigente desde {comprovante_pdf.instante(aceita.valid_from)}"
-                    if aceita
-                    else ""
-                ),
+                (f"vigente desde {comprovante_pdf.instante(aceita.valid_from)}" if aceita else ""),
             ),
         ],
         "documentos": [

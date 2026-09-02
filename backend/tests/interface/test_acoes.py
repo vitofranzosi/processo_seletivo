@@ -77,9 +77,7 @@ def rotulos(resposta):
         # de testar o cartão para testar o seletor.
     ],
 )
-def test_a_mensagem_de_ausencia_nunca_convive_com_uma_acao(
-    client, seletor_ligado, edital, papeis
-):
+def test_a_mensagem_de_ausencia_nunca_convive_com_uma_acao(client, seletor_ligado, edital, papeis):
     """A lista e o vazio saem do mesmo conjunto — é o que torna a contradição impossível.
 
     Antes, o `{% empty %}` observava apenas os atos, enquanto `Retificar`, `Elaborar`, `Visualizar`

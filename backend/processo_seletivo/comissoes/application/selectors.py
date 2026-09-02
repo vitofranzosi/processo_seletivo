@@ -58,9 +58,7 @@ def pessoas_da_trilha(processo):
             "subject": membro.identity_subject,
             "rotulo": membro.display_label or anterior,
         }
-    return sorted(
-        vistos.values(), key=lambda p: chave_de_leitura(p["rotulo"] or p["subject"])
-    )
+    return sorted(vistos.values(), key=lambda p: chave_de_leitura(p["rotulo"] or p["subject"]))
 
 
 def preside(ator, processo):
@@ -194,9 +192,9 @@ def etapas_por_membro(processo):
     para desenhar uma lista. Aqui a leitura é uma, e o conteúdo vigente de cada Edital é aberto
     uma vez só.
     """
-    alocacoes = AlocacaoEtapa.objects.filter(
-        membro__processo=processo, ativo=True
-    ).select_related("edital", "edital__processo", "membro")
+    alocacoes = AlocacaoEtapa.objects.filter(membro__processo=processo, ativo=True).select_related(
+        "edital", "edital__processo", "membro"
+    )
     por_membro = {}
     for item in _atribuicoes(alocacoes):
         por_membro.setdefault(item["alocacao"].membro_id, []).append(item)
@@ -257,9 +255,7 @@ def resumo_da_organizacao(organizacao, membros_ativos):
     de quarenta é entregar o dado e esconder a resposta.
     """
     etapas = [e for grupo in organizacao if grupo["publicado"] for e in grupo["etapas"]]
-    alocados = {
-        alocacao.membro_id for etapa in etapas for alocacao in etapa["alocacoes"]
-    }
+    alocados = {alocacao.membro_id for etapa in etapas for alocacao in etapa["alocacoes"]}
     return {
         "etapas": len(etapas),
         "com_equipe": sum(1 for e in etapas if not e["sem_membros"]),

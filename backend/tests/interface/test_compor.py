@@ -134,9 +134,7 @@ def test_data_malformada_e_explicada_antes_de_chegar_ao_dominio(client, seletor_
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_pendencias_mostram_o_que_falta_e_somem_quando_resolvidas(
-    client, seletor_ligado, edital
-):
+def test_pendencias_mostram_o_que_falta_e_somem_quando_resolvidas(client, seletor_ligado, edital):
     """FR-008: a tela diz o que falta para submeter, separando erro impeditivo de aviso."""
     identificar(client, "ana.elaboradora", ["elaborador"])
     url = etapa(edital, "revisao")
@@ -463,9 +461,7 @@ def test_identificacao_nao_e_alteravel_fora_da_elaboracao(
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_reordenar_muda_a_ordem_persistida_e_preserva_a_identidade(
-    client, seletor_ligado, edital
-):
+def test_reordenar_muda_a_ordem_persistida_e_preserva_a_identidade(client, seletor_ligado, edital):
     """FR-003 e FR-004, e a correção de uma afirmação errada do plano.
 
     A primeira versão dizia que bastava mover a linha no DOM, porque a gravação derivaria a ordem
@@ -532,9 +528,7 @@ def etapas_form(**alteracoes):
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_etapas_sao_acrescentadas_editadas_e_preservam_identidade(
-    client, seletor_ligado, edital
-):
+def test_etapas_sao_acrescentadas_editadas_e_preservam_identidade(client, seletor_ligado, edital):
     """US2: o ciclo inteiro do assistente, incluindo a ida e volta por outra etapa."""
     identificar(client, "ana.elaboradora", ["elaborador"])
     compor_rascunho(client, edital, perfis(), eventos())
@@ -704,9 +698,7 @@ def test_percentual_fora_da_faixa_e_recusado_pela_interface(
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_fragmento_de_modalidade_nasce_com_os_dois_identificadores(
-    client, seletor_ligado, edital
-):
+def test_fragmento_de_modalidade_nasce_com_os_dois_identificadores(client, seletor_ligado, edital):
     """Sem os dois UUID, a linha nova nasceria sem identidade e não haveria o que preservar."""
     identificar(client, "ana.elaboradora", ["elaborador"])
 
@@ -797,9 +789,7 @@ def test_salvar_conteudo_sem_editar_nada_nao_congela_o_texto_do_catalogo(
 
     # Exatamente o que a tela reenviaria sem nenhuma edição.
     intocado = {
-        f"secao-{secao.key}": secao.default_text
-        for secao in catalogo.CATALOGO
-        if not secao.gerada
+        f"secao-{secao.key}": secao.default_text for secao in catalogo.CATALOGO if not secao.gerada
     }
     assert client.post(etapa(edital, "conteudo"), intocado).status_code == 302
     assert not SecaoEdital.objects.exists(), "nada foi editado; nada precisa de linha"
@@ -857,9 +847,7 @@ def test_texto_de_secao_nova_e_gravado_e_chega_a_previa(client, seletor_ligado, 
         for secao in catalogo.CATALOGO
         if not secao.gerada
     }
-    resposta = client.post(
-        reverse("interface:compor-etapa", args=[edital.id, "conteudo"]), campos
-    )
+    resposta = client.post(reverse("interface:compor-etapa", args=[edital.id, "conteudo"]), campos)
     assert resposta.status_code == 302, resposta.content
 
     documento = client.get(reverse("interface:previa-documento", args=[edital.id]))

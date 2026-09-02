@@ -46,9 +46,7 @@ def test_abrir_duas_vezes_leva_a_mesma_inscricao(api_client, manager_headers, pr
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_a_mesma_pessoa_pode_concorrer_a_outro_perfil(
-    api_client, manager_headers, process_payload
-):
+def test_a_mesma_pessoa_pode_concorrer_a_outro_perfil(api_client, manager_headers, process_payload):
     """A Constituição admite Inscrições distintas para Perfis distintos do mesmo Edital."""
     edital = _publicar(api_client, manager_headers, process_payload)
 
@@ -88,9 +86,7 @@ def test_o_perfil_nao_muda_dentro_da_inscricao(
     nenhum.
     """
     edital = _publicar(api_client, manager_headers, process_payload)
-    inscricao = abrir_inscricao(
-        identidade=MARIA, edital_id=edital.id, profile_id=PERFIL_DOCENTE
-    )
+    inscricao = abrir_inscricao(identidade=MARIA, edital_id=edital.id, profile_id=PERFIL_DOCENTE)
     sessao = client.session
     sessao["portal_identidade"] = str(registrar(MARIA).pk)
     sessao.save()
@@ -148,9 +144,7 @@ def test_os_dados_da_identidade_chegam_ao_rascunho(api_client, manager_headers, 
     """FR-037: nada do que a identidade forneceu é digitado de novo."""
     edital = _publicar(api_client, manager_headers, process_payload)
 
-    inscricao = abrir_inscricao(
-        identidade=MARIA, edital_id=edital.id, profile_id=PERFIL_DOCENTE
-    )
+    inscricao = abrir_inscricao(identidade=MARIA, edital_id=edital.id, profile_id=PERFIL_DOCENTE)
 
     assert (inscricao.nome, inscricao.email) == (MARIA.nome, MARIA.email)
     assert inscricao.cpf_normalizado == "12345678909", "normalizado para comparação (FR-073)"
@@ -165,9 +159,7 @@ def test_a_criacao_da_inscricao_e_auditada(api_client, manager_headers, process_
     from processo_seletivo.auditoria.models import RegistroAuditoria
 
     edital = _publicar(api_client, manager_headers, process_payload)
-    inscricao = abrir_inscricao(
-        identidade=MARIA, edital_id=edital.id, profile_id=PERFIL_DOCENTE
-    )
+    inscricao = abrir_inscricao(identidade=MARIA, edital_id=edital.id, profile_id=PERFIL_DOCENTE)
 
     registro = RegistroAuditoria.objects.get(aggregate_id=inscricao.id)
 

@@ -70,9 +70,7 @@ PORTAL_IDENTIDADE_DEMO = os.getenv("PORTAL_IDENTIDADE_DEMO", "false").lower() ==
 # mecanismo vem do ambiente porque desenvolvimento imprime no terminal e produção entrega de
 # verdade — e é justamente por isso que `production.py` recusa subir com um mecanismo que não
 # entrega: seria imprimir o código de acesso no log e chamar isso de autenticação.
-EMAIL_BACKEND = os.getenv(
-    "DJANGO_EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
-)
+EMAIL_BACKEND = os.getenv("DJANGO_EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "")
 EMAIL_HOST = os.getenv("EMAIL_HOST", "")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))

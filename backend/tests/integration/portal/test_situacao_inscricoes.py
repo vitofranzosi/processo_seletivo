@@ -20,9 +20,7 @@ def _publicar_com_periodo(api_client, manager_headers, process_payload, *, inici
     rascunho["schedule"][0]["startAt"] = inicio.isoformat()
     rascunho["schedule"][0]["endAt"] = None if fim is None else fim.isoformat()
     rascunho["schedule"][0]["isRegistrationPeriod"] = True
-    return publicar_selecao(
-        api_client, manager_headers, process_payload, rascunho=rascunho
-    )
+    return publicar_selecao(api_client, manager_headers, process_payload, rascunho=rascunho)
 
 
 @pytest.mark.django_db(transaction=True)
@@ -107,9 +105,7 @@ def test_a_situacao_vem_da_marca_e_nao_do_texto_do_evento(
     vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
 
     designados = [
-        evento
-        for evento in vigente.content["schedule"]
-        if evento.get("isRegistrationPeriod")
+        evento for evento in vigente.content["schedule"] if evento.get("isRegistrationPeriod")
     ]
 
     assert [evento["description"] for evento in vigente.content["schedule"]] == [

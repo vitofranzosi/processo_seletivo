@@ -62,6 +62,8 @@ def documento(conteudo, content_hash=HASH, *, modo=None, **kwargs):
         return render_edital_pdf(conteudo, content_hash, modo=modo, **kwargs)
     kwargs.setdefault("autoridade", AUTORIDADE_DA_SUITE)
     return render_edital_pdf(conteudo, content_hash, **kwargs)
+
+
 TEXTO_PDF = re.compile(rb"\((.*?)\) Tj", re.DOTALL)
 # Só os fluxos de conteúdo das páginas. Desde que o documento embute o brasão, varrer o arquivo
 # inteiro alcançaria os bytes da imagem — que não são texto e não decodificam como tal.
@@ -119,11 +121,7 @@ def secoes(edital_id="11111111-1111-1111-1111-111111111111"):
             "title": secao.title,
             "order": secao.order,
             "type": secao.type,
-            **(
-                {"source": secao.source}
-                if secao.gerada
-                else {"content": secao.default_text}
-            ),
+            **({"source": secao.source} if secao.gerada else {"content": secao.default_text}),
         }
         for secao in catalogo.CATALOGO
     ]
@@ -477,9 +475,9 @@ def test_paragrafos_da_secao_textual_sobrevivem_ao_documento():
     assert "Caberá recurso em dois dias úteis." in linhas
     assert "O recurso será fundamentado." in linhas
     # A prova do defeito: antes, as duas frases saíam refluídas na mesma linha.
-    assert not any(
-        "dois dias úteis. O recurso" in linha for linha in linhas
-    ), "os parágrafos foram colados de novo"
+    assert not any("dois dias úteis. O recurso" in linha for linha in linhas), (
+        "os parágrafos foram colados de novo"
+    )
 
 
 def test_quebra_simples_de_linha_tambem_separa_paragrafo():
@@ -725,9 +723,9 @@ def test_o_titulo_do_perfil_nunca_se_separa_do_que_ele_apresenta():
         if "TEC-LAB — " in linha and re.match(r"^\d+\.\d+ ", linha)
     ]
     assert len(onde) == 1, "o título do Perfil aparece em mais de uma página"
-    assert any(
-        "Apoio técnico aos laboratórios" in linha for linha in paginas[onde[0] - 1]
-    ), "o título ficou separado da descrição que ele apresenta"
+    assert any("Apoio técnico aos laboratórios" in linha for linha in paginas[onde[0] - 1]), (
+        "o título ficou separado da descrição que ele apresenta"
+    )
 
 
 def test_a_paginacao_nao_deixa_um_terco_da_pagina_em_branco():
@@ -833,10 +831,7 @@ def test_a_paginacao_por_bloco_nao_perde_nem_duplica_conteudo():
         # duplicá-la ou perdê-la é exatamente o que a decisão "cabe / não cabe" erra em silêncio.
         if conteudo is not snapshot():
             atribuicoes = [
-                linha
-                for pagina in paginas
-                for linha in pagina
-                if linha.startswith("Atribuição ")
+                linha for pagina in paginas for linha in pagina if linha.startswith("Atribuição ")
             ]
             assert len(atribuicoes) == len(set(atribuicoes)), "atribuição repetida entre páginas"
 
@@ -935,9 +930,7 @@ def test_o_cabecalho_da_tabela_se_repete_na_continuacao_e_nunca_fica_orfao():
     no rodapé é o mesmo defeito do título órfão, uma linha abaixo.
     """
     paginas = paginas_de(documento(cronograma_longo(), HASH))
-    com_cabecalho = [
-        numero for numero, pagina in enumerate(paginas, 1) if "Evento" in pagina
-    ]
+    com_cabecalho = [numero for numero, pagina in enumerate(paginas, 1) if "Evento" in pagina]
     # A célula do evento reflui dentro da sua coluna, então a continuação de uma linha da tabela
     # não começa por `ETAPA`. O que identifica uma página com tabela é ter célula de qualquer
     # coluna — inclusive a continuação, que é justamente quem precisa do cabeçalho repetido.
@@ -979,7 +972,9 @@ def test_a_etapa_apresenta_carater_peso_e_nota_em_pares_rotulo_valor():
     # Etapa sem peso nem nota mínima não ganha rótulo vazio.
     sem_ponderacao = snapshot()
     sem_ponderacao["stages"][0] = {
-        **sem_ponderacao["stages"][0], "weight": None, "minimumScore": None
+        **sem_ponderacao["stages"][0],
+        "weight": None,
+        "minimumScore": None,
     }
     texto = texto_de(documento(sem_ponderacao, HASH))
     assert "Peso" not in texto
@@ -1032,7 +1027,11 @@ def test_nenhuma_linha_ultrapassa_a_margem_em_nenhum_cenario():
 
     util = LARGURA - 2 * MARGEM
     for conteudo in (
-        snapshot(), dois_perfis(), perfil_maior_que_a_pagina(), cronograma_longo(), sem_etapas()
+        snapshot(),
+        dois_perfis(),
+        perfil_maior_que_a_pagina(),
+        cronograma_longo(),
+        sem_etapas(),
     ):
         pdf = documento(conteudo, HASH)
         for linha, fonte, tamanho, recuo in linhas_desenhadas(pdf):
@@ -1133,9 +1132,7 @@ def test_a_verificacao_vem_depois_da_assinatura_e_nao_e_secao_do_edital():
 
     # Discreto: o bloco de verificação usa o menor corpo do documento.
     corpos = {
-        tamanho
-        for linha, _, tamanho, _ in linhas_desenhadas(pdf)
-        if linha.startswith("SHA-256")
+        tamanho for linha, _, tamanho, _ in linhas_desenhadas(pdf) if linha.startswith("SHA-256")
     }
     from processo_seletivo.publicacoes.infrastructure.pdf import CORPO_NOTA
 
@@ -1151,7 +1148,8 @@ def test_o_mesmo_snapshot_com_a_mesma_autoridade_produz_os_mesmos_bytes():
     from processo_seletivo.publicacoes.infrastructure.pdf import AutoridadeSignataria
 
     diferente = documento(
-        snapshot(), HASH,
+        snapshot(),
+        HASH,
         autoridade=AutoridadeSignataria(nome="Diretora do Cefor", cargo="Diretora-Geral"),
     )
     assert diferente != um, "trocar quem assina tem de mudar o documento"
@@ -1271,7 +1269,10 @@ def test_uma_linha_de_tabela_com_celula_refluida_nao_se_parte_entre_paginas():
                 "foundation": "Lei 12.990/2014",
                 "version": "2014-06-09",
                 "percentage": "20.0000",
-                "calculation": {}, "rounding": {}, "distribution": {}, "callRules": {},
+                "calculation": {},
+                "rounding": {},
+                "distribution": {},
+                "callRules": {},
                 "effectiveFrom": None,
             },
         }
@@ -1359,13 +1360,17 @@ def test_a_medicao_de_um_bloco_atravessa_os_quadros_que_ele_contem():
     completo = {
         **base["profiles"][0],
         "duties": "Ministrar aulas nos cursos técnicos e de graduação.\n"
-                  "Participar das atividades de ensino, pesquisa e extensão do campus.",
+        "Participar das atividades de ensino, pesquisa e extensão do campus.",
         "workload": "40 horas semanais",
         "compensation": "R$ 4.200,00 mensais, acrescidos de auxílio-alimentação",
         "requirements": ["Mestrado em Computação ou área afim", "Registro profissional ativo"],
     }
-    segundo = {**completo, "id": "33333333-3333-3333-3333-33333333aaaa", "code": "TEC-LAB",
-               "name": "Técnico de Laboratório"}
+    segundo = {
+        **completo,
+        "id": "33333333-3333-3333-3333-33333333aaaa",
+        "code": "TEC-LAB",
+        "name": "Técnico de Laboratório",
+    }
     paginas = paginas_de(documento(snapshot(profiles=[completo, segundo])))
 
     for codigo in ("DOC-INFO", "TEC-LAB"):
@@ -1472,7 +1477,8 @@ def test_o_cargo_nao_e_repetido_quando_ja_esta_no_nome_registrado():
 
     repetido = texto_de(
         documento(
-            snapshot(), HASH,
+            snapshot(),
+            HASH,
             autoridade=AutoridadeSignataria(nome="Reitora do Ifes", cargo="Reitora"),
         )
     )
@@ -1480,7 +1486,8 @@ def test_o_cargo_nao_e_repetido_quando_ja_esta_no_nome_registrado():
 
     distinto = texto_de(
         documento(
-            snapshot(), HASH,
+            snapshot(),
+            HASH,
             autoridade=AutoridadeSignataria(
                 nome="Aline Freitas da Silva de Carvalho",
                 cargo="Diretora do Centro de Referência em Formação e em Educação a Distância",

@@ -19,6 +19,7 @@ class RecusaDeCampo(ValueError):
         self.campo = campo
         self.identidade = str(identidade or "")
 
+
 class ProfileValidationError(RecusaDeCampo):
     pass
 

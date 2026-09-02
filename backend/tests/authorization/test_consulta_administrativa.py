@@ -34,9 +34,7 @@ def com_documento(inscricao_de_maria):
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.authorization
 @pytest.mark.parametrize("papel", ["elaborador", "homologador", "publicador", "auditor"])
-def test_papel_sem_a_permissao_nao_alcanca_a_lista(
-    client, settings, selecao, com_documento, papel
-):
+def test_papel_sem_a_permissao_nao_alcanca_a_lista(client, settings, selecao, com_documento, papel):
     settings.INTERFACE_SELETOR_IDENTIDADE = True
     identificar(client, f"pessoa.{papel}", [papel])
 
@@ -56,9 +54,7 @@ def test_o_gestor_alcanca(client, settings, selecao, com_documento):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.authorization
-def test_sem_permissao_o_detalhe_e_o_arquivo_tambem_sao_recusados(
-    client, settings, com_documento
-):
+def test_sem_permissao_o_detalhe_e_o_arquivo_tambem_sao_recusados(client, settings, com_documento):
     settings.INTERFACE_SELETOR_IDENTIDADE = True
     identificar(client, "ana.elaboradora", ["elaborador"])
 

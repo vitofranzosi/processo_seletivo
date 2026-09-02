@@ -124,8 +124,9 @@ def _modulos_de_migration():
         pacote = import_module(f"processo_seletivo.{app}.migrations")
         pasta = Path(pacote.__file__).parent
         for arquivo in sorted(pasta.glob("[0-9]*.py")):
-            yield f"processo_seletivo/{app}/migrations/{arquivo.name}", arquivo.read_text(
-                encoding="utf-8"
+            yield (
+                f"processo_seletivo/{app}/migrations/{arquivo.name}",
+                arquivo.read_text(encoding="utf-8"),
             )
 
 

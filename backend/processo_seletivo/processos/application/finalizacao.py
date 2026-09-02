@@ -37,8 +37,18 @@ def _lock_edital(actor, edital_id):
         raise _not_found() from exc
 
 
-def _register(*, actor, aggregate, operation, permission, reason, previous, now, correlation_id,
-              idempotency_key):
+def _register(
+    *,
+    actor,
+    aggregate,
+    operation,
+    permission,
+    reason,
+    previous,
+    now,
+    correlation_id,
+    idempotency_key,
+):
     AtoAdministrativo.objects.create(
         aggregate_type=aggregate.__class__.__name__,
         aggregate_id=aggregate.pk,
@@ -68,8 +78,17 @@ class _Previous:
 
 
 def _finalize_processo(
-    *, actor, processo_id, expected_revision, reason, idempotency_key, correlation_id,
-    permission, operation, target_status, check,
+    *,
+    actor,
+    processo_id,
+    expected_revision,
+    reason,
+    idempotency_key,
+    correlation_id,
+    permission,
+    operation,
+    target_status,
+    check,
 ):
     require_permission(actor, permission)
     with command_context() as now:
@@ -107,8 +126,9 @@ def _finalize_processo(
         return processo, 200
 
 
-def close_process(*, actor, processo_id, expected_revision, reason, idempotency_key,
-                  correlation_id):
+def close_process(
+    *, actor, processo_id, expected_revision, reason, idempotency_key, correlation_id
+):
     return _finalize_processo(
         actor=actor,
         processo_id=processo_id,
@@ -123,8 +143,9 @@ def close_process(*, actor, processo_id, expected_revision, reason, idempotency_
     )
 
 
-def cancel_process(*, actor, processo_id, expected_revision, reason, idempotency_key,
-                   correlation_id):
+def cancel_process(
+    *, actor, processo_id, expected_revision, reason, idempotency_key, correlation_id
+):
     """Bloqueia o cancelamento sob concorrência travando o Processo e depois seus Editais."""
 
     def check(processo):
@@ -153,8 +174,17 @@ def cancel_process(*, actor, processo_id, expected_revision, reason, idempotency
 
 
 def _finalize_edital(
-    *, actor, edital_id, expected_revision, reason, idempotency_key, correlation_id,
-    permission, operation, target_status, check,
+    *,
+    actor,
+    edital_id,
+    expected_revision,
+    reason,
+    idempotency_key,
+    correlation_id,
+    permission,
+    operation,
+    target_status,
+    check,
 ):
     require_permission(actor, permission)
     with command_context() as now:

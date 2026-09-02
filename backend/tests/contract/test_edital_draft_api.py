@@ -111,9 +111,7 @@ def test_blocking_error_stops_submission_and_names_the_cause(
 
 @pytest.mark.contract
 @pytest.mark.django_db(transaction=True)
-def test_campo_nao_reconhecido_no_rascunho_e_recusado(
-    api_client, manager_headers, process_payload
-):
+def test_campo_nao_reconhecido_no_rascunho_e_recusado(api_client, manager_headers, process_payload):
     """FR-028 da 003: aceitar e descartar em silêncio não é comportamento admissível.
 
     `editorialContent` era aceito pelo serializer e pelo contrato, e nenhum comando o persistia.
@@ -311,8 +309,12 @@ def test_identidade_de_modalidade_e_de_regra_e_preservada_pela_api(
 @pytest.mark.contract
 @pytest.mark.parametrize(
     "caso",
-    ["modalidade-de-outro-perfil", "modalidade-de-outro-edital", "regra-de-modalidade-irma",
-     "regra-de-outro-edital"],
+    [
+        "modalidade-de-outro-perfil",
+        "modalidade-de-outro-edital",
+        "regra-de-modalidade-irma",
+        "regra-de-outro-edital",
+    ],
 )
 def test_identificador_de_outro_conteiner_e_recusado_com_conflito(
     api_client, manager_headers, process_payload, caso
