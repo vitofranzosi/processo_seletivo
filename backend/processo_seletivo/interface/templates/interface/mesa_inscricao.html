@@ -26,7 +26,15 @@ arquivo automaticamente faria "abriu o documento" virar "abriu a inscrição" �
 dizendo outra coisa.
 {% endcomment %}
 <aside class="painel-documento" id="painel-documento" hidden>
-  <h2 id="painel-documento-titulo" tabindex="-1">Documento</h2>
+  {% comment %}
+  A barra do painel tem a **mesma altura e o mesmo desenho** da ficha do candidato, do outro lado:
+  as duas colunas começavam em alturas diferentes — um título solto à esquerda, um cartão com borda
+  e respiro à direita — e o desalinhamento aparecia em toda inscrição. Alinhar por construção é
+  mais firme do que acertar margens uma a uma.
+  {% endcomment %}
+  <div class="barra-do-painel">
+    <h2 id="painel-documento-titulo" tabindex="-1">Documento</h2>
+  </div>
   <iframe id="painel-documento-quadro" title="Documento do candidato" src="about:blank"></iframe>
 </aside>
 

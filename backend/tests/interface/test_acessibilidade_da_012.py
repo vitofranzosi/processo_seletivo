@@ -115,7 +115,9 @@ def test_toda_tabela_rola_dentro_do_proprio_conteiner(client, seletor_ligado, ce
     for nome, corpo in corpos(client, seletor_ligado, cenario).items():
         for tabela in re.finditer(r'<table class="tabela">', corpo):
             antes = corpo[: tabela.start()]
-            assert antes.rstrip().endswith('<div class="tabela-rolavel">'), nome
+            # A classe pode vir acompanhada — `lista-da-mesa` limita a largura da lista —, e o
+            # que importa é que o contêiner rolável seja o pai imediato da tabela.
+            assert re.search(r'<div class="tabela-rolavel[^"]*">\s*$', antes), nome
 
 
 def test_as_recusas_anunciam_se_e_recebem_foco(client, seletor_ligado, cenario):
@@ -139,7 +141,9 @@ def test_o_estado_de_conclusao_nao_depende_so_de_cor(client, seletor_ligado, cen
         reverse("interface:minha-etapa", args=[cenario["edital"].id, cenario["etapa"]])
     ).content.decode()
 
-    assert "Pendente" in corpo
+    # Três estados, três palavras: pendente virou "não iniciada" e "em rascunho", que é o que a
+    # coluna precisa distinguir para quem retoma o trabalho.
+    assert "Não iniciada" in corpo
 
 
 def test_as_telas_tem_titulo_e_trilha_de_navegacao(client, seletor_ligado, cenario):

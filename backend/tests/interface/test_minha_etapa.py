@@ -31,7 +31,7 @@ def pagina(client, seletor_ligado, gestor, processo_a, edital_a, comissao_de_a, 
 def test_a_pagina_contextualiza_a_atribuicao(pagina):
     corpo = pagina.content.decode()
 
-    assert "Você está alocado nesta Etapa" in corpo
+    assert "Alocado nesta Etapa" in corpo
     assert "Análise documental" in corpo
 
 

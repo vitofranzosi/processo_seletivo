@@ -207,6 +207,10 @@ def resumo_da_etapa(*, edital, etapa):
 PENDENTES = "pendentes"
 CONCLUIDAS = "concluidas"
 RASCUNHOS = "rascunhos"
+# O que sobra do pendente depois de separar o rascunho. Os três somam o total, e é isso que faz as
+# contagens fecharem: "3 pendentes, 1 em rascunho" sobre um total de 3 pedia que quem lesse somasse
+# quatro.
+NAO_INICIADAS = "nao-iniciadas"
 
 
 def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None):
@@ -239,10 +243,13 @@ def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None):
         rascunhos=Count("id", filter=Q(avaliacao__estado=Avaliacao.Estado.RASCUNHO)),
     )
     contagens["pendentes"] = contagens["total"] - contagens["concluidas"]
+    contagens["nao_iniciadas"] = contagens["pendentes"] - contagens["rascunhos"]
     if filtro == CONCLUIDAS:
         minhas = minhas.filter(avaliacao__estado=Avaliacao.Estado.CONCLUIDA)
     elif filtro == RASCUNHOS:
         minhas = minhas.filter(avaliacao__estado=Avaliacao.Estado.RASCUNHO)
+    elif filtro == NAO_INICIADAS:
+        minhas = minhas.filter(avaliacao__isnull=True)
     elif filtro == PENDENTES:
         minhas = minhas.exclude(avaliacao__estado=Avaliacao.Estado.CONCLUIDA)
     paginas = Paginator(minhas.order_by("inscricao__protocolo", "inscricao_id"), POR_PAGINA)

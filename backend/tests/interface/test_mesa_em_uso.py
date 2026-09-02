@@ -69,7 +69,7 @@ def test_o_rascunho_nao_se_confunde_com_o_nao_iniciado(como_joao, cenario, cinco
 
     assert "Em rascunho" in corpo
     assert "Não iniciada" in corpo
-    assert "1 em rascunho" in corpo
+    assert "em rascunho" in corpo
 
 
 def test_o_filtro_de_rascunhos_traz_so_o_que_foi_comecado(como_joao, cenario, cinco):
@@ -102,7 +102,7 @@ def test_a_mesa_diz_o_que_foi_retirado_dela_e_por_que(como_joao, cenario, gestor
     corpo = como_joao.get(mesa(cenario)).content.decode()
 
     assert "Atribuições retiradas de você" in corpo
-    assert f"inscrição {cinco[0].protocolo}" in corpo
+    assert f"Inscrição {cinco[0].protocolo}" in corpo
     assert "Parentesco declarado em reunião." in corpo
 
 

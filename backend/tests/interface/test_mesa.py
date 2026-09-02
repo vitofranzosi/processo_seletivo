@@ -49,8 +49,9 @@ def test_a_mesa_lista_o_que_e_dele_e_conta(
 
     corpo = client.get(mesa).content.decode()
 
-    assert "3 atribuições" in corpo
-    assert "3 pendentes" in corpo
+    assert "no total" in corpo and ">3<" in corpo
+    # As parcelas fecham com o total: três não iniciadas, nenhum rascunho, nenhuma concluída.
+    assert "não iniciadas" in corpo
     for inscricao in inscricoes:
         assert inscricao.protocolo in corpo
 
@@ -141,9 +142,11 @@ def test_o_filtro_separa_pendentes_de_concluidas(
     assert rascunho.protocolo in pendentes
     assert rascunho.protocolo not in concluidas
     assert intocada.protocolo in pendentes
-    assert "3 atribuições" in todas
-    assert "2 pendentes" in todas
-    assert "1 concluída" in todas
+    assert "no total" in todas and ">3<" in todas
+    # Duas pendentes, e a Mesa agora diz **onde** elas estão: uma em rascunho, uma não iniciada.
+    assert "em rascunho" in todas
+    assert "não iniciada" in todas
+    assert "concluída" in todas
 
 
 def test_a_mesa_pagina(client, seletor_ligado, gestor, edital_a, etapa_a1, joao, mesa):

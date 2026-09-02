@@ -354,6 +354,33 @@ input.largo,textarea.largo{width:100%;}
 .dados-da-inscricao{display:grid;grid-template-columns:auto 1fr;gap:.35rem .75rem;margin:0}
 .dados-da-inscricao dt{color:var(--texto-fraco)}
 .dados-da-inscricao dd{margin:0}
+/* O que saiu da Mesa: uma linha por retirada, com o motivo à vista. Era uma lista com marcador e
+   frases longas, em que o protocolo, o motivo e o instante se misturavam num parágrafo só. */
+ul.retiradas{list-style:none;margin:0;padding:0;border:1px solid var(--borda);border-radius:6px;
+  background:var(--branco);max-width:64rem}
+ul.retiradas>li{display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem 1rem;
+  padding:.7rem 1rem;border-bottom:1px solid var(--fundo)}
+ul.retiradas>li:last-child{border-bottom:0}
+ul.retiradas .qual{font-weight:600;flex:0 0 auto}
+ul.retiradas .porque{flex:1 1 18rem;color:var(--texto)}
+ul.retiradas .quando{color:var(--texto-fraco);font-size:.875rem;flex:0 0 auto;margin-left:auto}
+
+/* Os filtros da Mesa eram quatro links encostados, que se liam como uma frase. Agora são um
+   controle: cada um com o seu número, e o escolhido marcado por forma — o traço embaixo —, e não
+   só por cor. */
+.filtros-da-mesa{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 1rem;padding:0}
+.filtros-da-mesa a{display:flex;flex-direction:column;gap:.1rem;text-decoration:none;
+  padding:.5rem .9rem;border:1px solid var(--borda);border-radius:6px;background:var(--branco);
+  color:var(--texto);min-width:7.5rem}
+.filtros-da-mesa a:hover{border-color:var(--verde)}
+.filtros-da-mesa a strong{font-size:1.25rem;line-height:1.1;font-weight:600}
+.filtros-da-mesa a span{font-size:.8125rem;color:var(--texto-fraco)}
+.filtros-da-mesa a[aria-current]{border-color:var(--verde);box-shadow:inset 0 -3px 0 var(--verde)}
+.filtros-da-mesa a[aria-current] span{color:var(--verde-texto);font-weight:600}
+/* Duas colunas não precisam da página inteira: o protocolo ficava numa ponta e a situação na
+   outra, com um vão no meio que o olho tinha de atravessar a cada linha. */
+.lista-da-mesa{max-width:44rem}
+
 /* A tela onde o avaliador passa o dia. Ela era a menos desenhada do sistema: os pares rótulo/valor
    saíam com o `dl` padrão do navegador — rótulo numa linha, valor indentado na seguinte —, a lista
    de documentos era uma marcação com três pedaços soltos que quebravam em três linhas, e o
@@ -401,12 +428,21 @@ ul.documentos .entrega.ausente{font-style:italic}
 /* `:not([hidden])` **não é enfeite**: `display` de autor vence o `display:none` que o atributo
    `hidden` traz do navegador, e sem esta guarda o painel aparecia vazio no alto de toda inscrição,
    com o botão de fechar, antes de qualquer documento ser aberto. */
-.painel-documento:not([hidden]){display:flex;flex-direction:column;gap:.5rem;min-width:0}
-.painel-documento h2{margin:0;font-size:1rem}
+.painel-documento:not([hidden]){display:flex;flex-direction:column;gap:.75rem;min-width:0}
+/* Mesmo desenho da ficha do candidato, do outro lado: as duas colunas passam a começar na mesma
+   altura por construção, e não por ajuste de margem. */
+.barra-do-painel{display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  padding:.85rem 1rem;background:var(--branco);border:1px solid var(--borda);border-radius:6px}
+.barra-do-painel h2{margin:0;font-size:1rem;overflow-wrap:anywhere}
+.barra-do-painel .acao{flex:0 0 auto}
 .painel-documento iframe{width:100%;flex:1 1 auto;min-height:24rem;border:1px solid var(--borda);
   border-radius:4px;background:var(--branco)}
-.painel-documento .acao{align-self:flex-start}
-.painel-avaliacao{min-width:0}
+
+/* Sem documento aberto, a coluna é uma só — e o formulário de uma avaliação não tem o que fazer
+   com 1.480 px: a ficha esticava, a lista de documentos punha a ação a um palmo do nome, e a caixa
+   do parecer virava uma faixa. A página larga serve ao painel; o formulário tem a sua medida. */
+.painel-avaliacao{min-width:0;max-width:64rem}
+.mesa-trabalho.com-documento .painel-avaliacao{max-width:none}
 .documentos a[aria-current]{font-weight:600;text-decoration:underline}
 @media (min-width:64rem){
   .mesa-trabalho.com-documento{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);

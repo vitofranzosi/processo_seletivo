@@ -110,7 +110,13 @@ def test_cada_celula_da_matriz_diz_de_quem_e_de_onde(
 def test_a_confirmacao_de_atribuicao_nao_usa_estilo_de_alerta(
     client, seletor_ligado, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
 ):
-    """L8: a frase que confirma a atribuição parecia um problema a resolver."""
+    """L8: a frase que confirma a atribuição parecia um problema a resolver.
+
+    Ela deixou de ser faixa de sucesso também: estar alocado é **fato**, e uma faixa verde dizia
+    "deu certo" toda vez que a pessoa abria a própria Etapa. Agora é uma linha da ficha, ao lado do
+    período e do caráter. O que continua valendo é o que este teste sempre protegeu — a frase não
+    pode parecer um problema.
+    """
     alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
     identificar(client, "joao", [])
 
@@ -118,8 +124,10 @@ def test_a_confirmacao_de_atribuicao_nao_usa_estilo_de_alerta(
         reverse("interface:minha-etapa", args=[edital_a.id, etapa_a1])
     ).content.decode()
 
-    trecho = corpo.split("Você está alocado nesta Etapa")[0][-120:]
-    assert 'class="sucesso"' in trecho
+    trecho = corpo.split("Alocado nesta Etapa")[0][-260:]
+    assert 'class="ficha"' in trecho
+    assert 'class="aviso"' not in trecho
+    assert 'class="erro"' not in trecho
 
 
 def test_alocar_a_comissao_inteira_numa_submissao(

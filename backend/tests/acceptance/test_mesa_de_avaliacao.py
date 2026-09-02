@@ -111,8 +111,9 @@ def test_a_vertical_completa(seletor_ligado, edital, etapa, comissao, inscricoes
     # 2. João abre a Mesa e vê as duas.
     mesa = reverse("interface:minha-etapa", args=[edital.id, etapa])
     corpo_da_mesa = do_joao.get(mesa).content.decode()
-    assert "2 atribuições" in corpo_da_mesa
-    assert "2 pendentes" in corpo_da_mesa
+    # As contagens da Mesa são um controle de filtro: o número e o estado, lado a lado.
+    assert "no total" in corpo_da_mesa and ">2<" in corpo_da_mesa
+    assert "não iniciadas" in corpo_da_mesa
     assert primeira.protocolo in corpo_da_mesa
 
     # 3. Abre a inscrição e o documento — que é conferido antes de sair um byte.
@@ -150,8 +151,9 @@ def test_a_vertical_completa(seletor_ligado, edital, etapa, comissao, inscricoes
 
     # A Mesa passa a contar a conclusão.
     depois = do_joao.get(mesa).content.decode()
-    assert "1 pendente" in depois
-    assert "1 concluída" in depois
+    # As parcelas fecham com o total: uma não iniciada, uma concluída, duas ao todo.
+    assert ">1</strong> <span>não iniciada" in depois
+    assert ">1</strong> <span>concluída" in depois
 
     # 5. **A recusa faz parte da entrega.** Bruno está alocado, e não recebeu nada.
     assert do_bruno.get(mesa).status_code == 200

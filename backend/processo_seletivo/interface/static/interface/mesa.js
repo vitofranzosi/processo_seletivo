@@ -75,14 +75,17 @@
     larga.addListener(aoMudar);
   }
 
+  // O fechar mora na barra, ao lado do nome do documento — e não no fim do painel, a uma tela de
+  // distância do que ele fecha.
   var fechador = document.createElement("button");
   fechador.type = "button";
   fechador.className = "acao";
-  fechador.textContent = "Fechar documento";
+  fechador.textContent = "Fechar";
+  fechador.setAttribute("aria-label", "Fechar o documento e voltar ao formulário");
   fechador.addEventListener("click", function () {
     fechar();
     var primeiro = document.getElementById("pontuacao");
     if (primeiro) primeiro.focus();
   });
-  painel.appendChild(fechador);
+  titulo.parentNode.appendChild(fechador);
 })();
