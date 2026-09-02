@@ -247,7 +247,7 @@ preserva o que havia sido concluído.
 - [X] T088 [P] Teste de não-regressão do pipeline de Retificação em `backend/tests/integration/publicacoes/test_retificacao_intocada.py`, exigido por FR-100: para Edital **inteiramente na versão vigente**, a precondição, a detecção de conflito, a consolidação, a verificação de efeito prático e a materialização produzem o mesmo resultado que produziam antes desta feature. É a guarda sobre a superfície que a 012 passou a tocar em quatro módulos
 - [X] T089 Executar `specs/012-mesa-de-avaliacao/quickstart.md` inteiro, as seis entregas, e registrar o que divergiu
 - [X] T090 Registrar os dois gates de implantação do quickstart em `specs/012-mesa-de-avaliacao/quickstart.md` — identidade institucional (FR-058) e retenção/descarte do acervo (FR-057) —, com o estado de cada um. **FR-057 não tem tarefa de implementação de propósito**: a resposta é institucional, e o que a 012 entrega é a pergunta registrada
-- [X] T091 Escrever `specs/012-mesa-de-avaliacao/traceability.md`, fechando os 108 FR e os 31 SC contra tarefa e teste — os 37 demonstrados pelo quickstart e os demais cobertos por suíte
+- [X] T091 Escrever `specs/012-mesa-de-avaliacao/traceability.md`, fechando os 110 FR e os 31 SC contra tarefa e teste — os 37 demonstrados pelo quickstart e os demais cobertos por suíte
 
 ---
 
@@ -262,6 +262,9 @@ E mais sete do **percurso de um Processo de 600 inscritos**, que é onde a escal
 deles é visível numa Etapa de três inscrições, e dois eram bloqueadores de uso — a tela que crescia
 com o trabalho já feito, e as cerca de 700 marcações para distribuir uma Etapa.
 
+E mais dois de uma avaliação de percurso e navegação: a feature inteira estava **inalcançável por
+link**, e o caminho de quem avalia custava três cliques por inscrição que não decidiam nada.
+
 - [X] T092 Separar a porta da trilha em `_etapa_para_auditar()`, em `backend/processo_seletivo/interface/views.py`: presidência **ou** `auditoria:consultar`, e 404 para quem não é nenhum dos dois (FR-091). A rota exigia as duas coisas ao mesmo tempo — o presidente lia 403, o auditor puro lia 404 —, e a fixture `["gestor", "auditor"]` escondia isso por testar justamente o híbrido
 - [X] T093 Ancorar a abertura de documento na `Atribuicao`, em `_registrar_na_mesa()`, e desfazer a consulta composta de T-084 em `backend/processo_seletivo/auditoria/selectors.py` (FR-053, T-016). Sobre a `Inscricao`, o registro não nomeava a Etapa e não se distinguia da consulta administrativa da 009 — a trilha de uma Etapa exibia as aberturas de outra e as consultas do gestor
 - [X] T094 Corrigir a paginação da trilha: uma consulta, um cursor (T093 já a torna única) e o link da página seguinte carregando os três filtros, por `pagina_seguinte` em `backend/processo_seletivo/interface/templatetags/interface_extras.py`. Duas páginas somadas em memória não têm cursor comum, e sob filtro de abertura de documento a segunda ficava inalcançável
@@ -270,6 +273,8 @@ com o trabalho já feito, e as cerca de 700 marcações para distribuir uma Etap
 - [X] T098 Paginar `conclusoes_preservadas()` em `backend/processo_seletivo/avaliacoes/application/selectors.py` e a tela em `conclusoes.html` (FR-049), calculando a última ordem de cada Avaliação **por agregação**, porque a conclusão que vale pode estar na página seguinte
 - [X] T099 Recusar a confirmação do impedimento sem alcance declarado em `backend/processo_seletivo/interface/views.py` (FR-106): sem isso a garantia era desligável por quem monta o formulário
 - [X] T100 Trocar a lista de identificadores por `aggregate_filter` de subconsultas em `trilha_da_avaliacao()` (FR-050), com o teste de escala que mede o texto da consulta em `backend/tests/performance/test_escala_da_mesa.py`
+- [X] T111 Ligar a Etapa à sua distribuição na matriz de alocação (`alocacoes.html`) e oferecer Comissão e Alocação a quem tem `comissao:gerir` sem integrar a comissão (`lista.html`), com teste que percorre o caminho **só por links** em `backend/tests/interface/test_caminho_ate_a_mesa.py` (FR-109)
+- [X] T112 Cortar os três cliques de navegação da Mesa (FR-110): documento em aba própria, foco inicial na pontuação, e concluir levando à próxima pendente com o aviso nomeando a inscrição concluída
 - [X] T104 Tirar a reabertura da tela de distribuição e levá-la à página de conclusões preservadas, com o formulário de motivo por linha em vigor (FR-036, FR-049) — a seção sem paginação media 679 KB e 605 formulários com 601 conclusões
 - [X] T105 Criar `backend/processo_seletivo/avaliacoes/domain/rodizio.py` e os comandos `propor_rodizio`/`confirmar_rodizio` em `application/distribuicao.py`, com a conferência da assinatura sob trava (FR-107)
 - [X] T106 Acrescentar a proposta de rodízio à tela de distribuição em `distribuicao.html`, com o plano por pessoa e o que fica de fora, e `selecao.js` para marcar todas as inscrições da página (FR-049, FR-107)

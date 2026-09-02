@@ -368,6 +368,35 @@ pessoa depois de removê-la crie linha nova e preserve o histórico — o padrã
 **FR-004** — Remover a Atribuição é inativá-la. Isso revoga o acesso e **não** apaga a Avaliação já
 registrada.
 
+**FR-109** — **Toda tela desta feature é alcançável por link**, a partir de onde o ator entra.
+
+A 012 ficou pronta, testada e **inalcançável**: nenhuma tela do sistema tinha link para a
+distribuição de uma Etapa — nem a lista de Processos, nem o Processo, nem o Edital, nem a Alocação
+por Etapa, nem Minhas Etapas —, e impedimentos, trilha e conclusões preservadas pendem dela. A
+lacuna atravessou a implementação inteira porque toda verificação chegava por `reverse()` e todo
+roteiro montava a URL: quem verifica nunca clica para chegar.
+
+O elo é a **Etapa**, que é onde a 011 e a 012 se encontram: a matriz de alocação lista as Etapas do
+Edital, e cada uma leva à sua distribuição. É o princípio VI cobrado no lugar onde ele é fácil de
+perder — a jornada demonstrável pelo canal do ator inclui **chegar** à tela.
+
+Do mesmo defeito: quem tem `comissao:gerir` e não integra a comissão não recebia link nenhum para
+ela. A permissão existia, o caminho não — e quem constitui a comissão é justamente quem ainda não a
+integra.
+
+**FR-110** — **O caminho não pode custar mais que o trabalho.** Numa Mesa de 230 inscrições, cada
+clique de navegação é cobrado 230 vezes. Três deles não decidiam nada:
+
+- **o documento abre em aba própria.** Servido `inline` na mesma aba, o PDF substituía a página — e
+  quem havia digitado a nota perdia o formulário. Eram dois cliques, abrir e voltar, e um risco;
+- **o foco começa no campo de pontuação**, que é onde o trabalho começa. Salvo quando há aviso a
+  ler: aí o foco é dele;
+- **concluir leva à próxima pendente.** Quem conclui está, quase sempre, seguindo — e a Mesa fica a
+  um clique. O aviso nomeia **qual** inscrição foi concluída, porque a tela que aparece é a de
+  outra, e uma confirmação sem nome se referiria ao candidato errado.
+
+Salvar rascunho não avança: quem salva sem concluir está no meio do trabalho.
+
 **FR-108** — **Quem perde trabalho é avisado.** A revogação é imediata, e era silenciosa: a
 atribuição sumia da Mesa e a contagem mudava, sem nada dizer o que houve. A trilha registra o ato
 com autor e motivo e responde 404 para quem avalia — corretamente, porque avaliar não é auditar —,

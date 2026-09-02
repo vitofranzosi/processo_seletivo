@@ -44,6 +44,8 @@ responsabilidade. Solicite acesso a quem administra o sistema no Cefor.</p>
     {% if processo.vinculo %}
     <span class="situacao s-{{ processo.vinculo.funcao }}">
       {% if processo.vinculo.funcao == "PRESIDENTE" %}Você preside a comissão{% else %}Você integra a comissão{% endif %}</span>
+    {% endif %}
+    {% if processo.pode_gerir %}
     <a class="acao" href="{% url 'interface:comissao' processo.id %}">Comissão</a>
     <a class="acao" href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a>
     {% endif %}

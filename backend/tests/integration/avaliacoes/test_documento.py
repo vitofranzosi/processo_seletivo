@@ -193,3 +193,21 @@ def test_o_dado_pessoal_exibido_e_o_minimo(como_joao, edital_com_documentos, eta
     assert cenario.nome in corpo
     assert cenario.cpf not in corpo
     assert cenario.email not in corpo
+
+
+def test_o_documento_abre_em_aba_propria(como_joao, edital_com_documentos, etapa_a1, cenario):
+    """O PDF é servido `inline`: na mesma aba ele substitui a página, e leva o formulário junto.
+
+    Quem digitou a nota e abriu o documento para conferir uma última coisa saía da tela com o
+    formulário preenchido e não salvo — e eram dois cliques por documento, abrir e voltar, cobrados
+    uma vez por inscrição avaliada.
+    """
+    pagina = reverse(
+        "interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id]
+    )
+
+    corpo = como_joao.get(pagina).content.decode()
+
+    assert 'target="_blank"' in corpo
+    assert 'rel="noopener"' in corpo
+    assert "em nova aba" in corpo

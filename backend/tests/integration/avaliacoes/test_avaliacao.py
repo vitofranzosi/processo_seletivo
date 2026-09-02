@@ -329,7 +329,9 @@ def test_pela_tela_o_avaliador_salva_e_conclui(
 
     assert "Rascunho salvo." in depois_de_salvar
     assert "Em análise" in depois_de_salvar
-    assert "Avaliação concluída" in depois_de_concluir
+    # O aviso nomeia a inscrição concluída, porque concluir leva à **próxima**: a tela que aparece
+    # é a de outro candidato, e uma confirmação sem nome se referiria a ele.
+    assert f"Avaliação da inscrição {inscricao.protocolo} concluída" in depois_de_concluir
     # Concluída não é formulário desabilitado: é a ausência do formulário (FR-035).
     assert "Concluir avaliação" not in depois_de_concluir
     assert Atribuicao.objects.get(inscricao=inscricao, membro__identity_subject="joao")

@@ -110,6 +110,14 @@
             {% else %}
             <span class="situacao s-PUBLICADO">{{ coluna.total }}</span>
             {% endif %}
+            {% comment %}
+            **O elo entre organizar quem trabalha e organizar o trabalho.** A distribuição de uma
+            Etapa não tinha link em tela nenhuma do sistema — nem aqui, nem no Processo, nem no
+            Edital, nem em Minhas Etapas —, e por isso a 012 inteira só era alcançável digitando a
+            URL. É aqui que ela pertence: esta é a tela onde as Etapas estão.
+            {% endcomment %}
+            <a class="acao" href="{% url 'interface:distribuicao' coluna.edital.id coluna.etapa_id %}"
+               aria-label="Distribuir inscrições de {{ coluna.nome }}, Edital {{ coluna.edital.number }}/{{ coluna.edital.year }}">Distribuir</a>
             {% if matriz.linhas and tem_presidente %}
             <span class="coluna-toda">
               <button type="submit" name="coluna_todos" value="{{ coluna.chave }}" class="acao"

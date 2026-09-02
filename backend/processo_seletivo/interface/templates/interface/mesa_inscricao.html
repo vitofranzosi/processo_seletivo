@@ -34,8 +34,15 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
     <li>
       <span class="requisito">{{ documento.nome }}{% if documento.obrigatorio %} <span class="marca">obrigatório</span>{% endif %}</span>
       {% if documento.enviado %}
-      <a href="{% url 'interface:mesa-documento' edital.id etapa_id inscricao.id documento.id %}">
-        Abrir</a>
+      {% comment %}
+      **Aba própria, e não a mesma.** O PDF é servido `inline`, então abrir na mesma aba substitui
+      a página — e quem já tinha digitado a nota para conferir uma última coisa no documento sai
+      daqui com o formulário preenchido e não salvo. Não é lentidão: é trabalho que se perde. E são
+      dois cliques por documento — abrir e voltar — cobrados uma vez por inscrição.
+      {% endcomment %}
+      <a href="{% url 'interface:mesa-documento' edital.id etapa_id inscricao.id documento.id %}"
+         target="_blank" rel="noopener"
+         aria-label="Abrir {{ documento.nome }} em nova aba">Abrir<span class="ajuda"> (nova aba)</span></a>
       <span class="tamanho">{{ documento.tamanho }}</span>
       {% else %}
       <span class="vazio">Não apresentado</span>
@@ -95,8 +102,13 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
 
     <p class="campo curto">
       <label for="pontuacao">Pontuação</label>
+      {% comment %}
+      O foco começa aqui, que é onde o trabalho começa. Sem isto era um clique por inscrição só
+      para poder digitar — e o aviso, quando existe, tem prioridade: ele é o que a pessoa precisa
+      ler antes de qualquer coisa.
+      {% endcomment %}
       <input type="number" step="0.0001" min="0" id="pontuacao" name="pontuacao"
-             value="{{ valores.pontuacao }}"
+             value="{{ valores.pontuacao }}"{% if not aviso %} autofocus{% endif %}
              aria-describedby="ajuda-pontuacao">
       <span class="ajuda" id="ajuda-pontuacao">
         {% if maxima %}Máxima publicada: {{ maxima|floatformat:4 }}.{% else %}O Edital não declara pontuação máxima para esta Etapa.{% endif %}

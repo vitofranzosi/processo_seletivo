@@ -5,6 +5,8 @@ inscritos, e nenhum deles aparece numa Mesa de três: com poucas linhas, "onde e
 olhando, e uma atribuição a menos se percebe.
 """
 
+import re
+
 import pytest
 from django.urls import reverse
 
@@ -139,6 +141,107 @@ def test_a_proxima_pula_o_que_ja_foi_concluido(como_joao, cenario, cinco):
 
     assert f"inscrição {cinco[2].protocolo}" in corpo
     assert f"Próxima pendente — inscrição {cinco[1].protocolo}" not in corpo
+
+
+def test_o_foco_comeca_no_campo_de_pontuacao(como_joao, cenario, cinco):
+    """Um clique por inscrição só para poder digitar é caminho, e não trabalho."""
+    corpo = como_joao.get(
+        reverse(
+            "interface:mesa-inscricao",
+            args=[cenario["edital"].id, cenario["etapa"], cinco[0].id],
+        )
+    ).content.decode()
+
+    assert re.search(r'id="pontuacao"[^>]*autofocus', corpo, re.S) or re.search(
+        r'autofocus[^>]*id="pontuacao"', corpo, re.S
+    )
+
+
+def test_o_aviso_tem_prioridade_sobre_o_foco_do_campo(como_joao, cenario, cinco):
+    """Quando há recusa para ler, é ela que precisa do foco — e não o campo."""
+    como_joao.post(
+        reverse(
+            "interface:mesa-avaliacao-concluir",
+            args=[cenario["edital"].id, cenario["etapa"], cinco[0].id],
+        ),
+        {"pontuacao": "50", "parecer": "", "expected_revision": "1", "versao_reconhecida": "x"},
+    )
+    corpo = como_joao.get(
+        reverse(
+            "interface:mesa-inscricao",
+            args=[cenario["edital"].id, cenario["etapa"], cinco[0].id],
+        )
+    ).content.decode()
+
+    assert 'class="erro"' in corpo
+    assert not re.search(r'id="pontuacao"[^>]*autofocus', corpo, re.S)
+
+
+def test_concluir_leva_a_proxima_pendente(como_joao, cenario, cinco):
+    """Concluir e seguir eram dois cliques, cobrados uma vez por inscrição.
+
+    Numa Mesa de 230 são 230 cliques para dizer “continuo trabalhando”.
+    """
+    from processo_seletivo.publicacoes.application.selectors import effective_version
+
+    versao = effective_version(edital_id=cenario["edital"].id)
+    resposta = como_joao.post(
+        reverse(
+            "interface:mesa-avaliacao-concluir",
+            args=[cenario["edital"].id, cenario["etapa"], cinco[0].id],
+        ),
+        {
+            "pontuacao": "88",
+            "parecer": "Atende.",
+            "expected_revision": "1",
+            "versao_reconhecida": str(versao.id),
+        },
+    )
+
+    assert resposta.status_code == 302
+    assert str(cinco[1].id) in resposta["Location"]
+
+    corpo = como_joao.get(resposta["Location"]).content.decode()
+    assert f"Avaliação da inscrição {cinco[0].protocolo} concluída" in corpo
+    assert f"Inscrição {cinco[1].protocolo}" in corpo
+
+
+def test_a_ultima_conclusao_diz_que_o_trabalho_acabou(como_joao, cenario, cinco):
+    """Sem próxima, a tela não finge que há: ela diz que não há mais pendente."""
+    from processo_seletivo.publicacoes.application.selectors import effective_version
+
+    for inscricao in cinco[1:]:
+        concluir_como(cenario, "joao", inscricao)
+    versao = effective_version(edital_id=cenario["edital"].id)
+
+    resposta = como_joao.post(
+        reverse(
+            "interface:mesa-avaliacao-concluir",
+            args=[cenario["edital"].id, cenario["etapa"], cinco[0].id],
+        ),
+        {
+            "pontuacao": "88",
+            "parecer": "Atende.",
+            "expected_revision": "1",
+            "versao_reconhecida": str(versao.id),
+        },
+        follow=True,
+    )
+
+    assert "Não há mais inscrições pendentes suas nesta Etapa." in resposta.content.decode()
+
+
+def test_salvar_rascunho_nao_leva_a_lugar_nenhum(como_joao, cenario, cinco):
+    """Só concluir avança. Quem salva sem concluir está no meio do trabalho, e fica onde está."""
+    resposta = como_joao.post(
+        reverse(
+            "interface:mesa-avaliacao-gravar",
+            args=[cenario["edital"].id, cenario["etapa"], cinco[0].id],
+        ),
+        {"pontuacao": "70", "parecer": "Em análise.", "expected_revision": "1"},
+    )
+
+    assert str(cinco[0].id) in resposta["Location"]
 
 
 def test_concluir_nao_empilha_duas_faixas_dizendo_o_mesmo(como_joao, cenario, cinco):

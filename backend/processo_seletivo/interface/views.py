@@ -119,6 +119,13 @@ def lista(request):
     vinculos = {v.processo_id: v for v in comissao_selectors.comissoes_da_pessoa(ator)}
     for processo in processos:
         processo.vinculo = vinculos.get(processo.id)
+        # **Quem pode gerir vê o caminho**, e não só quem integra a comissão. Antes, o gestor com
+        # `comissao:gerir` que não fosse membro não recebia link nenhum para a comissão nem para a
+        # alocação — a permissão existia, o caminho não. Sem consulta nova: a base é a permissão
+        # sistêmica ou a presidência **deste** Processo, e os vínculos já estão carregados.
+        processo.pode_gerir = ator.can("comissao:gerir") or (
+            processo.vinculo is not None and processo.vinculo.funcao == "PRESIDENTE"
+        )
 
     contagem = contar_por_situacao(processos)
     return render(
@@ -2330,13 +2337,30 @@ def avaliacao_gravar(request, edital_id, etapa_id, inscricao_id):
 
 @require_http_methods(["POST"])
 def avaliacao_concluir(request, edital_id, etapa_id, inscricao_id):
-    """Concluir — ato explícito, distinto de salvar (FR-032)."""
+    """Concluir — ato explícito, distinto de salvar (FR-032) — **e seguir para a próxima**.
+
+    Concluir e ir para a próxima eram dois cliques, cobrados uma vez por inscrição: numa Mesa de
+    230 são 230 cliques para dizer "continuo trabalhando". Quem conclui uma avaliação está, quase
+    sempre, indo para a seguinte — e quando não está, a Mesa fica a um clique.
+
+    O aviso nomeia **qual** inscrição foi concluída, porque a tela que aparece é a de outra: sem o
+    protocolo escrito, a confirmação passaria a se referir a um candidato diferente do que ela
+    confirma.
+    """
     return _registrar_avaliacao(
-        request, edital_id, etapa_id, inscricao_id, avaliacao_app.concluir, "Avaliação concluída."
+        request,
+        edital_id,
+        etapa_id,
+        inscricao_id,
+        avaliacao_app.concluir,
+        "Avaliação concluída.",
+        seguir=True,
     )
 
 
-def _registrar_avaliacao(request, edital_id, etapa_id, inscricao_id, comando, sucesso):
+def _registrar_avaliacao(
+    request, edital_id, etapa_id, inscricao_id, comando, sucesso, *, seguir=False
+):
     """O caminho comum das duas rotas: autorizar, executar, e devolver a recusa legível.
 
     A recusa volta para a mesma tela, e não vira 500: revisão obsoleta, parecer obrigatório e
@@ -2361,7 +2385,10 @@ def _registrar_avaliacao(request, edital_id, etapa_id, inscricao_id, comando, su
         argumentos["versao_reconhecida"] = dados["versao_reconhecida"]
     try:
         comando(**argumentos)
-        request.session["aviso_da_avaliacao"] = {"tipo": "sucesso", "texto": sucesso}
+        texto = sucesso
+        if seguir:
+            texto, destino = _para_a_proxima(ator, edital, etapa_id, inscricao_id, destino)
+        request.session["aviso_da_avaliacao"] = {"tipo": "sucesso", "texto": texto}
     except DomainError as recusa:
         if recusa.status == 404:
             raise Http404 from recusa
@@ -2371,6 +2398,31 @@ def _registrar_avaliacao(request, edital_id, etapa_id, inscricao_id, comando, su
             "parecer": dados["parecer"],
         }
     return redirect(destino)
+
+
+def _para_a_proxima(ator, edital, etapa_id, inscricao_id, destino):
+    """O aviso e o destino depois de concluir: a próxima pendente, ou o fim do trabalho.
+
+    O protocolo da que foi concluída entra no texto porque a página que se abre é a de outra
+    inscrição — uma confirmação sem nome se referiria ao candidato errado.
+    """
+    from processo_seletivo.inscricoes.models import Inscricao
+
+    concluida = Inscricao.objects.filter(pk=inscricao_id).first()
+    protocolo = (concluida.protocolo or inscricao_id) if concluida else inscricao_id
+    proxima = avaliacao_selectors.proxima_pendente(
+        ator=ator, edital=edital, etapa_id=etapa_id, depois_de=inscricao_id
+    )
+    if proxima is None:
+        return (
+            f"Avaliação da inscrição {protocolo} concluída. "
+            "Não há mais inscrições pendentes suas nesta Etapa.",
+            destino,
+        )
+    return (
+        f"Avaliação da inscrição {protocolo} concluída. Esta é a próxima pendente da sua Mesa.",
+        reverse("interface:mesa-inscricao", args=[edital.id, etapa_id, proxima.id]),
+    )
 
 
 @require_http_methods(["GET"])

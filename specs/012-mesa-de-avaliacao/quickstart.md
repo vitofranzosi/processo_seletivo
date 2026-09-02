@@ -64,6 +64,12 @@ de `Publicacao` ou `VersaoConsolidada` foi atualizada durante o percurso.
 
 ## Entrega 2 — Distribuir
 
+**O caminho, antes do que se faz nele.** Entre como `marina` — a presidência, sem papel nenhum —,
+e chegue à distribuição **sem digitar URL**: Minhas Etapas → Alocação por Etapa → **Distribuir**,
+no cabeçalho da coluna da Etapa. São dois cliques. Se em algum momento for preciso montar o
+endereço à mão, a entrega não está feita: foi assim que a feature inteira ficou pronta e
+inalcançável (FR-109).
+
 **O que se vê**: a presidência distribui quatrocentas inscrições em poucas submissões, e a tela diz
 o que falta.
 

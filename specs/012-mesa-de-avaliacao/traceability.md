@@ -10,10 +10,10 @@ falharia se ele fosse quebrado** — e não o teste que passa perto.
 
 | | |
 |---|---:|
-| Requisitos funcionais (FR) | 108 |
+| Requisitos funcionais (FR) | 110 |
 | Critérios de sucesso (SC) | 31 |
 | Edge cases (EC) | 20 |
-| Testes na suíte, ao fim da 012 | 1890 |
+| Testes na suíte, ao fim da 012 | 1902 |
 | Verificações do quickstart, executadas em 2026-09-02 | 34, sem divergência |
 
 ## Onde procurar
@@ -41,6 +41,7 @@ cd backend && grep -rn "FR-092" tests/
 | Preservação consultável e reabertura | `tests/interface/test_conclusoes_preservadas.py` |
 | Proposta de rodízio | `tests/integration/avaliacoes/test_rodizio.py`, `tests/interface/test_distribuicao.py` |
 | A Mesa em uso, com centenas | `tests/interface/test_mesa_em_uso.py` |
+| O caminho até o trabalho, só por links | `tests/interface/test_caminho_ate_a_mesa.py` |
 | Escala | `tests/performance/test_escala_da_mesa.py`, `tests/authorization/test_listagem_em_lote.py` |
 | Não-regressão | `tests/integration/comissoes/test_011_intocada.py`, `tests/integration/publicacoes/test_retificacao_intocada.py` |
 
@@ -67,6 +68,8 @@ e cada um tem um teste que falha primeiro.
 | **FR-091** | preservação que só o banco enxerga | `test_conclusoes_preservadas.py::test_o_que_foi_concluido_antes_da_reabertura_continua_legivel` |
 | **FR-107** | o sistema distribuir por conta própria | `test_rodizio.py::test_propor_nao_grava_nada` e `::test_a_proposta_que_mudou_no_intervalo_e_recusada` |
 | **FR-108** | trabalho retirado sem que o afetado saiba | `test_mesa_em_uso.py::test_a_mesa_diz_o_que_foi_retirado_dela_e_por_que` |
+| **FR-109** | a feature ficar pronta e inalcançável | `test_caminho_ate_a_mesa.py::test_a_presidencia_chega_a_distribuicao_seguindo_links` |
+| **FR-110** | o caminho custar mais que o trabalho | `test_mesa_em_uso.py::test_concluir_leva_a_proxima_pendente` |
 
 ## Requisitos sem teste, e por quê
 
@@ -177,6 +180,22 @@ deles aparece numa Etapa de três inscrições, e dois eram bloqueadores de uso.
 | o identificador exibido não era o aceito | a trilha mostra “inscrição 7529”; o filtro recusava “7529” | `test_trilha_da_012.py::test_o_filtro_aceita_o_protocolo_que_a_trilha_mostra` |
 | não havia filtro por progresso | cobertura respondia por atribuição, nunca por conclusão | `test_distribuicao.py::test_o_filtro_de_avaliacao_pendente_responde_o_que_falta_avaliar` |
 | lote inteiramente recusado saía em verde | “0 atribuídas, 75 recusadas” em caixa de sucesso, com 75 linhas iguais | `test_distribuicao.py::test_o_lote_inteiramente_recusado_nao_e_anunciado_como_sucesso` |
+
+## O que a navegação escondia
+
+Uma avaliação de percurso feita sobre o mesmo Processo encontrou o defeito que nenhuma das
+anteriores viu, e por um motivo específico: **toda verificação chegava às telas por `reverse()`, e
+todo roteiro montava a URL.** Ninguém clicava para chegar.
+
+| achado | a medida | o teste |
+|---|---|---|
+| nenhuma tela linkava a distribuição de uma Etapa | 0 links em 5 telas da presidência | `test_caminho_ate_a_mesa.py::test_a_presidencia_chega_a_distribuicao_seguindo_links` |
+| quem podia gerir sem integrar a comissão não via caminho | a lista só oferecia links a quem tinha vínculo | `::test_quem_pode_gerir_ve_o_caminho_mesmo_sem_integrar_a_comissao` |
+| três dos seis cliques por inscrição eram navegação | 1.380 cliques numa Mesa de 230 → 690 | `test_mesa_em_uso.py::test_concluir_leva_a_proxima_pendente` e vizinhos |
+
+O primeiro é o mais instrutivo: a suíte tinha 1.890 testes e nenhum deles **seguia um link**. Um
+teste que parte da tela inicial e clica no que ela oferece é o que prende o princípio VI onde ele é
+mais fácil de perder — chegar faz parte da jornada.
 
 ## O gate da 013
 
