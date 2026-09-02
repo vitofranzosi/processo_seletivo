@@ -384,6 +384,15 @@ Do mesmo defeito: quem tem `comissao:gerir` e não integra a comissão não rece
 ela. A permissão existia, o caminho não — e quem constitui a comissão é justamente quem ainda não a
 integra.
 
+**FR-111** — **O seletor de identidade oferece quem tem trabalho de comissão.** Presidir e avaliar
+não são papéis — vêm do vínculo, objeto a objeto —, e nenhuma caixa daquela tela os concede. Quem
+digitava o próprio nome, ou aceitava o exemplo que vinha preenchido, entrava sem vínculo nenhum e
+via uma página vazia: o campo em branco era uma parede antes de qualquer percurso.
+
+A lista diz **o que cada identidade alcança** — preside este Processo, integra aquele, tem tantas
+Etapas alocadas, tantas avaliações pendentes — e não apenas que ela existe. Some junto com o
+seletor, quando o diretório institucional for integrado (FR-058).
+
 **FR-110** — **O caminho não pode custar mais que o trabalho.** Numa Mesa de 230 inscrições, cada
 clique de navegação é cobrado 230 vezes. Três deles não decidiam nada:
 

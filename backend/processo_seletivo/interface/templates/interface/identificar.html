@@ -7,13 +7,43 @@ percorrer os fluxos — é assim que a demonstração substitui o diretório.</p
 
 {% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
 
+{% comment %}
+**Presidir e avaliar não são papéis.** Nenhuma caixa desta tela os concede: eles vêm do vínculo com
+a comissão, objeto a objeto. Quem digitava o próprio nome — ou aceitava o exemplo que vinha
+preenchido — entrava sem vínculo nenhum e via uma página vazia, sem nada dizendo que os nomes com
+trabalho eram outros. O campo em branco era uma parede antes de qualquer percurso.
+
+Esta lista some junto com o seletor, quando o diretório institucional for integrado (FR-058).
+{% endcomment %}
+{% if com_trabalho %}
+<section aria-labelledby="com-trabalho" class="pendencias">
+  <h2 id="com-trabalho">Quem tem trabalho de comissão neste ambiente</h2>
+  <p class="sub">Presidir e avaliar não são papéis — vêm do vínculo com a comissão. Entre por uma
+    destas identidades para percorrer a organização e a execução do trabalho.</p>
+  <form method="post" class="identidades">
+    {% csrf_token %}
+    <ul>
+      {% for pessoa in com_trabalho %}
+      <li>
+        <button type="submit" name="identidade_sugerida" value="{{ pessoa.subject }}" class="acao">
+          {{ pessoa.subject }}</button>
+        {% if pessoa.rotulo %}<span class="ator">{{ pessoa.rotulo }}</span>{% endif %}
+        <span class="agregado">{{ pessoa.resumo }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </form>
+</section>
+{% endif %}
+
 <form method="post" class="identificar">
   {% csrf_token %}
-  <label for="subject">Nome de quem está usando</label>
-  <input type="text" id="subject" name="subject" required autofocus
-         aria-describedby="ajuda-subject" value="ana.elaboradora">
+  <label for="subject">Ou entre por outro nome</label>
+  <input type="text" id="subject" name="subject" required
+         aria-describedby="ajuda-subject" placeholder="ana.elaboradora">
   <p id="ajuda-subject" class="nenhuma" style="margin:.35rem 0 1.25rem">
-    É registrado na auditoria de cada ato praticado.</p>
+    É registrado na auditoria de cada ato praticado. Os papéis abaixo concedem capacidade
+    administrativa; nenhum deles concede presidência nem avaliação.</p>
 
   <fieldset>
     <legend>Papéis de responsabilidade</legend>

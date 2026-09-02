@@ -107,3 +107,50 @@ def test_quem_pode_gerir_ve_o_caminho_mesmo_sem_integrar_a_comissao(
 
     assert any(u.endswith("/comissao") for u in oferecidos)
     assert any(u.endswith("/alocacoes") for u in oferecidos)
+
+
+def test_a_tela_de_identificacao_oferece_quem_tem_trabalho(client, seletor_ligado, cenario):
+    """Presidir e avaliar não são papéis: nenhuma caixa desta tela os concede.
+
+    Quem digitava o próprio nome entrava sem vínculo e via uma página vazia, sem nada dizendo que
+    os nomes com trabalho eram outros — o campo em branco era uma parede antes do percurso.
+    """
+    corpo = client.get(reverse("interface:identificar")).content.decode()
+
+    assert "Quem tem trabalho de comissão neste ambiente" in corpo
+    assert "maria" in corpo and "joao" in corpo
+    # E o que cada identidade alcança, não só que ela existe.
+    assert "preside" in corpo
+    assert "Etapa alocada" in corpo or "Etapas alocadas" in corpo
+
+
+def test_entrar_por_uma_identidade_sugerida_leva_ao_trabalho(client, seletor_ligado, cenario):
+    """Um clique na identidade, e a pessoa está onde há o que fazer."""
+    resposta = client.post(
+        reverse("interface:identificar"), {"identidade_sugerida": "joao"}, follow=True
+    )
+
+    corpo = resposta.content.decode()
+    assert "Minhas Etapas" in corpo
+    assert cenario["edital"].title in corpo or "Análise documental" in corpo
+
+
+def test_a_identidade_escolhida_tem_prioridade_sobre_o_campo(client, seletor_ligado, cenario):
+    """O campo pode estar com um exemplo; quem clicou num nome disse o que queria."""
+    client.post(
+        reverse("interface:identificar"),
+        {"identidade_sugerida": "maria", "subject": "outra.pessoa"},
+    )
+
+    corpo = client.get(reverse("interface:minhas-etapas")).content.decode()
+
+    assert "maria" in corpo
+    assert "outra.pessoa" not in corpo
+
+
+def test_a_lista_nao_promete_papel_que_ela_nao_concede(client, seletor_ligado, cenario):
+    """O texto precisa dizer de onde vem a autorização, senão a lista vira mais uma caixa."""
+    corpo = client.get(reverse("interface:identificar")).content.decode()
+
+    assert "não são papéis" in corpo
+    assert "vêm do vínculo com a comissão" in corpo

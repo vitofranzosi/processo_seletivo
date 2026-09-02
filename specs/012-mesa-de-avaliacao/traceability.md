@@ -10,10 +10,10 @@ falharia se ele fosse quebrado** — e não o teste que passa perto.
 
 | | |
 |---|---:|
-| Requisitos funcionais (FR) | 110 |
+| Requisitos funcionais (FR) | 111 |
 | Critérios de sucesso (SC) | 31 |
 | Edge cases (EC) | 20 |
-| Testes na suíte, ao fim da 012 | 1902 |
+| Testes na suíte, ao fim da 012 | 1908 |
 | Verificações do quickstart, executadas em 2026-09-02 | 34, sem divergência |
 
 ## Onde procurar
@@ -42,6 +42,7 @@ cd backend && grep -rn "FR-092" tests/
 | Proposta de rodízio | `tests/integration/avaliacoes/test_rodizio.py`, `tests/interface/test_distribuicao.py` |
 | A Mesa em uso, com centenas | `tests/interface/test_mesa_em_uso.py` |
 | O caminho até o trabalho, só por links | `tests/interface/test_caminho_ate_a_mesa.py` |
+| O cartão de vagas do candidato | `tests/integration/portal/test_detalhe_selecao.py` |
 | Escala | `tests/performance/test_escala_da_mesa.py`, `tests/authorization/test_listagem_em_lote.py` |
 | Não-regressão | `tests/integration/comissoes/test_011_intocada.py`, `tests/integration/publicacoes/test_retificacao_intocada.py` |
 
@@ -70,6 +71,7 @@ e cada um tem um teste que falha primeiro.
 | **FR-108** | trabalho retirado sem que o afetado saiba | `test_mesa_em_uso.py::test_a_mesa_diz_o_que_foi_retirado_dela_e_por_que` |
 | **FR-109** | a feature ficar pronta e inalcançável | `test_caminho_ate_a_mesa.py::test_a_presidencia_chega_a_distribuicao_seguindo_links` |
 | **FR-110** | o caminho custar mais que o trabalho | `test_mesa_em_uso.py::test_concluir_leva_a_proxima_pendente` |
+| **FR-111** | a parede antes do percurso | `test_caminho_ate_a_mesa.py::test_a_tela_de_identificacao_oferece_quem_tem_trabalho` |
 
 ## Requisitos sem teste, e por quê
 
@@ -192,6 +194,11 @@ todo roteiro montava a URL.** Ninguém clicava para chegar.
 | nenhuma tela linkava a distribuição de uma Etapa | 0 links em 5 telas da presidência | `test_caminho_ate_a_mesa.py::test_a_presidencia_chega_a_distribuicao_seguindo_links` |
 | quem podia gerir sem integrar a comissão não via caminho | a lista só oferecia links a quem tinha vínculo | `::test_quem_pode_gerir_ve_o_caminho_mesmo_sem_integrar_a_comissao` |
 | três dos seis cliques por inscrição eram navegação | 1.380 cliques numa Mesa de 230 → 690 | `test_mesa_em_uso.py::test_concluir_leva_a_proxima_pendente` e vizinhos |
+
+Dois deles seguiram na mesma avaliação: o seletor de identidade passou a oferecer quem tem
+trabalho de comissão — porque presidir e avaliar não são papéis, e o campo em branco era a primeira
+parede —, e o cartão de vagas do portal foi reordenado para que o requisito e os documentos venham
+**antes** do botão que pede a decisão.
 
 O primeiro é o mais instrutivo: a suíte tinha 1.890 testes e nenhum deles **seguia um link**. Um
 teste que parte da tela inicial e clica no que ela oferece é o que prende o princípio VI onde ele é

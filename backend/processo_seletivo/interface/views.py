@@ -311,7 +311,11 @@ def identificar(request):
         return render(request, "interface/sem_autenticacao.html", status=503)
     if request.method == "POST":
         papeis = request.POST.getlist("papeis")
-        subject = (request.POST.get("subject") or "").strip()
+        # A identidade escolhida na lista tem prioridade sobre o campo livre: quem clicou num nome
+        # sugerido disse o que queria, e o campo pode estar com o exemplo que veio preenchido.
+        subject = (
+            request.POST.get("identidade_sugerida") or request.POST.get("subject") or ""
+        ).strip()
         if subject:
             # Papel deixou de ser obrigatório com a 011: quem integra uma comissão pode não ter
             # capacidade sistêmica nenhuma — sua autorização vem do vínculo, objeto a objeto — e
@@ -324,10 +328,26 @@ def identificar(request):
         return render(
             request,
             "interface/identificar.html",
-            {"papeis": identidade.PAPEIS, "erro": "Informe um nome."},
+            {
+                "papeis": identidade.PAPEIS,
+                "erro": "Informe um nome.",
+                "com_trabalho": comissao_selectors.identidades_com_trabalho(
+                    identidade.ESCOPO_PADRAO
+                ),
+            },
             status=422,
         )
-    return render(request, "interface/identificar.html", {"papeis": identidade.PAPEIS})
+    return render(
+        request,
+        "interface/identificar.html",
+        {
+            "papeis": identidade.PAPEIS,
+            # Presidir e avaliar **não são papéis** — vêm do vínculo com a comissão —, e por isso
+            # nenhuma caixa desta tela os concede. Sem esta lista, quem quisesse percorrer a Mesa
+            # tinha de adivinhar um nome que estivesse numa comissão.
+            "com_trabalho": comissao_selectors.identidades_com_trabalho(identidade.ESCOPO_PADRAO),
+        },
+    )
 
 
 @require_http_methods(["POST"])

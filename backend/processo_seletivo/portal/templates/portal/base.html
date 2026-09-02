@@ -83,12 +83,27 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .selecao:focus-within{outline:3px solid var(--verde);outline-offset:2px}
 .selecao .meta{color:var(--texto-fraco);font-size:.9375rem;overflow-wrap:anywhere}
 .perfis{list-style:none;margin:0;padding:0;display:grid;gap:.75rem}
-.perfil{background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:1rem}
+.perfil{background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:1rem;
+  display:grid;grid-template-columns:1fr;gap:.25rem}
+.perfil>h3{margin:0 0 .35rem}
+/* A ordem do DOM é a ordem da leitura em tela estreita: nome, argumento, e a ação no fim. Em
+   tela larga a lateral vai para a coluna da direita, que estava vazia. */
 .perfil dl{margin:.5rem 0 0;display:grid;grid-template-columns:1fr;gap:.25rem .75rem;
   font-size:.9375rem}
 .perfil dt{color:var(--texto-fraco)}
 .perfil dd{margin:0}
-.requisitos{margin:.5rem 0 0;padding-left:1.25rem}
+.rotulo-vaga{margin:.6rem 0 .1rem;font-size:.8125rem;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--texto-fraco)}
+.dados-vaga{margin:.6rem 0 0;font-size:.9375rem;color:var(--texto-fraco);
+  display:flex;flex-wrap:wrap;gap:.15rem .5rem}
+/* O separador acompanha o item **seguinte**, e não o anterior: quando a linha quebra, ele começa
+   a linha nova em vez de ficar pendurado no fim da anterior. */
+.dados-vaga span:not(:first-child)::before{content:"· ";color:var(--borda)}
+.vagas-numero{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:.35rem}
+.vagas-numero strong{font-size:1.75rem;line-height:1}
+.vagas-numero span{font-size:.9375rem;color:var(--texto-fraco)}
+.vagas-numero .reserva{flex-basis:100%}
+.requisitos{margin:.25rem 0 0;padding-left:1.25rem}
 .documento{display:inline-block;margin-top:.5rem;padding:.6rem 1rem;border-radius:4px;
   background:var(--verde);color:var(--branco);text-decoration:none;font-weight:600}
 .documento:hover{background:var(--verde-escuro)}
@@ -368,6 +383,15 @@ form.convite{margin:.75rem 0 0}
   main{padding:1.5rem}
   h1{font-size:1.6rem}
   .perfil dl{grid-template-columns:auto 1fr}
+  /* Duas zonas: o argumento à esquerda, os números e a ação à direita — onde antes havia metade
+     do cartão vazia. Abaixo de 600 px isto não vale, e a ordem volta a ser a do DOM. */
+  .perfil{grid-template-columns:minmax(0,1fr) minmax(11rem,15rem);gap:.25rem 1.5rem;
+    align-items:start}
+  .perfil>h3{grid-column:1/-1}
+  .perfil>.corpo-vaga{grid-column:1}
+  .perfil>.lateral-vaga{grid-column:2;padding-top:.2rem}
+  .lateral-vaga form.convite,.lateral-vaga p.convite{margin:.75rem 0 0}
+  .lateral-vaga .principal{width:100%}
   .dados{grid-template-columns:auto 1fr}
   button.principal{width:auto}
 }
