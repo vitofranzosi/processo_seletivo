@@ -52,7 +52,13 @@
   <li>
     <div class="cabeca">
       <strong class="pessoa">{{ item.membro.display_label|default:item.membro.identity_subject }}</strong>
-      <span class="codigo">{{ item.membro.identity_subject }}</span>
+      {% comment %}
+      Sem diretório institucional, o identificador **é** o que dá acesso — e por isso ele aparece.
+      Mas quando ele repete o nome ao lado ("ana ana"), a etiqueta gasta a atenção sem informar, e
+      some. Volta assim que houver nome de exibição distinto, que é quando ela desempata.
+      {% endcomment %}
+      {% if item.membro.display_label and item.membro.display_label != item.membro.identity_subject %}
+      <span class="codigo">{{ item.membro.identity_subject }}</span>{% endif %}
       <span class="situacao s-{{ item.membro.funcao }}">
         {% if item.membro.funcao == "PRESIDENTE" %}Presidente{% else %}Membro{% endif %}</span>
     </div>
@@ -80,8 +86,10 @@
         <input type="hidden" name="membro_id" value="{{ item.membro.id }}">
         <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-f{{ forloop.counter }}">
         <input type="hidden" name="acao" value="alterar_funcao">
-        <label class="campo" for="funcao-{{ forloop.counter }}">Função de
-          {{ item.membro.display_label|default:item.membro.identity_subject }}</label>
+        {% comment %} O cartão já diz de quem é; o rótulo repetia o nome uma terceira vez, depois
+           do título e do "Gerir". Para quem não vê o cartão, o nome continua no `aria-label` do
+           botão e no resumo que abriu este painel. {% endcomment %}
+        <label class="campo" for="funcao-{{ forloop.counter }}">Função</label>
         <select id="funcao-{{ forloop.counter }}" name="funcao">
           <option value="MEMBRO" {% if item.membro.funcao == "MEMBRO" %}selected{% endif %}>Membro</option>
           <option value="PRESIDENTE" {% if item.membro.funcao == "PRESIDENTE" %}selected{% endif %}>Presidente</option>

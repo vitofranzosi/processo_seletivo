@@ -77,6 +77,12 @@ tbody tr:last-child td{border-bottom:none}
 .s-ENCERRADO{background:var(--cinza-fundo);color:var(--texto-fraco)}
 .s-CANCELADO{background:var(--vermelho-fundo);color:var(--vermelho)}
 .s-ATIVO{background:var(--sucesso-fundo);color:var(--sucesso)}
+/* Função na comissão. Quatro telas escreviam `s-PRESIDENTE` e `s-MEMBRO`, e nenhuma das duas
+   existia aqui: a pastilha ficava com a forma e sem a cor, e "Presidente" saía como texto em
+   negrito ao lado do nome — indistinguível de "Membro", que é a única distinção que a tela
+   precisa fazer. Presidir é o que autoriza; ser membro é o estado comum, e fica quieto. */
+.s-PRESIDENTE{background:var(--verde-claro);color:var(--verde-escuro)}
+.s-MEMBRO{background:var(--cinza-fundo);color:var(--texto-fraco);font-weight:400}
 .acoes{display:flex;gap:.4rem;flex-wrap:wrap}
 .acao{font-size:.8125rem;padding:.25rem .7rem;border:1px solid var(--verde);color:var(--verde-texto);
   background:var(--branco);border-radius:3px;text-decoration:none;white-space:nowrap;cursor:pointer}
@@ -334,10 +340,40 @@ fieldset.caracter legend{font-size:.85rem;color:var(--texto-fraco);padding:0;
   color:var(--verde-texto);border:1px solid var(--borda);border-radius:4px;padding:.25rem .6rem}
 .gerir-membro>summary:hover{border-color:var(--verde-texto)}
 .gerir-membro[open]>summary{margin-bottom:.5rem}
+/* Duas palavras não precisam da largura do cartão. E o rótulo fica sobre o seletor, e não ao
+   lado: em `.linha-de-acoes` os três — rótulo, seletor e botão — disputavam a mesma linha e o
+   seletor esticava para o que sobrasse. */
+.gerir-membro .linha-de-acoes{align-items:center}
+.gerir-membro select{width:auto;min-width:10rem;padding:.4rem;border:1px solid var(--borda);
+  border-radius:4px;background:var(--branco);font:inherit}
+/* O rótulo ao lado do que ele nomeia. Como `.campo`, ele crescia para preencher a linha e
+   empurrava o seletor para a outra ponta do cartão — rótulo numa margem, controle na outra, e o
+   botão sobrando para a linha de baixo. */
+.gerir-membro .campo{flex:0 0 auto;font-size:.8125rem;font-weight:600;margin:0}
+/* Remover é de outra natureza. Encostado no botão de alterar, o gesto errado fica à distância de
+   um deslize; a folga é o que separa o rotineiro do irreversível. */
+.gerir-membro form+form{margin-top:.9rem;padding-top:.75rem;border-top:1px solid var(--fundo)}
 .escolhas{display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:.35rem .75rem;
   max-height:16rem;overflow-y:auto;padding:.25rem 0}
 .escolha{display:flex;gap:.5rem;align-items:baseline;font-size:.9375rem;line-height:1.4}
+/* Caixa de marcar não é campo de texto. Dentro de `.campo`, ela herdava `width:100%` e virava um
+   bloco da largura do filtro: o rótulo caía para a linha de baixo, e a marca ficava solta no meio
+   da barra, sem nada ao lado. A classe existe para isso — e reconhecer a marca pela classe, e não
+   pelo atributo de tipo, é o que mantém a folha fora do alcance do guarda que proíbe oferecer
+   papel na tela de indisponibilidade. */
 .escolha input{margin:0;flex:none}
+/* `.campo.escolha`, e não `.escolha`: a marca de filtrar vive dentro de um `.campo`, e a
+   regra genérica dos campos — `width:100%` — mora **depois** nesta folha. Empatadas em
+   especificidade, quem vem depois ganha, e a caixa de marcar esticava à largura do rótulo,
+   empurrando a frase para uma coluna de uma palavra por linha. Dois nomes de classe no
+   seletor resolvem sem depender da ordem — que muda a cada regra inserida acima. */
+.campo.escolha input{width:auto;padding:0;border:0;background:none}
+/* A marca ocupa o que a frase dela ocupa. Como `.campo`, ela disputava a barra em partes iguais
+   com o campo de busca e recebia largura de sobra — "Só quem está sem Etapa (1 de 7)" quebrava
+   uma palavra por linha, e a marca ficava solta ao lado de uma coluna de texto. */
+.campo.escolha{display:flex;align-items:center;flex:0 0 auto}
+.campo.escolha label{display:flex;align-items:center;gap:.5rem;margin:0;font-weight:400;
+  font-size:.9375rem}
 .alocar-em-lote fieldset,.remover-em-lote fieldset{border:1px solid var(--borda);border-radius:4px;
   padding:.75rem 1rem;margin:.75rem 0 0}
 .alocar-em-lote legend,.remover-em-lote legend{font-weight:600;font-size:.9375rem;padding:0 .35rem}
@@ -351,7 +387,11 @@ fieldset.caracter legend{font-size:.85rem;color:var(--texto-fraco);padding:0;
 .filtro .salvar{border-top:0;padding:0}
 /* "nome ou identificador" não precisa de 850 px, e o campo esticado empurrava o botão
    para o extremo oposto da tela. */
-.filtro .campo{flex:0 1 26rem}
+/* Só o campo de digitar. A regra pegava também a marca de "Só quem está sem Etapa", que é
+   `.campo` e vinha antes na folha: com 26rem de base, a frase dela quebrava uma palavra por
+   linha, e a marca ficava solta ao lado de uma coluna de texto. */
+.filtro .campo:not(.escolha){flex:0 1 26rem}
+.filtro .escolha{flex:0 0 auto}
 .conferencia-lote{border-collapse:collapse;width:100%;font-size:.9375rem}
 .conferencia-lote caption{text-align:left;color:var(--texto-fraco);padding-bottom:.5rem}
 .conferencia-lote th,.conferencia-lote td{text-align:left;padding:.5rem .75rem;
@@ -458,7 +498,12 @@ ul.retiradas .quando{color:var(--texto-fraco);font-size:.875rem;flex:0 0 auto;ma
 /* Cartões de pessoa e de Etapa em grade: um por linha, com a página larga, dava um cartão de 1.450
    px para três linhas de texto — e uma banca de sete virava uma página de rolagem. */
 ul.comissao{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(24rem,100%),1fr));
-  gap:.75rem;align-items:start}
+  gap:.75rem}
+/* Cada cartão tem o conteúdo que tem — uma pessoa atua em duas Etapas, outra em nenhuma —, e com
+   os cartões medindo cada um a sua altura a fileira terminava em degraus, com os "Gerir" a alturas
+   diferentes. A ação vai para o rodapé do cartão, e os rodapés se alinham. */
+ul.comissao>li{display:flex;flex-direction:column;margin-bottom:0}
+ul.comissao .gerir-membro{margin-top:auto;padding-top:.5rem}
 
 /* Poucas colunas não precisam da página inteira: o protocolo ficava numa ponta e a situação na
    outra, com um vão no meio que o olho tinha de atravessar a cada linha. */
