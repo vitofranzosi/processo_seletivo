@@ -1,6 +1,7 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Inscrição {{ inscricao.protocolo|default:inscricao.id }}{% endblock %}
 {% block conteudo %}
+<div class="pagina-da-inscricao">
 <nav aria-label="Trilha de navegação" class="trilha">
   <a href="{% url 'interface:minhas-etapas' %}">Minhas Etapas</a> ›
   <a href="{% url 'interface:minha-etapa' edital.id etapa_id %}">Minha Mesa</a> ›
@@ -63,7 +64,7 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
     {% for documento in documentos %}
     <li>
       <span class="requisito">{{ documento.nome }}</span>
-      {% if documento.obrigatorio %}<span class="marca">obrigatório</span>{% else %}<span></span>{% endif %}
+      <span class="celula-marca">{% if documento.obrigatorio %}<span class="marca">obrigatório</span>{% endif %}</span>
       {% if documento.enviado %}
       {% comment %}
       **Aba própria, e não a mesma.** O PDF é servido `inline`, então abrir na mesma aba substitui
@@ -145,8 +146,12 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
   o sistema não faz é impedir de pontuar, porque documento ausente é caso legítimo e ninguém
   precisa abrir arquivo nenhum para registrar que não havia o que conferir.
   {% endcomment %}
-  {% if tem_documento and not ja_abriu_documento %}
+  {% if tem_documento %}
+  {% if ultima_leitura %}
+  <p class="ajuda" role="status">Você abriu documento desta inscrição em {{ ultima_leitura|date:"d/m/Y" }} às {{ ultima_leitura|date:"H:i" }} — por isso o cursor começa aqui.</p>
+  {% else %}
   <p class="ajuda" role="status">Você ainda não abriu nenhum documento desta inscrição.</p>
+  {% endif %}
   {% endif %}
 
   <form method="post" action="{% url 'interface:mesa-avaliacao-gravar' edital.id etapa_id inscricao.id %}">
@@ -211,6 +216,7 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
 
 </div>{# painel-avaliacao #}
 </div>{# mesa-trabalho #}
+</div>{# pagina-da-inscricao #}
 
 {% comment %}
 O painel é montado pelo script, e só em tela larga: abaixo disso não há onde pôr duas colunas, e o

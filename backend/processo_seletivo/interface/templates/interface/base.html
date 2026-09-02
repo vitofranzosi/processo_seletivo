@@ -429,8 +429,12 @@ ul.documentos .entrega{justify-content:flex-end;white-space:nowrap}
   ul.documentos .entrega{grid-column:1/-1;padding:0 1rem .7rem}
   ul.documentos>li>*:not(.entrega){border-bottom:0}
 }
+/* A marca é uma marca, e não uma célula: como item de grade direto ela recebia o preenchimento da
+   linha e a borda passava a envolver a célula inteira, virando uma caixa alta ao lado do nome. A
+   célula cuida do espaçamento; a marca volta ao seu tamanho. */
+ul.documentos .celula-marca{justify-content:flex-start}
 ul.documentos .marca{font-size:.75rem;color:var(--texto-fraco);border:1px solid var(--borda);
-  border-radius:3px;padding:.05rem .35rem;font-weight:400;white-space:nowrap}
+  border-radius:3px;padding:.05rem .35rem;font-weight:400;white-space:nowrap;line-height:1.5}
 ul.documentos .entrega{display:flex;align-items:center;gap:.6rem;font-size:.875rem;
   color:var(--texto-fraco)}
 ul.documentos .entrega.ausente{font-style:italic}
@@ -467,9 +471,14 @@ ul.documentos .entrega.ausente{font-style:italic}
 
 /* Sem documento aberto, a coluna é uma só — e o formulário de uma avaliação não tem o que fazer
    com 1.480 px: a ficha esticava, a lista de documentos punha a ação a um palmo do nome, e a caixa
-   do parecer virava uma faixa. A página larga serve ao painel; o formulário tem a sua medida. */
-.painel-avaliacao{min-width:0;max-width:64rem}
-.mesa-trabalho.com-documento .painel-avaliacao{max-width:none}
+   do parecer virava uma faixa. A página larga serve ao painel; o formulário tem a sua medida.
+
+   O limite é da **página**, e não só do formulário: posto apenas no formulário, o cabeçalho
+   atravessava a tela inteira e o conteúdo parava antes, deixando uma borda direita irregular que
+   parece defeito. Com o painel aberto, o limite sai — quem manda ali é o documento. */
+.pagina-da-inscricao{max-width:64rem}
+.pagina-da-inscricao.com-documento{max-width:none}
+.painel-avaliacao{min-width:0}
 .documentos a[aria-current]{font-weight:600;text-decoration:underline}
 @media (min-width:64rem){
   .mesa-trabalho.com-documento{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);

@@ -429,8 +429,13 @@ quando há aviso a ler — que tem prioridade sobre tudo.
 
 **Sugerida, e não imposta**, como o período previsto de FR-095: nada impede pontuar antes de abrir,
 porque documento ausente é caso legítimo e ninguém precisa abrir arquivo para registrar que não
-havia o que conferir. E a tela diz, em uma linha, que ainda não houve leitura — um fato que a
-**trilha** já guarda, e não um estado novo inventado para a mesma coisa (FR-027).
+havia o que conferir.
+
+E a tela diz, numa linha, **onde a leitura está** — nas duas direções: que ainda não houve, ou
+quando houve. Só a frase negativa deixaria o caso oposto em silêncio, e silêncio é indistinguível
+de defeito: quem chega e encontra o cursor na nota não saberia se o sistema pulou a leitura ou se
+foi ela mesma que já leu. O instante vem da **trilha**, que registra cada abertura — não é estado
+novo inventado para a mesma coisa (FR-027).
 
 **FR-110** — **O caminho não pode custar mais que o trabalho.** Numa Mesa de 230 inscrições, cada
 clique de navegação é cobrado 230 vezes. Três deles não decidiam nada:

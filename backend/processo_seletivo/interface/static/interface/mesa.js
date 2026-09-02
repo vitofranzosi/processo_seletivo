@@ -23,6 +23,8 @@
   var quadro = document.getElementById("painel-documento-quadro");
   var titulo = document.getElementById("painel-documento-titulo");
   var trabalho = document.querySelector(".mesa-trabalho");
+  // O limite de largura é da página, e sai junto quando o documento entra.
+  var pagina = document.querySelector(".pagina-da-inscricao");
   var links = [].slice.call(document.querySelectorAll("[data-documento]"));
   if (!painel || !quadro || !titulo || !trabalho || !links.length) return;
 
@@ -31,6 +33,7 @@
   function fechar() {
     painel.hidden = true;
     trabalho.classList.remove("com-documento");
+    if (pagina) pagina.classList.remove("com-documento");
     quadro.src = "about:blank";
     links.forEach(function (link) {
       link.removeAttribute("aria-current");
@@ -42,6 +45,7 @@
     titulo.textContent = link.getAttribute("data-documento");
     painel.hidden = false;
     trabalho.classList.add("com-documento");
+    if (pagina) pagina.classList.add("com-documento");
     links.forEach(function (outro) {
       if (outro === link) {
         outro.setAttribute("aria-current", "true");
