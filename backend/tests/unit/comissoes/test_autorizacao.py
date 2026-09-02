@@ -78,9 +78,7 @@ def test_minhas_etapas_ordena_o_numero_do_edital_como_numero(
     assert _numero("11") < _numero("11-A")
 
 
-def test_a_chave_de_leitura_e_uma_so_para_toda_a_feature(
-    gestor, processo_a, comissao_de_a
-):
+def test_a_chave_de_leitura_e_uma_so_para_toda_a_feature(gestor, processo_a, comissao_de_a):
     """Duas ordenações por nome no mesmo arquivo foi o que reintroduziu o defeito do acento.
 
     A lista da Comissão e o filtro da trilha ordenam pela mesma função — se alguém criar uma
@@ -125,17 +123,28 @@ def test_o_filtro_da_trilha_mostra_o_rotulo_mais_recente(gestor, processo_a):
     from processo_seletivo.comissoes.models import MembroComissao
 
     adicionar_varios(
-        actor=gestor, processo_id=processo_a.id, entradas=[("joao.souza", "João S.")],
-        funcao="MEMBRO", idempotency_key="rotulo-antigo", correlation_id="c",
+        actor=gestor,
+        processo_id=processo_a.id,
+        entradas=[("joao.souza", "João S.")],
+        funcao="MEMBRO",
+        idempotency_key="rotulo-antigo",
+        correlation_id="c",
     )
     antigo = MembroComissao.objects.get(identity_subject="joao.souza")
     remover_membro(
-        actor=gestor, processo_id=processo_a.id, membro_id=antigo.id,
-        idempotency_key="rotulo-saida", correlation_id="c",
+        actor=gestor,
+        processo_id=processo_a.id,
+        membro_id=antigo.id,
+        idempotency_key="rotulo-saida",
+        correlation_id="c",
     )
     adicionar_varios(
-        actor=gestor, processo_id=processo_a.id, entradas=[("joao.souza", "João Souza Neto")],
-        funcao="MEMBRO", idempotency_key="rotulo-novo", correlation_id="c",
+        actor=gestor,
+        processo_id=processo_a.id,
+        entradas=[("joao.souza", "João Souza Neto")],
+        funcao="MEMBRO",
+        idempotency_key="rotulo-novo",
+        correlation_id="c",
     )
 
     pessoas = {p["subject"]: p["rotulo"] for p in pessoas_da_trilha(processo_a)}

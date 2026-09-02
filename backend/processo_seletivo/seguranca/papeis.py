@@ -46,8 +46,9 @@ def _lista_sql(valores) -> str:
     return "ARRAY[" + ", ".join(_literal(valor) for valor in valores) + "]"
 
 
-def comandos_de_papeis(*, database, migration_role, runtime_role, migration_password,
-                       runtime_password):
+def comandos_de_papeis(
+    *, database, migration_role, runtime_role, migration_password, runtime_password
+):
     """Papéis, senhas, acesso ao banco e privilégios default. Válido em banco vazio.
 
     `ALTER DEFAULT PRIVILEGES` é o que faz tabela criada por migration futura já nascer acessível

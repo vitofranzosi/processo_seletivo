@@ -125,9 +125,7 @@ def test_a_confirmacao_diz_a_quem_o_ato_entrega(
     assert "aguardando quem publica" in resposta.content.decode()
 
 
-def test_nada_de_fila_notificacao_ou_atribuicao_nasce(
-    api_client, manager_headers, process_payload
-):
+def test_nada_de_fila_notificacao_ou_atribuicao_nasce(api_client, manager_headers, process_payload):
     """FR-030: a indicação é leitura derivada. Nenhum estado novo é persistido.
 
     Se algum dia isto virar tabela, este teste é o que acusa — e a conversa passa a ser sobre

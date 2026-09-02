@@ -118,9 +118,7 @@ def _par(composicao, rotulo, valor):
     documento não precisa para ser lido.
     """
     composicao.escrever(rotulo, tamanho=CORPO_NOTA, antes=4.5)
-    composicao.escrever(
-        valor, tamanho=CORPO_TEXTO, recuo=RECUO_DO_VALOR, antes=SUBIR_PARA_A_LINHA
-    )
+    composicao.escrever(valor, tamanho=CORPO_TEXTO, recuo=RECUO_DO_VALOR, antes=SUBIR_PARA_A_LINHA)
 
 
 def _documentos(composicao, dados):
@@ -154,9 +152,7 @@ def _documentos(composicao, dados):
                 tamanho=CORPO_NOTA,
                 antes=1.0,
             )
-            composicao.escrever(
-                f"SHA-256: {documento['resumo']}", tamanho=CORPO_NOTA, antes=1.0
-            )
+            composicao.escrever(f"SHA-256: {documento['resumo']}", tamanho=CORPO_NOTA, antes=1.0)
 
 
 def _atestado(composicao, dados):

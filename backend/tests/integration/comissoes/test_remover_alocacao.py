@@ -55,8 +55,7 @@ def test_remove_varias_alocacoes_numa_submissao(
 
     joao = comissao_de_a["joao"]
     alocacoes = [
-        alocar_em(gestor, processo_a, joao, edital_a, etapa)
-        for etapa in (etapa_a1, etapa_a2)
+        alocar_em(gestor, processo_a, joao, edital_a, etapa) for etapa in (etapa_a1, etapa_a2)
     ]
 
     removidas = remover_varias_alocacoes(

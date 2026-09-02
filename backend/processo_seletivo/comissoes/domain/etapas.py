@@ -42,8 +42,7 @@ def conteudo_vigente(edital, *, at=None):
 def etapas_vigentes(edital, *, at=None):
     """As Etapas do conteúdo vigente, por identidade. Devolve `{UUID: dados}`."""
     return {
-        UUID(etapa["id"]): etapa
-        for etapa in (conteudo_vigente(edital, at=at).get("stages") or [])
+        UUID(etapa["id"]): etapa for etapa in (conteudo_vigente(edital, at=at).get("stages") or [])
     }
 
 

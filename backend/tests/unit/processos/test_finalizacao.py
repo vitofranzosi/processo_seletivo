@@ -19,8 +19,11 @@ def edital(status, number="01", year=2026):
 
 @pytest.mark.parametrize(
     "status",
-    [ProcessoSeletivo.Status.EM_ELABORACAO, ProcessoSeletivo.Status.ENCERRADO,
-     ProcessoSeletivo.Status.CANCELADO],
+    [
+        ProcessoSeletivo.Status.EM_ELABORACAO,
+        ProcessoSeletivo.Status.ENCERRADO,
+        ProcessoSeletivo.Status.CANCELADO,
+    ],
 )
 def test_only_an_active_process_can_be_closed(status):
     with pytest.raises(DomainError) as exc:

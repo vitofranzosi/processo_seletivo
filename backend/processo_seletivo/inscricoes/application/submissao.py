@@ -200,9 +200,7 @@ def enviar_inscricao(*, identidade, inscricao, declaracoes, idempotency_key, cor
             previous_state=Inscricao.Status.RASCUNHO,
             # Edital, versão e Perfil, que é o que a Constituição exige que se possa responder
             # depois; sem CPF e sem nome de arquivo (FR-078, FR-090).
-            reason=(
-                f"edital {travada.edital_id} versao {versao.pk} perfil {travada.profile_id}"
-            ),
+            reason=(f"edital {travada.edital_id} versao {versao.pk} perfil {travada.profile_id}"),
         )
         idem.result_id = travada.pk
         idem.result_type = "Inscricao"

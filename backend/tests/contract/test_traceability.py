@@ -41,9 +41,7 @@ def test_every_referenced_test_exists(documento):
             continue
         if not re.search(rf"^def {re.escape(nome)}\(", caminho.read_text(encoding="utf-8"), re.M):
             ausentes.append(f"{arquivo}::{nome}")
-    assert not ausentes, (
-        f"{documento.name} cita testes que não existem: {sorted(set(ausentes))}"
-    )
+    assert not ausentes, f"{documento.name} cita testes que não existem: {sorted(set(ausentes))}"
 
 
 def test_matrix_covers_every_requirement_of_the_current_spec(matrix):

@@ -109,9 +109,7 @@ def test_runtime_role_keeps_the_privileges_it_needs(runtime_connection, table):
         cursor.execute(f"SELECT count(*) FROM {table}")
         assert cursor.fetchone()[0] >= 0
     with runtime_connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT has_table_privilege(%s, %s, 'INSERT')", [RUNTIME_ROLE, table]
-        )
+        cursor.execute("SELECT has_table_privilege(%s, %s, 'INSERT')", [RUNTIME_ROLE, table])
         assert cursor.fetchone()[0] is True
 
 
@@ -199,9 +197,7 @@ def test_provisionamento_e_idempotente(runtime_connection):
         ):
             cursor.execute(instrucao)
         for tabela in APPEND_ONLY_TABLES:
-            cursor.execute(
-                "SELECT has_table_privilege(%s, %s, 'UPDATE')", [RUNTIME_ROLE, tabela]
-            )
+            cursor.execute("SELECT has_table_privilege(%s, %s, 'UPDATE')", [RUNTIME_ROLE, tabela])
             assert cursor.fetchone()[0] is False, tabela
 
 

@@ -275,9 +275,7 @@ def _processo_do_formulario(dados):
         raise RecusaDoFormulario(
             [
                 {
-                    "mensagem": (
-                        f"O ano do Edital deve estar entre {ANO_MINIMO} e {ANO_MAXIMO}."
-                    ),
+                    "mensagem": (f"O ano do Edital deve estar entre {ANO_MINIMO} e {ANO_MAXIMO}."),
                     "ancora": "ano",
                 }
             ]
@@ -364,6 +362,8 @@ def _destino(caminho):
         return DESTINO_DA_PENDENCIA[caminho]
     colecao = caminho.split("/")[1] if caminho.startswith("/") else ""
     return DESTINO_DA_PENDENCIA.get(colecao, (None, "", False))
+
+
 # Caminho que a tradução não conhece — os da forma publicada, por exemplo — não ganha destino nem
 # explicação inventada. FR-007 proíbe declarar incorrigível o que a etapa resolve; não obriga a
 # justificar o que ninguém mapeou.
@@ -591,9 +591,9 @@ def compor_etapa(request, edital_id, etapa):
             "proxima": proxima,
             "editavel": editavel,
             "erros": erros,
-            "salvo": dict(
-                (chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO
-            ).get(request.GET.get("salvo", "")),
+            "salvo": dict((chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO).get(
+                request.GET.get("salvo", "")
+            ),
             "identificacao": (
                 digitados
                 if etapa == "identificacao" and digitados is not None
@@ -649,8 +649,7 @@ def _reexibir_perfis(perfis):
             **perfil,
             "requirements": "\n".join(perfil["requirements"]),
             "modalidades": [
-                _reexibir_modalidade(modalidade)
-                for modalidade in perfil["competitionModalities"]
+                _reexibir_modalidade(modalidade) for modalidade in perfil["competitionModalities"]
             ],
         }
         for perfil in perfis
@@ -787,15 +786,24 @@ def _indice_de_linha(request):
 
 @require_http_methods(["GET"])
 def fragmento_perfil(request):
-    return render(request, "interface/_perfil.html",
-                  {"perfil": {"id": str(uuid4()), "reserveType": "NONE"},
-                   "indice": _indice_de_linha(request), "reservas": forms.RESERVA})
+    return render(
+        request,
+        "interface/_perfil.html",
+        {
+            "perfil": {"id": str(uuid4()), "reserveType": "NONE"},
+            "indice": _indice_de_linha(request),
+            "reservas": forms.RESERVA,
+        },
+    )
 
 
 @require_http_methods(["GET"])
 def fragmento_evento(request):
-    return render(request, "interface/_evento.html",
-                  {"evento": {"id": str(uuid4())}, "indice": _indice_de_linha(request)})
+    return render(
+        request,
+        "interface/_evento.html",
+        {"evento": {"id": str(uuid4())}, "indice": _indice_de_linha(request)},
+    )
 
 
 @require_http_methods(["GET"])
@@ -876,16 +884,20 @@ def _campos_de(definicoes):
 def fragmento_retificacao_perfil(request):
     """Perfil a acrescentar por Retificação (US4). Só a linha; o que ela vira é decidido na
     composição por diferença, ao comparar com o conteúdo vigente."""
-    return render(request, "interface/_retificacao_perfil.html",
-                  {"indice": _indice_de_linha(request),
-                   "campos": _campos_de(retificacao_ui.NOVO_PERFIL)})
+    return render(
+        request,
+        "interface/_retificacao_perfil.html",
+        {"indice": _indice_de_linha(request), "campos": _campos_de(retificacao_ui.NOVO_PERFIL)},
+    )
 
 
 @require_http_methods(["GET"])
 def fragmento_retificacao_evento(request):
-    return render(request, "interface/_retificacao_evento.html",
-                  {"indice": _indice_de_linha(request),
-                   "campos": _campos_de(retificacao_ui.NOVO_EVENTO)})
+    return render(
+        request,
+        "interface/_retificacao_evento.html",
+        {"indice": _indice_de_linha(request), "campos": _campos_de(retificacao_ui.NOVO_EVENTO)},
+    )
 
 
 @require_http_methods(["GET"])
@@ -1236,9 +1248,7 @@ def retificar(request, edital_id):
         {
             "edital": edital,
             "base": base,
-            "grupos": retificacao_ui.reexibir(
-                retificacao_ui.campos_editaveis(base.content), dados
-            ),
+            "grupos": retificacao_ui.reexibir(retificacao_ui.campos_editaveis(base.content), dados),
             "digitado": dados,
             # As linhas acrescentadas nascem no cliente, mas precisam voltar do servidor depois
             # do POST: sem isto, ver o resumo devolve um formulário sem elas.
@@ -1495,9 +1505,7 @@ def _trilha_processo(processo):
 
 def _processo_do_ator(ator, processo_id):
     processo = (
-        ProcessoSeletivo.objects.filter(
-            pk=processo_id, institution_scope=ator.institution_scope
-        )
+        ProcessoSeletivo.objects.filter(pk=processo_id, institution_scope=ator.institution_scope)
         .prefetch_related("editais")
         .first()
     )
@@ -1760,10 +1768,7 @@ def comissao(request, processo_id):
                             "Informe ao menos um identificador institucional.",
                             422,
                         )
-                    ja = {
-                        m.identity_subject
-                        for m in comissao_selectors.membros(processo)
-                    }
+                    ja = {m.identity_subject for m in comissao_selectors.membros(processo)}
                     return render(
                         request,
                         "interface/comissao_confirmar.html",
@@ -1807,9 +1812,7 @@ def comissao(request, processo_id):
                     idempotency_key=chave,
                     correlation_id=getattr(request, "correlation_id", ""),
                 )
-            return redirect(
-                f"{reverse('interface:comissao', args=[processo.id])}?feito={acao}"
-            )
+            return redirect(f"{reverse('interface:comissao', args=[processo.id])}?feito={acao}")
         except DomainError as recusa:
             if recusa.status == 404:
                 raise Http404 from recusa
@@ -1910,9 +1913,7 @@ def alocacoes(request, processo_id):
                     idempotency_key=chave,
                     correlation_id=getattr(request, "correlation_id", ""),
                 )
-            return redirect(
-                f"{reverse('interface:alocacoes', args=[processo.id])}?feito={acao}"
-            )
+            return redirect(f"{reverse('interface:alocacoes', args=[processo.id])}?feito={acao}")
         except DomainError as recusa:
             if recusa.status == 404:
                 raise Http404 from recusa
@@ -1962,9 +1963,7 @@ def minhas_etapas(request):
             "vinculos": vinculos,
             # A orientação da 002 é para quem não tem nada. Mostrá-la a quem já integra uma
             # comissão mandava a pessoa pedir exatamente o que ela já tem (FR-028 da 002).
-            "sem_papel_nem_atribuicao": (
-                not atribuicoes and not ator.permissions and not vinculos
-            ),
+            "sem_papel_nem_atribuicao": (not atribuicoes and not ator.permissions and not vinculos),
         },
     )
 
@@ -2068,9 +2067,7 @@ def auditoria_da_comissao(request, processo_id):
                     "quando": registro.occurred_at,
                     "ator": registro.actor_subject,
                     "operacao": OPERACOES.get(registro.operation, registro.operation),
-                    "agregado": AGREGADOS.get(
-                        registro.aggregate_type, registro.aggregate_type
-                    ),
+                    "agregado": AGREGADOS.get(registro.aggregate_type, registro.aggregate_type),
                     "identificador": registro.aggregate_id,
                     "permissao": registro.permission,
                     "motivo": registro.reason,

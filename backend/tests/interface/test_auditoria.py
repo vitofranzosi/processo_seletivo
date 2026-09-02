@@ -41,9 +41,7 @@ def test_trilha_mostra_o_motivo_registrado_no_ato(client, seletor_ligado, edital
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_trilha_reune_o_edital_e_suas_retificacoes(
-    client, seletor_ligado, api_client, edital
-):
+def test_trilha_reune_o_edital_e_suas_retificacoes(client, seletor_ligado, api_client, edital):
     """Atos de Retificação são auditados sob o id dela; a trilha do Edital precisa dos dois."""
     from tests.fixtures.publicacao import retify
 
@@ -151,9 +149,7 @@ def test_recusa_do_dominio_vira_pagina_e_nao_erro_de_servidor(client, seletor_li
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_situacao_feminina_da_retificacao_e_traduzida(
-    client, seletor_ligado, api_client, edital
-):
+def test_situacao_feminina_da_retificacao_e_traduzida(client, seletor_ligado, api_client, edital):
     """A trilha mostrava 'Em revisão → HOMOLOGADA', misturando texto e código cru."""
     from tests.fixtures.publicacao import retify
 

@@ -156,7 +156,5 @@ def test_nenhuma_operacao_deixa_alocacao_ativa_sem_presidente(
     sem_presidente = not MembroComissao.objects.filter(
         processo=processo_a, ativo=True, funcao=Funcao.PRESIDENTE
     ).exists()
-    com_alocacao = AlocacaoEtapa.objects.filter(
-        membro__processo=processo_a, ativo=True
-    ).exists()
+    com_alocacao = AlocacaoEtapa.objects.filter(membro__processo=processo_a, ativo=True).exists()
     assert not (sem_presidente and com_alocacao)

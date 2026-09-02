@@ -170,9 +170,7 @@ def _tentar_publicar(api_client, edital, changes, sufixo):
             "changes": changes,
         },
         format="json",
-        **actor_headers(
-            "retificador", ["retificacao:elaborar"], key=f"retificacao-{sufixo}-0001"
-        ),
+        **actor_headers("retificador", ["retificacao:elaborar"], key=f"retificacao-{sufixo}-0001"),
     )
     if criada.status_code != 201:
         return criada

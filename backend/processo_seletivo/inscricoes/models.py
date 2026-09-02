@@ -146,9 +146,7 @@ class DocumentoSubmetido(models.Model):
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    inscricao = models.ForeignKey(
-        Inscricao, on_delete=models.CASCADE, related_name="documentos"
-    )
+    inscricao = models.ForeignKey(Inscricao, on_delete=models.CASCADE, related_name="documentos")
     requirement_id = models.UUIDField()
     arquivo = models.FileField(
         storage=ArmazenamentoPrivado(), upload_to=caminho_do_documento, max_length=255

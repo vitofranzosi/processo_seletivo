@@ -66,10 +66,13 @@ def enviar_comprovante(*, para: str, dados: dict) -> None:
     """
     if not para:
         return
-    documentos = "\n".join(
-        f"    - {documento['requisito']}: {documento['arquivo']}"
-        for documento in dados["documentos"]
-    ) or "    (nenhum)"
+    documentos = (
+        "\n".join(
+            f"    - {documento['requisito']}: {documento['arquivo']}"
+            for documento in dados["documentos"]
+        )
+        or "    (nenhum)"
+    )
     try:
         send_mail(
             subject=ASSUNTO.format(protocolo=dados["protocolo"]),

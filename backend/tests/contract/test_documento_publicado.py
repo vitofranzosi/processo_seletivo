@@ -66,6 +66,7 @@ def documento(conteudo, content_hash=HASH, *, modo=MODO_PUBLICADO, **kwargs):
         kwargs.setdefault("autoridade", AUTORIDADE)
     return render_edital_pdf(conteudo, content_hash, modo=modo, **kwargs)
 
+
 PAGINA = re.compile(rb"/Type /Page /Parent")
 TEXTO_PDF = re.compile(rb"\((.*?)\) Tj", re.DOTALL)
 # Só os fluxos de conteúdo das páginas. Desde que o documento embute o brasão, varrer o arquivo
@@ -286,9 +287,9 @@ def test_o_corpo_normativo_quebra_nas_mesmas_paginas_na_previa_e_no_publicado():
     assert len(publicado) >= len(previa), "o publicado paginou o corpo em menos páginas"
     for numero, uma in enumerate(previa, 1):
         outra = publicado[numero - 1]
-        assert corpo_normativo(uma, MARCA_DE_PREVIA) == corpo_normativo(
-            outra, MARCA_DE_PREVIA
-        ), f"o corpo normativo da página {numero} difere entre prévia e publicado"
+        assert corpo_normativo(uma, MARCA_DE_PREVIA) == corpo_normativo(outra, MARCA_DE_PREVIA), (
+            f"o corpo normativo da página {numero} difere entre prévia e publicado"
+        )
     for excedente in publicado[len(previa) :]:
         assert not corpo_normativo(excedente, MARCA_DE_PREVIA), (
             "a página a mais do publicado deveria conter só o fechamento do ato"

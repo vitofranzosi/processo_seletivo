@@ -253,9 +253,7 @@ def test_enderecar_etapa_por_posicao_e_recusado(api_client, manager_headers, pro
         {
             "baseSnapshotId": str(base.id),
             "justification": "Endereçamento posicional",
-            "changes": [
-                {"targetPath": "/stages/0/name", "operation": "REPLACE", "newValue": "X"}
-            ],
+            "changes": [{"targetPath": "/stages/0/name", "operation": "REPLACE", "newValue": "X"}],
         },
         format="json",
         **actor_headers("retificador", ["retificacao:elaborar"], key="posicional-000001"),

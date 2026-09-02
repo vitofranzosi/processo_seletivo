@@ -68,9 +68,7 @@ def test_nao_reescreve_nenhuma_inscricao(selecao):
 
 def test_nao_marca_endereco_algum_como_verificado(selecao):
     """Endereço digitado numa inscrição é indício. Quem prova controle é o desafio (FR-015)."""
-    inscricao(
-        selecao, subject=MARIA.subject, cpf=CPF_DE_MARIA, nome="Maria", email="maria@ex.br"
-    )
+    inscricao(selecao, subject=MARIA.subject, cpf=CPF_DE_MARIA, nome="Maria", email="maria@ex.br")
 
     reconciliacao.reconciliar(apps, None)
 

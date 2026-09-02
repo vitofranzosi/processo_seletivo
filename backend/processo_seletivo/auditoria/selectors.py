@@ -34,9 +34,7 @@ def encode_cursor(registro):
 
 def decode_cursor(cursor):
     try:
-        occurred_at, event_id = (
-            base64.urlsafe_b64decode(cursor.encode()).decode().split("|", 1)
-        )
+        occurred_at, event_id = base64.urlsafe_b64decode(cursor.encode()).decode().split("|", 1)
         return occurred_at, event_id
     except (ValueError, UnicodeDecodeError, binascii.Error) as exc:
         raise DomainError("invalid_cursor", "O cursor informado é inválido.", 400) from exc

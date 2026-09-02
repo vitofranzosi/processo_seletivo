@@ -585,9 +585,7 @@ def publish_retification(
         pdf = render_edital_pdf(
             content,
             canonical_sha256(content),
-            autoridade=AutoridadeSignataria(
-                nome=signatory["name"], cargo=signatory["role"]
-            ),
+            autoridade=AutoridadeSignataria(nome=signatory["name"], cargo=signatory["role"]),
         )
         publication = Publicacao.objects.create(
             edital=edital,
