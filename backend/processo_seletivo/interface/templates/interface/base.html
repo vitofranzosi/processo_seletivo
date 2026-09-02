@@ -58,10 +58,23 @@ main>p,main>section>p,.sub,.ajuda,.vazio,legend+p{max-width:var(--leitura)}
 .processo{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   margin-bottom:1.25rem;overflow:hidden}
 .processo>header{padding:1rem 1.25rem;border-bottom:1px solid var(--borda);
-  display:flex;align-items:baseline;gap:.75rem;flex-wrap:wrap}
+  display:flex;align-items:baseline;gap:.75rem 1rem;flex-wrap:wrap}
+/* Dois grupos, e não seis itens soltos: quem é o Processo e como ele está de um lado; o que se
+   faz nele, do outro. Sem isso o estado caía depois dos botões, longe do título que ele qualifica. */
+.processo>header>.quem-e{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap;min-width:0}
+.processo>header>.acoes{margin-left:auto}
+.sem-edital{padding:1rem 1.25rem;color:var(--texto-fraco)}
 .codigo{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;
   background:var(--verde-claro);color:var(--verde-escuro);padding:.15rem .5rem;border-radius:3px}
 table{width:100%;border-collapse:collapse}
+/* Cada Processo monta a sua própria tabela, e sem largura declarada cada uma se media pelo que
+   tinha dentro: em cartões empilhados, "Situação" aparecia em posições diferentes a cada um, e o
+   olho que desce a lista precisava reencontrar as colunas. Três têm conteúdo limitado e recebem
+   medida; o título, que é o texto variável, fica com o que sobra. */
+.processo table th:nth-child(1){width:7rem}
+.processo table th:nth-child(3){width:8rem}
+.processo table th:nth-child(4){width:24rem}
+.processo table th:first-child{white-space:nowrap}
 /* Sete colunas não cabem em 375px, e sem um contêiner que role a tabela empurra a **página**
    inteira na horizontal — o cabeçalho e o texto passam a fugir da tela junto com ela. Quem
    confere inscrições pelo celular estava lendo um layout quebrado. */
@@ -156,6 +169,11 @@ tbody tr:last-child td{border-bottom:none}
 /* A mesma advertência na escala de uma ação de linha: `.perigoso` só existia para `.botao`, e
    remover uma pessoa saía com a aparência de uma ação segura (UX-004). */
 .acao.perigoso{color:var(--vermelho);border-color:var(--vermelho)}
+/* Indisponível não pode parecer clicável. `.desabilitado` só existia para `.botao`, e a ação
+   de linha continuava com a borda verde e a cor de link — oferecendo o que não se pode fazer,
+   que é pior do que não oferecer (FR-024 mostra o controle **e** o motivo). */
+.acao.desabilitado{color:var(--texto-fraco);border-color:var(--borda);
+  background:var(--cinza-fundo);cursor:not-allowed}
 .acao.perigoso:hover{background:var(--vermelho);color:var(--branco)}
 .marca-irreversivel{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
   color:var(--vermelho);background:var(--vermelho-fundo);padding:.1rem .45rem;border-radius:3px}
