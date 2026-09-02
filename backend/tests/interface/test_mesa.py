@@ -75,29 +75,75 @@ def test_a_mesa_nao_mostra_inscricao_de_outro_avaliador(
     assert dela[0].protocolo not in corpo
 
 
+def avaliar(atribuicao, etapa_id, inscricao, edital, *, concluida):
+    """Uma Avaliação em rascunho, ou realmente concluída.
+
+    A conclusão exige pontuação, versão, instante e autor — é o que o check de completude do banco
+    cobra, e é o que separa "rascunho gravado" de "ato encerrado".
+    """
+    from decimal import Decimal
+
+    from django.utils import timezone
+
+    from processo_seletivo.avaliacoes.models import Avaliacao
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+
+    encerrada = (
+        {
+            "estado": Avaliacao.Estado.CONCLUIDA,
+            "pontuacao": Decimal("80.0000"),
+            "versao": VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at"),
+            "concluida_em": timezone.now(),
+            "concluida_por": "joao",
+        }
+        if concluida
+        else {}
+    )
+    return Avaliacao.objects.create(
+        atribuicao=atribuicao,
+        identity_subject="joao",
+        etapa_id=etapa_id,
+        inscricao_id=inscricao.id,
+        **encerrada,
+    )
+
+
 def test_o_filtro_separa_pendentes_de_concluidas(
     client, seletor_ligado, gestor, edital_a, etapa_a1, joao, mesa
 ):
-    from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao
+    """Os dois sentidos, e as contagens.
 
-    inscricoes = inscrever(edital_a, 2)
-    distribuir_para(gestor, edital_a, etapa_a1, joao, inscricoes)
-    atribuicao = Atribuicao.objects.get(inscricao=inscricoes[0])
-    Avaliacao.objects.create(
-        atribuicao=atribuicao,
-        identity_subject="joao",
-        etapa_id=etapa_a1,
-        inscricao_id=inscricoes[0].id,
+    Com apenas um rascunho, uma implementação em que "Concluídas" sempre voltasse vazio passaria:
+    é preciso uma conclusão de verdade, e afirmar que ela **aparece** num filtro e **some** do
+    outro (FR-021).
+    """
+    from processo_seletivo.avaliacoes.models import Atribuicao
+
+    concluida, rascunho, intocada = inscrever(edital_a, 3)
+    distribuir_para(gestor, edital_a, etapa_a1, joao, [concluida, rascunho, intocada])
+    avaliar(
+        Atribuicao.objects.get(inscricao=concluida), etapa_a1, concluida, edital_a, concluida=True
+    )
+    avaliar(
+        Atribuicao.objects.get(inscricao=rascunho), etapa_a1, rascunho, edital_a, concluida=False
     )
     identificar(client, "joao", [])
 
     pendentes = client.get(f"{mesa}?filtro=pendentes").content.decode()
     concluidas = client.get(f"{mesa}?filtro=concluidas").content.decode()
+    todas = client.get(mesa).content.decode()
 
-    # Rascunho **não** é concluída: pendente é a ausência de conclusão, e não a de avaliação.
-    assert inscricoes[0].protocolo in pendentes
-    assert inscricoes[1].protocolo in pendentes
-    assert "Nenhuma inscrição sua corresponde" in concluidas
+    # A concluída aparece num filtro e some do outro.
+    assert concluida.protocolo in concluidas
+    assert concluida.protocolo not in pendentes
+    # **Rascunho gravado continua pendente**: pendente é a ausência de conclusão, e não a de
+    # avaliação — quem salvou sem concluir não terminou o trabalho.
+    assert rascunho.protocolo in pendentes
+    assert rascunho.protocolo not in concluidas
+    assert intocada.protocolo in pendentes
+    assert "3 atribuições" in todas
+    assert "2 pendentes" in todas
+    assert "1 concluída" in todas
 
 
 def test_a_mesa_pagina(client, seletor_ligado, gestor, edital_a, etapa_a1, joao, mesa):
