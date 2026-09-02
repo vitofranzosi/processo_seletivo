@@ -46,7 +46,7 @@ atribuições e quantas conclusões o impedimento alcançará.
     {% endif %}
   </p>
   <p class="acoes">
-    <button type="submit">Registrar mesmo assim</button>
+    <button type="submit" class="botao perigoso">Registrar mesmo assim</button>
     <a class="acao" href="{% url 'interface:impedimentos' edital.id etapa.id %}">Cancelar</a>
   </p>
 </form>
@@ -79,7 +79,7 @@ de quem sabe — e é por isso que esta tela pede a identidade e o motivo, em ve
     <textarea id="motivo" name="motivo" rows="3" required aria-describedby="ajuda-motivo"></textarea>
     <span class="ajuda" id="ajuda-motivo">É o motivo que sustenta o ato, e ele fica registrado.</span>
   </p>
-  <p class="acoes"><button type="submit">Registrar impedimento</button></p>
+  <p class="acoes"><button type="submit" class="botao">Registrar impedimento</button></p>
 </form>
 
 <section aria-labelledby="inelegiveis">

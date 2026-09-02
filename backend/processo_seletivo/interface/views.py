@@ -2723,6 +2723,8 @@ def trilha_da_avaliacao(request, edital_id, etapa_id):
             operation=operacao or None,
         )
     rotulos = avaliacao_selectors.rotulos_dos_agregados(registros)
+    # Os nomes dos requisitos, para a trilha dizer qual documento foi aberto em vez do UUID dele.
+    nomes_dos_requisitos = mesa_app.nomes_dos_requisitos(edital.id)
     return marcar_como_privada(
         render(
             request,
@@ -2756,7 +2758,7 @@ def trilha_da_avaliacao(request, edital_id, etapa_id):
                         # "Conclusão de avaliação, por joao" e escondia de qual inscrição.
                         "sobre": rotulos.get(registro.aggregate_id),
                         "permissao": registro.permission,
-                        "motivo": registro.reason,
+                        "motivo": mesa_app.motivo_legivel(registro.reason, nomes_dos_requisitos),
                     }
                     for registro in registros
                 ],

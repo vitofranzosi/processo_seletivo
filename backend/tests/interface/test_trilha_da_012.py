@@ -399,3 +399,19 @@ def test_protocolo_desconhecido_no_filtro_e_recusa_de_formulario(
 
     assert resposta.status_code == 200
     assert "Não há inscrição com este protocolo" in resposta.content.decode()
+
+
+def test_a_trilha_diz_qual_documento_foi_aberto(auditor_na_tela, cenario, percurso):
+    """Trinta e seis caracteres de UUID por linha, e a pergunta do histórico sem resposta.
+
+    O que a trilha **guarda** é o identificador, e tem de ser: nome muda por Retificação,
+    identificador não. O que ela **mostra** pode ser o nome, resolvido no conteúdo publicado na
+    hora de exibir — e continua sem o nome do arquivo, que é do candidato (FR-054): o requisito é
+    a Etapa dizendo o que exigiu, não a pessoa dizendo o que enviou.
+    """
+    corpo = registros(auditor_na_tela, trilha(cenario))
+
+    assert "requisito Documento de identificação" in corpo
+    # A trilha já cita o motivo inteiro; aspas próprias aqui dariam aspas dentro de aspas.
+    assert "identificação\u201d\u201d" not in corpo
+    assert str(identificador(DOCUMENTO_A, SEED)) not in corpo

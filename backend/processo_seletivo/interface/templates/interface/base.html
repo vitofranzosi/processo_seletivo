@@ -33,6 +33,10 @@ main>p,main>section>p,.sub,.ajuda,.vazio,legend+p{max-width:var(--leitura)}
    1.052 px, e ninguém redige assim. Campos dentro de `.campos` já flexionam e não são tocados. */
 .campo>textarea,.campo>input[type=text],.campo>input[type=search],.campo>input[type=email]{
   max-width:var(--leitura)}
+/* E o mesmo teto para `select`: escolher entre cinco nomes não precisa de 1.200 px. A regra já
+   valia para o que se escreve; valer também para o que se escolhe é a mesma ideia — o campo tem
+   a largura do que recebe, e não a da página. */
+.campo>select{max-width:var(--leitura)}
 .sub{color:var(--texto-fraco);margin:0 0 1.5rem}
 .aviso{background:var(--amarelo-fundo);border-left:4px solid var(--amarelo);padding:.75rem 1rem;
   margin-bottom:1.5rem;border-radius:0 4px 4px 0}
@@ -84,6 +88,32 @@ tbody tr:last-child td{border-bottom:none}
 .s-PRESIDENTE{background:var(--verde-claro);color:var(--verde-escuro)}
 .s-MEMBRO{background:var(--cinza-fundo);color:var(--texto-fraco);font-weight:400}
 .acoes{display:flex;gap:.4rem;flex-wrap:wrap}
+/* Texto para quem ouve a tela, e não para quem a vê. Cinco `caption` e um `label` usavam esta
+   classe — legendas de tabela que repetem o título logo acima, e o rótulo do motivo da
+   reabertura — e ela não existia: "Carga por avaliador nesta Etapa" aparecia impressa sob o
+   "Quem está alocado" que já a nomeia, e a lista de inscrições ganhava uma segunda legenda.
+   Não é `display:none`: isso a tiraria também de quem usa leitor de tela, que é justamente
+   para quem ela foi escrita. */
+/* Três telas paginam — conclusões, distribuição, impedimentos — e a navegação saía como três
+   pedaços de texto corrido: "Anterior Página 2 de 25 Próxima", sem alvo e sem separação. */
+.paginacao{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin:1rem 0 2rem;
+  font-size:.875rem}
+.paginacao a{border:1px solid var(--verde);color:var(--verde-texto);border-radius:4px;
+  padding:.25rem .7rem;text-decoration:none}
+.paginacao a:hover{background:var(--verde-claro)}
+.paginacao [aria-current]{color:var(--texto-fraco);font-variant-numeric:tabular-nums}
+
+/* Por que o lote recusou o que recusou, agrupado por motivo. Sem regra, a lista voltava ao
+   marcador e ao recuo do navegador dentro de uma faixa de aviso — a única do sistema a fazê-lo. */
+.motivos{list-style:none;padding:0;margin:.5rem 0 0;display:grid;gap:.35rem;font-size:.9375rem}
+.motivos .ajuda{margin:0 0 0 .35rem}
+
+/* O ato precisa de motivo, e o motivo precisa caber. */
+.reabertura{display:flex;flex-direction:column;gap:.35rem;align-items:flex-start;min-width:11rem}
+.reabertura input[type=text]{width:100%;padding:.35rem .5rem;border:1px solid var(--borda);
+  border-radius:4px;font:inherit;font-size:.875rem}
+.oculto{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip-path:inset(50%);white-space:nowrap;border:0}
 .acao{font-size:.8125rem;padding:.25rem .7rem;border:1px solid var(--verde);color:var(--verde-texto);
   background:var(--branco);border-radius:3px;text-decoration:none;white-space:nowrap;cursor:pointer}
 .acao:hover{background:var(--verde-claro)}
@@ -353,8 +383,6 @@ fieldset.caracter legend{font-size:.85rem;color:var(--texto-fraco);padding:0;
 /* Remover é de outra natureza. Encostado no botão de alterar, o gesto errado fica à distância de
    um deslize; a folga é o que separa o rotineiro do irreversível. */
 .gerir-membro form+form{margin-top:.9rem;padding-top:.75rem;border-top:1px solid var(--fundo)}
-.escolhas{display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:.35rem .75rem;
-  max-height:16rem;overflow-y:auto;padding:.25rem 0}
 .escolha{display:flex;gap:.5rem;align-items:baseline;font-size:.9375rem;line-height:1.4}
 /* Caixa de marcar não é campo de texto. Dentro de `.campo`, ela herdava `width:100%` e virava um
    bloco da largura do filtro: o rótulo caía para a linha de baixo, e a marca ficava solta no meio
@@ -378,19 +406,24 @@ fieldset.caracter legend{font-size:.85rem;color:var(--texto-fraco);padding:0;
   padding:.75rem 1rem;margin:.75rem 0 0}
 .alocar-em-lote legend,.remover-em-lote legend{font-weight:600;font-size:.9375rem;padding:0 .35rem}
 .alocar-em-lote legend .ajuda,.remover-em-lote legend .ajuda{font-weight:400;margin-left:.35rem}
-.filtro{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+/* `.filtro` e `.filtros`: a mesma barra, escrita no plural numa tela e no singular nas outras.
+   Só o singular tinha regra, e a busca da distribuição saía solta na página enquanto a da
+   comissão e a da alocação eram cartão. Um conceito, um desenho — os dois nomes até que
+   alguém unifique a marcação. */
+.filtro,.filtros{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;gap:1rem 1.5rem;flex-wrap:wrap;
   align-items:flex-end}
-.filtro .campo,.filtro .salvar{margin:0}
+.filtro .campo,.filtros .campo,.filtro .salvar{margin:0}
 /* `.salvar` é a barra de gravação, e traz consigo filete e rodapé. Dentro do filtro, ela
    desenhava um traço solto acima do "Filtrar" — um separador sem nada para separar. */
 .filtro .salvar{border-top:0;padding:0}
+.filtros .acoes{margin:0}
 /* "nome ou identificador" não precisa de 850 px, e o campo esticado empurrava o botão
    para o extremo oposto da tela. */
 /* Só o campo de digitar. A regra pegava também a marca de "Só quem está sem Etapa", que é
    `.campo` e vinha antes na folha: com 26rem de base, a frase dela quebrava uma palavra por
    linha, e a marca ficava solta ao lado de uma coluna de texto. */
-.filtro .campo:not(.escolha){flex:0 1 26rem}
+.filtro .campo:not(.escolha),.filtros .campo{flex:0 1 26rem}
 .filtro .escolha{flex:0 0 auto}
 .conferencia-lote{border-collapse:collapse;width:100%;font-size:.9375rem}
 .conferencia-lote caption{text-align:left;color:var(--texto-fraco);padding-bottom:.5rem}
@@ -516,6 +549,11 @@ ul.comissao .gerir-membro{margin-top:auto;padding-top:.5rem}
 fieldset.em-colunas{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(20rem,100%),1fr));
   gap:.15rem 1.5rem;align-content:start}
 fieldset.em-colunas legend{grid-column:1/-1}
+/* Cada caixa é uma linha: marca, nome e, quando há, a carga de hoje — lado a lado. Solta, a
+   `.ajuda` cai para a linha seguinte e o número deixa de pertencer a alguém. */
+fieldset.em-colunas>label{display:flex;align-items:baseline;gap:.4rem;font-size:.9375rem}
+fieldset.em-colunas>label input{flex:none;margin:0}
+fieldset.em-colunas>label .ajuda{margin:0}
 
 /* A tela onde o avaliador passa o dia. Ela era a menos desenhada do sistema: os pares rótulo/valor
    saíam com o `dl` padrão do navegador — rótulo numa linha, valor indentado na seguinte —, a lista

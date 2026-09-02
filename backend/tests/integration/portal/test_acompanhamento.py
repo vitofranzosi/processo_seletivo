@@ -71,8 +71,7 @@ def test_o_cronograma_traz_os_eventos_publicados(client, enviada, selecao):
 
     conteudo = selectors.selecao_publica(edital_id=selecao.id).content
     nomes = [
-        evento.get("description") or evento.get("type")
-        for evento in conteudo.get("schedule") or []
+        evento.get("description") or evento.get("type") for evento in conteudo.get("schedule") or []
     ]
 
     corpo = abrir(client, enviada)
@@ -99,9 +98,7 @@ def test_a_situacao_aparece_por_texto_e_nao_so_por_cor(client, enviada):
 
 def test_rascunho_nao_tem_acompanhamento(client, inscricao_de_maria):
     identificar(client, MARIA)
-    resposta = client.get(
-        reverse("portal:acompanhamento", args=[inscricao_de_maria.id])
-    )
+    resposta = client.get(reverse("portal:acompanhamento", args=[inscricao_de_maria.id]))
     assert resposta.status_code == 302
     assert resposta["Location"] == reverse("portal:inscricao", args=[inscricao_de_maria.id])
 

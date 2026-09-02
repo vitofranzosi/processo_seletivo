@@ -37,7 +37,9 @@ ANTIGO = "maria.antiga@exemplo.test"
 @pytest.fixture
 def legada(selecao):
     identidade = CandidateIdentity.objects.create(
-        subject=novo_subject(), nome="Maria", cpf_normalizado=CPF_DE_MARIA,
+        subject=novo_subject(),
+        nome="Maria",
+        cpf_normalizado=CPF_DE_MARIA,
         created_at=timezone.now(),
     )
     Inscricao.objects.create(

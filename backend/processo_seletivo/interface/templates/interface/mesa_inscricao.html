@@ -217,8 +217,8 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
     </p>
 
     <p class="acoes">
-      <button type="submit">Salvar sem concluir</button>
-      <button type="submit" formaction="{% url 'interface:mesa-avaliacao-concluir' edital.id etapa_id inscricao.id %}">Concluir avaliação</button>
+      <button type="submit" class="acao">Salvar sem concluir</button>
+      <button type="submit" class="botao" formaction="{% url 'interface:mesa-avaliacao-concluir' edital.id etapa_id inscricao.id %}">Concluir avaliação</button>
     </p>
   </form>
   {% endif %}

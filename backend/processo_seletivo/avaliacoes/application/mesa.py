@@ -50,6 +50,43 @@ def motivo_da_abertura(requirement_id):
     return f"requisito {requirement_id}"
 
 
+def nomes_dos_requisitos(edital_id):
+    """Identificador do requisito → nome, do mesmo conteúdo que a Mesa usa para listar documentos.
+
+    A trilha atravessa muitas inscrições e não tem a versão aceita de cada uma; a seleção pública
+    é a base compartilhada, e é a que a Mesa já consulta quando a inscrição não traz a sua.
+    """
+    versao = selectors.selecao_publica(edital_id=edital_id)
+    conteudo = getattr(versao, "content", None) or {}
+    return {
+        str(requisito.get("id")): requisito.get("name")
+        for requisito in (conteudo.get("documentRequirements") or [])
+        if requisito.get("id")
+    }
+
+
+def motivo_legivel(motivo, nomes_dos_requisitos):
+    """O mesmo motivo, dito para gente.
+
+    A trilha guarda o identificador do requisito, e é ele que precisa estar gravado: nome muda por
+    Retificação, identificador não. Mas na tela o identificador não responde a pergunta que se faz
+    olhando um histórico — **qual documento foi aberto** —, e trinta e seis caracteres de UUID por
+    linha empurram para fora o que se lê.
+
+    O nome vem do conteúdo publicado, no momento de exibir. Continua sem o nome do arquivo, que é
+    do candidato (FR-054): o requisito é a Etapa dizendo o que exigiu, não a pessoa dizendo o que
+    enviou. Sem correspondência — requisito removido por Retificação —, fica o identificador, que
+    é sempre verdadeiro.
+    """
+    requisito = requisito_do_motivo(motivo)
+    if requisito is None:
+        return motivo
+    nome = (nomes_dos_requisitos or {}).get(str(requisito))
+    # Sem aspas próprias: a trilha já cita o motivo inteiro, e aspas dentro de aspas é o que
+    # produz o `""` no fim da linha.
+    return f"requisito {nome}" if nome else motivo
+
+
 def requisito_do_motivo(motivo):
     """O caminho de volta: de que requisito fala este motivo, ou `None`."""
     prefixo = "requisito "

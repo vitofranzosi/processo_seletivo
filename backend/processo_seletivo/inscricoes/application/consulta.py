@@ -123,9 +123,7 @@ def _cpfs_coincidentes(edital) -> set:
         .annotate(quantas=Count("id"))
         .filter(quantas__gt=1)
     )
-    return {
-        (str(linha["profile_id"]), linha["cpf_normalizado"]) for linha in contagens
-    }
+    return {(str(linha["profile_id"]), linha["cpf_normalizado"]) for linha in contagens}
 
 
 def _conteudo_da_inscricao(inscricao, vigente):

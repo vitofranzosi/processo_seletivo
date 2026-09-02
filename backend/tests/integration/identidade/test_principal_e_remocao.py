@@ -63,9 +63,7 @@ def credencial(identidade, endereco):
 
 
 def test_trocar_a_principal(client, dentro):
-    resposta = client.post(
-        reverse("portal:conta-principal", args=[credencial(dentro, SEGUNDO).id])
-    )
+    resposta = client.post(reverse("portal:conta-principal", args=[credencial(dentro, SEGUNDO).id]))
 
     assert resposta["Location"] == reverse("portal:conta")
     assert credencial(dentro, SEGUNDO).principal is True

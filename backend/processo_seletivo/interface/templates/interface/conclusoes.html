@@ -76,7 +76,10 @@ concluído antes vive aqui, no registro append-only do domínio, e não na trilh
       {% endcomment %}
       <td>
         {% if linha.situacao == "em_vigor" %}
-        <form method="post" action="{% url 'interface:reabrir-avaliacao' edital.id etapa.id %}">
+        {% comment %} O motivo é o que sustenta o ato, e a caixa dele cabia em oito caracteres:
+           espremida numa das oito colunas, quem escrevia não via o que havia escrito. A coluna
+           passa a ter a largura do que se digita nela, com o botão abaixo do campo. {% endcomment %}
+        <form method="post" class="reabertura" action="{% url 'interface:reabrir-avaliacao' edital.id etapa.id %}">
           {% csrf_token %}
           <input type="hidden" name="avaliacao_id" value="{{ linha.avaliacao.id }}">
           <input type="hidden" name="expected_revision" value="{{ linha.avaliacao.revision }}">
@@ -84,7 +87,7 @@ concluído antes vive aqui, no registro append-only do domínio, e não na trilh
           <label for="motivo-{{ linha.conclusao.id }}" class="oculto">Motivo da reabertura da inscrição {{ linha.inscricao.protocolo|default:linha.inscricao.id }}</label>
           <input type="text" id="motivo-{{ linha.conclusao.id }}" name="motivo" required
                  placeholder="Motivo da reabertura">
-          <button type="submit">Reabrir</button>
+          <button type="submit" class="acao">Reabrir</button>
         </form>
         {% else %}—{% endif %}
       </td>

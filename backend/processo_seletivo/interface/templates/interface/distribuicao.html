@@ -165,7 +165,7 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
       <input type="hidden" name="assinatura" value="{{ proposta.assinatura }}">
       {% for id in proposta.membro_ids %}<input type="hidden" name="membro_id" value="{{ id }}">{% endfor %}
       <p class="acoes">
-        <button type="submit">Confirmar esta distribuição</button>
+        <button type="submit" class="botao">Confirmar esta distribuição</button>
         <a class="acao" href="{% url 'interface:distribuicao' edital.id etapa.id %}">Cancelar</a>
       </p>
     </form>
@@ -177,7 +177,10 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
   <form method="post">
     {% csrf_token %}
     <input type="hidden" name="acao" value="propor">
-    <fieldset>
+    {% comment %} Em colunas, como o "Retirar atribuições" abaixo: são tantas caixas quanto há
+       gente alocada, e uma banca de dez virava uma coluna de vinte linhas — com a carga de cada
+       um numa linha própria, longe do nome a que pertence. {% endcomment %}
+    <fieldset class="em-colunas">
       <legend>Entre quem distribuir</legend>
       {% for linha in carga %}
       <label for="rodizio-{{ linha.membro.id }}">
@@ -187,7 +190,7 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
       </label>
       {% endfor %}
     </fieldset>
-    <p class="acoes"><button type="submit">Propor distribuição</button></p>
+    <p class="acoes"><button type="submit" class="botao">Propor distribuição</button></p>
   </form>
   {% endif %}
 </section>
@@ -216,7 +219,7 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
              aria-describedby="ajuda-avaliador">
       <span class="ajuda" id="ajuda-avaliador">Identificador institucional, exato.</span>
     </p>
-    <p class="acoes"><button type="submit">Filtrar</button></p>
+    <p class="acoes"><button type="submit" class="acao">Filtrar</button></p>
   </form>
 
   {% if linhas %}
@@ -225,7 +228,7 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
     <input type="hidden" name="acao" value="distribuir">
     <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
 
-    <fieldset>
+    <fieldset class="em-colunas">
       <legend>Para quem</legend>
       {% for linha in carga %}
       <label for="membro-{{ linha.membro.id }}">
@@ -270,7 +273,7 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
     </table>
   </div>
 
-    <p class="acoes"><button type="submit">Distribuir as selecionadas</button></p>
+    <p class="acoes"><button type="submit" class="botao">Distribuir as selecionadas</button></p>
   </form>
 
   {% comment %}
@@ -297,7 +300,7 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
         {% endfor %}
       {% endfor %}
     </fieldset>
-    <p class="acoes"><button type="submit">Retirar as selecionadas</button></p>
+    <p class="acoes"><button type="submit" class="acao perigoso">Retirar as selecionadas</button></p>
   </form>
   {% endif %}
 
