@@ -5,6 +5,8 @@ permissão. Aqui os três invariantes que a spec cobra: cada abertura deixa rast
 integridade é recusa registrada, e não existe caminho de lote.
 """
 
+import re
+
 import pytest
 from django.urls import reverse
 
@@ -211,3 +213,54 @@ def test_o_documento_abre_em_aba_propria(como_joao, edital_com_documentos, etapa
     assert 'target="_blank"' in corpo
     assert 'rel="noopener"' in corpo
     assert "em nova aba" in corpo
+
+
+def test_o_documento_e_emoldurável_pela_propria_origem_e_por_nenhuma_outra(
+    como_joao, edital_com_documentos, etapa_a1, cenario
+):
+    """A Mesa exibe o documento ao lado do formulário, e a moldura é da mesma origem.
+
+    O `X-Frame-Options: DENY` do resto do sistema bloquearia a nossa própria moldura. A proteção
+    contra clickjacking continua valendo contra qualquer outra origem, que é de quem ela protege.
+    """
+    resposta = abrir_arquivo(como_joao, arquivo(edital_com_documentos, etapa_a1, cenario))
+
+    assert resposta.headers["X-Frame-Options"] == "SAMEORIGIN"
+    # E a página que emoldura continua recusando molduras de fora.
+    pagina = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    )
+    assert pagina.headers["X-Frame-Options"] == "DENY"
+
+
+def test_nenhuma_moldura_da_pagina_aponta_para_um_documento(
+    como_joao, edital_com_documentos, etapa_a1, cenario
+):
+    """A abertura continua sendo um ato: nada é servido só por entrar na inscrição.
+
+    Uma moldura que já viesse apontada para o arquivo o carregaria ao abrir a página — e o evento
+    "abriu o documento" passaria a significar "abriu a inscrição", que é o mesmo registro dizendo
+    outra coisa (FR-027, FR-053). O que se confere é a **marcação**: o cliente do teste não busca
+    molduras, então contar eventos aqui não provaria nada.
+    """
+    corpo = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    ).content.decode()
+
+    molduras = re.findall(r"<(?:iframe|embed|object)[^>]*>", corpo)
+    assert molduras, "a Mesa tem o painel do documento"
+    for moldura in molduras:
+        assert "/documentos/" not in moldura, moldura
+
+
+def test_o_painel_comeca_vazio_e_escondido(como_joao, edital_com_documentos, etapa_a1, cenario):
+    """Enquanto nada foi aberto, leitor de tela nenhum encontra o painel."""
+    corpo = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    ).content.decode()
+
+    assert 'id="painel-documento"' in corpo
+    assert "hidden" in corpo.split('id="painel-documento"')[1][:60]
+    assert 'src="about:blank"' in corpo
+    # E o link continua sendo um link: sem script, ou em tela estreita, ele abre em aba própria.
+    assert 'target="_blank"' in corpo

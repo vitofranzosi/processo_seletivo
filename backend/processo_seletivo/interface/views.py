@@ -14,6 +14,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.auditoria import selectors as auditoria_selectors
@@ -2445,9 +2446,16 @@ def _para_a_proxima(ator, edital, etapa_id, inscricao_id, destino):
     )
 
 
+@xframe_options_sameorigin
 @require_http_methods(["GET"])
 def documento_da_mesa(request, edital_id, etapa_id, inscricao_id, requirement_id):
     """O documento do candidato, conferido **antes** de sair um byte.
+
+    **Emoldurável pela própria origem**, e só por ela. A Mesa exibe o documento ao lado do
+    formulário, e sem isto o `X-Frame-Options: DENY` do resto do sistema bloquearia a moldura —
+    inclusive a nossa. A proteção contra clickjacking continua valendo contra qualquer outra
+    origem, que é de quem ela protege; e o que vai dentro da moldura é a mesma resposta
+    autenticada, conferida e não armazenável de sempre.
 
     A mecânica é a mesma da consulta administrativa da 009 — e a autorização não é: aqui vale a
     Atribuição, e nunca a permissão que alcança o Edital inteiro (D-005).

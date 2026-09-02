@@ -342,6 +342,23 @@ input.largo,textarea.largo{width:100%;}
 .dados-da-inscricao{display:grid;grid-template-columns:auto 1fr;gap:.35rem .75rem;margin:0}
 .dados-da-inscricao dt{color:var(--texto-fraco)}
 .dados-da-inscricao dd{margin:0}
+/* A Mesa de trabalho: o documento à esquerda, o formulário à direita — e uma coluna só enquanto
+   nada está aberto, que é como a tela sempre foi. O painel só existe em tela larga; abaixo disso
+   o link continua abrindo o documento em aba própria. */
+.mesa-trabalho{display:grid;gap:1.5rem}
+.painel-documento{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+.painel-documento h2{margin:0;font-size:1rem}
+.painel-documento iframe{width:100%;flex:1 1 auto;min-height:24rem;border:1px solid var(--borda);
+  border-radius:4px;background:var(--branco)}
+.painel-documento .acao{align-self:flex-start}
+.painel-avaliacao{min-width:0}
+.documentos a[aria-current]{font-weight:600;text-decoration:underline}
+@media (min-width:64rem){
+  .mesa-trabalho.com-documento{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+    align-items:start}
+  .mesa-trabalho.com-documento .painel-documento{position:sticky;top:1rem;
+    height:calc(100vh - 5rem)}
+}
 .requisitos-apresentados{list-style:none;margin:0;padding:0;display:grid;gap:.75rem}
 .requisitos-apresentados>li{border:1px solid var(--borda);border-radius:4px;padding:.75rem 1rem;
   background:var(--branco)}

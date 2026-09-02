@@ -103,6 +103,11 @@ o que falta.
 
 ## Entrega 4 — A inscrição e o documento
 
+**Em tela larga, abrir um documento não sai da página.** Ele aparece à esquerda, o formulário fica
+à direita, e o que foi digitado continua onde estava. Abaixo de 64 rem — ou com o JavaScript
+desligado — o link abre em aba própria, que é o que esta tela fazia antes; nos dois casos, é o
+clique de abrir que a trilha registra, e nada é carregado sozinho ao entrar na inscrição (FR-112).
+
 1. Abrir uma inscrição atribuída: identificação mínima e a lista de documentos, cada um sob o
    Documento Exigido que atende.
 2. Abrir um documento: abre inline, conferido antes do primeiro byte.

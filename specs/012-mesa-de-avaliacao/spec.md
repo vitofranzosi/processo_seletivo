@@ -384,6 +384,26 @@ Do mesmo defeito: quem tem `comissao:gerir` e não integra a comissão não rece
 ela. A permissão existia, o caminho não — e quem constitui a comissão é justamente quem ainda não a
 integra.
 
+**FR-112** — **Ler o documento e registrar a avaliação acontecem na mesma tela.** O documento
+abria por cima da página, e ler e avaliar eram duas telas que se revezavam — com o formulário
+preenchido correndo o risco de se perder no caminho. Em tela larga, o documento fica ao lado do
+formulário.
+
+Três coisas não mudam, e é o que separa isto de uma conveniência:
+
+- **a abertura continua sendo um ato.** Nada é carregado sozinho ao entrar na inscrição: quem abre
+  um documento clica nele, e é esse clique que a trilha registra, com o mesmo significado de antes
+  (FR-027, FR-053). Embutir o arquivo automaticamente faria “abriu o documento” virar “abriu a
+  inscrição” — o mesmo evento dizendo outra coisa;
+- **a conferência de integridade e a entrega mediada são as mesmas** (FR-029), porque o painel
+  carrega exatamente a resposta que o link carregava;
+- **abaixo de tela larga nada disso vale**: não há onde pôr duas colunas, e o documento continua
+  abrindo em aba própria — que é o que a tela fazia antes. Sem JavaScript, idem.
+
+O documento é emoldurável **pela própria origem**, e por nenhuma outra: sem isso o
+`X-Frame-Options: DENY` do resto do sistema bloquearia a nossa própria moldura. A proteção contra
+clickjacking continua valendo contra quem ela protege.
+
 **FR-111** — **O seletor de identidade oferece quem tem trabalho de comissão.** Presidir e avaliar
 não são papéis — vêm do vínculo, objeto a objeto —, e nenhuma caixa daquela tela os concede. Quem
 digitava o próprio nome, ou aceitava o exemplo que vinha preenchido, entrava sem vínculo nenhum e

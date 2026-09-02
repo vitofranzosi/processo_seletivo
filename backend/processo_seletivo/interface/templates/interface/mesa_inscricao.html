@@ -10,6 +10,28 @@
 <h1>Inscrição {{ inscricao.protocolo|default:inscricao.id }}</h1>
 <p class="sub">Edital {{ edital.number }}/{{ edital.year }} — {{ processo.title }}</p>
 
+<div class="mesa-trabalho">
+
+{% comment %}
+**Ler e registrar na mesma tela.** O documento abria por cima da página, e ler e avaliar eram duas
+telas que se revezavam — com o formulário preenchido correndo o risco de se perder no caminho.
+
+O painel vem **antes** no DOM de propósito: em tela larga ele fica à esquerda, e assim a ordem de
+tabulação acompanha a ordem visual. Enquanto nada foi aberto ele está `hidden`, e leitor de tela
+nenhum o encontra.
+
+**A abertura continua sendo um ato.** Nada é carregado sozinho: quem abre um documento clica nele,
+e é esse clique que a trilha registra, com o mesmo significado de antes (FR-027, FR-053). Embutir o
+arquivo automaticamente faria "abriu o documento" virar "abriu a inscrição" — o mesmo evento
+dizendo outra coisa.
+{% endcomment %}
+<aside class="painel-documento" id="painel-documento" hidden>
+  <h2 id="painel-documento-titulo" tabindex="-1">Documento</h2>
+  <iframe id="painel-documento-quadro" title="Documento do candidato" src="about:blank"></iframe>
+</aside>
+
+<div class="painel-avaliacao">
+
 {% comment %}
 FR-030: o necessário ao trabalho, e nada além. E-mail e telefone ficam de fora porque não decidem
 avaliação nenhuma. O nome **fica**: avaliação cega está fora do escopo desta feature, e esconder
@@ -42,6 +64,7 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
       {% endcomment %}
       <a href="{% url 'interface:mesa-documento' edital.id etapa_id inscricao.id documento.id %}"
          target="_blank" rel="noopener"
+         data-documento="{{ documento.nome }}"
          aria-label="Abrir {{ documento.nome }} em nova aba">Abrir<span class="ajuda"> (nova aba)</span></a>
       <span class="tamanho">{{ documento.tamanho }}</span>
       {% else %}
@@ -144,4 +167,15 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
     <a class="acao" href="{% url 'interface:minha-etapa' edital.id etapa_id %}">Voltar à Mesa</a>
   </p>
 </section>
+
+</div>{# painel-avaliacao #}
+</div>{# mesa-trabalho #}
+
+{% comment %}
+O painel é montado pelo script, e só em tela larga: abaixo disso não há onde pôr duas colunas, e o
+link continua abrindo em aba própria — que é exatamente o que esta tela fazia antes. Sem
+JavaScript, idem. Um painel que existisse no HTML e só funcionasse com script prometeria o que não
+cumpre.
+{% endcomment %}
+{% load static %}<script src="{% static 'interface/mesa.js' %}" defer></script>
 {% endblock %}

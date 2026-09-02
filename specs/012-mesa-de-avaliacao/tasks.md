@@ -247,7 +247,7 @@ preserva o que havia sido concluído.
 - [X] T088 [P] Teste de não-regressão do pipeline de Retificação em `backend/tests/integration/publicacoes/test_retificacao_intocada.py`, exigido por FR-100: para Edital **inteiramente na versão vigente**, a precondição, a detecção de conflito, a consolidação, a verificação de efeito prático e a materialização produzem o mesmo resultado que produziam antes desta feature. É a guarda sobre a superfície que a 012 passou a tocar em quatro módulos
 - [X] T089 Executar `specs/012-mesa-de-avaliacao/quickstart.md` inteiro, as seis entregas, e registrar o que divergiu
 - [X] T090 Registrar os dois gates de implantação do quickstart em `specs/012-mesa-de-avaliacao/quickstart.md` — identidade institucional (FR-058) e retenção/descarte do acervo (FR-057) —, com o estado de cada um. **FR-057 não tem tarefa de implementação de propósito**: a resposta é institucional, e o que a 012 entrega é a pergunta registrada
-- [X] T091 Escrever `specs/012-mesa-de-avaliacao/traceability.md`, fechando os 111 FR e os 31 SC contra tarefa e teste — os 37 demonstrados pelo quickstart e os demais cobertos por suíte
+- [X] T091 Escrever `specs/012-mesa-de-avaliacao/traceability.md`, fechando os 112 FR e os 31 SC contra tarefa e teste — os 37 demonstrados pelo quickstart e os demais cobertos por suíte
 
 ---
 
@@ -273,6 +273,7 @@ link**, e o caminho de quem avalia custava três cliques por inscrição que nã
 - [X] T098 Paginar `conclusoes_preservadas()` em `backend/processo_seletivo/avaliacoes/application/selectors.py` e a tela em `conclusoes.html` (FR-049), calculando a última ordem de cada Avaliação **por agregação**, porque a conclusão que vale pode estar na página seguinte
 - [X] T099 Recusar a confirmação do impedimento sem alcance declarado em `backend/processo_seletivo/interface/views.py` (FR-106): sem isso a garantia era desligável por quem monta o formulário
 - [X] T100 Trocar a lista de identificadores por `aggregate_filter` de subconsultas em `trilha_da_avaliacao()` (FR-050), com o teste de escala que mede o texto da consulta em `backend/tests/performance/test_escala_da_mesa.py`
+- [X] T115 Pôr o documento ao lado do formulário em tela larga — `mesa.js`, o painel em `mesa_inscricao.html` e as duas colunas em `base.html` —, com `xframe_options_sameorigin` apenas na entrega da Mesa (FR-112). Abaixo de 64rem e sem JavaScript, o link continua abrindo em aba própria
 - [X] T113 Oferecer as identidades com trabalho de comissão no seletor, por `identidades_com_trabalho()` em `backend/processo_seletivo/comissoes/application/selectors.py` e `identificar.html`, dizendo o que cada uma alcança (FR-111)
 - [X] T114 Reordenar o cartão de vagas do portal em `portal/templates/portal/selecao.html` e `portal/base.html`: requisitos antes da ação, dados em linha, contagem nos documentos, e números e ação na coluna da direita em tela larga
 - [X] T111 Ligar a Etapa à sua distribuição na matriz de alocação (`alocacoes.html`) e oferecer Comissão e Alocação a quem tem `comissao:gerir` sem integrar a comissão (`lista.html`), com teste que percorre o caminho **só por links** em `backend/tests/interface/test_caminho_ate_a_mesa.py` (FR-109)

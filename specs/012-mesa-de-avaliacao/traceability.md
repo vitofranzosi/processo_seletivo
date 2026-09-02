@@ -10,10 +10,10 @@ falharia se ele fosse quebrado** — e não o teste que passa perto.
 
 | | |
 |---|---:|
-| Requisitos funcionais (FR) | 111 |
+| Requisitos funcionais (FR) | 112 |
 | Critérios de sucesso (SC) | 31 |
 | Edge cases (EC) | 20 |
-| Testes na suíte, ao fim da 012 | 1908 |
+| Testes na suíte, ao fim da 012 | 1911 |
 | Verificações do quickstart, executadas em 2026-09-02 | 34, sem divergência |
 
 ## Onde procurar
@@ -72,6 +72,7 @@ e cada um tem um teste que falha primeiro.
 | **FR-109** | a feature ficar pronta e inalcançável | `test_caminho_ate_a_mesa.py::test_a_presidencia_chega_a_distribuicao_seguindo_links` |
 | **FR-110** | o caminho custar mais que o trabalho | `test_mesa_em_uso.py::test_concluir_leva_a_proxima_pendente` |
 | **FR-111** | a parede antes do percurso | `test_caminho_ate_a_mesa.py::test_a_tela_de_identificacao_oferece_quem_tem_trabalho` |
+| **FR-112** | a moldura mudar o que o evento significa | `test_documento.py::test_nenhuma_moldura_da_pagina_aponta_para_um_documento` |
 
 ## Requisitos sem teste, e por quê
 
@@ -194,6 +195,7 @@ todo roteiro montava a URL.** Ninguém clicava para chegar.
 | nenhuma tela linkava a distribuição de uma Etapa | 0 links em 5 telas da presidência | `test_caminho_ate_a_mesa.py::test_a_presidencia_chega_a_distribuicao_seguindo_links` |
 | quem podia gerir sem integrar a comissão não via caminho | a lista só oferecia links a quem tinha vínculo | `::test_quem_pode_gerir_ve_o_caminho_mesmo_sem_integrar_a_comissao` |
 | três dos seis cliques por inscrição eram navegação | 1.380 cliques numa Mesa de 230 → 690 | `test_mesa_em_uso.py::test_concluir_leva_a_proxima_pendente` e vizinhos |
+| ler e avaliar eram duas telas que se revezavam | 6 → 2 cliques por inscrição, com o documento ao lado | `test_documento.py::test_o_documento_e_emoldurável_pela_propria_origem_e_por_nenhuma_outra` |
 
 Dois deles seguiram na mesma avaliação: o seletor de identidade passou a oferecer quem tem
 trabalho de comissão — porque presidir e avaliar não são papéis, e o campo em branco era a primeira
