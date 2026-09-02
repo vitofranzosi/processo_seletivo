@@ -99,7 +99,7 @@ de quem sabe — e é por isso que esta tela pede a identidade e o motivo, em ve
       <tr>
         <td>{{ linha.inscricao.protocolo|default:linha.inscricao.id }}</td>
         <td>{{ linha.membro.display_label|default:linha.membro.identity_subject }}</td>
-        <td>{{ linha.avaliacao.pontuacao|floatformat:4 }}</td>
+        <td>{{ linha.avaliacao.pontuacao|pontuacao }}</td>
         <td>{{ linha.avaliacao.parecer|default:"—" }}</td>
         <td>vigente desde {{ linha.avaliacao.versao.valid_from|date:"d/m/Y H:i" }}</td>
         <td>{{ linha.avaliacao.concluida_em|date:"d/m/Y H:i:s" }}</td>

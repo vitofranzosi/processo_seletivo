@@ -165,7 +165,7 @@ def test_a_lista_e_a_dos_requisitos_e_nao_a_dos_arquivos(
     ).content.decode()
 
     assert "Documento de identificação" in corpo
-    assert "Não apresentado" in corpo
+    assert "não apresentado" in corpo
 
 
 def test_nao_existe_caminho_de_lote(como_joao, edital_com_documentos, etapa_a1, cenario):
@@ -212,7 +212,9 @@ def test_o_documento_abre_em_aba_propria(como_joao, edital_com_documentos, etapa
 
     assert 'target="_blank"' in corpo
     assert 'rel="noopener"' in corpo
-    assert "em nova aba" in corpo
+    # O rótulo **não** anuncia "nova aba": em tela larga o documento abre no painel ao lado, e
+    # prometer aba nova ali seria descrever o que não acontece.
+    assert "nova aba" not in corpo
 
 
 def test_o_documento_e_emoldurável_pela_propria_origem_e_por_nenhuma_outra(

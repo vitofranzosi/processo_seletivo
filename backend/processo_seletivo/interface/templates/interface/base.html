@@ -354,11 +354,54 @@ input.largo,textarea.largo{width:100%;}
 .dados-da-inscricao{display:grid;grid-template-columns:auto 1fr;gap:.35rem .75rem;margin:0}
 .dados-da-inscricao dt{color:var(--texto-fraco)}
 .dados-da-inscricao dd{margin:0}
+/* A tela onde o avaliador passa o dia. Ela era a menos desenhada do sistema: os pares rótulo/valor
+   saíam com o `dl` padrão do navegador — rótulo numa linha, valor indentado na seguinte —, a lista
+   de documentos era uma marcação com três pedaços soltos que quebravam em três linhas, e o
+   "não apresentado" reusava a caixa tracejada de estado vazio, que ali parecia uma área de
+   arrastar arquivo. */
+.ficha{display:flex;flex-wrap:wrap;gap:.25rem 2rem;margin:0 0 1.5rem;
+  padding:.85rem 1rem;background:var(--branco);border:1px solid var(--borda);border-radius:6px}
+.ficha>div{display:flex;flex-direction:column;gap:.1rem}
+.ficha dt{color:var(--texto-fraco);font-size:.75rem;letter-spacing:.04em;text-transform:uppercase}
+.ficha dd{margin:0}
+.ficha .destaque{font-weight:600;font-size:1.05rem}
+.ausente{color:var(--texto-fraco);font-style:italic}
+
+/* Um requisito por linha: o nome à esquerda, o que foi entregue à direita. Antes, nome, ação e
+   tamanho eram três pedaços em fluxo, e um documento ocupava três linhas irregulares. */
+ul.documentos{list-style:none;margin:0;padding:0;border:1px solid var(--borda);border-radius:6px;
+  background:var(--branco)}
+ul.documentos>li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+  gap:.5rem 1rem;padding:.7rem 1rem;border-bottom:1px solid var(--fundo)}
+ul.documentos>li:last-child{border-bottom:0}
+ul.documentos .requisito{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap}
+ul.documentos .marca{font-size:.75rem;color:var(--texto-fraco);border:1px solid var(--borda);
+  border-radius:3px;padding:.05rem .35rem;font-weight:400}
+ul.documentos .entrega{display:flex;align-items:center;gap:.6rem;font-size:.875rem;
+  color:var(--texto-fraco)}
+ul.documentos .entrega.ausente{font-style:italic}
+
+/* A nota é o que se lê primeiro ao voltar a uma avaliação concluída — e não a confirmação de que
+   ela foi salva. */
+.registro-da-avaliacao{display:flex;flex-wrap:wrap;align-items:baseline;gap:.35rem 1.25rem;
+  padding:.85rem 1rem;background:var(--branco);border:1px solid var(--borda);
+  border-left:4px solid var(--verde);border-radius:0 6px 6px 0;margin:0 0 1rem}
+.registro-da-avaliacao .nota{margin:0;display:flex;align-items:baseline;gap:.4rem}
+.registro-da-avaliacao .nota strong{font-size:1.75rem;line-height:1;font-weight:600}
+.registro-da-avaliacao .nota span{color:var(--texto-fraco)}
+.registro-da-avaliacao .quando{margin:0;color:var(--texto-fraco);font-size:.9375rem}
+.parecer-registrado h3{font-size:.75rem;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--texto-fraco);margin:0 0 .25rem;font-weight:600}
+.parecer-registrado p{margin:0 0 1rem;max-width:var(--leitura)}
+
 /* A Mesa de trabalho: o documento à esquerda, o formulário à direita — e uma coluna só enquanto
    nada está aberto, que é como a tela sempre foi. O painel só existe em tela larga; abaixo disso
    o link continua abrindo o documento em aba própria. */
 .mesa-trabalho{display:grid;gap:1.5rem}
-.painel-documento{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+/* `:not([hidden])` **não é enfeite**: `display` de autor vence o `display:none` que o atributo
+   `hidden` traz do navegador, e sem esta guarda o painel aparecia vazio no alto de toda inscrição,
+   com o botão de fechar, antes de qualquer documento ser aberto. */
+.painel-documento:not([hidden]){display:flex;flex-direction:column;gap:.5rem;min-width:0}
 .painel-documento h2{margin:0;font-size:1rem}
 .painel-documento iframe{width:100%;flex:1 1 auto;min-height:24rem;border:1px solid var(--borda);
   border-radius:4px;background:var(--branco)}

@@ -65,7 +65,7 @@ def test_o_que_foi_concluido_antes_da_reabertura_continua_legivel(
     identificar(client, "maria", [])
     corpo = client.get(pagina(cenario)).content.decode()
 
-    assert "87.5000" in corpo
+    assert "87,5" in corpo
     assert "Atende com folga." in corpo
     assert "Substituída por reabertura" in corpo
     assert "vigente desde" in corpo
@@ -89,7 +89,7 @@ def test_a_conclusao_tornada_inelegivel_aparece_como_preservada(
     corpo = client.get(pagina(cenario)).content.decode()
 
     assert "Preservada e inelegível" in corpo
-    assert "87.5000" in corpo
+    assert "87,5" in corpo
 
 
 def test_a_conclusao_em_vigor_nao_e_anunciada_como_perdida(
@@ -117,7 +117,7 @@ def test_o_filtro_aceita_o_protocolo_da_tabela(client, seletor_ligado, cenario, 
     identificar(client, "maria", [])
     corpo = client.get(pagina(cenario, inscricao=concluida["inscricao"].protocolo)).content.decode()
 
-    assert "87.5000" in corpo
+    assert "87,5" in corpo
 
 
 def test_protocolo_desconhecido_no_filtro_e_recusa_de_formulario(
@@ -177,7 +177,7 @@ def test_a_auditoria_le_a_pagina_e_nao_reabre(client, seletor_ligado, cenario, c
     """Consultar é de dois; reabrir é de um (FR-091, FR-036)."""
     identificar(client, "bianca", ["auditor"])
     corpo = client.get(pagina(cenario)).content.decode()
-    assert "87.5000" in corpo
+    assert "87,5" in corpo
     assert "Motivo da reabertura" not in corpo
 
     recusa = client.post(

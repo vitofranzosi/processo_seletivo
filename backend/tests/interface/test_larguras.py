@@ -75,3 +75,13 @@ def test_nenhuma_das_bases_crava_largura_em_pixel(da_gestao, do_portal):
     for css in (da_gestao, do_portal):
         cravadas = re.findall(r"(?<!min-)max-width:(\d+)px", css)
         assert cravadas == [], cravadas
+
+
+def test_o_painel_do_documento_respeita_o_atributo_hidden(da_gestao):
+    """`display` de autor vence o `display:none` que o `hidden` traz do navegador.
+
+    Sem a guarda, o painel aparecia vazio no alto de **toda** inscrição, com o botão de fechar,
+    antes de qualquer documento ser aberto — e empurrava a avaliação para fora da primeira tela.
+    """
+    assert re.search(r"\.painel-documento:not\(\[hidden\]\)\{[^}]*display:flex", da_gestao)
+    assert not re.search(r"\.painel-documento\{[^}]*display:flex", da_gestao)

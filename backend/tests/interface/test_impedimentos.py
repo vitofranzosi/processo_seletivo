@@ -126,7 +126,7 @@ def test_a_tela_mostra_o_ato_e_o_motivo_ao_lado_da_inelegivel(
     assert "AVALIACAO_TORNAR_INELEGIVEL" not in corpo
     assert "Avaliação tornada inelegível" in corpo
     assert "carlos" in corpo
-    assert "95.0000" in corpo
+    assert "95" in corpo
 
 
 def test_a_tela_nao_e_armazenavel_pelo_navegador(presidente, tela, cenario, com_conclusao):

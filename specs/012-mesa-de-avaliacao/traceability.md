@@ -13,7 +13,7 @@ falharia se ele fosse quebrado** — e não o teste que passa perto.
 | Requisitos funcionais (FR) | 112 |
 | Critérios de sucesso (SC) | 31 |
 | Edge cases (EC) | 20 |
-| Testes na suíte, ao fim da 012 | 1919 |
+| Testes na suíte, ao fim da 012 | 1920 |
 | Verificações do quickstart, executadas em 2026-09-02 | 34, sem divergência |
 
 ## Onde procurar

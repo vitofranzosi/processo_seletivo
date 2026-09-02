@@ -37,10 +37,10 @@ FR-030: o necessário ao trabalho, e nada além. E-mail e telefone ficam de fora
 avaliação nenhuma. O nome **fica**: avaliação cega está fora do escopo desta feature, e esconder
 metade da identidade produziria a meia anonimização que é pior que nenhuma.
 {% endcomment %}
-<dl class="conferencia">
-  <dt>Candidato</dt><dd>{{ inscricao.nome }}</dd>
-  <dt>CPF</dt><dd>{{ cpf }}</dd>
-  <dt>Perfil</dt><dd>{% if perfil %}{{ perfil }}{% if modalidade %} — {{ modalidade }}{% endif %}{% else %}não informado{% endif %}</dd>
+<dl class="ficha">
+  <div><dt>Candidato</dt><dd class="destaque">{{ inscricao.nome }}</dd></div>
+  <div><dt>CPF</dt><dd>{{ cpf }}</dd></div>
+  <div><dt>Perfil</dt><dd>{% if perfil %}{{ perfil }}{% if modalidade %} — {{ modalidade }}{% endif %}{% else %}<span class="ausente">não informado</span>{% endif %}</dd></div>
 </dl>
 
 <section aria-labelledby="documentos">
@@ -62,13 +62,20 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
       daqui com o formulário preenchido e não salvo. Não é lentidão: é trabalho que se perde. E são
       dois cliques por documento — abrir e voltar — cobrados uma vez por inscrição.
       {% endcomment %}
-      <a href="{% url 'interface:mesa-documento' edital.id etapa_id inscricao.id documento.id %}"
-         target="_blank" rel="noopener"
-         data-documento="{{ documento.nome }}"
-         aria-label="Abrir {{ documento.nome }} em nova aba">Abrir<span class="ajuda"> (nova aba)</span></a>
-      <span class="tamanho">{{ documento.tamanho }}</span>
+      {% comment %}
+      O rótulo não anuncia "nova aba" porque nem sempre é: em tela larga o documento abre no painel
+      ao lado, e prometer aba nova ali seria descrever o que não acontece. `target` continua como o
+      caminho de quem não tem o painel.
+      {% endcomment %}
+      <span class="entrega">
+        <a class="acao" href="{% url 'interface:mesa-documento' edital.id etapa_id inscricao.id documento.id %}"
+           target="_blank" rel="noopener"
+           data-documento="{{ documento.nome }}"
+           aria-label="Abrir {{ documento.nome }}">Abrir</a>
+        <span class="tamanho">{{ documento.tamanho }}</span>
+      </span>
       {% else %}
-      <span class="vazio">Não apresentado</span>
+      <span class="entrega ausente">não apresentado</span>
       {% endif %}
     </li>
     {% endfor %}
@@ -96,11 +103,20 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
   Uma faixa só: o aviso da ação recém-praticada e este estado diziam a mesma coisa, empilhados.
   Quando a pessoa acaba de concluir, quem fala é o aviso; quando ela volta depois, é este.
   {% endcomment %}
-  {% if not aviso %}<p class="sucesso" role="status">Avaliação concluída em {{ avaliacao.concluida_em|date:"d/m/Y H:i" }}.</p>{% endif %}
-  <dl class="conferencia">
-    <dt>Pontuação</dt><dd>{{ avaliacao.pontuacao|floatformat:4 }}</dd>
-    <dt>Parecer</dt><dd>{{ avaliacao.parecer|default:"—"|linebreaksbr }}</dd>
-  </dl>
+  {% comment %}
+  Concluída é **estado**, e não a comemoração de um ato: a faixa verde de sucesso reaparecia a cada
+  visita, meses depois, dizendo "deu certo" sobre uma coisa que a pessoa já sabe. O que ela precisa
+  ver ao voltar é a nota, o parecer e quando aquilo foi afirmado.
+  {% endcomment %}
+  <div class="registro-da-avaliacao">
+    <p class="nota"><strong>{{ avaliacao.pontuacao|pontuacao }}</strong>{% if maxima %} <span>de {{ maxima|pontuacao }}</span>{% endif %}</p>
+    <p class="quando">Avaliação concluída em {{ avaliacao.concluida_em|date:"d/m/Y" }} às {{ avaliacao.concluida_em|date:"H:i" }}</p>
+  </div>
+  <div class="parecer-registrado">
+    <h3>Parecer</h3>
+    {% if avaliacao.parecer %}<p>{{ avaliacao.parecer|linebreaksbr }}</p>
+    {% else %}<p class="ausente">Sem parecer registrado.</p>{% endif %}
+  </div>
   <p class="ajuda">Para alterar, a reabertura é ato da presidência, com motivo registrado.</p>
 
   {% else %}
@@ -134,8 +150,8 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
              value="{{ valores.pontuacao }}"{% if not aviso %} autofocus{% endif %}
              aria-describedby="ajuda-pontuacao">
       <span class="ajuda" id="ajuda-pontuacao">
-        {% if maxima %}Máxima publicada: {{ maxima|floatformat:4 }}.{% else %}O Edital não declara pontuação máxima para esta Etapa.{% endif %}
-        {% if minima %} Nota mínima: {{ minima|floatformat:4 }}.{% endif %}
+        {% if maxima %}Máxima publicada: {{ maxima|pontuacao }}.{% else %}O Edital não declara pontuação máxima para esta Etapa.{% endif %}
+        {% if minima %} Nota mínima: {{ minima|pontuacao }}.{% endif %}
       </span>
     </p>
 
@@ -144,7 +160,7 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
       <textarea id="parecer" name="parecer" rows="6" aria-describedby="ajuda-parecer">{{ valores.parecer }}</textarea>
       <span class="ajuda" id="ajuda-parecer">
         É o parecer que responde a um recurso.
-        {% if eliminatoria and minima %}Nesta Etapa eliminatória, ele é obrigatório quando a pontuação fica abaixo de {{ minima|floatformat:4 }}.{% endif %}
+        {% if eliminatoria and minima %}Nesta Etapa eliminatória, ele é obrigatório quando a pontuação fica abaixo de {{ minima|pontuacao }}.{% endif %}
       </span>
     </p>
 

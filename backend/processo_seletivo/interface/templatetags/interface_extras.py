@@ -1,5 +1,7 @@
 """Apresentação de valores do domínio. Nenhuma regra aqui — só como o dado é lido."""
 
+from decimal import Decimal, InvalidOperation
+
 from django import template
 from django.http import QueryDict
 
@@ -116,3 +118,25 @@ def pagina_seguinte(context, cursor):
     parametros = pedido.GET.copy() if pedido is not None else QueryDict(mutable=True)
     parametros["cursor"] = cursor
     return f"?{parametros.urlencode()}"
+
+
+@register.filter
+def pontuacao(valor):
+    """A nota como uma pessoa a escreve: `60`, `87,5`, `60,005`.
+
+    O campo guarda quatro casas porque a norma pode exigi-las, e a tela mostrava `60.0000` — que é
+    o valor certo apresentado como saída de máquina. Zeros à direita não informam nada e ainda
+    fazem a coluna parecer mais precisa do que a nota é; o ponto decimal em português é vírgula.
+
+    Nada é arredondado: o que sai é exatamente o que está gravado, sem os zeros que não dizem nada.
+    """
+    if valor in (None, ""):
+        return "—"
+    try:
+        exato = Decimal(str(valor)).normalize()
+    except (TypeError, ValueError, InvalidOperation):
+        return valor
+    # `normalize()` transforma 100.0000 em 1E+2; `quantize` desfaz isso sem reintroduzir zeros.
+    if exato == exato.to_integral_value():
+        exato = exato.quantize(Decimal(1))
+    return f"{exato:f}".replace(".", ",")

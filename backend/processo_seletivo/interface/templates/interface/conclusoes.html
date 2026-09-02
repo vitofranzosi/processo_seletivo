@@ -1,4 +1,4 @@
-{% extends "interface/base.html" %}
+{% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Conclusões preservadas — {{ etapa.name }}{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
@@ -58,7 +58,7 @@ concluído antes vive aqui, no registro append-only do domínio, e não na trilh
     <tr>
       <td>{{ linha.inscricao.protocolo|default:linha.inscricao.id }}</td>
       <td>{{ linha.membro.display_label|default:linha.conclusao.concluida_por }}</td>
-      <td>{{ linha.conclusao.pontuacao|floatformat:4 }}</td>
+      <td>{{ linha.conclusao.pontuacao|pontuacao }}</td>
       <td>{{ linha.conclusao.parecer|default:"—" }}</td>
       <td>vigente desde {{ linha.conclusao.versao.valid_from|date:"d/m/Y H:i" }}
         <span class="codigo">{{ linha.conclusao.versao.id }}</span></td>
