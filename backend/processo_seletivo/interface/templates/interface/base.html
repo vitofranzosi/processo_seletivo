@@ -414,7 +414,7 @@ fieldset.em-colunas legend{grid-column:1/-1}
    exatamente o desalinhamento que se queria resolver. `display:contents` no `li` entrega os filhos
    às trilhas da lista, e aí as três colunas valem para todas as linhas. */
 ul.documentos{list-style:none;margin:0;padding:0;border:1px solid var(--borda);border-radius:6px;
-  background:var(--branco);display:grid;grid-template-columns:minmax(0,1fr) auto auto}
+  background:var(--branco);display:grid;grid-template-columns:minmax(0,1fr) auto auto auto}
 /* Três colunas: o nome primeiro, porque é o que se procura ao percorrer a lista; a marca em coluna
    própria, que é o que a alinha sem precisar vir antes do nome; e a entrega à direita. */
 ul.documentos>li{display:contents}
@@ -433,6 +433,15 @@ ul.documentos .entrega{justify-content:flex-end;white-space:nowrap}
    linha e a borda passava a envolver a célula inteira, virando uma caixa alta ao lado do nome. A
    célula cuida do espaçamento; a marca volta ao seu tamanho. */
 ul.documentos .celula-marca{justify-content:flex-start}
+/* O que já foi aberto por esta pessoa. Numa inscrição de dez documentos, é a coluna que responde
+   "onde eu parei" — e o que ela marca é **aberto**, que é o que a trilha sabe: abrir não é ler, e
+   ler não é avaliar. */
+ul.documentos .leitura{gap:.4rem;color:var(--texto-fraco);font-size:.8125rem;white-space:nowrap}
+ul.documentos .marca-lida{color:var(--verde-texto);font-weight:600}
+@media (max-width:34rem){
+  ul.documentos{grid-template-columns:minmax(0,1fr) auto}
+  ul.documentos .leitura{grid-column:1/-1;padding-top:0}
+}
 ul.documentos .marca{font-size:.75rem;color:var(--texto-fraco);border:1px solid var(--borda);
   border-radius:3px;padding:.05rem .35rem;font-weight:400;white-space:nowrap;line-height:1.5}
 ul.documentos .entrega{display:flex;align-items:center;gap:.6rem;font-size:.875rem;

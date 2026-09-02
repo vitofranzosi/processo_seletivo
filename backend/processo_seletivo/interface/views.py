@@ -1739,7 +1739,7 @@ def _registrar_consulta(ator, documento, request):
             aggregate=documento.inscricao,
             now=agora,
             correlation_id=getattr(request, "correlation_id", ""),
-            reason=f"requisito {documento.requirement_id}",
+            reason=mesa_app.motivo_da_abertura(documento.requirement_id),
         )
 
 
@@ -1752,7 +1752,7 @@ def _registrar_divergencia(ator, documento, request):
             aggregate=documento.inscricao,
             now=agora,
             correlation_id=getattr(request, "correlation_id", ""),
-            reason=f"requisito {documento.requirement_id}",
+            reason=mesa_app.motivo_da_abertura(documento.requirement_id),
         )
     raise DomainError(
         "document_integrity_failed",
@@ -2308,8 +2308,15 @@ def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
         )
     except DomainError as recusa:
         raise Http404 from recusa
-    leitura = _ultima_leitura(ator, contexto["atribuicao"])
-    tem_documento = any(documento["enviado"] for documento in contexto["documentos"])
+    leituras = _leituras_por_requisito(ator, contexto["atribuicao"])
+    leitura = max(leituras.values(), default=None)
+    documentos = [
+        {**documento, "aberto_em": leituras.get(str(documento["id"]))}
+        for documento in contexto["documentos"]
+    ]
+    contexto["documentos"] = documentos
+    tem_documento = any(documento["enviado"] for documento in documentos)
+    abertos = sum(1 for documento in documentos if documento["enviado"] and documento["aberto_em"])
     # A **página** carrega dado pessoal, e não só o arquivo: protocolo, nome e CPF mascarado não
     # podem ficar no cache do navegador (FR-056).
     return marcar_como_privada(
@@ -2328,6 +2335,8 @@ def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
                 # decidir onde o foco começa, porque a tela abria com o cursor na nota, pronta
                 # para receber uma pontuação antes de qualquer leitura.
                 "ultima_leitura": leitura,
+                "documentos_abertos": abertos,
+                "documentos_entregues": sum(1 for d in documentos if d["enviado"]),
                 "ja_abriu_documento": leitura is not None,
                 "tem_documento": tem_documento,
                 # Onde o cursor para: na nota só quando não há o que ler antes.
@@ -2347,6 +2356,36 @@ def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
             },
         )
     )
+
+
+def _leituras_por_requisito(ator, atribuicao):
+    """Quais documentos desta inscrição **esta pessoa** já abriu, e quando cada um.
+
+    Numa inscrição com dez documentos exigidos, "onde eu parei" deixa de ser uma pergunta que se
+    responde olhando — e a resposta já está registrada, um evento por abertura, com o requisito no
+    motivo (FR-027).
+
+    O que se marca é **aberto**, e não avaliado: a Avaliação é uma só por inscrição, e não há
+    julgamento por documento a exibir. Chamar isto de "avaliado" inventaria um veredito que o
+    domínio não tem.
+    """
+    from processo_seletivo.auditoria.models import RegistroAuditoria
+
+    leituras = {}
+    for motivo, quando in RegistroAuditoria.objects.filter(
+        operation=CONSULTAR_DOCUMENTO,
+        aggregate_id=atribuicao.id,
+        actor_subject=ator.subject,
+    ).values_list("reason", "occurred_at"):
+        requisito = mesa_app.requisito_do_motivo(motivo)
+        if requisito is None:
+            continue
+        # A mais recente de cada requisito. `datetime.min` não serve de piso aqui: ele é ingênuo,
+        # e os instantes da trilha têm fuso.
+        anterior = leituras.get(requisito)
+        if anterior is None or quando > anterior:
+            leituras[requisito] = quando
+    return leituras
 
 
 def _ultima_leitura(ator, atribuicao):
@@ -2552,7 +2591,7 @@ def _registrar_na_mesa(ator, atribuicao, documento, request, operacao):
             aggregate=atribuicao,
             now=agora,
             correlation_id=getattr(request, "correlation_id", ""),
-            reason=f"requisito {documento.requirement_id}",
+            reason=mesa_app.motivo_da_abertura(documento.requirement_id),
         )
 
 

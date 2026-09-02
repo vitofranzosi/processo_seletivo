@@ -37,6 +37,26 @@ INTEGRIDADE = "INTEGRIDADE"
 BASE_DA_MESA = "avaliacao:atribuida"
 
 
+def motivo_da_abertura(requirement_id):
+    """O motivo que a trilha guarda de cada abertura: **qual requisito** foi aberto.
+
+    O formato é escrito aqui e lido aqui, num lugar só, porque a tela passou a responder "quais
+    documentos desta inscrição eu já abri" a partir dele — e um formato combinado de longe entre
+    quem escreve e quem lê quebra em silêncio na primeira mudança de texto.
+
+    A trilha continua sem o nome do arquivo, que é do candidato (FR-054): o requisito basta para
+    saber o que foi aberto.
+    """
+    return f"requisito {requirement_id}"
+
+
+def requisito_do_motivo(motivo):
+    """O caminho de volta: de que requisito fala este motivo, ou `None`."""
+    prefixo = "requisito "
+    texto = (motivo or "").strip()
+    return texto[len(prefixo) :] if texto.startswith(prefixo) else None
+
+
 def _nao_encontrado():
     """A mesma resposta para tudo que o avaliador não alcança (FR-044)."""
     return DomainError("not_found", "Recurso não encontrado.", 404)

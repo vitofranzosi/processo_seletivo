@@ -437,6 +437,24 @@ de defeito: quem chega e encontra o cursor na nota não saberia se o sistema pul
 foi ela mesma que já leu. O instante vem da **trilha**, que registra cada abertura — não é estado
 novo inventado para a mesma coisa (FR-027).
 
+**FR-114** — **Cada documento diz se esta pessoa já o abriu.** FR-113 responde "houve leitura?"
+para a inscrição inteira. Com dez requisitos exigidos, essa resposta não basta: "onde eu parei"
+volta a ser pergunta que só a memória responde, e quem retoma o trabalho relê o que já leu ou pula
+o que não leu.
+
+Cada linha da lista mostra **quando esta pessoa abriu aquele documento**, e a lista mostra quantos
+dos entregues já foram abertos — a contagem só aparece quando há mais de um, porque com um só ela
+não informa nada que a linha não diga.
+
+**Aberto, e não avaliado.** A Avaliação é uma só por inscrição — nota e parecer sobre o conjunto —
+e não existe veredito por documento: marcar "avaliado" em cada linha inventaria um julgamento que
+o domínio não tem, e transformaria a leitura numa lista de conferência cujo preenchimento pareceria
+ter efeito sobre o resultado.
+
+A marca é **de quem abriu**, e não do documento: ela vem da trilha, filtrada pela Atribuição e pelo
+ator (FR-027). Abertura de outra pessoa — outro avaliador, ou a consulta administrativa da 009 —
+não aparece como trabalho feito, porque apareceria como trabalho de quem não o fez.
+
 **FR-110** — **O caminho não pode custar mais que o trabalho.** Numa Mesa de 230 inscrições, cada
 clique de navegação é cobrado 230 vezes. Três deles não decidiam nada:
 

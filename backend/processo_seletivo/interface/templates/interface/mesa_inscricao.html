@@ -56,6 +56,19 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
   <h2 id="documentos">Documentos apresentados</h2>
 
   {% comment %}
+  **Abertos, e não avaliados.** A Avaliação é uma só por inscrição — nota e parecer sobre o
+  conjunto —, e não há veredito por documento a exibir: marcar "avaliado" em cada um inventaria um
+  julgamento que o domínio não tem, e transformaria a leitura numa lista de conferência.
+
+  O que existe, e resolve a mesma dificuldade, é **o que já foi aberto**: com dez documentos
+  exigidos, "onde eu parei" deixa de ser pergunta que se responde olhando. Cada abertura já está na
+  trilha, com o requisito no motivo (FR-027) — a tela só mostra o que já está registrado.
+  {% endcomment %}
+  {% if documentos_entregues > 1 %}
+  <p class="ajuda">{{ documentos_abertos }} de {{ documentos_entregues }} abertos por você.</p>
+  {% endif %}
+
+  {% comment %}
   A lista é a dos **requisitos**, e o arquivo aparece dentro do seu (FR-025). É a diferença entre
   este sistema e uma pasta compartilhada: requisito sem arquivo aparece como requisito sem
   arquivo, que é informação para quem avalia — e não uma linha que some.
@@ -77,6 +90,8 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
       ao lado, e prometer aba nova ali seria descrever o que não acontece. `target` continua como o
       caminho de quem não tem o painel.
       {% endcomment %}
+      <span class="leitura">{% if documento.aberto_em %}<span class="marca-lida">aberto</span>
+        <span class="quando">{{ documento.aberto_em|date:"d/m" }} às {{ documento.aberto_em|date:"H:i" }}</span>{% endif %}</span>
       <span class="entrega">
         <a class="acao" href="{% url 'interface:mesa-documento' edital.id etapa_id inscricao.id documento.id %}"
            target="_blank" rel="noopener"
@@ -86,6 +101,7 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
         <span class="tamanho">{{ documento.tamanho }}</span>
       </span>
       {% else %}
+      <span class="leitura"></span>
       <span class="entrega ausente">não apresentado</span>
       {% endif %}
     </li>
