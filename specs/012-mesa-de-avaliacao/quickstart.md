@@ -187,3 +187,35 @@ subir com dado real, e a conferência final registra o estado de cada uma.
 **FR-057 não tem tarefa de implementação de propósito**: resolvê-lo é decisão institucional sobre
 dado pessoal, não código desta feature. O que a 012 deve entregar é a pergunta registrada e visível,
 e não uma resposta inventada pela engenharia.
+
+### Estado em 2026-09-02, ao fim da implementação
+
+| gate | estado | o que falta |
+|---|---|---|
+| identidade institucional confiável (FR-058) | **pendente, e é bloqueante para produção** | O seletor de identidade continua sendo o mecanismo disponível, e com ele **qualquer pessoa se declara presidente ou avaliador**. Até a 011 isso expunha organização do trabalho; a partir da 012 exporia documento e dado pessoal de candidato. `INTERFACE_SELETOR_IDENTIDADE` continua recusado em produção, e é essa recusa que segura a feature. |
+| retenção e descarte do acervo (FR-057) | **não respondido** | Não há prazo declarado, ato de descarte nem responsável. A 012 não o resolve e o torna mais urgente: ela é a primeira feature em que membro de comissão lê documento comprobatório em volume, e documento de candidato inclui autodeclaração étnico-racial. A resposta é institucional. |
+
+Nenhum dos dois é defeito de código, e nenhum dos dois se resolve escrevendo mais código. Ficam
+registrados aqui porque um gate que só existe na cabeça de quem implementou não é um gate.
+
+---
+
+## Execução registrada — 2026-09-02
+
+O percurso das seis entregas foi executado contra o servidor de demonstração, com dados semeados
+por `seed_demo` e uma comissão de quatro pessoas — Maria preside, João e Ana avaliam, Bruno fica
+alocado sem receber nada. **34 verificações, nenhuma divergência.**
+
+Três observações do percurso, todas sobre o **roteiro** e não sobre o sistema:
+
+1. **O Edital semeado não declara as duas propriedades**, e por isso ele exercita justamente a
+   leitura da ausência: a tela diz "1 avaliação por inscrição" e "o Edital não declara pontuação
+   máxima", que é o que FR-009 e FR-066 mandam. Para exercitar a dupla avaliação é preciso um
+   Edital que a declare.
+2. **A versão a reconhecer na conclusão vem do formulário, e não da última materializada.** O seed
+   cria uma Retificação com vigência futura, então a versão mais recente **não** é a vigente — e
+   uma tentativa de concluir declarando aquela é corretamente recusada com "o Edital foi retificado
+   enquanto você avaliava". Quem percorre o roteiro deve usar o que a página oferece, como uma
+   pessoa faria.
+3. **O protocolo é único no sistema inteiro**, então semear um segundo Edital de demonstração exige
+   protocolos com prefixo próprio.

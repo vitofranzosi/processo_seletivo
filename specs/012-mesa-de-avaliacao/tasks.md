@@ -245,9 +245,9 @@ preserva o que havia sido concluído.
 - [X] T086 [P] Teste em `backend/tests/interface/test_trilha_da_012.py`: cada um dos **sete** atos aparece sob o filtro por inscrição e sob o filtro por avaliador, isolados e combinados; um ato praticado pela presidência sobre a atribuição de alguém aparece no filtro **daquele avaliador**, e não no de quem o praticou; **dois avaliadores abrindo a mesma inscrição** aparecem cada um sob o seu filtro, e nenhum sob o do outro; e **impedimento registrado sem Atribuição ativa** — o caso preventivo — aparece nos dois filtros, porque o agregado é o próprio `Impedimento`
 - [X] T087 [P] Teste de não-regressão em `backend/tests/integration/comissoes/test_011_intocada.py`: comissão, alocação e guard da 011 seguem idênticos
 - [X] T088 [P] Teste de não-regressão do pipeline de Retificação em `backend/tests/integration/publicacoes/test_retificacao_intocada.py`, exigido por FR-100: para Edital **inteiramente na versão vigente**, a precondição, a detecção de conflito, a consolidação, a verificação de efeito prático e a materialização produzem o mesmo resultado que produziam antes desta feature. É a guarda sobre a superfície que a 012 passou a tocar em quatro módulos
-- [ ] T089 Executar `specs/012-mesa-de-avaliacao/quickstart.md` inteiro, as seis entregas, e registrar o que divergiu
-- [ ] T090 Registrar os dois gates de implantação do quickstart em `specs/012-mesa-de-avaliacao/quickstart.md` — identidade institucional (FR-058) e retenção/descarte do acervo (FR-057) —, com o estado de cada um. **FR-057 não tem tarefa de implementação de propósito**: a resposta é institucional, e o que a 012 entrega é a pergunta registrada
-- [ ] T091 Escrever `specs/012-mesa-de-avaliacao/traceability.md`, fechando os 100 FR e os 31 SC contra tarefa e teste — os 37 demonstrados pelo quickstart e os demais cobertos por suíte
+- [X] T089 Executar `specs/012-mesa-de-avaliacao/quickstart.md` inteiro, as seis entregas, e registrar o que divergiu
+- [X] T090 Registrar os dois gates de implantação do quickstart em `specs/012-mesa-de-avaliacao/quickstart.md` — identidade institucional (FR-058) e retenção/descarte do acervo (FR-057) —, com o estado de cada um. **FR-057 não tem tarefa de implementação de propósito**: a resposta é institucional, e o que a 012 entrega é a pergunta registrada
+- [X] T091 Escrever `specs/012-mesa-de-avaliacao/traceability.md`, fechando os 105 FR e os 31 SC contra tarefa e teste — os 37 demonstrados pelo quickstart e os demais cobertos por suíte
 
 ---
 
