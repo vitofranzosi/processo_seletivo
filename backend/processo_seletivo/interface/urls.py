@@ -123,6 +123,17 @@ urlpatterns = [
         name="mesa-inscricao",
     ),
     path(
+        "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>/avaliacao",
+        views.avaliacao_gravar,
+        name="mesa-avaliacao-gravar",
+    ),
+    path(
+        "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>"
+        "/avaliacao/concluir",
+        views.avaliacao_concluir,
+        name="mesa-avaliacao-concluir",
+    ),
+    path(
         "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>"
         "/documentos/<uuid:requirement_id>",
         views.documento_da_mesa,

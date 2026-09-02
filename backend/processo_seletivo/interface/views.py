@@ -18,6 +18,7 @@ from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.auditoria import selectors as auditoria_selectors
 from processo_seletivo.auditoria.application import record_event
+from processo_seletivo.avaliacoes.application import avaliacao as avaliacao_app
 from processo_seletivo.avaliacoes.application import distribuicao as distribuicao_app
 from processo_seletivo.avaliacoes.application import mesa as mesa_app
 from processo_seletivo.avaliacoes.application import selectors as avaliacao_selectors
@@ -2100,9 +2101,86 @@ def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
         render(
             request,
             "interface/mesa_inscricao.html",
-            {**contexto, "edital": edital, "processo": edital.processo, "etapa_id": etapa_id},
+            {
+                **contexto,
+                "edital": edital,
+                "processo": edital.processo,
+                "etapa_id": etapa_id,
+                "aviso": request.session.pop("aviso_da_avaliacao", None),
+                # O que a tela exibe nos campos, resolvido **aqui**: o digitado antes da recusa
+                # tem prioridade — perder o parecer escrito porque a revisão estava obsoleta
+                # seria punir duas vezes —, e depois o que já estava gravado.
+                "valores": _valores_da_avaliacao(
+                    request.session.pop("digitado_na_avaliacao", None),
+                    contexto.get("avaliacao"),
+                ),
+            },
         )
     )
+
+
+def _valores_da_avaliacao(digitado, avaliacao):
+    if digitado:
+        return {"pontuacao": digitado.get("pontuacao", ""), "parecer": digitado.get("parecer", "")}
+    if avaliacao is None:
+        return {"pontuacao": "", "parecer": ""}
+    return {
+        "pontuacao": "" if avaliacao.pontuacao is None else f"{avaliacao.pontuacao:f}",
+        "parecer": avaliacao.parecer,
+    }
+
+
+@require_http_methods(["POST"])
+def avaliacao_gravar(request, edital_id, etapa_id, inscricao_id):
+    """Salvar o rascunho — sem exigir conclusão (FR-031)."""
+    return _registrar_avaliacao(
+        request, edital_id, etapa_id, inscricao_id, avaliacao_app.gravar, "Rascunho salvo."
+    )
+
+
+@require_http_methods(["POST"])
+def avaliacao_concluir(request, edital_id, etapa_id, inscricao_id):
+    """Concluir — ato explícito, distinto de salvar (FR-032)."""
+    return _registrar_avaliacao(
+        request, edital_id, etapa_id, inscricao_id, avaliacao_app.concluir, "Avaliação concluída."
+    )
+
+
+def _registrar_avaliacao(request, edital_id, etapa_id, inscricao_id, comando, sucesso):
+    """O caminho comum das duas rotas: autorizar, executar, e devolver a recusa legível.
+
+    A recusa volta para a mesma tela, e não vira 500: revisão obsoleta, parecer obrigatório e
+    versão mudada são coisas que a pessoa precisa **ler** para corrigir.
+    """
+    ator, edital = _mesa_do_avaliador(request, edital_id, etapa_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    dados = forms.ler_avaliacao(request.POST)
+    destino = reverse("interface:mesa-inscricao", args=[edital_id, etapa_id, inscricao_id])
+    argumentos = {
+        "ator": ator,
+        "edital": edital,
+        "etapa_id": etapa_id,
+        "inscricao_id": inscricao_id,
+        "pontuacao": dados["pontuacao"],
+        "parecer": dados["parecer"],
+        "expected_revision": dados["expected_revision"],
+        "correlation_id": getattr(request, "correlation_id", ""),
+    }
+    if comando is avaliacao_app.concluir:
+        argumentos["versao_reconhecida"] = dados["versao_reconhecida"]
+    try:
+        comando(**argumentos)
+        request.session["aviso_da_avaliacao"] = {"tipo": "sucesso", "texto": sucesso}
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["aviso_da_avaliacao"] = {"tipo": "erro", "texto": recusa.detail}
+        request.session["digitado_na_avaliacao"] = {
+            "pontuacao": dados["pontuacao"],
+            "parecer": dados["parecer"],
+        }
+    return redirect(destino)
 
 
 @require_http_methods(["GET"])

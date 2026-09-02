@@ -419,6 +419,21 @@ def ler_distribuicao(dados):
     }
 
 
+def ler_avaliacao(dados):
+    """Pontuação, parecer e a revisão esperada — que não é opcional.
+
+    `expected_revision` é a precondição de FR-081: sem ela, duas abas do mesmo avaliador se
+    sobrescreveriam em silêncio. Vazio vira `0`, que nunca corresponde a revisão real e produz a
+    recusa por revisão obsoleta em vez de uma gravação cega.
+    """
+    return {
+        "pontuacao": _texto(dados, "pontuacao"),
+        "parecer": _texto(dados, "parecer"),
+        "expected_revision": _inteiro(dados, "expected_revision", 0),
+        "versao_reconhecida": _texto(dados, "versao_reconhecida") or None,
+    }
+
+
 def etapas_do_edital(edital):
     """Etapas persistidas, no formato que o formulário renderiza."""
     return [

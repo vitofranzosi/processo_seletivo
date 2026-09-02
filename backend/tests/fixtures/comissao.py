@@ -16,7 +16,7 @@ DOCUMENTO_A = 420
 DOCUMENTO_B = 421
 
 
-def etapas(seed=0, *, avaliacoes=None, maxima=None):
+def etapas(seed=0, *, avaliacoes=None, maxima=None, minima=None):
     """As duas Etapas dos cenários. `avaliacoes` e `maxima` declaram o que a `012` acrescentou.
 
     Ficam opcionais de propósito: a maioria dos testes fala de Etapa **sem** declaração, que é o
@@ -27,6 +27,8 @@ def etapas(seed=0, *, avaliacoes=None, maxima=None):
         declaracao["evaluationsPerRegistration"] = avaliacoes
     if maxima is not None:
         declaracao["maximumScore"] = maxima
+    if minima is not None:
+        declaracao["minimumScore"] = minima
     return [
         {
             "id": identificador(ETAPA_A1, seed),

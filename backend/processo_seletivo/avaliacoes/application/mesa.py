@@ -17,12 +17,17 @@ telefone, que não decidem avaliação nenhuma. O nome **fica**: avaliação ceg
 esconder metade da identidade produziria a meia anonimização que é pior que nenhuma.
 """
 
+from django.utils.dateparse import parse_datetime
+
 from processo_seletivo.avaliacoes.domain.autorizacao import pode_avaliar_inscricao
+from processo_seletivo.avaliacoes.domain.previsao import pontuacao_maxima
+from processo_seletivo.comissoes.domain.etapas import etapa_vigente
 from processo_seletivo.inscricoes.application.rascunho import requisitos_da_inscricao
 from processo_seletivo.inscricoes.domain.arquivos import tamanho_legivel
 from processo_seletivo.inscricoes.domain.pessoais import mascarar_cpf
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.publicacoes.application import selectors
+from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.shared.api.problems import DomainError
 
 CONSULTAR_DOCUMENTO = "CONSULTAR_DOCUMENTO"
@@ -79,8 +84,21 @@ def inscricao_para_avaliar(*, ator, edital, etapa_id, inscricao_id):
         for requisito in requisitos_da_inscricao(conteudo, inscricao)
     ]
     perfil, modalidade = _perfil_e_modalidade(conteudo, inscricao)
+    # A regra que vale **agora**, e a que a Avaliação vai gravar. A versão da inscrição governa o
+    # que o candidato enviou; a versão **vigente** governa a avaliação, e são coisas diferentes:
+    # uma Retificação pode ter mudado a pontuação máxima depois da inscrição (FR-071, FR-096).
+    vigente = effective_version(edital_id=edital.id)
+    etapa = etapa_vigente(edital, etapa_id)
+    avaliacao = getattr(atribuicao, "avaliacao", None)
     return {
         "atribuicao": atribuicao,
+        "avaliacao": avaliacao,
+        "etapa": etapa,
+        "versao_vigente": vigente,
+        "maxima": pontuacao_maxima(etapa),
+        "minima": (etapa or {}).get("minimumScore"),
+        "eliminatoria": bool((etapa or {}).get("eliminatory")),
+        "fora_do_periodo": _fora_do_periodo(edital, etapa),
         "inscricao": inscricao,
         "perfil": perfil,
         "modalidade": modalidade,
@@ -88,6 +106,32 @@ def inscricao_para_avaliar(*, ator, edital, etapa_id, inscricao_id):
         "versao": versao,
         "documentos": documentos,
     }
+
+
+def _fora_do_periodo(edital, etapa):
+    """Se **agora** está fora do período previsto da Etapa (FR-077, FR-095).
+
+    O período é **informado, e não aplicado**: a Etapa pode não referenciar Evento algum, o Edital
+    publica datas previstas e não a proibição de trabalhar fora delas, e o efeito de avaliar
+    atrasado é administrativo. O que não pode é o sistema conhecer a divergência e escondê-la de
+    quem responde por ela.
+    """
+    from django.utils import timezone
+
+    from processo_seletivo.comissoes.domain.etapas import evento_vigente
+
+    if not etapa:
+        return False
+    try:
+        evento = evento_vigente(edital, etapa.get("scheduleEventId"))
+    except DomainError:
+        return False
+    if not evento:
+        return False
+    agora = timezone.now()
+    inicio = parse_datetime(evento["startAt"]) if evento.get("startAt") else None
+    fim = parse_datetime(evento["endAt"]) if evento.get("endAt") else None
+    return bool((inicio and agora < inicio) or (fim and agora > fim))
 
 
 def _perfil_e_modalidade(conteudo, inscricao):

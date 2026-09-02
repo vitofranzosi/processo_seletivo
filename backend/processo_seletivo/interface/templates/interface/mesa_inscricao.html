@@ -49,4 +49,71 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
   A ausência é o requisito — e é por isso que não há "baixar todos" aqui.
   {% endcomment %}
 </section>
+
+<section aria-labelledby="avaliacao">
+  <h2 id="avaliacao">Avaliação</h2>
+
+  {% if aviso %}
+  <p class="{% if aviso.tipo == 'erro' %}erro{% else %}sucesso{% endif %}" role="{% if aviso.tipo == 'erro' %}alert{% else %}status{% endif %}" tabindex="-1">{{ aviso.texto }}</p>
+  {% endif %}
+
+  {% if avaliacao.estado == "CONCLUIDA" %}
+  {% comment %}
+  FR-035: concluída é imutável **para o avaliador**. Não é um formulário desabilitado — é a
+  ausência do formulário, com o que foi afirmado à vista e o caminho de volta nomeado (FR-036).
+  {% endcomment %}
+  <p class="sucesso" role="status">Avaliação concluída em {{ avaliacao.concluida_em|date:"d/m/Y H:i" }}.</p>
+  <dl class="conferencia">
+    <dt>Pontuação</dt><dd>{{ avaliacao.pontuacao|floatformat:4 }}</dd>
+    <dt>Parecer</dt><dd>{{ avaliacao.parecer|default:"—"|linebreaksbr }}</dd>
+  </dl>
+  <p class="ajuda">Para alterar, a reabertura é ato da presidência, com motivo registrado.</p>
+
+  {% else %}
+  {% comment %}
+  FR-077 e FR-095: o período é informado, e não aplicado. O aviso aparece **antes** de concluir —
+  o sistema conhecer a divergência e escondê-la seria o extremo oposto do bloqueio.
+  {% endcomment %}
+  {% if fora_do_periodo %}
+  <p class="aviso" role="status"><strong>Atenção:</strong> esta avaliação está sendo registrada
+    fora do período previsto para a Etapa. O instante real fica registrado.</p>
+  {% endif %}
+
+  <form method="post" action="{% url 'interface:mesa-avaliacao-gravar' edital.id etapa_id inscricao.id %}">
+    {% csrf_token %}
+    {% comment %}
+    A revisão esperada e a versão reconhecida viajam no formulário: a primeira impede que duas
+    abas se sobrescrevam (FR-081), a segunda impede concluir contra uma regra que mudou enquanto
+    a pessoa escrevia (FR-073).
+    {% endcomment %}
+    <input type="hidden" name="expected_revision" value="{{ avaliacao.revision|default:1 }}">
+    <input type="hidden" name="versao_reconhecida" value="{{ versao_vigente.id }}">
+
+    <p class="campo curto">
+      <label for="pontuacao">Pontuação</label>
+      <input type="number" step="0.0001" min="0" id="pontuacao" name="pontuacao"
+             value="{{ valores.pontuacao }}"
+             aria-describedby="ajuda-pontuacao">
+      <span class="ajuda" id="ajuda-pontuacao">
+        {% if maxima %}Máxima publicada: {{ maxima|floatformat:4 }}.{% else %}O Edital não declara pontuação máxima para esta Etapa.{% endif %}
+        {% if minima %} Nota mínima: {{ minima|floatformat:4 }}.{% endif %}
+      </span>
+    </p>
+
+    <p class="campo">
+      <label for="parecer">Parecer</label>
+      <textarea id="parecer" name="parecer" rows="6" aria-describedby="ajuda-parecer">{{ valores.parecer }}</textarea>
+      <span class="ajuda" id="ajuda-parecer">
+        É o parecer que responde a um recurso.
+        {% if eliminatoria and minima %}Nesta Etapa eliminatória, ele é obrigatório quando a pontuação fica abaixo de {{ minima|floatformat:4 }}.{% endif %}
+      </span>
+    </p>
+
+    <p class="acoes">
+      <button type="submit">Salvar sem concluir</button>
+      <button type="submit" formaction="{% url 'interface:mesa-avaliacao-concluir' edital.id etapa_id inscricao.id %}">Concluir avaliação</button>
+    </p>
+  </form>
+  {% endif %}
+</section>
 {% endblock %}
