@@ -102,6 +102,7 @@ def test_a_conclusao_grava_a_versao_contra_a_qual_foi_validada(edital_com_regra,
         pontuacao="90",
         parecer="Atende",
         expected_revision=1,
+        versao_reconhecida=vigente(edital_com_regra).id,
         correlation_id="teste",
     )
 
@@ -199,6 +200,7 @@ def test_retificacao_que_remove_a_etapa_nao_apaga_a_avaliacao(
         pontuacao="90",
         parecer="Atende",
         expected_revision=1,
+        versao_reconhecida=vigente(edital_com_regra).id,
         correlation_id="teste",
     )
 

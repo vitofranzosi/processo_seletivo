@@ -404,15 +404,21 @@ versão registrada os reproduz, e duplicá-los criaria a segunda fonte divergent
 fonte autoritativa única proíbe.
 
 **FR-073** — Se a versão vigente mudar entre a última gravação e a conclusão, o avaliador é avisado
-**antes** de concluir e reconhece a mudança explicitamente. Retificação que muda a pontuação máxima
+**antes** de concluir e reconhece a mudança explicitamente. **O reconhecimento é obrigatório**:
+concluir sem declarar contra qual versão se escreveu é recusado, senão omitir o campo do envio
+desligaria este requisito pelo cliente. Retificação que muda a pontuação máxima
 no meio do trabalho não pode ser descoberta depois, no parecer de outra pessoa. O precedente é o
 aviso de Retificação que a inscrição já dá ao candidato, e a razão é a mesma.
 
 **FR-096** — O aviso sozinho não basta, e é aqui que ele se fecha: **a versão contra a qual a
 conclusão é validada e a versão gravada na Avaliação são a mesma**, lida uma vez dentro da transação
-que conclui. Ler a versão para avisar, e outra para gravar, produziria uma Avaliação que afirma
-obedecer a uma regra contra a qual nunca foi verificada — que é pior do que não registrar versão
-alguma.
+que conclui — e a Etapa é extraída **do conteúdo dessa versão**, e não de uma segunda consulta.
+
+Ler a versão para avisar e outra para gravar produziria uma Avaliação que afirma obedecer a uma
+regra contra a qual nunca foi verificada, o que é pior do que não registrar versão alguma. E
+resolver a Etapa por fora reabre a mesma janela por outro caminho: uma Retificação consolidada
+entre as duas leituras faria a pontuação ser validada pela Etapa nova e a versão antiga ficar
+gravada.
 
 **FR-074** — Existe **no máximo uma Avaliação concluída** por pessoa, inscrição e Etapa, qualquer
 que seja o número de Atribuições — ou de vínculos de comissão — que tenham existido ali. Reatribuir
@@ -681,6 +687,15 @@ terminar.
 
 **FR-031** — A Avaliação nasce como rascunho e é gravada sem exigir conclusão.
 
+**FR-103** — **O rascunho valida a forma; a conclusão valida a regra.** Salvar exige que a
+pontuação seja um número que o registro comporte — finito, não negativo, na escala do conteúdo
+publicado. Não exige a pontuação máxima do Edital: quem está no meio do trabalho pode gravar um
+valor que ainda não decidiu, e cobrar a regra normativa ali obrigaria a concluir para descobrir se
+o número passa. A máxima é cobrada no ato que tem efeito (FR-033).
+
+Valor que não é número — infinito, indefinido, expoente que a coluna não comporta — é recusado nos
+dois, com mensagem: forma impossível não pode virar erro interno.
+
 **FR-032** — Concluir é ato explícito, distinto de salvar.
 
 **FR-033** — A pontuação é validada contra o que o Edital publicou para aquela Etapa: a pontuação
@@ -827,7 +842,9 @@ spec diz qual resultado cada um deve produzir.
 
 **FR-081** — Toda gravação e toda conclusão de Avaliação carregam a revisão esperada, e revisão
 obsoleta é recusada pela resposta que o projeto já usa. Duas abas do mesmo avaliador não se
-sobrescrevem em silêncio.
+sobrescrevem em silêncio — **inclusive na primeira gravação**, que é quando a Avaliação nasce: duas
+primeiras gravações simultâneas produzem uma gravação e uma recusa por revisão, e nunca um erro
+interno por colisão de chave.
 
 **FR-082** — Conclusão sobre Avaliação que a presidência reabriu no intervalo é recusada pela mesma
 regra, e a tela diz que a avaliação foi reaberta. O avaliador nunca conclui sobre um estado que

@@ -28,34 +28,53 @@ def _recusa(mensagem, codigo="pontuacao_invalida"):
 
 
 def normalizar(bruta):
-    """A pontuação na forma canônica, ou recusa nomeando o campo."""
+    """A pontuação na **forma** que o registro comporta, ou recusa nomeando o campo.
+
+    Quatro verificações, e as duas primeiras existem porque `Decimal` aceita mais do que um número
+    de verdade: `Infinity`, `NaN` e `1E+100` atravessam o construtor e explodem depois — no
+    `quantize`, ou no banco. Recusar aqui é o que impede que um valor impossível vire erro
+    interno em vez de recusa legível.
+
+    A **máxima publicada** não entra aqui: ela é regra normativa, e é cobrada na conclusão
+    (`validar`). Esta função é o que o rascunho exige.
+    """
     if bruta is None or bruta == "":
         raise _recusa("Informe a pontuação.")
     try:
         valor = Decimal(str(bruta))
     except (InvalidOperation, ValueError, TypeError) as exc:
         raise _recusa("A pontuação precisa ser um número.") from exc
-    if valor != valor.quantize(CASAS):
-        raise _recusa("A pontuação admite no máximo quatro casas decimais.")
+    if not valor.is_finite():
+        raise _recusa("A pontuação precisa ser um número.")
     if valor < 0:
         raise _recusa("A pontuação não pode ser negativa.")
+    # O teto da **coluna**, e não uma regra normativa: `decimal(7,4)` comporta três dígitos
+    # inteiros. Deixar passar produziria erro de banco no lugar de uma recusa que a pessoa lê.
+    if valor > TETO_DA_PERSISTENCIA:
+        raise _recusa(
+            f"A pontuação não pode superar {TETO_DA_PERSISTENCIA:f}, que é o máximo que o "
+            "registro comporta."
+        )
+    try:
+        if valor != valor.quantize(CASAS):
+            raise _recusa("A pontuação admite no máximo quatro casas decimais.")
+    except InvalidOperation as exc:
+        raise _recusa("A pontuação precisa ser um número.") from exc
     return valor
 
 
 def validar(bruta, etapa):
-    """A pontuação aceita para esta Etapa, contra a regra que o Edital publicou."""
+    """A forma **mais** a regra publicada — o que a conclusão exige.
+
+    Salvar sem concluir cobra só `normalizar`: quem está no meio do trabalho pode gravar um valor
+    que ainda não decidiu, e cobrar a máxima ali obrigaria a concluir para descobrir se o número
+    passa. A regra normativa é cobrada no ato que tem efeito (FR-031, FR-032, FR-033).
+    """
     valor = normalizar(bruta)
     maxima = pontuacao_maxima(etapa)
     if maxima is not None and valor > maxima:
         raise _recusa(
             f"A pontuação não pode superar {maxima:f}, que é a máxima publicada para esta Etapa."
-        )
-    if maxima is None and valor > TETO_DA_PERSISTENCIA:
-        # O Edital não declarou limite, e este não é um: é o que o campo comporta. A mensagem diz
-        # isso, em vez de fingir uma regra normativa que ninguém publicou.
-        raise _recusa(
-            "O Edital não declara pontuação máxima para esta Etapa, e o valor informado excede o "
-            f"que o registro comporta ({TETO_DA_PERSISTENCIA:f})."
         )
     return valor
 

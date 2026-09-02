@@ -80,7 +80,11 @@ def avaliada(edital_com_regra, cenario):
         "correlation_id": "teste",
     }
     gravar(**comum, expected_revision=1)
-    avaliacao, _ = concluir(**comum, expected_revision=2)
+    avaliacao, _ = concluir(
+        **comum,
+        expected_revision=2,
+        versao_reconhecida=edital_com_regra.versoes_consolidadas.latest("materialized_at").id,
+    )
     return avaliacao
 
 

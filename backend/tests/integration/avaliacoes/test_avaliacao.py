@@ -71,6 +71,11 @@ def cenario(gestor, edital_com_regra, etapa):
 
 
 def argumentos(edital, etapa, inscricao, *, subject="joao", **extra):
+    """Os argumentos comuns, com a versão vigente já reconhecida.
+
+    `versao_reconhecida` é **obrigatória** na conclusão: sem ela, omitir o campo do envio
+    desligaria FR-073 pelo cliente. `gravar` a ignora, e passá-la aqui não a torna opcional lá.
+    """
     return {
         "ator": ator_institucional(subject),
         "edital": edital,
@@ -79,6 +84,11 @@ def argumentos(edital, etapa, inscricao, *, subject="joao", **extra):
         "correlation_id": "teste",
         **extra,
     }
+
+
+def para_concluir(edital, etapa, inscricao, **extra):
+    versao = edital.versoes_consolidadas.latest("materialized_at")
+    return argumentos(edital, etapa, inscricao, versao_reconhecida=versao.id, **extra)
 
 
 def test_o_rascunho_e_gravado_sem_exigir_conclusao(edital_com_regra, etapa, cenario):
@@ -104,7 +114,7 @@ def test_pontuacao_acima_da_maxima_publicada_e_recusada(edital_com_regra, etapa,
     """FR-033: o limite é o que o Edital publicou, e a recusa o nomeia."""
     with pytest.raises(DomainError) as recusa:
         concluir(
-            **argumentos(
+            **para_concluir(
                 edital_com_regra,
                 etapa,
                 cenario["inscricoes"][0],
@@ -124,13 +134,13 @@ def test_abaixo_da_minima_e_aceita_e_exige_parecer(edital_com_regra, etapa, cena
 
     with pytest.raises(DomainError) as sem_parecer:
         concluir(
-            **argumentos(
+            **para_concluir(
                 edital_com_regra, etapa, inscricao, pontuacao="50", parecer="", expected_revision=1
             )
         )
 
     avaliacao, _ = concluir(
-        **argumentos(
+        **para_concluir(
             edital_com_regra,
             etapa,
             inscricao,
@@ -148,7 +158,7 @@ def test_abaixo_da_minima_e_aceita_e_exige_parecer(edital_com_regra, etapa, cena
 def test_concluir_grava_a_versao_e_a_conclusao_preservada(edital_com_regra, etapa, cenario):
     """FR-071 e FR-094: a regra que governou o ato, e o que ele afirmou."""
     avaliacao, _ = concluir(
-        **argumentos(
+        **para_concluir(
             edital_com_regra,
             etapa,
             cenario["inscricoes"][0],
@@ -170,7 +180,7 @@ def test_concluida_e_imutavel_para_o_avaliador(edital_com_regra, etapa, cenario)
     """FR-035, e a guarda vale no comando — não na tela que esconde o formulário."""
     inscricao = cenario["inscricoes"][0]
     concluir(
-        **argumentos(
+        **para_concluir(
             edital_com_regra,
             etapa,
             inscricao,
@@ -222,7 +232,7 @@ def test_dois_avaliadores_concluem_a_mesma_inscricao_sem_interferir(
     inscricao = cenario["inscricoes"][0]
 
     do_joao, _ = concluir(
-        **argumentos(
+        **para_concluir(
             edital_com_regra,
             etapa,
             inscricao,
@@ -232,7 +242,7 @@ def test_dois_avaliadores_concluem_a_mesma_inscricao_sem_interferir(
         )
     )
     da_ana, _ = concluir(
-        **argumentos(
+        **para_concluir(
             edital_com_regra,
             etapa,
             inscricao,
@@ -271,7 +281,7 @@ def test_nada_disso_produz_resultado(edital_com_regra, etapa, cenario):
     """SC-013: concluir não torna a inscrição apta nem inapta — isso é da 013 (FR-037)."""
     inscricao = cenario["inscricoes"][0]
     concluir(
-        **argumentos(
+        **para_concluir(
             edital_com_regra,
             etapa,
             inscricao,
@@ -323,3 +333,82 @@ def test_pela_tela_o_avaliador_salva_e_conclui(
     # Concluída não é formulário desabilitado: é a ausência do formulário (FR-035).
     assert "Concluir avaliação" not in depois_de_concluir
     assert Atribuicao.objects.get(inscricao=inscricao, membro__identity_subject="joao")
+
+
+@pytest.mark.parametrize(
+    "impossivel", ["Infinity", "-Infinity", "NaN", "sNaN", "1E+100", "1000", "80,5", "abc"]
+)
+def test_a_forma_recusa_o_que_nao_e_pontuacao(edital_com_regra, etapa, cenario, impossivel):
+    """O rascunho valida a **forma**, e a forma inclui o que `Decimal` aceita e o banco não.
+
+    `Infinity`, `sNaN` e expoentes extremos atravessam o construtor e explodem depois — no
+    `quantize` ou no `INSERT`. Recusar aqui é o que impede que um valor impossível vire erro
+    interno em vez de recusa legível.
+    """
+    with pytest.raises(DomainError) as recusa:
+        gravar(
+            **argumentos(
+                edital_com_regra,
+                etapa,
+                cenario["inscricoes"][0],
+                pontuacao=impossivel,
+                parecer="",
+                expected_revision=1,
+            )
+        )
+
+    assert recusa.value.status == 422
+    assert recusa.value.code == "pontuacao_invalida"
+
+
+def test_o_rascunho_aceita_acima_da_maxima_e_a_conclusao_nao(edital_com_regra, etapa, cenario):
+    """A separação que a spec declara: forma no rascunho, regra publicada na conclusão.
+
+    Quem está no meio do trabalho pode gravar um valor que ainda não decidiu; cobrar a máxima ali
+    obrigaria a concluir para descobrir se o número passa (FR-031, FR-032, FR-033).
+    """
+    inscricao = cenario["inscricoes"][0]
+
+    avaliacao, _ = gravar(
+        **argumentos(
+            edital_com_regra, etapa, inscricao, pontuacao="150", parecer="", expected_revision=1
+        )
+    )
+
+    with pytest.raises(DomainError) as recusa:
+        concluir(
+            **para_concluir(
+                edital_com_regra,
+                etapa,
+                inscricao,
+                pontuacao="150",
+                parecer="Atende",
+                expected_revision=2,
+            )
+        )
+
+    assert avaliacao.pontuacao == Decimal("150.0000")
+    assert "100.0000" in recusa.value.detail
+
+
+def test_concluir_sem_declarar_a_versao_e_recusado(edital_com_regra, etapa, cenario):
+    """FR-073 não pode ser desligado pelo cliente.
+
+    Se a comparação só acontecesse quando o campo viesse, omiti-lo do envio bastaria para concluir
+    sem reconhecer uma Retificação — que é exatamente o que o requisito existe para impedir.
+    """
+    with pytest.raises(DomainError) as recusa:
+        concluir(
+            **argumentos(
+                edital_com_regra,
+                etapa,
+                cenario["inscricoes"][0],
+                pontuacao="88",
+                parecer="Atende",
+                expected_revision=1,
+                versao_reconhecida=None,
+            )
+        )
+
+    assert recusa.value.code == "versao_nao_reconhecida"
+    assert not Avaliacao.objects.filter(estado=Avaliacao.Estado.CONCLUIDA).exists()

@@ -21,7 +21,6 @@ from django.utils.dateparse import parse_datetime
 
 from processo_seletivo.avaliacoes.domain.autorizacao import pode_avaliar_inscricao
 from processo_seletivo.avaliacoes.domain.previsao import pontuacao_maxima
-from processo_seletivo.comissoes.domain.etapas import etapa_vigente
 from processo_seletivo.inscricoes.application.rascunho import requisitos_da_inscricao
 from processo_seletivo.inscricoes.domain.arquivos import tamanho_legivel
 from processo_seletivo.inscricoes.domain.pessoais import mascarar_cpf
@@ -88,7 +87,16 @@ def inscricao_para_avaliar(*, ator, edital, etapa_id, inscricao_id):
     # que o candidato enviou; a versão **vigente** governa a avaliação, e são coisas diferentes:
     # uma Retificação pode ter mudado a pontuação máxima depois da inscrição (FR-071, FR-096).
     vigente = effective_version(edital_id=edital.id)
-    etapa = etapa_vigente(edital, etapa_id)
+    # A Etapa sai da **mesma** versão que a tela declara ao avaliador, pela razão de FR-096: o
+    # `versao_reconhecida` que o formulário envia precisa corresponder à regra que ele leu.
+    etapa = next(
+        (
+            item
+            for item in vigente.content.get("stages") or []
+            if str(item.get("id")) == str(etapa_id)
+        ),
+        None,
+    )
     avaliacao = getattr(atribuicao, "avaliacao", None)
     return {
         "atribuicao": atribuicao,

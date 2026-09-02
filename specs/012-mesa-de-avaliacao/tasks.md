@@ -187,18 +187,19 @@ distinto.
 **Independent Test**: a vertical inteira da §24 — presidente distribui, avaliador abre a Mesa, abre a
 inscrição, registra e conclui, e quem não recebeu aquela inscrição não a alcança.
 
-- [X] T053 [P] [US4] Criar `backend/processo_seletivo/avaliacoes/domain/pontuacao.py`: validação contra a máxima publicada, a forma decimal e a não-negatividade — **a nota mínima não recusa nada** (FR-033)
+- [X] T053 [P] [US4] Criar `backend/processo_seletivo/avaliacoes/domain/pontuacao.py`: `normalizar()` para a **forma** — finitude, não-negatividade, escala e capacidade da coluna — e `validar()`, que acrescenta a máxima publicada. O rascunho cobra a primeira; a conclusão, as duas. **A nota mínima não recusa nada** (FR-033, FR-103)
 - [X] T054 [US4] Implementar `gravar()` em `backend/processo_seletivo/avaliacoes/application/avaliacao.py`, com `compare_and_swap` sobre `revision` e a autorização composta verificada no servidor
 - [X] T055 [US4] Implementar `concluir()` em `backend/processo_seletivo/avaliacoes/application/avaliacao.py`: lê a Versão Consolidada **dentro da transação**, valida contra ela, grava-a na Avaliação e escreve a `ConclusaoAvaliacao` (FR-071, FR-096)
 - [X] T056 [US4] Implementar em `backend/processo_seletivo/avaliacoes/application/avaliacao.py` o parecer obrigatório quando a Etapa for eliminatória e a nota ficar abaixo do mínimo (FR-034), lendo o caráter da versão lida na mesma transação
-- [X] T057 [US4] Implementar em `backend/processo_seletivo/avaliacoes/application/avaliacao.py` o reconhecimento explícito da mudança de versão entre a última gravação e a conclusão (FR-073)
+- [X] T057 [US4] Implementar em `backend/processo_seletivo/avaliacoes/application/avaliacao.py` o reconhecimento explícito da mudança de versão entre a última gravação e a conclusão, **obrigatório no comando** — ausente, a conclusão é recusada, senão o cliente desligaria o requisito omitindo o campo (FR-073)
 - [X] T058 [US4] Emitir a trilha de **gravar** e de **concluir** em `backend/processo_seletivo/avaliacoes/application/avaliacao.py`, via `auditar()`, **sem pontuação e sem parecer no evento** (FR-038, FR-054)
 - [X] T059 [US4] Criar as views `avaliacao_gravar` e `avaliacao_concluir` em `backend/processo_seletivo/interface/views.py`, autorizadas por `pode_avaliar_inscricao`, e o formulário em `backend/processo_seletivo/interface/forms.py` com `expected_revision`
 - [X] T060 [US4] Acrescentar o formulário e o aviso de conclusão fora do período previsto (FR-095) em `backend/processo_seletivo/interface/templates/interface/mesa_inscricao.html`, com as duas rotas em `backend/processo_seletivo/interface/urls.py`
-- [X] T061 [P] [US4] Testes de integração em `backend/tests/integration/avaliacoes/test_avaliacao.py`: rascunho persistido; pontuação acima da máxima recusada; abaixo da mínima aceita com parecer obrigatório; concluída imutável para o avaliador; duas abas do **mesmo** avaliador gravando com revisão obsoleta; e dois avaliadores **diferentes** concluindo a mesma inscrição ao mesmo tempo sem interferir um no outro (EC-007)
-- [X] T062 [P] [US4] Teste em `backend/tests/integration/avaliacoes/test_versao_da_avaliacao.py`: Retificação consolidada no intervalo produz aviso, e a versão validada é a gravada; e Retificação que **remove a Etapa** com avaliações registradas não as apaga — elas permanecem como registro do que foi afirmado, e a Etapa deixa de conceder acesso (EC-004)
-- [X] T063 [P] [US4] Teste em `backend/tests/integration/avaliacoes/test_trilha_da_avaliacao.py`: gravar e concluir geram evento, e **nenhum evento da 012 contém pontuação ou parecer** (FR-054)
-- [X] T064 [US4] Teste de aceitação da vertical completa em `backend/tests/acceptance/test_mesa_de_avaliacao.py`, com três atores — inclusive a recusa de quem não recebeu a inscrição
+- [X] T061 [P] [US4] Testes de integração em `backend/tests/integration/avaliacoes/test_avaliacao.py`: rascunho persistido; pontuação acima da máxima recusada; abaixo da mínima aceita com parecer obrigatório; concluída imutável para o avaliador; forma impossível recusada com mensagem — infinito, indefinido, expoente fora da coluna; rascunho aceitando acima da máxima e a conclusão recusando (FR-103); conclusão sem versão reconhecida recusada; duas abas do **mesmo** avaliador gravando com revisão obsoleta; e dois avaliadores **diferentes** concluindo a mesma inscrição ao mesmo tempo sem interferir um no outro (EC-007)
+- [X] T062 [P] [US4] Teste realmente simultâneo em `backend/tests/integration/avaliacoes/test_primeira_gravacao_concorrente.py`, com duas threads e `transaction=True`: duas primeiras gravações na mesma Atribuição produzem uma gravação e uma recusa por revisão obsoleta — nunca `IntegrityError` por colisão do `OneToOne` (FR-081)
+- [X] T063 [P] [US4] Teste em `backend/tests/integration/avaliacoes/test_versao_da_avaliacao.py`: Retificação consolidada no intervalo produz aviso, e a versão validada é a gravada; e Retificação que **remove a Etapa** com avaliações registradas não as apaga — elas permanecem como registro do que foi afirmado, e a Etapa deixa de conceder acesso (EC-004)
+- [X] T064 [P] [US4] Teste em `backend/tests/integration/avaliacoes/test_trilha_da_avaliacao.py`: gravar e concluir geram evento, e **nenhum evento da 012 contém pontuação ou parecer** (FR-054)
+- [X] T065 [US4] Teste de aceitação da vertical completa em `backend/tests/acceptance/test_mesa_de_avaliacao.py`, com três atores — inclusive a recusa de quem não recebeu a inscrição
 
 **Checkpoint**: **MVP**. A vertical que a §24 declarou como primeira entrega significativa está de
 pé, e nada nela produz resultado.
@@ -214,19 +215,19 @@ escolher quais avaliações contam.
 impedimento inativa a Atribuição no mesmo ato e preserva a conclusão como inelegível; reabrir
 preserva o que havia sido concluído.
 
-- [ ] T065 [US5] Implementar `registrar_impedimento()` em `backend/processo_seletivo/avaliacoes/application/impedimento.py`, sobre `comando_de_comissao`: cria a linha e inativa as Atribuições ativas do par
-- [ ] T066 [US5] Implementar em `backend/processo_seletivo/avaliacoes/application/impedimento.py` a contagem prévia que a confirmação declara — quantas Atribuições serão inativadas — antes de o ato ser confirmado (FR-041)
-- [ ] T067 [US5] Implementar a recusa de FR-092 em `remover_atribuicao()`, em `backend/processo_seletivo/avaliacoes/application/distribuicao.py`: retirar Atribuição sob Avaliação concluída pela via comum é recusado, nomeando os atos que teriam esse efeito e o que cada um exige
-- [ ] T068 [US5] Implementar `reabrir()` em `backend/processo_seletivo/avaliacoes/application/avaliacao.py`, sobre `comando_de_comissao`, partindo apenas de `CONCLUIDA`, com motivo obrigatório e `expected_revision`
-- [ ] T069 [US5] Emitir a trilha de **impedir** e de **reabrir** em `backend/processo_seletivo/avaliacoes/application/impedimento.py` e `avaliacao.py`, via `auditar()`, gravando também o `AtoAdministrativo` com motivo — um por Atribuição inativada. **Impedimento sem Atribuição ativa também é auditado**, e ali o agregado é o próprio `Impedimento`, porque não há Atribuição a que ancorar (FR-052, FR-093, T-016)
-- [ ] T070 [P] [US5] Implementar em `backend/processo_seletivo/avaliacoes/application/selectors.py` os três seletores do conjunto: `avaliacoes_elegiveis()`, que é o contrato herdado pela 013; as **inelegíveis**, com o ato, o autor e o motivo ao lado; e as **órfãs** (FR-093, EC-003, contrato §6)
-- [ ] T071 [US5] Criar as views de impedimento e reabertura em `backend/processo_seletivo/interface/views.py` e os formulários com motivo e `idempotency_key` em `backend/processo_seletivo/interface/forms.py`
-- [ ] T072 [US5] Criar `backend/processo_seletivo/interface/templates/interface/impedimentos.html`, acrescentar os controles de reabertura e as listas de inelegíveis e órfãs a `distribuicao.html`, e as duas rotas em `backend/processo_seletivo/interface/urls.py`
-- [ ] T073 [P] [US5] Testes de integração em `backend/tests/integration/avaliacoes/test_impedimento.py`: bloqueia atribuição nova nomeando o motivo; inativa a ativa; preserva a concluída e a torna inelegível; libera a vaga para uma substituta
-- [ ] T074 [P] [US5] Teste em `backend/tests/integration/avaliacoes/test_conjunto_elegivel.py`: **a sequência que FR-092 existe para impedir** — dois concluem, a presidência tenta remover uma Atribuição para trocar a nota, e é recusada. Mais: `avaliacoes_elegiveis()` devolve exatamente as concluídas sob Atribuição ativa, e nada além
-- [ ] T075 [P] [US5] Teste em `backend/tests/integration/avaliacoes/test_reabertura.py`: reabrir preserva a conclusão anterior de forma consultável; concluir numa aba aberta desde antes é recusado; reabrir o que não está concluído é transição inválida
-- [ ] T076 [P] [US5] Teste em `backend/tests/integration/avaliacoes/test_identidade_estavel.py`: remover e readicionar a pessoa **não** libera segunda conclusão nem apaga o impedimento (FR-074, FR-099)
-- [ ] T077 [P] [US5] Teste em `backend/tests/integration/avaliacoes/test_idempotencia_dos_atos.py`: remover, impedir e reabrir repetem sem criar registro nem evento; chave repetida com conteúdo diferente é conflito; os três recusam quem perdeu a presidência durante a transação (FR-084, FR-086)
+- [ ] T066 [US5] Implementar `registrar_impedimento()` em `backend/processo_seletivo/avaliacoes/application/impedimento.py`, sobre `comando_de_comissao`: cria a linha e inativa as Atribuições ativas do par
+- [ ] T067 [US5] Implementar em `backend/processo_seletivo/avaliacoes/application/impedimento.py` a contagem prévia que a confirmação declara — quantas Atribuições serão inativadas — antes de o ato ser confirmado (FR-041)
+- [ ] T068 [US5] Implementar a recusa de FR-092 em `remover_atribuicao()`, em `backend/processo_seletivo/avaliacoes/application/distribuicao.py`: retirar Atribuição sob Avaliação concluída pela via comum é recusado, nomeando os atos que teriam esse efeito e o que cada um exige
+- [ ] T069 [US5] Implementar `reabrir()` em `backend/processo_seletivo/avaliacoes/application/avaliacao.py`, sobre `comando_de_comissao`, partindo apenas de `CONCLUIDA`, com motivo obrigatório e `expected_revision`
+- [ ] T070 [US5] Emitir a trilha de **impedir** e de **reabrir** em `backend/processo_seletivo/avaliacoes/application/impedimento.py` e `avaliacao.py`, via `auditar()`, gravando também o `AtoAdministrativo` com motivo — um por Atribuição inativada. **Impedimento sem Atribuição ativa também é auditado**, e ali o agregado é o próprio `Impedimento`, porque não há Atribuição a que ancorar (FR-052, FR-093, T-016)
+- [ ] T071 [P] [US5] Implementar em `backend/processo_seletivo/avaliacoes/application/selectors.py` os três seletores do conjunto: `avaliacoes_elegiveis()`, que é o contrato herdado pela 013; as **inelegíveis**, com o ato, o autor e o motivo ao lado; e as **órfãs** (FR-093, EC-003, contrato §6)
+- [ ] T072 [US5] Criar as views de impedimento e reabertura em `backend/processo_seletivo/interface/views.py` e os formulários com motivo e `idempotency_key` em `backend/processo_seletivo/interface/forms.py`
+- [ ] T073 [US5] Criar `backend/processo_seletivo/interface/templates/interface/impedimentos.html`, acrescentar os controles de reabertura e as listas de inelegíveis e órfãs a `distribuicao.html`, e as duas rotas em `backend/processo_seletivo/interface/urls.py`
+- [ ] T074 [P] [US5] Testes de integração em `backend/tests/integration/avaliacoes/test_impedimento.py`: bloqueia atribuição nova nomeando o motivo; inativa a ativa; preserva a concluída e a torna inelegível; libera a vaga para uma substituta
+- [ ] T075 [P] [US5] Teste em `backend/tests/integration/avaliacoes/test_conjunto_elegivel.py`: **a sequência que FR-092 existe para impedir** — dois concluem, a presidência tenta remover uma Atribuição para trocar a nota, e é recusada. Mais: `avaliacoes_elegiveis()` devolve exatamente as concluídas sob Atribuição ativa, e nada além
+- [ ] T076 [P] [US5] Teste em `backend/tests/integration/avaliacoes/test_reabertura.py`: reabrir preserva a conclusão anterior de forma consultável; concluir numa aba aberta desde antes é recusado; reabrir o que não está concluído é transição inválida
+- [ ] T077 [P] [US5] Teste em `backend/tests/integration/avaliacoes/test_identidade_estavel.py`: remover e readicionar a pessoa **não** libera segunda conclusão nem apaga o impedimento (FR-074, FR-099)
+- [ ] T078 [P] [US5] Teste em `backend/tests/integration/avaliacoes/test_idempotencia_dos_atos.py`: remover, impedir e reabrir repetem sem criar registro nem evento; chave repetida com conteúdo diferente é conflito; os três recusam quem perdeu a presidência durante a transação (FR-084, FR-086)
 
 **Checkpoint**: o conjunto que a 013 vai consumir é inequívoco, e sair dele exige ato com nome.
 
@@ -234,18 +235,18 @@ preserva o que havia sido concluído.
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T078 [P] Testes de escala em `backend/tests/performance/test_escala_da_mesa.py`, contando consultas: Mesa com 500 atribuições em três consultas; organização do trabalho de 1000 inscrições por agregação; retirar pessoa de Etapa com 500 atribuições em uma escrita
-- [ ] T079 [P] Teste em `backend/tests/authorization/test_listagem_em_lote.py`: nenhuma listagem da 012 chama `pode_atuar_na_etapa`, e as duas formas de autorização nunca divergem
-- [ ] T080 [P] Teste em `backend/tests/integration/avaliacoes/test_trilha_completa.py`: os **sete** atos de FR-052 — atribuir, remover atribuição, abrir documento, gravar, concluir, reabrir, impedir — produzem evento com ator, inscrição, Etapa, operação e instante (FR-053)
-- [ ] T081 [P] Acessibilidade e responsividade das cinco telas em `backend/processo_seletivo/interface/templates/interface/` — 375 px sem tabela horizontal, foco visível, rótulos associados
-- [ ] T082 Acrescentar o parâmetro opcional `actor_subject` a `consultar()` em `backend/processo_seletivo/auditoria/selectors.py` — assinatura, não esquema, como `record_event` ganhou dois na 011 — e criar `trilha_da_avaliacao()` no mesmo arquivo, com a **consulta composta** de T-016: por inscrição, os agregados relacionados (`Inscricao`, `Atribuicao`, `Avaliacao`, `Impedimento` daquela inscrição); por avaliador, os relacionados daquela identidade estável **mais** os eventos de `Inscricao` restritos a `actor_subject` igual a ela, porque abrir documento é o único ato cujo agregado não distingue avaliadores; combinado, a interseção
-- [ ] T083 Acrescentar a tela da trilha da 012 em `backend/processo_seletivo/interface/views.py`, `urls.py` e `backend/processo_seletivo/interface/templates/interface/auditoria.html`, com os três filtros de FR-050 — inscrição, avaliador e operação — e as sete operações novas na lista
-- [ ] T084 [P] Teste em `backend/tests/interface/test_trilha_da_012.py`: cada um dos **sete** atos aparece sob o filtro por inscrição e sob o filtro por avaliador, isolados e combinados; um ato praticado pela presidência sobre a atribuição de alguém aparece no filtro **daquele avaliador**, e não no de quem o praticou; **dois avaliadores abrindo a mesma inscrição** aparecem cada um sob o seu filtro, e nenhum sob o do outro; e **impedimento registrado sem Atribuição ativa** — o caso preventivo — aparece nos dois filtros, porque o agregado é o próprio `Impedimento`
-- [ ] T085 [P] Teste de não-regressão em `backend/tests/integration/comissoes/test_011_intocada.py`: comissão, alocação e guard da 011 seguem idênticos
-- [ ] T086 [P] Teste de não-regressão do pipeline de Retificação em `backend/tests/integration/publicacoes/test_retificacao_intocada.py`, exigido por FR-100: para Edital **inteiramente na versão vigente**, a precondição, a detecção de conflito, a consolidação, a verificação de efeito prático e a materialização produzem o mesmo resultado que produziam antes desta feature. É a guarda sobre a superfície que a 012 passou a tocar em quatro módulos
-- [ ] T087 Executar `specs/012-mesa-de-avaliacao/quickstart.md` inteiro, as seis entregas, e registrar o que divergiu
-- [ ] T088 Registrar os dois gates de implantação do quickstart em `specs/012-mesa-de-avaliacao/quickstart.md` — identidade institucional (FR-058) e retenção/descarte do acervo (FR-057) —, com o estado de cada um. **FR-057 não tem tarefa de implementação de propósito**: a resposta é institucional, e o que a 012 entrega é a pergunta registrada
-- [ ] T089 Escrever `specs/012-mesa-de-avaliacao/traceability.md`, fechando os 100 FR e os 31 SC contra tarefa e teste — os 37 demonstrados pelo quickstart e os demais cobertos por suíte
+- [ ] T079 [P] Testes de escala em `backend/tests/performance/test_escala_da_mesa.py`, contando consultas: Mesa com 500 atribuições em três consultas; organização do trabalho de 1000 inscrições por agregação; retirar pessoa de Etapa com 500 atribuições em uma escrita
+- [ ] T080 [P] Teste em `backend/tests/authorization/test_listagem_em_lote.py`: nenhuma listagem da 012 chama `pode_atuar_na_etapa`, e as duas formas de autorização nunca divergem
+- [ ] T081 [P] Teste em `backend/tests/integration/avaliacoes/test_trilha_completa.py`: os **sete** atos de FR-052 — atribuir, remover atribuição, abrir documento, gravar, concluir, reabrir, impedir — produzem evento com ator, inscrição, Etapa, operação e instante (FR-053)
+- [ ] T082 [P] Acessibilidade e responsividade das cinco telas em `backend/processo_seletivo/interface/templates/interface/` — 375 px sem tabela horizontal, foco visível, rótulos associados
+- [ ] T083 Acrescentar o parâmetro opcional `actor_subject` a `consultar()` em `backend/processo_seletivo/auditoria/selectors.py` — assinatura, não esquema, como `record_event` ganhou dois na 011 — e criar `trilha_da_avaliacao()` no mesmo arquivo, com a **consulta composta** de T-016: por inscrição, os agregados relacionados (`Inscricao`, `Atribuicao`, `Avaliacao`, `Impedimento` daquela inscrição); por avaliador, os relacionados daquela identidade estável **mais** os eventos de `Inscricao` restritos a `actor_subject` igual a ela, porque abrir documento é o único ato cujo agregado não distingue avaliadores; combinado, a interseção
+- [ ] T084 Acrescentar a tela da trilha da 012 em `backend/processo_seletivo/interface/views.py`, `urls.py` e `backend/processo_seletivo/interface/templates/interface/auditoria.html`, com os três filtros de FR-050 — inscrição, avaliador e operação — e as sete operações novas na lista
+- [ ] T085 [P] Teste em `backend/tests/interface/test_trilha_da_012.py`: cada um dos **sete** atos aparece sob o filtro por inscrição e sob o filtro por avaliador, isolados e combinados; um ato praticado pela presidência sobre a atribuição de alguém aparece no filtro **daquele avaliador**, e não no de quem o praticou; **dois avaliadores abrindo a mesma inscrição** aparecem cada um sob o seu filtro, e nenhum sob o do outro; e **impedimento registrado sem Atribuição ativa** — o caso preventivo — aparece nos dois filtros, porque o agregado é o próprio `Impedimento`
+- [ ] T086 [P] Teste de não-regressão em `backend/tests/integration/comissoes/test_011_intocada.py`: comissão, alocação e guard da 011 seguem idênticos
+- [ ] T087 [P] Teste de não-regressão do pipeline de Retificação em `backend/tests/integration/publicacoes/test_retificacao_intocada.py`, exigido por FR-100: para Edital **inteiramente na versão vigente**, a precondição, a detecção de conflito, a consolidação, a verificação de efeito prático e a materialização produzem o mesmo resultado que produziam antes desta feature. É a guarda sobre a superfície que a 012 passou a tocar em quatro módulos
+- [ ] T088 Executar `specs/012-mesa-de-avaliacao/quickstart.md` inteiro, as seis entregas, e registrar o que divergiu
+- [ ] T089 Registrar os dois gates de implantação do quickstart em `specs/012-mesa-de-avaliacao/quickstart.md` — identidade institucional (FR-058) e retenção/descarte do acervo (FR-057) —, com o estado de cada um. **FR-057 não tem tarefa de implementação de propósito**: a resposta é institucional, e o que a 012 entrega é a pergunta registrada
+- [ ] T090 Escrever `specs/012-mesa-de-avaliacao/traceability.md`, fechando os 100 FR e os 31 SC contra tarefa e teste — os 37 demonstrados pelo quickstart e os demais cobertos por suíte
 
 ---
 
@@ -282,7 +283,7 @@ preserva o que havia sido concluído.
 ### MVP — as fases 1 a 6
 
 A vertical que a §24 da spec declara: presidente distribui → avaliador abre a Mesa → abre a
-inscrição → registra e conclui → quem não recebeu não alcança. Pare em T064, rode o quickstart das
+inscrição → registra e conclui → quem não recebeu não alcança. Pare em T065, rode o quickstart das
 entregas 1 a 5 e valide.
 
 ### Entrega incremental
@@ -290,7 +291,7 @@ entregas 1 a 5 e valide.
 1. Fases 1–2 → o Edital declara e publica as duas propriedades, o que já estava publicado continua
    retificável, e as quatro tabelas existem com suas garantias. **É a única fase que toca conteúdo
    normativo, e a que mais pode quebrar o que já existe** — os oito cenários e as três contraprovas
-   de T026, mais a regressão de T087, são a condição para seguir.
+   de T026, mais a regressão de T088, são a condição para seguir.
 2. Fase 3 → distribuição com autoria, auditada.
 3. Fases 4–5 → a Mesa e o documento.
 4. Fase 6 → **MVP**.

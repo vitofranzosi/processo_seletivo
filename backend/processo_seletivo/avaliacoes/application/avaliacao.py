@@ -18,7 +18,6 @@ from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.avaliacoes.domain import pontuacao as regras
 from processo_seletivo.avaliacoes.domain.autorizacao import pode_avaliar_inscricao
 from processo_seletivo.avaliacoes.models import Avaliacao, ConclusaoAvaliacao
-from processo_seletivo.comissoes.domain.etapas import etapa_vigente
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
@@ -50,25 +49,39 @@ def _avaliacao_de(atribuicao, ator):
     Nasce rascunho, e a tripla que a identifica é copiada **uma vez** — é ela que sustenta a
     unicidade de conclusão por pessoa, inscrição e Etapa (FR-074).
     """
-    avaliacao = getattr(atribuicao, "avaliacao", None)
-    if avaliacao is not None:
-        return avaliacao
-    return Avaliacao.objects.create(
+    # `get_or_create` porque a primeira gravação **corre**: duas abas abertas na mesma inscrição
+    # disputam o `OneToOne`, e "consultar e depois criar" faria uma delas receber `IntegrityError`
+    # — erro interno onde deveria haver a recusa por revisão obsoleta. O Django trata a colisão
+    # relendo, e as duas seguem para a comparação de revisão, que é quem decide.
+    avaliacao, _ = Avaliacao.objects.get_or_create(
         atribuicao=atribuicao,
-        identity_subject=ator.subject,
-        etapa_id=atribuicao.etapa_id,
-        inscricao_id=atribuicao.inscricao_id,
+        defaults={
+            "identity_subject": ator.subject,
+            "etapa_id": atribuicao.etapa_id,
+            "inscricao_id": atribuicao.inscricao_id,
+        },
     )
+    return avaliacao
 
 
 def _versao_e_etapa(edital, etapa_id, agora):
-    """A Versão Consolidada vigente **neste instante**, e a Etapa dentro dela.
+    """A Versão Consolidada vigente **neste instante**, e a Etapa **dentro dela**.
 
-    Lidas juntas e uma vez só: é a mesma versão que valida a pontuação e que fica gravada na
-    Avaliação, e é isso que FR-096 exige.
+    Uma leitura só, e a Etapa extraída do conteúdo dessa versão — não de uma segunda consulta.
+    Resolver a Etapa por fora reabriria a janela que FR-096 fecha: uma Retificação consolidada
+    entre as duas leituras faria a pontuação ser validada pela Etapa nova e a versão **antiga**
+    ficar gravada, produzindo uma Avaliação que afirma obedecer a uma regra contra a qual nunca
+    foi verificada.
     """
     versao = effective_version(edital_id=edital.id, at=agora)
-    etapa = etapa_vigente(edital, etapa_id)
+    etapa = next(
+        (
+            item
+            for item in versao.content.get("stages") or []
+            if str(item.get("id")) == str(etapa_id)
+        ),
+        None,
+    )
     if etapa is None:
         raise _nao_encontrado()
     return versao, etapa
@@ -90,10 +103,11 @@ def gravar(
                 409,
             )
         versao, etapa = _versao_e_etapa(edital, etapa_id, agora)
-        # O rascunho valida a **forma**, e não a regra inteira: quem está no meio do trabalho
-        # pode salvar um valor que ainda não decidiu, e recusá-lo aqui obrigaria a concluir para
-        # descobrir. A regra publicada é cobrada na conclusão, que é o ato com efeito.
-        valor = None if pontuacao in (None, "") else regras.validar(pontuacao, etapa)
+        # O rascunho valida a **forma**, e não a regra publicada: quem está no meio do trabalho
+        # pode salvar um valor que ainda não decidiu, e cobrar a máxima aqui obrigaria a concluir
+        # para descobrir se o número passa. A regra normativa é cobrada na conclusão, que é o ato
+        # com efeito (FR-031, FR-032, FR-033).
+        valor = None if pontuacao in (None, "") else regras.normalizar(pontuacao)
         nova = compare_and_swap(
             Avaliacao.objects,
             pk=avaliacao.pk,
@@ -123,7 +137,7 @@ def concluir(
     pontuacao,
     parecer,
     expected_revision,
-    versao_reconhecida=None,
+    versao_reconhecida,
     correlation_id,
 ):
     """Ato explícito, distinto de salvar (FR-032).
@@ -143,7 +157,17 @@ def concluir(
                 409,
             )
         versao, etapa = _versao_e_etapa(edital, etapa_id, agora)
-        if versao_reconhecida is not None and str(versao_reconhecida) != str(versao.id):
+        # **Obrigatório, e não opcional.** Deixá-lo cair quando ausente permitiria concluir sem
+        # reconhecimento apenas omitindo o campo do envio — desligar FR-073 pelo cliente.
+        if not versao_reconhecida:
+            raise DomainError(
+                "versao_nao_reconhecida",
+                "A conclusão precisa declarar a versão do Edital contra a qual foi escrita. "
+                "Recarregue a página e conclua novamente.",
+                422,
+                campo="versao_reconhecida",
+            )
+        if str(versao_reconhecida) != str(versao.id):
             raise DomainError(
                 "versao_mudou",
                 "O Edital foi retificado enquanto você avaliava. Confira a pontuação máxima e a "
