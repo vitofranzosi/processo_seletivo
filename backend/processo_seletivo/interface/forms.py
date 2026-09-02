@@ -411,11 +411,14 @@ def ler_distribuicao(dados):
     ramo irmão decide sozinho.
     """
     acao = (_texto(dados, "acao") or "distribuir").strip()
+    conhecidas = {"remover", "propor", "confirmar_rodizio"}
     return {
-        "acao": "remover" if acao == "remover" else "distribuir",
+        "acao": acao if acao in conhecidas else "distribuir",
         "membro_ids": dados.getlist("membro_id"),
         "inscricao_ids": dados.getlist("inscricao_id"),
         "atribuicao_ids": dados.getlist("atribuicao_id"),
+        # A assinatura da proposta que a pessoa leu. O comando a confere depois da trava.
+        "assinatura": _texto(dados, "assinatura"),
     }
 
 

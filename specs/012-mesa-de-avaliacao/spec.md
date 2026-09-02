@@ -368,6 +368,14 @@ pessoa depois de removê-la crie linha nova e preserve o histórico — o padrã
 **FR-004** — Remover a Atribuição é inativá-la. Isso revoga o acesso e **não** apaga a Avaliação já
 registrada.
 
+**FR-108** — **Quem perde trabalho é avisado.** A revogação é imediata, e era silenciosa: a
+atribuição sumia da Mesa e a contagem mudava, sem nada dizer o que houve. A trilha registra o ato
+com autor e motivo e responde 404 para quem avalia — corretamente, porque avaliar não é auditar —,
+de modo que a pessoa cujo trabalho foi retirado era a única sem canal para saber disso.
+
+A Mesa mostra o que saiu dela, quando e por qual ato. Não é registro novo: é o registro que já
+existe, mostrado a quem ele afeta.
+
 **FR-063** — A Atribuição espelha a forma da alocação, com `etapa_id` designando a Etapa do
 conteúdo publicado e não a linha de elaboração (D-004, e 011 D-002).
 
@@ -620,6 +628,33 @@ presidência confirma, e o ato registrado é o da confirmação. Nunca um ato do
 **FR-019** — Não implementar carga máxima, balanceamento por perfil, sorteio nem substituição
 automática antes de existir uso real que informe os parâmetros.
 
+**FR-107** — **A proposta de FR-018 passa a existir, e nos termos que ele fixou.** O uso real que
+FR-019 exigia apareceu no percurso de um Processo de 600 inscritos com dupla avaliação: distribuir
+custava 24 telas e cerca de 700 marcações, e o equilíbrio da carga era aritmética de quem
+distribui — o que não é organização do trabalho, é digitação.
+
+O que existe é isto, e nada além:
+
+- a presidência escolhe **entre quem** distribuir e pede a proposta;
+- o sistema devolve o plano **inteiro**, sem gravar nada: quantas atribuições no total, quantas
+  para cada pessoa — antes e depois —, e o que fica de fora e por quê;
+- a presidência confirma, e **o ato registrado é o da confirmação**, com quem confirmou;
+- cada Atribuição continua gerando o seu evento (FR-016), como no lote manual.
+
+**A regra é por menor carga projetada, com desempate estável pelo identificador institucional.**
+Não há sorteio, não há carga máxima e não há perfil: o parâmetro é o que a Etapa já declara e a
+carga que a banca já tem. Sorteio, em particular, tornaria a proposta irreprodutível — e proposta
+que não se reproduz não pode ser conferida sob trava antes de gravar.
+
+**A proposta confirmada é conferida contra a proposta executada**, pela mesma razão de FR-106: entre
+ver e confirmar, uma conclusão nova ou um impedimento mudam **quem** recebe o quê sem mudar quantos
+são. Divergiu, o ato não acontece e a proposta é refeita. E sem proposta confirmada não há ato: um
+envio que não traga a confirmação é recusado, senão a garantia seria desligável por quem monta o
+formulário.
+
+**O caminho manual não é substituído.** Quem quer escolher inscrição por inscrição continua
+escolhendo, na mesma tela, com a mesma forma uniforme de FR-013.
+
 ---
 
 ## 12. US2 — A Mesa
@@ -641,7 +676,11 @@ Página conceitual:
 
 **FR-020** — A Mesa mostra todas e somente as inscrições atribuídas àquela pessoa, naquela Etapa.
 
-**FR-021** — Filtro por pendente e concluída, e contagem visível.
+**FR-021** — Filtro por pendente, **em rascunho** e concluída, e contagem visível.
+
+O rascunho é estado próprio na lista, e não conforto: sem distingui-lo, uma avaliação começada
+aparece igual às que ninguém abriu. Numa Mesa de centenas, retomar o trabalho vira memória, e uma
+avaliação em andamento pode ficar esquecida sem que nada indique.
 
 **FR-022** — A lista é paginada. Quarenta e oito é comum; quinhentas não pode quebrar a tela.
 
@@ -726,6 +765,12 @@ agregado, como a 009 fez com a inscrição enviada — e não apenas na tela que
 
 **FR-036** — Reabrir é ato da presidência, com motivo, registrado. Recurso e erro material existem;
 o que não pode existir é reabertura silenciosa.
+
+A reabertura mora **onde se lê o que foi concluído** — a página das conclusões preservadas —, e não
+na tela de distribuição. Ali ela ocupava uma linha e um formulário por avaliação concluída, sem
+paginar: numa Etapa de 600 inscritos com dupla avaliação são 1.200 formulários acima da área de
+trabalho, na tela que a presidência mais recarrega. E decidir sobre uma conclusão exige ver a
+conclusão: pontuação, parecer, versão que governou e instante.
 
 **FR-094** — Reabrir **não destrói o que havia sido concluído**. Depois de uma reabertura, e de
 quantas vierem, continua sendo possível responder o que aquela pessoa havia efetivamente concluído
@@ -841,7 +886,9 @@ com Atribuição ativa — e a revogação é a conjunção sendo avaliada, não
 **FR-048** — Nenhuma listagem pode verificar autorização por linha.
 
 **FR-049** — As telas de distribuição, de Mesa, de **conclusões preservadas** e de **avaliações
-inelegíveis** devem ser paginadas e filtráveis. A de conclusões é o maior acervo da feature — uma
+inelegíveis** devem ser paginadas e filtráveis, e o filtro da distribuição responde por **cobertura
+e por progresso**: “quais ainda não têm avaliador” e “quais ainda não têm avaliação concluída” são
+perguntas diferentes, e a segunda — a da véspera do resultado — não se respondia. A de conclusões é o maior acervo da feature — uma
 linha por conclusão, e mais uma a cada reabertura —, e é justamente a que se abre para responder a
 recurso. A de inelegíveis é curta no uso corrente, e deixar de paginá-la por isso seria apostar no
 uso: trocar a banca de uma Etapa a torna longa de uma vez.
@@ -852,6 +899,11 @@ documento aberto. Ela precisa nascer filtrável por inscrição, por avaliador e
 Cada linha diz também **a que inscrição o ato se refere**, pelo protocolo, e a quem: a pergunta que
 traz alguém à trilha é quase sempre sobre uma inscrição, e "conclusão de avaliação, por joao" sem
 dizer de qual não responde a ela.
+
+E onde se **digita** uma inscrição — o filtro da trilha, o das conclusões, o formulário do
+impedimento — o **protocolo** vale, porque é o que toda tela mostra e o que o candidato tem em mãos.
+Exigir o identificador interno no único campo que se digita obrigava a procurá-lo em outro lugar, e
+um erro de digitação virava erro de servidor.
 
 E o **impedimento é da pessoa e da inscrição, e não da Etapa**: na trilha de uma Etapa ele entra
 quando a pessoa está ou esteve alocada nela, que é onde ele decide alguma coisa. Sem esse critério

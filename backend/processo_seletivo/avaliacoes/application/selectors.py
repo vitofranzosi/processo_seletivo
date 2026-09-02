@@ -31,6 +31,10 @@ POR_PAGINA = 25
 SEM_NENHUM = "sem_nenhum"
 INCOMPLETA = "incompleta"
 COMPLETA = "completa"
+# E o quarto filtro, que não é sobre cobertura e sim sobre **progresso**: quais inscrições ainda
+# não têm todas as avaliações **concluídas**. É a pergunta da véspera do resultado, e ela não se
+# respondia — cobertura fala de atribuição, e ter avaliador não é ter avaliação.
+AVALIACAO_PENDENTE = "avaliacao_pendente"
 
 
 def carga_por_avaliador(*, edital, etapa_id):
@@ -92,7 +96,16 @@ def inscricoes_da_etapa(*, edital, etapa, pagina=1, cobertura=None, avaliador=No
                 "atribuicoes",
                 filter=Q(atribuicoes__etapa_id=etapa["id"], atribuicoes__ativo=True),
                 distinct=True,
-            )
+            ),
+            concluidas=Count(
+                "atribuicoes",
+                filter=Q(
+                    atribuicoes__etapa_id=etapa["id"],
+                    atribuicoes__ativo=True,
+                    atribuicoes__avaliacao__estado=Avaliacao.Estado.CONCLUIDA,
+                ),
+                distinct=True,
+            ),
         )
         .prefetch_related(
             # Quem já avalia cada inscrição, para que a tela ofereça a remoção sem uma consulta
@@ -119,13 +132,17 @@ def inscricoes_da_etapa(*, edital, etapa, pagina=1, cobertura=None, avaliador=No
         consulta = consulta.filter(atribuidas__gt=0, atribuidas__lt=previstas)
     elif cobertura == COMPLETA:
         consulta = consulta.filter(atribuidas__gte=previstas)
+    elif cobertura == AVALIACAO_PENDENTE:
+        consulta = consulta.filter(concluidas__lt=previstas)
     paginas = Paginator(consulta, POR_PAGINA)
     pagina_atual = paginas.get_page(pagina)
     linhas = [
         {
             "inscricao": inscricao,
             "atribuidas": inscricao.atribuidas,
+            "concluidas": inscricao.concluidas,
             "faltam": max(previstas - inscricao.atribuidas, 0),
+            "faltam_concluir": max(previstas - inscricao.concluidas, 0),
             "cobertura": _cobertura(inscricao.atribuidas, previstas),
             "atribuicoes": inscricao.atribuicoes_da_etapa,
         }
@@ -148,7 +165,16 @@ def resumo_da_etapa(*, edital, etapa):
                 "atribuicoes",
                 filter=Q(atribuicoes__etapa_id=etapa["id"], atribuicoes__ativo=True),
                 distinct=True,
-            )
+            ),
+            concluidas=Count(
+                "atribuicoes",
+                filter=Q(
+                    atribuicoes__etapa_id=etapa["id"],
+                    atribuicoes__ativo=True,
+                    atribuicoes__avaliacao__estado=Avaliacao.Estado.CONCLUIDA,
+                ),
+                distinct=True,
+            ),
         )
         .aggregate(
             total=Count("id"),
@@ -172,10 +198,15 @@ def resumo_da_etapa(*, edital, etapa):
     }
 
 
-# Os dois filtros da Mesa. São derivados do estado da Avaliação, e não colunas: "pendente" é a
+# Os três filtros da Mesa. São derivados do estado da Avaliação, e não colunas: "pendente" é a
 # ausência de conclusão, e persistí-la criaria estado a manter a cada gravação (FR-021).
+#
+# **Rascunho é o terceiro**, e ele não é conforto. Sem distingui-lo, uma avaliação começada aparece
+# igual às que ninguém abriu: numa Mesa de 230 itens, retomar o trabalho vira memória, e uma
+# avaliação em andamento pode ficar esquecida sem que nada indique.
 PENDENTES = "pendentes"
 CONCLUIDAS = "concluidas"
+RASCUNHOS = "rascunhos"
 
 
 def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None):
@@ -205,10 +236,13 @@ def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None):
     contagens = minhas.aggregate(
         total=Count("id"),
         concluidas=Count("id", filter=Q(avaliacao__estado=Avaliacao.Estado.CONCLUIDA)),
+        rascunhos=Count("id", filter=Q(avaliacao__estado=Avaliacao.Estado.RASCUNHO)),
     )
     contagens["pendentes"] = contagens["total"] - contagens["concluidas"]
     if filtro == CONCLUIDAS:
         minhas = minhas.filter(avaliacao__estado=Avaliacao.Estado.CONCLUIDA)
+    elif filtro == RASCUNHOS:
+        minhas = minhas.filter(avaliacao__estado=Avaliacao.Estado.RASCUNHO)
     elif filtro == PENDENTES:
         minhas = minhas.exclude(avaliacao__estado=Avaliacao.Estado.CONCLUIDA)
     paginas = Paginator(minhas.order_by("inscricao__protocolo", "inscricao_id"), POR_PAGINA)
@@ -220,10 +254,128 @@ def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None):
             "avaliacao": getattr(atribuicao, "avaliacao", None),
             "concluida": getattr(atribuicao, "avaliacao", None) is not None
             and atribuicao.avaliacao.estado == Avaliacao.Estado.CONCLUIDA,
+            "rascunho": getattr(atribuicao, "avaliacao", None) is not None
+            and atribuicao.avaliacao.estado == Avaliacao.Estado.RASCUNHO,
         }
         for atribuicao in pagina_atual
     ]
     return linhas, pagina_atual, contagens
+
+
+def carga_nas_etapas(*, ator, atribuicoes):
+    """Quantas pendentes e quantas concluídas em cada Etapa alocada — por agregação (FR-048).
+
+    A tela inicial de quem avalia listava as Etapas e um botão “Abrir”, sem número nenhum: com 230
+    pendentes, saber quanto falta exigia entrar. É a primeira pergunta de quem trabalha.
+    """
+    from django.db.models import Count, Q
+
+    from processo_seletivo.comissoes.models import MembroComissao
+
+    chaves = {(item["edital"].id, str(item["etapa_id"])) for item in atribuicoes}
+    if not chaves:
+        return {}
+    membros = MembroComissao.objects.filter(
+        identity_subject=ator.subject,
+        processo__institution_scope=ator.institution_scope,
+        ativo=True,
+    )
+    contagens = (
+        Atribuicao.objects.filter(
+            membro__in=membros,
+            ativo=True,
+            edital_id__in={edital_id for edital_id, _ in chaves},
+        )
+        .values("edital_id", "etapa_id")
+        .annotate(
+            total=Count("id"),
+            concluidas=Count("id", filter=Q(avaliacao__estado=Avaliacao.Estado.CONCLUIDA)),
+        )
+    )
+    return {
+        (linha["edital_id"], str(linha["etapa_id"])): {
+            "total": linha["total"],
+            "concluidas": linha["concluidas"],
+            "pendentes": linha["total"] - linha["concluidas"],
+        }
+        for linha in contagens
+    }
+
+
+def proxima_pendente(*, ator, edital, etapa_id, depois_de):
+    """A próxima inscrição sem conclusão desta pessoa, na ordem em que a Mesa lista.
+
+    Sem isto, quem tem 230 para avaliar volta pela trilha de navegação a cada uma — e o caminho de
+    trabalho fica mais longo que o trabalho.
+    """
+    from processo_seletivo.comissoes.domain.autorizacao import membro_ativo
+
+    membro = membro_ativo(ator, edital.processo)
+    if membro is None:
+        return None
+    atual = (
+        Atribuicao.objects.filter(
+            membro=membro, edital=edital, etapa_id=etapa_id, inscricao_id=depois_de, ativo=True
+        )
+        .select_related("inscricao")
+        .first()
+    )
+    pendentes = (
+        Atribuicao.objects.filter(membro=membro, edital=edital, etapa_id=etapa_id, ativo=True)
+        .exclude(avaliacao__estado=Avaliacao.Estado.CONCLUIDA)
+        .exclude(inscricao_id=depois_de)
+        .select_related("inscricao")
+        .order_by("inscricao__protocolo", "inscricao_id")
+    )
+    if atual is not None:
+        # A seguinte na ordem da Mesa; se esta era a última, volta-se à primeira pendente, porque
+        # o trabalho é circular e não linear.
+        adiante = pendentes.filter(inscricao__protocolo__gt=atual.inscricao.protocolo or "").first()
+        if adiante is not None:
+            return adiante.inscricao
+    return pendentes.first().inscricao if pendentes.exists() else None
+
+
+def retiradas_do_avaliador(*, ator, edital, etapa_id):
+    """O que saiu da Mesa desta pessoa, e por qual ato — para ela, e não só para a auditoria.
+
+    A revogação é imediata e silenciosa: a Atribuição some da Mesa e a contagem muda, sem nada
+    dizer o que houve. A trilha registra o ato com autor e motivo e responde 404 para quem avalia,
+    corretamente — de modo que a pessoa cujo trabalho foi retirado era a única sem canal para saber
+    disso. Isto é o mesmo registro, mostrado a quem ele afeta.
+
+    O que é lido aqui é o `AtoAdministrativo`, e não a trilha de auditoria: o ato é o que tem
+    motivo obrigatório, e é o motivo que responde à pergunta “por quê”.
+    """
+    from processo_seletivo.comissoes.domain.autorizacao import membro_ativo
+    from processo_seletivo.processos.models import AtoAdministrativo
+
+    membro = membro_ativo(ator, edital.processo)
+    if membro is None:
+        return []
+    inativas = list(
+        Atribuicao.objects.filter(
+            membro=membro, edital=edital, etapa_id=etapa_id, ativo=False
+        ).select_related("inscricao")
+    )
+    if not inativas:
+        return []
+    atos = {}
+    for ato in AtoAdministrativo.objects.filter(
+        aggregate_type="Atribuicao", aggregate_id__in=[a.id for a in inativas]
+    ).order_by("occurred_at"):
+        atos[ato.aggregate_id] = ato
+    return [
+        {
+            "inscricao": atribuicao.inscricao,
+            "quando": atribuicao.inativado_em,
+            "por": atribuicao.inativado_por,
+            "ato": atos.get(atribuicao.id),
+        }
+        for atribuicao in sorted(
+            inativas, key=lambda a: a.inativado_em or a.criado_em, reverse=True
+        )
+    ]
 
 
 def avaliacoes_elegiveis(*, edital, etapa_id, inscricao_id=None):
@@ -353,6 +505,7 @@ def conclusoes_preservadas(*, edital, etapa_id, inscricao_id=None, pagina=1):
         linhas.append(
             {
                 "conclusao": conclusao,
+                "avaliacao": avaliacao,
                 "inscricao": atribuicao.inscricao,
                 "membro": atribuicao.membro,
                 "situacao": (

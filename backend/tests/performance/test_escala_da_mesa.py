@@ -157,11 +157,16 @@ def test_distribuir_mil_inscricoes_nao_exige_mil_interacoes(cenario, gestor):
 def test_a_tela_da_mesa_com_quinhentas_responde(
     client, seletor_ligado, django_assert_max_num_queries, cenario, mesa_cheia
 ):
-    """Pelo canal do ator, que é onde a escala precisa valer."""
+    """Pelo canal do ator, que é onde a escala precisa valer.
+
+    O limite subiu de 20 para 22 quando a Mesa passou a mostrar **o que foi retirado dela**: uma
+    consulta pelas atribuições inativas desta pessoa, e outra pelos atos que as retiraram, só
+    quando há alguma. É custo fixo, e não por linha — que é o que este teste protege.
+    """
     identificar(client, "joao", [])
     url = reverse("interface:minha-etapa", args=[cenario["edital"].id, cenario["etapa"]])
 
-    with django_assert_max_num_queries(20):
+    with django_assert_max_num_queries(22):
         resposta = client.get(url)
 
     assert resposta.status_code == 200
@@ -293,3 +298,73 @@ def test_as_avaliacoes_inelegiveis_sao_paginadas(cenario, mesa_cheia, gestor):
     assert pagina.paginator.count == MUITAS
     assert len(linhas) == POR_PAGINA
     assert len(consultas.captured_queries) <= 4, len(consultas.captured_queries)
+
+
+def test_a_tela_de_distribuicao_nao_cresce_com_o_trabalho_ja_feito(
+    client, seletor_ligado, cenario, mesa_cheia
+):
+    """FR-049. Era a tela mais recarregada da presidência, e a única que crescia com o uso.
+
+    A seção de avaliações concluídas trazia uma linha e um formulário de reabertura por conclusão,
+    sem paginar. Com 500 conclusões medimos 679 KB e 605 formulários numa página só — acima da área
+    de trabalho, que é a lista de inscrições a distribuir.
+    """
+    from tests.interface.conftest import identificar
+
+    atribuicoes = list(Atribuicao.objects.filter(edital=cenario["edital"]).select_related("membro"))
+    _concluir_em_massa(cenario, atribuicoes)
+    identificar(client, "carlos", ["gestor"])
+
+    corpo = client.get(
+        reverse("interface:distribuicao", args=[cenario["edital"].id, cenario["etapa"]])
+    ).content.decode()
+
+    assert corpo.count("<form") <= 6, corpo.count("<form")
+    assert len(corpo) < 120_000, len(corpo)
+    # E o caminho para reabrir continua existindo, na página que pagina.
+    assert "conclusoes" in corpo
+
+
+def test_o_rodizio_distribui_a_etapa_inteira_em_um_ato(cenario, gestor):
+    """FR-107. O caminho manual custava 24 telas e cerca de 700 marcações para 600 inscrições.
+
+    Aqui a mesma Etapa é proposta e confirmada em dois passos, e cada Atribuição continua tendo o
+    seu evento — o que muda é como a presidência chega à decisão, não o que fica registrado dela.
+    """
+    from processo_seletivo.auditoria.models import RegistroAuditoria
+    from processo_seletivo.avaliacoes.application.distribuicao import (
+        ATRIBUIR,
+        confirmar_rodizio,
+        propor_rodizio,
+    )
+
+    inscricoes = inscrever(cenario["edital"], MUITAS, primeiro=6000)
+    membros = [cenario["membros"][nome].id for nome in ("joao", "ana")]
+
+    proposta = propor_rodizio(
+        actor=gestor,
+        processo=cenario["processo"],
+        edital_id=cenario["edital"].id,
+        etapa_id=cenario["etapa"],
+        membro_ids=membros,
+    )
+    # A Etapa declara duas avaliações por inscrição: mil atribuições para quinhentos inscritos.
+    assert proposta["total"] == 2 * len(inscricoes)
+    assert not Atribuicao.objects.filter(edital=cenario["edital"]).exists()
+
+    resultado = confirmar_rodizio(
+        actor=gestor,
+        processo_id=cenario["processo"].id,
+        edital_id=cenario["edital"].id,
+        etapa_id=cenario["etapa"],
+        membro_ids=membros,
+        assinatura=proposta["assinatura"],
+        idempotency_key="escala-rodizio",
+        correlation_id="teste",
+    )
+
+    assert resultado["feitas"] == 2 * MUITAS
+    assert RegistroAuditoria.objects.filter(operation=ATRIBUIR).count() == 2 * MUITAS
+    # E a carga sai equilibrada, que é o que a aritmética manual não garantia.
+    por_pessoa = sorted(linha["recebe"] for linha in proposta["por_pessoa"])
+    assert por_pessoa[-1] - por_pessoa[0] <= 1

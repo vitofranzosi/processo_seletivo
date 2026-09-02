@@ -150,7 +150,9 @@ def test_a_alocacao_abre_com_o_resumo(presidente, processo_a, comissao_de_a):
 
     assert "Etapas com equipe" in corpo or "Etapa com equipe" in corpo
     assert "sem ninguém" in corpo
-    assert "sem atribuição" in corpo
+    # “sem Etapa”, e não “sem atribuição”: nesta tela põem-se pessoas em Etapas, e “atribuição”
+    # é o nome do vínculo entre inscrição e avaliador na tela vizinha (012).
+    assert "sem Etapa" in corpo
 
 
 def test_a_comissao_pode_ser_filtrada_por_nome(presidente, processo_a, comissao_de_a):

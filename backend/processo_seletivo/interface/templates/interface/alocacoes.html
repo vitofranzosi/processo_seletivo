@@ -1,17 +1,22 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
-{% block titulo %}Distribuição — {{ processo.institutional_code }}{% endblock %}
+{% block titulo %}Alocação por Etapa — {{ processo.institutional_code }}{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
   <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
   <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
-  <span aria-current="page">Distribuição</span>
+  <span aria-current="page">Alocação por Etapa</span>
 </nav>
 
-<h1>Distribuição</h1>
+{% comment %}
+“Alocação”, e não “Distribuição”. Esta tela põe **pessoas em Etapas** (011); a da 012 põe
+**inscrições em avaliadores**, e as duas se chamavam Distribuição em telas vizinhas — com
+“atribuição” significando coisas diferentes em cada uma. Uma palavra por conceito.
+{% endcomment %}
+<h1>Alocação por Etapa</h1>
 <p class="sub">{{ processo.title }} — <span class="codigo">{{ processo.institutional_code }}</span></p>
 
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
-{% if request.GET.feito == "distribuir" %}<p class="sucesso" role="status">Distribuição salva.</p>{% endif %}
+{% if request.GET.feito == "distribuir" %}<p class="sucesso" role="status">Alocação salva.</p>{% endif %}
 {% if request.GET.feito == "remover" %}<p class="sucesso" role="status">Alocação removida.</p>{% endif %}
 
 <p class="acoes-do-painel">
@@ -27,7 +32,7 @@
 <ul class="resumo" aria-label="Situação da distribuição">
   <li><strong>{{ resumo.com_equipe }}</strong>Etapa{{ resumo.com_equipe|pluralize:"s" }} com equipe</li>
   <li><strong>{{ resumo.sem_equipe }}</strong>sem ninguém</li>
-  <li><strong>{{ resumo.sem_atribuicao }}</strong>de {{ resumo.membros }} sem atribuição</li>
+  <li><strong>{{ resumo.sem_atribuicao }}</strong>de {{ resumo.membros }} sem Etapa</li>
   {% if resumo.editais_sem_publicacao %}
   <li><strong>{{ resumo.editais_sem_publicacao }}</strong>Edital{{ resumo.editais_sem_publicacao|pluralize:",is" }} não publicado{{ resumo.editais_sem_publicacao|pluralize:"s" }}</li>
   {% endif %}

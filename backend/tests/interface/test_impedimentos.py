@@ -121,7 +121,10 @@ def test_a_tela_mostra_o_ato_e_o_motivo_ao_lado_da_inelegivel(
     corpo = presidente.get(tela).content.decode()
 
     assert "Conflito de interesse superveniente." in corpo
-    assert "AVALIACAO_TORNAR_INELEGIVEL" in corpo
+    # O ato por extenso, e não a constante: a trilha já o traduz, e esta tabela mostrava o código
+    # cru para a mesma pessoa.
+    assert "AVALIACAO_TORNAR_INELEGIVEL" not in corpo
+    assert "Avaliação tornada inelegível" in corpo
     assert "carlos" in corpo
     assert "95.0000" in corpo
 
@@ -152,3 +155,18 @@ def test_confirmar_sem_declarar_o_alcance_refaz_a_confirmacao(presidente, tela, 
     assert "Confirme antes de registrar" in resposta.content.decode()
     assert not Impedimento.objects.exists()
     assert Atribuicao.objects.filter(inscricao=com_conclusao, ativo=True).exists()
+
+
+def test_a_confirmacao_nomeia_quem_e_qual_inscricao(presidente, tela, com_conclusao):
+    """Declarar o alcance sem dizer sobre quem ele recai deixa a pessoa confirmando um número."""
+    corpo = presidente.post(
+        tela,
+        {
+            "identity_subject": "joao",
+            "inscricao_id": com_conclusao.protocolo,
+            "motivo": "Parentesco declarado.",
+        },
+    ).content.decode()
+
+    assert "Impedir <strong>joao</strong>" in corpo
+    assert f"inscrição {com_conclusao.protocolo}" in corpo

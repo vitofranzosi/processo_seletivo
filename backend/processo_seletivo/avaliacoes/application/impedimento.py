@@ -17,8 +17,7 @@ from uuid import UUID
 
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao, Impedimento
-from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
-from processo_seletivo.comissoes.application.comissao import identificador
+from processo_seletivo.comissoes.application import comando_de_comissao
 from processo_seletivo.comissoes.models import MembroComissao
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.shared.api.problems import DomainError
@@ -29,17 +28,28 @@ IMPEDIR = "AVALIACAO_IMPEDIR"
 TORNAR_INELEGIVEL = "AVALIACAO_TORNAR_INELEGIVEL"
 
 
-def identificador_de_inscricao(valor):
-    """O identificador, ou a recusa de formulário. Nunca `ValidationError` de dentro do ORM."""
+def resolver_inscricao(processo, valor):
+    """A inscrição, pelo **protocolo** ou pelo identificador — e a recusa é de formulário.
+
+    Toda tela do sistema identifica a inscrição pelo protocolo: é o número que o candidato tem em
+    mãos ao ligar, e é o que a trilha e a distribuição mostram. Aceitar só o UUID obrigava a
+    presidência a achá-lo em outro lugar e colar — e um erro de digitação chegava ao ORM como
+    `ValidationError`, virando 500 onde a pessoa deveria ler que aquilo não identifica nada.
+    """
+    texto = str(valor or "").strip()
+    consulta = Inscricao.objects.filter(edital__processo=processo)
     try:
-        return UUID(str(valor).strip())
-    except (TypeError, ValueError) as exc:
+        inscricao = consulta.filter(pk=UUID(texto)).first()
+    except (TypeError, ValueError):
+        inscricao = consulta.filter(protocolo=texto).first()
+    if inscricao is None:
         raise DomainError(
-            "inscricao_invalida",
-            "O identificador da inscrição não tem forma de identificador.",
+            "inscricao_nao_encontrada",
+            "Não há inscrição com este protocolo ou identificador neste Processo.",
             422,
             campo="inscricao_id",
-        ) from exc
+        )
+    return inscricao
 
 
 def exigir_dados(*, identity_subject, inscricao_id, motivo):
@@ -57,10 +67,6 @@ def exigir_dados(*, identity_subject, inscricao_id, motivo):
         raise DomainError(
             "inscricao_obrigatoria", "Informe a inscrição.", 422, campo="inscricao_id"
         )
-    # A forma é conferida **aqui**, e por isso vale nos dois passos: sem isto o texto malformado
-    # chega a `filter(inscricao_id=...)` e vira `ValidationError` — 500 onde a pessoa deveria ler
-    # que o que ela digitou não identifica inscrição nenhuma.
-    identificador_de_inscricao(inscricao_id)
     if not (motivo or "").strip():
         # O motivo é o que faz do impedimento um ato, e não uma preferência (FR-039).
         raise DomainError(
@@ -97,11 +103,12 @@ def alcance_do_impedimento(*, processo, identity_subject, inscricao_id):
     alcance e executar outro é a mesma falha que FR-041 existe para impedir, apenas mais difícil
     de ver.
     """
+    inscricao = resolver_inscricao(processo, inscricao_id)
     ativas = list(
         Atribuicao.objects.filter(
             membro__processo=processo,
             membro__identity_subject=identity_subject,
-            inscricao_id=identificador_de_inscricao(inscricao_id),
+            inscricao=inscricao,
             ativo=True,
         ).values_list("id", flat=True)
     )
@@ -114,6 +121,10 @@ def alcance_do_impedimento(*, processo, identity_subject, inscricao_id):
         "atribuicoes": len(ativas),
         "concluidas": len(concluidas),
         "assinatura": _assinatura(ativas, concluidas),
+        # A confirmação nomeia **quem** e **qual inscrição**: declarar o alcance sem dizer sobre
+        # quem ele recai deixa a presidência confirmando um UUID que ela acabou de digitar.
+        "pessoa": identity_subject,
+        "inscricao": inscricao.protocolo or str(inscricao.id),
     }
 
 
@@ -157,11 +168,7 @@ def registrar_impedimento(
         payload={"pessoa": subject, "inscricao": str(inscricao_id), "motivo": texto},
         idempotency_key=idempotency_key,
     ) as ctx:
-        inscricao = Inscricao.objects.filter(
-            pk=identificador(inscricao_id), edital__processo=ctx.processo
-        ).first()
-        if inscricao is None:
-            raise nao_encontrado()
+        inscricao = resolver_inscricao(ctx.processo, inscricao_id)
         if ctx.repetido:
             # **O desfecho original, e não um vazio.** A tela precisa dizer quantas atribuições o
             # ato inativou, e essa contagem não é reconstruível depois (FR-084, FR-097).

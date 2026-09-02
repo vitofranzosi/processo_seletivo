@@ -152,7 +152,7 @@ def test_distribuicao_salva_produz_aviso_perceptivel(
         follow=True,
     )
 
-    assert "Distribuição salva" in resposta.content.decode()
+    assert "Alocação salva" in resposta.content.decode()
 
 
 def test_formulario_sem_o_campo_funcao_nao_rebaixa_ninguem(

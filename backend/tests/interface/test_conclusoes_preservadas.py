@@ -112,15 +112,23 @@ def test_a_porta_e_a_presidencia_ou_a_auditoria(client, seletor_ligado, cenario,
     assert client.get(pagina(cenario)).status_code == 404
 
 
-def test_identificador_malformado_no_filtro_e_recusa_de_formulario(
+def test_o_filtro_aceita_o_protocolo_da_tabela(client, seletor_ligado, cenario, concluida):
+    """O protocolo é o que a tabela mostra — e era o que o filtro recusava."""
+    identificar(client, "maria", [])
+    corpo = client.get(pagina(cenario, inscricao=concluida["inscricao"].protocolo)).content.decode()
+
+    assert "87.5000" in corpo
+
+
+def test_protocolo_desconhecido_no_filtro_e_recusa_de_formulario(
     client, seletor_ligado, cenario, concluida
 ):
-    """Errar o identificador digitado não pode ser erro de servidor."""
+    """Errar o que se digita não pode ser erro de servidor."""
     identificar(client, "maria", [])
-    resposta = client.get(pagina(cenario, inscricao="não-é-uuid"))
+    resposta = client.get(pagina(cenario, inscricao="não-existe"))
 
     assert resposta.status_code == 200
-    assert "não tem forma de identificador" in resposta.content.decode()
+    assert "Não há inscrição com este protocolo" in resposta.content.decode()
 
 
 def test_a_tela_nao_e_armazenavel_pelo_navegador(client, seletor_ligado, cenario, concluida):
@@ -138,3 +146,69 @@ def test_a_situacao_e_dita_por_extenso_e_nao_por_cor(client, seletor_ligado, cen
     assert "Em vigor" in corpo
     assert "<caption" in corpo
     assert "tabela-rolavel" in corpo
+
+
+def test_a_presidencia_reabre_a_partir_desta_pagina(client, seletor_ligado, cenario, concluida):
+    """A reabertura mora onde se lê o que foi concluído — e não na tela de distribuição.
+
+    Na tela de distribuição ela ocupava uma linha e um formulário por avaliação concluída, sem
+    paginar: numa Etapa de 600 inscritos com dupla avaliação, 1.200 formulários acima da área de
+    trabalho. Aqui a página é paginada e cada linha mostra o que se precisa saber antes de decidir.
+    """
+    identificar(client, "maria", [])
+    resposta = client.post(
+        reverse("interface:reabrir-avaliacao", args=[cenario["edital"].id, cenario["etapa"]]),
+        {
+            "avaliacao_id": str(concluida["avaliacao"].id),
+            "expected_revision": concluida["avaliacao"].revision,
+            "motivo": "Recurso deferido pela banca.",
+            "chave_idempotencia": "reab-tela",
+        },
+        follow=True,
+    )
+    corpo = resposta.content.decode()
+
+    assert Avaliacao.objects.get(pk=concluida["avaliacao"].pk).estado == Avaliacao.Estado.RASCUNHO
+    assert "Avaliação reaberta" in corpo
+    assert "Substituída por reabertura" in corpo
+
+
+def test_a_auditoria_le_a_pagina_e_nao_reabre(client, seletor_ligado, cenario, concluida):
+    """Consultar é de dois; reabrir é de um (FR-091, FR-036)."""
+    identificar(client, "bianca", ["auditor"])
+    corpo = client.get(pagina(cenario)).content.decode()
+    assert "87.5000" in corpo
+    assert "Motivo da reabertura" not in corpo
+
+    recusa = client.post(
+        reverse("interface:reabrir-avaliacao", args=[cenario["edital"].id, cenario["etapa"]]),
+        {
+            "avaliacao_id": str(concluida["avaliacao"].id),
+            "expected_revision": concluida["avaliacao"].revision,
+            "motivo": "Sem base para isto.",
+        },
+    )
+
+    assert recusa.status_code == 404
+    assert Avaliacao.objects.get(pk=concluida["avaliacao"].pk).estado == Avaliacao.Estado.CONCLUIDA
+
+
+def test_so_a_conclusao_em_vigor_oferece_reabertura(
+    client, seletor_ligado, cenario, gestor, concluida
+):
+    """Reabrir o que já foi substituído não traria nada de volta."""
+    reabrir(
+        actor=gestor,
+        processo_id=cenario["processo"].id,
+        avaliacao_id=concluida["avaliacao"].id,
+        motivo="Primeira reabertura.",
+        expected_revision=concluida["avaliacao"].revision,
+        idempotency_key="cp-uma",
+        correlation_id="teste",
+    )
+
+    identificar(client, "maria", [])
+    corpo = client.get(pagina(cenario)).content.decode()
+
+    assert "Substituída por reabertura" in corpo
+    assert "Motivo da reabertura" not in corpo

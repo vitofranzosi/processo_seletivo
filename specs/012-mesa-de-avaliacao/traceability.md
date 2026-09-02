@@ -10,10 +10,10 @@ falharia se ele fosse quebrado** — e não o teste que passa perto.
 
 | | |
 |---|---:|
-| Requisitos funcionais (FR) | 106 |
+| Requisitos funcionais (FR) | 108 |
 | Critérios de sucesso (SC) | 31 |
 | Edge cases (EC) | 20 |
-| Testes na suíte, ao fim da 012 | 1863 |
+| Testes na suíte, ao fim da 012 | 1890 |
 | Verificações do quickstart, executadas em 2026-09-02 | 34, sem divergência |
 
 ## Onde procurar
@@ -38,7 +38,9 @@ cd backend && grep -rn "FR-092" tests/
 | Impedimento, reabertura e conjunto elegível | `tests/integration/avaliacoes/test_impedimento.py`, `test_reabertura.py`, `test_conjunto_elegivel.py` |
 | Concorrência | `test_primeira_gravacao_concorrente.py`, `test_corrida_conclusao_e_remocao.py` |
 | Trilha | `tests/integration/avaliacoes/test_trilha_completa.py`, `tests/interface/test_trilha_da_012.py` |
-| Preservação consultável | `tests/interface/test_conclusoes_preservadas.py` |
+| Preservação consultável e reabertura | `tests/interface/test_conclusoes_preservadas.py` |
+| Proposta de rodízio | `tests/integration/avaliacoes/test_rodizio.py`, `tests/interface/test_distribuicao.py` |
+| A Mesa em uso, com centenas | `tests/interface/test_mesa_em_uso.py` |
 | Escala | `tests/performance/test_escala_da_mesa.py`, `tests/authorization/test_listagem_em_lote.py` |
 | Não-regressão | `tests/integration/comissoes/test_011_intocada.py`, `tests/integration/publicacoes/test_retificacao_intocada.py` |
 
@@ -63,6 +65,8 @@ e cada um tem um teste que falha primeiro.
 | **FR-037** | a 012 produzir resultado | `tests/acceptance/test_mesa_de_avaliacao.py::test_a_vertical_nao_produz_resultado` |
 | **FR-106** | confirmar um alcance e executar outro | `test_impedimento.py::test_o_ato_recusa_quando_o_alcance_mudou_desde_a_confirmacao` |
 | **FR-091** | preservação que só o banco enxerga | `test_conclusoes_preservadas.py::test_o_que_foi_concluido_antes_da_reabertura_continua_legivel` |
+| **FR-107** | o sistema distribuir por conta própria | `test_rodizio.py::test_propor_nao_grava_nada` e `::test_a_proposta_que_mudou_no_intervalo_e_recusada` |
+| **FR-108** | trabalho retirado sem que o afetado saiba | `test_mesa_em_uso.py::test_a_mesa_diz_o_que_foi_retirado_dela_e_por_que` |
 
 ## Requisitos sem teste, e por quê
 
@@ -157,6 +161,22 @@ a sério, as três viraram correção — e cada uma tem teste que falha se ela 
 | o impedimento aparecia na trilha de toda Etapa do Edital | ele é da pessoa e da inscrição, e faltava dizer **onde** ele decide algo: a alocação | `test_trilha_da_012.py::test_o_impedimento_aparece_na_etapa_em_que_a_pessoa_atua_e_nao_nas_outras` e `::test_o_impedimento_preventivo_continua_visivel_onde_ele_decide` |
 | a trilha não dizia a que inscrição cada ato se referia | a pergunta que traz alguém à trilha é sobre uma inscrição | `test_trilha_da_012.py::test_cada_ato_diz_a_que_inscricao_se_refere` e `::test_nomear_o_alvo_de_cada_ato_nao_custa_por_linha` |
 | a lista de inelegíveis não paginava | "na prática é curta" é aposta no uso, e trocar a banca a torna longa de uma vez | `test_escala_da_mesa.py::test_as_avaliacoes_inelegiveis_sao_paginadas` |
+
+## O percurso de 600 inscritos, e os sete achados dele
+
+A escala não se descobre lendo código: os sete achados abaixo vieram de percorrer um Processo de 600
+inscritos com dupla avaliação — 1.200 atribuições, banca de sete — pelo canal de cada ator. Nenhum
+deles aparece numa Etapa de três inscrições, e dois eram bloqueadores de uso.
+
+| achado | o número que o revelou | o teste |
+|---|---|---|
+| a tela de distribuição crescia com o trabalho já feito | 679 KB, 605 formulários e 73.414 px com 601 conclusões | `test_escala_da_mesa.py::test_a_tela_de_distribuicao_nao_cresce_com_o_trabalho_ja_feito` |
+| distribuir a Etapa custava ~700 marcações em 24 telas | 25 por página × 24 páginas | `test_escala_da_mesa.py::test_o_rodizio_distribui_a_etapa_inteira_em_um_ato` |
+| quem perdia trabalho não era avisado | a Mesa foi de 230 para 229, em silêncio | `test_mesa_em_uso.py::test_a_mesa_diz_o_que_foi_retirado_dela_e_por_que` |
+| o rascunho era indistinguível do não iniciado | 1 rascunho entre 229 “Pendente” | `test_mesa_em_uso.py::test_o_rascunho_nao_se_confunde_com_o_nao_iniciado` |
+| o identificador exibido não era o aceito | a trilha mostra “inscrição 7529”; o filtro recusava “7529” | `test_trilha_da_012.py::test_o_filtro_aceita_o_protocolo_que_a_trilha_mostra` |
+| não havia filtro por progresso | cobertura respondia por atribuição, nunca por conclusão | `test_distribuicao.py::test_o_filtro_de_avaliacao_pendente_responde_o_que_falta_avaliar` |
+| lote inteiramente recusado saía em verde | “0 atribuídas, 75 recusadas” em caixa de sucesso, com 75 linhas iguais | `test_distribuicao.py::test_o_lote_inteiramente_recusado_nao_e_anunciado_como_sucesso` |
 
 ## O gate da 013
 

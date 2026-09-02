@@ -33,6 +33,26 @@
         "8008"
       ],
       "port": 8008
+    },
+    {
+      "name": "mesa-012",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "INTERFACE_SELETOR_IDENTIDADE=true",
+        "LC_ALL=en_US.UTF-8",
+        "DB_USER=saymoncastro",
+        "DJANGO_SETTINGS_MODULE=config.settings.development",
+        "ARQUIVOS_CANDIDATOS_RAIZ=/private/tmp/claude-501/-Users-saymoncastro-Projetos-processo-seletivo--claude-worktrees-mesa-de-avaliacao-cb9bff/ea8c1d68-8142-49ce-9e7b-9f80a5bc0f08/scratchpad/acervo",
+        "uv",
+        "run",
+        "--directory",
+        "backend",
+        "python",
+        "manage.py",
+        "runserver",
+        "8014"
+      ],
+      "port": 8014
     }
   ]
 }

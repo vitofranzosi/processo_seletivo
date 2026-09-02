@@ -190,3 +190,122 @@ def test_a_remocao_tem_rota_e_formulario_proprios(presidente, tela, edital_a, ba
 
     assert Atribuicao.objects.filter(ativo=True).count() == 1
     assert "1</strong> removida" in depois
+
+
+def test_a_proposta_de_rodizio_mostra_o_plano_e_nao_grava(presidente, tela, edital_a, banca):
+    """FR-107: propor é leitura, e o que a tela mostra é o que a confirmação vai executar."""
+    inscrever(edital_a, 6, primeiro=700)
+
+    corpo = presidente.post(tela, {"acao": "propor", "membro_id": [str(banca.id)]}).content.decode()
+
+    assert "Confira antes de confirmar" in corpo
+    assert "nada foi gravado ainda" in corpo
+    assert "Confirmar esta distribuição" in corpo
+    assert not Atribuicao.objects.filter(edital=edital_a).exists()
+
+
+def test_a_confirmacao_do_rodizio_distribui_em_um_ato(presidente, tela, edital_a, banca):
+    """Seiscentas marcações em 24 telas viram uma proposta e uma confirmação."""
+    inscricoes = inscrever(edital_a, 6, primeiro=710)
+    import re
+
+    proposta = presidente.post(tela, {"acao": "propor", "membro_id": [str(banca.id)]})
+    assinatura = re.search(r'name="assinatura" value="([^"]+)"', proposta.content.decode()).group(1)
+
+    resposta = presidente.post(
+        tela,
+        {
+            "acao": "confirmar_rodizio",
+            "membro_id": [str(banca.id)],
+            "assinatura": assinatura,
+            "chave_idempotencia": "rodizio-tela",
+        },
+        follow=True,
+    )
+
+    assert Atribuicao.objects.filter(edital=edital_a, ativo=True).count() == len(inscricoes)
+    assert "atribuídas" in resposta.content.decode()
+
+
+def test_confirmar_sem_assinatura_nao_grava_o_que_ninguem_confirmou(
+    presidente, tela, edital_a, banca
+):
+    """A conferência não pode ser desligável por quem monta o formulário (o mesmo de FR-106)."""
+    inscrever(edital_a, 3, primeiro=720)
+
+    presidente.post(
+        tela,
+        {
+            "acao": "confirmar_rodizio",
+            "membro_id": [str(banca.id)],
+            "chave_idempotencia": "sem-assinatura",
+        },
+    )
+
+    assert not Atribuicao.objects.filter(edital=edital_a, ativo=True).exists()
+
+
+def test_o_lote_inteiramente_recusado_nao_e_anunciado_como_sucesso(
+    presidente, tela, edital_a, banca, comissao_de_a, processo_a, etapa_a1
+):
+    """Anunciar em verde “0 atribuídas, 75 recusadas” diz o contrário do que aconteceu.
+
+    E os motivos vêm agrupados: um envio de 25 inscrições para 3 pessoas repetia a mesma frase 75
+    vezes, uma por par, o que enterra a informação em vez de dá-la.
+    """
+    # `maria` preside e também avalia: o que este teste precisa é de **duas** pessoas alocadas
+    # para uma Etapa que declara uma avaliação por inscrição.
+    alocar_em(gestor_de(processo_a), processo_a, comissao_de_a["maria"], edital_a, etapa_a1)
+    inscricoes = inscrever(edital_a, 4, primeiro=730)
+    ambos = [str(banca.id), str(comissao_de_a["maria"].id)]
+
+    corpo = presidente.post(
+        tela,
+        {
+            "acao": "distribuir",
+            "membro_id": ambos,
+            "inscricao_id": [str(i.id) for i in inscricoes],
+            "chave_idempotencia": "excesso-1",
+        },
+        follow=True,
+    ).content.decode()
+
+    assert '<div class="erro"' in corpo
+    assert '<div class="sucesso"' not in corpo
+    # Uma linha por motivo, e não uma por par: quatro inscrições × duas pessoas dariam oito.
+    assert corpo.count("o sistema não escolhe por você") == 1
+    assert "<strong>4</strong> —" in corpo
+
+
+def gestor_de(processo):
+    from tests.conftest import ator_institucional
+
+    return ator_institucional("carlos", "comissao:gerir")
+
+
+def test_o_filtro_de_avaliacao_pendente_responde_o_que_falta_avaliar(
+    presidente, tela, edital_a, banca
+):
+    """Cobertura fala de atribuição; ter avaliador não é ter avaliação (FR-049)."""
+    from tests.fixtures.mesa import concluir_como
+
+    inscricoes = inscrever(edital_a, 2, primeiro=740)
+    presidente.post(
+        tela,
+        {
+            "acao": "distribuir",
+            "membro_id": [str(banca.id)],
+            "inscricao_id": [str(i.id) for i in inscricoes],
+            "chave_idempotencia": "pendentes-1",
+        },
+    )
+    concluir_como({"edital": edital_a, "etapa": etapa_do(tela)}, "joao", inscricoes[0])
+
+    corpo = presidente.get(tela + "?cobertura=avaliacao_pendente").content.decode()
+
+    assert inscricoes[1].protocolo in corpo
+    assert inscricoes[0].protocolo not in corpo
+
+
+def etapa_do(tela):
+    return tela.rstrip("/").split("/")[-1]

@@ -2,7 +2,7 @@
 {% block titulo %}Impedimentos — {{ etapa.name }}{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:alocacoes' processo.id %}">Distribuição</a> ›
+  <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> ›
   <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> ›
   <span aria-current="page">Impedimentos</span>
 </nav>
@@ -36,6 +36,8 @@ atribuições e quantas conclusões o impedimento alcançará.
   <input type="hidden" name="alcance" value="{{ confirmacao.assinatura }}">
   <p class="aviso" role="status" tabindex="-1" autofocus>
     <strong>Confirme antes de registrar.</strong>
+    Impedir <strong>{{ confirmacao.pessoa }}</strong> de avaliar a
+    <strong>inscrição {{ confirmacao.inscricao }}</strong>.
     {% if confirmacao.atribuicoes %}
     Este impedimento inativará <strong>{{ confirmacao.atribuicoes }}</strong> atribuiç{{ confirmacao.atribuicoes|pluralize:"ão,ões" }} ativa{{ confirmacao.atribuicoes|pluralize:"s" }}{% if confirmacao.concluidas %}, das quais <strong>{{ confirmacao.concluidas }}</strong> com avaliação já concluída — ela será preservada e deixará de integrar o conjunto elegível{% endif %}.
     {% else %}
@@ -70,7 +72,7 @@ de quem sabe — e é por isso que esta tela pede a identidade e o motivo, em ve
     <label for="inscricao_id">Inscrição</label>
     <input type="text" id="inscricao_id" name="inscricao_id" required
            aria-describedby="ajuda-inscricao">
-    <span class="ajuda" id="ajuda-inscricao">Identificador da inscrição.</span>
+    <span class="ajuda" id="ajuda-inscricao">Protocolo da inscrição, como ele aparece na distribuição — ou o identificador.</span>
   </p>
   <p class="campo">
     <label for="motivo">Motivo</label>
@@ -101,7 +103,7 @@ de quem sabe — e é por isso que esta tela pede a identidade e o motivo, em ve
         <td>{{ linha.avaliacao.parecer|default:"—" }}</td>
         <td>vigente desde {{ linha.avaliacao.versao.valid_from|date:"d/m/Y H:i" }}</td>
         <td>{{ linha.avaliacao.concluida_em|date:"d/m/Y H:i:s" }}</td>
-        <td>{{ linha.ato.operation|default:"—" }} por {{ linha.ato.actor_subject|default:"—" }}</td>
+        <td>{{ linha.ato_rotulo|default:"—" }} por {{ linha.ato.actor_subject|default:"—" }}</td>
         <td>{{ linha.ato.reason|default:"—" }}</td>
       </tr>
       {% endfor %}

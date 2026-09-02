@@ -4,7 +4,7 @@
 <nav aria-label="Trilha de navegação" class="trilha">
   <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
   <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
-  <a href="{% url 'interface:alocacoes' processo.id %}">Distribuição</a> ›
+  <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> ›
   <span aria-current="page">{{ etapa.name }}</span>
 </nav>
 
@@ -18,12 +18,18 @@ FR-097: o resultado do lote é declarado, e não inferido. Sucesso parcial que n
 surpresa administrativa — quem distribuiu precisa saber o que ficou de fora sem conferir mil linhas.
 {% endcomment %}
 {% if resultado %}
-<div class="sucesso" role="status" tabindex="-1">
+{% comment %}
+Lote inteiramente recusado é **recusa**, e não sucesso parcial: anunciá-lo em verde diz o contrário
+do que aconteceu. E os motivos vêm agrupados — um envio de 25 inscrições para 3 pessoas repetia a
+mesma frase 75 vezes, uma por par, o que enterra a informação em vez de dá-la.
+{% endcomment %}
+<div class="{% if resultado.feitas %}sucesso{% else %}erro{% endif %}" role="status" tabindex="-1">
   <p><strong>{{ resultado.feitas }}</strong> {{ resultado.verbo }}{{ resultado.feitas|pluralize:"s" }}{% if resultado.recusadas %}, <strong>{{ resultado.recusadas }}</strong> recusada{{ resultado.recusadas|pluralize:"s" }}{% endif %}.</p>
-  {% if resultado.motivos %}
+  {% if resultado.agrupados %}
   <ul class="motivos">
-    {% for motivo in resultado.motivos %}
-    <li>{{ motivo.avaliador }} — inscrição {{ motivo.inscricao }}: {{ motivo.motivo }}</li>
+    {% for grupo in resultado.agrupados %}
+    <li><strong>{{ grupo.quantas }}</strong> — {{ grupo.motivo }}
+      <span class="ajuda">{{ grupo.exemplos }}</span></li>
     {% endfor %}
   </ul>
   {% endif %}
@@ -88,45 +94,93 @@ cartões seria pedir que a presidência fizesse a soma.
 </section>
 {% endif %}
 
-{% if concluidas %}
-<section aria-labelledby="concluidas">
-  <h2 id="concluidas">Avaliações concluídas</h2>
-  {% comment %}
-  A reabertura é ato da presidência, com motivo, registrado (FR-036). O formulário pede o motivo
-  antes de qualquer coisa — reabertura silenciosa é o que não pode existir.
-  {% endcomment %}
-  <div class="tabela-rolavel">
-  <table class="tabela">
-    <caption class="oculto">Avaliações concluídas desta Etapa</caption>
-    <thead><tr><th scope="col">Inscrição</th><th scope="col">Avaliador</th><th scope="col">Pontuação</th><th scope="col">Reabrir</th></tr></thead>
-    <tbody>
-      {% for avaliacao in concluidas %}
-      <tr>
-        <td>{{ avaliacao.atribuicao.inscricao.protocolo|default:avaliacao.atribuicao.inscricao.id }}</td>
-        <td>{{ avaliacao.identity_subject }}</td>
-        <td>{{ avaliacao.pontuacao|floatformat:4 }}</td>
-        <td>
-          <form method="post" action="{% url 'interface:reabrir-avaliacao' edital.id etapa.id %}">
-            {% csrf_token %}
-            <input type="hidden" name="avaliacao_id" value="{{ avaliacao.id }}">
-            <input type="hidden" name="expected_revision" value="{{ avaliacao.revision }}">
-            <input type="hidden" name="chave_idempotencia" value="{{ chave_reabertura }}-{{ avaliacao.id }}">
-            <label for="motivo-{{ avaliacao.id }}" class="oculto">Motivo da reabertura</label>
-            <input type="text" id="motivo-{{ avaliacao.id }}" name="motivo" required
-                   placeholder="Motivo da reabertura">
-            <button type="submit">Reabrir</button>
-          </form>
-        </td>
-      </tr>
+{% comment %}
+A reabertura **não mora aqui**. Ela morava, com uma linha e um formulário por avaliação concluída,
+e sem paginar: na metade de uma Etapa de 600 inscritos com dupla avaliação eram 601 formulários
+empilhados acima da área de trabalho — 679 KB e setenta mil pixels de altura, medidos. A tela que a
+presidência mais recarrega crescia com o trabalho já feito.
+
+Ela agora mora onde já se olha uma conclusão para decidir sobre ela: a página das conclusões
+preservadas, que é paginada, filtrável e mostra pontuação, parecer, versão e instante (FR-091).
+{% endcomment %}
+<p class="ajuda">Para reabrir uma avaliação concluída, com motivo registrado, vá a
+  <a href="{% url 'interface:conclusoes-preservadas' edital.id etapa.id %}">conclusões
+  preservadas</a> — é lá que se vê o que foi concluído antes de decidir sobre aquilo.</p>
+
+{% comment %}
+FR-107: o sistema **propõe**, a presidência confirma. A proposta não grava nada; o que ela mostra é
+o que vai acontecer, pessoa por pessoa, e o ato registrado é o da confirmação. O caminho manual,
+abaixo, continua existindo inteiro — quem quer escolher inscrição por inscrição escolhe.
+{% endcomment %}
+<section aria-labelledby="rodizio">
+  <h2 id="rodizio">Distribuir o que falta</h2>
+  {% if proposta %}
+  <div class="aviso" role="status" tabindex="-1" autofocus>
+    <p><strong>{{ proposta.total }}</strong> atribuiç{{ proposta.total|pluralize:"ão,ões" }} em
+      <strong>{{ proposta.inscricoes }}</strong> inscriç{{ proposta.inscricoes|pluralize:"ão,ões" }},
+      distribuídas por menor carga. Confira antes de confirmar — nada foi gravado ainda.</p>
+    <div class="tabela-rolavel">
+    <table class="tabela">
+      <caption class="oculto">Quanto cada pessoa recebe nesta proposta</caption>
+      <thead><tr><th scope="col">Avaliador</th><th scope="col">Tem hoje</th><th scope="col">Recebe</th><th scope="col">Fica com</th></tr></thead>
+      <tbody>
+        {% for linha in proposta.por_pessoa %}
+        <tr>
+          <td>{{ linha.membro.display_label|default:linha.membro.identity_subject }}</td>
+          <td>{{ linha.antes }}</td>
+          <td>+{{ linha.recebe }}</td>
+          <td>{{ linha.depois }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% if proposta.fora %}
+    <p><strong>{{ proposta.fora|length }}</strong> inscriç{{ proposta.fora|length|pluralize:"ão,ões" }}
+      não fica{{ proposta.fora|length|pluralize:"m" }} completa{{ proposta.fora|length|pluralize:"s" }}:</p>
+    <ul class="motivos">
+      {% for item in proposta.fora|slice:":10" %}
+      <li>inscrição {{ item.inscricao }} — faltam {{ item.faltam }}: {{ item.motivo }}</li>
       {% endfor %}
-    </tbody>
-  </table>
+      {% if proposta.fora|length > 10 %}<li>… e mais {{ proposta.fora|length|add:"-10" }}.</li>{% endif %}
+    </ul>
+    {% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="acao" value="confirmar_rodizio">
+      <input type="hidden" name="chave_idempotencia" value="{{ chave_rodizio }}">
+      <input type="hidden" name="assinatura" value="{{ proposta.assinatura }}">
+      {% for id in proposta.membro_ids %}<input type="hidden" name="membro_id" value="{{ id }}">{% endfor %}
+      <p class="acoes">
+        <button type="submit">Confirmar esta distribuição</button>
+        <a class="acao" href="{% url 'interface:distribuicao' edital.id etapa.id %}">Cancelar</a>
+      </p>
+    </form>
   </div>
+  {% else %}
+  <p class="ajuda">O sistema propõe uma distribuição entre quem você escolher, equilibrando a carga
+    de cada um, e mostra a proposta inteira antes de gravar. A decisão continua sendo sua: nada
+    acontece sem a sua confirmação.</p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="acao" value="propor">
+    <fieldset>
+      <legend>Entre quem distribuir</legend>
+      {% for linha in carga %}
+      <label for="rodizio-{{ linha.membro.id }}">
+        <input type="checkbox" id="rodizio-{{ linha.membro.id }}" name="membro_id" value="{{ linha.membro.id }}">
+        {{ linha.membro.display_label|default:linha.membro.identity_subject }}
+        <span class="ajuda">{{ linha.atribuidas }} hoje</span>
+      </label>
+      {% endfor %}
+    </fieldset>
+    <p class="acoes"><button type="submit">Propor distribuição</button></p>
+  </form>
+  {% endif %}
 </section>
-{% endif %}
 
 <section aria-labelledby="inscricoes">
-  <h2 id="inscricoes">Inscrições</h2>
+  <h2 id="inscricoes">Inscrições, uma a uma</h2>
 
   <form method="get" class="filtros" role="search">
     <p class="campo">
@@ -136,6 +190,11 @@ cartões seria pedir que a presidência fizesse a soma.
         <option value="sem_nenhum" {% if cobertura == "sem_nenhum" %}selected{% endif %}>Sem nenhum avaliador</option>
         <option value="incompleta" {% if cobertura == "incompleta" %}selected{% endif %}>Sem avaliador suficiente</option>
         <option value="completa" {% if cobertura == "completa" %}selected{% endif %}>Completas</option>
+        {% comment %}
+        Este é sobre **progresso**, e não sobre cobertura: ter avaliador não é ter avaliação, e
+        “o que ainda falta avaliar” era a pergunta da véspera do resultado que a tela não respondia.
+        {% endcomment %}
+        <option value="avaliacao_pendente" {% if cobertura == "avaliacao_pendente" %}selected{% endif %}>Com avaliação pendente</option>
       </select>
     </p>
     <p class="campo">
@@ -164,13 +223,14 @@ cartões seria pedir que a presidência fizesse a soma.
     </fieldset>
 
     <div class="tabela-rolavel">
-  <table class="tabela">
+  <table class="tabela" data-selecionavel>
       <caption class="oculto">Inscrições submetidas desta Etapa</caption>
       <thead>
         <tr>
           <th scope="col"><span class="oculto">Selecionar</span></th>
           <th scope="col">Inscrição</th>
-          <th scope="col">Avaliações</th>
+          <th scope="col">Atribuídas</th>
+          <th scope="col">Concluídas</th>
           <th scope="col">Quem avalia</th>
         </tr>
       </thead>
@@ -184,6 +244,7 @@ cartões seria pedir que a presidência fizesse a soma.
           </td>
           <td><label for="inscricao-{{ linha.inscricao.id }}">{{ linha.inscricao.protocolo|default:linha.inscricao.id }}</label></td>
           <td>{{ linha.atribuidas }} de {{ resumo.previstas }}{% if linha.faltam %} — faltam {{ linha.faltam }}{% endif %}</td>
+          <td>{{ linha.concluidas }} de {{ resumo.previstas }}</td>
           <td>
             {% for atribuicao in linha.atribuicoes %}
             <span class="quem">{{ atribuicao.membro.display_label|default:atribuicao.membro.identity_subject }}</span>{% if not forloop.last %}, {% endif %}
@@ -243,4 +304,10 @@ cartões seria pedir que a presidência fizesse a soma.
   <p class="vazio">Nenhuma inscrição submetida corresponde a este filtro.</p>
   {% endif %}
 </section>
+{% comment %}
+A caixa de "selecionar todas desta página" é criada pelo script, e não pelo template: sem
+JavaScript ela não aparece, e as marcações individuais continuam sendo o caminho — controle que
+existe no HTML e só funciona com script promete o que não cumpre.
+{% endcomment %}
+{% load static %}<script src="{% static 'interface/selecao.js' %}" defer></script>
 {% endblock %}

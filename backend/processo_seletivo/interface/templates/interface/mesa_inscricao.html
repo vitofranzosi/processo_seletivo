@@ -18,7 +18,7 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
 <dl class="conferencia">
   <dt>Candidato</dt><dd>{{ inscricao.nome }}</dd>
   <dt>CPF</dt><dd>{{ cpf }}</dd>
-  <dt>Perfil</dt><dd>{{ perfil }}{% if modalidade %} — {{ modalidade }}{% endif %}</dd>
+  <dt>Perfil</dt><dd>{% if perfil %}{{ perfil }}{% if modalidade %} — {{ modalidade }}{% endif %}{% else %}não informado{% endif %}</dd>
 </dl>
 
 <section aria-labelledby="documentos">
@@ -62,7 +62,11 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
   FR-035: concluída é imutável **para o avaliador**. Não é um formulário desabilitado — é a
   ausência do formulário, com o que foi afirmado à vista e o caminho de volta nomeado (FR-036).
   {% endcomment %}
-  <p class="sucesso" role="status">Avaliação concluída em {{ avaliacao.concluida_em|date:"d/m/Y H:i" }}.</p>
+  {% comment %}
+  Uma faixa só: o aviso da ação recém-praticada e este estado diziam a mesma coisa, empilhados.
+  Quando a pessoa acaba de concluir, quem fala é o aviso; quando ela volta depois, é este.
+  {% endcomment %}
+  {% if not aviso %}<p class="sucesso" role="status">Avaliação concluída em {{ avaliacao.concluida_em|date:"d/m/Y H:i" }}.</p>{% endif %}
   <dl class="conferencia">
     <dt>Pontuação</dt><dd>{{ avaliacao.pontuacao|floatformat:4 }}</dd>
     <dt>Parecer</dt><dd>{{ avaliacao.parecer|default:"—"|linebreaksbr }}</dd>
@@ -115,5 +119,17 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
     </p>
   </form>
   {% endif %}
+
+  {% comment %}
+  Para onde ir depois desta. A Mesa de quem avalia tem dezenas ou centenas de inscrições, e voltar
+  pela trilha de navegação a cada uma fazia o caminho ser mais longo que o trabalho. O atalho não
+  substitui a Mesa — ele é o passo seguinte quando a próxima é óbvia.
+  {% endcomment %}
+  <p class="navegacao-etapa">
+    {% if proxima %}
+    <a class="botao secundario" href="{% url 'interface:mesa-inscricao' edital.id etapa_id proxima.id %}">Próxima pendente — inscrição {{ proxima.protocolo|default:proxima.id }}</a>
+    {% endif %}
+    <a class="acao" href="{% url 'interface:minha-etapa' edital.id etapa_id %}">Voltar à Mesa</a>
+  </p>
 </section>
 {% endblock %}

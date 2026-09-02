@@ -36,6 +36,13 @@
     <div class="corpo">
       <span class="agregado">Edital {{ item.edital.number }}/{{ item.edital.year }}</span>
       <span class="ator">{{ item.processo.title }}</span>
+      {% comment %}
+      Quanto falta, antes de entrar. A tela listava Etapas e um botão, e quem tinha centenas de
+      inscrições atribuídas só descobria isso abrindo cada uma.
+      {% endcomment %}
+      {% if item.carga %}
+      <span class="transicao">{{ item.carga.pendentes }} pendente{{ item.carga.pendentes|pluralize:"s" }} de {{ item.carga.total }}</span>
+      {% endif %}
     </div>
     <p class="salvar">
       <a class="botao" href="{% url 'interface:minha-etapa' item.edital.id item.etapa_id %}">Abrir</a>
@@ -46,7 +53,18 @@
 {% else %}
 {% comment %} §26 da spec: estado válido, e não erro. Quem não tem atribuição não vê Etapa alheia
    bloqueada — ela simplesmente não pertence a esta área. {% endcomment %}
+{% comment %}
+Quem preside e não avalia caía num “você não possui nada” escrito para quem realmente não tem nada
+— com a gestão da própria comissão logo acima, em dois botões pequenos. O estado vazio agora fala
+com quem está lendo: presidir não é ter Etapa, e é isso que a frase precisa dizer.
+{% endcomment %}
+{% if preside %}
+<p class="vazio" role="status">Você não possui Etapas atribuídas no momento — presidir uma comissão
+  não atribui trabalho de avaliação. Para organizar o trabalho da sua comissão, use
+  <strong>Gerir comissão</strong> e <strong>Alocação por Etapa</strong>, acima.</p>
+{% else %}
 <p class="vazio" role="status">Você não possui Etapas atribuídas no momento.</p>
+{% endif %}
 {% if sem_papel_nem_atribuicao %}
 {% comment %} FR-028 da 002: sem papel reconhecido, orientar a quem pedir acesso. Quem entra sem
    papel nenhum termina aqui, e não na lista de Processos — então é aqui que a orientação precisa

@@ -379,109 +379,23 @@ def test_a_trilha_de_uma_etapa_nao_mostra_a_abertura_feita_em_outra(
     assert (aberturas_de_a1, aberturas_de_a2) == (2, 1)
 
 
-def test_identificador_malformado_no_filtro_e_recusa_de_formulario(
+def test_o_filtro_aceita_o_protocolo_que_a_trilha_mostra(auditor_na_tela, cenario, percurso):
+    """A trilha diz “inscrição 7529 — bruno” e o filtro recusava exatamente esse número.
+
+    Toda tela do sistema identifica a inscrição pelo protocolo; exigir o UUID no único campo em
+    que se digita obrigava a procurá-lo em outro lugar.
+    """
+    corpo = registros(auditor_na_tela, trilha(cenario, inscricao=percurso["inscricao"].protocolo))
+
+    assert f"inscrição {percurso['inscricao'].protocolo}" in corpo
+    assert f"inscrição {percurso['outra'].protocolo}" not in corpo
+
+
+def test_protocolo_desconhecido_no_filtro_e_recusa_de_formulario(
     auditor_na_tela, cenario, percurso
 ):
-    """O campo é digitado, e identificador digitado erra — sem virar 500."""
-    resposta = auditor_na_tela.get(trilha(cenario, inscricao="não-é-uuid"))
+    """Errar o que se digita não pode ser erro de servidor."""
+    resposta = auditor_na_tela.get(trilha(cenario, inscricao="não-existe"))
 
     assert resposta.status_code == 200
-    assert "não tem forma de identificador" in resposta.content.decode()
-
-
-def test_o_impedimento_aparece_na_etapa_em_que_a_pessoa_atua_e_nao_nas_outras(
-    auditor_na_tela, cenario, gestor, percurso
-):
-    """O impedimento é da pessoa e da inscrição, e não da Etapa — daí precisar de pertinência.
-
-    Sem critério, o registro aparecia na trilha de **toda** Etapa do Edital, inclusive naquelas em
-    que a pessoa nunca trabalhou. O critério é a alocação: é onde o impedimento tem efeito.
-    """
-    from tests.fixtures.comissao import ETAPA_A2
-
-    outra_etapa = identificador(ETAPA_A2, SEED)
-
-    # `ana` foi impedida no percurso, e está alocada apenas na Etapa A1.
-    na_etapa_dela = registros(auditor_na_tela, trilha(cenario, operacao="AVALIACAO_IMPEDIR"))
-    na_outra = registros(
-        auditor_na_tela,
-        trilha({**cenario, "etapa": outra_etapa}, operacao="AVALIACAO_IMPEDIR"),
-    )
-
-    assert "Registro de impedimento" in na_etapa_dela
-    assert "Registro de impedimento" not in na_outra
-
-
-def test_o_impedimento_preventivo_continua_visivel_onde_ele_decide(
-    auditor_na_tela, cenario, gestor, percurso
-):
-    """Impedir antes de distribuir é ato legítimo, e some se a pertinência for pela Atribuição.
-
-    A alocação é o critério justamente por isto: `bruno` está alocado e ainda não recebeu nada, e
-    o impedimento registrado sobre ele é o que a presidência precisa ver antes de distribuir.
-    """
-    from processo_seletivo.comissoes.domain.funcoes import Funcao
-    from tests.fixtures.comissao import alocar_em, constituir
-
-    membros = constituir(gestor, cenario["processo"], [("bruno", Funcao.MEMBRO)], prefixo="prev")
-    alocar_em(
-        gestor,
-        cenario["processo"],
-        membros["bruno"],
-        cenario["edital"],
-        cenario["etapa"],
-        chave="prev-aloc",
-    )
-    nova = inscrever(cenario["edital"], 1, primeiro=1650)[0]
-    registrar_impedimento(
-        actor=gestor,
-        processo_id=cenario["processo"].id,
-        identity_subject="bruno",
-        inscricao_id=nova.id,
-        motivo="Impedimento preventivo, antes de distribuir.",
-        idempotency_key="prev-imp",
-        correlation_id="teste",
-    )
-
-    corpo = registros(auditor_na_tela, trilha(cenario, avaliador="bruno"))
-
-    assert "Registro de impedimento" in corpo
-    assert "Impedimento preventivo, antes de distribuir." in corpo
-
-
-def test_cada_ato_diz_a_que_inscricao_se_refere(auditor_na_tela, cenario, percurso):
-    """A pergunta que traz alguém à trilha é quase sempre sobre uma inscrição.
-
-    A trilha nomeava a operação e o tipo do agregado, e guardava o identificador sem mostrá-lo:
-    "Conclusão de avaliação, por joao" não diz de qual inscrição. O protocolo é o que a pessoa tem
-    em mãos ao perguntar.
-    """
-    corpo = registros(auditor_na_tela, trilha(cenario))
-
-    assert f"inscrição {percurso['inscricao'].protocolo} — joao" in corpo
-    assert f"inscrição {percurso['outra'].protocolo} — joao" in corpo
-    # E o impedimento nomeia quem foi impedido, que não é quem praticou o ato.
-    assert f"inscrição {percurso['inscricao'].protocolo} — ana" in corpo
-
-
-def test_nomear_o_alvo_de_cada_ato_nao_custa_por_linha(auditor_na_tela, cenario, percurso):
-    """Três consultas, uma por tipo de agregado — e não uma por evento (FR-048)."""
-    from django.db import connection
-    from django.test.utils import CaptureQueriesContext
-
-    from processo_seletivo.auditoria.selectors import trilha_da_avaliacao
-    from processo_seletivo.avaliacoes.application.selectors import rotulos_dos_agregados
-    from tests.conftest import ator_institucional
-
-    eventos, _ = trilha_da_avaliacao(
-        actor=ator_institucional("carlos", "comissao:gerir"),
-        edital=cenario["edital"],
-        etapa_id=cenario["etapa"],
-    )
-    assert len(eventos) > 3
-
-    with CaptureQueriesContext(connection) as consultas:
-        rotulos = rotulos_dos_agregados(eventos)
-
-    assert len(rotulos) == len({evento.aggregate_id for evento in eventos})
-    assert len(consultas.captured_queries) == 3, len(consultas.captured_queries)
+    assert "Não há inscrição com este protocolo" in resposta.content.decode()

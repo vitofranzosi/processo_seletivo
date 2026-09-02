@@ -247,16 +247,20 @@ preserva o que havia sido concluído.
 - [X] T088 [P] Teste de não-regressão do pipeline de Retificação em `backend/tests/integration/publicacoes/test_retificacao_intocada.py`, exigido por FR-100: para Edital **inteiramente na versão vigente**, a precondição, a detecção de conflito, a consolidação, a verificação de efeito prático e a materialização produzem o mesmo resultado que produziam antes desta feature. É a guarda sobre a superfície que a 012 passou a tocar em quatro módulos
 - [X] T089 Executar `specs/012-mesa-de-avaliacao/quickstart.md` inteiro, as seis entregas, e registrar o que divergiu
 - [X] T090 Registrar os dois gates de implantação do quickstart em `specs/012-mesa-de-avaliacao/quickstart.md` — identidade institucional (FR-058) e retenção/descarte do acervo (FR-057) —, com o estado de cada um. **FR-057 não tem tarefa de implementação de propósito**: a resposta é institucional, e o que a 012 entrega é a pergunta registrada
-- [X] T091 Escrever `specs/012-mesa-de-avaliacao/traceability.md`, fechando os 106 FR e os 31 SC contra tarefa e teste — os 37 demonstrados pelo quickstart e os demais cobertos por suíte
+- [X] T091 Escrever `specs/012-mesa-de-avaliacao/traceability.md`, fechando os 108 FR e os 31 SC contra tarefa e teste — os 37 demonstrados pelo quickstart e os demais cobertos por suíte
 
 ---
 
-## Phase 9: Correções das duas rodadas de revisão
+## Phase 9: Correções das revisões e do percurso em escala
 
 Cinco defeitos funcionais e dois menores na primeira rodada (`origin/main...f5bcaba`), e mais três
 na segunda, sobre as próprias correções. Nenhum era visível pela suíte que existia — quatro
 passavam porque o teste exercitava exatamente o caso que escondia o defeito, e os três da segunda
 rodada eram sobre código novo que a primeira ainda não tinha lido.
+
+E mais sete do **percurso de um Processo de 600 inscritos**, que é onde a escala aparece: nenhum
+deles é visível numa Etapa de três inscrições, e dois eram bloqueadores de uso — a tela que crescia
+com o trabalho já feito, e as cerca de 700 marcações para distribuir uma Etapa.
 
 - [X] T092 Separar a porta da trilha em `_etapa_para_auditar()`, em `backend/processo_seletivo/interface/views.py`: presidência **ou** `auditoria:consultar`, e 404 para quem não é nenhum dos dois (FR-091). A rota exigia as duas coisas ao mesmo tempo — o presidente lia 403, o auditor puro lia 404 —, e a fixture `["gestor", "auditor"]` escondia isso por testar justamente o híbrido
 - [X] T093 Ancorar a abertura de documento na `Atribuicao`, em `_registrar_na_mesa()`, e desfazer a consulta composta de T-084 em `backend/processo_seletivo/auditoria/selectors.py` (FR-053, T-016). Sobre a `Inscricao`, o registro não nomeava a Etapa e não se distinguia da consulta administrativa da 009 — a trilha de uma Etapa exibia as aberturas de outra e as consultas do gestor
@@ -266,6 +270,13 @@ rodada eram sobre código novo que a primeira ainda não tinha lido.
 - [X] T098 Paginar `conclusoes_preservadas()` em `backend/processo_seletivo/avaliacoes/application/selectors.py` e a tela em `conclusoes.html` (FR-049), calculando a última ordem de cada Avaliação **por agregação**, porque a conclusão que vale pode estar na página seguinte
 - [X] T099 Recusar a confirmação do impedimento sem alcance declarado em `backend/processo_seletivo/interface/views.py` (FR-106): sem isso a garantia era desligável por quem monta o formulário
 - [X] T100 Trocar a lista de identificadores por `aggregate_filter` de subconsultas em `trilha_da_avaliacao()` (FR-050), com o teste de escala que mede o texto da consulta em `backend/tests/performance/test_escala_da_mesa.py`
+- [X] T104 Tirar a reabertura da tela de distribuição e levá-la à página de conclusões preservadas, com o formulário de motivo por linha em vigor (FR-036, FR-049) — a seção sem paginação media 679 KB e 605 formulários com 601 conclusões
+- [X] T105 Criar `backend/processo_seletivo/avaliacoes/domain/rodizio.py` e os comandos `propor_rodizio`/`confirmar_rodizio` em `application/distribuicao.py`, com a conferência da assinatura sob trava (FR-107)
+- [X] T106 Acrescentar a proposta de rodízio à tela de distribuição em `distribuicao.html`, com o plano por pessoa e o que fica de fora, e `selecao.js` para marcar todas as inscrições da página (FR-049, FR-107)
+- [X] T107 Distinguir rascunho de não iniciada na Mesa, com filtro próprio (FR-021), e mostrar as atribuições retiradas com o ato e o motivo (FR-108) em `selectors.py` e `minha_etapa.html`
+- [X] T108 Aceitar protocolo onde se digita inscrição — filtro da trilha, filtro das conclusões e formulário de impedimento (FR-050) — e nomear quem e qual inscrição na confirmação do impedimento (FR-041)
+- [X] T109 Acrescentar o filtro por progresso à distribuição e a coluna de concluídas (FR-049), a contagem por Etapa na tela inicial de quem avalia e o atalho para a próxima pendente
+- [X] T110 [P] Corrigir a comunicação: lote inteiramente recusado deixa de ser anunciado em verde e os motivos vêm agrupados (FR-097); o ato aparece por extenso na tabela de inelegíveis; uma faixa só ao concluir; Perfil vazio diz "não informado"; e a tela da 011 passa a se chamar Alocação por Etapa, desfazendo a colisão com a Distribuição da 012
 - [X] T101 Escopar o impedimento na trilha pela **alocação** da pessoa na Etapa, em `trilha_da_avaliacao()` (FR-050): sem critério de pertinência ele aparecia na trilha de toda Etapa do Edital, e escopá-lo pela Atribuição apagaria o caso preventivo
 - [X] T102 Nomear o alvo de cada ato na trilha por `rotulos_dos_agregados()` em `backend/processo_seletivo/avaliacoes/application/selectors.py` — três consultas, uma por tipo de agregado, e não uma por linha (FR-048, FR-050)
 - [X] T103 Paginar `avaliacoes_inelegiveis()` e a sua tabela em `impedimentos.html` (FR-049)

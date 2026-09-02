@@ -263,26 +263,55 @@ def test_o_alcance_reconfirmado_sobre_o_conjunto_atual_e_aceito(gestor, cenario,
     assert resultado["concluidas_inelegiveis"] == 1
 
 
-def test_identificador_malformado_e_recusa_de_formulario_nos_dois_passos(gestor, cenario):
-    """Identificador digitado erra, e errar não pode ser erro de servidor (FR-044).
+def test_a_inscricao_e_encontrada_pelo_protocolo(gestor, cenario, inscricoes):
+    """O protocolo é o número que o candidato tem em mãos, e é o que toda tela mostra.
 
-    Sem esta conferência o texto malformado chega a `filter(inscricao_id=...)` e vira
-    `ValidationError` — 500 onde a pessoa deveria ler que aquilo não identifica inscrição nenhuma.
+    Exigir o UUID obrigava a presidência a achá-lo em outro lugar e colar — e um erro de digitação
+    chegava ao ORM como `ValidationError`, virando 500 onde deveria haver erro de formulário.
     """
+    distribuir_para(cenario, gestor, ["joao"], inscricoes[:1])
+
+    alcance = alcance_do_impedimento(
+        processo=cenario["processo"],
+        identity_subject="joao",
+        inscricao_id=inscricoes[0].protocolo,
+    )
+
+    assert alcance["atribuicoes"] == 1
+    assert alcance["inscricao"] == inscricoes[0].protocolo
+    assert alcance["pessoa"] == "joao"
+
+    resultado = registrar_impedimento(
+        actor=gestor,
+        processo_id=cenario["processo"].id,
+        identity_subject="joao",
+        inscricao_id=inscricoes[0].protocolo,
+        motivo=MOTIVO,
+        idempotency_key="por-protocolo",
+        correlation_id="teste",
+        alcance_confirmado=alcance["assinatura"],
+    )
+
+    assert resultado["inativadas"] == 1
+    assert Impedimento.objects.filter(inscricao=inscricoes[0]).exists()
+
+
+def test_identificador_desconhecido_e_recusa_de_formulario_nos_dois_passos(gestor, cenario):
+    """Errar o que se digita não pode ser erro de servidor (FR-044)."""
     with pytest.raises(DomainError) as na_previa:
         alcance_do_impedimento(
             processo=cenario["processo"], identity_subject="joao", inscricao_id="não-é-uuid"
         )
-    assert (na_previa.value.code, na_previa.value.status) == ("inscricao_invalida", 422)
+    assert (na_previa.value.code, na_previa.value.status) == ("inscricao_nao_encontrada", 422)
 
     with pytest.raises(DomainError) as no_ato:
         registrar_impedimento(
             actor=gestor,
             processo_id=cenario["processo"].id,
             identity_subject="joao",
-            inscricao_id="não-é-uuid",
+            inscricao_id="7777",
             motivo=MOTIVO,
-            idempotency_key="malformado",
+            idempotency_key="desconhecido",
             correlation_id="teste",
         )
-    assert no_ato.value.code == "inscricao_invalida"
+    assert no_ato.value.code == "inscricao_nao_encontrada"

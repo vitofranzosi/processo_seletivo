@@ -24,7 +24,7 @@ concluído antes vive aqui, no registro append-only do domínio, e não na trilh
     <label for="inscricao">Inscrição</label>
     <input type="search" id="inscricao" name="inscricao" value="{{ inscricao_filtro }}"
            aria-describedby="ajuda-inscricao-conclusoes">
-    <span class="ajuda" id="ajuda-inscricao-conclusoes">Identificador da inscrição.</span>
+    <span class="ajuda" id="ajuda-inscricao-conclusoes">Protocolo da inscrição, como ele aparece na tabela — ou o identificador.</span>
   </p>
   <p class="salvar">
     <button type="submit" class="acao">Filtrar</button>
@@ -33,6 +33,9 @@ concluído antes vive aqui, no registro append-only do domínio, e não na trilh
   </p>
   {% if filtro_invalido %}<p class="erro" role="alert" tabindex="-1" autofocus>{{ filtro_invalido }}</p>{% endif %}
 </form>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível reabrir:</strong> {{ erro }}</p>{% endif %}
+{% if resultado %}<p class="sucesso" role="status" tabindex="-1">{{ resultado }}</p>{% endif %}
 
 {% if linhas %}
 <div class="tabela-rolavel">
@@ -47,6 +50,7 @@ concluído antes vive aqui, no registro append-only do domínio, e não na trilh
       <th scope="col">Versão que governou</th>
       <th scope="col">Concluída em</th>
       <th scope="col">Situação</th>
+      {% if pode_reabrir %}<th scope="col">Reabrir</th>{% endif %}
     </tr>
   </thead>
   <tbody>
@@ -64,6 +68,27 @@ concluído antes vive aqui, no registro append-only do domínio, e não na trilh
       "em vigor" de "preservada e inelegível" (FR-076 da 011, checklist de UX).
       {% endcomment %}
       <td>{{ linha.rotulo }}</td>
+      {% if pode_reabrir %}
+      {% comment %}
+      Só a conclusão **em vigor** é reabrível: as anteriores já foram substituídas por uma
+      reabertura, e a que está sob atribuição inativa saiu do conjunto por ato nomeado — reabri-la
+      não a traria de volta. O formulário pede o motivo antes de qualquer coisa (FR-036).
+      {% endcomment %}
+      <td>
+        {% if linha.situacao == "em_vigor" %}
+        <form method="post" action="{% url 'interface:reabrir-avaliacao' edital.id etapa.id %}">
+          {% csrf_token %}
+          <input type="hidden" name="avaliacao_id" value="{{ linha.avaliacao.id }}">
+          <input type="hidden" name="expected_revision" value="{{ linha.avaliacao.revision }}">
+          <input type="hidden" name="chave_idempotencia" value="{{ chave_reabertura }}-{{ linha.avaliacao.id }}">
+          <label for="motivo-{{ linha.conclusao.id }}" class="oculto">Motivo da reabertura da inscrição {{ linha.inscricao.protocolo|default:linha.inscricao.id }}</label>
+          <input type="text" id="motivo-{{ linha.conclusao.id }}" name="motivo" required
+                 placeholder="Motivo da reabertura">
+          <button type="submit">Reabrir</button>
+        </form>
+        {% else %}—{% endif %}
+      </td>
+      {% endif %}
     </tr>
     {% endfor %}
   </tbody>
