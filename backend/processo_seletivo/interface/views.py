@@ -2055,6 +2055,9 @@ def impedimentos(request, edital_id, etapa_id):
                     identity_subject=dados["identity_subject"],
                     inscricao_id=dados["inscricao_id"],
                 )
+    inelegiveis, pagina_dos_inelegiveis = avaliacao_selectors.avaliacoes_inelegiveis(
+        edital=edital, etapa_id=etapa_id, pagina=request.GET.get("pagina") or 1
+    )
     return marcar_como_privada(
         render(
             request,
@@ -2064,9 +2067,8 @@ def impedimentos(request, edital_id, etapa_id):
                 "processo": edital.processo,
                 "etapa": etapa,
                 "carga": avaliacao_selectors.carga_por_avaliador(edital=edital, etapa_id=etapa_id),
-                "inelegiveis": avaliacao_selectors.avaliacoes_inelegiveis(
-                    edital=edital, etapa_id=etapa_id
-                ),
+                "inelegiveis": inelegiveis,
+                "pagina_dos_inelegiveis": pagina_dos_inelegiveis,
                 "erro": erro,
                 "confirmacao": confirmacao,
                 "digitado": digitado,
@@ -2511,6 +2513,7 @@ def trilha_da_avaliacao(request, edital_id, etapa_id):
             limit=auditoria_selectors.parse_limit(request.GET.get("limit")),
             operation=operacao or None,
         )
+    rotulos = avaliacao_selectors.rotulos_dos_agregados(registros)
     return marcar_como_privada(
         render(
             request,
@@ -2540,6 +2543,9 @@ def trilha_da_avaliacao(request, edital_id, etapa_id):
                         "operacao": OPERACOES.get(registro.operation, registro.operation),
                         "agregado": AGREGADOS.get(registro.aggregate_type, registro.aggregate_type),
                         "identificador": registro.aggregate_id,
+                        # A que o ato se refere, em nome de gente: sem isto a trilha dizia
+                        # "Conclusão de avaliação, por joao" e escondia de qual inscrição.
+                        "sobre": rotulos.get(registro.aggregate_id),
                         "permissao": registro.permission,
                         "motivo": registro.reason,
                     }

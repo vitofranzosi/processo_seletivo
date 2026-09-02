@@ -237,7 +237,7 @@ A revisão de `origin/main...f5bcaba` encontrou cinco defeitos funcionais que a 
 não alcançou, e as correções mudaram três telas: a porta da trilha, o registro da abertura de
 documento e a nova página de conclusões preservadas. **A execução acima é anterior a elas**, e por
 isso os pontos afetados foram percorridos de novo, pelo mesmo canal e contra o mesmo banco de
-desenvolvimento: **27 verificações, nenhuma divergência** — incluindo os dois passos da confirmação do impedimento
+desenvolvimento: **29 verificações, nenhuma divergência** — incluindo os dois passos da confirmação do impedimento
 pela própria tela, e o envio que tenta pular a declaração do alcance.
 
 Duas observações novas, e as duas são sobre o roteiro:

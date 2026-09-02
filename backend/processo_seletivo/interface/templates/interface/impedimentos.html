@@ -108,6 +108,13 @@ de quem sabe — e é por isso que esta tela pede a identidade e o motivo, em ve
     </tbody>
   </table>
   </div>
+  {% if pagina_dos_inelegiveis.has_other_pages %}
+  <nav class="paginacao" aria-label="Páginas das avaliações inelegíveis">
+    {% if pagina_dos_inelegiveis.has_previous %}<a href="?pagina={{ pagina_dos_inelegiveis.previous_page_number }}">Anterior</a>{% endif %}
+    <span aria-current="page">Página {{ pagina_dos_inelegiveis.number }} de {{ pagina_dos_inelegiveis.paginator.num_pages }}</span>
+    {% if pagina_dos_inelegiveis.has_next %}<a href="?pagina={{ pagina_dos_inelegiveis.next_page_number }}">Próxima</a>{% endif %}
+  </nav>
+  {% endif %}
   {% else %}
   <p class="vazio">Nenhuma avaliação foi tirada do conjunto elegível nesta Etapa.</p>
   {% endif %}

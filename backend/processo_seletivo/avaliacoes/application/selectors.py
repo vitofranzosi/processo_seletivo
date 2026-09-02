@@ -15,7 +15,12 @@ from django.core.paginator import Paginator
 from django.db.models import Count, Max, Prefetch, Q
 
 from processo_seletivo.avaliacoes.domain.previsao import avaliacoes_previstas
-from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao, ConclusaoAvaliacao
+from processo_seletivo.avaliacoes.models import (
+    Atribuicao,
+    Avaliacao,
+    ConclusaoAvaliacao,
+    Impedimento,
+)
 from processo_seletivo.comissoes.models import AlocacaoEtapa
 from processo_seletivo.inscricoes.models import Inscricao
 
@@ -242,38 +247,47 @@ def avaliacoes_elegiveis(*, edital, etapa_id, inscricao_id=None):
     return consulta.order_by("atribuicao__inscricao__protocolo", "concluida_em")
 
 
-def avaliacoes_inelegiveis(*, edital, etapa_id):
+def avaliacoes_inelegiveis(*, edital, etapa_id, pagina=1):
     """As que ficaram de fora — **com o ato, o autor e o motivo ao lado** (FR-093).
 
     Invalidação apenas registrada não impede seleção silenciosa; invalidação **visível** impede. É
     por isso que este seletor não devolve só as linhas: ele traz o `AtoAdministrativo` que as tirou
     do conjunto, que é onde o motivo obrigatório está.
+
+    **Paginada** (FR-049), ainda que na prática ela seja curta: o que entra aqui entra por ato de
+    exceção. "Na prática é curta" é suposição sobre o uso, e uma Etapa que troque a banca inteira a
+    torna longa de uma vez — que é justamente a hora em que alguém vai querer lê-la.
     """
     from processo_seletivo.processos.models import AtoAdministrativo
 
-    fora = list(
+    paginas = Paginator(
         Avaliacao.objects.filter(
             atribuicao__edital=edital,
             atribuicao__etapa_id=etapa_id,
             atribuicao__ativo=False,
             estado=Avaliacao.Estado.CONCLUIDA,
-        ).select_related("atribuicao", "atribuicao__inscricao", "atribuicao__membro")
+        )
+        .select_related("atribuicao", "atribuicao__inscricao", "atribuicao__membro", "versao")
+        .order_by("atribuicao__inscricao__protocolo", "atribuicao_id"),
+        POR_PAGINA,
     )
+    pagina_atual = paginas.get_page(pagina)
     atos = {}
     for ato in AtoAdministrativo.objects.filter(
         aggregate_type="Atribuicao",
-        aggregate_id__in=[a.atribuicao_id for a in fora],
+        aggregate_id__in=[avaliacao.atribuicao_id for avaliacao in pagina_atual],
     ).order_by("occurred_at"):
         atos[ato.aggregate_id] = ato
-    return [
+    linhas = [
         {
             "avaliacao": avaliacao,
             "inscricao": avaliacao.atribuicao.inscricao,
             "membro": avaliacao.atribuicao.membro,
             "ato": atos.get(avaliacao.atribuicao_id),
         }
-        for avaliacao in fora
+        for avaliacao in pagina_atual
     ]
+    return linhas, pagina_atual
 
 
 def conclusoes_preservadas(*, edital, etapa_id, inscricao_id=None, pagina=1):
@@ -351,6 +365,40 @@ def conclusoes_preservadas(*, edital, etapa_id, inscricao_id=None, pagina=1):
             }
         )
     return linhas, pagina_atual
+
+
+def rotulos_dos_agregados(registros):
+    """A que cada evento da trilha se refere — em nome de gente, e não em identificador.
+
+    A trilha nomeia a operação e o tipo do agregado, e o identificador que ela guarda é um UUID
+    que a tela não mostrava. Quem lê via "Conclusão de avaliação, por joao" sem saber **de qual
+    inscrição** — e a pergunta que traz alguém à trilha é quase sempre sobre uma inscrição.
+
+    Resolver por evento seria uma consulta por linha. Aqui são três, uma por tipo de agregado,
+    qualquer que seja o tamanho da página (FR-048).
+    """
+    por_tipo = {}
+    for registro in registros:
+        por_tipo.setdefault(registro.aggregate_type, []).append(registro.aggregate_id)
+    rotulos = {}
+    for atribuicao in Atribuicao.objects.filter(
+        id__in=por_tipo.get("Atribuicao", [])
+    ).select_related("inscricao", "membro"):
+        rotulos[atribuicao.id] = _rotulo(atribuicao.inscricao, atribuicao.membro.identity_subject)
+    for avaliacao in Avaliacao.objects.filter(id__in=por_tipo.get("Avaliacao", [])).select_related(
+        "atribuicao__inscricao"
+    ):
+        rotulos[avaliacao.id] = _rotulo(avaliacao.atribuicao.inscricao, avaliacao.identity_subject)
+    for impedimento in Impedimento.objects.filter(
+        id__in=por_tipo.get("Impedimento", [])
+    ).select_related("inscricao"):
+        rotulos[impedimento.id] = _rotulo(impedimento.inscricao, impedimento.identity_subject)
+    return rotulos
+
+
+def _rotulo(inscricao, subject):
+    """A inscrição pelo protocolo, que é o que a pessoa tem em mãos ao perguntar."""
+    return f"inscrição {inscricao.protocolo or inscricao.id} — {subject}"
 
 
 def atribuicoes_orfas(*, edital, etapa_id):

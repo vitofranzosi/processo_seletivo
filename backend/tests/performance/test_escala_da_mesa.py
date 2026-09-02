@@ -269,3 +269,27 @@ def test_a_trilha_da_etapa_nao_carrega_a_etapa_inteira_para_montar_uma_pagina(ce
     assert len(consultas.captured_queries) <= 3, len(consultas.captured_queries)
     maior = max(len(consulta["sql"]) for consulta in consultas.captured_queries)
     assert maior < 5000, maior
+
+
+def test_as_avaliacoes_inelegiveis_sao_paginadas(cenario, mesa_cheia, gestor):
+    """FR-049. "Na prática é curta" é suposição sobre o uso, e não garantia do desenho.
+
+    O que entra aqui entra por ato de exceção — mas uma Etapa que troque a banca inteira torna a
+    lista longa de uma vez, e é justamente a hora em que alguém vai querer lê-la.
+    """
+    from processo_seletivo.avaliacoes.application.selectors import avaliacoes_inelegiveis
+
+    atribuicoes = list(Atribuicao.objects.filter(edital=cenario["edital"]).select_related("membro"))
+    _concluir_em_massa(cenario, atribuicoes)
+    from django.utils import timezone
+
+    Atribuicao.objects.filter(id__in=[a.id for a in atribuicoes]).update(
+        ativo=False, inativado_em=timezone.now(), inativado_por="maria"
+    )
+
+    with CaptureQueriesContext(connection) as consultas:
+        linhas, pagina = avaliacoes_inelegiveis(edital=cenario["edital"], etapa_id=cenario["etapa"])
+
+    assert pagina.paginator.count == MUITAS
+    assert len(linhas) == POR_PAGINA
+    assert len(consultas.captured_queries) <= 4, len(consultas.captured_queries)

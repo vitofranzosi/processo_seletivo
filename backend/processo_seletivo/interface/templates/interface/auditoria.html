@@ -116,6 +116,7 @@ que foi concluído vive no registro do domínio, e é consultável em página pr
       <span class="quando">{{ registro.quando|date:"d/m/Y H:i:s" }}</span>
       <strong class="operacao">{{ registro.operacao }}</strong>
       <span class="agregado">{{ registro.agregado }}</span>
+      {% if registro.sobre %}<span class="alvo">{{ registro.sobre }}</span>{% endif %}
     </div>
     <div class="corpo">
       <span class="ator">por <strong>{{ registro.ator }}</strong></span>

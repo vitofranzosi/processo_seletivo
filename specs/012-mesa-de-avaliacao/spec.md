@@ -840,12 +840,22 @@ com Atribuição ativa — e a revogação é a conjunção sendo avaliada, não
 
 **FR-048** — Nenhuma listagem pode verificar autorização por linha.
 
-**FR-049** — As telas de distribuição, de Mesa e de **conclusões preservadas** devem ser paginadas
-e filtráveis. A última é o maior acervo da feature — uma linha por conclusão, e mais uma a cada
-reabertura —, e é justamente a tela que se abre para responder a recurso.
+**FR-049** — As telas de distribuição, de Mesa, de **conclusões preservadas** e de **avaliações
+inelegíveis** devem ser paginadas e filtráveis. A de conclusões é o maior acervo da feature — uma
+linha por conclusão, e mais uma a cada reabertura —, e é justamente a que se abre para responder a
+recurso. A de inelegíveis é curta no uso corrente, e deixar de paginá-la por isso seria apostar no
+uso: trocar a banca de uma Etapa a torna longa de uma vez.
 
 **FR-050** — A trilha desta feature será volumosa por natureza — duas mil atribuições e cada
 documento aberto. Ela precisa nascer filtrável por inscrição, por avaliador e por operação.
+
+Cada linha diz também **a que inscrição o ato se refere**, pelo protocolo, e a quem: a pergunta que
+traz alguém à trilha é quase sempre sobre uma inscrição, e "conclusão de avaliação, por joao" sem
+dizer de qual não responde a ela.
+
+E o **impedimento é da pessoa e da inscrição, e não da Etapa**: na trilha de uma Etapa ele entra
+quando a pessoa está ou esteve alocada nela, que é onde ele decide alguma coisa. Sem esse critério
+ele apareceria em toda Etapa do Edital, inclusive naquelas em que ela nunca trabalhou.
 
 **FR-069** — Nenhum ato de alocação, remoção de alocação ou remoção de membro pode disparar
 escrita proporcional ao número de atribuições da pessoa.

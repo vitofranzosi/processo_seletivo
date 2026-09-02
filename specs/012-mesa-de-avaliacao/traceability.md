@@ -13,7 +13,7 @@ falharia se ele fosse quebrado** — e não o teste que passa perto.
 | Requisitos funcionais (FR) | 106 |
 | Critérios de sucesso (SC) | 31 |
 | Edge cases (EC) | 20 |
-| Testes na suíte, ao fim da 012 | 1858 |
+| Testes na suíte, ao fim da 012 | 1863 |
 | Verificações do quickstart, executadas em 2026-09-02 | 34, sem divergência |
 
 ## Onde procurar
@@ -146,6 +146,17 @@ Três achados, e os três sobre código que a primeira rodada ainda não tinha p
 | a trilha resolvia os agregados por lista de identificadores | 43 mil caracteres de SQL, com mil atribuições, para montar vinte linhas | `test_escala_da_mesa.py::test_a_trilha_da_etapa_nao_carrega_a_etapa_inteira_para_montar_uma_pagina` |
 
 O primeiro merece nota: **a suíte continha o ataque**. `test_a_tela_mostra_o_ato_e_o_motivo_ao_lado_da_inelegivel` postava `confirmar=1` sem a assinatura do alcance, e passava — o teste documentava como pular a confirmação. Ele agora percorre os dois passos, lendo o alcance da própria tela.
+
+## As três observações da segunda rodada, também fechadas
+
+A segunda rodada terminou com três coisas registradas como decisões, e não como defeitos. Levadas
+a sério, as três viraram correção — e cada uma tem teste que falha se ela for desfeita.
+
+| observação | o que ela era de fato | o teste |
+|---|---|---|
+| o impedimento aparecia na trilha de toda Etapa do Edital | ele é da pessoa e da inscrição, e faltava dizer **onde** ele decide algo: a alocação | `test_trilha_da_012.py::test_o_impedimento_aparece_na_etapa_em_que_a_pessoa_atua_e_nao_nas_outras` e `::test_o_impedimento_preventivo_continua_visivel_onde_ele_decide` |
+| a trilha não dizia a que inscrição cada ato se referia | a pergunta que traz alguém à trilha é sobre uma inscrição | `test_trilha_da_012.py::test_cada_ato_diz_a_que_inscricao_se_refere` e `::test_nomear_o_alvo_de_cada_ato_nao_custa_por_linha` |
+| a lista de inelegíveis não paginava | "na prática é curta" é aposta no uso, e trocar a banca a torna longa de uma vez | `test_escala_da_mesa.py::test_as_avaliacoes_inelegiveis_sao_paginadas` |
 
 ## O gate da 013
 

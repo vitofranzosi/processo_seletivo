@@ -166,9 +166,23 @@ def trilha_da_avaliacao(
     páginas somadas fora do banco não têm cursor comum, e a segunda ficava inalcançável.
     """
     from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao, Impedimento
+    from processo_seletivo.comissoes.models import AlocacaoEtapa
 
     atribuicoes = Atribuicao.objects.filter(edital=edital, etapa_id=etapa_id)
-    impedimentos = Impedimento.objects.filter(inscricao__edital=edital)
+    # **O impedimento é da pessoa e da inscrição, e não da Etapa** — e por isso ele precisa de um
+    # critério de pertinência, ou apareceria na trilha de toda Etapa do Edital, inclusive naquelas
+    # em que a pessoa nunca trabalhou.
+    #
+    # O critério é a **alocação**: o impedimento só tem efeito onde a pessoa poderia receber
+    # trabalho. Vale a alocação em qualquer estado, porque a removida é história e a trilha existe
+    # para lê-la; e é o que preserva o caso preventivo — impedir antes de distribuir aparece na
+    # Etapa em que aquela pessoa atua, que é onde a decisão importa (T-016).
+    alocados = AlocacaoEtapa.objects.filter(edital=edital, etapa_id=etapa_id).values_list(
+        "membro__identity_subject", flat=True
+    )
+    impedimentos = Impedimento.objects.filter(
+        inscricao__edital=edital, identity_subject__in=alocados
+    )
     if inscricao:
         atribuicoes = atribuicoes.filter(inscricao_id=inscricao)
         impedimentos = impedimentos.filter(inscricao_id=inscricao)

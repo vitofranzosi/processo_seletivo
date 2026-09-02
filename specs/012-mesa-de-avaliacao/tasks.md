@@ -266,6 +266,9 @@ rodada eram sobre código novo que a primeira ainda não tinha lido.
 - [X] T098 Paginar `conclusoes_preservadas()` em `backend/processo_seletivo/avaliacoes/application/selectors.py` e a tela em `conclusoes.html` (FR-049), calculando a última ordem de cada Avaliação **por agregação**, porque a conclusão que vale pode estar na página seguinte
 - [X] T099 Recusar a confirmação do impedimento sem alcance declarado em `backend/processo_seletivo/interface/views.py` (FR-106): sem isso a garantia era desligável por quem monta o formulário
 - [X] T100 Trocar a lista de identificadores por `aggregate_filter` de subconsultas em `trilha_da_avaliacao()` (FR-050), com o teste de escala que mede o texto da consulta em `backend/tests/performance/test_escala_da_mesa.py`
+- [X] T101 Escopar o impedimento na trilha pela **alocação** da pessoa na Etapa, em `trilha_da_avaliacao()` (FR-050): sem critério de pertinência ele aparecia na trilha de toda Etapa do Edital, e escopá-lo pela Atribuição apagaria o caso preventivo
+- [X] T102 Nomear o alvo de cada ato na trilha por `rotulos_dos_agregados()` em `backend/processo_seletivo/avaliacoes/application/selectors.py` — três consultas, uma por tipo de agregado, e não uma por linha (FR-048, FR-050)
+- [X] T103 Paginar `avaliacoes_inelegiveis()` e a sua tabela em `impedimentos.html` (FR-049)
 - [X] T097 [P] Recusar identificador malformado como erro de formulário — `identificador_de_inscricao()` no impedimento e `_tem_forma_de_identificador()` nos filtros da trilha e das conclusões —, e marcar `postgresql_only` os dois testes de corrida da 012, que quebravam em SQLite por "database table is locked" e vazavam conexões
 
 ---
