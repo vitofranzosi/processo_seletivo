@@ -49,9 +49,12 @@ def registrar_impedimento(
 ):
     """Cria o impedimento e inativa as Atribuições ativas do par, na mesma transação.
 
-    Devolve `(impedimento, inativadas)`. As Avaliações já concluídas são **preservadas e tornadas
-    inelegíveis** — nada nelas é apagado ou alterado, e elas deixam de integrar o conjunto que a
-    013 consome, o que libera a vaga que ocupavam (FR-041, FR-079, FR-090).
+    Devolve o **resultado declarado** do ato: quantas Atribuições foram inativadas e quantas delas
+    tinham conclusão.
+
+    As Avaliações já concluídas são **preservadas e tornadas inelegíveis** — nada nelas é apagado
+    ou alterado, e elas deixam de integrar o conjunto que a 013 consome, o que libera a vaga que
+    ocupavam (FR-041, FR-079, FR-090).
     """
     subject = (identity_subject or "").strip()
     texto = (motivo or "").strip()
@@ -71,7 +74,9 @@ def registrar_impedimento(
         actor=actor,
         processo_id=processo_id,
         operation="avaliacao:impedir",
-        payload={"pessoa": subject, "inscricao": str(inscricao_id)},
+        # O motivo entra no conteúdo da chave: sem ele, reenviar a mesma chave com outro motivo
+        # seria tratado como repetição, e o ato registrado não seria o que se pediu (FR-084).
+        payload={"pessoa": subject, "inscricao": str(inscricao_id), "motivo": texto},
         idempotency_key=idempotency_key,
     ) as ctx:
         inscricao = Inscricao.objects.filter(
@@ -80,7 +85,9 @@ def registrar_impedimento(
         if inscricao is None:
             raise nao_encontrado()
         if ctx.repetido:
-            return None, []
+            # **O desfecho original, e não um vazio.** A tela precisa dizer quantas atribuições o
+            # ato inativou, e essa contagem não é reconstruível depois (FR-084, FR-097).
+            return ctx.desfecho_anterior
         if not MembroComissao.objects.filter(
             processo=ctx.processo, identity_subject=subject
         ).exists():
@@ -118,12 +125,24 @@ def registrar_impedimento(
             com_ato_administrativo=True,
         )
         inativadas = []
-        ativas = Atribuicao.objects.filter(
-            membro__processo=ctx.processo,
-            membro__identity_subject=subject,
-            inscricao=inscricao,
-            ativo=True,
-        ).select_related("membro")
+        # `of=("self",)` porque a Avaliação é junção externa — o Postgres recusa `FOR UPDATE` do
+        # lado anulável —, e o que precisa ser travado é a Atribuição, que é a linha que `concluir`
+        # também bloqueia.
+        ativas = list(
+            Atribuicao.objects.select_for_update(of=("self",))
+            .filter(
+                membro__processo=ctx.processo,
+                membro__identity_subject=subject,
+                inscricao=inscricao,
+                ativo=True,
+            )
+            .select_related("membro")
+        )
+        com_conclusao = set(
+            Avaliacao.objects.filter(
+                atribuicao__in=ativas, estado=Avaliacao.Estado.CONCLUIDA
+            ).values_list("atribuicao_id", flat=True)
+        )
         for atribuicao in ativas:
             Atribuicao.objects.filter(pk=atribuicao.pk).update(
                 ativo=False, inativado_em=ctx.now, inativado_por=actor.subject
@@ -140,5 +159,13 @@ def registrar_impedimento(
                 idempotency_key=idempotency_key,
                 com_ato_administrativo=True,
             )
-        ctx.concluir(impedimento, 201)
-        return impedimento, inativadas
+        resultado = {
+            "impedimento": str(impedimento.id),
+            "pessoa": subject,
+            "inativadas": len(inativadas),
+            "concluidas_inelegiveis": sum(
+                1 for atribuicao in inativadas if atribuicao.id in com_conclusao
+            ),
+        }
+        ctx.concluir_sem_resultado(201, resultado)
+        return resultado

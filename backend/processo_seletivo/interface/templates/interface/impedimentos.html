@@ -12,7 +12,36 @@
 
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível registrar:</strong> {{ erro }}</p>{% endif %}
 {% if resultado %}
-<p class="sucesso" role="status" tabindex="-1">Impedimento registrado{% if resultado.inativadas %}, e {{ resultado.inativadas }} atribuiç{{ resultado.inativadas|pluralize:"ão,ões" }} inativada{{ resultado.inativadas|pluralize:"s" }}{% endif %}.</p>
+<p class="sucesso" role="status" tabindex="-1">Impedimento registrado{% if resultado.inativadas %}, e {{ resultado.inativadas }} atribuiç{{ resultado.inativadas|pluralize:"ão,ões" }} inativada{{ resultado.inativadas|pluralize:"s" }}{% if resultado.concluidas_inelegiveis %} — {{ resultado.concluidas_inelegiveis }} com avaliação concluída, preservada e agora inelegível{% endif %}{% endif %}.</p>
+{% endif %}
+
+{% comment %}
+FR-041: a confirmação **declara o alcance** antes de o ato acontecer. Retirar trabalho de alguém não
+pode ser efeito colateral silencioso de registrar um motivo — quem confirma precisa ver quantas
+atribuições e quantas conclusões o impedimento alcançará.
+{% endcomment %}
+{% if confirmacao %}
+<form method="post" class="confirmacao">
+  {% csrf_token %}
+  <input type="hidden" name="confirmar" value="1">
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  <input type="hidden" name="identity_subject" value="{{ digitado.identity_subject }}">
+  <input type="hidden" name="inscricao_id" value="{{ digitado.inscricao_id }}">
+  <input type="hidden" name="motivo" value="{{ digitado.motivo }}">
+  <p class="aviso" role="status" tabindex="-1" autofocus>
+    <strong>Confirme antes de registrar.</strong>
+    {% if confirmacao.atribuicoes %}
+    Este impedimento inativará <strong>{{ confirmacao.atribuicoes }}</strong> atribuiç{{ confirmacao.atribuicoes|pluralize:"ão,ões" }} ativa{{ confirmacao.atribuicoes|pluralize:"s" }}{% if confirmacao.concluidas %}, das quais <strong>{{ confirmacao.concluidas }}</strong> com avaliação já concluída — ela será preservada e deixará de integrar o conjunto elegível{% endif %}.
+    {% else %}
+    Esta pessoa não tem atribuição ativa para esta inscrição: o impedimento é preventivo e nada
+    será inativado.
+    {% endif %}
+  </p>
+  <p class="acoes">
+    <button type="submit">Registrar mesmo assim</button>
+    <a class="acao" href="{% url 'interface:impedimentos' edital.id etapa.id %}">Cancelar</a>
+  </p>
+</form>
 {% endif %}
 
 {% comment %}

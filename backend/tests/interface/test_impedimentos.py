@@ -1,109 +1,115 @@
-"""A tela de confirmação é alcançável por URL direta e precisa dizer o que impede.
-
-A lista de ações já filtra por permissão e situação — quem abre `/atos/<acao>` diretamente
-recebia o mesmo formulário com "Confirmar", e a recusa só aparecia depois do clique. O command
-continua sendo quem decide; isto é apenas a explicação antecipada.
-"""
+"""A tela do impedimento: a confirmação declara o alcance antes do ato (FR-041)."""
 
 import pytest
 from django.urls import reverse
 
-from processo_seletivo.processos.models import Edital
-from tests.interface.conftest import compor_rascunho, identificar
+from processo_seletivo.avaliacoes.models import Atribuicao, Impedimento
+from tests.fixtures.mesa import concluir_como, distribuir_para, inscricoes_de, montar_banca
+from tests.interface.conftest import identificar
+
+pytestmark = [pytest.mark.django_db]
 
 
 @pytest.fixture
-def edital(api_client, manager_headers, process_payload):
-    api_client.post("/api/v1/admin/processos", process_payload, format="json", **manager_headers)
-    return Edital.objects.get()
+def cenario(gestor, api_client, manager_headers):
+    return montar_banca(gestor, api_client, manager_headers, seed=14, codigo="E1")
 
 
-def confirmar(client, edital, acao):
-    return client.get(reverse("interface:ato", args=[edital.id, acao]))
+@pytest.fixture
+def tela(cenario):
+    return reverse("interface:impedimentos", args=[cenario["edital"].id, cenario["etapa"]])
 
 
-@pytest.mark.django_db
-@pytest.mark.integration
-def test_sem_permissao_a_tela_explica_e_nao_oferece_confirmar(client, seletor_ligado, edital):
-    identificar(client, "iris.auditora", ["auditor"])
-    corpo = confirmar(client, edital, "submeter").content.decode()
-
-    assert "Você não pode praticar este ato" in corpo
-    assert "edital:submeter" in corpo
-    assert "Confirmar: " not in corpo
+@pytest.fixture
+def presidente(client, seletor_ligado):
+    identificar(client, "carlos", ["gestor"])
+    return client
 
 
-@pytest.mark.django_db
-@pytest.mark.integration
-def test_situacao_incompativel_diz_qual_e_a_exigida_e_qual_e_a_atual(
-    client, seletor_ligado, edital
+@pytest.fixture
+def com_conclusao(cenario, gestor):
+    inscricao = inscricoes_de(cenario, 1, primeiro=1500)[0]
+    distribuir_para(cenario, gestor, ["joao"], [inscricao], chave="tela")
+    concluir_como(cenario, "joao", inscricao, pontuacao="95")
+    return inscricao
+
+
+def test_o_primeiro_envio_declara_o_alcance_em_vez_de_registrar(
+    presidente, tela, cenario, com_conclusao
 ):
-    """O Edital está em elaboração; homologar exige revisão."""
-    identificar(client, "bruno.homologador", ["homologador"])
-    corpo = confirmar(client, edital, "homologar").content.decode()
+    """Retirar trabalho não pode ser efeito colateral silencioso de registrar um motivo."""
+    corpo = presidente.post(
+        tela,
+        {
+            "identity_subject": "joao",
+            "inscricao_id": str(com_conclusao.id),
+            "motivo": "Parentesco declarado.",
+        },
+    ).content.decode()
 
-    assert "não cabe na situação atual" in corpo
-    assert "Em revisão" in corpo and "Em elaboração" in corpo
-    assert "Confirmar: " not in corpo
-
-
-PERFIL_MINIMO = {
-    "perfil-0-id": "dddddddd-0000-4000-8000-00000000f001",
-    "perfil-0-code": "P1",
-    "perfil-0-name": "Perfil",
-    "perfil-0-immediateVacancies": "1",
-    "perfil-0-reserveType": "NONE",
-}
-EVENTO_MINIMO = {
-    "evento-0-id": "dddddddd-0000-4000-8000-00000000f002",
-    "evento-0-type": "Inscrições",
-    "evento-0-description": "Inscrições",
-    "evento-0-startAt": "2026-10-01T09:00",
-}
+    assert "Confirme antes de registrar" in corpo
+    assert "1</strong> atribuição" in corpo
+    assert "avaliação já concluída" in corpo
+    # Nada foi registrado ainda: o alcance é declarado **antes** do ato.
+    assert not Impedimento.objects.exists()
+    assert Atribuicao.objects.filter(inscricao=com_conclusao, ativo=True).exists()
 
 
-@pytest.mark.django_db
-@pytest.mark.integration
-def test_ato_cabivel_continua_oferecendo_confirmar(client, seletor_ligado, edital):
-    """Sem Perfil e sem Evento o ato tem pendência impeditiva; o Edital precisa estar pronto."""
-    identificar(client, "ana.elaboradora", ["elaborador"])
-    compor_rascunho(client, edital, PERFIL_MINIMO, EVENTO_MINIMO)
-    corpo = confirmar(client, edital, "submeter").content.decode()
+def test_a_confirmacao_registra_e_diz_o_que_alcancou(presidente, tela, cenario, com_conclusao):
+    envio = {
+        "identity_subject": "joao",
+        "inscricao_id": str(com_conclusao.id),
+        "motivo": "Parentesco declarado.",
+    }
+    presidente.post(tela, envio)
 
-    assert "Confirmar: Submeter para revisão" in corpo
-    assert "não cabe na situação atual" not in corpo
-    assert "Impedimento:" not in corpo
+    presidente.post(tela, {**envio, "confirmar": "1", "chave_idempotencia": "tela-1"})
+    corpo = presidente.get(tela).content.decode()
 
-
-@pytest.mark.django_db
-@pytest.mark.integration
-def test_pendencia_impeditiva_tambem_retira_o_confirmar(client, seletor_ligado, edital):
-    """A tela já dizia "Impedimento: ..." e mesmo assim oferecia o botão.
-
-    A previsão é exata: a interface chama a mesma `validate_for_publication` que o command.
-    """
-    identificar(client, "ana.elaboradora", ["elaborador"])
-    corpo = confirmar(client, edital, "submeter").content.decode()
-
-    assert "Impedimento:" in corpo, "um Edital recém-criado não tem Perfil nem Evento"
-    assert "Confirmar: " not in corpo
+    assert Impedimento.objects.count() == 1
+    assert not Atribuicao.objects.filter(inscricao=com_conclusao, ativo=True).exists()
+    assert "Impedimento registrado" in corpo
+    assert "preservada e agora inelegível" in corpo
 
 
-@pytest.mark.django_db
-@pytest.mark.integration
-def test_nenhuma_pendencia_com_etapa_e_declarada_incorrigivel(client, seletor_ligado, edital):
-    """FR-007: dizer "não há como corrigir" sobre o que a etapa corrige é pior que não dizer nada.
+def test_o_alcance_preventivo_e_dito_como_tal(presidente, tela, cenario):
+    """Impedir quem não tem atribuição ativa é ato legítimo, e a tela não finge o contrário."""
+    inscricao = inscricoes_de(cenario, 1, primeiro=1510)[0]
 
-    A verificação é sobre a regra, e não sobre o dicionário: percorre as pendências que a tela
-    realmente produz e exige que toda a que tem etapa de destino seja corrigível. Um destino novo
-    que nasça sem ato de domínio cai aqui.
-    """
-    identificar(client, "ana.elaboradora", ["elaborador"])
-    resposta = client.get(reverse("interface:compor-etapa", args=[edital.id, "revisao"]))
+    corpo = presidente.post(
+        tela,
+        {
+            "identity_subject": "ana",
+            "inscricao_id": str(inscricao.id),
+            "motivo": "Impedimento preventivo.",
+        },
+    ).content.decode()
 
-    pendencias = resposta.context["pendencias"]
-    assert pendencias, "o Edital recém-criado precisa ter pendências, ou o teste não verifica nada"
-    com_etapa = [item for item in pendencias if item["etapa"]]
-    assert com_etapa, "ao menos uma pendência precisa apontar para uma etapa"
-    assert [item for item in com_etapa if not item["corrigivel"]] == []
-    assert "Não corrigível aqui" not in resposta.content.decode()
+    assert "o impedimento é preventivo e nada" in corpo
+
+
+def test_a_tela_mostra_o_ato_e_o_motivo_ao_lado_da_inelegivel(
+    presidente, tela, cenario, com_conclusao
+):
+    """FR-093: invalidação **visível** é o que impede a seleção silenciosa."""
+    envio = {
+        "identity_subject": "joao",
+        "inscricao_id": str(com_conclusao.id),
+        "motivo": "Conflito de interesse superveniente.",
+        "confirmar": "1",
+        "chave_idempotencia": "tela-2",
+    }
+    presidente.post(tela, envio)
+
+    corpo = presidente.get(tela).content.decode()
+
+    assert "Conflito de interesse superveniente." in corpo
+    assert "AVALIACAO_TORNAR_INELEGIVEL" in corpo
+    assert "carlos" in corpo
+    assert "95.0000" in corpo
+
+
+def test_a_tela_nao_e_armazenavel_pelo_navegador(presidente, tela, cenario, com_conclusao):
+    resposta = presidente.get(tela)
+
+    assert "no-store" in resposta["Cache-Control"]

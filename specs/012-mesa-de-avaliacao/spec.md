@@ -460,6 +460,12 @@ e auditoria conseguem reconstruir o ocorrido: o que a pessoa havia registrado, q
 versão, e por qual ato aquilo deixou de valer. Uma avaliação concluída e depois invalidada é
 exatamente o tipo de coisa que um recurso pergunta, e "está gravada em algum lugar" não é resposta.
 
+**FR-104** — **Concluir e remover atribuição serializam pela mesma Atribuição.** As duas disputam
+a linha, e sem trava comum a remoção lê "pendente", inativa, e a conclusão grava depois — o que
+produz avaliação concluída **e** inelegível pela via comum: o efeito sem o ato que FR-092 impede,
+por concorrência em vez de por decisão. Quem chega depois encontra a Atribuição já inativa e é
+recusado; quem chega antes conclui, e a remoção passa a ver a conclusão.
+
 **FR-092** — Depois de concluída a Avaliação, a inativação da Atribuição que a tornaria inelegível
 **não é operação comum de redistribuição**: exige ato nomeado, com motivo obrigatório e auditoria —
 impedimento, ou anulação declarada como tal. A operação corriqueira de retirar e redistribuir
@@ -760,7 +766,12 @@ para contorná-lo, e ele nomeia justamente as razões que não mudam por reorgan
 
 **FR-040** — Impedimento bloqueia a **atribuição nova**, e a recusa nomeia o motivo registrado.
 
-**FR-041** — Impedimento registrado sobre uma Atribuição **ativa** a inativa no mesmo ato, que é da
+**FR-041** — A confirmação do impedimento **declara o alcance antes do ato**: quantas Atribuições
+ativas serão inativadas e quantas delas têm avaliação concluída. Retirar trabalho de alguém não
+pode ser efeito colateral silencioso de registrar um motivo, e a declaração é da tela — um número
+que só existe no comando não é aviso.
+
+Registrado sobre uma Atribuição **ativa**, o impedimento a inativa no mesmo ato, que é da
 presidência, tem motivo e é auditado. Disso decorre, por FR-004, tudo o mais: o acesso é revogado
 imediatamente, a Avaliação já registrada não é apagada, e o rascunho que houvesse deixa de ser lido
 por qualquer um (FR-075). O ato declara, antes de ser confirmado, quantas Atribuições ativas ele
@@ -851,6 +862,10 @@ regra, e a tela diz que a avaliação foi reaberta. O avaliador nunca conclui so
 deixou de existir enquanto ele escrevia.
 
 **FR-083** — Reabrir Avaliação que não está concluída é transição inválida, e é recusada.
+
+**FR-105** — A chave de idempotência cobre **o conteúdo inteiro do ato**, e o motivo faz parte
+dele. Num ato cujo motivo é a sua própria justificativa — impedir, reabrir, anular —, tratar
+motivos diferentes como repetição registraria um ato que ninguém pediu.
 
 **FR-084** — **Os quatro atos da presidência são idempotentes por chave** — distribuir em lote,
 remover Atribuição, registrar impedimento e reabrir. Repetir qualquer um deles — por timeout, duplo

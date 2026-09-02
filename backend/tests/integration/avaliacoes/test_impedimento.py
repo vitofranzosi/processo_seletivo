@@ -72,10 +72,12 @@ def test_impedimento_inativa_a_atribuicao_ativa_no_mesmo_ato(gestor, cenario, in
     """FR-041: o acesso é revogado na hora, e não na próxima distribuição."""
     distribuir_para(cenario, gestor, ["joao"], inscricoes[:1])
 
-    _, inativadas = impedir(gestor, cenario, "joao", inscricoes[0])
+    resultado = impedir(gestor, cenario, "joao", inscricoes[0])
 
-    assert len(inativadas) == 1
-    assert not Atribuicao.objects.filter(pk=inativadas[0].pk, ativo=True).exists()
+    assert resultado["inativadas"] == 1
+    assert not Atribuicao.objects.filter(
+        inscricao=inscricoes[0], membro__identity_subject="joao", ativo=True
+    ).exists()
 
 
 def test_a_contagem_previa_declara_o_alcance_antes_da_confirmacao(gestor, cenario, inscricoes):
@@ -141,12 +143,12 @@ def _terceiro_avaliador(gestor, cenario):
 
 def test_impedimento_sem_atribuicao_ativa_e_ato_legitimo_e_auditado(gestor, cenario, inscricoes):
     """O caso preventivo — e o agregado é o próprio Impedimento, porque não há outro (T-016)."""
-    impedimento, inativadas = impedir(gestor, cenario, "ana", inscricoes[1], chave="preventivo")
+    resultado = impedir(gestor, cenario, "ana", inscricoes[1], chave="preventivo")
 
-    assert inativadas == []
+    assert resultado["inativadas"] == 0
     ato = AtoAdministrativo.objects.get(operation=IMPEDIR)
     assert ato.aggregate_type == "Impedimento"
-    assert ato.aggregate_id == impedimento.pk
+    assert str(ato.aggregate_id) == resultado["impedimento"]
     assert ato.reason == MOTIVO
 
 
@@ -171,3 +173,31 @@ def test_impedimento_repetido_e_recusado(gestor, cenario, inscricoes):
 
     assert recusa.value.code == "impedimento_ja_registrado"
     assert Impedimento.objects.count() == 1
+
+
+def test_a_mesma_chave_com_outro_motivo_e_conflito(gestor, cenario, inscricoes):
+    """O motivo entra no conteúdo da chave (FR-084).
+
+    Fora dele, reenviar a mesma chave com outro motivo seria tratado como repetição — e o ato
+    registrado não seria o que se pediu. Num ato cujo motivo é a sua própria justificativa, isso
+    seria pior do que não ter idempotência.
+    """
+    impedir(gestor, cenario, "joao", inscricoes[0], chave="mesma", motivo="Parentesco.")
+
+    with pytest.raises(DomainError) as recusa:
+        impedir(gestor, cenario, "joao", inscricoes[0], chave="mesma", motivo="Outro motivo.")
+
+    assert recusa.value.code == "idempotency_conflict"
+
+
+def test_a_repeticao_devolve_o_desfecho_com_a_contagem(gestor, cenario, inscricoes):
+    """FR-084 e FR-097: a tela precisa dizer quantas o ato inativou, e a repetição também."""
+    distribuir_para(cenario, gestor, ["joao"], inscricoes[:1])
+    concluir_como(cenario, "joao", inscricoes[0])
+    primeiro = impedir(gestor, cenario, "joao", inscricoes[0], chave="repetida")
+
+    repetido = impedir(gestor, cenario, "joao", inscricoes[0], chave="repetida")
+
+    assert primeiro["inativadas"] == 1
+    assert primeiro["concluidas_inelegiveis"] == 1
+    assert repetido == primeiro

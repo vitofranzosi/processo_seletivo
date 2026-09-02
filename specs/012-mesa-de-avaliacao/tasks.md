@@ -227,7 +227,8 @@ preserva o que havia sido concluído.
 - [X] T075 [P] [US5] Teste em `backend/tests/integration/avaliacoes/test_conjunto_elegivel.py`: **a sequência que FR-092 existe para impedir** — dois concluem, a presidência tenta remover uma Atribuição para trocar a nota, e é recusada. Mais: `avaliacoes_elegiveis()` devolve exatamente as concluídas sob Atribuição ativa, e nada além
 - [X] T076 [P] [US5] Teste em `backend/tests/integration/avaliacoes/test_reabertura.py`: reabrir preserva a conclusão anterior de forma consultável; concluir numa aba aberta desde antes é recusado; reabrir o que não está concluído é transição inválida
 - [X] T077 [P] [US5] Teste em `backend/tests/integration/avaliacoes/test_identidade_estavel.py`: remover e readicionar a pessoa **não** libera segunda conclusão nem apaga o impedimento (FR-074, FR-099)
-- [X] T078 [P] [US5] Teste em `backend/tests/integration/avaliacoes/test_idempotencia_dos_atos.py`: remover, impedir e reabrir repetem sem criar registro nem evento; chave repetida com conteúdo diferente é conflito; os três recusam quem perdeu a presidência durante a transação (FR-084, FR-086)
+- [X] T078 [P] [US5] Teste realmente concorrente em `backend/tests/integration/avaliacoes/test_corrida_conclusao_e_remocao.py`: concluir e remover disputam a mesma Atribuição, e nunca existe Avaliação concluída sob Atribuição inativada pela via comum — as duas serializam pela linha e reavaliam o estado depois da trava (FR-092, FR-104)
+- [X] T079 [P] [US5] Teste em `backend/tests/integration/avaliacoes/test_idempotencia_dos_atos.py`: remover, impedir e reabrir repetem sem criar registro nem evento; chave repetida com conteúdo diferente é conflito; os três recusam quem perdeu a presidência durante a transação (FR-084, FR-086)
 
 **Checkpoint**: o conjunto que a 013 vai consumir é inequívoco, e sair dele exige ato com nome.
 
@@ -235,18 +236,18 @@ preserva o que havia sido concluído.
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T079 [P] Testes de escala em `backend/tests/performance/test_escala_da_mesa.py`, contando consultas: Mesa com 500 atribuições em três consultas; organização do trabalho de 1000 inscrições por agregação; retirar pessoa de Etapa com 500 atribuições em uma escrita
-- [ ] T080 [P] Teste em `backend/tests/authorization/test_listagem_em_lote.py`: nenhuma listagem da 012 chama `pode_atuar_na_etapa`, e as duas formas de autorização nunca divergem
-- [ ] T081 [P] Teste em `backend/tests/integration/avaliacoes/test_trilha_completa.py`: os **sete** atos de FR-052 — atribuir, remover atribuição, abrir documento, gravar, concluir, reabrir, impedir — produzem evento com ator, inscrição, Etapa, operação e instante (FR-053)
-- [ ] T082 [P] Acessibilidade e responsividade das cinco telas em `backend/processo_seletivo/interface/templates/interface/` — 375 px sem tabela horizontal, foco visível, rótulos associados
-- [ ] T083 Acrescentar o parâmetro opcional `actor_subject` a `consultar()` em `backend/processo_seletivo/auditoria/selectors.py` — assinatura, não esquema, como `record_event` ganhou dois na 011 — e criar `trilha_da_avaliacao()` no mesmo arquivo, com a **consulta composta** de T-016: por inscrição, os agregados relacionados (`Inscricao`, `Atribuicao`, `Avaliacao`, `Impedimento` daquela inscrição); por avaliador, os relacionados daquela identidade estável **mais** os eventos de `Inscricao` restritos a `actor_subject` igual a ela, porque abrir documento é o único ato cujo agregado não distingue avaliadores; combinado, a interseção
-- [ ] T084 Acrescentar a tela da trilha da 012 em `backend/processo_seletivo/interface/views.py`, `urls.py` e `backend/processo_seletivo/interface/templates/interface/auditoria.html`, com os três filtros de FR-050 — inscrição, avaliador e operação — e as sete operações novas na lista
-- [ ] T085 [P] Teste em `backend/tests/interface/test_trilha_da_012.py`: cada um dos **sete** atos aparece sob o filtro por inscrição e sob o filtro por avaliador, isolados e combinados; um ato praticado pela presidência sobre a atribuição de alguém aparece no filtro **daquele avaliador**, e não no de quem o praticou; **dois avaliadores abrindo a mesma inscrição** aparecem cada um sob o seu filtro, e nenhum sob o do outro; e **impedimento registrado sem Atribuição ativa** — o caso preventivo — aparece nos dois filtros, porque o agregado é o próprio `Impedimento`
-- [ ] T086 [P] Teste de não-regressão em `backend/tests/integration/comissoes/test_011_intocada.py`: comissão, alocação e guard da 011 seguem idênticos
-- [ ] T087 [P] Teste de não-regressão do pipeline de Retificação em `backend/tests/integration/publicacoes/test_retificacao_intocada.py`, exigido por FR-100: para Edital **inteiramente na versão vigente**, a precondição, a detecção de conflito, a consolidação, a verificação de efeito prático e a materialização produzem o mesmo resultado que produziam antes desta feature. É a guarda sobre a superfície que a 012 passou a tocar em quatro módulos
-- [ ] T088 Executar `specs/012-mesa-de-avaliacao/quickstart.md` inteiro, as seis entregas, e registrar o que divergiu
-- [ ] T089 Registrar os dois gates de implantação do quickstart em `specs/012-mesa-de-avaliacao/quickstart.md` — identidade institucional (FR-058) e retenção/descarte do acervo (FR-057) —, com o estado de cada um. **FR-057 não tem tarefa de implementação de propósito**: a resposta é institucional, e o que a 012 entrega é a pergunta registrada
-- [ ] T090 Escrever `specs/012-mesa-de-avaliacao/traceability.md`, fechando os 100 FR e os 31 SC contra tarefa e teste — os 37 demonstrados pelo quickstart e os demais cobertos por suíte
+- [ ] T080 [P] Testes de escala em `backend/tests/performance/test_escala_da_mesa.py`, contando consultas: Mesa com 500 atribuições em três consultas; organização do trabalho de 1000 inscrições por agregação; retirar pessoa de Etapa com 500 atribuições em uma escrita
+- [ ] T081 [P] Teste em `backend/tests/authorization/test_listagem_em_lote.py`: nenhuma listagem da 012 chama `pode_atuar_na_etapa`, e as duas formas de autorização nunca divergem
+- [ ] T082 [P] Teste em `backend/tests/integration/avaliacoes/test_trilha_completa.py`: os **sete** atos de FR-052 — atribuir, remover atribuição, abrir documento, gravar, concluir, reabrir, impedir — produzem evento com ator, inscrição, Etapa, operação e instante (FR-053)
+- [ ] T083 [P] Acessibilidade e responsividade das cinco telas em `backend/processo_seletivo/interface/templates/interface/` — 375 px sem tabela horizontal, foco visível, rótulos associados
+- [ ] T084 Acrescentar o parâmetro opcional `actor_subject` a `consultar()` em `backend/processo_seletivo/auditoria/selectors.py` — assinatura, não esquema, como `record_event` ganhou dois na 011 — e criar `trilha_da_avaliacao()` no mesmo arquivo, com a **consulta composta** de T-016: por inscrição, os agregados relacionados (`Inscricao`, `Atribuicao`, `Avaliacao`, `Impedimento` daquela inscrição); por avaliador, os relacionados daquela identidade estável **mais** os eventos de `Inscricao` restritos a `actor_subject` igual a ela, porque abrir documento é o único ato cujo agregado não distingue avaliadores; combinado, a interseção
+- [ ] T085 Acrescentar a tela da trilha da 012 em `backend/processo_seletivo/interface/views.py`, `urls.py` e `backend/processo_seletivo/interface/templates/interface/auditoria.html`, com os três filtros de FR-050 — inscrição, avaliador e operação — e as sete operações novas na lista
+- [ ] T086 [P] Teste em `backend/tests/interface/test_trilha_da_012.py`: cada um dos **sete** atos aparece sob o filtro por inscrição e sob o filtro por avaliador, isolados e combinados; um ato praticado pela presidência sobre a atribuição de alguém aparece no filtro **daquele avaliador**, e não no de quem o praticou; **dois avaliadores abrindo a mesma inscrição** aparecem cada um sob o seu filtro, e nenhum sob o do outro; e **impedimento registrado sem Atribuição ativa** — o caso preventivo — aparece nos dois filtros, porque o agregado é o próprio `Impedimento`
+- [ ] T087 [P] Teste de não-regressão em `backend/tests/integration/comissoes/test_011_intocada.py`: comissão, alocação e guard da 011 seguem idênticos
+- [ ] T088 [P] Teste de não-regressão do pipeline de Retificação em `backend/tests/integration/publicacoes/test_retificacao_intocada.py`, exigido por FR-100: para Edital **inteiramente na versão vigente**, a precondição, a detecção de conflito, a consolidação, a verificação de efeito prático e a materialização produzem o mesmo resultado que produziam antes desta feature. É a guarda sobre a superfície que a 012 passou a tocar em quatro módulos
+- [ ] T089 Executar `specs/012-mesa-de-avaliacao/quickstart.md` inteiro, as seis entregas, e registrar o que divergiu
+- [ ] T090 Registrar os dois gates de implantação do quickstart em `specs/012-mesa-de-avaliacao/quickstart.md` — identidade institucional (FR-058) e retenção/descarte do acervo (FR-057) —, com o estado de cada um. **FR-057 não tem tarefa de implementação de propósito**: a resposta é institucional, e o que a 012 entrega é a pergunta registrada
+- [ ] T091 Escrever `specs/012-mesa-de-avaliacao/traceability.md`, fechando os 100 FR e os 31 SC contra tarefa e teste — os 37 demonstrados pelo quickstart e os demais cobertos por suíte
 
 ---
 
@@ -291,7 +292,7 @@ entregas 1 a 5 e valide.
 1. Fases 1–2 → o Edital declara e publica as duas propriedades, o que já estava publicado continua
    retificável, e as quatro tabelas existem com suas garantias. **É a única fase que toca conteúdo
    normativo, e a que mais pode quebrar o que já existe** — os oito cenários e as três contraprovas
-   de T026, mais a regressão de T088, são a condição para seguir.
+   de T026, mais a regressão de T089, são a condição para seguir.
 2. Fase 3 → distribuição com autoria, auditada.
 3. Fases 4–5 → a Mesa e o documento.
 4. Fase 6 → **MVP**.

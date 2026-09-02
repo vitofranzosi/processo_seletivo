@@ -168,3 +168,27 @@ def test_quem_nao_gere_a_comissao_nao_reabre(cenario, concluida):
         )
 
     assert recusa.value.status == 404
+
+
+def test_a_mesma_chave_com_outro_motivo_e_conflito(gestor, cenario, concluida):
+    """O motivo entra no conteúdo da chave (FR-084).
+
+    Num ato cujo motivo é a sua própria justificativa, tratar motivos diferentes como repetição
+    registraria uma reabertura que ninguém pediu.
+    """
+    reabrir(gestor, cenario, concluida, chave="mesma", motivo="Recurso deferido.")
+
+    with pytest.raises(DomainError) as recusa:
+        reabrir(gestor, cenario, concluida, chave="mesma", motivo="Erro material.")
+
+    assert recusa.value.code == "idempotency_conflict"
+
+
+def test_a_mesma_chave_com_outra_revisao_e_conflito(gestor, cenario, concluida):
+    """A revisão também: ela é a precondição do ato, e não um detalhe do envio."""
+    reabrir(gestor, cenario, concluida, chave="rev")
+
+    with pytest.raises(DomainError) as recusa:
+        reabrir(gestor, cenario, concluida, chave="rev", revisao=concluida.revision + 5)
+
+    assert recusa.value.code == "idempotency_conflict"

@@ -17,7 +17,8 @@ from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.avaliacoes.domain import pontuacao as regras
 from processo_seletivo.avaliacoes.domain.autorizacao import pode_avaliar_inscricao
-from processo_seletivo.avaliacoes.models import Avaliacao, ConclusaoAvaliacao
+from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao, ConclusaoAvaliacao
+from processo_seletivo.comissoes.domain.autorizacao import pode_atuar_na_etapa
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
@@ -41,6 +42,30 @@ def _autorizar(ator, edital, etapa_id, inscricao_id):
     if atribuicao is None:
         raise _nao_encontrado()
     return atribuicao
+
+
+def _travar_e_reautorizar(ator, edital, etapa_id, atribuicao):
+    """Bloqueia a Atribuição e **reavalia a autorização depois do bloqueio**.
+
+    É a mesma razão que levou a 011 a reautorizar depois do `select_for_update`, aplicada ao par
+    que esta feature precisa serializar: **concluir** e **remover atribuição** disputam a mesma
+    linha, e sem trava comum a remoção pode ler "pendente", inativar, e a conclusão gravar depois.
+    O resultado seria uma avaliação concluída **e** inelegível pela via comum — exatamente o efeito
+    sem ato que FR-092 existe para impedir.
+
+    Quem chega depois encontra a Atribuição já inativa e é recusado; quem chega antes conclui, e a
+    remoção passa a ver a conclusão e recusa com o motivo nomeado.
+    """
+    travada = (
+        Atribuicao.objects.select_for_update(of=("self",))
+        .filter(pk=atribuicao.pk, ativo=True)
+        .first()
+    )
+    if travada is None:
+        raise _nao_encontrado()
+    if not pode_atuar_na_etapa(ator, edital, etapa_id):
+        raise _nao_encontrado()
+    return travada
 
 
 def _avaliacao_de(atribuicao, ator):
@@ -93,6 +118,7 @@ def gravar(
     """O rascunho, gravado sem exigir conclusão (FR-031)."""
     atribuicao = _autorizar(ator, edital, etapa_id, inscricao_id)
     with command_context() as agora:
+        atribuicao = _travar_e_reautorizar(ator, edital, etapa_id, atribuicao)
         avaliacao = _avaliacao_de(atribuicao, ator)
         if avaliacao.estado == Avaliacao.Estado.CONCLUIDA:
             # Concluída é imutável para o avaliador (FR-035). Reabrir é ato da presidência.
@@ -149,6 +175,9 @@ def concluir(
     """
     atribuicao = _autorizar(ator, edital, etapa_id, inscricao_id)
     with command_context() as agora:
+        # A trava é aqui, e não só na gravação: é a conclusão que a remoção comum não pode
+        # atropelar (FR-092).
+        atribuicao = _travar_e_reautorizar(ator, edital, etapa_id, atribuicao)
         avaliacao = _avaliacao_de(atribuicao, ator)
         if avaliacao.estado == Avaliacao.Estado.CONCLUIDA:
             raise DomainError(
@@ -268,7 +297,14 @@ def reabrir(
         actor=actor,
         processo_id=processo_id,
         operation="avaliacao:reabrir",
-        payload={"avaliacao": str(avaliacao_id)},
+        # O motivo e a revisão entram no conteúdo da chave: sem eles, reenviar a mesma chave com
+        # outro motivo seria tratado como repetição, e o ato registrado não seria o que se pediu
+        # (FR-084).
+        payload={
+            "avaliacao": str(avaliacao_id),
+            "motivo": texto,
+            "revisao": expected_revision,
+        },
         idempotency_key=idempotency_key,
     ) as ctx:
         avaliacao = (

@@ -349,10 +349,14 @@ def remover_atribuicao(*, actor, processo_id, atribuicao_ids, idempotency_key, c
     ) as ctx:
         if ctx.repetido:
             return ctx.desfecho_anterior
+        # **A trava vem antes da leitura das conclusões**, e é a mesma linha que `concluir`
+        # bloqueia. Sem ela, esta consulta poderia ler "pendente", inativar, e uma conclusão
+        # concorrente gravar depois — produzindo avaliação concluída e inelegível pela via comum,
+        # que é o efeito sem ato que FR-092 impede.
         atribuicoes = list(
-            Atribuicao.objects.filter(
-                pk__in=ids, edital__processo=ctx.processo, ativo=True
-            ).select_related("membro", "inscricao")
+            Atribuicao.objects.select_for_update(of=("self",))
+            .filter(pk__in=ids, edital__processo=ctx.processo, ativo=True)
+            .select_related("membro", "inscricao")
         )
         concluidas = set(
             Avaliacao.objects.filter(

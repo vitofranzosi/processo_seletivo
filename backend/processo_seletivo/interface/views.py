@@ -1979,28 +1979,33 @@ def impedimentos(request, edital_id, etapa_id):
     ator, edital, etapa = _etapa_para_distribuir(request, edital_id, etapa_id)
     if ator is None:
         return redirect(reverse("interface:identificar"))
-    erro = None
+    erro, confirmacao, digitado = None, None, {}
     if request.method == "POST":
         dados = forms.ler_impedimento(request.POST)
+        digitado = dados
         try:
-            _, inativadas = impedimento_app.registrar_impedimento(
-                actor=ator,
-                processo_id=edital.processo_id,
-                identity_subject=dados["identity_subject"],
-                inscricao_id=dados["inscricao_id"],
-                motivo=dados["motivo"],
-                idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
-                correlation_id=getattr(request, "correlation_id", ""),
-            )
-            request.session["resultado_da_distribuicao"] = {
-                "feitas": 1,
-                "verbo": "registrada",
-                "recusadas": 0,
-                "ids": [],
-                "motivos": [],
-                "inativadas": len(inativadas),
-            }
-            return redirect(request.get_full_path())
+            if request.POST.get("confirmar") != "1":
+                # **A confirmação declara o alcance antes de o ato acontecer** (FR-041): retirar
+                # trabalho de alguém não pode ser efeito colateral silencioso de registrar um
+                # motivo. Quem confirma vê quantas atribuições e quantas conclusões serão
+                # alcançadas.
+                confirmacao = impedimento_app.alcance_do_impedimento(
+                    processo=edital.processo,
+                    identity_subject=dados["identity_subject"],
+                    inscricao_id=dados["inscricao_id"],
+                )
+            else:
+                resultado = impedimento_app.registrar_impedimento(
+                    actor=ator,
+                    processo_id=edital.processo_id,
+                    identity_subject=dados["identity_subject"],
+                    inscricao_id=dados["inscricao_id"],
+                    motivo=dados["motivo"],
+                    idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+                    correlation_id=getattr(request, "correlation_id", ""),
+                )
+                request.session["resultado_do_impedimento"] = resultado
+                return redirect(request.path)
         except DomainError as recusa:
             if recusa.status == 404:
                 raise Http404 from recusa
@@ -2018,7 +2023,9 @@ def impedimentos(request, edital_id, etapa_id):
                     edital=edital, etapa_id=etapa_id
                 ),
                 "erro": erro,
-                "resultado": request.session.pop("resultado_da_distribuicao", None),
+                "confirmacao": confirmacao,
+                "digitado": digitado,
+                "resultado": request.session.pop("resultado_do_impedimento", None),
                 "chave_idempotencia": uuid4().hex,
             },
         )
