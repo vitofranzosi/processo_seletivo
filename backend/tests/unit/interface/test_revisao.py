@@ -66,9 +66,7 @@ def test_a_conferencia_mostra_cota_etapa_e_texto(api_client, manager_headers, pr
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_cada_bloco_aponta_para_a_etapa_que_o_corrige(
-    api_client, manager_headers, process_payload
-):
+def test_cada_bloco_aponta_para_a_etapa_que_o_corrige(api_client, manager_headers, process_payload):
     from processo_seletivo.interface.views import CHAVES_ETAPA
 
     edital = publish_original(api_client, manager_headers, process_payload)

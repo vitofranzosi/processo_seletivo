@@ -37,7 +37,11 @@ def test_cria_o_que_faltava_e_remove_o_que_sobrava(
     alocar_em(gestor, processo_a, joao, edital_a, etapa_a1)
 
     criadas, removidas = salvar(
-        gestor, processo_a, edital_a, [maria, joao], [etapa_a1, etapa_a2],
+        gestor,
+        processo_a,
+        edital_a,
+        [maria, joao],
+        [etapa_a1, etapa_a2],
         [f"{edital_a.id}:{etapa_a2}:{joao.id}", f"{edital_a.id}:{etapa_a1}:{maria.id}"],
     )
 
@@ -60,9 +64,7 @@ def test_o_que_esta_fora_do_escopo_nao_e_tocado(
     assert AlocacaoEtapa.objects.filter(membro=joao, ativo=True).count() == 0
 
 
-def test_a_coluna_inteira_e_o_inverso(
-    gestor, processo_a, edital_a, comissao_de_a, etapa_a1
-):
+def test_a_coluna_inteira_e_o_inverso(gestor, processo_a, edital_a, comissao_de_a, etapa_a1):
     membros = list(comissao_de_a.values())
     coluna = f"{edital_a.id}:{etapa_a1}"
 
@@ -71,8 +73,14 @@ def test_a_coluna_inteira_e_o_inverso(
 
     marcadas = [f"{coluna}:{m.id}" for m in membros]
     salvar(
-        gestor, processo_a, edital_a, membros, [etapa_a1], marcadas,
-        chave="dist-2", coluna_nenhum=coluna,
+        gestor,
+        processo_a,
+        edital_a,
+        membros,
+        [etapa_a1],
+        marcadas,
+        chave="dist-2",
+        coluna_nenhum=coluna,
     )
     assert AlocacaoEtapa.objects.filter(ativo=True).count() == 0
 
@@ -85,7 +93,11 @@ def test_marcacao_fora_do_escopo_e_recusada(
 
     with pytest.raises(DomainError) as recusa:
         salvar(
-            gestor, processo_a, edital_a, [maria], [etapa_a1],
+            gestor,
+            processo_a,
+            edital_a,
+            [maria],
+            [etapa_a1],
             [f"{edital_a.id}:{etapa_a1}:{joao.id}"],
         )
 
@@ -107,8 +119,11 @@ def test_membro_que_saiu_durante_a_edicao_recusa_o_ato(
 
     joao = comissao_de_a["joao"]
     remover_membro(
-        actor=gestor, processo_id=processo_a.id, membro_id=joao.id,
-        idempotency_key="saiu", correlation_id="c",
+        actor=gestor,
+        processo_id=processo_a.id,
+        membro_id=joao.id,
+        idempotency_key="saiu",
+        correlation_id="c",
     )
 
     with pytest.raises(DomainError) as recusa:
@@ -124,20 +139,26 @@ def test_distribuir_exige_presidente(gestor, processo_a, edital_a, etapa_a1):
 
     with pytest.raises(DomainError) as recusa:
         salvar(
-            gestor, processo_a, edital_a, [joao], [etapa_a1],
+            gestor,
+            processo_a,
+            edital_a,
+            [joao],
+            [etapa_a1],
             [f"{edital_a.id}:{etapa_a1}:{joao.id}"],
         )
 
     assert recusa.value.code == "comissao_sem_presidente"
 
 
-def test_etapa_fora_do_conteudo_vigente_e_recusada(
-    gestor, processo_a, edital_a, comissao_de_a
-):
+def test_etapa_fora_do_conteudo_vigente_e_recusada(gestor, processo_a, edital_a, comissao_de_a):
     with pytest.raises(DomainError) as recusa:
         salvar(
-            gestor, processo_a, edital_a, list(comissao_de_a.values()),
-            [str(uuid.uuid4())], [],
+            gestor,
+            processo_a,
+            edital_a,
+            list(comissao_de_a.values()),
+            [str(uuid.uuid4())],
+            [],
         )
 
     assert recusa.value.status == 404
@@ -152,7 +173,11 @@ def test_cada_mudanca_gera_o_seu_evento(
     alocar_em(gestor, processo_a, joao, edital_a, etapa_a1)
 
     salvar(
-        gestor, processo_a, edital_a, [maria, joao], [etapa_a1, etapa_a2],
+        gestor,
+        processo_a,
+        edital_a,
+        [maria, joao],
+        [etapa_a1, etapa_a2],
         [f"{edital_a.id}:{etapa_a2}:{joao.id}"],
     )
 

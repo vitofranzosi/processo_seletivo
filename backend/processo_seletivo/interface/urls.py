@@ -101,6 +101,13 @@ urlpatterns = [
         views.auditoria_da_comissao,
         name="auditoria-comissao",
     ),
+    # A execução do trabalho (012). O segmento é `distribuicao`, e não `etapas`, pela restrição
+    # de vocabulário que a 011 fixou: `etapa` já significa "passo do compositor" em `compor/`.
+    path(
+        "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>",
+        views.distribuicao,
+        name="distribuicao",
+    ),
     path("minhas-etapas", views.minhas_etapas, name="minhas-etapas"),
     path(
         "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>",

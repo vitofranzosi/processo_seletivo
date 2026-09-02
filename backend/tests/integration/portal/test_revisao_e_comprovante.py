@@ -180,7 +180,7 @@ def test_a_recusa_das_declaracoes_recebe_o_foco_e_aponta_o_que_falta(client, ins
         reverse("portal:revisao", args=[completa.id]), {"veracidade": "on"}
     ).content.decode()
 
-    assert 'data-recusa' in corpo and 'tabindex="-1"' in corpo
+    assert "data-recusa" in corpo and 'tabindex="-1"' in corpo
     assert 'href="#ciencia"' in corpo, "o resumo leva à declaração que falta"
     assert 'href="#veracidade"' not in corpo, "a que foi marcada não é cobrada"
     assert "portal/recusa.js" in corpo
@@ -417,9 +417,7 @@ def test_o_comprovante_traz_o_codigo_que_prova_que_e_ele(client, inscricao_de_ma
 
     corpo = client.get(reverse("portal:comprovante", args=[enviada.id])).content.decode()
 
-    esperado = codigo_de_verificacao(
-        enviada, DocumentoSubmetido.objects.filter(inscricao=enviada)
-    )
+    esperado = codigo_de_verificacao(enviada, DocumentoSubmetido.objects.filter(inscricao=enviada))
     assert esperado in corpo
     assert "Código de verificação" in corpo
     assert "para confirmar que\n    nada foi alterado" in corpo or "nada foi alterado" in corpo

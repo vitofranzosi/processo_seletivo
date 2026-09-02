@@ -256,7 +256,7 @@ def test_a_recusa_ancora_no_campo_e_aparece_junto_dele(client, seletor_ligado, e
 
 @pytest.mark.django_db(transaction=True)
 def test_recusa_que_nao_pertence_a_campo_nenhum_fica_em_texto(client, seletor_ligado, edital):
-    """"O Edital deve possuir ao menos um Perfil" não é de campo nenhum.
+    """ "O Edital deve possuir ao menos um Perfil" não é de campo nenhum.
 
     Apontar um campo qualquer seria pior do que não apontar — e é por isso que `campo` é opcional.
     """

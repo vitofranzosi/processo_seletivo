@@ -51,9 +51,7 @@ PAPEIS = {
 
 
 def permissoes_de(papeis):
-    return frozenset(
-        permissao for papel in papeis for permissao in PAPEIS.get(papel, ("", []))[1]
-    )
+    return frozenset(permissao for papel in papeis for permissao in PAPEIS.get(papel, ("", []))[1])
 
 
 def ator_da_sessao(request):

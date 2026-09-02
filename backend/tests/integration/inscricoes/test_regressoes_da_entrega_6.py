@@ -71,9 +71,7 @@ def _retificar(api_client, edital, caminho, valor, sufixo):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_a_lista_usa_a_versao_aceita_de_cada_inscricao(
-    inscricao_de_maria, api_client, selecao
-):
+def test_a_lista_usa_a_versao_aceita_de_cada_inscricao(inscricao_de_maria, api_client, selecao):
     """Renomear o Perfil depois do envio não pode mudar o que a lista diz daquela inscrição."""
     enviada = enviar_inscricao(
         identidade=MARIA,
@@ -163,9 +161,7 @@ def test_documento_que_deixou_de_ser_exigido_e_listado_e_descartado(
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_reconhecer_versao_sem_descarte_nao_remove_nada(
-    inscricao_de_maria, api_client, selecao
-):
+def test_reconhecer_versao_sem_descarte_nao_remove_nada(inscricao_de_maria, api_client, selecao):
     completa = _completar(inscricao_de_maria)
     versao = _retificar(api_client, selecao, "/description", "Outra descrição.", "descricao")
 

@@ -62,11 +62,7 @@ def _evento(evento, _snapshot):
 
 
 def _etapa(etapa, snapshot):
-    caracteres = [
-        rotulo
-        for chave, rotulo in CARATER
-        if etapa.get(chave)
-    ]
+    caracteres = [rotulo for chave, rotulo in CARATER if etapa.get(chave)]
     linhas = ["Caráter: " + (" e ".join(caracteres) if caracteres else "não informado")]
     if etapa.get("weight") is not None:
         linhas.append(f"Peso: {etapa['weight']}")

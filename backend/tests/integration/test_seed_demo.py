@@ -36,9 +36,7 @@ def test_a_demonstracao_percorre_o_fluxo_ate_a_retificacao():
     assert edital.cronograma.eventos.count() >= 3
     # Publicação original mais as Retificações publicadas.
     assert Publicacao.objects.filter(edital=edital).count() >= 2
-    assert Retificacao.objects.filter(
-        edital=edital, status=Retificacao.Status.PUBLICADA
-    ).exists()
+    assert Retificacao.objects.filter(edital=edital, status=Retificacao.Status.PUBLICADA).exists()
     assert VersaoConsolidada.objects.filter(edital=edital).count() >= 2
     assert str(edital.id) in saida
 

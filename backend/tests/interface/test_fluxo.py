@@ -104,9 +104,7 @@ def test_confirmacao_diz_o_que_o_ato_provoca_antes_de_praticar(
     """FR-010 e FR-011: consequências e irreversibilidade ditas antes da confirmação."""
     publicado = publish_original(api_client, manager_headers, process_payload)
     identificar(client, "marcia.gestora", ["gestor"])
-    corpo = client.get(
-        reverse("interface:ato", args=[publicado.id, "encerrar"])
-    ).content.decode()
+    corpo = client.get(reverse("interface:ato", args=[publicado.id, "encerrar"])).content.decode()
 
     assert "Este ato não pode ser desfeito" in corpo
     assert "conclusão regular" in corpo
@@ -398,9 +396,10 @@ def test_previa_acompanha_o_edital_ate_a_homologacao_e_para_na_publicacao(
     # para o mesmo conteúdo.
     recusada = client.get(reverse("interface:previa", args=[edital.id]))
     assert recusada.status_code == 409
-    assert "Visualizar Edital" not in client.get(
-        reverse("interface:detalhe", args=[edital.id])
-    ).content.decode()
+    assert (
+        "Visualizar Edital"
+        not in client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
+    )
 
 
 @pytest.mark.django_db
@@ -478,9 +477,12 @@ def test_etapas_aparecem_na_previa_e_no_documento_publicado_na_ordem_definida(
     identificar(client, "ana.elaboradora", ["elaborador"])
     compor_rascunho(client, edital, PERFIS, EVENTOS)
     edital.refresh_from_db()
-    assert client.post(
-        reverse("interface:compor-etapa", args=[edital.id, "etapas"]), ETAPAS
-    ).status_code == 302
+    assert (
+        client.post(
+            reverse("interface:compor-etapa", args=[edital.id, "etapas"]), ETAPAS
+        ).status_code
+        == 302
+    )
 
     previa = texto_do_pdf(client.get(reverse("interface:previa-documento", args=[edital.id])))
     assert previa.index("Prova didática") < previa.index("Análise de títulos")
@@ -515,9 +517,7 @@ PERFIS_COM_COTA = {
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_modalidades_aparecem_na_previa_e_no_documento_publicado(
-    client, seletor_ligado, edital
-):
+def test_modalidades_aparecem_na_previa_e_no_documento_publicado(client, seletor_ligado, edital):
     """FR-031: o renderizador já imprimia fundamento e percentual — o que faltava era o dado.
 
     A cobertura é o requisito: sem ela, a correção da ida e volta poderia estar certa e o
@@ -547,10 +547,13 @@ def test_secao_textual_editada_aparece_no_documento(client, seletor_ligado, edit
     identificar(client, "ana.elaboradora", ["elaborador"])
     compor_rascunho(client, edital, PERFIS, EVENTOS)
     edital.refresh_from_db()
-    assert client.post(
-        reverse("interface:compor-etapa", args=[edital.id, "conteudo"]),
-        {"secao-recursos": "Recurso em até três dias úteis, pelo sistema."},
-    ).status_code == 302
+    assert (
+        client.post(
+            reverse("interface:compor-etapa", args=[edital.id, "conteudo"]),
+            {"secao-recursos": "Recurso em até três dias úteis, pelo sistema."},
+        ).status_code
+        == 302
+    )
 
     previa = texto_do_pdf(client.get(reverse("interface:previa-documento", args=[edital.id])))
     assert "DOS RECURSOS" in previa

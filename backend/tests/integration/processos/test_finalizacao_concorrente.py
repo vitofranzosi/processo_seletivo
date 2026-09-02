@@ -12,9 +12,7 @@ from processo_seletivo.seguranca.domain import Actor
 from processo_seletivo.shared.api.problems import DomainError
 from tests.fixtures.publicacao import publish_original
 
-GESTOR = frozenset(
-    {"processo:encerrar", "processo:cancelar", "edital:encerrar", "edital:cancelar"}
-)
+GESTOR = frozenset({"processo:encerrar", "processo:cancelar", "edital:encerrar", "edital:cancelar"})
 
 postgresql_only = pytest.mark.skipif(
     connection.vendor != "postgresql", reason="locks exigem PostgreSQL"
@@ -142,9 +140,7 @@ def test_concurrent_cancellations_produce_exactly_one_act(api_client, edital_pub
     vencedoras = [item for item in resultados if item == ProcessoSeletivo.Status.CANCELADO]
     assert len(vencedoras) == 1, resultados
     assert (
-        AtoAdministrativo.objects.filter(
-            aggregate_id=processo.id, operation="CANCELAR"
-        ).count()
+        AtoAdministrativo.objects.filter(aggregate_id=processo.id, operation="CANCELAR").count()
         == 1
     )
     assert ProcessoSeletivo.objects.get(pk=processo.pk).status == ProcessoSeletivo.Status.CANCELADO
@@ -153,9 +149,7 @@ def test_concurrent_cancellations_produce_exactly_one_act(api_client, edital_pub
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
 @postgresql_only
-def test_final_states_never_return_to_a_previous_one_in_the_database(
-    api_client, edital_publicado
-):
+def test_final_states_never_return_to_a_previous_one_in_the_database(api_client, edital_publicado):
     from processo_seletivo.processos.application.finalizacao import cancel_edital, close_edital
 
     encerrado, _ = close_edital(

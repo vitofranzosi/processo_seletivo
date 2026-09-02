@@ -87,9 +87,7 @@ def test_a_recusa_de_um_envio_nao_derruba_os_outros(client, inscricao_de_maria):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_substituir_sobrescreve_e_descarta_o_anterior(
-    client, inscricao_de_maria, raiz_de_arquivos
-):
+def test_substituir_sobrescreve_e_descarta_o_anterior(client, inscricao_de_maria, raiz_de_arquivos):
     """FR-043 e FR-050: um arquivo por requisito, e fica claro qual passou a valer."""
     identificar(client, MARIA)
     _enviar(client, inscricao_de_maria, DOCUMENTO_DE_TODOS, pdf("primeiro.pdf"))
@@ -261,12 +259,10 @@ def test_o_requisito_enviado_recolhe_o_formulario_de_substituicao(client, inscri
     identificar(client, MARIA)
     _enviar(client, inscricao_de_maria, DOCUMENTO_DE_TODOS, pdf("rg.pdf"))
 
-    corpo = client.get(
-        reverse("portal:inscricao", args=[inscricao_de_maria.id])
-    ).content.decode()
+    corpo = client.get(reverse("portal:inscricao", args=[inscricao_de_maria.id])).content.decode()
     assert '<details class="envio-de-novo"' in corpo
     assert "Substituir ou remover" in corpo
-    assert "<details class=\"envio-de-novo\" open>" not in corpo, "recolhido quando está tudo bem"
+    assert '<details class="envio-de-novo" open>' not in corpo, "recolhido quando está tudo bem"
 
     recusado = _enviar(
         client, inscricao_de_maria, DOCUMENTO_DE_TODOS, imagem("foto.jpg")

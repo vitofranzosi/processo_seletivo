@@ -403,6 +403,22 @@ def _modalidade_persistida(modalidade):
     return persistida
 
 
+def ler_distribuicao(dados):
+    """O corpo do lote e o da remoção, na mesma porta.
+
+    `acao` decide qual, e não a presença dos campos: um envio com `acao=remover` que carregasse
+    `inscricao_id` por sobra de formulário não pode distribuir — foi assim que a 011 descobriu que
+    ramo irmão decide sozinho.
+    """
+    acao = (_texto(dados, "acao") or "distribuir").strip()
+    return {
+        "acao": "remover" if acao == "remover" else "distribuir",
+        "membro_ids": dados.getlist("membro_id"),
+        "inscricao_ids": dados.getlist("inscricao_id"),
+        "atribuicao_ids": dados.getlist("atribuicao_id"),
+    }
+
+
 def etapas_do_edital(edital):
     """Etapas persistidas, no formato que o formulário renderiza."""
     return [

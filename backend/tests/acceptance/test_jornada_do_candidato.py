@@ -68,9 +68,7 @@ def test_do_edital_publicado_ate_a_equipe_abrir_os_documentos(client, selecao, s
         reverse("portal:inscricao", args=[inscricao.id]),
         {"modalidade": MODALIDADE_PPP, "telefone": "(27) 99999-0000"},
     )
-    com_modalidade = client.get(
-        reverse("portal:inscricao", args=[inscricao.id])
-    ).content.decode()
+    com_modalidade = client.get(reverse("portal:inscricao", args=[inscricao.id])).content.decode()
     assert "0 de 3" in com_modalidade
     assert "Autodeclaração étnico-racial" in com_modalidade
 
@@ -85,9 +83,7 @@ def test_do_edital_publicado_ate_a_equipe_abrir_os_documentos(client, selecao, s
             {"arquivo": pdf(nome)},
         )
         assert enviado.status_code == 200
-    assert "3 de 3" in client.get(
-        reverse("portal:inscricao", args=[inscricao.id])
-    ).content.decode()
+    assert "3 de 3" in client.get(reverse("portal:inscricao", args=[inscricao.id])).content.decode()
 
     # 6. Revisa: tudo o que ela declarou, com os três arquivos nomeados.
     revisao = client.get(reverse("portal:revisao", args=[inscricao.id])).content.decode()

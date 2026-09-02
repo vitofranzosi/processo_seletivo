@@ -18,9 +18,7 @@ ARMAZENAMENTOS = ("localStorage", "sessionStorage", "indexedDB", "document.cooki
 
 
 def fontes_do_portal():
-    return sorted(
-        [*(PORTAL / "static").rglob("*.js"), *(PORTAL / "templates").rglob("*.html")]
-    )
+    return sorted([*(PORTAL / "static").rglob("*.js"), *(PORTAL / "templates").rglob("*.html")])
 
 
 @pytest.mark.parametrize("arquivo", fontes_do_portal(), ids=lambda p: p.name)

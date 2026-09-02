@@ -1,0 +1,153 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Distribuir — {{ etapa.name }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
+  <a href="{% url 'interface:alocacoes' processo.id %}">Distribuição</a> ›
+  <span aria-current="page">{{ etapa.name }}</span>
+</nav>
+
+<h1>{{ etapa.name }}</h1>
+<p class="sub">Edital {{ edital.number }}/{{ edital.year }} — {{ processo.title }}</p>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
+
+{% comment %}
+FR-097: o resultado do lote é declarado, e não inferido. Sucesso parcial que não se anuncia vira
+surpresa administrativa — quem distribuiu precisa saber o que ficou de fora sem conferir mil linhas.
+{% endcomment %}
+{% if resultado %}
+<div class="sucesso" role="status" tabindex="-1">
+  <p><strong>{{ resultado.feitas }}</strong> {{ resultado.verbo }}{{ resultado.feitas|pluralize:"s" }}{% if resultado.recusadas %}, <strong>{{ resultado.recusadas }}</strong> recusada{{ resultado.recusadas|pluralize:"s" }}{% endif %}.</p>
+  {% if resultado.motivos %}
+  <ul class="motivos">
+    {% for motivo in resultado.motivos %}
+    <li>{{ motivo.avaliador }} — inscrição {{ motivo.inscricao }}: {{ motivo.motivo }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endif %}
+
+{% comment %}
+O que falta, antes do detalhe (FR-014). É a resposta que esta tela existe para dar, e contá-la nos
+cartões seria pedir que a presidência fizesse a soma.
+{% endcomment %}
+<ul class="resumo" aria-label="Situação da distribuição">
+  <li><strong>{{ resumo.inscricoes }}</strong>inscriç{{ resumo.inscricoes|pluralize:"ão,ões" }} submetida{{ resumo.inscricoes|pluralize:"s" }}</li>
+  <li><strong>{{ resumo.carentes }}</strong>sem avaliador suficiente</li>
+  <li><strong>{{ resumo.sem_nenhum }}</strong>sem nenhum</li>
+  <li><strong>{{ resumo.previstas }}</strong>avaliaç{{ resumo.previstas|pluralize:"ão,ões" }} por inscrição</li>
+</ul>
+
+<section aria-labelledby="carga">
+  <h2 id="carga">Quem está alocado</h2>
+  {% if carga %}
+  <table class="tabela">
+    <caption class="oculto">Carga por avaliador nesta Etapa</caption>
+    <thead><tr><th scope="col">Avaliador</th><th scope="col">Atribuídas</th><th scope="col">Concluídas</th></tr></thead>
+    <tbody>
+      {% for linha in carga %}
+      <tr>
+        <td>{{ linha.membro.display_label|default:linha.membro.identity_subject }}</td>
+        <td>{{ linha.atribuidas }}</td>
+        <td>{{ linha.concluidas }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="vazio">Ninguém está alocado nesta Etapa ainda.
+    <a href="{% url 'interface:alocacoes' processo.id %}">Alocar a comissão</a></p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="inscricoes">
+  <h2 id="inscricoes">Inscrições</h2>
+
+  <form method="get" class="filtros" role="search">
+    <p class="campo">
+      <label for="cobertura">Cobertura</label>
+      <select id="cobertura" name="cobertura">
+        <option value="">Todas</option>
+        <option value="sem_nenhum" {% if cobertura == "sem_nenhum" %}selected{% endif %}>Sem nenhum avaliador</option>
+        <option value="incompleta" {% if cobertura == "incompleta" %}selected{% endif %}>Sem avaliador suficiente</option>
+        <option value="completa" {% if cobertura == "completa" %}selected{% endif %}>Completas</option>
+      </select>
+    </p>
+    <p class="campo">
+      <label for="avaliador">Avaliador</label>
+      <input type="search" id="avaliador" name="avaliador" value="{{ avaliador }}"
+             aria-describedby="ajuda-avaliador">
+      <span class="ajuda" id="ajuda-avaliador">Identificador institucional, exato.</span>
+    </p>
+    <p class="acoes"><button type="submit">Filtrar</button></p>
+  </form>
+
+  {% if linhas %}
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="acao" value="distribuir">
+    <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+
+    <fieldset>
+      <legend>Para quem</legend>
+      {% for linha in carga %}
+      <label for="membro-{{ linha.membro.id }}">
+        <input type="checkbox" id="membro-{{ linha.membro.id }}" name="membro_id" value="{{ linha.membro.id }}">
+        {{ linha.membro.display_label|default:linha.membro.identity_subject }}
+      </label>
+      {% endfor %}
+    </fieldset>
+
+    <table class="tabela">
+      <caption class="oculto">Inscrições submetidas desta Etapa</caption>
+      <thead>
+        <tr>
+          <th scope="col"><span class="oculto">Selecionar</span></th>
+          <th scope="col">Inscrição</th>
+          <th scope="col">Avaliações</th>
+          <th scope="col">Faltam</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for linha in linhas %}
+        <tr>
+          <td>
+            <input type="checkbox" name="inscricao_id" value="{{ linha.inscricao.id }}"
+                   id="inscricao-{{ linha.inscricao.id }}"
+                   aria-label="Inscrição {{ linha.inscricao.protocolo|default:linha.inscricao.id }}">
+          </td>
+          <td><label for="inscricao-{{ linha.inscricao.id }}">{{ linha.inscricao.protocolo|default:linha.inscricao.id }}</label></td>
+          <td>{{ linha.atribuidas }} de {{ resumo.previstas }}</td>
+          <td>{% if linha.faltam %}{{ linha.faltam }}{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <p class="acoes"><button type="submit">Distribuir as selecionadas</button></p>
+  </form>
+
+  {% comment %}
+  Mil inscrições não cabem numa tela (FR-049). A paginação preserva o filtro, senão avançar de
+  página desfaria a pergunta que trouxe a pessoa até aqui.
+  {% endcomment %}
+  {% if pagina.has_other_pages %}
+  <nav class="paginacao" aria-label="Páginas de inscrições">
+    {% if pagina.has_previous %}
+    <a href="?pagina={{ pagina.previous_page_number }}{% if cobertura %}&cobertura={{ cobertura }}{% endif %}{% if avaliador %}&avaliador={{ avaliador }}{% endif %}">Anterior</a>
+    {% endif %}
+    <span aria-current="page">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    {% if pagina.has_next %}
+    <a href="?pagina={{ pagina.next_page_number }}{% if cobertura %}&cobertura={{ cobertura }}{% endif %}{% if avaliador %}&avaliador={{ avaliador }}{% endif %}">Próxima</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <p class="vazio">Nenhuma inscrição submetida corresponde a este filtro.</p>
+  {% endif %}
+</section>
+{% endblock %}

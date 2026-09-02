@@ -126,8 +126,11 @@ def test_a_cascata_tambem_nomeia_a_etapa(
 ):
     alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
     remover_membro(
-        actor=gestor, processo_id=processo_a.id, membro_id=comissao_de_a["joao"].id,
-        idempotency_key="k-cascata", correlation_id="c",
+        actor=gestor,
+        processo_id=processo_a.id,
+        membro_id=comissao_de_a["joao"].id,
+        idempotency_key="k-cascata",
+        correlation_id="c",
     )
 
     registros, _ = trilha_da_comissao(actor=auditor, processo=processo_a, limit=100)
@@ -153,9 +156,7 @@ def test_o_filtro_por_pessoa_e_exato_e_nao_por_pedaco_do_motivo(
         correlation_id="c",
     )
 
-    registros, _ = trilha_da_comissao(
-        actor=auditor, processo=processo_a, pessoa="ana", limit=100
-    )
+    registros, _ = trilha_da_comissao(actor=auditor, processo=processo_a, pessoa="ana", limit=100)
 
     assert registros
     assert all("susana" not in r.reason for r in registros)

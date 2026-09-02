@@ -41,9 +41,7 @@ def test_detalhe_mostra_a_trilha_e_os_editais(client, seletor_ligado, cenario):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_impedimento_do_cancelamento_e_mostrado_antes_da_tentativa(
-    client, seletor_ligado, cenario
-):
+def test_impedimento_do_cancelamento_e_mostrado_antes_da_tentativa(client, seletor_ligado, cenario):
     """FR-018: identificar o que impede e permitir alcançar cada pendência."""
     processo, edital = cenario
     identificar(client, "marcia.gestora", GESTOR)
@@ -74,9 +72,7 @@ def test_cancelamento_e_recusado_pelo_dominio_e_explicado(client, seletor_ligado
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_cancelamento_e_admitido_quando_os_editais_sao_finalizados(
-    client, seletor_ligado, cenario
-):
+def test_cancelamento_e_admitido_quando_os_editais_sao_finalizados(client, seletor_ligado, cenario):
     processo, edital = cenario
     identificar(client, "marcia.gestora", ["gestor"])
     # Encerrar o Edital exige permissão própria; o gestor a possui.
@@ -113,9 +109,7 @@ def test_ativar_e_encerrar_seguem_o_fluxo_ordinario(client, seletor_ligado, cena
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_encerrar_avisa_que_os_editais_deixam_de_aceitar_alteracao(
-    client, seletor_ligado, cenario
-):
+def test_encerrar_avisa_que_os_editais_deixam_de_aceitar_alteracao(client, seletor_ligado, cenario):
     processo, _ = cenario
     identificar(client, "marcia.gestora", GESTOR)
     ato(client, processo, "ativar", "Abertura")
@@ -178,9 +172,7 @@ def test_processo_de_outro_escopo_nao_e_alcancavel(client, seletor_ligado, cenar
         "papeis": ["gestor"],
     }
     sessao.save()
-    assert client.get(
-        reverse("interface:processo-detalhe", args=[processo.id])
-    ).status_code == 404
+    assert client.get(reverse("interface:processo-detalhe", args=[processo.id])).status_code == 404
 
 
 @pytest.mark.django_db(transaction=True)
@@ -233,8 +225,14 @@ def test_campo_obrigatorio_ausente_preserva_o_que_foi_digitado(client, seletor_l
 
     resposta = client.post(
         reverse("interface:processo-criar"),
-        {"codigo": "", "titulo": "Processo Seletivo 2027", "numero": "03", "ano": "2027",
-         "titulo_edital": "Primeiro Edital", "chave_idempotencia": "ui-criacao-000000003"},
+        {
+            "codigo": "",
+            "titulo": "Processo Seletivo 2027",
+            "numero": "03",
+            "ano": "2027",
+            "titulo_edital": "Primeiro Edital",
+            "chave_idempotencia": "ui-criacao-000000003",
+        },
     )
 
     assert resposta.status_code == 422
@@ -276,8 +274,14 @@ def test_sem_permissao_a_criacao_e_recusada_pelo_command(client, seletor_ligado)
 
     resposta = client.post(
         reverse("interface:processo-criar"),
-        {"codigo": "PS-2027-005", "titulo": "T", "numero": "05", "ano": "2027",
-         "titulo_edital": "E", "chave_idempotencia": "ui-criacao-000000005"},
+        {
+            "codigo": "PS-2027-005",
+            "titulo": "T",
+            "numero": "05",
+            "ano": "2027",
+            "titulo_edital": "E",
+            "chave_idempotencia": "ui-criacao-000000005",
+        },
     )
 
     assert resposta.status_code == 403

@@ -39,9 +39,7 @@ def test_us7_cancelling_a_published_edital_preserves_its_publications(
 ):
     """Cenário 1: o ato muda a situação sem apagar Publicações nem histórico."""
     edital = publish_original(api_client, manager_headers, process_payload)
-    publicacoes_antes = list(
-        Publicacao.objects.filter(edital=edital).values_list("id", flat=True)
-    )
+    publicacoes_antes = list(Publicacao.objects.filter(edital=edital).values_list("id", flat=True))
 
     response = ato(
         api_client,
@@ -205,9 +203,7 @@ def test_us7_closing_an_edital_is_not_treated_as_cancellation(
     assert response.status_code == 200
     assert response.json()["status"] == "ENCERRADO"
 
-    assert AtoAdministrativo.objects.filter(
-        aggregate_id=edital.id, operation="ENCERRAR"
-    ).exists()
+    assert AtoAdministrativo.objects.filter(aggregate_id=edital.id, operation="ENCERRAR").exists()
     assert not AtoAdministrativo.objects.filter(
         aggregate_id=edital.id, operation="CANCELAR"
     ).exists()

@@ -38,9 +38,7 @@ def test_htmx_e_encontravel_pelo_finder():
 @pytest.mark.parametrize("etapa", TELAS_COM_HTMX)
 def test_telas_dinamicas_carregam_um_script_que_existe(client, seletor_ligado, edital, etapa):
     identificar(client, "ana.elaboradora", ["elaborador"])
-    corpo = client.get(
-        reverse("interface:compor-etapa", args=[edital.id, etapa])
-    ).content.decode()
+    corpo = client.get(reverse("interface:compor-etapa", args=[edital.id, etapa])).content.decode()
 
     scripts = re.findall(r'<script src="([^"]+)"', corpo)
     assert scripts, f"a etapa {etapa} usa HTMX e precisa carregá-lo"
@@ -55,9 +53,7 @@ def test_telas_dinamicas_carregam_um_script_que_existe(client, seletor_ligado, e
 def test_botao_de_acrescentar_declara_o_que_htmx_precisa(client, seletor_ligado, edital, etapa):
     """Sem alvo e sem modo de inserção, o clique não teria efeito mesmo com a biblioteca."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    corpo = client.get(
-        reverse("interface:compor-etapa", args=[edital.id, etapa])
-    ).content.decode()
+    corpo = client.get(reverse("interface:compor-etapa", args=[edital.id, etapa])).content.decode()
 
     assert 'hx-get="/gestao/fragmentos/' in corpo
     assert 'hx-target="#' in corpo
@@ -80,9 +76,7 @@ def test_contador_declara_o_que_o_script_precisa_para_reagir(
 ):
     """O contador vem do servidor; sem estes atributos ele congela após o primeiro clique."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    corpo = client.get(
-        reverse("interface:compor-etapa", args=[edital.id, etapa])
-    ).content.decode()
+    corpo = client.get(reverse("interface:compor-etapa", args=[edital.id, etapa])).content.decode()
 
     assert f'data-contador="{alvo}"' in corpo
     assert f'data-item="{item}"' in corpo
@@ -103,9 +97,7 @@ def test_nenhuma_sintaxe_de_template_chega_ao_navegador(client, seletor_ligado, 
     Foi assim que um comentário sobre FR-020 apareceu para o usuário entre os botões.
     """
     identificar(client, "ana.elaboradora", ["elaborador"])
-    corpo = client.get(
-        reverse("interface:compor-etapa", args=[edital.id, etapa])
-    ).content.decode()
+    corpo = client.get(reverse("interface:compor-etapa", args=[edital.id, etapa])).content.decode()
 
     for residuo in ("{#", "#}", "{%", "%}", "{{", "}}"):
         assert residuo not in corpo, f"sintaxe de template não interpretada na página: {residuo}"
@@ -120,9 +112,7 @@ def test_pagina_nao_depende_de_eval_do_htmx(client, seletor_ligado, edital, etap
     O índice de cada linha nasce no servidor, então a página funciona com a política ativa.
     """
     identificar(client, "ana.elaboradora", ["elaborador"])
-    corpo = client.get(
-        reverse("interface:compor-etapa", args=[edital.id, etapa])
-    ).content.decode()
+    corpo = client.get(reverse("interface:compor-etapa", args=[edital.id, etapa])).content.decode()
 
     assert "hx-vals" not in corpo
     assert "js:" not in corpo

@@ -124,16 +124,16 @@ Etapa, e vê o que falta.
 **Independent Test**: distribuir 400 inscrições entre dois avaliadores em poucas submissões;
 recusar a excedente nomeando o número publicado; reenviar o lote e não criar nada.
 
-- [ ] T029 [US1] Implementar `distribuir()` em `backend/processo_seletivo/avaliacoes/application/distribuicao.py`, sobre `comando_de_comissao` da 011, com os seis invariantes de §2 do data-model
-- [ ] T030 [US1] Implementar a recusa de duas naturezas de FR-085 em `backend/processo_seletivo/avaliacoes/application/distribuicao.py`: regra sobre a linha acumula e relata; erro sobre o pedido levanta e desfaz o lote
-- [ ] T031 [US1] Implementar `remover_atribuicao()` em `backend/processo_seletivo/avaliacoes/application/distribuicao.py`, alcançando **apenas** Atribuição sem Avaliação concluída, também sobre `comando_de_comissao` (a recusa nomeada de FR-092 entra na Phase 7)
-- [ ] T032 [US1] Emitir a trilha de **atribuir** e de **remover atribuição** em `backend/processo_seletivo/avaliacoes/application/distribuicao.py`, via `auditar()`, um evento por Atribuição — inclusive no lote (FR-016, FR-052)
-- [ ] T033 [P] [US1] Implementar os seletores da organização do trabalho em `backend/processo_seletivo/avaliacoes/application/selectors.py`: carga por pessoa, déficit por inscrição e totais — por agregação, nunca por laço —, **paginados e filtráveis** por avaliador e por estado de cobertura (FR-049)
-- [ ] T034 [US1] Criar as views `distribuicao` e `remover_atribuicao` em `backend/processo_seletivo/interface/views.py`, autorizadas por `pode_gerir_comissao`, e os formulários do lote e da remoção em `backend/processo_seletivo/interface/forms.py`, com `idempotency_key` e o resultado declarado de FR-097
-- [ ] T035 [US1] Criar `backend/processo_seletivo/interface/templates/interface/distribuicao.html`, com **paginação e filtro** — mil inscrições não cabem numa tela (FR-049) —, e as três rotas de distribuição em `backend/processo_seletivo/interface/urls.py`
-- [ ] T036 [P] [US1] Testes de integração em `backend/tests/integration/avaliacoes/test_distribuicao.py`: teto recusado nomeando o número; impedimento e já-atribuída não derrubam o lote; Etapa inexistente derruba; um evento por atribuição; e a tela pagina e filtra com mil inscrições (FR-049)
-- [ ] T037 [P] [US1] Teste de idempotência e reautorização em `backend/tests/integration/avaliacoes/test_idempotencia_distribuicao.py`: reenvio devolve o desfecho sem criar Atribuição nem evento; chave repetida com conteúdo diferente é conflito; quem perdeu a presidência durante a transação não conclui o ato
-- [ ] T038 [P] [US1] Teste de autorização em `backend/tests/authorization/test_distribuicao.py`: quem não gere a comissão recebe 404; escopo divergente idem
+- [X] T029 [US1] Implementar `distribuir()` em `backend/processo_seletivo/avaliacoes/application/distribuicao.py`, sobre `comando_de_comissao` da 011, com os seis invariantes de §2 do data-model
+- [X] T030 [US1] Implementar a recusa de duas naturezas de FR-085 em `backend/processo_seletivo/avaliacoes/application/distribuicao.py`: regra sobre a linha acumula e relata; erro sobre o pedido levanta e desfaz o lote
+- [X] T031 [US1] Implementar `remover_atribuicao()` em `backend/processo_seletivo/avaliacoes/application/distribuicao.py`, alcançando **apenas** Atribuição sem Avaliação concluída, também sobre `comando_de_comissao` (a recusa nomeada de FR-092 entra na Phase 7)
+- [X] T032 [US1] Emitir a trilha de **atribuir** e de **remover atribuição** em `backend/processo_seletivo/avaliacoes/application/distribuicao.py`, via `auditar()`, um evento por Atribuição — inclusive no lote (FR-016, FR-052)
+- [X] T033 [P] [US1] Implementar os seletores da organização do trabalho em `backend/processo_seletivo/avaliacoes/application/selectors.py`: carga por pessoa, déficit por inscrição e totais — por agregação, nunca por laço —, **paginados e filtráveis** por avaliador e por estado de cobertura (FR-049)
+- [X] T034 [US1] Criar as views `distribuicao` e `remover_atribuicao` em `backend/processo_seletivo/interface/views.py`, autorizadas por `pode_gerir_comissao`, e os formulários do lote e da remoção em `backend/processo_seletivo/interface/forms.py`, com `idempotency_key` e o resultado declarado de FR-097
+- [X] T035 [US1] Criar `backend/processo_seletivo/interface/templates/interface/distribuicao.html`, com **paginação e filtro** — mil inscrições não cabem numa tela (FR-049) —, e as três rotas de distribuição em `backend/processo_seletivo/interface/urls.py`
+- [X] T036 [P] [US1] Testes de integração em `backend/tests/integration/avaliacoes/test_distribuicao.py`: teto recusado nomeando o número; impedimento e já-atribuída não derrubam o lote; Etapa inexistente derruba; um evento por atribuição; e a tela pagina e filtra com mil inscrições (FR-049)
+- [X] T037 [P] [US1] Teste de idempotência e reautorização em `backend/tests/integration/avaliacoes/test_idempotencia_distribuicao.py`: reenvio devolve o desfecho sem criar Atribuição nem evento; chave repetida com conteúdo diferente é conflito; quem perdeu a presidência durante a transação não conclui o ato
+- [X] T038 [P] [US1] Teste de autorização em `backend/tests/authorization/test_distribuicao.py`: quem não gere a comissão recebe 404; escopo divergente idem
 
 **Checkpoint**: existe distribuição com autoria, em lote, auditada e idempotente.
 

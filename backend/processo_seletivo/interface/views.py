@@ -18,6 +18,8 @@ from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.auditoria import selectors as auditoria_selectors
 from processo_seletivo.auditoria.application import record_event
+from processo_seletivo.avaliacoes.application import distribuicao as distribuicao_app
+from processo_seletivo.avaliacoes.application import selectors as avaliacao_selectors
 from processo_seletivo.comissoes.application import alocacao as alocacao_app
 from processo_seletivo.comissoes.application import comissao as comissao_app
 from processo_seletivo.comissoes.application import selectors as comissao_selectors
@@ -1935,6 +1937,116 @@ def alocacoes(request, processo_id):
             "chave_idempotencia": uuid4().hex,
         },
     )
+
+
+@require_http_methods(["GET", "POST"])
+def distribuicao(request, edital_id, etapa_id):
+    """A distribuição das inscrições de uma Etapa (US1 da `012`).
+
+    A porta é a de gestão da comissão — as duas bases que a 011 reconhece —, e não a de atuação:
+    distribuir é ato de quem responde pela organização do trabalho, e o guard contextual da 011
+    continua respondendo por quem **executa** (FR-067).
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital = (
+        Edital.objects.filter(pk=edital_id, institution_scope=ator.institution_scope)
+        .select_related("processo")
+        .first()
+    )
+    if edital is None or pode_gerir_comissao(ator, edital.processo) is None:
+        # A mesma resposta para Edital de outro escopo e para quem não gere esta comissão: a
+        # existência não é enumerável por quem não alcança (FR-044).
+        raise Http404
+    try:
+        etapa = etapa_vigente(edital, etapa_id)
+    except DomainError:
+        etapa = None
+    if etapa is None:
+        raise Http404
+
+    erro, resultado = None, None
+    if request.method == "POST":
+        dados = forms.ler_distribuicao(request.POST)
+        chave = request.POST.get("chave_idempotencia") or uuid4().hex
+        try:
+            if dados["acao"] == "remover":
+                removidas, recusas = distribuicao_app.remover_atribuicao(
+                    actor=ator,
+                    processo_id=edital.processo_id,
+                    atribuicao_ids=dados["atribuicao_ids"],
+                    idempotency_key=chave,
+                    correlation_id=getattr(request, "correlation_id", ""),
+                )
+                resultado = _resultado_do_lote(len(removidas), recusas, "removida")
+            else:
+                criadas, recusas = distribuicao_app.distribuir(
+                    actor=ator,
+                    processo_id=edital.processo_id,
+                    edital_id=edital.id,
+                    etapa_id=etapa_id,
+                    membro_ids=dados["membro_ids"],
+                    inscricao_ids=dados["inscricao_ids"],
+                    idempotency_key=chave,
+                    correlation_id=getattr(request, "correlation_id", ""),
+                )
+                resultado = _resultado_do_lote(len(criadas), recusas, "atribuída")
+            request.session["resultado_da_distribuicao"] = resultado
+            return redirect(request.get_full_path())
+        except DomainError as recusa:
+            if recusa.status == 404:
+                raise Http404 from recusa
+            erro = recusa.detail
+
+    linhas, pagina = avaliacao_selectors.inscricoes_da_etapa(
+        edital=edital,
+        etapa=etapa,
+        pagina=request.GET.get("pagina") or 1,
+        cobertura=request.GET.get("cobertura") or None,
+        avaliador=request.GET.get("avaliador") or None,
+    )
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/distribuicao.html",
+            {
+                "edital": edital,
+                "processo": edital.processo,
+                "etapa": etapa,
+                "linhas": linhas,
+                "pagina": pagina,
+                "carga": avaliacao_selectors.carga_por_avaliador(edital=edital, etapa_id=etapa_id),
+                "resumo": avaliacao_selectors.resumo_da_etapa(edital=edital, etapa=etapa),
+                "cobertura": request.GET.get("cobertura") or "",
+                "avaliador": request.GET.get("avaliador") or "",
+                "erro": erro,
+                "resultado": request.session.pop("resultado_da_distribuicao", None),
+                "chave_idempotencia": uuid4().hex,
+            },
+        )
+    )
+
+
+def _resultado_do_lote(feitas, recusas, verbo):
+    """O resultado é **declarado**, e não inferido (FR-097).
+
+    Sucesso parcial que não se anuncia vira surpresa administrativa: quem distribuiu precisa saber
+    o que ficou de fora sem conferir mil linhas.
+    """
+    return {
+        "feitas": feitas,
+        "verbo": verbo,
+        "recusadas": len(recusas),
+        "motivos": [
+            {
+                "avaliador": recusa.membro.identity_subject,
+                "inscricao": recusa.inscricao.protocolo or str(recusa.inscricao.id),
+                "motivo": recusa.motivo,
+            }
+            for recusa in recusas
+        ],
+    }
 
 
 @require_http_methods(["GET"])

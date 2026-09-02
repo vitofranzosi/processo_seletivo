@@ -33,7 +33,7 @@ def test_a_matriz_mostra_a_distribuicao_inteira_de_uma_vez(
     corpo = client.get(url(processo_a)).content.decode()
 
     assert "Análise documental" in corpo and "Prova didática" in corpo
-    assert corpo.count("name=\"celula\"") == 4  # duas pessoas × duas Etapas
+    assert corpo.count('name="celula"') == 4  # duas pessoas × duas Etapas
     marcada = f'value="{edital_a.id}:{etapa_a1}:{comissao_de_a["joao"].id}"'
     vazia = f'value="{edital_a.id}:{etapa_a2}:{comissao_de_a["joao"].id}"'
     assert "checked" in corpo.split(marcada)[1].split(">")[0]
@@ -75,10 +75,7 @@ def test_salvar_a_matriz_cria_e_remove_no_mesmo_ato(
         follow=True,
     )
 
-    ativas = {
-        (str(a.etapa_id), a.membro_id)
-        for a in AlocacaoEtapa.objects.filter(ativo=True)
-    }
+    ativas = {(str(a.etapa_id), a.membro_id) for a in AlocacaoEtapa.objects.filter(ativo=True)}
     assert ativas == {(etapa_a2, joao.id), (etapa_a1, maria.id)}
 
 
@@ -153,9 +150,7 @@ def test_a_coluna_inteira_e_um_clique_e_o_inverso_tambem(
     assert AlocacaoEtapa.objects.filter(ativo=True, etapa_id=etapa_a1).count() == 0
 
 
-def test_comissao_sem_presidente_nao_deixa_distribuir(
-    client, seletor_ligado, gestor, processo_a
-):
+def test_comissao_sem_presidente_nao_deixa_distribuir(client, seletor_ligado, gestor, processo_a):
     constituir(gestor, processo_a, [("joao", "MEMBRO")])
     identificar(client, "carlos", ["gestor"])
 

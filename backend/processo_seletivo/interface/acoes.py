@@ -72,9 +72,7 @@ def _navegacao(edital, ator):
             estilo=PRIMARIA,
         )
     if edital.status in ESTADOS_COM_PREVIA:
-        yield Acao(
-            "visualizar", "Visualizar Edital", reverse("interface:previa", args=[edital.id])
-        )
+        yield Acao("visualizar", "Visualizar Edital", reverse("interface:previa", args=[edital.id]))
     # A permissão que `ACOES_POR_SITUACAO` já declarava desde a `002` e que o template ignorava.
     if edital.status == "PUBLICADO" and ator.can("retificacao:elaborar"):
         yield Acao("retificar", "Retificar", reverse("interface:retificar", args=[edital.id]))
