@@ -304,6 +304,11 @@ fieldset.linha legend{font-size:.75rem;text-transform:uppercase;letter-spacing:.
 .campos{display:flex;gap:1rem;flex-wrap:wrap}
 .campo{flex:1 1 200px;margin:0 0 .9rem}
 .campo.curto{flex:0 1 150px}
+/* `.curto` só encolhia dentro de `.campos`, onde `flex-basis` tem efeito. Solto — como na
+   avaliação —, o campo é bloco e `width:100%` dava 1.350 px a uma caixa de quatro dígitos,
+   ao lado de um parecer limitado à medida de leitura. O desencontro parecia defeito, e era:
+   cada campo tem a largura do que recebe. */
+.campo.curto>input{max-width:10rem}
 .campo.largo{flex:2 1 320px}
 .campo label{font-size:.8125rem;font-weight:600;margin-bottom:.25rem}
 .campo input,.campo select,.campo textarea{width:100%;padding:.5rem;border:1px solid var(--borda);

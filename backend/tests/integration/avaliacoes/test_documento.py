@@ -328,13 +328,15 @@ def test_a_marca_de_obrigatorio_tem_coluna_propria(
     assert linha.index("requisito") < linha.index("marca")
 
 
-def test_a_tela_diz_quando_esta_pessoa_leu_o_documento(
+def test_a_tela_diz_que_houve_leitura_sem_carimbar_a_hora(
     como_joao, edital_com_documentos, etapa_a1, cenario
 ):
     """Só a frase negativa deixava o caso oposto em silêncio — e silêncio parece defeito.
 
     Quem chega e encontra o cursor na nota precisa saber se o sistema pulou a leitura ou se foi
-    ela mesma que já leu. O instante vem da trilha, que registra cada abertura (FR-027).
+    ela mesma que já leu. O que responde isso é **o fato**, e não o minuto: para quem avalia
+    dezenas de inscrições por dia, "já vi este?" é sim ou não, e a hora exata não muda decisão
+    nenhuma. Ela é dado de auditoria, e o lugar dela é a trilha (FR-027).
     """
     abrir_arquivo(como_joao, arquivo(edital_com_documentos, etapa_a1, cenario))
 
@@ -342,8 +344,9 @@ def test_a_tela_diz_quando_esta_pessoa_leu_o_documento(
         reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
     ).content.decode()
 
-    assert "Você abriu documento desta inscrição em" in corpo
-    assert "por isso o cursor começa aqui" in corpo
+    assert "Você abriu documento desta inscrição — por isso o cursor começa aqui" in corpo
+    frase = re.search(r"<p class=\"ajuda\" role=\"status\">([^<]*cursor[^<]*)</p>", corpo).group(1)
+    assert not re.search(r"\d\d:\d\d", frase), frase
 
 
 @pytest.fixture

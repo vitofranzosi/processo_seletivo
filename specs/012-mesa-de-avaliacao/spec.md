@@ -431,20 +431,24 @@ quando há aviso a ler — que tem prioridade sobre tudo.
 porque documento ausente é caso legítimo e ninguém precisa abrir arquivo para registrar que não
 havia o que conferir.
 
-E a tela diz, numa linha, **onde a leitura está** — nas duas direções: que ainda não houve, ou
-quando houve. Só a frase negativa deixaria o caso oposto em silêncio, e silêncio é indistinguível
-de defeito: quem chega e encontra o cursor na nota não saberia se o sistema pulou a leitura ou se
-foi ela mesma que já leu. O instante vem da **trilha**, que registra cada abertura — não é estado
-novo inventado para a mesma coisa (FR-027).
+E a tela diz, numa linha, **se houve leitura** — nas duas direções. Só a frase negativa deixaria
+o caso oposto em silêncio, e silêncio é indistinguível de defeito: quem chega e encontra o cursor
+na nota não saberia se o sistema pulou a leitura ou se foi ela mesma que já leu.
+
+O que ela afirma é **o fato, e não o minuto**. Para quem avalia dezenas de inscrições por dia,
+"já vi este?" é sim ou não; a hora exata não muda decisão nenhuma e disputa espaço com o que muda.
+Ela é dado de auditoria, e o lugar dela é a **trilha**, de onde o fato vem (FR-027) — na tela fica
+ao alcance de quem a procure, fora do caminho de quem não a procura.
 
 **FR-114** — **Cada documento diz se esta pessoa já o abriu.** FR-113 responde "houve leitura?"
 para a inscrição inteira. Com dez requisitos exigidos, essa resposta não basta: "onde eu parei"
 volta a ser pergunta que só a memória responde, e quem retoma o trabalho relê o que já leu ou pula
 o que não leu.
 
-Cada linha da lista mostra **quando esta pessoa abriu aquele documento**, e a lista mostra quantos
+Cada linha da lista mostra **que esta pessoa já abriu aquele documento**, e a lista mostra quantos
 dos entregues já foram abertos — a contagem só aparece quando há mais de um, porque com um só ela
-não informa nada que a linha não diga.
+não informa nada que a linha não diga. O instante segue a regra de FR-113: fica ao alcance, não
+impresso na linha, onde competiria em largura com o nome do documento.
 
 **Aberto, e não avaliado.** A Avaliação é uma só por inscrição — nota e parecer sobre o conjunto —
 e não existe veredito por documento: marcar "avaliado" em cada linha inventaria um julgamento que

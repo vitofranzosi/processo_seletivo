@@ -2388,32 +2388,6 @@ def _leituras_por_requisito(ator, atribuicao):
     return leituras
 
 
-def _ultima_leitura(ator, atribuicao):
-    """**Quando** esta pessoa abriu documento desta inscrição pela última vez — ou `None`.
-
-    A pergunta é do trabalho, e a resposta já existe: a trilha guarda cada abertura, com ator e
-    agregado. Ler dali é o oposto de inventar um estado novo para a mesma coisa (FR-027).
-
-    Devolve o instante, e não um sim-ou-não, porque a tela precisa dizer as duas coisas. Só a
-    frase negativa — "você ainda não abriu" — deixa o caso oposto em silêncio, e silêncio é
-    indistinguível de defeito: quem chega e encontra o cursor na nota não sabe se o sistema pulou
-    a leitura ou se foi ela mesma que já leu, semana passada.
-    """
-    from processo_seletivo.auditoria.models import RegistroAuditoria
-
-    ultima = (
-        RegistroAuditoria.objects.filter(
-            operation=CONSULTAR_DOCUMENTO,
-            aggregate_id=atribuicao.id,
-            actor_subject=ator.subject,
-        )
-        .order_by("-occurred_at")
-        .values_list("occurred_at", flat=True)
-        .first()
-    )
-    return ultima
-
-
 def _valores_da_avaliacao(digitado, avaliacao):
     if digitado:
         return {"pontuacao": digitado.get("pontuacao", ""), "parecer": digitado.get("parecer", "")}

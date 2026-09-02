@@ -90,8 +90,14 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
       ao lado, e prometer aba nova ali seria descrever o que não acontece. `target` continua como o
       caminho de quem não tem o painel.
       {% endcomment %}
-      <span class="leitura">{% if documento.aberto_em %}<span class="marca-lida">aberto</span>
-        <span class="quando">{{ documento.aberto_em|date:"d/m" }} às {{ documento.aberto_em|date:"H:i" }}</span>{% endif %}</span>
+      {% comment %}
+      **O fato, e não o minuto.** Quem avalia dezenas de inscrições por dia pergunta "já vi este?",
+      e a resposta é sim ou não. A hora exata não muda decisão nenhuma: ela é dado de auditoria, e
+      o lugar dela é a trilha — fica no `title`, à mão de quem precisar, fora do caminho de quem
+      não precisa. Impressa na linha, competia em largura com o nome do documento.
+      {% endcomment %}
+      <span class="leitura">{% if documento.aberto_em %}<span class="marca-lida"
+        title="Aberto por você em {{ documento.aberto_em|date:'d/m/Y' }} às {{ documento.aberto_em|date:'H:i' }}">aberto</span>{% endif %}</span>
       <span class="entrega">
         <a class="acao" href="{% url 'interface:mesa-documento' edital.id etapa_id inscricao.id documento.id %}"
            target="_blank" rel="noopener"
@@ -164,7 +170,7 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
   {% endcomment %}
   {% if tem_documento %}
   {% if ultima_leitura %}
-  <p class="ajuda" role="status">Você abriu documento desta inscrição em {{ ultima_leitura|date:"d/m/Y" }} às {{ ultima_leitura|date:"H:i" }} — por isso o cursor começa aqui.</p>
+  <p class="ajuda" role="status">Você abriu documento desta inscrição — por isso o cursor começa aqui.</p>
   {% else %}
   <p class="ajuda" role="status">Você ainda não abriu nenhum documento desta inscrição.</p>
   {% endif %}

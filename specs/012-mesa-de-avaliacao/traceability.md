@@ -75,6 +75,7 @@ e cada um tem um teste que falha primeiro.
 | **FR-111** | a parede antes do percurso | `test_caminho_ate_a_mesa.py::test_a_tela_de_identificacao_oferece_quem_tem_trabalho` |
 | **FR-112** | a moldura mudar o que o evento significa | `test_documento.py::test_nenhuma_moldura_da_pagina_aponta_para_um_documento` |
 | **FR-113** | a tela convidar a pontuar antes de ler | `test_documento.py::test_o_foco_comeca_no_documento_e_nao_na_nota` |
+| **FR-113** | carimbar a hora onde bastava o fato | `test_documento.py::test_a_tela_diz_que_houve_leitura_sem_carimbar_a_hora` |
 | **FR-114** | a memória responder "onde eu parei" numa inscrição de dez documentos | `test_documento.py::test_a_tela_marca_o_que_esta_pessoa_ja_abriu` |
 | **FR-114** | a leitura de outra pessoa aparecer como trabalho feito | `test_documento.py::test_a_consulta_administrativa_nao_marca_a_lista_de_quem_avalia` |
 
