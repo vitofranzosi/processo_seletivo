@@ -65,8 +65,15 @@ embarcados.
 parcial (a Atribuição ativa), duas totais (a ordem da conclusão e o par do impedimento), um índice
 único parcial (a conclusão única de FR-074), os checks de completude de estado e a trigger
 append-only da conclusão. Uma migration em `editais`,
-com dois campos na Etapa de elaboração. **Nenhuma migration em `publicacoes` ou `auditoria`**: a
-elevação de versão canônica é função pura sobre conteúdo lido, e não escrita em linha gravada.
+com dois campos na Etapa de elaboração. **Nenhuma migration em `publicacoes`**: a elevação de
+versão canônica é função pura sobre conteúdo lido, e não escrita em linha gravada.
+
+Uma migration em `auditoria`, aditiva e anulável: a reserva de idempotência passa a guardar o
+**desfecho** de um ato em lote. A restrição original dizia "nem em `auditoria`", e ela caiu por um
+motivo que só apareceu na implementação — sem guardar o resultado, a repetição de um lote responde
+zero atribuídas e zero recusadas, e recusa não é reconstruível depois, porque o estado que a
+produziu mudou no ato seguinte (FR-084, FR-097). É completar o mecanismo que já guarda
+`result_id`, e não criar um paralelo.
 
 **Testing**: pytest com pytest-django, marcadores `acceptance`, `contract`, `integration` e
 `authorization` já declarados. Três exigências específicas desta feature: o índice único parcial de

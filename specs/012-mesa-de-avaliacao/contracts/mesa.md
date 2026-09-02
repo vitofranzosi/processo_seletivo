@@ -41,9 +41,13 @@ inscricao_id     um ou vários
 idempotency_key  obrigatório
 ```
 
-Uma submissão, N atribuições. As duas formas que a tela oferece — muitas inscrições para um
-avaliador, ou um conjunto repartido entre vários — são o mesmo corpo. Nenhuma variante aceita uma
-atribuição por submissão como caminho normal (FR-047).
+Uma submissão, N atribuições, e a combinação é **uniforme**: cada inscrição selecionada vai para
+cada avaliador selecionado (FR-101). O corpo não tem variante que reparta — repartir é escolher
+quem avalia quem, e o sistema não escolhe (FR-017).
+
+Quando as vagas de uma inscrição não comportam os selecionados, aquela inscrição é recusada
+**inteira**, nomeando quantas vagas restam (FR-102). Nenhuma variante aceita uma atribuição por
+submissão como caminho normal (FR-047).
 
 ### `POST editais/<id>/impedimentos`
 
@@ -96,6 +100,8 @@ repetição (FR-081).
 | chave de idempotência repetida, mesmo conteúdo | desfecho original, sem atribuição nem evento novos (FR-084) |
 | chave repetida, conteúdo diferente | conflito (FR-084) |
 | impedimento, teto atingido, já atribuída | **linha recusada, lote prossegue** (FR-085) |
+| conjunto maior que as vagas da inscrição | **aquela inscrição recusada inteira**, lote prossegue (FR-102) |
+| reenvio da mesma chave | **o desfecho original**, com as recusas que ele teve (FR-084, FR-097) |
 | Etapa inexistente, avaliador sem alocação, inscrição de outro Edital ou não submetida | **lote inteiro recusado** (FR-085) |
 | pontuação acima da máxima publicada | recusa nomeando o limite (FR-033) |
 | pontuação abaixo da mínima | **aceita**; torna o parecer obrigatório (FR-033, FR-034) |

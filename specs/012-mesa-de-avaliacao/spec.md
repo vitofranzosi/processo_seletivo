@@ -558,10 +558,21 @@ que a 011 usa para quem não é membro ativo.
 **FR-012** — Só é atribuível inscrição **submetida** do Edital daquela Etapa.
 
 **FR-013** — A distribuição é **em lote**: uma submissão atribui muitas inscrições a um avaliador,
-ou distribui um conjunto entre vários. Um clique por atribuição é inviável na escala real. O
-precedente é a alocação em lote da 011, e a regra que ela fixou vale aqui: quem já tem a atribuição
-não faz o lote falhar, porque recusar o conjunto por causa de uma linha seria punir o caminho
-normal.
+ou às várias pessoas selecionadas. Um clique por atribuição é inviável na escala real. O precedente
+é a alocação em lote da 011, e a regra que ela fixou vale aqui: quem já tem a atribuição não faz o
+lote falhar, porque recusar o conjunto por causa de uma linha seria punir o caminho normal.
+
+**FR-101** — A combinação do lote é **uniforme**: cada inscrição selecionada vai para cada avaliador
+selecionado. O lote **não reparte** — nada nele divide o conjunto entre as pessoas, sorteia ou olha
+carga. Repartir é escolher quem avalia quem, e isso é decisão com autoria: quem quer dividir cem
+inscrições entre dois avaliadores faz duas submissões de cinquenta, e as duas são atos dela
+(FR-017, FR-019, P-002).
+
+**FR-102** — Quando o conjunto **não cabe** — restam menos vagas do que pessoas selecionadas para
+aquela inscrição —, a inscrição inteira é recusada, e a recusa diz quantas vagas restam e quantas
+pessoas foram selecionadas. Conceder as vagas na ordem em que os avaliadores vierem faria a
+ordenação do banco decidir quem avalia quem: ninguém teria tomado a decisão, e ela pareceria
+distribuição. A escolha volta para quem responde por ela.
 
 **FR-014** — A tela mostra, antes do detalhe: inscrições sem avaliador suficiente, quantas cada
 pessoa recebeu, quantas faltam para cumprir o declarado na Etapa.

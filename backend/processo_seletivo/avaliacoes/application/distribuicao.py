@@ -35,15 +35,37 @@ REMOVER = "AVALIACAO_ATRIBUICAO_REMOVER"
 
 
 class Recusa:
-    """Uma linha que não foi distribuída, e por quê. O resultado do lote é declarado (FR-097)."""
+    """Uma linha que não foi distribuída, e por quê."""
 
     def __init__(self, membro, inscricao, motivo):
         self.membro = membro
         self.inscricao = inscricao
         self.motivo = motivo
 
+    def declarada(self):
+        return {
+            "avaliador": self.membro.identity_subject,
+            "inscricao": self.inscricao.protocolo or str(self.inscricao.id),
+            "motivo": self.motivo,
+        }
+
     def __repr__(self):
         return f"Recusa({self.membro}, {self.inscricao}, {self.motivo!r})"
+
+
+def resultado_declarado(feitas, recusas, verbo):
+    """O desfecho do lote, na forma que a tela mostra e que a repetição devolve (FR-097).
+
+    É **serializável** de propósito: ele é guardado na reserva de idempotência, porque recusa não
+    é reconstruível depois — o estado que a produziu mudou no ato seguinte.
+    """
+    return {
+        "feitas": len(feitas),
+        "verbo": verbo,
+        "recusadas": len(recusas),
+        "ids": [str(item.id) for item in feitas],
+        "motivos": [recusa.declarada() for recusa in recusas],
+    }
 
 
 def _edital_do_processo(processo, edital_id):
@@ -155,7 +177,10 @@ def distribuir(
     idempotency_key,
     correlation_id,
 ):
-    """Devolve `(criadas, recusas)`. Cada Atribuição criada gera seu evento (FR-016)."""
+    """O **resultado declarado** do lote.
+
+    Cada Atribuição criada gera seu evento, inclusive no lote (FR-016).
+    """
     etapa_id = identificador(etapa_id)
     ids_membros = [identificador(m) for m in membro_ids]
     ids_inscricoes = [identificador(i) for i in inscricao_ids]
@@ -179,7 +204,7 @@ def distribuir(
     ) as ctx:
         edital = _edital_do_processo(ctx.processo, edital_id)
         if ctx.repetido:
-            return [], []
+            return ctx.desfecho_anterior
         etapa = _etapa_vigente_ou_404(edital, etapa_id)
         membros = _membros_alocados(ctx.processo, edital, etapa_id, ids_membros)
         inscricoes = _inscricoes_atribuiveis(edital, ids_inscricoes)
@@ -191,19 +216,27 @@ def distribuir(
 
         criadas, recusas = [], []
         for inscricao in inscricoes:
+            candidatos = []
             for membro in membros:
                 motivo = _motivo_da_recusa(
-                    membro,
-                    inscricao,
-                    previstas,
-                    ocupacao.get(inscricao.id, 0),
-                    impedidos,
-                    ja_atribuidas,
-                    ja_concluidas,
+                    membro, inscricao, impedidos, ja_atribuidas, ja_concluidas
                 )
                 if motivo is not None:
                     recusas.append(Recusa(membro, inscricao, motivo))
                     continue
+                candidatos.append(membro)
+            vagas = previstas - ocupacao.get(inscricao.id, 0)
+            if len(candidatos) > vagas:
+                # **O conjunto não cabe, e o sistema não escolhe quem fica.** Conceder as vagas na
+                # ordem em que os membros vieram faria a ordenação do banco decidir quem avalia
+                # quem — decisão de distribuição, tomada por ninguém, que é exatamente o que
+                # FR-017 e P-002 recusam. Recusa-se a inscrição inteira, e a presidência escolhe.
+                recusas.extend(
+                    Recusa(membro, inscricao, _motivo_do_excesso(vagas, len(candidatos), previstas))
+                    for membro in candidatos
+                )
+                continue
+            for membro in candidatos:
                 atribuicao = Atribuicao.objects.create(
                     membro=membro,
                     edital=edital,
@@ -227,8 +260,9 @@ def distribuir(
                     reason=_motivo_do_ato(membro, inscricao, nome_da_etapa),
                     idempotency_key=idempotency_key,
                 )
-        ctx.concluir_sem_resultado(201)
-        return criadas, recusas
+        resultado = resultado_declarado(criadas, recusas, "atribuída")
+        ctx.concluir_sem_resultado(201, resultado)
+        return resultado
 
 
 def _motivo_do_ato(membro, inscricao, nome_da_etapa):
@@ -241,10 +275,26 @@ def _motivo_do_ato(membro, inscricao, nome_da_etapa):
     return f"{membro.identity_subject} — inscrição {protocolo}, Etapa “{nome_da_etapa}”"
 
 
-def _motivo_da_recusa(
-    membro, inscricao, previstas, ocupadas, impedidos, ja_atribuidas, ja_concluidas
-):
-    """As quatro regras de linha, na ordem em que elas explicam melhor o que aconteceu."""
+def _motivo_do_excesso(vagas, candidatos, previstas):
+    """O conjunto não cabe — e é a presidência que escolhe, não a ordenação do banco.
+
+    Conceder as vagas na ordem em que os membros vieram faria o sistema decidir quem avalia quem,
+    e a ordem seria a de `MembroComissao.Meta.ordering`: função e identificador. Ninguém teria
+    tomado a decisão, e ela pareceria distribuição (FR-017, FR-019, P-002).
+    """
+    if vagas <= 0:
+        return (
+            f"Esta inscrição já tem as {previstas} avaliações que o Edital declara para esta Etapa."
+        )
+    plural = "s" if vagas > 1 else ""
+    return (
+        f"Restam {vagas} vaga{plural} nesta inscrição e {candidatos} pessoas foram selecionadas. "
+        "Escolha quem avalia esta inscrição — o sistema não escolhe por você."
+    )
+
+
+def _motivo_da_recusa(membro, inscricao, impedidos, ja_atribuidas, ja_concluidas):
+    """As três regras que dependem **só** da linha; o teto é da inscrição, e vem depois."""
     if (membro.identity_subject, inscricao.id) in impedidos:
         return "Há impedimento registrado entre esta pessoa e esta inscrição."
     if (membro.id, inscricao.id) in ja_atribuidas:
@@ -253,10 +303,6 @@ def _motivo_da_recusa(
         return (
             "Esta pessoa já concluiu a avaliação desta inscrição nesta Etapa. "
             "O caminho de volta é a reabertura."
-        )
-    if ocupadas >= previstas:
-        return (
-            f"Esta inscrição já tem as {previstas} avaliações que o Edital declara para esta Etapa."
         )
     return None
 
@@ -285,7 +331,7 @@ def remover_atribuicao(*, actor, processo_id, atribuicao_ids, idempotency_key, c
         idempotency_key=idempotency_key,
     ) as ctx:
         if ctx.repetido:
-            return [], []
+            return ctx.desfecho_anterior
         atribuicoes = list(
             Atribuicao.objects.filter(
                 pk__in=ids, edital__processo=ctx.processo, ativo=True
@@ -324,5 +370,6 @@ def remover_atribuicao(*, actor, processo_id, atribuicao_ids, idempotency_key, c
                 ),
                 idempotency_key=idempotency_key,
             )
-        ctx.concluir_sem_resultado(200)
-        return removidas, recusas
+        resultado = resultado_declarado(removidas, recusas, "removida")
+        ctx.concluir_sem_resultado(200, resultado)
+        return resultado

@@ -1939,6 +1939,59 @@ def alocacoes(request, processo_id):
     )
 
 
+def _etapa_para_distribuir(request, edital_id, etapa_id):
+    """Edital, Etapa e ator — ou 404 para tudo que este ator não alcança (FR-044).
+
+    A porta é a de **gestão da comissão**, e não a de atuação: distribuir é ato de quem responde
+    pela organização do trabalho, e o guard contextual da 011 continua respondendo por quem
+    executa (FR-067).
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return None, None, None
+    edital = (
+        Edital.objects.filter(pk=edital_id, institution_scope=ator.institution_scope)
+        .select_related("processo")
+        .first()
+    )
+    if edital is None or pode_gerir_comissao(ator, edital.processo) is None:
+        raise Http404
+    try:
+        etapa = etapa_vigente(edital, etapa_id)
+    except DomainError:
+        etapa = None
+    if etapa is None:
+        raise Http404
+    return ator, edital, etapa
+
+
+@require_http_methods(["POST"])
+def remover_atribuicao(request, edital_id, etapa_id):
+    """Retira Atribuições da Etapa — as que ainda não têm Avaliação concluída.
+
+    Rota própria, e não um ramo do formulário de distribuir: `acao` decidindo entre criar e
+    remover foi como a 011 descobriu que ramo irmão decide sozinho, e aqui o custo do engano seria
+    retirar trabalho de alguém.
+    """
+    ator, edital, _ = _etapa_para_distribuir(request, edital_id, etapa_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    destino = reverse("interface:distribuicao", args=[edital_id, etapa_id])
+    try:
+        request.session["resultado_da_distribuicao"] = distribuicao_app.remover_atribuicao(
+            actor=ator,
+            processo_id=edital.processo_id,
+            atribuicao_ids=request.POST.getlist("atribuicao_id"),
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_da_distribuicao"] = recusa.detail
+    return redirect(destino)
+
+
 @require_http_methods(["GET", "POST"])
 def distribuicao(request, edital_id, etapa_id):
     """A distribuição das inscrições de uma Etapa (US1 da `012`).
@@ -1947,51 +2000,25 @@ def distribuicao(request, edital_id, etapa_id):
     distribuir é ato de quem responde pela organização do trabalho, e o guard contextual da 011
     continua respondendo por quem **executa** (FR-067).
     """
-    ator = identidade.ator_da_sessao(request)
+    ator, edital, etapa = _etapa_para_distribuir(request, edital_id, etapa_id)
     if ator is None:
         return redirect(reverse("interface:identificar"))
-    edital = (
-        Edital.objects.filter(pk=edital_id, institution_scope=ator.institution_scope)
-        .select_related("processo")
-        .first()
-    )
-    if edital is None or pode_gerir_comissao(ator, edital.processo) is None:
-        # A mesma resposta para Edital de outro escopo e para quem não gere esta comissão: a
-        # existência não é enumerável por quem não alcança (FR-044).
-        raise Http404
-    try:
-        etapa = etapa_vigente(edital, etapa_id)
-    except DomainError:
-        etapa = None
-    if etapa is None:
-        raise Http404
 
-    erro, resultado = None, None
+    erro = request.session.pop("erro_da_distribuicao", None)
     if request.method == "POST":
         dados = forms.ler_distribuicao(request.POST)
         chave = request.POST.get("chave_idempotencia") or uuid4().hex
         try:
-            if dados["acao"] == "remover":
-                removidas, recusas = distribuicao_app.remover_atribuicao(
-                    actor=ator,
-                    processo_id=edital.processo_id,
-                    atribuicao_ids=dados["atribuicao_ids"],
-                    idempotency_key=chave,
-                    correlation_id=getattr(request, "correlation_id", ""),
-                )
-                resultado = _resultado_do_lote(len(removidas), recusas, "removida")
-            else:
-                criadas, recusas = distribuicao_app.distribuir(
-                    actor=ator,
-                    processo_id=edital.processo_id,
-                    edital_id=edital.id,
-                    etapa_id=etapa_id,
-                    membro_ids=dados["membro_ids"],
-                    inscricao_ids=dados["inscricao_ids"],
-                    idempotency_key=chave,
-                    correlation_id=getattr(request, "correlation_id", ""),
-                )
-                resultado = _resultado_do_lote(len(criadas), recusas, "atribuída")
+            resultado = distribuicao_app.distribuir(
+                actor=ator,
+                processo_id=edital.processo_id,
+                edital_id=edital.id,
+                etapa_id=etapa_id,
+                membro_ids=dados["membro_ids"],
+                inscricao_ids=dados["inscricao_ids"],
+                idempotency_key=chave,
+                correlation_id=getattr(request, "correlation_id", ""),
+            )
             request.session["resultado_da_distribuicao"] = resultado
             return redirect(request.get_full_path())
         except DomainError as recusa:
@@ -2023,30 +2050,11 @@ def distribuicao(request, edital_id, etapa_id):
                 "erro": erro,
                 "resultado": request.session.pop("resultado_da_distribuicao", None),
                 "chave_idempotencia": uuid4().hex,
+                "chave_remocao": uuid4().hex,
+                "tem_atribuicoes": any(linha["atribuicoes"] for linha in linhas),
             },
         )
     )
-
-
-def _resultado_do_lote(feitas, recusas, verbo):
-    """O resultado é **declarado**, e não inferido (FR-097).
-
-    Sucesso parcial que não se anuncia vira surpresa administrativa: quem distribuiu precisa saber
-    o que ficou de fora sem conferir mil linhas.
-    """
-    return {
-        "feitas": feitas,
-        "verbo": verbo,
-        "recusadas": len(recusas),
-        "motivos": [
-            {
-                "avaliador": recusa.membro.identity_subject,
-                "inscricao": recusa.inscricao.protocolo or str(recusa.inscricao.id),
-                "motivo": recusa.motivo,
-            }
-            for recusa in recusas
-        ],
-    }
 
 
 @require_http_methods(["GET"])

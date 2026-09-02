@@ -108,7 +108,7 @@ cartões seria pedir que a presidência fizesse a soma.
           <th scope="col"><span class="oculto">Selecionar</span></th>
           <th scope="col">Inscrição</th>
           <th scope="col">Avaliações</th>
-          <th scope="col">Faltam</th>
+          <th scope="col">Quem avalia</th>
         </tr>
       </thead>
       <tbody>
@@ -120,8 +120,13 @@ cartões seria pedir que a presidência fizesse a soma.
                    aria-label="Inscrição {{ linha.inscricao.protocolo|default:linha.inscricao.id }}">
           </td>
           <td><label for="inscricao-{{ linha.inscricao.id }}">{{ linha.inscricao.protocolo|default:linha.inscricao.id }}</label></td>
-          <td>{{ linha.atribuidas }} de {{ resumo.previstas }}</td>
-          <td>{% if linha.faltam %}{{ linha.faltam }}{% else %}—{% endif %}</td>
+          <td>{{ linha.atribuidas }} de {{ resumo.previstas }}{% if linha.faltam %} — faltam {{ linha.faltam }}{% endif %}</td>
+          <td>
+            {% for atribuicao in linha.atribuicoes %}
+            <span class="quem">{{ atribuicao.membro.display_label|default:atribuicao.membro.identity_subject }}</span>{% if not forloop.last %}, {% endif %}
+            {% empty %}—
+            {% endfor %}
+          </td>
         </tr>
         {% endfor %}
       </tbody>
@@ -129,6 +134,30 @@ cartões seria pedir que a presidência fizesse a soma.
 
     <p class="acoes"><button type="submit">Distribuir as selecionadas</button></p>
   </form>
+
+  {% comment %}
+  Formulário próprio, e rota própria: `acao` decidindo entre criar e remover no mesmo envio foi
+  como a 011 descobriu que ramo irmão decide sozinho, e aqui o custo do engano seria retirar
+  trabalho de alguém. A via comum alcança apenas quem ainda não concluiu (FR-092).
+  {% endcomment %}
+  {% if tem_atribuicoes %}
+  <form method="post" action="{% url 'interface:distribuicao-remover' edital.id etapa.id %}">
+    {% csrf_token %}
+    <input type="hidden" name="chave_idempotencia" value="{{ chave_remocao }}">
+    <fieldset>
+      <legend>Retirar atribuições</legend>
+      {% for linha in linhas %}
+        {% for atribuicao in linha.atribuicoes %}
+        <label for="atribuicao-{{ atribuicao.id }}">
+          <input type="checkbox" id="atribuicao-{{ atribuicao.id }}" name="atribuicao_id" value="{{ atribuicao.id }}">
+          {{ atribuicao.membro.display_label|default:atribuicao.membro.identity_subject }} — inscrição {{ linha.inscricao.protocolo|default:linha.inscricao.id }}
+        </label>
+        {% endfor %}
+      {% endfor %}
+    </fieldset>
+    <p class="acoes"><button type="submit">Retirar as selecionadas</button></p>
+  </form>
+  {% endif %}
 
   {% comment %}
   Mil inscrições não cabem numa tela (FR-049). A paginação preserva o filtro, senão avançar de

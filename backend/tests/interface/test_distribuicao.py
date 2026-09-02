@@ -4,6 +4,8 @@ Mil inscrições não cabem numa tela, e a pergunta operacional quase nunca é "
 não têm ninguém". Daí paginação e filtro serem requisito, e não conforto (FR-049).
 """
 
+from math import ceil
+
 import pytest
 from django.urls import reverse
 
@@ -39,6 +41,26 @@ def test_a_tela_diz_o_que_falta_antes_do_detalhe(presidente, tela, edital_a, ban
 
     assert "sem avaliador suficiente" in corpo
     assert "avaliação por inscrição" in corpo or "avaliações por inscrição" in corpo
+
+
+@pytest.mark.performance
+def test_mil_inscricoes_paginam_e_filtram(presidente, tela, edital_a, banca):
+    """A escala que a spec declara, e não uma amostra dela (FR-049, P-004).
+
+    Mil é o número da spec, e é onde uma listagem que parecia boa deixa de ser: sem paginação a
+    tela carregaria mil linhas, e sem agregação o resumo faria mil consultas.
+    """
+    inscrever(edital_a, 1000)
+
+    resposta = presidente.get(tela)
+    corpo = resposta.content.decode()
+
+    assert resposta.status_code == 200
+    assert f"Página 1 de {ceil(1000 / POR_PAGINA)}" in corpo
+    assert corpo.count('name="inscricao_id"') == POR_PAGINA
+    assert "1000</strong>" in corpo
+    filtrada = presidente.get(f"{tela}?cobertura=sem_nenhum").content.decode()
+    assert filtrada.count('name="inscricao_id"') == POR_PAGINA
 
 
 def test_a_lista_e_paginada(presidente, tela, edital_a, banca):
@@ -138,3 +160,33 @@ def test_a_resposta_nao_e_armazenavel_pelo_navegador(presidente, tela, edital_a,
     resposta = presidente.get(tela)
 
     assert "no-store" in resposta["Cache-Control"]
+
+
+def test_a_remocao_tem_rota_e_formulario_proprios(presidente, tela, edital_a, banca):
+    """Rota própria, e não um ramo do formulário de distribuir (FR-085, contrato §1).
+
+    `acao` decidindo entre criar e remover no mesmo envio foi como a 011 descobriu que ramo irmão
+    decide sozinho — e aqui o custo do engano seria retirar trabalho de alguém.
+    """
+    from processo_seletivo.avaliacoes.models import Atribuicao
+
+    inscricoes = inscrever(edital_a, 2)
+    presidente.post(
+        tela,
+        {
+            "acao": "distribuir",
+            "chave_idempotencia": "para-remover",
+            "membro_id": [str(banca.id)],
+            "inscricao_id": [str(i.id) for i in inscricoes],
+        },
+    )
+    corpo = presidente.get(tela).content.decode()
+    assert "Retirar as selecionadas" in corpo
+
+    atribuicao = Atribuicao.objects.filter(ativo=True).first()
+    remocao = reverse("interface:distribuicao-remover", args=[edital_a.id, atribuicao.etapa_id])
+    presidente.post(remocao, {"chave_idempotencia": "r1", "atribuicao_id": [str(atribuicao.id)]})
+    depois = presidente.get(tela).content.decode()
+
+    assert Atribuicao.objects.filter(ativo=True).count() == 1
+    assert "1</strong> removida" in depois

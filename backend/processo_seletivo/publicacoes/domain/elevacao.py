@@ -103,6 +103,25 @@ def _e_entidade_de_etapa(target_path):
     return "entidade"
 
 
+def diz_o_mesmo_que_a_ausencia(etapa):
+    """Se os campos novos desta Etapa ainda exprimem o que a ausência deles exprimiria.
+
+    **`null` e ausência são a mesma coisa**, e o contrato declara isso: `evaluationsPerRegistration`
+    nulo é uma avaliação, `maximumScore` nulo é limite não declarado. Comparar por igualdade com o
+    valor da ausência erraria justamente aí — `None != 1` —, e a grafia literal seria recusada para
+    uma Etapa que não declarou nada (T-002, T-017).
+
+    A leitura é a mesma de `avaliacoes/domain/previsao.py`; o que muda é a pergunta: lá, "quanto
+    vale"; aqui, "isto ainda é ausência".
+    """
+    if not isinstance(etapa, dict):
+        return False
+    previstas = etapa.get("evaluationsPerRegistration")
+    return previstas in (None, AUSENCIA["evaluationsPerRegistration"]) and (
+        etapa.get("maximumScore") is None
+    )
+
+
 def endereca_etapa(target_path):
     """Se o caminho endereça a **entidade** Etapa — a mesma classificação que a elevação usa.
 

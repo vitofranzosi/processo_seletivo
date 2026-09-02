@@ -46,18 +46,34 @@ def lote(gestor, edital, etapa_id, membro, inscricoes, chave):
     )
 
 
-def test_o_reenvio_devolve_o_desfecho_sem_criar_nada(gestor, edital_a, etapa_a1, cenario):
-    lote(gestor, edital_a, etapa_a1, cenario["joao"], cenario["inscricoes"], "mesma")
+def test_o_reenvio_devolve_o_desfecho_original(gestor, edital_a, etapa_a1, cenario):
+    """**O desfecho, e não um vazio.**
+
+    Zero atribuídas e zero recusadas seria resposta falsa: a tela diria que o lote não fez nada,
+    quando ele fez tudo. E recusa não é reconstruível depois — o estado que a produziu mudou no ato
+    seguinte —, então o resultado é guardado na reserva (FR-084, FR-097).
+    """
+    primeiro = lote(gestor, edital_a, etapa_a1, cenario["joao"], cenario["inscricoes"], "mesma")
     atribuicoes = Atribuicao.objects.count()
     eventos = RegistroAuditoria.objects.filter(operation=ATRIBUIR).count()
 
-    criadas, recusas = lote(
-        gestor, edital_a, etapa_a1, cenario["joao"], cenario["inscricoes"], "mesma"
-    )
+    repetido = lote(gestor, edital_a, etapa_a1, cenario["joao"], cenario["inscricoes"], "mesma")
 
-    assert criadas == [] and recusas == []
+    assert repetido == primeiro
+    assert repetido["feitas"] == 3
     assert Atribuicao.objects.count() == atribuicoes
     assert RegistroAuditoria.objects.filter(operation=ATRIBUIR).count() == eventos
+
+
+def test_o_reenvio_devolve_tambem_as_recusas(gestor, edital_a, etapa_a1, cenario):
+    """A metade que só o registro guarda: a repetição não recalcularia as recusas."""
+    lote(gestor, edital_a, etapa_a1, cenario["joao"], cenario["inscricoes"], "a")
+    primeiro = lote(gestor, edital_a, etapa_a1, cenario["joao"], cenario["inscricoes"], "b")
+
+    repetido = lote(gestor, edital_a, etapa_a1, cenario["joao"], cenario["inscricoes"], "b")
+
+    assert primeiro["recusadas"] == 3
+    assert repetido["motivos"] == primeiro["motivos"]
 
 
 def test_a_mesma_chave_com_outro_conteudo_e_conflito(gestor, edital_a, etapa_a1, cenario):
@@ -99,18 +115,18 @@ def test_quem_perdeu_a_presidencia_no_intervalo_nao_conclui_o_ato(
 
 
 def test_a_remocao_tambem_e_idempotente(gestor, edital_a, etapa_a1, cenario):
-    criadas, _ = lote(gestor, edital_a, etapa_a1, cenario["joao"], cenario["inscricoes"], "a")
+    criadas = lote(gestor, edital_a, etapa_a1, cenario["joao"], cenario["inscricoes"], "a")
     argumentos = {
         "actor": gestor,
         "processo_id": edital_a.processo_id,
-        "atribuicao_ids": [c.id for c in criadas],
+        "atribuicao_ids": criadas["ids"],
         "idempotency_key": "remocao",
         "correlation_id": "teste",
     }
-    removidas, _ = remover_atribuicao(**argumentos)
+    removidas = remover_atribuicao(**argumentos)
 
-    repetidas, _ = remover_atribuicao(**argumentos)
+    repetidas = remover_atribuicao(**argumentos)
 
-    assert len(removidas) == 3
-    assert repetidas == []
+    assert removidas["feitas"] == 3
+    assert repetidas == removidas
     assert Atribuicao.objects.filter(ativo=True).count() == 0

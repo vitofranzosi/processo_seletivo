@@ -108,6 +108,11 @@ urlpatterns = [
         views.distribuicao,
         name="distribuicao",
     ),
+    path(
+        "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/remover",
+        views.remover_atribuicao,
+        name="distribuicao-remover",
+    ),
     path("minhas-etapas", views.minhas_etapas, name="minhas-etapas"),
     path(
         "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>",

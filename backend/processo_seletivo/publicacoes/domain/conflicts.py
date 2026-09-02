@@ -77,9 +77,7 @@ def _grafias_aceitas(content, target_path):
     # `maximumScore` ganharia uma segunda grafia e um hash obsoleto passaria por ali (T-001, T-017).
     if not elevacao.endereca_etapa(target_path) or not isinstance(valor, dict):
         return {vigente}
-    if any(chave not in valor for chave in elevacao.AUSENCIA):
-        return {vigente}
-    if any(valor[chave] != esperado for chave, esperado in elevacao.AUSENCIA.items()):
+    if not elevacao.diz_o_mesmo_que_a_ausencia(valor):
         return {vigente}
     literal = {chave: item for chave, item in valor.items() if chave not in elevacao.AUSENCIA}
     return {vigente, canonical_sha256(literal)}

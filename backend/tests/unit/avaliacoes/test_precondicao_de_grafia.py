@@ -66,12 +66,17 @@ def test_quantidade_declarada_tambem_encerra_a_equivalencia():
 
 
 def test_quantidade_nula_e_ausencia_dizem_a_mesma_coisa():
-    """O contrato declara `null` equivalente à ausência, e a precondição precisa concordar."""
+    """O contrato declara `null` equivalente à ausência, e a precondição precisa concordar.
+
+    O hash declarado é o da forma **sem** os campos — que é o que a consulta pública serve para
+    conteúdo anterior ao incremento. Declará-lo sobre a própria forma nula não provaria nada: esse
+    hash seria aceito de qualquer maneira, por ser o da forma vigente.
+    """
     nula = {**ETAPA_LITERAL, "evaluationsPerRegistration": None, "maximumScore": None}
     atual = conteudo(nula)
 
     conflitos = content_conflicts(
-        atual, alteracao(CAMINHO, canonical_sha256(nula), {**nula, "name": "Outro"})
+        atual, alteracao(CAMINHO, canonical_sha256(ETAPA_LITERAL), {**nula, "name": "Outro"})
     )
 
     assert HASH_MISMATCH not in conflitos

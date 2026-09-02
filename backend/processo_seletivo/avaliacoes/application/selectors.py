@@ -10,7 +10,7 @@ cumprir o que a Etapa declarou (FR-014).
 """
 
 from django.core.paginator import Paginator
-from django.db.models import Count, Q
+from django.db.models import Count, Prefetch, Q
 
 from processo_seletivo.avaliacoes.domain.previsao import avaliacoes_previstas
 from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao
@@ -87,6 +87,17 @@ def inscricoes_da_etapa(*, edital, etapa, pagina=1, cobertura=None, avaliador=No
                 distinct=True,
             )
         )
+        .prefetch_related(
+            # Quem já avalia cada inscrição, para que a tela ofereça a remoção sem uma consulta
+            # por linha. O `Prefetch` traz o membro junto, senão a listagem paga N+1 no rótulo.
+            Prefetch(
+                "atribuicoes",
+                queryset=Atribuicao.objects.filter(etapa_id=etapa["id"], ativo=True)
+                .select_related("membro")
+                .order_by("membro__identity_subject"),
+                to_attr="atribuicoes_da_etapa",
+            )
+        )
         .order_by("protocolo", "id")
     )
     if avaliador:
@@ -109,6 +120,7 @@ def inscricoes_da_etapa(*, edital, etapa, pagina=1, cobertura=None, avaliador=No
             "atribuidas": inscricao.atribuidas,
             "faltam": max(previstas - inscricao.atribuidas, 0),
             "cobertura": _cobertura(inscricao.atribuidas, previstas),
+            "atribuicoes": inscricao.atribuicoes_da_etapa,
         }
         for inscricao in pagina_atual
     ]

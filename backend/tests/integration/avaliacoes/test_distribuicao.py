@@ -46,44 +46,43 @@ def lote(gestor, edital, etapa_id, membros, inscricoes, chave="lote-1"):
 
 
 def test_uma_submissao_atribui_muitas_inscricoes(gestor, edital_a, etapa_a1, banca, inscricoes):
-    criadas, recusas = lote(gestor, edital_a, etapa_a1, [banca["joao"]], inscricoes)
+    resultado = lote(gestor, edital_a, etapa_a1, [banca["joao"]], inscricoes)
 
-    assert len(criadas) == 4
-    assert recusas == []
+    assert resultado["feitas"] == 4
+    assert resultado["motivos"] == []
     assert Atribuicao.objects.filter(ativo=True).count() == 4
 
 
-def test_o_teto_alcanca_o_segundo_avaliador_quando_a_etapa_declara_uma(
-    gestor, edital_a, etapa_a1, banca, inscricoes
-):
-    """Etapa sem declaração recebe **uma** avaliação, e a segunda é recusada (FR-009, FR-065)."""
-    criadas, recusas = lote(
-        gestor, edital_a, etapa_a1, [banca["joao"], banca["ana"]], inscricoes[:2]
-    )
+def test_o_conjunto_que_nao_cabe_e_recusado_inteiro(gestor, edital_a, etapa_a1, banca, inscricoes):
+    """Etapa sem declaração recebe **uma** avaliação (FR-009), e o excesso não é resolvido pelo
+    sistema: ele é devolvido à presidência, que escolhe (FR-017, FR-065)."""
+    resultado = lote(gestor, edital_a, etapa_a1, [banca["joao"], banca["ana"]], inscricoes[:2])
 
-    assert len(criadas) == 2
-    assert len(recusas) == 2
-    for inscricao in inscricoes[:2]:
-        assert Atribuicao.objects.filter(inscricao=inscricao, ativo=True).count() == 1
+    # **Nenhuma** é atribuída: com uma vaga e duas pessoas selecionadas, conceder a vaga a quem
+    # vier primeiro faria a ordenação do banco escolher quem avalia quem (FR-017, P-002).
+    assert resultado["feitas"] == 0
+    assert resultado["recusadas"] == 4
+    assert all("não escolhe por você" in m["motivo"] for m in resultado["motivos"])
+    assert Atribuicao.objects.count() == 0
 
 
 def test_cada_atribuicao_gera_seu_evento(gestor, edital_a, etapa_a1, banca, inscricoes):
     """A trilha responde por agregado: "quem passou a avaliar esta inscrição" (FR-016)."""
-    criadas, _ = lote(gestor, edital_a, etapa_a1, [banca["joao"]], inscricoes)
+    resultado = lote(gestor, edital_a, etapa_a1, [banca["joao"]], inscricoes)
 
     eventos = RegistroAuditoria.objects.filter(operation=ATRIBUIR)
-    assert eventos.count() == len(criadas)
-    assert set(eventos.values_list("aggregate_id", flat=True)) == {c.id for c in criadas}
+    assert eventos.count() == resultado["feitas"]
+    assert {str(i) for i in eventos.values_list("aggregate_id", flat=True)} == set(resultado["ids"])
 
 
 def test_o_teto_recusa_a_excedente_nomeando_o_numero(gestor, edital_a, etapa_a1, banca, inscricoes):
     """A Etapa não declara quantidade: a ausência é uma avaliação por inscrição (FR-009)."""
     lote(gestor, edital_a, etapa_a1, [banca["joao"]], inscricoes[:1], chave="a")
 
-    _, recusas = lote(gestor, edital_a, etapa_a1, [banca["ana"]], inscricoes[:1], chave="b")
+    resultado = lote(gestor, edital_a, etapa_a1, [banca["ana"]], inscricoes[:1], chave="b")
 
-    assert len(recusas) == 1
-    assert "1 avaliaç" in recusas[0].motivo
+    assert resultado["recusadas"] == 1
+    assert "1 avaliaç" in resultado["motivos"][0]["motivo"]
 
 
 def test_impedimento_e_ja_atribuida_nao_derrubam_o_lote(
@@ -101,12 +100,13 @@ def test_impedimento_e_ja_atribuida_nao_derrubam_o_lote(
     )
     lote(gestor, edital_a, etapa_a1, [banca["joao"]], inscricoes[1:2], chave="a")
 
-    criadas, recusas = lote(gestor, edital_a, etapa_a1, [banca["joao"]], inscricoes, chave="b")
+    resultado = lote(gestor, edital_a, etapa_a1, [banca["joao"]], inscricoes, chave="b")
 
-    assert len(criadas) == 2
-    assert {r.inscricao.id for r in recusas} == {inscricoes[0].id, inscricoes[1].id}
-    assert any("impedimento" in r.motivo.lower() for r in recusas)
-    assert any("já estava atribuída" in r.motivo for r in recusas)
+    assert resultado["feitas"] == 2
+    protocolos = {m["inscricao"] for m in resultado["motivos"]}
+    assert protocolos == {inscricoes[0].protocolo, inscricoes[1].protocolo}
+    assert any("impedimento" in m["motivo"].lower() for m in resultado["motivos"])
+    assert any("já estava atribuída" in m["motivo"] for m in resultado["motivos"])
 
 
 def test_etapa_inexistente_derruba_o_lote(gestor, edital_a, banca, inscricoes):
@@ -208,11 +208,11 @@ def test_a_combinacao_e_uniforme_quando_a_etapa_declara_duas(
         alocar_em(gestor, processo, membros[nome], edital_com_dupla, etapa_id)
     inscricoes = inscrever(edital_com_dupla, 2, primeiro=200)
 
-    criadas, recusas = lote(
+    resultado = lote(
         gestor, edital_com_dupla, etapa_id, [membros["joao"], membros["ana"]], inscricoes
     )
 
-    assert len(criadas) == 4
-    assert recusas == []
+    assert resultado["feitas"] == 4
+    assert resultado["motivos"] == []
     for inscricao in inscricoes:
         assert Atribuicao.objects.filter(inscricao=inscricao, ativo=True).count() == 2

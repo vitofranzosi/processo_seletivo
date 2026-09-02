@@ -239,9 +239,7 @@ def remover_alocacao(*, actor, processo_id, alocacao_id, idempotency_key, correl
         return ctx.concluir(alocacao, 200)
 
 
-def remover_varias_alocacoes(
-    *, actor, processo_id, alocacao_ids, idempotency_key, correlation_id
-):
+def remover_varias_alocacoes(*, actor, processo_id, alocacao_ids, idempotency_key, correlation_id):
     """Desfaz em lote o que se faz em lote.
 
     Alocar a Etapa inteira virou uma submissão; desfazer continuava custando uma por pessoa. A

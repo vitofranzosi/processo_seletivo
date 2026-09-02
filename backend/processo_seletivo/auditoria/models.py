@@ -44,6 +44,11 @@ class IdempotencyRecord(models.Model):
     result_type = models.CharField(max_length=100, blank=True)
     result_id = models.UUIDField(null=True)
     response_status = models.PositiveSmallIntegerField(null=True)
+    # O desfecho de um ato **em lote**, que não cabe num identificador. Distribuir cem inscrições
+    # produz um resultado — quantas foram, quantas não e por quê — e a repetição precisa devolver
+    # esse resultado, não um vazio: recusa não é reconstruível depois, porque o estado que a
+    # produziu mudou (012, FR-084, FR-097). Nulo para todo ato de resultado singular.
+    result_payload = models.JSONField(null=True, blank=True)
 
     class Meta:
         constraints = [

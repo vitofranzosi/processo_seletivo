@@ -84,7 +84,17 @@ class Contexto:
         finalizar_idempotencia(self.reserva, resultado, status)
         return resultado, status
 
-    def concluir_sem_resultado(self, status):
-        """Fecha a reserva de um lote que não criou nada — o desfecho existe, o objeto não."""
-        self.reserva.response_status = status
-        self.reserva.save(update_fields=["response_status"])
+    def concluir_sem_resultado(self, status, payload=None):
+        """Fecha a reserva de um lote — o desfecho existe, o objeto único não.
+
+        `payload` guarda o resultado declarado quando o ato tem um: a repetição devolve o que o
+        ato respondeu, e não um vazio (012, FR-084, FR-097).
+        """
+        from processo_seletivo.shared.idempotency import finish_batch
+
+        finish_batch(self.reserva, status, payload)
+
+    @property
+    def desfecho_anterior(self):
+        """O resultado guardado por esta chave, quando havia um."""
+        return self.reserva.result_payload
