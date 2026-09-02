@@ -38,5 +38,9 @@ jobs:
           python-version: "3.13"
       - run: uv sync --extra dev --locked
       - run: uv run ruff check .
+      # O `check` não olha formatação: sem este passo a divergência cresce sem sinal —
+      # foi assim que a árvore chegou a 101 arquivos fora de formato antes de alguém rodar
+      # `ruff format` pela primeira vez.
+      - run: uv run ruff format --check .
       - run: uv run python manage.py makemigrations --check --dry-run
       - run: uv run pytest
