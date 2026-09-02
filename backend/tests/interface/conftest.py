@@ -51,7 +51,6 @@ def compor_rascunho(client, edital, perfis=None, eventos=None):
 CLASSES_SEM_DESENHO = {
     "alvo",
     "base",
-    "concluido",
     "confirmacao",
     "conteudo-vigente",
     "etapa",
@@ -72,4 +71,11 @@ CLASSES_SEM_DESENHO = {
     "perfil",
     # Envolve um `.botao`, que é quem tem o peso; a classe nomeia o lugar, não o desenho.
     "proximo-passo",
+    # --- portal ---
+    # O par de `.linha-do-tempo.pessoal`: aquela é a exceção e tem regra; esta é a linha comum, e
+    # o nome existe para dizer qual é qual na marcação.
+    "processo",
+    # Nomeia **qual** `.sub` é esta — a notícia de que o código foi enviado. O desenho é o de
+    # `.sub`; se um dia a notícia precisar de mais peso, é aqui que ela ganha.
+    "aviso-do-envio",
 }

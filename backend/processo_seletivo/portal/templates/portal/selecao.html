@@ -3,7 +3,7 @@
 {% load arquivos_do_candidato %}
 {% block conteudo %}
 <h1>{{ processo_titulo }}</h1>
-<p class="sub">{{ processo_codigo }} · Edital {{ numero }}/{{ ano }} · Unidade: {{ unidade }}</p>
+<p class="sub">{% if processo_codigo %}{{ processo_codigo }} · {% endif %}Edital {{ numero }}/{{ ano }} · Unidade: {{ unidade }}</p>
 
 {% include "portal/_periodo.html" with dias_restantes=dias_restantes %}
 

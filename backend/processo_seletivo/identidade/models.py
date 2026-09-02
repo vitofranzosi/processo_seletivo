@@ -79,7 +79,9 @@ class CandidateEmail(models.Model):
             # Exclusividade **por restrição**, e não por consulta prévia (FR-011). Verificar antes
             # de gravar perde a corrida entre duas confirmações simultâneas, e o que se perde
             # nessa corrida é a exclusividade de uma credencial.
-            models.UniqueConstraint(Lower("email_canonico"), name="uq_credencial_email_canonico"),
+            models.UniqueConstraint(
+                Lower("email_canonico"), name="uq_credencial_email_canonico"
+            ),
             # Uma identidade **que tenha credencial** tem exatamente uma principal. A restrição é
             # parcial porque a outra metade — não ficar sem principal — não é invariante de linha:
             # a reconciliação cria identidade sem credencial alguma, e isso é estado válido.

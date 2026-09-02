@@ -22,7 +22,9 @@ from tests.fixtures.selecao import DOCUMENTO_DE_TODOS, DOCUMENTO_DO_PERFIL
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
-ESTATICOS = pathlib.Path(__file__).resolve().parents[3] / "processo_seletivo/portal/static/portal"
+ESTATICOS = (
+    pathlib.Path(__file__).resolve().parents[3] / "processo_seletivo/portal/static/portal"
+)
 
 
 @pytest.fixture

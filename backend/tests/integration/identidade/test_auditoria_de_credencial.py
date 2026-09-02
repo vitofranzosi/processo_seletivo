@@ -87,10 +87,9 @@ def test_o_ato_nao_carrega_endereco_nem_cpf(client, dentro):
 
     tudo = " ".join(
         str(valor)
-        for valor in RegistroAuditoria.objects.filter(aggregate_type="CandidateIdentity")
-        .values()
-        .first()
-        .values()
+        for valor in RegistroAuditoria.objects.filter(
+            aggregate_type="CandidateIdentity"
+        ).values().first().values()
     )
     assert NOVO not in tudo and "12345678909" not in tudo
 
@@ -103,11 +102,9 @@ def test_o_escopo_e_vazio_e_a_consequencia_esta_declarada(client, dentro):
 
     registro = RegistroAuditoria.objects.get(aggregate_type="CandidateIdentity")
     assert registro.institution_scope == ""
-    assert (
-        not RegistroAuditoria.objects.filter(institution_scope="cefor")
-        .filter(aggregate_type="CandidateIdentity")
-        .exists()
-    )
+    assert not RegistroAuditoria.objects.filter(institution_scope="cefor").filter(
+        aggregate_type="CandidateIdentity"
+    ).exists()
 
 
 def test_codigo_invalido_nao_vira_ato_de_negocio(client, dentro, canal):

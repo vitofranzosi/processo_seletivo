@@ -60,10 +60,9 @@ def registrar(identidade):
             "created_at": timezone.now(),
         },
     )
-    if (
-        identidade.email
-        and not CandidateEmail.objects.filter(email_canonico=identidade.email.lower()).exists()
-    ):
+    if identidade.email and not CandidateEmail.objects.filter(
+        email_canonico=identidade.email.lower()
+    ).exists():
         associar_credencial(registro, identidade.email.lower(), identidade.email)
     return registro
 

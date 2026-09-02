@@ -34,7 +34,9 @@ def aviso(corpo):
 
 def entrar_com(client, endereco):
     client.post(reverse("portal:acesso"), {"email": endereco})
-    codigo = re.search(r"\b(\d{6})\b", mail.outbox[-1].body).group(1)
+    codigo = re.search(
+        r"\b(\d{6})\b", mail.outbox[-1].body
+    ).group(1)
     return client.post(reverse("portal:acesso-codigo"), {"codigo": codigo}, follow=True)
 
 
@@ -67,7 +69,9 @@ def participacao_anterior(selecao):
 def test_vincular_a_participacao_anterior_diz_que_deu_certo(client, caixa, participacao_anterior):
     entrar_com(client, MARIA.email)
 
-    resposta = client.post(reverse("portal:acesso-reconciliar"), {"cpf": MARIA.cpf}, follow=True)
+    resposta = client.post(
+        reverse("portal:acesso-reconciliar"), {"cpf": MARIA.cpf}, follow=True
+    )
 
     assert "sua participação anterior está aqui" in aviso(resposta.content.decode())
 
@@ -92,7 +96,9 @@ def test_esgotar_as_tentativas_de_cpf_explica_o_que_houve(client, caixa, partici
 def test_recusar_o_convite_diz_que_ainda_dá_para_voltar_atrás(client, caixa, participacao_anterior):
     entrar_com(client, MARIA.email)
 
-    resposta = client.post(reverse("portal:acesso-reconciliar"), {"acao": "continuar"}, follow=True)
+    resposta = client.post(
+        reverse("portal:acesso-reconciliar"), {"acao": "continuar"}, follow=True
+    )
 
     assert "Se mudar de ideia" in aviso(resposta.content.decode())
 
@@ -121,9 +127,9 @@ def test_adicionar_e_remover_e_promover_confirmam(client, caixa, candidatos_regi
     promoveu = client.post(reverse("portal:conta-principal", args=[segunda.id]), follow=True)
     assert "por este endereço que a instituição vai falar" in aviso(promoveu.content.decode())
 
-    antiga = (
-        CandidateEmail.objects.filter(identidade=segunda.identidade).exclude(pk=segunda.pk).get()
-    )
+    antiga = CandidateEmail.objects.filter(identidade=segunda.identidade).exclude(
+        pk=segunda.pk
+    ).get()
     removeu = client.post(reverse("portal:conta-remover", args=[antiga.id]), follow=True)
     assert "foi removido" in aviso(removeu.content.decode())
 
@@ -142,7 +148,9 @@ def test_a_recusa_e_a_confirmacao_nao_se_confundem(client, caixa, candidatos_reg
 
 def test_o_aviso_e_lido_uma_vez_so(client, caixa):
     entrar_com(client, "efemera@exemplo.test")
-    client.post(reverse("portal:meus-dados"), {"nome": "Rita Pereira", "cpf": "111.444.777-35"})
+    client.post(
+        reverse("portal:meus-dados"), {"nome": "Rita Pereira", "cpf": "111.444.777-35"}
+    )
 
     primeira = client.get(reverse("portal:inscricoes")).content.decode()
     segunda = client.get(reverse("portal:inscricoes")).content.decode()

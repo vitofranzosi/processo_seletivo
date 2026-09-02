@@ -38,9 +38,7 @@ def canal(settings):
 def maria_da_009(selecao):
     """O que a implantação encontrou: identidade reconciliada, com a inscrição que ela já tinha."""
     identidade = CandidateIdentity.objects.create(
-        subject=novo_subject(),
-        nome="Maria Silva",
-        cpf_normalizado=CPF_DE_MARIA,
+        subject=novo_subject(), nome="Maria Silva", cpf_normalizado=CPF_DE_MARIA,
         created_at=timezone.now(),
     )
     Inscricao.objects.create(

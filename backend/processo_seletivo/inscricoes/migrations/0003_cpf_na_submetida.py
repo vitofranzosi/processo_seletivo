@@ -16,15 +16,15 @@ class Migration(migrations.Migration):
     """
 
     dependencies = [
-        ("inscricoes", "0002_documento_submetido"),
-        ("identidade", "0002_reconciliacao"),
-        ("processos", "0001_initial"),
-        ("publicacoes", "0008_remover_ancoras"),
+        ('inscricoes', '0002_documento_submetido'),
+        ('identidade', '0002_reconciliacao'),
+        ('processos', '0001_initial'),
+        ('publicacoes', '0008_remover_ancoras'),
     ]
 
     operations = [
         migrations.AddConstraint(
-            model_name="inscricao",
+            model_name='inscricao',
             constraint=models.CheckConstraint(
                 condition=models.Q(
                     ("status", "RASCUNHO"),

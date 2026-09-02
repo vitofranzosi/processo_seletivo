@@ -359,6 +359,28 @@ details.integridade .resumos{list-style:none;margin:.75rem 0 0;padding:0;display
 .linha-do-tempo .marco.em_curso .rotulo{font-weight:700}
 .linha-do-tempo .rotulo{font-weight:600}
 .linha-do-tempo .marco.futuro .rotulo{font-weight:400;color:var(--texto-fraco)}
+/* Três estados, e só dois tinham desenho: `em_curso` e `futuro`. O concluído caía no padrão
+   neutro — o mesmo do "Nada registrado ainda" —, e o cronograma dizia com duas aparências o
+   que tem três significados. Passado que aconteceu é afirmação, e não ausência. */
+.linha-do-tempo .marco.concluido{border-left-color:var(--sucesso)}
+
+/* As duas declarações do envio: é o aceite que precisa significar alguma coisa, e ele saía
+   como parágrafo comum, com a marca desalinhada do texto que ela afirma. */
+.papel{display:flex;align-items:flex-start;gap:.6rem;margin:.6rem 0;
+  border-left:3px solid var(--borda);padding-left:.75rem}
+.papel input{margin:.2rem 0 0;flex:none}
+.papel label{font-weight:500}
+
+/* A frase que explica o resumo do arquivo vinha colada no `code`, na mesma linha. */
+.explica{display:block;color:var(--texto-fraco);font-size:.875rem;margin-top:.25rem}
+
+/* "3 documentos que serão pedidos" abre e fecha, e saía como texto corrido com o triângulo do
+   navegador: no meio de um cartão desenhado, nada dizia que aquilo era um controle. É a mesma
+   forma que o "Gerir" da gestão usa — um canal, um desenho. */
+.documentos-anunciados>summary{cursor:pointer;color:var(--verde-texto);font-size:.9375rem;
+  width:fit-content;border-radius:4px;padding:.15rem .1rem}
+.documentos-anunciados>summary:hover{text-decoration:underline}
+.documentos-anunciados[open]>summary{margin-bottom:.35rem}
 .linha-do-tempo .quando{color:var(--texto-fraco);font-size:.9375rem}
 /* As credenciais (010). Endereço com quebra explícita, porque em 375px um e-mail longo é a coisa
    mais fácil de transbordar; e as ações empilham no celular e alinham quando há espaço. */

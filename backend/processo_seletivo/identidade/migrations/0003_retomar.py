@@ -3,18 +3,20 @@
 Reformatada à mão para caber no limite do projeto, como as anteriores.
 """
 
+
 from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("identidade", "0002_reconciliacao"),
+        ('identidade', '0002_reconciliacao'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="desafiodeacesso",
-            name="finalidade",
+            model_name='desafiodeacesso',
+            name='finalidade',
             field=models.CharField(
                 choices=[
                     ("ENTRAR", "Entrar"),

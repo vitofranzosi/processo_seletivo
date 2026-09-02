@@ -91,7 +91,9 @@ def test_corrigir_o_nome_pela_conta(client, canal, dentro):
     conta = client.get(reverse("portal:conta")).content.decode()
     assert reverse("portal:meus-dados") in conta
 
-    client.post(reverse("portal:meus-dados"), {"nome": "Maria S. Silva", "cpf": "123.456.789-09"})
+    client.post(
+        reverse("portal:meus-dados"), {"nome": "Maria S. Silva", "cpf": "123.456.789-09"}
+    )
 
     dentro.refresh_from_db()
     assert dentro.nome == "Maria S. Silva"

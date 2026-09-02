@@ -16,12 +16,16 @@ pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
 
 def test_identidade_sem_credencial_persiste():
-    dona = CandidateIdentity.objects.create(subject=novo_subject(), created_at=timezone.now())
+    dona = CandidateIdentity.objects.create(
+        subject=novo_subject(), created_at=timezone.now()
+    )
     dona.refresh_from_db()
     assert dona.credenciais.count() == 0
 
 
 def test_identidade_sem_nome_e_sem_cpf_persiste():
     """É o estado de quem acabou de entrar pela primeira vez: só provou uma caixa de e-mail."""
-    dona = CandidateIdentity.objects.create(subject=novo_subject(), created_at=timezone.now())
+    dona = CandidateIdentity.objects.create(
+        subject=novo_subject(), created_at=timezone.now()
+    )
     assert dona.nome == "" and dona.cpf_normalizado == ""

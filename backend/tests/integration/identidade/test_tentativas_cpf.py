@@ -40,9 +40,7 @@ ENTRAR = DesafioDeAcesso.Finalidade.ENTRAR
 @pytest.fixture
 def maria_legada(selecao):
     identidade = CandidateIdentity.objects.create(
-        subject=novo_subject(),
-        nome="Maria",
-        cpf_normalizado=CPF_DE_MARIA,
+        subject=novo_subject(), nome="Maria", cpf_normalizado=CPF_DE_MARIA,
         created_at=timezone.now(),
     )
     Inscricao.objects.create(

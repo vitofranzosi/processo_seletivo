@@ -67,7 +67,9 @@ def criar_identidade_com(email_canonico: str, email_como_informado: str) -> Cand
     agora = timezone.now()
     try:
         with transaction.atomic():
-            identidade = CandidateIdentity.objects.create(subject=novo_subject(), created_at=agora)
+            identidade = CandidateIdentity.objects.create(
+                subject=novo_subject(), created_at=agora
+            )
             CandidateEmail.objects.create(
                 id=uuid.uuid4(),
                 identidade=identidade,
@@ -164,7 +166,9 @@ def confirmar_cpf(desafio: DesafioDeAcesso, cpf: str) -> CandidateIdentity | Non
         return alvo if alvo.cpf_normalizado == informado else None
 
     candidatas = correspondencia_historica(desafio.email_canonico)
-    conferem = [identidade for identidade in candidatas if identidade.cpf_normalizado == informado]
+    conferem = [
+        identidade for identidade in candidatas if identidade.cpf_normalizado == informado
+    ]
     if len(conferem) != 1:
         return None
     return conferem[0]
@@ -226,7 +230,9 @@ def retomar(*, vazia: CandidateIdentity, destino: CandidateIdentity) -> bool:
     que o bloqueio existe para pegar.
     """
     with transaction.atomic():
-        travada = CandidateIdentity.objects.select_for_update().filter(pk=vazia.pk).first()
+        travada = (
+            CandidateIdentity.objects.select_for_update().filter(pk=vazia.pk).first()
+        )
         if travada is None or not esta_vazia(travada):
             return False
         principal_do_destino = destino.credenciais.filter(principal=True).exists()

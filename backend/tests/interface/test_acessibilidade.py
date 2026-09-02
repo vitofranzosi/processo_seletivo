@@ -421,8 +421,55 @@ def test_todo_botao_de_envio_declara_o_seu_peso(template):
     assert sem_classe == [], sem_classe
 
 
-@pytest.mark.parametrize("template", [p for p in TELAS], ids=lambda p: p.name)
-def test_nenhuma_classe_citada_deixa_de_existir_na_folha(template):
+PORTAL = Path(__file__).resolve().parents[2] / "processo_seletivo/portal/templates/portal/base.html"
+# Dois canais, duas folhas, e a varredura valia só para um. O portal é o que o candidato vê.
+CANAIS = [(BASE.parent, FONTE), (PORTAL.parent, PORTAL.read_text())]
+DAS_DUAS_FOLHAS = [(t, folha) for pasta, folha in CANAIS for t in sorted(pasta.glob("*.html"))]
+
+
+def sem_prosa(texto):
+    """A folha sem comentário: eles citam classes o tempo todo, e citar não é definir.
+
+    Custou uma varredura cega descobrir isto — a busca por uma classe casava com a **frase** que
+    explicava a regra dela, e concluía que a regra existia.
+    """
+    texto = re.sub(r"/\*.*?\*/", " ", texto, flags=re.S)
+    return re.sub(r"\{%\s*comment\s*%\}.*?\{%\s*endcomment\s*%\}", " ", texto, flags=re.S)
+
+
+@pytest.mark.parametrize(
+    ("template", "folha"), DAS_DUAS_FOLHAS, ids=lambda v: getattr(v, "name", "")
+)
+def test_nenhum_modificador_fica_sem_a_base_que_o_usa(template, folha):
+    """`.desabilitado` existia **só** para `.botao`, e a lista o punha num `.acao`.
+
+    A ação de linha indisponível ficava com a borda verde e a cor de link, oferecendo o que não se
+    pode fazer. Não é classe órfã — os dois nomes existem —, é a **combinação** que não existe, e
+    é por isso que a varredura de nomes passou por cima dela.
+    """
+    regras = sem_prosa(folha)
+    faltando = []
+    for valor in re.findall(r'class="([^"]*)"', sem_prosa(template.read_text())):
+        if "{{" in valor or "{%" in valor:
+            continue
+        classes = valor.split()
+        for modificador in classes:
+            bases = set(
+                re.findall(rf"\.([A-Za-z][\w-]*)\.{re.escape(modificador)}(?![\w-])", regras)
+            )
+            solto = re.search(
+                rf"(?<![\w.\-])\.{re.escape(modificador)}(?![\w.\-])[^\w.\-]*[,{{]", regras
+            )
+            if bases and not solto and not (bases & set(classes)):
+                faltando.append(f".{modificador} só existe para {sorted(bases)}, aqui em {classes}")
+
+    assert faltando == [], faltando
+
+
+@pytest.mark.parametrize(
+    ("template", "folha"), DAS_DUAS_FOLHAS, ids=lambda v: getattr(v, "name", "")
+)
+def test_nenhuma_classe_citada_deixa_de_existir_na_folha(template, folha):
     """`.s-PRESIDENTE` e `.oculto` foram escritas nos templates e nunca definidas.
 
     Uma classe sem regra não quebra nada em execução — ela some. A pastilha de função ficava com
@@ -435,7 +482,7 @@ def test_nenhuma_classe_citada_deixa_de_existir_na_folha(template):
     """
     from tests.interface.conftest import CLASSES_SEM_DESENHO
 
-    definidas = set(re.findall(r"\.([A-Za-z][\w-]*)", FONTE))
+    definidas = set(re.findall(r"\.([A-Za-z][\w-]*)", sem_prosa(folha)))
     citadas = set()
     for valor in re.findall(r'class="([^"]*)"', template.read_text()):
         # `s-{{ ... }}` monta o nome no render; o sufixo é conferido por quem o escreve.
