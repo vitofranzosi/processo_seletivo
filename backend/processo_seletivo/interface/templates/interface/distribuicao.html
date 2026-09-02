@@ -44,6 +44,7 @@ cartões seria pedir que a presidência fizesse a soma.
 <section aria-labelledby="carga">
   <h2 id="carga">Quem está alocado</h2>
   {% if carga %}
+  <div class="tabela-rolavel">
   <table class="tabela">
     <caption class="oculto">Carga por avaliador nesta Etapa</caption>
     <thead><tr><th scope="col">Avaliador</th><th scope="col">Atribuídas</th><th scope="col">Concluídas</th></tr></thead>
@@ -57,6 +58,7 @@ cartões seria pedir que a presidência fizesse a soma.
       {% endfor %}
     </tbody>
   </table>
+  </div>
   {% else %}
   <p class="vazio">Ninguém está alocado nesta Etapa ainda.
     <a href="{% url 'interface:alocacoes' processo.id %}">Alocar a comissão</a></p>
@@ -65,6 +67,7 @@ cartões seria pedir que a presidência fizesse a soma.
 
 <p class="acoes-do-painel">
   <a class="acao" href="{% url 'interface:impedimentos' edital.id etapa.id %}">Impedimentos</a>
+  <a class="acao" href="{% url 'interface:trilha-da-avaliacao' edital.id etapa.id %}">Trilha</a>
 </p>
 
 {% if orfas %}
@@ -92,6 +95,7 @@ cartões seria pedir que a presidência fizesse a soma.
   A reabertura é ato da presidência, com motivo, registrado (FR-036). O formulário pede o motivo
   antes de qualquer coisa — reabertura silenciosa é o que não pode existir.
   {% endcomment %}
+  <div class="tabela-rolavel">
   <table class="tabela">
     <caption class="oculto">Avaliações concluídas desta Etapa</caption>
     <thead><tr><th scope="col">Inscrição</th><th scope="col">Avaliador</th><th scope="col">Pontuação</th><th scope="col">Reabrir</th></tr></thead>
@@ -117,6 +121,7 @@ cartões seria pedir que a presidência fizesse a soma.
       {% endfor %}
     </tbody>
   </table>
+  </div>
 </section>
 {% endif %}
 
@@ -158,7 +163,8 @@ cartões seria pedir que a presidência fizesse a soma.
       {% endfor %}
     </fieldset>
 
-    <table class="tabela">
+    <div class="tabela-rolavel">
+  <table class="tabela">
       <caption class="oculto">Inscrições submetidas desta Etapa</caption>
       <thead>
         <tr>
@@ -188,6 +194,7 @@ cartões seria pedir que a presidência fizesse a soma.
         {% endfor %}
       </tbody>
     </table>
+  </div>
 
     <p class="acoes"><button type="submit">Distribuir as selecionadas</button></p>
   </form>

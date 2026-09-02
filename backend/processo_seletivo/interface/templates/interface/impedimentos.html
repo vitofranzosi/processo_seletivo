@@ -82,6 +82,7 @@ de quem sabe — e é por isso que esta tela pede a identidade e o motivo, em ve
   continuam consultáveis, porque preservar não é o mesmo que continuar valendo (FR-075, FR-091).
   {% endcomment %}
   {% if inelegiveis %}
+  <div class="tabela-rolavel">
   <table class="tabela">
     <caption class="oculto">Avaliações preservadas e tornadas inelegíveis</caption>
     <thead><tr><th scope="col">Inscrição</th><th scope="col">Avaliador</th><th scope="col">Pontuação</th><th scope="col">Ato</th><th scope="col">Motivo</th></tr></thead>
@@ -97,6 +98,7 @@ de quem sabe — e é por isso que esta tela pede a identidade e o motivo, em ve
       {% endfor %}
     </tbody>
   </table>
+  </div>
   {% else %}
   <p class="vazio">Nenhuma avaliação foi tirada do conjunto elegível nesta Etapa.</p>
   {% endif %}

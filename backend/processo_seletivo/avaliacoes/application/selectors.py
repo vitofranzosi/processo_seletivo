@@ -9,6 +9,8 @@ inscrições ainda não têm avaliador suficiente, quantas cada pessoa recebeu, 
 cumprir o que a Etapa declarou (FR-014).
 """
 
+from uuid import UUID
+
 from django.core.paginator import Paginator
 from django.db.models import Count, Prefetch, Q
 
@@ -185,11 +187,15 @@ def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None):
     """
     from processo_seletivo.comissoes.domain.autorizacao import etapas_autorizadas, membro_ativo
 
-    if etapa_id not in etapas_autorizadas(ator, edital):
+    # `etapas_autorizadas` devolve `UUID`, e o identificador chega como texto quando o chamador não
+    # é a rota — comparar sem normalizar responderia "sem acesso" **em silêncio**, que é o pior
+    # modo de falha possível para uma verificação de autorização.
+    identidade_da_etapa = etapa_id if isinstance(etapa_id, UUID) else UUID(str(etapa_id))
+    if identidade_da_etapa not in etapas_autorizadas(ator, edital):
         return None, None, None
     membro = membro_ativo(ator, edital.processo)
     minhas = Atribuicao.objects.filter(
-        membro=membro, edital=edital, etapa_id=etapa_id, ativo=True
+        membro=membro, edital=edital, etapa_id=identidade_da_etapa, ativo=True
     ).select_related("inscricao", "avaliacao")
     contagens = minhas.aggregate(
         total=Count("id"),

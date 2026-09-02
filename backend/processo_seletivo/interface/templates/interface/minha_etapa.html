@@ -62,6 +62,7 @@ executa, e a página continua dizendo por qual porta ele veio (011, D-006).
   </nav>
 
   {% if linhas %}
+  <div class="tabela-rolavel">
   <table class="tabela">
     <caption class="oculto">Inscrições atribuídas a você nesta Etapa</caption>
     <thead><tr><th scope="col">Inscrição</th><th scope="col">Situação</th></tr></thead>
@@ -77,6 +78,7 @@ executa, e a página continua dizendo por qual porta ele veio (011, D-006).
       {% endfor %}
     </tbody>
   </table>
+  </div>
 
   {% comment %} Quarenta e oito é comum; quinhentas não pode quebrar a tela (FR-022). {% endcomment %}
   {% if pagina.has_other_pages %}

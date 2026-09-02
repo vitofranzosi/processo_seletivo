@@ -48,6 +48,7 @@ def consultar(
     cursor=None,
     limit=LIMITE_PADRAO,
     operation=None,
+    actor_subject=None,
 ):
     """Registros do escopo do ator, do mais recente para o mais antigo, com cursor estável.
 
@@ -62,6 +63,12 @@ def consultar(
         registros = registros.filter(aggregate_id__in=list(aggregate_ids))
     if operation:
         registros = registros.filter(operation=operation)
+    if actor_subject:
+        # Quem **praticou** o ato. Não confundir com quem foi afetado por ele: nos atos da
+        # presidência o ator é ela, e o avaliador é o afetado. Este filtro serve ao único ato em
+        # que os dois coincidem — abrir documento, cujo agregado é a Inscrição e não distingue
+        # avaliadores (012, T-016).
+        registros = registros.filter(actor_subject=actor_subject)
     if cursor:
         occurred_at, event_id = decode_cursor(cursor)
         # O cursor aponta para o último item já entregue, na mesma ordem decrescente.
@@ -114,3 +121,91 @@ def trilha_da_comissao(
         limit=limit,
         operation=operation,
     )
+
+
+def trilha_da_avaliacao(
+    *,
+    actor,
+    edital,
+    etapa_id,
+    inscricao=None,
+    avaliador=None,
+    cursor=None,
+    limit=LIMITE_PADRAO,
+    operation=None,
+):
+    """Tudo que aconteceu na execução do trabalho de uma Etapa — filtrável pelas três dimensões.
+
+    FR-050 pede a trilha filtrável por inscrição, por avaliador e por operação, e as duas primeiras
+    **não saem de graça**:
+
+    - **`aggregate_id` não é a inscrição.** Os sete atos têm agregados diferentes: abrir documento
+      registra sobre `Inscricao`, herdado da 009; atribuir e remover sobre `Atribuicao`; gravar,
+      concluir e reabrir sobre `Avaliacao`; impedir sobre o `Impedimento`, e sobre cada Atribuição
+      inativada. Filtrar por um só traria um sétimo dos eventos e esconderia o resto — pior que
+      não filtrar, porque parece completo.
+    - **`actor_subject` não é o avaliador.** Ele é quem praticou o ato, e nos atos da presidência o
+      avaliador é o **afetado**. Perguntar "o que aconteceu com o trabalho da Ana" por ele
+      devolveria só o que a Ana fez, e nada do que fizeram com ela.
+
+    Daí a consulta ser **composta**: os agregados relacionados resolvem os atos administrativos, e
+    a abertura de documento — único ato cujo agregado não distingue avaliadores — entra pelo ator
+    quando o filtro é por avaliador (T-016).
+
+    O molde é `trilha_da_comissao`: resolver identificadores pelas relações e entregar o conjunto
+    ao `consultar` que já existe, em vez de carimbar a inscrição em cada evento.
+    """
+    from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao, Impedimento
+
+    atribuicoes = Atribuicao.objects.filter(edital=edital, etapa_id=etapa_id)
+    impedimentos = Impedimento.objects.filter(inscricao__edital=edital)
+    inscricoes = set()
+    if inscricao:
+        atribuicoes = atribuicoes.filter(inscricao_id=inscricao)
+        impedimentos = impedimentos.filter(inscricao_id=inscricao)
+        inscricoes = {inscricao}
+    if avaliador:
+        atribuicoes = atribuicoes.filter(membro__identity_subject=avaliador)
+        impedimentos = impedimentos.filter(identity_subject=avaliador)
+        if not inscricao:
+            inscricoes = set(
+                Atribuicao.objects.filter(
+                    edital=edital, etapa_id=etapa_id, membro__identity_subject=avaliador
+                ).values_list("inscricao_id", flat=True)
+            )
+    elif not inscricao:
+        inscricoes = set(
+            Atribuicao.objects.filter(edital=edital, etapa_id=etapa_id).values_list(
+                "inscricao_id", flat=True
+            )
+        )
+    ids_atribuicoes = list(atribuicoes.values_list("id", flat=True))
+    ids_avaliacoes = list(
+        Avaliacao.objects.filter(atribuicao_id__in=ids_atribuicoes).values_list("id", flat=True)
+    )
+    relacionados = [*ids_atribuicoes, *ids_avaliacoes, *impedimentos.values_list("id", flat=True)]
+
+    dos_atos, proximo = consultar(
+        actor=actor,
+        aggregate_ids=relacionados,
+        cursor=cursor,
+        limit=limit,
+        operation=operation,
+    )
+    # A abertura de documento entra por outra porta: o agregado é a Inscrição, e o avaliador só se
+    # distingue pelo ator. Sem esta restrição, filtrar por uma pessoa devolveria as aberturas dos
+    # colegas sob o nome dela.
+    das_aberturas, _ = consultar(
+        actor=actor,
+        aggregate_type="Inscricao",
+        aggregate_ids=list(inscricoes),
+        limit=limit,
+        operation=operation,
+        actor_subject=avaliador,
+    )
+    reunidos = sorted(
+        {registro.event_id: registro for registro in [*dos_atos, *das_aberturas]}.values(),
+        key=lambda registro: registro.occurred_at,
+        reverse=True,
+    )
+    return reunidos[:limit], proximo

@@ -197,9 +197,7 @@ def _selecao_da_vitrine(versao, agora):
         **dados,
         "perfis": [perfil.get("name", "") for perfil in perfis if perfil.get("name")],
         "vagas": sum(perfil.get("immediateVacancies") or 0 for perfil in perfis),
-        "tem_reserva": any(
-            (perfil.get("reserveType") or "NONE") != "NONE" for perfil in perfis
-        ),
+        "tem_reserva": any((perfil.get("reserveType") or "NONE") != "NONE" for perfil in perfis),
         "dias_restantes": _dias_ate(periodo.fim, agora) if periodo.estado == "aberto" else None,
     }
 
@@ -536,14 +534,17 @@ def _documentos(conteudo, inscricao):
 
 def _perfil_do_conteudo(conteudo, profile_id):
     """O Perfil da inscrição, lido do conteúdo publicado — nunca da tabela de elaboração."""
-    return next(
-        (
-            perfil
-            for perfil in conteudo.get("profiles") or []
-            if str(perfil.get("id")) == str(profile_id)
-        ),
-        None,
-    ) or {}
+    return (
+        next(
+            (
+                perfil
+                for perfil in conteudo.get("profiles") or []
+                if str(perfil.get("id")) == str(profile_id)
+            ),
+            None,
+        )
+        or {}
+    )
 
 
 def _perfil_legivel(perfil):
@@ -772,11 +773,7 @@ def _dados_do_comprovante(request, registro, conteudo, versao):
             ("Enviada em", comprovante_pdf.instante(registro.submitted_at)),
             (
                 "Versão do Edital",
-                (
-                    f"vigente desde {comprovante_pdf.instante(aceita.valid_from)}"
-                    if aceita
-                    else ""
-                ),
+                (f"vigente desde {comprovante_pdf.instante(aceita.valid_from)}" if aceita else ""),
             ),
         ],
         "documentos": [

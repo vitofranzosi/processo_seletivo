@@ -149,9 +149,7 @@ def inscricao_para_consulta(*, actor, inscricao_id):
         # O mesmo código impresso no comprovante do candidato: é comparando os dois que quem
         # confere recusa um papel alterado, sem ter de conferir linha por linha.
         "codigo_de_verificacao": (
-            codigo_de_verificacao(inscricao, enviados.values())
-            if inscricao.protocolo
-            else ""
+            codigo_de_verificacao(inscricao, enviados.values()) if inscricao.protocolo else ""
         ),
         "cpf": mascarar_cpf(inscricao.cpf),
         "versao": versao,

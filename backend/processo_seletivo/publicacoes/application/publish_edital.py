@@ -403,9 +403,7 @@ def publish_edital(
         pdf = render_edital_pdf(
             revisao.content,
             revisao.content_hash,
-            autoridade=AutoridadeSignataria(
-                nome=signatory["name"], cargo=signatory["role"]
-            ),
+            autoridade=AutoridadeSignataria(nome=signatory["name"], cargo=signatory["role"]),
         )
         document_hash = hashlib.sha256(pdf).hexdigest()
         publication = Publicacao.objects.create(

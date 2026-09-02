@@ -58,9 +58,7 @@ def _material(inscricao, documentos) -> str:
 
 
 def _digest(material: str) -> str:
-    return hmac.new(
-        settings.SECRET_KEY.encode(), material.encode(), hashlib.sha256
-    ).hexdigest()
+    return hmac.new(settings.SECRET_KEY.encode(), material.encode(), hashlib.sha256).hexdigest()
 
 
 def _formatar(digest: str) -> str:

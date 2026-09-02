@@ -26,6 +26,31 @@ IMPEDIR = "AVALIACAO_IMPEDIR"
 TORNAR_INELEGIVEL = "AVALIACAO_TORNAR_INELEGIVEL"
 
 
+def exigir_dados(*, identity_subject, inscricao_id, motivo):
+    """As três exigências do ato, verificadas **antes** da confirmação e de novo no comando.
+
+    Antes, porque um passo de confirmação que aceita formulário incompleto transforma a validação
+    em armadilha: a pessoa confirma e só então descobre que faltava o motivo. De novo no comando,
+    porque a tela não é fronteira de segurança — e o comando é chamado de outros lugares.
+    """
+    if not (identity_subject or "").strip():
+        raise DomainError(
+            "identidade_obrigatoria", "Informe quem está impedido.", 422, campo="identity_subject"
+        )
+    if not (inscricao_id or "").strip():
+        raise DomainError(
+            "inscricao_obrigatoria", "Informe a inscrição.", 422, campo="inscricao_id"
+        )
+    if not (motivo or "").strip():
+        # O motivo é o que faz do impedimento um ato, e não uma preferência (FR-039).
+        raise DomainError(
+            "motivo_obrigatorio",
+            "O impedimento exige motivo: é ele que sustenta o ato.",
+            422,
+            campo="motivo",
+        )
+
+
 def alcance_do_impedimento(*, processo, identity_subject, inscricao_id):
     """Quantas Atribuições ativas este impedimento inativará — **antes** de ele ser confirmado.
 
@@ -56,20 +81,11 @@ def registrar_impedimento(
     ou alterado, e elas deixam de integrar o conjunto que a 013 consome, o que libera a vaga que
     ocupavam (FR-041, FR-079, FR-090).
     """
-    subject = (identity_subject or "").strip()
-    texto = (motivo or "").strip()
-    if not subject:
-        raise DomainError(
-            "identidade_obrigatoria", "Informe quem está impedido.", 422, campo="identity_subject"
-        )
-    if not texto:
-        # O motivo é o que faz do impedimento um ato, e não uma preferência (FR-039).
-        raise DomainError(
-            "motivo_obrigatorio",
-            "O impedimento exige motivo: é ele que sustenta o ato.",
-            422,
-            campo="motivo",
-        )
+    exigir_dados(
+        identity_subject=identity_subject, inscricao_id=str(inscricao_id or ""), motivo=motivo
+    )
+    subject = identity_subject.strip()
+    texto = motivo.strip()
     with comando_de_comissao(
         actor=actor,
         processo_id=processo_id,

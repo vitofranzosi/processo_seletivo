@@ -123,6 +123,11 @@ urlpatterns = [
         views.reabrir_avaliacao,
         name="reabrir-avaliacao",
     ),
+    path(
+        "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/trilha",
+        views.trilha_da_avaliacao,
+        name="trilha-da-avaliacao",
+    ),
     path("minhas-etapas", views.minhas_etapas, name="minhas-etapas"),
     # A inscrição como instrumento de trabalho, sob a Mesa que a autoriza (012, US3). O caminho
     # pende de `minhas-etapas` porque é dali que ele é alcançado, e porque a autorização é a

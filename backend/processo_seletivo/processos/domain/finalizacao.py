@@ -82,6 +82,4 @@ def ensure_edital_accepts_changes(edital):
 
 def pending_editais(processo):
     """Editais que ainda impedem o cancelamento do Processo, em ordem estável."""
-    return list(
-        processo.editais.exclude(status__in=EDITAL_FINAL).order_by("year", "number", "id")
-    )
+    return list(processo.editais.exclude(status__in=EDITAL_FINAL).order_by("year", "number", "id"))

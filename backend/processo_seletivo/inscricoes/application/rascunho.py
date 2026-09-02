@@ -11,7 +11,6 @@ Três decisões estão aqui, e todas as três valem no servidor:
    administrativo o recusa por construção, que é a propriedade desejada.
 """
 
-
 from django.conf import settings
 from django.db import IntegrityError, transaction
 
@@ -96,9 +95,7 @@ def abrir_inscricao(*, identidade, edital_id, profile_id, correlation_id=""):
         existente = _inscricao_existente(identidade, edital_id, profile_id)
         if existente is not None:
             return existente
-        if not recebe_inscricoes(
-            status=versao.edital.status, conteudo=conteudo, agora=agora
-        ):
+        if not recebe_inscricoes(status=versao.edital.status, conteudo=conteudo, agora=agora):
             raise DomainError(
                 "registration_closed",
                 "Esta seleção não está recebendo inscrições.",
@@ -322,13 +319,9 @@ def _rascunho_travado(inscricao, conteudo, agora):
     obsoleto. A trava também serializa duas requisições do mesmo candidato — dois envios, ou um
     envio e uma mudança de modalidade — em vez de deixá-las se atropelarem.
     """
-    travada = (
-        Inscricao.objects.select_for_update().select_related("edital").get(pk=inscricao.pk)
-    )
+    travada = Inscricao.objects.select_for_update().select_related("edital").get(pk=inscricao.pk)
     if not recebe_inscricoes(status=travada.edital.status, conteudo=conteudo, agora=agora):
-        raise DomainError(
-            "registration_closed", "Esta seleção não está recebendo inscrições.", 409
-        )
+        raise DomainError("registration_closed", "Esta seleção não está recebendo inscrições.", 409)
     if travada.status != Inscricao.Status.RASCUNHO:
         raise DomainError(
             "submission_is_final", "Uma inscrição enviada não aceita alterações.", 409
@@ -453,8 +446,7 @@ def descartes_por_mudanca_de_modalidade(conteudo, inscricao, modality_id) -> lis
         for documento in DocumentoSubmetido.objects.filter(inscricao=inscricao)
     }
     por_id = {
-        str(requisito["id"]): requisito
-        for requisito in conteudo.get("documentRequirements") or []
+        str(requisito["id"]): requisito for requisito in conteudo.get("documentRequirements") or []
     }
     return [
         {

@@ -1437,6 +1437,16 @@ OPERACOES = {
     "CONSULTAR_DOCUMENTO": "Consulta a documento do candidato",
     # A organização do trabalho (011). Mesma trilha, pela mesma razão: quem investiga quem
     # perdeu acesso a uma Etapa lê a mesma tela de quem investiga uma publicação.
+    # A execução do trabalho (012). Os sete atos de FR-052 na mesma trilha, pela razão de sempre:
+    # quem investiga por que uma avaliação não conta lê a mesma tela de quem investiga uma
+    # publicação.
+    "AVALIACAO_ATRIBUIR": "Atribuição de inscrição a avaliador",
+    "AVALIACAO_ATRIBUICAO_REMOVER": "Remoção de atribuição",
+    "AVALIACAO_GRAVAR": "Gravação de avaliação",
+    "AVALIACAO_CONCLUIR": "Conclusão de avaliação",
+    "AVALIACAO_REABRIR": "Reabertura de avaliação",
+    "AVALIACAO_IMPEDIR": "Registro de impedimento",
+    "AVALIACAO_TORNAR_INELEGIVEL": "Avaliação tornada inelegível",
     "COMISSAO_INCLUIR_MEMBRO": "Inclusão na comissão",
     "COMISSAO_ALTERAR_FUNCAO": "Alteração de função na comissão",
     "COMISSAO_REMOVER_MEMBRO": "Remoção da comissão",
@@ -1450,7 +1460,21 @@ AGREGADOS = {
     "Inscricao": "Inscrição",
     "MembroComissao": "Membro da comissão",
     "AlocacaoEtapa": "Alocação em Etapa",
+    "Atribuicao": "Atribuição de avaliação",
+    "Avaliacao": "Avaliação",
+    "Impedimento": "Impedimento",
 }
+
+# Os sete atos de FR-052, na ordem do percurso. É esta lista que a tela oferece como filtro.
+OPERACOES_DA_AVALIACAO = (
+    "AVALIACAO_ATRIBUIR",
+    "AVALIACAO_ATRIBUICAO_REMOVER",
+    "CONSULTAR_DOCUMENTO",
+    "AVALIACAO_GRAVAR",
+    "AVALIACAO_CONCLUIR",
+    "AVALIACAO_REABRIR",
+    "AVALIACAO_IMPEDIR",
+)
 
 
 @require_http_methods(["GET"])
@@ -1989,6 +2013,11 @@ def impedimentos(request, edital_id, etapa_id):
                 # trabalho de alguém não pode ser efeito colateral silencioso de registrar um
                 # motivo. Quem confirma vê quantas atribuições e quantas conclusões serão
                 # alcançadas.
+                #
+                # O motivo é cobrado **aqui**, e não só no comando: sem isso, o passo de
+                # confirmação aceitaria um formulário incompleto e a recusa só apareceria depois
+                # de a pessoa confirmar — o que transforma a validação em armadilha.
+                impedimento_app.exigir_dados(**dados)
                 confirmacao = impedimento_app.alcance_do_impedimento(
                     processo=edital.processo,
                     identity_subject=dados["identity_subject"],
@@ -2327,6 +2356,70 @@ def _registrar_na_mesa(ator, documento, request, operacao):
             correlation_id=getattr(request, "correlation_id", ""),
             reason=f"requisito {documento.requirement_id}",
         )
+
+
+@require_http_methods(["GET"])
+def trilha_da_avaliacao(request, edital_id, etapa_id):
+    """A trilha da execução do trabalho, filtrável pelas três dimensões de FR-050.
+
+    Volumosa por natureza — duas mil atribuições e cada documento aberto —, ela nasce filtrável por
+    inscrição, por avaliador e por operação. As duas primeiras não saem de `aggregate_id` nem de
+    `actor_subject` sozinhos, e a razão está em T-016.
+    """
+    ator, edital, etapa = _etapa_para_distribuir(request, edital_id, etapa_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    require_permission(ator, "auditoria:consultar")
+    operacao = (request.GET.get("operacao") or "").strip()
+    inscricao = (request.GET.get("inscricao") or "").strip()
+    avaliador = (request.GET.get("avaliador") or "").strip()
+    registros, proximo = auditoria_selectors.trilha_da_avaliacao(
+        actor=ator,
+        edital=edital,
+        etapa_id=etapa_id,
+        inscricao=inscricao or None,
+        avaliador=avaliador or None,
+        cursor=request.GET.get("cursor"),
+        limit=auditoria_selectors.parse_limit(request.GET.get("limit")),
+        operation=operacao or None,
+    )
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/auditoria.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "etapa": etapa,
+                "da_avaliacao": True,
+                "operacao_filtro": operacao,
+                "inscricao_filtro": inscricao,
+                "avaliador_filtro": avaliador,
+                "avaliadores_da_etapa": [
+                    linha["membro"]
+                    for linha in avaliacao_selectors.carga_por_avaliador(
+                        edital=edital, etapa_id=etapa_id
+                    )
+                ],
+                "operacoes_da_avaliacao": [
+                    (chave, OPERACOES[chave]) for chave in OPERACOES_DA_AVALIACAO
+                ],
+                "registros": [
+                    {
+                        "quando": registro.occurred_at,
+                        "ator": registro.actor_subject,
+                        "operacao": OPERACOES.get(registro.operation, registro.operation),
+                        "agregado": AGREGADOS.get(registro.aggregate_type, registro.aggregate_type),
+                        "identificador": registro.aggregate_id,
+                        "permissao": registro.permission,
+                        "motivo": registro.reason,
+                    }
+                    for registro in registros
+                ],
+                "proximo_cursor": proximo,
+            },
+        )
+    )
 
 
 @require_http_methods(["GET"])
