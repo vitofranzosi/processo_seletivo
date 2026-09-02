@@ -28,6 +28,7 @@ from processo_seletivo.avaliacoes.application.mesa import (
     CONSULTAR_DOCUMENTO,
     INTEGRIDADE,
 )
+from processo_seletivo.avaliacoes.application.trilha import auditar as auditar_ato
 from processo_seletivo.comissoes.application import alocacao as alocacao_app
 from processo_seletivo.comissoes.application import comissao as comissao_app
 from processo_seletivo.comissoes.application import selectors as comissao_selectors
@@ -2032,6 +2033,9 @@ def impedimentos(request, edital_id, etapa_id):
                     motivo=dados["motivo"],
                     idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
                     correlation_id=getattr(request, "correlation_id", ""),
+                    # A assinatura do alcance que esta pessoa viu. O comando a confere **sob
+                    # trava**, contra o conjunto que vai mesmo inativar.
+                    alcance_confirmado=request.POST.get("alcance") or None,
                 )
                 request.session["resultado_do_impedimento"] = resultado
                 return redirect(request.path)
@@ -2039,6 +2043,15 @@ def impedimentos(request, edital_id, etapa_id):
             if recusa.status == 404:
                 raise Http404 from recusa
             erro = recusa.detail
+            if recusa.code == "alcance_mudou":
+                # Recusar sem mostrar o novo alcance devolveria a pessoa ao formulário vazio para
+                # ela repetir exatamente o mesmo ato às cegas. A confirmação é refeita sobre o que
+                # existe agora (FR-041).
+                confirmacao = impedimento_app.alcance_do_impedimento(
+                    processo=edital.processo,
+                    identity_subject=dados["identity_subject"],
+                    inscricao_id=dados["inscricao_id"],
+                )
     return marcar_como_privada(
         render(
             request,
@@ -2312,7 +2325,7 @@ def documento_da_mesa(request, edital_id, etapa_id, inscricao_id, requirement_id
     if ator is None:
         return redirect(reverse("interface:identificar"))
     try:
-        documento, _ = mesa_app.documento_para_avaliar(
+        documento, atribuicao = mesa_app.documento_para_avaliar(
             ator=ator,
             edital=edital,
             etapa_id=etapa_id,
@@ -2327,35 +2340,134 @@ def documento_da_mesa(request, edital_id, etapa_id, inscricao_id, requirement_id
     copia, calculado = copia_verificada(documento)
     if calculado != documento.content_hash:
         copia.close()
-        _registrar_na_mesa(ator, documento, request, INTEGRIDADE)
+        _registrar_na_mesa(ator, atribuicao, documento, request, INTEGRIDADE)
         raise DomainError(
             "document_integrity_failed",
             "O arquivo guardado não confere com o que foi recebido. O documento não pode ser "
             "apresentado como íntegro; registre a ocorrência à presidência.",
             409,
         )
-    _registrar_na_mesa(ator, documento, request, CONSULTAR_DOCUMENTO)
+    _registrar_na_mesa(ator, atribuicao, documento, request, CONSULTAR_DOCUMENTO)
     return entregar(documento, anexo=bool(request.GET.get("baixar")), verificado=copia)
 
 
-def _registrar_na_mesa(ator, documento, request, operacao):
-    """Cada abertura fica registrada, com ator, inscrição e requisito (FR-027).
+def _registrar_na_mesa(ator, atribuicao, documento, request, operacao):
+    """Cada abertura fica registrada **sob a Atribuição que a autorizou** (FR-027, FR-053).
+
+    O agregado é a Atribuição, e não a Inscrição, porque é ela que nomeia as quatro coisas que o
+    registro precisa identificar: quem, qual inscrição, qual Etapa e por qual vínculo. A Inscrição
+    nomeia uma só — e ancorar ali fazia a trilha de uma Etapa exibir as aberturas de outra, e
+    exibir as consultas administrativas da 009, que registram a mesma operação sobre a mesma
+    Inscrição sob outra permissão. Histórico que mistura origens é pior que histórico incompleto.
 
     A base registrada é a da Mesa, e não a permissão da consulta administrativa: é ela que diz
-    **por que** o acesso foi concedido — a Atribuição, e não um papel (FR-051, FR-053).
+    **por que** o acesso foi concedido — a Atribuição, e não um papel (FR-051).
 
     A trilha guarda que o ato aconteceu, e nunca o nome do arquivo, que é do candidato (FR-054).
     """
     with command_context() as agora:
-        record_event(
+        # Pelo emissor da 012, e não por `record_event` direto: a Atribuição não tem ciclo de vida,
+        # e o registrador leria `aggregate.status` de um objeto que não tem estado (D-014, FR-070).
+        auditar_ato(
             actor=ator,
-            permission=BASE_DA_MESA,
+            permissao=BASE_DA_MESA,
             operation=operacao,
-            aggregate=documento.inscricao,
+            aggregate=atribuicao,
             now=agora,
             correlation_id=getattr(request, "correlation_id", ""),
             reason=f"requisito {documento.requirement_id}",
         )
+
+
+@require_http_methods(["GET"])
+def conclusoes_preservadas(request, edital_id, etapa_id):
+    """O que foi concluído e deixou de valer — íntegro, e legível por quem responde (FR-091).
+
+    Esta página existe porque "está gravado em algum lugar" não é resposta a um recurso. A trilha
+    diz que a reabertura aconteceu e quem a praticou; ela não diz — e não deve dizer — qual era a
+    pontuação, o parecer e a versão que governava (FR-054). Isso vive no registro append-only do
+    domínio, e é o que esta tela lê.
+    """
+    ator, edital, etapa = _etapa_para_auditar(request, edital_id, etapa_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    inscricao = (request.GET.get("inscricao") or "").strip()
+    filtro_invalido = None
+    if inscricao and not _tem_forma_de_identificador(inscricao):
+        filtro_invalido = (
+            "O identificador de inscrição não tem forma de identificador. Informe-o por inteiro."
+        )
+        linhas = []
+    else:
+        linhas = [
+            {**linha, "rotulo": SITUACAO_DA_CONCLUSAO[linha["situacao"]]}
+            for linha in avaliacao_selectors.conclusoes_preservadas(
+                edital=edital, etapa_id=etapa_id, inscricao_id=inscricao or None
+            )
+        ]
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/conclusoes.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "etapa": etapa,
+                "linhas": linhas,
+                "inscricao_filtro": inscricao,
+                "filtro_invalido": filtro_invalido,
+            },
+        )
+    )
+
+
+# O que aconteceu com cada conclusão preservada, dito por extenso. Preservar não é o mesmo que
+# continuar valendo, e a tela que não distingue as duas coisas engana quem consulta.
+SITUACAO_DA_CONCLUSAO = {
+    "em_vigor": "Em vigor",
+    "reaberta": "Substituída por reabertura",
+    "inelegivel": "Preservada e inelegível",
+}
+
+
+def _tem_forma_de_identificador(valor):
+    """Se o texto digitado é um UUID. Identificador que não tem forma não identifica nada."""
+    try:
+        UUID(str(valor))
+    except (TypeError, ValueError):
+        return False
+    return True
+
+
+def _etapa_para_auditar(request, edital_id, etapa_id):
+    """A porta da consulta: presidência **ou** auditoria — nunca as duas ao mesmo tempo (FR-091).
+
+    Exigir a conjunção reduzia a trilha ao usuário híbrido: quem preside sem o papel de auditor
+    lia 403, e quem audita sem gerir o Processo lia 404. Quem responde a um recurso é um dos dois,
+    e quase nunca é os dois — o que a spec concede a cada um, a porta negava a ambos.
+
+    A recusa é 404 para as duas, como em todo o resto da feature: quem não alcança não descobre
+    pela resposta se o que existe é a Etapa ou a permissão (FR-044).
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return None, None, None
+    edital = (
+        Edital.objects.filter(pk=edital_id, institution_scope=ator.institution_scope)
+        .select_related("processo")
+        .first()
+    )
+    if edital is None:
+        raise Http404
+    if pode_gerir_comissao(ator, edital.processo) is None and not ator.can("auditoria:consultar"):
+        raise Http404
+    try:
+        etapa = etapa_vigente(edital, etapa_id)
+    except DomainError:
+        etapa = None
+    if etapa is None:
+        raise Http404
+    return ator, edital, etapa
 
 
 @require_http_methods(["GET"])
@@ -2366,23 +2478,32 @@ def trilha_da_avaliacao(request, edital_id, etapa_id):
     inscrição, por avaliador e por operação. As duas primeiras não saem de `aggregate_id` nem de
     `actor_subject` sozinhos, e a razão está em T-016.
     """
-    ator, edital, etapa = _etapa_para_distribuir(request, edital_id, etapa_id)
+    ator, edital, etapa = _etapa_para_auditar(request, edital_id, etapa_id)
     if ator is None:
         return redirect(reverse("interface:identificar"))
-    require_permission(ator, "auditoria:consultar")
     operacao = (request.GET.get("operacao") or "").strip()
     inscricao = (request.GET.get("inscricao") or "").strip()
     avaliador = (request.GET.get("avaliador") or "").strip()
-    registros, proximo = auditoria_selectors.trilha_da_avaliacao(
-        actor=ator,
-        edital=edital,
-        etapa_id=etapa_id,
-        inscricao=inscricao or None,
-        avaliador=avaliador or None,
-        cursor=request.GET.get("cursor"),
-        limit=auditoria_selectors.parse_limit(request.GET.get("limit")),
-        operation=operacao or None,
-    )
+    # O campo é digitado, e identificador digitado erra. Sem esta conferência o texto malformado
+    # chega a `filter(inscricao_id=...)` e vira `ValidationError` — 500 onde a pessoa deveria ler
+    # que o que ela digitou não tem forma de identificador.
+    filtro_invalido = None
+    if inscricao and not _tem_forma_de_identificador(inscricao):
+        filtro_invalido = (
+            "O identificador de inscrição não tem forma de identificador. Informe-o por inteiro."
+        )
+        registros, proximo = [], None
+    else:
+        registros, proximo = auditoria_selectors.trilha_da_avaliacao(
+            actor=ator,
+            edital=edital,
+            etapa_id=etapa_id,
+            inscricao=inscricao or None,
+            avaliador=avaliador or None,
+            cursor=request.GET.get("cursor"),
+            limit=auditoria_selectors.parse_limit(request.GET.get("limit")),
+            operation=operacao or None,
+        )
     return marcar_como_privada(
         render(
             request,
@@ -2392,6 +2513,7 @@ def trilha_da_avaliacao(request, edital_id, etapa_id):
                 "edital": edital,
                 "etapa": etapa,
                 "da_avaliacao": True,
+                "filtro_invalido": filtro_invalido,
                 "operacao_filtro": operacao,
                 "inscricao_filtro": inscricao,
                 "avaliador_filtro": avaliador,

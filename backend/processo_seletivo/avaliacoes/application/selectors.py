@@ -15,7 +15,7 @@ from django.core.paginator import Paginator
 from django.db.models import Count, Prefetch, Q
 
 from processo_seletivo.avaliacoes.domain.previsao import avaliacoes_previstas
-from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao
+from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao, ConclusaoAvaliacao
 from processo_seletivo.comissoes.models import AlocacaoEtapa
 from processo_seletivo.inscricoes.models import Inscricao
 
@@ -274,6 +274,68 @@ def avaliacoes_inelegiveis(*, edital, etapa_id):
         }
         for avaliacao in fora
     ]
+
+
+def conclusoes_preservadas(*, edital, etapa_id, inscricao_id=None):
+    """O que havia sido concluído — **consultável**, e não apenas existente no banco (FR-091).
+
+    Sem esta consulta a preservação de FR-094 era uma promessa que só o banco cumpria. Depois de
+    uma reabertura a Avaliação corrente volta a rascunho e perde pontuação, versão e instante; a
+    linha some da consulta de inelegíveis, e a pergunta que um recurso faz — "o que aquela pessoa
+    havia registrado, quando e sob qual versão" — deixava de ter resposta pela interface.
+
+    A trilha **não** responde por isto, e é de propósito: ela guarda que o ato aconteceu e nunca a
+    pontuação nem o parecer (FR-054). O conteúdo vive aqui, no registro append-only do domínio.
+
+    Cada linha diz também **o que aconteceu com aquela conclusão**, porque preservar não é o mesmo
+    que continuar valendo:
+
+    - `em_vigor` — é a conclusão corrente, sob Atribuição ativa;
+    - `reaberta` — foi substituída por reabertura, e a Avaliação voltou a ser trabalho pendente;
+    - `inelegivel` — continua sendo a conclusão corrente, e a Atribuição foi inativada por ato
+      nomeado: ela permanece íntegra e fora do conjunto que a 013 consome (FR-075, FR-093).
+    """
+    consulta = ConclusaoAvaliacao.objects.filter(
+        avaliacao__atribuicao__edital=edital,
+        avaliacao__atribuicao__etapa_id=etapa_id,
+    ).select_related(
+        "avaliacao",
+        "avaliacao__atribuicao",
+        "avaliacao__atribuicao__inscricao",
+        "avaliacao__atribuicao__membro",
+        "versao",
+    )
+    if inscricao_id is not None:
+        consulta = consulta.filter(avaliacao__atribuicao__inscricao_id=inscricao_id)
+    conclusoes = list(consulta.order_by("avaliacao__atribuicao__inscricao__protocolo", "ordem"))
+    # A última ordem de cada Avaliação: só ela pode estar em vigor — as anteriores foram, cada
+    # uma, substituídas por uma reabertura.
+    ultima = {}
+    for conclusao in conclusoes:
+        ultima[conclusao.avaliacao_id] = max(ultima.get(conclusao.avaliacao_id, 0), conclusao.ordem)
+    linhas = []
+    for conclusao in conclusoes:
+        avaliacao = conclusao.avaliacao
+        atribuicao = avaliacao.atribuicao
+        corrente = (
+            conclusao.ordem == ultima[conclusao.avaliacao_id]
+            and avaliacao.estado == Avaliacao.Estado.CONCLUIDA
+        )
+        linhas.append(
+            {
+                "conclusao": conclusao,
+                "inscricao": atribuicao.inscricao,
+                "membro": atribuicao.membro,
+                "situacao": (
+                    "em_vigor"
+                    if corrente and atribuicao.ativo
+                    else "inelegivel"
+                    if corrente
+                    else "reaberta"
+                ),
+            }
+        )
+    return linhas
 
 
 def atribuicoes_orfas(*, edital, etapa_id):

@@ -12,6 +12,9 @@ uma terceira acrescentaria uma verificação por linha a toda listagem da featur
 sabe (FR-042).
 """
 
+import hashlib
+from uuid import UUID
+
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao, Impedimento
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
@@ -24,6 +27,19 @@ IMPEDIR = "AVALIACAO_IMPEDIR"
 # O ato que tira uma Avaliação do conjunto elegível tem nome próprio na trilha, e não se confunde
 # com a remoção corriqueira de uma atribuição pendente (FR-092, FR-093).
 TORNAR_INELEGIVEL = "AVALIACAO_TORNAR_INELEGIVEL"
+
+
+def identificador_de_inscricao(valor):
+    """O identificador, ou a recusa de formulário. Nunca `ValidationError` de dentro do ORM."""
+    try:
+        return UUID(str(valor).strip())
+    except (TypeError, ValueError) as exc:
+        raise DomainError(
+            "inscricao_invalida",
+            "O identificador da inscrição não tem forma de identificador.",
+            422,
+            campo="inscricao_id",
+        ) from exc
 
 
 def exigir_dados(*, identity_subject, inscricao_id, motivo):
@@ -41,6 +57,10 @@ def exigir_dados(*, identity_subject, inscricao_id, motivo):
         raise DomainError(
             "inscricao_obrigatoria", "Informe a inscrição.", 422, campo="inscricao_id"
         )
+    # A forma é conferida **aqui**, e por isso vale nos dois passos: sem isto o texto malformado
+    # chega a `filter(inscricao_id=...)` e vira `ValidationError` — 500 onde a pessoa deveria ler
+    # que o que ela digitou não identifica inscrição nenhuma.
+    identificador_de_inscricao(inscricao_id)
     if not (motivo or "").strip():
         # O motivo é o que faz do impedimento um ato, e não uma preferência (FR-039).
         raise DomainError(
@@ -51,26 +71,62 @@ def exigir_dados(*, identity_subject, inscricao_id, motivo):
         )
 
 
+def _assinatura(ids_ativas, ids_concluidas):
+    """A identidade do conjunto alcançado, e não só o seu tamanho.
+
+    Contar não basta: entre a confirmação e o ato, uma Atribuição pode ser removida e outra
+    criada, e as duas contagens continuariam iguais sobre um conjunto diferente. A conclusão de
+    uma avaliação também muda o alcance sem mudar o número de atribuições — e é a diferença entre
+    confirmar "nenhuma concluída" e tornar uma conclusão inelegível.
+    """
+    conteudo = "|".join(
+        # `identificador` já é o nome da função que valida UUID neste módulo — a variável de laço
+        # se chama `chave` para não sombreá-la.
+        sorted(f"{chave}{'C' if chave in ids_concluidas else ''}" for chave in ids_ativas)
+    )
+    return hashlib.sha256(conteudo.encode()).hexdigest()[:16]
+
+
 def alcance_do_impedimento(*, processo, identity_subject, inscricao_id):
     """Quantas Atribuições ativas este impedimento inativará — **antes** de ele ser confirmado.
 
     Retirar trabalho de alguém não pode ser efeito colateral silencioso de registrar um motivo: a
     confirmação declara o alcance, e quem confirma sabe o que está fazendo (FR-041).
+
+    Devolve também a **assinatura** do conjunto, que o ato conferirá sob trava: confirmar um
+    alcance e executar outro é a mesma falha que FR-041 existe para impedir, apenas mais difícil
+    de ver.
     """
-    ativas = Atribuicao.objects.filter(
-        membro__processo=processo,
-        membro__identity_subject=identity_subject,
-        inscricao_id=inscricao_id,
-        ativo=True,
+    ativas = list(
+        Atribuicao.objects.filter(
+            membro__processo=processo,
+            membro__identity_subject=identity_subject,
+            inscricao_id=identificador_de_inscricao(inscricao_id),
+            ativo=True,
+        ).values_list("id", flat=True)
     )
-    concluidas = Avaliacao.objects.filter(
-        atribuicao__in=ativas, estado=Avaliacao.Estado.CONCLUIDA
-    ).count()
-    return {"atribuicoes": ativas.count(), "concluidas": concluidas}
+    concluidas = set(
+        Avaliacao.objects.filter(
+            atribuicao_id__in=ativas, estado=Avaliacao.Estado.CONCLUIDA
+        ).values_list("atribuicao_id", flat=True)
+    )
+    return {
+        "atribuicoes": len(ativas),
+        "concluidas": len(concluidas),
+        "assinatura": _assinatura(ativas, concluidas),
+    }
 
 
 def registrar_impedimento(
-    *, actor, processo_id, identity_subject, inscricao_id, motivo, idempotency_key, correlation_id
+    *,
+    actor,
+    processo_id,
+    identity_subject,
+    inscricao_id,
+    motivo,
+    idempotency_key,
+    correlation_id,
+    alcance_confirmado=None,
 ):
     """Cria o impedimento e inativa as Atribuições ativas do par, na mesma transação.
 
@@ -80,6 +136,12 @@ def registrar_impedimento(
     As Avaliações já concluídas são **preservadas e tornadas inelegíveis** — nada nelas é apagado
     ou alterado, e elas deixam de integrar o conjunto que a 013 consome, o que libera a vaga que
     ocupavam (FR-041, FR-079, FR-090).
+
+    **`alcance_confirmado` é a assinatura que a pessoa viu ao confirmar**, e ela é conferida
+    depois da trava, contra o conjunto que o ato realmente alcançará. Sem essa conferência a
+    confirmação de FR-041 declara um alcance e o ato executa outro: entre os dois passos o
+    avaliador pode concluir a avaliação, e quem confirmou "nenhuma concluída" torna uma conclusão
+    inelegível sem ter sido avisado. Divergiu, o ato não acontece e a confirmação é refeita.
     """
     exigir_dados(
         identity_subject=identity_subject, inscricao_id=str(inscricao_id or ""), motivo=motivo
@@ -159,6 +221,16 @@ def registrar_impedimento(
                 atribuicao__in=ativas, estado=Avaliacao.Estado.CONCLUIDA
             ).values_list("atribuicao_id", flat=True)
         )
+        assinatura = _assinatura([atribuicao.id for atribuicao in ativas], com_conclusao)
+        if alcance_confirmado is not None and alcance_confirmado != assinatura:
+            # A trava já está posta: o conjunto conferido aqui é o que será inativado logo abaixo,
+            # e nada mais entra nem sai entre uma coisa e outra.
+            raise DomainError(
+                "alcance_mudou",
+                "O que este impedimento alcança mudou desde a confirmação. Confira o novo alcance "
+                "antes de registrar.",
+                409,
+            )
         for atribuicao in ativas:
             Atribuicao.objects.filter(pk=atribuicao.pk).update(
                 ativo=False, inativado_em=ctx.now, inativado_por=actor.subject

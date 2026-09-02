@@ -595,27 +595,38 @@ ato legítimo e auditável — é o caso preventivo, registrado antes de distrib
 Atribuição a que ancorar o evento. O agregado é o `Impedimento`, e ele entra nas duas relações: por
 inscrição e por identidade.
 
-**Segunda: abrir documento não se filtra por relação.** Esse evento tem por agregado a `Inscricao`,
-herdado da 009. Pelo filtro de inscrição isso basta — todas as aberturas daquela inscrição são
-dela. Mas pelo filtro de **avaliador** não: o identificador da inscrição é o mesmo para todos os
-avaliadores dela, e resolver só por relação devolveria as aberturas feitas pelos colegas sob o nome
-de quem se pesquisou. Aqui, e só aqui, `actor_subject` **é** o avaliador — foi ele quem abriu — e
-precisa entrar na condição junto com a inscrição.
+**Segunda: abrir documento precisa de agregado próprio.** A primeira implementação registrou a
+abertura sobre a `Inscricao`, herdando o agregado da 009 — e a revisão de 2026-09-02 mostrou que
+isso está errado por dois motivos independentes.
 
-**Terceira, que decorre das duas: a consulta é composta.**
+A `Inscricao` **não nomeia a Etapa**, e FR-053 exige que o registro a identifique: a mesma inscrição
+pode ser avaliada em duas Etapas, e a trilha de uma exibia as aberturas da outra. E a consulta
+administrativa da 009 registra **a mesma operação sobre o mesmo agregado**, sob outra permissão: as
+duas apareciam misturadas, e a consulta do gestor contava como trabalho da Mesa. Um histórico que
+mistura origens é pior que um incompleto, porque parece verdadeiro.
 
-| filtro | atos administrativos | abertura de documento |
-|---|---|---|
-| por inscrição | agregados relacionados: `Inscricao`, `Atribuicao`, `Avaliacao`, `Impedimento` daquela inscrição | os eventos daquela `Inscricao` |
-| por avaliador | agregados relacionados: `Atribuicao`, `Avaliacao`, `Impedimento` daquela identidade estável | eventos de `Inscricao` **com `actor_subject` igual àquela identidade** |
-| combinado | interseção das duas | interseção das duas |
+**A decisão corrigida**: a abertura ancora na **Atribuição**, que nomeia as quatro coisas que o
+registro precisa identificar — quem, qual inscrição, qual Etapa e por qual vínculo. Com isso os
+sete atos passam a se resolver por relação, sem exceção:
 
-A identidade é a estável, e nunca o vínculo, pela razão de T-007.
+| ato | agregado |
+|---|---|
+| atribuir, remover atribuição, **abrir documento** | `Atribuicao` |
+| gravar, concluir, reabrir | `Avaliacao` |
+| impedir | `Impedimento` |
 
-`consultar` não filtra por ator hoje; ganha um parâmetro opcional, como `record_event` ganhou dois
-na 011 — assinatura, e não esquema. A alternativa seria carimbar a inscrição em cada evento,
-criando coluna de conveniência para uma pergunta que a relação já responde. `record_event` não
-ganha campo nesta feature (FR-070).
+**Terceira: a consulta é uma só, e não duas reunidas em memória.** Com a exceção da abertura
+desfeita, o filtro por avaliador sai da relação `Atribuicao → MembroComissao`, e `actor_subject`
+deixa de ser necessário — o parâmetro que a primeira versão acrescentou a `consultar` foi retirado.
+
+Isso também conserta a paginação, e esse era o segundo defeito: duas páginas somadas fora do banco
+**não têm cursor comum**. O cursor devolvido era o da primeira consulta, e sob filtro de abertura
+de documento ele vinha vazio — o que passasse da primeira página ficava inalcançável, sem erro
+nenhum na tela. Uma consulta, um cursor.
+
+A identidade é a estável, e nunca o vínculo, pela razão de T-007. A alternativa seria carimbar a
+inscrição e a Etapa em cada evento, criando colunas de conveniência para perguntas que a relação já
+responde. `record_event` não ganha campo nesta feature (FR-070).
 
 ---
 

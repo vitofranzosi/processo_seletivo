@@ -1,0 +1,75 @@
+{% extends "interface/base.html" %}
+{% block titulo %}Conclusões preservadas — {{ etapa.name }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> ›
+  <span aria-current="page">Conclusões preservadas</span>
+</nav>
+
+<h1>Conclusões preservadas</h1>
+<p class="sub">{{ etapa.name }} — Edital {{ edital.number }}/{{ edital.year }}</p>
+
+{% comment %}
+FR-091: a preservação é **consultável**, e não apenas existente no banco. Reabrir devolve a
+Avaliação a rascunho e a esvazia de pontuação, versão e instante — o que aquela pessoa havia
+concluído antes vive aqui, no registro append-only do domínio, e não na trilha (FR-054, FR-094).
+{% endcomment %}
+<p class="ajuda">O que cada avaliador havia concluído, quando, sob qual versão do Edital — e o que
+  aconteceu com aquela conclusão depois. Nada aqui é apagado ou alterado: preservar não é o mesmo
+  que continuar valendo, e cada linha diz qual dos dois é o caso.</p>
+
+<form method="get" class="filtro">
+  <p class="campo">
+    <label for="inscricao">Inscrição</label>
+    <input type="search" id="inscricao" name="inscricao" value="{{ inscricao_filtro }}"
+           aria-describedby="ajuda-inscricao-conclusoes">
+    <span class="ajuda" id="ajuda-inscricao-conclusoes">Identificador da inscrição.</span>
+  </p>
+  <p class="salvar">
+    <button type="submit" class="acao">Filtrar</button>
+    {% if inscricao_filtro %}
+    <a class="acao" href="{% url 'interface:conclusoes-preservadas' edital.id etapa.id %}">Limpar</a>{% endif %}
+  </p>
+  {% if filtro_invalido %}<p class="erro" role="alert" tabindex="-1" autofocus>{{ filtro_invalido }}</p>{% endif %}
+</form>
+
+{% if linhas %}
+<div class="tabela-rolavel">
+<table class="tabela">
+  <caption class="oculto">Conclusões preservadas desta Etapa</caption>
+  <thead>
+    <tr>
+      <th scope="col">Inscrição</th>
+      <th scope="col">Avaliador</th>
+      <th scope="col">Pontuação</th>
+      <th scope="col">Parecer</th>
+      <th scope="col">Versão que governou</th>
+      <th scope="col">Concluída em</th>
+      <th scope="col">Situação</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for linha in linhas %}
+    <tr>
+      <td>{{ linha.inscricao.protocolo|default:linha.inscricao.id }}</td>
+      <td>{{ linha.membro.display_label|default:linha.conclusao.concluida_por }}</td>
+      <td>{{ linha.conclusao.pontuacao|floatformat:4 }}</td>
+      <td>{{ linha.conclusao.parecer|default:"—" }}</td>
+      <td>vigente desde {{ linha.conclusao.versao.valid_from|date:"d/m/Y H:i" }}
+        <span class="codigo">{{ linha.conclusao.versao.id }}</span></td>
+      <td>{{ linha.conclusao.concluida_em|date:"d/m/Y H:i:s" }} por {{ linha.conclusao.concluida_por }}</td>
+      {% comment %}
+      A situação vem por extenso, e não por cor: quem lê em escala de cinza precisa distinguir
+      "em vigor" de "preservada e inelegível" (FR-076 da 011, checklist de UX).
+      {% endcomment %}
+      <td>{{ linha.rotulo }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="vazio">{% if inscricao_filtro %}Nenhuma conclusão corresponde ao filtro.{% else %}Nenhuma avaliação foi concluída nesta Etapa.{% endif %}</p>
+{% endif %}
+{% endblock %}

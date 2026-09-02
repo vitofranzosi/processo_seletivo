@@ -128,6 +128,13 @@ urlpatterns = [
         views.trilha_da_avaliacao,
         name="trilha-da-avaliacao",
     ),
+    # A preservação de FR-094 só é preservação se for consultável (FR-091). A porta é a mesma da
+    # trilha — presidência ou auditoria —, porque são os dois que respondem a recurso.
+    path(
+        "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/conclusoes",
+        views.conclusoes_preservadas,
+        name="conclusoes-preservadas",
+    ),
     path("minhas-etapas", views.minhas_etapas, name="minhas-etapas"),
     # A inscrição como instrumento de trabalho, sob a Mesa que a autoriza (012, US3). O caminho
     # pende de `minhas-etapas` porque é dali que ele é alcançado, e porque a autorização é a

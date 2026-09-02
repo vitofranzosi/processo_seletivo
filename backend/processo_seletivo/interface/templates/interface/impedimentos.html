@@ -28,6 +28,12 @@ atribuições e quantas conclusões o impedimento alcançará.
   <input type="hidden" name="identity_subject" value="{{ digitado.identity_subject }}">
   <input type="hidden" name="inscricao_id" value="{{ digitado.inscricao_id }}">
   <input type="hidden" name="motivo" value="{{ digitado.motivo }}">
+  {% comment %}
+  A assinatura do alcance que está escrito logo abaixo. O comando a confere sob trava, contra o
+  conjunto que vai mesmo inativar: sem ela, confirmar "nenhuma concluída" e tornar uma conclusão
+  inelegível é uma corrida de dois passos, e não um ato consciente (FR-041).
+  {% endcomment %}
+  <input type="hidden" name="alcance" value="{{ confirmacao.assinatura }}">
   <p class="aviso" role="status" tabindex="-1" autofocus>
     <strong>Confirme antes de registrar.</strong>
     {% if confirmacao.atribuicoes %}
@@ -85,13 +91,16 @@ de quem sabe — e é por isso que esta tela pede a identidade e o motivo, em ve
   <div class="tabela-rolavel">
   <table class="tabela">
     <caption class="oculto">Avaliações preservadas e tornadas inelegíveis</caption>
-    <thead><tr><th scope="col">Inscrição</th><th scope="col">Avaliador</th><th scope="col">Pontuação</th><th scope="col">Ato</th><th scope="col">Motivo</th></tr></thead>
+    <thead><tr><th scope="col">Inscrição</th><th scope="col">Avaliador</th><th scope="col">Pontuação</th><th scope="col">Parecer</th><th scope="col">Versão que governou</th><th scope="col">Concluída em</th><th scope="col">Ato</th><th scope="col">Motivo</th></tr></thead>
     <tbody>
       {% for linha in inelegiveis %}
       <tr>
         <td>{{ linha.inscricao.protocolo|default:linha.inscricao.id }}</td>
         <td>{{ linha.membro.display_label|default:linha.membro.identity_subject }}</td>
         <td>{{ linha.avaliacao.pontuacao|floatformat:4 }}</td>
+        <td>{{ linha.avaliacao.parecer|default:"—" }}</td>
+        <td>vigente desde {{ linha.avaliacao.versao.valid_from|date:"d/m/Y H:i" }}</td>
+        <td>{{ linha.avaliacao.concluida_em|date:"d/m/Y H:i:s" }}</td>
         <td>{{ linha.ato.operation|default:"—" }} por {{ linha.ato.actor_subject|default:"—" }}</td>
         <td>{{ linha.ato.reason|default:"—" }}</td>
       </tr>
@@ -102,5 +111,14 @@ de quem sabe — e é por isso que esta tela pede a identidade e o motivo, em ve
   {% else %}
   <p class="vazio">Nenhuma avaliação foi tirada do conjunto elegível nesta Etapa.</p>
   {% endif %}
+  {% comment %}
+  Esta tabela mostra a conclusão **corrente** de cada Atribuição inativada. O que foi substituído
+  por reabertura não aparece aqui, porque a Avaliação corrente já não é a que foi concluída — e
+  continua consultável, íntegro, na página das conclusões preservadas (FR-091, FR-094).
+  {% endcomment %}
+  <p class="ajuda">O que foi concluído e depois <strong>reaberto</strong> não está nesta tabela: a
+    avaliação corrente voltou a ser rascunho. O que havia sido concluído continua íntegro em
+    <a href="{% url 'interface:conclusoes-preservadas' edital.id etapa.id %}">conclusões
+    preservadas</a>.</p>
 </section>
 {% endblock %}

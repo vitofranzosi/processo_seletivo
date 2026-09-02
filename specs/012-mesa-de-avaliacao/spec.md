@@ -460,6 +460,14 @@ e auditoria conseguem reconstruir o ocorrido: o que a pessoa havia registrado, q
 versão, e por qual ato aquilo deixou de valer. Uma avaliação concluída e depois invalidada é
 exatamente o tipo de coisa que um recurso pergunta, e "está gravada em algum lugar" não é resposta.
 
+A concessão é a **cada um dos dois**, e não à interseção: quem preside sem papel de auditoria
+consulta, e quem audita sem gerir o Processo também. Exigir as duas coisas ao mesmo tempo reduziria
+a consulta ao usuário híbrido, que é justamente quem não responde a recurso.
+
+A consulta **não é a trilha**, e não pode ser: a trilha guarda que o ato aconteceu e nunca a
+pontuação nem o parecer (FR-054). O conteúdo do que foi concluído vive no registro do domínio, e é
+de lá que ele é lido.
+
 **FR-104** — **Concluir e remover atribuição serializam pela mesma Atribuição.** As duas disputam
 a linha, e sem trava comum a remoção lê "pendente", inativa, e a conclusão grava depois — o que
 produz avaliação concluída **e** inelegível pela via comum: o efeito sem o ato que FR-092 impede,
@@ -866,6 +874,17 @@ deixou de existir enquanto ele escrevia.
 **FR-105** — A chave de idempotência cobre **o conteúdo inteiro do ato**, e o motivo faz parte
 dele. Num ato cujo motivo é a sua própria justificativa — impedir, reabrir, anular —, tratar
 motivos diferentes como repetição registraria um ato que ninguém pediu.
+
+**FR-106** — **O alcance confirmado é conferido contra o alcance executado.** A declaração de
+FR-041 é de um passo, e o ato é de outro; entre os dois a realidade continua andando — o avaliador
+conclui a avaliação que estava pendente, uma atribuição nova aparece. Sem conferência, quem confirma
+"nenhuma concluída" torna uma conclusão inelegível sem ter sido avisado: o efeito que FR-092 impede,
+obtido por corrida em vez de por decisão.
+
+A conferência é **sob a mesma trava** que o ato usa, contra o conjunto que ele realmente alcançará,
+e compara a identidade do conjunto — não o seu tamanho: uma atribuição removida e outra criada
+mantêm a contagem e mudam o alcance. Divergiu, o ato não acontece e a confirmação é refeita sobre o
+que existe agora.
 
 **FR-084** — **Os quatro atos da presidência são idempotentes por chave** — distribuir em lote,
 remover Atribuição, registrar impedimento e reabrir. Repetir qualquer um deles — por timeout, duplo

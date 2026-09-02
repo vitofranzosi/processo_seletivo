@@ -138,13 +138,21 @@ notas com aparência de organização do trabalho.
 3. Conferir que a vaga foi liberada: a inscrição volta a aparecer como carente, e uma substituta
    pode ser distribuída (FR-090, EC-020).
 4. Conferir que a avaliação invalidada continua **consultável** pela presidência e pela auditoria —
-   conteúdo, instante, versão e o ato que a tirou do conjunto (FR-091).
-5. **Tentar retirar, pela via comum de redistribuição, a Atribuição de quem já concluiu**: recusado,
+   conteúdo, instante, versão e o ato que a tirou do conjunto (FR-091). A consulta é a página de
+   **conclusões preservadas**, e não a trilha: a trilha guarda que o ato aconteceu e nunca a
+   pontuação nem o parecer (FR-054).
+   Nas duas páginas — a trilha e as conclusões — conferir a porta: **maria**, que preside sem papel
+   de auditoria, entra; uma identidade com **só** o papel Auditor entra; **joao**, que avalia nesta
+   Etapa, recebe 404.
+5. Entre a confirmação do impedimento e o clique em "Registrar mesmo assim", concluir a avaliação
+   numa segunda janela. O ato é **recusado**, dizendo que o alcance mudou, e a confirmação é
+   refeita sobre o que existe agora (FR-041, FR-106).
+6. **Tentar retirar, pela via comum de redistribuição, a Atribuição de quem já concluiu**: recusado,
    nomeando os atos que teriam esse efeito e o que cada um exige (FR-092, EC-018).
-6. Reabrir uma avaliação concluída, com motivo. O avaliador volta a poder gravar.
-7. Concluir de novo, e então perguntar o que ele havia concluído antes da reabertura: a resposta
+7. Reabrir uma avaliação concluída, com motivo. O avaliador volta a poder gravar.
+8. Concluir de novo, e então perguntar o que ele havia concluído antes da reabertura: a resposta
    existe, com pontuação, parecer, versão e instante (FR-094, SC-028).
-8. Tentar concluir numa aba que ficou aberta desde antes da reabertura: recusada, dizendo que a
+9. Tentar concluir numa aba que ficou aberta desde antes da reabertura: recusada, dizendo que a
    avaliação foi reaberta (FR-082).
 
 ---
@@ -219,3 +227,23 @@ Três observações do percurso, todas sobre o **roteiro** e não sobre o sistem
    pessoa faria.
 3. **O protocolo é único no sistema inteiro**, então semear um segundo Edital de demonstração exige
    protocolos com prefixo próprio.
+
+
+---
+
+## Segunda execução registrada — 2026-09-02, depois da revisão
+
+A revisão de `origin/main...f5bcaba` encontrou cinco defeitos funcionais que a primeira execução
+não alcançou, e as correções mudaram três telas: a porta da trilha, o registro da abertura de
+documento e a nova página de conclusões preservadas. **A execução acima é anterior a elas**, e por
+isso os pontos afetados foram percorridos de novo, pelo mesmo canal e contra o mesmo banco de
+desenvolvimento: **22 verificações, nenhuma divergência.**
+
+Duas observações novas, e as duas são sobre o roteiro:
+
+4. **O `seed_demo` não envia documento nenhum.** A Entrega 4 não é percorrível sobre os dados
+   semeados sem antes anexar um — e a 009 recusa anexar a inscrição **já enviada**, de propósito.
+   A inscrição precisa nascer com o documento e ser promovida depois, que é o percurso do candidato.
+5. **Anexar exige `ARQUIVOS_CANDIDATOS_RAIZ`** apontando para um diretório absoluto fora da árvore
+   do código. Sem ela o sistema recusa receber documento, o que é o comportamento correto — e é a
+   segunda variável de ambiente que o roteiro precisa declarar, ao lado do seletor de identidade.

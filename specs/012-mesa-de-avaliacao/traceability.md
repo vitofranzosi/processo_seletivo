@@ -10,10 +10,10 @@ falharia se ele fosse quebrado** — e não o teste que passa perto.
 
 | | |
 |---|---:|
-| Requisitos funcionais (FR) | 105 |
+| Requisitos funcionais (FR) | 106 |
 | Critérios de sucesso (SC) | 31 |
 | Edge cases (EC) | 20 |
-| Testes na suíte, ao fim da 012 | 1837 |
+| Testes na suíte, ao fim da 012 | 1852 |
 | Verificações do quickstart, executadas em 2026-09-02 | 34, sem divergência |
 
 ## Onde procurar
@@ -38,6 +38,7 @@ cd backend && grep -rn "FR-092" tests/
 | Impedimento, reabertura e conjunto elegível | `tests/integration/avaliacoes/test_impedimento.py`, `test_reabertura.py`, `test_conjunto_elegivel.py` |
 | Concorrência | `test_primeira_gravacao_concorrente.py`, `test_corrida_conclusao_e_remocao.py` |
 | Trilha | `tests/integration/avaliacoes/test_trilha_completa.py`, `tests/interface/test_trilha_da_012.py` |
+| Preservação consultável | `tests/interface/test_conclusoes_preservadas.py` |
 | Escala | `tests/performance/test_escala_da_mesa.py`, `tests/authorization/test_listagem_em_lote.py` |
 | Não-regressão | `tests/integration/comissoes/test_011_intocada.py`, `tests/integration/publicacoes/test_retificacao_intocada.py` |
 
@@ -60,6 +61,8 @@ e cada um tem um teste que falha primeiro.
 | **FR-055** | avaliador alcançando o acervo do Edital | `test_consulta_administrativa_intocada.py` |
 | **FR-054** | trilha virando segunda fonte da avaliação | `test_trilha_da_avaliacao.py` |
 | **FR-037** | a 012 produzir resultado | `tests/acceptance/test_mesa_de_avaliacao.py::test_a_vertical_nao_produz_resultado` |
+| **FR-106** | confirmar um alcance e executar outro | `test_impedimento.py::test_o_ato_recusa_quando_o_alcance_mudou_desde_a_confirmacao` |
+| **FR-091** | preservação que só o banco enxerga | `test_conclusoes_preservadas.py::test_o_que_foi_concluido_antes_da_reabertura_continua_legivel` |
 
 ## Requisitos sem teste, e por quê
 
@@ -111,6 +114,26 @@ EC-001 a EC-020 têm teste, com três exceções deliberadas:
   contagem de déficit de `test_distribuicao.py`; não há recusa a testar, porque não há recusa.
 - **EC-010** (reabertura de avaliação já usada pela 013) depende da 013 existir. A 012 registra a
   pendência no gate.
+
+## A revisão de `origin/main...f5bcaba`
+
+Sete achados, cinco deles funcionais, todos encontrados por leitura do código depois de a Phase 8
+fechar com a suíte verde. Vale registrar **por que a suíte não os pegou**, que é a parte útil.
+
+| achado | por que passava despercebido | o teste que agora o prende |
+|---|---|---|
+| a trilha exigia presidência **e** auditoria | a fixture usava `["gestor", "auditor"]` — testava exatamente o usuário híbrido, o único que passava | `test_trilha_da_012.py::test_a_porta_da_trilha_e_a_presidencia_ou_a_auditoria` |
+| a abertura de documento não nomeava a Etapa | o teste de FR-053 conferia a Etapa em atribuir e concluir, e não nos sete atos | `test_documento.py::test_cada_abertura_registra_ator_etapa_inscricao_e_requisito`, `test_trilha_da_012.py::test_a_trilha_de_uma_etapa_nao_mostra_a_abertura_feita_em_outra` |
+| a paginação da trilha perdia registros | nenhum teste folheava a trilha; todos cabiam na primeira página | `test_trilha_da_012.py::test_a_paginacao_alcanca_todos_os_atos_do_filtro` |
+| a preservação não era consultável | os testes liam o banco diretamente, e não a interface — a preservação existia, e ninguém a alcançava | `test_conclusoes_preservadas.py` (cinco cenários) |
+| a confirmação do impedimento não era conferida | o teste chamava o comando direto, sem passar pelos dois passos da tela | `test_impedimento.py::test_o_ato_recusa_quando_o_alcance_mudou_desde_a_confirmacao` |
+| identificador malformado virava 500 | nenhum teste digitava errado | `test_impedimento.py::test_identificador_malformado_e_recusa_de_formulario_nos_dois_passos` e os dois de filtro |
+| a suíte em SQLite não fechava verde | a execução padrão do projeto é PostgreSQL, e os testes de corrida não estavam marcados | `postgresql_only` nos dois arquivos de corrida |
+
+Os quatro primeiros têm em comum a mesma forma: **o teste exercitava justamente o caso que
+escondia o defeito**. É o modo de falha que a contraprova por reversão pega e a leitura do
+resultado verde não pega — e cada correção acima foi verificada assim, quebrando o conserto e
+conferindo que o teste falha.
 
 ## O gate da 013
 

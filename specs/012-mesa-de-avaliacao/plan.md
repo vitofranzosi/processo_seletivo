@@ -182,12 +182,13 @@ backend/processo_seletivo/
 │   ├── views.py                  # + distribuicao, mesa, inscricao_da_mesa, documento_da_mesa, impedimentos
 │   ├── forms.py                  # + lote, avaliação, impedimento, reabertura
 │   ├── retificacao.py            # campos_editaveis e diferencas recebem a projeção (T-015)
-│   ├── urls.py                   # + dez rotas; atribuicao -> minha_etapa (T-012)
+│   ├── urls.py                   # + onze rotas; atribuicao -> minha_etapa (T-012)
 │   └── templates/interface/
 │       ├── distribuicao.html
 │       ├── mesa.html
 │       ├── mesa_inscricao.html
 │       ├── impedimentos.html
+│       ├── conclusoes.html       # a preservação de FR-094, consultável (FR-091)
 │       └── minha_etapa.html      # renomeado; o aviso da 011 dá lugar à Mesa
 └── comissoes/                    # INALTERADO — nem guard, nem modelo, nem comando
 

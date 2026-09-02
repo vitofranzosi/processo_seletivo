@@ -8,6 +8,9 @@ O que este arquivo protege são duas suposições falsas que a primeira redaçã
   afetado. "O que aconteceu com o trabalho da Ana" não é "o que a Ana fez".
 """
 
+import html
+import re
+
 import pytest
 from django.urls import reverse
 
@@ -249,7 +252,138 @@ def test_os_filtros_combinam(auditor_na_tela, cenario, percurso):
     assert "Registro de impedimento" not in corpo
 
 
-def test_a_trilha_exige_permissao_de_auditoria(client, seletor_ligado, cenario, percurso):
-    identificar(client, "carlos", ["gestor"])
+def test_a_porta_da_trilha_e_a_presidencia_ou_a_auditoria(
+    client, seletor_ligado, cenario, percurso
+):
+    """FR-091 concede a consulta a **cada um dos dois**, e não à interseção dos dois.
 
-    assert client.get(trilha(cenario)).status_code == 403
+    Enquanto a rota somava as duas exigências, só o usuário híbrido passava: quem preside sem o
+    papel de auditor lia 403, e quem audita sem gerir o Processo lia 404 — e a fixture que usava
+    `["gestor", "auditor"]` escondia isso, porque testava justamente o híbrido.
+    """
+    identificar(client, "maria", [])  # a presidência desta comissão, sem papel de auditoria
+    assert client.get(trilha(cenario)).status_code == 200
+
+    identificar(client, "carlos", ["gestor"])
+    assert client.get(trilha(cenario)).status_code == 200
+
+    identificar(client, "bianca", ["auditor"])  # auditoria pura, sem gestão do Processo
+    assert client.get(trilha(cenario)).status_code == 200
+
+
+def test_quem_nao_preside_nem_audita_nao_alcanca_a_trilha(
+    client, seletor_ligado, cenario, percurso
+):
+    """E a recusa é 404, como em todo o resto da feature: a resposta não revela o que existe."""
+    identificar(client, "joao", [])  # avaliador desta Etapa — trabalha nela, não a audita
+
+    assert client.get(trilha(cenario)).status_code == 404
+
+
+def proxima_pagina(cliente, url):
+    """O endereço que a própria tela oferece — e não um que o teste monta.
+
+    Testar a paginação com um cursor construído à mão passaria mesmo com o link quebrado: o que
+    a pessoa consegue alcançar é o que está escrito no `href`.
+    """
+    corpo = cliente.get(url).content.decode()
+    achado = re.search(
+        r'<a class="botao secundario"\s+href="([^"]+)">Ver atos anteriores</a>', corpo
+    )
+    return html.unescape(achado.group(1)) if achado else None
+
+
+def test_a_paginacao_alcanca_todos_os_atos_do_filtro(auditor_na_tela, cenario, percurso):
+    """FR-050: filtrar e folhear não podem ser coisas que se excluem.
+
+    Enquanto a trilha era duas consultas reunidas em memória, o cursor era o da primeira: com
+    filtro de abertura de documento a segunda página não tinha endereço nenhum, e o que passasse
+    da primeira ficava inalcançável. A soma de duas páginas não tem cursor comum.
+    """
+    base = reverse("interface:trilha-da-avaliacao", args=[cenario["edital"].id, cenario["etapa"]])
+    url = base + "?operacao=CONSULTAR_DOCUMENTO&limit=1"
+    vistos, visitados = [], set()
+    while url and url not in visitados:
+        visitados.add(url)
+        corpo = registros(auditor_na_tela, url)
+        assert corpo, url
+        vistos.append(corpo)
+        seguinte = proxima_pagina(auditor_na_tela, url)
+        url = base + seguinte if seguinte else None
+
+    # As duas aberturas — a do joão e a da ana —, uma por página, sem repetir nenhuma.
+    assert len(vistos) == 2
+    assert all("Consulta a documento do candidato" in pagina for pagina in vistos)
+    assert vistos[0] != vistos[1]
+
+
+def test_o_link_da_pagina_seguinte_carrega_os_filtros(auditor_na_tela, cenario, percurso):
+    """Um link que leva só o cursor mostra atos de terceiros sob o rótulo do filtro escolhido."""
+    seguinte = proxima_pagina(
+        auditor_na_tela,
+        trilha(cenario, avaliador="joao", inscricao=str(percurso["inscricao"].id), limit=1),
+    )
+
+    assert seguinte is not None
+    assert "avaliador=joao" in seguinte
+    assert f"inscricao={percurso['inscricao'].id}" in seguinte
+    assert "cursor=" in seguinte
+
+
+def test_a_trilha_de_uma_etapa_nao_mostra_a_abertura_feita_em_outra(
+    auditor_na_tela, cenario, gestor, percurso
+):
+    """A mesma inscrição, avaliada em duas Etapas: cada trilha responde pela sua (FR-053).
+
+    Com a abertura ancorada na Inscrição, o registro não dizia em qual Etapa o documento foi
+    aberto — e a trilha de uma exibia o trabalho da outra como se fosse seu.
+    """
+    from django.test import Client
+
+    from tests.fixtures.comissao import ETAPA_A2, alocar_em
+
+    outra_etapa = identificador(ETAPA_A2, SEED)
+    alocar_em(
+        gestor,
+        cenario["processo"],
+        cenario["membros"]["joao"],
+        cenario["edital"],
+        outra_etapa,
+        chave="tr-a2",
+    )
+    distribuir_para(
+        {**cenario, "etapa": outra_etapa}, gestor, ["joao"], [percurso["inscricao"]], chave="tr-a2d"
+    )
+    cliente = Client()
+    identificar(cliente, "joao", [])
+    abrir_arquivo(
+        cliente,
+        reverse(
+            "interface:mesa-documento",
+            args=[
+                cenario["edital"].id,
+                outra_etapa,
+                percurso["inscricao"].id,
+                identificador(DOCUMENTO_A, SEED),
+            ],
+        ),
+    )
+
+    aberturas_de_a1 = registros(
+        auditor_na_tela, trilha(cenario, operacao="CONSULTAR_DOCUMENTO")
+    ).count("Consulta a documento do candidato")
+    aberturas_de_a2 = registros(
+        auditor_na_tela, trilha({**cenario, "etapa": outra_etapa}, operacao="CONSULTAR_DOCUMENTO")
+    ).count("Consulta a documento do candidato")
+
+    assert (aberturas_de_a1, aberturas_de_a2) == (2, 1)
+
+
+def test_identificador_malformado_no_filtro_e_recusa_de_formulario(
+    auditor_na_tela, cenario, percurso
+):
+    """O campo é digitado, e identificador digitado erra — sem virar 500."""
+    resposta = auditor_na_tela.get(trilha(cenario, inscricao="não-é-uuid"))
+
+    assert resposta.status_code == 200
+    assert "não tem forma de identificador" in resposta.content.decode()

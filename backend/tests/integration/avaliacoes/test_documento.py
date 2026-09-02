@@ -11,6 +11,7 @@ from django.urls import reverse
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.avaliacoes.application.distribuicao import distribuir
 from processo_seletivo.avaliacoes.application.mesa import BASE_DA_MESA
+from processo_seletivo.avaliacoes.models import Atribuicao
 from processo_seletivo.inscricoes.application.consulta import CONSULTAR
 from processo_seletivo.inscricoes.models import DocumentoSubmetido
 from tests.fixtures.comissao import DOCUMENTO_A, abrir_arquivo, alocar_em, inscrever
@@ -51,18 +52,52 @@ def arquivo(edital, etapa_id, inscricao):
     )
 
 
-def test_cada_abertura_registra_ator_inscricao_e_requisito(
+def test_cada_abertura_registra_ator_etapa_inscricao_e_requisito(
     como_joao, edital_com_documentos, etapa_a1, cenario
 ):
-    """FR-027. E a base registrada é a da Mesa: é ela que diz **por que** o acesso foi dado."""
+    """FR-027 e FR-053. E a base registrada é a da Mesa: ela diz **por que** o acesso foi dado.
+
+    O agregado é a **Atribuição**, e não a Inscrição, porque o registro precisa identificar quatro
+    coisas — quem, qual inscrição, qual Etapa e por qual vínculo — e a Inscrição identifica uma.
+    """
     abrir_arquivo(como_joao, arquivo(edital_com_documentos, etapa_a1, cenario))
 
     evento = RegistroAuditoria.objects.get(operation="CONSULTAR_DOCUMENTO")
     assert evento.actor_subject == "joao"
-    assert evento.aggregate_id == cenario.id
+    assert evento.aggregate_type == "Atribuicao"
+    atribuicao = Atribuicao.objects.get(pk=evento.aggregate_id)
+    assert atribuicao.inscricao_id == cenario.id
+    assert str(atribuicao.etapa_id) == str(etapa_a1)
+    assert atribuicao.membro.identity_subject == "joao"
     assert str(identificador(DOCUMENTO_A, 0)) in evento.reason
     assert evento.permission == BASE_DA_MESA
     assert evento.permission != CONSULTAR
+
+
+def test_a_abertura_da_mesa_nao_se_confunde_com_a_consulta_administrativa(
+    como_joao, client, gestor, seletor_ligado, edital_com_documentos, etapa_a1, cenario
+):
+    """As duas registram `CONSULTAR_DOCUMENTO` sobre a mesma inscrição — e não são o mesmo ato.
+
+    Enquanto o agregado da abertura era a Inscrição, os dois eventos eram indistinguíveis por
+    identificador, e a trilha da Etapa exibia a consulta administrativa da 009 como se fosse
+    trabalho da Mesa. Um histórico que mistura origens é pior que um incompleto: parece verdadeiro.
+    """
+    abrir_arquivo(como_joao, arquivo(edital_com_documentos, etapa_a1, cenario))
+    identificar(client, "carlos", ["gestor"])
+    abrir_arquivo(
+        client,
+        reverse(
+            "interface:documento-da-inscricao",
+            args=[cenario.id, identificador(DOCUMENTO_A, 0)],
+        ),
+    )
+
+    por_agregado = {
+        evento.aggregate_type
+        for evento in RegistroAuditoria.objects.filter(operation="CONSULTAR_DOCUMENTO")
+    }
+    assert por_agregado == {"Atribuicao", "Inscricao"}
 
 
 def test_a_trilha_nao_guarda_o_nome_do_arquivo(como_joao, edital_com_documentos, etapa_a1, cenario):

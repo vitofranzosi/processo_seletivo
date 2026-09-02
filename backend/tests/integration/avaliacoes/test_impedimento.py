@@ -89,7 +89,11 @@ def test_a_contagem_previa_declara_o_alcance_antes_da_confirmacao(gestor, cenari
         processo=cenario["processo"], identity_subject="joao", inscricao_id=inscricoes[0].id
     )
 
-    assert alcance == {"atribuicoes": 1, "concluidas": 1}
+    assert alcance["atribuicoes"] == 1
+    assert alcance["concluidas"] == 1
+    # A assinatura acompanha a contagem porque contar não basta: o ato a confere sob trava, contra
+    # o conjunto que vai mesmo inativar.
+    assert alcance["assinatura"]
 
 
 def test_a_concluida_e_preservada_e_tornada_inelegivel(gestor, cenario, inscricoes):
@@ -201,3 +205,84 @@ def test_a_repeticao_devolve_o_desfecho_com_a_contagem(gestor, cenario, inscrico
     assert primeiro["inativadas"] == 1
     assert primeiro["concluidas_inelegiveis"] == 1
     assert repetido == primeiro
+
+
+def test_o_ato_recusa_quando_o_alcance_mudou_desde_a_confirmacao(gestor, cenario, inscricoes):
+    """FR-041: confirmar um alcance e executar outro é a mesma falha, só mais difícil de ver.
+
+    A confirmação é de dois passos, e entre eles a realidade continua andando: o avaliador conclui
+    a avaliação que estava pendente. Quem confirmou "nenhuma concluída" tornaria uma conclusão
+    inelegível sem ter sido avisado — o efeito de FR-092 sem o ato que ele exige.
+    """
+    distribuir_para(cenario, gestor, ["joao"], inscricoes[:1])
+    alcance = alcance_do_impedimento(
+        processo=cenario["processo"], identity_subject="joao", inscricao_id=inscricoes[0].id
+    )
+    assert alcance["concluidas"] == 0
+
+    concluir_como(cenario, "joao", inscricoes[0])  # o mundo andou entre a confirmação e o ato
+
+    with pytest.raises(DomainError) as recusa:
+        registrar_impedimento(
+            actor=gestor,
+            processo_id=cenario["processo"].id,
+            identity_subject="joao",
+            inscricao_id=inscricoes[0].id,
+            motivo=MOTIVO,
+            idempotency_key="alcance",
+            correlation_id="teste",
+            alcance_confirmado=alcance["assinatura"],
+        )
+
+    assert recusa.value.code == "alcance_mudou"
+    # E nada aconteceu: nem impedimento, nem inativação, nem ato registrado.
+    assert not Impedimento.objects.filter(identity_subject="joao").exists()
+    assert Atribuicao.objects.filter(inscricao=inscricoes[0], ativo=True).count() == 1
+    assert not AtoAdministrativo.objects.filter(operation=IMPEDIR).exists()
+
+
+def test_o_alcance_reconfirmado_sobre_o_conjunto_atual_e_aceito(gestor, cenario, inscricoes):
+    """A recusa acima é para conferir, e não para impedir: reconfirmado, o ato acontece."""
+    distribuir_para(cenario, gestor, ["joao"], inscricoes[:1])
+    concluir_como(cenario, "joao", inscricoes[0])
+    alcance = alcance_do_impedimento(
+        processo=cenario["processo"], identity_subject="joao", inscricao_id=inscricoes[0].id
+    )
+
+    resultado = registrar_impedimento(
+        actor=gestor,
+        processo_id=cenario["processo"].id,
+        identity_subject="joao",
+        inscricao_id=inscricoes[0].id,
+        motivo=MOTIVO,
+        idempotency_key="alcance-2",
+        correlation_id="teste",
+        alcance_confirmado=alcance["assinatura"],
+    )
+
+    assert resultado["concluidas_inelegiveis"] == 1
+
+
+def test_identificador_malformado_e_recusa_de_formulario_nos_dois_passos(gestor, cenario):
+    """Identificador digitado erra, e errar não pode ser erro de servidor (FR-044).
+
+    Sem esta conferência o texto malformado chega a `filter(inscricao_id=...)` e vira
+    `ValidationError` — 500 onde a pessoa deveria ler que aquilo não identifica inscrição nenhuma.
+    """
+    with pytest.raises(DomainError) as na_previa:
+        alcance_do_impedimento(
+            processo=cenario["processo"], identity_subject="joao", inscricao_id="não-é-uuid"
+        )
+    assert (na_previa.value.code, na_previa.value.status) == ("inscricao_invalida", 422)
+
+    with pytest.raises(DomainError) as no_ato:
+        registrar_impedimento(
+            actor=gestor,
+            processo_id=cenario["processo"].id,
+            identity_subject="joao",
+            inscricao_id="não-é-uuid",
+            motivo=MOTIVO,
+            idempotency_key="malformado",
+            correlation_id="teste",
+        )
+    assert no_ato.value.code == "inscricao_invalida"

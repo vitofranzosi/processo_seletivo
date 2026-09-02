@@ -15,16 +15,24 @@ Sem isso a corrida não acontece — as duas operações rodariam sequencialment
 import threading
 
 import pytest
-from django.db import connections
+from django.db import connection
 
 from processo_seletivo.avaliacoes.application.avaliacao import concluir
 from processo_seletivo.avaliacoes.application.distribuicao import remover_atribuicao
 from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao
 from processo_seletivo.shared.api.problems import DomainError
-from tests.conftest import ator_institucional
+from tests.conftest import ator_institucional, encerrar_conexoes_da_thread
 from tests.fixtures.mesa import distribuir_para, inscricoes_de, montar_banca
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
+
+# Estas corridas exigem PostgreSQL, e a marca não é burocracia: `select_for_update` é inócuo em
+# SQLite, e o banco em memória serializa as threads com "database table is locked". Sem a marca o
+# teste não prova o invariante em SQLite — ele quebra, e por um motivo que não tem relação nenhuma
+# com o que ele existe para proteger.
+postgresql_only = pytest.mark.skipif(
+    connection.vendor != "postgresql", reason="a corrida exige as travas do PostgreSQL"
+)
 
 
 @pytest.fixture
@@ -39,6 +47,7 @@ def disputada(cenario, gestor):
     return inscricao
 
 
+@postgresql_only
 def test_concluir_e_remover_nunca_produzem_concluida_inelegivel(cenario, gestor, disputada):
     """Uma das duas vence, e as duas saídas são íntegras.
 
@@ -71,7 +80,7 @@ def test_concluir_e_remover_nunca_produzem_concluida_inelegivel(cenario, gestor,
         except Exception as erro:  # noqa: BLE001 — é o que não pode acontecer
             desfechos["conclusao"] = f"erro:{type(erro).__name__}"
         finally:
-            connections.close_all()
+            encerrar_conexoes_da_thread()
 
     def remover():
         partida.wait(timeout=5)
@@ -89,7 +98,7 @@ def test_concluir_e_remover_nunca_produzem_concluida_inelegivel(cenario, gestor,
         except Exception as erro:  # noqa: BLE001
             desfechos["remocao"] = f"erro:{type(erro).__name__}"
         finally:
-            connections.close_all()
+            encerrar_conexoes_da_thread()
 
     fios = [threading.Thread(target=concluir_avaliacao), threading.Thread(target=remover)]
     for fio in fios:
@@ -114,6 +123,7 @@ def test_concluir_e_remover_nunca_produzem_concluida_inelegivel(cenario, gestor,
         assert desfechos["conclusao"] == "ok", desfechos
 
 
+@postgresql_only
 def test_o_estado_final_e_sempre_coerente_sob_repeticao(cenario, gestor):
     """A corrida repetida, para que um resultado feliz por acaso não passe por garantia."""
     for rodada in range(4):
@@ -140,7 +150,7 @@ def test_o_estado_final_e_sempre_coerente_sob_repeticao(cenario, gestor):
             except DomainError:
                 pass
             finally:
-                connections.close_all()
+                encerrar_conexoes_da_thread()
 
         def remover(alvo=atribuicao, chave=rodada, largada=partida):
             largada.wait(timeout=5)
@@ -155,7 +165,7 @@ def test_o_estado_final_e_sempre_coerente_sob_repeticao(cenario, gestor):
             except DomainError:
                 pass
             finally:
-                connections.close_all()
+                encerrar_conexoes_da_thread()
 
         fios = [threading.Thread(target=concluir_avaliacao), threading.Thread(target=remover)]
         for fio in fios:

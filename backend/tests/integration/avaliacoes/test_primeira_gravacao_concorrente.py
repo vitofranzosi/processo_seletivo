@@ -13,18 +13,26 @@ as duas gravações seriam sequenciais no mesmo snapshot.
 import threading
 
 import pytest
-from django.db import connections
+from django.db import connection
 
 from processo_seletivo.avaliacoes.application.avaliacao import gravar
 from processo_seletivo.avaliacoes.application.distribuicao import distribuir
 from processo_seletivo.avaliacoes.models import Avaliacao
 from processo_seletivo.comissoes.domain.funcoes import Funcao
 from processo_seletivo.shared.api.problems import DomainError
-from tests.conftest import ator_institucional
+from tests.conftest import ator_institucional, encerrar_conexoes_da_thread
 from tests.fixtures.comissao import ETAPA_A1, alocar_em, constituir, inscrever
 from tests.fixtures.edital import identificador
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
+
+# Estas corridas exigem PostgreSQL, e a marca não é burocracia: `select_for_update` é inócuo em
+# SQLite, e o banco em memória serializa as threads com "database table is locked". Sem a marca o
+# teste não prova o invariante em SQLite — ele quebra, e por um motivo que não tem relação nenhuma
+# com o que ele existe para proteger.
+postgresql_only = pytest.mark.skipif(
+    connection.vendor != "postgresql", reason="a corrida exige as travas do PostgreSQL"
+)
 
 SEED = 7
 
@@ -64,6 +72,7 @@ def cenario(gestor, api_client, manager_headers):
     return {"edital": edital, "etapa": etapa, "inscricao": inscricao}
 
 
+@postgresql_only
 def test_duas_primeiras_gravacoes_simultaneas_nao_produzem_erro_interno(cenario):
     """Uma vence; a outra recebe **recusa por revisão obsoleta**, e não `IntegrityError`."""
     partida = threading.Barrier(2)
@@ -88,7 +97,7 @@ def test_duas_primeiras_gravacoes_simultaneas_nao_produzem_erro_interno(cenario)
         except Exception as erro:  # noqa: BLE001 — é justamente o que não pode acontecer
             desfechos.append(("erro", type(erro).__name__))
         finally:
-            connections.close_all()
+            encerrar_conexoes_da_thread()
 
     fios = [threading.Thread(target=gravar_como, args=(texto,)) for texto in ("A", "B")]
     for fio in fios:
