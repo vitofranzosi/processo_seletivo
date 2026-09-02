@@ -459,6 +459,21 @@ A marca é **de quem abriu**, e não do documento: ela vem da trilha, filtrada p
 ator (FR-027). Abertura de outra pessoa — outro avaliador, ou a consulta administrativa da 009 —
 não aparece como trabalho feito, porque apareceria como trabalho de quem não o fez.
 
+**FR-115** — **O cartão da Etapa responde as duas perguntas de quem tem várias.** "115 pendentes
+de 255" responde o que se age; não responde o que se compara — qual destas Etapas nem começou, e
+qual está no fim. Ao lado de "200 pendentes de 200", descobrir isso custava duas divisões a quem
+lê, e é a pergunta que se faz olhando a lista inteira.
+
+O cartão traz a contagem pendente, o percentual concluído e a barra que diz o mesmo de relance.
+
+**O percentual arredonda, e arredondar mente nas duas pontas**: uma avaliação de 255 vira "0%" e dá
+por não começada a Etapa que já andou; 254 de 255 vira "100%" e dá por encerrada a que ainda deve
+uma. Os extremos ficam reservados aos extremos.
+
+E os **quatro estados são quatro**, e não três parecidos: concluída ganha a palavra, porque
+"0 pendentes" é a mesma notícia dita ao contrário; e alocada sem distribuição diz isso, em vez de
+omitir a linha e ficar idêntica ao cartão de quem não sabe informar.
+
 **FR-110** — **O caminho não pode custar mais que o trabalho.** Numa Mesa de 230 inscrições, cada
 clique de navegação é cobrado 230 vezes. Três deles não decidiam nada:
 

@@ -72,6 +72,9 @@ e cada um tem um teste que falha primeiro.
 | **FR-108** | trabalho retirado sem que o afetado saiba | `test_mesa_em_uso.py::test_a_mesa_diz_o_que_foi_retirado_dela_e_por_que` |
 | **FR-109** | a feature ficar pronta e inalcançável | `test_caminho_ate_a_mesa.py::test_a_presidencia_chega_a_distribuicao_seguindo_links` |
 | **FR-110** | o caminho custar mais que o trabalho | `test_mesa_em_uso.py::test_concluir_leva_a_proxima_pendente` |
+| **FR-115** | a aritmética de comparar Etapas ficar com quem lê | `test_completude_das_etapas.py::test_o_cartao_diz_quanto_falta_e_o_quanto_ja_andou` |
+| **FR-115** | o arredondamento dar por começada ou encerrada a que não está | `test_completude_das_etapas.py::test_o_percentual_reserva_os_extremos_para_os_extremos` |
+| **FR-115** | terminar aparecer como ausência de pendência | `test_completude_das_etapas.py::test_terminar_e_um_estado_e_nao_a_ausencia_de_pendencias` |
 | **FR-111** | a parede antes do percurso | `test_caminho_ate_a_mesa.py::test_a_tela_de_identificacao_oferece_quem_tem_trabalho` |
 | **FR-112** | a moldura mudar o que o evento significa | `test_documento.py::test_nenhuma_moldura_da_pagina_aponta_para_um_documento` |
 | **FR-113** | a tela convidar a pontuar antes de ler | `test_documento.py::test_o_foco_comeca_no_documento_e_nao_na_nota` |
