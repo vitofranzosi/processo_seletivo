@@ -63,6 +63,63 @@ cartões seria pedir que a presidência fizesse a soma.
   {% endif %}
 </section>
 
+<p class="acoes-do-painel">
+  <a class="acao" href="{% url 'interface:impedimentos' edital.id etapa.id %}">Impedimentos</a>
+</p>
+
+{% if orfas %}
+<section aria-labelledby="orfas">
+  <h2 id="orfas">Atribuições órfãs</h2>
+  {% comment %}
+  EC-003: quem perdeu a alocação continua com as atribuições **ativas e inertes** — a revogação é
+  computada, e as linhas não somem. Elas precisam ser vistas para serem redistribuídas: é a
+  diferença entre "o acesso acabou" e "o trabalho desapareceu".
+  {% endcomment %}
+  <p class="aviso" role="status">Estas pessoas já não estão alocadas nesta Etapa. Devolva a
+    alocação ou redistribua as inscrições.</p>
+  <ul>
+    {% for orfa in orfas %}
+    <li>{{ orfa.membro.display_label|default:orfa.membro.identity_subject }} — inscrição {{ orfa.inscricao.protocolo|default:orfa.inscricao.id }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if concluidas %}
+<section aria-labelledby="concluidas">
+  <h2 id="concluidas">Avaliações concluídas</h2>
+  {% comment %}
+  A reabertura é ato da presidência, com motivo, registrado (FR-036). O formulário pede o motivo
+  antes de qualquer coisa — reabertura silenciosa é o que não pode existir.
+  {% endcomment %}
+  <table class="tabela">
+    <caption class="oculto">Avaliações concluídas desta Etapa</caption>
+    <thead><tr><th scope="col">Inscrição</th><th scope="col">Avaliador</th><th scope="col">Pontuação</th><th scope="col">Reabrir</th></tr></thead>
+    <tbody>
+      {% for avaliacao in concluidas %}
+      <tr>
+        <td>{{ avaliacao.atribuicao.inscricao.protocolo|default:avaliacao.atribuicao.inscricao.id }}</td>
+        <td>{{ avaliacao.identity_subject }}</td>
+        <td>{{ avaliacao.pontuacao|floatformat:4 }}</td>
+        <td>
+          <form method="post" action="{% url 'interface:reabrir-avaliacao' edital.id etapa.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="avaliacao_id" value="{{ avaliacao.id }}">
+            <input type="hidden" name="expected_revision" value="{{ avaliacao.revision }}">
+            <input type="hidden" name="chave_idempotencia" value="{{ chave_reabertura }}-{{ avaliacao.id }}">
+            <label for="motivo-{{ avaliacao.id }}" class="oculto">Motivo da reabertura</label>
+            <input type="text" id="motivo-{{ avaliacao.id }}" name="motivo" required
+                   placeholder="Motivo da reabertura">
+            <button type="submit">Reabrir</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
 <section aria-labelledby="inscricoes">
   <h2 id="inscricoes">Inscrições</h2>
 

@@ -20,6 +20,7 @@ from processo_seletivo.auditoria import selectors as auditoria_selectors
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.avaliacoes.application import avaliacao as avaliacao_app
 from processo_seletivo.avaliacoes.application import distribuicao as distribuicao_app
+from processo_seletivo.avaliacoes.application import impedimento as impedimento_app
 from processo_seletivo.avaliacoes.application import mesa as mesa_app
 from processo_seletivo.avaliacoes.application import selectors as avaliacao_selectors
 from processo_seletivo.avaliacoes.application.mesa import (
@@ -1972,6 +1973,82 @@ def _etapa_para_distribuir(request, edital_id, etapa_id):
     return ator, edital, etapa
 
 
+@require_http_methods(["GET", "POST"])
+def impedimentos(request, edital_id, etapa_id):
+    """Registrar impedimento, e ver o que ele já tirou do conjunto (US5 da `012`)."""
+    ator, edital, etapa = _etapa_para_distribuir(request, edital_id, etapa_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    erro = None
+    if request.method == "POST":
+        dados = forms.ler_impedimento(request.POST)
+        try:
+            _, inativadas = impedimento_app.registrar_impedimento(
+                actor=ator,
+                processo_id=edital.processo_id,
+                identity_subject=dados["identity_subject"],
+                inscricao_id=dados["inscricao_id"],
+                motivo=dados["motivo"],
+                idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+                correlation_id=getattr(request, "correlation_id", ""),
+            )
+            request.session["resultado_da_distribuicao"] = {
+                "feitas": 1,
+                "verbo": "registrada",
+                "recusadas": 0,
+                "ids": [],
+                "motivos": [],
+                "inativadas": len(inativadas),
+            }
+            return redirect(request.get_full_path())
+        except DomainError as recusa:
+            if recusa.status == 404:
+                raise Http404 from recusa
+            erro = recusa.detail
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/impedimentos.html",
+            {
+                "edital": edital,
+                "processo": edital.processo,
+                "etapa": etapa,
+                "carga": avaliacao_selectors.carga_por_avaliador(edital=edital, etapa_id=etapa_id),
+                "inelegiveis": avaliacao_selectors.avaliacoes_inelegiveis(
+                    edital=edital, etapa_id=etapa_id
+                ),
+                "erro": erro,
+                "resultado": request.session.pop("resultado_da_distribuicao", None),
+                "chave_idempotencia": uuid4().hex,
+            },
+        )
+    )
+
+
+@require_http_methods(["POST"])
+def reabrir_avaliacao(request, edital_id, etapa_id):
+    """Reabertura: ato da presidência, com motivo, registrado (FR-036)."""
+    ator, edital, _ = _etapa_para_distribuir(request, edital_id, etapa_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    dados = forms.ler_reabertura(request.POST)
+    try:
+        avaliacao_app.reabrir(
+            actor=ator,
+            processo_id=edital.processo_id,
+            avaliacao_id=dados["avaliacao_id"],
+            motivo=dados["motivo"],
+            expected_revision=dados["expected_revision"],
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_da_distribuicao"] = recusa.detail
+    return redirect(reverse("interface:distribuicao", args=[edital_id, etapa_id]))
+
+
 @require_http_methods(["POST"])
 def remover_atribuicao(request, edital_id, etapa_id):
     """Retira Atribuições da Etapa — as que ainda não têm Avaliação concluída.
@@ -2058,7 +2135,12 @@ def distribuicao(request, edital_id, etapa_id):
                 "resultado": request.session.pop("resultado_da_distribuicao", None),
                 "chave_idempotencia": uuid4().hex,
                 "chave_remocao": uuid4().hex,
+                "chave_reabertura": uuid4().hex,
                 "tem_atribuicoes": any(linha["atribuicoes"] for linha in linhas),
+                "concluidas": avaliacao_selectors.avaliacoes_elegiveis(
+                    edital=edital, etapa_id=etapa_id
+                ),
+                "orfas": avaliacao_selectors.atribuicoes_orfas(edital=edital, etapa_id=etapa_id),
             },
         )
     )

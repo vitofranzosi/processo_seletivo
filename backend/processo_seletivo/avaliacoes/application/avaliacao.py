@@ -234,3 +234,88 @@ def eventos_da_avaliacao(avaliacao):
     return RegistroAuditoria.objects.filter(
         aggregate_type="Avaliacao", aggregate_id=avaliacao.pk
     ).order_by("occurred_at")
+
+
+REABRIR = "AVALIACAO_REABRIR"
+
+
+def reabrir(
+    *, actor, processo_id, avaliacao_id, motivo, expected_revision, idempotency_key, correlation_id
+):
+    """Ato da presidência, com motivo, registrado (FR-036).
+
+    Recurso e erro material existem; o que não pode existir é reabertura silenciosa. Por isso o
+    invólucro de comando da 011 — que bloqueia, reavalia a autorização depois do bloqueio e
+    reserva a idempotência — e por isso o `AtoAdministrativo` com motivo obrigatório.
+
+    **Reabrir não destrói o que foi concluído** (FR-094): a `ConclusaoAvaliacao` daquela conclusão
+    já está gravada e é append-only, de modo que "o que aquela pessoa havia concluído antes" segue
+    sendo uma consulta, e não arqueologia de trilha.
+    """
+    from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
+    from processo_seletivo.comissoes.application.comissao import identificador
+
+    texto = (motivo or "").strip()
+    if not texto:
+        raise DomainError(
+            "motivo_obrigatorio",
+            "A reabertura exige motivo: é ele que separa recurso e erro material de reabertura "
+            "silenciosa.",
+            422,
+            campo="motivo",
+        )
+    with comando_de_comissao(
+        actor=actor,
+        processo_id=processo_id,
+        operation="avaliacao:reabrir",
+        payload={"avaliacao": str(avaliacao_id)},
+        idempotency_key=idempotency_key,
+    ) as ctx:
+        avaliacao = (
+            Avaliacao.objects.filter(
+                pk=identificador(avaliacao_id), atribuicao__edital__processo=ctx.processo
+            )
+            .select_related("atribuicao")
+            .first()
+        )
+        if avaliacao is None:
+            raise nao_encontrado()
+        if ctx.repetido:
+            return avaliacao
+        if avaliacao.estado != Avaliacao.Estado.CONCLUIDA:
+            # Transição inválida, e não "nada a fazer": reabrir um rascunho não tem significado, e
+            # responder sucesso faria a tela afirmar um ato que não aconteceu (FR-083).
+            raise DomainError(
+                "transicao_invalida",
+                "Só uma avaliação concluída pode ser reaberta.",
+                409,
+            )
+        compare_and_swap(
+            Avaliacao.objects,
+            pk=avaliacao.pk,
+            expected_revision=expected_revision,
+            estado=Avaliacao.Estado.RASCUNHO,
+            concluida_em=None,
+            concluida_por="",
+            # A versão sai do registro **corrente**: o que governou a conclusão anterior está na
+            # `ConclusaoAvaliacao`, e mantê-la aqui afirmaria uma conclusão que já não existe.
+            versao=None,
+        )
+        # A Avaliação volta a ser trabalho pendente **na Mesa de quem ainda tem a Atribuição**.
+        # Reabrir uma cuja Atribuição já foi inativada é possível e não ressuscita o acesso: a
+        # conjunção da autorização continua valendo, e a avaliação segue inelegível até que a
+        # presidência redistribua (FR-075, D-004).
+        auditar(
+            actor=actor,
+            permissao=ctx.base.permissao,
+            operation=REABRIR,
+            aggregate=avaliacao,
+            now=ctx.now,
+            correlation_id=correlation_id,
+            reason=texto,
+            idempotency_key=idempotency_key,
+            com_ato_administrativo=True,
+        )
+        avaliacao.refresh_from_db()
+        ctx.concluir(avaliacao, 200)
+        return avaliacao

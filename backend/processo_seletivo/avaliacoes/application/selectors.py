@@ -213,3 +213,79 @@ def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None):
         for atribuicao in pagina_atual
     ]
     return linhas, pagina_atual, contagens
+
+
+def avaliacoes_elegiveis(*, edital, etapa_id, inscricao_id=None):
+    """**O contrato que a 013 herda** (contrato §6).
+
+    As Avaliações concluídas, sob Atribuição **ativa**, cada uma com autoria, instante e a Versão
+    Consolidada que a governou. O que está fora deste conjunto está fora por ato nomeado, com autor
+    e motivo — nunca por efeito colateral de reorganizar o trabalho (FR-092, FR-093).
+
+    A `012` para aqui: ela não soma, não tira média, não conta quórum e não diz se alguém está
+    apto. Transformar isto em consequência é da feature seguinte (FR-037, P-006).
+    """
+    consulta = Avaliacao.objects.filter(
+        atribuicao__edital=edital,
+        atribuicao__etapa_id=etapa_id,
+        atribuicao__ativo=True,
+        estado=Avaliacao.Estado.CONCLUIDA,
+    ).select_related("atribuicao", "atribuicao__inscricao", "versao")
+    if inscricao_id is not None:
+        consulta = consulta.filter(inscricao_id=inscricao_id)
+    return consulta.order_by("atribuicao__inscricao__protocolo", "concluida_em")
+
+
+def avaliacoes_inelegiveis(*, edital, etapa_id):
+    """As que ficaram de fora — **com o ato, o autor e o motivo ao lado** (FR-093).
+
+    Invalidação apenas registrada não impede seleção silenciosa; invalidação **visível** impede. É
+    por isso que este seletor não devolve só as linhas: ele traz o `AtoAdministrativo` que as tirou
+    do conjunto, que é onde o motivo obrigatório está.
+    """
+    from processo_seletivo.processos.models import AtoAdministrativo
+
+    fora = list(
+        Avaliacao.objects.filter(
+            atribuicao__edital=edital,
+            atribuicao__etapa_id=etapa_id,
+            atribuicao__ativo=False,
+            estado=Avaliacao.Estado.CONCLUIDA,
+        ).select_related("atribuicao", "atribuicao__inscricao", "atribuicao__membro")
+    )
+    atos = {}
+    for ato in AtoAdministrativo.objects.filter(
+        aggregate_type="Atribuicao",
+        aggregate_id__in=[a.atribuicao_id for a in fora],
+    ).order_by("occurred_at"):
+        atos[ato.aggregate_id] = ato
+    return [
+        {
+            "avaliacao": avaliacao,
+            "inscricao": avaliacao.atribuicao.inscricao,
+            "membro": avaliacao.atribuicao.membro,
+            "ato": atos.get(avaliacao.atribuicao_id),
+        }
+        for avaliacao in fora
+    ]
+
+
+def atribuicoes_orfas(*, edital, etapa_id):
+    """Atribuições ativas de quem já não está alocado na Etapa (EC-003).
+
+    A revogação é computada, e por isso as linhas continuam ativas e inertes: elas não somem, e
+    quem organiza precisa vê-las para redistribuir. É a diferença entre "o acesso acabou" e "o
+    trabalho desapareceu".
+    """
+    alocados = set(
+        AlocacaoEtapa.objects.filter(edital=edital, etapa_id=etapa_id, ativo=True).values_list(
+            "membro_id", flat=True
+        )
+    )
+    return [
+        atribuicao
+        for atribuicao in Atribuicao.objects.filter(
+            edital=edital, etapa_id=etapa_id, ativo=True
+        ).select_related("membro", "inscricao")
+        if atribuicao.membro_id not in alocados
+    ]

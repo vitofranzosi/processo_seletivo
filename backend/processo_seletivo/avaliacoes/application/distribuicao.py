@@ -33,6 +33,23 @@ from processo_seletivo.shared.api.problems import DomainError
 ATRIBUIR = "AVALIACAO_ATRIBUIR"
 REMOVER = "AVALIACAO_ATRIBUICAO_REMOVER"
 
+# **A recusa que impede a via comum de virar seletor de notas** (FR-092).
+#
+# Sem ela, esta sequência seria possível e indistinguível de trabalho normal: dois avaliadores
+# concluem, a presidência não gosta de uma das notas, remove aquela Atribuição, a avaliação deixa
+# de ser elegível, e a inscrição é distribuída a um terceiro. Isso é escolher qual avaliação conta
+# no resultado, com a aparência de organizar o trabalho.
+#
+# A recusa nomeia os atos que **de fato** têm esse efeito, e o que cada um exige — porque
+# invalidar uma avaliação concluída é legítimo quando há motivo, e o que não pode existir é o
+# efeito sem o ato.
+MOTIVO_DE_FR_092 = (
+    "Esta avaliação já foi concluída, e a via comum de redistribuição não a alcança. "
+    "Tirar uma avaliação concluída do conjunto elegível exige ato nomeado, com motivo e "
+    "auditoria: registre o impedimento entre esta pessoa e esta inscrição, ou reabra a avaliação "
+    "para que ela seja refeita."
+)
+
 
 class Recusa:
     """Uma linha que não foi distribuída, e por quê."""
@@ -345,13 +362,7 @@ def remover_atribuicao(*, actor, processo_id, atribuicao_ids, idempotency_key, c
         removidas, recusas = [], []
         for atribuicao in atribuicoes:
             if atribuicao.id in concluidas:
-                recusas.append(
-                    Recusa(
-                        atribuicao.membro,
-                        atribuicao.inscricao,
-                        "Esta avaliação já foi concluída, e a via comum não a alcança.",
-                    )
-                )
+                recusas.append(Recusa(atribuicao.membro, atribuicao.inscricao, MOTIVO_DE_FR_092))
                 continue
             Atribuicao.objects.filter(pk=atribuicao.pk).update(
                 ativo=False, inativado_em=ctx.now, inativado_por=actor.subject

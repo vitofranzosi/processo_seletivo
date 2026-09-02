@@ -1,0 +1,75 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Impedimentos — {{ etapa.name }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:alocacoes' processo.id %}">Distribuição</a> ›
+  <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> ›
+  <span aria-current="page">Impedimentos</span>
+</nav>
+
+<h1>Impedimentos</h1>
+<p class="sub">{{ etapa.name }} — Edital {{ edital.number }}/{{ edital.year }}</p>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível registrar:</strong> {{ erro }}</p>{% endif %}
+{% if resultado %}
+<p class="sucesso" role="status" tabindex="-1">Impedimento registrado{% if resultado.inativadas %}, e {{ resultado.inativadas }} atribuiç{{ resultado.inativadas|pluralize:"ão,ões" }} inativada{{ resultado.inativadas|pluralize:"s" }}{% endif %}.</p>
+{% endif %}
+
+{% comment %}
+FR-042: a `012` não infere impedimento por CPF, sobrenome ou coincidência de dado. Declarar é ato
+de quem sabe — e é por isso que esta tela pede a identidade e o motivo, em vez de sugerir pares.
+{% endcomment %}
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  <p class="campo">
+    <label for="identity_subject">Quem está impedido</label>
+    <select id="identity_subject" name="identity_subject" required>
+      <option value="">Selecione</option>
+      {% for linha in carga %}
+      <option value="{{ linha.membro.identity_subject }}">{{ linha.membro.display_label|default:linha.membro.identity_subject }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  <p class="campo">
+    <label for="inscricao_id">Inscrição</label>
+    <input type="text" id="inscricao_id" name="inscricao_id" required
+           aria-describedby="ajuda-inscricao">
+    <span class="ajuda" id="ajuda-inscricao">Identificador da inscrição.</span>
+  </p>
+  <p class="campo">
+    <label for="motivo">Motivo</label>
+    <textarea id="motivo" name="motivo" rows="3" required aria-describedby="ajuda-motivo"></textarea>
+    <span class="ajuda" id="ajuda-motivo">É o motivo que sustenta o ato, e ele fica registrado.</span>
+  </p>
+  <p class="acoes"><button type="submit">Registrar impedimento</button></p>
+</form>
+
+<section aria-labelledby="inelegiveis">
+  <h2 id="inelegiveis">Avaliações fora do conjunto elegível</h2>
+  {% comment %}
+  FR-093: invalidação **visível** é o que impede a seleção silenciosa; invalidação apenas
+  registrada não é. Por isso o ato, o autor e o motivo vêm ao lado de cada uma — e as avaliações
+  continuam consultáveis, porque preservar não é o mesmo que continuar valendo (FR-075, FR-091).
+  {% endcomment %}
+  {% if inelegiveis %}
+  <table class="tabela">
+    <caption class="oculto">Avaliações preservadas e tornadas inelegíveis</caption>
+    <thead><tr><th scope="col">Inscrição</th><th scope="col">Avaliador</th><th scope="col">Pontuação</th><th scope="col">Ato</th><th scope="col">Motivo</th></tr></thead>
+    <tbody>
+      {% for linha in inelegiveis %}
+      <tr>
+        <td>{{ linha.inscricao.protocolo|default:linha.inscricao.id }}</td>
+        <td>{{ linha.membro.display_label|default:linha.membro.identity_subject }}</td>
+        <td>{{ linha.avaliacao.pontuacao|floatformat:4 }}</td>
+        <td>{{ linha.ato.operation|default:"—" }} por {{ linha.ato.actor_subject|default:"—" }}</td>
+        <td>{{ linha.ato.reason|default:"—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="vazio">Nenhuma avaliação foi tirada do conjunto elegível nesta Etapa.</p>
+  {% endif %}
+</section>
+{% endblock %}

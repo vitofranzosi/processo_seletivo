@@ -419,6 +419,23 @@ def ler_distribuicao(dados):
     }
 
 
+def ler_impedimento(dados):
+    """Quem, sobre qual inscrição, e por quê. O motivo é o que faz do impedimento um ato."""
+    return {
+        "identity_subject": _texto(dados, "identity_subject"),
+        "inscricao_id": _texto(dados, "inscricao_id"),
+        "motivo": _texto(dados, "motivo"),
+    }
+
+
+def ler_reabertura(dados):
+    return {
+        "avaliacao_id": _texto(dados, "avaliacao_id"),
+        "motivo": _texto(dados, "motivo"),
+        "expected_revision": _inteiro(dados, "expected_revision", 0),
+    }
+
+
 def ler_avaliacao(dados):
     """Pontuação, parecer e a revisão esperada — que não é opcional.
 
