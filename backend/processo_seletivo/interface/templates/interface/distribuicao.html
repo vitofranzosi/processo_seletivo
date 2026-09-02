@@ -37,29 +37,42 @@ mesma frase 75 vezes, uma por par, o que enterra a informação em vez de dá-la
 {% endif %}
 
 {% comment %}
-O que falta, antes do detalhe (FR-014). É a resposta que esta tela existe para dar, e contá-la nos
-cartões seria pedir que a presidência fizesse a soma.
+O que falta, antes do detalhe (FR-014). É a resposta que esta tela existe para dar.
+
+Os números **são o filtro**: "3 sem avaliador suficiente" é onde a presidência quer chegar, e ler o
+número num cartão para depois procurá-lo num `select` é pedir duas vezes a mesma coisa. Quantas
+avaliações a Etapa declara não é contagem que se filtra — é propriedade do Edital, e mora na ficha.
 {% endcomment %}
-<ul class="resumo" aria-label="Situação da distribuição">
-  <li><strong>{{ resumo.inscricoes }}</strong>inscriç{{ resumo.inscricoes|pluralize:"ão,ões" }} submetida{{ resumo.inscricoes|pluralize:"s" }}</li>
-  <li><strong>{{ resumo.carentes }}</strong>sem avaliador suficiente</li>
-  <li><strong>{{ resumo.sem_nenhum }}</strong>sem nenhum</li>
-  <li><strong>{{ resumo.previstas }}</strong>avaliaç{{ resumo.previstas|pluralize:"ão,ões" }} por inscrição</li>
-</ul>
+<dl class="ficha">
+  <div><dt>Avaliações por inscrição</dt><dd class="destaque">{{ resumo.previstas }}</dd></div>
+  <div><dt>Inscrições submetidas</dt><dd>{{ resumo.inscricoes }}</dd></div>
+</dl>
+
+<nav class="filtros-da-mesa" aria-label="Filtrar por cobertura">
+  <a href="?" {% if not cobertura %}aria-current="page"{% endif %}>
+    <strong>{{ resumo.inscricoes }}</strong> <span>todas</span></a>
+  <a href="?cobertura=sem_nenhum" {% if cobertura == "sem_nenhum" %}aria-current="page"{% endif %}>
+    <strong>{{ resumo.sem_nenhum }}</strong> <span>sem nenhum avaliador</span></a>
+  <a href="?cobertura=incompleta" {% if cobertura == "incompleta" %}aria-current="page"{% endif %}>
+    <strong>{{ resumo.carentes }}</strong> <span>sem avaliador suficiente</span></a>
+  <a href="?cobertura=avaliacao_pendente" {% if cobertura == "avaliacao_pendente" %}aria-current="page"{% endif %}>
+    <strong>{{ resumo.sem_conclusao }}</strong> <span>com avaliação pendente</span></a>
+</nav>
 
 <section aria-labelledby="carga">
   <h2 id="carga">Quem está alocado</h2>
   {% if carga %}
-  <div class="tabela-rolavel">
+  {% comment %} Três colunas não precisam da página inteira. {% endcomment %}
+  <div class="tabela-rolavel tabela-estreita">
   <table class="tabela">
     <caption class="oculto">Carga por avaliador nesta Etapa</caption>
-    <thead><tr><th scope="col">Avaliador</th><th scope="col">Atribuídas</th><th scope="col">Concluídas</th></tr></thead>
+    <thead><tr><th scope="col">Avaliador</th><th scope="col" class="numero">Atribuídas</th><th scope="col" class="numero">Concluídas</th></tr></thead>
     <tbody>
       {% for linha in carga %}
       <tr>
         <td>{{ linha.membro.display_label|default:linha.membro.identity_subject }}</td>
-        <td>{{ linha.atribuidas }}</td>
-        <td>{{ linha.concluidas }}</td>
+        <td class="numero">{{ linha.atribuidas }}</td>
+        <td class="numero">{{ linha.concluidas }}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -269,7 +282,11 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
   <form method="post" action="{% url 'interface:distribuicao-remover' edital.id etapa.id %}">
     {% csrf_token %}
     <input type="hidden" name="chave_idempotencia" value="{{ chave_remocao }}">
-    <fieldset>
+    <fieldset class="em-colunas">
+      {% comment %}
+      Em colunas: são duas por inscrição, e uma página de 25 inscrições dava 48 caixas empilhadas —
+      mil e seiscentos pixels de altura para uma escolha que quase sempre é de uma linha só.
+      {% endcomment %}
       <legend>Retirar atribuições</legend>
       {% for linha in linhas %}
         {% for atribuicao in linha.atribuicoes %}

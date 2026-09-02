@@ -180,6 +180,7 @@ def resumo_da_etapa(*, edital, etapa):
             total=Count("id"),
             sem_nenhum=Count("id", filter=Q(atribuidas=0)),
             completas=Count("id", filter=Q(atribuidas__gte=previstas)),
+            avaliadas=Count("id", filter=Q(concluidas__gte=previstas)),
         )
     )
     total = por_inscricao["total"]
@@ -192,6 +193,9 @@ def resumo_da_etapa(*, edital, etapa):
         # "Sem avaliador suficiente" é a pergunta da véspera do prazo (EC-001), e ela não é a
         # mesma que "sem nenhum": uma inscrição com uma das duas avaliações também está carente.
         "carentes": total - completas,
+        # Cobertura e progresso são perguntas diferentes: ter avaliador não é ter avaliação, e é
+        # esta que a presidência faz na véspera do resultado.
+        "sem_conclusao": total - por_inscricao["avaliadas"],
         "atribuicoes": Atribuicao.objects.filter(
             edital=edital, etapa_id=etapa["id"], ativo=True
         ).count(),

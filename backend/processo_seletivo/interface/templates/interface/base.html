@@ -377,9 +377,22 @@ ul.retiradas .quando{color:var(--texto-fraco);font-size:.875rem;flex:0 0 auto;ma
 .filtros-da-mesa a span{font-size:.8125rem;color:var(--texto-fraco)}
 .filtros-da-mesa a[aria-current]{border-color:var(--verde);box-shadow:inset 0 -3px 0 var(--verde)}
 .filtros-da-mesa a[aria-current] span{color:var(--verde-texto);font-weight:600}
-/* Duas colunas não precisam da página inteira: o protocolo ficava numa ponta e a situação na
+/* Cartões de pessoa e de Etapa em grade: um por linha, com a página larga, dava um cartão de 1.450
+   px para três linhas de texto — e uma banca de sete virava uma página de rolagem. */
+ul.comissao{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(24rem,100%),1fr));
+  gap:.75rem;align-items:start}
+
+/* Poucas colunas não precisam da página inteira: o protocolo ficava numa ponta e a situação na
    outra, com um vão no meio que o olho tinha de atravessar a cada linha. */
 .lista-da-mesa{max-width:44rem}
+.tabela-estreita{max-width:38rem}
+.tabela td.numero,.tabela th.numero{text-align:right;font-variant-numeric:tabular-nums}
+/* Escolhas que são muitas e curtas vão em colunas: duas atribuições por inscrição davam 48 caixas
+   empilhadas numa página de 25 — mil e seiscentos pixels para uma escolha que quase sempre é de
+   uma linha só. */
+fieldset.em-colunas{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(20rem,100%),1fr));
+  gap:.15rem 1.5rem;align-content:start}
+fieldset.em-colunas legend{grid-column:1/-1}
 
 /* A tela onde o avaliador passa o dia. Ela era a menos desenhada do sistema: os pares rótulo/valor
    saíam com o `dl` padrão do navegador — rótulo numa linha, valor indentado na seguinte —, a lista

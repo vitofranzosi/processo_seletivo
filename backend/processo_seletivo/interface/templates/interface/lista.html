@@ -10,8 +10,12 @@ manualmente e não vem do diretório institucional. Esta interface não pode ser
 antes da autenticação real.</p>
 {% endif %}
 
+{% comment %}
+Integrar uma comissão é **fato**, e não conquista: a faixa verde de sucesso dizia "deu certo" toda
+vez que a pessoa abria a lista de Processos. É orientação, e o que ela carrega de útil é o caminho.
+{% endcomment %}
 {% if vinculos %}
-<p class="sucesso" role="status">Você integra a comissão de
+<p class="ajuda">Você integra a comissão de
   {{ vinculos|length }} Processo{{ vinculos|length|pluralize:"s" }}.
   <a href="{% url 'interface:minhas-etapas' %}">Ver minhas atribuições</a>.</p>
 {% endif %}

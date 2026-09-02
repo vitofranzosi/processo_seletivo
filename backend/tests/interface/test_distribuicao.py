@@ -39,8 +39,11 @@ def test_a_tela_diz_o_que_falta_antes_do_detalhe(presidente, tela, edital_a, ban
 
     corpo = presidente.get(tela).content.decode()
 
+    # Os números são o filtro: ler a contagem num cartão para depois procurá-la num `select` é
+    # pedir duas vezes a mesma coisa.
     assert "sem avaliador suficiente" in corpo
-    assert "avaliação por inscrição" in corpo or "avaliações por inscrição" in corpo
+    assert "cobertura=incompleta" in corpo
+    assert "Avaliações por inscrição" in corpo
 
 
 @pytest.mark.performance

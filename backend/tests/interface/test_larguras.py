@@ -85,3 +85,44 @@ def test_o_painel_do_documento_respeita_o_atributo_hidden(da_gestao):
     """
     assert re.search(r"\.painel-documento:not\(\[hidden\]\)\{[^}]*display:flex", da_gestao)
     assert not re.search(r"\.painel-documento\{[^}]*display:flex", da_gestao)
+
+
+def test_os_numeros_da_distribuicao_sao_o_filtro(
+    client, seletor_ligado, gestor, edital_a, etapa_a1
+):
+    """Ler a contagem num cartão para depois procurá-la num `select` é pedir duas vezes o mesmo.
+
+    "Sem avaliador suficiente" é onde a presidência quer chegar; o número é o caminho.
+    """
+    from tests.fixtures.comissao import inscrever
+
+    inscrever(edital_a, 2, primeiro=800)
+    identificar(client, "carlos", ["gestor"])
+
+    corpo = client.get(
+        reverse("interface:distribuicao", args=[edital_a.id, etapa_a1])
+    ).content.decode()
+
+    # Dentro do controle, e não em qualquer lugar da página: o que se prende é que o número
+    # **seja** o filtro, e não que o endereço exista em algum canto.
+    controle = re.search(r'<nav class="filtros-da-mesa"[^>]*>(.*?)</nav>', corpo, re.S)
+    assert controle, "a distribuição tem o controle de cobertura"
+    for alvo in ("?cobertura=sem_nenhum", "?cobertura=incompleta", "?cobertura=avaliacao_pendente"):
+        assert alvo in controle.group(1), alvo
+
+
+def test_nenhuma_tela_anuncia_um_estado_como_sucesso(client, seletor_ligado, gestor, processo_a):
+    """Faixa verde é para ato recém-praticado, e não para fato permanente.
+
+    "Você integra a comissão", "Você está alocado nesta Etapa" e "Avaliação concluída em…"
+    reapareciam a cada visita dizendo "deu certo" sobre coisas que a pessoa já sabia.
+    """
+    from tests.fixtures.comissao import constituir
+
+    constituir(gestor, processo_a, [("carlos", "MEMBRO")], prefixo="estado")
+    identificar(client, "carlos", ["gestor"])
+
+    corpo = client.get(reverse("interface:lista")).content.decode()
+
+    assert "Você integra a comissão de" in corpo
+    assert 'class="sucesso"' not in corpo
