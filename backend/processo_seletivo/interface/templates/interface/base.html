@@ -20,9 +20,19 @@ header.topo .marca{font-weight:600;letter-spacing:.02em}
 header.topo .marca span{font-weight:300;opacity:.85}
 header.topo .identidade{margin-left:auto;display:flex;align-items:center;gap:.75rem;font-size:.875rem}
 header.topo .identidade a,header.topo .identidade button{color:var(--branco)}
-main{max-width:1100px;margin:0 auto;padding:1.5rem}
+/* A página serve à **estrutura** — matriz de alocação, tabelas de oito colunas, o painel do
+   documento ao lado do formulário. O texto tem medida própria logo abaixo: sem ela, alargar a
+   página levaria as linhas de 147 para mais de 200 caracteres. */
+main{max-width:var(--pagina);margin:0 auto;padding:1.5rem}
 h1{font-size:1.6rem;margin:0 0 .25rem;font-weight:600}
 h2{font-size:1.15rem;margin:0;font-weight:600}
+/* Texto corrido e ajuda de campo em linha curta. Dentro de cartão ou coluna estreita o limite não
+   morde — ele só age onde havia largura sobrando. */
+main>p,main>section>p,.sub,.ajuda,.vazio,legend+p{max-width:var(--leitura)}
+/* O que se escreve acompanha a medida do que se lê: o parecer de uma avaliação se esticava por
+   1.052 px, e ninguém redige assim. Campos dentro de `.campos` já flexionam e não são tocados. */
+.campo>textarea,.campo>input[type=text],.campo>input[type=search],.campo>input[type=email]{
+  max-width:var(--leitura)}
 .sub{color:var(--texto-fraco);margin:0 0 1.5rem}
 .aviso{background:var(--amarelo-fundo);border-left:4px solid var(--amarelo);padding:.75rem 1rem;
   margin-bottom:1.5rem;border-radius:0 4px 4px 0}
@@ -315,8 +325,10 @@ fieldset.linha legend{font-size:.75rem;text-transform:uppercase;letter-spacing:.
 .bastao .ajuda{display:block;margin-top:.3rem}
 .botao.secundario:hover{background:var(--verde-claro)}
 .salvar{display:flex;gap:1rem;align-items:center;padding:1rem 0 2rem;border-top:1px solid var(--borda)}
+/* Em `rem`, e não em pixel: o formulário acompanha o tamanho de texto de quem aumentou a fonte do
+   navegador — que é justamente quem mais precisa dele. É a mesma medida dos campos do portal. */
 form.identificar{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
-  padding:1.5rem;max-width:520px}
+  padding:1.5rem;max-width:32rem}
 fieldset{border:1px solid var(--borda);border-radius:4px;padding:1rem;margin:0 0 1.25rem}
 legend{font-weight:600;padding:0 .4rem}
 label{display:block;margin-bottom:.5rem}

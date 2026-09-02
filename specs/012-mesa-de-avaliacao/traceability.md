@@ -13,7 +13,7 @@ falharia se ele fosse quebrado** — e não o teste que passa perto.
 | Requisitos funcionais (FR) | 112 |
 | Critérios de sucesso (SC) | 31 |
 | Edge cases (EC) | 20 |
-| Testes na suíte, ao fim da 012 | 1911 |
+| Testes na suíte, ao fim da 012 | 1919 |
 | Verificações do quickstart, executadas em 2026-09-02 | 34, sem divergência |
 
 ## Onde procurar
@@ -43,6 +43,7 @@ cd backend && grep -rn "FR-092" tests/
 | A Mesa em uso, com centenas | `tests/interface/test_mesa_em_uso.py` |
 | O caminho até o trabalho, só por links | `tests/interface/test_caminho_ate_a_mesa.py` |
 | O cartão de vagas do candidato | `tests/integration/portal/test_detalhe_selecao.py` |
+| As duas larguras, texto e página | `tests/interface/test_larguras.py` |
 | Escala | `tests/performance/test_escala_da_mesa.py`, `tests/authorization/test_listagem_em_lote.py` |
 | Não-regressão | `tests/integration/comissoes/test_011_intocada.py`, `tests/integration/publicacoes/test_retificacao_intocada.py` |
 
@@ -196,6 +197,7 @@ todo roteiro montava a URL.** Ninguém clicava para chegar.
 | quem podia gerir sem integrar a comissão não via caminho | a lista só oferecia links a quem tinha vínculo | `::test_quem_pode_gerir_ve_o_caminho_mesmo_sem_integrar_a_comissao` |
 | três dos seis cliques por inscrição eram navegação | 1.380 cliques numa Mesa de 230 → 690 | `test_mesa_em_uso.py::test_concluir_leva_a_proxima_pendente` e vizinhos |
 | ler e avaliar eram duas telas que se revezavam | 6 → 2 cliques por inscrição, com o documento ao lado | `test_documento.py::test_o_documento_e_emoldurável_pela_propria_origem_e_por_nenhuma_outra` |
+| um limite só fazia medida de texto, tabela e painel | 84 e 147 caracteres por linha, com 412 px de tela vazios | `test_larguras.py` (sete cenários) |
 
 Dois deles seguiram na mesma avaliação: o seletor de identidade passou a oferecer quem tem
 trabalho de comissão — porque presidir e avaliar não são papéis, e o campo em branco era a primeira

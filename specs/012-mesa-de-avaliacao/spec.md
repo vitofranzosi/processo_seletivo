@@ -404,6 +404,11 @@ O documento é emoldurável **pela própria origem**, e por nenhuma outra: sem i
 `X-Frame-Options: DENY` do resto do sistema bloquearia a nossa própria moldura. A proteção contra
 clickjacking continua valendo contra quem ela protege.
 
+E o painel recebe a largura da **página**, e não a de um limite herdado: com o limite antigo o PDF
+ficava com 550 px enquanto sobravam 412 px de tela, e uma página A4 renderizava a 69% do tamanho.
+A separação entre a largura do texto e a da estrutura está em `shared/_tokens.css.html` — é ela que
+faz esta feature caber na tela.
+
 **FR-111** — **O seletor de identidade oferece quem tem trabalho de comissão.** Presidir e avaliar
 não são papéis — vêm do vínculo, objeto a objeto —, e nenhuma caixa daquela tela os concede. Quem
 digitava o próprio nome, ou aceitava o exemplo que vinha preenchido, entrava sem vínculo nenhum e

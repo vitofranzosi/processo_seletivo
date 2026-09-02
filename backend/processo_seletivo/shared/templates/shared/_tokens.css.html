@@ -15,4 +15,14 @@ formulário de dez campos.
   --texto:#1c1c1c; --texto-fraco:#555; --borda:#d4d4d4; --fundo:#f8f8f8; --branco:#fff;
   --sucesso:#146c37; --sucesso-fundo:#e7f5ec; --amarelo:#8a5300; --amarelo-fundo:#fdf5e5;
   --vermelho:#a91b1b; --vermelho-fundo:#fbe9e9; --cinza-fundo:#eee;
+
+  /* **Duas larguras, porque são dois trabalhos.** Um limite só, em `main`, fazia os três ao mesmo
+     tempo — medida de texto, largura de tabela e largura de painel — e fazia os três mal: media-se
+     84 caracteres por linha no portal e 147 na gestão, contra os 65 a 75 confortáveis, e ao mesmo
+     tempo sobravam 412 px de tela vazia ao lado de um PDF renderizado a 69% do tamanho.
+
+     `--leitura` é a medida do texto corrido e dos campos que se escrevem. `--pagina` é o quanto a
+     estrutura pode ocupar: tabelas, matrizes, painéis e grades de cartão. Quem lê ganha linha
+     curta; quem trabalha ganha a tela. */
+  --leitura:68ch; --pagina:96rem;
 }
