@@ -8,6 +8,8 @@ e a trilha não pode virar a brecha por onde se enxerga o que não se alcança.
 import base64
 import binascii
 
+from django.db.models import Q
+
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.shared.api.problems import DomainError
 
@@ -45,6 +47,7 @@ def consultar(
     actor,
     aggregate_type=None,
     aggregate_ids=None,
+    aggregate_filter=None,
     cursor=None,
     limit=LIMITE_PADRAO,
     operation=None,
@@ -60,6 +63,12 @@ def consultar(
         registros = registros.filter(aggregate_type=aggregate_type)
     if aggregate_ids is not None:
         registros = registros.filter(aggregate_id__in=list(aggregate_ids))
+    if aggregate_filter is not None:
+        # A alternativa a `aggregate_ids` para quem tem escala: um `Q` de subconsultas, resolvido
+        # **dentro** do banco. Trazer mil identificadores para o Python e devolvê-los num `IN`
+        # produz SQL que cresce com o trabalho da Etapa — quarenta e três mil caracteres para
+        # montar uma página de vinte linhas, medidos com mil atribuições.
+        registros = registros.filter(aggregate_filter)
     if operation:
         registros = registros.filter(operation=operation)
     if cursor:
@@ -168,14 +177,17 @@ def trilha_da_avaliacao(
         # pelo ator devolveria só o que a pessoa fez — nunca o que fizeram com o trabalho dela.
         atribuicoes = atribuicoes.filter(membro__identity_subject=avaliador)
         impedimentos = impedimentos.filter(identity_subject=avaliador)
-    ids_atribuicoes = list(atribuicoes.values_list("id", flat=True))
-    ids_avaliacoes = list(
-        Avaliacao.objects.filter(atribuicao_id__in=ids_atribuicoes).values_list("id", flat=True)
+    # Subconsultas, e não listas de identificadores: numa Etapa de duas mil atribuições, resolver
+    # em Python e devolver o resultado num `IN` faz o texto da consulta crescer com o trabalho já
+    # distribuído — e ele não tem relação nenhuma com o tamanho da página que se quer ler.
+    alcance = (
+        Q(aggregate_id__in=atribuicoes.values("id"))
+        | Q(aggregate_id__in=Avaliacao.objects.filter(atribuicao__in=atribuicoes).values("id"))
+        | Q(aggregate_id__in=impedimentos.values("id"))
     )
-    relacionados = [*ids_atribuicoes, *ids_avaliacoes, *impedimentos.values_list("id", flat=True)]
     return consultar(
         actor=actor,
-        aggregate_ids=relacionados,
+        aggregate_filter=alcance,
         cursor=cursor,
         limit=limit,
         operation=operation,

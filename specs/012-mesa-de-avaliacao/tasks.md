@@ -251,17 +251,21 @@ preserva o que havia sido concluído.
 
 ---
 
-## Phase 9: Correções da revisão de `origin/main...f5bcaba`
+## Phase 9: Correções das duas rodadas de revisão
 
-Cinco defeitos funcionais e dois menores, todos encontrados por revisão de código depois de a
-Phase 8 fechar. Nenhum deles era visível pela suíte que existia — quatro passavam porque o teste
-exercitava exatamente o caso que escondia o defeito.
+Cinco defeitos funcionais e dois menores na primeira rodada (`origin/main...f5bcaba`), e mais três
+na segunda, sobre as próprias correções. Nenhum era visível pela suíte que existia — quatro
+passavam porque o teste exercitava exatamente o caso que escondia o defeito, e os três da segunda
+rodada eram sobre código novo que a primeira ainda não tinha lido.
 
 - [X] T092 Separar a porta da trilha em `_etapa_para_auditar()`, em `backend/processo_seletivo/interface/views.py`: presidência **ou** `auditoria:consultar`, e 404 para quem não é nenhum dos dois (FR-091). A rota exigia as duas coisas ao mesmo tempo — o presidente lia 403, o auditor puro lia 404 —, e a fixture `["gestor", "auditor"]` escondia isso por testar justamente o híbrido
 - [X] T093 Ancorar a abertura de documento na `Atribuicao`, em `_registrar_na_mesa()`, e desfazer a consulta composta de T-084 em `backend/processo_seletivo/auditoria/selectors.py` (FR-053, T-016). Sobre a `Inscricao`, o registro não nomeava a Etapa e não se distinguia da consulta administrativa da 009 — a trilha de uma Etapa exibia as aberturas de outra e as consultas do gestor
 - [X] T094 Corrigir a paginação da trilha: uma consulta, um cursor (T093 já a torna única) e o link da página seguinte carregando os três filtros, por `pagina_seguinte` em `backend/processo_seletivo/interface/templatetags/interface_extras.py`. Duas páginas somadas em memória não têm cursor comum, e sob filtro de abertura de documento a segunda ficava inalcançável
 - [X] T095 Tornar a preservação consultável: `conclusoes_preservadas()` em `backend/processo_seletivo/avaliacoes/application/selectors.py`, a rota e a tela `conclusoes.html`, com pontuação, parecer, versão, instante e a situação de cada conclusão (FR-091, FR-094). Depois de uma reabertura, o histórico existia só na tabela append-only — e a trilha, corretamente, não guarda nota nem parecer
 - [X] T096 Conferir o alcance confirmado sob trava em `registrar_impedimento()`, por assinatura do conjunto e não por contagem (FR-041, FR-106). O primeiro POST calculava as contagens e o segundo não as comparava: entre os dois, uma conclusão nova tornava inelegível o que ninguém confirmou
+- [X] T098 Paginar `conclusoes_preservadas()` em `backend/processo_seletivo/avaliacoes/application/selectors.py` e a tela em `conclusoes.html` (FR-049), calculando a última ordem de cada Avaliação **por agregação**, porque a conclusão que vale pode estar na página seguinte
+- [X] T099 Recusar a confirmação do impedimento sem alcance declarado em `backend/processo_seletivo/interface/views.py` (FR-106): sem isso a garantia era desligável por quem monta o formulário
+- [X] T100 Trocar a lista de identificadores por `aggregate_filter` de subconsultas em `trilha_da_avaliacao()` (FR-050), com o teste de escala que mede o texto da consulta em `backend/tests/performance/test_escala_da_mesa.py`
 - [X] T097 [P] Recusar identificador malformado como erro de formulário — `identificador_de_inscricao()` no impedimento e `_tem_forma_de_identificador()` nos filtros da trilha e das conclusões —, e marcar `postgresql_only` os dois testes de corrida da 012, que quebravam em SQLite por "database table is locked" e vazavam conexões
 
 ---

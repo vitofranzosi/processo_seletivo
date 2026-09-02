@@ -840,7 +840,9 @@ com Atribuição ativa — e a revogação é a conjunção sendo avaliada, não
 
 **FR-048** — Nenhuma listagem pode verificar autorização por linha.
 
-**FR-049** — As telas de distribuição e de Mesa devem ser paginadas e filtráveis.
+**FR-049** — As telas de distribuição, de Mesa e de **conclusões preservadas** devem ser paginadas
+e filtráveis. A última é o maior acervo da feature — uma linha por conclusão, e mais uma a cada
+reabertura —, e é justamente a tela que se abre para responder a recurso.
 
 **FR-050** — A trilha desta feature será volumosa por natureza — duas mil atribuições e cada
 documento aberto. Ela precisa nascer filtrável por inscrição, por avaliador e por operação.
@@ -885,6 +887,10 @@ A conferência é **sob a mesma trava** que o ato usa, contra o conjunto que ele
 e compara a identidade do conjunto — não o seu tamanho: uma atribuição removida e outra criada
 mantêm a contagem e mudam o alcance. Divergiu, o ato não acontece e a confirmação é refeita sobre o
 que existe agora.
+
+E o ato **sem alcance declarado não acontece**: um envio que não traga a declaração volta ao passo
+da confirmação. Aceitá-lo deixaria a garantia desligável por quem monta o formulário, que é a mesma
+falha um nível acima.
 
 **FR-084** — **Os quatro atos da presidência são idempotentes por chave** — distribuir em lote,
 remover Atribuição, registrar impedimento e reabrir. Repetir qualquer um deles — por timeout, duplo

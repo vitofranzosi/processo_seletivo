@@ -165,3 +165,107 @@ def test_a_tela_da_mesa_com_quinhentas_responde(
         resposta = client.get(url)
 
     assert resposta.status_code == 200
+
+
+def _concluir_em_massa(cenario, atribuicoes):
+    """Conclusões gravadas direto, porque o que se mede aqui é a leitura e não a escrita."""
+    from django.utils import timezone
+
+    from processo_seletivo.avaliacoes.models import Avaliacao, ConclusaoAvaliacao
+    from processo_seletivo.publicacoes.application.selectors import effective_version
+
+    versao = effective_version(edital_id=cenario["edital"].id)
+    agora = timezone.now()
+    avaliacoes = Avaliacao.objects.bulk_create(
+        Avaliacao(
+            atribuicao=atribuicao,
+            identity_subject=atribuicao.membro.identity_subject,
+            etapa_id=atribuicao.etapa_id,
+            inscricao_id=atribuicao.inscricao_id,
+            estado=Avaliacao.Estado.CONCLUIDA,
+            pontuacao="70.0000",
+            parecer="Atende.",
+            versao=versao,
+            concluida_em=agora,
+            concluida_por=atribuicao.membro.identity_subject,
+        )
+        for atribuicao in atribuicoes
+    )
+    ConclusaoAvaliacao.objects.bulk_create(
+        ConclusaoAvaliacao(
+            avaliacao=avaliacao,
+            ordem=1,
+            pontuacao="70.0000",
+            parecer="Atende.",
+            versao=versao,
+            concluida_em=agora,
+            concluida_por=avaliacao.concluida_por,
+        )
+        for avaliacao in avaliacoes
+    )
+
+
+def test_as_conclusoes_preservadas_sao_paginadas_e_lidas_em_custo_constante(cenario, mesa_cheia):
+    """FR-048, FR-091. É o maior acervo da feature: uma linha por conclusão, e mais uma a cada
+    reabertura.
+
+    Sem paginação, a tela que existe para responder a recurso seria a mais pesada da 012 — e o
+    custo cresceria com o trabalho já feito, que é justamente o que a Etapa acumula.
+    """
+    from processo_seletivo.avaliacoes.application.selectors import conclusoes_preservadas
+
+    _concluir_em_massa(
+        cenario, list(Atribuicao.objects.filter(edital=cenario["edital"]).select_related("membro"))
+    )
+
+    with CaptureQueriesContext(connection) as consultas:
+        linhas, pagina = conclusoes_preservadas(edital=cenario["edital"], etapa_id=cenario["etapa"])
+
+    assert pagina.paginator.count == MUITAS
+    assert len(linhas) == POR_PAGINA
+    assert len(consultas.captured_queries) <= 6, len(consultas.captured_queries)
+
+
+def test_a_situacao_de_cada_conclusao_nao_depende_da_pagina_em_que_ela_caiu(cenario, mesa_cheia):
+    """A conclusão mais recente de uma Avaliação pode estar na página seguinte.
+
+    Deduzir "esta é a que vale" das linhas carregadas daria a resposta errada na fronteira das
+    páginas — e a resposta errada aqui é dizer que continua valendo o que foi reaberto.
+    """
+    from processo_seletivo.avaliacoes.application.selectors import conclusoes_preservadas
+
+    _concluir_em_massa(
+        cenario, list(Atribuicao.objects.filter(edital=cenario["edital"]).select_related("membro"))
+    )
+
+    situacoes = set()
+    for numero in range(1, 4):
+        linhas, _ = conclusoes_preservadas(
+            edital=cenario["edital"], etapa_id=cenario["etapa"], pagina=numero
+        )
+        situacoes.update(linha["situacao"] for linha in linhas)
+
+    assert situacoes == {"em_vigor"}
+
+
+def test_a_trilha_da_etapa_nao_carrega_a_etapa_inteira_para_montar_uma_pagina(cenario, mesa_cheia):
+    """FR-050. A trilha é volumosa por natureza, e por isso ela não pode custar pelo acervo.
+
+    Resolver os agregados em Python e devolvê-los num `IN` produz consulta cujo **texto** cresce
+    com o trabalho já distribuído: com mil atribuições eram quarenta e três mil caracteres para
+    montar uma página de vinte linhas. As subconsultas mantêm isso no banco, onde é o índice que
+    responde.
+    """
+    from processo_seletivo.auditoria.selectors import trilha_da_avaliacao
+
+    with CaptureQueriesContext(connection) as consultas:
+        registros, _ = trilha_da_avaliacao(
+            actor=ator_institucional("carlos", "comissao:gerir"),
+            edital=cenario["edital"],
+            etapa_id=cenario["etapa"],
+        )
+
+    assert len(registros) == 20
+    assert len(consultas.captured_queries) <= 3, len(consultas.captured_queries)
+    maior = max(len(consulta["sql"]) for consulta in consultas.captured_queries)
+    assert maior < 5000, maior

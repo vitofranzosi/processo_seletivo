@@ -2009,7 +2009,10 @@ def impedimentos(request, edital_id, etapa_id):
         dados = forms.ler_impedimento(request.POST)
         digitado = dados
         try:
-            if request.POST.get("confirmar") != "1":
+            # **Sem a assinatura do alcance não há confirmação**, e o passo é refeito. Aceitar o
+            # POST sem ela deixaria a proteção de FR-106 desligável por quem monta o formulário —
+            # que é a mesma falha, um nível acima.
+            if request.POST.get("confirmar") != "1" or not request.POST.get("alcance"):
                 # **A confirmação declara o alcance antes de o ato acontecer** (FR-041): retirar
                 # trabalho de alguém não pode ser efeito colateral silencioso de registrar um
                 # motivo. Quem confirma vê quantas atribuições e quantas conclusões serão
@@ -2397,13 +2400,16 @@ def conclusoes_preservadas(request, edital_id, etapa_id):
         filtro_invalido = (
             "O identificador de inscrição não tem forma de identificador. Informe-o por inteiro."
         )
-        linhas = []
+        linhas, pagina = [], None
     else:
+        encontradas, pagina = avaliacao_selectors.conclusoes_preservadas(
+            edital=edital,
+            etapa_id=etapa_id,
+            inscricao_id=inscricao or None,
+            pagina=request.GET.get("pagina") or 1,
+        )
         linhas = [
-            {**linha, "rotulo": SITUACAO_DA_CONCLUSAO[linha["situacao"]]}
-            for linha in avaliacao_selectors.conclusoes_preservadas(
-                edital=edital, etapa_id=etapa_id, inscricao_id=inscricao or None
-            )
+            {**linha, "rotulo": SITUACAO_DA_CONCLUSAO[linha["situacao"]]} for linha in encontradas
         ]
     return marcar_como_privada(
         render(
@@ -2414,6 +2420,7 @@ def conclusoes_preservadas(request, edital_id, etapa_id):
                 "edital": edital,
                 "etapa": etapa,
                 "linhas": linhas,
+                "pagina": pagina,
                 "inscricao_filtro": inscricao,
                 "filtro_invalido": filtro_invalido,
             },

@@ -13,7 +13,7 @@ falharia se ele fosse quebrado** — e não o teste que passa perto.
 | Requisitos funcionais (FR) | 106 |
 | Critérios de sucesso (SC) | 31 |
 | Edge cases (EC) | 20 |
-| Testes na suíte, ao fim da 012 | 1852 |
+| Testes na suíte, ao fim da 012 | 1858 |
 | Verificações do quickstart, executadas em 2026-09-02 | 34, sem divergência |
 
 ## Onde procurar
@@ -134,6 +134,18 @@ Os quatro primeiros têm em comum a mesma forma: **o teste exercitava justamente
 escondia o defeito**. É o modo de falha que a contraprova por reversão pega e a leitura do
 resultado verde não pega — e cada correção acima foi verificada assim, quebrando o conserto e
 conferindo que o teste falha.
+
+## A segunda rodada, sobre as próprias correções
+
+Três achados, e os três sobre código que a primeira rodada ainda não tinha para ler.
+
+| achado | consequência | o teste que agora o prende |
+|---|---|---|
+| a confirmação do impedimento aceitava envio **sem** alcance declarado | FR-106 desligável por quem monta o formulário — e um teste da própria suíte fazia exatamente esse envio | `test_impedimentos.py::test_confirmar_sem_declarar_o_alcance_refaz_a_confirmacao` |
+| a página de conclusões preservadas não paginava | o maior acervo da feature — uma linha por conclusão, mais uma a cada reabertura — numa página só | `test_escala_da_mesa.py::test_as_conclusoes_preservadas_sao_paginadas_e_lidas_em_custo_constante` |
+| a trilha resolvia os agregados por lista de identificadores | 43 mil caracteres de SQL, com mil atribuições, para montar vinte linhas | `test_escala_da_mesa.py::test_a_trilha_da_etapa_nao_carrega_a_etapa_inteira_para_montar_uma_pagina` |
+
+O primeiro merece nota: **a suíte continha o ataque**. `test_a_tela_mostra_o_ato_e_o_motivo_ao_lado_da_inelegivel` postava `confirmar=1` sem a assinatura do alcance, e passava — o teste documentava como pular a confirmação. Ele agora percorre os dois passos, lendo o alcance da própria tela.
 
 ## O gate da 013
 

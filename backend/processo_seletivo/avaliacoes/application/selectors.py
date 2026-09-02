@@ -12,7 +12,7 @@ cumprir o que a Etapa declarou (FR-014).
 from uuid import UUID
 
 from django.core.paginator import Paginator
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Count, Max, Prefetch, Q
 
 from processo_seletivo.avaliacoes.domain.previsao import avaliacoes_previstas
 from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao, ConclusaoAvaliacao
@@ -276,7 +276,7 @@ def avaliacoes_inelegiveis(*, edital, etapa_id):
     ]
 
 
-def conclusoes_preservadas(*, edital, etapa_id, inscricao_id=None):
+def conclusoes_preservadas(*, edital, etapa_id, inscricao_id=None, pagina=1):
     """O que havia sido concluído — **consultável**, e não apenas existente no banco (FR-091).
 
     Sem esta consulta a preservação de FR-094 era uma promessa que só o banco cumpria. Depois de
@@ -286,6 +286,12 @@ def conclusoes_preservadas(*, edital, etapa_id, inscricao_id=None):
 
     A trilha **não** responde por isto, e é de propósito: ela guarda que o ato aconteceu e nunca a
     pontuação nem o parecer (FR-054). O conteúdo vive aqui, no registro append-only do domínio.
+
+    **Paginada, como as outras listagens da feature** (FR-048). Este acervo é o maior de todos:
+    cresce com toda conclusão de toda Atribuição da Etapa, e mais uma linha a cada reabertura —
+    numa Etapa de mil inscrições com dupla avaliação, são dois mil registros de partida. Devolver
+    o conjunto inteiro numa página faria a tela que existe para responder a recurso ser a mais
+    pesada da 012.
 
     Cada linha diz também **o que aconteceu com aquela conclusão**, porque preservar não é o mesmo
     que continuar valendo:
@@ -307,14 +313,23 @@ def conclusoes_preservadas(*, edital, etapa_id, inscricao_id=None):
     )
     if inscricao_id is not None:
         consulta = consulta.filter(avaliacao__atribuicao__inscricao_id=inscricao_id)
-    conclusoes = list(consulta.order_by("avaliacao__atribuicao__inscricao__protocolo", "ordem"))
-    # A última ordem de cada Avaliação: só ela pode estar em vigor — as anteriores foram, cada
-    # uma, substituídas por uma reabertura.
-    ultima = {}
-    for conclusao in conclusoes:
-        ultima[conclusao.avaliacao_id] = max(ultima.get(conclusao.avaliacao_id, 0), conclusao.ordem)
+    paginas = Paginator(
+        consulta.order_by("avaliacao__atribuicao__inscricao__protocolo", "avaliacao_id", "ordem"),
+        POR_PAGINA,
+    )
+    pagina_atual = paginas.get_page(pagina)
+    # A última ordem de cada Avaliação, por agregação e não por laço: só ela pode estar em vigor —
+    # as anteriores foram, cada uma, substituídas por uma reabertura. Deduzir isso das linhas da
+    # página estaria errado, porque a conclusão mais recente pode estar na página seguinte.
+    ultima = dict(
+        ConclusaoAvaliacao.objects.filter(
+            avaliacao_id__in=[conclusao.avaliacao_id for conclusao in pagina_atual]
+        )
+        .values_list("avaliacao_id")
+        .annotate(ultima=Max("ordem"))
+    )
     linhas = []
-    for conclusao in conclusoes:
+    for conclusao in pagina_atual:
         avaliacao = conclusao.avaliacao
         atribuicao = avaliacao.atribuicao
         corrente = (
@@ -335,7 +350,7 @@ def conclusoes_preservadas(*, edital, etapa_id, inscricao_id=None):
                 ),
             }
         )
-    return linhas
+    return linhas, pagina_atual
 
 
 def atribuicoes_orfas(*, edital, etapa_id):

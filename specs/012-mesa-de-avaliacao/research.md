@@ -624,6 +624,13 @@ Isso também conserta a paginação, e esse era o segundo defeito: duas páginas
 de documento ele vinha vazio — o que passasse da primeira página ficava inalcançável, sem erro
 nenhum na tela. Uma consulta, um cursor.
 
+**Quarta, medida e não suposta: os agregados entram por subconsulta, e não por lista.** Resolver os
+identificadores em Python e devolvê-los num `IN` — que é o que `trilha_da_comissao` faz, na escala
+de ata em que ela vive — produz consulta cujo **texto** cresce com o trabalho já distribuído. Com
+mil atribuições são quarenta e três mil caracteres de SQL para montar uma página de vinte linhas, e
+5,1 ms; com as três subconsultas, mil e setecentos caracteres e 1,1 ms. `consultar` ganha um
+`aggregate_filter` opcional ao lado de `aggregate_ids`, e quem tem escala usa o primeiro.
+
 A identidade é a estável, e nunca o vínculo, pela razão de T-007. A alternativa seria carimbar a
 inscrição e a Etapa em cada evento, criando colunas de conveniência para perguntas que a relação já
 responde. `record_event` não ganha campo nesta feature (FR-070).

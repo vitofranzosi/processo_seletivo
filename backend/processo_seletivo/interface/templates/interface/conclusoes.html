@@ -69,6 +69,14 @@ concluído antes vive aqui, no registro append-only do domínio, e não na trilh
   </tbody>
 </table>
 </div>
+
+{% if pagina.has_other_pages %}
+<nav class="paginacao" aria-label="Páginas das conclusões preservadas">
+  {% if pagina.has_previous %}<a href="?pagina={{ pagina.previous_page_number }}{% if inscricao_filtro %}&inscricao={{ inscricao_filtro|urlencode }}{% endif %}">Anterior</a>{% endif %}
+  <span aria-current="page">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+  {% if pagina.has_next %}<a href="?pagina={{ pagina.next_page_number }}{% if inscricao_filtro %}&inscricao={{ inscricao_filtro|urlencode }}{% endif %}">Próxima</a>{% endif %}
+</nav>
+{% endif %}
 {% else %}
 <p class="vazio">{% if inscricao_filtro %}Nenhuma conclusão corresponde ao filtro.{% else %}Nenhuma avaliação foi concluída nesta Etapa.{% endif %}</p>
 {% endif %}

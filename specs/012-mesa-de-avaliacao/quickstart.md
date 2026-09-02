@@ -237,7 +237,8 @@ A revisão de `origin/main...f5bcaba` encontrou cinco defeitos funcionais que a 
 não alcançou, e as correções mudaram três telas: a porta da trilha, o registro da abertura de
 documento e a nova página de conclusões preservadas. **A execução acima é anterior a elas**, e por
 isso os pontos afetados foram percorridos de novo, pelo mesmo canal e contra o mesmo banco de
-desenvolvimento: **22 verificações, nenhuma divergência.**
+desenvolvimento: **27 verificações, nenhuma divergência** — incluindo os dois passos da confirmação do impedimento
+pela própria tela, e o envio que tenta pular a declaração do alcance.
 
 Duas observações novas, e as duas são sobre o roteiro:
 
@@ -247,3 +248,6 @@ Duas observações novas, e as duas são sobre o roteiro:
 5. **Anexar exige `ARQUIVOS_CANDIDATOS_RAIZ`** apontando para um diretório absoluto fora da árvore
    do código. Sem ela o sistema recusa receber documento, o que é o comportamento correto — e é a
    segunda variável de ambiente que o roteiro precisa declarar, ao lado do seletor de identidade.
+
+6. **Cada execução consome atribuições sem avaliação**, e a Entrega 6 precisa de uma. Repetir o
+   roteiro sobre a mesma base exige repor: inscrever e distribuir antes de impedir.

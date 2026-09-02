@@ -83,6 +83,9 @@ def corpos(client, seletor_ligado, cenario):
     paginas["trilha"] = client.get(
         reverse("interface:trilha-da-avaliacao", args=[cenario["edital"].id, cenario["etapa"]])
     ).content.decode()
+    paginas["conclusoes"] = client.get(
+        reverse("interface:conclusoes-preservadas", args=[cenario["edital"].id, cenario["etapa"]])
+    ).content.decode()
     identificar(client, "joao", [])
     for nome, url in telas_do_avaliador(cenario).items():
         paginas[nome] = client.get(url).content.decode()

@@ -121,3 +121,20 @@ def test_identificador_malformado_no_filtro_e_recusa_de_formulario(
 
     assert resposta.status_code == 200
     assert "não tem forma de identificador" in resposta.content.decode()
+
+
+def test_a_tela_nao_e_armazenavel_pelo_navegador(client, seletor_ligado, cenario, concluida):
+    """FR-056: resposta com pontuação e parecer não fica no cache do navegador."""
+    identificar(client, "maria", [])
+
+    assert "no-store" in client.get(pagina(cenario))["Cache-Control"]
+
+
+def test_a_situacao_e_dita_por_extenso_e_nao_por_cor(client, seletor_ligado, cenario, concluida):
+    """Quem lê em escala de cinza precisa distinguir preservada de em vigor."""
+    identificar(client, "maria", [])
+    corpo = client.get(pagina(cenario)).content.decode()
+
+    assert "Em vigor" in corpo
+    assert "<caption" in corpo
+    assert "tabela-rolavel" in corpo
