@@ -2308,6 +2308,8 @@ def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
         )
     except DomainError as recusa:
         raise Http404 from recusa
+    ja_abriu = _ja_abriu_algum_documento(ator, contexto["atribuicao"])
+    tem_documento = any(documento["enviado"] for documento in contexto["documentos"])
     # A **página** carrega dado pessoal, e não só o arquivo: protocolo, nome e CPF mascarado não
     # podem ficar no cache do navegador (FR-056).
     return marcar_como_privada(
@@ -2320,6 +2322,15 @@ def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
                 "processo": edital.processo,
                 "etapa_id": etapa_id,
                 "aviso": request.session.pop("aviso_da_avaliacao", None),
+                # **Se esta pessoa já abriu algum documento desta inscrição.** Não é palpite nem
+                # estado de sessão: é a trilha, que registra cada abertura sob a Atribuição. Serve
+                # a duas coisas — dizer, a quem volta a uma Mesa de centenas, se já leu esta; e
+                # decidir onde o foco começa, porque a tela abria com o cursor na nota, pronta
+                # para receber uma pontuação antes de qualquer leitura.
+                "ja_abriu_documento": ja_abriu,
+                "tem_documento": tem_documento,
+                # Onde o cursor para: na nota só quando não há o que ler antes.
+                "foco_na_nota": ja_abriu or not tem_documento,
                 # Para onde ir depois desta. Com centenas atribuídas, voltar pela trilha de
                 # navegação a cada inscrição faz o caminho ser mais longo que o trabalho.
                 "proxima": avaliacao_selectors.proxima_pendente(
@@ -2335,6 +2346,21 @@ def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
             },
         )
     )
+
+
+def _ja_abriu_algum_documento(ator, atribuicao):
+    """Se há abertura registrada desta pessoa sobre esta Atribuição (FR-027).
+
+    A pergunta é do trabalho, e a resposta já existe: a trilha guarda cada abertura, com ator e
+    agregado. Ler dali é o oposto de inventar um estado novo para a mesma coisa.
+    """
+    from processo_seletivo.auditoria.models import RegistroAuditoria
+
+    return RegistroAuditoria.objects.filter(
+        operation=CONSULTAR_DOCUMENTO,
+        aggregate_id=atribuicao.id,
+        actor_subject=ator.subject,
+    ).exists()
 
 
 def _valores_da_avaliacao(digitado, avaliacao):

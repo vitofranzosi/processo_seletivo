@@ -396,14 +396,28 @@ ul.retiradas .quando{color:var(--texto-fraco);font-size:.875rem;flex:0 0 auto;ma
 
 /* Um requisito por linha: o nome à esquerda, o que foi entregue à direita. Antes, nome, ação e
    tamanho eram três pedaços em fluxo, e um documento ocupava três linhas irregulares. */
+/* A grade é da **lista**, e não de cada linha: com `display:grid` no `li`, cada linha formava a sua
+   própria grade e as colunas não se falavam — a marca caía num lugar diferente em cada uma, que é
+   exatamente o desalinhamento que se queria resolver. `display:contents` no `li` entrega os filhos
+   às trilhas da lista, e aí as três colunas valem para todas as linhas. */
 ul.documentos{list-style:none;margin:0;padding:0;border:1px solid var(--borda);border-radius:6px;
-  background:var(--branco)}
-ul.documentos>li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
-  gap:.5rem 1rem;padding:.7rem 1rem;border-bottom:1px solid var(--fundo)}
-ul.documentos>li:last-child{border-bottom:0}
-ul.documentos .requisito{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap}
+  background:var(--branco);display:grid;grid-template-columns:minmax(0,1fr) auto auto}
+/* Três colunas: o nome primeiro, porque é o que se procura ao percorrer a lista; a marca em coluna
+   própria, que é o que a alinha sem precisar vir antes do nome; e a entrega à direita. */
+ul.documentos>li{display:contents}
+ul.documentos>li>*{padding:.7rem .5rem;border-bottom:1px solid var(--fundo);
+  display:flex;align-items:center;min-width:0}
+ul.documentos>li>*:first-child{padding-left:1rem;overflow-wrap:anywhere}
+ul.documentos>li>*:last-child{padding-right:1rem}
+ul.documentos>li:last-child>*{border-bottom:0}
+ul.documentos .entrega{justify-content:flex-end;white-space:nowrap}
+@media (max-width:34rem){
+  ul.documentos{grid-template-columns:minmax(0,1fr) auto}
+  ul.documentos .entrega{grid-column:1/-1;padding:0 1rem .7rem}
+  ul.documentos>li>*:not(.entrega){border-bottom:0}
+}
 ul.documentos .marca{font-size:.75rem;color:var(--texto-fraco);border:1px solid var(--borda);
-  border-radius:3px;padding:.05rem .35rem;font-weight:400}
+  border-radius:3px;padding:.05rem .35rem;font-weight:400;white-space:nowrap}
 ul.documentos .entrega{display:flex;align-items:center;gap:.6rem;font-size:.875rem;
   color:var(--texto-fraco)}
 ul.documentos .entrega.ausente{font-style:italic}

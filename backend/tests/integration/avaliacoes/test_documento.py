@@ -266,3 +266,60 @@ def test_o_painel_comeca_vazio_e_escondido(como_joao, edital_com_documentos, eta
     assert 'src="about:blank"' in corpo
     # E o link continua sendo um link: sem script, ou em tela estreita, ele abre em aba própria.
     assert 'target="_blank"' in corpo
+
+
+def test_o_foco_comeca_no_documento_e_nao_na_nota(
+    como_joao, edital_com_documentos, etapa_a1, cenario
+):
+    """A tela abria com o cursor na pontuação, pronta para receber nota antes de haver leitura.
+
+    A ordem da página dizia uma coisa — candidato, documentos, avaliação — e o cursor dizia outra.
+    O foco agora para no primeiro documento por abrir, que é onde o trabalho começa de fato.
+    """
+    corpo = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    ).content.decode()
+
+    assert re.search(r'data-documento="[^"]*"\s*\n?\s*autofocus', corpo)
+    assert not re.search(r'id="pontuacao"[^>]*autofocus', corpo, re.S)
+    assert "Você ainda não abriu nenhum documento desta inscrição." in corpo
+
+
+def test_depois_de_abrir_o_documento_o_foco_vai_para_a_nota(
+    como_joao, edital_com_documentos, etapa_a1, cenario
+):
+    """Quem já leu não precisa ser levado ao documento de novo — e a trilha é quem sabe disso."""
+    abrir_arquivo(como_joao, arquivo(edital_com_documentos, etapa_a1, cenario))
+
+    corpo = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    ).content.decode()
+
+    assert re.search(r'id="pontuacao"[^>]*autofocus', corpo, re.S)
+    assert "Você ainda não abriu nenhum documento" not in corpo
+
+
+def test_a_ordem_e_sugerida_e_nao_imposta(como_joao, edital_com_documentos, etapa_a1, cenario):
+    """Documento ausente é caso legítimo: ninguém precisa abrir arquivo para registrar que não
+    havia o que conferir. O formulário continua inteiro, e a nota continua aceita."""
+    corpo = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    ).content.decode()
+
+    assert "Concluir avaliação" in corpo
+    assert "disabled" not in corpo
+
+
+def test_a_marca_de_obrigatorio_tem_coluna_propria(
+    como_joao, edital_com_documentos, etapa_a1, cenario
+):
+    """Depois do nome, ela caía num lugar diferente em cada linha; em coluna, tudo alinha.
+
+    E o nome continua vindo primeiro, porque é ele que se procura ao percorrer a lista.
+    """
+    corpo = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    ).content.decode()
+
+    linha = re.search(r"<li>(.*?)</li>", corpo, re.S).group(1)
+    assert linha.index("requisito") < linha.index("marca")

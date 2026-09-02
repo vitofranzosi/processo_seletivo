@@ -418,6 +418,20 @@ A lista diz **o que cada identidade alcança** — preside este Processo, integr
 Etapas alocadas, tantas avaliações pendentes — e não apenas que ela existe. Some junto com o
 seletor, quando o diretório institucional for integrado (FR-058).
 
+**FR-113** — **O foco começa onde o trabalho começa, e o trabalho começa na leitura.** A tela da
+inscrição abria com o cursor no campo de pontuação: a ordem da página dizia uma coisa — candidato,
+documentos, avaliação — e o cursor dizia outra, convidando a pontuar antes de qualquer documento
+ter sido aberto.
+
+O foco para no primeiro documento por abrir. Ele vai para a nota quando não há o que ler antes:
+quando esta pessoa já abriu algum documento desta inscrição, quando não há documento nenhum, ou
+quando há aviso a ler — que tem prioridade sobre tudo.
+
+**Sugerida, e não imposta**, como o período previsto de FR-095: nada impede pontuar antes de abrir,
+porque documento ausente é caso legítimo e ninguém precisa abrir arquivo para registrar que não
+havia o que conferir. E a tela diz, em uma linha, que ainda não houve leitura — um fato que a
+**trilha** já guarda, e não um estado novo inventado para a mesma coisa (FR-027).
+
 **FR-110** — **O caminho não pode custar mais que o trabalho.** Numa Mesa de 230 inscrições, cada
 clique de navegação é cobrado 230 vezes. Três deles não decidiam nada:
 

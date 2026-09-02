@@ -10,10 +10,10 @@ falharia se ele fosse quebrado** — e não o teste que passa perto.
 
 | | |
 |---|---:|
-| Requisitos funcionais (FR) | 112 |
+| Requisitos funcionais (FR) | 113 |
 | Critérios de sucesso (SC) | 31 |
 | Edge cases (EC) | 20 |
-| Testes na suíte, ao fim da 012 | 1920 |
+| Testes na suíte, ao fim da 012 | 1924 |
 | Verificações do quickstart, executadas em 2026-09-02 | 34, sem divergência |
 
 ## Onde procurar
@@ -74,6 +74,7 @@ e cada um tem um teste que falha primeiro.
 | **FR-110** | o caminho custar mais que o trabalho | `test_mesa_em_uso.py::test_concluir_leva_a_proxima_pendente` |
 | **FR-111** | a parede antes do percurso | `test_caminho_ate_a_mesa.py::test_a_tela_de_identificacao_oferece_quem_tem_trabalho` |
 | **FR-112** | a moldura mudar o que o evento significa | `test_documento.py::test_nenhuma_moldura_da_pagina_aponta_para_um_documento` |
+| **FR-113** | a tela convidar a pontuar antes de ler | `test_documento.py::test_o_foco_comeca_no_documento_e_nao_na_nota` |
 
 ## Requisitos sem teste, e por quê
 

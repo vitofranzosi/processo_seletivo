@@ -62,7 +62,8 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
   <ul class="documentos">
     {% for documento in documentos %}
     <li>
-      <span class="requisito">{{ documento.nome }}{% if documento.obrigatorio %} <span class="marca">obrigatório</span>{% endif %}</span>
+      <span class="requisito">{{ documento.nome }}</span>
+      {% if documento.obrigatorio %}<span class="marca">obrigatório</span>{% else %}<span></span>{% endif %}
       {% if documento.enviado %}
       {% comment %}
       **Aba própria, e não a mesma.** O PDF é servido `inline`, então abrir na mesma aba substitui
@@ -79,6 +80,7 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
         <a class="acao" href="{% url 'interface:mesa-documento' edital.id etapa_id inscricao.id documento.id %}"
            target="_blank" rel="noopener"
            data-documento="{{ documento.nome }}"
+           {% if forloop.first and not ja_abriu_documento and not aviso and avaliacao.estado != "CONCLUIDA" %}autofocus{% endif %}
            aria-label="Abrir {{ documento.nome }}">Abrir</a>
         <span class="tamanho">{{ documento.tamanho }}</span>
       </span>
@@ -137,6 +139,16 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
     fora do período previsto para a Etapa. O instante real fica registrado.</p>
   {% endif %}
 
+  {% comment %}
+  Dito, e não imposto — a mesma escolha do período previsto (FR-095). Numa Mesa de centenas, quem
+  retoma o trabalho não lembra o que já leu, e a trilha sabe: cada abertura fica registrada. O que
+  o sistema não faz é impedir de pontuar, porque documento ausente é caso legítimo e ninguém
+  precisa abrir arquivo nenhum para registrar que não havia o que conferir.
+  {% endcomment %}
+  {% if tem_documento and not ja_abriu_documento %}
+  <p class="ajuda" role="status">Você ainda não abriu nenhum documento desta inscrição.</p>
+  {% endif %}
+
   <form method="post" action="{% url 'interface:mesa-avaliacao-gravar' edital.id etapa_id inscricao.id %}">
     {% csrf_token %}
     {% comment %}
@@ -150,12 +162,17 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
     <p class="campo curto">
       <label for="pontuacao">Pontuação</label>
       {% comment %}
-      O foco começa aqui, que é onde o trabalho começa. Sem isto era um clique por inscrição só
-      para poder digitar — e o aviso, quando existe, tem prioridade: ele é o que a pessoa precisa
-      ler antes de qualquer coisa.
+      **O foco começa onde o trabalho começa — e o trabalho começa na leitura.** A tela abria com o
+      cursor aqui, pronta para receber uma pontuação antes de o documento ter sido aberto: a ordem
+      da página dizia uma coisa e o cursor dizia outra.
+
+      Agora ele só para aqui quando não há o que ler primeiro — quando esta pessoa já abriu algum
+      documento desta inscrição, quando não há documento nenhum, ou quando há aviso, que tem
+      prioridade sobre tudo. Ninguém é impedido de pontuar antes: a ordem é sugerida, não aplicada,
+      como o período previsto de FR-095.
       {% endcomment %}
       <input type="number" step="0.0001" min="0" id="pontuacao" name="pontuacao"
-             value="{{ valores.pontuacao }}"{% if not aviso %} autofocus{% endif %}
+             value="{{ valores.pontuacao }}"{% if foco_na_nota and not aviso %} autofocus{% endif %}
              aria-describedby="ajuda-pontuacao">
       <span class="ajuda" id="ajuda-pontuacao">
         {% if maxima %}Máxima publicada: {{ maxima|pontuacao }}.{% else %}O Edital não declara pontuação máxima para esta Etapa.{% endif %}
