@@ -278,16 +278,54 @@ fieldset.caracter legend{font-size:.85rem;color:var(--texto-fraco);padding:0;
   text-align:left;vertical-align:middle}
 .distribuicao thead th{position:sticky;top:0;background:var(--branco);border-bottom:2px solid var(--borda);
   font-size:.875rem;line-height:1.3;vertical-align:bottom;z-index:2;
-  box-shadow:0 1px 0 var(--borda)}
-.distribuicao thead th .codigo,.distribuicao thead th .situacao{display:block;margin-top:.2rem}
+  box-shadow:0 1px 0 var(--borda);
+  /* `thead th` global põe versalete em tudo que herda — e âncora herda, botão não. O
+     "Distribuir" saía em maiúsculas ao lado de um "todos" em caixa baixa, sem que nenhuma regra
+     tivesse pedido isso. A caixa passa a ser decidida por quem a quer. */
+  text-transform:none;letter-spacing:normal}
+.distribuicao thead th.rotulo,.distribuicao thead th.num{text-transform:uppercase;
+  letter-spacing:.04em;font-size:.75rem;color:var(--texto-fraco)}
+/* Três degraus: qual Etapa é, como ela está, o que se faz nela. E tudo centrado sobre a coluna
+   que o cabeçalho encima — encostado à esquerda de uma faixa de 390 px, ele deixava de apontar
+   para as marcas que descreve. */
+.distribuicao thead th:not(.rotulo):not(.num){text-align:center}
+.distribuicao thead th>*{display:block}
+.distribuicao thead th>.acao{margin-inline:auto}
+.etapa-medida{justify-content:center}
+.coluna-toda{justify-content:center}
+.etapa-nome{font-weight:600;text-transform:uppercase;letter-spacing:.03em;font-size:.8125rem}
+/* As pastilhas voltam a abraçar o próprio conteúdo. Esticadas à largura da coluna por um
+   `display:block` herdado, `12/2027` e a contagem liam-se como campos, e não como etiquetas. */
+.etapa-medida{margin-top:.35rem;display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}
+.etapa-medida .codigo,.etapa-medida .situacao{display:inline-block}
+.distribuicao thead th>.acao{margin-top:.45rem;width:fit-content}
 .distribuicao tbody th{font-weight:600;position:sticky;left:0;background:var(--branco);
   min-width:14rem;box-shadow:1px 0 0 var(--fundo)}
 .distribuicao tbody th .codigo,.distribuicao tbody th .situacao{margin-left:.4rem;font-weight:400}
 .distribuicao tbody tr:hover th,.distribuicao tbody tr:hover td{background:var(--fundo)}
-.coluna-toda{display:flex;gap:.25rem;margin-top:.3rem}
-.coluna-toda .acao{padding:.1rem .4rem;font-size:.75rem;font-weight:400}
-.distribuicao td.marca{text-align:center}
+/* Estes dois agem na coluna logo abaixo, e não na Etapa: peso de ligação, não de botão. */
+.coluna-toda{display:flex;gap:.3rem;margin-top:.5rem;align-items:baseline;
+  font-size:.75rem;color:var(--texto-fraco)}
+.ligacao{background:none;border:0;padding:0;font:inherit;color:var(--verde-texto);
+  text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.ligacao:hover{color:var(--verde-escuro)}
+/* A folga da tabela vai para as colunas de marca, e não para a última: com poucas Etapas, o
+   `Etapas` sozinho engolia 683 px e o total de cada linha ficava a meia tela das marcas que ele
+   soma. Aqui ele é estreito, como o número que é. */
+.distribuicao th.num,.distribuicao td.num{width:1%;white-space:nowrap}
+/* E a coluna larga deixa de ser problema quando **a célula inteira é o alvo**: a faixa toda
+   marca e desmarca, e a cor de fundo diz o estado sem depender de acertar 17 px. */
+.distribuicao td.marca{padding:0;text-align:center}
+.distribuicao td.marca label{display:flex;align-items:center;justify-content:center;
+  padding:.6rem;cursor:pointer;min-height:2.6rem}
 .distribuicao td.marca input{width:1.15rem;height:1.15rem;margin:0;cursor:pointer}
+.distribuicao td.marca label:hover{background:var(--cinza-fundo)}
+/* Sete linhas se acompanham a olho; trinta, não. O filete separa as colunas de marca sem
+   desenhar uma grade inteira. */
+.distribuicao td.marca+td.marca,.distribuicao thead th+th:not(.num){
+  border-left:1px solid var(--fundo)}
+.distribuicao td.marca:has(input:checked){background:var(--verde-claro)}
+.distribuicao tbody tr:hover td.marca:has(input:checked){background:var(--verde-claro)}
 .distribuicao td.num,.distribuicao th.num{text-align:right;font-variant-numeric:tabular-nums;
   color:var(--texto-fraco)}
 .distribuicao tbody tr:last-child th,.distribuicao tbody tr:last-child td{border-bottom:0}
@@ -308,6 +346,12 @@ fieldset.caracter legend{font-size:.85rem;color:var(--texto-fraco);padding:0;
   padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;gap:1rem 1.5rem;flex-wrap:wrap;
   align-items:flex-end}
 .filtro .campo,.filtro .salvar{margin:0}
+/* `.salvar` é a barra de gravação, e traz consigo filete e rodapé. Dentro do filtro, ela
+   desenhava um traço solto acima do "Filtrar" — um separador sem nada para separar. */
+.filtro .salvar{border-top:0;padding:0}
+/* "nome ou identificador" não precisa de 850 px, e o campo esticado empurrava o botão
+   para o extremo oposto da tela. */
+.filtro .campo{flex:0 1 26rem}
 .conferencia-lote{border-collapse:collapse;width:100%;font-size:.9375rem}
 .conferencia-lote caption{text-align:left;color:var(--texto-fraco);padding-bottom:.5rem}
 .conferencia-lote th,.conferencia-lote td{text-align:left;padding:.5rem .75rem;

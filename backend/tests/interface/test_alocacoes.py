@@ -210,3 +210,58 @@ def test_cada_celula_diz_de_quem_e_de_qual_etapa(
 
     assert 'aria-label="joao em Análise documental' in corpo
     assert 'aria-label="maria em Prova didática' in corpo
+
+
+def folha_de_estilo(corpo):
+    return corpo[corpo.index("<style>") : corpo.index("</style>")]
+
+
+def test_a_celula_inteira_e_o_alvo_da_marca(
+    client, seletor_ligado, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    """Numa matriz, a coluna é larga porque o **cabeçalho** dela é largo.
+
+    A caixa media 17 px no meio de uma faixa de quase 400, a meia tela do nome a que pertence:
+    alvo pequeno, errado com facilidade, e cobrado uma vez por pessoa por Etapa. Envolvê-la num
+    rótulo que preenche a célula transforma a faixa inteira em alvo, sem mudar o formulário.
+    """
+    alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
+    identificar(client, "carlos", ["gestor"])
+
+    corpo = client.get(url(processo_a)).content.decode()
+
+    celula = corpo.split('<td class="marca">')[1].split("</td>")[0]
+    assert "<label>" in celula, "a marca vive dentro de um rótulo, e o rótulo preenche a célula"
+    assert celula.index("<label>") < celula.index('type="checkbox"')
+    assert "padding:0" in folha_de_estilo(corpo).split(".distribuicao td.marca{")[1].split("}")[0]
+
+
+def test_as_pastilhas_do_cabecalho_abracam_o_proprio_conteudo(
+    client, seletor_ligado, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    """`display:block` numa etiqueta esticava `12/2027` à largura inteira da coluna.
+
+    Uma pastilha existe para abraçar o que carrega; do tamanho da coluna, ela se lê como campo ou
+    barra de progresso — e a tela ficava com cinco blocos verdes empilhados por Etapa, todos do
+    mesmo peso, nenhum deles dizendo o que era.
+    """
+    identificar(client, "carlos", ["gestor"])
+
+    css = folha_de_estilo(client.get(url(processo_a)).content.decode())
+
+    assert ".distribuicao thead th .codigo" not in css, "a regra que esticava não existe mais"
+    regra = css.split(".etapa-medida .codigo,.etapa-medida .situacao{")[1].split("}")[0]
+    assert "display:inline-block" in regra
+
+
+def test_a_contagem_da_coluna_diz_de_que_ela_fala(
+    client, seletor_ligado, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
+):
+    """Numa tela que conta Etapas, membros e inscrições, um número sozinho é adivinha."""
+    alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
+    identificar(client, "carlos", ["gestor"])
+
+    corpo = client.get(url(processo_a)).content.decode()
+
+    assert "1 alocado<" in corpo
+    assert ">1<" not in corpo.split("Análise documental")[1].split("</th>")[0]

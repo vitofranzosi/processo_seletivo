@@ -82,14 +82,18 @@ def test_quem_ja_esta_alocado_aparece_marcado(
 def test_a_coluna_conta_quantos_atuam_na_etapa(
     presidente, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
 ):
-    """O que antes era uma frase por Etapa virou um número no cabeçalho da coluna."""
+    """O que antes era uma frase por Etapa virou um número no cabeçalho da coluna.
+
+    **Com a unidade.** Numa tela que conta Etapas, membros e inscrições, um "2" sozinho em
+    pastilha é adivinha — e a resposta muda a leitura inteira da coluna.
+    """
     for membro in comissao_de_a.values():
         alocar_em(gestor, processo_a, membro, edital_a, etapa_a1)
 
     corpo = presidente.get(reverse("interface:alocacoes", args=[processo_a.id])).content.decode()
 
     cabecalho = corpo.split("Análise documental")[1].split("</th>")[0]
-    assert ">2<" in cabecalho
+    assert "2 alocados" in cabecalho
 
 
 def test_cada_celula_da_matriz_diz_de_quem_e_de_onde(
@@ -160,7 +164,12 @@ def test_a_alocacao_abre_com_o_resumo(presidente, processo_a, comissao_de_a):
     assert "sem ninguém" in corpo
     # “sem Etapa”, e não “sem atribuição”: nesta tela põem-se pessoas em Etapas, e “atribuição”
     # é o nome do vínculo entre inscrição e avaliador na tela vizinha (012).
-    assert "sem Etapa" in corpo
+    #
+    # E cada cartão diz **de que** ele fala: os três contavam coisas diferentes — Etapas, Etapas e
+    # pessoas — com rótulos que não distinguiam qual, e a fração ficava partida entre o número
+    # grande e o texto pequeno ("1" de um lado, "de 7 sem Etapa" do outro).
+    assert "sem nenhuma Etapa" in corpo
+    assert "Etapas sem ninguém" in corpo or "Etapa sem ninguém" in corpo
 
 
 def test_a_comissao_pode_ser_filtrada_por_nome(presidente, processo_a, comissao_de_a):
