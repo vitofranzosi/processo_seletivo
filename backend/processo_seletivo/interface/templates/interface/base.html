@@ -221,6 +221,35 @@ fieldset.caracter legend{font-size:.85rem;color:var(--texto-fraco);padding:0;
   border-radius:6px;padding:1rem 1.25rem;margin-bottom:.75rem}
 .organizacao-etapas .cabeca,.comissao .cabeca{display:flex;gap:.5rem;align-items:center;
   flex-wrap:wrap;margin-bottom:.5rem}
+/* O cartão de Etapa de quem avalia. Os três fatos — Edital, Processo e quanto falta — saíam num
+   `.corpo`, que só tem regra sob `.auditoria`: sem eixo e sem separador, os três viravam uma
+   frase corrida. Uma linha por fato resolve a leitura; o que sobra é a comparação entre cartões,
+   e essa é do medidor. */
+.comissao .contexto{display:flex;flex-direction:column;gap:.15rem;margin:0 0 .75rem;
+  font-size:.875rem;color:var(--texto-fraco)}
+.comissao .contexto .ator{color:var(--texto)}
+/* A mesma barra do progresso de documentos no portal, no canal da gestão: mesma trilha, mesmo
+   verde, mesmo estado completo. Duas paletas para a mesma ideia é como se perde um sistema.
+
+   Com um contorno a mais, e é o estado zerado que o exige: a trilha sozinha é cinza sobre branco,
+   e o cartão de quem não começou ficava sem barra nenhuma — justo o que a barra existe para
+   dizer. No portal a lista nunca começa vazia; aqui, começar do zero é o caso comum. */
+.medidor{display:grid;gap:.3rem;margin:0 0 1rem}
+.medidor .numeros{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;
+  margin:0;font-size:.9375rem}
+.medidor .restante strong{font-size:1.25rem;font-weight:600;line-height:1;
+  font-variant-numeric:tabular-nums}
+.medidor .taxa{color:var(--texto-fraco);font-variant-numeric:tabular-nums}
+.medidor .trilha-do-medidor{height:.5rem;border-radius:999px;background:var(--cinza-fundo);
+  border:1px solid var(--borda);overflow:hidden}
+.medidor .feito{height:100%;background:var(--verde);border-radius:999px}
+.medidor .detalhe{margin:0;font-size:.8125rem;color:var(--texto-fraco)}
+/* Terminar é um estado, e não a ausência de pendências: sem a palavra e a barra cheia, a Etapa
+   pronta ficava idêntica à que ninguém começou. */
+.medidor.completo .restante{color:var(--sucesso);font-weight:600}
+.medidor.completo .feito{background:var(--sucesso)}
+.sem-distribuicao{margin:0 0 1rem;font-size:.8125rem;color:var(--texto-fraco);font-style:italic}
+.acao-do-cartao{margin:0}
 .atribuicoes li{padding:.35rem 0;border-bottom:1px solid var(--fundo);font-size:.9375rem}
 .atribuicoes li:last-child{border-bottom:0}
 .linha-de-acoes{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin:.5rem 0 0}

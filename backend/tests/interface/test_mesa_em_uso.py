@@ -107,12 +107,19 @@ def test_a_mesa_diz_o_que_foi_retirado_dela_e_por_que(como_joao, cenario, gestor
 
 
 def test_a_tela_inicial_diz_quanto_falta_em_cada_etapa(como_joao, cenario, cinco):
-    """Listar Etapas e um botão “Abrir” não responde a primeira pergunta de quem trabalha."""
+    """Listar Etapas e um botão “Abrir” não responde a primeira pergunta de quem trabalha.
+
+    São duas perguntas, e a frase única — "4 pendentes de 5" — respondia só a primeira: o quanto
+    já andou ficava para a aritmética de quem lê. Os estados do medidor estão em
+    `test_completude_das_etapas`.
+    """
     concluir_como(cenario, "joao", cinco[0])
 
     corpo = como_joao.get(reverse("interface:minhas-etapas")).content.decode()
 
-    assert "4 pendentes de 5" in corpo
+    assert "pendentes" in corpo and "4</strong>" in corpo
+    assert "20%" in corpo
+    assert "1 de 5" in corpo
 
 
 def test_a_inscricao_oferece_a_proxima_pendente(como_joao, cenario, cinco):

@@ -304,12 +304,33 @@ def carga_nas_etapas(*, ator, atribuicoes):
         )
     )
     return {
-        (linha["edital_id"], str(linha["etapa_id"])): {
-            "total": linha["total"],
-            "concluidas": linha["concluidas"],
-            "pendentes": linha["total"] - linha["concluidas"],
-        }
+        (linha["edital_id"], str(linha["etapa_id"])): _completude(
+            linha["total"], linha["concluidas"]
+        )
         for linha in contagens
+    }
+
+
+def _completude(total, concluidas):
+    """As contagens e a fração entre elas, que é o que se compara de relance entre Etapas.
+
+    O percentual arredonda, e arredondar mente nas duas pontas: uma de 255 concluída vira "0%" e
+    dá a Etapa por não começada; 254 de 255 vira "100%" e a dá por encerrada. As duas guardas
+    reservam os extremos para os extremos — só quem tem zero mostra 0%, só quem não deve nada
+    mostra 100%.
+    """
+    if not total:
+        return {"total": 0, "concluidas": 0, "pendentes": 0, "percentual": 0}
+    percentual = round(concluidas * 100 / total)
+    if percentual == 0 and concluidas:
+        percentual = 1
+    elif percentual == 100 and concluidas < total:
+        percentual = 99
+    return {
+        "total": total,
+        "concluidas": concluidas,
+        "pendentes": total - concluidas,
+        "percentual": percentual,
     }
 
 
