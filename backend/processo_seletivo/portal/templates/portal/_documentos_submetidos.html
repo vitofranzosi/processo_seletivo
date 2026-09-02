@@ -1,0 +1,23 @@
+{% comment %}
+Os documentos como a pessoa os reconhece: pelo requisito que atendem, e não por uma pasta com o
+nome dela. É a mesma ligação que a `009` gravou — Diploma exigido → documento apresentado — e é o
+que permite conferir sem abrir arquivo por arquivo.
+
+Ver e baixar são o mesmo arquivo, e nenhuma das duas altera a inscrição.
+{% endcomment %}
+<ul class="enviados">
+  {% for documento in documentos %}
+  <li class="enviado">
+    <h3>{{ documento.requisito }}</h3>
+    <p class="meta">
+      <span class="arquivo">{{ documento.arquivo }}</span> · {{ documento.tamanho }}<br>
+      enviado em {{ documento.quando|date:"d/m/Y" }} às {{ documento.quando|date:"H:i" }}
+    </p>
+    <p class="acoes">
+      <a href="{% url 'portal:documento-do-candidato' inscricao.id documento.requisito_id %}">Visualizar</a>
+      ·
+      <a href="{% url 'portal:documento-do-candidato' inscricao.id documento.requisito_id %}?baixar=1">Baixar</a>
+    </p>
+  </li>
+  {% endfor %}
+</ul>

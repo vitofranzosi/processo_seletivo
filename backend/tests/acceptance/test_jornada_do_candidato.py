@@ -10,6 +10,8 @@ protocolo, e a equipe abre `Inscrições` e visualiza cada documento sob o requi
 Sem banco, sem shell, sem API manual — e sem Drive, planilha ou download em lote.
 """
 
+import re
+
 import pytest
 from django.test import Client
 from django.urls import reverse
@@ -42,17 +44,28 @@ def test_do_edital_publicado_ate_a_equipe_abrir_os_documentos(client, selecao, s
 
     # 2. Aciona o convite da vaga e é levada a identificar-se — voltando para a mesma vaga.
     vaga = reverse("portal:inscrever", args=[selecao.id, PERFIL_DOCENTE])
-    assert client.post(vaga)["Location"] == f"{reverse('portal:identificar')}?destino={vaga}"
+    assert client.post(vaga)["Location"] == f"{reverse('portal:acesso')}?destino={vaga}"
 
-    identificada = client.post(
-        reverse("portal:identificar"),
-        {
-            "nome": "Maria Silva",
-            "cpf": "123.456.789-09",
-            "email": "maria@exemplo.br",
-            "destino": vaga,
-        },
+    # A 010 trocou a declaração pela prova: informa o e-mail, recebe o código, digita. Nome e CPF
+    # vêm depois, uma única vez, e ela volta para a vaga que escolheu.
+    from django.core import mail
+
+    from processo_seletivo.identidade.models import DesafioDeAcesso
+
+    mail.outbox.clear()
+    client.post(f"{reverse('portal:acesso')}?destino={vaga}", {"email": "maria@exemplo.br"})
+    codigo = re.search(r"\b(\d{6})\b", mail.outbox[-1].body).group(1)
+    assert client.post(reverse("portal:acesso-codigo"), {"codigo": codigo})["Location"] == reverse(
+        "portal:meus-dados"
     )
+    assert DesafioDeAcesso.objects.get().consumido_em is not None
+
+    dados = client.post(
+        reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": "123.456.789-09"}
+    )
+    assert "Continuar inscrição" in dados.content.decode(), "volta para a vaga que ela escolheu"
+
+    identificada = client.post(vaga)
     inscricao = Inscricao.objects.get()
     assert identificada["Location"] == reverse("portal:inscricao", args=[inscricao.id])
     assert str(inscricao.profile_id) == PERFIL_DOCENTE, "chegou pela vaga, e não escolheu de novo"

@@ -17,7 +17,8 @@ from django.urls import reverse
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.inscricoes.application.rascunho import anexar_documento, gravar_dados
 from processo_seletivo.inscricoes.application.submissao import enviar_inscricao
-from tests.fixtures.candidato import MARIA, MODALIDADE_AC, identificar, pdf
+from processo_seletivo.inscricoes.domain.pessoais import digitos
+from tests.fixtures.candidato import CPF_MARIA, MARIA, MODALIDADE_AC, identificar, pdf
 from tests.fixtures.selecao import DOCUMENTO_DE_TODOS, DOCUMENTO_DO_PERFIL
 
 # O que não pode aparecer: o documento em qualquer grafia, o e-mail, o nome da pessoa e o nome do
@@ -110,5 +111,9 @@ def test_o_ator_registrado_e_o_identificador_opaco(jornada):
     registro = RegistroAuditoria.objects.filter(aggregate_type="Inscricao").first()
 
     assert registro.actor_subject == MARIA.subject
-    assert registro.actor_subject.startswith("demo:")
+    # O prefixo mudou de `demo:` para `cand:` com a 010, e o que o teste afirma é o mesmo: o ator
+    # registrado é opaco. O que ele **não** pode ser é derivado do CPF — nem por segredo.
+    assert registro.actor_subject.startswith("cand:")
+    assert CPF_MARIA not in registro.actor_subject
+    assert digitos(CPF_MARIA) not in registro.actor_subject
     assert len(registro.actor_subject.split(":")[1]) == 32, "resumo, e não documento"

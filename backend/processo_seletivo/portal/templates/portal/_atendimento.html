@@ -1,0 +1,12 @@
+{% comment %}
+Para onde ir quando o sistema não resolve sozinho.
+
+As duas telas que mandavam "procure o atendimento institucional" não diziam qual: nem e-mail, nem
+telefone, nem link. São os dois pontos em que a pessoa já está travada — o CPF congelado depois da
+primeira inscrição enviada, e a participação anterior que ela não conseguiu confirmar —, e mandar
+procurar sem dizer onde é abandonar quem pediu ajuda.
+
+Em produção o valor é obrigatório; em desenvolvimento pode faltar, e então a frase genérica é o que
+sobra — que é exatamente o que havia antes.
+{% endcomment %}
+{% if atendimento %}<a href="{% if '@' in atendimento %}mailto:{{ atendimento }}{% else %}{{ atendimento }}{% endif %}">{{ atendimento }}</a>{% else %}o atendimento institucional{% endif %}

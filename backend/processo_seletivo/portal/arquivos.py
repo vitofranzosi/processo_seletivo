@@ -24,14 +24,14 @@ from processo_seletivo.shared.http import marcar_como_privada
 LIMITE_EM_MEMORIA = 2 * 1024 * 1024
 
 
-def entregar_ao_titular(*, inscricao, identidade, requirement_id):
+def entregar_ao_titular(*, inscricao, identidade, requirement_id, anexo=False):
     exigir_titularidade(inscricao, identidade)
     documento = DocumentoSubmetido.objects.filter(
         inscricao=inscricao, requirement_id=requirement_id
     ).first()
     if documento is None:
         raise DomainError("not_found", "Recurso não encontrado.", 404)
-    return entregar(documento)
+    return entregar(documento, anexo=anexo)
 
 
 def entregar(documento, *, anexo=False, verificado=None):

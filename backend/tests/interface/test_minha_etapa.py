@@ -1,5 +1,7 @@
 """T049 — a demonstração de fronteira: o que a página da atribuição **não** tem (§50 da spec)."""
 
+import re
+
 import pytest
 from django.urls import reverse
 
@@ -36,8 +38,14 @@ def test_a_pagina_contextualiza_a_atribuicao(pagina):
 
 
 def test_a_pagina_nao_oferece_nenhum_controle_de_avaliacao(pagina):
-    """FR-051 e FR-052: nem existente, nem desabilitado."""
-    corpo = pagina.content.decode()
+    """FR-051 e FR-052: nem existente, nem desabilitado.
+
+    Lido do **conteúdo**, e não da resposta inteira: o `<style>` da base administrativa comenta
+    regras de outras telas, e a `010` acrescentou ali uma que menciona CPF — a marca de
+    coincidência na listagem do que chegou. Afirmar sobre a página toda mediria o CSS, e um
+    comentário de folha de estilo não é controle de avaliação.
+    """
+    corpo = re.sub(r"<style>.*?</style>", "", pagina.content.decode(), flags=re.S)
 
     for proibido in PROIBIDOS:
         assert proibido not in corpo, proibido

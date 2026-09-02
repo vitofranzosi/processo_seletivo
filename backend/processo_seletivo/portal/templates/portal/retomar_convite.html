@@ -1,0 +1,17 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Continuar inscrição{% endblock %}
+{% block convite_de_entrar %}{% endblock %}
+{% block conteudo %}
+<h1>Tudo certo</h1>
+{% comment %}
+O convite é POST porque abrir rascunho cria registro e pratica ato auditado — a mesma razão da
+`009`. Depois de entrar, ou de informar nome e CPF, a pessoa volta para a vaga que ela escolheu,
+e não para uma lista vazia que a obrigaria a procurar tudo de novo.
+{% endcomment %}
+<p class="sub">Você pode continuar a inscrição que começou.</p>
+<form method="post" action="{{ destino }}">
+  {% csrf_token %}
+  <button type="submit" class="principal">Continuar inscrição</button>
+</form>
+<p><a href="{% url 'portal:inscricoes' %}">Ver minhas inscrições</a></p>
+{% endblock %}

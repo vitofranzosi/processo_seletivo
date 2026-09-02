@@ -38,6 +38,7 @@ from processo_seletivo.comissoes.domain.autorizacao import (
     pode_gerir_comissao,
 )
 from processo_seletivo.comissoes.domain.etapas import etapa_vigente, evento_vigente
+from processo_seletivo.comissoes.models import Funcao
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.application.identificacao import update_edital_identification
 from processo_seletivo.editais.domain.validation import validate_for_publication
@@ -118,14 +119,20 @@ def lista(request):
     # A base contextual da 011: sem isto a tela decide só por `ator.permissions` e diz a quem
     # preside uma comissão que sua conta não possui papel algum.
     vinculos = {v.processo_id: v for v in comissao_selectors.comissoes_da_pessoa(ator)}
+    # Integrar a comissão não é geri-la: a lista oferecia as duas telas a qualquer membro, e
+    # ambas exigem **gerir** — o link levava ao 404. A porta aqui é a mesma de
+    # `pode_gerir_comissao`, resolvida sobre os vínculos já lidos para não custar uma consulta
+    # por Processo.
+    gere_por_papel = ator.can("comissao:gerir")
     for processo in processos:
         processo.vinculo = vinculos.get(processo.id)
-        # **Quem pode gerir vê o caminho**, e não só quem integra a comissão. Antes, o gestor com
-        # `comissao:gerir` que não fosse membro não recebia link nenhum para a comissão nem para a
-        # alocação — a permissão existia, o caminho não. Sem consulta nova: a base é a permissão
-        # sistêmica ou a presidência **deste** Processo, e os vínculos já estão carregados.
-        processo.pode_gerir = ator.can("comissao:gerir") or (
-            processo.vinculo is not None and processo.vinculo.funcao == "PRESIDENTE"
+        # E a recíproca: **quem pode gerir vê o caminho**, ainda que não integre a comissão. O
+        # gestor com `comissao:gerir` que não fosse membro não recebia link nenhum para a comissão
+        # nem para a alocação — e é justamente ele quem constitui a comissão que ainda não integra.
+        # Sem consulta nova: a permissão sistêmica ou a presidência **deste** Processo, sobre os
+        # vínculos já lidos.
+        processo.pode_gerir = gere_por_papel or (
+            processo.vinculo is not None and processo.vinculo.funcao == Funcao.PRESIDENTE
         )
 
     contagem = contar_por_situacao(processos)
@@ -1595,6 +1602,10 @@ def processo_detalhe(request, processo_id):
             "pendentes": pending_editais(processo),
             "atos": list(atos_processo.disponiveis(processo, ator)),
             "pode_auditar": ator.can("auditoria:consultar"),
+            # As duas telas da comissão exigem gerir (011, FR-016). O painel as oferecia a
+            # qualquer identidade que enxergasse o Processo, e quem não gere batia num 404 sem
+            # explicação: a oferta agora é a mesma decisão que a view de destino toma.
+            "pode_gerir_comissao": pode_gerir_comissao(ator, processo) is not None,
             # FR-021: criado o Processo, o próximo passo é elaborar o Edital — e era só um link
             # discreto no número, enquanto o destaque ia para o impedimento de cancelar, ato que
             # ninguém tentou. O primeiro Edital em elaboração que este ator pode compor.

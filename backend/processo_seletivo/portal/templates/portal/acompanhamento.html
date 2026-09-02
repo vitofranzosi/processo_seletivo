@@ -1,0 +1,51 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Acompanhar{% endblock %}
+{% block conteudo %}
+<h1>Acompanhar</h1>
+<p class="sub">{{ selecao.processo_titulo }}</p>
+
+{% if retificado %}
+{% comment %}
+Informa, e não altera nada: a versão aceita pela inscrição permanece a que foi aceita, e nada é
+reaberto nem reenviado (FR-079). O que a pessoa ganha é a chance de ler o que mudou.
+{% endcomment %}
+<p class="aviso"><strong>Este Edital foi atualizado após sua inscrição.</strong><br>
+Sua inscrição continua valendo sob a versão que você aceitou.
+<a href="{% url 'portal:selecao' selecao.edital_id %}">Ver o Edital vigente</a></p>
+{% endif %}
+
+{% comment %}
+Dois blocos, e a distinção entre eles é o ponto da tela: o primeiro fala de você, o segundo fala do
+processo. Uma data alcançada no Cronograma não é notícia sobre a sua participação (FR-076, FR-077).
+{% endcomment %}
+<h2>Sua participação</h2>
+<ul class="linha-do-tempo pessoal">
+  {% for fato in fatos %}
+  <li class="marco concluido">
+    <span class="rotulo">✓ {{ fato.rotulo }}</span>
+    <span class="quando">{{ fato.quando|date:"d/m/Y" }} às {{ fato.quando|date:"H:i" }}</span>
+  </li>
+  {% empty %}
+  <li class="marco"><span class="rotulo">Nada registrado ainda.</span></li>
+  {% endfor %}
+</ul>
+
+<h2>Cronograma do processo</h2>
+<ul class="linha-do-tempo processo">
+  {% for evento in cronograma %}
+  <li class="marco {{ evento.situacao }}">
+    <span class="rotulo">
+      {% if evento.situacao == "concluido" %}✓ {% endif %}{{ evento.nome }}
+    </span>
+    <span class="quando">
+      {% if evento.inicio %}{{ evento.inicio|date:"d/m" }}{% endif %}
+      {% if evento.fim %}– {{ evento.fim|date:"d/m" }}{% endif %}
+    </span>
+  </li>
+  {% empty %}
+  <li class="marco"><span class="rotulo">O Edital não publicou cronograma.</span></li>
+  {% endfor %}
+</ul>
+
+<p><a class="principal" href="{% url 'portal:inscricao' inscricao.id %}">Ver o que enviei</a></p>
+{% endblock %}

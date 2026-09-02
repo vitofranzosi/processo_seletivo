@@ -10,6 +10,8 @@ O escopo institucional é conferido junto: um Edital de outro escopo não é "se
 inexistente para quem pergunta — a mesma resposta que `require_permission` já dá (FR-072).
 """
 
+from django.db.models import Count
+
 from processo_seletivo.inscricoes.application.rascunho import requisitos_da_inscricao
 from processo_seletivo.inscricoes.domain.arquivos import tamanho_legivel
 from processo_seletivo.inscricoes.domain.autenticidade import codigo_de_verificacao
@@ -65,6 +67,7 @@ def inscricoes_do_edital(*, actor, edital_id):
         enviados.setdefault(documento.inscricao_id, set()).add(str(documento.requirement_id))
     linhas = []
     consulta = Inscricao.objects.filter(edital=edital).select_related("versao_aceita")
+    coincidentes = _cpfs_coincidentes(edital)
     for inscricao in consulta.order_by("-submitted_at", "-created_at"):
         # **A versão de cada inscrição, e não a vigente para todas.** Uma inscrição enviada
         # responde à versão que ela aceitou: usar a vigente faria Perfil, modalidade e contagem de
@@ -91,9 +94,38 @@ def inscricoes_do_edital(*, actor, edital_id):
                 "recebidos": len([item for item in obrigatorios if item in recebidos]),
                 "esperados": len(obrigatorios),
                 "quando": inscricao.submitted_at or inscricao.created_at,
+                # Assinalado, e não apenas visível: a coluna mostra o CPF mascarado, e comparar
+                # máscaras a olho numa listagem não é detecção (FR-065).
+                "cpf_coincidente": (
+                    str(inscricao.profile_id),
+                    inscricao.cpf_normalizado,
+                )
+                in coincidentes,
             }
         )
     return edital, linhas
+
+
+def _cpfs_coincidentes(edital) -> set:
+    """Os pares Perfil + CPF com mais de uma inscrição **enviada** neste Edital (FR-064, FR-065).
+
+    O sistema não decide qual das duas vale — essa decisão é institucional, e a regra pertence à
+    feature que for avaliar inscrições, junto com o estado, o contraditório e o ato que a
+    acompanham. O que ele faz é não deixar a coincidência passar despercebida.
+
+    Só as enviadas: a regra fala do ato de enviar, e rascunho alheio não marca ninguém. E por
+    Perfil, porque concorrer a duas vagas distintas é legítimo — a Constituição o diz.
+    """
+    contagens = (
+        Inscricao.objects.filter(edital=edital, status=Inscricao.Status.SUBMETIDA)
+        .exclude(cpf_normalizado="")
+        .values("profile_id", "cpf_normalizado")
+        .annotate(quantas=Count("id"))
+        .filter(quantas__gt=1)
+    )
+    return {
+        (str(linha["profile_id"]), linha["cpf_normalizado"]) for linha in contagens
+    }
 
 
 def _conteudo_da_inscricao(inscricao, vigente):

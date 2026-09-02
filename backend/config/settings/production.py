@@ -30,6 +30,8 @@ from .base import (
     ARQUIVOS_CANDIDATOS_RAIZ,
     BASE_DIR,
     DATABASES,
+    DEFAULT_FROM_EMAIL,
+    EMAIL_BACKEND,
     INTERFACE_SELETOR_IDENTIDADE,
     PORTAL_IDENTIDADE_DEMO,
     REST_FRAMEWORK,
@@ -90,6 +92,11 @@ _exigir(
 # A mesma barreira, para o outro eixo de identidade (FR-024 da 009). O provedor de demonstração
 # do portal deixa qualquer pessoa dizer quem é; em produção, uma inscrição atribuída assim não
 # vale nada — e não seria descoberta por quem a recebe.
+#
+# **A 010 apagou o caminho que esta guarda vigiava, e mesmo assim ela fica** (FR-048). A
+# identificação por declaração não existe mais: quem entra prova o controle de um endereço. A
+# variável continua definida e continua recusando o boot como armadilha — se o caminho voltar,
+# por descuido ou por atalho de alguém com pressa, produção não sobe.
 _exigir(
     not PORTAL_IDENTIDADE_DEMO,
     "PORTAL_IDENTIDADE_DEMO",
@@ -110,6 +117,70 @@ _exigir(
     "ARQUIVOS_CANDIDATOS_RAIZ",
     "deve declarar um diretório absoluto para os documentos do candidato, fora da árvore do "
     "código; documento de candidato não pode ser servido diretamente pelo servidor web.",
+)
+
+# O canal de e-mail (FR-081 da 010). Autenticar sem senha depende inteiramente de a mensagem
+# chegar: com um mecanismo que não entrega, o código de acesso vai para o log do servidor e
+# qualquer pessoa com acesso a ele entra como qualquer candidato. É pior do que não ter
+# autenticação, porque parece ter.
+#
+# O alcance desta barreira é o mesmo que este módulo já declara sobre a autenticação
+# institucional, e a redação segue a mesma honestidade: ela **recusa o que sabe não entregar**, e
+# **não prova** que um servidor configurado entregue mensagem alguma. Nenhuma verificação de
+# inicialização pode provar isso.
+MECANISMOS_QUE_NAO_ENTREGAM = frozenset(
+    {
+        "django.core.mail.backends.console.EmailBackend",
+        "django.core.mail.backends.dummy.EmailBackend",
+        "django.core.mail.backends.locmem.EmailBackend",
+        "django.core.mail.backends.filebased.EmailBackend",
+    }
+)
+_exigir(
+    EMAIL_BACKEND not in MECANISMOS_QUE_NAO_ENTREGAM,
+    "DJANGO_EMAIL_BACKEND",
+    "o mecanismo de envio configurado não entrega mensagem alguma; em produção o código de "
+    "acesso do candidato iria para o log do servidor, e autenticação que não sai da máquina não "
+    "é autenticação.",
+)
+_exigir(
+    bool(DEFAULT_FROM_EMAIL.strip()),
+    "DEFAULT_FROM_EMAIL",
+    "sem remetente declarado a mensagem com o código de acesso não é enviada, e o candidato "
+    "fica sem caminho para entrar.",
+)
+
+# Há proxy à frente? (FR-030 da 010) A pergunta precisa ser **respondida**, e não assumida.
+#
+# O limite por origem existe para conter quem varre endereços. Atrás de um proxy, `REMOTE_ADDR` é
+# o mesmo para todo mundo — e sem declarar isso, o teto de trinta pedidos por hora deixa de valer
+# por origem e passa a valer para a instituição inteira. No último dia do prazo, isso recusa
+# candidato legítimo em bloco, com a mesma mensagem neutra de sempre, e ninguém entende por quê.
+#
+# Não há padrão seguro para adivinhar: confiar no cabeçalho sem proxy torna o limite contornável
+# com um valor aleatório por requisição; não confiar com proxy transforma o limite em teto global.
+# Quem implanta sabe qual é a topologia, e é essa a única resposta que serve.
+_atras_de_proxy = os.getenv("PORTAL_ATRAS_DE_PROXY", "").strip().lower()
+_exigir(
+    _atras_de_proxy in {"true", "false"},
+    "PORTAL_ATRAS_DE_PROXY",
+    "declare 'true' quando houver proxy ou balanceador à frente da aplicação, e 'false' quando ela "
+    "receber a conexão diretamente. Sem a declaração, o limite de solicitações por origem ou é "
+    "contornável por cabeçalho forjado, ou recusa candidatos legítimos em bloco — e qual dos dois "
+    "depende da topologia, que só quem implanta conhece.",
+)
+
+# Sem canal de atendimento declarado, duas telas do candidato viram beco sem saída: o CPF congelado
+# depois da primeira inscrição enviada só se corrige por ato institucional, e a participação
+# anterior que a pessoa não conseguiu confirmar só se recupera por atendimento. Mandar "procure o
+# atendimento" sem dizer qual é abandonar quem já está travado.
+PORTAL_ATENDIMENTO = os.getenv("PORTAL_ATENDIMENTO", "").strip()
+_exigir(
+    bool(PORTAL_ATENDIMENTO),
+    "PORTAL_ATENDIMENTO",
+    "declare o canal de atendimento ao candidato — um e-mail, um telefone ou o endereço de uma "
+    "página. Duas telas mandam procurá-lo, e são os dois pontos em que o sistema não resolve "
+    "sozinho: CPF congelado e participação anterior não confirmada.",
 )
 
 # A autenticação institucional é incremento próprio; até lá, produção não sobe.
