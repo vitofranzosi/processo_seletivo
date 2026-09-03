@@ -317,6 +317,62 @@ def homologate_edital(
         return edital, 200
 
 
+def return_edital_to_drafting(
+    *, actor, edital_id, expected_revision, reason, idempotency_key, correlation_id
+):
+    """FR-006: antes da Publicação, a revisão devolve o Edital a Em elaboração.
+
+    A metade da FR-006 que faltava. Sem ela, quem revisa e discorda tinha duas saídas e nenhuma
+    era a certa: cancelar — que é interrupção administrativa, estado final, e queima o número no
+    escopo — ou homologar o que recusa para retificar depois, publicando o defeito de propósito.
+
+    É ato de quem homologa, como a revogação de homologação e como a devolução da Retificação,
+    que exige `retificacao:homologar` pela mesma razão: devolver desfaz a revisão que alguém
+    submeteu, e quem desfaz é quem recusa.
+
+    A `RevisaoEdital` submetida **permanece** — ela é o que foi submetido, e continua verdadeira
+    depois de devolvida. A próxima submissão cria outra, com o número de revisão que esta
+    transição acabou de incrementar; a única unicidade em jogo, `(edital, edital_revision)`,
+    nunca colide por isso.
+    """
+    require_permission(actor, "edital:homologar")
+    with command_context() as now:
+        idem = reserve(
+            actor=actor,
+            operation=f"edital:devolver:{edital_id}",
+            key=idempotency_key,
+            payload={"reason": reason},
+        )
+        if idem.result_id:
+            return Edital.objects.get(pk=idem.result_id), idem.response_status
+        edital = _locked_edital(actor, edital_id)
+        if edital.status != Edital.Status.EM_REVISAO:
+            raise DomainError("invalid_state", "Edital não está em revisão.", 409)
+        if not (reason or "").strip():
+            raise DomainError("reason_required", "A devolução exige motivo.", 422)
+        compare_and_swap(
+            Edital.objects,
+            pk=edital.pk,
+            expected_revision=expected_revision,
+            status=Edital.Status.EM_ELABORACAO,
+        )
+        edital.refresh_from_db()
+        record_event(
+            actor=actor,
+            permission="edital:homologar",
+            operation="DEVOLVER",
+            aggregate=edital,
+            now=now,
+            correlation_id=correlation_id,
+            reason=reason,
+            previous_state=Edital.Status.EM_REVISAO,
+            previous_revision=expected_revision,
+            idempotency_key=idempotency_key,
+        )
+        _finish_idempotency(idem, edital, 200)
+        return edital, 200
+
+
 def revoke_homologation(
     *, actor, edital_id, expected_revision, reason, idempotency_key, correlation_id
 ):

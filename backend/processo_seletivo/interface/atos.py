@@ -13,6 +13,7 @@ from processo_seletivo.processos.application.finalizacao import cancel_edital, c
 from processo_seletivo.publicacoes.application.publish_edital import (
     homologate_edital,
     publish_edital,
+    return_edital_to_drafting,
     revoke_homologation,
     submit_edital,
 )
@@ -58,6 +59,20 @@ ATOS = {
         consequencias=[
             "A revisão submetida passa a ser a versão candidata à Publicação.",
             "A homologação fica registrada em seu nome e pode ser revogada antes de publicar.",
+        ],
+    ),
+    "devolver": Ato(
+        chave="devolver",
+        rotulo="Devolver para elaboração",
+        permissao="edital:homologar",
+        situacao_exigida="EM_REVISAO",
+        command=return_edital_to_drafting,
+        exige_motivo=True,
+        rotulo_motivo="Motivo da devolução",
+        consequencias=[
+            "O Edital volta para elaboração e pode ser editado novamente pelo formulário.",
+            "A revisão submetida é preservada no histórico; a próxima submissão cria outra.",
+            "O motivo fica registrado e é o que orienta quem for corrigir.",
         ],
     ),
     "revogar-homologacao": Ato(

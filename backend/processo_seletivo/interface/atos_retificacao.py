@@ -14,10 +14,19 @@ from processo_seletivo.publicacoes.application.retificacoes import (
 
 @dataclass(frozen=True)
 class AtoRetificacao:
+    """Um ato e as situações de que ele parte.
+
+    `situacoes_exigidas` é conjunto, e não situação única, porque `devolver` parte de duas — o
+    domínio admite desfazer tanto a revisão quanto a homologação (`TRANSITIONS`). Enquanto era
+    escalar, `cancelar` precisava de um ramo próprio em `disponiveis` e outro em `impedimento`
+    para consultar o seu conjunto à parte; com o conjunto no próprio ato, os dois ramos somem e
+    o terceiro caso nunca precisa nascer.
+    """
+
     chave: str
     rotulo: str
     permissao: str
-    situacao_exigida: str
+    situacoes_exigidas: frozenset[str]
     consequencias: list[str]
     irreversivel: bool = False
     interrupcao: bool = False
@@ -26,12 +35,17 @@ class AtoRetificacao:
     rotulo_motivo: str = "Motivo"
 
 
+CANCELAVEL = frozenset({"EM_ELABORACAO", "EM_REVISAO", "HOMOLOGADA"})
+# Devolver desfaz a revisão ou a homologação, e por isso parte das duas — é o mesmo conjunto que
+# `TRANSITIONS["devolver"]` declara no domínio.
+DEVOLVIVEL = frozenset({"EM_REVISAO", "HOMOLOGADA"})
+
 ATOS = {
     "submeter": AtoRetificacao(
         chave="submeter",
         rotulo="Submeter para revisão",
         permissao="retificacao:submeter",
-        situacao_exigida="EM_ELABORACAO",
+        situacoes_exigidas=frozenset({"EM_ELABORACAO"}),
         consequencias=[
             "As alterações declaradas são congeladas para revisão.",
             "A Retificação deixa de poder ser editada até ser devolvida ou homologada.",
@@ -41,7 +55,7 @@ ATOS = {
         chave="homologar",
         rotulo="Homologar",
         permissao="retificacao:homologar",
-        situacao_exigida="EM_REVISAO",
+        situacoes_exigidas=frozenset({"EM_REVISAO"}),
         exige_motivo=True,
         rotulo_motivo="Fundamento da homologação",
         consequencias=[
@@ -49,11 +63,24 @@ ATOS = {
             "Nada muda no conteúdo vigente do Edital até a Publicação.",
         ],
     ),
+    "devolver": AtoRetificacao(
+        chave="devolver",
+        rotulo="Devolver para elaboração",
+        permissao="retificacao:homologar",
+        situacoes_exigidas=DEVOLVIVEL,
+        exige_motivo=True,
+        rotulo_motivo="Motivo da devolução",
+        consequencias=[
+            "A Retificação volta para elaboração e pode ser editada novamente.",
+            "Uma homologação anterior deixa de valer; sua autoria permanece na auditoria.",
+            "O motivo fica registrado e é o que orienta quem for corrigir.",
+        ],
+    ),
     "publicar": AtoRetificacao(
         chave="publicar",
         rotulo="Publicar Retificação",
         permissao="retificacao:publicar",
-        situacao_exigida="HOMOLOGADA",
+        situacoes_exigidas=frozenset({"HOMOLOGADA"}),
         irreversivel=True,
         exige_signatario=True,
         consequencias=[
@@ -68,7 +95,7 @@ ATOS = {
         chave="cancelar",
         rotulo="Cancelar Retificação",
         permissao="retificacao:cancelar",
-        situacao_exigida=None,
+        situacoes_exigidas=CANCELAVEL,
         irreversivel=True,
         interrupcao=True,
         exige_motivo=True,
@@ -79,17 +106,11 @@ ATOS = {
         ],
     ),
 }
-CANCELAVEL = {"EM_ELABORACAO", "EM_REVISAO", "HOMOLOGADA"}
 
 
 def disponiveis(retificacao, ator):
     for ato in ATOS.values():
-        if not ator.can(ato.permissao):
-            continue
-        if ato.chave == "cancelar":
-            if retificacao.status in CANCELAVEL:
-                yield ato
-        elif retificacao.status == ato.situacao_exigida:
+        if ator.can(ato.permissao) and retificacao.status in ato.situacoes_exigidas:
             yield ato
 
 
@@ -121,5 +142,8 @@ def impedimento(retificacao, ator, ato):
         return {"motivo": "permissao", "permissao": ato.permissao}
     if any(cabivel.chave == ato.chave for cabivel in disponiveis(retificacao, ator)):
         return None
-    exigidas = sorted(CANCELAVEL) if ato.chave == "cancelar" else [ato.situacao_exigida]
-    return {"motivo": "situacao", "exigidas": exigidas, "atual": retificacao.status}
+    return {
+        "motivo": "situacao",
+        "exigidas": sorted(ato.situacoes_exigidas),
+        "atual": retificacao.status,
+    }
