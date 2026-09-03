@@ -63,19 +63,6 @@ ATOS = {
             "Nada muda no conteúdo vigente do Edital até a Publicação.",
         ],
     ),
-    "devolver": AtoRetificacao(
-        chave="devolver",
-        rotulo="Devolver para elaboração",
-        permissao="retificacao:homologar",
-        situacoes_exigidas=DEVOLVIVEL,
-        exige_motivo=True,
-        rotulo_motivo="Motivo da devolução",
-        consequencias=[
-            "A Retificação volta para elaboração e pode ser editada novamente.",
-            "Uma homologação anterior deixa de valer; sua autoria permanece na auditoria.",
-            "O motivo fica registrado e é o que orienta quem for corrigir.",
-        ],
-    ),
     "publicar": AtoRetificacao(
         chave="publicar",
         rotulo="Publicar Retificação",
@@ -89,6 +76,22 @@ ATOS = {
             "declarada — imediatamente, se nenhuma data futura foi informada.",
             "A Publicação original e as versões anteriores continuam preservadas e consultáveis.",
             "Correções posteriores exigem nova Retificação.",
+        ],
+    ),
+    # Depois de `publicar`, e não antes: a tela lista os atos na ordem deste dicionário, e numa
+    # Retificação homologada os dois são oferecidos juntos. O ato principal vem primeiro; o que
+    # anda para trás vem depois dele, como no Edital.
+    "devolver": AtoRetificacao(
+        chave="devolver",
+        rotulo="Devolver para elaboração",
+        permissao="retificacao:homologar",
+        situacoes_exigidas=DEVOLVIVEL,
+        exige_motivo=True,
+        rotulo_motivo="Motivo da devolução",
+        consequencias=[
+            "A Retificação volta para elaboração e pode ser editada novamente.",
+            "Uma homologação anterior deixa de valer; sua autoria permanece na auditoria.",
+            "O motivo fica registrado e é o que orienta quem for corrigir.",
         ],
     ),
     "cancelar": AtoRetificacao(

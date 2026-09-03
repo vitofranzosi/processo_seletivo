@@ -14,6 +14,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from django.utils.http import urlencode
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_http_methods
 
@@ -1692,6 +1693,10 @@ def inscricoes_recebidas(request, edital_id):
         perfil=perfil or None,
         modalidade=modalidade or None,
     )
+    # O filtro viaja em todo link da tela — nas duas paginações e em cada cartão de Perfil. Montá-lo
+    # uma vez evita a cadeia de `{% if %}` repetida por link, que foi como o cartão acabou perdendo
+    # a busca que o formulário preservava.
+    filtro = _querystring(busca=busca, perfil=perfil, modalidade=modalidade)
     return marcar_como_privada(
         render(
             request,
@@ -1702,9 +1707,26 @@ def inscricoes_recebidas(request, edital_id):
                 "perfil": perfil,
                 "modalidade": modalidade,
                 "filtrando": bool(busca or perfil or modalidade),
+                "filtro": filtro,
+                # Sem o Perfil, para que o cartão possa trocá-lo sem descartar o resto.
+                "filtro_sem_perfil": _querystring(busca=busca, modalidade=modalidade),
+                # A posição da outra seção, para que paginar uma não devolva a outra ao começo.
+                "pagina_da_irma": _querystring(pagina=contexto["pagina_recebidas"].number),
+                "rascunhos_da_irma": _querystring(rascunhos=contexto["pagina_rascunhos"].number),
             },
         )
     )
+
+
+def _querystring(**parametros):
+    """Os parâmetros informados, codificados, sem separador nenhum na frente.
+
+    Sem o `&` inicial porque quem monta o link sabe se ele é o primeiro parâmetro ou não, e um
+    separador embutido produziria `?&busca=…` nos links que começam por ele. Devolve `""` quando
+    não há nada a dizer. Página 1 não entra: é o padrão, e carregá-la só alongaria a URL.
+    """
+    presentes = {chave: valor for chave, valor in parametros.items() if valor not in (None, "", 1)}
+    return urlencode(presentes) if presentes else ""
 
 
 @require_http_methods(["GET"])

@@ -178,6 +178,53 @@ def test_a_paginacao_carrega_o_filtro_consigo(gestor, selecao, tela):
     assert "busca=" in proxima.group(1)
 
 
+def test_paginar_uma_secao_preserva_o_lugar_na_outra(gestor, selecao, tela):
+    """Duas seções, duas posições: avançar numa não devolve a outra ao começo.
+
+    Sem isto, quem conferia rascunho na segunda página e paginava o que já chegou perdia o
+    lugar sem nenhum aviso — o link simplesmente não carregava a posição da irmã.
+    """
+    inscrever(selecao, POR_PAGINA + 3)
+    inscrever(selecao, POR_PAGINA + 3, primeiro=300, enviada=False, nome="Rascunho")
+
+    corpo = gestor.get(f"{tela}?rascunhos=2").content.decode()
+
+    recebidas = re.search(r'<a href="([^"]*pagina=2[^"]*)">Próxima</a>', corpo)
+    assert recebidas, "a seção das recebidas tem próxima página"
+    assert "rascunhos=2" in recebidas.group(1), "e ela carrega a posição da outra seção"
+
+
+def test_o_cartao_de_perfil_preserva_a_busca(gestor, selecao, tela):
+    """O cartão troca o Perfil; ele não é um botão de limpar tudo.
+
+    O formulário já preservava o Perfil num campo oculto, e o cartão descartava a busca: o mesmo
+    filtro se comportava de dois jeitos conforme a ordem dos cliques.
+    """
+    inscrever(selecao, 2)
+    inscrever(selecao, 1, primeiro=90, perfil=PERFIL_TECNICO, nome="Técnico")
+
+    corpo = gestor.get(f"{tela}?busca=Candidato").content.decode()
+
+    cartao = re.search(rf'<a href="(\?perfil={PERFIL_TECNICO}[^"]*)"', corpo)
+    assert cartao, "o cartão do Perfil técnico está na tela"
+    assert "busca=Candidato" in cartao.group(1)
+
+
+@pytest.mark.parametrize("parametro", ["perfil", "modalidade"])
+def test_filtro_que_nao_e_identificador_nao_derruba_a_tela(gestor, selecao, tela, parametro):
+    """URL editada à mão, link antigo ou rastreador não podem produzir erro de servidor.
+
+    `profile_id` e `modality_id` são colunas de UUID: texto qualquer levantava `ValidationError`,
+    que ninguém captura, e a consulta inteira respondia 500.
+    """
+    inscrever(selecao, 2)
+
+    resposta = gestor.get(f"{tela}?{parametro}=isto-nao-e-uuid")
+
+    assert resposta.status_code == 200
+    assert "Inscrições — 2" in resposta.content.decode()
+
+
 def test_os_rascunhos_paginam_por_conta_propria(gestor, selecao, tela):
     """Dois conjuntos com prazos distintos: avançar num não arrasta quem conferia o outro."""
     inscrever(selecao, 3)

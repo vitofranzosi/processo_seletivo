@@ -130,7 +130,11 @@ def test_quem_elabora_nao_devolve(client, em_revisao):
 
 
 def test_a_publicada_nao_e_devolvida(client, em_revisao):
-    """Publicada é imutável: a volta existe até a Publicação, e não depois dela."""
+    """Publicada é imutável: a volta existe até a Publicação, e não depois dela.
+
+    A tela esconde o botão, e é o servidor que recusa — as duas coisas, porque só a primeira
+    seria a recusa da tela, e não a do domínio.
+    """
     identificar(client, "bruno.homologador", ["homologador"])
     ato(client, em_revisao, "homologar", motivo="Conferido")
     identificar(client, "carla.publicadora", ["publicador"])
@@ -140,10 +144,11 @@ def test_a_publicada_nao_e_devolvida(client, em_revisao):
     assert em_revisao.status == Retificacao.Status.PUBLICADA
 
     identificar(client, "bruno.homologador", ["homologador"])
-    corpo = client.get(
-        reverse("interface:retificacao-ato", args=[em_revisao.id, "devolver"])
-    ).content.decode()
+    url = reverse("interface:retificacao-ato", args=[em_revisao.id, "devolver"])
+    corpo = client.get(url).content.decode()
+    forcado = client.post(url, {"chave_idempotencia": "devolver-publicada", "motivo": MOTIVO})
 
     assert "Confirmar: Devolver para elaboração" not in corpo
+    assert forcado.status_code == 409, "o POST direto também é recusado"
     em_revisao.refresh_from_db()
     assert em_revisao.status == Retificacao.Status.PUBLICADA

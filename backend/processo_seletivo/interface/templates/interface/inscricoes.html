@@ -28,10 +28,15 @@ resposta, e não ausência de resposta.
 {% endcomment %}
 {% if por_perfil|length > 1 %}
 <nav class="filtros-da-mesa" aria-label="Filtrar por Perfil de Vaga">
-  <a href="?" {% if not perfil %}aria-current="page"{% endif %}>
+  {% comment %}
+  O cartão troca o Perfil e preserva o resto: quem procurou "Maria" e depois recortou por Perfil
+  continua procurando Maria. "Todas" é o único que limpa, porque é o que ele significa.
+  {% endcomment %}
+  <a href="?{{ filtro_sem_perfil }}" {% if not perfil %}aria-current="page"{% endif %}>
     <strong>{{ total }}</strong> <span>todas</span></a>
   {% for item in por_perfil %}
-  <a href="?perfil={{ item.id }}" {% if perfil == item.id %}aria-current="page"{% endif %}>
+  <a href="?perfil={{ item.id }}{% if filtro_sem_perfil %}&{{ filtro_sem_perfil }}{% endif %}"
+     {% if perfil == item.id %}aria-current="page"{% endif %}>
     <strong>{{ item.quantas }}</strong> <span>{{ item.nome }}</span></a>
   {% endfor %}
 </nav>
@@ -65,20 +70,11 @@ resposta, e não ausência de resposta.
 {% if recebidas %}
 {% include "interface/_tabela_de_inscricoes.html" with inscricoes=recebidas legenda="Inscrições recebidas neste Edital" %}
 {% comment %}
-Mil e quinhentas não cabem numa tela. A paginação carrega o filtro consigo, senão avançar de
-página desfaria a pergunta que trouxe a pessoa até aqui.
+Mil e quinhentas não cabem numa tela. A paginação carrega o filtro e a posição da outra seção,
+senão avançar de página desfaria a pergunta que trouxe a pessoa até aqui — ou o lugar onde ela
+estava na lista de rascunhos.
 {% endcomment %}
-{% if pagina_recebidas.has_other_pages %}
-<nav class="paginacao" aria-label="Páginas de inscrições recebidas">
-  {% if pagina_recebidas.has_previous %}
-  <a href="?pagina={{ pagina_recebidas.previous_page_number }}{% if busca %}&busca={{ busca|urlencode }}{% endif %}{% if perfil %}&perfil={{ perfil }}{% endif %}{% if modalidade %}&modalidade={{ modalidade }}{% endif %}">Anterior</a>
-  {% endif %}
-  <span aria-current="page">Página {{ pagina_recebidas.number }} de {{ pagina_recebidas.paginator.num_pages }}</span>
-  {% if pagina_recebidas.has_next %}
-  <a href="?pagina={{ pagina_recebidas.next_page_number }}{% if busca %}&busca={{ busca|urlencode }}{% endif %}{% if perfil %}&perfil={{ perfil }}{% endif %}{% if modalidade %}&modalidade={{ modalidade }}{% endif %}">Próxima</a>
-  {% endif %}
-</nav>
-{% endif %}
+{% include "interface/_paginacao_de_inscricoes.html" with pagina=pagina_recebidas parametro="pagina" irma=rascunhos_da_irma rotulo="Páginas de inscrições recebidas" %}
 {% elif filtrando %}
 <p class="vazio">Nenhuma inscrição recebida corresponde a este filtro.</p>
 {% else %}
@@ -98,16 +94,6 @@ na página dos rascunhos não pode arrastar quem estava conferindo o que já che
 <p class="aviso">Rascunhos abertos e ainda não enviados. Não são inscrições recebidas, e podem
   nunca ser enviados.</p>
 {% include "interface/_tabela_de_inscricoes.html" with inscricoes=em_preenchimento legenda="Rascunhos em preenchimento neste Edital" %}
-{% if pagina_rascunhos.has_other_pages %}
-<nav class="paginacao" aria-label="Páginas de rascunhos em preenchimento">
-  {% if pagina_rascunhos.has_previous %}
-  <a href="?rascunhos={{ pagina_rascunhos.previous_page_number }}{% if busca %}&busca={{ busca|urlencode }}{% endif %}{% if perfil %}&perfil={{ perfil }}{% endif %}{% if modalidade %}&modalidade={{ modalidade }}{% endif %}">Anterior</a>
-  {% endif %}
-  <span aria-current="page">Página {{ pagina_rascunhos.number }} de {{ pagina_rascunhos.paginator.num_pages }}</span>
-  {% if pagina_rascunhos.has_next %}
-  <a href="?rascunhos={{ pagina_rascunhos.next_page_number }}{% if busca %}&busca={{ busca|urlencode }}{% endif %}{% if perfil %}&perfil={{ perfil }}{% endif %}{% if modalidade %}&modalidade={{ modalidade }}{% endif %}">Próxima</a>
-  {% endif %}
-</nav>
-{% endif %}
+{% include "interface/_paginacao_de_inscricoes.html" with pagina=pagina_rascunhos parametro="rascunhos" irma=pagina_da_irma rotulo="Páginas de rascunhos em preenchimento" %}
 {% endif %}
 {% endblock %}

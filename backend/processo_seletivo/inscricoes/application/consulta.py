@@ -10,6 +10,8 @@ O escopo institucional é conferido junto: um Edital de outro escopo não é "se
 inexistente para quem pergunta — a mesma resposta que `require_permission` já dá (FR-072).
 """
 
+from uuid import UUID
+
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
 
@@ -57,26 +59,16 @@ def _nome_no_conteudo(conteudo, inscricao):
 POR_PAGINA = 25
 
 
-def inscricoes_do_edital(*, actor, edital_id):
-    """A lista do que chegou, com o que decide a conferência — e nada de avaliação (FR-067).
-
-    Todas as linhas, sem paginar: é a leitura do conjunto inteiro, e quem a usa quer o conjunto.
-    A tela tem porta própria — `consulta_de_inscricoes` —, porque lá a pergunta é outra e mil
-    linhas não cabem numa página.
-    """
-    edital = _edital_no_escopo(actor, edital_id)
-    inscricoes = list(
-        Inscricao.objects.filter(edital=edital)
-        .select_related("versao_aceita")
-        .order_by("-submitted_at", "-created_at")
-    )
-    return edital, _linhas(edital, inscricoes)
-
-
 def consulta_de_inscricoes(
     *, actor, edital_id, pagina=1, pagina_rascunhos=1, busca=None, perfil=None, modalidade=None
 ):
-    """A tela: paginada, filtrável e com o que substitui a planilha (FR-066, FR-067).
+    """A consulta administrativa do que chegou (FR-066, FR-067) — e nada de avaliação.
+
+    Porta única: a tela não tem uma leitura e os testes outra. Enquanto conviveram duas — esta e
+    uma que devolvia o Edital inteiro sem paginar —, os guardas de autorização e de mascaramento
+    ficaram apontados para a que o produto não usava, e uma regressão aqui passaria por todos
+    eles em silêncio.
+
 
     Mil e quinhentas inscrições numa página só era o convite para o Excel — não por feiura, mas
     porque as perguntas de quem confere não se respondiam ali: "quantas por Perfil", "quantas na
@@ -93,23 +85,50 @@ def consulta_de_inscricoes(
     consulta = Inscricao.objects.filter(edital=edital).select_related("versao_aceita")
     contagens = _contagens(edital, vigente)
     filtrada = _filtrar(consulta, busca=busca, perfil=perfil, modalidade=modalidade)
-
-    def paginar(queryset, numero):
-        return Paginator(queryset.order_by("-submitted_at", "-created_at"), POR_PAGINA).get_page(
-            numero
-        )
-
-    recebidas = paginar(filtrada.filter(status=Inscricao.Status.SUBMETIDA), pagina)
-    rascunhos = paginar(filtrada.filter(status=Inscricao.Status.RASCUNHO), pagina_rascunhos)
+    recebidas = _pagina(filtrada.filter(status=Inscricao.Status.SUBMETIDA), pagina)
+    rascunhos = _pagina(filtrada.filter(status=Inscricao.Status.RASCUNHO), pagina_rascunhos)
+    # Uma vez por requisição, e não uma por seção: a coincidência é do Edital inteiro, e as duas
+    # seções perguntam exatamente a mesma coisa.
+    coincidentes = _cpfs_coincidentes(edital)
     return {
         "edital": edital,
         "pagina_recebidas": recebidas,
         "pagina_rascunhos": rascunhos,
         # As linhas de **cada página**, e não do Edital: é o que torna o custo da tela constante.
-        "recebidas": _linhas(edital, list(recebidas), vigente=vigente),
-        "em_preenchimento": _linhas(edital, list(rascunhos), vigente=vigente),
+        "recebidas": _linhas(edital, list(recebidas), vigente=vigente, coincidentes=coincidentes),
+        "em_preenchimento": _linhas(
+            edital, list(rascunhos), vigente=vigente, coincidentes=coincidentes
+        ),
         **contagens,
     }
+
+
+def _pagina(queryset, numero):
+    """A página pedida, sobre uma ordem **total**.
+
+    `-submitted_at, -created_at` não desempata: inscrições gravadas no mesmo instante — uma
+    importação, uma carga, o próprio segundo de pico do último dia — empatam nas duas chaves, e
+    aí a ordem entre elas fica a critério do plano de execução. Página e página seguinte são
+    consultas distintas, então a mesma linha pode aparecer nas duas e outra não aparecer em
+    nenhuma. O identificador fecha a ordem, como já fazem os selectors da `012`.
+    """
+    ordenado = queryset.order_by("-submitted_at", "-created_at", "-id")
+    return Paginator(ordenado, POR_PAGINA).get_page(numero)
+
+
+def _identificador(valor):
+    """O UUID do filtro, ou `None` quando o texto não é um.
+
+    `profile_id` e `modality_id` são colunas de UUID, e entregar-lhes texto qualquer levanta
+    `ValidationError` — que ninguém captura, e que a tela devolveria como erro de servidor. Uma
+    querystring editada à mão, um link antigo ou um rastreador derrubariam a consulta inteira.
+    Filtro que não corresponde a identificador nenhum não filtra, como na distribuição da `012`,
+    onde valor de cobertura desconhecido cai fora de todos os ramos.
+    """
+    try:
+        return UUID(str(valor))
+    except (TypeError, ValueError):
+        return None
 
 
 def _filtrar(consulta, *, busca, perfil, modalidade):
@@ -120,10 +139,10 @@ def _filtrar(consulta, *, busca, perfil, modalidade):
     links, então é por ele que se filtra — e é por isso que uma denominação alterada por
     Retificação não quebra o filtro de quem estava no meio da conferência.
     """
-    if perfil:
-        consulta = consulta.filter(profile_id=perfil)
-    if modalidade:
-        consulta = consulta.filter(modality_id=modalidade)
+    if perfil and (identificador := _identificador(perfil)) is not None:
+        consulta = consulta.filter(profile_id=identificador)
+    if modalidade and (identificador := _identificador(modalidade)) is not None:
+        consulta = consulta.filter(modality_id=identificador)
     texto = (busca or "").strip()
     if texto:
         # Três formas de procurar a mesma pessoa, porque quem confere tem uma das três em mãos:
@@ -190,7 +209,7 @@ def _contagens(edital, vigente):
     }
 
 
-def _linhas(edital, inscricoes, *, vigente=None):
+def _linhas(edital, inscricoes, *, vigente=None, coincidentes=None):
     """A linha de cada inscrição, com o que decide a conferência.
 
     A contagem de documentos é sobre os **obrigatórios aplicáveis àquela inscrição**, e não sobre
@@ -208,7 +227,8 @@ def _linhas(edital, inscricoes, *, vigente=None):
         inscricao__in=[inscricao.pk for inscricao in inscricoes]
     ):
         enviados.setdefault(documento.inscricao_id, set()).add(str(documento.requirement_id))
-    coincidentes = _cpfs_coincidentes(edital)
+    if coincidentes is None:
+        coincidentes = _cpfs_coincidentes(edital)
     linhas = []
     for inscricao in inscricoes:
         # **A versão de cada inscrição, e não a vigente para todas.** Uma inscrição enviada
