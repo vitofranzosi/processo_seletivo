@@ -203,3 +203,49 @@ Justificativa: nenhum desses itens depende da 013 nem a adianta, mas todos ating
 1. **A equipe abre planilha na primeira semana por causa da lista de inscrições** — 1.500 linhas numa página, sem filtro nem contagem por modalidade ([FATO] 60 linhas sem paginação/busca; E2E-003).
 2. **Um erro descoberto depois da submissão faz o fluxo de aprovação sair do sistema** — sem devolução, a correção vira reunião, cancelamento com número queimado, ou "publica e retifica"; e se o erro for num documento exigido, nem Retificação pela UI alcança ([FATO] telas de Homologar sem recusa + Retificar sem documentos; E2E-001/002/004).
 3. **O candidato que não recebe o código no e-mail desiste** — é o único degrau da jornada dele que depende de infraestrutura ainda não real (SMTP/G1), e o único sem alternativa ([FATO] fluxo de acesso; E2E-020). Todo o resto da jornada do candidato joga a favor da conversão.
+
+---
+
+## Pendências registradas ao fechar a auditoria
+
+Registradas aqui, e **fora da 013**, porque nenhuma delas toca a cadeia
+Atribuição → Avaliação → Conclusão → Consolidação que a próxima feature consome. Puxá-las para a
+spec da 013 interromperia o arco funcional para resolver capacidade lateral.
+
+### E2E-004 — Retificar não alcança documentos exigidos (ALTO ATRITO)
+
+A tela de Retificação alcança Perfis, Modalidades, Eventos, Etapas e Seções, e **não** alcança
+`documentRequirements`, `maximumScore`, `evaluationsPerRegistration` nem a marca de período de
+inscrições. O domínio alcança as coleções (`publicacoes/domain/colecoes.py`); é a interface que
+para na metade. Consequência: um documento exigido publicado errado só se corrige pela API.
+
+**Classificação:** P0 antes da primeira seleção real; **não** é pré-requisito da 013. Se um certame
+for aberto antes de a 013 ficar pronta, esta correção passa à frente — é o último ponto por onde a
+equipe sai do sistema no meio do certame.
+
+### E2E-021 — quem cancela uma Retificação (decisão tomada)
+
+**Decisão de governança, tomada em 02/09/2026:** cancelar uma Retificação **em elaboração** é ato
+do **Gestor**, pelo mesmo padrão do Edital, onde `edital:cancelar` já pertence a ele. A separação
+que a sustenta:
+
+| Situação da Retificação | Ato | Quem |
+|---|---|---|
+| Em elaboração | Cancelar | Gestor |
+| Em revisão · Homologada | Devolver para elaboração | Homologador |
+
+Cancelar um ato administrativo **em preparação** não é a mesma coisa que devolver um ato já
+submetido: quem elabora não ganha, por elaborar, o poder de eliminar o ato.
+
+**O que a implementação precisa resolver, e que a decisão ainda não cobre.** Hoje
+`atos_retificacao.CANCELAVEL` admite três situações — `EM_ELABORACAO`, `EM_REVISAO` e
+`HOMOLOGADA` —, e a decisão nomeia só a primeira. Quem implementar decide entre:
+
+- **estreitar** `CANCELAVEL` para `{EM_ELABORACAO}`, ficando a devolução como única saída das
+  outras duas — o que é coerente com a tabela acima, e deixa uma Retificação homologada sem forma
+  de ser abandonada sem antes voltar à elaboração; ou
+- **manter** as três situações e estender a decisão, dizendo quem cancela uma Retificação já
+  submetida ou homologada.
+
+A permissão `retificacao:cancelar` continua sem dono em `identidade.py::PAPEIS` até que isso seja
+resolvido, e por isso o ato segue inalcançável pela interface.
