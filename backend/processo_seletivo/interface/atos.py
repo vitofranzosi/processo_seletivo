@@ -13,6 +13,7 @@ from processo_seletivo.processos.application.finalizacao import cancel_edital, c
 from processo_seletivo.publicacoes.application.publish_edital import (
     homologate_edital,
     publish_edital,
+    return_edital_to_drafting,
     revoke_homologation,
     submit_edital,
 )
@@ -20,10 +21,19 @@ from processo_seletivo.publicacoes.application.publish_edital import (
 
 @dataclass(frozen=True)
 class Ato:
+    """Um ato e as situações de que ele parte.
+
+    `situacoes_exigidas` é conjunto, e não situação única, pela mesma razão que levou os atos da
+    Retificação ao mesmo formato: `cancelar` parte de quatro situações, e enquanto o campo era
+    escalar ele precisava de um ramo próprio em `disponiveis` e outro em `impedimento`. Com o
+    conjunto no próprio ato os dois ramos somem, e o ato que amanhã partir de duas situações não
+    reabre o caso especial.
+    """
+
     chave: str
     rotulo: str
     permissao: str
-    situacao_exigida: str
+    situacoes_exigidas: frozenset[str]
     command: object
     consequencias: list[str]
     irreversivel: bool = False
@@ -34,12 +44,15 @@ class Ato:
     campos: list[str] = field(default_factory=list)
 
 
+# Situações a partir das quais cancelar é admitido; o domínio confirma.
+CANCELAVEL = frozenset({"EM_ELABORACAO", "EM_REVISAO", "HOMOLOGADO", "PUBLICADO"})
+
 ATOS = {
     "submeter": Ato(
         chave="submeter",
         rotulo="Submeter para revisão",
         permissao="edital:submeter",
-        situacao_exigida="EM_ELABORACAO",
+        situacoes_exigidas=frozenset({"EM_ELABORACAO"}),
         command=submit_edital,
         consequencias=[
             "O conteúdo atual é congelado como a revisão que será homologada.",
@@ -51,7 +64,7 @@ ATOS = {
         chave="homologar",
         rotulo="Homologar",
         permissao="edital:homologar",
-        situacao_exigida="EM_REVISAO",
+        situacoes_exigidas=frozenset({"EM_REVISAO"}),
         command=homologate_edital,
         exige_motivo=True,
         rotulo_motivo="Fundamento da homologação",
@@ -60,11 +73,25 @@ ATOS = {
             "A homologação fica registrada em seu nome e pode ser revogada antes de publicar.",
         ],
     ),
+    "devolver": Ato(
+        chave="devolver",
+        rotulo="Devolver para elaboração",
+        permissao="edital:homologar",
+        situacoes_exigidas=frozenset({"EM_REVISAO"}),
+        command=return_edital_to_drafting,
+        exige_motivo=True,
+        rotulo_motivo="Motivo da devolução",
+        consequencias=[
+            "O Edital volta para elaboração e pode ser editado novamente pelo formulário.",
+            "A revisão submetida é preservada no histórico; a próxima submissão cria outra.",
+            "O motivo fica registrado e é o que orienta quem for corrigir.",
+        ],
+    ),
     "revogar-homologacao": Ato(
         chave="revogar-homologacao",
         rotulo="Revogar homologação",
         permissao="edital:homologar",
-        situacao_exigida="HOMOLOGADO",
+        situacoes_exigidas=frozenset({"HOMOLOGADO"}),
         command=revoke_homologation,
         exige_motivo=True,
         rotulo_motivo="Motivo da revogação",
@@ -77,7 +104,7 @@ ATOS = {
         chave="publicar",
         rotulo="Publicar",
         permissao="edital:publicar",
-        situacao_exigida="HOMOLOGADO",
+        situacoes_exigidas=frozenset({"HOMOLOGADO"}),
         command=publish_edital,
         irreversivel=True,
         exige_signatario=True,
@@ -92,7 +119,7 @@ ATOS = {
         chave="encerrar",
         rotulo="Encerrar",
         permissao="edital:encerrar",
-        situacao_exigida="PUBLICADO",
+        situacoes_exigidas=frozenset({"PUBLICADO"}),
         command=close_edital,
         irreversivel=True,
         exige_motivo=True,
@@ -107,7 +134,7 @@ ATOS = {
         chave="cancelar",
         rotulo="Cancelar",
         permissao="edital:cancelar",
-        situacao_exigida=None,
+        situacoes_exigidas=CANCELAVEL,
         command=cancel_edital,
         irreversivel=True,
         interrupcao=True,
@@ -122,19 +149,11 @@ ATOS = {
     ),
 }
 
-# Situações a partir das quais cancelar é admitido; o domínio confirma.
-CANCELAVEL = {"EM_ELABORACAO", "EM_REVISAO", "HOMOLOGADO", "PUBLICADO"}
-
 
 def disponiveis(edital, ator):
     """Atos que fazem sentido nesta situação e que este ator pode praticar."""
     for ato in ATOS.values():
-        if not ator.can(ato.permissao):
-            continue
-        if ato.chave == "cancelar":
-            if edital.status in CANCELAVEL:
-                yield ato
-        elif edital.status == ato.situacao_exigida:
+        if ator.can(ato.permissao) and edital.status in ato.situacoes_exigidas:
             yield ato
 
 
@@ -149,5 +168,8 @@ def impedimento(edital, ator, ato):
         return {"motivo": "permissao", "permissao": ato.permissao}
     if any(cabivel.chave == ato.chave for cabivel in disponiveis(edital, ator)):
         return None
-    exigidas = sorted(CANCELAVEL) if ato.chave == "cancelar" else [ato.situacao_exigida]
-    return {"motivo": "situacao", "exigidas": exigidas, "atual": edital.status}
+    return {
+        "motivo": "situacao",
+        "exigidas": sorted(ato.situacoes_exigidas),
+        "atual": edital.status,
+    }

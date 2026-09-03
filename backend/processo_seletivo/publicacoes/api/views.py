@@ -18,6 +18,7 @@ from processo_seletivo.publicacoes.api.serializers import (
 from processo_seletivo.publicacoes.application.publish_edital import (
     homologate_edital,
     publish_edital,
+    return_edital_to_drafting,
     revoke_homologation,
     submit_edital,
 )
@@ -52,6 +53,23 @@ class HomologateEditalView(APIView):
         serializer = HomologacaoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         edital, _ = homologate_edital(
+            actor=request.user,
+            edital_id=edital_id,
+            expected_revision=parse_if_match(request.headers.get("If-Match")),
+            reason=serializer.validated_data["reason"],
+            idempotency_key=idempotency_key(request),
+            correlation_id=request.correlation_id,
+        )
+        response = Response(EditalResponseSerializer(edital).data)
+        response["ETag"] = etag(edital.revision)
+        return response
+
+
+class ReturnEditalView(APIView):
+    def post(self, request, edital_id):
+        serializer = MotivoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        edital, _ = return_edital_to_drafting(
             actor=request.user,
             edital_id=edital_id,
             expected_revision=parse_if_match(request.headers.get("If-Match")),

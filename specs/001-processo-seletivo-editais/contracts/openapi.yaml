@@ -164,6 +164,24 @@ paths:
         '412': { $ref: '#/components/responses/PreconditionFailed' }
         '422': { $ref: '#/components/responses/Unprocessable' }
         '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /admin/editais/{editalId}/devolucoes:
+    post:
+      tags: [Editais administrativos]
+      summary: Devolver a revisão submetida para elaboração
+      operationId: devolverEdital
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/EditalId' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/MotivoRequest' } } }
+      responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '200': { description: Edital devolvido para elaboração, headers: { ETag: { $ref: '#/components/headers/ETag' } }, content: { application/json: { schema: { $ref: '#/components/schemas/EditalAdminResponse' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
   /admin/editais/{editalId}/revogacoes-homologacao:
     post:
       tags: [Editais administrativos]

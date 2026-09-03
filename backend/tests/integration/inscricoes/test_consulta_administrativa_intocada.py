@@ -14,7 +14,7 @@ from django.urls import reverse
 from processo_seletivo.avaliacoes.application.distribuicao import distribuir
 from processo_seletivo.inscricoes.application.consulta import (
     CONSULTAR,
-    inscricoes_do_edital,
+    consulta_de_inscricoes,
 )
 from processo_seletivo.shared.api.problems import DomainError
 from tests.conftest import ator_institucional
@@ -47,10 +47,10 @@ def test_a_porta_da_009_continua_exatamente_como_era(edital_com_documentos, cena
     """Quem tem a permissão da consulta administrativa segue listando o Edital inteiro."""
     gestor_da_009 = ator_institucional("conferente", CONSULTAR)
 
-    _, linhas = inscricoes_do_edital(actor=gestor_da_009, edital_id=edital_com_documentos.id)
+    consulta = consulta_de_inscricoes(actor=gestor_da_009, edital_id=edital_com_documentos.id)
 
-    assert len(linhas) == 1
-    assert linhas[0]["candidato"] == cenario.nome
+    assert consulta["total"] == 1, "o total é o do Edital, e não o da página"
+    assert consulta["recebidas"][0]["candidato"] == cenario.nome
 
 
 def test_a_autorizacao_da_mesa_nao_abre_a_consulta_administrativa(edital_com_documentos, cenario):
@@ -62,7 +62,7 @@ def test_a_autorizacao_da_mesa_nao_abre_a_consulta_administrativa(edital_com_doc
     joao = ator_institucional("joao")
 
     with pytest.raises(DomainError) as recusa:
-        inscricoes_do_edital(actor=joao, edital_id=edital_com_documentos.id)
+        consulta_de_inscricoes(actor=joao, edital_id=edital_com_documentos.id)
 
     assert recusa.value.status == 403
 

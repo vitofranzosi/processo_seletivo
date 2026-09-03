@@ -1,0 +1,20 @@
+{% comment %}
+A navegação de uma das duas seções da tela de inscrições.
+
+`parametro` é o nome da página desta seção — `pagina` para as recebidas, `rascunhos` para o que
+está em preenchimento —, e `irma` é a posição da outra, reemitida junto. Sem ela, avançar numa
+seção devolvia a outra à primeira página sem avisar, e quem conferia rascunho na página 2 perdia
+o lugar ao paginar o que já chegou. O filtro viaja pelo mesmo motivo: avançar de página não pode
+desfazer a pergunta que trouxe a pessoa até aqui.
+{% endcomment %}
+{% if pagina.has_other_pages %}
+<nav class="paginacao" aria-label="{{ rotulo }}">
+  {% if pagina.has_previous %}
+  <a href="?{{ parametro }}={{ pagina.previous_page_number }}{% if irma %}&{{ irma }}{% endif %}{% if filtro %}&{{ filtro }}{% endif %}">Anterior</a>
+  {% endif %}
+  <span aria-current="page">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+  {% if pagina.has_next %}
+  <a href="?{{ parametro }}={{ pagina.next_page_number }}{% if irma %}&{{ irma }}{% endif %}{% if filtro %}&{{ filtro }}{% endif %}">Próxima</a>
+  {% endif %}
+</nav>
+{% endif %}

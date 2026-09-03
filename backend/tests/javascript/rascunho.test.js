@@ -40,10 +40,10 @@ function guardado(idadeMs, opcoes = {}) {
   });
 }
 
-function carregarCom(bruto) {
+function carregarCom(bruto, opcoes = {}) {
   const armazem = new Armazem(bruto === null ? {} : { [CHAVE]: bruto });
-  const form = formulario();
-  montar({ formulario: form, armazem });
+  const form = opcoes.semFormulario ? null : formulario();
+  montar({ formulario: form, armazem, rascunhoSalvo: opcoes.rascunhoSalvo ?? null });
   carregar(SCRIPT);
   // O script sonda o armazenamento gravando e apagando `CHAVE + ":teste"`; só interessa aqui o
   // que aconteceu com a chave do rascunho.
@@ -92,6 +92,47 @@ test("conteúdo corrompido é descartado em vez de derrubar a tela", () => {
 
 test("sem nada guardado, nada é removido", () => {
   const armazem = carregarCom(null);
+
+  assert.equal(armazem.removeuORascunho, false);
+});
+
+/* O recibo do servidor — a metade que faltava.
+
+   Sem ela, salvar o rascunho recarregava a tela dizendo "Rascunho salvo" e, logo abaixo, "há
+   preenchimento não enviado neste navegador": duas frases contraditórias sobre o mesmo ato, na
+   mesma tela, no mesmo segundo. A comparação por conteúdo não desfazia o engano porque o
+   servidor normaliza o que recebe, e o digitado nunca volta textualmente igual. */
+
+test("o que o servidor confirma ter recebido é apagado do navegador", () => {
+  const armazem = carregarCom(guardado(60_000), { rascunhoSalvo: "edital:perfis:ana" });
+
+  assert.equal(armazem.removeuORascunho, true);
+  assert.equal(armazem.getItem(CHAVE), null);
+});
+
+test("o recibo apaga a etapa que foi gravada, e não a que está na tela", () => {
+  // "Avançar" grava uma etapa e abre a seguinte: o recibo fala da anterior.
+  const outra = "ps:rascunho:edital:cronograma:ana";
+  const armazem = new Armazem({ [CHAVE]: guardado(60_000), [outra]: guardado(60_000) });
+  montar({ formulario: formulario(), armazem, rascunhoSalvo: "edital:cronograma:ana" });
+  carregar(SCRIPT);
+
+  assert.equal(armazem.getItem(outra), null, "a etapa gravada foi apagada");
+  assert.notEqual(armazem.getItem(CHAVE), null, "a etapa em edição continua guardada");
+});
+
+test("o recibo é honrado mesmo numa etapa que não guarda rascunho", () => {
+  // Conteúdo e Revisão não têm formulário com rascunho local, e "Avançar" pode parar numa delas.
+  const armazem = carregarCom(guardado(60_000), {
+    rascunhoSalvo: "edital:perfis:ana",
+    semFormulario: true,
+  });
+
+  assert.equal(armazem.removeuORascunho, true);
+});
+
+test("sem recibo, o rascunho recente continua sendo oferecido", () => {
+  const armazem = carregarCom(guardado(60_000), { rascunhoSalvo: null });
 
   assert.equal(armazem.removeuORascunho, false);
 });

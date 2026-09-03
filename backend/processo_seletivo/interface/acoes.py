@@ -160,6 +160,9 @@ PROXIMO_RESPONSAVEL = {
 ENTREGA_DO_ATO = {
     "submeter": "quem homologa",
     "homologar": "quem publica",
+    # Devolver entrega o bastão de volta: é o único ato que anda para trás no fluxo, e dizê-lo
+    # antes da confirmação é o que separa devolver de recusar em silêncio.
+    "devolver": "quem elabora",
 }
 
 

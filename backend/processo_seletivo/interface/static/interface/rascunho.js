@@ -22,25 +22,46 @@
    virar arquivo. Vencido, é apagado sem ser oferecido: restaurar um preenchimento antigo sobre
    um Edital que mudou no servidor trocaria uma perda por outra. */
 (function () {
+  var PREFIXO = "ps:rascunho:";
+
+  function armazenamento(sonda) {
+    // Janela anônima, cookies bloqueados, cota estourada: sem armazenamento a tela funciona
+    // igual, só não protege o preenchimento.
+    try {
+      window.localStorage.setItem(sonda, "1");
+      window.localStorage.removeItem(sonda);
+      return window.localStorage;
+    } catch (erro) {
+      return null;
+    }
+  }
+
+  /* O que o servidor acabou de receber deixa de existir só neste navegador.
+
+     Roda **antes** de tudo, e fora do formulário desta tela, por duas razões. A primeira é que
+     "Avançar" grava uma etapa e abre outra — que pode nem guardar rascunho —, e sem isto a
+     etapa gravada continuaria oferecendo, na próxima visita, o que já foi enviado. A segunda é
+     que a comparação por conteúdo não resolve o caso: o servidor normaliza o que recebe (`2`
+     volta `2.0000`, a ordem é renumerada), e o digitado nunca é textualmente igual ao
+     reexibido. Era isso que fazia o aviso "há preenchimento não enviado" aparecer na mesma tela
+     que anunciava "Rascunho salvo". */
+  var confirmado = document.querySelector("[data-rascunho-salvo]");
+  if (confirmado && confirmado.dataset.rascunhoSalvo) {
+    var recibo = armazenamento(PREFIXO + "sonda");
+    if (recibo) recibo.removeItem(PREFIXO + confirmado.dataset.rascunhoSalvo);
+  }
+
   var form = document.getElementById("formulario");
   if (!form || !form.dataset.rascunho) return;
 
-  var CHAVE = "ps:rascunho:" + form.dataset.rascunho;
+  var CHAVE = PREFIXO + form.dataset.rascunho;
   var VALIDADE_MS = 24 * 60 * 60 * 1000;
   var lista = document.querySelector(form.dataset.lista);
   var fragmento = form.dataset.fragmento;
   var IGNORADOS = ["csrfmiddlewaretoken", "destino"];
 
   function guarda() {
-    // Janela anônima, cookies bloqueados, cota estourada: sem armazenamento a tela funciona
-    // igual, só não protege o preenchimento.
-    try {
-      window.localStorage.setItem(CHAVE + ":teste", "1");
-      window.localStorage.removeItem(CHAVE + ":teste");
-      return window.localStorage;
-    } catch (erro) {
-      return null;
-    }
+    return armazenamento(CHAVE + ":teste");
   }
 
   function valorDe(campo) {

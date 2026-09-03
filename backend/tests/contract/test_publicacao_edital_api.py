@@ -15,6 +15,9 @@ def test_openapi_has_explicit_publication_workflow_and_signatory():
     expected = {
         "/admin/editais/{editalId}/submissoes": "submeterEdital",
         "/admin/editais/{editalId}/homologacoes": "homologarEdital",
+        # FR-006 declara as duas voltas anteriores à Publicação, e o contrato precisa das duas:
+        # devolver desfaz a submissão, revogar desfaz a homologação.
+        "/admin/editais/{editalId}/devolucoes": "devolverEdital",
         "/admin/editais/{editalId}/revogacoes-homologacao": "revogarHomologacaoEdital",
         "/admin/editais/{editalId}/publicacoes": "publicarEdital",
     }

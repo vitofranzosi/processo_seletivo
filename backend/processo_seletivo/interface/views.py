@@ -14,6 +14,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from django.utils.http import urlencode
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_http_methods
 
@@ -48,9 +49,9 @@ from processo_seletivo.editais.application.identificacao import update_edital_id
 from processo_seletivo.editais.domain.validation import validate_for_publication
 from processo_seletivo.inscricoes.application.consulta import (
     CONSULTAR,
+    consulta_de_inscricoes,
     documento_para_consulta,
     inscricao_para_consulta,
-    inscricoes_do_edital,
 )
 from processo_seletivo.interface import (
     acoes,
@@ -641,6 +642,10 @@ def compor_etapa(request, edital_id, etapa):
             "salvo": dict((chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO).get(
                 request.GET.get("salvo", "")
             ),
+            # A chave da etapa que acabou de ser gravada, e não o rótulo dela: é o que o rascunho
+            # local precisa para apagar exatamente o que o servidor passou a ter. "Avançar" grava
+            # uma etapa e abre outra, então nem sempre é a etapa desta tela.
+            "salvo_chave": request.GET.get("salvo", ""),
             "identificacao": (
                 digitados
                 if etapa == "identificacao" and digitados is not None
@@ -1681,22 +1686,54 @@ def inscricoes_recebidas(request, edital_id):
     ator = identidade.ator_da_sessao(request)
     if ator is None:
         return redirect(reverse("interface:identificar"))
-    edital, linhas = inscricoes_do_edital(actor=ator, edital_id=edital_id)
+    busca = (request.GET.get("busca") or "").strip()
+    perfil = request.GET.get("perfil") or ""
+    modalidade = request.GET.get("modalidade") or ""
     # Recebido é o que foi entregue. O rascunho continua na tela — em seção própria e sob o nome do
     # que é —, mas fora do total: contá-lo diria à gestão que recebeu inscrição que ninguém enviou.
-    recebidas = [linha for linha in linhas if linha["enviada"]]
+    contexto = consulta_de_inscricoes(
+        actor=ator,
+        edital_id=edital_id,
+        pagina=request.GET.get("pagina") or 1,
+        pagina_rascunhos=request.GET.get("rascunhos") or 1,
+        busca=busca or None,
+        perfil=perfil or None,
+        modalidade=modalidade or None,
+    )
+    # O filtro viaja em todo link da tela — nas duas paginações e em cada cartão de Perfil. Montá-lo
+    # uma vez evita a cadeia de `{% if %}` repetida por link, que foi como o cartão acabou perdendo
+    # a busca que o formulário preservava.
+    filtro = _querystring(busca=busca, perfil=perfil, modalidade=modalidade)
     return marcar_como_privada(
         render(
             request,
             "interface/inscricoes.html",
             {
-                "edital": edital,
-                "recebidas": recebidas,
-                "em_preenchimento": [linha for linha in linhas if not linha["enviada"]],
-                "total": len(recebidas),
+                **contexto,
+                "busca": busca,
+                "perfil": perfil,
+                "modalidade": modalidade,
+                "filtrando": bool(busca or perfil or modalidade),
+                "filtro": filtro,
+                # Sem o Perfil, para que o cartão possa trocá-lo sem descartar o resto.
+                "filtro_sem_perfil": _querystring(busca=busca, modalidade=modalidade),
+                # A posição da outra seção, para que paginar uma não devolva a outra ao começo.
+                "pagina_da_irma": _querystring(pagina=contexto["pagina_recebidas"].number),
+                "rascunhos_da_irma": _querystring(rascunhos=contexto["pagina_rascunhos"].number),
             },
         )
     )
+
+
+def _querystring(**parametros):
+    """Os parâmetros informados, codificados, sem separador nenhum na frente.
+
+    Sem o `&` inicial porque quem monta o link sabe se ele é o primeiro parâmetro ou não, e um
+    separador embutido produziria `?&busca=…` nos links que começam por ele. Devolve `""` quando
+    não há nada a dizer. Página 1 não entra: é o padrão, e carregá-la só alongaria a URL.
+    """
+    presentes = {chave: valor for chave, valor in parametros.items() if valor not in (None, "", 1)}
+    return urlencode(presentes) if presentes else ""
 
 
 @require_http_methods(["GET"])
