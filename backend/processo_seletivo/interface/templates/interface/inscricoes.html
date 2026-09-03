@@ -13,10 +13,74 @@
 `total` conta o que foi **entregue**. Um rascunho aberto e abandonado não é inscrição recebida: o
 candidato não submeteu nada, e somá-lo aqui faria o painel anunciar centenas de inscrições numa
 seleção que recebeu dezenas (FR-066). Ele continua visível — abaixo, e sob o nome do que é.
+
+E o total é o do **Edital**, não o da página nem o do filtro: ele é o mesmo número do rótulo
+"Inscrições recebidas (N)" que trouxe a pessoa até aqui, e vê-lo mudar ao filtrar diria que o
+certame encolheu.
 {% endcomment %}
+
+{% comment %}
+Quantas por Perfil, antes do detalhe — e os números **são** o filtro, como na distribuição da
+`012`. "Quantas se inscreveram para a vaga de laboratório" era a pergunta que fazia a equipe
+exportar para contar à mão; lê-la num cartão e ter de procurá-la de novo num campo seria pedir
+duas vezes a mesma coisa. Perfil sem inscrição aparece com zero: "ninguém se inscreveu" é
+resposta, e não ausência de resposta.
+{% endcomment %}
+{% if por_perfil|length > 1 %}
+<nav class="filtros-da-mesa" aria-label="Filtrar por Perfil de Vaga">
+  <a href="?" {% if not perfil %}aria-current="page"{% endif %}>
+    <strong>{{ total }}</strong> <span>todas</span></a>
+  {% for item in por_perfil %}
+  <a href="?perfil={{ item.id }}" {% if perfil == item.id %}aria-current="page"{% endif %}>
+    <strong>{{ item.quantas }}</strong> <span>{{ item.nome }}</span></a>
+  {% endfor %}
+</nav>
+{% endif %}
+
+<form method="get" class="filtros" role="search">
+  <p class="campo">
+    <label for="busca">Procurar</label>
+    <input type="search" id="busca" name="busca" value="{{ busca }}"
+           aria-describedby="ajuda-busca-inscricoes">
+    <span class="ajuda" id="ajuda-busca-inscricoes">Nome, protocolo ou CPF.</span>
+  </p>
+  <p class="campo">
+    <label for="modalidade">Concorrência</label>
+    <select id="modalidade" name="modalidade">
+      <option value="">Todas</option>
+      {% for item in por_modalidade %}
+      <option value="{{ item.id }}" {% if modalidade == item.id %}selected{% endif %}>
+        {{ item.nome }} ({{ item.quantas }})</option>
+      {% endfor %}
+    </select>
+  </p>
+  {% if perfil %}<input type="hidden" name="perfil" value="{{ perfil }}">{% endif %}
+  <p class="acoes">
+    <button type="submit" class="acao">Filtrar</button>
+    {% if filtrando %}
+    <a class="acao" href="{% url 'interface:inscricoes' edital.id %}">Limpar</a>{% endif %}
+  </p>
+</form>
 
 {% if recebidas %}
 {% include "interface/_tabela_de_inscricoes.html" with inscricoes=recebidas legenda="Inscrições recebidas neste Edital" %}
+{% comment %}
+Mil e quinhentas não cabem numa tela. A paginação carrega o filtro consigo, senão avançar de
+página desfaria a pergunta que trouxe a pessoa até aqui.
+{% endcomment %}
+{% if pagina_recebidas.has_other_pages %}
+<nav class="paginacao" aria-label="Páginas de inscrições recebidas">
+  {% if pagina_recebidas.has_previous %}
+  <a href="?pagina={{ pagina_recebidas.previous_page_number }}{% if busca %}&busca={{ busca|urlencode }}{% endif %}{% if perfil %}&perfil={{ perfil }}{% endif %}{% if modalidade %}&modalidade={{ modalidade }}{% endif %}">Anterior</a>
+  {% endif %}
+  <span aria-current="page">Página {{ pagina_recebidas.number }} de {{ pagina_recebidas.paginator.num_pages }}</span>
+  {% if pagina_recebidas.has_next %}
+  <a href="?pagina={{ pagina_recebidas.next_page_number }}{% if busca %}&busca={{ busca|urlencode }}{% endif %}{% if perfil %}&perfil={{ perfil }}{% endif %}{% if modalidade %}&modalidade={{ modalidade }}{% endif %}">Próxima</a>
+  {% endif %}
+</nav>
+{% endif %}
+{% elif filtrando %}
+<p class="vazio">Nenhuma inscrição recebida corresponde a este filtro.</p>
 {% else %}
 <p class="aviso">Nenhuma inscrição recebida até agora.</p>
 {% endif %}
@@ -26,10 +90,24 @@ seleção que recebeu dezenas (FR-066). Ele continua visível — abaixo, e sob 
 Seção própria, e não linhas misturadas às recebidas: quem confere precisa distinguir de relance o
 que chegou do que ainda pode não chegar. Continua na tela porque FR-067 pede a coluna `situação`,
 e quem conduz a seleção precisa saber que há gente no meio do caminho quando o prazo se aproxima.
+
+Pagina em separado, e com parâmetro próprio: são dois conjuntos com prazos distintos, e avançar
+na página dos rascunhos não pode arrastar quem estava conferindo o que já chegou.
 {% endcomment %}
-<h2>Em preenchimento — {{ em_preenchimento|length }}</h2>
+<h2>Em preenchimento — {{ total_rascunhos }}</h2>
 <p class="aviso">Rascunhos abertos e ainda não enviados. Não são inscrições recebidas, e podem
   nunca ser enviados.</p>
 {% include "interface/_tabela_de_inscricoes.html" with inscricoes=em_preenchimento legenda="Rascunhos em preenchimento neste Edital" %}
+{% if pagina_rascunhos.has_other_pages %}
+<nav class="paginacao" aria-label="Páginas de rascunhos em preenchimento">
+  {% if pagina_rascunhos.has_previous %}
+  <a href="?rascunhos={{ pagina_rascunhos.previous_page_number }}{% if busca %}&busca={{ busca|urlencode }}{% endif %}{% if perfil %}&perfil={{ perfil }}{% endif %}{% if modalidade %}&modalidade={{ modalidade }}{% endif %}">Anterior</a>
+  {% endif %}
+  <span aria-current="page">Página {{ pagina_rascunhos.number }} de {{ pagina_rascunhos.paginator.num_pages }}</span>
+  {% if pagina_rascunhos.has_next %}
+  <a href="?rascunhos={{ pagina_rascunhos.next_page_number }}{% if busca %}&busca={{ busca|urlencode }}{% endif %}{% if perfil %}&perfil={{ perfil }}{% endif %}{% if modalidade %}&modalidade={{ modalidade }}{% endif %}">Próxima</a>
+  {% endif %}
+</nav>
+{% endif %}
 {% endif %}
 {% endblock %}

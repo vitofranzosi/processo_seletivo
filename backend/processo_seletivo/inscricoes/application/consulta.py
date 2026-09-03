@@ -10,7 +10,8 @@ O escopo institucional é conferido junto: um Edital de outro escopo não é "se
 inexistente para quem pergunta — a mesma resposta que `require_permission` já dá (FR-072).
 """
 
-from django.db.models import Count
+from django.core.paginator import Paginator
+from django.db.models import Count, Q
 
 from processo_seletivo.inscricoes.application.rascunho import requisitos_da_inscricao
 from processo_seletivo.inscricoes.domain.arquivos import tamanho_legivel
@@ -53,22 +54,163 @@ def _nome_no_conteudo(conteudo, inscricao):
     return perfil.get("name", ""), modalidade
 
 
+POR_PAGINA = 25
+
+
 def inscricoes_do_edital(*, actor, edital_id):
     """A lista do que chegou, com o que decide a conferência — e nada de avaliação (FR-067).
+
+    Todas as linhas, sem paginar: é a leitura do conjunto inteiro, e quem a usa quer o conjunto.
+    A tela tem porta própria — `consulta_de_inscricoes` —, porque lá a pergunta é outra e mil
+    linhas não cabem numa página.
+    """
+    edital = _edital_no_escopo(actor, edital_id)
+    inscricoes = list(
+        Inscricao.objects.filter(edital=edital)
+        .select_related("versao_aceita")
+        .order_by("-submitted_at", "-created_at")
+    )
+    return edital, _linhas(edital, inscricoes)
+
+
+def consulta_de_inscricoes(
+    *, actor, edital_id, pagina=1, pagina_rascunhos=1, busca=None, perfil=None, modalidade=None
+):
+    """A tela: paginada, filtrável e com o que substitui a planilha (FR-066, FR-067).
+
+    Mil e quinhentas inscrições numa página só era o convite para o Excel — não por feiura, mas
+    porque as perguntas de quem confere não se respondiam ali: "quantas por Perfil", "quantas na
+    modalidade reservada", "onde está fulano". Nenhuma delas exige exportar; todas exigem que a
+    tela saiba contar e filtrar.
+
+    Os contadores saem de `GROUP BY` e valem o Edital inteiro — o filtro muda o que se lista, e
+    nunca o que se conta, senão os números passariam a descrever a pergunta em vez do certame.
+    As duas seções paginam em separado porque são dois conjuntos com prazos distintos: o que
+    chegou é trabalho, e o que está em preenchimento ainda pode nunca chegar.
+    """
+    edital = _edital_no_escopo(actor, edital_id)
+    vigente = selectors.selecao_publica(edital_id=edital.id)
+    consulta = Inscricao.objects.filter(edital=edital).select_related("versao_aceita")
+    contagens = _contagens(edital, vigente)
+    filtrada = _filtrar(consulta, busca=busca, perfil=perfil, modalidade=modalidade)
+
+    def paginar(queryset, numero):
+        return Paginator(queryset.order_by("-submitted_at", "-created_at"), POR_PAGINA).get_page(
+            numero
+        )
+
+    recebidas = paginar(filtrada.filter(status=Inscricao.Status.SUBMETIDA), pagina)
+    rascunhos = paginar(filtrada.filter(status=Inscricao.Status.RASCUNHO), pagina_rascunhos)
+    return {
+        "edital": edital,
+        "pagina_recebidas": recebidas,
+        "pagina_rascunhos": rascunhos,
+        # As linhas de **cada página**, e não do Edital: é o que torna o custo da tela constante.
+        "recebidas": _linhas(edital, list(recebidas), vigente=vigente),
+        "em_preenchimento": _linhas(edital, list(rascunhos), vigente=vigente),
+        **contagens,
+    }
+
+
+def _filtrar(consulta, *, busca, perfil, modalidade):
+    """Perfil e modalidade por identificador, e não por nome.
+
+    A denominação vive no conteúdo publicado, e não em coluna: filtrar por ela exigiria varrer o
+    JSON de cada inscrição. O identificador é estável e é o que a tela já carrega nos próprios
+    links, então é por ele que se filtra — e é por isso que uma denominação alterada por
+    Retificação não quebra o filtro de quem estava no meio da conferência.
+    """
+    if perfil:
+        consulta = consulta.filter(profile_id=perfil)
+    if modalidade:
+        consulta = consulta.filter(modality_id=modalidade)
+    texto = (busca or "").strip()
+    if texto:
+        # Três formas de procurar a mesma pessoa, porque quem confere tem uma das três em mãos:
+        # o nome que leu, o protocolo que ela informou, ou o CPF de um documento.
+        digitos = "".join(caractere for caractere in texto if caractere.isdigit())
+        alcance = Q(nome__icontains=texto) | Q(protocolo__iexact=texto)
+        if digitos:
+            alcance |= Q(cpf_normalizado__contains=digitos)
+        consulta = consulta.filter(alcance)
+    return consulta
+
+
+def _contagens(edital, vigente):
+    """Quantas, e de que tipo — por agregação, e sempre sobre o Edital inteiro.
+
+    Uma consulta para os totais e uma por eixo de recorte. Contar em Python custaria materializar
+    mil e quinhentas inscrições para produzir meia dúzia de inteiros.
+    """
+    conteudo = vigente.content if vigente is not None else {}
+    perfis = conteudo.get("profiles") or []
+    totais = Inscricao.objects.filter(edital=edital).aggregate(
+        recebidas=Count("id", filter=Q(status=Inscricao.Status.SUBMETIDA)),
+        rascunhos=Count("id", filter=Q(status=Inscricao.Status.RASCUNHO)),
+    )
+    enviadas = Inscricao.objects.filter(edital=edital, status=Inscricao.Status.SUBMETIDA)
+
+    def agrupar(campo):
+        # Chave em texto: o banco devolve `UUID`, e o conteúdo publicado traz o identificador
+        # como string. Comparar os dois sem normalizar não levanta erro — devolve zero para
+        # tudo, que é o pior dos dois mundos: a tela conta, e conta errado.
+        return {
+            str(identificador): quantas
+            for identificador, quantas in enviadas.values_list(campo)
+            .annotate(quantas=Count("id"))
+            .values_list(campo, "quantas")
+            if identificador is not None
+        }
+
+    por_perfil = agrupar("profile_id")
+    por_modalidade = agrupar("modality_id")
+    return {
+        "total": totais["recebidas"],
+        "total_rascunhos": totais["rascunhos"],
+        # O rótulo vem do conteúdo vigente, e a contagem do banco: um Perfil sem inscrição
+        # aparece com zero, porque "ninguém se inscreveu para esta vaga" é resposta, não ausência.
+        "por_perfil": [
+            {
+                "id": str(perfil.get("id")),
+                "nome": perfil.get("name", ""),
+                "quantas": por_perfil.get(str(perfil.get("id")), 0),
+            }
+            for perfil in perfis
+        ],
+        "por_modalidade": [
+            {
+                "id": str(modalidade.get("id")),
+                "nome": modalidade.get("name", ""),
+                "perfil": perfil.get("name", ""),
+                "quantas": por_modalidade.get(str(modalidade.get("id")), 0),
+            }
+            for perfil in perfis
+            for modalidade in perfil.get("competitionModalities") or []
+        ],
+    }
+
+
+def _linhas(edital, inscricoes, *, vigente=None):
+    """A linha de cada inscrição, com o que decide a conferência.
 
     A contagem de documentos é sobre os **obrigatórios aplicáveis àquela inscrição**, e não sobre
     o total do Edital: um candidato de ampla concorrência com dois de dois está completo, e exibir
     "2 de 3" por causa de um requisito que não é dele diria que falta algo que não falta.
     """
-    edital = _edital_no_escopo(actor, edital_id)
-    vigente = selectors.selecao_publica(edital_id=edital.id)
+    if not inscricoes:
+        return []
+    if vigente is None:
+        vigente = selectors.selecao_publica(edital_id=edital.id)
+    # Só os documentos das inscrições desta página: sobre o Edital inteiro, o custo da tela
+    # crescia com o certame em vez de com o que ela mostra.
     enviados = {}
-    for documento in DocumentoSubmetido.objects.filter(inscricao__edital=edital):
+    for documento in DocumentoSubmetido.objects.filter(
+        inscricao__in=[inscricao.pk for inscricao in inscricoes]
+    ):
         enviados.setdefault(documento.inscricao_id, set()).add(str(documento.requirement_id))
-    linhas = []
-    consulta = Inscricao.objects.filter(edital=edital).select_related("versao_aceita")
     coincidentes = _cpfs_coincidentes(edital)
-    for inscricao in consulta.order_by("-submitted_at", "-created_at"):
+    linhas = []
+    for inscricao in inscricoes:
         # **A versão de cada inscrição, e não a vigente para todas.** Uma inscrição enviada
         # responde à versão que ela aceitou: usar a vigente faria Perfil, modalidade e contagem de
         # documentos mudarem retroativamente na lista a cada Retificação — o passado sendo
@@ -103,7 +245,7 @@ def inscricoes_do_edital(*, actor, edital_id):
                 in coincidentes,
             }
         )
-    return edital, linhas
+    return linhas
 
 
 def _cpfs_coincidentes(edital) -> set:

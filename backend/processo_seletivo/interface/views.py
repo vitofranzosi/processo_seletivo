@@ -44,9 +44,9 @@ from processo_seletivo.editais.application.identificacao import update_edital_id
 from processo_seletivo.editais.domain.validation import validate_for_publication
 from processo_seletivo.inscricoes.application.consulta import (
     CONSULTAR,
+    consulta_de_inscricoes,
     documento_para_consulta,
     inscricao_para_consulta,
-    inscricoes_do_edital,
 )
 from processo_seletivo.interface import (
     acoes,
@@ -1674,19 +1674,30 @@ def inscricoes_recebidas(request, edital_id):
     ator = identidade.ator_da_sessao(request)
     if ator is None:
         return redirect(reverse("interface:identificar"))
-    edital, linhas = inscricoes_do_edital(actor=ator, edital_id=edital_id)
+    busca = (request.GET.get("busca") or "").strip()
+    perfil = request.GET.get("perfil") or ""
+    modalidade = request.GET.get("modalidade") or ""
     # Recebido é o que foi entregue. O rascunho continua na tela — em seção própria e sob o nome do
     # que é —, mas fora do total: contá-lo diria à gestão que recebeu inscrição que ninguém enviou.
-    recebidas = [linha for linha in linhas if linha["enviada"]]
+    contexto = consulta_de_inscricoes(
+        actor=ator,
+        edital_id=edital_id,
+        pagina=request.GET.get("pagina") or 1,
+        pagina_rascunhos=request.GET.get("rascunhos") or 1,
+        busca=busca or None,
+        perfil=perfil or None,
+        modalidade=modalidade or None,
+    )
     return marcar_como_privada(
         render(
             request,
             "interface/inscricoes.html",
             {
-                "edital": edital,
-                "recebidas": recebidas,
-                "em_preenchimento": [linha for linha in linhas if not linha["enviada"]],
-                "total": len(recebidas),
+                **contexto,
+                "busca": busca,
+                "perfil": perfil,
+                "modalidade": modalidade,
+                "filtrando": bool(busca or perfil or modalidade),
             },
         )
     )

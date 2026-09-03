@@ -79,6 +79,27 @@
         "8014"
       ],
       "port": 8014
+    },
+    {
+      "name": "pacote-a",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "INTERFACE_SELETOR_IDENTIDADE=true",
+        "LC_ALL=en_US.UTF-8",
+        "DB_USER=saymoncastro",
+        "DB_NAME=ps_audit_e2e",
+        "DJANGO_SETTINGS_MODULE=config.settings.development",
+        "ARQUIVOS_CANDIDATOS_RAIZ=/private/tmp/claude-501/-Users-saymoncastro-Projetos-processo-seletivo--claude-worktrees-processos-seletivos-exploratory-824229/533156c5-b347-4411-aff3-24d7964e5a5f/scratchpad/arquivos-candidatos",
+        "uv",
+        "run",
+        "--directory",
+        "backend",
+        "python",
+        "manage.py",
+        "runserver",
+        "8123"
+      ],
+      "port": 8123
     }
   ]
 }
