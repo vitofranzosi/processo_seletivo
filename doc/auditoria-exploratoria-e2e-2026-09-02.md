@@ -1,5 +1,13 @@
 # Auditoria Exploratória End-to-End
 
+> **Situação em 02/09/2026, depois desta auditoria.** O pacote A da §14 foi executado nos commits
+> seguintes a este documento. Estão **corrigidos**: E2E-001 e E2E-002 (a devolução, no Edital e na
+> Retificação), E2E-003 (paginação, busca, filtros e contadores na lista de inscrições), E2E-006
+> (o rascunho local que se contradizia), E2E-007 (o resumo de congelamento incompleto) e E2E-015
+> (a matriz de recusa dos POSTs da 012). Todo o restante do inventário permanece como registrado.
+>
+> Um achado novo surgiu ao corrigir a devolução, e está no fim da §10 como **E2E-021**.
+
 **Data:** 02/09/2026 · **Base:** `main` em `ec67d52` (012 — Mesa de Avaliação fechada) · **Método:** leitura do código, das 12 specs e da suíte (~1.891 testes) + percurso completo no navegador com sete identidades distintas (gestor, elaboradora, homologador, publicadora, dois candidatos, presidente, dois avaliadores), num banco novo (`ps_audit_e2e`), do `Novo Processo Seletivo` até avaliações concluídas na Mesa — mais uma Retificação publicada com o aviso de versão conferido na área do candidato.
 
 Convenções deste relatório: **[FATO]** = observado no navegador ou no código citado; **[INFERÊNCIA]** = conclusão derivada; **[RECOMENDAÇÃO]** = sugestão. Ressalva de método: os três documentos exigidos do Edital de teste ficaram `required=false` por falha da automação do percurso (cliques em coordenadas obsoletas), não do sistema — a obrigatoriedade de documento não foi exercitada no navegador (a suíte a cobre em `tests/integration/inscricoes/test_submissao.py`).
@@ -139,6 +147,8 @@ Onde o incentivo a Drive/planilha ainda mora: (1) essa lista; (2) conferência d
 | E2E-018 | POLIMENTO | UX | Retificação | Detalhe | Handoff sem texto: falta "Aguardando quem homologa" (o Edital tem) | Assimetria de orientação | [FATO] | Reusar o padrão do Edital | Apenas registrar |
 | E2E-019 | POLIMENTO | PRIVACIDADE | Equipe | Home da gestão | Toda identidade institucional vê todos os Processos/Editais do escopo (sem ações) | Metadados apenas; provável decisão | [FATO] avaliadora vê PS-DEMO-B | Confirmar como decisão consciente | Apenas registrar |
 | E2E-020 | MELHORIA | UX (conversão) | Candidato | Acesso | Código por e-mail é ponto único de falha; reenvio só após 60 s | Abandono por spam/atraso — dependente do SMTP real (G1) | [FATO] fluxo | Registrar; monitorar quando houver e-mail real | Feature futura |
+
+| E2E-021 | MELHORIA | AUTORIZAÇÃO/UX | Elaborador | Retificação | `retificacao:cancelar` não pertence a papel nenhum (`identidade.py:20-50`): o ato "Cancelar Retificação" existe no domínio e na tabela de atos, e é inalcançável pela interface | Retificação aberta por engano não tem como ser abandonada pela tela; a devolução a leva de volta à elaboração, e ela fica lá | [FATO] descoberto ao expor a devolução (E2E-002); confirmado por varredura: duas ocorrências, nenhuma num papel | Decidir de quem é o ato — o espelho do Edital diria Gestor, que detém `edital:cancelar` — e conceder a permissão. É decisão de governança, não de implementação: não foi tomada aqui | Próxima leva |
 
 Positivos que merecem registro: recusas pré-POST no fluxo de atos; convite por vaga sobrevivendo ao login; aviso de versão pós-Retificação; alerta "CPF repetido neste Perfil"; iframe de documento sem download; loop concluir→próxima; conferência antes de gravar na comissão; proposta de distribuição com prévia.
 
