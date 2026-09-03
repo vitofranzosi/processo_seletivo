@@ -75,9 +75,9 @@ Classificação global, resultado final, desempate, recurso, publicação de res
 
 - **E2E-004** — a Retificação pela interface não alcança documentos exigidos e alguns campos da
   012. P0 antes da primeira seleção real; não é pré-requisito da 013.
-- **E2E-021** — quem cancela uma Retificação. Decisão de governança tomada (Gestor cancela a que
-  está em elaboração); a implementação ainda precisa resolver as situações que a decisão não
-  nomeia.
+- **E2E-021** — quem cancela uma Retificação. Decisão **fechada**: `CANCELAVEL =
+  {EM_ELABORACAO}`, permissão do Gestor, e o que está em revisão ou homologado precisa ser
+  devolvido antes. Falta implementar.
 
 Os dois estão em `doc/auditoria-exploratoria-e2e-2026-09-02.md`, na seção "Pendências registradas
 ao fechar a auditoria".

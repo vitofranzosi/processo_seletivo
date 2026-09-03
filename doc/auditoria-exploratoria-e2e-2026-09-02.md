@@ -237,15 +237,21 @@ que a sustenta:
 Cancelar um ato administrativo **em preparação** não é a mesma coisa que devolver um ato já
 submetido: quem elabora não ganha, por elaborar, o poder de eliminar o ato.
 
-**O que a implementação precisa resolver, e que a decisão ainda não cobre.** Hoje
-`atos_retificacao.CANCELAVEL` admite três situações — `EM_ELABORACAO`, `EM_REVISAO` e
-`HOMOLOGADA` —, e a decisão nomeia só a primeira. Quem implementar decide entre:
+**Decisão fechada — o alcance do cancelamento.** `CANCELAVEL = {EM_ELABORACAO}`, e
+`retificacao:cancelar` pertence ao **Gestor**. Uma Retificação em revisão ou homologada precisa ser
+**devolvida antes** de poder ser cancelada:
 
-- **estreitar** `CANCELAVEL` para `{EM_ELABORACAO}`, ficando a devolução como única saída das
-  outras duas — o que é coerente com a tabela acima, e deixa uma Retificação homologada sem forma
-  de ser abandonada sem antes voltar à elaboração; ou
-- **manter** as três situações e estender a decisão, dizendo quem cancela uma Retificação já
-  submetida ou homologada.
+```
+EM_REVISAO ──devolver──▶ EM_ELABORACAO ──cancelar──▶ CANCELADA
+HOMOLOGADA ──devolver──▶ EM_ELABORACAO ──cancelar──▶ CANCELADA
+```
 
-A permissão `retificacao:cancelar` continua sem dono em `identidade.py::PAPEIS` até que isso seja
-resolvido, e por isso o ato segue inalcançável pela interface.
+A alternativa — deixar o Gestor cancelar atravessando os estados de aprovação — foi recusada, e a
+razão é a mesma que separa os dois atos: **devolver desfaz o avanço no fluxo de aprovação; cancelar
+abandona um ato que está em elaboração**. Exigir dois atos para abandonar uma Retificação
+homologada não é atrito acidental — é mais auditável, porque alguém desfaz a aprovação e alguém
+abandona o rascunho, e a trilha guarda os dois.
+
+Hoje `atos_retificacao.CANCELAVEL` admite as três situações, e a permissão segue sem dono em
+`identidade.py::PAPEIS` — por isso o ato continua inalcançável pela interface. Implementar é
+estreitar o conjunto e conceder a permissão ao Gestor: **próxima leva corretiva, fora da 013**.
