@@ -56,39 +56,81 @@ a 013 ficaria sem uma das entradas que precisa consumir.
 Não é dependência conceitual: a 013 não pressupõe `Avaliacao`. É dependência de **saber a forma
 exata de uma das entradas** antes de escrever a spec que a consome.
 
-### Duas perguntas em aberto que essa revisão terá de fechar
+### Duas perguntas que essa revisão terá de fechar — **fechadas em 03/09/2026**
 
-Ficam registradas aqui, e não no documento de decisão, porque decisão é registro fechado e estas
-ainda são perguntas. As duas atrasam a 013 se chegarem ao `/plan` sem resposta.
+Nasceram aqui como perguntas em aberto e foram respondidas antes de a revisão começar, que era a
+condição para o `/plan` não herdar ambiguidade. Ficam registradas com a resposta.
 
-**1 · O campo novo da Etapa cai no ponto cego da E2E-004.** A forma da conclusão é propriedade
-publicada da Etapa. A auditoria registra que a tela de Retificação alcança Etapas mas **não**
-alcança `maximumScore` nem `evaluationsPerRegistration` — exatamente os campos que a 012
-acrescentou à Etapa. É de esperar que `forma` caia no mesmo buraco, e isso precisa ser verificado,
-não presumido.
+**1 · O campo novo da Etapa cai no ponto cego da E2E-004 — confirmado, e a metade que importa é
+barata.**
 
-```text
-forma publicada errada → só se corrige pela API
+A forma da conclusão é propriedade publicada da Etapa, e a auditoria já registrava que a tela de
+Retificação não alcança `maximumScore` nem `evaluationsPerRegistration`. A verificação confirmou a
+causa exata: `interface/retificacao.py` declara
+
+```python
+CAMPOS_ETAPA = [
+    ("name", ...), ("weight", ...), ("minimumScore", ...),
+    ("eliminatory", ...), ("classificatory", ...),
+]
 ```
 
-Ou a revisão assume esse limite explicitamente, ou é o momento natural de fechar a E2E-004 — que já
-era P0 antes do primeiro certame real, e cuja causa é a interface parar onde o domínio alcança
-(`publicacoes/domain/colecoes.py`).
+Cinco campos. `forma`, `rotuloFavoravel` e `rotuloDesfavoravel` cairiam no mesmo buraco.
 
-**2 · O rótulo publicado é mais de um campo.** A decisão diz que `Deferido/Indeferido` vem da
-Etapa. Na prática isso é um **par** por Etapa decisória — o rótulo do sentido favorável e o do
-desfavorável —, e o Edital 14 usaria outro par, e o Napne outro:
+Mas `publicacoes/domain/colecoes.py` já lista `/stages` — **o domínio alcança; é a lista literal da
+tela que está incompleta**. Completá-la são cinco linhas: os três campos novos mais os dois que a
+012 deixou para trás. Isso parte a E2E-004 em duas metades desiguais:
+
+| Metade | Estado da tela | Custo |
+|---|---|---|
+| **Etapa** | `CAMPOS_ETAPA` existe e está incompleta | linhas |
+| **`documentRequirements`** | **não existe grupo nenhum** — sem lista de campos, sem renderização | grupo novo no formulário |
+
+**A decisão:** a metade Etapa entra no escopo da revisão da 012. É onde os campos novos caem, custa
+quase nada, e deixá-la de fora significaria publicar uma forma que só se corrige pela API. A metade
+`documentRequirements` continua sendo a E2E-004 da leva corretiva — é trabalho de outra natureza.
+
+**2 · O rótulo publicado é um par de campos na Etapa.**
 
 ```text
-FAVORAVEL / DESFAVORAVEL   ← o que o domínio guarda
-Deferido / Indeferido      ← análise documental dos 35/57
-Apto / Inapto              ← elegibilidade
-Elegível / Não elegível    ← verificação PcD
+FAVORAVEL / DESFAVORAVEL   ← o que o domínio guarda, sempre
+rotulo_favoravel           ← publicado pela Etapa
+rotulo_desfavoravel        ← publicado pela Etapa
 ```
 
-A spec precisa resolver se são dois campos, um par estruturado, ou um default institucional que o
-Edital sobrescreve. Não é grande, mas é ambiguidade que trava o planejamento — e, seja qual for a
-forma, ela é conteúdo publicado e passa pelo mesmo caminho canônico do item 1.
+Assim os 35/57 publicam Deferido/Indeferido, a elegibilidade publica Apto/Inapto e a verificação
+PcD publica Elegível/Não elegível, sobre o mesmo par que o domínio classifica.
+
+**A decisão:** dois campos publicados, e não objeto genérico nem default institucional. É a forma
+mais explícita, versionável e retificável, e é o que P-007 pede — o que o Edital publicou é o que
+vale. Duas precisões que vão junto:
+
+- **A condicionalidade é a mesma da conclusão.** Exigidos quando `forma = DECISORIA`, vazios quando
+  `PONTUADA`. Uma Etapa pontuada não carrega rótulo que ninguém lê.
+- **Prefill não é default.** A tela de elaboração pode sugerir "Deferido/Indeferido" como valor
+  inicial editável; o que não pode existir é o domínio aplicar rótulo que o Edital não publicou.
+
+### Ordem de execução da revisão da 012
+
+Com as duas fechadas, a emenda da spec vem antes do código: implementar contra a
+`specs/012-mesa-de-avaliacao/spec.md` vigente, que ainda diz que concluir exige pontuação, criaria
+a contradição que o Princípio V proíbe.
+
+```text
+1. branch própria
+2. emendar specs/012 — D-008 no §5, ajuste do conceito 8.2 e FRs
+3. modelo, constraint, snapshot v6, CAMPOS_ETAPA
+4. Mesa: dois instrumentos conforme a forma
+5. PDF: forma e rótulos no documento publicado
+6. testes
+7. /specify da 013
+```
+
+Além dos testes óbvios de ida e volta das duas formas, quatro que o projeto cobraria pelo padrão
+que já pratica: a recusa da constraint verificada por `INSERT` cru, e não só pelo app; a leitura de
+um snapshot versão 5 depois do salto para 6; forma e rótulos no PDF, senão a fonte estruturada e o
+documento divergem; e a recusa HTTP no canal real, que a E2E-015 registra como faltante nos POSTs
+de escrita da Mesa.
 
 ## Os seis invariantes
 
