@@ -140,6 +140,9 @@ def _resultados_contestados(inativadas):
     return [
         {
             "inscricao": resultado.inscricao.protocolo or str(resultado.inscricao_id),
+            # A Etapa entra junto: um Processo tem várias, e "Resultado da inscrição X" não diz
+            # de qual delas se fala (013, FR-033).
+            "etapa": str(resultado.etapa_id),
             "resultado": str(resultado.id),
         }
         for resultado in ResultadoEtapa.objects.filter(

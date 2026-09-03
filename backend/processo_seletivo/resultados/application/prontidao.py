@@ -16,6 +16,8 @@ vale depois que ela produz Resultado. Enquanto não produz, a Etapa seguinte con
 leitura múltipla, que a V1 não consolida.
 """
 
+from django.db.models import Exists, OuterRef
+
 from processo_seletivo.avaliacoes.application.selectors import avaliacoes_elegiveis
 from processo_seletivo.comissoes.domain.etapas import etapas_vigentes as etapas_vigentes_do_edital
 from processo_seletivo.inscricoes.models import Inscricao
@@ -106,24 +108,37 @@ def restringir_a_participantes(consulta, *, edital, etapa_id, vigentes=None, pre
 
     `prefixo` diz como o queryset alcança a inscrição — `"inscricao"` a partir de `Atribuicao`,
     `""` quando a própria linha é a inscrição.
+
+    **Subconsulta correlacionada, e não `exclude()` com dois campos.** A primeira redação usava
+    `exclude(rel__etapa_id__in=..., rel__consequencia=ELIMINADA)`, e Django **não** garante que as
+    duas condições recaiam sobre a mesma linha relacionada: ele gera dois `EXISTS` independentes.
+    O efeito é uma exclusão indevida — quem foi eliminado numa Etapa *posterior* e habilitado numa
+    anterior satisfaz as duas metades separadamente, e sairia do conjunto de uma Etapa em que
+    deveria estar. `Exists` amarra Etapa e consequência na mesma linha, que é o que a regra diz.
     """
     anteriores, exigir = _anteriores_e_gate(edital, etapa_id, vigentes)
-    caminho = f"{prefixo}__resultados" if prefixo else "resultados"
+    referencia = OuterRef(f"{prefixo}_id") if prefixo else OuterRef("pk")
     if anteriores:
         # Regra 1, sem gate: eliminada em qualquer Etapa anterior está fora, sempre.
-        consulta = consulta.exclude(
-            **{
-                f"{caminho}__etapa_id__in": anteriores,
-                f"{caminho}__consequencia": ResultadoEtapa.Consequencia.ELIMINADA,
-            }
+        consulta = consulta.filter(
+            ~Exists(
+                ResultadoEtapa.objects.filter(
+                    inscricao_id=referencia,
+                    etapa_id__in=anteriores,
+                    consequencia=ResultadoEtapa.Consequencia.ELIMINADA,
+                )
+            )
         )
     if exigir is not None:
         # Regra 2, com gate: só depois que a imediatamente anterior produziu Resultado.
         consulta = consulta.filter(
-            **{
-                f"{caminho}__etapa_id": exigir,
-                f"{caminho}__consequencia": ResultadoEtapa.Consequencia.HABILITADA,
-            }
+            Exists(
+                ResultadoEtapa.objects.filter(
+                    inscricao_id=referencia,
+                    etapa_id=exigir,
+                    consequencia=ResultadoEtapa.Consequencia.HABILITADA,
+                )
+            )
         )
     return consulta
 

@@ -339,15 +339,38 @@ def carga_nas_etapas(*, ator, atribuicoes):
         processo__institution_scope=ator.institution_scope,
         ativo=True,
     )
-    # As excluídas pela `013`, uma consulta por Etapa em que esta pessoa atua — e não por linha.
-    # São poucas Etapas por pessoa, e sem isto `Minhas Etapas` anunciaria trabalho que não existe
-    # mais: "230 pendentes" quando trinta delas foram eliminadas na Etapa anterior.
+    # **A progressão vale aqui também**, e sem ela a Mesa ficaria corretamente vazia enquanto esta
+    # tela anunciaria o mesmo trabalho como pendente — duas telas dizendo coisas diferentes sobre a
+    # mesma Etapa. Uma restrição por Etapa em que a pessoa atua, e não por linha: são poucas Etapas
+    # por pessoa, e a alternativa seria contar errado (013, FR-005).
+    # O conteúdo publicado é lido **uma vez por Edital**, e não uma por Etapa: uma pessoa alocada
+    # em quatro Etapas do mesmo Edital pagaria quatro leituras idênticas do mesmo conteúdo.
+    from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
+
+    conteudos = {}
+    por_etapa = Q(pk__in=[])
+    for item in atribuicoes:
+        edital = item["edital"]
+        if edital.id not in conteudos:
+            try:
+                conteudos[edital.id] = etapas_vigentes(edital)
+            except Exception:  # noqa: BLE001 — Edital sem versão vigente não restringe nada
+                conteudos[edital.id] = {}
+        por_etapa |= Q(edital=edital, etapa_id=item["etapa_id"]) & Q(
+            pk__in=_so_participantes(
+                Atribuicao.objects.filter(edital=edital, etapa_id=item["etapa_id"]),
+                edital,
+                item["etapa_id"],
+                vigentes=conteudos[edital.id],
+            ).values("pk")
+        )
     contagens = (
         Atribuicao.objects.filter(
             membro__in=membros,
             ativo=True,
             edital_id__in={edital_id for edital_id, _ in chaves},
         )
+        .filter(por_etapa)
         .values("edital_id", "etapa_id")
         .annotate(
             total=Count("id"),

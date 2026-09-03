@@ -65,6 +65,14 @@ class ResultadoEtapa(models.Model):
             models.UniqueConstraint(
                 fields=["inscricao", "etapa_id"], name="uq_resultado_inscricao_etapa"
             ),
+            # `TextChoices` valida no formulário e no `full_clean`, e **não** cria constraint:
+            # `bulk_create`, SQL direto ou código futuro gravariam qualquer texto. Num registro
+            # append-only isso é pior que em qualquer outro — a consequência inválida entraria uma
+            # vez e ficaria, porque nada a corrige depois.
+            models.CheckConstraint(
+                condition=Q(consequencia__in=("HABILITADA", "ELIMINADA")),
+                name="ck_resultado_consequencia",
+            ),
             models.CheckConstraint(condition=~Q(motivo=""), name="ck_resultado_motivo_presente"),
             models.CheckConstraint(
                 condition=~Q(consolidado_por=""), name="ck_resultado_autor_presente"

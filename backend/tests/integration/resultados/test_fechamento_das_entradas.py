@@ -108,6 +108,7 @@ def test_o_impedimento_se_aplica_por_inteiro_e_declara_o_contestado(consolidado)
     assert desfecho["resultados_contestados"] == [
         {
             "inscricao": consolidado["inscricoes"][0].protocolo,
+            "etapa": str(consolidado["primeira"]),
             "resultado": str(resultado.id),
         }
     ]

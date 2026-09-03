@@ -284,15 +284,39 @@ def _recusar_se_fundamenta_resultado(avaliacao):
     """
     from processo_seletivo.resultados.models import ResultadoEtapa
 
-    resultado = ResultadoEtapa.objects.filter(avaliacao=avaliacao).first()
+    resultado = (
+        ResultadoEtapa.objects.filter(avaliacao=avaliacao).select_related("inscricao").first()
+    )
     if resultado is None:
         return
+    protocolo = resultado.inscricao.protocolo or str(resultado.inscricao_id)
+    nome_da_etapa = _nome_da_etapa(resultado)
     raise DomainError(
         "avaliacao_fundamenta_resultado",
-        "Esta avaliação fundamenta o Resultado da Etapa para esta inscrição e não pode ser "
-        "reaberta. Corrigir um Resultado consolidado exige anulação, que é ato de outra natureza.",
+        # **Nomeia os três**: inscrição, Etapa e o Resultado protetor. "Existe um Resultado" manda
+        # quem recebeu a recusa procurar qual — e quem responde a um recurso precisa citá-lo. A
+        # pontuação **não** entra: quem organiza o trabalho não é necessariamente quem pode vê-la
+        # (013, FR-033).
+        f"Esta avaliação fundamenta o Resultado da Etapa {nome_da_etapa} para a inscrição "
+        f"{protocolo} (Resultado {resultado.id}) e não pode ser reaberta. Corrigir um Resultado "
+        "consolidado exige anulação, que é ato de outra natureza.",
         409,
     )
+
+
+def _nome_da_etapa(resultado):
+    """O nome publicado da Etapa, ou a identidade quando o conteúdo não a alcança.
+
+    A frase precisa dizer **qual** Etapa; cair na identidade é pior que o nome e melhor que o
+    silêncio, e acontece quando a Etapa saiu do conteúdo vigente por Retificação.
+    """
+    from processo_seletivo.comissoes.domain.etapas import etapa_vigente
+
+    try:
+        etapa = etapa_vigente(resultado.edital, resultado.etapa_id)
+    except DomainError:
+        etapa = None
+    return (etapa or {}).get("name") or resultado.etapa_id
 
 
 def reabrir(

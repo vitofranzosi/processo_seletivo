@@ -363,10 +363,19 @@ def _carentes(edital, etapa_id, previstas):
     A ordem é a do protocolo porque a proposta precisa ser reproduzível: a mesma pergunta, sobre o
     mesmo estado, tem de devolver a mesma resposta — senão não há o que conferir sob trava.
     """
+    from processo_seletivo.resultados.application.prontidao import restringir_a_participantes
+
+    # **A progressão vale aqui também.** Proteger só o caminho manual deixaria o automático como a
+    # porta larga: o rodízio parte de todas as submetidas, e sem esta restrição proporia — e a
+    # confirmação criaria — Atribuição para inscrição eliminada na Etapa anterior. A regra é da
+    # Etapa, e não da forma de distribuir (013, FR-005).
     inscricoes = list(
-        Inscricao.objects.filter(edital=edital, status=Inscricao.Status.SUBMETIDA).order_by(
-            "protocolo", "id"
-        )
+        restringir_a_participantes(
+            Inscricao.objects.filter(edital=edital, status=Inscricao.Status.SUBMETIDA),
+            edital=edital,
+            etapa_id=etapa_id,
+            prefixo="",
+        ).order_by("protocolo", "id")
     )
     ocupacao = {}
     for inscricao_id in Atribuicao.objects.filter(

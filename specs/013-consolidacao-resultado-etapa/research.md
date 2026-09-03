@@ -185,6 +185,7 @@ Etapa e parou ali. A exclusão precisa valer em toda porta que hoje devolve insc
 |---|---|---|
 | distribuição | `avaliacoes/application/distribuicao.py:175` | `_inscricoes_atribuiveis` recusa a excluída **como erro do pedido**, na mesma classificação que já usa para inscrição não submetida |
 | rota individual | `avaliacoes/domain/autorizacao.py:42` | `pode_avaliar_inscricao` ganha a terceira pergunta — e só ela, porque listagem não usa esta função |
+| rodízio | `avaliacoes/application/distribuicao.py:360` | `_carentes` restringe o universo: propor e confirmar não passam por `_inscricoes_atribuiveis` |
 | Mesa do avaliador | `avaliacoes/application/selectors.py:220` | `mesa` filtra pelo conjunto, uma vez |
 | próxima pendente | `avaliacoes/application/selectors.py:337` | `proxima_pendente` filtra pelo conjunto — sem isso, entregaria a inscrição eliminada sem que ninguém a pedisse |
 | carga em Minhas Etapas | `avaliacoes/application/selectors.py:276` | `carga_nas_etapas` deixa de contar trabalho que não existe mais |
@@ -195,11 +196,21 @@ condições, e não três". O argumento dele é sobre custo em listagem, e ele m
 "rota individual usa esta função; listagem nunca usa". Uma consulta a mais na rota de item é o preço
 correto; o mesmo custo numa listagem seria o gargalo que a 011 antecipou.
 
+**Como a restrição é escrita, e por que não com `exclude()`.** A forma correta é subconsulta
+correlacionada — `Exists` / `~Exists` amarrando Etapa e consequência **na mesma linha** de
+`ResultadoEtapa`. `exclude(rel__etapa_id__in=..., rel__consequencia=ELIMINADA)` parece equivalente e
+não é: Django não garante que as duas condições recaiam sobre a mesma linha relacionada, e gera dois
+`EXISTS` independentes. O efeito é uma exclusão indevida — quem foi eliminado numa Etapa *posterior*
+e habilitado numa anterior satisfaz as duas metades separadamente e sairia de um conjunto em que
+deveria estar. A forma `filter()` de uma chamada só, ao contrário, **é** correlacionada; a assimetria
+está documentada no próprio Django, e é fácil de atravessar sem perceber.
+
 **Alternativas rejeitadas.** *Materializar a participação numa tabela*: cria estado a manter a cada
 consolidação e duplica um fato derivado, contra D-006. *Deixar a exclusão só na organização da
-Etapa*: a Mesa e a próxima pendente continuariam entregando inscrição eliminada, e nenhuma delas
-passa pela organização. *Consultar apenas a Etapa imediatamente anterior*: é a redação que
-produzia o buraco da Etapa 3.
+Etapa*: a Mesa, a próxima pendente e **o rodízio** continuariam entregando inscrição eliminada, e
+nenhum deles passa pela organização — proteger só o caminho manual deixa o automático como a porta
+larga. *Consultar apenas a Etapa imediatamente anterior*: é a redação que produzia o buraco da
+Etapa 3. *`exclude()` com dois campos*: a correlação acima.
 
 ---
 

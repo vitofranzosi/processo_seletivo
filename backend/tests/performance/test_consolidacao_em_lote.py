@@ -1,8 +1,14 @@
-"""T034 — mil inscrições num envio, e nenhuma consulta por linha.
+"""SC-002 no teto declarado: **mil** inscrições num envio.
 
-O teto de SC-002 não é decorativo: a planilha que esta feature substitui tem mil linhas, e um lote
-que exigisse uma leitura por inscrição pareceria rápido com três e sumiria com mil. O que se mede é
-**a forma**, e não o relógio — o número de consultas não pode crescer com a seleção.
+Duas perguntas diferentes, e cada uma precisa do seu teste:
+
+1. **a derivada** — o custo de decidir não pode crescer com a seleção, que é o defeito N+1;
+2. **o teto** — mil inscrições cabem mesmo num envio, que é o que SC-002 promete e o que a
+   planilha substituída tem. A derivada não responde a isso: limites de parâmetro, tamanho de
+   pedido e comportamento no volume real só aparecem no volume real.
+
+O cenário é semeado em massa de propósito. Percorrer os comandos mil vezes mediria o custo de
+montar o estado, e não o de consolidá-lo — e as invariantes daqueles comandos já têm testes seus.
 """
 
 import pytest
@@ -12,71 +18,57 @@ from django.test.utils import CaptureQueriesContext
 from processo_seletivo.resultados.application.consolidacao import consolidar
 from processo_seletivo.resultados.models import ResultadoEtapa
 from tests.conftest import ator_institucional
-from tests.fixtures.comissao import inscrever
-from tests.fixtures.mesa import concluir_como, distribuir_para
-from tests.fixtures.resultado import montar_etapa_de_leitura_unica
+from tests.fixtures.resultado import montar_etapa_de_leitura_unica, semear_prontas
 
 pytestmark = [pytest.mark.django_db, pytest.mark.performance]
 
-# Trinta, e não mil, para que a suíte continue rodando em segundos. O que o teste afirma é a
-# **derivada**: se o custo não cresce de três para trinta, ele não cresce de trinta para mil, e é
-# a derivada que o defeito N+1 revela.
-LOTE = 30
+TETO = 1000
 
 
-def preparar(gestor, api_client, manager_headers, *, seed, quantas, primeiro):
+def consolidar_lote(cenario, inscricoes, *, chave):
+    return consolidar(
+        actor=ator_institucional("maria"),
+        processo_id=cenario["processo"].id,
+        edital_id=cenario["edital"].id,
+        etapa_id=cenario["primeira"],
+        inscricao_ids=[i.id for i in inscricoes],
+        idempotency_key=chave,
+        correlation_id="teste",
+    )
+
+
+def test_mil_inscricoes_cabem_num_unico_envio(gestor, api_client, manager_headers):
+    """O teto de SC-002, exercido — e não estimado por extrapolação."""
     cenario = montar_etapa_de_leitura_unica(
-        gestor, api_client, manager_headers, seed=seed, codigo=str(seed)
+        gestor, api_client, manager_headers, seed=1520, codigo="1520"
     )
-    inscricoes = inscrever(cenario["edital"], quantas, primeiro=primeiro)
-    distribuir_para(cenario, gestor, ["joao"], inscricoes, chave=f"lote-{seed}")
-    for inscricao in inscricoes:
-        concluir_como(cenario, "joao", inscricao, pontuacao="75")
-    return cenario, inscricoes
+    inscricoes = semear_prontas(cenario, TETO, primeiro=1)
+
+    desfecho = consolidar_lote(cenario, inscricoes, chave="teto")
+    assert desfecho["feitas"] == TETO
+    assert desfecho["recusadas"] == 0
+    assert ResultadoEtapa.objects.filter(edital=cenario["edital"]).count() == TETO
 
 
-def custo_de_consolidar(cenario, inscricoes, *, chave):
-    with CaptureQueriesContext(connection) as capturadas:
-        desfecho = consolidar(
-            actor=ator_institucional("maria"),
-            processo_id=cenario["processo"].id,
-            edital_id=cenario["edital"].id,
-            etapa_id=cenario["primeira"],
-            inscricao_ids=[i.id for i in inscricoes],
-            idempotency_key=chave,
-            correlation_id="teste",
-        )
-    return len(capturadas), desfecho
+def test_o_custo_de_decidir_nao_cresce_com_a_selecao(gestor, api_client, manager_headers):
+    """A derivada. As escritas acompanham o lote — Resultado e evento por linha —; as leituras não.
 
-
-def test_um_envio_consolida_o_lote_inteiro_sem_interacao_por_inscricao(
-    gestor, api_client, manager_headers
-):
-    cenario, inscricoes = preparar(
-        gestor, api_client, manager_headers, seed=1380, quantas=LOTE, primeiro=1
-    )
-    _, desfecho = custo_de_consolidar(cenario, inscricoes, chave="v1")
-    assert desfecho["feitas"] == LOTE
-    assert ResultadoEtapa.objects.filter(edital=cenario["edital"]).count() == LOTE
-
-
-def test_a_leitura_do_panorama_nao_cresce_com_a_selecao(gestor, api_client, manager_headers):
-    """As consultas **de leitura** são constantes; só as escritas acompanham o lote.
-
-    A escrita por Resultado é inevitável e correta — cada linha é um ato, com seu evento. O que
-    não pode crescer é o custo de **decidir**: elegíveis, Resultados existentes e conjuntos da
-    progressão saem numa leitura só, antes do laço.
+    Se o custo de decidir não cresce de três para trezentas, ele não cresce de trezentas para mil,
+    e é a derivada que o N+1 revela.
     """
-    pequeno, poucas = preparar(
-        gestor, api_client, manager_headers, seed=1381, quantas=3, primeiro=1
+    pequeno = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=1521, codigo="1521"
     )
-    grande, muitas = preparar(
-        gestor, api_client, manager_headers, seed=1382, quantas=LOTE, primeiro=500
+    poucas = semear_prontas(pequeno, 3, primeiro=1)
+    grande = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=1522, codigo="1522"
     )
-    custo_pequeno, _ = custo_de_consolidar(pequeno, poucas, chave="v2")
-    custo_grande, _ = custo_de_consolidar(grande, muitas, chave="v3")
+    muitas = semear_prontas(grande, 300, primeiro=5000)
 
-    # Dez vezes mais inscrições não podem custar dez vezes mais **leituras**. A folga cobre as
-    # escritas — Resultado e evento por linha —, e nada além delas.
-    por_linha = (custo_grande - custo_pequeno) / (LOTE - 3)
-    assert por_linha <= 3, (custo_pequeno, custo_grande)
+    with CaptureQueriesContext(connection) as poucas_consultas:
+        consolidar_lote(pequeno, poucas, chave="d1")
+    with CaptureQueriesContext(connection) as muitas_consultas:
+        consolidar_lote(grande, muitas, chave="d2")
+
+    por_linha = (len(muitas_consultas) - len(poucas_consultas)) / (300 - 3)
+    assert por_linha <= 3, (len(poucas_consultas), len(muitas_consultas))

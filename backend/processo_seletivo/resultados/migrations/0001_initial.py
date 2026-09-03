@@ -142,6 +142,13 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="resultadoetapa",
             constraint=models.CheckConstraint(
+                condition=models.Q(("consequencia__in", ("HABILITADA", "ELIMINADA"))),
+                name="ck_resultado_consequencia",
+            ),
+        ),
+        migrations.AddConstraint(
+            model_name="resultadoetapa",
+            constraint=models.CheckConstraint(
                 condition=models.Q(("motivo", ""), _negated=True),
                 name="ck_resultado_motivo_presente",
             ),

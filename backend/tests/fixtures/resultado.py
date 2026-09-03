@@ -123,3 +123,78 @@ def montar_tres_etapas(gestor, api_client, manager_headers, *, seed, codigo, ava
         "segunda": etapas_do_edital[1],
         "terceira": etapas_do_edital[2],
     }
+
+
+def semear_prontas(cenario, quantas, *, primeiro, avaliador="joao", pontuacao="75.0000"):
+    """`quantas` inscrições submetidas, atribuídas e concluídas — em quatro escritas.
+
+    Existe para o teste de volume, e só para ele. Percorrer os comandos mil vezes mediria o custo
+    de **montar** o cenário, que não é o que se quer medir, e faria a suíte levar minutos para
+    responder uma pergunta sobre a consolidação. As invariantes desses comandos têm testes
+    próprios; aqui o que interessa é o estado de onde a consolidação parte.
+    """
+    from decimal import Decimal
+
+    from django.utils import timezone
+
+    from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao
+    from processo_seletivo.inscricoes.models import Inscricao
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+
+    edital = cenario["edital"]
+    membro = cenario["membros"][avaliador]
+    versao = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    agora = timezone.now()
+    numeros = range(primeiro, primeiro + quantas)
+
+    Inscricao.objects.bulk_create(
+        Inscricao(
+            created_at=agora,
+            identity_subject=f"cpf:massa-{n:05d}",
+            edital=edital,
+            profile_id="00000000-0000-0000-0000-000000000401",
+            nome=f"Candidata {n}",
+            cpf="111.444.777-35",
+            cpf_normalizado="11144477735",
+            email=f"massa{n}@exemplo.br",
+            status=Inscricao.Status.SUBMETIDA,
+            protocolo=f"{n:05d}",
+            submitted_at=agora,
+            versao_aceita=versao,
+            declaracoes_aceitas_em=agora,
+        )
+        for n in numeros
+    )
+    inscricoes = list(
+        Inscricao.objects.filter(edital=edital, protocolo__in=[f"{n:05d}" for n in numeros])
+    )
+    Atribuicao.objects.bulk_create(
+        Atribuicao(
+            membro=membro,
+            edital=edital,
+            etapa_id=cenario["primeira"],
+            inscricao=inscricao,
+            criado_em=agora,
+            criado_por="maria",
+        )
+        for inscricao in inscricoes
+    )
+    atribuicoes = list(
+        Atribuicao.objects.filter(edital=edital, etapa_id=cenario["primeira"], ativo=True)
+    )
+    Avaliacao.objects.bulk_create(
+        Avaliacao(
+            atribuicao=atribuicao,
+            identity_subject=membro.identity_subject,
+            etapa_id=atribuicao.etapa_id,
+            inscricao_id=atribuicao.inscricao_id,
+            estado=Avaliacao.Estado.CONCLUIDA,
+            pontuacao=Decimal(pontuacao),
+            parecer="Atende.",
+            versao=versao,
+            concluida_em=agora,
+            concluida_por=membro.identity_subject,
+        )
+        for atribuicao in atribuicoes
+    )
+    return inscricoes

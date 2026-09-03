@@ -166,3 +166,23 @@ def test_dois_resultados_para_o_mesmo_par_sao_recusados(consolidavel):
     cenario, inscricao, avaliacao = consolidavel
     with pytest.raises(IntegrityError), transaction.atomic():
         gravar(cenario, inscricao, avaliacao)
+
+
+@SOMENTE_POSTGRES
+def test_consequencia_invalida_e_recusada_pelo_banco(consolidavel):
+    """`TextChoices` valida no formulário; o banco valida sempre.
+
+    `bulk_create`, SQL direto e código futuro não passam pelo `full_clean`, e num registro
+    append-only uma consequência inventada entraria uma vez e ficaria — não há caminho que a
+    corrija depois. É por isso que a lista fechada precisa ser constraint, e não apenas `choices`.
+    """
+    cenario, inscricao, avaliacao = consolidavel
+    with pytest.raises(IntegrityError), transaction.atomic():
+        gravar(cenario, inscricao, avaliacao, consequencia="APROVADA")
+
+
+@SOMENTE_POSTGRES
+def test_consequencia_vazia_e_recusada_pelo_banco(consolidavel):
+    cenario, inscricao, avaliacao = consolidavel
+    with pytest.raises(IntegrityError), transaction.atomic():
+        gravar(cenario, inscricao, avaliacao, consequencia="")
