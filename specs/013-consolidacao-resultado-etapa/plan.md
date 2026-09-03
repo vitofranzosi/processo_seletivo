@@ -76,8 +76,8 @@ embarcados. Nenhuma alteração no `openapi.yaml` da 001.
 **Storage**: PostgreSQL. **Uma** migration, no app novo `resultados`: um modelo, uma unicidade
 `(inscricao, etapa_id)`, um `OneToOne` sobre a Avaliação fonte, três checks de completude, um índice
 `(edital, etapa_id)` e **duas** triggers — a de coerência, que impede o Resultado de nascer apontando
-para Avaliação de outra inscrição, e a append-only, que impede que ele mude depois. Sem a primeira, a
-segunda apenas congelaria o erro (T-011). **Nenhuma migration em `editais`, `publicacoes`,
+para Avaliação de outra inscrição ou para conclusão que não estava elegível, e a append-only, que
+impede que ele mude depois. Sem a primeira, a segunda apenas congelaria o erro (T-011). **Nenhuma migration em `editais`, `publicacoes`,
 `auditoria`, `avaliacoes` ou `comissoes`** — a 013 não acrescenta coluna a nenhum modelo existente.
 
 **Testing**: pytest com pytest-django, marcadores `acceptance`, `contract`, `integration`,
@@ -115,13 +115,13 @@ alteradas, zero campos normativos novos.
 | Princípio | Exigência | Como esta feature responde |
 |---|---|---|
 | I — Linguagem ubíqua e integridade | Conceitos distintos; identificadores estáveis; identificador público não autoriza; invariantes em constraint | `ResultadoEtapa` é conceito distinto de `Avaliacao`, com ciclo de vida próprio, e por isso app próprio (T-001) — a Constituição nomeia Avaliação e Resultado separadamente. `etapa_id` referencia a identidade publicada, não a linha de elaboração, pela razão que a 011 e a 012 já fixaram. As duas invariantes centrais vão para o banco: unicidade do par e `OneToOne` da fonte. Trocar o UUID de uma inscrição eliminada na URL responde 404 uniforme. **Passa** |
-| II — Integridade normativa e temporalidade | Fonte única; publicado imutável; estado vigente reproduzível | O Resultado **não copia** nota mínima, máxima nem caráter: guarda a `VersaoConsolidada`, e a regra histórica é reproduzida dela — a mesma decisão que a 012 tomou e pelo mesmo motivo (T-004). A compatibilidade compara norma, não identidade de versão, o que impede tanto misturar regras diferentes quanto bloquear por Retificação irrelevante. Nada nesta feature escreve em conteúdo publicado. Instantes vêm do `now` da transação, como nos demais comandos. **Passa** |
+| II — Integridade normativa e temporalidade | Fonte única; publicado imutável; estado vigente reproduzível | O Resultado **não copia** norma alguma — nem nota mínima, nem máxima, nem caráter, nem a própria `VersaoConsolidada`: a regra histórica é reproduzida pela versão da Avaliação fonte, alcançada na mesma consulta (T-004, T-011). A compatibilidade compara norma, não identidade de versão, o que impede tanto misturar regras diferentes quanto bloquear por Retificação irrelevante. Nada nesta feature escreve em conteúdo publicado. Instantes vêm do `now` da transação, como nos demais comandos. **Passa** |
 | III — Segurança, dados pessoais e auditoria | Negar por padrão; menor privilégio; sem IDOR; LGPD avaliada; auditoria de ato sensível | A autorização é a herdada — `comando_de_comissao` sobre `pode_gerir_comissao` —, reavaliada depois do bloqueio, sem capacidade nova (T-009). Eliminação passa a ser motivo de 404 na Mesa, com a mesma resposta uniforme que a 012 dá para inscrição não atribuída. A trilha registra ator, ato, agregado, correlação e chave, e **não copia pontuação nem parecer**; o desfecho do lote carrega protocolo, nunca nome ou nota. Respostas com Resultado são não armazenáveis. **Passa** |
 | IV — Regras explícitas e consistência | Regra no backend; estados explícitos; transação; concorrência | A regra é função pura no domínio, e a tela não decide nada — FR-016 proíbe até que a presidência digite a nota. Estados: `HABILITADA` e `ELIMINADA` são persistidos porque são o ato; `PENDENTE` e `CONSOLIDADO` são derivados porque são fatos, e persistí-los criaria estado a manter (D-006). Os quatro riscos de concorrência da Constituição estão mapeados a mecanismo existente em T-010, e cada um tem resultado observável na spec. **Passa** |
 | V — Qualidade, rastreabilidade e simplicidade | Rastreável; testado no nível certo; solução mais simples | O [quickstart.md](./quickstart.md) demonstra os requisitos observáveis pelo canal do ator e **declara** que os demais — invariantes de banco, de comando e de não regressão — são responsabilidade de `tasks.md`, com fechamento em `traceability.md`. Nada de motor de regras: uma tabela, três funções puras. A simplicidade não custou histórico: o Resultado é append-only nas três camadas. **Passa, com a cobertura declarada e não presumida** |
 | VI — Completude de jornada e valor demonstrável | Capacidade observável pelo canal do ator | O percurso inteiro é navegável em `interface`: a presidência abre a Etapa, lê a prontidão, consolida um lote, consulta a proveniência, é recusada ao tentar reabrir a fonte e encontra apenas os habilitados na Etapa seguinte. A recusa faz parte da entrega. E o gate de D-003 tem demonstração própria — o Edital de segunda leitura que continua funcionando —, porque não regredir é parte do valor. **Passa** |
 
-Duas exceções vão para `Complexity Tracking`: o app novo e a versão materializada no Resultado.
+Quatro exceções vão para `Complexity Tracking`: o app novo, o import local que quebra o ciclo, a trigger de coerência e a terceira condição na rota individual.
 
 **Reavaliação após a Fase 1.** Os seis gates continuam aprovados, e a Fase 1 mudou uma coisa: a
 primeira leitura do princípio III dava a autorização por resolvida com "a mesma base da reabertura".
@@ -140,7 +140,9 @@ sobre premissa errada, e o registro fica porque os erros são de tipos diferente
   passa a declarar a contestação. **Passa** de novo, agora por construção e não por otimismo.
 - **I** — dava-se a integridade por garantida porque as linhas são imutáveis. Imutabilidade impede
   que o correto se torne errado; não impede que o errado nasça, e num append-only ela o torna
-  incorrigível. Corrigido em T-011: sai o campo `versao`, entra a trigger de coerência. **Passa.**
+  incorrigível. Corrigido em T-011: sai o campo `versao`, entra a trigger de coerência — e ela
+  confere também que a Atribuição da fonte estava ativa, sem o que a invariante 2 seria promessa da
+  função de consolidação e não garantia de banco. **Passa.**
 - **IV/V** — a progressão estava descrita como uma regra só, e como três arquivos alterados. São
   duas regras — eliminação transitiva sem gate, habilitação com gate — e seis superfícies. A
   subestimação não era de esforço, era de risco: `proxima_pendente` entregaria inscrição eliminada

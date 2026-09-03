@@ -76,9 +76,23 @@ E uma trigger, porque `CHECK` não atravessa tabelas em PostgreSQL:
 resultado_etapa_coerente   BEFORE INSERT
   a Avaliação fonte pertence à mesma inscrição, à mesma Etapa e ao mesmo Edital;
   NEW.pontuacao é igual à pontuação da fonte;
-  a fonte está CONCLUIDA.
+  a fonte está CONCLUIDA;
+  a Atribuição que a governa está ATIVA.
   RAISE EXCEPTION 'stage result does not match its source evaluation'
 ```
+
+A quarta linha é a que fecha a invariante 2. Sem ela, a trigger provaria que o Resultado aponta
+para a Avaliação certa, e não que essa Avaliação **estava elegível** — elegibilidade, na 012, é
+conclusão sob Atribuição ativa. Um Resultado nascido de conclusão sob Atribuição já inativada
+ficaria consolidado para sempre, porque append-only não corrige, só congela.
+
+E a verificação é barata porque a junção já é obrigatória: `Avaliacao.atribuicao` é `OneToOne`, e é
+a **Atribuição** que carrega `inscricao_id`, `etapa_id` e `edital_id`. A trigger junta uma vez e lê
+os quatro campos de coerência mais o `ativo` na mesma linha.
+
+Note o instante: `ativo` é conferido **no `INSERT`**, e é isso que a invariante afirma. Impedimento
+posterior inativa a Atribuição sem tornar o Resultado inválido — a fonte *era* elegível quando
+consolidada, e passou a ser contestada depois (FR-031, FR-032).
 
 A unicidade é a invariante 1 da spec dita no banco, e é ela — não o botão da tela, não o bloqueio —
 que torna FR-024 verdadeiro sob qualquer concorrência e qualquer número de reenvios. O `OneToOne` em

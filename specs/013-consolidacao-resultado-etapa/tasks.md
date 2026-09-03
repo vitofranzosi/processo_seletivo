@@ -80,7 +80,7 @@ conjuntos. **Nenhuma história começa antes.**
 **⚠️ CRITICAL**: sem esta fase, nenhuma história tem onde gravar nem como decidir.
 
 - [ ] T004 Criar `ResultadoEtapa` em `backend/processo_seletivo/resultados/models.py` com os campos de [data-model.md](./data-model.md), `consequencia` em `TextChoices`, e `save()`/`delete()` recusando mutação — sem o campo `versao`, que é alcançado pela fonte (T-011)
-- [ ] T005 Escrever `backend/processo_seletivo/resultados/migrations/0001_initial.py` com a unicidade `(inscricao, etapa_id)`, o `OneToOne` sobre `Avaliacao`, os três checks, o índice `(edital, etapa_id)`, a trigger `resultado_etapa_coerente` `BEFORE INSERT` e a trigger `resultado_etapa_append_only` `BEFORE UPDATE OR DELETE`, no molde de `publicacoes/migrations/0002_retificacoes.py`
+- [ ] T005 Escrever `backend/processo_seletivo/resultados/migrations/0001_initial.py` com a unicidade `(inscricao, etapa_id)`, o `OneToOne` sobre `Avaliacao`, os três checks, o índice `(edital, etapa_id)`, a trigger `resultado_etapa_coerente` `BEFORE INSERT` — inscrição, Etapa, Edital e pontuação conferidos contra a Avaliação fonte, mais `estado = CONCLUIDA` e **`Atribuicao.ativo = true`**, tudo pela junção que `Avaliacao.atribuicao` já obriga — e a trigger `resultado_etapa_append_only` `BEFORE UPDATE OR DELETE`, no molde de `publicacoes/migrations/0002_retificacoes.py`
 - [ ] T006 Acrescentar `resultados_resultadoetapa` a `TABELAS_APPEND_ONLY` em `backend/processo_seletivo/seguranca/papeis.py`, retirando `UPDATE` e `DELETE` do papel de runtime
 - [ ] T007 [P] Escrever `backend/processo_seletivo/resultados/domain/regra.py` com a tabela-verdade de T-003: consequência a partir de `eliminatory`, `minimum_score` e quantidade prevista, comparando `Decimal`, devolvendo motivo exibível ou a razão do impedimento. Sem consulta, sem modelo
 - [ ] T008 [P] Escrever `backend/processo_seletivo/resultados/domain/compatibilidade.py` comparando semanticamente os quatro campos de D-005 entre a Etapa da versão histórica e a vigente, normalizando decimais antes de comparar e tratando a ausência pelos leitores herdados (T-004)
@@ -89,7 +89,7 @@ conjuntos. **Nenhuma história começa antes.**
 - [ ] T011 [P] Teste unitário da regra em `backend/tests/unit/resultados/test_regra.py`, cobrindo as quatro linhas da tabela-verdade, **nota exatamente igual à mínima** e Etapa eliminatória sem nota mínima
 - [ ] T012 [P] Teste unitário da compatibilidade em `backend/tests/unit/resultados/test_compatibilidade.py`, incluindo `"60.0000"` contra `"60.00"` como compatíveis, versão sem a identidade da Etapa como incompatível, e **nome, cronograma, peso e caráter classificatório divergentes como compatíveis**
 - [ ] T013 [P] Teste unitário da progressão em `backend/tests/unit/resultados/test_progressao.py`, com ordem não contígua, primeira Etapa e Etapa ausente do vigente
-- [ ] T014 [P] Teste de integração das duas triggers em `backend/tests/integration/resultados/test_imutabilidade_do_resultado.py`: `UPDATE` e `DELETE` recusados, e **`INSERT` apontando para Avaliação de outra inscrição recusado**
+- [ ] T014 [P] Teste de integração das duas triggers em `backend/tests/integration/resultados/test_imutabilidade_do_resultado.py`: `UPDATE` e `DELETE` recusados, e `INSERT` recusado em cada uma das seis divergências — inscrição, Etapa, Edital, pontuação, Avaliação em `RASCUNHO` e **Avaliação sob Atribuição inativa**, esta última a que torna a invariante 2 uma garantia de banco
 - [ ] T015 [P] Conferir em `backend/tests/integration/test_imutabilidade_do_historico.py` e `test_database_permissions.py` que a tabela nova entrou nas duas varreduras sem ajuste manual
 - [ ] T016 [P] Teste de custo dos conjuntos em `backend/tests/performance/test_progressao.py`: o número de consultas não cresce com o número de inscrições
 
@@ -136,7 +136,7 @@ repetição da mesma chave devolve exatamente o desfecho original.
 - [ ] T030 [US2] Acrescentar a ação e a exibição do desfecho agrupado por motivo em `distribuicao.html`, sem campo de pontuação, consequência ou justificativa
 - [ ] T031 [P] [US2] Teste de aceitação do lote misto em `backend/tests/acceptance/test_resultado_da_etapa.py`: prontas, pendentes e já consolidadas na mesma submissão
 - [ ] T032 [P] [US2] Teste de idempotência em `backend/tests/integration/resultados/test_consolidacao_idempotente.py`: mesma chave e mesmo conteúdo devolve o desfecho original sem evento novo; mesma chave e conteúdo diferente conflita; chave nova sobre par consolidado recusa o item
-- [ ] T033 [P] [US2] Teste de concorrência em `backend/tests/integration/resultados/test_consolidacao_idempotente.py`: duas transações consolidando a mesma inscrição produzem exatamente um Resultado, e a perdedora recebe desfecho explícito, sem erro de integridade vazando
+- [ ] T033 [US2] Teste de concorrência em `backend/tests/integration/resultados/test_consolidacao_idempotente.py`: duas transações consolidando a mesma inscrição produzem exatamente um Resultado, e a perdedora recebe desfecho explícito, sem erro de integridade vazando
 - [ ] T034 [P] [US2] Teste de volume em `backend/tests/performance/test_consolidacao_em_lote.py`: um envio com **1.000** inscrições prontas consolida numa submissão só, sem interação por inscrição e sem consulta por linha dentro do laço (SC-002)
 - [ ] T035 [P] [US2] Teste de contrato em `backend/tests/contract/test_consolidacao.py`: seleção vazia, Etapa de leitura múltipla e Etapa eliminatória sem nota mínima são **erro do pedido**, e nenhuma criação acontece
 - [ ] T036 [P] [US2] Teste de autorização em `backend/tests/authorization/test_consolidacao.py`: quem não preside recebe 404 uniforme, e a autorização é reavaliada **dentro** do ato protegido
@@ -161,7 +161,7 @@ e acessada — e que a terceira Etapa continua excluindo a eliminada mesmo sem R
 - [ ] T041 [US3] Filtrar `proxima_pendente(...)` em `backend/processo_seletivo/avaliacoes/application/selectors.py` — sem isso, a navegação entrega a inscrição excluída **sem que ninguém a peça pelo identificador**
 - [ ] T042 [US3] Ajustar `carga_nas_etapas(...)` em `backend/processo_seletivo/avaliacoes/application/selectors.py`, para que Minhas Etapas não anuncie trabalho que não existe mais
 - [ ] T043 [P] [US3] Teste de aceitação da **transitividade** em `backend/tests/acceptance/test_resultado_da_etapa.py`: eliminada na Etapa 1, com a Etapa 2 sem nenhum Resultado, continua fora da Etapa 3
-- [ ] T044 [P] [US3] Teste de aceitação do **gate dormente** em `backend/tests/acceptance/test_resultado_da_etapa.py`: Edital cuja Etapa 1 prevê duas avaliações mantém a Etapa 2 distribuível com todas as submetidas
+- [ ] T044 [US3] Teste de aceitação do **gate dormente** em `backend/tests/acceptance/test_resultado_da_etapa.py`: Edital cuja Etapa 1 prevê duas avaliações mantém a Etapa 2 distribuível com todas as submetidas
 - [ ] T045 [P] [US3] Teste de autorização em `backend/tests/authorization/test_progressao.py`: inscrição excluída responde **404 uniforme** na Mesa, na inscrição de trabalho, no documento e na próxima pendente — e trocar o identificador na URL não alcança nada
 - [ ] T046 [P] [US3] Teste de contrato em `backend/tests/contract/test_distribuicao_com_progressao.py`: distribuir inscrição excluída pela progressão responde 422 `inscricao_fora_da_etapa` — **erro do pedido**, e não recusa de linha —, e nenhuma Atribuição é criada (FR-007)
 - [ ] T047 [P] [US3] Teste de custo em `backend/tests/performance/test_progressao.py`: nenhuma listagem passa a verificar autorização por linha
@@ -188,7 +188,7 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
 - [ ] T055 [P] [US4] Teste de aceitação da proveniência em `backend/tests/acceptance/test_resultado_da_etapa.py`: depois de Retificação não retroativa e da saída do avaliador da comissão, total, consequência, fonte normativa e as duas autorias continuam reproduzíveis
 - [ ] T056 [P] [US4] Teste de integração do guard em `backend/tests/integration/resultados/test_fechamento_das_entradas.py`: a reabertura é recusada antes de qualquer efeito, a Avaliação conserva estado e revisão, e a trilha não ganha evento
 - [ ] T057 [P] [US4] Teste de autorização em `backend/tests/authorization/test_impedimento_superveniente.py`: registrado o impedimento, a pessoa impedida acessa **zero** inscrições alcançadas — inclusive a que fundamenta Resultado — na Mesa, na inscrição de trabalho e no documento (SC-009)
-- [ ] T058 [P] [US4] Teste de não regressão em `backend/tests/integration/resultados/test_fechamento_das_entradas.py`: reabrir avaliação **não** consolidada continua funcionando exatamente como na 012
+- [ ] T058 [US4] Teste de não regressão em `backend/tests/integration/resultados/test_fechamento_das_entradas.py`: reabrir avaliação **não** consolidada continua funcionando exatamente como na 012
 - [ ] T059 [P] [US4] Teste de autorização em `backend/tests/authorization/test_consulta_de_resultado.py`: auditoria consulta e **não** adquire poder de consolidar; identificador de outro escopo responde 404
 - [ ] T060 [P] [US4] Teste de integração em `backend/tests/integration/resultados/test_armazenamento_da_consulta.py`: a resposta de `.../resultados` carrega `SEM_ARMAZENAMENTO` — a varredura de `backend/tests/test_armazenamento_no_navegador.py` alcança só `portal/`, e nunca `interface/`, de modo que esta garantia não tem cobertura automática (FR-039)
 
@@ -229,7 +229,9 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
 
 - T007, T008 e T009 são três arquivos independentes de domínio puro — paralelos
 - T011 a T016 são seis arquivos de teste independentes — paralelos
-- Em cada história, todas as tarefas marcadas [P] são arquivos distintos
+- Em cada história, todas as tarefas marcadas [P] são arquivos distintos. T033, T044 e T058 **não**
+  levam [P] de propósito: cada uma escreve no mesmo arquivo de teste que a tarefa imediatamente
+  anterior, e duas mãos no mesmo arquivo não é paralelismo, é conflito
 - **US3 e US4 podem ser trabalhadas em paralelo por pessoas diferentes** depois de US2: uma toca as seis superfícies da 012, a outra toca consulta e guards
 
 ---

@@ -339,7 +339,15 @@ explicitamente, e o princípio IV também.
 **Decisão.** Reduzir o que é materializado, e verificar no `INSERT` o que sobra. Sai `versao`, que é
 alcançável pela fonte na mesma consulta. Ficam `inscricao`, `edital`, `etapa_id`, `avaliacao` e
 `pontuacao` — e uma trigger `BEFORE INSERT` confere que os quatro primeiros correspondem à Avaliação
-fonte e que `pontuacao` é igual à dela.
+fonte, que `pontuacao` é igual à dela, que ela está `CONCLUIDA` e que **a Atribuição que a governa
+está ativa**.
+
+Essa última condição não é enfeite: elegibilidade, na 012, é conclusão sob Atribuição ativa, e sem
+ela a trigger provaria que o Resultado aponta para a Avaliação certa sem provar que essa Avaliação
+podia fundamentar coisa alguma. É o que torna a invariante 2 — "a fonte era elegível quando
+consolidada" — uma garantia de banco e não uma promessa da função de consolidação. Custa zero
+junções a mais: `Avaliacao.atribuicao` é `OneToOne`, e é a Atribuição que carrega `inscricao_id`,
+`etapa_id` e `edital_id`, de modo que a mesma junção que confere a coerência lê o `ativo`.
 
 **Racional.** Uma redação anterior do modelo justificava a redundância dizendo que a divergência era
 "impossível porque as linhas de origem são imutáveis". O argumento não se sustenta, e reconhecê-lo é
