@@ -66,6 +66,48 @@ def test_a_conferencia_mostra_cota_etapa_e_texto(api_client, manager_headers, pr
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
+def test_a_conferencia_mostra_o_que_a_012_acrescentou_a_etapa(
+    api_client, manager_headers, process_payload
+):
+    """FR-007 da `012`: o que é congelado precisa aparecer em "o que será congelado".
+
+    A pontuação máxima é o teto contra o qual cada avaliação da Etapa é validada depois, e as
+    avaliações por inscrição são o que a distribuição cobra. O formulário coletava as duas e o
+    documento publicado as imprimia; a conferência da submissão era o único lugar do caminho que
+    as omitia — justamente o que existe para dizer o que está prestes a ficar imutável.
+    """
+    rascunho = rascunho_com_etapas()
+    rascunho["stages"][0].update(evaluationsPerRegistration=2, maximumScore="100.0000")
+    edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
+    blocos = revisao.blocos(edital_snapshot(Edital.objects.get(pk=edital.pk)))
+    tudo = "\n".join(
+        linha for bloco in blocos for item in bloco["itens"] for linha in item["linhas"]
+    )
+
+    assert "Pontuação máxima: 100.0000" in tudo
+    assert "Avaliações por inscrição: 2" in tudo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_etapa_que_nada_declara_nao_inventa_o_padrao(
+    api_client, manager_headers, process_payload
+):
+    """Ausência é "o Edital não declarou", e não "declarou o padrão" — como no documento."""
+    edital = publish_original(
+        api_client, manager_headers, process_payload, draft=rascunho_com_etapas()
+    )
+    blocos = revisao.blocos(edital_snapshot(Edital.objects.get(pk=edital.pk)))
+    tudo = "\n".join(
+        linha for bloco in blocos for item in bloco["itens"] for linha in item["linhas"]
+    )
+
+    assert "Pontuação máxima" not in tudo
+    assert "Avaliações por inscrição" not in tudo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
 def test_cada_bloco_aponta_para_a_etapa_que_o_corrige(api_client, manager_headers, process_payload):
     from processo_seletivo.interface.views import CHAVES_ETAPA
 

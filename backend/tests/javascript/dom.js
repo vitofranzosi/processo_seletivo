@@ -272,7 +272,15 @@ class Armazem {
 let documento;
 
 /** Monta o ambiente global e devolve o que o teste precisa inspecionar. */
-function montar({ formulario, armazem = new Armazem(), avisos = [], ordenaveis = [] } = {}) {
+function montar({
+  formulario,
+  armazem = new Armazem(),
+  avisos = [],
+  ordenaveis = [],
+  // O recibo do servidor: a chave do rascunho que ele acabou de receber. `null` é a tela que
+  // não vem de um salvamento, que é o caso comum.
+  rascunhoSalvo = null,
+} = {}) {
   const ouvintes = {};
   documento = {
     activeElement: null,
@@ -298,6 +306,12 @@ function montar({ formulario, armazem = new Armazem(), avisos = [], ordenaveis =
     getElementById: (id) => (id === "formulario" ? formulario : null),
     querySelector: (seletor) => {
       if (seletor === "[data-nao-enviado]") return null;
+      if (seletor === "[data-rascunho-salvo]") {
+        if (rascunhoSalvo === null) return null;
+        const recibo = new Elemento("p");
+        recibo.dataset.rascunhoSalvo = rascunhoSalvo;
+        return recibo;
+      }
       return seletor.startsWith("#") ? new Elemento("div") : null;
     },
     querySelectorAll: (seletor) => (seletor === "[data-ordenavel]" ? ordenaveis : []),

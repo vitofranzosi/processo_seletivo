@@ -634,6 +634,10 @@ def compor_etapa(request, edital_id, etapa):
             "salvo": dict((chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO).get(
                 request.GET.get("salvo", "")
             ),
+            # A chave da etapa que acabou de ser gravada, e não o rótulo dela: é o que o rascunho
+            # local precisa para apagar exatamente o que o servidor passou a ter. "Avançar" grava
+            # uma etapa e abre outra, então nem sempre é a etapa desta tela.
+            "salvo_chave": request.GET.get("salvo", ""),
             "identificacao": (
                 digitados
                 if etapa == "identificacao" and digitados is not None
