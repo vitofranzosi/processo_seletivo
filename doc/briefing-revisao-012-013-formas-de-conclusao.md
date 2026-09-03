@@ -179,9 +179,14 @@ Os dez pontos abaixo são a decisão; o corpo da spec passa a estar escrito conf
    critério' seria deixar a consequência para quem implementa decidir"*. A análise documental dos
    35/57 é **eliminatória, decisória e sem nota mínima**, e isso é normal. Sem esta alteração, o
    sistema aceitaria o indeferimento na 012 e recusaria produzir Resultado procurando uma nota
-   mínima que o Edital nunca publicou — que é a fronteira quebrada descrita acima.
+   mínima que o Edital nunca publicou — que é a fronteira quebrada descrita acima. **No lugar dela
+   entra o impedimento simétrico**: Etapa decisória e não eliminatória não publica o que a decisão
+   desfavorável produz, e por isso não é consolidável.
 4. **`consequencia` ganha o ramo decisório**, sem inventar escala: `DESFAVORAVEL` não vira zero e
-   `FAVORAVEL` não vira um. O motivo exibível cita o rótulo publicado, e não o enum interno.
+   `FAVORAVEL` não vira um. Em Etapa eliminatória, `DESFAVORAVEL` produz `ELIMINADA` e `FAVORAVEL`
+   produz `HABILITADA`; fora dela a Etapa nem chega aqui, porque o impedimento da regra a barrou
+   antes. O motivo exibível cita o rótulo publicado, e não o enum interno — quem lê o Resultado lê
+   "Indeferido", e não `DESFAVORAVEL`.
 5. **`CAMPOS_COMPARADOS` passa a incluir `forma`.** É o furo mais silencioso do conjunto: uma
    Retificação que virasse `PONTUADA → DECISORIA` não seria detectada como norma divergente, e a
    013 consolidaria uma conclusão pontuada sob norma decisória — exatamente o que aquela função
@@ -191,27 +196,39 @@ Os dez pontos abaixo são a decisão; o corpo da spec passa a estar escrito conf
 6. **A progressão não muda.** `ELIMINADA` continua sendo `ELIMINADA`, qualquer que seja a forma que
    a produziu. É o limite que mantém esta rodada estreita.
 
-## A pergunta que ainda está aberta
-
-Uma só, e ela precisa fechar **antes do `/plan`**, porque altera domínio e constraint:
+## A última pergunta, fechada em 03/09/2026
 
 > **O que uma Etapa `DECISORIA` e não eliminatória produz como consequência?**
 
 `FAVORAVEL` habilita, e `DESFAVORAVEL` em Etapa eliminatória elimina — os dois casos dos Editais 35
-e 57. O terceiro caso não tem resposta óbvia: se a Etapa não é eliminatória, um desfavorável que
+e 57. O terceiro não tinha resposta óbvia: se a Etapa não é eliminatória, um desfavorável que
 habilita é absurdo, e um desfavorável que elimina aplica caráter eliminatório que o Edital não
 publicou.
 
-Três saídas, e a recomendação é a terceira:
+**A decisão: `DECISORIA` + não eliminatória cai em `REGRA_INSUFICIENTE` na 013.** Nem o sentido
+carrega a consequência por conta própria, nem a forma decisória implica caráter eliminatório por
+definição. O sistema diz o que de fato sabe:
 
-| saída | o que afirma | custo |
-|---|---|---|
-| `DESFAVORAVEL` sempre elimina | o sentido carrega a consequência, e `eliminatory` não a modula na forma decisória | inventa efeito onde o Edital não o publicou |
-| `DECISORIA` implica `eliminatory` | a forma decisória só existe em Etapa eliminatória; publicar o contrário é recusado | fecha por validação, e nenhum dos três Editais exercita o contrário |
-| impedimento explícito na 013 | a Etapa é consolidável, mas a combinação decisória + não eliminatória cai em `REGRA_INSUFICIENTE`, com a frase que diz por quê | consistente com o que `regra.py` **já** faz para eliminatória sem nota mínima |
+> recebi uma decisão desfavorável, e o Edital não publicou que ela elimina — não posso inventar o
+> efeito.
 
-A terceira é a que não inventa norma e não fecha porta: usa o mecanismo de recusa que a 013 já tem,
-com a mesma voz. Mas é decisão de quem governa a spec, e não do `/plan`.
+As duas alternativas recusadas afirmariam norma que ninguém escreveu. Fazer `DESFAVORAVEL` sempre
+eliminar transformaria o sentido em consequência, que é a fusão que P-006 impede do lado da 012 e
+que a 013 impede do lado dela. Exigir `eliminatory` de toda Etapa decisória fecharia por validação
+uma porta que nenhum dos três Editais precisou abrir — e proibir na elaboração o que o Edital
+poderia legitimamente publicar é a mesma invenção, com o sinal trocado.
+
+A saída escolhida não inventa e não fecha porta: usa o mecanismo de recusa que a 013 **já** tem,
+com a mesma voz e o mesmo alcance. `impedimento_da_regra` é impedimento da **Etapa inteira**, e não
+de uma inscrição — hoje ele diz *"a Etapa é eliminatória e o Edital não publicou nota mínima"*, e
+passa a dizer, no caso simétrico, que a Etapa é decisória e o Edital não publicou o que a decisão
+desfavorável produz. A recusa aparece onde as outras aparecem: na prontidão da Etapa, com a frase
+que explica por quê, antes de alguém tentar consolidar.
+
+Uma consequência que vale nomear na emenda: **na forma decisória, `eliminatory` é o que dá
+consequência à decisão.** Ele deixa de ser apenas o modulador do parecer obrigatório e da nota
+mínima e passa a ser a declaração normativa sem a qual a Etapa decisória não produz efeito. Isso
+não é regra nova — é o mesmo papel que ele já tem na forma pontuada, dito para a outra forma.
 
 ## Testes que a rodada precisa produzir
 
@@ -228,20 +245,26 @@ Além da ida e volta das duas formas nas duas features:
 - recusa pelo canal HTTP real nos POSTs de escrita da Mesa → a lacuna que a E2E-015 registra;
 - Etapa decisória eliminatória **sem** nota mínima consolida e elimina → a regressão que a
   contraparte 3 na 013 existe para impedir;
+- Etapa decisória **não** eliminatória não consolida, e a prontidão exibe a frase que diz por quê;
 - todo o comportamento pontuado hoje verde continua verde, sem alteração de asserção.
 
 ## Ordem de execução
 
 ```text
-1. branch própria
-2. emendar specs/012 — D-008 no §5 e revisão transversal (mapa abaixo)
-3. emendar specs/013 — a contraparte, no §2 e nas seções do mapa
-4. modelo, constraint e migração da 012 · snapshot v6 · elevação · CAMPOS_ETAPA
-5. Mesa: dois instrumentos conforme a forma
-6. PDF: forma e rótulos no documento publicado
-7. modelo, trigger e domínio da 013
-8. testes
+1. branch própria                                                        ✔ feito
+2. emendar specs/012 — D-008 no §5 e revisão transversal (mapa abaixo)    ✔ feito
+3. emendar specs/013 — a contraparte, no §2 e nas seções do mapa          ✔ feito
+4. /plan da revisão conjunta                                             ← a próxima sessão começa aqui
+5. modelo, constraint e migração da 012 · snapshot v6 · elevação · retificação
+6. Mesa: dois instrumentos conforme a forma
+7. PDF: forma e rótulos no documento publicado
+8. modelo, trigger e domínio da 013
+9. testes de não regressão e dos casos decisórios
 ```
+
+**Os passos 2 e 3 foram executados em 03/09/2026**, e o mapa abaixo passa a ser o registro do que
+foi emendado — não uma lista de pendências. As duas specs já estão coerentes entre si; o `/plan`
+parte delas e não as refaz.
 
 Emendar as duas specs **antes** do código é o que impede a contradição que o Princípio V proíbe.
 Implementar contra a 012 vigente, que ainda diz que concluir exige pontuação, e contra a 013
