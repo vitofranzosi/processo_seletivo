@@ -137,8 +137,9 @@ repetição da mesma chave devolve exatamente o desfecho original.
 - [ ] T031 [P] [US2] Teste de aceitação do lote misto em `backend/tests/acceptance/test_resultado_da_etapa.py`: prontas, pendentes e já consolidadas na mesma submissão
 - [ ] T032 [P] [US2] Teste de idempotência em `backend/tests/integration/resultados/test_consolidacao_idempotente.py`: mesma chave e mesmo conteúdo devolve o desfecho original sem evento novo; mesma chave e conteúdo diferente conflita; chave nova sobre par consolidado recusa o item
 - [ ] T033 [P] [US2] Teste de concorrência em `backend/tests/integration/resultados/test_consolidacao_idempotente.py`: duas transações consolidando a mesma inscrição produzem exatamente um Resultado, e a perdedora recebe desfecho explícito, sem erro de integridade vazando
-- [ ] T034 [P] [US2] Teste de contrato em `backend/tests/contract/test_consolidacao.py`: seleção vazia, Etapa de leitura múltipla e Etapa eliminatória sem nota mínima são **erro do pedido**, e nenhuma criação acontece
-- [ ] T035 [P] [US2] Teste de autorização em `backend/tests/authorization/test_consolidacao.py`: quem não preside recebe 404 uniforme, e a autorização é reavaliada **dentro** do ato protegido
+- [ ] T034 [P] [US2] Teste de volume em `backend/tests/performance/test_consolidacao_em_lote.py`: um envio com **1.000** inscrições prontas consolida numa submissão só, sem interação por inscrição e sem consulta por linha dentro do laço (SC-002)
+- [ ] T035 [P] [US2] Teste de contrato em `backend/tests/contract/test_consolidacao.py`: seleção vazia, Etapa de leitura múltipla e Etapa eliminatória sem nota mínima são **erro do pedido**, e nenhuma criação acontece
+- [ ] T036 [P] [US2] Teste de autorização em `backend/tests/authorization/test_consolidacao.py`: quem não preside recebe 404 uniforme, e a autorização é reavaliada **dentro** do ato protegido
 
 **Checkpoint**: US1 + US2 entregam a jornada central — ver o que está pronto e transformá-lo em Resultado.
 
@@ -153,17 +154,18 @@ as seis superfícies que hoje devolvem inscrição por Etapa.
 distribuição e a Mesa da segunda e comprovar que somente a habilitada pode ser distribuída, contada
 e acessada — e que a terceira Etapa continua excluindo a eliminada mesmo sem Resultado na segunda.
 
-- [ ] T036 [US3] Recusar em `_inscricoes_atribuiveis`, em `backend/processo_seletivo/avaliacoes/application/distribuicao.py`, a inscrição excluída pela progressão — como **erro do pedido** (`inscricao_fora_da_etapa`, 422), na mesma classificação já usada para inscrição não submetida
-- [ ] T037 [US3] Acrescentar a terceira pergunta a `pode_avaliar_inscricao` em `backend/processo_seletivo/avaliacoes/domain/autorizacao.py`, **só na rota individual**, atualizando o docstring que hoje afirma "duas condições, e não três" para registrar por que a terceira cabe ali e não em listagem
-- [ ] T038 [US3] Fazer `_autorizar` em `backend/processo_seletivo/avaliacoes/application/mesa.py` herdar a decisão, cobrindo a inscrição de trabalho e a entrega de documento
-- [ ] T039 [US3] Filtrar `mesa(...)` em `backend/processo_seletivo/avaliacoes/application/selectors.py` pelos conjuntos da progressão, resolvidos uma vez por listagem
-- [ ] T040 [US3] Filtrar `proxima_pendente(...)` em `backend/processo_seletivo/avaliacoes/application/selectors.py` — sem isso, a navegação entrega a inscrição excluída **sem que ninguém a peça pelo identificador**
-- [ ] T041 [US3] Ajustar `carga_nas_etapas(...)` em `backend/processo_seletivo/avaliacoes/application/selectors.py`, para que Minhas Etapas não anuncie trabalho que não existe mais
-- [ ] T042 [P] [US3] Teste de aceitação da **transitividade** em `backend/tests/acceptance/test_resultado_da_etapa.py`: eliminada na Etapa 1, com a Etapa 2 sem nenhum Resultado, continua fora da Etapa 3
-- [ ] T043 [P] [US3] Teste de aceitação do **gate dormente** em `backend/tests/acceptance/test_resultado_da_etapa.py`: Edital cuja Etapa 1 prevê duas avaliações mantém a Etapa 2 distribuível com todas as submetidas
-- [ ] T044 [P] [US3] Teste de autorização em `backend/tests/authorization/test_progressao.py`: inscrição excluída responde **404 uniforme** na Mesa, na inscrição de trabalho, no documento e na próxima pendente — e trocar o identificador na URL não alcança nada
-- [ ] T045 [P] [US3] Teste de custo em `backend/tests/performance/test_progressao.py`: nenhuma listagem passa a verificar autorização por linha
-- [ ] T046 [P] [US3] Teste de não regressão em `backend/tests/integration/resultados/test_nao_regressao_012.py`: a primeira Etapa conserva integralmente o comportamento da 012, e a Atribuição criada enquanto a exigência estava dormente volta a autorizar quando o Resultado habilitador existe
+- [ ] T037 [US3] Recusar em `_inscricoes_atribuiveis`, em `backend/processo_seletivo/avaliacoes/application/distribuicao.py`, a inscrição excluída pela progressão — como **erro do pedido** (`inscricao_fora_da_etapa`, 422), na mesma classificação já usada para inscrição não submetida
+- [ ] T038 [US3] Acrescentar a terceira pergunta a `pode_avaliar_inscricao` em `backend/processo_seletivo/avaliacoes/domain/autorizacao.py`, **só na rota individual**, atualizando o docstring que hoje afirma "duas condições, e não três" para registrar por que a terceira cabe ali e não em listagem
+- [ ] T039 [US3] Fazer `_autorizar` em `backend/processo_seletivo/avaliacoes/application/mesa.py` herdar a decisão, cobrindo a inscrição de trabalho e a entrega de documento
+- [ ] T040 [US3] Filtrar `mesa(...)` em `backend/processo_seletivo/avaliacoes/application/selectors.py` pelos conjuntos da progressão, resolvidos uma vez por listagem
+- [ ] T041 [US3] Filtrar `proxima_pendente(...)` em `backend/processo_seletivo/avaliacoes/application/selectors.py` — sem isso, a navegação entrega a inscrição excluída **sem que ninguém a peça pelo identificador**
+- [ ] T042 [US3] Ajustar `carga_nas_etapas(...)` em `backend/processo_seletivo/avaliacoes/application/selectors.py`, para que Minhas Etapas não anuncie trabalho que não existe mais
+- [ ] T043 [P] [US3] Teste de aceitação da **transitividade** em `backend/tests/acceptance/test_resultado_da_etapa.py`: eliminada na Etapa 1, com a Etapa 2 sem nenhum Resultado, continua fora da Etapa 3
+- [ ] T044 [P] [US3] Teste de aceitação do **gate dormente** em `backend/tests/acceptance/test_resultado_da_etapa.py`: Edital cuja Etapa 1 prevê duas avaliações mantém a Etapa 2 distribuível com todas as submetidas
+- [ ] T045 [P] [US3] Teste de autorização em `backend/tests/authorization/test_progressao.py`: inscrição excluída responde **404 uniforme** na Mesa, na inscrição de trabalho, no documento e na próxima pendente — e trocar o identificador na URL não alcança nada
+- [ ] T046 [P] [US3] Teste de contrato em `backend/tests/contract/test_distribuicao_com_progressao.py`: distribuir inscrição excluída pela progressão responde 422 `inscricao_fora_da_etapa` — **erro do pedido**, e não recusa de linha —, e nenhuma Atribuição é criada (FR-007)
+- [ ] T047 [P] [US3] Teste de custo em `backend/tests/performance/test_progressao.py`: nenhuma listagem passa a verificar autorização por linha
+- [ ] T048 [P] [US3] Teste de não regressão em `backend/tests/integration/resultados/test_nao_regressao_012.py`: a primeira Etapa conserva integralmente o comportamento da 012, e a Atribuição criada enquanto a exigência estava dormente volta a autorizar quando o Resultado habilitador existe
 
 **Checkpoint**: a eliminação produz efeito operacional, e nenhuma porta da 012 ficou aberta.
 
@@ -177,17 +179,18 @@ fundamentaram — e as entradas da decisão ficam fechadas para reabertura.
 **Independent Test**: consolidar, publicar uma Retificação não retroativa e remover o avaliador da
 comissão; consultar o Resultado e reproduzir total, consequência, fonte normativa e duas autorias.
 
-- [ ] T047 [US4] Escrever o seletor de Resultados em `backend/processo_seletivo/resultados/application/selectors.py`, com `select_related("avaliacao__versao")` para a proveniência, paginação e filtro por consequência
-- [ ] T048 [US4] Acrescentar a rota `editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/resultados` em `urls.py` e a view em `views.py`, aberta à presidência e a `auditoria:consultar`, pela mesma porta das conclusões preservadas
-- [ ] T049 [US4] Criar `backend/processo_seletivo/interface/templates/interface/resultados.html` mostrando pontuação, consequência e motivo, Avaliação fonte, versão normativa, quem avaliou, quem consolidou e quando — marcado como não armazenável pelo navegador
-- [ ] T050 [US4] Acrescentar o guard em `reabrir`, em `backend/processo_seletivo/avaliacoes/application/avaliacao.py`, entre a localização da Avaliação e o `compare_and_swap`: 409 `avaliacao_fundamenta_resultado`, nomeando inscrição e Etapa **sem expor pontuação**
-- [ ] T051 [US4] Acrescentar `resultados_contestados` ao desfecho de `registrar_impedimento`, em `backend/processo_seletivo/avaliacoes/application/impedimento.py` — **declaração, não decisão**: nenhuma Atribuição é preservada e nenhum Resultado é alterado
-- [ ] T052 [US4] Exibir a contestação superveniente junto do Resultado em `resultados.html`, para que quem consulta saiba que a origem foi contestada depois
-- [ ] T053 [P] [US4] Teste de aceitação da proveniência em `backend/tests/acceptance/test_resultado_da_etapa.py`: depois de Retificação não retroativa e da saída do avaliador da comissão, total, consequência, fonte normativa e as duas autorias continuam reproduzíveis
-- [ ] T054 [P] [US4] Teste de integração do guard em `backend/tests/integration/resultados/test_fechamento_das_entradas.py`: a reabertura é recusada antes de qualquer efeito, a Avaliação conserva estado e revisão, e a trilha não ganha evento
-- [ ] T055 [P] [US4] Teste de autorização em `backend/tests/authorization/test_impedimento_superveniente.py`: registrado o impedimento, a pessoa impedida acessa **zero** inscrições alcançadas — inclusive a que fundamenta Resultado — na Mesa, na inscrição de trabalho e no documento (SC-009)
-- [ ] T056 [P] [US4] Teste de não regressão em `backend/tests/integration/resultados/test_fechamento_das_entradas.py`: reabrir avaliação **não** consolidada continua funcionando exatamente como na 012
-- [ ] T057 [P] [US4] Teste de autorização em `backend/tests/authorization/test_consulta_de_resultado.py`: auditoria consulta e **não** adquire poder de consolidar; identificador de outro escopo responde 404
+- [ ] T049 [US4] Escrever o seletor de Resultados em `backend/processo_seletivo/resultados/application/selectors.py`, com `select_related("avaliacao__versao")` para a proveniência, paginação e filtro por consequência
+- [ ] T050 [US4] Acrescentar a rota `editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/resultados` em `urls.py` e a view em `views.py`, aberta à presidência e a `auditoria:consultar`, pela mesma porta das conclusões preservadas
+- [ ] T051 [US4] Criar `backend/processo_seletivo/interface/templates/interface/resultados.html` mostrando pontuação, consequência e motivo, Avaliação fonte, versão normativa, quem avaliou, quem consolidou e quando — marcado como não armazenável pelo navegador
+- [ ] T052 [US4] Acrescentar o guard em `reabrir`, em `backend/processo_seletivo/avaliacoes/application/avaliacao.py`, entre a localização da Avaliação e o `compare_and_swap`: 409 `avaliacao_fundamenta_resultado`, nomeando inscrição e Etapa **sem expor pontuação**
+- [ ] T053 [US4] Acrescentar `resultados_contestados` ao desfecho de `registrar_impedimento`, em `backend/processo_seletivo/avaliacoes/application/impedimento.py` — **declaração, não decisão**: nenhuma Atribuição é preservada e nenhum Resultado é alterado
+- [ ] T054 [US4] Exibir a contestação superveniente junto do Resultado em `resultados.html`, para que quem consulta saiba que a origem foi contestada depois
+- [ ] T055 [P] [US4] Teste de aceitação da proveniência em `backend/tests/acceptance/test_resultado_da_etapa.py`: depois de Retificação não retroativa e da saída do avaliador da comissão, total, consequência, fonte normativa e as duas autorias continuam reproduzíveis
+- [ ] T056 [P] [US4] Teste de integração do guard em `backend/tests/integration/resultados/test_fechamento_das_entradas.py`: a reabertura é recusada antes de qualquer efeito, a Avaliação conserva estado e revisão, e a trilha não ganha evento
+- [ ] T057 [P] [US4] Teste de autorização em `backend/tests/authorization/test_impedimento_superveniente.py`: registrado o impedimento, a pessoa impedida acessa **zero** inscrições alcançadas — inclusive a que fundamenta Resultado — na Mesa, na inscrição de trabalho e no documento (SC-009)
+- [ ] T058 [P] [US4] Teste de não regressão em `backend/tests/integration/resultados/test_fechamento_das_entradas.py`: reabrir avaliação **não** consolidada continua funcionando exatamente como na 012
+- [ ] T059 [P] [US4] Teste de autorização em `backend/tests/authorization/test_consulta_de_resultado.py`: auditoria consulta e **não** adquire poder de consolidar; identificador de outro escopo responde 404
+- [ ] T060 [P] [US4] Teste de integração em `backend/tests/integration/resultados/test_armazenamento_da_consulta.py`: a resposta de `.../resultados` carrega `SEM_ARMAZENAMENTO` — a varredura de `backend/tests/test_armazenamento_no_navegador.py` alcança só `portal/`, e nunca `interface/`, de modo que esta garantia não tem cobertura automática (FR-039)
 
 **Checkpoint**: a decisão é demonstrável, a entrada está fechada para reabertura, e a contestação superveniente é visível.
 
@@ -195,12 +198,13 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T058 [P] Escrever `specs/013-consolidacao-resultado-etapa/traceability.md` ligando os 45 requisitos e os 11 critérios a tarefa, arquivo e teste, como a 011 e a 012 fizeram
-- [ ] T059 Executar `specs/013-consolidacao-resultado-etapa/quickstart.md` inteiro pela interface administrativa, incluindo o passo 4 da Entrega 4 e o passo 4 da Entrega 5 — os dois que provam as correções da revisão
-- [ ] T060 [P] Conferir `backend/processo_seletivo/interface/templates/interface/distribuicao.html` e `resultados.html` em 375 px, sem tabela horizontal
-- [ ] T061 [P] Rodar `ruff format --check` e `ruff check` sobre `backend/` — é portão de CI desde a 012
-- [ ] T062 [P] Rodar `backend/tests/test_citacoes_de_requisito.py`: toda citação de FR e SC no código novo aponta para requisito que existe
-- [ ] T063 Rodar `backend/tests/` inteira com `TEST_DB_ENGINE=postgresql` e `DB_NAME` próprio, confirmando que nenhum teste da 011 ou da 012 regrediu
+- [ ] T061 [P] Escrever `specs/013-consolidacao-resultado-etapa/traceability.md` ligando os 45 requisitos e os 11 critérios a tarefa, arquivo e teste, como a 011 e a 012 fizeram
+- [ ] T062 Executar `specs/013-consolidacao-resultado-etapa/quickstart.md` inteiro pela interface administrativa, incluindo o passo 4 da Entrega 4 e o passo 4 da Entrega 5 — os dois que provam as correções da revisão
+- [ ] T063 [P] Conferir `backend/processo_seletivo/interface/templates/interface/distribuicao.html` e `resultados.html` em 375 px, sem tabela horizontal
+- [ ] T064 [P] Rodar `ruff format --check` e `ruff check` sobre `backend/` — é portão de CI desde a 012
+- [ ] T065 [P] Rodar `backend/tests/test_citacoes_de_requisito.py`: toda citação de FR e SC no código novo aponta para requisito que existe
+- [ ] T066 [P] Escrever a varredura de vocabulário em `backend/tests/test_vocabulario_do_resultado.py`: nenhum template nem resposta da 013 afirma colocação, classificação, aprovação final, ocupação de vaga ou direito à convocação (FR-045)
+- [ ] T067 Rodar `backend/tests/` inteira com `TEST_DB_ENGINE=postgresql` e `DB_NAME` próprio, confirmando que nenhum teste da 011 ou da 012 regrediu
 
 ---
 

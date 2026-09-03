@@ -104,8 +104,9 @@ inscrições o segura pela duração da transação. Não é novidade — a dist
 forma —, mas é o motivo de o lote ser paginado por seleção de tela e não crescer indefinidamente.
 
 **Scale/Scope**: um Edital com mil inscritos e quatro Etapas — mil é o teto de SC-002, e é o número
-usado em spec, contrato e quickstart. Um modelo novo, três funções de domínio, um seletor de
-conjuntos, duas rotas novas, seis superfícies alteradas, zero campos normativos novos.
+usado em spec, contrato, quickstart e no teste de volume do lote. Um modelo novo, três funções de
+domínio, um classificador de prontidão, um seletor de conjuntos, duas rotas novas, seis superfícies
+alteradas, zero campos normativos novos.
 
 ## Constitution Check
 
@@ -177,6 +178,7 @@ backend/processo_seletivo/
 │   │   ├── compatibilidade.py       # norma histórica × vigente (T-004)
 │   │   └── progressao.py            # Etapa anterior e Etapas anteriores (T-005)
 │   └── application/
+│       ├── prontidao.py             # classificação derivada de cada participante (T-008)
 │       ├── consolidacao.py          # o lote, sob comando_de_comissao (T-006)
 │       └── selectors.py             # conjuntos de eliminadas e habilitadas; Resultados da Etapa
 ├── avaliacoes/

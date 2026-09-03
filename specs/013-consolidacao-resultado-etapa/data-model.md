@@ -115,7 +115,7 @@ Três camadas, como `ConclusaoAvaliacao` e `VersaoConsolidada` (T-002):
 | `PENDENTE` | ausência de linha para o par participante+Etapa (D-006) |
 | `CONSOLIDADO` | existência da linha |
 | Participação na Etapa | conjunto derivado: submetidas do Edital, menos as eliminadas em qualquer Etapa anterior, menos — quando a imediatamente anterior já produziu Resultado — as sem `HABILITADA` nela (D-003) |
-| Prontidão | classificação derivada por participante: elegibilidade, compatibilidade, regra disponível, Resultado existente |
+| Prontidão | classificação derivada por participante: elegibilidade, compatibilidade, regra disponível, Resultado existente. Calculada em `resultados/application/prontidao.py` a cada leitura, nunca gravada |
 | Desfecho do lote | `IdempotencyRecord.result_payload`, que a 012 já criou; não é entidade do domínio |
 
 Persistir qualquer um deles criaria estado a manter a cada gravação — a razão pela qual a 012 deixou
@@ -161,6 +161,7 @@ desfecho de lote desde a 012.
 | Compatibilidade normativa entre versão e vigente | domínio puro | `resultados/domain/compatibilidade.py` |
 | Etapa anterior e Etapas anteriores | domínio puro | `resultados/domain/progressao.py` |
 | Conjuntos de eliminadas e de habilitadas | consulta | `resultados/application/selectors.py` |
+| Classificação de prontidão do participante | aplicação | `resultados/application/prontidao.py` |
 | Elegibilidade da Avaliação | herdada | `avaliacoes/application/selectors.py` |
 | Quantidade prevista e teto | herdadas | `avaliacoes/domain/previsao.py` |
 | Unicidade do par | banco | constraint |
