@@ -82,11 +82,23 @@ def _cobertura(atribuidas, previstas):
     return COMPLETA if atribuidas >= previstas else INCOMPLETA
 
 
-def inscricoes_da_etapa(*, edital, etapa, pagina=1, cobertura=None, avaliador=None):
+def inscricoes_da_etapa(
+    *, edital, etapa, pagina=1, cobertura=None, avaliador=None, panorama=None, prontidao=None
+):
     """As inscrições submetidas do Edital, com quantas avaliações cada uma já tem.
 
     Paginada e filtrável (FR-049): mil inscrições não cabem numa tela, e a pergunta operacional
     quase nunca é "todas" — é "quais ainda não têm ninguém" ou "quais são de fulano".
+
+    **`panorama` é o acréscimo da 013**, e ele chega por parâmetro em vez de ser consultado aqui
+    por dois motivos. O primeiro é dependência: `resultados` lê este módulo, e lê-lo de volta seria
+    ciclo. O segundo é custo: quem monta a tela resolve o panorama **uma vez** e o entrega ao
+    resumo e à listagem, de modo que os dois contem a mesma coisa e nenhum deles consulte por
+    linha (013, FR-006, FR-009).
+
+    Com o panorama, a listagem passa a mostrar **participantes** por padrão — quem foi eliminado
+    numa Etapa anterior ou ainda aguarda a anterior sai do conjunto (013, FR-005) — e o filtro de
+    prontidão é o que traz cada grupo de volta, nomeado.
     """
     previstas = avaliacoes_previstas(etapa)
     consulta = (
@@ -120,6 +132,8 @@ def inscricoes_da_etapa(*, edital, etapa, pagina=1, cobertura=None, avaliador=No
         )
         .order_by("protocolo", "id")
     )
+    if panorama is not None:
+        consulta = consulta.filter(id__in=_recorte_da_prontidao(panorama, prontidao))
     if avaliador:
         consulta = consulta.filter(
             atribuicoes__membro__identity_subject=avaliador,
@@ -145,17 +159,40 @@ def inscricoes_da_etapa(*, edital, etapa, pagina=1, cobertura=None, avaliador=No
             "faltam_concluir": max(previstas - inscricao.concluidas, 0),
             "cobertura": _cobertura(inscricao.atribuidas, previstas),
             "atribuicoes": inscricao.atribuicoes_da_etapa,
+            # `(estado, motivo)` da 013, ou `None` quando quem chamou não pediu prontidão. A
+            # segunda posição é o que a tela mostra: "erro" não diz a ação seguinte, "1 de 2
+            # avaliações concluída" diz (013, FR-012).
+            "prontidao": (panorama or {}).get("estados", {}).get(inscricao.id),
         }
         for inscricao in pagina_atual
     ]
     return linhas, pagina_atual
 
 
-def resumo_da_etapa(*, edital, etapa):
+def _recorte_da_prontidao(panorama, prontidao):
+    """As identidades que a listagem deve mostrar, dado o filtro pedido.
+
+    Sem filtro, os participantes — e não a população inteira. Com filtro, exatamente o grupo
+    nomeado, inclusive os dois que **não** são participantes: quem foi eliminado antes e quem
+    aguarda a Etapa anterior precisam ser alcançáveis, senão a presidência sabe que existem pelo
+    resumo e não consegue vê-los.
+    """
+    if not prontidao:
+        return panorama["participantes"]
+    return {
+        identidade for identidade, (estado, _) in panorama["estados"].items() if estado == prontidao
+    }
+
+
+def resumo_da_etapa(*, edital, etapa, panorama=None):
     """O que falta, em três números — antes do detalhe (FR-014).
 
     Uma consulta agregada sobre as inscrições submetidas, e não um laço sobre elas: com mil
     inscrições, contar em Python custaria mil objetos para produzir três inteiros.
+
+    **A 013 acrescenta dimensões a este mesmo resumo**, e não um painel ao lado dele: cobertura,
+    conclusão e prontidão são perguntas sobre a mesma população, e contá-las em lugares diferentes
+    daria dois números para a mesma Etapa (013, D-004, FR-009).
     """
     previstas = avaliacoes_previstas(etapa)
     por_inscricao = (
@@ -199,6 +236,9 @@ def resumo_da_etapa(*, edital, etapa):
         "atribuicoes": Atribuicao.objects.filter(
             edital=edital, etapa_id=etapa["id"], ativo=True
         ).count(),
+        # As contagens da 013 vêm do panorama, e não de uma segunda agregação: é o mesmo
+        # dicionário que a listagem filtra, e é isso que torna a partição verificável (FR-010).
+        **((panorama or {}).get("contagens") or {}),
     }
 
 

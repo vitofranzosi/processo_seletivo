@@ -59,6 +59,37 @@ avaliações a Etapa declara não é contagem que se filtra — é propriedade d
     <strong>{{ resumo.sem_conclusao }}</strong> <span>com avaliação pendente</span></a>
 </nav>
 
+{% comment %}
+A prontidão da `013` **acrescenta** dimensões a este mesmo resumo, e não abre um painel ao lado
+dele: cobertura, conclusão e prontidão são perguntas sobre a mesma população, e contá-las em dois
+lugares daria dois números para a mesma Etapa (D-004).
+
+Os seis números fecham: participantes, eliminadas antes e aguardando a anterior somam o total
+submetido; e prontas, impedidas e consolidadas somam os participantes. Quem confere a tela pode
+somar.
+{% endcomment %}
+{% if impedimento_da_etapa %}
+<p class="aviso" role="status">
+  Esta Etapa não pode ser consolidada: {{ impedimento_da_etapa.1 }}.
+</p>
+{% endif %}
+<nav class="filtros-da-mesa" aria-label="Filtrar por prontidão para consolidar">
+  <a href="?prontidao=pronta" {% if prontidao == "pronta" %}aria-current="page"{% endif %}>
+    <strong>{{ resumo.prontas }}</strong> <span>prontas para consolidar</span></a>
+  <a href="?prontidao=impedida" {% if prontidao == "impedida" %}aria-current="page"{% endif %}>
+    <strong>{{ resumo.impedidas }}</strong> <span>com impedimento</span></a>
+  <a href="?prontidao=consolidada" {% if prontidao == "consolidada" %}aria-current="page"{% endif %}>
+    <strong>{{ resumo.consolidadas }}</strong> <span>já consolidadas</span></a>
+  {% if resumo.aguardando_anterior %}
+  <a href="?prontidao=aguardando-anterior" {% if prontidao == "aguardando-anterior" %}aria-current="page"{% endif %}>
+    <strong>{{ resumo.aguardando_anterior }}</strong> <span>aguardando a Etapa anterior</span></a>
+  {% endif %}
+  {% if resumo.eliminadas_antes %}
+  <a href="?prontidao=eliminada-antes" {% if prontidao == "eliminada-antes" %}aria-current="page"{% endif %}>
+    <strong>{{ resumo.eliminadas_antes }}</strong> <span>eliminadas antes</span></a>
+  {% endif %}
+</nav>
+
 <section aria-labelledby="carga">
   <h2 id="carga">Quem está alocado</h2>
   {% if carga %}
@@ -247,6 +278,7 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
           <th scope="col">Inscrição</th>
           <th scope="col">Atribuídas</th>
           <th scope="col">Concluídas</th>
+          <th scope="col">Prontidão</th>
           <th scope="col">Quem avalia</th>
         </tr>
       </thead>
@@ -261,6 +293,11 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
           <td><label for="inscricao-{{ linha.inscricao.id }}">{{ linha.inscricao.protocolo|default:linha.inscricao.id }}</label></td>
           <td>{{ linha.atribuidas }} de {{ resumo.previstas }}{% if linha.faltam %} — faltam {{ linha.faltam }}{% endif %}</td>
           <td>{{ linha.concluidas }} de {{ resumo.previstas }}</td>
+          {% comment %}
+          A causa vai ao lado da linha, e não numa tela de erro: quem precisa agir precisa saber
+          **o que** fazer, e "erro" não diz (FR-012).
+          {% endcomment %}
+          <td class="motivo-da-prontidao">{% if linha.prontidao %}{{ linha.prontidao.1 }}{% endif %}</td>
           <td>
             {% for atribuicao in linha.atribuicoes %}
             <span class="quem">{{ atribuicao.membro.display_label|default:atribuicao.membro.identity_subject }}</span>{% if not forloop.last %}, {% endif %}

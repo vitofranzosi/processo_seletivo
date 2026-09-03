@@ -66,9 +66,9 @@ para a organização da Etapa.
 
 **Purpose**: o app novo existe e é reconhecido pelo projeto.
 
-- [ ] T001 Criar o app em `backend/processo_seletivo/resultados/` com `__init__.py`, `apps.py`, `models.py`, `domain/`, `application/` e `migrations/`
-- [ ] T002 Registrar `processo_seletivo.resultados` em `backend/config/settings/base.py`, com o comentário que diz por que é app próprio e não um modelo dentro de `avaliacoes` (T-001)
-- [ ] T003 [P] Criar `backend/tests/unit/resultados/` e `backend/tests/integration/resultados/` com `__init__.py`
+- [X] T001 Criar o app em `backend/processo_seletivo/resultados/` com `__init__.py`, `apps.py`, `models.py`, `domain/`, `application/` e `migrations/`
+- [X] T002 Registrar `processo_seletivo.resultados` em `backend/config/settings/base.py`, com o comentário que diz por que é app próprio e não um modelo dentro de `avaliacoes` (T-001)
+- [X] T003 [P] Criar `backend/tests/unit/resultados/` e `backend/tests/integration/resultados/` com `__init__.py`
 
 ---
 
@@ -79,19 +79,19 @@ conjuntos. **Nenhuma história começa antes.**
 
 **⚠️ CRITICAL**: sem esta fase, nenhuma história tem onde gravar nem como decidir.
 
-- [ ] T004 Criar `ResultadoEtapa` em `backend/processo_seletivo/resultados/models.py` com os campos de [data-model.md](./data-model.md), `consequencia` em `TextChoices`, e `save()`/`delete()` recusando mutação — sem o campo `versao`, que é alcançado pela fonte (T-011)
-- [ ] T005 Escrever `backend/processo_seletivo/resultados/migrations/0001_initial.py` com a unicidade `(inscricao, etapa_id)`, o `OneToOne` sobre `Avaliacao`, os três checks, o índice `(edital, etapa_id)`, a trigger `resultado_etapa_coerente` `BEFORE INSERT` — inscrição, Etapa, Edital e pontuação conferidos contra a Avaliação fonte, mais `estado = CONCLUIDA` e **`Atribuicao.ativo = true`**, tudo pela junção que `Avaliacao.atribuicao` já obriga — e a trigger `resultado_etapa_append_only` `BEFORE UPDATE OR DELETE`, no molde de `publicacoes/migrations/0002_retificacoes.py`
-- [ ] T006 Acrescentar `resultados_resultadoetapa` a `TABELAS_APPEND_ONLY` em `backend/processo_seletivo/seguranca/papeis.py`, retirando `UPDATE` e `DELETE` do papel de runtime
-- [ ] T007 [P] Escrever `backend/processo_seletivo/resultados/domain/regra.py` com a tabela-verdade de T-003: consequência a partir de `eliminatory`, `minimum_score` e quantidade prevista, comparando `Decimal`, devolvendo motivo exibível ou a razão do impedimento. Sem consulta, sem modelo
-- [ ] T008 [P] Escrever `backend/processo_seletivo/resultados/domain/compatibilidade.py` comparando semanticamente os quatro campos de D-005 entre a Etapa da versão histórica e a vigente, normalizando decimais antes de comparar e tratando a ausência pelos leitores herdados (T-004)
-- [ ] T009 [P] Escrever `backend/processo_seletivo/resultados/domain/progressao.py` — puro — devolvendo a Etapa imediatamente anterior (maior `order` estritamente menor) e **a lista de todas as anteriores**, a partir do dicionário de Etapas vigentes (T-005)
-- [ ] T010 Escrever `backend/processo_seletivo/resultados/application/selectors.py` com `ha_resultado_em(...)`, `eliminadas_em(...)` e `habilitadas_em(...)`, cada um resolvendo um conjunto por consulta (T-005)
-- [ ] T011 [P] Teste unitário da regra em `backend/tests/unit/resultados/test_regra.py`, cobrindo as quatro linhas da tabela-verdade, **nota exatamente igual à mínima** e Etapa eliminatória sem nota mínima
-- [ ] T012 [P] Teste unitário da compatibilidade em `backend/tests/unit/resultados/test_compatibilidade.py`, incluindo `"60.0000"` contra `"60.00"` como compatíveis, versão sem a identidade da Etapa como incompatível, e **nome, cronograma, peso e caráter classificatório divergentes como compatíveis**
-- [ ] T013 [P] Teste unitário da progressão em `backend/tests/unit/resultados/test_progressao.py`, com ordem não contígua, primeira Etapa e Etapa ausente do vigente
-- [ ] T014 [P] Teste de integração das duas triggers em `backend/tests/integration/resultados/test_imutabilidade_do_resultado.py`: `UPDATE` e `DELETE` recusados, e `INSERT` recusado em cada uma das seis divergências — inscrição, Etapa, Edital, pontuação, Avaliação em `RASCUNHO` e **Avaliação sob Atribuição inativa**, esta última a que torna a invariante 2 uma garantia de banco
-- [ ] T015 [P] Conferir em `backend/tests/integration/test_imutabilidade_do_historico.py` e `test_database_permissions.py` que a tabela nova entrou nas duas varreduras sem ajuste manual
-- [ ] T016 [P] Teste de custo dos conjuntos em `backend/tests/performance/test_progressao.py`: o número de consultas não cresce com o número de inscrições
+- [X] T004 Criar `ResultadoEtapa` em `backend/processo_seletivo/resultados/models.py` com os campos de [data-model.md](./data-model.md), `consequencia` em `TextChoices`, e `save()`/`delete()` recusando mutação — sem o campo `versao`, que é alcançado pela fonte (T-011)
+- [X] T005 Escrever `backend/processo_seletivo/resultados/migrations/0001_initial.py` com a unicidade `(inscricao, etapa_id)`, o `OneToOne` sobre `Avaliacao`, os três checks, o índice `(edital, etapa_id)`, a trigger `resultado_etapa_coerente` `BEFORE INSERT` — inscrição, Etapa, Edital e pontuação conferidos contra a Avaliação fonte, mais `estado = CONCLUIDA` e **`Atribuicao.ativo = true`**, tudo pela junção que `Avaliacao.atribuicao` já obriga — e a trigger `resultado_etapa_append_only` `BEFORE UPDATE OR DELETE`, no molde de `publicacoes/migrations/0002_retificacoes.py`
+- [X] T006 Acrescentar `resultados_resultadoetapa` a `TABELAS_APPEND_ONLY` em `backend/processo_seletivo/seguranca/papeis.py`, retirando `UPDATE` e `DELETE` do papel de runtime
+- [X] T007 [P] Escrever `backend/processo_seletivo/resultados/domain/regra.py` com a tabela-verdade de T-003: consequência a partir de `eliminatory`, `minimum_score` e quantidade prevista, comparando `Decimal`, devolvendo motivo exibível ou a razão do impedimento. Sem consulta, sem modelo
+- [X] T008 [P] Escrever `backend/processo_seletivo/resultados/domain/compatibilidade.py` comparando semanticamente os quatro campos de D-005 entre a Etapa da versão histórica e a vigente, normalizando decimais antes de comparar e tratando a ausência pelos leitores herdados (T-004)
+- [X] T009 [P] Escrever `backend/processo_seletivo/resultados/domain/progressao.py` — puro — devolvendo a Etapa imediatamente anterior (maior `order` estritamente menor) e **a lista de todas as anteriores**, a partir do dicionário de Etapas vigentes (T-005)
+- [X] T010 Escrever `backend/processo_seletivo/resultados/application/selectors.py` com `ha_resultado_em(...)`, `eliminadas_em(...)` e `habilitadas_em(...)`, cada um resolvendo um conjunto por consulta (T-005)
+- [X] T011 [P] Teste unitário da regra em `backend/tests/unit/resultados/test_regra.py`, cobrindo as quatro linhas da tabela-verdade, **nota exatamente igual à mínima** e Etapa eliminatória sem nota mínima
+- [X] T012 [P] Teste unitário da compatibilidade em `backend/tests/unit/resultados/test_compatibilidade.py`, incluindo `"60.0000"` contra `"60.00"` como compatíveis, versão sem a identidade da Etapa como incompatível, e **nome, cronograma, peso e caráter classificatório divergentes como compatíveis**
+- [X] T013 [P] Teste unitário da progressão em `backend/tests/unit/resultados/test_progressao.py`, com ordem não contígua, primeira Etapa e Etapa ausente do vigente
+- [X] T014 [P] Teste de integração das duas triggers em `backend/tests/integration/resultados/test_imutabilidade_do_resultado.py`: `UPDATE` e `DELETE` recusados, e `INSERT` recusado em cada uma das seis divergências — inscrição, Etapa, Edital, pontuação, Avaliação em `RASCUNHO` e **Avaliação sob Atribuição inativa**, esta última a que torna a invariante 2 uma garantia de banco
+- [X] T015 [P] Conferir em `backend/tests/integration/test_imutabilidade_do_historico.py` e `test_database_permissions.py` que a tabela nova entrou nas duas varreduras sem ajuste manual
+- [X] T016 [P] Teste de custo dos conjuntos em `backend/tests/performance/test_progressao.py`: o número de consultas não cresce com o número de inscrições
 
 **Checkpoint**: a tabela existe, é imutável, não nasce contraditória, e as decisões de domínio são testáveis sem banco.
 
@@ -106,14 +106,14 @@ as demais não podem, sem tela nova.
 incompatível, aguardando Etapa anterior e já eliminadas; abrir a organização e conferir que
 contagens, filtros e motivos particionam exatamente a população.
 
-- [ ] T017 [US1] Escrever `backend/processo_seletivo/resultados/application/prontidao.py` classificando cada participante em pendente, pronta, consolidada ou impedida por motivo, consumindo o conjunto elegível herdado da 012 e a compatibilidade de T008
-- [ ] T018 [US1] Ampliar `resumo_da_etapa` em `backend/processo_seletivo/avaliacoes/application/selectors.py` com participantes, aguardando anterior, eliminadas anteriormente, pendentes, prontas, consolidadas e impedidas — **na mesma agregação**, com `Count` condicional, recebendo os conjuntos da progressão como parâmetro (T-008)
-- [ ] T019 [US1] Acrescentar o filtro de prontidão a `inscricoes_da_etapa` em `backend/processo_seletivo/avaliacoes/application/selectors.py`, sem criar segunda listagem
-- [ ] T020 [US1] Passar o contexto novo em `backend/processo_seletivo/interface/views.py`, na view `distribuicao`, resolvendo os conjuntos **uma vez** antes de montar resumo e linhas
-- [ ] T021 [US1] Estender `backend/processo_seletivo/interface/templates/interface/distribuicao.html` com as contagens e os filtros de prontidão, sem criar página paralela de Resultado (D-004)
-- [ ] T022 [P] [US1] Teste de aceitação da partição em `backend/tests/acceptance/test_resultado_da_etapa.py`: a soma dos estados de prontidão é igual ao total de participantes, e nenhuma inscrição aparece em dois
-- [ ] T023 [P] [US1] Teste de custo em `backend/tests/performance/test_resumo_da_etapa.py`: o resumo continua sendo uma agregação e o número de consultas não cresce com as inscrições
-- [ ] T024 [P] [US1] Teste de integração dos motivos em `backend/tests/integration/resultados/test_prontidao.py`: cada impedimento tem frase acionável, e Etapa que prevê mais de uma avaliação impede a Etapa inteira nomeando a quantidade publicada
+- [X] T017 [US1] Escrever `backend/processo_seletivo/resultados/application/prontidao.py` classificando cada participante em pendente, pronta, consolidada ou impedida por motivo, consumindo o conjunto elegível herdado da 012 e a compatibilidade de T008
+- [X] T018 [US1] Ampliar `resumo_da_etapa` em `backend/processo_seletivo/avaliacoes/application/selectors.py` com participantes, aguardando anterior, eliminadas anteriormente, pendentes, prontas, consolidadas e impedidas — **na mesma agregação**, com `Count` condicional, recebendo os conjuntos da progressão como parâmetro (T-008)
+- [X] T019 [US1] Acrescentar o filtro de prontidão a `inscricoes_da_etapa` em `backend/processo_seletivo/avaliacoes/application/selectors.py`, sem criar segunda listagem
+- [X] T020 [US1] Passar o contexto novo em `backend/processo_seletivo/interface/views.py`, na view `distribuicao`, resolvendo os conjuntos **uma vez** antes de montar resumo e linhas
+- [X] T021 [US1] Estender `backend/processo_seletivo/interface/templates/interface/distribuicao.html` com as contagens e os filtros de prontidão, sem criar página paralela de Resultado (D-004)
+- [X] T022 [P] [US1] Teste de aceitação da partição em `backend/tests/acceptance/test_resultado_da_etapa.py`: a soma dos estados de prontidão é igual ao total de participantes, e nenhuma inscrição aparece em dois
+- [X] T023 [P] [US1] Teste de custo em `backend/tests/performance/test_resumo_da_etapa.py`: o resumo continua sendo uma agregação e o número de consultas não cresce com as inscrições
+- [X] T024 [P] [US1] Teste de integração dos motivos em `backend/tests/integration/resultados/test_prontidao.py`: cada impedimento tem frase acionável, e Etapa que prevê mais de uma avaliação impede a Etapa inteira nomeando a quantidade publicada
 
 **Checkpoint**: a presidência enxerga o que pode consolidar e o que a impede, antes de existir qualquer Resultado.
 

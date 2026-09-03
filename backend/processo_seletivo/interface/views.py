@@ -37,7 +37,11 @@ from processo_seletivo.comissoes.domain.autorizacao import (
     pode_atuar_na_etapa,
     pode_gerir_comissao,
 )
-from processo_seletivo.comissoes.domain.etapas import etapa_vigente, evento_vigente
+from processo_seletivo.comissoes.domain.etapas import (
+    etapa_vigente,
+    etapas_vigentes,
+    evento_vigente,
+)
 from processo_seletivo.comissoes.models import Funcao
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.application.identificacao import update_edital_identification
@@ -79,6 +83,7 @@ from processo_seletivo.publicacoes.application.selectors import (
 from processo_seletivo.publicacoes.domain import autoridades
 from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA, render_edital_pdf
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
+from processo_seletivo.resultados.application import prontidao as prontidao_013
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
@@ -2254,12 +2259,20 @@ def distribuicao(request, edital_id, etapa_id):
                     membro_ids=dados["membro_ids"],
                 )
 
+    # O panorama da 013 é resolvido **uma vez** e entregue ao resumo e à listagem. Consultá-lo nos
+    # dois lugares daria dois números para a mesma Etapa, que é o que D-004 recusa; consultá-lo por
+    # linha devolveria à listagem o custo que a 012 tirou dela (FR-006, FR-009).
+    panorama = prontidao_013.panorama_da_etapa(
+        edital=edital, etapa=etapa, etapas_vigentes=etapas_vigentes(edital)
+    )
     linhas, pagina = avaliacao_selectors.inscricoes_da_etapa(
         edital=edital,
         etapa=etapa,
         pagina=request.GET.get("pagina") or 1,
         cobertura=request.GET.get("cobertura") or None,
         avaliador=request.GET.get("avaliador") or None,
+        panorama=panorama,
+        prontidao=request.GET.get("prontidao") or None,
     )
     return marcar_como_privada(
         render(
@@ -2272,7 +2285,11 @@ def distribuicao(request, edital_id, etapa_id):
                 "linhas": linhas,
                 "pagina": pagina,
                 "carga": avaliacao_selectors.carga_por_avaliador(edital=edital, etapa_id=etapa_id),
-                "resumo": avaliacao_selectors.resumo_da_etapa(edital=edital, etapa=etapa),
+                "resumo": avaliacao_selectors.resumo_da_etapa(
+                    edital=edital, etapa=etapa, panorama=panorama
+                ),
+                "prontidao": request.GET.get("prontidao") or "",
+                "impedimento_da_etapa": panorama["impedimento_da_etapa"],
                 "cobertura": request.GET.get("cobertura") or "",
                 "avaliador": request.GET.get("avaliador") or "",
                 "erro": erro,
