@@ -35,23 +35,26 @@ CAMPOS_COMPARADOS = (
 )
 
 
-def etapa_na_versao(versao, etapa_id):
-    """A Etapa daquela identidade no conteúdo da versão, ou `None`.
+def etapa_no_conteudo(conteudo, etapa_id):
+    """A Etapa daquela identidade no conteúdo publicado, ou `None`.
+
+    Recebe o **conteúdo**, e não a Versão Consolidada. A diferença não é estética: a versão carrega
+    o Edital inteiro em JSON mais os bytes canônicos, e quem compara mil avaliações precisa dos
+    conteúdos **distintos** — que são dois ou três —, e não de mil cópias deles.
 
     `None` não é detalhe: significa que a versão sob a qual se avaliou não descreve esta Etapa, e
     portanto não há norma histórica a reproduzir.
     """
     alvo = str(etapa_id)
-    conteudo = getattr(versao, "content", None) or {}
-    for etapa in conteudo.get("stages") or []:
+    for etapa in (conteudo or {}).get("stages") or []:
         if isinstance(etapa, dict) and str(etapa.get("id")) == alvo:
             return etapa
     return None
 
 
-def incompatibilidade(*, versao, etapa_id, etapa_vigente):
+def incompatibilidade(*, conteudo, etapa_id, etapa_vigente):
     """`None` quando a Avaliação pode fundamentar Resultado; senão `(codigo, frase)`."""
-    historica = etapa_na_versao(versao, etapa_id)
+    historica = etapa_no_conteudo(conteudo, etapa_id)
     if historica is None:
         return (
             VERSAO_SEM_A_ETAPA,

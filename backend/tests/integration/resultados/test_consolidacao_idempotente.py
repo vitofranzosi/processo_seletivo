@@ -89,9 +89,13 @@ def test_cada_resultado_criado_gera_exatamente_um_evento(pronto, presidente):
     eventos = RegistroAuditoria.objects.filter(operation=CONSOLIDAR)
     assert eventos.count() == 1
     # A trilha diz o ato e o agregado, e **não** carrega pontuação nem parecer (FR-040).
+    #
+    # A busca é pela nota **formatada**: `"75"` sozinho colidiria com um protocolo `0075` ou com
+    # um UUID, e um teste que falha por coincidência é pior que um que não existe.
     evento = eventos.first()
     assert evento.aggregate_type == "ResultadoEtapa"
-    assert "75" not in evento.reason
+    assert "75,0000" not in evento.reason and "75.0000" not in evento.reason
+    assert "Atende" not in evento.reason
 
 
 def test_selecao_vazia_e_erro_do_pedido(pronto, presidente):

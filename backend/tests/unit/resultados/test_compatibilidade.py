@@ -13,11 +13,13 @@ from processo_seletivo.resultados.domain.compatibilidade import (
 ETAPA = "11111111-1111-1111-1111-111111111111"
 
 
-class VersaoFalsa:
-    """Só `content` importa aqui: a comparação é sobre conteúdo publicado, não sobre a linha."""
+def conteudo(*etapas):
+    """A comparação é sobre **conteúdo publicado**, e não sobre a linha da Versão Consolidada.
 
-    def __init__(self, *etapas):
-        self.content = {"stages": list(etapas)}
+    A função recebe o dicionário direto: quem compara mil avaliações resolve os conteúdos distintos
+    — dois ou três por Edital — em vez de carregar mil cópias do Edital inteiro.
+    """
+    return {"stages": list(etapas)}
 
 
 def etapa(**kwargs):
@@ -35,8 +37,7 @@ def etapa(**kwargs):
 
 def test_norma_identica_e_compativel():
     assert (
-        incompatibilidade(versao=VersaoFalsa(etapa()), etapa_id=ETAPA, etapa_vigente=etapa())
-        is None
+        incompatibilidade(conteudo=conteudo(etapa()), etapa_id=ETAPA, etapa_vigente=etapa()) is None
     )
 
 
@@ -44,7 +45,7 @@ def test_decimal_em_forma_diferente_e_a_mesma_norma():
     """`"60.0000"` e `"60.00"` são o mesmo valor; comparar texto inventaria uma divergência."""
     assert (
         incompatibilidade(
-            versao=VersaoFalsa(etapa(minimumScore="60.00")),
+            conteudo=conteudo(etapa(minimumScore="60.00")),
             etapa_id=ETAPA,
             etapa_vigente=etapa(minimumScore="60.0000"),
         )
@@ -56,7 +57,7 @@ def test_ausencia_de_quantidade_equivale_a_uma():
     """O incremento da 012 é aditivo: conteúdo anterior a ele não carrega a chave, e vale 1."""
     assert (
         incompatibilidade(
-            versao=VersaoFalsa(etapa()),
+            conteudo=conteudo(etapa()),
             etapa_id=ETAPA,
             etapa_vigente=etapa(evaluationsPerRegistration=1),
         )
@@ -66,7 +67,7 @@ def test_ausencia_de_quantidade_equivale_a_uma():
 
 def test_nota_minima_diferente_e_incompativel():
     codigo, frase = incompatibilidade(
-        versao=VersaoFalsa(etapa(minimumScore="50.0000")),
+        conteudo=conteudo(etapa(minimumScore="50.0000")),
         etapa_id=ETAPA,
         etapa_vigente=etapa(minimumScore="60.0000"),
     )
@@ -76,14 +77,14 @@ def test_nota_minima_diferente_e_incompativel():
 
 def test_carater_eliminatorio_diferente_e_incompativel():
     codigo, _ = incompatibilidade(
-        versao=VersaoFalsa(etapa(eliminatory=False)), etapa_id=ETAPA, etapa_vigente=etapa()
+        conteudo=conteudo(etapa(eliminatory=False)), etapa_id=ETAPA, etapa_vigente=etapa()
     )
     assert codigo == NORMA_DIVERGENTE
 
 
 def test_quantidade_prevista_diferente_e_incompativel():
     codigo, _ = incompatibilidade(
-        versao=VersaoFalsa(etapa(evaluationsPerRegistration=2)),
+        conteudo=conteudo(etapa(evaluationsPerRegistration=2)),
         etapa_id=ETAPA,
         etapa_vigente=etapa(evaluationsPerRegistration=1),
     )
@@ -92,7 +93,7 @@ def test_quantidade_prevista_diferente_e_incompativel():
 
 def test_pontuacao_maxima_diferente_e_incompativel():
     codigo, _ = incompatibilidade(
-        versao=VersaoFalsa(etapa(maximumScore="100.0000")),
+        conteudo=conteudo(etapa(maximumScore="100.0000")),
         etapa_id=ETAPA,
         etapa_vigente=etapa(maximumScore="80.0000"),
     )
@@ -109,7 +110,7 @@ def test_nome_cronograma_peso_classificatorio_e_ordem_nao_criam_incompatibilidad
         order=7,
     )
     assert (
-        incompatibilidade(versao=VersaoFalsa(historica), etapa_id=ETAPA, etapa_vigente=etapa())
+        incompatibilidade(conteudo=conteudo(historica), etapa_id=ETAPA, etapa_vigente=etapa())
         is None
     )
 
@@ -117,7 +118,7 @@ def test_nome_cronograma_peso_classificatorio_e_ordem_nao_criam_incompatibilidad
 def test_versao_que_nao_descreve_a_etapa_impede():
     """Sem a identidade no conteúdo histórico, não há norma a reproduzir."""
     codigo, _ = incompatibilidade(
-        versao=VersaoFalsa(etapa(id="99999999-9999-9999-9999-999999999999")),
+        conteudo=conteudo(etapa(id="99999999-9999-9999-9999-999999999999")),
         etapa_id=ETAPA,
         etapa_vigente=etapa(),
     )
@@ -128,6 +129,6 @@ def test_retificacao_fora_da_etapa_nao_cria_incompatibilidade():
     """Outra Etapa alterada na mesma versão não diz nada sobre esta."""
     outra = {"id": "33333333-3333-3333-3333-333333333333", "order": 1, "minimumScore": "10.0000"}
     assert (
-        incompatibilidade(versao=VersaoFalsa(etapa(), outra), etapa_id=ETAPA, etapa_vigente=etapa())
+        incompatibilidade(conteudo=conteudo(etapa(), outra), etapa_id=ETAPA, etapa_vigente=etapa())
         is None
     )

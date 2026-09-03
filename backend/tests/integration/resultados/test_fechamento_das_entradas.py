@@ -75,11 +75,26 @@ def test_reabrir_a_fonte_de_um_resultado_e_recusado_sem_efeito(consolidado):
     assert RegistroAuditoria.objects.count() == eventos
 
 
-def test_a_recusa_nao_expoe_a_pontuacao(consolidado):
-    """Quem organiza o trabalho não é necessariamente quem pode ver a nota (FR-033)."""
+def test_a_recusa_nomeia_inscricao_etapa_e_resultado_sem_expor_a_nota(consolidado):
+    """FR-033 tem duas metades, e as duas são afirmações sobre a mesma frase.
+
+    Ela precisa **identificar** — "existe um Resultado" manda quem foi recusado procurar qual, e
+    quem responde a um recurso precisa citá-lo —, e precisa **não** trazer a pontuação, porque quem
+    organiza o trabalho não é necessariamente quem pode vê-la.
+
+    A busca é pela nota **formatada**, e não por `"75"`: a frase carrega um UUID, e hexadecimal
+    contém dígitos por acidente. Foi assim que a primeira versão deste teste passou isolada e
+    falhou na suíte inteira — vírgula e ponto não existem em UUID, e por isso são o que se procura.
+    """
+    resultado = ResultadoEtapa.objects.get(inscricao=consolidado["inscricoes"][0])
     with pytest.raises(DomainError) as recusa:
         tentar_reabrir(consolidado, consolidado["avaliacoes"][0], chave="r2")
-    assert "75" not in recusa.value.detail
+
+    frase = recusa.value.detail
+    assert consolidado["inscricoes"][0].protocolo in frase
+    assert str(resultado.id) in frase
+    assert "Análise documental" in frase
+    assert "75,0000" not in frase and "75.0000" not in frase
 
 
 def test_reabrir_avaliacao_nao_consolidada_continua_funcionando(consolidado):

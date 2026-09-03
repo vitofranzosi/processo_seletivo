@@ -49,12 +49,34 @@ def eliminadas_ate(*, edital, etapas_ids):
     )
 
 
-def resultados_por_inscricao(*, edital, etapa_id):
-    """`{inscricao_id: ResultadoEtapa}` da Etapa — o que já foi consolidado."""
-    return {
-        resultado.inscricao_id: resultado
-        for resultado in ResultadoEtapa.objects.filter(edital=edital, etapa_id=etapa_id)
-    }
+def inscricoes_com_resultado(*, edital, etapa_id):
+    """As identidades já consolidadas nesta Etapa.
+
+    Identidades, e não objetos: a prontidão só pergunta "já tem?", e materializar o modelo inteiro
+    para responder a uma pergunta de pertinência é o que a 012 recusou ao fazer o resumo por
+    agregação.
+    """
+    return set(
+        ResultadoEtapa.objects.filter(edital=edital, etapa_id=etapa_id).values_list(
+            "inscricao_id", flat=True
+        )
+    )
+
+
+def conteudos_das_versoes(ids):
+    """`{versao_id: conteúdo}` para as versões referenciadas — **uma linha por versão distinta**.
+
+    Um Edital tem duas ou três Versões Consolidadas; mil avaliações apontam para elas. Trazer a
+    versão junto de cada avaliação carregaria mil cópias do Edital inteiro em JSON, mais os bytes
+    canônicos, para comparar quatro campos — e nenhum teste de contagem de consultas denunciaria,
+    porque o número de consultas continuaria o mesmo.
+    """
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+
+    identidades = {identidade for identidade in ids if identidade is not None}
+    if not identidades:
+        return {}
+    return dict(VersaoConsolidada.objects.filter(pk__in=identidades).values_list("id", "content"))
 
 
 def resultados_da_etapa(*, edital, etapa_id, consequencia=None, pagina=1):

@@ -16,16 +16,19 @@ vale depois que ela produz Resultado. Enquanto não produz, a Etapa seguinte con
 leitura múltipla, que a V1 não consolida.
 """
 
+from collections import namedtuple
+
 from django.db.models import Exists, OuterRef
 
 from processo_seletivo.avaliacoes.application.selectors import avaliacoes_elegiveis
 from processo_seletivo.comissoes.domain.etapas import etapas_vigentes as etapas_vigentes_do_edital
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.resultados.application.selectors import (
+    conteudos_das_versoes,
     eliminadas_ate,
     ha_resultado_em,
     habilitadas_em,
-    resultados_por_inscricao,
+    inscricoes_com_resultado,
 )
 from processo_seletivo.resultados.domain.compatibilidade import incompatibilidade
 from processo_seletivo.resultados.domain.progressao import etapa_anterior, etapas_anteriores
@@ -40,6 +43,14 @@ AGUARDANDO_ANTERIOR = "aguardando-anterior"
 CONSOLIDADA = "consolidada"
 PRONTA = "pronta"
 IMPEDIDA = "impedida"
+
+#: A conclusão elegível, reduzida ao que a prontidão precisa saber sobre ela.
+#:
+#: Tupla, e não modelo: comparar a norma de mil avaliações exige a pontuação, a identidade e o
+#: conteúdo da versão — e materializar mil `Avaliacao` com `select_related("versao")` traria mil
+#: cópias do Edital inteiro em JSON para ler quatro campos. Quem precisa do objeto é a
+#: consolidação, que o busca para as inscrições selecionadas, e não para a Etapa inteira.
+Conclusao = namedtuple("Conclusao", ("avaliacao_id", "pontuacao", "conteudo"))
 
 SEM_CONCLUSAO = "ainda não há avaliação concluída para esta inscrição"
 CONCLUSOES_DEMAIS = (
@@ -179,13 +190,24 @@ def panorama_da_etapa(*, edital, etapa, etapas_vigentes):
     participantes, eliminadas, aguardando = participacao(
         edital=edital, etapa_id=etapa["id"], vigentes=etapas_vigentes
     )
-    resultados = resultados_por_inscricao(edital=edital, etapa_id=etapa["id"])
+    resultados = inscricoes_com_resultado(edital=edital, etapa_id=etapa["id"])
     impedimento = impedimento_da_regra(etapa)
 
     elegiveis = {}
     if impedimento is None:
-        for avaliacao in avaliacoes_elegiveis(edital=edital, etapa_id=etapa["id"]):
-            elegiveis.setdefault(avaliacao.inscricao_id, []).append(avaliacao)
+        # `values_list` sobre o contrato herdado: o conjunto é o mesmo, e o que muda é o que vem
+        # dentro dele. Os conteúdos das versões são resolvidos **uma vez por versão distinta** —
+        # duas ou três por Edital —, e não uma por avaliação.
+        linhas = list(
+            avaliacoes_elegiveis(edital=edital, etapa_id=etapa["id"]).values_list(
+                "inscricao_id", "id", "pontuacao", "versao_id"
+            )
+        )
+        conteudos = conteudos_das_versoes({versao for _, _, _, versao in linhas})
+        for inscricao_id, avaliacao_id, pontuacao, versao_id in linhas:
+            elegiveis.setdefault(inscricao_id, []).append(
+                Conclusao(avaliacao_id, pontuacao, conteudos.get(versao_id))
+            )
 
     estados = {}
     for identidade in eliminadas:
@@ -226,7 +248,7 @@ def _estado_do_participante(identidade, etapa, resultados, elegiveis, impediment
         # seria o sistema decidindo qual nota vale.
         return (IMPEDIDA, CONCLUSOES_DEMAIS.format(quantas=len(conclusoes)))
     divergencia = incompatibilidade(
-        versao=conclusoes[0].versao, etapa_id=etapa["id"], etapa_vigente=etapa
+        conteudo=conclusoes[0].conteudo, etapa_id=etapa["id"], etapa_vigente=etapa
     )
     if divergencia is not None:
         return (IMPEDIDA, divergencia[1])

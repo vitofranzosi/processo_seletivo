@@ -14,7 +14,7 @@ diferentes e confundi-las seria contar cobertura que não existe.
 | FR-002 | `resultados/domain/regra.py` consome `avaliacoes_previstas` | `unit/resultados/test_regra.py` |
 | FR-003 | `resultados/domain/progressao.py::etapas_anteriores` | `acceptance::test_us3_a_eliminacao_vale_para_todas_as_etapas_seguintes` |
 | FR-004 | `prontidao.py::participacao` (gate) | `acceptance::test_us3_a_exigencia_de_habilitacao_fica_dormente_ate_o_primeiro_resultado` |
-| FR-005 | `avaliacoes/{domain/autorizacao,application/{distribuicao,mesa,selectors}}.py` | `authorization/test_progressao.py` |
+| FR-005 | `avaliacoes/{domain/autorizacao,application/{distribuicao,mesa,selectors}}.py` — inclusive `_carentes`, do rodízio | `authorization/test_progressao.py`, `integration/resultados/test_progressao_no_rodizio.py`, `integration/resultados/test_carga_nas_etapas.py` |
 | FR-006 | `prontidao.py::restringir_a_participantes` | `performance/test_progressao.py`, `performance/test_escala_da_mesa.py` |
 | FR-007 | `distribuicao.py::_inscricoes_atribuiveis` | `contract/test_distribuicao_com_progressao.py` |
 | FR-008 | `prontidao.py::panorama_da_etapa` consome `avaliacoes_elegiveis` | `integration/resultados/test_prontidao.py` |
@@ -23,7 +23,7 @@ diferentes e confundi-las seria contar cobertura que não existe.
 | FR-011 | `regra.py::impedimento_da_regra` | `unit/resultados/test_regra.py` |
 | FR-012 | `prontidao.py::_estado_do_participante` | `integration/resultados/test_prontidao.py` |
 | FR-013 | `resultados/domain/compatibilidade.py` | `unit/resultados/test_compatibilidade.py` |
-| FR-014 | `compatibilidade.py::etapa_na_versao` | `unit/resultados/test_compatibilidade.py` |
+| FR-014 | `compatibilidade.py::etapa_no_conteudo` | `unit/resultados/test_compatibilidade.py` |
 | FR-015 | `regra.py` + `consolidacao.py` (erro do pedido) | `contract/test_consolidacao.py` |
 | FR-016 | `consolidacao.py` + trigger `resultado_etapa_coerente` | `acceptance::test_us2_a_pontuacao_e_copia_exata_e_ninguem_a_digita` |
 | FR-017 | `regra.py::consequencia` | `unit/resultados/test_regra.py`, `acceptance::test_us2_o_lote_produz_*` |
@@ -42,7 +42,7 @@ diferentes e confundi-las seria contar cobertura que não existe.
 | FR-030 | `avaliacao.py::_recusar_se_fundamenta_resultado` | `integration/resultados/test_fechamento_das_entradas.py` |
 | FR-031 | `impedimento.py` (aplica por inteiro) | `authorization/test_impedimento_superveniente.py` |
 | FR-032 | `impedimento.py::_resultados_contestados` + `resultados.html` | `integration/resultados/test_fechamento_das_entradas.py`, `authorization/test_impedimento_superveniente.py` |
-| FR-033 | frase da recusa em `avaliacao.py` | `integration/resultados/test_fechamento_das_entradas.py::test_a_recusa_nao_expoe_a_pontuacao` |
+| FR-033 | frase da recusa em `avaliacao.py`, desfecho em `impedimento.py` | `integration/resultados/test_fechamento_das_entradas.py::test_a_recusa_nomeia_inscricao_etapa_e_resultado_sem_expor_a_nota` |
 | FR-034 | nada recalcula Resultado | `acceptance::test_us4_a_proveniencia_sobrevive_*` |
 | FR-035 | `consolidacao.py` sob `comando_de_comissao` | `authorization/test_consolidacao.py` |
 | FR-036 | invólucro reavalia após o bloqueio | `authorization/test_consolidacao.py` |
@@ -61,7 +61,7 @@ diferentes e confundi-las seria contar cobertura que não existe.
 | SC | Prova |
 |---|---|
 | SC-001 | `performance/test_resumo_da_etapa.py`, `acceptance::test_us1_*` |
-| SC-002 | `performance/test_consolidacao_em_lote.py` |
+| SC-002 | `performance/test_consolidacao_em_lote.py` — o teto de mil exercido, e a derivada em teste próprio |
 | SC-003 | `acceptance::test_us2_a_pontuacao_e_copia_exata_e_ninguem_a_digita` |
 | SC-004 | `unit/resultados/test_regra.py`, `acceptance::test_us2_o_lote_produz_*` |
 | SC-005 | `authorization/test_progressao.py`, `acceptance::test_us3_a_eliminacao_*` |

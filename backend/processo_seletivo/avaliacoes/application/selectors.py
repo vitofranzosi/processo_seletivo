@@ -23,6 +23,7 @@ from processo_seletivo.avaliacoes.models import (
 )
 from processo_seletivo.comissoes.models import AlocacaoEtapa
 from processo_seletivo.inscricoes.models import Inscricao
+from processo_seletivo.shared.api.problems import DomainError
 
 POR_PAGINA = 25
 
@@ -354,7 +355,10 @@ def carga_nas_etapas(*, ator, atribuicoes):
         if edital.id not in conteudos:
             try:
                 conteudos[edital.id] = etapas_vigentes(edital)
-            except Exception:  # noqa: BLE001 — Edital sem versão vigente não restringe nada
+            except DomainError:
+                # Edital sem Versão Consolidada vigente: não há Etapa anterior a consultar, e
+                # portanto nada a restringir. Capturar `Exception` aqui esconderia defeito de
+                # verdade sob a mesma cláusula que trata um estado legítimo.
                 conteudos[edital.id] = {}
         por_etapa |= Q(edital=edital, etapa_id=item["etapa_id"]) & Q(
             pk__in=_so_participantes(
