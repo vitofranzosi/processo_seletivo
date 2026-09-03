@@ -108,6 +108,13 @@ urlpatterns = [
         views.distribuicao,
         name="distribuicao",
     ),
+    # A consequência do trabalho (013). Pende do mesmo caminho da organização da Etapa, porque é
+    # dali que ela é alcançada e porque a autorização é a mesma.
+    path(
+        "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/consolidar",
+        views.consolidar_resultados,
+        name="consolidar-resultados",
+    ),
     path(
         "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/remover",
         views.remover_atribuicao,

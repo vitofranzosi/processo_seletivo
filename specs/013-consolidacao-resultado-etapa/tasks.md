@@ -128,18 +128,18 @@ pontuação.
 confirmar e verificar que as prontas recebem Resultado, as demais são recusadas com motivo e a
 repetição da mesma chave devolve exatamente o desfecho original.
 
-- [ ] T025 [US2] Escrever `backend/processo_seletivo/resultados/application/consolidacao.py` sob `comando_de_comissao(..., operation="resultado:consolidar")`, devolvendo `ctx.desfecho_anterior` quando `ctx.repetido`, resolvendo elegíveis, Resultados existentes e conjuntos da progressão **antes** do laço, e fechando com `ctx.concluir_sem_resultado(201, resultado)`
-- [ ] T026 [US2] Montar o desfecho em `backend/processo_seletivo/resultados/application/consolidacao.py` com `resultado_declarado(criados, recusas, "consolidada")`, com o catálogo de recusas de item da §4 do [contrato](./contracts/resultado.md)
-- [ ] T027 [US2] Emitir, em `backend/processo_seletivo/resultados/application/consolidacao.py`, um evento de auditoria por Resultado criado, com ator, base autorizadora, agregado, correlação e chave — **sem pontuação nem parecer** na trilha
-- [ ] T028 [US2] Acrescentar a rota `editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/consolidar` em `backend/processo_seletivo/interface/urls.py`
-- [ ] T029 [US2] Implementar a view de consolidação em `backend/processo_seletivo/interface/views.py`, com chave de idempotência gerada por render e o desfecho preservado na sessão, como a distribuição já faz
-- [ ] T030 [US2] Acrescentar a ação e a exibição do desfecho agrupado por motivo em `distribuicao.html`, sem campo de pontuação, consequência ou justificativa
-- [ ] T031 [P] [US2] Teste de aceitação do lote misto em `backend/tests/acceptance/test_resultado_da_etapa.py`: prontas, pendentes e já consolidadas na mesma submissão
-- [ ] T032 [P] [US2] Teste de idempotência em `backend/tests/integration/resultados/test_consolidacao_idempotente.py`: mesma chave e mesmo conteúdo devolve o desfecho original sem evento novo; mesma chave e conteúdo diferente conflita; chave nova sobre par consolidado recusa o item
-- [ ] T033 [US2] Teste de concorrência em `backend/tests/integration/resultados/test_consolidacao_idempotente.py`: duas transações consolidando a mesma inscrição produzem exatamente um Resultado, e a perdedora recebe desfecho explícito, sem erro de integridade vazando
-- [ ] T034 [P] [US2] Teste de volume em `backend/tests/performance/test_consolidacao_em_lote.py`: um envio com **1.000** inscrições prontas consolida numa submissão só, sem interação por inscrição e sem consulta por linha dentro do laço (SC-002)
-- [ ] T035 [P] [US2] Teste de contrato em `backend/tests/contract/test_consolidacao.py`: seleção vazia, Etapa de leitura múltipla e Etapa eliminatória sem nota mínima são **erro do pedido**, e nenhuma criação acontece
-- [ ] T036 [P] [US2] Teste de autorização em `backend/tests/authorization/test_consolidacao.py`: quem não preside recebe 404 uniforme, e a autorização é reavaliada **dentro** do ato protegido
+- [X] T025 [US2] Escrever `backend/processo_seletivo/resultados/application/consolidacao.py` sob `comando_de_comissao(..., operation="resultado:consolidar")`, devolvendo `ctx.desfecho_anterior` quando `ctx.repetido`, resolvendo elegíveis, Resultados existentes e conjuntos da progressão **antes** do laço, e fechando com `ctx.concluir_sem_resultado(201, resultado)`
+- [X] T026 [US2] Montar o desfecho em `backend/processo_seletivo/resultados/application/consolidacao.py` com `resultado_declarado(criados, recusas, "consolidada")`, com o catálogo de recusas de item da §4 do [contrato](./contracts/resultado.md)
+- [X] T027 [US2] Emitir, em `backend/processo_seletivo/resultados/application/consolidacao.py`, um evento de auditoria por Resultado criado, com ator, base autorizadora, agregado, correlação e chave — **sem pontuação nem parecer** na trilha
+- [X] T028 [US2] Acrescentar a rota `editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/consolidar` em `backend/processo_seletivo/interface/urls.py`
+- [X] T029 [US2] Implementar a view de consolidação em `backend/processo_seletivo/interface/views.py`, com chave de idempotência gerada por render e o desfecho preservado na sessão, como a distribuição já faz
+- [X] T030 [US2] Acrescentar a ação e a exibição do desfecho agrupado por motivo em `distribuicao.html`, sem campo de pontuação, consequência ou justificativa
+- [X] T031 [P] [US2] Teste de aceitação do lote misto em `backend/tests/acceptance/test_resultado_da_etapa.py`: prontas, pendentes e já consolidadas na mesma submissão
+- [X] T032 [P] [US2] Teste de idempotência em `backend/tests/integration/resultados/test_consolidacao_idempotente.py`: mesma chave e mesmo conteúdo devolve o desfecho original sem evento novo; mesma chave e conteúdo diferente conflita; chave nova sobre par consolidado recusa o item
+- [X] T033 [US2] Teste de concorrência em `backend/tests/integration/resultados/test_consolidacao_idempotente.py`: duas transações consolidando a mesma inscrição produzem exatamente um Resultado, e a perdedora recebe desfecho explícito, sem erro de integridade vazando
+- [X] T034 [P] [US2] Teste de volume em `backend/tests/performance/test_consolidacao_em_lote.py`: um envio com **1.000** inscrições prontas consolida numa submissão só, sem interação por inscrição e sem consulta por linha dentro do laço (SC-002)
+- [X] T035 [P] [US2] Teste de contrato em `backend/tests/contract/test_consolidacao.py`: seleção vazia, Etapa de leitura múltipla e Etapa eliminatória sem nota mínima são **erro do pedido**, e nenhuma criação acontece
+- [X] T036 [P] [US2] Teste de autorização em `backend/tests/authorization/test_consolidacao.py`: quem não preside recebe 404 uniforme, e a autorização é reavaliada **dentro** do ato protegido
 
 **Checkpoint**: US1 + US2 entregam a jornada central — ver o que está pronto e transformá-lo em Resultado.
 

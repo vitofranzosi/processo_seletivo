@@ -73,6 +73,26 @@ somar.
   Esta Etapa não pode ser consolidada: {{ impedimento_da_etapa.1 }}.
 </p>
 {% endif %}
+{% if erro_da_consolidacao %}
+<p class="erro" role="alert">{{ erro_da_consolidacao }}</p>
+{% endif %}
+{% if consolidacao %}
+{% comment %}
+O desfecho agrupado por motivo, e não uma linha por inscrição: vinte e sete recusas por três causas
+são três linhas. A informação — "o que impede" — some no meio da repetição.
+{% endcomment %}
+<div class="resultado-do-lote" role="status">
+  <p><strong>{{ consolidacao.feitas }}</strong> consolidada(s), <strong>{{ consolidacao.recusadas }}</strong> recusada(s).</p>
+  {% if consolidacao.agrupados %}
+  <ul>
+    {% for grupo in consolidacao.agrupados %}
+    <li>{{ grupo.motivo }} — {{ grupo.inscricoes|join:", " }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endif %}
+
 <nav class="filtros-da-mesa" aria-label="Filtrar por prontidão para consolidar">
   <a href="?prontidao=pronta" {% if prontidao == "pronta" %}aria-current="page"{% endif %}>
     <strong>{{ resumo.prontas }}</strong> <span>prontas para consolidar</span></a>
@@ -310,7 +330,22 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
     </table>
   </div>
 
-    <p class="acoes"><button type="submit" class="botao">Distribuir as selecionadas</button></p>
+    <p class="acoes">
+      <button type="submit" class="botao">Distribuir as selecionadas</button>
+      {% comment %}
+      `formaction` em vez de um segundo formulário: a seleção é a mesma, e duplicar as caixas
+      obrigaria quem usa a tela a marcar duas vezes as mesmas inscrições. A rota, porém, é outra —
+      consolidar não é um ramo de distribuir, e a diferença é irreversível.
+
+      Não há campo de pontuação nem de consequência aqui, e a ausência é a regra: a presidência
+      confirma um cálculo, não o informa (FR-016).
+      {% endcomment %}
+      <button type="submit" class="botao"
+              formaction="{% url 'interface:consolidar-resultados' edital.id etapa.id %}"
+              name="chave_idempotencia" value="{{ chave_consolidacao }}">
+        Consolidar as selecionadas
+      </button>
+    </p>
   </form>
 
   {% comment %}

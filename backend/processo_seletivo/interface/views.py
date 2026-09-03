@@ -83,6 +83,7 @@ from processo_seletivo.publicacoes.application.selectors import (
 from processo_seletivo.publicacoes.domain import autoridades
 from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA, render_edital_pdf
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
+from processo_seletivo.resultados.application import consolidacao as consolidacao_app
 from processo_seletivo.resultados.application import prontidao as prontidao_013
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
@@ -2164,6 +2165,38 @@ def reabrir_avaliacao(request, edital_id, etapa_id):
 
 
 @require_http_methods(["POST"])
+def consolidar_resultados(request, edital_id, etapa_id):
+    """O lote da 013: as inscrições prontas viram Resultado num ato confirmado (FR-018).
+
+    Rota própria, e não um ramo do formulário de distribuir. A razão é a mesma que a 012 usou para
+    separar remover de atribuir, e aqui o custo do engano seria maior: consolidar é irreversível, e
+    a V1 não oferece anulação.
+
+    A porta é a de gestão da comissão — a mesma da reabertura —, e não há capacidade nova. Quem
+    preside o Processo consolida a Etapa dele; quem não preside recebe a resposta uniforme.
+    """
+    ator, edital, _ = _etapa_para_distribuir(request, edital_id, etapa_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    destino = reverse("interface:distribuicao", args=[edital_id, etapa_id])
+    try:
+        request.session["resultado_da_consolidacao"] = consolidacao_app.consolidar(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            etapa_id=etapa_id,
+            inscricao_ids=request.POST.getlist("inscricao_id"),
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_da_consolidacao"] = recusa.detail
+    return redirect(destino)
+
+
+@require_http_methods(["POST"])
 def remover_atribuicao(request, edital_id, etapa_id):
     """Retira Atribuições da Etapa — as que ainda não têm Avaliação concluída.
 
@@ -2295,6 +2328,9 @@ def distribuicao(request, edital_id, etapa_id):
                 "erro": erro,
                 "proposta": proposta,
                 "resultado": request.session.pop("resultado_da_distribuicao", None),
+                "consolidacao": request.session.pop("resultado_da_consolidacao", None),
+                "erro_da_consolidacao": request.session.pop("erro_da_consolidacao", None),
+                "chave_consolidacao": uuid4().hex,
                 "chave_idempotencia": uuid4().hex,
                 "chave_remocao": uuid4().hex,
                 "chave_rodizio": uuid4().hex,
