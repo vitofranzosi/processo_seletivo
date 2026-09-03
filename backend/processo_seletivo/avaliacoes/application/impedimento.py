@@ -128,6 +128,26 @@ def alcance_do_impedimento(*, processo, identity_subject, inscricao_id):
     }
 
 
+def _resultados_contestados(inativadas):
+    """Os Resultados cuja Avaliação fonte acabou de ser alcançada por este impedimento.
+
+    Import local pelo motivo de sempre (013, T-001). Uma consulta para o conjunto inteiro.
+    """
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    if not inativadas:
+        return []
+    return [
+        {
+            "inscricao": resultado.inscricao.protocolo or str(resultado.inscricao_id),
+            "resultado": str(resultado.id),
+        }
+        for resultado in ResultadoEtapa.objects.filter(
+            avaliacao__atribuicao__in=[a.id for a in inativadas]
+        ).select_related("inscricao")
+    ]
+
+
 def registrar_impedimento(
     *,
     actor,
@@ -261,6 +281,15 @@ def registrar_impedimento(
             "concluidas_inelegiveis": sum(
                 1 for atribuicao in inativadas if atribuicao.id in com_conclusao
             ),
+            # **Declaração, e não decisão** (013, FR-032). Nenhuma Atribuição foi preservada e
+            # nenhum Resultado foi alterado: o impedimento se aplica por inteiro, porque a cadeia
+            # de autorização não pergunta por ele — ela depende de ele ter inativado a Atribuição.
+            # Preservá-la para proteger a proveniência deixaria a pessoa recém-declarada impedida
+            # com acesso mantido à inscrição e aos documentos dela.
+            #
+            # O que sobra é dizer o que ficou contestado, para que quem consulta o Resultado saiba
+            # que a origem dele foi questionada depois de consolidada.
+            "resultados_contestados": _resultados_contestados(inativadas),
         }
         ctx.concluir_sem_resultado(201, resultado)
         return resultado

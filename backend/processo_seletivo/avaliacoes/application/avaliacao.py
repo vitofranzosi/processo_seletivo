@@ -268,6 +268,33 @@ def eventos_da_avaliacao(avaliacao):
 REABRIR = "AVALIACAO_REABRIR"
 
 
+def _recusar_se_fundamenta_resultado(avaliacao):
+    """A porta que a `013` fecha: reabrir muda a pontuação, e o Resultado a afirma.
+
+    Recusa **por inteiro**, antes de qualquer efeito — não há aplicação parcial possível quando o
+    ato é mutação da fonte. O impedimento é o caso oposto e continua se aplicando inteiro: ele não
+    muda pontuação nenhuma, e recusá-lo faria o sistema se recusar a registrar que descobriu tarde
+    quem não podia avaliar (013, FR-030, FR-031).
+
+    A frase nomeia a inscrição e a Etapa e **não** mostra a pontuação: quem organiza o trabalho não
+    é necessariamente quem pode ver a nota (013, FR-033).
+
+    Import local pelo motivo de sempre: `resultados` lê este app, e lê-lo de volta no topo seria
+    ciclo — o mesmo idioma que esta função já usa com `comando_de_comissao` (013, T-001).
+    """
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    resultado = ResultadoEtapa.objects.filter(avaliacao=avaliacao).first()
+    if resultado is None:
+        return
+    raise DomainError(
+        "avaliacao_fundamenta_resultado",
+        "Esta avaliação fundamenta o Resultado da Etapa para esta inscrição e não pode ser "
+        "reaberta. Corrigir um Resultado consolidado exige anulação, que é ato de outra natureza.",
+        409,
+    )
+
+
 def reabrir(
     *, actor, processo_id, avaliacao_id, motivo, expected_revision, idempotency_key, correlation_id
 ):
@@ -318,6 +345,7 @@ def reabrir(
             raise nao_encontrado()
         if ctx.repetido:
             return avaliacao
+        _recusar_se_fundamenta_resultado(avaliacao)
         if avaliacao.estado != Avaliacao.Estado.CONCLUIDA:
             # Transição inválida, e não "nada a fazer": reabrir um rascunho não tem significado, e
             # responder sucesso faria a tela afirmar um ato que não aconteceu (FR-083).

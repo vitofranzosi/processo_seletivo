@@ -55,3 +55,53 @@ def resultados_por_inscricao(*, edital, etapa_id):
         resultado.inscricao_id: resultado
         for resultado in ResultadoEtapa.objects.filter(edital=edital, etapa_id=etapa_id)
     }
+
+
+def resultados_da_etapa(*, edital, etapa_id, consequencia=None, pagina=1):
+    """Os Resultados da Etapa, com a proveniência ao lado — paginados.
+
+    `select_related` até a versão: a norma histórica é alcançada **pela fonte**, e não copiada para
+    o Resultado. Sem isto, reconstruir a decisão de mil Resultados custaria mil leituras de Versão
+    Consolidada; com isto, custa a mesma consulta.
+    """
+    from django.core.paginator import Paginator
+
+    consulta = ResultadoEtapa.objects.filter(edital=edital, etapa_id=etapa_id).select_related(
+        "inscricao", "avaliacao", "avaliacao__versao", "avaliacao__atribuicao"
+    )
+    if consequencia:
+        consulta = consulta.filter(consequencia=consequencia)
+    paginas = Paginator(consulta.order_by("inscricao__protocolo", "inscricao_id"), 25)
+    return paginas.get_page(pagina)
+
+
+def contestacoes_supervenientes(resultados):
+    """`{resultado_id: Impedimento}` para os Resultados cuja fonte foi depois alcançada.
+
+    **Declaração, e não decisão.** Nada aqui altera pontuação ou consequência: o Resultado é
+    histórico e permanece. O que muda é a leitura — quem consulta precisa saber que a origem foi
+    contestada depois de consolidada, porque essa é a única forma pela qual a V1, sem anulação,
+    registra que algo saiu errado (FR-032).
+
+    Uma consulta para o conjunto, e não uma por linha.
+    """
+    from processo_seletivo.avaliacoes.models import Impedimento
+
+    if not resultados:
+        return {}
+    pares = {
+        (r.avaliacao.identity_subject, r.inscricao_id): r.id
+        for r in resultados
+        if r.avaliacao_id is not None
+    }
+    if not pares:
+        return {}
+    achados = Impedimento.objects.filter(
+        identity_subject__in={subject for subject, _ in pares},
+        inscricao_id__in={inscricao for _, inscricao in pares},
+    )
+    return {
+        pares[(imp.identity_subject, imp.inscricao_id)]: imp
+        for imp in achados
+        if (imp.identity_subject, imp.inscricao_id) in pares
+    }

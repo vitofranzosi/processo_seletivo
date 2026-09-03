@@ -85,6 +85,7 @@ from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA, render
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.resultados.application import consolidacao as consolidacao_app
 from processo_seletivo.resultados.application import prontidao as prontidao_013
+from processo_seletivo.resultados.application import selectors as resultado_selectors
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
@@ -2631,6 +2632,46 @@ def _registrar_na_mesa(ator, atribuicao, documento, request, operacao):
             correlation_id=getattr(request, "correlation_id", ""),
             reason=mesa_app.motivo_da_abertura(documento.requirement_id),
         )
+
+
+@require_http_methods(["GET"])
+def resultados_da_etapa(request, edital_id, etapa_id):
+    """Os Resultados da Etapa, com a origem de cada um (US4 da `013`).
+
+    **Consultar é de dois; consolidar é de um.** A presidência e a auditoria leem esta página pela
+    mesma porta das conclusões preservadas — são as duas que respondem a recurso —, e ler não
+    concede o poder de decidir: consolidar continua exigindo a base de gestão da comissão.
+
+    A resposta carrega pontuação e protocolo de candidato, e por isso não fica no cache do
+    navegador (013, FR-039).
+    """
+    ator, edital, etapa = _etapa_para_auditar(request, edital_id, etapa_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    pagina = resultado_selectors.resultados_da_etapa(
+        edital=edital,
+        etapa_id=etapa_id,
+        consequencia=(request.GET.get("consequencia") or "").upper() or None,
+        pagina=request.GET.get("pagina") or 1,
+    )
+    linhas = list(pagina)
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/resultados.html",
+            {
+                "edital": edital,
+                "processo": edital.processo,
+                "etapa": etapa,
+                "linhas": linhas,
+                "pagina": pagina,
+                # A contestação superveniente vai ao lado da decisão, e não escondida na trilha:
+                # quem consulta precisa saber que a origem foi questionada depois (FR-032).
+                "contestados": resultado_selectors.contestacoes_supervenientes(linhas),
+                "consequencia": request.GET.get("consequencia") or "",
+            },
+        )
+    )
 
 
 @require_http_methods(["GET"])

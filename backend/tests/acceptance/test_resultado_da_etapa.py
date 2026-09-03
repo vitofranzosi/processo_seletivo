@@ -9,7 +9,9 @@ que é seria contar cobertura que não existe.
 from uuid import UUID
 
 import pytest
+from django.urls import reverse
 
+from processo_seletivo.comissoes.application.comissao import remover_membro
 from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
 from processo_seletivo.resultados.application.consolidacao import consolidar
 from processo_seletivo.resultados.application.prontidao import panorama_da_etapa
@@ -18,6 +20,7 @@ from tests.conftest import ator_institucional
 from tests.fixtures.comissao import inscrever
 from tests.fixtures.mesa import concluir_como, distribuir_para
 from tests.fixtures.resultado import montar_etapa_de_leitura_unica, montar_tres_etapas
+from tests.interface.conftest import identificar
 
 pytestmark = [pytest.mark.acceptance, pytest.mark.django_db]
 
@@ -171,3 +174,56 @@ def test_us3_a_exigencia_de_habilitacao_fica_dormente_ate_o_primeiro_resultado(
     segunda = panorama(cenario, etapa="segunda_publicada")
     assert len(segunda["participantes"]) == len(inscricoes)
     assert segunda["contagens"]["aguardando_anterior"] == 0
+
+
+def test_us4_a_proveniencia_sobrevive_a_retificacao_e_a_saida_do_avaliador(
+    gestor, api_client, manager_headers, client, seletor_ligado
+):
+    """T055 — a decisão continua demonstrável depois de o mundo mudar em volta dela.
+
+    Uma Retificação **fora** da Etapa e a saída do avaliador da comissão: nem uma nem outra pode
+    apagar a origem. É por isso que a autoria é identificador estável, e não vínculo, e que a norma
+    histórica é lida da versão que governou a Avaliação.
+    """
+    cenario = montar(gestor, api_client, manager_headers, seed=1470)
+    inscricao = inscrever(cenario["edital"], 1, primeiro=1)[0]
+    distribuir_para(cenario, gestor, ["joao"], [inscricao], chave="lote-1470")
+    concluir_como(cenario, "joao", inscricao, pontuacao="73.5000")
+    consolidar_como(cenario, [inscricao], chave="p-1470")
+
+    remover_membro(
+        actor=gestor,
+        processo_id=cenario["processo"].id,
+        membro_id=cenario["membros"]["joao"].id,
+        idempotency_key="saida-1470",
+        correlation_id="teste",
+    )
+
+    identificar(client, "maria", ["gestor"])
+    resposta = client.get(
+        reverse("interface:resultados-da-etapa", args=[cenario["edital"].id, cenario["primeira"]])
+    )
+    corpo = resposta.content.decode()
+    assert resposta.status_code == 200
+    # Total, consequência e as **duas** autorias continuam legíveis na mesma jornada.
+    assert "73,5" in corpo
+    assert "Habilitada" in corpo
+    assert "joao" in corpo and "maria" in corpo
+
+
+def test_us4_nenhuma_tela_afirma_colocacao_ou_aprovacao(
+    gestor, api_client, manager_headers, client, seletor_ligado
+):
+    """FR-045 — a fronteira com a 014, dita na tela e não só na spec."""
+    cenario = montar(gestor, api_client, manager_headers, seed=1471)
+    inscricao = inscrever(cenario["edital"], 1, primeiro=1)[0]
+    distribuir_para(cenario, gestor, ["joao"], [inscricao], chave="lote-1471")
+    concluir_como(cenario, "joao", inscricao, pontuacao="90")
+    consolidar_como(cenario, [inscricao], chave="p-1471")
+
+    identificar(client, "maria", ["gestor"])
+    corpo = client.get(
+        reverse("interface:resultados-da-etapa", args=[cenario["edital"].id, cenario["primeira"]])
+    ).content.decode()
+    for proibido in ("colocação", "classificação", "aprovado", "convocaç", "ocupa a vaga"):
+        assert proibido not in corpo.lower(), proibido
