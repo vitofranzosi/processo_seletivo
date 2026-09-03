@@ -23,6 +23,7 @@ from processo_seletivo.avaliacoes.models import (
 )
 from processo_seletivo.comissoes.models import AlocacaoEtapa
 from processo_seletivo.inscricoes.models import Inscricao
+from processo_seletivo.shared.api.problems import DomainError
 
 POR_PAGINA = 25
 
@@ -82,11 +83,23 @@ def _cobertura(atribuidas, previstas):
     return COMPLETA if atribuidas >= previstas else INCOMPLETA
 
 
-def inscricoes_da_etapa(*, edital, etapa, pagina=1, cobertura=None, avaliador=None):
+def inscricoes_da_etapa(
+    *, edital, etapa, pagina=1, cobertura=None, avaliador=None, panorama=None, prontidao=None
+):
     """As inscrições submetidas do Edital, com quantas avaliações cada uma já tem.
 
     Paginada e filtrável (FR-049): mil inscrições não cabem numa tela, e a pergunta operacional
     quase nunca é "todas" — é "quais ainda não têm ninguém" ou "quais são de fulano".
+
+    **`panorama` é o acréscimo da 013**, e ele chega por parâmetro em vez de ser consultado aqui
+    por dois motivos. O primeiro é dependência: `resultados` lê este módulo, e lê-lo de volta seria
+    ciclo. O segundo é custo: quem monta a tela resolve o panorama **uma vez** e o entrega ao
+    resumo e à listagem, de modo que os dois contem a mesma coisa e nenhum deles consulte por
+    linha (013, FR-006, FR-009).
+
+    Com o panorama, a listagem passa a mostrar **participantes** por padrão — quem foi eliminado
+    numa Etapa anterior ou ainda aguarda a anterior sai do conjunto (013, FR-005) — e o filtro de
+    prontidão é o que traz cada grupo de volta, nomeado.
     """
     previstas = avaliacoes_previstas(etapa)
     consulta = (
@@ -120,6 +133,8 @@ def inscricoes_da_etapa(*, edital, etapa, pagina=1, cobertura=None, avaliador=No
         )
         .order_by("protocolo", "id")
     )
+    if panorama is not None:
+        consulta = consulta.filter(id__in=_recorte_da_prontidao(panorama, prontidao))
     if avaliador:
         consulta = consulta.filter(
             atribuicoes__membro__identity_subject=avaliador,
@@ -145,17 +160,40 @@ def inscricoes_da_etapa(*, edital, etapa, pagina=1, cobertura=None, avaliador=No
             "faltam_concluir": max(previstas - inscricao.concluidas, 0),
             "cobertura": _cobertura(inscricao.atribuidas, previstas),
             "atribuicoes": inscricao.atribuicoes_da_etapa,
+            # `(estado, motivo)` da 013, ou `None` quando quem chamou não pediu prontidão. A
+            # segunda posição é o que a tela mostra: "erro" não diz a ação seguinte, "1 de 2
+            # avaliações concluída" diz (013, FR-012).
+            "prontidao": (panorama or {}).get("estados", {}).get(inscricao.id),
         }
         for inscricao in pagina_atual
     ]
     return linhas, pagina_atual
 
 
-def resumo_da_etapa(*, edital, etapa):
+def _recorte_da_prontidao(panorama, prontidao):
+    """As identidades que a listagem deve mostrar, dado o filtro pedido.
+
+    Sem filtro, os participantes — e não a população inteira. Com filtro, exatamente o grupo
+    nomeado, inclusive os dois que **não** são participantes: quem foi eliminado antes e quem
+    aguarda a Etapa anterior precisam ser alcançáveis, senão a presidência sabe que existem pelo
+    resumo e não consegue vê-los.
+    """
+    if not prontidao:
+        return panorama["participantes"]
+    return {
+        identidade for identidade, (estado, _) in panorama["estados"].items() if estado == prontidao
+    }
+
+
+def resumo_da_etapa(*, edital, etapa, panorama=None):
     """O que falta, em três números — antes do detalhe (FR-014).
 
     Uma consulta agregada sobre as inscrições submetidas, e não um laço sobre elas: com mil
     inscrições, contar em Python custaria mil objetos para produzir três inteiros.
+
+    **A 013 acrescenta dimensões a este mesmo resumo**, e não um painel ao lado dele: cobertura,
+    conclusão e prontidão são perguntas sobre a mesma população, e contá-las em lugares diferentes
+    daria dois números para a mesma Etapa (013, D-004, FR-009).
     """
     previstas = avaliacoes_previstas(etapa)
     por_inscricao = (
@@ -199,6 +237,9 @@ def resumo_da_etapa(*, edital, etapa):
         "atribuicoes": Atribuicao.objects.filter(
             edital=edital, etapa_id=etapa["id"], ativo=True
         ).count(),
+        # As contagens da 013 vêm do panorama, e não de uma segunda agregação: é o mesmo
+        # dicionário que a listagem filtra, e é isso que torna a partição verificável (FR-010).
+        **((panorama or {}).get("contagens") or {}),
     }
 
 
@@ -217,7 +258,7 @@ RASCUNHOS = "rascunhos"
 NAO_INICIADAS = "nao-iniciadas"
 
 
-def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None):
+def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None, vigentes=None):
     """A lista de trabalho de quem avalia: **todas e somente** as inscrições dela (FR-020).
 
     A autorização vem da forma **em lote** que a 011 entregou — `etapas_autorizadas` responde a
@@ -238,8 +279,16 @@ def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None):
     if identidade_da_etapa not in etapas_autorizadas(ator, edital):
         return None, None, None
     membro = membro_ativo(ator, edital.processo)
-    minhas = Atribuicao.objects.filter(
-        membro=membro, edital=edital, etapa_id=identidade_da_etapa, ativo=True
+    # `vigentes` chega da view, que já leu o conteúdo publicado para resolver a Etapa. Relê-lo aqui
+    # custaria uma consulta a mais por abertura da Mesa — fixa, mas gratuita de evitar, e o
+    # orçamento de consulta desta tela é testado desde a 012 (013, FR-006).
+    minhas = _so_participantes(
+        Atribuicao.objects.filter(
+            membro=membro, edital=edital, etapa_id=identidade_da_etapa, ativo=True
+        ),
+        edital,
+        identidade_da_etapa,
+        vigentes=vigentes,
     ).select_related("inscricao", "avaliacao")
     contagens = minhas.aggregate(
         total=Count("id"),
@@ -291,12 +340,41 @@ def carga_nas_etapas(*, ator, atribuicoes):
         processo__institution_scope=ator.institution_scope,
         ativo=True,
     )
+    # **A progressão vale aqui também**, e sem ela a Mesa ficaria corretamente vazia enquanto esta
+    # tela anunciaria o mesmo trabalho como pendente — duas telas dizendo coisas diferentes sobre a
+    # mesma Etapa. Uma restrição por Etapa em que a pessoa atua, e não por linha: são poucas Etapas
+    # por pessoa, e a alternativa seria contar errado (013, FR-005).
+    # O conteúdo publicado é lido **uma vez por Edital**, e não uma por Etapa: uma pessoa alocada
+    # em quatro Etapas do mesmo Edital pagaria quatro leituras idênticas do mesmo conteúdo.
+    from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
+
+    conteudos = {}
+    por_etapa = Q(pk__in=[])
+    for item in atribuicoes:
+        edital = item["edital"]
+        if edital.id not in conteudos:
+            try:
+                conteudos[edital.id] = etapas_vigentes(edital)
+            except DomainError:
+                # Edital sem Versão Consolidada vigente: não há Etapa anterior a consultar, e
+                # portanto nada a restringir. Capturar `Exception` aqui esconderia defeito de
+                # verdade sob a mesma cláusula que trata um estado legítimo.
+                conteudos[edital.id] = {}
+        por_etapa |= Q(edital=edital, etapa_id=item["etapa_id"]) & Q(
+            pk__in=_so_participantes(
+                Atribuicao.objects.filter(edital=edital, etapa_id=item["etapa_id"]),
+                edital,
+                item["etapa_id"],
+                vigentes=conteudos[edital.id],
+            ).values("pk")
+        )
     contagens = (
         Atribuicao.objects.filter(
             membro__in=membros,
             ativo=True,
             edital_id__in={edital_id for edital_id, _ in chaves},
         )
+        .filter(por_etapa)
         .values("edital_id", "etapa_id")
         .annotate(
             total=Count("id"),
@@ -309,6 +387,23 @@ def carga_nas_etapas(*, ator, atribuicoes):
         )
         for linha in contagens
     }
+
+
+def _so_participantes(consulta, edital, etapa_id, prefixo="inscricao", vigentes=None):
+    """As duas regras de progressão da `013`, **dobradas na consulta** que já ia acontecer.
+
+    Materializar o conjunto e passá-lo em `__in` custaria duas leituras de população inteira por
+    listagem, e os orçamentos de consulta da 011 e da 012 existem justamente para que uma feature
+    seguinte não os corroa em silêncio — foram eles que denunciaram a primeira versão disto.
+
+    Import local pelo motivo de sempre: `resultados` lê este módulo, e lê-lo de volta no topo seria
+    ciclo (013, T-001).
+    """
+    from processo_seletivo.resultados.application.prontidao import restringir_a_participantes
+
+    return restringir_a_participantes(
+        consulta, edital=edital, etapa_id=etapa_id, prefixo=prefixo, vigentes=vigentes
+    )
 
 
 def _completude(total, concluidas):
@@ -353,7 +448,14 @@ def proxima_pendente(*, ator, edital, etapa_id, depois_de):
         .first()
     )
     pendentes = (
-        Atribuicao.objects.filter(membro=membro, edital=edital, etapa_id=etapa_id, ativo=True)
+        # **A porta que mais importa fechar.** As demais superfícies entregam a inscrição porque
+        # alguém pediu por ela; esta a entrega sem que ninguém peça — e oferecer uma inscrição
+        # eliminada como "próximo trabalho" é o pior modo de a exclusão falhar.
+        _so_participantes(
+            Atribuicao.objects.filter(membro=membro, edital=edital, etapa_id=etapa_id, ativo=True),
+            edital,
+            etapa_id,
+        )
         .exclude(avaliacao__estado=Avaliacao.Estado.CONCLUIDA)
         .exclude(inscricao_id=depois_de)
         .select_related("inscricao")

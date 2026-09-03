@@ -172,8 +172,14 @@ def _membros_alocados(processo, edital, etapa_id, ids):
     return membros
 
 
-def _inscricoes_atribuiveis(edital, ids):
-    """Só inscrição **submetida** do Edital daquela Etapa (FR-002, FR-012)."""
+def _inscricoes_atribuiveis(edital, ids, etapa_id=None):
+    """Só inscrição **submetida** do Edital daquela Etapa (FR-002, FR-012).
+
+    A `013` acrescenta a segunda condição: quem foi eliminado numa Etapa anterior, ou ainda aguarda
+    o resultado da anterior, não é distribuível. É **erro do pedido**, e não recusa de linha — a
+    mesma classificação que a submissão já tem aqui, e pelo mesmo motivo: uma seleção que a tela não
+    deveria ter oferecido não é o caminho normal esbarrando numa regra (013, FR-007).
+    """
     inscricoes = list(
         Inscricao.objects.filter(pk__in=ids, edital=edital, status=Inscricao.Status.SUBMETIDA)
     )
@@ -184,6 +190,25 @@ def _inscricoes_atribuiveis(edital, ids):
             422,
             campo="inscricao_id",
         )
+    if etapa_id is not None:
+        from processo_seletivo.resultados.application.prontidao import restringir_a_participantes
+
+        # A restrição é dobrada na consulta, e a comparação é de contagem: a seleção inteira ou
+        # nada, sem uma pergunta por inscrição selecionada.
+        participantes = restringir_a_participantes(
+            Inscricao.objects.filter(pk__in=[i.id for i in inscricoes]),
+            edital=edital,
+            etapa_id=etapa_id,
+            prefixo="",
+        ).count()
+        if participantes != len(inscricoes):
+            raise DomainError(
+                "inscricao_fora_da_etapa",
+                "Uma ou mais inscrições selecionadas não participam desta Etapa: elas foram "
+                "eliminadas numa Etapa anterior ou ainda aguardam o resultado da anterior.",
+                422,
+                campo="inscricao_id",
+            )
     return inscricoes
 
 
@@ -262,7 +287,7 @@ def distribuir(
             return ctx.desfecho_anterior
         etapa = _etapa_vigente_ou_404(edital, etapa_id)
         membros = _membros_alocados(ctx.processo, edital, etapa_id, ids_membros)
-        inscricoes = _inscricoes_atribuiveis(edital, ids_inscricoes)
+        inscricoes = _inscricoes_atribuiveis(edital, ids_inscricoes, etapa_id=etapa_id)
         previstas = avaliacoes_previstas(etapa)
         impedidos, ja_atribuidas, ja_concluidas, ocupacao = _contexto_de_recusa(
             edital, etapa_id, membros, inscricoes
@@ -338,10 +363,19 @@ def _carentes(edital, etapa_id, previstas):
     A ordem é a do protocolo porque a proposta precisa ser reproduzível: a mesma pergunta, sobre o
     mesmo estado, tem de devolver a mesma resposta — senão não há o que conferir sob trava.
     """
+    from processo_seletivo.resultados.application.prontidao import restringir_a_participantes
+
+    # **A progressão vale aqui também.** Proteger só o caminho manual deixaria o automático como a
+    # porta larga: o rodízio parte de todas as submetidas, e sem esta restrição proporia — e a
+    # confirmação criaria — Atribuição para inscrição eliminada na Etapa anterior. A regra é da
+    # Etapa, e não da forma de distribuir (013, FR-005).
     inscricoes = list(
-        Inscricao.objects.filter(edital=edital, status=Inscricao.Status.SUBMETIDA).order_by(
-            "protocolo", "id"
-        )
+        restringir_a_participantes(
+            Inscricao.objects.filter(edital=edital, status=Inscricao.Status.SUBMETIDA),
+            edital=edital,
+            etapa_id=etapa_id,
+            prefixo="",
+        ).order_by("protocolo", "id")
     )
     ocupacao = {}
     for inscricao_id in Atribuicao.objects.filter(

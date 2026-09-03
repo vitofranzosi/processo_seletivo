@@ -43,6 +43,13 @@ INSTALLED_APPS = [
     # que separa organizar de executar: a 011 responde quem pode trabalhar em cada Etapa, a 012
     # responde quais inscrições cabem a cada um — e misturá-las entregaria a confusão à 013.
     "processo_seletivo.avaliacoes",
+    # A consequência do trabalho (013): o Resultado da Etapa, que transforma a Avaliação concluída
+    # em `HABILITADA` ou `ELIMINADA`. App próprio, e não um modelo dentro de `avaliacoes`, porque o
+    # Resultado não é uma avaliação: é a consequência dela, com ciclo de vida, imutabilidade e
+    # autoria próprios — e é o agregado sobre o qual a classificação e a publicação serão
+    # construídas. As duas direções de dependência são reais e opostas, e o ciclo se quebra com
+    # import local, como `reabrir` já faz com `comando_de_comissao` (013, T-001).
+    "processo_seletivo.resultados",
 ]
 TEMPLATES = [
     {

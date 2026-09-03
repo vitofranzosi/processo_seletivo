@@ -108,6 +108,13 @@ urlpatterns = [
         views.distribuicao,
         name="distribuicao",
     ),
+    # A consequência do trabalho (013). Pende do mesmo caminho da organização da Etapa, porque é
+    # dali que ela é alcançada e porque a autorização é a mesma.
+    path(
+        "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/consolidar",
+        views.consolidar_resultados,
+        name="consolidar-resultados",
+    ),
     path(
         "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/remover",
         views.remover_atribuicao,
@@ -130,6 +137,13 @@ urlpatterns = [
     ),
     # A preservação de FR-094 só é preservação se for consultável (FR-091). A porta é a mesma da
     # trilha — presidência ou auditoria —, porque são os dois que respondem a recurso.
+    # A consulta do Resultado. Mesma porta das conclusões preservadas — presidência e auditoria —,
+    # porque são as duas que respondem a recurso.
+    path(
+        "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/resultados",
+        views.resultados_da_etapa,
+        name="resultados-da-etapa",
+    ),
     path(
         "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/conclusoes",
         views.conclusoes_preservadas,

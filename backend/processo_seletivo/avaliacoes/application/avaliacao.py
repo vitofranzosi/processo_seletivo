@@ -268,6 +268,57 @@ def eventos_da_avaliacao(avaliacao):
 REABRIR = "AVALIACAO_REABRIR"
 
 
+def _recusar_se_fundamenta_resultado(avaliacao):
+    """A porta que a `013` fecha: reabrir muda a pontuação, e o Resultado a afirma.
+
+    Recusa **por inteiro**, antes de qualquer efeito — não há aplicação parcial possível quando o
+    ato é mutação da fonte. O impedimento é o caso oposto e continua se aplicando inteiro: ele não
+    muda pontuação nenhuma, e recusá-lo faria o sistema se recusar a registrar que descobriu tarde
+    quem não podia avaliar (013, FR-030, FR-031).
+
+    A frase nomeia a inscrição e a Etapa e **não** mostra a pontuação: quem organiza o trabalho não
+    é necessariamente quem pode ver a nota (013, FR-033).
+
+    Import local pelo motivo de sempre: `resultados` lê este app, e lê-lo de volta no topo seria
+    ciclo — o mesmo idioma que esta função já usa com `comando_de_comissao` (013, T-001).
+    """
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    resultado = (
+        ResultadoEtapa.objects.filter(avaliacao=avaliacao).select_related("inscricao").first()
+    )
+    if resultado is None:
+        return
+    protocolo = resultado.inscricao.protocolo or str(resultado.inscricao_id)
+    nome_da_etapa = _nome_da_etapa(resultado)
+    raise DomainError(
+        "avaliacao_fundamenta_resultado",
+        # **Nomeia os três**: inscrição, Etapa e o Resultado protetor. "Existe um Resultado" manda
+        # quem recebeu a recusa procurar qual — e quem responde a um recurso precisa citá-lo. A
+        # pontuação **não** entra: quem organiza o trabalho não é necessariamente quem pode vê-la
+        # (013, FR-033).
+        f"Esta avaliação fundamenta o Resultado da Etapa {nome_da_etapa} para a inscrição "
+        f"{protocolo} (Resultado {resultado.id}) e não pode ser reaberta. Corrigir um Resultado "
+        "consolidado exige anulação, que é ato de outra natureza.",
+        409,
+    )
+
+
+def _nome_da_etapa(resultado):
+    """O nome publicado da Etapa, ou a identidade quando o conteúdo não a alcança.
+
+    A frase precisa dizer **qual** Etapa; cair na identidade é pior que o nome e melhor que o
+    silêncio, e acontece quando a Etapa saiu do conteúdo vigente por Retificação.
+    """
+    from processo_seletivo.comissoes.domain.etapas import etapa_vigente
+
+    try:
+        etapa = etapa_vigente(resultado.edital, resultado.etapa_id)
+    except DomainError:
+        etapa = None
+    return (etapa or {}).get("name") or resultado.etapa_id
+
+
 def reabrir(
     *, actor, processo_id, avaliacao_id, motivo, expected_revision, idempotency_key, correlation_id
 ):
@@ -318,6 +369,7 @@ def reabrir(
             raise nao_encontrado()
         if ctx.repetido:
             return avaliacao
+        _recusar_se_fundamenta_resultado(avaliacao)
         if avaliacao.estado != Avaliacao.Estado.CONCLUIDA:
             # Transição inválida, e não "nada a fazer": reabrir um rascunho não tem significado, e
             # responder sucesso faria a tela afirmar um ato que não aconteceu (FR-083).

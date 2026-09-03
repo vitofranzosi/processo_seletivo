@@ -30,6 +30,10 @@ TABELAS_APPEND_ONLY = (
     # também para quem chegue por fora da aplicação (FR-094).
     "avaliacoes_conclusaoavaliacao",
     "processos_atoadministrativo",
+    # O Resultado da Etapa da `013`: a consequência registrada de um ato da presidência. Histórico
+    # pela mesma razão dos demais, e com um agravante próprio — ele é a origem do que a
+    # classificação e o recurso vão ler depois (013, FR-029).
+    "resultados_resultadoetapa",
     "publicacoes_documentopublicado",
     "publicacoes_publicacao",
     "publicacoes_revisaoedital",

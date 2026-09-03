@@ -38,7 +38,11 @@ from processo_seletivo.comissoes.domain.autorizacao import (
     pode_atuar_na_etapa,
     pode_gerir_comissao,
 )
-from processo_seletivo.comissoes.domain.etapas import etapa_vigente, evento_vigente
+from processo_seletivo.comissoes.domain.etapas import (
+    etapa_vigente,
+    etapas_vigentes,
+    evento_vigente,
+)
 from processo_seletivo.comissoes.models import Funcao
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.application.identificacao import update_edital_identification
@@ -80,6 +84,9 @@ from processo_seletivo.publicacoes.application.selectors import (
 from processo_seletivo.publicacoes.domain import autoridades
 from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA, render_edital_pdf
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
+from processo_seletivo.resultados.application import consolidacao as consolidacao_app
+from processo_seletivo.resultados.application import prontidao as prontidao_013
+from processo_seletivo.resultados.application import selectors as resultado_selectors
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
@@ -2196,6 +2203,38 @@ def reabrir_avaliacao(request, edital_id, etapa_id):
 
 
 @require_http_methods(["POST"])
+def consolidar_resultados(request, edital_id, etapa_id):
+    """O lote da 013: as inscrições prontas viram Resultado num ato confirmado (FR-018).
+
+    Rota própria, e não um ramo do formulário de distribuir. A razão é a mesma que a 012 usou para
+    separar remover de atribuir, e aqui o custo do engano seria maior: consolidar é irreversível, e
+    a V1 não oferece anulação.
+
+    A porta é a de gestão da comissão — a mesma da reabertura —, e não há capacidade nova. Quem
+    preside o Processo consolida a Etapa dele; quem não preside recebe a resposta uniforme.
+    """
+    ator, edital, _ = _etapa_para_distribuir(request, edital_id, etapa_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    destino = reverse("interface:distribuicao", args=[edital_id, etapa_id])
+    try:
+        request.session["resultado_da_consolidacao"] = consolidacao_app.consolidar(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            etapa_id=etapa_id,
+            inscricao_ids=request.POST.getlist("inscricao_id"),
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_da_consolidacao"] = recusa.detail
+    return redirect(destino)
+
+
+@require_http_methods(["POST"])
 def remover_atribuicao(request, edital_id, etapa_id):
     """Retira Atribuições da Etapa — as que ainda não têm Avaliação concluída.
 
@@ -2291,12 +2330,20 @@ def distribuicao(request, edital_id, etapa_id):
                     membro_ids=dados["membro_ids"],
                 )
 
+    # O panorama da 013 é resolvido **uma vez** e entregue ao resumo e à listagem. Consultá-lo nos
+    # dois lugares daria dois números para a mesma Etapa, que é o que D-004 recusa; consultá-lo por
+    # linha devolveria à listagem o custo que a 012 tirou dela (FR-006, FR-009).
+    panorama = prontidao_013.panorama_da_etapa(
+        edital=edital, etapa=etapa, etapas_vigentes=etapas_vigentes(edital)
+    )
     linhas, pagina = avaliacao_selectors.inscricoes_da_etapa(
         edital=edital,
         etapa=etapa,
         pagina=request.GET.get("pagina") or 1,
         cobertura=request.GET.get("cobertura") or None,
         avaliador=request.GET.get("avaliador") or None,
+        panorama=panorama,
+        prontidao=request.GET.get("prontidao") or None,
     )
     return marcar_como_privada(
         render(
@@ -2309,12 +2356,19 @@ def distribuicao(request, edital_id, etapa_id):
                 "linhas": linhas,
                 "pagina": pagina,
                 "carga": avaliacao_selectors.carga_por_avaliador(edital=edital, etapa_id=etapa_id),
-                "resumo": avaliacao_selectors.resumo_da_etapa(edital=edital, etapa=etapa),
+                "resumo": avaliacao_selectors.resumo_da_etapa(
+                    edital=edital, etapa=etapa, panorama=panorama
+                ),
+                "prontidao": request.GET.get("prontidao") or "",
+                "impedimento_da_etapa": panorama["impedimento_da_etapa"],
                 "cobertura": request.GET.get("cobertura") or "",
                 "avaliador": request.GET.get("avaliador") or "",
                 "erro": erro,
                 "proposta": proposta,
                 "resultado": request.session.pop("resultado_da_distribuicao", None),
+                "consolidacao": request.session.pop("resultado_da_consolidacao", None),
+                "erro_da_consolidacao": request.session.pop("erro_da_consolidacao", None),
+                "chave_consolidacao": uuid4().hex,
                 "chave_idempotencia": uuid4().hex,
                 "chave_remocao": uuid4().hex,
                 "chave_rodizio": uuid4().hex,
@@ -2618,6 +2672,46 @@ def _registrar_na_mesa(ator, atribuicao, documento, request, operacao):
 
 
 @require_http_methods(["GET"])
+def resultados_da_etapa(request, edital_id, etapa_id):
+    """Os Resultados da Etapa, com a origem de cada um (US4 da `013`).
+
+    **Consultar é de dois; consolidar é de um.** A presidência e a auditoria leem esta página pela
+    mesma porta das conclusões preservadas — são as duas que respondem a recurso —, e ler não
+    concede o poder de decidir: consolidar continua exigindo a base de gestão da comissão.
+
+    A resposta carrega pontuação e protocolo de candidato, e por isso não fica no cache do
+    navegador (013, FR-039).
+    """
+    ator, edital, etapa = _etapa_para_auditar(request, edital_id, etapa_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    pagina = resultado_selectors.resultados_da_etapa(
+        edital=edital,
+        etapa_id=etapa_id,
+        consequencia=(request.GET.get("consequencia") or "").upper() or None,
+        pagina=request.GET.get("pagina") or 1,
+    )
+    linhas = list(pagina)
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/resultados.html",
+            {
+                "edital": edital,
+                "processo": edital.processo,
+                "etapa": etapa,
+                "linhas": linhas,
+                "pagina": pagina,
+                # A contestação superveniente vai ao lado da decisão, e não escondida na trilha:
+                # quem consulta precisa saber que a origem foi questionada depois (FR-032).
+                "contestados": resultado_selectors.contestacoes_supervenientes(linhas),
+                "consequencia": request.GET.get("consequencia") or "",
+            },
+        )
+    )
+
+
+@require_http_methods(["GET"])
 def conclusoes_preservadas(request, edital_id, etapa_id):
     """O que foi concluído e deixou de valer — íntegro, e legível por quem responde (FR-091).
 
@@ -2863,9 +2957,13 @@ def minha_etapa(request, edital_id, etapa_id):
         # existência não é enumerável por quem não tem acesso (FR-057).
         raise Http404
     try:
-        etapa = etapa_vigente(edital, etapa_id)
+        # A coleção inteira, e não `etapa_vigente`: é o que aquele wrapper leria por dentro, e a
+        # Mesa precisa dela para resolver a progressão. Ler uma vez e repassar mantém o custo onde
+        # estava — o orçamento de consulta desta tela é testado (013, FR-006).
+        vigentes = etapas_vigentes(edital)
     except DomainError:
-        etapa = None
+        vigentes = {}
+    etapa = vigentes.get(etapa_id)
     if etapa is None:
         raise Http404
     try:
@@ -2892,6 +2990,7 @@ def minha_etapa(request, edital_id, etapa_id):
             etapa_id=etapa_id,
             pagina=request.GET.get("pagina") or 1,
             filtro=request.GET.get("filtro") or None,
+            vigentes=vigentes,
         )
         if por_alocacao
         else (None, None, None)

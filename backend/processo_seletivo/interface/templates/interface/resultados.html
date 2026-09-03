@@ -1,0 +1,96 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Resultados — {{ etapa.name }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> ›
+  <span aria-current="page">Resultados</span>
+</nav>
+
+<h1>Resultados da Etapa</h1>
+<p class="sub">{{ etapa.name }} — Edital {{ edital.number }}/{{ edital.year }}</p>
+
+{% comment %}
+A decisão e a sua origem na **mesma tela**: pontuação, consequência e causa, a avaliação que a
+fundamentou, quem avaliou, quem consolidou e sob qual versão do Edital. Sem isso, responder a um
+recurso exigiria reconstruir a conta em planilha, que é exatamente o que esta feature veio tirar
+do caminho (FR-026, FR-027).
+
+Nenhuma linha aqui afirma colocação, aprovação final, ocupação de vaga ou convocação: `HABILITADA`
+significa apenas que a inscrição segue para a Etapa seguinte (FR-045).
+{% endcomment %}
+{% comment %}
+A fronteira é dita **pela afirmação**, e não pela negação. Escrever "não é aprovação, classificação
+nem direito a vaga" põe as três palavras na tela para negá-las, e quem lê depressa lê as palavras —
+além de tornar indistinguíveis, para a varredura de vocabulário, a página que nega e a que afirma.
+{% endcomment %}
+<p class="ajuda">O que cada inscrição obteve nesta Etapa, e de onde veio.
+  <strong>Habilitada</strong> significa exatamente uma coisa: a inscrição segue para a Etapa
+  seguinte. Esta Etapa não decide nada além disso.</p>
+
+<nav class="filtros-da-mesa" aria-label="Filtrar por consequência">
+  <a href="?" {% if not consequencia %}aria-current="page"{% endif %}>
+    <strong>{{ pagina.paginator.count }}</strong> <span>todos</span></a>
+  <a href="?consequencia=habilitada" {% if consequencia == "habilitada" %}aria-current="page"{% endif %}>
+    <span>somente habilitadas</span></a>
+  <a href="?consequencia=eliminada" {% if consequencia == "eliminada" %}aria-current="page"{% endif %}>
+    <span>somente eliminadas</span></a>
+</nav>
+
+{% if linhas %}
+<div class="rolagem">
+  <table>
+    <caption class="oculto">Resultados da Etapa {{ etapa.name }}</caption>
+    <thead>
+      <tr>
+        <th scope="col">Inscrição</th>
+        <th scope="col">Pontuação</th>
+        <th scope="col">Situação na Etapa</th>
+        <th scope="col">Por quê</th>
+        <th scope="col">Quem avaliou</th>
+        <th scope="col">Quem consolidou</th>
+        <th scope="col">Versão do Edital</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for resultado in linhas %}
+      <tr>
+        <td>{{ resultado.inscricao.protocolo|default:resultado.inscricao_id }}</td>
+        <td class="numero">{{ resultado.pontuacao|pontuacao }}</td>
+        <td>{{ resultado.get_consequencia_display }}</td>
+        <td class="motivo-da-prontidao">
+          {{ resultado.motivo }}
+          {% with contestacao=contestados|dicionario_simples:resultado.id %}
+          {% if contestacao %}
+          {% comment %}
+          Declaração, e não decisão: o Resultado permanece com a pontuação e a consequência que
+          teve. O que mudou é que a origem dele foi contestada depois de consolidada, e quem lê
+          precisa saber (FR-032).
+          {% endcomment %}
+          <p class="aviso">Origem contestada depois da consolidação: registrou-se impedimento entre
+            quem avaliou e esta inscrição em {{ contestacao.criado_em|date:"d/m/Y H:i" }}.
+            Motivo: {{ contestacao.motivo }}</p>
+          {% endif %}
+          {% endwith %}
+        </td>
+        <td>{{ resultado.avaliacao.concluida_por }}<br>
+          <span class="ajuda">em {{ resultado.avaliacao.concluida_em|date:"d/m/Y H:i" }}</span></td>
+        <td>{{ resultado.consolidado_por }}<br>
+          <span class="ajuda">em {{ resultado.consolidado_em|date:"d/m/Y H:i" }}</span></td>
+        <td>{{ resultado.avaliacao.versao.valid_from|date:"d/m/Y H:i" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% if pagina.has_other_pages %}
+<nav class="paginacao" aria-label="Páginas dos Resultados">
+  {% if pagina.has_previous %}<a href="?pagina={{ pagina.previous_page_number }}{% if consequencia %}&consequencia={{ consequencia|urlencode }}{% endif %}">Anterior</a>{% endif %}
+  <span aria-current="page">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+  {% if pagina.has_next %}<a href="?pagina={{ pagina.next_page_number }}{% if consequencia %}&consequencia={{ consequencia|urlencode }}{% endif %}">Próxima</a>{% endif %}
+</nav>
+{% endif %}
+{% else %}
+<p class="vazio">Nenhum Resultado consolidado nesta Etapa ainda.</p>
+{% endif %}
+{% endblock %}
