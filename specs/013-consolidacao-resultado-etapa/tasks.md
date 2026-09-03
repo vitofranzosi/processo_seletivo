@@ -198,13 +198,13 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T061 [P] Escrever `specs/013-consolidacao-resultado-etapa/traceability.md` ligando os 45 requisitos e os 11 critérios a tarefa, arquivo e teste, como a 011 e a 012 fizeram
-- [ ] T062 Executar `specs/013-consolidacao-resultado-etapa/quickstart.md` inteiro pela interface administrativa, incluindo o passo 4 da Entrega 4 e o passo 4 da Entrega 5 — os dois que provam as correções da revisão
+- [X] T061 [P] Escrever `specs/013-consolidacao-resultado-etapa/traceability.md` ligando os 45 requisitos e os 11 critérios a tarefa, arquivo e teste, como a 011 e a 012 fizeram
+- [X] T062 Executar `specs/013-consolidacao-resultado-etapa/quickstart.md` inteiro pela interface administrativa, incluindo o passo 4 da Entrega 4 e o passo 4 da Entrega 5 — os dois que provam as correções da revisão
 - [ ] T063 [P] Conferir `backend/processo_seletivo/interface/templates/interface/distribuicao.html` e `resultados.html` em 375 px, sem tabela horizontal
-- [ ] T064 [P] Rodar `ruff format --check` e `ruff check` sobre `backend/` — é portão de CI desde a 012
-- [ ] T065 [P] Rodar `backend/tests/test_citacoes_de_requisito.py`: toda citação de FR e SC no código novo aponta para requisito que existe
-- [ ] T066 [P] Escrever a varredura de vocabulário em `backend/tests/test_vocabulario_do_resultado.py`: nenhum template nem resposta da 013 afirma colocação, classificação, aprovação final, ocupação de vaga ou direito à convocação (FR-045)
-- [ ] T067 Rodar `backend/tests/` inteira com `TEST_DB_ENGINE=postgresql` e `DB_NAME` próprio, confirmando que nenhum teste da 011 ou da 012 regrediu
+- [X] T064 [P] Rodar `ruff format --check` e `ruff check` sobre `backend/` — é portão de CI desde a 012
+- [X] T065 [P] Rodar `backend/tests/test_citacoes_de_requisito.py`: toda citação de FR e SC no código novo aponta para requisito que existe
+- [X] T066 [P] Escrever a varredura de vocabulário em `backend/tests/test_vocabulario_do_resultado.py`: nenhum template nem resposta da 013 afirma colocação, classificação, aprovação final, ocupação de vaga ou direito à convocação (FR-045)
+- [X] T067 Rodar `backend/tests/` inteira com `TEST_DB_ENGINE=postgresql` e `DB_NAME` próprio, confirmando que nenhum teste da 011 ou da 012 regrediu
 
 ---
 

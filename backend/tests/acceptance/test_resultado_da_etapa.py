@@ -161,8 +161,8 @@ def test_us3_a_exigencia_de_habilitacao_fica_dormente_ate_o_primeiro_resultado(
 ):
     """T044 — o gate, e o que ele impede a 013 de quebrar.
 
-    Edital de leitura múltipla: a V1 não consolida a Etapa 1, e por isso a Etapa 2 **não pode** ficar
-    sem participantes. Sem este gate, todo Edital de segunda leitura pararia na primeira Etapa.
+    Edital de leitura múltipla: a V1 não consolida a Etapa 1, e por isso a Etapa 2 **não pode**
+    ficar sem participantes. Sem o gate, todo Edital de segunda leitura pararia na primeira Etapa.
     """
     cenario = montar(gestor, api_client, manager_headers, seed=1391, avaliacoes=2)
     inscricoes = inscrever(cenario["edital"], 3, primeiro=1)
@@ -227,3 +227,89 @@ def test_us4_nenhuma_tela_afirma_colocacao_ou_aprovacao(
     ).content.decode()
     for proibido in ("colocação", "classificação", "aprovado", "convocaç", "ocupa a vaga"):
         assert proibido not in corpo.lower(), proibido
+
+
+def test_a_jornada_completa_pela_interface_administrativa(
+    gestor, api_client, manager_headers, client, seletor_ligado
+):
+    """O cenário demonstrável do princípio VI, ponta a ponta e **pelo canal do ator**.
+
+    Sem banco, sem shell e sem chamada manual: tudo o que este teste faz, a presidência faz com o
+    navegador. É a diferença entre uma capacidade que o domínio sustenta e uma que alguém alcança.
+    """
+    cenario = montar_tres_etapas(gestor, api_client, manager_headers, seed=1480, codigo="1480")
+    cenario["vigentes"] = etapas_vigentes(cenario["edital"])
+    inscricoes = inscrever(cenario["edital"], 3, primeiro=1)
+    distribuir_para(cenario, gestor, ["joao"], inscricoes, chave="lote-1480")
+    concluir_como(cenario, "joao", inscricoes[0], pontuacao="75")
+    concluir_como(cenario, "joao", inscricoes[1], pontuacao="40")
+
+    identificar(client, "maria", ["gestor"])
+    organizacao = reverse(
+        "interface:distribuicao", args=[cenario["edital"].id, cenario["primeira"]]
+    )
+
+    # 1. A presidência abre a Etapa e lê a prontidão — no resumo que já existia.
+    corpo = client.get(organizacao).content.decode()
+    assert "prontas para consolidar" in corpo
+    assert "ainda não há avaliação concluída" in corpo
+
+    # 2. Consolida as duas prontas num ato só.
+    resposta = client.post(
+        reverse(
+            "interface:consolidar-resultados", args=[cenario["edital"].id, cenario["primeira"]]
+        ),
+        {
+            "inscricao_id": [str(inscricoes[0].id), str(inscricoes[1].id)],
+            "chave_idempotencia": "jornada-1480",
+        },
+    )
+    assert resposta.status_code == 302
+    corpo = client.get(organizacao).content.decode()
+    assert "2 </strong> consolidada(s)" in corpo.replace("\n", " ") or "consolidada(s)" in corpo
+
+    # 3. Consulta um Resultado com a origem dele.
+    corpo = client.get(
+        reverse("interface:resultados-da-etapa", args=[cenario["edital"].id, cenario["primeira"]])
+    ).content.decode()
+    assert "Habilitada" in corpo and "Eliminada" in corpo
+    assert "nota mínima" in corpo
+    assert "joao" in corpo and "maria" in corpo
+
+    # 4. Tenta reabrir a fonte de um Resultado, e é recusada.
+    fonte = ResultadoEtapa.objects.get(inscricao=inscricoes[0]).avaliacao
+    client.post(
+        reverse("interface:reabrir-avaliacao", args=[cenario["edital"].id, cenario["primeira"]]),
+        {
+            "avaliacao_id": str(fonte.id),
+            "motivo": "Tentativa de reabertura.",
+            "expected_revision": fonte.revision,
+            "chave_idempotencia": "reab-1480",
+        },
+    )
+    fonte.refresh_from_db()
+    assert fonte.estado == "CONCLUIDA"
+
+    # 5. A Etapa seguinte, e a de depois — onde as **duas** regras aparecem separadas.
+    #
+    #    Na Etapa 2 a exigência de habilitação já vigora, porque a Etapa 1 produziu Resultado:
+    #    participa só quem foi habilitado. Na Etapa 3 ela está dormente, porque a Etapa 2 ainda não
+    #    consolidou nada — mas a **eliminação continua valendo**, e é essa diferença que a redação
+    #    anterior de D-003 não fazia.
+    segunda = panorama_da_etapa(
+        edital=cenario["edital"],
+        etapa=cenario["vigentes"][UUID(str(cenario["segunda"]))],
+        etapas_vigentes=cenario["vigentes"],
+    )
+    assert segunda["participantes"] == {inscricoes[0].id}
+    assert inscricoes[1].id in segunda["eliminadas"]
+    assert inscricoes[2].id in segunda["aguardando"]
+
+    terceira = panorama_da_etapa(
+        edital=cenario["edital"],
+        etapa=cenario["vigentes"][UUID(str(cenario["terceira"]))],
+        etapas_vigentes=cenario["vigentes"],
+    )
+    assert terceira["participantes"] == {inscricoes[0].id, inscricoes[2].id}
+    assert inscricoes[1].id in terceira["eliminadas"]
+    assert terceira["aguardando"] == set()

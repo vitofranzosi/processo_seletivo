@@ -13,10 +13,10 @@ from processo_seletivo.avaliacoes.application.selectors import mesa, proxima_pen
 from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
 from processo_seletivo.resultados.application.consolidacao import consolidar
 from tests.conftest import ator_institucional
-from tests.interface.conftest import identificar
 from tests.fixtures.comissao import inscrever
 from tests.fixtures.mesa import concluir_como, distribuir_para
 from tests.fixtures.resultado import montar_etapa_de_leitura_unica
+from tests.interface.conftest import identificar
 
 pytestmark = [pytest.mark.authorization, pytest.mark.django_db]
 
