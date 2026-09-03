@@ -48,4 +48,26 @@ def pode_avaliar_inscricao(ator, edital, etapa_id, inscricao_id):
     """
     if not pode_atuar_na_etapa(ator, edital, etapa_id):
         return None
+    if not participa_da_etapa(edital, etapa_id, inscricao_id):
+        return None
     return atribuicao_ativa(ator, edital, etapa_id, inscricao_id)
+
+
+def participa_da_etapa(edital, etapa_id, inscricao_id):
+    """A terceira pergunta, acrescentada pela `013` — e **só na rota individual**.
+
+    A inscrição eliminada numa Etapa anterior, ou que ainda aguarda o resultado da anterior, não é
+    trabalho desta Etapa. Sem esta condição, a organização da Etapa a excluiria e a Mesa a
+    entregaria — a pior combinação possível, porque a exclusão pareceria funcionar.
+
+    **Isto não contradiz "duas condições, e não três".** O argumento acima é sobre custo em
+    listagem, e ele mesmo registra que listagem nunca chama esta função: quem desenha lista resolve
+    o conjunto uma vez, com `excluidas_da_etapa`. Uma consulta a mais na rota de item é o preço
+    certo; a mesma consulta por linha seria o gargalo que a 011 antecipou (013, FR-005, FR-006).
+
+    O import é local pelo motivo de sempre: `resultados` lê este app, e lê-lo de volta no topo seria
+    ciclo — o mesmo idioma que `reabrir` usa com `comando_de_comissao`.
+    """
+    from processo_seletivo.resultados.application import prontidao
+
+    return prontidao.participa_da_etapa(edital=edital, etapa_id=etapa_id, inscricao_id=inscricao_id)

@@ -257,7 +257,7 @@ RASCUNHOS = "rascunhos"
 NAO_INICIADAS = "nao-iniciadas"
 
 
-def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None):
+def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None, vigentes=None):
     """A lista de trabalho de quem avalia: **todas e somente** as inscrições dela (FR-020).
 
     A autorização vem da forma **em lote** que a 011 entregou — `etapas_autorizadas` responde a
@@ -278,8 +278,16 @@ def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None):
     if identidade_da_etapa not in etapas_autorizadas(ator, edital):
         return None, None, None
     membro = membro_ativo(ator, edital.processo)
-    minhas = Atribuicao.objects.filter(
-        membro=membro, edital=edital, etapa_id=identidade_da_etapa, ativo=True
+    # `vigentes` chega da view, que já leu o conteúdo publicado para resolver a Etapa. Relê-lo aqui
+    # custaria uma consulta a mais por abertura da Mesa — fixa, mas gratuita de evitar, e o
+    # orçamento de consulta desta tela é testado desde a 012 (013, FR-006).
+    minhas = _so_participantes(
+        Atribuicao.objects.filter(
+            membro=membro, edital=edital, etapa_id=identidade_da_etapa, ativo=True
+        ),
+        edital,
+        identidade_da_etapa,
+        vigentes=vigentes,
     ).select_related("inscricao", "avaliacao")
     contagens = minhas.aggregate(
         total=Count("id"),
@@ -331,6 +339,9 @@ def carga_nas_etapas(*, ator, atribuicoes):
         processo__institution_scope=ator.institution_scope,
         ativo=True,
     )
+    # As excluídas pela `013`, uma consulta por Etapa em que esta pessoa atua — e não por linha.
+    # São poucas Etapas por pessoa, e sem isto `Minhas Etapas` anunciaria trabalho que não existe
+    # mais: "230 pendentes" quando trinta delas foram eliminadas na Etapa anterior.
     contagens = (
         Atribuicao.objects.filter(
             membro__in=membros,
@@ -349,6 +360,23 @@ def carga_nas_etapas(*, ator, atribuicoes):
         )
         for linha in contagens
     }
+
+
+def _so_participantes(consulta, edital, etapa_id, prefixo="inscricao", vigentes=None):
+    """As duas regras de progressão da `013`, **dobradas na consulta** que já ia acontecer.
+
+    Materializar o conjunto e passá-lo em `__in` custaria duas leituras de população inteira por
+    listagem, e os orçamentos de consulta da 011 e da 012 existem justamente para que uma feature
+    seguinte não os corroa em silêncio — foram eles que denunciaram a primeira versão disto.
+
+    Import local pelo motivo de sempre: `resultados` lê este módulo, e lê-lo de volta no topo seria
+    ciclo (013, T-001).
+    """
+    from processo_seletivo.resultados.application.prontidao import restringir_a_participantes
+
+    return restringir_a_participantes(
+        consulta, edital=edital, etapa_id=etapa_id, prefixo=prefixo, vigentes=vigentes
+    )
 
 
 def _completude(total, concluidas):
@@ -393,7 +421,14 @@ def proxima_pendente(*, ator, edital, etapa_id, depois_de):
         .first()
     )
     pendentes = (
-        Atribuicao.objects.filter(membro=membro, edital=edital, etapa_id=etapa_id, ativo=True)
+        # **A porta que mais importa fechar.** As demais superfícies entregam a inscrição porque
+        # alguém pediu por ela; esta a entrega sem que ninguém peça — e oferecer uma inscrição
+        # eliminada como "próximo trabalho" é o pior modo de a exclusão falhar.
+        _so_participantes(
+            Atribuicao.objects.filter(membro=membro, edital=edital, etapa_id=etapa_id, ativo=True),
+            edital,
+            etapa_id,
+        )
         .exclude(avaliacao__estado=Avaliacao.Estado.CONCLUIDA)
         .exclude(inscricao_id=depois_de)
         .select_related("inscricao")

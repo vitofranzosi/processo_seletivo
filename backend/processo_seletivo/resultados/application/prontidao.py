@@ -17,6 +17,7 @@ leitura múltipla, que a V1 não consolida.
 """
 
 from processo_seletivo.avaliacoes.application.selectors import avaliacoes_elegiveis
+from processo_seletivo.comissoes.domain.etapas import etapas_vigentes as etapas_vigentes_do_edital
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.resultados.application.selectors import (
     eliminadas_ate,
@@ -27,6 +28,7 @@ from processo_seletivo.resultados.application.selectors import (
 from processo_seletivo.resultados.domain.compatibilidade import incompatibilidade
 from processo_seletivo.resultados.domain.progressao import etapa_anterior, etapas_anteriores
 from processo_seletivo.resultados.domain.regra import impedimento_da_regra
+from processo_seletivo.resultados.models import ResultadoEtapa
 
 # Os cinco estados de prontidão. Formam partição: toda inscrição submetida do Edital ocupa um, e
 # apenas um. `PENDENTE` e `CONSOLIDADO` da spec aparecem aqui como ausência e presença de linha —
@@ -43,24 +45,112 @@ CONCLUSOES_DEMAIS = (
 )
 
 
-def _participacao(*, edital, etapa, etapas_vigentes):
-    """`(participantes, eliminadas, aguardando)` — as duas regras de D-003, nesta ordem."""
+def participacao(*, edital, etapa_id, vigentes=None):
+    """`(participantes, eliminadas, aguardando)` — as duas regras de D-003, nesta ordem.
+
+    **É a única fonte da participação**, e é por isso que ela vive aqui e não em cada superfície.
+    A distribuição, a Mesa, a inscrição de trabalho, o documento e a próxima pendente perguntam
+    todas a mesma coisa, e a resposta precisa ser a mesma nas cinco — senão a organização exclui e
+    a Mesa entrega, que é a pior combinação possível.
+
+    `vigentes` chega por parâmetro quando quem chama já o resolveu: a tela da Etapa lê o conteúdo
+    publicado uma vez e o entrega, em vez de cada seletor relê-lo.
+    """
+    if vigentes is None:
+        vigentes = etapas_vigentes_do_edital(edital)
     submetidas = set(
         Inscricao.objects.filter(edital=edital, status=Inscricao.Status.SUBMETIDA).values_list(
             "id", flat=True
         )
     )
-    anteriores = [identidade for identidade, _ in etapas_anteriores(etapas_vigentes, etapa["id"])]
+    anteriores = [identidade for identidade, _ in etapas_anteriores(vigentes, etapa_id)]
     eliminadas = eliminadas_ate(edital=edital, etapas_ids=anteriores) & submetidas
 
     aguardando = set()
-    imediata = etapa_anterior(etapas_vigentes, etapa["id"])
+    imediata = etapa_anterior(vigentes, etapa_id)
     # O gate, e só ele: a exigência de habilitação fica dormente enquanto a Etapa anterior não
     # produziu Resultado nenhum. A exclusão por eliminação, acima, não tem gate.
     if imediata is not None and ha_resultado_em(edital=edital, etapa_id=imediata[0]):
         habilitadas = habilitadas_em(edital=edital, etapa_id=imediata[0])
         aguardando = submetidas - eliminadas - habilitadas
     return submetidas - eliminadas - aguardando, eliminadas, aguardando
+
+
+def _anteriores_e_gate(edital, etapa_id, vigentes=None):
+    """`(identidades anteriores, identidade da imediata quando a exigência vigora)`.
+
+    Uma leitura do conteúdo publicado e, no máximo, uma pergunta de existência. É todo o custo fixo
+    que a progressão impõe às superfícies da 012 — o resto vira junção dentro da consulta que já ia
+    acontecer.
+    """
+    if vigentes is None:
+        vigentes = etapas_vigentes_do_edital(edital)
+    anteriores = [identidade for identidade, _ in etapas_anteriores(vigentes, etapa_id)]
+    imediata = etapa_anterior(vigentes, etapa_id)
+    exigir = (
+        imediata[0]
+        if imediata is not None and ha_resultado_em(edital=edital, etapa_id=imediata[0])
+        else None
+    )
+    return anteriores, exigir
+
+
+def restringir_a_participantes(consulta, *, edital, etapa_id, vigentes=None, prefixo="inscricao"):
+    """Aplica as duas regras de D-003 a um queryset que já fala de inscrições.
+
+    **Restringir a consulta, e não materializar o conjunto.** Devolver ids e passá-los em `__in`
+    custaria duas leituras completas de população por listagem, e as superfícies da 012 têm
+    orçamento de consulta declarado em teste — a 011 e a 012 os escreveram justamente para que uma
+    feature seguinte não os corroesse em silêncio. Dobradas em junção, as duas regras não custam
+    round-trip nenhum: o que sobra é a leitura do conteúdo publicado e a pergunta do gate.
+
+    `prefixo` diz como o queryset alcança a inscrição — `"inscricao"` a partir de `Atribuicao`,
+    `""` quando a própria linha é a inscrição.
+    """
+    anteriores, exigir = _anteriores_e_gate(edital, etapa_id, vigentes)
+    caminho = f"{prefixo}__resultados" if prefixo else "resultados"
+    if anteriores:
+        # Regra 1, sem gate: eliminada em qualquer Etapa anterior está fora, sempre.
+        consulta = consulta.exclude(
+            **{
+                f"{caminho}__etapa_id__in": anteriores,
+                f"{caminho}__consequencia": ResultadoEtapa.Consequencia.ELIMINADA,
+            }
+        )
+    if exigir is not None:
+        # Regra 2, com gate: só depois que a imediatamente anterior produziu Resultado.
+        consulta = consulta.filter(
+            **{
+                f"{caminho}__etapa_id": exigir,
+                f"{caminho}__consequencia": ResultadoEtapa.Consequencia.HABILITADA,
+            }
+        )
+    return consulta
+
+
+def participa_da_etapa(*, edital, etapa_id, inscricao_id, vigentes=None):
+    """A mesma pergunta, para **uma** inscrição — na rota individual, onde ela cabe.
+
+    Duas perguntas de existência no pior caso, e nenhuma listagem passa por aqui: o docstring de
+    `autorizacao.py` registra que listagem usa a forma em conjunto, e é ela que está acima.
+    """
+    anteriores, exigir = _anteriores_e_gate(edital, etapa_id, vigentes)
+    if (
+        anteriores
+        and ResultadoEtapa.objects.filter(
+            inscricao_id=inscricao_id,
+            etapa_id__in=anteriores,
+            consequencia=ResultadoEtapa.Consequencia.ELIMINADA,
+        ).exists()
+    ):
+        return False
+    if exigir is None:
+        return True
+    return ResultadoEtapa.objects.filter(
+        inscricao_id=inscricao_id,
+        etapa_id=exigir,
+        consequencia=ResultadoEtapa.Consequencia.HABILITADA,
+    ).exists()
 
 
 def panorama_da_etapa(*, edital, etapa, etapas_vigentes):
@@ -71,8 +161,8 @@ def panorama_da_etapa(*, edital, etapa, etapas_vigentes):
     conta a partir daqui, e a listagem filtra a partir daqui, de modo que os dois não podem
     divergir.
     """
-    participantes, eliminadas, aguardando = _participacao(
-        edital=edital, etapa=etapa, etapas_vigentes=etapas_vigentes
+    participantes, eliminadas, aguardando = participacao(
+        edital=edital, etapa_id=etapa["id"], vigentes=etapas_vigentes
     )
     resultados = resultados_por_inscricao(edital=edital, etapa_id=etapa["id"])
     impedimento = impedimento_da_regra(etapa)

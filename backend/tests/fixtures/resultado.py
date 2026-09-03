@@ -14,9 +14,18 @@ from tests.fixtures.comissao import (
     ETAPA_A2,
     alocar_em,
     constituir,
+    etapas,
     publicar_processo_com_etapas,
+    rascunho_com_etapas,
 )
 from tests.fixtures.edital import identificador
+from tests.fixtures.publicacao import publish_original
+
+# A terceira Etapa não existe nos cenários da 011 e da 012, e ela é a única forma de demonstrar a
+# transitividade: eliminada na primeira, com a segunda ainda não consolidada, a inscrição não pode
+# reaparecer na terceira. Fica aqui, e não em `comissao.py`, para não mexer no cenário
+# compartilhado da 011 e da 012.
+ETAPA_A3 = 412
 
 NOTA_MINIMA = "60.0000"
 
@@ -59,4 +68,58 @@ def montar_etapa_de_leitura_unica(
         "etapa": primeira,
         "primeira": primeira,
         "segunda": segunda,
+    }
+
+
+def montar_tres_etapas(gestor, api_client, manager_headers, *, seed, codigo, avaliador="joao"):
+    """Um Edital com **três** Etapas em ordem — o cenário da transitividade.
+
+    A terceira é acrescentada ao rascunho que `rascunho_com_etapas` produz, em vez de a fixture
+    compartilhada ganhar uma Etapa que a 011 e a 012 não pediram.
+    """
+    rascunho = rascunho_com_etapas(seed, avaliacoes=1, maxima="100.0000", minima=NOTA_MINIMA)
+    rascunho["stages"] = [
+        *etapas(seed, avaliacoes=1, maxima="100.0000", minima=NOTA_MINIMA),
+        {
+            "id": identificador(ETAPA_A3, seed),
+            "name": "Entrevista",
+            "order": 3,
+            "eliminatory": False,
+            "classificatory": True,
+        },
+    ]
+    edital = publish_original(
+        api_client,
+        {**manager_headers, "HTTP_IDEMPOTENCY_KEY": f"mvp-test-key-{seed:04d}"},
+        {
+            "institutionalCode": f"PS-2026-{codigo}",
+            "title": f"Processo {codigo}",
+            "firstEdital": {"number": codigo, "year": 2026, "title": f"Edital {codigo}"},
+        },
+        draft=rascunho,
+    )
+    processo = edital.processo
+    membros = constituir(
+        gestor,
+        processo,
+        [("maria", Funcao.PRESIDENTE), (avaliador, Funcao.MEMBRO)],
+        prefixo=f"tres-{seed}",
+    )
+    etapas_do_edital = [
+        identificador(ETAPA_A1, seed),
+        identificador(ETAPA_A2, seed),
+        identificador(ETAPA_A3, seed),
+    ]
+    for etapa in etapas_do_edital:
+        alocar_em(
+            gestor, processo, membros[avaliador], edital, etapa, chave=f"aloc3-{seed}-{etapa}"
+        )
+    return {
+        "edital": edital,
+        "processo": processo,
+        "membros": membros,
+        "etapa": etapas_do_edital[0],
+        "primeira": etapas_do_edital[0],
+        "segunda": etapas_do_edital[1],
+        "terceira": etapas_do_edital[2],
     }

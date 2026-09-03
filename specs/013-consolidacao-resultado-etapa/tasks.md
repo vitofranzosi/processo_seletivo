@@ -154,17 +154,17 @@ as seis superfícies que hoje devolvem inscrição por Etapa.
 distribuição e a Mesa da segunda e comprovar que somente a habilitada pode ser distribuída, contada
 e acessada — e que a terceira Etapa continua excluindo a eliminada mesmo sem Resultado na segunda.
 
-- [ ] T037 [US3] Recusar em `_inscricoes_atribuiveis`, em `backend/processo_seletivo/avaliacoes/application/distribuicao.py`, a inscrição excluída pela progressão — como **erro do pedido** (`inscricao_fora_da_etapa`, 422), na mesma classificação já usada para inscrição não submetida
-- [ ] T038 [US3] Acrescentar a terceira pergunta a `pode_avaliar_inscricao` em `backend/processo_seletivo/avaliacoes/domain/autorizacao.py`, **só na rota individual**, atualizando o docstring que hoje afirma "duas condições, e não três" para registrar por que a terceira cabe ali e não em listagem
-- [ ] T039 [US3] Fazer `_autorizar` em `backend/processo_seletivo/avaliacoes/application/mesa.py` herdar a decisão, cobrindo a inscrição de trabalho e a entrega de documento
-- [ ] T040 [US3] Filtrar `mesa(...)` em `backend/processo_seletivo/avaliacoes/application/selectors.py` pelos conjuntos da progressão, resolvidos uma vez por listagem
-- [ ] T041 [US3] Filtrar `proxima_pendente(...)` em `backend/processo_seletivo/avaliacoes/application/selectors.py` — sem isso, a navegação entrega a inscrição excluída **sem que ninguém a peça pelo identificador**
-- [ ] T042 [US3] Ajustar `carga_nas_etapas(...)` em `backend/processo_seletivo/avaliacoes/application/selectors.py`, para que Minhas Etapas não anuncie trabalho que não existe mais
-- [ ] T043 [P] [US3] Teste de aceitação da **transitividade** em `backend/tests/acceptance/test_resultado_da_etapa.py`: eliminada na Etapa 1, com a Etapa 2 sem nenhum Resultado, continua fora da Etapa 3
-- [ ] T044 [US3] Teste de aceitação do **gate dormente** em `backend/tests/acceptance/test_resultado_da_etapa.py`: Edital cuja Etapa 1 prevê duas avaliações mantém a Etapa 2 distribuível com todas as submetidas
-- [ ] T045 [P] [US3] Teste de autorização em `backend/tests/authorization/test_progressao.py`: inscrição excluída responde **404 uniforme** na Mesa, na inscrição de trabalho, no documento e na próxima pendente — e trocar o identificador na URL não alcança nada
-- [ ] T046 [P] [US3] Teste de contrato em `backend/tests/contract/test_distribuicao_com_progressao.py`: distribuir inscrição excluída pela progressão responde 422 `inscricao_fora_da_etapa` — **erro do pedido**, e não recusa de linha —, e nenhuma Atribuição é criada (FR-007)
-- [ ] T047 [P] [US3] Teste de custo em `backend/tests/performance/test_progressao.py`: nenhuma listagem passa a verificar autorização por linha
+- [X] T037 [US3] Recusar em `_inscricoes_atribuiveis`, em `backend/processo_seletivo/avaliacoes/application/distribuicao.py`, a inscrição excluída pela progressão — como **erro do pedido** (`inscricao_fora_da_etapa`, 422), na mesma classificação já usada para inscrição não submetida
+- [X] T038 [US3] Acrescentar a terceira pergunta a `pode_avaliar_inscricao` em `backend/processo_seletivo/avaliacoes/domain/autorizacao.py`, **só na rota individual**, atualizando o docstring que hoje afirma "duas condições, e não três" para registrar por que a terceira cabe ali e não em listagem
+- [X] T039 [US3] Fazer `_autorizar` em `backend/processo_seletivo/avaliacoes/application/mesa.py` herdar a decisão, cobrindo a inscrição de trabalho e a entrega de documento
+- [X] T040 [US3] Filtrar `mesa(...)` em `backend/processo_seletivo/avaliacoes/application/selectors.py` pelos conjuntos da progressão, resolvidos uma vez por listagem
+- [X] T041 [US3] Filtrar `proxima_pendente(...)` em `backend/processo_seletivo/avaliacoes/application/selectors.py` — sem isso, a navegação entrega a inscrição excluída **sem que ninguém a peça pelo identificador**
+- [X] T042 [US3] Ajustar `carga_nas_etapas(...)` em `backend/processo_seletivo/avaliacoes/application/selectors.py`, para que Minhas Etapas não anuncie trabalho que não existe mais
+- [X] T043 [P] [US3] Teste de aceitação da **transitividade** em `backend/tests/acceptance/test_resultado_da_etapa.py`: eliminada na Etapa 1, com a Etapa 2 sem nenhum Resultado, continua fora da Etapa 3
+- [X] T044 [US3] Teste de aceitação do **gate dormente** em `backend/tests/acceptance/test_resultado_da_etapa.py`: Edital cuja Etapa 1 prevê duas avaliações mantém a Etapa 2 distribuível com todas as submetidas
+- [X] T045 [P] [US3] Teste de autorização em `backend/tests/authorization/test_progressao.py`: inscrição excluída responde **404 uniforme** na Mesa, na inscrição de trabalho, no documento e na próxima pendente — e trocar o identificador na URL não alcança nada
+- [X] T046 [P] [US3] Teste de contrato em `backend/tests/contract/test_distribuicao_com_progressao.py`: distribuir inscrição excluída pela progressão responde 422 `inscricao_fora_da_etapa` — **erro do pedido**, e não recusa de linha —, e nenhuma Atribuição é criada (FR-007)
+- [X] T047 [P] [US3] Teste de custo em `backend/tests/performance/test_progressao.py`: nenhuma listagem passa a verificar autorização por linha
 - [ ] T048 [P] [US3] Teste de não regressão em `backend/tests/integration/resultados/test_nao_regressao_012.py`: a primeira Etapa conserva integralmente o comportamento da 012, e a Atribuição criada enquanto a exigência estava dormente volta a autorizar quando o Resultado habilitador existe
 
 **Checkpoint**: a eliminação produz efeito operacional, e nenhuma porta da 012 ficou aberta.

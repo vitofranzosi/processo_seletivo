@@ -2879,9 +2879,13 @@ def minha_etapa(request, edital_id, etapa_id):
         # existência não é enumerável por quem não tem acesso (FR-057).
         raise Http404
     try:
-        etapa = etapa_vigente(edital, etapa_id)
+        # A coleção inteira, e não `etapa_vigente`: é o que aquele wrapper leria por dentro, e a
+        # Mesa precisa dela para resolver a progressão. Ler uma vez e repassar mantém o custo onde
+        # estava — o orçamento de consulta desta tela é testado (013, FR-006).
+        vigentes = etapas_vigentes(edital)
     except DomainError:
-        etapa = None
+        vigentes = {}
+    etapa = vigentes.get(etapa_id)
     if etapa is None:
         raise Http404
     try:
@@ -2908,6 +2912,7 @@ def minha_etapa(request, edital_id, etapa_id):
             etapa_id=etapa_id,
             pagina=request.GET.get("pagina") or 1,
             filtro=request.GET.get("filtro") or None,
+            vigentes=vigentes,
         )
         if por_alocacao
         else (None, None, None)
