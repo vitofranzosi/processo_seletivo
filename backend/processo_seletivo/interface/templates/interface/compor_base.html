@@ -32,7 +32,16 @@
   </ol>
 </nav>
 
-{% if salvo %}<p class="sucesso" role="status">Rascunho salvo — {{ salvo }}.</p>{% endif %}
+{% comment %}
+`data-rascunho-salvo` carrega a chave do rascunho local que o servidor acabou de receber — a mesma
+forma de `data-rascunho`, porque é a mesma chave. Sem ela, o script comparava o digitado com o
+**renderizado**, que o servidor normaliza (`2` volta `2.0000`, a ordem é renumerada), concluía que
+divergiam e anunciava "há preenchimento não enviado" na mesma tela que dizia "Rascunho salvo".
+Quem lia as duas frases juntas não tinha como saber qual delas era verdade.
+{% endcomment %}
+{% if salvo %}<p class="sucesso" role="status"
+  {% if ator %}data-rascunho-salvo="{{ edital.id }}:{{ salvo_chave }}:{{ ator.subject }}"{% endif %}
+  >Rascunho salvo — {{ salvo }}.</p>{% endif %}
 
 {% include "interface/_erros.html" with preserva_o_digitado=True %}
 

@@ -33,6 +33,7 @@ ambos sobre a Regra Normativa, que é registrada mas ainda não aplicada neste i
 | FR-004 | Ciclos de vida de Processo e Edital separados | `tests/acceptance/test_us1_processos_editais.py::test_us1_create_add_and_activate`, `tests/acceptance/test_us7_finalizacao.py::test_us7_process_keeps_its_status_until_an_explicit_act` | Coberto |
 | FR-005 | Estados do Processo; ativação e encerramento como atos explícitos | `tests/unit/processos/test_finalizacao.py::test_only_an_active_process_can_be_closed`, `tests/unit/processos/test_finalizacao.py::test_process_can_be_cancelled_before_a_final_state`, `tests/unit/processos/test_finalizacao.py::test_final_process_states_never_return_to_a_previous_one` | Coberto |
 | FR-006 | Estados do Edital; Encerrado distinto de Cancelado | `tests/unit/processos/test_finalizacao.py::test_only_a_published_edital_reaches_regular_conclusion`, `tests/unit/processos/test_finalizacao.py::test_cancelled_edital_is_not_presented_as_regular_conclusion`, `tests/acceptance/test_us7_finalizacao.py::test_us7_closing_an_edital_is_not_treated_as_cancellation` | Coberto |
+| FR-006 (devolução) | "Antes da Publicação, a revisão PODE devolver o Edital a Em elaboração" | `tests/integration/publicacoes/test_devolucao_do_edital.py::test_a_revisao_devolve_o_edital_para_elaboracao`, `tests/integration/publicacoes/test_devolucao_do_edital.py::test_devolvido_o_edital_volta_a_aceitar_o_formulario`, `tests/interface/test_devolucao.py::test_devolver_pela_tela_reabre_a_elaboracao` | Coberto |
 | FR-007 | Edital registra número, ano, título, vínculo, situação e histórico | `tests/contract/test_processos_api.py::test_create_response_matches_contract`, `tests/integration/processos/test_creation.py::test_process_and_first_edital_are_atomic` | Coberto |
 | FR-008 | Identidade interna separada do código institucional; unicidade | `tests/integration/processos/test_creation.py::test_duplicate_identifier_leaves_no_partial_process`, `tests/authorization/test_processos.py::test_cross_scope_process_is_not_revealed` | Coberto |
 | FR-009 | Incluir um ou vários Perfis no Edital | `tests/acceptance/test_us2_perfis.py::test_us2_replaces_profiles_without_affecting_other_edital`, `tests/integration/editais/test_perfis.py::test_profile_code_is_unique_only_inside_its_edital` | Coberto |
@@ -149,6 +150,24 @@ ambos sobre a Regra Normativa, que é registrada mas ainda não aplicada neste i
 | SC-010 | Fluxos críticos concluíveis por teclado | — | **Diferido** (frontend) |
 
 ## Lacunas conhecidas
+
+### L0 — Devolução do Edital, prevista e não construída (FR-006) — resolvida
+
+A FR-006 declara **duas** voltas anteriores à Publicação: "a revisão PODE devolver o Edital a Em
+elaboração e a homologação PODE ser revogada para Em revisão". Só a segunda foi construída, e a
+linha da FR-006 nesta matriz dizia "Coberto" citando três testes que falam de Encerrado e
+Cancelado — nenhum deles toca a devolução. A metade ausente atravessou a `001` e a `002` sem que
+matriz, checklist ou revisão a notassem, porque o requisito estava marcado como coberto pela
+metade que existia.
+
+O defeito só apareceu numa auditoria de percurso, do lado de quem opera: quem revisava e
+discordava tinha "Homologar" e mais nada, e as duas saídas restantes eram cancelar — estado final,
+que queima o número no escopo — ou homologar o que se recusa, para retificar depois de publicar o
+defeito de propósito.
+
+**Lição de método**, e é a razão de esta lacuna ficar registrada em vez de simplesmente sumir: um
+requisito com duas metades precisa de linha por metade, ou a primeira que for implementada declara
+a outra coberta.
 
 ### L1 — Regra Normativa sem cobertura própria (FR-013, FR-014, US2 cenário 3)
 

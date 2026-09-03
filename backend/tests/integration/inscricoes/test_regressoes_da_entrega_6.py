@@ -8,7 +8,7 @@ disputam o mesmo caminho, ou quando a lista é aberta meses depois.
 import pytest
 from django.urls import reverse
 
-from processo_seletivo.inscricoes.application.consulta import inscricoes_do_edital
+from processo_seletivo.inscricoes.application.consulta import consulta_de_inscricoes
 from processo_seletivo.inscricoes.application.rascunho import anexar_documento, gravar_dados
 from processo_seletivo.inscricoes.application.submissao import (
     documentos_que_a_retificacao_invalida,
@@ -87,7 +87,7 @@ def test_a_lista_usa_a_versao_aceita_de_cada_inscricao(inscricao_de_maria, api_c
         "perfil",
     )
 
-    _, linhas = inscricoes_do_edital(actor=GESTOR, edital_id=selecao.id)
+    linhas = consulta_de_inscricoes(actor=GESTOR, edital_id=selecao.id)["recebidas"]
 
     assert linhas[0]["perfil"] == "Professor de Informática", (
         "a inscrição responde à versão que aceitou, e não à que passou a vigorar depois"

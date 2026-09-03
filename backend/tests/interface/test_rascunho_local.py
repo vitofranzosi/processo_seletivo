@@ -87,6 +87,47 @@ def test_tela_somente_leitura_nao_guarda_rascunho(
     assert "data-rascunho=" not in corpo_da_etapa(client, edital, "perfis")
 
 
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_o_salvamento_devolve_o_recibo_da_etapa_gravada(client, seletor_ligado, edital):
+    """A outra metade do contrato: o servidor diz **o que** recebeu, e não só que recebeu.
+
+    Sem o recibo, o script comparava o digitado com o reexibido — que o servidor normaliza — e
+    concluía que divergiam, anunciando "há preenchimento não enviado" na mesma tela em que
+    imprimia "Rascunho salvo". Duas frases contraditórias sobre o mesmo ato.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = client.get(
+        f"{reverse('interface:compor-etapa', args=[edital.id, 'perfis'])}?salvo=perfis"
+    )
+    corpo = resposta.content.decode()
+
+    assert "Rascunho salvo — Perfis de Vaga." in corpo
+    assert f'data-rascunho-salvo="{edital.id}:perfis:ana.elaboradora"' in corpo
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_o_recibo_nomeia_a_etapa_gravada_e_nao_a_exibida(client, seletor_ligado, edital):
+    """ "Avançar" grava uma etapa e abre a seguinte — o recibo fala da que foi gravada."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo = client.get(
+        f"{reverse('interface:compor-etapa', args=[edital.id, 'cronograma'])}?salvo=perfis"
+    ).content.decode()
+
+    assert f'data-rascunho-salvo="{edital.id}:perfis:ana.elaboradora"' in corpo
+    assert f'data-rascunho="{edital.id}:cronograma:ana.elaboradora"' in corpo
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_sem_salvamento_nao_ha_recibo(client, seletor_ligado, edital):
+    """Abrir a tela não é ter gravado: um recibo aqui apagaria preenchimento não enviado."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    assert "data-rascunho-salvo=" not in corpo_da_etapa(client, edital, "perfis")
+
+
 def test_a_expiracao_do_rascunho_e_verificada_executando_o_script():
     """FR-022: o prazo e o descarte estão em tests/javascript/rascunho.test.js.
 

@@ -68,6 +68,15 @@ def _etapa(etapa, snapshot):
         linhas.append(f"Peso: {etapa['weight']}")
     if etapa.get("minimumScore") is not None:
         linhas.append(f"Nota mínima: {etapa['minimumScore']}")
+    # O incremento da `012`. Estavam no formulário e no documento publicado, e faltavam
+    # justamente aqui — na tela cuja pergunta é "o que será congelado". Quem submetia congelava
+    # dois campos que a conferência não mostrava, e a pontuação máxima é o teto contra o qual
+    # cada avaliação da Etapa é validada depois. Impressos só quando declarados, como no
+    # documento: ausência é "o Edital não declarou", e não "declarou o padrão".
+    if etapa.get("maximumScore") is not None:
+        linhas.append(f"Pontuação máxima: {etapa['maximumScore']}")
+    if etapa.get("evaluationsPerRegistration") is not None:
+        linhas.append(f"Avaliações por inscrição: {etapa['evaluationsPerRegistration']}")
     vinculado = next(
         (
             evento

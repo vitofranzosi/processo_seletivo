@@ -12,7 +12,7 @@ import uuid
 import pytest
 from django.utils import timezone
 
-from processo_seletivo.inscricoes.application.consulta import inscricoes_do_edital
+from processo_seletivo.inscricoes.application.consulta import consulta_de_inscricoes
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from processo_seletivo.seguranca.domain import Actor
@@ -21,6 +21,12 @@ from tests.fixtures.candidato import PERFIL_DOCENTE, PERFIL_TECNICO
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
 CPF = "12345678909"
+
+
+def todas_as_linhas(selecao):
+    """As duas seções juntas: a coincidência é assinalada na linha, e rascunho também tem linha."""
+    consulta = consulta_de_inscricoes(actor=gestor(), edital_id=selecao.id)
+    return [*consulta["recebidas"], *consulta["em_preenchimento"]]
 
 
 def enviada(selecao, subject, *, cpf=CPF, perfil=PERFIL_DOCENTE):
@@ -62,7 +68,7 @@ def test_a_coincidencia_e_assinalada_na_consulta(selecao):
     enviada(selecao, "cand:um")
     enviada(selecao, "cand:dois")
 
-    _edital, linhas = inscricoes_do_edital(actor=gestor(), edital_id=selecao.id)
+    linhas = todas_as_linhas(selecao)
 
     assert all(linha["cpf_coincidente"] for linha in linhas)
 
@@ -71,7 +77,7 @@ def test_sem_coincidencia_nada_e_assinalado(selecao):
     enviada(selecao, "cand:um")
     enviada(selecao, "cand:dois", cpf="98765432100")
 
-    _edital, linhas = inscricoes_do_edital(actor=gestor(), edital_id=selecao.id)
+    linhas = todas_as_linhas(selecao)
 
     assert not any(linha["cpf_coincidente"] for linha in linhas)
 
@@ -81,7 +87,7 @@ def test_o_mesmo_cpf_em_perfis_diferentes_nao_e_coincidencia(selecao):
     enviada(selecao, "cand:um")
     enviada(selecao, "cand:dois", perfil=PERFIL_TECNICO)
 
-    _edital, linhas = inscricoes_do_edital(actor=gestor(), edital_id=selecao.id)
+    linhas = todas_as_linhas(selecao)
 
     assert not any(linha["cpf_coincidente"] for linha in linhas)
 
@@ -101,6 +107,6 @@ def test_rascunho_nao_conta_como_coincidencia(selecao):
         created_at=timezone.now(),
     )
 
-    _edital, linhas = inscricoes_do_edital(actor=gestor(), edital_id=selecao.id)
+    linhas = todas_as_linhas(selecao)
 
     assert not any(linha["cpf_coincidente"] for linha in linhas)
