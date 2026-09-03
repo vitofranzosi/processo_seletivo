@@ -63,3 +63,32 @@
   `pode_atuar_na_etapa(ator, edital, etapa_id)`) in its inherited-contract section, in narrative and
   in its guidance for planning, but never inside a functional requirement. §1 and §2 of this spec
   keep the same freedom.
+- Validation iteration 4: a review of the Phase 0/1 artifacts against the 012 code found four
+  consistency defects and two smaller ones; all were corrected in `spec.md`, `research.md`,
+  `data-model.md`, `contracts/resultado.md`, `quickstart.md` and `plan.md`. All checklist items
+  still pass. Requirement count is now 45 and success criteria 11 (`FR-005`, `FR-006`, `FR-007` and
+  `SC-009` were inserted and the items after them renumbered; every cross-artifact FR citation was
+  remapped).
+  1. **Progression was not transitive.** The spec promised elimination excludes from "any following
+     stage", but the rule consulted only the immediately-previous stage: eliminated in stage 1, with
+     stage 2 not yet consolidated, an inscription reappeared in stage 3. D-003 now carries two
+     distinct rules — elimination excludes transitively with no gate; the habilitation requirement
+     applies to the immediately-previous stage and only once it has produced a Result.
+  2. **The impediment preserved the access it exists to remove.** Keeping the source Atribuição
+     active kept the newly-impeded person's access to the inscription and its documents, because the
+     authorization chain does not consult Impedimento — it relies on the impediment having
+     deactivated the Atribuição. The impediment now applies in full; the Result survives untouched
+     and declares the supervening challenge. Invariant 2 changed from "the source is still eligible"
+     to "the source was eligible when consolidated".
+  3. **The Result could be born self-contradictory and frozen that way.** The claim that divergence
+     was impossible because rows are immutable does not hold — immutability only makes a wrong row
+     incorrigible. `versao` was dropped (reachable via the source in the same query) and a
+     `BEFORE INSERT` trigger now checks inscription, stage, edital and score against the source.
+  4. **The surface touched by progression was understated.** Six places, not three: distribution,
+     the individual authorization route, the Mesa listing, the working inscription with its
+     documents, the "next pending" navigation and the Minhas Etapas counts. The contract now also
+     classifies a distribution request carrying an excluded inscription as a request error.
+  5. `progressao.py` was described as pure while prescribing `exists`/`values_list`; it was split
+     into a pure domain function and a selector.
+  6. The quickstart's anticipated-Atribuição step was unreachable in the order given, and the scale
+     figures now read 1.000 consistently across spec, plan, contract and quickstart.
