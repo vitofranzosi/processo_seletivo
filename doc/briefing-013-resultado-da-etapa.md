@@ -56,6 +56,40 @@ a 013 ficaria sem uma das entradas que precisa consumir.
 Não é dependência conceitual: a 013 não pressupõe `Avaliacao`. É dependência de **saber a forma
 exata de uma das entradas** antes de escrever a spec que a consome.
 
+### Duas perguntas em aberto que essa revisão terá de fechar
+
+Ficam registradas aqui, e não no documento de decisão, porque decisão é registro fechado e estas
+ainda são perguntas. As duas atrasam a 013 se chegarem ao `/plan` sem resposta.
+
+**1 · O campo novo da Etapa cai no ponto cego da E2E-004.** A forma da conclusão é propriedade
+publicada da Etapa. A auditoria registra que a tela de Retificação alcança Etapas mas **não**
+alcança `maximumScore` nem `evaluationsPerRegistration` — exatamente os campos que a 012
+acrescentou à Etapa. É de esperar que `forma` caia no mesmo buraco, e isso precisa ser verificado,
+não presumido.
+
+```text
+forma publicada errada → só se corrige pela API
+```
+
+Ou a revisão assume esse limite explicitamente, ou é o momento natural de fechar a E2E-004 — que já
+era P0 antes do primeiro certame real, e cuja causa é a interface parar onde o domínio alcança
+(`publicacoes/domain/colecoes.py`).
+
+**2 · O rótulo publicado é mais de um campo.** A decisão diz que `Deferido/Indeferido` vem da
+Etapa. Na prática isso é um **par** por Etapa decisória — o rótulo do sentido favorável e o do
+desfavorável —, e o Edital 14 usaria outro par, e o Napne outro:
+
+```text
+FAVORAVEL / DESFAVORAVEL   ← o que o domínio guarda
+Deferido / Indeferido      ← análise documental dos 35/57
+Apto / Inapto              ← elegibilidade
+Elegível / Não elegível    ← verificação PcD
+```
+
+A spec precisa resolver se são dois campos, um par estruturado, ou um default institucional que o
+Edital sobrescreve. Não é grande, mas é ambiguidade que trava o planejamento — e, seja qual for a
+forma, ela é conteúdo publicado e passa pelo mesmo caminho canônico do item 1.
+
 ## Os seis invariantes
 
 **I-1 · Independência do mecanismo.** `ResultadoEtapa` não pressupõe `Avaliacao`. Avaliações,
