@@ -7,6 +7,16 @@ Resultado* e nascia da pergunta errada.
 57/2026 (sorteio) e 14/2026 (títulos e entrevista). O que eles mostraram é que o roadmap enxergava
 avaliação como o centro do Processo Seletivo, e ela é **um mecanismo entre outros**.
 
+> **Corrigido em 03/09/2026, à noite.** Este briefing foi escrito de manhã, numa branch que ainda
+> não continha `specs/013-consolidacao-resultado-etapa/` nem o app `processo_seletivo/resultados/`.
+> A 013 foi mergeada às 19:29 (PR #26) e este documento às 19:34 (PR #27) — ele descreve, de
+> boa-fé, um repositório que deixou de existir cinco minutos antes de ele entrar.
+>
+> **A 013 existe e está implementada.** O que este briefing chama de "a feature que vem depois" é a
+> generalização dela, e não a sua primeira escrita. As três seções marcadas abaixo foram
+> substituídas por [`briefing-revisao-012-013-formas-de-conclusao.md`](briefing-revisao-012-013-formas-de-conclusao.md);
+> o resto — a fronteira, os seis invariantes e as lacunas — continua valendo.
+
 ## A frase que governa
 
 > Toda Etapa que produz consequência no Processo deve poder resultar em um Resultado da Etapa
@@ -46,7 +56,11 @@ mexer no conceito de resultado oficial.
 Nada que dependa de combinar Etapas entre si, classificar globalmente candidatos, ocupar vaga ou
 tratar recurso pertence a esta feature.
 
-## Dependência que precisa cair antes
+## Dependência que precisa cair antes — **substituída**
+
+*A dependência é real, e o escopo dela era estreito demais: a mesma premissa está na 013 já
+implementada. Ver [`briefing-revisao-012-013-formas-de-conclusao.md`](briefing-revisao-012-013-formas-de-conclusao.md).
+O texto abaixo fica como registro do que se sabia pela manhã.*
 
 **A revisão do contrato de conclusão da 012** (`doc/decisao-012-conclusao-decisoria.md`). Hoje
 concluir uma Avaliação exige nota — em constraint, em coluna não-nulável de tabela append-only e no
@@ -110,7 +124,11 @@ vale. Duas precisões que vão junto:
 - **Prefill não é default.** A tela de elaboração pode sugerir "Deferido/Indeferido" como valor
   inicial editável; o que não pode existir é o domínio aplicar rótulo que o Edital não publicou.
 
-### Ordem de execução da revisão da 012
+### Ordem de execução da revisão da 012 — **substituída**
+
+*O passo 7, `/specify` da 013, partia de um estado que não é o de `main`. A ordem vigente está no
+briefing da revisão de compatibilidade.*
+
 
 Com as duas fechadas, a emenda da spec vem antes do código: implementar contra a
 `specs/012-mesa-de-avaliacao/spec.md` vigente, que ainda diz que concluir exige pontuação, criaria
@@ -186,7 +204,12 @@ resultado = 73 → reabre entrada → troca 72 por 52 → resultado continua 73
 
 Anulação e reconsolidação, se vierem, são **ato explícito** — nunca efeito colateral da reabertura.
 
-## Antes do `/specify`: exploração do código real
+## Antes de tocar o código: exploração do que já existe — **substituída**
+
+*Escrita como preparação para um `/specify` que já aconteceu. A lista continua útil como roteiro de
+leitura, com um acréscimo que ela não podia prever: **ler também o app `resultados` e a
+`specs/013-consolidacao-resultado-etapa/`**, que são a implementação da 013.*
+
 
 Ler a implementação da 012 — spec, research, models, guards, testes e contratos — e não preservar
 nomes ou estruturas imaginadas se a 012 tiver implementado contratos diferentes. O §27 da 012 diz
