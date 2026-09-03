@@ -152,7 +152,7 @@ def test_distribuicao_salva_produz_aviso_perceptivel(
         follow=True,
     )
 
-    assert "Distribuição salva" in resposta.content.decode()
+    assert "Alocação salva" in resposta.content.decode()
 
 
 def test_formulario_sem_o_campo_funcao_nao_rebaixa_ninguem(
@@ -172,3 +172,69 @@ def test_formulario_sem_o_campo_funcao_nao_rebaixa_ninguem(
 
     comissao_de_a["maria"].refresh_from_db()
     assert comissao_de_a["maria"].funcao == "PRESIDENTE"
+
+
+def folha_de_estilo(corpo):
+    return corpo[corpo.index("<style>") : corpo.index("</style>")]
+
+
+def test_a_funcao_na_comissao_tem_cor_e_nao_so_forma(
+    client, seletor_ligado, gestor, processo_a, comissao_de_a
+):
+    """Quatro telas escreviam `s-PRESIDENTE` e `s-MEMBRO`, e nenhuma das duas existia na folha.
+
+    A pastilha ficava com a forma e sem a cor: "Presidente" saía como texto em negrito ao lado do
+    nome, indistinguível de "Membro" — e essa é a única distinção que a tela precisa fazer, porque
+    presidir é o que autoriza.
+    """
+    identificar(client, "carlos", ["gestor"])
+
+    css = folha_de_estilo(client.get(url(processo_a)).content.decode())
+
+    assert ".s-PRESIDENTE{" in css
+    assert ".s-MEMBRO{" in css
+    assert css.split(".s-PRESIDENTE{")[1].split("}")[0] != css.split(".s-MEMBRO{")[1].split("}")[0]
+
+
+def test_o_identificador_nao_repete_o_nome_ao_lado(
+    client, seletor_ligado, gestor, processo_a, comissao_de_a
+):
+    """Sem diretório institucional o identificador **é** o que dá acesso, e por isso ele aparece.
+
+    Mas quando repete o nome ("ana ana"), a etiqueta gasta a atenção sem informar. Ela volta
+    assim que houver nome de exibição distinto, que é quando ela desempata.
+    """
+    identificar(client, "carlos", ["gestor"])
+
+    corpo = client.get(url(processo_a)).content.decode()
+
+    cartao = corpo.split('<ul class="comissao"')[1].split("</ul>")[0]
+    assert 'class="codigo"' not in cartao, "nome e identificador iguais: a etiqueta não acrescenta"
+
+
+def test_a_marca_de_filtrar_nao_e_esticada_como_campo_de_texto(
+    client, seletor_ligado, gestor, processo_a, comissao_de_a
+):
+    """A regra genérica dos campos mora **depois** nesta folha, e empate cai na ordem.
+
+    A caixa de marcar esticava à largura do rótulo e empurrava "Só quem está sem Etapa" para uma
+    coluna de uma palavra por linha, com a marca solta ao lado. Dois nomes de classe no seletor
+    resolvem sem depender da ordem — que muda a cada regra inserida acima.
+    """
+    identificar(client, "carlos", ["gestor"])
+
+    css = folha_de_estilo(client.get(url(processo_a)).content.decode())
+
+    assert "width:auto" in css.split(".campo.escolha input{")[1].split("}")[0]
+
+
+def test_a_acao_do_cartao_fica_no_rodape_dele(
+    client, seletor_ligado, gestor, processo_a, comissao_de_a
+):
+    """Uma pessoa atua em duas Etapas, outra em nenhuma: sem isso a fileira termina em degraus."""
+    identificar(client, "carlos", ["gestor"])
+
+    css = folha_de_estilo(client.get(url(processo_a)).content.decode())
+
+    assert "margin-top:auto" in css.split("ul.comissao .gerir-membro{")[1].split("}")[0]
+    assert "flex-direction:column" in css.split("ul.comissao>li{")[1].split("}")[0]

@@ -101,10 +101,69 @@ urlpatterns = [
         views.auditoria_da_comissao,
         name="auditoria-comissao",
     ),
+    # A execução do trabalho (012). O segmento é `distribuicao`, e não `etapas`, pela restrição
+    # de vocabulário que a 011 fixou: `etapa` já significa "passo do compositor" em `compor/`.
+    path(
+        "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>",
+        views.distribuicao,
+        name="distribuicao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/remover",
+        views.remover_atribuicao,
+        name="distribuicao-remover",
+    ),
+    path(
+        "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/impedimentos",
+        views.impedimentos,
+        name="impedimentos",
+    ),
+    path(
+        "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/reabrir",
+        views.reabrir_avaliacao,
+        name="reabrir-avaliacao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/trilha",
+        views.trilha_da_avaliacao,
+        name="trilha-da-avaliacao",
+    ),
+    # A preservação de FR-094 só é preservação se for consultável (FR-091). A porta é a mesma da
+    # trilha — presidência ou auditoria —, porque são os dois que respondem a recurso.
+    path(
+        "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/conclusoes",
+        views.conclusoes_preservadas,
+        name="conclusoes-preservadas",
+    ),
     path("minhas-etapas", views.minhas_etapas, name="minhas-etapas"),
+    # A inscrição como instrumento de trabalho, sob a Mesa que a autoriza (012, US3). O caminho
+    # pende de `minhas-etapas` porque é dali que ele é alcançado, e porque a autorização é a
+    # mesma: a Etapa pela alocação, a inscrição pela Atribuição.
+    path(
+        "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>",
+        views.inscricao_da_mesa,
+        name="mesa-inscricao",
+    ),
+    path(
+        "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>/avaliacao",
+        views.avaliacao_gravar,
+        name="mesa-avaliacao-gravar",
+    ),
+    path(
+        "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>"
+        "/avaliacao/concluir",
+        views.avaliacao_concluir,
+        name="mesa-avaliacao-concluir",
+    ),
+    path(
+        "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>"
+        "/documentos/<uuid:requirement_id>",
+        views.documento_da_mesa,
+        name="mesa-documento",
+    ),
     path(
         "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>",
-        views.atribuicao,
-        name="atribuicao",
+        views.minha_etapa,
+        name="minha-etapa",
     ),
 ]

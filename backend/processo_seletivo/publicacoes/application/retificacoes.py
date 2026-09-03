@@ -31,6 +31,7 @@ from processo_seletivo.publicacoes.domain.conflicts import (
     duplicate_keys,
 )
 from processo_seletivo.publicacoes.domain.consolidation import consolidate
+from processo_seletivo.publicacoes.domain.elevacao import elevar, elevar_alteracoes
 from processo_seletivo.publicacoes.infrastructure.pdf import (
     AutoridadeSignataria,
     render_edital_pdf,
@@ -65,15 +66,23 @@ def _retificacao(actor, retificacao_id):
 
 
 def _changes_payload(retificacao):
-    return [
-        {
-            "targetPath": item.target_path,
-            "operation": item.operation,
-            "newValue": item.new_value,
-            "expectedPreviousHash": item.expected_previous_hash,
-        }
-        for item in retificacao.alteracoes.all()
-    ]
+    """As Alterações gravadas, na forma canônica vigente.
+
+    **Único lugar que carrega alteração do banco**, e é chamado tanto por `_acts` — a consolidação
+    — quanto pela publicação. Elevar aqui cobre as duas de uma vez, e é o que impede que um ato v4
+    que acrescentou Etapa reintroduza essa Etapa fora de forma quando for reaplicado (012, T-001).
+    """
+    return elevar_alteracoes(
+        [
+            {
+                "targetPath": item.target_path,
+                "operation": item.operation,
+                "newValue": item.new_value,
+                "expectedPreviousHash": item.expected_previous_hash,
+            }
+            for item in retificacao.alteracoes.all()
+        ]
+    )
 
 
 # Endereçar por posição só faz sentido recusar na elaboração: impede o ato instável de nascer,
@@ -247,8 +256,10 @@ def create_retification(*, actor, edital_id, data, idempotency_key, correlation_
             created_by=actor.subject,
             created_at=now,
         )
-        _apply_declared_changes(base.content, data["changes"])
-        _replace_changes(retificacao, data["changes"], base.content)
+        alteracoes = elevar_alteracoes(data["changes"])
+        conteudo = conteudo_base(base)
+        _apply_declared_changes(conteudo, alteracoes)
+        _replace_changes(retificacao, alteracoes, conteudo)
         record_event(
             actor=actor,
             permission="retificacao:elaborar",
@@ -278,7 +289,9 @@ def edit_retification(*, actor, retificacao_id, expected_revision, data):
                 )
             except VersaoConsolidada.DoesNotExist as exc:
                 raise DomainError("not_found", "Recurso não encontrado.", 404) from exc
-        _apply_declared_changes(base.content, data["changes"])
+        alteracoes = elevar_alteracoes(data["changes"])
+        conteudo = conteudo_base(base)
+        _apply_declared_changes(conteudo, alteracoes)
         compare_and_swap(
             Retificacao.objects,
             pk=item.pk,
@@ -287,7 +300,7 @@ def edit_retification(*, actor, retificacao_id, expected_revision, data):
             justification=data["justification"],
             effective_at=data.get("effectiveAt"),
         )
-        _replace_changes(item, data["changes"], base.content)
+        _replace_changes(item, alteracoes, conteudo)
         item.refresh_from_db()
         return item
 
@@ -373,6 +386,19 @@ def transition_retification(
         return item, 200
 
 
+def conteudo_base(versao):
+    """O conteúdo de uma Versão Consolidada, na forma vigente, **para compor ou consolidar**.
+
+    A porta única por onde conteúdo entra no fluxo de Retificação. A linha gravada não muda: a
+    elevação é leitura, e o que ela produz vai para uma Versão Consolidada nova, que é artefato
+    novo com hash próprio (012, D-002, T-001).
+
+    Fora deste fluxo ninguém chama isto: a consulta pública e o documento de uma Publicação já
+    existente servem o conteúdo literal, que é o que o `content_hash` cobre (T-002).
+    """
+    return elevar(versao.content)
+
+
 def _original_version(edital):
     return (
         VersaoConsolidada.objects.filter(edital=edital, source_publication__revisao__isnull=False)
@@ -432,7 +458,7 @@ def _content_in_force(edital, moment):
     applicable = [
         item for item in _published_retifications(edital) if item.publication.effective_at <= moment
     ]
-    content, _ = _consolidate(_original_version(edital).content, _acts(applicable))
+    content, _ = _consolidate(conteudo_base(_original_version(edital)), _acts(applicable))
     return content
 
 
@@ -457,8 +483,9 @@ def _assert_effective_change(edital, retificacao, effective_at, publication_orde
         "publicationId": "pending",
         "changes": _changes_payload(retificacao),
     }
-    antes, _ = _consolidate(original.content, in_force)
-    depois, _ = _consolidate(original.content, [*in_force, pendente])
+    conteudo = conteudo_base(original)
+    antes, _ = _consolidate(conteudo, in_force)
+    depois, _ = _consolidate(conteudo, [*in_force, pendente])
     if canonical_sha256(antes) == canonical_sha256(depois):
         raise _no_effective_change()
 
@@ -522,7 +549,7 @@ def _materialize_affected_versions(retificacao, publication, now):
     for boundary in boundaries:
         applicable = [item for item in published if item.publication.effective_at <= boundary]
         acts = _acts(applicable)
-        content, provenance = _consolidate(original.content, acts)
+        content, provenance = _consolidate(conteudo_base(original), acts)
         _assert_structurally_publishable(content, boundary)
         version = VersaoConsolidada.objects.create(
             edital=retificacao.edital,
@@ -573,12 +600,16 @@ def publish_retification(
         # Antes de aplicar: o conteúdo-base é o que a Publicação vai carimbar com a constante
         # global, e carimbá-la sobre conteúdo de outra versão canônica seria registrar uma
         # afirmação falsa.
-        _assert_versao_canonica(item.base_snapshot.content, "O conteúdo-base desta Retificação")
+        # Elevado antes de qualquer uso: a comparação de versão, as precondições e a aplicação
+        # falam do mesmo conteúdo, e é isso que impede uma `Publicacao` carimbada v5 de carregar
+        # Etapa em forma v4 (012, T-001).
+        base_publicacao = conteudo_base(item.base_snapshot)
+        _assert_versao_canonica(base_publicacao, "O conteúdo-base desta Retificação")
         changes = _changes_payload(item)
         _reject_changes_without_content_precondition(changes)
         _reject_stale_changes(_content_in_force(edital, effective_at), changes)
         _assert_effective_change(edital, item, effective_at, edital.next_publication_order)
-        content, _ = apply_changes(item.base_snapshot.content, changes, publication_id="pending")
+        content, _ = apply_changes(base_publicacao, changes, publication_id="pending")
         canonical = canonical_bytes(content)
         # O documento consolidado usa a mesma composição e a autoridade da própria Publicação
         # da Retificação (`008`, FR-043).

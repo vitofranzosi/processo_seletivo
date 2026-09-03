@@ -1,0 +1,333 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Distribuir — {{ etapa.name }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
+  <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> ›
+  <span aria-current="page">{{ etapa.name }}</span>
+</nav>
+
+<h1>{{ etapa.name }}</h1>
+<p class="sub">Edital {{ edital.number }}/{{ edital.year }} — {{ processo.title }}</p>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
+
+{% comment %}
+FR-097: o resultado do lote é declarado, e não inferido. Sucesso parcial que não se anuncia vira
+surpresa administrativa — quem distribuiu precisa saber o que ficou de fora sem conferir mil linhas.
+{% endcomment %}
+{% if resultado %}
+{% comment %}
+Lote inteiramente recusado é **recusa**, e não sucesso parcial: anunciá-lo em verde diz o contrário
+do que aconteceu. E os motivos vêm agrupados — um envio de 25 inscrições para 3 pessoas repetia a
+mesma frase 75 vezes, uma por par, o que enterra a informação em vez de dá-la.
+{% endcomment %}
+<div class="{% if resultado.feitas %}sucesso{% else %}erro{% endif %}" role="status" tabindex="-1">
+  <p><strong>{{ resultado.feitas }}</strong> {{ resultado.verbo }}{{ resultado.feitas|pluralize:"s" }}{% if resultado.recusadas %}, <strong>{{ resultado.recusadas }}</strong> recusada{{ resultado.recusadas|pluralize:"s" }}{% endif %}.</p>
+  {% if resultado.agrupados %}
+  <ul class="motivos">
+    {% for grupo in resultado.agrupados %}
+    <li><strong>{{ grupo.quantas }}</strong> — {{ grupo.motivo }}
+      <span class="ajuda">{{ grupo.exemplos }}</span></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endif %}
+
+{% comment %}
+O que falta, antes do detalhe (FR-014). É a resposta que esta tela existe para dar.
+
+Os números **são o filtro**: "3 sem avaliador suficiente" é onde a presidência quer chegar, e ler o
+número num cartão para depois procurá-lo num `select` é pedir duas vezes a mesma coisa. Quantas
+avaliações a Etapa declara não é contagem que se filtra — é propriedade do Edital, e mora na ficha.
+{% endcomment %}
+<dl class="ficha">
+  <div><dt>Avaliações por inscrição</dt><dd class="destaque">{{ resumo.previstas }}</dd></div>
+  <div><dt>Inscrições submetidas</dt><dd>{{ resumo.inscricoes }}</dd></div>
+</dl>
+
+<nav class="filtros-da-mesa" aria-label="Filtrar por cobertura">
+  <a href="?" {% if not cobertura %}aria-current="page"{% endif %}>
+    <strong>{{ resumo.inscricoes }}</strong> <span>todas</span></a>
+  <a href="?cobertura=sem_nenhum" {% if cobertura == "sem_nenhum" %}aria-current="page"{% endif %}>
+    <strong>{{ resumo.sem_nenhum }}</strong> <span>sem nenhum avaliador</span></a>
+  <a href="?cobertura=incompleta" {% if cobertura == "incompleta" %}aria-current="page"{% endif %}>
+    <strong>{{ resumo.carentes }}</strong> <span>sem avaliador suficiente</span></a>
+  <a href="?cobertura=avaliacao_pendente" {% if cobertura == "avaliacao_pendente" %}aria-current="page"{% endif %}>
+    <strong>{{ resumo.sem_conclusao }}</strong> <span>com avaliação pendente</span></a>
+</nav>
+
+<section aria-labelledby="carga">
+  <h2 id="carga">Quem está alocado</h2>
+  {% if carga %}
+  {% comment %} Três colunas não precisam da página inteira. {% endcomment %}
+  <div class="tabela-rolavel tabela-estreita">
+  <table class="tabela">
+    <caption class="oculto">Carga por avaliador nesta Etapa</caption>
+    <thead><tr><th scope="col">Avaliador</th><th scope="col" class="numero">Atribuídas</th><th scope="col" class="numero">Concluídas</th></tr></thead>
+    <tbody>
+      {% for linha in carga %}
+      <tr>
+        <td>{{ linha.membro.display_label|default:linha.membro.identity_subject }}</td>
+        <td class="numero">{{ linha.atribuidas }}</td>
+        <td class="numero">{{ linha.concluidas }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="vazio">Ninguém está alocado nesta Etapa ainda.
+    <a href="{% url 'interface:alocacoes' processo.id %}">Alocar a comissão</a></p>
+  {% endif %}
+</section>
+
+<p class="acoes-do-painel">
+  <a class="acao" href="{% url 'interface:impedimentos' edital.id etapa.id %}">Impedimentos</a>
+  <a class="acao" href="{% url 'interface:trilha-da-avaliacao' edital.id etapa.id %}">Trilha</a>
+</p>
+
+{% if orfas %}
+<section aria-labelledby="orfas">
+  <h2 id="orfas">Atribuições órfãs</h2>
+  {% comment %}
+  EC-003: quem perdeu a alocação continua com as atribuições **ativas e inertes** — a revogação é
+  computada, e as linhas não somem. Elas precisam ser vistas para serem redistribuídas: é a
+  diferença entre "o acesso acabou" e "o trabalho desapareceu".
+  {% endcomment %}
+  <p class="aviso" role="status">Estas pessoas já não estão alocadas nesta Etapa. Devolva a
+    alocação ou redistribua as inscrições.</p>
+  <ul>
+    {% for orfa in orfas %}
+    <li>{{ orfa.membro.display_label|default:orfa.membro.identity_subject }} — inscrição {{ orfa.inscricao.protocolo|default:orfa.inscricao.id }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% comment %}
+A reabertura **não mora aqui**. Ela morava, com uma linha e um formulário por avaliação concluída,
+e sem paginar: na metade de uma Etapa de 600 inscritos com dupla avaliação eram 601 formulários
+empilhados acima da área de trabalho — 679 KB e setenta mil pixels de altura, medidos. A tela que a
+presidência mais recarrega crescia com o trabalho já feito.
+
+Ela agora mora onde já se olha uma conclusão para decidir sobre ela: a página das conclusões
+preservadas, que é paginada, filtrável e mostra pontuação, parecer, versão e instante (FR-091).
+{% endcomment %}
+<p class="ajuda">Para reabrir uma avaliação concluída, com motivo registrado, vá a
+  <a href="{% url 'interface:conclusoes-preservadas' edital.id etapa.id %}">conclusões
+  preservadas</a> — é lá que se vê o que foi concluído antes de decidir sobre aquilo.</p>
+
+{% comment %}
+FR-107: o sistema **propõe**, a presidência confirma. A proposta não grava nada; o que ela mostra é
+o que vai acontecer, pessoa por pessoa, e o ato registrado é o da confirmação. O caminho manual,
+abaixo, continua existindo inteiro — quem quer escolher inscrição por inscrição escolhe.
+{% endcomment %}
+<section aria-labelledby="rodizio">
+  <h2 id="rodizio">Distribuir o que falta</h2>
+  {% if proposta %}
+  <div class="aviso" role="status" tabindex="-1" autofocus>
+    <p><strong>{{ proposta.total }}</strong> atribuiç{{ proposta.total|pluralize:"ão,ões" }} em
+      <strong>{{ proposta.inscricoes }}</strong> inscriç{{ proposta.inscricoes|pluralize:"ão,ões" }},
+      distribuídas por menor carga. Confira antes de confirmar — nada foi gravado ainda.</p>
+    <div class="tabela-rolavel">
+    <table class="tabela">
+      <caption class="oculto">Quanto cada pessoa recebe nesta proposta</caption>
+      <thead><tr><th scope="col">Avaliador</th><th scope="col">Tem hoje</th><th scope="col">Recebe</th><th scope="col">Fica com</th></tr></thead>
+      <tbody>
+        {% for linha in proposta.por_pessoa %}
+        <tr>
+          <td>{{ linha.membro.display_label|default:linha.membro.identity_subject }}</td>
+          <td>{{ linha.antes }}</td>
+          <td>+{{ linha.recebe }}</td>
+          <td>{{ linha.depois }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% if proposta.fora %}
+    <p><strong>{{ proposta.fora|length }}</strong> inscriç{{ proposta.fora|length|pluralize:"ão,ões" }}
+      não fica{{ proposta.fora|length|pluralize:"m" }} completa{{ proposta.fora|length|pluralize:"s" }}:</p>
+    <ul class="motivos">
+      {% for item in proposta.fora|slice:":10" %}
+      <li>inscrição {{ item.inscricao }} — faltam {{ item.faltam }}: {{ item.motivo }}</li>
+      {% endfor %}
+      {% if proposta.fora|length > 10 %}<li>… e mais {{ proposta.fora|length|add:"-10" }}.</li>{% endif %}
+    </ul>
+    {% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="acao" value="confirmar_rodizio">
+      <input type="hidden" name="chave_idempotencia" value="{{ chave_rodizio }}">
+      <input type="hidden" name="assinatura" value="{{ proposta.assinatura }}">
+      {% for id in proposta.membro_ids %}<input type="hidden" name="membro_id" value="{{ id }}">{% endfor %}
+      <p class="acoes">
+        <button type="submit" class="botao">Confirmar esta distribuição</button>
+        <a class="acao" href="{% url 'interface:distribuicao' edital.id etapa.id %}">Cancelar</a>
+      </p>
+    </form>
+  </div>
+  {% else %}
+  <p class="ajuda">O sistema propõe uma distribuição entre quem você escolher, equilibrando a carga
+    de cada um, e mostra a proposta inteira antes de gravar. A decisão continua sendo sua: nada
+    acontece sem a sua confirmação.</p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="acao" value="propor">
+    {% comment %} Em colunas, como o "Retirar atribuições" abaixo: são tantas caixas quanto há
+       gente alocada, e uma banca de dez virava uma coluna de vinte linhas — com a carga de cada
+       um numa linha própria, longe do nome a que pertence. {% endcomment %}
+    <fieldset class="em-colunas">
+      <legend>Entre quem distribuir</legend>
+      {% for linha in carga %}
+      <label for="rodizio-{{ linha.membro.id }}">
+        <input type="checkbox" id="rodizio-{{ linha.membro.id }}" name="membro_id" value="{{ linha.membro.id }}">
+        {{ linha.membro.display_label|default:linha.membro.identity_subject }}
+        <span class="ajuda">{{ linha.atribuidas }} hoje</span>
+      </label>
+      {% endfor %}
+    </fieldset>
+    <p class="acoes"><button type="submit" class="botao">Propor distribuição</button></p>
+  </form>
+  {% endif %}
+</section>
+
+<section aria-labelledby="inscricoes">
+  <h2 id="inscricoes">Inscrições, uma a uma</h2>
+
+  <form method="get" class="filtros" role="search">
+    <p class="campo">
+      <label for="cobertura">Cobertura</label>
+      <select id="cobertura" name="cobertura">
+        <option value="">Todas</option>
+        <option value="sem_nenhum" {% if cobertura == "sem_nenhum" %}selected{% endif %}>Sem nenhum avaliador</option>
+        <option value="incompleta" {% if cobertura == "incompleta" %}selected{% endif %}>Sem avaliador suficiente</option>
+        <option value="completa" {% if cobertura == "completa" %}selected{% endif %}>Completas</option>
+        {% comment %}
+        Este é sobre **progresso**, e não sobre cobertura: ter avaliador não é ter avaliação, e
+        “o que ainda falta avaliar” era a pergunta da véspera do resultado que a tela não respondia.
+        {% endcomment %}
+        <option value="avaliacao_pendente" {% if cobertura == "avaliacao_pendente" %}selected{% endif %}>Com avaliação pendente</option>
+      </select>
+    </p>
+    <p class="campo">
+      <label for="avaliador">Avaliador</label>
+      <input type="search" id="avaliador" name="avaliador" value="{{ avaliador }}"
+             aria-describedby="ajuda-avaliador">
+      <span class="ajuda" id="ajuda-avaliador">Identificador institucional, exato.</span>
+    </p>
+    <p class="acoes"><button type="submit" class="acao">Filtrar</button></p>
+  </form>
+
+  {% if linhas %}
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="acao" value="distribuir">
+    <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+
+    <fieldset class="em-colunas">
+      <legend>Para quem</legend>
+      {% for linha in carga %}
+      <label for="membro-{{ linha.membro.id }}">
+        <input type="checkbox" id="membro-{{ linha.membro.id }}" name="membro_id" value="{{ linha.membro.id }}">
+        {{ linha.membro.display_label|default:linha.membro.identity_subject }}
+      </label>
+      {% endfor %}
+    </fieldset>
+
+    <div class="tabela-rolavel">
+  <table class="tabela" data-selecionavel>
+      <caption class="oculto">Inscrições submetidas desta Etapa</caption>
+      <thead>
+        <tr>
+          <th scope="col"><span class="oculto">Selecionar</span></th>
+          <th scope="col">Inscrição</th>
+          <th scope="col">Atribuídas</th>
+          <th scope="col">Concluídas</th>
+          <th scope="col">Quem avalia</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for linha in linhas %}
+        <tr>
+          <td>
+            <input type="checkbox" name="inscricao_id" value="{{ linha.inscricao.id }}"
+                   id="inscricao-{{ linha.inscricao.id }}"
+                   aria-label="Inscrição {{ linha.inscricao.protocolo|default:linha.inscricao.id }}">
+          </td>
+          <td><label for="inscricao-{{ linha.inscricao.id }}">{{ linha.inscricao.protocolo|default:linha.inscricao.id }}</label></td>
+          <td>{{ linha.atribuidas }} de {{ resumo.previstas }}{% if linha.faltam %} — faltam {{ linha.faltam }}{% endif %}</td>
+          <td>{{ linha.concluidas }} de {{ resumo.previstas }}</td>
+          <td>
+            {% for atribuicao in linha.atribuicoes %}
+            <span class="quem">{{ atribuicao.membro.display_label|default:atribuicao.membro.identity_subject }}</span>{% if not forloop.last %}, {% endif %}
+            {% empty %}—
+            {% endfor %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+    <p class="acoes"><button type="submit" class="botao">Distribuir as selecionadas</button></p>
+  </form>
+
+  {% comment %}
+  Formulário próprio, e rota própria: `acao` decidindo entre criar e remover no mesmo envio foi
+  como a 011 descobriu que ramo irmão decide sozinho, e aqui o custo do engano seria retirar
+  trabalho de alguém. A via comum alcança apenas quem ainda não concluiu (FR-092).
+  {% endcomment %}
+  {% if tem_atribuicoes %}
+  <form method="post" action="{% url 'interface:distribuicao-remover' edital.id etapa.id %}">
+    {% csrf_token %}
+    <input type="hidden" name="chave_idempotencia" value="{{ chave_remocao }}">
+    <fieldset class="em-colunas">
+      {% comment %}
+      Em colunas: são duas por inscrição, e uma página de 25 inscrições dava 48 caixas empilhadas —
+      mil e seiscentos pixels de altura para uma escolha que quase sempre é de uma linha só.
+      {% endcomment %}
+      <legend>Retirar atribuições</legend>
+      {% for linha in linhas %}
+        {% for atribuicao in linha.atribuicoes %}
+        <label for="atribuicao-{{ atribuicao.id }}">
+          <input type="checkbox" id="atribuicao-{{ atribuicao.id }}" name="atribuicao_id" value="{{ atribuicao.id }}">
+          {{ atribuicao.membro.display_label|default:atribuicao.membro.identity_subject }} — inscrição {{ linha.inscricao.protocolo|default:linha.inscricao.id }}
+        </label>
+        {% endfor %}
+      {% endfor %}
+    </fieldset>
+    <p class="acoes"><button type="submit" class="acao perigoso">Retirar as selecionadas</button></p>
+  </form>
+  {% endif %}
+
+  {% comment %}
+  Mil inscrições não cabem numa tela (FR-049). A paginação preserva o filtro, senão avançar de
+  página desfaria a pergunta que trouxe a pessoa até aqui.
+  {% endcomment %}
+  {% if pagina.has_other_pages %}
+  <nav class="paginacao" aria-label="Páginas de inscrições">
+    {% if pagina.has_previous %}
+    <a href="?pagina={{ pagina.previous_page_number }}{% if cobertura %}&cobertura={{ cobertura }}{% endif %}{% if avaliador %}&avaliador={{ avaliador }}{% endif %}">Anterior</a>
+    {% endif %}
+    <span aria-current="page">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    {% if pagina.has_next %}
+    <a href="?pagina={{ pagina.next_page_number }}{% if cobertura %}&cobertura={{ cobertura }}{% endif %}{% if avaliador %}&avaliador={{ avaliador }}{% endif %}">Próxima</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <p class="vazio">Nenhuma inscrição submetida corresponde a este filtro.</p>
+  {% endif %}
+</section>
+{% comment %}
+A caixa de "selecionar todas desta página" é criada pelo script, e não pelo template: sem
+JavaScript ela não aparece, e as marcações individuais continuam sendo o caminho — controle que
+existe no HTML e só funciona com script promete o que não cumpre.
+{% endcomment %}
+{% load static %}<script src="{% static 'interface/selecao.js' %}" defer></script>
+{% endblock %}

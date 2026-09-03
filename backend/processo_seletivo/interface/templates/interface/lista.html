@@ -10,8 +10,12 @@ manualmente e não vem do diretório institucional. Esta interface não pode ser
 antes da autenticação real.</p>
 {% endif %}
 
+{% comment %}
+Integrar uma comissão é **fato**, e não conquista: a faixa verde de sucesso dizia "deu certo" toda
+vez que a pessoa abria a lista de Processos. É orientação, e o que ela carrega de útil é o caminho.
+{% endcomment %}
 {% if vinculos %}
-<p class="sucesso" role="status">Você integra a comissão de
+<p class="ajuda">Você integra a comissão de
   {{ vinculos|length }} Processo{{ vinculos|length|pluralize:"s" }}.
   <a href="{% url 'interface:minhas-etapas' %}">Ver minhas atribuições</a>.</p>
 {% endif %}
@@ -32,24 +36,36 @@ responsabilidade. Solicite acesso a quem administra o sistema no Cefor.</p>
   {% for situacao_valor, quantidade in resumo %}
   <li><strong>{{ quantidade }}</strong>{{ situacao_valor|situacao }}</li>
   {% endfor %}
-  <li><strong>{{ total_editais }}</strong>no total</li>
+  {% comment %} "5 Publicado, 2 Cancelado, 7 no total" — de quê? A página se chama Processos
+     Seletivos e lista Processos; quem conta são os Editais dentro deles. O nome acessível já
+     dizia; quem vê a tela é que ficava sem saber. {% endcomment %}
+  <li><strong>{{ total_editais }}</strong>Editais no total</li>
 </ul>
 {% endif %}
 
 {% for processo in processos %}
 <article class="processo">
+  {% comment %}
+  Quem é, como está, e o que se faz nele — nesta ordem, e em dois grupos. Os seis itens saíam numa
+  fileira só, e o estado do Processo caía **depois** dos botões, no extremo oposto do título que
+  ele qualifica: para saber se aquele Processo está em elaboração era preciso atravessar as ações.
+  {% endcomment %}
   <header>
-    <h2><a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.title }}</a></h2>
-    <span class="codigo">{{ processo.institutional_code }}</span>
-    {% if processo.vinculo %}
-    <span class="situacao s-{{ processo.vinculo.funcao }}">
-      {% if processo.vinculo.funcao == "PRESIDENTE" %}Você preside a comissão{% else %}Você integra a comissão{% endif %}</span>
-    {% endif %}
+    <span class="quem-e">
+      <h2><a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.title }}</a></h2>
+      <span class="codigo">{{ processo.institutional_code }}</span>
+      <span class="situacao s-{{ processo.status }}">{{ processo.status|situacao }}</span>
+      {% if processo.vinculo %}
+      <span class="situacao s-{{ processo.vinculo.funcao }}">
+        {% if processo.vinculo.funcao == "PRESIDENTE" %}Você preside a comissão{% else %}Você integra a comissão{% endif %}</span>
+      {% endif %}
+    </span>
     {% if processo.pode_gerir %}
-    <a class="acao" href="{% url 'interface:comissao' processo.id %}">Comissão</a>
-    <a class="acao" href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a>
+    <span class="acoes">
+      <a class="acao" href="{% url 'interface:comissao' processo.id %}">Comissão</a>
+      <a class="acao" href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a>
+    </span>
     {% endif %}
-    <span class="situacao s-{{ processo.status }}">{{ processo.status|situacao }}</span>
   </header>
   {% if processo.editais.all %}
   <table>
@@ -71,7 +87,9 @@ responsabilidade. Solicite acesso a quem administra o sistema no Cefor.</p>
         <td>
           {% if edital.acoes %}
           <div class="acoes">
-            {% for acao in edital.acoes %}{% if acao.disponivel %}<a class="acao" href="{{ acao.url }}">{{ acao.rotulo }}</a>{% else %}<span class="acao desabilitado">{{ acao.rotulo }}</span>{% endif %}{% endfor %}
+            {% comment %} A mesma advertência que `detalhe.html` já dá: "Cancelar" e "Encerrar" interrompem
+            o Edital, e aqui saíam com o desenho de "Retificar". O estilo é o que a própria ação declara. {% endcomment %}
+            {% for acao in edital.acoes %}{% if acao.disponivel %}<a class="acao{% if acao.estilo == 'perigoso' %} perigoso{% endif %}" href="{{ acao.url }}">{{ acao.rotulo }}</a>{% else %}<span class="acao desabilitado">{{ acao.rotulo }}</span>{% endif %}{% endfor %}
           </div>
           {% else %}
           <span class="nenhuma">Nenhuma ação disponível para seus papéis</span>
@@ -82,7 +100,7 @@ responsabilidade. Solicite acesso a quem administra o sistema no Cefor.</p>
     </tbody>
   </table>
   {% else %}
-  <p style="padding:1rem 1.25rem;color:var(--texto-fraco)">Nenhum Edital neste Processo.</p>
+  <p class="sem-edital">Nenhum Edital neste Processo.</p>
   {% endif %}
 </article>
 {% empty %}

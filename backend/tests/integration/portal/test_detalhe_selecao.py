@@ -1,5 +1,7 @@
 """A página que responde "essa oportunidade serve para mim?" (US1, FR-014, FR-011)."""
 
+import re
+
 import pytest
 from django.urls import reverse
 
@@ -124,7 +126,10 @@ def test_os_documentos_exigidos_aparecem_antes_da_identificacao(
 
     corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
 
-    assert "Documentos que serão pedidos" in corpo
+    # O resumo conta quantos são: um triângulo com “Documentos que serão pedidos” parece enfeite,
+    # e a contagem é o que decide se dá para se inscrever agora ou se é preciso preparar.
+    assert "documentos que serão pedidos" in corpo
+    assert re.search(r"<summary>\s*\d+ documentos? que ser", corpo), corpo[:0]
     assert "Documento de identificação" in corpo, "o que vale para todo mundo"
     assert "Diploma de graduação" in corpo, "o que vale para o Perfil"
     assert "Se concorrer em" in corpo, "e o que a modalidade reservada acrescenta"
@@ -141,3 +146,58 @@ def test_o_cartao_da_vitrine_e_alvo_inteiro(client, api_client, manager_headers,
 
     assert '.selecao a.titulo::after{content:"";position:absolute;inset:0}' in corpo
     assert ".selecao:focus-within{outline:" in corpo, "o teclado continua vendo o foco"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_requisito_vem_antes_do_botao_de_inscrever(
+    client, api_client, manager_headers, process_payload
+):
+    """A ordem do cartão é a ordem da decisão.
+
+    Ele dizia nome → dados → INSCREVER-SE → documentos → requisitos: as duas informações com que a
+    pessoa decide — “tenho o título?” e “tenho os arquivos?” — vinham depois do botão que pede a
+    decisão. Quem lê de cima para baixo era convidado a se inscrever antes de saber se podia.
+    """
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from tests.fixtures.selecao import rascunho_aberto_com_documentos
+
+    edital = publicar_selecao(
+        api_client,
+        manager_headers,
+        process_payload,
+        rascunho=rascunho_aberto_com_documentos(timezone.now() - timedelta(seconds=1)),
+    )
+
+    corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
+
+    requisitos = corpo.index("Requisitos")
+    documentos = corpo.index("que serão pedidos")
+    botao = corpo.index("Inscrever-se nesta vaga")
+
+    assert requisitos < botao, "o requisito é o primeiro filtro que a pessoa aplica"
+    assert documentos < botao, "e saber o que preparar decide se dá para começar agora"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_cartao_da_vaga_nao_empilha_um_dado_por_linha(
+    client, api_client, manager_headers, process_payload
+):
+    """Localidade e concorrência viram uma linha de dados, e não pares empilhados.
+
+    Em 375 px eram seis linhas para três informações, e o cartão inteiro ocupava mais da metade da
+    tela — com dois perfis, a página passava de mil e quatrocentos pixels.
+    """
+    edital = publicar_selecao(api_client, manager_headers, process_payload)
+
+    corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
+
+    assert 'class="dados-vaga"' in corpo
+    assert "<dt>Localidade</dt>" not in corpo
+    assert "<dt>Vagas imediatas</dt>" not in corpo
+    # O número de vagas continua sendo o dado em destaque, agora ao lado da ação.
+    assert 'class="vagas-numero"' in corpo

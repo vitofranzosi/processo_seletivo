@@ -1,0 +1,250 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Inscrição {{ inscricao.protocolo|default:inscricao.id }}{% endblock %}
+{% block conteudo %}
+<div class="pagina-da-inscricao">
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:minhas-etapas' %}">Minhas Etapas</a> ›
+  <a href="{% url 'interface:minha-etapa' edital.id etapa_id %}">Minha Mesa</a> ›
+  <span aria-current="page">Inscrição {{ inscricao.protocolo|default:inscricao.id }}</span>
+</nav>
+
+<h1>Inscrição {{ inscricao.protocolo|default:inscricao.id }}</h1>
+<p class="sub">Edital {{ edital.number }}/{{ edital.year }} — {{ processo.title }}</p>
+
+<div class="mesa-trabalho">
+
+{% comment %}
+**Ler e registrar na mesma tela.** O documento abria por cima da página, e ler e avaliar eram duas
+telas que se revezavam — com o formulário preenchido correndo o risco de se perder no caminho.
+
+O painel vem **antes** no DOM de propósito: em tela larga ele fica à esquerda, e assim a ordem de
+tabulação acompanha a ordem visual. Enquanto nada foi aberto ele está `hidden`, e leitor de tela
+nenhum o encontra.
+
+**A abertura continua sendo um ato.** Nada é carregado sozinho: quem abre um documento clica nele,
+e é esse clique que a trilha registra, com o mesmo significado de antes (FR-027, FR-053). Embutir o
+arquivo automaticamente faria "abriu o documento" virar "abriu a inscrição" — o mesmo evento
+dizendo outra coisa.
+{% endcomment %}
+<aside class="painel-documento" id="painel-documento" hidden>
+  {% comment %}
+  A barra do painel tem a **mesma altura e o mesmo desenho** da ficha do candidato, do outro lado:
+  as duas colunas começavam em alturas diferentes — um título solto à esquerda, um cartão com borda
+  e respiro à direita — e o desalinhamento aparecia em toda inscrição. Alinhar por construção é
+  mais firme do que acertar margens uma a uma.
+  {% endcomment %}
+  <div class="barra-do-painel">
+    <h2 id="painel-documento-titulo" tabindex="-1">Documento</h2>
+  </div>
+  <iframe id="painel-documento-quadro" title="Documento do candidato" src="about:blank"></iframe>
+</aside>
+
+<div class="painel-avaliacao">
+
+{% comment %}
+FR-030: o necessário ao trabalho, e nada além. E-mail e telefone ficam de fora porque não decidem
+avaliação nenhuma. O nome **fica**: avaliação cega está fora do escopo desta feature, e esconder
+metade da identidade produziria a meia anonimização que é pior que nenhuma.
+{% endcomment %}
+<dl class="ficha">
+  <div><dt>Candidato</dt><dd class="destaque">{{ inscricao.nome }}</dd></div>
+  <div><dt>CPF</dt><dd>{{ cpf }}</dd></div>
+  <div><dt>Perfil</dt><dd>{% if perfil %}{{ perfil }}{% if modalidade %} — {{ modalidade }}{% endif %}{% else %}<span class="ausente">não informado</span>{% endif %}</dd></div>
+</dl>
+
+<section aria-labelledby="documentos">
+  <h2 id="documentos">Documentos apresentados</h2>
+
+  {% comment %}
+  **Abertos, e não avaliados.** A Avaliação é uma só por inscrição — nota e parecer sobre o
+  conjunto —, e não há veredito por documento a exibir: marcar "avaliado" em cada um inventaria um
+  julgamento que o domínio não tem, e transformaria a leitura numa lista de conferência.
+
+  O que existe, e resolve a mesma dificuldade, é **o que já foi aberto**: com dez documentos
+  exigidos, "onde eu parei" deixa de ser pergunta que se responde olhando. Cada abertura já está na
+  trilha, com o requisito no motivo (FR-027) — a tela só mostra o que já está registrado.
+  {% endcomment %}
+  {% if documentos_entregues > 1 %}
+  <p class="ajuda">{{ documentos_abertos }} de {{ documentos_entregues }} abertos por você.</p>
+  {% endif %}
+
+  {% comment %}
+  A lista é a dos **requisitos**, e o arquivo aparece dentro do seu (FR-025). É a diferença entre
+  este sistema e uma pasta compartilhada: requisito sem arquivo aparece como requisito sem
+  arquivo, que é informação para quem avalia — e não uma linha que some.
+  {% endcomment %}
+  <ul class="documentos">
+    {% for documento in documentos %}
+    <li>
+      <span class="requisito">{{ documento.nome }}</span>
+      <span class="celula-marca">{% if documento.obrigatorio %}<span class="marca">obrigatório</span>{% endif %}</span>
+      {% if documento.enviado %}
+      {% comment %}
+      **Aba própria, e não a mesma.** O PDF é servido `inline`, então abrir na mesma aba substitui
+      a página — e quem já tinha digitado a nota para conferir uma última coisa no documento sai
+      daqui com o formulário preenchido e não salvo. Não é lentidão: é trabalho que se perde. E são
+      dois cliques por documento — abrir e voltar — cobrados uma vez por inscrição.
+      {% endcomment %}
+      {% comment %}
+      O rótulo não anuncia "nova aba" porque nem sempre é: em tela larga o documento abre no painel
+      ao lado, e prometer aba nova ali seria descrever o que não acontece. `target` continua como o
+      caminho de quem não tem o painel.
+      {% endcomment %}
+      {% comment %}
+      **O fato, e não o minuto.** Quem avalia dezenas de inscrições por dia pergunta "já vi este?",
+      e a resposta é sim ou não. A hora exata não muda decisão nenhuma: ela é dado de auditoria, e
+      o lugar dela é a trilha — fica no `title`, à mão de quem precisar, fora do caminho de quem
+      não precisa. Impressa na linha, competia em largura com o nome do documento.
+      {% endcomment %}
+      <span class="leitura">{% if documento.aberto_em %}<span class="marca-lida"
+        title="Aberto por você em {{ documento.aberto_em|date:'d/m/Y' }} às {{ documento.aberto_em|date:'H:i' }}">aberto</span>{% endif %}</span>
+      <span class="entrega">
+        <a class="acao" href="{% url 'interface:mesa-documento' edital.id etapa_id inscricao.id documento.id %}"
+           target="_blank" rel="noopener"
+           data-documento="{{ documento.nome }}"
+           {% if forloop.first and not ja_abriu_documento and not aviso and avaliacao.estado != "CONCLUIDA" %}autofocus{% endif %}
+           aria-label="Abrir {{ documento.nome }}">Abrir</a>
+        <span class="tamanho">{{ documento.tamanho }}</span>
+      </span>
+      {% else %}
+      <span class="leitura"></span>
+      <span class="entrega ausente">não apresentado</span>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+
+  {% comment %}
+  FR-028: não existe download em lote, exportação do acervo nem navegação por inscrição alheia.
+  A ausência é o requisito — e é por isso que não há "baixar todos" aqui.
+  {% endcomment %}
+</section>
+
+<section aria-labelledby="avaliacao">
+  <h2 id="avaliacao">Avaliação</h2>
+
+  {% if aviso %}
+  <p class="{% if aviso.tipo == 'erro' %}erro{% else %}sucesso{% endif %}" role="{% if aviso.tipo == 'erro' %}alert{% else %}status{% endif %}" tabindex="-1">{{ aviso.texto }}</p>
+  {% endif %}
+
+  {% if avaliacao.estado == "CONCLUIDA" %}
+  {% comment %}
+  FR-035: concluída é imutável **para o avaliador**. Não é um formulário desabilitado — é a
+  ausência do formulário, com o que foi afirmado à vista e o caminho de volta nomeado (FR-036).
+  {% endcomment %}
+  {% comment %}
+  Uma faixa só: o aviso da ação recém-praticada e este estado diziam a mesma coisa, empilhados.
+  Quando a pessoa acaba de concluir, quem fala é o aviso; quando ela volta depois, é este.
+  {% endcomment %}
+  {% comment %}
+  Concluída é **estado**, e não a comemoração de um ato: a faixa verde de sucesso reaparecia a cada
+  visita, meses depois, dizendo "deu certo" sobre uma coisa que a pessoa já sabe. O que ela precisa
+  ver ao voltar é a nota, o parecer e quando aquilo foi afirmado.
+  {% endcomment %}
+  <div class="registro-da-avaliacao">
+    <p class="nota"><strong>{{ avaliacao.pontuacao|pontuacao }}</strong>{% if maxima %} <span>de {{ maxima|pontuacao }}</span>{% endif %}</p>
+    <p class="quando">Avaliação concluída em {{ avaliacao.concluida_em|date:"d/m/Y" }} às {{ avaliacao.concluida_em|date:"H:i" }}</p>
+  </div>
+  <div class="parecer-registrado">
+    <h3>Parecer</h3>
+    {% if avaliacao.parecer %}<p>{{ avaliacao.parecer|linebreaksbr }}</p>
+    {% else %}<p class="ausente">Sem parecer registrado.</p>{% endif %}
+  </div>
+  <p class="ajuda">Para alterar, a reabertura é ato da presidência, com motivo registrado.</p>
+
+  {% else %}
+  {% comment %}
+  FR-077 e FR-095: o período é informado, e não aplicado. O aviso aparece **antes** de concluir —
+  o sistema conhecer a divergência e escondê-la seria o extremo oposto do bloqueio.
+  {% endcomment %}
+  {% if fora_do_periodo %}
+  <p class="aviso" role="status"><strong>Atenção:</strong> esta avaliação está sendo registrada
+    fora do período previsto para a Etapa. O instante real fica registrado.</p>
+  {% endif %}
+
+  {% comment %}
+  Dito, e não imposto — a mesma escolha do período previsto (FR-095). Numa Mesa de centenas, quem
+  retoma o trabalho não lembra o que já leu, e a trilha sabe: cada abertura fica registrada. O que
+  o sistema não faz é impedir de pontuar, porque documento ausente é caso legítimo e ninguém
+  precisa abrir arquivo nenhum para registrar que não havia o que conferir.
+  {% endcomment %}
+  {% if tem_documento %}
+  {% if ultima_leitura %}
+  <p class="ajuda" role="status">Você abriu documento desta inscrição — por isso o cursor começa aqui.</p>
+  {% else %}
+  <p class="ajuda" role="status">Você ainda não abriu nenhum documento desta inscrição.</p>
+  {% endif %}
+  {% endif %}
+
+  <form method="post" action="{% url 'interface:mesa-avaliacao-gravar' edital.id etapa_id inscricao.id %}">
+    {% csrf_token %}
+    {% comment %}
+    A revisão esperada e a versão reconhecida viajam no formulário: a primeira impede que duas
+    abas se sobrescrevam (FR-081), a segunda impede concluir contra uma regra que mudou enquanto
+    a pessoa escrevia (FR-073).
+    {% endcomment %}
+    <input type="hidden" name="expected_revision" value="{{ avaliacao.revision|default:1 }}">
+    <input type="hidden" name="versao_reconhecida" value="{{ versao_vigente.id }}">
+
+    <p class="campo curto">
+      <label for="pontuacao">Pontuação</label>
+      {% comment %}
+      **O foco começa onde o trabalho começa — e o trabalho começa na leitura.** A tela abria com o
+      cursor aqui, pronta para receber uma pontuação antes de o documento ter sido aberto: a ordem
+      da página dizia uma coisa e o cursor dizia outra.
+
+      Agora ele só para aqui quando não há o que ler primeiro — quando esta pessoa já abriu algum
+      documento desta inscrição, quando não há documento nenhum, ou quando há aviso, que tem
+      prioridade sobre tudo. Ninguém é impedido de pontuar antes: a ordem é sugerida, não aplicada,
+      como o período previsto de FR-095.
+      {% endcomment %}
+      <input type="number" step="0.0001" min="0" id="pontuacao" name="pontuacao"
+             value="{{ valores.pontuacao }}"{% if foco_na_nota and not aviso %} autofocus{% endif %}
+             aria-describedby="ajuda-pontuacao">
+      <span class="ajuda" id="ajuda-pontuacao">
+        {% if maxima %}Máxima publicada: {{ maxima|pontuacao }}.{% else %}O Edital não declara pontuação máxima para esta Etapa.{% endif %}
+        {% if minima %} Nota mínima: {{ minima|pontuacao }}.{% endif %}
+      </span>
+    </p>
+
+    <p class="campo">
+      <label for="parecer">Parecer</label>
+      <textarea id="parecer" name="parecer" rows="6" aria-describedby="ajuda-parecer">{{ valores.parecer }}</textarea>
+      <span class="ajuda" id="ajuda-parecer">
+        É o parecer que responde a um recurso.
+        {% if eliminatoria and minima %}Nesta Etapa eliminatória, ele é obrigatório quando a pontuação fica abaixo de {{ minima|pontuacao }}.{% endif %}
+      </span>
+    </p>
+
+    <p class="acoes">
+      <button type="submit" class="acao">Salvar sem concluir</button>
+      <button type="submit" class="botao" formaction="{% url 'interface:mesa-avaliacao-concluir' edital.id etapa_id inscricao.id %}">Concluir avaliação</button>
+    </p>
+  </form>
+  {% endif %}
+
+  {% comment %}
+  Para onde ir depois desta. A Mesa de quem avalia tem dezenas ou centenas de inscrições, e voltar
+  pela trilha de navegação a cada uma fazia o caminho ser mais longo que o trabalho. O atalho não
+  substitui a Mesa — ele é o passo seguinte quando a próxima é óbvia.
+  {% endcomment %}
+  <p class="navegacao-etapa">
+    {% if proxima %}
+    <a class="botao secundario" href="{% url 'interface:mesa-inscricao' edital.id etapa_id proxima.id %}">Próxima pendente — inscrição {{ proxima.protocolo|default:proxima.id }}</a>
+    {% endif %}
+    <a class="acao" href="{% url 'interface:minha-etapa' edital.id etapa_id %}">Voltar à Mesa</a>
+  </p>
+</section>
+
+</div>{# painel-avaliacao #}
+</div>{# mesa-trabalho #}
+</div>{# pagina-da-inscricao #}
+
+{% comment %}
+O painel é montado pelo script, e só em tela larga: abaixo disso não há onde pôr duas colunas, e o
+link continua abrindo em aba própria — que é exatamente o que esta tela fazia antes. Sem
+JavaScript, idem. Um painel que existisse no HTML e só funcionasse com script prometeria o que não
+cumpre.
+{% endcomment %}
+{% load static %}<script src="{% static 'interface/mesa.js' %}" defer></script>
+{% endblock %}

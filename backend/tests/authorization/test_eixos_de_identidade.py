@@ -36,7 +36,7 @@ def rotas_da_comissao(processo, edital, etapa_id):
         reverse("interface:alocacoes", args=[processo.id]),
         reverse("interface:auditoria-comissao", args=[processo.id]),
         reverse("interface:minhas-etapas"),
-        reverse("interface:atribuicao", args=[edital.id, etapa_id]),
+        reverse("interface:minha-etapa", args=[edital.id, etapa_id]),
     ]
 
 

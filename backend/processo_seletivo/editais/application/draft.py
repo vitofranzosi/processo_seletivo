@@ -259,6 +259,8 @@ def replace_draft(
                     eliminatory=stage.get("eliminatory", False),
                     classificatory=stage.get("classificatory", False),
                     minimum_score=stage.get("minimumScore"),
+                    evaluations_per_registration=stage.get("evaluationsPerRegistration"),
+                    maximum_score=stage.get("maximumScore"),
                     evento_id=stage.get("scheduleEventId"),
                 )
                 for stage in stages

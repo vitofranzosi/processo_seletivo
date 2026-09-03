@@ -181,3 +181,59 @@ def test_plural_de_edital_em_portugues(
     )
     corpo = client.get(reverse("interface:lista")).content.decode()
     assert "2 Editais neste Processo" in corpo
+
+
+def folha(corpo):
+    return corpo[corpo.index("<style>") : corpo.index("</style>")]
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_acao_indisponivel_nao_se_parece_com_a_disponivel(client, seletor_ligado):
+    """`.desabilitado` só existia para `.botao`.
+
+    A ação de linha continuava com a borda verde e a cor de link: oferecia o que não se pode
+    fazer, que é pior do que não oferecer. FR-024 manda mostrar o controle **e** o motivo — o
+    controle mostrado precisa parecer o que é.
+    """
+    identificar(client, "carlos", ["gestor"])
+
+    css = folha(client.get(reverse("interface:lista")).content.decode())
+
+    regra = css.split(".acao.desabilitado{")[1].split("}")[0]
+    assert "cursor:not-allowed" in regra
+    assert "var(--verde)" not in regra
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_contagem_diz_o_que_ela_conta(client, seletor_ligado, edital_a):
+    """ "5 Publicado, 2 Cancelado, 7 no total" — de quê?
+
+    A página se chama Processos Seletivos e lista Processos; quem conta são os Editais dentro
+    deles. O nome acessível já dizia; quem vê a tela é que ficava sem saber.
+    """
+    identificar(client, "carlos", ["gestor"])
+
+    corpo = client.get(reverse("interface:lista")).content.decode()
+
+    assert "Editais no total" in corpo
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_o_estado_do_processo_fica_com_o_nome_dele(client, seletor_ligado, edital_a):
+    """Os seis itens do cabeçalho saíam numa fileira só, e o estado caía **depois** dos botões.
+
+    Para saber se aquele Processo está em elaboração era preciso atravessar as ações até o
+    extremo oposto do título que o estado qualifica.
+    """
+    identificar(client, "carlos", ["gestor"])
+
+    corpo = client.get(reverse("interface:lista")).content.decode()
+
+    cabeca = corpo.split('<article class="processo">')[1].split("</header>")[0]
+    # O estado vem **antes** do grupo de ações, e não depois dele.
+    identidade = cabeca.split('<span class="acoes">')[0]
+    assert "s-EM_ELABORACAO" in identidade or "s-PUBLICADO" in identidade
+    assert "/comissao" in cabeca and "/comissao" not in identidade

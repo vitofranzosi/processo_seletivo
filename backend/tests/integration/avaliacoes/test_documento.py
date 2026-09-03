@@ -1,0 +1,444 @@
+"""O documento como instrumento de trabalho: mediado, conferido e auditado (US3).
+
+A mecânica é a que a 009 construiu, e a `012` a reutiliza inteira — o que ela **não** reutiliza é a
+permissão. Aqui os três invariantes que a spec cobra: cada abertura deixa rastro, divergência de
+integridade é recusa registrada, e não existe caminho de lote.
+"""
+
+import re
+
+import pytest
+from django.test import Client
+from django.urls import reverse
+
+from processo_seletivo.auditoria.models import RegistroAuditoria
+from processo_seletivo.avaliacoes.application.distribuicao import distribuir
+from processo_seletivo.avaliacoes.application.mesa import BASE_DA_MESA
+from processo_seletivo.avaliacoes.models import Atribuicao
+from processo_seletivo.inscricoes.application.consulta import CONSULTAR
+from processo_seletivo.inscricoes.models import DocumentoSubmetido
+from tests.fixtures.comissao import DOCUMENTO_A, abrir_arquivo, alocar_em, inscrever
+from tests.fixtures.edital import identificador
+from tests.interface.conftest import identificar
+
+pytestmark = [pytest.mark.django_db, pytest.mark.integration]
+
+
+@pytest.fixture
+def cenario(raiz_de_arquivos, gestor, processo_a, edital_com_documentos, comissao_de_a, etapa_a1):
+    membro = comissao_de_a["joao"]
+    alocar_em(gestor, processo_a, membro, edital_com_documentos, etapa_a1)
+    inscricao = inscrever(edital_com_documentos, 1, documentos=[identificador(DOCUMENTO_A, 0)])[0]
+    distribuir(
+        actor=gestor,
+        processo_id=processo_a.id,
+        edital_id=edital_com_documentos.id,
+        etapa_id=etapa_a1,
+        membro_ids=[membro.id],
+        inscricao_ids=[inscricao.id],
+        idempotency_key="doc",
+        correlation_id="teste",
+    )
+    return inscricao
+
+
+@pytest.fixture
+def como_joao(client, seletor_ligado):
+    identificar(client, "joao", [])
+    return client
+
+
+def arquivo(edital, etapa_id, inscricao):
+    return reverse(
+        "interface:mesa-documento",
+        args=[edital.id, etapa_id, inscricao.id, identificador(DOCUMENTO_A, 0)],
+    )
+
+
+def test_cada_abertura_registra_ator_etapa_inscricao_e_requisito(
+    como_joao, edital_com_documentos, etapa_a1, cenario
+):
+    """FR-027 e FR-053. E a base registrada é a da Mesa: ela diz **por que** o acesso foi dado.
+
+    O agregado é a **Atribuição**, e não a Inscrição, porque o registro precisa identificar quatro
+    coisas — quem, qual inscrição, qual Etapa e por qual vínculo — e a Inscrição identifica uma.
+    """
+    abrir_arquivo(como_joao, arquivo(edital_com_documentos, etapa_a1, cenario))
+
+    evento = RegistroAuditoria.objects.get(operation="CONSULTAR_DOCUMENTO")
+    assert evento.actor_subject == "joao"
+    assert evento.aggregate_type == "Atribuicao"
+    atribuicao = Atribuicao.objects.get(pk=evento.aggregate_id)
+    assert atribuicao.inscricao_id == cenario.id
+    assert str(atribuicao.etapa_id) == str(etapa_a1)
+    assert atribuicao.membro.identity_subject == "joao"
+    assert str(identificador(DOCUMENTO_A, 0)) in evento.reason
+    assert evento.permission == BASE_DA_MESA
+    assert evento.permission != CONSULTAR
+
+
+def test_a_abertura_da_mesa_nao_se_confunde_com_a_consulta_administrativa(
+    como_joao, client, gestor, seletor_ligado, edital_com_documentos, etapa_a1, cenario
+):
+    """As duas registram `CONSULTAR_DOCUMENTO` sobre a mesma inscrição — e não são o mesmo ato.
+
+    Enquanto o agregado da abertura era a Inscrição, os dois eventos eram indistinguíveis por
+    identificador, e a trilha da Etapa exibia a consulta administrativa da 009 como se fosse
+    trabalho da Mesa. Um histórico que mistura origens é pior que um incompleto: parece verdadeiro.
+    """
+    abrir_arquivo(como_joao, arquivo(edital_com_documentos, etapa_a1, cenario))
+    # Cliente próprio: `como_joao` é o mesmo `client`, e reidentificar trocaria a sessão de joao.
+    da_gestao = Client()
+    identificar(da_gestao, "carlos", ["gestor"])
+    abrir_arquivo(
+        da_gestao,
+        reverse(
+            "interface:documento-da-inscricao",
+            args=[cenario.id, identificador(DOCUMENTO_A, 0)],
+        ),
+    )
+
+    por_agregado = {
+        evento.aggregate_type
+        for evento in RegistroAuditoria.objects.filter(operation="CONSULTAR_DOCUMENTO")
+    }
+    assert por_agregado == {"Atribuicao", "Inscricao"}
+
+
+def test_a_trilha_nao_guarda_o_nome_do_arquivo(como_joao, edital_com_documentos, etapa_a1, cenario):
+    """O requisito basta para saber o que foi aberto; o nome do arquivo é do candidato (FR-054)."""
+    abrir_arquivo(como_joao, arquivo(edital_com_documentos, etapa_a1, cenario))
+
+    evento = RegistroAuditoria.objects.get(operation="CONSULTAR_DOCUMENTO")
+    assert "documento.pdf" not in evento.reason
+
+
+def test_divergencia_de_integridade_e_recusa_registrada(
+    como_joao, edital_com_documentos, etapa_a1, cenario
+):
+    """FR-029, EC-008: não é aviso silencioso — é recusa, e ela fica na trilha.
+
+    O que sustenta "o que o avaliador abre é o que o candidato enviou" precisa falhar alto quando
+    deixa de ser verdade.
+    """
+    documento = DocumentoSubmetido.objects.get(inscricao=cenario)
+    with documento.arquivo.storage.open(documento.arquivo.name, "wb") as destino:
+        destino.write(b"%PDF-1.4\nconteudo trocado")
+
+    resposta = abrir_arquivo(como_joao, arquivo(edital_com_documentos, etapa_a1, cenario))
+
+    assert resposta.status_code == 409
+    assert RegistroAuditoria.objects.filter(operation="INTEGRIDADE").count() == 1
+    assert not RegistroAuditoria.objects.filter(operation="CONSULTAR_DOCUMENTO").exists()
+
+
+def test_o_arquivo_servido_e_o_conferido(como_joao, edital_com_documentos, etapa_a1, cenario):
+    """Os bytes conferidos e os bytes servidos são os **mesmos bytes**, e não o mesmo caminho.
+
+    Conferir o arquivo e reabri-lo para servir deixaria uma janela entre as duas leituras, e uma
+    verificação que aprova um conteúdo e serve outro é pior do que verificação nenhuma (FR-029).
+    """
+    import hashlib
+
+    resposta = abrir_arquivo(como_joao, arquivo(edital_com_documentos, etapa_a1, cenario))
+
+    documento = DocumentoSubmetido.objects.get(inscricao=cenario)
+    assert hashlib.sha256(resposta.conteudo_servido).hexdigest() == documento.content_hash
+
+
+def test_as_duas_respostas_nao_sao_armazenaveis(
+    como_joao, edital_com_documentos, etapa_a1, cenario
+):
+    """Página **e** arquivo: a página carrega dado pessoal, e não só o anexo (FR-056)."""
+    pagina = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    )
+    anexo = abrir_arquivo(como_joao, arquivo(edital_com_documentos, etapa_a1, cenario))
+
+    assert "no-store" in pagina["Cache-Control"]
+    assert "no-store" in anexo["Cache-Control"]
+
+
+def test_a_lista_e_a_dos_requisitos_e_nao_a_dos_arquivos(
+    como_joao, edital_com_documentos, etapa_a1, cenario
+):
+    """Requisito sem arquivo aparece como requisito sem arquivo — é informação (FR-025)."""
+    corpo = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    ).content.decode()
+
+    assert "Documento de identificação" in corpo
+    assert "não apresentado" in corpo
+
+
+def test_nao_existe_caminho_de_lote(como_joao, edital_com_documentos, etapa_a1, cenario):
+    """FR-028: a ausência é o requisito.
+
+    Não existe download em lote, exportação do acervo nem navegação por inscrição alheia — e é
+    disso que a feature existe para tirar a equipe.
+    """
+    corpo = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    ).content.decode()
+
+    for proibido in ("baixar todos", "Baixar todos", "exportar", "Exportar", ".zip"):
+        assert proibido not in corpo
+
+
+def test_o_dado_pessoal_exibido_e_o_minimo(como_joao, edital_com_documentos, etapa_a1, cenario):
+    """FR-030: o necessário ao trabalho, e nada além.
+
+    O nome fica — avaliação cega está fora do escopo, e meia anonimização é pior que nenhuma. O
+    CPF vai mascarado, e e-mail e telefone não aparecem: não decidem avaliação nenhuma.
+    """
+    corpo = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    ).content.decode()
+
+    assert cenario.nome in corpo
+    assert cenario.cpf not in corpo
+    assert cenario.email not in corpo
+
+
+def test_o_documento_abre_em_aba_propria(como_joao, edital_com_documentos, etapa_a1, cenario):
+    """O PDF é servido `inline`: na mesma aba ele substitui a página, e leva o formulário junto.
+
+    Quem digitou a nota e abriu o documento para conferir uma última coisa saía da tela com o
+    formulário preenchido e não salvo — e eram dois cliques por documento, abrir e voltar, cobrados
+    uma vez por inscrição avaliada.
+    """
+    pagina = reverse(
+        "interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id]
+    )
+
+    corpo = como_joao.get(pagina).content.decode()
+
+    assert 'target="_blank"' in corpo
+    assert 'rel="noopener"' in corpo
+    # O rótulo **não** anuncia "nova aba": em tela larga o documento abre no painel ao lado, e
+    # prometer aba nova ali seria descrever o que não acontece.
+    assert "nova aba" not in corpo
+
+
+def test_o_documento_e_emoldurável_pela_propria_origem_e_por_nenhuma_outra(
+    como_joao, edital_com_documentos, etapa_a1, cenario
+):
+    """A Mesa exibe o documento ao lado do formulário, e a moldura é da mesma origem.
+
+    O `X-Frame-Options: DENY` do resto do sistema bloquearia a nossa própria moldura. A proteção
+    contra clickjacking continua valendo contra qualquer outra origem, que é de quem ela protege.
+    """
+    resposta = abrir_arquivo(como_joao, arquivo(edital_com_documentos, etapa_a1, cenario))
+
+    assert resposta.headers["X-Frame-Options"] == "SAMEORIGIN"
+    # E a página que emoldura continua recusando molduras de fora.
+    pagina = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    )
+    assert pagina.headers["X-Frame-Options"] == "DENY"
+
+
+def test_nenhuma_moldura_da_pagina_aponta_para_um_documento(
+    como_joao, edital_com_documentos, etapa_a1, cenario
+):
+    """A abertura continua sendo um ato: nada é servido só por entrar na inscrição.
+
+    Uma moldura que já viesse apontada para o arquivo o carregaria ao abrir a página — e o evento
+    "abriu o documento" passaria a significar "abriu a inscrição", que é o mesmo registro dizendo
+    outra coisa (FR-027, FR-053). O que se confere é a **marcação**: o cliente do teste não busca
+    molduras, então contar eventos aqui não provaria nada.
+    """
+    corpo = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    ).content.decode()
+
+    molduras = re.findall(r"<(?:iframe|embed|object)[^>]*>", corpo)
+    assert molduras, "a Mesa tem o painel do documento"
+    for moldura in molduras:
+        assert "/documentos/" not in moldura, moldura
+
+
+def test_o_painel_comeca_vazio_e_escondido(como_joao, edital_com_documentos, etapa_a1, cenario):
+    """Enquanto nada foi aberto, leitor de tela nenhum encontra o painel."""
+    corpo = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    ).content.decode()
+
+    assert 'id="painel-documento"' in corpo
+    assert "hidden" in corpo.split('id="painel-documento"')[1][:60]
+    assert 'src="about:blank"' in corpo
+    # E o link continua sendo um link: sem script, ou em tela estreita, ele abre em aba própria.
+    assert 'target="_blank"' in corpo
+
+
+def test_o_foco_comeca_no_documento_e_nao_na_nota(
+    como_joao, edital_com_documentos, etapa_a1, cenario
+):
+    """A tela abria com o cursor na pontuação, pronta para receber nota antes de haver leitura.
+
+    A ordem da página dizia uma coisa — candidato, documentos, avaliação — e o cursor dizia outra.
+    O foco agora para no primeiro documento por abrir, que é onde o trabalho começa de fato.
+    """
+    corpo = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    ).content.decode()
+
+    assert re.search(r'data-documento="[^"]*"\s*\n?\s*autofocus', corpo)
+    assert not re.search(r'id="pontuacao"[^>]*autofocus', corpo, re.S)
+    assert "Você ainda não abriu nenhum documento desta inscrição." in corpo
+
+
+def test_depois_de_abrir_o_documento_o_foco_vai_para_a_nota(
+    como_joao, edital_com_documentos, etapa_a1, cenario
+):
+    """Quem já leu não precisa ser levado ao documento de novo — e a trilha é quem sabe disso."""
+    abrir_arquivo(como_joao, arquivo(edital_com_documentos, etapa_a1, cenario))
+
+    corpo = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    ).content.decode()
+
+    assert re.search(r'id="pontuacao"[^>]*autofocus', corpo, re.S)
+    assert "Você ainda não abriu nenhum documento" not in corpo
+
+
+def test_a_ordem_e_sugerida_e_nao_imposta(como_joao, edital_com_documentos, etapa_a1, cenario):
+    """Documento ausente é caso legítimo: ninguém precisa abrir arquivo para registrar que não
+    havia o que conferir. O formulário continua inteiro, e a nota continua aceita."""
+    corpo = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    ).content.decode()
+
+    assert "Concluir avaliação" in corpo
+    assert "disabled" not in corpo
+
+
+def test_a_marca_de_obrigatorio_tem_coluna_propria(
+    como_joao, edital_com_documentos, etapa_a1, cenario
+):
+    """Depois do nome, ela caía num lugar diferente em cada linha; em coluna, tudo alinha.
+
+    E o nome continua vindo primeiro, porque é ele que se procura ao percorrer a lista.
+    """
+    corpo = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    ).content.decode()
+
+    linha = re.search(r"<li>(.*?)</li>", corpo, re.S).group(1)
+    assert linha.index("requisito") < linha.index("marca")
+
+
+def test_a_tela_diz_que_houve_leitura_sem_carimbar_a_hora(
+    como_joao, edital_com_documentos, etapa_a1, cenario
+):
+    """Só a frase negativa deixava o caso oposto em silêncio — e silêncio parece defeito.
+
+    Quem chega e encontra o cursor na nota precisa saber se o sistema pulou a leitura ou se foi
+    ela mesma que já leu. O que responde isso é **o fato**, e não o minuto: para quem avalia
+    dezenas de inscrições por dia, "já vi este?" é sim ou não, e a hora exata não muda decisão
+    nenhuma. Ela é dado de auditoria, e o lugar dela é a trilha (FR-027).
+    """
+    abrir_arquivo(como_joao, arquivo(edital_com_documentos, etapa_a1, cenario))
+
+    corpo = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    ).content.decode()
+
+    assert "Você abriu documento desta inscrição — por isso o cursor começa aqui" in corpo
+    frase = re.search(r"<p class=\"ajuda\" role=\"status\">([^<]*cursor[^<]*)</p>", corpo).group(1)
+    assert not re.search(r"\d\d:\d\d", frase), frase
+
+
+@pytest.fixture
+def com_dois_documentos(
+    raiz_de_arquivos, gestor, processo_a, edital_com_documentos, comissao_de_a, etapa_a1
+):
+    """Uma inscrição que entregou os dois requisitos — o caso em que "onde eu parei" aparece."""
+    from tests.fixtures.comissao import DOCUMENTO_B
+
+    membro = comissao_de_a["joao"]
+    alocar_em(gestor, processo_a, membro, edital_com_documentos, etapa_a1, chave="dois")
+    inscricao = inscrever(
+        edital_com_documentos,
+        1,
+        primeiro=950,
+        documentos=[identificador(DOCUMENTO_A, 0), identificador(DOCUMENTO_B, 0)],
+    )[0]
+    distribuir(
+        actor=gestor,
+        processo_id=processo_a.id,
+        edital_id=edital_com_documentos.id,
+        etapa_id=etapa_a1,
+        membro_ids=[membro.id],
+        inscricao_ids=[inscricao.id],
+        idempotency_key="dois-docs",
+        correlation_id="teste",
+    )
+    return inscricao
+
+
+def lista_de_documentos(corpo):
+    """Só as linhas — a folha de estilo da base também nomeia a classe."""
+    return re.search(r'<ul class="documentos">(.*?)</ul>', corpo, re.S).group(1)
+
+
+def test_a_tela_marca_o_que_esta_pessoa_ja_abriu(
+    como_joao, edital_com_documentos, etapa_a1, com_dois_documentos
+):
+    """Com dez documentos exigidos, "onde eu parei" deixa de ser pergunta que se responde olhando.
+
+    O que se marca é **aberto**, e não avaliado: a Avaliação é uma só por inscrição, e não há
+    veredito por documento. Marcar "avaliado" inventaria um julgamento que o domínio não tem.
+    """
+    pagina = reverse(
+        "interface:mesa-inscricao",
+        args=[edital_com_documentos.id, etapa_a1, com_dois_documentos.id],
+    )
+    antes = como_joao.get(pagina).content.decode()
+    assert "0 de 2 abertos por você" in antes
+    assert lista_de_documentos(antes).count("marca-lida") == 0, "nada aberto, nada marcado"
+
+    abrir_arquivo(
+        como_joao,
+        reverse(
+            "interface:mesa-documento",
+            args=[
+                edital_com_documentos.id,
+                etapa_a1,
+                com_dois_documentos.id,
+                identificador(DOCUMENTO_A, 0),
+            ],
+        ),
+    )
+    depois = como_joao.get(pagina).content.decode()
+
+    assert "1 de 2 abertos por você" in depois
+    assert lista_de_documentos(depois).count("marca-lida") == 1, "só o aberto é marcado"
+    assert "avaliado" not in lista_de_documentos(depois), "a marca é de leitura, não de veredito"
+
+
+def test_a_consulta_administrativa_nao_marca_a_lista_de_quem_avalia(
+    como_joao, client, gestor, seletor_ligado, edital_com_documentos, etapa_a1, cenario
+):
+    """ "Abertos **por você**" — e a mesma inscrição é aberta por mais gente que a Mesa.
+
+    A consulta administrativa da 009 registra `CONSULTAR_DOCUMENTO` sobre o mesmo arquivo, sob a
+    Inscrição. Se a marca viesse do documento, o expediente de outra pessoa apareceria como
+    trabalho já feito — e a tela mentiria justamente para quem confia nela para saber onde parou.
+    """
+    # Cliente próprio: `como_joao` é o mesmo `client`, e reidentificar trocaria a sessão de joao.
+    da_gestao = Client()
+    identificar(da_gestao, "carlos", ["gestor"])
+    abrir_arquivo(
+        da_gestao,
+        reverse(
+            "interface:documento-da-inscricao",
+            args=[cenario.id, identificador(DOCUMENTO_A, 0)],
+        ),
+    )
+
+    corpo = como_joao.get(
+        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
+    ).content.decode()
+
+    assert lista_de_documentos(corpo).count("marca-lida") == 0

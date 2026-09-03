@@ -34,6 +34,21 @@ def _texto(dados, chave):
     return (dados.get(chave) or "").strip()
 
 
+def _inteiro_opcional(dados, chave):
+    """Vazio é `None` — "não declarado" —, e não zero.
+
+    `_inteiro` tem padrão porque `order` sempre existe; aqui a ausência é significativa: ela é o
+    que a `012` lê como uma avaliação por inscrição (FR-009).
+    """
+    bruto = _texto(dados, chave)
+    if not bruto:
+        return None
+    try:
+        return int(bruto)
+    except ValueError as exc:
+        raise ValueError(f"'{bruto}' não é um número inteiro.") from exc
+
+
 def _inteiro(dados, chave, padrao=0):
     bruto = _texto(dados, chave)
     if not bruto:
@@ -192,6 +207,13 @@ def ler_etapas(dados):
                 "eliminatory": _marcado(dados, f"{base}-eliminatory"),
                 "classificatory": _marcado(dados, f"{base}-classificatory"),
                 "minimumScore": _decimal(dados, f"{base}-minimumScore"),
+                # As duas do incremento da `012`. Vazio é "não declarado", e o assistente precisa
+                # devolvê-las porque ele reenvia o rascunho inteiro a cada passo: campo que ele não
+                # lê vira `null` na próxima gravação de qualquer outra Etapa (FR-007).
+                "evaluationsPerRegistration": _inteiro_opcional(
+                    dados, f"{base}-evaluationsPerRegistration"
+                ),
+                "maximumScore": _decimal(dados, f"{base}-maximumScore"),
                 # Vazio é "não vinculada a Evento", e não Evento inexistente.
                 "scheduleEventId": _texto(dados, f"{base}-scheduleEventId") or None,
             }
@@ -381,6 +403,57 @@ def _modalidade_persistida(modalidade):
     return persistida
 
 
+def ler_distribuicao(dados):
+    """O corpo do lote e o da remoção, na mesma porta.
+
+    `acao` decide qual, e não a presença dos campos: um envio com `acao=remover` que carregasse
+    `inscricao_id` por sobra de formulário não pode distribuir — foi assim que a 011 descobriu que
+    ramo irmão decide sozinho.
+    """
+    acao = (_texto(dados, "acao") or "distribuir").strip()
+    conhecidas = {"remover", "propor", "confirmar_rodizio"}
+    return {
+        "acao": acao if acao in conhecidas else "distribuir",
+        "membro_ids": dados.getlist("membro_id"),
+        "inscricao_ids": dados.getlist("inscricao_id"),
+        "atribuicao_ids": dados.getlist("atribuicao_id"),
+        # A assinatura da proposta que a pessoa leu. O comando a confere depois da trava.
+        "assinatura": _texto(dados, "assinatura"),
+    }
+
+
+def ler_impedimento(dados):
+    """Quem, sobre qual inscrição, e por quê. O motivo é o que faz do impedimento um ato."""
+    return {
+        "identity_subject": _texto(dados, "identity_subject"),
+        "inscricao_id": _texto(dados, "inscricao_id"),
+        "motivo": _texto(dados, "motivo"),
+    }
+
+
+def ler_reabertura(dados):
+    return {
+        "avaliacao_id": _texto(dados, "avaliacao_id"),
+        "motivo": _texto(dados, "motivo"),
+        "expected_revision": _inteiro(dados, "expected_revision", 0),
+    }
+
+
+def ler_avaliacao(dados):
+    """Pontuação, parecer e a revisão esperada — que não é opcional.
+
+    `expected_revision` é a precondição de FR-081: sem ela, duas abas do mesmo avaliador se
+    sobrescreveriam em silêncio. Vazio vira `0`, que nunca corresponde a revisão real e produz a
+    recusa por revisão obsoleta em vez de uma gravação cega.
+    """
+    return {
+        "pontuacao": _texto(dados, "pontuacao"),
+        "parecer": _texto(dados, "parecer"),
+        "expected_revision": _inteiro(dados, "expected_revision", 0),
+        "versao_reconhecida": _texto(dados, "versao_reconhecida") or None,
+    }
+
+
 def etapas_do_edital(edital):
     """Etapas persistidas, no formato que o formulário renderiza."""
     return [
@@ -392,6 +465,12 @@ def etapas_do_edital(edital):
             "eliminatory": etapa.eliminatory,
             "classificatory": etapa.classificatory,
             "minimumScore": "" if etapa.minimum_score is None else f"{etapa.minimum_score:f}",
+            "evaluationsPerRegistration": (
+                ""
+                if etapa.evaluations_per_registration is None
+                else etapa.evaluations_per_registration
+            ),
+            "maximumScore": "" if etapa.maximum_score is None else f"{etapa.maximum_score:f}",
             "scheduleEventId": "" if etapa.evento_id is None else str(etapa.evento_id),
         }
         for etapa in edital.etapas.order_by("order")
@@ -409,6 +488,8 @@ def etapas_persistidas(edital):
             "eliminatory": etapa.eliminatory,
             "classificatory": etapa.classificatory,
             "minimumScore": etapa.minimum_score,
+            "evaluationsPerRegistration": etapa.evaluations_per_registration,
+            "maximumScore": etapa.maximum_score,
             "scheduleEventId": None if etapa.evento_id is None else str(etapa.evento_id),
         }
         for etapa in edital.etapas.order_by("order")

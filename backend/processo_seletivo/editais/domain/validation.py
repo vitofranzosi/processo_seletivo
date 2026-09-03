@@ -141,6 +141,11 @@ ETAPA_PUBLICADA = (
     Campo("eliminatory", bool),
     Campo("classificatory", bool),
     Campo("minimumScore", str, admite_nulo=True, formato="decimal", padrao=DECIMAL),
+    # As duas do incremento da `012` (FR-007). Inteiro para a contagem de avaliações, que não tem
+    # casas; decimal canônico para a máxima, que é `decimal(7,4)` como as outras duas. `null` é
+    # "não declarado", e é assim que conteúdo publicado antes do incremento continua legível.
+    Campo("evaluationsPerRegistration", int, admite_nulo=True, minimo=1),
+    Campo("maximumScore", str, admite_nulo=True, formato="decimal", padrao=DECIMAL),
     Campo("scheduleEventId", str, admite_nulo=True, formato="uuid"),
 )
 
@@ -488,6 +493,7 @@ def _coerencia_das_etapas(snapshot: dict) -> list[ValidationFinding]:
         for atributo, minimo, mensagem in (
             ("weight", None, "O peso da Etapa deve ser maior que zero em"),
             ("minimumScore", 0, "A nota mínima da Etapa não pode ser negativa em"),
+            ("maximumScore", None, "A pontuação máxima da Etapa deve ser maior que zero em"),
         ):
             valor = _decimal_ou_none(item.get(atributo))
             fora = valor is not None and (valor <= 0 if minimo is None else valor < minimo)
@@ -499,6 +505,20 @@ def _coerencia_das_etapas(snapshot: dict) -> list[ValidationFinding]:
                         f"{caminho}/{atributo}",
                     )
                 )
+        # Coerência entre os dois, e não faixa de um só: nota mínima acima da máxima descreveria
+        # uma Etapa em que ninguém pode ser aprovado. É a única coerência entre campos que o
+        # contrato escreve para a Etapa, e por isso a única que se aplica aqui (012, FR-033).
+        minima = _decimal_ou_none(item.get("minimumScore"))
+        maxima = _decimal_ou_none(item.get("maximumScore"))
+        if minima is not None and maxima is not None and minima > maxima:
+            findings.append(
+                _impeditivo(
+                    RESTRICAO_VIOLADA,
+                    "A nota mínima da Etapa não pode superar a pontuação máxima em "
+                    f"{caminho}/minimumScore.",
+                    f"{caminho}/minimumScore",
+                )
+            )
     return findings
 
 

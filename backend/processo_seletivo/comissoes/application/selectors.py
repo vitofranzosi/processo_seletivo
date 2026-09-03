@@ -323,3 +323,85 @@ def matriz(processo, *, busca=""):
         "editais": {c["edital"].id: c["edital"] for c in colunas}.values(),
         "busca": busca,
     }
+
+
+def identidades_com_trabalho(escopo, *, limite=12):
+    """Quem, neste ambiente, tem trabalho de comissão — para o seletor de identidade oferecer.
+
+    **Existe pelo mesmo motivo que o seletor existe**: enquanto o diretório institucional não é
+    integrado (FR-058 da 012), a identidade vem de um campo de texto livre, e presidir ou avaliar
+    **não é papel** — vem do vínculo com a comissão. Quem digita o próprio nome entra sem vínculo
+    nenhum e vê uma página vazia, sem nada dizendo que os nomes com trabalho são outros. O campo
+    em branco é uma parede antes de qualquer percurso.
+
+    Some quando o diretório chegar, junto com o seletor inteiro.
+    """
+    from processo_seletivo.avaliacoes.models import Atribuicao
+
+    membros = list(
+        MembroComissao.objects.filter(ativo=True, processo__institution_scope=escopo)
+        .select_related("processo")
+        .order_by("identity_subject")
+    )
+    if not membros:
+        return []
+    alocacoes = {}
+    for membro_id, edital_id, etapa_id in AlocacaoEtapa.objects.filter(
+        ativo=True, membro__in=membros
+    ).values_list("membro_id", "edital_id", "etapa_id"):
+        alocacoes.setdefault(membro_id, set()).add((edital_id, etapa_id))
+    pendentes = {}
+    for membro_id in (
+        Atribuicao.objects.filter(membro__in=membros, ativo=True)
+        .exclude(avaliacao__estado="CONCLUIDA")
+        .values_list("membro_id", flat=True)
+    ):
+        pendentes[membro_id] = pendentes.get(membro_id, 0) + 1
+
+    por_pessoa = {}
+    for membro in membros:
+        pessoa = por_pessoa.setdefault(
+            membro.identity_subject,
+            {
+                "subject": membro.identity_subject,
+                "rotulo": membro.display_label or "",
+                "preside": [],
+                "integra": [],
+                "etapas": set(),
+                "pendentes": 0,
+            },
+        )
+        pessoa["rotulo"] = pessoa["rotulo"] or (membro.display_label or "")
+        alvo = "preside" if membro.funcao == Funcao.PRESIDENTE else "integra"
+        pessoa[alvo].append(membro.processo.institutional_code)
+        pessoa["etapas"].update(alocacoes.get(membro.id, ()))
+        pessoa["pendentes"] += pendentes.get(membro.id, 0)
+
+    pessoas = [{**p, "etapas": len(p["etapas"])} for p in por_pessoa.values()]
+    for pessoa in pessoas:
+        pessoa["resumo"] = _resumo_do_trabalho(pessoa)
+    # Quem preside primeiro, depois quem tem mais trabalho pendente: é a ordem em que a lista
+    # responde “por onde eu entro para ver alguma coisa”.
+    pessoas.sort(key=lambda p: (not p["preside"], -p["pendentes"], -p["etapas"], p["subject"]))
+    return pessoas[:limite]
+
+
+def _resumo_do_trabalho(pessoa):
+    """Uma linha dizendo o que aquela identidade alcança — e não só que ela existe."""
+    partes = []
+    if pessoa["preside"]:
+        partes.append("preside " + ", ".join(sorted(set(pessoa["preside"]))))
+    if pessoa["integra"]:
+        partes.append("integra " + ", ".join(sorted(set(pessoa["integra"]))))
+    if pessoa["etapas"]:
+        partes.append(
+            f"{pessoa['etapas']} Etapa{'s' if pessoa['etapas'] > 1 else ''} alocada"
+            f"{'s' if pessoa['etapas'] > 1 else ''}"
+        )
+    if pessoa["pendentes"]:
+        partes.append(
+            f"{pessoa['pendentes']} avaliação pendente"
+            if pessoa["pendentes"] == 1
+            else f"{pessoa['pendentes']} avaliações pendentes"
+        )
+    return " · ".join(partes)

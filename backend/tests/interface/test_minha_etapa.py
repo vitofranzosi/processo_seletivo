@@ -27,13 +27,13 @@ PROIBIDOS = [
 def pagina(client, seletor_ligado, gestor, processo_a, edital_a, comissao_de_a, etapa_a1):
     alocar_em(gestor, processo_a, comissao_de_a["joao"], edital_a, etapa_a1)
     identificar(client, "joao", [])
-    return client.get(reverse("interface:atribuicao", args=[edital_a.id, etapa_a1]))
+    return client.get(reverse("interface:minha-etapa", args=[edital_a.id, etapa_a1]))
 
 
 def test_a_pagina_contextualiza_a_atribuicao(pagina):
     corpo = pagina.content.decode()
 
-    assert "Você está alocado nesta Etapa" in corpo
+    assert "Alocado nesta Etapa" in corpo
     assert "Análise documental" in corpo
 
 
@@ -60,7 +60,7 @@ def test_quem_chega_pela_gestao_e_avisado_de_que_nao_esta_alocado(
     identificar(client, "carlos", ["gestor"])
 
     corpo = client.get(
-        reverse("interface:atribuicao", args=[edital_a.id, etapa_a2])
+        reverse("interface:minha-etapa", args=[edital_a.id, etapa_a2])
     ).content.decode()
 
     assert "pela gestão da comissão" in corpo

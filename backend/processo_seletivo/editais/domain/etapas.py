@@ -36,6 +36,31 @@ def validate_stage(stage: dict, *, event_ids: frozenset[str]) -> None:
             campo="minimumScore",
             identidade=stage.get("id", ""),
         )
+    # As duas do incremento da `012`, verificadas **aqui** porque é aqui que o command passa: a
+    # interface administrativa não atravessa o serializer da API, e deixar a faixa só para o
+    # `CheckConstraint` transformaria dado digitado errado em erro de banco (FR-007).
+    previstas = stage.get("evaluationsPerRegistration")
+    if previstas is not None and previstas < 1:
+        raise StageValidationError(
+            "A Etapa recebe ao menos uma avaliação por inscrição.",
+            campo="evaluationsPerRegistration",
+            identidade=stage.get("id", ""),
+        )
+    maxima = stage.get("maximumScore")
+    # Máxima zero afirmaria uma pontuação que não pontua, pelo mesmo motivo do peso. Ausência é
+    # que exprime "o Edital não declarou limite".
+    if maxima is not None and maxima <= 0:
+        raise StageValidationError(
+            "A pontuação máxima da Etapa, quando informada, deve ser maior que zero.",
+            campo="maximumScore",
+            identidade=stage.get("id", ""),
+        )
+    if nota is not None and maxima is not None and nota > maxima:
+        raise StageValidationError(
+            "A nota mínima da Etapa não pode superar a pontuação máxima.",
+            campo="minimumScore",
+            identidade=stage.get("id", ""),
+        )
     evento = stage.get("scheduleEventId")
     if evento is not None and str(evento) not in event_ids:
         raise StageValidationError(

@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from rest_framework import serializers
 
 from processo_seletivo.editais.domain.cronograma import ScheduleValidationError, validate_event
@@ -101,6 +103,14 @@ class StageSerializer(serializers.Serializer):
     classificatory = serializers.BooleanField(required=False, default=False)
     minimumScore = serializers.DecimalField(
         max_digits=7, decimal_places=4, required=False, allow_null=True
+    )
+    # As duas do incremento da `012`. Opcionais e anuláveis: rascunho que não as informa declara
+    # ausência, e ausência é uma avaliação por inscrição e limite não declarado (FR-009, FR-066).
+    evaluationsPerRegistration = serializers.IntegerField(
+        min_value=1, required=False, allow_null=True
+    )
+    maximumScore = serializers.DecimalField(
+        max_digits=7, decimal_places=4, required=False, allow_null=True, min_value=Decimal("0.0001")
     )
     scheduleEventId = serializers.UUIDField(required=False, allow_null=True)
 

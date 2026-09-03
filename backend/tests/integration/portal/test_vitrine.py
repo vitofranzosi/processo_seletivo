@@ -5,6 +5,8 @@ que é de dentro não vaza. A segunda é a que ninguém percebe quebrada — uma
 nome de quem elaborou continua parecendo certa.
 """
 
+from pathlib import Path
+
 import pytest
 from django.urls import reverse
 
@@ -126,3 +128,25 @@ def _publicar_aberta(api_client, manager_headers, process_payload):
         process_payload,
         rascunho=rascunho_aberto_com_documentos(timezone.now() - timedelta(seconds=1)),
     )
+
+
+CARTAO = (
+    Path(__file__).resolve().parents[3]
+    / "processo_seletivo/portal/templates/portal/_cartao_da_selecao.html"
+)
+
+
+def test_o_separador_do_cartao_acompanha_o_valor_que_ele_separa():
+    """`processoCode` pode não existir no conteúdo publicado, e o ponto saía sozinho.
+
+    A linha começava com "· Edital 07/2026", e ponto que não separa nada é ruído com aparência de
+    erro de dado — quem lê não tem como saber que aquele é o segundo campo, e não o primeiro.
+
+    O que se prende é a **forma**: o separador vive dentro da condição do valor que o precede.
+    Renderizar não serve de prova aqui, porque a seleção que expõe o defeito é justamente a que
+    não se consegue publicar pelo caminho normal — o código é obrigatório na elaboração.
+    """
+    marcacao = CARTAO.read_text()
+
+    assert "{% if selecao.processo_codigo %}{{ selecao.processo_codigo }} · {% endif %}" in marcacao
+    assert "{{ selecao.processo_codigo }} · Edital" not in marcacao

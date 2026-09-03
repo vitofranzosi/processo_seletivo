@@ -27,6 +27,14 @@ class EtapaAvaliacao(models.Model):
     eliminatory = models.BooleanField(default=False)
     classificatory = models.BooleanField(default=False)
     minimum_score = models.DecimalField(max_digits=7, decimal_places=4, null=True, blank=True)
+    # Quantas avaliações cada inscrição recebe nesta Etapa, e qual a pontuação máxima. As duas
+    # entram juntas na versão canônica 5 e são **normativas**: a primeira decide se uma nota
+    # isolada elimina o candidato ou se há segunda leitura, e a segunda é o limite contra o qual
+    # a pontuação é validada — regra que afeta direito não pode ser configuração de tela (012,
+    # FR-007, D-001). `null` significa "não declarado", e o que a ausência quer dizer vive num
+    # leitor só, em `avaliacoes/domain/previsao.py` (012, FR-009, FR-066).
+    evaluations_per_registration = models.PositiveSmallIntegerField(null=True, blank=True)
+    maximum_score = models.DecimalField(max_digits=7, decimal_places=4, null=True, blank=True)
     # A Etapa referencia o Evento; as datas são do Evento e não são copiadas. `SET_NULL` porque
     # remover o Evento não pode remover a Etapa — o que não pode é o vínculo sobreviver a ele.
     evento = models.ForeignKey(
@@ -50,6 +58,17 @@ class EtapaAvaliacao(models.Model):
             models.CheckConstraint(
                 condition=Q(weight__isnull=True) | Q(weight__gt=0),
                 name="ck_etapa_weight_positivo",
+            ),
+            # Zero avaliações não é declaração, é contradição: a Etapa existe para ser avaliada.
+            models.CheckConstraint(
+                condition=Q(evaluations_per_registration__isnull=True)
+                | Q(evaluations_per_registration__gt=0),
+                name="ck_etapa_avaliacoes_positivas",
+            ),
+            # Máxima zero afirmaria uma pontuação que não pontua, pelo mesmo motivo de `weight`.
+            models.CheckConstraint(
+                condition=Q(maximum_score__isnull=True) | Q(maximum_score__gt=0),
+                name="ck_etapa_maximum_score_positiva",
             ),
         ]
 

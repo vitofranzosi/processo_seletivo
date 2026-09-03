@@ -8,8 +8,11 @@ O cartão inteiro é alvo do toque; o link é um só, estendido pelo pseudo-elem
 <li class="selecao">
   <a class="titulo" href="{% url 'portal:selecao' selecao.edital_id %}">{{ selecao.processo_titulo }}</a>
   {% if selecao.titulo %}<p class="chamada">{{ selecao.titulo }}</p>{% endif %}
-  <p class="meta">{{ selecao.processo_codigo }} · Edital {{ selecao.numero }}/{{ selecao.ano }}
-    · Unidade: {{ selecao.unidade }}</p>
+  {% comment %} O código pode não existir no conteúdo publicado, e o separador saía sozinho: a
+     linha começava com "· Edital 07/2026". Ponto que não separa nada é ruído com aparência de
+     erro de dado. {% endcomment %}
+  <p class="meta">{% if selecao.processo_codigo %}{{ selecao.processo_codigo }} · {% endif %}Edital
+    {{ selecao.numero }}/{{ selecao.ano }} · Unidade: {{ selecao.unidade }}</p>
 
   {% if selecao.perfis %}
   {% comment %}

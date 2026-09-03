@@ -34,7 +34,13 @@ BACKEND = RAIZ / "backend"
 CITACAO = re.compile(r"\b(SC-UX-\d+[a-z]?|(?:FR|SC|UX)-\d+[a-z]?)\b")
 DEFINICAO = re.compile(r"\*\*(SC-UX-\d+[a-z]?|(?:FR|SC|UX)-\d+[a-z]?)\*\*")
 DECISAO = re.compile(r"\b(D-\d+)\b")
-DECISAO_DEFINIDA = re.compile(r"^## (D-\d+)", re.M)
+# O nível do título não importa, e o arquivo é o da feature: a `012` fechou as decisões dela
+# **antes** do planejamento, e por isso elas moram na §5 da spec, em `###`, enquanto a
+# `research.md` guarda as questões técnicas em `T-NNN`. Exigir `##` em `research.md` prenderia
+# o hábito das features que puderam decidir depois, e não a regra — que é a decisão estar
+# declarada dentro da feature que a produziu.
+DECISAO_DEFINIDA = re.compile(r"^#{2,4} (D-\d+)", re.M)
+ONDE_SE_DECIDE = ("research.md", "spec.md")
 
 IGNORADOS = ("checklists", "rascunho-de-entrada.md")
 FORA_DA_ARVORE = (".venv", "__pycache__", "node_modules", "htmlcov", ".pytest_cache")
@@ -96,13 +102,23 @@ def test_nenhuma_decisao_citada_esta_ausente_da_pesquisa():
 
     Aqui a varredura é feita **dentro** de cada feature, ao contrário da dos requisitos — e é o que
     faz sentido, porque uma decisão só é lida no contexto que a produziu.
+
+    Onde ela é declarada varia, e não deveria fazer diferença: a `009`, a `010` e a `011` decidiram
+    durante a pesquisa e escreveram em `research.md`; a `012` fechou as dela **antes** do
+    planejamento, e escreveu na spec. O que o teste cobra é que a decisão citada exista na feature,
+    não em qual dos dois arquivos ela ficou.
     """
     perdidas = {}
     for feature in sorted(SPECS.glob("*/")):
-        pesquisa = feature / "research.md"
-        if not pesquisa.exists():
+        onde = [feature / nome for nome in ONDE_SE_DECIDE]
+        if not any(arquivo.exists() for arquivo in onde):
             continue
-        decisoes = set(DECISAO_DEFINIDA.findall(pesquisa.read_text(encoding="utf-8")))
+        decisoes = {
+            identificador
+            for arquivo in onde
+            if arquivo.exists()
+            for identificador in DECISAO_DEFINIDA.findall(arquivo.read_text(encoding="utf-8"))
+        }
         for artefato in sorted(feature.rglob("*.md")):
             if not _relevante(artefato):
                 continue

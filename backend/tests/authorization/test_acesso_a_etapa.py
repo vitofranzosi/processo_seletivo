@@ -19,7 +19,7 @@ def joao_alocado_em_a1(gestor, processo_a, edital_a, comissao_de_a, etapa_a1):
 
 
 def url(edital, etapa_id):
-    return reverse("interface:atribuicao", args=[edital.id, etapa_id])
+    return reverse("interface:minha-etapa", args=[edital.id, etapa_id])
 
 
 def test_a_etapa_alocada_abre(client, seletor_ligado, edital_a, etapa_a1, joao_alocado_em_a1):

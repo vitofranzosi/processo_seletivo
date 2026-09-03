@@ -43,3 +43,39 @@ def compor_rascunho(client, edital, perfis=None, eventos=None):
         )
         assert resposta.status_code == 302, resposta.content
     return edital
+
+
+# Ganchos, e não desenho: nomes que a marcação carrega para o JavaScript ou para as consultas dos
+# testes acharem o elemento. A folha não decide nada sobre eles, e por isso a varredura de classes
+# órfãs os dispensa — declarados aqui, um a um, para que a dispensa seja escolha e não descuido.
+CLASSES_SEM_DESENHO = {
+    "alvo",
+    "base",
+    "confirmacao",
+    "conteudo-vigente",
+    "etapa",
+    "evento",
+    "identidades",
+    "modalidade",
+    "pessoa",
+    "quem",
+    "secao",
+    "tamanho",
+    # A grade da lista de documentos posiciona por ordem, e não por nome: o `span` do requisito é
+    # célula da grade do `ul`, e a classe serve para achá-lo em teste.
+    "requisito",
+    # `.linha` já desenha o bloco; o sufixo marca **qual** foi acrescentado agora no formulário de
+    # Retificação, e hoje não carrega desenho próprio nem é lido por script algum.
+    "evento-novo",
+    "perfil-novo",
+    "perfil",
+    # Envolve um `.botao`, que é quem tem o peso; a classe nomeia o lugar, não o desenho.
+    "proximo-passo",
+    # --- portal ---
+    # O par de `.linha-do-tempo.pessoal`: aquela é a exceção e tem regra; esta é a linha comum, e
+    # o nome existe para dizer qual é qual na marcação.
+    "processo",
+    # Nomeia **qual** `.sub` é esta — a notícia de que o código foi enviado. O desenho é o de
+    # `.sub`; se um dia a notícia precisar de mais peso, é aqui que ela ganha.
+    "aviso-do-envio",
+}

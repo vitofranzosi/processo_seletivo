@@ -8,6 +8,8 @@ e a trilha não pode virar a brecha por onde se enxerga o que não se alcança.
 import base64
 import binascii
 
+from django.db.models import Q
+
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.shared.api.problems import DomainError
 
@@ -45,6 +47,7 @@ def consultar(
     actor,
     aggregate_type=None,
     aggregate_ids=None,
+    aggregate_filter=None,
     cursor=None,
     limit=LIMITE_PADRAO,
     operation=None,
@@ -60,6 +63,12 @@ def consultar(
         registros = registros.filter(aggregate_type=aggregate_type)
     if aggregate_ids is not None:
         registros = registros.filter(aggregate_id__in=list(aggregate_ids))
+    if aggregate_filter is not None:
+        # A alternativa a `aggregate_ids` para quem tem escala: um `Q` de subconsultas, resolvido
+        # **dentro** do banco. Trazer mil identificadores para o Python e devolvê-los num `IN`
+        # produz SQL que cresce com o trabalho da Etapa — quarenta e três mil caracteres para
+        # montar uma página de vinte linhas, medidos com mil atribuições.
+        registros = registros.filter(aggregate_filter)
     if operation:
         registros = registros.filter(operation=operation)
     if cursor:
@@ -110,6 +119,89 @@ def trilha_da_comissao(
     return consultar(
         actor=actor,
         aggregate_ids=[*membros, *alocacoes],
+        cursor=cursor,
+        limit=limit,
+        operation=operation,
+    )
+
+
+def trilha_da_avaliacao(
+    *,
+    actor,
+    edital,
+    etapa_id,
+    inscricao=None,
+    avaliador=None,
+    cursor=None,
+    limit=LIMITE_PADRAO,
+    operation=None,
+):
+    """Tudo que aconteceu na execução do trabalho de uma Etapa — filtrável pelas três dimensões.
+
+    FR-050 pede a trilha filtrável por inscrição, por avaliador e por operação, e as duas primeiras
+    **não saem de graça**:
+
+    - **`aggregate_id` não é a inscrição.** Os sete atos têm agregados diferentes: abrir documento
+      registra sobre `Inscricao`, herdado da 009; atribuir e remover sobre `Atribuicao`; gravar,
+      concluir e reabrir sobre `Avaliacao`; impedir sobre o `Impedimento`, e sobre cada Atribuição
+      inativada. Filtrar por um só traria um sétimo dos eventos e esconderia o resto — pior que
+      não filtrar, porque parece completo.
+    - **`actor_subject` não é o avaliador.** Ele é quem praticou o ato, e nos atos da presidência o
+      avaliador é o **afetado**. Perguntar "o que aconteceu com o trabalho da Ana" por ele
+      devolveria só o que a Ana fez, e nada do que fizeram com ela.
+
+    Daí os sete atos serem resolvidos **pelas relações**, e não por um campo do registro. Todos
+    eles ancoram em objeto que nomeia a Etapa: atribuir, remover e abrir documento na Atribuição;
+    gravar, concluir e reabrir na Avaliação; impedir no Impedimento (T-016).
+
+    A abertura de documento **ancorou na Inscrição até 2026-09-02**, e ancorar ali era defeito: a
+    Inscrição não distingue Etapa nem avaliador, de modo que a trilha de uma Etapa mostrava as
+    aberturas de outra — e as consultas administrativas da 009, que registram a mesma operação
+    sobre a mesma Inscrição, apareciam como se fossem trabalho da Mesa. Um histórico que mistura
+    atos de origens diferentes é pior que um histórico incompleto, porque parece verdadeiro.
+
+    O molde é `trilha_da_comissao`: resolver identificadores pelas relações e entregar o conjunto
+    ao `consultar` que já existe, em vez de carimbar a inscrição em cada evento. Sendo **uma**
+    consulta, e não duas reunidas em memória, o cursor da paginação continua valendo — duas
+    páginas somadas fora do banco não têm cursor comum, e a segunda ficava inalcançável.
+    """
+    from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao, Impedimento
+    from processo_seletivo.comissoes.models import AlocacaoEtapa
+
+    atribuicoes = Atribuicao.objects.filter(edital=edital, etapa_id=etapa_id)
+    # **O impedimento é da pessoa e da inscrição, e não da Etapa** — e por isso ele precisa de um
+    # critério de pertinência, ou apareceria na trilha de toda Etapa do Edital, inclusive naquelas
+    # em que a pessoa nunca trabalhou.
+    #
+    # O critério é a **alocação**: o impedimento só tem efeito onde a pessoa poderia receber
+    # trabalho. Vale a alocação em qualquer estado, porque a removida é história e a trilha existe
+    # para lê-la; e é o que preserva o caso preventivo — impedir antes de distribuir aparece na
+    # Etapa em que aquela pessoa atua, que é onde a decisão importa (T-016).
+    alocados = AlocacaoEtapa.objects.filter(edital=edital, etapa_id=etapa_id).values_list(
+        "membro__identity_subject", flat=True
+    )
+    impedimentos = Impedimento.objects.filter(
+        inscricao__edital=edital, identity_subject__in=alocados
+    )
+    if inscricao:
+        atribuicoes = atribuicoes.filter(inscricao_id=inscricao)
+        impedimentos = impedimentos.filter(inscricao_id=inscricao)
+    if avaliador:
+        # Por Atribuição, e não pelo ator: nos atos da presidência quem pratica é ela, e filtrar
+        # pelo ator devolveria só o que a pessoa fez — nunca o que fizeram com o trabalho dela.
+        atribuicoes = atribuicoes.filter(membro__identity_subject=avaliador)
+        impedimentos = impedimentos.filter(identity_subject=avaliador)
+    # Subconsultas, e não listas de identificadores: numa Etapa de duas mil atribuições, resolver
+    # em Python e devolver o resultado num `IN` faz o texto da consulta crescer com o trabalho já
+    # distribuído — e ele não tem relação nenhuma com o tamanho da página que se quer ler.
+    alcance = (
+        Q(aggregate_id__in=atribuicoes.values("id"))
+        | Q(aggregate_id__in=Avaliacao.objects.filter(atribuicao__in=atribuicoes).values("id"))
+        | Q(aggregate_id__in=impedimentos.values("id"))
+    )
+    return consultar(
+        actor=actor,
+        aggregate_filter=alcance,
         cursor=cursor,
         limit=limit,
         operation=operation,

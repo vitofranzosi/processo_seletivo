@@ -38,6 +38,11 @@ INSTALLED_APPS = [
     # Etapa. App próprio porque é autorização operacional sobre Processo e Edital, e não o ciclo
     # de vida normativo deles — as telas continuam em `interface`, que já é o canal dos dois atores.
     "processo_seletivo.comissoes",
+    # A execução do trabalho (012): a atribuição de inscrições a quem já está alocado, a avaliação
+    # que ela autoriza e o impedimento que a bloqueia. App separado de `comissoes` pela mesma razão
+    # que separa organizar de executar: a 011 responde quem pode trabalhar em cada Etapa, a 012
+    # responde quais inscrições cabem a cada um — e misturá-las entregaria a confusão à 013.
+    "processo_seletivo.avaliacoes",
 ]
 TEMPLATES = [
     {

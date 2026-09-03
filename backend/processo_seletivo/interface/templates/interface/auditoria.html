@@ -1,9 +1,12 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
-{% block titulo %}{% if da_comissao %}Auditoria da comissão — {{ processo.institutional_code }}{% else %}Auditoria — Edital {{ edital.number }}/{{ edital.year }}{% endif %}{% endblock %}
+{% block titulo %}{% if da_avaliacao %}Trilha da avaliação — {{ etapa.name }}{% elif da_comissao %}Auditoria da comissão — {{ processo.institutional_code }}{% else %}Auditoria — Edital {{ edital.number }}/{{ edital.year }}{% endif %}{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
   <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  {% if da_comissao %}
+  {% if da_avaliacao %}
+  <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> ›
+  <span aria-current="page">Trilha da avaliação</span>
+  {% elif da_comissao %}
   <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
   <span aria-current="page">Auditoria da comissão</span>
   {% else %}
@@ -13,7 +16,58 @@
 </nav>
 
 <h1>Trilha de auditoria</h1>
-{% if da_comissao %}
+{% if da_avaliacao %}
+<p class="sub">{{ etapa.name }} — Edital {{ edital.number }}/{{ edital.year }}</p>
+{% comment %}
+FR-050: esta trilha é volumosa por natureza — duas mil atribuições e cada documento aberto —, e por
+isso nasce filtrável pelas três dimensões. Duas delas não saem de um campo só do registro: os sete
+atos têm agregados diferentes, e nos atos da presidência o ator é ela, não o avaliador afetado.
+{% endcomment %}
+<p class="ajuda">Todo ato da execução do trabalho nesta Etapa — atribuir, remover, abrir documento,
+  gravar, concluir, reabrir e impedir —, do mais recente para o mais antigo. Filtrar por avaliador
+  traz também o que fizeram <strong>com</strong> o trabalho dele, e não só o que ele fez.</p>
+{% comment %}
+FR-054: a trilha guarda **que o ato aconteceu**, e nunca a pontuação nem o parecer. O conteúdo do
+que foi concluído vive no registro do domínio, e é consultável em página própria (FR-091).
+{% endcomment %}
+<p class="ajuda">A trilha não guarda pontuação nem parecer. O que foi concluído, sob qual versão e
+  quando está em <a href="{% url 'interface:conclusoes-preservadas' edital.id etapa.id %}">conclusões
+  preservadas</a>.</p>
+
+<form method="get" class="filtro">
+  <p class="campo">
+    <label for="avaliador">Avaliador</label>
+    <select id="avaliador" name="avaliador">
+      <option value="">Todos</option>
+      {% for membro in avaliadores_da_etapa %}
+      <option value="{{ membro.identity_subject }}" {% if membro.identity_subject == avaliador_filtro %}selected{% endif %}>
+        {% if membro.display_label %}{{ membro.display_label }} — {% endif %}{{ membro.identity_subject }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  <p class="campo">
+    <label for="inscricao">Inscrição</label>
+    <input type="search" id="inscricao" name="inscricao" value="{{ inscricao_filtro }}"
+           aria-describedby="ajuda-inscricao-trilha">
+    <span class="ajuda" id="ajuda-inscricao-trilha">Protocolo da inscrição, como ele aparece nos atos abaixo — ou o identificador.</span>
+  </p>
+  <p class="campo">
+    <label for="operacao">Operação</label>
+    <select id="operacao" name="operacao">
+      <option value="">Todas</option>
+      {% for chave, rotulo in operacoes_da_avaliacao %}
+      <option value="{{ chave }}" {% if chave == operacao_filtro %}selected{% endif %}>{{ rotulo }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  <p class="salvar">
+    <button type="submit" class="acao">Filtrar</button>
+    {% if inscricao_filtro or avaliador_filtro or operacao_filtro %}
+    <a class="acao" href="{% url 'interface:trilha-da-avaliacao' edital.id etapa.id %}">Limpar</a>{% endif %}
+  </p>
+  {% if filtro_invalido %}<p class="erro" role="alert" tabindex="-1" autofocus>{{ filtro_invalido }}</p>{% endif %}
+</form>
+{% elif da_comissao %}
 <p class="sub">Comissão de {{ processo.title }} — <span class="codigo">{{ processo.institutional_code }}</span></p>
 <p class="ajuda">Toda inclusão, alteração de função, remoção e alocação da comissão deste Processo,
   do mais recente para o mais antigo. Cada registro diz por qual base a pessoa estava autorizada —
@@ -62,6 +116,7 @@
       <span class="quando">{{ registro.quando|date:"d/m/Y H:i:s" }}</span>
       <strong class="operacao">{{ registro.operacao }}</strong>
       <span class="agregado">{{ registro.agregado }}</span>
+      {% if registro.sobre %}<span class="alvo">{{ registro.sobre }}</span>{% endif %}
     </div>
     <div class="corpo">
       <span class="ator">por <strong>{{ registro.ator }}</strong></span>
@@ -82,7 +137,7 @@
 {% if proximo_cursor %}
 <p class="navegacao-etapa">
   <a class="botao secundario"
-     href="?cursor={{ proximo_cursor|urlencode }}">Ver atos anteriores</a>
+     href="{% pagina_seguinte proximo_cursor %}">Ver atos anteriores</a>
 </p>
 {% endif %}
 {% else %}

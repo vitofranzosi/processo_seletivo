@@ -3,7 +3,7 @@
 {% load arquivos_do_candidato %}
 {% block conteudo %}
 <h1>{{ processo_titulo }}</h1>
-<p class="sub">{{ processo_codigo }} · Edital {{ numero }}/{{ ano }} · Unidade: {{ unidade }}</p>
+<p class="sub">{% if processo_codigo %}{{ processo_codigo }} · {% endif %}Edital {{ numero }}/{{ ano }} · Unidade: {{ unidade }}</p>
 
 {% include "portal/_periodo.html" with dias_restantes=dias_restantes %}
 
@@ -18,61 +18,76 @@ inscrição. Ler o Edital continua a um toque — só não disputa mais a decis�
 <h2>Perfis e vagas</h2>
 <ul class="perfis">
   {% for perfil in perfis %}
+  {% comment %}
+  **A ordem é a da decisão.** O cartão dizia nome → dados → INSCREVER-SE → documentos → requisitos:
+  as duas informações com que a pessoa decide — “eu tenho o título que pedem?” e “eu tenho os
+  arquivos?” — vinham **depois** do botão que pede a decisão. Quem lê de cima para baixo era
+  convidado a se inscrever antes de saber se podia.
+
+  Agora o requisito vem logo abaixo do nome, os documentos são anunciados com a contagem antes de
+  serem abertos, e a ação fecha o argumento. Em tela larga, vagas e ação ocupam a coluna da direita,
+  que estava vazia; em 375 px tudo volta a uma coluna, na mesma ordem de leitura.
+  {% endcomment %}
   <li class="perfil">
     <h3>{{ perfil.nome }}</h3>
-    {% if perfil.descricao %}<p class="meta">{{ perfil.descricao }}</p>{% endif %}
-    <dl>
-      <dt>Vagas imediatas</dt>
-      <dd>{{ perfil.vagas }}{% if perfil.reserva %}, {{ perfil.reserva }}{% endif %}</dd>
-      {% if perfil.localidade %}
-      <dt>Localidade</dt>
-      <dd>{{ perfil.localidade }}</dd>
-      {% endif %}
-      {% if perfil.modalidades %}
-      <dt>Concorrência</dt>
-      <dd>{{ perfil.modalidades|join:"; " }}</dd>
-      {% endif %}
-    </dl>
-    {% if perfil.enviada %}
-    <p class="convite"><span class="situacao aberto">✓ Inscrição enviada</span>
-      <a class="documento" href="{% url 'portal:comprovante' perfil.inscricao_id %}">Ver comprovante</a></p>
-    {% elif perfil.inscricao_id %}
-    <p class="convite"><a class="documento" href="{% url 'portal:inscricao' perfil.inscricao_id %}">Continuar inscrição</a></p>
-    {% elif recebe_inscricoes %}
-    <form class="convite" method="post" action="{% url 'portal:inscrever' edital_id perfil.id %}">
-      {% csrf_token %}
-      <button type="submit" class="principal">Inscrever-se nesta vaga</button>
-    </form>
-    {% endif %}
-    {% comment %}
-    O que será pedido, antes de a pessoa se identificar (L7 da auditoria de percurso). Sem isto, a
-    página listava requisitos de titulação e nada sobre arquivos: descobrir que precisaria do
-    diploma digitalizado custava identificar-se e abrir uma inscrição. Quem lê no ônibus e não tem
-    os arquivos à mão desiste no meio — e volta, se souber o que preparar.
-    {% endcomment %}
-    {% if perfil.documentos_anunciados.sempre or perfil.documentos_anunciados.por_modalidade %}
-    <details class="documentos-anunciados">
-      <summary>Documentos que serão pedidos</summary>
-      {% if perfil.documentos_anunciados.sempre %}
-      <ul>
-        {% for documento in perfil.documentos_anunciados.sempre %}<li>{{ documento }}</li>{% endfor %}
+
+    <div class="corpo-vaga">
+      {% if perfil.descricao %}<p class="meta">{{ perfil.descricao }}</p>{% endif %}
+
+      {% if perfil.requisitos %}
+      <p class="rotulo-vaga">Requisitos</p>
+      <ul class="requisitos">
+        {% for requisito in perfil.requisitos %}<li>{{ requisito }}</li>{% endfor %}
       </ul>
       {% endif %}
-      {% for grupo in perfil.documentos_anunciados.por_modalidade %}
-      <p class="meta">Se concorrer em <strong>{{ grupo.modalidade }}</strong>, também:</p>
-      <ul>
-        {% for documento in grupo.documentos %}<li>{{ documento }}</li>{% endfor %}
-      </ul>
-      {% endfor %}
-      <p class="meta">Cada um em PDF, até {% limite_de_arquivo %}.</p>
-    </details>
-    {% endif %}
-    {% if perfil.requisitos %}
-    <p class="meta" style="margin-top:.75rem">Requisitos</p>
-    <ul class="requisitos">
-      {% for requisito in perfil.requisitos %}<li>{{ requisito }}</li>{% endfor %}
-    </ul>
-    {% endif %}
+
+      <p class="dados-vaga">
+        {% if perfil.localidade %}<span>{{ perfil.localidade }}</span>{% endif %}
+        {% if perfil.modalidades %}<span>Concorrência: {{ perfil.modalidades|join:"; " }}</span>{% endif %}
+      </p>
+
+      {% comment %}
+      O que será pedido, antes de a pessoa se identificar (L7 da auditoria de percurso). Sem isto, a
+      página listava requisitos de titulação e nada sobre arquivos: descobrir que precisaria do
+      diploma digitalizado custava identificar-se e abrir uma inscrição. Quem lê no ônibus e não tem
+      os arquivos à mão desiste no meio — e volta, se souber o que preparar. A contagem no resumo é
+      o que transforma “tem mais coisa aqui” em informação.
+      {% endcomment %}
+      {% if perfil.documentos_anunciados.sempre or perfil.documentos_anunciados.por_modalidade %}
+      <details class="documentos-anunciados">
+        <summary>{{ perfil.documentos_anunciados.total }} documento{{ perfil.documentos_anunciados.total|pluralize:"s" }} que ser{{ perfil.documentos_anunciados.total|pluralize:"á,ão" }} pedido{{ perfil.documentos_anunciados.total|pluralize:"s" }}</summary>
+        {% if perfil.documentos_anunciados.sempre %}
+        <ul>
+          {% for documento in perfil.documentos_anunciados.sempre %}<li>{{ documento }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+        {% for grupo in perfil.documentos_anunciados.por_modalidade %}
+        <p class="meta">Se concorrer em <strong>{{ grupo.modalidade }}</strong>, também:</p>
+        <ul>
+          {% for documento in grupo.documentos %}<li>{{ documento }}</li>{% endfor %}
+        </ul>
+        {% endfor %}
+        <p class="meta">Cada um em PDF, até {% limite_de_arquivo %}.</p>
+      </details>
+      {% endif %}
+    </div>
+
+    <div class="lateral-vaga">
+      <p class="vagas-numero"><strong>{{ perfil.vagas }}</strong>
+        <span>vaga{{ perfil.vagas|pluralize:"s" }} imediata{{ perfil.vagas|pluralize:"s" }}</span>
+        {% if perfil.reserva %}<span class="reserva">{{ perfil.reserva }}</span>{% endif %}</p>
+      {% if perfil.enviada %}
+      <p class="convite"><span class="situacao aberto">✓ Inscrição enviada</span>
+        <a class="documento" href="{% url 'portal:comprovante' perfil.inscricao_id %}">Ver comprovante</a></p>
+      {% elif perfil.inscricao_id %}
+      <p class="convite"><a class="documento" href="{% url 'portal:inscricao' perfil.inscricao_id %}">Continuar inscrição</a></p>
+      {% elif recebe_inscricoes %}
+      <form class="convite" method="post" action="{% url 'portal:inscrever' edital_id perfil.id %}">
+        {% csrf_token %}
+        <button type="submit" class="principal">Inscrever-se nesta vaga</button>
+      </form>
+      {% endif %}
+    </div>
   </li>
   {% endfor %}
 </ul>

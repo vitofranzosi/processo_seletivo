@@ -45,6 +45,10 @@ def _stages(edital: Edital) -> list[dict]:
             "eliminatory": etapa.eliminatory,
             "classificatory": etapa.classificatory,
             "minimumScore": _decimal_canonico(etapa.minimum_score),
+            # O incremento da `012`: quantas avaliações e qual a máxima (FR-007). `None` viaja
+            # como `null`, e é assim que "não declarado" fica dito no conteúdo publicado.
+            "evaluationsPerRegistration": etapa.evaluations_per_registration,
+            "maximumScore": _decimal_canonico(etapa.maximum_score),
             # A Etapa referencia o Evento; as datas são dele e não são copiadas (FR-021).
             "scheduleEventId": None if etapa.evento_id is None else str(etapa.evento_id),
         }

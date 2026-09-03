@@ -160,9 +160,15 @@ def _documentos_anunciados(conteudo, perfil):
         ]
         if com_ela:
             por_modalidade.append({"modalidade": modalidade.get("name", ""), "documentos": com_ela})
+    nomes_de_sempre_em_ordem = [item.get("name", "") for item in sempre]
     return {
-        "sempre": [item.get("name", "") for item in sempre],
+        "sempre": nomes_de_sempre_em_ordem,
         "por_modalidade": por_modalidade,
+        # **Quantos são**, para o resumo dizer isso antes de a pessoa abrir. Um triângulo com
+        # “Documentos que serão pedidos” parece enfeite; “2 documentos que serão pedidos” é
+        # informação — e é o que decide se dá para se inscrever agora ou se é preciso preparar.
+        "total": len(nomes_de_sempre_em_ordem)
+        + sum(len(grupo["documentos"]) for grupo in por_modalidade),
     }
 
 

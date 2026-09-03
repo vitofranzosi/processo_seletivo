@@ -135,7 +135,16 @@ def test_nada_de_fila_notificacao_ou_atribuicao_nasce(api_client, manager_header
 
     _ate(api_client, manager_headers, process_payload, parar_em="homologado")
 
-    nomes = {modelo.__name__.lower() for modelo in apps.get_models()}
+    # `avaliacoes.Atribuicao` é a exceção **nomeada**, e não uma folga: a `012` promoveu a palavra
+    # a entidade do domínio com outro significado — o vínculo avaliador→inscrição —, e o que este
+    # guard persegue é estado de workflow sobre o Edital (D-003 da `012`). Excluir a classe pelo
+    # nome completo mantém o dente: um `TarefaAtribuicao` novo, em qualquer app, continua caindo.
+    LEGITIMOS = {("avaliacoes", "atribuicao")}
+    nomes = {
+        modelo.__name__.lower()
+        for modelo in apps.get_models()
+        if (modelo._meta.app_label, modelo.__name__.lower()) not in LEGITIMOS
+    }
     for proibido in ("fila", "notificacao", "atribuicao", "designacao", "tarefa", "pendenciaator"):
         assert proibido not in nomes, f"{proibido} indica mecanismo que FR-030 proíbe"
 

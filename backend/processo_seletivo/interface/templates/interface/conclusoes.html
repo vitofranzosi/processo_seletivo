@@ -1,0 +1,111 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Conclusões preservadas — {{ etapa.name }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> ›
+  <span aria-current="page">Conclusões preservadas</span>
+</nav>
+
+<h1>Conclusões preservadas</h1>
+<p class="sub">{{ etapa.name }} — Edital {{ edital.number }}/{{ edital.year }}</p>
+
+{% comment %}
+FR-091: a preservação é **consultável**, e não apenas existente no banco. Reabrir devolve a
+Avaliação a rascunho e a esvazia de pontuação, versão e instante — o que aquela pessoa havia
+concluído antes vive aqui, no registro append-only do domínio, e não na trilha (FR-054, FR-094).
+{% endcomment %}
+<p class="ajuda">O que cada avaliador havia concluído, quando, sob qual versão do Edital — e o que
+  aconteceu com aquela conclusão depois. Nada aqui é apagado ou alterado: preservar não é o mesmo
+  que continuar valendo, e cada linha diz qual dos dois é o caso.</p>
+
+<form method="get" class="filtro">
+  <p class="campo">
+    <label for="inscricao">Inscrição</label>
+    <input type="search" id="inscricao" name="inscricao" value="{{ inscricao_filtro }}"
+           aria-describedby="ajuda-inscricao-conclusoes">
+    <span class="ajuda" id="ajuda-inscricao-conclusoes">Protocolo da inscrição, como ele aparece na tabela — ou o identificador.</span>
+  </p>
+  <p class="salvar">
+    <button type="submit" class="acao">Filtrar</button>
+    {% if inscricao_filtro %}
+    <a class="acao" href="{% url 'interface:conclusoes-preservadas' edital.id etapa.id %}">Limpar</a>{% endif %}
+  </p>
+  {% if filtro_invalido %}<p class="erro" role="alert" tabindex="-1" autofocus>{{ filtro_invalido }}</p>{% endif %}
+</form>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível reabrir:</strong> {{ erro }}</p>{% endif %}
+{% if resultado %}<p class="sucesso" role="status" tabindex="-1">{{ resultado }}</p>{% endif %}
+
+{% if linhas %}
+<div class="tabela-rolavel">
+<table class="tabela">
+  <caption class="oculto">Conclusões preservadas desta Etapa</caption>
+  <thead>
+    <tr>
+      <th scope="col">Inscrição</th>
+      <th scope="col">Avaliador</th>
+      <th scope="col">Pontuação</th>
+      <th scope="col">Parecer</th>
+      <th scope="col">Versão que governou</th>
+      <th scope="col">Concluída em</th>
+      <th scope="col">Situação</th>
+      {% if pode_reabrir %}<th scope="col">Reabrir</th>{% endif %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for linha in linhas %}
+    <tr>
+      <td>{{ linha.inscricao.protocolo|default:linha.inscricao.id }}</td>
+      <td>{{ linha.membro.display_label|default:linha.conclusao.concluida_por }}</td>
+      <td>{{ linha.conclusao.pontuacao|pontuacao }}</td>
+      <td>{{ linha.conclusao.parecer|default:"—" }}</td>
+      <td>vigente desde {{ linha.conclusao.versao.valid_from|date:"d/m/Y H:i" }}
+        <span class="codigo">{{ linha.conclusao.versao.id }}</span></td>
+      <td>{{ linha.conclusao.concluida_em|date:"d/m/Y H:i:s" }} por {{ linha.conclusao.concluida_por }}</td>
+      {% comment %}
+      A situação vem por extenso, e não por cor: quem lê em escala de cinza precisa distinguir
+      "em vigor" de "preservada e inelegível" (FR-076 da 011, checklist de UX).
+      {% endcomment %}
+      <td>{{ linha.rotulo }}</td>
+      {% if pode_reabrir %}
+      {% comment %}
+      Só a conclusão **em vigor** é reabrível: as anteriores já foram substituídas por uma
+      reabertura, e a que está sob atribuição inativa saiu do conjunto por ato nomeado — reabri-la
+      não a traria de volta. O formulário pede o motivo antes de qualquer coisa (FR-036).
+      {% endcomment %}
+      <td>
+        {% if linha.situacao == "em_vigor" %}
+        {% comment %} O motivo é o que sustenta o ato, e a caixa dele cabia em oito caracteres:
+           espremida numa das oito colunas, quem escrevia não via o que havia escrito. A coluna
+           passa a ter a largura do que se digita nela, com o botão abaixo do campo. {% endcomment %}
+        <form method="post" class="reabertura" action="{% url 'interface:reabrir-avaliacao' edital.id etapa.id %}">
+          {% csrf_token %}
+          <input type="hidden" name="avaliacao_id" value="{{ linha.avaliacao.id }}">
+          <input type="hidden" name="expected_revision" value="{{ linha.avaliacao.revision }}">
+          <input type="hidden" name="chave_idempotencia" value="{{ chave_reabertura }}-{{ linha.avaliacao.id }}">
+          <label for="motivo-{{ linha.conclusao.id }}" class="oculto">Motivo da reabertura da inscrição {{ linha.inscricao.protocolo|default:linha.inscricao.id }}</label>
+          <input type="text" id="motivo-{{ linha.conclusao.id }}" name="motivo" required
+                 placeholder="Motivo da reabertura">
+          <button type="submit" class="acao">Reabrir</button>
+        </form>
+        {% else %}—{% endif %}
+      </td>
+      {% endif %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% if pagina.has_other_pages %}
+<nav class="paginacao" aria-label="Páginas das conclusões preservadas">
+  {% if pagina.has_previous %}<a href="?pagina={{ pagina.previous_page_number }}{% if inscricao_filtro %}&inscricao={{ inscricao_filtro|urlencode }}{% endif %}">Anterior</a>{% endif %}
+  <span aria-current="page">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+  {% if pagina.has_next %}<a href="?pagina={{ pagina.next_page_number }}{% if inscricao_filtro %}&inscricao={{ inscricao_filtro|urlencode }}{% endif %}">Próxima</a>{% endif %}
+</nav>
+{% endif %}
+{% else %}
+<p class="vazio">{% if inscricao_filtro %}Nenhuma conclusão corresponde ao filtro.{% else %}Nenhuma avaliação foi concluída nesta Etapa.{% endif %}</p>
+{% endif %}
+{% endblock %}

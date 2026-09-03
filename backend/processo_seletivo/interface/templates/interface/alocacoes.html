@@ -1,17 +1,22 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
-{% block titulo %}Distribuição — {{ processo.institutional_code }}{% endblock %}
+{% block titulo %}Alocação por Etapa — {{ processo.institutional_code }}{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
   <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
   <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
-  <span aria-current="page">Distribuição</span>
+  <span aria-current="page">Alocação por Etapa</span>
 </nav>
 
-<h1>Distribuição</h1>
+{% comment %}
+“Alocação”, e não “Distribuição”. Esta tela põe **pessoas em Etapas** (011); a da 012 põe
+**inscrições em avaliadores**, e as duas se chamavam Distribuição em telas vizinhas — com
+“atribuição” significando coisas diferentes em cada uma. Uma palavra por conceito.
+{% endcomment %}
+<h1>Alocação por Etapa</h1>
 <p class="sub">{{ processo.title }} — <span class="codigo">{{ processo.institutional_code }}</span></p>
 
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
-{% if request.GET.feito == "distribuir" %}<p class="sucesso" role="status">Distribuição salva.</p>{% endif %}
+{% if request.GET.feito == "distribuir" %}<p class="sucesso" role="status">Alocação salva.</p>{% endif %}
 {% if request.GET.feito == "remover" %}<p class="sucesso" role="status">Alocação removida.</p>{% endif %}
 
 <p class="acoes-do-painel">
@@ -25,9 +30,13 @@
 
 {% if resumo.etapas or resumo.editais_sem_publicacao %}
 <ul class="resumo" aria-label="Situação da distribuição">
+  {% comment %}
+  Os três contavam coisas diferentes com rótulos que não diziam qual: "sem ninguém" é de Etapas,
+  "de 7 sem Etapa" é de pessoas, e a fração ficava partida entre o número e o texto.
+  {% endcomment %}
   <li><strong>{{ resumo.com_equipe }}</strong>Etapa{{ resumo.com_equipe|pluralize:"s" }} com equipe</li>
-  <li><strong>{{ resumo.sem_equipe }}</strong>sem ninguém</li>
-  <li><strong>{{ resumo.sem_atribuicao }}</strong>de {{ resumo.membros }} sem atribuição</li>
+  <li><strong>{{ resumo.sem_equipe }}</strong>Etapa{{ resumo.sem_equipe|pluralize:"s" }} sem ninguém</li>
+  <li><strong>{{ resumo.sem_atribuicao }} de {{ resumo.membros }}</strong>sem nenhuma Etapa</li>
   {% if resumo.editais_sem_publicacao %}
   <li><strong>{{ resumo.editais_sem_publicacao }}</strong>Edital{{ resumo.editais_sem_publicacao|pluralize:",is" }} não publicado{{ resumo.editais_sem_publicacao|pluralize:"s" }}</li>
   {% endif %}
@@ -95,22 +104,49 @@
     <table class="distribuicao">
       <thead>
         <tr>
-          <th scope="col">Avaliador</th>
+          <th scope="col" class="rotulo">Avaliador</th>
           {% for coluna in matriz.colunas %}
           <th scope="col">
-            {{ coluna.nome }}
-            <span class="codigo">{{ coluna.edital.number }}/{{ coluna.edital.year }}</span>
-            {% if coluna.sem_membros %}
-            <span class="situacao s-CANCELADO">sem ninguém</span>
-            {% else %}
-            <span class="situacao s-PUBLICADO">{{ coluna.total }}</span>
-            {% endif %}
+            {% comment %}
+            Três degraus, e não cinco blocos de mesmo peso: **qual Etapa é**, **como ela está** e
+            **o que se faz nela**. Antes, `.codigo` e `.situacao` viravam `display:block` aqui — e
+            uma pastilha que existe para abraçar o próprio conteúdo, esticada à largura da coluna,
+            lê-se como campo ou barra de progresso, não como etiqueta.
+            {% endcomment %}
+            <span class="etapa-nome">{{ coluna.nome }}</span>
+            <span class="etapa-medida">
+              <span class="codigo">{{ coluna.edital.number }}/{{ coluna.edital.year }}</span>
+              {% comment %}
+              O número sozinho não dizia de quê. Numa tela que conta Etapas, membros e inscrições,
+              um "5" em pastilha verde é uma adivinha — e a resposta muda a leitura da coluna.
+              {% endcomment %}
+              {% if coluna.sem_membros %}
+              <span class="situacao s-CANCELADO">sem ninguém</span>
+              {% else %}
+              <span class="situacao s-PUBLICADO">{{ coluna.total }} alocado{{ coluna.total|pluralize:"s" }}</span>
+              {% endif %}
+            </span>
+            {% comment %}
+            **O elo entre organizar quem trabalha e organizar o trabalho.** A distribuição de uma
+            Etapa não tinha link em tela nenhuma do sistema — nem aqui, nem no Processo, nem no
+            Edital, nem em Minhas Etapas —, e por isso a 012 inteira só era alcançável digitando a
+            URL. É aqui que ela pertence: esta é a tela onde as Etapas estão.
+            {% endcomment %}
+            <a class="acao" href="{% url 'interface:distribuicao' coluna.edital.id coluna.etapa_id %}"
+               aria-label="Distribuir inscrições de {{ coluna.nome }}, Edital {{ coluna.edital.number }}/{{ coluna.edital.year }}">Distribuir</a>
+            {% comment %}
+            "Distribuir" sai desta tela e leva ao trabalho da Etapa; "todos"/"nenhum" mexem na
+            coluna que está logo abaixo. São movimentos de tamanhos diferentes e paravam com o
+            mesmo desenho — e os dois botões ainda saíam em caixa baixa enquanto o link saía em
+            maiúsculas, porque botão não herda `text-transform` do `thead`, e âncora herda.
+            {% endcomment %}
             {% if matriz.linhas and tem_presidente %}
             <span class="coluna-toda">
-              <button type="submit" name="coluna_todos" value="{{ coluna.chave }}" class="acao"
-                      aria-label="Marcar todos em {{ coluna.nome }}">todos</button>
-              <button type="submit" name="coluna_nenhum" value="{{ coluna.chave }}" class="acao"
-                      aria-label="Desmarcar todos em {{ coluna.nome }}">nenhum</button>
+              <button type="submit" name="coluna_todos" value="{{ coluna.chave }}" class="ligacao"
+                      aria-label="Marcar todos em {{ coluna.nome }}">Todos</button>
+              <span aria-hidden="true">·</span>
+              <button type="submit" name="coluna_nenhum" value="{{ coluna.chave }}" class="ligacao"
+                      aria-label="Desmarcar todos em {{ coluna.nome }}">Nenhum</button>
             </span>
             {% endif %}
           </th>
@@ -125,14 +161,28 @@
             {{ linha.membro.display_label|default:linha.membro.identity_subject }}
             {% if linha.membro.funcao == "PRESIDENTE" %}
             <span class="situacao s-PRESIDENTE">Presidente</span>{% endif %}
-            <span class="codigo">{{ linha.membro.identity_subject }}</span>
+            {% comment %}
+            O identificador repetia o nome quando os dois são iguais — "marina Presidente marina" —,
+            e uma etiqueta que só repete o que está ao lado gasta a atenção sem informar. Ele volta
+            assim que houver nome de exibição distinto, que é quando ele desempata.
+            {% endcomment %}
+            {% if linha.membro.display_label and linha.membro.display_label != linha.membro.identity_subject %}
+            <span class="codigo">{{ linha.membro.identity_subject }}</span>{% endif %}
           </th>
           {% for celula in linha.celulas %}
+          {% comment %}
+          A célula inteira é o alvo. Numa matriz, a coluna é larga porque o cabeçalho dela é
+          largo, e a caixa ficava com 17 px no meio de uma faixa de 450 — um alvo pequeno a meia
+          tela do nome a que pertence, errado com facilidade e uma vez por pessoa por Etapa. O
+          rótulo não tem texto: quem o lê é a caixa, que continua com o seu próprio nome acessível.
+          {% endcomment %}
           <td class="marca">
-            <input type="checkbox" name="celula" value="{{ celula.chave }}"
-                   {% if celula.marcada %}checked{% endif %}
-                   {% if not tem_presidente %}disabled{% endif %}
-                   aria-label="{{ linha.membro.display_label|default:linha.membro.identity_subject }} em {{ celula.coluna.nome }}, Edital {{ celula.coluna.edital.number }}/{{ celula.coluna.edital.year }}">
+            <label>
+              <input type="checkbox" name="celula" value="{{ celula.chave }}"
+                     {% if celula.marcada %}checked{% endif %}
+                     {% if not tem_presidente %}disabled{% endif %}
+                     aria-label="{{ linha.membro.display_label|default:linha.membro.identity_subject }} em {{ celula.coluna.nome }}, Edital {{ celula.coluna.edital.number }}/{{ celula.coluna.edital.year }}">
+            </label>
           </td>
           {% endfor %}
           <td class="num">{{ linha.total }}</td>

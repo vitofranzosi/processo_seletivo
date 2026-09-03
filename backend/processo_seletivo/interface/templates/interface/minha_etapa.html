@@ -1,0 +1,145 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}{{ etapa.name }} — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  {% if por_gestao %}
+  <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> ›
+  {% else %}
+  <a href="{% url 'interface:minhas-etapas' %}">Minhas Etapas</a> ›
+  {% endif %}
+  <span aria-current="page">{{ etapa.name }}</span>
+</nav>
+
+<h1>{{ etapa.name }}</h1>
+<p class="sub">Edital {{ edital.number }}/{{ edital.year }} — {{ processo.title }}</p>
+
+{% comment %}
+D-006: a página é alcançável pelas duas portas, e diz por qual delas o ator chegou — sem isso, quem
+gere confundiria a própria visão administrativa com uma atribuição sua.
+
+Estar alocado é **fato**, e não conquista: a faixa verde de sucesso dizia "deu certo" toda vez que a
+pessoa abria a própria Etapa. Ela entra na ficha, ao lado do período e do caráter, que é onde se lê
+o contexto do trabalho. Chegar pela gestão continua sendo aviso, porque ali há o que advertir.
+{% endcomment %}
+{% if not por_alocacao %}
+<p class="aviso" role="status"><strong>Você chegou aqui pela gestão da comissão</strong>, e não
+  por atribuição: você não está alocado nesta Etapa.</p>
+{% endif %}
+
+<dl class="ficha">
+  {% if por_alocacao %}
+  <div><dt>Sua situação</dt><dd class="destaque">Alocado nesta Etapa</dd></div>
+  {% endif %}
+  {% if evento %}
+  <div><dt>Período previsto</dt>
+    <dd>{{ evento.inicio|date:"d/m/Y" }}{% if evento.fim %} a {{ evento.fim|date:"d/m/Y" }}{% endif %}</dd></div>
+  {% endif %}
+  <div><dt>Caráter</dt>
+    <dd>{% if etapa.eliminatory and etapa.classificatory %}Eliminatória e classificatória
+      {% elif etapa.eliminatory %}Eliminatória
+      {% elif etapa.classificatory %}Classificatória
+      {% else %}Não declarado{% endif %}</dd></div>
+</dl>
+
+{% comment %}
+A Mesa (012, US2). Ela substitui o aviso que a 011 deixou aqui — e é por isso que aquele aviso
+existia em vez de um controle desabilitado: prometer em forma de botão inerte o que a entrega não
+cumpre seria pior do que dizer que viria depois.
+
+Só quem chegou por **alocação** tem Mesa. Quem chegou pela gestão organiza o trabalho e não o
+executa, e a página continua dizendo por qual porta ele veio (011, D-006).
+{% endcomment %}
+{% if por_alocacao %}
+<section aria-labelledby="mesa">
+  <h2 id="mesa">Minha Mesa</h2>
+
+  {% if contagens.total %}
+  {% comment %}
+  As contagens diziam "3 pendentes, 1 em rascunho" sobre um total de 3 — e quem lê soma quatro. O
+  rascunho **é** pendente; o que faltava era separar os dois estados que compõem o pendente, para
+  que as parcelas fechem com o total e digam onde o trabalho está.
+
+  Os filtros eram quatro links encostados, que se liam como uma frase. Viraram controle: cada um
+  com o seu número, e o escolhido marcado por forma, e não só por cor (`aria-current` + o traço).
+  {% endcomment %}
+  <nav class="filtros-da-mesa" aria-label="Filtrar a Mesa">
+    <a href="?" {% if not filtro %}aria-current="page"{% endif %}>
+      <strong>{{ contagens.total }}</strong> <span>no total</span></a>
+    <a href="?filtro=nao-iniciadas" {% if filtro == "nao-iniciadas" %}aria-current="page"{% endif %}>
+      <strong>{{ contagens.nao_iniciadas }}</strong> <span>não iniciada{{ contagens.nao_iniciadas|pluralize:"s" }}</span></a>
+    <a href="?filtro=rascunhos" {% if filtro == "rascunhos" %}aria-current="page"{% endif %}>
+      <strong>{{ contagens.rascunhos }}</strong> <span>em rascunho</span></a>
+    <a href="?filtro=concluidas" {% if filtro == "concluidas" %}aria-current="page"{% endif %}>
+      <strong>{{ contagens.concluidas }}</strong> <span>concluída{{ contagens.concluidas|pluralize:"s" }}</span></a>
+  </nav>
+
+  {% if linhas %}
+  {% comment %}
+  Duas colunas não precisam da página inteira: com 1.480 px, o protocolo ficava numa ponta e a
+  situação na outra, e o olho atravessava um vão para juntar as duas. A lista tem a largura do que
+  ela mostra.
+  {% endcomment %}
+  <div class="tabela-rolavel lista-da-mesa">
+  <table class="tabela">
+    <caption class="oculto">Inscrições atribuídas a você nesta Etapa</caption>
+    <thead><tr><th scope="col">Inscrição</th><th scope="col">Situação</th></tr></thead>
+    <tbody>
+      {% for linha in linhas %}
+      <tr>
+        <td>
+          <a href="{% url 'interface:mesa-inscricao' edital.id etapa.id linha.inscricao.id %}">
+            {{ linha.inscricao.protocolo|default:linha.inscricao.id }}</a>
+        </td>
+        <td>{% if linha.concluida %}Concluída{% elif linha.rascunho %}Em rascunho{% else %}Não iniciada{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  {% comment %} Quarenta e oito é comum; quinhentas não pode quebrar a tela (FR-022). {% endcomment %}
+  {% if pagina.has_other_pages %}
+  <nav class="paginacao" aria-label="Páginas da Mesa">
+    {% if pagina.has_previous %}<a href="?pagina={{ pagina.previous_page_number }}{% if filtro %}&filtro={{ filtro }}{% endif %}">Anterior</a>{% endif %}
+    <span aria-current="page">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    {% if pagina.has_next %}<a href="?pagina={{ pagina.next_page_number }}{% if filtro %}&filtro={{ filtro }}{% endif %}">Próxima</a>{% endif %}
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <p class="vazio">Nenhuma inscrição sua corresponde a este filtro.</p>
+  {% endif %}
+
+  {% comment %}
+  O que saiu desta Mesa, e por qual ato. A revogação é imediata e silenciosa: a atribuição some e a
+  contagem muda, sem nada dizer o que houve — e a trilha, que registra o ato com autor e motivo,
+  responde 404 para quem avalia. Aqui é o mesmo registro, mostrado a quem ele afeta.
+  {% endcomment %}
+  {% if retiradas %}
+  <section aria-labelledby="retiradas">
+    <h3 id="retiradas">Atribuições retiradas de você</h3>
+    <ul class="retiradas">
+      {% for item in retiradas %}
+      <li>
+        <span class="qual">Inscrição {{ item.inscricao.protocolo|default:item.inscricao.id }}</span>
+        {% if item.ato %}<span class="porque">“{{ item.ato.reason }}”</span>{% endif %}
+        <span class="quando">{{ item.quando|date:"d/m/Y" }} às {{ item.quando|date:"H:i" }}, por {{ item.por }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% else %}
+  {% comment %}
+  FR-023: alocação abre a porta da Etapa; a Atribuição abre a inscrição. Quem está alocado e ainda
+  não recebeu nada **alcança** a Mesa e a encontra vazia — responder como inexistente negaria o que
+  a 011 concedeu, e falar em permissão diria a coisa errada: não falta autorização, falta trabalho
+  distribuído.
+  {% endcomment %}
+  <p class="vazio">Nenhuma inscrição foi distribuída a você nesta Etapa ainda.
+    Quando a presidência distribuir, elas aparecerão aqui.</p>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

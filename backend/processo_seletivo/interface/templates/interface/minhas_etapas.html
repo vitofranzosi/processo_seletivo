@@ -33,12 +33,62 @@
     <div class="cabeca">
       <strong class="operacao">{{ item.nome }}</strong>
     </div>
-    <div class="corpo">
+    {% comment %}
+    Uma linha por fato. Os três saíam num `.corpo` que só tem regra sob `.auditoria`, então o
+    Edital, o Processo e a contagem viravam uma frase corrida — "Concurso Docente 2027 — Campus
+    Serra 115 pendentes de 255" — em que nada tinha começo nem fim.
+    {% endcomment %}
+    <p class="contexto">
       <span class="agregado">Edital {{ item.edital.number }}/{{ item.edital.year }}</span>
       <span class="ator">{{ item.processo.title }}</span>
+    </p>
+    {% comment %}
+    Quanto falta, antes de entrar. A tela listava Etapas e um botão, e quem tinha centenas de
+    inscrições atribuídas só descobria isso abrindo cada uma.
+
+    São duas perguntas, e por isso dois números: quanto falta **para mim** — a contagem pendente,
+    que é o que se age — e quanto já andou, que é o que se compara entre cartões. "115 pendentes
+    de 255" respondia a primeira e deixava a segunda para a aritmética de quem lê; ao lado de "200
+    pendentes de 200", descobrir qual das duas nem começou custava duas divisões. A barra é a
+    mesma do progresso de documentos no portal — mesma trilha, mesmo verde, mesmo estado completo.
+    {% endcomment %}
+    {% if item.carga.total %}
+    <div class="medidor{% if not item.carga.pendentes %} completo{% endif %}">
+      <p class="numeros">
+        {% if item.carga.pendentes %}
+        <span class="restante"><strong>{{ item.carga.pendentes }}</strong>
+          pendente{{ item.carga.pendentes|pluralize:"s" }}</span>
+        {% else %}
+        {% comment %} "0 pendentes" é a mesma notícia dita pela ausência; quem terminou merece a
+           palavra. {% endcomment %}
+        <span class="restante">Concluída</span>
+        {% endif %}
+        <span class="taxa">{{ item.carga.percentual }}%</span>
+      </p>
+      {% comment %} A barra não é lida: o texto acima e abaixo dela já diz o mesmo em número, e
+         anunciá-la seria dizer três vezes a mesma coisa a quem usa leitor de tela. A cor também
+         não carrega nada sozinha, pelo mesmo motivo. {% endcomment %}
+      <div class="trilha-do-medidor" aria-hidden="true">
+        <div class="feito" style="width:{{ item.carga.percentual }}%"></div>
+      </div>
+      <p class="detalhe">{{ item.carga.concluidas }} de {{ item.carga.total }}
+        avalia{{ item.carga.total|pluralize:"ção,ções" }}
+        conclu{{ item.carga.total|pluralize:"ída,ídas" }}</p>
     </div>
-    <p class="salvar">
-      <a class="botao" href="{% url 'interface:atribuicao' item.edital.id item.etapa_id %}">Abrir</a>
+    {% else %}
+    {% comment %}
+    Alocação sem distribuição: a pessoa responde pela Etapa e ainda não recebeu inscrição nenhuma.
+    Esconder a linha inteira — o que a condição anterior fazia — deixava o cartão idêntico ao de
+    quem não sabe informar, e a diferença entre "nada para fazer" e "não sei" é o dia de quem lê.
+    {% endcomment %}
+    <p class="detalhe sem-distribuicao">Nenhuma inscrição distribuída a você ainda.</p>
+    {% endif %}
+    {% comment %} `.salvar` é a barra de gravação de formulário, e o cartão a usava só por ter um
+       botão: vinham junto o filete e os 48px de rodapé de um formulário, que aqui viravam um vão
+       morto abaixo do "Abrir" — o mesmo empréstimo de classe que embaralhava a leitura acima.
+       {% endcomment %}
+    <p class="acao-do-cartao">
+      <a class="botao" href="{% url 'interface:minha-etapa' item.edital.id item.etapa_id %}">Abrir</a>
     </p>
   </li>
   {% endfor %}
@@ -46,7 +96,18 @@
 {% else %}
 {% comment %} §26 da spec: estado válido, e não erro. Quem não tem atribuição não vê Etapa alheia
    bloqueada — ela simplesmente não pertence a esta área. {% endcomment %}
+{% comment %}
+Quem preside e não avalia caía num “você não possui nada” escrito para quem realmente não tem nada
+— com a gestão da própria comissão logo acima, em dois botões pequenos. O estado vazio agora fala
+com quem está lendo: presidir não é ter Etapa, e é isso que a frase precisa dizer.
+{% endcomment %}
+{% if preside %}
+<p class="vazio" role="status">Você não possui Etapas atribuídas no momento — presidir uma comissão
+  não atribui trabalho de avaliação. Para organizar o trabalho da sua comissão, use
+  <strong>Gerir comissão</strong> e <strong>Alocação por Etapa</strong>, acima.</p>
+{% else %}
 <p class="vazio" role="status">Você não possui Etapas atribuídas no momento.</p>
+{% endif %}
 {% if sem_papel_nem_atribuicao %}
 {% comment %} FR-028 da 002: sem papel reconhecido, orientar a quem pedir acesso. Quem entra sem
    papel nenhum termina aqui, e não na lista de Processos — então é aqui que a orientação precisa

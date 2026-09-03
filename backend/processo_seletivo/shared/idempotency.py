@@ -17,7 +17,7 @@ def reserve(*, actor, operation: str, key: str, payload) -> IdempotencyRecord:
     return record
 
 
-def finish(record: IdempotencyRecord, result, status: int) -> None:
+def finish(record: IdempotencyRecord, result, status: int, payload=None) -> None:
     """Liga a reserva ao resultado e ao status com que o ato respondeu.
 
     O status é lido de volta na repetição: o contrato documenta um único código de sucesso por
@@ -27,4 +27,16 @@ def finish(record: IdempotencyRecord, result, status: int) -> None:
     record.result_type = result.__class__.__name__
     record.result_id = result.pk
     record.response_status = status
-    record.save(update_fields=["result_type", "result_id", "response_status"])
+    record.result_payload = payload
+    record.save(update_fields=["result_type", "result_id", "response_status", "result_payload"])
+
+
+def finish_batch(record: IdempotencyRecord, status: int, payload) -> None:
+    """Fecha a reserva de um ato em lote, guardando o desfecho declarado.
+
+    Um lote não tem "o objeto criado": tem um resultado. Guardá-lo é o que faz a repetição
+    responder o que o ato respondeu, em vez de zero atribuídas e zero recusadas (FR-084, FR-097).
+    """
+    record.response_status = status
+    record.result_payload = payload
+    record.save(update_fields=["response_status", "result_payload"])

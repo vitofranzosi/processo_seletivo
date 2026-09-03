@@ -25,6 +25,10 @@ conformidade a verificam. Uma cópia nos testes verificaria a si mesma.
 # consegue expressar.
 TABELAS_APPEND_ONLY = (
     "auditoria_registroauditoria",
+    # A conclusão preservada da `012`: o que uma pessoa havia concluído antes de cada reabertura.
+    # É histórico pela mesma razão que os demais — nasce e não muda —, e a garantia precisa valer
+    # também para quem chegue por fora da aplicação (FR-094).
+    "avaliacoes_conclusaoavaliacao",
     "processos_atoadministrativo",
     "publicacoes_documentopublicado",
     "publicacoes_publicacao",
