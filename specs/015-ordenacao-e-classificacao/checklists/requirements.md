@@ -41,18 +41,26 @@ aberta dentro não é testável. A segunda passagem, depois das respostas, fecha
 1. **Combinação (FR-008 a FR-012).** O marco enumera as Etapas; `weight` continua sendo a fonte
    autoritativa do peso; só Etapa classificatória participa; a operação nova declara também
    normalização e arredondamento; os pesos não precisam somar 1.
-2. **Empate residual (FR-023 a FR-025).** Emite com posições compartilhadas, e o ato registra que
+2. **Empate residual (FR-023 a FR-026).** Emite com posições compartilhadas, e o ato registra que
    dentro do grupo empatado não existe ordem normativa. O corte que atravessar o grupo é problema
    da 014.
 3. **Eliminado na Etapa do marco (FR-007).** Permanece no snapshot como participante considerado,
-   sem posição, com consequência e motivo — fechando com FR-003, FR-006 e SC-014.
+   sem posição, com consequência e motivo — fechando com FR-003, FR-006 e SC-016.
 
 **Dois ajustes que não vieram das perguntas:**
 
-- a **regra do marco entrou no universo** (D-003, FR-003, FR-032, IO-7, SC-012): Retificação que
+- a **regra do marco entrou no universo** (D-003, FR-003, FR-034, IO-7, SC-013): Retificação que
   alcance operação, enumeração, pesos ou critérios obsoleta o ato sem que nenhuma entrada mude;
 - **valor ausente virou requisito** (FR-017), e não suposição: critério sem comportamento declarado
   para valor inexistente impede a publicação da regra.
+
+**Sessão de clarificação (2026-09-04).** Cinco perguntas, cinco respostas, todas integradas: a
+emissão concorrente é recusada e suceder exige recálculo com confirmação explícita (FR-029,
+FR-030); a numeração segue a classificação padrão, `1, 1, 3` (FR-025, IO-9, SC-017); reprodução é
+garantia interna testável e a jornada expõe a proveniência inteira (FR-039 a FR-041); ato cuja
+regra deixou de ser computável fica obsoleto **e não recomputável**, dito na tela (FR-037, FR-038,
+SC-014); e a tela do marco abre em até 3 segundos a 1.000 participantes (SC-002). Os 16 itens
+permanecem passando depois das integrações.
 
 A US5 deixou de depender de "Resultado revisto" — a 013 admite um Resultado imutável por Inscrição
 × Etapa, e superá-lo é da 018. A sucessão passa a nascer de Resultado tardio ou de Retificação da
