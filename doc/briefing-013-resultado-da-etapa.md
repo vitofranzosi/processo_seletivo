@@ -263,6 +263,33 @@ justificativa para transformar ordem em compromisso de execução.
 > estudante, contratação de pessoal, bolsa e seleção interna de servidor **no mesmo acervo**,
 > tipando o processo em vez de bifurcar o sistema.
 
+> **Onde a classificação de um Edital mora, quando ela existir.** O mesmo catálogo do IFRN
+> apresenta os processos em nove categorias com contagem — *Estude no IFRN* (695), *Bolsas para
+> estudantes* (295), *Servidores* (115), *Gestão IFRN* (10) —, e o sistema hoje não tem campo
+> nenhum de tipo, subtipo ou nível: a única forma de saber que um Edital é de Especialização é ler
+> o título. Se um dia houver classificação, ela **não é uma coisa só**, e a costura passa entre os
+> dois níveis daquela taxonomia:
+>
+> - **O tipo é editorial.** *Estude* / *Trabalhe* / *Bolsas* muda com a gestão e não afeta direito
+>   de ninguém. A própria lista denuncia: *Monitoria e Tutoria* (23) é bolsa e está fora de
+>   *Bolsas para estudantes*; *Pesquise no IFRN* (3) convive com *Bolsas > Projetos de Pesquisa*.
+>   Três das nove categorias têm menos de 25 processos, que é o que acontece quando se recorta
+>   navegação por campanha e não por natureza.
+> - **O subtipo é quase normativo.** *Graduação*, *Especialização*, *Concurso público para docente*
+>   determinam família, requisitos e quais Etapas fazem sentido. É praticamente o tipo de processo
+>   que falta ao domínio, e por isso pertence à semântica discente registrada acima.
+>
+> **A consequência prática, e a razão de registrar isto antes de alguém implementar:** neste
+> sistema, o que é normativo entra no conteúdo publicado e só muda por Retificação — ato com
+> homologação e publicação. Classificação editorial que entre por engano nesse caminho faz renomear
+> uma categoria virar ato administrativo sobre todos os Editais dela. O tipo editorial é metadado
+> fora do snapshot, sem retificação, sem PDF e sem subir `SCHEMA_VERSION`; só a natureza do
+> processo é conteúdo publicado.
+>
+> Vale de passagem que a vitrine atual (`portal/views.py`) materializa todas as seleções vigentes e
+> ordena em memória, sem paginação nem filtro no banco. Ela foi feita para dezenas; faceta com
+> contagem sobre mais de mil processos é outro desenho de consulta.
+
 ## Uma observação de arquitetura para 015 e 016, registrada aqui para não se perder
 
 O processo real **não é um pipeline**. A cascata dos Editais 35/57 — indeferiu, analisa o próximo,
