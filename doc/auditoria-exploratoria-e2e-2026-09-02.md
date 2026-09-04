@@ -11,6 +11,11 @@
 > **Situação em 04/09/2026.** **E2E-021 está implementado** — `CANCELAVEL` estreitou para a
 > elaboração, `retificacao:cancelar` passou a pertencer ao Gestor, e o ato ficou alcançável. A
 > implementação foi maior do que esta auditoria previu: ver a nota ao fim da seção do achado.
+>
+> **E2E-004 está implementado na metade da edição.** A tela de Retificação passou a alcançar
+> `documentRequirements`: os campos publicados de cada Documento Exigido são editáveis, e a
+> aplicabilidade é escolhida entre Perfis e Modalidades do conteúdo. **Acrescentar e remover
+> continuam fora**, por decisão registrada na seção do achado — não por incompletude.
 
 **Data:** 02/09/2026 · **Base:** `main` em `ec67d52` (012 — Mesa de Avaliação fechada) · **Método:** leitura do código, das 12 specs e da suíte (~1.891 testes) + percurso completo no navegador com sete identidades distintas (gestor, elaboradora, homologador, publicadora, dois candidatos, presidente, dois avaliadores), num banco novo (`ps_audit_e2e`), do `Novo Processo Seletivo` até avaliações concluídas na Mesa — mais uma Retificação publicada com o aviso de versão conferido na área do candidato.
 
@@ -223,7 +228,30 @@ A tela de Retificação alcança Perfis, Modalidades, Eventos, Etapas e Seções
 inscrições. O domínio alcança as coleções (`publicacoes/domain/colecoes.py`); é a interface que
 para na metade. Consequência: um documento exigido publicado errado só se corrige pela API.
 
-**Classificação:** P0 antes da primeira seleção real; **não** é pré-requisito da 013. Se um certame
+**Implementado em 04/09/2026 — a metade da edição, e o custo não era o previsto.** A metade das
+Etapas caiu junto com a revisão do contrato de conclusão: `maximumScore` e
+`evaluationsPerRegistration` entraram em `CAMPOS_ETAPA` com os campos da forma. A metade dos
+documentos exigia outra coisa.
+
+O laço do grupo é mecânico, como o das Etapas. Mas **dois dos campos publicados do Documento
+Exigido não tinham tipo na tela**: `profileId` e `modalityId` referenciam entidades do próprio
+conteúdo, `null` neles significa "sem restrição", e todos os tipos existentes eram escalares
+digitados ou marcados. E são justamente esses dois que `documentos.aplicaveis` lê para decidir
+quem precisa enviar o quê — oferecê-los como texto livre deixaria um erro de digitação mudar em
+silêncio a obrigação documental de um grupo de candidatos.
+
+Entrou um tipo de campo novo, `REFERENCIA`, com três consequências: as opções vêm do **conteúdo
+publicado** e não de `edital.perfis`, porque uma Retificação anterior pode ter criado Perfil que
+não existe na linha de elaboração; o POST confere a escolha contra o que foi oferecido, porque a
+verificação de publicação confere a forma do UUID e não se ele endereça algo; e o resumo mostra o
+rótulo, porque conferir identificador de cor é o mesmo que não conferir.
+
+**Acrescentar e remover ficaram fora, e a razão é normativa.** Acrescentar Documento Exigido
+obrigatório depois de publicado torna incompleta a inscrição de quem já enviou tudo o que se
+pedia. O que fazer com essas pessoas é decisão do domínio, não da tela, e enquanto ela não existir
+o grupo dos documentos não é removível.
+
+**Classificação original:** P0 antes da primeira seleção real; **não** é pré-requisito da 013. Se um certame
 for aberto antes de a 013 ficar pronta, esta correção passa à frente — é o último ponto por onde a
 equipe sai do sistema no meio do certame.
 
