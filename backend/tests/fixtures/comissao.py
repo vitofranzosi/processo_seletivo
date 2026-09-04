@@ -16,7 +16,7 @@ DOCUMENTO_A = 420
 DOCUMENTO_B = 421
 
 
-def etapas(seed=0, *, avaliacoes=None, maxima=None, minima=None):
+def etapas(seed=0, *, avaliacoes=None, maxima=None, minima=None, decisoria=False):
     """As duas Etapas dos cenários. `avaliacoes` e `maxima` declaram o que a `012` acrescentou.
 
     Ficam opcionais de propósito: a maioria dos testes fala de Etapa **sem** declaração, que é o
@@ -29,6 +29,15 @@ def etapas(seed=0, *, avaliacoes=None, maxima=None, minima=None):
         declaracao["maximumScore"] = maxima
     if minima is not None:
         declaracao["minimumScore"] = minima
+    if decisoria:
+        # A primeira Etapa passa a ser a análise documental dos Editais 35/57: eliminatória,
+        # decisória e **sem nota** — nem mínima nem máxima, que ali não se aplicam (FR-121).
+        declaracao = {
+            **{chave: valor for chave, valor in declaracao.items() if "Score" not in chave},
+            "forma": "DECISORIA",
+            "rotuloFavoravel": "Deferido",
+            "rotuloDesfavoravel": "Indeferido",
+        }
     return [
         {
             "id": identificador(ETAPA_A1, seed),

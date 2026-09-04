@@ -20,7 +20,7 @@ import pytest
 from django.db import IntegrityError, connection, transaction
 from django.utils import timezone
 
-from processo_seletivo.avaliacoes.domain.formas import Forma
+from processo_seletivo.avaliacoes.domain.formas import Forma, Sentido
 from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao, ConclusaoAvaliacao
 from processo_seletivo.comissoes.domain.funcoes import Funcao
 from processo_seletivo.inscricoes.models import Inscricao
@@ -207,5 +207,93 @@ def test_a_ordem_da_conclusao_e_unica(conclusao, versao):
             pontuacao=Decimal("90.0000"),
             versao=versao,
             concluida_em=timezone.now() + timedelta(minutes=1),
+            concluida_por="joao",
+        )
+
+
+# --------------------------------- a completude por forma, no banco (012, FR-116)
+
+
+@pytest.fixture
+def cenario_de_constraint(membro, edital_a, inscricao, versao):
+    """Uma Atribuição ativa e a versão vigente — o mínimo para uma Avaliação existir."""
+    return atribuir(membro, edital_a, "00000000-0000-0000-0000-000000000410", inscricao), versao
+
+
+def _decisoria(atribuicao, versao, **sobrescrever):
+    campos = {
+        "atribuicao": atribuicao,
+        "identity_subject": "joao",
+        "etapa_id": atribuicao.etapa_id,
+        "inscricao_id": atribuicao.inscricao_id,
+        "estado": Avaliacao.Estado.CONCLUIDA,
+        "forma": Forma.DECISORIA,
+        "sentido": Sentido.DESFAVORAVEL,
+        "pontuacao": None,
+        "parecer": "Não apresentou o diploma.",
+        "versao": versao,
+        "concluida_em": timezone.now(),
+        "concluida_por": "joao",
+    }
+    campos.update(sobrescrever)
+    return Avaliacao.objects.create(**campos)
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+@postgresql_only
+def test_a_conclusao_decisoria_com_pontuacao_e_recusada_pelo_banco(cenario_de_constraint):
+    """As duas formas não se misturam, e quem garante isso é a constraint (FR-116)."""
+    atribuicao, versao = cenario_de_constraint
+
+    with pytest.raises(IntegrityError, match="ck_avaliacao_concluida_completa"):
+        _decisoria(atribuicao, versao, pontuacao=Decimal("80.0000"))
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+@postgresql_only
+def test_a_conclusao_pontuada_com_sentido_e_recusada_pelo_banco(cenario_de_constraint):
+    atribuicao, versao = cenario_de_constraint
+
+    with pytest.raises(IntegrityError, match="ck_avaliacao_concluida_completa"):
+        _decisoria(
+            atribuicao,
+            versao,
+            forma=Forma.PONTUADA,
+            pontuacao=Decimal("80.0000"),
+            sentido=Sentido.FAVORAVEL,
+        )
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+@postgresql_only
+def test_a_conclusao_sem_forma_e_recusada_pelo_banco(cenario_de_constraint):
+    """Sem forma não há como dizer o que "completa" significa — e o estado fica inalcançável."""
+    atribuicao, versao = cenario_de_constraint
+
+    with pytest.raises(IntegrityError, match="ck_avaliacao_concluida_completa"):
+        _decisoria(atribuicao, versao, forma="", sentido="", pontuacao=Decimal("80.0000"))
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+@postgresql_only
+def test_a_conclusao_preservada_decisoria_com_pontuacao_e_recusada(cenario_de_constraint):
+    """A mesma regra na tabela append-only: ali o inválido entra uma vez e fica."""
+    atribuicao, versao = cenario_de_constraint
+    avaliacao = _decisoria(atribuicao, versao)
+
+    with pytest.raises(IntegrityError, match="ck_conclusao_completa_por_forma"):
+        ConclusaoAvaliacao.objects.create(
+            avaliacao=avaliacao,
+            ordem=1,
+            forma=Forma.DECISORIA,
+            sentido=Sentido.DESFAVORAVEL,
+            pontuacao=Decimal("80.0000"),
+            parecer="",
+            versao=versao,
+            concluida_em=timezone.now(),
             concluida_por="joao",
         )

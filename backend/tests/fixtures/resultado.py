@@ -32,7 +32,15 @@ NOTA_MINIMA = "60.0000"
 
 
 def montar_etapa_de_leitura_unica(
-    gestor, api_client, manager_headers, *, seed, codigo, avaliadores=("joao",), avaliacoes=1
+    gestor,
+    api_client,
+    manager_headers,
+    *,
+    seed,
+    codigo,
+    avaliadores=("joao",),
+    avaliacoes=1,
+    decisoria=False,
 ):
     """Edital publicado com Etapa de leitura única, comissão constituída e banca alocada.
 
@@ -51,6 +59,7 @@ def montar_etapa_de_leitura_unica(
         avaliacoes=avaliacoes,
         maxima="100.0000",
         minima=NOTA_MINIMA,
+        decisoria=decisoria,
     )
     processo = edital.processo
     pessoas = [("maria", Funcao.PRESIDENTE)] + [(nome, Funcao.MEMBRO) for nome in avaliadores]

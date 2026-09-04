@@ -203,3 +203,70 @@ def test_a_mesa_nao_e_armazenavel_pelo_navegador(
     resposta = client.get(mesa)
 
     assert "no-store" in resposta["Cache-Control"]
+
+
+# --------------------------- a forma decisória pelo canal real (012, FR-122; E2E-015)
+
+
+@pytest.fixture
+def mesa_decisoria(gestor, api_client, manager_headers):
+    from tests.fixtures.comissao import inscrever
+    from tests.fixtures.mesa import distribuir_para
+    from tests.fixtures.resultado import montar_etapa_de_leitura_unica
+
+    cenario = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=2400, codigo="2400", decisoria=True
+    )
+    inscricao = inscrever(cenario["edital"], 1, primeiro=1)[0]
+    distribuir_para(cenario, gestor, ["joao"], [inscricao], chave="lote-2400")
+    return cenario, inscricao
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_mesa_decisoria_mostra_os_rotulos_e_nao_o_campo_de_nota(
+    client, seletor_ligado, mesa_decisoria
+):
+    """Jornada 2: o instrumento é o da forma publicada, e o vocabulário é o do Edital."""
+    cenario, inscricao = mesa_decisoria
+    identificar(client, "joao", [])
+
+    corpo = client.get(
+        reverse(
+            "interface:mesa-inscricao",
+            args=[cenario["edital"].id, cenario["etapa"], inscricao.id],
+        )
+    ).content.decode()
+
+    assert 'name="sentido"' in corpo and ">Deferido<" in corpo and ">Indeferido<" in corpo
+    assert 'id="pontuacao"' not in corpo
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_o_post_com_o_campo_da_outra_forma_e_recusado_no_canal_real(
+    client, seletor_ligado, mesa_decisoria
+):
+    """A recusa é do domínio, e por isso ela existe também para quem não passa pela tela."""
+    from processo_seletivo.avaliacoes.models import Avaliacao
+
+    cenario, inscricao = mesa_decisoria
+    identificar(client, "joao", [])
+
+    client.post(
+        reverse(
+            "interface:mesa-avaliacao-concluir",
+            args=[cenario["edital"].id, cenario["etapa"], inscricao.id],
+        ),
+        {
+            "pontuacao": "80",
+            "sentido": "FAVORAVEL",
+            "parecer": "Atende",
+            "expected_revision": "1",
+            "versao_reconhecida": str(
+                cenario["edital"].versoes_consolidadas.latest("materialized_at").id
+            ),
+        },
+    )
+
+    assert not Avaliacao.objects.filter(estado=Avaliacao.Estado.CONCLUIDA).exists()

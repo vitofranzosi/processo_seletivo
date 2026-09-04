@@ -171,12 +171,12 @@ nova, nenhuma permissão nova.**
 - [X] T038 [US3] Ler `sentido` em `forms.ler_avaliacao` e devolvê-lo em `_valores_da_avaliacao`, em `backend/processo_seletivo/interface/forms.py` e `backend/processo_seletivo/interface/views.py`, preservando o digitado após uma recusa como já se faz com a pontuação
 - [X] T039 [US3] Apresentar o instrumento da forma publicada em `backend/processo_seletivo/interface/templates/interface/mesa_inscricao.html`: par de opções **rotulado pelo Edital** sobre valores `FAVORAVEL`/`DESFAVORAVEL`, e nenhum campo de nota
 - [X] T040 [US3] Tornar o par de opções da Mesa operável por teclado em `backend/processo_seletivo/interface/templates/interface/mesa_inscricao.html`: grupo rotulado pela pergunta, navegação por setas, foco visível, e o rótulo publicado como **texto** do controle — nunca só cor ou posição distinguindo favorável de desfavorável
-- [ ] T041 [P] [US3] Testar por `INSERT` cru, em `backend/tests/integration/avaliacoes/test_constraints.py`, que `DECISORIA` com pontuação é recusada **nas duas tabelas** — `Avaliacao` por `ck_avaliacao_concluida_completa` e `ConclusaoAvaliacao` por `ck_conclusao_completa_por_forma`
-- [ ] T042 [P] [US3] Testar por `INSERT` cru, em `backend/tests/integration/avaliacoes/test_constraints.py`, que `PONTUADA` com sentido é recusada nas mesmas duas tabelas, e que conclusão sem forma nenhuma é recusada
-- [ ] T043 [P] [US3] Testar em `backend/tests/integration/avaliacoes/test_avaliacao.py` a ida e volta da forma decisória: rascunho sem sentido, conclusão com sentido, e conclusão desfavorável sem parecer recusada
-- [ ] T044 [P] [US3] Testar em `backend/tests/integration/interface/test_fluxo.py`, pelo canal HTTP real, que o POST com o campo da outra forma é recusado com mensagem — e não ignorado em silêncio (E2E-015)
-- [ ] T045 [P] [US3] Testar em `backend/tests/integration/avaliacoes/test_versao_da_avaliacao.py` que a forma gravada é a da versão validada, e que Retificação que muda a forma no intervalo recusa a conclusão
-- [ ] T046 [P] [US3] Testar em `backend/tests/integration/avaliacoes/test_trilha_da_avaliacao.py` que a trilha **não** guarda o sentido, como já não guarda pontuação nem parecer (012, FR-054)
+- [X] T041 [P] [US3] Testar por `INSERT` cru, em `backend/tests/integration/avaliacoes/test_constraints.py`, que `DECISORIA` com pontuação é recusada **nas duas tabelas** — `Avaliacao` por `ck_avaliacao_concluida_completa` e `ConclusaoAvaliacao` por `ck_conclusao_completa_por_forma`
+- [X] T042 [P] [US3] Testar por `INSERT` cru, em `backend/tests/integration/avaliacoes/test_constraints.py`, que `PONTUADA` com sentido é recusada nas mesmas duas tabelas, e que conclusão sem forma nenhuma é recusada
+- [X] T043 [P] [US3] Testar em `backend/tests/integration/avaliacoes/test_avaliacao.py` a ida e volta da forma decisória: rascunho sem sentido, conclusão com sentido, e conclusão desfavorável sem parecer recusada
+- [X] T044 [P] [US3] Testar em `backend/tests/integration/interface/test_fluxo.py`, pelo canal HTTP real, que o POST com o campo da outra forma é recusado com mensagem — e não ignorado em silêncio (E2E-015)
+- [X] T045 [P] [US3] Testar em `backend/tests/integration/avaliacoes/test_versao_da_avaliacao.py` que a forma gravada é a da versão validada, e que Retificação que muda a forma no intervalo recusa a conclusão
+- [X] T046 [P] [US3] Testar em `backend/tests/integration/avaliacoes/test_trilha_da_avaliacao.py` que a trilha **não** guarda o sentido, como já não guarda pontuação nem parecer (012, FR-054)
 
 **Checkpoint**: o avaliador conclui sem nota, e o banco garante que as duas formas não se misturam
 

@@ -120,3 +120,31 @@ def test_a_trilha_nao_ganhou_coluna_para_isso(avaliada):
 
     for proibido in ("pontuacao", "parecer", "score", "avaliacao"):
         assert proibido not in campos
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_trilha_nao_guarda_o_sentido(gestor, api_client, manager_headers):
+    """FR-054: o sentido é conteúdo do juízo, como a pontuação e o parecer.
+
+    Sem isto, a trilha da forma decisória passaria a guardar o **deferimento** — exatamente o que
+    este requisito existe para manter fora dela. O conteúdo vive na Avaliação.
+    """
+    from processo_seletivo.avaliacoes.application.avaliacao import eventos_da_avaliacao
+    from tests.fixtures.comissao import inscrever
+    from tests.fixtures.mesa import concluir_como, distribuir_para
+    from tests.fixtures.resultado import montar_etapa_de_leitura_unica
+
+    cenario = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=2200, codigo="2200", decisoria=True
+    )
+    inscricao = inscrever(cenario["edital"], 1, primeiro=1)[0]
+    distribuir_para(cenario, gestor, ["joao"], [inscricao], chave="lote-2200")
+    avaliacao = concluir_como(
+        cenario, "joao", inscricao, sentido="DESFAVORAVEL", parecer="Faltou o diploma."
+    )
+
+    for evento in eventos_da_avaliacao(avaliacao):
+        assert "DESFAVORAVEL" not in (evento.reason or "")
+        assert "Indeferido" not in (evento.reason or "")
+        assert "diploma" not in (evento.reason or "")

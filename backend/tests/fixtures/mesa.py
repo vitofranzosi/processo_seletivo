@@ -55,14 +55,18 @@ def distribuir_para(cenario, gestor, nomes, inscricoes, *, chave="lote"):
     )
 
 
-def concluir_como(cenario, subject, inscricao, *, pontuacao="80", parecer="Atende", revisao=1):
+def concluir_como(
+    cenario, subject, inscricao, *, pontuacao="80", parecer="Atende", revisao=1, sentido=None
+):
+    """`sentido` conclui na forma decisória, e ali a pontuação não vai: a forma decide qual vale."""
     versao = cenario["edital"].versoes_consolidadas.latest("materialized_at")
     avaliacao, _ = concluir(
         ator=ator_institucional(subject),
         edital=cenario["edital"],
         etapa_id=cenario["etapa"],
         inscricao_id=inscricao.id,
-        pontuacao=pontuacao,
+        pontuacao=None if sentido else pontuacao,
+        sentido=sentido,
         parecer=parecer,
         expected_revision=revisao,
         versao_reconhecida=versao.id,
