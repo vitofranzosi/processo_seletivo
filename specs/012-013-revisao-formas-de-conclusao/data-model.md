@@ -39,7 +39,7 @@ elegível, Classificado/Desclassificado.
 | `weight` | decimal canônico | sim | **inalterado**: descreve a composição entre Etapas, não a conclusão |
 | `eliminatory` | bool | não | **inalterado** — e, na forma decisória, é ele que dá consequência ao sentido |
 
-**"Proibido" significa nulo, e nunca ausente**: as dez chaves da Etapa estão sempre presentes no
+**"Proibido" significa nulo, e nunca ausente**: toda chave da Etapa está sempre presente no
 conteúdo publicado, e o que a forma decisória proíbe é o **valor**, não a chave.
 
 ¹ **Na versão 6, `forma` é obrigatória e não nula.** Admitir nulo criaria duas grafias canônicas

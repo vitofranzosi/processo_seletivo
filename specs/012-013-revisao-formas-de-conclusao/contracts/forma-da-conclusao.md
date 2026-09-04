@@ -46,7 +46,7 @@ Os três são obrigatórios; só a nulabilidade os separa.
 | `minimumScore` | sim | sim | — |
 | `maximumScore` | sim | sim | — |
 
-**"Proibido" significa `null`, e nunca ausente.** As dez chaves da Etapa estão sempre presentes no
+**"Proibido" significa `null`, e nunca ausente.** Toda chave da Etapa está sempre presente no
 conteúdo publicado — `required == properties` é invariante conferida por
 `test_forma_publicada.py::test_todo_campo_do_conteudo_publicado_e_obrigatorio`. O que a forma decisória
 proíbe é o **valor**, não a chave.
@@ -64,6 +64,11 @@ coisa que `null`:
 | `forma` omitida | vale `PONTUADA` — é a compatibilidade de quem já integrava com a API |
 | `forma: null` | **recusado**: nulo não é uma forma, e aceitá-lo devolveria o `NULL` que o modelo proíbe |
 | `forma` fora do enum | recusado |
+
+No esquema, isso é: `forma` em `properties` de `EtapaInput` como `type: string` com `enum`, e **fora**
+de `required` — que hoje é `[id, name]`. Assim a omissão é legal e o `null` é recusado pelo próprio
+contrato, e não apenas pelo serializer. Os dois rótulos entram como `type: [string, 'null']`, também
+fora de `required`.
 
 O caminho de rascunho não converte ausência em `None` ao gravar; escrever `None` contornaria o
 `default` do modelo pela porta dos fundos.

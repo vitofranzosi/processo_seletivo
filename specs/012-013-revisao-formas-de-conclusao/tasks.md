@@ -86,7 +86,7 @@ nova, nenhuma permissão nova.**
 
 ### O contrato e a validação
 
-- [ ] T004 [P] Declarar `forma` (`required`, `type: string`, `enum: [PONTUADA, DECISORIA]`, **sem `'null'`**) e os dois rótulos (`required`, `type: [string, 'null']`) em `EtapaPublicada`, e os três em `EtapaInput`, em `specs/001-processo-seletivo-editais/contracts/openapi.yaml`, atualizando a `description` para a versão canônica 6 (TR-013)
+- [ ] T004 [P] Declarar `forma` (`required`, `type: string`, `enum: [PONTUADA, DECISORIA]`, **sem `'null'`**) e os dois rótulos (`required`, `type: [string, 'null']`) em `EtapaPublicada`, e os três em `EtapaInput` — ali `forma` entra em `properties` como `type: string` com `enum`, e **fora** de `required`, que hoje é `[id, name]`: omissão é legal na entrada e `null` é recusado pelo próprio esquema, que é a metade contratual da regra do serializer (T010) —, em `specs/001-processo-seletivo-editais/contracts/openapi.yaml`, atualizando a `description` para a versão canônica 6 (TR-013)
 - [ ] T005 Acrescentar os três `Campo` a `ETAPA_PUBLICADA` em `backend/processo_seletivo/editais/domain/validation.py`, com `forma` **não anulável** e os rótulos anuláveis (TR-003)
 - [ ] T006 Estender `_coerencia_das_etapas` em `backend/processo_seletivo/editais/domain/validation.py` com a condicionalidade por forma: rótulos exigidos em `DECISORIA` e proibidos em `PONTUADA`; `minimumScore` e `maximumScore` **presentes e nulos** em `DECISORIA` — o que se recusa é o valor, porque a chave está sempre lá; rótulo em branco ou só espaços recusado como ausente
 - [ ] T007 Cobrir os limites de borda dos três campos em `backend/tests/contract/test_limites_de_borda.py` (depende de T005 e T006)
