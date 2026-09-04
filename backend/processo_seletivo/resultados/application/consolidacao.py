@@ -137,7 +137,7 @@ def consolidar(
                 recusas.append(Recusa(inscricao, motivo))
                 continue
             conclusao = panorama["elegiveis"][inscricao.id][0]
-            efeito, causa = consequencia(etapa, conclusao.pontuacao)
+            efeito, causa = consequencia(etapa, conclusao)
             resultado = ResultadoEtapa.objects.create(
                 inscricao=inscricao,
                 edital=edital,
@@ -145,7 +145,11 @@ def consolidar(
                 # A identidade basta: o Resultado guarda a chave estrangeira, e materializar o
                 # modelo da fonte para gravá-la traria o Edital inteiro em JSON junto (T-011).
                 avaliacao_id=conclusao.avaliacao_id,
+                # A conclusão é **copiada conforme a forma**, e não convertida: o indeferimento
+                # não vira zero, e a nota não vira sentido (013, D-008, FR-016).
+                forma=conclusao.forma,
                 pontuacao=conclusao.pontuacao,
+                sentido=conclusao.sentido,
                 consequencia=efeito,
                 motivo=causa,
                 consolidado_em=ctx.now,

@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from rest_framework import serializers
 
+from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.editais.domain.cronograma import ScheduleValidationError, validate_event
 from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_profile
 
@@ -111,6 +112,21 @@ class StageSerializer(serializers.Serializer):
     )
     maximumScore = serializers.DecimalField(
         max_digits=7, decimal_places=4, required=False, allow_null=True, min_value=Decimal("0.0001")
+    )
+    # As três do incremento da revisão da `012` (D-008, FR-119). `forma` é opcional e **não**
+    # anulável, e a assimetria entre omitir e enviar `null` é a decisão: quem já integrava com esta
+    # API não conhece o campo, e a omissão continua valendo — vale `PONTUADA`, que é o que a
+    # ausência significa em todo o resto do sistema (FR-120). `null` explícito é outra coisa: é
+    # afirmar que não há forma, e não há Etapa sem forma. Aceitá-lo devolveria ao rascunho o vazio
+    # que o modelo deixou de admitir, contornando o default pela porta dos fundos.
+    forma = serializers.ChoiceField(choices=Forma.choices, required=False, allow_null=False)
+    # Os rótulos são anuláveis, porque neles o "não se aplica" é real. `null` e ausência chegam ao
+    # rascunho como string vazia, que é como a coluna grava "não publicado".
+    rotuloFavoravel = serializers.CharField(
+        max_length=100, required=False, allow_null=True, allow_blank=True
+    )
+    rotuloDesfavoravel = serializers.CharField(
+        max_length=100, required=False, allow_null=True, allow_blank=True
     )
     scheduleEventId = serializers.UUIDField(required=False, allow_null=True)
 

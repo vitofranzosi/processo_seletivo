@@ -142,7 +142,16 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
   ver ao voltar é a nota, o parecer e quando aquilo foi afirmado.
   {% endcomment %}
   <div class="registro-da-avaliacao">
+    {% comment %}
+    A forma é a **da conclusão**, e não a vigente: uma Retificação que tornasse a Etapa decisória
+    faria uma nota antiga aparecer como favorável, e o registro histórico passaria a dizer o que
+    ninguém afirmou. É o mesmo motivo pelo qual a conclusão guarda a forma (FR-117).
+    {% endcomment %}
+    {% if avaliacao.forma == "DECISORIA" %}
+    <p class="nota"><strong>{% if avaliacao.sentido == "DESFAVORAVEL" %}{{ rotulo_desfavoravel }}{% else %}{{ rotulo_favoravel }}{% endif %}</strong></p>
+    {% else %}
     <p class="nota"><strong>{{ avaliacao.pontuacao|pontuacao }}</strong>{% if maxima %} <span>de {{ maxima|pontuacao }}</span>{% endif %}</p>
+    {% endif %}
     <p class="quando">Avaliação concluída em {{ avaliacao.concluida_em|date:"d/m/Y" }} às {{ avaliacao.concluida_em|date:"H:i" }}</p>
   </div>
   <div class="parecer-registrado">
@@ -186,6 +195,34 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
     <input type="hidden" name="expected_revision" value="{{ avaliacao.revision|default:1 }}">
     <input type="hidden" name="versao_reconhecida" value="{{ versao_vigente.id }}">
 
+    {% if decisoria %}
+    {% comment %}
+    O instrumento da forma publicada, e **só** ele: uma Etapa decisória não oferece campo de nota
+    que ninguém deveria preencher. Esconder é apresentação; a recusa do campo da outra forma é do
+    domínio, e vale no canal HTTP real (FR-122).
+
+    O que a pessoa lê são os rótulos deste Edital; o que o envio carrega são os valores do domínio.
+    O texto do controle é o rótulo, e não cor nem posição: quem não distingue cor precisa ler qual
+    é qual.
+    {% endcomment %}
+    <fieldset class="campo caracter">
+      <legend>Conclusão da análise</legend>
+      <p>
+        <input type="radio" id="sentido-favoravel" name="sentido" value="FAVORAVEL"
+               {% if valores.sentido == "FAVORAVEL" %}checked{% endif %}
+               aria-describedby="ajuda-sentido">
+        <label for="sentido-favoravel">{{ rotulo_favoravel }}</label>
+      </p>
+      <p>
+        <input type="radio" id="sentido-desfavoravel" name="sentido" value="DESFAVORAVEL"
+               {% if valores.sentido == "DESFAVORAVEL" %}checked{% endif %}
+               aria-describedby="ajuda-sentido">
+        <label for="sentido-desfavoravel">{{ rotulo_desfavoravel }}</label>
+      </p>
+      <span class="ajuda" id="ajuda-sentido">Esta Etapa é concluída por decisão, e o Edital não
+        publicou pontuação para ela.</span>
+    </fieldset>
+    {% else %}
     <p class="campo curto">
       <label for="pontuacao">Pontuação</label>
       {% comment %}
@@ -206,13 +243,14 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
         {% if minima %} Nota mínima: {{ minima|pontuacao }}.{% endif %}
       </span>
     </p>
+    {% endif %}
 
     <p class="campo">
       <label for="parecer">Parecer</label>
       <textarea id="parecer" name="parecer" rows="6" aria-describedby="ajuda-parecer">{{ valores.parecer }}</textarea>
       <span class="ajuda" id="ajuda-parecer">
         É o parecer que responde a um recurso.
-        {% if eliminatoria and minima %}Nesta Etapa eliminatória, ele é obrigatório quando a pontuação fica abaixo de {{ minima|pontuacao }}.{% endif %}
+        {% if decisoria %}A conclusão {{ rotulo_desfavoravel }} exige parecer.{% elif eliminatoria and minima %}Nesta Etapa eliminatória, ele é obrigatório quando a pontuação fica abaixo de {{ minima|pontuacao }}.{% endif %}
       </span>
     </p>
 

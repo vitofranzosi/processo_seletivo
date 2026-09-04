@@ -14,6 +14,7 @@ coisa só: torna o parecer obrigatório, porque é o parecer que responde recurs
 
 from decimal import Decimal, InvalidOperation
 
+from processo_seletivo.avaliacoes.domain.formas import Sentido
 from processo_seletivo.avaliacoes.domain.previsao import pontuacao_maxima
 from processo_seletivo.shared.api.problems import DomainError
 
@@ -95,3 +96,42 @@ def exige_parecer(valor, etapa):
         return valor < Decimal(str(minima))
     except (InvalidOperation, ValueError, TypeError):
         return False
+
+
+# ---------------------------------------------------------------- a forma decisória (D-008)
+
+
+def _recusa_do_sentido(mensagem):
+    return DomainError("sentido_invalido", mensagem, 422, campo="sentido")
+
+
+def normalizar_sentido(bruto, *, exigir):
+    """O sentido como o registro o comporta, ou recusa nomeando o campo.
+
+    A assimetria com `normalizar` é a mesma que separa rascunho de conclusão: `exigir=False` aceita
+    o vazio, porque quem está no meio do trabalho ainda não decidiu; `exigir=True` é a conclusão, e
+    ali a ausência é recusada — como "Informe a pontuação." faz do outro lado (FR-103).
+    """
+    valor = (bruto or "").strip()
+    if not valor:
+        if exigir:
+            raise _recusa_do_sentido("Informe o sentido da decisão.")
+        return ""
+    if valor not in Sentido.values:
+        # Inclui o caso em que chega o **rótulo publicado** no lugar do enum: a tela mostra
+        # "Indeferido" e envia `DESFAVORAVEL`, e aceitar o rótulo faria o domínio guardar o
+        # vocabulário de um Edital no lugar do juízo (FR-118).
+        raise _recusa_do_sentido("O sentido da decisão precisa ser favorável ou desfavorável.")
+    return valor
+
+
+def exige_parecer_do_sentido(sentido):
+    """Desfavorável exige parecer, e **não** depende do caráter da Etapa (FR-123).
+
+    A assimetria com `exige_parecer` é deliberada: na forma pontuada é a nota abaixo do mínimo em
+    Etapa eliminatória que torna o parecer obrigatório, porque é ali que a avaliação elimina. Na
+    decisória, o desfavorável é sempre o caso em que o candidato mais precisará da fundamentação —
+    é contra o parecer que o recurso responderá —, e condicioná-lo ao caráter deixaria sem
+    justificativa registrada justamente a Etapa que ainda não declarou o que faz com a decisão.
+    """
+    return sentido == Sentido.DESFAVORAVEL

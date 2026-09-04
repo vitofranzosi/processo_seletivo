@@ -8,6 +8,7 @@ Duas Etapas em ordem, porque a progressão só existe a partir da segunda, e as 
 de D-003 não são demonstráveis com uma Etapa só.
 """
 
+from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.comissoes.domain.funcoes import Funcao
 from tests.fixtures.comissao import (
     ETAPA_A1,
@@ -31,7 +32,15 @@ NOTA_MINIMA = "60.0000"
 
 
 def montar_etapa_de_leitura_unica(
-    gestor, api_client, manager_headers, *, seed, codigo, avaliadores=("joao",), avaliacoes=1
+    gestor,
+    api_client,
+    manager_headers,
+    *,
+    seed,
+    codigo,
+    avaliadores=("joao",),
+    avaliacoes=1,
+    decisoria=False,
 ):
     """Edital publicado com Etapa de leitura única, comissão constituída e banca alocada.
 
@@ -50,6 +59,7 @@ def montar_etapa_de_leitura_unica(
         avaliacoes=avaliacoes,
         maxima="100.0000",
         minima=NOTA_MINIMA,
+        decisoria=decisoria,
     )
     processo = edital.processo
     pessoas = [("maria", Funcao.PRESIDENTE)] + [(nome, Funcao.MEMBRO) for nome in avaliadores]
@@ -189,6 +199,7 @@ def semear_prontas(cenario, quantas, *, primeiro, avaliador="joao", pontuacao="7
             etapa_id=atribuicao.etapa_id,
             inscricao_id=atribuicao.inscricao_id,
             estado=Avaliacao.Estado.CONCLUIDA,
+            forma=Forma.PONTUADA,
             pontuacao=Decimal(pontuacao),
             parecer="Atende.",
             versao=versao,

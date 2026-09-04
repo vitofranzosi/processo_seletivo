@@ -12,6 +12,8 @@ escrita em cinco lugares e divergiria no sexto. Estas duas funções são esse l
 
 from decimal import Decimal, InvalidOperation
 
+from processo_seletivo.avaliacoes.domain.formas import Forma
+
 # Sem declaração, uma avaliação por inscrição (FR-009). Não é padrão de conveniência: é o que a
 # spec diz que a ausência significa, e é o que a elevação escreve quando converte.
 AVALIACOES_QUANDO_AUSENTE = 1
@@ -43,3 +45,85 @@ def pontuacao_maxima(etapa):
         return Decimal(str(declarado))
     except (InvalidOperation, ValueError, TypeError):
         return None
+
+
+# Sem declaração, a Etapa pontua (FR-120). Não é padrão de conveniência: até a versão canônica 5 o
+# domínio não admitia outra forma, e escrever `PONTUADA` no lugar da ausência não afirma nada que o
+# conteúdo já não dissesse. A partir da 6 a chave existe sempre, e é a validação de publicação que
+# recusa o nulo — este leitor continua defensivo porque ele também atravessa conteúdo antigo.
+FORMA_QUANDO_AUSENTE = Forma.PONTUADA
+
+
+def forma_publicada(etapa):
+    """A forma de conclusão que esta Etapa exige. Nunca `None`.
+
+    Valor fora do par declarado é lido como a ausência, e não estoura: o mesmo tratamento que
+    `avaliacoes_previstas` dá a lixo, e pela mesma razão — quem lê conteúdo antigo não pode receber
+    exceção de um campo que talvez nem exista ali.
+    """
+    if not isinstance(etapa, dict):
+        return FORMA_QUANDO_AUSENTE
+    declarada = etapa.get("forma")
+    if declarada not in Forma.values:
+        return FORMA_QUANDO_AUSENTE
+    return Forma(declarada)
+
+
+def decisoria(etapa):
+    """Atalho legível para a pergunta que o domínio faz o tempo todo."""
+    return forma_publicada(etapa) == Forma.DECISORIA
+
+
+def rotulos(etapa):
+    """`(favorável, desfavorável)` como o Edital os publicou, ou `(None, None)`.
+
+    **Não há default institucional**, e a ausência não vira "Deferido/Indeferido": o domínio aplicar
+    rótulo que o Edital não publicou é exatamente o que P-007 impede. Prefill de tela é outra coisa,
+    e mora na tela (012, D-008).
+    """
+    if not isinstance(etapa, dict):
+        return (None, None)
+    return (_rotulo(etapa.get("rotuloFavoravel")), _rotulo(etapa.get("rotuloDesfavoravel")))
+
+
+def _rotulo(valor):
+    """Rótulo em branco não é rótulo: um PDF com `""` no lugar do indeferimento não diz nada."""
+    if not isinstance(valor, str):
+        return None
+    limpo = valor.strip()
+    return limpo or None
+
+
+def conclusao_exibivel(forma, pontuacao, sentido, etapa):
+    """O que a conclusão afirmou, dito no vocabulário sob o qual ela foi feita.
+
+    **A forma é a da conclusão, e a Etapa é a da versão que a governou** — não a vigente. Ler a
+    forma vigente para renderizar histórico faria uma conclusão pontuada aparecer como favorável
+    depois de uma Retificação que tornasse a Etapa decisória, e uma decisória preservada aparecer
+    como um traço. É o mesmo motivo pelo qual a conclusão guarda a forma (FR-117): preservar o
+    registro sem preservar a leitura preserva metade.
+
+    Devolve `None` na forma pontuada, porque ali quem exibe é o filtro de pontuação — esta função
+    responde "há um rótulo a mostrar no lugar do número?".
+    """
+    if forma != Forma.DECISORIA:
+        return None
+    favoravel, desfavoravel = rotulos(etapa)
+    if sentido == "DESFAVORAVEL":
+        return desfavoravel or "desfavorável"
+    if sentido == "FAVORAVEL":
+        return favoravel or "favorável"
+    return None
+
+
+def etapa_do_conteudo(conteudo, etapa_id):
+    """A Etapa daquela identidade no conteúdo publicado, ou `{}`.
+
+    `{}` e não `None`: quem chama vai perguntar pelos rótulos, e a ausência de conteúdo histórico
+    significa "sem rótulo a mostrar", não erro.
+    """
+    alvo = str(etapa_id)
+    for etapa in (conteudo or {}).get("stages") or []:
+        if isinstance(etapa, dict) and str(etapa.get("id")) == alvo:
+            return etapa
+    return {}

@@ -1,6 +1,7 @@
 from django.db import transaction
 
 from processo_seletivo.auditoria.application import record_event
+from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.editais.domain import secoes as secoes_do_catalogo
 from processo_seletivo.editais.domain.cronograma import ScheduleValidationError, validate_schedule
 from processo_seletivo.editais.domain.documentos import (
@@ -261,6 +262,13 @@ def replace_draft(
                     minimum_score=stage.get("minimumScore"),
                     evaluations_per_registration=stage.get("evaluationsPerRegistration"),
                     maximum_score=stage.get("maximumScore"),
+                    # `stage.get("forma")` **não** serve aqui: a chave ausente devolveria `None` e
+                    # gravaria nulo numa coluna que não o admite, contornando o default do modelo.
+                    # A omissão vale `PONTUADA`, e é o único lugar do rascunho em que a ausência de
+                    # um campo normativo tem valor escrito em vez de `None` (012, FR-120).
+                    forma=stage.get("forma") or Forma.PONTUADA,
+                    rotulo_favoravel=stage.get("rotuloFavoravel") or "",
+                    rotulo_desfavoravel=stage.get("rotuloDesfavoravel") or "",
                     evento_id=stage.get("scheduleEventId"),
                 )
                 for stage in stages

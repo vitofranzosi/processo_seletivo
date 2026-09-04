@@ -20,7 +20,7 @@ esconder metade da identidade produziria a meia anonimização que é pior que n
 from django.utils.dateparse import parse_datetime
 
 from processo_seletivo.avaliacoes.domain.autorizacao import pode_avaliar_inscricao
-from processo_seletivo.avaliacoes.domain.previsao import pontuacao_maxima
+from processo_seletivo.avaliacoes.domain.previsao import decisoria, pontuacao_maxima, rotulos
 from processo_seletivo.inscricoes.application.rascunho import requisitos_da_inscricao
 from processo_seletivo.inscricoes.domain.arquivos import tamanho_legivel
 from processo_seletivo.inscricoes.domain.pessoais import mascarar_cpf
@@ -163,6 +163,12 @@ def inscricao_para_avaliar(*, ator, edital, etapa_id, inscricao_id):
         "maxima": pontuacao_maxima(etapa),
         "minima": (etapa or {}).get("minimumScore"),
         "eliminatoria": bool((etapa or {}).get("eliminatory")),
+        # O instrumento que a Mesa apresenta vem da forma **publicada**, e não de preferência de
+        # tela (FR-122). Os rótulos vêm junto porque é com eles que o avaliador lê as opções — o
+        # domínio guarda o sentido, e a tela mostra o vocabulário deste Edital (FR-118).
+        "decisoria": decisoria(etapa),
+        "rotulo_favoravel": rotulos(etapa)[0],
+        "rotulo_desfavoravel": rotulos(etapa)[1],
         "fora_do_periodo": _fora_do_periodo(edital, etapa),
         "inscricao": inscricao,
         "perfil": perfil,

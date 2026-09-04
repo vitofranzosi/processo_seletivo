@@ -14,7 +14,11 @@ from uuid import UUID
 from django.core.paginator import Paginator
 from django.db.models import Count, Max, Prefetch, Q
 
-from processo_seletivo.avaliacoes.domain.previsao import avaliacoes_previstas
+from processo_seletivo.avaliacoes.domain.previsao import (
+    avaliacoes_previstas,
+    conclusao_exibivel,
+    etapa_do_conteudo,
+)
 from processo_seletivo.avaliacoes.models import (
     Atribuicao,
     Avaliacao,
@@ -533,6 +537,27 @@ def avaliacoes_elegiveis(*, edital, etapa_id, inscricao_id=None):
     return consulta.order_by("atribuicao__inscricao__protocolo", "concluida_em")
 
 
+def _conteudos_historicos(versao_ids):
+    """`{versao_id: conteúdo}`, **uma leitura por versão distinta**.
+
+    Um Edital tem duas ou três Versões Consolidadas e mil avaliações apontam para elas; trazer a
+    versão junto de cada linha carregaria mil cópias do Edital inteiro em JSON para ler dois
+    rótulos.
+    """
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+
+    identidades = {identidade for identidade in versao_ids if identidade is not None}
+    if not identidades:
+        return {}
+    return dict(VersaoConsolidada.objects.filter(id__in=identidades).values_list("id", "content"))
+
+
+def _exibivel(forma, pontuacao, sentido, conteudos, versao_id, etapa_id):
+    """A conclusão histórica lida sob a **sua** norma, e não sob a vigente (FR-117)."""
+    etapa = etapa_do_conteudo(conteudos.get(versao_id), etapa_id)
+    return conclusao_exibivel(forma, pontuacao, sentido, etapa)
+
+
 def avaliacoes_inelegiveis(*, edital, etapa_id, pagina=1):
     """As que ficaram de fora — **com o ato, o autor e o motivo ao lado** (FR-093).
 
@@ -564,12 +589,21 @@ def avaliacoes_inelegiveis(*, edital, etapa_id, pagina=1):
         aggregate_id__in=[avaliacao.atribuicao_id for avaliacao in pagina_atual],
     ).order_by("occurred_at"):
         atos[ato.aggregate_id] = ato
+    conteudos = _conteudos_historicos(avaliacao.versao_id for avaliacao in pagina_atual)
     linhas = [
         {
             "avaliacao": avaliacao,
             "inscricao": avaliacao.atribuicao.inscricao,
             "membro": avaliacao.atribuicao.membro,
             "ato": atos.get(avaliacao.atribuicao_id),
+            "conclusao_exibivel": _exibivel(
+                avaliacao.forma,
+                avaliacao.pontuacao,
+                avaliacao.sentido,
+                conteudos,
+                avaliacao.versao_id,
+                etapa_id,
+            ),
         }
         for avaliacao in pagina_atual
     ]
@@ -628,6 +662,7 @@ def conclusoes_preservadas(*, edital, etapa_id, inscricao_id=None, pagina=1):
         .values_list("avaliacao_id")
         .annotate(ultima=Max("ordem"))
     )
+    conteudos = _conteudos_historicos(conclusao.versao_id for conclusao in pagina_atual)
     linhas = []
     for conclusao in pagina_atual:
         avaliacao = conclusao.avaliacao
@@ -642,6 +677,14 @@ def conclusoes_preservadas(*, edital, etapa_id, inscricao_id=None, pagina=1):
                 "avaliacao": avaliacao,
                 "inscricao": atribuicao.inscricao,
                 "membro": atribuicao.membro,
+                "conclusao_exibivel": _exibivel(
+                    conclusao.forma,
+                    conclusao.pontuacao,
+                    conclusao.sentido,
+                    conteudos,
+                    conclusao.versao_id,
+                    etapa_id,
+                ),
                 "situacao": (
                     "em_vigor"
                     if corrente and atribuicao.ativo

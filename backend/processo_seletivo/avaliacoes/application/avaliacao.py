@@ -16,7 +16,9 @@ do que não registrar versão alguma.
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.avaliacoes.domain import pontuacao as regras
+from processo_seletivo.avaliacoes.domain import previsao
 from processo_seletivo.avaliacoes.domain.autorizacao import pode_avaliar_inscricao
+from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao, ConclusaoAvaliacao
 from processo_seletivo.comissoes.domain.autorizacao import pode_atuar_na_etapa
 from processo_seletivo.publicacoes.application.selectors import effective_version
@@ -112,8 +114,40 @@ def _versao_e_etapa(edital, etapa_id, agora):
     return versao, etapa
 
 
+def _recusar_campo_da_outra_forma(forma, pontuacao, sentido):
+    """O envio traz o campo da forma publicada, e não o da outra (FR-122).
+
+    Esconder o campo na tela é apresentação; **recusá-lo é regra**, e ignorá-lo em silêncio faria a
+    tela decidir o que é normativo. A recusa é do domínio, e por isso vale no canal HTTP real.
+    """
+    if forma == Forma.DECISORIA and pontuacao not in (None, ""):
+        raise DomainError(
+            "forma_incompativel",
+            "Esta Etapa é concluída por decisão, e não por nota: o Edital não publicou pontuação "
+            "para ela.",
+            422,
+            campo="pontuacao",
+        )
+    if forma == Forma.PONTUADA and (sentido or "").strip():
+        raise DomainError(
+            "forma_incompativel",
+            "Esta Etapa é concluída por pontuação: não há decisão a registrar.",
+            422,
+            campo="sentido",
+        )
+
+
 def gravar(
-    *, ator, edital, etapa_id, inscricao_id, pontuacao, parecer, expected_revision, correlation_id
+    *,
+    ator,
+    edital,
+    etapa_id,
+    inscricao_id,
+    pontuacao,
+    parecer,
+    expected_revision,
+    correlation_id,
+    sentido=None,
 ):
     """O rascunho, gravado sem exigir conclusão (FR-031)."""
     atribuicao = _autorizar(ator, edital, etapa_id, inscricao_id)
@@ -133,12 +167,16 @@ def gravar(
         # pode salvar um valor que ainda não decidiu, e cobrar a máxima aqui obrigaria a concluir
         # para descobrir se o número passa. A regra normativa é cobrada na conclusão, que é o ato
         # com efeito (FR-031, FR-032, FR-033).
+        forma = previsao.forma_publicada(etapa)
+        _recusar_campo_da_outra_forma(forma, pontuacao, sentido)
         valor = None if pontuacao in (None, "") else regras.normalizar(pontuacao)
+        escolha = regras.normalizar_sentido(sentido, exigir=False)
         nova = compare_and_swap(
             Avaliacao.objects,
             pk=avaliacao.pk,
             expected_revision=expected_revision,
             pontuacao=valor,
+            sentido=escolha,
             parecer=parecer or "",
         )
         auditar(
@@ -165,6 +203,7 @@ def concluir(
     expected_revision,
     versao_reconhecida,
     correlation_id,
+    sentido=None,
 ):
     """Ato explícito, distinto de salvar (FR-032).
 
@@ -203,22 +242,43 @@ def concluir(
                 "nota mínima que passaram a valer e confirme a conclusão.",
                 409,
             )
-        valor = regras.validar(pontuacao, etapa)
+        # A forma vem **do conteúdo da versão já lida nesta transação** (FR-096), e é ela que fica
+        # gravada na conclusão (FR-117). Uma segunda consulta aqui reabriria a janela que FR-096
+        # fechou: a Retificação consolidada no intervalo faria validar por uma forma e gravar outra.
+        forma = previsao.forma_publicada(etapa)
+        _recusar_campo_da_outra_forma(forma, pontuacao, sentido)
         texto = (parecer or "").strip()
-        if regras.exige_parecer(valor, etapa) and not texto:
-            raise DomainError(
-                "parecer_obrigatorio",
-                "Esta Etapa é eliminatória e a pontuação ficou abaixo da nota mínima: o parecer "
-                "é obrigatório, porque é ele que responde a um recurso.",
-                422,
-                campo="parecer",
-            )
+        if forma == Forma.DECISORIA:
+            escolha = regras.normalizar_sentido(sentido, exigir=True)
+            valor = None
+            if regras.exige_parecer_do_sentido(escolha) and not texto:
+                _, desfavoravel = previsao.rotulos(etapa)
+                raise DomainError(
+                    "parecer_obrigatorio",
+                    f"A conclusão {desfavoravel or 'desfavorável'} exige parecer, porque é ele que "
+                    "responde a um recurso.",
+                    422,
+                    campo="parecer",
+                )
+        else:
+            escolha = ""
+            valor = regras.validar(pontuacao, etapa)
+            if regras.exige_parecer(valor, etapa) and not texto:
+                raise DomainError(
+                    "parecer_obrigatorio",
+                    "Esta Etapa é eliminatória e a pontuação ficou abaixo da nota mínima: o "
+                    "parecer é obrigatório, porque é ele que responde a um recurso.",
+                    422,
+                    campo="parecer",
+                )
         nova = compare_and_swap(
             Avaliacao.objects,
             pk=avaliacao.pk,
             expected_revision=expected_revision,
             estado=Avaliacao.Estado.CONCLUIDA,
+            forma=forma,
             pontuacao=valor,
+            sentido=escolha,
             parecer=texto,
             # **A versão validada é a versão gravada** (FR-071, FR-096).
             versao=versao,
@@ -229,7 +289,9 @@ def concluir(
         ConclusaoAvaliacao.objects.create(
             avaliacao=avaliacao,
             ordem=avaliacao.conclusoes.count() + 1,
+            forma=forma,
             pontuacao=valor,
+            sentido=escolha,
             parecer=texto,
             versao=versao,
             concluida_em=agora,

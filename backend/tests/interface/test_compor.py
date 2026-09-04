@@ -942,3 +942,44 @@ def test_o_seletor_de_evento_mostra_a_data_que_a_etapa_herda(client, seletor_lig
     assert not re.search(r'<option value="[0-9a-f-]{36}"[^>]*>\s*</option>', corpo), (
         "opção de Evento sem texto"
     )
+
+
+# ------------------------------------------------ a forma da conclusão (012, D-008)
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_etapa_decisoria_e_gravada_com_os_rotulos(client, seletor_ligado, edital):
+    """A jornada 1 do quickstart: declarar que a Etapa não pontua, com os rótulos (FR-119)."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, perfis(), eventos())
+    edital.refresh_from_db()
+
+    client.post(
+        etapa(edital, "etapas"),
+        etapas_form(
+            **{
+                "etapa-0-forma": "DECISORIA",
+                "etapa-0-minimumScore": "",
+                "etapa-0-rotuloFavoravel": "Deferido",
+                "etapa-0-rotuloDesfavoravel": "Indeferido",
+            }
+        ),
+    )
+
+    gravada = EtapaAvaliacao.objects.order_by("order").first()
+    assert gravada.forma == "DECISORIA"
+    assert (gravada.rotulo_favoravel, gravada.rotulo_desfavoravel) == ("Deferido", "Indeferido")
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_etapa_nasce_pontuada_quando_ninguem_escolhe(client, seletor_ligado, edital):
+    """O que a ausência significa — e o que mantém publicável o Edital em elaboração (FR-120)."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, perfis(), eventos())
+    edital.refresh_from_db()
+
+    client.post(etapa(edital, "etapas"), etapas_form())
+
+    assert {gravada.forma for gravada in EtapaAvaliacao.objects.all()} == {"PONTUADA"}

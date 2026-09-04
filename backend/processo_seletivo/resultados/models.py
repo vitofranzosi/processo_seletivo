@@ -22,6 +22,7 @@ import uuid
 from django.db import models
 from django.db.models import Q
 
+from processo_seletivo.avaliacoes.domain.formas import Forma, Sentido
 from processo_seletivo.avaliacoes.models import Avaliacao
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.processos.models import Edital
@@ -49,7 +50,12 @@ class ResultadoEtapa(models.Model):
     avaliacao = models.OneToOneField(
         Avaliacao, on_delete=models.PROTECT, related_name="resultado_da_etapa"
     )
-    pontuacao = models.DecimalField(max_digits=7, decimal_places=4)
+    # A forma sob a qual a fonte foi concluída, copiada com ela. O Resultado guarda a conclusão
+    # **conforme a forma**, e não uma nota sempre: a Etapa decisória não produz número nenhum, e
+    # inventar um seria afirmar uma grandeza que o Edital não publicou (012, D-008; 013, D-008).
+    forma = models.CharField(max_length=20, choices=Forma.choices)
+    pontuacao = models.DecimalField(max_digits=7, decimal_places=4, null=True, blank=True)
+    sentido = models.CharField(max_length=20, choices=Sentido.choices, blank=True, default="")
     consequencia = models.CharField(max_length=20, choices=Consequencia.choices)
     # A causa da consequência, em texto exibível. Consequência sem causa é rótulo: quem consulta
     # precisa ler "pontuação inferior à nota mínima da Etapa (55,0000 < 60,0000)", e não apenas
@@ -74,6 +80,15 @@ class ResultadoEtapa(models.Model):
                 name="ck_resultado_consequencia",
             ),
             models.CheckConstraint(condition=~Q(motivo=""), name="ck_resultado_motivo_presente"),
+            # O que a coluna `NOT NULL` garantia sozinha, dito agora por forma. A trigger confere o
+            # Resultado contra a fonte; esta confere que ele é internamente coerente, e as duas
+            # precisam existir — a trigger sozinha aprovaria uma linha sem forma se a fonte também
+            # não a tivesse, e num registro append-only o inválido entra uma vez e fica.
+            models.CheckConstraint(
+                condition=Q(forma=Forma.PONTUADA, pontuacao__isnull=False, sentido="")
+                | Q(forma=Forma.DECISORIA, pontuacao__isnull=True, sentido__in=Sentido.values),
+                name="ck_resultado_completo_por_forma",
+            ),
             models.CheckConstraint(
                 condition=~Q(consolidado_por=""), name="ck_resultado_autor_presente"
             ),

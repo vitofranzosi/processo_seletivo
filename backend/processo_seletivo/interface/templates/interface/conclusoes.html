@@ -58,7 +58,8 @@ concluído antes vive aqui, no registro append-only do domínio, e não na trilh
     <tr>
       <td>{{ linha.inscricao.protocolo|default:linha.inscricao.id }}</td>
       <td>{{ linha.membro.display_label|default:linha.conclusao.concluida_por }}</td>
-      <td>{{ linha.conclusao.pontuacao|pontuacao }}</td>
+      {# A conclusão sob a norma que a governou, e não sob a vigente (FR-117). #}
+      <td>{% if linha.conclusao_exibivel %}{{ linha.conclusao_exibivel }}{% else %}{{ linha.conclusao.pontuacao|pontuacao }}{% endif %}</td>
       <td>{{ linha.conclusao.parecer|default:"—" }}</td>
       <td>vigente desde {{ linha.conclusao.versao.valid_from|date:"d/m/Y H:i" }}
         <span class="codigo">{{ linha.conclusao.versao.id }}</span></td>

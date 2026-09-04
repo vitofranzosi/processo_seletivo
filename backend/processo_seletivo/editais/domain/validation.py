@@ -133,6 +133,15 @@ DOCUMENTO_EXIGIDO_PUBLICADO = (
 # `_coerencia_das_etapas`, que já percorre a coleção.
 DECIMAL = r"^-?(0|[1-9]\d{0,2})\.\d{4}$"
 
+# As duas formas de conclusão, como o conteúdo publicado as grafa. A lista literal fica aqui, e não
+# importada de `avaliacoes`: este módulo confere a **string publicada** contra o contrato, e não
+# conhece o domínio da conclusão — importá-lo inverteria a direção de dependência entre os apps.
+FORMAS = ("PONTUADA", "DECISORIA")
+
+# As duas recusas de aplicabilidade, ditas uma vez.
+ROTULO = "A Etapa pontuada não publica rótulos de resultado em "
+NOTA = "A Etapa decisória não publica nota em "
+
 ETAPA_PUBLICADA = (
     Campo("id", str, formato="uuid"),
     Campo("name", str),
@@ -146,6 +155,17 @@ ETAPA_PUBLICADA = (
     # "não declarado", e é assim que conteúdo publicado antes do incremento continua legível.
     Campo("evaluationsPerRegistration", int, admite_nulo=True, minimo=1),
     Campo("maximumScore", str, admite_nulo=True, formato="decimal", padrao=DECIMAL),
+    # As três do incremento da revisão de `012` (FR-119). `forma` **não** admite nulo, e é o único
+    # campo da Etapa publicada que não admite: nulo aqui criaria duas grafias canônicas para a mesma
+    # versão — um snapshot com `null` e outro com `"PONTUADA"` descrevendo a mesma Etapa —, e a
+    # versão existe para identificar uma forma só. A ausência é lida como pontuada apenas em
+    # conteúdo anterior à 6, e quem a lê é `avaliacoes/domain/previsao.py` (FR-120).
+    Campo("forma", str, valores=FORMAS),
+    # Os rótulos são anuláveis porque neles o "não se aplica" é real: Etapa pontuada não nomeia
+    # sentido nenhum. Que sejam obrigatórios na forma decisória é coerência **entre** campos, e
+    # `Campo` não a expressa — ela vive em `_coerencia_das_etapas` (FR-121).
+    Campo("rotuloFavoravel", str, admite_nulo=True),
+    Campo("rotuloDesfavoravel", str, admite_nulo=True),
     Campo("scheduleEventId", str, admite_nulo=True, formato="uuid"),
 )
 
@@ -505,9 +525,48 @@ def _coerencia_das_etapas(snapshot: dict) -> list[ValidationFinding]:
                         f"{caminho}/{atributo}",
                     )
                 )
+        # A aplicabilidade por forma (FR-119, FR-121). `Campo` valida um campo por vez e não
+        # expressa isto: publicar `maximumScore = 100` numa Etapa que não pontua seria a regra
+        # normativa fictícia que P-007 existe para impedir, e uma Etapa decisória sem rótulo
+        # publicaria um juízo que ninguém sabe ler.
+        #
+        # **São três estados, e não dois.** O rótulo é exigido numa forma e proibido na outra; a
+        # nota é proibida na decisória e apenas **admitida** na pontuada — Etapa pontuada sem nota
+        # mínima nem máxima é legítima, e é o que FR-066 chama de limite não declarado. Tratar
+        # "admitido" como "exigido" recusaria Edital que o sistema publica desde a 012.
+        #
+        # "Proibido" significa **nulo**, e nunca ausente: no conteúdo publicado toda chave da Etapa
+        # está sempre lá, e o que se recusa é o valor.
+        decisoria = item.get("forma") == "DECISORIA"
+        for atributo, exigido, proibido, recusa in (
+            ("rotuloFavoravel", decisoria, not decisoria, ROTULO),
+            ("rotuloDesfavoravel", decisoria, not decisoria, ROTULO),
+            ("minimumScore", False, decisoria, NOTA),
+            ("maximumScore", False, decisoria, NOTA),
+        ):
+            valor = item.get(atributo)
+            # Rótulo em branco não é rótulo: um documento com `""` no lugar do indeferimento não
+            # diz nada a quem lê o Edital. Para os decimais, `strip` não se aplica.
+            presente = valor.strip() != "" if isinstance(valor, str) else valor is not None
+            if exigido and not presente:
+                findings.append(
+                    _impeditivo(
+                        RESTRICAO_VIOLADA,
+                        f"A Etapa decisória deve publicar os rótulos do resultado em "
+                        f"{caminho}/{atributo}.",
+                        f"{caminho}/{atributo}",
+                    )
+                )
+            elif proibido and presente:
+                findings.append(
+                    _impeditivo(
+                        RESTRICAO_VIOLADA, f"{recusa}{caminho}/{atributo}.", f"{caminho}/{atributo}"
+                    )
+                )
+
         # Coerência entre os dois, e não faixa de um só: nota mínima acima da máxima descreveria
-        # uma Etapa em que ninguém pode ser aprovado. É a única coerência entre campos que o
-        # contrato escreve para a Etapa, e por isso a única que se aplica aqui (012, FR-033).
+        # uma Etapa em que ninguém pode ser aprovado. Vale só na forma pontuada, porque é a única
+        # em que os dois existem (012, FR-033, FR-121).
         minima = _decimal_ou_none(item.get("minimumScore"))
         maxima = _decimal_ou_none(item.get("maximumScore"))
         if minima is not None and maxima is not None and minima > maxima:

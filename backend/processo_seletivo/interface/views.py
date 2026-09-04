@@ -31,6 +31,7 @@ from processo_seletivo.avaliacoes.application.mesa import (
     INTEGRIDADE,
 )
 from processo_seletivo.avaliacoes.application.trilha import auditar as auditar_ato
+from processo_seletivo.avaliacoes.domain.previsao import rotulos
 from processo_seletivo.comissoes.application import alocacao as alocacao_app
 from processo_seletivo.comissoes.application import comissao as comissao_app
 from processo_seletivo.comissoes.application import selectors as comissao_selectors
@@ -2492,11 +2493,16 @@ def _leituras_por_requisito(ator, atribuicao):
 
 def _valores_da_avaliacao(digitado, avaliacao):
     if digitado:
-        return {"pontuacao": digitado.get("pontuacao", ""), "parecer": digitado.get("parecer", "")}
+        return {
+            "pontuacao": digitado.get("pontuacao", ""),
+            "sentido": digitado.get("sentido", ""),
+            "parecer": digitado.get("parecer", ""),
+        }
     if avaliacao is None:
-        return {"pontuacao": "", "parecer": ""}
+        return {"pontuacao": "", "sentido": "", "parecer": ""}
     return {
         "pontuacao": "" if avaliacao.pontuacao is None else f"{avaliacao.pontuacao:f}",
+        "sentido": avaliacao.sentido,
         "parecer": avaliacao.parecer,
     }
 
@@ -2551,6 +2557,7 @@ def _registrar_avaliacao(
         "etapa_id": etapa_id,
         "inscricao_id": inscricao_id,
         "pontuacao": dados["pontuacao"],
+        "sentido": dados["sentido"],
         "parecer": dados["parecer"],
         "expected_revision": dados["expected_revision"],
         "correlation_id": getattr(request, "correlation_id", ""),
@@ -2569,6 +2576,7 @@ def _registrar_avaliacao(
         request.session["aviso_da_avaliacao"] = {"tipo": "erro", "texto": recusa.detail}
         request.session["digitado_na_avaliacao"] = {
             "pontuacao": dados["pontuacao"],
+            "sentido": dados["sentido"],
             "parecer": dados["parecer"],
         }
     return redirect(destino)
@@ -2706,6 +2714,10 @@ def resultados_da_etapa(request, edital_id, etapa_id):
                 # quem consulta precisa saber que a origem foi questionada depois (FR-032).
                 "contestados": resultado_selectors.contestacoes_supervenientes(linhas),
                 "consequencia": request.GET.get("consequencia") or "",
+                # Os rótulos que **este** Edital publicou: quem consulta o Resultado tem direito ao
+                # vocabulário do Edital, e não ao enum do domínio (FR-118).
+                "rotulo_favoravel": rotulos(etapa)[0],
+                "rotulo_desfavoravel": rotulos(etapa)[1],
             },
         )
     )

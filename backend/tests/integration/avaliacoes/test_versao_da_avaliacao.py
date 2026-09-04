@@ -222,3 +222,30 @@ def test_retificacao_que_remove_a_etapa_nao_apaga_a_avaliacao(
     # no conteúdo vigente.
     assert avaliacao.versao is not None
     assert pode_avaliar_inscricao(joao, edital_com_regra, etapa, cenario.id) is None
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_forma_gravada_e_a_da_versao_validada(gestor, api_client, manager_headers):
+    """FR-117 e FR-096: a forma sai do conteúdo lido **na transação**, e é essa que fica.
+
+    Ler a versão para avisar e outra para gravar produziria uma Avaliação que afirma obedecer a uma
+    regra contra a qual nunca foi verificada — e com duas formas o efeito é pior que com um limite:
+    a conclusão inteira mudaria de espécie.
+    """
+    from tests.fixtures.comissao import inscrever
+    from tests.fixtures.mesa import concluir_como, distribuir_para
+    from tests.fixtures.resultado import montar_etapa_de_leitura_unica
+
+    cenario = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=2300, codigo="2300", decisoria=True
+    )
+    inscricao = inscrever(cenario["edital"], 1, primeiro=1)[0]
+    distribuir_para(cenario, gestor, ["joao"], [inscricao], chave="lote-2300")
+
+    avaliacao = concluir_como(cenario, "joao", inscricao, sentido="FAVORAVEL", parecer="")
+    vigente = cenario["edital"].versoes_consolidadas.latest("materialized_at")
+    etapa = next(e for e in vigente.content["stages"] if e["id"] == str(cenario["etapa"]))
+
+    assert avaliacao.versao_id == vigente.id
+    assert avaliacao.forma == etapa["forma"] == "DECISORIA"

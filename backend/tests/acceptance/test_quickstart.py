@@ -341,3 +341,47 @@ def test_quickstart_s11_recomputed_temporal_function_matches_the_materialized_sn
     recomputada, _ = consolidate(original.content, atos)
     assert canonical_sha256(recomputada) == materializada.content_hash
     assert recomputada == materializada.content
+
+
+# --------------- as jornadas da revisão 012–013 que não são a E2E (quickstart)
+
+
+@pytest.mark.acceptance
+@pytest.mark.django_db
+def test_j1_o_edital_publica_como_a_etapa_e_concluida(gestor, api_client, manager_headers):
+    """Jornada 1: o snapshot e o documento dizem que aquela Etapa não pontua."""
+    from tests.fixtures.resultado import montar_etapa_de_leitura_unica
+
+    cenario = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=2900, codigo="2900", decisoria=True
+    )
+    conteudo = cenario["edital"].versoes_consolidadas.latest("materialized_at").content
+    etapa = next(e for e in conteudo["stages"] if e["id"] == str(cenario["primeira"]))
+
+    assert conteudo["schemaVersion"] == 6
+    assert etapa["forma"] == "DECISORIA"
+    assert etapa["minimumScore"] is None and etapa["maximumScore"] is None
+    assert (etapa["rotuloFavoravel"], etapa["rotuloDesfavoravel"]) == ("Deferido", "Indeferido")
+
+
+@pytest.mark.acceptance
+@pytest.mark.django_db
+def test_j4_a_etapa_decisoria_sem_carater_eliminatorio_nao_e_consolidavel():
+    """Jornada 4: o Edital não publicou o efeito, e o sistema não o inventa (013, FR-047)."""
+    from processo_seletivo.resultados.domain.regra import REGRA_INSUFICIENTE, impedimento_da_regra
+
+    decisoria = {
+        "id": "00000000-0000-0000-0000-0000000000c1",
+        "forma": "DECISORIA",
+        "rotuloFavoravel": "Deferido",
+        "rotuloDesfavoravel": "Indeferido",
+        "eliminatory": False,
+        "evaluationsPerRegistration": 1,
+    }
+
+    codigo, frase = impedimento_da_regra(decisoria)
+
+    assert codigo == REGRA_INSUFICIENTE
+    assert "decisória" in frase and "desfavorável" in frase
+    # E o simétrico, que passa a funcionar: eliminatória, decisória e sem nota mínima consolida.
+    assert impedimento_da_regra({**decisoria, "eliminatory": True}) is None

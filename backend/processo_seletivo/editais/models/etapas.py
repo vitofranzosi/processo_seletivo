@@ -3,6 +3,7 @@ import uuid
 from django.db import models
 from django.db.models import Q
 
+from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.processos.models import Edital
 
@@ -35,6 +36,22 @@ class EtapaAvaliacao(models.Model):
     # leitor só, em `avaliacoes/domain/previsao.py` (012, FR-009, FR-066).
     evaluations_per_registration = models.PositiveSmallIntegerField(null=True, blank=True)
     maximum_score = models.DecimalField(max_digits=7, decimal_places=4, null=True, blank=True)
+    # A forma de conclusão que a Etapa exige, e os rótulos com que este Edital nomeia o sentido na
+    # forma decisória. Entram juntos na versão canônica 6 e são normativos: decidir se o trabalho do
+    # avaliador produz nota ou deferimento afeta direito do candidato tanto quanto decidir quantas
+    # pessoas o avaliam (012, D-008, FR-119).
+    #
+    # `forma` **não** é anulável e tem default, ao contrário de todo campo normativo anulável acima,
+    # e a razão não é conveniência: não existe estado "ainda não escolhida" para ela, porque a
+    # ausência já significa pontuada em todo o resto do sistema — um `NULL` aqui seria uma terceira
+    # grafia do mesmo nada. O default é também o que mantém publicável todo Edital **já em
+    # elaboração** quando esta coluna nasce: sem ele, o snapshot sairia com `forma: null` e a
+    # publicação seria recusada. É o padrão que `eliminatory` e `classificatory` já seguem.
+    forma = models.CharField(max_length=20, choices=Forma.choices, default=Forma.PONTUADA)
+    # Os rótulos não têm default, e a assimetria é deliberada: neles o "não se aplica" é real, e um
+    # default institucional aplicaria ao Edital um rótulo que ele não publicou (012, D-008, P-007).
+    rotulo_favoravel = models.CharField(max_length=100, blank=True, default="")
+    rotulo_desfavoravel = models.CharField(max_length=100, blank=True, default="")
     # A Etapa referencia o Evento; as datas são do Evento e não são copiadas. `SET_NULL` porque
     # remover o Evento não pode remover a Etapa — o que não pode é o vínculo sobreviver a ele.
     evento = models.ForeignKey(

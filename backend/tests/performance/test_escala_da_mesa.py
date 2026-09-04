@@ -16,6 +16,7 @@ from processo_seletivo.avaliacoes.application.selectors import (
     mesa,
     resumo_da_etapa,
 )
+from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.avaliacoes.models import Atribuicao
 from processo_seletivo.comissoes.application.alocacao import remover_alocacao
 from processo_seletivo.comissoes.domain.etapas import etapa_vigente
@@ -188,6 +189,7 @@ def _concluir_em_massa(cenario, atribuicoes):
             etapa_id=atribuicao.etapa_id,
             inscricao_id=atribuicao.inscricao_id,
             estado=Avaliacao.Estado.CONCLUIDA,
+            forma=Forma.PONTUADA,
             pontuacao="70.0000",
             parecer="Atende.",
             versao=versao,
@@ -200,6 +202,7 @@ def _concluir_em_massa(cenario, atribuicoes):
         ConclusaoAvaliacao(
             avaliacao=avaliacao,
             ordem=1,
+            forma=Forma.PONTUADA,
             pontuacao="70.0000",
             parecer="Atende.",
             versao=versao,

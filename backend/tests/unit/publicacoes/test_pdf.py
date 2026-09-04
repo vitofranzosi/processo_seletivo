@@ -1496,3 +1496,31 @@ def test_o_cargo_nao_e_repetido_quando_ja_esta_no_nome_registrado():
     )
     assert "Aline Freitas da Silva de Carvalho" in distinto
     assert "Diretora do Centro de Referência" in distinto
+
+
+def test_a_etapa_decisoria_imprime_os_rotulos_e_nao_imprime_nota():
+    """Jornada 1: quem lê o Edital descobre que aquela Etapa produz deferimento, e não nota."""
+    conteudo = snapshot(
+        stages=[
+            {
+                "id": "00000000-0000-0000-0000-0000000000b1",
+                "name": "Análise documental",
+                "order": 1,
+                "weight": None,
+                "eliminatory": True,
+                "classificatory": False,
+                "minimumScore": None,
+                "maximumScore": None,
+                "evaluationsPerRegistration": 1,
+                "forma": "DECISORIA",
+                "rotuloFavoravel": "Deferido",
+                "rotuloDesfavoravel": "Indeferido",
+                "scheduleEventId": None,
+            }
+        ]
+    )
+
+    texto = texto_de(documento(conteudo))
+
+    assert "Deferido ou Indeferido" in texto
+    assert "Nota mínima" not in texto and "Pontuação máxima" not in texto

@@ -44,7 +44,8 @@ além de tornar indistinguíveis, para a varredura de vocabulário, a página qu
     <thead>
       <tr>
         <th scope="col">Inscrição</th>
-        <th scope="col">Pontuação</th>
+        {# "Conclusão", e não "Pontuação": a célula abaixo traz o rótulo quando a Etapa não pontua. #}
+        <th scope="col">Conclusão</th>
         <th scope="col">Situação na Etapa</th>
         <th scope="col">Por quê</th>
         <th scope="col">Quem avaliou</th>
@@ -56,7 +57,11 @@ além de tornar indistinguíveis, para a varredura de vocabulário, a página qu
       {% for resultado in linhas %}
       <tr>
         <td>{{ resultado.inscricao.protocolo|default:resultado.inscricao_id }}</td>
-        <td class="numero">{{ resultado.pontuacao|pontuacao }}</td>
+        {% comment %}
+        A conclusão como a forma a define: a Etapa decisória não produziu número, e imprimir um
+        traço no lugar dele diria menos que o rótulo que o Edital publicou (D-008).
+        {% endcomment %}
+        <td class="numero">{% if resultado.forma == "DECISORIA" %}{% if resultado.sentido == "DESFAVORAVEL" %}{{ rotulo_desfavoravel }}{% else %}{{ rotulo_favoravel }}{% endif %}{% else %}{{ resultado.pontuacao|pontuacao }}{% endif %}</td>
         <td>{{ resultado.get_consequencia_display }}</td>
         <td class="motivo-da-prontidao">
           {{ resultado.motivo }}

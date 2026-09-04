@@ -49,6 +49,14 @@ def _stages(edital: Edital) -> list[dict]:
             # como `null`, e é assim que "não declarado" fica dito no conteúdo publicado.
             "evaluationsPerRegistration": etapa.evaluations_per_registration,
             "maximumScore": _decimal_canonico(etapa.maximum_score),
+            # O incremento da revisão da `012`: a forma da conclusão e, na decisória, os rótulos
+            # com que este Edital nomeia o sentido (D-008, FR-119). A forma viaja como string e
+            # nunca como `null` — não há Etapa sem forma, e é a versão canônica 6 que fixa isso.
+            # Os rótulos vazios viajam como `null`, que é como o conteúdo publicado diz "não se
+            # aplica", pela mesma grafia de `weight` e `minimumScore`.
+            "forma": etapa.forma,
+            "rotuloFavoravel": etapa.rotulo_favoravel or None,
+            "rotuloDesfavoravel": etapa.rotulo_desfavoravel or None,
             # A Etapa referencia o Evento; as datas são dele e não são copiadas (FR-021).
             "scheduleEventId": None if etapa.evento_id is None else str(etapa.evento_id),
         }

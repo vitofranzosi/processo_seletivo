@@ -132,3 +132,54 @@ def test_retificacao_fora_da_etapa_nao_cria_incompatibilidade():
         incompatibilidade(conteudo=conteudo(etapa(), outra), etapa_id=ETAPA, etapa_vigente=etapa())
         is None
     )
+
+
+def test_a_troca_de_forma_cria_incompatibilidade():
+    """O campo mais grave da lista: uma nota onde a norma não prevê nota nenhuma (D-008)."""
+    historica = etapa(forma="PONTUADA", minimumScore="60.0000", eliminatory=True)
+    vigente = etapa(
+        forma="DECISORIA",
+        rotuloFavoravel="Deferido",
+        rotuloDesfavoravel="Indeferido",
+        eliminatory=True,
+    )
+
+    codigo, frase = incompatibilidade(
+        conteudo={"stages": [historica]}, etapa_id=historica["id"], etapa_vigente=vigente
+    )
+
+    assert codigo == NORMA_DIVERGENTE
+    assert "forma da conclusão" in frase
+
+
+def test_a_troca_de_rotulo_nao_cria_incompatibilidade():
+    """Corrigir uma redação não pode bloquear toda consolidação pendente."""
+    base = {
+        "forma": "DECISORIA",
+        "eliminatory": True,
+        "rotuloFavoravel": "Deferido",
+        "rotuloDesfavoravel": "Indeferido",
+    }
+    historica = etapa(**base)
+    vigente = etapa(**{**base, "rotuloFavoravel": "Deferido(a)"})
+
+    assert (
+        incompatibilidade(
+            conteudo={"stages": [historica]}, etapa_id=historica["id"], etapa_vigente=vigente
+        )
+        is None
+    )
+
+
+def test_forma_ausente_e_pontuada_dizem_a_mesma_coisa():
+    """Conteúdo anterior à v6 não carrega a chave, e isso não é divergência (FR-120)."""
+    historica = etapa()
+    historica.pop("forma", None)
+    vigente = etapa(forma="PONTUADA")
+
+    assert (
+        incompatibilidade(
+            conteudo={"stages": [historica]}, etapa_id=historica["id"], etapa_vigente=vigente
+        )
+        is None
+    )

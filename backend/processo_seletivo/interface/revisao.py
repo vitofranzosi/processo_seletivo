@@ -75,6 +75,14 @@ def _etapa(etapa, snapshot):
     # documento: ausência é "o Edital não declarou", e não "declarou o padrão".
     if etapa.get("maximumScore") is not None:
         linhas.append(f"Pontuação máxima: {etapa['maximumScore']}")
+    # A forma, e os rótulos só onde eles existem: quem revisa precisa ver que esta Etapa não pontua
+    # antes de submeter, e não descobrir isso no documento publicado (D-008).
+    if etapa.get("forma") == "DECISORIA":
+        favoravel = etapa.get("rotuloFavoravel") or "—"
+        desfavoravel = etapa.get("rotuloDesfavoravel") or "—"
+        linhas.append(f"Conclusão: decisão, sem nota ({favoravel} / {desfavoravel})")
+    else:
+        linhas.append("Conclusão: com pontuação")
     if etapa.get("evaluationsPerRegistration") is not None:
         linhas.append(f"Avaliações por inscrição: {etapa['evaluationsPerRegistration']}")
     vinculado = next(

@@ -22,17 +22,38 @@ ETAPA_V4 = {
 }
 
 
+# A mesma Etapa já na forma da versão 5: ela ainda precisa do degrau da 6.
+ETAPA_V5 = {**ETAPA_V4, "evaluationsPerRegistration": 1, "maximumScore": None}
+
+# E na forma vigente, que não precisa de degrau nenhum.
+ETAPA_V6 = {**ETAPA_V5, "forma": "PONTUADA", "rotuloFavoravel": None, "rotuloDesfavoravel": None}
+
+
 def conteudo(versao, etapas):
     return {"schemaVersion": versao, "title": "Edital", "stages": etapas}
 
 
 def test_a_etapa_antiga_ganha_o_que_a_ausencia_ja_dizia():
+    """Da v4 até a vigente, os dois degraus de uma vez — e nenhum deles inventa conteúdo."""
     elevada = elevar_etapa(ETAPA_V4)
 
     assert elevada["evaluationsPerRegistration"] == 1
     assert elevada["maximumScore"] is None
+    assert elevada["forma"] == "PONTUADA"
+    assert elevada["rotuloFavoravel"] is None and elevada["rotuloDesfavoravel"] is None
     # E nada mais muda: elevar não é reescrever.
     assert {k: v for k, v in elevada.items() if k in ETAPA_V4} == ETAPA_V4
+
+
+def test_a_etapa_da_versao_5_sobe_um_degrau_so():
+    """A cadeia aplica o que vem **depois** da origem, e não tudo sempre (TR-001)."""
+    elevada = elevar_etapa(ETAPA_V5, de=5)
+
+    assert elevada == ETAPA_V6
+
+
+def test_a_etapa_vigente_atravessa_sem_copia():
+    assert elevar_etapa(ETAPA_V6, de=SCHEMA_VERSION) is ETAPA_V6
 
 
 def test_elevar_e_idempotente():
@@ -44,14 +65,23 @@ def test_elevar_e_idempotente():
 
 
 def test_o_que_ja_declarou_atravessa_intacto():
-    declarada = {**ETAPA_V4, "evaluationsPerRegistration": 2, "maximumScore": "100.0000"}
+    declarada = {
+        **ETAPA_V6,
+        "evaluationsPerRegistration": 2,
+        "maximumScore": "100.0000",
+    }
 
     assert elevar_etapa(declarada) == declarada
 
 
 def test_nulo_declarado_continua_nulo():
     """Ausente e nulo significam a mesma coisa, e é por isso que a função é idempotente."""
-    nula = {**ETAPA_V4, "evaluationsPerRegistration": None, "maximumScore": None}
+    nula = {
+        **ETAPA_V6,
+        "evaluationsPerRegistration": None,
+        "maximumScore": None,
+        "forma": None,
+    }
 
     assert elevar_etapa(nula) == nula
 
@@ -131,3 +161,32 @@ def test_a_entidade_de_etapa_e_a_unica_que_a_precondicao_reconhece():
     assert not endereca_etapa("/stages/id=00000000-0000-0000-0000-0000000000e1/minimumScore")
     assert not endereca_etapa("/other")
     assert not endereca_etapa("/profiles/-")
+
+
+def test_a_cadeia_sobe_dois_degraus_do_conteudo_v4():
+    """v4 → 5 → 6 num passo só de chamada, e em dois de significado (TR-001)."""
+    elevado = elevar(conteudo(4, [ETAPA_V4]))
+
+    assert elevado["schemaVersion"] == SCHEMA_VERSION == 6
+    assert elevado["stages"][0]["forma"] == "PONTUADA"
+    assert elevado["stages"][0]["evaluationsPerRegistration"] == 1
+
+
+def test_a_cadeia_sobe_um_degrau_do_conteudo_v5():
+    elevado = elevar(conteudo(5, [ETAPA_V5]))
+
+    assert elevado["schemaVersion"] == SCHEMA_VERSION
+    assert elevado["stages"] == [ETAPA_V6]
+
+
+def test_conteudo_vigente_atravessa_sem_copia():
+    original = conteudo(SCHEMA_VERSION, [ETAPA_V6])
+
+    assert elevar(original) is original
+
+
+def test_versao_que_a_cadeia_nao_conhece_atravessa_intacta():
+    """Carimbá-la aqui afirmaria uma forma que o conteúdo não tem — a recusa é dita adiante."""
+    original = conteudo(3, [ETAPA_V4])
+
+    assert elevar(original) is original

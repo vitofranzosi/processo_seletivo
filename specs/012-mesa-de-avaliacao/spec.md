@@ -25,8 +25,8 @@ no resultado.
 
 Permitir que a presidência **distribua as inscrições** entre os membros já alocados à Etapa, e que
 cada avaliador **execute, dentro do sistema, somente as avaliações que lhe foram atribuídas** —
-abrindo a documentação como instrumento de trabalho, registrando pontuação e parecer, e
-concluindo.
+abrindo a documentação como instrumento de trabalho, registrando o que afirma sobre a inscrição na
+forma que a Etapa publicou, e concluindo.
 
 A feature responde à pergunta:
 
@@ -132,6 +132,12 @@ não pode ser reutilizada. As decisões abaixo fecham isso em termos de resultad
 está escrito conforme elas.*
 
 ### D-001 — O incremento canônico é um, e ele carrega **duas** propriedades
+
+> **Decisão histórica, e verdadeira no contexto em que foi tomada.** Ela descreve o primeiro
+> incremento, de 4 para 5. Uma mudança de requisito posterior — a conclusão que não pressupõe nota —
+> exigiu um segundo, de 5 para 6, e está em D-008. As duas convivem: o que a D-001 fixou sobre o
+> primeiro incremento não é reescrito, e a história dele não é reencenada como se os cinco campos
+> tivessem nascido juntos.
 
 A redação original declarava um único incremento — quantas avaliações por inscrição — e, oito
 seções adiante, exigia validar a pontuação contra "o limite que o Edital publicou". **Esse limite
@@ -273,6 +279,127 @@ impedimento superveniente, por exemplo — deixa de ocupar uma das vagas previst
 histórico de uma pessoa impediria para sempre que outra a substituísse. Preservar o passado não pode
 significar bloquear o presente.
 
+### D-008 — Concluir deixa de significar pontuar, e a Etapa publica qual das duas formas exige
+
+*Mudança de requisito, tomada em 03/09/2026 a partir da análise de três Editais reais do Cefor/Ifes
+— 35/2026 e 57/2026 (sorteio e análise documental) e 14/2026 (títulos e entrevista), registrada em
+`doc/decisao-012-conclusao-decisoria.md`. Não reabre nada que o §21 recusou: conclusão não-numérica
+não aparece ali, e a 012 nunca decidiu que concluir exige nota — ela só nunca teve pela frente uma
+Etapa que não pontuasse.*
+
+Nos Editais 35 e 57 a Etapa central não pontua. Depois do sorteio, a comissão faz a análise
+documental dos candidatos sorteados, e o que ela produz é **deferido** ou **indeferido** — nunca uma
+nota. Fingir que produz — deferido igual a 1, indeferido igual a 0 — inventaria uma grandeza que o
+Edital não publicou, e a 013 teria de descobrir, por convenção não escrita, que aquele `0` elimina.
+É o mesmo erro de categoria que esta spec já recusa em outro lugar: heteroidentificação não é
+"avaliação com nota zero".
+
+**A decisão**: uma Avaliação concluída precisa possuir a **conclusão completa segundo a forma que a
+Etapa publicou**. "Completa" deixa de significar *tem nota* e passa a significar *tem o que a forma
+exige*. O invariante forte não é relaxado — o que muda é o que ele afirma.
+
+```text
+Avaliacao concluída
+├── forma:     PONTUADA | DECISORIA      ← publicada pela Etapa, gravada na linha
+├── pontuação                            ← exigida quando PONTUADA, ausente quando DECISORIA
+├── sentido:   FAVORAVEL | DESFAVORAVEL  ← exigida quando DECISORIA, ausente quando PONTUADA
+└── parecer
+```
+
+**1 · A Etapa publica a forma.** `forma = PONTUADA | DECISORIA` é conteúdo normativo, pelo mesmo
+argumento de P-007 que obrigou a pontuação máxima a ser publicada (D-001): regra que decide se o
+trabalho do avaliador produz nota ou deferimento afeta direito do candidato, e não pode ser
+configuração de tela.
+
+**2 · A forma decisória publica os rótulos.** O domínio guarda sempre `FAVORAVEL | DESFAVORAVEL`; o
+rótulo que o avaliador lê e o documento imprime é dado publicado — `rotuloFavoravel` e
+`rotuloDesfavoravel` —, pelo mesmo padrão de `ModalidadeConcorrencia`, onde código e denominação são
+dados e não enumeração. Deferido/Indeferido, Apto/Inapto, Elegível/Não elegível e
+Classificado/Desclassificado são o mesmo juízo com o vocabulário que cada Edital escolheu; um enum
+com os quatro pares teria oito valores para dois significados e cresceria a cada Edital novo, que é
+hard-code de regra sujeita a legislação. **Sem objeto genérico e sem default institucional**: a tela
+de elaboração pode sugerir um par inicial editável, e prefill de tela não é default normativo.
+
+**3 · Conteúdo anterior é lido como `PONTUADA`.** Edital em versão canônica igual ou anterior a 5
+não carrega a forma, e a ausência significa a forma pontuada — não por conveniência, mas porque o
+domínio anterior não admitia outra. A ausência dos rótulos, ali, é correta: não há sentido a nomear.
+A leitura vale nos **dois** lugares em que o projeto a exerce, e a spec nomeia os dois: o **consumo**,
+onde a ausência já é interpretada num lugar só; e a **elevação no caminho de Retificação**, que hoje
+é declaradamente a conversão de um incremento, e só dele. **O `/plan` decide a forma** — cadeia
+4 → 5 → 6, ou origem que passa a ser um conjunto —, mas não pode decidir que ela não acontece: a
+D-002 continua valendo por inteiro, e tornar irretificável por evolução de esquema um Edital já
+publicado seria consequência de produto.
+
+**4 · São dois incrementos canônicos, e a história do primeiro não é reescrita.**
+
+```text
+012 original      v4 → v5    + evaluationsPerRegistration, + maximumScore
+revisão da 012    v5 → v6    + forma, + rotuloFavoravel, + rotuloDesfavoravel
+```
+
+Dentro de cada incremento as propriedades entram juntas, pela razão que o próprio `SCHEMA_VERSION`
+registra: subir a versão com uma e acrescentar a outra depois produziria snapshots da mesma versão
+com e sem a segunda, e a versão deixaria de identificar uma forma. Entre incrementos não há essa
+exigência — o segundo nasce de mudança de requisito posterior, e não de descuido do primeiro.
+
+**5 · A conclusão copia a forma da versão contra a qual foi validada.** A forma aparece em dois
+lugares com funções diferentes, e eles não são fontes concorrentes:
+
+```text
+Etapa publicada     → "a regra vigente determina a forma X"
+Avaliação concluída → "esta avaliação foi concluída sob a forma X"
+```
+
+Na transação que conclui, a forma é lida **do conteúdo da versão consolidada** — a mesma leitura
+única que FR-096 já exige para a Etapa —, a conclusão é validada contra ela e aquela mesma forma é
+gravada. São duas razões, e a segunda é a que importa mais. Uma verificação do banco não referencia
+outra tabela: com a forma na linha, a regra volta a ser local e continua sendo do banco. E a
+conclusão é histórica: se uma Retificação mudar a natureza da Etapa depois, a conclusão antiga
+precisa continuar interpretável sob a regra que a governou — que é exatamente por que ela já guarda
+a versão (FR-071). Gravar a forma não é duplicação; é a mesma preservação de sentido, no padrão que
+esta spec estabeleceu.
+
+**6 e 7 · Cada forma exige o que é seu, e recusa o que é da outra.** `PONTUADA` exige pontuação e
+não admite sentido; `DECISORIA` exige sentido e não admite pontuação. As duas juntas substituem o
+que define "concluída" no banco, que continua sendo verificação do banco e não promessa da tela.
+
+**8 · `DESFAVORAVEL` exige parecer.** Na forma pontuada a regra atual permanece intacta — nota
+abaixo do mínimo em Etapa eliminatória (FR-034). Na forma decisória a obrigatoriedade **não** depende
+do caráter da Etapa, e a assimetria é deliberada: o desfavorável é justamente o caso em que o
+candidato mais precisará da fundamentação para recorrer, e é contra o parecer que o recurso
+responderá. Exigir parecer também no favorável é configuração futura, e não se generaliza aqui.
+
+**9 · Aplicabilidade dos campos normativos de pontuação, por forma.**
+
+```text
+PONTUADA    maximumScore aplicável · minimumScore aplicável conforme a Etapa
+            sentido ausente · rótulos ausentes
+DECISORIA   maximumScore ausente  · minimumScore ausente
+            sentido aplicável · rótulos obrigatórios
+```
+
+**O peso fica fora dessa condicionalidade.** Ele descreve a composição entre Etapas — feature
+posterior — e não a forma da conclusão local; condicioná-lo à forma o acoplaria a uma distinção que
+não é a dele. O caráter eliminatório e o classificatório também permanecem propriedades da Etapa, e
+não da forma, mas com uma consequência nova que a 013 cobra: **na forma decisória é o caráter
+eliminatório que dá consequência à decisão.** Etapa decisória que não o declara não publicou o que o
+sentido desfavorável produz, e a 013 recusa consolidá-la em vez de inventar o efeito — decisão
+registrada na contraparte desta em `specs/013`.
+
+**10 · Todos os campos normativos da Etapa introduzidos pela 012 são retificáveis pelo canal
+institucional suportado**, inclusive a forma e os dois rótulos, e inclusive os dois que o primeiro
+incremento deixou para trás. O requisito é de **capacidade**, e não de contagem: qual é a lista, e
+onde ela vive, é do `/plan`; o que a spec exige é que publicar uma forma que só se corrige pela API
+não seja um resultado aceitável. A metade `documentRequirements` da lacuna E2E-004 continua fora
+desta feature — é trabalho de outra natureza, e de outra leva.
+
+**O que esta decisão não é.** Não é barema: pontuação por critério, com itens e limites por item,
+continua fora pela recusa do §21, que segue valendo por inteiro. A conclusão decisória não pontua
+nada — ela é o que permite **não** pontuar. E existe uma terceira forma plausível que nenhum dos
+três Editais exercita — conceito ordinal, A/B/C, menção de prova didática —, deliberadamente não
+construída: `forma` é o ponto de extensão por onde ela entraria, e desenhá-la antes da regra que a
+consome seria inventar norma.
+
 ---
 
 ## 6. Problema
@@ -283,7 +410,7 @@ recomeça fora dele:
 
 - quem avalia quais candidatos vira planilha;
 - a documentação é baixada em lote e circula por pasta compartilhada;
-- a pontuação é anotada em papel ou em documento de texto;
+- a pontuação, ou o deferimento, é anotada em papel ou em documento de texto;
 - o parecer chega por e-mail;
 - e a consolidação é feita à mão, sem que exista registro de quem avaliou o quê e quando.
 
@@ -326,15 +453,21 @@ acesso a inscrição que não lhe foi atribuída.
 
 ### P-006 — Avaliar não é decidir
 
-A 012 registra o que **um** avaliador afirmou sobre **uma** inscrição. Média, quórum, divergência,
-desempate e resultado são da 013. Antecipá-los aqui faria a nota de uma pessoa parecer decisão da
-instituição.
+A 012 registra o que **um** avaliador afirmou sobre **uma** inscrição — uma pontuação ou um
+sentido, conforme a forma que a Etapa publicou. Média, quórum, divergência, desempate e resultado
+são da 013. Antecipá-los aqui faria a afirmação de uma pessoa parecer decisão da instituição.
+
+É por isso que o campo da forma decisória chama-se `sentido`, e não `decisão` (D-008). Duas análises
+documentais podem afirmar sentidos opostos, e resolver isso continua sendo da 013, exatamente como
+média, quórum e divergência já eram. A 012 não ganhou poder de decidir; ganhou uma segunda forma de
+afirmar.
 
 ### P-007 — O que o Edital publicou é o que vale
 
-A pontuação máxima, o caráter eliminatório e a nota mínima vêm do conteúdo vigente, e não de
-configuração de tela. Se a regra não está publicada, ela não pode ser aplicada — e é por isso que
-a pontuação máxima precisou passar a ser publicada (D-001).
+A forma da conclusão, os rótulos com que ela é lida, a pontuação máxima, o caráter eliminatório e a
+nota mínima vêm do conteúdo vigente, e não de configuração de tela. Se a regra não está publicada,
+ela não pode ser aplicada — e é por isso que a pontuação máxima precisou passar a ser publicada
+(D-001), e a forma e os rótulos também (D-008).
 
 ---
 
@@ -503,7 +636,9 @@ conteúdo publicado e não a linha de elaboração (D-004, e 011 D-002).
 ```text
 Avaliacao
 - atribuição
-- pontuação
+- forma:     PONTUADA | DECISORIA      ← publicada pela Etapa, gravada na conclusão
+- pontuação                            ← exigida quando PONTUADA, ausente quando DECISORIA
+- sentido:   FAVORAVEL | DESFAVORAVEL  ← exigido quando DECISORIA, ausente quando PONTUADA
 - parecer
 - estado: RASCUNHO | CONCLUIDA
 - versão consolidada sob a qual foi concluída
@@ -512,6 +647,29 @@ Avaliacao
 ```
 
 > o que esta pessoa afirmou sobre esta inscrição, e sob qual regra.
+
+**FR-116** — **Uma Avaliação concluída possui a conclusão completa segundo a forma que a Etapa
+publicou** (D-008). Completa significa *tem o que a forma exige*, e não *tem nota*:
+
+```text
+forma = PONTUADA   → pontuação presente  e sentido ausente
+forma = DECISORIA  → sentido   presente  e pontuação ausente
+```
+
+A verificação é **do banco**, e continua sendo ela o que define "concluída" ali — como já era antes
+desta revisão. Relaxar o campo e confiar a regra à aplicação seria trocar o invariante forte pela
+promessa da tela, que é precisamente o que esta spec recusou ao escrevê-lo.
+
+**FR-117** — A Avaliação **grava a forma sob a qual foi concluída**, e a forma gravada é a que a
+versão consolidada lida em FR-096 publicava para aquela Etapa. Não é segunda fonte concorrente com a
+Etapa: a Etapa diz qual regra vige, e a conclusão diz sob qual regra foi feita. É a mesma preservação
+de sentido de FR-071, pelo mesmo motivo — e é o que mantém a verificação local, já que uma verificação
+do banco não referencia outra tabela.
+
+**FR-118** — Na forma decisória, o que o avaliador registra é `FAVORAVEL` ou `DESFAVORAVEL`, e o que
+ele **lê na tela** são os rótulos que a Etapa publicou. O domínio nunca guarda o rótulo no lugar do
+sentido, e a tela nunca mostra o sentido no lugar do rótulo. Etapa que não publicou rótulos não é
+decisória, e a recusa é da elaboração e da Retificação, não da Mesa.
 
 **FR-005** — Uma Avaliação pertence a exatamente uma Atribuição, e há **no máximo uma** Avaliação
 por Atribuição. A restrição é do banco, e não da tela que grava.
@@ -529,6 +687,11 @@ que já guarda a versão que o candidato aceitou.
 **FR-072** — A Avaliação **não copia** a pontuação máxima, a nota mínima nem o caráter da Etapa. A
 versão registrada os reproduz, e duplicá-los criaria a segunda fonte divergente que o princípio da
 fonte autoritativa única proíbe.
+
+**A forma é a única exceção, e ela é exceção por uma razão que os outros três não têm** (FR-117): a
+verificação que define "concluída" precisa ser verificável na própria linha, e nenhum dos outros três
+participa dessa verificação. Copiar a nota mínima não tornaria nenhuma regra local; copiar a forma
+torna. Onde a cópia não compra invariante, ela continua proibida.
 
 **FR-073** — Se a versão vigente mudar entre a última gravação e a conclusão, o avaliador é avisado
 **antes** de concluir e reconhece a mudança explicitamente. **O reconhecimento é obrigatório**:
@@ -653,23 +816,44 @@ operacional invisível.
 **FR-007** — A Etapa passa a declarar, como conteúdo normativo publicado, quantas avaliações cada
 inscrição recebe e qual é a pontuação máxima daquela Etapa.
 
-**FR-008** — Esse é o **único** incremento canônico da 012, ele acontece **uma vez**, e as duas
-propriedades entram juntas (D-001).
+**FR-119** — A Etapa passa a declarar, também como conteúdo normativo publicado, **a forma da
+conclusão** que ela exige — `PONTUADA` ou `DECISORIA` — e, na forma decisória, os dois rótulos com que
+o Edital nomeia o sentido favorável e o desfavorável (D-008). A classificação é a mesma de FR-007,
+pelo mesmo argumento: decidir se o trabalho do avaliador produz nota ou deferimento afeta direito do
+candidato tanto quanto decidir quantas pessoas o avaliam.
 
-**FR-064** — O incremento sobe a versão canônica do snapshot e alcança a Etapa publicada, o
+**FR-008** — A 012 produz **dois** incrementos canônicos, em momentos distintos e por razões
+distintas: o primeiro subiu a versão de 4 para 5 e levou juntas as duas propriedades de FR-007
+(D-001); o segundo sobe de 5 para 6 e leva juntas as três de FR-119 (D-008). **Dentro de cada
+incremento as propriedades entram juntas**, pela razão que o `SCHEMA_VERSION` registra; entre
+incrementos não há essa exigência, porque o segundo nasce de mudança de requisito posterior e não de
+omissão do primeiro.
+
+**FR-064** — Cada incremento sobe a versão canônica do snapshot e alcança a Etapa publicada, o
 esquema que verifica sua forma, o caminho de elaboração e o documento materializado. **Nenhuma
-outra coleção do conteúdo publicado muda.**
+outra coleção do conteúdo publicado muda**, nos dois.
 
-**FR-009** — Edital publicado antes do incremento continua **legível**, e a ausência da declaração
-significa uma avaliação por inscrição.
+**FR-009** — Edital publicado antes do primeiro incremento continua **legível**, e a ausência da
+declaração significa uma avaliação por inscrição.
 
-**FR-098** — Edital publicado antes do incremento continua **retificável**. A Publicação original
-não é alterada, e a Retificação que o alcança produz Versão Consolidada na versão vigente,
-interpretando a ausência pela leitura de FR-009 e FR-066 (D-002). A elevação não tem autor e não é
-apresentada como alteração normativa, porque não altera norma nenhuma.
+**FR-120** — Edital publicado antes do **segundo** incremento continua legível pela mesma regra, e a
+ausência da forma significa `PONTUADA` — não por conveniência, mas porque o domínio anterior não
+admitia outra forma (D-008). A ausência dos rótulos, nesse conteúdo, é correta: na forma pontuada não
+há sentido a nomear. A leitura é **uma só**, e vale tanto no consumo quanto na elevação que a
+Retificação faz; escrever a mesma interpretação em dois lugares independentes é como ela passa a
+divergir.
 
-**FR-010** — Alterar qualquer uma das duas declarações num Edital publicado é Retificação, com tudo
-o que ela já exige.
+**FR-098** — Edital publicado antes de qualquer um dos dois incrementos continua **retificável**. A
+Publicação original não é alterada, e a Retificação que o alcança produz Versão Consolidada na versão
+vigente, interpretando a ausência pela leitura de FR-009, FR-066 e FR-120 (D-002, D-008). A elevação
+não tem autor e não é apresentada como alteração normativa, porque não altera norma nenhuma. **A
+D-002 alcança o segundo incremento por inteiro**: se o mecanismo atual não comportar duas origens sem
+violar imutabilidade, proveniência ou hash, a decisão volta a esta spec em vez de virar precondição
+de implantação.
+
+**FR-010** — Alterar qualquer uma dessas declarações num Edital publicado é Retificação, com tudo
+o que ela já exige. Alterar a **forma** é Retificação como as demais, e a conclusão já gravada
+continua interpretável sob a forma que a governou (FR-117).
 
 **FR-089** — A quantidade declarada é a **cardinalidade normativamente prevista** de avaliações
 válidas por inscrição naquela Etapa. Não é mínimo, não é meta operacional e não é sugestão. É a
@@ -686,9 +870,17 @@ uma substituta possa ser distribuída (D-007).
 FR-014, é estado legítimo (FR-015) e não bloqueia distribuir, avaliar, concluir nem produz efeito
 algum sobre a Avaliação. A consequência da insuficiência é da 013.
 
-**FR-066** — A pontuação máxima publicada é o limite superior da validação de FR-033. Etapa sem a
-declaração — porque foi publicada antes do incremento — não admite pontuação acima do que a
-persistência comporta, e a tela diz que o Edital não declarou limite, em vez de inventar um.
+**FR-066** — A pontuação máxima publicada é o limite superior da validação de FR-033, **na forma
+pontuada**. Etapa sem a declaração — porque foi publicada antes do primeiro incremento — não admite
+pontuação acima do que a persistência comporta, e a tela diz que o Edital não declarou limite, em vez
+de inventar um.
+
+**FR-121** — Na forma decisória, pontuação máxima e nota mínima **não se aplicam**, e a Etapa as
+publica **nulas** — presentes e vazias, e nunca ausentes. A precisão importa porque no conteúdo
+publicado não existe campo opcional: toda chave da Etapa está sempre lá, e "não publicar" um valor é
+dizer `null`. Não é omissão tolerada: publicar `maximumScore = 100` numa Etapa que não pontua seria
+exatamente a regra normativa fictícia que P-007 existe para impedir. O peso permanece propriedade da
+Etapa nas duas formas, porque descreve a composição entre Etapas e não a conclusão local (D-008).
 
 ---
 
@@ -854,10 +1046,16 @@ contradiria FR-055 (D-005).
 
 **Prioridade: P1**
 
-Como avaliador, quero registrar pontuação e parecer, salvar sem concluir, e concluir quando
-terminar.
+Como avaliador, quero registrar o que afirmo sobre a inscrição — pontuação ou sentido, conforme a
+forma que a Etapa publicou — e o parecer, salvar sem concluir, e concluir quando terminar.
 
 **FR-031** — A Avaliação nasce como rascunho e é gravada sem exigir conclusão.
+
+**FR-122** — **A Mesa apresenta um instrumento, e não os dois.** Qual deles é decidido pela forma
+que a versão vigente publica para aquela Etapa, e nunca por preferência de quem monta a tela. Uma
+Etapa decisória não oferece campo de nota que ninguém deveria preencher, e uma Etapa pontuada não
+oferece par de rótulos que ninguém publicou. O envio que trouxer o campo da outra forma é recusado no
+domínio, e não apenas escondido pela tela — esconder é decisão de apresentação, e a regra é normativa.
 
 **FR-103** — **O rascunho valida a forma; a conclusão valida a regra.** Salvar exige que a
 pontuação seja um número que o registro comporte — finito, não negativo, na escala do conteúdo
@@ -868,16 +1066,26 @@ o número passa. A máxima é cobrada no ato que tem efeito (FR-033).
 Valor que não é número — infinito, indefinido, expoente que a coluna não comporta — é recusado nos
 dois, com mensagem: forma impossível não pode virar erro interno.
 
+**Na forma decisória a assimetria é a mesma, com outro conteúdo**: o rascunho aceita sentido ainda
+não escolhido, porque quem está no meio do trabalho ainda não decidiu; a conclusão o exige. Sentido
+que não é `FAVORAVEL` nem `DESFAVORAVEL` é recusado nos dois.
+
 **FR-032** — Concluir é ato explícito, distinto de salvar.
 
-**FR-033** — A pontuação é validada contra o que o Edital publicou para aquela Etapa: a pontuação
-máxima, a forma decimal do conteúdo publicado e a não-negatividade. **A nota mínima não recusa
+**FR-033** — **Na forma pontuada**, a pontuação é validada contra o que o Edital publicou para
+aquela Etapa: a pontuação máxima, a forma decimal do conteúdo publicado e a não-negatividade. **A nota mínima não recusa
 pontuação nenhuma** — nota abaixo do mínimo é registro válido, é justamente o que o avaliador
 precisa poder afirmar, e a consequência dela é da 013. O que a nota mínima produz aqui é uma coisa
 só: torna o parecer obrigatório (FR-034).
 
 **FR-034** — O parecer é texto livre. Ele é o que responde recurso, e por isso não pode ser
 opcional quando a Etapa for eliminatória e a nota ficar abaixo do mínimo.
+
+**FR-123** — **Na forma decisória, o sentido `DESFAVORAVEL` exige parecer, e a exigência não depende
+do caráter da Etapa.** A assimetria com FR-034 é deliberada e não é descuido: o desfavorável é o caso
+em que o candidato mais precisará da fundamentação para recorrer, e é contra o parecer que o recurso
+responderá. Exigir parecer também no favorável é configuração futura — pode haver Edital que o peça,
+e generalizar agora seria aplicar regra que nenhum dos três publicou.
 
 **FR-035** — Avaliação concluída é imutável para o avaliador, e a imutabilidade é garantida no
 agregado, como a 009 fez com a inscrição enviada — e não apenas na tela que grava.
@@ -1109,9 +1317,15 @@ autorização que deixou de existir durante a transação.
 revisão obsoleta. Duas conclusões de avaliadores diferentes sobre a mesma inscrição não competem —
 são Avaliações distintas, de Atribuições distintas, e nenhuma interfere na outra (EC-007).
 
-**FR-088** — A validação da pontuação e a versão gravada em FR-071 são lidas **dentro da transação
+**FR-088** — A validação da conclusão e a versão gravada em FR-071 são lidas **dentro da transação
 que grava**, e não da tela que foi montada minutos antes. É o que impede que uma Retificação
 consolidada no intervalo produza uma Avaliação validada contra regra que já não vigia.
+
+**A forma entra nessa mesma leitura, e não numa segunda.** Forma, pontuação máxima e nota mínima
+saem do conteúdo da versão lida uma vez (FR-096), e a forma gravada em FR-117 é aquela — não a que a
+tela exibia. Uma Retificação que mudasse a forma entre a montagem e o envio faria o avaliador
+concluir no instrumento antigo; a conclusão é recusada com a mesma frase de FR-073, e não gravada
+sob a forma nova.
 
 ---
 
@@ -1124,8 +1338,11 @@ concluir, reabrir, registrar impedimento.
 
 **FR-053** — O registro identifica ator, inscrição, Etapa, operação e instante.
 
-**FR-054** — A trilha não guarda o conteúdo do parecer nem a pontuação: ela guarda que o ato
-aconteceu. O conteúdo vive na Avaliação, que é o registro do domínio.
+**FR-054** — A trilha não guarda o conteúdo do parecer, nem a pontuação, **nem o sentido**: ela
+guarda que o ato aconteceu. O sentido entra nessa lista pelo mesmo motivo que os outros dois — é o
+conteúdo do juízo, e não o registro de que houve juízo. Sem isso, a trilha da forma decisória passaria
+a guardar o deferimento, que é exatamente o que este requisito mantém fora dela. O conteúdo vive na
+Avaliação, que é o registro do domínio.
 
 **FR-070** — Como a trilha existente é adaptada a agregados sem estado e sem revisão é decisão do
 `/plan`, e a 011 já resolveu o caso passando estado e revisão explicitamente. O que a spec proíbe é
@@ -1195,7 +1412,10 @@ hash ou documento materializado.
 vice-versa.
 
 **FR-100** — **A Retificação continua se comportando exatamente como antes para conteúdo já na
-versão vigente.** O incremento do FR-007 obrigou a 012 a tocar o mecanismo de Retificação em mais de
+versão vigente.** O "antes" é reancorado a cada incremento: para o primeiro ele significa *antes da
+012*, e para o segundo, *antes da revisão de D-008* — o que a invariante protege é o comportamento
+que vigia imediatamente antes da mudança, e não um estado congelado de agosto. O incremento do FR-007
+obrigou a 012 a tocar o mecanismo de Retificação em mais de
 um ponto — a leitura do conteúdo-base, a reaplicação dos atos, a projeção que o autor compõe e a
 comparação da precondição —, e o alcance da última é toda Retificação, e não apenas as de base
 anterior. FR-061 protege o conteúdo, a versão, o hash e o documento; este protege o **comportamento**.
@@ -1204,6 +1424,24 @@ Precondição, detecção de conflito, consolidação, verificação de efeito p
 produzem, para Edital inteiramente na versão vigente, o mesmo resultado que produziam antes desta
 feature. É invariante demonstrável, e não intenção: sem ele, a feature que promete não quebrar o que
 já existe não tem como provar que não quebrou.
+
+**FR-124** — **O comportamento da forma pontuada é invariante de não regressão, e não apenas
+preservado.** Toda Etapa hoje publicada é pontuada e toda Avaliação hoje concluída tem nota; nenhuma
+delas pode mudar de comportamento por causa desta revisão. Gravar, validar, concluir, reabrir,
+invalidar e auditar produzem, na forma pontuada, exatamente o que produziam antes de D-008.
+
+**A demonstração é comportamental, e o critério precisa dizer isso com precisão.** "A suíte passa sem
+alteração de asserção" seria um critério impossível, e afirmá-lo faria a spec cobrar o que ela mesma
+torna falso: o incremento sobe a versão canônica, e todo teste que fixa o literal da versão **tem de
+mudar**. O que a invariante exige é isto:
+
+1. nenhuma asserção sobre **comportamento da forma pontuada** muda — pontuação validada, conclusão,
+   reabertura, invalidação, autorização, concorrência e trilha;
+2. as asserções que mudam são **apenas** as que fixam o literal da versão canônica ou a forma do
+   conteúdo publicado, e são **enumeradas** na entrega, uma a uma, com o motivo;
+3. a comparação é por **identidade de teste**, e não por contagem: todo teste que existia antes
+   continua existindo e continua passando. A contagem total cresce, porque a revisão acrescenta
+   testes, e exigir que ela não cresça seria exigir que a revisão não fosse testada.
 
 ---
 
@@ -1215,8 +1453,8 @@ já existe não tem como provar que não quebrou.
 alguma.
 **SC-004** — Atribuído abre os documentos daquela inscrição, e de nenhuma outra.
 **SC-005** — Toda abertura de documento fica registrada.
-**SC-006** — Avaliação é gravada como rascunho e concluída em ato distinto.
-**SC-007** — Pontuação fora do que o Edital publicou é recusada.
+**SC-006** — Avaliação é gravada como rascunho e concluída em ato distinto, nas duas formas.
+**SC-007** — Pontuação fora do que o Edital publicou é recusada, na Etapa que pontua.
 **SC-008** — Avaliação concluída não é alterada pelo avaliador.
 **SC-009** — Reabertura é ato da presidência, com motivo registrado.
 **SC-010** — Remover a alocação da Etapa revoga o acesso às inscrições dela, sem escrever em
@@ -1226,8 +1464,9 @@ nenhuma Atribuição.
 **SC-013** — A 012 não produz resultado, média nem situação de aprovado.
 **SC-014** — Distribuir mil inscrições não exige mil interações.
 **SC-015** — A Mesa com quinhentas atribuições responde sem verificação por linha.
-**SC-016** — A Etapa publicada declara quantas avaliações e qual a pontuação máxima, e o documento
-materializado as mostra a quem lê o Edital.
+**SC-016** — A Etapa publicada declara quantas avaliações, qual a pontuação máxima e qual a forma da
+conclusão — com os dois rótulos, quando decisória —, e o documento materializado as mostra a quem lê
+o Edital.
 **SC-017** — A permissão da consulta administrativa da 009 não abre a Mesa, e a autorização da Mesa
 não abre a consulta administrativa.
 **SC-018** — A Avaliação diz sob qual Versão Consolidada foi concluída, e a regra vigente à época é
@@ -1238,6 +1477,7 @@ concluída permanece.
 **SC-021** — Repetir o mesmo lote de distribuição não cria atribuição nem evento de auditoria novo.
 **SC-022** — Conclusão sobre avaliação reaberta no intervalo é recusada, e o avaliador é informado.
 **SC-023** — Nota abaixo do mínimo é gravada e concluída, com parecer obrigatório.
+**SC-032** — Sentido desfavorável é gravado e concluído, com parecer obrigatório, independentemente do caráter da Etapa.
 **SC-024** — Retificação consolidada entre a última gravação e a conclusão é anunciada ao avaliador
 antes de ele concluir, e a versão contra a qual ele é validado é a que fica gravada.
 **SC-025** — Remover atribuição pela via comum não invalida Avaliação concluída: a operação é
@@ -1252,6 +1492,21 @@ antes dela.
 **SC-030** — O lote declara quantas atribuiu, quantas recusou e o motivo de cada recusa.
 **SC-031** — Conclusão fora do período informado avisa antes, registra o instante real e não
 bloqueia.
+**SC-033** — Etapa decisória conclui sem pontuação, e a conclusão com pontuação é recusada — pelo
+domínio e pelo banco.
+**SC-034** — Etapa pontuada conclui sem sentido, e a conclusão com sentido é recusada — pelo domínio
+e pelo banco.
+**SC-035** — A Mesa apresenta o instrumento da forma publicada, e o envio do campo da outra forma é
+recusado no canal HTTP real.
+**SC-036** — A conclusão diz sob qual forma foi concluída, e a Retificação que muda a forma da Etapa
+depois não altera o que ela afirma.
+**SC-037** — Edital publicado na versão canônica 5 continua legível e retificável depois do salto
+para 6, e a ausência da forma é lida como pontuada.
+**SC-038** — A forma e os dois rótulos são alcançáveis pela Retificação no canal institucional
+suportado, junto com os demais campos normativos da Etapa.
+**SC-039** — Nenhum comportamento da forma pontuada muda: todo teste que existia antes da revisão
+continua existindo e passando, e as únicas asserções alteradas são as que fixam o literal da versão
+canônica, enumeradas uma a uma.
 
 ---
 
@@ -1272,6 +1527,17 @@ permanecem como registro do que foi afirmado.
 **EC-005** — Retificação que altera a pontuação máxima depois de avaliações concluídas: a Avaliação
 concluída aponta para a Versão Consolidada sob a qual foi concluída (FR-071), de modo que a regra
 da época é reproduzível; a 012 não a reescreve, não a revalida e não a invalida.
+
+**EC-021** — Retificação que altera a **forma** da Etapa depois de avaliações concluídas: é de outra
+espécie que a EC-005, porque não muda um limite e sim o que uma conclusão significa. A resposta da
+012 é a mesma, e por isso ela funciona: a conclusão guarda a forma sob a qual foi feita (FR-117) e
+continua interpretável, e a 012 não a reescreve nem a invalida. **A consequência é da 013**, que
+recusa fundamentar Resultado em conclusão cuja forma divergiu da vigente — pelo mesmo mecanismo com
+que já trata nota mínima e pontuação máxima divergentes.
+
+**EC-022** — Retificação que muda a forma entre a montagem da Mesa e o envio da conclusão: recusada
+por FR-073 e FR-088, com a mesma frase do aviso de mudança de versão. O avaliador não conclui no
+instrumento antigo, e nada é gravado sob a forma nova sem que ele a reconheça.
 
 **EC-006** — Candidato que retira a inscrição depois de distribuída: não alcançável hoje (D-006).
 
@@ -1328,11 +1594,12 @@ a inscrição volta a aparecer como carente de avaliador (EC-001, FR-090).
 
 | Slice | Entrega observável |
 |---|---|
-| **S1** | O incremento canônico: quantas avaliações e pontuação máxima, publicadas e no documento |
+| **S1** | O primeiro incremento canônico: quantas avaliações e pontuação máxima, publicadas e no documento |
 | **S2** | Distribuição manual em lote, com a organização do trabalho e a trilha |
 | **S3** | A Mesa: lista do avaliador, filtro e contagem |
 | **S4** | A inscrição aberta: documentos mediados e auditados, sob a autorização composta |
 | **S5** | A avaliação: rascunho, pontuação, parecer, conclusão |
+| **S7** | O segundo incremento e a forma decisória: forma e rótulos publicados, conclusão por forma, dois instrumentos na Mesa |
 | **S6** | Impedimento, reabertura, órfãs, escala e acessibilidade |
 
 A primeira vertical significativa: **presidente distribui → avaliador abre a Mesa → abre a
@@ -1351,8 +1618,14 @@ inscrição → registra e conclui → quem não recebeu aquela inscrição não
 > A Atribuição é derivada da alocação, e não paralela a ela. A revogação é computada, e nenhum ato
 > da 011 pode disparar escrita proporcional ao número de atribuições.
 >
-> Um incremento canônico, e só um — carregando as duas propriedades juntas, pela razão que o
-> próprio `SCHEMA_VERSION` registra nos incrementos anteriores.
+> **Dois** incrementos canônicos, em momentos distintos, e as propriedades de cada um entrando
+> juntas — pela razão que o próprio `SCHEMA_VERSION` registra nos incrementos anteriores. O segundo é
+> de D-008, e a leitura da ausência que ele exige vive num lugar só, tanto no consumo quanto na
+> elevação da Retificação.
+>
+> A forma da conclusão é lida da versão consolidada dentro da transação que conclui, e gravada na
+> linha. É a única cópia que a Avaliação faz, e ela existe porque a verificação do banco precisa ser
+> local — não porque duplicar seja conveniente.
 >
 > Reutilize a mecânica de arquivo da 009 inteira: `copia_verificada`, entrega mediada, registro da
 > consulta, registro da divergência, resposta não armazenável. Não reutilize a permissão dela.
@@ -1371,7 +1644,7 @@ inscrição → registra e conclui → quem não recebeu aquela inscrição não
 > A Avaliação aponta para a Versão Consolidada; ela não copia limite nenhum, e a versão validada é
 > a versão gravada.
 >
-> Confronte o incremento canônico com D-002 antes de escrever migration: a Publicação original é
+> Confronte **cada** incremento canônico com D-002 antes de escrever migration: a Publicação original é
 > imutável e continua sendo o que foi publicado, e a Retificação sobre conteúdo da versão anterior
 > precisa continuar possível. Se o mecanismo atual não comportar isso sem violar imutabilidade,
 > proveniência ou hash, a decisão volta à spec — não vira precondição de implantação.
@@ -1383,10 +1656,17 @@ inscrição → registra e conclui → quem não recebeu aquela inscrição não
 
 ## 27. Gate para a SPEC 013
 
+> **Registro histórico, e não portão.** A 013 foi especificada e implementada sob a redação anterior
+> deste gate, e passou por ele. A revisão de D-008 o reescreve para que ele continue dizendo a
+> verdade sobre o contrato — não para liberar nada. A contraparte de D-008 na `specs/013` é o que
+> mantém as duas features coerentes daqui em diante.
+
 A 012 libera a 013 quando estiver demonstrado que:
 
 1. existe Atribuição inequívoca de inscrição a avaliador;
-2. existe Avaliação com autoria, pontuação, parecer e instante de conclusão;
+2. existe Avaliação com autoria, parecer, instante de conclusão e **conclusão válida segundo a
+   forma que a Etapa publicou** — pontuação na forma pontuada, sentido na forma decisória, e a forma
+   gravada na própria conclusão;
 3. cada Avaliação aponta para a Versão Consolidada sob a qual foi concluída, de modo que a regra
    vigente à época é reproduzível sem depender da regra atual;
 4. está definido, sem ambiguidade, **qual** Avaliação a 013 deve considerar: a que está sob
@@ -1395,7 +1675,8 @@ A 012 libera a 013 quando estiver demonstrado que:
    motivo — nunca efeito colateral de reorganizar o trabalho;
 6. a autorização composta funciona e é demonstrável pela recusa;
 7. a quantidade de avaliações por inscrição é conhecida e publicada, o excedente é recusado e o
-   déficit é visível e contável;
+   déficit é visível e contável; e a forma da conclusão é conhecida e publicada, legível tanto da
+   Etapa vigente quanto da conclusão histórica, sem depender de a regra atual ainda ser a mesma;
 8. avaliações concluídas são imutáveis, reabertura é ato registrado e o que havia sido concluído
    antes dela continua reproduzível;
 9. nada disso produziu resultado.

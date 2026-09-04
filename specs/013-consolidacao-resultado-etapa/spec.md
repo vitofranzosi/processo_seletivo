@@ -25,10 +25,14 @@ redefine seus conceitos:
 - Participante nasce do universo de inscrições `SUBMETIDA` do Edital. A partir da segunda Etapa,
   esta feature subtrai quem foi eliminado em Etapa anterior e, depois que a imediatamente anterior
   produzir Resultado, exige habilitação nela — as duas regras de D-003;
-- Avaliação possui apenas `RASCUNHO` e `CONCLUIDA`, com pontuação total e parecer. Critérios,
-  itens e barema estruturado não existem no domínio e não são pressupostos aqui;
-- a quantidade prevista e a pontuação máxima já são conteúdo publicado da Etapa, na versão
-  canônica 5. A 013 lê esse conteúdo e não cria novo incremento normativo;
+- Avaliação possui apenas `RASCUNHO` e `CONCLUIDA`, e conclui em **uma de duas formas** publicadas
+  pela Etapa: `PONTUADA`, com pontuação total, ou `DECISORIA`, com sentido `FAVORAVEL` ou
+  `DESFAVORAVEL` (012, D-008). Nas duas há parecer, e a forma sob a qual se concluiu fica gravada na
+  própria conclusão. Critérios, itens e barema estruturado não existem no domínio e não são
+  pressupostos aqui;
+- a quantidade prevista, a pontuação máxima, a forma da conclusão e os rótulos da forma decisória são
+  conteúdo publicado da Etapa, na versão canônica 6. A 013 lê esse conteúdo e **não cria incremento
+  normativo próprio** — nem o primeiro nem o segundo são dela;
 - reabertura e impedimento preservam o histórico, mas hoje podem substituir ou retirar uma
   conclusão do conjunto elegível. A 013 fecha essa porta quando a conclusão já produziu Resultado —
   sem impedir que o impedimento seja registrado, conforme D-002.
@@ -45,8 +49,11 @@ combinar duas ou mais avaliações. Peso da Etapa não é peso entre avaliadores
 não é regra implícita.
 
 Por isso, a V1 consolida somente Etapa cuja leitura normativa resulte em
-`evaluations_per_registration == 1`. A pontuação consolidada é exatamente o total da única
-Avaliação elegível, sem média, arredondamento ou ponderação. Etapa que preveja mais de uma avaliação
+`evaluations_per_registration == 1`. **A consolidação é cópia, e não cálculo**: na forma pontuada, a
+pontuação consolidada é exatamente o total da única Avaliação elegível, sem média, arredondamento ou
+ponderação; na forma decisória, o sentido consolidado é exatamente o sentido dela. A recusa de
+inventar regra de combinação vale igual nas duas — dois sentidos opostos são tão insolúveis quanto
+duas notas diferentes, e por isso o impedimento é o mesmo. Etapa que preveja mais de uma avaliação
 fica em impedimento explícito: “o Edital prevê N avaliações, mas não declara como combiná-las”.
 
 Uma regra de combinação para múltiplas avaliações exigirá incremento canônico próprio — forma
@@ -55,8 +62,9 @@ publicada, validação, elaboração, documento e Retificação — e pertence a
 ### D-002 — Consolidar fecha as entradas da decisão
 
 `ResultadoEtapa` é uma consequência administrativa imutável. Depois que existe para uma inscrição
-e Etapa, a Avaliação que o fundamentou não pode ser **reaberta**: reabrir muda a pontuação, e mudar
-a pontuação tornaria o Resultado uma afirmação sobre um número que não existe mais. A reabertura é
+e Etapa, a Avaliação que o fundamentou não pode ser **reaberta**: reabrir muda a conclusão, e mudar
+a conclusão tornaria o Resultado uma afirmação sobre uma pontuação — ou sobre um deferimento — que
+não existe mais. A reabertura é
 recusada por inteiro, antes de qualquer efeito, nomeando o Resultado que protege a Avaliação.
 
 A V1 não oferece anulação nem reconsolidação. Aceitar mudança da entrada e conservar Resultado
@@ -158,9 +166,16 @@ o conteúdo normativo da Etapa que governou a Avaliação com o conteúdo vigent
 consolidação, e não a identidade da Versão Consolidada.
 
 Para a mesma identidade de Etapa, são comparados semanticamente **os campos que podem mudar o
-Resultado**: caráter eliminatório, nota mínima, quantidade de avaliações e pontuação máxima.
-Ausência de quantidade equivale a `1`; ausência de máxima equivale a “não declarada”, conforme os
-leitores herdados da 012.
+Resultado**: forma da conclusão, caráter eliminatório, nota mínima, quantidade de avaliações e
+pontuação máxima. Ausência de quantidade equivale a `1`; ausência de máxima equivale a “não
+declarada”; ausência de forma equivale a `PONTUADA`, conforme os leitores herdados da 012.
+
+**A forma entra na comparação, e é o campo mais grave dela.** Uma Retificação que trocasse
+`PONTUADA` por `DECISORIA` sem ser detectada faria a 013 fundamentar Resultado numa conclusão cuja
+espécie a norma vigente já não admite — não uma nota fora do limite novo, mas uma nota onde a norma
+não prevê nota nenhuma. **Os rótulos ficam de fora**, pelo mesmo critério que mantém o nome fora:
+trocar "Deferido" por "Deferido(a)" não altera consequência alguma, e compará-los faria correção de
+redação bloquear consolidação pendente.
 
 **Nome, vínculo de cronograma, peso, caráter classificatório e ordem ficam de fora, de propósito.**
 Nenhum deles altera a pontuação ou a consequência que esta feature produz: peso e caráter
@@ -187,6 +202,69 @@ Consolidação usa o mesmo invólucro transacional e idempotente dos comandos da
 obrigatória, desfecho completo preservado e um evento de auditoria para cada Resultado criado. O
 nome canônico do ato é `resultado:consolidar`. A autorização é a mesma da reabertura pela
 presidência; não nasce papel, capacidade administrativa ou modelo paralelo.
+
+### D-008 — O Resultado oficializa as duas formas de conclusão, e não infere consequência
+
+*Contraparte, nesta spec, da D-008 da `specs/012`. As duas foram tomadas no mesmo movimento, em
+03/09/2026: a 012 deixou de pressupor que avaliar produz número, e esta feature deixaria o fluxo
+quebrado no meio se continuasse pressupondo que o Resultado é uma nota — o avaliador concluiria
+"indeferido" e a Etapa nunca produziria consequência.*
+
+**1 · O Resultado guarda a conclusão conforme a forma**, pela mesma estrutura e pelo mesmo motivo da
+conclusão que o fundamenta: pontuação quando a fonte é pontuada, sentido quando é decisória, e a
+forma na própria linha para que a verificação continue local. `ResultadoEtapa` é append-only por
+privilégio e por trigger, e a migração tem a restrição de implantação que isso impõe.
+
+**2 · A conferência de coerência com a fonte passa a comparar forma, pontuação e sentido — os três,
+sempre.** Ela é o coração da garantia desta feature: o Resultado não é confiado à promessa da
+aplicação. O que ela exige é que o Resultado afirme exatamente o que a Avaliação fonte afirmou, na
+forma em que ela o afirmou.
+
+**A comparação é incondicional, e não alterna por forma.** A primeira redação desta decisão dizia
+"alterna", e estava errada: alternar significa deixar um campo **sem conferência nenhuma** no ramo
+que não o olha, e o campo não conferido é exatamente o que carrega a afirmação daquela forma. Numa
+conclusão decisória, um ramo que só comparasse pontuação compararia dois nulos — e `IS DISTINCT
+FROM` resolve nulo contra nulo como **iguais** —, aprovando qualquer sentido em silêncio. Comparar
+os três incondicionalmente é mais forte e mais simples: se as formas são iguais, alternar seria
+redundante; se divergem, o primeiro teste já reprova.
+
+**3 · A consequência é lida da forma, e nunca inferida.** Na forma pontuada, a regra atual permanece
+intacta: Etapa eliminatória elimina abaixo da mínima, e Etapa sem caráter eliminatório materializa e
+habilita. Na forma decisória, **em Etapa eliminatória**, `DESFAVORAVEL` produz `ELIMINADA` e
+`FAVORAVEL` produz `HABILITADA`. O motivo exibível cita o rótulo que o Edital publicou — quem lê o
+Resultado lê "Indeferido", e não `DESFAVORAVEL`.
+
+**4 · Etapa decisória e não eliminatória não é consolidável, e a recusa diz por quê.** É o caso que
+os três Editais não exercitam, e ele não tem resposta óbvia: um desfavorável que habilita é absurdo,
+e um desfavorável que elimina aplica caráter eliminatório que o Edital não publicou. As duas saídas
+que evitariam a recusa afirmariam norma que ninguém escreveu — fazer o sentido carregar a
+consequência por si, ou exigir caráter eliminatório de toda Etapa decisória, proibindo na elaboração
+o que um Edital poderia legitimamente publicar.
+
+Por isso a resposta é a que esta spec já dá no caso simétrico:
+
+```text
+eliminatória, sem nota mínima  → regra insuficiente: não publicou o que a nota produz
+decisória, não eliminatória    → regra insuficiente: não publicou o que o sentido produz
+```
+
+O impedimento é da **Etapa inteira**, como o outro, e aparece na prontidão antes que alguém tente
+consolidar. Em uma frase: *recebi uma decisão desfavorável, e o Edital não publicou que ela elimina;
+não posso inventar o efeito.* **Na forma decisória é o caráter eliminatório que dá consequência à
+decisão** — o mesmo papel que ele já tem na forma pontuada, dito para a outra forma.
+
+**5 · Nota mínima e pontuação máxima não se aplicam à forma decisória**, e a Etapa não as publica. A
+recusa de FR-014 por "eliminatória sem nota mínima" passa a valer somente na forma pontuada: análise
+documental eliminatória, decisória e sem nota mínima é normal nos Editais 35 e 57, e recusá-la seria
+o sistema procurando um número que a norma nunca teve.
+
+**6 · A progressão não muda.** `ELIMINADA` é `ELIMINADA`, qualquer que seja a forma que a produziu, e
+D-003 continua valendo palavra por palavra. É o limite que mantém esta revisão estreita: generalizar
+a 013 é ensiná-la a oficializar as duas conclusões que já existem, e não trazer classificação, vagas,
+sorteio, recurso ou convocação para dentro dela.
+
+**7 · O comportamento da forma pontuada é invariante de não regressão.** Todo Resultado hoje gravado
+é pontuado, e nenhum deles muda de comportamento por causa desta revisão.
 
 ## 3. Problema
 
@@ -305,8 +383,13 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
 ### Edge Cases
 
 - Nota exatamente igual à mínima habilita; comparação decimal não arredonda o valor.
-- Etapa eliminatória sem nota mínima não possui regra suficiente e não pode ser consolidada.
-- Etapa não eliminatória materializa total e `HABILITADA`; eventual nota mínima não elimina.
+- Etapa **pontuada** eliminatória sem nota mínima não possui regra suficiente e não pode ser
+  consolidada; a mesma ausência numa Etapa decisória é normal, e não impede nada.
+- Etapa pontuada não eliminatória materializa total e `HABILITADA`; eventual nota mínima não elimina.
+- Etapa **decisória** não eliminatória não possui regra suficiente e não pode ser consolidada: o
+  Edital não publicou o que o sentido desfavorável produz, e o sistema não infere o efeito (D-008).
+- Etapa decisória eliminatória consolida `DESFAVORAVEL` como `ELIMINADA` e `FAVORAVEL` como
+  `HABILITADA`, e o motivo exibível usa os rótulos publicados, nunca o enum interno.
 - Zero ou mais de uma Avaliação elegível quando a regra prevê uma é inconsistência explícita; o
   sistema não escolhe uma linha nem consolida silenciosamente.
 - Retificação que altera outro trecho do Edital não impede consolidação; alteração normativa da
@@ -325,8 +408,12 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
 - Etapa anterior sem nenhum Resultado — porque prevê mais de uma avaliação, ou porque a consolidação
   ainda não começou — não bloqueia a Etapa seguinte: a exigência de habilitação fica dormente e a
   distribuição segue como na 012, exceto pelas eliminadas em Etapas anteriores, que continuam fora.
-- Retificação que corrige nome, cronograma, peso ou caráter classificatório da Etapa não cria
-  incompatibilidade, porque nenhum deles altera a pontuação ou a consequência desta feature.
+- Retificação que corrige nome, cronograma, peso, caráter classificatório ou os rótulos da forma
+  decisória não cria incompatibilidade, porque nenhum deles altera a conclusão ou a consequência
+  desta feature.
+- Retificação que troca a **forma** da Etapa depois de conclusões gravadas cria incompatibilidade e
+  impede consolidar aquelas conclusões: a conclusão histórica continua íntegra e interpretável sob a
+  forma que a governou, e é a consequência — não o registro — que fica retida (012, EC-021).
 - Dois lotes concorrentes sobre a mesma inscrição produzem no máximo um Resultado; o perdedor
   recebe desfecho explícito, sem evento duplicado.
 
@@ -378,10 +465,25 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
   comparado, NÃO PODE produzir Resultado.
 - **FR-015**: Na V1, Etapa que preveja mais de uma avaliação por inscrição DEVE ser impedida por
   inteiro, nomeando a quantidade publicada e a ausência de regra de combinação.
-- **FR-016**: A pontuação consolidada DEVE ser cópia exata da pontuação da única Avaliação elegível,
-  sem média, peso, arredondamento ou edição pela presidência.
-- **FR-017**: Etapa eliminatória DEVE produzir `ELIMINADA` somente quando a pontuação for menor que
-  a mínima publicada; em todos os demais casos alcançáveis, DEVE produzir `HABILITADA`.
+- **FR-016**: A conclusão consolidada DEVE ser cópia exata da conclusão da única Avaliação elegível
+  — a pontuação na forma pontuada, o sentido na forma decisória —, sem média, peso, arredondamento,
+  conversão entre formas ou edição pela presidência.
+- **FR-017**: Etapa **pontuada** eliminatória DEVE produzir `ELIMINADA` somente quando a pontuação
+  for menor que a mínima publicada; em todos os demais casos alcançáveis, DEVE produzir `HABILITADA`.
+- **FR-046**: Etapa **decisória** eliminatória DEVE produzir `ELIMINADA` para `DESFAVORAVEL` e
+  `HABILITADA` para `FAVORAVEL`, e o motivo registrado DEVE nomear o rótulo publicado pela Etapa.
+- **FR-047**: Etapa decisória **não** eliminatória DEVE ser impedida por inteiro, por regra
+  insuficiente, nomeando que o Edital não publicou o efeito do sentido desfavorável (D-008). O
+  sistema NÃO PODE inferir a consequência, nem tratando `DESFAVORAVEL` como eliminação nem exigindo
+  caráter eliminatório de toda Etapa decisória.
+- **FR-048**: A recusa por "eliminatória sem nota mínima" DEVE valer somente na forma pontuada.
+  Etapa decisória eliminatória e sem nota mínima é consolidável, e recusá-la seria procurar um número
+  que a norma nunca teve.
+- **FR-049**: O Resultado DEVE registrar a forma sob a qual foi consolidado, e a conferência de
+  coerência com a Avaliação fonte DEVE comparar **forma, pontuação e sentido — os três,
+  incondicionalmente**, e não alternar por forma. A conferência é do banco, e não da aplicação.
+  Alternar aprovaria qualquer sentido na forma decisória, porque a comparação de pontuação entre dois
+  nulos resolve como igualdade.
 
 #### Lote e idempotência
 
@@ -404,8 +506,8 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
 
 - **FR-024**: DEVE existir no máximo um `ResultadoEtapa` por inscrição e Etapa, inclusive sob
   concorrência e qualquer número de reenvios.
-- **FR-025**: O Resultado DEVE materializar pontuação consolidada, consequência, Avaliação fonte,
-  instante e identidade de quem consolidou.
+- **FR-025**: O Resultado DEVE materializar a conclusão consolidada conforme a forma, a
+  consequência, a Avaliação fonte, o instante e a identidade de quem consolidou.
 - **FR-026**: A partir da Avaliação fonte, DEVE ser possível reproduzir a Versão Consolidada e os
   campos normativos que determinaram pontuação e consequência, sem usar regra atual no lugar da
   histórica.
@@ -445,7 +547,8 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
 - **FR-039**: Respostas com Resultado individual ou dados da inscrição NÃO DEVEM ser armazenáveis
   pelo navegador e NÃO DEVEM ampliar o acesso a documentos do candidato.
 - **FR-040**: Auditoria DEVE registrar ator, base autorizadora, ato, Resultado, instante,
-  correlação e chave de idempotência, sem copiar pontuação ou parecer para a trilha.
+  correlação e chave de idempotência, sem copiar pontuação, sentido ou parecer para a trilha — os
+  três são conteúdo do juízo, e não registro de que houve juízo (012, FR-054).
 
 #### Não regressão e limites
 
@@ -458,18 +561,23 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
   conservam todo o resto do comportamento da 012.
 - **FR-043**: A 013 NÃO DEVE alterar conteúdo, estado ou autoria de Avaliação, Atribuição,
   Impedimento, Publicação ou Versão Consolidada existente.
-- **FR-044**: Peso da Etapa, caráter classificatório e pontuação de outras Etapas NÃO DEVEM compor o
-  total desta feature.
+- **FR-044**: Peso da Etapa, caráter classificatório e conclusões de outras Etapas NÃO DEVEM compor
+  o Resultado desta feature.
+- **FR-050**: Nenhum comportamento da forma pontuada DEVE mudar por causa desta revisão. A
+  demonstração é por **identidade de teste**: todo teste que existia antes continua existindo e
+  passando, e as únicas asserções alteradas são as que fixam o literal da versão canônica ou a forma
+  do conteúdo publicado, enumeradas uma a uma na entrega. Exigir contagem total idêntica seria exigir
+  que a revisão não fosse testada (012, FR-124).
 - **FR-045**: Nenhuma tela ou resposta da 013 DEVE afirmar colocação, aprovação final, ocupação de
   vaga, resultado preliminar/final publicado ou direito à convocação.
 
 ### Key Entities
 
 - **ResultadoEtapa**: consequência imutável de consolidar a Avaliação elegível de uma inscrição em
-  uma Etapa; é único por esse par e registra pontuação exata, `HABILITADA` ou `ELIMINADA`, fonte,
-  autoria e instante.
+  uma Etapa; é único por esse par e registra a forma, a conclusão exata que ela exige — pontuação ou
+  sentido —, `HABILITADA` ou `ELIMINADA`, fonte, autoria e instante.
 - **Avaliação fonte**: única Avaliação concluída e elegível consumida pela V1; preserva autoria,
-  parecer, pontuação, conclusão e Versão Consolidada que a governou.
+  parecer, a conclusão na forma sob a qual foi feita e a Versão Consolidada que a governou.
 - **Participação na Etapa**: conjunto derivado das inscrições submetidas, menos as eliminadas em
   qualquer Etapa anterior e, quando a imediatamente anterior já produziu Resultado, menos as que não
   possuem `HABILITADA` nela. Não é entidade persistida.
@@ -514,10 +622,20 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
   e detalhes filtráveis que particionam 100% da população por progressão e prontidão.
 - **SC-002**: Um único envio consolida até 1.000 inscrições prontas e devolve o total criado, o
   total recusado e o motivo de 100% das recusas, sem interação por inscrição.
-- **SC-003**: Em todos os Resultados V1, a pontuação consolidada é idêntica à da única Avaliação
-  fonte; não existe caso de arredondamento, média ou edição manual.
-- **SC-004**: 100% das inscrições abaixo da mínima em Etapa eliminatória ficam `ELIMINADA`, e nota
-  igual ou superior fica `HABILITADA`.
+- **SC-003**: Em todos os Resultados V1, a conclusão consolidada é idêntica à da única Avaliação
+  fonte, na forma dela; não existe caso de arredondamento, média, conversão entre formas ou edição
+  manual.
+- **SC-004**: 100% das inscrições abaixo da mínima em Etapa pontuada eliminatória ficam `ELIMINADA`,
+  e nota igual ou superior fica `HABILITADA`.
+- **SC-012**: 100% das inscrições com sentido desfavorável em Etapa decisória eliminatória ficam
+  `ELIMINADA`, e as com sentido favorável ficam `HABILITADA`; o motivo de cada uma nomeia o rótulo
+  publicado.
+- **SC-013**: Etapa decisória e não eliminatória produz zero Resultados, e a prontidão exibe a frase
+  que diz por que ela não é consolidável.
+- **SC-014**: Etapa decisória eliminatória sem nota mínima consolida normalmente — a ausência do
+  número não impede nada nessa forma.
+- **SC-015**: Nenhum Resultado da forma pontuada muda de conclusão, consequência ou motivo por causa
+  desta revisão, e todo teste de consolidação que existia antes continua existindo e passando.
 - **SC-005**: Depois de uma eliminação, a inscrição aparece zero vezes entre participantes,
   distribuição, Mesa, inscrição de trabalho, entrega de documento e próxima pendente de **toda**
   Etapa seguinte, inclusive das que ainda não têm Resultado na Etapa que as precede.
@@ -526,8 +644,8 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
 - **SC-007**: Para qualquer Resultado consultável, presidência ou auditoria identifica em uma única
   jornada quem avaliou, quem consolidou, quando, sob qual versão e por qual regra a consequência
   foi obtida.
-- **SC-008**: Nenhuma tentativa de reabertura ou impedimento altera pontuação ou consequência de um
-  Resultado: 100% das reaberturas são recusadas sem efeito algum, e 100% dos impedimentos são
+- **SC-008**: Nenhuma tentativa de reabertura ou impedimento altera a conclusão ou a consequência de
+  um Resultado: 100% das reaberturas são recusadas sem efeito algum, e 100% dos impedimentos são
   registrados e aplicados por inteiro, com o Resultado preservado e o fato declarado junto dele.
 - **SC-009**: Depois de registrado impedimento superveniente, a pessoa impedida acessa zero
   inscrições alcançadas — inclusive a que fundamenta Resultado — na Mesa, na inscrição de trabalho e
@@ -550,8 +668,10 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
   remédio interno para Resultado fundado em Avaliação depois reconhecida como defeituosa: o fato
   fica registrado pelo impedimento superveniente e declarado junto do Resultado, mas corrigir o
   Resultado depende da anulação, que é feature posterior.
-- Nota mínima é a única regra estruturada disponível para eliminação por pontuação; texto livre do
-  Edital não é interpretado automaticamente.
+- Nota mínima é a única regra estruturada disponível para eliminação **por pontuação**; o sentido
+  desfavorável em Etapa decisória eliminatória é a segunda regra estruturada de eliminação, e ela
+  chega pela forma, não pelo número. Texto livre do Edital não é interpretado automaticamente em
+  nenhuma das duas.
 - `HABILITADA` significa apenas que a inscrição pode seguir para a próxima Etapa. Não significa
   aprovação, classificação ou direito a vaga.
 - A identidade institucional confiável e as restrições de acesso a dados reais continuam sendo
@@ -561,7 +681,8 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
 
 O plano DEVE começar pelos contratos existentes, não por novos seletores concorrentes. Os nomes
 concretos, que os requisitos deliberadamente não carregam, são estes: `avaliacoes_previstas` e
-`pontuacao_maxima` para a leitura normativa da Etapa; `avaliacoes_elegiveis` e
+`pontuacao_maxima` para a leitura normativa da Etapa, aos quais a revisão de D-008 acrescenta a
+leitura da forma e dos rótulos publicados — que vive na 012 e é herdada, e não reescrita aqui; `avaliacoes_elegiveis` e
 `avaliacoes_inelegiveis` para o conjunto que fundamenta o Resultado e para o que ficou de fora;
 `resumo_da_etapa` e `inscricoes_da_etapa` para a prontidão de D-004; `comando_de_comissao(...,
 idempotency_key)` para o invólucro do lote, `resultado_declarado(...)` para a forma do desfecho e o

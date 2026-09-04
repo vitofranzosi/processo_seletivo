@@ -79,3 +79,32 @@ def test_consolidar_sobre_conteudo_base_de_outra_versao_canonica_e_recusado(
     assert resposta.status_code == 409, resposta.content
     assert resposta.json()["code"] == "canonical_schema_version_mismatch"
     assert Retificacao.objects.get(pk=criada.json()["id"]).publication is None
+
+
+# ------------------------------ a tela alcança o que o Edital publica (012, D-008.10)
+
+# O que a Etapa publicada carrega e **não** é norma: identidade, insumo da progressão, e vínculo
+# endereçado pela coleção do Cronograma. Declarado aqui, e não descoberto por heurística, para que
+# excluir um campo novo seja uma decisão escrita e não um esquecimento.
+NAO_SAO_NORMA = {"id", "order", "scheduleEventId"}
+
+
+@pytest.mark.contract
+def test_a_retificacao_alcanca_todo_campo_normativo_da_etapa():
+    """A metade barata da E2E-004, e a guarda contra a próxima.
+
+    A lista da tela ficou para trás uma vez — `maximumScore` e `evaluationsPerRegistration` nasceram
+    na 012 e não entraram —, e o efeito foi publicar regra que afeta direito e só se corrige pela
+    API. O domínio sempre alcançou: `colecoes.py` lista `/stages`. O que faltava era a tela.
+    """
+    from processo_seletivo.editais.domain.validation import ETAPA_PUBLICADA
+    from processo_seletivo.interface.retificacao import CAMPOS_ETAPA
+
+    publicados = {campo.nome for campo in ETAPA_PUBLICADA}
+    oferecidos = {nome for nome, _, _ in CAMPOS_ETAPA}
+
+    assert oferecidos == publicados - NAO_SAO_NORMA, (
+        "a tela de Retificação e o contrato da Etapa publicada divergiram: "
+        f"faltando {sorted(publicados - NAO_SAO_NORMA - oferecidos)}, "
+        f"a mais {sorted(oferecidos - publicados)}"
+    )
