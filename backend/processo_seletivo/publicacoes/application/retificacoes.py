@@ -305,8 +305,25 @@ def edit_retification(*, actor, retificacao_id, expected_revision, data):
         return item
 
 
-# Estados de origem admitidos e estado alvo de cada transição. `None` significa
-# "qualquer estado não final", verificado à parte.
+def _recusa_de_cancelamento(situacao):
+    """Por que não dá para cancelar **desta** situação — e, quando há, qual é o caminho de volta.
+
+    A mensagem genérica de transição diria apenas "inválida", e quem está com uma Retificação
+    homologada nas mãos precisa saber que existe saída: devolver para elaboração e cancelar
+    depois. Situação final não tem saída nenhuma, e dizer o contrário seria pior que calar.
+    """
+    if situacao in {Retificacao.Status.PUBLICADA, Retificacao.Status.CANCELADA}:
+        return DomainError("invalid_state", "Retificação final não pode ser cancelada.", 409)
+    return DomainError(
+        "invalid_state",
+        "Retificação em revisão ou homologada precisa ser devolvida para elaboração antes de ser "
+        "cancelada.",
+        409,
+    )
+
+
+# Estados de origem admitidos e estado alvo de cada transição. Todas os declaram: `cancelar` era a
+# única a dizer `None` — "qualquer estado não final" — e deixou de dizer com E2E-021.
 TRANSITIONS = {
     "submeter": ((Retificacao.Status.EM_ELABORACAO,), Retificacao.Status.EM_REVISAO),
     "homologar": ((Retificacao.Status.EM_REVISAO,), Retificacao.Status.HOMOLOGADA),
@@ -314,7 +331,12 @@ TRANSITIONS = {
         (Retificacao.Status.EM_REVISAO, Retificacao.Status.HOMOLOGADA),
         Retificacao.Status.EM_ELABORACAO,
     ),
-    "cancelar": (None, Retificacao.Status.CANCELADA),
+    # Só o que está **em elaboração** (E2E-021). Cancelar abandona um ato em preparação; desfazer
+    # um ato já aprovado é devolver, e são coisas diferentes — exigir os dois passos para abandonar
+    # uma Retificação homologada não é atrito acidental: alguém desfaz a aprovação e alguém
+    # abandona o rascunho, e a trilha guarda os dois. `None` aqui admitia as três situações, e a
+    # decisão de governança de 02/09/2026 recusou atravessar os estados de aprovação.
+    "cancelar": ((Retificacao.Status.EM_ELABORACAO,), Retificacao.Status.CANCELADA),
 }
 
 # Devolver desfaz revisão ou homologação: é ato de quem homologa, como a revogação de
@@ -339,13 +361,10 @@ def transition_retification(
         item = _retificacao(actor, retificacao_id)
         origins, target = TRANSITIONS[action]
         previous = item.status
-        if origins and previous not in origins:
+        if action == "cancelar" and previous != Retificacao.Status.EM_ELABORACAO:
+            raise _recusa_de_cancelamento(previous)
+        if previous not in origins:
             raise DomainError("invalid_state", "Transição inválida para a Retificação.", 409)
-        if action == "cancelar" and previous in {
-            Retificacao.Status.PUBLICADA,
-            Retificacao.Status.CANCELADA,
-        }:
-            raise DomainError("invalid_state", "Retificação final não pode ser cancelada.", 409)
         if action == "devolver" and not reason.strip():
             raise DomainError("reason_required", "A devolução exige motivo.", 422)
         changes = {"status": target}

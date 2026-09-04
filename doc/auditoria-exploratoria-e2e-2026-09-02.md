@@ -7,6 +7,10 @@
 > (a matriz de recusa dos POSTs da 012). Todo o restante do inventário permanece como registrado.
 >
 > Um achado novo surgiu ao corrigir a devolução, e está no fim da §10 como **E2E-021**.
+>
+> **Situação em 04/09/2026.** **E2E-021 está implementado** — `CANCELAVEL` estreitou para a
+> elaboração, `retificacao:cancelar` passou a pertencer ao Gestor, e o ato ficou alcançável. A
+> implementação foi maior do que esta auditoria previu: ver a nota ao fim da seção do achado.
 
 **Data:** 02/09/2026 · **Base:** `main` em `ec67d52` (012 — Mesa de Avaliação fechada) · **Método:** leitura do código, das 12 specs e da suíte (~1.891 testes) + percurso completo no navegador com sete identidades distintas (gestor, elaboradora, homologador, publicadora, dois candidatos, presidente, dois avaliadores), num banco novo (`ps_audit_e2e`), do `Novo Processo Seletivo` até avaliações concluídas na Mesa — mais uma Retificação publicada com o aviso de versão conferido na área do candidato.
 
@@ -252,6 +256,27 @@ abandona um ato que está em elaboração**. Exigir dois atos para abandonar uma
 homologada não é atrito acidental — é mais auditável, porque alguém desfaz a aprovação e alguém
 abandona o rascunho, e a trilha guarda os dois.
 
-Hoje `atos_retificacao.CANCELAVEL` admite as três situações, e a permissão segue sem dono em
+~~Hoje `atos_retificacao.CANCELAVEL` admite as três situações, e a permissão segue sem dono em
 `identidade.py::PAPEIS` — por isso o ato continua inalcançável pela interface. Implementar é
-estreitar o conjunto e conceder a permissão ao Gestor: **próxima leva corretiva, fora da 013**.
+estreitar o conjunto e conceder a permissão ao Gestor: **próxima leva corretiva, fora da 013**.~~
+
+**Implementado em 04/09/2026 — e a receita acima estava incompleta.** Estreitar `CANCELAVEL` e
+conceder a permissão eram duas das três mudanças necessárias. A terceira, que esta auditoria não
+viu, é a que importava:
+
+```
+TRANSITIONS["cancelar"] = (None, CANCELADA)   ← "qualquer estado não final"
+```
+
+O **domínio** admitia cancelar de qualquer situação não final, e a única guarda era uma recusa
+explícita de `PUBLICADA` e `CANCELADA`. Estreitar apenas a constante da interface teria deixado a
+API aceitando o que a decisão recusa — o que o Princípio IV proíbe, porque validação de tela não é
+fronteira de segurança nem autoridade final.
+
+A transição passou a declarar `(EM_ELABORACAO,)`, e a recusa ganhou o caminho de volta em vez da
+mensagem genérica: quem tenta cancelar o que está em revisão ou homologado lê que precisa devolver
+antes; quem tenta cancelar o que é final lê que não há volta. A semântica `None` deixou de existir
+em `TRANSITIONS`, porque `cancelar` era a única a usá-la.
+
+**Lição para as próximas correções:** um achado descrito pela tela pode ter metade da causa no
+domínio. A verificação antes de implementar custou uma leitura e mudou o tamanho da mudança.

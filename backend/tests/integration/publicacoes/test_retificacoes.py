@@ -1499,3 +1499,87 @@ def test_the_key_alone_does_not_authorize_a_replace(api_client, manager_headers,
     assert alvo in refused.data["detail"]
     vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
     assert vigente.content["profiles"][0]["name"] == "Alterado por outra"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+@pytest.mark.parametrize("situacao", ["EM_REVISAO", "HOMOLOGADA"])
+def test_cancelling_a_retification_under_approval_is_refused_and_names_the_way_back(
+    api_client, manager_headers, process_payload, situacao
+):
+    """E2E-021: cancelar é ato sobre o que está **em elaboração**, e a recusa diz o caminho.
+
+    Cancelar abandona um ato em preparação; desfazer um ato já aprovado é devolver. Deixar o
+    cancelamento atravessar os estados de aprovação faria uma pessoa só desfazer a homologação de
+    outra sem que a trilha registrasse os dois atos.
+    """
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    criada = create_retification(api_client, edital, base, [title_change("Novo")])
+    retificacao_id = criada.data["id"]
+
+    api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao_id}/submissoes",
+        format="json",
+        **actor_headers(
+            "retificador-e021", ["retificacao:submeter"], if_match=1, key="e021-submissao-0001"
+        ),
+    )
+    revisao = 2
+    if situacao == "HOMOLOGADA":
+        api_client.post(
+            f"/api/v1/admin/retificacoes/{retificacao_id}/homologacoes",
+            {"reason": "OK"},
+            format="json",
+            **actor_headers(
+                "homologador-e021",
+                ["retificacao:homologar"],
+                if_match=2,
+                key="e021-homologacao-0001",
+            ),
+        )
+        revisao = 3
+
+    recusa = api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao_id}/cancelamentos",
+        {"reason": "Desnecessária"},
+        format="json",
+        **actor_headers(
+            "cancelador-e021",
+            ["retificacao:cancelar"],
+            if_match=revisao,
+            key="e021-cancelamento-0001",
+        ),
+    )
+
+    assert recusa.status_code == 409
+    assert "devolvida para elaboração" in str(recusa.data)
+    assert Retificacao.objects.get(pk=retificacao_id).status == situacao
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_cancelling_a_published_retification_says_it_is_final_and_offers_no_way_back(
+    api_client, manager_headers, process_payload
+):
+    """A recusa da situação final não pode sugerir a devolução: dela não se volta."""
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.get(edital=edital)
+    criada = create_retification(api_client, edital, base, [title_change("Novo")])
+    retificacao_id = criada.data["id"]
+    homologate_and_publish(
+        api_client, retificacao_id, suffix="e021f", key="e021-final-publicacao-0001"
+    )
+
+    recusa = api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao_id}/cancelamentos",
+        {"reason": "Tarde demais"},
+        format="json",
+        **actor_headers(
+            "cancelador-e021f", ["retificacao:cancelar"], if_match=4, key="e021-cancelar-final-0001"
+        ),
+    )
+
+    assert recusa.status_code == 409
+    assert "final não pode ser cancelada" in str(recusa.data)
+    assert "devolvida" not in str(recusa.data)

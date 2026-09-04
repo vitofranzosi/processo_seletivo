@@ -35,7 +35,10 @@ class AtoRetificacao:
     rotulo_motivo: str = "Motivo"
 
 
-CANCELAVEL = frozenset({"EM_ELABORACAO", "EM_REVISAO", "HOMOLOGADA"})
+# Só a elaboração (E2E-021). O conjunto espelha `TRANSITIONS["cancelar"]` do domínio, que é quem
+# recusa de fato — esta lista decide o que a tela **oferece**, e oferecer o que o domínio recusa
+# seria convidar para um beco.
+CANCELAVEL = frozenset({"EM_ELABORACAO"})
 # Devolver desfaz a revisão ou a homologação, e por isso parte das duas — é o mesmo conjunto que
 # `TRANSITIONS["devolver"]` declara no domínio.
 DEVOLVIVEL = frozenset({"EM_REVISAO", "HOMOLOGADA"})
