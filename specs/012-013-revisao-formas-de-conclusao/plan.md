@@ -51,8 +51,10 @@ o começo de um motor genérico de avaliação.
 **Primary Dependencies**: Django 5.2, DRF 3.16. **Nenhuma dependência nova. Nenhuma rota nova,
 nenhum caminho alterado, nenhuma permissão nova, nenhum ato administrativo novo.**
 
-**Storage**: PostgreSQL. **Três migrations**, em `editais`, `avaliacoes` e `resultados`, e **três
-backfills** — `Avaliacao` concluída, `ConclusaoAvaliacao` e `ResultadoEtapa`, todos para `PONTUADA`;
+**Storage**: PostgreSQL. **Três migrations**, em `editais`, `avaliacoes` e `resultados`. Em `editais`,
+`forma` nasce com `default="PONTUADA"` e o próprio `AddField` alcança as Etapas já em elaboração — sem
+isso, todo Edital em rascunho ficaria impublicável. Nas outras duas, **três backfills explícitos** —
+`Avaliacao` concluída, `ConclusaoAvaliacao` e `ResultadoEtapa`, todos para `PONTUADA`;
 rascunho de Avaliação permanece sem forma, porque ela é lida no ato de concluir. Duas das tabelas são
 append-only protegidas por trigger, e por isso derrubam e recriam a trigger dentro da própria
 transação para o backfill (TR-004a, TR-005, TR-006). **Nenhuma migration em `publicacoes`**: a
@@ -98,7 +100,7 @@ domínio estendidas.
 | III — Segurança, dados pessoais e auditoria | Menor privilégio; auditoria de ato sensível | Nenhuma permissão nova e nenhuma superfície nova. A trilha passa a deixar o **sentido** de fora pelo mesmo motivo que já deixava parecer e pontuação: é conteúdo do juízo, e não registro de que houve juízo (012, FR-054). Sem isso, a trilha da forma decisória passaria a guardar o deferimento. **Passa** |
 | IV — Regras explícitas e consistência | Regra no backend; transação; concorrência | A forma é lida na transação que conclui, do conteúdo da versão já lida uma vez, e é essa que fica gravada (FR-088, FR-096). Retificação que muda a forma no intervalo é recusada pela mesma via de FR-073. A escolha do instrumento na tela é apresentação; a recusa do campo da outra forma é do domínio. **Passa** |
 | V — Qualidade, rastreabilidade e simplicidade | Testado no nível certo; solução mais simples | A alternativa "deferido = 1, indeferido = 0" era mais simples de escrever e inventaria uma grandeza que o Edital não publicou. A escolhida é a mais simples **que não inventa norma**. Nenhuma abstração especulativa: a terceira forma plausível (conceito ordinal) é nomeada e deliberadamente não construída. **Passa** |
-| VI — Completude de jornada e valor demonstrável | Capacidade observável pelo canal do ator | O [quickstart.md](./quickstart.md) percorre as seis jornadas, incluindo as negativas: publicar decisória sem rótulo, concluir desfavorável sem parecer, enviar pontuação para Etapa decisória, e a Etapa que não é consolidável. A recusa faz parte da entrega. **Passa** |
+| VI — Completude de jornada e valor demonstrável | Capacidade observável pelo canal do ator | O [quickstart.md](./quickstart.md) percorre as seis jornadas, incluindo as negativas: publicar decisória sem rótulo, concluir desfavorável sem parecer, enviar pontuação para Etapa decisória, e a Etapa que não é consolidável. A recusa faz parte da entrega. Os **dois controles novos** — o formulário que alterna por forma e o par de opções da Mesa — entram sob a exigência de interface da Constituição, com tarefa própria em US1 e US3: rótulo associado, operação por teclado, foco visível e recusa anunciada. A 012 tratou acessibilidade como fatia (S6), e esta revisão não a herda por omissão. **Passa** |
 
 **A Restrição de Domínio que precisou ser lida com atenção.** A Constituição diz que *"cada Etapa
 PODE definir ordem, peso, notas mínima e máxima, caráter eliminatório ou classificatório, banca,

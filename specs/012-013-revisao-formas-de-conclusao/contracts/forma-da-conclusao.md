@@ -43,9 +43,30 @@ Os três são obrigatórios; só a nulabilidade os separa.
 | `forma` | sim | **não** | `eliminatory` |
 | `rotuloFavoravel` | sim | sim | `minimumScore` |
 | `rotuloDesfavoravel` | sim | sim | `minimumScore` |
+| `minimumScore` | sim | sim | — |
+| `maximumScore` | sim | sim | — |
+
+**"Proibido" significa `null`, e nunca ausente.** As dez chaves da Etapa estão sempre presentes no
+conteúdo publicado — `required == properties` é invariante conferida por
+`test_forma_publicada.py::test_todo_campo_do_conteudo_publicado_e_obrigatorio`. O que a forma decisória
+proíbe é o **valor**, não a chave.
 
 Os literais do enum são exatamente `PONTUADA` e `DECISORIA` — maiúsculas, sem acento. Os do sentido,
 em toda a superfície de escrita, são exatamente `FAVORAVEL` e `DESFAVORAVEL`.
+
+### Entrada — `EtapaInput`
+
+A elaboração é o único lugar em que a ausência de `forma` é aceita, e ela **não** significa a mesma
+coisa que `null`:
+
+| envio | resultado |
+|---|---|
+| `forma` omitida | vale `PONTUADA` — é a compatibilidade de quem já integrava com a API |
+| `forma: null` | **recusado**: nulo não é uma forma, e aceitá-lo devolveria o `NULL` que o modelo proíbe |
+| `forma` fora do enum | recusado |
+
+O caminho de rascunho não converte ausência em `None` ao gravar; escrever `None` contornaria o
+`default` do modelo pela porta dos fundos.
 
 ### Recusas do contrato
 

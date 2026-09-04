@@ -875,8 +875,10 @@ pontuada**. Etapa sem a declaração — porque foi publicada antes do primeiro 
 pontuação acima do que a persistência comporta, e a tela diz que o Edital não declarou limite, em vez
 de inventar um.
 
-**FR-121** — Na forma decisória, pontuação máxima e nota mínima **não se aplicam**, e a Etapa não as
-publica. Não é omissão tolerada: publicar `maximumScore = 100` numa Etapa que não pontua seria
+**FR-121** — Na forma decisória, pontuação máxima e nota mínima **não se aplicam**, e a Etapa as
+publica **nulas** — presentes e vazias, e nunca ausentes. A precisão importa porque no conteúdo
+publicado não existe campo opcional: toda chave da Etapa está sempre lá, e "não publicar" um valor é
+dizer `null`. Não é omissão tolerada: publicar `maximumScore = 100` numa Etapa que não pontua seria
 exatamente a regra normativa fictícia que P-007 existe para impedir. O peso permanece propriedade da
 Etapa nas duas formas, porque descreve a composição entre Etapas e não a conclusão local (D-008).
 

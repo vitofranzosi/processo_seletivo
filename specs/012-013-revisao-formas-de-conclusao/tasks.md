@@ -21,7 +21,9 @@ Seis são P1; **US4 é a única P2** e é a única que pode ser adiada sem bloqu
 
 ## Format: `[ID] [P?] [Story] Description`
 
-- **[P]**: pode rodar em paralelo (arquivos diferentes, sem dependência)
+- **[P]**: paralelizável **entre si, dentro do seu grupo** — arquivos diferentes, sem dependência
+  mútua. Um teste marcado `[P]` depende da implementação da sua própria história; o que a marca diz é
+  que ele não depende dos **outros** testes marcados ao lado dele
 - **[Story]**: US1 a US7, conforme o mapa de execução da spec
 
 ## Path Conventions
@@ -86,14 +88,14 @@ nova, nenhuma permissão nova.**
 
 - [ ] T004 [P] Declarar `forma` (`required`, `type: string`, `enum: [PONTUADA, DECISORIA]`, **sem `'null'`**) e os dois rótulos (`required`, `type: [string, 'null']`) em `EtapaPublicada`, e os três em `EtapaInput`, em `specs/001-processo-seletivo-editais/contracts/openapi.yaml`, atualizando a `description` para a versão canônica 6 (TR-013)
 - [ ] T005 Acrescentar os três `Campo` a `ETAPA_PUBLICADA` em `backend/processo_seletivo/editais/domain/validation.py`, com `forma` **não anulável** e os rótulos anuláveis (TR-003)
-- [ ] T006 Estender `_coerencia_das_etapas` em `backend/processo_seletivo/editais/domain/validation.py` com a condicionalidade por forma: rótulos exigidos em `DECISORIA` e proibidos em `PONTUADA`; `minimumScore` e `maximumScore` proibidos em `DECISORIA`; rótulo em branco ou só espaços recusado como ausente
-- [ ] T007 [P] Cobrir os limites de borda dos três campos em `backend/tests/contract/test_limites_de_borda.py`
+- [ ] T006 Estender `_coerencia_das_etapas` em `backend/processo_seletivo/editais/domain/validation.py` com a condicionalidade por forma: rótulos exigidos em `DECISORIA` e proibidos em `PONTUADA`; `minimumScore` e `maximumScore` **presentes e nulos** em `DECISORIA` — o que se recusa é o valor, porque a chave está sempre lá; rótulo em branco ou só espaços recusado como ausente
+- [ ] T007 Cobrir os limites de borda dos três campos em `backend/tests/contract/test_limites_de_borda.py` (depende de T005 e T006)
 
 ### A versão canônica e a elaboração
 
 - [ ] T008 Subir `SCHEMA_VERSION` para 6 em `backend/processo_seletivo/shared/canonical.py`, registrando o segundo incremento no mesmo formato em que o arquivo registra os quatro anteriores — e dizendo que ele nasce de mudança de requisito, não de omissão do primeiro
-- [ ] T009 Acrescentar `forma`, `rotulo_favoravel` e `rotulo_desfavoravel` à Etapa de elaboração em `backend/processo_seletivo/editais/models/etapas.py` — o pacote `models/`, e não um módulo único —, anuláveis porque o rascunho é anulável, **com migration** em `backend/processo_seletivo/editais/migrations/`
-- [ ] T010 [P] Aceitar os três campos no `StageSerializer` de `backend/processo_seletivo/editais/api/serializers.py` e no rascunho de `backend/processo_seletivo/editais/application/draft.py`
+- [ ] T009 Acrescentar `forma` — **não anulável, `default="PONTUADA"`** — e `rotulo_favoravel` e `rotulo_desfavoravel` — anuláveis, sem default — à Etapa de elaboração em `backend/processo_seletivo/editais/models/etapas.py`, o pacote `models/` e não um módulo único, **com migration** em `backend/processo_seletivo/editais/migrations/`. O default é o que mantém publicável todo Edital **já em elaboração**: sem ele, `_stages()` transcreveria `forma: null` e a publicação seria recusada por `field_null_invalid` (TR-003)
+- [ ] T010 [P] Aceitar os três campos no `StageSerializer` de `backend/processo_seletivo/editais/api/serializers.py`, aplicando `PONTUADA` quando `forma` vier **omitida** e recusando `forma: null` explícito — omissão e nulo não são a mesma coisa e não recebem a mesma resposta —, e propagar no rascunho de `backend/processo_seletivo/editais/application/draft.py` **sem converter ausência em `None`**, que contornaria o default do modelo (TR-003)
 - [ ] T011 [P] Transcrever os três para o snapshot em `backend/processo_seletivo/publicacoes/application/publish_edital.py`
 
 ### A elevação
@@ -112,7 +114,7 @@ nova, nenhuma permissão nova.**
 ### A regra da 013 que precisa mudar antes de qualquer Resultado decisório
 
 - [ ] T019 Condicionar à forma, em `backend/processo_seletivo/resultados/domain/regra.py`, a recusa que hoje é incondicional: `impedimento_da_regra` só exige nota mínima de Etapa eliminatória **na forma pontuada** (013, FR-048). Sem isto, análise documental eliminatória e sem mínima — a configuração real dos Editais 35 e 57 — é recusada, e nenhuma tarefa de US5 consegue consolidar. O caso **simétrico**, da decisória não eliminatória, é de US6 e não entra aqui
-- [ ] T020 [P] Testar em `backend/tests/unit/resultados/test_regra.py` que Etapa decisória eliminatória e sem nota mínima **não** cai em regra insuficiente, e que a pontuada eliminatória e sem mínima continua caindo
+- [ ] T020 Testar em `backend/tests/unit/resultados/test_regra.py` que Etapa decisória eliminatória e sem nota mínima **não** cai em regra insuficiente, e que a pontuada eliminatória e sem mínima continua caindo (depende de T019)
 
 ### A prova do salto — junto das migrations, e não no fim
 
@@ -131,9 +133,12 @@ nova, nenhuma permissão nova.**
 
 - [ ] T023 [P] [US1] Ler e escrever os três campos no formulário de Etapa em `backend/processo_seletivo/interface/forms.py`
 - [ ] T024 [US1] Alternar o formulário por forma em `backend/processo_seletivo/interface/templates/interface/_etapa.html`: nota mínima e máxima na pontuada, par de rótulos na decisória, com "Deferido"/"Indeferido" como **prefill editável e não default normativo**
-- [ ] T025 [P] [US1] Exibir a Etapa por forma no resumo de `backend/processo_seletivo/interface/revisao.py`
-- [ ] T026 [P] [US1] Testar a publicação de uma Etapa decisória em `backend/tests/integration/interface/test_compor.py`: o snapshot traz forma e rótulos, e `schemaVersion` é 6
-- [ ] T027 [P] [US1] Testar as recusas em `backend/tests/unit/editais/test_etapas.py`: decisória sem rótulo, decisória com pontuação máxima, rótulo em branco, e `forma` fora do enum — cada uma com o código declarado no [contrato](./contracts/forma-da-conclusao.md)
+- [ ] T025 [US1] Tornar o formulário condicional de Etapa operável por teclado e legível por leitor de tela em `backend/processo_seletivo/interface/templates/interface/_etapa.html`: a troca de forma anuncia que os campos mudaram, cada rótulo é associado ao seu controle, e a recusa continua ancorada no campo por `aria-describedby`, como o arquivo já faz com `recusa-etapa-…`
+- [ ] T026 [P] [US1] Exibir a Etapa por forma no resumo de `backend/processo_seletivo/interface/revisao.py`
+- [ ] T027 [P] [US1] Testar a publicação de uma Etapa decisória em `backend/tests/integration/interface/test_compor.py`: o snapshot traz forma e rótulos, e `schemaVersion` é 6
+- [ ] T028 [P] [US1] Testar em `backend/tests/integration/editais/` que um Edital criado **antes** da migration continua publicável sem edição nenhuma: as Etapas dele saem no snapshot como `PONTUADA`, e o conteúdo publicado é idêntico ao que seria antes da revisão, exceto pelos três campos novos
+- [ ] T029 [P] [US1] Testar em `backend/tests/contract/test_edital_draft_api.py` que `forma` omitida no `StageSerializer` vale `PONTUADA` e que `forma: null` explícito é recusado — e que o rascunho gravado não guarda `None`
+- [ ] T030 [P] [US1] Testar as recusas em `backend/tests/unit/editais/test_etapas.py`: decisória sem rótulo, decisória com pontuação máxima, rótulo em branco, e `forma` fora do enum — cada uma com o código declarado no [contrato](./contracts/forma-da-conclusao.md)
 
 **Checkpoint**: existe Edital publicado cuja Etapa declara que não pontua
 
@@ -145,11 +150,11 @@ nova, nenhuma permissão nova.**
 
 **Independent Test**: [Jornadas 5 e 6](./quickstart.md) — retificar um Edital v5 e retificar a forma de uma Etapa.
 
-- [ ] T028 [US2] Completar `CAMPOS_ETAPA` em `backend/processo_seletivo/interface/retificacao.py` com **todos** os campos normativos da Etapa: os cinco atuais, `maximumScore` e `evaluationsPerRegistration` que o primeiro incremento deixou para trás, e os três novos (012, D-008.10)
-- [ ] T029 [P] [US2] Escrever, em `backend/tests/contract/test_retificacoes_api.py`, a guarda que compara `CAMPOS_ETAPA` com um **conjunto declarado explicitamente** — os campos normativos da Etapa, isto é `ETAPA_PUBLICADA` menos `id`, `order` e `scheduleEventId`, cada exclusão justificada em comentário (identidade, insumo da progressão, e vínculo endereçado por outra coleção). O objetivo é que o próximo campo normativo não caia no mesmo buraco em silêncio
-- [ ] T030 [P] [US2] Testar em `backend/tests/integration/publicacoes/test_elevacao_de_versao.py` que um Edital v5 retificado produz Versão Consolidada v6 com `forma = "PONTUADA"`, que a Publicação original não é tocada e que a elevação não aparece como ato de ninguém
-- [ ] T031 [P] [US2] Testar em `backend/tests/integration/publicacoes/test_elevacao_de_versao.py` que retificar `PONTUADA → DECISORIA` exige os dois rótulos e recusa manter mínima e máxima
-- [ ] T032 [P] [US2] Testar em `backend/tests/contract/test_documento_publicado.py` que a consulta pública e o comprovante continuam servindo o conteúdo **literal** do v5, sem elevação, para que o `content_hash` continue provando o que a tela mostra
+- [ ] T031 [US2] Completar `CAMPOS_ETAPA` em `backend/processo_seletivo/interface/retificacao.py` com **todos** os campos normativos da Etapa: os cinco atuais, `maximumScore` e `evaluationsPerRegistration` que o primeiro incremento deixou para trás, e os três novos (012, D-008.10)
+- [ ] T032 [P] [US2] Escrever, em `backend/tests/contract/test_retificacoes_api.py`, a guarda que compara `CAMPOS_ETAPA` com um **conjunto declarado explicitamente** — os campos normativos da Etapa, isto é `ETAPA_PUBLICADA` menos `id`, `order` e `scheduleEventId`, cada exclusão justificada em comentário (identidade, insumo da progressão, e vínculo endereçado por outra coleção). O objetivo é que o próximo campo normativo não caia no mesmo buraco em silêncio
+- [ ] T033 [P] [US2] Testar em `backend/tests/integration/publicacoes/test_elevacao_de_versao.py` que um Edital v5 retificado produz Versão Consolidada v6 com `forma = "PONTUADA"`, que a Publicação original não é tocada e que a elevação não aparece como ato de ninguém
+- [ ] T034 [P] [US2] Testar em `backend/tests/integration/publicacoes/test_elevacao_de_versao.py` que retificar `PONTUADA → DECISORIA` exige os dois rótulos e recusa manter mínima e máxima
+- [ ] T035 [P] [US2] Testar em `backend/tests/contract/test_documento_publicado.py` que a consulta pública e o comprovante continuam servindo o conteúdo **literal** do v5, sem elevação, para que o `content_hash` continue provando o que a tela mostra
 
 **Checkpoint**: a norma nova é publicável, corrigível e não quebrou o passado
 
@@ -161,16 +166,17 @@ nova, nenhuma permissão nova.**
 
 **Independent Test**: [Jornada 2](./quickstart.md) — concluir "Indeferido" numa Etapa decisória, e ser recusado ao enviar pontuação.
 
-- [ ] T033 [P] [US3] Condicionar `backend/processo_seletivo/avaliacoes/domain/pontuacao.py` à forma: a recusa "Informe a pontuação." passa a valer só na pontuada, entra "Informe o sentido da decisão.", e `exige_parecer` passa a exigir parecer no `DESFAVORAVEL` **sem** depender do caráter eliminatório (012, FR-123)
-- [ ] T034 [US3] Ramificar gravar e concluir por forma em `backend/processo_seletivo/avaliacoes/application/avaliacao.py`, lendo a forma **do conteúdo da versão já lida na transação** (FR-096) e gravando-a na conclusão (FR-117); recusar no domínio o envio que traz o campo da outra forma (FR-122)
-- [ ] T035 [US3] Ler `sentido` em `forms.ler_avaliacao` e devolvê-lo em `_valores_da_avaliacao`, em `backend/processo_seletivo/interface/forms.py` e `backend/processo_seletivo/interface/views.py`, preservando o digitado após uma recusa como já se faz com a pontuação
-- [ ] T036 [US3] Apresentar o instrumento da forma publicada em `backend/processo_seletivo/interface/templates/interface/mesa_inscricao.html`: par de opções **rotulado pelo Edital** sobre valores `FAVORAVEL`/`DESFAVORAVEL`, e nenhum campo de nota
-- [ ] T037 [P] [US3] Testar por `INSERT` cru, em `backend/tests/integration/avaliacoes/test_constraints.py`, que `DECISORIA` com pontuação é recusada **nas duas tabelas** — `Avaliacao` por `ck_avaliacao_concluida_completa` e `ConclusaoAvaliacao` por `ck_conclusao_completa_por_forma`
-- [ ] T038 [P] [US3] Testar por `INSERT` cru, em `backend/tests/integration/avaliacoes/test_constraints.py`, que `PONTUADA` com sentido é recusada nas mesmas duas tabelas, e que conclusão sem forma nenhuma é recusada
-- [ ] T039 [P] [US3] Testar em `backend/tests/integration/avaliacoes/test_avaliacao.py` a ida e volta da forma decisória: rascunho sem sentido, conclusão com sentido, e conclusão desfavorável sem parecer recusada
-- [ ] T040 [P] [US3] Testar em `backend/tests/integration/interface/test_fluxo.py`, pelo canal HTTP real, que o POST com o campo da outra forma é recusado com mensagem — e não ignorado em silêncio (E2E-015)
-- [ ] T041 [P] [US3] Testar em `backend/tests/integration/avaliacoes/test_versao_da_avaliacao.py` que a forma gravada é a da versão validada, e que Retificação que muda a forma no intervalo recusa a conclusão
-- [ ] T042 [P] [US3] Testar em `backend/tests/integration/avaliacoes/test_trilha_da_avaliacao.py` que a trilha **não** guarda o sentido, como já não guarda pontuação nem parecer (012, FR-054)
+- [ ] T036 [P] [US3] Condicionar `backend/processo_seletivo/avaliacoes/domain/pontuacao.py` à forma: a recusa "Informe a pontuação." passa a valer só na pontuada, entra "Informe o sentido da decisão.", e `exige_parecer` passa a exigir parecer no `DESFAVORAVEL` **sem** depender do caráter eliminatório (012, FR-123)
+- [ ] T037 [US3] Ramificar gravar e concluir por forma em `backend/processo_seletivo/avaliacoes/application/avaliacao.py`, lendo a forma **do conteúdo da versão já lida na transação** (FR-096) e gravando-a na conclusão (FR-117); recusar no domínio o envio que traz o campo da outra forma (FR-122)
+- [ ] T038 [US3] Ler `sentido` em `forms.ler_avaliacao` e devolvê-lo em `_valores_da_avaliacao`, em `backend/processo_seletivo/interface/forms.py` e `backend/processo_seletivo/interface/views.py`, preservando o digitado após uma recusa como já se faz com a pontuação
+- [ ] T039 [US3] Apresentar o instrumento da forma publicada em `backend/processo_seletivo/interface/templates/interface/mesa_inscricao.html`: par de opções **rotulado pelo Edital** sobre valores `FAVORAVEL`/`DESFAVORAVEL`, e nenhum campo de nota
+- [ ] T040 [US3] Tornar o par de opções da Mesa operável por teclado em `backend/processo_seletivo/interface/templates/interface/mesa_inscricao.html`: grupo rotulado pela pergunta, navegação por setas, foco visível, e o rótulo publicado como **texto** do controle — nunca só cor ou posição distinguindo favorável de desfavorável
+- [ ] T041 [P] [US3] Testar por `INSERT` cru, em `backend/tests/integration/avaliacoes/test_constraints.py`, que `DECISORIA` com pontuação é recusada **nas duas tabelas** — `Avaliacao` por `ck_avaliacao_concluida_completa` e `ConclusaoAvaliacao` por `ck_conclusao_completa_por_forma`
+- [ ] T042 [P] [US3] Testar por `INSERT` cru, em `backend/tests/integration/avaliacoes/test_constraints.py`, que `PONTUADA` com sentido é recusada nas mesmas duas tabelas, e que conclusão sem forma nenhuma é recusada
+- [ ] T043 [P] [US3] Testar em `backend/tests/integration/avaliacoes/test_avaliacao.py` a ida e volta da forma decisória: rascunho sem sentido, conclusão com sentido, e conclusão desfavorável sem parecer recusada
+- [ ] T044 [P] [US3] Testar em `backend/tests/integration/interface/test_fluxo.py`, pelo canal HTTP real, que o POST com o campo da outra forma é recusado com mensagem — e não ignorado em silêncio (E2E-015)
+- [ ] T045 [P] [US3] Testar em `backend/tests/integration/avaliacoes/test_versao_da_avaliacao.py` que a forma gravada é a da versão validada, e que Retificação que muda a forma no intervalo recusa a conclusão
+- [ ] T046 [P] [US3] Testar em `backend/tests/integration/avaliacoes/test_trilha_da_avaliacao.py` que a trilha **não** guarda o sentido, como já não guarda pontuação nem parecer (012, FR-054)
 
 **Checkpoint**: o avaliador conclui sem nota, e o banco garante que as duas formas não se misturam
 
@@ -182,8 +188,8 @@ nova, nenhuma permissão nova.**
 
 **Independent Test**: [Jornada 1](./quickstart.md) — o PDF da Etapa decisória mostra os rótulos e nenhuma linha de nota.
 
-- [ ] T043 [US4] Montar os pares da Etapa por forma em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, pela mesma mecânica condicional que "Pontuação máxima" já usa
-- [ ] T044 [P] [US4] Testar em `backend/tests/unit/publicacoes/test_pdf.py` que a Etapa decisória imprime os rótulos publicados e **não** imprime nota mínima nem máxima
+- [ ] T047 [US4] Montar os pares da Etapa por forma em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, pela mesma mecânica condicional que "Pontuação máxima" já usa
+- [ ] T048 [P] [US4] Testar em `backend/tests/unit/publicacoes/test_pdf.py` que a Etapa decisória imprime os rótulos publicados e **não** imprime nota mínima nem máxima
 
 **Checkpoint**: a fonte estruturada e o documento dizem a mesma coisa
 
@@ -195,15 +201,15 @@ nova, nenhuma permissão nova.**
 
 **Independent Test**: [Jornada 3](./quickstart.md) — consolidar uma Etapa decisória eliminatória e ver `ELIMINADA` com o motivo citando "Indeferido".
 
-- [ ] T045 [P] [US5] Estender `consequencia` em `backend/processo_seletivo/resultados/domain/regra.py` para receber a conclusão em vez de um decimal, com o ramo decisório — `DESFAVORAVEL → ELIMINADA`, `FAVORAVEL → HABILITADA` — e o **rótulo publicado** no motivo exibível, nunca o enum
-- [ ] T046 [P] [US5] Acrescentar `forma` a `CAMPOS_COMPARADOS` em `backend/processo_seletivo/resultados/domain/compatibilidade.py`, reusando o leitor de `previsao.py`, e registrar no docstring por que os **rótulos ficam de fora** (TR-008)
-- [ ] T047 [US5] Copiar a conclusão conforme a forma em `backend/processo_seletivo/resultados/application/consolidacao.py` e carregar `forma` e `sentido` em `backend/processo_seletivo/resultados/application/prontidao.py`
-- [ ] T048 [US5] Exibir a conclusão por forma em `backend/processo_seletivo/interface/templates/interface/resultados.html`, com o rótulo publicado
-- [ ] T049 [P] [US5] Testar por `INSERT` cru, em `backend/tests/integration/resultados/test_constraints.py`, que `ck_resultado_completo_por_forma` recusa Resultado decisório com pontuação, pontuado com sentido, e sem forma
-- [ ] T050 [P] [US5] Testar por `INSERT` cru, no mesmo `backend/tests/integration/resultados/test_constraints.py`, que a **trigger** `resultado_etapa_coerente` recusa Resultado cuja forma, pontuação ou sentido divirja da Avaliação fonte — **incluindo o caso que motivou a decisão**: Resultado decisório com sentido diferente do da fonte, que uma conferência alternante aprovaria em silêncio
-- [ ] T051 [P] [US5] Testar em `backend/tests/unit/resultados/test_regra.py` a tabela-verdade decisória inteira, com o rótulo no motivo
-- [ ] T052 [P] [US5] Testar em `backend/tests/unit/resultados/test_compatibilidade.py` que a troca de forma cria incompatibilidade e que a troca de rótulo **não** cria
-- [ ] T053 [P] [US5] Testar em `backend/tests/acceptance/test_resultado_da_etapa.py` a **consolidação em lote** de uma Etapa decisória: o desfecho conta criadas e recusadas, e o Resultado exibe o rótulo publicado. A progressão fica para a E2E de T058, e não é repetida aqui
+- [ ] T049 [P] [US5] Estender `consequencia` em `backend/processo_seletivo/resultados/domain/regra.py` para receber a conclusão em vez de um decimal, com o ramo decisório — `DESFAVORAVEL → ELIMINADA`, `FAVORAVEL → HABILITADA` — e o **rótulo publicado** no motivo exibível, nunca o enum
+- [ ] T050 [P] [US5] Acrescentar `forma` a `CAMPOS_COMPARADOS` em `backend/processo_seletivo/resultados/domain/compatibilidade.py`, reusando o leitor de `previsao.py`, e registrar no docstring por que os **rótulos ficam de fora** (TR-008)
+- [ ] T051 [US5] Copiar a conclusão conforme a forma em `backend/processo_seletivo/resultados/application/consolidacao.py` e carregar `forma` e `sentido` em `backend/processo_seletivo/resultados/application/prontidao.py`
+- [ ] T052 [US5] Exibir a conclusão por forma em `backend/processo_seletivo/interface/templates/interface/resultados.html`, com o rótulo publicado
+- [ ] T053 [P] [US5] Testar por `INSERT` cru, em `backend/tests/integration/resultados/test_constraints.py`, que `ck_resultado_completo_por_forma` recusa Resultado decisório com pontuação, pontuado com sentido, e sem forma
+- [ ] T054 [P] [US5] Testar por `INSERT` cru, no mesmo `backend/tests/integration/resultados/test_constraints.py`, que a **trigger** `resultado_etapa_coerente` recusa Resultado cuja forma, pontuação ou sentido divirja da Avaliação fonte — **incluindo o caso que motivou a decisão**: Resultado decisório com sentido diferente do da fonte, que uma conferência alternante aprovaria em silêncio
+- [ ] T055 [P] [US5] Testar em `backend/tests/unit/resultados/test_regra.py` a tabela-verdade decisória inteira, com o rótulo no motivo
+- [ ] T056 [P] [US5] Testar em `backend/tests/unit/resultados/test_compatibilidade.py` que a troca de forma cria incompatibilidade e que a troca de rótulo **não** cria
+- [ ] T057 [P] [US5] Testar em `backend/tests/acceptance/test_resultado_da_etapa.py` a **consolidação em lote** de uma Etapa decisória: o desfecho conta criadas e recusadas, e o Resultado exibe o rótulo publicado. A progressão fica para a E2E de T062, e não é repetida aqui
 
 **Checkpoint**: a fronteira está fechada — o trabalho decisório vira consequência oficial
 
@@ -220,9 +226,9 @@ nova, nenhuma permissão nova.**
 
 **Independent Test**: [Jornada 4](./quickstart.md) — a Etapa não é consolidável, e a prontidão diz por quê.
 
-- [ ] T054 [US6] Acrescentar a `impedimento_da_regra`, em `backend/processo_seletivo/resultados/domain/regra.py`, o **caso simétrico**: decisória e não eliminatória não publicou o efeito da decisão desfavorável, e por isso a Etapa não é consolidável (013, FR-047). A metade que condiciona a recusa existente à forma já foi feita na Foundational, e não é refeita aqui
-- [ ] T055 [P] [US6] Testar em `backend/tests/unit/resultados/test_regra.py` a tabela de impedimentos inteira, com os três casos lado a lado: mais de uma avaliação prevista, pontuada eliminatória sem mínima, e decisória não eliminatória
-- [ ] T056 [P] [US6] Testar em `backend/tests/integration/resultados/test_prontidao.py` que Etapa decisória **não** eliminatória produz zero Resultados e que a prontidão exibe a frase que diz por quê
+- [ ] T058 [US6] Acrescentar a `impedimento_da_regra`, em `backend/processo_seletivo/resultados/domain/regra.py`, o **caso simétrico**: decisória e não eliminatória não publicou o efeito da decisão desfavorável, e por isso a Etapa não é consolidável (013, FR-047). A metade que condiciona a recusa existente à forma já foi feita na Foundational, e não é refeita aqui
+- [ ] T059 [P] [US6] Testar em `backend/tests/unit/resultados/test_regra.py` a tabela de impedimentos inteira, com os três casos lado a lado: mais de uma avaliação prevista, pontuada eliminatória sem mínima, e decisória não eliminatória
+- [ ] T060 [P] [US6] Testar em `backend/tests/integration/resultados/test_prontidao.py` que Etapa decisória **não** eliminatória produz zero Resultados e que a prontidão exibe a frase que diz por quê
 
 **Checkpoint**: as duas recusas por regra insuficiente são simétricas e visíveis antes de qualquer tentativa
 
@@ -234,9 +240,9 @@ nova, nenhuma permissão nova.**
 
 **Independent Test**: a suíte inteira passa, e a lista de node IDs do baseline é um **subconjunto** da lista final — todo teste que existia continua existindo. A contagem total cresce, de propósito.
 
-- [ ] T057 [US7] Rodar a suíte inteira com PostgreSQL e comparar a lista de node IDs com o baseline: **todo teste que existia continua existindo e passando**. Enumerar em `specs/012-013-revisao-formas-de-conclusao/traceability.md` cada asserção alterada, com o motivo — só as do literal da versão canônica são admissíveis (012, FR-124 · 013, FR-050)
-- [ ] T058 [P] [US7] Acrescentar a jornada decisória de ponta a ponta a `backend/tests/acceptance/test_mesa_de_avaliacao.py`: publicar decisória, distribuir, concluir indeferido, consolidar, e a inscrição sumir da Etapa seguinte
-- [ ] T059 [P] [US7] Cobrir em `backend/tests/acceptance/test_quickstart.py` as jornadas do [quickstart](./quickstart.md) que **não** são a E2E de T058 — J1, J4, J5 e J6 —, sem reencenar publicar→avaliar→consolidar→progredir
+- [ ] T061 [US7] Rodar a suíte inteira com PostgreSQL e comparar a lista de node IDs com o baseline: **todo teste que existia continua existindo e passando**. Enumerar em `specs/012-013-revisao-formas-de-conclusao/traceability.md` cada asserção alterada, com o motivo — só as do literal da versão canônica são admissíveis (012, FR-124 · 013, FR-050)
+- [ ] T062 [P] [US7] Acrescentar a jornada decisória de ponta a ponta a `backend/tests/acceptance/test_mesa_de_avaliacao.py`: publicar decisória, distribuir, concluir indeferido, consolidar, e a inscrição sumir da Etapa seguinte
+- [ ] T063 [P] [US7] Cobrir em `backend/tests/acceptance/test_quickstart.py` as jornadas do [quickstart](./quickstart.md) que **não** são a E2E de T062 — J1, J4, J5 e J6 —, sem reencenar publicar→avaliar→consolidar→progredir
 
 **Checkpoint**: a revisão está entregue e demonstrada
 
@@ -244,9 +250,9 @@ nova, nenhuma permissão nova.**
 
 ## Phase 10: Polish & Cross-Cutting Concerns
 
-- [ ] T060 [P] Fechar a rastreabilidade em `specs/012-013-revisao-formas-de-conclusao/traceability.md`, ligando FR e SC das duas specs às tarefas e aos testes, como 012 e 013 fizeram
-- [ ] T061 [P] Acrescentar uma Etapa decisória aos dados de demonstração em `backend/processo_seletivo/processos/management/commands/seed_demo.py`, para que a forma nova exista em ambiente de demonstração e não só em teste
-- [ ] T062 [P] Atualizar `doc/briefing-revisao-012-013-formas-de-conclusao.md` marcando as fases executadas, como o próprio documento já faz com os passos 1 a 3
+- [ ] T064 [P] Fechar a rastreabilidade em `specs/012-013-revisao-formas-de-conclusao/traceability.md`, ligando FR e SC das duas specs às tarefas e aos testes, como 012 e 013 fizeram
+- [ ] T065 [P] Acrescentar uma Etapa decisória aos dados de demonstração em `backend/processo_seletivo/processos/management/commands/seed_demo.py`, para que a forma nova exista em ambiente de demonstração e não só em teste
+- [ ] T066 [P] Atualizar `doc/briefing-revisao-012-013-formas-de-conclusao.md` marcando as fases executadas, como o próprio documento já faz com os passos 1 a 3
 
 ---
 
@@ -343,7 +349,7 @@ apps que o grafo do Django não infere da ordem das tarefas. É por isso que a p
 
 ## Notes
 
-- `[P]` = arquivos diferentes **e** sem dependência de tarefa incompleta
+- `[P]` = arquivos diferentes e sem dependência entre as tarefas marcadas juntas
 - Commit por tarefa ou por grupo lógico
 - **Nenhuma tarefa desta lista cria rota, permissão, ato administrativo, app ou dependência externa.**
   Um módulo novo existe — `avaliacoes/domain/formas.py`, para os dois enums —, e ele é a única

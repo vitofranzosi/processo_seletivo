@@ -96,9 +96,26 @@ sentido nenhum —, exatamente como `minimumScore` é anulável e obrigatório. 
 há campo opcional: obrigatório significa **presente**, e não preenchido, e é isso que
 `test_todo_campo_do_conteudo_publicado_e_obrigatorio` já cobra de toda coleção.
 
-O modelo de **elaboração** pode manter `forma` anulável enquanto rascunho — quem está compondo ainda
-não escolheu —, e a publicação é que a exige. É a mesma assimetria que a 012 já pratica entre
-rascunho e conclusão.
+No modelo de **elaboração**, `forma` nasce com `default="PONTUADA"` e **não** é anulável. A primeira
+redação a deixava anulável, "porque quem está compondo ainda não escolheu", e o argumento não vale
+para este campo: a ausência de forma já significa pontuada em todo o resto do sistema, de modo que um
+`NULL` na elaboração seria uma terceira grafia do mesmo nada. É o padrão que `eliminatory` e
+`classificatory` já seguem — campo normativo publicado, com estado inicial visível e editável.
+
+O default resolve, no mesmo `AddField`, as Etapas **já em elaboração**. Sem ele, todo Edital hoje em
+rascunho ficaria impublicável no instante em que `forma` passasse a ser exigida no conteúdo
+publicado, porque `_stages()` transcreve `etapa.forma` direto para o snapshot e a validação recusaria
+`null`.
+
+**A compatibilidade precisa existir também na entrada da API**, e o default do modelo sozinho não a
+dá. `StageSerializer` aplica `PONTUADA` quando `forma` vem **omitida** e recusa `forma: null`
+explícito — as duas coisas são diferentes, e tratá-las igual devolveria a mensagem errada a quem
+chamou. E `draft.py` **não pode** transformar ausência em `forma=None` no caminho de `stage.get(...)`,
+como faz hoje com os campos anuláveis: escrever `None` contornaria o default do modelo e reintroduziria
+o `NULL` que ele existe para impedir.
+
+Os **rótulos continuam anuláveis**, e a assimetria é deliberada: neles o "não se aplica" é real, e um
+default seria exatamente o default institucional que a D-008.2 recusa.
 
 **A regra de verdade, porém, é entre campos**, e `Campo` não a expressa — o próprio arquivo já diz
 isso ao deixar `content` e `source` de fora da seção publicada.

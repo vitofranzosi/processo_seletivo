@@ -34,10 +34,13 @@ elegível, Classificado/Desclassificado.
 | `forma` | `"PONTUADA" \| "DECISORIA"` | **não**¹ | sempre |
 | `rotuloFavoravel` | string | sim | obrigatório em `DECISORIA`, proibido em `PONTUADA` |
 | `rotuloDesfavoravel` | string | sim | obrigatório em `DECISORIA`, proibido em `PONTUADA` |
-| `minimumScore` | decimal canônico | sim | admitido em `PONTUADA`, proibido em `DECISORIA` |
-| `maximumScore` | decimal canônico | sim | admitido em `PONTUADA`, proibido em `DECISORIA` |
+| `minimumScore` | decimal canônico | sim | valor admitido em `PONTUADA`; **nulo** em `DECISORIA` |
+| `maximumScore` | decimal canônico | sim | valor admitido em `PONTUADA`; **nulo** em `DECISORIA` |
 | `weight` | decimal canônico | sim | **inalterado**: descreve a composição entre Etapas, não a conclusão |
 | `eliminatory` | bool | não | **inalterado** — e, na forma decisória, é ele que dá consequência ao sentido |
+
+**"Proibido" significa nulo, e nunca ausente**: as dez chaves da Etapa estão sempre presentes no
+conteúdo publicado, e o que a forma decisória proíbe é o **valor**, não a chave.
 
 ¹ **Na versão 6, `forma` é obrigatória e não nula.** Admitir nulo criaria duas grafias canônicas
 para a mesma versão, e a versão existe para identificar *uma* forma. A ausência é lida como
@@ -46,8 +49,8 @@ A elevação sempre escreve o literal, e nenhum snapshot v5 cru chega ao validad
 roda sobre a projeção de elaboração, sobre a publicação e sobre a consolidação de Retificação, e nos
 três o conteúdo já está na forma vigente (TR-003).
 
-O modelo de **elaboração** pode manter `forma` anulável enquanto rascunho; a publicação é que a
-exige. É a mesma assimetria entre rascunho e ato que a 012 já pratica na Avaliação.
+No modelo de **elaboração**, `forma` não é anulável e tem `default="PONTUADA"` — o que também alcança
+as Etapas já em rascunho, que sem isso ficariam impublicáveis (TR-003).
 
 **Elevação, degrau novo** (TR-001, TR-002):
 
@@ -134,10 +137,21 @@ fato de o Resultado não guardar norma — a versão é alcançada por `avaliaca
 
 ## 6. `editais` — elaboração
 
-A Etapa de elaboração ganha `forma`, `rotulo_favoravel` e `rotulo_desfavoravel` — **três** campos —,
-que o `edital_snapshot` transcreve para o conteúdo publicado. Anuláveis na elaboração, porque o
-rascunho é anulável; exigidos na publicação, pela regra de TR-003. Nenhum outro modelo de elaboração
-muda.
+A Etapa de elaboração ganha três campos, que o `edital_snapshot` transcreve para o conteúdo publicado:
+
+| campo | nulo | default |
+|---|---|---|
+| `forma` | não | `"PONTUADA"` — o mesmo padrão de `eliminatory` e `classificatory` |
+| `rotulo_favoravel` | sim | nenhum |
+| `rotulo_desfavoravel` | sim | nenhum |
+
+O default de `forma` não é conveniência: é o que mantém publicável todo Edital **já em elaboração**,
+cujas Etapas nasceriam sem forma e falhariam a validação de publicação. Os rótulos não têm default,
+porque neles o "não se aplica" é real (D-008.2).
+
+Na **entrada da API**, `forma` omitida vale `PONTUADA` e `forma: null` explícito é recusado; o
+caminho de rascunho não escreve `None` no lugar da ausência, sob pena de contornar o default do
+modelo. Nenhum outro modelo de elaboração muda.
 
 ## 7. Transições de estado
 
