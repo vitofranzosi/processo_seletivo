@@ -79,8 +79,8 @@ no `INSERT` e append-only no `UPDATE`/`DELETE`, esta **sem exceção alguma**). 
 conteúdo publicado.
 
 **Testing**: pytest com pytest-django, marcadores `acceptance`, `contract`, `integration`,
-`authorization` e `performance` já declarados. Quatro exigências específicas: a unicidade do vigente
-sob concorrência e as triggers só são exercidas com `TEST_DB_ENGINE=postgresql`; o nome de cada
+`authorization` e `performance` já declarados. Quatro exigências específicas: a unicidade da raiz e a do
+sucessor sob concorrência e as triggers só são exercidas com `TEST_DB_ENGINE=postgresql`; o nome de cada
 trigger precisa entrar em `TRIGGERS_POR_APP` (`tests/migrations/test_migrations.py:21-38`), sem o que
 o teste estrutural não a enxerga; as tabelas novas entram em `TABELAS_APPEND_ONLY`
 (`seguranca/papeis.py:26-41`); e a coleção aninhada nova só é pega por um guarda —
@@ -108,7 +108,7 @@ souber descer até `profiles`, todo conteúdo v6 publicado fica irretificável.
 
 **Scale/Scope**: um Edital com mil inscritos, quatro Etapas e até três marcos por Perfil. Com a leva
 decidida: **duas** coleções normativas novas — marco e fatos declarados — mais um campo publicado,
-numa elevação canônica única; quatro tabelas novas; três funções de domínio; duas rotas novas; uma
+numa elevação canônica única; **seis** tabelas novas — marco, critério, fato declarado, valor congelado, ato e posição; três funções de domínio; duas rotas novas; uma
 tela nova; e o caminho do conteúdo publicado percorrido **uma** vez para as três mudanças, em vez de
 três vezes.
 
@@ -140,7 +140,7 @@ specs/015-ordenacao-e-classificacao/
 │   ├── marco.md         # a coleção normativa nova: forma, validação e Retificação
 │   └── ordenacao.md     # rotas, corpos, desfecho e recusas
 ├── checklists/
-│   └── requirements.md  # qualidade da spec, duas iterações
+│   └── requirements.md  # qualidade da spec, clarificação, revisão do plano e análise cruzada
 └── tasks.md             # Fase 2 — NÃO criado por este comando
 ```
 
@@ -182,21 +182,23 @@ backend/processo_seletivo/
     ├── retificacao.py                    # ALTERADO: CAMPOS_MARCO e laço aninhado
     └── templates/interface/
         ├── _marco.html                   # NOVO
+        ├── _fato.html                     # NOVO (D-2, na composição do Edital)
         └── ordenacao.html                # NOVO
 
 backend/tests/
 ├── unit/classificacao/                   # combinação, desempate, universo — sem banco
 ├── unit/editais/                         # forma do snapshot com a coleção nova
-├── integration/                          # unicidade do vigente, triggers, elevação, endereçamento
+├── integration/                          # unicidade da raiz e do sucessor, triggers, elevação
 ├── authorization/                        # 404 uniforme; consultar é de dois, emitir é de um
 ├── performance/                          # o custo não cresce com a população
 └── acceptance/test_ordenacao.py
 ```
 
 **Structure Decision**: a estrutura existente do backend Django, com um app novo em
-`backend/processo_seletivo/classificacao/`. O canal continua sendo o HTML de `interface`; nada é
-acrescentado a `portal` — a ordem é administrativa nesta feature, e a publicação para o candidato é
-da 017.
+`backend/processo_seletivo/classificacao/`. O canal administrativo continua sendo o HTML de
+`interface`. **`portal` recebe os campos dos fatos declarados**, porque a leva trouxe a US2 e quem
+preenche fato é o candidato — o que continua fora do `portal` é a **ordem**, que é administrativa
+nesta feature e só chega ao candidato pela 017.
 
 ## Fases de implementação sugeridas
 

@@ -35,6 +35,29 @@ por identidade (`id=`), nunca por índice, e reordenar substituindo a lista inte
 identidades que a própria Retificação usa. Reordenar é, portanto, alterar `order` de cada critério
 por identidade, e os identificadores são preservados (FR-015).
 
+## 2b. Os fatos declarados e o teto (D-2 e D-3)
+
+A mesma elevação carrega mais duas mudanças de forma, e elas são contrato como o marco é.
+
+`/profiles/*/declaredFacts` — aninhada no Perfil, coleção com chave:
+
+```
+declaredFacts: [
+  { id, code, label, type }          # type: "DATE" | "INTEGER", e nada além
+]
+```
+
+`maxInscricoesPorCandidato` — campo **do Perfil**, inteiro ou `null`. `null` significa sem limite, e
+é o comportamento de hoje; a ausência da chave não é forma válida, pela convenção de que todo campo
+publicado é obrigatório.
+
+**O que a validação recusa:** fato sem `code` único no Perfil; `type` fora dos dois valores; critério
+de desempate que aponte fato inexistente no mesmo conteúdo (FR-017); teto negativo ou zero.
+
+**O que a Retificação alcança:** `label` e o teto, por identidade. **`type` não é editável** — mudar
+o tipo remove um fato e acrescenta outro (FR-058), porque reinterpretar valor já congelado seria o
+sistema decidindo o que a pessoa quis dizer.
+
 ## 3. Endereçamento
 
 Entra em `COLECOES_COM_CHAVE` (`publicacoes/domain/colecoes.py:18-30`):
@@ -42,6 +65,7 @@ Entra em `COLECOES_COM_CHAVE` (`publicacoes/domain/colecoes.py:18-30`):
 ```
 "/profiles/*/classificationMilestones"
 "/profiles/*/classificationMilestones/*/tiebreakers"
+"/profiles/*/declaredFacts"
 ```
 
 Sem a declaração, `changes.py:144-149` recusa endereçamento por `id=` e o caminho só resolveria por

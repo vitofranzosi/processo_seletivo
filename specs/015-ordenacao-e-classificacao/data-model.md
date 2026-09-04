@@ -26,7 +26,7 @@ um valor já congelado seria o sistema decidindo o que a pessoa quis dizer.
 | Campo | Forma | Nota |
 |---|---|---|
 | `id` | UUID, pk | |
-| `inscricao` | FK → `Inscricao`, CASCADE | |
+| `inscricao` | FK → `Inscricao`, **PROTECT** | CASCADE seria mentira: a tabela é append-only e o runtime não tem `DELETE`. É o mesmo motivo de `ResultadoEtapa.inscricao` ser PROTECT |
 | `fato_id` | UUID | identidade **publicada** do fato, não FK para a linha de elaboração — mesma razão de `etapa_id` |
 | `valor_data` | data, nulo | um dos dois, conforme o tipo |
 | `valor_inteiro` | inteiro, nulo | |

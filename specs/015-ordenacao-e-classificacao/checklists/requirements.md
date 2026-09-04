@@ -54,6 +54,18 @@ aberta dentro não é testável. A segunda passagem, depois das respostas, fecha
 - **valor ausente virou requisito** (FR-017), e não suposição: critério sem comportamento declarado
   para valor inexistente impede a publicação da regra.
 
+**Segunda análise cruzada (2026-09-04).** Com C1 e C2 fechados, a passada seguinte pegou o que as
+próprias edições introduziram: a Structure Decision do plano ainda afirmava que nada era acrescentado
+ao `portal`, e a US2 acrescenta; o quickstart não tinha entrega alguma para uma história P1, o que o
+Princípio VI não admite; nenhum contrato descrevia a forma publicada de `declaredFacts` e do teto; e
+`ValorDeFato` estava com `inscricao` em CASCADE numa tabela append-only cujo runtime não tem
+`DELETE` — um CASCADE que nunca poderia executar, corrigido para PROTECT como em
+`ResultadoEtapa.inscricao`.
+
+Três lacunas de cobertura viraram tarefa: o teto contando só submetidas, a Retificação que reduz o
+teto sem invalidar o já submetido, e a ponte entre D-2 e o desempate — inscrição anterior à
+declaração do fato, tratada pelo comportamento declarado para valor ausente.
+
 **Análise cruzada (2026-09-04).** O `speckit-analyze` encontrou uma questão CRITICAL e uma HIGH, e
 as duas eram o mesmo buraco visto de dois lados: onze tarefas implementavam D-2 e D-3 sem um único
 requisito na spec, e o `data-model.md` não modelava as entidades que elas criavam. A leva foi
