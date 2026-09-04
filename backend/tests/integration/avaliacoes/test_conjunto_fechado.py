@@ -16,6 +16,7 @@ import pytest
 from django.utils import timezone
 
 from processo_seletivo.avaliacoes.application.distribuicao import distribuir, propor_rodizio
+from processo_seletivo.avaliacoes.models import Atribuicao
 from processo_seletivo.comissoes.domain.funcoes import Funcao
 from processo_seletivo.shared.api.problems import DomainError
 from tests.fixtures.comissao import (
@@ -148,3 +149,42 @@ def test_encerrado_o_prazo_a_distribuicao_volta_a_ser_admitida(
     )
 
     assert desfecho["feitas"] == len(inscricoes)
+
+
+def test_a_confirmacao_do_rodizio_tambem_recusa(
+    api_client, manager_headers, process_payload, gestor, etapa
+):
+    """A guarda na proposta é consultiva; a que vale é a do caminho que grava.
+
+    Quem chama a confirmação direto não passa pela proposta. E a assinatura carrega apenas os pares
+    inscrição–membro: uma Retificação que reabra o prazo entre ver e confirmar deixaria a proposta
+    válida sobre um conjunto que voltou a crescer.
+    """
+    from processo_seletivo.avaliacoes.application.distribuicao import confirmar_rodizio
+
+    agora = timezone.now()
+    edital, membros, _ = cenario(
+        api_client,
+        manager_headers,
+        process_payload,
+        gestor,
+        etapa,
+        inicio=agora - timedelta(days=1),
+        fim=agora + timedelta(days=2),
+    )
+
+    with pytest.raises(DomainError) as recusa:
+        confirmar_rodizio(
+            actor=gestor,
+            processo_id=edital.processo.id,
+            edital_id=edital.id,
+            etapa_id=etapa,
+            membro_ids=[membros["joao"].id],
+            assinatura="assinatura-qualquer",
+            idempotency_key="confirmar-aberto-01",
+            correlation_id="teste",
+        )
+
+    assert recusa.value.status == 409
+    assert "sem avaliador quem se inscrever depois" in str(recusa.value.detail)
+    assert not Atribuicao.objects.filter(edital=edital).exists()

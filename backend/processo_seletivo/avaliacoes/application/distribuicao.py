@@ -515,6 +515,12 @@ def confirmar_rodizio(
         edital = _edital_do_processo(ctx.processo, edital_id)
         if ctx.repetido:
             return ctx.desfecho_anterior
+        # **Dentro da transação, e não só na proposta.** Guarda em `propor_rodizio` é consultiva:
+        # quem chama a confirmação direto não passa por ela, e a assinatura carrega apenas os pares
+        # inscrição–membro, então uma Retificação que reabra o prazo entre ver e confirmar deixa a
+        # proposta válida enquanto o conjunto voltou a crescer. A regra que decide direito precisa
+        # correr no caminho que **grava** (E2E-017; Princípio IV).
+        _exigir_conjunto_fechado(edital)
         etapa, _, pares, _, fora, _ = _plano_do_rodizio(ctx.processo, edital, etapa_id, ids_membros)
         if rodizio.assinar(pares) != assinatura:
             raise DomainError(
