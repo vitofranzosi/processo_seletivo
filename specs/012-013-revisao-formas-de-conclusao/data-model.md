@@ -63,16 +63,19 @@ as Etapas já em rascunho, que sem isso ficariam impublicáveis (TR-003).
 
 | campo | mudança |
 |---|---|
-| `forma` | **novo**, anulável, `choices=Forma` — gravado na conclusão, lido da versão validada |
-| `sentido` | **novo**, anulável, `choices=Sentido` |
+| `forma` | **novo**, `blank`/`default=""`, `choices=Forma` — gravado na conclusão, lido da versão validada |
+| `sentido` | **novo**, `blank`/`default=""`, `choices=Sentido` |
 | `pontuacao` | inalterado no tipo; deixa de ser exigido pela conclusão em toda forma |
 
-**Backfill obrigatório**, e ele não é opcional: o PostgreSQL valida a tabela inteira ao criar a
-constraint, e toda avaliação já concluída reprovaria com `forma = NULL`.
+**Vazio, e não nulo**: o projeto não usa `NULL` em campo de texto, e a mesma constraint já compara
+`~Q(concluida_por="")`.
+
+**Backfill obrigatório**: o PostgreSQL valida a tabela inteira ao criar a constraint, e toda
+avaliação já concluída reprovaria sem forma.
 
 ```text
 estado = CONCLUIDA  → forma := 'PONTUADA'
-estado = RASCUNHO   → forma permanece NULL
+estado = RASCUNHO   → forma permanece vazia
 ```
 
 Os rascunhos ficam sem forma de propósito: ela é lida e gravada **no ato de concluir**, e carimbá-la
@@ -101,8 +104,10 @@ participam de nenhuma verificação local, e a forma participa da que define "co
 | `sentido` | **novo**, anulável |
 | `pontuacao` | `NOT NULL` → **anulável**, governada pela constraint que alterna |
 
-Append-only por privilégio (`TABELAS_APPEND_ONLY`) e por trigger. Migração em três passos, com
-`DROP TRIGGER` / backfill / `CREATE TRIGGER` na mesma transação (TR-005).
+Append-only por privilégio (`TABELAS_APPEND_ONLY`) e por trigger. **O `DROP TRIGGER` previsto não
+foi necessário**: o preenchimento vem do `DEFAULT` do `ADD COLUMN`, que é DDL e não dispara trigger
+de linha, e `preserve_default=False` remove o default em seguida para que ele não afirme, para
+sempre, que conclusão sem forma é pontuada.
 
 Todas as linhas existentes recebem `forma = 'PONTUADA'` — aqui não há rascunho, porque uma conclusão
 preservada é sempre uma conclusão — e continuam completas sob a regra nova: **nenhuma conclusão

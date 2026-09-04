@@ -84,6 +84,26 @@ def conferir_como_antes(apps, schema_editor):
     schema_editor.execute(CONFERIR_ANTERIOR)
 
 
+# A mesma guarda da migration de `avaliacoes`, e pelo mesmo motivo: reverter devolve `pontuacao` a
+# `NOT NULL`, e um Resultado decisório não tem pontuação. A recusa nomeia o que precisa acontecer
+# antes, em vez de deixar o `migrate` falhar com um erro de coluna nula que não explica nada.
+RECUSAR = (
+    "Existem {quantas} Resultados na forma decisória. Reverter esta migration devolveria a "
+    "pontuação a obrigatória, e esses Resultados não têm pontuação. Desfazê-los é ato "
+    "administrativo, e precisa acontecer antes."
+)
+
+
+def _recusar_se_houver_decisorio(apps, schema_editor):
+    from django.db.migrations.exceptions import IrreversibleError
+
+    quantas = (
+        apps.get_model("resultados", "ResultadoEtapa").objects.filter(forma="DECISORIA").count()
+    )
+    if quantas:
+        raise IrreversibleError(RECUSAR.format(quantas=quantas))
+
+
 class Migration(migrations.Migration):
     dependencies = [
         ("avaliacoes", "0002_conclusao_por_forma"),
@@ -137,4 +157,6 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.RunPython(conferir_por_forma, conferir_como_antes),
+        # Última na lista, e por isso **primeira** na reversão.
+        migrations.RunPython(migrations.RunPython.noop, _recusar_se_houver_decisorio),
     ]

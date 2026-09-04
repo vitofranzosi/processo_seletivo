@@ -192,3 +192,63 @@ def test_a_mesma_chave_com_outra_revisao_e_conflito(gestor, cenario, concluida):
         reabrir(gestor, cenario, concluida, chave="rev", revisao=concluida.revision + 5)
 
     assert recusa.value.code == "idempotency_conflict"
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_conclusao_preservada_e_lida_sob_a_norma_que_a_governou(
+    gestor, api_client, manager_headers
+):
+    """FR-117: preservar o registro sem preservar a leitura preserva metade.
+
+    Uma conclusão decisória apareceria como um traço se a tela lesse a pontuação, e — pior — uma
+    conclusão **pontuada** apareceria como "favorável" se a tela lesse a forma **vigente** depois de
+    uma Retificação que tornasse a Etapa decisória. A forma é a da conclusão, e os rótulos são os da
+    versão que a governou.
+    """
+    from processo_seletivo.avaliacoes.application.selectors import (
+        avaliacoes_inelegiveis,
+        conclusoes_preservadas,
+    )
+    from tests.fixtures.comissao import inscrever
+    from tests.fixtures.mesa import concluir_como, distribuir_para
+    from tests.fixtures.resultado import montar_etapa_de_leitura_unica
+
+    cenario = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=3000, codigo="3000", decisoria=True
+    )
+    inscricao = inscrever(cenario["edital"], 1, primeiro=1)[0]
+    distribuir_para(cenario, gestor, ["joao"], [inscricao], chave="lote-3000")
+    concluir_como(cenario, "joao", inscricao, sentido="DESFAVORAVEL", parecer="Sem diploma.")
+
+    linhas, _ = conclusoes_preservadas(edital=cenario["edital"], etapa_id=cenario["primeira"])
+
+    assert [linha["conclusao_exibivel"] for linha in linhas] == ["Indeferido"]
+    # E o seletor de inelegíveis usa a mesma leitura, embora aqui não haja nenhuma.
+    assert avaliacoes_inelegiveis(edital=cenario["edital"], etapa_id=cenario["primeira"])[0] == []
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_conclusao_pontuada_nao_vira_favoravel_depois_de_a_etapa_virar_decisoria(
+    gestor, api_client, manager_headers
+):
+    """O caso que a forma vigente estragaria: a norma mudou, a conclusão histórica não."""
+    from processo_seletivo.avaliacoes.application.selectors import conclusoes_preservadas
+    from tests.fixtures.comissao import inscrever
+    from tests.fixtures.mesa import concluir_como, distribuir_para
+    from tests.fixtures.resultado import montar_etapa_de_leitura_unica
+
+    cenario = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=3001, codigo="3001"
+    )
+    inscricao = inscrever(cenario["edital"], 1, primeiro=1)[0]
+    distribuir_para(cenario, gestor, ["joao"], [inscricao], chave="lote-3001")
+    concluir_como(cenario, "joao", inscricao, pontuacao="75")
+
+    linhas, _ = conclusoes_preservadas(edital=cenario["edital"], etapa_id=cenario["primeira"])
+
+    # Nenhum rótulo a mostrar: a conclusão é pontuada, e continuará sendo qualquer que seja a
+    # forma que a Etapa venha a publicar depois.
+    assert linhas[0]["conclusao_exibivel"] is None
+    assert linhas[0]["conclusao"].forma == "PONTUADA"

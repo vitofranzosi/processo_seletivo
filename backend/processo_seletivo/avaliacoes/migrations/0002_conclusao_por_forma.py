@@ -32,6 +32,31 @@ UPDATE avaliacoes_avaliacao SET forma = '' WHERE forma = 'PONTUADA';
 """
 
 
+# A reversão só é válida enquanto **nenhuma conclusão decisória existir**, e isso não é descuido:
+# desfazer este passo é afirmar de novo que concluída significa "tem nota", e uma linha decisória
+# não tem nota para oferecer. Sem esta guarda, o `migrate` para trás falharia lá adiante, com um
+# `IntegrityError` de coluna nula que não diz o que aconteceu.
+#
+# A recusa vem **primeiro** na reversão — por isso a operação é a última da lista —, e ela nomeia o
+# que precisa acontecer antes: as conclusões decisórias são histórico, e desfazê-las é decisão
+# administrativa, não de implantação.
+RECUSAR = (
+    "Existem {quantas} conclusões na forma decisória. Reverter esta migration afirmaria de novo "
+    "que concluir exige nota, e essas conclusões não têm nota. Desfazê-las é ato administrativo, "
+    "e precisa acontecer antes."
+)
+
+
+def _recusar_se_houver_decisoria(apps, schema_editor):
+    from django.db.migrations.exceptions import IrreversibleError
+
+    quantas = 0
+    for rotulo, modelo in (("avaliacoes", "Avaliacao"), ("avaliacoes", "ConclusaoAvaliacao")):
+        quantas += apps.get_model(rotulo, modelo).objects.filter(forma="DECISORIA").count()
+    if quantas:
+        raise IrreversibleError(RECUSAR.format(quantas=quantas))
+
+
 class Migration(migrations.Migration):
     dependencies = [
         ("avaliacoes", "0001_initial"),
@@ -107,4 +132,6 @@ class Migration(migrations.Migration):
                 name="ck_conclusao_completa_por_forma",
             ),
         ),
+        # Última na lista, e por isso **primeira** na reversão.
+        migrations.RunPython(migrations.RunPython.noop, _recusar_se_houver_decisoria),
     ]

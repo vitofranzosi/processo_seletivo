@@ -169,6 +169,13 @@ A leitura da forma acontece **na transação que conclui**, do conteúdo da vers
 não numa segunda consulta, e não da tela. Retificação consolidada no intervalo é recusada por
 FR-073/FR-088, com a frase que já existe.
 
+> **Revisto na implementação.** Dois pontos desta seção e da seguinte não sobreviveram ao código, e
+> ambos para melhor: o projeto proíbe `NULL` em campo de texto, então a ausência de forma e de
+> sentido é **vazio**; e o `DROP TRIGGER` em torno do backfill é desnecessário, porque o
+> preenchimento da conclusão preservada vem do `DEFAULT` do `ADD COLUMN` — DDL, que não dispara
+> trigger de linha — com `preserve_default=False` removendo o default logo depois. O que ficou está
+> em [`traceability.md`](./traceability.md) §3.
+
 ## TR-004a — `Avaliacao`: o backfill que a constraint nova exige
 
 `Avaliacao` **não** é append-only e não tem trigger; o backfill dela é um `UPDATE` comum. Mas ele é

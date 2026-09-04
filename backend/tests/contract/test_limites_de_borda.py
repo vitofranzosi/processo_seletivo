@@ -429,3 +429,61 @@ def test_retificacao_nao_contorna_a_faixa_do_percentual(
     assert resposta.status_code == 422, resposta.content
     assert "maior que zero e menor ou igual a cem" in resposta.json()["detail"]
     assert caminho in resposta.json()["detail"]
+
+
+def _recusa_de_etapa(campo, valor, *, forma="PONTUADA"):
+    """Se a forma publicada recusa a Etapa com aquele campo naquele valor.
+
+    Monta a Etapa inteira, porque no conteúdo publicado toda chave está sempre presente e a
+    aplicabilidade é verificada **entre** campos.
+    """
+    from processo_seletivo.editais.domain.validation import validate_for_publication
+
+    etapa = {
+        "id": "00000000-0000-0000-0000-0000000000e9",
+        "name": "Análise documental",
+        "order": 1,
+        "weight": None,
+        "eliminatory": True,
+        "classificatory": False,
+        "minimumScore": None,
+        "evaluationsPerRegistration": 1,
+        "maximumScore": None,
+        "forma": forma,
+        "rotuloFavoravel": "Deferido" if forma == "DECISORIA" else None,
+        "rotuloDesfavoravel": "Indeferido" if forma == "DECISORIA" else None,
+        "scheduleEventId": None,
+    }
+    etapa[campo] = valor
+    achados = validate_for_publication({"schemaVersion": 6, "stages": [etapa]})
+    return any(achado.path.endswith(f"/{campo}") for achado in achados)
+
+
+# ------------------------------- os três campos da revisão 012–013 (D-008, FR-119)
+
+
+@pytest.mark.contract
+@pytest.mark.parametrize(
+    ("valor", "por_que"),
+    [
+        ("pontuada", "minúscula, e o conteúdo publicado grafa o enum em maiúsculas"),
+        ("ORDINAL", "a terceira forma existe como possibilidade e não como valor"),
+        ("", "vazio não é uma forma"),
+        (" PONTUADA", "espaço à esquerda, forma que o sistema nunca escreve"),
+    ],
+)
+def test_forma_fora_da_grafia_canonica_e_recusada(valor, por_que):
+    assert _recusa_de_etapa("forma", valor), por_que
+
+
+@pytest.mark.contract
+def test_forma_nula_e_recusada():
+    """O único campo não anulável da Etapa publicada: `null` criaria duas grafias para a v6."""
+    assert _recusa_de_etapa("forma", None)
+
+
+@pytest.mark.contract
+@pytest.mark.parametrize("valor", ["", "   ", "\t"])
+def test_rotulo_em_branco_nao_conta_como_publicado(valor):
+    """Um documento com vazio no lugar do indeferimento não diz nada a quem lê o Edital."""
+    assert _recusa_de_etapa("rotuloFavoravel", valor, forma="DECISORIA")

@@ -138,6 +138,13 @@ class Avaliacao(models.Model):
                 condition=Q(estado="CONCLUIDA"),
                 name="uq_avaliacao_concluida_por_pessoa",
             ),
+            # `sentido__in` e não `~Q(sentido="")`: `TextChoices` valida no formulário e no
+            # `full_clean`, e **não cria constraint** — é a mesma razão pela qual
+            # `ck_resultado_consequencia` existe do outro lado. Sem nomear os dois valores, um
+            # `INSERT` cru com sentido inventado entraria, e `_consequencia_decisoria` trataria
+            # tudo que não fosse `DESFAVORAVEL` como favorável: uma inscrição habilitada por um
+            # valor que ninguém escreveu.
+            #
             # O que "concluída" significa, dito no banco. **Completa deixou de significar "tem
             # nota" e passou a significar "tem o que a forma exige"** (D-008, FR-116): o invariante
             # forte não foi relaxado, e o que mudou foi o que ele afirma. Sem versão, instante,
@@ -154,7 +161,11 @@ class Avaliacao(models.Model):
                     & ~Q(concluida_por="")
                     & (
                         Q(forma=Forma.PONTUADA, pontuacao__isnull=False, sentido="")
-                        | Q(forma=Forma.DECISORIA, pontuacao__isnull=True) & ~Q(sentido="")
+                        | Q(
+                            forma=Forma.DECISORIA,
+                            pontuacao__isnull=True,
+                            sentido__in=Sentido.values,
+                        )
                     )
                 ),
                 name="ck_avaliacao_concluida_completa",
@@ -203,7 +214,7 @@ class ConclusaoAvaliacao(models.Model):
             # registro inválido entraria uma vez e ficaria, porque nada o corrige depois.
             models.CheckConstraint(
                 condition=Q(forma=Forma.PONTUADA, pontuacao__isnull=False, sentido="")
-                | Q(forma=Forma.DECISORIA, pontuacao__isnull=True) & ~Q(sentido=""),
+                | Q(forma=Forma.DECISORIA, pontuacao__isnull=True, sentido__in=Sentido.values),
                 name="ck_conclusao_completa_por_forma",
             ),
         ]

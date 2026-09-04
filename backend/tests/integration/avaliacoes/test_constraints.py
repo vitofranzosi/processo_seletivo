@@ -297,3 +297,19 @@ def test_a_conclusao_preservada_decisoria_com_pontuacao_e_recusada(cenario_de_co
             concluida_em=timezone.now(),
             concluida_por="joao",
         )
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+@postgresql_only
+def test_sentido_inventado_e_recusado_pelo_banco(cenario_de_constraint):
+    """`TextChoices` não cria constraint: sem nomear os dois valores, o banco aceita qualquer um.
+
+    O efeito não seria uma linha feia: `_consequencia_decisoria` trata tudo que não é
+    `DESFAVORAVEL` como favorável, de modo que a inscrição sairia **habilitada** por um valor que
+    ninguém escreveu. É a mesma razão pela qual `ck_resultado_consequencia` já existia na 013.
+    """
+    atribuicao, versao = cenario_de_constraint
+
+    with pytest.raises(IntegrityError, match="ck_avaliacao_concluida_completa"):
+        _decisoria(atribuicao, versao, sentido="QUALQUER")

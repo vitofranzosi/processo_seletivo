@@ -142,7 +142,12 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
   ver ao voltar é a nota, o parecer e quando aquilo foi afirmado.
   {% endcomment %}
   <div class="registro-da-avaliacao">
-    {% if decisoria %}
+    {% comment %}
+    A forma é a **da conclusão**, e não a vigente: uma Retificação que tornasse a Etapa decisória
+    faria uma nota antiga aparecer como favorável, e o registro histórico passaria a dizer o que
+    ninguém afirmou. É o mesmo motivo pelo qual a conclusão guarda a forma (FR-117).
+    {% endcomment %}
+    {% if avaliacao.forma == "DECISORIA" %}
     <p class="nota"><strong>{% if avaliacao.sentido == "DESFAVORAVEL" %}{{ rotulo_desfavoravel }}{% else %}{{ rotulo_favoravel }}{% endif %}</strong></p>
     {% else %}
     <p class="nota"><strong>{{ avaliacao.pontuacao|pontuacao }}</strong>{% if maxima %} <span>de {{ maxima|pontuacao }}</span>{% endif %}</p>

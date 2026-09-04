@@ -92,3 +92,38 @@ def _rotulo(valor):
         return None
     limpo = valor.strip()
     return limpo or None
+
+
+def conclusao_exibivel(forma, pontuacao, sentido, etapa):
+    """O que a conclusão afirmou, dito no vocabulário sob o qual ela foi feita.
+
+    **A forma é a da conclusão, e a Etapa é a da versão que a governou** — não a vigente. Ler a
+    forma vigente para renderizar histórico faria uma conclusão pontuada aparecer como favorável
+    depois de uma Retificação que tornasse a Etapa decisória, e uma decisória preservada aparecer
+    como um traço. É o mesmo motivo pelo qual a conclusão guarda a forma (FR-117): preservar o
+    registro sem preservar a leitura preserva metade.
+
+    Devolve `None` na forma pontuada, porque ali quem exibe é o filtro de pontuação — esta função
+    responde "há um rótulo a mostrar no lugar do número?".
+    """
+    if forma != Forma.DECISORIA:
+        return None
+    favoravel, desfavoravel = rotulos(etapa)
+    if sentido == "DESFAVORAVEL":
+        return desfavoravel or "desfavorável"
+    if sentido == "FAVORAVEL":
+        return favoravel or "favorável"
+    return None
+
+
+def etapa_do_conteudo(conteudo, etapa_id):
+    """A Etapa daquela identidade no conteúdo publicado, ou `{}`.
+
+    `{}` e não `None`: quem chama vai perguntar pelos rótulos, e a ausência de conteúdo histórico
+    significa "sem rótulo a mostrar", não erro.
+    """
+    alvo = str(etapa_id)
+    for etapa in (conteudo or {}).get("stages") or []:
+        if isinstance(etapa, dict) and str(etapa.get("id")) == alvo:
+            return etapa
+    return {}

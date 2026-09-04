@@ -10,11 +10,11 @@ antes de T001 e comparado ao final:
 
 ```text
 baseline   2750 testes coletados
-final      2807 testes coletados
+final      2819 testes coletados
 sumiram       0
 ```
 
-**Nenhum teste que existia deixou de existir.** A contagem cresce porque a revisão acrescentou 57
+**Nenhum teste que existia deixou de existir.** A contagem cresce porque a revisão acrescentou 69
 testes — exigir que ela não crescesse seria exigir que a revisão não fosse testada.
 
 ### As asserções que mudaram, e por quê
@@ -85,3 +85,18 @@ E dois defeitos foram encontrados escrevendo, ambos silenciosos:
   carimbado como v4 — uma grafia que nunca existiu;
 - `ck_resultado_completo_por_forma` é inalcançável pelo caminho comum, porque a trigger
   `BEFORE INSERT` chega primeiro. Ela permanece como defesa em profundidade, e o teste diz isso.
+
+
+## 4. O que a revisão do PR encontrou, e que a suíte verde não cobria
+
+Três bloqueadores e dois menores, todos reais, todos corrigidos antes do merge. Ficam registrados
+porque o padrão que os une é instrutivo: **os três P1 eram invisíveis para uma suíte que só
+exercitava o caminho feliz da forma nova.**
+
+| achado | o que estava errado | o que passou a existir |
+|---|---|---|
+| **P1 · a conclusão histórica lida pela norma vigente** | a Mesa renderizava conclusão concluída pela forma **vigente**, e as duas telas históricas só mostravam pontuação. Uma decisória preservada aparecia como traço; depois de uma Retificação de forma, uma pontuada apareceria como favorável | `conclusao_exibivel` lê a forma **da conclusão** e os rótulos da versão que a governou; os dois seletores resolvem o conteúdo histórico uma vez por versão distinta |
+| **P1 · o banco aceitava qualquer sentido** | as três constraints só exigiam `~Q(sentido="")`. `TextChoices` não cria constraint, e `_consequencia_decisoria` trata tudo que não é `DESFAVORAVEL` como favorável: uma inscrição sairia **habilitada** por um valor inventado | `sentido__in=Sentido.values` nas três, com migration própria e `INSERT` cru de prova. Era o padrão que `ck_resultado_consequencia` já estabelecia, e não seguido |
+| **P1 · a reversão falharia com dado decisório** | reverter restaura a constraint que exige nota e devolve `pontuacao` a `NOT NULL`; qualquer linha decisória a derruba, com um erro de coluna nula que não explica nada | guarda que recusa a reversão nomeando o ato administrativo que precisa vir antes, e teste que a exercita **com dado** — o anterior só verificava que havia caminho declarado |
+| **P2 · o cabeçalho dizia "Pontuação"** | sobre uma célula que trazia "Deferido" | "Conclusão" |
+| **P2 · artefatos descrevendo o desenho abandonado** | `data-model.md` e `research.md` ainda falavam em `NULL` e `DROP TRIGGER`; T007 estava marcado sem o teste correspondente | artefatos alinhados ao que existe, e os limites de borda dos três campos escritos |

@@ -185,6 +185,44 @@ def test_o_salto_para_a_forma_da_conclusao_preenche_o_historico(
     assert esperadas <= _installed_triggers(), "o salto não recriou as triggers que derrubou"
 
 
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+@postgresql_only
+def test_a_reversao_recusa_quando_ja_existe_conclusao_decisoria(
+    gestor, api_client, manager_headers
+):
+    """Reverter é possível **enquanto ninguém tiver concluído por decisão** — e a recusa diz isso.
+
+    Desfazer o passo é afirmar de novo que concluída significa "tem nota", e uma conclusão decisória
+    não tem nota para oferecer. Sem a guarda, o `migrate` para trás falharia adiante com um erro de
+    coluna nula que não explica o que aconteceu; com ela, a recusa nomeia o ato administrativo que
+    precisa vir antes.
+
+    O teste anterior verificava apenas que existe caminho de volta declarado. Este verifica o que
+    esse caminho faz quando há dado — que é quando ele importa.
+    """
+    from django.db.migrations.exceptions import IrreversibleError
+
+    from tests.fixtures.comissao import inscrever
+    from tests.fixtures.mesa import concluir_como, distribuir_para
+    from tests.fixtures.resultado import montar_etapa_de_leitura_unica
+
+    inicial = MigrationExecutor(connection)
+    inicial.loader.build_graph()
+    inicial.migrate(inicial.loader.graph.leaf_nodes())
+
+    cenario = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=1950, codigo="1950", decisoria=True
+    )
+    inscricao = inscrever(cenario["edital"], 1, primeiro=1)[0]
+    distribuir_para(cenario, gestor, ["joao"], [inscricao], chave="lote-1950")
+    concluir_como(cenario, "joao", inscricao, sentido="DESFAVORAVEL", parecer="Sem diploma.")
+
+    executor = MigrationExecutor(connection)
+    with pytest.raises(IrreversibleError, match="Desfazê-las é ato administrativo"):
+        executor.migrate([("avaliacoes", "0001_initial")])
+
+
 def _semear_historico_pontuado(gestor, api_client, manager_headers):
     """Uma avaliação concluída, um rascunho, uma conclusão preservada e um Resultado — pontuados.
 

@@ -86,7 +86,7 @@ class ResultadoEtapa(models.Model):
             # não a tivesse, e num registro append-only o inválido entra uma vez e fica.
             models.CheckConstraint(
                 condition=Q(forma=Forma.PONTUADA, pontuacao__isnull=False, sentido="")
-                | Q(forma=Forma.DECISORIA, pontuacao__isnull=True) & ~Q(sentido=""),
+                | Q(forma=Forma.DECISORIA, pontuacao__isnull=True, sentido__in=Sentido.values),
                 name="ck_resultado_completo_por_forma",
             ),
             models.CheckConstraint(

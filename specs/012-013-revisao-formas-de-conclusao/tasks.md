@@ -107,9 +107,9 @@ nova, nenhuma permissão nova.**
 ### O esquema da conclusão e do Resultado
 
 - [X] T015 Acrescentar `forma` e `sentido` a `Avaliacao` **e** a `ConclusaoAvaliacao` em `backend/processo_seletivo/avaliacoes/models.py`, com **duas** verificações de banco nomeadas — `ck_avaliacao_concluida_completa` reescrita para alternar por forma, e `ck_conclusao_completa_por_forma` nova na tabela append-only, que hoje garante completude por `NOT NULL` e deixa de poder fazê-lo —, relaxando `ConclusaoAvaliacao.pontuacao` (TR-004, TR-005)
-- [X] T016 Escrever a migration de `backend/processo_seletivo/avaliacoes/migrations/` que acrescenta as quatro colunas anuláveis, faz os **dois backfills** — `Avaliacao` só onde `estado = 'CONCLUIDA'`, e `ConclusaoAvaliacao` inteira —, e só então cria as duas constraints, derrubando e recriando `conclusao_avaliacao_append_only` em torno do backfill, na mesma transação (TR-004a, TR-005)
+- [X] T016 Escrever a migration de `backend/processo_seletivo/avaliacoes/migrations/` que acrescenta as quatro colunas anuláveis, faz os **dois backfills** — `Avaliacao` só onde `estado = 'CONCLUIDA'`, e `ConclusaoAvaliacao` inteira, esta pelo `DEFAULT` do `ADD COLUMN` com `preserve_default=False` —, e só então cria as duas constraints (TR-004a, TR-005)
 - [X] T017 Acrescentar `forma` e `sentido` a `ResultadoEtapa` em `backend/processo_seletivo/resultados/models.py`, relaxar `pontuacao` e criar `ck_resultado_completo_por_forma` — a verificação que alterna, hoje inexistente porque `pontuacao` era `NOT NULL` (TR-006)
-- [X] T018 Escrever a migration de `backend/processo_seletivo/resultados/migrations/` com **`dependencies` explícita na migration criada em T016**, porque o SQL de `check_stage_result_source()` lê `avaliacoes_avaliacao.forma` e `.sentido` e o grafo do Django não infere isso da ordem das tarefas; ela acrescenta as colunas, faz o backfill, cria a constraint e reescreve a trigger para comparar **forma, pontuação e sentido incondicionalmente**, recriando também `resultado_etapa_append_only` (TR-006)
+- [X] T018 Escrever a migration de `backend/processo_seletivo/resultados/migrations/` com **`dependencies` explícita na migration criada em T016**, porque o SQL de `check_stage_result_source()` lê `avaliacoes_avaliacao.forma` e `.sentido` e o grafo do Django não infere isso da ordem das tarefas; ela acrescenta as colunas, faz o backfill pelo `DEFAULT` do `ADD COLUMN`, cria a constraint e reescreve a trigger para comparar **forma, pontuação e sentido incondicionalmente** (TR-006)
 
 ### A regra da 013 que precisa mudar antes de qualquer Resultado decisório
 
@@ -119,7 +119,7 @@ nova, nenhuma permissão nova.**
 ### A prova do salto — junto das migrations, e não no fim
 
 - [X] T021 Incluir `avaliacoes` e `resultados` em `APPS`, e `conclusao_avaliacao_append_only`, `resultado_etapa_append_only` e `resultado_etapa_coerente` em `TRIGGERS`, em `backend/tests/migrations/test_migrations.py` — hoje nenhuma migration desses dois apps é exercida por teste de upgrade
-- [X] T022 Escrever, em `backend/tests/migrations/test_migrations.py`, o teste `postgresql_only` que aplica as migrations até o estado anterior, cria Avaliação concluída, rascunho, conclusão preservada e Resultado pontuados, aplica as três migrations novas e confere os três backfills, o rascunho **sem** forma e as três triggers recriadas (TR-014)
+- [X] T022 Escrever, em `backend/tests/migrations/test_migrations.py`, o teste `postgresql_only` que aplica as migrations até o estado anterior, cria Avaliação concluída, rascunho, conclusão preservada e Resultado pontuados, aplica as três migrations novas e confere os três backfills, o rascunho **sem** forma e as três triggers no lugar; e recusa a reversão, nomeando o ato administrativo que precisa vir antes, quando já existe conclusão decisória (TR-014)
 
 **Checkpoint**: a norma está publicada, o esquema mudou de significado e o salto está provado com dados
 
