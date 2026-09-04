@@ -69,9 +69,10 @@ institucional de `interface`, com os fragmentos htmx já embarcados. Há altera�
 001 — o schema do Perfil publicado ganha a coleção nova, e o teste de contrato exige que todo campo
 publicado seja obrigatório (`tests/contract/test_forma_publicada.py:109-116`).
 
-**Storage**: PostgreSQL. **Três migrations**, pela leva decidida (ver §Fases): uma em `editais` — o
-marco e seus critérios, os **fatos declarados** de D-2 e o teto `maxInscricoesPorCandidato` de D-3,
-todos como linhas de elaboração no molde de `ModalidadeConcorrencia`; uma em `inscricoes` — os
+**Storage**: PostgreSQL. **Quatro migrations**, pela leva decidida (ver §Fases): uma em `editais` — o
+marco, seus critérios e os **fatos declarados** de D-2, como linhas de elaboração no molde de
+`ModalidadeConcorrencia`; uma em `processos` — o teto `maxInscricoesPorCandidato` de D-3, que é campo
+do **`Edital`** e mora naquele app; uma em `inscricoes` — os
 valores **congelados na submissão** e o que a trava do par identidade–Edital exige; e uma no app novo
 `classificacao` — o ato, as posições, a unicidade da raiz e do sucessor, e duas triggers (coerência
 no `INSERT` e append-only no `UPDATE`/`DELETE`, esta **sem exceção alguma**). Nenhuma migration em
@@ -108,7 +109,7 @@ souber descer até `profiles`, todo conteúdo v6 publicado fica irretificável.
 
 **Scale/Scope**: um Edital com mil inscritos, quatro Etapas e até três marcos por Perfil. Com a leva
 decidida: **duas** coleções normativas novas — marco e fatos declarados — mais um campo publicado,
-numa elevação canônica única; **seis** tabelas novas — marco, critério, fato declarado, valor congelado, ato e posição; três funções de domínio; duas rotas novas; uma
+numa elevação canônica única; **seis** tabelas novas — marco, critério, fato declarado, valor congelado, ato e posição — e um campo no `Edital`; três funções de domínio; duas rotas novas; uma
 tela nova; e o caminho do conteúdo publicado percorrido **uma** vez para as três mudanças, em vez de
 três vezes.
 
@@ -170,6 +171,7 @@ backend/processo_seletivo/
 │   ├── domain/colecoes.py                # ALTERADO: COLECOES_COM_CHAVE
 │   ├── domain/elevacao.py                # ALTERADO: degrau 7, e elevar() desce até profiles
 │   └── infrastructure/pdf.py             # ALTERADO: render dentro de _perfis
+├── processos/models.py                   # ALTERADO (D-3): o teto é campo do Edital
 ├── shared/canonical.py                   # ALTERADO: SCHEMA_VERSION 6→7 e a história
 ├── portal/                               # ALTERADO (D-2): o canal do candidato
 │   ├── views.py                          #   campos dos fatos declarados na inscrição

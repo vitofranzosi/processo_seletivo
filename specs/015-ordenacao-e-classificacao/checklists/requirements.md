@@ -54,6 +54,19 @@ aberta dentro não é testável. A segunda passagem, depois das respostas, fecha
 - **valor ausente virou requisito** (FR-017), e não suposição: critério sem comportamento declarado
   para valor inexistente impede a publicação da regra.
 
+**Regressão de escopo em D-3, corrigida antes de implementar (2026-09-04).** O teto de inscrições
+tinha sido modelado como campo do **Perfil**. Não implementa D-3, que o define no **Edital**, e ainda
+é redundante: `uq_inscricao_identidade_edital_perfil` já garante uma inscrição por Perfil, de modo
+que um teto por Perfil com valor 1 repete a constraint e com valor maior descreve o que ela proíbe. O
+campo passou para o `Edital`, que mora em `processos/models.py` — e por isso a migration também
+estava no app errado. No snapshot ele é campo de **raiz**, e é o único dos três que a elevação 6→7
+resolve no nível superior.
+
+Junto foram três coisas que a correção expôs: o checkpoint da Foundational ainda prometia congelar
+fatos e aplicar o teto, que viraram US2; o grafo desenhava `US4 ← US5 ← US6`, dizendo o contrário da
+frase ao lado, que as declara independentes; e D-1, que corre em paralelo mas é **lida** pela US3,
+não estava registrada como dependência de integração — agora está, no topo daquela fase.
+
 **Terceira análise cruzada (2026-09-04).** Zero CRITICAL, zero HIGH, zero tarefas órfãs. O que
 sobrou foi de duas naturezas, e as duas foram fechadas: a árvore de código do plano ainda não listava
 `portal/`, embora a prosa ao lado já dissesse que ele recebe os campos dos fatos — a rodada anterior

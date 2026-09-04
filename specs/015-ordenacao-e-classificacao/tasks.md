@@ -68,15 +68,18 @@ nasce nesta feature — `classificacao` —, e as telas ficam em `interface`.
 - [ ] T007 Teste: conteúdo v6 publicado continua retificável depois da elevação, em `backend/tests/integration/publicacoes/test_elevacao_de_versao.py`
 - [ ] T008 [P] Declarar as coleções novas em `COLECOES_COM_CHAVE` em `backend/processo_seletivo/publicacoes/domain/colecoes.py`
 - [ ] T009 [P] Modelo `FatoDeclarado` (D-2) em `backend/processo_seletivo/editais/models/perfis.py`, com identidade estável e tipo restrito a data e inteiro
-- [ ] T010 [P] Campo `max_inscricoes_por_candidato` (D-3), anulável, em `backend/processo_seletivo/editais/models/perfis.py`
-- [ ] T011 Migration de `editais` com `FatoDeclarado`, o teto e as unicidades, em `backend/processo_seletivo/editais/migrations/`
-- [ ] T012 Emitir `declaredFacts` e `maxInscricoesPorCandidato` no snapshot em `backend/processo_seletivo/publicacoes/application/publish_edital.py`
-- [ ] T013 Teste: mudar o tipo de um fato cria fato novo, e o valor congelado permanece legível sob a norma que o governou, em `backend/tests/unit/editais/`
-- [ ] T014 [P] Atualizar as fixtures de snapshot em `backend/tests/fixtures/snapshot.py` e o `rebaixar()` de `backend/tests/fixtures/legado.py`
-- [ ] T015 [P] Atualizar `seed_demo` em `backend/processo_seletivo/processos/management/commands/seed_demo.py`
-- [ ] T016 Atualizar os testes que travam a versão canônica com o literal `6` — `test_forma_publicada.py`, `test_contrato_de_inscricao.py`, `test_quickstart.py`, `test_elevacao.py`, `test_etapas.py`, `test_limites_de_borda.py`
+- [ ] T010 [P] Campo `max_inscricoes_por_candidato` (D-3), anulável, em `backend/processo_seletivo/processos/models.py` — é do **`Edital`**, e não do Perfil: no Perfil ele seria redundante com `uq_inscricao_identidade_edital_perfil`, que já existe
+- [ ] T011 Migration de `editais` com `FatoDeclarado` e suas unicidades, em `backend/processo_seletivo/editais/migrations/`
+- [ ] T012 Migration de `processos` com o teto, em `backend/processo_seletivo/processos/migrations/`
+- [ ] T013 Emitir `declaredFacts` dentro do laço do Perfil e `maxInscricoesPorCandidato` **na raiz** do snapshot, em `backend/processo_seletivo/publicacoes/application/publish_edital.py`
+- [ ] T014 Teste: mudar o tipo de um fato cria fato novo, e o valor congelado permanece legível sob a norma que o governou, em `backend/tests/unit/editais/`
+- [ ] T015 [P] Atualizar as fixtures de snapshot em `backend/tests/fixtures/snapshot.py` e o `rebaixar()` de `backend/tests/fixtures/legado.py`
+- [ ] T016 [P] Atualizar `seed_demo` em `backend/processo_seletivo/processos/management/commands/seed_demo.py`
+- [ ] T017 Atualizar os testes que travam a versão canônica com o literal `6` — `test_forma_publicada.py`, `test_contrato_de_inscricao.py`, `test_quickstart.py`, `test_elevacao.py`, `test_etapas.py`, `test_limites_de_borda.py`
 
-**Checkpoint**: a versão 7 publica, retifica e eleva; a inscrição congela fatos; o teto vale.
+**Checkpoint**: a versão 7 publica, retifica e eleva, carregando as três mudanças de forma — marco,
+fatos declarados e teto. **Nada de comportamento ainda**: coletar, congelar e aplicar o teto é a US2,
+e calcular é a US3.
 
 ---
 
@@ -88,26 +91,26 @@ publica; retifica.
 **Teste independente**: elaborar um marco com dois critérios, publicar, e verificar que ele aparece
 no PDF e no conteúdo canônico, endereçado por identidade.
 
-- [ ] T017 [P] [US1] Modelo `MarcoClassificatorio` em `backend/processo_seletivo/editais/models/perfis.py`
-- [ ] T018 [P] [US1] Modelo `CriterioDesempate`, com `ordem` única no marco e `quando_ausente` não anulável, em `backend/processo_seletivo/editais/models/perfis.py`
-- [ ] T019 [US1] Migration de `editais` com os dois modelos e `uq_marco_perfil_code`, `uq_criterio_marco_ordem`
-- [ ] T020 [US1] Validação de elaboração em `backend/processo_seletivo/editais/domain/perfis.py`
-- [ ] T021 [US1] Serializer aninhado e campo em `ProfileSerializer` em `backend/processo_seletivo/editais/api/serializers.py`
-- [ ] T022 [US1] Preservar identidades em `replace_draft` e estender `_identidades_aninhadas_alheias` em `backend/processo_seletivo/editais/application/draft.py`
-- [ ] T023 [US1] Emitir `classificationMilestones` no laço do Perfil, com `tiebreakers` ordenados por `order`, em `backend/processo_seletivo/publicacoes/application/publish_edital.py`
-- [ ] T024 [US1] Função de validação de publicação no molde de `_faixa_do_percentual`, registrada em `validate_for_publication`, em `backend/processo_seletivo/editais/domain/validation.py`
-- [ ] T025 [US1] Teste: publicação recusada quando o marco enumera Etapa não classificatória, em `backend/tests/unit/editais/`
-- [ ] T026 [US1] Teste: publicação recusada quando um critério não declara `whenMissing` — o defeito de inventar semântica no cálculo, em `backend/tests/unit/editais/`
-- [ ] T027 [US1] Teste: Retificação que remove Etapa enumerada sem ajustar o marco é recusada — é aqui que o critério pendurado é impedido, em `backend/tests/integration/publicacoes/`
-- [ ] T028 [P] [US1] Ler, renderizar e **persistir** o marco em `backend/processo_seletivo/interface/forms.py`, com prefixo composto pelo índice do Perfil
-- [ ] T029 [US1] Fragmento htmx e reexibição do marco e do critério em `backend/processo_seletivo/interface/views.py`
-- [ ] T030 [P] [US1] Templates `_marco.html` e `_criterio.html` em `backend/processo_seletivo/interface/templates/interface/`
-- [ ] T031 [US1] `CAMPOS_MARCO` e `CAMPOS_CRITERIO` e o laço aninhado em `campos_editaveis` em `backend/processo_seletivo/interface/retificacao.py`
-- [ ] T032 [US1] Teste: reordenar critérios por Retificação altera a ordem calculada e **preserva os identificadores** — o defeito de substituir a lista inteira, em `backend/tests/integration/publicacoes/`
-- [ ] T033 [US1] Render do marco dentro de `_perfis` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`
-- [ ] T034 [US1] Regenerar a fixture byte-a-byte `documento_publicado_v1.pdf` na mesma tarefa que muda a composição, com o diff revisado
-- [ ] T035 [P] [US1] Schemas publicados e referência em `PerfilPublicado` em `specs/001-processo-seletivo-editais/contracts/openapi.yaml`
-- [ ] T036 [US1] Teste: `colecoes_nao_declaradas` e `elementos_sem_chave` vazios sobre snapshot realmente publicado — o único guarda que pega coleção aninhada esquecida, em `backend/tests/integration/publicacoes/test_enderecamento.py`
+- [ ] T018 [P] [US1] Modelo `MarcoClassificatorio` em `backend/processo_seletivo/editais/models/perfis.py`
+- [ ] T019 [P] [US1] Modelo `CriterioDesempate`, com `ordem` única no marco e `quando_ausente` não anulável, em `backend/processo_seletivo/editais/models/perfis.py`
+- [ ] T020 [US1] Migration de `editais` com os dois modelos e `uq_marco_perfil_code`, `uq_criterio_marco_ordem`
+- [ ] T021 [US1] Validação de elaboração em `backend/processo_seletivo/editais/domain/perfis.py`
+- [ ] T022 [US1] Serializer aninhado e campo em `ProfileSerializer` em `backend/processo_seletivo/editais/api/serializers.py`
+- [ ] T023 [US1] Preservar identidades em `replace_draft` e estender `_identidades_aninhadas_alheias` em `backend/processo_seletivo/editais/application/draft.py`
+- [ ] T024 [US1] Emitir `classificationMilestones` no laço do Perfil, com `tiebreakers` ordenados por `order`, em `backend/processo_seletivo/publicacoes/application/publish_edital.py`
+- [ ] T025 [US1] Função de validação de publicação no molde de `_faixa_do_percentual`, registrada em `validate_for_publication`, em `backend/processo_seletivo/editais/domain/validation.py`
+- [ ] T026 [US1] Teste: publicação recusada quando o marco enumera Etapa não classificatória, em `backend/tests/unit/editais/`
+- [ ] T027 [US1] Teste: publicação recusada quando um critério não declara `whenMissing` — o defeito de inventar semântica no cálculo, em `backend/tests/unit/editais/`
+- [ ] T028 [US1] Teste: Retificação que remove Etapa enumerada sem ajustar o marco é recusada — é aqui que o critério pendurado é impedido, em `backend/tests/integration/publicacoes/`
+- [ ] T029 [P] [US1] Ler, renderizar e **persistir** o marco em `backend/processo_seletivo/interface/forms.py`, com prefixo composto pelo índice do Perfil
+- [ ] T030 [US1] Fragmento htmx e reexibição do marco e do critério em `backend/processo_seletivo/interface/views.py`
+- [ ] T031 [P] [US1] Templates `_marco.html` e `_criterio.html` em `backend/processo_seletivo/interface/templates/interface/`
+- [ ] T032 [US1] `CAMPOS_MARCO` e `CAMPOS_CRITERIO` e o laço aninhado em `campos_editaveis` em `backend/processo_seletivo/interface/retificacao.py`
+- [ ] T033 [US1] Teste: reordenar critérios por Retificação altera a ordem calculada e **preserva os identificadores** — o defeito de substituir a lista inteira, em `backend/tests/integration/publicacoes/`
+- [ ] T034 [US1] Render do marco dentro de `_perfis` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`
+- [ ] T035 [US1] Regenerar a fixture byte-a-byte `documento_publicado_v1.pdf` na mesma tarefa que muda a composição, com o diff revisado
+- [ ] T036 [P] [US1] Schemas publicados e referência em `PerfilPublicado` em `specs/001-processo-seletivo-editais/contracts/openapi.yaml`
+- [ ] T037 [US1] Teste: `colecoes_nao_declaradas` e `elementos_sem_chave` vazios sobre snapshot realmente publicado — o único guarda que pega coleção aninhada esquecida, em `backend/tests/integration/publicacoes/test_enderecamento.py`
 
 **Checkpoint**: o Edital declara e publica a regra; nada calcula ainda.
 
@@ -120,20 +123,20 @@ no PDF e no conteúdo canônico, endereçado por identidade.
 **Teste independente**: declarar dois fatos, submeter, alterar o perfil depois e verificar que os
 valores congelados não mudaram.
 
-- [ ] T037 [US2] Modelo `ValorDeFato` em `backend/processo_seletivo/inscricoes/models.py`, com `fato_id` pela identidade publicada e `ck_valor_conforme_tipo`
-- [ ] T038 [US2] Congelar os fatos na **submissão**, contra a `versao_aceita`, em `backend/processo_seletivo/inscricoes/` — nunca na abertura do rascunho
-- [ ] T039 [US2] Migration de `inscricoes` com os valores congelados, em `backend/processo_seletivo/inscricoes/migrations/`
-- [ ] T040 [US2] Aplicar o teto de D-3 na submissão, serializando pelo par identidade–Edital, em `backend/processo_seletivo/inscricoes/application/`
-- [ ] T041 [US2] Teste: duas submissões concorrentes de Perfis diferentes não ultrapassam o teto, em `backend/tests/integration/inscricoes/`
-- [ ] T042 [US2] Teste: rascunho abandonado não consome direito — o teto conta só inscrições submetidas, em `backend/tests/integration/inscricoes/`
-- [ ] T043 [US2] Teste: Retificação que reduz o teto não invalida inscrição já submetida sob a norma que a admitia, em `backend/tests/integration/inscricoes/`
-- [ ] T044 [US2] Registrar `ValorDeFato` em `TABELAS_APPEND_ONLY` em `backend/processo_seletivo/seguranca/papeis.py`
-- [ ] T045 [P] [US2] Campos dos fatos declarados no formulário da inscrição em `backend/processo_seletivo/portal/` e no template correspondente
-- [ ] T046 [US2] Teste: editar o perfil depois da submissão muda zero valores congelados, em `backend/tests/integration/inscricoes/`
-- [ ] T047 [US2] Teste: inscrição submetida **antes** de o fato ser declarado permanece válida, e o critério que o consome a trata pelo comportamento declarado para valor ausente — a ponte entre D-2 e o desempate, em `backend/tests/integration/classificacao/`
-- [ ] T048 [P] [US2] Teste: Edital sem fato declarado apresenta zero campos novos na inscrição, em `backend/tests/integration/inscricoes/`
-- [ ] T049 [US2] Teste: rascunho aberto durante a Retificação que acrescenta fato revê a versão nova antes de confirmar, em `backend/tests/integration/inscricoes/`
-- [ ] T050 [US2] Teste de autorização: os valores congelados não vazam para outro candidato nem para quem não administra, em `backend/tests/authorization/`
+- [ ] T038 [US2] Modelo `ValorDeFato` em `backend/processo_seletivo/inscricoes/models.py`, com `fato_id` pela identidade publicada e `ck_valor_conforme_tipo`
+- [ ] T039 [US2] Congelar os fatos na **submissão**, contra a `versao_aceita`, em `backend/processo_seletivo/inscricoes/` — nunca na abertura do rascunho
+- [ ] T040 [US2] Migration de `inscricoes` com os valores congelados, em `backend/processo_seletivo/inscricoes/migrations/`
+- [ ] T041 [US2] Aplicar o teto de D-3 na submissão, com trava **do par identidade–Edital** — nunca da inscrição, que deixaria duas submissões concorrentes de Perfis diferentes passarem as duas pelo teto; a trava serializa as inscrições de uma pessoa num Edital, e não as de todo mundo, em `backend/processo_seletivo/inscricoes/application/`
+- [ ] T042 [US2] Teste: duas submissões concorrentes de Perfis diferentes não ultrapassam o teto, em `backend/tests/integration/inscricoes/`
+- [ ] T043 [US2] Teste: rascunho abandonado não consome direito — o teto conta só inscrições submetidas, em `backend/tests/integration/inscricoes/`
+- [ ] T044 [US2] Teste: Retificação que reduz o teto não invalida inscrição já submetida sob a norma que a admitia, em `backend/tests/integration/inscricoes/`
+- [ ] T045 [US2] Registrar `ValorDeFato` em `TABELAS_APPEND_ONLY` em `backend/processo_seletivo/seguranca/papeis.py`
+- [ ] T046 [P] [US2] Campos dos fatos declarados no formulário da inscrição em `backend/processo_seletivo/portal/` e no template correspondente
+- [ ] T047 [US2] Teste: editar o perfil depois da submissão muda zero valores congelados, em `backend/tests/integration/inscricoes/`
+- [ ] T048 [US2] Teste: inscrição submetida **antes** de o fato ser declarado permanece válida, e o critério que o consome a trata pelo comportamento declarado para valor ausente — a ponte entre D-2 e o desempate, em `backend/tests/integration/classificacao/`
+- [ ] T049 [P] [US2] Teste: Edital sem fato declarado apresenta zero campos novos na inscrição, em `backend/tests/integration/inscricoes/`
+- [ ] T050 [US2] Teste: rascunho aberto durante a Retificação que acrescenta fato revê a versão nova antes de confirmar, em `backend/tests/integration/inscricoes/`
+- [ ] T051 [US2] Teste de autorização: os valores congelados não vazam para outro candidato nem para quem não administra, em `backend/tests/authorization/`
 
 **Checkpoint**: o desempate por idade e por experiência passa a ter valor para ler.
 
@@ -141,34 +144,40 @@ valores congelados não mudaram.
 
 ## Phase 5: US3 — Emitir a ordem de um marco (P1)
 
+> **⚠️ Dependência de integração, e ela não é desta feature.** D-1 — `origem` e `versao` no
+> `ResultadoEtapa` — corre em paralelo, como extensão da 013. A US3 **lê** `ResultadoEtapa.versao`
+> como âncora normativa do que entrou na ordem; enquanto D-1 não estiver integrada, a versão só é
+> alcançável por `avaliacao__versao`, e o Resultado por Ocorrência fica fora de qualquer ordem.
+> Confirmar a integração antes de iniciar esta fase, e não durante.
+
 **Meta**: a ordem é calculada na abertura, conferida e emitida como ato imutável.
 
 **Teste independente**: com Resultados consolidados, calcular e emitir; o snapshot é imutável e traz
 posição, participante e proveniência.
 
-- [ ] T051 [P] [US3] `combinacao.py` — pontuação combinada a partir da operação, dos `weight` publicados, da normalização e do arredondamento, em `backend/processo_seletivo/classificacao/domain/`
-- [ ] T052 [P] [US3] `desempate.py` — critérios na ordem publicada, `quando_ausente`, empate residual e numeração `1, 1, 3`, em `backend/processo_seletivo/classificacao/domain/`
-- [ ] T053 [P] [US3] Teste da tabela-verdade do desempate, sem banco, em `backend/tests/unit/classificacao/test_desempate.py`
-- [ ] T054 [P] [US3] Teste: a numeração é sempre "quantos estão à frente mais um", e "os N primeiros" seleciona N pessoas, em `backend/tests/unit/classificacao/`
-- [ ] T055 [P] [US3] Teste: ausência de pontuação nunca vira zero, em `backend/tests/unit/classificacao/`
-- [ ] T056 [US3] Modelos `AtoDeOrdenacao` e `PosicaoNaOrdem` em `backend/processo_seletivo/classificacao/models.py`, com `ato_anterior` e **sem** campo `vigente`
-- [ ] T057 [US3] Migration do app com `uq_ato_raiz_por_marco`, `uq_ato_sucessor_unico`, `uq_posicao_por_ato_inscricao`, `ck_posicao_ou_motivo`, `ck_sucessao_com_motivo` e as duas triggers
-- [ ] T058 [US3] Registrar as duas tabelas em `TABELAS_APPEND_ONLY` em `backend/processo_seletivo/seguranca/papeis.py`
-- [ ] T059 [US3] Registrar os nomes das triggers em `TRIGGERS_POR_APP` em `backend/tests/migrations/test_migrations.py` — sem isso o teste estrutural não as enxerga
-- [ ] T060 [US3] Teste: alteração recusada pelo ORM **e** por SQL cru; a append-only não tem exceção alguma — o defeito do ato mutável, em `backend/tests/integration/classificacao/test_imutabilidade_do_ato.py`
-- [ ] T061 [US3] `calculo.py` — leitura única, `conteudos_das_versoes` para desduplicar por versão, laço sem consulta, em `backend/processo_seletivo/classificacao/application/`
-- [ ] T062 [US3] `emissao.py` sob `comando_de_comissao`, com `ctx.repetido` como primeira verificação e `resultado_declarado` no desfecho, em `backend/processo_seletivo/classificacao/application/`
-- [ ] T063 [US3] Trilha: `auditar(...)` **uma vez por ato**, com `permissao=ctx.base.permissao` e sem pontuação, em `backend/processo_seletivo/classificacao/application/emissao.py`
-- [ ] T064 [US3] Rotas do marco e da emissão em `backend/processo_seletivo/interface/urls.py`
-- [ ] T065 [US3] Views `ordenacao` (GET) e `emitir_ordenacao` (POST) com guarda, sessão e POST-redirect-GET, em `backend/processo_seletivo/interface/views.py`
-- [ ] T066 [US3] Template `ordenacao.html`, **sem** campo de posição, pontuação ou desempate no formulário, em `backend/processo_seletivo/interface/templates/interface/`
-- [ ] T067 [US3] Teste: abrir a tela produz zero atos, zero gravações e zero eventos, em `backend/tests/integration/classificacao/`
-- [ ] T068 [US3] Teste: duas emissões concorrentes produzem exatamente um vigente, e a segunda recebe 409, em `backend/tests/integration/classificacao/`
-- [ ] T069 [US3] Teste de autorização: emitir sem base de gestão responde 404 uniforme; consultar aceita `auditoria:consultar`, em `backend/tests/authorization/`
-- [ ] T070 [US3] Teste: participante eliminado na Etapa fica sem posição, e posições mais considerados fecham com o universo, em `backend/tests/integration/classificacao/`
+- [ ] T052 [P] [US3] `combinacao.py` — pontuação combinada a partir da operação, dos `weight` publicados, da normalização e do arredondamento, em `backend/processo_seletivo/classificacao/domain/`
+- [ ] T053 [P] [US3] `desempate.py` — critérios na ordem publicada, `quando_ausente`, empate residual e numeração `1, 1, 3`, em `backend/processo_seletivo/classificacao/domain/`
+- [ ] T054 [P] [US3] Teste da tabela-verdade do desempate, sem banco, em `backend/tests/unit/classificacao/test_desempate.py`
+- [ ] T055 [P] [US3] Teste: a numeração é sempre "quantos estão à frente mais um", e "os N primeiros" seleciona N pessoas, em `backend/tests/unit/classificacao/`
+- [ ] T056 [P] [US3] Teste: ausência de pontuação nunca vira zero, em `backend/tests/unit/classificacao/`
+- [ ] T057 [US3] Modelos `AtoDeOrdenacao` e `PosicaoNaOrdem` em `backend/processo_seletivo/classificacao/models.py`, com `ato_anterior` e **sem** campo `vigente`
+- [ ] T058 [US3] Migration do app com `uq_ato_raiz_por_marco`, `uq_ato_sucessor_unico`, `uq_posicao_por_ato_inscricao`, `ck_posicao_ou_motivo`, `ck_sucessao_com_motivo` e as duas triggers
+- [ ] T059 [US3] Registrar as duas tabelas em `TABELAS_APPEND_ONLY` em `backend/processo_seletivo/seguranca/papeis.py`
+- [ ] T060 [US3] Registrar os nomes das triggers em `TRIGGERS_POR_APP` em `backend/tests/migrations/test_migrations.py` — sem isso o teste estrutural não as enxerga
+- [ ] T061 [US3] Teste: alteração recusada pelo ORM **e** por SQL cru; a append-only não tem exceção alguma — o defeito do ato mutável, em `backend/tests/integration/classificacao/test_imutabilidade_do_ato.py`
+- [ ] T062 [US3] `calculo.py` — leitura única, `conteudos_das_versoes` para desduplicar por versão, laço sem consulta, em `backend/processo_seletivo/classificacao/application/`
+- [ ] T063 [US3] `emissao.py` sob `comando_de_comissao`, com `ctx.repetido` como primeira verificação e `resultado_declarado` no desfecho, em `backend/processo_seletivo/classificacao/application/`
+- [ ] T064 [US3] Trilha: `auditar(...)` **uma vez por ato**, com `permissao=ctx.base.permissao` e sem pontuação, em `backend/processo_seletivo/classificacao/application/emissao.py`
+- [ ] T065 [US3] Rotas do marco e da emissão em `backend/processo_seletivo/interface/urls.py`
+- [ ] T066 [US3] Views `ordenacao` (GET) e `emitir_ordenacao` (POST) com guarda, sessão e POST-redirect-GET, em `backend/processo_seletivo/interface/views.py`
+- [ ] T067 [US3] Template `ordenacao.html`, **sem** campo de posição, pontuação ou desempate no formulário, em `backend/processo_seletivo/interface/templates/interface/`
+- [ ] T068 [US3] Teste: abrir a tela produz zero atos, zero gravações e zero eventos, em `backend/tests/integration/classificacao/`
+- [ ] T069 [US3] Teste: duas emissões concorrentes produzem exatamente um vigente, e a segunda recebe 409, em `backend/tests/integration/classificacao/`
+- [ ] T070 [US3] Teste de autorização: emitir sem base de gestão responde 404 uniforme; consultar aceita `auditoria:consultar`, em `backend/tests/authorization/`
+- [ ] T071 [US3] Teste: participante eliminado na Etapa fica sem posição, e posições mais considerados fecham com o universo, em `backend/tests/integration/classificacao/`
 
-- [ ] T071 [US3] Teste: a tela identifica o grupo empatado como grupo, para que ninguém infira precedência onde o Edital não a declarou (FR-027), em `backend/tests/integration/classificacao/`
-- [ ] T072 [US3] Teste de autorização: os fatos do candidato usados em desempate só são alcançáveis por quem administra e audita, e nunca por outro candidato (FR-053), em `backend/tests/authorization/`
+- [ ] T072 [US3] Teste: a tela identifica o grupo empatado como grupo, para que ninguém infira precedência onde o Edital não a declarou (FR-027), em `backend/tests/integration/classificacao/`
+- [ ] T073 [US3] Teste de autorização: os fatos do candidato usados em desempate só são alcançáveis por quem administra e audita, e nunca por outro candidato (FR-053), em `backend/tests/authorization/`
 **Checkpoint**: a ordem existe como ato, e não muda mais.
 
 ---
@@ -180,18 +189,18 @@ posição, participante e proveniência.
 **Teste independente**: emitir, consolidar Resultado tardio, e ver o vigente marcado com a
 divergência.
 
-- [ ] T073 [US4] `universo.py` — o recorte declarado e a comparação de obsolescência, em `backend/processo_seletivo/classificacao/domain/`
-- [ ] T074 [US4] `selectors.py` — ato vigente derivado de `ato_anterior`, posições paginadas e divergência, em `backend/processo_seletivo/classificacao/application/`
-- [ ] T075 [US4] Divergência posição a posição na tela em `backend/processo_seletivo/interface/templates/interface/ordenacao.html`
-- [ ] T076 [US4] Marca de **obsoleto e não recomputável** quando o marco não existe mais no conteúdo vigente, em `backend/processo_seletivo/classificacao/application/selectors.py`
-- [ ] T077 [US4] Teste: Retificação que alcança a regra obsoleta o ato **sem nenhum Resultado novo**, em `backend/tests/integration/classificacao/`
-- [ ] T078 [US4] Teste: Resultado novo fora do universo declarado produz zero marcações, em `backend/tests/integration/classificacao/`
-- [ ] T079 [US4] Teste: marco removido deixa o ato obsoleto e não recomputável, **e ainda reproduzível** pela versão histórica, em `backend/tests/integration/classificacao/`
-- [ ] T080 [US4] Teste de performance: a contagem de consultas não cresce entre um marco pequeno e um de 1.000 participantes, em `backend/tests/performance/test_ordenacao.py`
-- [ ] T081 [US4] Teste de performance: o percurso de 1.000 participantes fica dentro do teto medido com `time.monotonic()` contra um `BUDGET_SECONDS` abaixo do limite de SC-002 — o defeito de provar tempo por contagem de consultas, em `backend/tests/performance/test_ordenacao.py`
+- [ ] T074 [US4] `universo.py` — o recorte declarado e a comparação de obsolescência, em `backend/processo_seletivo/classificacao/domain/`
+- [ ] T075 [US4] `selectors.py` — ato vigente derivado de `ato_anterior`, posições paginadas e divergência, em `backend/processo_seletivo/classificacao/application/`
+- [ ] T076 [US4] Divergência posição a posição na tela em `backend/processo_seletivo/interface/templates/interface/ordenacao.html`
+- [ ] T077 [US4] Marca de **obsoleto e não recomputável** quando o marco não existe mais no conteúdo vigente, em `backend/processo_seletivo/classificacao/application/selectors.py`
+- [ ] T078 [US4] Teste: Retificação que alcança a regra obsoleta o ato **sem nenhum Resultado novo**, em `backend/tests/integration/classificacao/`
+- [ ] T079 [US4] Teste: Resultado novo fora do universo declarado produz zero marcações, em `backend/tests/integration/classificacao/`
+- [ ] T080 [US4] Teste: marco removido deixa o ato obsoleto e não recomputável, **e ainda reproduzível** pela versão histórica, em `backend/tests/integration/classificacao/`
+- [ ] T081 [US4] Teste de performance: a contagem de consultas não cresce entre um marco pequeno e um de 1.000 participantes, em `backend/tests/performance/test_ordenacao.py`
+- [ ] T082 [US4] Teste de performance: o percurso de 1.000 participantes fica dentro do teto medido com `time.monotonic()` contra um `BUDGET_SECONDS` abaixo do limite de SC-002 — o defeito de provar tempo por contagem de consultas, em `backend/tests/performance/test_ordenacao.py`
 
-- [ ] T082 [US4] Teste: Resultado tardio **dentro** do universo faz o vigente aparecer como obsoleto (SC-008) — hoje só o caminho negativo é exercitado, em `backend/tests/integration/classificacao/`
-- [ ] T083 [US4] Teste: ato obsoleto continua vigente, consultável e produzindo efeito até que outro seja emitido (FR-038), em `backend/tests/integration/classificacao/`
+- [ ] T083 [US4] Teste: Resultado tardio **dentro** do universo faz o vigente aparecer como obsoleto (SC-008) — hoje só o caminho negativo é exercitado, em `backend/tests/integration/classificacao/`
+- [ ] T084 [US4] Teste: ato obsoleto continua vigente, consultável e produzindo efeito até que outro seja emitido (FR-038), em `backend/tests/integration/classificacao/`
 **Checkpoint**: a divergência é observável, e o vigente não muda por leitura.
 
 ---
@@ -202,14 +211,14 @@ divergência.
 
 **Teste independente**: reproduzir um ato a partir da proveniência e comparar posição a posição.
 
-- [ ] T084 [US5] View e template do ato, com proveniência inteira e o critério que separou cada par de vizinhas, em `backend/processo_seletivo/interface/`
-- [ ] T085 [US5] Rota do ato em `backend/processo_seletivo/interface/urls.py`
-- [ ] T086 [US5] `marcar_como_privada` na resposta que carrega posição, pontuação e fatos de desempate, em `backend/processo_seletivo/interface/views.py`
-- [ ] T087 [US5] Teste: reproduzir a partir da proveniência devolve a mesma ordem, posição a posição, sem consultar o estado vigente, em `backend/tests/integration/classificacao/`
-- [ ] T088 [US5] Teste: divergência entre reproduzido e snapshot é detectável — a garantia contra mudança silenciosa de implementação, em `backend/tests/integration/classificacao/`
-- [ ] T089 [US5] Teste: não existe rota que recalcule o passado, em `backend/tests/contract/`
+- [ ] T085 [US5] View e template do ato, com proveniência inteira e o critério que separou cada par de vizinhas, em `backend/processo_seletivo/interface/`
+- [ ] T086 [US5] Rota do ato em `backend/processo_seletivo/interface/urls.py`
+- [ ] T087 [US5] `marcar_como_privada` na resposta que carrega posição, pontuação e fatos de desempate, em `backend/processo_seletivo/interface/views.py`
+- [ ] T088 [US5] Teste: reproduzir a partir da proveniência devolve a mesma ordem, posição a posição, sem consultar o estado vigente, em `backend/tests/integration/classificacao/`
+- [ ] T089 [US5] Teste: divergência entre reproduzido e snapshot é detectável — a garantia contra mudança silenciosa de implementação, em `backend/tests/integration/classificacao/`
+- [ ] T090 [US5] Teste: não existe rota que recalcule o passado, em `backend/tests/contract/`
 
-- [ ] T090 [US5] Teste: para duas posições vizinhas separadas por desempate, a consulta nomeia o critério e os valores usados (FR-050, SC-010), em `backend/tests/integration/classificacao/`
+- [ ] T091 [US5] Teste: para duas posições vizinhas separadas por desempate, a consulta nomeia o critério e os valores usados (FR-050, SC-010), em `backend/tests/integration/classificacao/`
 **Checkpoint**: a proveniência sustenta a auditoria sem operação administrativa nova.
 
 ---
@@ -220,22 +229,22 @@ divergência.
 
 **Teste independente**: emitir dois atos e verificar um vigente e o anterior íntegro.
 
-- [ ] T091 [US6] Sucessão por linha nova, com `ato_anterior` e motivo, em `backend/processo_seletivo/classificacao/application/emissao.py`
-- [ ] T092 [US6] `confirmacao_do_calculo` no POST e recusa 422 quando a leitura é anterior ao vigente, em `backend/processo_seletivo/interface/views.py`
-- [ ] T093 [US6] Histórico da sucessão na tela do marco, em `backend/processo_seletivo/interface/templates/interface/ordenacao.html`
-- [ ] T094 [US6] Teste: depois da sucessão há exatamente um vigente, e o anterior permanece **inalterado** e consultável, em `backend/tests/integration/classificacao/`
-- [ ] T095 [US6] Teste: sucessão a partir de leitura anterior ao vigente é recusada, em `backend/tests/integration/classificacao/`
+- [ ] T092 [US6] Sucessão por linha nova, com `ato_anterior` e motivo, em `backend/processo_seletivo/classificacao/application/emissao.py`
+- [ ] T093 [US6] `confirmacao_do_calculo` no POST e recusa 422 quando a leitura é anterior ao vigente, em `backend/processo_seletivo/interface/views.py`
+- [ ] T094 [US6] Histórico da sucessão na tela do marco, em `backend/processo_seletivo/interface/templates/interface/ordenacao.html`
+- [ ] T095 [US6] Teste: depois da sucessão há exatamente um vigente, e o anterior permanece **inalterado** e consultável, em `backend/tests/integration/classificacao/`
+- [ ] T096 [US6] Teste: sucessão a partir de leitura anterior ao vigente é recusada, em `backend/tests/integration/classificacao/`
 
 ---
 
 ## Phase 9: Polish & Cross-Cutting
 
-- [ ] T096 [P] Teste de aceitação do percurso inteiro do quickstart em `backend/tests/acceptance/test_ordenacao.py`
-- [ ] T097 [P] Verificar 375 px sem tabela horizontal na tela do marco
-- [ ] T098 [P] Rodar `test_citacoes_de_requisito.py` depois de qualquer renumeração de requisito
-- [ ] T099 [P] Teste de guarda: pesos que não somam 1 publicam normalmente (FR-012); a feature não aplica corte nem vaga (FR-055); e não existe rota que exponha a ordem a candidato ou público (FR-056), em `backend/tests/contract/`
-- [ ] T100 Rodar a suíte inteira com `TEST_DB_ENGINE=postgresql` e `DB_NAME` próprio do worktree
-- [ ] T101 Conferir que nenhum teste da 013 mudou de comportamento — a 015 não altera Resultado algum
+- [ ] T097 [P] Teste de aceitação do percurso inteiro do quickstart em `backend/tests/acceptance/test_ordenacao.py`
+- [ ] T098 [P] Verificar 375 px sem tabela horizontal na tela do marco
+- [ ] T099 [P] Rodar `test_citacoes_de_requisito.py` depois de qualquer renumeração de requisito
+- [ ] T100 [P] Teste de guarda: pesos que não somam 1 publicam normalmente (FR-012); a feature não aplica corte nem vaga (FR-055); e não existe rota que exponha a ordem a candidato ou público (FR-056), em `backend/tests/contract/`
+- [ ] T101 Rodar a suíte inteira com `TEST_DB_ENGINE=postgresql` e `DB_NAME` próprio do worktree
+- [ ] T102 Conferir que nenhum teste da 013 mudou de comportamento — a 015 não altera Resultado algum
 
 ---
 
@@ -244,20 +253,24 @@ divergência.
 ```text
 Setup (T001-T003)
    ↓
-Foundational (T004-T016) ......... bloqueia tudo; a elevação sobe uma vez só
+Foundational (T004-T017) ......... bloqueia tudo; a elevação sobe uma vez só
    ↓
-US1 (T017-T036) ..................... a regra publicada
+US1 (T018-T037) ..................... a regra publicada
    ↓
-US2 (T037-T050) ..................... os fatos congelados
+US2 (T038-T051) ..................... os fatos congelados
    ↓
-US3 (T051-T072) ..................... o cálculo e o ato
+US3 (T052-T073) ..................... o cálculo e o ato        ← exige D-1 integrada
    ↓
-US4 (T073-T083) ← US5 (T084-T090) ← US6 (T091-T095)
+   ├── US4 (T074-T084) .............. a obsolescência
+   ├── US5 (T085-T091) .............. a proveniência
+   └── US6 (T092-T096) .............. a sucessão
    ↓
-Polish (T096-T101)
+Polish (T097-T102)
 ```
 
-US4, US5 e US6 dependem de US3 e são independentes entre si — podem ser feitas em qualquer ordem, ou
+As três últimas pendem de US3 e **não** pendem umas das outras — a primeira redação deste grafo
+desenhava `US4 ← US5 ← US6`, que dizia o contrário da frase ao lado. Elas dependem de US3 e são
+independentes entre si — podem ser feitas em qualquer ordem, ou
 em paralelo por pessoas diferentes. **US2 não bloqueia US3 tecnicamente**: o cálculo roda com
 critérios que só leem pontuação. Ela vem antes porque, sem fato congelado, o desempate por idade e
 por experiência é inexecutável — e porque o congelamento acontece na submissão, que não retroage

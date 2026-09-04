@@ -38,11 +38,19 @@ um valor já congelado seria o sistema decidindo o que a pessoa quis dizer.
 de inscrição, e esta feature não a cria. É o comportamento que D-2 pede, porque congelar é o ponto
 inteiro; e é rigoroso o bastante para merecer estar escrito em vez de descoberto.
 
-### Campo novo em `PerfilVaga` (D-3)
+### Campo novo em `Edital` (D-3) — app `processos`
 
-`max_inscricoes_por_candidato`, inteiro anulável. Ausência significa **sem limite**, que é o
-comportamento de hoje. A constraint existente `(identidade, edital, perfil)` permanece — ela impede a
-duplicata por Perfil, e o campo novo limita o total (FR-063).
+`max_inscricoes_por_candidato`, inteiro anulável, **no `Edital`** (`processos/models.py`), e não no
+Perfil. Ausência significa **sem limite**, que é o comportamento de hoje.
+
+**Por que não no Perfil, dito porque a primeira redação errou isso.** A restrição de hoje é
+`uq_inscricao_identidade_edital_perfil` — uma inscrição por Perfil, várias por Edital. Um teto por
+Perfil não acrescentaria nada: com valor 1 ele repete a constraint que já existe, e com valor maior
+descreve algo que a constraint proíbe. O que os Editais 14 (7.8) e 57 exigem é **uma inscrição por
+Edital**, que é limite sobre o total — e total é do certame, não de um dos Perfis dele.
+
+A constraint existente permanece: ela impede a duplicata por Perfil, e o campo novo limita o total
+(FR-063).
 
 ### `MarcoClassificatorio`
 

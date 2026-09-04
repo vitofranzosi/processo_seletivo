@@ -47,9 +47,14 @@ declaredFacts: [
 ]
 ```
 
-`maxInscricoesPorCandidato` — campo **do Perfil**, inteiro ou `null`. `null` significa sem limite, e
-é o comportamento de hoje; a ausência da chave não é forma válida, pela convenção de que todo campo
+`maxInscricoesPorCandidato` — campo **da raiz do snapshot**, ao lado de `number`, `year` e `title`,
+inteiro ou `null`. É do Edital porque limita o **total** de inscrições da pessoa no certame; no
+Perfil ele seria redundante com a unicidade `(identidade, edital, perfil)` que já existe. `null`
+significa sem limite, e a ausência da chave não é forma válida, pela convenção de que todo campo
 publicado é obrigatório.
+
+Sendo campo de raiz, ele é o **único** dos três que a elevação 6→7 resolve no nível superior — os
+outros dois descem para dentro de `profiles`.
 
 **O que a validação recusa:** fato sem `code` único no Perfil; `type` fora dos dois valores; critério
 de desempate que aponte fato inexistente no mesmo conteúdo (FR-017); teto negativo ou zero.
