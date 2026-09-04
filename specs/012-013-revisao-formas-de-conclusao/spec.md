@@ -45,14 +45,17 @@ originais de 012 e 013, que já estão entregues.
 | **E4** | Ler no Edital publicado como a Etapa é concluída | **P2** | 012: FR-119, SC-016 · P-007 | J1 | F5 |
 | **E5** | Oficializar o Resultado da Etapa decisória | **P1** | 013: FR-046, FR-049, FR-016, FR-025, SC-012 | J3 | F6 |
 | **E6** | Não oficializar o que o Edital não publicou | **P1** | 013: FR-047, FR-048, SC-013, SC-014 | J4 | F6 |
-| **E7** | Provar que nada da forma pontuada mudou, e que o salto funciona com dados | **P1** | 012: FR-124 · 013: FR-050 | garantias de banco | F7 |
+| **E7** | Provar que nada da forma pontuada mudou | **P1** | 012: FR-124 · 013: FR-050 | varredura das seis | F7 |
 
 As fases F1 a F7 estão em [plan.md](./plan.md); as jornadas J1 a J6, em
 [quickstart.md](./quickstart.md).
 
-**E7 não é fase de encerramento decorativa.** A revisão mexe em três tabelas com dados históricos e
-em duas triggers append-only; a suíte comum roda sobre banco já migrado e por isso não demonstra o
-salto. Sem E7, o que se prova é que o esquema novo funciona — não que a migração até ele funciona.
+**A prova do salto de versão não espera E7.** A revisão mexe em três tabelas com dados históricos e
+em duas triggers append-only, e a suíte comum roda sobre banco já migrado — ela demonstra que o
+esquema novo funciona, não que a migração até ele funciona. Por isso o teste de upgrade com
+`MigrationExecutor` é executado **junto das migrations**, e não no fim: um backfill descoberto
+quebrado na última fase invalidaria as cinco anteriores. E7 fica com o que só faz sentido no fim — a
+varredura de não regressão e as seis jornadas.
 
 ## Fora de escopo
 
