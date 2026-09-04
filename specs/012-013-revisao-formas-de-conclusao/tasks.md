@@ -70,9 +70,9 @@ nova, nenhuma permissão nova.**
 
 **Purpose**: os dois enums e a leitura da ausência, antes de qualquer coisa depender deles
 
-- [ ] T001 [P] Criar `Forma` (`PONTUADA`, `DECISORIA`) e `Sentido` (`FAVORAVEL`, `DESFAVORAVEL`) em `backend/processo_seletivo/avaliacoes/domain/formas.py`, com a razão de o rótulo publicado **não** morar aqui (D-008.2)
-- [ ] T002 Acrescentar `forma_publicada(etapa)` e `rotulos(etapa)` a `backend/processo_seletivo/avaliacoes/domain/previsao.py`, mantendo o contrato do arquivo — a ausência interpretada num lugar só, e `PONTUADA` como o que ela significa (012, FR-120)
-- [ ] T003 Testar os dois leitores em `backend/tests/unit/avaliacoes/test_previsao.py`: **ausência** e `null` são lidos como `PONTUADA` — o leitor é defensivo de propósito, embora o validador de publicação recuse `null` na v6 (TR-003) —, valor literal atravessa, e valor fora do enum cai em `PONTUADA` sem estourar, como `avaliacoes_previstas` já faz com lixo
+- [X] T001 [P] Criar `Forma` (`PONTUADA`, `DECISORIA`) e `Sentido` (`FAVORAVEL`, `DESFAVORAVEL`) em `backend/processo_seletivo/avaliacoes/domain/formas.py`, com a razão de o rótulo publicado **não** morar aqui (D-008.2)
+- [X] T002 Acrescentar `forma_publicada(etapa)` e `rotulos(etapa)` a `backend/processo_seletivo/avaliacoes/domain/previsao.py`, mantendo o contrato do arquivo — a ausência interpretada num lugar só, e `PONTUADA` como o que ela significa (012, FR-120)
+- [X] T003 Testar os dois leitores em `backend/tests/unit/avaliacoes/test_previsao.py`: **ausência** e `null` são lidos como `PONTUADA` — o leitor é defensivo de propósito, embora o validador de publicação recuse `null` na v6 (TR-003) —, valor literal atravessa, e valor fora do enum cai em `PONTUADA` sem estourar, como `avaliacoes_previstas` já faz com lixo
 
 **Checkpoint**: o vocabulário existe e é lido de um lugar só
 
