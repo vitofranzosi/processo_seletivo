@@ -31,6 +31,11 @@ TEXTO, INTEIRO, INSTANTE = "texto", "inteiro", "instante"
 # o motor endereçava os três, a interface alcançava nenhum. Estes três tipos são o que faltava
 # para descrevê-los — decimal canônico, texto longo e booleano.
 DECIMAL, TEXTO_LONGO, BOOLEANO = "decimal", "texto_longo", "booleano"
+# O Documento Exigido trouxe o primeiro campo que **não** é escalar digitado: `profileId` e
+# `modalityId` referenciam entidades do próprio conteúdo, e `null` neles significa "sem restrição"
+# (009, FR-009). Digitar UUID à mão faria um erro de digitação mudar em silêncio quem precisa
+# enviar o quê — que é o que `documentos.aplicaveis` decide a partir destes dois campos.
+REFERENCIA = "referencia"
 
 # (sufixo do caminho, rótulo, tipo) — aplicado a cada Perfil e a cada Evento.
 CAMPOS_PERFIL = [
@@ -82,6 +87,17 @@ CAMPOS_ETAPA = [
 # Só o conteúdo. O catálogo de seções é fixo: título, ordem, tipo e origem divergentes são
 # recusados pela verificação de topologia, e uma seção gerada nem campo de conteúdo tem.
 CAMPOS_SECAO = [("content", "Texto da seção", TEXTO_LONGO)]
+# E2E-004. `key` fica de fora de propósito: é a identificação estável com que a inscrição já
+# submetida nomeia o arquivo enviado, e trocá-la depois de publicado desligaria o documento do que
+# os candidatos mandaram. O que se corrige aqui é o que a pessoa lê e a quem o documento se aplica.
+CAMPOS_DOCUMENTO = [
+    ("name", "Nome", TEXTO),
+    ("instructions", "Instrução ao candidato", TEXTO_LONGO),
+    ("required", "Obrigatório", BOOLEANO),
+    ("order", "Ordem", INTEIRO),
+    ("profileId", "Exigido apenas do Perfil", REFERENCIA),
+    ("modalityId", "Exigido apenas da modalidade", REFERENCIA),
+]
 
 LISTA = "lista"
 # Um Perfil ou Evento acrescentado entra no snapshot publicado; precisa nascer com a mesma
@@ -140,7 +156,8 @@ def _para_formulario(valor, tipo):
     return str(valor)
 
 
-def _grupo(titulo, caminho, item, campos, *, removivel=True):
+def _grupo(titulo, caminho, item, campos, *, removivel=True, opcoes=None):
+    opcoes = opcoes or {}
     return {
         "titulo": titulo,
         "caminho": caminho,
@@ -151,10 +168,36 @@ def _grupo(titulo, caminho, item, campos, *, removivel=True):
                 "rotulo": rotulo,
                 "tipo": tipo,
                 "valor": _para_formulario(_valor(item, chave), tipo),
+                # Vazia em todo campo escalar, e é o que faz o `select` existir só onde há o que
+                # escolher. A mesma tupla que a tela lê é a que o POST confere.
+                "opcoes": tuple(opcoes.get(chave, ())),
             }
             for chave, rotulo, tipo in campos
         ],
     }
+
+
+def opcoes_de_aplicabilidade(conteudo):
+    """A quem um Documento Exigido pode se restringir — lido do **conteúdo publicado**.
+
+    Não de `edital.perfis`, que é a linha de elaboração: a Retificação sabe acrescentar Perfil ao
+    conteúdo sem escrever de volta ali, e oferecer as opções da elaboração deixaria de fora
+    justamente o Perfil que uma Retificação anterior criou. É a mesma razão pela qual a Inscrição
+    guarda `profile_id` e não uma chave estrangeira.
+    """
+    perfis, modalidades = [], []
+    for perfil in conteudo.get("profiles") or []:
+        identificador = perfil.get("id")
+        if not identificador:
+            continue
+        rotulo_do_perfil = f"{perfil.get('code', '')} — {perfil.get('name', '')}".strip(" —")
+        perfis.append((identificador, rotulo_do_perfil))
+        for modalidade in perfil.get("competitionModalities") or []:
+            if not modalidade.get("id"):
+                continue
+            rotulo = f"{modalidade.get('code', '')} — {modalidade.get('name', '')}".strip(" —")
+            modalidades.append((modalidade["id"], f"{rotulo_do_perfil} · {rotulo}"))
+    return {"profileId": perfis, "modalityId": modalidades}
 
 
 def _referenciar(grupos):
@@ -229,6 +272,22 @@ def campos_editaveis(conteudo):
             )
         )
 
+    aplicabilidade = opcoes_de_aplicabilidade(conteudo)
+    for documento in conteudo.get("documentRequirements") or []:
+        grupos.append(
+            _grupo(
+                f"Documento {documento.get('order', '')} — {documento.get('name', '')}",
+                f"/documentRequirements/id={documento.get('id', '')}",
+                documento,
+                CAMPOS_DOCUMENTO,
+                # Acrescentar e remover Documento Exigido ficam fora: acrescentar um obrigatório
+                # depois de publicado torna incompleta a inscrição de quem já enviou tudo o que se
+                # pedia, e o que fazer com essas pessoas é decisão normativa, não de tela.
+                removivel=False,
+                opcoes=aplicabilidade,
+            )
+        )
+
     for secao in conteudo.get("sections") or []:
         # Seção gerada não tem conteúdo próprio: ela é composta a partir do dado que a origina,
         # e é lá que se corrige.
@@ -266,12 +325,20 @@ def reexibir(grupos, dados):
     return grupos
 
 
-def _converter(bruto, tipo, rotulo):
+def _converter(bruto, tipo, rotulo, opcoes=()):
     bruto = (bruto or "").strip()
     if tipo == BOOLEANO:
         return bruto == "1"
     if bruto == "":
         return None
+    if tipo == REFERENCIA:
+        # A tela oferece um `select`, e o `select` não é fronteira: um POST fabricado traria
+        # qualquer UUID, e a verificação de publicação o aceitaria — ela confere **forma**, e um
+        # UUID que não endereça Perfil algum tem a forma certa. O documento passaria a se aplicar
+        # a ninguém, sem recusa em lugar nenhum (Princípio IV).
+        if bruto not in {identificador for identificador, _ in opcoes}:
+            raise ValueError(f"{rotulo}: a opção escolhida não existe neste Edital.")
+        return bruto
     if tipo == DECIMAL:
         # **A forma canônica não é escolha de apresentação.** O conteúdo publicado materializa
         # decimais com quatro casas e sem zero à esquerda, e a verificação de publicação recusa
@@ -294,6 +361,23 @@ def _converter(bruto, tipo, rotulo):
         except ValueError as exc:
             raise ValueError(f"{rotulo}: '{bruto}' não é uma data e hora válidas.") from exc
     return bruto
+
+
+def _exibir(valor, campo):
+    """O que o resumo mostra — e, na referência, o rótulo, nunca o identificador.
+
+    O resumo é o que a pessoa confirma antes de submeter a Retificação. Exibir
+    `f4c1…-…` no lugar de "Todos os Perfis → AC — Ampla Concorrência" pediria que ela
+    conferisse um UUID de cor, que é o mesmo que não conferir.
+    """
+    if campo["tipo"] != REFERENCIA:
+        return _para_formulario(valor, campo["tipo"])
+    if valor is None:
+        return "sem restrição"
+    for identificador, rotulo in campo.get("opcoes", ()):
+        if identificador == valor:
+            return rotulo
+    return str(valor)
 
 
 def _mesmo_instante(anterior, novo):
@@ -441,7 +525,9 @@ def diferencas(conteudo, dados):
             enviado = dados.get(f"campo:{campo['referencia']}")
             if enviado is None:
                 continue
-            novo_valor = _converter(enviado, campo["tipo"], campo["rotulo"])
+            novo_valor = _converter(
+                enviado, campo["tipo"], campo["rotulo"], campo.get("opcoes", ())
+            )
             anterior = _ler(conteudo, campo["caminho"])
             if campo["tipo"] == INSTANTE:
                 if _mesmo_instante(anterior, novo_valor):
@@ -457,8 +543,8 @@ def diferencas(conteudo, dados):
                 {
                     "grupo": grupo["titulo"],
                     "rotulo": campo["rotulo"],
-                    "antes": _para_formulario(anterior, campo["tipo"]) or "—",
-                    "depois": _para_formulario(novo_valor, campo["tipo"]) or "—",
+                    "antes": _exibir(anterior, campo) or "—",
+                    "depois": _exibir(novo_valor, campo) or "—",
                 }
             )
 

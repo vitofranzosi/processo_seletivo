@@ -23,13 +23,16 @@ de outro Edital ou não submetida — levanta e desfaz o lote inteiro, porque al
 e distribuir a parte válida dele seria adivinhar a intenção.
 """
 
+from django.utils import timezone
+
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.avaliacoes.domain import rodizio
+from processo_seletivo.avaliacoes.domain.conjunto import recusa_por_inscricoes_em_curso
 from processo_seletivo.avaliacoes.domain.previsao import avaliacoes_previstas
 from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao, Impedimento
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
 from processo_seletivo.comissoes.application.comissao import identificador
-from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
+from processo_seletivo.comissoes.domain.etapas import conteudo_vigente, etapas_vigentes
 from processo_seletivo.comissoes.models import AlocacaoEtapa, MembroComissao
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.processos.models import Edital
@@ -132,6 +135,17 @@ def _edital_do_processo(processo, edital_id):
     if edital is None:
         raise nao_encontrado()
     return edital
+
+
+def _exigir_conjunto_fechado(edital):
+    """E2E-017. Vale nos dois caminhos: proteger só o manual deixaria o automático como porta larga.
+
+    A recusa acontece antes de qualquer leitura de membro ou inscrição, porque o que ela diz não
+    depende de quem foi selecionado — depende só do prazo.
+    """
+    recusa = recusa_por_inscricoes_em_curso(conteudo_vigente(edital), timezone.now())
+    if recusa is not None:
+        raise recusa
 
 
 def _etapa_vigente_ou_404(edital, etapa_id):
@@ -285,6 +299,7 @@ def distribuir(
         edital = _edital_do_processo(ctx.processo, edital_id)
         if ctx.repetido:
             return ctx.desfecho_anterior
+        _exigir_conjunto_fechado(edital)
         etapa = _etapa_vigente_ou_404(edital, etapa_id)
         membros = _membros_alocados(ctx.processo, edital, etapa_id, ids_membros)
         inscricoes = _inscricoes_atribuiveis(edital, ids_inscricoes, etapa_id=etapa_id)
@@ -423,6 +438,9 @@ def propor_rodizio(*, actor, processo, edital_id, etapa_id, membro_ids):
             campo="membro_id",
         )
     edital = _edital_do_processo(processo, edital_id)
+    # Recusar aqui, e não só na confirmação: propor um plano que a confirmação vai recusar seria
+    # convidar a presidência a montar o que não pode ser executado.
+    _exigir_conjunto_fechado(edital)
     etapa_id = identificador(etapa_id)
     _, membros, pares, projecao, fora, carga = _plano_do_rodizio(
         processo, edital, etapa_id, ids_membros

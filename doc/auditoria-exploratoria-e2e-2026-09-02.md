@@ -7,6 +7,20 @@
 > (a matriz de recusa dos POSTs da 012). Todo o restante do inventário permanece como registrado.
 >
 > Um achado novo surgiu ao corrigir a devolução, e está no fim da §10 como **E2E-021**.
+>
+> **Situação em 04/09/2026.** **E2E-021 está implementado** — `CANCELAVEL` estreitou para a
+> elaboração, `retificacao:cancelar` passou a pertencer ao Gestor, e o ato ficou alcançável. A
+> implementação foi maior do que esta auditoria previu: ver a nota ao fim da seção do achado.
+>
+> **E2E-017 está implementado como invariante.** A distribuição passou a recusar enquanto o
+> período de inscrições estiver aberto ou por começar, nos dois caminhos — o manual e a proposta
+> automática. A classificação original, "melhoria", subestimava: não havia regra nenhuma impedindo
+> a situação. Ver a nota ao fim da seção do achado.
+>
+> **E2E-004 está implementado na metade da edição.** A tela de Retificação passou a alcançar
+> `documentRequirements`: os campos publicados de cada Documento Exigido são editáveis, e a
+> aplicabilidade é escolhida entre Perfis e Modalidades do conteúdo. **Acrescentar e remover
+> continuam fora**, por decisão registrada na seção do achado — não por incompletude.
 
 **Data:** 02/09/2026 · **Base:** `main` em `ec67d52` (012 — Mesa de Avaliação fechada) · **Método:** leitura do código, das 12 specs e da suíte (~1.891 testes) + percurso completo no navegador com sete identidades distintas (gestor, elaboradora, homologador, publicadora, dois candidatos, presidente, dois avaliadores), num banco novo (`ps_audit_e2e`), do `Novo Processo Seletivo` até avaliações concluídas na Mesa — mais uma Retificação publicada com o aviso de versão conferido na área do candidato.
 
@@ -143,7 +157,7 @@ Onde o incentivo a Drive/planilha ainda mora: (1) essa lista; (2) conferência d
 | E2E-014 | POLIMENTO | UX | Equipe | Identificar-se | "Ou entre por outro nome" sem lista acima em ambiente sem vínculos | Só superfície de demonstração | [FATO] | Esconder o "Ou" quando a lista está vazia | Apenas registrar |
 | E2E-015 | MELHORIA | DÍVIDA TÉCNICA | — | Suíte | Escrita da Mesa, `distribuicao-remover`, `impedimentos`, `compor`/`retificar` cross-escopo sem teste de recusa HTTP; fragmentos de retificação sem teste algum | O eixo mais sensível da 012 sem contrato negativo no canal real | análise da suíte (`tests/authorization/`) | Fechar a matriz de recusa dos POSTs | **Corrigir agora** (só testes) |
 | E2E-016 | — | FEATURE FUTURA | Todos | Handoffs | Sem notificação em nenhuma passagem de bastão | Combinação informal (e-mail/corredor) permanece | seção 7 | Registrar; não implementar por ora | Feature futura |
-| E2E-017 | MELHORIA | FLUXO | Presidente | Distribuição | Inscrições chegadas após a distribuição ficam sem avaliador até alguém voltar à tela | Cauda de inscritos de última hora esquecida | [FATO] contadores sobem sem aviso | Registrar; contadores já denunciam | Apenas registrar |
+| ~~E2E-017~~ | **CORRIGIDO** | FLUXO | Presidente | Distribuição | Inscrições chegadas após a distribuição ficam sem avaliador até alguém voltar à tela | Cauda de inscritos de última hora esquecida | [FATO] contadores sobem sem aviso | Registrar; contadores já denunciam | Apenas registrar |
 | E2E-018 | POLIMENTO | UX | Retificação | Detalhe | Handoff sem texto: falta "Aguardando quem homologa" (o Edital tem) | Assimetria de orientação | [FATO] | Reusar o padrão do Edital | Apenas registrar |
 | E2E-019 | POLIMENTO | PRIVACIDADE | Equipe | Home da gestão | Toda identidade institucional vê todos os Processos/Editais do escopo (sem ações) | Metadados apenas; provável decisão | [FATO] avaliadora vê PS-DEMO-B | Confirmar como decisão consciente | Apenas registrar |
 | E2E-020 | MELHORIA | UX (conversão) | Candidato | Acesso | Código por e-mail é ponto único de falha; reenvio só após 60 s | Abandono por spam/atraso — dependente do SMTP real (G1) | [FATO] fluxo | Registrar; monitorar quando houver e-mail real | Feature futura |
@@ -219,9 +233,56 @@ A tela de Retificação alcança Perfis, Modalidades, Eventos, Etapas e Seções
 inscrições. O domínio alcança as coleções (`publicacoes/domain/colecoes.py`); é a interface que
 para na metade. Consequência: um documento exigido publicado errado só se corrige pela API.
 
-**Classificação:** P0 antes da primeira seleção real; **não** é pré-requisito da 013. Se um certame
+**Implementado em 04/09/2026 — a metade da edição, e o custo não era o previsto.** A metade das
+Etapas caiu junto com a revisão do contrato de conclusão: `maximumScore` e
+`evaluationsPerRegistration` entraram em `CAMPOS_ETAPA` com os campos da forma. A metade dos
+documentos exigia outra coisa.
+
+O laço do grupo é mecânico, como o das Etapas. Mas **dois dos campos publicados do Documento
+Exigido não tinham tipo na tela**: `profileId` e `modalityId` referenciam entidades do próprio
+conteúdo, `null` neles significa "sem restrição", e todos os tipos existentes eram escalares
+digitados ou marcados. E são justamente esses dois que `documentos.aplicaveis` lê para decidir
+quem precisa enviar o quê — oferecê-los como texto livre deixaria um erro de digitação mudar em
+silêncio a obrigação documental de um grupo de candidatos.
+
+Entrou um tipo de campo novo, `REFERENCIA`, com três consequências: as opções vêm do **conteúdo
+publicado** e não de `edital.perfis`, porque uma Retificação anterior pode ter criado Perfil que
+não existe na linha de elaboração; o POST confere a escolha contra o que foi oferecido, porque a
+verificação de publicação confere a forma do UUID e não se ele endereça algo; e o resumo mostra o
+rótulo, porque conferir identificador de cor é o mesmo que não conferir.
+
+**Acrescentar e remover ficaram fora, e a razão é normativa.** Acrescentar Documento Exigido
+obrigatório depois de publicado torna incompleta a inscrição de quem já enviou tudo o que se
+pedia. O que fazer com essas pessoas é decisão do domínio, não da tela, e enquanto ela não existir
+o grupo dos documentos não é removível.
+
+**Classificação original:** P0 antes da primeira seleção real; **não** é pré-requisito da 013. Se um certame
 for aberto antes de a 013 ficar pronta, esta correção passa à frente — é o último ponto por onde a
 equipe sai do sistema no meio do certame.
+
+### E2E-017 — inscrições após a distribuição (corrigido em 04/09/2026)
+
+**O que a verificação encontrou, e que muda a classificação.** O universo da distribuição é
+`Inscricao.objects.filter(edital=edital, status=SUBMETIDA)`, **sem nenhuma referência ao período
+de inscrição**: distribuir com o prazo aberto era admitido, e nada roteava quem chegasse depois.
+Não era falta de aviso — era falta de regra.
+
+**E a 013, posterior a esta auditoria, já tinha melhorado o sintoma.** A participação da Etapa é o
+conjunto das submetidas, e não o das distribuídas. A inscrição atrasada aparece como participante
+`IMPEDIDA / sem conclusão`, fica de fora do lote consolidado e é retida em "aguardando" na Etapa
+seguinte. **Não há perda silenciosa** — a pessoa não some, não é eliminada por omissão e não
+avança sem avaliação. Ela espera que alguém repare.
+
+**O invariante escolhido, entre os dois possíveis.** Distribuição incremental — cada inscrição nova
+entrando numa fila de pendência com dono — é capacidade nova que ninguém pediu. Enquanto ela não
+existir, a única forma de o sistema não produzir candidato sem avaliador é recusar o ato que o
+produz. A regra vive em `avaliacoes/domain/conjunto.py` e vale nos **dois** caminhos: o manual e a
+proposta automática, porque proteger só a confirmação faria a presidência montar um plano inteiro
+para ser recusada no fim.
+
+A recusa diz **quando** o conjunto fecha, e não só que está aberto. E a ausência de prazo não é
+prazo aberto: Edital sem Evento designado não recebe inscrição por este sistema, e a regra não se
+aplica.
 
 ### E2E-021 — quem cancela uma Retificação (decisão tomada)
 
@@ -252,6 +313,27 @@ abandona um ato que está em elaboração**. Exigir dois atos para abandonar uma
 homologada não é atrito acidental — é mais auditável, porque alguém desfaz a aprovação e alguém
 abandona o rascunho, e a trilha guarda os dois.
 
-Hoje `atos_retificacao.CANCELAVEL` admite as três situações, e a permissão segue sem dono em
+~~Hoje `atos_retificacao.CANCELAVEL` admite as três situações, e a permissão segue sem dono em
 `identidade.py::PAPEIS` — por isso o ato continua inalcançável pela interface. Implementar é
-estreitar o conjunto e conceder a permissão ao Gestor: **próxima leva corretiva, fora da 013**.
+estreitar o conjunto e conceder a permissão ao Gestor: **próxima leva corretiva, fora da 013**.~~
+
+**Implementado em 04/09/2026 — e a receita acima estava incompleta.** Estreitar `CANCELAVEL` e
+conceder a permissão eram duas das três mudanças necessárias. A terceira, que esta auditoria não
+viu, é a que importava:
+
+```
+TRANSITIONS["cancelar"] = (None, CANCELADA)   ← "qualquer estado não final"
+```
+
+O **domínio** admitia cancelar de qualquer situação não final, e a única guarda era uma recusa
+explícita de `PUBLICADA` e `CANCELADA`. Estreitar apenas a constante da interface teria deixado a
+API aceitando o que a decisão recusa — o que o Princípio IV proíbe, porque validação de tela não é
+fronteira de segurança nem autoridade final.
+
+A transição passou a declarar `(EM_ELABORACAO,)`, e a recusa ganhou o caminho de volta em vez da
+mensagem genérica: quem tenta cancelar o que está em revisão ou homologado lê que precisa devolver
+antes; quem tenta cancelar o que é final lê que não há volta. A semântica `None` deixou de existir
+em `TRANSITIONS`, porque `cancelar` era a única a usá-la.
+
+**Lição para as próximas correções:** um achado descrito pela tela pode ter metade da causa no
+domínio. A verificação antes de implementar custou uma leitura e mudou o tamanho da mudança.

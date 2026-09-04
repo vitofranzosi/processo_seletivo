@@ -90,6 +90,15 @@ corrige é o caminho que não termina.
         {% if campo.tipo == 'texto_longo' %}
         <textarea id="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
                   name="campo:{{ campo.referencia }}" rows="5">{{ campo.valor }}</textarea>
+        {% elif campo.tipo == 'referencia' %}
+        {# A opção vazia é normativa, e não cortesia: `null` significa "sem restrição". #}
+        <select id="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                name="campo:{{ campo.referencia }}">
+          <option value="" {% if not campo.valor %}selected{% endif %}>Sem restrição</option>
+          {% for identificador, rotulo in campo.opcoes %}
+          <option value="{{ identificador }}" {% if campo.valor == identificador %}selected{% endif %}>{{ rotulo }}</option>
+          {% endfor %}
+        </select>
         {% elif campo.tipo == 'booleano' %}
         <select id="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
                 name="campo:{{ campo.referencia }}">
