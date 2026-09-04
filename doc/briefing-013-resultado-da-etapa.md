@@ -242,8 +242,8 @@ justificativa para transformar ordem em compromisso de execução.
 
 | Lacuna | Bloqueia | Quando |
 |---|---|---|
-| **E2E-004** — Retificação não alcança documentos exigidos pela interface | primeiro certame real | P0 antes da primeira seleção; não é pré-requisito da 013 |
-| **E2E-021** — cancelamento de Retificação (decisão fechada, falta implementar) | — | próxima leva corretiva |
+| ~~**E2E-004**~~ — a **edição** de documentos exigidos passou a ser alcançável pela tela | — | **corrigido em 04/09**; acrescentar e remover seguem fora, por decisão normativa |
+| ~~**E2E-021**~~ — cancelamento de Retificação | — | **corrigido em 04/09**: `CANCELAVEL` estreitou no domínio e a permissão ganhou dono |
 | ~~**Desfecho de Etapa sem Avaliação**~~ — ausência, eliminação administrativa, não comparecimento | extensão da 013, antes da 014 | **decidido em 04/09** — FK anulável e `origem` declarada (D-1) |
 | ~~**Dados estruturados do candidato**~~ | **015** | **decidido em 04/09** — o Edital declara os fatos, a inscrição os congela (D-2 de `doc/decisoes-pre-vertical.md`) |
 | ~~**Cardinalidade da inscrição**~~ | execução dos 35/57 e do 14 | **decidido em 04/09** — `maxInscricoesPorCandidato`, anulável, publicado (D-3) |

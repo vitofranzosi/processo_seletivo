@@ -32,6 +32,20 @@ com o caso que a justifica.
 avaliou quem não compareceu. Contradiz P-006 da 012 — *avaliar não é decidir* — e mente sobre a
 autoria: a ausência é constatada pela presidência, não julgada por avaliador.
 
+**A versão normativa passa a ser do Resultado, e isto não é detalhe.** O docstring do modelo
+declara a estratégia inteira de proveniência: *"nem a `VersaoConsolidada` — a norma histórica é
+reproduzida pela versão da Avaliação fonte, alcançada por `avaliacao__versao`"*. Sem Avaliação não
+há esse caminho, e o Resultado por Ocorrência ficaria sem a norma que o fundamentou — contra o
+invariante I-2, que exige o resultado reproduzível a partir das regras que o produziram.
+
+A saída não é guardar a versão só no ramo sem Avaliação, que criaria duas formas de responder à
+mesma pergunta. **`versao` passa a ser campo do `ResultadoEtapa`, exigido sempre**, e a trigger
+`resultado_etapa_coerente` — que já confere os campos copiados contra a fonte — passa a conferir
+também que ela coincide com `avaliacao.versao` quando há Avaliação. O argumento original contra
+materializá-la era que "não economizaria junção nenhuma e abriria uma quinta forma de o Resultado
+se contradizer"; a primeira metade deixa de valer quando não há junção possível, e a segunda é
+respondida pela trigger, que é como as outras quatro já são impedidas.
+
 **O que vai junto, e não pode ser esquecido.** A constraint `ck_resultado_completo_por_forma` hoje
 alterna entre pontuada e decisória. Uma Ocorrência não tem forma nenhuma — não pontua e não
 registra sentido —, então a constraint ganha um terceiro ramo, pelo mesmo caminho que a conclusão
@@ -57,6 +71,22 @@ ser o do momento da inscrição. Sem isso, editar o perfil depois mudaria classi
 e a Constituição exige que o estado vigente em qualquer instante relevante seja reproduzível. É a
 mesma razão pela qual a Inscrição já guarda `versao_aceita`.
 
+**Onde exatamente o congelamento acontece.** Na **submissão**, contra a `versao_aceita` — e não na
+abertura do rascunho. É a fronteira que a 009 já usa para tudo o mais que a inscrição afirma, e
+usar outra faria os fatos e as declarações responderem a versões diferentes do mesmo Edital.
+
+Disso decorrem três coisas que a spec não pode escolher sozinha:
+
+- **cada fato tem identidade estável**, como Perfil, Etapa e Documento Exigido — endereçado por ela
+  na Retificação, nunca por posição;
+- **mudar o tipo de um fato cria fato novo.** Um fato declarado como data que vira número não é o
+  mesmo fato: reinterpretar o valor já congelado seria o sistema decidindo o que a pessoa quis
+  dizer. A Retificação remove um e acrescenta outro, e o que foi congelado sob o primeiro
+  permanece legível sob a norma que o governou;
+- **rascunho aberto durante a Retificação segue o caminho que já existe.** `edital_foi_retificado`
+  já recusa a submissão de quem não reconheceu a versão nova, e um fato acrescentado depois de a
+  pessoa começar a preencher é exatamente esse caso — ela revê antes de confirmar.
+
 **O escopo mínimo:** os tipos que os Editais lidos de fato usam — data e número inteiro. Terceiro
 tipo entra quando aparecer o Edital que o exija.
 
@@ -78,6 +108,19 @@ parcial entre Perfis generalizam antes da evidência — e "opções por inscri�
 o modelo não tem: a Inscrição carrega **um** `profile_id`. Quando aparecer Edital com primeira e
 segunda opção, o segundo campo nasce com ele.
 
+**O que o campo conta: apenas inscrições submetidas.** Rascunho não é ato — abandonar um não pode
+custar um direito, e a 009 já o trata assim em toda parte. Contar rascunhos faria uma pessoa que
+abriu e desistiu ficar sem poder se inscrever no que decidiu depois.
+
+**A verificação precisa serializar por candidato e Edital.** Hoje cada submissão trava a própria
+inscrição, e duas submissões concorrentes de Perfis diferentes passariam as duas pelo teto. A trava
+é do par identidade–Edital, e o custo é limitado: ela serializa as inscrições de **uma pessoa** num
+Edital, não as de todo mundo.
+
+**Retificação que reduza o teto não invalida o que já foi submetido.** Publicação anterior não se
+reescreve, e uma inscrição submetida sob a norma que a admitia continua válida sob ela. O teto novo
+vale da vigência em diante, e quem já está dentro permanece.
+
 A constraint existente permanece: ela impede a duplicata por Perfil; o campo novo limita o total.
 
 ## D-4 · Barema fica fora do primeiro vertical
@@ -86,9 +129,11 @@ A constraint existente permanece: ela impede a duplicata por Perfil; o campo nov
 registra o total, que é o que a Mesa já sabe receber.
 
 **O que isso custa, dito por extenso.** A promessa de eliminar apuração paralela fora do sistema
-**não se cumpre** nesse Edital: a lógica avaliativa crítica continua num anexo. Não é limitação
-funcional — o processo roda e o resultado é correto —, é limitação de alcance do produto, e vale
-saber que ela foi escolhida e não esquecida.
+**não se cumpre** nesse Edital: a lógica avaliativa crítica continua num anexo. O processo é
+executável de ponta a ponta e a trilha registra o que a banca afirmou — mas **o sistema não
+demonstra que o total está certo**, porque não conhece as parcelas. A conferência do cálculo
+permanece responsabilidade externa, e é essa a limitação de alcance que foi escolhida, e não
+esquecida.
 
 **Por que assim.** Barema é spec inteira — critérios, pontuação por item, limites por item, tela
 de elaboração própria e autopontuação vinculante (173) —, serve a uma família só, e o §21 da 012
