@@ -54,17 +54,21 @@ precisa dizer "este Edital não exige", nunca "esta família não exige".
 
 ### P-1 · Como o Edital declara quem é chamado em seguida?
 
-Duas formas observadas, e elas não se reduzem uma à outra:
+Duas formas observadas — e **elas não são independentes: P-2 escolhe qual se usa.**
 
 ```
-percentual sobre vagas      25% PPI, 5% PcD, calculado sobre o total ofertado
-ordem nominal publicada     1ª AC · 2ª PcD · 3ª PPIQ · 4ª AC · 5ª AC · 6ª PPIQ · …
+quantidade conhecida    quantidade por modalidade + destinos do que sobrar
+quantidade desconhecida ordem nominal publicada: 1ª AC · 2ª PcD · 3ª PPIQ · 4ª AC · …
 ```
 
-A segunda não distribui vaga por proporção: ela **publica a sequência do chamamento**, posição por
-posição. O domínio precisa do lugar onde essa regra é declarada e executada, e não de dois
-motores nomeados — que é exatamente o que `RegraNormativa.call_rules` reservou como JSON e nunca
-consumiu.
+Sem número de vagas não há sobre o que aplicar proporção, e resta declarar a **sequência do
+chamamento**, posição por posição. Foi assim em todo Edital lido: os que têm quadro de vagas
+declaram quantidade; o de cadastro de reserva declara ordem.
+
+O domínio precisa do lugar onde essa regra é declarada e executada — que é o que
+`RegraNormativa.call_rules` reservou como JSON e nunca consumiu —, e **não** de dois motores
+nomeados. Registrá-los como dois motores foi erro de leitura desta análise, corrigido quando os
+dois Editais ficaram lado a lado.
 
 *Evidência: 35/57 e 28 (percentual); 173 (ordem nominal).*
 
@@ -174,6 +178,85 @@ Duas formas **novas de regra**, que não são categorias e sim estrutura:
   reserva, e só depois para a ampla concorrência;
 - **percentual como faixa** — mínimo e máximo, em vez de valor único, contra o
   `RegraNormativa.percentage` que é um decimal só.
+
+## O Edital grande, e por que ele entra sem ser alvo
+
+O **46/2026 — Exame de Seleção dos cursos técnicos integrados** é de outra ordem de grandeza: 3.587
+vagas, mais de vinte campi, prova objetiva, nove modalidades de concorrência.
+
+**Ele não é objetivo do produto**, e nada aqui propõe que passe a ser. Entra por um motivo só: ele
+exibe, por escrito, a forma completa de um mecanismo que os Editais pequenos usam **colapsado** — e
+é isso que permite modelar os pequenos sem escolher uma forma que não cresce.
+
+### A forma completa da modalidade
+
+Cada modalidade é uma **conjunção de fatos sobre a pessoa**, e não um rótulo:
+
+```
+AA1 = escola pública ∧ renda ≤ 1 SM      AA2 = escola pública
+                    ×
+              { PPI | Q | PCD | EP }      EP = o resíduo, sem atributo adicional
+```
+
+Nove ao todo, contando a ampla concorrência. O `AC / PPI / PcD` dos Editais pequenos é o caso de
+**uma dimensão** disso.
+
+### A forma completa do remanejamento
+
+Cada modalidade declara, **em ordem**, para onde vai a vaga que não preencher:
+
+```
+AA1-PPI → AA1-Q → AA1-PCD → AA1-EP → AA2-PPI → AA2-Q → AA2-PCD → AA2-EP → AC
+AC      → AA1-PPI → AA1-Q → AA1-PCD → AA1-EP → AA2-PPI → AA2-Q → AA2-PCD → AA2-EP
+```
+
+E aqui está a razão de registrar isto:
+
+```
+"não preenchida vai para a ampla concorrência"   →  lista de UM destino
+reversão entre subgrupos, depois ampla            →  lista de DOIS destinos
+a matriz acima                                    →  lista de OITO destinos
+```
+
+**É a mesma declaração com profundidades diferentes.** Um Edital pequeno modelado como "sobra vai
+para AC" grava no domínio uma regra que era do Edital; modelado como "o Edital declara os destinos,
+e aqui há um só", custa o mesmo e não trava.
+
+### O que isso esclarece nos Editais pequenos
+
+Esta é a utilidade concreta, e é o motivo de o achado existir:
+
+| Dúvida que os Editais pequenos deixavam | O que a forma completa mostra |
+|---|---|
+| "sobra vai para a ampla concorrência" é regra do domínio ou declaração do Edital? | **declaração** — e a lista de um destino é o caso raso da matriz |
+| por que 15 suplentes num Edital, 20 noutro, 30 noutro? | é **corte da análise documental**, não propriedade da vaga: o grande analisa "até o triplo das vagas" |
+| e quem fica além do corte, o que é? | tem nome: **lista de espera** — classificado, documentação não analisada. Os pequenos têm essa população e não a nomeiam |
+| "concorrência concomitante" é regra ou ordem de execução? | **ordem**: classificação geral primeiro, por modalidade depois — que é a formulação executável |
+| desempate é campo ou regra? | **lista ordenada de critérios**, aqui com seis, terminando em maior idade |
+
+### O que é do Edital grande e fica fora
+
+Registrado para que ninguém o leia como requisito:
+
+- prova objetiva, gabarito e **recurso de efeito coletivo** (questão anulada dá ponto a todos —
+  o provimento reemite o resultado inteiro da Etapa, e não o de um candidato);
+- **taxa de inscrição**, isenção com comprovação e recurso próprio, compensação bancária;
+- **treineiro** — participante que faz a prova, não concorre e não aparece nos resultados;
+- **nome social** e **atendimento especial** com doze condições;
+- **aproveitamento de lista de espera entre cursos do mesmo campus**, com manifestação de interesse
+  e desistência implícita do curso original;
+- a unidade de vaga descendo a `campus × curso × turno`.
+
+Dois desses tocam perguntas já registradas — o aproveitamento entre cursos é P-6 vista de outro
+ângulo, e a unidade fina é P-5 — mas nenhum é exigido pelos Editais que estão em vista.
+
+### O que ele confirma
+
+- **impugnação por qualquer pessoa**, em até 5 dias úteis: segundo Edital independente a trazê-la,
+  o que a tira da categoria de exceção (P-4);
+- **recurso contra atos muito diferentes** — isenção, pagamento, atendimento especial, gabarito,
+  análise documental, entrevista (P-4);
+- **modalidade como dado publicado**, agora com nove valores em vez de três.
 
 ## Onde estas perguntas incidem
 
