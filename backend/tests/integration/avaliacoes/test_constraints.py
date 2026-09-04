@@ -20,6 +20,7 @@ import pytest
 from django.db import IntegrityError, connection, transaction
 from django.utils import timezone
 
+from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao, ConclusaoAvaliacao
 from processo_seletivo.comissoes.domain.funcoes import Funcao
 from processo_seletivo.inscricoes.models import Inscricao
@@ -73,6 +74,7 @@ def concluir(atribuicao, versao, *, identity="joao"):
         etapa_id=atribuicao.etapa_id,
         inscricao_id=atribuicao.inscricao_id,
         estado=Avaliacao.Estado.CONCLUIDA,
+        forma=Forma.PONTUADA,
         pontuacao=Decimal("80.0000"),
         parecer="Atende",
         versao=versao,
@@ -164,6 +166,7 @@ def conclusao(membro, edital_a, etapa_a1, inscricao, versao):
     return ConclusaoAvaliacao.objects.create(
         avaliacao=avaliacao,
         ordem=1,
+        forma=Forma.PONTUADA,
         pontuacao=Decimal("80.0000"),
         parecer="Atende",
         versao=versao,
@@ -200,6 +203,7 @@ def test_a_ordem_da_conclusao_e_unica(conclusao, versao):
         ConclusaoAvaliacao.objects.create(
             avaliacao=conclusao.avaliacao,
             ordem=1,
+            forma=Forma.PONTUADA,
             pontuacao=Decimal("90.0000"),
             versao=versao,
             concluida_em=timezone.now() + timedelta(minutes=1),

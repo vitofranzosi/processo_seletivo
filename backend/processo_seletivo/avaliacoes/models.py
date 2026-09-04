@@ -26,6 +26,7 @@ import uuid
 from django.db import models
 from django.db.models import Q
 
+from processo_seletivo.avaliacoes.domain.formas import Forma, Sentido
 from processo_seletivo.comissoes.models import MembroComissao
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.processos.models import Edital
@@ -93,7 +94,22 @@ class Avaliacao(models.Model):
     etapa_id = models.UUIDField()
     inscricao_id = models.UUIDField()
     estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.RASCUNHO)
+    # A forma sob a qual esta avaliação foi concluída, lida do conteúdo da versão validada dentro da
+    # transação que conclui, e gravada aqui (FR-117). **É a única cópia que a Avaliação faz**, e a
+    # exceção a FR-072 tem um motivo que mínima, máxima e caráter não têm: uma `CheckConstraint`
+    # do PostgreSQL não referencia outra tabela, e sem a forma na linha a regra que define
+    # "concluída" sairia do banco e voltaria para a aplicação — a camada de que esta spec desconfiou
+    # quando escreveu a constraint. Onde a cópia não compra invariante, ela continua proibida.
+    #
+    # **Vazio, e não nulo**, como `concluida_por` na linha abaixo: o projeto não usa `NULL` em campo
+    # de texto, e a mesma constraint já compara `~Q(concluida_por="")`. Vazio aqui significa "ainda
+    # não concluída": a forma é lida no ato de concluir, e carimbá-la no nascimento faria um
+    # rascunho aberto hoje concluir sob a forma de ontem.
+    forma = models.CharField(max_length=20, choices=Forma.choices, blank=True, default="")
     pontuacao = models.DecimalField(max_digits=7, decimal_places=4, null=True, blank=True)
+    # O que o avaliador afirmou, na forma decisória. Não se chama `decisão`: avaliar não é decidir,
+    # e duas análises documentais podem afirmar sentidos opostos — resolver isso é da 013 (P-006).
+    sentido = models.CharField(max_length=20, choices=Sentido.choices, blank=True, default="")
     parecer = models.TextField(blank=True)
     # A regra que governou o ato. **Não** se copiam máxima, mínima e caráter: a versão os
     # reproduz, e duplicá-los criaria a segunda fonte divergente que o princípio da fonte
@@ -122,17 +138,25 @@ class Avaliacao(models.Model):
                 condition=Q(estado="CONCLUIDA"),
                 name="uq_avaliacao_concluida_por_pessoa",
             ),
-            # O que "concluída" significa, dito no banco: sem pontuação, versão, instante e autor,
-            # o estado não é alcançável. O mesmo padrão de `ck_inscricao_submetida_completa`.
+            # O que "concluída" significa, dito no banco. **Completa deixou de significar "tem
+            # nota" e passou a significar "tem o que a forma exige"** (D-008, FR-116): o invariante
+            # forte não foi relaxado, e o que mudou foi o que ele afirma. Sem versão, instante,
+            # autor e forma o estado continua inalcançável; e, dentro da forma, cada uma exige o
+            # que é seu e recusa o que é da outra.
             models.CheckConstraint(
                 condition=Q(estado="RASCUNHO")
-                | Q(
-                    estado="CONCLUIDA",
-                    pontuacao__isnull=False,
-                    versao__isnull=False,
-                    concluida_em__isnull=False,
-                )
-                & ~Q(concluida_por=""),
+                | (
+                    Q(
+                        estado="CONCLUIDA",
+                        versao__isnull=False,
+                        concluida_em__isnull=False,
+                    )
+                    & ~Q(concluida_por="")
+                    & (
+                        Q(forma=Forma.PONTUADA, pontuacao__isnull=False, sentido="")
+                        | Q(forma=Forma.DECISORIA, pontuacao__isnull=True) & ~Q(sentido="")
+                    )
+                ),
                 name="ck_avaliacao_concluida_completa",
             ),
         ]
@@ -154,7 +178,15 @@ class ConclusaoAvaliacao(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     avaliacao = models.ForeignKey(Avaliacao, on_delete=models.PROTECT, related_name="conclusoes")
     ordem = models.PositiveIntegerField()
-    pontuacao = models.DecimalField(max_digits=7, decimal_places=4)
+    # A forma que governou aquela conclusão, preservada pela mesma razão que a versão é (FR-071,
+    # FR-117): se uma Retificação mudar a natureza da Etapa depois, a conclusão antiga precisa
+    # continuar interpretável sob a regra que a governou. Não anulável — não existe conclusão sem
+    # forma —, e as linhas que já existiam receberam `PONTUADA`, que é o que todas eram.
+    forma = models.CharField(max_length=20, choices=Forma.choices)
+    # `pontuacao` deixou de ser `NOT NULL`, e a completude passou a ser verificada por forma: a
+    # coluna sozinha não sabe mais dizer o que "concluída" significa.
+    pontuacao = models.DecimalField(max_digits=7, decimal_places=4, null=True, blank=True)
+    sentido = models.CharField(max_length=20, choices=Sentido.choices, blank=True, default="")
     parecer = models.TextField(blank=True)
     versao = models.ForeignKey(
         VersaoConsolidada, on_delete=models.PROTECT, related_name="conclusoes_de_avaliacao"
@@ -165,7 +197,15 @@ class ConclusaoAvaliacao(models.Model):
     class Meta:
         ordering = ["avaliacao", "ordem"]
         constraints = [
-            models.UniqueConstraint(fields=["avaliacao", "ordem"], name="uq_conclusao_ordem")
+            models.UniqueConstraint(fields=["avaliacao", "ordem"], name="uq_conclusao_ordem"),
+            # O que a coluna `NOT NULL` garantia sozinha, dito agora por forma. Sem isto, a
+            # preservação histórica aceitaria uma conclusão vazia — e numa tabela append-only o
+            # registro inválido entraria uma vez e ficaria, porque nada o corrige depois.
+            models.CheckConstraint(
+                condition=Q(forma=Forma.PONTUADA, pontuacao__isnull=False, sentido="")
+                | Q(forma=Forma.DECISORIA, pontuacao__isnull=True) & ~Q(sentido=""),
+                name="ck_conclusao_completa_por_forma",
+            ),
         ]
 
     def __str__(self):

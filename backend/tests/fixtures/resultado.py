@@ -8,6 +8,7 @@ Duas Etapas em ordem, porque a progressão só existe a partir da segunda, e as 
 de D-003 não são demonstráveis com uma Etapa só.
 """
 
+from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.comissoes.domain.funcoes import Funcao
 from tests.fixtures.comissao import (
     ETAPA_A1,
@@ -189,6 +190,7 @@ def semear_prontas(cenario, quantas, *, primeiro, avaliador="joao", pontuacao="7
             etapa_id=atribuicao.etapa_id,
             inscricao_id=atribuicao.inscricao_id,
             estado=Avaliacao.Estado.CONCLUIDA,
+            forma=Forma.PONTUADA,
             pontuacao=Decimal(pontuacao),
             parecer="Atende.",
             versao=versao,

@@ -16,6 +16,7 @@ do que não registrar versão alguma.
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.avaliacoes.domain import pontuacao as regras
+from processo_seletivo.avaliacoes.domain import previsao
 from processo_seletivo.avaliacoes.domain.autorizacao import pode_avaliar_inscricao
 from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao, ConclusaoAvaliacao
 from processo_seletivo.comissoes.domain.autorizacao import pode_atuar_na_etapa
@@ -203,6 +204,10 @@ def concluir(
                 "nota mínima que passaram a valer e confirme a conclusão.",
                 409,
             )
+        # A forma vem **do conteúdo da versão já lida nesta transação** (FR-096), e é ela que fica
+        # gravada na conclusão (FR-117). Uma segunda consulta aqui reabriria a janela que FR-096
+        # fechou: a Retificação consolidada no intervalo faria validar por uma forma e gravar outra.
+        forma = previsao.forma_publicada(etapa)
         valor = regras.validar(pontuacao, etapa)
         texto = (parecer or "").strip()
         if regras.exige_parecer(valor, etapa) and not texto:
@@ -218,6 +223,7 @@ def concluir(
             pk=avaliacao.pk,
             expected_revision=expected_revision,
             estado=Avaliacao.Estado.CONCLUIDA,
+            forma=forma,
             pontuacao=valor,
             parecer=texto,
             # **A versão validada é a versão gravada** (FR-071, FR-096).
@@ -229,6 +235,7 @@ def concluir(
         ConclusaoAvaliacao.objects.create(
             avaliacao=avaliacao,
             ordem=avaliacao.conclusoes.count() + 1,
+            forma=forma,
             pontuacao=valor,
             parecer=texto,
             versao=versao,

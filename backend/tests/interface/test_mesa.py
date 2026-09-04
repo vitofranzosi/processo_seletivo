@@ -86,12 +86,14 @@ def avaliar(atribuicao, etapa_id, inscricao, edital, *, concluida):
 
     from django.utils import timezone
 
+    from processo_seletivo.avaliacoes.domain.formas import Forma
     from processo_seletivo.avaliacoes.models import Avaliacao
     from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 
     encerrada = (
         {
             "estado": Avaliacao.Estado.CONCLUIDA,
+            "forma": Forma.PONTUADA,
             "pontuacao": Decimal("80.0000"),
             "versao": VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at"),
             "concluida_em": timezone.now(),
