@@ -215,10 +215,17 @@ conclusão que o fundamenta: pontuação quando a fonte é pontuada, sentido qua
 forma na própria linha para que a verificação continue local. `ResultadoEtapa` é append-only por
 privilégio e por trigger, e a migração tem a restrição de implantação que isso impõe.
 
-**2 · A conferência de coerência com a fonte passa a alternar por forma.** Ela é o coração da
-garantia desta feature — o Resultado não é confiado à promessa da aplicação — e comparar pontuação
-com uma conclusão que não tem pontuação não é conferência nenhuma. O que a conferência exige é que o
-Resultado afirme exatamente o que a Avaliação fonte afirmou, na forma em que ela o afirmou.
+**2 · A conferência de coerência com a fonte passa a comparar forma, pontuação e sentido — os três,
+sempre.** Ela é o coração da garantia desta feature: o Resultado não é confiado à promessa da
+aplicação. O que ela exige é que o Resultado afirme exatamente o que a Avaliação fonte afirmou, na
+forma em que ela o afirmou.
+
+**A comparação é incondicional, e não alterna por forma.** A primeira redação desta decisão dizia
+"alterna", e estava errada por uma razão que só aparece no SQL: numa conclusão decisória os dois
+lados da pontuação são nulos, e `IS DISTINCT FROM` resolve nulo contra nulo como **iguais** — uma
+conferência que alternasse por forma aprovaria qualquer sentido em silêncio. Comparar os três
+incondicionalmente é mais forte e mais simples: se as formas são iguais, alternar seria redundante;
+se divergem, o primeiro teste já reprova.
 
 **3 · A consequência é lida da forma, e nunca inferida.** Na forma pontuada, a regra atual permanece
 intacta: Etapa eliminatória elimina abaixo da mínima, e Etapa sem caráter eliminatório materializa e
@@ -472,8 +479,10 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
   Etapa decisória eliminatória e sem nota mínima é consolidável, e recusá-la seria procurar um número
   que a norma nunca teve.
 - **FR-049**: O Resultado DEVE registrar a forma sob a qual foi consolidado, e a conferência de
-  coerência com a Avaliação fonte DEVE alternar por forma — comparando pontuação com pontuação e
-  sentido com sentido. A conferência é do banco, e não da aplicação.
+  coerência com a Avaliação fonte DEVE comparar **forma, pontuação e sentido — os três,
+  incondicionalmente**, e não alternar por forma. A conferência é do banco, e não da aplicação.
+  Alternar aprovaria qualquer sentido na forma decisória, porque a comparação de pontuação entre dois
+  nulos resolve como igualdade.
 
 #### Lote e idempotência
 

@@ -75,14 +75,33 @@ só o que é entidade Etapa.
 por vez — tipo, nulidade, formato, mínimo, conjunto de valores. Três campos entram por ali:
 
 ```python
-Campo("forma", str, admite_nulo=True, valores=("PONTUADA", "DECISORIA")),
+Campo("forma", str, valores=("PONTUADA", "DECISORIA")),   # obrigatória e NÃO nula
 Campo("rotuloFavoravel", str, admite_nulo=True),
 Campo("rotuloDesfavoravel", str, admite_nulo=True),
 ```
 
-`admite_nulo=True` nos três, porque conteúdo em v5 elevado por leitura passa por aqui e porque a
-forma pontuada não tem rótulos. **Mas a regra de verdade é entre campos**, e `Campo` não a expressa —
-o próprio arquivo já diz isso ao deixar `content` e `source` de fora da seção publicada.
+**`forma` não admite nulo, e essa é a correção mais importante desta seção.** A primeira redação a
+deixava anulável "porque conteúdo v5 passa por aqui", e isso é falso: `validate_for_publication` é
+chamada em três lugares — a projeção de elaboração, a publicação e a consolidação de Retificação —, e
+nos três o conteúdo já está na forma vigente, porque a elevação roda antes. Nenhum snapshot v5 cru
+chega a este validador.
+
+Admitir nulo criaria **duas grafias canônicas para a mesma versão**: um v6 com `forma: null` e um v6
+com `forma: "PONTUADA"` descreveriam a mesma Etapa com bytes diferentes, e a versão canônica existe
+justamente para identificar *uma* forma. FR-120 autoriza a ausência em **conteúdo anterior à v6**, e
+só ali; quem a interpreta é o leitor legado, não o contrato da versão nova.
+
+Os rótulos continuam anuláveis porque `null` neles tem significado — a forma pontuada não nomeia
+sentido nenhum —, exatamente como `minimumScore` é anulável e obrigatório. No conteúdo publicado não
+há campo opcional: obrigatório significa **presente**, e não preenchido, e é isso que
+`test_todo_campo_do_conteudo_publicado_e_obrigatorio` já cobra de toda coleção.
+
+O modelo de **elaboração** pode manter `forma` anulável enquanto rascunho — quem está compondo ainda
+não escolheu —, e a publicação é que a exige. É a mesma assimetria que a 012 já pratica entre
+rascunho e conclusão.
+
+**A regra de verdade, porém, é entre campos**, e `Campo` não a expressa — o próprio arquivo já diz
+isso ao deixar `content` e `source` de fora da seção publicada.
 
 A condicionalidade vai para `validate_stages`, onde já vive a única coerência entre campos que o
 contrato escreve para a Etapa — hoje "nota mínima não supera a máxima". Ela ganha companhia:
@@ -133,6 +152,27 @@ A leitura da forma acontece **na transação que conclui**, do conteúdo da vers
 não numa segunda consulta, e não da tela. Retificação consolidada no intervalo é recusada por
 FR-073/FR-088, com a frase que já existe.
 
+## TR-004a — `Avaliacao`: o backfill que a constraint nova exige
+
+`Avaliacao` **não** é append-only e não tem trigger; o backfill dela é um `UPDATE` comum. Mas ele é
+obrigatório, e esquecê-lo derruba a migration: `ck_avaliacao_concluida_completa` passa a exigir
+`forma` para o estado `CONCLUIDA`, e o PostgreSQL **valida a tabela inteira** ao criar a constraint.
+Toda avaliação já concluída nasceria com `forma = NULL` e reprovaria.
+
+```text
+estado = CONCLUIDA  → forma := 'PONTUADA'
+estado = RASCUNHO   → forma permanece NULL
+```
+
+Os rascunhos ficam sem forma de propósito: a forma é lida e gravada **no ato de concluir**, do
+conteúdo da versão validada (FR-117), e escrevê-la num rascunho afirmaria antecipadamente uma regra
+que a conclusão ainda vai ler. Um rascunho aberto hoje e concluído depois de uma Retificação que
+mudou a forma da Etapa deve concluir na forma nova — ou ser recusado por FR-073 —, e nunca numa forma
+carimbada quando ele nasceu.
+
+A ordem dentro da migration é a mesma das outras duas: acrescentar anulável, preencher, só então
+trocar a constraint.
+
 ## TR-005 — `ConclusaoAvaliacao`: coluna não-nulável em tabela append-only
 
 `ConclusaoAvaliacao.pontuacao` é `NOT NULL`, a tabela está em `TABELAS_APPEND_ONLY` e tem trigger
@@ -173,7 +213,8 @@ não tem pontuação não é conferência nenhuma — é uma comparação de `NU
 `IS DISTINCT FROM` resolve como *iguais*, e a trigger passaria a aprovar qualquer coisa na forma
 decisória.
 
-A conferência passa a alternar, e ganha um campo:
+A conferência **não** alterna por forma: ela ganha `forma` e `sentido` e compara os três
+incondicionalmente.
 
 ```sql
 fonte.forma      IS DISTINCT FROM NEW.forma       → erro
@@ -185,6 +226,11 @@ Comparar os três incondicionalmente é mais forte que alternar por forma **e ma
 formas são iguais e os dois campos são iguais, a alternância é redundante; se as formas divergem, o
 primeiro teste já reprova. A alternância voltaria a existir só se algum dia uma forma admitisse os
 dois campos — e nenhuma admite, por construção.
+
+A D-008.2 e a FR-049 da `specs/013` diziam "alterna por forma" na primeira redação, e **foram
+emendadas** para descrever a comparação incondicional. Implementar diferente do que a spec diz seria
+divergência deliberada, e a Constituição não a admite: quando o desenho corrige a spec, quem muda é
+a spec.
 
 `ResultadoEtapa.pontuacao` relaxa para anulável e `sentido` nasce anulável, pelo mesmo caminho de
 TR-005, com o mesmo `DROP TRIGGER` / backfill / `CREATE TRIGGER` — a tabela também é append-only por
@@ -294,19 +340,70 @@ razão e com a mesma condicionalidade.
 
 ## TR-012 — A ordem das migrations, e o que não cabe na mesma
 
-São quatro migrations, em três apps, e a ordem entre elas é imposta por dependência de dado:
+São **três** migrations, em três apps, e a ordem entre elas é imposta por dependência de dado:
 
 ```text
-1. editais       dois campos na Etapa de elaboração: forma e os dois rótulos
+1. editais       três campos na Etapa de elaboração: forma e os dois rótulos
 2. avaliacoes    forma + sentido na Avaliacao e na ConclusaoAvaliacao,
-                 backfill PONTUADA, constraints que alternam
+                 backfill PONTUADA nas duas, constraints que alternam
 3. resultados    forma + sentido no ResultadoEtapa, backfill, trigger nova
-4. —             nenhuma em publicacoes: a elevação é função pura sobre conteúdo lido
 ```
 
-A quarta linha é a que mais importa e é a que a 012 já provou: elevar não escreve linha nenhuma, e
-`Publicacao` e `VersaoConsolidada` continuam byte a byte o que foi publicado.
+**Nenhuma em `publicacoes`**, e essa ausência é a que mais importa: a elevação é função pura sobre
+conteúdo lido, não escreve linha nenhuma, e `Publicacao` e `VersaoConsolidada` continuam byte a byte
+o que foi publicado. A 012 já provou isso, e a prova não é refeita.
 
 `SCHEMA_VERSION` sobe para 6 **junto** da migration de `editais`, e não antes: entre o salto da
 constante e a chegada do campo, toda Retificação em curso passaria a comparar contra uma versão que
 o conteúdo elaborado ainda não sabe escrever.
+
+## TR-013 — O `openapi.yaml` é parte da entrega, e não documentação de acompanhamento
+
+`specs/001-processo-seletivo-editais/contracts/openapi.yaml` é a fonte única da forma publicada, e
+`tests/contract/test_forma_publicada.py` a confere contra o domínio campo a campo. Três testes de lá
+falham no instante em que `ETAPA_PUBLICADA` ganha campos sem a alteração correspondente no contrato:
+a transcrição que cobre todos os campos, a que confere dimensão por dimensão, e a que exige que
+**todo campo do conteúdo publicado seja obrigatório** — onde obrigatório significa presente, e não
+preenchido.
+
+O que muda no arquivo:
+
+| esquema | mudança |
+|---|---|
+| `EtapaPublicada` | `forma` em `required`, `type: string`, `enum: [PONTUADA, DECISORIA]`, **sem `'null'`** |
+| `EtapaPublicada` | `rotuloFavoravel` e `rotuloDesfavoravel` em `required`, `type: [string, 'null']` |
+| `EtapaPublicada` | a `description` passa a falar da versão canônica **6**, e registra o segundo incremento como o texto atual registra o primeiro |
+| `EtapaInput` | os três campos aceitos na elaboração, com a nulabilidade do rascunho |
+
+A assimetria entre `forma` e os rótulos no contrato é a mesma de TR-003, e é visível na diferença
+entre `eliminatory: { type: boolean }` — obrigatório e não nulo — e `minimumScore: { type: [string,
+'null'] }`, obrigatório e nulo admitido. `forma` é do primeiro tipo.
+
+Editar o `openapi.yaml` **antes** do domínio inverteria a ordem que o teste protege, mas nada impede
+que as duas coisas entrem na mesma tarefa; o que não pode acontecer é a alteração do domínio ser
+declarada pronta com o contrato em vermelho.
+
+## TR-014 — O salto de versão precisa ser exercido, e não só o estado final
+
+A suíte roda contra um banco já migrado, e por isso ela demonstra que o **esquema novo** funciona —
+não que o **salto** funciona. Os três backfills, o `DROP`/`CREATE` das duas triggers append-only e a
+substituição da trigger de coerência são precisamente o tipo de coisa que passa em banco limpo e
+falha em produção, onde existem linhas.
+
+`tests/migrations/test_migrations.py` já tem a forma certa — `MigrationExecutor`, upgrade
+incremental, conferência de que as triggers sobreviveram — e tem um limite que esta revisão obriga a
+remover: `APPS = ("processos", "editais", "publicacoes", "auditoria")`, sem `avaliacoes` e sem
+`resultados`, e `TRIGGERS` sem as três daquelas duas. Enquanto for assim, nenhuma migration dos dois
+apps que esta revisão mais mexe é exercida por teste de upgrade.
+
+O teste que a revisão acrescenta:
+
+1. aplica as migrations **até o estado anterior** a esta revisão;
+2. cria dados históricos — Avaliação concluída, conclusão preservada e Resultado, todos pontuados;
+3. aplica as três migrations novas;
+4. confere os três backfills: `forma = 'PONTUADA'` em toda linha concluída, e `NULL` nos rascunhos;
+5. confere que `conclusao_avaliacao_append_only`, `resultado_etapa_append_only` e
+   `resultado_etapa_coerente` existem de novo, e que a última recusa uma fonte divergente.
+
+`postgresql_only`, como os demais — em SQLite não há trigger a recriar, e o teste passaria sem
+exercitar o que ele existe para exercitar.

@@ -107,4 +107,9 @@ As garantias de banco, que são o que sustenta as jornadas acima e precisam de t
 | conclusão pontuada com sentido é impossível | `INSERT` cru recusado pela constraint |
 | Resultado que não bate com a fonte é impossível | `INSERT` cru recusado pela trigger |
 | conclusão histórica continua completa | toda linha existente com `forma = PONTUADA` |
+| o salto de versão funciona **com dados** | `MigrationExecutor` a partir do estado anterior, com avaliações, conclusões e Resultados históricos: os três backfills e as três triggers recriadas |
 | nada da forma pontuada mudou | a suíte existente passa sem alteração de asserção |
+
+A penúltima linha é a que a suíte comum **não** alcança: ela roda sobre banco já migrado, e por isso
+demonstra que o esquema novo funciona, não que a migração até ele funciona. `tests/migrations/test_migrations.py`
+precisa antes admitir `avaliacoes` e `resultados` no seu `APPS`, hoje restrito a quatro.

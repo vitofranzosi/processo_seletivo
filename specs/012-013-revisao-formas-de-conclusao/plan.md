@@ -51,17 +51,25 @@ o começo de um motor genérico de avaliação.
 **Primary Dependencies**: Django 5.2, DRF 3.16. **Nenhuma dependência nova. Nenhuma rota nova,
 nenhum caminho alterado, nenhuma permissão nova, nenhum ato administrativo novo.**
 
-**Storage**: PostgreSQL. **Três migrations**, em `editais`, `avaliacoes` e `resultados`. As duas
-últimas mexem em tabelas append-only protegidas por trigger, e por isso derrubam e recriam a trigger
-dentro da própria transação para fazer o backfill (TR-005, TR-006). **Nenhuma migration em
-`publicacoes`**: a elevação de versão canônica é função pura sobre conteúdo lido, e não escreve
-linha nenhuma — a 012 já provou isso e a prova não é refeita.
+**Storage**: PostgreSQL. **Três migrations**, em `editais`, `avaliacoes` e `resultados`, e **três
+backfills** — `Avaliacao` concluída, `ConclusaoAvaliacao` e `ResultadoEtapa`, todos para `PONTUADA`;
+rascunho de Avaliação permanece sem forma, porque ela é lida no ato de concluir. Duas das tabelas são
+append-only protegidas por trigger, e por isso derrubam e recriam a trigger dentro da própria
+transação para o backfill (TR-004a, TR-005, TR-006). **Nenhuma migration em `publicacoes`**: a
+elevação de versão canônica é função pura sobre conteúdo lido, e não escreve linha nenhuma — a 012 já
+provou isso e a prova não é refeita.
 
 **Testing**: pytest com pytest-django. Toda garantia de banco desta revisão é `postgresql_only` — as
-triggers não existem em SQLite, e sob ela os testes passariam sem exercitar nada. Três exigências
-específicas: os quatro `INSERT` crus das constraints e da trigger; a leitura de um snapshot v5 depois
-do salto para 6; e a suíte existente passando **sem alteração de asserção**, que é a demonstração de
-FR-124 e FR-050.
+triggers não existem em SQLite, e sob ela os testes passariam sem exercitar nada. Quatro exigências
+específicas: os `INSERT` crus das constraints e da trigger; a leitura de um snapshot v5 depois do
+salto para 6; **o salto de versão exercido com dados**, por `MigrationExecutor`, que exige incluir
+`avaliacoes` e `resultados` no `APPS` de `tests/migrations/test_migrations.py`, hoje restrito a
+quatro apps (TR-014); e a suíte existente passando **sem alteração de asserção**, que é a
+demonstração de FR-124 e FR-050.
+
+O contrato tem suíte própria: `tests/contract/test_forma_publicada.py` confere o `openapi.yaml`
+contra o domínio campo a campo, e três dos seus testes ficam vermelhos no instante em que
+`ETAPA_PUBLICADA` ganha campo sem a alteração correspondente no contrato (TR-013).
 
 **Target Platform**: servidor Linux; navegador institucional, incluindo celular. O par de rótulos
 precisa caber em 375 px sem virar tabela horizontal.
@@ -131,6 +139,13 @@ entrega que aconteceu.
 ### Source Code (repository root)
 
 ```text
+specs/001-processo-seletivo-editais/contracts/
+└── openapi.yaml                           EtapaPublicada e EtapaInput: os três campos, na versão 6
+
+backend/tests/
+└── migrations/test_migrations.py          APPS e TRIGGERS ganham avaliacoes e resultados; o salto
+                                           com dados históricos vira teste
+
 backend/processo_seletivo/
 ├── shared/canonical.py                    SCHEMA_VERSION 5 → 6, com a história do incremento
 ├── editais/
@@ -162,19 +177,20 @@ backend/processo_seletivo/
 
 **Structure Decision**: nada de app novo e nada de módulo novo. Cada mudança cai no arquivo que já
 é dono daquela responsabilidade, e a lista acima é exatamente o conjunto de pontos que `maximumScore`
-toca hoje, mais os três de domínio da conclusão.
+toca hoje, mais os três de domínio da conclusão — e mais o `openapi.yaml`, que é fonte única da forma
+publicada e não documentação de acompanhamento.
 
 ## Fases de implementação sugeridas
 
 | Fase | Entrega observável | Por que nesta ordem |
 |---|---|---|
-| **F1** | A Etapa publica a forma: contrato, validação, elaboração, snapshot, `SCHEMA_VERSION` 6 | Sem norma publicada, tudo que vier depois aplicaria regra que ninguém publicou (P-007) |
+| **F1** | A Etapa publica a forma: `openapi.yaml`, validação, elaboração, snapshot, `SCHEMA_VERSION` 6 | Sem norma publicada, tudo que vier depois aplicaria regra que ninguém publicou (P-007). O contrato entra **nesta** fase, e não ao final: três testes de `test_forma_publicada.py` ficam vermelhos sem ele |
 | **F2** | Elevação 5 → 6 e Retificação: `CAMPOS_ETAPA` completa, equivalência de grafias, conflito | É a precondição que a D-002 mandou confrontar **antes** de qualquer migration de conteúdo |
 | **F3** | A conclusão por forma: `Avaliacao` e `ConclusaoAvaliacao`, constraints que alternam, backfill | O invariante desce ao banco antes de qualquer tela poder gravar nele |
 | **F4** | A Mesa com dois instrumentos, e as recusas no canal HTTP real | A capacidade só existe quando é alcançável pelo ator (Princípio VI) |
 | **F5** | O documento materializado, e o resumo da Retificação | Senão a fonte estruturada e o PDF divergem |
 | **F6** | `ResultadoEtapa` por forma, trigger nova, consequência e os dois impedimentos | Fecha a fronteira: a decisão vira consequência oficial |
-| **F7** | A bateria: garantias de banco, não regressão, e as seis jornadas | A demonstração, e não a intenção |
+| **F7** | A bateria: garantias de banco, o salto de versão com dados, não regressão, e as seis jornadas | A demonstração, e não a intenção. O upgrade exercido é o que prova os três backfills e a recriação das triggers — a suíte comum roda sobre banco já migrado e não os alcança |
 
 **A primeira vertical significativa** é F1 → F3 → F4: publicar uma Etapa decisória, avaliar sem nota
 e concluir. F6 é o que a torna útil; sem ela o sistema aceita o indeferimento e não produz efeito, e

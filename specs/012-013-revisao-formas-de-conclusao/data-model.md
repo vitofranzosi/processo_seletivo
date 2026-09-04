@@ -26,7 +26,7 @@ elegível, Classificado/Desclassificado.
 
 | campo | tipo | nulo | aplicabilidade |
 |---|---|---|---|
-| `forma` | `"PONTUADA" \| "DECISORIA"` | sim¹ | sempre |
+| `forma` | `"PONTUADA" \| "DECISORIA"` | **não**¹ | sempre |
 | `rotuloFavoravel` | string | sim | obrigatório em `DECISORIA`, proibido em `PONTUADA` |
 | `rotuloDesfavoravel` | string | sim | obrigatório em `DECISORIA`, proibido em `PONTUADA` |
 | `minimumScore` | decimal canônico | sim | admitido em `PONTUADA`, proibido em `DECISORIA` |
@@ -34,8 +34,15 @@ elegível, Classificado/Desclassificado.
 | `weight` | decimal canônico | sim | **inalterado**: descreve a composição entre Etapas, não a conclusão |
 | `eliminatory` | bool | não | **inalterado** — e, na forma decisória, é ele que dá consequência ao sentido |
 
-¹ Nulo ou ausente significa `PONTUADA` (012, FR-120). A elevação escreve o valor literal; o consumo
-interpreta a ausência. As duas leituras vêm da mesma função.
+¹ **Na versão 6, `forma` é obrigatória e não nula.** Admitir nulo criaria duas grafias canônicas
+para a mesma versão, e a versão existe para identificar *uma* forma. A ausência é lida como
+`PONTUADA` apenas em **conteúdo anterior à v6** (012, FR-120), e quem a interpreta é o leitor legado.
+A elevação sempre escreve o literal, e nenhum snapshot v5 cru chega ao validador de publicação — ele
+roda sobre a projeção de elaboração, sobre a publicação e sobre a consolidação de Retificação, e nos
+três o conteúdo já está na forma vigente (TR-003).
+
+O modelo de **elaboração** pode manter `forma` anulável enquanto rascunho; a publicação é que a
+exige. É a mesma assimetria entre rascunho e ato que a 012 já pratica na Avaliação.
 
 **Elevação, degrau novo** (TR-001, TR-002):
 
@@ -50,6 +57,17 @@ interpreta a ausência. As duas leituras vêm da mesma função.
 | `forma` | **novo**, anulável, `choices=Forma` — gravado na conclusão, lido da versão validada |
 | `sentido` | **novo**, anulável, `choices=Sentido` |
 | `pontuacao` | inalterado no tipo; deixa de ser exigido pela conclusão em toda forma |
+
+**Backfill obrigatório**, e ele não é opcional: o PostgreSQL valida a tabela inteira ao criar a
+constraint, e toda avaliação já concluída reprovaria com `forma = NULL`.
+
+```text
+estado = CONCLUIDA  → forma := 'PONTUADA'
+estado = RASCUNHO   → forma permanece NULL
+```
+
+Os rascunhos ficam sem forma de propósito: ela é lida e gravada **no ato de concluir**, e carimbá-la
+no nascimento afirmaria uma regra que a conclusão ainda vai ler (TR-004a).
 
 `ck_avaliacao_concluida_completa` passa a alternar:
 
@@ -77,8 +95,9 @@ participam de nenhuma verificação local, e a forma participa da que define "co
 Append-only por privilégio (`TABELAS_APPEND_ONLY`) e por trigger. Migração em três passos, com
 `DROP TRIGGER` / backfill / `CREATE TRIGGER` na mesma transação (TR-005).
 
-Todas as linhas existentes recebem `forma = 'PONTUADA'` e continuam completas sob a regra nova —
-**nenhuma conclusão histórica perde validade**.
+Todas as linhas existentes recebem `forma = 'PONTUADA'` — aqui não há rascunho, porque uma conclusão
+preservada é sempre uma conclusão — e continuam completas sob a regra nova: **nenhuma conclusão
+histórica perde validade**.
 
 ## 5. `resultados.ResultadoEtapa` — delta
 
@@ -90,7 +109,11 @@ Todas as linhas existentes recebem `forma = 'PONTUADA'` e continuam completas so
 | `consequencia` | inalterado — `HABILITADA \| ELIMINADA` nas duas formas |
 | `motivo` | inalterado no tipo; passa a citar o **rótulo publicado** na forma decisória |
 
-`check_stage_result_source()` passa a conferir três campos contra a Avaliação fonte, sem alternar:
+Todas as linhas existentes recebem `forma = 'PONTUADA'`, pelo mesmo caminho e pela mesma razão.
+
+`check_stage_result_source()` passa a conferir três campos contra a Avaliação fonte,
+**incondicionalmente** — a spec da 013 foi emendada para dizer isso, porque a primeira redação dela
+falava em alternar por forma:
 
 ```sql
 fonte.forma     IS DISTINCT FROM NEW.forma      → erro
@@ -106,8 +129,10 @@ fato de o Resultado não guardar norma — a versão é alcançada por `avaliaca
 
 ## 6. `editais` — elaboração
 
-A Etapa de elaboração ganha `forma`, `rotulo_favoravel` e `rotulo_desfavoravel`, que o
-`edital_snapshot` transcreve para o conteúdo publicado. Nenhum outro modelo de elaboração muda.
+A Etapa de elaboração ganha `forma`, `rotulo_favoravel` e `rotulo_desfavoravel` — **três** campos —,
+que o `edital_snapshot` transcreve para o conteúdo publicado. Anuláveis na elaboração, porque o
+rascunho é anulável; exigidos na publicação, pela regra de TR-003. Nenhum outro modelo de elaboração
+muda.
 
 ## 7. Transições de estado
 
@@ -125,3 +150,4 @@ para `CONCLUIDA` exige**, e isso é constraint, não estado.
 | banco — `resultados` | Resultado idêntico à fonte em forma, pontuação e sentido |
 | `resultados/domain/regra.py` | a Etapa tem regra suficiente; a consequência é lida, nunca inferida |
 | `resultados/domain/compatibilidade.py` | a forma histórica é a forma vigente |
+| `openapi.yaml` (001) | a forma publicada é a que o domínio transcreve — conferido por `test_forma_publicada.py` |
