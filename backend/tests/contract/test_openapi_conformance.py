@@ -274,12 +274,22 @@ def test_admin_finalization_responses_conform_to_the_contract(
         method="post",
     )
 
+    # O Processo já está Ativo: publicar o primeiro Edital abre o certame (E2E-005). O 409 que
+    # este trecho precisa conferir vem, então, de encerrar o que já foi encerrado — recusa real,
+    # e não mais a falta de ativação, que deixou de ser alcançável por aqui.
     processo = ProcessoSeletivo.objects.get(pk=edital.processo_id)
-    bloqueado = api_client.post(
+    api_client.post(
         f"/api/v1/admin/processos/{processo.id}/encerramentos",
-        {"reason": "Sem ativação"},
+        {"reason": "Certame concluído"},
         format="json",
         **actor_headers("gestor", gestor, if_match=processo.revision, key="conformance-key-0004"),
+    )
+    processo.refresh_from_db()
+    bloqueado = api_client.post(
+        f"/api/v1/admin/processos/{processo.id}/encerramentos",
+        {"reason": "De novo"},
+        format="json",
+        **actor_headers("gestor", gestor, if_match=processo.revision, key="conformance-key-0005"),
     )
     assert bloqueado.status_code == 409
     assert_conforms(

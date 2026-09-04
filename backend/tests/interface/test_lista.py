@@ -235,5 +235,7 @@ def test_o_estado_do_processo_fica_com_o_nome_dele(client, seletor_ligado, edita
     cabeca = corpo.split('<article class="processo">')[1].split("</header>")[0]
     # O estado vem **antes** do grupo de ações, e não depois dele.
     identidade = cabeca.split('<span class="acoes">')[0]
-    assert "s-EM_ELABORACAO" in identidade or "s-PUBLICADO" in identidade
+    # `s-ATIVO` desde E2E-005: publicar o primeiro Edital abre o certame, e o Processo do cenário
+    # já está publicado. O que este teste guarda é a **posição** do estado, não qual ele é.
+    assert any(f"s-{estado}" in identidade for estado in ("ATIVO", "EM_ELABORACAO", "PUBLICADO"))
     assert "/comissao" in cabeca and "/comissao" not in identidade

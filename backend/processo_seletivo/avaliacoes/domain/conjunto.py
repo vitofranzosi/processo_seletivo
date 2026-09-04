@@ -11,6 +11,13 @@ incremental: cada inscrição nova entrando numa fila de pendência com dono. Is
 e ninguém a pediu. Enquanto ela não existir, a única forma de o sistema não produzir candidato sem
 avaliador é recusar o ato que o produz — e recusar cedo, dizendo por quê.
 
+**Onde a regra corre.** Nos três pontos, e não só nos dois que a tela usa: a distribuição manual,
+a proposta do rodízio e **a confirmação dela**. A proposta recusa para não convidar a presidência
+a montar o que será negado; a confirmação recusa porque é ela que grava, e regra que decide
+direito precisa correr no caminho que produz o efeito — a assinatura da proposta carrega os pares
+inscrição–membro e nada diz sobre o prazo, de modo que uma Retificação que reabra as inscrições
+entre ver e confirmar deixaria a proposta válida sobre um conjunto que voltou a crescer.
+
 **A ausência de prazo não é prazo aberto.** Edital sem Evento designado não recebe inscrição por
 este sistema, e não há o que esperar: a regra não se aplica, e distribuir é admitido.
 """
