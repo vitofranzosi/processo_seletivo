@@ -114,12 +114,12 @@ nova, nenhuma permissão nova.**
 ### A regra da 013 que precisa mudar antes de qualquer Resultado decisório
 
 - [X] T019 Condicionar à forma, em `backend/processo_seletivo/resultados/domain/regra.py`, a recusa que hoje é incondicional: `impedimento_da_regra` só exige nota mínima de Etapa eliminatória **na forma pontuada** (013, FR-048). Sem isto, análise documental eliminatória e sem mínima — a configuração real dos Editais 35 e 57 — é recusada, e nenhuma tarefa de US5 consegue consolidar. O caso **simétrico**, da decisória não eliminatória, é de US6 e não entra aqui
-- [ ] T020 Testar em `backend/tests/unit/resultados/test_regra.py` que Etapa decisória eliminatória e sem nota mínima **não** cai em regra insuficiente, e que a pontuada eliminatória e sem mínima continua caindo (depende de T019)
+- [X] T020 Testar em `backend/tests/unit/resultados/test_regra.py` que Etapa decisória eliminatória e sem nota mínima **não** cai em regra insuficiente, e que a pontuada eliminatória e sem mínima continua caindo (depende de T019)
 
 ### A prova do salto — junto das migrations, e não no fim
 
-- [ ] T021 Incluir `avaliacoes` e `resultados` em `APPS`, e `conclusao_avaliacao_append_only`, `resultado_etapa_append_only` e `resultado_etapa_coerente` em `TRIGGERS`, em `backend/tests/migrations/test_migrations.py` — hoje nenhuma migration desses dois apps é exercida por teste de upgrade
-- [ ] T022 Escrever, em `backend/tests/migrations/test_migrations.py`, o teste `postgresql_only` que aplica as migrations até o estado anterior, cria Avaliação concluída, rascunho, conclusão preservada e Resultado pontuados, aplica as três migrations novas e confere os três backfills, o rascunho **sem** forma e as três triggers recriadas (TR-014)
+- [X] T021 Incluir `avaliacoes` e `resultados` em `APPS`, e `conclusao_avaliacao_append_only`, `resultado_etapa_append_only` e `resultado_etapa_coerente` em `TRIGGERS`, em `backend/tests/migrations/test_migrations.py` — hoje nenhuma migration desses dois apps é exercida por teste de upgrade
+- [X] T022 Escrever, em `backend/tests/migrations/test_migrations.py`, o teste `postgresql_only` que aplica as migrations até o estado anterior, cria Avaliação concluída, rascunho, conclusão preservada e Resultado pontuados, aplica as três migrations novas e confere os três backfills, o rascunho **sem** forma e as três triggers recriadas (TR-014)
 
 **Checkpoint**: a norma está publicada, o esquema mudou de significado e o salto está provado com dados
 
