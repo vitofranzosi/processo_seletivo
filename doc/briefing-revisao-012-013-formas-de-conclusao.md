@@ -262,11 +262,11 @@ Além da ida e volta das duas formas nas duas features:
 9. testes de não regressão e dos casos decisórios                        ✔ feito
 ```
 
-**Executado em 04/09/2026.** As 66 tarefas estão em
+**Executado em 04/09/2026.** As 71 tarefas — 66 do plano, mais cinco da revisão do PR — estão em
 [`specs/012-013-revisao-formas-de-conclusao/tasks.md`](../specs/012-013-revisao-formas-de-conclusao/tasks.md),
 e o que a implementação corrigiu do plano está registrado em
 [`traceability.md`](../specs/012-013-revisao-formas-de-conclusao/traceability.md). A suíte fecha com
-2806 testes passando, e nenhum dos 2750 do baseline deixou de existir.
+2818 testes passando, e nenhum dos 2750 do baseline deixou de existir.
 
 **Os passos 2 e 3 foram executados em 03/09/2026**, e o mapa abaixo passa a ser o registro do que
 foi emendado — não uma lista de pendências. As duas specs já estão coerentes entre si; o `/plan`

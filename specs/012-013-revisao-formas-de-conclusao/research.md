@@ -151,11 +151,18 @@ preenchida, e é a conclusão que exige completude — exatamente como `pontuaca
 estado = RASCUNHO   → nada é exigido
 estado = CONCLUIDA  → versao, concluida_em, concluida_por, forma
                       ∧ (forma = PONTUADA  ∧ pontuacao ≠ NULL ∧ sentido = NULL)
-                      ∨ (forma = DECISORIA ∧ sentido  ≠ NULL ∧ pontuacao = NULL)
+                      ∨ (forma = DECISORIA ∧ pontuacao = NULL
+                                            ∧ sentido ∈ {FAVORAVEL, DESFAVORAVEL})
 ```
 
 O comentário acima dela — *"o que 'concluída' significa, dito no banco"* — continua exato, e é por
-isso que a mudança é ali e não num validador. O que a constraint afirma mudou; o nível em que ela
+isso que a mudança é ali e não num validador.
+
+**Duas precisões que a implementação acrescentou.** A ausência é **vazio** e não `NULL`, porque o
+projeto não usa nulo em campo de texto e a própria constraint já comparava `~Q(concluida_por="")`. E
+o sentido é restrito **aos dois valores**, e não apenas a "não vazio": `TextChoices` não cria
+constraint, e sem nomeá-los um `INSERT` cru com valor inventado sairia habilitado, porque a
+consequência trata tudo que não é `DESFAVORAVEL` como favorável. O que a constraint afirma mudou; o nível em que ela
 afirma, não.
 
 **Por que `forma` é copiada e a nota mínima não.** FR-072 proíbe a Avaliação de copiar máxima,

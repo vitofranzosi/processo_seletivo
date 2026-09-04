@@ -107,9 +107,16 @@ As garantias de banco, que são o que sustenta as jornadas acima e precisam de t
 | conclusão pontuada com sentido é impossível | `INSERT` cru recusado pela constraint |
 | Resultado que não bate com a fonte é impossível | `INSERT` cru recusado pela trigger |
 | conclusão histórica continua completa | toda linha existente com `forma = PONTUADA` |
-| o salto de versão funciona **com dados** | `MigrationExecutor` a partir do estado anterior, com avaliações, conclusões e Resultados históricos: os três backfills e as três triggers recriadas |
-| nada da forma pontuada mudou | a suíte existente passa sem alteração de asserção |
+| sentido inventado é impossível | `INSERT` cru com valor fora do par recusado pela constraint |
+| o salto de versão funciona **com dados** | `MigrationExecutor` a partir do estado anterior, com avaliações, conclusões e Resultados históricos: os três backfills e as três triggers no lugar |
+| a reversão é recusada depois da primeira conclusão decisória | `migrate` para trás com dado decisório, e a recusa nomeia o ato administrativo que precisa vir antes |
+| nada da forma pontuada mudou | **por identidade de teste**: todo teste que existia continua existindo e passando, e as asserções alteradas são enumeradas uma a uma em [`traceability.md`](./traceability.md) §1 |
 
-A penúltima linha é a que a suíte comum **não** alcança: ela roda sobre banco já migrado, e por isso
-demonstra que o esquema novo funciona, não que a migração até ele funciona. `tests/migrations/test_migrations.py`
-precisa antes admitir `avaliacoes` e `resultados` no seu `APPS`, hoje restrito a quatro.
+As duas linhas do salto e da reversão são as que a suíte comum **não** alcança: ela roda sobre banco
+já migrado, e por isso demonstra que o esquema novo funciona, não que a migração até ele funciona.
+Para chegar até elas, `tests/migrations/test_migrations.py` passou a admitir `avaliacoes` e
+`resultados` no seu `APPS`, que era restrito a quatro.
+
+E "nada da forma pontuada mudou" **não** significa "nenhuma asserção mudou": o incremento sobe a
+versão canônica, e todo teste que fixa o literal dela tem de mudar. Exigir o contrário seria cobrar
+o que a própria revisão torna falso (012, FR-124; 013, FR-050).

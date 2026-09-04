@@ -64,7 +64,7 @@ as Etapas já em rascunho, que sem isso ficariam impublicáveis (TR-003).
 | campo | mudança |
 |---|---|
 | `forma` | **novo**, `blank`/`default=""`, `choices=Forma` — gravado na conclusão, lido da versão validada |
-| `sentido` | **novo**, `blank`/`default=""`, `choices=Sentido` |
+| `sentido` | **novo**, `blank`/`default=""`, `choices=Sentido` — e `choices` **não** basta: a constraint nomeia os dois valores |
 | `pontuacao` | inalterado no tipo; deixa de ser exigido pela conclusão em toda forma |
 
 **Vazio, e não nulo**: o projeto não usa `NULL` em campo de texto, e a mesma constraint já compara
@@ -85,10 +85,17 @@ no nascimento afirmaria uma regra que a conclusão ainda vai ler (TR-004a).
 
 ```text
 RASCUNHO   → sem exigência
-CONCLUIDA  → versao ∧ concluida_em ∧ concluida_por ∧ forma
-             ∧ ( forma = PONTUADA  ∧ pontuacao ≠ NULL ∧ sentido = NULL )
-             ∨ ( forma = DECISORIA ∧ sentido  ≠ NULL ∧ pontuacao = NULL )
+CONCLUIDA  → versao ∧ concluida_em ∧ concluida_por
+             ∧ ( forma = PONTUADA  ∧ pontuacao ≠ NULL ∧ sentido = '' )
+             ∨ ( forma = DECISORIA ∧ pontuacao = NULL ∧ sentido ∈ {FAVORAVEL, DESFAVORAVEL} )
 ```
+
+**Vazio, e não `NULL`, para os dois campos de texto**: é a convenção do projeto, e a mesma constraint
+já comparava `~Q(concluida_por="")`. E o sentido é restrito **aos dois valores**, não apenas a "não
+vazio": `TextChoices` valida no formulário e no `full_clean` e **não cria constraint**, de modo que
+um `INSERT` cru com valor inventado entraria — e `_consequencia_decisoria` trata tudo que não é
+`DESFAVORAVEL` como favorável, o que habilitaria a inscrição por um valor que ninguém escreveu. É o
+mesmo motivo pelo qual `ck_resultado_consequencia` existe na 013 desde sempre.
 
 Inalterados: `uq_avaliacao_concluida_por_pessoa`, a tripla copiada da Atribuição, `revision`, a
 autoria histórica em `identity_subject` / `concluida_por`.
@@ -101,7 +108,7 @@ participam de nenhuma verificação local, e a forma participa da que define "co
 | campo | mudança |
 |---|---|
 | `forma` | **novo**, `NOT NULL` depois do backfill |
-| `sentido` | **novo**, anulável |
+| `sentido` | **novo**, vazio por padrão; a constraint o restringe aos dois valores na forma decisória |
 | `pontuacao` | `NOT NULL` → **anulável**, governada pela constraint que alterna |
 
 Append-only por privilégio (`TABELAS_APPEND_ONLY`) e por trigger. **O `DROP TRIGGER` previsto não
@@ -118,7 +125,7 @@ histórica perde validade**.
 | campo | mudança |
 |---|---|
 | `forma` | **novo**, `NOT NULL` depois do backfill |
-| `sentido` | **novo**, anulável |
+| `sentido` | **novo**, vazio por padrão; restrito aos dois valores na forma decisória |
 | `pontuacao` | `NOT NULL` → **anulável** |
 | `consequencia` | inalterado — `HABILITADA \| ELIMINADA` nas duas formas |
 | `motivo` | inalterado no tipo; passa a citar o **rótulo publicado** na forma decisória |

@@ -221,11 +221,12 @@ aplicação. O que ela exige é que o Resultado afirme exatamente o que a Avalia
 forma em que ela o afirmou.
 
 **A comparação é incondicional, e não alterna por forma.** A primeira redação desta decisão dizia
-"alterna", e estava errada por uma razão que só aparece no SQL: numa conclusão decisória os dois
-lados da pontuação são nulos, e `IS DISTINCT FROM` resolve nulo contra nulo como **iguais** — uma
-conferência que alternasse por forma aprovaria qualquer sentido em silêncio. Comparar os três
-incondicionalmente é mais forte e mais simples: se as formas são iguais, alternar seria redundante;
-se divergem, o primeiro teste já reprova.
+"alterna", e estava errada: alternar significa deixar um campo **sem conferência nenhuma** no ramo
+que não o olha, e o campo não conferido é exatamente o que carrega a afirmação daquela forma. Numa
+conclusão decisória, um ramo que só comparasse pontuação compararia dois nulos — e `IS DISTINCT
+FROM` resolve nulo contra nulo como **iguais** —, aprovando qualquer sentido em silêncio. Comparar
+os três incondicionalmente é mais forte e mais simples: se as formas são iguais, alternar seria
+redundante; se divergem, o primeiro teste já reprova.
 
 **3 · A consequência é lida da forma, e nunca inferida.** Na forma pontuada, a regra atual permanece
 intacta: Etapa eliminatória elimina abaixo da mínima, e Etapa sem caráter eliminatório materializa e

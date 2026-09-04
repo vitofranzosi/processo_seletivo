@@ -15,7 +15,9 @@ para migração. Além disso, dois defeitos já foram encontrados no papel e cad
 própria, nomeada pelo defeito: a constraint que reprovaria toda avaliação concluída por falta de
 backfill, e a conferência que aprovaria qualquer sentido porque `NULL IS DISTINCT FROM NULL` é falso.
 
-**Organization**: por história de execução. As sete são as **E1 a E7** do [mapa de execução](./spec.md),
+**Organization**: por história de execução. A Fase 11 é posterior à entrega: ela registra as
+correções que a revisão do PR pediu, para que esta lista não declare completude sobre um escopo que
+cresceu depois dela. As sete são as **E1 a E7** do [mapa de execução](./spec.md),
 e aparecem aqui como US1 a US7 na mesma ordem — que é a ordem de dependência, e não a de prioridade.
 Seis são P1; **US4 é a única P2** e é a única que pode ser adiada sem bloquear as demais.
 
@@ -253,6 +255,21 @@ nova, nenhuma permissão nova.**
 - [X] T064 [P] Fechar a rastreabilidade em `specs/012-013-revisao-formas-de-conclusao/traceability.md`, ligando FR e SC das duas specs às tarefas e aos testes, como 012 e 013 fizeram
 - [X] T065 [P] Acrescentar uma Etapa decisória aos dados de demonstração em `backend/processo_seletivo/processos/management/commands/seed_demo.py`, para que a forma nova exista em ambiente de demonstração e não só em teste
 - [X] T066 [P] Atualizar `doc/briefing-revisao-012-013-formas-de-conclusao.md` marcando as fases executadas, como o próprio documento já faz com os passos 1 a 3
+
+---
+
+## Phase 11: Correções da revisão do PR
+
+**Purpose**: os cinco achados de `bc3eecb`, registrados como tarefas porque a lista não pode
+declarar completude sobre um escopo que cresceu depois dela. O que os une está em
+[`traceability.md`](./traceability.md) §4: **os três P1 eram invisíveis para uma suíte que só
+exercitava o caminho feliz da forma nova.**
+
+- [X] T067 Ler a conclusão histórica sob a **sua** norma: `conclusao_exibivel` e `etapa_do_conteudo` em `backend/processo_seletivo/avaliacoes/domain/previsao.py`, resolvidos uma vez por versão distinta nos dois seletores de `backend/processo_seletivo/avaliacoes/application/selectors.py`, e usados em `conclusoes.html`, `impedimentos.html` e `mesa_inscricao.html` — que lia a forma **vigente** para renderizar histórico
+- [X] T068 [P] Testar em `backend/tests/integration/avaliacoes/test_reabertura.py` que a decisória preservada exibe o rótulo publicado, e que a pontuada **não** vira favorável depois de a Etapa virar decisória
+- [X] T069 Restringir `sentido` aos dois valores nas três constraints — `backend/processo_seletivo/avaliacoes/models.py` e `backend/processo_seletivo/resultados/models.py` —, com as migrations `0003_sentido_restrito_aos_dois_valores` e `INSERT` cru de prova em `backend/tests/integration/avaliacoes/test_constraints.py`. `TextChoices` não cria constraint, e sem nomear os valores a inscrição sairia habilitada por um sentido inventado
+- [X] T070 Recusar a reversão das migrations `0002` de `avaliacoes` e `resultados` quando já existir conclusão decisória, nomeando o ato administrativo que precisa vir antes, e exercitar a recusa **com dado** em `backend/tests/migrations/test_migrations.py` — o teste anterior só verificava que havia caminho declarado
+- [X] T071 [P] Trocar o cabeçalho "Pontuação" por "Conclusão" em `backend/processo_seletivo/interface/templates/interface/resultados.html`, escrever os limites de borda dos três campos em `backend/tests/contract/test_limites_de_borda.py` — que T007 marcava sem ter tocado — e alinhar `data-model.md`, `research.md` e `quickstart.md` ao que foi construído
 
 ---
 

@@ -130,7 +130,7 @@ specs/012-013-revisao-formas-de-conclusao/
 ├── contracts/
 │   └── forma-da-conclusao.md
 ├── quickstart.md    # seis jornadas, com as negativas
-└── tasks.md         # $speckit-tasks — 62 tarefas em dez fases
+└── tasks.md         # $speckit-tasks — 71 tarefas em dez fases
 ```
 
 Os artefatos de `specs/012-mesa-de-avaliacao/` e `specs/013-consolidacao-resultado-etapa/`
