@@ -15,7 +15,11 @@ import hashlib
 from django.utils import timezone
 
 from processo_seletivo.processos.models import Edital
-from processo_seletivo.publicacoes.domain.elevacao import DEGRAUS
+from processo_seletivo.publicacoes.domain.elevacao import (
+    DEGRAUS,
+    DEGRAUS_DA_RAIZ,
+    DEGRAUS_DE_PERFIL,
+)
 from processo_seletivo.publicacoes.models import DocumentoPublicado, Publicacao
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from processo_seletivo.shared.canonical import canonical_bytes, canonical_sha256
@@ -27,31 +31,46 @@ VERSAO_ANTERIOR = 4
 # elevação. A lista literal aqui já ficou desatualizada uma vez — com o segundo incremento, ela
 # deixava `forma` num conteúdo carimbado como 4, que é uma grafia que nunca existiu — e derivá-la
 # é o que impede a terceira vez.
-PROPRIEDADES_DO_INCREMENTO = tuple(
-    chave
-    for versao, degrau in sorted(DEGRAUS.items())
-    if versao > VERSAO_ANTERIOR
-    for chave in degrau
-)
+def _propriedades_acima(degraus, versao):
+    return tuple(
+        chave for numero, degrau in sorted(degraus.items()) if numero > versao for chave in degrau
+    )
 
 
-def rebaixar(conteudo):
-    """O conteúdo como ele era antes do incremento: sem as duas chaves, na versão anterior."""
+PROPRIEDADES_DO_INCREMENTO = _propriedades_acima(DEGRAUS, VERSAO_ANTERIOR)
+
+
+def rebaixar(conteudo, *, para=VERSAO_ANTERIOR):
+    """O conteúdo como ele era antes dos incrementos acima de `para`.
+
+    **Três níveis, e não mais um.** Até a `012` todo degrau era de Etapa, e esta função só tirava
+    chaves de `/stages`. O degrau 7 acrescentou coleções dentro do Perfil e um campo na raiz, e
+    rebaixar sem tirar os três produziria um conteúdo carimbado com versão antiga e forma nova —
+    grafia que nunca existiu, que é o defeito que o comentário acima já registrou uma vez.
+
+    `para` existe porque cada incremento tem a sua "versão anterior": a elevação da `012` se
+    exercita a partir da 4, e a da `015`, a partir da 6.
+    """
+    de_etapa = _propriedades_acima(DEGRAUS, para)
+    de_perfil = _propriedades_acima(DEGRAUS_DE_PERFIL, para)
+    da_raiz = _propriedades_acima(DEGRAUS_DA_RAIZ, para)
     return {
-        **conteudo,
-        "schemaVersion": VERSAO_ANTERIOR,
+        **{chave: valor for chave, valor in conteudo.items() if chave not in da_raiz},
+        "schemaVersion": para,
         "stages": [
-            {
-                chave: valor
-                for chave, valor in etapa.items()
-                if chave not in PROPRIEDADES_DO_INCREMENTO
-            }
+            {chave: valor for chave, valor in etapa.items() if chave not in de_etapa}
             for etapa in conteudo.get("stages", [])
+        ],
+        "profiles": [
+            {chave: valor for chave, valor in perfil.items() if chave not in de_perfil}
+            for perfil in conteudo.get("profiles", [])
         ],
     }
 
 
-def publicar_na_versao_anterior(api_client, manager_headers, process_payload, *, draft=None):
+def publicar_na_versao_anterior(
+    api_client, manager_headers, process_payload, *, draft=None, versao=VERSAO_ANTERIOR
+):
     """Cria Processo e Edital e os publica com conteúdo da versão canônica anterior."""
     from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
     from processo_seletivo.publicacoes.models import RevisaoEdital
@@ -74,7 +93,7 @@ def publicar_na_versao_anterior(api_client, manager_headers, process_payload, *,
         **{**preparer, "HTTP_IF_MATCH": '"2"'},
     )
     revisao = RevisaoEdital.objects.filter(edital=edital).latest("submitted_at")
-    conteudo = rebaixar(edital_snapshot(edital))
+    conteudo = rebaixar(edital_snapshot(edital), para=versao)
     agora = timezone.now()
     publicacao = Publicacao.objects.create(
         edital=edital,
@@ -84,7 +103,7 @@ def publicar_na_versao_anterior(api_client, manager_headers, process_payload, *,
         effective_at=agora,
         content_hash=canonical_sha256(conteudo),
         canonical_content=canonical_bytes(conteudo),
-        canonical_schema_version=VERSAO_ANTERIOR,
+        canonical_schema_version=versao,
         published_by="publicador",
         signatory_id=SIGNATORY["authorityId"],
         signatory_name=SIGNATORY["name"],
