@@ -313,3 +313,44 @@ def test_a_jornada_completa_pela_interface_administrativa(
     assert terceira["participantes"] == {inscricoes[0].id, inscricoes[2].id}
     assert inscricoes[1].id in terceira["eliminadas"]
     assert terceira["aguardando"] == set()
+
+
+@pytest.mark.acceptance
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_etapa_decisoria_consolida_em_lote(gestor, api_client, manager_headers):
+    """Jornada 3: o indeferimento vira consequência oficial, sem virar zero (013, FR-046)."""
+    from processo_seletivo.resultados.application.consolidacao import consolidar
+    from processo_seletivo.resultados.models import ResultadoEtapa
+    from tests.conftest import ator_institucional
+    from tests.fixtures.comissao import inscrever
+    from tests.fixtures.mesa import concluir_como, distribuir_para
+    from tests.fixtures.resultado import montar_etapa_de_leitura_unica
+
+    cenario = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=2600, codigo="2600", decisoria=True
+    )
+    inscricoes = inscrever(cenario["edital"], 2, primeiro=1)
+    distribuir_para(cenario, gestor, ["joao"], inscricoes, chave="lote-2600")
+    concluir_como(cenario, "joao", inscricoes[0], sentido="FAVORAVEL", parecer="")
+    concluir_como(cenario, "joao", inscricoes[1], sentido="DESFAVORAVEL", parecer="Sem diploma.")
+
+    desfecho = consolidar(
+        actor=ator_institucional("maria"),
+        processo_id=cenario["processo"].id,
+        edital_id=cenario["edital"].id,
+        etapa_id=cenario["primeira"],
+        inscricao_ids=[i.id for i in inscricoes],
+        idempotency_key="k-2600",
+        correlation_id="teste",
+    )
+
+    assert desfecho is not None
+    resultados = {r.inscricao_id: r for r in ResultadoEtapa.objects.all()}
+    assert len(resultados) == 2
+    habilitada = resultados[inscricoes[0].id]
+    eliminada = resultados[inscricoes[1].id]
+    assert habilitada.consequencia == "HABILITADA" and habilitada.sentido == "FAVORAVEL"
+    assert eliminada.consequencia == "ELIMINADA" and eliminada.pontuacao is None
+    # O motivo fala a língua do Edital, e não a do domínio.
+    assert "Indeferido" in eliminada.motivo and "DESFAVORAVEL" not in eliminada.motivo

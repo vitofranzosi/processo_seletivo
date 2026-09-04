@@ -31,6 +31,7 @@ from processo_seletivo.avaliacoes.application.mesa import (
     INTEGRIDADE,
 )
 from processo_seletivo.avaliacoes.application.trilha import auditar as auditar_ato
+from processo_seletivo.avaliacoes.domain.previsao import rotulos
 from processo_seletivo.comissoes.application import alocacao as alocacao_app
 from processo_seletivo.comissoes.application import comissao as comissao_app
 from processo_seletivo.comissoes.application import selectors as comissao_selectors
@@ -2713,6 +2714,10 @@ def resultados_da_etapa(request, edital_id, etapa_id):
                 # quem consulta precisa saber que a origem foi questionada depois (FR-032).
                 "contestados": resultado_selectors.contestacoes_supervenientes(linhas),
                 "consequencia": request.GET.get("consequencia") or "",
+                # Os rótulos que **este** Edital publicou: quem consulta o Resultado tem direito ao
+                # vocabulário do Edital, e não ao enum do domínio (FR-118).
+                "rotulo_favoravel": rotulos(etapa)[0],
+                "rotulo_desfavoravel": rotulos(etapa)[1],
             },
         )
     )

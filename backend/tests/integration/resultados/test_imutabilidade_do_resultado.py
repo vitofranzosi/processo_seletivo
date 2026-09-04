@@ -13,7 +13,7 @@ para a Avaliação certa sem provar que essa Avaliação podia fundamentar coisa
 from decimal import Decimal
 
 import pytest
-from django.db import IntegrityError, connection, transaction
+from django.db import DatabaseError, IntegrityError, connection, transaction
 from django.utils import timezone
 
 from processo_seletivo.avaliacoes.models import Atribuicao
@@ -188,3 +188,53 @@ def test_consequencia_vazia_e_recusada_pelo_banco(consolidavel):
     cenario, inscricao, avaliacao = consolidavel
     with pytest.raises(IntegrityError), transaction.atomic():
         gravar(cenario, inscricao, avaliacao, consequencia="")
+
+
+# ------------------------- a coerência por forma, no banco (013, D-008, FR-049)
+
+
+@pytest.fixture
+def decisoria_consolidavel(gestor, api_client, manager_headers):
+    cenario = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=2500, codigo="2500", decisoria=True
+    )
+    inscricao = inscrever(cenario["edital"], 1, primeiro=1)[0]
+    distribuir_para(cenario, gestor, ["joao"], [inscricao], chave="lote-2500")
+    avaliacao = concluir_como(
+        cenario, "joao", inscricao, sentido="DESFAVORAVEL", parecer="Faltou o diploma."
+    )
+    return cenario, inscricao, avaliacao
+
+
+def test_o_resultado_decisorio_com_pontuacao_e_recusado(decisoria_consolidavel):
+    """As **duas** camadas recusam, e a trigger chega primeiro.
+
+    `ck_resultado_completo_por_forma` é defesa em profundidade: `BEFORE INSERT` roda antes de a
+    constraint ser avaliada, de modo que um Resultado incoerente com a fonte nunca chega até ela. A
+    constraint existe para o caso que a trigger não cobre — uma fonte que já estivesse errada —, e
+    esse caso a constraint da própria Avaliação impede antes. Duas garantias, e nenhuma sozinha.
+    """
+    cenario, inscricao, avaliacao = decisoria_consolidavel
+
+    with pytest.raises(DatabaseError):
+        gravar(cenario, inscricao, avaliacao, pontuacao=Decimal("80.0000"))
+
+
+def test_a_trigger_recusa_resultado_com_sentido_diferente_do_da_fonte(decisoria_consolidavel):
+    """**O caso que motivou a decisão de comparar os três campos incondicionalmente.**
+
+    Uma conferência que alternasse por forma nem olharia o sentido quando as pontuações fossem
+    ambas nulas — e `IS DISTINCT FROM` resolve nulo contra nulo como igualdade. O Resultado sairia
+    afirmando o contrário do que a Avaliação fonte afirmou, em silêncio.
+    """
+    cenario, inscricao, avaliacao = decisoria_consolidavel
+
+    with pytest.raises(DatabaseError, match="does not match its source evaluation"):
+        gravar(cenario, inscricao, avaliacao, sentido="FAVORAVEL")
+
+
+def test_a_trigger_recusa_resultado_com_forma_diferente_da_fonte(decisoria_consolidavel):
+    cenario, inscricao, avaliacao = decisoria_consolidavel
+
+    with pytest.raises(DatabaseError, match="does not match its source evaluation"):
+        gravar(cenario, inscricao, avaliacao, forma="PONTUADA", sentido="", pontuacao=None)

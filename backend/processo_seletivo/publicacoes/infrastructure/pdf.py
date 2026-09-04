@@ -1291,6 +1291,14 @@ def _etapas(composicao, snapshot, secao=0, tabelas=None):
             if previstas is not None:
                 quantas = "1 avaliação" if previstas == 1 else f"{previstas} avaliações"
                 pares.append(["Avaliações por inscrição", quantas])
+            # A forma da conclusão, pela mesma régua: impressa só quando declarada, e com os
+            # rótulos **deste** Edital. Sem isto, a fonte estruturada e o documento divergem, e o
+            # candidato lê um Edital que não diz como sua Etapa é concluída — P-007 valendo só na
+            # metade que ninguém vê (D-008, FR-119).
+            if etapa.get("forma") == "DECISORIA":
+                favoravel = etapa.get("rotuloFavoravel") or "favorável"
+                desfavoravel = etapa.get("rotuloDesfavoravel") or "desfavorável"
+                pares.append(["Resultado", f"{favoravel} ou {desfavoravel}"])
             # As datas são do Evento e não são copiadas: o documento as lê de lá, como o domínio.
             # E o rótulo humano é que vai para o papel, não a chave do tipo.
             evento = eventos.get(etapa.get("scheduleEventId"))

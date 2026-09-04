@@ -188,8 +188,8 @@ nova, nenhuma permissão nova.**
 
 **Independent Test**: [Jornada 1](./quickstart.md) — o PDF da Etapa decisória mostra os rótulos e nenhuma linha de nota.
 
-- [ ] T047 [US4] Montar os pares da Etapa por forma em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, pela mesma mecânica condicional que "Pontuação máxima" já usa
-- [ ] T048 [P] [US4] Testar em `backend/tests/unit/publicacoes/test_pdf.py` que a Etapa decisória imprime os rótulos publicados e **não** imprime nota mínima nem máxima
+- [X] T047 [US4] Montar os pares da Etapa por forma em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, pela mesma mecânica condicional que "Pontuação máxima" já usa
+- [X] T048 [P] [US4] Testar em `backend/tests/unit/publicacoes/test_pdf.py` que a Etapa decisória imprime os rótulos publicados e **não** imprime nota mínima nem máxima
 
 **Checkpoint**: a fonte estruturada e o documento dizem a mesma coisa
 
@@ -202,14 +202,14 @@ nova, nenhuma permissão nova.**
 **Independent Test**: [Jornada 3](./quickstart.md) — consolidar uma Etapa decisória eliminatória e ver `ELIMINADA` com o motivo citando "Indeferido".
 
 - [X] T049 [P] [US5] Estender `consequencia` em `backend/processo_seletivo/resultados/domain/regra.py` para receber a conclusão em vez de um decimal, com o ramo decisório — `DESFAVORAVEL → ELIMINADA`, `FAVORAVEL → HABILITADA` — e o **rótulo publicado** no motivo exibível, nunca o enum
-- [ ] T050 [P] [US5] Acrescentar `forma` a `CAMPOS_COMPARADOS` em `backend/processo_seletivo/resultados/domain/compatibilidade.py`, reusando o leitor de `previsao.py`, e registrar no docstring por que os **rótulos ficam de fora** (TR-008)
+- [X] T050 [P] [US5] Acrescentar `forma` a `CAMPOS_COMPARADOS` em `backend/processo_seletivo/resultados/domain/compatibilidade.py`, reusando o leitor de `previsao.py`, e registrar no docstring por que os **rótulos ficam de fora** (TR-008)
 - [X] T051 [US5] Copiar a conclusão conforme a forma em `backend/processo_seletivo/resultados/application/consolidacao.py` e carregar `forma` e `sentido` em `backend/processo_seletivo/resultados/application/prontidao.py`
-- [ ] T052 [US5] Exibir a conclusão por forma em `backend/processo_seletivo/interface/templates/interface/resultados.html`, com o rótulo publicado
-- [ ] T053 [P] [US5] Testar por `INSERT` cru, em `backend/tests/integration/resultados/test_constraints.py`, que `ck_resultado_completo_por_forma` recusa Resultado decisório com pontuação, pontuado com sentido, e sem forma
-- [ ] T054 [P] [US5] Testar por `INSERT` cru, no mesmo `backend/tests/integration/resultados/test_constraints.py`, que a **trigger** `resultado_etapa_coerente` recusa Resultado cuja forma, pontuação ou sentido divirja da Avaliação fonte — **incluindo o caso que motivou a decisão**: Resultado decisório com sentido diferente do da fonte, que uma conferência alternante aprovaria em silêncio
-- [ ] T055 [P] [US5] Testar em `backend/tests/unit/resultados/test_regra.py` a tabela-verdade decisória inteira, com o rótulo no motivo
-- [ ] T056 [P] [US5] Testar em `backend/tests/unit/resultados/test_compatibilidade.py` que a troca de forma cria incompatibilidade e que a troca de rótulo **não** cria
-- [ ] T057 [P] [US5] Testar em `backend/tests/acceptance/test_resultado_da_etapa.py` a **consolidação em lote** de uma Etapa decisória: o desfecho conta criadas e recusadas, e o Resultado exibe o rótulo publicado. A progressão fica para a E2E de T062, e não é repetida aqui
+- [X] T052 [US5] Exibir a conclusão por forma em `backend/processo_seletivo/interface/templates/interface/resultados.html`, com o rótulo publicado
+- [X] T053 [P] [US5] Testar por `INSERT` cru, em `backend/tests/integration/resultados/test_constraints.py`, que `ck_resultado_completo_por_forma` recusa Resultado decisório com pontuação, pontuado com sentido, e sem forma
+- [X] T054 [P] [US5] Testar por `INSERT` cru, no mesmo `backend/tests/integration/resultados/test_constraints.py`, que a **trigger** `resultado_etapa_coerente` recusa Resultado cuja forma, pontuação ou sentido divirja da Avaliação fonte — **incluindo o caso que motivou a decisão**: Resultado decisório com sentido diferente do da fonte, que uma conferência alternante aprovaria em silêncio
+- [X] T055 [P] [US5] Testar em `backend/tests/unit/resultados/test_regra.py` a tabela-verdade decisória inteira, com o rótulo no motivo
+- [X] T056 [P] [US5] Testar em `backend/tests/unit/resultados/test_compatibilidade.py` que a troca de forma cria incompatibilidade e que a troca de rótulo **não** cria
+- [X] T057 [P] [US5] Testar em `backend/tests/acceptance/test_resultado_da_etapa.py` a **consolidação em lote** de uma Etapa decisória: o desfecho conta criadas e recusadas, e o Resultado exibe o rótulo publicado. A progressão fica para a E2E de T062, e não é repetida aqui
 
 **Checkpoint**: a fronteira está fechada — o trabalho decisório vira consequência oficial
 
@@ -228,7 +228,7 @@ nova, nenhuma permissão nova.**
 
 - [X] T058 [US6] Acrescentar a `impedimento_da_regra`, em `backend/processo_seletivo/resultados/domain/regra.py`, o **caso simétrico**: decisória e não eliminatória não publicou o efeito da decisão desfavorável, e por isso a Etapa não é consolidável (013, FR-047). A metade que condiciona a recusa existente à forma já foi feita na Foundational, e não é refeita aqui
 - [X] T059 [P] [US6] Testar em `backend/tests/unit/resultados/test_regra.py` a tabela de impedimentos inteira, com os três casos lado a lado: mais de uma avaliação prevista, pontuada eliminatória sem mínima, e decisória não eliminatória
-- [ ] T060 [P] [US6] Testar em `backend/tests/integration/resultados/test_prontidao.py` que Etapa decisória **não** eliminatória produz zero Resultados e que a prontidão exibe a frase que diz por quê
+- [X] T060 [P] [US6] Testar em `backend/tests/integration/resultados/test_prontidao.py` que Etapa decisória **não** eliminatória produz zero Resultados e que a prontidão exibe a frase que diz por quê
 
 **Checkpoint**: as duas recusas por regra insuficiente são simétricas e visíveis antes de qualquer tentativa
 

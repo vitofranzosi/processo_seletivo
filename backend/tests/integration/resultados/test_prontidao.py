@@ -111,3 +111,33 @@ def test_o_filtro_da_listagem_devolve_exatamente_o_grupo(gestor, api_client, man
     )
     assert [linha["inscricao"].id for linha in linhas] == [inscricoes[0].id]
     assert len(linhas) == visao["contagens"]["prontas"]
+
+
+# ------------------- o que o Edital não publicou não vira consequência (013, FR-047)
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_etapa_decisoria_nao_eliminatoria_nao_consolida(gestor, api_client, manager_headers):
+    """Jornada 4: recebi uma decisão desfavorável, e o Edital não publicou que ela elimina.
+
+    As duas saídas que evitariam esta recusa afirmariam norma que ninguém escreveu — fazer o
+    sentido carregar a consequência por si, ou exigir caráter eliminatório de toda Etapa decisória.
+    A recusa usa o mecanismo que a 013 já tem para o caso simétrico da nota mínima ausente.
+    """
+    from processo_seletivo.resultados.domain.regra import REGRA_INSUFICIENTE, impedimento_da_regra
+
+    cenario = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=2700, codigo="2700", decisoria=True
+    )
+    vigente = cenario["edital"].versoes_consolidadas.latest("materialized_at")
+    decisoria = next(
+        e for e in vigente.content["stages"] if e["id"] == str(cenario["primeira"])
+    )
+    # A mesma Etapa, sem o caráter eliminatório: é a única diferença que separa consolidar de não.
+    sem_carater = {**decisoria, "eliminatory": False}
+
+    assert impedimento_da_regra(decisoria) is None
+    codigo, frase = impedimento_da_regra(sem_carater)
+    assert codigo == REGRA_INSUFICIENTE
+    assert "não publicou o efeito da decisão desfavorável" in frase
