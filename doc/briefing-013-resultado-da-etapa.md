@@ -228,8 +228,17 @@ justificativa para transformar ordem em compromisso de execução.
 | **Verificação de reserva de vaga** — heteroidentificação, indígena, PcD | família 35/57 | mecanismo sobre a 013, depois dela |
 | **Notificações** — convocação por e-mail, com prazo contado do recebimento | **019** | E2E-016; a 010 limitou o canal por decisão |
 | **Semântica de seleção discente** — curso, oferta, nível; hoje o vocabulário é de vaga de pessoal | antes de um Edital discente em produção | não bloqueia o backbone |
+| **Campus como entidade** — hoje `PerfilVaga.locality` é texto livre, e um Edital multi-campus não tem como dizer para quais campi seleciona | qualquer Edital multi-campus, e a faceta de campus de um catálogo | não bloqueia o backbone; anda junto da semântica discente |
 | **Autopontuação do candidato** (Anexo IV do Edital 14) | família 14/2026 | junto do barema |
 | **Identidade Gov.br** | fidelidade literal aos 35/57 | método de autenticação sobre a mesma identidade estável |
+
+> **De onde vem a lacuna de campus.** Ela não saiu dos três Editais analisados — saiu do catálogo
+> público de processos seletivos do IFRN, que lista 682 processos com faceta de campus e mostra
+> Editais destinados a mais de vinte campi de uma vez (`+19 campi` no Exame de Seleção). Multi-campus
+> é a norma nesse porte de instituição, não a exceção, e `locality` como texto livre por Perfil não
+> a expressa. O mesmo catálogo é evidência a favor da semântica discente: o IFRN serve seleção de
+> estudante, contratação de pessoal, bolsa e seleção interna de servidor **no mesmo acervo**,
+> tipando o processo em vez de bifurcar o sistema.
 
 ## Uma observação de arquitetura para 015 e 016, registrada aqui para não se perder
 
