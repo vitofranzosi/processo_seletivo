@@ -246,7 +246,9 @@ Além da ida e volta das duas formas nas duas features:
 - Etapa decisória eliminatória **sem** nota mínima consolida e elimina → a regressão que a
   contraparte 3 na 013 existe para impedir;
 - Etapa decisória **não** eliminatória não consolida, e a prontidão exibe a frase que diz por quê;
-- todo o comportamento pontuado hoje verde continua verde, sem alteração de asserção.
+- todo o comportamento pontuado hoje verde continua verde, e todo teste que existia continua
+  existindo — a comparação é por identidade, e as asserções de versão canônica que mudarem são
+  enumeradas uma a uma.
 
 ## Ordem de execução
 

@@ -150,7 +150,7 @@ preenchida, e é a conclusão que exige completude — exatamente como `pontuaca
 ```text
 estado = RASCUNHO   → nada é exigido
 estado = CONCLUIDA  → versao, concluida_em, concluida_por, forma
-                      ∧ (forma = PONTUADA  ∧ pontuacao ≠ NULL ∧ sentido = NULL)
+                      ∧ (forma = PONTUADA  ∧ pontuacao ≠ NULL ∧ sentido = '')
                       ∨ (forma = DECISORIA ∧ pontuacao = NULL
                                             ∧ sentido ∈ {FAVORAVEL, DESFAVORAVEL})
 ```

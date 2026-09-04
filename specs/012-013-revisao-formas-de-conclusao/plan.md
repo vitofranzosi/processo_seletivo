@@ -66,8 +66,10 @@ triggers não existem em SQLite, e sob ela os testes passariam sem exercitar nad
 específicas: os `INSERT` crus das constraints e da trigger; a leitura de um snapshot v5 depois do
 salto para 6; **o salto de versão exercido com dados**, por `MigrationExecutor`, que exige incluir
 `avaliacoes` e `resultados` no `APPS` de `tests/migrations/test_migrations.py`, hoje restrito a
-quatro apps (TR-014); e a suíte existente passando **sem alteração de asserção**, que é a
-demonstração de FR-124 e FR-050.
+quatro apps (TR-014); e a suíte existente passando **por identidade de teste** — todo teste que
+existia continua existindo e passando, com as asserções alteradas enumeradas uma a uma —, que é a
+demonstração de FR-124 e FR-050. "Sem alteração de asserção" seria impossível: o incremento sobe a
+versão canônica, e todo teste que fixa o literal dela tem de mudar.
 
 O contrato tem suíte própria: `tests/contract/test_forma_publicada.py` confere o `openapi.yaml`
 contra o domínio campo a campo, e três dos seus testes ficam vermelhos no instante em que
