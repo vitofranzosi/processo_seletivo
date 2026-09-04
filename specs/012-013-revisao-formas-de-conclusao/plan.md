@@ -123,12 +123,12 @@ Nenhuma dependência nova. Nenhuma exceção de complexidade nova.
 specs/012-013-revisao-formas-de-conclusao/
 ├── spec.md          # escopo e ponteiros — não cria requisito
 ├── plan.md          # este arquivo
-├── research.md      # TR-001 a TR-012
+├── research.md      # TR-001 a TR-014
 ├── data-model.md    # só o delta
 ├── contracts/
 │   └── forma-da-conclusao.md
 ├── quickstart.md    # seis jornadas, com as negativas
-└── tasks.md         # $speckit-tasks — não criado aqui
+└── tasks.md         # $speckit-tasks — 62 tarefas em dez fases
 ```
 
 Os artefatos de `specs/012-mesa-de-avaliacao/` e `specs/013-consolidacao-resultado-etapa/`
@@ -153,14 +153,15 @@ backend/processo_seletivo/
 │   ├── domain/etapas.py                   a leitura da Etapa na elaboração
 │   ├── api/serializers.py                 os três campos no contrato
 │   ├── application/draft.py               rascunho → linha de elaboração
-│   └── models.py                          forma, rotulo_favoravel, rotulo_desfavoravel  [migration]
+│   └── models/etapas.py                   forma, rotulo_favoravel, rotulo_desfavoravel  [migration]
 ├── publicacoes/
 │   ├── domain/elevacao.py                 o degrau 5 → 6 e a equivalência de grafias
 │   ├── domain/conflicts.py                acompanha a equivalência
 │   ├── application/publish_edital.py      transcrição para o snapshot
 │   └── infrastructure/pdf.py              os pares da Etapa, por forma
 ├── avaliacoes/
-│   ├── models.py                          forma + sentido; constraints que alternam  [migration]
+│   ├── models.py                          forma + sentido; duas constraints que alternam  [migration]
+│   ├── domain/formas.py                   **módulo novo** — os enums Forma e Sentido
 │   ├── domain/previsao.py                 a leitura da ausência, num lugar só
 │   └── domain/pontuacao.py                a recusa por forma; parecer no desfavorável
 ├── resultados/
@@ -175,10 +176,17 @@ backend/processo_seletivo/
     └── templates/interface/_etapa.html    o formulário condicional
 ```
 
-**Structure Decision**: nada de app novo e nada de módulo novo. Cada mudança cai no arquivo que já
-é dono daquela responsabilidade, e a lista acima é exatamente o conjunto de pontos que `maximumScore`
+**Structure Decision**: nada de app novo, e **um** módulo novo. Cada mudança cai no arquivo que já é
+dono daquela responsabilidade, e a lista acima é exatamente o conjunto de pontos que `maximumScore`
 toca hoje, mais os três de domínio da conclusão — e mais o `openapi.yaml`, que é fonte única da forma
 publicada e não documentação de acompanhamento.
+
+O módulo novo é `avaliacoes/domain/formas.py`, e o lugar dele decorre da direção de dependência que
+já existe: `resultados` importa de `avaliacoes` — `compatibilidade.py` importa `previsao.py` hoje —, e
+o contrário nunca acontece. Os dois enums descrevem **a conclusão**, que é conceito da 012, e por isso
+nascem lá e são importados pela 013. Colocá-los em `shared/` os afastaria do conceito que nomeiam;
+duplicá-los nos dois apps criaria a divergência que um enum existe para impedir. `editais` não os
+importa: ele valida a **string publicada** contra o contrato, e não conhece o domínio da conclusão.
 
 ## Fases de implementação sugeridas
 

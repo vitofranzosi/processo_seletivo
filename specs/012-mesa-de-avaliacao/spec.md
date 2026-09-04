@@ -1426,9 +1426,20 @@ já existe não tem como provar que não quebrou.
 **FR-124** — **O comportamento da forma pontuada é invariante de não regressão, e não apenas
 preservado.** Toda Etapa hoje publicada é pontuada e toda Avaliação hoje concluída tem nota; nenhuma
 delas pode mudar de comportamento por causa desta revisão. Gravar, validar, concluir, reabrir,
-invalidar e auditar produzem, na forma pontuada, exatamente o que produziam antes de D-008 — e a
-demonstração é a suíte existente passando sem alteração de asserção, e não a intenção de quem
-implementa.
+invalidar e auditar produzem, na forma pontuada, exatamente o que produziam antes de D-008.
+
+**A demonstração é comportamental, e o critério precisa dizer isso com precisão.** "A suíte passa sem
+alteração de asserção" seria um critério impossível, e afirmá-lo faria a spec cobrar o que ela mesma
+torna falso: o incremento sobe a versão canônica, e todo teste que fixa o literal da versão **tem de
+mudar**. O que a invariante exige é isto:
+
+1. nenhuma asserção sobre **comportamento da forma pontuada** muda — pontuação validada, conclusão,
+   reabertura, invalidação, autorização, concorrência e trilha;
+2. as asserções que mudam são **apenas** as que fixam o literal da versão canônica ou a forma do
+   conteúdo publicado, e são **enumeradas** na entrega, uma a uma, com o motivo;
+3. a comparação é por **identidade de teste**, e não por contagem: todo teste que existia antes
+   continua existindo e continua passando. A contagem total cresce, porque a revisão acrescenta
+   testes, e exigir que ela não cresça seria exigir que a revisão não fosse testada.
 
 ---
 
@@ -1491,8 +1502,9 @@ depois não altera o que ela afirma.
 para 6, e a ausência da forma é lida como pontuada.
 **SC-038** — A forma e os dois rótulos são alcançáveis pela Retificação no canal institucional
 suportado, junto com os demais campos normativos da Etapa.
-**SC-039** — Nenhum comportamento da forma pontuada muda: a suíte existente passa sem alteração de
-asserção.
+**SC-039** — Nenhum comportamento da forma pontuada muda: todo teste que existia antes da revisão
+continua existindo e passando, e as únicas asserções alteradas são as que fixam o literal da versão
+canônica, enumeradas uma a uma.
 
 ---
 

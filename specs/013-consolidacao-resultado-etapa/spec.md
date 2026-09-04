@@ -563,7 +563,10 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
 - **FR-044**: Peso da Etapa, caráter classificatório e conclusões de outras Etapas NÃO DEVEM compor
   o Resultado desta feature.
 - **FR-050**: Nenhum comportamento da forma pontuada DEVE mudar por causa desta revisão. A
-  demonstração é a suíte existente passando sem alteração de asserção.
+  demonstração é por **identidade de teste**: todo teste que existia antes continua existindo e
+  passando, e as únicas asserções alteradas são as que fixam o literal da versão canônica ou a forma
+  do conteúdo publicado, enumeradas uma a uma na entrega. Exigir contagem total idêntica seria exigir
+  que a revisão não fosse testada (012, FR-124).
 - **FR-045**: Nenhuma tela ou resposta da 013 DEVE afirmar colocação, aprovação final, ocupação de
   vaga, resultado preliminar/final publicado ou direito à convocação.
 
@@ -631,7 +634,7 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
 - **SC-014**: Etapa decisória eliminatória sem nota mínima consolida normalmente — a ausência do
   número não impede nada nessa forma.
 - **SC-015**: Nenhum Resultado da forma pontuada muda de conclusão, consequência ou motivo por causa
-  desta revisão.
+  desta revisão, e todo teste de consolidação que existia antes continua existindo e passando.
 - **SC-005**: Depois de uma eliminação, a inscrição aparece zero vezes entre participantes,
   distribuição, Mesa, inscrição de trabalho, entrega de documento e próxima pendente de **toda**
   Etapa seguinte, inclusive das que ainda não têm Resultado na Etapa que as precede.

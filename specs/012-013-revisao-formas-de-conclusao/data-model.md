@@ -15,6 +15,11 @@ Forma    PONTUADA | DECISORIA        ← publicada pela Etapa, gravada em cada c
 Sentido  FAVORAVEL | DESFAVORAVEL    ← o que o avaliador afirma na forma decisória
 ```
 
+Os dois vivem em `backend/processo_seletivo/avaliacoes/domain/formas.py`, e o lugar segue a direção
+de dependência que já existe: `resultados` importa de `avaliacoes`, nunca o contrário, e os dois enums
+descrevem **a conclusão**, que é conceito da 012. `editais` não os importa — ele valida a string
+publicada contra o contrato, e não conhece o domínio da conclusão.
+
 `Sentido` é do **domínio** e nunca carrega vocabulário de Edital. O que o avaliador lê na tela e o
 que o documento imprime são `rotuloFavoravel` e `rotuloDesfavoravel`, publicados pela Etapa — o
 mesmo padrão de `ModalidadeConcorrencia`, onde código e denominação são dados e não enumeração.
