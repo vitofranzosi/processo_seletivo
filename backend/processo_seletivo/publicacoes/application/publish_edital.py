@@ -5,7 +5,7 @@ from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.domain import secoes
 from processo_seletivo.editais.domain.validation import blocking_findings, validate_for_publication
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
-from processo_seletivo.processos.models import Edital
+from processo_seletivo.processos.models import AtoAdministrativo, Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.infrastructure.pdf import (
     AutoridadeSignataria,
     render_edital_pdf,
@@ -522,5 +522,62 @@ def publish_edital(
             previous_revision=expected_revision,
             idempotency_key=idempotency_key,
         )
+        _ativar_o_processo_na_primeira_publicacao(
+            edital.processo, actor=actor, now=now, correlation_id=correlation_id
+        )
         _finish_idempotency(idem, publication, 201)
         return publication, 201
+
+
+def _ativar_o_processo_na_primeira_publicacao(processo, *, actor, now, correlation_id):
+    """Publicar o primeiro Edital **é** a abertura formal do certame (E2E-005).
+
+    O estado tinha uma consequência só — ser precondição de encerrar —, e nada obrigava a abertura.
+    O certame rodava inteiro em "Em elaboração", com Edital publicado e inscrições correndo, e no
+    fim não podia ser encerrado sem uma ativação retroativa sobre fato consumado. O crachá mentia
+    todo esse tempo.
+
+    **O ato explícito continua existindo**, para quem abre o certame antes de publicar. O que muda
+    é que ele deixa de ser a única porta: publicar o primeiro Edital passa a produzir a ativação
+    como consequência, e não como ato à parte.
+
+    **Por que não exige `processo:ativar`.** Isto não é um segundo ato praticado pela mesma pessoa,
+    e sim efeito do ato que ela já estava autorizada a praticar — como a Versão Consolidada e o
+    documento publicado, que nascem daqui sem permissão própria. Exigir a permissão faria quem
+    publica precisar também poder ativar, o que inverteria a segregação em vez de reforçá-la.
+
+    **Silencioso não é.** O `AtoAdministrativo` nasce com a autoria de quem publicou e com o
+    motivo dizendo de onde a ativação veio, de modo que a trilha distinga a abertura declarada da
+    derivada.
+    """
+    if processo.status != ProcessoSeletivo.Status.EM_ELABORACAO:
+        return
+    motivo = "Ativação derivada da publicação do primeiro Edital do Processo."
+    anterior = processo.revision
+    compare_and_swap(
+        ProcessoSeletivo.objects,
+        pk=processo.pk,
+        expected_revision=anterior,
+        status=ProcessoSeletivo.Status.ATIVO,
+        last_changed_at=now,
+    )
+    processo.refresh_from_db()
+    AtoAdministrativo.objects.create(
+        aggregate_type="ProcessoSeletivo",
+        aggregate_id=processo.pk,
+        operation="ATIVAR",
+        actor_subject=actor.subject,
+        reason=motivo,
+        occurred_at=now,
+    )
+    record_event(
+        actor=actor,
+        permission="edital:publicar",
+        operation="ATIVAR",
+        aggregate=processo,
+        now=now,
+        correlation_id=correlation_id,
+        reason=motivo,
+        previous_state=ProcessoSeletivo.Status.EM_ELABORACAO,
+        previous_revision=anterior,
+    )

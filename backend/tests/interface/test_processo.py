@@ -20,6 +20,30 @@ def cenario(api_client, manager_headers, process_payload):
     return ProcessoSeletivo.objects.get(), edital
 
 
+@pytest.fixture
+def sem_publicacao(client, seletor_ligado):
+    """Processo criado e nada mais — o único estado em que "Ativar" ainda é ato de alguém.
+
+    Depois de E2E-005, publicar o primeiro Edital **é** a abertura formal do certame, e o ato
+    explícito sobra para quem abre antes de publicar. Testar "ativar" sobre Processo publicado
+    passou a testar o impossível.
+    """
+    identificar(client, "gestora", ["gestor"])
+    client.post(
+        reverse("interface:processo-criar"),
+        {
+            "codigo": "PS-2028-009",
+            "titulo": "Processo sem publicação",
+            "numero": "09",
+            "ano": "2028",
+            "titulo_edital": "Edital em elaboração",
+            "descricao": "Ainda não publicado",
+            "chave_idempotencia": "ui-criacao-000000009",
+        },
+    )
+    return ProcessoSeletivo.objects.get(institutional_code="PS-2028-009")
+
+
 def ato(client, processo, acao, motivo="Ato motivado"):
     url = reverse("interface:processo-ato", args=[processo.id, acao])
     chave = client.get(url).context["chave_idempotencia"]
@@ -36,7 +60,9 @@ def test_detalhe_mostra_a_trilha_e_os_editais(client, seletor_ligado, cenario):
     assert processo.institutional_code in corpo
     assert f"{edital.number}/{edital.year}" in corpo
     assert 'class="e-atual"' in corpo
-    assert "Ativar Processo" in corpo
+    # Publicar o primeiro Edital já abriu o certame (E2E-005): o que resta é encerrá-lo.
+    assert "Encerrar Processo" in corpo
+    assert "Ativar Processo" not in corpo
 
 
 @pytest.mark.django_db(transaction=True)
@@ -91,20 +117,22 @@ def test_cancelamento_e_admitido_quando_os_editais_sao_finalizados(client, selet
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_ativar_e_encerrar_seguem_o_fluxo_ordinario(client, seletor_ligado, cenario):
-    processo, _ = cenario
+def test_ativar_e_encerrar_seguem_o_fluxo_ordinario(client, seletor_ligado, sem_publicacao):
+    """A abertura declarada continua existindo, para quem abre o certame antes de publicar."""
+    processo = sem_publicacao
     identificar(client, "marcia.gestora", GESTOR)
 
     assert ato(client, processo, "ativar", "Abertura formal").status_code == 302
-    assert ProcessoSeletivo.objects.get().status == ProcessoSeletivo.Status.ATIVO
-
     processo.refresh_from_db()
+    assert processo.status == ProcessoSeletivo.Status.ATIVO
+
     corpo = client.get(reverse("interface:processo-detalhe", args=[processo.id])).content.decode()
     assert "Encerrar Processo" in corpo
     assert "Ativar Processo" not in corpo, "não se ativa o que já está ativo"
 
     assert ato(client, processo, "encerrar", "Certame concluído").status_code == 302
-    assert ProcessoSeletivo.objects.get().status == ProcessoSeletivo.Status.ENCERRADO
+    processo.refresh_from_db()
+    assert processo.status == ProcessoSeletivo.Status.ENCERRADO
 
 
 @pytest.mark.django_db(transaction=True)
@@ -138,26 +166,28 @@ def test_cancelamento_avisa_que_nao_propaga_para_os_editais(client, seletor_liga
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_motivo_e_obrigatorio_em_todo_ato_do_processo(client, seletor_ligado, cenario):
-    processo, _ = cenario
+def test_motivo_e_obrigatorio_em_todo_ato_do_processo(client, seletor_ligado, sem_publicacao):
+    processo = sem_publicacao
     identificar(client, "marcia.gestora", GESTOR)
     resposta = ato(client, processo, "ativar", motivo="   ")
     assert resposta.status_code == 422
     assert "é obrigatório" in resposta.content.decode()
-    assert ProcessoSeletivo.objects.get().status == ProcessoSeletivo.Status.EM_ELABORACAO
+    processo.refresh_from_db()
+    assert processo.status == ProcessoSeletivo.Status.EM_ELABORACAO
 
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_ato_do_processo_exige_permissao(client, seletor_ligado, cenario):
-    processo, _ = cenario
+def test_ato_do_processo_exige_permissao(client, seletor_ligado, sem_publicacao):
+    processo = sem_publicacao
     identificar(client, "ana.elaboradora", ["elaborador"])
     corpo = client.get(reverse("interface:processo-detalhe", args=[processo.id])).content.decode()
     assert "Ativar Processo" not in corpo
 
     resposta = ato(client, processo, "ativar", "Tentativa")
     assert resposta.status_code == 403
-    assert ProcessoSeletivo.objects.get().status == ProcessoSeletivo.Status.EM_ELABORACAO
+    processo.refresh_from_db()
+    assert processo.status == ProcessoSeletivo.Status.EM_ELABORACAO
 
 
 @pytest.mark.django_db(transaction=True)
@@ -352,3 +382,55 @@ def test_o_limite_vem_do_modelo_e_nao_de_um_numero_copiado(client, seletor_ligad
 
     for _, _, modelo, campo in TEXTOS_DA_CRIACAO:
         assert modelo._meta.get_field(campo).max_length
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_publicar_o_primeiro_edital_abre_o_certame(cenario):
+    """E2E-005: publicar o primeiro Edital **é** a abertura formal, e não precisa de ato à parte.
+
+    Antes, o certame rodava inteiro em "Em elaboração" — Edital publicado, inscrições correndo —
+    e no fim não podia ser encerrado sem uma ativação retroativa sobre fato consumado.
+    """
+    processo, _ = cenario
+
+    assert processo.status == ProcessoSeletivo.Status.ATIVO
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_ativacao_derivada_e_registrada_com_a_autoria_de_quem_publicou(cenario):
+    """Derivada não é silenciosa.
+
+    A trilha precisa distinguir a abertura declarada da que veio da publicação, e é o motivo que
+    faz essa distinção.
+    """
+    from processo_seletivo.processos.models import AtoAdministrativo
+
+    processo, _ = cenario
+
+    ato_registrado = AtoAdministrativo.objects.get(
+        aggregate_type="ProcessoSeletivo", aggregate_id=processo.pk, operation="ATIVAR"
+    )
+    assert ato_registrado.actor_subject == "publicador"
+    assert "publicação do primeiro Edital" in ato_registrado.reason
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_processo_aberto_antes_nao_e_reativado_pela_publicacao(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """Quem já abriu o certame declaradamente não ganha um segundo ato de abertura."""
+    from processo_seletivo.processos.models import AtoAdministrativo
+
+    publish_original(api_client, manager_headers, process_payload)
+    processo = ProcessoSeletivo.objects.get()
+
+    assert processo.status == ProcessoSeletivo.Status.ATIVO
+    assert (
+        AtoAdministrativo.objects.filter(
+            aggregate_type="ProcessoSeletivo", aggregate_id=processo.pk, operation="ATIVAR"
+        ).count()
+        == 1
+    )
