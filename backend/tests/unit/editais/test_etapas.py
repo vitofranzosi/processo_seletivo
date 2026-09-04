@@ -98,3 +98,81 @@ def test_etapas_nao_repetem_ordem():
     outra = etapa(id="00000000-0000-0000-0000-000000000802", name="Títulos")
     with pytest.raises(StageValidationError, match="repetir ordem"):
         validate_stages([etapa(), outra], schedule=CRONOGRAMA)
+
+
+# ------------------------------------------ a aplicabilidade por forma (012, FR-119, FR-121)
+
+
+def _publicada(**extra):
+    """Uma Etapa na forma do conteúdo publicado, com todas as chaves presentes."""
+    return {
+        "id": "00000000-0000-0000-0000-0000000000a1",
+        "name": "Análise documental",
+        "order": 1,
+        "weight": None,
+        "eliminatory": True,
+        "classificatory": False,
+        "minimumScore": None,
+        "evaluationsPerRegistration": 1,
+        "maximumScore": None,
+        "forma": "PONTUADA",
+        "rotuloFavoravel": None,
+        "rotuloDesfavoravel": None,
+        "scheduleEventId": None,
+        **extra,
+    }
+
+
+def _recusas(etapa):
+    from processo_seletivo.editais.domain.validation import validate_for_publication
+
+    achados = validate_for_publication({"schemaVersion": 6, "stages": [etapa]})
+    return {achado.path: achado.message for achado in achados if achado.path.startswith("/stages")}
+
+
+def test_a_decisoria_sem_rotulo_e_recusada():
+    caminhos = _recusas(_publicada(forma="DECISORIA"))
+
+    assert any("rotuloFavoravel" in caminho for caminho in caminhos)
+    assert any("rotuloDesfavoravel" in caminho for caminho in caminhos)
+
+
+def test_a_decisoria_com_nota_e_recusada():
+    """Publicar máxima numa Etapa que não pontua é a regra fictícia que P-007 impede."""
+    caminhos = _recusas(
+        _publicada(
+            forma="DECISORIA",
+            rotuloFavoravel="Deferido",
+            rotuloDesfavoravel="Indeferido",
+            minimumScore="60.0000",
+            maximumScore="100.0000",
+        )
+    )
+
+    assert any("minimumScore" in caminho for caminho in caminhos)
+    assert any("maximumScore" in caminho for caminho in caminhos)
+
+
+def test_a_pontuada_com_rotulo_e_recusada():
+    caminhos = _recusas(_publicada(rotuloFavoravel="Deferido"))
+
+    assert any("rotuloFavoravel" in caminho for caminho in caminhos)
+
+
+def test_a_pontuada_sem_nota_nenhuma_e_legitima():
+    """Limite não declarado é o que FR-066 chama de ausência, e não falta."""
+    assert _recusas(_publicada()) == {}
+
+
+def test_rotulo_em_branco_nao_conta_como_publicado():
+    caminhos = _recusas(
+        _publicada(forma="DECISORIA", rotuloFavoravel="   ", rotuloDesfavoravel="Indeferido")
+    )
+
+    assert any("rotuloFavoravel" in caminho for caminho in caminhos)
+
+
+def test_forma_fora_do_par_e_recusada():
+    caminhos = _recusas(_publicada(forma="ORDINAL"))
+
+    assert any("forma" in caminho for caminho in caminhos)

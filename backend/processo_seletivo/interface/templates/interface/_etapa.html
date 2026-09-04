@@ -41,6 +41,53 @@
       {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-weight">{{ recusado }}</span>{% endif %}
       <span class="ajuda" id="ajuda-peso-{{ indice }}">Vazio: a Etapa não pondera.</span>
     </p>
+    <fieldset class="campo caracter">
+      <legend>Como esta Etapa é concluída</legend>
+      {% recusa_de recusas "etapa" indice "forma" as recusado %}
+      <p>
+        <input type="radio" id="etapa-{{ indice }}-forma-pontuada"
+               name="etapa-{{ indice }}-forma" value="PONTUADA"
+               {% if etapa_linha.forma != "DECISORIA" %}checked{% endif %}
+               aria-describedby="ajuda-forma-{{ indice }}{% if recusado %} recusa-etapa-{{ indice }}-forma{% endif %}">
+        <label for="etapa-{{ indice }}-forma-pontuada">Com pontuação</label>
+      </p>
+      <p>
+        <input type="radio" id="etapa-{{ indice }}-forma-decisoria"
+               name="etapa-{{ indice }}-forma" value="DECISORIA"
+               {% if etapa_linha.forma == "DECISORIA" %}checked{% endif %}
+               aria-describedby="ajuda-forma-{{ indice }}{% if recusado %} recusa-etapa-{{ indice }}-forma{% endif %}">
+        <label for="etapa-{{ indice }}-forma-decisoria">Com decisão, sem nota</label>
+      </p>
+      {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-forma">{{ recusado }}</span>{% endif %}
+      <span class="ajuda" id="ajuda-forma-{{ indice }}">A Etapa decisória publica os rótulos do
+        resultado e não publica nota; a pontuada publica nota e não publica rótulos.</span>
+    </fieldset>
+    {% comment %}
+      Os rótulos que **este** Edital usa. O `placeholder` é conveniência de tela, e não default do
+      domínio: o que não pode existir é o sistema aplicar rótulo que ninguém publicou (D-008).
+    {% endcomment %}
+    <p class="campo">
+      <label for="etapa-{{ indice }}-rotuloFavoravel">Rótulo do resultado favorável</label>
+      {% recusa_de recusas "etapa" indice "rotuloFavoravel" as recusado %}
+      <input type="text" maxlength="100" id="etapa-{{ indice }}-rotuloFavoravel"
+             name="etapa-{{ indice }}-rotuloFavoravel"
+             value="{{ etapa_linha.rotuloFavoravel|default:'' }}" placeholder="Deferido"
+             aria-describedby="ajuda-rotulos-{{ indice }}{% if recusado %} recusa-etapa-{{ indice }}-rotuloFavoravel{% endif %}"
+             {% if recusado %}aria-invalid="true"{% endif %}>
+      {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-rotuloFavoravel">{{ recusado }}</span>{% endif %}
+    </p>
+    <p class="campo">
+      <label for="etapa-{{ indice }}-rotuloDesfavoravel">Rótulo do resultado desfavorável</label>
+      {% recusa_de recusas "etapa" indice "rotuloDesfavoravel" as recusado %}
+      <input type="text" maxlength="100" id="etapa-{{ indice }}-rotuloDesfavoravel"
+             name="etapa-{{ indice }}-rotuloDesfavoravel"
+             value="{{ etapa_linha.rotuloDesfavoravel|default:'' }}" placeholder="Indeferido"
+             aria-describedby="ajuda-rotulos-{{ indice }}{% if recusado %} recusa-etapa-{{ indice }}-rotuloDesfavoravel{% endif %}"
+             {% if recusado %}aria-invalid="true"{% endif %}>
+      {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-rotuloDesfavoravel">{{ recusado }}</span>{% endif %}
+      <span class="ajuda" id="ajuda-rotulos-{{ indice }}">Só na Etapa decisória. É o que o candidato
+        lê no Edital e no resultado — "Deferido/Indeferido", "Apto/Inapto".</span>
+    </p>
     <p class="campo curto">
       <label for="etapa-{{ indice }}-minimumScore">Nota mínima</label>
       {% recusa_de recusas "etapa" indice "minimumScore" as recusado %}

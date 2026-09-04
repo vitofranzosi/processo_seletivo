@@ -526,3 +526,41 @@ def test_identificador_de_modalidade_e_de_regra_e_exigido(
 
     assert resposta.status_code == 422, resposta.content
     assert "id" in resposta.json()["detail"]
+
+
+ETAPA_ID = "00000000-0000-0000-0000-0000000000f1"
+
+
+# ------------------------------------ a forma na entrada da API (012, D-008; TR-003)
+
+
+@pytest.mark.contract
+@pytest.mark.django_db
+def test_forma_omitida_no_rascunho_vale_pontuada(api_client, manager_headers, process_payload):
+    """A compatibilidade de quem já integrava: o campo não existia, e a ausência tem valor."""
+    from processo_seletivo.editais.api.serializers import StageSerializer
+
+    serializer = StageSerializer(data={"id": ETAPA_ID, "name": "Prova"})
+
+    assert serializer.is_valid(), serializer.errors
+    assert "forma" not in serializer.validated_data
+
+
+@pytest.mark.contract
+def test_forma_nula_e_recusada():
+    """Nulo não é uma forma. Aceitá-lo devolveria ao rascunho o vazio que o modelo não admite."""
+    from processo_seletivo.editais.api.serializers import StageSerializer
+
+    serializer = StageSerializer(data={"id": ETAPA_ID, "name": "Prova", "forma": None})
+
+    assert not serializer.is_valid()
+    assert "forma" in serializer.errors
+
+
+@pytest.mark.contract
+def test_forma_fora_do_par_e_recusada_na_entrada():
+    from processo_seletivo.editais.api.serializers import StageSerializer
+
+    serializer = StageSerializer(data={"id": ETAPA_ID, "name": "Prova", "forma": "ORDINAL"})
+
+    assert not serializer.is_valid()

@@ -131,14 +131,14 @@ nova, nenhuma permissão nova.**
 
 **Independent Test**: [Jornada 1](./quickstart.md) — publicar uma Etapa decisória e ver `forma` e os dois rótulos no snapshot, com `schemaVersion` 6.
 
-- [ ] T023 [P] [US1] Ler e escrever os três campos no formulário de Etapa em `backend/processo_seletivo/interface/forms.py`
-- [ ] T024 [US1] Alternar o formulário por forma em `backend/processo_seletivo/interface/templates/interface/_etapa.html`: nota mínima e máxima na pontuada, par de rótulos na decisória, com "Deferido"/"Indeferido" como **prefill editável e não default normativo**
-- [ ] T025 [US1] Tornar o formulário condicional de Etapa operável por teclado e legível por leitor de tela em `backend/processo_seletivo/interface/templates/interface/_etapa.html`: a troca de forma anuncia que os campos mudaram, cada rótulo é associado ao seu controle, e a recusa continua ancorada no campo por `aria-describedby`, como o arquivo já faz com `recusa-etapa-…`
-- [ ] T026 [P] [US1] Exibir a Etapa por forma no resumo de `backend/processo_seletivo/interface/revisao.py`
-- [ ] T027 [P] [US1] Testar a publicação de uma Etapa decisória em `backend/tests/integration/interface/test_compor.py`: o snapshot traz forma e rótulos, e `schemaVersion` é 6
-- [ ] T028 [P] [US1] Testar em `backend/tests/integration/editais/` que um Edital criado **antes** da migration continua publicável sem edição nenhuma: as Etapas dele saem no snapshot como `PONTUADA`, e o conteúdo publicado é idêntico ao que seria antes da revisão, exceto pelos três campos novos
-- [ ] T029 [P] [US1] Testar em `backend/tests/contract/test_edital_draft_api.py` que `forma` omitida no `StageSerializer` vale `PONTUADA` e que `forma: null` explícito é recusado — e que o rascunho gravado não guarda `None`
-- [ ] T030 [P] [US1] Testar as recusas em `backend/tests/unit/editais/test_etapas.py`: decisória sem rótulo, decisória com pontuação máxima, rótulo em branco, e `forma` fora do enum — cada uma com o código declarado no [contrato](./contracts/forma-da-conclusao.md)
+- [X] T023 [P] [US1] Ler e escrever os três campos no formulário de Etapa em `backend/processo_seletivo/interface/forms.py`
+- [X] T024 [US1] Alternar o formulário por forma em `backend/processo_seletivo/interface/templates/interface/_etapa.html`: nota mínima e máxima na pontuada, par de rótulos na decisória, com "Deferido"/"Indeferido" como **prefill editável e não default normativo**
+- [X] T025 [US1] Tornar o formulário condicional de Etapa operável por teclado e legível por leitor de tela em `backend/processo_seletivo/interface/templates/interface/_etapa.html`: a troca de forma anuncia que os campos mudaram, cada rótulo é associado ao seu controle, e a recusa continua ancorada no campo por `aria-describedby`, como o arquivo já faz com `recusa-etapa-…`
+- [X] T026 [P] [US1] Exibir a Etapa por forma no resumo de `backend/processo_seletivo/interface/revisao.py`
+- [X] T027 [P] [US1] Testar a publicação de uma Etapa decisória em `backend/tests/integration/interface/test_compor.py`: o snapshot traz forma e rótulos, e `schemaVersion` é 6
+- [X] T028 [P] [US1] Testar em `backend/tests/integration/editais/` que um Edital criado **antes** da migration continua publicável sem edição nenhuma: as Etapas dele saem no snapshot como `PONTUADA`, e o conteúdo publicado é idêntico ao que seria antes da revisão, exceto pelos três campos novos
+- [X] T029 [P] [US1] Testar em `backend/tests/contract/test_edital_draft_api.py` que `forma` omitida no `StageSerializer` vale `PONTUADA` e que `forma: null` explícito é recusado — e que o rascunho gravado não guarda `None`
+- [X] T030 [P] [US1] Testar as recusas em `backend/tests/unit/editais/test_etapas.py`: decisória sem rótulo, decisória com pontuação máxima, rótulo em branco, e `forma` fora do enum — cada uma com o código declarado no [contrato](./contracts/forma-da-conclusao.md)
 
 **Checkpoint**: existe Edital publicado cuja Etapa declara que não pontua
 
@@ -201,9 +201,9 @@ nova, nenhuma permissão nova.**
 
 **Independent Test**: [Jornada 3](./quickstart.md) — consolidar uma Etapa decisória eliminatória e ver `ELIMINADA` com o motivo citando "Indeferido".
 
-- [ ] T049 [P] [US5] Estender `consequencia` em `backend/processo_seletivo/resultados/domain/regra.py` para receber a conclusão em vez de um decimal, com o ramo decisório — `DESFAVORAVEL → ELIMINADA`, `FAVORAVEL → HABILITADA` — e o **rótulo publicado** no motivo exibível, nunca o enum
+- [X] T049 [P] [US5] Estender `consequencia` em `backend/processo_seletivo/resultados/domain/regra.py` para receber a conclusão em vez de um decimal, com o ramo decisório — `DESFAVORAVEL → ELIMINADA`, `FAVORAVEL → HABILITADA` — e o **rótulo publicado** no motivo exibível, nunca o enum
 - [ ] T050 [P] [US5] Acrescentar `forma` a `CAMPOS_COMPARADOS` em `backend/processo_seletivo/resultados/domain/compatibilidade.py`, reusando o leitor de `previsao.py`, e registrar no docstring por que os **rótulos ficam de fora** (TR-008)
-- [ ] T051 [US5] Copiar a conclusão conforme a forma em `backend/processo_seletivo/resultados/application/consolidacao.py` e carregar `forma` e `sentido` em `backend/processo_seletivo/resultados/application/prontidao.py`
+- [X] T051 [US5] Copiar a conclusão conforme a forma em `backend/processo_seletivo/resultados/application/consolidacao.py` e carregar `forma` e `sentido` em `backend/processo_seletivo/resultados/application/prontidao.py`
 - [ ] T052 [US5] Exibir a conclusão por forma em `backend/processo_seletivo/interface/templates/interface/resultados.html`, com o rótulo publicado
 - [ ] T053 [P] [US5] Testar por `INSERT` cru, em `backend/tests/integration/resultados/test_constraints.py`, que `ck_resultado_completo_por_forma` recusa Resultado decisório com pontuação, pontuado com sentido, e sem forma
 - [ ] T054 [P] [US5] Testar por `INSERT` cru, no mesmo `backend/tests/integration/resultados/test_constraints.py`, que a **trigger** `resultado_etapa_coerente` recusa Resultado cuja forma, pontuação ou sentido divirja da Avaliação fonte — **incluindo o caso que motivou a decisão**: Resultado decisório com sentido diferente do da fonte, que uma conferência alternante aprovaria em silêncio
@@ -226,8 +226,8 @@ nova, nenhuma permissão nova.**
 
 **Independent Test**: [Jornada 4](./quickstart.md) — a Etapa não é consolidável, e a prontidão diz por quê.
 
-- [ ] T058 [US6] Acrescentar a `impedimento_da_regra`, em `backend/processo_seletivo/resultados/domain/regra.py`, o **caso simétrico**: decisória e não eliminatória não publicou o efeito da decisão desfavorável, e por isso a Etapa não é consolidável (013, FR-047). A metade que condiciona a recusa existente à forma já foi feita na Foundational, e não é refeita aqui
-- [ ] T059 [P] [US6] Testar em `backend/tests/unit/resultados/test_regra.py` a tabela de impedimentos inteira, com os três casos lado a lado: mais de uma avaliação prevista, pontuada eliminatória sem mínima, e decisória não eliminatória
+- [X] T058 [US6] Acrescentar a `impedimento_da_regra`, em `backend/processo_seletivo/resultados/domain/regra.py`, o **caso simétrico**: decisória e não eliminatória não publicou o efeito da decisão desfavorável, e por isso a Etapa não é consolidável (013, FR-047). A metade que condiciona a recusa existente à forma já foi feita na Foundational, e não é refeita aqui
+- [X] T059 [P] [US6] Testar em `backend/tests/unit/resultados/test_regra.py` a tabela de impedimentos inteira, com os três casos lado a lado: mais de uma avaliação prevista, pontuada eliminatória sem mínima, e decisória não eliminatória
 - [ ] T060 [P] [US6] Testar em `backend/tests/integration/resultados/test_prontidao.py` que Etapa decisória **não** eliminatória produz zero Resultados e que a prontidão exibe a frase que diz por quê
 
 **Checkpoint**: as duas recusas por regra insuficiente são simétricas e visíveis antes de qualquer tentativa

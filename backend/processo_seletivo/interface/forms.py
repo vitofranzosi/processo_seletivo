@@ -10,6 +10,7 @@ from decimal import Decimal, InvalidOperation
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.editais.domain import secoes
 
 ZONA = ZoneInfo("America/Sao_Paulo")
@@ -214,6 +215,13 @@ def ler_etapas(dados):
                     dados, f"{base}-evaluationsPerRegistration"
                 ),
                 "maximumScore": _decimal(dados, f"{base}-maximumScore"),
+                # As três do incremento da revisão (D-008). A forma vem sempre preenchida, porque o
+                # controle é um par de opções com uma marcada: `_texto` vazio só acontece em envio
+                # forjado, e ali `or PONTUADA` devolve o que a ausência significa (FR-120). Os
+                # rótulos vazios significam "não se aplica" e viajam como vazio até o snapshot.
+                "forma": _texto(dados, f"{base}-forma") or Forma.PONTUADA,
+                "rotuloFavoravel": _texto(dados, f"{base}-rotuloFavoravel"),
+                "rotuloDesfavoravel": _texto(dados, f"{base}-rotuloDesfavoravel"),
                 # Vazio é "não vinculada a Evento", e não Evento inexistente.
                 "scheduleEventId": _texto(dados, f"{base}-scheduleEventId") or None,
             }
@@ -471,6 +479,9 @@ def etapas_do_edital(edital):
                 else etapa.evaluations_per_registration
             ),
             "maximumScore": "" if etapa.maximum_score is None else f"{etapa.maximum_score:f}",
+            "forma": etapa.forma,
+            "rotuloFavoravel": etapa.rotulo_favoravel,
+            "rotuloDesfavoravel": etapa.rotulo_desfavoravel,
             "scheduleEventId": "" if etapa.evento_id is None else str(etapa.evento_id),
         }
         for etapa in edital.etapas.order_by("order")
@@ -490,6 +501,9 @@ def etapas_persistidas(edital):
             "minimumScore": etapa.minimum_score,
             "evaluationsPerRegistration": etapa.evaluations_per_registration,
             "maximumScore": etapa.maximum_score,
+            "forma": etapa.forma,
+            "rotuloFavoravel": etapa.rotulo_favoravel,
+            "rotuloDesfavoravel": etapa.rotulo_desfavoravel,
             "scheduleEventId": None if etapa.evento_id is None else str(etapa.evento_id),
         }
         for etapa in edital.etapas.order_by("order")
