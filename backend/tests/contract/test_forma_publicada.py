@@ -312,6 +312,6 @@ def test_dois_snapshots_da_versao_vigente_do_mesmo_conteudo_tem_as_mesmas_chaves
     primeiro = edital_snapshot(edital)
     segundo = edital_snapshot(edital)
 
-    assert primeiro["schemaVersion"] == SCHEMA_VERSION == 6
+    assert primeiro["schemaVersion"] == SCHEMA_VERSION == 7
     assert chaves(primeiro) == chaves(segundo)
     assert {"/processoCode", "/processoTitle"} <= chaves(primeiro)

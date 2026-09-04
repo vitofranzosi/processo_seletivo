@@ -323,7 +323,7 @@ def test_9_o_edital_v5_retificado_nasce_na_6_com_a_forma_escrita(api_client, leg
     publish_retification(api_client, create_retification(api_client, legado, TITULO), suffix="v6")
 
     consolidada = vigente(legado)
-    assert consolidada.content["schemaVersion"] == SCHEMA_VERSION == 6
+    assert consolidada.content["schemaVersion"] == SCHEMA_VERSION == 7
     assert {etapa["forma"] for etapa in consolidada.content["stages"]} == {"PONTUADA"}
     assert all(etapa["rotuloFavoravel"] is None for etapa in consolidada.content["stages"])
 

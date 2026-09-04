@@ -167,7 +167,7 @@ def test_a_cadeia_sobe_dois_degraus_do_conteudo_v4():
     """v4 → 5 → 6 num passo só de chamada, e em dois de significado (TR-001)."""
     elevado = elevar(conteudo(4, [ETAPA_V4]))
 
-    assert elevado["schemaVersion"] == SCHEMA_VERSION == 6
+    assert elevado["schemaVersion"] == SCHEMA_VERSION == 7
     assert elevado["stages"][0]["forma"] == "PONTUADA"
     assert elevado["stages"][0]["evaluationsPerRegistration"] == 1
 

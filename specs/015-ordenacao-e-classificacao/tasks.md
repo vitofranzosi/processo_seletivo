@@ -73,9 +73,9 @@ nasce nesta feature — `classificacao` —, e as telas ficam em `interface`.
 - [ ] T012 Migration de `processos` com o teto, em `backend/processo_seletivo/processos/migrations/`
 - [ ] T013 Emitir `declaredFacts` dentro do laço do Perfil e `maxInscricoesPorCandidato` **na raiz** do snapshot, em `backend/processo_seletivo/publicacoes/application/publish_edital.py`
 - [ ] T014 Teste: mudar o tipo de um fato cria fato novo, e o valor congelado permanece legível sob a norma que o governou, em `backend/tests/unit/editais/`
-- [ ] T015 [P] Atualizar as fixtures de snapshot em `backend/tests/fixtures/snapshot.py` e o `rebaixar()` de `backend/tests/fixtures/legado.py`
+- [ ] T015 [P] Atualizar as fixtures de snapshot em `backend/tests/fixtures/snapshot.py` — o `rebaixar()` de `backend/tests/fixtures/legado.py` **já foi feito** em T007, que não fecharia sem ele; falta a fixture de snapshot
 - [ ] T016 [P] Atualizar `seed_demo` em `backend/processo_seletivo/processos/management/commands/seed_demo.py`
-- [ ] T017 Atualizar os testes que travam a versão canônica com o literal `6` — `test_forma_publicada.py`, `test_contrato_de_inscricao.py`, `test_quickstart.py`, `test_elevacao.py`, `test_etapas.py`, `test_limites_de_borda.py`
+- [X] T017 Atualizar os testes que travam a versão canônica com o literal `6` — `test_forma_publicada.py`, `test_contrato_de_inscricao.py`, `test_quickstart.py`, `test_elevacao.py`, `test_etapas.py`, `test_limites_de_borda.py`
 
 **Checkpoint**: a versão 7 publica, retifica e eleva, carregando as três mudanças de forma — marco,
 fatos declarados e teto. **Nada de comportamento ainda**: coletar, congelar e aplicar o teto é a US2,

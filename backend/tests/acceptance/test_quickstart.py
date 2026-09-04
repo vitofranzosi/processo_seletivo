@@ -358,7 +358,7 @@ def test_j1_o_edital_publica_como_a_etapa_e_concluida(gestor, api_client, manage
     conteudo = cenario["edital"].versoes_consolidadas.latest("materialized_at").content
     etapa = next(e for e in conteudo["stages"] if e["id"] == str(cenario["primeira"]))
 
-    assert conteudo["schemaVersion"] == 6
+    assert conteudo["schemaVersion"] == 7
     assert etapa["forma"] == "DECISORIA"
     assert etapa["minimumScore"] is None and etapa["maximumScore"] is None
     assert (etapa["rotuloFavoravel"], etapa["rotuloDesfavoravel"]) == ("Deferido", "Indeferido")
