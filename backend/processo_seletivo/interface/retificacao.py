@@ -61,12 +61,23 @@ CAMPOS_REGRA = [
     ("normativeRule/foundation", "Fundamento normativo", TEXTO),
     ("normativeRule/version", "Versão do fundamento", TEXTO),
 ]
+# **Todos** os campos normativos da Etapa, e não os que alguém lembrou de listar. A lista estava
+# incompleta desde a 012 — `maximumScore` e `evaluationsPerRegistration` ficaram de fora —, e o
+# custo disso é publicar regra que afeta direito e só se corrige pela API (D-008.10). Fica fora o
+# que não é norma: `id` é identidade, `order` é insumo da progressão e `scheduleEventId` é vínculo
+# endereçado pela coleção do Cronograma. `tests/contract/test_retificacoes_api.py` guarda a lista
+# contra o próximo campo que nascer.
 CAMPOS_ETAPA = [
     ("name", "Nome da Etapa", TEXTO),
     ("weight", "Peso", DECIMAL),
     ("minimumScore", "Nota mínima", DECIMAL),
+    ("maximumScore", "Pontuação máxima", DECIMAL),
+    ("evaluationsPerRegistration", "Avaliações por inscrição", INTEIRO),
     ("eliminatory", "Eliminatória", BOOLEANO),
     ("classificatory", "Classificatória", BOOLEANO),
+    ("forma", "Forma da conclusão", TEXTO),
+    ("rotuloFavoravel", "Rótulo do resultado favorável", TEXTO),
+    ("rotuloDesfavoravel", "Rótulo do resultado desfavorável", TEXTO),
 ]
 # Só o conteúdo. O catálogo de seções é fixo: título, ordem, tipo e origem divergentes são
 # recusados pela verificação de topologia, e uma seção gerada nem campo de conteúdo tem.

@@ -12,6 +12,7 @@ import pytest
 from processo_seletivo.publicacoes.domain.elevacao import elevar_etapa
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from processo_seletivo.shared.canonical import SCHEMA_VERSION, canonical_sha256
+from tests.fixtures.edital import actor_headers
 from tests.fixtures.legado import (
     hashes_publicados,
     publicar_na_versao_anterior,
@@ -312,3 +313,81 @@ def test_a_publicacao_original_permanece_byte_a_byte(api_client, legado):
     assert original.canonical_schema_version == 4
     assert original.content_hash == antes["publicacoes"][original.id]
     assert rebaixar(original.revisao.content)["schemaVersion"] == 4
+
+
+# ------------------------- o segundo degrau, e o que ele não pode quebrar (D-008, TR-001)
+
+
+def test_9_o_edital_v5_retificado_nasce_na_6_com_a_forma_escrita(api_client, legado):
+    """Jornada 5: nenhum Edital fica irretificável por evolução de esquema (D-002, FR-098)."""
+    publish_retification(api_client, create_retification(api_client, legado, TITULO), suffix="v6")
+
+    consolidada = vigente(legado)
+    assert consolidada.content["schemaVersion"] == SCHEMA_VERSION == 6
+    assert {etapa["forma"] for etapa in consolidada.content["stages"]} == {"PONTUADA"}
+    assert all(etapa["rotuloFavoravel"] is None for etapa in consolidada.content["stages"])
+
+
+def test_10_a_publicacao_original_continua_intacta_depois_do_salto(api_client, legado):
+    """Elevar é leitura: a Publicação original permanece byte a byte o que foi publicado."""
+    from processo_seletivo.publicacoes.models import Publicacao
+
+    original = Publicacao.objects.filter(edital=legado).earliest("published_at")
+    antes = original.content_hash
+    publish_retification(api_client, create_retification(api_client, legado, TITULO), suffix="v6b")
+
+    original.refresh_from_db()
+    assert original.content_hash == antes
+
+
+def test_11_retificar_a_forma_para_decisoria_exige_os_rotulos(api_client, legado):
+    """Jornada 6: trocar a forma é Retificação como as demais, e a coerência é cobrada."""
+    atual = next(e for e in vigente(legado).content["stages"] if e["id"] == ETAPA["A"])
+    sem_rotulo = [
+        {
+            "targetPath": f"/stages/id={ETAPA['A']}",
+            "operation": "REPLACE",
+            "newValue": {**elevar_etapa(atual), "forma": "DECISORIA"},
+            "expectedPreviousHash": canonical_sha256(elevar_etapa(atual)),
+        }
+    ]
+    # A recusa vem já na **elaboração**: o ato é projetado sobre o conteúdo vigente e a coerência
+    # entre campos é verificada ali, antes de existir Retificação alguma para publicar.
+    base = vigente(legado)
+    recusada = api_client.post(
+        f"/api/v1/admin/editais/{legado.id}/retificacoes",
+        {
+            "baseSnapshotId": str(base.id),
+            "justification": "Retificação d1",
+            "changes": sem_rotulo,
+        },
+        format="json",
+        **actor_headers("retificador", ["retificacao:elaborar"], key="retificacao-d1-0001"),
+    )
+
+    assert recusada.status_code == 422, recusada.content
+    assert b"decis" in recusada.content.lower()
+
+
+def test_12_a_publicacao_original_continua_servindo_o_conteudo_literal(legado):
+    """Elevar no caminho público faria a tela mostrar o que o `content_hash` não cobre (T-002).
+
+    A elevação existe para que o Edital antigo continue **retificável**, e mora no fluxo de
+    Retificação. Aqui está a recíproca: o que a Publicação guarda é o literal, sem as chaves que a
+    revisão acrescentou, e é ele que o hash prova. Sem esta guarda, a compatibilidade vazaria para
+    a leitura e a verificação de integridade da 005 passaria a comparar coisas diferentes.
+    """
+    import hashlib
+    import json
+
+    from processo_seletivo.publicacoes.models import Publicacao
+
+    original = Publicacao.objects.filter(edital=legado).earliest("published_at")
+    literal = json.loads(bytes(original.canonical_content).decode("utf-8"))
+
+    assert original.canonical_schema_version == 4
+    assert literal["schemaVersion"] == 4
+    for etapa in literal["stages"]:
+        assert "forma" not in etapa and "evaluationsPerRegistration" not in etapa
+    # E os bytes continuam sendo o que o hash prova: elevar não passou por aqui.
+    assert original.content_hash == hashlib.sha256(bytes(original.canonical_content)).hexdigest()

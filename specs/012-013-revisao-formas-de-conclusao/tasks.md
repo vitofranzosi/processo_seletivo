@@ -150,11 +150,11 @@ nova, nenhuma permissão nova.**
 
 **Independent Test**: [Jornadas 5 e 6](./quickstart.md) — retificar um Edital v5 e retificar a forma de uma Etapa.
 
-- [ ] T031 [US2] Completar `CAMPOS_ETAPA` em `backend/processo_seletivo/interface/retificacao.py` com **todos** os campos normativos da Etapa: os cinco atuais, `maximumScore` e `evaluationsPerRegistration` que o primeiro incremento deixou para trás, e os três novos (012, D-008.10)
-- [ ] T032 [P] [US2] Escrever, em `backend/tests/contract/test_retificacoes_api.py`, a guarda que compara `CAMPOS_ETAPA` com um **conjunto declarado explicitamente** — os campos normativos da Etapa, isto é `ETAPA_PUBLICADA` menos `id`, `order` e `scheduleEventId`, cada exclusão justificada em comentário (identidade, insumo da progressão, e vínculo endereçado por outra coleção). O objetivo é que o próximo campo normativo não caia no mesmo buraco em silêncio
-- [ ] T033 [P] [US2] Testar em `backend/tests/integration/publicacoes/test_elevacao_de_versao.py` que um Edital v5 retificado produz Versão Consolidada v6 com `forma = "PONTUADA"`, que a Publicação original não é tocada e que a elevação não aparece como ato de ninguém
-- [ ] T034 [P] [US2] Testar em `backend/tests/integration/publicacoes/test_elevacao_de_versao.py` que retificar `PONTUADA → DECISORIA` exige os dois rótulos e recusa manter mínima e máxima
-- [ ] T035 [P] [US2] Testar em `backend/tests/contract/test_documento_publicado.py` que a consulta pública e o comprovante continuam servindo o conteúdo **literal** do v5, sem elevação, para que o `content_hash` continue provando o que a tela mostra
+- [X] T031 [US2] Completar `CAMPOS_ETAPA` em `backend/processo_seletivo/interface/retificacao.py` com **todos** os campos normativos da Etapa: os cinco atuais, `maximumScore` e `evaluationsPerRegistration` que o primeiro incremento deixou para trás, e os três novos (012, D-008.10)
+- [X] T032 [P] [US2] Escrever, em `backend/tests/contract/test_retificacoes_api.py`, a guarda que compara `CAMPOS_ETAPA` com um **conjunto declarado explicitamente** — os campos normativos da Etapa, isto é `ETAPA_PUBLICADA` menos `id`, `order` e `scheduleEventId`, cada exclusão justificada em comentário (identidade, insumo da progressão, e vínculo endereçado por outra coleção). O objetivo é que o próximo campo normativo não caia no mesmo buraco em silêncio
+- [X] T033 [P] [US2] Testar em `backend/tests/integration/publicacoes/test_elevacao_de_versao.py` que um Edital v5 retificado produz Versão Consolidada v6 com `forma = "PONTUADA"`, que a Publicação original não é tocada e que a elevação não aparece como ato de ninguém
+- [X] T034 [P] [US2] Testar em `backend/tests/integration/publicacoes/test_elevacao_de_versao.py` que retificar `PONTUADA → DECISORIA` exige os dois rótulos e recusa manter mínima e máxima
+- [X] T035 [P] [US2] Testar em `backend/tests/contract/test_documento_publicado.py` que a consulta pública e o comprovante continuam servindo o conteúdo **literal** do v5, sem elevação, para que o `content_hash` continue provando o que a tela mostra
 
 **Checkpoint**: a norma nova é publicável, corrigível e não quebrou o passado
 
