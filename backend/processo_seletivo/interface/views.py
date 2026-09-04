@@ -2492,11 +2492,16 @@ def _leituras_por_requisito(ator, atribuicao):
 
 def _valores_da_avaliacao(digitado, avaliacao):
     if digitado:
-        return {"pontuacao": digitado.get("pontuacao", ""), "parecer": digitado.get("parecer", "")}
+        return {
+            "pontuacao": digitado.get("pontuacao", ""),
+            "sentido": digitado.get("sentido", ""),
+            "parecer": digitado.get("parecer", ""),
+        }
     if avaliacao is None:
-        return {"pontuacao": "", "parecer": ""}
+        return {"pontuacao": "", "sentido": "", "parecer": ""}
     return {
         "pontuacao": "" if avaliacao.pontuacao is None else f"{avaliacao.pontuacao:f}",
+        "sentido": avaliacao.sentido,
         "parecer": avaliacao.parecer,
     }
 
@@ -2551,6 +2556,7 @@ def _registrar_avaliacao(
         "etapa_id": etapa_id,
         "inscricao_id": inscricao_id,
         "pontuacao": dados["pontuacao"],
+        "sentido": dados["sentido"],
         "parecer": dados["parecer"],
         "expected_revision": dados["expected_revision"],
         "correlation_id": getattr(request, "correlation_id", ""),
@@ -2569,6 +2575,7 @@ def _registrar_avaliacao(
         request.session["aviso_da_avaliacao"] = {"tipo": "erro", "texto": recusa.detail}
         request.session["digitado_na_avaliacao"] = {
             "pontuacao": dados["pontuacao"],
+            "sentido": dados["sentido"],
             "parecer": dados["parecer"],
         }
     return redirect(destino)

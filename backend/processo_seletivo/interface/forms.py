@@ -456,6 +456,9 @@ def ler_avaliacao(dados):
     """
     return {
         "pontuacao": _texto(dados, "pontuacao"),
+        # O instrumento da outra forma chega vazio quando a tela é a certa, e preenchido quando
+        # alguém forjou o envio — e é o domínio que recusa, não a leitura (FR-122).
+        "sentido": _texto(dados, "sentido"),
         "parecer": _texto(dados, "parecer"),
         "expected_revision": _inteiro(dados, "expected_revision", 0),
         "versao_reconhecida": _texto(dados, "versao_reconhecida") or None,
