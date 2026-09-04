@@ -254,13 +254,19 @@ Além da ida e volta das duas formas nas duas features:
 1. branch própria                                                        ✔ feito
 2. emendar specs/012 — D-008 no §5 e revisão transversal (mapa abaixo)    ✔ feito
 3. emendar specs/013 — a contraparte, no §2 e nas seções do mapa          ✔ feito
-4. /plan da revisão conjunta                                             ← a próxima sessão começa aqui
-5. modelo, constraint e migração da 012 · snapshot v6 · elevação · retificação
-6. Mesa: dois instrumentos conforme a forma
-7. PDF: forma e rótulos no documento publicado
-8. modelo, trigger e domínio da 013
-9. testes de não regressão e dos casos decisórios
+4. /plan da revisão conjunta                                             ✔ feito
+5. modelo, constraint e migração da 012 · snapshot v6 · elevação · retificação  ✔ feito
+6. Mesa: dois instrumentos conforme a forma                              ✔ feito
+7. PDF: forma e rótulos no documento publicado                           ✔ feito
+8. modelo, trigger e domínio da 013                                      ✔ feito
+9. testes de não regressão e dos casos decisórios                        ✔ feito
 ```
+
+**Executado em 04/09/2026.** As 66 tarefas estão em
+[`specs/012-013-revisao-formas-de-conclusao/tasks.md`](../specs/012-013-revisao-formas-de-conclusao/tasks.md),
+e o que a implementação corrigiu do plano está registrado em
+[`traceability.md`](../specs/012-013-revisao-formas-de-conclusao/traceability.md). A suíte fecha com
+2806 testes passando, e nenhum dos 2750 do baseline deixou de existir.
 
 **Os passos 2 e 3 foram executados em 03/09/2026**, e o mapa abaixo passa a ser o registro do que
 foi emendado — não uma lista de pendências. As duas specs já estão coerentes entre si; o `/plan`

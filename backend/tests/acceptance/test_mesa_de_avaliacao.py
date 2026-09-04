@@ -207,3 +207,69 @@ def test_a_vertical_nao_produz_resultado(
     for corpo in telas:
         for proibido in ("média", "Média", "quórum", "apto", "Apto", "aprovad", "classificaç"):
             assert proibido not in corpo
+
+
+@pytest.mark.acceptance
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_jornada_decisoria_de_ponta_a_ponta(gestor, api_client, manager_headers):
+    """Publicar decisória → distribuir → concluir indeferido → consolidar → sumir da seguinte.
+
+    É a vertical inteira da revisão 012–013, e a razão de ela existir: até aqui o sistema não
+    percorria este caminho sem inventar uma nota. Os Editais 35 e 57 do Cefor/Ifes passam por aqui.
+    """
+    from processo_seletivo.avaliacoes.application.selectors import inscricoes_da_etapa
+    from processo_seletivo.resultados.application.consolidacao import consolidar
+    from processo_seletivo.resultados.models import ResultadoEtapa
+    from tests.conftest import ator_institucional
+    from tests.fixtures.comissao import inscrever
+    from tests.fixtures.mesa import concluir_como, distribuir_para
+    from tests.fixtures.resultado import montar_etapa_de_leitura_unica
+
+    cenario = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=2800, codigo="2800", decisoria=True
+    )
+    vigente = cenario["edital"].versoes_consolidadas.latest("materialized_at")
+    etapa = next(e for e in vigente.content["stages"] if e["id"] == str(cenario["primeira"]))
+
+    # 1 · a Etapa publicada declara que não pontua, e publica o vocabulário deste Edital
+    assert etapa["forma"] == "DECISORIA"
+    assert (etapa["rotuloFavoravel"], etapa["rotuloDesfavoravel"]) == ("Deferido", "Indeferido")
+    assert etapa["minimumScore"] is None and etapa["maximumScore"] is None
+
+    # 2 · o avaliador conclui um indeferimento, e nada vira número
+    inscricao = inscrever(cenario["edital"], 1, primeiro=1)[0]
+    distribuir_para(cenario, gestor, ["joao"], [inscricao], chave="lote-2800")
+    avaliacao = concluir_como(
+        cenario, "joao", inscricao, sentido="DESFAVORAVEL", parecer="Não apresentou o diploma."
+    )
+    assert avaliacao.pontuacao is None and avaliacao.sentido == "DESFAVORAVEL"
+
+    # 3 · a presidência oficializa, e o Resultado fala a língua do Edital
+    consolidar(
+        actor=ator_institucional("maria"),
+        processo_id=cenario["processo"].id,
+        edital_id=cenario["edital"].id,
+        etapa_id=cenario["primeira"],
+        inscricao_ids=[inscricao.id],
+        idempotency_key="k-2800",
+        correlation_id="teste",
+    )
+    resultado = ResultadoEtapa.objects.get(inscricao=inscricao)
+    assert resultado.consequencia == "ELIMINADA"
+    assert "Indeferido" in resultado.motivo
+
+    # 4 · e a inscrição indeferida some da Etapa seguinte, pela regra que já valia
+    from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
+    from processo_seletivo.resultados.application.prontidao import panorama_da_etapa
+
+    seguinte = next(e for e in vigente.content["stages"] if e["id"] == str(cenario["segunda"]))
+    visao = panorama_da_etapa(
+        edital=cenario["edital"],
+        etapa=seguinte,
+        etapas_vigentes=etapas_vigentes(cenario["edital"]),
+    )
+    linhas, _ = inscricoes_da_etapa(
+        edital=cenario["edital"], etapa=seguinte, panorama=visao
+    )
+    assert inscricao.id not in {linha["inscricao"].id for linha in linhas}

@@ -154,8 +154,14 @@ def documentos_exigidos(numero):
 
 
 def etapas(numero):
-    """Duas Etapas, uma vinculada a Evento e outra não — o suficiente para a demonstração mostrar
-    que as datas vêm do Cronograma e que o vínculo é opcional."""
+    """Três Etapas: duas pontuadas e uma decisória.
+
+    As duas primeiras mostram que as datas vêm do Cronograma e que o vínculo é opcional. A terceira
+    é a análise documental dos Editais 35 e 57 do Cefor/Ifes — eliminatória, concluída por decisão e
+    **sem nota**. Ela existe aqui porque a forma decisória precisa existir em ambiente de
+    demonstração, e não só em teste: quem abre o sistema para conhecer precisa ver que avaliar nem
+    sempre é pontuar (D-008).
+    """
     return [
         {
             "id": f"00000000-0000-0000-00{numero}-0000000000d1",
@@ -175,6 +181,21 @@ def etapas(numero):
             "eliminatory": False,
             "classificatory": True,
             "minimumScore": None,
+            "scheduleEventId": None,
+        },
+        {
+            "id": f"00000000-0000-0000-00{numero}-0000000000d3",
+            "name": "Análise documental",
+            "order": 3,
+            "weight": None,
+            "eliminatory": True,
+            "classificatory": False,
+            # Nem mínima nem máxima: nesta forma elas não se aplicam, e publicá-las seria regra
+            # normativa fictícia (FR-121).
+            "minimumScore": None,
+            "forma": "DECISORIA",
+            "rotuloFavoravel": "Deferido",
+            "rotuloDesfavoravel": "Indeferido",
             "scheduleEventId": None,
         },
     ]

@@ -240,9 +240,9 @@ nova, nenhuma permissão nova.**
 
 **Independent Test**: a suíte inteira passa, e a lista de node IDs do baseline é um **subconjunto** da lista final — todo teste que existia continua existindo. A contagem total cresce, de propósito.
 
-- [ ] T061 [US7] Rodar a suíte inteira com PostgreSQL e comparar a lista de node IDs com o baseline: **todo teste que existia continua existindo e passando**. Enumerar em `specs/012-013-revisao-formas-de-conclusao/traceability.md` cada asserção alterada, com o motivo — só as do literal da versão canônica são admissíveis (012, FR-124 · 013, FR-050)
-- [ ] T062 [P] [US7] Acrescentar a jornada decisória de ponta a ponta a `backend/tests/acceptance/test_mesa_de_avaliacao.py`: publicar decisória, distribuir, concluir indeferido, consolidar, e a inscrição sumir da Etapa seguinte
-- [ ] T063 [P] [US7] Cobrir em `backend/tests/acceptance/test_quickstart.py` as jornadas do [quickstart](./quickstart.md) que **não** são a E2E de T062 — J1, J4, J5 e J6 —, sem reencenar publicar→avaliar→consolidar→progredir
+- [X] T061 [US7] Rodar a suíte inteira com PostgreSQL e comparar a lista de node IDs com o baseline: **todo teste que existia continua existindo e passando**. Enumerar em `specs/012-013-revisao-formas-de-conclusao/traceability.md` cada asserção alterada, com o motivo — só as do literal da versão canônica são admissíveis (012, FR-124 · 013, FR-050)
+- [X] T062 [P] [US7] Acrescentar a jornada decisória de ponta a ponta a `backend/tests/acceptance/test_mesa_de_avaliacao.py`: publicar decisória, distribuir, concluir indeferido, consolidar, e a inscrição sumir da Etapa seguinte
+- [X] T063 [P] [US7] Cobrir em `backend/tests/acceptance/test_quickstart.py` as jornadas do [quickstart](./quickstart.md) que **não** são a E2E de T062 — J1, J4, J5 e J6 —, sem reencenar publicar→avaliar→consolidar→progredir
 
 **Checkpoint**: a revisão está entregue e demonstrada
 
@@ -250,9 +250,9 @@ nova, nenhuma permissão nova.**
 
 ## Phase 10: Polish & Cross-Cutting Concerns
 
-- [ ] T064 [P] Fechar a rastreabilidade em `specs/012-013-revisao-formas-de-conclusao/traceability.md`, ligando FR e SC das duas specs às tarefas e aos testes, como 012 e 013 fizeram
-- [ ] T065 [P] Acrescentar uma Etapa decisória aos dados de demonstração em `backend/processo_seletivo/processos/management/commands/seed_demo.py`, para que a forma nova exista em ambiente de demonstração e não só em teste
-- [ ] T066 [P] Atualizar `doc/briefing-revisao-012-013-formas-de-conclusao.md` marcando as fases executadas, como o próprio documento já faz com os passos 1 a 3
+- [X] T064 [P] Fechar a rastreabilidade em `specs/012-013-revisao-formas-de-conclusao/traceability.md`, ligando FR e SC das duas specs às tarefas e aos testes, como 012 e 013 fizeram
+- [X] T065 [P] Acrescentar uma Etapa decisória aos dados de demonstração em `backend/processo_seletivo/processos/management/commands/seed_demo.py`, para que a forma nova exista em ambiente de demonstração e não só em teste
+- [X] T066 [P] Atualizar `doc/briefing-revisao-012-013-formas-de-conclusao.md` marcando as fases executadas, como o próprio documento já faz com os passos 1 a 3
 
 ---
 
