@@ -131,9 +131,7 @@ def test_a_etapa_decisoria_nao_eliminatoria_nao_consolida(gestor, api_client, ma
         gestor, api_client, manager_headers, seed=2700, codigo="2700", decisoria=True
     )
     vigente = cenario["edital"].versoes_consolidadas.latest("materialized_at")
-    decisoria = next(
-        e for e in vigente.content["stages"] if e["id"] == str(cenario["primeira"])
-    )
+    decisoria = next(e for e in vigente.content["stages"] if e["id"] == str(cenario["primeira"]))
     # A mesma Etapa, sem o caráter eliminatório: é a única diferença que separa consolidar de não.
     sem_carater = {**decisoria, "eliminatory": False}
 

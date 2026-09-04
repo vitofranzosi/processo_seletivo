@@ -1500,7 +1500,8 @@ def test_o_cargo_nao_e_repetido_quando_ja_esta_no_nome_registrado():
 
 def test_a_etapa_decisoria_imprime_os_rotulos_e_nao_imprime_nota():
     """Jornada 1: quem lê o Edital descobre que aquela Etapa produz deferimento, e não nota."""
-    conteudo = snapshot(stages=[
+    conteudo = snapshot(
+        stages=[
             {
                 "id": "00000000-0000-0000-0000-0000000000b1",
                 "name": "Análise documental",

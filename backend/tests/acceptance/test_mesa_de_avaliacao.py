@@ -269,7 +269,5 @@ def test_a_jornada_decisoria_de_ponta_a_ponta(gestor, api_client, manager_header
         etapa=seguinte,
         etapas_vigentes=etapas_vigentes(cenario["edital"]),
     )
-    linhas, _ = inscricoes_da_etapa(
-        edital=cenario["edital"], etapa=seguinte, panorama=visao
-    )
+    linhas, _ = inscricoes_da_etapa(edital=cenario["edital"], etapa=seguinte, panorama=visao)
     assert inscricao.id not in {linha["inscricao"].id for linha in linhas}

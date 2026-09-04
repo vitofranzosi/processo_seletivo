@@ -549,9 +549,7 @@ def _conteudos_historicos(versao_ids):
     identidades = {identidade for identidade in versao_ids if identidade is not None}
     if not identidades:
         return {}
-    return dict(
-        VersaoConsolidada.objects.filter(id__in=identidades).values_list("id", "content")
-    )
+    return dict(VersaoConsolidada.objects.filter(id__in=identidades).values_list("id", "content"))
 
 
 def _exibivel(forma, pontuacao, sentido, conteudos, versao_id, etapa_id):
