@@ -16,9 +16,10 @@ Sentido  FAVORAVEL | DESFAVORAVEL    ← o que o avaliador afirma na forma decis
 ```
 
 Os dois vivem em `backend/processo_seletivo/avaliacoes/domain/formas.py`, e o lugar segue a direção
-de dependência que já existe: `resultados` importa de `avaliacoes`, nunca o contrário, e os dois enums
-descrevem **a conclusão**, que é conceito da 012. `editais` não os importa — ele valida a string
-publicada contra o contrato, e não conhece o domínio da conclusão.
+de dependência que já existe: `resultados` importa de `avaliacoes`, nunca o contrário, e os dois
+enums descrevem **a conclusão**, que é conceito da 012. `editais` importa `Forma` no **modelo** de
+elaboração, para as `choices` — a alternativa seria uma terceira cópia dos literais —, e mantém a
+tupla literal no **validador** do conteúdo publicado, onde o que se confere é a string do snapshot.
 
 `Sentido` é do **domínio** e nunca carrega vocabulário de Edital. O que o avaliador lê na tela e o
 que o documento imprime são `rotuloFavoravel` e `rotuloDesfavoravel`, publicados pela Etapa — o

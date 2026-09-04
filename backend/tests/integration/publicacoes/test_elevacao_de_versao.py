@@ -9,6 +9,7 @@ leitura, e o que ela produz vai para uma Versão Consolidada nova, que é artefa
 
 import pytest
 
+from processo_seletivo.publicacoes.domain.elevacao import elevar_etapa
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from processo_seletivo.shared.canonical import SCHEMA_VERSION, canonical_sha256
 from tests.fixtures.legado import (
@@ -189,7 +190,10 @@ def test_8_o_hash_declarado_vale_nas_duas_grafias(api_client, legado):
     pública serve. As duas denotam a mesma norma, e as duas passam (T-017)."""
     base = vigente(legado)
     etapa_literal = next(e for e in base.content["stages"] if e["id"] == ETAPA["A"])
-    etapa_elevada = {**etapa_literal, "evaluationsPerRegistration": 1, "maximumScore": None}
+    # A grafia elevada vem da própria elevação, e não de uma cópia literal das chaves que ela
+    # escreve: com dois degraus a cópia já ficou desatualizada uma vez, e ficaria de novo no
+    # terceiro. O que o teste afirma é que a projeção que a autoria compõe passa na conferência.
+    etapa_elevada = elevar_etapa(etapa_literal)
 
     for indice, grafia in enumerate((etapa_literal, etapa_elevada)):
         atual = next(e for e in vigente(legado).content["stages"] if e["id"] == ETAPA["A"])

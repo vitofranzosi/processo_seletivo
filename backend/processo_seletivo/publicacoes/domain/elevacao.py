@@ -33,25 +33,54 @@ uma consolidação etiquetada por versão produziria, sem armazenar versão por 
 
 from processo_seletivo.shared.canonical import SCHEMA_VERSION
 
-# O que a ausência de cada propriedade quer dizer, dito uma vez. É a mesma leitura que
-# `avaliacoes/domain/previsao.py` aplica no consumo; aqui ela vira grafia.
-AUSENCIA = {"evaluationsPerRegistration": 1, "maximumScore": None}
+# O que a ausência de cada propriedade quer dizer, **por degrau**, dito uma vez. É a mesma leitura
+# que `avaliacoes/domain/previsao.py` aplica no consumo; aqui ela vira grafia.
+#
+# `forma` é o único que a elevação escreve com valor, e ela pode fazê-lo porque a spec declara o
+# que a ausência significa: até a versão 5 o domínio não admitia outra forma, e escrever "PONTUADA"
+# não afirma nada que o conteúdo já não dissesse (012, FR-120). Os rótulos continuam nulos, porque
+# na forma pontuada não há sentido a nomear.
+DEGRAUS = {
+    5: {"evaluationsPerRegistration": 1, "maximumScore": None},
+    6: {"forma": "PONTUADA", "rotuloFavoravel": None, "rotuloDesfavoravel": None},
+}
+
+# O que a Etapa na versão vigente carrega, somando todos os degraus. Serve à idempotência: entidade
+# que já tem tudo atravessa sem cópia.
+AUSENCIA = {chave: valor for degrau in DEGRAUS.values() for chave, valor in degrau.items()}
 
 COLECAO_DE_ETAPAS = "/stages"
 
-# **A única conversão que existe.** Elevar não é um mecanismo genérico de compatibilidade: é este
-# incremento, e só ele. Conteúdo em versão anterior à 4 continua recusado por
-# `_assert_versao_canonica`, como a 007 e a 009 decidiram — ali a conversão inventaria norma, e a
-# recusa é a resposta certa. Sem esta guarda, um snapshot v3 sairia carimbado como 5 e a
-# verificação de versão deixaria de verificar coisa alguma (D-002).
+# **A conversão é uma cadeia, e não um mecanismo genérico de compatibilidade.** Um degrau por
+# incremento, cada um sabendo só a sua origem e o seu destino, aplicados em sequência enquanto
+# houver degrau. Conteúdo em versão anterior à 4 continua recusado por `_assert_versao_canonica`,
+# como a 007 e a 009 decidiram — ali a conversão inventaria norma, e a recusa é a resposta certa.
+# Sem esta guarda, um snapshot v3 sairia carimbado como 6 e a verificação de versão deixaria de
+# verificar coisa alguma (D-002).
+#
+# Elevar v4 direto para v6 seria menos linhas e pior significado: saltaria uma forma que existiu de
+# verdade, e a função passaria a decidir por ausência de chave em vez de por versão — o modo de
+# falha que `colecoes.py` recusa, acertar hoje e falhar em silêncio quando nascer o degrau seguinte.
 VERSAO_DE_ORIGEM = 4
+VERSOES_ELEVAVEIS = frozenset(range(VERSAO_DE_ORIGEM, SCHEMA_VERSION + 1))
 
 
-def elevar_etapa(etapa):
-    """A Etapa na forma vigente. Idempotente: o que já está na forma nova atravessa igual."""
+def elevar_etapa(etapa, *, de=VERSAO_DE_ORIGEM):
+    """A Etapa na forma vigente. Idempotente: o que já está na forma nova atravessa igual.
+
+    `de` é a versão em que a Etapa está; os degraus aplicados são os que vêm **depois** dela. Quando
+    a origem não é conhecida — o `newValue` de um ato, que não carrega versão —, aplicam-se todos, e
+    o resultado é o mesmo: a chave que já existe não é reescrita.
+    """
     if not isinstance(etapa, dict):
         return etapa
-    faltando = {chave: valor for chave, valor in AUSENCIA.items() if chave not in etapa}
+    faltando = {
+        chave: valor
+        for versao, degrau in sorted(DEGRAUS.items())
+        if versao > de
+        for chave, valor in degrau.items()
+        if chave not in etapa
+    }
     return {**etapa, **faltando} if faltando else etapa
 
 
@@ -64,13 +93,17 @@ def elevar(conteudo):
     if not isinstance(conteudo, dict):
         return conteudo
     declarada = conteudo.get("schemaVersion")
-    if declarada not in (VERSAO_DE_ORIGEM, SCHEMA_VERSION):
+    if declarada not in VERSOES_ELEVAVEIS:
         # Versão que esta conversão não conhece atravessa **intacta**, para ser recusada onde a
         # recusa é dita: em `_assert_versao_canonica`. Carimbá-la aqui seria afirmar uma forma que
         # o conteúdo não tem — exatamente o que aquela verificação existe para impedir.
         return conteudo
     etapas = conteudo.get("stages")
-    elevadas = [elevar_etapa(item) for item in etapas] if isinstance(etapas, list) else etapas
+    elevadas = (
+        [elevar_etapa(item, de=declarada) for item in etapas]
+        if isinstance(etapas, list)
+        else etapas
+    )
     if declarada == SCHEMA_VERSION and elevadas == etapas:
         return conteudo
     elevado = {**conteudo, "schemaVersion": SCHEMA_VERSION}
@@ -107,7 +140,8 @@ def diz_o_mesmo_que_a_ausencia(etapa):
     """Se os campos novos desta Etapa ainda exprimem o que a ausência deles exprimiria.
 
     **`null` e ausência são a mesma coisa**, e o contrato declara isso: `evaluationsPerRegistration`
-    nulo é uma avaliação, `maximumScore` nulo é limite não declarado. Comparar por igualdade com o
+    nulo é uma avaliação, `maximumScore` nulo é limite não declarado, `forma` nula é forma pontuada
+    e rótulo nulo é rótulo não publicado. Comparar por igualdade com o
     valor da ausência erraria justamente aí — `None != 1` —, e a grafia literal seria recusada para
     uma Etapa que não declarou nada (T-002, T-017).
 
@@ -117,9 +151,16 @@ def diz_o_mesmo_que_a_ausencia(etapa):
     if not isinstance(etapa, dict):
         return False
     previstas = etapa.get("evaluationsPerRegistration")
-    return previstas in (None, AUSENCIA["evaluationsPerRegistration"]) and (
-        etapa.get("maximumScore") is None
-    )
+    if previstas not in (None, AUSENCIA["evaluationsPerRegistration"]):
+        return False
+    if etapa.get("maximumScore") is not None:
+        return False
+    # O degrau da revisão, pela mesma régua: `forma` ausente e `"PONTUADA"` dizem a mesma coisa, e
+    # os rótulos ausentes dizem "não se aplica". Sem isto, uma Retificação elaborada antes do salto
+    # entraria em conflito com o conteúdo elevado por uma diferença que não é diferença (T-017).
+    if etapa.get("forma") not in (None, AUSENCIA["forma"]):
+        return False
+    return etapa.get("rotuloFavoravel") is None and etapa.get("rotuloDesfavoravel") is None
 
 
 def endereca_etapa(target_path):

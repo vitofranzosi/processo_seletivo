@@ -15,6 +15,7 @@ import hashlib
 from django.utils import timezone
 
 from processo_seletivo.processos.models import Edital
+from processo_seletivo.publicacoes.domain.elevacao import DEGRAUS
 from processo_seletivo.publicacoes.models import DocumentoPublicado, Publicacao
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from processo_seletivo.shared.canonical import canonical_bytes, canonical_sha256
@@ -22,7 +23,16 @@ from tests.fixtures.edital import actor_headers, complete_draft
 from tests.fixtures.publicacao import SIGNATORY
 
 VERSAO_ANTERIOR = 4
-PROPRIEDADES_DO_INCREMENTO = ("evaluationsPerRegistration", "maximumScore")
+# O que rebaixar tira: **tudo** o que os degraus acima da versão alvo escrevem, derivado da própria
+# elevação. A lista literal aqui já ficou desatualizada uma vez — com o segundo incremento, ela
+# deixava `forma` num conteúdo carimbado como 4, que é uma grafia que nunca existiu — e derivá-la
+# é o que impede a terceira vez.
+PROPRIEDADES_DO_INCREMENTO = tuple(
+    chave
+    for versao, degrau in sorted(DEGRAUS.items())
+    if versao > VERSAO_ANTERIOR
+    for chave in degrau
+)
 
 
 def rebaixar(conteudo):

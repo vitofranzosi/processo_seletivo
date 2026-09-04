@@ -26,17 +26,35 @@ from uuid import UUID
 #      recebe naquela Etapa, que decide se uma nota isolada elimina ou se há segunda leitura;
 #   2. `maximumScore` no mesmo item — o limite contra o qual a pontuação é validada.
 #
+# 5 → 6 na revisão da `012`, uma vez, cobrindo a forma da conclusão (D-008, FR-119):
+#   1. `forma` em cada item de `stages` — `PONTUADA` ou `DECISORIA`, qual conclusão a Etapa exige;
+#   2. `rotuloFavoravel` e `rotuloDesfavoravel` no mesmo item — o vocabulário com que aquele Edital
+#      nomeia o sentido, publicado como dado porque `Deferido/Indeferido`, `Apto/Inapto` e
+#      `Elegível/Não elegível` são o mesmo juízo e um enum com todos cresceria a cada Edital.
+#
+# Ele **não** corrige omissão do incremento anterior: nasce de mudança de requisito posterior, a
+# análise de três Editais reais em que a Etapa central não pontua. Concluir deixa de significar
+# pontuar, e a D-001 continua verdadeira sobre o primeiro incremento — a história dele não é
+# reencenada como se os cinco campos tivessem nascido juntos.
+#
+# `forma` é o único campo não anulável que a Etapa publicada ganhou, e por um motivo de forma
+# canônica: `null` e `"PONTUADA"` descreveriam a mesma Etapa com bytes diferentes, e a versão existe
+# para identificar **uma** grafia. Os rótulos são anuláveis porque neles o "não se aplica" é real.
+#
 # As duas entram juntas pela razão de sempre, e esta é a primeira vez que o incremento **não**
 # torna irretificável o que já estava publicado. Ele é aditivo sobre uma coleção existente, e a
 # `012` declara o que a ausência significa — uma avaliação, limite não declarado. Existe, portanto,
 # conversão sem invenção, e ela vive em `publicacoes/domain/elevacao.py`: função pura aplicada na
 # **leitura**, dentro do fluxo de Retificação, que não escreve linha nenhuma (012, D-002, T-001).
+# O segundo incremento tem a mesma propriedade pelo mesmo motivo — a spec declara que a ausência de
+# `forma` significa pontuada (FR-120) —, e por isso a elevação passou a ser uma **cadeia**:
+# 4 → 5 → 6, um degrau por incremento, cada um sabendo só a sua origem.
 #
 # Conteúdo publicado na versão 2 torna-se irretificável, por versão **e** por topologia de seções.
 # É a integridade funcionando, e é o que a precondição de implantação da `007` admite: a feature
 # precede o primeiro Edital de produção, e os dados de demonstração são recriados. A `009` repete
 # a mesma precondição pela mesma razão, e ela vale igual para o conteúdo da versão 3.
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 
 
 def _default(value):

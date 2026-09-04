@@ -187,8 +187,12 @@ O módulo novo é `avaliacoes/domain/formas.py`, e o lugar dele decorre da dire�
 já existe: `resultados` importa de `avaliacoes` — `compatibilidade.py` importa `previsao.py` hoje —, e
 o contrário nunca acontece. Os dois enums descrevem **a conclusão**, que é conceito da 012, e por isso
 nascem lá e são importados pela 013. Colocá-los em `shared/` os afastaria do conceito que nomeiam;
-duplicá-los nos dois apps criaria a divergência que um enum existe para impedir. `editais` não os
-importa: ele valida a **string publicada** contra o contrato, e não conhece o domínio da conclusão.
+duplicá-los nos dois apps criaria a divergência que um enum existe para impedir.
+
+`editais` os alcança por **um** caminho e não por dois, e a distinção importa: o **modelo** de
+elaboração importa `Forma` para as suas `choices`, porque a alternativa seria uma terceira cópia dos
+dois literais; o **validador** do conteúdo publicado mantém a tupla literal, porque ali o que se
+confere é a string que chegou no snapshot, e não o domínio da conclusão.
 
 ## Fases de implementação sugeridas
 

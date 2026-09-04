@@ -648,6 +648,14 @@ components:
         # "não declarado", e a ausência é lida como uma avaliação e limite não declarado.
         evaluationsPerRegistration: { type: [integer, 'null'], minimum: 1 }
         maximumScore: { type: [number, 'null'], exclusiveMinimum: 0 }
+        # A forma de conclusão que a Etapa exige, e os rótulos com que o Edital nomeia o sentido na
+        # forma decisória (012, D-008, FR-119). Aqui `forma` fica **fora** de `required`, e a
+        # omissão é legal: quem já integrava com esta API não conhece o campo, e a ausência vale
+        # PONTUADA. `null` **não** é a mesma coisa que a omissão e é recusado — nulo não é uma
+        # forma, e aceitá-lo devolveria ao rascunho o vazio que o modelo proíbe.
+        forma: { type: string, enum: [PONTUADA, DECISORIA] }
+        rotuloFavoravel: { type: [string, 'null'] }
+        rotuloDesfavoravel: { type: [string, 'null'] }
         scheduleEventId: { type: [string, 'null'], format: uuid }
     SecaoInput:
       type: object
@@ -787,15 +795,19 @@ components:
     EtapaPublicada:
       type: object
       description: >-
-        Forma da Etapa de Avaliação no conteúdo normativo **publicado**, na versão canônica 5.
+        Forma da Etapa de Avaliação no conteúdo normativo **publicado**, na versão canônica 6.
         Distinta de EtapaInput pela mesma razão que PerfilPublicado o é de PerfilInput.
-        `evaluationsPerRegistration` e `maximumScore` entram na versão 5, juntas, pelo mesmo motivo
-        que as coleções da 2 entraram juntas: a versão canônica identifica **uma** forma (012,
-        FR-007, FR-008). Conteúdo publicado em versão anterior não carrega as duas chaves, e a
-        ausência é lida como uma avaliação por inscrição e limite não declarado (FR-009, FR-066).
+        `evaluationsPerRegistration` e `maximumScore` entraram na versão 5, juntas, pelo mesmo
+        motivo que as coleções da 2 entraram juntas: a versão canônica identifica **uma** forma
+        (012, FR-007, FR-008). `forma`, `rotuloFavoravel` e `rotuloDesfavoravel` entram na 6, também
+        juntas, por mudança de requisito posterior — avaliar deixa de significar pontuar (012,
+        D-008, FR-119). Conteúdo publicado antes de cada incremento não carrega as chaves dele, e a
+        ausência é lida como uma avaliação por inscrição, limite não declarado e forma pontuada
+        (FR-009, FR-066, FR-120).
       required:
         [id, name, order, weight, eliminatory, classificatory, minimumScore,
-         evaluationsPerRegistration, maximumScore, scheduleEventId]
+         evaluationsPerRegistration, maximumScore, forma, rotuloFavoravel,
+         rotuloDesfavoravel, scheduleEventId]
       properties:
         id: { $ref: '#/components/schemas/Id' }
         name: { type: string }
@@ -823,6 +835,16 @@ components:
           type: [string, 'null']
           format: decimal
           pattern: '^-?(0|[1-9]\d{0,2})\.\d{4}$'
+        # `forma` é obrigatória **e não nula**, ao contrário de todo campo anulável desta Etapa:
+        # `null` aqui criaria duas grafias canônicas para a mesma versão — um snapshot com `null` e
+        # outro com "PONTUADA" descrevendo a mesma Etapa —, e a versão existe para identificar uma
+        # forma só. A ausência é lida como pontuada apenas em conteúdo anterior à 6 (012, FR-120).
+        forma: { type: string, enum: [PONTUADA, DECISORIA] }
+        # Os rótulos são anuláveis porque neles o "não se aplica" é real: a Etapa pontuada não
+        # nomeia sentido nenhum. Obrigatórios em DECISORIA, e a coerência entre campos é verificada
+        # na publicação, não aqui (012, FR-119, FR-121).
+        rotuloFavoravel: { type: [string, 'null'] }
+        rotuloDesfavoravel: { type: [string, 'null'] }
         scheduleEventId: { type: [string, 'null'], format: uuid }
     SecaoPublicada:
       type: object
