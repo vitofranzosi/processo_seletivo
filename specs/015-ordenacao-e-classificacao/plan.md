@@ -171,6 +171,9 @@ backend/processo_seletivo/
 │   ├── domain/elevacao.py                # ALTERADO: degrau 7, e elevar() desce até profiles
 │   └── infrastructure/pdf.py             # ALTERADO: render dentro de _perfis
 ├── shared/canonical.py                   # ALTERADO: SCHEMA_VERSION 6→7 e a história
+├── portal/                               # ALTERADO (D-2): o canal do candidato
+│   ├── views.py                          #   campos dos fatos declarados na inscrição
+│   └── templates/portal/inscricao.html   #   e a recusa do teto, com o motivo
 ├── inscricoes/                           # ALTERADO (D-2, D-3): fatos congelados na submissão
 │   ├── models.py                         #   valores por inscrição, contra a versao_aceita
 │   └── application/                       #   trava do par identidade–Edital; teto de D-3

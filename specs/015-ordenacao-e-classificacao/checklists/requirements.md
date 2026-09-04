@@ -54,6 +54,21 @@ aberta dentro não é testável. A segunda passagem, depois das respostas, fecha
 - **valor ausente virou requisito** (FR-017), e não suposição: critério sem comportamento declarado
   para valor inexistente impede a publicação da regra.
 
+**Terceira análise cruzada (2026-09-04).** Zero CRITICAL, zero HIGH, zero tarefas órfãs. O que
+sobrou foi de duas naturezas, e as duas foram fechadas: a árvore de código do plano ainda não listava
+`portal/`, embora a prosa ao lado já dissesse que ele recebe os campos dos fatos — a rodada anterior
+corrigiu a frase e esqueceu o desenho; e seis requisitos estavam implementados por tarefa sem
+**tarefa de verificação**, o que não é inconsistência e sim cobertura de teste.
+
+Os seis foram distribuídos pelas fatias em que incidem, e não amontoados no fim: o grupo empatado
+visível e a restrição de acesso aos fatos de desempate em US3; o Resultado tardio dentro do universo
+e o obsoleto que continua produzindo efeito em US4; o critério que separou as vizinhas em US5; e os
+três requisitos negativos como um teste de guarda no Polish. São 101 tarefas.
+
+Duas observações ficaram sem ação, por escolha: a seção "2b" do contrato do marco e o título da US2,
+que nomeia os fatos e cobre também o teto. As duas são de forma, nenhuma muda o que se implementa, e
+a terceira passada já é o ponto em que o retorno da análise deixa de pagar o custo.
+
 **Segunda análise cruzada (2026-09-04).** Com C1 e C2 fechados, a passada seguinte pegou o que as
 próprias edições introduziram: a Structure Decision do plano ainda afirmava que nada era acrescentado
 ao `portal`, e a US2 acrescenta; o quickstart não tinha entrega alguma para uma história P1, o que o
