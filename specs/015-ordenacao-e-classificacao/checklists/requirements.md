@@ -54,6 +54,23 @@ aberta dentro não é testável. A segunda passagem, depois das respostas, fecha
 - **valor ausente virou requisito** (FR-017), e não suposição: critério sem comportamento declarado
   para valor inexistente impede a publicação da regra.
 
+**Revisão do plano (2026-09-04).** Quatro achados de desenho voltaram para a spec, e três deles
+mudaram requisitos:
+
+- **a sucessão passou a ser append-only de verdade** (FR-031 a FR-035). O desenho anterior virava um
+  booleano `vigente`, e isso é impossível: a política de papéis roda `REVOKE UPDATE, DELETE` sobre as
+  tabelas append-only (`seguranca/papeis.py:129`), e exceção em trigger não devolve privilégio. O ato
+  sucessor aponta o anterior; vigente é o ato que ninguém sucedeu;
+- **o "não recomputável" foi reformulado** (FR-040 a FR-043). O cenário que o disparava — critério
+  apontando Etapa removida — é inalcançável, porque a publicação o recusa. O caso real é a remoção do
+  **marco**, e ficou explícito que não recomputável não é irreproduzível;
+- **o teto de tempo ganhou a segunda prova** (SC-002 e SC-003). Orçamento de consultas não prova
+  tempo: uma consulta pode ser lenta, e mil linhas podem estourar o teto sem mudar a contagem;
+- **a ordem dos critérios virou campo publicado** (FR-015), porque a Retificação endereça por
+  identidade e a primeira redação não dizia como reordenar.
+
+A quarta — a leva de D-1, D-2 e D-3 — não é ajuste de redação e está com o usuário.
+
 **Sessão de clarificação (2026-09-04).** Cinco perguntas, cinco respostas, todas integradas: a
 emissão concorrente é recusada e suceder exige recálculo com confirmação explícita (FR-029,
 FR-030); a numeração segue a classificação padrão, `1, 1, 3` (FR-025, IO-9, SC-017); reprodução é

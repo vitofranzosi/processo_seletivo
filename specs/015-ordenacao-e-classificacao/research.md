@@ -265,8 +265,11 @@ versão, declaração em `COLECOES_COM_CHAVE`, validação de publicação, quat
 fragmento HTMX e reexibição, template, catálogo de Retificação, PDF, consulta pública, `openapi.yaml`,
 fixtures e `seed_demo`. Só depois disso existe regra publicada para o cálculo ler.
 
-**Consequência de planejamento, e ela é do usuário:** D-2 acrescenta outra coleção normativa (os
-fatos declarados) e sobe a mesma versão. Feitas em levas separadas, são duas elevações, dois degraus
-em `elevacao.py` e dois caminhos de leitura — e, pior, os critérios de desempate por idade e por
-tempo de experiência ficam sem valor para ler até a segunda cair. O plano assume a leva conjunta como
-hipótese e a declara na §Fases; se a decisão for outra, o que muda é o fatiamento, não o desenho.
+**A leva, decidida pelo usuário em 04/09/2026:** D-2 e D-3 entram **nesta** feature, junto com o
+marco, numa elevação canônica única; D-1 corre em paralelo, como extensão da 013, porque não toca
+conteúdo publicado e por isso não disputa a elevação.
+
+O que a decisão compra: o caminho do conteúdo publicado percorrido uma vez em vez de três, um degrau
+em `elevacao.py` em vez de três, e o desempate por idade e por tempo de experiência nascendo
+executável. O que ela custa: a 015 absorve trabalho que seria da 009 (a coleta dos fatos) e da
+submissão (o teto), e passa a ser a maior feature do vertical.

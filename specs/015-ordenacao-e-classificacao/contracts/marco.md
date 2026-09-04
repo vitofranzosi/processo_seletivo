@@ -16,8 +16,8 @@ classificationMilestones: [
     id, code, name,
     stages: [ <uuid da Etapa>, ... ],      # enumeração; a ordem aqui não é normativa
     operation, normalization, rounding,     # como as pontuações se combinam
-    tiebreakers: [                          # a ORDEM aqui É normativa
-      { id, type, parameters, whenMissing }
+    tiebreakers: [                          # emitida ordenada por `order`
+      { id, order, type, parameters, whenMissing }
     ]
   }
 ]
@@ -29,9 +29,11 @@ chave omitida (`publish_edital.py:137-140`); decimal é canônico de quatro casa
 `test_todo_campo_do_conteudo_publicado_e_obrigatorio`
 (`tests/contract/test_forma_publicada.py:109-116`) recusa campo opcional no publicado.
 
-`tiebreakers` é a única lista do conteúdo publicado cuja **posição significa**. Isso é declarado
-aqui e no `openapi.yaml`, e não presumido: aplicar critérios fora da ordem publicada é aplicar outra
-regra.
+**A ordem é campo, e não posição.** `order` é publicado em cada critério, único dentro do marco, e a
+lista é emitida ordenada por ele — como `stages` já faz. A razão é a Retificação: o catálogo endereça
+por identidade (`id=`), nunca por índice, e reordenar substituindo a lista inteira perderia as
+identidades que a própria Retificação usa. Reordenar é, portanto, alterar `order` de cada critério
+por identidade, e os identificadores são preservados (FR-015).
 
 ## 3. Endereçamento
 
@@ -58,7 +60,8 @@ Função dedicada registrada em `validate_for_publication`, no molde de `_faixa_
 | marco que enumera Etapa não classificatória | FR-010 |
 | critério que aponta Etapa ou fato inexistente | FR-016 |
 | critério sem `whenMissing` declarado | FR-017 |
-| dois critérios com a mesma ordem | data-model, `uq_criterio_marco_ordem` |
+| dois critérios do mesmo marco com a mesma `order` | FR-015, `uq_criterio_marco_ordem` |
+| Retificação que remove Etapa enumerada sem ajustar o marco | FR-043 — é aqui que o critério pendurado é impedido, e por isso ele não é estado a tratar depois |
 
 Os pesos **não** são verificados quanto a somar 1 (FR-012): a normalização declarada pela operação é
 que responde por isso.

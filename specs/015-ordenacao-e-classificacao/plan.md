@@ -69,10 +69,14 @@ institucional de `interface`, com os fragmentos htmx já embarcados. Há altera�
 001 — o schema do Perfil publicado ganha a coleção nova, e o teste de contrato exige que todo campo
 publicado seja obrigatório (`tests/contract/test_forma_publicada.py:109-116`).
 
-**Storage**: PostgreSQL. **Duas migrations**: uma em `editais` (o marco e seus critérios como linhas
-de elaboração, no molde de `ModalidadeConcorrencia`) e uma no app novo `classificacao` (o ato, as
-posições, a unicidade parcial do vigente e duas triggers — coerência no `INSERT` e append-only no
-`UPDATE`/`DELETE`). Nenhuma migration em `resultados`, `avaliacoes`, `inscricoes` ou `auditoria`.
+**Storage**: PostgreSQL. **Três migrations**, pela leva decidida (ver §Fases): uma em `editais` — o
+marco e seus critérios, os **fatos declarados** de D-2 e o teto `maxInscricoesPorCandidato` de D-3,
+todos como linhas de elaboração no molde de `ModalidadeConcorrencia`; uma em `inscricoes` — os
+valores **congelados na submissão** e o que a trava do par identidade–Edital exige; e uma no app novo
+`classificacao` — o ato, as posições, a unicidade da raiz e do sucessor, e duas triggers (coerência
+no `INSERT` e append-only no `UPDATE`/`DELETE`, esta **sem exceção alguma**). Nenhuma migration em
+`resultados`, `avaliacoes` ou `auditoria`: D-1 corre em paralelo, como extensão da 013, e não toca
+conteúdo publicado.
 
 **Testing**: pytest com pytest-django, marcadores `acceptance`, `contract`, `integration`,
 `authorization` e `performance` já declarados. Quatro exigências específicas: a unicidade do vigente
@@ -87,9 +91,14 @@ divergência precisam caber em 375 px sem tabela horizontal.
 
 **Project Type**: aplicação web com canal HTML servido pelo Django. Sem SPA, sem build de front.
 
-**Performance Goals**: SC-002 dá **3 segundos a 1.000 participantes** na abertura da tela do marco.
-O alvo vira teste de **orçamento de consultas**, e não de cronômetro: cronômetro em CI mede a
-máquina. O cálculo resolve participantes, Resultados das Etapas enumeradas e conteúdos de versão
+**Performance Goals**: SC-002 dá **3 segundos a 1.000 participantes** na abertura da tela do marco, e
+o alvo exige **duas provas**, não uma. Orçamento de consultas sozinho não prova nada sobre tempo —
+uma consulta pode ser lenta, e ordenar e renderizar mil linhas pode estourar o teto sem mudar a
+contagem. A casa já faz as duas: `tests/performance/test_public_queries.py:145-169` mede o percurso
+com `time.monotonic()` contra um `BUDGET_SECONDS` deliberadamente **abaixo** do limite da SC, para
+que a folga absorva a variação da máquina, e o teste vizinho compara custos entre cenários. Esta
+feature repete o par: medição de ponta a ponta com 1.000 participantes (SC-002) e derivada de
+consultas igual a zero entre dois tamanhos (SC-003). O cálculo resolve participantes, Resultados das Etapas enumeradas e conteúdos de versão
 **antes** do laço, com `conteudos_das_versoes` para desduplicar por versão — a alternativa errada não
 muda a contagem de consultas e por isso nenhum orçamento a denunciaria (T-004).
 
@@ -97,9 +106,11 @@ muda a contagem de consultas e por isso nenhum orçamento a denunciaria (T-004).
 transação, como em toda a família. A elevação canônica é a restrição dura: enquanto o degrau 7 não
 souber descer até `profiles`, todo conteúdo v6 publicado fica irretificável.
 
-**Scale/Scope**: um Edital com mil inscritos, quatro Etapas e até três marcos por Perfil. Duas
-tabelas novas, três funções de domínio, uma coleção normativa nova com elevação de versão, duas rotas
-novas, uma tela nova e 19 pontos de toque no caminho do conteúdo publicado.
+**Scale/Scope**: um Edital com mil inscritos, quatro Etapas e até três marcos por Perfil. Com a leva
+decidida: **duas** coleções normativas novas — marco e fatos declarados — mais um campo publicado,
+numa elevação canônica única; quatro tabelas novas; três funções de domínio; duas rotas novas; uma
+tela nova; e o caminho do conteúdo publicado percorrido **uma** vez para as três mudanças, em vez de
+três vezes.
 
 ## Constitution Check
 
@@ -110,7 +121,7 @@ novas, uma tela nova e 19 pontos de toque no caminho do conteúdo publicado.
 | I — Linguagem ubíqua e integridade | Conceitos distintos; identificadores estáveis; invariantes em constraint | Marco, Ato de Ordenação e Posição são conceitos distintos, com ciclos de vida próprios — daí o app novo (T-010). Marco e critério recebem identidade estável e são endereçados por `id=`, no padrão da 004; a ordem dos critérios é normativa e por isso a posição no array significa, o que é declarado e não presumido. As duas invariantes centrais vão ao banco: unicidade parcial do ato vigente por marco (T-002) e coerência das posições contra os Resultados citados (T-003). **Passa** |
 | II — Integridade normativa e temporalidade | Fonte única; publicado imutável; estado vigente reproduzível | `weight` continua sendo a única fonte do peso — o marco enumera e declara operação, não duplica número (FR-009). O ato grava a versão normativa que o governou, e a proveniência é suficiente para reproduzir a ordem sem consultar o estado vigente (FR-041). A elevação 6→7 declara significado verdadeiro para a ausência: Edital sem marco não classifica (T-008). Retificação alcança marco e critérios e não reescreve publicação anterior. **Passa** |
 | III — Segurança, dados pessoais e auditoria | Negar por padrão; menor privilégio; sem IDOR; LGPD avaliada; auditoria de ato sensível | Autorização herdada — `comissao:gerir` ∪ presidência —, reavaliada depois do bloqueio, sem capacidade nova (D-007, T-001). Consultar abre para `auditoria:consultar`; emitir não. Recusa é 404 uniforme. A resposta que carrega posição e fatos de desempate é `marcar_como_privada`. A trilha registra ator, base, ato, correlação e motivo, e **não tem por onde** pontuação caber — a assinatura de `auditar` a exclui por projeto. Fato de candidato usado em desempate é dado pessoal: FR-048 restringe a quem administra e audita. **Passa** |
-| IV — Regras explícitas e consistência | Regra no backend; estados explícitos; transação; concorrência | O cálculo é função pura sobre conteúdo publicado, e a tela não decide nada — não há campo de posição, nota ou desempate no POST de emissão. Vigente e sucedido são persistidos porque são o ato; obsoleto e não recomputável são **derivados**, porque são fatos sobre o mundo de agora e persistí-los criaria estado a manter. Concorrência: bloqueio do Processo mais unicidade parcial, cinto e suspensório, ambos existentes. **Passa** |
+| IV — Regras explícitas e consistência | Regra no backend; estados explícitos; transação; concorrência | O cálculo é função pura sobre conteúdo publicado, e a tela não decide nada — não há campo de posição, nota ou desempate no POST de emissão. **Nada é persistido como estado mutável:** vigente, obsoleto e não recomputável são todos derivados, e a sucessão é linha nova apontando a anterior. Não é elegância — a política de papéis revoga `UPDATE` das tabelas append-only (`seguranca/papeis.py:129`), e um booleano `vigente` seria impossível de virar em produção. Concorrência: bloqueio do Processo mais unicidade da raiz e do sucessor. **Passa** |
 | V — Qualidade, rastreabilidade e simplicidade | Citação resolvível; teste como prova; simplicidade | As decisões herdadas D-1 a D-4 foram declaradas na `research.md` porque a feature as cita, e `test_citacoes_de_requisito.py` exige que citação seja resolvível dentro da feature — o teste estava vermelho e voltou ao verde antes deste plano. **Passa** |
 | VI — Completude de jornada e valor demonstrável | Capacidade observável; jornada de ponta a ponta pelo canal do ator | A jornada é inteira pela interface administrativa: declarar o marco no Edital, publicar, abrir a tela, conferir a ordem calculada, emitir, consultar a proveniência e ver a obsolescência (FR-046). A divergência entre computado e vigente é exigência de interface, não de domínio — é o que impede a capacidade de existir sem ser alcançável. **Passa** |
 
@@ -160,6 +171,9 @@ backend/processo_seletivo/
 │   ├── domain/elevacao.py                # ALTERADO: degrau 7, e elevar() desce até profiles
 │   └── infrastructure/pdf.py             # ALTERADO: render dentro de _perfis
 ├── shared/canonical.py                   # ALTERADO: SCHEMA_VERSION 6→7 e a história
+├── inscricoes/                           # ALTERADO (D-2, D-3): fatos congelados na submissão
+│   ├── models.py                         #   valores por inscrição, contra a versao_aceita
+│   └── application/                       #   trava do par identidade–Edital; teto de D-3
 ├── seguranca/papeis.py                   # ALTERADO: as duas tabelas em TABELAS_APPEND_ONLY
 └── interface/
     ├── urls.py                           # ALTERADO: duas rotas novas
@@ -186,19 +200,39 @@ da 017.
 
 ## Fases de implementação sugeridas
 
+**A leva está decidida:** D-2 (fatos declarados) e D-3 (teto de inscrições) entram **nesta** feature,
+junto com o marco, numa elevação canônica única 6→7. D-1 corre **em paralelo**, como extensão da 013,
+porque é esquema e regra de domínio sem reflexo no snapshot — e por isso não disputa a elevação.
+
+A consequência honesta: a 015 absorve trabalho que seria de outra spec. A coleta dos fatos é
+território da 009 e o teto é regra de submissão; os dois entram aqui porque atravessam o mesmo
+caminho de conteúdo publicado, e percorrê-lo três vezes custaria três elevações, três degraus em
+`elevacao.py` e três caminhos de leitura das versões anteriores.
+
 | Slice | Entrega | Artefatos |
 |---|---|---|
-| **S0** | O Edital declara marco e desempate, publica e retifica — sem ordem nenhuma ainda | `perfis.py`, `draft.py`, `validation.py`, `publish_edital.py`, `canonical.py`, `elevacao.py`, `colecoes.py`, `forms.py`, `retificacao.py`, `pdf.py`, `_marco.html` |
-| **S1** | A ordem é calculada e exibida, e nada é gravado | `combinacao.py`, `desempate.py`, `calculo.py`, `ordenacao.html` |
-| **S2** | A ordem é emitida, imutável, com proveniência e trilha | app `classificacao`, migration com as duas triggers, `emissao.py` |
-| **S3** | A obsolescência aparece, e a sucessão exige recálculo confirmado | `universo.py`, `selectors.py`, divergência na tela |
+| **S0** | O Edital declara marco, desempate, fatos exigidos e teto; publica e retifica — numa elevação só | `perfis.py`, `draft.py`, `validation.py`, `publish_edital.py`, `canonical.py`, `elevacao.py`, `colecoes.py`, `forms.py`, `retificacao.py`, `pdf.py`, `_marco.html`, `_fato.html` |
+| **S1** | A inscrição coleta e **congela** os fatos na submissão, e o teto passa a valer | `inscricoes/`, submissão com trava do par identidade–Edital, `portal/` |
+| **S2** | A ordem é calculada e exibida, e nada é gravado | `combinacao.py`, `desempate.py`, `calculo.py`, `ordenacao.html` |
+| **S3** | A ordem é emitida, imutável, com proveniência e trilha | app `classificacao`, migration com as duas triggers, `emissao.py` |
+| **S4** | A obsolescência aparece, e a sucessão exige recálculo confirmado | `universo.py`, `selectors.py`, divergência na tela |
 
-S0 é a fatia mais longa e a mais arriscada, e não pode ser encurtada: sem regra publicada, S1 não tem
+**O que S3 não trata, e por quê:** o par "obsoleto e não recomputável" foi reformulado depois que a
+revisão do plano mostrou que o cenário original era inalcançável. Remover a Etapa enumerada sem
+ajustar o marco é **recusado na publicação** por FR-017 e FR-043, de modo que critério pendurado não
+existe. O caso real é a **remoção do marco**: aí não há regra vigente com que comparar, e o ato
+segue reproduzível pela versão histórica (FR-042).
+
+S0 é a fatia mais longa e a mais arriscada, e não pode ser encurtada: sem regra publicada, S2 não tem
 o que ler. **A elevação de versão é o item de maior risco da feature inteira** — é a primeira vez que
-um degrau precisa descer abaixo de `/stages`, e enquanto ela não funcionar todo conteúdo v6 publicado
-fica irretificável. Se D-2 entrar na mesma leva, ela entra em S0, e a elevação sobe uma vez só.
+um degrau precisa descer abaixo de `/stages`, e agora ela carrega duas coleções e um campo de uma
+vez; enquanto não funcionar, todo conteúdo v6 publicado fica irretificável.
 
-S3 vem por último porque só há divergência a mostrar depois de existir ato emitido, e antecipá-la
+S1 é o que torna o desempate executável: sem fato congelado, os critérios por idade e por tempo de
+experiência não têm valor para ler. Ela vem antes do cálculo de propósito — o congelamento acontece
+na **submissão**, contra a `versao_aceita`, e não há como retroagi-lo para quem já se inscreveu.
+
+S4 vem por último porque só há divergência a mostrar depois de existir ato emitido, e antecipá-la
 produziria código com um único caminho testável — o de nunca haver ato.
 
 ## Complexity Tracking
@@ -208,5 +242,6 @@ produziria código com um único caminho testável — o de nunca haver ato.
 | App novo `classificacao` para duas tabelas | Ordenar não é resultado de Etapa: o ato tem universo, autoridade e sucessão próprios, e a 016 crescerá em torno dele. Migration aplicada não se reescreve, e mover tabela depois é caro. | *Tabelas dentro de `resultados`*: custa zero apps e hospeda em "resultados" um agregado que não é resultado. Repete exatamente o erro que a 013 evitou ao não morar em `avaliacoes`. |
 | Elevação canônica que desce abaixo de `/stages` | Sem ela, todo Edital publicado em v6 fica irretificável, e a feature quebraria conteúdo em uso para entregar capacidade nova. | *Aceitar a irretificabilidade*, como a 007 e a 009 fizeram: era aceitável quando não havia conteúdo publicado em uso; hoje não é. |
 | Posição como tabela, e não JSON dentro do ato | SC-016 exige contar posições e considerados sem posição contra o universo; FR-045 exige consultar o desempate entre vizinhas. Ambas viram agregação em memória sobre mil linhas se a posição for JSON. | *JSON no ato*: uma tabela a menos e uma migration mais simples, ao custo de toda consulta da feature. |
-| Unicidade parcial do ato vigente no banco | FR-030 exige recusa, e a idempotência não cobre — chaves diferentes são pedidos diferentes. O bloqueio do Processo serializa hoje, mas some no dia em que outro caminho gravar a tabela. | *Confiar no `select_for_update` do Processo*: verdade hoje, e a 016 também escreverá aqui. É o mesmo argumento que a 013 registrou para a trigger de coerência. |
-| Lista ordenada onde toda outra coleção é endereçada por identidade | A ordem dos critérios **é** a norma: aplicá-los fora de ordem é aplicar outra regra. | *Campo de ordem por critério, como `stages.order`*: seria coerente com a casa, mas admite dois critérios com a mesma ordem e exige regra de desempate para o desempate. |
+| Unicidade da raiz e do sucessor, em vez de um campo `vigente` | FR-031 exige recusa da segunda emissão, e a idempotência não cobre — chaves diferentes são pedidos diferentes. Com a sucessão em linha nova, unicidade sobre `ato_anterior` impede bifurcar a cadeia e unicidade parcial da raiz impede dois primeiros atos. | *Booleano `vigente` com unicidade parcial*: era o desenho anterior, e é **impossível** — a política revoga `UPDATE` do runtime nas tabelas append-only, e a exceção em trigger não devolve privilégio. |
+| Absorver D-2 e D-3 nesta feature | As três mudanças atravessam o mesmo caminho de conteúdo publicado e a mesma elevação canônica. Separadas, são três elevações, três degraus e três caminhos de leitura — e a 015 seria entregue com o desempate por fato inexecutável para os Editais em vista. | *Uma spec normativa antes, e a 015 depois*: cada spec do tamanho planejado, ao custo de duas elevações, sendo a segunda a que precisa descer até `profiles`. Considerada e recusada pelo usuário em 04/09/2026. |
+| Ordem publicada como campo do critério, com unicidade | A ordem dos critérios **é** a norma, e a Retificação precisa de um alvo endereçável para reordenar: substituir a lista inteira perderia identidades e quebraria o endereçamento por `id=`. Com `uq_criterio_marco_ordem`, o empate de ordem que se temia não é representável. | *Posição no array como única fonte da ordem*: foi a primeira redação, e não dizia como reordenar por Retificação — o catálogo endereça por identidade, nunca por índice. |

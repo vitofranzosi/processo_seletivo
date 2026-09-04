@@ -164,6 +164,10 @@ E, sem ordem, o corte da 014 não tem sobre o que operar e a ocupação da 016 n
 - Q: O que a tela mostra quando uma Retificação remove a Etapa que um critério de desempate
   consumia? → A: O ato fica obsoleto **e não recomputável** — íntegro e consultável, com a
   impossibilidade de recálculo dita explicitamente.
+  *(A resposta vale; o cenário que a disparava, não. A revisão do plano mostrou que remover a Etapa
+  sem ajustar o critério é recusado na publicação por FR-016, de modo que o critério pendurado não é
+  alcançável. O caso real de não recomputabilidade é a **remoção do marco**, e é ele que FR-040
+  passa a tratar.)*
 - Q: Qual é o teto de tempo para a tela do marco abrir com a ordem calculada, a 1.000
   participantes? → A: Até 3 segundos.
 
@@ -306,8 +310,11 @@ que o anterior permanece íntegro e consultável.
   precisa dizer se ela participa como filtro ou não participa; o silêncio não vira zero.
 - Participante com Resultado em todas as Etapas do marco, mas eliminado em uma delas.
 - Empate que sobrevive a todos os critérios declarados.
-- Critério de desempate que aponta Etapa removida por Retificação posterior à emissão: o ato fica
-  obsoleto e não recomputável, e a tela diz por quê.
+- Marco removido do conteúdo por Retificação posterior à emissão: o ato fica obsoleto e não
+  recomputável — não há regra vigente com que comparar —, e continua reproduzível pela versão que o
+  governou.
+- Retificação que remove Etapa enumerada por um marco sem ajustar o marco: recusada na publicação,
+  e não estado a tratar depois.
 - Critério que consome fato do candidato que aquela inscrição não congelou — porque foi submetida
   antes de o fato ser declarado.
 - Dois atos emitidos concorrentemente no mesmo marco.
@@ -354,104 +361,119 @@ que o anterior permanece íntegro e consultável.
   tipo e parâmetros.
 - **FR-014**: O sistema MUST aplicar os critérios de desempate na ordem declarada, e MUST NOT
   alterar essa ordem por decisão do código.
-- **FR-015**: Os critérios MUST poder consumir pontuação de Etapa específica e fatos do candidato
+- **FR-015**: A ordem MUST ser publicada como campo de cada critério, e não inferida da posição no
+  array; dois critérios do mesmo marco MUST NOT compartilhar a mesma ordem. Reordenar é Retificação
+  que altera esse campo por identidade, preservando os identificadores — nunca substituição da lista
+  inteira.
+- **FR-016**: Os critérios MUST poder consumir pontuação de Etapa específica e fatos do candidato
   congelados na inscrição (D-2).
-- **FR-016**: O sistema MUST recusar a publicação de marco cujo critério aponte Etapa ou fato
+- **FR-017**: O sistema MUST recusar a publicação de marco cujo critério aponte Etapa ou fato
   inexistente no mesmo conteúdo.
-- **FR-017**: Cada critério MUST declarar o comportamento quando o valor que ele consome não
+- **FR-018**: Cada critério MUST declarar o comportamento quando o valor que ele consome não
   existe — fato não congelado naquela inscrição, ou Etapa sem pontuação —, e o sistema MUST recusar
   a publicação da regra quando algum critério não o declarar.
-- **FR-018**: A regra do marco e seus critérios MUST ser retificáveis pelo catálogo de Retificação,
+- **FR-019**: A regra do marco e seus critérios MUST ser retificáveis pelo catálogo de Retificação,
   com vigência, autoria e efeito, sem reescrever publicação anterior.
-- **FR-019**: O sistema MUST elevar a versão do conteúdo canônico ao introduzir o marco, e MUST
+- **FR-020**: O sistema MUST elevar a versão do conteúdo canônico ao introduzir o marco, e MUST
   preservar a leitura das versões anteriores.
 
 #### Cálculo determinístico
 
-- **FR-020**: O sistema MUST calcular a ordem a partir das entradas e da regra vigente, de forma
+- **FR-021**: O sistema MUST calcular a ordem a partir das entradas e da regra vigente, de forma
   determinística: mesmas entradas e mesma regra produzem sempre a mesma ordem.
-- **FR-021**: O cálculo MUST NOT gravar, emitir ou substituir ato algum.
-- **FR-022**: O sistema MUST tratar ausência de pontuação conforme a regra publicada, e MUST NOT
+- **FR-022**: O cálculo MUST NOT gravar, emitir ou substituir ato algum.
+- **FR-023**: O sistema MUST tratar ausência de pontuação conforme a regra publicada, e MUST NOT
   converter ausência em zero.
-- **FR-023**: Esgotados os critérios declarados, o sistema MUST declarar o empate residual e MUST
+- **FR-024**: Esgotados os critérios declarados, o sistema MUST declarar o empate residual e MUST
   NOT desempatar por identificador técnico, nome, instante de criação ou ordem de retorno do
   armazenamento.
-- **FR-024**: O empate residual MUST NOT impedir a emissão: os participantes empatados MUST
+- **FR-025**: O empate residual MUST NOT impedir a emissão: os participantes empatados MUST
   receber a **mesma posição**, e o ato MUST registrar que dentro daquele grupo não existe ordem
   normativa.
-- **FR-025**: A numeração MUST seguir a classificação padrão: a posição de um participante é o
+- **FR-026**: A numeração MUST seguir a classificação padrão: a posição de um participante é o
   número de participantes à frente dele mais um, e as posições consumidas por um grupo empatado são
   puladas — `1, 1, 3, 4`. O sistema MUST NOT renumerar densamente.
-- **FR-026**: A consulta e a interface MUST identificar o grupo empatado como tal, para que quem
+- **FR-027**: A consulta e a interface MUST identificar o grupo empatado como tal, para que quem
   lê a ordem não infira precedência onde o Edital não a declarou.
 
 #### Emissão, autoridade e imutabilidade
 
-- **FR-027**: Emitir MUST ser operação explícita, autorizada e auditável, com autor, instante e
+- **FR-028**: Emitir MUST ser operação explícita, autorizada e auditável, com autor, instante e
   motivo — nunca efeito colateral de abrir tela ou de consolidar Resultado.
-- **FR-028**: O sistema MUST recusar a emissão a quem não tem a autorização específica, e MUST
+- **FR-029**: O sistema MUST recusar a emissão a quem não tem a autorização específica, e MUST
   reavaliá-la depois de obter o bloqueio da operação.
-- **FR-029**: Um ato emitido MUST ser imutável: 100% das tentativas de alteração são recusadas sem
+- **FR-030**: Um ato emitido MUST ser imutável: 100% das tentativas de alteração são recusadas sem
   efeito.
-- **FR-030**: Para um mesmo marco MUST existir no máximo um ato vigente; emissões concorrentes MUST
+- **FR-031**: Para um mesmo marco MUST existir no máximo um ato vigente; emissões concorrentes MUST
   ser serializadas, e a segunda MUST ser **recusada** com o motivo — nunca produzir dois vigentes e
   nunca suceder por acidente de temporização.
-- **FR-031**: Suceder um ato vigente MUST exigir recálculo e confirmação explícita da nova ordem;
+- **FR-032**: A sucessão MUST ser expressa por **linha nova**: o ato sucessor declara qual ato ele
+  sucede, e nenhuma linha já gravada é alterada. O sistema MUST NOT depender de alterar o ato
+  anterior para deixar de considerá-lo vigente.
+- **FR-033**: Vigente MUST ser derivado, e não gravado: o ato vigente de um marco é aquele que ainda
+  não foi sucedido.
+- **FR-034**: Suceder um ato vigente MUST exigir recálculo e confirmação explícita da nova ordem;
   o sistema MUST NOT emitir sucessão a partir de uma leitura anterior ao ato vigente.
-- **FR-032**: Ato sucedido MUST permanecer consultável, com o motivo da sucessão e sob a norma que
-  o governou.
+- **FR-035**: Ato sucedido MUST permanecer consultável e inalterado, com o motivo da sucessão
+  declarado pelo sucessor e sob a norma que o governou.
 
 #### Obsolescência e divergência observável
 
-- **FR-033**: O sistema MUST marcar o ato vigente como **obsoleto** quando houver mudança relevante
+- **FR-036**: O sistema MUST marcar o ato vigente como **obsoleto** quando houver mudança relevante
   no universo que ele declarou, e MUST NOT marcá-lo por mudança fora desse universo.
-- **FR-034**: A comparação de obsolescência MUST incluir a regra do marco: Retificação que alcance
+- **FR-037**: A comparação de obsolescência MUST incluir a regra do marco: Retificação que alcance
   a operação, a enumeração de Etapas, os pesos que ela lê ou a lista de critérios de desempate MUST
   tornar obsoleto o ato calculado sob a versão anterior, ainda que nenhum Resultado tenha mudado.
-- **FR-035**: Obsoleto MUST NOT significar inválido: o ato continua vigente, consultável e
+- **FR-038**: Obsoleto MUST NOT significar inválido: o ato continua vigente, consultável e
   produzindo efeito até que outro seja emitido.
-- **FR-036**: A interface administrativa MUST exibir a divergência entre o computado agora e o
+- **FR-039**: A interface administrativa MUST exibir a divergência entre o computado agora e o
   vigente, posição a posição.
-- **FR-037**: Quando a regra vigente não permitir recalcular a ordem — porque uma Retificação
-  removeu Etapa ou fato que um critério consumia —, o ato MUST ser marcado como **obsoleto e não
-  recomputável**, e a interface MUST nomear o critério e o item que desapareceram.
-- **FR-038**: Ato obsoleto e não recomputável MUST permanecer íntegro, vigente e consultável, com
+- **FR-040**: Quando o conteúdo vigente não tiver mais o marco que o ato realizou — porque uma
+  Retificação o removeu —, o ato MUST ser marcado como **obsoleto e não recomputável**, e a
+  interface MUST dizer que não há regra vigente sob a qual comparar.
+- **FR-041**: Ato obsoleto e não recomputável MUST permanecer íntegro, vigente e consultável, com
   sua proveniência inteira; o sistema MUST NOT exibir a ausência de comparação como conformidade.
-- **FR-039**: O sistema MUST NOT regenerar, substituir ou emitir ato como efeito de uma leitura.
+- **FR-042**: Não recomputável MUST NOT significar irreproduzível: o ato continua reproduzível a
+  partir da sua própria proveniência e da versão histórica que o governou (FR-046). O que falta é
+  regra **vigente** com que comparar, não norma com que reproduzir.
+- **FR-043**: Retificação que remova Etapa enumerada por um marco sem ajustar o marco MUST ser
+  recusada na publicação, pelo mesmo caminho de FR-017 — o critério pendurado não é estado
+  alcançável, e a interface não deve prometer tratá-lo.
+- **FR-044**: O sistema MUST NOT regenerar, substituir ou emitir ato como efeito de uma leitura.
 
 #### Proveniência e reprodução
 
-- **FR-040**: Todo ato emitido MUST identificar os Resultados de Etapa que entraram nele, a versão
+- **FR-045**: Todo ato emitido MUST identificar os Resultados de Etapa que entraram nele, a versão
   normativa vigente que o governou e os valores usados em cada critério de desempate.
-- **FR-041**: A proveniência registrada MUST ser **suficiente** para reproduzir a ordem do ato,
+- **FR-046**: A proveniência registrada MUST ser **suficiente** para reproduzir a ordem do ato,
   posição a posição, sem recorrer ao estado vigente do sistema.
-- **FR-042**: A reprodução MUST ser verificada por teste sobre atos reais, e MUST NOT ser exposta
+- **FR-047**: A reprodução MUST ser verificada por teste sobre atos reais, e MUST NOT ser exposta
   como operação administrativa: não existe, nesta feature, ato de recalcular o passado, e portanto
   não existe autoridade para exercê-lo.
-- **FR-043**: A consulta de um ato MUST expor a proveniência **inteira** — entradas, versão
+- **FR-048**: A consulta de um ato MUST expor a proveniência **inteira** — entradas, versão
   normativa e valores de desempate —, de modo que a conferência humana seja possível pela tela, sem
   banco, shell ou exportação.
-- **FR-044**: Mudança na implementação MUST NOT alterar silenciosamente a reprodução de atos
+- **FR-049**: Mudança na implementação MUST NOT alterar silenciosamente a reprodução de atos
   históricos; divergência entre o reproduzido e o snapshot MUST ser detectável.
-- **FR-045**: A consulta MUST mostrar, para duas posições vizinhas separadas por desempate, qual
+- **FR-050**: A consulta MUST mostrar, para duas posições vizinhas separadas por desempate, qual
   critério as separou e com quais valores.
 
 #### Jornada e proteção de dados
 
-- **FR-046**: A jornada MUST ser executável de ponta a ponta pela interface administrativa —
+- **FR-051**: A jornada MUST ser executável de ponta a ponta pela interface administrativa —
   declarar o marco, calcular, conferir, emitir, consultar e ver a obsolescência — sem banco, shell
   ou chamada manual.
-- **FR-047**: O sistema MUST registrar auditoria da emissão com ator, ação, entidade, instante,
+- **FR-052**: O sistema MUST registrar auditoria da emissão com ator, ação, entidade, instante,
   motivo e versão.
-- **FR-048**: A ordem MUST expor apenas os dados necessários à finalidade; fatos do candidato
+- **FR-053**: A ordem MUST expor apenas os dados necessários à finalidade; fatos do candidato
   usados em desempate MUST ter acesso restrito a quem administra e audita, e MUST NOT ser expostos
   a outros candidatos por esta feature.
 
 #### Limites e não regressão
 
-- **FR-049**: A 015 MUST NOT alterar conclusão, consequência ou motivo de `ResultadoEtapa` algum.
-- **FR-050**: A 015 MUST NOT aplicar corte, alvo, vaga, percentual, reserva ou remanejamento.
-- **FR-051**: A 015 MUST NOT publicar a ordem para candidato ou público.
+- **FR-054**: A 015 MUST NOT alterar conclusão, consequência ou motivo de `ResultadoEtapa` algum.
+- **FR-055**: A 015 MUST NOT aplicar corte, alvo, vaga, percentual, reserva ou remanejamento.
+- **FR-056**: A 015 MUST NOT publicar a ordem para candidato ou público.
 
 ### Key Entities
 
@@ -506,37 +528,41 @@ que o anterior permanece íntegro e consultável.
 - **SC-001**: Para um marco com até 1.000 participantes, quem administra obtém a ordem calculada em
   uma única visão, com 100% dos participantes do universo classificados ou nomeados com motivo.
 - **SC-002**: A tela do marco abre com a ordem já calculada em **até 3 segundos** para 1.000
-  participantes, e o tempo não degrada quando o marco combina mais de uma Etapa.
-- **SC-003**: 100% dos atos emitidos identificam entradas, versão normativa e valores de desempate,
+  participantes, medido de ponta a ponta, e o tempo não degrada quando o marco combina mais de uma
+  Etapa.
+- **SC-003**: O número de consultas da abertura não cresce com a população: entre um marco pequeno e
+  um de 1.000 participantes, a diferença de consultas é zero.
+- **SC-004**: 100% dos atos emitidos identificam entradas, versão normativa e valores de desempate,
   e 100% deles reproduzem a mesma ordem posição a posição a partir dessa proveniência.
-- **SC-004**: Abrir a tela de um marco produz zero atos, zero gravações e zero eventos de emissão,
+- **SC-005**: Abrir a tela de um marco produz zero atos, zero gravações e zero eventos de emissão,
   em 100% das aberturas.
-- **SC-005**: 100% das tentativas de alteração de ato emitido são recusadas sem efeito.
-- **SC-006**: 100% das tentativas de emissão sem autorização específica são recusadas, e nenhuma
+- **SC-006**: 100% das tentativas de alteração de ato emitido são recusadas sem efeito.
+- **SC-007**: 100% das tentativas de emissão sem autorização específica são recusadas, e nenhuma
   delas produz ato.
-- **SC-007**: Entrada nova no universo de um marco emitido faz o vigente aparecer como obsoleto em
+- **SC-008**: Entrada nova no universo de um marco emitido faz o vigente aparecer como obsoleto em
   100% das aberturas seguintes; entrada fora do universo produz zero marcações.
-- **SC-008**: Duas emissões concorrentes no mesmo marco produzem exatamente um ato vigente, em 100%
+- **SC-009**: Duas emissões concorrentes no mesmo marco produzem exatamente um ato vigente, em 100%
   das execuções.
-- **SC-009**: Em 100% dos empates resolvidos, a consulta nomeia o critério que separou as posições
+- **SC-010**: Em 100% dos empates resolvidos, a consulta nomeia o critério que separou as posições
   e os valores usados; em 100% dos empates residuais, o desfecho aparece explicitamente.
-- **SC-010**: Nenhum `ResultadoEtapa` muda de conclusão, consequência ou motivo por causa desta
+- **SC-011**: Nenhum `ResultadoEtapa` muda de conclusão, consequência ou motivo por causa desta
   feature, e todo teste da 013 continua existindo e passando.
-- **SC-011**: A jornada demonstrável é executada pela interface administrativa: declarar o marco,
+- **SC-012**: A jornada demonstrável é executada pela interface administrativa: declarar o marco,
   publicar, calcular, emitir, consultar a proveniência e ver a obsolescência — sem banco, shell ou
   chamada manual.
-- **SC-012**: Reordenar os critérios de desempate por Retificação altera a ordem calculada a partir
+- **SC-013**: Reordenar os critérios de desempate por Retificação altera a ordem calculada a partir
   da vigência, e zero atos emitidos antes dela mudam.
-- **SC-013**: Retificação que alcance a regra de um marco faz o ato vigente aparecer como obsoleto
+- **SC-014**: Retificação que alcance a regra de um marco faz o ato vigente aparecer como obsoleto
   em 100% das aberturas seguintes, mesmo sem nenhum Resultado novo.
-- **SC-014**: Quando a regra vigente não permite recalcular, 100% das aberturas mostram o ato como
-  obsoleto e não recomputável, nomeando o critério e o item ausentes — e zero delas exibem
-  comparação vazia sem explicação.
-- **SC-015**: 100% das tentativas de publicar marco com critério sem comportamento declarado para
+- **SC-015**: Quando o marco não existe mais no conteúdo vigente, 100% das aberturas mostram o ato
+  como obsoleto e não recomputável, dizendo que não há regra vigente com que comparar — e zero delas
+  exibem comparação vazia sem explicação. Nos mesmos 100%, o ato continua reproduzível pela sua
+  proveniência.
+- **SC-016**: 100% das tentativas de publicar marco com critério sem comportamento declarado para
   valor ausente, ou com Etapa não classificatória enumerada, são recusadas com o motivo.
-- **SC-016**: Em 100% dos atos, a soma das posições atribuídas e dos participantes considerados sem
+- **SC-017**: Em 100% dos atos, a soma das posições atribuídas e dos participantes considerados sem
   posição é igual ao total do universo declarado.
-- **SC-017**: Em 100% dos atos com empate residual, a posição de cada participante é igual ao número
+- **SC-018**: Em 100% dos atos com empate residual, a posição de cada participante é igual ao número
   de participantes à frente dele mais um, e "os N primeiros" seleciona exatamente N pessoas quando
   nenhum empate atravessa a N-ésima posição.
 
@@ -555,10 +581,10 @@ que o anterior permanece íntegro e consultável.
   as capacidades constituídas digam outra coisa.
 - Os fatos do candidato consumidos por desempate chegam por D-2, congelados na submissão contra a
   `versao_aceita`. Inscrição submetida antes de o fato ser declarado não o possui — e o que fazer
-  nesse caso deixou de ser suposição: é FR-017, e sem essa declaração a regra não publica.
+  nesse caso deixou de ser suposição: é FR-018, e sem essa declaração a regra não publica.
 - Etapa decisória não produz número; sua participação num marco que soma pontuação é filtro, não
   parcela. Como Etapa decisória pode ser publicada como classificatória, o comportamento para valor
-  ausente (FR-017) é o que a mantém honesta dentro de um marco.
+  ausente (FR-018) é o que a mantém honesta dentro de um marco.
 - O volume de referência é o mesmo da 013: até 1.000 participantes por marco, e o teto de abertura
   da tela é de 3 segundos nesse volume (SC-002).
 - Atingir esse teto pressupõe que o número de consultas não cresça com o número de participantes,
@@ -567,16 +593,18 @@ que o anterior permanece íntegro e consultável.
 
 ## 6. Dependências e direção para o planejamento
 
-**Depende de D-2** — fatos declarados pelo Edital, congelados na submissão. Sem eles não há
-desempate por idade nem por tempo de experiência, e a feature nasce inexecutável para os Editais em
-vista. A coleta é território da 009.
+**A leva ficou decidida em 04/09/2026, e ela muda o tamanho desta feature.**
 
-**Consome D-1** — `origem` e `versao` no `ResultadoEtapa`, que é extensão da 013 e precisa cair
-antes ou junto, sob pena de o Resultado por Ocorrência ficar fora de qualquer ordem.
+**D-2 e D-3 entram aqui** — os fatos declarados pelo Edital, congelados na submissão contra a
+`versao_aceita`, e o teto `maxInscricoesPorCandidato`. Não porque pertençam conceitualmente à
+ordenação, mas porque atravessam o mesmo caminho de conteúdo publicado e a mesma elevação canônica:
+separadas, seriam três elevações, três degraus de leitura e uma 015 entregue com o desempate por
+idade e por tempo de experiência sem valor para ler. A coleta continua sendo assunto da 009 em
+desenho; o que muda é que ela é construída nesta leva.
 
-**Custo de esquema, a planejar em conjunto**: esta feature, D-2 e D-3 elevam a mesma versão
-canônica. Feitas na mesma leva, é uma elevação; separadas, são três, cada uma com seu caminho de
-leitura das versões anteriores.
+**D-1 corre em paralelo** — `origem` e `versao` no `ResultadoEtapa`, extensão da 013. Não disputa a
+elevação, porque é esquema e regra de domínio sem reflexo no snapshot, mas precisa cair antes de a
+ordem existir, sob pena de o Resultado por Ocorrência ficar fora de qualquer ordem.
 
 **O que esta feature deixa pronto para a 014**: a ordem, o universo declarado e a modalidade
 legível em cada posição. O corte lê e não recalcula.

@@ -47,6 +47,10 @@ ato foi criado, nenhum evento de emissão foi gravado.
 **A conferir explicitamente:** um grupo empatado até o fim compartilha posição, é identificado como
 grupo, e o próximo participante recebe a posição seguinte pulando as consumidas — `1, 1, 3`.
 
+**As duas medições de desempenho vivem aqui:** a contagem de consultas não muda entre um marco
+pequeno e um de 1.000 participantes, e o percurso de 1.000 participantes fica dentro do teto de tempo
+medido de ponta a ponta.
+
 ## Entrega 3 — A ordem vira ato, e o ato não muda mais
 
 1. Emitir, informando a chave de idempotência do render.
@@ -55,7 +59,8 @@ grupo, e o próximo participante recebe a posição seguinte pulando as consumid
 
 **Prova:** o primeiro POST cria o ato com autor, instante e a versão normativa; o segundo devolve o
 mesmo desfecho sem emitir de novo; as duas tentativas de alteração são recusadas, a segunda pela
-trigger, que é a que vale por fora do ORM.
+trigger, que é a que vale por fora do ORM. **Nada no ato é alterável, nem para sucedê-lo:** a
+sucessão grava linha nova, e o vigente é o ato que ninguém sucedeu.
 
 **Concorrência:** duas emissões simultâneas no mesmo marco produzem exatamente um ato vigente, e a
 segunda recebe 409 — não uma sucessão.
@@ -69,10 +74,17 @@ segunda recebe 409 — não uma sucessão.
 segundo **sem que nenhum Resultado tenha mudado**, que é o caminho que a revisão do prompt cobrou.
 Um Resultado novo em outro Perfil não marca nada.
 
-3. Retificar o Edital removendo a Etapa que um critério consumia.
+3. Retificar o Edital removendo a Etapa enumerada pelo marco **sem** ajustar o marco.
 
-**Prova:** o ato aparece **obsoleto e não recomputável**, íntegro e consultável, com o critério e a
-Etapa ausentes nomeados. A comparação não aparece vazia sem explicação.
+**Prova:** a publicação é **recusada**, com o motivo. Este é o ponto em que o critério pendurado é
+impedido — ele não é estado que a tela precise tratar depois.
+
+4. Retificar o Edital removendo o **marco** inteiro, e reabrir a tela do ato já emitido.
+
+**Prova:** o ato aparece **obsoleto e não recomputável** — não há regra vigente com que comparar —,
+íntegro e consultável, e a comparação não aparece vazia sem explicação. E a prova que fecha o par: o
+ato continua **reproduzível** pela sua proveniência e pela versão histórica que o governou. Não
+recomputável não é irreproduzível.
 
 ## Entrega 5 — A proveniência basta, e a sucessão exige confirmação
 
@@ -99,7 +111,8 @@ banco, sem shell e sem chamada manual.
 | imutabilidade e coerência por trigger, com SQL cru | `tests/integration/classificacao/` |
 | um vigente por marco sob concorrência | `tests/integration/classificacao/` |
 | 404 uniforme; consultar é de dois, emitir é de um | `tests/authorization/` |
-| custo não cresce com a população | `tests/performance/` |
+| custo em consultas não cresce com a população | `tests/performance/` |
+| percurso de 1.000 participantes dentro do teto de tempo | `tests/performance/`, no molde de `test_public_queries.py:145-169` |
 | o percurso inteiro | `tests/acceptance/test_ordenacao.py` |
 
 **O que este quickstart não prova, e por quê:** o Edital 57/2026 não percorre este roteiro. Ele
