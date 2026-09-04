@@ -15,6 +15,31 @@
 | [`doc/decisao-012-conclusao-decisoria.md`](../../doc/decisao-012-conclusao-decisoria.md) | a decisão de domínio e os três Editais reais que a motivaram |
 | [`doc/briefing-revisao-012-013-formas-de-conclusao.md`](../../doc/briefing-revisao-012-013-formas-de-conclusao.md) | o handoff, o mapa da emenda e a pergunta que foi fechada |
 
+## Decisões citadas, e de quem elas são
+
+Esta revisão **não toma decisão numerada própria**: ela executa decisões que pertencem às duas
+features que atravessa. As três seções abaixo existem porque a rastreabilidade do projeto lê decisões
+por feature — o mesmo número, em duas features, designa decisões diferentes — e um diretório que
+cita sem declarar deixaria
+quem procura sem resposta. São ponteiros, e não cópias: a norma continua morando num lugar só.
+
+### D-001 — o primeiro incremento canônico
+
+Decisão da **012**, tomada em 01/09/2026 e preservada como histórica.
+Ver [`specs/012-mesa-de-avaliacao/spec.md`](../012-mesa-de-avaliacao/spec.md) §5.
+
+### D-002 — o incremento não torna irretificável o que já foi publicado
+
+Decisão da **012**, e ela alcança o segundo incremento por inteiro.
+Ver [`specs/012-mesa-de-avaliacao/spec.md`](../012-mesa-de-avaliacao/spec.md) §5.
+
+### D-008 — concluir deixa de significar pontuar
+
+Tomada em 03/09/2026, e escrita **duas vezes**, uma de cada lado da fronteira: na
+[`012`](../012-mesa-de-avaliacao/spec.md) §5, com os dez pontos, e na
+[`013`](../013-consolidacao-resultado-etapa/spec.md) §2, como contraparte. É a decisão que esta
+revisão executa.
+
 ## Por que a revisão tem diretório próprio
 
 Ela não é feature nova e não recebe número de feature. É **uma mudança de requisito que atravessa
