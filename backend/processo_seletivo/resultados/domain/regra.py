@@ -15,7 +15,12 @@ posterior — e não a consequência local. Peso, idem.
 
 from decimal import Decimal, InvalidOperation
 
-from processo_seletivo.avaliacoes.domain.previsao import avaliacoes_previstas
+from processo_seletivo.avaliacoes.domain.formas import Forma, Sentido
+from processo_seletivo.avaliacoes.domain.previsao import (
+    avaliacoes_previstas,
+    forma_publicada,
+    rotulos,
+)
 
 HABILITADA = "HABILITADA"
 ELIMINADA = "ELIMINADA"
@@ -52,12 +57,16 @@ def eliminatoria(etapa):
 def impedimento_da_regra(etapa):
     """`None` quando a Etapa pode ser consolidada; senão `(codigo, frase)`.
 
-    Dois impedimentos, e os dois são da **Etapa inteira** — não de uma inscrição:
+    Três impedimentos, e os três são da **Etapa inteira** — não de uma inscrição:
 
     - a Etapa prevê mais de uma avaliação, e o Edital não declara como combiná-las;
-    - a Etapa é eliminatória e não publicou nota mínima, de modo que não há como eliminar por
-      pontuação. Aceitar "eliminatória sem critério" seria deixar a consequência para quem
-      implementa decidir.
+    - a Etapa é **pontuada**, eliminatória, e não publicou nota mínima, de modo que não há como
+      eliminar por pontuação;
+    - a Etapa é **decisória** e não eliminatória, de modo que o Edital não publicou o que a decisão
+      desfavorável produz.
+
+    Os dois últimos são a mesma recusa dita para cada forma: aceitar "eliminatória sem critério" ou
+    "decisória sem efeito" seria deixar a consequência para quem implementa decidir.
     """
     previstas = avaliacoes_previstas(etapa)
     if previstas > 1:
@@ -65,6 +74,21 @@ def impedimento_da_regra(etapa):
             REGRA_DE_COMBINACAO_AUSENTE,
             f"o Edital prevê {previstas} avaliações para esta Etapa e não declara como combiná-las",
         )
+    if forma_publicada(etapa) == Forma.DECISORIA:
+        # O caso simétrico do de baixo, e a decisão de 03/09/2026: o Edital não publicou o que o
+        # sentido desfavorável produz, e as duas saídas que evitariam esta recusa afirmariam norma
+        # que ninguém escreveu — fazer o sentido carregar a consequência por si, ou exigir caráter
+        # eliminatório de toda Etapa decisória, proibindo na elaboração o que um Edital poderia
+        # legitimamente publicar (013, FR-047).
+        if not eliminatoria(etapa):
+            return (
+                REGRA_INSUFICIENTE,
+                "a Etapa é decisória e o Edital não publicou o efeito da decisão desfavorável",
+            )
+        # E a recusa por nota mínima ausente **não** se aplica aqui: análise documental
+        # eliminatória e sem mínima é a configuração real dos Editais 35 e 57, e procurar um número
+        # que a norma nunca teve seria o sistema inventando a exigência (013, FR-048).
+        return None
     if eliminatoria(etapa) and nota_minima(etapa) is None:
         return (
             REGRA_INSUFICIENTE,
@@ -73,12 +97,18 @@ def impedimento_da_regra(etapa):
     return None
 
 
-def consequencia(etapa, pontuacao):
-    """`(consequencia, motivo)` para uma pontuação, sob uma Etapa com regra disponível.
+def consequencia(etapa, conclusao):
+    """`(consequencia, motivo)` para uma conclusão, sob uma Etapa com regra disponível.
 
-    A comparação é decimal, e nunca de ponto flutuante: nota **exatamente igual** à mínima
-    habilita, e é o caso em que o arredondamento binário decidiria a vida de alguém.
+    Recebe a **conclusão**, e não um decimal solto: com duas formas, quem chama não deveria ter de
+    adivinhar qual dos dois campos vale — a forma diz, e é ela que escolhe o ramo.
+
+    Na forma pontuada, a comparação é decimal e nunca de ponto flutuante: nota **exatamente igual**
+    à mínima habilita, e é o caso em que o arredondamento binário decidiria a vida de alguém.
     """
+    if forma_publicada(etapa) == Forma.DECISORIA:
+        return _consequencia_decisoria(etapa, conclusao.sentido)
+    pontuacao = conclusao.pontuacao
     minima = nota_minima(etapa)
     if eliminatoria(etapa) and minima is not None and pontuacao < minima:
         return (
@@ -95,3 +125,19 @@ def consequencia(etapa, pontuacao):
     # não elimina: sem o caráter, ela não é critério de exclusão, e aplicá-la seria a 013 decidindo
     # o que o Edital não decidiu.
     return (HABILITADA, "a Etapa não tem caráter eliminatório")
+
+
+def _consequencia_decisoria(etapa, sentido):
+    """O sentido vira consequência **porque a Etapa é eliminatória**, e não por si (013, D-008).
+
+    Uma Etapa decisória e não eliminatória nem chega aqui: `impedimento_da_regra` a barrou antes,
+    porque o Edital não publicou o que a decisão desfavorável produz. Se chegasse, qualquer resposta
+    afirmaria norma que ninguém escreveu.
+
+    O motivo cita o **rótulo publicado**, e nunca o enum: quem consulta o Resultado tem direito ao
+    vocabulário do Edital — "Indeferido", e não `DESFAVORAVEL`.
+    """
+    favoravel, desfavoravel = rotulos(etapa)
+    if sentido == Sentido.DESFAVORAVEL:
+        return (ELIMINADA, f"a avaliação concluiu {desfavoravel or 'em sentido desfavorável'}")
+    return (HABILITADA, f"a avaliação concluiu {favoravel or 'em sentido favorável'}")

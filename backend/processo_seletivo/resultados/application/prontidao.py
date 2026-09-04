@@ -50,7 +50,9 @@ IMPEDIDA = "impedida"
 #: conteúdo da versão — e materializar mil `Avaliacao` com `select_related("versao")` traria mil
 #: cópias do Edital inteiro em JSON para ler quatro campos. Quem precisa do objeto é a
 #: consolidação, que o busca para as inscrições selecionadas, e não para a Etapa inteira.
-Conclusao = namedtuple("Conclusao", ("avaliacao_id", "pontuacao", "conteudo"))
+# A conclusão como o Resultado precisa copiá-la: a forma diz qual dos dois campos vale, e o
+# outro vem vazio (013, D-008).
+Conclusao = namedtuple("Conclusao", ("avaliacao_id", "forma", "pontuacao", "sentido", "conteudo"))
 
 SEM_CONCLUSAO = "ainda não há avaliação concluída para esta inscrição"
 CONCLUSOES_DEMAIS = (
@@ -200,13 +202,13 @@ def panorama_da_etapa(*, edital, etapa, etapas_vigentes):
         # duas ou três por Edital —, e não uma por avaliação.
         linhas = list(
             avaliacoes_elegiveis(edital=edital, etapa_id=etapa["id"]).values_list(
-                "inscricao_id", "id", "pontuacao", "versao_id"
+                "inscricao_id", "id", "forma", "pontuacao", "sentido", "versao_id"
             )
         )
-        conteudos = conteudos_das_versoes({versao for _, _, _, versao in linhas})
-        for inscricao_id, avaliacao_id, pontuacao, versao_id in linhas:
+        conteudos = conteudos_das_versoes({linha[-1] for linha in linhas})
+        for inscricao_id, avaliacao_id, forma, pontuacao, sentido, versao_id in linhas:
             elegiveis.setdefault(inscricao_id, []).append(
-                Conclusao(avaliacao_id, pontuacao, conteudos.get(versao_id))
+                Conclusao(avaliacao_id, forma, pontuacao, sentido, conteudos.get(versao_id))
             )
 
     estados = {}
