@@ -54,6 +54,25 @@ aberta dentro não é testável. A segunda passagem, depois das respostas, fecha
 - **valor ausente virou requisito** (FR-017), e não suposição: critério sem comportamento declarado
   para valor inexistente impede a publicação da regra.
 
+**Análise cruzada (2026-09-04).** O `speckit-analyze` encontrou uma questão CRITICAL e uma HIGH, e
+as duas eram o mesmo buraco visto de dois lados: onze tarefas implementavam D-2 e D-3 sem um único
+requisito na spec, e o `data-model.md` não modelava as entidades que elas criavam. A leva foi
+decidida depois de a spec estar escrita, e ninguém voltou para fechá-la.
+
+Fechado assim: história US2 nova (o candidato informa os fatos e os vê congelados), dez requisitos
+(FR-057 a FR-066) e quatro critérios (SC-019 a SC-022); `FatoDeclarado`, `ValorDeFato` e o teto no
+`data-model.md`; e a leva partida em duas no `tasks.md` — o que é esquema fica na Foundational,
+porque a elevação canônica precisa carregar tudo de uma vez, e o que é jornada do candidato virou
+fase própria com cenário demonstrável.
+
+Os requisitos novos foram **acrescentados ao fim** da seção em vez de junto dos assuntos que
+descrevem. É deliberado e está dito na spec: renumerar teria quebrado quarenta citações em plano,
+contratos, quickstart e tarefas, e rastreabilidade vale mais que ordem de leitura.
+
+Uma consequência que a modelagem revelou e que ficou escrita em vez de descoberta depois: com
+`ValorDeFato` append-only, o candidato **não corrige** o que informou depois de submeter — a 009 não
+tem retificação de inscrição, e esta feature não a cria.
+
 **Revisão do plano (2026-09-04).** Quatro achados de desenho voltaram para a spec, e três deles
 mudaram requisitos:
 

@@ -199,7 +199,36 @@ identidade estável.
 
 ---
 
-### User Story 2 — Emitir a ordem de um marco (Priority: P1)
+### User Story 2 — Informar os fatos que o Edital exige (Priority: P1)
+
+O candidato preenche, na inscrição, os fatos que aquele Edital declarou exigir — data de nascimento,
+meses de experiência — e os vê congelados no momento em que submete. Editar o perfil depois não muda
+o que foi congelado.
+
+**Why this priority**: sem fato congelado, os critérios de desempate por idade e por tempo de
+experiência não têm valor para ler, e a ordem nasce inexecutável para os Editais em vista. Esta
+história entrou na feature pela decisão de leva de 04/09/2026 (§6), e não por pertencer
+conceitualmente à ordenação.
+
+**Independent Test**: declarar dois fatos num Edital, submeter uma inscrição, alterar o perfil
+depois e verificar que os valores congelados não mudaram.
+
+**Acceptance Scenarios**:
+
+1. **Given** um Edital que declara dois fatos, **When** o candidato abre a inscrição, **Then** vê os
+   dois campos, com o tipo declarado.
+2. **Given** uma inscrição submetida, **When** o candidato altera o perfil, **Then** os valores
+   congelados permanecem idênticos.
+3. **Given** um Edital que não declara fato nenhum, **When** o candidato abre a inscrição, **Then**
+   não vê campo novo algum.
+4. **Given** um fato acrescentado por Retificação, **When** quem tinha rascunho aberto tenta
+   submeter, **Then** revê a versão nova antes de confirmar.
+5. **Given** um Edital com teto de uma inscrição por candidato, **When** a pessoa tenta submeter a
+   segunda, **Then** a submissão é recusada com o motivo, e a primeira permanece.
+
+---
+
+### User Story 3 — Emitir a ordem de um marco (Priority: P1)
 
 A presidência abre o marco, vê a ordem calculada a partir dos Resultados oficiais e da regra
 vigente, confere, e **emite**. O que fica gravado é um snapshot imutável, com autor, instante,
@@ -227,7 +256,7 @@ verificar que o snapshot emitido é imutável e traz posição, participante e p
 
 ---
 
-### User Story 3 — Enxergar que a ordem vigente ficou para trás (Priority: P2)
+### User Story 4 — Enxergar que a ordem vigente ficou para trás (Priority: P2)
 
 Um Resultado novo entra no universo de um marco já emitido. Quem administra vê, na própria tela do
 marco, que o vigente **está obsoleto** e em que ele difere do computado agora — e decide emitir o
@@ -250,7 +279,7 @@ verificar que a tela marca o vigente como obsoleto e mostra a diferença.
 
 ---
 
-### User Story 4 — Auditar e reproduzir uma ordem emitida (Priority: P2)
+### User Story 5 — Auditar e reproduzir uma ordem emitida (Priority: P2)
 
 Auditoria abre um ato emitido, vê quais Resultados entraram, sob qual versão normativa, e quais
 valores cada critério de desempate usou para separar dois participantes — e obtém de novo a mesma
@@ -273,7 +302,7 @@ posição com o snapshot.
 
 ---
 
-### User Story 5 — Suceder um ato por outro no mesmo marco (Priority: P3)
+### User Story 6 — Suceder um ato por outro no mesmo marco (Priority: P3)
 
 Um Resultado tardio entra no universo, ou uma Retificação alcança a regra do marco. A presidência
 emite um novo ato no mesmo marco: o anterior não é apagado — deixa de ser o vigente e continua
@@ -475,6 +504,36 @@ que o anterior permanece íntegro e consultável.
 - **FR-055**: A 015 MUST NOT aplicar corte, alvo, vaga, percentual, reserva ou remanejamento.
 - **FR-056**: A 015 MUST NOT publicar a ordem para candidato ou público.
 
+#### Fatos declarados pelo Edital
+
+> Este grupo e o seguinte fecham a seção em vez de acompanhar os assuntos que descrevem: eles
+> chegaram pela decisão de leva (§6), depois de os requisitos anteriores já estarem numerados e
+> citados em plano, contrato, quickstart e tarefas. Renumerar quarenta citações para ganhar ordem de
+> leitura seria trocar rastreabilidade por estética.
+
+- **FR-057**: O Edital MUST poder declarar os fatos que exige do candidato, cada um com identidade
+  estável, rótulo e tipo restrito a data ou número inteiro.
+- **FR-058**: Mudar o tipo de um fato MUST criar fato novo; o valor congelado sob o anterior MUST
+  permanecer legível sob a norma que o governou, e o sistema MUST NOT reinterpretá-lo.
+- **FR-059**: A inscrição MUST coletar os fatos declarados aplicáveis ao Perfil e MUST **congelá-los
+  na submissão**, contra a `versao_aceita` — nunca na abertura do rascunho.
+- **FR-060**: O valor congelado MUST NOT mudar por edição posterior de perfil, de inscrição ou de
+  qualquer dado do candidato.
+- **FR-061**: Edital que não declara fato nenhum MUST continuar sem campo nenhum na inscrição.
+- **FR-062**: Fato acrescentado por Retificação MUST seguir o caminho de reconhecimento de versão já
+  existente: quem não reconheceu a versão nova não submete.
+
+#### Cardinalidade de inscrições por candidato
+
+- **FR-063**: O Edital MUST poder publicar um teto de inscrições por candidato, anulável, onde a
+  ausência significa **sem limite**.
+- **FR-064**: O teto MUST contar apenas inscrições **submetidas**; rascunho abandonado MUST NOT
+  consumir direito.
+- **FR-065**: A verificação do teto MUST serializar pelo par identidade–Edital, e MUST NOT permitir
+  que duas submissões concorrentes de Perfis diferentes o ultrapassem.
+- **FR-066**: Retificação que reduza o teto MUST NOT invalidar inscrição já submetida sob a norma
+  que a admitia.
+
 ### Key Entities
 
 - **Marco Classificatório**: o ponto do certame em que uma ordem é produzida, declarado no conteúdo
@@ -487,6 +546,10 @@ que o anterior permanece íntegro e consultável.
 - **Posição**: o lugar de um participante no ato, com o valor que o colocou ali, os valores de
   desempate usados e a modalidade declarada.
 - **Universo Classificável**: o recorte que o ato declara e que delimita sua obsolescência.
+- **Fato Declarado**: o que o Edital exige do candidato para que uma regra publicada possa consumir —
+  identidade estável, rótulo e tipo. Pertence ao Perfil.
+- **Valor de Fato**: o que a inscrição congelou na submissão, sob a versão que então vigorava. Nasce
+  e não muda mais.
 
 ## 4. Invariantes observáveis
 
@@ -565,6 +628,14 @@ que o anterior permanece íntegro e consultável.
 - **SC-018**: Em 100% dos atos com empate residual, a posição de cada participante é igual ao número
   de participantes à frente dele mais um, e "os N primeiros" seleciona exatamente N pessoas quando
   nenhum empate atravessa a N-ésima posição.
+- **SC-019**: 100% dos fatos declarados aplicáveis ao Perfil são coletados na inscrição e congelados
+  na submissão; editar o perfil depois muda **zero** valores congelados.
+- **SC-020**: Edital sem fato declarado apresenta **zero** campos novos na inscrição.
+- **SC-021**: Duas submissões concorrentes de Perfis diferentes do mesmo candidato respeitam o teto
+  publicado em 100% das execuções.
+- **SC-022**: 100% das inscrições submetidas antes de um fato ser declarado permanecem válidas, e o
+  critério que consome esse fato as trata pelo comportamento que declarou para valor ausente
+  (FR-018).
 
 ## Assumptions
 
