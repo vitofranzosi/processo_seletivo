@@ -46,7 +46,10 @@ def gravar(cenario, inscricao, avaliacao, **sobrescrever):
         "inscricao": inscricao,
         "edital": cenario["edital"],
         "etapa_id": cenario["etapa"],
+        "origem": ResultadoEtapa.Origem.AVALIACAO,
         "avaliacao": avaliacao,
+        # A versão **da fonte**: a trigger recusa qualquer outra desde D-1.
+        "versao_id": avaliacao.versao_id,
         "forma": avaliacao.forma,
         "pontuacao": avaliacao.pontuacao,
         "sentido": avaliacao.sentido,
@@ -238,3 +241,164 @@ def test_a_trigger_recusa_resultado_com_forma_diferente_da_fonte(decisoria_conso
 
     with pytest.raises(DatabaseError, match="does not match its source evaluation"):
         gravar(cenario, inscricao, avaliacao, forma="PONTUADA", sentido="", pontuacao=None)
+
+
+# ------------------------- as duas origens, por SQL cru (D-1)
+#
+# **Por fora do ORM de propósito.** Os testes acima chegam ao banco pelo modelo, e o modelo já
+# recusa muita coisa antes — o que eles provam sobre a trigger é o que sobra. Aqui o `INSERT` é
+# escrito à mão, com a lista de colunas explícita, porque é assim que chega quem tem o cliente do
+# banco na mão: sem `save()`, sem `full_clean`, sem constraint de aplicação. É o único jeito de
+# provar que o terceiro ramo e a nulabilidade nova não são promessa de código.
+
+
+COLUNAS = (
+    "id, inscricao_id, edital_id, etapa_id, origem, avaliacao_id, versao_id, forma, pontuacao, "
+    "sentido, consequencia, motivo, consolidado_em, consolidado_por"
+)
+
+
+def inserir_cru(cenario, inscricao, **campos):
+    """Um `INSERT` escrito à mão, com os valores que o chamador quiser — inclusive impossíveis."""
+    import uuid
+
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+
+    versao = VersaoConsolidada.objects.filter(edital=cenario["edital"]).latest("valid_from")
+    linha = {
+        "id": str(uuid.uuid4()),
+        "inscricao_id": str(inscricao.id),
+        "edital_id": str(cenario["edital"].id),
+        "etapa_id": str(cenario["etapa"]),
+        "origem": "OCORRENCIA",
+        "avaliacao_id": None,
+        "versao_id": str(versao.id),
+        "forma": "",
+        "pontuacao": None,
+        "sentido": "",
+        "consequencia": "ELIMINADA",
+        "motivo": "não compareceu",
+        "consolidado_em": timezone.now(),
+        "consolidado_por": "maria",
+    }
+    linha.update(campos)
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"INSERT INTO resultados_resultadoetapa ({COLUNAS}) VALUES "
+            "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            [linha[nome.strip()] for nome in COLUNAS.split(",")],
+        )
+    return linha["id"]
+
+
+@SOMENTE_POSTGRES
+def test_o_ramo_por_ocorrencia_grava_por_sql_cru(consolidavel):
+    """O caminho correto do terceiro ramo: sem Avaliação, sem forma, sem pontuação, sem sentido."""
+    cenario, _, _ = consolidavel
+    outra = inscrever(cenario["edital"], 1, primeiro=70)[0]
+    assert inserir_cru(cenario, outra)
+    assert ResultadoEtapa.objects.filter(inscricao=outra).exists()
+
+
+@SOMENTE_POSTGRES
+def test_a_ocorrencia_que_cita_avaliacao_e_recusada_pela_trigger(consolidavel):
+    """Constatação e conclusão são coisas diferentes, e a linha não pode afirmar as duas."""
+    cenario, inscricao, avaliacao = consolidavel
+    with (
+        pytest.raises(DatabaseError, match="must not cite a source evaluation"),
+        transaction.atomic(),
+    ):
+        inserir_cru(cenario, inscricao, avaliacao_id=str(avaliacao.id))
+
+
+@SOMENTE_POSTGRES
+def test_a_ocorrencia_que_cita_versao_de_outro_edital_e_recusada(
+    consolidavel, gestor, api_client, manager_headers
+):
+    """A única conferência que sobra no ramo sem fonte — e sem ela a proveniência seria promessa.
+
+    A versão citada pelo Resultado por Ocorrência não vem copiada de lugar nenhum: quem escreve a
+    linha a escolhe. Se ela pudesse ser de outro Edital, o Resultado afirmaria ter sido fundamentado
+    por norma que nunca governou este certame, e I-2 seria letra morta neste ramo.
+    """
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+
+    cenario, inscricao, _ = consolidavel
+    alheio = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=1302, codigo="1302"
+    )
+    de_fora = VersaoConsolidada.objects.filter(edital=alheio["edital"]).latest("valid_from")
+    with (
+        pytest.raises(DatabaseError, match="version of another edital"),
+        transaction.atomic(),
+    ):
+        inserir_cru(cenario, inscricao, versao_id=str(de_fora.id))
+
+
+@SOMENTE_POSTGRES
+def test_a_ocorrencia_com_pontuacao_e_recusada_pela_constraint(consolidavel):
+    """O terceiro ramo é feito de ausências, e a constraint cobra as três.
+
+    A trigger aprovaria esta linha — ela não cita Avaliação e a versão é deste Edital —, e é
+    exatamente por isso que as duas camadas precisam existir: a trigger confere contra a fonte, e
+    a constraint confere que a linha é internamente coerente.
+    """
+    cenario, inscricao, _ = consolidavel
+    with pytest.raises(IntegrityError), transaction.atomic():
+        inserir_cru(cenario, inscricao, pontuacao=Decimal("80.0000"))
+
+
+@SOMENTE_POSTGRES
+def test_a_ocorrencia_com_sentido_e_recusada_pela_constraint(consolidavel):
+    cenario, inscricao, _ = consolidavel
+    with pytest.raises(IntegrityError), transaction.atomic():
+        inserir_cru(cenario, inscricao, sentido="DESFAVORAVEL")
+
+
+@SOMENTE_POSTGRES
+def test_a_ocorrencia_com_forma_e_recusada_pela_constraint(consolidavel):
+    """Carimbar `DECISORIA` numa ausência diria que alguém avaliou quem não compareceu."""
+    cenario, inscricao, _ = consolidavel
+    with pytest.raises(IntegrityError), transaction.atomic():
+        inserir_cru(cenario, inscricao, forma="DECISORIA", sentido="DESFAVORAVEL")
+
+
+@SOMENTE_POSTGRES
+def test_o_resultado_por_avaliacao_sem_fonte_e_recusado(consolidavel):
+    """A metade que `null=True` sozinho abriria: uma linha sem fonte **e** sem constatação.
+
+    Quem recusa é a **trigger**, e não a constraint: `BEFORE INSERT` roda antes de o `CHECK` ser
+    avaliado, e a linha nem chega até `ck_resultado_origem`. As duas cobrem o caso, e é bom que
+    cubram — a constraint sobrevive a uma trigger derrubada por engano numa manutenção, e é ela
+    que fecha o caso oposto, que a trigger aprovaria (o teste da forma na Ocorrência, acima).
+    """
+    cenario, inscricao, _ = consolidavel
+    with (
+        pytest.raises(DatabaseError, match="does not match its source evaluation"),
+        transaction.atomic(),
+    ):
+        inserir_cru(cenario, inscricao, origem="AVALIACAO", forma="PONTUADA", pontuacao=None)
+
+
+@SOMENTE_POSTGRES
+def test_o_ramo_por_avaliacao_confere_a_versao_da_fonte(
+    consolidavel, gestor, api_client, manager_headers
+):
+    """A versão do Resultado é a **da Avaliação**, e a trigger não aceita outra.
+
+    Sem esta conferência, materializar a norma no Resultado abriria justamente a contradição que o
+    argumento original contra materializá-la previa: duas respostas para "sob qual regra isto foi
+    decidido".
+    """
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+
+    cenario, inscricao, avaliacao = consolidavel
+    alheio = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=1303, codigo="1303"
+    )
+    outra = VersaoConsolidada.objects.filter(edital=alheio["edital"]).latest("valid_from")
+    with (
+        pytest.raises(DatabaseError, match="does not match its source evaluation"),
+        transaction.atomic(),
+    ):
+        gravar(cenario, inscricao, avaliacao, versao_id=str(outra.id))

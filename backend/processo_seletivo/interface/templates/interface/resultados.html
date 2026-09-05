@@ -46,6 +46,8 @@ além de tornar indistinguíveis, para a varredura de vocabulário, a página qu
         <th scope="col">Inscrição</th>
         {# "Conclusão", e não "Pontuação": a célula abaixo traz o rótulo quando a Etapa não pontua. #}
         <th scope="col">Conclusão</th>
+        {# De onde veio a evidência do desfecho — e não o que ele decidiu (D-1). #}
+        <th scope="col">Origem</th>
         <th scope="col">Situação na Etapa</th>
         <th scope="col">Por quê</th>
         <th scope="col">Quem avaliou</th>
@@ -61,7 +63,13 @@ além de tornar indistinguíveis, para a varredura de vocabulário, a página qu
         A conclusão como a forma a define: a Etapa decisória não produziu número, e imprimir um
         traço no lugar dele diria menos que o rótulo que o Edital publicou (D-008).
         {% endcomment %}
-        <td class="numero">{% if resultado.forma == "DECISORIA" %}{% if resultado.sentido == "DESFAVORAVEL" %}{{ rotulo_desfavoravel }}{% else %}{{ rotulo_favoravel }}{% endif %}{% else %}{{ resultado.pontuacao|pontuacao }}{% endif %}</td>
+        {% comment %}
+        Três ramos, e o terceiro é a ausência dita por extenso: a Ocorrência não pontuou e não
+        registrou sentido, porque não houve conclusão sob forma nenhuma. Imprimir um traço faria a
+        célula parecer um dado que faltou, e ela é um dado que não existe (D-1).
+        {% endcomment %}
+        <td class="numero">{% if resultado.forma == "DECISORIA" %}{% if resultado.sentido == "DESFAVORAVEL" %}{{ rotulo_desfavoravel }}{% else %}{{ rotulo_favoravel }}{% endif %}{% elif resultado.forma == "PONTUADA" %}{{ resultado.pontuacao|pontuacao }}{% else %}<span class="ajuda">não avaliada</span>{% endif %}</td>
+        <td>{% if resultado.origem == "OCORRENCIA" %}Ocorrência{% else %}Avaliação{% endif %}</td>
         <td>{{ resultado.get_consequencia_display }}</td>
         <td class="motivo-da-prontidao">
           {{ resultado.motivo }}
@@ -78,11 +86,19 @@ além de tornar indistinguíveis, para a varredura de vocabulário, a página qu
           {% endif %}
           {% endwith %}
         </td>
-        <td>{{ resultado.avaliacao.concluida_por }}<br>
-          <span class="ajuda">em {{ resultado.avaliacao.concluida_em|date:"d/m/Y H:i" }}</span></td>
+        {% comment %}
+        Sem Avaliação não há quem avaliou, e a célula diz isso — quem responde pelo desfecho está
+        na coluna ao lado, que é a presidência que o constatou (D-1).
+        {% endcomment %}
+        <td>{% if resultado.avaliacao_id %}{{ resultado.avaliacao.concluida_por }}<br>
+          <span class="ajuda">em {{ resultado.avaliacao.concluida_em|date:"d/m/Y H:i" }}</span>{% else %}<span class="ajuda">ninguém: não houve avaliação</span>{% endif %}</td>
         <td>{{ resultado.consolidado_por }}<br>
           <span class="ajuda">em {{ resultado.consolidado_em|date:"d/m/Y H:i" }}</span></td>
-        <td>{{ resultado.avaliacao.versao.valid_from|date:"d/m/Y H:i" }}</td>
+        {% comment %}
+        A norma é campo do Resultado desde D-1, e não caminho até a Avaliação: no ramo por
+        Ocorrência não há Avaliação por onde alcançá-la.
+        {% endcomment %}
+        <td>{{ resultado.vigencia|date:"d/m/Y H:i" }}</td>
       </tr>
       {% endfor %}
     </tbody>

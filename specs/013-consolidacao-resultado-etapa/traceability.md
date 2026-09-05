@@ -90,3 +90,34 @@ que a Fase 1 do plano se recusou a afirmar que cada requisito tem cenário no qu
 | `avaliacoes/{domain/autorizacao,application/{avaliacao,distribuicao,impedimento,mesa,selectors}}.py` | `authorization/` (4 arquivos) |
 | `interface/{urls,views}.py`, `templates/interface/{distribuicao,resultados}.html` | `contract/` (2), `performance/` (3) |
 | `seguranca/papeis.py`, `config/settings/base.py` | `tests/test_vocabulario_do_resultado.py` |
+
+---
+
+## A extensão D-1 — Resultado de Etapa sem Avaliação
+
+*Acrescentada em 04/09/2026. **Nenhum requisito funcional novo**: D-1 é decisão de
+`doc/decisoes-pre-vertical.md`, e o que ela muda são o esquema, uma regra de domínio e um ato — não
+o contrato de requisitos desta feature. A rastreabilidade dela é por tarefa e por invariante do
+briefing, e é isto que a tabela abaixo registra.*
+
+| O que D-1 afirma | Onde vive | Prova |
+|---|---|---|
+| **I-1** — o Resultado não pressupõe Avaliação | `resultados/models.py` (`origem`, `avaliacao` anulável), `application/ocorrencia.py` | `integration/resultados/test_ocorrencia.py::test_a_etapa_impedida_de_consolidar_ainda_registra_ocorrencia` |
+| **I-2** — a norma que fundamentou é reproduzível nos dois ramos | `models.py::versao`, `migrations/0004` (trigger), `application/{consolidacao,ocorrencia}.py` | `test_ocorrencia.py::test_a_norma_que_fundamentou_a_constatacao_e_a_vigente`, `test_imutabilidade_do_resultado.py::test_o_ramo_por_avaliacao_confere_a_versao_da_fonte` |
+| **I-5** — o ato é explícito, autorizado e auditável | `application/ocorrencia.py` (`comando_de_comissao`, `auditar`) | `test_ocorrencia.py::{test_o_ato_deixa_trilha_e_motivo_no_ato_administrativo,test_quem_nao_preside_nem_gere_recebe_a_resposta_uniforme}`, `authorization/test_consulta_de_resultado.py` |
+| **I-6** — no máximo um Resultado vigente por Inscrição × Etapa, **entre** origens | `uq_resultado_inscricao_etapa` (inalterada) | `test_ocorrencia.py::{test_quem_ja_tem_resultado_e_recusa_de_linha_e_o_lote_segue,test_a_ocorrencia_nao_reescreve_um_resultado_por_avaliacao}` |
+| A Ocorrência não tem forma, pontuação nem sentido | `ck_resultado_completo_por_forma` (terceiro ramo), `ck_resultado_origem` | `test_imutabilidade_do_resultado.py::test_a_ocorrencia_com_{pontuacao,sentido,forma}_e_recusada_pela_constraint` — por SQL cru |
+| A trigger confere os dois ramos | `migrations/0004_resultado_por_ocorrencia.py::CONFERIR` | `test_imutabilidade_do_resultado.py::{test_o_ramo_por_ocorrencia_grava_por_sql_cru,test_a_ocorrencia_que_cita_avaliacao_e_recusada_pela_trigger,test_a_ocorrencia_que_cita_versao_de_outro_edital_e_recusada}` |
+| O histórico é preenchido, e a reversão recusa quando há ocorrência | `migrations/0004` (backfill e guarda) | `migrations/test_migrations.py::{test_o_salto_para_a_origem_declarada_preenche_o_historico,test_a_reversao_de_d1_recusa_quando_ja_existe_ocorrencia}` |
+| Os seletores que a 015 consome contam as duas origens | `application/selectors.py`, `application/prontidao.py` | `integration/resultados/test_leitura_das_duas_origens.py` |
+| A leitura não paga o Edital em JSON por linha | `selectors.py::vigencias_das_versoes` | `test_leitura_das_duas_origens.py::test_a_versao_nao_e_lida_uma_vez_por_linha` |
+| **Princípio VI** — a presidência alcança a capacidade pela interface | `interface/{urls,views}.py`, `templates/interface/ocorrencia.html` | `interface/test_ocorrencia_na_tela.py` |
+
+### Arquivos da extensão
+
+| Produção | Testes |
+|---|---|
+| `resultados/models.py`, `migrations/0004_resultado_por_ocorrencia.py` | `integration/resultados/test_ocorrencia.py` |
+| `resultados/application/ocorrencia.py` | `integration/resultados/test_leitura_das_duas_origens.py` |
+| `resultados/application/{consolidacao,prontidao,selectors}.py` | `integration/resultados/test_imutabilidade_do_resultado.py` (seção nova) |
+| `interface/{urls,views}.py`, `templates/interface/{ocorrencia,resultados,distribuicao}.html` | `interface/test_ocorrencia_na_tela.py`, `authorization/test_consulta_de_resultado.py`, `migrations/test_migrations.py` |

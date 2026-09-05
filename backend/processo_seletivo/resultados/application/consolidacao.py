@@ -142,9 +142,14 @@ def consolidar(
                 inscricao=inscricao,
                 edital=edital,
                 etapa_id=etapa["id"],
+                origem=ResultadoEtapa.Origem.AVALIACAO,
                 # A identidade basta: o Resultado guarda a chave estrangeira, e materializar o
                 # modelo da fonte para gravá-la traria o Edital inteiro em JSON junto (T-011).
                 avaliacao_id=conclusao.avaliacao_id,
+                # A versão **da fonte**, copiada e não inventada: a trigger recusa qualquer outra.
+                # Pela mesma razão que acima, a identidade basta — materializar a Versão
+                # Consolidada traria o Edital inteiro em JSON por linha do lote (D-1).
+                versao_id=conclusao.versao_id,
                 # A conclusão é **copiada conforme a forma**, e não convertida: o indeferimento
                 # não vira zero, e a nota não vira sentido (013, D-008, FR-016).
                 forma=conclusao.forma,

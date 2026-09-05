@@ -9,6 +9,13 @@ nenhuma delas os invente por conta própria.
 
 ## D-1 · Resultado de Etapa sem Avaliação
 
+> **Implementada em 04/09/2026**, como extensão da 013 — Phase 8 de
+> `specs/013-consolidacao-resultado-etapa/tasks.md`, com a decisão registrada na §2 daquela spec e
+> o esquema em `data-model.md`. O que veio junto e não estava escrito aqui: a tela própria a partir
+> da Etapa, exigida pelo Princípio VI, e a decisão de **não** transformar em constraint que a
+> Ocorrência sempre elimina — os mecanismos que a 013 vai hospedar depois produzem desfecho
+> favorável por caminho que não é avaliação.
+
 **A decisão:** `ResultadoEtapa.avaliacao` passa a ser **anulável**, e a linha ganha `origem`:
 
 ```
