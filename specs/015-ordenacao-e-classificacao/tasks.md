@@ -147,21 +147,21 @@ valores congelados não mudaram.
 - [X] T045 [US2] Teste: identidade de fato pertencente a outro Perfil é recusada na gravação do rascunho, em `backend/tests/integration/editais/`
 - [X] T046 [US2] `CAMPOS_NAO_RETIFICAVEIS` por **forma de caminho** em `backend/processo_seletivo/publicacoes/domain/colecoes.py`, com exceção própria traduzida para `422 invalid_change` — e a recusa **depois** de resolver o contêiner, para não roubar a precedência de caminho inexistente e seletor inválido
 - [X] T047 [US2] Teste: `REPLACE` sobre `.../declaredFacts/.../type` é recusado, e remover o fato e acrescentar outro com identidade nova continua permitido, em `backend/tests/integration/publicacoes/test_fato_declarado.py`
-- [ ] T048 [US2] Modelo `ValorDeFato` em `backend/processo_seletivo/inscricoes/models.py`, com `fato_id` pela identidade publicada e `ck_valor_conforme_tipo`
-- [ ] T049 [US2] Congelar os fatos na **submissão**, contra a `versao_aceita`, em `backend/processo_seletivo/inscricoes/` — nunca na abertura do rascunho
-- [ ] T050 [US2] Migration de `inscricoes` com os valores congelados, em `backend/processo_seletivo/inscricoes/migrations/`
-- [ ] T051 [US2] Aplicar o teto de D-3 na submissão, com trava **do par identidade–Edital** — nunca da inscrição, que deixaria duas submissões concorrentes de Perfis diferentes passarem as duas pelo teto; a trava serializa as inscrições de uma pessoa num Edital, e não as de todo mundo, em `backend/processo_seletivo/inscricoes/application/`
-- [ ] T052 [US2] Teste: duas submissões concorrentes de Perfis diferentes não ultrapassam o teto, em `backend/tests/integration/inscricoes/`
-- [ ] T053 [US2] Teste: rascunho abandonado não consome direito — o teto conta só inscrições submetidas, em `backend/tests/integration/inscricoes/`
-- [ ] T054 [US2] Teste: Retificação que reduz o teto não invalida inscrição já submetida sob a norma que a admitia, em `backend/tests/integration/inscricoes/`
-- [ ] T055 [US2] Registrar `ValorDeFato` em `TABELAS_APPEND_ONLY` em `backend/processo_seletivo/seguranca/papeis.py`
-- [ ] T056 [P] [US2] Campos dos fatos declarados no formulário da inscrição em `backend/processo_seletivo/portal/` e no template correspondente
-- [ ] T057 [US2] Teste: editar o perfil depois da submissão muda zero valores congelados, em `backend/tests/integration/inscricoes/`
-- [ ] T058 [US2] Teste: inscrição submetida **antes** de o fato ser declarado permanece válida, e o critério que o consome a trata pelo comportamento declarado para valor ausente — a ponte entre D-2 e o desempate, em `backend/tests/integration/classificacao/`
-- [ ] T059 [P] [US2] Teste: Edital sem fato declarado apresenta zero campos novos na inscrição, em `backend/tests/integration/inscricoes/`
-- [ ] T060 [US2] Teste: rascunho aberto durante a Retificação que acrescenta fato revê a versão nova antes de confirmar, em `backend/tests/integration/inscricoes/`
-- [ ] T061 [US2] Teste de ciclo completo: congelar um valor, retificar removendo o fato e acrescentando outro, e provar que o valor antigo permanece ligado à **identidade e à versão anteriores** — é a metade de T046 que só é demonstrável depois de `ValorDeFato` existir, em `backend/tests/integration/inscricoes/`
-- [ ] T062 [US2] Teste de autorização: os valores congelados não vazam para outro candidato nem para quem não administra, em `backend/tests/authorization/`
+- [X] T048 [US2] Modelo `ValorDeFato` em `backend/processo_seletivo/inscricoes/models.py`, com `fato_id` pela identidade publicada e `ck_valor_conforme_tipo`
+- [X] T049 [US2] Congelar os fatos na **submissão**, contra a `versao_aceita`, em `backend/processo_seletivo/inscricoes/` — nunca na abertura do rascunho
+- [X] T050 [US2] Migration de `inscricoes` com os valores congelados, em `backend/processo_seletivo/inscricoes/migrations/`
+- [X] T051 [US2] Aplicar o teto de D-3 na submissão, com trava **do par identidade–Edital** — nunca da inscrição, que deixaria duas submissões concorrentes de Perfis diferentes passarem as duas pelo teto; a trava serializa as inscrições de uma pessoa num Edital, e não as de todo mundo, em `backend/processo_seletivo/inscricoes/application/`
+- [X] T052 [US2] Teste: duas submissões concorrentes de Perfis diferentes não ultrapassam o teto, em `backend/tests/integration/inscricoes/`
+- [X] T053 [US2] Teste: rascunho abandonado não consome direito — o teto conta só inscrições submetidas, em `backend/tests/integration/inscricoes/`
+- [X] T054 [US2] Teste: Retificação que reduz o teto não invalida inscrição já submetida sob a norma que a admitia, em `backend/tests/integration/inscricoes/`
+- [X] T055 [US2] Registrar `ValorDeFato` em `TABELAS_APPEND_ONLY` em `backend/processo_seletivo/seguranca/papeis.py`
+- [X] T056 [P] [US2] Campos dos fatos declarados no formulário da inscrição em `backend/processo_seletivo/portal/` e no template correspondente
+- [X] T057 [US2] Teste: editar o perfil depois da submissão muda zero valores congelados, em `backend/tests/integration/inscricoes/`
+- [X] T058 [US2] Teste: inscrição submetida **antes** de o fato ser declarado permanece válida, e o critério que o consome a trata pelo comportamento declarado para valor ausente — a ponte entre D-2 e o desempate, em `backend/tests/integration/classificacao/`
+- [X] T059 [P] [US2] Teste: Edital sem fato declarado apresenta zero campos novos na inscrição, em `backend/tests/integration/inscricoes/`
+- [X] T060 [US2] Teste: rascunho aberto durante a Retificação que acrescenta fato revê a versão nova antes de confirmar, em `backend/tests/integration/inscricoes/`
+- [X] T061 [US2] Teste de ciclo completo: congelar um valor, retificar removendo o fato e acrescentando outro, e provar que o valor antigo permanece ligado à **identidade e à versão anteriores** — é a metade de T046 que só é demonstrável depois de `ValorDeFato` existir, em `backend/tests/integration/inscricoes/`
+- [X] T062 [US2] Teste de autorização: os valores congelados não vazam para outro candidato nem para quem não administra, em `backend/tests/authorization/`
 
 **Checkpoint**: o desempate por idade e por experiência passa a ter valor para ler.
 

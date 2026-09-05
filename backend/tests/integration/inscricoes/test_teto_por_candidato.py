@@ -19,6 +19,7 @@ from processo_seletivo.inscricoes.application.rascunho import abrir_inscricao, a
 from processo_seletivo.inscricoes.application.submissao import enviar_inscricao
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.processos.models import Edital
+from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from processo_seletivo.shared.api.problems import DomainError
 from tests.fixtures.candidato import (
     MARIA,
@@ -116,3 +117,75 @@ def test_duas_submissoes_concorrentes_respeitam_o_teto(com_teto_de_uma, candidat
     ).count()
     assert submetidas == 1, desfechos
     assert sorted(desfechos.values()) == ["enviada", "registration_limit_reached"], desfechos
+
+
+@SOMENTE_POSTGRES
+def test_a_submissao_e_a_retificacao_nao_se_atropelam(api_client, selecao, candidatos_registrados):
+    """A prova do `FOR SHARE`, que o teste do teto não cobre.
+
+    O advisory lock serializa **o mesmo candidato**; ele nada diz sobre uma Retificação publicada
+    no meio do ato. Quem responde por isso é o `FOR SHARE` no Edital, conflitante com o
+    `FOR UPDATE` que a publicação toma sobre a mesma linha.
+
+    Os dois desfechos são legítimos, e é a **combinação proibida** que este teste exclui: submeter
+    sob a versão antiga **depois** de a Retificação concorrente já ter vencido. Ou a submissão
+    chega primeiro e conclui sob a versão que leu — e a Retificação espera —, ou a Retificação
+    chega primeiro e a submissão, ao ler a versão nova, recusa com `edital_updated`, porque a
+    pessoa não reconheceu aquela norma.
+    """
+    inscricao = _pronta(selecao, PERFIL_DOCENTE)
+    antes = VersaoConsolidada.objects.filter(edital=selecao).latest("materialized_at")
+
+    barreira = threading.Barrier(2, timeout=10)
+    desfechos = {}
+
+    def submeter():
+        try:
+            barreira.wait()
+            enviada = enviar_inscricao(
+                identidade=MARIA,
+                inscricao=inscricao,
+                declaracoes=DECLARACOES,
+                idempotency_key="corrida-versao",
+            )
+            desfechos["submissao"] = ("enviada", enviada.versao_aceita_id)
+        except DomainError as exc:
+            desfechos["submissao"] = (exc.code, None)
+        finally:
+            connections.close_all()
+
+    def retificar():
+        try:
+            barreira.wait()
+            retify(
+                api_client,
+                selecao,
+                [{"targetPath": "/title", "operation": "REPLACE", "newValue": "Retificado"}],
+                suffix="corrida",
+            )
+            desfechos["retificacao"] = "publicada"
+        finally:
+            connections.close_all()
+
+    fios = [threading.Thread(target=submeter), threading.Thread(target=retificar)]
+    for fio in fios:
+        fio.start()
+    for fio in fios:
+        fio.join(timeout=30)
+
+    codigo, versao_aceita = desfechos["submissao"]
+    depois = VersaoConsolidada.objects.filter(edital=selecao).latest("materialized_at")
+    if codigo == "enviada":
+        # Chegou primeiro: concluiu sob a versão que leu, e a Retificação esperou.
+        assert versao_aceita == antes.pk, desfechos
+    else:
+        # A Retificação venceu: a submissão leu a versão nova e recusou, porque ninguém a
+        # reconheceu ainda. O que **não** pode acontecer é ela ter passado sob a antiga.
+        assert codigo == "edital_updated", desfechos
+        assert depois.pk != antes.pk, "a Retificação precisa ter sido publicada neste ramo"
+    assert (
+        Inscricao.objects.filter(
+            pk=inscricao.pk, status=Inscricao.Status.SUBMETIDA, versao_aceita=antes
+        ).exists()
+        or codigo != "enviada"
+    ), "submeter sob a versão antiga depois de a Retificação vencer é a combinação proibida"
