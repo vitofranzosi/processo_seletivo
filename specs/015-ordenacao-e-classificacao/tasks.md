@@ -169,11 +169,22 @@ valores congelados não mudaram.
 
 ## Phase 5: US3 — Emitir a ordem de um marco (P1)
 
-> **⚠️ Dependência de integração, e ela não é desta feature.** D-1 — `origem` e `versao` no
-> `ResultadoEtapa` — corre em paralelo, como extensão da 013. A US3 **lê** `ResultadoEtapa.versao`
-> como âncora normativa do que entrou na ordem; enquanto D-1 não estiver integrada, a versão só é
-> alcançável por `avaliacao__versao`, e o Resultado por Ocorrência fica fora de qualquer ordem.
-> Confirmar a integração antes de iniciar esta fase, e não durante.
+> **⛔ BLOQUEADA em 04/09/2026: D-1 não está integrada.** O gate foi verificado antes de iniciar a
+> fase, e falhou nas cinco evidências: `ResultadoEtapa` não tem `origem` nem `versao`; `avaliacao`
+> segue `OneToOneField` obrigatório; as migrations de `resultados` terminam em
+> `0003_sentido_restrito_aos_dois_valores`; `git log --all -S OCORRENCIA` não encontra commit algum
+> em todo o repositório; e o docstring do modelo ainda declara que a norma histórica é alcançada
+> por `avaliacao__versao`.
+>
+> **Por que isso impede começar, e não só atrasa.** A US3 lê a âncora normativa do que entrou na
+> ordem. Escrita agora, ela a leria por `avaliacao__versao` — que é o caminho que
+> `resultados/application/selectors.py:92` já usa no `select_related`. Construir a proveniência do
+> ato sobre esse caminho **cimentaria** a dependência que D-1 existe para remover, num lugar onde
+> desfazê-la depois custaria caro. E o Resultado por Ocorrência ficaria fora de qualquer ordem.
+>
+> **Como sai daqui.** D-1 é extensão da 013, em branch e PR próprios. Depois de ela entrar em
+> `main`: integrar `main` nesta branch, rodar migrations e a suíte completa, e só então liberar
+> esta fase. O checkpoint verde da 015 é `5770595`, com US1 e US2 fechadas.
 
 **Meta**: a ordem é calculada na abertura, conferida e emitida como ato imutável.
 
