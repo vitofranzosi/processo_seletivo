@@ -1,4 +1,6 @@
-"""O arredondamento da pontuação combinada: uma vez, no fim, na forma publicada (015, FR-068, FR-069).
+"""O arredondamento da pontuação combinada: uma vez, no fim, na forma publicada.
+
+015, FR-068 e FR-069.
 
 Três provas que a spec pede por nome, e uma quarta que decorre delas: o arredondamento **cria**
 empate, e criar empate é criar trabalho para os critérios de desempate. Isso não é defeito — é a
@@ -152,3 +154,53 @@ def test_o_calculo_nao_interpreta_peso_ausente():
         combinar(
             marco(), {A: {"weight": None}, B: {"weight": "1.0"}}, {A: Decimal("8"), B: Decimal("5")}
         )
+
+
+# --- a escala segue o regime de precisão que existe ---------------------------------------------
+
+
+@pytest.mark.parametrize("escala", [0, 1, 4])
+def test_as_escalas_do_intervalo_sao_aceitas(escala):
+    """0 a 4: quatro é `decimal_places` de `ResultadoEtapa.pontuacao`, que é a entrada."""
+    assert arredondar(Decimal("7.123456"), marco(escala=escala)) is not None
+
+
+@pytest.mark.parametrize("escala", [-1, 5, 6])
+def test_a_escala_fora_do_regime_de_precisao_e_recusada(escala):
+    """Cinco e seis não são "mais precisão" — são precisão que a entrada não tem.
+
+    Uma redação anterior aceitava até seis, justificando com uma premissa falsa sobre a precisão
+    de `ResultadoEtapa.pontuacao`. Escala maior que a da entrada só pode ser adotada como regime
+    novo, e com o campo do ato suportando-a.
+    """
+    with pytest.raises(RegraIncompleta):
+        arredondar(Decimal("7.123456"), marco(escala=escala))
+
+
+# --- divisor zero é regra inválida, e não ausência de dado --------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("operacao", "normalizacao"),
+    [("MEDIA_PONDERADA", "NENHUMA"), ("SOMA_PONDERADA", "PELA_SOMA_DOS_PESOS")],
+)
+def test_divisor_zero_nao_vira_ausencia_de_pontuacao(operacao, normalizacao):
+    """As duas coisas se leem de formas diferentes por quem consulta a ordem (FR-073).
+
+    `SEM_PONTUACAO` diz "este participante não é classificável". Divisor zero diz "esta regra não
+    calcula nada, para ninguém". Devolver o primeiro no lugar do segundo faria a ordem acusar os
+    participantes de uma falha do Edital.
+    """
+    regra = marco(operacao=operacao, normalizacao=normalizacao)
+    pesos_zerados = {A: {"weight": "0.0000"}, B: {"weight": "0.0000"}}
+
+    with pytest.raises(RegraIncompleta):
+        combinar(regra, pesos_zerados, {A: Decimal("8"), B: Decimal("5")})
+
+
+def test_soma_sem_normalizacao_com_pesos_zerados_nao_e_regra_invalida():
+    """A contraprova: sem divisor, peso zero é escolha do Edital, e a conta dá zero."""
+    regra = marco(operacao="SOMA_PONDERADA", normalizacao="NENHUMA")
+    pesos_zerados = {A: {"weight": "0.0000"}, B: {"weight": "0.0000"}}
+
+    assert combinar(regra, pesos_zerados, {A: Decimal("8"), B: Decimal("5")}) == Decimal("0.00")

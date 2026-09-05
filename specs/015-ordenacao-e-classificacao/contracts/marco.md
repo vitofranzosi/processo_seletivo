@@ -66,13 +66,18 @@ sistema decidindo o que a pessoa quis dizer.
 ## 2c. A forma de `rounding`, exata
 
 ```
-rounding: { "scale": <inteiro 0..6>, "mode": "MEIO_PARA_CIMA" | "MEIO_PARA_PAR" | "TRUNCAR" }
+rounding: { "scale": <inteiro 0..4>, "mode": "MEIO_PARA_CIMA" | "MEIO_PARA_PAR" | "TRUNCAR" }
 ```
 
-**`scale`** é o número de casas decimais da pontuação combinada. O intervalo é **0 a 6**: zero
-porque há Editais que classificam por pontuação inteira, e seis porque é a precisão que
-`pontuacao` já carrega no `ResultadoEtapa` — publicar escala maior prometeria precisão que a
-entrada não tem.
+**`scale`** é o número de casas decimais da pontuação combinada. O intervalo é **0 a 4**: zero
+porque há Editais que classificam por pontuação inteira, e quatro porque é a precisão que
+`ResultadoEtapa.pontuacao` carrega — `decimal_places=4`. Publicar escala maior prometeria precisão
+que a entrada não tem.
+
+> Uma redação anterior dizia **0 a 6** e justificava o seis como "a precisão que a pontuação já
+> carrega". Era falso: a entrada tem quatro casas. Seis seria um regime de precisão **novo** para o
+> valor derivado — decisão legítima, mas que a clarificação não tomou e que obrigaria
+> `PosicaoNaOrdem.pontuacao_combinada` a suportar seis. O intervalo segue o regime que existe.
 
 **`mode`** tem três valores canônicos, e a grafia é a publicada, não a da biblioteca:
 
@@ -89,7 +94,10 @@ e arredondar o total dão resultados distintos, e num lugar onde a pontuação d
 **O que a validação recusa na publicação, e não no cálculo:**
 
 - marco cuja operação não declare `rounding`;
-- `scale` ausente, não inteiro, ou fora de 0..6;
+- `scale` ausente, não inteiro, ou fora de 0..4;
+- operação que divide pela soma dos pesos quando essa soma é **zero** — regra sem divisor não é
+  regra incompleta do participante, é regra inválida do Edital, e o lugar de recusá-la é a
+  publicação;
 - `mode` ausente ou fora dos três valores canônicos.
 
 Recusar aqui é o que impede o cálculo de escolher um padrão. Um marco sem arredondamento declarado

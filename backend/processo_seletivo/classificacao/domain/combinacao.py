@@ -23,7 +23,8 @@ MODOS = {
     "MEIO_PARA_PAR": ROUND_HALF_EVEN,
     "TRUNCAR": ROUND_DOWN,
 }
-ESCALA_MINIMA, ESCALA_MAXIMA = 0, 6
+# Quatro é a precisão de `ResultadoEtapa.pontuacao` (`decimal_places=4`), que é a entrada.
+ESCALA_MINIMA, ESCALA_MAXIMA = 0, 4
 
 SOMA_PONDERADA = "SOMA_PONDERADA"
 MEDIA_PONDERADA = "MEDIA_PONDERADA"
@@ -114,18 +115,25 @@ def combinar(marco, etapas_publicadas, pontuacoes):
     return arredondar(combinada, marco)
 
 
+def divide_pela_soma_dos_pesos(marco):
+    """A regra deste marco precisa de divisor? Média sempre precisa; soma, só se normalizar."""
+    return (
+        marco.get("operation") == MEDIA_PONDERADA
+        or marco.get("normalization") == PELA_SOMA_DOS_PESOS
+    )
+
+
 def _normalizar(marco, total, soma_dos_pesos, quantas):
-    operacao = marco.get("operation")
-    normalizacao = marco.get("normalization")
-    if operacao == MEDIA_PONDERADA:
-        # A média divide pela soma dos pesos por definição; normalizar de novo seria dividir duas
-        # vezes. Soma dos pesos zero só acontece se todas as Etapas declararem peso zero, e aí não
-        # há média a tirar — não é divisão por zero a evitar, é regra sem sentido a recusar.
-        if soma_dos_pesos == 0:
-            return SEM_PONTUACAO
-        return total / soma_dos_pesos
-    if normalizacao == PELA_SOMA_DOS_PESOS:
-        if soma_dos_pesos == 0:
-            return SEM_PONTUACAO
-        return total / soma_dos_pesos
-    return total
+    if not divide_pela_soma_dos_pesos(marco):
+        return total
+    # **Divisor zero é regra inválida do Edital, e não ausência de dado do participante.** Uma
+    # redação anterior devolvia `SEM_PONTUACAO` aqui, o que confundia as duas coisas: quem lesse o
+    # resultado veria "este participante não é classificável" quando o que aconteceu foi que a
+    # regra publicada não tem divisor. A recusa é da publicação, e aqui só se afirma que ela
+    # falhou em chegar (FR-073).
+    if soma_dos_pesos == 0:
+        raise RegraIncompleta(
+            "A operação divide pela soma dos pesos, e as Etapas enumeradas somam peso zero: "
+            "não há divisor, e isso é regra inválida do Edital — não ausência de dado."
+        )
+    return total / soma_dos_pesos

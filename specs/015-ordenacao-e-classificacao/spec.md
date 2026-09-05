@@ -537,6 +537,10 @@ que o anterior permanece íntegro e consultável.
   participante desative o critério para grupos de que ele não faz parte.
 - **FR-072**: O empate residual só existe depois de **todos** os critérios publicados terem sido
   aplicados ao grupo; um critério que não particiona MUST NOT encerrar a sequência.
+- **FR-073**: O sistema MUST recusar a publicação de marco cuja operação divida pela soma dos pesos
+  quando as Etapas enumeradas somam peso **zero**. Regra sem divisor é regra inválida do Edital, e
+  o cálculo MUST NOT tratá-la como ausência de dado do participante — as duas coisas se leem de
+  formas diferentes por quem consulta a ordem.
 
 #### Fatos declarados pelo Edital
 
@@ -675,6 +679,8 @@ que o anterior permanece íntegro e consultável.
   ciclo que a revisão de 04/09/2026 encontrou, em que seis permutações produziam três ordens.
 - **SC-024**: 100% das tentativas de publicar marco que enumere Etapa sem peso, ou cuja operação não
   declare escala e modo de arredondamento, são recusadas com o motivo.
+- **SC-026**: 100% das tentativas de publicar marco cuja operação divida pela soma dos pesos com
+  soma zero são recusadas, e zero delas chegam ao cálculo como participante não classificável.
 - **SC-025**: A pontuação combinada é arredondada exatamente uma vez; nenhuma parcela é arredondada
   antes da combinação, e o valor gravado é o arredondado.
 

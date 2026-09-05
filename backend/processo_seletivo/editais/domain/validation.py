@@ -511,6 +511,36 @@ def _arredondamento_do_marco(marco, caminho) -> list[ValidationFinding]:
     return []
 
 
+def _divisor_do_marco(marco, etapas, caminho) -> list[ValidationFinding]:
+    """Operação que divide pela soma dos pesos precisa de soma diferente de zero (FR-073).
+
+    Recusar aqui é o que separa **regra inválida do Edital** de **ausência de dado do
+    participante**. Sem isto, o cálculo devolveria "não classificável" para todo mundo, e quem
+    lesse a ordem concluiria que os participantes é que estavam incompletos.
+    """
+    from processo_seletivo.classificacao.domain.combinacao import divide_pela_soma_dos_pesos
+
+    if not divide_pela_soma_dos_pesos(marco):
+        return []
+    soma = Decimal("0")
+    for etapa_id in marco.get("stages") or []:
+        etapa = etapas.get(etapa_id) or {}
+        peso = etapa.get("weight")
+        if peso is not None:
+            soma += Decimal(str(peso))
+    if soma != 0:
+        return []
+    return [
+        ValidationFinding(
+            Severity.BLOCKING_ERROR,
+            "milestone_zero_divisor",
+            "A operação do marco divide pela soma dos pesos, e as Etapas enumeradas somam zero: "
+            "não há divisor.",
+            f"{caminho}/operation",
+        )
+    ]
+
+
 def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
     """O marco só é executável se o que ele aponta existir e puder ser apontado (015, D-001).
 
@@ -547,6 +577,7 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
             dentro = f"id={chave}" if isinstance(chave, str) and chave else str(indice)
             caminho = f"{base}/classificationMilestones/{dentro}"
             findings.extend(_arredondamento_do_marco(marco, caminho))
+            findings.extend(_divisor_do_marco(marco, etapas, caminho))
             for etapa_id in marco.get("stages") or []:
                 etapa = etapas.get(etapa_id)
                 if etapa is not None and etapa.get("weight") is None:

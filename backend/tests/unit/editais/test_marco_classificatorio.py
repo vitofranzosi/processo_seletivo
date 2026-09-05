@@ -133,7 +133,7 @@ def test_a_etapa_enumerada_sem_peso_e_recusada():
         {"scale": 2},
         {"mode": "MEIO_PARA_CIMA"},
         {"scale": -1, "mode": "MEIO_PARA_CIMA"},
-        {"scale": 7, "mode": "MEIO_PARA_CIMA"},
+        {"scale": 5, "mode": "MEIO_PARA_CIMA"},
         {"scale": "2", "mode": "MEIO_PARA_CIMA"},
         {"scale": 2, "mode": "ROUND_HALF_UP"},
         {"scale": 2, "mode": "PARA_CIMA"},
@@ -162,7 +162,32 @@ def test_o_arredondamento_mal_declarado_e_recusado_na_publicacao(rounding):
     )
 
 
-@pytest.mark.parametrize("escala", [0, 6])
+@pytest.mark.parametrize("escala", [0, 4])
 def test_as_escalas_das_pontas_do_intervalo_publicam(escala):
     """Zero porque há Edital que classifica por inteiro; seis é a precisão que a pontuação tem."""
     assert codigos(conteudo_com_marco(rounding={"scale": escala, "mode": "TRUNCAR"})) == set()
+
+
+@pytest.mark.parametrize(
+    ("operacao", "normalizacao"),
+    [("MEDIA_PONDERADA", "NENHUMA"), ("SOMA_PONDERADA", "PELA_SOMA_DOS_PESOS")],
+)
+def test_operacao_que_divide_com_soma_de_pesos_zero_e_recusada(operacao, normalizacao):
+    """Regra sem divisor é inválida do Edital, e o lugar de recusá-la é a publicação (FR-073).
+
+    Deixá-la publicar faria o cálculo devolver "não classificável" para todo o universo — e quem
+    lesse a ordem concluiria que os participantes é que estavam incompletos.
+    """
+    conteudo = conteudo_com_marco(peso="0.0000")
+    perfil = next(item for item in conteudo["profiles"] if item["id"] == PERFIL["B"])
+    perfil["classificationMilestones"][0]["operation"] = operacao
+    perfil["classificationMilestones"][0]["normalization"] = normalizacao
+
+    assert "milestone_zero_divisor" in codigos(conteudo)
+
+
+def test_soma_sem_normalizacao_com_peso_zero_publica():
+    """A contraprova: sem divisor, peso zero é escolha legítima do Edital."""
+    conteudo = conteudo_com_marco(peso="0.0000")
+
+    assert "milestone_zero_divisor" not in codigos(conteudo)
