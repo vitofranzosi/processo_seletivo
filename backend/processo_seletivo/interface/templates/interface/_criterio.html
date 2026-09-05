@@ -1,0 +1,59 @@
+<fieldset class="linha criterio">
+  <legend>Critério de desempate</legend>
+  {% comment %}
+  A ordem é campo, e não a posição desta linha na tela: ela é a norma, e a Retificação a altera
+  por identidade. Substituir a lista inteira perderia os identificadores que ela endereça.
+  {% endcomment %}
+  <input type="hidden" name="criterio-{{ indice }}-{{ sub }}-{{ n }}-id" value="{{ criterio.id }}">
+  <div class="campos">
+    <p class="campo curto">
+      <label for="criterio-{{ indice }}-{{ sub }}-{{ n }}-order">Ordem <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <input type="number" min="1" step="1"
+             id="criterio-{{ indice }}-{{ sub }}-{{ n }}-order"
+             name="criterio-{{ indice }}-{{ sub }}-{{ n }}-order"
+             value="{{ criterio.order|default:'' }}" required aria-required="true">
+    </p>
+    <p class="campo largo">
+      <label for="criterio-{{ indice }}-{{ sub }}-{{ n }}-type">Critério <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <select id="criterio-{{ indice }}-{{ sub }}-{{ n }}-type"
+              name="criterio-{{ indice }}-{{ sub }}-{{ n }}-type" required aria-required="true">
+        <option value="MAIOR_PONTUACAO_NA_ETAPA" {% if criterio.type == "MAIOR_PONTUACAO_NA_ETAPA" %}selected{% endif %}>Maior pontuação numa Etapa</option>
+        <option value="MAIOR_VALOR_DE_FATO" {% if criterio.type == "MAIOR_VALOR_DE_FATO" %}selected{% endif %}>Maior valor de um fato declarado</option>
+        <option value="MENOR_VALOR_DE_FATO" {% if criterio.type == "MENOR_VALOR_DE_FATO" %}selected{% endif %}>Menor valor de um fato declarado</option>
+      </select>
+    </p>
+    <p class="campo largo">
+      <label for="criterio-{{ indice }}-{{ sub }}-{{ n }}-target">O que ele compara <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <select id="criterio-{{ indice }}-{{ sub }}-{{ n }}-target"
+              name="criterio-{{ indice }}-{{ sub }}-{{ n }}-target" required aria-required="true">
+        <option value="">—</option>
+        <optgroup label="Pontuação na Etapa">
+          {% for etapa in etapas_classificatorias %}
+          <option value="{{ etapa.id }}" {% if criterio.target == etapa.id %}selected{% endif %}>{{ etapa.rotulo }}</option>
+          {% endfor %}
+        </optgroup>
+        <optgroup label="Fato declarado">
+          {% for fato in fatos_declarados %}
+          <option value="{{ fato.id }}" {% if criterio.target == fato.id %}selected{% endif %}>{{ fato.rotulo }}</option>
+          {% endfor %}
+        </optgroup>
+      </select>
+      <span class="ajuda">Escolha coerente com o critério: pontuação aponta Etapa, valor aponta
+        fato declarado.</span>
+    </p>
+    <p class="campo">
+      <label for="criterio-{{ indice }}-{{ sub }}-{{ n }}-whenMissing">Quando o valor não existe <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <select id="criterio-{{ indice }}-{{ sub }}-{{ n }}-whenMissing"
+              name="criterio-{{ indice }}-{{ sub }}-{{ n }}-whenMissing" required aria-required="true">
+        <option value="ULTIMO_NO_CRITERIO" {% if criterio.whenMissing == "ULTIMO_NO_CRITERIO" %}selected{% endif %}>Fica por último neste critério</option>
+        <option value="CRITERIO_NAO_SE_APLICA" {% if criterio.whenMissing == "CRITERIO_NAO_SE_APLICA" %}selected{% endif %}>O critério não se aplica</option>
+      </select>
+      <span class="ajuda">Precisa ser declarado: o silêncio não vira zero nem último lugar.</span>
+    </p>
+  </div>
+  <p class="remover">
+    <button type="button" class="acao perigo"
+            hx-get="{% url 'interface:fragmento-remover' %}"
+            hx-target="closest fieldset" hx-swap="outerHTML">Remover este critério</button>
+  </p>
+</fieldset>

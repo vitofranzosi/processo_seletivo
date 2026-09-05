@@ -22,6 +22,17 @@ COLECOES_COM_CHAVE = frozenset(
         "/stages",
         "/sections",
         "/profiles/*/competitionModalities",
+        # As duas da leva da `015`. Aninhadas no Perfil pela mesma razão que a Modalidade: a regra
+        # não depende de qual Perfil é. Declará-las **antes** de o snapshot as emitir não é ordem
+        # arbitrária — sem isto, `changes.py` recusaria endereçá-las por `id=` e o caminho só
+        # resolveria por posição, que é o que o sistema proíbe (015, T-007).
+        "/profiles/*/declaredFacts",
+        "/profiles/*/classificationMilestones",
+        # Os critérios são endereçados por identidade como tudo o mais, **apesar** de a ordem deles
+        # ser normativa: a ordem é campo publicado de cada um, e não a posição na lista. Sem esta
+        # declaração, reordenar por Retificação só resolveria por índice — que é o que o sistema
+        # proíbe, e o que faria a reordenação perder os identificadores (015, FR-015).
+        "/profiles/*/classificationMilestones/*/tiebreakers",
         # O Documento Exigido nasce com identidade estável e é endereçado por ela como as demais
         # (FR-009 da 009): nenhuma regra nova, nenhuma gramática nova — só mais uma coleção na
         # declaração que já existe.
@@ -31,7 +42,16 @@ COLECOES_COM_CHAVE = frozenset(
 
 # Coleção sem identificador: valor normativo atômico, substituído inteiro e nunca endereçado
 # item a item (FR-011).
-COLECOES_ATOMICAS = frozenset({"/profiles/*/requirements"})
+COLECOES_ATOMICAS = frozenset(
+    {
+        "/profiles/*/requirements",
+        # A enumeração de Etapas de um marco é lista de **identidades**, e não de entidades: não há
+        # o que endereçar item a item, e mudar quais Etapas entram é substituir a enumeração
+        # inteira. Foi o guarda de endereçamento sobre snapshot publicado que a encontrou — sem
+        # esta declaração ela seria coleção sem chave, que é o que o sistema recusa (015, T-007).
+        "/profiles/*/classificationMilestones/*/stages",
+    }
+)
 
 # Controle interno da Versão Consolidada. Não é conteúdo normativo e nenhuma Alteração o
 # endereça, em forma alguma (FR-013).
@@ -54,6 +74,23 @@ CAMPOS_DE_IDENTIDADE = frozenset(
     {"editalId", "processoId", "processoCode", "processoTitle", "schemaVersion"}
 )
 
+# Campos que existem no conteúdo publicado e que **nenhuma Retificação altera no lugar**, declarados
+# por **forma de caminho** — e não por nome de token, como `CAMPOS_DE_IDENTIDADE`. A diferença é o
+# que torna isto correto: `type` também é campo do Evento do Cronograma, e proibi-lo por nome
+# quebraria Retificação legítima de tipo de evento.
+#
+# Hoje há um só, e ele está aqui porque mudar o tipo de um fato declarado **não é editar o fato**:
+# um fato declarado como data que virasse número não é o mesmo fato, e reinterpretar o valor já
+# congelado sob ele seria o sistema decidindo o que a pessoa quis dizer. A Retificação remove um e
+# acrescenta outro, com identidade nova, e o que foi congelado sob o primeiro permanece legível sob
+# a norma que o governou (015, FR-058).
+#
+# **A lista não se generaliza sozinha.** `operation` e `normalization` do marco continuam
+# retificáveis de propósito: a spec exige que a regra seja retificável, e cita a Retificação da
+# operação como causa de obsolescência do ato já emitido. Um campo entra aqui quando mudá-lo
+# significaria reinterpretar algo já gravado — não quando ele é apenas importante.
+CAMPOS_NAO_RETIFICAVEIS = frozenset({"/profiles/*/declaredFacts/*/type"})
+
 
 def escapar(token):
     """Devolve o token à grafia do RFC 6901, para que a forma seja comparável ao declarado."""
@@ -74,6 +111,17 @@ def e_controle_interno(token):
 
 def e_campo_de_identidade(token):
     return token in CAMPOS_DE_IDENTIDADE
+
+
+def e_campo_nao_retificavel(forma):
+    """A forma designa um campo que nenhuma Retificação altera no lugar?
+
+    Recebe a forma **calculada durante a travessia** — com `*` no lugar de cada segmento de lista
+    já atravessado —, e não o caminho concreto. Comparar por expressão regular sobre o caminho
+    aceitaria `/profiles/id=…/declaredFacts/id=…/type` e recusaria a mesma coisa escrita de outro
+    jeito, que é o modo de falha que este módulo recusa em toda parte.
+    """
+    return forma in CAMPOS_NAO_RETIFICAVEIS
 
 
 def e_elemento_de_colecao_com_chave(forma):

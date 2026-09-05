@@ -257,6 +257,7 @@ class Command(BaseCommand):
             processo, _ = self._criar(elaborador, codigo, numero, ano, titulo)
             edital = Edital.objects.get(processo=processo)
             self._elaborar(elaborador, edital, agora, numero)
+            self._declarar_fatos_e_teto(edital, numero)
             self._publicar(elaborador, homologador, publicador, edital)
 
         self._retificar(edital, agora)
@@ -298,6 +299,42 @@ class Command(BaseCommand):
             document_requirements=documentos_exigidos(numero),
             correlation_id="seed-demo",
         )
+        edital.refresh_from_db()
+
+    def _declarar_fatos_e_teto(self, edital, numero):
+        """Os fatos que o desempate consome, e o teto do certame (D-2, D-3).
+
+        **Pelo modelo, e não pelo rascunho**, porque a elaboração de fatos ainda não existe no
+        caminho de produto — `replace_draft` não os conhece. Duas consequências que valem estar
+        escritas: isto precisa rodar **depois** de `_elaborar`, que apaga e recria os Perfis; e este
+        método sai daqui no dia em que a `US2` entregar o serializer e a persistência, quando os
+        fatos passarão a viajar no próprio rascunho, como as Modalidades já viajam.
+        """
+        from processo_seletivo.editais.models.perfis import FatoDeclarado, PerfilVaga
+
+        self.stdout.write("Declarando os fatos exigidos do candidato e o teto de inscrições…")
+        perfil = PerfilVaga.objects.filter(edital=edital).order_by("code").first()
+        if perfil is not None:
+            FatoDeclarado.objects.bulk_create(
+                [
+                    FatoDeclarado(
+                        id=f"00000000-0000-0000-00{numero}-0000000000f1",
+                        perfil=perfil,
+                        code="NASCIMENTO",
+                        label="Data de nascimento",
+                        tipo=FatoDeclarado.Tipo.DATA,
+                    ),
+                    FatoDeclarado(
+                        id=f"00000000-0000-0000-00{numero}-0000000000f2",
+                        perfil=perfil,
+                        code="EXPERIENCIA",
+                        label="Meses de experiência na área",
+                        tipo=FatoDeclarado.Tipo.INTEIRO,
+                    ),
+                ]
+            )
+        # Uma inscrição por candidato, que é o que os Editais 14 (7.8) e 57 exigem.
+        Edital.objects.filter(pk=edital.pk).update(max_inscricoes_por_candidato=1)
         edital.refresh_from_db()
 
     def _publicar(self, elaborador, homologador, publicador, edital):

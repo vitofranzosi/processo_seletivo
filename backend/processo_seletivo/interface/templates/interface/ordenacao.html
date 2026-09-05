@@ -1,0 +1,94 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Classificação — {{ marco.name }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">{{ marco.name }}</span>
+</nav>
+
+<h1>{{ marco.name }}</h1>
+<p class="sub">{{ perfil.name }} — ordem calculada conforme a versão normativa vigente.</p>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível emitir:</strong> {{ erro }}</p>{% endif %}
+{% if resultado %}<p class="sucesso" role="status" tabindex="-1">Ordem emitida. O ato é imutável e já pode ser consultado.</p>{% endif %}
+
+{% if ato_vigente %}
+<p class="imutavel"><strong>Ato vigente emitido em {{ ato_vigente.emitido_em }}</strong> por {{ ato_vigente.emitido_por }}. Abrir esta tela não o altera. <a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ato_vigente.id %}">Consultar ato e proveniência</a>.</p>
+{% else %}
+<p class="aviso">Ainda não existe ato emitido para este marco. A lista abaixo é uma proposta calculada agora.</p>
+{% endif %}
+
+{% if obsoleto %}
+<section class="consequencias irreversivel" aria-labelledby="titulo-divergencia">
+  <h2 id="titulo-divergencia">O ato vigente está obsoleto{% if not recomputavel %} e não é recomputável{% endif %}</h2>
+  {% if recomputavel %}<p>A norma ou o universo atual produzem uma proposta diferente. O ato continua vigente e produzindo efeito até que um sucessor seja emitido.</p>
+  {% else %}<p>Não há regra vigente com que comparar. O ato permanece íntegro, vigente e reproduzível pela versão histórica que o governou.</p>{% endif %}
+  <ul>{% for item in divergencias %}<li>{{ item.descricao }}</li>{% endfor %}</ul>
+  {% if posicoes_divergentes %}
+  <div class="tabela-rolavel">
+  <table>
+    <caption>Mudanças posição a posição</caption>
+    <thead><tr><th scope="col">Inscrição</th><th scope="col">No ato</th><th scope="col">Agora</th></tr></thead>
+    <tbody>{% for item in posicoes_divergentes %}<tr><td>{{ item.inscricao_id }}</td><td>{% if item.antes.posicao %}{{ item.antes.posicao }}º{% else %}Sem posição — {{ item.antes.motivo }}{% endif %}</td><td>{% if item.agora.posicao %}{{ item.agora.posicao }}º{% else %}Sem posição — {{ item.agora.motivo|default:"fora do universo" }}{% endif %}</td></tr>{% endfor %}</tbody>
+  </table>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
+<section aria-labelledby="titulo-ordem">
+  <h2 id="titulo-ordem">Ordem calculada</h2>
+  {% if posicoes %}
+  <div class="tabela-rolavel">
+  <table>
+    <caption class="oculto">Participantes com posição classificatória</caption>
+    <thead><tr><th scope="col">Posição</th><th scope="col">Inscrição</th><th scope="col">Participante</th><th scope="col">Pontuação combinada</th><th scope="col">Modalidade</th></tr></thead>
+    <tbody>
+    {% for item in posicoes %}
+      <tr{% if item.empate_residual %} class="grupo-empatado"{% endif %}>
+        <td>{{ item.posicao }}º{% if item.empate_residual %}<span class="situacao s-EM_REVISAO">Empate residual</span>{% endif %}</td>
+        <td>{{ item.protocolo|default:item.inscricao_id }}</td>
+        <td>{{ item.nome }}</td>
+        <td>{% if item.pontuacao is None %}<span class="nenhuma">Não se aplica</span>{% else %}{{ item.pontuacao }}{% endif %}</td>
+        <td>{{ item.modalidade_id|default:"Não declarada" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}<p class="vazio">Nenhum participante recebeu posição neste marco.</p>{% endif %}
+</section>
+
+{% if sem_posicao %}
+<section aria-labelledby="titulo-sem-posicao">
+  <h2 id="titulo-sem-posicao">Participantes considerados sem posição</h2>
+  <div class="tabela-rolavel">
+  <table>
+    <caption class="oculto">Participantes do universo sem posição classificatória</caption>
+    <thead><tr><th scope="col">Inscrição</th><th scope="col">Participante</th><th scope="col">Consequência</th><th scope="col">Motivo</th></tr></thead>
+    <tbody>{% for item in sem_posicao %}<tr><td>{{ item.protocolo|default:item.inscricao_id }}</td><td>{{ item.nome }}</td><td>{{ item.consequencia|default:"Sem pontuação" }}</td><td>{{ item.motivo }}</td></tr>{% endfor %}</tbody>
+  </table>
+  </div>
+</section>
+{% endif %}
+
+{% if pode_emitir and recomputavel %}
+<form method="post" action="{% url 'interface:emitir-ordenacao' edital.id marco.id %}" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  <input type="hidden" name="confirmacao_do_calculo" value="{{ confirmacao_do_calculo }}">
+  {% comment %}A posição, a nota e o desempate nunca vêm do navegador. O POST só confirma que o servidor deve recalcular e constituir o ato.{% endcomment %}
+  <p><strong>Emitir é irreversível.</strong> O sistema recalcula sob trava e grava um ato imutável; esta tela não envia posição, pontuação nem desempate.</p>
+  {% if ato_vigente %}<p class="campo"><label for="motivo">Motivo da sucessão</label><textarea id="motivo" name="motivo" rows="3" required></textarea><span class="ajuda">O ato vigente permanece íntegro; este motivo explica por que uma nova ordem o sucede.</span></p>{% endif %}
+  <p class="acoes"><button type="submit" class="botao">Emitir ordem</button></p>
+</form>
+{% endif %}
+
+{% if historico %}
+<section aria-labelledby="titulo-historico">
+  <h2 id="titulo-historico">Histórico de atos</h2>
+  <ol>{% for ato in historico %}<li><a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ato.id %}">{{ ato.emitido_em }} — {{ ato.emitido_por }}</a>{% if ato.ato_anterior_id %}: sucede {{ ato.ato_anterior_id }} — {{ ato.motivo_da_sucessao }}{% else %}: primeiro ato do marco{% endif %}</li>{% endfor %}</ol>
+</section>
+{% endif %}
+{% endblock %}

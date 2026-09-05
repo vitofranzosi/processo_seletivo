@@ -128,6 +128,14 @@ permanecem preservados.</p>
 </section>
 {% endif %}
 
+{% if marcos_classificatorios %}
+<section aria-labelledby="classificacao-titulo" class="cartao">
+  <h2 id="classificacao-titulo">Classificação</h2>
+  <p class="ajuda">Abra um marco para conferir a ordem calculada, emitir o ato e consultar seu histórico.</p>
+  <ul class="resumo-lista">{% for grupo in marcos_classificatorios %}{% for marco in grupo.marcos %}<li><a href="{% url 'interface:ordenacao' edital.id marco.id %}">{{ marco.name }}</a> <span class="quando">{{ grupo.perfil.name }}</span></li>{% endfor %}{% endfor %}</ul>
+</section>
+{% endif %}
+
 {% if pendencias %}
 <section aria-labelledby="pendencias-titulo" class="pendencias">
   <h2 id="pendencias-titulo">Validação do conteúdo</h2>

@@ -62,7 +62,7 @@ def test_o_contrato_declarado_chega_ao_conteudo_publicado(
 
     conteudo = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at").content
 
-    assert conteudo["schemaVersion"] == 6
+    assert conteudo["schemaVersion"] == 7
     assert [documento["key"] for documento in conteudo["documentRequirements"]] == [
         "identificacao",
         "diploma",

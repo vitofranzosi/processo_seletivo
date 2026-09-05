@@ -89,6 +89,64 @@ def validate_profile(profile: dict) -> None:
         rule = modality.get("normativeRule")
         if rule:
             validate_normative_rule(rule)
+    validate_declared_facts(profile.get("declaredFacts", []))
+    validate_classification_milestones(profile.get("classificationMilestones", []))
+
+
+def validate_declared_facts(facts: list[dict]) -> None:
+    """Código único no Perfil, e tipo entre os dois que existem (D-2).
+
+    O tipo é verificado aqui **além** do serializer porque a interface administrativa invoca o
+    command diretamente e não atravessa aquele caminho — é a mesma razão pela qual a faixa do
+    percentual é verificada no domínio.
+    """
+    codes = [fato.get("code") for fato in facts]
+    if len(codes) != len(set(codes)):
+        raise ProfileValidationError("Fatos declarados não podem repetir código no Perfil.")
+    for fato in facts:
+        if fato.get("type") not in {"DATA", "INTEIRO"}:
+            raise ProfileValidationError(
+                "O tipo de um fato declarado deve ser data ou número inteiro."
+            )
+
+
+def validate_classification_milestones(milestones: list[dict]) -> None:
+    """O que a elaboração do marco recusa antes de a publicação sequer ser tentada (015, D-001).
+
+    Aqui não se verifica se a Etapa enumerada existe ou é classificatória — isso depende do conteúdo
+    inteiro, e mora em `validate_for_publication`. O que se verifica é o que se decide olhando só o
+    Perfil: identidade legível, ordem sem empate e comportamento declarado para valor ausente.
+    """
+    codes = [marco.get("code") for marco in milestones]
+    if len(codes) != len(set(codes)):
+        raise ProfileValidationError("Marcos classificatórios não podem repetir código no Perfil.")
+    for marco in milestones:
+        if not marco.get("stages"):
+            raise ProfileValidationError(
+                "Um marco classificatório deve enumerar ao menos uma Etapa: sem Etapa não há "
+                "pontuação a combinar, e a ordem não sai."
+            )
+        criterios = marco.get("tiebreakers", [])
+        ordens = [criterio.get("order") for criterio in criterios]
+        if len(ordens) != len(set(ordens)):
+            raise ProfileValidationError(
+                "Critérios de desempate não podem compartilhar a mesma ordem: "
+                "a ordem é a norma, e duas na mesma posição exigiriam desempatar o desempate."
+            )
+        for criterio in criterios:
+            # A ausência é declarada, nunca inferida: o silêncio não vira zero nem último lugar
+            # — ele impede a publicação da regra (FR-018).
+            parametros = criterio.get("parameters") or {}
+            if not (parametros.get("stageId") or parametros.get("factId")):
+                raise ProfileValidationError(
+                    "Todo critério de desempate deve declarar o que compara: uma Etapa ou um fato "
+                    "declarado."
+                )
+            if not criterio.get("whenMissing"):
+                raise ProfileValidationError(
+                    "Todo critério de desempate deve declarar o que fazer quando o valor "
+                    "que ele consome não existe."
+                )
 
 
 def validate_profiles(profiles: list[dict]) -> None:

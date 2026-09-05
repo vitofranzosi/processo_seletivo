@@ -681,7 +681,7 @@ components:
       required:
         [id, code, name, description, requirements, immediateVacancies, reserveType, reserveLimit,
          locality, duties, workload, compensation, classificationInformation, callInformation,
-         competitionModalities]
+         competitionModalities, declaredFacts, classificationMilestones]
       properties:
         id: { $ref: '#/components/schemas/Id' }
         code: { type: string }
@@ -705,6 +705,25 @@ components:
             item é objeto. ModalidadePublicada e RegraNormativaPublicada descrevem a forma que o
             conteúdo publicado carrega — inclusive os identificadores, que são preservados entre
             gravações — sem promovê-la a verificação, que seria decisão de outra feature.
+          items: { type: object }
+        declaredFacts:
+          type: array
+          description: >-
+            Os fatos que o Edital exige do candidato para que uma regra publicada possa consumi-los
+            — data de nascimento, meses de experiência. Coleção com identidade estável, endereçada
+            por id na Retificação. Vazia significa que o Edital não exige fato algum, e é a forma
+            que todo conteúdo elevado da versão 6 recebe. A forma de dentro segue a mesma régua de
+            competitionModalities: cada item é objeto, e o que vai nele é verificado pela coerência
+            dos marcos, que precisa do conteúdo inteiro.
+          items: { type: object }
+        classificationMilestones:
+          type: array
+          description: >-
+            Os marcos classificatórios do Perfil: onde uma ordem entre participantes é produzida,
+            com as Etapas que entram, a operação que as combina e a lista ordenada de critérios de
+            desempate. A ordem dos critérios é campo publicado de cada um, e não a posição no array,
+            porque a Retificação os endereça por identidade. Vazia significa que o Perfil não
+            classifica.
           items: { type: object }
     EventoPublicado:
       type: object

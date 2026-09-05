@@ -45,6 +45,29 @@ DEGRAUS = {
     6: {"forma": "PONTUADA", "rotuloFavoravel": None, "rotuloDesfavoravel": None},
 }
 
+# **O degrau 7 não é de Etapa, e é o primeiro que não é.** A leva da `015` acrescentou uma coleção
+# dentro do Perfil — duas, na verdade — e um campo na raiz do conteúdo. Os dois dicionários abaixo
+# existem separados de `DEGRAUS` por isso: cada um responde por um **nível** da árvore, e fundi-los
+# obrigaria a função a descobrir onde cada chave mora, que é o modo de falha que este módulo recusa
+# em toda parte — decidir por presença de chave em vez de por posição declarada.
+#
+# O que a ausência de cada um significa, e por que escrevê-la não inventa nada: Edital publicado
+# antes da `015` não declarou marco (e Edital sem marco não classifica), não exigiu fato do
+# candidato, e não limitou o total de inscrições dele no certame (015, T-008).
+DEGRAUS_DE_PERFIL = {
+    7: {"classificationMilestones": [], "declaredFacts": []},
+}
+
+DEGRAUS_DA_RAIZ = {
+    7: {"maxInscricoesPorCandidato": None},
+}
+
+AUSENCIA_DE_PERFIL = {
+    chave: valor for degrau in DEGRAUS_DE_PERFIL.values() for chave, valor in degrau.items()
+}
+
+COLECAO_DE_PERFIS = "/profiles"
+
 # O que a Etapa na versão vigente carrega, somando todos os degraus. Serve à idempotência: entidade
 # que já tem tudo atravessa sem cópia.
 AUSENCIA = {chave: valor for degrau in DEGRAUS.values() for chave, valor in degrau.items()}
@@ -84,6 +107,25 @@ def elevar_etapa(etapa, *, de=VERSAO_DE_ORIGEM):
     return {**etapa, **faltando} if faltando else etapa
 
 
+def elevar_perfil(perfil, *, de=VERSAO_DE_ORIGEM):
+    """O Perfil na forma vigente. Idempotente, pela mesma regra de `elevar_etapa`.
+
+    As coleções nascem **vazias**, e a lista vazia é a grafia da ausência: um Edital que não declara
+    marco nenhum não classifica, e um que não declara fato nenhum não exige nada do candidato além
+    do que a `009` já pede. Nenhuma das duas afirma norma que o conteúdo não tivesse.
+    """
+    if not isinstance(perfil, dict):
+        return perfil
+    faltando = {
+        chave: valor
+        for versao, degrau in sorted(DEGRAUS_DE_PERFIL.items())
+        if versao > de
+        for chave, valor in degrau.items()
+        if chave not in perfil
+    }
+    return {**perfil, **faltando} if faltando else perfil
+
+
 def elevar(conteudo):
     """O conteúdo publicado na versão canônica vigente, sem inventar nada.
 
@@ -104,11 +146,31 @@ def elevar(conteudo):
         if isinstance(etapas, list)
         else etapas
     )
-    if declarada == SCHEMA_VERSION and elevadas == etapas:
+    perfis = conteudo.get("profiles")
+    perfis_elevados = (
+        [elevar_perfil(item, de=declarada) for item in perfis]
+        if isinstance(perfis, list)
+        else perfis
+    )
+    raiz = {
+        chave: valor
+        for versao, degrau in sorted(DEGRAUS_DA_RAIZ.items())
+        if versao > declarada
+        for chave, valor in degrau.items()
+        if chave not in conteudo
+    }
+    if (
+        declarada == SCHEMA_VERSION
+        and elevadas == etapas
+        and perfis_elevados == perfis
+        and not raiz
+    ):
         return conteudo
-    elevado = {**conteudo, "schemaVersion": SCHEMA_VERSION}
+    elevado = {**conteudo, **raiz, "schemaVersion": SCHEMA_VERSION}
     if isinstance(etapas, list):
         elevado["stages"] = elevadas
+    if isinstance(perfis, list):
+        elevado["profiles"] = perfis_elevados
     return elevado
 
 

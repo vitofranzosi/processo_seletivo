@@ -14,6 +14,9 @@ from processo_seletivo.editais.models.cronograma import Cronograma, EventoCronog
 from processo_seletivo.editais.models.documentos import DocumentoExigido
 from processo_seletivo.editais.models.etapas import EtapaAvaliacao
 from processo_seletivo.editais.models.perfis import (
+    CriterioDesempate,
+    FatoDeclarado,
+    MarcoClassificatorio,
     ModalidadeConcorrencia,
     PerfilVaga,
     RegraNormativa,
@@ -34,8 +37,11 @@ def _identidades_aninhadas_alheias(profiles):
     pertence à Modalidade, e não ao Perfil (`editais/models/perfis.py:63-66`): conferir só até o
     Perfil deixaria duas Modalidades irmãs trocarem a identidade das suas Regras sem que nada
     acusasse, e a identidade estável passaria a designar outra relação normativa.
+
+    O marco segue a mesma regra contra o Perfil, e o critério contra o marco: dois marcos irmãos
+    trocarem critérios seria trocar a norma de lugar sem que nada acusasse (015, FR-002).
     """
-    modalidades, regras = {}, {}
+    modalidades, regras, marcos, criterios, fatos = {}, {}, {}, {}, {}
     for perfil in profiles:
         for modalidade in perfil.get("competitionModalities", []):
             if modalidade.get("id"):
@@ -43,6 +49,15 @@ def _identidades_aninhadas_alheias(profiles):
             regra = modalidade.get("normativeRule") or {}
             if regra.get("id"):
                 regras[str(regra["id"])] = str(modalidade.get("id") or "")
+        for fato in perfil.get("declaredFacts", []):
+            if fato.get("id"):
+                fatos[str(fato["id"])] = str(perfil["id"])
+        for marco in perfil.get("classificationMilestones", []):
+            if marco.get("id"):
+                marcos[str(marco["id"])] = str(perfil["id"])
+            for criterio in marco.get("tiebreakers", []):
+                if criterio.get("id"):
+                    criterios[str(criterio["id"])] = str(marco.get("id") or "")
 
     alheios = set()
     for identificador, contêiner in ModalidadeConcorrencia.objects.filter(
@@ -54,6 +69,21 @@ def _identidades_aninhadas_alheias(profiles):
         "id", "modalidade_id"
     ):
         if str(contêiner) != regras[str(identificador)]:
+            alheios.add(str(identificador))
+    for identificador, contêiner in MarcoClassificatorio.objects.filter(
+        id__in=list(marcos)
+    ).values_list("id", "perfil_id"):
+        if str(contêiner) != marcos[str(identificador)]:
+            alheios.add(str(identificador))
+    for identificador, contêiner in CriterioDesempate.objects.filter(
+        id__in=list(criterios)
+    ).values_list("id", "marco_id"):
+        if str(contêiner) != criterios[str(identificador)]:
+            alheios.add(str(identificador))
+    for identificador, contêiner in FatoDeclarado.objects.filter(id__in=list(fatos)).values_list(
+        "id", "perfil_id"
+    ):
+        if str(contêiner) != fatos[str(identificador)]:
             alheios.add(str(identificador))
     return alheios
 
@@ -228,6 +258,39 @@ def replace_draft(
                         distribution=rule.get("distribution", {}),
                         call_rules=rule.get("callRules", {}),
                         effective_from=rule.get("effectiveFrom"),
+                    )
+            for fato_payload in payload.get("declaredFacts", []):
+                # Com o `id` recebido, como tudo o mais: é por ele que a Retificação alcança o fato
+                # e que o valor congelado na inscrição diz de qual fato ele é.
+                FatoDeclarado.objects.create(
+                    id=fato_payload["id"],
+                    perfil=perfil,
+                    code=fato_payload["code"],
+                    label=fato_payload["label"],
+                    tipo=fato_payload["type"],
+                )
+            for marco_payload in payload.get("classificationMilestones", []):
+                # Com o `id` recebido, pela mesma razão da Modalidade: sem isto, cada gravação do
+                # rascunho trocaria a identidade do marco — e é por ela que a Retificação o alcança
+                # e que o ato de ordenação declara qual marco realizou.
+                marco = MarcoClassificatorio.objects.create(
+                    id=marco_payload["id"],
+                    perfil=perfil,
+                    code=marco_payload["code"],
+                    name=marco_payload["name"],
+                    etapas=[str(etapa) for etapa in marco_payload.get("stages", [])],
+                    operacao=marco_payload["operation"],
+                    normalizacao=marco_payload["normalization"],
+                    arredondamento=marco_payload.get("rounding", {}),
+                )
+                for criterio_payload in marco_payload.get("tiebreakers", []):
+                    CriterioDesempate.objects.create(
+                        id=criterio_payload["id"],
+                        marco=marco,
+                        ordem=criterio_payload["order"],
+                        tipo=criterio_payload["type"],
+                        parametros=criterio_payload.get("parameters", {}),
+                        quando_ausente=criterio_payload["whenMissing"],
                     )
         cronograma, _ = Cronograma.objects.get_or_create(edital=edital)
         EventoCronograma.objects.filter(cronograma=cronograma).delete()

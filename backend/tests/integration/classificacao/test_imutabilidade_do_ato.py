@@ -1,0 +1,395 @@
+"""O ato e suas posições nascem coerentes e não são reinterpretados depois (015, T078-T081)."""
+
+import json
+import uuid
+
+import pytest
+from django.db import DatabaseError, IntegrityError, connection, transaction
+from django.utils import timezone
+
+from processo_seletivo.classificacao.models import AtoDeOrdenacao, PosicaoNaOrdem
+from processo_seletivo.inscricoes.models import Inscricao
+from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+from processo_seletivo.resultados.models import ResultadoEtapa
+from tests.fixtures.comissao import inscrever, rascunho_com_etapas
+from tests.fixtures.edital import PROFILE_ID
+from tests.fixtures.publicacao import publish_original
+
+pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
+
+SOMENTE_POSTGRES = pytest.mark.skipif(
+    connection.vendor != "postgresql",
+    reason="As triggers são de PostgreSQL; em sqlite a garantia não existe.",
+)
+
+
+@pytest.fixture
+def cenario(api_client, manager_headers, process_payload):
+    rascunho = rascunho_com_etapas(avaliacoes=1, maxima="100.0000", minima="60.0000")
+    etapa_enumerada = rascunho["stages"][1]
+    etapa_enumerada["weight"] = "1.0000"
+    marco = uuid.uuid4()
+    rascunho["profiles"][0]["classificationMilestones"] = [
+        {
+            "id": str(marco),
+            "code": "FINAL",
+            "name": "Classificação final",
+            "stages": [etapa_enumerada["id"]],
+            "operation": "SOMA_PONDERADA",
+            "normalization": "NENHUMA",
+            "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
+            "tiebreakers": [],
+        }
+    ]
+    edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
+    inscricao = inscrever(edital)[0]
+    versao = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    ato = AtoDeOrdenacao.objects.create(
+        edital=edital,
+        perfil_id=PROFILE_ID,
+        marco_id=marco,
+        versao=versao,
+        # O universo precisa descrever **este** ato: desde T125 a trigger confere Edital, Perfil,
+        # marco e versão contra as colunas, e um resumo que não os traga descreveria outro ato.
+        universo=universo_de(edital, inscricao.profile_id, marco, versao),
+        emitido_por="maria",
+        emitido_em=timezone.now(),
+    )
+    return edital, inscricao, versao, ato
+
+
+def _inserir_ato_por_sql(*, edital, perfil_id, marco_id, versao, universo, anterior=None):
+    """Insere sem passar pelo modelo: a prova de T125 pertence ao banco, não ao ORM."""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            INSERT INTO classificacao_atodeordenacao (
+                id, perfil_id, marco_id, universo, emitido_por, emitido_em,
+                motivo_da_sucessao, ato_anterior_id, edital_id, versao_id
+            ) VALUES (%s, %s, %s, %s::jsonb, %s, %s, %s, %s, %s, %s)
+            """,
+            [
+                uuid.uuid4(),
+                perfil_id,
+                marco_id,
+                json.dumps(universo),
+                "maria",
+                timezone.now(),
+                "Correção da ordem" if anterior else "",
+                anterior.id if anterior else None,
+                edital.id,
+                versao.id,
+            ],
+        )
+
+
+def _resultado_por_ocorrencia(*, edital, inscricao, versao, etapa_id):
+    return ResultadoEtapa.objects.create(
+        inscricao=inscricao,
+        edital=edital,
+        etapa_id=etapa_id,
+        origem=ResultadoEtapa.Origem.OCORRENCIA,
+        avaliacao=None,
+        versao=versao,
+        forma="",
+        pontuacao=None,
+        sentido="",
+        consequencia=ResultadoEtapa.Consequencia.ELIMINADA,
+        motivo="Não comparecimento.",
+        consolidado_em=timezone.now(),
+        consolidado_por="maria",
+    )
+
+
+def _resultado_citado(resultado):
+    return {
+        "id": str(resultado.id),
+        "registrationId": str(resultado.inscricao_id),
+        "stageId": str(resultado.etapa_id),
+        "versionId": str(resultado.versao_id),
+        "consolidatedAt": resultado.consolidado_em.isoformat(),
+    }
+
+
+def universo_de(edital, perfil_id, marco_id, versao, stage_results=None):
+    return {
+        "processoId": str(edital.processo_id),
+        "editalId": str(edital.id),
+        "profileId": str(perfil_id),
+        "milestoneId": str(marco_id),
+        "versionId": str(versao.id),
+        "participants": [],
+        "stageResults": stage_results or [],
+    }
+
+
+def test_o_modelo_recusa_atualizacao_e_exclusao_do_ato(cenario):
+    *_, ato = cenario
+    ato.emitido_por = "outra-pessoa"
+    with pytest.raises(TypeError, match="append-only"):
+        ato.save()
+    with pytest.raises(TypeError, match="append-only"):
+        ato.delete()
+
+
+@SOMENTE_POSTGRES
+@pytest.mark.parametrize(
+    ("sql", "parametros"),
+    [
+        (
+            "UPDATE classificacao_atodeordenacao SET emitido_por = %s WHERE id = %s",
+            lambda ato: ["outra-pessoa", str(ato.id)],
+        ),
+        (
+            "DELETE FROM classificacao_atodeordenacao WHERE id = %s",
+            lambda ato: [str(ato.id)],
+        ),
+    ],
+)
+def test_a_trigger_recusa_mutacao_do_ato_por_sql_cru(cenario, sql, parametros):
+    *_, ato = cenario
+    with (
+        pytest.raises(DatabaseError, match="append-only"),
+        transaction.atomic(),
+        connection.cursor() as cursor,
+    ):
+        cursor.execute(sql, parametros(ato))
+
+
+def test_dois_atos_raiz_do_mesmo_marco_sao_recusados(cenario):
+    edital, _, versao, ato = cenario
+    with pytest.raises(IntegrityError), transaction.atomic():
+        AtoDeOrdenacao.objects.create(
+            edital=edital,
+            perfil_id=ato.perfil_id,
+            marco_id=ato.marco_id,
+            versao=versao,
+            universo=universo_de(edital, ato.perfil_id, ato.marco_id, versao),
+            emitido_por="maria",
+            emitido_em=timezone.now(),
+        )
+
+
+def test_sucessor_sem_motivo_e_recusado(cenario):
+    edital, _, versao, ato = cenario
+    with pytest.raises(IntegrityError), transaction.atomic():
+        AtoDeOrdenacao.objects.create(
+            edital=edital,
+            perfil_id=ato.perfil_id,
+            marco_id=ato.marco_id,
+            versao=versao,
+            ato_anterior=ato,
+            motivo_da_sucessao="",
+            universo=universo_de(edital, ato.perfil_id, ato.marco_id, versao),
+            emitido_por="maria",
+            emitido_em=timezone.now(),
+        )
+
+
+def test_dois_sucessores_do_mesmo_ato_sao_recusados(cenario):
+    edital, _, versao, ato = cenario
+    campos = {
+        "edital": edital,
+        "perfil_id": ato.perfil_id,
+        "marco_id": ato.marco_id,
+        "versao": versao,
+        "ato_anterior": ato,
+        "motivo_da_sucessao": "Resultado tardio",
+        "universo": universo_de(edital, ato.perfil_id, ato.marco_id, versao),
+        "emitido_por": "maria",
+        "emitido_em": timezone.now(),
+    }
+    AtoDeOrdenacao.objects.create(**campos)
+
+    with pytest.raises(IntegrityError), transaction.atomic():
+        AtoDeOrdenacao.objects.create(**campos)
+
+
+def test_posicao_exige_posicao_positiva_ou_motivo(cenario):
+    _, inscricao, _, ato = cenario
+    with pytest.raises(IntegrityError), transaction.atomic():
+        PosicaoNaOrdem.objects.create(
+            ato=ato,
+            inscricao=inscricao,
+            posicao=None,
+            consequencia="ELIMINADA",
+            motivo="",
+        )
+
+
+def test_a_mesma_inscricao_nao_ocupa_duas_linhas_do_ato(cenario):
+    _, inscricao, _, ato = cenario
+    campos = {
+        "ato": ato,
+        "inscricao": inscricao,
+        "posicao": 1,
+        "pontuacao_combinada": "10.0000",
+        "consequencia": "HABILITADA",
+    }
+    PosicaoNaOrdem.objects.create(**campos)
+
+    with pytest.raises(IntegrityError), transaction.atomic():
+        PosicaoNaOrdem.objects.create(**campos)
+
+
+@SOMENTE_POSTGRES
+def test_a_trigger_recusa_inscricao_de_outro_perfil(cenario):
+    edital, _, _, ato = cenario
+    alheia = Inscricao.objects.create(
+        identity_subject="cpf:outro-perfil",
+        edital=edital,
+        profile_id=uuid.uuid4(),
+        created_at=timezone.now(),
+    )
+
+    with (
+        pytest.raises(DatabaseError, match="does not match its act scope"),
+        transaction.atomic(),
+    ):
+        PosicaoNaOrdem.objects.create(
+            ato=ato,
+            inscricao=alheia,
+            posicao=1,
+            pontuacao_combinada="10.0000",
+            consequencia="HABILITADA",
+        )
+
+
+@SOMENTE_POSTGRES
+def test_a_trigger_recusa_ato_cujo_universo_descreve_outro_ato(cenario):
+    """O resumo é a proveniência: descrever outro Edital nele seria mentir sobre a origem."""
+    edital, inscricao, versao, _ = cenario
+
+    with pytest.raises(DatabaseError, match="universe does not match"), transaction.atomic():
+        AtoDeOrdenacao.objects.create(
+            edital=edital,
+            perfil_id=inscricao.profile_id,
+            marco_id=uuid.uuid4(),
+            versao=versao,
+            universo=universo_de(edital, uuid.uuid4(), uuid.uuid4(), versao),
+            emitido_por="maria",
+            emitido_em=timezone.now(),
+        )
+
+
+@SOMENTE_POSTGRES
+def test_a_trigger_recusa_resultado_citado_que_nao_e_do_universo(cenario):
+    """A promessa forte do `research.md`, cumprida uma vez por ato e não uma por posição (T125).
+
+    Um Resultado que não existe, ou que existe noutro Edital, ou que veio de Etapa que o marco não
+    enumera: nos três casos a proveniência afirmaria algo que não sustenta.
+    """
+    edital, inscricao, versao, ato = cenario
+    marco = ato.marco_id
+    citado = {
+        "id": str(uuid.uuid4()),
+        "registrationId": str(inscricao.id),
+        "stageId": str(uuid.uuid4()),
+        "versionId": str(versao.id),
+        "consolidatedAt": timezone.now().isoformat(),
+    }
+
+    with pytest.raises(DatabaseError, match="stage results"), transaction.atomic():
+        _inserir_ato_por_sql(
+            edital=edital,
+            perfil_id=inscricao.profile_id,
+            marco_id=marco,
+            versao=versao,
+            universo=universo_de(edital, inscricao.profile_id, marco, versao, [citado]),
+            anterior=ato,
+        )
+
+
+@SOMENTE_POSTGRES
+def test_a_trigger_recusa_resultado_real_de_etapa_nao_enumerada(cenario):
+    """Existir no Edital não basta: a Etapa precisa estar enumerada pelo marco histórico."""
+    edital, inscricao, versao, ato = cenario
+    marco = next(
+        item
+        for item in versao.content["profiles"][0]["classificationMilestones"]
+        if item["id"] == str(ato.marco_id)
+    )
+    etapa_nao_enumerada = next(
+        item["id"] for item in versao.content["stages"] if item["id"] not in marco["stages"]
+    )
+    resultado = _resultado_por_ocorrencia(
+        edital=edital,
+        inscricao=inscricao,
+        versao=versao,
+        etapa_id=etapa_nao_enumerada,
+    )
+    universo = universo_de(
+        edital,
+        inscricao.profile_id,
+        ato.marco_id,
+        versao,
+        [_resultado_citado(resultado)],
+    )
+
+    with pytest.raises(DatabaseError, match="milestone"), transaction.atomic():
+        _inserir_ato_por_sql(
+            edital=edital,
+            perfil_id=inscricao.profile_id,
+            marco_id=ato.marco_id,
+            versao=versao,
+            universo=universo,
+            anterior=ato,
+        )
+
+
+@SOMENTE_POSTGRES
+@pytest.mark.parametrize("campo", ["registrationId", "versionId"])
+def test_a_trigger_nao_confia_na_identidade_declarada_pelo_item_citado(cenario, campo):
+    edital, inscricao, versao, ato = cenario
+    marco = next(
+        item
+        for item in versao.content["profiles"][0]["classificationMilestones"]
+        if item["id"] == str(ato.marco_id)
+    )
+    resultado = _resultado_por_ocorrencia(
+        edital=edital,
+        inscricao=inscricao,
+        versao=versao,
+        etapa_id=marco["stages"][0],
+    )
+    citado = _resultado_citado(resultado)
+    citado[campo] = str(uuid.uuid4())
+    universo = universo_de(edital, inscricao.profile_id, ato.marco_id, versao, [citado])
+
+    with pytest.raises(DatabaseError, match="milestone"), transaction.atomic():
+        _inserir_ato_por_sql(
+            edital=edital,
+            perfil_id=inscricao.profile_id,
+            marco_id=ato.marco_id,
+            versao=versao,
+            universo=universo,
+            anterior=ato,
+        )
+
+
+@SOMENTE_POSTGRES
+def test_a_conferencia_da_proveniencia_roda_uma_vez_por_ato(cenario):
+    """A contraprova do desenho: mil posições não custam mil verificações globais.
+
+    Conferir os Resultados citados dentro de `posicao_coerente` daria a mesma resposta uma vez por
+    linha. A trigger do ato roda no `INSERT` dele — uma execução, `set-based`.
+    """
+    from django.test.utils import CaptureQueriesContext
+
+    edital, inscricao, versao, ato = cenario
+    marco = ato.marco_id
+
+    with CaptureQueriesContext(connection) as consultas:
+        AtoDeOrdenacao.objects.create(
+            edital=edital,
+            perfil_id=inscricao.profile_id,
+            marco_id=marco,
+            versao=versao,
+            ato_anterior=ato,
+            motivo_da_sucessao="Correção da ordem",
+            universo=universo_de(edital, inscricao.profile_id, marco, versao),
+            emitido_por="maria",
+            emitido_em=timezone.now(),
+        )
+
+    assert len(consultas) == 1, "o ato nasce numa consulta; a conferência é da trigger"

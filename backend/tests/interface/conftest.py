@@ -57,6 +57,11 @@ CLASSES_SEM_DESENHO = {
     "evento",
     "identidades",
     "modalidade",
+    # O marco e o critério são ganchos pela mesma razão da modalidade: a linha é desenhada por
+    # `.linha`, e o nome serve para achá-la em teste e para o htmx trocar a certa.
+    "marco",
+    "criterio",
+    "fato",
     "pessoa",
     "quem",
     "secao",

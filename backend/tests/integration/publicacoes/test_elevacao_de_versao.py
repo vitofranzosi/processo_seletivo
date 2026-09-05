@@ -323,7 +323,7 @@ def test_9_o_edital_v5_retificado_nasce_na_6_com_a_forma_escrita(api_client, leg
     publish_retification(api_client, create_retification(api_client, legado, TITULO), suffix="v6")
 
     consolidada = vigente(legado)
-    assert consolidada.content["schemaVersion"] == SCHEMA_VERSION == 6
+    assert consolidada.content["schemaVersion"] == SCHEMA_VERSION == 7
     assert {etapa["forma"] for etapa in consolidada.content["stages"]} == {"PONTUADA"}
     assert all(etapa["rotuloFavoravel"] is None for etapa in consolidada.content["stages"])
 
@@ -391,3 +391,59 @@ def test_12_a_publicacao_original_continua_servindo_o_conteudo_literal(legado):
         assert "forma" not in etapa and "evaluationsPerRegistration" not in etapa
     # E os bytes continuam sendo o que o hash prova: elevar não passou por aqui.
     assert original.content_hash == hashlib.sha256(bytes(original.canonical_content)).hexdigest()
+
+
+# ----------------------------------------------------------------- o degrau da `015` (6 → 7)
+
+
+@pytest.fixture
+def legado_v6(api_client, manager_headers, process_payload):
+    """Um Edital publicado na versão 6: com a forma da Etapa completa, e sem nada da `015`."""
+    return publicar_na_versao_anterior(
+        api_client, manager_headers, process_payload, draft=rascunho_com_etapas(), versao=6
+    )
+
+
+def test_edital_publicado_na_versao_6_continua_retificavel(api_client, legado_v6):
+    """O que a elevação da `015` existe para impedir, e o maior risco da feature.
+
+    O degrau 7 é o primeiro que precisa descer abaixo de `/stages`: marco e fatos declarados são
+    coleções **dentro do Perfil**, e o teto é campo da **raiz**. Enquanto `elevar()` só soubesse
+    reescrever as Etapas, todo conteúdo v6 publicado ficaria travado em
+    `_assert_versao_canonica` — e deixar de ser retificável por evolução de esquema é consequência
+    de produto, não detalhe de implantação (015, T-008).
+    """
+    antes = hashes_publicados()
+
+    publish_retification(
+        api_client, create_retification(api_client, legado_v6, TITULO), suffix="v7"
+    )
+
+    conteudo = vigente(legado_v6).content
+    assert conteudo["schemaVersion"] == SCHEMA_VERSION
+    assert_publicado_permanece(antes)
+
+
+def test_a_versao_nova_nasce_com_as_tres_formas_da_leva(api_client, legado_v6):
+    """As três mudanças sobem juntas: sem isso, existiriam snapshots v7 com e sem cada uma."""
+    publish_retification(
+        api_client, create_retification(api_client, legado_v6, TITULO), suffix="v7"
+    )
+
+    conteudo = vigente(legado_v6).content
+    assert conteudo["maxInscricoesPorCandidato"] is None
+    assert conteudo["profiles"], "o Edital de teste precisa ter Perfil para a asserção valer"
+    for perfil in conteudo["profiles"]:
+        assert perfil["classificationMilestones"] == [], perfil["code"]
+        assert perfil["declaredFacts"] == [], perfil["code"]
+
+
+def test_a_publicacao_na_versao_6_continua_servindo_o_conteudo_literal(legado_v6):
+    """A elevação é leitura. O que foi publicado permanece como foi, e o hash prova."""
+    publicacao = legado_v6.publicacoes.latest("published_at")
+    literal = canonical_sha256(
+        VersaoConsolidada.objects.filter(edital=legado_v6).earliest("materialized_at").content
+    )
+
+    assert publicacao.canonical_schema_version == 6
+    assert publicacao.content_hash == literal

@@ -96,7 +96,9 @@ def _sections(edital: Edital) -> list[dict]:
 
 def edital_snapshot(edital: Edital) -> dict:
     profiles = []
-    for profile in edital.perfis.prefetch_related("modalidades__regra_normativa").order_by("code"):
+    for profile in edital.perfis.prefetch_related(
+        "modalidades__regra_normativa", "fatos", "marcos__criterios"
+    ).order_by("code"):
         modalities = []
         for modality in profile.modalidades.order_by("code"):
             rule = getattr(modality, "regra_normativa", None)
@@ -123,6 +125,38 @@ def edital_snapshot(edital: Edital) -> dict:
                     },
                 }
             )
+        # Os fatos que este Perfil exige do candidato (D-2). Ordenados por `code` pela mesma razão
+        # que as Modalidades: a ordem do snapshot não pode depender da ordem de inserção, ou dois
+        # snapshots do mesmo conteúdo teriam bytes diferentes.
+        declared_facts = [
+            {"id": str(fato.id), "code": fato.code, "label": fato.label, "type": fato.tipo}
+            for fato in sorted(profile.fatos.all(), key=lambda fato: fato.code)
+        ]
+        # Os marcos classificatórios deste Perfil (015, D-001). Ordenados por `code`, e os
+        # critérios por `order` — que é campo publicado, e não a posição no array: a ordem **é** a
+        # norma, e a Retificação a altera por identidade (FR-015).
+        milestones = [
+            {
+                "id": str(marco.id),
+                "code": marco.code,
+                "name": marco.name,
+                "stages": [str(etapa) for etapa in marco.etapas],
+                "operation": marco.operacao,
+                "normalization": marco.normalizacao,
+                "rounding": marco.arredondamento,
+                "tiebreakers": [
+                    {
+                        "id": str(criterio.id),
+                        "order": criterio.ordem,
+                        "type": criterio.tipo,
+                        "parameters": criterio.parametros,
+                        "whenMissing": criterio.quando_ausente,
+                    }
+                    for criterio in sorted(marco.criterios.all(), key=lambda item: item.ordem)
+                ],
+            }
+            for marco in sorted(profile.marcos.all(), key=lambda item: item.code)
+        ]
         profiles.append(
             {
                 "id": str(profile.id),
@@ -144,6 +178,8 @@ def edital_snapshot(edital: Edital) -> dict:
                 "classificationInformation": profile.classification_information,
                 "callInformation": profile.call_information,
                 "competitionModalities": modalities,
+                "declaredFacts": declared_facts,
+                "classificationMilestones": milestones,
             }
         )
     schedule = []
@@ -175,6 +211,9 @@ def edital_snapshot(edital: Edital) -> dict:
         # snapshot **basta** para compor o documento, sem consultar o banco — que é o que a
         # Constituição pede da cadeia "dados estruturados → versão homologada → PDF". O Processo já
         # vem por `select_related("processo")` em `_locked_edital`; não há consulta a mais.
+        # O teto de Inscrições por candidato (D-3). Da raiz porque limita o **total** da pessoa no
+        # certame; no Perfil seria redundante com `uq_inscricao_identidade_edital_perfil`.
+        "maxInscricoesPorCandidato": edital.max_inscricoes_por_candidato,
         "processoCode": edital.processo.institutional_code,
         "processoTitle": edital.processo.title,
         "number": edital.number,

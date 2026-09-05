@@ -65,6 +65,14 @@ class SeletorInvalido(ValueError):
     """`id=` em lista com valor que não é UUID (FR-003)."""
 
 
+class CampoNaoRetificavel(ValueError):
+    """Campo que existe no conteúdo publicado e que a Retificação não altera no lugar.
+
+    Distinta de `IdentidadeNaoEnderecavel`: o identificador não é conteúdo normativo, e este é —
+    o que ele tem de próprio é que alterá-lo reinterpretaria o que já foi gravado sob ele.
+    """
+
+
 class ColecaoAtomica(ValueError):
     """Endereçamento item a item de coleção sem identificador (FR-011)."""
 
@@ -345,6 +353,15 @@ def apply_change(content, change):
     if operation not in OPERATIONS:
         raise ValueError(f"Operação desconhecida: {operation}")
     parent, leaf, forma = _parent_of(content, path)
+    # **Depois** de `_parent_of`, e não antes: caminho inexistente e seletor inválido têm
+    # precedência, porque um caminho que não existe não endereça campo algum — retificável ou não.
+    if colecoes.e_campo_nao_retificavel(f"{forma}/{colecoes.escapar(leaf)}"):
+        raise CampoNaoRetificavel(
+            f"{path} endereça um campo que a Retificação não altera no lugar. Mudar o tipo de um "
+            "fato declarado cria fato novo: remova este e acrescente outro, com identidade "
+            "própria, para que o valor congelado sob o primeiro continue legível sob a norma "
+            "que o governou."
+        )
     if leaf == colecoes.CAMPO_CHAVE and colecoes.e_elemento_de_colecao_com_chave(forma):
         raise IdentidadeNaoEnderecavel(
             f"{path} endereça o identificador da entidade, que é o substrato do endereçamento e "

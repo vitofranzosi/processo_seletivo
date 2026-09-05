@@ -88,6 +88,11 @@ PERFIL_PUBLICADO = (
     # A forma de **dentro** de cada Modalidade não é declarada. Que cada item seja objeto, é —
     # `items: { type: object }` está escrito no contrato, e conferi-lo é aplicar, não inventar.
     Campo("competitionModalities", list, tipo_do_item=dict),
+    # As duas da versão 7, pela mesma régua: aqui se declara que a coleção existe e que cada item é
+    # objeto; o que vai **dentro** do fato e do marco é verificado por `_coerencia_dos_marcos`, que
+    # precisa do conteúdo inteiro e não caberia numa forma de campo (015, T-009).
+    Campo("declaredFacts", list, tipo_do_item=dict),
+    Campo("classificationMilestones", list, tipo_do_item=dict),
 )
 
 # A forma canônica do instante, transcrita de `EventoPublicado` no contrato: `T` maiúsculo,
@@ -438,6 +443,243 @@ def _topologia_das_secoes(snapshot: dict) -> list[ValidationFinding]:
     return findings
 
 
+def _coerencia_dos_fatos(snapshot: dict) -> list[ValidationFinding]:
+    """O fato publicado precisa ser identificável e ter tipo executável (D-2).
+
+    **Por que o tipo é verificado na publicação, e não só na elaboração.** A Retificação altera
+    conteúdo já público sem passar pelo rascunho: sem esta verificação, publicar-se-ia por
+    Retificação um fato de tipo que o congelamento não sabe gravar nem o desempate comparar — e o
+    defeito só apareceria no dia da classificação, sobre valores já congelados.
+    """
+    findings = []
+    for posicao, perfil in enumerate(snapshot.get("profiles") or []):
+        if not isinstance(perfil, dict):
+            continue
+        base = _caminho_da_entidade("profiles", perfil, posicao)
+        codigos = []
+        for indice, fato in enumerate(perfil.get("declaredFacts") or []):
+            if not isinstance(fato, dict):
+                continue
+            chave = fato.get("id")
+            dentro = f"id={chave}" if isinstance(chave, str) and chave else str(indice)
+            caminho = f"{base}/declaredFacts/{dentro}"
+            codigos.append(fato.get("code"))
+            if fato.get("type") not in {"DATA", "INTEIRO"}:
+                findings.append(
+                    ValidationFinding(
+                        Severity.BLOCKING_ERROR,
+                        "declared_fact_type_invalid",
+                        "O tipo de um fato declarado deve ser data ou número inteiro.",
+                        f"{caminho}/type",
+                    )
+                )
+        if len(codigos) != len(set(codigos)):
+            findings.append(
+                ValidationFinding(
+                    Severity.BLOCKING_ERROR,
+                    "declared_fact_code_duplicated",
+                    "Fatos declarados não podem repetir código no Perfil.",
+                    f"{base}/declaredFacts",
+                )
+            )
+    return findings
+
+
+def _arredondamento_do_marco(marco, caminho) -> list[ValidationFinding]:
+    """A regra precisa estar completa **na publicação**, e não no dia em que alguém a executa.
+
+    Sem esta recusa, um marco sem arredondamento declarado publicaria uma regra que só fica
+    completa quando o cálculo escolhe um padrão — e aí o padrão seria do código, não do Edital
+    (FR-068).
+    """
+    from processo_seletivo.classificacao.domain.combinacao import (
+        RegraIncompleta,
+        arredondamento_publicado,
+    )
+
+    try:
+        arredondamento_publicado(marco)
+    except RegraIncompleta as falta:
+        return [
+            ValidationFinding(
+                Severity.BLOCKING_ERROR,
+                "milestone_rounding_invalid",
+                str(falta),
+                f"{caminho}/rounding",
+            )
+        ]
+    return []
+
+
+def _divisor_do_marco(marco, etapas, caminho) -> list[ValidationFinding]:
+    """Operação que divide pela soma dos pesos precisa de soma diferente de zero (FR-073).
+
+    Recusar aqui é o que separa **regra inválida do Edital** de **ausência de dado do
+    participante**. Sem isto, o cálculo devolveria "não classificável" para todo mundo, e quem
+    lesse a ordem concluiria que os participantes é que estavam incompletos.
+    """
+    from processo_seletivo.classificacao.domain.combinacao import divide_pela_soma_dos_pesos
+
+    if not divide_pela_soma_dos_pesos(marco):
+        return []
+    soma = Decimal("0")
+    parcelas = 0
+    for etapa_id in marco.get("stages") or []:
+        etapa = etapas.get(etapa_id) or {}
+        if etapa.get("forma") == "DECISORIA":
+            continue
+        parcelas += 1
+        peso = etapa.get("weight")
+        if peso is not None:
+            soma += Decimal(str(peso))
+    # Marco sem parcela numérica não divide coisa alguma: a pontuação combinada é nula, e não há
+    # divisor a exigir (FR-077). Recusá-lo aqui impediria uma ordenação legítima.
+    if parcelas == 0 or soma != 0:
+        return []
+    return [
+        ValidationFinding(
+            Severity.BLOCKING_ERROR,
+            "milestone_zero_divisor",
+            "A operação do marco divide pela soma dos pesos, e as Etapas enumeradas somam zero: "
+            "não há divisor.",
+            f"{caminho}/operation",
+        )
+    ]
+
+
+def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
+    """O marco só é executável se o que ele aponta existir e puder ser apontado (015, D-001).
+
+    Três recusas, e as três dependem do **conteúdo inteiro** — por isso vivem aqui, e não na
+    validação de elaboração do Perfil, que enxerga só o Perfil:
+
+    - Etapa enumerada que não existe no mesmo conteúdo: o marco somaria o que ninguém publicou;
+    - Etapa enumerada que não é classificatória: o Edital declarou que ela não classifica, e
+      contá-la seria o sistema contradizendo o Edital (FR-010);
+    - critério que aponta Etapa ou fato inexistente (FR-017). É **aqui** que o critério pendurado é
+      impedido, e é por isso que ele não é estado que a tela precise tratar depois: uma Retificação
+      que remova a Etapa enumerada sem ajustar o marco não publica (FR-043).
+
+    Pelo mesmo caminho de `_faixa_do_percentual`: função dedicada, porque `COLECOES_PUBLICADAS` só
+    percorre coleções de raiz e não desce para dentro do Perfil.
+    """
+    findings = []
+    etapas = {
+        etapa.get("id"): etapa
+        for etapa in (snapshot.get("stages") or [])
+        if isinstance(etapa, dict)
+    }
+    for posicao, perfil in enumerate(snapshot.get("profiles") or []):
+        if not isinstance(perfil, dict):
+            continue
+        base = _caminho_da_entidade("profiles", perfil, posicao)
+        fatos = {
+            fato.get("id") for fato in (perfil.get("declaredFacts") or []) if isinstance(fato, dict)
+        }
+        for indice, marco in enumerate(perfil.get("classificationMilestones") or []):
+            if not isinstance(marco, dict):
+                continue
+            chave = marco.get("id")
+            dentro = f"id={chave}" if isinstance(chave, str) and chave else str(indice)
+            caminho = f"{base}/classificationMilestones/{dentro}"
+            findings.extend(_arredondamento_do_marco(marco, caminho))
+            if not marco.get("stages"):
+                findings.append(
+                    ValidationFinding(
+                        Severity.BLOCKING_ERROR,
+                        "milestone_without_stage",
+                        "O marco classificatório não enumera Etapa alguma: sem Etapa não há "
+                        "pontuação a combinar, e a ordem não sai.",
+                        f"{caminho}/stages",
+                    )
+                )
+            findings.extend(_divisor_do_marco(marco, etapas, caminho))
+            for etapa_id in marco.get("stages") or []:
+                etapa = etapas.get(etapa_id)
+                # Peso é cobrado de **parcela**, e não de porta: a Etapa decisória não soma, e
+                # exigir peso dela seria exigir a declaração de um número que a regra não usa
+                # (FR-067, FR-074).
+                if (
+                    etapa is not None
+                    and etapa.get("forma") != "DECISORIA"
+                    and etapa.get("weight") is None
+                ):
+                    findings.append(
+                        ValidationFinding(
+                            Severity.BLOCKING_ERROR,
+                            "milestone_stage_without_weight",
+                            "O marco enumera uma Etapa sem peso declarado. Quem enumera declara o "
+                            "peso: ausência não é equivalência, e o cálculo não a interpreta.",
+                            f"{caminho}/stages",
+                        )
+                    )
+                if etapa is None:
+                    findings.append(
+                        ValidationFinding(
+                            Severity.BLOCKING_ERROR,
+                            "milestone_stage_missing",
+                            "O marco classificatório enumera uma Etapa que não existe no Edital.",
+                            f"{caminho}/stages",
+                        )
+                    )
+                elif not etapa.get("classificatory"):
+                    findings.append(
+                        ValidationFinding(
+                            Severity.BLOCKING_ERROR,
+                            "milestone_stage_not_classificatory",
+                            "O marco classificatório enumera uma Etapa que o Edital não publicou "
+                            "como classificatória.",
+                            f"{caminho}/stages",
+                        )
+                    )
+            for criterio in marco.get("tiebreakers") or []:
+                if not isinstance(criterio, dict):
+                    continue
+                parametros = criterio.get("parameters") or {}
+                alvo_etapa = parametros.get("stageId")
+                if alvo_etapa is not None and alvo_etapa not in etapas:
+                    findings.append(
+                        ValidationFinding(
+                            Severity.BLOCKING_ERROR,
+                            "tiebreaker_stage_missing",
+                            "Um critério de desempate aponta Etapa que não existe no Edital.",
+                            f"{caminho}/tiebreakers",
+                        )
+                    )
+                alvo_fato = parametros.get("factId")
+                if alvo_fato is not None and alvo_fato not in fatos:
+                    findings.append(
+                        ValidationFinding(
+                            Severity.BLOCKING_ERROR,
+                            "tiebreaker_fact_missing",
+                            "Um critério de desempate aponta fato declarado que não existe "
+                            "no Perfil.",
+                            f"{caminho}/tiebreakers",
+                        )
+                    )
+                if not (parametros.get("stageId") or parametros.get("factId")):
+                    findings.append(
+                        ValidationFinding(
+                            Severity.BLOCKING_ERROR,
+                            "tiebreaker_without_target",
+                            "Um critério de desempate não declara o que compara: falta a Etapa ou "
+                            "o fato declarado que ele consome.",
+                            f"{caminho}/tiebreakers",
+                        )
+                    )
+                if not criterio.get("whenMissing"):
+                    findings.append(
+                        ValidationFinding(
+                            Severity.BLOCKING_ERROR,
+                            "tiebreaker_missing_behaviour",
+                            "Um critério de desempate não declara o que fazer quando o valor "
+                            "que ele consome não existe.",
+                            f"{caminho}/tiebreakers",
+                        )
+                    )
+    return findings
+
+
 def _faixa_do_percentual(snapshot: dict) -> list[ValidationFinding]:
     """FR-030 vale também **depois** da publicação.
 
@@ -629,6 +871,8 @@ def validate_for_publication(snapshot: dict) -> list[ValidationFinding]:
     findings.extend(_topologia_das_secoes(snapshot))
     findings.extend(_coerencia_das_etapas(snapshot))
     findings.extend(_faixa_do_percentual(snapshot))
+    findings.extend(_coerencia_dos_fatos(snapshot))
+    findings.extend(_coerencia_dos_marcos(snapshot))
     findings.extend(_periodo_de_inscricoes(snapshot))
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
     return findings

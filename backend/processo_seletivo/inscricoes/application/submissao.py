@@ -7,8 +7,11 @@ mão. Dez eixos, e a lista está escrita como lista de propósito: uma verifica�
 aparece como erro, aparece como inscrição aceita que não devia ter sido.
 """
 
+import hashlib
+from datetime import date
+
 from django.conf import settings
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connection, transaction
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.domain.documentos import aplicaveis
@@ -22,7 +25,7 @@ from processo_seletivo.inscricoes.application.rascunho import (
 )
 from processo_seletivo.inscricoes.domain.arquivos import ASSINATURA_PDF, resumo
 from processo_seletivo.inscricoes.domain.protocolo import gerar
-from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
+from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao, ValorDeFato
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.concurrency import compare_and_swap
@@ -30,6 +33,45 @@ from processo_seletivo.shared.idempotency import reserve
 
 SUBMETER = "inscricao:submeter"
 TENTATIVAS_DE_PROTOCOLO = 5
+
+
+def _travar_o_par(inscricao):
+    """Serializa **este candidato neste Edital**, antes de qualquer leitura que decida o ato.
+
+    **Por que não `select_for_update` sobre as inscrições dele.** Travar linhas não serializa a
+    ausência delas: nas duas primeiras submissões concorrentes não existe linha submetida para
+    bloquear, as duas contam zero e as duas passam pelo teto. E `count()` é agregação — não há o
+    que travar num resultado que o banco calcula.
+
+    O advisory lock trava o **par**, exista linha ou não, e é liberado no fim da transação. A chave
+    é determinística: o mesmo par produz sempre o mesmo inteiro, e colidir custaria serialização
+    desnecessária entre dois candidatos, nunca correção.
+
+    Fora do PostgreSQL é no-op, e é honesto que seja: SQLite serializa a escrita inteira, e a
+    corrida que este lock impede não existe lá.
+    """
+    if connection.vendor != "postgresql":
+        return
+    material = f"{inscricao.identity_subject}:{inscricao.edital_id}".encode()
+    chave = int.from_bytes(hashlib.sha256(material).digest()[:8], "big", signed=True)
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pg_advisory_xact_lock(%s)", [chave])
+
+
+def _travar_o_edital(inscricao):
+    """`FOR SHARE` no Edital, para que a versão lida não mude debaixo deste ato.
+
+    Compatível entre submissões — várias pessoas enviam ao mesmo tempo sem se bloquear — e
+    conflitante com o `FOR UPDATE` que a publicação de Retificação toma sobre a mesma linha
+    (`publicacoes/application/retificacoes.py:611`). É isso que impede uma Retificação de ser
+    publicada **entre** a leitura da versão vigente e a gravação do ato.
+    """
+    if connection.vendor != "postgresql":
+        return
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT id FROM processos_edital WHERE id = %s FOR SHARE", [str(inscricao.edital_id)]
+        )
 
 
 def edital_foi_retificado(inscricao, versao_vigente) -> bool:
@@ -127,7 +169,9 @@ def pendencias_para_enviar(conteudo, inscricao) -> list[str]:
     ]
 
 
-def enviar_inscricao(*, identidade, inscricao, declaracoes, idempotency_key, correlation_id=""):
+def enviar_inscricao(
+    *, identidade, inscricao, declaracoes, idempotency_key, correlation_id="", fatos=None
+):
     """Revalida tudo, grava o ato e devolve a Inscrição enviada.
 
     A idempotência é a do projeto, e não uma inventada aqui: duplo clique e reenvio do mesmo POST
@@ -144,10 +188,12 @@ def enviar_inscricao(*, identidade, inscricao, declaracoes, idempotency_key, cor
         )
         if idem.result_id:
             return Inscricao.objects.get(pk=idem.result_id)
-        # A versão é lida **dentro** da transação e depois da trava. Lida antes, uma Retificação
-        # publicada no intervalo faria a inscrição registrar como aceita uma versão que já não
-        # vigorava no instante do ato — e é exatamente essa a pergunta que FR-058 existe para
-        # responder depois.
+        # As duas travas vêm **antes** de qualquer leitura que decida o ato, e nessa ordem: o par
+        # candidato–Edital, que serializa o teto; e o Edital em `FOR SHARE`, que impede uma
+        # Retificação de ser publicada entre a leitura da versão e a gravação. Uma redação anterior
+        # afirmava, em comentário, que a versão era lida depois da trava — e o código a lia antes.
+        _travar_o_par(inscricao)
+        _travar_o_edital(inscricao)
         versao = _versao_vigente(inscricao.edital_id)
         conteudo = versao.content
         # 1 e 2 — período aberto e Edital recebendo; e a trava, que resolve o estado obsoleto.
@@ -186,8 +232,16 @@ def enviar_inscricao(*, identidade, inscricao, declaracoes, idempotency_key, cor
                 "As duas declarações são obrigatórias para enviar a inscrição.",
                 422,
             )
-        # 10 — unicidade, garantida pelo banco; aqui só se transforma em recusa legível.
+        # 10 — o teto de Inscrições por candidato neste Edital (D-3), já serializado pelo par.
+        _conferir_o_teto(travada, conteudo)
+        # 11 — os fatos que o Edital declara, na forma que ele declarou.
+        valores = _valores_dos_fatos(conteudo, travada, fatos or {})
+        # 12 — unicidade, garantida pelo banco; aqui só se transforma em recusa legível.
         _gravar_o_ato(travada, modalidade=modalidade, versao=versao, agora=agora)
+        # O congelamento é da **mesma transação** que muda o status: um valor gravado fora dela
+        # existiria para uma inscrição que não chegou a ser submetida, e uma submissão sem os
+        # valores seria classificável sobre fato que ninguém declarou.
+        _congelar(travada, valores, versao=versao, agora=agora)
         travada.refresh_from_db()
         record_event(
             actor=ator,
@@ -207,6 +261,91 @@ def enviar_inscricao(*, identidade, inscricao, declaracoes, idempotency_key, cor
         idem.response_status = 201
         idem.save()
         return travada
+
+
+def _conferir_o_teto(inscricao, conteudo):
+    """Quantas Inscrições esta pessoa já enviou neste Edital, e quantas o Edital admite (D-3).
+
+    **A serialização é do par, e já aconteceu** — em `_travar_o_par`, no início do ato. Aqui a
+    consulta é comum de propósito: `select_for_update` num `count()` não travaria coisa alguma.
+
+    **Conta apenas submetidas.** Rascunho não é ato: abandonar um não pode custar um direito, e a
+    `009` já o trata assim em toda parte.
+    """
+    teto = conteudo.get("maxInscricoesPorCandidato")
+    if teto is None:
+        return
+    ja_enviadas = (
+        Inscricao.objects.filter(
+            identity_subject=inscricao.identity_subject,
+            edital_id=inscricao.edital_id,
+            status=Inscricao.Status.SUBMETIDA,
+        )
+        .exclude(pk=inscricao.pk)
+        .count()
+    )
+    if ja_enviadas >= teto:
+        raise DomainError(
+            "registration_limit_reached",
+            f"Este Edital admite {teto} inscrição(ões) por candidato, e você já enviou "
+            f"{ja_enviadas}.",
+            409,
+        )
+
+
+def _valores_dos_fatos(conteudo, inscricao, informados):
+    """Os fatos declarados pelo Perfil, com o valor informado, na forma do tipo publicado.
+
+    Não há valor opcional: se o Edital declara o fato, ele é exigido. Declarar um fato é dizer que
+    uma regra publicada o consome, e o que fazer com ausência é decisão do **cálculo**, declarada
+    em `whenMissing` — não tolerância aqui.
+    """
+    perfil = next(
+        (
+            item
+            for item in conteudo.get("profiles") or []
+            if str(item.get("id")) == str(inscricao.profile_id)
+        ),
+        None,
+    )
+    valores = []
+    for fato in (perfil or {}).get("declaredFacts") or []:
+        bruto = (informados.get(str(fato["id"])) or "").strip()
+        if not bruto:
+            raise DomainError(
+                "declared_fact_required",
+                f"Informe {fato.get('label', 'o dado exigido')} para enviar a inscrição.",
+                422,
+            )
+        try:
+            if fato["type"] == "DATA":
+                valores.append((fato["id"], date.fromisoformat(bruto), None))
+            else:
+                valores.append((fato["id"], None, int(bruto)))
+        except ValueError as exc:
+            raise DomainError(
+                "declared_fact_invalid",
+                f"{fato.get('label', 'O dado exigido')} não está na forma que o Edital declarou.",
+                422,
+            ) from exc
+    return valores
+
+
+def _congelar(inscricao, valores, *, versao, agora):
+    """O que a pessoa informou, gravado sob a versão que vigorava no instante do ato."""
+    ValorDeFato.objects.bulk_create(
+        [
+            ValorDeFato(
+                inscricao=inscricao,
+                fato_id=fato_id,
+                valor_data=valor_data,
+                valor_inteiro=valor_inteiro,
+                congelado_em=agora,
+                versao=versao,
+            )
+            for fato_id, valor_data, valor_inteiro in valores
+        ]
+    )
 
 
 def _gravar_o_ato(inscricao, *, modalidade, versao, agora):

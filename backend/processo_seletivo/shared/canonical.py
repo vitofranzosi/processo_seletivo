@@ -54,7 +54,23 @@ from uuid import UUID
 # É a integridade funcionando, e é o que a precondição de implantação da `007` admite: a feature
 # precede o primeiro Edital de produção, e os dados de demonstração são recriados. A `009` repete
 # a mesma precondição pela mesma razão, e ela vale igual para o conteúdo da versão 3.
-SCHEMA_VERSION = 6
+#
+# **6 → 7, a leva da `015`.** Três mudanças de forma, e elas sobem juntas pela razão do topo deste
+# bloco: o marco classificatório com seus critérios de desempate, os fatos que o Edital declara
+# exigir do candidato (D-2) e o teto de inscrições por candidato (D-3). Feitas em incrementos
+# separados seriam três versões, três degraus e três caminhos de leitura, e existiriam snapshots de
+# uma mesma versão com e sem cada propriedade.
+#
+# As três são aditivas e a ausência de cada uma tem significado declarado e verdadeiro: Edital
+# publicado antes desta feature não declarou marco nenhum — e Edital sem marco não classifica —,
+# não exigiu fato nenhum, e não limitou o total de inscrições. Há, portanto, conversão sem
+# invenção, e o degrau 7 entra na mesma cadeia dos anteriores.
+#
+# **O que este incremento tem de diferente dos dois primeiros:** é o primeiro que não é só de
+# Etapa. `maxInscricoesPorCandidato` é campo da **raiz**, porque limita o total do candidato no
+# certame; marco e fatos são coleções **dentro do Perfil**. A elevação, que até aqui só sabia
+# reescrever `/stages`, passou a descer um nível (015, T-008).
+SCHEMA_VERSION = 7
 
 
 def _default(value):

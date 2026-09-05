@@ -90,6 +90,10 @@ def test_o_perfil_reduzido_aos_campos_de_entrada_e_recusado():
         "classificationInformation",
         "callInformation",
         "competitionModalities",
+        # As duas da versão 7: um Perfil reduzido aos campos de entrada também não as tem, e o
+        # conteúdo publicado não admite campo opcional.
+        "declaredFacts",
+        "classificationMilestones",
     }
 
 

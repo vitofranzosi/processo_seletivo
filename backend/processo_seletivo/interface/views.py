@@ -32,6 +32,15 @@ from processo_seletivo.avaliacoes.application.mesa import (
 )
 from processo_seletivo.avaliacoes.application.trilha import auditar as auditar_ato
 from processo_seletivo.avaliacoes.domain.previsao import rotulos
+from processo_seletivo.classificacao.application.emissao import assinatura_da_proposta, emitir_ordem
+from processo_seletivo.classificacao.application.selectors import (
+    ato_por_id,
+    estado_do_marco,
+    posicoes_do_ato,
+)
+from processo_seletivo.classificacao.application.selectors import (
+    historico as historico_da_ordenacao,
+)
 from processo_seletivo.comissoes.application import alocacao as alocacao_app
 from processo_seletivo.comissoes.application import comissao as comissao_app
 from processo_seletivo.comissoes.application import selectors as comissao_selectors
@@ -48,6 +57,7 @@ from processo_seletivo.comissoes.models import Funcao
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.application.identificacao import update_edital_identification
 from processo_seletivo.editais.domain.validation import validate_for_publication
+from processo_seletivo.editais.models.perfis import MarcoClassificatorio
 from processo_seletivo.inscricoes.application.consulta import (
     CONSULTAR,
     consulta_de_inscricoes,
@@ -79,6 +89,7 @@ from processo_seletivo.publicacoes.application.retificacoes import (
     create_retification,
 )
 from processo_seletivo.publicacoes.application.selectors import (
+    effective_version,
     impede_por_segregacao,
     participantes_do_edital,
 )
@@ -459,6 +470,11 @@ ETAPAS_COMPOSICAO = [
     # Depois dos Perfis, das Modalidades e do Cronograma: a designação do período escolhe um
     # Evento que precisa existir, e a aplicabilidade de cada documento referencia Perfil e
     # modalidade que precisam existir. Pedir antes seria oferecer listas vazias.
+    # Depois das Etapas, e pela mesma razão que a `inscricao` veio depois do Cronograma: o marco
+    # **enumera** Etapas e seus critérios apontam Etapa e fato declarado. Oferecê-lo no passo dos
+    # Perfis, que vem antes, seria oferecer uma lista vazia e chamá-la de escolha — e foi assim que
+    # a primeira redação o colocou (015, T072).
+    ("classificacao", "Classificação", "interface/compor_classificacao.html"),
     ("inscricao", "Inscrição", "interface/compor_inscricao.html"),
     # Depois de tudo o que gera conteúdo: as seções textuais complementam o que o sistema já
     # sabe, e quem as redige precisa ver o que já está estruturado.
@@ -467,7 +483,15 @@ ETAPAS_COMPOSICAO = [
 ]
 CHAVES_ETAPA = [chave for chave, _, _ in ETAPAS_COMPOSICAO]
 # As que aceitam POST. `revisao` consolida e não grava.
-ETAPAS_GRAVAVEIS = {"identificacao", "perfis", "cronograma", "etapas", "inscricao", "conteudo"}
+ETAPAS_GRAVAVEIS = {
+    "identificacao",
+    "perfis",
+    "cronograma",
+    "etapas",
+    "classificacao",
+    "inscricao",
+    "conteudo",
+}
 
 
 # Três estados, e não dois (FR-040). O terceiro existe por um defeito preciso: `conteudo` era
@@ -490,6 +514,7 @@ ROTULO_DO_ESTADO = {
 # Prefixo do nome dos campos de cada etapa, para reconstruir o `id` do controle recusado.
 PREFIXO_DA_ETAPA = {
     "perfis": "perfil",
+    "classificacao": "marco",
     "cronograma": "evento",
     "etapas": "etapa",
     "inscricao": "documento",
@@ -533,6 +558,11 @@ def _progresso(edital, atual):
         else PENDENTE,
         # Etapas são opcionais; "concluída" aqui quer dizer "já tem conteúdo", não "obrigatória".
         "etapas": CONCLUIDA if edital.etapas.exists() else PENDENTE,
+        # Como `etapas`: um Edital pode não classificar, e nesta versão isso é legítimo. "Concluída"
+        # diz "já tem marco", e não "é obrigatório ter".
+        "classificacao": CONCLUIDA
+        if MarcoClassificatorio.objects.filter(perfil__edital=edital).exists()
+        else PENDENTE,
         # `SecaoEdital` só tem linha depois da primeira edição — ausência de linha significa "texto
         # padrão do catálogo". Logo `exists()` responde exatamente "esta etapa já foi gravada",
         # sem custar estado novo.
@@ -656,6 +686,8 @@ def compor_etapa(request, edital_id, etapa):
             "perfis": (
                 _reexibir_perfis(digitados)
                 if etapa == "perfis" and digitados is not None
+                else _reexibir_classificacao(edital, digitados)
+                if etapa == "classificacao" and digitados is not None
                 else forms.perfis_do_edital(edital)
             ),
             "eventos": (
@@ -676,6 +708,14 @@ def compor_etapa(request, edital_id, etapa):
                 else forms.periodo_do_edital(edital)
             ),
             "alcance": forms.alcance_da_aplicabilidade(edital) if etapa == "inscricao" else [],
+            # As listas que o marco e o critério escolhem. Só no passo da classificação: montá-las
+            # em toda tela custaria duas consultas por render sem servir a nenhuma delas.
+            "etapas_classificatorias": (
+                _etapas_e_fatos_do_edital(edital)[0] if etapa == "classificacao" else []
+            ),
+            "fatos_declarados": (
+                _etapas_e_fatos_do_edital(edital)[1] if etapa == "classificacao" else []
+            ),
             "etapas_avaliacao": (
                 _reexibir_etapas(digitados)
                 if etapa == "etapas" and digitados is not None
@@ -708,6 +748,46 @@ def _reexibir_perfis(perfis):
         }
         for perfil in perfis
     ]
+
+
+def _reexibir_classificacao(edital, marcos_por_perfil):
+    """Funde o digitado sobre os Perfis persistidos depois de uma recusa.
+
+    O POST deste passo traz somente os marcos. Voltar a consultar `perfis_do_edital` sem esta
+    transformação fazia a resposta 200 descartar visualmente tudo o que a pessoa acabara de
+    preencher, embora o domínio tivesse recusado justamente para que ela pudesse corrigir.
+    """
+    perfis = forms.perfis_do_edital(edital)
+    for perfil in perfis:
+        digitados = marcos_por_perfil.get(perfil["id"], [])
+        perfil["marcos"] = [_reexibir_marco(marco) for marco in digitados]
+    return perfis
+
+
+def _reexibir_marco(marco):
+    arredondamento = marco.get("rounding") or {}
+    return {
+        "id": marco.get("id", ""),
+        "code": marco.get("code", ""),
+        "name": marco.get("name", ""),
+        "etapas": marco.get("stages") or [],
+        "operation": marco.get("operation", ""),
+        "normalization": marco.get("normalization", ""),
+        "scale": arredondamento.get("scale", ""),
+        "mode": arredondamento.get("mode", ""),
+        "criterios": [_reexibir_criterio(item) for item in marco.get("tiebreakers") or []],
+    }
+
+
+def _reexibir_criterio(criterio):
+    parametros = criterio.get("parameters") or {}
+    return {
+        "id": criterio.get("id", ""),
+        "order": criterio.get("order", ""),
+        "type": criterio.get("type", ""),
+        "target": parametros.get("stageId") or parametros.get("factId") or "",
+        "whenMissing": criterio.get("whenMissing", ""),
+    }
 
 
 def _reexibir_modalidade(modalidade):
@@ -761,6 +841,10 @@ def _reexibir_eventos(eventos):
 # Qual coleção do rascunho cada etapa do assistente escreve.
 COLECAO_DA_ETAPA = {
     "perfis": "profiles",
+    # Escreve em `profiles` como o passo de Perfis, porque o marco mora dentro do Perfil. O que
+    # muda é **o que** do Perfil vem do formulário: ali, o Perfil inteiro; aqui, só os marcos,
+    # fundidos sobre o que já está persistido.
+    "classificacao": "profiles",
     "cronograma": "schedule",
     "etapas": "stages",
     "conteudo": "sections",
@@ -771,6 +855,7 @@ LEITURA_DA_ETAPA = {
     "perfis": forms.ler_perfis,
     "cronograma": forms.ler_eventos,
     "etapas": forms.ler_etapas,
+    "classificacao": forms.ler_classificacao,
     "inscricao": forms.ler_inscricao,
     "conteudo": forms.ler_secoes,
 }
@@ -809,6 +894,13 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
         conteudo["schedule"] = [
             {**evento, "isRegistrationPeriod": str(evento["id"]) == digitados["periodo"]}
             for evento in conteudo["schedule"]
+        ]
+    elif etapa == "classificacao":
+        # Só os marcos vêm do formulário; o resto de cada Perfil é o que já estava gravado.
+        marcos_por_perfil = {str(chave): valor for chave, valor in digitados.items()}
+        conteudo["profiles"] = [
+            {**perfil, "classificationMilestones": marcos_por_perfil.get(str(perfil["id"]), [])}
+            for perfil in conteudo["profiles"]
         ]
     else:
         conteudo[COLECAO_DA_ETAPA[etapa]] = digitados
@@ -884,6 +976,96 @@ def fragmento_documento(request, edital_id):
 
 
 @require_http_methods(["GET"])
+def fragmento_fato(request, indice):
+    """A linha nova nasce com identidade: é por ela que o valor congelado dirá de qual fato é."""
+    return render(
+        request,
+        "interface/_fato.html",
+        {
+            "fato": {"id": str(uuid4())},
+            "indice": indice,
+            "sub": _indice_de_linha(request),
+        },
+    )
+
+
+def _edital_do_fragmento(request):
+    """O Edital que o fragmento htmx está compondo, ou `None`.
+
+    O fragmento não recebe o Edital na rota — ele é um pedaço de uma tela que já o tem. O
+    identificador viaja na query, como o índice da linha já viaja.
+    """
+    from processo_seletivo.processos.models import Edital
+
+    identificador = request.GET.get("edital")
+    if not identificador:
+        return None
+    return Edital.objects.filter(pk=identificador).first()
+
+
+def _etapas_e_fatos_do_edital(edital):
+    """As Etapas classificatórias e os fatos declarados que o marco pode apontar.
+
+    Só as **classificatórias**: uma Etapa que o Edital não publicou como classificatória não pode
+    integrar marco, e oferecê-la na tela seria convidar a uma recusa que só apareceria na
+    publicação (FR-010).
+    """
+    etapas = [
+        {"id": str(etapa.id), "rotulo": f"{etapa.name}"}
+        for etapa in edital.etapas.filter(classificatory=True).order_by("order")
+    ]
+    fatos = [
+        {"id": str(fato.id), "rotulo": f"{perfil.code} · {fato.label}", "perfil": str(perfil.id)}
+        for perfil in edital.perfis.prefetch_related("fatos").order_by("code")
+        for fato in sorted(perfil.fatos.all(), key=lambda item: item.code)
+    ]
+    return etapas, fatos
+
+
+def fragmento_marco(request, indice):
+    """A linha nova nasce com identidade, pela mesma razão da modalidade.
+
+    `indice` é o do Perfil que a contém: os campos são `marco-<perfil>-<n>-…`.
+    """
+    edital = _edital_do_fragmento(request)
+    etapas, fatos = _etapas_e_fatos_do_edital(edital) if edital else ([], [])
+    return render(
+        request,
+        "interface/_marco.html",
+        {
+            "marco": {"id": str(uuid4())},
+            "indice": indice,
+            "sub": _indice_de_linha(request),
+            # Sem as listas, a linha nova nasceria com os selects vazios — e quem acrescentasse um
+            # marco não teria o que escolher, que é o defeito que este passo existe para evitar.
+            "etapas_classificatorias": etapas,
+            "fatos_declarados": fatos,
+        },
+    )
+
+
+def fragmento_criterio(request, indice, sub):
+    """Um nível mais fundo: o critério pertence ao marco, e não ao Perfil.
+
+    Renumerar critérios por Perfil faria dois marcos irmãos disputarem a mesma linha do formulário,
+    que é o mesmo defeito que a composição de prefixo da modalidade já evita um nível acima.
+    """
+    edital = _edital_do_fragmento(request)
+    etapas, fatos = _etapas_e_fatos_do_edital(edital) if edital else ([], [])
+    return render(
+        request,
+        "interface/_criterio.html",
+        {
+            "criterio": {"id": str(uuid4())},
+            "indice": indice,
+            "sub": sub,
+            "n": _indice_de_linha(request),
+            "etapas_classificatorias": etapas,
+            "fatos_declarados": fatos,
+        },
+    )
+
+
 def fragmento_modalidade(request, indice):
     """A linha nova nasce com **os dois** identificadores: o da modalidade e o da sua Regra.
 
@@ -1120,8 +1302,22 @@ def detalhe(request, edital_id):
             "acoes": conjunto,
             "impedido_por_segregacao": segregacao,
             "proximo_passo": acoes.proximo_passo(edital, ator, segregacao=segregacao),
+            "marcos_classificatorios": _marcos_publicados(edital),
         },
     )
+
+
+def _marcos_publicados(edital):
+    """Marcos alcançáveis a partir do Edital publicado, agrupados pelo Perfil que os nomeia."""
+    try:
+        conteudo = effective_version(edital_id=edital.id).content
+    except DomainError:
+        return []
+    return [
+        {"perfil": perfil, "marcos": perfil.get("classificationMilestones") or []}
+        for perfil in conteudo.get("profiles") or []
+        if perfil.get("classificationMilestones")
+    ]
 
 
 @require_http_methods(["GET", "POST"])
@@ -2819,6 +3015,140 @@ def resultados_da_etapa(request, edital_id, etapa_id):
                 # vocabulário do Edital, e não ao enum do domínio (FR-118).
                 "rotulo_favoravel": rotulos(etapa)[0],
                 "rotulo_desfavoravel": rotulos(etapa)[1],
+            },
+        )
+    )
+
+
+def _edital_para_classificar(request, edital_id, *, somente_gestao=False):
+    """A porta do marco: presidência ou auditoria lê; só a base de gestão emite.
+
+    Tudo que o ator não alcança responde 404. O identificador público do marco não confere
+    autorização e, no POST, a aplicação volta a conferir a gestão depois de obter a trava.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return None, None, False
+    edital = (
+        Edital.objects.filter(pk=edital_id, institution_scope=ator.institution_scope)
+        .select_related("processo")
+        .first()
+    )
+    if edital is None:
+        raise Http404
+    pode_emitir = pode_gerir_comissao(ator, edital.processo) is not None
+    if not pode_emitir and (somente_gestao or not ator.can("auditoria:consultar")):
+        raise Http404
+    return ator, edital, pode_emitir
+
+
+@require_http_methods(["GET"])
+def ordenacao(request, edital_id, marco_id):
+    """Calcula a ordem vigente para conferência, sem constituir ato algum (015, FR-022)."""
+    ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    try:
+        estado = estado_do_marco(edital=edital, marco_id=marco_id)
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        raise
+    proposta = estado["proposta"] or {"posicoes": [], "sem_posicao": []}
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/ordenacao.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "perfil": estado["perfil"],
+                "marco": estado["marco"],
+                "posicoes": proposta["posicoes"],
+                "sem_posicao": proposta["sem_posicao"],
+                "ato_vigente": estado["vigente"],
+                "obsoleto": estado["obsoleto"],
+                "recomputavel": estado["recomputavel"],
+                "divergencias": estado["divergencias"],
+                "posicoes_divergentes": estado["posicoes_divergentes"],
+                "pode_emitir": pode_emitir,
+                "resultado": request.session.pop("resultado_da_ordenacao", None),
+                "erro": request.session.pop("erro_da_ordenacao", None),
+                "chave_idempotencia": uuid4().hex,
+                "confirmacao_do_calculo": (
+                    assinatura_da_proposta(proposta, ato_vigente=estado["vigente"])
+                    if estado["proposta"] is not None
+                    else ""
+                ),
+                "historico": historico_da_ordenacao(edital=edital, marco_id=marco_id),
+            },
+        )
+    )
+
+
+def _perfil_do_marco(edital, marco_id):
+    """Resolve o pai normativo do marco sem depender da linha de elaboração."""
+    from processo_seletivo.publicacoes.application.selectors import effective_version
+
+    conteudo = effective_version(edital_id=edital.id).content
+    alvo = str(marco_id)
+    for perfil in conteudo.get("profiles") or []:
+        if any(
+            str(marco.get("id")) == alvo for marco in perfil.get("classificationMilestones") or []
+        ):
+            return perfil["id"]
+    raise Http404
+
+
+@require_http_methods(["POST"])
+def emitir_ordenacao(request, edital_id, marco_id):
+    """Constitui o cálculo do servidor e volta à leitura pelo padrão POST-redirect-GET."""
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    destino = reverse("interface:ordenacao", args=[edital_id, marco_id])
+    try:
+        request.session["resultado_da_ordenacao"] = emitir_ordem(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            perfil_id=_perfil_do_marco(edital, marco_id),
+            marco_id=marco_id,
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+            confirmacao_do_calculo=request.POST.get("confirmacao_do_calculo", ""),
+            motivo=request.POST.get("motivo", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_da_ordenacao"] = recusa.detail
+    return redirect(destino)
+
+
+@require_http_methods(["GET"])
+def ato_de_ordenacao(request, edital_id, marco_id, ato_id):
+    """A proveniência inteira do snapshot, pela porta de presidência ou auditoria."""
+    ator, edital, _ = _edital_para_classificar(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    ato = ato_por_id(edital=edital, marco_id=marco_id, ato_id=ato_id)
+    if ato is None:
+        raise Http404
+    pagina = posicoes_do_ato(
+        ato=ato,
+        pagina=request.GET.get("pagina") or 1,
+    )
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/ato_ordenacao.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "ato": ato,
+                "linhas": list(pagina),
+                "pagina": pagina,
             },
         )
     )

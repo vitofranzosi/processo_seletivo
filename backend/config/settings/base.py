@@ -50,6 +50,11 @@ INSTALLED_APPS = [
     # construídas. As duas direções de dependência são reais e opostas, e o ciclo se quebra com
     # import local, como `reabrir` já faz com `comando_de_comissao` (013, T-001).
     "processo_seletivo.resultados",
+    # A ordem entre participantes (015): o ato de ordenação e suas posições. App próprio pela mesma
+    # razão que separou `resultados` de `avaliacoes` — ordenar não é resultado de Etapa: o ato tem
+    # universo declarado, autoridade, sucessão e imutabilidade próprios, e é sobre ele que a 016
+    # crescerá. O Resultado é lido e nunca escrito daqui (015, T-010).
+    "processo_seletivo.classificacao",
 ]
 TEMPLATES = [
     {

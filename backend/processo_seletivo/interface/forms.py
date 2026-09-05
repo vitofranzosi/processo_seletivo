@@ -117,6 +117,95 @@ def _modalidades(dados, prefixo):
     return modalidades
 
 
+def _fatos(dados, prefixo):
+    """Os fatos declarados de um Perfil, pelo mesmo esquema de prefixo composto da modalidade."""
+    fatos = []
+    for indice in _indices(dados, prefixo):
+        base = f"{prefixo}-{indice}"
+        fatos.append(
+            {
+                "id": _texto(dados, f"{base}-id"),
+                "code": _texto(dados, f"{base}-code"),
+                "label": _texto(dados, f"{base}-label"),
+                "type": _texto(dados, f"{base}-type"),
+            }
+        )
+    return fatos
+
+
+def ler_classificacao(dados):
+    """Os marcos de cada Perfil, indexados pelo identificador do Perfil.
+
+    A chave é a identidade do Perfil, e não o índice de tela: este passo funde os marcos sobre
+    Perfis já persistidos, e o índice diria respeito à ordem em que a tela os desenhou.
+    """
+    return {
+        identificador: _marcos(dados, f"marco-{identificador}")
+        for identificador in dados.getlist("perfil_id")
+    }
+
+
+def _marcos(dados, prefixo):
+    """Os marcos classificatórios de um Perfil, com seus critérios de desempate.
+
+    Duas indexações aninhadas, e não uma: `marco-<perfil>-<sub>` para o marco, e
+    `criterio-<perfil>-<sub>-<n>` para cada critério dentro dele. É a mesma composição de prefixo
+    que a modalidade usa, um nível mais fundo — porque o critério pertence ao marco, e renumerá-lo
+    por Perfil faria dois marcos irmãos disputarem a mesma linha.
+
+    A `order` do critério vem do formulário, e não da posição: é campo publicado, e a Retificação o
+    altera por identidade (015, FR-015).
+    """
+    marcos = []
+    for indice in _indices(dados, prefixo):
+        base = f"{prefixo}-{indice}"
+        criterios = []
+        # O critério pertence ao marco, e o marco ao Perfil: o prefixo carrega os dois níveis.
+        # `criterio-<perfil>-<marco>-<n>`, e não `criterio-<marco>-<n>` — sem o Perfil, dois
+        # Perfis com marco de mesmo índice disputariam a mesma linha do formulário.
+        dono = prefixo.removeprefix("marco-")
+        for sub_indice in _indices(dados, f"criterio-{dono}-{indice}"):
+            criterio_base = f"criterio-{dono}-{indice}-{sub_indice}"
+            tipo = _texto(dados, f"{criterio_base}-type")
+            # O parâmetro é **do tipo**: quem compara pontuação aponta Etapa, quem compara fato
+            # aponta fato. Guardar os dois faria o critério declarar um alvo que ele não consome.
+            alvo = _texto(dados, f"{criterio_base}-target")
+            parametros = {}
+            if alvo:
+                parametros = (
+                    {"stageId": alvo} if tipo == "MAIOR_PONTUACAO_NA_ETAPA" else {"factId": alvo}
+                )
+            criterios.append(
+                {
+                    "id": _texto(dados, f"{criterio_base}-id"),
+                    "order": _inteiro(dados, f"{criterio_base}-order"),
+                    "type": tipo,
+                    "parameters": parametros,
+                    "whenMissing": _texto(dados, f"{criterio_base}-whenMissing"),
+                }
+            )
+        escala = _inteiro_opcional(dados, f"{base}-scale")
+        modo = _texto(dados, f"{base}-mode")
+        marcos.append(
+            {
+                "id": _texto(dados, f"{base}-id"),
+                "code": _texto(dados, f"{base}-code"),
+                "name": _texto(dados, f"{base}-name"),
+                # As Etapas enumeradas: seleção múltipla, e a ordem aqui não é normativa.
+                # `getlist` de um campo vazio devolve `[""]`, que é lista truthy: sem o filtro, um
+                # marco sem Etapa alguma passaria pela validação que exige ao menos uma.
+                "stages": [item for item in dados.getlist(f"{base}-stages") if item],
+                "operation": _texto(dados, f"{base}-operation"),
+                "normalization": _texto(dados, f"{base}-normalization"),
+                # Escala e modo viajam mesmo vazios: é a validação que recusa, com mensagem que
+                # nomeia o que falta — e não o formulário, que devolveria silêncio.
+                "rounding": {"scale": escala, "mode": modo},
+                "tiebreakers": criterios,
+            }
+        )
+    return marcos
+
+
 def ler_identificacao(dados):
     """Título e descrição; número e ano continuam sendo da criação do Edital."""
     return {"title": _texto(dados, "title"), "description": _texto(dados, "description")}
@@ -149,6 +238,9 @@ def ler_perfis(dados):
                 # As linhas de modalidade são indexadas dentro do índice do Perfil, e não
                 # renumeradas: `modalidade-3-…` pertence ao Perfil cujo prefixo é `perfil-3`.
                 "competitionModalities": _modalidades(dados, f"modalidade-{indice}"),
+                # Pelo mesmo esquema de prefixo composto: `marco-3-…` pertence ao `perfil-3`.
+                "declaredFacts": _fatos(dados, f"fato-{indice}"),
+                "classificationMilestones": _marcos(dados, f"marco-{indice}"),
             }
         )
     return perfis
@@ -325,10 +417,12 @@ def perfis_do_edital(edital):
             "modalidades": [
                 _modalidade_para_o_formulario(m) for m in perfil.modalidades.order_by("code")
             ],
+            "marcos": [_marco_para_o_formulario(m) for m in perfil.marcos.order_by("code")],
+            "fatos": [_fato_para_o_formulario(f) for f in perfil.fatos.order_by("code")],
         }
-        for perfil in edital.perfis.prefetch_related("modalidades__regra_normativa").order_by(
-            "code"
-        )
+        for perfil in edital.perfis.prefetch_related(
+            "modalidades__regra_normativa", "marcos__criterios", "fatos", "fatos"
+        ).order_by("code")
     ]
 
 
@@ -381,11 +475,75 @@ def perfis_persistidos(edital):
             "competitionModalities": [
                 _modalidade_persistida(m) for m in perfil.modalidades.order_by("code")
             ],
+            # Pela razão do comentário acima, e ela vale igual: sem isto, gravar o Cronograma
+            # apagaria os marcos configurados no passo dos Perfis.
+            "classificationMilestones": [
+                _marco_persistido(m) for m in perfil.marcos.order_by("code")
+            ],
+            "declaredFacts": [_fato_persistido(f) for f in perfil.fatos.order_by("code")],
         }
-        for perfil in edital.perfis.prefetch_related("modalidades__regra_normativa").order_by(
-            "code"
-        )
+        for perfil in edital.perfis.prefetch_related(
+            "modalidades__regra_normativa", "marcos__criterios"
+        ).order_by("code")
     ]
+
+
+def _fato_para_o_formulario(fato):
+    return {"id": str(fato.id), "code": fato.code, "label": fato.label, "type": fato.tipo}
+
+
+def _fato_persistido(fato):
+    return {"id": str(fato.id), "code": fato.code, "label": fato.label, "type": fato.tipo}
+
+
+def _marco_para_o_formulario(marco):
+    arredondamento = marco.arredondamento or {}
+    return {
+        "id": str(marco.id),
+        "code": marco.code,
+        "name": marco.name,
+        "etapas": [str(etapa) for etapa in marco.etapas],
+        "operation": marco.operacao,
+        "normalization": marco.normalizacao,
+        "scale": arredondamento.get("scale", ""),
+        "mode": arredondamento.get("mode", ""),
+        "criterios": [
+            {
+                "id": str(criterio.id),
+                "order": criterio.ordem,
+                "type": criterio.tipo,
+                # O alvo é um só, e a tela o oferece conforme o tipo — guardar `stageId` e
+                # `factId` separados aqui faria a reexibição escolher qual mostrar.
+                "target": (criterio.parametros or {}).get("stageId")
+                or (criterio.parametros or {}).get("factId")
+                or "",
+                "whenMissing": criterio.quando_ausente,
+            }
+            for criterio in sorted(marco.criterios.all(), key=lambda item: item.ordem)
+        ],
+    }
+
+
+def _marco_persistido(marco):
+    return {
+        "id": str(marco.id),
+        "code": marco.code,
+        "name": marco.name,
+        "stages": [str(etapa) for etapa in marco.etapas],
+        "operation": marco.operacao,
+        "normalization": marco.normalizacao,
+        "rounding": marco.arredondamento,
+        "tiebreakers": [
+            {
+                "id": str(criterio.id),
+                "order": criterio.ordem,
+                "type": criterio.tipo,
+                "parameters": criterio.parametros,
+                "whenMissing": criterio.quando_ausente,
+            }
+            for criterio in sorted(marco.criterios.all(), key=lambda item: item.ordem)
+        ],
+    }
 
 
 def _modalidade_persistida(modalidade):

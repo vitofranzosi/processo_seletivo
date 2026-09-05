@@ -1027,6 +1027,60 @@ def _tabela(
             escrever_linha(linha, REGULAR)
 
 
+OPERACAO_DO_MARCO = {
+    "SOMA_PONDERADA": "soma ponderada",
+    "MEDIA_PONDERADA": "média ponderada",
+}
+CRITERIO_DE_DESEMPATE = {
+    "MAIOR_PONTUACAO_NA_ETAPA": "maior pontuação na Etapa",
+    "MAIOR_VALOR_DE_FATO": "maior valor declarado",
+    "MENOR_VALOR_DE_FATO": "menor valor declarado",
+}
+
+
+def _marcos(composicao, perfil, tabelas, nomear_perfil=False):
+    """Os marcos classificatórios em tabela, com os critérios na ordem publicada (015, D-001).
+
+    **A ordem impressa é a `order` de cada critério**, e não a posição em que ele aparece no
+    conteúdo: é ela que a norma declara, e imprimir a posição faria o documento dizer uma coisa e
+    o cálculo fazer outra depois de uma Retificação que reordenasse.
+
+    Nomes internos não vão ao papel: `SOMA_PONDERADA` e `MAIOR_PONTUACAO_NA_ETAPA` viram frase,
+    pelo mesmo motivo que os UUIDs e a versão canônica ficaram fora — o candidato lê a regra, não a
+    grafia com que o sistema a guarda.
+    """
+    marcos = perfil.get("classificationMilestones") or []
+    if not marcos:
+        return
+    linhas = []
+    for marco in marcos:
+        criterios = sorted(marco.get("tiebreakers") or [], key=lambda item: item.get("order") or 0)
+        desempate = "; ".join(
+            f"{indice}º {CRITERIO_DE_DESEMPATE.get(criterio.get('type'), criterio.get('type', ''))}"
+            for indice, criterio in enumerate(criterios, start=1)
+        )
+        linhas.append(
+            [
+                f"{marco.get('code', '')} — {marco.get('name', '')}",
+                OPERACAO_DO_MARCO.get(marco.get("operation"), marco.get("operation", "")),
+                desempate,
+            ]
+        )
+    cabecalho = ["Marco", "Combinação das Etapas", "Critérios de desempate"]
+    presentes = [c for c in range(len(cabecalho)) if any(linha[c] for linha in linhas)]
+    titulo = "Marcos classificatórios"
+    if nomear_perfil:
+        titulo = f"{titulo} — {perfil.get('code', '')}"
+    with composicao.bloco():
+        _tabela(
+            composicao,
+            [cabecalho[c] for c in presentes],
+            [[linha[c] or "—" for c in presentes] for linha in linhas],
+            alinhamentos=[ESQUERDA for _ in presentes],
+            legenda=tabelas.legenda(titulo),
+        )
+
+
 def _modalidades(composicao, perfil, tabelas, nomear_perfil=False):
     """As modalidades em tabela — sem perder o que a frase corrida dizia (FR-018, FR-019).
 
@@ -1190,6 +1244,7 @@ def _perfis(composicao, snapshot, secao=0, tabelas=None):
                     for requisito in requisitos:
                         composicao.escrever(f"• {requisito}", tamanho=CORPO_TEXTO, recuo=32)
             _modalidades(composicao, perfil, tabelas, len(perfis) > 1)
+            _marcos(composicao, perfil, tabelas, len(perfis) > 1)
 
 
 def _reserva(perfil):

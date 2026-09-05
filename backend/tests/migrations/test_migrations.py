@@ -14,7 +14,15 @@ from django.db.migrations.loader import MigrationLoader
 # `avaliacoes` e `resultados` entram na revisão de 012–013: até aqui nenhuma migration deles era
 # exercida por teste de upgrade, e são justamente os dois que a revisão mais mexe — três backfills
 # sobre tabelas com histórico, duas delas protegidas contra `UPDATE` por trigger.
-APPS = ("processos", "editais", "publicacoes", "auditoria", "avaliacoes", "resultados")
+APPS = (
+    "processos",
+    "editais",
+    "publicacoes",
+    "auditoria",
+    "avaliacoes",
+    "resultados",
+    "classificacao",
+)
 # Agrupadas pelo app que as cria, porque o teste de upgrade incremental exercita **um** app por vez:
 # voltar `publicacoes` uma migration desaplica também o que depende dela, e exigir ali o conjunto
 # inteiro cobraria triggers de apps que o próprio teste acabou de desmontar.
@@ -37,6 +45,12 @@ TRIGGERS_POR_APP = {
     # O nome não mudou com o terceiro ramo: a função foi recriada, e a trigger é a mesma.
     "avaliacoes": ("conclusao_avaliacao_append_only",),
     "resultados": ("resultado_etapa_append_only", "resultado_etapa_coerente"),
+    "classificacao": (
+        "ato_de_ordenacao_append_only",
+        # A proveniência do ato, conferida uma vez por ato e não uma vez por posição (T125).
+        "ato_de_ordenacao_coerente",
+        "posicao_coerente",
+    ),
 }
 TRIGGERS = tuple(nome for grupo in TRIGGERS_POR_APP.values() for nome in grupo)
 

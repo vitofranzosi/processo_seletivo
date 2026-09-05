@@ -1430,15 +1430,33 @@ def revisao(request, inscricao_id):
         "veracidade": bool(request.POST.get("veracidade")),
         "ciencia": bool(request.POST.get("ciencia")),
     }
+    # Os fatos vêm do **snapshot**, e não do rascunho: o rascunho guarda o que a pessoa preencheu,
+    # e o que o Edital exige é conteúdo publicado. E vêm da mesma versão contra a qual o
+    # congelamento vai acontecer — que é a vigente, porque `edital_foi_retificado` recusa o envio
+    # de quem não a reconheceu. Renderizar da versão reconhecida quando ela já não é a vigente
+    # mostraria campos de uma norma e congelaria sob outra, que é exatamente a divergência que este
+    # desenho existe para não ter (015, FR-059).
+    # **Só quando a versão reconhecida já é a vigente.** Enquanto houver Retificação por
+    # reconhecer, a tela mostra a norma nova e apenas a ação de reconhecer: os campos vêm da versão
+    # que vai governar o envio, e essa versão precisa estar reconhecida antes de o formulário ficar
+    # acionável. Sem o gate, a pessoa preencheria fatos e os perderia ao reconhecer.
+    fatos_exigidos = [] if retificado else _fatos_do_perfil(conteudo, registro)
+    fatos_informados = {
+        str(fato["id"]): request.POST.get(f"fato-{fato['id']}", "") for fato in fatos_exigidos
+    }
     if request.method == "POST":
         if request.POST.get("reconhecer_versao"):
-            registro = reconhecer_versao(
+            reconhecer_versao(
                 identidade=identidade,
                 inscricao=registro,
                 versao=versao,
                 correlation_id=getattr(request, "correlation_id", ""),
             )
-            retificado = False
+            # Redirect para um GET novo, e não render direto: no GET seguinte a reconhecida **é** a
+            # vigente, e é só então que os fatos e o botão de envio aparecem. Renderizar aqui
+            # mostraria os campos na mesma resposta do reconhecimento, e quem os preenchesse antes
+            # de reconhecer perderia o que digitou (015, FR-059).
+            return redirect(reverse("portal:revisao", args=[registro.id]))
         else:
             try:
                 registro = enviar_inscricao(
@@ -1449,6 +1467,7 @@ def revisao(request, inscricao_id):
                     # reserva a mesma chave, e a segunda tentativa devolve o mesmo resultado.
                     idempotency_key=f"envio-{registro.id}-{registro.revision}",
                     correlation_id=getattr(request, "correlation_id", ""),
+                    fatos=fatos_informados,
                 )
                 _confirmar_por_email(request, registro)
                 return redirect(reverse("portal:comprovante", args=[registro.id]))
@@ -1476,6 +1495,12 @@ def revisao(request, inscricao_id):
             ),
             "erros": erros,
             "declaracoes": declaracoes,
+            # Cada fato com o que a pessoa digitou: uma recusa não pode custar o que já estava
+            # certo, pela mesma razão que as declarações voltam marcadas (SC-UX-007).
+            "fatos": [
+                {**fato, "valor": fatos_informados.get(str(fato["id"]), "")}
+                for fato in fatos_exigidos
+            ],
             "etapas": etapas_ate(1),
         },
     )
@@ -1632,6 +1657,12 @@ def comprovante(request, inscricao_id):
             "cpf_do_candidato": formatar_cpf(registro.cpf),
         },
     )
+
+
+def _fatos_do_perfil(conteudo, inscricao):
+    """O que o Edital exige do candidato neste Perfil, na versão que o conteúdo carrega (D-2)."""
+    perfil = _perfil_do_conteudo(conteudo, inscricao.profile_id)
+    return list(perfil.get("declaredFacts") or [])
 
 
 def _modalidade_da_inscricao(conteudo, inscricao):

@@ -134,6 +134,55 @@ class Inscricao(models.Model):
         return super().save(*args, **kwargs)
 
 
+class ValorDeFato(models.Model):
+    """O que a inscrição congelou na submissão, sob a versão que então vigorava (015, D-2).
+
+    **Nasce na submissão, e não na abertura do rascunho.** É a fronteira que a `009` já usa para
+    tudo o mais que a inscrição afirma, e usar outra faria os fatos e as declarações responderem a
+    versões diferentes do mesmo Edital.
+
+    **Nasce e não muda mais.** O valor que entra na classificação tem de ser o do momento da
+    inscrição: sem isso, editar o perfil depois mudaria classificação histórica. A tabela entra em
+    `TABELAS_APPEND_ONLY`, e por isso `inscricao` é `PROTECT` e não `CASCADE` — o runtime não tem
+    `DELETE`, e um `CASCADE` que jamais poderia executar seria promessa falsa no esquema.
+
+    **A consequência precisa ser dita:** o candidato **não corrige** o que informou depois de
+    submeter. A `009` não tem retificação de inscrição, e esta feature não a cria. É o que D-2
+    pede, porque congelar é o ponto inteiro.
+
+    `fato_id` guarda a identidade **publicada** do fato, e não chave estrangeira para a linha de
+    elaboração — mesma razão de `ResultadoEtapa.etapa_id`: a Retificação sabe acrescentar item a
+    coleção e não escreve de volta em `editais`.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    inscricao = models.ForeignKey(Inscricao, on_delete=models.PROTECT, related_name="fatos")
+    fato_id = models.UUIDField()
+    valor_data = models.DateField(null=True, blank=True)
+    valor_inteiro = models.IntegerField(null=True, blank=True)
+    congelado_em = models.DateTimeField()
+    versao = models.ForeignKey(
+        "publicacoes.VersaoConsolidada", on_delete=models.PROTECT, related_name="fatos_congelados"
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["inscricao", "fato_id"], name="uq_valor_por_inscricao_fato"
+            ),
+            # Um dos dois, nunca os dois e nunca nenhum: o tipo declarado diz qual, e uma linha com
+            # os dois preenchidos admitiria duas leituras do mesmo fato.
+            models.CheckConstraint(
+                condition=Q(valor_data__isnull=False, valor_inteiro__isnull=True)
+                | Q(valor_data__isnull=True, valor_inteiro__isnull=False),
+                name="ck_valor_conforme_tipo",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.fato_id} — {self.valor_data or self.valor_inteiro}"
+
+
 class DocumentoSubmetido(models.Model):
     """O arquivo que o candidato apresentou **para um Documento Exigido específico**.
 

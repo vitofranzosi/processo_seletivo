@@ -7,6 +7,7 @@ seja uma falha de suíte.
 
 from processo_seletivo.publicacoes.domain import colecoes
 from tests.fixtures.snapshot import (
+    FATO,
     MODALIDADE,
     PERFIL,
     colecoes_nao_declaradas,
@@ -37,8 +38,20 @@ def test_a_keyed_collection_missing_an_identifier_is_reported():
     assert elementos_sem_chave(conteudo) == ["/profiles"]
 
 
-def test_requirements_is_the_only_collection_without_a_key():
-    assert colecoes.COLECOES_ATOMICAS == frozenset({"/profiles/*/requirements"})
+def test_as_colecoes_sem_chave_sao_declaradas_uma_a_uma():
+    """Eram uma; passaram a ser duas, e a lista continua literal de propósito.
+
+    Uma coleção atômica é valor normativo substituído inteiro. `requirements` é lista de frases;
+    `stages` de um marco é lista de identidades de Etapa — em nenhuma das duas há entidade a
+    endereçar. Manter a lista escrita, e não derivada, é o que faz a terceira exigir uma decisão em
+    vez de aparecer por acidente.
+    """
+    assert colecoes.COLECOES_ATOMICAS == frozenset(
+        {
+            "/profiles/*/requirements",
+            "/profiles/*/classificationMilestones/*/stages",
+        }
+    )
 
 
 def test_nested_collections_are_declared_by_shape_and_not_by_profile():
@@ -73,7 +86,10 @@ def test_the_identity_topology_names_every_addressable_entity():
 
     assert f"/profiles/id={PERFIL['A']}" in topologia
     assert f"/profiles/id={PERFIL['A']}/competitionModalities/id={MODALIDADE['A']}" in topologia
-    assert len(topologia) == 3 + 2 + 2, "três Perfis, duas Modalidades do primeiro, dois Eventos"
+    assert f"/profiles/id={PERFIL['B']}/declaredFacts/id={FATO['NASCIMENTO']}" in topologia
+    assert len(topologia) == 3 + 2 + 2 + 2, (
+        "três Perfis, duas Modalidades do primeiro, dois Eventos e dois Fatos Declarados do segundo"
+    )
 
 
 def test_the_topology_skips_a_key_that_is_not_text_instead_of_breaking():

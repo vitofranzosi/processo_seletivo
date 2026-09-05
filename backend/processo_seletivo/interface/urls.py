@@ -72,6 +72,24 @@ urlpatterns = [
         views.fragmento_modalidade,
         name="fragmento-modalidade",
     ),
+    # O marco segue o mesmo esquema da modalidade, e o critério vai um nível mais fundo: os
+    # campos dele são `criterio-<perfil>-<marco>-<n>-…`, e sem os dois índices na rota a linha nova
+    # não saberia a que marco de que Perfil pertence.
+    path(
+        "fragmentos/perfil/<str:indice>/fato",
+        views.fragmento_fato,
+        name="fragmento-fato",
+    ),
+    path(
+        "fragmentos/perfil/<str:indice>/marco",
+        views.fragmento_marco,
+        name="fragmento-marco",
+    ),
+    path(
+        "fragmentos/perfil/<str:indice>/marco/<str:sub>/criterio",
+        views.fragmento_criterio,
+        name="fragmento-criterio",
+    ),
     path("fragmentos/evento", views.fragmento_evento, name="fragmento-evento"),
     path(
         "fragmentos/retificacao/perfil",
@@ -150,6 +168,23 @@ urlpatterns = [
         "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/resultados",
         views.resultados_da_etapa,
         name="resultados-da-etapa",
+    ),
+    # A classificação pende do marco publicado, e não de uma Etapa isolada: o mesmo ato serve
+    # tanto ao marco intermediário quanto à combinação final de várias Etapas (015, D-001).
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>",
+        views.ordenacao,
+        name="ordenacao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/emitir",
+        views.emitir_ordenacao,
+        name="emitir-ordenacao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/atos/<uuid:ato_id>",
+        views.ato_de_ordenacao,
+        name="ato-de-ordenacao",
     ),
     path(
         "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/conclusoes",

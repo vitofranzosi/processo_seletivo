@@ -1,0 +1,42 @@
+{% extends "interface/compor_base.html" %}
+{% block etapa_titulo %}Classificação{% endblock %}
+{% block etapa %}
+<form method="post" id="formulario">
+  {% csrf_token %}
+<section aria-labelledby="titulo-classificacao">
+  <h2 id="titulo-classificacao">Marcos classificatórios</h2>
+  {% comment %}
+  Este passo vem depois das Etapas de propósito: o marco **enumera** Etapas, e seus critérios
+  apontam Etapa ou fato declarado. Oferecê-lo antes seria oferecer listas vazias e chamá-las de
+  escolha — a mesma razão pela qual a Inscrição veio depois do Cronograma.
+  {% endcomment %}
+  <p class="ajuda">Onde a ordem entre participantes é produzida: quais Etapas entram, como as
+    pontuações se combinam, com que arredondamento, e em que ordem os critérios de desempate se
+    aplicam. Um Perfil sem marco não classifica.</p>
+  {% if not etapas_classificatorias %}
+  <div class="aviso" role="alert">
+    <p>Nenhuma Etapa foi publicada como <strong>classificatória</strong>. Um marco só pode enumerar
+      Etapas classificatórias — declare ao menos uma no passo de Etapas de Avaliação antes de
+      compor a classificação.</p>
+  </div>
+  {% endif %}
+  {% for perfil in perfis %}
+  <fieldset class="linha perfil">
+    <legend>{{ perfil.code }} — {{ perfil.name }}</legend>
+    <input type="hidden" name="perfil_id" value="{{ perfil.id }}">
+    <div id="marcos-{{ perfil.id }}">
+      {% for marco in perfil.marcos %}{% include "interface/_marco.html" with indice=perfil.id sub=forloop.counter0 %}{% endfor %}
+    </div>
+    <button type="button" class="acao"
+            hx-get="{% url 'interface:fragmento-marco' perfil.id %}?edital={{ edital.id }}"
+            hx-target="#marcos-{{ perfil.id }}" hx-swap="beforeend">Acrescentar marco</button>
+  </fieldset>
+  {% endfor %}
+</section>
+{% include "interface/_navegacao_etapa.html" %}
+</form>
+{% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
+<script src="{% static 'interface/assistente.js' %}" defer></script>
+<script src="{% static 'interface/ordenacao.js' %}" defer></script>
+<script src="{% static 'interface/remocao.js' %}" defer></script>
+{% endblock %}
