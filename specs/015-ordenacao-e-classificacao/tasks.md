@@ -194,7 +194,7 @@ valores congelados não mudaram.
 posição, participante e proveniência.
 
 - [~] T063 [P] [US3] **PARCIAL** — falta o arredondamento (`marco["rounding"]` nunca é lido) e o significado de peso ausente é decisão do código, não da norma: `combinacao.py` — pontuação combinada a partir da operação, dos `weight` publicados, da normalização e do arredondamento, em `backend/processo_seletivo/classificacao/domain/`
-- [~] T064 [P] [US3] **PARCIAL** — o comparador é **não transitivo** com `CRITERIO_NAO_SE_APLICA` par a par, e as seis permutações dos mesmos participantes produzem três ordens: `desempate.py` — critérios na ordem publicada, `quando_ausente`, empate residual e numeração `1, 1, 3`, em `backend/processo_seletivo/classificacao/domain/`
+- [X] T064 [P] [US3] `desempate.py` — reescrito como **partição sucessiva de grupos**: `CRITERIO_NAO_SE_APLICA` vale por grupo, a ordem é transitiva, e a comparação par a par deixou de existir — critérios na ordem publicada, `quando_ausente`, empate residual e numeração `1, 1, 3`, em `backend/processo_seletivo/classificacao/domain/`
 - [X] T065 [P] [US3] Teste da tabela-verdade do desempate, sem banco, em `backend/tests/unit/classificacao/test_desempate.py`
 - [X] T066 [P] [US3] Teste: a numeração é sempre "quantos estão à frente mais um", e "os N primeiros" seleciona N pessoas, em `backend/tests/unit/classificacao/`
 - [X] T067 [P] [US3] Teste: ausência de pontuação nunca vira zero, em `backend/tests/unit/classificacao/`
@@ -204,8 +204,8 @@ posição, participante e proveniência.
 
 - [ ] T068 [US3] Arredondamento em `combinacao.py`: ler `marco["rounding"]` e aplicá-lo na forma, escala, modo e momento que a clarificação fixar (FR-011)
 - [ ] T069 [US3] Significado de `weight` ausente, conforme a clarificação — hoje o código decide `1`, e a norma não diz
-- [ ] T070 [US3] Tornar o comparador **transitivo**: `CRITERIO_NAO_SE_APLICA` passa a valer por **grupo ainda empatado**, e não par a par
-- [ ] T071 [US3] Teste de ciclo e permutação: as N! ordens de entrada dos mesmos participantes produzem **uma** ordem de saída, com o caso A/B/C que expôs o defeito
+- [X] T070 [US3] Tornar o comparador **transitivo**: `CRITERIO_NAO_SE_APLICA` passa a valer por **grupo ainda empatado**, e não par a par
+- [X] T071 [US3] Teste de ciclo e permutação: as N! ordens de entrada dos mesmos participantes produzem **uma** ordem de saída, com o caso A/B/C que expôs o defeito
 - [ ] T072 [US1] Campos de Etapas enumeradas, arredondamento e parâmetros do critério em `interface/forms.py`, `views.py` e nos templates `_marco.html` e `_criterio.html` — hoje `_marcos()` não lê nenhum dos três, e a tela publica marco sem Etapa e critério sem alvo
 - [ ] T073 [US1] Preservar esses valores na reexibição após recusa, pela mesma razão que as declarações voltam marcadas
 - [ ] T074 [US1] Validação que recusa marco sem Etapa enumerada e critério sem o parâmetro que o tipo exige, na elaboração e na publicação

@@ -40,80 +40,107 @@ def _valor_do_criterio(criterio, participante):
     return (participante.get("fatos") or {}).get(str(parametros.get("factId")))
 
 
-def _comparar_por(criterio, esquerda, direita):
-    """-1, 0 ou 1: qual vem primeiro por este critério. Zero quando ele não separa este par."""
-    a, b = _valor_do_criterio(criterio, esquerda), _valor_do_criterio(criterio, direita)
-    if a is None and b is None:
-        return 0
-    if a is None or b is None:
-        if criterio.get("whenMissing") == CRITERIO_NAO_SE_APLICA:
-            return 0
-        # `ULTIMO_NO_CRITERIO`: quem não tem valor fica atrás de quem tem, **neste** critério.
-        return 1 if a is None else -1
-    if a == b:
-        return 0
-    maior_primeiro = criterio.get("type") in MAIOR_PRIMEIRO
-    return -1 if (a > b) == maior_primeiro else 1
+def particiona_o_grupo(criterio, grupo):
+    """Este critério separa alguém **dentro deste grupo**? (FR-071)
 
+    A pergunta é do **grupo**, e não do par. `CRITERIO_NAO_SE_APLICA` avaliado par a par produzia
+    comparação não transitiva: bastava o critério não se aplicar a dois pares por ausência e
+    aplicar-se ao terceiro para existir A > B > C > A — e aí as permutações da mesma entrada davam
+    ordens diferentes, sob a mesma regra publicada.
 
-def comparar(criterios, esquerda, direita):
-    """A comparação completa: pontuação combinada e, empatada, os critérios na ordem publicada.
-
-    Devolve `(ordem, separou_em)`: `ordem` é -1, 0 ou 1, e `separou_em` é o critério que decidiu,
-    ou `None` quando foi a pontuação ou quando o empate sobreviveu a todos. É esse segundo valor
-    que a consulta mostra depois: quem lê a ordem precisa saber **o que** separou duas posições
-    vizinhas (FR-050).
+    Avaliado por grupo, o critério ou particiona o grupo inteiro ou não particiona nenhum par dele,
+    e a ordem volta a ser função só das entradas e da norma (FR-070).
     """
-    a, b = esquerda.get("pontuacao"), direita.get("pontuacao")
-    if a is not None and b is not None and a != b:
-        return (-1 if Decimal(str(a)) > Decimal(str(b)) else 1), None
-    for criterio in sorted(criterios, key=lambda item: item.get("order") or 0):
-        decisao = _comparar_por(criterio, esquerda, direita)
-        if decisao != 0:
-            return decisao, criterio
-    return 0, None
+    valores = [_valor_do_criterio(criterio, item) for item in grupo]
+    if criterio.get("whenMissing") == CRITERIO_NAO_SE_APLICA and any(v is None for v in valores):
+        # Ausência em **qualquer** membro desliga o critério para este grupo — e só para ele. Quem
+        # está noutro grupo não desativa nada, que é a diferença entre esta regra e a global.
+        return False
+    return len(_grupos_por_valor(criterio, grupo)) > 1
+
+
+def _grupos_por_valor(criterio, grupo):
+    """O grupo quebrado por valor, na ordem que o critério declara — ausentes sempre no fim.
+
+    **Não se ordena negando o valor.** A primeira redação fazia `-valor` para inverter o sentido, e
+    isso quebrava em dois lugares: `Decimal` não é `int` nem `float`, de modo que a inversão era
+    silenciosamente ignorada para pontuações — o "maior primeiro" ordenava ao contrário —, e fato
+    do tipo data não admite negação nenhuma. Ordenar os **valores distintos** e reverter a
+    sequência funciona para os três tipos que o domínio conhece.
+    """
+    presentes, ausentes = {}, []
+    for item in grupo:
+        valor = _valor_do_criterio(criterio, item)
+        if valor is None:
+            ausentes.append(item)
+        else:
+            presentes.setdefault(valor, []).append(item)
+    ordenados = sorted(presentes, reverse=criterio.get("type") in MAIOR_PRIMEIRO)
+    saida = [presentes[valor] for valor in ordenados]
+    if ausentes:
+        # `ULTIMO_NO_CRITERIO`: quem não tem o valor fica atrás de quem tem, **neste** critério.
+        saida.append(ausentes)
+    return saida
+
+
+def _particionar(grupo, criterios):
+    """O grupo, quebrado pelo primeiro critério que o particiona, recursivamente.
+
+    Devolve lista de `(subgrupo, criterio_que_separou)`. Um critério que não particiona **não
+    encerra a sequência**: o próximo é oferecido ao mesmo grupo (FR-072).
+    """
+    if len(grupo) <= 1:
+        return [(grupo, None)]
+    ordenados = sorted(criterios, key=lambda item: item.get("order") or 0)
+    for indice, criterio in enumerate(ordenados):
+        if not particiona_o_grupo(criterio, grupo):
+            continue
+        saida = []
+        for subgrupo in _grupos_por_valor(criterio, grupo):
+            saida.extend(
+                (sub, quem or criterio)
+                for sub, quem in _particionar(subgrupo, ordenados[indice + 1 :])
+            )
+        return saida
+    return [(grupo, None)]
 
 
 def ordenar(participantes, criterios):
     """Os classificáveis em ordem, com posição, empate residual e o critério que separou.
 
-    Devolve a lista de participantes acrescida de `posicao`, `empate_residual` e `separado_por`.
-    Quem não tem pontuação combinada não entra: ele é considerado do universo, mas não recebe
-    posição — e essa distinção é do chamador, não daqui.
-    """
-    import functools
+    **Partição sucessiva de grupos, e não comparação par a par.** A pontuação combinada separa
+    primeiro; dentro de cada grupo empatado, cada critério publicado é oferecido na ordem, e o
+    primeiro que particiona o grupo o quebra em subgrupos — sobre os quais os critérios seguintes
+    são oferecidos de novo. Um critério que não particiona não encerra a sequência.
 
-    ordenados = sorted(
-        participantes,
-        key=functools.cmp_to_key(lambda a, b: comparar(criterios, a, b)[0]),
-    )
+    É essa forma que torna a ordem **transitiva**, e portanto determinística: ela não depende de
+    comparar pares, e por isso não pode ter ciclo (FR-070, FR-071, FR-072).
+    """
+    por_pontuacao = {}
+    for participante in participantes:
+        chave = participante.get("pontuacao")
+        por_pontuacao.setdefault(str(chave), []).append(participante)
+    grupos = []
+    for _, grupo in sorted(
+        por_pontuacao.items(),
+        key=lambda par: Decimal(str(par[1][0].get("pontuacao"))),
+        reverse=True,
+    ):
+        grupos.extend(_particionar(grupo, criterios))
+
     resultado = []
-    posicao_do_grupo = 0
-    for indice, participante in enumerate(ordenados):
-        if indice == 0:
-            posicao_do_grupo = 1
-            separado_por = None
-            empatado_com_anterior = False
-        else:
-            decisao, criterio = comparar(criterios, ordenados[indice - 1], participante)
-            empatado_com_anterior = decisao == 0
-            separado_por = None if empatado_com_anterior else criterio
-            if not empatado_com_anterior:
-                # A posição é quantos estão à frente mais um: o grupo empatado consome as posições
-                # que ocuparia, e a seguinte pula para o índice real.
-                posicao_do_grupo = indice + 1
-        resultado.append(
-            {
-                **participante,
-                "posicao": posicao_do_grupo,
-                "separado_por": separado_por,
-                "empate_residual": empatado_com_anterior,
-            }
-        )
-    # Marca o **primeiro** de cada grupo empatado também: um empate é do grupo, e não só de quem
-    # chega depois — sem isto, o primeiro de um par empatado apareceria como se tivesse posição
-    # própria (FR-027).
-    for indice, item in enumerate(resultado[:-1]):
-        if resultado[indice + 1]["empate_residual"]:
-            item["empate_residual"] = True
+    for grupo, separou in grupos:
+        # A posição é quantos estão à frente mais um: o grupo anterior consome as posições que
+        # ocupou, e este começa na seguinte — `1, 1, 3` (FR-026).
+        posicao = len(resultado) + 1
+        empatado = len(grupo) > 1
+        for item in grupo:
+            resultado.append(
+                {
+                    **item,
+                    "posicao": posicao,
+                    "separado_por": separou,
+                    "empate_residual": empatado,
+                }
+            )
     return resultado

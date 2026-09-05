@@ -171,6 +171,17 @@ E, sem ordem, o corte da 014 não tem sobre o que operar e a ocupação da 016 n
 - Q: Qual é o teto de tempo para a tela do marco abrir com a ordem calculada, a 1.000
   participantes? → A: Até 3 segundos.
 
+### Sessão 2026-09-04 (segunda rodada, após a revisão da fatia de domínio)
+
+- Q: O que `weight: null` significa numa Etapa enumerada pelo marco? → A: **Recusa a publicação.**
+  Quem enumera declara o peso; nenhuma ausência é interpretada.
+- Q: Como o arredondamento funciona na pontuação combinada? → A: **Só no fim**, com escala e modo
+  publicados. A conta roda em precisão plena e arredonda uma vez, sobre o resultado.
+- Q: Qual é o escopo de `CRITERIO_NAO_SE_APLICA`? → A: **Por grupo ainda empatado.** Se qualquer
+  participante do grupo não tem o valor, o critério não particiona aquele grupo, e o algoritmo
+  segue ao próximo — o que torna a classificação transitiva sem deixar alguém de outro grupo
+  desativar o critério globalmente.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 — Declarar a regra do marco e o desempate no Edital (Priority: P1)
@@ -504,6 +515,29 @@ que o anterior permanece íntegro e consultável.
 - **FR-055**: A 015 MUST NOT aplicar corte, alvo, vaga, percentual, reserva ou remanejamento.
 - **FR-056**: A 015 MUST NOT publicar a ordem para candidato ou público.
 
+#### Combinação, arredondamento e transitividade
+
+> Este grupo fecha a seção pela mesma razão do anterior: chegou na segunda rodada de clarificação,
+> depois de a revisão da fatia de domínio encontrar três decisões que o código estava tomando por
+> conta própria — e uma delas produzia ordem não determinística.
+
+- **FR-067**: O sistema MUST recusar a publicação de marco que enumere Etapa sem `weight` declarado.
+  Ausência de peso MUST NOT ser interpretada como equivalência, como zero, nem como qualquer outro
+  valor: quem enumera declara o peso.
+- **FR-068**: O marco MUST publicar, no arredondamento, a **escala** (casas decimais) e o **modo**
+  (meio para cima, meio para par, truncamento), e o sistema MUST recusar a publicação de marco cuja
+  operação não os declare.
+- **FR-069**: O cálculo MUST rodar em precisão plena e aplicar o arredondamento **uma única vez**,
+  sobre a pontuação combinada final. MUST NOT arredondar parcelas antes de combiná-las.
+- **FR-070**: O desempate MUST ser **transitivo**: para os mesmos participantes e a mesma regra
+  publicada, todas as ordens de entrada MUST produzir a mesma ordem de saída.
+- **FR-071**: `CRITERIO_NAO_SE_APLICA` MUST ser avaliado por **grupo ainda empatado**, e não par a
+  par: se qualquer participante do grupo não possui o valor que o critério consome, o critério não
+  particiona aquele grupo, e o próximo critério é aplicado. MUST NOT deixar que a ausência num
+  participante desative o critério para grupos de que ele não faz parte.
+- **FR-072**: O empate residual só existe depois de **todos** os critérios publicados terem sido
+  aplicados ao grupo; um critério que não particiona MUST NOT encerrar a sequência.
+
 #### Fatos declarados pelo Edital
 
 > Este grupo e o seguinte fecham a seção em vez de acompanhar os assuntos que descrevem: eles
@@ -636,6 +670,13 @@ que o anterior permanece íntegro e consultável.
 - **SC-022**: 100% das inscrições submetidas antes de um fato ser declarado permanecem válidas, e o
   critério que consome esse fato as trata pelo comportamento que declarou para valor ausente
   (FR-018).
+- **SC-023**: Para qualquer conjunto de participantes e qualquer regra publicada, **todas** as
+  permutações da ordem de entrada produzem a mesma ordem de saída — verificado sobre o caso de
+  ciclo que a revisão de 04/09/2026 encontrou, em que seis permutações produziam três ordens.
+- **SC-024**: 100% das tentativas de publicar marco que enumere Etapa sem peso, ou cuja operação não
+  declare escala e modo de arredondamento, são recusadas com o motivo.
+- **SC-025**: A pontuação combinada é arredondada exatamente uma vez; nenhuma parcela é arredondada
+  antes da combinação, e o valor gravado é o arredondado.
 
 ## Assumptions
 
