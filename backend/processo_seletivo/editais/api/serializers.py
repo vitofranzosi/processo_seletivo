@@ -38,6 +38,20 @@ class CompetitionModalitySerializer(serializers.Serializer):
     normativeRule = NormativeRuleSerializer(required=False)
 
 
+class DeclaredFactSerializer(serializers.Serializer):
+    """Um fato que o Edital exige do candidato (D-2).
+
+    `type` é escolha entre os dois que os Editais lidos de fato usam — idade sai de data de
+    nascimento, tempo de experiência sai de meses. Terceiro tipo entra quando aparecer o Edital que
+    o exija, e não antes: cada tipo novo é uma forma nova de congelar e de comparar.
+    """
+
+    id = serializers.UUIDField()
+    code = serializers.CharField(min_length=1, max_length=100)
+    label = serializers.CharField(min_length=1, max_length=255)
+    type = serializers.ChoiceField(choices=["DATA", "INTEIRO"])
+
+
 class TiebreakerSerializer(serializers.Serializer):
     """Um critério de desempate. `order` e `whenMissing` são exigidos, e não têm padrão.
 
@@ -87,6 +101,8 @@ class ProfileSerializer(serializers.Serializer):
     competitionModalities = CompetitionModalitySerializer(many=True)
     # Opcional no rascunho: um Edital que não classifica não declara marco nenhum.
     classificationMilestones = ClassificationMilestoneSerializer(many=True, required=False)
+    # Opcional pelo mesmo motivo: um Edital que não declara fato nenhum continua sem campo nenhum.
+    declaredFacts = DeclaredFactSerializer(many=True, required=False)
 
     def validate(self, attrs):
         try:

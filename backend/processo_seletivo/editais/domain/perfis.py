@@ -89,7 +89,25 @@ def validate_profile(profile: dict) -> None:
         rule = modality.get("normativeRule")
         if rule:
             validate_normative_rule(rule)
+    validate_declared_facts(profile.get("declaredFacts", []))
     validate_classification_milestones(profile.get("classificationMilestones", []))
+
+
+def validate_declared_facts(facts: list[dict]) -> None:
+    """Código único no Perfil, e tipo entre os dois que existem (D-2).
+
+    O tipo é verificado aqui **além** do serializer porque a interface administrativa invoca o
+    command diretamente e não atravessa aquele caminho — é a mesma razão pela qual a faixa do
+    percentual é verificada no domínio.
+    """
+    codes = [fato.get("code") for fato in facts]
+    if len(codes) != len(set(codes)):
+        raise ProfileValidationError("Fatos declarados não podem repetir código no Perfil.")
+    for fato in facts:
+        if fato.get("type") not in {"DATA", "INTEIRO"}:
+            raise ProfileValidationError(
+                "O tipo de um fato declarado deve ser data ou número inteiro."
+            )
 
 
 def validate_classification_milestones(milestones: list[dict]) -> None:

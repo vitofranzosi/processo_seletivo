@@ -883,6 +883,19 @@ def fragmento_documento(request, edital_id):
 
 
 @require_http_methods(["GET"])
+def fragmento_fato(request, indice):
+    """A linha nova nasce com identidade: é por ela que o valor congelado dirá de qual fato é."""
+    return render(
+        request,
+        "interface/_fato.html",
+        {
+            "fato": {"id": str(uuid4())},
+            "indice": indice,
+            "sub": _indice_de_linha(request),
+        },
+    )
+
+
 def fragmento_marco(request, indice):
     """A linha nova nasce com identidade, pela mesma razão da modalidade.
 

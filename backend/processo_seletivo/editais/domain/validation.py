@@ -443,6 +443,48 @@ def _topologia_das_secoes(snapshot: dict) -> list[ValidationFinding]:
     return findings
 
 
+def _coerencia_dos_fatos(snapshot: dict) -> list[ValidationFinding]:
+    """O fato publicado precisa ser identificável e ter tipo executável (D-2).
+
+    **Por que o tipo é verificado na publicação, e não só na elaboração.** A Retificação altera
+    conteúdo já público sem passar pelo rascunho: sem esta verificação, publicar-se-ia por
+    Retificação um fato de tipo que o congelamento não sabe gravar nem o desempate comparar — e o
+    defeito só apareceria no dia da classificação, sobre valores já congelados.
+    """
+    findings = []
+    for posicao, perfil in enumerate(snapshot.get("profiles") or []):
+        if not isinstance(perfil, dict):
+            continue
+        base = _caminho_da_entidade("profiles", perfil, posicao)
+        codigos = []
+        for indice, fato in enumerate(perfil.get("declaredFacts") or []):
+            if not isinstance(fato, dict):
+                continue
+            chave = fato.get("id")
+            dentro = f"id={chave}" if isinstance(chave, str) and chave else str(indice)
+            caminho = f"{base}/declaredFacts/{dentro}"
+            codigos.append(fato.get("code"))
+            if fato.get("type") not in {"DATA", "INTEIRO"}:
+                findings.append(
+                    ValidationFinding(
+                        Severity.BLOCKING_ERROR,
+                        "declared_fact_type_invalid",
+                        "O tipo de um fato declarado deve ser data ou número inteiro.",
+                        f"{caminho}/type",
+                    )
+                )
+        if len(codigos) != len(set(codigos)):
+            findings.append(
+                ValidationFinding(
+                    Severity.BLOCKING_ERROR,
+                    "declared_fact_code_duplicated",
+                    "Fatos declarados não podem repetir código no Perfil.",
+                    f"{base}/declaredFacts",
+                )
+            )
+    return findings
+
+
 def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
     """O marco só é executável se o que ele aponta existir e puder ser apontado (015, D-001).
 
@@ -730,6 +772,7 @@ def validate_for_publication(snapshot: dict) -> list[ValidationFinding]:
     findings.extend(_topologia_das_secoes(snapshot))
     findings.extend(_coerencia_das_etapas(snapshot))
     findings.extend(_faixa_do_percentual(snapshot))
+    findings.extend(_coerencia_dos_fatos(snapshot))
     findings.extend(_coerencia_dos_marcos(snapshot))
     findings.extend(_periodo_de_inscricoes(snapshot))
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))

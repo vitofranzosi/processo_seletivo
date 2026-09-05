@@ -61,6 +61,7 @@ CLASSES_SEM_DESENHO = {
     # `.linha`, e o nome serve para achá-la em teste e para o htmx trocar a certa.
     "marco",
     "criterio",
+    "fato",
     "pessoa",
     "quem",
     "secao",

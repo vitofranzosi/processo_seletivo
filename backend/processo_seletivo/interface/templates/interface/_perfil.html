@@ -98,6 +98,17 @@
             hx-get="{% url 'interface:fragmento-modalidade' indice %}"
             hx-target="#modalidades-{{ indice }}" hx-swap="beforeend">Acrescentar Modalidade</button>
   </section>
+  <section class="marcos" aria-labelledby="fato-titulo-{{ indice }}">
+    <h3 id="fato-titulo-{{ indice }}">Fatos exigidos do candidato</h3>
+    <p class="ajuda">O que a inscrição vai perguntar porque uma regra publicada consome — e nada
+      além. Um Perfil que não declara fato nenhum não acrescenta campo nenhum à inscrição.</p>
+    <div id="fatos-{{ indice }}">
+      {% for fato in perfil.fatos %}{% include "interface/_fato.html" with sub=forloop.counter0 %}{% endfor %}
+    </div>
+    <button type="button" class="acao"
+            hx-get="{% url 'interface:fragmento-fato' indice %}"
+            hx-target="#fatos-{{ indice }}" hx-swap="beforeend">Acrescentar fato</button>
+  </section>
   <section class="marcos" aria-labelledby="marco-titulo-{{ indice }}">
     <h3 id="marco-titulo-{{ indice }}">Marcos classificatórios</h3>
     <p class="ajuda">Onde a ordem entre participantes é produzida: quais Etapas entram, como as

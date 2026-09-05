@@ -76,6 +76,11 @@ urlpatterns = [
     # campos dele são `criterio-<perfil>-<marco>-<n>-…`, e sem os dois índices na rota a linha nova
     # não saberia a que marco de que Perfil pertence.
     path(
+        "fragmentos/perfil/<str:indice>/fato",
+        views.fragmento_fato,
+        name="fragmento-fato",
+    ),
+    path(
         "fragmentos/perfil/<str:indice>/marco",
         views.fragmento_marco,
         name="fragmento-marco",

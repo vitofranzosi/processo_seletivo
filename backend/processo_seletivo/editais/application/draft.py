@@ -15,6 +15,7 @@ from processo_seletivo.editais.models.documentos import DocumentoExigido
 from processo_seletivo.editais.models.etapas import EtapaAvaliacao
 from processo_seletivo.editais.models.perfis import (
     CriterioDesempate,
+    FatoDeclarado,
     MarcoClassificatorio,
     ModalidadeConcorrencia,
     PerfilVaga,
@@ -40,7 +41,7 @@ def _identidades_aninhadas_alheias(profiles):
     O marco segue a mesma regra contra o Perfil, e o critério contra o marco: dois marcos irmãos
     trocarem critérios seria trocar a norma de lugar sem que nada acusasse (015, FR-002).
     """
-    modalidades, regras, marcos, criterios = {}, {}, {}, {}
+    modalidades, regras, marcos, criterios, fatos = {}, {}, {}, {}, {}
     for perfil in profiles:
         for modalidade in perfil.get("competitionModalities", []):
             if modalidade.get("id"):
@@ -48,6 +49,9 @@ def _identidades_aninhadas_alheias(profiles):
             regra = modalidade.get("normativeRule") or {}
             if regra.get("id"):
                 regras[str(regra["id"])] = str(modalidade.get("id") or "")
+        for fato in perfil.get("declaredFacts", []):
+            if fato.get("id"):
+                fatos[str(fato["id"])] = str(perfil["id"])
         for marco in perfil.get("classificationMilestones", []):
             if marco.get("id"):
                 marcos[str(marco["id"])] = str(perfil["id"])
@@ -75,6 +79,11 @@ def _identidades_aninhadas_alheias(profiles):
         id__in=list(criterios)
     ).values_list("id", "marco_id"):
         if str(contêiner) != criterios[str(identificador)]:
+            alheios.add(str(identificador))
+    for identificador, contêiner in FatoDeclarado.objects.filter(id__in=list(fatos)).values_list(
+        "id", "perfil_id"
+    ):
+        if str(contêiner) != fatos[str(identificador)]:
             alheios.add(str(identificador))
     return alheios
 
@@ -250,6 +259,16 @@ def replace_draft(
                         call_rules=rule.get("callRules", {}),
                         effective_from=rule.get("effectiveFrom"),
                     )
+            for fato_payload in payload.get("declaredFacts", []):
+                # Com o `id` recebido, como tudo o mais: é por ele que a Retificação alcança o fato
+                # e que o valor congelado na inscrição diz de qual fato ele é.
+                FatoDeclarado.objects.create(
+                    id=fato_payload["id"],
+                    perfil=perfil,
+                    code=fato_payload["code"],
+                    label=fato_payload["label"],
+                    tipo=fato_payload["type"],
+                )
             for marco_payload in payload.get("classificationMilestones", []):
                 # Com o `id` recebido, pela mesma razão da Modalidade: sem isto, cada gravação do
                 # rascunho trocaria a identidade do marco — e é por ela que a Retificação o alcança

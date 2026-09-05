@@ -117,6 +117,22 @@ def _modalidades(dados, prefixo):
     return modalidades
 
 
+def _fatos(dados, prefixo):
+    """Os fatos declarados de um Perfil, pelo mesmo esquema de prefixo composto da modalidade."""
+    fatos = []
+    for indice in _indices(dados, prefixo):
+        base = f"{prefixo}-{indice}"
+        fatos.append(
+            {
+                "id": _texto(dados, f"{base}-id"),
+                "code": _texto(dados, f"{base}-code"),
+                "label": _texto(dados, f"{base}-label"),
+                "type": _texto(dados, f"{base}-type"),
+            }
+        )
+    return fatos
+
+
 def _marcos(dados, prefixo):
     """Os marcos classificatórios de um Perfil, com seus critérios de desempate.
 
@@ -188,6 +204,7 @@ def ler_perfis(dados):
                 # renumeradas: `modalidade-3-…` pertence ao Perfil cujo prefixo é `perfil-3`.
                 "competitionModalities": _modalidades(dados, f"modalidade-{indice}"),
                 # Pelo mesmo esquema de prefixo composto: `marco-3-…` pertence ao `perfil-3`.
+                "declaredFacts": _fatos(dados, f"fato-{indice}"),
                 "classificationMilestones": _marcos(dados, f"marco-{indice}"),
             }
         )
@@ -366,9 +383,10 @@ def perfis_do_edital(edital):
                 _modalidade_para_o_formulario(m) for m in perfil.modalidades.order_by("code")
             ],
             "marcos": [_marco_para_o_formulario(m) for m in perfil.marcos.order_by("code")],
+            "fatos": [_fato_para_o_formulario(f) for f in perfil.fatos.order_by("code")],
         }
         for perfil in edital.perfis.prefetch_related(
-            "modalidades__regra_normativa", "marcos__criterios"
+            "modalidades__regra_normativa", "marcos__criterios", "fatos", "fatos"
         ).order_by(
             "code"
         )
@@ -429,6 +447,7 @@ def perfis_persistidos(edital):
             "classificationMilestones": [
                 _marco_persistido(m) for m in perfil.marcos.order_by("code")
             ],
+            "declaredFacts": [_fato_persistido(f) for f in perfil.fatos.order_by("code")],
         }
         for perfil in edital.perfis.prefetch_related(
             "modalidades__regra_normativa", "marcos__criterios"
@@ -436,6 +455,14 @@ def perfis_persistidos(edital):
             "code"
         )
     ]
+
+
+def _fato_para_o_formulario(fato):
+    return {"id": str(fato.id), "code": fato.code, "label": fato.label, "type": fato.tipo}
+
+
+def _fato_persistido(fato):
+    return {"id": str(fato.id), "code": fato.code, "label": fato.label, "type": fato.tipo}
 
 
 def _marco_para_o_formulario(marco):

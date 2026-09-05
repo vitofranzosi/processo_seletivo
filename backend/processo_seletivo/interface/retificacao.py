@@ -70,6 +70,11 @@ CAMPOS_REGRA = [
 # e a segunda é escolha entre formas que o motor sabe executar — retificá-las por caixa de texto
 # publicaria regra que o cálculo não interpreta. O que a tela alcança aqui é o rótulo.
 CAMPOS_MARCO = [("name", "Denominação do marco", TEXTO)]
+# **O tipo do fato não está aqui, e a ausência é a regra.** Um fato declarado como data que virasse
+# número não é o mesmo fato: reinterpretar o valor já congelado seria o sistema decidindo o que a
+# pessoa quis dizer. Mudar o tipo é remover um fato e acrescentar outro, e o que foi congelado sob
+# o primeiro permanece legível sob a norma que o governou (015, FR-058).
+CAMPOS_FATO = [("label", "Rótulo exibido ao candidato", TEXTO)]
 # **A ordem é o campo que importa retificar.** Ela é a norma: reordenar critérios é mudar a regra, e
 # é por identidade que cada um é alcançado — substituir a lista inteira perderia os identificadores
 # que a própria Retificação endereça (015, FR-015).
@@ -257,6 +262,15 @@ def campos_editaveis(conteudo):
                     f"{caminho}/competitionModalities/id={modalidade.get('id', '')}",
                     modalidade,
                     campos,
+                )
+            )
+        for fato in perfil.get("declaredFacts") or []:
+            grupos.append(
+                _grupo(
+                    f"Fato {fato.get('code', '')} — {perfil.get('code', '')}",
+                    f"{caminho}/declaredFacts/id={fato.get('id', '')}",
+                    fato,
+                    CAMPOS_FATO,
                 )
             )
         for marco in perfil.get("classificationMilestones") or []:

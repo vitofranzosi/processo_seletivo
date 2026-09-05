@@ -1,0 +1,36 @@
+<fieldset class="linha fato">
+  <legend>Fato exigido do candidato</legend>
+  {% comment %}
+  O identificador viaja oculto: é por ele que a Retificação alcança o fato e que o valor congelado
+  na inscrição diz de qual fato ele é. O tipo não é editável depois de publicado — mudar o tipo
+  remove um fato e acrescenta outro, porque reinterpretar valor já congelado seria o sistema
+  decidindo o que a pessoa quis dizer.
+  {% endcomment %}
+  <input type="hidden" name="fato-{{ indice }}-{{ sub }}-id" value="{{ fato.id }}">
+  <div class="campos">
+    <p class="campo curto">
+      <label for="fato-{{ indice }}-{{ sub }}-code">Código <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <input type="text" id="fato-{{ indice }}-{{ sub }}-code" name="fato-{{ indice }}-{{ sub }}-code"
+             value="{{ fato.code|default:'' }}" required placeholder="NASCIMENTO" aria-required="true">
+    </p>
+    <p class="campo largo">
+      <label for="fato-{{ indice }}-{{ sub }}-label">Rótulo exibido ao candidato <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <input type="text" id="fato-{{ indice }}-{{ sub }}-label" name="fato-{{ indice }}-{{ sub }}-label"
+             value="{{ fato.label|default:'' }}" required placeholder="Data de nascimento" aria-required="true">
+    </p>
+    <p class="campo">
+      <label for="fato-{{ indice }}-{{ sub }}-type">Tipo <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <select id="fato-{{ indice }}-{{ sub }}-type" name="fato-{{ indice }}-{{ sub }}-type" required aria-required="true">
+        <option value="DATA" {% if fato.type == "DATA" %}selected{% endif %}>Data</option>
+        <option value="INTEIRO" {% if fato.type == "INTEIRO" %}selected{% endif %}>Número inteiro</option>
+      </select>
+      <span class="ajuda">Só o que uma regra publicada consome: idade sai de data, tempo de
+        experiência sai de número.</span>
+    </p>
+  </div>
+  <p class="remover">
+    <button type="button" class="acao perigo"
+            hx-get="{% url 'interface:fragmento-remover' %}"
+            hx-target="closest fieldset" hx-swap="outerHTML">Remover este fato</button>
+  </p>
+</fieldset>

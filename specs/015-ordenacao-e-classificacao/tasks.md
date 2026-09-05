@@ -137,15 +137,22 @@ teste independente abaixo começa justamente por declarar.
 **Teste independente**: declarar dois fatos, submeter, alterar o perfil depois e verificar que os
 valores congelados não mudaram.
 
-- [ ] T038 [US2] Serializer aninhado de `declaredFacts` e campo em `ProfileSerializer`, no molde de `CompetitionModalitySerializer`, em `backend/processo_seletivo/editais/api/serializers.py`
-- [ ] T039 [US2] Persistir os fatos em `replace_draft` preservando o `id` recebido, e estender `_identidades_aninhadas_alheias`, em `backend/processo_seletivo/editais/application/draft.py`
-- [ ] T040 [US2] Validação de elaboração e de publicação do fato — código único no Perfil, tipo restrito aos dois valores — em `backend/processo_seletivo/editais/domain/perfis.py` e `domain/validation.py`
-- [ ] T041 [P] [US2] Ler, renderizar e **persistir** os fatos em `backend/processo_seletivo/interface/forms.py`, com prefixo composto pelo índice do Perfil
-- [ ] T042 [US2] Fragmento htmx e reexibição do fato em `backend/processo_seletivo/interface/views.py`, e template `_fato.html` em `templates/interface/`
-- [ ] T043 [US2] `CAMPOS_FATO` e o laço aninhado em `campos_editaveis` em `backend/processo_seletivo/interface/retificacao.py`
-- [ ] T044 [US2] Teste integrado: declarar dois fatos → publicar → retificar, com os identificadores **preservados** ao longo do percurso, em `backend/tests/integration/publicacoes/`
-- [ ] T045 [US2] Teste: identidade de fato pertencente a outro Perfil é recusada na gravação do rascunho, em `backend/tests/integration/editais/`
-- [ ] T046 [US2] Teste: mudar o tipo de um fato cria fato novo — a Retificação remove um e acrescenta outro —, e o valor congelado sob o primeiro permanece legível sob a norma que o governou, em `backend/tests/integration/publicacoes/`
+- [X] T038 [US2] Serializer aninhado de `declaredFacts` e campo em `ProfileSerializer`, no molde de `CompetitionModalitySerializer`, em `backend/processo_seletivo/editais/api/serializers.py`
+- [X] T039 [US2] Persistir os fatos em `replace_draft` preservando o `id` recebido, e estender `_identidades_aninhadas_alheias`, em `backend/processo_seletivo/editais/application/draft.py`
+- [X] T040 [US2] Validação de elaboração e de publicação do fato — código único no Perfil, tipo restrito aos dois valores — em `backend/processo_seletivo/editais/domain/perfis.py` e `domain/validation.py`
+- [X] T041 [P] [US2] Ler, renderizar e **persistir** os fatos em `backend/processo_seletivo/interface/forms.py`, com prefixo composto pelo índice do Perfil
+- [X] T042 [US2] Fragmento htmx e reexibição do fato em `backend/processo_seletivo/interface/views.py`, e template `_fato.html` em `templates/interface/`
+- [X] T043 [US2] `CAMPOS_FATO` e o laço aninhado em `campos_editaveis` em `backend/processo_seletivo/interface/retificacao.py`
+- [X] T044 [US2] Teste integrado: declarar dois fatos → publicar → retificar, com os identificadores **preservados** ao longo do percurso, em `backend/tests/integration/publicacoes/`
+- [X] T045 [US2] Teste: identidade de fato pertencente a outro Perfil é recusada na gravação do rascunho, em `backend/tests/integration/editais/`
+- [ ] T046 **BLOQUEADA — buraco encontrado ao escrever o teste, em 04/09/2026.** A Retificação
+  **aceita** trocar o `type` de um fato declarado: a gramática admite o caminho
+  `/profiles/id=…/declaredFacts/id=…/type` como escalar de coleção com chave, e responde 201. FR-058
+  exige o contrário — mudar o tipo remove um fato e acrescenta outro. O catálogo da interface não
+  oferece o campo, mas a API não é a interface. `CAMPOS_DE_IDENTIDADE` não serve: ela casa por
+  **nome de token**, e `type` também é campo do Evento do Cronograma — proibi-lo ali quebraria
+  Retificação legítima. Falta um mecanismo por **forma de caminho**, que não existe hoje. Original:
+  Teste: mudar o tipo de um fato cria fato novo — a Retificação remove um e acrescenta outro —, e o valor congelado sob o primeiro permanece legível sob a norma que o governou, em `backend/tests/integration/publicacoes/`
 - [ ] T047 [US2] Modelo `ValorDeFato` em `backend/processo_seletivo/inscricoes/models.py`, com `fato_id` pela identidade publicada e `ck_valor_conforme_tipo`
 - [ ] T048 [US2] Congelar os fatos na **submissão**, contra a `versao_aceita`, em `backend/processo_seletivo/inscricoes/` — nunca na abertura do rascunho
 - [ ] T049 [US2] Migration de `inscricoes` com os valores congelados, em `backend/processo_seletivo/inscricoes/migrations/`
