@@ -18,6 +18,10 @@ EVENTO = {
     "A": "00000000-0000-0000-0000-000000000521",
     "B": "00000000-0000-0000-0000-000000000522",
 }
+FATO = {
+    "NASCIMENTO": "00000000-0000-0000-0000-000000000531",
+    "EXPERIENCIA": "00000000-0000-0000-0000-000000000532",
+}
 MODALIDADE = {
     "A": "00000000-0000-0000-0000-000000000541",
     "B": "00000000-0000-0000-0000-000000000542",
@@ -67,7 +71,12 @@ def modalidade(identificador, sigla, percentual):
     }
 
 
-def perfil(identificador, sigla, nome, *, modalidades=(), requisitos=()):
+def fato(identificador, sigla, rotulo, tipo):
+    """Um fato declarado pelo Edital (D-2), na forma **publicada**."""
+    return {"id": identificador, "code": sigla, "label": rotulo, "type": tipo}
+
+
+def perfil(identificador, sigla, nome, *, modalidades=(), requisitos=(), fatos=()):
     return {
         "id": identificador,
         "code": sigla,
@@ -84,6 +93,11 @@ def perfil(identificador, sigla, nome, *, modalidades=(), requisitos=()):
         "classificationInformation": {},
         "callInformation": {},
         "competitionModalities": list(modalidades),
+        # As duas da versão 7. `classificationMilestones` fica vazia enquanto a elaboração do marco
+        # não existir; a chave, porém, é obrigatória — no conteúdo publicado não há campo opcional,
+        # e a versão canônica identifica **uma** grafia.
+        "declaredFacts": list(fatos),
+        "classificationMilestones": [],
     }
 
 
@@ -118,7 +132,16 @@ def conteudo_normativo():
                 ],
                 requisitos=["Diploma", "Registro profissional"],
             ),
-            perfil(PERFIL["B"], "P2", "Perfil B", requisitos=["Diploma"]),
+            perfil(
+                PERFIL["B"],
+                "P2",
+                "Perfil B",
+                requisitos=["Diploma"],
+                fatos=[
+                    fato(FATO["NASCIMENTO"], "NASCIMENTO", "Data de nascimento", "DATA"),
+                    fato(FATO["EXPERIENCIA"], "EXPERIENCIA", "Meses de experiência", "INTEIRO"),
+                ],
+            ),
             perfil(PERFIL["C"], "P3", "Perfil C"),
         ],
         "schedule": [
@@ -143,6 +166,11 @@ def rascunho_publicavel():
     """
     base = conteudo_normativo()
     for perfil_ in base["profiles"]:
+        # O rascunho ainda não declara as duas coleções da versão 7: a elaboração do fato e a do
+        # marco são da `US2` e da `US1`, e o serializer do rascunho recusa campo desconhecido. O
+        # conteúdo **publicado** as tem porque a emissão as deriva dos modelos; o rascunho, não.
+        perfil_.pop("declaredFacts", None)
+        perfil_.pop("classificationMilestones", None)
         for modalidade_ in perfil_["competitionModalities"]:
             modalidade_["normativeRule"] = {
                 chave: valor

@@ -7,6 +7,7 @@ seja uma falha de suíte.
 
 from processo_seletivo.publicacoes.domain import colecoes
 from tests.fixtures.snapshot import (
+    FATO,
     MODALIDADE,
     PERFIL,
     colecoes_nao_declaradas,
@@ -73,7 +74,10 @@ def test_the_identity_topology_names_every_addressable_entity():
 
     assert f"/profiles/id={PERFIL['A']}" in topologia
     assert f"/profiles/id={PERFIL['A']}/competitionModalities/id={MODALIDADE['A']}" in topologia
-    assert len(topologia) == 3 + 2 + 2, "três Perfis, duas Modalidades do primeiro, dois Eventos"
+    assert f"/profiles/id={PERFIL['B']}/declaredFacts/id={FATO['NASCIMENTO']}" in topologia
+    assert len(topologia) == 3 + 2 + 2 + 2, (
+        "três Perfis, duas Modalidades do primeiro, dois Eventos e dois Fatos Declarados do segundo"
+    )
 
 
 def test_the_topology_skips_a_key_that_is_not_text_instead_of_breaking():

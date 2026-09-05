@@ -484,6 +484,11 @@ def _perfil_completo(valores):
         "classificationInformation": {},
         "callInformation": {},
         "competitionModalities": [],
+        # As duas da versão 7, pelo mesmo motivo do comentário acima: um Perfil acrescentado por
+        # Retificação sem elas nasceria com a forma da versão 6, e o guarda de
+        # `test_perfil_acrescentado_nasce_com_a_forma_do_snapshot` é justamente quem impede isso.
+        "declaredFacts": [],
+        "classificationMilestones": [],
     }
 
 
