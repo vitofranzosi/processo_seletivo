@@ -42,7 +42,16 @@ COLECOES_COM_CHAVE = frozenset(
 
 # Coleção sem identificador: valor normativo atômico, substituído inteiro e nunca endereçado
 # item a item (FR-011).
-COLECOES_ATOMICAS = frozenset({"/profiles/*/requirements"})
+COLECOES_ATOMICAS = frozenset(
+    {
+        "/profiles/*/requirements",
+        # A enumeração de Etapas de um marco é lista de **identidades**, e não de entidades: não há
+        # o que endereçar item a item, e mudar quais Etapas entram é substituir a enumeração
+        # inteira. Foi o guarda de endereçamento sobre snapshot publicado que a encontrou — sem
+        # esta declaração ela seria coleção sem chave, que é o que o sistema recusa (015, T-007).
+        "/profiles/*/classificationMilestones/*/stages",
+    }
+)
 
 # Controle interno da Versão Consolidada. Não é conteúdo normativo e nenhuma Alteração o
 # endereça, em forma alguma (FR-013).

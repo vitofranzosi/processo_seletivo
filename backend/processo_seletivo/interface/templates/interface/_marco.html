@@ -1,0 +1,60 @@
+<fieldset class="linha marco">
+  <legend>Marco classificatório</legend>
+  {% comment %}
+  O identificador viaja oculto pela mesma razão da Modalidade: a gravação preserva o `id` recebido,
+  e é por ele que a Retificação alcança o marco e que o ato de ordenação declara qual marco
+  realizou. Uma linha sem identidade não teria o que preservar.
+  {% endcomment %}
+  <input type="hidden" name="marco-{{ indice }}-{{ sub }}-id" value="{{ marco.id }}">
+  <div class="campos">
+    <p class="campo curto">
+      <label for="marco-{{ indice }}-{{ sub }}-code">Código <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <input type="text" id="marco-{{ indice }}-{{ sub }}-code"
+             name="marco-{{ indice }}-{{ sub }}-code"
+             value="{{ marco.code|default:'' }}" required placeholder="FINAL" aria-required="true">
+    </p>
+    <p class="campo largo">
+      <label for="marco-{{ indice }}-{{ sub }}-name">Denominação <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <input type="text" id="marco-{{ indice }}-{{ sub }}-name"
+             name="marco-{{ indice }}-{{ sub }}-name"
+             value="{{ marco.name|default:'' }}" required
+             placeholder="Classificação final" aria-required="true">
+    </p>
+  </div>
+  <div class="campos">
+    <p class="campo">
+      <label for="marco-{{ indice }}-{{ sub }}-operation">Como as pontuações se combinam <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <select id="marco-{{ indice }}-{{ sub }}-operation" name="marco-{{ indice }}-{{ sub }}-operation" required aria-required="true">
+        <option value="SOMA_PONDERADA" {% if marco.operation == "SOMA_PONDERADA" %}selected{% endif %}>Soma ponderada pelos pesos das Etapas</option>
+        <option value="MEDIA_PONDERADA" {% if marco.operation == "MEDIA_PONDERADA" %}selected{% endif %}>Média ponderada pelos pesos das Etapas</option>
+      </select>
+      <span class="ajuda">O peso de cada Etapa é o que a própria Etapa já publica; aqui se declara
+        o que se faz com eles.</span>
+    </p>
+    <p class="campo">
+      <label for="marco-{{ indice }}-{{ sub }}-normalization">Normalização <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <select id="marco-{{ indice }}-{{ sub }}-normalization" name="marco-{{ indice }}-{{ sub }}-normalization" required aria-required="true">
+        <option value="NENHUMA" {% if marco.normalization == "NENHUMA" %}selected{% endif %}>Nenhuma</option>
+        <option value="PELA_SOMA_DOS_PESOS" {% if marco.normalization == "PELA_SOMA_DOS_PESOS" %}selected{% endif %}>Dividir pela soma dos pesos</option>
+      </select>
+      <span class="ajuda">Os pesos não precisam somar 1: é a normalização declarada que responde
+        por isso.</span>
+    </p>
+  </div>
+  <section class="modalidades">
+    <h4>Critérios de desempate</h4>
+    <p class="ajuda">Aplicados na ordem declarada. Esgotados todos, os empatados compartilham
+      posição, e o ato registra que ali não existe ordem normativa.</p>
+    <div id="criterios-{{ indice }}-{{ sub }}">
+      {% for criterio in marco.criterios %}{% include "interface/_criterio.html" with n=forloop.counter0 %}{% endfor %}
+    </div>
+    <button type="button" class="acao"
+            hx-get="{% url 'interface:fragmento-criterio' indice sub %}"
+            hx-target="#criterios-{{ indice }}-{{ sub }}" hx-swap="beforeend">Acrescentar critério</button>
+  </section>
+  <p class="remover">
+    <button type="button" class="acao perigo"
+            hx-get="{% url 'interface:fragmento-remover' %}"
+            hx-target="closest fieldset" hx-swap="outerHTML">Remover este marco</button>
+  </p>
+</fieldset>

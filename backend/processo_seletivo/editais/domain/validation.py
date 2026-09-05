@@ -485,7 +485,7 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
                 if etapa is None:
                     findings.append(
                         ValidationFinding(
-                            Severity.ERROR,
+                            Severity.BLOCKING_ERROR,
                             "milestone_stage_missing",
                             "O marco classificatório enumera uma Etapa que não existe no Edital.",
                             f"{caminho}/stages",
@@ -494,7 +494,7 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
                 elif not etapa.get("classificatory"):
                     findings.append(
                         ValidationFinding(
-                            Severity.ERROR,
+                            Severity.BLOCKING_ERROR,
                             "milestone_stage_not_classificatory",
                             "O marco classificatório enumera uma Etapa que o Edital não publicou "
                             "como classificatória.",
@@ -509,7 +509,7 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
                 if alvo_etapa is not None and alvo_etapa not in etapas:
                     findings.append(
                         ValidationFinding(
-                            Severity.ERROR,
+                            Severity.BLOCKING_ERROR,
                             "tiebreaker_stage_missing",
                             "Um critério de desempate aponta Etapa que não existe no Edital.",
                             f"{caminho}/tiebreakers",
@@ -519,7 +519,7 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
                 if alvo_fato is not None and alvo_fato not in fatos:
                     findings.append(
                         ValidationFinding(
-                            Severity.ERROR,
+                            Severity.BLOCKING_ERROR,
                             "tiebreaker_fact_missing",
                             "Um critério de desempate aponta fato declarado que não existe "
                             "no Perfil.",
@@ -529,7 +529,7 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
                 if not criterio.get("whenMissing"):
                     findings.append(
                         ValidationFinding(
-                            Severity.ERROR,
+                            Severity.BLOCKING_ERROR,
                             "tiebreaker_missing_behaviour",
                             "Um critério de desempate não declara o que fazer quando o valor "
                             "que ele consome não existe.",

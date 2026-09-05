@@ -98,6 +98,18 @@
             hx-get="{% url 'interface:fragmento-modalidade' indice %}"
             hx-target="#modalidades-{{ indice }}" hx-swap="beforeend">Acrescentar Modalidade</button>
   </section>
+  <section class="marcos" aria-labelledby="marco-titulo-{{ indice }}">
+    <h3 id="marco-titulo-{{ indice }}">Marcos classificatórios</h3>
+    <p class="ajuda">Onde a ordem entre participantes é produzida: quais Etapas entram, como as
+      pontuações se combinam e em que ordem os critérios de desempate se aplicam. Um Perfil sem
+      marco não classifica.</p>
+    <div id="marcos-{{ indice }}">
+      {% for marco in perfil.marcos %}{% include "interface/_marco.html" with sub=forloop.counter0 %}{% endfor %}
+    </div>
+    <button type="button" class="acao"
+            hx-get="{% url 'interface:fragmento-marco' indice %}"
+            hx-target="#marcos-{{ indice }}" hx-swap="beforeend">Acrescentar marco</button>
+  </section>
   <p class="remover">
     <button type="button" class="acao perigo"
             hx-get="{% url 'interface:fragmento-remover' %}"

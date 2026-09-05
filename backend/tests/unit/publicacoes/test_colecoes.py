@@ -38,8 +38,20 @@ def test_a_keyed_collection_missing_an_identifier_is_reported():
     assert elementos_sem_chave(conteudo) == ["/profiles"]
 
 
-def test_requirements_is_the_only_collection_without_a_key():
-    assert colecoes.COLECOES_ATOMICAS == frozenset({"/profiles/*/requirements"})
+def test_as_colecoes_sem_chave_sao_declaradas_uma_a_uma():
+    """Eram uma; passaram a ser duas, e a lista continua literal de propósito.
+
+    Uma coleção atômica é valor normativo substituído inteiro. `requirements` é lista de frases;
+    `stages` de um marco é lista de identidades de Etapa — em nenhuma das duas há entidade a
+    endereçar. Manter a lista escrita, e não derivada, é o que faz a terceira exigir uma decisão em
+    vez de aparecer por acidente.
+    """
+    assert colecoes.COLECOES_ATOMICAS == frozenset(
+        {
+            "/profiles/*/requirements",
+            "/profiles/*/classificationMilestones/*/stages",
+        }
+    )
 
 
 def test_nested_collections_are_declared_by_shape_and_not_by_profile():

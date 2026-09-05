@@ -883,6 +883,40 @@ def fragmento_documento(request, edital_id):
 
 
 @require_http_methods(["GET"])
+def fragmento_marco(request, indice):
+    """A linha nova nasce com identidade, pela mesma razão da modalidade.
+
+    `indice` é o do Perfil que a contém: os campos são `marco-<perfil>-<n>-…`.
+    """
+    return render(
+        request,
+        "interface/_marco.html",
+        {
+            "marco": {"id": str(uuid4())},
+            "indice": indice,
+            "sub": _indice_de_linha(request),
+        },
+    )
+
+
+def fragmento_criterio(request, indice, sub):
+    """Um nível mais fundo: o critério pertence ao marco, e não ao Perfil.
+
+    Renumerar critérios por Perfil faria dois marcos irmãos disputarem a mesma linha do formulário,
+    que é o mesmo defeito que a composição de prefixo da modalidade já evita um nível acima.
+    """
+    return render(
+        request,
+        "interface/_criterio.html",
+        {
+            "criterio": {"id": str(uuid4())},
+            "indice": indice,
+            "sub": sub,
+            "n": _indice_de_linha(request),
+        },
+    )
+
+
 def fragmento_modalidade(request, indice):
     """A linha nova nasce com **os dois** identificadores: o da modalidade e o da sua Regra.
 
