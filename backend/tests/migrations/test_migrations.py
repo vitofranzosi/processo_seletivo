@@ -32,7 +32,9 @@ TRIGGERS_POR_APP = {
         "revisao_edital_append_only",
     ),
     # A conclusão preservada da 012 e o Resultado da 013. A última não é append-only: é a
-    # conferência que impede o Resultado de afirmar o que a Avaliação fonte não afirmou.
+    # conferência que impede o Resultado de afirmar o que a Avaliação fonte não afirmou — e, desde
+    # D-1, também que o Resultado por Ocorrência afirme fonte nenhuma e cite norma de outro Edital.
+    # O nome não mudou com o terceiro ramo: a função foi recriada, e a trigger é a mesma.
     "avaliacoes": ("conclusao_avaliacao_append_only",),
     "resultados": ("resultado_etapa_append_only", "resultado_etapa_coerente"),
 }
@@ -278,6 +280,98 @@ def _semear_historico_pontuado(gestor, api_client, manager_headers):
         "conclusao": conclusao.pk,
         "resultado": resultado.pk,
     }
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+@postgresql_only
+def test_o_salto_para_a_origem_declarada_preenche_o_historico(gestor, api_client, manager_headers):
+    """O upgrade de D-1 com dados: `origem` e `versao` nas linhas que já existiam.
+
+    `origem` nasce com `DEFAULT 'AVALIACAO'`, que é DDL e não toca linha nenhuma. `versao` não tem
+    valor constante a oferecer — cada Resultado herda a da sua Avaliação —, e por isso o
+    preenchimento é um `UPDATE` linha a linha **numa tabela append-only**. É o único passo destas
+    migrations que precisa desligar a própria proteção pelo tempo em que corre, e é por isso que
+    ele merece prova com dado real em vez de só esquema.
+    """
+    inicial = MigrationExecutor(connection)
+    inicial.loader.build_graph()
+    inicial.migrate(inicial.loader.graph.leaf_nodes())
+
+    dados = _semear_historico_pontuado(gestor, api_client, manager_headers)
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT versao_id FROM resultados_resultadoetapa WHERE id = %s", [dados["resultado"]]
+        )
+        versao_esperada = cursor.fetchone()[0]
+
+    # A instalação volta ao estado anterior a D-1: as colunas somem, as linhas ficam.
+    executor = MigrationExecutor(connection)
+    executor.migrate([("resultados", "0003_sentido_restrito_aos_dois_valores")])
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT 1 FROM information_schema.columns "
+            "WHERE table_name = 'resultados_resultadoetapa' AND column_name = 'origem'"
+        )
+        assert cursor.fetchone() is None, "o cenário precisa começar sem a coluna"
+
+    executor.loader.build_graph()
+    alvos = [node for node in executor.loader.graph.leaf_nodes() if node[0] in APPS]
+    executor.migrate(alvos)
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT origem, versao_id, avaliacao_id FROM resultados_resultadoetapa WHERE id = %s",
+            [dados["resultado"]],
+        )
+        origem, versao, avaliacao = cursor.fetchone()
+    assert origem == "AVALIACAO", "o histórico inteiro nasceu de Avaliação"
+    assert versao == versao_esperada, "a versão preenchida é a que a junção devolvia"
+    assert avaliacao is not None
+
+    esperadas = set(TRIGGERS_POR_APP["resultados"])
+    assert esperadas <= _installed_triggers(), "o salto não recriou as triggers que derrubou"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+@postgresql_only
+def test_a_reversao_de_d1_recusa_quando_ja_existe_ocorrencia(gestor, api_client, manager_headers):
+    """Reverter é possível **enquanto ninguém tiver registrado ocorrência** — e a recusa diz isso.
+
+    Desfazer o passo é afirmar de novo que todo Resultado tem Avaliação, e o Resultado por
+    Ocorrência não tem nenhuma a oferecer. Sem a guarda, o `migrate` para trás falharia adiante com
+    um erro de coluna nula que não explica o que aconteceu.
+    """
+    from django.db.migrations.exceptions import IrreversibleError
+
+    from processo_seletivo.resultados.application.ocorrencia import registrar_ocorrencia
+    from tests.conftest import ator_institucional
+    from tests.fixtures.comissao import inscrever
+    from tests.fixtures.resultado import montar_etapa_de_leitura_unica
+
+    inicial = MigrationExecutor(connection)
+    inicial.loader.build_graph()
+    inicial.migrate(inicial.loader.graph.leaf_nodes())
+
+    cenario = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=1960, codigo="1960"
+    )
+    inscricao = inscrever(cenario["edital"], 1, primeiro=1)[0]
+    registrar_ocorrencia(
+        actor=ator_institucional("maria"),
+        processo_id=cenario["processo"].id,
+        edital_id=cenario["edital"].id,
+        etapa_id=cenario["etapa"],
+        inscricao_ids=[inscricao.id],
+        motivo="não compareceu à Entrevista (item 6.3 do Edital)",
+        idempotency_key="k-1960",
+        correlation_id="teste",
+    )
+
+    executor = MigrationExecutor(connection)
+    with pytest.raises(IrreversibleError, match="Desfazê-los é ato administrativo"):
+        executor.migrate([("resultados", "0003_sentido_restrito_aos_dois_valores")])
 
 
 DOMINIO_OU_APLICACAO = ("domain", "application")

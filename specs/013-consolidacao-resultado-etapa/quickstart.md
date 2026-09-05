@@ -174,6 +174,34 @@ colocação, aprovação final ou direito a vaga (FR-045).
 
 ---
 
+## Entrega 6 — o desfecho de quem não foi avaliado (D-1)
+
+*Acrescentada em 04/09/2026, junto da extensão. Ela é curta porque o ato é curto — e é a única do
+documento que **não** passa pela Mesa em momento nenhum.*
+
+1. Na Etapa, a presidência clica **Registrar ocorrência**. A tela lista quem participa da Etapa e
+   ainda não tem Resultado — inclusive quem não tem avaliação concluída nenhuma, que é justamente
+   quem esta tela existe para resolver.
+2. Ela marca a inscrição de quem faltou, escreve *"não compareceu à Entrevista (item 6.3 do
+   Edital)"* e envia. **Nada é gravado ainda**: a tela devolve a confirmação, nomeando quem será
+   eliminado e sob qual motivo.
+3. Ela confirma. O Resultado nasce **eliminado, sem Avaliação, sem pontuação e sem sentido**, com a
+   versão vigente do Edital como norma e o motivo como causa.
+4. Em **Resultados**, a linha aparece com a coluna *Origem* dizendo `Ocorrência`, a conclusão dita
+   como "não avaliada" e a coluna de quem avaliou dizendo, por extenso, que ninguém avaliou.
+5. Na Etapa **seguinte**, aquela inscrição não está — pelo mesmo caminho de quem foi eliminado por
+   nota.
+
+O passo 2 é o que prova o Princípio VI junto com o 1: sem eles, a capacidade existiria no domínio e
+nenhuma interface a alcançaria. E o passo 3 é o que a distingue da consolidação: aqui a presidência
+**informa** o motivo, porque a constatação é o conteúdo do ato, e não um cálculo a confirmar.
+
+**O caso que vale exercitar depois**, porque é o que a decisão existe para permitir: repetir a
+Entrega 6 numa Etapa cuja consolidação está impedida — decisória e não eliminatória, ou de leitura
+múltipla. A ocorrência é registrada assim mesmo, e é isso que I-1 afirma.
+
+---
+
 ## Cobertura declarada, e não presumida
 
 O percurso acima demonstra os requisitos observáveis pelo canal do ator — a participação, a

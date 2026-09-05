@@ -55,3 +55,42 @@ def test_a_auditoria_nao_ganha_o_botao_de_consolidar(client, seletor_ligado, cen
 def test_quem_nao_tem_nada_recebe_a_resposta_uniforme(client, seletor_ligado, cenario):
     identificar(client, "estranho", [])
     assert client.get(consulta(cenario)).status_code == 404
+
+
+# ------------------------- o ato por ocorrência: quem constata, e quem não (D-1)
+
+
+def ocorrencia(cenario):
+    return reverse(
+        "interface:registrar-ocorrencia", args=[cenario["edital"].id, cenario["primeira"]]
+    )
+
+
+def test_a_auditoria_le_o_resultado_e_nao_alcanca_a_ocorrencia(client, seletor_ligado, cenario):
+    """Ler não concede o poder de constatar, aqui pela mesma razão que não concede o de consolidar.
+
+    A resposta é **404**, e não 403: é a mesma resposta uniforme que a 011 dá a tudo que o ator não
+    alcança, e ela não confirma nem nega que a Etapa exista.
+    """
+    identificar(client, "iris", ["auditor"])
+    assert client.get(consulta(cenario)).status_code == 200
+    assert client.get(ocorrencia(cenario)).status_code == 404
+
+    resposta = client.post(
+        ocorrencia(cenario),
+        {"confirmar": "1", "inscricao_id": [], "motivo": "não compareceu"},
+    )
+    assert resposta.status_code == 404
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    assert ResultadoEtapa.objects.count() == 0
+
+
+def test_a_presidencia_alcanca_a_ocorrencia(client, seletor_ligado, cenario):
+    identificar(client, "maria", ["gestor"])
+    assert client.get(ocorrencia(cenario)).status_code == 200
+
+
+def test_quem_nao_tem_nada_recebe_a_uniforme_na_ocorrencia(client, seletor_ligado, cenario):
+    identificar(client, "estranho", [])
+    assert client.get(ocorrencia(cenario)).status_code == 404

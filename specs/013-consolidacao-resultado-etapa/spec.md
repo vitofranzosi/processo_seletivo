@@ -266,6 +266,81 @@ sorteio, recurso ou convocação para dentro dela.
 **7 · O comportamento da forma pontuada é invariante de não regressão.** Todo Resultado hoje gravado
 é pontuado, e nenhum deles muda de comportamento por causa desta revisão.
 
+### D-1 — Resultado de Etapa sem Avaliação
+
+*Tomada em 04/09/2026 em `doc/decisoes-pre-vertical.md`, e implementada como **extensão** desta
+feature. **O identificador é o de lá**, e não o próximo da série desta spec: renumerá-la aqui daria
+dois nomes ao mesmo contrato, e as specs 014–019 a citam pelo nome com que foi decidida. Ela não
+toca conteúdo publicado — é esquema e regra de domínio, sem reflexo no snapshot.*
+
+**1 · `ResultadoEtapa.avaliacao` passa a ser anulável, e a linha ganha `origem`.**
+
+```text
+origem = AVALIACAO   →  avaliacao NOT NULL      (o que existia)
+origem = OCORRENCIA  →  avaliacao NULL          (ato administrativo da presidência)
+```
+
+**O que a força.** Os Editais produzem desfecho para quem não foi avaliado, e não é caso de borda:
+*"o candidato que faltar à etapa de Entrevista estará automaticamente desclassificado"* (14, 6.3);
+eliminação a qualquer tempo por descumprimento de pré-requisito (76, 5.3); não comparecimento ao
+procedimento de verificação (35/57). Enquanto a chave era `OneToOne` não-anulável, **um Resultado
+não podia existir sem uma Avaliação** — e o invariante I-1 do briefing dizia o contrário do que a
+implementação fazia.
+
+**2 · Não é entidade própria de Ocorrência, e não é conclusão decisória.** Uma entidade seria mais
+expressiva e criaria estrutura antes da regra que a consome: há um consumidor só, e ele cabe num
+discriminador; quando houver ocorrência que precise de ciclo de vida próprio — contestada, revista,
+anulada —, a entidade nasce com o caso que a justifica. Registrar a ausência como conclusão
+decisória seria mais barato e afirmaria que alguém avaliou quem não compareceu: contradiz P-006 da
+012 — *avaliar não é decidir* — e mente sobre a autoria, porque a ausência é constatada pela
+presidência e não julgada por avaliador.
+
+**3 · A versão normativa passa a ser campo do Resultado, exigida sempre.** O docstring do modelo
+declarava a estratégia inteira de proveniência: a norma histórica era reproduzida pela versão da
+Avaliação fonte, alcançada por `avaliacao__versao`. Sem Avaliação não há esse caminho, e o
+Resultado por Ocorrência ficaria sem a norma que o fundamentou — contra I-2, que exige o resultado
+reproduzível a partir das regras que o produziram. Guardá-la só no ramo sem Avaliação criaria duas
+formas de responder à mesma pergunta.
+
+O argumento original contra materializá-la era que "não economizaria junção nenhuma e abriria uma
+quinta forma de o Resultado se contradizer" (T-011): a primeira metade deixa de valer quando não há
+junção possível, e a segunda é respondida pela trigger, que é como as outras quatro já são
+impedidas. `resultado_etapa_coerente` passa a conferir origem, nulabilidade e — **quando a origem é
+Avaliação** — que a versão coincide com a da fonte. No ramo por Ocorrência ela confere o que sobra:
+que a linha não cita Avaliação nenhuma, e que a versão citada é deste Edital.
+
+**4 · A Ocorrência não tem forma, pontuação nem sentido**, e `ck_resultado_completo_por_forma` ganha
+um terceiro ramo feito das três ausências, pelo mesmo caminho que a conclusão da 012 percorreu.
+Carimbar `DECISORIA` numa ausência diria que houve conclusão, e não houve. A unicidade
+Inscrição × Etapa e o regime append-only permanecem palavra por palavra, e valem **entre** origens:
+um par já resolvido por avaliação não recebe ocorrência depois — isso seria anulação, ato que a V1
+não tem.
+
+**5 · O ato tem autor, motivo e trilha, como `resultado:consolidar` já tem.** Mesmo invólucro —
+transação, bloqueio do Processo, reavaliação da autorização **depois** do bloqueio, reserva da
+chave — e mesma autorização: `comissao:gerir` ou a presidência deste Processo. Não há permissão
+nova. A diferença é o que a presidência informa: na consolidação, nada — ela confirma um cálculo;
+aqui, o **motivo**, porque a constatação é o conteúdo do ato e é ela que responde a um recurso.
+
+**6 · A prontidão da ocorrência não consulta o mecanismo avaliação, e a ausência é I-1 em código.**
+Ela não pergunta se há conclusão elegível, se a Etapa declara como combinar avaliações, se a norma
+histórica é compatível com a vigente, nem se a Etapa publicou nota mínima. Uma Etapa **impedida de
+consolidar** continua podendo registrar que alguém não compareceu. O que a estreita são as duas
+regras de participação de D-003 e a unicidade.
+
+**7 · A consequência da Ocorrência é `ELIMINADA`, e ela não vira constraint.** Os três casos que a
+forçam eliminam, e nenhum Edital lido produz habilitação por ausência de avaliação. Mas as
+constraints deste modelo dizem se a linha é internamente coerente, e "que atos a V1 permite" é
+política: o sorteio e a verificação de reserva de vaga, que a 013 vai hospedar depois, produzem
+desfecho favorável por caminho que não é avaliação, e uma constraint escrita hoje os obrigaria a
+desfazê-la amanhã.
+
+**8 · A capacidade é alcançável pela presidência na interface administrativa** — tela própria a
+partir da Etapa, com confirmação que declara o alcance antes do ato. Comando interno isolado não
+bastaria: pelo Princípio VI, capacidade que o domínio sustenta e nenhuma interface alcança não está
+entregue. Tela própria, e não um botão a mais na distribuição, porque o ato tem conteúdo próprio a
+informar — o motivo — e porque ele **elimina** quem a Etapa nunca avaliou, e não se desfaz.
+
 ## 3. Problema
 
 Hoje a presidência consegue distribuir, acompanhar e concluir avaliações confiáveis, mas precisa

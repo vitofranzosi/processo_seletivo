@@ -137,6 +137,13 @@ são três linhas. A informação — "o que impede" — some no meio da repeti�
 
 <p class="acoes-do-painel">
   <a class="acao" href="{% url 'interface:impedimentos' edital.id etapa.id %}">Impedimentos</a>
+  {% comment %}
+  O caminho até o desfecho de quem **não foi avaliado** — faltou, não compareceu, descumpriu
+  pré-requisito. Ele sai daqui porque é aqui que a presidência acompanha a Etapa, e é uma tela
+  própria porque o ato tem conteúdo próprio e elimina (D-1).
+  {% endcomment %}
+  <a class="acao" href="{% url 'interface:registrar-ocorrencia' edital.id etapa.id %}">Registrar ocorrência</a>
+  <a class="acao" href="{% url 'interface:resultados-da-etapa' edital.id etapa.id %}">Resultados</a>
   <a class="acao" href="{% url 'interface:trilha-da-avaliacao' edital.id etapa.id %}">Trilha</a>
 </p>
 
