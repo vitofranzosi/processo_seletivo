@@ -1,0 +1,121 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Ocorrência — {{ etapa.name }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> ›
+  <span aria-current="page">Ocorrência</span>
+</nav>
+
+<h1>Registrar ocorrência na Etapa</h1>
+<p class="sub">{{ etapa.name }} — Edital {{ edital.number }}/{{ edital.year }}</p>
+
+{% comment %}
+Esta tela existe porque o Edital produz desfecho para quem **não foi avaliado**: quem falta à
+entrevista, quem descumpre pré-requisito, quem não comparece ao procedimento de verificação. A
+ausência é constatada pela presidência — não é avaliação, não é parecer e não é nota (D-1).
+
+Ela é **outra tela**, e não um botão a mais na distribuição, porque aqui há conteúdo a informar: o
+motivo constatado. E porque o ato elimina alguém que a Etapa nunca avaliou, e não se desfaz.
+{% endcomment %}
+<p class="ajuda">O que é registrado aqui é uma <strong>constatação</strong>: a pessoa não foi
+  avaliada nesta Etapa, e o Edital dá consequência ao fato. O Resultado nasce
+  <strong>eliminado</strong>, com o motivo que você escrever, e ele é a resposta que ficará
+  registrada se houver recurso. <strong>Não há desfazer.</strong></p>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível registrar:</strong> {{ erro }}</p>{% endif %}
+{% if resultado %}
+<p class="sucesso" role="status" tabindex="-1">{{ resultado.feitas }} ocorrênci{{ resultado.feitas|pluralize:"a,as" }} {{ resultado.verbo }}{{ resultado.feitas|pluralize:",s" }}{% if resultado.recusadas %}, e {{ resultado.recusadas }} inscriç{{ resultado.recusadas|pluralize:"ão,ões" }} recusada{{ resultado.recusadas|pluralize:"s" }}{% endif %}.
+  Os Resultados estão em <a href="{% url 'interface:resultados-da-etapa' edital.id etapa.id %}">Resultados da Etapa</a>.</p>
+{% for grupo in resultado.agrupados %}
+<p class="aviso">{{ grupo.motivo }} — {{ grupo.inscricoes|join:", " }}{% if grupo.restantes %} e mais {{ grupo.restantes }}{% endif %}.</p>
+{% endfor %}
+{% endif %}
+
+{% comment %}
+A confirmação **declara o alcance** antes de o ato acontecer, como a do impedimento na 012: quem
+confirma vê quais inscrições serão eliminadas e sob qual motivo. Tirar alguém do Processo não pode
+ser efeito colateral de um clique numa lista longa.
+{% endcomment %}
+{% if confirmacao %}
+<form method="post" class="confirmacao">
+  {% csrf_token %}
+  <input type="hidden" name="confirmar" value="1">
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  <input type="hidden" name="motivo" value="{{ motivo }}">
+  {% for inscricao in confirmacao %}
+  <input type="hidden" name="inscricao_id" value="{{ inscricao.id }}">
+  {% endfor %}
+  <p class="aviso" role="status" tabindex="-1" autofocus>
+    <strong>Confirme antes de registrar.</strong>
+    {{ confirmacao|length }} inscriç{{ confirmacao|length|pluralize:"ão,ões" }} ser{{ confirmacao|length|pluralize:"á,ão" }}
+    <strong>eliminada{{ confirmacao|length|pluralize:"s" }}</strong> desta Etapa por ocorrência:
+    {% for inscricao in confirmacao %}{{ inscricao.protocolo|default:inscricao.id }}{% if not forloop.last %}, {% endif %}{% endfor %}.
+    Motivo registrado: <em>{{ motivo }}</em>
+  </p>
+  <p class="acoes">
+    <button type="submit" class="botao perigoso">Registrar mesmo assim</button>
+    <a class="acao" href="{% url 'interface:registrar-ocorrencia' edital.id etapa.id %}">Cancelar</a>
+  </p>
+</form>
+{% endif %}
+
+{% if linhas %}
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  <p class="campo">
+    <label for="motivo">O que aconteceu</label>
+    <textarea id="motivo" name="motivo" rows="3" required aria-describedby="ajuda-motivo">{{ motivo }}</textarea>
+    {% comment %}
+    O motivo é o **conteúdo** do ato, e não uma justificativa administrativa acessória: sem
+    avaliação, é ele que diz por que a inscrição foi eliminada.
+    {% endcomment %}
+    <span class="ajuda" id="ajuda-motivo">Ele vira a causa do Resultado, com a citação do item do
+      Edital que a sustenta — por exemplo: “não compareceu à Entrevista (item 6.3 do Edital)”.</span>
+  </p>
+
+  <div class="tabela-rolavel">
+  <table class="tabela" data-selecionavel>
+    <caption class="oculto">Inscrições desta Etapa que ainda não têm Resultado</caption>
+    <thead>
+      <tr>
+        <th scope="col"><span class="oculto">Selecionar</span></th>
+        <th scope="col">Inscrição</th>
+        <th scope="col">Candidata ou candidato</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for inscricao in linhas %}
+      <tr>
+        <td>
+          <input type="checkbox" name="inscricao_id" value="{{ inscricao.id }}"
+                 id="ocorrencia-{{ inscricao.id }}"
+                 {% if inscricao.id|stringformat:"s" in marcadas %}checked{% endif %}
+                 aria-label="Inscrição {{ inscricao.protocolo|default:inscricao.id }}">
+        </td>
+        <td><label for="ocorrencia-{{ inscricao.id }}">{{ inscricao.protocolo|default:inscricao.id }}</label></td>
+        <td>{{ inscricao.nome }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <p class="acoes"><button type="submit" class="botao">Revisar antes de registrar</button></p>
+</form>
+{% if pagina.has_other_pages %}
+<nav class="paginacao" aria-label="Páginas das inscrições sem Resultado">
+  {% if pagina.has_previous %}<a href="?pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+  <span aria-current="page">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+  {% if pagina.has_next %}<a href="?pagina={{ pagina.next_page_number }}">Próxima</a>{% endif %}
+</nav>
+{% endif %}
+{% else %}
+{% comment %}
+Vazio não é erro: significa que toda inscrição participante desta Etapa já tem Resultado — ou que
+nenhuma chegou até ela.
+{% endcomment %}
+<p class="vazio">Nenhuma inscrição desta Etapa está sem Resultado.</p>
+{% endif %}
+{% endblock %}

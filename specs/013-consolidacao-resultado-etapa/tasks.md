@@ -208,6 +208,32 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
 
 ---
 
+## Phase 8: Extensão D-1 — Resultado de Etapa sem Avaliação
+
+**Meta**: o desfecho de quem **não foi avaliado** existe, é auditável e é alcançável pela
+presidência. Fase acrescentada em 04/09/2026, depois de a feature estar entregue: D-1 é decisão de
+`doc/decisoes-pre-vertical.md` que cai sobre esta feature, e não sobre a 014 nem sobre a 015.
+
+**Teste independente**: numa Etapa cuja consolidação está **impedida**, registrar que alguém não
+compareceu; o Resultado nasce eliminado, sem Avaliação e com a norma vigente, e a inscrição sai do
+conjunto da Etapa seguinte.
+
+- [X] T068 [D-1] `origem`, `avaliacao` anulável, `versao` obrigatória e as duas constraints em `backend/processo_seletivo/resultados/models.py` — `ck_resultado_origem` amarra origem, fonte e forma; `ck_resultado_completo_por_forma` ganha o terceiro ramo
+- [X] T069 [D-1] Migration `0004_resultado_por_ocorrencia.py`: `origem` com `DEFAULT` que sai do esquema, `versao` anulável → preenchida → obrigatória, e a guarda de reversão que nomeia o ato administrativo que precisa vir antes
+- [X] T070 [D-1] Backfill de `versao` por `Subquery` sobre `avaliacao__versao`, **desligando `resultado_etapa_append_only` pelo tempo em que corre** — é o único passo destas migrations que precisa disso, e a razão está no docstring
+- [X] T071 [D-1] `check_stage_result_source()` recriada por inteiro, com `CREATE OR REPLACE` nos dois sentidos: ramo por Ocorrência (não cita fonte, versão do próprio Edital) e `versao_id` acrescentado à conferência do ramo por Avaliação
+- [X] T072 [D-1] `backend/processo_seletivo/resultados/application/ocorrencia.py` — o ato autorizado e auditado, no molde de `consolidar`, com o motivo na carga da reserva e `AtoAdministrativo` junto da trilha
+- [X] T073 [D-1] `consolidar` grava `origem` e `versao_id`; `Conclusao` carrega `versao_id`, que já vinha na mesma leitura
+- [X] T074 [D-1] Seletores leem `ResultadoEtapa.versao` direto, e `vigencias_das_versoes` resolve a vigência **uma vez por versão distinta** — `select_related("versao")` traria o Edital em JSON por linha sem mudar a contagem de consultas
+- [X] T075 [D-1] Tela própria em `interface/ocorrencia.html`, rota `registrar-ocorrencia` e caminho a partir da Etapa, com confirmação que declara o alcance antes do ato (Princípio VI)
+- [X] T076 [P] [D-1] Testes do ato em `backend/tests/integration/resultados/test_ocorrencia.py`: as três ausências, a norma vigente, motivo obrigatório, recusa de linha por par resolvido, **Etapa impedida de consolidar que ainda registra ocorrência**, idempotência, concorrência e trilha
+- [X] T077 [P] [D-1] Testes das duas origens por **SQL cru** em `backend/tests/integration/resultados/test_imutabilidade_do_resultado.py`: o ramo por Ocorrência grava; citar Avaliação, citar versão de outro Edital, ter forma, pontuação ou sentido são recusados; e a versão do ramo por Avaliação é conferida contra a fonte
+- [X] T078 [P] [D-1] Testes de leitura em `backend/tests/integration/resultados/test_leitura_das_duas_origens.py`: os conjuntos da progressão e a listagem contam as duas origens, e a Versão Consolidada é lida uma vez por versão distinta — é o que a 015 vai consumir
+- [X] T079 [P] [D-1] Testes da migration em `backend/tests/migrations/test_migrations.py`: o salto preenche `origem` e `versao` com dado real, e a reversão recusa quando já existe ocorrência
+- [X] T080 [P] [D-1] Testes da tela em `backend/tests/interface/test_ocorrencia_na_tela.py` e de autorização em `backend/tests/authorization/test_consulta_de_resultado.py`: o primeiro envio revisa e não grava, e a auditoria lê o Resultado sem alcançar o ato (404 uniforme)
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

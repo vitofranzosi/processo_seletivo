@@ -51,8 +51,14 @@ IMPEDIDA = "impedida"
 #: cópias do Edital inteiro em JSON para ler quatro campos. Quem precisa do objeto é a
 #: consolidação, que o busca para as inscrições selecionadas, e não para a Etapa inteira.
 # A conclusão como o Resultado precisa copiá-la: a forma diz qual dos dois campos vale, e o
-# outro vem vazio (013, D-008).
-Conclusao = namedtuple("Conclusao", ("avaliacao_id", "forma", "pontuacao", "sentido", "conteudo"))
+# outro vem vazio (013, D-008). `versao_id` entra porque o Resultado passou a **guardar** a norma,
+# em vez de alcançá-la por `avaliacao__versao` — e ela já vinha na mesma leitura, para resolver o
+# conteúdo (D-1).
+Conclusao = namedtuple(
+    "Conclusao",
+    ("avaliacao_id", "forma", "pontuacao", "sentido", "versao_id", "conteudo"),
+    defaults=(None, None),
+)
 
 SEM_CONCLUSAO = "ainda não há avaliação concluída para esta inscrição"
 CONCLUSOES_DEMAIS = (
@@ -208,7 +214,9 @@ def panorama_da_etapa(*, edital, etapa, etapas_vigentes):
         conteudos = conteudos_das_versoes({linha[-1] for linha in linhas})
         for inscricao_id, avaliacao_id, forma, pontuacao, sentido, versao_id in linhas:
             elegiveis.setdefault(inscricao_id, []).append(
-                Conclusao(avaliacao_id, forma, pontuacao, sentido, conteudos.get(versao_id))
+                Conclusao(
+                    avaliacao_id, forma, pontuacao, sentido, versao_id, conteudos.get(versao_id)
+                )
             )
 
     estados = {}

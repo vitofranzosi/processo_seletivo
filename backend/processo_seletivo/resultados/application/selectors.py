@@ -79,17 +79,39 @@ def conteudos_das_versoes(ids):
     return dict(VersaoConsolidada.objects.filter(pk__in=identidades).values_list("id", "content"))
 
 
+def vigencias_das_versoes(ids):
+    """`{versao_id: valid_from}` para as versões referenciadas — **uma linha por versão distinta**.
+
+    O irmão de `conteudos_das_versoes`, e existe pela mesma razão dita ao contrário: agora que a
+    norma é campo do Resultado, `select_related("versao")` seria a leitura óbvia — e traria uma
+    cópia do Edital inteiro em JSON, mais os bytes canônicos, **por linha da página**, para
+    imprimir uma data. Nenhum teste de contagem de consultas denunciaria, porque o número de
+    consultas continuaria o mesmo (D-1).
+    """
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+
+    identidades = {identidade for identidade in ids if identidade is not None}
+    if not identidades:
+        return {}
+    return dict(
+        VersaoConsolidada.objects.filter(pk__in=identidades).values_list("id", "valid_from")
+    )
+
+
 def resultados_da_etapa(*, edital, etapa_id, consequencia=None, pagina=1):
     """Os Resultados da Etapa, com a proveniência ao lado — paginados.
 
-    `select_related` até a versão: a norma histórica é alcançada **pela fonte**, e não copiada para
-    o Resultado. Sem isto, reconstruir a decisão de mil Resultados custaria mil leituras de Versão
-    Consolidada; com isto, custa a mesma consulta.
+    **A norma vem do próprio Resultado**, e não mais por `avaliacao__versao`: desde D-1 ela é campo
+    dele, e o Resultado por Ocorrência não tem Avaliação por onde alcançá-la. A junção que sobra é
+    a da fonte, e ela é `LEFT` — a Ocorrência traz `avaliacao` nula, de propósito.
+
+    `versao` fica **fora** do `select_related` de propósito: ver `vigencias_das_versoes`, que
+    resolve a vigência uma vez por versão distinta em vez de uma cópia do Edital por linha.
     """
     from django.core.paginator import Paginator
 
     consulta = ResultadoEtapa.objects.filter(edital=edital, etapa_id=etapa_id).select_related(
-        "inscricao", "avaliacao", "avaliacao__versao", "avaliacao__atribuicao"
+        "inscricao", "avaliacao", "avaliacao__atribuicao"
     )
     if consequencia:
         consulta = consulta.filter(consequencia=consequencia)

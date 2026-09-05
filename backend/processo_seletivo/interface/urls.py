@@ -133,6 +133,13 @@ urlpatterns = [
         views.consolidar_resultados,
         name="consolidar-resultados",
     ),
+    # O desfecho de quem não foi avaliado (D-1). Página própria, e não um botão a mais na
+    # distribuição: o ato tem conteúdo próprio — o motivo constatado —, elimina e não se desfaz.
+    path(
+        "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/ocorrencia",
+        views.registrar_ocorrencia,
+        name="registrar-ocorrencia",
+    ),
     path(
         "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/remover",
         views.remover_atribuicao,

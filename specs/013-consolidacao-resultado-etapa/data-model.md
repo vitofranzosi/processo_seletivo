@@ -32,7 +32,13 @@ de elaboração para uma FK apontar, porque a Retificação sabe acrescentar ite
 não escreve de volta em `editais`. Consolidar contra a linha de elaboração consolidaria contra um
 registro que a Retificação altera depois.
 
-### Por que a versão **não** é copiada
+### Por que a versão **não** é copiada — **revertido por D-1 em 04/09/2026**
+
+> **A versão passou a ser campo do Resultado.** O argumento abaixo tinha duas metades, e as duas
+> deixaram de valer quando o Resultado passou a existir sem Avaliação: não há junção a economizar
+> quando não há junção possível, e a contradição que ele temia é impedida pela trigger, que é como
+> as outras quatro já são. O texto fica como registro do que se sabia; a redação vigente está na
+> seção **A extensão D-1** ao final deste documento, e o argumento inteiro na §2 da spec.
 
 Uma redação anterior materializava `versao` no Resultado, argumentando que a divergência seria
 impossível porque as linhas de origem são imutáveis. O argumento não se sustenta: imutabilidade
@@ -164,6 +170,83 @@ mutar a fonte.
 (FR-041), não altera conteúdo publicado e não precisa de campo novo na trilha: `RegistroAuditoria` já
 tem ator, operação, agregado, correlação e chave, e `IdempotencyRecord.result_payload` já guarda
 desfecho de lote desde a 012.
+
+---
+
+## A extensão D-1 — o Resultado sem Avaliação
+
+*Acrescentada em 04/09/2026. O que está acima descreve a 013 como ela foi entregue; esta seção diz o
+que D-1 mudou, e por quê. Nada aqui é migration fora de `resultados`, e nada toca conteúdo
+publicado.*
+
+### Campos
+
+| Campo | Antes | Depois |
+|---|---|---|
+| `origem` | — | `CharField(20)`, choices `AVALIACAO` \| `OCORRENCIA`, obrigatório |
+| `avaliacao` | `OneToOne(Avaliacao, PROTECT)` obrigatório | **anulável**: `NOT NULL` quando a origem é Avaliação, `NULL` quando é Ocorrência |
+| `versao` | — (alcançada por `avaliacao__versao`) | `FK(VersaoConsolidada, PROTECT)`, **obrigatória sempre** — a norma que fundamentou o desfecho |
+| `forma` | `CharField(20)`, choices | **vazia** na Ocorrência: não houve conclusão sob forma nenhuma |
+
+`pontuacao` e `sentido` já eram anuláveis desde a revisão de D-008, e na Ocorrência os dois vêm
+vazios: o Edital não publicou grandeza para quem não compareceu, e a linha não pode afirmar uma.
+
+### Constraints
+
+```text
+ck_resultado_origem            (origem = 'AVALIACAO'  AND avaliacao_id IS NOT NULL AND forma <> '')
+                            OR (origem = 'OCORRENCIA' AND avaliacao_id IS NULL     AND forma  = '')
+
+ck_resultado_completo_por_forma  ganha um terceiro ramo, feito de ausências:
+                                 forma = '' AND pontuacao IS NULL AND sentido = ''
+```
+
+`ck_resultado_origem` existe porque `null=True` sozinho seria uma permissão solta: uma linha
+`AVALIACAO` sem fonte, ou uma `OCORRENCIA` com fonte, atravessaria — e a trigger, que confere a
+fonte, não tem o que conferir num nulo que a coluna passou a admitir.
+
+### A trigger, recriada por inteiro
+
+```text
+resultado_etapa_coerente   BEFORE INSERT
+
+  origem = OCORRENCIA:
+    a linha NÃO cita Avaliação nenhuma;
+    a Versão Consolidada citada pertence a ESTE Edital.
+    RAISE 'stage result by occurrence must not cite a source evaluation'
+    RAISE 'stage result cites a consolidated version of another edital'
+
+  origem = AVALIACAO:
+    tudo o que ela já conferia — inscrição, Etapa, Edital, forma, pontuação, sentido,
+    estado CONCLUIDA e Atribuição ATIVA — mais
+    NEW.versao_id é igual ao da fonte.
+    RAISE 'stage result does not match its source evaluation'
+```
+
+A conferência da versão no ramo por Ocorrência é a **única** que sobra ali: sem Avaliação, a versão
+não vem copiada de lugar nenhum — quem escreve a linha a escolhe. Sem ela, o Resultado poderia
+afirmar ter sido fundamentado por norma que nunca governou este certame, e I-2 seria letra morta
+neste ramo.
+
+### Leitura
+
+`avaliacao__versao` sai dos seletores: a norma vem de `ResultadoEtapa.versao`. E `versao` fica
+**fora** do `select_related` — ela carrega o Edital inteiro em JSON mais os bytes canônicos, e
+trazê-la por linha da página não mudaria a contagem de consultas, de modo que nenhum teste de custo
+denunciaria. `vigencias_das_versoes` a resolve uma vez por versão distinta, como
+`conteudos_das_versoes` já fazia do outro lado.
+
+### Migrations
+
+| App | Migration | Conteúdo |
+|---|---|---|
+| `resultados` | `0004_resultado_por_ocorrencia` | `origem` com `DEFAULT` que sai do esquema; `versao` anulável → preenchida por `Subquery` sobre `avaliacao__versao` → obrigatória; `avaliacao` anulável; `forma` com branco; as duas constraints; a trigger recriada; e a guarda de reversão |
+
+O preenchimento de `versao` é o único passo destas migrations que **desliga
+`resultado_etapa_append_only`** pelo tempo em que corre: não há valor constante a oferecer como
+`DEFAULT`, e um `UPDATE` linha a linha numa tabela append-only é exatamente o que aquela trigger
+existe para recusar. A migração pode fazê-lo e o runtime não — o papel de migração é o dono da
+tabela, e o de runtime nem `UPDATE` tem.
 
 ---
 

@@ -86,6 +86,7 @@ from processo_seletivo.publicacoes.domain import autoridades
 from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA, render_edital_pdf
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.resultados.application import consolidacao as consolidacao_app
+from processo_seletivo.resultados.application import ocorrencia as ocorrencia_app
 from processo_seletivo.resultados.application import prontidao as prontidao_013
 from processo_seletivo.resultados.application import selectors as resultado_selectors
 from processo_seletivo.seguranca.application.authorization import require_permission
@@ -2282,6 +2283,99 @@ def consolidar_resultados(request, edital_id, etapa_id):
     return redirect(destino)
 
 
+@require_http_methods(["GET", "POST"])
+def registrar_ocorrencia(request, edital_id, etapa_id):
+    """O desfecho de quem não foi avaliado, alcançável por quem preside (D-1).
+
+    **Página própria, e não um `formaction` a mais na distribuição.** Consolidar compartilha o
+    formulário de distribuir porque a seleção é a mesma e nada mais é informado; aqui a presidência
+    informa o motivo, e um campo obrigatório ao lado de três botões pertenceria visualmente aos
+    três. O ato também é de outra natureza: ele **elimina** quem a Etapa nunca avaliou, e não se
+    desfaz.
+
+    **Confirmação em dois passos, como o impedimento da 012.** O primeiro passo declara o alcance —
+    quantas e quais inscrições serão eliminadas — antes de o ato acontecer; o segundo o executa.
+    Retirar alguém do Processo não pode ser efeito colateral de um clique.
+
+    A porta é a de gestão da comissão — a mesma de consolidar e de reabrir —, e não há capacidade
+    nova: quem preside o Processo constata a ocorrência na Etapa dele, e quem não preside recebe a
+    resposta uniforme.
+    """
+    from django.core.paginator import Paginator
+
+    from processo_seletivo.inscricoes.models import Inscricao
+
+    ator, edital, etapa = _etapa_para_distribuir(request, edital_id, etapa_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    vigentes = etapas_vigentes(edital)
+    erro, confirmacao = None, None
+    motivo = (request.POST.get("motivo") or "").strip() if request.method == "POST" else ""
+    marcadas = request.POST.getlist("inscricao_id") if request.method == "POST" else []
+    if request.method == "POST":
+        try:
+            # O motivo e a seleção são cobrados **aqui**, e não só no comando: sem isso o passo de
+            # confirmação aceitaria um formulário incompleto e a recusa só apareceria depois de a
+            # pessoa confirmar, o que transforma a validação em armadilha.
+            ocorrencia_app.exigir_motivo(motivo)
+            if not marcadas:
+                raise DomainError(
+                    "selecao_vazia",
+                    "Selecione ao menos uma inscrição para registrar a ocorrência.",
+                    422,
+                    campo="inscricao_id",
+                )
+            if request.POST.get("confirmar") != "1":
+                confirmacao = list(
+                    Inscricao.objects.filter(pk__in=marcadas, edital=edital).order_by(
+                        "protocolo", "id"
+                    )
+                )
+            else:
+                request.session["resultado_da_ocorrencia"] = ocorrencia_app.registrar_ocorrencia(
+                    actor=ator,
+                    processo_id=edital.processo_id,
+                    edital_id=edital.id,
+                    etapa_id=etapa_id,
+                    inscricao_ids=marcadas,
+                    motivo=motivo,
+                    idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+                    correlation_id=getattr(request, "correlation_id", ""),
+                )
+                return redirect(
+                    reverse("interface:registrar-ocorrencia", args=[edital_id, etapa_id])
+                )
+        except DomainError as recusa:
+            if recusa.status == 404:
+                raise Http404 from recusa
+            erro = recusa.detail
+
+    pendentes = ocorrencia_app.participantes_sem_resultado(
+        edital=edital, etapa=etapa, vigentes=vigentes
+    )
+    paginas = Paginator(pendentes, 25)
+    pagina = paginas.get_page(request.GET.get("pagina") or 1)
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/ocorrencia.html",
+            {
+                "edital": edital,
+                "processo": edital.processo,
+                "etapa": etapa,
+                "linhas": list(pagina),
+                "pagina": pagina,
+                "erro": erro,
+                "confirmacao": confirmacao,
+                "motivo": motivo,
+                "marcadas": set(marcadas),
+                "resultado": request.session.pop("resultado_da_ocorrencia", None),
+                "chave_idempotencia": uuid4().hex,
+            },
+        )
+    )
+
+
 @require_http_methods(["POST"])
 def remover_atribuicao(request, edital_id, etapa_id):
     """Retira Atribuições da Etapa — as que ainda não têm Avaliação concluída.
@@ -2747,6 +2841,13 @@ def resultados_da_etapa(request, edital_id, etapa_id):
         pagina=request.GET.get("pagina") or 1,
     )
     linhas = list(pagina)
+    # A vigência da norma resolvida **uma vez por versão distinta**, e pendurada na linha. Um Edital
+    # tem duas ou três Versões Consolidadas; `select_related("versao")` traria uma cópia do Edital
+    # inteiro em JSON por linha da página para imprimir esta data, e a contagem de consultas não
+    # mudaria — nenhum teste de custo denunciaria (D-1).
+    vigencias = resultado_selectors.vigencias_das_versoes({linha.versao_id for linha in linhas})
+    for linha in linhas:
+        linha.vigencia = vigencias.get(linha.versao_id)
     return marcar_como_privada(
         render(
             request,
