@@ -96,9 +96,35 @@ pedi-la sobre o que a pessoa não viu. Seus dados e arquivos continuam onde esta
 <div class="erro" role="alert">
   <p>Falta enviar: {{ pendencias|join:", " }}.</p>
 </div>
+{% elif retificado %}
+{% comment %}
+Enquanto houver Retificação por reconhecer, a tela oferece **apenas** a ação de reconhecer, que
+está no aviso acima. O formulário de envio não aparece: os campos exigidos vêm da versão que vai
+governar o envio, e mostrá-los antes faria a pessoa preencher o que perderia ao reconhecer.
+{% endcomment %}
 {% else %}
 <form method="post">
   {% csrf_token %}
+  {% if fatos %}
+  <section aria-labelledby="fatos-exigidos">
+    <h2 id="fatos-exigidos">Dados exigidos pelo Edital</h2>
+    {% comment %}
+    Derivados do conteúdo publicado, e não do rascunho: o que o Edital exige é norma. São
+    congelados no envio, sob a versão que então vigorar — e não mudam depois, porque a
+    classificação precisa do valor do momento da inscrição.
+    {% endcomment %}
+    <p class="ajuda">Estes dados são registrados no momento do envio e não podem ser alterados
+      depois.</p>
+    {% for fato in fatos %}
+    <p class="campo">
+      <label for="fato-{{ fato.id }}">{{ fato.label }} <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <input id="fato-{{ fato.id }}" name="fato-{{ fato.id }}" required aria-required="true"
+             value="{{ fato.valor }}"
+             {% if fato.type == "DATA" %}type="date"{% else %}type="number" step="1"{% endif %}>
+    </p>
+    {% endfor %}
+  </section>
+  {% endif %}
   <section aria-labelledby="declaracoes">
     <h2 id="declaracoes">Declarações</h2>
     {% comment %}

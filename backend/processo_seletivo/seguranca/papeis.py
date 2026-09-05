@@ -34,6 +34,9 @@ TABELAS_APPEND_ONLY = (
     # pela mesma razão dos demais, e com um agravante próprio — ele é a origem do que a
     # classificação e o recurso vão ler depois (013, FR-029).
     "resultados_resultadoetapa",
+    # O valor que a inscrição congelou (015, D-2): nasce na submissão e não muda mais, porque a
+    # classificação histórica depende de ele ser o do momento da inscrição.
+    "inscricoes_valordefato",
     "publicacoes_documentopublicado",
     "publicacoes_publicacao",
     "publicacoes_revisaoedital",
