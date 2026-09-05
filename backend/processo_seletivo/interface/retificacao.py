@@ -66,6 +66,14 @@ CAMPOS_REGRA = [
     ("normativeRule/foundation", "Fundamento normativo", TEXTO),
     ("normativeRule/version", "Versão do fundamento", TEXTO),
 ]
+# O marco não oferece `stages` nem `operation` como texto livre: a primeira é lista de identidades
+# e a segunda é escolha entre formas que o motor sabe executar — retificá-las por caixa de texto
+# publicaria regra que o cálculo não interpreta. O que a tela alcança aqui é o rótulo.
+CAMPOS_MARCO = [("name", "Denominação do marco", TEXTO)]
+# **A ordem é o campo que importa retificar.** Ela é a norma: reordenar critérios é mudar a regra, e
+# é por identidade que cada um é alcançado — substituir a lista inteira perderia os identificadores
+# que a própria Retificação endereça (015, FR-015).
+CAMPOS_CRITERIO = [("order", "Ordem de aplicação", INTEIRO)]
 # **Todos** os campos normativos da Etapa, e não os que alguém lembrou de listar. A lista estava
 # incompleta desde a 012 — `maximumScore` e `evaluationsPerRegistration` ficaram de fora —, e o
 # custo disso é publicar regra que afeta direito e só se corrige pela API (D-008.10). Fica fora o
@@ -251,6 +259,25 @@ def campos_editaveis(conteudo):
                     campos,
                 )
             )
+        for marco in perfil.get("classificationMilestones") or []:
+            base_do_marco = f"{caminho}/classificationMilestones/id={marco.get('id', '')}"
+            grupos.append(
+                _grupo(
+                    f"Marco {marco.get('code', '')} — {perfil.get('code', '')}",
+                    base_do_marco,
+                    marco,
+                    CAMPOS_MARCO,
+                )
+            )
+            for criterio in marco.get("tiebreakers") or []:
+                grupos.append(
+                    _grupo(
+                        f"Critério {criterio.get('order', '')} — marco {marco.get('code', '')}",
+                        f"{base_do_marco}/tiebreakers/id={criterio.get('id', '')}",
+                        criterio,
+                        CAMPOS_CRITERIO,
+                    )
+                )
 
     for evento in conteudo.get("schedule") or []:
         grupos.append(

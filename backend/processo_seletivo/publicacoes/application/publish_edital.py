@@ -97,7 +97,7 @@ def _sections(edital: Edital) -> list[dict]:
 def edital_snapshot(edital: Edital) -> dict:
     profiles = []
     for profile in edital.perfis.prefetch_related(
-        "modalidades__regra_normativa", "fatos"
+        "modalidades__regra_normativa", "fatos", "marcos__criterios"
     ).order_by("code"):
         modalities = []
         for modality in profile.modalidades.order_by("code"):
@@ -132,6 +132,31 @@ def edital_snapshot(edital: Edital) -> dict:
             {"id": str(fato.id), "code": fato.code, "label": fato.label, "type": fato.tipo}
             for fato in sorted(profile.fatos.all(), key=lambda fato: fato.code)
         ]
+        # Os marcos classificatórios deste Perfil (015, D-001). Ordenados por `code`, e os
+        # critérios por `order` — que é campo publicado, e não a posição no array: a ordem **é** a
+        # norma, e a Retificação a altera por identidade (FR-015).
+        milestones = [
+            {
+                "id": str(marco.id),
+                "code": marco.code,
+                "name": marco.name,
+                "stages": [str(etapa) for etapa in marco.etapas],
+                "operation": marco.operacao,
+                "normalization": marco.normalizacao,
+                "rounding": marco.arredondamento,
+                "tiebreakers": [
+                    {
+                        "id": str(criterio.id),
+                        "order": criterio.ordem,
+                        "type": criterio.tipo,
+                        "parameters": criterio.parametros,
+                        "whenMissing": criterio.quando_ausente,
+                    }
+                    for criterio in sorted(marco.criterios.all(), key=lambda item: item.ordem)
+                ],
+            }
+            for marco in sorted(profile.marcos.all(), key=lambda item: item.code)
+        ]
         profiles.append(
             {
                 "id": str(profile.id),
@@ -154,11 +179,7 @@ def edital_snapshot(edital: Edital) -> dict:
                 "callInformation": profile.call_information,
                 "competitionModalities": modalities,
                 "declaredFacts": declared_facts,
-                # A coleção do marco existe na forma desde a versão 7, e nasce vazia: a elaboração
-                # dela é da US1, e um Edital sem marco não classifica. Emiti-la vazia agora é o que
-                # mantém a versão 7 com **uma** forma — a alternativa seria snapshots v7 com e sem a
-                # chave, que é o que o bloco de história de `canonical.py` proíbe.
-                "classificationMilestones": [],
+                "classificationMilestones": milestones,
             }
         )
     schedule = []

@@ -117,6 +117,44 @@ def _modalidades(dados, prefixo):
     return modalidades
 
 
+def _marcos(dados, prefixo):
+    """Os marcos classificatórios de um Perfil, com seus critérios de desempate.
+
+    Duas indexações aninhadas, e não uma: `marco-<perfil>-<sub>` para o marco, e
+    `criterio-<perfil>-<sub>-<n>` para cada critério dentro dele. É a mesma composição de prefixo
+    que a modalidade usa, um nível mais fundo — porque o critério pertence ao marco, e renumerá-lo
+    por Perfil faria dois marcos irmãos disputarem a mesma linha.
+
+    A `order` do critério vem do formulário, e não da posição: é campo publicado, e a Retificação o
+    altera por identidade (015, FR-015).
+    """
+    marcos = []
+    for indice in _indices(dados, prefixo):
+        base = f"{prefixo}-{indice}"
+        criterios = []
+        for sub_indice in _indices(dados, f"criterio-{indice}"):
+            criterio_base = f"criterio-{indice}-{sub_indice}"
+            criterios.append(
+                {
+                    "id": _texto(dados, f"{criterio_base}-id"),
+                    "order": _inteiro(dados, f"{criterio_base}-order"),
+                    "type": _texto(dados, f"{criterio_base}-type"),
+                    "whenMissing": _texto(dados, f"{criterio_base}-whenMissing"),
+                }
+            )
+        marcos.append(
+            {
+                "id": _texto(dados, f"{base}-id"),
+                "code": _texto(dados, f"{base}-code"),
+                "name": _texto(dados, f"{base}-name"),
+                "operation": _texto(dados, f"{base}-operation"),
+                "normalization": _texto(dados, f"{base}-normalization"),
+                "tiebreakers": criterios,
+            }
+        )
+    return marcos
+
+
 def ler_identificacao(dados):
     """Título e descrição; número e ano continuam sendo da criação do Edital."""
     return {"title": _texto(dados, "title"), "description": _texto(dados, "description")}
@@ -149,6 +187,8 @@ def ler_perfis(dados):
                 # As linhas de modalidade são indexadas dentro do índice do Perfil, e não
                 # renumeradas: `modalidade-3-…` pertence ao Perfil cujo prefixo é `perfil-3`.
                 "competitionModalities": _modalidades(dados, f"modalidade-{indice}"),
+                # Pelo mesmo esquema de prefixo composto: `marco-3-…` pertence ao `perfil-3`.
+                "classificationMilestones": _marcos(dados, f"marco-{indice}"),
             }
         )
     return perfis
@@ -325,8 +365,11 @@ def perfis_do_edital(edital):
             "modalidades": [
                 _modalidade_para_o_formulario(m) for m in perfil.modalidades.order_by("code")
             ],
+            "marcos": [_marco_para_o_formulario(m) for m in perfil.marcos.order_by("code")],
         }
-        for perfil in edital.perfis.prefetch_related("modalidades__regra_normativa").order_by(
+        for perfil in edital.perfis.prefetch_related(
+            "modalidades__regra_normativa", "marcos__criterios"
+        ).order_by(
             "code"
         )
     ]
@@ -381,11 +424,59 @@ def perfis_persistidos(edital):
             "competitionModalities": [
                 _modalidade_persistida(m) for m in perfil.modalidades.order_by("code")
             ],
+            # Pela razão do comentário acima, e ela vale igual: sem isto, gravar o Cronograma
+            # apagaria os marcos configurados no passo dos Perfis.
+            "classificationMilestones": [
+                _marco_persistido(m) for m in perfil.marcos.order_by("code")
+            ],
         }
-        for perfil in edital.perfis.prefetch_related("modalidades__regra_normativa").order_by(
+        for perfil in edital.perfis.prefetch_related(
+            "modalidades__regra_normativa", "marcos__criterios"
+        ).order_by(
             "code"
         )
     ]
+
+
+def _marco_para_o_formulario(marco):
+    return {
+        "id": str(marco.id),
+        "code": marco.code,
+        "name": marco.name,
+        "operation": marco.operacao,
+        "normalization": marco.normalizacao,
+        "criterios": [
+            {
+                "id": str(criterio.id),
+                "order": criterio.ordem,
+                "type": criterio.tipo,
+                "whenMissing": criterio.quando_ausente,
+            }
+            for criterio in sorted(marco.criterios.all(), key=lambda item: item.ordem)
+        ],
+    }
+
+
+def _marco_persistido(marco):
+    return {
+        "id": str(marco.id),
+        "code": marco.code,
+        "name": marco.name,
+        "stages": [str(etapa) for etapa in marco.etapas],
+        "operation": marco.operacao,
+        "normalization": marco.normalizacao,
+        "rounding": marco.arredondamento,
+        "tiebreakers": [
+            {
+                "id": str(criterio.id),
+                "order": criterio.ordem,
+                "type": criterio.tipo,
+                "parameters": criterio.parametros,
+                "whenMissing": criterio.quando_ausente,
+            }
+            for criterio in sorted(marco.criterios.all(), key=lambda item: item.ordem)
+        ],
+    }
 
 
 def _modalidade_persistida(modalidade):

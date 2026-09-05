@@ -88,6 +88,11 @@ PERFIL_PUBLICADO = (
     # A forma de **dentro** de cada Modalidade não é declarada. Que cada item seja objeto, é —
     # `items: { type: object }` está escrito no contrato, e conferi-lo é aplicar, não inventar.
     Campo("competitionModalities", list, tipo_do_item=dict),
+    # As duas da versão 7, pela mesma régua: aqui se declara que a coleção existe e que cada item é
+    # objeto; o que vai **dentro** do fato e do marco é verificado por `_coerencia_dos_marcos`, que
+    # precisa do conteúdo inteiro e não caberia numa forma de campo (015, T-009).
+    Campo("declaredFacts", list, tipo_do_item=dict),
+    Campo("classificationMilestones", list, tipo_do_item=dict),
 )
 
 # A forma canônica do instante, transcrita de `EventoPublicado` no contrato: `T` maiúsculo,
@@ -438,6 +443,102 @@ def _topologia_das_secoes(snapshot: dict) -> list[ValidationFinding]:
     return findings
 
 
+def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
+    """O marco só é executável se o que ele aponta existir e puder ser apontado (015, D-001).
+
+    Três recusas, e as três dependem do **conteúdo inteiro** — por isso vivem aqui, e não na
+    validação de elaboração do Perfil, que enxerga só o Perfil:
+
+    - Etapa enumerada que não existe no mesmo conteúdo: o marco somaria o que ninguém publicou;
+    - Etapa enumerada que não é classificatória: o Edital declarou que ela não classifica, e
+      contá-la seria o sistema contradizendo o Edital (FR-010);
+    - critério que aponta Etapa ou fato inexistente (FR-017). É **aqui** que o critério pendurado é
+      impedido, e é por isso que ele não é estado que a tela precise tratar depois: uma Retificação
+      que remova a Etapa enumerada sem ajustar o marco não publica (FR-043).
+
+    Pelo mesmo caminho de `_faixa_do_percentual`: função dedicada, porque `COLECOES_PUBLICADAS` só
+    percorre coleções de raiz e não desce para dentro do Perfil.
+    """
+    findings = []
+    etapas = {
+        etapa.get("id"): etapa
+        for etapa in (snapshot.get("stages") or [])
+        if isinstance(etapa, dict)
+    }
+    for posicao, perfil in enumerate(snapshot.get("profiles") or []):
+        if not isinstance(perfil, dict):
+            continue
+        base = _caminho_da_entidade("profiles", perfil, posicao)
+        fatos = {
+            fato.get("id")
+            for fato in (perfil.get("declaredFacts") or [])
+            if isinstance(fato, dict)
+        }
+        for indice, marco in enumerate(perfil.get("classificationMilestones") or []):
+            if not isinstance(marco, dict):
+                continue
+            chave = marco.get("id")
+            dentro = f"id={chave}" if isinstance(chave, str) and chave else str(indice)
+            caminho = f"{base}/classificationMilestones/{dentro}"
+            for etapa_id in marco.get("stages") or []:
+                etapa = etapas.get(etapa_id)
+                if etapa is None:
+                    findings.append(
+                        ValidationFinding(
+                            Severity.ERROR,
+                            "milestone_stage_missing",
+                            "O marco classificatório enumera uma Etapa que não existe no Edital.",
+                            f"{caminho}/stages",
+                        )
+                    )
+                elif not etapa.get("classificatory"):
+                    findings.append(
+                        ValidationFinding(
+                            Severity.ERROR,
+                            "milestone_stage_not_classificatory",
+                            "O marco classificatório enumera uma Etapa que o Edital não publicou "
+                            "como classificatória.",
+                            f"{caminho}/stages",
+                        )
+                    )
+            for criterio in marco.get("tiebreakers") or []:
+                if not isinstance(criterio, dict):
+                    continue
+                parametros = criterio.get("parameters") or {}
+                alvo_etapa = parametros.get("stageId")
+                if alvo_etapa is not None and alvo_etapa not in etapas:
+                    findings.append(
+                        ValidationFinding(
+                            Severity.ERROR,
+                            "tiebreaker_stage_missing",
+                            "Um critério de desempate aponta Etapa que não existe no Edital.",
+                            f"{caminho}/tiebreakers",
+                        )
+                    )
+                alvo_fato = parametros.get("factId")
+                if alvo_fato is not None and alvo_fato not in fatos:
+                    findings.append(
+                        ValidationFinding(
+                            Severity.ERROR,
+                            "tiebreaker_fact_missing",
+                            "Um critério de desempate aponta fato declarado que não existe "
+                            "no Perfil.",
+                            f"{caminho}/tiebreakers",
+                        )
+                    )
+                if not criterio.get("whenMissing"):
+                    findings.append(
+                        ValidationFinding(
+                            Severity.ERROR,
+                            "tiebreaker_missing_behaviour",
+                            "Um critério de desempate não declara o que fazer quando o valor "
+                            "que ele consome não existe.",
+                            f"{caminho}/tiebreakers",
+                        )
+                    )
+    return findings
+
+
 def _faixa_do_percentual(snapshot: dict) -> list[ValidationFinding]:
     """FR-030 vale também **depois** da publicação.
 
@@ -629,6 +730,7 @@ def validate_for_publication(snapshot: dict) -> list[ValidationFinding]:
     findings.extend(_topologia_das_secoes(snapshot))
     findings.extend(_coerencia_das_etapas(snapshot))
     findings.extend(_faixa_do_percentual(snapshot))
+    findings.extend(_coerencia_dos_marcos(snapshot))
     findings.extend(_periodo_de_inscricoes(snapshot))
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
     return findings

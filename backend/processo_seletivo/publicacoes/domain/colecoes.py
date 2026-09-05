@@ -28,6 +28,11 @@ COLECOES_COM_CHAVE = frozenset(
         # resolveria por posição, que é o que o sistema proíbe (015, T-007).
         "/profiles/*/declaredFacts",
         "/profiles/*/classificationMilestones",
+        # Os critérios são endereçados por identidade como tudo o mais, **apesar** de a ordem deles
+        # ser normativa: a ordem é campo publicado de cada um, e não a posição na lista. Sem esta
+        # declaração, reordenar por Retificação só resolveria por índice — que é o que o sistema
+        # proíbe, e o que faria a reordenação perder os identificadores (015, FR-015).
+        "/profiles/*/classificationMilestones/*/tiebreakers",
         # O Documento Exigido nasce com identidade estável e é endereçado por ela como as demais
         # (FR-009 da 009): nenhuma regra nova, nenhuma gramática nova — só mais uma coleção na
         # declaração que já existe.
