@@ -224,9 +224,20 @@ posição, participante e proveniência.
 - [X] T079 [US3] Registrar as duas tabelas em `TABELAS_APPEND_ONLY` em `backend/processo_seletivo/seguranca/papeis.py`
 - [X] T080 [US3] Registrar os nomes das triggers em `TRIGGERS_POR_APP` em `backend/tests/migrations/test_migrations.py` — sem isso o teste estrutural não as enxerga
 - [X] T081 [US3] Teste: alteração recusada pelo ORM **e** por SQL cru; a append-only não tem exceção alguma — o defeito do ato mutável, em `backend/tests/integration/classificacao/test_imutabilidade_do_ato.py`
-- [ ] T082 [US3] `calculo.py` — leitura única, `conteudos_das_versoes` para desduplicar por versão, laço sem consulta, em `backend/processo_seletivo/classificacao/application/`
-- [ ] T083 [US3] `emissao.py` sob `comando_de_comissao`, com `ctx.repetido` como primeira verificação e `resultado_declarado` no desfecho, em `backend/processo_seletivo/classificacao/application/`
-- [ ] T084 [US3] Trilha: `auditar(...)` **uma vez por ato**, com `permissao=ctx.base.permissao` e sem pontuação, em `backend/processo_seletivo/classificacao/application/emissao.py`
+- [X] T082 [US3] `calculo.py` — leitura única, `conteudos_das_versoes` para desduplicar por versão, laço sem consulta, em `backend/processo_seletivo/classificacao/application/`
+- [X] T083 [US3] `emissao.py` sob `comando_de_comissao`, com `ctx.repetido` como primeira verificação e `resultado_declarado` no desfecho, em `backend/processo_seletivo/classificacao/application/`
+- [X] T084 [US3] Trilha: `auditar(...)` **uma vez por ato**, com `permissao=ctx.base.permissao` e sem pontuação, em `backend/processo_seletivo/classificacao/application/emissao.py`
+> **⛔ Antes das rotas, duas divergências dos artefatos precisam ser resolvidas.** A suíte verde não
+> decide nenhuma delas. A primeira é normativa: a Assumption chama Etapa decisória enumerada de
+> **filtro**, mas `combinar()` trata sua ausência estrutural de pontuação como participante não
+> classificável; falta dizer como representar a pontuação combinada quando o marco só tem filtros.
+> A segunda é de persistência: `research.md` promete que `posicao_coerente` confere também os
+> Resultados citados contra as Etapas do marco, enquanto `data-model.md` e a migration planejada
+> limitam a trigger a Edital e Perfil. A estrutura de `universo` só ficou concreta em T082; como a
+> `0001` já foi aplicada nos testes, qualquer ampliação entra em migration nova, nunca reescrita.
+
+- [ ] T124 [US3] Resolver a semântica da Etapa decisória enumerada como filtro, incluindo o marco composto só por filtros, e cobri-la no domínio e em `calculo.py`
+- [ ] T125 [US3] Resolver a divergência da trigger de coerência sobre os Resultados citados; se a promessa do `research.md` prevalecer, acrescentar migration nova e prova por SQL cru sem custo por posição
 - [ ] T085 [US3] Rotas do marco e da emissão em `backend/processo_seletivo/interface/urls.py`
 - [ ] T086 [US3] Views `ordenacao` (GET) e `emitir_ordenacao` (POST) com guarda, sessão e POST-redirect-GET, em `backend/processo_seletivo/interface/views.py`
 - [ ] T087 [US3] Template `ordenacao.html`, **sem** campo de posição, pontuação ou desempate no formulário, em `backend/processo_seletivo/interface/templates/interface/`
