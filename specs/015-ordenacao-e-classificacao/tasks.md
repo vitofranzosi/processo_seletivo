@@ -66,13 +66,13 @@ nasce nesta feature — `classificacao` —, e as telas ficam em `interface`.
 - [X] T005 Acrescentar o degrau `7` a `DEGRAUS` em `backend/processo_seletivo/publicacoes/domain/elevacao.py`, com a coleção nova elevando para lista vazia
 - [X] T006 Estender `elevar()` para descer até `profiles` em `backend/processo_seletivo/publicacoes/domain/elevacao.py` — hoje ela só reescreve `conteudo["stages"]`, e esta é a primeira elevação aninhada
 - [X] T007 Teste: conteúdo v6 publicado continua retificável depois da elevação, em `backend/tests/integration/publicacoes/test_elevacao_de_versao.py`
-- [ ] T008 [P] Declarar as coleções novas em `COLECOES_COM_CHAVE` em `backend/processo_seletivo/publicacoes/domain/colecoes.py`
-- [ ] T009 [P] Modelo `FatoDeclarado` (D-2) em `backend/processo_seletivo/editais/models/perfis.py`, com identidade estável e tipo restrito a data e inteiro
-- [ ] T010 [P] Campo `max_inscricoes_por_candidato` (D-3), anulável, em `backend/processo_seletivo/processos/models.py` — é do **`Edital`**, e não do Perfil: no Perfil ele seria redundante com `uq_inscricao_identidade_edital_perfil`, que já existe
-- [ ] T011 Migration de `editais` com `FatoDeclarado` e suas unicidades, em `backend/processo_seletivo/editais/migrations/`
-- [ ] T012 Migration de `processos` com o teto, em `backend/processo_seletivo/processos/migrations/`
-- [ ] T013 Emitir `declaredFacts` dentro do laço do Perfil e `maxInscricoesPorCandidato` **na raiz** do snapshot, em `backend/processo_seletivo/publicacoes/application/publish_edital.py`
-- [ ] T014 Teste: mudar o tipo de um fato cria fato novo, e o valor congelado permanece legível sob a norma que o governou, em `backend/tests/unit/editais/`
+- [X] T008 [P] Declarar as coleções novas em `COLECOES_COM_CHAVE` em `backend/processo_seletivo/publicacoes/domain/colecoes.py`
+- [X] T009 [P] Modelo `FatoDeclarado` (D-2) em `backend/processo_seletivo/editais/models/perfis.py`, com identidade estável e tipo restrito a data e inteiro
+- [X] T010 [P] Campo `max_inscricoes_por_candidato` (D-3), anulável, em `backend/processo_seletivo/processos/models.py` — é do **`Edital`**, e não do Perfil: no Perfil ele seria redundante com `uq_inscricao_identidade_edital_perfil`, que já existe
+- [X] T011 Migration de `editais` com `FatoDeclarado` e suas unicidades, em `backend/processo_seletivo/editais/migrations/`
+- [X] T012 Migration de `processos` com o teto, em `backend/processo_seletivo/processos/migrations/`
+- [X] T013 Emitir `declaredFacts` dentro do laço do Perfil e `maxInscricoesPorCandidato` **na raiz** do snapshot, em `backend/processo_seletivo/publicacoes/application/publish_edital.py`
+- [ ] T014 **BLOQUEADA** (ver aviso da fase): Teste: mudar o tipo de um fato cria fato novo, e o valor congelado permanece legível sob a norma que o governou, em `backend/tests/unit/editais/`
 - [ ] T015 [P] Atualizar as fixtures de snapshot em `backend/tests/fixtures/snapshot.py` — o `rebaixar()` de `backend/tests/fixtures/legado.py` **já foi feito** em T007, que não fecharia sem ele; falta a fixture de snapshot
 - [ ] T016 [P] Atualizar `seed_demo` em `backend/processo_seletivo/processos/management/commands/seed_demo.py`
 - [X] T017 Atualizar os testes que travam a versão canônica com o literal `6` — `test_forma_publicada.py`, `test_contrato_de_inscricao.py`, `test_quickstart.py`, `test_elevacao.py`, `test_etapas.py`, `test_limites_de_borda.py`
@@ -83,7 +83,28 @@ e calcular é a US3.
 
 ---
 
+> **⛔ Buraco encontrado ao executar T014, em 04/09/2026.** `FatoDeclarado` existe (T009), a
+> migration existe (T011) e o snapshot o emite (T013) — mas **nenhuma tarefa cria a linha pelo
+> caminho de produto**. Para a Modalidade existem `CompetitionModalitySerializer`
+> (`editais/api/serializers.py:57`) e a persistência em `replace_draft`
+> (`editais/application/draft.py:207`); para o fato declarado não existe nem um nem outro, nem
+> formulário de elaboração, nem entrada no catálogo de Retificação.
+>
+> A leva trouxe D-2 para esta feature e as tarefas cobriram o **esquema** (Foundational) e a
+> **jornada do candidato** (US2). Faltou a jornada de quem **elabora** o Edital — que para o marco
+> está em T025, T026, T032 e T035, e para o fato não está em lugar nenhum. Sem ela o snapshot emite
+> `declaredFacts: []` para sempre, e T014, T015 e T016 não têm o que exercitar.
+>
+> T014, T015 e T016 ficam bloqueadas até que essas tarefas existam.
+
 ## Phase 3: US1 — Declarar a regra do marco e o desempate (P1)
+
+> **⚠️ T028 e T039 são uma minifatia atômica.** Medido por spike em 04/09/2026: emitir a coleção no
+> snapshot quebra **um** teste, o de endereçamento, e quem o resolve é T008 — que já vem antes. Mas
+> quando `COLECOES_PUBLICADAS` ganhar a forma do marco (T028), os três testes parametrizados de
+> `test_forma_publicada.py` passam a exigir o esquema no `openapi.yaml` (T039), porque `FORMAS`
+> deriva da **validação**, e não da emissão. Executar T028 e antecipar T039 imediatamente, antes das
+> demais tarefas desta fase, em vez de manter testes de contrato deliberadamente vermelhos.
 
 **Meta**: quem elabora declara um marco com operação, Etapas enumeradas e critérios ordenados;
 publica; retifica.

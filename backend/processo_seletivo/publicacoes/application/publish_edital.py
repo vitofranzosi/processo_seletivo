@@ -96,7 +96,9 @@ def _sections(edital: Edital) -> list[dict]:
 
 def edital_snapshot(edital: Edital) -> dict:
     profiles = []
-    for profile in edital.perfis.prefetch_related("modalidades__regra_normativa").order_by("code"):
+    for profile in edital.perfis.prefetch_related(
+        "modalidades__regra_normativa", "fatos"
+    ).order_by("code"):
         modalities = []
         for modality in profile.modalidades.order_by("code"):
             rule = getattr(modality, "regra_normativa", None)
@@ -123,6 +125,13 @@ def edital_snapshot(edital: Edital) -> dict:
                     },
                 }
             )
+        # Os fatos que este Perfil exige do candidato (D-2). Ordenados por `code` pela mesma razão
+        # que as Modalidades: a ordem do snapshot não pode depender da ordem de inserção, ou dois
+        # snapshots do mesmo conteúdo teriam bytes diferentes.
+        declared_facts = [
+            {"id": str(fato.id), "code": fato.code, "label": fato.label, "type": fato.tipo}
+            for fato in sorted(profile.fatos.all(), key=lambda fato: fato.code)
+        ]
         profiles.append(
             {
                 "id": str(profile.id),
@@ -144,6 +153,12 @@ def edital_snapshot(edital: Edital) -> dict:
                 "classificationInformation": profile.classification_information,
                 "callInformation": profile.call_information,
                 "competitionModalities": modalities,
+                "declaredFacts": declared_facts,
+                # A coleção do marco existe na forma desde a versão 7, e nasce vazia: a elaboração
+                # dela é da US1, e um Edital sem marco não classifica. Emiti-la vazia agora é o que
+                # mantém a versão 7 com **uma** forma — a alternativa seria snapshots v7 com e sem a
+                # chave, que é o que o bloco de história de `canonical.py` proíbe.
+                "classificationMilestones": [],
             }
         )
     schedule = []
@@ -175,6 +190,9 @@ def edital_snapshot(edital: Edital) -> dict:
         # snapshot **basta** para compor o documento, sem consultar o banco — que é o que a
         # Constituição pede da cadeia "dados estruturados → versão homologada → PDF". O Processo já
         # vem por `select_related("processo")` em `_locked_edital`; não há consulta a mais.
+        # O teto de Inscrições por candidato (D-3). Da raiz porque limita o **total** da pessoa no
+        # certame; no Perfil seria redundante com `uq_inscricao_identidade_edital_perfil`.
+        "maxInscricoesPorCandidato": edital.max_inscricoes_por_candidato,
         "processoCode": edital.processo.institutional_code,
         "processoTitle": edital.processo.title,
         "number": edital.number,

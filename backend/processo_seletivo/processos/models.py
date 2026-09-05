@@ -51,6 +51,16 @@ class Edital(models.Model):
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.EM_ELABORACAO)
     revision = models.PositiveBigIntegerField(default=1)
     next_publication_order = models.PositiveBigIntegerField(default=1)
+    # Quantas Inscrições um candidato pode ter **neste Edital**. Anulável, e a ausência significa
+    # sem limite, que é o comportamento de hoje (D-3).
+    #
+    # **Do Edital, e não do Perfil.** A restrição existente é
+    # `uq_inscricao_identidade_edital_perfil` — uma inscrição por Perfil, várias por Edital. Um teto
+    # por Perfil com valor 1 repetiria essa constraint, e com valor maior descreveria o que ela
+    # proíbe. O que os Editais 14 (7.8) e 57 exigem é uma por **Edital**, que é limite sobre o
+    # total; e total é do certame, não de um dos Perfis dele. A constraint permanece: ela impede a
+    # duplicata por Perfil, e este campo limita o total (015, FR-063).
+    max_inscricoes_por_candidato = models.PositiveIntegerField(null=True, blank=True)
     created_at = models.DateTimeField()
     created_by = models.CharField(max_length=255)
     last_edited_by = models.CharField(max_length=255)

@@ -69,6 +69,42 @@ class ModalidadeConcorrencia(models.Model):
         return f"{self.code} — {self.name}"
 
 
+class FatoDeclarado(models.Model):
+    """Um fato que o Edital exige do candidato, para que uma regra publicada possa consumi-lo.
+
+    **Não é construtor de formulário** — a recusa da `009` era de configuração de tela. Isto é
+    conteúdo normativo: o campo existe porque uma regra publicada o consome, viaja no snapshot, é
+    retificável e responde pela mesma cadeia de vigência que peso e nota mínima. Um Edital que não
+    declara fato nenhum continua sem campo nenhum (D-2).
+
+    **O tipo não é editável.** Um fato declarado como data que virasse número não seria o mesmo
+    fato: reinterpretar o valor já congelado seria o sistema decidindo o que a pessoa quis dizer. A
+    Retificação remove um e acrescenta outro, e o que foi congelado sob o primeiro permanece legível
+    sob a norma que o governou (015, FR-058).
+
+    **Os dois tipos são os que os Editais lidos de fato usam** — idade sai de data de nascimento,
+    tempo de experiência sai de meses. O terceiro entra quando aparecer o Edital que o exija.
+    """
+
+    class Tipo(models.TextChoices):
+        DATA = "DATA"
+        INTEIRO = "INTEIRO"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    perfil = models.ForeignKey(PerfilVaga, on_delete=models.CASCADE, related_name="fatos")
+    code = models.CharField(max_length=100)
+    label = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=20, choices=Tipo.choices)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["perfil", "code"], name="uq_fato_perfil_code")
+        ]
+
+    def __str__(self):
+        return f"{self.code} — {self.label}"
+
+
 class RegraNormativa(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     modalidade = models.OneToOneField(

@@ -22,6 +22,12 @@ COLECOES_COM_CHAVE = frozenset(
         "/stages",
         "/sections",
         "/profiles/*/competitionModalities",
+        # As duas da leva da `015`. Aninhadas no Perfil pela mesma razão que a Modalidade: a regra
+        # não depende de qual Perfil é. Declará-las **antes** de o snapshot as emitir não é ordem
+        # arbitrária — sem isto, `changes.py` recusaria endereçá-las por `id=` e o caminho só
+        # resolveria por posição, que é o que o sistema proíbe (015, T-007).
+        "/profiles/*/declaredFacts",
+        "/profiles/*/classificationMilestones",
         # O Documento Exigido nasce com identidade estável e é endereçado por ela como as demais
         # (FR-009 da 009): nenhuma regra nova, nenhuma gramática nova — só mais uma coleção na
         # declaração que já existe.
