@@ -63,6 +63,39 @@ de desempate que aponte fato inexistente no mesmo conteúdo (FR-017); teto negat
 o tipo remove um fato e acrescenta outro (FR-058), porque reinterpretar valor já congelado seria o
 sistema decidindo o que a pessoa quis dizer.
 
+## 2c. A forma de `rounding`, exata
+
+```
+rounding: { "scale": <inteiro 0..6>, "mode": "MEIO_PARA_CIMA" | "MEIO_PARA_PAR" | "TRUNCAR" }
+```
+
+**`scale`** é o número de casas decimais da pontuação combinada. O intervalo é **0 a 6**: zero
+porque há Editais que classificam por pontuação inteira, e seis porque é a precisão que
+`pontuacao` já carrega no `ResultadoEtapa` — publicar escala maior prometeria precisão que a
+entrada não tem.
+
+**`mode`** tem três valores canônicos, e a grafia é a publicada, não a da biblioteca:
+
+| Publicado | Significa | No domínio |
+|---|---|---|
+| `MEIO_PARA_CIMA` | 2,5 vira 3 — o arredondamento que a maioria dos Editais descreve | `ROUND_HALF_UP` |
+| `MEIO_PARA_PAR` | 2,5 vira 2 e 3,5 vira 4 — o que não enviesa uma população | `ROUND_HALF_EVEN` |
+| `TRUNCAR` | 2,9 vira 2 — corta sem olhar o que vem depois | `ROUND_DOWN` |
+
+**Quando se aplica:** uma vez, **depois** da operação e da normalização, sobre a pontuação
+combinada final. Nunca sobre as parcelas (FR-069). A diferença não é teórica — arredondar parcelas
+e arredondar o total dão resultados distintos, e num lugar onde a pontuação decide quem passa.
+
+**O que a validação recusa na publicação, e não no cálculo:**
+
+- marco cuja operação não declare `rounding`;
+- `scale` ausente, não inteiro, ou fora de 0..6;
+- `mode` ausente ou fora dos três valores canônicos.
+
+Recusar aqui é o que impede o cálculo de escolher um padrão. Um marco sem arredondamento declarado
+publicaria uma regra que só fica completa no dia em que alguém a executa — e aí o padrão seria do
+código, não do Edital (FR-068).
+
 ## 3. Endereçamento
 
 Entra em `COLECOES_COM_CHAVE` (`publicacoes/domain/colecoes.py:18-30`):

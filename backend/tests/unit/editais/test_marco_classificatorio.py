@@ -18,12 +18,12 @@ MARCO = "00000000-0000-0000-0000-000000000541"
 CRITERIO = "00000000-0000-0000-0000-000000000551"
 
 
-def etapa(identificador, *, classificatory):
+def etapa(identificador, *, classificatory, weight="1.0000"):
     return {
         "id": identificador,
         "name": "Prova",
         "order": 1,
-        "weight": "1.0000",
+        "weight": weight,
         "eliminatory": False,
         "classificatory": classificatory,
         "minimumScore": None,
@@ -47,10 +47,15 @@ def criterio(**sobrescrever):
     return {**base, **sobrescrever}
 
 
-def conteudo_com_marco(*, classificatory=True, criterios=None, etapas_do_marco=None):
+ARREDONDAMENTO = {"scale": 2, "mode": "MEIO_PARA_CIMA"}
+
+
+def conteudo_com_marco(
+    *, classificatory=True, criterios=None, etapas_do_marco=None, rounding=None, peso="1.0000"
+):
     """Conteúdo publicável com uma Etapa e um marco que a enumera."""
     conteudo = conteudo_normativo()
-    conteudo["stages"] = [etapa(ETAPA["A"], classificatory=classificatory)]
+    conteudo["stages"] = [etapa(ETAPA["A"], classificatory=classificatory, weight=peso)]
     perfil = next(item for item in conteudo["profiles"] if item["id"] == PERFIL["B"])
     perfil["classificationMilestones"] = [
         {
@@ -60,7 +65,7 @@ def conteudo_com_marco(*, classificatory=True, criterios=None, etapas_do_marco=N
             "stages": [ETAPA["A"]] if etapas_do_marco is None else etapas_do_marco,
             "operation": "SOMA_PONDERADA",
             "normalization": "NENHUMA",
-            "rounding": {},
+            "rounding": ARREDONDAMENTO if rounding is None else rounding,
             "tiebreakers": [criterio()] if criterios is None else criterios,
         }
     ]
@@ -110,3 +115,54 @@ def test_o_criterio_que_aponta_fato_declarado_do_proprio_perfil_publica():
     )
 
     assert codigos(conteudo) == set()
+
+
+# --- a regra precisa estar completa na publicação, e não no cálculo ----------------------------
+
+
+def test_a_etapa_enumerada_sem_peso_e_recusada():
+    """Quem enumera declara o peso: ausência não é equivalência, e o cálculo não a interpreta."""
+    assert "milestone_stage_without_weight" in codigos(conteudo_com_marco(peso=None))
+
+
+@pytest.mark.parametrize(
+    "rounding",
+    [
+        None,
+        {},
+        {"scale": 2},
+        {"mode": "MEIO_PARA_CIMA"},
+        {"scale": -1, "mode": "MEIO_PARA_CIMA"},
+        {"scale": 7, "mode": "MEIO_PARA_CIMA"},
+        {"scale": "2", "mode": "MEIO_PARA_CIMA"},
+        {"scale": 2, "mode": "ROUND_HALF_UP"},
+        {"scale": 2, "mode": "PARA_CIMA"},
+    ],
+    ids=[
+        "ausente",
+        "vazio",
+        "sem-modo",
+        "sem-escala",
+        "escala-negativa",
+        "escala-acima-do-teto",
+        "escala-texto",
+        "grafia-da-biblioteca",
+        "modo-inexistente",
+    ],
+)
+def test_o_arredondamento_mal_declarado_e_recusado_na_publicacao(rounding):
+    """A recusa é aqui, e não no dia em que alguém executa o marco.
+
+    Se o cálculo escolhesse um padrão, o padrão seria do código e não do Edital. E a grafia da
+    biblioteca é recusada de propósito: `ROUND_HALF_UP` é detalhe de implementação, e publicá-lo
+    faria a norma depender de como o sistema por acaso arredonda hoje.
+    """
+    assert "milestone_rounding_invalid" in codigos(
+        conteudo_com_marco(rounding={} if rounding is None else rounding)
+    )
+
+
+@pytest.mark.parametrize("escala", [0, 6])
+def test_as_escalas_das_pontas_do_intervalo_publicam(escala):
+    """Zero porque há Edital que classifica por inteiro; seis é a precisão que a pontuação tem."""
+    assert codigos(conteudo_com_marco(rounding={"scale": escala, "mode": "TRUNCAR"})) == set()

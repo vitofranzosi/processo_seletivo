@@ -54,6 +54,9 @@ def publicado(api_client, manager_headers, process_payload):
             "stages": [ETAPA["A"]],
             "operation": "SOMA_PONDERADA",
             "normalization": "NENHUMA",
+            # Exigido desde que o contrato de `rounding` foi fixado: um marco sem escala e modo
+            # declarados não publica, porque o cálculo não escolhe padrão por conta própria.
+            "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
             "tiebreakers": [criterio(CRITERIOS[0], 1), criterio(CRITERIOS[1], 2)],
         }
     ]

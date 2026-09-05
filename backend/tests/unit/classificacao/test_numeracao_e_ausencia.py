@@ -9,7 +9,12 @@ from decimal import Decimal
 
 import pytest
 
-from processo_seletivo.classificacao.domain.combinacao import SEM_PONTUACAO, combinar, peso_da_etapa
+from processo_seletivo.classificacao.domain.combinacao import (
+    SEM_PONTUACAO,
+    RegraIncompleta,
+    combinar,
+    peso_da_etapa,
+)
 from processo_seletivo.classificacao.domain.desempate import ordenar
 
 ETAPA_A = "00000000-0000-0000-0000-0000000000a1"
@@ -20,6 +25,9 @@ MARCO = {
     "stages": [ETAPA_A, ETAPA_B],
     "operation": "SOMA_PONDERADA",
     "normalization": "NENHUMA",
+    # Escala 4 para que estes testes falem de combinação, e não de arredondamento: o que eles
+    # verificam é a conta, e os modos têm arquivo próprio.
+    "rounding": {"scale": 4, "mode": "MEIO_PARA_CIMA"},
 }
 
 
@@ -112,13 +120,17 @@ def test_o_peso_vem_da_etapa_publicada():
     assert combinar(MARCO, ETAPAS, {ETAPA_A: Decimal("8"), ETAPA_B: Decimal("5")}) == Decimal("21")
 
 
-def test_etapa_sem_peso_declarado_pesa_um():
-    """Ausência de peso é equivalência, e não anulação.
+def test_etapa_sem_peso_declarado_nao_e_interpretada():
+    """A redação anterior devolvia 1 e chamava isso de equivalência (FR-067).
 
-    Peso zero apagaria a Etapa da conta.
+    Era decisão do código escrita como se fosse norma. Quem enumera a Etapa declara o peso, e a
+    falta é recusada na publicação — não completada no cálculo.
     """
-    assert peso_da_etapa({}) == Decimal("1")
-    assert peso_da_etapa({"weight": None}) == Decimal("1")
+    with pytest.raises(RegraIncompleta):
+        peso_da_etapa({})
+
+    with pytest.raises(RegraIncompleta):
+        peso_da_etapa({"weight": None})
 
 
 @pytest.mark.parametrize(

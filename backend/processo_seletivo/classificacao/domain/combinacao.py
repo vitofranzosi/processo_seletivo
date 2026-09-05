@@ -14,7 +14,16 @@ nota que ninguém atribuiu. Quem não tem pontuação em Etapa enumerada não é
 chama recebe isso dito, e não um número inventado (FR-023).
 """
 
-from decimal import Decimal
+from decimal import ROUND_DOWN, ROUND_HALF_EVEN, ROUND_HALF_UP, Decimal
+
+# A grafia publicada e a da biblioteca são coisas distintas de propósito: o Edital publica
+# `MEIO_PARA_CIMA`, e `ROUND_HALF_UP` é detalhe de implementação que não deve vazar para a norma.
+MODOS = {
+    "MEIO_PARA_CIMA": ROUND_HALF_UP,
+    "MEIO_PARA_PAR": ROUND_HALF_EVEN,
+    "TRUNCAR": ROUND_DOWN,
+}
+ESCALA_MINIMA, ESCALA_MAXIMA = 0, 6
 
 SOMA_PONDERADA = "SOMA_PONDERADA"
 MEDIA_PONDERADA = "MEDIA_PONDERADA"
@@ -27,14 +36,54 @@ Distinto de `Decimal(0)`, e por isso irredutível a ele.
 """
 
 
-def peso_da_etapa(etapa):
-    """O peso publicado, ou 1 quando a Etapa não o declara.
+class RegraIncompleta(ValueError):
+    """A regra publicada não basta para calcular, e o cálculo não a completa por conta própria.
 
-    Ausência de peso é "pesa como as outras", e não "não pesa": um Edital que não declara peso
-    nenhum tem Etapas equivalentes, e tratá-las como zero anularia a pontuação inteira.
+    Existe para que a falta apareça na **publicação**, e não no dia em que alguém executa o marco:
+    se o cálculo escolhesse um padrão, o padrão seria do código e não do Edital (FR-067, FR-068).
+    """
+
+
+def peso_da_etapa(etapa):
+    """O peso publicado da Etapa. Ausência é recusa, e não interpretação (FR-067).
+
+    A redação anterior devolvia 1 e chamava isso de equivalência. Era decisão do código escrita como
+    se fosse norma: a spec diz que os pesos não precisam somar 1, e não diz o que `null` significa.
+    Quem enumera a Etapa num marco declara o peso dela.
     """
     bruto = etapa.get("weight")
-    return Decimal("1") if bruto is None else Decimal(str(bruto))
+    if bruto is None:
+        raise RegraIncompleta(
+            "Etapa enumerada pelo marco sem peso declarado: quem enumera declara o peso."
+        )
+    return Decimal(str(bruto))
+
+
+def arredondamento_publicado(marco):
+    """`(escala, modo)` do marco, ou `RegraIncompleta` quando a publicação não os declarou."""
+    rounding = marco.get("rounding") or {}
+    escala, modo = rounding.get("scale"), rounding.get("mode")
+    if not isinstance(escala, int) or isinstance(escala, bool):
+        raise RegraIncompleta("O arredondamento do marco deve declarar `scale` como inteiro.")
+    if not ESCALA_MINIMA <= escala <= ESCALA_MAXIMA:
+        raise RegraIncompleta(
+            f"A escala do arredondamento deve estar entre {ESCALA_MINIMA} e {ESCALA_MAXIMA}."
+        )
+    if modo not in MODOS:
+        raise RegraIncompleta(
+            "O modo do arredondamento deve ser MEIO_PARA_CIMA, MEIO_PARA_PAR ou TRUNCAR."
+        )
+    return escala, modo
+
+
+def arredondar(valor, marco):
+    """A pontuação na escala e no modo publicados — **uma vez**, e sobre o resultado final.
+
+    Arredondar parcelas antes de combiná-las dá resultado diferente, e num lugar onde a pontuação
+    decide quem passa. A conta roda em precisão plena e perde precisão uma única vez (FR-069).
+    """
+    escala, modo = arredondamento_publicado(marco)
+    return valor.quantize(Decimal(1).scaleb(-escala), rounding=MODOS[modo])
 
 
 def combinar(marco, etapas_publicadas, pontuacoes):
@@ -58,7 +107,11 @@ def combinar(marco, etapas_publicadas, pontuacoes):
         peso = peso_da_etapa(etapa)
         total += Decimal(str(valor)) * peso
         soma_dos_pesos += peso
-    return _normalizar(marco, total, soma_dos_pesos, len(enumeradas))
+    combinada = _normalizar(marco, total, soma_dos_pesos, len(enumeradas))
+    if combinada is SEM_PONTUACAO:
+        return SEM_PONTUACAO
+    # Depois da operação e da normalização, e só aqui.
+    return arredondar(combinada, marco)
 
 
 def _normalizar(marco, total, soma_dos_pesos, quantas):

@@ -485,6 +485,32 @@ def _coerencia_dos_fatos(snapshot: dict) -> list[ValidationFinding]:
     return findings
 
 
+def _arredondamento_do_marco(marco, caminho) -> list[ValidationFinding]:
+    """A regra precisa estar completa **na publicação**, e não no dia em que alguém a executa.
+
+    Sem esta recusa, um marco sem arredondamento declarado publicaria uma regra que só fica
+    completa quando o cálculo escolhe um padrão — e aí o padrão seria do código, não do Edital
+    (FR-068).
+    """
+    from processo_seletivo.classificacao.domain.combinacao import (
+        RegraIncompleta,
+        arredondamento_publicado,
+    )
+
+    try:
+        arredondamento_publicado(marco)
+    except RegraIncompleta as falta:
+        return [
+            ValidationFinding(
+                Severity.BLOCKING_ERROR,
+                "milestone_rounding_invalid",
+                str(falta),
+                f"{caminho}/rounding",
+            )
+        ]
+    return []
+
+
 def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
     """O marco só é executável se o que ele aponta existir e puder ser apontado (015, D-001).
 
@@ -520,8 +546,19 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
             chave = marco.get("id")
             dentro = f"id={chave}" if isinstance(chave, str) and chave else str(indice)
             caminho = f"{base}/classificationMilestones/{dentro}"
+            findings.extend(_arredondamento_do_marco(marco, caminho))
             for etapa_id in marco.get("stages") or []:
                 etapa = etapas.get(etapa_id)
+                if etapa is not None and etapa.get("weight") is None:
+                    findings.append(
+                        ValidationFinding(
+                            Severity.BLOCKING_ERROR,
+                            "milestone_stage_without_weight",
+                            "O marco enumera uma Etapa sem peso declarado. Quem enumera declara o "
+                            "peso: ausência não é equivalência, e o cálculo não a interpreta.",
+                            f"{caminho}/stages",
+                        )
+                    )
                 if etapa is None:
                     findings.append(
                         ValidationFinding(
