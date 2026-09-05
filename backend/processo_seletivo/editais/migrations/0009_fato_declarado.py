@@ -8,29 +8,48 @@ de data de nascimento, tempo de experiência sai de meses. Nenhuma linha existe 
 nada precisa de default: um Edital que não declara fato nenhum continua sem campo nenhum.
 """
 
-import django.db.models.deletion
 import uuid
+
+import django.db.models.deletion
 from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('editais', '0008_forma_da_conclusao'),
+        ("editais", "0008_forma_da_conclusao"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='FatoDeclarado',
+            name="FatoDeclarado",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('code', models.CharField(max_length=100)),
-                ('label', models.CharField(max_length=255)),
-                ('tipo', models.CharField(choices=[('DATA', 'Data'), ('INTEIRO', 'Inteiro')], max_length=20)),
-                ('perfil', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='fatos', to='editais.perfilvaga')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("code", models.CharField(max_length=100)),
+                ("label", models.CharField(max_length=255)),
+                (
+                    "tipo",
+                    models.CharField(
+                        choices=[("DATA", "Data"), ("INTEIRO", "Inteiro")], max_length=20
+                    ),
+                ),
+                (
+                    "perfil",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="fatos",
+                        to="editais.perfilvaga",
+                    ),
+                ),
             ],
             options={
-                'constraints': [models.UniqueConstraint(fields=('perfil', 'code'), name='uq_fato_perfil_code')],
+                "constraints": [
+                    models.UniqueConstraint(fields=("perfil", "code"), name="uq_fato_perfil_code")
+                ],
             },
         ),
     ]

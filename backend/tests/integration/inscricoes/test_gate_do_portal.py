@@ -51,7 +51,9 @@ def test_edital_sem_fato_declarado_nao_acrescenta_campo(client, selecao, candida
     assert 'name="fato-' not in pagina
 
 
-def test_o_gate_esconde_o_envio_ate_o_reconhecimento(client, api_client, selecao, candidatos_registrados):
+def test_o_gate_esconde_o_envio_ate_o_reconhecimento(
+    client, api_client, selecao, candidatos_registrados
+):
     """As três fases do ciclo, na mesma ordem em que a pessoa as vive."""
     inscricao = pronta_pelo_portal(client, selecao)
     retify(
@@ -93,7 +95,9 @@ def test_o_gate_esconde_o_envio_ate_o_reconhecimento(client, api_client, selecao
     assert "O Edital foi atualizado" not in depois
 
 
-def test_o_valor_digitado_volta_apos_uma_recusa(client, api_client, selecao, candidatos_registrados):
+def test_o_valor_digitado_volta_apos_uma_recusa(
+    client, api_client, selecao, candidatos_registrados
+):
     """Uma recusa não pode custar o que já estava certo (SC-UX-007)."""
     inscricao = pronta_pelo_portal(client, selecao)
     retify(

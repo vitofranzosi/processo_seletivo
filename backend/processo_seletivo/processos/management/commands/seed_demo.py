@@ -302,7 +302,7 @@ class Command(BaseCommand):
         edital.refresh_from_db()
 
     def _declarar_fatos_e_teto(self, edital, numero):
-        """Os dois fatos que os Editais em vista consomem no desempate, e o teto do certame (D-2, D-3).
+        """Os fatos que o desempate consome, e o teto do certame (D-2, D-3).
 
         **Pelo modelo, e não pelo rascunho**, porque a elaboração de fatos ainda não existe no
         caminho de produto — `replace_draft` não os conhece. Duas consequências que valem estar

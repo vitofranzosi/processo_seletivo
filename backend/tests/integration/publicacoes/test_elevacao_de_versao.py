@@ -415,7 +415,9 @@ def test_edital_publicado_na_versao_6_continua_retificavel(api_client, legado_v6
     """
     antes = hashes_publicados()
 
-    publish_retification(api_client, create_retification(api_client, legado_v6, TITULO), suffix="v7")
+    publish_retification(
+        api_client, create_retification(api_client, legado_v6, TITULO), suffix="v7"
+    )
 
     conteudo = vigente(legado_v6).content
     assert conteudo["schemaVersion"] == SCHEMA_VERSION
@@ -424,7 +426,9 @@ def test_edital_publicado_na_versao_6_continua_retificavel(api_client, legado_v6
 
 def test_a_versao_nova_nasce_com_as_tres_formas_da_leva(api_client, legado_v6):
     """As três mudanças sobem juntas: sem isso, existiriam snapshots v7 com e sem cada uma."""
-    publish_retification(api_client, create_retification(api_client, legado_v6, TITULO), suffix="v7")
+    publish_retification(
+        api_client, create_retification(api_client, legado_v6, TITULO), suffix="v7"
+    )
 
     conteudo = vigente(legado_v6).content
     assert conteudo["maxInscricoesPorCandidato"] is None

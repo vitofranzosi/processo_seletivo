@@ -1054,9 +1054,7 @@ def _marcos(composicao, perfil, tabelas, nomear_perfil=False):
         return
     linhas = []
     for marco in marcos:
-        criterios = sorted(
-            marco.get("tiebreakers") or [], key=lambda item: item.get("order") or 0
-        )
+        criterios = sorted(marco.get("tiebreakers") or [], key=lambda item: item.get("order") or 0)
         desempate = "; ".join(
             f"{indice}º {CRITERIO_DE_DESEMPATE.get(criterio.get('type'), criterio.get('type', ''))}"
             for indice, criterio in enumerate(criterios, start=1)

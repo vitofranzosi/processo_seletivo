@@ -13,15 +13,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('processos', '0001_initial'),
+        ("processos", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='edital',
-            name='max_inscricoes_por_candidato',
+            model_name="edital",
+            name="max_inscricoes_por_candidato",
             field=models.PositiveIntegerField(blank=True, null=True),
         ),
     ]

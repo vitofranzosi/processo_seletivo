@@ -78,15 +78,11 @@ def test_o_marco_bem_formado_publica():
 
 def test_a_etapa_nao_classificatoria_e_recusada():
     """O Edital declarou que ela não classifica; contá-la seria o sistema contradizendo o Edital."""
-    assert "milestone_stage_not_classificatory" in codigos(
-        conteudo_com_marco(classificatory=False)
-    )
+    assert "milestone_stage_not_classificatory" in codigos(conteudo_com_marco(classificatory=False))
 
 
 def test_a_etapa_inexistente_e_recusada():
-    assert "milestone_stage_missing" in codigos(
-        conteudo_com_marco(etapas_do_marco=[ETAPA["B"]])
-    )
+    assert "milestone_stage_missing" in codigos(conteudo_com_marco(etapas_do_marco=[ETAPA["B"]]))
 
 
 def test_o_criterio_sem_comportamento_para_valor_ausente_e_recusado():

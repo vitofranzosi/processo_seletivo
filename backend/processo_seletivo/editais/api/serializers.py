@@ -66,9 +66,7 @@ class TiebreakerSerializer(serializers.Serializer):
         choices=["MAIOR_PONTUACAO_NA_ETAPA", "MAIOR_VALOR_DE_FATO", "MENOR_VALOR_DE_FATO"]
     )
     parameters = serializers.JSONField(required=False)
-    whenMissing = serializers.ChoiceField(
-        choices=["ULTIMO_NO_CRITERIO", "CRITERIO_NAO_SE_APLICA"]
-    )
+    whenMissing = serializers.ChoiceField(choices=["ULTIMO_NO_CRITERIO", "CRITERIO_NAO_SE_APLICA"])
 
 
 class ClassificationMilestoneSerializer(serializers.Serializer):

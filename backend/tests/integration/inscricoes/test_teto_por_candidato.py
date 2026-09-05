@@ -15,7 +15,11 @@ import threading
 import pytest
 from django.db import connection, connections
 
-from processo_seletivo.inscricoes.application.rascunho import abrir_inscricao, anexar_documento, gravar_dados
+from processo_seletivo.inscricoes.application.rascunho import (
+    abrir_inscricao,
+    anexar_documento,
+    gravar_dados,
+)
 from processo_seletivo.inscricoes.application.submissao import enviar_inscricao
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.processos.models import Edital

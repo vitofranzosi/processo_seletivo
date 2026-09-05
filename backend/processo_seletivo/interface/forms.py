@@ -387,9 +387,7 @@ def perfis_do_edital(edital):
         }
         for perfil in edital.perfis.prefetch_related(
             "modalidades__regra_normativa", "marcos__criterios", "fatos", "fatos"
-        ).order_by(
-            "code"
-        )
+        ).order_by("code")
     ]
 
 
@@ -451,9 +449,7 @@ def perfis_persistidos(edital):
         }
         for perfil in edital.perfis.prefetch_related(
             "modalidades__regra_normativa", "marcos__criterios"
-        ).order_by(
-            "code"
-        )
+        ).order_by("code")
     ]
 
 

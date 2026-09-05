@@ -6,7 +6,6 @@ exige que o estado vigente em qualquer instante relevante seja reproduzível.
 """
 
 import pytest
-from django.urls import reverse
 
 from processo_seletivo.inscricoes.application.rascunho import (
     abrir_inscricao,
@@ -80,7 +79,9 @@ def enviar(inscricao, fatos=None, chave="envio"):
     )
 
 
-def test_o_valor_congela_na_submissao_sob_a_versao_do_ato(api_client, selecao, candidatos_registrados):
+def test_o_valor_congela_na_submissao_sob_a_versao_do_ato(
+    api_client, selecao, candidatos_registrados
+):
     declarar_fato(api_client, selecao, NASCIMENTO, "NASCIMENTO", "DATA")
     vigente = VersaoConsolidada.objects.filter(edital=selecao).latest("materialized_at")
 
@@ -92,7 +93,9 @@ def test_o_valor_congela_na_submissao_sob_a_versao_do_ato(api_client, selecao, c
     assert valor.congelado_em == enviada.submitted_at
 
 
-def test_editar_o_perfil_depois_nao_muda_valor_congelado(api_client, selecao, candidatos_registrados):
+def test_editar_o_perfil_depois_nao_muda_valor_congelado(
+    api_client, selecao, candidatos_registrados
+):
     """A razão de congelar: sem isto, editar o perfil mudaria classificação histórica."""
     declarar_fato(api_client, selecao, NASCIMENTO, "NASCIMENTO", "DATA")
     enviada = enviar(pronta(selecao), {NASCIMENTO: "1990-05-20"})
@@ -104,7 +107,10 @@ def test_editar_o_perfil_depois_nao_muda_valor_congelado(api_client, selecao, ca
 
 
 def test_o_fato_declarado_e_exigido_no_envio(api_client, selecao, candidatos_registrados):
-    """Declarar um fato é dizer que uma regra o consome; enviar sem ele seria classificar no vazio."""
+    """Declarar um fato é dizer que uma regra o consome.
+
+    Enviar sem ele seria classificar no vazio.
+    """
     declarar_fato(api_client, selecao, NASCIMENTO, "NASCIMENTO", "DATA")
 
     with pytest.raises(DomainError) as recusa:
@@ -189,7 +195,7 @@ def test_remover_o_fato_e_acrescentar_outro_nao_toca_o_valor_congelado(
     assert congelado.versao_id == versao_do_ato, "e à versão sob a qual foi congelado"
     assert congelado.valor_data.isoformat() == "1990-05-20"
     vigente = VersaoConsolidada.objects.filter(edital=selecao).latest("materialized_at")
-    declarados = next(
-        item for item in vigente.content["profiles"] if item["id"] == PERFIL_DOCENTE
-    )["declaredFacts"]
+    declarados = next(item for item in vigente.content["profiles"] if item["id"] == PERFIL_DOCENTE)[
+        "declaredFacts"
+    ]
     assert [item["id"] for item in declarados] == [OUTRO], "o vigente exige outro fato"

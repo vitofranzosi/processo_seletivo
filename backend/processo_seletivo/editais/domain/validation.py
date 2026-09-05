@@ -512,9 +512,7 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
             continue
         base = _caminho_da_entidade("profiles", perfil, posicao)
         fatos = {
-            fato.get("id")
-            for fato in (perfil.get("declaredFacts") or [])
-            if isinstance(fato, dict)
+            fato.get("id") for fato in (perfil.get("declaredFacts") or []) if isinstance(fato, dict)
         }
         for indice, marco in enumerate(perfil.get("classificationMilestones") or []):
             if not isinstance(marco, dict):

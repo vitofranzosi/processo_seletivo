@@ -65,9 +65,7 @@ def vigente(edital):
 
 
 def marco_publicado(edital):
-    perfil = next(
-        item for item in vigente(edital).content["profiles"] if item["id"] == PERFIL["B"]
-    )
+    perfil = next(item for item in vigente(edital).content["profiles"] if item["id"] == PERFIL["B"])
     return perfil["classificationMilestones"][0]
 
 

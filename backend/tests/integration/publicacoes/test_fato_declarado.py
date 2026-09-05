@@ -71,7 +71,9 @@ def test_retificar_o_rotulo_preserva_a_identidade_do_fato(api_client, publicado)
     assert depois[NASCIMENTO]["type"] == "DATA", "retificar o rótulo não toca o tipo"
 
 
-def test_a_identidade_de_fato_de_outro_perfil_e_recusada(api_client, manager_headers, process_payload):
+def test_a_identidade_de_fato_de_outro_perfil_e_recusada(
+    api_client, manager_headers, process_payload
+):
     """A guarda é no nível do contêiner: o fato pertence ao Perfil, e não ao Edital.
 
     Sem ela, dois Perfis irmãos trocariam a identidade dos seus fatos sem que nada acusasse — e a

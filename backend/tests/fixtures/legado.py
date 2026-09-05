@@ -27,6 +27,8 @@ from tests.fixtures.edital import actor_headers, complete_draft
 from tests.fixtures.publicacao import SIGNATORY
 
 VERSAO_ANTERIOR = 4
+
+
 # O que rebaixar tira: **tudo** o que os degraus acima da versão alvo escrevem, derivado da própria
 # elevação. A lista literal aqui já ficou desatualizada uma vez — com o segundo incremento, ela
 # deixava `forma` num conteúdo carimbado como 4, que é uma grafia que nunca existiu — e derivá-la

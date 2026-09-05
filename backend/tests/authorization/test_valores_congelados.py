@@ -81,9 +81,7 @@ def test_outro_candidato_nao_alcanca_a_inscricao_alheia(client, inscricao_enviad
     """404 uniforme: dizer que existe já entregaria informação."""
     identificar(client, JOAO)
 
-    resposta = client.get(
-        reverse("portal:comprovante", args=[inscricao_enviada_de_maria.id])
-    )
+    resposta = client.get(reverse("portal:comprovante", args=[inscricao_enviada_de_maria.id]))
 
     assert resposta.status_code == 404
     assert "1990-05-20" not in resposta.content.decode()

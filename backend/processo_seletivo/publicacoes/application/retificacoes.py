@@ -11,8 +11,8 @@ from processo_seletivo.processos.domain.finalizacao import ensure_processo_accep
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.domain.changes import (
     AcrescimoPosicionado,
-    ChaveNaoEncontrada,
     CampoNaoRetificavel,
+    ChaveNaoEncontrada,
     ColecaoAtomica,
     ColecaoDescaracterizada,
     EnderecamentoPosicional,
