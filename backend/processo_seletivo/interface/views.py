@@ -676,6 +676,8 @@ def compor_etapa(request, edital_id, etapa):
             "perfis": (
                 _reexibir_perfis(digitados)
                 if etapa == "perfis" and digitados is not None
+                else _reexibir_classificacao(edital, digitados)
+                if etapa == "classificacao" and digitados is not None
                 else forms.perfis_do_edital(edital)
             ),
             "eventos": (
@@ -736,6 +738,46 @@ def _reexibir_perfis(perfis):
         }
         for perfil in perfis
     ]
+
+
+def _reexibir_classificacao(edital, marcos_por_perfil):
+    """Funde o digitado sobre os Perfis persistidos depois de uma recusa.
+
+    O POST deste passo traz somente os marcos. Voltar a consultar `perfis_do_edital` sem esta
+    transformação fazia a resposta 200 descartar visualmente tudo o que a pessoa acabara de
+    preencher, embora o domínio tivesse recusado justamente para que ela pudesse corrigir.
+    """
+    perfis = forms.perfis_do_edital(edital)
+    for perfil in perfis:
+        digitados = marcos_por_perfil.get(perfil["id"], [])
+        perfil["marcos"] = [_reexibir_marco(marco) for marco in digitados]
+    return perfis
+
+
+def _reexibir_marco(marco):
+    arredondamento = marco.get("rounding") or {}
+    return {
+        "id": marco.get("id", ""),
+        "code": marco.get("code", ""),
+        "name": marco.get("name", ""),
+        "etapas": marco.get("stages") or [],
+        "operation": marco.get("operation", ""),
+        "normalization": marco.get("normalization", ""),
+        "scale": arredondamento.get("scale", ""),
+        "mode": arredondamento.get("mode", ""),
+        "criterios": [_reexibir_criterio(item) for item in marco.get("tiebreakers") or []],
+    }
+
+
+def _reexibir_criterio(criterio):
+    parametros = criterio.get("parameters") or {}
+    return {
+        "id": criterio.get("id", ""),
+        "order": criterio.get("order", ""),
+        "type": criterio.get("type", ""),
+        "target": parametros.get("stageId") or parametros.get("factId") or "",
+        "whenMissing": criterio.get("whenMissing", ""),
+    }
 
 
 def _reexibir_modalidade(modalidade):

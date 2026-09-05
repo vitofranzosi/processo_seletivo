@@ -37,6 +37,10 @@ TABELAS_APPEND_ONLY = (
     # O valor que a inscrição congelou (015, D-2): nasce na submissão e não muda mais, porque a
     # classificação histórica depende de ele ser o do momento da inscrição.
     "inscricoes_valordefato",
+    # O ato da classificação e as posições que constituem seu snapshot (015): a sucessão cria
+    # outra linha, e nem o cabeçalho nem uma posição emitida podem ser reinterpretados depois.
+    "classificacao_atodeordenacao",
+    "classificacao_posicaonaordem",
     "publicacoes_documentopublicado",
     "publicacoes_publicacao",
     "publicacoes_revisaoedital",

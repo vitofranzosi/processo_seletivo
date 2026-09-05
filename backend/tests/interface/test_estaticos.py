@@ -18,7 +18,8 @@ from django.urls import reverse
 from processo_seletivo.processos.models import Edital
 from tests.interface.conftest import identificar
 
-TELAS_COM_HTMX = ["perfis", "cronograma"]
+TELAS_COM_HTMX = ["perfis", "cronograma", "classificacao"]
+TELAS_COM_BOTAO_DINAMICO = ["perfis", "cronograma"]
 
 
 @pytest.fixture
@@ -49,7 +50,7 @@ def test_telas_dinamicas_carregam_um_script_que_existe(client, seletor_ligado, e
 
 @pytest.mark.django_db
 @pytest.mark.integration
-@pytest.mark.parametrize("etapa", TELAS_COM_HTMX)
+@pytest.mark.parametrize("etapa", TELAS_COM_BOTAO_DINAMICO)
 def test_botao_de_acrescentar_declara_o_que_htmx_precisa(client, seletor_ligado, edital, etapa):
     """Sem alvo e sem modo de inserção, o clique não teria efeito mesmo com a biblioteca."""
     identificar(client, "ana.elaboradora", ["elaborador"])

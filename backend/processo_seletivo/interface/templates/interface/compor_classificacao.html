@@ -1,6 +1,8 @@
 {% extends "interface/compor_base.html" %}
 {% block etapa_titulo %}Classificação{% endblock %}
 {% block etapa %}
+<form method="post" id="formulario">
+  {% csrf_token %}
 <section aria-labelledby="titulo-classificacao">
   <h2 id="titulo-classificacao">Marcos classificatórios</h2>
   {% comment %}
@@ -31,4 +33,10 @@
   </fieldset>
   {% endfor %}
 </section>
+{% include "interface/_navegacao_etapa.html" %}
+</form>
+{% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
+<script src="{% static 'interface/assistente.js' %}" defer></script>
+<script src="{% static 'interface/ordenacao.js' %}" defer></script>
+<script src="{% static 'interface/remocao.js' %}" defer></script>
 {% endblock %}

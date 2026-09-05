@@ -88,6 +88,46 @@ def test_o_passo_vem_depois_das_etapas():
     assert CHAVES_ETAPA.index("classificacao") > CHAVES_ETAPA.index("etapas")
 
 
+def test_get_oferece_so_etapas_classificatorias(client, com_etapas):
+    client.post(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"]), marco_form()
+    )
+
+    resposta = client.get(reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"]))
+    corpo = resposta.content.decode()
+
+    assert resposta.status_code == 200
+    assert "Marcos classificatórios" in corpo
+    assert '<form method="post" id="formulario">' in corpo
+    assert 'name="destino" value="classificacao"' in corpo
+    assert f'hx-get="/gestao/fragmentos/perfil/{PERFIL}/marco' in corpo
+    assert f'hx-target="#marcos-{PERFIL}"' in corpo
+    assert 'src="/static/interface/htmx.min.js"' in corpo
+    assert "Prova didática" in corpo
+    assert "Análise documental" not in corpo
+
+
+def test_recusa_reexibe_o_que_foi_digitado(client, com_etapas):
+    nome_digitado = "Classificação digitada e ainda não salva"
+
+    resposta = client.post(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"]),
+        marco_form(
+            **{
+                f"marco-{PERFIL}-0-name": nome_digitado,
+                f"criterio-{PERFIL}-0-0-target": "",
+            }
+        ),
+    )
+
+    assert resposta.status_code == 200
+    corpo = resposta.content.decode()
+    assert nome_digitado in corpo
+    assert f'<option value="{ETAPA_CLASSIFICATORIA}" selected>' in corpo
+    assert 'value="2" required' in corpo
+    assert '<option value="MEIO_PARA_CIMA" selected>' in corpo
+
+
 def test_o_percurso_produz_regra_executavel(client, com_etapas):
     """Interface → rascunho → domínio: o que a tela grava, o cálculo consegue rodar.
 

@@ -210,29 +210,20 @@ posição, participante e proveniência.
 - [X] T073 [US1] Preservar esses valores na reexibição após recusa, pela mesma razão que as declarações voltam marcadas
 - [X] T074 [US1] Validação que recusa marco sem Etapa enumerada e critério sem o parâmetro que o tipo exige, na elaboração e na publicação
 - [X] T075 [US1] Teste de percurso: interface → rascunho → publicação com uma regra **realmente executável**, que o cálculo consegue rodar
-> **⚠️ Uma lacuna aberta na fatia da interface, com evidência.** Dois testes ficaram de fora do
-> arquivo `tests/interface/test_compor_classificacao.py` porque falhavam por uma causa que não
-> consegui isolar no tempo desta fatia: a resposta do `GET` de `compor-etapa` para `classificacao`
-> vem **sem o corpo do passo** — nem o `<h2>`, nem os Perfis, nem o aviso de "nenhuma Etapa
-> classificatória".
->
-> O que **já foi descartado**: o nome do bloco (`etapa`, não `passo` — corrigido); o balanceamento
-> dos `endblock` (dois, corretos); o gate de `editavel` em `compor_base.html:48-55`, que não
-> envolve o bloco; e a presença de `id` em `perfis_do_edital`. O POST do mesmo passo **funciona** —
-> grava marco, critérios, Etapas enumeradas e arredondamento —, o que restringe a causa ao caminho
-> do `GET`.
->
-> Alternativas a investigar: o contexto do passo não chega ao template (o `perfis` do contexto pode
-> estar sendo sobrescrito por outra chave), ou o `ETAPAS_COMPOSICAO` novo não está sendo casado com
-> o template na resolução da view. Os dois testes retirados verificavam (a) que só Etapas
-> classificatórias são oferecidas e (b) que o digitado volta após recusa.
+> **Lacuna da interface fechada, com o diagnóstico corrigido.** A reprodução isolada mostrou que o
+> `GET` normal sempre renderizava o corpo e oferecia só Etapas classificatórias; a afirmação acima
+> confundia esse caminho com a resposta 200 de uma recusa. O defeito real era duplo: a recusa
+> ignorava `digitados` e relia os marcos persistidos, apagando visualmente o preenchimento, e o
+> template novo não tinha `<form>`, navegação nem carregava HTMX — o POST de teste funcionava porque
+> era fabricado diretamente, mas a jornada no navegador não era submetível. Os testes devolvidos
+> cobrem o GET, a reexibição integral do digitado e os controles necessários no navegador.
 
-- [ ] T076 [US1] Investigar por que o `GET` do passo `classificacao` renderiza sem o corpo, e devolver os dois testes retirados
-- [ ] T077 [US3] Modelos `AtoDeOrdenacao` e `PosicaoNaOrdem` em `backend/processo_seletivo/classificacao/models.py`, com `ato_anterior` e **sem** campo `vigente`
-- [ ] T078 [US3] Migration do app com `uq_ato_raiz_por_marco`, `uq_ato_sucessor_unico`, `uq_posicao_por_ato_inscricao`, `ck_posicao_ou_motivo`, `ck_sucessao_com_motivo` e as duas triggers
-- [ ] T079 [US3] Registrar as duas tabelas em `TABELAS_APPEND_ONLY` em `backend/processo_seletivo/seguranca/papeis.py`
-- [ ] T080 [US3] Registrar os nomes das triggers em `TRIGGERS_POR_APP` em `backend/tests/migrations/test_migrations.py` — sem isso o teste estrutural não as enxerga
-- [ ] T081 [US3] Teste: alteração recusada pelo ORM **e** por SQL cru; a append-only não tem exceção alguma — o defeito do ato mutável, em `backend/tests/integration/classificacao/test_imutabilidade_do_ato.py`
+- [X] T076 [US1] Investigar por que o `GET` do passo `classificacao` renderiza sem o corpo, e devolver os dois testes retirados
+- [X] T077 [US3] Modelos `AtoDeOrdenacao` e `PosicaoNaOrdem` em `backend/processo_seletivo/classificacao/models.py`, com `ato_anterior` e **sem** campo `vigente`
+- [X] T078 [US3] Migration do app com `uq_ato_raiz_por_marco`, `uq_ato_sucessor_unico`, `uq_posicao_por_ato_inscricao`, `ck_posicao_ou_motivo`, `ck_sucessao_com_motivo` e as duas triggers
+- [X] T079 [US3] Registrar as duas tabelas em `TABELAS_APPEND_ONLY` em `backend/processo_seletivo/seguranca/papeis.py`
+- [X] T080 [US3] Registrar os nomes das triggers em `TRIGGERS_POR_APP` em `backend/tests/migrations/test_migrations.py` — sem isso o teste estrutural não as enxerga
+- [X] T081 [US3] Teste: alteração recusada pelo ORM **e** por SQL cru; a append-only não tem exceção alguma — o defeito do ato mutável, em `backend/tests/integration/classificacao/test_imutabilidade_do_ato.py`
 - [ ] T082 [US3] `calculo.py` — leitura única, `conteudos_das_versoes` para desduplicar por versão, laço sem consulta, em `backend/processo_seletivo/classificacao/application/`
 - [ ] T083 [US3] `emissao.py` sob `comando_de_comissao`, com `ctx.repetido` como primeira verificação e `resultado_declarado` no desfecho, em `backend/processo_seletivo/classificacao/application/`
 - [ ] T084 [US3] Trilha: `auditar(...)` **uma vez por ato**, com `permissao=ctx.base.permissao` e sem pontuação, em `backend/processo_seletivo/classificacao/application/emissao.py`
@@ -313,6 +304,7 @@ divergência.
 - [ ] T120 [P] Teste de guarda: pesos que não somam 1 publicam normalmente (FR-012); a feature não aplica corte nem vaga (FR-055); e não existe rota que exponha a ordem a candidato ou público (FR-056), em `backend/tests/contract/`
 - [ ] T121 Rodar a suíte inteira com `TEST_DB_ENGINE=postgresql` e `DB_NAME` próprio do worktree
 - [ ] T122 Conferir que nenhum teste da 013 mudou de comportamento — a 015 não altera Resultado algum
+- [ ] T123 [P] Alinhar `make lint` ao gate do CI, incluindo `ruff format --check`, para que o comando local não declare verde com formatação pendente
 
 ---
 
