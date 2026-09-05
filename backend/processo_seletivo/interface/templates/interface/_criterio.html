@@ -22,6 +22,25 @@
         <option value="MENOR_VALOR_DE_FATO" {% if criterio.type == "MENOR_VALOR_DE_FATO" %}selected{% endif %}>Menor valor de um fato declarado</option>
       </select>
     </p>
+    <p class="campo largo">
+      <label for="criterio-{{ indice }}-{{ sub }}-{{ n }}-target">O que ele compara <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <select id="criterio-{{ indice }}-{{ sub }}-{{ n }}-target"
+              name="criterio-{{ indice }}-{{ sub }}-{{ n }}-target" required aria-required="true">
+        <option value="">—</option>
+        <optgroup label="Pontuação na Etapa">
+          {% for etapa in etapas_classificatorias %}
+          <option value="{{ etapa.id }}" {% if criterio.target == etapa.id %}selected{% endif %}>{{ etapa.rotulo }}</option>
+          {% endfor %}
+        </optgroup>
+        <optgroup label="Fato declarado">
+          {% for fato in fatos_declarados %}
+          <option value="{{ fato.id }}" {% if criterio.target == fato.id %}selected{% endif %}>{{ fato.rotulo }}</option>
+          {% endfor %}
+        </optgroup>
+      </select>
+      <span class="ajuda">Escolha coerente com o critério: pontuação aponta Etapa, valor aponta
+        fato declarado.</span>
+    </p>
     <p class="campo">
       <label for="criterio-{{ indice }}-{{ sub }}-{{ n }}-whenMissing">Quando o valor não existe <span class="obrigatorio" aria-hidden="true">*</span></label>
       <select id="criterio-{{ indice }}-{{ sub }}-{{ n }}-whenMissing"

@@ -22,6 +22,37 @@
     </p>
   </div>
   <div class="campos">
+    <p class="campo largo">
+      <label for="marco-{{ indice }}-{{ sub }}-stages">Etapas que entram na ordem <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <select id="marco-{{ indice }}-{{ sub }}-stages" name="marco-{{ indice }}-{{ sub }}-stages"
+              multiple required aria-required="true" aria-describedby="ajuda-etapas-{{ indice }}-{{ sub }}">
+        {% for etapa in etapas_classificatorias %}
+        <option value="{{ etapa.id }}" {% if etapa.id in marco.etapas %}selected{% endif %}>{{ etapa.rotulo }}</option>
+        {% endfor %}
+      </select>
+      <span class="ajuda" id="ajuda-etapas-{{ indice }}-{{ sub }}">Só Etapas classificatórias. O
+        peso de cada uma é o que ela já publica; aqui se escolhe quais entram.</span>
+    </p>
+  </div>
+  <div class="campos">
+    <p class="campo curto">
+      <label for="marco-{{ indice }}-{{ sub }}-scale">Casas decimais <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <input type="number" min="0" max="4" step="1"
+             id="marco-{{ indice }}-{{ sub }}-scale" name="marco-{{ indice }}-{{ sub }}-scale"
+             value="{{ marco.scale }}" required aria-required="true">
+    </p>
+    <p class="campo">
+      <label for="marco-{{ indice }}-{{ sub }}-mode">Arredondamento <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <select id="marco-{{ indice }}-{{ sub }}-mode" name="marco-{{ indice }}-{{ sub }}-mode" required aria-required="true">
+        <option value="">—</option>
+        <option value="MEIO_PARA_CIMA" {% if marco.mode == "MEIO_PARA_CIMA" %}selected{% endif %}>Meio para cima (2,5 vira 3)</option>
+        <option value="MEIO_PARA_PAR" {% if marco.mode == "MEIO_PARA_PAR" %}selected{% endif %}>Meio para par (2,5 vira 2)</option>
+        <option value="TRUNCAR" {% if marco.mode == "TRUNCAR" %}selected{% endif %}>Truncar (2,9 vira 2)</option>
+      </select>
+      <span class="ajuda">Aplicado uma vez, sobre a pontuação combinada.</span>
+    </p>
+  </div>
+  <div class="campos">
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-operation">Como as pontuações se combinam <span class="obrigatorio" aria-hidden="true">*</span></label>
       <select id="marco-{{ indice }}-{{ sub }}-operation" name="marco-{{ indice }}-{{ sub }}-operation" required aria-required="true">
@@ -49,7 +80,7 @@
       {% for criterio in marco.criterios %}{% include "interface/_criterio.html" with n=forloop.counter0 %}{% endfor %}
     </div>
     <button type="button" class="acao"
-            hx-get="{% url 'interface:fragmento-criterio' indice sub %}"
+            hx-get="{% url 'interface:fragmento-criterio' indice sub %}?edital={{ edital.id }}"
             hx-target="#criterios-{{ indice }}-{{ sub }}" hx-swap="beforeend">Acrescentar critério</button>
   </section>
   <p class="remover">

@@ -577,6 +577,16 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
             dentro = f"id={chave}" if isinstance(chave, str) and chave else str(indice)
             caminho = f"{base}/classificationMilestones/{dentro}"
             findings.extend(_arredondamento_do_marco(marco, caminho))
+            if not marco.get("stages"):
+                findings.append(
+                    ValidationFinding(
+                        Severity.BLOCKING_ERROR,
+                        "milestone_without_stage",
+                        "O marco classificatório não enumera Etapa alguma: sem Etapa não há "
+                        "pontuação a combinar, e a ordem não sai.",
+                        f"{caminho}/stages",
+                    )
+                )
             findings.extend(_divisor_do_marco(marco, etapas, caminho))
             for etapa_id in marco.get("stages") or []:
                 etapa = etapas.get(etapa_id)
@@ -631,6 +641,16 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
                             "tiebreaker_fact_missing",
                             "Um critério de desempate aponta fato declarado que não existe "
                             "no Perfil.",
+                            f"{caminho}/tiebreakers",
+                        )
+                    )
+                if not (parametros.get("stageId") or parametros.get("factId")):
+                    findings.append(
+                        ValidationFinding(
+                            Severity.BLOCKING_ERROR,
+                            "tiebreaker_without_target",
+                            "Um critério de desempate não declara o que compara: falta a Etapa ou "
+                            "o fato declarado que ele consome.",
                             f"{caminho}/tiebreakers",
                         )
                     )

@@ -121,6 +121,11 @@ def validate_classification_milestones(milestones: list[dict]) -> None:
     if len(codes) != len(set(codes)):
         raise ProfileValidationError("Marcos classificatórios não podem repetir código no Perfil.")
     for marco in milestones:
+        if not marco.get("stages"):
+            raise ProfileValidationError(
+                "Um marco classificatório deve enumerar ao menos uma Etapa: sem Etapa não há "
+                "pontuação a combinar, e a ordem não sai."
+            )
         criterios = marco.get("tiebreakers", [])
         ordens = [criterio.get("order") for criterio in criterios]
         if len(ordens) != len(set(ordens)):
@@ -131,6 +136,12 @@ def validate_classification_milestones(milestones: list[dict]) -> None:
         for criterio in criterios:
             # A ausência é declarada, nunca inferida: o silêncio não vira zero nem último lugar
             # — ele impede a publicação da regra (FR-018).
+            parametros = criterio.get("parameters") or {}
+            if not (parametros.get("stageId") or parametros.get("factId")):
+                raise ProfileValidationError(
+                    "Todo critério de desempate deve declarar o que compara: uma Etapa ou um fato "
+                    "declarado."
+                )
             if not criterio.get("whenMissing"):
                 raise ProfileValidationError(
                     "Todo critério de desempate deve declarar o que fazer quando o valor "
