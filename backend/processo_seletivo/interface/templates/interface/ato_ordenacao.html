@@ -1,0 +1,55 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Ato de classificação{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:ordenacao' edital.id ato.marco_id %}">Classificação</a> ›
+  <span aria-current="page">Ato {{ ato.id }}</span>
+</nav>
+
+<h1>Ato de classificação</h1>
+<p class="sub">Emitido por {{ ato.emitido_por }} em {{ ato.emitido_em }}, sob a versão normativa {{ ato.versao_id }}.</p>
+<p class="imutavel">Este snapshot é imutável. A consulta abaixo lê o que foi registrado; não recalcula o passado.</p>
+
+<section aria-labelledby="titulo-universo">
+  <h2 id="titulo-universo">Proveniência do ato</h2>
+  <dl class="participantes">
+    <dt>Processo</dt><dd>{{ ato.universo.processoId }}</dd>
+    <dt>Edital</dt><dd>{{ ato.universo.editalId }}</dd>
+    <dt>Perfil</dt><dd>{{ ato.universo.profileId }}</dd>
+    <dt>Marco</dt><dd>{{ ato.universo.milestoneId }}</dd>
+    <dt>Versão normativa</dt><dd>{{ ato.universo.versionId }}</dd>
+    <dt>Participantes considerados</dt><dd>{{ ato.universo.participants|length }}</dd>
+    <dt>Resultados antecedentes</dt><dd>{{ ato.universo.stageResults|length }}</dd>
+  </dl>
+  {% if ato.universo.stageResults %}
+  <div class="tabela-rolavel"><table>
+    <caption>Resultados que entraram na ordem</caption>
+    <thead><tr><th scope="col">Resultado</th><th scope="col">Inscrição</th><th scope="col">Etapa</th><th scope="col">Versão</th><th scope="col">Consolidado em</th></tr></thead>
+    <tbody>{% for item in ato.universo.stageResults %}<tr><td>{{ item.id }}</td><td>{{ item.registrationId }}</td><td>{{ item.stageId }}</td><td>{{ item.versionId }}</td><td>{{ item.consolidatedAt }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% endif %}
+</section>
+
+<section aria-labelledby="titulo-posicoes">
+  <h2 id="titulo-posicoes">Posições e valores de desempate</h2>
+  <div class="tabela-rolavel"><table>
+    <caption class="oculto">Snapshot da ordem emitida</caption>
+    <thead><tr><th scope="col">Posição</th><th scope="col">Inscrição</th><th scope="col">Pontuação</th><th scope="col">Desempate</th></tr></thead>
+    <tbody>
+    {% for linha in linhas %}<tr{% if linha.empate_residual %} class="grupo-empatado"{% endif %}>
+      <td>{% if linha.posicao %}{{ linha.posicao }}º{% else %}Sem posição — {{ linha.motivo }}{% endif %}</td>
+      <td>{{ linha.inscricao.protocolo|default:linha.inscricao_id }} — {{ linha.inscricao.nome }}</td>
+      <td>{% if linha.pontuacao_combinada is None %}<span class="nenhuma">Não se aplica</span>{% else %}{{ linha.pontuacao_combinada }}{% endif %}</td>
+      <td>{% if linha.desempate %}<ol>{% for criterio in linha.desempate %}<li>{% if criterio.separated %}<strong>Critério que separou:</strong> {% endif %}{{ criterio.type }} — valor {% if criterio.value is None %}ausente{% else %}{{ criterio.value }}{% endif %}</li>{% endfor %}</ol>{% else %}<span class="nenhuma">Nenhum critério aplicado</span>{% endif %}</td>
+    </tr>{% endfor %}
+    </tbody>
+  </table></div>
+</section>
+
+{% if pagina.has_other_pages %}<nav class="paginacao" aria-label="Páginas do ato">
+  {% if pagina.has_previous %}<a href="?pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+  <span aria-current="page">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+  {% if pagina.has_next %}<a href="?pagina={{ pagina.next_page_number }}">Próxima</a>{% endif %}
+</nav>{% endif %}
+{% endblock %}

@@ -188,6 +188,10 @@ tbody tr:last-child td{border-bottom:none}
   padding:.25rem .6rem;border-radius:3px;margin-left:.5rem}
 .imutavel{background:var(--verde-claro);border-left:4px solid var(--sucesso);padding:.7rem 1rem;
   border-radius:0 4px 4px 0;font-size:.9375rem;margin:0 0 1rem}
+/* O fundo une visualmente as linhas que compartilham posição. O rótulo continua em cada linha
+   para que a informação sobreviva à leitura por voz e ao recorte de uma linha isolada. */
+.grupo-empatado{background:var(--amarelo-fundo)}
+.grupo-empatado .situacao{display:block;width:max-content;margin-top:.25rem}
 .consequencias{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1rem 1.25rem;margin-bottom:1.5rem}
 .consequencias h2{font-size:1rem;margin-bottom:.6rem}

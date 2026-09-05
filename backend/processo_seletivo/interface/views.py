@@ -32,6 +32,15 @@ from processo_seletivo.avaliacoes.application.mesa import (
 )
 from processo_seletivo.avaliacoes.application.trilha import auditar as auditar_ato
 from processo_seletivo.avaliacoes.domain.previsao import rotulos
+from processo_seletivo.classificacao.application.emissao import assinatura_da_proposta, emitir_ordem
+from processo_seletivo.classificacao.application.selectors import (
+    ato_por_id,
+    estado_do_marco,
+    posicoes_do_ato,
+)
+from processo_seletivo.classificacao.application.selectors import (
+    historico as historico_da_ordenacao,
+)
 from processo_seletivo.comissoes.application import alocacao as alocacao_app
 from processo_seletivo.comissoes.application import comissao as comissao_app
 from processo_seletivo.comissoes.application import selectors as comissao_selectors
@@ -80,6 +89,7 @@ from processo_seletivo.publicacoes.application.retificacoes import (
     create_retification,
 )
 from processo_seletivo.publicacoes.application.selectors import (
+    effective_version,
     impede_por_segregacao,
     participantes_do_edital,
 )
@@ -1292,8 +1302,22 @@ def detalhe(request, edital_id):
             "acoes": conjunto,
             "impedido_por_segregacao": segregacao,
             "proximo_passo": acoes.proximo_passo(edital, ator, segregacao=segregacao),
+            "marcos_classificatorios": _marcos_publicados(edital),
         },
     )
+
+
+def _marcos_publicados(edital):
+    """Marcos alcançáveis a partir do Edital publicado, agrupados pelo Perfil que os nomeia."""
+    try:
+        conteudo = effective_version(edital_id=edital.id).content
+    except DomainError:
+        return []
+    return [
+        {"perfil": perfil, "marcos": perfil.get("classificationMilestones") or []}
+        for perfil in conteudo.get("profiles") or []
+        if perfil.get("classificationMilestones")
+    ]
 
 
 @require_http_methods(["GET", "POST"])
@@ -2991,6 +3015,140 @@ def resultados_da_etapa(request, edital_id, etapa_id):
                 # vocabulário do Edital, e não ao enum do domínio (FR-118).
                 "rotulo_favoravel": rotulos(etapa)[0],
                 "rotulo_desfavoravel": rotulos(etapa)[1],
+            },
+        )
+    )
+
+
+def _edital_para_classificar(request, edital_id, *, somente_gestao=False):
+    """A porta do marco: presidência ou auditoria lê; só a base de gestão emite.
+
+    Tudo que o ator não alcança responde 404. O identificador público do marco não confere
+    autorização e, no POST, a aplicação volta a conferir a gestão depois de obter a trava.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return None, None, False
+    edital = (
+        Edital.objects.filter(pk=edital_id, institution_scope=ator.institution_scope)
+        .select_related("processo")
+        .first()
+    )
+    if edital is None:
+        raise Http404
+    pode_emitir = pode_gerir_comissao(ator, edital.processo) is not None
+    if not pode_emitir and (somente_gestao or not ator.can("auditoria:consultar")):
+        raise Http404
+    return ator, edital, pode_emitir
+
+
+@require_http_methods(["GET"])
+def ordenacao(request, edital_id, marco_id):
+    """Calcula a ordem vigente para conferência, sem constituir ato algum (015, FR-022)."""
+    ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    try:
+        estado = estado_do_marco(edital=edital, marco_id=marco_id)
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        raise
+    proposta = estado["proposta"] or {"posicoes": [], "sem_posicao": []}
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/ordenacao.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "perfil": estado["perfil"],
+                "marco": estado["marco"],
+                "posicoes": proposta["posicoes"],
+                "sem_posicao": proposta["sem_posicao"],
+                "ato_vigente": estado["vigente"],
+                "obsoleto": estado["obsoleto"],
+                "recomputavel": estado["recomputavel"],
+                "divergencias": estado["divergencias"],
+                "posicoes_divergentes": estado["posicoes_divergentes"],
+                "pode_emitir": pode_emitir,
+                "resultado": request.session.pop("resultado_da_ordenacao", None),
+                "erro": request.session.pop("erro_da_ordenacao", None),
+                "chave_idempotencia": uuid4().hex,
+                "confirmacao_do_calculo": (
+                    assinatura_da_proposta(proposta, ato_vigente=estado["vigente"])
+                    if estado["proposta"] is not None
+                    else ""
+                ),
+                "historico": historico_da_ordenacao(edital=edital, marco_id=marco_id),
+            },
+        )
+    )
+
+
+def _perfil_do_marco(edital, marco_id):
+    """Resolve o pai normativo do marco sem depender da linha de elaboração."""
+    from processo_seletivo.publicacoes.application.selectors import effective_version
+
+    conteudo = effective_version(edital_id=edital.id).content
+    alvo = str(marco_id)
+    for perfil in conteudo.get("profiles") or []:
+        if any(
+            str(marco.get("id")) == alvo for marco in perfil.get("classificationMilestones") or []
+        ):
+            return perfil["id"]
+    raise Http404
+
+
+@require_http_methods(["POST"])
+def emitir_ordenacao(request, edital_id, marco_id):
+    """Constitui o cálculo do servidor e volta à leitura pelo padrão POST-redirect-GET."""
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    destino = reverse("interface:ordenacao", args=[edital_id, marco_id])
+    try:
+        request.session["resultado_da_ordenacao"] = emitir_ordem(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            perfil_id=_perfil_do_marco(edital, marco_id),
+            marco_id=marco_id,
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+            confirmacao_do_calculo=request.POST.get("confirmacao_do_calculo", ""),
+            motivo=request.POST.get("motivo", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_da_ordenacao"] = recusa.detail
+    return redirect(destino)
+
+
+@require_http_methods(["GET"])
+def ato_de_ordenacao(request, edital_id, marco_id, ato_id):
+    """A proveniência inteira do snapshot, pela porta de presidência ou auditoria."""
+    ator, edital, _ = _edital_para_classificar(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    ato = ato_por_id(edital=edital, marco_id=marco_id, ato_id=ato_id)
+    if ato is None:
+        raise Http404
+    pagina = posicoes_do_ato(
+        ato=ato,
+        pagina=request.GET.get("pagina") or 1,
+    )
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/ato_ordenacao.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "ato": ato,
+                "linhas": list(pagina),
+                "pagina": pagina,
             },
         )
     )

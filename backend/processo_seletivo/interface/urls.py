@@ -169,6 +169,23 @@ urlpatterns = [
         views.resultados_da_etapa,
         name="resultados-da-etapa",
     ),
+    # A classificação pende do marco publicado, e não de uma Etapa isolada: o mesmo ato serve
+    # tanto ao marco intermediário quanto à combinação final de várias Etapas (015, D-001).
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>",
+        views.ordenacao,
+        name="ordenacao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/emitir",
+        views.emitir_ordenacao,
+        name="emitir-ordenacao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/atos/<uuid:ato_id>",
+        views.ato_de_ordenacao,
+        name="ato-de-ordenacao",
+    ),
     path(
         "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/conclusoes",
         views.conclusoes_preservadas,

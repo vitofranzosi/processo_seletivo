@@ -11,6 +11,7 @@ from processo_seletivo.comissoes.application import comando_de_comissao, nao_enc
 from processo_seletivo.comissoes.application.comissao import identificador
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.shared.canonical import canonical_sha256
 
 EMITIR = "CLASSIFICACAO_EMITIR"
 ATO = "classificacao:emitir"
@@ -25,12 +26,16 @@ def emitir_ordem(
     marco_id,
     idempotency_key,
     correlation_id,
+    confirmacao_do_calculo,
+    motivo="",
 ):
-    """Emite o primeiro ato do marco; sucessão deliberada entra na US6."""
+    """Emite a proposta confirmada; havendo vigente, cria sucessor sem alterar o anterior."""
     payload = {
         "edital": str(edital_id),
         "perfil": str(perfil_id),
         "marco": str(marco_id),
+        "confirmacao": confirmacao_do_calculo or "",
+        "motivo": (motivo or "").strip(),
     }
     with comando_de_comissao(
         actor=actor,
@@ -44,18 +49,12 @@ def emitir_ordem(
         if ctx.repetido:
             return ctx.desfecho_anterior
         edital = _edital_do_processo(ctx.processo, edital_id)
-        if AtoDeOrdenacao.objects.filter(
+        vigente = AtoDeOrdenacao.objects.filter(
             edital=edital,
             perfil_id=identificador(perfil_id),
             marco_id=identificador(marco_id),
             sucessores__isnull=True,
-        ).exists():
-            raise DomainError(
-                "ordering_act_already_exists",
-                "Este marco já possui ato vigente; uma nova emissão exige recálculo e sucessão "
-                "confirmados.",
-                409,
-            )
+        ).first()
 
         proposta = calcular_ordem(
             edital=edital,
@@ -63,11 +62,46 @@ def emitir_ordem(
             marco_id=marco_id,
             at=ctx.now,
         )
+        esperada = assinatura_da_proposta(proposta, ato_vigente=vigente)
+        if not (confirmacao_do_calculo or "").strip():
+            raise DomainError(
+                "ordering_confirmation_required",
+                "Confirme a ordem calculada antes de emitir.",
+                422,
+                campo="confirmacao_do_calculo",
+            )
+        if confirmacao_do_calculo != esperada:
+            raise DomainError(
+                "ordering_act_already_exists"
+                if vigente is not None
+                else "stale_ordering_calculation",
+                (
+                    "Outro ato foi emitido depois da sua leitura; confira a ordem atual "
+                    "antes de tentar de novo."
+                    if vigente is not None
+                    else (
+                        "A ordem mudou desde a sua leitura; confira o cálculo atual "
+                        "antes de emitir."
+                    )
+                ),
+                409 if vigente is not None else 422,
+                campo="confirmacao_do_calculo",
+            )
+        texto_do_motivo = (motivo or "").strip()
+        if vigente is not None and not texto_do_motivo:
+            raise DomainError(
+                "ordering_succession_reason_required",
+                "Declare o motivo da sucessão do ato vigente.",
+                422,
+                campo="motivo",
+            )
         ato = AtoDeOrdenacao.objects.create(
             edital=edital,
             perfil_id=proposta["perfil"]["id"],
             marco_id=proposta["marco"]["id"],
             versao=proposta["versao"],
+            ato_anterior=vigente,
+            motivo_da_sucessao=texto_do_motivo,
             universo=proposta["universo"],
             emitido_por=actor.subject,
             emitido_em=ctx.now,
@@ -83,12 +117,38 @@ def emitir_ordem(
             aggregate=ato,
             now=ctx.now,
             correlation_id=correlation_id,
-            reason=f"Ordem do marco {proposta['marco'].get('name') or marco_id} emitida.",
+            reason=(
+                texto_do_motivo
+                or f"Ordem do marco {proposta['marco'].get('name') or marco_id} emitida."
+            ),
             idempotency_key=idempotency_key,
         )
         declarado = resultado_declarado([ato], [], "emitida")
         ctx.concluir_sem_resultado(201, declarado)
         return declarado
+
+
+def assinatura_da_proposta(proposta, *, ato_vigente=None):
+    """Identidade do que foi conferido, vinculada ao vigente visto naquela leitura."""
+    linhas = proposta["posicoes"] + proposta["sem_posicao"]
+    return canonical_sha256(
+        {
+            "atoVigente": str(ato_vigente.id) if ato_vigente is not None else None,
+            "universo": proposta["universo"],
+            "ordem": [
+                {
+                    "inscricaoId": item["inscricao_id"],
+                    "posicao": item["posicao"],
+                    "pontuacao": item["pontuacao"],
+                    "consequencia": item["consequencia"],
+                    "motivo": item["motivo"],
+                    "empateResidual": item["empate_residual"],
+                    "separadoPor": (item.get("separado_por") or {}).get("id"),
+                }
+                for item in linhas
+            ],
+        }
+    )
 
 
 def _edital_do_processo(processo, edital_id):
@@ -145,4 +205,4 @@ def _valor_serializavel(valor):
     return valor
 
 
-__all__ = ["ATO", "EMITIR", "emitir_ordem"]
+__all__ = ["ATO", "EMITIR", "assinatura_da_proposta", "emitir_ordem"]
