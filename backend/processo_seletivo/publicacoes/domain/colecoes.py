@@ -74,6 +74,23 @@ CAMPOS_DE_IDENTIDADE = frozenset(
     {"editalId", "processoId", "processoCode", "processoTitle", "schemaVersion"}
 )
 
+# Campos que existem no conteúdo publicado e que **nenhuma Retificação altera no lugar**, declarados
+# por **forma de caminho** — e não por nome de token, como `CAMPOS_DE_IDENTIDADE`. A diferença é o
+# que torna isto correto: `type` também é campo do Evento do Cronograma, e proibi-lo por nome
+# quebraria Retificação legítima de tipo de evento.
+#
+# Hoje há um só, e ele está aqui porque mudar o tipo de um fato declarado **não é editar o fato**:
+# um fato declarado como data que virasse número não é o mesmo fato, e reinterpretar o valor já
+# congelado sob ele seria o sistema decidindo o que a pessoa quis dizer. A Retificação remove um e
+# acrescenta outro, com identidade nova, e o que foi congelado sob o primeiro permanece legível sob
+# a norma que o governou (015, FR-058).
+#
+# **A lista não se generaliza sozinha.** `operation` e `normalization` do marco continuam
+# retificáveis de propósito: a spec exige que a regra seja retificável, e cita a Retificação da
+# operação como causa de obsolescência do ato já emitido. Um campo entra aqui quando mudá-lo
+# significaria reinterpretar algo já gravado — não quando ele é apenas importante.
+CAMPOS_NAO_RETIFICAVEIS = frozenset({"/profiles/*/declaredFacts/*/type"})
+
 
 def escapar(token):
     """Devolve o token à grafia do RFC 6901, para que a forma seja comparável ao declarado."""
@@ -94,6 +111,17 @@ def e_controle_interno(token):
 
 def e_campo_de_identidade(token):
     return token in CAMPOS_DE_IDENTIDADE
+
+
+def e_campo_nao_retificavel(forma):
+    """A forma designa um campo que nenhuma Retificação altera no lugar?
+
+    Recebe a forma **calculada durante a travessia** — com `*` no lugar de cada segmento de lista
+    já atravessado —, e não o caminho concreto. Comparar por expressão regular sobre o caminho
+    aceitaria `/profiles/id=…/declaredFacts/id=…/type` e recusaria a mesma coisa escrita de outro
+    jeito, que é o modo de falha que este módulo recusa em toda parte.
+    """
+    return forma in CAMPOS_NAO_RETIFICAVEIS
 
 
 def e_elemento_de_colecao_com_chave(forma):

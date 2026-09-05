@@ -12,6 +12,7 @@ from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.domain.changes import (
     AcrescimoPosicionado,
     ChaveNaoEncontrada,
+    CampoNaoRetificavel,
     ColecaoAtomica,
     ColecaoDescaracterizada,
     EnderecamentoPosicional,
@@ -157,6 +158,7 @@ RECUSAS_DE_CAMINHO = (
     (ChaveNaoEncontrada, KEY_NOT_FOUND, 409),
     (SeletorInvalido, "invalid_change", 422),
     (ColecaoAtomica, "invalid_change", 422),
+    (CampoNaoRetificavel, "invalid_change", 422),
     (AcrescimoPosicionado, "invalid_change", 422),
     (EntidadeSemChave, "invalid_change", 422),
     (IdentidadeNaoEnderecavel, "invalid_change", 422),

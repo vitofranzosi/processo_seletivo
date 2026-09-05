@@ -115,3 +115,68 @@ def test_a_identidade_de_fato_de_outro_perfil_e_recusada(api_client, manager_hea
     assert recusa.status_code == 409, recusa.content
     assert recusa.json()["code"] == "identifier_belongs_to_another_edital"
     assert str(FatoDeclarado.objects.get(pk=NASCIMENTO).perfil_id) == PERFIL["B"]
+
+
+NOVO = "00000000-0000-0000-0000-000000000563"
+
+
+def test_trocar_o_tipo_do_fato_no_lugar_e_recusado(api_client, publicado):
+    """Mudar o tipo não é editar o fato — é criar outro (FR-058).
+
+    O catálogo da interface não oferece o campo, mas a API não é a interface: sem esta recusa,
+    publicava-se por Retificação um `type` novo sobre um fato cujo valor já podia estar congelado,
+    e o valor antigo passaria a ser lido sob outra grandeza.
+    """
+    base = VersaoConsolidada.objects.filter(edital=publicado).latest("materialized_at")
+
+    recusa = api_client.post(
+        f"/api/v1/admin/editais/{publicado.id}/retificacoes",
+        {
+            "baseSnapshotId": str(base.id),
+            "justification": "Trocar o tipo do fato",
+            "changes": [
+                {
+                    "targetPath": f"/profiles/id={PERFIL['B']}/declaredFacts/id={NASCIMENTO}/type",
+                    "operation": "REPLACE",
+                    "newValue": "INTEIRO",
+                }
+            ],
+        },
+        format="json",
+        **actor_headers("retificador", ["retificacao:elaborar"], key="retificacao-tipo-0001"),
+    )
+
+    assert recusa.status_code == 422, recusa.content
+    assert recusa.json()["code"] == "invalid_change"
+    assert {item["id"]: item["type"] for item in fatos_publicados(publicado)}[NASCIMENTO] == "DATA"
+
+
+def test_remover_o_fato_e_acrescentar_outro_continua_permitido(api_client, publicado):
+    """A contraprova, e é ela que faz a recusa acima ser uma regra e não um bloqueio.
+
+    O caminho normativo para mudar o tipo existe: remove-se um fato e acrescenta-se outro, com
+    identidade própria. O que foi congelado sob o primeiro continua apontando para ele.
+    """
+    troca = [
+        {
+            "targetPath": f"/profiles/id={PERFIL['B']}/declaredFacts/id={NASCIMENTO}",
+            "operation": "REMOVE",
+        },
+        {
+            "targetPath": f"/profiles/id={PERFIL['B']}/declaredFacts/-",
+            "operation": "ADD",
+            "newValue": {
+                "id": NOVO,
+                "code": "NASCIMENTO_ANO",
+                "label": "Ano de nascimento",
+                "type": "INTEIRO",
+            },
+        },
+    ]
+
+    publish_retification(api_client, create_retification(api_client, publicado, troca))
+
+    depois = {item["id"]: item for item in fatos_publicados(publicado)}
+    assert NASCIMENTO not in depois, "o fato antigo saiu do conteúdo vigente"
+    assert depois[NOVO]["type"] == "INTEIRO"
+    assert depois[NOVO]["code"] == "NASCIMENTO_ANO"
