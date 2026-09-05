@@ -120,12 +120,15 @@ def ordenar(participantes, criterios):
     for participante in participantes:
         chave = participante.get("pontuacao")
         por_pontuacao.setdefault(str(chave), []).append(participante)
+
+    def _do_maior_para_o_menor(par):
+        # Pontuação nula é o marco sem parcela numérica: todos entram no mesmo grupo, e a ordem
+        # entre grupos não se coloca porque só existe um (FR-077, FR-078).
+        valor = par[1][0].get("pontuacao")
+        return Decimal("0") if valor is None else Decimal(str(valor))
+
     grupos = []
-    for _, grupo in sorted(
-        por_pontuacao.items(),
-        key=lambda par: Decimal(str(par[1][0].get("pontuacao"))),
-        reverse=True,
-    ):
+    for _, grupo in sorted(por_pontuacao.items(), key=_do_maior_para_o_menor, reverse=True):
         grupos.extend(_particionar(grupo, criterios))
 
     resultado = []

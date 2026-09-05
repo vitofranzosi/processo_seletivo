@@ -87,6 +87,19 @@ def arredondar(valor, marco):
     return valor.quantize(Decimal(1).scaleb(-escala), rounding=MODOS[modo])
 
 
+DECISORIA = "DECISORIA"
+
+
+def e_porta(etapa):
+    """A Etapa decisória enumerada é **porta**, e não parcela (015, FR-074).
+
+    Ela não produz número, e por isso não contribui com grandeza alguma para a combinação. O que
+    ela decide é quem segue: `HABILITADA` participa da ordenação, `ELIMINADA` fica no universo sem
+    posição — e isso é decisão de quem monta o universo, não desta função.
+    """
+    return etapa.get("forma") == DECISORIA
+
+
 def combinar(marco, etapas_publicadas, pontuacoes):
     """A pontuação combinada, ou `SEM_PONTUACAO` quando falta alguma parcela.
 
@@ -98,17 +111,28 @@ def combinar(marco, etapas_publicadas, pontuacoes):
         return SEM_PONTUACAO
     total = Decimal("0")
     soma_dos_pesos = Decimal("0")
+    parcelas = 0
     for etapa_id in enumeradas:
         etapa = etapas_publicadas.get(etapa_id)
         if etapa is None:
             return SEM_PONTUACAO
+        if e_porta(etapa):
+            # Porta não soma e não exige peso: cobrar peso de quem não é parcela seria cobrar a
+            # declaração de um número que a regra não usa (FR-067, FR-074).
+            continue
         valor = pontuacoes.get(etapa_id)
         if valor is None:
             return SEM_PONTUACAO
         peso = peso_da_etapa(etapa)
         total += Decimal(str(valor)) * peso
         soma_dos_pesos += peso
-    combinada = _normalizar(marco, total, soma_dos_pesos, len(enumeradas))
+        parcelas += 1
+    if parcelas == 0:
+        # **Marco composto só por portas: pontuação nula, e nunca zero.** Zero é uma grandeza, e
+        # aqui não há grandeza alguma a afirmar. Todos os que passaram pelas portas começam no
+        # mesmo grupo, e os critérios publicados é que podem particioná-lo (FR-077, FR-078).
+        return None
+    combinada = _normalizar(marco, total, soma_dos_pesos, parcelas)
     if combinada is SEM_PONTUACAO:
         return SEM_PONTUACAO
     # Depois da operação e da normalização, e só aqui.

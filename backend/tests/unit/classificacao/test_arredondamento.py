@@ -12,6 +12,7 @@ from decimal import Decimal
 import pytest
 
 from processo_seletivo.classificacao.domain.combinacao import (
+    SEM_PONTUACAO,
     RegraIncompleta,
     arredondar,
     combinar,
@@ -204,3 +205,75 @@ def test_soma_sem_normalizacao_com_pesos_zerados_nao_e_regra_invalida():
     pesos_zerados = {A: {"weight": "0.0000"}, B: {"weight": "0.0000"}}
 
     assert combinar(regra, pesos_zerados, {A: Decimal("8"), B: Decimal("5")}) == Decimal("0.00")
+
+
+# --- a Etapa decisória é porta, e não parcela (FR-074 a FR-079) ---------------------------------
+
+
+DECISORIA = "00000000-0000-0000-0000-0000000000d1"
+
+
+def test_a_etapa_decisoria_nao_contribui_com_numero():
+    """Ela decide quem segue; a grandeza vem só das pontuadas."""
+    regra = {**marco(escala=2), "stages": [A, DECISORIA]}
+    publicadas = {A: {"weight": "1.0000"}, DECISORIA: {"forma": "DECISORIA"}}
+
+    combinada = combinar(regra, publicadas, {A: Decimal("8")})
+
+    assert combinada == Decimal("8.00"), "a porta não somou nada, e não exigiu peso"
+
+
+def test_a_porta_nao_exige_peso_declarado():
+    """Cobrar peso de quem não soma seria cobrar um número que a regra não usa (FR-067)."""
+    regra = {**marco(escala=2), "stages": [A, DECISORIA]}
+    publicadas = {A: {"weight": "1.0000"}, DECISORIA: {"forma": "DECISORIA", "weight": None}}
+
+    assert combinar(regra, publicadas, {A: Decimal("8")}) == Decimal("8.00")
+
+
+def test_marco_composto_so_por_portas_tem_pontuacao_nula():
+    """Nula, e nunca zero: zero é uma grandeza, e ali não há grandeza a afirmar (FR-077)."""
+    regra = {**marco(escala=2), "stages": [DECISORIA]}
+    publicadas = {DECISORIA: {"forma": "DECISORIA"}}
+
+    combinada = combinar(regra, publicadas, {})
+
+    assert combinada is None
+    assert combinada != Decimal("0")
+    assert combinada is not SEM_PONTUACAO, "não é ausência de dado: é ausência de grandeza"
+
+
+def test_sem_parcela_numerica_todos_comecam_no_mesmo_grupo():
+    """E os critérios publicados é que podem particioná-lo (FR-078)."""
+    ordenados = ordenar(
+        [
+            {"nome": "a", "pontuacao": None, "pontuacoes": {}, "fatos": {}},
+            {"nome": "b", "pontuacao": None, "pontuacoes": {}, "fatos": {}},
+            {"nome": "c", "pontuacao": None, "pontuacoes": {}, "fatos": {}},
+        ],
+        [],
+    )
+
+    assert [item["posicao"] for item in ordenados] == [1, 1, 1]
+    assert all(item["empate_residual"] for item in ordenados)
+
+
+def test_sem_parcela_numerica_o_criterio_publicado_particiona():
+    """A prova de que isto continua sendo classificação, e não empate universal."""
+    FATO = "00000000-0000-0000-0000-0000000000f9"
+    criterio = {
+        "id": "c1",
+        "order": 1,
+        "type": "MAIOR_VALOR_DE_FATO",
+        "parameters": {"factId": FATO},
+        "whenMissing": "ULTIMO_NO_CRITERIO",
+    }
+    ordenados = ordenar(
+        [
+            {"nome": "a", "pontuacao": None, "pontuacoes": {}, "fatos": {FATO: 1}},
+            {"nome": "b", "pontuacao": None, "pontuacoes": {}, "fatos": {FATO: 9}},
+        ],
+        [criterio],
+    )
+
+    assert [(item["nome"], item["posicao"]) for item in ordenados] == [("b", 1), ("a", 2)]

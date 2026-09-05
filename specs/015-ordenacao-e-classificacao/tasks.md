@@ -236,8 +236,8 @@ posição, participante e proveniência.
 > limitam a trigger a Edital e Perfil. A estrutura de `universo` só ficou concreta em T082; como a
 > `0001` já foi aplicada nos testes, qualquer ampliação entra em migration nova, nunca reescrita.
 
-- [ ] T124 [US3] Resolver a semântica da Etapa decisória enumerada como filtro, incluindo o marco composto só por filtros, e cobri-la no domínio e em `calculo.py`
-- [ ] T125 [US3] Resolver a divergência da trigger de coerência sobre os Resultados citados; se a promessa do `research.md` prevalecer, acrescentar migration nova e prova por SQL cru sem custo por posição
+- [X] T124 [US3] Resolver a semântica da Etapa decisória enumerada como filtro, incluindo o marco composto só por filtros, e cobri-la no domínio e em `calculo.py`
+- [X] T125 [US3] Resolver a divergência da trigger de coerência sobre os Resultados citados; se a promessa do `research.md` prevalecer, acrescentar migration nova e prova por SQL cru sem custo por posição
 - [ ] T085 [US3] Rotas do marco e da emissão em `backend/processo_seletivo/interface/urls.py`
 - [ ] T086 [US3] Views `ordenacao` (GET) e `emitir_ordenacao` (POST) com guarda, sessão e POST-redirect-GET, em `backend/processo_seletivo/interface/views.py`
 - [ ] T087 [US3] Template `ordenacao.html`, **sem** campo de posição, pontuação ou desempate no formulário, em `backend/processo_seletivo/interface/templates/interface/`
@@ -315,7 +315,7 @@ divergência.
 - [ ] T120 [P] Teste de guarda: pesos que não somam 1 publicam normalmente (FR-012); a feature não aplica corte nem vaga (FR-055); e não existe rota que exponha a ordem a candidato ou público (FR-056), em `backend/tests/contract/`
 - [ ] T121 Rodar a suíte inteira com `TEST_DB_ENGINE=postgresql` e `DB_NAME` próprio do worktree
 - [ ] T122 Conferir que nenhum teste da 013 mudou de comportamento — a 015 não altera Resultado algum
-- [ ] T123 [P] Alinhar `make lint` ao gate do CI, incluindo `ruff format --check`, para que o comando local não declare verde com formatação pendente
+- [X] T123 [P] Alinhar `make lint` ao gate do CI, incluindo `ruff format --check`, para que o comando local não declare verde com formatação pendente
 
 ---
 

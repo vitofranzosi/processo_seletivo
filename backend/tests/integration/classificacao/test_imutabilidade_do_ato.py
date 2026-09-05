@@ -25,16 +25,31 @@ def cenario(api_client, manager_headers, process_payload):
     edital = publish_original(api_client, manager_headers, process_payload)
     inscricao = inscrever(edital)[0]
     versao = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    marco = uuid.uuid4()
     ato = AtoDeOrdenacao.objects.create(
         edital=edital,
         perfil_id=inscricao.profile_id,
-        marco_id=uuid.uuid4(),
+        marco_id=marco,
         versao=versao,
-        universo={"resultados": []},
+        # O universo precisa descrever **este** ato: desde T125 a trigger confere Edital, Perfil,
+        # marco e versão contra as colunas, e um resumo que não os traga descreveria outro ato.
+        universo=universo_de(edital, inscricao.profile_id, marco, versao),
         emitido_por="maria",
         emitido_em=timezone.now(),
     )
     return edital, inscricao, versao, ato
+
+
+def universo_de(edital, perfil_id, marco_id, versao, stage_results=None):
+    return {
+        "processoId": str(edital.processo_id),
+        "editalId": str(edital.id),
+        "profileId": str(perfil_id),
+        "milestoneId": str(marco_id),
+        "versionId": str(versao.id),
+        "participants": [],
+        "stageResults": stage_results or [],
+    }
 
 
 def test_o_modelo_recusa_atualizacao_e_exclusao_do_ato(cenario):
@@ -78,7 +93,7 @@ def test_dois_atos_raiz_do_mesmo_marco_sao_recusados(cenario):
             perfil_id=ato.perfil_id,
             marco_id=ato.marco_id,
             versao=versao,
-            universo={"resultados": []},
+            universo=universo_de(edital, ato.perfil_id, ato.marco_id, versao),
             emitido_por="maria",
             emitido_em=timezone.now(),
         )
@@ -94,7 +109,7 @@ def test_sucessor_sem_motivo_e_recusado(cenario):
             versao=versao,
             ato_anterior=ato,
             motivo_da_sucessao="",
-            universo={"resultados": []},
+            universo=universo_de(edital, ato.perfil_id, ato.marco_id, versao),
             emitido_por="maria",
             emitido_em=timezone.now(),
         )
@@ -109,7 +124,7 @@ def test_dois_sucessores_do_mesmo_ato_sao_recusados(cenario):
         "versao": versao,
         "ato_anterior": ato,
         "motivo_da_sucessao": "Resultado tardio",
-        "universo": {"resultados": []},
+        "universo": universo_de(edital, ato.perfil_id, ato.marco_id, versao),
         "emitido_por": "maria",
         "emitido_em": timezone.now(),
     }
@@ -167,3 +182,75 @@ def test_a_trigger_recusa_inscricao_de_outro_perfil(cenario):
             pontuacao_combinada="10.0000",
             consequencia="HABILITADA",
         )
+
+
+@SOMENTE_POSTGRES
+def test_a_trigger_recusa_ato_cujo_universo_descreve_outro_ato(cenario):
+    """O resumo é a proveniência: descrever outro Edital nele seria mentir sobre a origem."""
+    edital, inscricao, versao, _ = cenario
+
+    with pytest.raises(DatabaseError, match="universe does not match"), transaction.atomic():
+        AtoDeOrdenacao.objects.create(
+            edital=edital,
+            perfil_id=inscricao.profile_id,
+            marco_id=uuid.uuid4(),
+            versao=versao,
+            universo=universo_de(edital, uuid.uuid4(), uuid.uuid4(), versao),
+            emitido_por="maria",
+            emitido_em=timezone.now(),
+        )
+
+
+@SOMENTE_POSTGRES
+def test_a_trigger_recusa_resultado_citado_que_nao_e_do_universo(cenario):
+    """A promessa forte do `research.md`, cumprida uma vez por ato e não uma por posição (T125).
+
+    Um Resultado que não existe, ou que existe noutro Edital, ou que veio de Etapa que o marco não
+    enumera: nos três casos a proveniência afirmaria algo que não sustenta.
+    """
+    edital, inscricao, versao, _ = cenario
+    marco = uuid.uuid4()
+    citado = {
+        "id": str(uuid.uuid4()),
+        "registrationId": str(inscricao.id),
+        "stageId": str(uuid.uuid4()),
+        "versionId": str(versao.id),
+        "consolidatedAt": timezone.now().isoformat(),
+    }
+
+    with pytest.raises(DatabaseError, match="stage results"), transaction.atomic():
+        AtoDeOrdenacao.objects.create(
+            edital=edital,
+            perfil_id=inscricao.profile_id,
+            marco_id=marco,
+            versao=versao,
+            universo=universo_de(edital, inscricao.profile_id, marco, versao, [citado]),
+            emitido_por="maria",
+            emitido_em=timezone.now(),
+        )
+
+
+@SOMENTE_POSTGRES
+def test_a_conferencia_da_proveniencia_roda_uma_vez_por_ato(cenario):
+    """A contraprova do desenho: mil posições não custam mil verificações globais.
+
+    Conferir os Resultados citados dentro de `posicao_coerente` daria a mesma resposta uma vez por
+    linha. A trigger do ato roda no `INSERT` dele — uma execução, `set-based`.
+    """
+    from django.test.utils import CaptureQueriesContext
+
+    edital, inscricao, versao, _ = cenario
+    marco = uuid.uuid4()
+
+    with CaptureQueriesContext(connection) as consultas:
+        AtoDeOrdenacao.objects.create(
+            edital=edital,
+            perfil_id=inscricao.profile_id,
+            marco_id=marco,
+            versao=versao,
+            universo=universo_de(edital, inscricao.profile_id, marco, versao),
+            emitido_por="maria",
+            emitido_em=timezone.now(),
+        )
+
+    assert len(consultas) == 1, "o ato nasce numa consulta; a conferência é da trigger"

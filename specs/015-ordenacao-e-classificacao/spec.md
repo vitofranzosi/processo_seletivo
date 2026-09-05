@@ -346,8 +346,10 @@ que o anterior permanece íntegro e consultável.
 
 - Marco cujo universo não tem nenhum participante classificável: a ordem emitida é vazia, e o
   motivo aparece — não é erro, e não é ausência de ato.
-- Etapa decisória dentro de um marco que combina pontuação: não há número a somar, e a regra
-  precisa dizer se ela participa como filtro ou não participa; o silêncio não vira zero.
+- Etapa decisória dentro de um marco que combina pontuação: é **porta**, e não parcela —
+  `HABILITADA` segue para a ordenação, `ELIMINADA` fica no universo sem posição (FR-074, FR-075).
+- Marco composto só por Etapas decisórias: válido, com pontuação combinada **nula** e todos no
+  mesmo grupo inicial, que os critérios publicados podem particionar (FR-077, FR-078).
 - Participante com Resultado em todas as Etapas do marco, mas eliminado em uma delas.
 - Empate que sobrevive a todos os critérios declarados.
 - Marco removido do conteúdo por Retificação posterior à emissão: o ato fica obsoleto e não
@@ -521,9 +523,11 @@ que o anterior permanece íntegro e consultável.
 > depois de a revisão da fatia de domínio encontrar três decisões que o código estava tomando por
 > conta própria — e uma delas produzia ordem não determinística.
 
-- **FR-067**: O sistema MUST recusar a publicação de marco que enumere Etapa sem `weight` declarado.
-  Ausência de peso MUST NOT ser interpretada como equivalência, como zero, nem como qualquer outro
-  valor: quem enumera declara o peso.
+- **FR-067**: O sistema MUST recusar a publicação de marco que enumere Etapa **pontuada** sem
+  `weight` declarado. Ausência de peso MUST NOT ser interpretada como equivalência, como zero, nem
+  como qualquer outro valor: quem enumera uma parcela declara o peso dela. Etapa **decisória** MUST
+  NOT exigir peso — ela não é parcela, e cobrar peso de quem não soma seria cobrar a declaração de
+  um número que a regra não usa.
 - **FR-068**: O marco MUST publicar, no arredondamento, a **escala** (casas decimais) e o **modo**
   (meio para cima, meio para par, truncamento), e o sistema MUST recusar a publicação de marco cuja
   operação não os declare.
@@ -541,6 +545,28 @@ que o anterior permanece íntegro e consultável.
   quando as Etapas enumeradas somam peso **zero**. Regra sem divisor é regra inválida do Edital, e
   o cálculo MUST NOT tratá-la como ausência de dado do participante — as duas coisas se leem de
   formas diferentes por quem consulta a ordem.
+
+#### A Etapa decisória enumerada, e o marco sem parcela numérica
+
+> Decidido em 05/09/2026, ao encontrar a contradição entre o caso de borda que declarava a questão
+> pendente e a suposição que a dava por resolvida sem definir o que "filtro" faz.
+
+- **FR-074**: Etapa decisória enumerada por um marco funciona como **porta**, e não como parcela:
+  ela MUST NOT contribuir com número para a pontuação combinada, e MUST decidir quem segue.
+- **FR-075**: Participante `HABILITADA` numa Etapa decisória enumerada MUST participar da
+  ordenação. Participante `ELIMINADA` MUST permanecer no universo **sem posição e com motivo**,
+  pela mesma regra de FR-007 — e MUST NOT ser omitido do snapshot.
+- **FR-076**: Etapa **não enumerada** MUST NOT participar do marco, seja qual for a sua forma. Não
+  enumerar é a forma de dizer que a Etapa não entra.
+- **FR-077**: Marco composto **somente** por Etapas decisórias MUST ser válido e publicável. A
+  `pontuacao_combinada` MUST ser **nula**, e MUST NOT ser zero: zero é uma grandeza, e ali não há
+  grandeza alguma a afirmar.
+- **FR-078**: Num marco sem parcela numérica, todos os que passam pelas portas MUST começar no
+  **mesmo grupo**, e os critérios publicados MUST poder particioná-lo. Persistindo o empate, todos
+  MUST compartilhar a primeira posição.
+- **FR-079**: O sistema MUST NOT recusar marco por ausência de parcela numérica. Ordenar por
+  resultado decisório e critérios publicados é classificação com equivalências, e recusá-la
+  impediria, sem necessidade, uma ordem que o Edital pode legitimamente querer.
 
 #### Fatos declarados pelo Edital
 
@@ -679,6 +705,11 @@ que o anterior permanece íntegro e consultável.
   ciclo que a revisão de 04/09/2026 encontrou, em que seis permutações produziam três ordens.
 - **SC-024**: 100% das tentativas de publicar marco que enumere Etapa sem peso, ou cuja operação não
   declare escala e modo de arredondamento, são recusadas com o motivo.
+- **SC-027**: Num marco composto só por Etapas decisórias, 100% dos habilitados têm
+  `pontuacao_combinada` nula — nenhuma zero — e, sem critério que os particione, todos compartilham
+  a primeira posição.
+- **SC-028**: Participante `ELIMINADA` numa Etapa decisória enumerada aparece no snapshot em 100%
+  dos atos, sem posição e com motivo; zero deles são omitidos do universo.
 - **SC-026**: 100% das tentativas de publicar marco cuja operação divida pela soma dos pesos com
   soma zero são recusadas, e zero delas chegam ao cálculo como participante não classificável.
 - **SC-025**: A pontuação combinada é arredondada exatamente uma vez; nenhuma parcela é arredondada
@@ -700,9 +731,11 @@ que o anterior permanece íntegro e consultável.
 - Os fatos do candidato consumidos por desempate chegam por D-2, congelados na submissão contra a
   `versao_aceita`. Inscrição submetida antes de o fato ser declarado não o possui — e o que fazer
   nesse caso deixou de ser suposição: é FR-018, e sem essa declaração a regra não publica.
-- Etapa decisória não produz número; sua participação num marco que soma pontuação é filtro, não
-  parcela. Como Etapa decisória pode ser publicada como classificatória, o comportamento para valor
-  ausente (FR-018) é o que a mantém honesta dentro de um marco.
+- Etapa decisória não produz número; sua participação num marco é de **porta**, e o que ela decide
+  está em FR-074 a FR-079. Deixou de ser suposição em 05/09/2026, quando se encontrou a contradição
+  entre o caso de borda que declarava a questão pendente e esta seção, que a dava por resolvida sem
+  definir o que "filtro" faz. O comportamento para valor ausente (FR-018) continua sendo o que
+  mantém o critério honesto quando o fato não foi congelado.
 - O volume de referência é o mesmo da 013: até 1.000 participantes por marco, e o teto de abertura
   da tela é de 3 segundos nesse volume (SC-002).
 - Atingir esse teto pressupõe que o número de consultas não cresça com o número de participantes,

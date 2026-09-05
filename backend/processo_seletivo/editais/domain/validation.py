@@ -523,12 +523,18 @@ def _divisor_do_marco(marco, etapas, caminho) -> list[ValidationFinding]:
     if not divide_pela_soma_dos_pesos(marco):
         return []
     soma = Decimal("0")
+    parcelas = 0
     for etapa_id in marco.get("stages") or []:
         etapa = etapas.get(etapa_id) or {}
+        if etapa.get("forma") == "DECISORIA":
+            continue
+        parcelas += 1
         peso = etapa.get("weight")
         if peso is not None:
             soma += Decimal(str(peso))
-    if soma != 0:
+    # Marco sem parcela numérica não divide coisa alguma: a pontuação combinada é nula, e não há
+    # divisor a exigir (FR-077). Recusá-lo aqui impediria uma ordenação legítima.
+    if parcelas == 0 or soma != 0:
         return []
     return [
         ValidationFinding(
@@ -590,7 +596,14 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
             findings.extend(_divisor_do_marco(marco, etapas, caminho))
             for etapa_id in marco.get("stages") or []:
                 etapa = etapas.get(etapa_id)
-                if etapa is not None and etapa.get("weight") is None:
+                # Peso é cobrado de **parcela**, e não de porta: a Etapa decisória não soma, e
+                # exigir peso dela seria exigir a declaração de um número que a regra não usa
+                # (FR-067, FR-074).
+                if (
+                    etapa is not None
+                    and etapa.get("forma") != "DECISORIA"
+                    and etapa.get("weight") is None
+                ):
                     findings.append(
                         ValidationFinding(
                             Severity.BLOCKING_ERROR,

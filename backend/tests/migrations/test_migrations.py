@@ -45,7 +45,12 @@ TRIGGERS_POR_APP = {
     # O nome não mudou com o terceiro ramo: a função foi recriada, e a trigger é a mesma.
     "avaliacoes": ("conclusao_avaliacao_append_only",),
     "resultados": ("resultado_etapa_append_only", "resultado_etapa_coerente"),
-    "classificacao": ("ato_de_ordenacao_append_only", "posicao_coerente"),
+    "classificacao": (
+        "ato_de_ordenacao_append_only",
+        # A proveniência do ato, conferida uma vez por ato e não uma vez por posição (T125).
+        "ato_de_ordenacao_coerente",
+        "posicao_coerente",
+    ),
 }
 TRIGGERS = tuple(nome for grupo in TRIGGERS_POR_APP.values() for nome in grupo)
 
