@@ -9,7 +9,7 @@ from django.urls import reverse
 
 from processo_seletivo.avaliacoes.application.selectors import POR_PAGINA
 from tests.fixtures.comissao import alocar_em, inscrever
-from tests.interface.conftest import identificar
+from tests.interface.conftest import identificar, protocolos_listados
 
 pytestmark = [pytest.mark.django_db]
 
@@ -52,8 +52,7 @@ def test_a_mesa_lista_o_que_e_dele_e_conta(
     assert "no total" in corpo and ">3<" in corpo
     # As parcelas fecham com o total: três não iniciadas, nenhum rascunho, nenhuma concluída.
     assert "não iniciadas" in corpo
-    for inscricao in inscricoes:
-        assert inscricao.protocolo in corpo
+    assert protocolos_listados(corpo) == [inscricao.protocolo for inscricao in inscricoes]
 
 
 def test_a_mesa_nao_mostra_inscricao_de_outro_avaliador(
@@ -70,10 +69,10 @@ def test_a_mesa_nao_mostra_inscricao_de_outro_avaliador(
     distribuir_para(gestor, edital_a, etapa_a1, ana, dela, chave="b")
     identificar(client, "joao", [])
 
-    corpo = client.get(mesa).content.decode()
+    listados = protocolos_listados(client.get(mesa).content.decode())
 
-    assert minhas[0].protocolo in corpo
-    assert dela[0].protocolo not in corpo
+    assert minhas[0].protocolo in listados
+    assert dela[0].protocolo not in listados
 
 
 def avaliar(atribuicao, etapa_id, inscricao, edital, *, concluida):
@@ -137,13 +136,13 @@ def test_o_filtro_separa_pendentes_de_concluidas(
     todas = client.get(mesa).content.decode()
 
     # A concluída aparece num filtro e some do outro.
-    assert concluida.protocolo in concluidas
-    assert concluida.protocolo not in pendentes
+    assert concluida.protocolo in protocolos_listados(concluidas)
+    assert concluida.protocolo not in protocolos_listados(pendentes)
     # **Rascunho gravado continua pendente**: pendente é a ausência de conclusão, e não a de
     # avaliação — quem salvou sem concluir não terminou o trabalho.
-    assert rascunho.protocolo in pendentes
-    assert rascunho.protocolo not in concluidas
-    assert intocada.protocolo in pendentes
+    assert rascunho.protocolo in protocolos_listados(pendentes)
+    assert rascunho.protocolo not in protocolos_listados(concluidas)
+    assert intocada.protocolo in protocolos_listados(pendentes)
     assert "no total" in todas and ">3<" in todas
     # Duas pendentes, e a Mesa agora diz **onde** elas estão: uma em rascunho, uma não iniciada.
     assert "em rascunho" in todas
@@ -191,7 +190,7 @@ def test_quem_chega_pela_gestao_nao_tem_mesa(
 
     assert "chegou aqui pela gestão" in corpo
     assert "Minha Mesa" not in corpo
-    assert inscricoes[0].protocolo not in corpo
+    assert inscricoes[0].protocolo not in protocolos_listados(corpo)
 
 
 def test_a_mesa_nao_e_armazenavel_pelo_navegador(
