@@ -1,7 +1,8 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 7,
   "editalId": "11111111-1111-1111-1111-111111111111",
   "processoId": "22222222-2222-2222-2222-222222222222",
+  "maxInscricoesPorCandidato": null,
   "processoCode": "PS-DOC-2026",
   "processoTitle": "Processo Seletivo Docente 2026",
   "number": "07",
@@ -45,6 +46,66 @@
             "effectiveFrom": null
           }
         }
+      ],
+      "declaredFacts": [
+        {
+          "id": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+          "code": "EXPERIENCIA",
+          "label": "Meses de experiência no ensino a distância",
+          "type": "INTEIRO"
+        },
+        {
+          "id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+          "code": "NASCIMENTO",
+          "label": "Data de nascimento",
+          "type": "DATA"
+        }
+      ],
+      "classificationMilestones": [
+        {
+          "id": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+          "code": "FINAL",
+          "name": "Classificação final",
+          "stages": [
+            "88888888-8888-8888-8888-888888888888",
+            "99999999-9999-9999-9999-999999999999"
+          ],
+          "operation": "SOMA_PONDERADA",
+          "normalization": "NENHUMA",
+          "rounding": {
+            "scale": 2,
+            "mode": "MEIO_PARA_CIMA"
+          },
+          "tiebreakers": [
+            {
+              "id": "ffffffff-ffff-ffff-ffff-fff000000001",
+              "order": 1,
+              "type": "MAIOR_PONTUACAO_NA_ETAPA",
+              "parameters": {
+                "stageId": "88888888-8888-8888-8888-888888888888"
+              },
+              "whenMissing": "ULTIMO_NO_CRITERIO"
+            },
+            {
+              "id": "ffffffff-ffff-ffff-ffff-fff000000002",
+              "order": 2,
+              "type": "MAIOR_VALOR_DE_FATO",
+              "parameters": {
+                "factId": "dddddddd-dddd-dddd-dddd-dddddddddddd"
+              },
+              "whenMissing": "ULTIMO_NO_CRITERIO"
+            },
+            {
+              "id": "ffffffff-ffff-ffff-ffff-fff000000003",
+              "order": 3,
+              "type": "MENOR_VALOR_DE_FATO",
+              "parameters": {
+                "factId": "cccccccc-cccc-cccc-cccc-cccccccccccc"
+              },
+              "whenMissing": "CRITERIO_NAO_SE_APLICA"
+            }
+          ]
+        }
       ]
     }
   ],
@@ -56,7 +117,8 @@
       "startAt": "2026-09-01T09:00:00-03:00",
       "endAt": "2026-09-20T23:59:00-03:00",
       "order": 1,
-      "status": "PLANEJADO"
+      "status": "PLANEJADO",
+      "isRegistrationPeriod": true
     },
     {
       "id": "77777777-7777-7777-7777-777777777777",
@@ -65,7 +127,30 @@
       "startAt": "2026-10-05T14:00:00-03:00",
       "endAt": null,
       "order": 2,
-      "status": "PLANEJADO"
+      "status": "PLANEJADO",
+      "isRegistrationPeriod": false
+    }
+  ],
+  "documentRequirements": [
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "key": "identificacao",
+      "name": "Documento oficial de identificação com foto",
+      "instructions": "Frente e verso, em arquivo único.",
+      "required": true,
+      "order": 1,
+      "profileId": null,
+      "modalityId": null
+    },
+    {
+      "id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+      "key": "autodeclaracao",
+      "name": "Autodeclaração étnico-racial",
+      "instructions": "Conforme modelo disponibilizado no sistema.",
+      "required": true,
+      "order": 2,
+      "profileId": null,
+      "modalityId": "44444444-4444-4444-4444-444444444444"
     }
   ],
   "stages": [
@@ -77,16 +162,26 @@
       "eliminatory": true,
       "classificatory": true,
       "minimumScore": "7.0000",
+      "evaluationsPerRegistration": 1,
+      "maximumScore": null,
+      "forma": "PONTUADA",
+      "rotuloFavoravel": null,
+      "rotuloDesfavoravel": null,
       "scheduleEventId": "77777777-7777-7777-7777-777777777777"
     },
     {
       "id": "99999999-9999-9999-9999-999999999999",
       "name": "Análise de títulos",
       "order": 2,
-      "weight": null,
+      "weight": "1.0000",
       "eliminatory": false,
       "classificatory": true,
       "minimumScore": null,
+      "evaluationsPerRegistration": 1,
+      "maximumScore": null,
+      "forma": "PONTUADA",
+      "rotuloFavoravel": null,
+      "rotuloDesfavoravel": null,
       "scheduleEventId": null
     }
   ],
@@ -124,10 +219,18 @@
       "content": "A inscrição será realizada exclusivamente pelos meios indicados neste Edital, nos prazos do Cronograma, e implica conhecimento e aceitação das condições aqui estabelecidas."
     },
     {
+      "id": "8bb898c2-3fc2-5e9b-8104-c2d8073643f0",
+      "key": "documentos-exigidos",
+      "title": "Documentos Exigidos para a Inscrição",
+      "order": 5,
+      "type": "GENERATED",
+      "source": "documentRequirements"
+    },
+    {
       "id": "9ee7f397-e5bf-552b-976b-968be61c4c23",
       "key": "perfis",
       "title": "Perfis de Vaga",
-      "order": 5,
+      "order": 6,
       "type": "GENERATED",
       "source": "profiles"
     },
@@ -135,7 +238,7 @@
       "id": "dc485b6c-0cd0-5b1c-b302-94552fd107bf",
       "key": "etapas",
       "title": "Etapas de Avaliação",
-      "order": 6,
+      "order": 7,
       "type": "GENERATED",
       "source": "stages"
     },
@@ -143,7 +246,7 @@
       "id": "8d63ea40-e905-54d3-9630-abc0a1941559",
       "key": "classificacao",
       "title": "Critérios de Classificação",
-      "order": 7,
+      "order": 8,
       "type": "TEXT",
       "content": "A classificação observará a pontuação obtida nas Etapas de Avaliação, respeitados os pesos e as notas mínimas declarados neste Edital e as reservas de vaga previstas."
     },
@@ -151,7 +254,7 @@
       "id": "96de1f8b-6d8f-5508-9768-41df9b976d50",
       "key": "cronograma",
       "title": "Cronograma",
-      "order": 8,
+      "order": 9,
       "type": "GENERATED",
       "source": "schedule"
     },
@@ -159,7 +262,7 @@
       "id": "758beb06-c278-520b-9d92-35d4d8473d4b",
       "key": "recursos",
       "title": "Dos Recursos",
-      "order": 9,
+      "order": 10,
       "type": "TEXT",
       "content": "Caberá recurso contra o resultado de cada etapa, no prazo de 2 (dois) dias úteis contados da divulgação, exclusivamente pelo sistema.\nO recurso deve ser fundamentado e não pode conter identificação do candidato, sob pena de indeferimento liminar."
     },
@@ -167,7 +270,7 @@
       "id": "add4303f-9e28-504b-a152-782961686189",
       "key": "disposicoes-finais",
       "title": "Disposições Finais",
-      "order": 10,
+      "order": 11,
       "type": "TEXT",
       "content": "Os casos omissos serão resolvidos pela autoridade responsável pelo processo seletivo, observada a legislação aplicável."
     }
