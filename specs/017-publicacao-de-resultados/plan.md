@@ -10,7 +10,10 @@ A 015 entregou o ato de ordenação: imutável, sucedível, reproduzível e invi
 administra o certame. A 017 acrescenta o segundo ato — a divulgação — e com ele a página pública, o
 documento oficial e a primeira informação de resultado que chega ao candidato.
 
-**Esta é uma feature pequena, e é pequena por três verificações no código, não por otimismo.**
+**A novidade arquitetural é pequena; a feature não é.** São 72 requisitos, cinco jornadas, dois
+canais públicos, documento oficial, concorrência em quatro frentes e dado pessoal atravessando a
+fronteira institucional pela primeira vez. O que a torna tratável é que quase nada aqui precisa ser
+inventado — e isso são três verificações no código, não otimismo.
 
 1. **A forma do ato já existe, inteira.** `AtoDeOrdenacao` resolveu append-only, sucessão sem coluna
    de vigência e unicidade da raiz e do sucessor (`classificacao/models.py:44-61`). A publicação é a
@@ -43,11 +46,20 @@ mais. Não toca `Inscricao`, `PosicaoNaOrdem` nem `VersaoConsolidada` — a supe
 sistema deixa de ter caminho de leitura para as tabelas que guardam dado pessoal, em vez de ter um
 caminho que se confia estar filtrado (T-013).
 
-**A que mais exigiu cuidado** é a tensão entre a FR-017 e a FR-058: quem não recebeu posição não é
-nomeado publicamente, mas é informado na própria Área. Resolver isso lendo `PosicaoNaOrdem` criaria
-a segunda fonte de verdade que a FR-056 proíbe. O snapshot publicado passa a ter duas faces — a
-lista pública e o índice individual —, ambas congeladas no mesmo ato, e a página pública renderiza
-só a primeira (T-010).
+**A que mais exigiu cuidado** é a tensão entre a FR-017 e a FR-059: quem não recebeu posição não é
+nomeado publicamente, mas é informado na própria Área. Resolvê-la lendo `PosicaoNaOrdem` no
+acompanhamento criaria a segunda fonte de verdade que a FR-058 proíbe — e viva, mudando com o ato
+enquanto a publicação permanece histórica. A projeção individual é congelada junto, no mesmo ato,
+mas em **tabela própria**: guardá-la dentro do conteúdo publicado faria toda leitura pública
+carregá-la, e a fronteira passaria a depender do template, não da ausência de consulta. E o resumo
+publicado, que a SC-004 apresenta como o do conteúdo divulgado, cobriria também o que não foi
+divulgado (T-010).
+
+**A quarta frente de concorrência é a que não se resolve revalidando.** `emitir_ordem` pode gravar o
+ato sucessor entre a aferição de publicabilidade e a gravação da publicação — a aferição estava
+correta quando ocorreu, e transação isolada não impede a outra transação de existir. O comando toma
+`select_for_update` na mesma linha do `ProcessoSeletivo` que `comando_de_comissao` já toma, antes de
+aferir, e os dois passam a se serializar (T-005).
 
 **O que não aparece no diagrama e custa** é a política de privilégios: tabela append-only nova
 significa entrada em `TABELAS_APPEND_ONLY` (`seguranca/papeis.py:26-48`), triggers nomeadas em
@@ -65,44 +77,48 @@ consultar o histórico, `portal` (HTML público, sem autenticação) para a pág
 entregar bytes de documento (`publicacoes/api/views.py:120-133`). O `openapi.yaml` da 001 **não**
 muda: nada aqui é contrato de API.
 
-**Storage**: PostgreSQL. **Uma migration**, no app novo `divulgacao`: duas tabelas — a publicação e
-seu documento —, duas constraints de cadeia — raiz única por marco e sucessor único — e duas
-triggers append-only, absolutas, sem a condicionalidade que `Retificacao` exige. Nenhuma migration
-em `classificacao`, `resultados`, `editais` ou `publicacoes`: a FR-068 é exatamente isso dito como
-requisito, e a feature inteira **lê** os agregados existentes.
+**Storage**: PostgreSQL. **Uma migration**, no app novo `divulgacao`: três tabelas — a publicação,
+a situação divulgada de cada participante e o documento —, três constraints de cadeia e unicidade —
+raiz única por marco, sucessor único e uma publicação por `(ato, natureza)` — e quatro triggers: três
+de imutabilidade, absolutas, e uma de coerência contra a linha predecessora, no molde de
+`resultado_etapa_coerente`. Nenhuma migration em `classificacao`, `resultados`, `editais` ou
+`publicacoes`: a FR-070 é exatamente isso dito como requisito, e a feature inteira **lê** os
+agregados existentes.
 
 **Testing**: pytest com pytest-django, marcadores `acceptance`, `contract`, `integration`,
 `authorization` e `performance` já declarados. Quatro exigências específicas: as duas constraints de
 cadeia sob concorrência e as duas triggers só são exercidas com `TEST_DB_ENGINE=postgresql`; os nomes
 das triggers entram em `TRIGGERS_POR_APP` e o app em `APPS`
-(`tests/migrations/test_migrations.py:17-38`); as tabelas entram em `TABELAS_APPEND_ONLY`
+(`tests/migrations/test_migrations.py:17-38`); as três tabelas entram em `TABELAS_APPEND_ONLY`
 (`seguranca/papeis.py:26-48`); e a varredura de vocabulário da 013
 (`tests/test_vocabulario_do_resultado.py`) hoje só lê `interface/templates` — os templates do
 `portal` desta feature afirmam classificação legitimamente, e a varredura **não** deve ser estendida
 a eles.
 
 **Target Platform**: servidor Linux; navegador institucional e celular. A página pública é a
-superfície mais exposta que o produto ganhou desde a vitrine, e a FR-049 dá 375 px sem rolagem
+superfície mais exposta que o produto ganhou desde a vitrine, e a FR-051 dá 375 px sem rolagem
 horizontal com listas que podem passar de mil linhas.
 
 **Project Type**: aplicação web com canal HTML servido pelo Django. Sem SPA, sem build de front.
 
-**Performance Goals**: a página pública responde com **uma** consulta ao registro da publicação e
-nenhuma junção — o conteúdo já está composto e canonizado (T-003). O alvo é derivada zero: o custo
-da página não varia entre 10 e 1.000 posições, e é isso que o teste mede, no molde de
-`tests/performance/test_public_queries.py`. A composição do conteúdo, essa sim proporcional ao
-universo, acontece **uma vez**, dentro do comando de publicar.
+**Performance Goals**: a página pública faz um número **constante** de consultas — a publicação e a
+cadeia que diz se ela ainda é a vigente — e não alcança `Inscricao`, `PosicaoNaOrdem` nem
+`SituacaoDivulgada` (T-013). O alvo é derivada zero em **consultas** entre 10 e 1.000 posições, no
+molde de `tests/performance/test_public_queries.py`. Não se promete tempo invariável: desserializar,
+montar o HTML e transmiti-lo crescem com o número de linhas, como em qualquer lista. A composição do
+conteúdo, essa proporcional ao universo, acontece **uma vez**, dentro do comando de publicar.
 
 **Constraints**: publicar exige reproduzir o estado classificatório para aferir publicabilidade
 (D-001), e essa reprodução tem o custo de `calcular_ordem` — o mesmo que a tela do marco da 015 já
 paga ao abrir. A prévia e a confirmação pagam-no duas vezes, e é deliberado: é o que fecha a janela
-entre ler e confirmar.
+entre ler e confirmar. E a confirmação segura a linha do `ProcessoSeletivo` pela duração da
+transação, como toda a família da 011 já faz — emitir e publicar passam a esperar um pelo outro.
 
-**Scale/Scope**: um Edital com mil inscritos e até três marcos por Perfil. **Um app novo, duas
-tabelas, uma migration, uma capacidade nova no mapa de papéis, três rotas administrativas, duas
-rotas públicas e um acréscimo ao acompanhamento.** Nenhuma coleção normativa nova, nenhuma elevação
-de versão canônica, nenhum campo publicado novo — a diferença de porte para a 015, que precisou de
-uma elevação 6→7, está inteira aqui.
+**Scale/Scope**: um Edital com mil inscritos e até três marcos por Perfil. **Um app novo, três
+tabelas, uma migration, quatro triggers, uma capacidade nova no mapa de papéis, três rotas
+administrativas, duas rotas públicas e um acréscimo ao acompanhamento.** Nenhuma coleção normativa
+nova, nenhuma elevação de versão canônica, nenhum campo publicado novo — é aí, e só aí, que a 017 é
+menor que a 015, que precisou de uma elevação 6→7.
 
 ## Constitution Check
 
@@ -111,10 +127,10 @@ uma elevação 6→7, está inteira aqui.
 | Princípio | Exigência | Como esta feature responde |
 |---|---|---|
 | I — Linguagem ubíqua e integridade | Conceitos distintos; identificadores estáveis; invariantes em constraint; histórico não excluído | `Publicacao` (do Edital) e `PublicacaoResultado` são atos distintos sobre objetos distintos, e por isso moram em apps distintos (D-009, T-001). As duas invariantes de cadeia vão ao banco, não ao código: raiz única por marco e sucessor único (T-002). Nada é excluído — `delete` recusa, a trigger recusa e o papel de runtime não tem privilégio. **Passa** |
-| II — Integridade normativa e temporalidade | Fonte única; publicado imutável; estado vigente reproduzível; documento deriva do conteúdo | A publicação não é fonte de resultado: ela cita o ato e congela a **projeção** dele (T-003). O documento deriva dos mesmos bytes que a página, e o resumo publicado é o que permite conferi-los (FR-060, FR-061). Retificação posterior não alcança publicação concluída porque não há o que alcançar: o conteúdo está gravado, não recomposto (FR-043). **Passa** |
-| III — Segurança, dados pessoais e auditoria | Negar por padrão; identificador público não autoriza; LGPD avaliada; auditoria de ato sensível | Capacidade própria e explícita (`resultado:publicar`), verificada no backend antes da transação (T-006). A superfície pública **não tem caminho de leitura** para `Inscricao` nem `PosicaoNaOrdem` (T-013) — a minimização é estrutural, e não uma serialização que se confia estar filtrada. O protocolo passa a ser público e a FR-024 o impede de virar credencial. A trilha é a existente, com ator, entidade, instante e versão (FR-064). **Passa** |
-| IV — Regras explícitas e consistência | Regra no backend; estados explícitos; publicar é operação de domínio; transação; concorrência | Publicar é comando de domínio com transação, autorização, reserva de idempotência e revalidação — nunca alteração de booleano. O agregado **não tem máquina de estados** porque não tem ciclo de vida, e a FR-044 declara isso em vez de omitir. A verificação classifica informação, aviso e impedimento (FR-005), no espírito do que a constituição exige da publicação do Edital. Concorrência coberta em três frentes: idempotência, assinatura da prévia e constraint de raiz (T-005). **Passa** |
-| V — Qualidade, rastreabilidade e simplicidade | Citação resolvível; teste como prova; simplicidade justificada | As nove decisões estão na spec, no formato que `test_citacoes_de_requisito.py` resolve. A simplicidade é ativa: sem rascunho persistente (D-008), sem abstração de publicável (D-002), sem despublicação (FR-038), sem notificação (FR-070). O que se acrescenta de estrutura — app novo, duas tabelas — é o mínimo que a imutabilidade exige. **Passa** |
+| II — Integridade normativa e temporalidade | Fonte única; publicado imutável; estado vigente reproduzível; documento deriva do conteúdo | A publicação não é fonte de resultado: ela cita o ato e congela a **projeção** dele (T-003). O documento deriva dos mesmos bytes que a página, e o resumo publicado é o que permite conferi-los (FR-062, FR-063). Retificação posterior não alcança publicação concluída porque não há o que alcançar: o conteúdo está gravado, não recomposto (FR-045). **Passa** |
+| III — Segurança, dados pessoais e auditoria | Negar por padrão; identificador público não autoriza; LGPD avaliada; auditoria de ato sensível | Capacidade própria e explícita (`resultado:publicar`), verificada no backend antes da transação (T-006). A superfície pública **não tem consulta** que alcance `Inscricao`, `PosicaoNaOrdem` ou `SituacaoDivulgada` (T-010, T-013) — a minimização é estrutural, e não uma serialização que se confia estar filtrada; foi por isso que a projeção individual saiu do conteúdo publicado e virou tabela. O protocolo passa a ser público e a FR-024 o impede de virar credencial. A trilha é a existente, com ator, entidade, instante e versão (FR-066). **Passa** |
+| IV — Regras explícitas e consistência | Regra no backend; estados explícitos; publicar é operação de domínio; transação; concorrência | Publicar é comando de domínio com transação, autorização, reserva de idempotência e revalidação — nunca alteração de booleano. O agregado **não tem máquina de estados** porque não tem ciclo de vida, e a FR-046 declara isso em vez de omitir. A verificação classifica informação, aviso e impedimento (FR-005), no espírito do que a constituição exige da publicação do Edital. Concorrência coberta em quatro frentes, cada uma para um caso que as outras não pegam: idempotência, unicidade por `(ato, natureza)`, assinatura da prévia e bloqueio do Processo contra a emissão concorrente (T-005). **Passa** |
+| V — Qualidade, rastreabilidade e simplicidade | Citação resolvível; teste como prova; simplicidade justificada | As nove decisões estão na spec, no formato que `test_citacoes_de_requisito.py` resolve. A simplicidade é ativa: sem rascunho persistente (D-008), sem abstração de publicável (D-002), sem despublicação (FR-040), sem notificação (FR-072). O que se acrescenta de estrutura — app novo, três tabelas — é o mínimo que a imutabilidade e a fronteira de dado pessoal exigem. **Passa** |
 | VI — Completude de jornada e valor demonstrável | Capacidade observável pelo canal do ator | A jornada fecha nos três canais dos três atores: a autoridade publica pela interface administrativa, qualquer pessoa consulta pelo portal sem autenticar, e o candidato encontra o resultado dentro da própria Inscrição. O único slice sem comportamento observável é o S0, e a spec declara o que ele desbloqueia. **Passa** |
 
 ## Project Structure
@@ -125,7 +141,7 @@ uma elevação 6→7, está inteira aqui.
 specs/017-publicacao-de-resultados/
 ├── plan.md              # Este arquivo
 ├── research.md          # Fase 0 — as decisões técnicas T-001 a T-013
-├── data-model.md        # Fase 1 — as duas tabelas e a forma do conteúdo congelado
+├── data-model.md        # Fase 1 — as três tabelas e a forma do conteúdo divulgado
 ├── quickstart.md        # Fase 1 — o roteiro que demonstra o gate da spec
 ├── contracts/
 │   ├── publicacao.md    # O comando de publicar: rotas administrativas e recusas
@@ -139,10 +155,10 @@ specs/017-publicacao-de-resultados/
 ```text
 backend/processo_seletivo/
 ├── divulgacao/                          # app novo
-│   ├── models.py                        # PublicacaoResultado, DocumentoDoResultado
-│   ├── migrations/0001_initial.py       # tabelas, constraints e triggers append-only
+│   ├── models.py                        # os três agregados da feature
+│   ├── migrations/0001_initial.py       # 3 tabelas, 3 constraints, 4 triggers
 │   ├── domain/
-│   │   ├── conteudo.py                  # a projeção publicável do ato (T-003, T-010)
+│   │   ├── conteudo.py                  # as duas projeções do ato (T-003, T-010)
 │   │   └── publicabilidade.py           # as três formas de impedimento (T-004)
 │   ├── application/
 │   │   ├── publicar.py                  # o comando: autoriza, revalida, reserva, grava
@@ -157,11 +173,11 @@ backend/processo_seletivo/
 │   ├── urls.py                          # 2 rotas: página do resultado e documento
 │   ├── views.py                         # + o resumo no acompanhamento
 │   └── templates/portal/                # resultado.html, + bloco no acompanhamento.html
-└── seguranca/papeis.py                  # + 2 tabelas em TABELAS_APPEND_ONLY
+└── seguranca/papeis.py                  # + 3 tabelas em TABELAS_APPEND_ONLY
 
 backend/tests/
 ├── acceptance/                          # o gate da spec, ponta a ponta
-├── authorization/                       # os negativos da FR-025 e da FR-054
+├── authorization/                       # os negativos da FR-026 e da FR-056
 ├── contract/                            # a canonização do conteúdo e o resumo
 ├── integration/divulgacao/              # comando, recusas, sucessão, concorrência
 ├── interface/ e portal/                 # as telas, incluindo 375 px
@@ -181,12 +197,12 @@ exceto a primeira, que a spec declara como desbloqueio.
 
 | Fase | Entrega | Termina quando |
 |---|---|---|
-| **F0** | App, tabelas, constraints, triggers, privilégios | O teste estrutural de migrations enxerga as duas triggers e o papel de runtime não consegue `UPDATE` |
+| **F0** | App, três tabelas, constraints, quatro triggers, privilégios | O teste estrutural de migrations enxerga as quatro triggers e o papel de runtime não consegue `UPDATE` |
 | **F1** | Projeção, publicabilidade, comando, prévia e confirmação | A autoridade publica pela interface e as três recusas da FR-004 aparecem nomeadas na tela |
 | **F2** | Página pública e descobribilidade pelo Edital | Alguém sem conta abre o resultado pela vitrine, em 375 px |
 | **F3** | Área do Candidato | Ana vê "2º lugar" dentro da própria Inscrição, e não via nada antes de P1 |
 | **F4** | Documento oficial | O PDF sai com autoridade, resumo e os mesmos rótulos da página |
-| **F5** | Histórico, sucessão observável e concorrência | P1 diz que foi sucedida, o histórico lista as duas, e o duplo submit produz uma |
+| **F5** | Histórico, sucessão observável e concorrência | P1 diz que foi sucedida, o histórico lista as duas, e o duplo submit produz uma, e emitir sucessor durante a publicação não deixa passar o ato antigo |
 
 **A F1 é a maior**, e dentro dela a projeção (T-003, T-010) é o que decide se as demais são simples.
 **A F5 não é hardening**: a sucessão é a metade da spec que responde "isto ainda vale?", e adiá-la
@@ -194,6 +210,8 @@ para o fim é o que permite exercê-la sobre publicações que já existem, em v
 
 ## Complexity Tracking
 
-> Sem violações a justificar. As duas escolhas que acrescentam estrutura estão argumentadas em
-> T-001 (app novo em vez de acréscimo a `publicacoes`) e T-003 (conteúdo congelado em vez de
-> composição na leitura), e ambas reduzem, e não aumentam, o que precisa ser confiado ao código.
+> Sem violações a justificar. As três escolhas que acrescentam estrutura estão argumentadas em
+> T-001 (app novo em vez de acréscimo a `publicacoes`), T-003 (conteúdo congelado em vez de
+> composição na leitura) e T-010 (projeção individual em tabela própria em vez de chave dentro do
+> conteúdo). As três reduzem, e não aumentam, o que precisa ser confiado ao código: a terceira em
+> especial troca "o template não vai renderizar isto" por "a view não tem como buscar isto".

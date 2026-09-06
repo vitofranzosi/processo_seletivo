@@ -171,7 +171,7 @@ tem autorização. O que muda é apenas o que atravessa a fronteira do público.
 Publicar nominalmente a eliminação de uma pessoa é decisão institucional sobre dado pessoal que
 nenhuma norma do Edital declarou até aqui, e o default conservador é não a tomar por conveniência
 de implementação. Não ser nomeado publicamente não é o mesmo que não ser informado: o motivo
-continua disponível ao próprio candidato na sua Área (FR-058) e à administração na proveniência.
+continua disponível ao próprio candidato na sua Área (FR-059) e à administração na proveniência.
 
 Se um Edital vier a exigir a divulgação nominal dos não classificados, isso é conteúdo normativo a
 declarar — e passa a ser lido da versão publicada, não decidido no renderizador.
@@ -193,6 +193,14 @@ concorrência precisa impedir.
 
 Não existe coluna de vigência, não existe despublicação, não existe `UPDATE`. Preliminar não vira
 definitiva: nasce outra publicação, e a anterior permanece íntegra.
+
+**Um mesmo ato pode originar mais de uma publicação — uma por natureza.** Um resultado preliminar
+contra o qual ninguém recorreu, ou cujos recursos não alteraram a ordem, é publicado como definitivo
+sem que exista ato novo a emitir; exigir a emissão de um sucessor idêntico só para poder publicá-lo
+faria a 015 registrar uma sucessão que não sucedeu nada. O que não cabe é a mesma natureza duas
+vezes sobre o mesmo ato: isso é duplicidade, e o banco a recusa (FR-039).
+
+E a ordem entre naturezas tem sentido único: uma publicação preliminar não sucede uma definitiva.
 
 ### D-008 — Não há rascunho persistente; a prévia é derivada
 
@@ -360,6 +368,9 @@ e situação, para saber o que foi divulgado, quando, e o que vale hoje.
 - Ato **divergente** da regra ou do universo vigentes: não é publicável; o caminho é emitir ato
   sucessor na 015 e publicar aquele.
 - Duas abas publicando o mesmo ato: uma publicação, e a segunda recebe o desfecho da primeira.
+- **Ato sucessor emitido enquanto a publicação confirma**: os dois atos disputam o mesmo marco, e
+  revalidar dentro da transação não basta sem serialização — a publicação não pode terminar
+  divulgando um ato que deixou de ser vigente entre a aferição e a gravação.
 - Duas publicações produzidas concorrentemente para o mesmo marco: a cadeia recusa a segunda raiz.
 - Publicação sem nenhuma posição atribuída (todos eliminados): publicável, com a lista vazia dita
   explicitamente em vez de página em branco.
@@ -466,82 +477,86 @@ finalidade exige, e o resto não sai porque estava à mão na mesma consulta.
 - **FR-037** — A publicação declara sua natureza: `PRELIMINAR` ou `DEFINITIVA`.
 - **FR-038** — Uma publicação preliminar não se converte em definitiva; a definitiva é outra
   publicação.
-- **FR-039** — A publicação concluída é imutável: não é editada, não é excluída e não é
+- **FR-039** — Um mesmo ato de ordenação pode originar publicações de naturezas distintas, e no
+  máximo uma por natureza: publicar como definitivo o resultado que já foi divulgado como
+  preliminar não exige emitir ato novo, e republicar a mesma natureza sobre o mesmo ato é
+  duplicidade.
+- **FR-040** — A publicação concluída é imutável: não é editada, não é excluída e não é
   despublicada.
-- **FR-040** — Correção posterior ocorre por sucessão: novo ato de resultado, nova publicação.
-- **FR-041** — A vigência é derivada da cadeia de sucessão, sem coluna de estado; existe no máximo
+- **FR-041** — Correção posterior ocorre por sucessão: novo ato de resultado, nova publicação.
+- **FR-042** — A vigência é derivada da cadeia de sucessão, sem coluna de estado; existe no máximo
   uma publicação vigente por marco classificatório.
-- **FR-042** — Uma publicação sucedida permanece existindo, íntegra e acessível.
-- **FR-043** — Quem abre uma publicação sucedida é informado disso e recebe o caminho para a
+- **FR-043** — Uma publicação sucedida permanece existindo, íntegra e acessível.
+- **FR-044** — Quem abre uma publicação sucedida é informado disso e recebe o caminho para a
   vigente.
-- **FR-044** — Retificação posterior do Edital não altera publicação concluída e não regenera seu
+- **FR-045** — Retificação posterior do Edital não altera publicação concluída e não regenera seu
   documento.
-- **FR-045** — `PublicacaoResultado` **não possui máquina de estados**, porque não possui ciclo de
+- **FR-046** — `PublicacaoResultado` **não possui máquina de estados**, porque não possui ciclo de
   vida: nasce completa e não muda. A única transição observável do conjunto é a sucessão, e ela é
   outra linha — não uma transição desta.
 
 #### Página pública
 
-- **FR-046** — A publicação possui endereço estável, que não depende de sessão administrativa e não
+- **FR-047** — A publicação possui endereço estável, que não depende de sessão administrativa e não
   exige autenticação.
-- **FR-047** — Publicação histórica continua acessível pelo mesmo endereço depois de sucedida.
-- **FR-048** — A página responde: que resultado é, de qual Edital, quando foi publicado, se é a
+- **FR-048** — Publicação histórica continua acessível pelo mesmo endereço depois de sucedida.
+- **FR-049** — A página responde: que resultado é, de qual Edital, quando foi publicado, se é a
   vigente e se existe publicação posterior.
-- **FR-049** — A publicação vigente é alcançável a partir da página pública do Edital: quem não
+- **FR-050** — A publicação vigente é alcançável a partir da página pública do Edital: quem não
   conhece o endereço chega a ela pelo caminho que já usa para conhecer a seleção.
-- **FR-050** — A página funciona em 375 px sem rolagem horizontal da página; listas extensas usam
+- **FR-051** — A página funciona em 375 px sem rolagem horizontal da página; listas extensas usam
   apresentação responsiva adequada.
-- **FR-051** — A situação vigente/sucedida não é comunicada apenas por cor.
-- **FR-052** — Os fluxos administrativos e públicos críticos funcionam por teclado.
-- **FR-053** — Listas e tabelas possuem estrutura semântica adequada.
-- **FR-054** — A página não oferece ação de recurso. Se a versão citada declarar prazo recursal, a
+- **FR-052** — A situação vigente/sucedida não é comunicada apenas por cor.
+- **FR-053** — Os fluxos administrativos e públicos críticos funcionam por teclado.
+- **FR-054** — Listas e tabelas possuem estrutura semântica adequada.
+- **FR-055** — A página não oferece ação de recurso. Se a versão citada declarar prazo recursal, a
   informação normativa existente pode ser apresentada, sem mecanismo transacional.
 
 #### Área do Candidato
 
-- **FR-055** — Nada relativo a resultado aparece na Área do Candidato antes da publicação. Existir
+- **FR-056** — Nada relativo a resultado aparece na Área do Candidato antes da publicação. Existir
   `ResultadoEtapa` ou `AtoDeOrdenacao` no banco não torna a informação pública.
-- **FR-056** — Havendo publicação cujo ato contemple a Inscrição, ela aparece dentro da própria
+- **FR-057** — Havendo publicação cujo ato contemple a Inscrição, ela aparece dentro da própria
   Inscrição, no acompanhamento.
-- **FR-057** — O resumo individual deriva da publicação e aponta para ela; não há segunda fonte de
+- **FR-058** — O resumo individual deriva da publicação e aponta para ela; não há segunda fonte de
   verdade específica do candidato.
-- **FR-058** — O candidato que foi considerado e não recebeu posição vê a sua própria situação e o
+- **FR-059** — O candidato que foi considerado e não recebeu posição vê a sua própria situação e o
   motivo na sua Área — e só depois que a publicação existe. Não ser nomeado publicamente (FR-017)
   não é o mesmo que não ser informado.
-- **FR-059** — O resumo é aditivo aos fatos existentes do acompanhamento e não afirma nada que
+- **FR-060** — O resumo é aditivo aos fatos existentes do acompanhamento e não afirma nada que
   ninguém tenha declarado.
-- **FR-060** — Quando a publicação que contempla a Inscrição foi sucedida, o candidato é levado à
+- **FR-061** — Quando a publicação que contempla a Inscrição foi sucedida, o candidato é levado à
   vigente.
 
 #### Documento oficial
 
-- **FR-061** — O documento é derivado do conteúdo persistido da publicação, e não do estado atual
+- **FR-062** — O documento é derivado do conteúdo persistido da publicação, e não do estado atual
   do Processo.
-- **FR-062** — O documento identifica Processo/Edital, marco, natureza, ato de origem, data e hora,
+- **FR-063** — O documento identifica Processo/Edital, marco, natureza, ato de origem, data e hora,
   autoridade signatária, o conteúdo da classificação e o resumo criptográfico.
-- **FR-063** — O documento apresenta os mesmos rótulos institucionais da página e o mesmo conteúdo
+- **FR-064** — O documento apresenta os mesmos rótulos institucionais da página e o mesmo conteúdo
   substancial.
-- **FR-064** — O documento é produzido pelo renderizador existente e segue os padrões de
+- **FR-065** — O documento é produzido pelo renderizador existente e segue os padrões de
   acessibilidade já adotados pelo projeto onde tecnicamente aplicável.
 
 #### Auditoria e histórico administrativo
 
-- **FR-065** — Publicação e sucessão geram auditoria na trilha existente, com ator, ação, entidade
+- **FR-066** — Publicação e sucessão geram auditoria na trilha existente, com ator, ação, entidade
   e identificador, data e hora, versão normativa citada pelo ato, motivo quando houver e
   correlação.
-- **FR-066** — Não se cria log paralelo nem tabela de eventos própria da feature.
-- **FR-067** — A consulta administrativa lista as publicações de um marco com natureza, instante,
+- **FR-067** — Não se cria log paralelo nem tabela de eventos própria da feature.
+- **FR-068** — A consulta administrativa lista as publicações de um marco com natureza, instante,
   autor, autoridade signatária e situação.
-- **FR-068** — A ação de publicar é alcançável a partir do ato de ordenação, no mesmo lugar em que
+- **FR-069** — A ação de publicar é alcançável a partir do ato de ordenação, no mesmo lugar em que
   a interface já oferece ao ator o que fazer agora, e condicionada à capacidade.
 
 #### Limites e não regressão
 
-- **FR-069** — A feature não altera `AtoDeOrdenacao`, `PosicaoNaOrdem`, `ResultadoEtapa` nem o
+- **FR-070** — A feature não altera `AtoDeOrdenacao`, `PosicaoNaOrdem`, `ResultadoEtapa` nem o
   conteúdo normativo do Edital.
-- **FR-070** — A feature não introduz `UPDATE` em tabela histórica; a tabela nova entra na política
+- **FR-071** — A feature não introduz `UPDATE` em tabela histórica; a tabela nova entra na política
   de privilégios como append-only.
-- **FR-071** — Publicar não dispara notificação de espécie alguma.
+- **FR-072** — Publicar não dispara notificação de espécie alguma.
 
 ### Key Entities
 
@@ -603,6 +618,8 @@ finalidade exige, e o resto não sai porque estava à mão na mesma consulta.
 - **SC-019** — A página e o documento dizem em texto se o resultado é preliminar ou definitivo.
 - **SC-020** — O candidato considerado e não classificado é informado da sua própria situação na sua
   Área, sem ser nomeado na publicação.
+- **SC-021** — O mesmo ato publicado de novo na mesma natureza é recusado; publicado na outra
+  natureza, produz a segunda publicação, que sucede a primeira.
 
 ---
 

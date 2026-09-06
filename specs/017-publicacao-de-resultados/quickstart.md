@@ -32,12 +32,12 @@ Como **paula.publicadora**, abrir o ato de ordenação do marco. O cartão de a�
 resultado**.
 
 Como **paulo.presidente**, abrir o mesmo ato: a ação **não** aparece — emitir não concede publicar
-(FR-025, SC-014).
+(FR-026, SC-014).
 
 ## 2 — A prévia
 
 Abrir **Publicar resultado**. A tela mostra título, Processo e Edital, marco, natureza a escolher,
-autoridade signatária a escolher, e a lista exata que será divulgada. Nada foi gravado (FR-034).
+autoridade signatária a escolher, e a lista exata que será divulgada. Nada foi gravado (FR-035).
 
 Conferir na lista: posições compartilhadas aparecem como tais (1º, 2º, 3º, 3º), os nomes são de
 gente e não identificadores, e **nenhum valor de desempate** aparece — nem data de nascimento, nem
@@ -49,7 +49,8 @@ Escolher **Resultado preliminar** e a autoridade; confirmar. Nasce a publicaçã
 instante e signatário (SC-003).
 
 **Duplo submit**: reenviar o mesmo formulário devolve a mesma publicação, e o histórico do marco
-lista **uma** (SC-013).
+lista **uma** (SC-013). Em duas abas, com chaves de idempotência diferentes, a segunda é recusada
+pela unicidade `(ato, natureza)` — que é o caso que a idempotência sozinha não pega (SC-021).
 
 ## 4 — A página pública
 
@@ -89,6 +90,10 @@ o caminho — emitir o ato sucessor (SC-012).
 
 Como **paulo.presidente**, emitir o ato sucessor na tela da 015. Como **paula.publicadora**,
 publicá-lo como **Resultado definitivo**.
+
+> **O caminho sem recurso também vale**: não havendo ato sucessor a emitir — ninguém contestou, ou
+> os recursos não mudaram a ordem —, o **mesmo** ato é publicado como definitivo, e a P2 sucede a P1
+> sem que a 015 registre uma sucessão que não sucedeu nada (FR-039, SC-021).
 
 Abrir o endereço de **P1**: ela continua exatamente como era, e diz que foi sucedida, com o caminho
 para a vigente (SC-005, SC-006, SC-011).
