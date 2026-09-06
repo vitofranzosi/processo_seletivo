@@ -46,14 +46,23 @@ ato novo a emitir; exigir a emissão de um sucessor idêntico faria a 015 regist
 não sucedeu nada. A mesma natureza duas vezes sobre o mesmo ato é duplicidade, e o banco a recusa —
 o que dá ao cenário das duas abas uma garantia de banco, e não só de idempotência (T-005).
 
-**Trigger `publicacao_resultado_coerente`** — no `INSERT`, confere contra a linha referenciada, no
-molde de `resultado_etapa_coerente`:
+**Trigger `publicacao_resultado_coerente`** — no `INSERT`, confere contra as linhas referenciadas,
+no molde de `resultado_etapa_coerente`:
 
-- o predecessor pertence ao mesmo `(edital, perfil_id, marco_id)`;
+- **`edital_id`, `perfil_id` e `marco_id` da publicação coincidem com os do `AtoDeOrdenacao`
+  citado**;
+- o predecessor, quando há, pertence ao mesmo `(edital, perfil_id, marco_id)`;
 - `PRELIMINAR` não sucede `DEFINITIVA` — a ordem entre naturezas tem sentido único.
 
-O predecessor é outra linha, e por isso a verificação é trigger e não `CheckConstraint`. É a mesma
-situação que a 013 resolveu do mesmo jeito.
+**A primeira não é redundância com as constraints.** Os três eixos são colunas da publicação, e as
+constraints de cadeia operam **sobre elas** — não sobre o ato. Uma linha que declare um marco e cite
+o ato de outro passa por `uq_publicacao_raiz_por_marco` sem ser vista, porque o par que ela ocupa é
+o do marco declarado: bastaria variar o eixo declarado para inserir quantas raízes se quisesse sobre
+o mesmo ato, e a cadeia deixaria de significar o que ela afirma. É o mesmo defeito que a 013 fecha
+conferindo o Resultado contra a Avaliação fonte, e a resposta é a mesma — a coluna redundante não é
+confiada ao código que a grava.
+
+As três dependem de **outra linha**, e por isso a verificação é trigger e não `CheckConstraint`.
 
 **Sem coluna de vigência.** Vigente é `sucessoras__isnull=True` (T-002). **Sem coluna de estado**: o
 agregado não tem ciclo de vida (FR-046).
@@ -126,8 +135,9 @@ Tabela própria, e não coluna anulável na publicação: até a F4 as publicaç
 
 ```text
 {
-  "cabecalho": { titulo, natureza_rotulo, processo, edital, perfil, marco,
-                 publicado_em, signatario_nome, signatario_cargo, ato },
+  "cabecalho": { titulo, natureza_rotulo, processo, edital, perfil,
+                 marco, marco_codigo, publicado_em,
+                 signatario_nome, signatario_cargo, ato },
   "posicoes": [ { posicao, compartilhada, candidato, protocolo,
                   modalidade, pontuacao } ]
 }

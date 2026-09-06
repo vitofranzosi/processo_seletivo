@@ -50,13 +50,13 @@ publicar mediante confirmação adicional (D-001).
 | `natureza` | sim | Um dos valores oferecidos; validado, não assinado |
 | `autoridade` | sim | A chave do catálogo; o identificador nunca é digitado (FR-029) |
 | `confirmacao_da_previa` | sim | A assinatura da projeção e da posição na cadeia (T-005) |
+| `idempotency_key` | sim | Gerada na prévia, no padrão da casa |
 
 A conferência **recalcula** o resumo com a projeção composta agora e com o predecessor vigente
 **agora**, e compara com o valor submetido. Não se usa o predecessor que veio no formulário: ele é
 justamente o que pode ter envelhecido, e aceitá-lo faria a recusa vir da constraint de raiz, com
 outra mensagem, para o mesmo fato. Assim toda mudança no intervalo — projeção ou cadeia — sai como
 `publication_preview_stale`, e a constraint fica sendo a rede embaixo, não o caminho normal.
-| `idempotency_key` | sim | Gerada na prévia, no padrão da casa |
 
 **Ordem de execução**
 

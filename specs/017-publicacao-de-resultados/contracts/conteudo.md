@@ -15,6 +15,7 @@ cobrem materiais diferentes.
     "edital": "Edital 14/2026",
     "perfil": "Professor de Matemática",
     "marco": "Classificação final",
+    "marco_codigo": "FINAL",
     "publicado_em": "2026-10-18T17:42:00-03:00",
     "signatario_nome": "Diretora do Cefor",
     "signatario_cargo": "Diretora-Geral do Centro de Referência…",
@@ -40,6 +41,16 @@ Herdadas do conteúdo publicado do Edital, e pelas mesmas razões:
 - **decimal já vem formatado como texto**, na apresentação institucional (`185,00`) — o número não é
   reformatado na renderização, porque reformatar é decidir de novo;
 - **todo campo é obrigatório**: a forma publicada não tem campo opcional.
+
+`marco_codigo` é o `code` do marco no conteúdo publicado, e existe por uma razão só: a 015 emite os
+marcos **ordenados por `code`** (`contracts/marco.md` da 015), e essa é a ordem normativa em que
+eles se sucedem no certame. Sem congelá-lo, a Área do Candidato teria de ordenar as publicações por
+instante — que é a ordem em que a instituição divulgou, e não a ordem em que os marcos existem —, ou
+reabrir a versão do ato só para descobrir o código, que é leitura que a fronteira pública não faz.
+
+Ele é **dado de ordenação, não de leitura**: nem a página, nem o documento, nem a Área do Candidato
+o exibem — o que se mostra é `marco`, o nome publicado (FR-013). É o mesmo estatuto que
+`signatario_id` tem na publicação do Edital.
 
 **Não há campo de versão do formato.** Ele foi considerado e retirado: prometeria que publicações
 antigas continuam sendo renderizadas pela regra em que nasceram, e nada nesta feature entrega isso —

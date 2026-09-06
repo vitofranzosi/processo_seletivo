@@ -628,10 +628,13 @@ finalidade exige, e o resto não sai porque estava à mão na mesma consulta.
 - **SC-019** — A página e o documento dizem em texto se o resultado é preliminar ou definitivo.
 - **SC-020** — O candidato considerado e não classificado é informado da sua própria situação na sua
   Área, sem ser nomeado na publicação.
-- **SC-021** — O mesmo ato publicado de novo na mesma natureza é recusado; publicado na outra
-  natureza, produz a segunda publicação, que sucede a primeira.
+- **SC-021** — O mesmo ato publicado de novo na mesma natureza é recusado; publicado primeiro como
+  `PRELIMINAR` e depois como `DEFINITIVA`, produz a segunda publicação, que sucede a primeira. A
+  ordem inversa não existe: `PRELIMINAR` não sucede `DEFINITIVA`.
 - **SC-022** — Publicados dois marcos que contemplam a mesma Inscrição, a Área do Candidato mostra
   os dois, cada um identificado pelo seu marco.
+- **SC-023** — Um ato recusado por obsolescência continua consultável na interface administrativa,
+  com a sua proveniência completa — inclusive os critérios de desempate e o que cada um comparou.
 
 ---
 

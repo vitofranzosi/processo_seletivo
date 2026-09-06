@@ -70,7 +70,10 @@ classificatórios, e cada um é ato pleno: publicados o intermediário e o final
 linhas vigentes, e as duas são da pessoa. Escolher uma seria o sistema decidindo qual ato
 administrativo lhe interessa (FR-057).
 
-A ordem é a do marco no conteúdo publicado, e cada bloco é nomeado pelo seu marco — sem isso a
+A ordem é a de `cabecalho.marco_codigo`, congelado em cada publicação — a mesma por que a 015 emite
+os marcos, e portanto a ordem normativa em que eles se sucedem no certame. **Não** é a ordem em que
+a instituição divulgou: publicar o marco final antes do intermediário é possível, e a Área não deve
+inverter a sequência do certame por causa disso. Cada bloco é nomeado pelo seu marco — sem isso a
 pessoa lê duas posições diferentes sem saber a que cada uma se refere.
 
 Não havendo linha alguma, a lista é vazia e **nada** aparece: a I-004 dita em ausência de dado, e

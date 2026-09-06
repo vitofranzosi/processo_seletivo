@@ -78,9 +78,10 @@ entregar bytes de documento (`publicacoes/api/views.py:120-133`). O `openapi.yam
 muda: nada aqui é contrato de API.
 
 **Storage**: PostgreSQL. **Uma migration**, no app novo `divulgacao`: três tabelas — a publicação,
-a situação divulgada de cada participante e o documento —, três constraints de cadeia e unicidade —
-raiz única por marco, sucessor único e uma publicação por `(ato, natureza)` — e quatro triggers: três
-de imutabilidade, absolutas, e uma de coerência contra a linha predecessora, no molde de
+a situação divulgada de cada participante e o documento —, quatro constraints de cadeia e unicidade
+— raiz única por marco, sucessor único, uma publicação por `(ato, natureza)` e uma situação por
+`(publicação, inscrição)` — e quatro triggers: três de imutabilidade, absolutas, e uma de coerência
+que confere os eixos da publicação contra o ato citado e contra a linha predecessora, no molde de
 `resultado_etapa_coerente`. Nenhuma migration em `classificacao`, `resultados`, `editais` ou
 `publicacoes`: a FR-070 é exatamente isso dito como requisito, e a feature inteira **lê** os
 agregados existentes.
