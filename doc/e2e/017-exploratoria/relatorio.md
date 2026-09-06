@@ -203,10 +203,19 @@ Três correções, portanto:
    por quê: no sistema, 404 é também a resposta a "existe e você não alcança", e distinguir os dois
    casos revelaria o recurso a quem não deve sabê-lo.
 
-**Observado e não corrigido.** Na mesma prévia, a trilha "Ato de classificação" e o botão
-"Cancelar" apontam para a tela do ato de ordenação, que fica atrás da mesma porta e devolve 404 ao
-publicador. É a mesma classe, com outro destino, e não foi objeto do achado — fica registrado para
-decisão, não decidido aqui.
+**A mesma classe, com outro destino** (`4032e8a`). Na mesma prévia, a trilha "Ato de
+classificação" e o botão "Cancelar" apontavam para a tela do ato de ordenação, atrás da mesma
+porta e com o mesmo 404 para o publicador. Não era objeto do achado; foi fechado depois, por
+decisão do produto, com a regra desta seção:
+
+- a **trilha** deixa de ligar e continua nomeando o degrau — nomear de onde a prévia vem não é
+  abrir o que veio antes dela;
+- **Cancelar** leva ao histórico de divulgações do marco, que é a tela da própria publicação e que
+  a capacidade de publicar já abre. Desistir precisa chegar a algum lugar, e devolver quem só
+  publica ao ato trocaria a desistência por um 404.
+
+Quem consulta o ato continua recebendo os dois caminhos de antes, e **nenhuma permissão se
+alargou**: o que muda é o destino oferecido, não quem entra em cada tela.
 
 ---
 
@@ -412,7 +421,7 @@ recursos.
 | achado | commit | natureza |
 |---|---|---|
 | E2E17-001 | `60f98f7` | round-trip do rascunho, nos dois caminhos, + auditoria dos cinco serializadores |
-| E2E17-002 | `17ab044` | recusa sem caminho impossível, CTA condicionado à porta, `404.html` institucional |
+| E2E17-002 | `17ab044`, `720038d`, `4032e8a` | recusa sem caminho impossível, todo caminho condicionado à porta, `404.html` institucional |
 | E2E17-006 | `99e9f6d` | horário local na recusa por inscrições abertas |
 | E2E17-003 | PR #43 + `432112c` | já corrigido antes; sobrou o instante da proveniência |
 
@@ -426,14 +435,15 @@ definitivo) e E2E17-007 (segundo Edital no mesmo Processo) permanecem abertos co
 Os dois primeiros são decisão de governança, não defeito a corrigir às cegas — é o que o próprio
 E2E17-005 já dizia.
 
-### O que a sessão observou e não decidiu
+### O que a sessão observou
 
-- Na prévia de publicação, a trilha "Ato de classificação" e o botão "Cancelar" apontam para a tela
-  do ato de ordenação, atrás da mesma porta que o CTA corrigido: o publicador recebe 404 nos dois.
-  Mesma classe do E2E17-002, destino diferente, não coberto pelo achado.
+- Na prévia de publicação, a trilha "Ato de classificação" e o botão "Cancelar" levavam à tela do
+  ato, atrás da mesma porta que o CTA corrigido: o publicador recebia 404 nos dois. Mesma classe do
+  E2E17-002, destino diferente, não coberto pelo achado — **fechado depois** (`4032e8a`), e a
+  prévia deixou de oferecer qualquer caminho que quem lê não alcance.
 - `perfis_persistidos()` perdia `classificationInformation` e `callInformation`, conteúdo normativo
   que **nenhuma tela do assistente escreve**. Corrigido o round-trip; que não haja onde escrevê-los
-  pela interface continua sendo o que é.
+  pela interface **continua aberto**, e é decisão de produto — não defeito a corrigir às cegas.
 
 ---
 
