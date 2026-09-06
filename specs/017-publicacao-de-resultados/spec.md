@@ -63,7 +63,15 @@ E o que a linhagem do Edital já entregou, e que a 017 herda como padrão:
   homologa e publica o mesmo Edital.
 - **`DocumentoPublicado`** guarda os bytes do PDF e o `document_hash`, e o renderizador
   (`publicacoes/infrastructure/pdf.py`) é próprio, sem dependência externa, com métricas base-14,
-  brasão e `WinAnsiEncoding`.
+  brasão e `WinAnsiEncoding`. Ele já está separado em duas camadas: `Composicao` acumula o texto e
+  `render_documento` o pagina e monta o arquivo — e essa separação existe porque **um segundo
+  documento já a usa**, o comprovante de inscrição. A saída é determinística, sem data de criação
+  embutida, que é o que permite publicar o resumo de um documento e esperar que ele confira.
+- **A resolução de rótulos para o documento oficial já existe**, e é recente: a correção de
+  E2E15-004/005/008 ensinou o renderizador a resolver `stageId` e `factId` para os nomes
+  publicados, a dizer o modo de arredondamento por extenso e a nomear o critério de desempate
+  inteiro. Junto veio a política do alvo irresolvível — `ETAPA_NAO_IDENTIFICADA`,
+  `FATO_NAO_IDENTIFICADO` —, que diz a lacuna em vez de imprimir identificador.
 - **O catálogo de autoridades** (`publicacoes/domain/autoridades.py`) oferece nome, cargo e
   identificador escolhidos por chave — ninguém digita UUID de signatário.
 - **O canal público em HTML é o `portal/`**; os endereços públicos de `publicacoes/api/` são JSON.
@@ -163,7 +171,7 @@ tem autorização. O que muda é apenas o que atravessa a fronteira do público.
 Publicar nominalmente a eliminação de uma pessoa é decisão institucional sobre dado pessoal que
 nenhuma norma do Edital declarou até aqui, e o default conservador é não a tomar por conveniência
 de implementação. Não ser nomeado publicamente não é o mesmo que não ser informado: o motivo
-continua disponível ao próprio candidato na sua Área (FR-057) e à administração na proveniência.
+continua disponível ao próprio candidato na sua Área (FR-058) e à administração na proveniência.
 
 Se um Edital vier a exigir a divulgação nominal dos não classificados, isso é conteúdo normativo a
 declarar — e passa a ser lido da versão publicada, não decidido no renderizador.
@@ -216,7 +224,8 @@ repositório já consolidou. Cada item abaixo é uma obrigação, não uma suges
 | Idempotência por `reserve` + `finish` | `shared/idempotency.py` | chave de idempotência própria, `get_or_create` como sucedâneo |
 | Revalidação entre prévia e confirmação | `confirmacao_do_calculo` em `classificacao/application/emissao.py` | confirmar sem reler, ou reler sem comparar |
 | Catálogo de autoridades signatárias | `publicacoes/domain/autoridades.py` | cadastro novo de autoridade, UUID digitado à mão |
-| Renderizador de documento oficial | `publicacoes/infrastructure/pdf.py` | biblioteca de PDF nova, dependência externa |
+| `Composicao` + `render_documento` | `publicacoes/infrastructure/pdf.py` | biblioteca de PDF nova, dependência externa, renderizador próprio |
+| Resolução de rótulo e política do alvo ausente | idem, pós E2E15-004/005/008 | segunda tradução de enum, UUID impresso como lacuna |
 | Trilha de auditoria existente | `avaliacoes/application/trilha.auditar` | log paralelo, tabela de eventos própria |
 | Portal Django para a página pública | `portal/` | endpoint JSON apresentado como página pública |
 | Acompanhamento como extensão aditiva | `portal/views.acompanhamento`, `_fatos_da_participacao` | segunda fonte de verdade do resultado do candidato |
@@ -392,7 +401,9 @@ e situação, para saber o que foi divulgado, quando, e o que vale hoje.
   criptográfico, de modo que se possa afirmar depois que o que se lê é o que foi divulgado.
 - **FR-012** — Nomes de Etapas, marcos, perfis, modalidades e critérios são resolvidos para os
   rótulos da versão que o ato cita.
-- **FR-013** — Enum canônico e identificador técnico não aparecem como texto institucional.
+- **FR-013** — Enum canônico e identificador técnico não aparecem como texto institucional. O
+  rótulo que o snapshot não resolve é dito como ausente — nunca como identificador —, seguindo a
+  política que o documento do Edital já adota.
 - **FR-014** — Empate residual é representado como posição compartilhada; nenhum desempate é
   inventado para produzir posições exclusivas.
 - **FR-015** — O conteúdo mínimo de cada linha é: posição, identificação pública, perfil,
@@ -420,114 +431,117 @@ finalidade exige, e o resto não sai porque estava à mão na mesma consulta.
   autorização; o público não precisa desse caminho para que a proveniência exista.
 - **FR-023** — Nenhum dado atravessa a fronteira pública por conveniência de implementação: o
   conjunto publicável é declarado, e não é o resultado de serializar o que a consulta trouxe.
+- **FR-024** — Publicar o protocolo o torna público, e ele não confere autorização — nem hoje, nem
+  quando alguém quiser oferecer consulta por protocolo. Identificador publicado não vira
+  credencial.
 
 #### Autoridade e constituição do ato
 
-- **FR-024** — Publicar exige capacidade institucional própria (`resultado:publicar`), reconciliada
+- **FR-025** — Publicar exige capacidade institucional própria (`resultado:publicar`), reconciliada
   com o mapa de papéis existente.
-- **FR-025** — A autorização não deriva de ter emitido o ato, de presidir a comissão, de integrá-la
+- **FR-026** — A autorização não deriva de ter emitido o ato, de presidir a comissão, de integrá-la
   nem de avaliar.
-- **FR-026** — A publicação registra quem publicou.
-- **FR-027** — A publicação registra o instante em que foi praticada.
-- **FR-028** — A publicação registra a autoridade signatária — nome, cargo e identificador —
+- **FR-027** — A publicação registra quem publicou.
+- **FR-028** — A publicação registra o instante em que foi praticada.
+- **FR-029** — A publicação registra a autoridade signatária — nome, cargo e identificador —
   escolhida no catálogo existente, persistida no ato e imune a alterações posteriores do catálogo.
-- **FR-029** — Repetir a confirmação com a mesma chave devolve o desfecho da primeira e não cria
+- **FR-030** — Repetir a confirmação com a mesma chave devolve o desfecho da primeira e não cria
   publicação equivalente.
-- **FR-030** — A confirmação carrega a identificação do que foi lido na prévia; divergência entre
+- **FR-031** — A confirmação carrega a identificação do que foi lido na prévia; divergência entre
   o lido e o vigente recusa o ato em vez de publicá-lo.
-- **FR-031** — A publicação concluída é imediatamente consultável nos canais entregues pela
+- **FR-032** — A publicação concluída é imediatamente consultável nos canais entregues pela
   feature.
 
 #### Prévia
 
-- **FR-032** — A prévia usa a mesma composição do conteúdo que será publicado.
-- **FR-033** — A prévia explicita título, Processo/Edital, marco, natureza, ato de origem,
+- **FR-033** — A prévia usa a mesma composição do conteúdo que será publicado.
+- **FR-034** — A prévia explicita título, Processo/Edital, marco, natureza, ato de origem,
   autoridade signatária e o conteúdo a divulgar.
-- **FR-034** — Visualizar a prévia não constitui ato administrativo, não grava linha e não reserva
+- **FR-035** — Visualizar a prévia não constitui ato administrativo, não grava linha e não reserva
   identidade.
-- **FR-035** — Não existe rascunho persistente de publicação.
+- **FR-036** — Não existe rascunho persistente de publicação.
 
 #### Natureza, sucessão e imutabilidade
 
-- **FR-036** — A publicação declara sua natureza: `PRELIMINAR` ou `DEFINITIVA`.
-- **FR-037** — Uma publicação preliminar não se converte em definitiva; a definitiva é outra
+- **FR-037** — A publicação declara sua natureza: `PRELIMINAR` ou `DEFINITIVA`.
+- **FR-038** — Uma publicação preliminar não se converte em definitiva; a definitiva é outra
   publicação.
-- **FR-038** — A publicação concluída é imutável: não é editada, não é excluída e não é
+- **FR-039** — A publicação concluída é imutável: não é editada, não é excluída e não é
   despublicada.
-- **FR-039** — Correção posterior ocorre por sucessão: novo ato de resultado, nova publicação.
-- **FR-040** — A vigência é derivada da cadeia de sucessão, sem coluna de estado; existe no máximo
+- **FR-040** — Correção posterior ocorre por sucessão: novo ato de resultado, nova publicação.
+- **FR-041** — A vigência é derivada da cadeia de sucessão, sem coluna de estado; existe no máximo
   uma publicação vigente por marco classificatório.
-- **FR-041** — Uma publicação sucedida permanece existindo, íntegra e acessível.
-- **FR-042** — Quem abre uma publicação sucedida é informado disso e recebe o caminho para a
+- **FR-042** — Uma publicação sucedida permanece existindo, íntegra e acessível.
+- **FR-043** — Quem abre uma publicação sucedida é informado disso e recebe o caminho para a
   vigente.
-- **FR-043** — Retificação posterior do Edital não altera publicação concluída e não regenera seu
+- **FR-044** — Retificação posterior do Edital não altera publicação concluída e não regenera seu
   documento.
-- **FR-044** — `PublicacaoResultado` **não possui máquina de estados**, porque não possui ciclo de
+- **FR-045** — `PublicacaoResultado` **não possui máquina de estados**, porque não possui ciclo de
   vida: nasce completa e não muda. A única transição observável do conjunto é a sucessão, e ela é
   outra linha — não uma transição desta.
 
 #### Página pública
 
-- **FR-045** — A publicação possui endereço estável, que não depende de sessão administrativa e não
+- **FR-046** — A publicação possui endereço estável, que não depende de sessão administrativa e não
   exige autenticação.
-- **FR-046** — Publicação histórica continua acessível pelo mesmo endereço depois de sucedida.
-- **FR-047** — A página responde: que resultado é, de qual Edital, quando foi publicado, se é a
+- **FR-047** — Publicação histórica continua acessível pelo mesmo endereço depois de sucedida.
+- **FR-048** — A página responde: que resultado é, de qual Edital, quando foi publicado, se é a
   vigente e se existe publicação posterior.
-- **FR-048** — A publicação vigente é alcançável a partir da página pública do Edital: quem não
+- **FR-049** — A publicação vigente é alcançável a partir da página pública do Edital: quem não
   conhece o endereço chega a ela pelo caminho que já usa para conhecer a seleção.
-- **FR-049** — A página funciona em 375 px sem rolagem horizontal da página; listas extensas usam
+- **FR-050** — A página funciona em 375 px sem rolagem horizontal da página; listas extensas usam
   apresentação responsiva adequada.
-- **FR-050** — A situação vigente/sucedida não é comunicada apenas por cor.
-- **FR-051** — Os fluxos administrativos e públicos críticos funcionam por teclado.
-- **FR-052** — Listas e tabelas possuem estrutura semântica adequada.
-- **FR-053** — A página não oferece ação de recurso. Se a versão citada declarar prazo recursal, a
+- **FR-051** — A situação vigente/sucedida não é comunicada apenas por cor.
+- **FR-052** — Os fluxos administrativos e públicos críticos funcionam por teclado.
+- **FR-053** — Listas e tabelas possuem estrutura semântica adequada.
+- **FR-054** — A página não oferece ação de recurso. Se a versão citada declarar prazo recursal, a
   informação normativa existente pode ser apresentada, sem mecanismo transacional.
 
 #### Área do Candidato
 
-- **FR-054** — Nada relativo a resultado aparece na Área do Candidato antes da publicação. Existir
+- **FR-055** — Nada relativo a resultado aparece na Área do Candidato antes da publicação. Existir
   `ResultadoEtapa` ou `AtoDeOrdenacao` no banco não torna a informação pública.
-- **FR-055** — Havendo publicação cujo ato contemple a Inscrição, ela aparece dentro da própria
+- **FR-056** — Havendo publicação cujo ato contemple a Inscrição, ela aparece dentro da própria
   Inscrição, no acompanhamento.
-- **FR-056** — O resumo individual deriva da publicação e aponta para ela; não há segunda fonte de
+- **FR-057** — O resumo individual deriva da publicação e aponta para ela; não há segunda fonte de
   verdade específica do candidato.
-- **FR-057** — O candidato que foi considerado e não recebeu posição vê a sua própria situação e o
+- **FR-058** — O candidato que foi considerado e não recebeu posição vê a sua própria situação e o
   motivo na sua Área — e só depois que a publicação existe. Não ser nomeado publicamente (FR-017)
   não é o mesmo que não ser informado.
-- **FR-058** — O resumo é aditivo aos fatos existentes do acompanhamento e não afirma nada que
+- **FR-059** — O resumo é aditivo aos fatos existentes do acompanhamento e não afirma nada que
   ninguém tenha declarado.
-- **FR-059** — Quando a publicação que contempla a Inscrição foi sucedida, o candidato é levado à
+- **FR-060** — Quando a publicação que contempla a Inscrição foi sucedida, o candidato é levado à
   vigente.
 
 #### Documento oficial
 
-- **FR-060** — O documento é derivado do conteúdo persistido da publicação, e não do estado atual
+- **FR-061** — O documento é derivado do conteúdo persistido da publicação, e não do estado atual
   do Processo.
-- **FR-061** — O documento identifica Processo/Edital, marco, natureza, ato de origem, data e hora,
+- **FR-062** — O documento identifica Processo/Edital, marco, natureza, ato de origem, data e hora,
   autoridade signatária, o conteúdo da classificação e o resumo criptográfico.
-- **FR-062** — O documento apresenta os mesmos rótulos institucionais da página e o mesmo conteúdo
+- **FR-063** — O documento apresenta os mesmos rótulos institucionais da página e o mesmo conteúdo
   substancial.
-- **FR-063** — O documento é produzido pelo renderizador existente e segue os padrões de
+- **FR-064** — O documento é produzido pelo renderizador existente e segue os padrões de
   acessibilidade já adotados pelo projeto onde tecnicamente aplicável.
 
 #### Auditoria e histórico administrativo
 
-- **FR-064** — Publicação e sucessão geram auditoria na trilha existente, com ator, ação, entidade
+- **FR-065** — Publicação e sucessão geram auditoria na trilha existente, com ator, ação, entidade
   e identificador, data e hora, versão normativa citada pelo ato, motivo quando houver e
   correlação.
-- **FR-065** — Não se cria log paralelo nem tabela de eventos própria da feature.
-- **FR-066** — A consulta administrativa lista as publicações de um marco com natureza, instante,
+- **FR-066** — Não se cria log paralelo nem tabela de eventos própria da feature.
+- **FR-067** — A consulta administrativa lista as publicações de um marco com natureza, instante,
   autor, autoridade signatária e situação.
-- **FR-067** — A ação de publicar é alcançável a partir do ato de ordenação, no mesmo lugar em que
+- **FR-068** — A ação de publicar é alcançável a partir do ato de ordenação, no mesmo lugar em que
   a interface já oferece ao ator o que fazer agora, e condicionada à capacidade.
 
 #### Limites e não regressão
 
-- **FR-068** — A feature não altera `AtoDeOrdenacao`, `PosicaoNaOrdem`, `ResultadoEtapa` nem o
+- **FR-069** — A feature não altera `AtoDeOrdenacao`, `PosicaoNaOrdem`, `ResultadoEtapa` nem o
   conteúdo normativo do Edital.
-- **FR-069** — A feature não introduz `UPDATE` em tabela histórica; a tabela nova entra na política
+- **FR-070** — A feature não introduz `UPDATE` em tabela histórica; a tabela nova entra na política
   de privilégios como append-only.
-- **FR-070** — Publicar não dispara notificação de espécie alguma.
+- **FR-071** — Publicar não dispara notificação de espécie alguma.
 
 ### Key Entities
 
@@ -615,10 +629,10 @@ ICP-Brasil.
 
 **CMS** — editor genérico de páginas ou documentos.
 
-**Os achados E2E15-004, E2E15-005 e E2E15-008** — são defeitos do documento normativo do **Edital**
-(critérios de desempate impressos sem dizer o que comparam, fatos exigidos não anunciados,
-arredondamento e pesos ausentes do documento). Dialogam com publicação, mas pertencem a um pacote
-próprio de reconstrutibilidade normativa. A 017 não é a ocasião de consertar o PDF do Edital.
+**O documento normativo do Edital** — os achados E2E15-004, E2E15-005 e E2E15-008 foram
+**resolvidos** no PR #39, antes desta spec: o Edital publicado já basta para refazer a ordem. A 017
+herda o vocabulário que aquela correção produziu e não volta a mexer no documento do Edital; se
+uma lacuna nova aparecer ali, ela é da linhagem do Edital, não desta feature.
 
 ---
 
@@ -628,7 +642,10 @@ próprio de reconstrutibilidade normativa. A 017 não é a ocasião de consertar
   de ordenação os cita — a 017 não introduz identidade nova.
 - A capacidade `resultado:publicar` será acrescentada ao papel Publicador existente; se a
   instituição preferir papel distinto, isso é configuração do mapa, não mudança de contrato.
-- O protocolo da Inscrição já é identificador legível e estável, adequado à divulgação pública.
+- O protocolo da Inscrição (`INS-2026-K7M4Q2PX`) é único, legível — alfabeto sem `0`/`O` e
+  `1`/`I`/`L`, porque ele é ditado ao telefone — e opaco, sem sequência. É adequado à divulgação
+  pública, e nenhum caminho atual o aceita como credencial de acesso. FR-024 mantém isso verdadeiro
+  depois de publicá-lo.
 - Os endereços públicos existentes usam identificador técnico no caminho, e a 017 segue o mesmo
   padrão: o endereço não é linguagem apresentada.
 
