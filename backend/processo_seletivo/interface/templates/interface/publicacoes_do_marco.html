@@ -63,8 +63,10 @@
 
 {% comment %}
 O caminho para a classificação do marco depende de alcançar **aquela** tela, e não de poder
-publicar: ela é da presidência e da auditoria. Condicionado a `pode_publicar`, o botão aparecia
-justamente para quem receberia 404 ao segui-lo (FR-022, E2E17-002).
+publicar: ela é da presidência e da auditoria. Condicionado a `pode_publicar` — invocando a
+FR-069, que governa a **ação** de publicar e não a navegação para uma tela de leitura —, o botão
+aparecia justamente para quem receberia 404 ao segui-lo, e sumia para quem podia lê-la
+(FR-022, E2E17-002). A ação de publicar não vive nesta página.
 {% endcomment %}
 {% if pode_ver_o_ato %}
 <p><a class="botao secundario" href="{% url 'interface:ordenacao' edital.id marco_id %}">Ir para a classificação do marco</a></p>

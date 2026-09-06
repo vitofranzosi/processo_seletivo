@@ -3400,7 +3400,7 @@ def publicacoes_do_marco(request, edital_id, marco_id):
     **Consultar é de dois; publicar é de um.** A auditoria lê esta página inteira e não age nela, e
     é por isso que a ação de publicar depende da capacidade que a rota de consulta não exige.
     """
-    ator, edital, pode_publicar = _edital_para_publicar(request, edital_id, consulta=True)
+    ator, edital, _ = _edital_para_publicar(request, edital_id, consulta=True)
     if ator is None:
         return redirect(reverse("interface:identificar"))
     return marcar_como_privada(
@@ -3412,13 +3412,17 @@ def publicacoes_do_marco(request, edital_id, marco_id):
                 "edital": edital,
                 "marco_id": marco_id,
                 "historico": historico_das_publicacoes(edital=edital, marco_id=marco_id),
-                "pode_publicar": pode_publicar,
-                # O caminho para o **ato de origem** e o da **classificação do marco** — as duas
-                # telas da 015 — condicionados à autorização de quem lê: elas têm porta própria, e
-                # oferecê-las a quem receberia 404 seria oferecer um beco (FR-022). O da
-                # classificação era condicionado a `pode_publicar`, que é exatamente a capacidade
-                # que **não** abre aquela porta: o publicador via o botão e caía no 404
-                # (E2E17-002).
+                # Os dois caminhos para as telas da 015 — o **ato de origem** e a **classificação
+                # do marco** — condicionados à autorização de quem lê: elas têm porta própria, e
+                # oferecê-las a quem receberia 404 seria oferecer um beco (FR-022).
+                #
+                # O da classificação era condicionado a `pode_publicar`, invocando a FR-069:
+                # publicar é de um, consultar é de dois. Mas a FR-069 governa a **ação** de
+                # publicar, e este link não é ação — é navegação para uma tela de leitura, cuja
+                # porta é a da presidência e da auditoria. Sob a capacidade errada, ele aparecia
+                # exatamente para quem cairia no 404 e sumia para quem podia lê-la (E2E17-002).
+                # A ação de publicar não vive nesta página: ela é do ato, e a porta dela continua
+                # sendo `resultado:publicar`.
                 "pode_ver_o_ato": _pode_ver_a_classificacao(ator, edital),
                 "publicada_agora": request.session.pop("resultado_da_publicacao", None),
             },
