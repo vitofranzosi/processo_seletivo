@@ -36,7 +36,10 @@ from processo_seletivo.classificacao.application.emissao import assinatura_da_pr
 from processo_seletivo.classificacao.application.selectors import (
     ato_por_id,
     estado_do_marco,
+    nomear_criterios,
+    nomes_do_ato,
     posicoes_do_ato,
+    sucessor_de,
 )
 from processo_seletivo.classificacao.application.selectors import (
     historico as historico_da_ordenacao,
@@ -3167,7 +3170,16 @@ def ato_de_ordenacao(request, edital_id, marco_id, ato_id):
                 "processo": edital.processo,
                 "edital": edital,
                 "ato": ato,
-                "linhas": list(pagina),
+                # Os nomes vêm da versão que **este** ato cita, e acompanham os identificadores
+                # sem os substituir: na proveniência o UUID é a âncora de auditoria, e o nome é o
+                # que torna a página citável fora da máquina (E2E15-006).
+                "nomes": nomes_do_ato(ato),
+                # Quem abre um ato histórico precisa ler, antes dos valores, que eles já foram
+                # sucedidos — sem isso dá para citar um ato superado sem perceber (E2E15-010).
+                "sucessor": sucessor_de(ato),
+                # O critério de desempate é nomeado pela versão que o ato cita, como tudo o mais
+                # nesta tela: o snapshot guarda o enum, e a FR-050 pede a frase (E2E15-006).
+                "linhas": nomear_criterios(list(pagina), ato),
                 "pagina": pagina,
                 # A porta da divulgação é outra — `resultado:publicar` —, e por isso o conjunto de
                 # ações é calculado com o ator desta requisição, e não com a porta que abriu a

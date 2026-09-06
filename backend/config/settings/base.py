@@ -10,6 +10,12 @@ WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 USE_TZ = True
 TIME_ZONE = "America/Sao_Paulo"
+# A interface é institucional brasileira e escreve tudo em português — menos as datas, que o
+# Django formatava em `en-us` por falta desta linha: "Sept. 5, 2026, 11:30 p.m." ao lado de
+# "05/09/2026 23:04" na mesma tela (E2E15-009). O idioma governa também o separador decimal, e é
+# por isso que ele entra aqui e não num filtro de template: `92,50` e `92.50` na mesma página
+# seriam a mesma inconsistência escrita com outro caractere.
+LANGUAGE_CODE = "pt-br"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 INSTALLED_APPS = [

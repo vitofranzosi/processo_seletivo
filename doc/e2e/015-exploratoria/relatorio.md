@@ -8,16 +8,22 @@
 
 O ciclo vertical **fecha**. Foi possível, só pelo navegador e alternando atores, criar o Processo e o Edital, compor o conteúdo normativo completo (perfil com fatos declarados, cronograma, duas Etapas — uma decisória e uma pontuada —, marco classificatório com três critérios de desempate, documentos exigidos), submeter, homologar e publicar com PDF íntegro; retificar três vezes; inscrever sete candidatos e manter um rascunho; compor comissão, alocar, distribuir por rodízio; avaliar nas duas formas da Mesa; registrar ocorrência (D‑1), consolidar as duas Etapas (013); e, na 015, calcular a ordem, emitir o ato, consultar a proveniência, provocar obsolescência por Retificação e emitir o ato sucessor com motivo. O cálculo classificatório saiu **exatamente** como a regra publicada mandava, incluindo desempate por fato declarado e empate residual com posição compartilhada (1º, 2º, 3º, 3º).
 
-O que **não** fecha é a borda institucional: o produto produz a classificação, mas não a comunica. O candidato nunca vê resultado de Etapa nem posição (divulgação é feature futura); o documento oficial (PDF) publicava os critérios de desempate **sem dizer o que eles comparam** e não anunciava os fatos que a inscrição exigirá (**já corrigido**, ver §4); e as telas da 015 falam em UUID onde a instituição precisa ler nomes. Além disso, um defeito real de operação, encontrado aqui e **já corrigido**: o critério de desempate de um marco recém‑criado nascia **sem opções de alvo**, bloqueando o caminho principal da composição da regra classificatória.
+A borda institucional, que na primeira redação era o que **não** fechava, fechou depois dela: o produto produzia a classificação e não a comunicava, e a 017 (PRs #41 e #42, commit `cb0f44c`) entregou justamente a comunicação — a publicação do ato pela autoridade competente, a página pública estável, o documento oficial e a situação de cada participante na Área do Candidato. Fora dela permanecem, **por decisão da própria 017**, o resultado de Etapa (o candidato continua sem ver "Habilitada na Etapa 1") e o recurso administrativo. Os outros defeitos apontados aqui também foram corrigidos: o documento oficial publicava os critérios de desempate **sem dizer o que eles comparam** e não anunciava os fatos que a inscrição exigirá (PR #39); as telas da 015 falavam em UUID e em enum onde a instituição precisa ler nomes, e mostravam data em inglês (corrigidos em `claude/e2e-015-audit-readability-288630`, 06/09/2026 — ver §4). E um defeito real de operação, encontrado aqui e corrigido primeiro: o critério de desempate de um marco recém‑criado nascia **sem opções de alvo**, bloqueando o caminho principal da composição da regra classificatória.
 
 > **Depois da primeira redação (06/09/2026):**
 > - **E2E15‑002 retratado** — "a tela de Retificação não tem link" era **falso**. A ação existe e está corretamente condicionada a `retificacao:elaborar`; ver o registro em §4.
 > - **E2E15‑001 corrigido** — a causa era a que a hipótese apontava, e a correção entrou em `main` pelo PR #37 (commit `36d1683`). O achado permanece registrado como observado, com a resolução anotada.
 > - **E2E15‑004, ‑005 e ‑008 corrigidos** — os três eram a mesma lacuna vista de três lugares, e foram juntos pelo PR #39 (commit `40130e3`): o documento publicado passa a nomear o alvo de cada critério de desempate, a anunciar os fatos que a inscrição exigirá e a trazer os parâmetros que fecham a conta. Na mesma entrega, a fixture byte a byte do documento publicado foi elevada da versão canônica 3 para a 7 (`a7de388`) — estava quatro degraus atrás e já não cobria nenhuma composição posterior à `009`.
 >
-> Os demais achados continuam abertos.
+> **Depois da 017 (06/09/2026):**
+> - **E2E15‑006, ‑009, ‑010 e ‑011 corrigidos** — os quatro eram legibilidade das mesmas telas de ordenação/ato, e foram juntos na branch `claude/e2e-015-audit-readability-288630`: modalidade, proveniência e **critério de desempate** passam a trazer o nome que a **versão citada pelo ato** lhes dá, o diff de obsolescência identifica por protocolo e mostra a pontuação de antes e de agora, o ato sucedido anuncia por qual ato e quando o foi, e a interface deixou de formatar data em `en-us`. Nenhuma regra de domínio, modelo ou rota mudou.
+> - **E2E15‑014 retratado** — "a lista não mostra o rascunho" era **falso**: ela não filtra por situação, e as duas evidências foram lidas fora de ordem. Ver o registro em §4.
+>
+> Os demais achados continuam abertos: **E2E15‑003** (governança), **‑007**, **‑012**, **‑013**, **‑016**.
 
-**Resposta à pergunta central:** sim — uma instituição consegue conduzir o certame até a classificação *dentro* do produto, do Edital ao ato de ordenação, sem manipular dado por fora e sem depender de conhecimento de implementação. O que ela ainda é obrigada a fazer fora dele é **comunicar**: divulgação dos resultados de Etapa, publicação da classificação e resposta a recursos — que o próprio PDF gerado promete ("Caberá recurso…") sem que o produto ofereça o meio. Havia um degrau anterior a esse — o Edital publicado **não bastava para reconstruir a ordem que o sistema calculou** (E2E15‑004/005/008), que é a lacuna que separa "o sistema classificou certo" de "a instituição consegue defender a classificação" —, e ele está fechado: o documento agora nomeia o alvo de cada critério, anuncia os fatos exigidos e publica os parâmetros que fecham a conta. O que resta por fora do produto é comunicar.
+**Resposta à pergunta central:** sim — uma instituição consegue conduzir o certame até a classificação *dentro* do produto, do Edital ao ato de ordenação, sem manipular dado por fora e sem depender de conhecimento de implementação. **E, desde a 017, consegue também divulgá‑la**: publicar o ato pela autoridade competente, oferecer a página pública estável e o documento oficial, e mostrar a cada candidato a sua situação na própria Inscrição. Dois degraus anteriores já haviam sido fechados: o Edital publicado **não bastava para reconstruir a ordem que o sistema calculou** (E2E15‑004/005/008 — o documento agora nomeia o alvo de cada critério, anuncia os fatos exigidos e publica os parâmetros que fecham a conta), e as telas do ato **não eram apresentáveis a ninguém de fora** (E2E15‑006/009/010/011). Juntos, esses três passos são o que separa "o sistema classificou certo" de "a instituição consegue publicar e defender a classificação".
+
+O que **ainda** fica por fora do produto é menor e nomeado: a divulgação do **resultado de Etapa** ao candidato (a 017 publica o ato de ordenação, e a publicação de `ResultadoEtapa` é out of scope declarado, D‑002) e o **recurso administrativo**, que o próprio PDF do Edital promete ("Caberá recurso…") — a 017 cria o marco público contra o qual ele se interpõe e remete a decisão à 018. Nenhum dos dois é defeito: são as duas fronteiras que a feature seguinte herda.
 
 ---
 
@@ -111,6 +117,7 @@ Formato: **Observado / Esperado / Impacto / Reproduzir / Evidência / Hipótese 
 - **Esperado:** identificadores legíveis (código INS, nomes publicados), com o UUID como detalhe técnico.
 - **Impacto:** a página do ato — exatamente a que responde recurso — não é apresentável a ninguém de fora.
 - **Evidência:** `76-ordenacao-calculada.png`, `80-ato-proveniencia.png`, `82-ato-obsoleto-divergencias.png`.
+- **Resolução (06/09/2026):** corrigido na branch `claude/e2e-015-audit-readability-288630`, reusando o que a 017 já tinha resolvido em `divulgacao/domain/conteudo.py::compor()` — o helper foi extraído para `classificacao/domain/nomes.py` e agora serve às duas leituras. A coluna MODALIDADE da ordem calculada traz o nome; o diff identifica por protocolo, como as outras tabelas; e a proveniência do ato **acrescenta** o nome ao lado do identificador em vez de substituí‑lo, porque ali o UUID é a âncora de auditoria. **A fonte é a versão que o ato cita**, e não a vigente: um ato histórico lê‑se com os nomes que ele congelou, e resolver pela vigente faria uma Retificação que renomeia uma modalidade reescrever retroativamente como um ato antigo é lido — há teste que retifica o nome do marco e afirma as duas leituras lado a lado. **Os critérios de desempate também**: a tabela do ato imprimia `MAIOR_VALOR_DE_FATO` porque `PosicaoNaOrdem.desempate` congela `type` e `criterionId`, e não a grafia — o critério passou a ser localizado por `criterionId` na versão que o ato cita, e sai pela frase publicada ("maior pontuação na Etapa Prova didática"), com o enum e o identificador mantidos ao lado como detalhe técnico. A grafia não foi reinventada: as três frases que o PR #39 criou para o documento do Edital foram extraídas para `publicacoes/domain/vocabulario_da_regra.py` e agora servem às duas peças — que são justamente as duas que a instituição põe lado a lado para responder a um recurso. Com isso **FR‑050 e SC‑010 da 015 ficam observáveis pela tela**, que é o que elas exigem. O achado está **integralmente corrigido**.
 
 **E2E15‑007 · UX/fluxo · portal · Candidato — Depois do encerramento, o rascunho não diz que acabou**
 - **Observado:** com as inscrições encerradas, a revisão do rascunho de Hugo continuou mostrando o gate "O Edital foi atualizado… Li as alterações e quero continuar" — nenhuma menção a período encerrado; o convite é a prosseguir.
@@ -127,16 +134,23 @@ Formato: **Observado / Esperado / Impacto / Reproduzir / Evidência / Hipótese 
 ### P3
 
 **E2E15‑009 · l10n · 015 — Datas em inglês nas telas de ordenação** — "Ato vigente emitido em Sept. 5, 2026, 11:30 p.m." em meio a uma interface toda em "05/09/2026 23:04". Evidência: `78-ato-emitido.png`, `80-ato-proveniencia.png`.
+- **Resolução (06/09/2026):** a causa era `settings/base.py` declarar `TIME_ZONE` e **nenhum** `LANGUAGE_CODE`, caindo em `en-us`; agora declara `LANGUAGE_CODE = "pt-br"`. A mudança é global e governa também o separador decimal — a suíte inteira foi executada contra PostgreSQL antes e depois, sem diferença (3284 testes; nenhum assertava formato em inglês). Só isso, porém, trocaria "Sept. 5, 2026" por "5 de Setembro de 2026 às 23:30", que continua não sendo o que a interface escreve: as três datas cruas das telas da 015 passaram a usar o `|date:"d/m/Y H:i"` que o resto do sistema já usava.
 
 **E2E15‑010 · UX · 015 — O ato histórico não declara que foi sucedido** — a página do ato 1 (aberta pela auditora após a sucessão) mostra os valores antigos sem nenhum banner "sucedido por … em …"; dá para citar um ato superado sem perceber. Evidência: `85-ato-historico-imutavel.png`.
+- **Resolução (06/09/2026):** o aviso entra **antes** dos valores, e não ao lado do histórico: quem chega por um link guardado lê o número da posição primeiro. Traz quando, por quem, o motivo declarado da sucessão e o link para o ato sucessor, lido da relação reversa de `ato_anterior` — nenhum valor congelado muda, e há teste que compara byte a byte a seção de posições antes e depois da sucessão para afirmá‑lo.
 
 **E2E15‑011 · UX · 015 — O diff de obsolescência não mostra o que mudou de fato** — "Mudanças posição a posição" listou 1º→1º, 2º→2º…, tudo igual; a mudança real (pontuação 92,5→185) não aparece, e o gestor fica sem ver por que o ato está obsoleto além da frase "a regra publicada do marco mudou". Evidência: `82-ato-obsoleto-divergencias.png`.
+- **Resolução (06/09/2026):** a tabela ganhou "Pontuação no ato" e "Pontuação agora". O diff já **detectava** a divergência — `comparar()` compara a nota, e era por isso que a linha aparecia —, mas exibia só a posição, que era justamente a coluna que não tinha mudado. Os dois lados vinham com nomes diferentes (`pontuacao_combinada` no snapshot, `pontuacao` na proposta) e passaram a ser uniformizados no selector, e não na tela. Teste: Retificação que dobra o peso da Etapa, com asserção sobre as quatro células (90/180 e 70/140).
 
 **E2E15‑012 · consistência · gestão — 404 técnico do Django na recusa da Mesa alheia** — a avaliadora acessando inscrição de outro avaliador recebe a página "Page not found (404)" crua (artefato de DEBUG), enquanto o portal tem 404 institucional ("Recurso não encontrado"). Evidência: `59-NEG-alice-mesa-do-otavio.png` vs `36-NEG-bruno-tenta-inscricao-da-ana.png`.
 
 **E2E15‑013 · UX · portal — Candidato deslogado recebe 404 em vez de convite a entrar** — abrir a URL da própria inscrição sem sessão devolve 404; um link guardado no celular vira beco. (O 404 uniforme é correto contra terceiros; para anônimo, redirecionar ao acesso não vazaria nada.)
 
-**E2E15‑014 · UX · portal — "Minhas inscrições" não mostra o rascunho** — após "Seus dados foram guardados… Você pode continuar a inscrição que começou", a lista diz "Você ainda não possui inscrições"; retomar exige voltar ao Edital e clicar "Inscrever‑se" de novo. Evidência: `24-candidata-apos-login.png`, `28-inscricao-modalidade.png`.
+**E2E15‑014 · ~~UX (portal)~~ → RETRATADO · "Minhas inscrições" não mostra o rascunho**
+- **Retratação (06/09/2026):** o achado **não procede**. `portal/views.py::inscricoes` consulta `Inscricao.objects.filter(identity_subject=…)` **sem filtro de situação**, e `inscricoes.html` desenha o rascunho explicitamente — "Inscrição não enviada", com a ação "Continuar inscrição". Três suítes já afirmam isso (`tests/integration/portal/test_minhas_inscricoes.py`, `test_convite_por_vaga.py`, `test_recusas_de_abertura.py`).
+- **Como o erro ocorreu:** as duas evidências foram lidas fora de ordem. `24-candidata-apos-login.png` é **anterior** a `28-inscricao-modalidade.png`: a lista foi consultada no minuto seguinte ao acesso, **antes** de o rascunho existir — o rascunho só nasce ao escolher a vaga —, e ali "Você ainda não possui inscrições" é o estado vazio correto, e não uma consulta que esconde.
+- **Nada a fazer.** O número é preservado para que as citações anteriores continuem resolvendo, como no 002.
+- **Fica como oportunidade de UX, não como achado:** o convite de retomada não distingue "ainda não comecei" de "comecei e não terminei" — a mensagem pós‑acesso não diz que o rascunho passa a existir só depois da escolha da vaga. Não foi observado como defeito nesta auditoria; entra no §6 se alguém quiser persegui‑lo.
 
 **E2E15‑015 · registro de desenho · 015 — Eliminados em Etapa anterior à última ficam fora do universo do ato** — Edite e Gilda (eliminadas na Etapa 1) não aparecem nem em "Participantes considerados sem posição" (só Diego, eliminado na última Etapa). É coerente com o desenho (universo = participantes da última Etapa enumerada), mas quem espera que o ato final liste todos os eliminados vai procurá‑los ali; os Resultados por Etapa é que contam essa história. Evidência: `76-ordenacao-calculada.png` + `66-resultados-etapa1.png`.
 
@@ -150,9 +164,11 @@ Formato: **Observado / Esperado / Impacto / Reproduzir / Evidência / Hipótese 
 |---|---|---|
 | P0 | 0 | — |
 | P1 | 1 | 001 — **corrigido** em `36d1683` (PR #37) |
-| P2 | 6 | 003, 006, 007 abertos · 004, 005, 008 — **corrigidos** em `40130e3` (PR #39) |
-| P3 | 8 | 009–016 |
-| — | 1 | 002 (retratado — não era defeito) |
+| P2 | 6 | 003 (governança) e 007 abertos · 004, 005, 008 — **corrigidos** em `40130e3` (PR #39) · 006 — **corrigido** em `claude/e2e-015-audit-readability-288630` |
+| P3 | 7 | 009, 010, 011 — **corrigidos** em `claude/e2e-015-audit-readability-288630` · 012, 013, 016 abertos · 015 é registro de desenho |
+| — | 2 | 002 e 014 (retratados — não eram defeitos) |
+
+Abertos ao fim desta rodada: **003** (depende de decisão de governança), **007**, **012**, **013** e **016**. Tudo o mais está corrigido ou retratado.
 
 O que funcionou **bem** e merece registro: recusas de autorização nominais e uniformes (404 institucional entre candidatos; permissão citada na gestão); idempotência em toda parte (inclusão repetida na comissão, reconsolidação, emissão dupla com página velha → 409 com mensagem exata); gate de retificação no rascunho; D‑003 (eliminada antes some da Mesa seguinte, lista e rota); a Mesa nas duas formas com vocabulário do Edital; ocorrência D‑1 com revisão em dois passos; e o cálculo/desempate/empate residual da 015 **corretos ao decimal**, com proveniência que registra o critério que separou cada par.
 
@@ -160,31 +176,33 @@ O que funcionou **bem** e merece registro: recusas de autorização nominais e u
 
 ## 6. Oportunidades de produto
 
-1. **Divulgação é o elo que falta** (e o mais valioso): resultado da Etapa e classificação nunca chegam ao candidato — nem um "sua participação: Habilitada na Etapa 1". Hoje a instituição divulga por fora (site/DOU), o que reabre a porta dos controles paralelos que o produto veio fechar.
-2. **Ato publicável**: o ato de classificação precisa de uma forma exportável/imprimível (PDF/CSV com nomes e modalidades legíveis) — é o anexo do resultado oficial.
-3. **Recursos**: o texto institucional do PDF já promete "Caberá recurso contra os resultados divulgados" — o produto gera a promessa sem oferecer o meio. Ou a seção sai do template, ou recursos entram no roteiro (016+).
+1. ~~**Divulgação é o elo que falta**~~ — **entregue pela 017** (PRs #41 e #42, commit `cb0f44c`): a classificação chega ao candidato pela sua própria Inscrição, e ao público por uma página estável. **O que resta da oportunidade original** é o resultado **de Etapa**: "sua participação: Habilitada na Etapa 1" continua não existindo, e a publicação de `ResultadoEtapa` é out of scope declarado da 017 (D‑002). Enquanto ela não existir, a instituição divulga o intermediário por fora.
+2. ~~**Ato publicável**~~ — **entregue pela 017**: a publicação produz documento oficial (PDF) a partir dos mesmos bytes que a página lê, com nomes e modalidades resolvidos pela versão que o ato cita. O que **não** existe é exportação **administrativa** do ato (CSV para conferência interna), que é outra necessidade e outro público.
+3. **Recursos** *(continua aberta — por decisão da própria 017)*: o texto institucional do PDF já promete "Caberá recurso contra os resultados divulgados" — o produto gera a promessa sem oferecer o meio. A 017 declarou Contestação fora de escopo e remeteu à **018**, criando o marco público contra o qual o recurso se interpõe; a página publicada não oferece ação de recurso (FR‑055) justamente para não fingir que oferece. Ou a seção sai do template do Edital, ou a 018 entra no roteiro.
 4. **Retificação guiada pelo dado**: a tela de retificar é ótima (endereçamento por identidade, diff antes de criar) — só falta ganhar os campos que hoje só a API tem (ex.: `max_inscricoes_por_candidato`, sem campo no assistente).
 5. **Encerramento do certame**: "Encerrar" existe no detalhe mas nenhuma orientação diz quando encerrá‑lo em relação ao ato de classificação; o pós‑015 (homologação do resultado final) é o próximo degrau natural.
-6. **Legibilidade da 015** (nomes em vez de UUIDs, critérios com rótulos publicados) transformaria as telas de ato/proveniência em documentos de resposta a recurso — quase de graça.
+6. ~~**Legibilidade da 015**~~ — **feita** em `claude/e2e-015-audit-readability-288630`, inclusive os critérios de desempate com os rótulos publicados: as telas de ato e proveniência viraram, como a oportunidade previa, documento de resposta a recurso. A grafia dos critérios é a mesma do documento oficial do Edital, por construção — ela mora num lugar só.
+7. **Retomada anunciada** *(nova, vinda da retratação do E2E15‑014)*: a lista de "Minhas inscrições" mostra rascunho corretamente, mas o convite pós‑acesso não distingue "ainda não comecei" de "comecei e não terminei" — a mensagem não diz que o rascunho passa a existir só depois de escolher a vaga. Custo baixo, e evita exatamente a leitura equivocada que o achado registrou.
 
 ---
 
 ## 7. Lacunas de cobertura
 
 **a) Coisas que não existem porque são de features futuras (não são defeitos):**
-- Divulgação de resultados/da classificação ao candidato; comunicação (e‑mails de resultado).
-- Recursos administrativos (interposição, resposta, efeito sobre Resultados — a reabertura pela presidência existe como ato interno).
+- ~~Divulgação da classificação ao candidato~~ — **fechada pela 017**. Continuam fora: a divulgação do **resultado de Etapa** (D‑002 da 017) e a **comunicação ativa** — e‑mail, SMS, push —, também out of scope declarado.
+- Recursos administrativos (interposição, resposta, efeito sobre Resultados — a reabertura pela presidência existe como ato interno). A 017 remeteu à **018**.
 - Corte por alvo e progressão entre etapas (014 — nada em código além do que a 013/015 já fazem).
-- Nomeação/convocação pós‑classificação (016+).
+- Nomeação/convocação pós‑classificação (016+); a 017 fornece o marco público que a 019 poderá referenciar.
+- Homologação do resultado final (D‑003 da 017).
 
 **b) Coisas que a feature coberta deveria ter e não tem:**
-- Nomes legíveis nas telas da 015 (E2E15‑006) e datas localizadas (E2E15‑009).
+- ~~Nomes legíveis nas telas da 015 (E2E15‑006) e datas localizadas (E2E15‑009)~~ — **corrigidos** em `claude/e2e-015-audit-readability-288630`, junto com o diff legível (E2E15‑011) e o aviso de sucessão (E2E15‑010). Inclui o rótulo publicado dos critérios de desempate, que é o que torna FR‑050 e SC‑010 verificáveis pela tela.
 - ~~Fatos declarados e alvos do desempate no documento publicado (E2E15‑004/005/008)~~ — **corrigido** (PR #39).
 - Aviso de encerramento no rascunho (E2E15‑007).
-- Guarda 012×013 na própria Etapa (E2E15‑003).
+- Guarda 012×013 na própria Etapa (E2E15‑003) — **depende de decisão de governança**, e não de implementação.
 
 **c) Capacidades que o domínio tem mas nenhuma tela alcança:**
-- `reproduzir_ato` / `divergencias_da_reproducao` (classificacao/application/reproducao.py) — a prova de reprodutibilidade, valor central da 015, vive só em teste; nenhuma rota a expõe.
+- `reproduzir_ato` / `divergencias_da_reproducao` (classificacao/application/reproducao.py) — a prova de reprodutibilidade, valor central da 015, vive só em teste; nenhuma rota a expõe. (A 017 **afere** publicabilidade reproduzindo o estado classificatório, mas não expõe a reprodução como leitura.)
 - `max_inscricoes_por_candidato` (teto D‑3) — só via API/seed; o assistente não tem o campo.
 - Obsolescência por universo alterado e `CRITERIO_NAO_SE_APLICA` com fato ausente: no fluxo real, fatos são obrigatórios no envio, então a ausência que ativaria o `whenMissing` de fato praticamente só ocorre via pontuação de Etapa‑porta; o comportamento existe no domínio e não foi observável pela UI neste cenário.
 - Cenário de **múltiplos marcos** por perfil: o compor aceita, mas nada na jornada sugere quando usar mais de um; não exercitado.
