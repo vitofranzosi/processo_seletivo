@@ -12,7 +12,7 @@ from django.urls import reverse
 from processo_seletivo.avaliacoes.application.selectors import POR_PAGINA
 from processo_seletivo.avaliacoes.models import Atribuicao
 from tests.fixtures.comissao import alocar_em, inscrever
-from tests.interface.conftest import identificar
+from tests.interface.conftest import identificar, protocolos_listados
 
 pytestmark = [pytest.mark.django_db]
 
@@ -92,10 +92,10 @@ def test_o_filtro_por_cobertura_encontra_as_carentes(
         correlation_id="teste",
     )
 
-    corpo = presidente.get(f"{tela}?cobertura=sem_nenhum").content.decode()
+    listados = protocolos_listados(presidente.get(f"{tela}?cobertura=sem_nenhum").content.decode())
 
-    assert inscricoes[0].protocolo not in corpo
-    assert inscricoes[1].protocolo in corpo
+    assert inscricoes[0].protocolo not in listados
+    assert inscricoes[1].protocolo in listados
 
 
 def test_o_filtro_por_avaliador_mostra_so_o_dele(
@@ -115,10 +115,10 @@ def test_o_filtro_por_avaliador_mostra_so_o_dele(
         correlation_id="teste",
     )
 
-    corpo = presidente.get(f"{tela}?avaliador=joao").content.decode()
+    listados = protocolos_listados(presidente.get(f"{tela}?avaliador=joao").content.decode())
 
-    assert inscricoes[0].protocolo in corpo
-    assert inscricoes[1].protocolo not in corpo
+    assert inscricoes[0].protocolo in listados
+    assert inscricoes[1].protocolo not in listados
 
 
 def test_o_lote_cabe_numa_submissao_e_declara_o_resultado(presidente, tela, edital_a, banca):
@@ -304,10 +304,11 @@ def test_o_filtro_de_avaliacao_pendente_responde_o_que_falta_avaliar(
     )
     concluir_como({"edital": edital_a, "etapa": etapa_do(tela)}, "joao", inscricoes[0])
 
-    corpo = presidente.get(tela + "?cobertura=avaliacao_pendente").content.decode()
+    resposta = presidente.get(tela + "?cobertura=avaliacao_pendente")
+    listados = protocolos_listados(resposta.content.decode())
 
-    assert inscricoes[1].protocolo in corpo
-    assert inscricoes[0].protocolo not in corpo
+    assert inscricoes[1].protocolo in listados
+    assert inscricoes[0].protocolo not in listados
 
 
 def etapa_do(tela):

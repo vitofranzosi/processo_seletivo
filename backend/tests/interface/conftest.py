@@ -1,5 +1,7 @@
 """Apoio comum às telas: identidade e o seletor que substitui a autenticação institucional."""
 
+import re
+
 import pytest
 from django.urls import reverse
 
@@ -84,3 +86,32 @@ CLASSES_SEM_DESENHO = {
     # `.sub`; se um dia a notícia precisar de mais peso, é aqui que ela ganha.
     "aviso-do-envio",
 }
+
+
+# --- leitura das listagens ---------------------------------------------------------------------
+
+_LINHA = re.compile(r"<tr[^>]*>(.*?)</tr>", re.DOTALL)
+_CELULA = re.compile(r"<td[^>]*>(.*?)</td>", re.DOTALL)
+_MARCACAO = re.compile(r"<[^>]+>")
+
+
+def protocolos_listados(corpo):
+    """Os protocolos que a tela **lista**, lidos das linhas da tabela.
+
+    Protocolo é número curto e preenchido com zeros — `0740` —, e a página é cheia de UUID
+    sorteado: o `id` de um membro da banca, de uma Atribuição, do Edital. Procurar `"0740"` no
+    documento inteiro acha `bf107404-b1ad-…` e responde "está listada" sem que linha alguma
+    exista. Foi assim que o filtro de avaliação pendente falhou num CI que não tocava em
+    distribuição — e passou, no mesmo commit, no `push` que sorteou outros UUID.
+
+    A coluna que identifica a linha é a primeira que tem texto: nas telas de distribuição a
+    primeira célula carrega só a caixa de seleção. Lendo dali, tanto o "está" quanto o "não está"
+    dizem o que o teste quer dizer.
+    """
+    listados = []
+    for linha in _LINHA.findall(corpo):
+        celulas = (_MARCACAO.sub("", celula).strip() for celula in _CELULA.findall(linha))
+        identificador = next((texto for texto in celulas if texto), None)
+        if identificador is not None:
+            listados.append(identificador)
+    return listados

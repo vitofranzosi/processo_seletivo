@@ -14,7 +14,7 @@ from processo_seletivo.avaliacoes.application.avaliacao import gravar
 from processo_seletivo.avaliacoes.application.impedimento import registrar_impedimento
 from tests.conftest import ator_institucional
 from tests.fixtures.mesa import concluir_como, distribuir_para, inscricoes_de, montar_banca
-from tests.interface.conftest import identificar
+from tests.interface.conftest import identificar, protocolos_listados
 
 pytestmark = [pytest.mark.django_db]
 
@@ -77,10 +77,11 @@ def test_o_filtro_de_rascunhos_traz_so_o_que_foi_comecado(como_joao, cenario, ci
     concluir_como(cenario, "joao", cinco[1])
 
     corpo = como_joao.get(mesa(cenario, filtro="rascunhos")).content.decode()
+    listados = protocolos_listados(corpo)
 
-    assert cinco[0].protocolo in corpo
-    assert cinco[1].protocolo not in corpo
-    assert cinco[2].protocolo not in corpo
+    assert cinco[0].protocolo in listados
+    assert cinco[1].protocolo not in listados
+    assert cinco[2].protocolo not in listados
 
 
 def test_a_mesa_diz_o_que_foi_retirado_dela_e_por_que(como_joao, cenario, gestor, cinco):
