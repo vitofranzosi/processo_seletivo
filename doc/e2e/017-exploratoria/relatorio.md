@@ -16,6 +16,11 @@ Distinguindo as quatro camadas que o roteiro pede:
 
 O achado mais grave **não é da 017**: seguindo o assistente na ordem natural, o Edital é publicado **sem período de inscrições**, porque qualquer gravação posterior ao passo *Inscrição* apaga silenciosamente a marca. O Edital anuncia o período no PDF e o sistema não recebe inscrição nenhuma. Causa confirmada no código, e foi o único bloqueio que exigiu contorno para esta auditoria prosseguir.
 
+> **Corrigido depois desta auditoria.** Os achados 001, 002, 003 e 006 foram fechados no hardening
+> pós-017 (§13). Os que permanecem abertos — 004, 005 e 007 — são decisão de governança ou
+> capacidade nova, e ficam para a priorização do produto. O corpo dos achados preserva o que foi
+> observado; o estado de cada um vem ao fim da respectiva seção.
+
 ---
 
 ## 2. Ambiente e base
@@ -129,6 +134,35 @@ O desempate entre Carla e Diego (ambos 82,00) foi decidido pelo 2º critério, m
 
 **Bloqueio e contorno.** Este foi o único bloqueio da auditoria. **Nenhuma linha de código foi alterada.** O contorno foi operacional: compus um segundo Edital (12/2026) gravando *Conteúdo* **antes** de *Inscrição*, deixando o passo de inscrição por último. A Revisão passou a dizer "Nada pendente" — o que confirma o diagnóstico. O Edital 11/2026, publicado sem período, ficou preservado como evidência.
 
+**Estado: corrigido** (hardening pós-017, `60f98f7`). O diagnóstico estava certo e era metade do
+defeito. `eventos_persistidos()` passou a emitir `status` e `isRegistrationPeriod`.
+
+A auditoria do código encontrou o mesmo defeito por um **segundo caminho**, que a reprodução do
+relatório não alcança: a etapa **dona** da coleção reenvia o que o formulário leu, e o formulário
+conhece só os campos que desenha. Voltar ao Cronograma para corrigir uma data desdesignava o
+período, porque aquela tela não oferece a marca. Fechar só o primeiro caminho deixaria a marca
+morrendo por meia jornada.
+
+**Auditoria dos serializadores irmãos.** Comparados campo a campo o modelo, o contrato de entrada
+(`editais/api/serializers.py`, `editais/domain/validation.py`) e a reconstrução em
+`draft.py::replace_draft`:
+
+| serializador | omissões reais |
+|---|---|
+| `eventos_persistidos()` | `status`, `isRegistrationPeriod` — o achado |
+| `perfis_persistidos()` | `classificationInformation`, `callInformation` |
+| `etapas_persistidas()` | nenhuma — os treze campos que o command reconstrói |
+| `secoes_persistidas()` | nenhuma — `key` e `content`, e a identidade é derivada |
+| `documentos_persistidos()` | nenhuma — os oito campos |
+
+Os dois do Perfil são conteúdo normativo que o contrato declara, que `draft.py` reconstrói e que o
+conteúdo publicado carrega — e que **nenhuma tela do assistente desenha**. Quem os escrevesse pela
+API os perderia na primeira gravação do assistente, sem tela onde reparar a perda.
+
+**Regressão coberta** em `tests/interface/test_round_trip_do_rascunho.py`: a jornada real, e a
+comparação do Cronograma inteiro contra o contrato — não só da marca —, de modo que campo novo
+esquecido no reenvio derrube o teste.
+
 ---
 
 ### E2E17-002 — Removido o marco, a tela de classificação devolve 404 técnico — e é para lá que a mensagem manda ir
@@ -147,6 +181,33 @@ O desempate entre Carla e Diego (ambos 82,00) foi decidido pelo 2º critério, m
 
 **Recomendação.** Mensagem específica para marco removido, sem CTA de sucessão, e página 404 institucional na gestão.
 
+**Estado: corrigido** (hardening pós-017, `17ab044`). A hipótese sobre a causa do 404 estava
+errada, e a causa real é mais ampla do que o achado.
+
+`estado_do_marco` **trata** o marco removido: com ato vigente ele devolve `recomputavel=False` e a
+tela da 015 responde 200, dizendo que o marco não existe na norma. O 404 era de **autorização**: a
+tela da classificação é da presidência e da auditoria, e `paula.publicadora` não tem nenhuma das
+duas. O botão levava a uma porta fechada — e levava **em qualquer das três recusas**, não só nesta.
+
+Três correções, portanto:
+
+1. **A mensagem.** `admite_sucessor` separa, no domínio, a recusa que tem remédio da que não tem.
+   Removido o marco, a recusa diz que não há ato sucessor a emitir e para; restabelecê-lo é
+   decisão normativa, por Retificação, e não operação que a tela ofereça. Ato sucedido e ato
+   desatualizado continuam nomeando o caminho, porque nesses o marco segue na norma.
+2. **O caminho.** O CTA passa a depender de alcançar a tela para a qual aponta — o mesmo predicado
+   que a guarda. Vale para a prévia e para a tela de resultados divulgados, onde ele estava
+   condicionado a `pode_publicar`, exatamente a capacidade que **não** abre aquela porta; e para a
+   trilha de navegação daquela tela, que leva ao mesmo lugar.
+3. **O 404.** Um `404.html` institucional em `shared/templates/`, para os dois canais. Ele não diz
+   por quê: no sistema, 404 é também a resposta a "existe e você não alcança", e distinguir os dois
+   casos revelaria o recurso a quem não deve sabê-lo.
+
+**Observado e não corrigido.** Na mesma prévia, a trilha "Ato de classificação" e o botão
+"Cancelar" apontam para a tela do ato de ordenação, que fica atrás da mesma porta e devolve 404 ao
+publicador. É a mesma classe, com outro destino, e não foi objeto do achado — fica registrado para
+decisão, não decidido aqui.
+
 ---
 
 ### E2E17-003 — A proveniência do ato mostra enum e data em inglês onde a instituição responde recurso
@@ -164,6 +225,27 @@ O desempate entre Carla e Diego (ambos 82,00) foi decidido pelo 2º critério, m
 **Causa confirmada.** Não há `LANGUAGE_CODE` em `backend/config/settings/` (há `TIME_ZONE = "America/Sao_Paulo"`), então o Django formata em `en-us`. A resolução de rótulo existe em `divulgacao/domain/conteudo.py::compor()`, que resolve modalidade pela versão que o ato citou, e não foi aplicada às telas da 015.
 
 **Recomendação.** `LANGUAGE_CODE = "pt-br"` e reuso do resolvedor da 017 nas telas de ordenação e ato. É o achado E2E15-006/009 da auditoria anterior, ainda aberto.
+
+**Estado: corrigido** — quase todo antes deste hardening. O PR #43 (`abd701a`, `120b19c`) entrou
+**depois** desta auditoria, que rodou em `c2e80c3`, e fez exatamente o que a recomendação pede:
+`LANGUAGE_CODE = "pt-br"`, datas no formato da instituição, a modalidade nomeada na coluna
+MODALIDADE, e o critério de desempate pela frase publicada com o alvo normativo — "maior pontuação
+na Etapa Prova didática" —, mantendo enum e `criterionId` ao lado, como detalhe técnico, porque
+ali o identificador é âncora de auditoria.
+
+O resolvedor foi **extraído**, e não `compor()` reaproveitado: `classificacao/domain/nomes.py` e
+`publicacoes/domain/vocabulario_da_regra.py`. A resolução é sempre pela versão que o ato cita — a
+fronteira pública/individual da 017 continua só em `compor()`.
+
+Sobrou uma instância da mesma classe, corrigida agora (`432112c`): a tabela de resultados
+antecedentes lia `consolidatedAt` como o snapshot o grava —
+`2026-09-06T18:43:10.761405+00:00`, UTC e notação de máquina — na mesma tela em que as outras
+datas já saíam `06/09/2026 15:43`. O filtro `date` do Django não a alcançava, porque diante de
+texto ele devolve vazio.
+
+Uma varredura das duas telas por enum e UUID confirma que o que resta é deliberado: a tela da
+ordenação não tem nenhum dos dois, e a do ato mantém os identificadores da proveniência ao lado
+dos nomes.
 
 ---
 
@@ -217,6 +299,11 @@ Compare com Gustavo, eliminado na Etapa 2 (dentro do universo), que vê: *"Você
 
 **Recomendação.** Localizar o instante na mensagem, como as demais telas fazem.
 
+**Estado: corrigido** (hardening pós-017, `99e9f6d`). `timezone.localtime` antes da formatação, que
+é o compromisso que `publicacoes/infrastructure/humano.py` já declarava por escrito. O teste usa um
+instante cujo horário em UTC cai no **dia seguinte** — 23h59 de 6 de setembro em São Paulo é 02h59
+de 7 de setembro em UTC —, de modo que a regressão não passe por diferença de três horas.
+
 ---
 
 ### E2E17-007 — Não há como criar um segundo Edital num Processo existente
@@ -233,12 +320,12 @@ Compare com Gustavo, eliminado na Etapa 2 (dentro do universo), que vê: *"Você
 
 ## 7. Severidade
 
-| Sev. | Qtde | Achados |
-|---|---|---|
-| P0 | 0 | — |
-| P1 | 1 | 001 |
-| P2 | 4 | 002, 003, 004, 005 |
-| P3 | 2 | 006, 007 |
+| Sev. | Qtde | Achados | corrigidos | abertos |
+|---|---|---|---|---|
+| P0 | 0 | — | — | — |
+| P1 | 1 | 001 | 001 | — |
+| P2 | 4 | 002, 003, 004, 005 | 002, 003 | 004, 005 |
+| P3 | 2 | 006, 007 | 006 | 007 |
 
 Nenhum P0: não houve publicação incorreta, vazamento, ato histórico modificável, publicação por ator indevido, divergência entre conteúdo público e ato, nem acesso do candidato a resultado não publicado.
 
@@ -250,14 +337,14 @@ Nenhum P0: não houve publicação incorreta, vazamento, ato histórico modific�
 |---|---|---|
 | **E2E15-001** — critério de desempate nasce sem alvos | ✅ **corrigido, sem regressão** | marco e três critérios compostos numa só passagem; o select já nasce com Etapas e fatos (`03`) |
 | **E2E15-004/005/008** — PDF sem alvos nem fatos | ✅ **corrigido** | PDF traz "3º menor valor declarado em Data de nascimento; sem o valor, o critério não se aplica" e a seção "Dados exigidos na inscrição" |
-| **E2E15-006** — UUID nas telas da 015 | ⚠️ **parcial** | protocolo resolvido; MODALIDADE ainda UUID (E2E17-003) |
-| **E2E15-009** — datas em inglês | ❌ **aberto** | "Sept. 6, 2026, 2:59 p.m." (E2E17-003) |
+| **E2E15-006** — UUID nas telas da 015 | ⚠️ **parcial na auditoria** · ✅ **fechado depois** | protocolo resolvido; MODALIDADE ainda UUID (E2E17-003) — corrigido pelo PR #43, que entrou depois desta auditoria |
+| **E2E15-009** — datas em inglês | ❌ **aberto na auditoria** · ✅ **fechado depois** | "Sept. 6, 2026, 2:59 p.m." (E2E17-003) — `LANGUAGE_CODE = "pt-br"` no PR #43 |
 | **E2E-017** — guarda de conjunto fechado na distribuição | ✅ **sem regressão** | distribuição recusada enquanto as inscrições estavam abertas |
 | **D-003** — eliminada em Etapa anterior some da Mesa seguinte | ✅ **sem regressão** | após consolidar a Etapa 1, a Mesa da Etapa 2 caiu de 4 para 3 inscrições |
 | Autorização, isolamento entre candidatos | ✅ **sem regressão** | 404 uniforme (`45`) |
 | Responsividade | ✅ **sem regressão** | 375px sem rolagem horizontal em cinco telas |
 
-**Nenhuma regressão real.** As duas linhas abertas são achados anteriores ainda não corrigidos, não retrocessos.
+**Nenhuma regressão real.** As duas linhas abertas eram achados anteriores ainda não corrigidos, não retrocessos — e as duas foram fechadas pelo PR #43, que entrou depois desta auditoria (§13).
 
 ---
 
@@ -278,7 +365,7 @@ Não são defeitos da 017 e não foram abertos como achados:
 
 **Alto impacto / baixo esforço**
 
-1. **Reusar o resolvedor da 017 nas telas da 015** — `compor()` já traduz identificadores em rótulos pela versão do ato. Aplicá-lo à ordenação e à proveniência transforma a trilha administrativa em documento apresentável. Some-se `LANGUAGE_CODE = "pt-br"`.
+1. ~~**Reusar o resolvedor da 017 nas telas da 015**~~ — **feito** (PR #43). O resolvedor foi extraído para `classificacao/domain/nomes.py` e `publicacoes/domain/vocabulario_da_regra.py` em vez de `compor()` ser reaproveitado, que era o desenho certo: `compor()` também define a fronteira pública/individual da 017, e reusá-lo inteiro traria a fronteira junto.
 2. **Avisar a quem ficou fora do universo** que houve divulgação (E2E17-004), mesmo sem divulgar resultado por Etapa.
 3. **Marcar explicitamente a publicação vigente** — P1 diz que foi sucedida, mas P2 não diz que é a atual; um selo positivo ajuda quem chega pelo link.
 
@@ -311,3 +398,75 @@ O invariante do §10 está provado: **o resultado do desempate é publicável se
 ## 12. Evidências
 
 `screenshots/` — 53 imagens na ordem da jornada, de `00-gestao-vazia.png` a `51-achado-404-tecnico-apos-remocao-do-marco.png`, incluindo os negativos (`22`, `23`, `34`, `35`, `45`, `49`) e o achado bloqueante (`E2E17-001-edital-publicado-sem-inscricao.png`).
+
+---
+
+## 13. Hardening pós-017
+
+Sessão de correção conduzida sobre `b8f85fe` — a `main` de então, que já continha o PR #43 — com o
+commit desta auditoria integrado. Não abriu a SPEC 018 e não tomou decisão de domínio sobre
+recursos.
+
+### O que foi corrigido
+
+| achado | commit | natureza |
+|---|---|---|
+| E2E17-001 | `60f98f7` | round-trip do rascunho, nos dois caminhos, + auditoria dos cinco serializadores |
+| E2E17-002 | `17ab044` | recusa sem caminho impossível, CTA condicionado à porta, `404.html` institucional |
+| E2E17-006 | `99e9f6d` | horário local na recusa por inscrições abertas |
+| E2E17-003 | PR #43 + `432112c` | já corrigido antes; sobrou o instante da proveniência |
+
+Cada correção tem teste de regressão que falha sem ela. A suíte inteira passa em SQLite e em
+PostgreSQL.
+
+### O que ficou fora, por escopo
+
+E2E17-004 (visibilidade do `ResultadoEtapa` ao candidato), E2E17-005 (autorização de resultado
+definitivo) e E2E17-007 (segundo Edital no mesmo Processo) permanecem abertos como registrados.
+Os dois primeiros são decisão de governança, não defeito a corrigir às cegas — é o que o próprio
+E2E17-005 já dizia.
+
+### O que a sessão observou e não decidiu
+
+- Na prévia de publicação, a trilha "Ato de classificação" e o botão "Cancelar" apontam para a tela
+  do ato de ordenação, atrás da mesma porta que o CTA corrigido: o publicador recebe 404 nos dois.
+  Mesma classe do E2E17-002, destino diferente, não coberto pelo achado.
+- `perfis_persistidos()` perdia `classificationInformation` e `callInformation`, conteúdo normativo
+  que **nenhuma tela do assistente escreve**. Corrigido o round-trip; que não haja onde escrevê-los
+  pela interface continua sendo o que é.
+
+---
+
+## 14. Perguntas pendentes para a 018
+
+Registradas, não decididas. A governança é do usuário.
+
+**A. Qual fato institucional torna uma publicação definitiva?**
+
+Hoje é escolha livre de um `<select>`: `publicar_resultado` valida que a natureza está entre as
+declaradas e que não há regressão de definitiva para preliminar, e nada mais (E2E17-005). Um ato
+que afirma definitividade sem ter o marco que a produz é risco jurídico do tipo que a 015 evitou ao
+separar calcular de emitir.
+
+**B. Qual fato institucional autoriza mostrar ao candidato seu Resultado individual da Etapa?**
+
+Hoje a Área do Candidato lê `SituacaoDivulgada`, que só existe para quem estava no universo do ato.
+Quem foi eliminado numa Etapa anterior não vê nada — nem que houve resultado (E2E17-004).
+
+**A e B são relacionadas, e podem compartilhar uma primitiva — mas isso é hipótese a investigar, e
+não premissa.** As duas perguntam "que fato institucional autoriza o quê", e é razoável que a
+resposta tenha a mesma forma. Não se segue que tenham o **mesmo marco temporal**: a definitividade
+de uma publicação e a visibilidade de um resultado individual podem depender de fatos distintos, e
+declará-las a mesma decisão antes de investigar fecharia a pergunta em vez de respondê-la. A 018
+deve verificar se compartilham a primitiva, e não assumir.
+
+**C. Um recurso deferido pode alterar um `ResultadoEtapa` consolidado? Se pode, por qual
+mecanismo — anulação, superação, ou outro?**
+
+É bloqueante para a especificação, e não uma consequência a decidir depois. O sistema inteiro é
+append-only sobre atos: a 015 sucede atos de ordenação, a 017 sucede publicações, e o
+`ResultadoEtapa` consolidado é imutável. Um recurso deferido que mude a pontuação de uma Etapa não
+tem, hoje, por onde produzir efeito — e a forma que esse efeito tomar decide o desenho da 018
+inteira, porque a cadeia `ResultadoEtapa → ato de ordenação → publicação` teria de reagir a ele.
+
+Sem resposta a C, a 018 não tem o que especificar.
