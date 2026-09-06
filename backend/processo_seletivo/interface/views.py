@@ -868,6 +868,22 @@ COLECAO_DA_ETAPA = {
     "conteudo": "sections",
 }
 
+# O que a tela da etapa **não** oferece e, por isso, não pode apagar.
+#
+# `replace_draft` substitui o rascunho inteiro: a coleção da etapa atual vem do formulário, e o
+# formulário conhece só os campos que desenha. Sem esta fusão, gravar de novo a etapa dona da
+# coleção apaga em silêncio decisão tomada noutra tela — corrigir a data de um Evento
+# desdesignava o período de inscrições, que é decisão da etapa `Inscrição`.
+#
+# É o mesmo defeito que `eventos_persistidos` tinha, pelo outro caminho: lá o estado se perdia ao
+# gravar **outra** etapa; aqui, ao gravar a **própria**. Fechar só um dos dois deixaria a marca
+# morrendo por meia jornada.
+PRESERVADO_DA_ETAPA = {
+    "cronograma": ("status", "isRegistrationPeriod"),
+    # Os dois objetos normativos do Perfil que nenhuma tela desenha.
+    "perfis": ("classificationInformation", "callInformation"),
+}
+
 LEITURA_DA_ETAPA = {
     "identificacao": forms.ler_identificacao,
     "perfis": forms.ler_perfis,
@@ -921,7 +937,10 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
             for perfil in conteudo["profiles"]
         ]
     else:
-        conteudo[COLECAO_DA_ETAPA[etapa]] = digitados
+        colecao = COLECAO_DA_ETAPA[etapa]
+        conteudo[colecao] = _preservando(
+            digitados, conteudo[colecao], PRESERVADO_DA_ETAPA.get(etapa, ())
+        )
     return replace_draft(
         actor=ator,
         edital_id=edital.id,
@@ -935,6 +954,26 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
         # O rótulo da etapa, como quem elabora a vê no assistente (FR-042).
         area=dict((chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO).get(etapa, ""),
     )
+
+
+def _preservando(digitados, persistidos, campos):
+    """Funde, sobre o que o formulário enviou, os campos que ele não oferece.
+
+    A correspondência é pela identidade, que o formulário carrega em campo próprio. Linha nova —
+    sem par no que estava gravado — fica com o padrão do contrato, e é o certo: não há decisão
+    anterior a preservar sobre um item que acabou de nascer.
+    """
+    if not campos:
+        return digitados
+    anterior = {str(item["id"]): item for item in persistidos}
+    fundidos = []
+    for item in digitados:
+        gravado = anterior.get(str(item.get("id", "")))
+        if gravado is None:
+            fundidos.append(item)
+            continue
+        fundidos.append({**item, **{campo: gravado[campo] for campo in campos if campo in gravado}})
+    return fundidos
 
 
 def _indice_de_linha(request):
@@ -3043,6 +3082,16 @@ def resultados_da_etapa(request, edital_id, etapa_id):
     )
 
 
+def _pode_ver_a_classificacao(ator, edital):
+    """A porta das telas da 015, lida de fora delas.
+
+    É o mesmo teste que `_edital_para_classificar` aplica, e existe separado porque as telas da
+    017 precisam **oferecer ou não** o caminho antes de alguém batê-lo: link para porta fechada
+    responde 404, e 404 não explica nada a quem o recebe (FR-022, E2E17-002).
+    """
+    return pode_gerir_comissao(ator, edital.processo) is not None or ator.can("auditoria:consultar")
+
+
 def _edital_para_classificar(request, edital_id, *, somente_gestao=False):
     """A porta do marco: presidência ou auditoria lê; só a base de gestão emite.
 
@@ -3243,10 +3292,10 @@ def previa_de_publicacao(request, edital_id, marco_id, ato_id):
     if ator is None:
         return redirect(reverse("interface:identificar"))
     ato = _ato_para_publicar(edital, marco_id, ato_id)
-    return _renderizar_previa(request, edital, ato, marco_id)
+    return _renderizar_previa(request, ator, edital, ato, marco_id)
 
 
-def _renderizar_previa(request, edital, ato, marco_id, *, erro="", status=200):
+def _renderizar_previa(request, ator, edital, ato, marco_id, *, erro="", status=200):
     """A prévia composta agora — usada pelo GET e pela **recusa do POST**.
 
     Recusado, o POST volta a esta mesma tela com o status HTTP que o domínio declarou, e não com um
@@ -3280,6 +3329,10 @@ def _renderizar_previa(request, edital, ato, marco_id, *, erro="", status=200):
                 "posicoes": projecao["posicoes"],
                 "consideradas": len(projecao["situacoes"]),
                 "publicabilidade": publicabilidade,
+                # Quem alcança a tela da classificação. A porta dela é outra — presidência ou
+                # auditoria —, e quem só publica recebe 404 lá. Oferecer o caminho a essa pessoa
+                # é oferecer um beco, e foi o que a auditoria da 017 encontrou (E2E17-002).
+                "pode_ver_a_classificacao": _pode_ver_a_classificacao(ator, edital),
                 "sucede": sucede,
                 "naturezas": _naturezas_oferecidas(sucede),
                 "autoridades": autoridades.CATALOGO,
@@ -3334,7 +3387,7 @@ def publicar_resultado(request, edital_id, marco_id, ato_id):
         # nada foi gravado. A tela volta composta de novo, com a recusa nomeada e com a assinatura
         # recalculada, que é o que a autoridade precisa para reconfirmar.
         return _renderizar_previa(
-            request, edital, ato, marco_id, erro=recusa.detail, status=recusa.status
+            request, ator, edital, ato, marco_id, erro=recusa.detail, status=recusa.status
         )
     request.session["resultado_da_publicacao"] = str(publicacao.id)
     return redirect(reverse("interface:publicacoes-do-marco", args=[edital_id, marco_id]))
@@ -3347,7 +3400,7 @@ def publicacoes_do_marco(request, edital_id, marco_id):
     **Consultar é de dois; publicar é de um.** A auditoria lê esta página inteira e não age nela, e
     é por isso que a ação de publicar depende da capacidade que a rota de consulta não exige.
     """
-    ator, edital, pode_publicar = _edital_para_publicar(request, edital_id, consulta=True)
+    ator, edital, _ = _edital_para_publicar(request, edital_id, consulta=True)
     if ator is None:
         return redirect(reverse("interface:identificar"))
     return marcar_como_privada(
@@ -3359,14 +3412,18 @@ def publicacoes_do_marco(request, edital_id, marco_id):
                 "edital": edital,
                 "marco_id": marco_id,
                 "historico": historico_das_publicacoes(edital=edital, marco_id=marco_id),
-                "pode_publicar": pode_publicar,
-                # O caminho para o **ato de origem** — a tela da 015 — é condicionado à autorização
-                # de quem lê: ela tem porta própria, e oferecê-lo a quem receberia 404 seria
-                # oferecer um beco (FR-022).
-                "pode_ver_o_ato": (
-                    pode_gerir_comissao(ator, edital.processo) is not None
-                    or ator.can("auditoria:consultar")
-                ),
+                # Os dois caminhos para as telas da 015 — o **ato de origem** e a **classificação
+                # do marco** — condicionados à autorização de quem lê: elas têm porta própria, e
+                # oferecê-las a quem receberia 404 seria oferecer um beco (FR-022).
+                #
+                # O da classificação era condicionado a `pode_publicar`, invocando a FR-069:
+                # publicar é de um, consultar é de dois. Mas a FR-069 governa a **ação** de
+                # publicar, e este link não é ação — é navegação para uma tela de leitura, cuja
+                # porta é a da presidência e da auditoria. Sob a capacidade errada, ele aparecia
+                # exatamente para quem cairia no 404 e sumia para quem podia lê-la (E2E17-002).
+                # A ação de publicar não vive nesta página: ela é do ato, e a porta dela continua
+                # sendo `resultado:publicar`.
+                "pode_ver_o_ato": _pode_ver_a_classificacao(ator, edital),
                 "publicada_agora": request.session.pop("resultado_da_publicacao", None),
             },
         )

@@ -4,7 +4,12 @@
 <nav aria-label="Trilha de navegação" class="trilha">
   <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
   <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <a href="{% url 'interface:ordenacao' edital.id marco_id %}">Classificação</a> ›
+  {% comment %}
+  A trilha leva ao mesmo lugar que o botão do rodapé, e cai no mesmo 404 quando quem lê não
+  alcança a tela da classificação. Sem o link, o degrau continua dizendo onde esta página fica —
+  que é o que a trilha existe para dizer (E2E17-002).
+  {% endcomment %}
+  {% if pode_ver_o_ato %}<a href="{% url 'interface:ordenacao' edital.id marco_id %}">Classificação</a>{% else %}Classificação{% endif %} ›
   <span aria-current="page">Resultados divulgados</span>
 </nav>
 
@@ -57,10 +62,13 @@
 {% endif %}
 
 {% comment %}
-Publicar é de um; consultar é de dois. Quem audita lê esta página inteira e não age nela, e por
-isso a ação depende da capacidade que a rota de consulta não exige (FR-069).
+O caminho para a classificação do marco depende de alcançar **aquela** tela, e não de poder
+publicar: ela é da presidência e da auditoria. Condicionado a `pode_publicar` — invocando a
+FR-069, que governa a **ação** de publicar e não a navegação para uma tela de leitura —, o botão
+aparecia justamente para quem receberia 404 ao segui-lo, e sumia para quem podia lê-la
+(FR-022, E2E17-002). A ação de publicar não vive nesta página.
 {% endcomment %}
-{% if pode_publicar %}
+{% if pode_ver_o_ato %}
 <p><a class="botao secundario" href="{% url 'interface:ordenacao' edital.id marco_id %}">Ir para a classificação do marco</a></p>
 {% endif %}
 {% endblock %}

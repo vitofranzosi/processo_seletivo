@@ -12,6 +12,7 @@ reescrever retroativamente como um ato antigo é lido.
 """
 
 import re
+from datetime import datetime
 
 import pytest
 from django.urls import reverse
@@ -336,3 +337,25 @@ def test_as_datas_da_classificacao_saem_no_formato_da_instituicao(client, seleto
     ):
         assert mes not in do_ato
         assert mes not in da_ordem
+
+
+def test_a_proveniencia_nao_deixa_instante_cru_do_snapshot(client, seletor_ligado, cenario):
+    """A tabela de resultados antecedentes lia o instante como o snapshot o grava (E2E17-003).
+
+    Texto ISO em UTC — `2026-09-06T18:43:10.761405+00:00` — na mesma tela em que todas as outras
+    datas já saem `06/09/2026 15:43`, e que é a que a instituição abre para responder a recurso.
+    O filtro `date` do Django não a alcançava: diante de texto ele devolve vazio, e a data passava
+    inteira.
+    """
+    _como_presidente(client)
+
+    do_ato = client.get(_ato(cenario)).content.decode()
+    proveniencia = _secao(do_ato, "Resultados que entraram na ordem")
+
+    assert "+00:00" not in proveniencia, "o instante não sai em UTC"
+    assert "T" not in re.sub(r"<[^>]+>", " ", proveniencia).replace("Etapa", ""), (
+        "nem na notação de máquina"
+    )
+    consolidado = cenario["ato"].universo["stageResults"][0]["consolidatedAt"]
+    esperado = datetime.fromisoformat(consolidado).astimezone().strftime("%d/%m/%Y %H:%M")
+    assert esperado in proveniencia

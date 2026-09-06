@@ -22,6 +22,8 @@ entre ver e confirmar deixaria a proposta válida sobre um conjunto que voltou a
 este sistema, e não há o que esperar: a regra não se aplica, e distribuir é admitido.
 """
 
+from django.utils import timezone
+
 from processo_seletivo.inscricoes.domain.periodo import (
     ABERTO,
     FUTURO,
@@ -51,7 +53,14 @@ def recusa_por_inscricoes_em_curso(conteudo, agora):
     if periodo.estado == FUTURO:
         detalhe = "O período de inscrições ainda não começou"
     elif periodo.fim is not None:
-        detalhe = f"As inscrições ficam abertas até {periodo.fim:%d/%m/%Y às %H:%M}"
+        # **No fuso institucional, e não no que o instante carrega.** O período vem do conteúdo
+        # publicado, onde o instante é materializado em UTC: formatá-lo direto anunciava um
+        # término três horas à frente do real, e a presidência concluía que precisava esperar o
+        # triplo do que precisava. A página pública, no mesmo instante, exibia a hora certa — é o
+        # sistema divergindo de si mesmo sobre o mesmo prazo (E2E17-006).
+        detalhe = (
+            f"As inscrições ficam abertas até {timezone.localtime(periodo.fim):%d/%m/%Y às %H:%M}"
+        )
     else:
         detalhe = "As inscrições estão abertas e o Edital não declarou término"
     return DomainError(

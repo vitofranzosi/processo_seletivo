@@ -1,9 +1,11 @@
 """Apresentação de valores do domínio. Nenhuma regra aqui — só como o dado é lido."""
 
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
 from django import template
 from django.http import QueryDict
+from django.utils import timezone
 
 register = template.Library()
 
@@ -140,3 +142,29 @@ def pontuacao(valor):
     if exato == exato.to_integral_value():
         exato = exato.quantize(Decimal(1))
     return f"{exato:f}".replace(".", ",")
+
+
+@register.filter
+def instante(valor):
+    """O instante que vem do conteúdo publicado, lido no fuso institucional.
+
+    O snapshot materializa cada instante como texto ISO em UTC, e é assim que ele chega ao
+    template: `2026-09-06T18:43:10.761405+00:00`, na tabela de proveniência que sustenta a
+    resposta a um recurso. O filtro `date` do Django não o alcança — ele espera um `datetime`, e
+    diante de texto devolve vazio —, então a data ficava crua, em UTC e em notação de máquina, na
+    mesma tela em que todas as outras já saem em `06/09/2026 15:43` (E2E17-003).
+
+    Só apresentação: nada aqui decide fuso institucional por conta própria — `localtime` lê o que
+    as configurações declaram, como o resto do sistema.
+    """
+    if valor in (None, ""):
+        return ""
+    momento = valor
+    if not isinstance(momento, datetime):
+        try:
+            momento = datetime.fromisoformat(str(valor))
+        except (TypeError, ValueError):
+            return valor
+    if timezone.is_aware(momento):
+        momento = timezone.localtime(momento)
+    return momento.strftime("%d/%m/%Y %H:%M")

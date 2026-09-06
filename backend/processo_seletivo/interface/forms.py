@@ -481,6 +481,12 @@ def perfis_persistidos(edital):
                 _marco_persistido(m) for m in perfil.marcos.order_by("code")
             ],
             "declaredFacts": [_fato_persistido(f) for f in perfil.fatos.order_by("code")],
+            # Pela mesma razão dos dois acima, e com um agravante: nenhuma tela do assistente os
+            # desenha. Conteúdo normativo que só o contrato administrativo escreve atravessaria o
+            # assistente uma vez e sumiria na primeira gravação — sem que houvesse tela onde
+            # reparar a perda (E2E17-001, classe do defeito).
+            "classificationInformation": perfil.classification_information,
+            "callInformation": perfil.call_information,
         }
         for perfil in edital.perfis.prefetch_related(
             "modalidades__regra_normativa", "marcos__criterios"
@@ -672,6 +678,15 @@ def etapas_persistidas(edital):
 
 
 def eventos_persistidos(edital):
+    """Eventos já salvos, no formato do command — para preservá-los ao salvar outra etapa.
+
+    **O contrato inteiro, e não os campos que a tela do Cronograma desenha.** `replace_draft`
+    substitui o rascunho inteiro e reconstrói cada Evento a partir do que recebe: campo omitido
+    aqui volta ao padrão do modelo na gravação seguinte, sem recusa e sem aviso. `status` e
+    `isRegistrationPeriod` faltavam, e a marca do período — que é decisão da etapa `Inscrição` —
+    morria no passo seguinte do assistente. O Edital era publicado anunciando prazo de inscrição
+    que o sistema não receberia (E2E17-001).
+    """
     cronograma = getattr(edital, "cronograma", None)
     if cronograma is None:
         return []
@@ -683,6 +698,8 @@ def eventos_persistidos(edital):
             "startAt": evento.start_at,
             "endAt": evento.end_at,
             "order": evento.order,
+            "status": evento.status,
+            "isRegistrationPeriod": evento.is_registration_period,
         }
         for evento in cronograma.eventos.order_by("order")
     ]

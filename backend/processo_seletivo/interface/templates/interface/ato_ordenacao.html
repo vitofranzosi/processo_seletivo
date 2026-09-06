@@ -58,7 +58,7 @@ de ausência deriva do mesmo conjunto que a lista, e não de um `if` separado.
   <div class="tabela-rolavel"><table>
     <caption>Resultados que entraram na ordem</caption>
     <thead><tr><th scope="col">Resultado</th><th scope="col">Inscrição</th><th scope="col">Etapa</th><th scope="col">Versão</th><th scope="col">Consolidado em</th></tr></thead>
-    <tbody>{% for item in ato.universo.stageResults %}<tr><td>{{ item.id }}</td><td>{{ item.registrationId }}</td><td>{{ item.stageId }}</td><td>{{ item.versionId }}</td><td>{{ item.consolidatedAt }}</td></tr>{% endfor %}</tbody>
+    <tbody>{% for item in ato.universo.stageResults %}<tr><td>{{ item.id }}</td><td>{{ item.registrationId }}</td><td>{{ item.stageId }}</td><td>{{ item.versionId }}</td><td>{{ item.consolidatedAt|instante }}</td></tr>{% endfor %}</tbody>
   </table></div>
   {% endif %}
 </section>
