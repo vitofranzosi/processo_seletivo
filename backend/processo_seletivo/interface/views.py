@@ -868,6 +868,22 @@ COLECAO_DA_ETAPA = {
     "conteudo": "sections",
 }
 
+# O que a tela da etapa **não** oferece e, por isso, não pode apagar.
+#
+# `replace_draft` substitui o rascunho inteiro: a coleção da etapa atual vem do formulário, e o
+# formulário conhece só os campos que desenha. Sem esta fusão, gravar de novo a etapa dona da
+# coleção apaga em silêncio decisão tomada noutra tela — corrigir a data de um Evento
+# desdesignava o período de inscrições, que é decisão da etapa `Inscrição`.
+#
+# É o mesmo defeito que `eventos_persistidos` tinha, pelo outro caminho: lá o estado se perdia ao
+# gravar **outra** etapa; aqui, ao gravar a **própria**. Fechar só um dos dois deixaria a marca
+# morrendo por meia jornada.
+PRESERVADO_DA_ETAPA = {
+    "cronograma": ("status", "isRegistrationPeriod"),
+    # Os dois objetos normativos do Perfil que nenhuma tela desenha.
+    "perfis": ("classificationInformation", "callInformation"),
+}
+
 LEITURA_DA_ETAPA = {
     "identificacao": forms.ler_identificacao,
     "perfis": forms.ler_perfis,
@@ -921,7 +937,10 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
             for perfil in conteudo["profiles"]
         ]
     else:
-        conteudo[COLECAO_DA_ETAPA[etapa]] = digitados
+        colecao = COLECAO_DA_ETAPA[etapa]
+        conteudo[colecao] = _preservando(
+            digitados, conteudo[colecao], PRESERVADO_DA_ETAPA.get(etapa, ())
+        )
     return replace_draft(
         actor=ator,
         edital_id=edital.id,
@@ -935,6 +954,26 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
         # O rótulo da etapa, como quem elabora a vê no assistente (FR-042).
         area=dict((chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO).get(etapa, ""),
     )
+
+
+def _preservando(digitados, persistidos, campos):
+    """Funde, sobre o que o formulário enviou, os campos que ele não oferece.
+
+    A correspondência é pela identidade, que o formulário carrega em campo próprio. Linha nova —
+    sem par no que estava gravado — fica com o padrão do contrato, e é o certo: não há decisão
+    anterior a preservar sobre um item que acabou de nascer.
+    """
+    if not campos:
+        return digitados
+    anterior = {str(item["id"]): item for item in persistidos}
+    fundidos = []
+    for item in digitados:
+        gravado = anterior.get(str(item.get("id", "")))
+        if gravado is None:
+            fundidos.append(item)
+            continue
+        fundidos.append({**item, **{campo: gravado[campo] for campo in campos if campo in gravado}})
+    return fundidos
 
 
 def _indice_de_linha(request):
