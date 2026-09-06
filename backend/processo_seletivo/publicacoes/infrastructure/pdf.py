@@ -18,6 +18,11 @@ from datetime import datetime
 from django.utils import timezone
 
 from processo_seletivo.editais.domain.secoes import GERADA
+from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
+    ETAPA_NAO_IDENTIFICADA,
+    criterio_com_a_ausencia,
+    por_identificador,
+)
 from processo_seletivo.publicacoes.infrastructure import brasao, humano
 
 LARGURA, ALTURA = 595, 842  # A4 em pontos
@@ -1043,26 +1048,11 @@ MODO_DE_ARREDONDAMENTO = {
     "MEIO_PARA_PAR": "meio para par",
     "TRUNCAR": "truncamento",
 }
-# `{alvo}` já vem com o substantivo que o antecede — "Etapa Prova didática", "Meses de
-# experiência" —, porque é o que permite à mesma frase servir ao alvo resolvido e ao ausente sem
-# que uma das duas leituras fique torta.
-CRITERIO_DE_DESEMPATE = {
-    "MAIOR_PONTUACAO_NA_ETAPA": "maior pontuação na {alvo}",
-    "MAIOR_VALOR_DE_FATO": "maior valor declarado em {alvo}",
-    "MENOR_VALOR_DE_FATO": "menor valor declarado em {alvo}",
-}
-QUANDO_AUSENTE = {
-    "ULTIMO_NO_CRITERIO": "sem o valor, fica por último neste critério",
-    "CRITERIO_NAO_SE_APLICA": "sem o valor, o critério não se aplica",
-}
 TIPO_DO_FATO = {"DATA": "data", "INTEIRO": "número inteiro"}
 
 # A Etapa decisória enumerada por um marco é porta, e não parcela: ela não produz número e não
 # entra na conta. `forma` é da `012`/`013`; aqui ela decide o que se escreve ao lado do nome.
 DECISORIA = "DECISORIA"
-
-ETAPA_NAO_IDENTIFICADA = "Etapa não identificada neste Edital"
-FATO_NAO_IDENTIFICADO = "dado não identificado neste Edital"
 
 
 def _enumerar(partes):
@@ -1070,10 +1060,6 @@ def _enumerar(partes):
     if len(partes) <= 1:
         return "".join(partes)
     return f"{', '.join(partes[:-1])} e {partes[-1]}"
-
-
-def _por_identificador(itens):
-    return {str(item.get("id")): item for item in itens or [] if isinstance(item, dict)}
 
 
 def _etapa_com_o_peso(etapa):
@@ -1132,38 +1118,6 @@ def _arredondamento(marco):
     return ", ".join(partes)
 
 
-def _alvo_do_criterio(criterio, etapas, fatos):
-    """O que o critério compara, resolvido para o **nome publicado** (E2E15-004).
-
-    `parameters` carrega `stageId` ou `factId` conforme o tipo, e era descartado: o documento
-    imprimia "2º maior valor declarado" sem dizer *de quê*. O desempate aplicado pelo sistema não
-    era o que o Edital deixava reconstituir — e um candidato, ou um juiz, lendo só o documento
-    oficial não chegava à mesma ordem.
-
-    **O identificador não vai ao papel em nenhuma hipótese.** Alvo que o snapshot não resolve é
-    dito como ausente, não como UUID: a publicação já recusa o critério pendurado (FR-017), e o
-    que resta aqui é a prévia de um rascunho — onde imprimir o identificador técnico trocaria uma
-    lacuna visível por uma que ninguém sabe ler.
-    """
-    parametros = criterio.get("parameters") or {}
-    if criterio.get("type") == "MAIOR_PONTUACAO_NA_ETAPA":
-        etapa = etapas.get(str(parametros.get("stageId"))) or {}
-        return f"Etapa {etapa['name']}" if etapa.get("name") else ETAPA_NAO_IDENTIFICADA
-    fato = fatos.get(str(parametros.get("factId"))) or {}
-    return fato.get("label") or FATO_NAO_IDENTIFICADO
-
-
-def _criterio_por_extenso(criterio, etapas, fatos):
-    alvo = _alvo_do_criterio(criterio, etapas, fatos)
-    # Tipo que não está no mapa não vira grafia impressa: sobra o alvo, que é a metade legível.
-    # A publicação só conhece os três, e imprimir `MAIOR_VALOR_DE_FATO` num rascunho em prévia
-    # seria trocar a frase que falta pelo nome interno que o candidato não lê.
-    tipo = criterio.get("type") or ""
-    frase = CRITERIO_DE_DESEMPATE[tipo].format(alvo=alvo) if tipo in CRITERIO_DE_DESEMPATE else alvo
-    ausencia = QUANDO_AUSENTE.get(criterio.get("whenMissing"))
-    return f"{frase}; {ausencia}" if ausencia else frase
-
-
 def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
     """Os marcos classificatórios por extenso, com o que basta para refazer a ordem publicada.
 
@@ -1184,8 +1138,8 @@ def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
     marcos = perfil.get("classificationMilestones") or []
     if not marcos:
         return
-    etapas = _por_identificador(snapshot.get("stages"))
-    fatos = _por_identificador(perfil.get("declaredFacts"))
+    etapas = por_identificador(snapshot.get("stages"))
+    fatos = por_identificador(perfil.get("declaredFacts"))
     titulo = "Marcos classificatórios"
     if nomear_perfil:
         titulo = f"{titulo} — {perfil.get('code', '')}"
@@ -1234,7 +1188,7 @@ def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
                 )
                 for indice, criterio in enumerate(criterios, start=1):
                     composicao.escrever(
-                        f"{indice}º {_criterio_por_extenso(criterio, etapas, fatos)}",
+                        f"{indice}º {criterio_com_a_ausencia(criterio, etapas, fatos)}",
                         tamanho=CORPO_TEXTO,
                         recuo=46,
                         antes=ANTES_DE_LINHA,

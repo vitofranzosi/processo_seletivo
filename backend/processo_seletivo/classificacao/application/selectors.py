@@ -12,6 +12,10 @@ from processo_seletivo.classificacao.domain.universo import (
 )
 from processo_seletivo.classificacao.models import AtoDeOrdenacao, PosicaoNaOrdem
 from processo_seletivo.publicacoes.application.selectors import effective_version
+from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
+    criterio_por_extenso,
+    por_identificador,
+)
 from processo_seletivo.shared.api.problems import DomainError
 
 
@@ -74,6 +78,32 @@ def nomes_do_ato(ato):
         "perfil": nomes["perfil"].get("name", "") or "",
         "marco": nomes["marco"].get("name", "") or "",
     }
+
+
+def nomear_criterios(linhas, ato):
+    """Acrescenta a cada critério do desempate a frase publicada que o nomeia (FR-050, SC-010).
+
+    O snapshot guarda `type` e `criterionId`, e não a grafia: a tabela imprimia
+    `MAIOR_VALOR_DE_FATO` sem dizer o que ele compara, que é justamente o que a FR-050 exige que a
+    consulta mostre. O critério é localizado por `criterionId` na versão que **o ato cita** — mesmo
+    princípio das modalidades e do marco: renomear um fato hoje não pode mudar o que um ato antigo
+    diz ter comparado.
+
+    A decoração é em memória e sobre `PosicaoNaOrdem`, que é append-only e recusa `save`: ela não
+    tem como alcançar o banco.
+    """
+    conteudo = ato.versao.content
+    nomes = nomes_do_marco(conteudo, perfil_id=ato.perfil_id, marco_id=ato.marco_id)
+    etapas = por_identificador(conteudo.get("stages"))
+    fatos = por_identificador(nomes["perfil"].get("declaredFacts"))
+    rotulos = {
+        str(criterio.get("id")): criterio_por_extenso(criterio, etapas, fatos)
+        for criterio in nomes["marco"].get("tiebreakers") or []
+    }
+    for linha in linhas:
+        for criterio in linha.desempate or []:
+            criterio["rotulo"] = rotulos.get(str(criterio.get("criterionId")), "")
+    return linhas
 
 
 def estado_do_marco(*, edital, marco_id, at=None):
@@ -267,6 +297,7 @@ __all__ = [
     "ato_vigente",
     "estado_do_marco",
     "historico",
+    "nomear_criterios",
     "nomes_do_ato",
     "posicoes_do_ato",
     "sucessor_de",

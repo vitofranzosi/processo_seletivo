@@ -27,6 +27,20 @@ SEED = 91
 CODIGO = "0791"
 ETAPA_DO_MARCO = identificador(411, SEED)
 PERFIL = identificador(401, SEED)
+CRITERIO = "00000000-0000-4000-8000-000000000491"
+
+# O marco publica um critério de desempate sobre a própria Etapa que ele combina: é o que faz o
+# ato gravar proveniência por critério em `PosicaoNaOrdem.desempate` — a coluna que imprimia o
+# enum, e que a FR-050 manda nomear.
+CRITERIOS = [
+    {
+        "id": CRITERIO,
+        "order": 1,
+        "type": "MAIOR_PONTUACAO_NA_ETAPA",
+        "parameters": {"stageId": ETAPA_DO_MARCO},
+        "whenMissing": "ULTIMO_NO_CRITERIO",
+    }
+]
 
 
 @pytest.fixture
@@ -41,6 +55,7 @@ def cenario(gestor, api_client, manager_headers, process_payload):
         codigo=CODIGO,
         pontuacoes=("90.0000", "70.0000"),
         primeiro=1901,
+        criterios=CRITERIOS,
     )
 
 
@@ -161,6 +176,57 @@ def test_o_ato_historico_e_lido_com_os_nomes_da_versao_que_ele_congelou(
     assert "renomeada por Retificação" not in do_ato
     # A proposta calculada agora é a de agora: ela lê a norma vigente, e é ali que o nome novo vale.
     assert "renomeada por Retificação" in de_agora
+
+
+def test_o_criterio_de_desempate_sai_pela_frase_publicada_e_nao_pelo_enum(
+    client, seletor_ligado, cenario
+):
+    """FR-050/SC-010: a consulta nomeia o critério que separou — e "nomear" não é imprimir o enum.
+
+    O enum e o `criterionId` continuam à vista, como detalhe técnico: é por eles que se confere o
+    ato contra a base, e removê-los trocaria uma ilegibilidade por outra.
+    """
+    _como_presidente(client)
+
+    desempate = _secao(
+        client.get(_ato(cenario)).content.decode(), "Posições e valores de desempate"
+    )
+
+    assert "maior pontuação na Etapa Prova didática" in desempate
+    assert "MAIOR_PONTUACAO_NA_ETAPA" in desempate
+    assert CRITERIO in desempate
+    # A mesma nota escrita do mesmo jeito na mesma tabela: `90`, e não `90` ao lado de `90.0000`.
+    # O filtro não arredonda — tira os zeros que não informam e usa vírgula.
+    assert "valor 90" in desempate
+    assert "90.0000" not in desempate
+
+
+def test_o_criterio_e_nomeado_pela_versao_que_o_ato_congelou(
+    client, seletor_ligado, cenario, api_client
+):
+    """Mesmo princípio das modalidades: renomear a Etapa hoje não muda o que o ato
+    diz ter comparado.
+    """
+    retify(
+        api_client,
+        cenario["edital"],
+        [
+            {
+                "targetPath": f"/stages/id={ETAPA_DO_MARCO}/name",
+                "operation": "REPLACE",
+                "newValue": "Prova didática (renomeada por Retificação)",
+            }
+        ],
+        suffix=f"etapa-{SEED}",
+    )
+    _como_presidente(client)
+
+    desempate = _secao(
+        client.get(_ato(cenario)).content.decode(), "Posições e valores de desempate"
+    )
+
+    assert "maior pontuação na Etapa Prova didática" in desempate
+    assert "renomeada por Retificação" not in desempate
 
 
 # ---------------------------------------------------------------------------

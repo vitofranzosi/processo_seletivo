@@ -72,8 +72,13 @@ de ausência deriva do mesmo conjunto que a lista, e não de um `if` separado.
     {% for linha in linhas %}<tr{% if linha.empate_residual %} class="grupo-empatado"{% endif %}>
       <td>{% if linha.posicao %}{{ linha.posicao }}º{% else %}Sem posição — {{ linha.motivo }}{% endif %}</td>
       <td>{{ linha.inscricao.protocolo|default:linha.inscricao_id }} — {{ linha.inscricao.nome }}</td>
-      <td>{% if linha.pontuacao_combinada is None %}<span class="nenhuma">Não se aplica</span>{% else %}{{ linha.pontuacao_combinada }}{% endif %}</td>
-      <td>{% if linha.desempate %}<ol>{% for criterio in linha.desempate %}<li>{% if criterio.separated %}<strong>Critério que separou:</strong> {% endif %}{{ criterio.type }} — valor {% if criterio.value is None %}ausente{% else %}{{ criterio.value }}{% endif %}</li>{% endfor %}</ol>{% else %}<span class="nenhuma">Nenhum critério aplicado</span>{% endif %}</td>
+      <td>{% if linha.pontuacao_combinada is None %}<span class="nenhuma">Não se aplica</span>{% else %}{{ linha.pontuacao_combinada|pontuacao }}{% endif %}</td>
+      {% comment %}
+      E2E15-006. A frase publicada do critério — "maior valor declarado em Meses de experiência" —
+      é o que a FR-050 pede que a consulta mostre; o enum e o `criterionId` continuam à vista
+      logo abaixo, como detalhe técnico, porque é por eles que se confere o ato contra a base.
+      {% endcomment %}
+      <td>{% if linha.desempate %}<ol>{% for criterio in linha.desempate %}<li>{% if criterio.separated %}<strong>Critério que separou:</strong> {% endif %}{{ criterio.rotulo|default:criterio.type }} — valor {% if criterio.value is None %}ausente{% else %}{{ criterio.value|pontuacao }}{% endif %}<span class="ajuda">{{ criterio.type }} · {{ criterio.criterionId }}</span></li>{% endfor %}</ol>{% else %}<span class="nenhuma">Nenhum critério aplicado</span>{% endif %}</td>
     </tr>{% endfor %}
     </tbody>
   </table></div>

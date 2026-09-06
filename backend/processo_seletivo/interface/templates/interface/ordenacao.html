@@ -56,7 +56,7 @@
         <td>{{ item.posicao }}º{% if item.empate_residual %}<span class="situacao s-EM_REVISAO">Empate residual</span>{% endif %}</td>
         <td>{{ item.protocolo|default:item.inscricao_id }}</td>
         <td>{{ item.nome }}</td>
-        <td>{% if item.pontuacao is None %}<span class="nenhuma">Não se aplica</span>{% else %}{{ item.pontuacao }}{% endif %}</td>
+        <td>{% if item.pontuacao is None %}<span class="nenhuma">Não se aplica</span>{% else %}{{ item.pontuacao|pontuacao }}{% endif %}</td>
         <td>{% if item.modalidade_id %}{{ item.modalidade|default:"Modalidade fora da versão vigente" }}{% else %}<span class="nenhuma">Não declarada</span>{% endif %}</td>
       </tr>
     {% endfor %}
