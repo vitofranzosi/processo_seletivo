@@ -534,8 +534,8 @@ finalidade exige, e o resto não sai porque estava à mão na mesma consulta.
   do Processo.
 - **FR-063** — O documento identifica Processo/Edital, marco, natureza, ato de origem, data e hora,
   autoridade signatária, o conteúdo da classificação e o resumo criptográfico.
-- **FR-064** — O documento apresenta os mesmos rótulos institucionais da página e o mesmo conteúdo
-  substancial.
+- **FR-064** — O documento e a página derivam dos mesmos bytes: os rótulos institucionais são os
+  mesmos, e cada linha da lista confere — posição, identificação pública, modalidade e pontuação.
 - **FR-065** — O documento é produzido pelo renderizador existente e segue os padrões de
   acessibilidade já adotados pelo projeto onde tecnicamente aplicável.
 
@@ -564,6 +564,11 @@ finalidade exige, e o resto não sai porque estava à mão na mesma consulta.
   `AtoDeOrdenacao` publicado, o marco, a natureza, o instante, quem publicou, a autoridade
   signatária, o conteúdo canônico divulgado com seu resumo criptográfico, e a publicação anterior
   quando sucede outra. Append-only.
+- **Situação divulgada** — a situação de uma pessoa naquela divulgação: uma linha por participante
+  considerado pelo ato, inclusive quem não recebeu posição. É o que responde à FR-059 sem nomear
+  ninguém publicamente, e é congelada na mesma transação e a partir do mesmo ato que a lista
+  pública — por isso não é segunda fonte de verdade. Não atravessa a fronteira pública.
+  Append-only.
 - **Documento da publicação** — a representação imprimível dos mesmos bytes de conteúdo, com seu
   próprio resumo. Append-only.
 
