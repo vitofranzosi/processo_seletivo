@@ -12,6 +12,15 @@ diff revisado. Regenerá-la para fazer um teste passar é apagar a única evidê
 O snapshot fica versionado ao lado dos bytes: sem ele a fixture seria um arquivo binário que
 ninguém consegue reproduzir, e a comparação viraria fé.
 
+**O snapshot é um Edital na versão canônica vigente, e isso é requisito da fixture.** Ele nasceu na
+versão 3 e ali ficou enquanto o esquema andava até a 7 — de modo que a comparação byte a byte
+cobria um Edital que o sistema já não emite, e nenhuma composição posterior à `009` passava por
+aqui. A elevação foi autoral onde a `elevacao.py` recusa converter (o degrau 4, que traz
+`documentRequirements`, porque dizer que um Edital não exige documento algum é dizer alguma coisa)
+e mecânica onde ela converte, escrevendo a mesma grafia da ausência que aquele módulo escreve.
+Quem acrescentar um degrau ao esquema tem de trazer a fixture junto: uma fixture em versão vencida
+não afirma ausência de mudança — afirma ausência de cobertura.
+
 **Duas naturezas, tratadas de forma oposta (`008`, D-010).**
 
 *Invariante* — o que a `008` não pode quebrar:
@@ -328,3 +337,42 @@ def test_tirar_a_marca_do_fluxo_nao_toca_os_bytes_do_documento_publicado():
     """
     assert documento(SNAPSHOT, HASH) == DOCUMENTO
     assert MARCA_DE_PREVIA not in texto_de(DOCUMENTO)
+
+
+# ---------------------------------------------------------------------------
+# 015 — A fixture é um Edital que classifica (E2E15-004/005/008)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.contract
+def test_a_regra_classificatoria_publicada_e_reconstituivel_no_documento():
+    """O que a comparação de bytes cobre, dito por extenso — e por que não basta o byte.
+
+    A fixture guarda a ausência de mudança; sozinha, ela é re-baselinável. Uma regeneração
+    descuidada trocaria os bytes e continuaria verde, e o documento poderia voltar a imprimir
+    "2º maior valor declarado" sem dizer de quê sem que nada aqui reclamasse. Estas afirmações
+    são o que sobrevive a uma regeneração: cada parâmetro que fecha a conta, no papel, com os
+    nomes publicados.
+    """
+    texto = texto_de(documento(SNAPSHOT, HASH))
+
+    # O alvo de cada tipo de critério, resolvido — e não o enum nem o identificador.
+    assert "1º maior pontuação na Etapa Prova didática" in texto
+    assert "2º maior valor declarado em Meses de experiência no ensino a distância" in texto
+    assert "3º menor valor declarado em Data de nascimento" in texto
+    # Os fatos que a inscrição vai exigir, anunciados antes dela.
+    assert "Dados exigidos na inscrição" in texto
+    assert "Data de nascimento (data)" in texto
+    # Os parâmetros que fecham a conta, junto da regra que os usa.
+    assert (
+        "soma ponderada das Etapas Prova didática (peso 2) e Análise de títulos (peso 1)" in texto
+    )
+    assert "2 casas decimais, meio para cima" in texto
+
+
+@pytest.mark.contract
+def test_a_elevacao_da_fixture_nao_trouxe_identificador_tecnico_para_o_papel():
+    """As coleções da versão 7 entraram carregando `id`, e é por aí que um UUID vazaria."""
+    texto = texto_de(documento(SNAPSHOT, HASH))
+
+    assert not re.search(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", texto)

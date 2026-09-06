@@ -1027,58 +1027,257 @@ def _tabela(
             escrever_linha(linha, REGULAR)
 
 
+# A grafia publicada vira frase. O documento não imprime `SOMA_PONDERADA` pelo mesmo motivo que
+# não imprime UUID nem a forma canônica de quatro casas: o candidato lê a regra, não a grafia com
+# que o sistema a guarda.
 OPERACAO_DO_MARCO = {
     "SOMA_PONDERADA": "soma ponderada",
     "MEDIA_PONDERADA": "média ponderada",
 }
-CRITERIO_DE_DESEMPATE = {
-    "MAIOR_PONTUACAO_NA_ETAPA": "maior pontuação na Etapa",
-    "MAIOR_VALOR_DE_FATO": "maior valor declarado",
-    "MENOR_VALOR_DE_FATO": "menor valor declarado",
+NORMALIZACAO_DO_MARCO = {
+    "NENHUMA": "nenhuma",
+    "PELA_SOMA_DOS_PESOS": "pela soma dos pesos",
 }
+MODO_DE_ARREDONDAMENTO = {
+    "MEIO_PARA_CIMA": "meio para cima",
+    "MEIO_PARA_PAR": "meio para par",
+    "TRUNCAR": "truncamento",
+}
+# `{alvo}` já vem com o substantivo que o antecede — "Etapa Prova didática", "Meses de
+# experiência" —, porque é o que permite à mesma frase servir ao alvo resolvido e ao ausente sem
+# que uma das duas leituras fique torta.
+CRITERIO_DE_DESEMPATE = {
+    "MAIOR_PONTUACAO_NA_ETAPA": "maior pontuação na {alvo}",
+    "MAIOR_VALOR_DE_FATO": "maior valor declarado em {alvo}",
+    "MENOR_VALOR_DE_FATO": "menor valor declarado em {alvo}",
+}
+QUANDO_AUSENTE = {
+    "ULTIMO_NO_CRITERIO": "sem o valor, fica por último neste critério",
+    "CRITERIO_NAO_SE_APLICA": "sem o valor, o critério não se aplica",
+}
+TIPO_DO_FATO = {"DATA": "data", "INTEIRO": "número inteiro"}
+
+# A Etapa decisória enumerada por um marco é porta, e não parcela: ela não produz número e não
+# entra na conta. `forma` é da `012`/`013`; aqui ela decide o que se escreve ao lado do nome.
+DECISORIA = "DECISORIA"
+
+ETAPA_NAO_IDENTIFICADA = "Etapa não identificada neste Edital"
+FATO_NAO_IDENTIFICADO = "dado não identificado neste Edital"
 
 
-def _marcos(composicao, perfil, tabelas, nomear_perfil=False):
-    """Os marcos classificatórios em tabela, com os critérios na ordem publicada (015, D-001).
+def _enumerar(partes):
+    """`a`, `a e b`, `a, b e c` — como um Edital enumera, e não como uma lista de código."""
+    if len(partes) <= 1:
+        return "".join(partes)
+    return f"{', '.join(partes[:-1])} e {partes[-1]}"
+
+
+def _por_identificador(itens):
+    return {str(item.get("id")): item for item in itens or [] if isinstance(item, dict)}
+
+
+def _etapa_com_o_peso(etapa):
+    """O nome publicado da Etapa, e o peso com que ela entra na combinação (E2E15-008).
+
+    **O peso existia no documento e estava no lugar errado.** Ele é publicado na seção da própria
+    Etapa — que continua sendo a fonte autoritativa (FR-009) —, longe da regra que o consome. Quem
+    lê "soma ponderada" precisa folhear até cada Etapa para reunir os fatores e refazer a conta;
+    repeti-lo aqui não cria segunda fonte, porque é o mesmo `weight` que se lê.
+
+    Porta não pondera: escrever "(peso …)" onde a Etapa não produz número afirmaria uma parcela
+    que a combinação não tem. E Etapa pontuada sem peso não é impressa como "peso 1" — a
+    publicação recusa esse marco (FR-067), e num rascunho em prévia inventar o número seria o
+    documento completando a regra que o Edital não declarou.
+    """
+    nome = etapa.get("name") or ETAPA_NAO_IDENTIFICADA
+    if etapa.get("forma") == DECISORIA:
+        return f"{nome} (não pontua)"
+    if etapa.get("weight") is not None:
+        return f"{nome} (peso {humano.decimal(etapa['weight'])})"
+    return nome
+
+
+def _combinacao(marco, etapas):
+    """A operação e as Etapas que ela combina, cada uma com o peso publicado.
+
+    Sai como `soma ponderada das Etapas Prova didática (peso 2) e Análise de títulos (peso 1)`.
+    """
+    operacao = OPERACAO_DO_MARCO.get(marco.get("operation"), marco.get("operation", "") or "")
+    enumeradas = [
+        _etapa_com_o_peso(etapas.get(str(identificador)) or {})
+        for identificador in marco.get("stages") or []
+    ]
+    if not enumeradas:
+        return operacao
+    artigo = "da Etapa" if len(enumeradas) == 1 else "das Etapas"
+    return f"{operacao} {artigo} {_enumerar(enumeradas)}".strip()
+
+
+def _arredondamento(marco):
+    """A escala e o modo que fecham a conta: `2 casas decimais, meio para cima` (FR-068).
+
+    Compõe o que estiver declarado e nada além: um rascunho em prévia sem `mode` imprime só a
+    escala, em vez de o documento escolher um modo que a publicação ainda vai exigir.
+    """
+    arredondamento = marco.get("rounding") or {}
+    escala, modo = arredondamento.get("scale"), arredondamento.get("mode")
+    partes = []
+    if isinstance(escala, int) and not isinstance(escala, bool):
+        if escala == 0:
+            partes.append("sem casas decimais")
+        else:
+            partes.append(f"{escala} casa decimal" if escala == 1 else f"{escala} casas decimais")
+    if modo in MODO_DE_ARREDONDAMENTO:
+        partes.append(MODO_DE_ARREDONDAMENTO[modo])
+    return ", ".join(partes)
+
+
+def _alvo_do_criterio(criterio, etapas, fatos):
+    """O que o critério compara, resolvido para o **nome publicado** (E2E15-004).
+
+    `parameters` carrega `stageId` ou `factId` conforme o tipo, e era descartado: o documento
+    imprimia "2º maior valor declarado" sem dizer *de quê*. O desempate aplicado pelo sistema não
+    era o que o Edital deixava reconstituir — e um candidato, ou um juiz, lendo só o documento
+    oficial não chegava à mesma ordem.
+
+    **O identificador não vai ao papel em nenhuma hipótese.** Alvo que o snapshot não resolve é
+    dito como ausente, não como UUID: a publicação já recusa o critério pendurado (FR-017), e o
+    que resta aqui é a prévia de um rascunho — onde imprimir o identificador técnico trocaria uma
+    lacuna visível por uma que ninguém sabe ler.
+    """
+    parametros = criterio.get("parameters") or {}
+    if criterio.get("type") == "MAIOR_PONTUACAO_NA_ETAPA":
+        etapa = etapas.get(str(parametros.get("stageId"))) or {}
+        return f"Etapa {etapa['name']}" if etapa.get("name") else ETAPA_NAO_IDENTIFICADA
+    fato = fatos.get(str(parametros.get("factId"))) or {}
+    return fato.get("label") or FATO_NAO_IDENTIFICADO
+
+
+def _criterio_por_extenso(criterio, etapas, fatos):
+    alvo = _alvo_do_criterio(criterio, etapas, fatos)
+    # Tipo que não está no mapa não vira grafia impressa: sobra o alvo, que é a metade legível.
+    # A publicação só conhece os três, e imprimir `MAIOR_VALOR_DE_FATO` num rascunho em prévia
+    # seria trocar a frase que falta pelo nome interno que o candidato não lê.
+    tipo = criterio.get("type") or ""
+    frase = CRITERIO_DE_DESEMPATE[tipo].format(alvo=alvo) if tipo in CRITERIO_DE_DESEMPATE else alvo
+    ausencia = QUANDO_AUSENTE.get(criterio.get("whenMissing"))
+    return f"{frase}; {ausencia}" if ausencia else frase
+
+
+def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
+    """Os marcos classificatórios por extenso, com o que basta para refazer a ordem publicada.
+
+    **Deixou de ser tabela, e a troca é a resposta ao que faltava.** Três colunas cabiam enquanto o
+    marco dizia só "soma ponderada" e "maior valor declarado"; com o alvo de cada critério, o que
+    fazer na ausência do valor, os pesos das Etapas enumeradas, a normalização e o arredondamento,
+    a mesma grade viraria um parágrafo espremido em célula. Grade é para comparar linhas entre si —
+    e marcos não se comparam: cada um é uma regra que se lê inteira (E2E15-004/005/008).
 
     **A ordem impressa é a `order` de cada critério**, e não a posição em que ele aparece no
     conteúdo: é ela que a norma declara, e imprimir a posição faria o documento dizer uma coisa e
     o cálculo fazer outra depois de uma Retificação que reordenasse.
 
-    Nomes internos não vão ao papel: `SOMA_PONDERADA` e `MAIOR_PONTUACAO_NA_ETAPA` viram frase,
-    pelo mesmo motivo que os UUIDs e a versão canônica ficaram fora — o candidato lê a regra, não a
-    grafia com que o sistema a guarda.
+    O `snapshot` inteiro chega aqui porque as Etapas são do Edital, não do Perfil: sem elas não há
+    como resolver `stageId` para nome nem ler o peso publicado. Os fatos, ao contrário, são do
+    Perfil que os declara.
     """
     marcos = perfil.get("classificationMilestones") or []
     if not marcos:
         return
-    linhas = []
-    for marco in marcos:
-        criterios = sorted(marco.get("tiebreakers") or [], key=lambda item: item.get("order") or 0)
-        desempate = "; ".join(
-            f"{indice}º {CRITERIO_DE_DESEMPATE.get(criterio.get('type'), criterio.get('type', ''))}"
-            for indice, criterio in enumerate(criterios, start=1)
-        )
-        linhas.append(
-            [
-                f"{marco.get('code', '')} — {marco.get('name', '')}",
-                OPERACAO_DO_MARCO.get(marco.get("operation"), marco.get("operation", "")),
-                desempate,
-            ]
-        )
-    cabecalho = ["Marco", "Combinação das Etapas", "Critérios de desempate"]
-    presentes = [c for c in range(len(cabecalho)) if any(linha[c] for linha in linhas)]
+    etapas = _por_identificador(snapshot.get("stages"))
+    fatos = _por_identificador(perfil.get("declaredFacts"))
     titulo = "Marcos classificatórios"
     if nomear_perfil:
         titulo = f"{titulo} — {perfil.get('code', '')}"
-    with composicao.bloco():
-        _tabela(
-            composicao,
-            [cabecalho[c] for c in presentes],
-            [[linha[c] or "—" for c in presentes] for linha in linhas],
-            alinhamentos=[ESQUERDA for _ in presentes],
-            legenda=tabelas.legenda(titulo),
+    with composicao.bloco(coeso=False):
+        composicao.escrever(
+            titulo,
+            tamanho=CORPO_TEXTO,
+            fonte=NEGRITO,
+            recuo=18,
+            antes=ANTES_DE_BLOCO,
+            junto=True,
         )
+        for marco in marcos:
+            with composicao.bloco():
+                composicao.escrever(
+                    f"{marco.get('code', '')} — {marco.get('name', '')}",
+                    tamanho=CORPO_TEXTO,
+                    fonte=NEGRITO,
+                    recuo=32,
+                    antes=ANTES_DE_BLOCO,
+                    junto=True,
+                )
+                pares = []
+                combinacao = _combinacao(marco, etapas)
+                if combinacao:
+                    pares.append(["Combinação", combinacao])
+                normalizacao = NORMALIZACAO_DO_MARCO.get(marco.get("normalization"))
+                if normalizacao:
+                    pares.append(["Normalização", normalizacao])
+                arredondamento = _arredondamento(marco)
+                if arredondamento:
+                    pares.append(["Arredondamento", arredondamento])
+                _pares(composicao, pares, recuo=32.0)
+                criterios = sorted(
+                    marco.get("tiebreakers") or [], key=lambda item: item.get("order") or 0
+                )
+                if not criterios:
+                    continue
+                composicao.escrever(
+                    "Critérios de desempate:",
+                    tamanho=CORPO_TEXTO,
+                    fonte=NEGRITO,
+                    recuo=32,
+                    antes=ANTES_DE_LINHA,
+                    junto=True,
+                )
+                for indice, criterio in enumerate(criterios, start=1):
+                    composicao.escrever(
+                        f"{indice}º {_criterio_por_extenso(criterio, etapas, fatos)}",
+                        tamanho=CORPO_TEXTO,
+                        recuo=46,
+                        antes=ANTES_DE_LINHA,
+                    )
+
+
+def _fatos_declarados(composicao, perfil):
+    """Os dados que a inscrição vai exigir, anunciados antes de ela começar (E2E15-005).
+
+    O Edital declara `declaredFacts`, a inscrição os exige e os **congela na submissão**, e o
+    desempate os consome — mas o documento normativo nunca os lia. O candidato descobria quais
+    dados seriam coletados na tela de revisão, no instante do envio: um dado irreversível exigido
+    sem aviso prévio no único texto que o obriga.
+
+    **Aqui, e não numa seção institucional.** "CRITÉRIOS DE CLASSIFICAÇÃO" é texto padrão vindo de
+    `sections`, e dado derivado não se enxerta em texto de catálogo. O lugar é o Perfil que os
+    declara, ao lado dos Requisitos — onde quem está decidindo se concorre àquela vaga já está
+    lendo o que ela exige, e antes das Modalidades e dos marcos que os consomem.
+
+    **O documento anuncia o que será exigido; não afirma o que o sistema faz com o valor.** O
+    congelamento na submissão é comportamento da inscrição e não viaja no conteúdo publicado —
+    escrevê-lo aqui seria o Edital afirmando regra que a Publicação não contém.
+    """
+    fatos = perfil.get("declaredFacts") or []
+    if not fatos:
+        return
+    with composicao.bloco():
+        composicao.escrever(
+            "Dados exigidos na inscrição",
+            tamanho=CORPO_TEXTO,
+            fonte=NEGRITO,
+            recuo=18,
+            antes=ANTES_DE_BLOCO,
+            junto=True,
+        )
+        for fato in fatos:
+            rotulo = fato.get("label") or fato.get("code", "")
+            tipo = TIPO_DO_FATO.get(fato.get("type"))
+            composicao.escrever(
+                f"• {rotulo} ({tipo})" if tipo else f"• {rotulo}",
+                tamanho=CORPO_TEXTO,
+                recuo=32,
+            )
 
 
 def _modalidades(composicao, perfil, tabelas, nomear_perfil=False):
@@ -1243,8 +1442,9 @@ def _perfis(composicao, snapshot, secao=0, tabelas=None):
                     )
                     for requisito in requisitos:
                         composicao.escrever(f"• {requisito}", tamanho=CORPO_TEXTO, recuo=32)
+            _fatos_declarados(composicao, perfil)
             _modalidades(composicao, perfil, tabelas, len(perfis) > 1)
-            _marcos(composicao, perfil, tabelas, len(perfis) > 1)
+            _marcos(composicao, snapshot, perfil, len(perfis) > 1)
 
 
 def _reserva(perfil):
@@ -1350,7 +1550,7 @@ def _etapas(composicao, snapshot, secao=0, tabelas=None):
             # rótulos **deste** Edital. Sem isto, a fonte estruturada e o documento divergem, e o
             # candidato lê um Edital que não diz como sua Etapa é concluída — P-007 valendo só na
             # metade que ninguém vê (D-008, FR-119).
-            if etapa.get("forma") == "DECISORIA":
+            if etapa.get("forma") == DECISORIA:
                 favoravel = etapa.get("rotuloFavoravel") or "favorável"
                 desfavoravel = etapa.get("rotuloDesfavoravel") or "desfavorável"
                 pares.append(["Resultado", f"{favoravel} ou {desfavoravel}"])
