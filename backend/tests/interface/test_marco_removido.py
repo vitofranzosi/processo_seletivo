@@ -26,7 +26,7 @@ from processo_seletivo.divulgacao.domain.publicabilidade import (
     SUCEDIDO,
     aferir,
 )
-from tests.fixtures.divulgacao import montar_ato_publicavel
+from tests.fixtures.divulgacao import emitir, montar_ato_publicavel
 from tests.fixtures.publicacao import retify
 from tests.interface.conftest import identificar
 
@@ -143,8 +143,7 @@ def test_a_recusa_por_ato_desatualizado_continua_mandando_emitir_sucessor(com_a_
 
 
 def test_a_recusa_por_ato_sucedido_continua_mandando_emitir_sucessor(cenario, gestor):
-    from tests.fixtures.divulgacao import emitir
-
+    """O marco permanece na norma: o ato é que deixou de ser o vigente."""
     sucessor = emitir(cenario, gestor, chave="emitir-sucessor-017")
     assert sucessor.id != cenario["ato"].id
 
