@@ -27,6 +27,7 @@ ETAPA_CLASSIFICATORIA = "aaaaaaaa-0000-4000-8000-00000000e021"
 ETAPA_SO_ELIMINATORIA = "aaaaaaaa-0000-4000-8000-00000000e023"
 MARCO = "aaaaaaaa-0000-4000-8000-00000000e051"
 CRITERIO = "aaaaaaaa-0000-4000-8000-00000000e061"
+FATO = "aaaaaaaa-0000-4000-8000-00000000e071"
 
 
 @pytest.fixture
@@ -38,7 +39,21 @@ def edital(api_client, manager_headers, process_payload):
 @pytest.fixture
 def com_etapas(client, seletor_ligado, edital):
     identificar(client, "ana.elaboradora", ["elaborador"])
-    compor_rascunho(client, edital, perfis=perfis(), eventos=eventos())
+    # O fato declarado entra aqui porque o desempate o consome: sem ele, o select "O que ele
+    # compara" teria só Etapas, e metade da lista que o critério oferece ficaria fora do teste.
+    compor_rascunho(
+        client,
+        edital,
+        perfis=perfis(
+            **{
+                "fato-0-0-id": FATO,
+                "fato-0-0-code": "EXPERIENCIA",
+                "fato-0-0-label": "Meses de experiência em EaD",
+                "fato-0-0-type": "INTEIRO",
+            }
+        ),
+        eventos=eventos(),
+    )
     edital.refresh_from_db()
     resposta = client.post(
         reverse("interface:compor-etapa", args=[edital.id, "etapas"]),
@@ -190,3 +205,47 @@ def test_gravar_a_classificacao_preserva_o_resto_do_perfil(client, com_etapas):
 
     perfil.refresh_from_db()
     assert (perfil.name, perfil.locality, perfil.immediate_vacancies) == antes
+
+
+def test_marco_recem_acrescentado_leva_o_edital_ate_o_criterio(client, com_etapas):
+    """O caminho principal da composição: acrescentar marco **e** critérios de uma vez (E2E15-001).
+
+    O fragmento de marco não é folha — dele nasce o botão que pede o fragmento de critério, e é
+    esse pedido que carrega o Edital na query. Sem o Edital no contexto do marco, o `hx-get` saía
+    com o parâmetro vazio, o critério nascia com o select "O que ele compara" só com o `—`, e como
+    ele é obrigatório o formulário não podia ser enviado. O contorno — preencher o marco, salvar o
+    rascunho e recarregar, para que o marco viesse do servidor dentro da tela inteira — exige
+    conhecimento interno, de modo que o defeito atingia exatamente quem seguia o caminho óbvio.
+
+    O teste anda os dois saltos do htmx, e não só o primeiro: o que importa não é o parâmetro estar
+    no atributo, é o critério que vem dele enxergar as Etapas classificatórias e os fatos.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    marco = client.get(
+        reverse("interface:fragmento-marco", args=[PERFIL]),
+        {"edital": str(com_etapas.id), "indice": "0"},
+    ).content.decode()
+
+    assert f"?edital={com_etapas.id}" in marco, "o botão de critério precisa levar o Edital adiante"
+    endereco = marco.split('hx-get="')[1].split('"')[0]
+    assert endereco.startswith(reverse("interface:fragmento-criterio", args=[PERFIL, "0"]))
+
+    # O endereço vai inteiro, com a query que o botão montou: passar `data` ao cliente de teste
+    # descartaria a query do caminho, e o teste deixaria de exercitar justamente o que se corrigiu.
+    criterio = client.get(f"{endereco}&indice=0").content.decode()
+
+    assert f'<option value="{ETAPA_CLASSIFICATORIA}"' in criterio
+    assert "Prova didática" in criterio
+    assert f'<option value="{FATO}"' in criterio, "o desempate por fato precisa do fato na lista"
+    assert f'<option value="{ETAPA_SO_ELIMINATORIA}"' not in criterio
+
+
+def test_fragmento_de_marco_sem_edital_nao_quebra(client, com_etapas):
+    """A rota é pública ao assistente e o parâmetro pode faltar; faltar é lista vazia, não erro."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.get(reverse("interface:fragmento-marco", args=[PERFIL]), {"indice": "0"})
+
+    assert resposta.status_code == 200
+    assert "?edital=" in resposta.content.decode()

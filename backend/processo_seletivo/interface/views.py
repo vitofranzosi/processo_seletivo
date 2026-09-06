@@ -1040,6 +1040,11 @@ def fragmento_marco(request, indice):
             # marco não teria o que escolher, que é o defeito que este passo existe para evitar.
             "etapas_classificatorias": etapas,
             "fatos_declarados": fatos,
+            # O marco não é folha: dele nasce o botão que pede o fragmento de critério, e esse
+            # pedido carrega o Edital na query. Sem `edital` aqui, o `hx-get` do botão sairia com o
+            # parâmetro vazio e o critério acrescentado a partir de um marco recém-criado nasceria
+            # sem alvo — o mesmo defeito que as listas acima evitam, um nível abaixo.
+            "edital": edital,
         },
     )
 
