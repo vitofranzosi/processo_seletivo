@@ -4,7 +4,12 @@
 <nav aria-label="Trilha de navegação" class="trilha">
   <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
   <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <a href="{% url 'interface:ato-de-ordenacao' edital.id marco_id ato.id %}">Ato de classificação</a> ›
+  {% comment %}
+  O degrau nomeia de onde esta tela vem, e nomear não é abrir: a tela do ato é da presidência e da
+  auditoria, e quem só publica recebe 404 nela. Sem o link, a trilha continua dizendo onde a
+  prévia fica — que é o que ela existe para dizer — sem fingir um acesso que não há (E2E17-002).
+  {% endcomment %}
+  {% if pode_ver_a_classificacao %}<a href="{% url 'interface:ato-de-ordenacao' edital.id marco_id ato.id %}">Ato de classificação</a>{% else %}Ato de classificação{% endif %} ›
   <span aria-current="page">Publicar resultado</span>
 </nav>
 
@@ -72,7 +77,19 @@ FR-040).
   </div>
 
   <button type="submit" class="botao perigoso">Publicar este resultado</button>
+  {% comment %}
+  Cancelar tem de **chegar a algum lugar**, e o lugar depende de quem desiste. Quem consulta o ato
+  volta para ele, que é de onde veio. Quem só publica não o alcança, e mandá-lo para lá trocaria a
+  desistência por um 404: volta para o histórico de divulgações do marco, que é a tela da própria
+  publicação e que a capacidade de publicar já abre (E2E17-002).
+
+  Nenhuma permissão se alarga aqui: o destino muda, a porta de cada tela continua a mesma.
+  {% endcomment %}
+  {% if pode_ver_a_classificacao %}
   <a class="botao secundario" href="{% url 'interface:ato-de-ordenacao' edital.id marco_id ato.id %}">Cancelar</a>
+  {% else %}
+  <a class="botao secundario" href="{% url 'interface:publicacoes-do-marco' edital.id marco_id %}">Cancelar</a>
+  {% endif %}
 </form>
 {% else %}
 {% comment %}

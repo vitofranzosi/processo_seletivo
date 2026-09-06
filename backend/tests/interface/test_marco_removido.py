@@ -95,6 +95,13 @@ def _previa(cenario):
     )
 
 
+def _ato(cenario):
+    return reverse(
+        "interface:ato-de-ordenacao",
+        args=[cenario["edital"].id, cenario["marco"], cenario["ato"].id],
+    )
+
+
 def _ordenacao(cenario):
     return reverse("interface:ordenacao", args=[cenario["edital"].id, cenario["marco"]])
 
@@ -215,6 +222,62 @@ def test_o_historico_oferece_o_caminho_a_quem_alcanca_a_classificacao(
     corpo = client.get(_publicacoes(cenario)).content.decode()
 
     assert _liga_para(corpo, _ordenacao(cenario))
+
+
+def test_a_previa_nao_liga_para_o_ato_quem_nao_o_alcanca(client, seletor_ligado, cenario):
+    """A trilha nomeia de onde a prévia vem; nomear não é abrir.
+
+    A tela do ato é da presidência e da auditoria. Quem só publica recebe 404 nela, e o degrau da
+    trilha oferecia o link assim mesmo — o segundo beco da mesma classe do E2E17-002.
+    """
+    identificar(client, "paula.publicadora", ["publicador"])
+
+    corpo = client.get(_previa(cenario)).content.decode()
+
+    assert not _liga_para(corpo, _ato(cenario))
+    assert "Ato de classificação" in corpo, "o degrau continua dizendo onde esta tela fica"
+
+
+def test_a_previa_liga_para_o_ato_quem_o_alcanca(client, seletor_ligado, cenario):
+    identificar(client, "paula.publicadora", ["publicador", "auditor"])
+
+    corpo = client.get(_previa(cenario)).content.decode()
+
+    assert _liga_para(corpo, _ato(cenario))
+
+
+def test_cancelar_leva_ao_historico_quem_nao_alcanca_o_ato(client, seletor_ligado, cenario):
+    """Desistir tem de chegar a algum lugar, e o lugar depende de quem desiste.
+
+    Mandar quem só publica de volta ao ato trocaria a desistência por um 404. O histórico de
+    divulgações do marco é a tela da própria publicação, e a capacidade de publicar já a abre.
+    """
+    identificar(client, "paula.publicadora", ["publicador"])
+
+    corpo = client.get(_previa(cenario)).content.decode()
+
+    assert _liga_para(corpo, _publicacoes(cenario))
+    assert not _liga_para(corpo, _ato(cenario))
+    # E o destino é mesmo alcançável — a alternativa seria trocar um beco por outro.
+    assert client.get(_publicacoes(cenario)).status_code == 200
+
+
+def test_cancelar_volta_ao_ato_para_quem_veio_dele(client, seletor_ligado, cenario):
+    """Quem consulta o ato volta para ele: é de onde veio, e o caminho continua o mesmo."""
+    identificar(client, "paula.publicadora", ["publicador", "auditor"])
+
+    corpo = client.get(_previa(cenario)).content.decode()
+
+    assert _liga_para(corpo, _ato(cenario))
+    assert client.get(_ato(cenario)).status_code == 200
+
+
+def test_nenhuma_permissao_se_alargou_para_resolver_navegacao(client, seletor_ligado, cenario):
+    """A porta de cada tela continua a mesma: o que mudou foi o que se oferece, não quem entra."""
+    identificar(client, "paula.publicadora", ["publicador"])
+
+    assert client.get(_ato(cenario)).status_code == 404
+    assert client.get(_ordenacao(cenario)).status_code == 404
 
 
 def test_a_classificacao_do_marco_removido_abre_para_quem_a_alcanca(
