@@ -1,0 +1,66 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Resultados divulgados{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <a href="{% url 'interface:ordenacao' edital.id marco_id %}">Classificação</a> ›
+  <span aria-current="page">Resultados divulgados</span>
+</nav>
+
+<h1>Resultados divulgados</h1>
+<p class="sub">O que foi divulgado neste marco, quando, por quem — e o que vale hoje.</p>
+
+{% if publicada_agora %}<p class="sucesso" role="status" tabindex="-1">Resultado publicado. Ele já pode ser consultado publicamente.</p>{% endif %}
+
+{% if historico %}
+<div class="tabela-rolavel">
+<table>
+  <caption class="oculto">Publicações de resultado deste marco</caption>
+  <thead>
+    <tr>
+      <th scope="col">Situação</th>
+      <th scope="col">Natureza</th>
+      <th scope="col">Publicado em</th>
+      <th scope="col">Por</th>
+      <th scope="col">Autoridade signatária</th>
+      <th scope="col">Consultar</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for linha in historico %}
+    <tr>
+      {% comment %}
+      A situação dita **em texto**, e não só por cor ou por posição na lista: quem lê sem enxergar
+      cor precisa da mesma informação que quem enxerga (FR-052).
+      {% endcomment %}
+      <td>{% if linha.vigente %}<strong>Vigente</strong>{% else %}Sucedida{% endif %}</td>
+      <td>{{ linha.natureza_rotulo }}</td>
+      <td>{{ linha.publicacao.publicado_em|date:"d/m/Y" }} às {{ linha.publicacao.publicado_em|date:"H:i" }}</td>
+      <td>{{ linha.publicacao.publicado_por }}</td>
+      <td>{{ linha.publicacao.signatario_nome }} — {{ linha.publicacao.signatario_cargo }}</td>
+      <td>
+        <a href="{% url 'portal:resultado' linha.publicacao.id %}">Página pública</a>
+        {% comment %}
+        O caminho para o **ato de origem** — a tela da 015 — condicionado à autorização de quem lê:
+        ela tem porta própria, e oferecê-lo a quem receberia 404 seria oferecer um beco (FR-022).
+        {% endcomment %}
+        {% if pode_ver_o_ato %} · <a href="{% url 'interface:ato-de-ordenacao' edital.id marco_id linha.ato.id %}">Ato de origem</a>{% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="nenhuma">Nenhum resultado foi divulgado neste marco ainda.</p>
+{% endif %}
+
+{% comment %}
+Publicar é de um; consultar é de dois. Quem audita lê esta página inteira e não age nela, e por
+isso a ação depende da capacidade que a rota de consulta não exige (FR-069).
+{% endcomment %}
+{% if pode_publicar %}
+<p><a class="botao secundario" href="{% url 'interface:ordenacao' edital.id marco_id %}">Ir para a classificação do marco</a></p>
+{% endif %}
+{% endblock %}

@@ -108,6 +108,16 @@ porque a base dele é contextual (T-006).
 Cada mensagem nomeia o caminho: as três de obsolescência apontam para emitir o ato sucessor na 015
 (FR-006).
 
+**O status é o da resposta, e não só o do `DomainError`.** Recusado, o POST **não** redireciona: ele
+recompõe a prévia e a devolve com o status desta tabela. O canal administrativo usa
+POST-redirect-GET no caminho de sucesso, e é o que esta rota faz — mas responder `302` a um `409`
+diria "vá para outro lugar" onde o correto é dizer "o ato não aconteceu", e esconderia de quem
+chamou que nada foi gravado.
+
+A recomposição não é só protocolo: a assinatura da prévia e a chave de idempotência voltam
+**recalculadas**, e é isso que torna a reconfirmação possível depois de `publication_preview_stale`
+— a projeção a confirmar é a de agora, e não a que envelheceu.
+
 `publication_already_exists` tem cobertura dupla e deliberada — a idempotência responde ao **mesmo**
 pedido repetido, e a constraint `uq_publicacao_por_ato_natureza` responde a **dois pedidos
 distintos** sobre o mesmo ato, que é o caso das duas abas com chaves diferentes.

@@ -15,6 +15,23 @@ inscrição. Ler o Edital continua a um toque — só não disputa mais a decis�
 {% endcomment %}
 <a class="documento secundaria" href="{% url 'public-document' publicacao_id %}">Ler o Edital completo (PDF)</a>
 
+{% comment %}
+Os resultados divulgados vêm **antes** dos Perfis, e de propósito: quem volta a esta página depois
+do período de inscrições volta para saber do resultado, e não para reler as vagas. Só os vigentes
+aparecem — o sucedido continua consultável pelo endereço dele (FR-050, SC-018).
+{% endcomment %}
+{% if resultados_divulgados %}
+<h2>Resultados divulgados</h2>
+<ul class="resultados-divulgados">
+  {% for item in resultados_divulgados %}
+  <li>
+    <a href="{% url 'portal:resultado' item.publicacao.id %}">{{ item.natureza_rotulo }} — {{ item.marco }}</a>
+    <span class="meta">publicado em {{ item.publicacao.publicado_em|date:"d/m/Y" }}</span>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+
 <h2>Perfis e vagas</h2>
 <ul class="perfis">
   {% for perfil in perfis %}

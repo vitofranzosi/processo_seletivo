@@ -58,6 +58,18 @@ urlpatterns = [
         views.documento_do_candidato,
         name="documento-do-candidato",
     ),
+    # A divulgação do resultado (017). Endereço **estável e histórico**: uma publicação sucedida
+    # continua respondendo no mesmo lugar, dizendo que foi sucedida (FR-047, FR-048). Não colide
+    # com `<uuid:edital_id>/`, que fecha este arquivo: `resultados` não casa com `uuid`.
+    path("resultados/<uuid:publicacao_id>/", views.resultado, name="resultado"),
+    # `.pdf` no fim segue o precedente do comprovante — é o que uma pessoa reconhece como arquivo
+    # para guardar. A rota nasce junto com a view: separá-las deixaria este módulo apontando para
+    # uma view inexistente e quebraria o import do portal inteiro.
+    path(
+        "resultados/<uuid:publicacao_id>/documento.pdf",
+        views.resultado_em_pdf,
+        name="resultado-documento",
+    ),
     path("<uuid:edital_id>/", views.selecao, name="selecao"),
     path(
         "<uuid:edital_id>/vagas/<uuid:profile_id>/inscrever",

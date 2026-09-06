@@ -22,6 +22,8 @@ APPS = (
     "avaliacoes",
     "resultados",
     "classificacao",
+    # A divulgação da 017: três tabelas append-only e a coerência da publicação contra o ato.
+    "divulgacao",
 )
 # Agrupadas pelo app que as cria, porque o teste de upgrade incremental exercita **um** app por vez:
 # voltar `publicacoes` uma migration desaplica também o que depende dela, e exigir ali o conjunto
@@ -51,12 +53,46 @@ TRIGGERS_POR_APP = {
         "ato_de_ordenacao_coerente",
         "posicao_coerente",
     ),
+    # A divulgação da 017: as três de imutabilidade são **absolutas** — publicar não tem ato em
+    # curso que legitime mutação, e toda sucessão é linha nova. A quarta é de coerência, no molde
+    # de `resultado_etapa_coerente`: ela confere os eixos declarados contra o ato citado e contra
+    # a linha predecessora, e é o que impede a publicação de nascer errada (FR-038, FR-040).
+    "divulgacao": (
+        "publicacao_resultado_append_only",
+        "situacao_divulgada_append_only",
+        "documento_do_resultado_append_only",
+        "publicacao_resultado_coerente",
+    ),
 }
 TRIGGERS = tuple(nome for grupo in TRIGGERS_POR_APP.values() for nome in grupo)
 
 postgresql_only = pytest.mark.skipif(
     connection.vendor != "postgresql", reason="migrations validadas em PostgreSQL"
 )
+
+
+@pytest.fixture(autouse=True)
+def _esquema_restaurado(request):
+    """Cada teste deste arquivo devolve o banco ao grafo completo antes de sair.
+
+    **Por que isto precisa existir.** Os testes daqui desaplicam migrations de propósito — é o que
+    eles verificam. Mas desaplicar `publicacoes` desaplica junto **tudo o que depende dela**, e
+    reaplicar só `publicacoes` deixa os dependentes de fora: `classificacao`, `resultados` e, desde
+    a 017, `divulgacao` ficam sem tabela para o resto da sessão. Como a ordem dos testes é
+    sorteada, o efeito aparecia como erro `relation ... does not exist` em arquivos que não têm
+    relação nenhuma com migrations — e num arquivo diferente a cada execução.
+
+    O teste que desaplica continua desaplicando; o que muda é que ele não deixa a conta para o
+    próximo.
+    """
+    yield
+    # Os testes que só leem arquivo não pedem banco, e tocar a conexão neles seria o erro de
+    # acesso a banco que o pytest-django existe para impedir.
+    if connection.vendor != "postgresql" or "django_db_setup" not in request.fixturenames:
+        return
+    executor = MigrationExecutor(connection)
+    executor.loader.build_graph()
+    executor.migrate(executor.loader.graph.leaf_nodes())
 
 
 def _installed_triggers():
@@ -420,6 +456,65 @@ def test_migrations_do_not_import_domain_or_application_code():
         and any(f".{camada}" in linha for camada in DOMINIO_OU_APLICACAO)
     ]
     assert not infratores, f"migrations acopladas ao código vivo: {infratores}"
+
+
+# Os apps que a 017 **lê** e não toca. `divulgacao` depende dos quatro, e a direção da dependência
+# é única: nenhum deles passa a conhecê-la (017, T-001).
+APPS_QUE_A_017_NAO_TOCA = ("classificacao", "resultados", "editais", "publicacoes")
+
+
+def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
+    """FR-070: a divulgação lê os agregados existentes e não altera nenhum deles.
+
+    A tentação concreta que isto bloqueia tem nome: acrescentar uma coluna de "publicado" ao
+    `AtoDeOrdenacao`, ou um campo de vigência ao lado dele. Qualquer uma das duas faria a 015
+    passar a conhecer a 017 — e a sucessão do ato e a da divulgação, que são cadeias diferentes
+    sobre objetos diferentes, começariam a se confundir numa coluna só.
+
+    A guarda é por **contagem**: a 017 nasce depois destas migrations, e qualquer uma nova nesses
+    quatro apps que ela precisasse teria de vir com justificativa própria — que é exatamente a
+    conversa que este teste força.
+    """
+    import pathlib as _pathlib
+
+    raiz = _pathlib.Path(__file__).resolve().parents[2] / "processo_seletivo"
+    esperadas = {
+        "classificacao": 3,
+        "resultados": 4,
+        "editais": 10,
+        "publicacoes": 8,
+    }
+    for app, quantas in esperadas.items():
+        migrations = sorted((raiz / app / "migrations").glob("[0-9]*.py"))
+        assert len(migrations) == quantas, (
+            f"{app} tem {len(migrations)} migrations, e a 017 não acrescenta nenhuma a ele "
+            f"(FR-070). Se a mudança é legítima, ela é de outra feature — e este número sobe "
+            f"junto com a justificativa."
+        )
+
+
+def test_a_017_nao_toca_o_esquema_de_outros_apps():
+    """O espelho da guarda da 011: a migration da divulgação não nomeia app alheio.
+
+    Ela **depende** de `classificacao`, `inscricoes` e `processos` — é preciso, para as chaves
+    estrangeiras —, e o que ela não pode é alterar tabela deles.
+    """
+    import pathlib as _pathlib
+
+    raiz = _pathlib.Path(__file__).resolve().parents[2] / "processo_seletivo"
+    migrations = sorted((raiz / "divulgacao" / "migrations").glob("[0-9]*.py"))
+    assert migrations, "a 017 precisa ter ao menos uma migration"
+
+    alteracoes = ("AlterField", "AddField", "RemoveField", "RenameField", "DeleteModel")
+    for arquivo in migrations:
+        corpo = arquivo.read_text()
+        for operacao in alteracoes:
+            assert operacao not in corpo, (
+                f"{arquivo.name} usa {operacao}: a 017 cria as tabelas dela e não altera as "
+                "existentes (FR-070)"
+            )
+        for app_alheio in APPS_QUE_A_017_NAO_TOCA:
+            assert f'model_name="{app_alheio}' not in corpo
 
 
 def test_a_011_nao_altera_o_esquema_de_outros_apps():

@@ -1,0 +1,74 @@
+{% extends "portal/base.html" %}
+{% block titulo %}{{ cabecalho.titulo }}{% endblock %}
+{% block conteudo %}
+<h1>{{ cabecalho.natureza_rotulo }}</h1>
+<p class="sub">{{ cabecalho.processo }} · {{ cabecalho.edital }} · {{ cabecalho.perfil }} — {{ cabecalho.marco }}</p>
+
+{% comment %}
+A sucessão dita **em texto**, e não só por cor: quem lê sem enxergar cor precisa da mesma
+informação (FR-044, FR-052). A publicação sucedida continua respondendo neste mesmo endereço, com o
+conteúdo intacto — ela é histórica, e não removida (FR-043, FR-048).
+{% endcomment %}
+{% if foi_sucedida %}
+<p class="aviso"><strong>Este resultado foi sucedido.</strong> Ele permanece consultável como registro do que foi divulgado em {{ publicacao.publicado_em|date:"d/m/Y" }}, e não é mais o que vale.
+{% comment %}
+O caminho é para **a vigente** — a ponta da cadeia —, e não para a sucessora imediata: numa cadeia
+de três, a sucessora desta também já foi sucedida, e apontar para ela levaria de um histórico a
+outro (FR-044, SC-006).
+{% endcomment %}
+{% if vigente %}<a href="{% url 'portal:resultado' vigente.id %}">Ver o resultado vigente</a>{% endif %}</p>
+{% endif %}
+
+<p class="meta">
+  Publicado em {{ publicacao.publicado_em|date:"d/m/Y" }} às {{ publicacao.publicado_em|date:"H:i" }}.
+  Assinado por {{ cabecalho.signatario_nome }} — {{ cabecalho.signatario_cargo }}.
+</p>
+
+<p><a href="{% url 'portal:selecao' edital_id %}">Ver o {{ cabecalho.edital }}</a></p>
+
+<h2 id="titulo-do-resultado">Resultado</h2>
+{% if posicoes %}
+{% comment %}
+Tabela de verdade, com cabeçalhos de coluna associados: é o que permite a quem ouve a página saber
+a que coluna cada valor pertence (FR-054). A rolagem, quando a tela é estreita, é da tabela — a
+página não rola de lado (FR-051).
+{% endcomment %}
+<div class="tabela-rolavel">
+{% comment %}
+O nome acessível da tabela vem do próprio título da seção, e não de uma legenda escondida por CSS:
+uma legenda visualmente oculta precisa de largura fixa em pixel, que é justamente o que a base do
+portal não admite — é ela que produz rolagem horizontal a 375 px.
+{% endcomment %}
+<table class="resultado" aria-labelledby="titulo-do-resultado">
+  <thead>
+    <tr>
+      <th scope="col">Posição</th>
+      <th scope="col">Candidato</th>
+      <th scope="col">Protocolo</th>
+      <th scope="col">Modalidade</th>
+      <th scope="col">Pontuação</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for item in posicoes %}
+    <tr>
+      {% comment %}
+      O empate residual é dito como o que ele é — posição compartilhada —, em texto e não por
+      marca visual. Nenhum desempate é inventado para desfazê-lo (FR-014).
+      {% endcomment %}
+      <td data-rotulo="Posição">{{ item.posicao }}º{% if item.compartilhada %} <span class="compartilhada">(posição compartilhada)</span>{% endif %}</td>
+      <td data-rotulo="Candidato">{{ item.candidato }}</td>
+      <td data-rotulo="Protocolo">{{ item.protocolo }}</td>
+      <td data-rotulo="Modalidade">{{ item.modalidade|default:"—" }}</td>
+      <td data-rotulo="Pontuação">{{ item.pontuacao|default:"—" }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="nenhuma">Nenhum participante recebeu posição neste marco.</p>
+{% endif %}
+
+<p><a class="documento secundaria" href="{% url 'portal:resultado-documento' publicacao.id %}">Baixar o documento oficial (PDF)</a></p>
+{% endblock %}

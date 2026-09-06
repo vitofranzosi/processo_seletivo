@@ -10,6 +10,7 @@ Os dois dependem da designação do período, que o Edital ainda não sabe fazer
 lá; esta entrega é a fatia navegável dela.
 """
 
+import json
 from hashlib import sha256
 
 from django.conf import settings
@@ -21,6 +22,15 @@ from django.utils.dateparse import parse_datetime
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods
 
+from processo_seletivo.divulgacao.application.selectors import (
+    documento_do_resultado,
+    situacoes_do_candidato,
+    vigente_do_marco,
+    vigentes_do_edital,
+)
+from processo_seletivo.divulgacao.application.selectors import (
+    publicacao_por_id as publicacao_de_resultado,
+)
 from processo_seletivo.editais.domain.documentos import aplicaveis
 from processo_seletivo.identidade.application import associacao
 from processo_seletivo.identidade.application import credenciais as nucleo_da_identidade
@@ -274,6 +284,11 @@ def selecao(request, edital_id):
     contexto["recebe_inscricoes"] = recebe_inscricoes(
         status=versao.edital.status, conteudo=versao.content, agora=timezone.now()
     )
+    # **A descobribilidade do resultado** (FR-050, SC-018). Esta é a página que alguém já abre para
+    # conhecer a seleção, e é onde procura o resultado: sem isto, só chegaria à divulgação quem já
+    # tivesse o endereço dela. Só as **vigentes** — uma publicação sucedida continua consultável
+    # pelo endereço dela, e anunciá-la aqui ofereceria como atual o que já não é.
+    contexto["resultados_divulgados"] = vigentes_do_edital(versao.edital)
     resposta = render(request, "portal/selecao.html", contexto)
     # A página é pública, mas deixa de ser genérica quando quem lê já começou uma inscrição: o
     # `Continuar inscrição` diz que aquela pessoa se inscreveu. Num computador compartilhado, o
@@ -1221,6 +1236,11 @@ def acompanhamento(request, inscricao_id):
             "selecao": _selecao(versao),
             "fatos": _fatos_da_participacao(registro),
             "cronograma": _cronograma(versao.content, timezone.now()),
+            # **Acréscimo, e não reescrita.** `_fatos_da_participacao` continua descrevendo fatos
+            # da própria inscrição — o que a pessoa fez —, e a publicação é ato de terceiro sobre
+            # ela. Misturar as duas coisas na mesma lista devolveria à tela justamente a confusão
+            # que a FR-077 da 010 nomeia (FR-060).
+            "resultados_divulgados": situacoes_do_candidato(registro),
             # A versão aceita deixou de ser a vigente: o Edital mudou depois do envio. O aviso
             # informa; ele **não** altera a versão aceita nem reabre coisa alguma (FR-079).
             "retificado": registro.versao_aceita_id != versao.pk,
@@ -1677,3 +1697,72 @@ def _modalidade_da_inscricao(conteudo, inscricao):
         ),
         "",
     )
+
+
+# ---------------------------------------------------------------------------
+# O resultado divulgado (017). Duas rotas públicas, sem autenticação e sem conta.
+#
+# **A fronteira é a ausência da consulta, e não um filtro na serialização.** Estas views leem a
+# publicação e desserializam `conteudo_publico`. Nenhuma consulta daqui alcança `Inscricao`,
+# `PosicaoNaOrdem`, `VersaoConsolidada` ou `SituacaoDivulgada` — a situação individual de quem foi
+# considerado mora em tabela à parte, e a superfície pública não tem caminho até ela (T-010,
+# T-013). Um filtro no template protegeria a mesma coisa e dependeria de ninguém o remover.
+#
+# **O número de consultas é constante**: a publicação e a cadeia que diz se ela ainda é a vigente.
+# O custo não é — desserializar, montar o HTML e transmiti-lo crescem com o número de posições,
+# como em qualquer lista. O que se promete, e o que o teste mede, é derivada zero em consultas.
+# ---------------------------------------------------------------------------
+
+
+@require_http_methods(["GET"])
+def resultado(request, publicacao_id):
+    """A página pública de um resultado divulgado (FR-047, FR-049).
+
+    **Abrir não recalcula nada.** O conteúdo está gravado, não recomposto: uma Retificação
+    posterior não alcança a divulgação concluída porque não há o que alcançar (FR-010, FR-045).
+    """
+    publicacao = publicacao_de_resultado(publicacao_id)
+    if publicacao is None:
+        raise Http404
+    conteudo = json.loads(bytes(publicacao.conteudo_publico).decode("utf-8"))
+    # **Sucedida é uma pergunta; qual é a vigente é outra.** A primeira se responde pela cadeia já
+    # trazida no `prefetch` — tem sucessora, logo não vale mais. A segunda **não** é a sucessora
+    # imediata: numa cadeia P1 → P2 → P3, a sucessora de P1 é P2, que também já foi sucedida, e
+    # oferecê-la levaria de um resultado histórico a outro. Vigente é a que ninguém sucedeu, e é
+    # ela que a FR-044 manda oferecer.
+    foi_sucedida = bool(publicacao.sucessoras.all())
+    vigente = (
+        vigente_do_marco(edital=publicacao.edital, marco_id=publicacao.marco_id)
+        if foi_sucedida
+        else None
+    )
+    return render(
+        request,
+        "portal/resultado.html",
+        {
+            "publicacao": publicacao,
+            "cabecalho": conteudo["cabecalho"],
+            "posicoes": conteudo["posicoes"],
+            "foi_sucedida": foi_sucedida,
+            "vigente": vigente,
+            "edital_id": publicacao.edital_id,
+        },
+    )
+
+
+@require_http_methods(["GET"])
+def resultado_em_pdf(request, publicacao_id):
+    """Os bytes gravados, e nada recomposto (FR-062).
+
+    `ETag` igual ao `documento_hash`, no molde de `PublishedDocumentView`: o documento é imutável,
+    e o resumo dele é a identidade natural da representação.
+    """
+    documento = documento_do_resultado(publicacao_id)
+    if documento is None:
+        raise Http404
+    resposta = HttpResponse(bytes(documento.bytes), content_type=documento.content_type)
+    resposta["ETag"] = f'"{documento.documento_hash}"'
+    # `attachment`, como o comprovante: quem vem buscar o documento oficial vem buscar um arquivo
+    # para guardar, e abri-lo no visualizador o devolveria à mesma tela de onde saiu.
+    resposta["Content-Disposition"] = 'attachment; filename="Resultado.pdf"'
+    return resposta
