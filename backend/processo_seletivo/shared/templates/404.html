@@ -1,0 +1,45 @@
+{% comment %}
+A resposta institucional para endereço que não abre — nos dois canais.
+
+Django procura este template sempre que uma view levanta `Http404`. Sem ele, quem elabora recebia
+a página de depuração com a lista inteira do URLconf em desenvolvimento, e uma linha de texto sem
+identidade em produção. Nenhuma das duas responde à pessoa que bateu na porta (E2E17-002).
+
+**Não diz por quê, e é deliberado.** No sistema, 404 é também a resposta a "existe e você não
+alcança" — Edital de outro escopo institucional, tela de classificação para quem só publica.
+Explicar qual dos dois casos é revelaria a existência do recurso a quem não deve sabê-la, e a
+Constituição pede negar por padrão sem vazar o que se nega (princípio III).
+
+Fica em `shared/`, e não em `interface/` ou `portal/`, porque a mesma pergunta chega pelos dois
+canais e a resposta é a mesma: o endereço não abre para você, e daqui você volta ao começo.
+{% endcomment %}<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Página não encontrada — Cefor/Ifes</title>
+<style>
+{% include "shared/_tokens.css.html" %}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Open Sans","Segoe UI",system-ui,sans-serif;color:var(--texto);
+  background:var(--fundo);line-height:1.6;font-size:16px}
+a{color:var(--verde-texto)}
+*:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
+header.topo{background:var(--verde-escuro);color:var(--branco);padding:.85rem 1.5rem}
+header.topo .marca{font-weight:600;letter-spacing:.02em}
+header.topo .marca span{font-weight:300;opacity:.85}
+main{max-width:var(--leitura);margin:0 auto;padding:2.5rem 1.5rem}
+h1{font-size:1.6rem;margin:0 0 .5rem;font-weight:600}
+p{margin:0 0 1rem}
+</style>
+</head>
+<body>
+<header class="topo"><span class="marca">Cefor<span>/Ifes</span> · Processos Seletivos</span></header>
+<main>
+  <h1>Página não encontrada</h1>
+  <p>O endereço não corresponde a nada que você possa acessar. Ele pode ter deixado de existir, ou
+  pertencer a um Processo Seletivo fora do seu alcance.</p>
+  <p><a href="/">Voltar ao início</a></p>
+</main>
+</body>
+</html>

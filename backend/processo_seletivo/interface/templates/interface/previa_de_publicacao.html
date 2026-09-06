@@ -85,7 +85,15 @@ confirmação adicional (D-001, FR-004, FR-006).
   {% if publicabilidade.divergencias %}
   <ul>{% for item in publicabilidade.divergencias %}<li>{{ item.descricao }}</li>{% endfor %}</ul>
   {% endif %}
+  {% comment %}
+  Duas condições, e as duas são necessárias. `admite_sucessor` é do domínio: removido o marco não
+  há ordem a recomputar, e mandar emitir o sucessor seria instruir o impossível. A segunda é de
+  autorização: a tela da classificação é da presidência e da auditoria, e quem só publica recebe
+  404 nela — o botão levava ao beco em **todas** as três recusas (E2E17-002, FR-022).
+  {% endcomment %}
+  {% if publicabilidade.admite_sucessor and pode_ver_a_classificacao %}
   <p><a class="botao" href="{% url 'interface:ordenacao' edital.id marco_id %}">Ir para a classificação do marco</a></p>
+  {% endif %}
 </section>
 {% endif %}
 

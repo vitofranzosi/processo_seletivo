@@ -14,6 +14,12 @@ A classificação é em três degraus, e é ela que a prévia mostra (FR-005):
 
 Havendo impedimento, não existe publicar mediante confirmação adicional (D-001): a tela mostra a
 recusa nomeada e o caminho — emitir o ato sucessor, na tela da 015 (FR-006).
+
+**O caminho não é o mesmo nas três.** Ato sucedido e ato desatualizado deixam o marco na norma:
+existe o que recomputar, e o sucessor é o remédio. Marco removido não deixa — e a recusa que
+mandava emitir sucessor instruía o operador a fazer o impossível (E2E17-002). `admite_sucessor`
+é o que separa as duas situações, e é o domínio que o declara: a tela não pode deduzi-lo do
+código da recusa sem repetir aqui a regra que vive aqui.
 """
 
 from dataclasses import dataclass, field
@@ -35,6 +41,15 @@ CAMINHO_DO_SUCESSOR = (
     "Emita o ato sucessor na tela de classificação do marco e publique o ato vigente."
 )
 
+# **O marco removido não tem esse caminho, e dizer que tem é mandar fazer o impossível.**
+# `estado_do_marco` devolve `recomputavel=False` justamente porque não há regra vigente sobre a
+# qual calcular ordem alguma: não existe ato sucessor a emitir enquanto o marco não voltar à
+# norma. A recusa diz o que é verdade e para — restabelecer o marco é decisão normativa, tomada
+# por Retificação, e não operação que esta tela ofereça (E2E17-002).
+SEM_SUCESSOR = (
+    "Não há ato sucessor a emitir: sem o marco na norma, não há ordem vigente a divulgar."
+)
+
 MENSAGENS = {
     SUCEDIDO: (
         "Este ato foi sucedido por outro e não é mais o vigente do marco. " + CAMINHO_DO_SUCESSOR
@@ -45,9 +60,13 @@ MENSAGENS = {
     ),
     MARCO_REMOVIDO: (
         "O marco não existe na norma vigente: uma Retificação o removeu, e não há regra vigente "
-        "com que comparar o ato. " + CAMINHO_DO_SUCESSOR
+        "com que comparar o ato. " + SEM_SUCESSOR
     ),
 }
+
+# Quais recusas admitem o remédio que a mensagem nomeia. É o que a tela lê para decidir se oferece
+# o caminho — e não o código da recusa, que a obrigaria a repetir aqui a regra do domínio.
+ADMITE_SUCESSOR = {SUCEDIDO: True, DESATUALIZADO: True, MARCO_REMOVIDO: False}
 
 
 @dataclass(frozen=True)
@@ -63,6 +82,9 @@ class Afericao:
     mensagem: str = ""
     status: int = 422
     divergencias: list = field(default_factory=list)
+    # Se há ato sucessor a emitir. Só faz sentido diante de impedimento, e é por isso que o padrão
+    # é `True`: quem não impede não nomeia caminho nenhum, e a tela não lê este campo.
+    admite_sucessor: bool = True
 
     @property
     def publicavel(self) -> bool:
@@ -103,6 +125,7 @@ def aferir(*, edital, marco_id, ato, sucede=None, at=None):
             MENSAGENS[MARCO_REMOVIDO],
             STATUS[MARCO_REMOVIDO],
             estado["divergencias"],
+            ADMITE_SUCESSOR[MARCO_REMOVIDO],
         )
 
     vigente = estado["vigente"]
@@ -110,7 +133,12 @@ def aferir(*, edital, marco_id, ato, sucede=None, at=None):
         # Publicar um ato que outro já sucedeu divulgaria uma ordem revogada. O vigente ausente
         # cai aqui pelo mesmo raciocínio: o ato citado não é o que o marco reconhece hoje.
         return Afericao(
-            IMPEDIMENTO, SUCEDIDO, MENSAGENS[SUCEDIDO], STATUS[SUCEDIDO], estado["divergencias"]
+            IMPEDIMENTO,
+            SUCEDIDO,
+            MENSAGENS[SUCEDIDO],
+            STATUS[SUCEDIDO],
+            estado["divergencias"],
+            ADMITE_SUCESSOR[SUCEDIDO],
         )
 
     if estado["obsoleto"]:
@@ -120,6 +148,7 @@ def aferir(*, edital, marco_id, ato, sucede=None, at=None):
             MENSAGENS[DESATUALIZADO],
             STATUS[DESATUALIZADO],
             estado["divergencias"],
+            ADMITE_SUCESSOR[DESATUALIZADO],
         )
 
     if sucede is not None:
@@ -129,12 +158,14 @@ def aferir(*, edital, marco_id, ato, sucede=None, at=None):
 
 
 __all__ = [
+    "ADMITE_SUCESSOR",
     "AVISO",
     "Afericao",
     "DESATUALIZADO",
     "IMPEDIMENTO",
     "INFORMACAO",
     "MARCO_REMOVIDO",
+    "SEM_SUCESSOR",
     "SUCEDERA",
     "SUCEDIDO",
     "aferir",

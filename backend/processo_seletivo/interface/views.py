@@ -3082,6 +3082,16 @@ def resultados_da_etapa(request, edital_id, etapa_id):
     )
 
 
+def _pode_ver_a_classificacao(ator, edital):
+    """A porta das telas da 015, lida de fora delas.
+
+    É o mesmo teste que `_edital_para_classificar` aplica, e existe separado porque as telas da
+    017 precisam **oferecer ou não** o caminho antes de alguém batê-lo: link para porta fechada
+    responde 404, e 404 não explica nada a quem o recebe (FR-022, E2E17-002).
+    """
+    return pode_gerir_comissao(ator, edital.processo) is not None or ator.can("auditoria:consultar")
+
+
 def _edital_para_classificar(request, edital_id, *, somente_gestao=False):
     """A porta do marco: presidência ou auditoria lê; só a base de gestão emite.
 
@@ -3319,6 +3329,12 @@ def _renderizar_previa(request, edital, ato, marco_id, *, erro="", status=200):
                 "posicoes": projecao["posicoes"],
                 "consideradas": len(projecao["situacoes"]),
                 "publicabilidade": publicabilidade,
+                # Quem alcança a tela da classificação. A porta dela é outra — presidência ou
+                # auditoria —, e quem só publica recebe 404 lá. Oferecer o caminho a essa pessoa
+                # é oferecer um beco, e foi o que a auditoria da 017 encontrou (E2E17-002).
+                "pode_ver_a_classificacao": _pode_ver_a_classificacao(
+                    identidade.ator_da_sessao(request), edital
+                ),
                 "sucede": sucede,
                 "naturezas": _naturezas_oferecidas(sucede),
                 "autoridades": autoridades.CATALOGO,
@@ -3399,13 +3415,13 @@ def publicacoes_do_marco(request, edital_id, marco_id):
                 "marco_id": marco_id,
                 "historico": historico_das_publicacoes(edital=edital, marco_id=marco_id),
                 "pode_publicar": pode_publicar,
-                # O caminho para o **ato de origem** — a tela da 015 — é condicionado à autorização
-                # de quem lê: ela tem porta própria, e oferecê-lo a quem receberia 404 seria
-                # oferecer um beco (FR-022).
-                "pode_ver_o_ato": (
-                    pode_gerir_comissao(ator, edital.processo) is not None
-                    or ator.can("auditoria:consultar")
-                ),
+                # O caminho para o **ato de origem** e o da **classificação do marco** — as duas
+                # telas da 015 — condicionados à autorização de quem lê: elas têm porta própria, e
+                # oferecê-las a quem receberia 404 seria oferecer um beco (FR-022). O da
+                # classificação era condicionado a `pode_publicar`, que é exatamente a capacidade
+                # que **não** abre aquela porta: o publicador via o botão e caía no 404
+                # (E2E17-002).
+                "pode_ver_o_ato": _pode_ver_a_classificacao(ator, edital),
                 "publicada_agora": request.session.pop("resultado_da_publicacao", None),
             },
         )
