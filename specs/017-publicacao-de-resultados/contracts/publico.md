@@ -64,16 +64,24 @@ são os mesmos da página, porque vêm dos mesmos bytes (FR-064).
 ele descreve fatos da própria inscrição, e a publicação é ato de terceiro (FR-060 é acréscimo, não
 reescrita).
 
-O seletor busca `SituacaoDivulgada` pela Inscrição — índice próprio — e fica com a linha cuja
-publicação é a vigente. Não havendo linha, a chave é `None` e **nada** aparece: a I-004 dita em
-ausência de dado, e não em `if` de template (FR-056).
+O seletor busca `SituacaoDivulgada` pela Inscrição — índice próprio — e devolve **todas** as linhas
+cuja publicação é vigente, uma por marco divulgado. Um Edital pode ter vários marcos
+classificatórios, e cada um é ato pleno: publicados o intermediário e o final, a Inscrição tem duas
+linhas vigentes, e as duas são da pessoa. Escolher uma seria o sistema decidindo qual ato
+administrativo lhe interessa (FR-057).
+
+A ordem é a do marco no conteúdo publicado, e cada bloco é nomeado pelo seu marco — sem isso a
+pessoa lê duas posições diferentes sem saber a que cada uma se refere.
+
+Não havendo linha alguma, a lista é vazia e **nada** aparece: a I-004 dita em ausência de dado, e
+não em `if` de template (FR-056).
 
 Havendo:
 
-| `situacao` | O que aparece |
+| `situacao` | O que aparece, por marco |
 |---|---|
-| `CLASSIFICADA` | Natureza, posição, pontuação e o caminho para o resultado completo |
-| `SEM_POSICAO` | Natureza, a situação e o motivo — sem posição, e sem aparecer na lista pública |
+| `CLASSIFICADA` | Marco, natureza, posição, pontuação e o caminho para o resultado completo |
+| `SEM_POSICAO` | Marco, natureza, a situação e o motivo — sem posição, e sem aparecer na lista pública |
 
 O caminho leva sempre à publicação **vigente** (FR-061). O resumo não é outra fonte de verdade
 (FR-058): ele é a projeção individual congelada na **mesma transação**, a partir do **mesmo ato

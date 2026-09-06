@@ -112,9 +112,11 @@ classificação emitida → prévia → publicação → página pública
 ## Suíte
 
 ```bash
-cd backend && TEST_DB_ENGINE=postgresql DB_USER=$USER DB_NAME=test_017 uv run pytest -q
+cd backend && TEST_DB_ENGINE=postgresql DB_USER=$USER DB_NAME=publicacao_017 uv run pytest -q
 ```
 
 > As constraints de cadeia sob concorrência e as duas triggers append-only **só** são exercidas
 > contra PostgreSQL; sem `TEST_DB_ENGINE=postgresql` a suíte cai para sqlite e as pula em silêncio.
-> `DB_NAME` próprio evita disputa com outra worktree.
+> `DB_NAME` próprio evita disputa com outra worktree. Ele é o nome **base**: a suíte cria
+> `test_publicacao_017`, prefixando. Passar um nome que já comece com `test_` produz
+> `test_test_...`, que funciona e some da vista de quem depois for limpar bancos órfãos.

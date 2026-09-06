@@ -145,14 +145,15 @@ chegar nela a partir da página pública do Edital, sem conhecer o endereço.
 
 **Teste independente**: o mesmo acompanhamento, antes e depois de publicar.
 
-- [ ] T045 [US3] Escrever `situacao_do_candidato(inscricao)` em `backend/processo_seletivo/divulgacao/application/selectors.py`: busca `SituacaoDivulgada` pela Inscrição e fica com a linha cuja publicação é a vigente (FR-058, FR-061)
+- [ ] T045 [US3] Escrever `situacoes_do_candidato(inscricao)` em `backend/processo_seletivo/divulgacao/application/selectors.py`: busca `SituacaoDivulgada` pela Inscrição e devolve **todas** as linhas cuja publicação é vigente, uma por marco divulgado, na ordem do marco no conteúdo publicado — um Edital pode ter vários marcos, e escolher um seria o sistema decidindo qual ato interessa à pessoa (FR-057, FR-058, FR-061)
 - [ ] T046 [US3] Acrescentar a chave de contexto a `acompanhamento` em `backend/processo_seletivo/portal/views.py`, **sem alterar** `_fatos_da_participacao` — ele descreve fatos da própria inscrição, e a publicação é ato de terceiro (FR-060)
-- [ ] T047 [US3] Acrescentar o bloco em `backend/processo_seletivo/portal/templates/portal/acompanhamento.html`, com natureza, posição e pontuação, ou situação e motivo, e o caminho para o resultado completo (FR-057, FR-059)
+- [ ] T047 [US3] Acrescentar o bloco em `backend/processo_seletivo/portal/templates/portal/acompanhamento.html`, um por marco divulgado e **nomeado pelo marco**, com natureza, posição e pontuação, ou situação e motivo, e o caminho para o resultado completo (FR-057, FR-059)
 - [ ] T048 [P] [US3] Testar a ausência em `backend/tests/portal/test_acompanhamento_resultado.py`: com ato emitido e **nenhuma** publicação, o acompanhamento não menciona resultado por nenhum caminho (FR-056, SC-008)
 - [ ] T049 [P] [US3] Testar a presença em `backend/tests/portal/test_acompanhamento_resultado.py`: publicada, a candidata classificada vê natureza, posição, pontuação e o caminho (FR-057, SC-009)
 - [ ] T050 [P] [US3] Testar o não classificado em `backend/tests/portal/test_acompanhamento_resultado.py`: vê a própria situação e o motivo, e o seu nome **não** está na página pública (FR-059, SC-020)
 - [ ] T051 [P] [US3] Testar a sucessão em `backend/tests/portal/test_acompanhamento_resultado.py`: publicada P2, o caminho da Área leva à vigente (FR-061)
-- [ ] T052 [P] [US3] Testar o isolamento em `backend/tests/authorization/test_publicacao_de_resultado.py`: uma candidata não alcança a situação de outra, com `404` uniforme
+- [ ] T052 [P] [US3] Testar os dois marcos em `backend/tests/portal/test_acompanhamento_resultado.py`: publicados o marco intermediário e o final para a mesma Inscrição, os **dois** aparecem, cada um nomeado pelo seu marco, e nenhum é escolhido em lugar do outro (FR-057, SC-022)
+- [ ] T053 [P] [US3] Testar o isolamento em `backend/tests/authorization/test_publicacao_de_resultado.py`: uma candidata não alcança a situação de outra, com `404` uniforme
 
 **Checkpoint**: o gate de produto da feature — o resultado chegou à pessoa.
 
@@ -165,13 +166,13 @@ chegar nela a partir da página pública do Edital, sem conhecer o endereço.
 **Teste independente**: baixar o documento pela página pública e conferir cabeçalho, autoridade e
 resumo; retificar o Edital e conferir que os bytes não mudaram.
 
-- [ ] T053 [US4] Escrever `render_resultado_pdf(conteudo)` em `backend/processo_seletivo/divulgacao/infrastructure/documento.py`, montando uma `Composicao` e chamando `render_documento`, com `_tabela` para a lista — no molde de `inscricoes/infrastructure/comprovante_pdf.py` (FR-065)
-- [ ] T054 [US4] Gravar `DocumentoDoResultado` dentro do comando, em `backend/processo_seletivo/divulgacao/application/publicar.py`, derivando **do conteúdo já composto** (FR-062)
-- [ ] T055 [US4] Acrescentar a rota `resultados/<uuid:publicacao_id>/documento.pdf` em `backend/processo_seletivo/portal/urls.py` **junto com** a view `resultado_em_pdf` em `backend/processo_seletivo/portal/views.py`, que devolve os bytes gravados com `ETag` igual ao `documento_hash`, no molde de `PublishedDocumentView` — rota e view nascem na mesma tarefa, porque a rota sem a view quebra o portal no import (FR-062)
-- [ ] T056 [P] [US4] Testar o conteúdo em `backend/tests/unit/divulgacao/test_documento.py`: Processo/Edital, marco, natureza, ato de origem, data e hora, autoridade signatária, a lista e o resumo criptográfico (FR-063, SC-010, SC-019)
-- [ ] T057 [P] [US4] Testar o determinismo em `backend/tests/unit/divulgacao/test_documento.py`: a mesma composição produz os mesmos bytes, sem data de criação embutida
-- [ ] T058 [P] [US4] Testar a correspondência em `backend/tests/unit/divulgacao/test_documento.py`: os rótulos institucionais do documento são os da página, e cada linha confere — posição, identificação pública, modalidade e pontuação (FR-064)
-- [ ] T059 [P] [US4] Testar a estabilidade em `backend/tests/integration/divulgacao/test_publicar.py`: Retificação posterior do Edital não altera os bytes nem regenera o documento (FR-045)
+- [ ] T054 [US4] Escrever `render_resultado_pdf(conteudo)` em `backend/processo_seletivo/divulgacao/infrastructure/documento.py`, montando uma `Composicao` e chamando `render_documento`, com `_tabela` para a lista — no molde de `inscricoes/infrastructure/comprovante_pdf.py` (FR-065)
+- [ ] T055 [US4] Gravar `DocumentoDoResultado` dentro do comando, em `backend/processo_seletivo/divulgacao/application/publicar.py`, derivando **do conteúdo já composto** (FR-062)
+- [ ] T056 [US4] Acrescentar a rota `resultados/<uuid:publicacao_id>/documento.pdf` em `backend/processo_seletivo/portal/urls.py` **junto com** a view `resultado_em_pdf` em `backend/processo_seletivo/portal/views.py`, que devolve os bytes gravados com `ETag` igual ao `documento_hash`, no molde de `PublishedDocumentView` — rota e view nascem na mesma tarefa, porque a rota sem a view quebra o portal no import (FR-062)
+- [ ] T057 [P] [US4] Testar o conteúdo em `backend/tests/unit/divulgacao/test_documento.py`: Processo/Edital, marco, natureza, ato de origem, data e hora, autoridade signatária, a lista e o resumo criptográfico (FR-063, SC-010, SC-019)
+- [ ] T058 [P] [US4] Testar o determinismo em `backend/tests/unit/divulgacao/test_documento.py`: a mesma composição produz os mesmos bytes, sem data de criação embutida
+- [ ] T059 [P] [US4] Testar a correspondência em `backend/tests/unit/divulgacao/test_documento.py`: os rótulos institucionais do documento são os da página, e cada linha confere — posição, identificação pública, modalidade e pontuação (FR-064)
+- [ ] T060 [P] [US4] Testar a estabilidade em `backend/tests/integration/divulgacao/test_publicar.py`: Retificação posterior do Edital não altera os bytes nem regenera o documento (FR-045)
 
 **Checkpoint**: existe a forma documental do ato, e ela é conferível.
 
@@ -183,13 +184,13 @@ resumo; retificar o Edital e conferir que os bytes não mudaram.
 
 **Teste independente**: com P1 sucedida por P2, abrir o histórico do marco.
 
-- [ ] T060 [US5] Escrever `historico_do_marco` em `backend/processo_seletivo/divulgacao/application/selectors.py`, devolvendo a cadeia com natureza, instante, autor, autoridade e situação (FR-068)
-- [ ] T061 [US5] Escrever `publicacoes_do_marco` em `backend/processo_seletivo/interface/views.py`, aberta a `resultado:publicar` **ou** `auditoria:consultar`
-- [ ] T062 [US5] Escrever o template em `backend/processo_seletivo/interface/templates/interface/publicacoes_do_marco.html` (FR-068)
-- [ ] T063 [US5] Oferecer, na publicação e no histórico, o caminho para o **ato de origem** — a tela da 015 — em `backend/processo_seletivo/interface/templates/interface/publicacoes_do_marco.html`, condicionado à autorização de quem lê (FR-022)
-- [ ] T064 [P] [US5] Testar a listagem em `backend/tests/interface/test_publicacoes_do_marco.py`: as duas publicações, com a vigente identificada e a anterior marcada como sucedida (FR-068)
-- [ ] T065 [P] [US5] Testar a autorização em `backend/tests/interface/test_publicacoes_do_marco.py`: a auditora consulta e **não** recebe a ação de publicar; o caminho para o ato de origem aparece a quem tem autorização e não aparece a quem não tem (FR-022)
-- [ ] T066 [P] [US5] Testar a acessibilidade em `backend/tests/interface/test_publicacoes_do_marco.py`: a situação vigente/sucedida é legível sem depender de cor (FR-052)
+- [ ] T061 [US5] Escrever `historico_do_marco` em `backend/processo_seletivo/divulgacao/application/selectors.py`, devolvendo a cadeia com natureza, instante, autor, autoridade e situação (FR-068)
+- [ ] T062 [US5] Escrever `publicacoes_do_marco` em `backend/processo_seletivo/interface/views.py`, aberta a `resultado:publicar` **ou** `auditoria:consultar`
+- [ ] T063 [US5] Escrever o template em `backend/processo_seletivo/interface/templates/interface/publicacoes_do_marco.html` (FR-068)
+- [ ] T064 [US5] Oferecer, na publicação e no histórico, o caminho para o **ato de origem** — a tela da 015 — em `backend/processo_seletivo/interface/templates/interface/publicacoes_do_marco.html`, condicionado à autorização de quem lê (FR-022)
+- [ ] T065 [P] [US5] Testar a listagem em `backend/tests/interface/test_publicacoes_do_marco.py`: as duas publicações, com a vigente identificada e a anterior marcada como sucedida (FR-068)
+- [ ] T066 [P] [US5] Testar a autorização em `backend/tests/interface/test_publicacoes_do_marco.py`: a auditora consulta e **não** recebe a ação de publicar; o caminho para o ato de origem aparece a quem tem autorização e não aparece a quem não tem (FR-022)
+- [ ] T067 [P] [US5] Testar a acessibilidade em `backend/tests/interface/test_publicacoes_do_marco.py`: a situação vigente/sucedida é legível sem depender de cor (FR-052)
 
 **Checkpoint**: a pergunta "isto ainda vale?" tem resposta nos três canais.
 
@@ -197,12 +198,12 @@ resumo; retificar o Edital e conferir que os bytes não mudaram.
 
 ## Phase 8: Polish
 
-- [ ] T067 Executar o [quickstart](./quickstart.md) inteiro como teste de aceitação em `backend/tests/acceptance/test_us_publicacao_de_resultado.py`, cobrindo o gate da spec de ponta a ponta, inclusive a publicação consultável imediatamente depois de confirmada (FR-032, SC-001)
-- [ ] T068 [P] Testar por teclado a prévia, a confirmação e a página pública em `backend/tests/interface/test_acessibilidade_publicacao.py` (FR-053)
-- [ ] T069 [P] Escrever a guarda do protocolo em `backend/tests/authorization/test_publicacao_de_resultado.py`: nenhum caminho não autenticado resolve uma Inscrição a partir do protocolo — publicá-lo o tornou público, e ele não pode virar credencial (FR-024)
-- [ ] T070 [P] Escrever a guarda de não regressão em `backend/tests/migrations/test_migrations.py`: esta feature não acrescenta migration a `classificacao`, `resultados`, `editais` nem `publicacoes` (FR-070)
-- [ ] T071 [P] Acrescentar ao `seed_demo` o ator publicador com `resultado:publicar` e um resultado publicado, em `backend/processo_seletivo/processos/management/commands/seed_demo.py`
-- [ ] T072 Conferir que `backend/tests/test_citacoes_de_requisito.py` continua verde e que nenhuma citação FR/SC introduzida aponta para requisito diferente do pretendido
+- [ ] T068 Executar o [quickstart](./quickstart.md) inteiro como teste de aceitação em `backend/tests/acceptance/test_us_publicacao_de_resultado.py`, cobrindo o gate da spec de ponta a ponta, inclusive a publicação consultável imediatamente depois de confirmada (FR-032, SC-001)
+- [ ] T069 [P] Testar por teclado a prévia, a confirmação e a página pública em `backend/tests/interface/test_acessibilidade_publicacao.py` (FR-053)
+- [ ] T070 [P] Escrever a guarda do protocolo em `backend/tests/authorization/test_publicacao_de_resultado.py`: nenhum caminho não autenticado resolve uma Inscrição a partir do protocolo — publicá-lo o tornou público, e ele não pode virar credencial (FR-024)
+- [ ] T071 [P] Escrever a guarda de não regressão em `backend/tests/migrations/test_migrations.py`: esta feature não acrescenta migration a `classificacao`, `resultados`, `editais` nem `publicacoes` (FR-070)
+- [ ] T072 [P] Acrescentar ao `seed_demo` o ator publicador com `resultado:publicar` e um resultado publicado, em `backend/processo_seletivo/processos/management/commands/seed_demo.py`
+- [ ] T073 Conferir que `backend/tests/test_citacoes_de_requisito.py` continua verde e que nenhuma citação FR/SC introduzida aponta para requisito diferente do pretendido
 
 ---
 
@@ -216,17 +217,17 @@ Foundational (T004–T013)          ← bloqueia tudo
 US1 (T014–T032)                   ← bloqueia US2, US3, US4, US5
    ↓
    ├── US2 (T033–T044)  ─┐
-   ├── US3 (T045–T052)  ─┤ independentes entre si
-   ├── US4 (T053–T059)  ─┤ rota e view do documento na mesma tarefa (T055)
-   └── US5 (T060–T066)  ─┘
+   ├── US3 (T045–T053)  ─┤ independentes entre si
+   ├── US4 (T054–T060)  ─┤ rota e view do documento na mesma tarefa (T056)
+   └── US5 (T061–T067)  ─┘
    ↓
-Polish (T067–T072)
+Polish (T068–T073)
 ```
 
 **Por que US1 bloqueia as demais**: as quatro seguintes leem publicações, e não há publicação antes
 do comando existir. Não é acoplamento evitável — é a ordem do domínio.
 
-**Nenhuma história depende de outra além da US1.** A rota do documento nasce com a sua view em T055,
+**Nenhuma história depende de outra além da US1.** A rota do documento nasce com a sua view em T056,
 dentro da US4 — separá-las deixaria o `portal/urls.py` apontando para uma view inexistente e
 quebraria o import do portal durante a US2 inteira.
 
@@ -243,10 +244,11 @@ ausência de linha representa isso sem deixar coluna a limpar.
 - **US1**: T022 a T025, T031 e T032 são arquivos distintos. T015 é paralela a T014.
 - **US2**: T037 a T043 compartilham arquivo — paralelas só se escritas em conjunto; T044 é
   independente. T042 depende de T034.
-- **US3**: T048 a T052 são independentes entre si.
-- **US4**: T056 a T059 são independentes.
-- **US5**: T064 a T066 compartilham arquivo.
-- **Polish**: T068 a T071 são independentes.
+- **US3**: T048 a T052 compartilham `test_acompanhamento_resultado.py` — paralelas só se escritas
+  em conjunto; T053 é arquivo distinto.
+- **US4**: T057 a T060 são independentes.
+- **US5**: T065 a T067 compartilham arquivo.
+- **Polish**: T069 a T072 são independentes.
 
 ## Implementation Strategy
 

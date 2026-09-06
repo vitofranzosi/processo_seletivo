@@ -7,7 +7,6 @@ cobrem materiais diferentes.
 
 ```text
 {
-  "versao_do_formato": 1,
   "cabecalho": {
     "titulo": "Resultado preliminar — Professor de Matemática",
     "natureza": "PRELIMINAR",
@@ -42,8 +41,13 @@ Herdadas do conteúdo publicado do Edital, e pelas mesmas razões:
   reformatado na renderização, porque reformatar é decidir de novo;
 - **todo campo é obrigatório**: a forma publicada não tem campo opcional.
 
-`versao_do_formato` existe para que uma mudança futura de projeção seja **legível** no histórico, e
-não silenciosa. Publicações antigas continuam na versão em que nasceram e são renderizadas por ela.
+**Não há campo de versão do formato.** Ele foi considerado e retirado: prometeria que publicações
+antigas continuam sendo renderizadas pela regra em que nasceram, e nada nesta feature entrega isso —
+há um renderizador só. Um campo que anuncia garantia que ninguém sustenta é pior que a ausência
+dele, porque a próxima pessoa confia nele.
+
+Quando uma mudança de projeção for necessária de verdade, ela virá com o mecanismo que a torna
+legível — e a decisão de qual mecanismo é dessa hora, não desta.
 
 ## 3. Os dois resumos
 

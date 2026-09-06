@@ -126,7 +126,6 @@ Tabela própria, e não coluna anulável na publicação: até a F4 as publicaç
 
 ```text
 {
-  "versao_do_formato": 1,
   "cabecalho": { titulo, natureza_rotulo, processo, edital, perfil, marco,
                  publicado_em, signatario_nome, signatario_cargo, ato },
   "posicoes": [ { posicao, compartilhada, candidato, protocolo,

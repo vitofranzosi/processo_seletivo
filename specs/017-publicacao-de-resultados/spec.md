@@ -375,6 +375,9 @@ e situação, para saber o que foi divulgado, quando, e o que vale hoje.
 - Publicação sem nenhuma posição atribuída (todos eliminados): publicável, com a lista vazia dita
   explicitamente em vez de página em branco.
 - Candidato cuja Inscrição não está no universo do ato: nada aparece no acompanhamento dele.
+- Candidato contemplado por publicações de **dois marcos** — a intermediária e a final: as duas
+  aparecem na sua Área, nomeadas pelo marco. Esconder a intermediária seria o sistema decidindo qual
+  ato administrativo importa.
 - Publicação preliminar cujo Edital não declara prazo de recurso: não se inventa prazo nem botão.
 
 ---
@@ -517,7 +520,9 @@ finalidade exige, e o resto não sai porque estava à mão na mesma consulta.
 - **FR-056** — Nada relativo a resultado aparece na Área do Candidato antes da publicação. Existir
   `ResultadoEtapa` ou `AtoDeOrdenacao` no banco não torna a informação pública.
 - **FR-057** — Havendo publicação cujo ato contemple a Inscrição, ela aparece dentro da própria
-  Inscrição, no acompanhamento.
+  Inscrição, no acompanhamento. Havendo mais de uma — o Edital pode ter vários marcos
+  classificatórios, e cada um é ato pleno —, **todas** aparecem, cada uma identificada pelo seu
+  marco. O sistema não escolhe por conta própria qual resultado interessa à pessoa.
 - **FR-058** — O resumo individual deriva da publicação e aponta para ela; não há segunda fonte de
   verdade específica do candidato.
 - **FR-059** — O candidato que foi considerado e não recebeu posição vê a sua própria situação e o
@@ -625,6 +630,8 @@ finalidade exige, e o resto não sai porque estava à mão na mesma consulta.
   Área, sem ser nomeado na publicação.
 - **SC-021** — O mesmo ato publicado de novo na mesma natureza é recusado; publicado na outra
   natureza, produz a segunda publicação, que sucede a primeira.
+- **SC-022** — Publicados dois marcos que contemplam a mesma Inscrição, a Área do Candidato mostra
+  os dois, cada um identificado pelo seu marco.
 
 ---
 
