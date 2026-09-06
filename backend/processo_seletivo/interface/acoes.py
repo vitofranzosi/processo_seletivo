@@ -144,6 +144,38 @@ def do_edital(edital, ator, *, pendencias=(), segregacao=False):
 
 
 # ---------------------------------------------------------------------------
+# A divulgação do resultado (017, FR-069)
+# ---------------------------------------------------------------------------
+
+
+def do_ato_de_ordenacao(ato, ator, *, edital):
+    """O que se pode fazer com um ato de classificação emitido.
+
+    Hoje há duas: divulgá-lo e consultar o que já se divulgou. Ficam aqui pela mesma razão que as
+    do Edital: a tela do ato não deve decidir sozinha o que oferecer, e a mensagem de ausência
+    precisa derivar do mesmo conjunto que a lista.
+
+    **A ação é oferecida na tela do ato** porque é dali que ela é alcançada. Sem isso a tela de
+    publicar existiria e ninguém a encontraria — FR-069. A condição é a capacidade, e a
+    desabilitação continua sendo previsão e não autorização: quem recusa é o command.
+    """
+    if ator.can("resultado:publicar"):
+        yield Acao(
+            "publicar-resultado",
+            "Publicar resultado",
+            reverse("interface:previa-de-publicacao", args=[edital.id, ato.marco_id, ato.id]),
+            estilo=PRIMARIA,
+            irreversivel=True,
+        )
+    if ator.can("resultado:publicar") or ator.can("auditoria:consultar"):
+        yield Acao(
+            "publicacoes-do-marco",
+            "Resultados divulgados",
+            reverse("interface:publicacoes-do-marco", args=[edital.id, ato.marco_id]),
+        )
+
+
+# ---------------------------------------------------------------------------
 # Passagem de bastão (FR-028 a FR-031)
 # ---------------------------------------------------------------------------
 

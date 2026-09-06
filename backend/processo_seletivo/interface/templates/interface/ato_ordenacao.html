@@ -11,6 +11,22 @@
 <p class="sub">Emitido por {{ ato.emitido_por }} em {{ ato.emitido_em }}, sob a versão normativa {{ ato.versao_id }}.</p>
 <p class="imutavel">Este snapshot é imutável. A consulta abaixo lê o que foi registrado; não recalcula o passado.</p>
 
+{% comment %}
+O cartão de ações do ato (017, FR-069). Publicar o resultado é alcançado daqui, e a oferta é
+condicionada a `resultado:publicar` — quem emitiu o ato não a recebe por tê-lo emitido. A mensagem
+de ausência deriva do mesmo conjunto que a lista, e não de um `if` separado.
+{% endcomment %}
+<section aria-labelledby="titulo-acoes-do-ato">
+  <h2 id="titulo-acoes-do-ato">O que fazer com este ato</h2>
+  <ul class="acoes">
+  {% for acao in acoes %}
+    <li><a class="botao {{ acao.estilo }}" href="{{ acao.url }}">{{ acao.rotulo }}</a></li>
+  {% empty %}
+    <li class="nenhuma">Você não tem ação disponível sobre este ato.</li>
+  {% endfor %}
+  </ul>
+</section>
+
 <section aria-labelledby="titulo-universo">
   <h2 id="titulo-universo">Proveniência do ato</h2>
   <dl class="participantes">

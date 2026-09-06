@@ -1,0 +1,117 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Publicar resultado — {{ cabecalho.marco }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <a href="{% url 'interface:ato-de-ordenacao' edital.id marco_id ato.id %}">Ato de classificação</a> ›
+  <span aria-current="page">Publicar resultado</span>
+</nav>
+
+<h1>Publicar resultado</h1>
+<p class="sub">{{ cabecalho.processo }} · {{ cabecalho.edital }} · {{ cabecalho.perfil }} — {{ cabecalho.marco }}</p>
+
+{% comment %}
+Nada foi gravado até aqui, e é isto que a frase diz (FR-035). Não existe rascunho de publicação a
+retomar: sair desta tela não deixa nada para trás, e voltar a ela recompõe a mesma leitura.
+{% endcomment %}
+<p class="imutavel">Esta é uma <strong>prévia</strong>: nada foi gravado. A publicação só existe depois de você confirmar.</p>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível publicar:</strong> {{ erro }}</p>{% endif %}
+
+{% if publicabilidade.publicavel %}
+{% comment %}
+**Os três níveis são apresentados, e não só os dois que pedem atenção** (FR-005). O nível normal
+tem texto próprio: sem ele, "não há aviso" e "a verificação não rodou" ficariam indistinguíveis na
+tela, e a autoridade confirmaria sem saber qual dos dois estava vendo.
+{% endcomment %}
+{% if publicabilidade.nivel == "informacao" %}
+<p class="sucesso" role="status">Verificação de publicabilidade: <strong>nada impede esta divulgação</strong>. O ato é o vigente do marco, e a norma e o universo não mudaram desde a emissão.</p>
+{% endif %}
+{% if publicabilidade.nivel == "aviso" %}
+{% comment %}
+O degrau do meio da FR-005: há o que ler antes de confirmar, e nada impede. Quem decide que este é
+o nível é a aferição, e não o template — a tela mostra o que o domínio classificou.
+{% endcomment %}
+<p class="aviso"><strong>Este marco já tem resultado divulgado</strong> — {{ sucede.get_natureza_display }}, publicado em {{ sucede.publicado_em|date:"d/m/Y" }} às {{ sucede.publicado_em|date:"H:i" }}. Publicar de novo <strong>sucede</strong> aquela divulgação: ela permanece consultável no mesmo endereço e passa a dizer que foi sucedida.</p>
+{% endif %}
+
+{% comment %}
+As consequências ditas **antes** da confirmação, e não depois: publicar torna o conteúdo abaixo
+acessível a qualquer pessoa, sem conta, num endereço estável — e não existe despublicar (FR-034,
+FR-040).
+{% endcomment %}
+<section class="consequencias irreversivel" aria-labelledby="titulo-consequencias">
+  <h2 id="titulo-consequencias">O que acontece ao confirmar</h2>
+  <ul>
+    <li>A lista abaixo passa a ser <strong>pública</strong>: qualquer pessoa a lê, sem conta e sem senha, num endereço estável.</li>
+    <li>Cada participante considerado passa a ver a própria situação dentro da inscrição dele.</li>
+    <li>O ato é <strong>imutável e não se despublica</strong>. Corrigir exige emitir um ato sucessor na classificação e divulgá-lo, e a divulgação de hoje continua consultável dizendo que foi sucedida.</li>
+  </ul>
+</section>
+
+<form method="post" action="{% url 'interface:publicar-resultado' edital.id marco_id ato.id %}">
+  {% csrf_token %}
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  <input type="hidden" name="confirmacao_da_previa" value="{{ confirmacao_da_previa }}">
+
+  <div class="campo">
+    <label for="natureza">Natureza do resultado</label>
+    <select id="natureza" name="natureza" required aria-describedby="ajuda-natureza">
+      {% for valor, rotulo in naturezas %}<option value="{{ valor }}">{{ rotulo }}</option>{% endfor %}
+    </select>
+    <p id="ajuda-natureza" class="ajuda">Um resultado definitivo não é sucedido por um preliminar.</p>
+  </div>
+
+  <div class="campo">
+    <label for="autoridade">Autoridade signatária</label>
+    <select id="autoridade" name="autoridade" required aria-describedby="ajuda-autoridade">
+      {% for autoridade in autoridades %}<option value="{{ autoridade.chave }}">{{ autoridade.nome }} — {{ autoridade.cargo }}</option>{% endfor %}
+    </select>
+    <p id="ajuda-autoridade" class="ajuda">Quem assina institucionalmente o ato. Nome e cargo ficam gravados na publicação.</p>
+  </div>
+
+  <button type="submit" class="botao perigoso">Publicar este resultado</button>
+  <a class="botao secundario" href="{% url 'interface:ato-de-ordenacao' edital.id marco_id ato.id %}">Cancelar</a>
+</form>
+{% else %}
+{% comment %}
+Havendo impedimento, a recusa é nomeada e o botão **não** é oferecido: não existe publicar mediante
+confirmação adicional (D-001, FR-004, FR-006).
+{% endcomment %}
+<section class="consequencias irreversivel" aria-labelledby="titulo-impedimento">
+  <h2 id="titulo-impedimento">Este ato não pode ser divulgado</h2>
+  <p class="erro" role="alert">{{ publicabilidade.mensagem }}</p>
+  {% if publicabilidade.divergencias %}
+  <ul>{% for item in publicabilidade.divergencias %}<li>{{ item.descricao }}</li>{% endfor %}</ul>
+  {% endif %}
+  <p><a class="botao" href="{% url 'interface:ordenacao' edital.id marco_id %}">Ir para a classificação do marco</a></p>
+</section>
+{% endif %}
+
+<section aria-labelledby="titulo-divulgado">
+  <h2 id="titulo-divulgado">O que será divulgado</h2>
+  <p class="ajuda">{{ consideradas }} participante{{ consideradas|pluralize:"s" }} considerado{{ consideradas|pluralize:"s" }} pelo ato. A lista pública nomeia apenas quem recebeu posição; quem não recebeu vê a própria situação dentro da inscrição.</p>
+  {% if posicoes %}
+  <div class="tabela-rolavel">
+  <table>
+    <caption class="oculto">Lista que será divulgada publicamente</caption>
+    <thead><tr><th scope="col">Posição</th><th scope="col">Candidato</th><th scope="col">Protocolo</th><th scope="col">Modalidade</th><th scope="col">Pontuação</th></tr></thead>
+    <tbody>
+    {% for item in posicoes %}
+      <tr{% if item.compartilhada %} class="grupo-empatado"{% endif %}>
+        <td>{{ item.posicao }}º{% if item.compartilhada %} <span class="nenhuma">(posição compartilhada)</span>{% endif %}</td>
+        <td>{{ item.candidato }}</td>
+        <td>{{ item.protocolo }}</td>
+        <td>{{ item.modalidade|default:"—" }}</td>
+        <td>{{ item.pontuacao|default:"—" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="nenhuma">Nenhum participante recebeu posição neste marco.</p>
+  {% endif %}
+</section>
+{% endblock %}

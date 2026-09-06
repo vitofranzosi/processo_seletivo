@@ -55,6 +55,13 @@ INSTALLED_APPS = [
     # universo declarado, autoridade, sucessão e imutabilidade próprios, e é sobre ele que a 016
     # crescerá. O Resultado é lido e nunca escrito daqui (015, T-010).
     "processo_seletivo.classificacao",
+    # A divulgação do que foi ordenado (017): o ato de publicar um resultado, a situação congelada
+    # de cada participante e o documento oficial. App próprio pela mesma razão que separou
+    # `classificacao` de `resultados` — publicar não é ordenar: o ato tem autoridade signatária,
+    # instante, sucessão e conteúdo congelado próprios. A direção da dependência é única:
+    # `divulgacao` lê `classificacao` e `publicacoes`, e nenhum dos dois passa a conhecê-la
+    # (017, T-001).
+    "processo_seletivo.divulgacao",
 ]
 TEMPLATES = [
     {

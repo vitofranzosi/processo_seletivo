@@ -223,6 +223,7 @@ def test_o_resultado_decisorio_com_pontuacao_e_recusado(decisoria_consolidavel):
         gravar(cenario, inscricao, avaliacao, pontuacao=Decimal("80.0000"))
 
 
+@SOMENTE_POSTGRES
 def test_a_trigger_recusa_resultado_com_sentido_diferente_do_da_fonte(decisoria_consolidavel):
     """**O caso que motivou a decisão de comparar os três campos incondicionalmente.**
 
@@ -236,6 +237,7 @@ def test_a_trigger_recusa_resultado_com_sentido_diferente_do_da_fonte(decisoria_
         gravar(cenario, inscricao, avaliacao, sentido="FAVORAVEL")
 
 
+@SOMENTE_POSTGRES
 def test_a_trigger_recusa_resultado_com_forma_diferente_da_fonte(decisoria_consolidavel):
     cenario, inscricao, avaliacao = decisoria_consolidavel
 

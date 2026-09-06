@@ -5,7 +5,7 @@ precisavam delas. A 011 precisa de duas no mesmo Edital, para que "alocado em A1
 seja demonstrável, e de um segundo Processo para que "Etapa de outro Processo" também seja.
 """
 
-from tests.fixtures.edital import complete_draft, identificador
+from tests.fixtures.edital import PROFILE_ID, complete_draft, identificador
 from tests.fixtures.publicacao import publish_original
 
 ETAPA_A1 = 410
@@ -139,11 +139,17 @@ def alocar_em(gestor, processo, membro, edital, etapa_id, *, chave=None):
     return alocacao
 
 
-def inscrever(edital, quantos=1, *, primeiro=1, documentos=()):
+def inscrever(edital, quantos=1, *, primeiro=1, documentos=(), perfil=None):
     """Inscrições **submetidas** — o único estado atribuível (FR-012).
 
     O protocolo é o que a tela mostra e o que a trilha guarda, então ele nasce aqui em vez de
     ficar em branco: sem ele, as asserções teriam de falar por UUID.
+
+    `perfil` existe porque o Perfil é derivado do `seed` do Edital, e o padrão aqui é o do `seed`
+    zero: um cenário que publica dois Editais no mesmo teste — como os da 017 fazem para exercitar
+    escopo alheio — precisa de `seed` próprio, e a inscrição tem de nascer no Perfil **daquele**
+    Edital. Sem isto ela nasce num Perfil que o Edital não declara, e a classificação não a
+    encontra: o universo sai vazio e nada acusa.
     """
     from django.utils import timezone
 
@@ -161,7 +167,7 @@ def inscrever(edital, quantos=1, *, primeiro=1, documentos=()):
             created_at=agora,
             identity_subject=f"cpf:candidato-{numero:04d}",
             edital=edital,
-            profile_id="00000000-0000-0000-0000-000000000401",
+            profile_id=perfil or PROFILE_ID,
             nome=f"Candidata {numero}",
             cpf="111.444.777-35",
             cpf_normalizado="11144477735",

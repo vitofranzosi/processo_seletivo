@@ -30,6 +30,42 @@ processo. Uma data alcançada no Cronograma não é notícia sobre a sua partici
   {% endfor %}
 </ul>
 
+{% comment %}
+A pontuação é **rotulada**, e não seguida do substantivo: ela chega como texto já formatado
+(`22,00`), e `pluralize` sobre texto não conta — daria "22,00 ponto" para qualquer valor. Rotular
+acerta em todos, inclusive em `1,00`.
+
+O resultado divulgado, **um bloco por marco** e cada um nomeado pelo seu marco (FR-057). Sem o nome,
+a pessoa leria duas posições diferentes sem saber a que cada uma se refere.
+
+Não havendo publicação vigente alguma, **nada aparece** — nem um bloco vazio, nem "aguardando
+resultado". A ausência é dita em ausência de dado, e não num `if` de template que afirmasse algo que
+ninguém decidiu (I-004, FR-056).
+
+Fica fora de "Sua participação" pela distinção da 010: aquela lista é o que **você fez**; divulgar é
+ato da instituição sobre você.
+{% endcomment %}
+{% for resultado in resultados_divulgados %}
+{% if forloop.first %}<h2>Resultado divulgado</h2>{% endif %}
+<section class="resultado-divulgado" aria-labelledby="marco-{{ forloop.counter }}">
+  <h3 id="marco-{{ forloop.counter }}">{{ resultado.marco }}</h3>
+  <p class="sub">{{ resultado.natureza_rotulo }}</p>
+  {% if resultado.classificada %}
+  <p class="posicao"><strong>{{ resultado.posicao }}º lugar</strong>{% if resultado.compartilhada %} — posição compartilhada{% endif %}{% if resultado.pontuacao %} · pontuação {{ resultado.pontuacao }}{% endif %}</p>
+  {% else %}
+  {% comment %}
+  Quem não recebeu posição vê a própria situação e o motivo aqui — e o nome dela **não** está na
+  lista pública. As duas coisas ao mesmo tempo são possíveis porque as projeções são duas
+  (FR-017, FR-059).
+  {% endcomment %}
+  <p class="posicao"><strong>Você não foi classificado neste marco.</strong></p>
+  {% if resultado.motivo %}<p class="meta">{{ resultado.motivo }}</p>{% endif %}
+  {% endif %}
+  {% comment %}O caminho leva sempre à publicação **vigente** (FR-061).{% endcomment %}
+  <p><a href="{% url 'portal:resultado' resultado.publicacao.id %}">Ver o resultado completo</a></p>
+</section>
+{% endfor %}
+
 <h2>Cronograma do processo</h2>
 <ul class="linha-do-tempo processo">
   {% for evento in cronograma %}

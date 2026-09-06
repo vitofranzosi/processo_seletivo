@@ -30,7 +30,10 @@ def test_a_demonstracao_percorre_o_fluxo_ate_a_retificacao():
     saida = _executar(codigo="PS-TESTE-0001", numero="70", ano=2026)
 
     processo = ProcessoSeletivo.objects.get(institutional_code="PS-TESTE-0001")
-    edital = Edital.objects.get(processo=processo)
+    # **Dois Editais, e não um** (017, T072). O primeiro está com as inscrições abertas — é ele que
+    # demonstra a jornada do candidato; o segundo tem o prazo vencido, e é nele que existe resultado
+    # divulgado. Um Edital só não conseguiria ser os dois: distribuir exige o conjunto fechado.
+    edital = Edital.objects.get(processo=processo, number="70")
     assert edital.status == Edital.Status.PUBLICADO
     assert edital.perfis.count() >= 2
     assert edital.cronograma.eventos.count() >= 3
@@ -39,6 +42,50 @@ def test_a_demonstracao_percorre_o_fluxo_ate_a_retificacao():
     assert Retificacao.objects.filter(edital=edital, status=Retificacao.Status.PUBLICADA).exists()
     assert VersaoConsolidada.objects.filter(edital=edital).count() >= 2
     assert str(edital.id) in saida
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_demonstracao_chega_ao_resultado_divulgado():
+    """A 017 na demonstração: ato emitido, resultado divulgado e o endereço público na saída.
+
+    O que isto protege é o percurso inteiro — comissão, banca, avaliação, consolidação, ordem e
+    divulgação —, feito pelos mesmos commands da aplicação. Semear a publicação por `INSERT`
+    produziria uma linha que o sistema nunca teria aceitado, e a demonstração passaria a mostrar um
+    estado inalcançável.
+    """
+    from processo_seletivo.classificacao.models import AtoDeOrdenacao
+    from processo_seletivo.divulgacao.models import PublicacaoResultado, SituacaoDivulgada
+
+    saida = _executar(codigo="PS-TESTE-0010", numero="20", ano=2026)
+
+    processo = ProcessoSeletivo.objects.get(institutional_code="PS-TESTE-0010")
+    concluido = Edital.objects.get(processo=processo, number="70")
+    assert concluido.status == Edital.Status.PUBLICADO
+
+    ato = AtoDeOrdenacao.objects.get(edital=concluido)
+    publicacao = PublicacaoResultado.objects.get(edital=concluido)
+    assert publicacao.ato_id == ato.id
+    assert publicacao.publicado_por == "paula.publicadora"
+    assert publicacao.signatario_nome == "Diretora do Cefor"
+    assert publicacao.documento.bytes, "a demonstração precisa do documento oficial"
+
+    # Quatro consideradas, três com posição e uma sem — é o que torna a fronteira visível.
+    situacoes = SituacaoDivulgada.objects.filter(publicacao=publicacao)
+    assert situacoes.count() == 4
+    assert situacoes.filter(situacao=SituacaoDivulgada.Situacao.SEM_POSICAO).count() == 1
+    conteudo = bytes(publicacao.conteudo_publico).decode()
+    assert "Daniel Rocha" not in conteudo, "quem não recebeu posição não é nomeado publicamente"
+    assert "Ana Silva" in conteudo
+
+    assert f"/selecoes/resultados/{publicacao.id}/" in saida
+
+    # O `--ano` vale para os **dois** Editais: eles são do mesmo Processo, e um certame não tem
+    # dois anos. Uma demonstração histórica ou futura precisa que os dois acompanhem o argumento.
+    assert concluido.year == 2026
+    assert (
+        Edital.objects.filter(processo=processo).values_list("year", flat=True).distinct().count()
+        == 1
+    )
 
 
 @pytest.mark.django_db(transaction=True)

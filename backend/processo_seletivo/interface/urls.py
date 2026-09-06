@@ -186,6 +186,25 @@ urlpatterns = [
         views.ato_de_ordenacao,
         name="ato-de-ordenacao",
     ),
+    # A divulgação (017). A rota pende do **ato**, e não do marco, pelo mesmo motivo que as da 015
+    # pendem do marco: é dali que ela é alcançada, e é o ato que a autorização qualifica. O GET
+    # compõe a prévia e não grava nada; o POST é o ato.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/atos/<uuid:ato_id>/publicar",
+        views.previa_de_publicacao,
+        name="previa-de-publicacao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/atos/<uuid:ato_id>/publicar/confirmar",
+        views.publicar_resultado,
+        name="publicar-resultado",
+    ),
+    # Consultar o histórico é de dois — quem publica **ou** quem audita; publicar é de um.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/publicacoes",
+        views.publicacoes_do_marco,
+        name="publicacoes-do-marco",
+    ),
     path(
         "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/conclusoes",
         views.conclusoes_preservadas,

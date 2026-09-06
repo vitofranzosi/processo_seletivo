@@ -8,7 +8,7 @@ impede um endereço autenticar duas identidades.
 import threading
 
 import pytest
-from django.db import connections
+from django.db import connection, connections
 
 from processo_seletivo.identidade.application import associacao
 from processo_seletivo.identidade.models import CandidateEmail
@@ -48,6 +48,9 @@ def test_seis_criacoes_simultaneas_produzem_uma_credencial():
     assert CandidateEmail.objects.filter(email_canonico=DISPUTADO).count() == 1
 
 
+@pytest.mark.skipif(
+    connection.vendor != "postgresql", reason="a corrida exige as travas do PostgreSQL"
+)
 def test_todas_terminam_na_mesma_identidade():
     """Perder a corrida não é erro: quem chega depois entra na identidade que passou a existir."""
     resultados = em_paralelo(lambda: associacao.criar_identidade_com(DISPUTADO, DISPUTADO))

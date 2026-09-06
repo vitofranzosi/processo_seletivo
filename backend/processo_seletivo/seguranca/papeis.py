@@ -41,6 +41,13 @@ TABELAS_APPEND_ONLY = (
     # outra linha, e nem o cabeçalho nem uma posição emitida podem ser reinterpretados depois.
     "classificacao_atodeordenacao",
     "classificacao_posicaonaordem",
+    # A divulgação do resultado (017): o ato publicado, a situação congelada de cada participante
+    # e o documento oficial. As três são históricas pela mesma razão das demais — nascem e não
+    # mudam —, com um agravante próprio: o que elas guardam já é público, e reescrevê-lo depois
+    # alteraria em silêncio o que a instituição divulgou (017, FR-071).
+    "divulgacao_documentodoresultado",
+    "divulgacao_publicacaoresultado",
+    "divulgacao_situacaodivulgada",
     "publicacoes_documentopublicado",
     "publicacoes_publicacao",
     "publicacoes_revisaoedital",

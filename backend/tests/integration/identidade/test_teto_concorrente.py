@@ -13,14 +13,25 @@ conferir nada.
 import threading
 
 import pytest
-from django.db import connections
+from django.db import connection, connections
 
 from processo_seletivo.identidade.application import associacao
 from processo_seletivo.identidade.application import desafio as servico
 from processo_seletivo.identidade.models import TETO_DE_TENTATIVAS, DesafioDeAcesso
 from tests.conftest import encerrar_conexoes_da_thread
 
-pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
+# **A corrida exige as travas do PostgreSQL.** Os três testes deste arquivo soltam doze chamadas no
+# mesmo instante e afirmam sobre o contador que sobra. Em SQLite os escritores concorrentes se
+# atropelam — só duas das doze chegam a gravar —, e a asserção falharia por a corrida **não ter
+# acontecido**, e não por o teto ter sido furado. Um teste que falha quando o defeito não existe
+# treina quem lê a suíte a ignorá-lo, que é o oposto do que este arquivo existe para fazer.
+pytestmark = [
+    pytest.mark.django_db(transaction=True),
+    pytest.mark.integration,
+    pytest.mark.skipif(
+        connection.vendor != "postgresql", reason="a corrida exige as travas do PostgreSQL"
+    ),
+]
 
 ENDERECO = "maria@exemplo.test"
 ENTRAR = DesafioDeAcesso.Finalidade.ENTRAR

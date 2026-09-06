@@ -13,7 +13,7 @@ maior do que ela é.
 import uuid
 
 import pytest
-from django.db import DataError, IntegrityError, transaction
+from django.db import DataError, IntegrityError, connection, transaction
 from django.utils import timezone
 
 from processo_seletivo.inscricoes.models import Inscricao
@@ -55,11 +55,20 @@ def test_o_banco_recusa_inscricao_enviada_sem_onze_digitos(selecao, cpf):
             enviar(selecao, registro)
 
 
+@pytest.mark.skipif(
+    connection.vendor != "postgresql",
+    reason="a largura declarada da coluna só é imposta pelo PostgreSQL",
+)
 def test_mais_de_onze_digitos_nem_chega_na_restricao(selecao):
     """A largura da coluna recusa antes, e em qualquer estado — inclusive rascunho.
 
     São dois mecanismos, e vale conhecer os dois: a restrição fala do ato de enviar, a largura fala
     da coluna. A garantia resultante é a mesma — o valor não entra.
+
+    **Só o PostgreSQL a impõe.** O SQLite é dinamicamente tipado e aceita qualquer comprimento num
+    `varchar(11)`: o insert passa, e o teste falharia por ausência de um `DataError` que aquele
+    banco nunca levanta. A garantia continua real onde a aplicação roda; o que não existe é a
+    conferência no backend da suíte rápida.
     """
     with pytest.raises(DataError):
         with transaction.atomic():

@@ -50,6 +50,25 @@ def perfis(numero):
             "reserveType": "LIMITED",
             "reserveLimit": 6,
             "locality": "Campus Serra",
+            # O marco classificatório da 015: a combinação das duas Etapas pontuadas, com o
+            # desempate declarado sobre os fatos que `_declarar_fatos_e_teto` cria. Ele existe aqui
+            # porque sem marco não há ordem a emitir — e sem ordem emitida não há resultado a
+            # divulgar, que é a demonstração que a 017 precisa deixar navegável.
+            "classificationMilestones": [
+                {
+                    "id": f"00000000-0000-0000-00{numero}-0000000000a1",
+                    "code": "FINAL",
+                    "name": "Classificação final",
+                    "stages": [
+                        f"00000000-0000-0000-00{numero}-0000000000d1",
+                        f"00000000-0000-0000-00{numero}-0000000000d2",
+                    ],
+                    "operation": "SOMA_PONDERADA",
+                    "normalization": "NENHUMA",
+                    "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
+                    "tiebreakers": [],
+                }
+            ],
             "competitionModalities": [
                 {
                     "id": f"00000000-0000-0000-00{numero}-0000000000e1",
@@ -207,6 +226,18 @@ def etapas(numero):
 AREA = "Professor Substituto e Técnico-Administrativo"
 
 
+def _numero_do_segundo_edital(numero):
+    """Dois dígitos, derivados do primeiro e sempre diferentes dele.
+
+    Devolve `None` quando o número informado não é numérico: o segundo Edital é conveniência da
+    demonstração, e inventar um identificador a partir de texto arbitrário produziria UUID
+    inválido — melhor não criá-lo e dizê-lo do que falhar no meio.
+    """
+    if not numero.isdigit():
+        return None
+    return f"{(int(numero) + 50) % 100:02d}"
+
+
 def _titulo_do_processo(ano, titulo_informado):
     return titulo_informado or f"Processo Seletivo Simplificado {ano}"
 
@@ -260,8 +291,28 @@ class Command(BaseCommand):
             self._declarar_fatos_e_teto(edital, numero)
             self._publicar(elaborador, homologador, publicador, edital)
 
+        # O segundo Edital e a divulgação dele. Fora da transação do primeiro, e depois de ele
+        # estar publicado: cada Edital é um ato completo, e falhar aqui não desfaz aquele.
+        #
+        # **O número do segundo deriva do primeiro e tem de caber em dois dígitos**: ele entra nos
+        # identificadores publicados como `00000000-0000-0000-00<numero>-…`, e três dígitos ali não
+        # formam UUID. O deslocamento de 50 em aritmética modular nunca devolve o próprio número, e
+        # é o que garante que os dois Editais não disputem identificador de Perfil, Etapa ou marco.
+        segundo = _numero_do_segundo_edital(numero)
+        publicacao = None
+        if segundo is None:
+            self.stdout.write(
+                "Número do Edital não é numérico: o segundo Edital, com resultado divulgado, "
+                "não foi criado. Use --numero com dois dígitos para tê-lo."
+            )
+        else:
+            concluido = self._edital_encerrado(
+                elaborador, homologador, publicador, processo, segundo, ano, agora
+            )
+            publicacao = self._divulgar_resultado(concluido, segundo, agora)
+
         self._retificar(edital, agora)
-        self._resumo(processo, edital)
+        self._resumo(processo, edital, publicacao)
 
     def _criar(self, elaborador, codigo, numero, ano, titulo):
         self.stdout.write("Criando Processo e primeiro Edital…")
@@ -364,6 +415,239 @@ class Command(BaseCommand):
             correlation_id="seed-demo",
         )
 
+    def _edital_encerrado(self, elaborador, homologador, publicador, processo, numero, ano, agora):
+        """Um **segundo** Edital, com o período de inscrições já vencido (T072).
+
+        **Por que dois, e não um.** Distribuir exige o conjunto fechado: enquanto o prazo corre,
+        distribuir deixaria sem avaliador quem se inscrever depois, e o domínio recusa — com razão.
+        O primeiro Edital da demonstração existe justamente para mostrar o período **aberto**, com a
+        contagem de dias na vitrine e a inscrição funcionando; forçar ali um resultado divulgado
+        exigiria ou fechar o prazo, tirando a jornada do candidato da demonstração, ou contornar a
+        regra por dentro, semeando linhas que a aplicação nunca teria aceitado.
+
+        Dois Editais no mesmo Processo é o que um Processo Seletivo real tem, e resolve os dois
+        estados sem que nenhum deles seja mentira: um em curso, outro concluído e divulgado.
+        """
+        from processo_seletivo.editais.application.draft import replace_draft
+        from processo_seletivo.processos.application.commands import add_edital
+
+        self.stdout.write("Criando o segundo Edital, já com as inscrições encerradas…")
+        # Criar Edital é do Gestor, e elaborar é de quem elabora: são pessoas diferentes, como no
+        # resto deste arquivo. Reusar o elaborador aqui daria a ele uma capacidade que o mapa de
+        # papéis não lhe concede — e a demonstração passaria a mentir sobre a segregação.
+        edital, _ = add_edital(
+            actor=ator("gustavo.gestor", "edital:criar"),
+            processo_id=processo.id,
+            data={
+                "number": numero,
+                # **O ano é o informado, e não o do relógio.** Os dois Editais são do mesmo
+                # Processo: um `--ano` que valesse só para o primeiro produziria uma demonstração
+                # com dois anos diferentes dentro do mesmo certame.
+                "year": ano,
+                "title": f"Edital {numero}/{ano} — seleção concluída",
+                "description": "Seleção com inscrições encerradas e resultado divulgado.",
+            },
+            idempotency_key=f"seed-demo-edital2-{processo.id.hex[:12]}",
+            correlation_id="seed-demo",
+        )
+        # O Cronograma inteiro deslocado para trás: o período de inscrições vai de 60 a 40 dias
+        # atrás, e é isso que torna o conjunto fechado.
+        replace_draft(
+            actor=elaborador,
+            edital_id=edital.id,
+            expected_revision=edital.revision,
+            profiles=perfis(numero),
+            schedule=cronograma(agora - timedelta(days=60), numero),
+            stages=etapas(numero),
+            document_requirements=documentos_exigidos(numero),
+            correlation_id="seed-demo",
+        )
+        edital.refresh_from_db()
+        self._publicar(elaborador, homologador, publicador, edital)
+        edital.refresh_from_db()
+        return edital
+
+    def _divulgar_resultado(self, edital, numero, agora):
+        """A cadeia da 011 à 017, para que a demonstração chegue ao que o candidato lê (T072).
+
+        **Pelos mesmos commands da aplicação**, como o resto deste arquivo: constituir a comissão,
+        alocar, inscrever, avaliar, consolidar, emitir a ordem e divulgá-la. Semear a publicação
+        por `INSERT` produziria uma linha que a aplicação nunca teria aceitado — sem trilha, sem
+        idempotência e sem a aferição de publicabilidade —, e a demonstração passaria a mostrar um
+        estado que o sistema não sabe alcançar.
+
+        A autoridade que divulga é **outra pessoa**, com capacidade própria: `resultado:publicar`
+        não decorre de `classificacao:emitir`, e a demonstração precisa tornar isso visível
+        (FR-025, FR-026).
+        """
+        from processo_seletivo.avaliacoes.application.avaliacao import concluir
+        from processo_seletivo.avaliacoes.application.distribuicao import distribuir
+        from processo_seletivo.classificacao.application.calculo import calcular_ordem
+        from processo_seletivo.classificacao.application.emissao import (
+            assinatura_da_proposta,
+            emitir_ordem,
+        )
+        from processo_seletivo.classificacao.models import AtoDeOrdenacao
+        from processo_seletivo.comissoes.application.alocacao import alocar
+        from processo_seletivo.comissoes.application.comissao import adicionar_membro
+        from processo_seletivo.comissoes.domain.funcoes import Funcao
+        from processo_seletivo.divulgacao.application.publicar import (
+            assinatura_da_previa,
+            publicar_resultado,
+        )
+        from processo_seletivo.divulgacao.domain.conteudo import compor
+        from processo_seletivo.inscricoes.models import Inscricao
+        from processo_seletivo.resultados.application.consolidacao import consolidar
+
+        self.stdout.write("Constituindo a comissão e alocando a banca…")
+        gestor = ator("gustavo.gestor", "comissao:gerir")
+        perfil_id = f"00000000-0000-0000-00{numero}-0000000000b1"
+        marco_id = f"00000000-0000-0000-00{numero}-0000000000a1"
+        primeira = f"00000000-0000-0000-00{numero}-0000000000d1"
+        segunda = f"00000000-0000-0000-00{numero}-0000000000d2"
+        chave = edital.id.hex[:8]
+
+        membros = {}
+        for indice, (subject, funcao) in enumerate(
+            [("paulo.presidente", Funcao.PRESIDENTE), ("joana.avaliadora", Funcao.MEMBRO)]
+        ):
+            membro, _ = adicionar_membro(
+                actor=gestor,
+                processo_id=edital.processo_id,
+                identity_subject=subject,
+                funcao=funcao,
+                idempotency_key=f"seed-demo-membro-{chave}-{indice}",
+                correlation_id="seed-demo",
+            )
+            membros[subject] = membro
+        for etapa in (primeira, segunda):
+            alocar(
+                actor=gestor,
+                processo_id=edital.processo_id,
+                membro_id=membros["joana.avaliadora"].id,
+                edital_id=edital.id,
+                etapa_id=etapa,
+                idempotency_key=f"seed-demo-aloc-{chave}-{etapa[-4:]}",
+                correlation_id="seed-demo",
+            )
+
+        self.stdout.write("Recebendo inscrições e avaliando…")
+        versao = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+        candidatas = [
+            ("Ana Silva", "8.5000", "9.0000"),
+            ("Bruno Costa", "7.0000", "8.0000"),
+            # Empate residual com a segunda: o marco não declara critério de desempate, e por isso
+            # as duas permanecem empatadas — a demonstração precisa mostrar a posição compartilhada.
+            ("Clara Dias", "7.0000", "8.0000"),
+            # Habilitado na primeira Etapa e **sem nota na segunda**: considerado pelo ato e sem
+            # posição. É ele quem torna a fronteira visível — não aparece na lista pública e vê a
+            # própria situação dentro da inscrição.
+            #
+            # Sem Resultado em Etapa alguma ele não estaria aqui: quem não passou pela Etapa
+            # eliminatória anterior não é participante da seguinte, e o ato nem o consideraria.
+            ("Daniel Rocha", "7.5000", None),
+        ]
+        inscricoes = []
+        for indice, (nome, _, _) in enumerate(candidatas, 1):
+            inscricao = Inscricao.objects.create(
+                created_at=agora,
+                identity_subject=f"cand:seed-{chave}-{indice:02d}",
+                edital=edital,
+                profile_id=perfil_id,
+                nome=nome,
+                cpf="111.444.777-35",
+                cpf_normalizado="11144477735",
+                email=f"{nome.split()[0].lower()}@exemplo.test",
+                modality_id=f"00000000-0000-0000-00{numero}-0000000000e1",
+            )
+            Inscricao.objects.filter(pk=inscricao.pk).update(
+                status=Inscricao.Status.SUBMETIDA,
+                protocolo=f"INS-{edital.year}-{chave.upper()}{indice:02d}",
+                submitted_at=agora,
+                versao_aceita=versao,
+                declaracoes_aceitas_em=agora,
+            )
+            inscricao.refresh_from_db()
+            inscricoes.append(inscricao)
+
+        avaliadora = ator("joana.avaliadora")
+        notas_por_inscricao = {
+            inscricao.id: notas
+            for inscricao, (_, *notas) in zip(inscricoes, candidatas, strict=True)
+        }
+        for etapa, posicao in ((primeira, 0), (segunda, 1)):
+            # Só quem tem nota **nesta** Etapa entra no lote dela: distribuir alguém para depois
+            # não concluir deixaria uma avaliação pendente, que é outro estado e não o que se quer
+            # demonstrar aqui.
+            desta_etapa = [
+                inscricao
+                for inscricao in inscricoes
+                if notas_por_inscricao[inscricao.id][posicao] is not None
+            ]
+            distribuir(
+                actor=gestor,
+                processo_id=edital.processo_id,
+                edital_id=edital.id,
+                etapa_id=etapa,
+                membro_ids=[membros["joana.avaliadora"].id],
+                inscricao_ids=[item.id for item in desta_etapa],
+                idempotency_key=f"seed-demo-lote-{chave}-{etapa[-4:]}",
+                correlation_id="seed-demo",
+            )
+            for inscricao in desta_etapa:
+                concluir(
+                    ator=avaliadora,
+                    edital=edital,
+                    etapa_id=etapa,
+                    inscricao_id=inscricao.id,
+                    pontuacao=notas_por_inscricao[inscricao.id][posicao],
+                    parecer="Avaliação concluída.",
+                    expected_revision=1,
+                    versao_reconhecida=versao.id,
+                    correlation_id="seed-demo",
+                )
+            consolidar(
+                actor=gestor,
+                processo_id=edital.processo_id,
+                edital_id=edital.id,
+                etapa_id=etapa,
+                inscricao_ids=[item.id for item in desta_etapa],
+                idempotency_key=f"seed-demo-consolidar-{chave}-{etapa[-4:]}",
+                correlation_id="seed-demo",
+            )
+
+        self.stdout.write("Emitindo a ordem classificatória…")
+        proposta = calcular_ordem(edital=edital, perfil_id=perfil_id, marco_id=marco_id)
+        emitir_ordem(
+            actor=gestor,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            perfil_id=perfil_id,
+            marco_id=marco_id,
+            idempotency_key=f"seed-demo-ordem-{chave}",
+            correlation_id="seed-demo",
+            confirmacao_do_calculo=assinatura_da_proposta(proposta, ato_vigente=None),
+        )
+        ato = AtoDeOrdenacao.objects.get(edital=edital, marco_id=marco_id, sucessores__isnull=True)
+
+        self.stdout.write("Divulgando o resultado…")
+        publicadora = ator("paula.publicadora", "resultado:publicar")
+        publicacao = publicar_resultado(
+            actor=publicadora,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            marco_id=marco_id,
+            ato_id=ato.id,
+            natureza="PRELIMINAR",
+            autoridade="diretoria-cefor",
+            confirmacao_da_previa=assinatura_da_previa(
+                ato=ato, publicacao_anterior=None, projecao=compor(ato)
+            ),
+            idempotency_key=f"seed-demo-divulgar-{chave}",
+            correlation_id="seed-demo",
+        )
+        return publicacao
+
     def _retificar(self, edital, agora):
         """Uma vigente e outra com vigência futura, para a consulta temporal ter o que mostrar."""
         elaborador = ator("ana.elaboradora", "retificacao:elaborar", "retificacao:submeter")
@@ -445,7 +729,7 @@ class Command(BaseCommand):
                 correlation_id=correlacao,
             )
 
-    def _resumo(self, processo, edital):
+    def _resumo(self, processo, edital, publicacao=None):
         publicada = Retificacao.objects.filter(
             edital=edital, status=Retificacao.Status.PUBLICADA
         ).first()
@@ -459,6 +743,14 @@ class Command(BaseCommand):
             ("versão vigente", f"/api/v1/public/editais/{edital.id}/versao-vigente"),
             ("histórico", f"/api/v1/public/editais/{edital.id}/historico"),
             ("retificação", f"/api/v1/public/retificacoes/{publicada.id}" if publicada else ""),
+            (
+                "resultado",
+                f"/selecoes/resultados/{publicacao.id}/" if publicacao else "",
+            ),
+            (
+                "documento",
+                f"/selecoes/resultados/{publicacao.id}/documento.pdf" if publicacao else "",
+            ),
             ("saúde", "/health"),
         ):
             if caminho:

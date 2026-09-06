@@ -503,6 +503,33 @@ form.convite{margin:.75rem 0 0}
   .dados{grid-template-columns:auto 1fr}
   button.principal{width:auto}
 }
+
+/* --- O resultado divulgado (017) --------------------------------------------------------- */
+/* A lista pública pode passar de mil linhas, e a 375 px ela não cabe. Quem rola é **a tabela**,
+   dentro do próprio contêiner: a página não anda de lado, que é o que a FR-051 exige. */
+.tabela-rolavel{overflow-x:auto;margin:0 0 1.5rem}
+.resultado{border-collapse:collapse;width:100%;font-size:.9375rem}
+.resultado th,.resultado td{text-align:left;padding:.5rem .75rem;
+  border-bottom:1px solid var(--borda)}
+.resultado thead th{font-size:.8125rem;color:var(--texto-fraco);text-transform:uppercase;
+  letter-spacing:.02em;white-space:nowrap}
+.resultado td:last-child{text-align:right;white-space:nowrap}
+/* O empate residual é dito em texto, e este é só o peso visual dele: quem não distingue a cor
+   continua lendo "(posição compartilhada)" na própria célula (FR-014, FR-052). */
+.compartilhada{color:var(--texto-fraco);font-size:.8125rem;white-space:nowrap}
+.nenhuma{color:var(--texto-fraco);font-size:.875rem}
+.resultados-divulgados{list-style:none;padding:0;margin:0 0 2rem;display:grid;gap:.5rem}
+.resultados-divulgados li{display:flex;flex-wrap:wrap;gap:.25rem .75rem;align-items:baseline}
+.resultados-divulgados .meta{color:var(--texto-fraco);font-size:.875rem}
+/* Um bloco por marco divulgado, na Área do Candidato. Cada um se fecha em si porque cada um é um
+   ato administrativo distinto, e lê-los em sequência sem fronteira confundiria os dois (FR-057). */
+.resultado-divulgado{border:1px solid var(--borda);border-radius:6px;padding:1rem 1.25rem;
+  margin:0 0 1rem;max-width:var(--leitura)}
+.resultado-divulgado>h3{margin:0}
+.resultado-divulgado>.sub{margin:.125rem 0 .75rem}
+.resultado-divulgado .posicao{margin:0 0 .5rem;font-size:1.125rem}
+.resultado-divulgado .meta{color:var(--texto-fraco);font-size:.9375rem;margin:0 0 .5rem}
+.resultado-divulgado p:last-child{margin-bottom:0}
 </style>
 </head>
 <body>

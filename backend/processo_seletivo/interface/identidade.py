@@ -23,7 +23,18 @@ PAPEIS = {
         ["edital:elaborar", "edital:submeter", "retificacao:elaborar", "retificacao:submeter"],
     ),
     "homologador": ("Homologador", ["edital:homologar", "retificacao:homologar"]),
-    "publicador": ("Publicador", ["edital:publicar", "retificacao:publicar"]),
+    "publicador": (
+        "Publicador",
+        [
+            "edital:publicar",
+            "retificacao:publicar",
+            # Divulgar o resultado é ato de quem publica — e é capacidade **própria**, e não efeito
+            # de `classificacao:emitir`: emitir constitui a ordem, publicar a torna pública, e são
+            # atos de autoridades distintas. Quem emitiu o ato não ganha, por tê-lo emitido, o
+            # poder de divulgá-lo (017, FR-025, FR-026).
+            "resultado:publicar",
+        ],
+    ),
     "gestor": (
         "Gestor",
         [

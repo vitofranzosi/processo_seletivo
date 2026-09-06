@@ -54,6 +54,21 @@ from processo_seletivo.comissoes.domain.etapas import (
     evento_vigente,
 )
 from processo_seletivo.comissoes.models import Funcao
+from processo_seletivo.divulgacao.application.publicar import (
+    assinatura_da_previa,
+)
+from processo_seletivo.divulgacao.application.publicar import (
+    publicar_resultado as publicar_resultado_do_marco,
+)
+from processo_seletivo.divulgacao.application.selectors import (
+    historico_do_marco as historico_das_publicacoes,
+)
+from processo_seletivo.divulgacao.application.selectors import (
+    vigente_do_marco as publicacao_vigente_do_marco,
+)
+from processo_seletivo.divulgacao.domain.conteudo import compor as compor_divulgacao
+from processo_seletivo.divulgacao.domain.publicabilidade import aferir as aferir_publicabilidade
+from processo_seletivo.divulgacao.models import Natureza
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.application.identificacao import update_edital_identification
 from processo_seletivo.editais.domain.validation import validate_for_publication
@@ -3154,6 +3169,193 @@ def ato_de_ordenacao(request, edital_id, marco_id, ato_id):
                 "ato": ato,
                 "linhas": list(pagina),
                 "pagina": pagina,
+                # A porta da divulgação é outra — `resultado:publicar` —, e por isso o conjunto de
+                # ações é calculado com o ator desta requisição, e não com a porta que abriu a
+                # tela: quem consulta o ato pode não poder divulgá-lo (017, FR-069).
+                "acoes": list(acoes.do_ato_de_ordenacao(ato, ator, edital=edital)),
+            },
+        )
+    )
+
+
+# ---------------------------------------------------------------------------
+# A divulgação do resultado (017). Três telas: a prévia, o ato e o histórico.
+#
+# **A porta é outra.** A da 015 é a presidência da comissão ou a auditoria; esta é a capacidade
+# `resultado:publicar`, e ela não decorre de nenhuma outra: quem emitiu o ato não ganha, por
+# tê-lo emitido, o poder de divulgá-lo (FR-025, FR-026).
+# ---------------------------------------------------------------------------
+
+
+def _edital_para_publicar(request, edital_id, *, consulta=False):
+    """A porta da divulgação: `resultado:publicar` — e `auditoria:consultar` só para consultar.
+
+    **Sem a capacidade é 403, e não 404**, inclusive para quem preside a comissão: a recusa é sobre
+    o ator, e escondê-la atrás de "não encontrado" faria a tela mentir sobre por que ela não abre.
+    O 404 fica para o que o ator **não alcança** — Edital de outro escopo institucional, que ele
+    não deve sequer saber que existe (FR-026).
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return None, None, False
+    pode_publicar = ator.can("resultado:publicar")
+    pode_consultar = pode_publicar or (consulta and ator.can("auditoria:consultar"))
+    if not pode_consultar:
+        raise DomainError("forbidden", "A operação não é permitida.", 403)
+    edital = (
+        Edital.objects.filter(pk=edital_id, institution_scope=ator.institution_scope)
+        .select_related("processo")
+        .first()
+    )
+    if edital is None:
+        raise Http404
+    return ator, edital, pode_publicar
+
+
+def _ato_para_publicar(edital, marco_id, ato_id):
+    ato = ato_por_id(edital=edital, marco_id=marco_id, ato_id=ato_id)
+    if ato is None:
+        raise Http404
+    return ato
+
+
+@require_http_methods(["GET"])
+def previa_de_publicacao(request, edital_id, marco_id, ato_id):
+    """O que **seria** divulgado, composto pela mesma função que o POST usa — e nada gravado.
+
+    Não há rascunho a persistir (D-008, FR-035): a prévia é uma leitura, e sair dela não deixa
+    nada para trás. Havendo impedimento, a tela mostra a recusa nomeada e **não** oferece o botão —
+    não existe publicar mediante confirmação adicional (D-001).
+    """
+    ator, edital, _ = _edital_para_publicar(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    ato = _ato_para_publicar(edital, marco_id, ato_id)
+    return _renderizar_previa(request, edital, ato, marco_id)
+
+
+def _renderizar_previa(request, edital, ato, marco_id, *, erro="", status=200):
+    """A prévia composta agora — usada pelo GET e pela **recusa do POST**.
+
+    Recusado, o POST volta a esta mesma tela com o status HTTP que o domínio declarou, e não com um
+    redirect. Isso importa além da fidelidade ao contrato: a assinatura e a chave de idempotência
+    são **recompostas aqui**, e é exatamente disso que a autoridade precisa depois de uma recusa por
+    prévia obsoleta — a projeção que ela vai reconfirmar é a de agora, não a que envelheceu.
+    """
+    sucede = publicacao_vigente_do_marco(edital=edital, marco_id=marco_id)
+    try:
+        # `sucede` entra na aferição porque é ele que produz o degrau do meio da FR-005: publicar
+        # sobre um marco já divulgado não impede nada, e ainda assim é o que a autoridade precisa
+        # ler antes de confirmar.
+        publicabilidade = aferir_publicabilidade(
+            edital=edital, marco_id=marco_id, ato=ato, sucede=sucede
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        raise
+    projecao = compor_divulgacao(ato)
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/previa_de_publicacao.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "ato": ato,
+                "marco_id": marco_id,
+                "cabecalho": projecao["cabecalho"],
+                "posicoes": projecao["posicoes"],
+                "consideradas": len(projecao["situacoes"]),
+                "publicabilidade": publicabilidade,
+                "sucede": sucede,
+                "naturezas": _naturezas_oferecidas(sucede),
+                "autoridades": autoridades.CATALOGO,
+                "confirmacao_da_previa": assinatura_da_previa(
+                    ato=ato, publicacao_anterior=sucede, projecao=projecao
+                ),
+                "chave_idempotencia": uuid4().hex,
+                "erro": erro,
+            },
+            status=status,
+        )
+    )
+
+
+def _naturezas_oferecidas(sucede):
+    """As duas desde a primeira publicação; a preliminar sai depois de uma definitiva.
+
+    Um certame pode divulgar diretamente o resultado definitivo, e condicionar `DEFINITIVA` à
+    existência de uma preliminar inventaria uma etapa que o Edital não declarou. O que se retira é
+    a `PRELIMINAR` depois de uma definitiva — a ordem entre naturezas tem sentido único (D-007).
+    """
+    if sucede is not None and sucede.natureza == Natureza.DEFINITIVA:
+        return [(Natureza.DEFINITIVA.value, Natureza.DEFINITIVA.label)]
+    return [(valor, rotulo) for valor, rotulo in Natureza.choices]
+
+
+@require_http_methods(["POST"])
+def publicar_resultado(request, edital_id, marco_id, ato_id):
+    """O ato, pelo padrão POST-redirect-GET: publicado, a tela seguinte é o histórico do marco."""
+    ator, edital, _ = _edital_para_publicar(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    ato = _ato_para_publicar(edital, marco_id, ato_id)
+    try:
+        publicacao = publicar_resultado_do_marco(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            marco_id=marco_id,
+            ato_id=ato_id,
+            natureza=request.POST.get("natureza", ""),
+            autoridade=request.POST.get("autoridade", ""),
+            confirmacao_da_previa=request.POST.get("confirmacao_da_previa", ""),
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        # **A recusa devolve o status que o contrato declara**, e não um 302. O ato não aconteceu,
+        # e responder "redirecione-se" a um 409 esconde do cliente — pessoa, script ou proxy — que
+        # nada foi gravado. A tela volta composta de novo, com a recusa nomeada e com a assinatura
+        # recalculada, que é o que a autoridade precisa para reconfirmar.
+        return _renderizar_previa(
+            request, edital, ato, marco_id, erro=recusa.detail, status=recusa.status
+        )
+    request.session["resultado_da_publicacao"] = str(publicacao.id)
+    return redirect(reverse("interface:publicacoes-do-marco", args=[edital_id, marco_id]))
+
+
+@require_http_methods(["GET"])
+def publicacoes_do_marco(request, edital_id, marco_id):
+    """O que foi divulgado, quando, por quem — e o que vale hoje (FR-068).
+
+    **Consultar é de dois; publicar é de um.** A auditoria lê esta página inteira e não age nela, e
+    é por isso que a ação de publicar depende da capacidade que a rota de consulta não exige.
+    """
+    ator, edital, pode_publicar = _edital_para_publicar(request, edital_id, consulta=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/publicacoes_do_marco.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "marco_id": marco_id,
+                "historico": historico_das_publicacoes(edital=edital, marco_id=marco_id),
+                "pode_publicar": pode_publicar,
+                # O caminho para o **ato de origem** — a tela da 015 — é condicionado à autorização
+                # de quem lê: ela tem porta própria, e oferecê-lo a quem receberia 404 seria
+                # oferecer um beco (FR-022).
+                "pode_ver_o_ato": (
+                    pode_gerir_comissao(ator, edital.processo) is not None
+                    or ator.can("auditoria:consultar")
+                ),
+                "publicada_agora": request.session.pop("resultado_da_publicacao", None),
             },
         )
     )
