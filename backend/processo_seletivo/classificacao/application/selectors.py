@@ -4,6 +4,7 @@ from django.core.paginator import Paginator
 from django.db.models import F
 
 from processo_seletivo.classificacao.application.calculo import calcular_ordem
+from processo_seletivo.classificacao.domain.nomes import edital_por_extenso, nomes_do_marco
 from processo_seletivo.classificacao.domain.universo import (
     comparar,
     por_identidade,
@@ -46,6 +47,33 @@ def ato_por_id(*, edital, marco_id, ato_id):
         .select_related("versao", "ato_anterior")
         .first()
     )
+
+
+def sucessor_de(ato):
+    """O ato que sucedeu este, ou ``None``. A cadeia é append-only e o sucessor é no máximo um.
+
+    Quem abre um ato histórico precisa saber disso **antes** de citá-lo: os valores continuam
+    íntegros e vigentes na sua data, mas já não são a ordem que produz efeito (E2E15-010).
+    """
+    return ato.sucessores.order_by("emitido_em").first()
+
+
+def nomes_do_ato(ato):
+    """Como a versão que o ato **cita** nomeia o que ele identifica por UUID.
+
+    A leitura é da versão congelada, e nunca da vigente: uma Retificação posterior que renomeie o
+    perfil, o marco ou o Edital não pode reescrever retroativamente como um ato antigo é lido. Os
+    nomes acompanham os identificadores na proveniência — não os substituem —, porque ali o UUID
+    é a âncora de auditoria (E2E15-006).
+    """
+    conteudo = ato.versao.content
+    nomes = nomes_do_marco(conteudo, perfil_id=ato.perfil_id, marco_id=ato.marco_id)
+    return {
+        "processo": nomes["processo"],
+        "edital": edital_por_extenso(conteudo, ato.edital),
+        "perfil": nomes["perfil"].get("name", "") or "",
+        "marco": nomes["marco"].get("name", "") or "",
+    }
 
 
 def estado_do_marco(*, edital, marco_id, at=None):
@@ -102,6 +130,7 @@ def estado_do_marco(*, edital, marco_id, at=None):
                 marco_id=marco_id,
             ),
         )
+    _nomear_modalidades(proposta, versao_atual.content, perfil_id=perfil["id"], marco_id=marco_id)
     return {
         "proposta": proposta,
         "vigente": vigente,
@@ -139,6 +168,22 @@ def _marco_na_versao(conteudo, marco_id):
     return None, None
 
 
+def _nomear_modalidades(proposta, conteudo, *, perfil_id, marco_id):
+    """Acrescenta a cada posição o **nome** que a versão em vigor dá à sua modalidade.
+
+    A fonte é a versão que calculou esta proposta, e não a que algum ato citou: o que a tela
+    mostra aqui é a ordem de agora, sob a norma de agora. A tela não resolve identificador
+    nenhum — imprimia o UUID justamente porque ninguém o resolvia antes dela (E2E15-006).
+
+    O rótulo é apresentação e **não entra na assinatura da proposta**, que é lida por chaves
+    nomeadas; é o que permite decorar as linhas aqui sem que a confirmação do cálculo mude de
+    valor entre a conferência na tela e a emissão.
+    """
+    modalidades = nomes_do_marco(conteudo, perfil_id=perfil_id, marco_id=marco_id)["modalidades"]
+    for linha in proposta["posicoes"]:
+        linha["modalidade"] = modalidades.get(str(linha["modalidade_id"]), "")
+
+
 def _divergencias_das_posicoes(ato, proposta):
     """Mudanças linha a linha entre o snapshot e a proposta calculada agora."""
     antes = {
@@ -150,6 +195,10 @@ def _divergencias_das_posicoes(ato, proposta):
             "consequencia",
             "motivo",
             "empate_residual",
+            # O protocolo entra pela consulta do snapshot porque é o único lado que enxerga quem
+            # **saiu** do universo: essa inscrição não tem linha na proposta de agora, e sem isto
+            # a tela só teria o UUID dela para mostrar (E2E15-006).
+            "inscricao__protocolo",
         )
     }
     depois = {item["inscricao_id"]: item for item in proposta["posicoes"] + proposta["sem_posicao"]}
@@ -183,11 +232,42 @@ def _divergencias_das_posicoes(ato, proposta):
             divergencias.append(
                 {
                     "inscricao_id": inscricao_id,
-                    "antes": anterior,
-                    "agora": atual,
+                    "protocolo": (
+                        (anterior or {}).get("inscricao__protocolo")
+                        or (atual or {}).get("protocolo")
+                        or ""
+                    ),
+                    "antes": _lado(anterior, "pontuacao_combinada"),
+                    "agora": _lado(atual, "pontuacao"),
                 }
             )
     return divergencias
 
 
-__all__ = ["ato_por_id", "ato_vigente", "estado_do_marco", "historico", "posicoes_do_ato"]
+def _lado(linha, campo_da_pontuacao):
+    """Um lado do diff com as chaves que o outro também tem.
+
+    O snapshot chama o valor de `pontuacao_combinada`; a proposta calculada chama o mesmo valor de
+    `pontuacao`. Uniformizar aqui é o que permite à tela ler os dois lados com uma linha só, em vez
+    de saber de qual deles cada nome veio — e é o que faltava para a pontuação **caber** na tabela:
+    ela comparava só a posição, e uma Retificação de peso que dobra a nota sem trocar ninguém de
+    lugar aparecia como "1º → 1º", sem nada que explicasse a divergência apontada (E2E15-011).
+    """
+    if linha is None:
+        return None
+    return {
+        "posicao": linha["posicao"],
+        "pontuacao": linha[campo_da_pontuacao],
+        "motivo": linha["motivo"],
+    }
+
+
+__all__ = [
+    "ato_por_id",
+    "ato_vigente",
+    "estado_do_marco",
+    "historico",
+    "nomes_do_ato",
+    "posicoes_do_ato",
+    "sucessor_de",
+]

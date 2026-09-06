@@ -8,8 +8,18 @@
 </nav>
 
 <h1>Ato de classificação</h1>
-<p class="sub">Emitido por {{ ato.emitido_por }} em {{ ato.emitido_em }}, sob a versão normativa {{ ato.versao_id }}.</p>
+<p class="sub">{{ nomes.edital }}{% if nomes.perfil %} — {{ nomes.perfil }}{% endif %}{% if nomes.marco %} — {{ nomes.marco }}{% endif %}. Emitido por {{ ato.emitido_por }} em {{ ato.emitido_em|date:"d/m/Y H:i" }}.</p>
 <p class="imutavel">Este snapshot é imutável. A consulta abaixo lê o que foi registrado; não recalcula o passado.</p>
+
+{% comment %}
+E2E15-010. O aviso vem **antes** dos valores, e não ao lado do histórico: quem chega aqui por um
+link guardado lê o número da posição primeiro e cita o ato sem saber que ele já foi superado. Nada
+do que está congelado abaixo muda — o ato continua íntegro na data em que foi emitido; o que mudou
+é que já não é ele que produz efeito.
+{% endcomment %}
+{% if sucessor %}
+<p class="aviso"><strong>Este ato foi sucedido</strong> em {{ sucessor.emitido_em|date:"d/m/Y H:i" }} por {{ sucessor.emitido_por }}: {{ sucessor.motivo_da_sucessao }} Os valores abaixo continuam sendo os que este ato congelou. <a href="{% url 'interface:ato-de-ordenacao' edital.id ato.marco_id sucessor.id %}">Consultar o ato que o sucedeu</a>.</p>
+{% endif %}
 
 {% comment %}
 O cartão de ações do ato (017, FR-069). Publicar o resultado é alcançado daqui, e a oferta é
@@ -30,11 +40,17 @@ de ausência deriva do mesmo conjunto que a lista, e não de um `if` separado.
 <section aria-labelledby="titulo-universo">
   <h2 id="titulo-universo">Proveniência do ato</h2>
   <dl class="participantes">
-    <dt>Processo</dt><dd>{{ ato.universo.processoId }}</dd>
-    <dt>Edital</dt><dd>{{ ato.universo.editalId }}</dd>
-    <dt>Perfil</dt><dd>{{ ato.universo.profileId }}</dd>
-    <dt>Marco</dt><dd>{{ ato.universo.milestoneId }}</dd>
-    <dt>Versão normativa</dt><dd>{{ ato.universo.versionId }}</dd>
+    {% comment %}
+    E2E15-006. O nome **acompanha** o identificador; não o substitui. Aqui o UUID é a âncora de
+    auditoria — é por ele que se confere um ato contra a base — e o nome é o que torna a página
+    legível para quem responde a um recurso. Os nomes saem da versão que este ato cita, e é o que
+    impede uma Retificação posterior de reescrever retroativamente como ele é lido.
+    {% endcomment %}
+    <dt>Processo</dt><dd>{{ nomes.processo|default:"—" }}<span class="ajuda">{{ ato.universo.processoId }}</span></dd>
+    <dt>Edital</dt><dd>{{ nomes.edital }}<span class="ajuda">{{ ato.universo.editalId }}</span></dd>
+    <dt>Perfil</dt><dd>{{ nomes.perfil|default:"—" }}<span class="ajuda">{{ ato.universo.profileId }}</span></dd>
+    <dt>Marco</dt><dd>{{ nomes.marco|default:"—" }}<span class="ajuda">{{ ato.universo.milestoneId }}</span></dd>
+    <dt>Versão normativa</dt><dd>vigente desde {{ ato.versao.valid_from|date:"d/m/Y H:i" }}<span class="ajuda">{{ ato.universo.versionId }}</span></dd>
     <dt>Participantes considerados</dt><dd>{{ ato.universo.participants|length }}</dd>
     <dt>Resultados antecedentes</dt><dd>{{ ato.universo.stageResults|length }}</dd>
   </dl>

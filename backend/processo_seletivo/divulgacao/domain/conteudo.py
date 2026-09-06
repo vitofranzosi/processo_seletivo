@@ -25,6 +25,7 @@ deixa de depender de disciplina: não há valor em mãos a filtrar depois.
 
 from decimal import Decimal, InvalidOperation
 
+from processo_seletivo.classificacao.domain.nomes import edital_por_extenso, nomes_do_marco
 from processo_seletivo.classificacao.models import PosicaoNaOrdem
 from processo_seletivo.divulgacao.models import Natureza, SituacaoDivulgada
 
@@ -52,12 +53,8 @@ def compor(ato):
     do POST, e entram em `conteudo_divulgado`.
     """
     conteudo = ato.versao.content
-    perfil = _por_identidade(conteudo.get("profiles"), ato.perfil_id) or {}
-    marco = _por_identidade(perfil.get("classificationMilestones"), ato.marco_id) or {}
-    modalidades = {
-        str(item.get("id")): item.get("name") or ""
-        for item in perfil.get("competitionModalities") or []
-    }
+    nomes = nomes_do_marco(conteudo, perfil_id=ato.perfil_id, marco_id=ato.marco_id)
+    perfil, marco, modalidades = nomes["perfil"], nomes["marco"], nomes["modalidades"]
     escala = _escala(marco)
 
     linhas = list(
@@ -106,8 +103,8 @@ def compor(ato):
 
     return {
         "cabecalho": {
-            "processo": conteudo.get("processoTitle", "") or "",
-            "edital": _edital_por_extenso(conteudo, ato.edital),
+            "processo": nomes["processo"],
+            "edital": edital_por_extenso(conteudo, ato.edital),
             "perfil": perfil.get("name", "") or "",
             "marco": marco.get("name", "") or "",
             # **Dado de ordenação, não de leitura.** A 015 emite os marcos ordenados por `code`, e
@@ -150,13 +147,6 @@ def _titulo(rotulo, perfil):
     return f"{rotulo} — {perfil}" if perfil else rotulo
 
 
-def _edital_por_extenso(conteudo, edital):
-    """`Edital 14/2026` — o Edital nomeado como um ato o nomeia, e nunca por identificador."""
-    numero = conteudo.get("number") or edital.number
-    ano = conteudo.get("year") or edital.year
-    return f"Edital {numero}/{ano}"
-
-
 def _escala(marco):
     """As casas decimais que o **marco** declarou — a apresentação não decide de novo.
 
@@ -181,11 +171,6 @@ def _apresentar(valor, escala):
     except (InvalidOperation, TypeError, ValueError):
         return str(valor)
     return f"{numero:f}".replace(".", ",")
-
-
-def _por_identidade(itens, identidade):
-    alvo = str(identidade)
-    return next((item for item in itens or [] if str(item.get("id")) == alvo), None)
 
 
 __all__ = ["compor", "conteudo_divulgado"]
