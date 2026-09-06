@@ -396,7 +396,7 @@ app — e aqui são **quatro** tabelas, porque a citação de cumprimento també
 seguranca/papeis.py   → TABELAS_APPEND_ONLY += recursos_recurso,
                                                recursos_juizodeadmissibilidade,
                                                recursos_decisaorecurso,
-                                               classificacao_cumprimentodeprovidencia
+                                               classificacao_citacaodedecisao
 tests/migrations/…    → APPS += "recursos"          ("classificacao" já está lá)
                       → TRIGGERS_POR_APP["recursos"]      = 3 de imutabilidade + 2 de coerência
                       → TRIGGERS_POR_APP["classificacao"] += cumprimento_de_providencia_append_only,
@@ -434,50 +434,66 @@ prova nada do que esta feature promete.
 
 ---
 
-## T-015 — O cumprimento da providência: vínculo causal, sem ato de cumprimento
+## T-015 — O cumprimento da providência: vínculo causal, sem ato autônomo
 
-**O problema.** Uma redação anterior dava a providência por cumprida quando a publicação vigente
-divulgasse **ato diferente** do reconhecido viciado. Isso a quitaria **por acidente**: um ato
+**O problema original.** Uma redação anterior dava a providência por cumprida quando a publicação
+vigente divulgasse **ato diferente** do reconhecido viciado. Isso a quitaria **por acidente**: um ato
 sucessor emitido por razão alheia — uma Retificação que mudou um peso, um Resultado consolidado
-tarde — encerraria a pendência sem que ninguém tivesse corrigido o vício que a decisão reconheceu.
-O vínculo precisa ser causal, e "diferente" não é vínculo.
+tarde — encerraria a pendência sem que ninguém tivesse corrigido o vício. O vínculo precisa ser
+causal, e "diferente" não é vínculo.
 
-**Decisão.** O ato de ordenação emitido em cumprimento **cita** a decisão que o determinou, e a
-citação é uma linha de `classificacao.CumprimentoDeProvidencia(ato, decisao)`.
+**Decisão.** O ato de ordenação emitido em cumprimento **cita** a decisão, e a citação é uma linha de
+`classificacao.CitacaoDeDecisao(ato, decisao)`, com `UNIQUE(ato, decisao)` e **nada além disso**.
 
 ```text
-pendente   →  a decisão PROVIDENCIA_A_JUSANTE não é citada por ato de ordenação nenhum
-cumprida   →  o ato que se publica cita a decisão
+cumprida_para(decisao, ato_candidato) =
+      existe CitacaoDeDecisao(ato_candidato, decisao)
+   OU existe CitacaoDeDecisao(A, decisao), com A do MESMO marco e A já publicado
 ```
+
+**Citar não é cumprir, e a primeira redação confundia os dois.** Ela tinha `UNIQUE(decisao)`,
+justificada como "a decisão é cumprida uma vez", e a análise cruzada mostrou que aquela unicidade
+errava em três frentes:
+
+1. **contradizia a FR-089**, que exige ato **publicado**: a citação sozinha encerraria a pendência;
+2. **criava beco**: emitido `C2` citando a decisão e ficando obsoleto antes de publicar, `C3` não
+   poderia recitá-la, e a definitiva do marco ficaria impedida para sempre — o beco que o desenho
+   existia para evitar;
+3. **impedia a pertinência múltipla**: providência normativa alcança todos os marcos que a regra
+   retificada governa, e cada um precisa citar a mesma decisão no seu ato.
+
+Por isso `UNIQUE(decisao)` **não existe**, a recitação é legítima enquanto nenhum ato citante for
+publicado, e a apuração é **por marco** — o trabalho feito num marco não libera a definitiva de
+outro.
 
 **Por que isto não é a "entidade de cumprimento" recusada na clarificação.** O que se recusou foi um
 **ato administrativo próprio** — alguém declarando, depois e em tela separada, que a providência foi
 cumprida, com autoridade e instante seus. A citação não é ato: é **proveniência do
 `AtoDeOrdenacao`**, do mesmo tipo de `motivo_da_sucessao`, gravada por `emitir_ordem` na mesma
-transação em que o ato nasce, por quem já tem autoridade para emitir. Nenhuma autoridade nova,
-nenhuma tela nova, nenhum passo humano separado que possa ser esquecido.
+transação em que o ato nasce, por quem já tem autoridade para emitir. O nome acompanhou a correção:
+`CumprimentoDeProvidencia` afirmava o que a linha não afirma, e virou `CitacaoDeDecisao`.
 
-**Por que uma tabela, e não uma FK única no `AtoDeOrdenacao`.** Dois deferimentos com providência
-sobre o mesmo marco são alcançáveis, e uma FK única obrigaria a emitir um ato por decisão — a
-"sucessão que não sucedeu nada" que a D-007 da 017 critica. `UNIQUE(decisao)` dá de graça a garantia
-de que uma decisão é cumprida **uma vez**.
-
-**Por que não é circular.** A publicação que executa o remédio **é** a que cita a decisão, e por isso
-não é impedida por ela. E emitir ato sucessor citando a decisão está sempre disponível: a pendência
-nunca vira beco.
+**A pertinência ao Marco é invariante persistente, e não promessa de comando.** A primeira redação
+da trigger conferia apenas o Edital, e deixava aberta a porta que a citação existe para fechar: uma
+gravação direta ligaria uma decisão pertinente a `M1` a um ato de `M2`, liberando indevidamente a
+definitiva de `M2`. `citacao_coerente` passa a conferir Perfil e Marco — e o ramo que precisa ler a
+enumeração de Etapas do JSON normativo **não é inédito**: é o caminho que
+`check_ordering_act_provenance` já percorre em `classificacao/0003`. O detalhe está em
+[data-model.md](./data-model.md) §10.1.
 
 **O custo, registrado por inteiro**, como a orientação exigiu:
 
 | dimensão | o que muda |
 |---|---|
-| estrutura | `classificacao.CumprimentoDeProvidencia`: `ato` FK PROTECT, `decisao` FK PROTECT, `UNIQUE(decisao)`, append-only |
+| estrutura | `classificacao.CitacaoDeDecisao`: `ato` FK PROTECT, `decisao` FK PROTECT, `UNIQUE(ato, decisao)`, append-only |
 | dependência entre apps | `classificacao → recursos`, por referência tardia (`"recursos.DecisaoRecurso"`). É a segunda aresta desse tipo, ao lado da de `resultados` |
 | migration | `classificacao/0004`, dependente de `recursos/0001`. O grafo continua acíclico |
-| coerência | trigger `cumprimento_coerente`: a decisão citada tem espécie `PROVIDENCIA_A_JUSANTE` e é do Edital do ato. A pertinência ao **marco** fica no comando — conferi-la na trigger exigiria ler a enumeração de Etapas do JSON normativo dentro do PL/pgSQL |
+| coerência | trigger `citacao_coerente`: espécie, Edital, **Perfil e Marco**, nos dois ramos de objeto atacado (§10.1) |
 | autorização | nenhuma nova: quem cita é quem emite o ato, pela autoridade que a 015 já exige. A tela de emissão passa a oferecer as decisões pendentes daquele marco |
 | privilégios | a tabela entra em `TABELAS_APPEND_ONLY`, e as suas duas triggers em `TRIGGERS_POR_APP["classificacao"]` |
+| fatiamento | a tabela e a sua migration só entregam a US7, e por isso vivem **na F6**, e não na fundação |
 
-**Alternativa descartada — relaxar para "qualquer sucessor cumpre".** É a redação anterior, e ela
+**Alternativa descartada — relaxar para "qualquer sucessor cumpre".** É a redação original, e ela
 devolve o problema: a pendência some sem que ninguém tenha corrigido nada. Não foi adotada, e não
 deve ser adotada em silêncio: se a instituição a preferir, é escolha dela, e volta à mesa.
 
@@ -501,4 +517,4 @@ deve ser adotada em silêncio: se a instituição a preferir, é escolha dela, e
 | T-012 | Protocolo com alfabeto compartilhado, prefixo próprio | nenhum |
 | T-013 | Três registros fora do app | fáceis de esquecer, e o teste não os inventa |
 | T-014 | As garantias centrais exigem PostgreSQL na suíte | disciplina de entrega |
-| T-015 | Cumprimento por citação do ato que executa, não por ato próprio | 1 tabela, 1 migration, 1 aresta entre apps |
+| T-015 | Cumprimento por citação **publicada**, apurado por marco; sem ato autônomo | 1 tabela, 1 migration, 1 aresta entre apps |

@@ -185,7 +185,7 @@ nomeia a vedação.
 
 A decisão da quarta espécie **nomeia** a providência na motivação e não a executa (FR-049). Quem a
 executa é quem tem a autoridade da 015 ou da 017, e o cumprimento se prova pela citação que o ato
-sucessor carrega.
+sucessor carrega — **quando esse ato é publicado**.
 
 **A regra é uma só, e mora em [janela.md](./janela.md) §3.1** — aqui basta saber que julgar não
 executa nada a jusante.

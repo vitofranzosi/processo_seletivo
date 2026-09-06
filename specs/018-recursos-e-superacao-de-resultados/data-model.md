@@ -17,7 +17,7 @@ Ocorrência ─┘        │  ▲                  ▲                         
                      │  └── resultado_anterior (sucessão, append-only)             │
                      ▼                     │                                       │
               AtoDeOrdenacao ──────────────┘                                       │
-                     │      CumprimentoDeProvidencia (o ato cita a decisão)        │
+                     │      CitacaoDeDecisao (o ato cita a decisão)                │
                      ▼                                                             │
              PublicacaoResultado ◀───────────────────────────────────────────────── ┘
                                         (objeto atacado, o outro dos dois)
@@ -47,10 +47,12 @@ Append-only. Nasce e não muda.
 | `janela_abriu_em` | instante, anulável | nulo quando não havia janela computável |
 | `janela_fecha_em` | instante, anulável | idem — os dois juntos são o "havia prazo, e era este" |
 
-**Constraints — 5** (`unique=True` no protocolo é índice do campo, e não constraint nomeada):
+**Constraints — 6.** `unique=True` no protocolo **é** unicidade de banco, ainda que declarada no
+campo e não em `Meta.constraints`; contá-la de fora seria subdeclarar o que o esquema garante.
 
 | nome | o que garante |
 |---|---|
+| `uq_recurso_protocolo` (via `unique=True`) | o protocolo é único no certame |
 | `ck_recurso_objeto_unico` | `(publicacao_atacada IS NULL) <> (resultado_atacado IS NULL)` — exatamente um |
 | `ck_recurso_fundamentacao` | `fundamentacao <> ''` |
 | `ck_recurso_janela_completa` | `(janela_abriu_em IS NULL) = (janela_fecha_em IS NULL)` |
@@ -130,11 +132,15 @@ honesta: a decisão de fato se referiu àquele Resultado (T-011).
 
 ---
 
-## 5. `classificacao.CumprimentoDeProvidencia` — a citação que o ato carrega
+## 5. `classificacao.CitacaoDeDecisao` — a citação que o ato carrega
 
-Append-only. **Não é ato administrativo**: é proveniência do `AtoDeOrdenacao`, do mesmo tipo de
-`motivo_da_sucessao`, declarada por quem emite, no ato de emitir. Não tem autoridade, instante nem
-motivo próprios (T-015).
+Append-only. **Não é ato administrativo e não é registro de cumprimento**: é proveniência do
+`AtoDeOrdenacao`, do mesmo tipo de `motivo_da_sucessao`, declarada por quem emite, no ato de emitir.
+Não tem autoridade, instante nem motivo próprios (T-015).
+
+*Chamava-se `CumprimentoDeProvidencia`, e o nome mentia sobre o que a linha afirma: ela registra que
+um ato **citou** uma decisão, não que a providência foi cumprida. Cumprimento é conclusão, e depende
+de publicação — ver §5.2.*
 
 | campo | tipo | observação |
 |---|---|---|
@@ -142,9 +148,43 @@ motivo próprios (T-015).
 | `ato` | FK `AtoDeOrdenacao`, PROTECT | o ato emitido em cumprimento |
 | `decisao` | FK `"recursos.DecisaoRecurso"`, PROTECT | referência tardia, como em `resultados` |
 
-**Constraints — 2**: `uq_cumprimento_por_decisao` (`UNIQUE(decisao)` — a decisão é cumprida uma
-vez) e `uq_cumprimento_ato_decisao` (`UNIQUE(ato, decisao)`, que a primeira já implica e que se
-mantém por legibilidade do par).
+**Constraint — 1**: `uq_citacao_ato_decisao` (`UNIQUE(ato, decisao)`) — um ato não cita a mesma
+decisão duas vezes, e nada além disso.
+
+### 5.1 Por que **não** existe `UNIQUE(decisao)`
+
+Uma redação anterior tinha as duas, com a segunda justificada como "a decisão é cumprida uma vez".
+Ela estava errada em três frentes, e cada uma sozinha bastaria:
+
+1. **Contradizia a FR-089.** Unicidade global faria a citação, sozinha, encerrar a pendência — e a
+   FR-089 exige ato **publicado**. Citar é intenção; publicar é o remédio.
+2. **Criava beco.** Emitido `C2` citando a decisão, e ficando `C2` obsoleto antes de ser publicado —
+   por Retificação ou por outro Resultado superado —, o sucessor `C3` **não poderia recitar** a
+   mesma decisão. A providência ficaria eternamente pendente, e a definitiva do marco, impedida
+   para sempre. É exatamente o beco que a decisão do cumprimento derivado existia para evitar.
+3. **Impedia a pertinência múltipla.** Uma decisão cuja providência é normativa — o erro está na
+   norma, e o remédio é Retificação — alcança **todos** os marcos que a regra retificada governa.
+   Cada um emite o seu ato sucessor, e cada um precisa citar a mesma decisão.
+
+### 5.2 A regra de cumprimento, e ela é por Marco
+
+```text
+cumprida_para(decisao, ato_candidato) =
+      existe CitacaoDeDecisao(ato_candidato, decisao)
+   OU existe CitacaoDeDecisao(A, decisao), com A do MESMO marco do ato_candidato
+      e A já publicado
+```
+
+O primeiro ramo é o ato que executa o remédio agora: ele não é impedido pela pendência que ele
+próprio cura. O segundo é o remédio **já executado e divulgado**: publicado o ato citante, um
+sucessor posterior emitido por razão alheia não reabre a pendência.
+
+**"Do mesmo marco" não é detalhe.** Publicado o ato citante de `M1`, a providência continua pendente
+para `M2`, porque o remédio de `M2` não foi executado. Apurar globalmente liberaria a definitiva de
+`M2` pelo trabalho feito em `M1`.
+
+**Recitação é legítima e esperada.** Enquanto nenhum ato citante for publicado, qualquer sucessor do
+marco pode citar a decisão de novo. É o que impede o beco de 5.1.2.
 
 **Por que uma linha por par, e não uma FK única no ato.** Dois deferimentos com providência sobre o
 mesmo marco são alcançáveis, e uma FK única obrigaria a emitir um ato por decisão — a "sucessão que
@@ -304,9 +344,9 @@ resultados/0004  ──▶  recursos/0001  ──▶  resultados/0005
 
 | # | migration | conteúdo | depende de |
 |---|---|---|---|
-| 1 | `recursos/0001` | 3 tabelas, 12 constraints, 5 triggers | `resultados/0004`, `divulgacao/0001`, `classificacao/0003`, `inscricoes`, `publicacoes` |
+| 1 | `recursos/0001` | 3 tabelas, 13 constraints, 5 triggers | `resultados/0004`, `divulgacao/0001`, `classificacao/0003`, `inscricoes`, `publicacoes` |
 | 2 | `resultados/0005` | 3 colunas, 4 constraints novas, 2 recriadas, trigger recriada | `recursos/0001` |
-| 3 | `classificacao/0004` | 1 tabela, 2 constraints, 2 triggers | `recursos/0001` |
+| 3 | `classificacao/0004` | 1 tabela, 1 constraint, 2 triggers | `recursos/0001` |
 | 4 | `divulgacao/0002` | 3 colunas, 1 constraint | `divulgacao/0001` |
 
 **O grafo é acíclico** porque a granularidade é a migration, e não o app: `recursos/0001` vem depois
@@ -314,9 +354,8 @@ de `resultados/0004` e antes de `resultados/0005`. Em Python não há import cir
 `classificacao` declaram a FK como *string* (`"recursos.DecisaoRecurso"`), que é a referência tardia
 do Django.
 
-**Contagem de constraints em `recursos/0001`**: 5 no `Recurso` + 2 no `JuizoDeAdmissibilidade` + 5 na
-`DecisaoRecurso` = **12**. O protocolo usa `unique=True` no campo, que é índice e não constraint
-nomeada.
+**Contagem de constraints em `recursos/0001`**: 6 no `Recurso` — incluindo a unicidade do protocolo,
+declarada no campo — + 2 no `JuizoDeAdmissibilidade` + 5 na `DecisaoRecurso` = **13**.
 
 ---
 
@@ -332,33 +371,41 @@ a sua própria mensagem de recusa. É o padrão de `divulgacao/0001` e de `resul
 | `recursos_juizodeadmissibilidade` | `juizo_de_admissibilidade_append_only` | imutabilidade | |
 | `recursos_decisaorecurso` | `decisao_recurso_append_only` | imutabilidade | |
 | `recursos_decisaorecurso` | `decisao_recurso_coerente` | coerência | o recurso citado está **admitido**; `resultado_protegido` é do mesmo par e Edital; `etapa_id` confere |
-| `classificacao_cumprimentodeprovidencia` | `cumprimento_de_providencia_append_only` | imutabilidade | |
-| `classificacao_cumprimentodeprovidencia` | `cumprimento_coerente` | coerência | a decisão citada tem espécie `PROVIDENCIA_A_JUSANTE` e é do Edital do ato |
+| `classificacao_citacaodedecisao` | `citacao_de_decisao_append_only` | imutabilidade | |
+| `classificacao_citacaodedecisao` | `citacao_coerente` | coerência | a decisão é `PROVIDENCIA_A_JUSANTE` **e pertinente ao Perfil e ao Marco do ato** — ver §10.1 |
 | `resultados_resultadoetapa` | `resultado_etapa_coerente` | coerência | **recriada**, com os ramos de §6.2. Nome inalterado |
 | `resultados_resultadoetapa` | `resultado_etapa_append_only` | imutabilidade | **inalterada, e não desligada** |
 
 **Uma trigger não valida outra tabela.** Por isso a coerência da `DecisaoRecurso` é instalada **na
 `DecisaoRecurso`**, e não no `Recurso`: são duas triggers de coerência em `recursos`, e não uma.
 
-**Pertinência ao marco fica no comando, e não na trigger.** `cumprimento_coerente` confere espécie e
-Edital; conferir que a decisão pertence ao **marco** do ato exigiria ler a enumeração de Etapas do
-JSON normativo dentro do PL/pgSQL. Essa verificação vive em `emitir_ordem`, e a trigger garante o
-que se garante barato.
+### 10.1 `citacao_coerente` — a pertinência ao Marco é invariante persistente
 
-**Registros fora do app** (T-013):
+Uma redação anterior desta trigger conferia apenas o **Edital**, e deixava aberta a porta que a
+citação existe para fechar: uma gravação direta poderia ligar uma decisão pertinente ao marco `M1` a
+um ato de `M2` do mesmo Edital, e liberar indevidamente a definitiva de `M2`. O Perfil e o Marco
+passam a ser conferidos no banco.
 
 ```text
-seguranca/papeis.py    TABELAS_APPEND_ONLY += recursos_recurso,
-                                              recursos_juizodeadmissibilidade,
-                                              recursos_decisaorecurso,
-                                              classificacao_cumprimentodeprovidencia
+1. a decisão citada tem espécie PROVIDENCIA_A_JUSANTE;
+2. o recurso da decisão é do mesmo Edital do ato;
+3. pertinência, conforme o objeto que o recurso atacou:
 
-tests/migrations/      APPS já contém "classificacao"; += "recursos"
-                       TRIGGERS_POR_APP["recursos"]     = as 5 acima
-                       TRIGGERS_POR_APP["classificacao"] += as 2 do cumprimento
-                       TRIGGERS_POR_APP["resultados"]    inalterado — a trigger é recriada,
-                                                         e o nome não muda
+   ataca PublicacaoResultado  →  (publicacao.edital_id, perfil_id, marco_id)
+                                 =  (ato.edital_id, ato.perfil_id, ato.marco_id)
+
+   ataca ResultadoEtapa       →  inscricao.profile_id = ato.perfil_id
+                                 E o marco do ato, lido de `ato.versao.content`,
+                                   ENUMERA `resultado.etapa_id`
 ```
+
+**O terceiro ramo não é caro nem inédito**: é literalmente o caminho que
+`check_ordering_act_provenance` já percorre em `classificacao/0003` — `jsonb_array_elements` sobre
+`content -> 'profiles' -> 'classificationMilestones' -> 'stages'`, com `perfil_id` e `marco_id` como
+filtros. O precedente está escrito, a conferência é `set-based` e roda uma vez por citação.
+
+**O que continua no comando**: oferecer ao operador **quais** decisões pendentes daquele marco ele
+pode citar. A trigger recusa a citação impertinente; a tela evita que ela seja tentada.
 
 ---
 
@@ -388,7 +435,7 @@ default que os esconde faria o caminho correto ser o exótico.
 | aguardando julgamento | admitido, sem `DecisaoRecurso` |
 | decidido | decisão existente |
 | reavaliação determinada, não cumprida | decisão `REAVALIACAO_DETERMINADA` sem sucessor do par posterior a ela |
-| providência não cumprida | decisão `PROVIDENCIA_A_JUSANTE` sem `CumprimentoDeProvidencia` |
+| providência não cumprida **para um marco** | decisão `PROVIDENCIA_A_JUSANTE` pertinente ao marco, sem citação pelo ato candidato e sem ato citante já publicado naquele marco (§5.2) |
 | Resultado vigente | `sucessor__isnull=True` |
 | reabilitada por recurso | Resultado vigente que é sucessor, com consequência habilitante |
 | janela aberta | função pura da publicação âncora e da norma |

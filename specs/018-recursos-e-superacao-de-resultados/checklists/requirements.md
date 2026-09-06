@@ -56,7 +56,7 @@ D-009 e FR-089. Nenhum marcador de clarificação permanece.
 | 4 — capacidade própria, impedimento que bloqueia | D-005, FR-037 a FR-043 |
 | 5 — *non reformatio in pejus*, alcançando a reavaliação | D-006, FR-070 a FR-074 |
 | 6 — progressão retroativa plena, com guarda e avisos | D-007, FR-075 a FR-080 |
-| 7 — definitividade verificada e declarada, nome pela causa | D-008, FR-081 a FR-091 |
+| 7 — definitividade verificada e declarada, nome pela causa | D-008, FR-081 a FR-091, FR-112 |
 
 **Decisão C** (`doc/descoberta-018-decisao-c-superacao-de-resultado.md`, §1): consumida em §1.1 e
 nos FR-051 a FR-064; a spec não reabre nenhuma das três escolhas.
@@ -71,10 +71,15 @@ com vínculo causal**: o ato de ordenação publicado **cita** a decisão que a 
 citação é proveniência do próprio ato, gravada por quem o emite. A spec recusa explicitamente ato de
 cumprimento com autoridade própria, espécie estruturada de providência e ato de impossibilidade.
 
-**A revisão do plano corrigiu a redação anterior desta regra**, que dava a pendência por cumprida
-quando a publicação divulgasse "ato diferente" do reconhecido viciado: isso a quitaria **por
-acidente** — um ato sucessor emitido por razão alheia encerraria a pendência sem que ninguém tivesse
-corrigido o vício. A FR-089 e a D-009 passaram a exigir a citação.
+**Duas rodadas de revisão corrigiram esta regra.** A primeira redação dava a pendência por cumprida
+quando a publicação divulgasse "ato diferente" do reconhecido viciado — o que a quitaria **por
+acidente**, porque um ato sucessor emitido por razão alheia encerraria a pendência sem que ninguém
+tivesse corrigido o vício. A FR-089 passou a exigir a citação. A segunda rodada corrigiu a citação:
+citar não é cumprir. A providência só está cumprida quando um ato citante é **publicado**, a apuração
+é **por marco**, e a citação pode ser repetida enquanto nenhum ato citante o tiver sido — sem isso, um
+ato citante que ficasse obsoleto antes de publicar impediria a definitiva daquele marco para sempre.
+A **FR-112** nasce dessa rodada, e com ela a pertinência ao Perfil e ao Marco vira invariante do
+banco, e não promessa do comando.
 
 **Três resíduos encontrados na varredura de contradições da segunda rodada, e corrigidos:**
 

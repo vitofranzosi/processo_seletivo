@@ -342,9 +342,23 @@ quarta espécie se fecha quando o **ato de ordenação que se publica cita a dec
 determinou:
 
 ```text
-pendente   →  o ato a publicar não cita a decisão
-cumprida   →  o ato a publicar cita a decisão que determinou a providência
+cumprida, para um marco  →  o ato que se vai publicar cita a decisão
+                            OU já existe, naquele marco, ato citante que foi publicado
+pendente                 →  nenhuma das duas
 ```
+
+**Citar é intenção; publicar é o remédio.** Um ato pode citar a decisão e nunca ser publicado — por
+ficar obsoleto antes disso, por exemplo. Enquanto nenhum ato citante for publicado, a providência
+continua pendente, e **qualquer sucessor do marco pode citar a decisão de novo**. É essa recitação
+que impede o único beco possível deste desenho.
+
+**O segundo ramo é o remédio já executado e divulgado.** Publicado o ato citante, um sucessor
+posterior emitido por razão alheia não reabre a pendência — do contrário, toda emissão futura
+exigiria recitar decisões antigas.
+
+**A apuração é por marco.** Uma decisão cuja providência é normativa alcança todos os marcos que a
+regra retificada governa, e cada um precisa do seu próprio ato citante publicado: o trabalho feito
+num marco não libera a definitiva de outro.
 
 **A citação é declarada por quem emite o ato sucessor**, entre as decisões pendentes daquele marco,
 e é proveniência do próprio ato — do mesmo tipo de `motivo_da_sucessao`, que a 015 já exige. Ela não
@@ -358,9 +372,10 @@ ninguém tivesse corrigido o vício que a decisão reconheceu. O vínculo precis
 o que a citação declara.
 
 **A regra não é circular, e não vira beco.** A publicação que executa o remédio **é** a que cita a
-decisão, e por isso não é impedida por ela. E emitir ato sucessor citando a decisão está sempre
-disponível: um mesmo ato pode citar mais de uma decisão pendente, de modo que dois deferimentos
-sobre o mesmo marco se resolvem numa emissão só.
+decisão, e por isso não é impedida por ela. Emitir ato sucessor citando a decisão está sempre
+disponível, e a citação pode ser repetida quantas vezes for preciso enquanto nenhum ato citante for
+publicado. Um mesmo ato pode citar mais de uma decisão pendente, de modo que dois deferimentos sobre
+o mesmo marco se resolvem numa emissão só.
 
 Disso decorrem três coisas que a spec **não** cria, e é deliberado:
 
@@ -394,7 +409,7 @@ A situação exibida deriva de quais atos existem, e não de coluna a manter coe
 | aguardando julgamento | admitido, sem decisão |
 | decidido | decisão existente |
 | reavaliação determinada, não cumprida | decisão da terceira espécie, sem Resultado sucessor do par posterior a ela |
-| providência determinada, não cumprida | decisão da quarta espécie que nenhum ato de ordenação emitido cita |
+| providência determinada, não cumprida | decisão da quarta espécie que, para o marco pertinente, nenhum ato publicado cita |
 
 É o mesmo idioma de `PENDENTE`/`CONSOLIDADO` na 013 e de vigência na 015 e na 017: **pendência
 calculável não vira coluna porque facilita uma tela.** Os dois atos são imutáveis e append-only, como
@@ -494,8 +509,10 @@ Três pontos que a primeira redação deixou inconsistentes ou resolvidos por me
   primeira redação o fez derivar de "a publicação vigente divulga ato diferente", e a revisão do
   plano mostrou que isso quitaria a providência **por acidente** — um ato sucessor emitido por razão
   alheia encerraria a pendência sem que ninguém tivesse corrigido o vício. O vínculo passa a ser
-  causal: o ato de ordenação publicado **cita** a decisão que determinou a providência, e a citação é
-  declarada por quem emite o ato sucessor, como proveniência dele (D-009, FR-089).
+  causal: o ato de ordenação **cita** a decisão, e a citação é declarada por quem emite o ato
+  sucessor, como proveniência dele. A análise cruzada corrigiu a segunda metade: citar não basta —
+  a providência só está cumprida quando um ato citante é **publicado**, a apuração é **por marco**, e
+  a citação pode ser repetida enquanto nenhum ato citante o tiver sido (D-009, FR-089, FR-112).
 - Q: A quarta espécie precisa de espécie estruturada de providência e de ato terminal de
   impossibilidade? → A: **Nenhum dos dois.** O cumprimento não é verificado por espécie, e a
   impossibilidade não produz beco — marco removido já impede qualquer publicação daquele marco pela
@@ -1056,12 +1073,17 @@ acaso.
 - **FR-087**: O sistema MUST NOT criar natureza nova para a definitiva que corrige outra definitiva.
 - **FR-088**: A publicação definitiva que sucede outra definitiva MUST ser apresentada pela causa,
   em texto derivado da cadeia e da decisão que a motivou, na página e no documento.
-- **FR-089**: A providência a jusante MUST ser considerada cumprida quando o ato de ordenação
-  publicado **citar** a decisão que a determinou. Publicar como `DEFINITIVA` ato que não a cite MUST
-  ser impedido; publicar ato que a cite MUST NOT ser impedido por essa pendência. A citação MUST ser
-  declarada por quem emite o ato sucessor, entre as decisões pendentes do marco, e um mesmo ato MUST
-  poder citar mais de uma decisão. O sistema MUST NOT criar ato de cumprimento com autoridade
-  própria, espécie estruturada de providência nem ato de impossibilidade de cumprimento (D-009).
+- **FR-089**: A providência a jusante MUST ser considerada cumprida, **para um marco**, quando o ato
+  de ordenação que se vai publicar citar a decisão que a determinou, **ou** quando já existir,
+  naquele marco, ato citante que tenha sido publicado. Publicar como `DEFINITIVA` sem que uma das
+  duas condições valha MUST ser impedido.
+- **FR-112**: A citação MUST nascer com o `AtoDeOrdenacao`, declarada por quem o emite entre as
+  decisões pendentes do marco, e MUST ser conferida como pertinente ao Perfil e ao Marco daquele ato
+  — não apenas ao Edital. Um mesmo ato MUST poder citar mais de uma decisão, e uma mesma decisão
+  MUST poder ser citada por mais de um ato: enquanto nenhum ato citante for publicado, um sucessor
+  MUST poder recitá-la, e uma decisão pertinente a mais de um marco MUST ser citada em cada um. O
+  sistema MUST NOT criar ato de cumprimento com autoridade própria, espécie estruturada de
+  providência nem ato de impossibilidade de cumprimento (D-009).
 - **FR-090**: A publicação vigente MUST dizer que é a vigente, e não apenas a anterior dizer que foi
   sucedida.
 - **FR-091**: A 018 MUST NOT alterar retroativamente publicação histórica nem regenerar documento já
