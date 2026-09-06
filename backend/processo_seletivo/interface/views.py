@@ -3292,10 +3292,10 @@ def previa_de_publicacao(request, edital_id, marco_id, ato_id):
     if ator is None:
         return redirect(reverse("interface:identificar"))
     ato = _ato_para_publicar(edital, marco_id, ato_id)
-    return _renderizar_previa(request, edital, ato, marco_id)
+    return _renderizar_previa(request, ator, edital, ato, marco_id)
 
 
-def _renderizar_previa(request, edital, ato, marco_id, *, erro="", status=200):
+def _renderizar_previa(request, ator, edital, ato, marco_id, *, erro="", status=200):
     """A prévia composta agora — usada pelo GET e pela **recusa do POST**.
 
     Recusado, o POST volta a esta mesma tela com o status HTTP que o domínio declarou, e não com um
@@ -3332,9 +3332,7 @@ def _renderizar_previa(request, edital, ato, marco_id, *, erro="", status=200):
                 # Quem alcança a tela da classificação. A porta dela é outra — presidência ou
                 # auditoria —, e quem só publica recebe 404 lá. Oferecer o caminho a essa pessoa
                 # é oferecer um beco, e foi o que a auditoria da 017 encontrou (E2E17-002).
-                "pode_ver_a_classificacao": _pode_ver_a_classificacao(
-                    identidade.ator_da_sessao(request), edital
-                ),
+                "pode_ver_a_classificacao": _pode_ver_a_classificacao(ator, edital),
                 "sucede": sucede,
                 "naturezas": _naturezas_oferecidas(sucede),
                 "autoridades": autoridades.CATALOGO,
@@ -3389,7 +3387,7 @@ def publicar_resultado(request, edital_id, marco_id, ato_id):
         # nada foi gravado. A tela volta composta de novo, com a recusa nomeada e com a assinatura
         # recalculada, que é o que a autoridade precisa para reconfirmar.
         return _renderizar_previa(
-            request, edital, ato, marco_id, erro=recusa.detail, status=recusa.status
+            request, ator, edital, ato, marco_id, erro=recusa.detail, status=recusa.status
         )
     request.session["resultado_da_publicacao"] = str(publicacao.id)
     return redirect(reverse("interface:publicacoes-do-marco", args=[edital_id, marco_id]))
