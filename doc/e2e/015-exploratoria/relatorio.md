@@ -8,15 +8,16 @@
 
 O ciclo vertical **fecha**. Foi possível, só pelo navegador e alternando atores, criar o Processo e o Edital, compor o conteúdo normativo completo (perfil com fatos declarados, cronograma, duas Etapas — uma decisória e uma pontuada —, marco classificatório com três critérios de desempate, documentos exigidos), submeter, homologar e publicar com PDF íntegro; retificar três vezes; inscrever sete candidatos e manter um rascunho; compor comissão, alocar, distribuir por rodízio; avaliar nas duas formas da Mesa; registrar ocorrência (D‑1), consolidar as duas Etapas (013); e, na 015, calcular a ordem, emitir o ato, consultar a proveniência, provocar obsolescência por Retificação e emitir o ato sucessor com motivo. O cálculo classificatório saiu **exatamente** como a regra publicada mandava, incluindo desempate por fato declarado e empate residual com posição compartilhada (1º, 2º, 3º, 3º).
 
-O que **não** fecha é a borda institucional: o produto produz a classificação, mas não a comunica. O candidato nunca vê resultado de Etapa nem posição (divulgação é feature futura); o documento oficial (PDF) publica os critérios de desempate **sem dizer o que eles comparam** e não anuncia os fatos que a inscrição exigirá; e as telas da 015 falam em UUID onde a instituição precisa ler nomes. Além disso, um defeito real de operação, encontrado aqui e **já corrigido**: o critério de desempate de um marco recém‑criado nascia **sem opções de alvo**, bloqueando o caminho principal da composição da regra classificatória.
+O que **não** fecha é a borda institucional: o produto produz a classificação, mas não a comunica. O candidato nunca vê resultado de Etapa nem posição (divulgação é feature futura); o documento oficial (PDF) publicava os critérios de desempate **sem dizer o que eles comparam** e não anunciava os fatos que a inscrição exigirá (**já corrigido**, ver §4); e as telas da 015 falam em UUID onde a instituição precisa ler nomes. Além disso, um defeito real de operação, encontrado aqui e **já corrigido**: o critério de desempate de um marco recém‑criado nascia **sem opções de alvo**, bloqueando o caminho principal da composição da regra classificatória.
 
 > **Depois da primeira redação (06/09/2026):**
 > - **E2E15‑002 retratado** — "a tela de Retificação não tem link" era **falso**. A ação existe e está corretamente condicionada a `retificacao:elaborar`; ver o registro em §4.
 > - **E2E15‑001 corrigido** — a causa era a que a hipótese apontava, e a correção entrou em `main` pelo PR #37 (commit `36d1683`). O achado permanece registrado como observado, com a resolução anotada.
+> - **E2E15‑004, ‑005 e ‑008 corrigidos** — os três eram a mesma lacuna vista de três lugares, e foram juntos pelo PR #39 (commit `40130e3`): o documento publicado passa a nomear o alvo de cada critério de desempate, a anunciar os fatos que a inscrição exigirá e a trazer os parâmetros que fecham a conta. Na mesma entrega, a fixture byte a byte do documento publicado foi elevada da versão canônica 3 para a 7 (`a7de388`) — estava quatro degraus atrás e já não cobria nenhuma composição posterior à `009`.
 >
-> Os demais achados continuavam abertos quando este documento foi incorporado.
+> Os demais achados continuam abertos.
 
-**Resposta à pergunta central:** sim — uma instituição consegue conduzir o certame até a classificação *dentro* do produto, do Edital ao ato de ordenação, sem manipular dado por fora e sem depender de conhecimento de implementação. O que ela ainda é obrigada a fazer fora dele é **comunicar**: divulgação dos resultados de Etapa, publicação da classificação e resposta a recursos — que o próprio PDF gerado promete ("Caberá recurso…") sem que o produto ofereça o meio. E há um degrau anterior a esse: o que o Edital publica hoje **não basta para reconstruir a ordem que o sistema calculou** (E2E15‑004/005/008), e é essa lacuna que separa "o sistema classificou certo" de "a instituição consegue defender a classificação".
+**Resposta à pergunta central:** sim — uma instituição consegue conduzir o certame até a classificação *dentro* do produto, do Edital ao ato de ordenação, sem manipular dado por fora e sem depender de conhecimento de implementação. O que ela ainda é obrigada a fazer fora dele é **comunicar**: divulgação dos resultados de Etapa, publicação da classificação e resposta a recursos — que o próprio PDF gerado promete ("Caberá recurso…") sem que o produto ofereça o meio. Havia um degrau anterior a esse — o Edital publicado **não bastava para reconstruir a ordem que o sistema calculou** (E2E15‑004/005/008), que é a lacuna que separa "o sistema classificou certo" de "a instituição consegue defender a classificação" —, e ele está fechado: o documento agora nomeia o alvo de cada critério, anuncia os fatos exigidos e publica os parâmetros que fecham a conta. O que resta por fora do produto é comunicar.
 
 ---
 
@@ -95,6 +96,7 @@ Formato: **Observado / Esperado / Impacto / Reproduzir / Evidência / Hipótese 
 - **Reproduzir:** publicar Edital com marco e critérios; baixar o PDF.
 - **Evidência:** PDF da Publicação nº 1 (via `16-edital-publicado.png` → documento) — texto extraído na auditoria.
 - **Recomendação:** o gerador do documento resolver `stageId`/`factId` para os nomes publicados.
+- **Resolução (06/09/2026):** corrigido exatamente assim em `40130e3` (PR #39). `parameters` deixou de ser descartado na tradução do enum, e cada critério passa a nomear o que compara — "1º maior pontuação na Etapa Prova didática", "2º maior valor declarado em Meses de experiência no ensino a distância". Junto veio o `whenMissing` por extenso ("sem o valor, fica por último neste critério"), sem o qual dois candidatos em que um não tem o dado continuariam inseparáveis no papel. Alvo que o snapshot não resolve é dito como ausente, nunca como UUID: a publicação já recusa o critério pendurado (FR‑017), e o que resta é a prévia de um rascunho.
 
 **E2E15‑005 · bug (contrato entre features) · publicação×D‑2 · Candidato — Os fatos exigidos não são anunciados em lugar nenhum antes do envio**
 - **Observado:** o Edital declara `declaredFacts` (nascimento, meses de EaD), a inscrição os exige e congela, o desempate os consome — mas o PDF e a página pública não os mencionam. O candidato os descobre na tela de revisão, no momento do envio ("registrados no momento do envio e não podem ser alterados depois").
@@ -102,6 +104,7 @@ Formato: **Observado / Esperado / Impacto / Reproduzir / Evidência / Hipótese 
 - **Impacto:** surpresa no envio de um dado irreversível; a transparência da regra de desempate depende disso.
 - **Evidência:** PDF sem "nascimento"/rotulos dos fatos; `30-ana-revisao-fatos.png`.
 - **Recomendação:** seção própria no documento gerado ("Dados exigidos na inscrição"), derivada dos `declaredFacts`.
+- **Resolução (06/09/2026):** corrigido em `40130e3` (PR #39), com o título que a recomendação sugeriu e no lugar onde o candidato procura **antes** de se inscrever: um bloco no Perfil que os declara, ao lado dos Requisitos e antes das Modalidades e do marco que os consome — e não na seção institucional "CRITÉRIOS DE CLASSIFICAÇÃO", que é texto padrão vindo de `sections` e não recebe dado derivado. Cada fato sai com rótulo e tipo publicados. O documento anuncia o que **será exigido** e não afirma o congelamento na submissão: aquilo é comportamento da inscrição, não viaja no conteúdo publicado, e escrevê‑lo seria o Edital afirmando regra que a Publicação não contém.
 
 **E2E15‑006 · UX · 015 · Presidência/Auditor — As telas da classificação falam UUID onde a instituição lê nome**
 - **Observado:** coluna MODALIDADE da ordem calculada mostra `f584b9db-…` em vez de "Ampla concorrência"; a proveniência do ato lista Processo/Edital/Perfil/Marco/Versão como UUIDs; o diff de obsolescência identifica inscrições por UUID (não INS‑…/nome); os critérios aparecem como enum (`MAIOR_VALOR_DE_FATO`) sem o rótulo do fato.
@@ -119,6 +122,7 @@ Formato: **Observado / Esperado / Impacto / Reproduzir / Evidência / Hipótese 
 - **Observado:** a Tabela 2 traz só "soma ponderada"; casas decimais (2), modo (meio para cima) e o peso de cada Etapa na combinação não são impressos juntos da regra classificatória (o peso aparece longe, na seção da Etapa).
 - **Impacto:** a nota combinada (185,00) não é reconstruível a partir do documento público.
 - **Evidência:** PDF (Tabela 2) vs. `84-ato-sucessor-emitido.png`.
+- **Resolução (06/09/2026):** corrigido em `40130e3` (PR #39). O marco publica normalização, escala e modo de arredondamento por extenso ("2 casas decimais, meio para cima"), e o peso de cada Etapa enumerada volta para junto da regra que o consome: ele já estava publicado na seção da própria Etapa — que continua sendo a fonte autoritativa (FR‑009) —, mas folhear o documento para reunir os fatores não é reconstruir a conta. O bloco **deixou de ser tabela**: três colunas cabiam enquanto o marco dizia só "soma ponderada"; com o alvo, a regra de ausência, os pesos e o arredondamento, a grade viraria parágrafo espremido em célula, e marcos não se comparam entre si — cada um é uma regra que se lê inteira.
 
 ### P3
 
@@ -146,7 +150,7 @@ Formato: **Observado / Esperado / Impacto / Reproduzir / Evidência / Hipótese 
 |---|---|---|
 | P0 | 0 | — |
 | P1 | 1 | 001 — **corrigido** em `36d1683` (PR #37) |
-| P2 | 6 | 003, 004, 005, 006, 007, 008 |
+| P2 | 6 | 003, 006, 007 abertos · 004, 005, 008 — **corrigidos** em `40130e3` (PR #39) |
 | P3 | 8 | 009–016 |
 | — | 1 | 002 (retratado — não era defeito) |
 
@@ -175,7 +179,7 @@ O que funcionou **bem** e merece registro: recusas de autorização nominais e u
 
 **b) Coisas que a feature coberta deveria ter e não tem:**
 - Nomes legíveis nas telas da 015 (E2E15‑006) e datas localizadas (E2E15‑009).
-- Fatos declarados e alvos do desempate no documento publicado (E2E15‑004/005/008).
+- ~~Fatos declarados e alvos do desempate no documento publicado (E2E15‑004/005/008)~~ — **corrigido** (PR #39).
 - Aviso de encerramento no rascunho (E2E15‑007).
 - Guarda 012×013 na própria Etapa (E2E15‑003).
 
