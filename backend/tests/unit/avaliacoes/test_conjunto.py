@@ -5,7 +5,7 @@ verifica. O que a wiring nos dois caminhos de distribuição garante está em
 `tests/integration/avaliacoes/test_conjunto_fechado.py`.
 """
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from django.utils import timezone
@@ -41,6 +41,25 @@ def test_periodo_aberto_recusa_e_diz_ate_quando():
     assert recusa is not None
     assert "07/09/2026" in str(recusa.detail)
     assert "sem avaliador quem se inscrever depois" in str(recusa.detail)
+
+
+def test_o_termino_e_dito_no_fuso_institucional_e_nao_em_utc():
+    """O prazo que a mensagem anuncia é o mesmo que a página pública mostra (E2E17-006).
+
+    O instante vem do conteúdo publicado, que o materializa **em UTC**. Formatá-lo como recebido
+    adiantava o término em três horas — e aqui em um dia inteiro, porque 23h59 de 6 de setembro em
+    São Paulo é 02h59 de 7 de setembro em UTC. A presidência lia o horário errado e concluía que
+    precisava esperar mais do que precisava.
+    """
+    fim = datetime(2026, 9, 7, 2, 59, tzinfo=UTC)
+    conteudo = cronograma(inicio=datetime(2026, 9, 1, 12, 0, tzinfo=UTC), fim=fim)
+
+    recusa = recusa_por_inscricoes_em_curso(conteudo, AGORA)
+
+    assert recusa is not None
+    assert "06/09/2026 às 23:59" in str(recusa.detail)
+    assert "07/09/2026" not in str(recusa.detail)
+    assert "02:59" not in str(recusa.detail)
 
 
 def test_periodo_aberto_sem_termino_recusa_sem_inventar_prazo():
