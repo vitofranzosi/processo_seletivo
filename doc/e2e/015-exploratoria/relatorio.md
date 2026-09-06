@@ -8,11 +8,15 @@
 
 O ciclo vertical **fecha**. Foi possível, só pelo navegador e alternando atores, criar o Processo e o Edital, compor o conteúdo normativo completo (perfil com fatos declarados, cronograma, duas Etapas — uma decisória e uma pontuada —, marco classificatório com três critérios de desempate, documentos exigidos), submeter, homologar e publicar com PDF íntegro; retificar três vezes; inscrever sete candidatos e manter um rascunho; compor comissão, alocar, distribuir por rodízio; avaliar nas duas formas da Mesa; registrar ocorrência (D‑1), consolidar as duas Etapas (013); e, na 015, calcular a ordem, emitir o ato, consultar a proveniência, provocar obsolescência por Retificação e emitir o ato sucessor com motivo. O cálculo classificatório saiu **exatamente** como a regra publicada mandava, incluindo desempate por fato declarado e empate residual com posição compartilhada (1º, 2º, 3º, 3º).
 
-O que **não** fecha é a borda institucional: o produto produz a classificação, mas não a comunica. O candidato nunca vê resultado de Etapa nem posição (divulgação é feature futura); o documento oficial (PDF) publica os critérios de desempate **sem dizer o que eles comparam** e não anuncia os fatos que a inscrição exigirá; e as telas da 015 falam em UUID onde a instituição precisa ler nomes. Além disso, um defeito real de operação: o critério de desempate de um marco recém‑criado nasce **sem opções de alvo**, bloqueando o caminho principal da composição da regra classificatória.
+O que **não** fecha é a borda institucional: o produto produz a classificação, mas não a comunica. O candidato nunca vê resultado de Etapa nem posição (divulgação é feature futura); o documento oficial (PDF) publica os critérios de desempate **sem dizer o que eles comparam** e não anuncia os fatos que a inscrição exigirá; e as telas da 015 falam em UUID onde a instituição precisa ler nomes. Além disso, um defeito real de operação, encontrado aqui e **já corrigido**: o critério de desempate de um marco recém‑criado nascia **sem opções de alvo**, bloqueando o caminho principal da composição da regra classificatória.
 
-> **Correção (06/09, após a primeira redação):** o achado E2E15‑002 — "a tela de Retificação não tem link" — era **falso**, e foi retratado. A ação existe e está corretamente condicionada a `retificacao:elaborar`. Ver o registro em §4.
+> **Depois da primeira redação (06/09/2026):**
+> - **E2E15‑002 retratado** — "a tela de Retificação não tem link" era **falso**. A ação existe e está corretamente condicionada a `retificacao:elaborar`; ver o registro em §4.
+> - **E2E15‑001 corrigido** — a causa era a que a hipótese apontava, e a correção entrou em `main` pelo PR #37 (commit `36d1683`). O achado permanece registrado como observado, com a resolução anotada.
+>
+> Os demais achados continuavam abertos quando este documento foi incorporado.
 
-**Resposta à pergunta central:** uma instituição consegue operar o certame até a classificação *dentro* do produto, mas precisa de (a) conhecimento interno para retificar e para contornar o defeito do critério, e (b) controles paralelos para tudo que é comunicação: divulgação de resultados, publicação da classificação e resposta a recursos — que o próprio PDF gerado promete ("Caberá recurso…") sem que o produto ofereça o meio.
+**Resposta à pergunta central:** sim — uma instituição consegue conduzir o certame até a classificação *dentro* do produto, do Edital ao ato de ordenação, sem manipular dado por fora e sem depender de conhecimento de implementação. O que ela ainda é obrigada a fazer fora dele é **comunicar**: divulgação dos resultados de Etapa, publicação da classificação e resposta a recursos — que o próprio PDF gerado promete ("Caberá recurso…") sem que o produto ofereça o meio. E há um degrau anterior a esse: o que o Edital publica hoje **não basta para reconstruir a ordem que o sistema calculou** (E2E15‑004/005/008), e é essa lacuna que separa "o sistema classificou certo" de "a instituição consegue defender a classificação".
 
 ---
 
@@ -65,6 +69,7 @@ Formato: **Observado / Esperado / Impacto / Reproduzir / Evidência / Hipótese 
 - **Evidência:** `06a-ACHADO-criterio-sem-alvo.png`.
 - **Hipótese:** `fragmento_marco` não põe `edital` no contexto do template ([views.py:1025](../../backend/processo_seletivo/interface/views.py)), e `_marco.html:83` interpola `{{ edital.id }}` vazio no `hx-get` do botão de critério.
 - **Recomendação:** passar `edital` ao contexto do fragmento (ou derivar o parâmetro no servidor); cobrir com teste de fragmento.
+- **Resolução (06/09/2026):** corrigido exatamente assim em `36d1683` (PR #37), com teste que percorre os dois saltos do htmx — pede o fragmento de marco e segue o endereço que o botão montou — para afirmar que o critério nascido de um marco novo enxerga as Etapas classificatórias e os fatos declarados.
 
 **E2E15‑002 · ~~bug (navegação)~~ → RETRATADO · retificação — "A tela de Retificação não é alcançável por nenhum link"**
 - **Retratação (06/09/2026):** o achado **não procede**. A ação "Retificar" existe no cartão "O que fazer agora" do Edital publicado, montada em [`acoes.py`](../../backend/processo_seletivo/interface/acoes.py) (`_navegacao`) e condicionada — corretamente — a `edital.status == "PUBLICADO" and ator.can("retificacao:elaborar")`.
@@ -140,7 +145,7 @@ Formato: **Observado / Esperado / Impacto / Reproduzir / Evidência / Hipótese 
 | Sev. | Qtde | Achados |
 |---|---|---|
 | P0 | 0 | — |
-| P1 | 1 | 001 |
+| P1 | 1 | 001 — **corrigido** em `36d1683` (PR #37) |
 | P2 | 6 | 003, 004, 005, 006, 007, 008 |
 | P3 | 8 | 009–016 |
 | — | 1 | 002 (retratado — não era defeito) |
