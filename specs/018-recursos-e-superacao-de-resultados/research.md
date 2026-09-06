@@ -48,7 +48,7 @@ dentro de `publicacoes`: são atos distintos, por autoridades distintas, sobre o
 
 ---
 
-## T-002 — A sucessão no `ResultadoEtapa`: uma migration, e nenhuma linha escrita
+## T-002 — A sucessão no `ResultadoEtapa`: só esquema, e nenhuma linha escrita
 
 **Decisão.** `resultados/0005`, inteiramente de esquema. Nenhum backfill, e **a trigger
 `resultado_etapa_append_only` não é desligada**.
@@ -65,7 +65,7 @@ dentro de `publicacoes`: são atos distintos, por autoridades distintas, sobre o
 + ck_superacao_com_motivo        resultado_anterior IS NULL OR motivo_da_superacao <> ''
 + ck_sucessor_cita_decisao       (anterior IS NULL AND decisao IS NULL)
                               OR (anterior IS NOT NULL AND decisao IS NOT NULL)
-~ ck_resultado_origem            ganha o ramo RECURSO
+~ ck_resultado_origem            ganha o ramo RECURSO, e NÃO menciona `decisao` em ramo nenhum
 ~ ck_resultado_completo_por_forma  deixa de ser fechada em três ramos fixos
 ```
 
@@ -77,9 +77,32 @@ precisou desligar a trigger porque preencheu `versao` linha a linha; aqui não h
 > alguém está corrigindo com `UPDATE` o que esta feature manda corrigir com linha nova.** Vale como
 > critério de revisão do PR.
 
-**`ck_resultado_completo_por_forma` é a parte delicada.** Hoje ela tem três ramos, e o terceiro — as
-três ausências — vale para a Ocorrência. Ele **não** pode valer para o Recurso, porque a decisão pode
-fixar pontuação. A restrição passa a depender de **origem × forma**:
+**A matriz de origem distingue raiz de sucessor, e é onde uma redação anterior errou.** Aquela
+redação punha `decisao IS NULL` no ramo `AVALIACAO` de `ck_resultado_origem`, e isso tornava a
+FR-068 **impossível**: `ck_sucessor_cita_decisao` exige decisão em todo sucessor, de modo que o
+sucessor por reavaliação — que é `AVALIACAO` **e** sucessor — não podia existir. São quatro linhas
+legítimas, e só quatro:
+
+| linha | `origem` | `avaliacao` | `decisao` | `resultado_anterior` |
+|---|---|---|---|---|
+| raiz por avaliação | `AVALIACAO` | presente | ausente | ausente |
+| **sucessor por reavaliação** | `AVALIACAO` | presente | **presente** | presente |
+| raiz por ocorrência | `OCORRENCIA` | ausente | ausente | ausente |
+| sucessor por recurso | `RECURSO` | ausente | presente | presente |
+
+O ramo do `AVALIACAO` **não menciona `decisao`**: quem amarra a decisão ao sucessor é
+`ck_sucessor_cita_decisao`, e repetir a regra no outro `CHECK` foi o que produziu a contradição.
+Os ramos de `OCORRENCIA` e `RECURSO` ganham a condição sobre `resultado_anterior`, e é ela que barra
+as duas linhas que não existem — raiz por recurso e sucessor por ocorrência.
+
+**A espécie da decisão citada é da trigger, e não do `CHECK`.** Sucessor `AVALIACAO` cita decisão
+`REAVALIACAO_DETERMINADA`; sucessor `RECURSO` cita `CORRECAO_FIXADA`. Nenhuma das duas cabe em
+`CheckConstraint`, porque `CHECK` não atravessa tabelas em PostgreSQL — é a mesma razão pela qual as
+quatro coerências que já existem moram na trigger.
+
+**`ck_resultado_completo_por_forma` também depende da origem.** O terceiro ramo de hoje — as três
+ausências — vale para a Ocorrência, e **não** pode valer para o Recurso, porque a decisão pode fixar
+pontuação:
 
 | origem | forma | pontuação | sentido |
 |---|---|---|---|
@@ -145,7 +168,9 @@ verdadeira; acrescentar filtro de vigência ali quebraria a reprodução histór
 
 1. `ResultadoEtapa.vigentes` — manager nomeado que filtra `sucessor__isnull=True`. Nomeado, e não
    `objects` redefinido: a reprodução histórica **precisa** ver os superados, e um default que os
-   esconde faria o caminho correto ser o exótico.
+   esconde faria o caminho correto ser o exótico. **Ele mora em `resultados/models.py`** — ou em
+   `resultados/managers.py`, importado pelo modelo —, e não em `application/selectors.py`: manager é
+   do modelo, e os selectors o **consomem**.
 2. `calculo.py` recebe, além do filtro, um `order_by` determinístico. **Sem ele, a ausência futura
    do filtro volta a produzir ordem arbitrária sem erro** — e é o teste de regressão mais importante
    da 018.
@@ -303,7 +328,7 @@ consultas denunciaria, porque o número de consultas continuaria o mesmo.
 
 ---
 
-## T-010 — A definitividade: o que `aferir()` passa a receber, e o que passa a perguntar
+## T-010 — A definitividade: o que `aferir()` passa a receber, e os seis fatos que apura
 
 **Decisão.** `aferir()` passa a receber a **natureza pretendida**. Hoje ela não a conhece — o comando
 decide a natureza depois —, e sem ela a verificação não tem como distinguir o que impede a definitiva
@@ -315,7 +340,7 @@ As perguntas novas são todas de existência, e todas de custo constante:
 |---|---|
 | recurso pendente pertinente | `Exists` sobre recursos do marco e das Etapas que ele enumera, sem decisão |
 | reavaliação determinada não cumprida | `Exists` sobre decisões da terceira espécie sem sucessor posterior do par |
-| providência a jusante não cumprida | o ato que se publica **é** o que a decisão reconheceu viciado (FR-089) |
+| providência a jusante não cumprida | o ato que se publica **não cita** a decisão que a determinou (FR-089, T-015) |
 | janela estruturada aberta | função pura sobre a publicação vigente e a norma (T-008) |
 | pendência reaberta | `Exists` de inscrição com Resultado sucessor habilitante e sem Resultado numa Etapa do marco |
 
@@ -323,9 +348,10 @@ As perguntas novas são todas de existência, e todas de custo constante:
 a publicação **e** o recurso contra `ResultadoEtapa` de Etapa que o marco enumera. Sem ela, o recurso
 individual seria a porta por onde uma definitiva nasceria com um Resultado em disputa dentro dela.
 
-**A declaração expressa** (FR-085) é campo anulável na `PublicacaoResultado`, preenchido no
-nascimento — a tabela é append-only e nasce completa, então acrescentar coluna anulável não fere
-nada. Ela é exigida **somente** quando não há janela computável, e recusada quando há: declarar o que
+**A declaração expressa** (FR-085) são **três** campos anuláveis na `PublicacaoResultado` — instante,
+autor e fundamento —, com um `CHECK` de que estão os três presentes ou os três ausentes. Preenchidos
+no nascimento: a tabela é append-only e nasce completa, então acrescentar colunas anuláveis não fere
+nada. São `divulgacao/0002`. Ela é exigida **somente** quando não há janela computável, e recusada quando há: declarar o que
 o sistema pode verificar seria pedir à pessoa que respondesse pelo que a máquina sabe.
 
 ---
@@ -361,18 +387,31 @@ divergiria em silêncio.
 
 ---
 
-## T-013 — Os três registros fora do app, e o teste que não enxerga o que não foi registrado
+## T-013 — Os registros fora do app, e o teste que não enxerga o que não foi registrado
 
-**Decisão.** Como a 017 aprendeu (T-011 dela), tabela append-only nova significa três anotações fora
-do app:
+**Decisão.** Como a 017 aprendeu (T-011 dela), tabela append-only nova significa anotações fora do
+app — e aqui são **quatro** tabelas, porque a citação de cumprimento também é histórica:
 
 ```text
-seguranca/papeis.py            → TABELAS_APPEND_ONLY += as três tabelas de `recursos`
-tests/migrations/…             → APPS += "recursos"
-                               → TRIGGERS_POR_APP["recursos"] = as três de imutabilidade + a de coerência
-                               → TRIGGERS_POR_APP["resultados"] += nada: a trigger de coerência é
-                                 recriada, e o nome não muda
+seguranca/papeis.py   → TABELAS_APPEND_ONLY += recursos_recurso,
+                                               recursos_juizodeadmissibilidade,
+                                               recursos_decisaorecurso,
+                                               classificacao_cumprimentodeprovidencia
+tests/migrations/…    → APPS += "recursos"          ("classificacao" já está lá)
+                      → TRIGGERS_POR_APP["recursos"]      = 3 de imutabilidade + 2 de coerência
+                      → TRIGGERS_POR_APP["classificacao"] += cumprimento_de_providencia_append_only,
+                                                             cumprimento_coerente
+                      → TRIGGERS_POR_APP["resultados"]     inalterado: a trigger de coerência é
+                                                           recriada, e o nome não muda
 ```
+
+**Duas triggers de coerência em `recursos`, e não uma.** Uma trigger instalada no `Recurso` não
+valida linha nenhuma da `DecisaoRecurso` — o gatilho é por tabela. A coerência da decisão vive na
+`DecisaoRecurso`. O inventário completo, com o que cada uma confere, está na §10 do
+[data-model.md](./data-model.md).
+
+**Uma função SQL por trigger**, com mensagem própria: é o padrão de `divulgacao/0001` e de
+`resultados/0004`, e não há função compartilhada a reaproveitar.
 
 A trigger `resultado_etapa_coerente` é **recriada por inteiro** no molde da `0004`, com dois ramos
 novos — a coerência do Resultado por recurso com a decisão que o fundamenta, e a coerência de par,
@@ -395,6 +434,55 @@ prova nada do que esta feature promete.
 
 ---
 
+## T-015 — O cumprimento da providência: vínculo causal, sem ato de cumprimento
+
+**O problema.** Uma redação anterior dava a providência por cumprida quando a publicação vigente
+divulgasse **ato diferente** do reconhecido viciado. Isso a quitaria **por acidente**: um ato
+sucessor emitido por razão alheia — uma Retificação que mudou um peso, um Resultado consolidado
+tarde — encerraria a pendência sem que ninguém tivesse corrigido o vício que a decisão reconheceu.
+O vínculo precisa ser causal, e "diferente" não é vínculo.
+
+**Decisão.** O ato de ordenação emitido em cumprimento **cita** a decisão que o determinou, e a
+citação é uma linha de `classificacao.CumprimentoDeProvidencia(ato, decisao)`.
+
+```text
+pendente   →  a decisão PROVIDENCIA_A_JUSANTE não é citada por ato de ordenação nenhum
+cumprida   →  o ato que se publica cita a decisão
+```
+
+**Por que isto não é a "entidade de cumprimento" recusada na clarificação.** O que se recusou foi um
+**ato administrativo próprio** — alguém declarando, depois e em tela separada, que a providência foi
+cumprida, com autoridade e instante seus. A citação não é ato: é **proveniência do
+`AtoDeOrdenacao`**, do mesmo tipo de `motivo_da_sucessao`, gravada por `emitir_ordem` na mesma
+transação em que o ato nasce, por quem já tem autoridade para emitir. Nenhuma autoridade nova,
+nenhuma tela nova, nenhum passo humano separado que possa ser esquecido.
+
+**Por que uma tabela, e não uma FK única no `AtoDeOrdenacao`.** Dois deferimentos com providência
+sobre o mesmo marco são alcançáveis, e uma FK única obrigaria a emitir um ato por decisão — a
+"sucessão que não sucedeu nada" que a D-007 da 017 critica. `UNIQUE(decisao)` dá de graça a garantia
+de que uma decisão é cumprida **uma vez**.
+
+**Por que não é circular.** A publicação que executa o remédio **é** a que cita a decisão, e por isso
+não é impedida por ela. E emitir ato sucessor citando a decisão está sempre disponível: a pendência
+nunca vira beco.
+
+**O custo, registrado por inteiro**, como a orientação exigiu:
+
+| dimensão | o que muda |
+|---|---|
+| estrutura | `classificacao.CumprimentoDeProvidencia`: `ato` FK PROTECT, `decisao` FK PROTECT, `UNIQUE(decisao)`, append-only |
+| dependência entre apps | `classificacao → recursos`, por referência tardia (`"recursos.DecisaoRecurso"`). É a segunda aresta desse tipo, ao lado da de `resultados` |
+| migration | `classificacao/0004`, dependente de `recursos/0001`. O grafo continua acíclico |
+| coerência | trigger `cumprimento_coerente`: a decisão citada tem espécie `PROVIDENCIA_A_JUSANTE` e é do Edital do ato. A pertinência ao **marco** fica no comando — conferi-la na trigger exigiria ler a enumeração de Etapas do JSON normativo dentro do PL/pgSQL |
+| autorização | nenhuma nova: quem cita é quem emite o ato, pela autoridade que a 015 já exige. A tela de emissão passa a oferecer as decisões pendentes daquele marco |
+| privilégios | a tabela entra em `TABELAS_APPEND_ONLY`, e as suas duas triggers em `TRIGGERS_POR_APP["classificacao"]` |
+
+**Alternativa descartada — relaxar para "qualquer sucessor cumpre".** É a redação anterior, e ela
+devolve o problema: a pendência some sem que ninguém tenha corrigido nada. Não foi adotada, e não
+deve ser adotada em silêncio: se a instituição a preferir, é escolha dela, e volta à mesa.
+
+---
+
 ## Resumo das decisões
 
 | # | Decisão | Custo |
@@ -413,3 +501,4 @@ prova nada do que esta feature promete.
 | T-012 | Protocolo com alfabeto compartilhado, prefixo próprio | nenhum |
 | T-013 | Três registros fora do app | fáceis de esquecer, e o teste não os inventa |
 | T-014 | As garantias centrais exigem PostgreSQL na suíte | disciplina de entrega |
+| T-015 | Cumprimento por citação do ato que executa, não por ato próprio | 1 tabela, 1 migration, 1 aresta entre apps |

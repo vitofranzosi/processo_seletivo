@@ -41,11 +41,14 @@ o deferimento inofensivo exatamente onde ele deveria valer. Por isso o desenho n
 filtrar": é um manager nomeado `vigentes`, um `order_by` determinístico e um **teste estrutural** que
 falha em uso não declarado de `ResultadoEtapa.objects` (T-004).
 
-**A decisão que mais economiza** é o cumprimento derivado. A quarta espécie de decisão — deferimento
-cuja providência é ato de outra autoridade — se fecha quando a publicação vigente divulga ato
-diferente do reconhecido viciado. Sem entidade de cumprimento, sem espécie estruturada, sem ato de
-impossibilidade: três vocabulários que verificariam o que uma comparação responde, e um passo humano
-que, esquecido, travaria o marco por omissão.
+**A decisão que mais economiza** é o cumprimento por citação. A quarta espécie de decisão —
+deferimento cuja providência é ato de outra autoridade — se fecha quando o ato de ordenação que se
+publica **cita** a decisão que a determinou. A citação é proveniência do próprio ato, gravada por
+quem o emite, na mesma transação: não há ato de cumprimento com autoridade própria, não há espécie
+estruturada de providência, não há ato de impossibilidade. Uma redação anterior dava a pendência por
+cumprida quando a publicação divulgasse "ato diferente", e isso a quitaria **por acidente** — um ato
+sucessor emitido por razão alheia encerraria a pendência sem que ninguém tivesse corrigido o vício
+(T-015).
 
 **A que mais exigiu cuidado** é a reavaliação determinada. Consolidar recusa o par que já tem
 Resultado, e é a consolidação que deve produzir o sucessor: sem exceção declarada, a inscrição
@@ -71,23 +74,35 @@ admissibilidade e o julgamento; `portal` (HTML do candidato, atrás de titularid
 Resultado da Etapa, interpor e ler a decisão. O `openapi.yaml` da 001 não muda: nada aqui é contrato
 de API.
 
-**Storage**: PostgreSQL. **Duas migrations.** `recursos/0001` cria três tabelas — a peça, o juízo de
-admissibilidade e a decisão —, com o `CHECK` de exatamente um objeto atacado, a unicidade por
-titular × objeto, a unicidade de um juízo e de uma decisão por recurso, três triggers de
-imutabilidade e uma de coerência. `resultados/0005` é **inteiramente de esquema**: três colunas
-anuláveis, o terceiro valor de `origem`, quatro constraints novas, duas recriadas e a trigger
-`resultado_etapa_coerente` recriada por inteiro — **sem backfill e sem desligar
-`resultado_etapa_append_only`** (T-002). Uma terceira migration existe apenas se `appealWindow`
-exigir declaração em `colecoes.py`; a elevação em si não é migration. `divulgacao` ganha **uma
-coluna anulável** para a declaração expressa de encerramento do prazo (T-010).
+**Storage**: PostgreSQL. **Quatro migrations**, e o grafo entre elas importa:
+
+```text
+resultados/0004 ──▶ recursos/0001 ──▶ resultados/0005
+                          └────────▶ classificacao/0004
+divulgacao/0001 ──▶ divulgacao/0002        (independente das demais)
+```
+
+`recursos/0001` cria três tabelas — a peça, o juízo de admissibilidade e a decisão —, com **12
+constraints** e **5 triggers**: três de imutabilidade e **duas** de coerência, porque uma trigger
+instalada no `Recurso` não valida linha da `DecisaoRecurso`. `resultados/0005` é **inteiramente de
+esquema** — três colunas anuláveis, o terceiro valor de `origem`, quatro constraints novas, duas
+recriadas e a trigger `resultado_etapa_coerente` recriada por inteiro, **sem backfill e sem desligar
+`resultado_etapa_append_only`** (T-002) —, e vem **depois** de `recursos/0001`, porque cita
+`DecisaoRecurso`. `classificacao/0004` cria a citação de cumprimento (T-015). `divulgacao/0002`
+acrescenta os **três** campos da declaração expressa de encerramento do prazo, com o `CHECK` de que
+estão os três presentes ou os três ausentes (T-010).
+
+`appealWindow` **não exige migration**: é JSON dentro de `VersaoConsolidada.content`, e o degrau 8 é
+código de leitura e elevação.
 
 **Testing**: pytest com pytest-django, marcadores `acceptance`, `contract`, `integration`,
 `authorization` e `performance` já declarados. Quatro exigências específicas, e a primeira é a que
 mais engana: as duas constraints de cadeia sob concorrência, a trigger de coerência e a recusa de
 `UPDATE` pelo papel de runtime **só são exercidas com `TEST_DB_ENGINE=postgresql` e `DB_USER`** —
 sem o primeiro a suíte cai para SQLite e pula tudo isso em silêncio, e um PR verde não prova nada
-(T-014). As três tabelas novas entram em `TABELAS_APPEND_ONLY`; `recursos` entra em `APPS` e em
-`TRIGGERS_POR_APP`; e o teste estrutural de vigência (T-004) é artefato desta feature, não herdado.
+(T-014). As **quatro** tabelas novas entram em `TABELAS_APPEND_ONLY`; `recursos` entra em `APPS` e
+em `TRIGGERS_POR_APP`, e `classificacao` ganha ali as duas triggers do cumprimento; e o teste
+estrutural de vigência (T-004) é artefato desta feature, não herdado.
 
 **Target Platform**: servidor Linux; navegador institucional e celular. A superfície do candidato
 cresce em dois pontos — o Resultado individual da Etapa e a peça recursal —, e os dois vivem dentro
@@ -108,10 +123,10 @@ família de comandos já faz — julgar, consolidar, emitir e publicar passam a 
 aferição de definitividade acrescenta cinco existências ao caminho que já reproduz o estado
 classificatório; a reprodução continua sendo o custo dominante, e ela não mudou.
 
-**Scale/Scope**: um Edital com mil inscritos e até três marcos por Perfil. **Um app novo, três
-tabelas, duas migrations, quatro triggers, um papel e uma capacidade novos, uma elevação de versão
-canônica, quatro rotas administrativas, duas rotas do candidato e dois acréscimos ao
-acompanhamento.** O item que domina o cronograma não é nenhum desses: é o inventário de vigência
+**Scale/Scope**: um Edital com mil inscritos e até três marcos por Perfil. **Um app novo, quatro
+tabelas, quatro migrations, sete triggers novas e uma recriada, um papel e uma capacidade novos, uma
+elevação de versão canônica, quatro rotas administrativas, duas rotas do candidato e dois acréscimos
+ao acompanhamento.** O item que domina o cronograma não é nenhum desses: é o inventário de vigência
 (T-004), que atravessa quatro apps e não entrega comportamento visível nenhum.
 
 ## Constitution Check
@@ -140,7 +155,7 @@ grafo de migrations e sem import circular em Python.
 specs/018-recursos-e-superacao-de-resultados/
 ├── plan.md              # Este arquivo
 ├── research.md          # Fase 0 — as decisões técnicas T-001 a T-014
-├── data-model.md        # Fase 1 — as três tabelas novas e a sucessão do Resultado
+├── data-model.md        # Fase 1 — as quatro tabelas novas e a sucessão do Resultado
 ├── quickstart.md        # Fase 1 — o roteiro que demonstra o gate da spec
 ├── contracts/
 │   ├── recurso.md       # O candidato: ver o Resultado, interpor, acompanhar, ler a decisão
@@ -157,27 +172,33 @@ specs/018-recursos-e-superacao-de-resultados/
 backend/processo_seletivo/
 ├── recursos/                            # app novo
 │   ├── models.py                        # Recurso, JuizoDeAdmissibilidade, DecisaoRecurso
-│   ├── migrations/0001_initial.py       # 3 tabelas, 13 constraints, 4 triggers
+│   ├── migrations/0001_initial.py       # 3 tabelas, 12 constraints, 5 triggers
 │   ├── domain/
 │   │   ├── janela.py                    # contagem pura: abre, fecha, está aberta (T-008)
 │   │   ├── elegibilidade.py             # as cinco perguntas do impedimento (T-006)
-│   │   └── pejus.py                     # a comparação de piora, nos dois pontos (T-011)
-│   ├── application/
-│   │   ├── interpor.py                  # comando do candidato
-│   │   ├── admitir.py                   # juízo de admissibilidade
-│   │   ├── julgar.py                    # decisão + superação, na mesma transação
-│   │   └── selectors.py                 # recursos do marco, do titular, pendências derivadas
-│   └── domain/protocolo.py              # REC-AAAA-XXXXXXXX, alfabeto compartilhado (T-012)
+│   │   ├── pejus.py                     # a comparação de piora, nos dois pontos (T-011)
+│   │   └── protocolo.py                 # REC-AAAA-XXXXXXXX, alfabeto compartilhado (T-012)
+│   └── application/
+│       ├── interpor.py                  # comando do candidato
+│       ├── admitir.py                   # juízo de admissibilidade
+│       ├── julgar.py                    # decisão + superação, na mesma transação
+│       └── selectors.py                 # recursos do marco, do titular, pendências derivadas
 ├── resultados/
 │   ├── models.py                        # + sucessão, origem RECURSO, FK da decisão
+│   ├── managers.py                      # o manager `vigentes` — do modelo, não do selector (T-004)
 │   ├── migrations/0005_superacao.py     # só esquema, sem backfill (T-002)
-│   ├── application/selectors.py         # + manager `vigentes` em todas as leituras de efeito
+│   ├── application/selectors.py         # CONSOME o manager em toda leitura de efeito
 │   ├── application/prontidao.py         # + vigência nos 4 Exists; + pendência de reavaliação
 │   └── application/consolidacao.py      # + a exceção única da FR-068
-├── classificacao/application/calculo.py # + vigência e order_by determinístico (T-004)
+├── classificacao/
+│   ├── models.py                        # + CumprimentoDeProvidencia (T-015)
+│   ├── migrations/0004_cumprimento.py   # 1 tabela, 2 constraints, 2 triggers
+│   ├── application/calculo.py           # + vigência e order_by determinístico (T-004)
+│   └── application/emissao.py           # + a citação das decisões cumpridas, na mesma transação
 ├── divulgacao/
-│   ├── models.py                        # + declaração expressa de encerramento do prazo
-│   └── domain/publicabilidade.py        # + natureza pretendida e os cinco fatos (T-010)
+│   ├── models.py                        # + os 3 campos da declaração de encerramento
+│   ├── migrations/0002_declaracao.py    # 3 colunas, 1 constraint
+│   └── domain/publicabilidade.py        # + natureza pretendida e os seis fatos (T-010)
 ├── publicacoes/domain/elevacao.py       # + DEGRAUS_DE_MARCO e elevar_marco (T-007)
 ├── shared/canonical.py                  # SCHEMA_VERSION 7 → 8
 ├── shared/tempo.py                      # a zona institucional, saindo de interface/ (T-008)
@@ -188,7 +209,7 @@ backend/processo_seletivo/
 ├── portal/                              # canal do candidato (existente)
 │   ├── urls.py / views.py               # 2 rotas: interpor e consultar o recurso
 │   └── templates/portal/                # + Resultado da Etapa e bloco do recurso no acompanhamento
-└── seguranca/papeis.py                  # + 3 tabelas em TABELAS_APPEND_ONLY
+└── seguranca/papeis.py                  # + 4 tabelas em TABELAS_APPEND_ONLY
 
 backend/tests/
 ├── acceptance/                          # o gate da spec, ponta a ponta
@@ -213,29 +234,39 @@ backend/tests/
 As fases seguem os slices da spec, e cada uma termina em comportamento observável pelo navegador —
 exceto a primeira, que a spec declara como desbloqueio.
 
+**A ordem é ditada pelo grafo de migrations, e não por preferência.** `resultados/0005` cita
+`recursos.DecisaoRecurso`, de modo que **os modelos de `recursos` precisam existir antes da sucessão
+do Resultado**. Uma versão anterior deste plano punha o app na F3 e a sucessão na F0, e era
+inexequível: a F0 não teria para onde apontar a chave, e a F2 tentaria interpor recurso num app que
+ainda não existia.
+
 | Fase | Entrega | Termina quando |
 |---|---|---|
-| **F0** | Sucessão do `ResultadoEtapa`, filtro de vigência em toda leitura de efeito, teste estrutural | O teste estrutural falha em uso não declarado de `ResultadoEtapa.objects`, e a suíte inteira continua verde em PostgreSQL |
+| **F0** | **Fundação persistente**: app `recursos` com as três tabelas, constraints e triggers; `classificacao/0004`; sucessão do `ResultadoEtapa`; manager `vigentes` consumido em toda leitura de efeito; teste estrutural | As quatro migrations aplicam do zero e a partir da anterior; o teste estrutural falha em uso não declarado de `ResultadoEtapa.objects`; a suíte inteira continua verde em PostgreSQL |
 | **F1** | O candidato vê o próprio Resultado da Etapa | Helena, eliminada na Etapa 1 e fora do universo do ato, lê o próprio Indeferimento com o motivo escrito |
-| **F2** | Interposição, protocolo, acompanhamento, recusa por objeto superado | O candidato recorre pelo portal e recebe protocolo; a segunda interposição é recusada nomeando a primeira |
-| **F3** | App `recursos`, papel `julgador`, impedimento que bloqueia, admissibilidade motivada | Quem consolidou o Resultado atacado é recusado; quem tem a capacidade admite com motivo |
-| **F4** | Decisão nas quatro espécies; deferimento que fixa correção supera na mesma transação | O Resultado sucessor nasce, o anterior permanece, o ato fica obsoleto e a publicação é recusada com caminho |
-| **F5** | Reavaliação determinada: pendência nomeada, consolidação que produz o sucessor, *non reformatio* | A Etapa mostra a pendência, a nova Avaliação é consolidada como sucessor, e a pior é recusada |
-| **F6** | Progressão retroativa visível e guarda de publicação | A linha reaberta aparece nomeada na Mesa e no painel; a publicação do marco é impedida |
-| **F7** | Definitividade: os cinco fatos e a declaração expressa | Publicar como definitivo é recusado em cada um dos cinco casos, e permitido depois de resolvidos |
-| **F8** | Janela recursal como conteúdo publicado | O elaborador declara a janela, o candidato vê os dois instantes, e a interposição fora do prazo é recusada citando a norma |
+| **F2** | Interposição, protocolo, acompanhamento, recusa por objeto superado — **sobre a fundação da F0** | O candidato recorre pelo portal e recebe protocolo; a segunda interposição é recusada nomeando a primeira |
+| **F3** | Papel `julgador`, impedimento que bloqueia, admissibilidade motivada, decisão nas quatro espécies, e o deferimento que fixa correção superando na mesma transação | Quem consolidou o Resultado atacado é recusado; o Resultado sucessor nasce, o anterior permanece, o ato fica obsoleto e a publicação é recusada com caminho |
+| **F4** | Reavaliação determinada: pendência nomeada, consolidação que produz o sucessor, *non reformatio* nos dois pontos | A Etapa mostra a pendência, a nova Avaliação é consolidada como sucessor, e a pior é recusada |
+| **F5** | Progressão retroativa visível e guarda de publicação | A linha reaberta aparece nomeada na Mesa e no painel; a publicação do marco é impedida |
+| **F6** | Definitividade: os seis fatos, a declaração expressa, e a citação de cumprimento na emissão | Publicar como definitivo é recusado em cada caso, e permitido depois de resolvidos; o ato que cita a decisão cumpre a providência, e o que não a cita não cumpre |
+| **F7** | Janela recursal como conteúdo publicado | O elaborador declara a janela, o candidato vê os dois instantes, e a interposição fora do prazo é recusada citando a norma |
 
-**A F0 é a maior, e não entrega nada visível.** É o preço de dar sucessão ao elo que não a tinha, e
-é onde mora o risco silencioso da feature. Ela precisa de duas provas antes de qualquer outra coisa
+**A F0 é a maior, e não entrega nada visível.** Ela hospeda duas coisas que precisam nascer juntas —
+a fundação de `recursos` e a sucessão do Resultado — porque a chave estrangeira as amarra. É também
+onde mora o risco silencioso da feature, e precisa de duas provas antes de qualquer outra coisa
 existir: que o cálculo classificatório não colapsa com dois Resultados do mesmo par, e que a
 eliminação superada deixa de excluir da progressão.
 
-**A F8 vem por último de propósito.** É a única com custo de conteúdo publicado, e a única que, se a
+**O que a F0 deliberadamente não entrega**: telas, comandos, autorização e o papel `julgador`. Ela
+cria a fundação persistente, e nada mais — é trabalho técnico que a spec declara como desbloqueio,
+com a capacidade que ele destrava nomeada nas fases seguintes.
+
+**A F7 vem por último de propósito.** É a única com custo de conteúdo publicado, e a única que, se a
 feature precisar ser fatiada, tem por onde ser adiada sem desmontar as demais — a tempestividade
 continua sendo juízo de admissibilidade motivado, que é a degradação que a decisão institucional
 declara.
 
-**A F6 não é polimento.** Sem os avisos nomeados, o efeito da progressão retroativa acontece e é
+**A F5 não é polimento.** Sem os avisos nomeados, o efeito da progressão retroativa acontece e é
 descoberto por acaso — uma Etapa que todos consideravam encerrada volta a ter linha pendente, e
 ninguém sabe por quê.
 
@@ -247,6 +278,7 @@ ninguém sabe por quê.
 | Escolha | Por que é necessária | Alternativa mais simples, e por que foi recusada |
 |---|---|---|
 | App novo `recursos`, com dependência de mão dupla (T-001) | A FK da decisão precisa morar no `ResultadoEtapa` para que "todo sucessor cita a decisão" seja constraint | Inverter a FK quebraria o ciclo de graça e perderia a invariante: do outro lado, a constraint possível não impede um sucessor nascer sem fundamento |
+| `CumprimentoDeProvidencia` como tabela de citação (T-015) | Sem vínculo causal, um ato sucessor emitido por razão alheia quitaria a providência por acidente | Uma FK única no `AtoDeOrdenacao` — recusada porque dois deferimentos com providência sobre o mesmo marco obrigariam a emitir um ato por decisão, a "sucessão que não sucedeu nada" que a D-007 da 017 critica. E "qualquer sucessor cumpre" foi recusada por ser o problema de origem |
 | Manager `vigentes` + teste estrutural (T-004) | Duas leituras quebram **em silêncio** com dois Resultados do mesmo par | "Lembrar de filtrar" — recusada porque a próxima feature que escrever `ResultadoEtapa.objects` reintroduz o defeito, e nenhum teste funcional o denuncia sem um recurso deferido em fixture |
 | Papel novo `julgador` (T-005) | Cada papel existente concede julgamento a quem tende a estar impedido | Reaproveitar `publicador` ou `gestor` — recusada porque a D-005 proíbe que julgar derive de publicar ou de gerir |
 | `DEGRAUS_DE_MARCO` na elevação (T-007) | O marco é coleção dentro do Perfil, e a elevação só desce dois níveis | Pôr a janela no Perfil, evitando o nível novo — recusada porque a decisão institucional é por marco, e um Edital com marco intermediário e final pode querer prazos distintos |

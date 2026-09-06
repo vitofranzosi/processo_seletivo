@@ -3,8 +3,8 @@
 **Feature**: 018 — Recursos e Superação de Resultados · **Spec**: [spec.md](./spec.md) ·
 **Pesquisa**: [research.md](./research.md)
 
-Três tabelas novas, três colunas e um valor de enum no `ResultadoEtapa`, uma coluna na
-`PublicacaoResultado`, e um campo no conteúdo publicado. Nada mais.
+Quatro tabelas novas, três colunas e um valor de enum no `ResultadoEtapa`, três colunas na
+`PublicacaoResultado`, e um campo no conteúdo publicado. **Quatro migrations.**
 
 ---
 
@@ -13,15 +13,19 @@ Três tabelas novas, três colunas e um valor de enum no `ResultadoEtapa`, uma c
 ```text
 Avaliacao ──┐
             ├──▶ ResultadoEtapa ◀── DecisaoRecurso ◀── JuizoDeAdmissibilidade ◀── Recurso
-Ocorrência ─┘        │  ▲                                                          │
-                     │  └── resultado_anterior (sucessão, append-only) ────────────┤
+Ocorrência ─┘        │  ▲                  ▲                                       │
+                     │  └── resultado_anterior (sucessão, append-only)             │
+                     ▼                     │                                       │
+              AtoDeOrdenacao ──────────────┘                                       │
+                     │      CumprimentoDeProvidencia (o ato cita a decisão)        │
                      ▼                                                             │
-              AtoDeOrdenacao ──▶ PublicacaoResultado ◀───────────────────────────── ┘
+             PublicacaoResultado ◀───────────────────────────────────────────────── ┘
                                         (objeto atacado, o outro dos dois)
 ```
 
-O `Recurso` aponta para **um** dos dois objetos atacados; a `DecisaoRecurso` é citada pelo
-`ResultadoEtapa` sucessor. É essa dupla direção que T-001 discute.
+O `Recurso` aponta para **um** dos dois objetos atacados. A `DecisaoRecurso` é citada pelo
+`ResultadoEtapa` sucessor, e — quando determina providência a jusante — pelo `AtoDeOrdenacao` que a
+executa. É essa dupla direção que T-001 discute e que T-015 estende.
 
 ---
 
@@ -32,7 +36,7 @@ Append-only. Nasce e não muda.
 | campo | tipo | observação |
 |---|---|---|
 | `id` | UUID | |
-| `protocolo` | texto único | `REC-2026-XXXXXXXX`, alfabeto compartilhado com a Inscrição (T-012) |
+| `protocolo` | texto, `unique=True` | `REC-2026-XXXXXXXX`, alfabeto compartilhado com a Inscrição (T-012) |
 | `inscricao` | FK `Inscricao`, PROTECT | a Inscrição de quem recorre; determina Edital e Processo |
 | `interposto_por` | texto | `identity_subject`, e não vínculo: a autoria é histórica |
 | `interposto_em` | instante | |
@@ -43,16 +47,15 @@ Append-only. Nasce e não muda.
 | `janela_abriu_em` | instante, anulável | nulo quando não havia janela computável |
 | `janela_fecha_em` | instante, anulável | idem — os dois juntos são o "havia prazo, e era este" |
 
-**Constraints**
+**Constraints — 5** (`unique=True` no protocolo é índice do campo, e não constraint nomeada):
 
-```text
-uq_recurso_protocolo             UNIQUE(protocolo)
-ck_recurso_objeto_unico          (publicacao_atacada IS NULL) <> (resultado_atacado IS NULL)
-ck_recurso_fundamentacao         fundamentacao <> ''
-ck_recurso_janela_completa       (abriu IS NULL) = (fecha IS NULL)
-uq_recurso_por_publicacao        UNIQUE(inscricao, publicacao_atacada) WHERE publicacao NOT NULL
-uq_recurso_por_resultado         UNIQUE(inscricao, resultado_atacado)  WHERE resultado NOT NULL
-```
+| nome | o que garante |
+|---|---|
+| `ck_recurso_objeto_unico` | `(publicacao_atacada IS NULL) <> (resultado_atacado IS NULL)` — exatamente um |
+| `ck_recurso_fundamentacao` | `fundamentacao <> ''` |
+| `ck_recurso_janela_completa` | `(janela_abriu_em IS NULL) = (janela_fecha_em IS NULL)` |
+| `uq_recurso_por_publicacao` | `UNIQUE(inscricao, publicacao_atacada) WHERE publicacao_atacada IS NOT NULL` |
+| `uq_recurso_por_resultado` | `UNIQUE(inscricao, resultado_atacado) WHERE resultado_atacado IS NOT NULL` |
 
 As duas últimas são a FR-011 no banco: um recurso por titular e objeto, pendente ou já decidido. A
 unicidade é por `(inscricao, objeto)` e não por `(interposto_por, objeto)` porque a Inscrição **é** a
@@ -60,11 +63,10 @@ titularidade — e é ela que o contrato do portal verifica.
 
 **Por que a janela é gravada, e não recalculada.** Recalcular na leitura responderia com a norma de
 hoje sobre um ato de ontem. A FR-024 exige que a peça registre se estava dentro da janela computável
-**quando existia**, e é proveniência: a mesma razão pela qual `ResultadoEtapa.versao` é campo, e não
+**quando existia**: é proveniência, pela mesma razão que `ResultadoEtapa.versao` é campo e não
 caminho até a fonte.
 
 **Por que não há coluna de situação.** D-010: a situação deriva de quais atos alcançaram a peça.
-Uma coluna seria estado a manter coerente onde a existência de linha já responde.
 
 ---
 
@@ -81,10 +83,8 @@ Append-only.
 | `decidido_por` | texto | `identity_subject` |
 | `decidido_em` | instante | |
 
-```text
-uq_juizo_por_recurso   UNIQUE(recurso)
-ck_juizo_motivo        motivo <> ''
-```
+**Constraints — 2**: `uq_juizo_por_recurso` (`UNIQUE(recurso)`) e `ck_juizo_motivo`
+(`motivo <> ''`).
 
 Um por recurso. A segunda tentativa concorrente perde no banco, e recebe recusa por estado obsoleto
 — não por leitura prévia.
@@ -109,24 +109,20 @@ Append-only, e fonte jurídica citada pelo Resultado sucessor.
 | `consequencia` | enum, anulável | o que a decisão declara, na correção fixada |
 | `forma`, `pontuacao`, `sentido` | conforme a Etapa, anuláveis | a conclusão fixada, quando há grandeza |
 
-```text
-uq_decisao_por_recurso        UNIQUE(recurso)
-ck_decisao_motivacao          motivacao <> ''
-ck_decisao_correcao_completa  especie = 'CORRECAO_FIXADA'
-                              ⟹ consequencia IS NOT NULL AND etapa_id IS NOT NULL
-                                 AND resultado_protegido IS NOT NULL
-ck_decisao_reavaliacao        especie = 'REAVALIACAO_DETERMINADA'
-                              ⟹ etapa_id IS NOT NULL AND resultado_protegido IS NOT NULL
-                                 AND consequencia IS NULL
-ck_decisao_sem_efeito         especie IN ('INDEFERIDO','PROVIDENCIA_A_JUSANTE')
-                              ⟹ consequencia IS NULL AND resultado_protegido IS NULL
-```
+**Constraints — 5**
 
-**As quatro espécies são um enum, e a providência não.** O que a espécie discrimina é o **efeito** —
-e o efeito é o que o esquema e a aferição de definitividade precisam distinguir. Qual providência a
-decisão determina é fundamentação escrita: o cumprimento não é verificado por espécie (D-009,
-T-010), e um vocabulário a mais só teria de responder o que fazer quando a providência real fosse
-outra.
+| nome | o que garante |
+|---|---|
+| `uq_decisao_por_recurso` | `UNIQUE(recurso)` |
+| `ck_decisao_motivacao` | `motivacao <> ''` |
+| `ck_decisao_correcao_completa` | `CORRECAO_FIXADA ⟹ consequencia, etapa_id e resultado_protegido presentes` |
+| `ck_decisao_reavaliacao` | `REAVALIACAO_DETERMINADA ⟹ etapa_id e resultado_protegido presentes, consequencia nula` |
+| `ck_decisao_sem_efeito` | `INDEFERIDO ou PROVIDENCIA_A_JUSANTE ⟹ consequencia e resultado_protegido nulos` |
+
+**As quatro espécies são um enum, e a providência não.** O que a espécie discrimina é o **efeito**, e
+é o efeito que o esquema e a aferição de definitividade precisam distinguir. Qual providência a
+decisão determina é fundamentação escrita: o cumprimento é verificado pela **citação** do ato que a
+executa (T-015), e não por espécie.
 
 **`resultado_protegido` é FK, e não derivado.** Derivá-lo exigiria perguntar "qual era o vigente
 naquele instante", que é consulta temporal sobre uma cadeia. Uma FK responde em uma junção e é
@@ -134,7 +130,33 @@ honesta: a decisão de fato se referiu àquele Resultado (T-011).
 
 ---
 
-## 5. `resultados.ResultadoEtapa` — o que muda
+## 5. `classificacao.CumprimentoDeProvidencia` — a citação que o ato carrega
+
+Append-only. **Não é ato administrativo**: é proveniência do `AtoDeOrdenacao`, do mesmo tipo de
+`motivo_da_sucessao`, declarada por quem emite, no ato de emitir. Não tem autoridade, instante nem
+motivo próprios (T-015).
+
+| campo | tipo | observação |
+|---|---|---|
+| `id` | UUID | |
+| `ato` | FK `AtoDeOrdenacao`, PROTECT | o ato emitido em cumprimento |
+| `decisao` | FK `"recursos.DecisaoRecurso"`, PROTECT | referência tardia, como em `resultados` |
+
+**Constraints — 2**: `uq_cumprimento_por_decisao` (`UNIQUE(decisao)` — a decisão é cumprida uma
+vez) e `uq_cumprimento_ato_decisao` (`UNIQUE(ato, decisao)`, que a primeira já implica e que se
+mantém por legibilidade do par).
+
+**Por que uma linha por par, e não uma FK única no ato.** Dois deferimentos com providência sobre o
+mesmo marco são alcançáveis, e uma FK única obrigaria a emitir um ato por decisão — a "sucessão que
+não sucedeu nada" que a D-007 da 017 critica. Um ato cita quantas decisões cumprir.
+
+**Por que mora em `classificacao`, e não em `recursos`.** A citação é do ato, e é `emitir_ordem` quem
+a grava, na mesma transação em que grava o ato. Pô-la em `recursos` faria `classificacao` escrever
+dentro de outro app no seu próprio comando.
+
+---
+
+## 6. `resultados.ResultadoEtapa` — o que muda
 
 **Campos**
 
@@ -143,8 +165,24 @@ honesta: a decisão de fato se referiu àquele Resultado (T-011).
 + motivo_da_superacao  TextField(blank, default="")
 + decisao              FK("recursos.DecisaoRecurso", null, PROTECT, related_name="resultados")
   origem               AVALIACAO | OCORRENCIA | RECURSO        ← terceiro valor
-  avaliacao            continua OneToOne anulável — nula também quando origem = RECURSO
+  avaliacao            continua OneToOne anulável — nula quando origem = RECURSO
 ```
+
+### 6.1 A matriz de origem — quatro linhas, e só quatro
+
+Esta é a parte que uma redação anterior deste documento errou, e o erro tornava a FR-068
+**impossível**: ela exigia `decisao IS NULL` no ramo `AVALIACAO`, enquanto
+`ck_sucessor_cita_decisao` exige `decisao IS NOT NULL` em todo sucessor. Um sucessor por reavaliação
+não podia existir.
+
+A matriz correta distingue **raiz de sucessor**, e é esta:
+
+| linha | `origem` | `avaliacao` | `decisao` | `resultado_anterior` | quem a cria |
+|---|---|---|---|---|---|
+| raiz por avaliação | `AVALIACAO` | presente | **ausente** | ausente | consolidação ordinária |
+| **sucessor por reavaliação** | `AVALIACAO` | presente | **presente** | presente | consolidação em cumprimento de decisão (FR-068) |
+| raiz por ocorrência | `OCORRENCIA` | ausente | ausente | ausente | constatação da presidência |
+| sucessor por recurso | `RECURSO` | ausente | presente | presente | deferimento com correção fixada |
 
 **Constraints**
 
@@ -153,33 +191,56 @@ honesta: a decisão de fato se referiu àquele Resultado (T-011).
 + uq_resultado_raiz_por_par      UNIQUE(inscricao, etapa_id) WHERE resultado_anterior IS NULL
 + uq_resultado_sucessor_unico    UNIQUE(resultado_anterior)  WHERE resultado_anterior IS NOT NULL
 + ck_superacao_com_motivo        resultado_anterior IS NULL OR motivo_da_superacao <> ''
-+ ck_sucessor_cita_decisao       (anterior IS NULL AND decisao IS NULL)
-                              OR (anterior IS NOT NULL AND decisao IS NOT NULL)
++ ck_sucessor_cita_decisao       (resultado_anterior IS NULL     AND decisao IS NULL)
+                              OR (resultado_anterior IS NOT NULL AND decisao IS NOT NULL)
 
 ~ ck_resultado_origem
-    (origem='AVALIACAO'  AND avaliacao IS NOT NULL AND forma <> '' AND decisao IS NULL)
- OR (origem='OCORRENCIA' AND avaliacao IS NULL     AND forma =  '' AND decisao IS NULL)
- OR (origem='RECURSO'    AND avaliacao IS NULL     AND decisao IS NOT NULL)
+    (origem='AVALIACAO'  AND avaliacao IS NOT NULL AND forma <> '')
+ OR (origem='OCORRENCIA' AND avaliacao IS NULL AND forma = '' AND resultado_anterior IS NULL)
+ OR (origem='RECURSO'    AND avaliacao IS NULL AND resultado_anterior IS NOT NULL)
 
 ~ ck_resultado_completo_por_forma   passa a depender de origem × forma (T-002)
 ```
+
+**Como as quatro linhas passam, e as duas que não existem são barradas:**
+
+| tentativa | resultado |
+|---|---|
+| raiz `AVALIACAO` | ramo 1 ✓; `anterior` nulo ⟹ `decisao` nula ✓ |
+| sucessor `AVALIACAO` | ramo 1 ✓; `anterior` presente ⟹ `decisao` presente ✓ |
+| raiz `OCORRENCIA` | ramo 2 ✓ |
+| sucessor `RECURSO` | ramo 3 ✓ |
+| **raiz `RECURSO`** | barrada: o ramo 3 exige `resultado_anterior IS NOT NULL` |
+| **sucessor `OCORRENCIA`** | barrada: o ramo 2 exige `resultado_anterior IS NULL` |
+
+**Nenhum `CheckConstraint` olha outra tabela.** A espécie da decisão citada, a coerência de par e a
+cronologia são conferidas na **trigger**, que é onde as coerências entre tabelas moram neste projeto
+— `CHECK` não atravessa tabelas em PostgreSQL.
 
 **`ck_sucessor_cita_decisao` é bidirecional de propósito**: sucessor sem decisão seria superação sem
 fundamento, e raiz com decisão seria consolidação disfarçada de julgamento.
 
 **Note o que não muda.** `avaliacao` continua `OneToOne` e continua anulável, e o Resultado por
-recurso não a cita. É isso que impede, **no banco**, a Avaliação sintética que a decisão C recusou:
-não há como gravar uma linha que se diga `RECURSO` e aponte para uma `Avaliacao`.
+recurso não a cita. É isso que impede, **no banco**, a Avaliação sintética que a decisão C recusou.
 
-**Trigger `resultado_etapa_coerente`, recriada por inteiro** no molde da `0004`, com dois ramos
-novos e o nome preservado:
+### 6.2 A trigger `resultado_etapa_coerente`, recriada por inteiro
+
+Molde da `0004`, nome preservado — a trigger é a mesma, e foi assim que a `0004` acrescentou o ramo
+da Ocorrência. Ramos novos:
 
 ```text
 origem = RECURSO:
   não cita Avaliação nenhuma;
-  a decisão citada está deferida, e é da mesma Inscrição, do mesmo Edital e da mesma Etapa;
+  a decisão citada tem espécie CORRECAO_FIXADA;
+  a decisão é da mesma Inscrição, do mesmo Edital e da mesma Etapa;
   a consequência da linha é a que a decisão declarou;
   a versão citada é a da decisão, e pertence a este Edital.
+
+origem = AVALIACAO com resultado_anterior NOT NULL:
+  a decisão citada tem espécie REAVALIACAO_DETERMINADA;
+  a decisão é da mesma Inscrição, do mesmo Edital e da mesma Etapa;
+  a Avaliação fonte confere com a linha, como já confere hoje;
+  a Avaliação fonte é DIFERENTE da que fundamentou o superado.
 
 qualquer origem, com resultado_anterior NOT NULL:
   o superado é do mesmo (inscricao_id, etapa_id, edital_id);
@@ -195,35 +256,28 @@ preencheu `versao` linha a linha, e aqui não há preenchimento.
 
 ---
 
-## 6. `divulgacao.PublicacaoResultado` — uma coluna
+## 7. `divulgacao.PublicacaoResultado` — três colunas
 
-| campo | tipo | observação |
-|---|---|---|
-| `prazo_encerrado_declarado_em` | instante, anulável | |
-| `prazo_encerrado_declarado_por` | texto, em branco por padrão | |
-| `prazo_encerrado_fundamento` | texto, em branco por padrão | |
+| campo | tipo |
+|---|---|
+| `prazo_encerrado_declarado_em` | instante, anulável |
+| `prazo_encerrado_declarado_por` | texto, em branco por padrão |
+| `prazo_encerrado_fundamento` | texto, em branco por padrão |
 
-```text
-ck_declaracao_completa   os três presentes, ou os três ausentes
-```
+**Constraint — 1**: `ck_declaracao_completa` — os três presentes, ou os três ausentes.
 
-Preenchidos **no nascimento**, como todo o resto da linha — a tabela é append-only e nasce completa.
+Preenchidos **no nascimento**, como todo o resto da linha: a tabela é append-only e nasce completa.
 Exigidos quando a natureza é `DEFINITIVA` e não há janela computável; recusados quando há janela
-computável, porque declarar o que o sistema verifica seria pedir à pessoa que respondesse pelo que a
-máquina sabe (FR-086).
+computável (FR-086).
 
 ---
 
-## 7. Conteúdo publicado — o degrau 8
+## 8. Conteúdo publicado — o degrau 8
 
 Dentro de cada marco classificatório:
 
 ```json
-"appealWindow": {
-  "admits": true,
-  "durationDays": 5,
-  "unit": "DIAS_CORRIDOS"
-}
+"appealWindow": {"admits": true, "durationDays": 5, "unit": "DIAS_CORRIDOS"}
 ```
 
 `null` ou ausente significa **janela não declarada** — e não janela de zero dias.
@@ -233,13 +287,99 @@ SCHEMA_VERSION      7 → 8
 DEGRAUS_DE_MARCO    {8: {"appealWindow": None}}       ← nível novo na elevação (T-007)
 ```
 
-`unit` tem um valor admissível na V1, e continua sendo campo publicado porque a frase "5 dias
-corridos" é normativa e aparece no documento. Declaração em outra unidade é recusada na publicação,
-nomeando a razão (FR-021).
+**Isto não é migration.** `appealWindow` vive no JSON de `VersaoConsolidada.content`; o degrau é
+código de leitura e elevação, exercido no fluxo de Retificação. Nenhuma coluna nova em
+`publicacoes`.
 
 ---
 
-## 8. Situações derivadas — o que **não** vira coluna
+## 9. Inventário de migrations
+
+```text
+resultados/0004  ──▶  recursos/0001  ──▶  resultados/0005
+                            │
+                            └──▶  classificacao/0004
+                      divulgacao/0002   (independente das demais)
+```
+
+| # | migration | conteúdo | depende de |
+|---|---|---|---|
+| 1 | `recursos/0001` | 3 tabelas, 12 constraints, 5 triggers | `resultados/0004`, `divulgacao/0001`, `classificacao/0003`, `inscricoes`, `publicacoes` |
+| 2 | `resultados/0005` | 3 colunas, 4 constraints novas, 2 recriadas, trigger recriada | `recursos/0001` |
+| 3 | `classificacao/0004` | 1 tabela, 2 constraints, 2 triggers | `recursos/0001` |
+| 4 | `divulgacao/0002` | 3 colunas, 1 constraint | `divulgacao/0001` |
+
+**O grafo é acíclico** porque a granularidade é a migration, e não o app: `recursos/0001` vem depois
+de `resultados/0004` e antes de `resultados/0005`. Em Python não há import circular — `resultados` e
+`classificacao` declaram a FK como *string* (`"recursos.DecisaoRecurso"`), que é a referência tardia
+do Django.
+
+**Contagem de constraints em `recursos/0001`**: 5 no `Recurso` + 2 no `JuizoDeAdmissibilidade` + 5 na
+`DecisaoRecurso` = **12**. O protocolo usa `unique=True` no campo, que é índice e não constraint
+nomeada.
+
+---
+
+## 10. Inventário de triggers
+
+O projeto usa **uma função SQL dedicada por trigger** — não há função compartilhada, e cada uma traz
+a sua própria mensagem de recusa. É o padrão de `divulgacao/0001` e de `resultados/0004`.
+
+| tabela | trigger | tipo | o que faz |
+|---|---|---|---|
+| `recursos_recurso` | `recurso_append_only` | imutabilidade | recusa `UPDATE`/`DELETE` |
+| `recursos_recurso` | `recurso_coerente` | coerência | o objeto atacado pertence à Inscrição; a versão citada é do Edital dela |
+| `recursos_juizodeadmissibilidade` | `juizo_de_admissibilidade_append_only` | imutabilidade | |
+| `recursos_decisaorecurso` | `decisao_recurso_append_only` | imutabilidade | |
+| `recursos_decisaorecurso` | `decisao_recurso_coerente` | coerência | o recurso citado está **admitido**; `resultado_protegido` é do mesmo par e Edital; `etapa_id` confere |
+| `classificacao_cumprimentodeprovidencia` | `cumprimento_de_providencia_append_only` | imutabilidade | |
+| `classificacao_cumprimentodeprovidencia` | `cumprimento_coerente` | coerência | a decisão citada tem espécie `PROVIDENCIA_A_JUSANTE` e é do Edital do ato |
+| `resultados_resultadoetapa` | `resultado_etapa_coerente` | coerência | **recriada**, com os ramos de §6.2. Nome inalterado |
+| `resultados_resultadoetapa` | `resultado_etapa_append_only` | imutabilidade | **inalterada, e não desligada** |
+
+**Uma trigger não valida outra tabela.** Por isso a coerência da `DecisaoRecurso` é instalada **na
+`DecisaoRecurso`**, e não no `Recurso`: são duas triggers de coerência em `recursos`, e não uma.
+
+**Pertinência ao marco fica no comando, e não na trigger.** `cumprimento_coerente` confere espécie e
+Edital; conferir que a decisão pertence ao **marco** do ato exigiria ler a enumeração de Etapas do
+JSON normativo dentro do PL/pgSQL. Essa verificação vive em `emitir_ordem`, e a trigger garante o
+que se garante barato.
+
+**Registros fora do app** (T-013):
+
+```text
+seguranca/papeis.py    TABELAS_APPEND_ONLY += recursos_recurso,
+                                              recursos_juizodeadmissibilidade,
+                                              recursos_decisaorecurso,
+                                              classificacao_cumprimentodeprovidencia
+
+tests/migrations/      APPS já contém "classificacao"; += "recursos"
+                       TRIGGERS_POR_APP["recursos"]     = as 5 acima
+                       TRIGGERS_POR_APP["classificacao"] += as 2 do cumprimento
+                       TRIGGERS_POR_APP["resultados"]    inalterado — a trigger é recriada,
+                                                         e o nome não muda
+```
+
+---
+
+## 11. O manager de vigência — onde ele mora
+
+`ResultadoEtapa.vigentes` é **manager de modelo**, e vive em `resultados/models.py` (ou em
+`resultados/managers.py`, importado pelo modelo). Os selectors **consomem** o manager; não o
+declaram (T-004).
+
+```python
+class ResultadoEtapa(models.Model):
+    objects = models.Manager()          # tudo, inclusive superados
+    vigentes = VigentesManager()        # sucessor__isnull=True
+```
+
+**Nomeado, e não `objects` redefinido**: a reprodução histórica precisa ver os superados, e um
+default que os esconde faria o caminho correto ser o exótico.
+
+---
+
+## 12. Situações derivadas — o que **não** vira coluna
 
 | situação | derivada de |
 |---|---|
@@ -248,33 +388,10 @@ nomeando a razão (FR-021).
 | aguardando julgamento | admitido, sem `DecisaoRecurso` |
 | decidido | decisão existente |
 | reavaliação determinada, não cumprida | decisão `REAVALIACAO_DETERMINADA` sem sucessor do par posterior a ela |
-| providência não cumprida | decisão `PROVIDENCIA_A_JUSANTE` e o ato publicado ainda é o reconhecido viciado |
+| providência não cumprida | decisão `PROVIDENCIA_A_JUSANTE` sem `CumprimentoDeProvidencia` |
 | Resultado vigente | `sucessor__isnull=True` |
 | reabilitada por recurso | Resultado vigente que é sucessor, com consequência habilitante |
 | janela aberta | função pura da publicação âncora e da norma |
 
 Nove situações, zero colunas de estado. É o mesmo idioma de `PENDENTE`/`CONSOLIDADO` na 013 e da
 vigência na 015 e na 017.
-
----
-
-## 9. Política de privilégios e teste estrutural
-
-```text
-seguranca/papeis.py   TABELAS_APPEND_ONLY += recursos_recurso,
-                                             recursos_juizodeadmissibilidade,
-                                             recursos_decisaorecurso
-
-tests/migrations/     APPS += "recursos"
-                      TRIGGERS_POR_APP["recursos"] = (recurso_append_only,
-                                                      juizo_de_admissibilidade_append_only,
-                                                      decisao_recurso_append_only,
-                                                      recurso_coerente)
-```
-
-`TRIGGERS_POR_APP["resultados"]` **não** ganha nome novo: `resultado_etapa_coerente` é recriada, e a
-trigger é a mesma — foi assim que a `0004` acrescentou o ramo da Ocorrência.
-
-O teste estrutural de vigência (T-004) é artefato próprio desta feature: ele varre
-`ResultadoEtapa.objects` no código de aplicação e falha em uso não declarado, com duas exceções
-explícitas — a reprodução histórica e a consulta do histórico do par.

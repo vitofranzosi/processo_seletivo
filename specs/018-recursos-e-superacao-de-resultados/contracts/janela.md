@@ -104,7 +104,7 @@ nada (T-010).
 |---|---|---|---|
 | 1 | recurso pendente pertinente | existe recurso do marco sem decisão | `DEFINITIVA` |
 | 2 | reavaliação determinada não cumprida | decisão dessa espécie sem sucessor do par posterior a ela | `DEFINITIVA` |
-| 3 | providência a jusante não cumprida | o ato que se publica **é** o reconhecido viciado (FR-089) | `DEFINITIVA` |
+| 3 | providência a jusante não cumprida | o ato que se publica **não cita** a decisão que a determinou | `DEFINITIVA` |
 | 4 | janela estruturada aberta | função pura sobre a publicação vigente e a norma | `DEFINITIVA` |
 | 5 | ato obsoleto | `estado_do_marco`, que a 017 já verifica | **as duas** naturezas |
 | 6 | pendência reaberta por progressão retroativa | inscrição com sucessor habilitante e sem Resultado numa Etapa do marco | `DEFINITIVA` |
@@ -126,12 +126,34 @@ nomeado, porque recusa que não diz o que fazer devolve a pessoa à tela anterio
 |---|---|---|
 | `publication_appeal_pending` | 422 | aguardar o julgamento, ou publicar como preliminar |
 | `publication_reassessment_pending` | 422 | concluir a reavaliação determinada e consolidar |
-| `publication_remedy_pending` | 422 | emitir o ato sucessor e publicar aquele |
+| `publication_remedy_pending` | 422 | emitir o ato sucessor **citando a decisão** e publicar aquele |
 | `publication_window_open` | 422 | o instante em que a janela fecha |
 | `publication_reentry_pending` | 422 | consolidar o Resultado de quem reingressou |
 
 Todos são **impedimento**, e não aviso: a 017 já decidiu que não existe publicar ato impedido
 mediante confirmação adicional.
+
+### 3.1 O cumprimento da providência, por citação
+
+```text
+pendente   →  a decisão PROVIDENCIA_A_JUSANTE não é citada por ato de ordenação nenhum
+cumprida   →  o ato que se publica cita a decisão
+```
+
+A citação é gravada por `emitir_ordem`, na mesma transação em que o ato nasce, por quem já tem
+autoridade para emitir — a tela de emissão passa a oferecer as decisões pendentes daquele marco.
+Ela é **proveniência do ato**, do mesmo tipo de `motivo_da_sucessao`: não tem autoridade, instante
+nem motivo próprios, e não é passo humano separado que se possa esquecer.
+
+Um mesmo ato **pode citar mais de uma decisão**, de modo que dois deferimentos sobre o mesmo marco
+se resolvem numa emissão só. `UNIQUE(decisao)` garante que uma decisão é cumprida uma vez.
+
+**Não é circular**: a publicação que executa o remédio é a que cita a decisão, e por isso não é
+impedida por ela. **E não vira beco**: emitir ato sucessor citando a decisão está sempre disponível.
+
+**Por que não basta "publicar ato diferente"** — que era a redação anterior: um ato sucessor emitido
+por razão alheia, como uma Retificação que mudou um peso, encerraria a pendência sem que ninguém
+tivesse corrigido o vício reconhecido. O vínculo tem de ser causal (T-015).
 
 ---
 

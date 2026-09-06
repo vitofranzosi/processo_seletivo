@@ -66,10 +66,15 @@ consistência**: a quarta espécie de decisão — deferimento com providência 
 está nomeada no documento institucional, e é derivada do mapa da §4 da descoberta: três das seis
 linhas daquele mapa têm remédio fora do `ResultadoEtapa`. Sem essa espécie, um recurso procedente
 contra a norma ou a forma da divulgação obrigaria o julgador a indeferir um recurso procedente ou a
-fabricar sucessor de Resultado para um erro que não está lá. **O cumprimento dela é fato derivado**
-— a publicação vigente divulgar ato diferente do reconhecido viciado (FR-089) —, e a spec recusa
-explicitamente registro de cumprimento, espécie estruturada de providência e ato de impossibilidade:
-seriam três vocabulários novos para verificar o que uma comparação responde.
+fabricar sucessor de Resultado para um erro que não está lá. **O cumprimento dela é fato derivado
+com vínculo causal**: o ato de ordenação publicado **cita** a decisão que a determinou (FR-089), e a
+citação é proveniência do próprio ato, gravada por quem o emite. A spec recusa explicitamente ato de
+cumprimento com autoridade própria, espécie estruturada de providência e ato de impossibilidade.
+
+**A revisão do plano corrigiu a redação anterior desta regra**, que dava a pendência por cumprida
+quando a publicação divulgasse "ato diferente" do reconhecido viciado: isso a quitaria **por
+acidente** — um ato sucessor emitido por razão alheia encerraria a pendência sem que ninguém tivesse
+corrigido o vício. A FR-089 e a D-009 passaram a exigir a citação.
 
 **Três resíduos encontrados na varredura de contradições da segunda rodada, e corrigidos:**
 

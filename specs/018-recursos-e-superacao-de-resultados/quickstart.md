@@ -101,6 +101,11 @@ emitir o ato sucessor (SC-010).
 
 Nada foi recalculado e nada foi emitido automaticamente. A cascata é de bloqueio.
 
+**A providência a jusante, quando houver.** Deferido um recurso da quarta espécie, emitir o ato
+sucessor **sem citar a decisão** deixa a publicação definitiva impedida; emitir citando-a — a tela de
+emissão oferece as decisões pendentes do marco — cumpre a providência, e a mesma publicação passa.
+Um ato sucessor emitido por razão alheia não quita nada.
+
 ## 7 — A progressão retroativa aparece
 
 Como **paulo.presidente**, abrir a Etapa 2, que estava consolidada para todos.
@@ -145,7 +150,7 @@ Como **paula.publicadora**, tentar publicar como **definitivo**, em cada estado:
 |---|---|
 | recurso pendente | recusado, com a pendência nomeada |
 | reavaliação determinada não cumprida | recusado |
-| providência a jusante não cumprida | recusado, publicando **o mesmo ato** viciado |
+| providência a jusante não cumprida | recusado, publicando ato que **não cita** a decisão |
 | janela estruturada aberta | recusado, informando quando ela fecha |
 | pendência reaberta | recusado |
 | tudo resolvido | **permitido** |
