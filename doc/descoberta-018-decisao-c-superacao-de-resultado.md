@@ -1,12 +1,27 @@
 # Descoberta 018 · Decisão C — como um recurso deferido supera um `ResultadoEtapa` consolidado
 
-**Sessão de análise conduzida em 06/09/2026**, sobre `124ff0b` — a `main` com o PR #44 integrado.
-Nenhuma linha de código foi escrita, nenhuma spec existente foi alterada e a SPEC 018 não foi
-aberta. O que está aqui responde à pergunta **C** da §14 do relatório
-`doc/e2e/017-exploratoria/relatorio.md`, e só a ela:
+**Sessão de análise conduzida em 06/09/2026**, sobre `124ff0b` — a `main` com o PR #44 integrado;
+**decisões de origem e de atomicidade consolidadas em 06/09/2026** sobre `42f153b`. Nenhuma linha de
+código foi escrita, nenhuma spec existente foi alterada e a SPEC 018 não foi aberta. O que está aqui
+responde à pergunta **C** da §14 do relatório `doc/e2e/017-exploratoria/relatorio.md`, e só a ela:
 
 > *Um recurso deferido pode alterar um `ResultadoEtapa` consolidado? Se pode, por qual mecanismo —
 > anulação, superação, ou outro?*
+
+### O alcance deste documento
+
+O título continua adequado, e a precisão do alcance é o que o mantém assim:
+
+- **O mecanismo técnico de C está decidido.** A §1 fixa as três escolhas — superação append-only,
+  origem `RECURSO` no sucessor, e efeito atômico ao deferimento que já declara o resultado
+  corrigido. Elas não voltam a ser discutidas na 018; ela as consome.
+- **O workflow completo da 018 não está decidido**, e depende das questões institucionais que a §10
+  mantém abertas: quem julga, se o deferimento pode piorar a situação de quem recorre, o que fazer
+  com Etapas já encerradas, prazos, correção posterior a publicação definitiva e recurso de
+  terceiro.
+- **Nada aqui autoriza spec ou implementação.** Este documento é insumo de especificação, não a
+  especificação; nenhuma tarefa, migration ou modelo decorre dele sem que a SPEC 018 seja aberta,
+  planejada e analisada pelo fluxo da Constituição.
 
 As perguntas **A** (que fato torna uma publicação definitiva) e **B** (que fato autoriza mostrar ao
 candidato o Resultado individual da Etapa) **não** são decididas aqui. A §9 registra, sem decidi-las,
@@ -14,23 +29,77 @@ o que a resposta a C oferece e o que ela não oferece a cada uma.
 
 ---
 
-## 1. Resumo da decisão
+## 1. A decisão
+
+São três escolhas, e a segunda e a terceira só fazem sentido depois da primeira.
+
+### 1.1 · O mecanismo — superação append-only
 
 **Um recurso deferido pode produzir efeito sobre um `ResultadoEtapa` consolidado, e o mecanismo é a
 superação por sucessor append-only** — a mesma forma que o `AtoDeOrdenacao` (015) e a
 `PublicacaoResultado` (017) já usam, aplicada ao elo que ficou sem ela.
 
-O Resultado consolidado **não** é alterado, anulado, marcado nem apagado. Nasce outra linha, que
-cita a que superou e a decisão que a autorizou; vigente passa a ser o Resultado que ninguém sucedeu.
+O Resultado consolidado **não** é alterado, anulado, marcado nem apagado. Não há `UPDATE`, não há
+exclusão e não há coluna de anulação. Nasce outra linha, que cita a que superou e a decisão que a
+autorizou; vigente passa a ser o Resultado que ninguém sucedeu.
 `uq_resultado_inscricao_etapa` deixa de ser incondicional e vira o par de constraints que a 015 e a
 017 já escreveram duas vezes: unicidade da **raiz** e unicidade do **sucessor**.
 
 O que isso custa não é mecanismo novo — é **percorrer os seletores que hoje leem "existe Resultado"
 como se isso significasse "existe um só"**. A lista é fechada e está na §7.
 
-O que isso **não** resolve, e é decisão institucional, está na §10. Duas dessas perguntas são
-bloqueantes para a 018 e uma delas — *quem fixa a nota nova* — decide se o modelo ganha uma terceira
-origem ou não.
+### 1.2 · A origem do sucessor — `RECURSO`, e não uma Avaliação artificial
+
+**A decisão recursal pode fixar diretamente a consequência e, quando aplicável, a pontuação
+corrigida.** Nesse caminho, o Resultado sucessor nasce com origem explícita **`RECURSO`** e cita
+obrigatoriamente a decisão que o fundamentou.
+
+A alternativa que se descarta aqui é a de *sintetizar uma Avaliação* — criar uma linha de
+`Avaliacao` cuja única função seria satisfazer `ck_resultado_origem`, que hoje exige fonte avaliativa
+para todo Resultado com pontuação (§2.4). Ela é descartada porque **mentiria sobre a fonte
+jurídica**: a decisão de um recurso não é uma avaliação, não foi produzida por avaliador sob
+Atribuição, não passou pela Mesa e não tem a autoria que `Avaliacao.concluida_por` afirma. É a mesma
+razão pela qual a D-1 recusou registrar a ausência como conclusão decisória — *"seria mais barato e
+afirmaria que alguém avaliou quem não compareceu"* —, aplicada ao caso simétrico: seria mais barato
+e afirmaria que alguém avaliou quem foi julgado.
+
+**Uma nova `Avaliacao` só existe quando a própria decisão determinar reavaliação real por avaliador
+competente.** Nesse outro caminho, o sucessor nasce com origem `AVALIACAO` como qualquer outro, e a
+decisão de recurso é o que o autoriza, não o que o fundamenta em conteúdo.
+
+`ResultadoEtapa.Origem` passa, portanto, a ter três valores — `AVALIACAO`, `OCORRENCIA`, `RECURSO` —
+e o discriminador continua dizendo **de onde veio a evidência do desfecho**, que é exatamente o que
+o modelo já declara que ele diz. O impacto detalhado está na §7.1.
+
+### 1.3 · O momento do efeito — atômico ao deferimento que já declara o resultado
+
+**Quando a decisão deferida já declara o resultado corrigido, julgar e superar acontecem na mesma
+transação.** Não existe o estado *"recurso deferido aguardando aplicação"*.
+
+A razão é que esse estado seria perigoso e não seria representável: entre o deferimento e a
+aplicação, o par Inscrição × Etapa teria um Resultado vigente que o próprio sistema já sabe estar
+errado, e todas as leituras de efeito — progressão, prontidão, classificação, publicação —
+continuariam a consumi-lo como verdadeiro. Uma janela assim não é um detalhe de implementação: é
+uma inconsistência institucional com duração indeterminada, e a Constituição exige consistência
+transacional das operações que produzem efeitos administrativos (Princípio IV).
+
+**Quando a decisão ordena reavaliação, ela não cria Resultado sucessor nenhum.** Esse é um efeito
+distinto, declarado explicitamente na própria decisão: quem produz o sucessor, depois, é a
+consolidação da nova Avaliação. O estado intermediário aqui é legítimo e nomeável — *"reavaliação
+determinada, ainda não concluída"* —, e é diferente do estado que o parágrafo anterior recusa,
+porque o resultado corrigido ainda **não existe** para ser aplicado.
+
+A separação entre julgar e executar, que a analogia com *calcular não é emitir* (D-002 da 015)
+sugeriria, é deliberadamente **não** adotada no primeiro caminho. Ela existe na 015 porque calcular é
+barato, repetível e não constitui ato; julgar um recurso é ato constitutivo por si, e o que se
+separaria dele não seria uma computação, mas a sua própria eficácia. **Só se separa se surgir
+exigência institucional explícita** — homologação do julgamento por autoridade distinta, por
+exemplo. Nenhum dos Editais lidos a impõe.
+
+### 1.4 · O que continua aberto
+
+O que estas três escolhas **não** resolvem, e é decisão institucional, está na §10 — nenhuma delas
+bloqueia o desenho do modelo, e todas bloqueiam o desenho do fluxo.
 
 ---
 
@@ -44,6 +113,8 @@ Atribuicao (ativo) ─1:1─ Avaliacao ──┐
                                       ↓
                           ResultadoEtapa  ← append-only, ÚNICO por Inscrição × Etapa
                           origem: AVALIACAO | OCORRENCIA        ← SEM SUCESSÃO
+                          (este é o estado de HOJE, sobre `124ff0b`; o que a §1 decide
+                           acrescentar está na §7.1, e ainda não existe no código)
                                       ↓  calcular_ordem lê TODOS os Resultados das
                                       ↓  Etapas que o marco enumera
                     AtoDeOrdenacao + PosicaoNaOrdem   ← append-only, COM sucessão
@@ -142,10 +213,10 @@ julgada por quais delas precisa remover.
   é possível hoje, porque `uq_atribuicao_ativa` é por *membro*: outro avaliador pode receber
   Atribuição ativa para o mesmo par e concluir.
 - **De (3) + (4): hoje não existe Resultado com pontuação sem Avaliação fonte.** A `OCORRENCIA` é
-  toda de ausências — sem forma, sem pontuação, sem sentido. Logo, **uma banca recursal que fixe
+  toda de ausências — sem forma, sem pontuação, sem sentido. Logo, **uma decisão recursal que fixe
   diretamente a nota nova não tem hoje como gravá-la**: precisaria de um terceiro ramo de origem.
   Isso transforma uma pergunta que parecia de processo — *quem fixa a nota?* — em pergunta de
-  esquema, e é por isso que ela aparece na §10 como bloqueante.
+  esquema, e é o que a §1.2 responde ao criar `origem = RECURSO` em vez de sintetizar uma Avaliação.
 
 ### 2.5 Quais seletores assumem unicidade
 
@@ -268,6 +339,11 @@ depois: uq_resultado_raiz_por_par       UNIQUE(inscricao_id, etapa_id) WHERE res
 **É, literalmente, o par que `AtoDeOrdenacao` e `PublicacaoResultado` já escreveram.** Cadeia linear,
 sem bifurcação, vigente derivado por `sucessor__isnull=True`.
 
+*A avaliação abaixo é a que levou à escolha, e é anterior às decisões da §1.2 e da §1.3 — que
+respondem, dentro desta alternativa, de onde vem o conteúdo do sucessor e quando ele nasce. O
+conjunto completo de constraints, já com a origem `RECURSO` e a citação obrigatória da decisão, está
+na §7.1.*
+
 | critério | avaliação |
 |---|---|
 | **Auditabilidade** | Máxima. Nada é alterado; a cadeia inteira fica legível na ordem em que aconteceu, com motivo obrigatório em cada elo. |
@@ -279,7 +355,7 @@ sem bifurcação, vigente derivado por `sucessor__isnull=True`.
 | **Publicações** | Sucessão, que a 017 já entrega. Preliminares e definitivas permanecem consultáveis; a Área do Candidato acompanha sozinha pelo filtro de `sucessoras__isnull=True`. Resta a aresta da §2.6.1 (definitiva sucedida por definitiva). |
 | **Concorrência** | O invólucro `comando_de_comissao` — transação, bloqueio do Processo, reavaliação da autorização **depois** do bloqueio, reserva da chave — é o mesmo de `consolidar` e `ocorrencia`. A corrida "dois deferimentos sobre o mesmo Resultado" é resolvida por `uq_resultado_sucessor_unico`, no banco, e não por leitura prévia. |
 | **Idempotência** | `IdempotencyRecord.result_payload` com o desfecho declarado, como os três comandos irmãos. |
-| **Autorização** | Ver §10.6 — é pergunta institucional aberta, não obstáculo técnico. |
+| **Autorização** | Ver §10.4 — é pergunta institucional aberta, não obstáculo técnico. |
 | **Explicação** | A melhor das quatro: *"o Resultado X foi superado pelo Resultado Y em razão do recurso Z, deferido em tal data por tal autoridade"*, com os dois consultáveis lado a lado. Auditoria e candidato leem a mesma frase. |
 | **Custo** | O inventário da §2.5. Real, enumerável, sem descoberta pendente. |
 
@@ -289,6 +365,10 @@ sem bifurcação, vigente derivado por `sucessor__isnull=True`.
 
 Uma `DecisaoRecurso` que a leitura consulta e "aplica" sobre o Resultado original, que permanece
 intocado e continua sendo a única linha do par.
+
+*A entidade tem o mesmo nome da que a §7.1 prevê, e o papel é o oposto: ali ela **fundamenta** uma
+linha nova; aqui ela **reinterpreta** a linha antiga. É a diferença entre citar a decisão e delegar
+a ela a leitura.*
 
 **Falha em três frentes, e a primeira é fatal:**
 
@@ -347,21 +427,23 @@ recai, e reconhecê-lo reduz o escopo da 018 sem perder capacidade.
 
 | o que o recurso ataca | onde está o erro | remédio | toca `ResultadoEtapa`? |
 |---|---|---|---|
-| a pontuação ou o sentido de uma Etapa | na Avaliação / na consequência consolidada | **superação de Resultado** (§3, alt. 2) → obsoleta o ato → sucessor de ato → publicação sucessora | **sim** |
+| a pontuação ou o sentido de uma Etapa, **e a decisão fixa o valor correto** | na Avaliação / na consequência consolidada | **superação** na mesma transação do deferimento (§1.3), sucessor com origem `RECURSO` → obsoleta o ato → sucessor de ato → publicação sucessora | **sim, no ato** |
+| a pontuação ou o sentido de uma Etapa, **e a decisão ordena reavaliação** | idem | a decisão declara o efeito e **não** cria sucessor; Atribuição → nova Avaliação → consolidação, que produz o sucessor com origem `AVALIACAO` | **sim, depois** |
 | a constatação de ausência (não compareceu, descumpriu pré-requisito) | no Resultado por `OCORRENCIA` | superação, com o Resultado sucessor declarando o desfecho correto | **sim** |
 | o cálculo, o desempate, a modalidade aplicada, o universo considerado | no `AtoDeOrdenacao` | **sucessor de ato**, que a 015 já entrega, com `motivo_da_sucessao` citando o recurso | **não** |
 | a forma, o conteúdo ou a autoridade da divulgação | na `PublicacaoResultado` | **publicação sucessora**, que a 017 já entrega | **não** |
 | a própria regra normativa | no Edital | **Retificação**, que a 006/007 já entregam — e que obsoleta atos por `regra_alterada` | **não** |
 
-Só as duas primeiras linhas exigem primitiva nova. As três últimas exigem que a **decisão do
+Só as três primeiras linhas exigem primitiva nova. As três últimas exigem que a **decisão do
 recurso** saiba citar o ato que a executa — o que é vínculo de auditoria, não mecanismo.
 
 ---
 
 ## 5. Invariantes propostos
 
-Numerados `I-R` para não colidir com os das specs existentes. São proposta de descoberta, não
-requisitos aprovados.
+Numerados `I-R` para não colidir com os das specs existentes. São **proposta de descoberta, não
+requisitos aprovados**: a SPEC 018 os recebe como insumo, e é ela que os promove a requisito, os
+renomeia ou os recusa. `I-R3a`, `I-R3b` e `I-R3c` são as três decisões da §1 ditas como invariante.
 
 - **I-R1 — Um vigente por par.** Para toda Inscrição × Etapa existe no máximo um `ResultadoEtapa`
   **vigente**, e vigente é o que nenhum outro sucedeu. Garantido no banco por
@@ -371,8 +453,25 @@ requisitos aprovados.
   fecha ciclo. A coerência de par é conferida pela trigger `resultado_etapa_coerente`, que já é o
   lugar onde as coerências entre tabelas moram.
 - **I-R3 — Superação só nasce de decisão.** Nenhum caminho cria Resultado sucessor senão a execução
-  de uma decisão de recurso deferido; a linha cita essa decisão. Consolidação e ocorrência continuam
-  criando **apenas raízes**, e continuam recusando o par que já tem vigente.
+  de uma decisão de recurso deferido; a linha cita essa decisão, e a citação é **obrigatória** em
+  todo sucessor, qualquer que seja a sua origem. Consolidação e ocorrência continuam criando
+  **apenas raízes**, e continuam recusando o par que já tem vigente.
+- **I-R3a — A origem diz a verdade sobre a fonte.** `RECURSO` significa que a própria decisão fixou
+  a consequência e, quando aplicável, a pontuação; `AVALIACAO` num sucessor significa que houve
+  reavaliação real, por avaliador competente, sob Atribuição ativa. **Nenhuma `Avaliacao` é criada
+  para satisfazer esquema**: um Resultado com origem `RECURSO` não cita Avaliação nenhuma, e a
+  constraint o impede de citar (§1.2, §7.1).
+- **I-R3b — O Resultado por recurso é coerente com a decisão que o fundamenta.** A decisão citada
+  refere-se à mesma Inscrição, ao mesmo Edital e à mesma Etapa do Resultado que ela produz; está
+  deferida; declara a consequência que o Resultado afirma; e a versão normativa citada pelo
+  Resultado é da própria decisão. Conferido na trigger, como as demais coerências entre tabelas — e
+  não por promessa de código.
+- **I-R3c — Deferir e superar são o mesmo ato, quando a decisão já declara o resultado.** A decisão
+  imutável e o Resultado sucessor nascem na mesma transação; ela cria **exatamente um** sucessor,
+  cita o superado, registra motivo, ator e instante, é idempotente pela chave, e **falha inteira**
+  se qualquer invariante falhar. Não existe estado *"deferido, aguardando aplicação"*. Quando a
+  decisão ordena reavaliação, ela declara esse efeito distinto e **não** cria sucessor: quem o
+  produz é a consolidação da nova Avaliação, depois (§1.3).
 - **I-R4 — Nada é alterado nem apagado.** Superado e superador são igualmente imutáveis nas três
   camadas. O regime append-only não é relaxado em ponto nenhum, e nenhuma migration futura desliga a
   trigger para gravar superação.
@@ -405,32 +504,45 @@ de vigência seria estado a manter coerente onde a cadeia já o deriva.
 A transição é da **cadeia**, e é irreversível:
 
 ```text
-(sem linha)  ──consolidar│ocorrência──▶  R1 · vigente
+(sem linha)  ──consolidar│ocorrência──▶  R1 · vigente   (origem AVALIACAO ou OCORRENCIA)
                                           │
-                                          │ recurso deferido com efeito sobre a Etapa
+                                          │ decisão de recurso deferida, com efeito sobre a Etapa
                                           ▼
                                         R1 · superado  ──▶ (terminal)
-                                        R2 · vigente
-                                          │
-                                          │ novo recurso deferido
+                                        R2 · vigente   (origem RECURSO, ou AVALIACAO se houve
+                                          │             reavaliação real)
+                                          │ nova decisão deferida
                                           ▼
                                         R2 · superado / R3 · vigente   …
 ```
 
-E o acoplamento com a máquina do Recurso — que é da 018 e **não** é decidida aqui — se dá num ponto
-só:
+O acoplamento com a máquina do Recurso — cujos estados são da 018 e **não** são fixados aqui — se dá
+em dois pontos, e a diferença entre eles é a §1.3:
 
 ```text
 Recurso:  INTERPOSTO ──▶ ADMITIDO ──▶ JULGADO
-                     └─▶ INADMITIDO      ├─ INDEFERIDO ──▶ nada muda no domínio
-                                          └─ DEFERIDO
-                                               ├─ com efeito sobre Resultado ──▶ cria R(n+1)
-                                               └─ sem efeito sobre Resultado ──▶ §4: sucessor de
-                                                  ato, publicação sucessora ou Retificação
+                     └─▶ INADMITIDO      ├─ INDEFERIDO ─▶ nada muda no domínio
+                                         └─ DEFERIDO
+                                             │
+        ┌────────────────────────────────────┴───────────────────────────────────┐
+        │ (a) a decisão DECLARA o resultado corrigido                            │
+        │     ▶ MESMA TRANSAÇÃO: decisão imutável + R(n+1) origem RECURSO        │
+        │       citando o superado. Sem estado intermediário.                    │
+        ├────────────────────────────────────────────────────────────────────────┤
+        │ (b) a decisão ORDENA reavaliação                                       │
+        │     ▶ efeito distinto e declarado: nenhum sucessor agora.              │
+        │       Atribuição ▶ nova Avaliação ▶ consolidação ▶ R(n+1) AVALIACAO    │
+        │       O estado "reavaliação determinada, não concluída" é legítimo.    │
+        ├────────────────────────────────────────────────────────────────────────┤
+        │ (c) a decisão não toca Resultado nenhum                                │
+        │     ▶ §4: sucessor de ato, publicação sucessora ou Retificação         │
+        └────────────────────────────────────────────────────────────────────────┘
 ```
 
-O ponto de contato é `DEFERIDO com efeito → cria sucessor`. Se esse passo é automático ou é ato
-separado da presidência é pergunta institucional (§10.2).
+**O caminho (a) não tem estado intermediário por decisão, e não por conveniência** — ver §1.3. O
+caminho (b) tem um, e ele é nomeável porque o resultado corrigido ainda não existe: não há o que
+aplicar. Confundir os dois seria criar, no caminho (a), uma janela em que o sistema sabe que o
+Resultado vigente está errado e continua a consumi-lo como verdadeiro.
 
 ---
 
@@ -438,36 +550,118 @@ separado da presidência é pergunta institucional (§10.2).
 
 ### 7.1 Modelos
 
-`resultados/models.py` — três campos e três constraints:
+`resultados/models.py` — a sucessão, a terceira origem e a fonte que ela exige.
+
+**Campos:**
 
 ```text
 + resultado_anterior   FK(self, null=True, PROTECT, related_name="sucessor")
 + motivo_da_superacao  TextField(blank, default="")
-+ (a citação da decisão de recurso — forma depende de §10.1)
++ decisao              FK(DecisaoRecurso, null=True, PROTECT, related_name="resultados")
+                       obrigatória em TODO sucessor; nula na raiz
+  origem               ganha o terceiro valor: AVALIACAO | OCORRENCIA | RECURSO
+  avaliacao            continua OneToOne anulável — nula também quando origem = RECURSO
+```
 
+`decisao` é FK, e não JSON nem texto: é a fonte jurídica do desfecho, e ela precisa de integridade
+referencial e de `PROTECT` pela mesma razão que `avaliacao` a tem — a decisão não pode desaparecer
+sob o Resultado que a cita. A entidade `DecisaoRecurso` em si é da 018; o que C fixa é que ela existe
+e que o Resultado a cita.
+
+**Constraints de sucessão:**
+
+```text
 - uq_resultado_inscricao_etapa
 + uq_resultado_raiz_por_par        UNIQUE(inscricao, etapa_id) WHERE resultado_anterior IS NULL
 + uq_resultado_sucessor_unico      UNIQUE(resultado_anterior)  WHERE resultado_anterior IS NOT NULL
 + ck_superacao_com_motivo          resultado_anterior IS NULL OR motivo_da_superacao <> ''
++ ck_sucessor_cita_decisao         (resultado_anterior IS NULL     AND decisao_id IS NULL)
+                                OR (resultado_anterior IS NOT NULL AND decisao_id IS NOT NULL)
 ```
 
-**Se** a decisão de §10.1 for "a banca recursal fixa a nota", acrescenta-se um terceiro valor a
-`origem` e um terceiro ramo a `ck_resultado_origem` e a `ck_resultado_completo_por_forma` — porque
-hoje um Resultado sem Avaliação é obrigatoriamente sem pontuação (§2.4). **Se** for "manda
-reavaliar", nada disso é necessário: a origem continua `AVALIACAO`, apontando outra Avaliação.
+A última é I-R3 dita em coluna, e ela é bidirecional de propósito: sucessor sem decisão seria
+superação sem fundamento, e raiz com decisão seria consolidação disfarçada de julgamento.
+
+**Constraints de origem — as duas que a §1.2 obriga a adaptar:**
+
+```text
+ck_resultado_origem   ganha o terceiro ramo, e ele é o de RECURSO:
+
+  (origem = 'AVALIACAO'  AND avaliacao_id IS NOT NULL AND forma <> '')
+OR(origem = 'OCORRENCIA' AND avaliacao_id IS NULL     AND forma  = '')
+OR(origem = 'RECURSO'    AND avaliacao_id IS NULL     AND decisao_id IS NOT NULL)
+
+ck_resultado_completo_por_forma   deixa de ser fechada em três ramos fixos:
+
+  o ramo `forma = '' ⟹ pontuacao IS NULL AND sentido = ''` continua valendo para a OCORRENCIA,
+  e NÃO pode valer para o RECURSO — porque a decisão recursal PODE fixar pontuação. A forma do
+  Resultado por recurso é a forma que a Etapa publica: PONTUADA exige pontuação e recusa sentido,
+  DECISORIA exige sentido e recusa pontuação, e a ausência das três só é admitida quando a decisão
+  declara desfecho sem grandeza. A redação exata é da 018; o que C fixa é que a restrição passa a
+  depender da **origem**, e não só da forma.
+```
+
+Note o que **não** muda: `avaliacao` continua `OneToOne` e continua anulável, e o Resultado por
+recurso não a cita. É isso que impede, no banco, a Avaliação sintética da §1.2 — não há como gravar
+um Resultado que se diga `RECURSO` e aponte para uma linha de `Avaliacao`.
+
+**Trigger `resultado_etapa_coerente`** — recriada por inteiro, no molde da `0004`, com dois ramos
+novos e uma conferência acrescentada aos existentes:
+
+```text
+origem = RECURSO:
+  não cita Avaliação nenhuma;
+  a decisão citada está DEFERIDA, e é da mesma Inscrição, do mesmo Edital e da mesma Etapa;
+  a consequência da linha é a que a decisão declarou;
+  a versão citada é a da decisão, e pertence a este Edital.
+
+qualquer origem, quando resultado_anterior IS NOT NULL:
+  o superado é do mesmo (inscricao_id, etapa_id, edital_id);
+  o superado ainda não tem sucessor  ← redundante com a constraint, e barato: a constraint
+                                       responde à concorrência, a trigger responde à leitura;
+  NEW.consolidado_em > superado.consolidado_em                    (I-R9)
+```
+
+É I-R3b em SQL. Vive na trigger porque `CHECK` não atravessa tabelas em PostgreSQL — a mesma razão
+pela qual as quatro coerências que já existem vivem lá.
 
 `classificacao/models.py` e `divulgacao/models.py` — **nenhuma alteração**. As duas cadeias de
 sucessão já existem e já reagem.
 
+**Reprodução histórica: preservada, e por construção.** `reproduzir_ato` lê os Resultados por
+`pk__in` dos ids gravados em `ato.universo.stageResults` (`classificacao/application/reproducao.py:34`)
+e recusa com `historical_input_missing` se algum sumir. Nenhum deles some: o superado permanece na
+tabela, imutável, com a mesma pontuação e a mesma consequência que tinha quando o ato foi emitido.
+Um ato emitido antes do recurso continua reproduzindo a ordem que ele constituiu, com as entradas que
+a constituíram, sob a versão que as governava. **IO-5 da 015 — *a mesma proveniência reproduz a mesma
+ordem* — permanece verdadeira sem nenhum cuidado adicional**, e nenhuma linha de `reproducao.py`
+precisa mudar. É a propriedade que separa esta decisão da alternativa 3, que a perdia.
+
 ### 7.2 Migrations
 
-Uma, em `resultados` (`0005`). Não toca conteúdo publicado, não eleva `SCHEMA_VERSION` (hoje 7), e
-**não desliga a trigger append-only**: a troca de constraint não escreve em linha nenhuma, porque
-todo Resultado existente já é raiz. A trigger `resultado_etapa_coerente` é recriada por inteiro —
-molde que a `0004` já estabeleceu — para ganhar a conferência de par do ramo com sucessor.
+Uma, em `resultados` (`0005`), e ela é **inteiramente de esquema — nenhuma linha é escrita**:
+
+| passo | por quê |
+|---|---|
+| `origem` ganha `RECURSO` nos `choices` | mudança de metadado; `CharField` não muda de forma |
+| `resultado_anterior`, `motivo_da_superacao`, `decisao` acrescentados **anuláveis** | todo Resultado existente é raiz, e raiz tem os três nulos. Nenhum `DEFAULT`, nenhum backfill |
+| `RemoveConstraint uq_resultado_inscricao_etapa` + os quatro `AddConstraint` | toda linha existente satisfaz `uq_resultado_raiz_por_par`, porque `resultado_anterior IS NULL` em todas |
+| `ck_resultado_origem` e `ck_resultado_completo_por_forma` recriadas | os ramos existentes não mudam; o de `RECURSO` é acrescentado |
+| trigger `resultado_etapa_coerente` recriada por inteiro | `CREATE OR REPLACE`, no molde da `0004`, reversível nos dois sentidos |
+
+**Ela não desliga `resultado_etapa_append_only`.** A `0004` precisou desligá-la porque preencheu
+`versao` linha a linha; aqui não há preenchimento nenhum — as colunas novas nascem nulas e assim
+ficam em todo Resultado que já existe. **Se a 018 se vir precisando desligar aquela trigger, é sinal
+de que alguém está corrigindo com `UPDATE` o que esta decisão manda corrigir com linha nova.**
+
+Não toca conteúdo publicado e não eleva `SCHEMA_VERSION` (hoje 7). A reversão é limpa enquanto não
+houver Resultado com origem `RECURSO`; havendo, cabe a mesma guarda `IrreversibleError` que a `0004`
+escreveu para a `OCORRENCIA`, e pela mesma razão — desfazê-los é ato administrativo, e precisa
+acontecer antes.
 
 **Nenhuma migration em `classificacao`, `divulgacao`, `publicacoes`, `avaliacoes` ou `editais`** para
-a decisão C isolada. A 018 inteira terá as suas, pela entidade Recurso.
+a decisão C isolada. A 018 terá a sua, em app próprio, pela entidade `DecisaoRecurso` — e a FK
+`decisao` cria a dependência de grafo entre as duas.
 
 ### 7.3 Comandos
 
@@ -476,7 +670,39 @@ a decisão C isolada. A 018 inteira terá as suas, pela entidade Recurso.
 | `resultados/application/consolidacao.py` | nenhuma de comportamento — continua criando só raízes e recusando o par que já tem vigente. A recusa passa a ler "já possui Resultado **vigente**". |
 | `resultados/application/ocorrencia.py` | idem. O docstring já diz *"para uma Inscrição × Etapa existe no máximo um Resultado vigente"* — a palavra já estava lá, aguardando a constraint. |
 | `avaliacoes/application/avaliacao.py::reabrir` | a recusa 409 permanece e melhora: a frase deixa de prometer uma "anulação" que não existe e passa a nomear o ato que existe. |
-| **novo** — executar o deferimento | comando próprio, invólucro idêntico a `consolidar`. |
+| **novo** — `julgar` | **um comando, não dois.** Ver abaixo. |
+
+**O comando de julgamento, e por que ele é um só.** A §1.3 decide que deferir e superar são o mesmo
+ato quando a decisão já declara o resultado corrigido. Em código isso é o invólucro que
+`consolidar` e `ocorrencia` já usam — `comando_de_comissao`: abre a transação, bloqueia o Processo,
+**reavalia a autorização depois do bloqueio**, reserva a chave de idempotência —, e dentro dele:
+
+```text
+com a transação aberta:
+  1. grava a DecisaoRecurso, imutável, com autor, motivo, instante e desfecho;
+  2. se a decisão declara resultado corrigido:
+       lê o Resultado vigente do par e o trava;
+       cria EXATAMENTE UM sucessor, citando-o, com origem RECURSO ou AVALIACAO;
+     se a decisão ordena reavaliação:
+       não cria sucessor nenhum, e declara o efeito na própria decisão;
+     se a decisão não toca Resultado:
+       §4 — nada aqui, e o remédio é a jusante;
+  3. audita a decisão e, quando houver, o Resultado — um evento por agregado;
+  4. serializa o desfecho no `result_payload` da reserva.
+
+qualquer invariante que falhe derruba a transação inteira:
+  não fica decisão sem efeito, nem efeito sem decisão.
+```
+
+Duas notas de concorrência, e as duas já têm precedente no repositório:
+
+- **A corrida "dois julgamentos sobre o mesmo Resultado" é resolvida no banco**, por
+  `uq_resultado_sucessor_unico`, e não por leitura prévia — exatamente como `uq_ato_sucessor_unico`
+  resolve a emissão simultânea de dois sucessores do mesmo ato. Ler o vigente antes de gravar é
+  conforto de mensagem de erro, não garantia.
+- **A repetição da chave devolve o desfecho original**, e não um recálculo sobre um mundo que já
+  mudou: é o que `consolidar`, `ocorrencia` e `emitir_ordem` fazem com `ctx.repetido`, e o motivo é
+  o mesmo — responder "zero criados" a um reenvio afirmaria que o ato não aconteceu.
 
 ### 7.4 Seletores — o trabalho real
 
@@ -527,7 +753,7 @@ Consolidado da §2.6, agora como afirmação:
    015 separou ao distinguir calcular de emitir.
 6. **A aresta aberta é a definitiva sucedida por definitiva** (§2.6.1). O produto sabe fazê-lo — a
    regressão proibida é só `DEFINITIVA → PRELIMINAR` — mas não tem palavra institucional para isso. É
-   a §10.7.
+   a §10.5.
 
 ---
 
@@ -575,32 +801,22 @@ sem responder B.** Qual das duas a 018 entrega é decisão de escopo, e é do us
 
 ## 10. Perguntas que dependem de decisão institucional
 
-Registradas, não decididas. As duas primeiras são **bloqueantes** para especificar a 018.
+Registradas, não decididas. **Nenhuma delas bloqueia o desenho do modelo** — as duas que bloqueavam
+foram fechadas na §1.2 e na §1.3 — **e todas bloqueiam o desenho do fluxo.** Não há resposta
+provisória para nenhuma abaixo: onde há trade-off, ele está descrito; onde há precedente no
+repositório, ele está citado; e a escolha é do usuário.
 
-**10.1 · Quem fixa a nota nova quando o recurso é deferido — a banca recursal, ou uma reavaliação?**
-*(bloqueante; é pergunta de esquema, não só de processo)*
-Se a banca recursal fixa a nota diretamente, o Resultado sucessor tem pontuação **sem Avaliação
-fonte** — e isso hoje é impossível: `ck_resultado_origem` + `ck_resultado_completo_por_forma` exigem
-que todo Resultado sem Avaliação seja também sem forma, sem pontuação e sem sentido (§2.4). Seria
-preciso um terceiro valor de `origem`. Se o deferimento **manda reavaliar**, nada muda no esquema
-além da superação — outro avaliador recebe Atribuição ativa (o que `uq_atribuicao_ativa` já permite,
-por ser por membro), conclui, e o Resultado sucessor tem origem `AVALIACAO` como qualquer outro.
-Note que a terceira via — reabrir a Avaliação original e recorrigi-la — **está estruturalmente
-fechada** pelo `OneToOne` de `ResultadoEtapa.avaliacao`, e não por escolha de escopo.
+> **Fechadas nesta revisão, e registradas aqui só para quem procurar por elas:**
+> *quem fixa a nota nova* → §1.2, a decisão fixa, com origem `RECURSO`;
+> *quando o efeito acontece* → §1.3, na mesma transação do deferimento que declara o resultado.
 
-**10.2 · O deferimento produz efeito automaticamente, ou o efeito é ato separado da presidência?**
-*(bloqueante)*
-Decide se a superação é escrita na mesma transação do julgamento ou é comando próprio com sua
-autorização, sua idempotência e sua trilha. A 015 já tomou a decisão análoga — *calcular não é
-emitir* — e o paralelo sugere *julgar não é executar*, mas isso é analogia, não decisão.
-
-**10.3 · Recurso deferido pode piorar a situação de quem recorreu?**
+**10.1 · Recurso deferido pode piorar a situação de quem recorreu?**
 Pode um deferimento transformar `HABILITADA` em `ELIMINADA`, ou baixar a nota? O modelo suporta
 qualquer dos dois — nada em `ResultadoEtapa` restringe a consequência do sucessor. É política, e a
 013 registra o precedente exato ao decidir **não** transformar em constraint que a Ocorrência sempre
 elimina: *"que atos a V1 permite é política"*.
 
-**10.4 · O deferimento pode reabrir Etapa já ultrapassada — e o que acontece com as seguintes?**
+**10.2 · O deferimento pode reabrir Etapa já ultrapassada — e o que acontece com as seguintes?**
 *(a de maior consequência operacional)*
 Uma inscrição eliminada na Etapa 1 e reabilitada por recurso **não foi avaliada** na Etapa 2, que
 pode já ter terminado e sido consolidada para todos os demais. A superação a devolve ao conjunto de
@@ -610,34 +826,54 @@ consolidar tardiamente são operações que existem —, mas quem opera precisa 
 acontecer, e o Edital precisa admiti-lo. Alternativa institucional: limitar o efeito à Etapa do
 recurso e tratar a progressão retroativa como caso a decidir por ato próprio.
 
-**10.5 · Até quando um recurso pode ser interposto, e até quando o deferimento pode produzir efeito?**
+**10.3 · Até quando um recurso pode ser interposto, e até quando o deferimento pode produzir efeito?**
 Depende do achado da §9 sobre prazo recursal não estruturado. Enquanto o prazo for texto livre, o
 limite temporal só pode ser exercido por decisão humana, não verificado pelo sistema.
 
-**10.6 · Quem julga?**
+**10.4 · Quem julga, e quem está impedido de julgar?**
 Presidência, comissão recursal própria, ou autoridade signatária? Hoje há duas bases —
 `comissao:gerir` (sistêmica) e `comissao:presidir` — e nenhuma permissão de julgamento. A
 Constituição exige autorização específica para *"julgamento de recurso"*, nomeando-o explicitamente
-entre as operações que a exigem (Princípio III). Provável permissão nova; e vale a pergunta se quem
-julga pode ser quem avaliou.
+entre as operações que a exigem (Princípio III). Provável permissão nova.
 
-**10.7 · Publicação já definitiva, recurso deferido depois — como se chama o que se publica?**
+E há a metade do impedimento, que é pergunta própria: **quem avaliou pode julgar o recurso contra a
+própria avaliação?** O domínio já tem a peça — `Impedimento`, por pessoa e inscrição
+(`uq_impedimento_pessoa_inscricao`) —, mas a 012 deliberadamente **deixou o impedimento fora da
+cadeia de autorização**, por custo de escala: consultá-lo custaria uma verificação por linha em toda
+listagem. Um impedimento recursal é ponto único, não listagem, e caberia — mas se ele é o mesmo
+conceito ou outro, e se ele bloqueia ou apenas declara, é decisão institucional.
+
+**10.5 · Publicação já definitiva, recurso deferido depois — como se chama o que se publica?**
 `DEFINITIVA → PRELIMINAR` é proibido; a sucessora só pode ser outra definitiva. Institucionalmente
 isso é retificação de resultado definitivo, e o produto não tem hoje palavra para ela. Aceita-se uma
 segunda definitiva sucedendo a primeira, ou o vocabulário precisa crescer?
 
-**10.8 · O recurso é do candidato, ou também de terceiro?**
+**10.6 · O recurso é do candidato, ou também de terceiro?**
 Impugnação por terceiro contra resultado alheio existe em certames. Muda a autorização de
 interposição e o que o interessado vê.
 
+**10.7 · As decisões A e B da §14 do relatório.**
+*Que fato torna uma publicação definitiva*, e *que fato autoriza mostrar ao candidato o seu Resultado
+individual da Etapa*. Continuam abertas e continuam sendo do usuário. A §9 registra, sem decidi-las,
+o que C oferece e o que C não oferece a cada uma — inclusive a dependência de jornada, na direção
+inversa da esperada: **recurso contra `ResultadoEtapa` de Etapa eliminatória pressupõe B**, porque
+não se recorre do que não se vê.
+
 ---
 
-## 11. O que esta sessão não fez
+## 11. O que este documento não faz
 
-- Não abriu a SPEC 018 e não gerou artefatos de spec.
-- Não alterou nenhuma spec existente. A `013` continua registrando "recurso, anulação, correção ou
+- **Não abre a SPEC 018 e não a autoriza.** O que está decidido aqui é o mecanismo de C; abrir a
+  especificação exige antes as respostas da §10, e depois o fluxo da Constituição — especificação,
+  clarificação, plano, tarefas, análise de consistência.
+- **Não autoriza implementação.** O esquema da §7.1, as migrations da §7.2 e o comando da §7.3 são
+  **impacto previsto**, não desenho aprovado: nenhuma linha deles é tarefa antes de existir plano.
+- Não altera nenhuma spec existente. A `013` continua registrando "recurso, anulação, correção ou
   reconsolidação de Resultado" como fora de escopo, e é assim que ela deve permanecer: a decisão é
   desta descoberta, não retroage às features que a antecederam.
-- Não decidiu A nem B.
+- **Não decide o workflow do recurso** — interposição, admissibilidade, instâncias, prazos, quem
+  julga, o que o candidato vê. Decide o que acontece com o `ResultadoEtapa` **depois** que um recurso
+  é deferido, e mais nada.
+- Não decide A nem B.
 - Não escreveu código, migration nem teste.
 
