@@ -1,6 +1,6 @@
 # Auditoria exploratória E2E — do Processo à Classificação (015)
 
-**Data:** 05–06/09/2026 · **Base:** `origin/main` @ `616ad20` · **Ambiente:** runserver local (porta 8123, banco `ps015_audit`, mailpit) · **Método:** navegação real via Playwright, um contexto de navegador por ator, evidência primária em screenshot (92 imagens em `screenshots/`).
+**Data:** 05–06/09/2026 · **Base:** `origin/main` @ `616ad20` · **Ambiente:** runserver local (porta 8123, banco `ps015_audit`, mailpit) · **Método:** navegação real via Playwright, um contexto de navegador por ator, evidência primária em screenshot (94 imagens em `screenshots/`).
 
 ---
 
@@ -8,7 +8,9 @@
 
 O ciclo vertical **fecha**. Foi possível, só pelo navegador e alternando atores, criar o Processo e o Edital, compor o conteúdo normativo completo (perfil com fatos declarados, cronograma, duas Etapas — uma decisória e uma pontuada —, marco classificatório com três critérios de desempate, documentos exigidos), submeter, homologar e publicar com PDF íntegro; retificar três vezes; inscrever sete candidatos e manter um rascunho; compor comissão, alocar, distribuir por rodízio; avaliar nas duas formas da Mesa; registrar ocorrência (D‑1), consolidar as duas Etapas (013); e, na 015, calcular a ordem, emitir o ato, consultar a proveniência, provocar obsolescência por Retificação e emitir o ato sucessor com motivo. O cálculo classificatório saiu **exatamente** como a regra publicada mandava, incluindo desempate por fato declarado e empate residual com posição compartilhada (1º, 2º, 3º, 3º).
 
-O que **não** fecha é a borda institucional: o produto produz a classificação, mas não a comunica. O candidato nunca vê resultado de Etapa nem posição (divulgação é feature futura); o documento oficial (PDF) publica os critérios de desempate **sem dizer o que eles comparam** e não anuncia os fatos que a inscrição exigirá; e as telas da 015 falam em UUID onde a instituição precisa ler nomes. Além disso, dois defeitos reais de operação: o critério de desempate de um marco recém‑criado nasce **sem opções de alvo** (bloqueio no caminho principal da composição), e a tela de Retificação **não tem link** — só chega lá quem sabe a URL.
+O que **não** fecha é a borda institucional: o produto produz a classificação, mas não a comunica. O candidato nunca vê resultado de Etapa nem posição (divulgação é feature futura); o documento oficial (PDF) publica os critérios de desempate **sem dizer o que eles comparam** e não anuncia os fatos que a inscrição exigirá; e as telas da 015 falam em UUID onde a instituição precisa ler nomes. Além disso, um defeito real de operação: o critério de desempate de um marco recém‑criado nasce **sem opções de alvo**, bloqueando o caminho principal da composição da regra classificatória.
+
+> **Correção (06/09, após a primeira redação):** o achado E2E15‑002 — "a tela de Retificação não tem link" — era **falso**, e foi retratado. A ação existe e está corretamente condicionada a `retificacao:elaborar`. Ver o registro em §4.
 
 **Resposta à pergunta central:** uma instituição consegue operar o certame até a classificação *dentro* do produto, mas precisa de (a) conhecimento interno para retificar e para contornar o defeito do critério, e (b) controles paralelos para tudo que é comunicação: divulgação de resultados, publicação da classificação e resposta a recursos — que o próprio PDF gerado promete ("Caberá recurso…") sem que o produto ofereça o meio.
 
@@ -37,7 +39,7 @@ O que **não** fecha é a borda institucional: o produto produz a classificaçã
 
 ## 3. Jornada observada (síntese)
 
-- **elena.elaboradora** compôs tudo no assistente de 8 passos. O assistente orienta bem (pendências com link, contadores, "o que falta para submeter"). Tropeços: o defeito do critério de desempate (E2E15‑001) e a ausência de link para retificar (E2E15‑002).
+- **elena.elaboradora** compôs tudo no assistente de 8 passos. O assistente orienta bem (pendências com link, contadores, "o que falta para submeter"). Tropeço: o defeito do critério de desempate (E2E15‑001).
 - **wagner.homologador / paula.publicadora** praticaram atos com confirmação explícita, fundamento e autoridade signatária; a linha do tempo do Edital ("Quem atuou") ficou completa e legível. A elaboradora, tentando homologar, recebeu recusa nominal à permissão (`edital:homologar`) — excelente.
 - **Candidatos**: acesso sem senha por código de e‑mail funcionou 8 vezes; o fluxo inscrição→documentos→revisão→fatos→declarações→comprovante é claro; o PPI viu a autodeclaração aparecer ao escolher a modalidade. O gate "O Edital foi atualizado… Li as alterações" segurou o rascunho do Hugo como especificado. Isolamento perfeito entre candidatos (404 uniforme).
 - **gustavo.gestor** criou comissão e alocação; **paulo.presidente** distribuiu por rodízio (proposta com carga por avaliador antes de gravar), registrou a ocorrência com revisão em dois passos ("Registrar mesmo assim"), consolidou em lote e emitiu os dois atos de ordenação.
@@ -64,13 +66,11 @@ Formato: **Observado / Esperado / Impacto / Reproduzir / Evidência / Hipótese 
 - **Hipótese:** `fragmento_marco` não põe `edital` no contexto do template ([views.py:1025](../../backend/processo_seletivo/interface/views.py)), e `_marco.html:83` interpola `{{ edital.id }}` vazio no `hx-get` do botão de critério.
 - **Recomendação:** passar `edital` ao contexto do fragmento (ou derivar o parâmetro no servidor); cobrir com teste de fragmento.
 
-**E2E15‑002 · bug (navegação) · retificação · Elaborador/Gestor — A tela de Retificação não é alcançável por nenhum link**
-- **Observado:** nenhuma página (detalhe do Edital publicado, lista, home) linka `/gestao/editais/<id>/retificar`; como gestor, o detalhe do Edital publicado oferece só "Encerrar/Cancelar". As três Retificações desta auditoria só existiram porque a URL foi digitada.
-- **Esperado:** ação "Retificar" visível no Edital publicado para quem tem `retificacao:elaborar`.
-- **Impacto:** na prática, o ciclo de correção — que funciona muito bem — é inoperável sem conhecimento interno; é o exemplo máximo de "operar exige saber a implementação".
-- **Reproduzir:** logar como elaborador, abrir o Edital publicado, procurar como retificar.
-- **Evidência:** ausência nas capturas do detalhe (`16-edital-publicado.png`) + `grep` sem referência a `interface:retificar` em templates.
-- **Recomendação:** link condicionado à permissão no detalhe do Edital publicado.
+**E2E15‑002 · ~~bug (navegação)~~ → RETRATADO · retificação — "A tela de Retificação não é alcançável por nenhum link"**
+- **Retratação (06/09/2026):** o achado **não procede**. A ação "Retificar" existe no cartão "O que fazer agora" do Edital publicado, montada em [`acoes.py`](../../backend/processo_seletivo/interface/acoes.py) (`_navegacao`) e condicionada — corretamente — a `edital.status == "PUBLICADO" and ator.can("retificacao:elaborar")`.
+- **Como o erro ocorreu:** durante a auditoria abri o Edital publicado apenas como `gustavo.gestor`, cujo conjunto de permissões inclui `retificacao:cancelar` mas **não** `retificacao:elaborar` — logo a ação não lhe é oferecida, e isso é o comportamento desejado. A conferência no código foi um `grep` por `interface:retificar` nos templates, que nada encontra porque a URL é construída em Python (`reverse(...)`), não em `{% url %}`.
+- **Verificação:** como `elena.elaboradora`, o cartão mostra "Retificar → /gestao/editais/<id>/retificar". Evidência: `87-CORRECAO-link-retificar-existe-para-elaborador.png`.
+- **Nada a fazer.** O número é preservado para que as citações anteriores continuem resolvendo.
 
 ### P2
 
@@ -140,9 +140,10 @@ Formato: **Observado / Esperado / Impacto / Reproduzir / Evidência / Hipótese 
 | Sev. | Qtde | Achados |
 |---|---|---|
 | P0 | 0 | — |
-| P1 | 2 | 001, 002 |
+| P1 | 1 | 001 |
 | P2 | 6 | 003, 004, 005, 006, 007, 008 |
 | P3 | 8 | 009–016 |
+| — | 1 | 002 (retratado — não era defeito) |
 
 O que funcionou **bem** e merece registro: recusas de autorização nominais e uniformes (404 institucional entre candidatos; permissão citada na gestão); idempotência em toda parte (inclusão repetida na comissão, reconsolidação, emissão dupla com página velha → 409 com mensagem exata); gate de retificação no rascunho; D‑003 (eliminada antes some da Mesa seguinte, lista e rota); a Mesa nas duas formas com vocabulário do Edital; ocorrência D‑1 com revisão em dois passos; e o cálculo/desempate/empate residual da 015 **corretos ao decimal**, com proveniência que registra o critério que separou cada par.
 
@@ -153,7 +154,7 @@ O que funcionou **bem** e merece registro: recusas de autorização nominais e u
 1. **Divulgação é o elo que falta** (e o mais valioso): resultado da Etapa e classificação nunca chegam ao candidato — nem um "sua participação: Habilitada na Etapa 1". Hoje a instituição divulga por fora (site/DOU), o que reabre a porta dos controles paralelos que o produto veio fechar.
 2. **Ato publicável**: o ato de classificação precisa de uma forma exportável/imprimível (PDF/CSV com nomes e modalidades legíveis) — é o anexo do resultado oficial.
 3. **Recursos**: o texto institucional do PDF já promete "Caberá recurso contra os resultados divulgados" — o produto gera a promessa sem oferecer o meio. Ou a seção sai do template, ou recursos entram no roteiro (016+).
-4. **Retificação guiada pelo dado**: a tela de retificar é ótima (endereçamento por identidade, diff antes de criar) — só falta ser encontrável (E2E15‑002) e ganhar os campos que hoje só a API tem (ex.: `max_inscricoes_por_candidato`, sem campo no assistente).
+4. **Retificação guiada pelo dado**: a tela de retificar é ótima (endereçamento por identidade, diff antes de criar) — só falta ganhar os campos que hoje só a API tem (ex.: `max_inscricoes_por_candidato`, sem campo no assistente).
 5. **Encerramento do certame**: "Encerrar" existe no detalhe mas nenhuma orientação diz quando encerrá‑lo em relação ao ato de classificação; o pós‑015 (homologação do resultado final) é o próximo degrau natural.
 6. **Legibilidade da 015** (nomes em vez de UUIDs, critérios com rótulos publicados) transformaria as telas de ato/proveniência em documentos de resposta a recurso — quase de graça.
 
@@ -170,7 +171,7 @@ O que funcionou **bem** e merece registro: recusas de autorização nominais e u
 **b) Coisas que a feature coberta deveria ter e não tem:**
 - Nomes legíveis nas telas da 015 (E2E15‑006) e datas localizadas (E2E15‑009).
 - Fatos declarados e alvos do desempate no documento publicado (E2E15‑004/005/008).
-- Link de Retificação (E2E15‑002); aviso de encerramento no rascunho (E2E15‑007).
+- Aviso de encerramento no rascunho (E2E15‑007).
 - Guarda 012×013 na própria Etapa (E2E15‑003).
 
 **c) Capacidades que o domínio tem mas nenhuma tela alcança:**
@@ -185,4 +186,4 @@ O que funcionou **bem** e merece registro: recusas de autorização nominais e u
 
 ## 8. Evidências
 
-`screenshots/` — 93 imagens numeradas na ordem da jornada (`00-gestao-vazia.png` → `86-detalhe-com-retificacoes.png`), incluindo os negativos prefixados `NEG` e o achado `06a-ACHADO-criterio-sem-alvo.png`.
+`screenshots/` — 94 imagens numeradas na ordem da jornada (`00-gestao-vazia.png` → `87-CORRECAO-link-retificar-existe-para-elaborador.png`), incluindo os negativos prefixados `NEG` e o achado `06a-ACHADO-criterio-sem-alvo.png`.
