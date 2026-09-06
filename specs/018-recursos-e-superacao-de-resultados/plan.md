@@ -176,6 +176,7 @@ backend/processo_seletivo/
 │   ├── domain/
 │   │   ├── janela.py                    # contagem pura: abre, fecha, está aberta (T-008)
 │   │   ├── elegibilidade.py             # as cinco perguntas do impedimento (T-006)
+│   │   ├── consequencia.py              # deriva a consequência da conclusão fixada (FR-059)
 │   │   ├── pejus.py                     # a comparação de piora, nos dois pontos (T-011)
 │   │   └── protocolo.py                 # REC-AAAA-XXXXXXXX, alfabeto compartilhado (T-012)
 │   └── application/
@@ -193,19 +194,29 @@ backend/processo_seletivo/
 ├── classificacao/
 │   ├── models.py                        # + CumprimentoDeProvidencia (T-015)
 │   ├── migrations/0004_cumprimento.py   # 1 tabela, 2 constraints, 2 triggers
+│   ├── domain/universo.py               # + a causa `participante reingressou` (FR-078)
 │   ├── application/calculo.py           # + vigência e order_by determinístico (T-004)
 │   └── application/emissao.py           # + a citação das decisões cumpridas, na mesma transação
 ├── divulgacao/
 │   ├── models.py                        # + os 3 campos da declaração de encerramento
 │   ├── migrations/0002_declaracao.py    # 3 colunas, 1 constraint
-│   └── domain/publicabilidade.py        # + natureza pretendida e os seis fatos (T-010)
-├── publicacoes/domain/elevacao.py       # + DEGRAUS_DE_MARCO e elevar_marco (T-007)
+│   ├── domain/publicabilidade.py        # + natureza pretendida e os seis fatos (T-010)
+│   └── application/publicar.py          # + a natureza a aferir e a declaração expressa (FR-085)
+├── avaliacoes/
+│   ├── application/impedimento.py       # + vigência na leitura de Resultado (T-004)
+│   └── application/avaliacao.py         # a recusa deixa de prometer "anulação" (FR-111)
+├── editais/domain/perfis.py             # + validação de `appealWindow` na publicação (FR-021)
+├── publicacoes/
+│   ├── domain/elevacao.py               # + DEGRAUS_DE_MARCO e elevar_marco (T-007)
+│   ├── domain/colecoes.py               # endereçamento de `appealWindow` por Retificação (T-007)
+│   └── infrastructure/pdf.py            # + a frase normativa da janela no documento (FR-030)
 ├── shared/canonical.py                  # SCHEMA_VERSION 7 → 8
 ├── shared/tempo.py                      # a zona institucional, saindo de interface/ (T-008)
 ├── interface/                           # canal administrativo (existente)
+│   ├── identidade.py                    # + o papel `julgador` com `recurso:julgar` (T-005)
 │   ├── urls.py / views.py               # 4 rotas: lista, recurso, admitir, julgar
 │   ├── forms.py                         # + a janela no assistente do marco
-│   └── templates/interface/             # lista, tela do recurso, confirmações
+│   └── templates/interface/             # lista, tela do recurso, confirmações, Mesa e painel
 ├── portal/                              # canal do candidato (existente)
 │   ├── urls.py / views.py               # 2 rotas: interpor e consultar o recurso
 │   └── templates/portal/                # + Resultado da Etapa e bloco do recurso no acompanhamento
@@ -242,7 +253,7 @@ ainda não existia.
 
 | Fase | Entrega | Termina quando |
 |---|---|---|
-| **F0** | **Fundação persistente**: app `recursos` com as três tabelas, constraints e triggers; `classificacao/0004`; sucessão do `ResultadoEtapa`; manager `vigentes` consumido em toda leitura de efeito; teste estrutural | As quatro migrations aplicam do zero e a partir da anterior; o teste estrutural falha em uso não declarado de `ResultadoEtapa.objects`; a suíte inteira continua verde em PostgreSQL |
+| **F0** | **Fundação persistente**: app `recursos` com as três tabelas, constraints e triggers; `classificacao/0004` e `divulgacao/0002`; sucessão do `ResultadoEtapa`; manager `vigentes` consumido em toda leitura de efeito; teste estrutural | As quatro migrations aplicam do zero e a partir da anterior; o teste estrutural falha em uso não declarado de `ResultadoEtapa.objects`; a suíte inteira continua verde em PostgreSQL |
 | **F1** | O candidato vê o próprio Resultado da Etapa | Helena, eliminada na Etapa 1 e fora do universo do ato, lê o próprio Indeferimento com o motivo escrito |
 | **F2** | Interposição, protocolo, acompanhamento, recusa por objeto superado — **sobre a fundação da F0** | O candidato recorre pelo portal e recebe protocolo; a segunda interposição é recusada nomeando a primeira |
 | **F3** | Papel `julgador`, impedimento que bloqueia, admissibilidade motivada, decisão nas quatro espécies, e o deferimento que fixa correção superando na mesma transação | Quem consolidou o Resultado atacado é recusado; o Resultado sucessor nasce, o anterior permanece, o ato fica obsoleto e a publicação é recusada com caminho |
@@ -250,6 +261,20 @@ ainda não existia.
 | **F5** | Progressão retroativa visível e guarda de publicação | A linha reaberta aparece nomeada na Mesa e no painel; a publicação do marco é impedida |
 | **F6** | Definitividade: os seis fatos, a declaração expressa, e a citação de cumprimento na emissão | Publicar como definitivo é recusado em cada caso, e permitido depois de resolvidos; o ato que cita a decisão cumpre a providência, e o que não a cita não cumpre |
 | **F7** | Janela recursal como conteúdo publicado | O elaborador declara a janela, o candidato vê os dois instantes, e a interposição fora do prazo é recusada citando a norma |
+
+**Correspondência com as fases de [tasks.md](./tasks.md)**, que agrupa por história de usuário:
+
+| fase deste plano | fases das tarefas |
+|---|---|
+| F0 | Phase 1 (Setup) + Phase 2 (Foundational) |
+| F1 | Phase 3 — US1 |
+| F2 | Phase 4 — US2 |
+| F3 | Phase 5 (US3) **e** Phase 6 (US4) — a autoridade e o julgamento são duas histórias |
+| F4 | Phase 7 — US5 |
+| F5 | Phase 8 — US8 |
+| F6 | Phase 9 — US7 |
+| F7 | Phase 10 — US6 |
+| — | Phase 11 (Polish), que o plano não fatia |
 
 **A F0 é a maior, e não entrega nada visível.** Ela hospeda duas coisas que precisam nascer juntas —
 a fundação de `recursos` e a sucessão do Resultado — porque a chave estrangeira as amarra. É também

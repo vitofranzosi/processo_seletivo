@@ -181,12 +181,11 @@ nomeia a vedação.
 
 ---
 
-## 7. A providência a jusante, e quem a cumpre
+## 7. A providência a jusante
 
-A decisão da quarta espécie **nomeia** a providência na motivação e não a executa. Quem a executa é
-quem tem a autoridade da 015 ou da 017 — e, ao emitir o ato sucessor, **cita a decisão que está
-cumprindo**, entre as pendentes daquele marco.
+A decisão da quarta espécie **nomeia** a providência na motivação e não a executa (FR-049). Quem a
+executa é quem tem a autoridade da 015 ou da 017, e o cumprimento se prova pela citação que o ato
+sucessor carrega.
 
-A citação vive em `classificacao.CumprimentoDeProvidencia`, gravada por `emitir_ordem` na mesma
-transação do ato. Não é ato administrativo: é proveniência do ato, como `motivo_da_sucessao`.
-Nenhuma autoridade nova, nenhum passo humano separado. Ver [janela.md](./janela.md), §3.1, e T-015.
+**A regra é uma só, e mora em [janela.md](./janela.md) §3.1** — aqui basta saber que julgar não
+executa nada a jusante.
