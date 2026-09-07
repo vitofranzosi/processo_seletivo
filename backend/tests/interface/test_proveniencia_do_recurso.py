@@ -27,6 +27,7 @@ from processo_seletivo.resultados.models import ResultadoEtapa
 from tests.conftest import ator_institucional
 from tests.fixtures.divulgacao import emitir, montar_marco, pontuar, publicar_o_ato
 from tests.fixtures.recursos import decidir, superar
+from tests.fixtures.recursos_us4 import assinatura_de
 from tests.interface.conftest import identificar
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
@@ -69,7 +70,7 @@ def julgado(gestor, api_client, manager_headers, process_payload):
         recurso_id=peca.id,
         admitido=True,
         motivo="Tempestivo e regularmente instruído.",
-        assinatura_do_estado="",
+        assinatura_do_estado=assinatura_de(peca),
         idempotency_key="admitir-proveniencia-us3",
     )
     peca.refresh_from_db()

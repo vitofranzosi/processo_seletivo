@@ -27,7 +27,7 @@ from processo_seletivo.recursos.application.julgar import julgar
 from processo_seletivo.recursos.models import DecisaoRecurso
 from processo_seletivo.resultados.models import ResultadoEtapa
 from processo_seletivo.shared.api.problems import DomainError
-from tests.fixtures.recursos_us4 import cenario_julgavel, julgador
+from tests.fixtures.recursos_us4 import assinatura_de, cenario_julgavel, julgador
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
@@ -163,7 +163,7 @@ def _superar_por_outro_recurso(peca):
         recurso_id=outro.id,
         admitido=True,
         motivo="Tempestivo.",
-        assinatura_do_estado="",
+        assinatura_do_estado=assinatura_de(outro),
         idempotency_key="admitir-outro-conc",
     )
     outro.refresh_from_db()

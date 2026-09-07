@@ -52,7 +52,8 @@ def travar(actor, recurso_id):
     return peca
 
 
-def exigir_elegibilidade(actor, peca):
-    razao = impedimento(actor, peca)
+def exigir_elegibilidade(actor, peca, *, etapa_id=None):
+    """`etapa_id` é o par que a decisão alcança — ver `impedimento`."""
+    razao = impedimento(actor, peca, etapa_id=etapa_id)
     if razao is not None:
         raise DomainError(BARRADO, RAZOES[razao], 403)

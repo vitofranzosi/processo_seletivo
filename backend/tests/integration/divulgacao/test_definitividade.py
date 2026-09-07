@@ -34,7 +34,7 @@ from processo_seletivo.recursos.models import DecisaoRecurso
 from processo_seletivo.shared.api.problems import DomainError
 from tests.conftest import ator_institucional
 from tests.fixtures.divulgacao import emitir, publicar_o_ato
-from tests.fixtures.recursos_us4 import cenario_julgavel, julgador
+from tests.fixtures.recursos_us4 import assinatura_de, cenario_julgavel, julgador
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
@@ -136,7 +136,7 @@ def test_o_recurso_inadmitido_nao_impede(gestor, api_client, manager_headers, pr
         recurso_id=outra["recurso"].id,
         admitido=False,
         motivo="Interposto fora de qualquer prazo razoável.",
-        assinatura_do_estado="",
+        assinatura_do_estado=assinatura_de(outra["recurso"]),
         idempotency_key="inadmitir-definitividade",
     )
 
@@ -460,7 +460,7 @@ def _determinar_providencia_da_outra(peca):
         recurso_id=segunda.id,
         admitido=True,
         motivo="Tempestivo.",
-        assinatura_do_estado="",
+        assinatura_do_estado=assinatura_de(segunda),
         idempotency_key="admitir-segunda-providencia",
     )
     decisao, _ = julgar(

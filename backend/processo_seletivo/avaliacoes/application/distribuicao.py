@@ -313,7 +313,12 @@ def distribuir(
         # avaliação **ordenada por decisão**, e contá-la contra esse teto tornaria a determinação
         # inexequível pelas operações que já existem — que é o que a FR-067 exige que ela seja. A
         # vaga extra existe só enquanto a decisão está pendente, e some quando ela é cumprida.
-        reavaliacoes = reavaliacoes_pendentes(edital, etapa_id=etapa_id)
+        # A chave é o **par** `(inscrição, Etapa)` desde a revisão: chaveando por inscrição, uma
+        # segunda reavaliação determinada para a mesma pessoa em outra Etapa sobrescrevia a
+        # primeira, e a pendência desaparecida abria a vaga no lugar errado.
+        reavaliacoes = {
+            identidade for (identidade, _etapa) in reavaliacoes_pendentes(edital, etapa_id=etapa_id)
+        }
         nome_da_etapa = etapa.get("name") or str(etapa_id)
 
         criadas, recusas = [], []

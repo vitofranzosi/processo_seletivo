@@ -264,8 +264,15 @@ def panorama_da_etapa(*, edital, etapa, etapas_vigentes):
     return panorama
 
 
+def identificador_da_etapa(etapa):
+    """A identidade da Etapa como as chaves do domínio a guardam — `UUID`, e não texto."""
+    from processo_seletivo.comissoes.application.comissao import identificador
+
+    return identificador(etapa["id"])
+
+
 def _estado_do_participante(identidade, etapa, resultados, elegiveis, impedimento, reavaliacoes):
-    if identidade in reavaliacoes:
+    if (identidade, identificador_da_etapa(etapa)) in reavaliacoes:
         # **Antes de "já consolidada"**, e é toda a questão: ela tem Resultado, e por isso caía no
         # ramo de baixo e sumia da lista de trabalho. A decisão determinou reavaliar, e enquanto
         # ninguém o fizer a Etapa tem uma pendência nomeada (FR-067).

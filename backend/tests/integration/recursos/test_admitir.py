@@ -62,12 +62,19 @@ def peca(gestor, api_client, manager_headers, process_payload):
 
 
 def apreciar(peca, *, admitido=True, motivo="Tempestivo e regularmente instruído.", **extra):
+    """A apreciação como a tela a faz: com a assinatura do estado que ela acabou de ler.
+
+    A assinatura deixou de ser opcional — omiti-la contornava a revisão otimista inteira —, e por
+    isso o atalho calcula a atual em vez de mandar vazio. Os testes que exercitam a obsolescência
+    passam a assinatura **antiga** de propósito.
+    """
+    peca["recurso"].refresh_from_db()
     argumentos = {
         "actor": julgador(),
         "recurso_id": peca["recurso"].id,
         "admitido": admitido,
         "motivo": motivo,
-        "assinatura_do_estado": "",
+        "assinatura_do_estado": assinatura_do_estado_da_peca(peca["recurso"]),
         "idempotency_key": "apreciar-us3b",
     }
     return admitir(**{**argumentos, **extra})

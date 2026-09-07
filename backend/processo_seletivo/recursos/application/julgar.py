@@ -37,6 +37,7 @@ cumprimento se prova pela citação que o ato sucessor carrega, quando ele é pu
 from django.db import IntegrityError, transaction
 
 from processo_seletivo.avaliacoes.application.trilha import auditar
+from processo_seletivo.publicacoes.application.selectors import selecao_publica
 from processo_seletivo.recursos.application.porta import exigir_elegibilidade, travar
 from processo_seletivo.recursos.domain.consequencia import derivar
 from processo_seletivo.recursos.domain.pejus import MENSAGEM as PIORARIA
@@ -59,6 +60,14 @@ RESULTADO_MUDOU = (
     "confira antes de decidir."
 )
 SEM_RESULTADO = "Não há resultado vigente desta Etapa para corrigir."
+
+# O que a trilha escreve de cada espécie: o **efeito**, em uma frase, e nada do conteúdo.
+ESPECIE_NA_TRILHA = {
+    DecisaoRecurso.Especie.INDEFERIDO: "indeferido",
+    DecisaoRecurso.Especie.CORRECAO_FIXADA: "deferido com correção fixada",
+    DecisaoRecurso.Especie.REAVALIACAO_DETERMINADA: "deferido com reavaliação determinada",
+    DecisaoRecurso.Especie.PROVIDENCIA_A_JUSANTE: "deferido com providência a jusante",
+}
 
 COM_EFEITO = {
     DecisaoRecurso.Especie.CORRECAO_FIXADA,
@@ -87,7 +96,10 @@ def julgar(
 
     with command_context() as agora:
         peca = travar(actor, recurso_id)
-        exigir_elegibilidade(actor, peca)
+        # **O impedimento é reavaliado pelo par que a decisão alcança**, e não só pelo objeto
+        # atacado (FR-039, FR-043). Um recurso contra a publicação que corrige a Etapa 2 é julgado
+        # sobre o Resultado da Etapa 2 — e quem o avaliou ou consolidou não pode julgá-lo.
+        exigir_elegibilidade(actor, peca, etapa_id=etapa_id)
         _exigir_admissao(peca)
 
         reserva = reserve(
@@ -105,15 +117,23 @@ def julgar(
         if reserva.result_id:
             return DecisaoRecurso.objects.get(pk=reserva.result_id), None
 
+        # **A norma da decisão é a vigente no instante do julgamento, e não a da interposição**
+        # (FR-045, FR-059). Havendo Retificação entre as duas, gravar `peca.versao` faria a decisão
+        # afirmar ter sido tomada sob regra que já não vale — e a consequência sairia de uma nota
+        # mínima revogada. A versão que a peça cita continua registrada nela: é a regra sob a qual
+        # se **recorreu**, e responde outra pergunta.
+        versao = selecao_publica(edital_id=peca.inscricao.edital_id)
         protegido = _protegido(peca, especie, etapa_id, assinatura_do_resultado)
-        efeito, motivo_da_regra, conclusao = _conclusao(peca, especie, etapa_id, pontuacao, sentido)
+        efeito, motivo_da_regra, conclusao = _conclusao(
+            peca, versao, especie, etapa_id, pontuacao, sentido
+        )
         _recusar_se_piora(especie, protegido, efeito, conclusao)
 
         decisao = _gravar(
             recurso=peca,
             especie=especie,
             motivacao=motivacao.strip(),
-            versao=peca.versao,
+            versao=versao,
             decidido_por=actor.subject,
             decidido_em=agora,
             resultado_protegido=protegido if especie in COM_EFEITO else None,
@@ -134,6 +154,10 @@ def julgar(
             aggregate=decisao,
             now=agora,
             correlation_id=correlation_id,
+            # **O ato, e não a motivação nem a grandeza** (FR-094, FR-095): a trilha diz que houve
+            # decisão, de que espécie e sobre qual peça. A motivação e a pontuação são conteúdo, e
+            # copiá-las aqui criaria uma segunda cópia sob outro regime de acesso.
+            reason=f"Recurso {peca.protocolo} julgado: {ESPECIE_NA_TRILHA[especie]}.",
             idempotency_key=idempotency_key,
         )
         if sucessor is not None:
@@ -146,6 +170,9 @@ def julgar(
                 aggregate=sucessor,
                 now=agora,
                 correlation_id=correlation_id,
+                reason=(
+                    f"Resultado superado em cumprimento da decisão no recurso {peca.protocolo}."
+                ),
                 idempotency_key=idempotency_key,
             )
         finish(reserva, decisao, 201)
@@ -197,12 +224,15 @@ def _protegido(peca, especie, etapa_id, assinatura):
     )
     if vigente is None:
         raise DomainError("appeal_correction_incomplete", SEM_RESULTADO, 422)
-    if assinatura and str(vigente.pk) != str(assinatura):
+    # **A ausência da assinatura é recusa, e não dispensa** (FR-100). Enquanto ela era opcional, um
+    # `POST` que omitisse o campo decidia sobre qualquer Resultado do par — inclusive um que já
+    # tivesse sido corrigido entre a leitura da tela e a confirmação.
+    if str(vigente.pk) != str(assinatura or ""):
         raise DomainError("stale_stage_result", RESULTADO_MUDOU, 409)
     return vigente
 
 
-def _conclusao(peca, especie, etapa_id, pontuacao, sentido):
+def _conclusao(peca, versao, especie, etapa_id, pontuacao, sentido):
     """A consequência **derivada** da regra publicada, e nunca digitada (FR-059).
 
     O desfecho sem grandeza é o ramo do recurso contra Ocorrência: nem a decisão nem o sucessor
@@ -220,7 +250,7 @@ def _conclusao(peca, especie, etapa_id, pontuacao, sentido):
         return str(efeito), "recurso deferido: a ocorrência não subsiste", None
 
     efeito, motivo, conclusao = derivar(
-        versao=peca.versao, etapa_id=etapa_id, pontuacao=pontuacao, sentido=sentido
+        versao=versao, etapa_id=etapa_id, pontuacao=pontuacao, sentido=sentido
     )
     return str(efeito), motivo, conclusao
 

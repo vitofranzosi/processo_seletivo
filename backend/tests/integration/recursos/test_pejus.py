@@ -18,7 +18,7 @@ import pytest
 from processo_seletivo.recursos.models import DecisaoRecurso
 from processo_seletivo.resultados.models import ResultadoEtapa
 from processo_seletivo.shared.api.problems import DomainError
-from tests.fixtures.recursos_us4 import cenario_julgavel, julgador
+from tests.fixtures.recursos_us4 import assinatura_de, cenario_julgavel, julgador
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
@@ -173,7 +173,7 @@ def _elevar_por_recurso(cenario, inscricao, protegido, pontuacao):
         recurso_id=peca.id,
         admitido=True,
         motivo="Tempestivo.",
-        assinatura_do_estado="",
+        assinatura_do_estado=assinatura_de(peca),
         idempotency_key="admitir-terceira",
     )
     return julgar(

@@ -54,6 +54,9 @@ def recursos_do_titular(inscricao):
     """
     peças = (
         Recurso.objects.filter(inscricao=inscricao)
+        # `versao` entra no `select_related` porque `_objeto` lê o nome publicado do Marco ou da
+        # Etapa: sem ele, nomear o objeto custaria uma leitura da Versão Consolidada por peça.
+        .select_related("versao", "publicacao_atacada", "resultado_atacado")
         .prefetch_related("juizos", "decisoes")
         .order_by("-interposto_em")
     )
@@ -81,6 +84,10 @@ def resumo(peca):
             {
                 "especie_rotulo": ESPECIES[decisao.especie],
                 "motivacao": decisao.motivacao,
+                # **Quem decidiu**, e não só o quê: uma decisão sem autor não é ato administrativo,
+                # é um texto que apareceu. Quem julga não é quem avalia — o nome do avaliador
+                # continua fora, e é essa a fronteira da FR-093.
+                "quem": decisao.decidido_por,
                 "quando": decisao.decidido_em,
             }
             if decisao is not None
@@ -98,14 +105,40 @@ def _situacao(juizo, decisao):
 
 
 def _objeto(peca):
-    """O objeto atacado, nomeado em linguagem institucional e nunca por identificador.
+    """O objeto atacado, **nomeado pelo Marco ou pela Etapa** — e nunca por identificador.
 
-    O candidato precisa reconhecer **o que** ele contestou: "o resultado divulgado" e "o meu
-    resultado da Etapa X" são coisas diferentes, e a peça vale por nomear qual das duas.
+    "O resultado divulgado" não identifica nada para quem tem dois marcos publicados, e "o meu
+    resultado de etapa" não identifica nada para quem tem quatro Etapas. O candidato precisa
+    reconhecer **o que** contestou, e o nome que ele reconhece é o que o Edital publicou: *"o
+    resultado divulgado da Classificação final"*, *"o meu resultado da Prova didática"*.
+
+    Cai no genérico quando o conteúdo não alcança o nome — marco removido por Retificação, por
+    exemplo. É pior que o nome e melhor que o identificador, pela mesma razão que a 013 já
+    registrou em `_nome_da_etapa`.
     """
+    conteudo = peca.versao.content
     if peca.publicacao_atacada_id is not None:
-        return "o resultado divulgado"
-    return "o meu resultado de etapa"
+        nome = _nome_do_marco(conteudo, peca.publicacao_atacada.marco_id)
+        return f"o resultado divulgado da {nome}" if nome else "o resultado divulgado"
+    nome = _nome_da_etapa(conteudo, peca.resultado_atacado.etapa_id)
+    return f"o meu resultado da {nome}" if nome else "o meu resultado de etapa"
+
+
+def _nome_do_marco(conteudo, marco_id):
+    alvo = str(marco_id)
+    for perfil in conteudo.get("profiles") or []:
+        for marco in perfil.get("classificationMilestones") or []:
+            if str(marco.get("id")) == alvo:
+                return marco.get("name") or ""
+    return ""
+
+
+def _nome_da_etapa(conteudo, etapa_id):
+    alvo = str(etapa_id)
+    for etapa in conteudo.get("stages") or []:
+        if str(etapa.get("id")) == alvo:
+            return etapa.get("name") or ""
+    return ""
 
 
 # ---------------------------------------------------------------------------
@@ -156,7 +189,7 @@ def recursos_do_edital(edital, *, situacao=""):
     """
     peças = (
         Recurso.objects.filter(inscricao__edital=edital)
-        .select_related("inscricao", "resultado_atacado", "publicacao_atacada")
+        .select_related("inscricao", "versao", "resultado_atacado", "publicacao_atacada")
         .prefetch_related("juizos", "decisoes")
         .order_by("interposto_em")
     )
@@ -254,7 +287,12 @@ def _sucessor(superado):
 
 
 def reavaliacoes_pendentes(edital, etapa_id=None):
-    """`{inscricao_id: decisao}` das reavaliações determinadas e **ainda não cumpridas**.
+    """`{(inscricao_id, etapa_id): decisao}` das reavaliações determinadas e **não cumpridas**.
+
+    **A chave é o par, e não a inscrição.** Chaveando por inscrição, uma segunda reavaliação
+    determinada para a mesma pessoa em outra Etapa sobrescrevia a primeira — e a pendência
+    desaparecida liberava indevidamente a publicação definitiva do marco que a enumerava. É o tipo
+    de perda que não produz erro nenhum: o dicionário simplesmente fica menor.
 
     Pendente é **derivado**, e não coluna (D-010): a decisão determinou reavaliar, e o cumprimento
     é a existência de um sucessor do Resultado protegido. Uma coluna `cumprida` seria estado a
@@ -289,7 +327,7 @@ def reavaliacoes_pendentes(edital, etapa_id=None):
     pendentes = {}
     for decisao in decisoes:
         if decisao.resultado_protegido_id not in cumpridas:
-            pendentes[decisao.recurso.inscricao_id] = decisao
+            pendentes[(decisao.recurso.inscricao_id, decisao.etapa_id)] = decisao
     return pendentes
 
 
@@ -390,8 +428,8 @@ def reavaliacoes_pendentes_do_marco(*, edital, marco):
     if not etapas:
         return {}
     return {
-        inscricao_id: decisao
-        for inscricao_id, decisao in reavaliacoes_pendentes(edital).items()
+        par: decisao
+        for par, decisao in reavaliacoes_pendentes(edital).items()
         if str(decisao.etapa_id) in etapas
     }
 

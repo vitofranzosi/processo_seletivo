@@ -32,6 +32,7 @@ from tests.fixtures.divulgacao import (
     publicar_o_ato,
 )
 from tests.fixtures.recursos import interpor
+from tests.fixtures.recursos_us4 import assinatura_de
 from tests.interface.conftest import identificar
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.authorization]
@@ -82,7 +83,7 @@ def apreciar(ator, recurso, *, chave="apreciar-us3"):
         recurso_id=recurso.id,
         admitido=True,
         motivo="Tempestivo e regularmente instruído.",
-        assinatura_do_estado="",
+        assinatura_do_estado=assinatura_de(recurso),
         idempotency_key=chave,
     )
 

@@ -132,6 +132,10 @@ def publicar_resultado(
                 "natureza": str(natureza or ""),
                 "autoridade": str(autoridade or ""),
                 "confirmacao": confirmacao_da_previa or "",
+                # **A declaração faz parte do pedido** (FR-098). Sem ela na reserva, a mesma chave
+                # reenviada com outro fundamento devolveria a primeira publicação em silêncio — e a
+                # afirmação que ficou gravada não seria a que a pessoa acabou de escrever.
+                "declaracao": (declaracao_de_encerramento or "").strip(),
             },
         )
         if reserva.result_id:

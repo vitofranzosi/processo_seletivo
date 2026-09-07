@@ -77,6 +77,13 @@ def admitir(
             aggregate=juizo,
             now=agora,
             correlation_id=correlation_id,
+            # **O ato, e não a motivação dele** (FR-094, FR-095): a trilha diz que houve juízo, de
+            # que direção, sobre qual peça e por quem. O motivo escrito é conteúdo do juízo e mora
+            # no agregado, sob o regime de acesso dele.
+            reason=(
+                f"Recurso {peca.protocolo} "
+                f"{'admitido' if juizo.admitido else 'não admitido'} na admissibilidade."
+            ),
             idempotency_key=idempotency_key,
         )
         finish(reserva, juizo, 201)
@@ -84,15 +91,17 @@ def admitir(
 
 
 def _recusar_se_obsoleto(peca, assinatura_do_estado):
-    """A tela leu um estado; se ele mudou, a confirmação é recusada (FR-100).
+    """A tela leu um estado; se ele mudou — **ou se ela não disse qual leu** — a confirmação é
+    recusada (FR-100).
 
-    Sem isto, duas pessoas abrindo a mesma peça ao mesmo tempo veriam a mesma tela e a segunda
-    gravaria por cima do que a primeira decidiu — ou, pior, decidiria sem saber que já havia
-    decisão.
+    **A ausência da assinatura é recusa, e não dispensa.** Enquanto ela era opcional, um `POST` que
+    simplesmente omitisse o campo contornava a revisão otimista inteira: bastava não dizer o que se
+    leu para poder gravar sobre qualquer estado. A garantia que não se pode omitir é a única que
+    vale sob concorrência.
     """
     from processo_seletivo.recursos.application.selectors import assinatura_do_estado_da_peca
 
-    if assinatura_do_estado and assinatura_do_estado != assinatura_do_estado_da_peca(peca):
+    if (assinatura_do_estado or "") != assinatura_do_estado_da_peca(peca):
         raise DomainError("stale_appeal_state", ESTADO_MUDOU, 409)
 
 

@@ -37,6 +37,25 @@ def declaracao_do_marco(conteudo, marco_id):
     return None
 
 
+def admite_recurso(declaracao):
+    """`True`, `False` ou `None` — e os três são respostas diferentes (FR-020).
+
+    ```text
+    None    o Edital não declarou nada sobre recurso naquele marco
+    False   o Edital declarou que aquele marco NÃO admite recurso por esta via
+    True    admite, e a duração diz por quanto tempo
+    ```
+
+    **Confundir `False` com `None` transforma "não cabe recurso" em "cabe para sempre"** — que é o
+    oposto exato do que a norma disse. A ausência é silêncio, e o silêncio devolve a tempestividade
+    ao juízo humano; a negativa é norma publicada, e norma publicada se aplica.
+    """
+    if not isinstance(declaracao, dict):
+        return None
+    admite = declaracao.get("admits")
+    return None if admite is None else bool(admite)
+
+
 def computavel(declaracao):
     """A janela é computável quando o Edital declara que o marco admite recurso **e por quanto**.
 

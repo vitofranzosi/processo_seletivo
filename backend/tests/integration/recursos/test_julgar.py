@@ -300,12 +300,19 @@ def test_a_trilha_registra_os_quatro_atos_sem_copiar_conteudo(peca):
         operacoes
     )
 
-    corpo = " ".join(
-        f"{evento.previous_state} {evento.new_state} {evento.reason}"
-        for evento in RegistroAuditoria.objects.filter(operation__startswith="recurso:")
-    )
+    eventos = list(RegistroAuditoria.objects.filter(operation__startswith="recurso:"))
+    corpo = " ".join(f"{item.previous_state} {item.new_state} {item.reason}" for item in eventos)
+
+    # **A trilha narra o ato**, e é isso que a torna auditável: sem motivo, ela responde "houve um
+    # evento" e obriga quem audita a abrir o agregado para saber qual (FR-094).
+    assert all(evento.reason for evento in eventos), "todo evento da 018 nasce com motivo escrito"
+    assert peca["recurso"].protocolo in corpo
+    assert "deferido com correção fixada" in corpo
+
+    # E **não** narra o conteúdo: nem a fundamentação, nem a grandeza (FR-095).
     assert peca["recurso"].fundamentacao not in corpo
-    assert "82" not in corpo
+    assert "82.0000" not in corpo
+    assert "82,0000" not in corpo
     assert sucessor.pontuacao == Decimal("82.0000")
 
 

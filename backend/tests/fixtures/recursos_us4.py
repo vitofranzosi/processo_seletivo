@@ -18,6 +18,18 @@ from tests.fixtures.divulgacao import emitir, montar_marco, pontuar, publicar_o_
 JULGADORA = "helena.julgadora"
 
 
+def assinatura_de(recurso):
+    """A assinatura do estado da peça, lida agora — como a tela a lê antes de oferecer o botão.
+
+    Ela deixou de ser opcional na revisão do code review: omiti-la contornava a revisão otimista
+    inteira, e por isso as fixtures passam a calculá-la em vez de mandar vazio.
+    """
+    from processo_seletivo.recursos.application.selectors import assinatura_do_estado_da_peca
+
+    recurso.refresh_from_db()
+    return assinatura_do_estado_da_peca(recurso)
+
+
 def julgador(subject=JULGADORA):
     return ator_institucional(subject, "recurso:julgar")
 
@@ -94,7 +106,7 @@ def cenario_julgavel(
             recurso_id=recurso.id,
             admitido=True,
             motivo="Tempestivo e regularmente instruído.",
-            assinatura_do_estado="",
+            assinatura_do_estado=assinatura_de(recurso),
             idempotency_key=chave_da_admissao,
         )
         recurso.refresh_from_db()

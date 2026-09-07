@@ -3960,7 +3960,18 @@ def recurso_recebido(request, recurso_id):
 
 
 def _alvo_da_correcao(peca):
-    """O Resultado vigente do par, que é sobre o que a correção incide — e a forma que ele exige.
+    """As Etapas que a decisão pode alcançar, e a forma que cada uma exige.
+
+    **O objeto atacado e o lugar do erro são eixos distintos** (D-001). Um recurso contra a
+    publicação cujo mérito é *"minha nota da Etapa 2 está errada"* corrige o `ResultadoEtapa` da
+    Etapa 2 — e enquanto esta função só olhava para `resultado_atacado`, esse recurso chegava à tela
+    sem alvo, e o formulário escondia as espécies `CORRECAO_FIXADA` e `REAVALIACAO_DETERMINADA`.
+    Quem recorreu da divulgação por causa da própria nota não tinha, pelo canal real, como obter a
+    correção que a decisão institucional prometeu.
+
+    No ramo do Resultado há **uma** Etapa alcançável, e ela já vem escolhida. No ramo da publicação
+    há as que o marco enumera, e o julgador escolhe: são elas que o ato divulgado ordena, e nenhuma
+    outra.
 
     A tela pede **pontuação ou sentido conforme a forma que a Etapa publica**, e nunca as duas: um
     formulário que oferecesse os dois campos convidaria a preencher o errado, e a decisão nasceria
@@ -3969,21 +3980,47 @@ def _alvo_da_correcao(peca):
     from processo_seletivo.recursos.domain.consequencia import etapa_publicada
     from processo_seletivo.resultados.models import ResultadoEtapa
 
-    alvo = peca.resultado_atacado
-    if alvo is not None:
-        alvo = ResultadoEtapa.vigentes.filter(
-            inscricao_id=peca.inscricao_id, etapa_id=alvo.etapa_id
+    alcancaveis = []
+    for etapa_id in _etapas_alcancaveis(peca):
+        vigente = ResultadoEtapa.vigentes.filter(
+            inscricao_id=peca.inscricao_id, etapa_id=etapa_id
         ).first()
-    if alvo is None:
-        return {"alvo": None, "forma_da_etapa": ""}
-    etapa = etapa_publicada(peca.versao, alvo.etapa_id) or {}
-    return {
-        "alvo": alvo,
-        # Vazia no ramo da Ocorrência: ali não há grandeza a fixar, e a decisão declara a
-        # consequência diretamente (FR-059).
-        "forma_da_etapa": "" if alvo.forma == "" else forma_publicada(etapa),
-        "sentidos": rotulos(etapa),
-    }
+        if vigente is None:
+            # Sem Resultado vigente não há o que corrigir naquela Etapa — e oferecê-la levaria a
+            # uma recusa que a tela poderia ter evitado (FR-013).
+            continue
+        etapa = etapa_publicada(peca.versao, etapa_id) or {}
+        alcancaveis.append(
+            {
+                "resultado": vigente,
+                "etapa_id": str(etapa_id),
+                "nome": etapa.get("name") or str(etapa_id),
+                # Vazia no ramo da Ocorrência: ali não há grandeza a fixar, e a decisão declara a
+                # consequência diretamente (FR-059).
+                "forma": "" if vigente.forma == "" else forma_publicada(etapa),
+                "sentidos": rotulos(etapa),
+            }
+        )
+    return {"alcancaveis": alcancaveis}
+
+
+def _etapas_alcancaveis(peca):
+    """As identidades de Etapa que o remédio pode alcançar, na versão que a peça cita.
+
+    Contra o Resultado, a Etapa dele. Contra a publicação, as que o **marco daquela publicação**
+    enumera: o ato divulgado ordena aquelas, e alcançar outras seria a decisão saindo do que se
+    contestou.
+    """
+    if peca.resultado_atacado_id is not None:
+        return [peca.resultado_atacado.etapa_id]
+    publicacao = peca.publicacao_atacada
+    if publicacao is None:
+        return []
+    for perfil in peca.versao.content.get("profiles") or []:
+        for marco in perfil.get("classificationMilestones") or []:
+            if str(marco.get("id")) == str(publicacao.marco_id):
+                return [item for item in marco.get("stages") or []]
+    return []
 
 
 @require_http_methods(["POST"])
@@ -4052,16 +4089,20 @@ def julgar_recurso(request, recurso_id):
     if ator is None:
         return redirect(reverse("interface:identificar"))
 
+    # A opção carrega `etapa|resultado`: a Etapa que a decisão alcança e a assinatura do Resultado
+    # vigente que a tela leu para ela. Separá-los em dois campos deixaria a assinatura descolar da
+    # Etapa quando o julgador trocasse a escolha.
+    etapa_id, _, assinatura = request.POST.get("etapa", "").partition("|")
     try:
         recursos_julgar.julgar(
             actor=ator,
             recurso_id=peca.id,
             especie=request.POST.get("especie", ""),
             motivacao=request.POST.get("motivacao", ""),
-            etapa_id=request.POST.get("etapa") or None,
-            pontuacao=request.POST.get("pontuacao") or None,
-            sentido=request.POST.get("sentido", ""),
-            assinatura_do_resultado=request.POST.get("assinatura_do_resultado", ""),
+            etapa_id=etapa_id or None,
+            pontuacao=request.POST.get(f"pontuacao-{etapa_id}") or None,
+            sentido=request.POST.get(f"sentido-{etapa_id}", ""),
+            assinatura_do_resultado=assinatura,
             idempotency_key=f"julgar-{peca.id}",
             correlation_id=str(peca.id),
         )

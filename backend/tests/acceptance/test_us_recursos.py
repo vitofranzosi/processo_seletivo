@@ -40,6 +40,7 @@ from tests.fixtures.divulgacao import (
     pontuar,
     publicar_o_ato,
 )
+from tests.fixtures.recursos_us4 import assinatura_de
 from tests.interface.conftest import identificar
 
 pytestmark = [pytest.mark.acceptance, pytest.mark.django_db(transaction=True)]
@@ -160,14 +161,15 @@ def test_o_roteiro_do_quickstart_de_ponta_a_ponta(client, seletor_ligado, certam
 
     # ---- 5. Deferir fixando a correção ------------------------------------------------------
     identificar(client, JULGADORA, ["julgador"])
+    # A opção da tela carrega `etapa|resultado`: a Etapa alcançada e a assinatura do Resultado
+    # vigente que ela leu para aquela Etapa (FR-100).
     resposta = client.post(
         reverse("interface:recurso-julgar", args=[peca.id]),
         {
             "especie": "CORRECAO_FIXADA",
             "motivacao": "O parecer não enfrentou o documento juntado na inscrição.",
-            "etapa": str(etapa),
-            "pontuacao": "82.0000",
-            "assinatura_do_resultado": str(alvo.id),
+            "etapa": f"{etapa}|{alvo.id}",
+            f"pontuacao-{etapa}": "82.0000",
         },
     )
     assert resposta.status_code == 302
@@ -228,7 +230,7 @@ def test_o_candidato_le_a_decisao_em_linguagem_institucional(client, seletor_lig
         recurso_id=peca.id,
         admitido=True,
         motivo="Tempestivo.",
-        assinatura_do_estado="",
+        assinatura_do_estado=assinatura_de(peca),
         idempotency_key="admitir-roteiro-b",
     )
     julgar(

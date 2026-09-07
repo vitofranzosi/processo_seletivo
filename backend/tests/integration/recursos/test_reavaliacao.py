@@ -85,7 +85,13 @@ def test_a_pendencia_nasce_da_decisao_e_e_derivada(peca):
     edital = peca["cenario"]["edital"]
     etapa = peca["cenario"]["etapa"]
 
-    assert peca["inscricao"].id in reavaliacoes_pendentes(edital, etapa_id=etapa)
+    # A chave é o **par**: a mesma pessoa pode ter reavaliação determinada em duas Etapas, e
+    # chavear por inscrição perderia uma delas em silêncio.
+    from processo_seletivo.comissoes.application.comissao import identificador
+
+    assert (peca["inscricao"].id, identificador(etapa)) in reavaliacoes_pendentes(
+        edital, etapa_id=etapa
+    )
     assert reavaliacao_pendente_do_par(peca["inscricao"].id, etapa) is not None
 
 

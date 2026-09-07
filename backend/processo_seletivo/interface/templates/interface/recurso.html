@@ -88,38 +88,54 @@ ler a peça, e separá-las obrigaria a decidir a espécie antes de escrever a mo
 {% endcomment %}
 <form method="post" action="{% url 'interface:recurso-julgar' peca.id %}">
   {% csrf_token %}
-  {% if alvo %}
-  <input type="hidden" name="etapa" value="{{ alvo.etapa_id }}">
-  {% comment %}
-  A assinatura do Resultado vigente lido: se ele mudar entre esta leitura e a confirmação, a
-  decisão é recusada em vez de corrigir o que já não é o vigente (FR-100).
-  {% endcomment %}
-  <input type="hidden" name="assinatura_do_resultado" value="{{ alvo.id }}">
-  {% endif %}
   <div class="campo">
     <label for="especie">Espécie da decisão</label>
     <select id="especie" name="especie" required>
       <option value="INDEFERIDO">Indeferir</option>
-      {% if alvo %}
+      {% if alcancaveis %}
       <option value="CORRECAO_FIXADA">Deferir fixando a correção</option>
       <option value="REAVALIACAO_DETERMINADA">Deferir determinando reavaliação</option>
       {% endif %}
       <option value="PROVIDENCIA_A_JUSANTE">Deferir determinando providência a jusante</option>
     </select>
   </div>
-  {% if forma_da_etapa == "PONTUADA" %}
-  <div class="campo curto">
-    <label for="pontuacao">Pontuação corrigida</label>
-    <input type="text" id="pontuacao" name="pontuacao" inputmode="decimal">
-  </div>
-  {% elif forma_da_etapa == "DECISORIA" %}
+  {% if alcancaveis %}
+  {% comment %}
+  **A Etapa alcançada é escolha do julgador, e não do objeto atacado** (D-001). Um recurso contra a
+  publicação cujo mérito é "minha nota da Etapa 2 está errada" corrige o Resultado da Etapa 2 — e
+  enquanto a tela derivava a Etapa do objeto atacado, esse recurso não tinha como produzir correção
+  nenhuma pelo canal real.
+
+  A assinatura do Resultado vigente viaja junto de cada opção: se ele mudar entre esta leitura e a
+  confirmação, a decisão é recusada em vez de corrigir o que já não é o vigente (FR-100).
+  {% endcomment %}
   <div class="campo">
-    <label for="sentido">Sentido corrigido</label>
-    <select id="sentido" name="sentido">
-      <option value="FAVORAVEL">{{ sentidos.0|default:"Favorável" }}</option>
-      <option value="DESFAVORAVEL">{{ sentidos.1|default:"Desfavorável" }}</option>
+    <label for="etapa">Etapa alcançada pela decisão</label>
+    <select id="etapa" name="etapa">
+      {% for alvo in alcancaveis %}
+      <option value="{{ alvo.etapa_id }}|{{ alvo.resultado.id }}">{{ alvo.nome }} —
+        {{ alvo.resultado.get_consequencia_display }}{% if alvo.resultado.pontuacao is not None %},
+        {{ alvo.resultado.pontuacao }}{% endif %}</option>
+      {% endfor %}
     </select>
   </div>
+  {% for alvo in alcancaveis %}
+  {% if alvo.forma == "PONTUADA" %}
+  <div class="campo curto">
+    <label for="pontuacao-{{ alvo.etapa_id }}">Pontuação corrigida — {{ alvo.nome }}</label>
+    <input type="text" id="pontuacao-{{ alvo.etapa_id }}" name="pontuacao-{{ alvo.etapa_id }}"
+           inputmode="decimal">
+  </div>
+  {% elif alvo.forma == "DECISORIA" %}
+  <div class="campo">
+    <label for="sentido-{{ alvo.etapa_id }}">Sentido corrigido — {{ alvo.nome }}</label>
+    <select id="sentido-{{ alvo.etapa_id }}" name="sentido-{{ alvo.etapa_id }}">
+      <option value="FAVORAVEL">{{ alvo.sentidos.0|default:"Favorável" }}</option>
+      <option value="DESFAVORAVEL">{{ alvo.sentidos.1|default:"Desfavorável" }}</option>
+    </select>
+  </div>
+  {% endif %}
+  {% endfor %}
   {% endif %}
   <div class="campo">
     <label for="motivacao">Motivação</label>

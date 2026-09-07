@@ -67,11 +67,28 @@ def interpor(
 
     ator = ator_do_candidato(identidade, inscricao.edital)
     with command_context() as agora:
+        # **A interposição serializa com a publicação definitiva** (spec §concorrência).
+        # Sem este bloqueio, a aferição de definitividade lê "zero recursos pendentes" enquanto uma
+        # interposição é gravada na transação vizinha, e as duas confirmam: nasce um resultado
+        # definitivo com recurso pendente dentro dele — que é exatamente o defeito que o E2E17-005
+        # registrou, agora por corrida em vez de por seletor livre.
+        #
+        # O ponto de bloqueio é o `ProcessoSeletivo`, o mesmo que emitir, publicar e consolidar já
+        # travam. Travar em outro lugar criaria uma segunda ordem de bloqueio, que é como nascem os
+        # *deadlocks* entre comandos que hoje convivem.
+        _travar_o_processo(inscricao, ator)
         reserva = reserve(
             actor=ator,
             operation=f"{OPERACAO}:{inscricao.pk}",
             key=idempotency_key,
-            payload={"fundamentacao": fundamentacao},
+            payload={
+                "fundamentacao": fundamentacao,
+                # **O pedido inteiro, e não só a razão** (FR-098). Sem o objeto na reserva, a mesma
+                # chave usada contra outro Resultado devolveria a primeira peça em vez de conflitar
+                # — e quem recorreu de duas coisas receberia o protocolo de uma só, sem saber.
+                "objeto": str(getattr(publicacao or resultado, "pk", "")),
+                "tipo": "publicacao" if publicacao is not None else "resultado",
+            },
         )
         if reserva.result_id:
             return Recurso.objects.get(pk=reserva.result_id)
@@ -131,6 +148,11 @@ def _gravar(**campos):
         ) from exc
 
 
+NAO_ADMITE = (
+    "O Edital declara que este resultado não admite recurso por esta via. Se você discorda do que "
+    "foi decidido, procure a comissão do certame."
+)
+
 FORA_DO_PRAZO = (
     "O prazo para recorrer deste resultado encerrou-se em {fecha}. Ele foi de {dias} dias "
     "corridos, contados da divulgação de {abre}, conforme o Edital."
@@ -148,6 +170,7 @@ def _janelas_pertinentes(inscricao, publicacao, resultado, agora):
     from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
     from processo_seletivo.divulgacao.application.selectors import vigente_do_marco
     from processo_seletivo.recursos.domain.janela import (
+        admite_recurso,
         declaracao_do_marco,
         janela_da_publicacao,
     )
@@ -165,17 +188,19 @@ def _janelas_pertinentes(inscricao, publicacao, resultado, agora):
             if str(resultado.etapa_id) in {str(item) for item in marco.get("stages") or []}
         ]
 
-    janelas = []
+    janelas, negados = [], []
     for marco_id in marcos:
+        declaracao = declaracao_do_marco(conteudo, marco_id)
+        negados.append(admite_recurso(declaracao) is False)
         vigente = (
             publicacao
             if publicacao is not None
             else vigente_do_marco(edital=edital, marco_id=marco_id)
         )
-        computada = janela_da_publicacao(vigente, declaracao_do_marco(conteudo, marco_id))
+        computada = janela_da_publicacao(vigente, declaracao)
         if computada is not None:
             janelas.append(computada)
-    return janelas
+    return janelas, bool(negados) and all(negados)
 
 
 def _janela(inscricao, publicacao, resultado, agora):
@@ -184,7 +209,12 @@ def _janela(inscricao, publicacao, resultado, agora):
     Nenhuma janela declarada devolve `(None, None)`, e a interposição segue: sem norma não há prazo,
     e inventá-lo seria o sistema legislando (FR-028).
     """
-    janelas = _janelas_pertinentes(inscricao, publicacao, resultado, agora)
+    janelas, so_negativas = _janelas_pertinentes(inscricao, publicacao, resultado, agora)
+    if so_negativas:
+        # **`admits: false` é norma, e não silêncio** (FR-020). Tratá-lo como ausência transformaria
+        # "este marco não admite recurso" em "cabe recurso para sempre" — o oposto do que o Edital
+        # publicou. A recusa nomeia a norma, porque é ela que a pessoa tem direito de conferir.
+        raise DomainError("appeal_window_closed", NAO_ADMITE, 422)
     if not janelas:
         return None, None
 
@@ -207,6 +237,24 @@ def _data(momento):
     from processo_seletivo.shared.tempo import ZONA
 
     return momento.astimezone(ZONA).strftime("%d/%m/%Y")
+
+
+def _travar_o_processo(inscricao, ator):
+    """Bloqueia o Processo do Edital da Inscrição, e devolve-o.
+
+    O escopo institucional entra no filtro porque o `Actor` do candidato o carrega — e porque
+    encontrar o Processo de outra unidade aqui seria alcançar o que a autorização não alcança.
+    """
+    from processo_seletivo.processos.models import ProcessoSeletivo
+
+    processo = (
+        ProcessoSeletivo.objects.select_for_update()
+        .filter(pk=inscricao.edital.processo_id, institution_scope=ator.institution_scope)
+        .first()
+    )
+    if processo is None:
+        raise DomainError("not_found", "Recurso não encontrado.", 404)
+    return processo
 
 
 def _recusar_se_superado(publicacao, resultado):
@@ -280,8 +328,18 @@ def _auditar(ator, peca, agora, correlation_id, idempotency_key):
         aggregate=peca,
         now=agora,
         correlation_id=correlation_id,
+        # **O ato, e não o conteúdo dele** (FR-094, FR-095). A trilha responde "houve interposição,
+        # por quem, quando e contra o quê"; a fundamentação continua fora, porque ela é conteúdo do
+        # juízo e copiá-la criaria uma segunda cópia do dado sensível, sob outro regime de acesso.
+        reason=f"Recurso {peca.protocolo} interposto contra {_objeto_auditavel(peca)}.",
         idempotency_key=idempotency_key,
     )
+
+
+def _objeto_auditavel(peca):
+    if peca.publicacao_atacada_id is not None:
+        return f"a publicação {peca.publicacao_atacada_id}"
+    return f"o resultado de etapa {peca.resultado_atacado_id}"
 
 
 def objeto_atacado(inscricao, tipo, identificador):
@@ -374,5 +432,7 @@ def _no_prazo(inscricao, publicacao, resultado, agora):
     """
     if resultado is None and publicacao is None:
         return False
-    janelas = _janelas_pertinentes(inscricao, publicacao, resultado, agora)
+    janelas, so_negativas = _janelas_pertinentes(inscricao, publicacao, resultado, agora)
+    if so_negativas:
+        return False
     return not janelas or any(agora <= fecha for _abre, fecha in janelas)

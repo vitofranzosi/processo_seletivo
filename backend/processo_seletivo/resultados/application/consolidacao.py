@@ -115,7 +115,16 @@ def _decisao_a_cumprir(panorama, inscricao, estado):
     para aquele par, decisão dessa espécie ainda não cumprida — e é por isso que a pergunta é feita
     ao panorama, que já a respondeu para a Etapa inteira numa consulta só, e não ao banco por linha.
     """
-    return panorama["reavaliacoes"].get(inscricao.id) if estado == REAVALIACAO else None
+    if estado != REAVALIACAO:
+        return None
+    return next(
+        (
+            decisao
+            for (identidade, _etapa), decisao in panorama["reavaliacoes"].items()
+            if identidade == inscricao.id
+        ),
+        None,
+    )
 
 
 def _conclusao_a_consolidar(panorama, inscricao, cumprindo):

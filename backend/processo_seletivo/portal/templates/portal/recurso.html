@@ -50,8 +50,13 @@ escrita é decisão que ninguém consegue discutir (FR-047).
 A espécie chega em português institucional, nunca como código: "Recurso deferido — o resultado foi
 corrigido" é o que a pessoa precisa entender (FR-048, SC-021).
 {% endcomment %}
+{% comment %}
+**Quem decidiu**, e não só o quê: uma decisão sem autor não é ato administrativo, é um texto que
+apareceu. Quem julga não é quem avalia — o nome do avaliador continua fora da tela do candidato, e
+é essa a fronteira da FR-093.
+{% endcomment %}
 <p class="posicao"><strong>{{ recurso.decisao.especie_rotulo }}</strong>
-  · {{ recurso.decisao.quando|date:"d/m/Y" }}</p>
+  · decidido por {{ recurso.decisao.quem }} em {{ recurso.decisao.quando|date:"d/m/Y" }}</p>
 <p class="meta">{{ recurso.decisao.motivacao|linebreaksbr }}</p>
 {% endif %}
 
