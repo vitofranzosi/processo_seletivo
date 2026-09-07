@@ -147,6 +147,9 @@ def test_o_envio_depois_do_prazo_recebe_a_recusa_que_nomeia_a_norma(
     assert "O prazo para recorrer deste resultado encerrou-se em" in tela
     assert "5 dias corridos" in tela, "a norma que fixou o prazo precisa ser citada"
     assert len(INSTANTE_CURTO.findall(tela)) >= 2, "a abertura e o encerramento, os dois"
+    # **O encerramento com o instante**, como a recusa irmã da definitividade já faz: a janela
+    # fecha às 23h59, e quem enviou às 23h50 do próprio dia lê uma data que parece a de hoje.
+    assert "23h59" in tela, "o encerramento é instante exato, e não só data (FR-024)"
     assert not Recurso.objects.filter(inscricao=inscricao).exists()
 
 

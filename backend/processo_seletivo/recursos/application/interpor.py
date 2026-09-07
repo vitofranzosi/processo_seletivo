@@ -234,7 +234,7 @@ def _janela(inscricao, publicacao, resultado, agora):
     dias = (fecha.date() - abre.astimezone(fecha.tzinfo).date()).days
     raise DomainError(
         "appeal_window_closed",
-        FORA_DO_PRAZO.format(fecha=_data(fecha), dias=dias, abre=_data(abre)),
+        FORA_DO_PRAZO.format(fecha=_instante(fecha), dias=dias, abre=_data(abre)),
         422,
     )
 
@@ -243,6 +243,19 @@ def _data(momento):
     from processo_seletivo.shared.tempo import ZONA
 
     return momento.astimezone(ZONA).strftime("%d/%m/%Y")
+
+
+def _instante(momento):
+    """O encerramento com a hora, como a recusa irmã da definitividade já escreve.
+
+    **A abertura é data; o encerramento é instante**, e a assimetria é do que cada um responde. A
+    abertura diz de quando o prazo correu — a hora ali é ruído, porque ninguém precisava agir
+    naquele minuto. O encerramento diz até quando, e a janela fecha às 23h59: quem enviou às 23h50
+    do próprio dia leria uma data igual à de hoje e não entenderia por que foi recusado (FR-024).
+    """
+    from processo_seletivo.shared.tempo import ZONA
+
+    return momento.astimezone(ZONA).strftime("%d/%m/%Y às %Hh%M")
 
 
 def _travar_o_processo(inscricao, ator):

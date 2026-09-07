@@ -529,3 +529,14 @@ achando que era acidente:
 **Alterações de teste que a convergência exigiu**, na mesma disciplina da T121: as fixtures que
 passavam assinatura de estado vazia passam a calculá-la, como a tela faz — a ausência deixou de ser
 dispensa e virou recusa. Nenhum teste foi removido.
+
+---
+
+## Phase 9: Convergence
+
+- [X] T140 Imprimir o encerramento da janela com o instante exato na recusa `appeal_window_closed`, em `backend/processo_seletivo/recursos/application/interpor.py`, como a recusa irmã da definitividade já faz per FR-024, FR-026 (partial)
+
+  **A abertura continua sendo data, e o encerramento passa a ser instante.** A assimetria é do que
+  cada um responde: a abertura diz de quando o prazo correu, e a hora ali é ruído; o encerramento
+  diz até quando, e a janela fecha às 23h59 — quem enviou às 23h50 do próprio dia lia uma data
+  igual à de hoje. Coberto em `backend/tests/portal/test_janela_na_tela.py`.

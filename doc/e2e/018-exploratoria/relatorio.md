@@ -320,7 +320,7 @@ Percorrido de novo no `ps018_prazo`, onde a janela se encerrou em 02/09. O envio
 candidata linka — agora responde:
 
 > **Recorrer**
-> O prazo para recorrer deste resultado encerrou-se em **02/09/2026**. Ele foi de **5 dias
+> O prazo para recorrer deste resultado encerrou-se em **02/09/2026 às 23h59**. Ele foi de **5 dias
 > corridos**, contados da divulgação de **28/08/2026**, conforme o Edital.
 > Voltar ao acompanhamento
 
@@ -393,3 +393,13 @@ Conferido no navegador, no `ps018_antigo`, cuja divulgação foi feita **antes**
 
 A página continua nomeando a causa — a retaguarda de derivação ao vivo funcionando sobre uma
 publicação que não tem a chave nova.
+
+### C6 — o encerramento passa a ser instante, e não só data
+
+Achado da checagem cruzada final, e o menor de todos: a recusa imprimia `02/09/2026`, enquanto a
+recusa irmã da definitividade já imprimia `12/09/2026 às 23h59`. A janela fecha às 23h59, e quem
+enviasse às 23h50 do próprio dia leria uma data igual à de hoje sem entender por que foi recusado.
+
+A abertura continua sendo data, e a assimetria é do que cada uma responde: a abertura diz de quando
+o prazo correu — a hora ali é ruído, porque ninguém precisava agir naquele minuto —, e o
+encerramento diz até quando.
