@@ -85,12 +85,31 @@ def _identificacao(composicao, cabecalho):
             ("PERFIL", cabecalho["perfil"]),
             ("MARCO", cabecalho["marco"]),
             ("NATUREZA", cabecalho["natureza_rotulo"]),
+            # **A causa da retificação, quando existe** (FR-088). Sem ela, o documento de uma
+            # divulgação que corrige outra afirmava uma ordem nova sem dizer que corrigia nada —
+            # e a página, que lê os mesmos bytes, já dizia.
+            ("RETIFICAÇÃO", _retificacao(cabecalho)),
             ("ATO DE ORIGEM", f"emitido em {_instante(cabecalho['ato']['emitido_em'])}"),
             ("PUBLICADO EM", _instante(cabecalho["publicado_em"])),
         ):
             if valor:
                 _par(composicao, rotulo, valor)
         composicao.espaco(4.0)
+
+
+def _retificacao(cabecalho):
+    """ "Em razão do julgamento do recurso REC-…, decidido em DD/MM/AAAA às HHhMM" — ou vazio.
+
+    Vazio some da moldura: `_identificacao` só imprime o par que tem valor, e uma linha
+    "RETIFICAÇÃO —" numa primeira divulgação afirmaria que houve o que não houve.
+    """
+    causa = cabecalho.get("retificacao") or {}
+    if not causa.get("recurso"):
+        return ""
+    return (
+        f"Em razão do julgamento do recurso {causa['recurso']}, "
+        f"decidido em {_instante(causa['quando'])}"
+    )
 
 
 def _par(composicao, rotulo, valor):

@@ -18,6 +18,7 @@ from django.urls import reverse
 from processo_seletivo.divulgacao.models import PublicacaoResultado
 from processo_seletivo.recursos.application.julgar import julgar
 from processo_seletivo.recursos.models import DecisaoRecurso
+from processo_seletivo.resultados.models import ResultadoEtapa
 from tests.conftest import ator_institucional
 from tests.fixtures.divulgacao import emitir, publicar_o_ato
 from tests.fixtures.recursos_us4 import cenario_julgavel, julgador
@@ -111,3 +112,79 @@ def test_a_primeira_publicacao_do_marco_nao_diz_que_corrige(
 
 def _gestor():
     return ator_institucional("carlos", "comissao:gerir")
+
+
+@pytest.fixture
+def corrigida(gestor, api_client, manager_headers, process_payload):
+    """A correção fixada — a espécie que **não** cita decisão e mesmo assim retifica a divulgação.
+
+    A caminhada da T125 chegou aqui pela porta da frente: recurso deferido com correção fixada, ato
+    sucessor emitido, definitiva publicada sobre ele — e a página dizia só "Resultado definitivo".
+    A causa era derivada da `CitacaoDeDecisao`, que só a providência a jusante produz; a correção
+    fixada e a reavaliação determinada corrigem o resultado sem citar nada, e a retificação delas
+    ficava anônima.
+    """
+    from decimal import Decimal
+
+    peca = cenario_julgavel(
+        gestor, api_client, manager_headers, process_payload, seed=131, codigo="0831"
+    )
+    cenario = peca["cenario"]
+    alvo = ResultadoEtapa.vigentes.get(
+        inscricao=peca["recurso"].inscricao, etapa_id=cenario["etapa"]
+    )
+    decisao, _ = julgar(
+        actor=julgador(),
+        recurso_id=peca["recurso"].id,
+        especie=DecisaoRecurso.Especie.CORRECAO_FIXADA,
+        motivacao="O documento juntado na inscrição não foi considerado.",
+        etapa_id=str(cenario["etapa"]),
+        pontuacao=Decimal("82.0000"),
+        assinatura_do_resultado=str(alvo.id),
+        idempotency_key="correcao-retificada",
+    )
+    sucessor = emitir(
+        cenario,
+        _gestor(),
+        chave="emitir-corrigida",
+        motivo="Cumprimento da decisão que corrigiu a pontuação.",
+    )
+    nova = publicar_o_ato(
+        cenario,
+        natureza="DEFINITIVA",
+        chave="publicar-corrigida",
+        ato=sucessor,
+        declaracao="O prazo recursal encerrou-se sem interposição.",
+    )
+    return {**peca, "decisao": decisao, "nova": nova}
+
+
+def test_a_correcao_fixada_tambem_apresenta_a_causa(client, corrigida):
+    """FR-088 não fala em citação: fala na **decisão que motivou**, qualquer que seja a espécie."""
+    corpo = abrir(client, corrigida["nova"])
+
+    assert "retificado em" in corpo.lower()
+    assert corrigida["recurso"].protocolo in corpo
+
+
+def test_a_causa_aparece_tambem_no_documento(retificada):
+    """FR-088 diz "na página **e no documento**" — e o documento calava (T125).
+
+    Os dois leem os mesmos bytes, e é daí que vem a correspondência entre eles (FR-064): a causa é
+    decidida no ato de publicar e congelada no conteúdo, não derivada de novo na renderização.
+    """
+    from tests.interface.test_fluxo import texto_de_pdf_bytes
+
+    texto = texto_de_pdf_bytes(retificada["nova"].documento.bytes)
+
+    assert "RETIFICAÇÃO" in texto
+    assert retificada["recurso"].protocolo in texto
+
+
+def test_a_primeira_divulgacao_nao_traz_a_linha_de_retificacao(retificada):
+    """Uma linha "RETIFICAÇÃO" na primeira divulgação afirmaria o que não houve."""
+    from tests.interface.test_fluxo import texto_de_pdf_bytes
+
+    texto = texto_de_pdf_bytes(retificada["publicacao"].documento.bytes)
+
+    assert "RETIFICAÇÃO" not in texto

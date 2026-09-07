@@ -202,7 +202,15 @@ def publicar_resultado(
         )
 
         conteudo = conteudo_divulgado(
-            projecao, natureza=natureza, publicado_em=agora, signatario=assinante
+            projecao,
+            natureza=natureza,
+            publicado_em=agora,
+            signatario=assinante,
+            # **A causa é congelada no ato de publicar** (FR-088). Divulgação que sucede outra e
+            # nasce de decisão de recurso é apresentada por ela — na página e no documento, que
+            # leem os mesmos bytes. Derivá-la na leitura faria uma decisão posterior reescrever a
+            # frase de um ato já praticado.
+            retificacao=_causa_da_retificacao(ato, anterior),
         )
         bytes_do_conteudo = canonical_bytes(conteudo)
         try:
@@ -320,6 +328,18 @@ def _declaracao_exigida(*, edital, marco_id, natureza, texto):
             DECLARACAO_EXIGIDA, MENSAGENS[DECLARACAO_EXIGIDA], STATUS[DECLARACAO_EXIGIDA]
         )
     return "" if computavel else texto
+
+
+def _causa_da_retificacao(ato, anterior):
+    """A decisão de recurso que motivou esta divulgação sucessora — serializável, ou `None`."""
+    if anterior is None:
+        return None
+    from processo_seletivo.recursos.application.selectors import causa_da_correcao
+
+    causa = causa_da_correcao(ato)
+    if causa is None:
+        return None
+    return {"recurso": causa["recurso"], "quando": causa["quando"].isoformat()}
 
 
 def _gravar_documento(publicacao, conteudo):

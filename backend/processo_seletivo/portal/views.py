@@ -1372,26 +1372,24 @@ def recurso(request, recurso_id):
 def _correcao_da_publicacao(publicacao):
     """Se esta publicação corrige outra por força de recurso, o que a motivou (FR-088).
 
-    A resposta vem da cadeia: existe publicação anterior, e o ato desta cita decisão de recurso. É
-    a mesma derivação que a natureza e a vigência já usam — e por isso não há estado a manter
+    A resposta vem da cadeia — existe publicação anterior, e o ato desta corrige por decisão de
+    recurso —, e é a mesma derivação que a natureza e a vigência já usam: não há estado a manter
     coerente com nada.
+
+    **A causa congelada tem preferência**, e é ela que o documento imprime: o que a página diz e o
+    que o documento diz precisam ser a mesma frase, e ela foi decidida no ato de publicar. A
+    derivação ao vivo continua aqui para as publicações anteriores a este congelamento, que não
+    têm a chave — apagá-la faria a causa sumir de divulgações já feitas.
     """
-    from processo_seletivo.classificacao.models import CitacaoDeDecisao
+    from processo_seletivo.recursos.application.selectors import causa_da_correcao
 
     if publicacao.publicacao_anterior_id is None:
         return None
-    citacao = (
-        CitacaoDeDecisao.objects.filter(ato_id=publicacao.ato_id)
-        .select_related("decisao", "decisao__recurso")
-        .order_by("decisao__decidido_em")
-        .first()
-    )
-    if citacao is None:
-        return None
-    return {
-        "recurso": citacao.decisao.recurso.protocolo,
-        "quando": citacao.decisao.decidido_em,
-    }
+    conteudo = json.loads(bytes(publicacao.conteudo_publico).decode("utf-8"))
+    congelada = (conteudo.get("cabecalho") or {}).get("retificacao")
+    if congelada:
+        return congelada
+    return causa_da_correcao(publicacao.ato)
 
 
 def _documentos(conteudo, inscricao):
