@@ -337,27 +337,54 @@ vínculo de auditoria, e não mecanismo.
 **A decisão nomeia a providência; ela não a executa.** Calcular, conferir e emitir continuam sendo
 atos de quem tem a autoridade da 015 e da 017. A cascata é de bloqueio (D-007, D-008).
 
-**O cumprimento é um fato derivado, e não um registro novo.** A pendência da quarta espécie se
-fecha quando a publicação deixa de divulgar o ato que a decisão reconheceu viciado:
+**O cumprimento é declarado pelo ato que o executa, e não por um ato próprio.** A pendência da
+quarta espécie se fecha quando o **ato de ordenação que se publica cita a decisão** que a
+determinou:
 
 ```text
-pendente   →  o ato publicado ainda é o que a decisão reconheceu viciado
-cumprida   →  a publicação vigente divulga ato diferente
+cumprida, para um marco  →  o ato que se vai publicar cita a decisão
+                            OU já existe, naquele marco, ato citante que foi publicado
+pendente                 →  nenhuma das duas
 ```
 
-Os três remédios desembocam no mesmo fato observável: Retificação obsoleta o ato e obriga a emitir
-outro; superação de Resultado obsoleta o ato e obriga a emitir outro; erro de cálculo se corrige
-emitindo outro. E **emitir ato sucessor está sempre disponível**, de modo que a pendência nunca vira
-beco — a recusa nomeia o mesmo caminho que a 017 já nomeia, e que a E2E-017 aprovou.
+**Citar é intenção; publicar é o remédio.** Um ato pode citar a decisão e nunca ser publicado — por
+ficar obsoleto antes disso, por exemplo. Enquanto nenhum ato citante for publicado, a providência
+continua pendente, e **qualquer sucessor do marco pode citar a decisão de novo**. É essa recitação
+que impede o único beco possível deste desenho.
+
+**O segundo ramo é o remédio já executado e divulgado.** Publicado o ato citante, um sucessor
+posterior emitido por razão alheia não reabre a pendência — do contrário, toda emissão futura
+exigiria recitar decisões antigas.
+
+**A apuração é por marco.** Uma decisão cuja providência é normativa alcança todos os marcos que a
+regra retificada governa, e cada um precisa do seu próprio ato citante publicado: o trabalho feito
+num marco não libera a definitiva de outro.
+
+**A citação é declarada por quem emite o ato sucessor**, entre as decisões pendentes daquele marco,
+e é proveniência do próprio ato — do mesmo tipo de `motivo_da_sucessao`, que a 015 já exige. Ela não
+tem autoridade, instante nem motivo próprios: quem a declara é quem emite, no ato de emitir.
+
+**Por que não basta "publicar ato diferente".** Uma redação anterior desta decisão dava a pendência
+por cumprida quando a publicação vigente divulgasse qualquer ato diferente do reconhecido viciado.
+Isso quitaria a providência **por acidente**: um ato sucessor emitido por razão alheia — uma
+Retificação que mudou um peso, um Resultado consolidado tarde — encerraria a pendência sem que
+ninguém tivesse corrigido o vício que a decisão reconheceu. O vínculo precisa ser causal, e causal é
+o que a citação declara.
+
+**A regra não é circular, e não vira beco.** A publicação que executa o remédio **é** a que cita a
+decisão, e por isso não é impedida por ela. Emitir ato sucessor citando a decisão está sempre
+disponível, e a citação pode ser repetida quantas vezes for preciso enquanto nenhum ato citante for
+publicado. Um mesmo ato pode citar mais de uma decisão pendente, de modo que dois deferimentos sobre
+o mesmo marco se resolvem numa emissão só.
 
 Disso decorrem três coisas que a spec **não** cria, e é deliberado:
 
-- **nenhum registro de cumprimento.** Declarar por ato o que uma comparação responde acrescentaria
-  entidade, autoridade e tela — e um passo humano que, esquecido, travaria o marco por omissão.
-  É a D-010 aplicada: pendência calculável não vira coluna;
+- **nenhum ato de cumprimento com autoridade própria.** Um passo humano separado — alguém declarando,
+  depois, que a providência foi cumprida — acrescentaria autoridade, tela e a possibilidade de
+  travar o marco por esquecimento. A citação vive **dentro** do ato que executa, e não ao lado dele;
 - **nenhuma espécie estruturada de providência.** O vocabulário só se justificaria se o cumprimento
-  fosse verificado por espécie, e ele não é. A providência é fundamentação escrita, como toda
-  motivação desta feature;
+  fosse verificado por espécie, e ele não é: é verificado pela citação. A providência é fundamentação
+  escrita, como toda motivação desta feature;
 - **nenhum ato de impossibilidade.** Removido o marco por Retificação, a 017 já recusa qualquer
   publicação daquele marco por razão própria e anterior — não há definitividade a desbloquear, e a
   pendência é inócua. Nos demais casos há sempre ato sucessor a emitir.
@@ -382,7 +409,7 @@ A situação exibida deriva de quais atos existem, e não de coluna a manter coe
 | aguardando julgamento | admitido, sem decisão |
 | decidido | decisão existente |
 | reavaliação determinada, não cumprida | decisão da terceira espécie, sem Resultado sucessor do par posterior a ela |
-| providência determinada, não cumprida | decisão da quarta espécie, com o ato viciado ainda sendo o publicado |
+| providência determinada, não cumprida | decisão da quarta espécie que, para o marco pertinente, nenhum ato publicado cita |
 
 É o mesmo idioma de `PENDENTE`/`CONSOLIDADO` na 013 e de vigência na 015 e na 017: **pendência
 calculável não vira coluna porque facilita uma tela.** Os dois atos são imutáveis e append-only, como
@@ -478,10 +505,14 @@ Três pontos que a primeira redação deixou inconsistentes ou resolvidos por me
   prejudicado pelo conteúdo corrigido recorre da nova publicação como de qualquer objeto vigente.
   Vale a regra geral, sem exceção, e o pior caso é uma espera (D-008).
 - Q: Que fato encerra a pendência da quarta espécie de decisão, cujo remédio é ato de outra
-  autoridade? → A: **Um fato derivado**: a publicação vigente do marco divulgar ato diferente do que
-  a decisão reconheceu viciado. Publicar como definitivo o mesmo ato viciado é impedido; publicar
-  ato diferente cumpre a providência. Emitir ato sucessor está sempre disponível, então a pendência
-  nunca vira beco (D-009, FR-089).
+  autoridade? → A: **Um fato derivado, sem registro de cumprimento com autoridade própria.** A
+  primeira redação o fez derivar de "a publicação vigente divulga ato diferente", e a revisão do
+  plano mostrou que isso quitaria a providência **por acidente** — um ato sucessor emitido por razão
+  alheia encerraria a pendência sem que ninguém tivesse corrigido o vício. O vínculo passa a ser
+  causal: o ato de ordenação **cita** a decisão, e a citação é declarada por quem emite o ato
+  sucessor, como proveniência dele. A análise cruzada corrigiu a segunda metade: citar não basta —
+  a providência só está cumprida quando um ato citante é **publicado**, a apuração é **por marco**, e
+  a citação pode ser repetida enquanto nenhum ato citante o tiver sido (D-009, FR-089, FR-112).
 - Q: A quarta espécie precisa de espécie estruturada de providência e de ato terminal de
   impossibilidade? → A: **Nenhum dos dois.** O cumprimento não é verificado por espécie, e a
   impossibilidade não produz beco — marco removido já impede qualquer publicação daquele marco pela
@@ -729,9 +760,9 @@ passa a ser permitida.
    exige nova declaração expressa de encerramento do prazo e é apresentada pela causa — resultado
    definitivo, retificado em tal data em razão do julgamento do recurso.
 7. **Dado** um deferimento com providência a jusante, **quando** a autoridade tenta publicar como
-   definitivo **o mesmo ato** que a decisão reconheceu viciado, **então** a operação é recusada
-   nomeando a decisão e o caminho; publicado um ato sucessor, a pendência deixa de existir sem que
-   ninguém precise declarar que ela foi cumprida.
+   definitivo um ato que **não cita** a decisão, **então** a operação é recusada nomeando a decisão e
+   o caminho; emitido o ato sucessor que a cita, a mesma publicação passa — e um ato sucessor
+   emitido por razão alheia não cumpre a providência.
 8. **Dado** a publicação vigente, **quando** alguém a abre, **então** ela diz que é a vigente — e
    não apenas a anterior diz que foi sucedida.
 
@@ -1042,11 +1073,17 @@ acaso.
 - **FR-087**: O sistema MUST NOT criar natureza nova para a definitiva que corrige outra definitiva.
 - **FR-088**: A publicação definitiva que sucede outra definitiva MUST ser apresentada pela causa,
   em texto derivado da cadeia e da decisão que a motivou, na página e no documento.
-- **FR-089**: A providência a jusante MUST ser considerada cumprida quando a publicação vigente do
-  marco divulgar ato diferente do que a decisão reconheceu viciado. Publicar como `DEFINITIVA` esse
-  mesmo ato MUST ser impedido; publicar ato diferente MUST NOT ser impedido por essa pendência. O
-  sistema MUST NOT criar registro de cumprimento, espécie estruturada de providência nem ato de
-  impossibilidade de cumprimento (D-009).
+- **FR-089**: A providência a jusante MUST ser considerada cumprida, **para um marco**, quando o ato
+  de ordenação que se vai publicar citar a decisão que a determinou, **ou** quando já existir,
+  naquele marco, ato citante que tenha sido publicado. Publicar como `DEFINITIVA` sem que uma das
+  duas condições valha MUST ser impedido.
+- **FR-112**: A citação MUST nascer com o `AtoDeOrdenacao`, declarada por quem o emite entre as
+  decisões pendentes do marco, e MUST ser conferida como pertinente ao Perfil e ao Marco daquele ato
+  — não apenas ao Edital. Um mesmo ato MUST poder citar mais de uma decisão, e uma mesma decisão
+  MUST poder ser citada por mais de um ato: enquanto nenhum ato citante for publicado, um sucessor
+  MUST poder recitá-la, e uma decisão pertinente a mais de um marco MUST ser citada em cada um. O
+  sistema MUST NOT criar ato de cumprimento com autoridade própria, espécie estruturada de
+  providência nem ato de impossibilidade de cumprimento (D-009).
 - **FR-090**: A publicação vigente MUST dizer que é a vigente, e não apenas a anterior dizer que foi
   sucedida.
 - **FR-091**: A 018 MUST NOT alterar retroativamente publicação histórica nem regenerar documento já
@@ -1243,9 +1280,9 @@ vocabulário, entidade, autoridade e tela para verificar o que uma comparação 
   sem nenhuma recusa causada pela ausência da declaração de janela.
 - **SC-017** — 100% das tentativas de publicar como definitivo com recurso pendente, reavaliação
   pendente, providência pendente, janela aberta, ato obsoleto ou pendência reaberta são recusadas, e
-  a publicação preliminar permanece possível em todas elas. Publicado um ato diferente do que a
-  decisão reconheceu viciado, a pendência da providência deixa de existir sem que ninguém declare
-  cumprimento algum.
+  a publicação preliminar permanece possível em todas elas. Publicado um ato que **cita** a decisão, a pendência da
+  providência deixa de existir sem que ninguém pratique ato de cumprimento; publicado um ato que não
+  a cita, ela permanece.
 - **SC-018** — Sem janela estruturada, nenhuma publicação definitiva existe sem declaração expressa
   de encerramento do prazo, com autor, instante e texto consultáveis.
 - **SC-019** — A publicação definitiva que corrige outra definitiva é apresentada pela causa, na
