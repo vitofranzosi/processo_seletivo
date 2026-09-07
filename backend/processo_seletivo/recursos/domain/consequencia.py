@@ -18,9 +18,10 @@ mesma consequência para a mesma nota — duas tabelas-verdade divergiriam no pr
 """
 
 from dataclasses import dataclass
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
 from processo_seletivo.avaliacoes.domain.formas import Forma
+from processo_seletivo.avaliacoes.domain.pontuacao import normalizar_sentido, validar
 from processo_seletivo.avaliacoes.domain.previsao import forma_publicada
 from processo_seletivo.resultados.domain.regra import consequencia as consequencia_da_regra
 from processo_seletivo.resultados.domain.regra import impedimento_da_regra
@@ -74,33 +75,42 @@ def derivar(*, versao, etapa_id, pontuacao=None, sentido=""):
         raise DomainError(INCOMPLETA, f"A Etapa não tem regra suficiente: {impedimento[1]}.", 422)
 
     forma = forma_publicada(etapa)
-    conclusao = _conclusao(forma, pontuacao, sentido)
+    conclusao = _conclusao(forma, pontuacao, sentido, etapa)
     efeito, motivo = consequencia_da_regra(etapa, conclusao)
     return efeito, motivo, conclusao
 
 
-def _conclusao(forma, pontuacao, sentido):
+def _conclusao(forma, pontuacao, sentido, etapa):
+    """O que o julgador fixou, validado **pelas mesmas regras que o avaliador enfrenta**.
+
+    A ausência é recusada aqui, e com código próprio: decisão sem a conclusão que a forma exige não
+    é valor inválido — é decisão que saiu pela metade, e a mensagem precisa dizer isso.
+
+    O **valor**, existindo, não tem validação própria: ele passa por
+    `avaliacoes.domain.pontuacao.validar`, que é a mesma porta da conclusão de Avaliação. Ter duas
+    validações para o mesmo campo produz, mais cedo ou mais tarde, um Resultado que uma porta
+    aceita e a outra recusaria — e a porta do recurso grava sob decisão irreversível. A revisão do
+    PR mostrou o que a segunda validação deixava passar: negativo, `Infinity`, casas em excesso e
+    valor acima da máxima publicada; `NaN` nem recusava — estourava.
+
+    O mesmo vale para o **sentido**: `normalizar_sentido` é quem sabe que o enum tem dois valores e
+    que o rótulo publicado não é um deles (FR-118).
+    """
     if forma == Forma.DECISORIA:
-        if not sentido:
+        if not (sentido or "").strip():
             raise DomainError(
                 INCOMPLETA, "Esta Etapa é decisória: a correção precisa fixar o sentido.", 422
             )
-        return Conclusao(forma=str(forma), pontuacao=None, sentido=str(sentido))
-    if pontuacao is None:
+        return Conclusao(
+            forma=str(forma),
+            pontuacao=None,
+            sentido=normalizar_sentido(sentido, exigir=True),
+        )
+    if pontuacao is None or str(pontuacao).strip() == "":
         raise DomainError(
             INCOMPLETA, "Esta Etapa é pontuada: a correção precisa fixar a pontuação.", 422
         )
-    try:
-        valor = Decimal(str(pontuacao))
-    except InvalidOperation as exc:
-        # **Recusa, e não erro de servidor.** O que chega aqui é texto digitado por quem julga, e
-        # texto que não é número é pedido malformado — não defeito do sistema. Deixar a exceção
-        # subir devolvia 500 na tela de um julgamento, sem motivo escrito e apagando a motivação
-        # que a pessoa já tinha redigido.
-        raise DomainError(
-            INCOMPLETA, f"'{pontuacao}' não é uma pontuação: informe um número.", 422
-        ) from exc
-    return Conclusao(forma=str(forma), pontuacao=valor, sentido="")
+    return Conclusao(forma=str(forma), pontuacao=validar(pontuacao, etapa), sentido="")
 
 
 __all__ = ["INCOMPLETA", "Conclusao", "derivar", "etapa_publicada"]

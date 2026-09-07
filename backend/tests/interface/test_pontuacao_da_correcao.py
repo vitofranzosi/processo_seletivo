@@ -11,6 +11,10 @@ Duas correções, e a segunda é a que importa mais:
 vírgula      é o separador decimal do país, e a tela usa exatamente ele — tem de ser aceita
 disparate    "abc" recusa com motivo, na página, preservando a motivação escrita — nunca 500
 ```
+
+**A mensagem é a canônica**, e não uma escrita aqui: desde a convergência do PR a correção fixada
+passa pela mesma `avaliacoes.domain.pontuacao.validar` que a conclusão de Avaliação enfrenta. Ter
+duas frases para a mesma recusa é o sintoma de ter duas validações — que é o defeito de fundo.
 """
 
 import re
@@ -83,6 +87,6 @@ def test_pontuacao_que_nao_e_numero_recusa_na_pagina(client, admitida):
 
     assert resposta.status_code == 422
     corpo = conteudo(resposta)
-    assert "não é uma pontuação" in corpo
+    assert "A pontuação precisa ser um número." in corpo
     assert motivacao in corpo, "recusar apagando o que foi escrito é pedir para escrever de novo"
     assert not DecisaoRecurso.objects.filter(recurso=peca).exists()
