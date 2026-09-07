@@ -58,6 +58,20 @@ def test_quem_elabora_alcanca_o_artefato_do_rascunho(client, seletor_ligado, edi
 
 @pytest.mark.authorization
 @pytest.mark.django_db(transaction=True)
+def test_quem_homologa_alcanca_o_artefato_do_rascunho(client, seletor_ligado, edital_em_elaboracao):
+    """A outra metade da FR-017: sem este caminho, homologar é aprovar o que não se pode abrir."""
+    anexo = criar_anexo(edital_em_elaboracao, rotulo="ANEXO I — REQUERIMENTO", order=1)
+    identificar(client, "helena.homologadora", ["homologador"])
+
+    resposta = client.get(
+        reverse("interface:anexo-arquivo", args=[edital_em_elaboracao.id, anexo.id])
+    )
+
+    assert resposta.status_code == 200
+
+
+@pytest.mark.authorization
+@pytest.mark.django_db(transaction=True)
 def test_sem_identificacao_o_artefato_do_rascunho_nao_e_entregue(
     client, seletor_ligado, edital_em_elaboracao
 ):
@@ -69,3 +83,27 @@ def test_sem_identificacao_o_artefato_do_rascunho_nao_e_entregue(
 
     assert resposta.status_code in (302, 403, 404)
     assert resposta.status_code != 200
+
+
+@pytest.mark.authorization
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("papel", ["publicador", "gestor", "auditor"])
+def test_ator_autenticado_sem_a_capacidade_nao_recebe_os_bytes(
+    client, seletor_ligado, edital_em_elaboracao, papel
+):
+    """O achado que a primeira redação deixou passar (FR-017).
+
+    A view conferia **só** identidade e escopo institucional, e escopo diz de quem é o Edital, não
+    quem pode vê-lo antes de ele existir para o público. Qualquer identidade da casa — inclusive
+    quem publica, quem gere o processo e quem audita — recebia o rascunho.
+
+    A recusa é 404, e não 403: dizer "existe, mas você não pode" já entregaria que existe.
+    """
+    anexo = criar_anexo(edital_em_elaboracao, rotulo="ANEXO I — REQUERIMENTO", order=1)
+    identificar(client, f"ator.{papel}", [papel])
+
+    resposta = client.get(
+        reverse("interface:anexo-arquivo", args=[edital_em_elaboracao.id, anexo.id])
+    )
+
+    assert resposta.status_code == 404

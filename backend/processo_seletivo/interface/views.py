@@ -636,6 +636,13 @@ def compor(request, edital_id):
     return redirect(reverse("interface:compor-etapa", args=[edital_id, CHAVES_ETAPA[0]]))
 
 
+# Quem pode ler o artefato de um Edital que ainda não foi publicado (020, FR-017). É a lista da
+# regra, e não a dos papéis que "fariam sentido": `edital:publicar` não está aqui porque a FR-017
+# nomeia elaboração, revisão e homologação, e alargar a regra por conveniência é como uma fronteira
+# de autorização se perde.
+LEITURA_DO_RASCUNHO = ("edital:elaborar", "edital:submeter", "edital:homologar")
+
+
 @require_http_methods(["POST"])
 def anexos_acao(request, edital_id):
     """As cinco operações sobre a coleção de Anexos, numa rota só (020, FR-015).
@@ -695,14 +702,26 @@ def anexos_acao(request, edital_id):
 def anexo_do_rascunho(request, edital_id, anexo_id):
     """Os bytes do anexo antes da publicação, para quem elabora, revisa e homologa (FR-017, FR-018).
 
-    Conferir bytes que não se pode abrir não é conferir. O artefato de Edital não publicado não tem
-    endereço público, e este endereço não é público: exige ator no escopo institucional do Edital.
+    Conferir bytes que não se pode abrir não é conferir. Mas o artefato de Edital não publicado
+    **não é conteúdo público**, e estar autenticado no mesmo escopo institucional não basta: a
+    primeira redação desta view conferia só isso, e entregava o rascunho a gestor, publicador,
+    auditor e a qualquer identidade da casa. Escopo diz **de quem é** o Edital; capacidade diz
+    **quem pode** vê-lo antes de ele existir para o público.
+
+    As três capacidades são as que a FR-017 nomeia, e nenhuma a mais. `edital:publicar` fica de
+    fora porque a regra escrita diz "elaboração, revisão ou homologação" — incluí-la é decisão de
+    produto, e não de implementação.
+
+    A recusa é **404**, e não 403: dizer "existe, mas você não pode" já entregaria que existe, que
+    é a mesma régua de `exigir_titularidade` na `009`.
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
         return redirect(reverse("interface:identificar"))
     edital = obter_edital(actor=ator, edital_id=edital_id)
     if edital is None:
+        raise Http404
+    if not any(ator.can(capacidade) for capacidade in LEITURA_DO_RASCUNHO):
         raise Http404
     anexo = edital.anexos.select_related("artefato").filter(pk=anexo_id).first()
     if anexo is None:

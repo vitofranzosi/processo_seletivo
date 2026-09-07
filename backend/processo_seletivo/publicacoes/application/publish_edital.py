@@ -295,17 +295,45 @@ def congelar_artefatos(conteudo, *, now):
     uma Retificação que reverte outra republica artefato que já é público. O filtro por
     `congelado_em__isnull=True` torna a operação idempotente — e é também o que impede a trigger de
     recusar a escrita.
+
+    **Antes de congelar, confere** (FR-026). A primeira redação só executava o `UPDATE`, e com isso
+    um artefato ausente passaria em silêncio — a versão publicada citando bytes que ninguém tem — e
+    um artefato alterado entre a homologação e a publicação seria publicado com o resumo antigo,
+    fazendo o `ETag` mentir sobre o conteúdo entregue. As duas conferências custam uma consulta e
+    um `sha256` por anexo, e é o que sustenta a cadeia `versão → identidade → resumo → bytes`
+    (FR-053).
     """
-    identidades = [
-        anexo.get("artifactId")
+    anexos = [
+        anexo
         for anexo in conteudo.get("attachments") or []
         if isinstance(anexo, dict) and anexo.get("artifactId")
     ]
-    if not identidades:
+    if not anexos:
         return 0
-    return ArtefatoAnexo.objects.filter(pk__in=identidades, congelado_em__isnull=True).update(
-        congelado_em=now
-    )
+    artefatos = {
+        str(artefato.id): artefato
+        for artefato in ArtefatoAnexo.objects.filter(
+            pk__in=[anexo["artifactId"] for anexo in anexos]
+        )
+    }
+    for anexo in anexos:
+        artefato = artefatos.get(str(anexo["artifactId"]))
+        if artefato is None:
+            raise DomainError(
+                "attachment_artifact_missing",
+                f"O artefato do Anexo '{anexo.get('label', '')}' não existe.",
+                422,
+            )
+        if hashlib.sha256(bytes(artefato.bytes)).hexdigest() != anexo.get("artifactHash"):
+            raise DomainError(
+                "attachment_artifact_missing",
+                f"Os bytes do Anexo '{anexo.get('label', '')}' não correspondem ao resumo "
+                "registrado na versão homologada.",
+                422,
+            )
+    return ArtefatoAnexo.objects.filter(
+        pk__in=[anexo["artifactId"] for anexo in anexos], congelado_em__isnull=True
+    ).update(congelado_em=now)
 
 
 def _locked_edital(actor, edital_id):

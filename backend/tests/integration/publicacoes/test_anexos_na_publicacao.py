@@ -7,6 +7,7 @@ apontando para bytes inexistentes — o defeito que a feature veio corrigir.
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 
 from processo_seletivo.editais.models import ArtefatoAnexo
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
@@ -71,3 +72,68 @@ def test_o_documento_publicado_lista_os_anexos_e_nao_carrega_os_bytes(publicado)
     assert len(bytes(documento.bytes)) > 0
     assert soma_dos_anexos > 0
     assert b"%PDF" in bytes(documento.bytes)[:8]
+
+
+def test_a_publicacao_e_recusada_quando_os_bytes_nao_correspondem_ao_resumo(
+    api_client, manager_headers, process_payload
+):
+    """FR-026 — o resumo da versão homologada prova os bytes, e é conferido antes de congelar.
+
+    Sem esta conferência, um artefato alterado entre a homologação e a publicação entraria com o
+    resumo antigo: a versão publicada afirmaria um conteúdo e o download entregaria outro, com o
+    `ETag` mentindo sobre os dois. É o elo `resumo publicado → bytes` da cadeia da FR-053, e é o
+    único que a aplicação precisa fechar sozinha — os demais são estruturais.
+    """
+    from processo_seletivo.publicacoes.application.publish_edital import congelar_artefatos
+    from processo_seletivo.shared.api.problems import DomainError
+    from tests.fixtures.anexos import pdf_de_teste
+
+    artefato = ArtefatoAnexo.objects.create(
+        bytes=pdf_de_teste("A"),
+        tamanho=len(pdf_de_teste("A")),
+        document_hash="0" * 64,
+        nome_original="anexo.pdf",
+        enviado_por="preparador",
+        enviado_em=timezone.now(),
+    )
+    conteudo = {
+        "attachments": [
+            {
+                "id": "11111111-1111-1111-1111-111111111111",
+                "label": "ANEXO I — REQUERIMENTO",
+                "order": 1,
+                "artifactId": str(artefato.id),
+                "artifactHash": "0" * 64,
+            }
+        ]
+    }
+
+    with pytest.raises(DomainError) as recusa:
+        congelar_artefatos(conteudo, now=timezone.now())
+
+    assert recusa.value.code == "attachment_artifact_missing"
+    artefato.refresh_from_db()
+    assert artefato.congelado_em is None, "nada é congelado quando a conferência falha"
+
+
+def test_a_publicacao_e_recusada_quando_o_artefato_nao_existe():
+    """A versão citaria bytes que ninguém tem, e o candidato receberia 404 no anexo do Edital."""
+    from processo_seletivo.publicacoes.application.publish_edital import congelar_artefatos
+    from processo_seletivo.shared.api.problems import DomainError
+
+    conteudo = {
+        "attachments": [
+            {
+                "id": "11111111-1111-1111-1111-111111111111",
+                "label": "ANEXO I — REQUERIMENTO",
+                "order": 1,
+                "artifactId": "22222222-2222-2222-2222-222222222222",
+                "artifactHash": "0" * 64,
+            }
+        ]
+    }
+
+    with pytest.raises(DomainError) as recusa:
+        congelar_artefatos(conteudo, now=timezone.now())
+
+    assert recusa.value.code == "attachment_artifact_missing"

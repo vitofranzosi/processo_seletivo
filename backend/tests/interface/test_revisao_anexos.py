@@ -1,5 +1,10 @@
 """A Revisão pelo canal de quem homologa (020, FR-018).
 
+**Quem se identifica aqui é o homologador, e não o elaborador.** A primeira redação destes testes
+usava o elaborador, e com isso provava o que já se sabia — quem escreve enxerga o que escreveu — em
+vez do que a FR-018 exige: que **quem aprova** veja os bytes que a publicação vai entregar. Trocar
+o ator é a diferença entre testar a tela e testar a jornada.
+
 Conferir bytes que não se pode abrir não é conferir. A tela que pergunta "o que será congelado na
 submissão" precisa listar os anexos, entregar o arquivo de cada um e dizer de qual requisito cada
 um é o modelo — senão quem homologa vê duas listas sem relação e cruza as duas de cabeça.
@@ -38,7 +43,7 @@ def edital(api_client, manager_headers, process_payload):
 
 
 def test_a_revisao_lista_os_anexos_e_entrega_os_bytes(client, seletor_ligado, edital):
-    identificar(client, "ana.elaboradora", ["elaborador"])
+    identificar(client, "helena.homologadora", ["homologador"])
     anexo = criar_anexo(edital, rotulo="ANEXO I — REQUERIMENTO", order=1)
 
     corpo = client.get(
@@ -51,7 +56,7 @@ def test_a_revisao_lista_os_anexos_e_entrega_os_bytes(client, seletor_ligado, ed
 
 
 def test_a_revisao_diz_de_qual_requisito_o_anexo_e_modelo(client, seletor_ligado, edital):
-    identificar(client, "ana.elaboradora", ["elaborador"])
+    identificar(client, "helena.homologadora", ["homologador"])
     anexo = criar_anexo(edital, rotulo="ANEXO I — REQUERIMENTO", order=1)
     documento = DocumentoExigido.objects.create(
         edital=edital,
@@ -70,7 +75,7 @@ def test_a_revisao_diz_de_qual_requisito_o_anexo_e_modelo(client, seletor_ligado
 
 def test_o_anexo_sem_vinculo_diz_que_nao_e_modelo_de_nada(client, seletor_ligado, edital):
     """Legítimo, e por isso a tela afirma em vez de calar: conteúdo programático não é modelo."""
-    identificar(client, "ana.elaboradora", ["elaborador"])
+    identificar(client, "helena.homologadora", ["homologador"])
     criar_anexo(edital, rotulo="ANEXO I — CONTEÚDO PROGRAMÁTICO", order=1)
 
     corpo = client.get(
