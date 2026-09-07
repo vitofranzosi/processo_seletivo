@@ -158,3 +158,67 @@ def test_a_linha_nova_conhece_os_perfis_daquele_edital(client, seletor_ligado, e
     assert "DOC-INFO" in corpo
     assert "PPP" in corpo
     assert "Todos os Perfis" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_vinculo_com_o_modelo_sobrevive_a_gravar_a_propria_etapa(
+    client, seletor_ligado, edital_com_perfis
+):
+    """FR-020 da 020, pelo caminho que a tela de documentos abre.
+
+    `replace_draft` apaga os requisitos e os recria a cada gravação, e a tela ainda não oferece o
+    campo do modelo. Sem preservá-lo, gravar a etapa que **não fala do anexo** apagaria o vínculo —
+    sem erro, sem aviso, e sem que ninguém tivesse tocado nele.
+    """
+    from tests.fixtures.anexos import criar_anexo
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    anexo = criar_anexo(edital_com_perfis, rotulo="ANEXO I — REQUERIMENTO", order=1)
+    client.post(
+        reverse("interface:compor-etapa", args=[edital_com_perfis.id, "inscricao"]),
+        _campos(edital_com_perfis),
+    )
+    DocumentoExigido.objects.filter(edital=edital_com_perfis, key="identificacao").update(
+        anexo=anexo
+    )
+
+    client.post(
+        reverse("interface:compor-etapa", args=[edital_com_perfis.id, "inscricao"]),
+        _campos(edital_com_perfis, **{"documento-0-name": "Documento de identificação (RG)"}),
+    )
+
+    documento = DocumentoExigido.objects.get(edital=edital_com_perfis, key="identificacao")
+    assert documento.name == "Documento de identificação (RG)", "a edição pedida foi gravada"
+    assert documento.anexo_id == anexo.id, "e o vínculo que a tela não desenha continua de pé"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_vinculo_com_o_modelo_sobrevive_a_gravar_outra_etapa(
+    client, seletor_ligado, edital_com_perfis
+):
+    """O segundo caminho de perda, e o mais silencioso: a etapa que nem menciona documentos.
+
+    Ao gravar `conteudo`, a view remonta as cinco coleções a partir do banco e as reenvia inteiras.
+    Um campo que `documentos_persistidos` não emitisse voltaria nulo por essa porta.
+    """
+    from tests.fixtures.anexos import criar_anexo
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    anexo = criar_anexo(edital_com_perfis, rotulo="ANEXO I — REQUERIMENTO", order=1)
+    client.post(
+        reverse("interface:compor-etapa", args=[edital_com_perfis.id, "inscricao"]),
+        _campos(edital_com_perfis),
+    )
+    DocumentoExigido.objects.filter(edital=edital_com_perfis, key="identificacao").update(
+        anexo=anexo
+    )
+
+    client.post(
+        reverse("interface:compor-etapa", args=[edital_com_perfis.id, "conteudo"]),
+        {"secao-0-key": "objeto", "secao-0-content": "Texto do objeto."},
+    )
+
+    documento = DocumentoExigido.objects.get(edital=edital_com_perfis, key="identificacao")
+    assert documento.anexo_id == anexo.id

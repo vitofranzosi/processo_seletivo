@@ -888,6 +888,9 @@ PRESERVADO_DA_ETAPA = {
     "cronograma": ("status", "isRegistrationPeriod"),
     # Os dois objetos normativos do Perfil que nenhuma tela desenha.
     "perfis": ("classificationInformation", "callInformation"),
+    # O modelo que o requisito aponta. A tela de documentos ainda não o oferece, e enquanto não
+    # oferecer é aqui que ele sobrevive a gravar a própria etapa (020, FR-020).
+    "inscricao": ("attachmentId",),
 }
 
 LEITURA_DA_ETAPA = {
@@ -930,7 +933,11 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
         # A única etapa que escreve em duas coleções, porque a designação do período mora **no**
         # Evento: para quem elabora é uma decisão só — como este Edital recebe inscrição —, e
         # separá-la em duas telas partiria o contrato ao meio.
-        conteudo["documentRequirements"] = digitados["documentos"]
+        conteudo["documentRequirements"] = _preservando(
+            digitados["documentos"],
+            conteudo["documentRequirements"],
+            PRESERVADO_DA_ETAPA.get(etapa, ()),
+        )
         conteudo["schedule"] = [
             {**evento, "isRegistrationPeriod": str(evento["id"]) == digitados["periodo"]}
             for evento in conteudo["schedule"]

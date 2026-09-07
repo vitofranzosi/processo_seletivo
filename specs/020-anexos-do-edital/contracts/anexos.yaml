@@ -52,8 +52,10 @@ components:
   schemas:
     AnexoPublicado:
       type: object
+      # Sem `additionalProperties: false` e sem `minLength`: nesta casa os dois só aparecem em
+      # esquema de **entrada**, e o conteúdo publicado é verificado pelas regras impeditivas da
+      # publicação — rótulo vazio é `attachment_label_required`, e não restrição de esquema.
       required: [id, label, order, artifactId, artifactHash]
-      additionalProperties: false
       properties:
         id:
           type: string
@@ -64,7 +66,6 @@ components:
           description: >
             Rótulo editorial completo, num texto só — "ANEXO VI — AUTODECLARAÇÃO ÉTNICO-RACIAL".
             Escrito pelo autor; o sistema não o interpreta nem deriva numeração dele.
-          minLength: 1
         order:
           type: integer
           minimum: 0

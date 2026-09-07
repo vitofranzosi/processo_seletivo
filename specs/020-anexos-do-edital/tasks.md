@@ -67,7 +67,7 @@ US1, ao lado da T027, que é quando a composição do documento muda de verdade.
 ### As tabelas
 
 - [X] T012 Criar `AnexoEdital` e `ArtefatoAnexo` em `backend/processo_seletivo/editais/models/anexos.py`, com os campos de [data-model.md](./data-model.md), e exportá-los em `backend/processo_seletivo/editais/models/__init__.py`. **Nenhuma tabela de versões por anexo**: a versão é a do Edital, como na Seção (FR-002, FR-004, FR-005, FR-007, FR-010, FR-011, FR-012, FR-014)
-- [X] T013 Acrescentar a referência anulável `anexo` (`SET_NULL`) a `DocumentoExigido` em `backend/processo_seletivo/editais/models/documentos.py` **e incluir o campo no `bulk_create` de `replace_draft` em `backend/processo_seletivo/editais/application/draft.py`** — as linhas do requisito são apagadas e recriadas a cada gravação de etapa, e o campo esquecido zera o vínculo em silêncio (FR-020, FR-022)
+- [X] T013 Acrescentar a referência anulável `anexo` (`SET_NULL`) a `DocumentoExigido` em `backend/processo_seletivo/editais/models/documentos.py` **e transportá-lo por todos os caminhos que reescrevem o requisito**: `attachmentId` no `EditalDraftSerializer` (`editais/api/serializers.py`), `anexo_id` no `bulk_create` de `replace_draft` (`editais/application/draft.py`), a chave em `forms.documentos_persistidos` e em `forms.ler_inscricao`, e a etapa `inscricao` em `PRESERVADO_DA_ETAPA` passando por `_preservando` — que hoje ela não faz. **São cinco pontos, e não um.** As linhas do requisito são apagadas e recriadas a cada gravação, e qualquer um dos cinco esquecido zera o vínculo em silêncio (FR-020, FR-022)
 - [X] T014 Escrever `backend/processo_seletivo/editais/migrations/0012_anexo_do_edital.py`
 - [X] T015 Escrever `backend/processo_seletivo/editais/migrations/0013_congelamento_do_artefato.py`, com a trigger condicional `WHEN (OLD.congelado_em IS NOT NULL)` no molde de `publicacoes/migrations/0007_imutabilidade_do_historico.py` (FR-010, R-002)
 
@@ -116,7 +116,9 @@ gente.
 **Teste independente**: percorrer a inscrição de um Perfil cujo requisito tem modelo, baixar o modelo
 pelo portal e enviar o arquivo preenchido, sem sair do fluxo.
 
-- [ ] T035 [US2] Emitir `attachmentId` em `_document_requirements` em `backend/processo_seletivo/publicacoes/application/publish_edital.py`, a partir da referência do modelo (FR-020, FR-021)
+- [X] T035 [US2] Emitir `attachmentId` em `_document_requirements` em `backend/processo_seletivo/publicacoes/application/publish_edital.py`, a partir da referência do modelo (FR-020, FR-021). *Feita junto com a T020: emitir a coleção e
+  emitir o vínculo é a mesma passagem pelo construtor do snapshot, e separá-las deixaria o snapshot
+  metade novo por uma fase inteira.*
 - [ ] T036 [US2] Oferecer a escolha do modelo na etapa `inscricao` do assistente, entre os anexos do próprio Edital, em `backend/processo_seletivo/interface/forms.py` e `templates/interface/_documento.html` (FR-020, FR-024)
 - [ ] T037 [US2] Acrescentar a regra impeditiva `attachment_reference_dangling` em `backend/processo_seletivo/editais/domain/validation.py`, aplicada na publicação e em cada fronteira de vigência da Retificação (FR-023)
 - [ ] T038 [US2] Oferecer o modelo vigente ao lado do campo de envio, em `backend/processo_seletivo/portal/views.py` e `templates/portal/_documentos.html` (FR-044, FR-045)

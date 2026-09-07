@@ -793,7 +793,7 @@ components:
         label: { type: string }
         order: { type: integer, minimum: 0 }
         artifactId: { type: string, format: uuid }
-        artifactHash: { type: string }
+        artifactHash: { type: string, pattern: '^[0-9a-f]{64}$' }
     ModalidadePublicada:
       type: object
       description: >-

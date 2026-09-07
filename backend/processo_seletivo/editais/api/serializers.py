@@ -214,6 +214,9 @@ class DocumentRequirementSerializer(serializers.Serializer):
     order = serializers.IntegerField(min_value=0, required=False, default=0)
     profileId = serializers.UUIDField(required=False, allow_null=True)
     modalityId = serializers.UUIDField(required=False, allow_null=True)
+    # O Anexo que serve de modelo. Ausente e nulo significam a mesma coisa — "não fornece modelo" —
+    # como em `profileId` e `modalityId`.
+    attachmentId = serializers.UUIDField(required=False, allow_null=True)
 
 
 class EditalDraftSerializer(serializers.Serializer):

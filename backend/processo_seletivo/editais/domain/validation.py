@@ -199,7 +199,9 @@ ANEXO_PUBLICADO = (
     Campo("label", str),
     Campo("order", int, minimo=0),
     Campo("artifactId", str, formato="uuid"),
-    Campo("artifactHash", str),
+    # A grafia do SHA-256 é verificada como a do decimal e a do instante já são: sem ela, um resumo
+    # truncado ou em maiúsculas atravessaria a publicação e só falharia na hora de comparar bytes.
+    Campo("artifactHash", str, padrao="^[0-9a-f]{64}$"),
 )
 
 COLECOES_PUBLICADAS = (
