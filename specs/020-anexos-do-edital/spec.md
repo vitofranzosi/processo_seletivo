@@ -158,8 +158,10 @@ do candidato.
 
 ### D-006 — O rótulo é campo versionado; não existe numeração automática
 
-"ANEXO VI — AUTODECLARAÇÃO" é **campo do Anexo no conteúdo canônico daquela versão**, escrito pelo
-autor e alterado só por Retificação explícita. O que não existe é numeração derivada: o sistema não
+"ANEXO VI — AUTODECLARAÇÃO ÉTNICO-RACIAL" é **um campo de texto único** do Anexo no conteúdo
+canônico daquela versão, escrito inteiro pelo autor e alterado só por Retificação explícita. Não se
+parte em designação e título, porque dois campos convidariam a preencher o numeral pela posição —
+que é exatamente o que esta decisão proíbe. O que não existe é numeração derivada: o sistema não
 renumera nada, não calcula rótulo a partir de posição e não computa sequência atravessando a
 coleção de Seções e a de Anexos. Acrescentar, remover ou reordenar não muda o rótulo de nenhum
 outro anexo, e remover deixa **lacuna** na sequência.
@@ -199,9 +201,14 @@ exatamente o defeito que a feature veio corrigir.
 
 ### D-011 — O endereço do anexo é da versão, nunca "o vigente"
 
-Se o documento principal de uma publicação histórica apontar para um endereço que sempre entrega o
-artefato atual, o documento de então abre o conteúdo de agora. Esse é precisamente o defeito da
-prática observada — e é o que o passo emblemático do teste de aceitação verifica.
+Se a consulta de uma publicação histórica devolver o artefato atual, o Edital de então entrega o
+conteúdo de agora. Esse é precisamente o defeito da prática observada — e é o que o passo
+emblemático do teste de aceitação verifica.
+
+O endereço é do **canal**, e não dos bytes: o documento principal lista os anexos pelo rótulo e não
+imprime URL (clarificação de 07/09/2026). Assim a resolução por versão fica onde é verificável — a
+publicação e a versão consolidada já são endereçáveis publicamente —, e o PDF imutável não carrega
+um domínio que um dia muda.
 
 ### D-012 — Substituir o modelo não invalida o que já foi enviado
 
@@ -227,6 +234,30 @@ substitui o arquivo no mesmo caminho e apaga o artefato anterior, tornando irres
 
 ---
 
+## Clarifications
+
+### Sessão 2026-09-07
+
+- Q: O que o documento principal publicado carrega sobre cada anexo — só o rótulo, ou também o
+  endereço para baixá-lo? → A: **Só o rótulo.** O endereço vive na página pública da seleção e na
+  API da publicação, e não nos bytes do PDF.
+- Q: Na página pública da seleção, todo visitante vê a coleção inteira de anexos, ou ela é filtrada
+  pelo Perfil e pela modalidade? → A: **Coleção inteira**, na ordem editorial. O anexo é conteúdo do
+  Edital e não tem Perfil próprio; a filtragem útil acontece no fluxo de inscrição, onde o candidato
+  vê o modelo do requisito dele.
+- Q: Durante a elaboração, um Anexo pode existir declarado sem artefato? → A: **Não.** Subir o
+  arquivo é o que cria o Anexo; não existe anexo vazio, e por isso não existe estado intermediário a
+  validar. O rótulo se escreve junto ou depois.
+- Q: Trocando o arquivo de um Anexo antes de publicar, o que acontece com o artefato anterior, que
+  nunca foi publicado? → A: **É descartado** — substituir sobrescreve, como a `009` decidiu para o
+  arquivo do candidato. A imutabilidade vale para o artefato que alguma versão publicou; artefato
+  que nenhuma publicação referencia não é histórico de nada.
+- Q: O rótulo é um texto só ou dois campos, designação e título? → A: **Um texto só**, escrito
+  inteiro pelo autor. Dois campos convidariam a preencher a designação pela posição, que é o que a
+  D-006 proíbe.
+
+---
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 — O autor publica o Edital com os seus anexos (Priority: P1)
@@ -248,9 +279,9 @@ e abrir a página pública da seleção baixando os três — sem shell e sem ma
    identidade própria, e aparece na lista de anexos do documento renderizado.
 2. **Given** um Edital em elaboração com anexos, **When** o autor pede a publicação, **Then** o
    documento principal e todos os artefatos são publicados no mesmo ato.
-3. **Given** um Edital em elaboração com um anexo cujo artefato falta ou está corrompido, **When**
-   o autor pede a publicação, **Then** a publicação é recusada com erro impeditivo que nomeia o
-   anexo, e nada é publicado.
+3. **Given** um Edital em elaboração cujo artefato de um anexo se tornou indisponível ou não
+   corresponde ao resumo registrado, **When** o autor pede a publicação, **Then** a publicação é
+   recusada com erro impeditivo que nomeia o anexo, e nada é publicado.
 4. **Given** um Edital ainda não publicado, **When** alguém sem autorização de elaboração tenta
    alcançar o artefato, **Then** o acesso é negado.
 
@@ -357,7 +388,10 @@ e ausência de referência pendurada.
 - **Mesmo artefato em dois anexos**, ou Retificação que reverte outra e reproduz bytes idênticos:
   legítimo. O hash é integridade, não unicidade.
 - **Anexo sem nenhum Documento Exigido apontando**: legítimo — conteúdo programático, ficha
-  informativa. O vínculo é opcional nos dois sentidos.
+  informativa. O vínculo é opcional nos dois sentidos, e o anexo aparece na lista pública como os
+  demais.
+- **Anexo sem rótulo**: possível durante a elaboração, entre o envio do arquivo e a redação do
+  rótulo; erro impeditivo na publicação.
 - **Dois anexos com o mesmo rótulo**: o sistema não deduplica rótulo, porque rótulo não é
   identidade; a validação de publicação pode avisar, e não impedir.
 - **Retificação que só troca o rótulo**, mantendo o artefato: legítima, e não cria artefato novo.
@@ -383,10 +417,13 @@ e ausência de referência pendurada.
   das demais coleções publicadas, inclusive a exigência de identificador no formato aceito pelo
   seletor de Retificação.
 - **FR-004**: O Anexo MUST NOT ter versão própria: a versão é a do Edital, como na Seção.
-- **FR-005**: O rótulo MUST ser escrito pelo autor e MUST integrar o conteúdo daquela versão.
+- **FR-005**: O rótulo MUST ser **um texto único** — designação e título juntos, como
+  "ANEXO VI — AUTODECLARAÇÃO ÉTNICO-RACIAL" —, escrito inteiro pelo autor, e MUST integrar o
+  conteúdo daquela versão. O sistema MUST NOT separá-lo em campos, e MUST NOT interpretá-lo.
 - **FR-006**: O sistema MUST NOT derivar, calcular ou renumerar rótulo a partir de posição, ordem
   ou contagem, nem atravessando a coleção de Seções.
-- **FR-007**: Alterar a ordem editorial MUST NOT alterar o rótulo de nenhum Anexo.
+- **FR-007**: A ordem editorial MUST ser campo próprio, e MUST NOT ser derivada do rótulo.
+  Alterá-la MUST NOT alterar o rótulo de nenhum Anexo.
 - **FR-008**: Remover um Anexo MUST deixar lacuna na sequência de rótulos, e o sistema MUST NOT
   renumerar os remanescentes.
 
@@ -394,8 +431,12 @@ e ausência de referência pendurada.
 
 - **FR-009**: O artefato MUST ser PDF, verificado pelo conteúdo do arquivo e não pela extensão ou
   pelo nome.
-- **FR-010**: O artefato MUST ser imutável e endereçado por resumo criptográfico, e MUST NOT ser
-  sobrescrito nem excluído pela aplicação.
+- **FR-010**: O artefato **referenciado por alguma versão publicada** MUST ser imutável, endereçado
+  por resumo criptográfico, e MUST NOT ser sobrescrito nem excluído pela aplicação — nem quando uma
+  Retificação posterior o substitui.
+- **FR-010a**: Trocar o arquivo de um Anexo **antes da primeira publicação que o referencie** MUST
+  substituir o artefato corrente, e o anterior MUST NOT ser preservado. Não há histórico de
+  elaboração de artefato, e não há desfazer.
 - **FR-011**: Artefatos de conteúdo idêntico MUST ser legítimos; o resumo criptográfico MUST ser
   tratado como integridade, e MUST NOT ser chave de unicidade.
 - **FR-012**: Cada artefato MUST registrar tamanho, tipo, resumo criptográfico, autoria e instante
@@ -409,12 +450,17 @@ e ausência de referência pendurada.
 
 - **FR-015**: O autor MUST poder acrescentar, substituir, rotular, ordenar e remover Anexos de um
   Edital em elaboração, pela interface administrativa.
+- **FR-015a**: O Anexo MUST nascer do envio do artefato: não existe Anexo sem artefato, em nenhum
+  estado. O rótulo MUST poder ser escrito no envio ou depois, e MUST ser exigido antes da
+  publicação.
 - **FR-016**: Cada uma dessas operações MUST exigir a autorização de elaboração do Edital,
   verificada no backend.
 - **FR-017**: Artefato de Edital ainda não publicado MUST NOT ter endereço público, e MUST ser
   alcançável apenas por quem tem autorização de elaboração, revisão ou homologação.
 - **FR-018**: Os bytes examinados na revisão e na homologação MUST ser exatamente os que a
-  publicação entregará.
+  publicação entregará. Como o resumo do artefato integra o conteúdo daquela versão (FR-029), trocar
+  o arquivo depois da homologação MUST invalidá-la pelo mecanismo que já existe, e MUST NOT publicar
+  bytes que ninguém homologou.
 - **FR-019**: O documento renderizado em elaboração MUST listar os Anexos declarados, com rótulo e
   ordem.
 
@@ -435,10 +481,13 @@ e ausência de referência pendurada.
 
 - **FR-025**: A publicação MUST ser atômica sobre o documento principal e todos os artefatos
   referenciados por aquela versão.
-- **FR-026**: A publicação MUST ser recusada, com erro impeditivo, quando algum Anexo referenciado
-  não tiver artefato disponível e íntegro.
-- **FR-027**: O documento principal MUST listar e referenciar os Anexos, e MUST NOT carregar os
-  bytes deles.
+- **FR-026**: A publicação MUST ser recusada, com erro impeditivo que nomeia o Anexo, quando o
+  artefato de algum Anexo estiver indisponível ou não corresponder ao resumo registrado.
+- **FR-027**: O documento principal MUST listar os Anexos pelo rótulo e pela ordem editorial, e
+  MUST NOT carregar os bytes deles.
+- **FR-027a**: O documento principal MUST NOT imprimir endereço de download por anexo. O endereço
+  MUST viver no canal — a página pública da seleção e a consulta da publicação —, para que os bytes
+  imutáveis não fiquem presos a um domínio nem dependam de identidade alocada antes da renderização.
 - **FR-028**: A referência publicada MUST resolver o artefato **daquela** publicação, e MUST NOT
   resolver "o vigente".
 - **FR-029**: O conteúdo canônico de cada versão MUST registrar, para cada Anexo, identidade,
@@ -466,8 +515,11 @@ e ausência de referência pendurada.
 
 **Consulta pública e histórica**
 
-- **FR-039**: A página pública da seleção MUST oferecer os Anexos vigentes para download,
-  identificados pelo rótulo.
+- **FR-039**: A página pública da seleção MUST oferecer **todos** os Anexos vigentes para download,
+  na ordem editorial, identificados pelo rótulo.
+- **FR-039a**: A lista pública MUST NOT ser filtrada por Perfil ou modalidade, e MUST NOT derivar
+  aplicabilidade dos vínculos: o Anexo é conteúdo do Edital, e anexo que nenhum requisito aponta
+  MUST aparecer como os demais.
 - **FR-040**: A consulta do conteúdo por um instante MUST devolver os Anexos vigentes naquele
   instante, com os artefatos de então.
 - **FR-041**: A consulta de uma publicação histórica MUST continuar entregando o artefato de então,

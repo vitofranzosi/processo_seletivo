@@ -50,6 +50,14 @@
     segundo registra a pressão sem incorporá-la;
   - FR-051 (nenhuma máquina de avaliação) × US4 (banca abre o modelo): mostrar o modelo não é
     conferir conformidade; FR-047 e FR-049 seguram a fronteira.
+- **Rodada de `/speckit-clarify` de 07/09/2026**: cinco perguntas, cinco respostas, todas
+  integradas — endereço do anexo fora dos bytes do PDF (FR-027a, D-011), lista pública sem filtro
+  (FR-039a), anexo que só nasce com artefato (FR-015a), artefato de rascunho sobrescrito e artefato
+  publicado imutável (FR-010/FR-010a), rótulo como texto único (FR-005, D-006). Nenhuma das doze
+  decisões da §2 foi reaberta. A varredura de contradições foi refeita sobre a spec atualizada, e
+  achou uma: com o artefato de rascunho sobrescrevível, trocar o arquivo depois da homologação
+  publicaria bytes que ninguém homologou. Fechada no FR-018, pelo mecanismo que já existe — o resumo
+  do artefato integra o conteúdo da versão, e trocá-lo invalida a homologação.
 - **Decisão de escopo registrada, não tomada aqui**: o teste de aceitação cobre os
   anexos-formulário do 173/2025, e não os nove. Está em Assumptions, com o preço do caminho
   alternativo. Reverter isso é decisão do produto, e muda SC-005.
