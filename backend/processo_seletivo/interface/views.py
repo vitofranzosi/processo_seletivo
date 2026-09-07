@@ -2724,6 +2724,11 @@ def distribuicao(request, edital_id, etapa_id):
                 # entraria na lista como mais uma pendente, e a presidência não saberia por que
                 # alguém que estava eliminada reapareceu (FR-077).
                 "reabilitadas": _reabilitadas_da_etapa(edital, etapa_id),
+                # **O histórico do par não entra aqui**, e a razão não é custo: a Mesa organiza
+                # trabalho — quem falta avaliar, quem falta consolidar —, e a pergunta "o que a
+                # decisão alterou" é do painel de Resultados. Foi tentar respondê-la nas duas
+                # telas que quebrou esta: aqui as linhas são dicionários de prontidão, e não
+                # `ResultadoEtapa`.
                 "cobertura": request.GET.get("cobertura") or "",
                 "avaliador": request.GET.get("avaliador") or "",
                 "erro": erro,
@@ -3086,6 +3091,10 @@ def resultados_da_etapa(request, edital_id, etapa_id):
                 # recurso foi deferido, e quem lê o painel precisa saber disso sem sair da tela
                 # (FR-077). Uma consulta para a Etapa inteira, e nenhuma por linha.
                 "reabilitadas": _reabilitadas_da_etapa(edital, etapa_id),
+                # **O histórico do par, para quem responde a um recurso** (FR-064). Sem ele, a
+                # tela mostra a nota corrigida e cala sobre a que foi corrigida — e quem precisa
+                # conferir o que a decisão alterou teria de sair do sistema para fazê-lo.
+                "historicos": _historicos_superados(linhas, etapa_id),
                 "consequencia": request.GET.get("consequencia") or "",
                 # Os rótulos que **este** Edital publicou: quem consulta o Resultado tem direito ao
                 # vocabulário do Edital, e não ao enum do domínio (FR-118).
@@ -3094,6 +3103,22 @@ def resultados_da_etapa(request, edital_id, etapa_id):
             },
         )
     )
+
+
+def _historicos_superados(linhas, etapa_id):
+    """`{inscricao_id: [linhas do par]}` — **somente** onde houve superação.
+
+    A consulta é feita só para quem tem sucessor: o par sem cadeia responde uma linha só, e pagar
+    uma leitura por inscrição para descobrir isso devolveria à listagem o custo por linha que a
+    012 tirou dela.
+    """
+    from processo_seletivo.resultados.application.selectors import historico_do_par
+
+    return {
+        linha.inscricao_id: historico_do_par(linha.inscricao_id, etapa_id)
+        for linha in linhas
+        if getattr(linha, "resultado_anterior_id", None) is not None
+    }
 
 
 def _reabilitadas_da_etapa(edital, etapa_id):
@@ -4077,6 +4102,16 @@ def _recurso_com_recusa(request, ator, peca, recusa):
     return resposta
 
 
+def _pontuacao_digitada(bruto):
+    """O que a pessoa escreveu, com a vírgula traduzida — e `None` quando ela não escreveu nada.
+
+    Não valida: o que não for número segue para o domínio, que recusa com motivo. Validar aqui
+    duplicaria a regra e deixaria a recusa dependente da porta por onde o pedido entrou.
+    """
+    texto = (bruto or "").strip()
+    return texto.replace(",", ".") if texto else None
+
+
 @require_http_methods(["POST"])
 def julgar_recurso(request, recurso_id):
     """A decisão de mérito, nas quatro espécies.
@@ -4100,7 +4135,10 @@ def julgar_recurso(request, recurso_id):
             especie=request.POST.get("especie", ""),
             motivacao=request.POST.get("motivacao", ""),
             etapa_id=etapa_id or None,
-            pontuacao=request.POST.get(f"pontuacao-{etapa_id}") or None,
+            # A vírgula é o separador decimal do país, e é o que estas telas imprimem — "8,5000",
+            # "26,00". Passá-la adiante como veio derrubava o julgamento em `InvalidOperation`:
+            # traduzi-la aqui é trabalho de apresentação, e o domínio segue recebendo número.
+            pontuacao=_pontuacao_digitada(request.POST.get(f"pontuacao-{etapa_id}")),
             sentido=request.POST.get(f"sentido-{etapa_id}", ""),
             assinatura_do_resultado=assinatura,
             idempotency_key=f"julgar-{peca.id}",

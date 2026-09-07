@@ -18,7 +18,7 @@ mesma consequência para a mesma nota — duas tabelas-verdade divergiriam no pr
 """
 
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.avaliacoes.domain.previsao import forma_publicada
@@ -90,7 +90,17 @@ def _conclusao(forma, pontuacao, sentido):
         raise DomainError(
             INCOMPLETA, "Esta Etapa é pontuada: a correção precisa fixar a pontuação.", 422
         )
-    return Conclusao(forma=str(forma), pontuacao=Decimal(str(pontuacao)), sentido="")
+    try:
+        valor = Decimal(str(pontuacao))
+    except InvalidOperation as exc:
+        # **Recusa, e não erro de servidor.** O que chega aqui é texto digitado por quem julga, e
+        # texto que não é número é pedido malformado — não defeito do sistema. Deixar a exceção
+        # subir devolvia 500 na tela de um julgamento, sem motivo escrito e apagando a motivação
+        # que a pessoa já tinha redigido.
+        raise DomainError(
+            INCOMPLETA, f"'{pontuacao}' não é uma pontuação: informe um número.", 422
+        ) from exc
+    return Conclusao(forma=str(forma), pontuacao=valor, sentido="")
 
 
 __all__ = ["INCOMPLETA", "Conclusao", "derivar", "etapa_publicada"]
