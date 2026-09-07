@@ -148,6 +148,8 @@ def _gravar(**campos):
         ) from exc
 
 
+NAO_PREVISTO = "appeal_not_provided"
+
 NAO_ADMITE = (
     "O Edital declara que este resultado não admite recurso por esta via. Se você discorda do que "
     "foi decidido, procure a comissão do certame."
@@ -211,10 +213,14 @@ def _janela(inscricao, publicacao, resultado, agora):
     """
     janelas, so_negativas = _janelas_pertinentes(inscricao, publicacao, resultado, agora)
     if so_negativas:
-        # **`admits: false` é norma, e não silêncio** (FR-020). Tratá-lo como ausência transformaria
-        # "este marco não admite recurso" em "cabe recurso para sempre" — o oposto do que o Edital
-        # publicou. A recusa nomeia a norma, porque é ela que a pessoa tem direito de conferir.
-        raise DomainError("appeal_window_closed", NAO_ADMITE, 422)
+        # **`admits: false` é norma, e não silêncio** (FR-113). Tratá-lo como ausência
+        # transformaria "este marco não admite recurso" em "cabe recurso para sempre" — o oposto do
+        # que o Edital publicou.
+        #
+        # **Código próprio, e não o da janela encerrada**: um só obrigaria quem recebe a ler a
+        # mensagem para distinguir "chegue mais cedo" de "não é por aqui", e as duas orientações são
+        # opostas. A recusa nomeia a norma, porque é ela que a pessoa tem direito de conferir.
+        raise DomainError(NAO_PREVISTO, NAO_ADMITE, 422)
     if not janelas:
         return None, None
 

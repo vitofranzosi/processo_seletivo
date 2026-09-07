@@ -464,3 +464,47 @@ O que **foi alterado**, um a um, e por quê:
 justificativa escrita — que é exatamente a conversa que esses guardas existem para forçar. A de
 `publicabilidade` troca uma frase por uma propriedade, e a propriedade é a que sempre esteve em
 jogo: *toda recusa diz o que fazer a seguir*.
+
+---
+
+## Convergência — os dez achados do code review
+
+Rodada de correção posterior à implementação, verificada em
+`backend/tests/integration/recursos/test_convergencia.py`: **um teste por achado, e cada um
+conferido desligando a correção correspondente**.
+
+| # | achado | o que acontecia | onde |
+|---|---|---|---|
+| 1 | **CRÍTICO** — interposição não serializava com a definitiva | a aferição lia "zero recursos pendentes" enquanto uma interposição era gravada na transação vizinha, e as duas confirmavam | `recursos/application/interpor.py` |
+| 2 | **CRÍTICO** — recurso contra publicação não corrigia pelo canal real | a tela derivava a Etapa do objeto atacado; sem alvo, o formulário escondia `CORRECAO_FIXADA` e `REAVALIACAO_DETERMINADA` | `interface/views.py`, `interface/templates/interface/recurso.html` |
+| 3 | impedimento incompleto no ramo da publicação | quem consolidou o Resultado da Etapa podia julgar o recurso contra a publicação que o corrige | `recursos/domain/elegibilidade.py` |
+| 4 | assinaturas de estado opcionais na prática | omitir o campo contornava a revisão otimista inteira | `recursos/application/admitir.py`, `julgar.py` |
+| 5 | a decisão citava a norma da interposição | havendo Retificação no meio, a decisão afirmava ter sido tomada sob regra revogada | `recursos/application/julgar.py` |
+| 6 | duas reavaliações da mesma inscrição colidiam | a chave por inscrição fazia a segunda sobrescrever a primeira, em silêncio | `recursos/application/selectors.py` |
+| 7 | `admits: false` virava recurso ilimitado | a negativa publicada era lida como silêncio | `recursos/domain/janela.py`, `interpor.py` |
+| 8 | reservas não representavam o pedido | a interposição omitia o objeto; a publicação, a declaração | `recursos/application/interpor.py`, `divulgacao/application/publicar.py` |
+| 9 | trilha nascia sem motivo | a auditoria respondia "houve um evento", e não qual | `interpor.py`, `admitir.py`, `julgar.py` |
+| 10 | contrato do candidato incompleto | o objeto não nomeava Marco nem Etapa, e a decisão omitia quem decidiu | `recursos/application/selectors.py`, `portal/templates/portal/recurso.html` |
+
+**Um ponto do achado 10 foi implementado com uma ressalva**: o autor da decisão passa a aparecer, e
+o nome de quem **avaliou** continua fora da tela do candidato. A FR-093 exclui o avaliador, não o
+julgador, e a D-005 garante que são pessoas distintas.
+
+### O que a convergência acrescentou aos artefatos
+
+A checagem cruzada posterior encontrou um caso em que a **implementação afirmava norma que a spec
+não declarava** — e essa é a espécie de dívida que não produz erro nenhum até alguém desfazê-la
+achando que era acidente:
+
+| artefato | o que passou a declarar |
+|---|---|
+| `spec.md` D-004 | o **terceiro estado** da janela: declarada, não declarada e **negada**, com a razão de os dois últimos não se confundirem |
+| `spec.md` FR-113 | o efeito de `admits: false` na interposição, a prevalência da FR-027 quando outro marco admite, e a exigência de código próprio |
+| `contracts/recurso.md` §2 | o código `appeal_not_provided`, e por que ele não é o `appeal_window_closed` |
+| `contracts/recurso.md` §2 | a reserva de idempotência cobre o **pedido inteiro**, e não só a fundamentação |
+| `contracts/janela.md` §1 | os três estados de `admits`, e a distinção por marco |
+| `contracts/julgamento.md` §1 | as duas primeiras perguntas do impedimento alcançam o **par que o remédio atinge**, e não só o objeto atacado |
+
+**Alterações de teste que a convergência exigiu**, na mesma disciplina da T121: as fixtures que
+passavam assinatura de estado vazia passam a calculá-la, como a tela faz — a ausência deixou de ser
+dispensa e virou recusa. Nenhum teste foi removido.

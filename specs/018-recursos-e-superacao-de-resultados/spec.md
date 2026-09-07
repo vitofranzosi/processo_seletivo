@@ -147,10 +147,24 @@ publicação vigente do marco** — o instante que o sistema já grava e já exi
 absolutas do Cronograma.
 
 ```text
-declarada      →  o sistema calcula, exibe ao candidato e aplica a janela
-não declarada  →  o sistema não inventa prazo; a interposição permanece possível e a
-                  tempestividade é matéria de admissibilidade humana motivada
+declarada        →  o sistema calcula, exibe ao candidato e aplica a janela
+não declarada    →  o sistema não inventa prazo; a interposição permanece possível e a
+                    tempestividade é matéria de admissibilidade humana motivada
+negada           →  o Edital declarou que aquele marco NÃO admite recurso; a interposição
+                    por esta via é recusada, nomeando a norma
 ```
+
+**Os três estados são respostas diferentes, e confundir os dois últimos inverte a norma.** A
+ausência é silêncio: o Edital nada disse, e o sistema não decide por ele. A negativa é norma
+publicada: o Edital disse que não cabe recurso, e norma publicada se aplica. Tratar a negativa como
+silêncio transformaria *"não cabe recurso"* em *"cabe recurso para sempre"* — o oposto exato do que
+foi publicado, e a favor de ninguém: nem do candidato, que receberia uma peça que a comissão não
+tem como julgar, nem da instituição, que veria nascer recursos contra o que ela declarou
+irrecorrível.
+
+**A negativa não fecha a porta do candidato**, e a recusa diz isso: ele conserva as vias que a lei
+lhe dá fora deste sistema, e a mensagem o encaminha à comissão do certame. O que o sistema recusa é
+processar por dentro o que a norma não previu — não é o mesmo que declarar que não há remédio.
 
 **Por que não se lê o Cronograma.** `EventoCronograma.type` é texto livre, sem validação, e o
 próprio modelo registra a razão: *"inferir o período dali seria decidir uma regra de direito lendo
@@ -920,6 +934,13 @@ acaso.
   algum, e a interposição MUST permanecer possível enquanto o objeto atacado for vigente.
 - **FR-029**: O sistema MUST elevar a versão do conteúdo canônico ao introduzir a janela, e MUST
   declarar que a ausência da declaração, em conteúdo anterior, significa **janela não declarada**.
+- **FR-113**: Declarando o marco que **não** admite recurso, a interposição contra a publicação
+  daquele marco, e contra o `ResultadoEtapa` de Etapa que somente marcos assim enumerem, MUST ser
+  recusada nomeando a norma, e a ação MUST NOT ser oferecida na tela. A negativa declarada MUST NOT
+  ser tratada como ausência de declaração — que é o caso da FR-028 —, e quando outro marco publicado
+  enumerar a mesma Etapa e admitir recurso, a FR-027 MUST prevalecer. A recusa MUST distinguir-se,
+  por código próprio, da recusa por janela encerrada da FR-026: a primeira diz que o recurso não é
+  previsto, e a segunda, que o prazo dele passou (D-004).
 - **FR-030**: A declaração da janela MUST ser escrita pelo assistente de elaboração, MUST aparecer
   no documento publicado e MUST ser endereçável pelo catálogo de Retificação por identidade estável.
 

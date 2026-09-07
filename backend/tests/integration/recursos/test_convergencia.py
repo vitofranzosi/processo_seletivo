@@ -390,7 +390,10 @@ def test_marco_que_nao_admite_recurso_recusa_a_interposicao(
     with pytest.raises(DomainError) as recusa:
         interpor_como_titular(cenario, inscricao, chave="nao-admite")
 
-    assert recusa.value.code == "appeal_window_closed"
+    # **Código próprio**: "o recurso não é previsto" e "o prazo dele passou" são orientações
+    # opostas para quem as recebe, e um código só as tornaria indistinguíveis (FR-113).
+    assert recusa.value.code == "appeal_not_provided"
+    assert recusa.value.code != "appeal_window_closed"
     assert "não admite recurso" in recusa.value.detail
     assert not Recurso.objects.exists()
 

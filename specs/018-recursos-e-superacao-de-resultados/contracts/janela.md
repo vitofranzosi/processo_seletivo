@@ -22,12 +22,26 @@ Dentro de cada marco classificatório, em `/profiles/*/classificationMilestones/
 
 | chave | valores | significado |
 |---|---|---|
-| `admits` | booleano | se aquele marco admite recurso |
+| `admits` | booleano | se aquele marco admite recurso — e `false` é **norma**, não silêncio (FR-113) |
 | `durationDays` | inteiro positivo | a duração da janela |
 | `unit` | `DIAS_CORRIDOS` | a unidade; único valor admissível na V1 |
 
 **`null` ou ausente significa janela não declarada** — e não janela de zero dias. É o significado que
 o degrau declara para todo Edital publicado antes dele (FR-029).
+
+**Três estados, e os três respondem coisas diferentes** (FR-113, D-004):
+
+```text
+ausente ou null   →  o Edital nada declarou: nenhum prazo é exibido, calculado ou aplicado
+admits: false     →  o Edital declarou que aquele marco NÃO admite recurso: a interposição
+                     por esta via é recusada com `appeal_not_provided`
+admits: true      →  admite, e `durationDays` diz por quanto tempo
+```
+
+Confundir os dois primeiros transforma *"não cabe recurso"* em *"cabe recurso para sempre"*. A
+distinção vale por marco: enumerando dois marcos a mesma Etapa e admitindo apenas um deles, a
+interposição contra o `ResultadoEtapa` permanece possível pela janela daquele — prazo que restringe
+direito interpreta-se a favor de quem recorre (FR-027).
 
 ```text
 SCHEMA_VERSION      7 → 8

@@ -65,11 +65,20 @@ institucional e — havendo janela computável — os instantes de abertura e en
 | `appeal_reason_required` | 422 | fundamentação vazia | recurso sem fundamento não é peça |
 | `appeal_target_superseded` | 409 | o objeto lido foi superado antes da confirmação | nomeia o objeto vigente e oferece o caminho |
 | `appeal_window_closed` | 422 | janela declarada e encerrada | cita a norma, a abertura e o encerramento |
+| `appeal_not_provided` | 422 | o marco declara que **não** admite recurso (FR-113) | encaminha à comissão do certame |
 | `appeal_already_filed` | 409 | já há recurso deste titular contra este objeto | nomeia o protocolo da primeira peça |
 | `appeal_not_visible` | 404 | o Resultado da Etapa não é visível ao titular (o fato de D-003 não ocorreu) | recurso não encontrado |
 
+**Dois códigos, e não um, para o que parece a mesma recusa.** `appeal_window_closed` diz que o
+prazo passou; `appeal_not_provided` diz que o recurso não é previsto naquele marco. Um código só
+obrigaria o cliente a ler a mensagem para distinguir "chegue mais cedo" de "não é por aqui" — e são
+duas orientações opostas para quem as recebe (FR-113).
+
 **Idempotência**: repetir a mesma chave devolve o desfecho da primeira e não cria segunda peça
-(FR-010). Chave igual com conteúdo diferente é conflito.
+(FR-010). A reserva cobre o **pedido inteiro** — a fundamentação e a identidade do objeto atacado:
+sem o objeto, a mesma chave usada contra outro alvo devolveria a primeira peça em silêncio, e quem
+recorreu de duas coisas sairia com o protocolo de uma só. Chave igual com conteúdo diferente é
+conflito (FR-098).
 
 **A ação não é oferecida** quando a interposição não é possível — janela fechada, objeto já
 recorrido, objeto não visível. A recusa existe para quem chega por outro caminho, e não como

@@ -30,6 +30,17 @@ publicacao.publicado_por   == ator?   →  praticou a publicação atacada
 Impedimento(ator, inscricao) existe?  →  o mesmo Impedimento da 012
 ```
 
+**As duas primeiras perguntas alcançam o par que o remédio atinge, e não apenas o objeto atacado.**
+O objeto atacado e o lugar do erro são eixos distintos (D-001): um recurso *contra a publicação*
+cujo mérito é *"minha nota da Etapa 2 está errada"* corrige o `ResultadoEtapa` daquela Etapa.
+Perguntando só pelo objeto atacado, quem avaliou ou consolidou esse Resultado julgaria a correção
+do próprio ato — e a imparcialidade se perderia exatamente onde ela é decidida.
+
+Logo, o conjunto examinado é `{Resultado atacado, Resultado vigente do par que a decisão alcança}`.
+A **cadeia inteira** do par fica de fora: quem respondeu pelo Resultado já superado não decide mais
+nada sobre o vigente, e alcançá-la impediria de julgar quem apenas avaliou uma versão que outro
+recurso já corrigiu.
+
 Cinco perguntas **por ato de julgamento**, e nenhuma por linha de listagem. A listagem mostra
 recursos que o ator pode não poder julgar; é a tela do recurso que diz o impedimento. Verificar na
 listagem custaria a consulta por linha que a 012 recusou (T-006).
