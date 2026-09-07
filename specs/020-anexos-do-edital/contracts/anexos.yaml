@@ -1,0 +1,93 @@
+# Contrato da 020 — Anexos do Edital.
+#
+# Fragmento a ser incorporado a specs/001-processo-seletivo-editais/contracts/openapi.yaml.
+# O esquema `AnexoPublicado` é obrigatório: `tests/contract/test_forma_publicada.py` deriva as
+# coleções de um Edital publicado de verdade e falha se alguma não tiver esquema no contrato.
+
+paths:
+  /api/v1/public/anexos/{artefatoId}:
+    get:
+      summary: Baixa o artefato de um anexo publicado
+      description: >
+        Entrega os bytes de um artefato que alguma versão publicada referencia. O endereço é o do
+        artefato, e não o do anexo: por ser imutável, ele resolve sempre "o de então", nunca "o
+        vigente" (D-011). Artefato ainda não publicado não existe por esta porta.
+      operationId: baixarAnexoPublicado
+      security: []
+      parameters:
+        - name: artefatoId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: O artefato.
+          headers:
+            ETag:
+              description: Resumo criptográfico do artefato, entre aspas.
+              schema: { type: string }
+            Cache-Control:
+              description: 'public, max-age=31536000, immutable'
+              schema: { type: string }
+            Content-Disposition:
+              description: attachment, com nome derivado do rótulo do anexo.
+              schema: { type: string }
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        "304":
+          description: Não modificado, em resposta a If-None-Match.
+        "404":
+          description: >
+            Não existe, ou existe e ainda não foi publicado. As duas respostas são a mesma:
+            dizer "existe, mas não é público" já entregaria que existe.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
+components:
+  schemas:
+    AnexoPublicado:
+      type: object
+      required: [id, label, order, artifactId, artifactHash]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identidade normativa estável do anexo. Sobrevive à Retificação.
+        label:
+          type: string
+          description: >
+            Rótulo editorial completo, num texto só — "ANEXO VI — AUTODECLARAÇÃO ÉTNICO-RACIAL".
+            Escrito pelo autor; o sistema não o interpreta nem deriva numeração dele.
+          minLength: 1
+        order:
+          type: integer
+          minimum: 0
+          description: Ordem editorial. Campo próprio; alterá-la não altera rótulo nenhum.
+        artifactId:
+          type: string
+          format: uuid
+          description: Artefato que esta versão publica para este anexo.
+        artifactHash:
+          type: string
+          description: Resumo criptográfico do artefato, para a cadeia versão → identidade → bytes.
+          pattern: "^[0-9a-f]{64}$"
+
+    # Acréscimo ao esquema existente.
+    DocumentoExigidoPublicado:
+      properties:
+        attachmentId:
+          type: string
+          format: uuid
+          nullable: true
+          description: >
+            Anexo que serve de modelo para este requisito, ou null. Aponta a identidade do anexo,
+            nunca o artefato — o artefato é o que aquela versão diz que o anexo é.
+
+    VersaoPublicada:
+      properties:
+        attachments:
+          type: array
+          items: { $ref: "#/components/schemas/AnexoPublicado" }
