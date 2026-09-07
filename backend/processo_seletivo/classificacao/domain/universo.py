@@ -41,8 +41,28 @@ def recorte_da_regra(conteudo, *, perfil_id, marco_id):
     }
 
 
-def comparar(*, gravado, atual, regra_gravada, regra_atual):
-    """Diferenças relevantes entre o ato e a proposta de agora, em forma legível pela tela."""
+REINGRESSO = "participante reingressou"
+# A causa irmã, e a que aparece primeiro na prática: o deferimento que **corrige** a nota de quem
+# já participava não muda o conjunto de participantes — muda quais Resultados o universo cita. Sem
+# nomeá-la, a tela diria "os Resultados oficiais mudaram" e quem lê sairia procurando por quê, que
+# é exatamente o que a FR-078 recusa. A reintegração de quem estava fora é a outra metade, e tem
+# nome próprio porque é outra coisa: ali muda quem participa, e não o que se cita.
+SUPERACAO = "resultado superado por recurso"
+
+
+def comparar(*, gravado, atual, regra_gravada, regra_atual, reingressos=frozenset()):
+    """Diferenças relevantes entre o ato e a proposta de agora, em forma legível pela tela.
+
+    `reingressos` são as inscrições cujo Resultado vigente é **sucessor** de outro — quem voltou ao
+    universo porque um recurso removeu a eliminação que a excluía. Sem esse conjunto, a divergência
+    diria apenas "o conjunto de participantes mudou", e quem lê a tela do marco teria de sair
+    procurando por quê. Nomear a causa é o que transforma um aviso genérico em informação
+    acionável (FR-078).
+
+    O conjunto vem de **fora** de propósito: `comparar` é função pura sobre dois universos e uma
+    regra, e ensiná-la a consultar recursos a faria conhecer um agregado de outro app para produzir
+    uma frase.
+    """
     diferencas = []
     if regra_atual is None:
         diferencas.append(
@@ -57,11 +77,19 @@ def comparar(*, gravado, atual, regra_gravada, regra_atual):
     participantes_antes = set(gravado.get("participants") or [])
     participantes_agora = set(atual.get("participants") or [])
     if participantes_antes != participantes_agora:
+        entraram = sorted(participantes_agora - participantes_antes)
+        reingressaram = [str(item) for item in entraram if str(item) in reingressos]
         diferencas.append(
             {
                 "tipo": "participantes_alterados",
-                "descricao": "O conjunto de participantes considerados mudou.",
-                "entraram": sorted(participantes_agora - participantes_antes),
+                "descricao": (
+                    f"O conjunto de participantes considerados mudou: {REINGRESSO}."
+                    if reingressaram
+                    else "O conjunto de participantes considerados mudou."
+                ),
+                "causa": REINGRESSO if reingressaram else "",
+                "entraram": entraram,
+                "reingressaram": reingressaram,
                 "sairam": sorted(participantes_antes - participantes_agora),
             }
         )
@@ -69,10 +97,21 @@ def comparar(*, gravado, atual, regra_gravada, regra_atual):
     resultados_antes = {item.get("id") for item in gravado.get("stageResults") or []}
     resultados_agora = {item.get("id") for item in atual.get("stageResults") or []}
     if resultados_antes != resultados_agora:
+        entrantes = [
+            item
+            for item in atual.get("stageResults") or []
+            if item.get("id") in (resultados_agora - resultados_antes)
+        ]
+        superados = [item for item in entrantes if str(item.get("registrationId")) in reingressos]
         diferencas.append(
             {
                 "tipo": "resultados_alterados",
-                "descricao": "Os Resultados oficiais do universo mudaram.",
+                "descricao": (
+                    f"Os Resultados oficiais do universo mudaram: {SUPERACAO}."
+                    if superados
+                    else "Os Resultados oficiais do universo mudaram."
+                ),
+                "causa": SUPERACAO if superados else "",
                 "entraram": sorted(resultados_agora - resultados_antes),
                 "sairam": sorted(resultados_antes - resultados_agora),
             }
@@ -80,4 +119,4 @@ def comparar(*, gravado, atual, regra_gravada, regra_atual):
     return diferencas
 
 
-__all__ = ["comparar", "por_identidade", "recorte_da_regra"]
+__all__ = ["REINGRESSO", "SUPERACAO", "comparar", "por_identidade", "recorte_da_regra"]

@@ -1524,3 +1524,43 @@ def test_a_etapa_decisoria_imprime_os_rotulos_e_nao_imprime_nota():
 
     assert "Deferido ou Indeferido" in texto
     assert "Nota mínima" not in texto and "Pontuação máxima" not in texto
+
+
+# ---------------------------------------------------------------------------
+# A janela recursal na frase normativa — e os três estados dela (FR-030, FR-113)
+# ---------------------------------------------------------------------------
+
+
+def test_a_janela_declarada_vira_frase_normativa():
+    from processo_seletivo.publicacoes.infrastructure.pdf import _janela_recursal
+
+    frase = _janela_recursal(
+        {"appealWindow": {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"}}
+    )
+
+    assert frase == (
+        "Caberá recurso no prazo de 5 (cinco) dias corridos, contados da divulgação do resultado."
+    )
+
+
+def test_a_negativa_declarada_tambem_e_frase():
+    """FR-113: `admits` falso é norma publicada — e a recusa a **nomeia**.
+
+    A caminhada da T125 encontrou o buraco: o documento imprimia a frase da janela declarada e
+    silenciava nos outros dois casos, tratando a negativa como se fosse a ausência. Mas a recusa
+    de interpor cita a norma, e o candidato tem direito de conferi-la no documento; quando ela não
+    está escrita em lugar nenhum, o que a recusa cita não existe.
+    """
+    from processo_seletivo.publicacoes.infrastructure.pdf import _janela_recursal
+
+    frase = _janela_recursal({"appealWindow": {"admits": False, "durationDays": None}})
+
+    assert frase == "Não caberá recurso contra o resultado deste marco."
+
+
+def test_o_silencio_do_edital_continua_sem_frase():
+    """FR-028: escrever "não cabe recurso" onde o Edital nada disse afirmaria norma inexistente."""
+    from processo_seletivo.publicacoes.infrastructure.pdf import _janela_recursal
+
+    assert _janela_recursal({"id": "m1"}) == ""
+    assert _janela_recursal({"appealWindow": None}) == ""

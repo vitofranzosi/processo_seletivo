@@ -324,7 +324,19 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
           A causa vai ao lado da linha, e não numa tela de erro: quem precisa agir precisa saber
           **o que** fazer, e "erro" não diz (FR-012).
           {% endcomment %}
-          <td class="motivo-da-prontidao">{% if linha.prontidao %}{{ linha.prontidao.1 }}{% endif %}</td>
+          <td class="motivo-da-prontidao">{% if linha.prontidao %}{{ linha.prontidao.1 }}{% endif %}
+            {% with reabilitada=reabilitadas|dicionario_simples:linha.inscricao.id %}
+            {% if reabilitada %}
+            {% comment %}
+            Quem voltou ao certame por recurso aparece **nomeada**, e não como mais uma pendente:
+            sem isso, a presidência veria reaparecer alguém que estava eliminada e não saberia por
+            quê. A data é a do deferimento, que é por onde se procura (FR-077).
+            {% endcomment %}
+            <p class="reabilitada">Reabilitada por recurso: decisão de
+              {{ reabilitada.deferido_em|date:"d/m/Y" }} no recurso {{ reabilitada.recurso }}.</p>
+            {% endif %}
+            {% endwith %}
+          </td>
           <td>
             {% for atribuicao in linha.atribuicoes %}
             <span class="quem">{{ atribuicao.membro.display_label|default:atribuicao.membro.identity_subject }}</span>{% if not forloop.last %}, {% endif %}

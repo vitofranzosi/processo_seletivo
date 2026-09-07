@@ -191,6 +191,15 @@ details.como-converter li{margin-bottom:.4rem}
    sozinho, quanto se espera — e um campo largo demais parece formulário mal montado. */
 .campo.curto{max-width:15rem}
 .ajuda{color:var(--texto-fraco);font-size:.9375rem;margin:.25rem 0 1rem}
+/* O campo de razão do recurso é o único texto longo que o candidato escreve no portal, e herda a
+   moldura dos demais controles: nada aqui é especial por ser recurso. */
+.campo textarea{width:100%;padding:.6rem;border:1px solid var(--borda);border-radius:4px;
+  font:inherit;background:var(--branco);resize:vertical}
+.vigente{background:var(--branco);border-left:4px solid var(--verde);border-radius:4px;
+  padding:.6rem 1rem;margin:0 0 1rem;font-weight:600}
+.meus-recursos{list-style:none;margin:0 0 1.5rem;padding:0;display:grid;gap:.6rem}
+.meus-recursos .peca{display:grid;gap:.15rem;padding:.6rem .75rem;border:1px solid var(--borda);
+  border-left:4px solid var(--verde);border-radius:4px;background:var(--branco)}
 .dados{display:grid;grid-template-columns:1fr;gap:.15rem .75rem;margin:0 0 1rem}
 .dados dt{color:var(--texto-fraco)}
 .dados dd{margin:0 0 .5rem;overflow-wrap:anywhere}
@@ -530,6 +539,20 @@ form.convite{margin:.75rem 0 0}
 .resultado-divulgado .posicao{margin:0 0 .5rem;font-size:1.125rem}
 .resultado-divulgado .meta{color:var(--texto-fraco);font-size:.9375rem;margin:0 0 .5rem}
 .resultado-divulgado p:last-child{margin-bottom:0}
+/* Um bloco por Etapa cujo Resultado a publicação vigente do marco já autoriza mostrar (018,
+   D-003). Reusa a caixa do marco divulgado porque as duas coisas se leem juntas e são do mesmo
+   registro — mudar de moldura entre elas sugeriria que uma é menos oficial que a outra. */
+.resultado-da-etapa{border:1px solid var(--borda);border-radius:6px;padding:1rem 1.25rem;
+  margin:0 0 1rem;max-width:var(--leitura)}
+.resultado-da-etapa>h3{margin:0}
+.resultado-da-etapa .posicao{margin:.25rem 0 .5rem;font-size:1.125rem}
+.resultado-da-etapa .meta{color:var(--texto-fraco);font-size:.9375rem;margin:0 0 .5rem}
+.resultado-da-etapa p:last-child{margin-bottom:0}
+/* A correção por recurso deferido é dita, e não apenas aplicada: quem vê a nota mudar precisa
+   saber por quê. Distinta do texto fraco ao lado, porque é a explicação de uma mudança — e não
+   mais um detalhe do registro (FR-016). */
+.resultado-da-etapa .corrigido{color:var(--texto);border-left:3px solid var(--borda);
+  padding-left:.75rem}
 </style>
 </head>
 <body>

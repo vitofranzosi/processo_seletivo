@@ -1,0 +1,68 @@
+{% extends "interface/base.html" %}
+{% block titulo %}Recursos recebidos{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">Recursos</span>
+</nav>
+
+<h1>Recursos recebidos</h1>
+<p class="sub">O que foi contestado neste Edital, e em que pé está cada peça.</p>
+
+{% comment %}
+**Sem impedimento na lista, e de propósito** (T-006). Perguntar quem está impedido de julgar cada
+peça custaria cinco leituras por linha — o custo por linha que a 012 já recusou uma vez. A lista
+mostra recursos que quem lê talvez não possa julgar, e é a tela da peça que nomeia o impedimento.
+
+Sem fundamentação também: ela é conteúdo do juízo, e esta tela existe para escolher o que abrir.
+{% endcomment %}
+<form method="get" action="{% url 'interface:recursos' edital.id %}" class="filtro">
+  <div class="campo curto">
+    <label for="situacao">Situação</label>
+    <select id="situacao" name="situacao">
+      <option value="">Todas</option>
+      {% for chave, rotulo in situacoes %}
+      <option value="{{ chave }}" {% if chave == situacao %}selected{% endif %}>{{ rotulo }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <p class="salvar"><button type="submit" class="botao">Filtrar</button></p>
+</form>
+
+{% if recursos %}
+<div class="tabela-rolavel">
+<table>
+  <caption class="oculto">Recursos recebidos neste Edital</caption>
+  <thead>
+    <tr>
+      <th scope="col">Protocolo</th>
+      <th scope="col">Interposto em</th>
+      <th scope="col">Candidato</th>
+      <th scope="col">Objeto atacado</th>
+      <th scope="col">Situação</th>
+      <th scope="col">Tempestividade</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for linha in recursos %}
+    <tr>
+      <td><a href="{% url 'interface:recurso' linha.recurso.id %}">{{ linha.protocolo }}</a></td>
+      <td>{{ linha.interposto_em|date:"d/m/Y H:i" }}</td>
+      <td>{{ linha.candidato }}<br><span class="linha-secundaria">{{ linha.inscricao }}</span></td>
+      <td>{{ linha.objeto }}</td>
+      <td>{{ linha.situacao_rotulo }}</td>
+      <td>{{ linha.tempestividade_rotulo }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+{% comment %}
+Estado vazio, e não erro: é o estado normal de um Edital em que ninguém recorreu — que é a maioria
+deles, na maior parte do tempo.
+{% endcomment %}
+<p class="vazio">Nenhum recurso foi interposto neste Edital{% if situacao %} nesta situação{% endif %}.</p>
+{% endif %}
+{% endblock %}

@@ -23,7 +23,11 @@ from processo_seletivo.comissoes.application.comissao import identificador
 from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.processos.models import Edital
-from processo_seletivo.resultados.application.prontidao import PRONTA, panorama_da_etapa
+from processo_seletivo.resultados.application.prontidao import (
+    PRONTA,
+    REAVALIACAO,
+    panorama_da_etapa,
+)
 from processo_seletivo.resultados.domain.regra import consequencia
 from processo_seletivo.resultados.models import ResultadoEtapa
 from processo_seletivo.shared.api.problems import DomainError
@@ -94,6 +98,64 @@ def _inscricoes_da_selecao(edital, ids, panorama):
     return inscricoes
 
 
+SEM_REAVALIACAO = "a reavaliação determinada por recurso ainda não foi concluída por um avaliador"
+PIORARIA = (
+    "a reavaliação produziu resultado pior que o protegido pela decisão, e o recurso não pode "
+    "agravar a situação de quem recorreu; a avaliação fica registrada e o resultado não é superado"
+)
+MOTIVO_DA_REAVALIACAO = (
+    "Resultado corrigido em cumprimento da decisão de reavaliação no recurso {protocolo}"
+)
+
+
+def _decisao_a_cumprir(panorama, inscricao, estado):
+    """A decisão de reavaliação que esta consolidação cumpre, ou `None`.
+
+    **É a única porta pela qual consolidar cria sucessor** (FR-068). Ela se abre apenas onde há,
+    para aquele par, decisão dessa espécie ainda não cumprida — e é por isso que a pergunta é feita
+    ao panorama, que já a respondeu para a Etapa inteira numa consulta só, e não ao banco por linha.
+    """
+    if estado != REAVALIACAO:
+        return None
+    return next(
+        (
+            decisao
+            for (identidade, _etapa), decisao in panorama["reavaliacoes"].items()
+            if identidade == inscricao.id
+        ),
+        None,
+    )
+
+
+def _conclusao_a_consolidar(panorama, inscricao, cumprindo):
+    """A conclusão elegível — e, no cumprimento, a **nova** avaliação, que pode ainda não existir.
+
+    Determinar reavaliação não a produz: alguém precisa avaliar. **A avaliação que fundamentou o
+    Resultado protegido é excluída aqui**, e não deixada para a trigger: sem isso, consolidar em
+    cumprimento reconsolidaria a mesma nota como se fosse a reavaliação, e o que chegaria ao
+    operador seria um erro de banco em vez da frase que diz o que falta.
+
+    Mais de uma nova é o mesmo caso ambíguo de sempre — escolher uma seria o sistema decidindo qual
+    nota vale.
+    """
+    conclusoes = panorama["elegiveis"].get(inscricao.id, [])
+    if cumprindo is not None:
+        original = getattr(cumprindo.resultado_protegido, "avaliacao_id", None)
+        conclusoes = [item for item in conclusoes if item.avaliacao_id != original]
+    if len(conclusoes) != 1:
+        return None
+    return conclusoes[0]
+
+
+def _pioraria(cumprindo, efeito, conclusao):
+    from processo_seletivo.recursos.domain.pejus import piora
+
+    protegido = cumprindo.resultado_protegido
+    if protegido is None:
+        return False
+    return piora(protegido=protegido, consequencia=efeito, pontuacao=conclusao.pontuacao)
+
+
 def consolidar(
     *, actor, processo_id, edital_id, etapa_id, inscricao_ids, idempotency_key, correlation_id
 ):
@@ -133,11 +195,22 @@ def consolidar(
         criados, recusas = [], []
         for inscricao in inscricoes:
             estado, motivo = panorama["estados"][inscricao.id]
-            if estado != PRONTA:
+            cumprindo = _decisao_a_cumprir(panorama, inscricao, estado)
+            if estado != PRONTA and cumprindo is None:
                 recusas.append(Recusa(inscricao, motivo))
                 continue
-            conclusao = panorama["elegiveis"][inscricao.id][0]
+            conclusao = _conclusao_a_consolidar(panorama, inscricao, cumprindo)
+            if conclusao is None:
+                recusas.append(Recusa(inscricao, SEM_REAVALIACAO))
+                continue
             efeito, causa = consequencia(etapa, conclusao)
+            if cumprindo is not None and _pioraria(cumprindo, efeito, conclusao):
+                # **A vedação de piora alcança este caminho** (FR-073). A nova Avaliação fica
+                # registrada — ela é o juízo do avaliador, e apagá-la seria mentir sobre o que ele
+                # concluiu —, mas o seu Resultado não vira sucessor. Sem isto, a reavaliação
+                # ordenada seria a porta dos fundos da *non reformatio*.
+                recusas.append(Recusa(inscricao, PIORARIA))
+                continue
             resultado = ResultadoEtapa.objects.create(
                 inscricao=inscricao,
                 edital=edital,
@@ -159,6 +232,17 @@ def consolidar(
                 motivo=causa,
                 consolidado_em=ctx.now,
                 consolidado_por=actor.subject,
+                # A **exceção única**: fora do cumprimento de decisão, estes três campos são vazios
+                # e a consolidação continua recusando o par que já tem Resultado vigente (FR-055).
+                resultado_anterior=(
+                    cumprindo.resultado_protegido if cumprindo is not None else None
+                ),
+                motivo_da_superacao=(
+                    MOTIVO_DA_REAVALIACAO.format(protocolo=cumprindo.recurso.protocolo)
+                    if cumprindo is not None
+                    else ""
+                ),
+                decisao=cumprindo,
             )
             criados.append(resultado)
             # Um evento por Resultado, inclusive no lote: a trilha responde por agregado, e "qual

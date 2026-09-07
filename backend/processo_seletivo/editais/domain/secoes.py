@@ -137,9 +137,14 @@ CATALOGO: tuple[Secao, ...] = (
         title="Dos Recursos",
         order=10,
         type=TEXTUAL,
+        # **Remete, e não afirma por todos** (018, FR-113). O padrão dizia "caberá recurso contra
+        # os resultados divulgados", e desde que o marco pode declarar que **não** admite recurso
+        # essa frase põe o documento em contradição consigo mesmo: a seção prometendo o que o marco
+        # nega, no mesmo ato publicado. Remeter é verdade nos três estados — declarada, negada e
+        # não declarada —, e o texto continua editável para o Edital que precise dizer mais.
         default_text=(
-            "Caberá recurso contra os resultados divulgados, nos prazos do Cronograma, pelos meios "
-            "indicados neste Edital."
+            "Caberá recurso contra os resultados divulgados nos casos e prazos que este Edital "
+            "declara para cada marco classificatório, pelos meios nele indicados."
         ),
     ),
     Secao(

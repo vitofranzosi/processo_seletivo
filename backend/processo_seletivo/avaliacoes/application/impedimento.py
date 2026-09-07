@@ -145,7 +145,10 @@ def _resultados_contestados(inativadas):
             "etapa": str(resultado.etapa_id),
             "resultado": str(resultado.id),
         }
-        for resultado in ResultadoEtapa.objects.filter(
+        # `vigentes`: um Resultado já superado por recurso deferido não tem a sua origem
+        # contestada de novo — ele deixou de produzir efeito, e declarar contestação sobre ele
+        # confundiria quem lê o desfecho do impedimento (018, T-004).
+        for resultado in ResultadoEtapa.vigentes.filter(
             avaliacao__atribuicao__in=[a.id for a in inativadas]
         ).select_related("inscricao")
     ]

@@ -256,7 +256,11 @@ def test_a_trigger_recusa_resultado_com_forma_diferente_da_fonte(decisoria_conso
 
 COLUNAS = (
     "id, inscricao_id, edital_id, etapa_id, origem, avaliacao_id, versao_id, forma, pontuacao, "
-    "sentido, consequencia, motivo, consolidado_em, consolidado_por"
+    "sentido, consequencia, motivo, consolidado_em, consolidado_por, "
+    # A sucessão da 018. `motivo_da_superacao` é `NOT NULL` com padrão só no ORM, como `forma` e
+    # `sentido` ao lado — um `INSERT` cru precisa listá-la, e é justamente por isto que ele existe:
+    # provar a trigger por fora do ORM significa carregar o esquema inteiro à mão.
+    "resultado_anterior_id, motivo_da_superacao, decisao_id"
 )
 
 
@@ -282,12 +286,15 @@ def inserir_cru(cenario, inscricao, **campos):
         "motivo": "não compareceu",
         "consolidado_em": timezone.now(),
         "consolidado_por": "maria",
+        "resultado_anterior_id": None,
+        "motivo_da_superacao": "",
+        "decisao_id": None,
     }
     linha.update(campos)
     with connection.cursor() as cursor:
         cursor.execute(
             f"INSERT INTO resultados_resultadoetapa ({COLUNAS}) VALUES "
-            "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            "(" + ", ".join(["%s"] * len(COLUNAS.split(","))) + ")",
             [linha[nome.strip()] for nome in COLUNAS.split(",")],
         )
     return linha["id"]

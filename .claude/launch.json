@@ -79,6 +79,98 @@
         "8014"
       ],
       "port": 8014
+    },
+    {
+      "name": "spec-018",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DB_USER=saymoncastro",
+        "DB_NAME=ps018_demo",
+        "LC_ALL=en_US.UTF-8",
+        "DEFAULT_FROM_EMAIL=nao-responda@exemplo.test",
+        "PORTAL_ATENDIMENTO=selecao@cefor.ifes.edu.br",
+        "ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos",
+        "DJANGO_EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend",
+        "INTERFACE_SELETOR_IDENTIDADE=true",
+        "uv",
+        "run",
+        "--directory",
+        "backend",
+        "python",
+        "manage.py",
+        "runserver",
+        "127.0.0.1:8018"
+      ],
+      "port": 8018
+    },
+    {
+      "name": "spec-018-prazo",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DB_USER=saymoncastro",
+        "DB_NAME=ps018_prazo",
+        "LC_ALL=en_US.UTF-8",
+        "DEFAULT_FROM_EMAIL=nao-responda@exemplo.test",
+        "PORTAL_ATENDIMENTO=selecao@cefor.ifes.edu.br",
+        "ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos",
+        "DJANGO_EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend",
+        "INTERFACE_SELETOR_IDENTIDADE=true",
+        "uv",
+        "run",
+        "--directory",
+        "backend",
+        "python",
+        "manage.py",
+        "runserver",
+        "127.0.0.1:8019"
+      ],
+      "port": 8019
+    },
+    {
+      "name": "spec-018-antigo",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DB_USER=saymoncastro",
+        "DB_NAME=ps018_antigo",
+        "LC_ALL=en_US.UTF-8",
+        "DEFAULT_FROM_EMAIL=nao-responda@exemplo.test",
+        "PORTAL_ATENDIMENTO=selecao@cefor.ifes.edu.br",
+        "ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos",
+        "DJANGO_EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend",
+        "INTERFACE_SELETOR_IDENTIDADE=true",
+        "uv",
+        "run",
+        "--directory",
+        "backend",
+        "python",
+        "manage.py",
+        "runserver",
+        "127.0.0.1:8020"
+      ],
+      "port": 8020
+    },
+    {
+      "name": "spec-018-negado",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DB_USER=saymoncastro",
+        "DB_NAME=ps018_negado",
+        "LC_ALL=en_US.UTF-8",
+        "DEFAULT_FROM_EMAIL=nao-responda@exemplo.test",
+        "PORTAL_ATENDIMENTO=selecao@cefor.ifes.edu.br",
+        "ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos",
+        "DJANGO_EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend",
+        "INTERFACE_SELETOR_IDENTIDADE=true",
+        "uv",
+        "run",
+        "--directory",
+        "backend",
+        "python",
+        "manage.py",
+        "runserver",
+        "127.0.0.1:8021"
+      ],
+      "port": 8021
     }
   ]
 }

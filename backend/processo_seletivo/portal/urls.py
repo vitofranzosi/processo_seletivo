@@ -35,6 +35,10 @@ urlpatterns = [
         views.acompanhamento,
         name="acompanhamento",
     ),
+    # As duas rotas do recurso (018, US2). O identificador está no **endereço**, e não na
+    # linguagem apresentada — que é a distinção que a 017 fixou e esta feature herda.
+    path("inscricoes/<uuid:inscricao_id>/recorrer", views.recorrer, name="recorrer"),
+    path("recursos/<uuid:recurso_id>", views.recurso, name="recurso"),
     path("inscricoes/<uuid:inscricao_id>/comprovante", views.comprovante, name="comprovante"),
     # O mesmo documento, como arquivo. `.pdf` no endereço porque é o que ele devolve, e porque um
     # endereço que termina em `.pdf` é o que uma pessoa reconhece como arquivo para guardar.

@@ -65,6 +65,17 @@ class PublicacaoResultado(models.Model):
     # Nome e cargo são persistidos: retirar a autoridade do catálogo não altera ato já praticado.
     signatario_nome = models.CharField(max_length=255)
     signatario_cargo = models.CharField(max_length=255)
+    # A declaração expressa de que o prazo recursal se encerrou, exigida **somente** quando a
+    # natureza é definitiva e o marco não tem janela computável (FR-085, FR-086). Onde há janela, o
+    # sistema verifica: pedir a declaração ali seria pedir à pessoa que respondesse pelo que a
+    # máquina sabe — e reintroduziria, com mais passos, a afirmação sem lastro que o E2E17-005
+    # registrou.
+    #
+    # Gravada no nascimento, e por isso persistida na publicação: quem a fez, quando e com que
+    # fundamento. Sem os três, "declarou-se encerrado" seria afirmação sem autor.
+    prazo_encerrado_declarado_em = models.DateTimeField(null=True, blank=True)
+    prazo_encerrado_declarado_por = models.CharField(max_length=255, blank=True, default="")
+    prazo_encerrado_fundamento = models.TextField(blank=True, default="")
 
     class Meta:
         constraints = [
@@ -86,6 +97,23 @@ class PublicacaoResultado(models.Model):
             models.UniqueConstraint(
                 fields=["ato", "natureza"],
                 name="uq_publicacao_por_ato_natureza",
+            ),
+            # Os três campos da declaração andam juntos ou não existem. Uma declaração com autor e
+            # sem fundamento seria afirmação sem razão escrita, e uma com fundamento e sem autor
+            # seria razão sem quem responda por ela — as duas metades de um ato que só vale
+            # inteiro (FR-085).
+            models.CheckConstraint(
+                condition=(
+                    Q(
+                        prazo_encerrado_declarado_em__isnull=True,
+                        prazo_encerrado_declarado_por="",
+                        prazo_encerrado_fundamento="",
+                    )
+                    | Q(prazo_encerrado_declarado_em__isnull=False)
+                    & ~Q(prazo_encerrado_declarado_por="")
+                    & ~Q(prazo_encerrado_fundamento="")
+                ),
+                name="ck_declaracao_completa",
             ),
         ]
         indexes = [models.Index(fields=["edital", "perfil_id", "marco_id"])]

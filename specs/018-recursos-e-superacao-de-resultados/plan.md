@@ -82,7 +82,7 @@ resultados/0004 ──▶ recursos/0001 ──▶ resultados/0005
 divulgacao/0001 ──▶ divulgacao/0002        (independente das demais)
 ```
 
-`recursos/0001` cria três tabelas — a peça, o juízo de admissibilidade e a decisão —, com **13
+`recursos/0001` cria três tabelas — a peça, o juízo de admissibilidade e a decisão —, com **17
 constraints** e **5 triggers**: três de imutabilidade e **duas** de coerência, porque uma trigger
 instalada no `Recurso` não valida linha da `DecisaoRecurso`. `resultados/0005` é **inteiramente de
 esquema** — três colunas anuláveis, o terceiro valor de `origem`, quatro constraints novas, duas
@@ -136,7 +136,7 @@ ao acompanhamento.** O item que domina o cronograma não é nenhum desses: é o 
 | Princípio | Exigência | Como esta feature responde |
 |---|---|---|
 | I — Linguagem ubíqua e integridade | Conceitos distintos; identificadores estáveis; invariantes em constraint; histórico não excluído | **Recurso** é o conceito que a Constituição já nomeia entre os que exigem autorização própria, e nasce distinto de Avaliação, Resultado e Publicação. O impedimento recursal **é** o `Impedimento` da 012, ampliado do avaliar para o julgar — criar um segundo seria a linguagem se partindo pelo canal da pergunta (D-005). As invariantes centrais vão ao banco: raiz única por par, sucessor único, exatamente um objeto atacado, um juízo e uma decisão por recurso. Nada é excluído: `delete` recusa, a trigger recusa, o papel de runtime não tem privilégio. **Passa** |
-| II — Integridade normativa e temporalidade | Fonte única; publicado imutável; estado vigente reproduzível; zona institucional | A janela é lida do conteúdo publicado, e a ausência tem significado declarado no degrau 8 — nunca inferida de `EventoCronograma.type`, que é texto livre (T-007). A vigência do Resultado é **derivada da cadeia**, e não coluna: a segunda fonte que o princípio proíbe é exatamente o que a alternativa 3 da decisão C perdia. A reprodução histórica é imune por construção (T-004). A contagem usa a zona institucional, que sobe de `interface/` para módulo compartilhado antes de ser usada pelo domínio (T-008). **Passa** |
+| II — Integridade normativa e temporalidade | Fonte única; publicado imutável; estado vigente reproduzível; zona institucional | A janela é lida do conteúdo publicado, e **cada um dos três estados** tem significado declarado no degrau 8 — não declarada, negada e declarada (FR-113) —, nunca inferida de `EventoCronograma.type`, que é texto livre (T-007). A vigência do Resultado é **derivada da cadeia**, e não coluna: a segunda fonte que o princípio proíbe é exatamente o que a alternativa 3 da decisão C perdia. A reprodução histórica é imune por construção (T-004). A contagem usa a zona institucional, que sobe de `interface/` para módulo compartilhado antes de ser usada pelo domínio (T-008). **Passa** |
 | III — Segurança, dados pessoais e auditoria | Negar por padrão; autorização específica para julgamento de recurso; IDOR; LGPD; auditoria | O Princípio III **nomeia** julgamento de recurso entre as operações que exigem autorização específica, e é o que `recurso:julgar` faz, em papel próprio para não conceder julgamento por carona (T-005). A titularidade do candidato usa o contrato existente, com 404 uniforme. Nenhum dado de terceiro atravessa as superfícies do recurso: o candidato vê o próprio Resultado, e a listagem administrativa não expõe fundamentação a quem não pode lê-la. Interposição, admissibilidade, decisão e superação entram na trilha existente, sem copiar fundamentação nem pontuação para ela. **Passa** |
 | IV — Regras explícitas e consistência | Regra no backend; estados explícitos; transação; concorrência | Julgar é comando de domínio com transação, autorização reavaliada **depois** do bloqueio, reserva de idempotência e revalidação do que foi lido. O Recurso **não ganha máquina de estados persistida**: a situação deriva de quais atos existem (D-010), e a spec declara isso em vez de omitir. Concorrência coberta em cinco frentes, cada uma para um caso que as outras não pegam: idempotência, unicidade de sucessor no banco, unicidade de decisão por recurso, assinatura do que foi lido e bloqueio do Processo. **Passa** |
 | V — Qualidade, rastreabilidade e simplicidade | Citação resolvível; teste como prova; simplicidade justificada | As onze decisões estão na spec, no formato que `test_citacoes_de_requisito.py` resolve. A simplicidade é **ativa e custou análise**: sem **ato autônomo** de cumprimento, sem espécie estruturada de providência, sem ato de impossibilidade, sem exceção à regra da janela, sem anexos, sem segunda instância, sem comissão recursal. Cada recusa está argumentada por alcançabilidade ou por precedente, e não por gosto. O que se acrescenta — **um app novo, quatro tabelas** e um degrau — é o mínimo que a imutabilidade e a promessa do Edital exigem, e a quarta tabela é **proveniência**, não ato: `CitacaoDeDecisao` registra que um ato citou uma decisão, e quem conclui que a providência foi cumprida é a leitura, não uma linha. **Passa** |
@@ -172,11 +172,12 @@ specs/018-recursos-e-superacao-de-resultados/
 backend/processo_seletivo/
 ├── recursos/                            # app novo
 │   ├── models.py                        # Recurso, JuizoDeAdmissibilidade, DecisaoRecurso
-│   ├── migrations/0001_initial.py       # 3 tabelas, 13 constraints, 5 triggers
+│   ├── migrations/0001_initial.py       # 3 tabelas, 17 constraints, 5 triggers
 │   ├── domain/
 │   │   ├── janela.py                    # contagem pura: abre, fecha, está aberta (T-008)
 │   │   ├── elegibilidade.py             # as cinco perguntas do impedimento (T-006)
-│   │   ├── consequencia.py              # deriva a consequência da conclusão fixada (FR-059)
+│   │   ├── consequencia.py              # deriva a consequência da conclusão fixada, e recusa
+│   │   │                                #   com motivo o que não é pontuação (FR-059)
 │   │   ├── pejus.py                     # a comparação de piora, nos dois pontos (T-011)
 │   │   └── protocolo.py                 # REC-AAAA-XXXXXXXX, alfabeto compartilhado (T-012)
 │   └── application/
@@ -201,11 +202,15 @@ backend/processo_seletivo/
 │   ├── models.py                        # + os 3 campos da declaração de encerramento
 │   ├── migrations/0002_declaracao.py    # 3 colunas, 1 constraint
 │   ├── domain/publicabilidade.py        # + natureza pretendida e os seis fatos (T-010)
+│   ├── domain/conteudo.py               # + a causa da retificação, congelada na publicação (FR-088)
+│   ├── infrastructure/documento.py      # + a linha RETIFICAÇÃO no documento do resultado (FR-088)
 │   └── application/publicar.py          # + a natureza a aferir e a declaração expressa (FR-085)
 ├── avaliacoes/
 │   ├── application/impedimento.py       # + vigência na leitura de Resultado (T-004)
 │   └── application/avaliacao.py         # a recusa deixa de prometer "anulação" (FR-111)
-├── editais/domain/perfis.py             # + validação de `appealWindow` na publicação (FR-021)
+├── editais/
+│   ├── domain/perfis.py                 # + validação de `appealWindow` na publicação (FR-021)
+│   └── domain/secoes.py                 # a seção "Dos Recursos" remete ao marco (FR-113)
 ├── publicacoes/
 │   ├── domain/elevacao.py               # + DEGRAUS_DE_MARCO e elevar_marco (T-007)
 │   ├── domain/colecoes.py               # endereçamento de `appealWindow` por Retificação (T-007)
@@ -254,7 +259,7 @@ ainda não existia.
 | Fase | Entrega | Termina quando |
 |---|---|---|
 | **F0** | **Fundação persistente, e só o que é indivisível**: app `recursos` com as três tabelas, constraints e triggers; sucessão do `ResultadoEtapa`; manager `vigentes` consumido em toda leitura de efeito; teste estrutural | `recursos/0001` e `resultados/0005` aplicam do zero e a partir da anterior; o teste estrutural falha em uso não declarado de `ResultadoEtapa.objects`; a suíte inteira continua verde em PostgreSQL |
-| **F1** | O candidato vê o próprio Resultado da Etapa | Helena, eliminada na Etapa 1 e fora do universo do ato, lê o próprio Indeferimento com o motivo escrito |
+| **F1** | O candidato vê o próprio Resultado da Etapa | Elisa, eliminada na Etapa 1 e fora do universo do ato, lê o próprio Indeferimento com o motivo escrito |
 | **F2** | Interposição, protocolo, acompanhamento, recusa por objeto superado — **sobre a fundação da F0** | O candidato recorre pelo portal e recebe protocolo; a segunda interposição é recusada nomeando a primeira |
 | **F3** | Papel `julgador`, impedimento que bloqueia, admissibilidade motivada, decisão nas quatro espécies, e o deferimento que fixa correção superando na mesma transação | Quem consolidou o Resultado atacado é recusado; o Resultado sucessor nasce, o anterior permanece, o ato fica obsoleto e a publicação é recusada com caminho |
 | **F4** | Reavaliação determinada: pendência nomeada, consolidação que produz o sucessor, *non reformatio* nos dois pontos | A Etapa mostra a pendência, a nova Avaliação é consolidada como sucessor, e a pior é recusada |

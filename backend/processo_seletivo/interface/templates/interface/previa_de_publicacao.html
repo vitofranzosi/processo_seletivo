@@ -67,6 +67,21 @@ FR-040).
     </select>
     <p id="ajuda-natureza" class="ajuda">Um resultado definitivo não é sucedido por um preliminar.</p>
   </div>
+  {% if exige_declaracao %}
+  <div class="campo">
+    <label for="declaracao_de_encerramento">Declaração de encerramento do prazo recursal</label>
+    {% comment %}
+    Exigida **somente** quando o marco não declara prazo computável (FR-085). Onde o Edital o
+    declara, o sistema verifica, e pedir a declaração ali seria pedir que a pessoa respondesse pelo
+    que a máquina sabe — a mesma afirmação sem lastro que o E2E17-005 registrou. Por isso o campo
+    nem aparece nesse caso, e o comando a recusa se ela vier assim mesmo.
+    {% endcomment %}
+    <textarea id="declaracao_de_encerramento" name="declaracao_de_encerramento" rows="3"></textarea>
+    <p class="ajuda">Este Edital não declara prazo recursal computável para este marco. Para
+      publicar como definitivo, declare com fundamento escrito que o prazo se encerrou. A
+      declaração fica registrada com o seu nome e o instante da publicação.</p>
+  </div>
+  {% endif %}
 
   <div class="campo">
     <label for="autoridade">Autoridade signatária</label>

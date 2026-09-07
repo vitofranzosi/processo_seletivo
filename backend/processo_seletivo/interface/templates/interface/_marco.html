@@ -52,6 +52,62 @@
       <span class="ajuda">Aplicado uma vez, sobre a pontuação combinada.</span>
     </p>
   </div>
+  {% comment %}
+  A janela recursal do marco (018, FR-030). **Não declarar é uma escolha legítima**, e é o que o
+  formulário oferece por padrão: sem prazo publicado o sistema não inventa nenhum, e a
+  tempestividade continua sendo juízo de admissibilidade motivado.
+
+  **Três escolhas, e não uma caixa de marcação** (FR-020, FR-113). Caixa tem dois estados, e os
+  estados são três: a negativa só nascia se a pessoa desmarcasse a caixa e ainda digitasse um
+  prazo — o que ninguém digita para um marco que não admite recurso —, de modo que o terceiro
+  estado era inalcançável pela própria tela que existe para declará-lo.
+
+  A unidade é campo publicado — e não constante de código — porque a frase normativa do documento a
+  cita: *"no prazo de 5 (cinco) dias corridos, contados da divulgação do resultado"*.
+  {% endcomment %}
+  <div class="campos">
+    <fieldset class="campo escolha">
+      <legend>Recurso contra o resultado deste marco</legend>
+      <p>
+        <input type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-admite"
+               name="marco-{{ indice }}-{{ sub }}-appealDeclaration" value="admite"
+               {% if marco.appealDeclaration == "admite" %}checked{% endif %}>
+        <label for="marco-{{ indice }}-{{ sub }}-appealDeclaration-admite">Admite recurso, no prazo abaixo</label>
+      </p>
+      <p>
+        <input type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_admite"
+               name="marco-{{ indice }}-{{ sub }}-appealDeclaration" value="nao_admite"
+               {% if marco.appealDeclaration == "nao_admite" %}checked{% endif %}>
+        <label for="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_admite">Não admite recurso por esta via</label>
+      </p>
+      <p>
+        <input type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_declarada"
+               name="marco-{{ indice }}-{{ sub }}-appealDeclaration" value="nao_declarada"
+               {% if marco.appealDeclaration != "admite" and marco.appealDeclaration != "nao_admite" %}checked{% endif %}>
+        <label for="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_declarada">Não declarar nada sobre recurso</label>
+      </p>
+      <span class="ajuda">Não declarar e negar são coisas diferentes: o silêncio devolve a
+        tempestividade ao juízo de admissibilidade motivado; a negativa é norma publicada, e
+        recusa a interposição nomeando-a.</span>
+    </fieldset>
+    <p class="campo curto">
+      <label for="marco-{{ indice }}-{{ sub }}-appealDurationDays">Prazo, em dias</label>
+      <input type="number" min="1" step="1"
+             id="marco-{{ indice }}-{{ sub }}-appealDurationDays"
+             name="marco-{{ indice }}-{{ sub }}-appealDurationDays"
+             value="{{ marco.appealDurationDays }}">
+      <span class="ajuda">Contados do dia seguinte ao da divulgação, incluindo o do vencimento.</span>
+    </p>
+    <p class="campo curto">
+      <label for="marco-{{ indice }}-{{ sub }}-appealUnit">Unidade</label>
+      <select id="marco-{{ indice }}-{{ sub }}-appealUnit"
+              name="marco-{{ indice }}-{{ sub }}-appealUnit">
+        <option value="DIAS_CORRIDOS" {% if marco.appealUnit == "DIAS_CORRIDOS" %}selected{% endif %}>Dias corridos</option>
+      </select>
+      <span class="ajuda">Dias úteis exigiriam o calendário de dias sem expediente, que o Edital
+        não publica.</span>
+    </p>
+  </div>
   <div class="campos">
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-operation">Como as pontuações se combinam <span class="obrigatorio" aria-hidden="true">*</span></label>

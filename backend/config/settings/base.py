@@ -68,6 +68,14 @@ INSTALLED_APPS = [
     # `divulgacao` lê `classificacao` e `publicacoes`, e nenhum dos dois passa a conhecê-la
     # (017, T-001).
     "processo_seletivo.divulgacao",
+    # A contestação do que foi divulgado (018): a peça recursal, o juízo de admissibilidade e a
+    # decisão que julga o mérito. App próprio pela mesma razão que separou `divulgacao` de
+    # `classificacao` — julgar não é publicar: a autoridade é outra, o impedimento bloqueia, e a
+    # decisão é fonte jurídica de um Resultado sucessor. **A dependência é de mão dupla**, e é a
+    # única da linhagem: `recursos` lê `resultados` e `divulgacao`, e `resultados` cita
+    # `DecisaoRecurso` — porque só assim "todo sucessor cita a decisão" é constraint, e não
+    # promessa. O ciclo se quebra por referência tardia, como o Django resolve (018, T-001).
+    "processo_seletivo.recursos",
 ]
 TEMPLATES = [
     {

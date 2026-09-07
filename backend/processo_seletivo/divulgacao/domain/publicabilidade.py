@@ -34,8 +34,32 @@ INFORMACAO, AVISO, IMPEDIMENTO = "informacao", "aviso", "impedimento"
 SUCEDIDO = "publication_act_superseded"
 DESATUALIZADO = "publication_act_stale"
 MARCO_REMOVIDO = "publication_milestone_removed"
+# A quarta, e a única que a 018 acrescenta. Ela não é sobre o ato: é sobre alguém que **voltou** ao
+# certame e cujo Resultado ainda não existe na Etapa que o marco enumera. Divulgar assim publicaria
+# uma ordem que já se sabe incompleta — e a pessoa reabilitada apareceria como ausente da lista, o
+# que é pior do que não publicar (FR-079).
+REINGRESSO_PENDENTE = "publication_reentry_pending"
+# As três da definitividade. Elas impedem **só** a natureza definitiva: publicar como preliminar
+# com recurso pendente é exatamente o caminho normal — é o preliminar que abre o prazo (FR-083).
+RECURSO_PENDENTE = "publication_appeal_pending"
+REAVALIACAO_PENDENTE = "publication_reassessment_pending"
+PROVIDENCIA_PENDENTE = "publication_remedy_pending"
+JANELA_ABERTA = "publication_window_open"
+DECLARACAO_EXIGIDA = "publication_deadline_declaration_required"
+DECLARACAO_RECUSADA = "publication_deadline_declaration_refused"
 
-STATUS = {SUCEDIDO: 409, DESATUALIZADO: 422, MARCO_REMOVIDO: 422}
+STATUS = {
+    SUCEDIDO: 409,
+    DESATUALIZADO: 422,
+    MARCO_REMOVIDO: 422,
+    REINGRESSO_PENDENTE: 422,
+    RECURSO_PENDENTE: 422,
+    REAVALIACAO_PENDENTE: 422,
+    PROVIDENCIA_PENDENTE: 422,
+    JANELA_ABERTA: 422,
+    DECLARACAO_EXIGIDA: 422,
+    DECLARACAO_RECUSADA: 422,
+}
 
 CAMINHO_DO_SUCESSOR = (
     "Emita o ato sucessor na tela de classificação do marco e publique o ato vigente."
@@ -50,6 +74,12 @@ SEM_SUCESSOR = (
     "Não há ato sucessor a emitir: sem o marco na norma, não há ordem vigente a divulgar."
 )
 
+# O caminho do reingresso é **para trás**, e por isso ele é dito por extenso: quem lê a recusa está
+# na tela da publicação e precisa saber que o trabalho está na organização da Etapa.
+CAMINHO_DO_REINGRESSO = (
+    "Consolide o resultado dessa inscrição na Etapa e emita o ato sucessor antes de divulgar."
+)
+
 MENSAGENS = {
     SUCEDIDO: (
         "Este ato foi sucedido por outro e não é mais o vigente do marco. " + CAMINHO_DO_SUCESSOR
@@ -62,11 +92,55 @@ MENSAGENS = {
         "O marco não existe na norma vigente: uma Retificação o removeu, e não há regra vigente "
         "com que comparar o ato. " + SEM_SUCESSOR
     ),
+    REINGRESSO_PENDENTE: (
+        "Há inscrição reabilitada por recurso cujo resultado ainda não foi consolidado numa Etapa "
+        "que este marco enumera. " + CAMINHO_DO_REINGRESSO
+    ),
+    RECURSO_PENDENTE: (
+        "Há recurso pendente de julgamento sobre este marco: chamar de definitivo o que ainda "
+        "está em disputa afirma o que não aconteceu. Aguarde o julgamento, ou publique como "
+        "resultado preliminar."
+    ),
+    REAVALIACAO_PENDENTE: (
+        "Há reavaliação determinada por recurso e ainda não cumprida numa Etapa que este marco "
+        "enumera. Conclua a reavaliação, consolide o resultado e emita o ato sucessor."
+    ),
+    PROVIDENCIA_PENDENTE: (
+        "Há decisão de recurso que determinou providência a jusante e ainda não cumprida neste "
+        "marco. Emita o ato sucessor **citando a decisão** e publique aquele ato."
+    ),
+    JANELA_ABERTA: (
+        "O prazo recursal deste marco ainda está aberto: ele se encerra em {fecha}. "
+        "Aguarde o encerramento, ou publique como resultado preliminar."
+    ),
+    DECLARACAO_EXIGIDA: (
+        "Este marco não declara prazo recursal computável: para publicar como definitivo é "
+        "preciso declarar expressamente, com fundamento escrito, que o prazo se encerrou."
+    ),
+    DECLARACAO_RECUSADA: (
+        "Este marco declara prazo recursal computável, e o sistema o verifica: a declaração "
+        "expressa de encerramento não é aceita aqui."
+    ),
 }
 
 # Quais recusas admitem o remédio que a mensagem nomeia. É o que a tela lê para decidir se oferece
 # o caminho — e não o código da recusa, que a obrigaria a repetir aqui a regra do domínio.
-ADMITE_SUCESSOR = {SUCEDIDO: True, DESATUALIZADO: True, MARCO_REMOVIDO: False}
+ADMITE_SUCESSOR = {
+    SUCEDIDO: True,
+    DESATUALIZADO: True,
+    MARCO_REMOVIDO: False,
+    # O caminho aqui **não** é emitir ato sucessor: é consolidar o Resultado de quem voltou. Emitir
+    # antes disso produziria o mesmo ato incompleto, e a tela mandaria repetir o que não resolve.
+    REINGRESSO_PENDENTE: False,
+    # Nenhuma das três se resolve emitindo outro ato do mesmo jeito: a primeira espera julgamento,
+    # a segunda espera avaliação e consolidação, e a terceira exige um ato que **cite a decisão**.
+    RECURSO_PENDENTE: False,
+    REAVALIACAO_PENDENTE: False,
+    PROVIDENCIA_PENDENTE: False,
+    JANELA_ABERTA: False,
+    DECLARACAO_EXIGIDA: False,
+    DECLARACAO_RECUSADA: False,
+}
 
 
 @dataclass(frozen=True)
@@ -99,8 +173,50 @@ AVISO_DE_SUCESSAO = (
 )
 
 
-def aferir(*, edital, marco_id, ato, sucede=None, at=None):
+def reingressos_pendentes(*, edital, marco, at=None):
+    """As inscrições reabilitadas por recurso e ainda sem Resultado numa Etapa que o marco enumera.
+
+    O fato é **derivado**, e por isso não depende de ninguém ter marcado nada: a reabilitação é um
+    Resultado sucessor que habilita, e a pendência é a ausência de Resultado na Etapa seguinte
+    (D-010, FR-075, FR-076).
+
+    Duas consultas, e nenhuma por inscrição — a tela do marco lista dezenas.
+    """
+    from processo_seletivo.resultados.application.selectors import (
+        inscricoes_com_resultado,
+        reabilitadas_por_recurso,
+    )
+
+    etapas = [str(item) for item in (marco or {}).get("stages") or []]
+    if not etapas:
+        return {}
+    reabilitadas = reabilitadas_por_recurso(edital=edital)
+    if not reabilitadas:
+        return {}
+
+    pendentes = {}
+    for etapa_id in etapas:
+        com_resultado = inscricoes_com_resultado(edital=edital, etapa_id=etapa_id)
+        for inscricao_id, resultado in reabilitadas.items():
+            # A própria Etapa em que a reabilitação aconteceu não é pendência: ali o Resultado
+            # existe, e é justamente o sucessor.
+            if inscricao_id not in com_resultado:
+                pendentes.setdefault(inscricao_id, resultado)
+    return pendentes
+
+
+def aferir(*, edital, marco_id, ato, sucede=None, at=None, natureza=""):
     """Afere a publicabilidade de `ato` contra o estado atual do marco.
+
+    **`natureza` é a pretendida, e sem ela a verificação não distingue o que impede a definitiva do
+    que não impede nada** (T-010, FR-081). Recurso pendente é o caminho normal do preliminar — é ele
+    que abre o prazo — e é impedimento absoluto da definitiva. Uma aferição cega à natureza teria de
+    escolher entre bloquear o preliminar, que travaria o certame, e liberar a definitiva, que é o
+    defeito que o E2E17-005 registrou.
+
+    Omitida, ela vale como preliminar: os três fatos da definitividade não se colocam, e a resposta
+    é a mesma que a 017 já dava. É o padrão seguro — quem não sabe a natureza não pode estar
+    pedindo a definitiva.
 
     `at` existe para o comando aferir no instante da transação, e não no da leitura da tela.
 
@@ -141,6 +257,34 @@ def aferir(*, edital, marco_id, ato, sucede=None, at=None):
             ADMITE_SUCESSOR[SUCEDIDO],
         )
 
+    pendentes = reingressos_pendentes(edital=edital, marco=estado.get("marco"), at=at)
+    if pendentes:
+        # **Antes da obsolescência**, e de propósito: quem lê precisa saber que o trabalho está na
+        # Etapa, e não em emitir outro ato. Emitir sucessor aqui produziria o mesmo ato incompleto.
+        return Afericao(
+            IMPEDIMENTO,
+            REINGRESSO_PENDENTE,
+            MENSAGENS[REINGRESSO_PENDENTE],
+            STATUS[REINGRESSO_PENDENTE],
+            estado["divergencias"],
+            ADMITE_SUCESSOR[REINGRESSO_PENDENTE],
+        )
+
+    if str(natureza).upper() == "DEFINITIVA":
+        impedimento = _impedimento_da_definitiva(
+            edital=edital, marco_id=marco_id, marco=estado.get("marco"), ato=ato, at=at
+        )
+        if impedimento is not None:
+            codigo, mensagem = impedimento
+            return Afericao(
+                IMPEDIMENTO,
+                codigo,
+                mensagem,
+                STATUS[codigo],
+                estado["divergencias"],
+                ADMITE_SUCESSOR[codigo],
+            )
+
     if estado["obsoleto"]:
         return Afericao(
             IMPEDIMENTO,
@@ -157,6 +301,76 @@ def aferir(*, edital, marco_id, ato, sucede=None, at=None):
     return Afericao(INFORMACAO, divergencias=[])
 
 
+def _impedimento_da_definitiva(*, edital, marco_id, marco, ato, at=None):
+    """Os três fatos que só a definitiva enfrenta, na ordem em que a instituição os resolve.
+
+    Primeiro o recurso pendente, porque enquanto há disputa em aberto nada mais importa; depois a
+    reavaliação, que é trabalho de quem avalia; por último a providência, que é ato de quem emite.
+    A ordem é a do caminho, e não da severidade: quem lê a recusa deve receber o próximo passo, e
+    não o mais grave.
+
+    O quarto fato — janela aberta — é do degrau 8, e entra quando ele existir. O quinto, ato
+    obsoleto, é o que a 017 já verifica e vale para as duas naturezas. O sexto, reingresso pendente,
+    é verificado antes, porque também impede o preliminar.
+    """
+    from processo_seletivo.divulgacao.models import PublicacaoResultado
+    from processo_seletivo.recursos.application import selectors as recursos
+
+    publicacoes = list(
+        PublicacaoResultado.objects.filter(edital=edital, marco_id=marco_id).values_list(
+            "id", flat=True
+        )
+    )
+    if recursos.recursos_pendentes_do_marco(
+        edital=edital, marco_id=marco_id, marco=marco, publicacoes_do_marco=publicacoes
+    ):
+        return (RECURSO_PENDENTE, MENSAGENS[RECURSO_PENDENTE])
+    if recursos.reavaliacoes_pendentes_do_marco(edital=edital, marco=marco):
+        return (REAVALIACAO_PENDENTE, MENSAGENS[REAVALIACAO_PENDENTE])
+    if recursos.providencias_pendentes_do_marco(
+        edital=edital,
+        marco_id=marco_id,
+        marco=marco,
+        publicacoes_do_marco=publicacoes,
+        ato=ato,
+    ):
+        return (PROVIDENCIA_PENDENTE, MENSAGENS[PROVIDENCIA_PENDENTE])
+    fecha = _janela_aberta(edital=edital, marco_id=marco_id, marco=marco, at=at)
+    if fecha is not None:
+        # **A mensagem diz o instante**, e não só que há prazo: quem lê precisa saber quando voltar,
+        # e "aguarde" sem data manda a pessoa tentar de novo às cegas.
+        return (JANELA_ABERTA, MENSAGENS[JANELA_ABERTA].format(fecha=_quando(fecha)))
+    return None
+
+
+def _quando(momento):
+    from processo_seletivo.shared.tempo import ZONA
+
+    return momento.astimezone(ZONA).strftime("%d/%m/%Y às %Hh%M")
+
+
+def _janela_aberta(*, edital, marco_id, marco, at):
+    """O instante em que o prazo declarado fecha, se ele ainda corre — senão `None` (FR-082).
+
+    **Onde há janela declarada, o sistema verifica** — e é justamente por isso que a declaração
+    expressa é recusada ali: pedir que a pessoa afirme o que a máquina sabe reintroduziria, com mais
+    passos, a afirmação sem lastro que o E2E17-005 registrou (FR-086).
+    """
+    from django.utils import timezone
+
+    from processo_seletivo.divulgacao.application.selectors import vigente_do_marco
+    from processo_seletivo.recursos.domain.janela import computavel, janela_da_publicacao
+
+    if computavel((marco or {}).get("appealWindow")) is None:
+        return None
+    vigente = vigente_do_marco(edital=edital, marco_id=marco_id)
+    computada = janela_da_publicacao(vigente, (marco or {}).get("appealWindow"))
+    if computada is None:
+        return None
+    _, fecha = computada
+    return fecha if (at or timezone.now()) <= fecha else None
+
+
 __all__ = [
     "ADMITE_SUCESSOR",
     "AVISO",
@@ -164,7 +378,14 @@ __all__ = [
     "DESATUALIZADO",
     "IMPEDIMENTO",
     "INFORMACAO",
+    "DECLARACAO_EXIGIDA",
+    "DECLARACAO_RECUSADA",
+    "JANELA_ABERTA",
     "MARCO_REMOVIDO",
+    "PROVIDENCIA_PENDENTE",
+    "REAVALIACAO_PENDENTE",
+    "RECURSO_PENDENTE",
+    "REINGRESSO_PENDENTE",
     "SEM_SUCESSOR",
     "SUCEDERA",
     "SUCEDIDO",

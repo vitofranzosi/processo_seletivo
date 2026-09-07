@@ -40,7 +40,21 @@
       cor precisa da mesma informação que quem enxerga (FR-052).
       {% endcomment %}
       <td>{% if linha.vigente %}<strong>Vigente</strong>{% else %}Sucedida{% endif %}</td>
-      <td>{{ linha.natureza_rotulo }}</td>
+      <td>{{ linha.natureza_rotulo }}
+        {% if linha.publicacao.prazo_encerrado_fundamento %}
+        {% comment %}
+        **A declaração expressa fica onde a publicação está** (SC-018). Ela era gravada com autor,
+        instante e texto e não aparecia em tela alguma — e afirmação de que o prazo se encerrou,
+        guardada onde ninguém lê, não é ato auditável: é linha de banco.
+
+        Junto da natureza, e não numa linha própria, porque é **desta** publicação que ela fala: a
+        definitiva que a exigiu. O autor da declaração é quem publicou, e o instante é o da
+        publicação — a coluna ao lado já os diz, e repeti-los aqui só afastaria os dois do fato.
+        {% endcomment %}
+        <p class="ajuda">Prazo recursal declarado encerrado:
+          {{ linha.publicacao.prazo_encerrado_fundamento }}</p>
+        {% endif %}
+      </td>
       <td>{{ linha.publicacao.publicado_em|date:"d/m/Y" }} às {{ linha.publicacao.publicado_em|date:"H:i" }}</td>
       <td>{{ linha.publicacao.publicado_por }}</td>
       <td>{{ linha.publicacao.signatario_nome }} — {{ linha.publicacao.signatario_cargo }}</td>

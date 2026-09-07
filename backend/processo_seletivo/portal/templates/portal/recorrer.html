@@ -1,0 +1,63 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Recorrer{% endblock %}
+{% block conteudo %}
+<h1>Recorrer</h1>
+<p class="sub">{{ selecao.processo_titulo }}</p>
+
+{% comment %}
+Uma tela só, e não um assistente: escolher o que se contesta e escrever por quê são a mesma
+decisão, e separá-las em dois passos faria a pessoa perder a razão que já tinha na cabeça.
+
+A recusa aparece **acima do formulário e com o que foi escrito preservado** — recusar apagando a
+fundamentação seria pedir que a pessoa escrevesse tudo de novo por causa de um erro do sistema.
+{% endcomment %}
+{% if erro %}<p class="erro" role="alert" tabindex="-1">{{ erro }}</p>{% endif %}
+
+{% if not recorriveis %}
+{% comment %}
+Recusa sem formulário. Quem enviou depois do prazo — ou contra um objeto que deixou de ser
+atacável — recebe a razão escrita, e **não** um formulário que produziria a mesma recusa: oferecer
+de novo o botão que acabou de recusar ensina a pessoa a tentar contra uma porta fechada (FR-013).
+
+A página do formulário continua não existindo para quem chega pela navegação: o `GET` sem objeto
+atacável devolve ao acompanhamento antes daqui.
+{% endcomment %}
+<p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>
+{% else %}
+<form method="post" action="{% url 'portal:recorrer' inscricao.id %}" novalidate>
+  {% csrf_token %}
+  <div class="campo">
+    <label for="objeto">O que você está contestando</label>
+    {% comment %}
+      O identificador viaja no valor, e é ele que a aplicação compara com o vigente: quem deixou
+      esta página aberta enquanto o resultado era corrigido recebe recusa, e não uma peça contra
+      um ato que já não existe (FR-009).
+    {% endcomment %}
+    <select id="objeto" name="objeto" required>
+      {% for alvo in recorriveis %}
+      <option value="{{ alvo.tipo }}:{{ alvo.id }}">{{ alvo.rotulo }}{% if alvo.fecha_em %} — até {{ alvo.fecha_em|date:"d/m/Y" }} às {{ alvo.fecha_em|date:"H\hi" }}{% endif %}</option>
+      {% endfor %}
+    </select>
+    {% comment %}
+      **O instante do encerramento vai junto do que ele encerra** (FR-024). Uma data solta no topo
+      da página não diria de qual objeto é — e, com dois marcos alcançando a mesma Etapa, os prazos
+      são diferentes. Onde não há janela declarada não aparece data alguma: não há prazo a exibir
+      nem a aplicar, e escrever "sem prazo" ali sugeriria um prazo que ninguém declarou (FR-028).
+    {% endcomment %}
+  </div>
+  <div class="campo">
+    <label for="fundamentacao">Sua razão</label>
+    {% comment %}
+      Sem contagem mínima de caracteres: a exigência é ter razão escrita, não ter tamanho. Um
+      mínimo em número produziria texto de enchimento e recusaria contestação curta e certa.
+    {% endcomment %}
+    <textarea id="fundamentacao" name="fundamentacao" rows="8" required
+              {% if erro %}aria-invalid="true"{% endif %}>{{ fundamentacao }}</textarea>
+    <span class="ajuda">Explique o que está errado no resultado e por quê. Este texto vai para
+      quem julgar o seu recurso.</span>
+  </div>
+  <button type="submit" class="principal">Interpor recurso</button>
+</form>
+<p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar sem recorrer</a></p>
+{% endif %}
+{% endblock %}

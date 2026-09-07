@@ -8,12 +8,14 @@ mensagens que tornam um erro de conversão compreensível antes de chegar ao dom
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from uuid import uuid4
-from zoneinfo import ZoneInfo
 
 from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.editais.domain import secoes
+from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
-ZONA = ZoneInfo("America/Sao_Paulo")
+# A zona institucional mora em `shared/tempo.py` desde a 018: a contagem do prazo recursal é
+# domínio, e domínio não importa de `interface` (T-008).
+ZONA = ZONA_INSTITUCIONAL
 
 RESERVA = [
     ("NONE", "Não há cadastro reserva"),
@@ -200,10 +202,64 @@ def _marcos(dados, prefixo):
                 # Escala e modo viajam mesmo vazios: é a validação que recusa, com mensagem que
                 # nomeia o que falta — e não o formulário, que devolveria silêncio.
                 "rounding": {"scale": escala, "mode": modo},
+                # A janela recursal do marco. **Ausente quando o marco não a declara**, e a
+                # ausência é a afirmação certa: sem prazo publicado, ninguém inventa prazo
+                # (FR-020, FR-028, FR-030).
+                "appealWindow": _janela_recursal(dados, base),
                 "tiebreakers": criterios,
             }
         )
     return marcos
+
+
+# As três escolhas da janela recursal, como viajam no formulário. Nomes em português porque é o
+# que a pessoa marca na tela; o conteúdo publicado continua falando `admits` (FR-020, FR-113).
+ADMITE, NAO_ADMITE, NAO_DECLARADA = "admite", "nao_admite", "nao_declarada"
+
+
+def _janela_recursal(dados, base):
+    """`{"admits": ..., "durationDays": ..., "unit": ...}` — ou `None`, quando não declarada.
+
+    **Três estados, e uma escolha de três** (FR-020, FR-113). Era caixa de marcação, e caixa de
+    marcação tem dois: a negativa só nascia se a pessoa desmarcasse a caixa **e** digitasse um
+    prazo — que é exatamente o que ninguém digita para um marco que não admite recurso. O terceiro
+    estado ficava inalcançável pela tela que existe para declará-lo, e confundir a negativa com o
+    silêncio troca "não cabe recurso" por "cabe para sempre".
+
+    **A negativa não carrega prazo**: marco que não admite recurso não tem duração a declarar, e
+    declarar uma seria contradição — a validação do Perfil recusa a metade, não a negativa inteira.
+
+    A unidade viaja como campo publicado porque a frase normativa do documento a cita: *"no prazo
+    de 5 (cinco) dias corridos"*. Ela é única na V1, e mesmo assim é conteúdo, e não constante de
+    código: o dia em que outra unidade existir, os Editais já publicados continuarão dizendo em que
+    unidade o prazo deles corria.
+    """
+    declaracao = _texto(dados, f"{base}-appealDeclaration")
+    if declaracao == NAO_ADMITE:
+        return {"admits": False, "durationDays": None, "unit": _unidade(dados, base)}
+    if declaracao != ADMITE:
+        return None
+    return {
+        "admits": True,
+        "durationDays": _inteiro_opcional(dados, f"{base}-appealDurationDays"),
+        "unit": _unidade(dados, base),
+    }
+
+
+def _unidade(dados, base):
+    return _texto(dados, f"{base}-appealUnit") or "DIAS_CORRIDOS"
+
+
+def _declaracao_do_marco(janela):
+    """Qual das três escolhas a tela deve reexibir marcada.
+
+    **Vazio é não declarada, e não negativa.** O rascunho guarda `{}` quando nada foi declarado —
+    o campo tem `default=dict` —, e ler isso como "não admite recurso" faria a tela inventar norma
+    que ninguém escreveu, e gravá-la no salvamento seguinte.
+    """
+    if not janela:
+        return NAO_DECLARADA
+    return ADMITE if janela.get("admits") else NAO_ADMITE
 
 
 def ler_identificacao(dados):
@@ -513,6 +569,11 @@ def _marco_para_o_formulario(marco):
         "normalization": marco.normalizacao,
         "scale": arredondamento.get("scale", ""),
         "mode": arredondamento.get("mode", ""),
+        # Os três estados voltam **como três** para a reexibição: devolver a negativa como
+        # "não declarada" apagaria a norma no salvamento seguinte, sem que ninguém pedisse.
+        "appealDeclaration": _declaracao_do_marco(marco.janela_recursal),
+        "appealDurationDays": (marco.janela_recursal or {}).get("durationDays") or "",
+        "appealUnit": (marco.janela_recursal or {}).get("unit") or "DIAS_CORRIDOS",
         "criterios": [
             {
                 "id": str(criterio.id),

@@ -61,6 +61,16 @@ def test_o_custo_nao_cresce_com_a_populacao(cenario, gestor):
 
 
 def test_a_primeira_etapa_nao_consulta_progressao(cenario, gestor):
-    """Sem Etapa anterior, não há conjunto a resolver — e não se paga por perguntar."""
+    """Sem Etapa anterior, não há conjunto a resolver — e não se paga por perguntar.
+
+    **O teto subiu de 5 para 6 na 018, e a conversa é esta.** O panorama passou a responder mais
+    uma pergunta — quais inscrições têm reavaliação determinada e não cumprida —, e ela custa uma
+    consulta por Etapa. Não é N+1: é constante, e é o preço de a Etapa deixar de chamar de "já
+    consolidada" quem tem trabalho pendente por decisão de recurso (FR-067).
+
+    O que este teste protege continua sendo o mesmo, e é a linha de baixo: o custo não cresce com a
+    população. Um teto que subisse a cada feature sem justificativa escrita deixaria de proteger
+    coisa alguma — e é por isso que ele é número, e não desigualdade folgada.
+    """
     inscrever(cenario["edital"], 2, primeiro=1)
-    assert custo(cenario) <= 5
+    assert custo(cenario) <= 6

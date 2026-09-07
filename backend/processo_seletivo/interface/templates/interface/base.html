@@ -501,6 +501,26 @@ fieldset.linha legend{font-size:.75rem;text-transform:uppercase;letter-spacing:.
 .bastao .ajuda{display:block;margin-top:.3rem}
 .botao.secundario:hover{background:var(--verde-claro)}
 .salvar{display:flex;gap:1rem;align-items:center;padding:1rem 0 2rem;border-top:1px solid var(--borda)}
+/* Os recursos (018). A fundamentação e a motivação são texto **escrito por alguém** e lido
+   inteiro: ganham a largura de leitura e a moldura que as separa da prosa da tela, para que não
+   se confundam com o que o sistema diz. */
+.fundamentacao,.motivacao{max-width:var(--leitura);white-space:pre-wrap;background:var(--branco);
+  border:1px solid var(--borda);border-left:4px solid var(--borda);border-radius:4px;
+  padding:.75rem 1rem;margin:0 0 1.5rem}
+.julgado{margin:0 0 .35rem}
+/* A reabilitação por recurso, na linha da Mesa e no painel da Etapa: aviso e não erro, e por isso
+   verde — quem voltou ao certame não é uma pendência a resolver, é um fato a saber. */
+.reabilitada{margin:.25rem 0 0;font-size:.875rem;color:var(--verde-texto)}
+/* As decisões que o ato executa, na emissão: um bloco próprio dentro do formulário, porque marcar
+   uma delas é declarar cumprimento — e isso não é detalhe do mesmo grupo de campos. */
+.citacoes{border:1px solid var(--borda);border-radius:6px;padding:.75rem 1rem;margin:0 0 1rem}
+.citacoes legend{font-weight:600;padding:0 .35rem}
+.linha-secundaria{color:var(--texto-fraco);font-size:.875rem}
+/* O histórico do par, recolhido: ele responde a uma pergunta que nem toda linha faz, e aberto
+   sempre encheria a listagem de quem não teve resultado superado. */
+.historico-do-par{margin:.35rem 0 0;font-size:.875rem}
+.historico-do-par summary{cursor:pointer;color:var(--verde-texto)}
+.historico-do-par ol{margin:.35rem 0 0;padding-left:1.2rem}
 /* Em `rem`, e não em pixel: o formulário acompanha o tamanho de texto de quem aumentou a fonte do
    navegador — que é justamente quem mais precisa dele. É a mesma medida dos campos do portal. */
 form.identificar{background:var(--branco);border:1px solid var(--borda);border-radius:6px;

@@ -282,6 +282,9 @@ def replace_draft(
                     operacao=marco_payload["operation"],
                     normalizacao=marco_payload["normalization"],
                     arredondamento=marco_payload.get("rounding", {}),
+                    # `{}` quando o marco não declara janela — a ausência é a afirmação, e não uma
+                    # omissão a corrigir depois (018, FR-020, FR-028).
+                    janela_recursal=marco_payload.get("appealWindow") or {},
                 )
                 for criterio_payload in marco_payload.get("tiebreakers", []):
                     CriterioDesempate.objects.create(

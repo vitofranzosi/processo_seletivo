@@ -5,6 +5,7 @@ a segregação de funções e a auditoria fiquem verdadeiras. Serve para inspeci
 ar; não é fixture de teste nem carga de produção.
 """
 
+import contextlib
 from datetime import timedelta
 from decimal import Decimal
 
@@ -34,11 +35,48 @@ SIGNATARIO = {
 }
 
 
+@contextlib.contextmanager
+def _relogio_atrasado(dias):
+    """Roda a demonstração inteira como se ela tivesse acontecido há `dias` dias.
+
+    **Não é atalho de produto, e nenhuma regra é afrouxada**: o certame percorre os mesmos
+    commands, com as mesmas aferições; só o instante em que ele ocorreu é outro. Sem isso, um
+    prazo recursal de cinco dias declarado hoje só poderia ser demonstrado **aberto** — e o que
+    a instituição precisa ver é também a recusa depois do encerramento, que nenhuma tela alcança
+    sem esperar cinco dias.
+
+    O deslocamento vale só enquanto o `seed` roda; a aplicação continua lendo o relógio real, e é
+    por isso que o resultado semeado aparece, no navegador, com a janela já encerrada.
+    """
+    if not dias:
+        yield
+        return
+    real = timezone.now
+    deslocamento = timedelta(days=dias)
+
+    def atrasado():
+        return real() - deslocamento
+
+    timezone.now = atrasado
+    try:
+        yield
+    finally:
+        timezone.now = real
+
+
 def ator(subject, *permissoes):
     return Actor(subject, ESCOPO, frozenset(permissoes))
 
 
-def perfis(numero):
+def _janela_do_marco(escolha):
+    if escolha == "negada":
+        return {"appealWindow": {"admits": False, "durationDays": None, "unit": "DIAS_CORRIDOS"}}
+    if escolha == "declarada":
+        return {"appealWindow": {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"}}
+    return {}
+
+
+def perfis(numero, *, janela_recursal="declarada"):
     return [
         {
             "id": f"00000000-0000-0000-00{numero}-0000000000b1",
@@ -67,6 +105,23 @@ def perfis(numero):
                     "normalization": "NENHUMA",
                     "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
                     "tiebreakers": [],
+                    # A janela recursal declarada (018, degrau 8). Ela existe aqui porque o prazo é
+                    # **norma publicada**, e a demonstração precisa mostrar o candidato lendo os
+                    # instantes exatos de abertura e encerramento — e não uma tela que fala de
+                    # recurso sem dizer até quando (FR-024, FR-030).
+                    #
+                    # Os **três** estados, porque são três coisas diferentes (FR-020, FR-113):
+                    #
+                    # ```text
+                    # declarada  admite recurso, por cinco dias corridos
+                    # negada     `admits` falso — norma publicada dizendo que não cabe por esta via
+                    # ausente    a chave não existe, como em todo Edital anterior ao degrau 8
+                    # ```
+                    #
+                    # A ausência devolve a tempestividade ao juízo humano motivado; a negativa a
+                    # recusa nomeando a norma. Semear só a primeira deixaria as outras duas
+                    # indemonstráveis no navegador.
+                    **_janela_do_marco(janela_recursal),
                 }
             ],
             "competitionModalities": [
@@ -262,8 +317,31 @@ class Command(BaseCommand):
         parser.add_argument(
             "--ano", type=int, default=None, help="ano do Edital (padrão: o ano corrente)"
         )
+        parser.add_argument(
+            "--janela-recursal",
+            choices=["declarada", "negada", "ausente"],
+            default="declarada",
+            help=(
+                "o que o marco declara sobre recurso: prazo de cinco dias, negativa expressa, "
+                "ou nada — como nos Editais anteriores ao degrau 8"
+            ),
+        )
+        parser.add_argument(
+            "--dias-atras",
+            type=int,
+            default=0,
+            help=(
+                "roda a demonstração como se ela tivesse ocorrido há N dias; serve para "
+                "exibir um prazo recursal já encerrado"
+            ),
+        )
 
     def handle(self, *args, **opcoes):
+        with _relogio_atrasado(opcoes["dias_atras"]):
+            self._semear(**opcoes)
+
+    def _semear(self, **opcoes):
+        self.janela_recursal = opcoes["janela_recursal"]
         codigo = opcoes["codigo"]
         existente = ProcessoSeletivo.objects.filter(
             institution_scope=ESCOPO, institutional_code=codigo
@@ -344,7 +422,7 @@ class Command(BaseCommand):
             actor=elaborador,
             edital_id=edital.id,
             expected_revision=edital.revision,
-            profiles=perfis(numero),
+            profiles=perfis(numero, janela_recursal=self.janela_recursal),
             schedule=cronograma(agora, numero),
             stages=etapas(numero),
             document_requirements=documentos_exigidos(numero),
@@ -456,7 +534,7 @@ class Command(BaseCommand):
             actor=elaborador,
             edital_id=edital.id,
             expected_revision=edital.revision,
-            profiles=perfis(numero),
+            profiles=perfis(numero, janela_recursal=self.janela_recursal),
             schedule=cronograma(agora - timedelta(days=60), numero),
             stages=etapas(numero),
             document_requirements=documentos_exigidos(numero),
@@ -501,6 +579,12 @@ class Command(BaseCommand):
 
         self.stdout.write("Constituindo a comissão e alocando a banca…")
         gestor = ator("gustavo.gestor", "comissao:gerir")
+        # **Consolidar e emitir são atos da presidência**, e não da gestão que constituiu a
+        # comissão. Os dois caminhos autorizam — `comando_de_comissao` aceita presidência **ou**
+        # `comissao:gerir` —, e quem os pratica na demonstração precisa ser quem os pratica no
+        # certame: sem isso, o impedimento da 018 fica indemonstrável, porque quem consolidou o
+        # Resultado não é ninguém que o seletor de identidade ofereça (018, FR-039).
+        presidencia = ator("paulo.presidente")
         perfil_id = f"00000000-0000-0000-00{numero}-0000000000b1"
         marco_id = f"00000000-0000-0000-00{numero}-0000000000a1"
         primeira = f"00000000-0000-0000-00{numero}-0000000000d1"
@@ -509,7 +593,15 @@ class Command(BaseCommand):
 
         membros = {}
         for indice, (subject, funcao) in enumerate(
-            [("paulo.presidente", Funcao.PRESIDENTE), ("joana.avaliadora", Funcao.MEMBRO)]
+            [
+                ("paulo.presidente", Funcao.PRESIDENTE),
+                ("joana.avaliadora", Funcao.MEMBRO),
+                # **Um segundo avaliador, e não um enfeite**: a reavaliação determinada por
+                # recurso exige avaliador diverso do que concluiu a original — a unicidade de
+                # conclusão por pessoa impede a segunda —, e sem ele o passo 9 do roteiro esbarra
+                # numa garantia estrutural em vez de ser percorrido (018, FR-068).
+                ("otavio.avaliador", Funcao.MEMBRO),
+            ]
         ):
             membro, _ = adicionar_membro(
                 actor=gestor,
@@ -521,15 +613,20 @@ class Command(BaseCommand):
             )
             membros[subject] = membro
         for etapa in (primeira, segunda):
-            alocar(
-                actor=gestor,
-                processo_id=edital.processo_id,
-                membro_id=membros["joana.avaliadora"].id,
-                edital_id=edital.id,
-                etapa_id=etapa,
-                idempotency_key=f"seed-demo-aloc-{chave}-{etapa[-4:]}",
-                correlation_id="seed-demo",
-            )
+            # Os **dois** avaliadores alocados nas duas Etapas: quem conclui a original é a Joana,
+            # e o Otávio fica disponível para a reavaliação que um deferimento pode determinar.
+            # Alocar só na hora seria um passo a mais no roteiro, e um passo que a presidência já
+            # teria dado ao montar a banca.
+            for nome in ("joana.avaliadora", "otavio.avaliador"):
+                alocar(
+                    actor=gestor,
+                    processo_id=edital.processo_id,
+                    membro_id=membros[nome].id,
+                    edital_id=edital.id,
+                    etapa_id=etapa,
+                    idempotency_key=f"seed-demo-aloc-{chave}-{etapa[-4:]}-{nome[:6]}",
+                    correlation_id="seed-demo",
+                )
 
         self.stdout.write("Recebendo inscrições e avaliando…")
         versao = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
@@ -546,6 +643,10 @@ class Command(BaseCommand):
             # Sem Resultado em Etapa alguma ele não estaria aqui: quem não passou pela Etapa
             # eliminatória anterior não é participante da seguinte, e o ato nem o consideraria.
             ("Daniel Rocha", "7.5000", None),
+            # **Eliminada na Etapa 1**, abaixo da mínima de 6,0: é ela quem o roteiro da 018 segue.
+            # Fora do universo do ato, ela não aparece na lista pública — e, desde a 018, lê o
+            # próprio Resultado com o motivo escrito e tem por onde recorrer (FR-014, FR-015).
+            ("Elisa Moraes", "4.0000", None),
         ]
         inscricoes = []
         for indice, (nome, _, _) in enumerate(candidatas, 1):
@@ -568,6 +669,7 @@ class Command(BaseCommand):
                 declaracoes_aceitas_em=agora,
             )
             inscricao.refresh_from_db()
+            self._dar_acesso(inscricao)
             inscricoes.append(inscricao)
 
         avaliadora = ator("joana.avaliadora")
@@ -607,7 +709,7 @@ class Command(BaseCommand):
                     correlation_id="seed-demo",
                 )
             consolidar(
-                actor=gestor,
+                actor=presidencia,
                 processo_id=edital.processo_id,
                 edital_id=edital.id,
                 etapa_id=etapa,
@@ -619,7 +721,7 @@ class Command(BaseCommand):
         self.stdout.write("Emitindo a ordem classificatória…")
         proposta = calcular_ordem(edital=edital, perfil_id=perfil_id, marco_id=marco_id)
         emitir_ordem(
-            actor=gestor,
+            actor=presidencia,
             processo_id=edital.processo_id,
             edital_id=edital.id,
             perfil_id=perfil_id,
@@ -647,6 +749,43 @@ class Command(BaseCommand):
             correlation_id="seed-demo",
         )
         return publicacao
+
+    def _dar_acesso(self, inscricao):
+        """A identidade e a credencial de quem já se inscreveu — para que ela consiga entrar.
+
+        **Não é atalho de demonstração**: são exatamente as linhas que o produto cria quando o
+        candidato prova o controle do e-mail, e a premissa deste seed é que essas pessoas já se
+        inscreveram — logo, já entraram alguma vez. Sem elas, o `identity_subject` das inscrições
+        seria um valor que nenhum login produz, e a demonstração ficaria com uma tela de
+        acompanhamento inalcançável: quem entrasse com o e-mail da Elisa criaria uma identidade
+        nova e vazia, e a inscrição dela responderia 404 — corretamente, e para ninguém.
+
+        A credencial nasce **verificada**, pela mesma razão: ela representa uma prova que já
+        aconteceu. A alternativa seria semear o desafio de acesso pendente, que é estado de
+        transição e não estado de mundo.
+        """
+        from processo_seletivo.identidade.domain.enderecos import canonizar
+        from processo_seletivo.identidade.models import CandidateEmail, CandidateIdentity
+
+        agora = timezone.now()
+        identidade, _ = CandidateIdentity.objects.get_or_create(
+            subject=inscricao.identity_subject,
+            defaults={
+                "nome": inscricao.nome,
+                "cpf_normalizado": inscricao.cpf_normalizado,
+                "created_at": agora,
+            },
+        )
+        CandidateEmail.objects.get_or_create(
+            email_canonico=canonizar(inscricao.email),
+            defaults={
+                "identidade": identidade,
+                "email_como_informado": inscricao.email,
+                "principal": True,
+                "verified_at": agora,
+                "created_at": agora,
+            },
+        )
 
     def _retificar(self, edital, agora):
         """Uma vigente e outra com vigência futura, para a consulta temporal ter o que mostrar."""

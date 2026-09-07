@@ -28,6 +28,7 @@ def emitir_ordem(
     correlation_id,
     confirmacao_do_calculo,
     motivo="",
+    decisoes=(),
 ):
     """Emite a proposta confirmada; havendo vigente, cria sucessor sem alterar o anterior."""
     payload = {
@@ -36,6 +37,7 @@ def emitir_ordem(
         "marco": str(marco_id),
         "confirmacao": confirmacao_do_calculo or "",
         "motivo": (motivo or "").strip(),
+        "decisoes": sorted(str(item) for item in decisoes or ()),
     }
     with comando_de_comissao(
         actor=actor,
@@ -106,6 +108,7 @@ def emitir_ordem(
             emitido_por=actor.subject,
             emitido_em=ctx.now,
         )
+        _citar(ato, proposta["marco"], decisoes)
         PosicaoNaOrdem.objects.bulk_create(
             [_posicao(ato, item, proposta["marco"]) for item in proposta["posicoes"]]
             + [_posicao(ato, item, proposta["marco"]) for item in proposta["sem_posicao"]]
@@ -160,6 +163,24 @@ def _edital_do_processo(processo, edital_id):
     if edital is None:
         raise nao_encontrado()
     return edital
+
+
+def _citar(ato, marco, decisoes):
+    """Grava, na mesma transação do ato, quais decisões de recurso ele executa (T-015, FR-089).
+
+    **Proveniência, e não passo humano separado.** Ela nasce com o ato, pela mão de quem já tem
+    autoridade para emiti-lo — do mesmo tipo de `motivo_da_sucessao`, que também não tem autoridade,
+    instante nem motivo próprios. Um passo separado seria um passo que se esquece, e o esquecimento
+    deixaria a definitiva do marco impedida sem que ninguém soubesse por quê.
+
+    A pertinência é conferida **no banco**, pela trigger `citacao_coerente`: uma gravação ligando
+    decisão de um marco a ato de outro liberaria indevidamente a definitiva daquele outro, e a
+    verificação que morasse só aqui não alcançaria os demais caminhos de escrita.
+    """
+    from processo_seletivo.classificacao.models import CitacaoDeDecisao
+
+    for identificador_da_decisao in sorted({str(item) for item in decisoes or ()}):
+        CitacaoDeDecisao.objects.create(ato=ato, decisao_id=identificador_da_decisao)
 
 
 def _posicao(ato, item, marco):

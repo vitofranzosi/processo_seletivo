@@ -147,6 +147,46 @@ def validate_classification_milestones(milestones: list[dict]) -> None:
                     "Todo critério de desempate deve declarar o que fazer quando o valor "
                     "que ele consome não existe."
                 )
+        _validar_janela_recursal(marco.get("appealWindow"))
+
+
+def _validar_janela_recursal(janela) -> None:
+    """A janela declarada precisa ser computável — ou não ser declarada (FR-020, FR-021).
+
+    **A ausência é válida e significa alguma coisa**: janela não declarada, e a tempestividade
+    volta a ser juízo de admissibilidade motivado. O que se recusa é a declaração pela metade, que
+    prometeria ao candidato um prazo que o sistema não sabe contar.
+    """
+    if janela is None:
+        return
+    if not isinstance(janela, dict):
+        raise ProfileValidationError(
+            "A janela recursal do marco deve ser declarada como um objeto, ou não ser declarada."
+        )
+    unidade = janela.get("unit", "DIAS_CORRIDOS")
+    if unidade != "DIAS_CORRIDOS":
+        # Dias úteis exigiriam o calendário de dias sem expediente, que o Edital não publica — e
+        # contá-los sem esse calendário produziria um prazo errado com aparência de exato. A
+        # alternativa honesta é não declarar a janela.
+        raise ProfileValidationError(
+            "A janela recursal só admite contagem em dias corridos: contar em dias úteis exige o "
+            "calendário de dias sem expediente, que o Edital não publica. Se a contagem do certame "
+            "for outra, não declare a janela — a tempestividade continua sendo juízo motivado."
+        )
+    if not janela.get("admits"):
+        # Marco que não admite recurso não precisa de duração, e declarar uma seria contradição.
+        return
+    duracao = janela.get("durationDays")
+    if duracao is None:
+        raise ProfileValidationError(
+            "O marco declara que admite recurso e não declara por quantos dias: uma janela sem "
+            "duração não é computável, e prometeria ao candidato um prazo que ninguém sabe contar."
+        )
+    if not isinstance(duracao, int) or isinstance(duracao, bool) or duracao <= 0:
+        raise ProfileValidationError(
+            "A duração da janela recursal deve ser um número inteiro de dias maior que zero: "
+            "prazo de zero dias não é prazo."
+        )
 
 
 def validate_profiles(profiles: list[dict]) -> None:

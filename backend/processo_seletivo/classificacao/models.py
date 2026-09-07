@@ -117,3 +117,48 @@ class PosicaoNaOrdem(models.Model):
 
     def delete(self, *args, **kwargs):
         raise TypeError("PosicaoNaOrdem é append-only")
+
+
+class CitacaoDeDecisao(models.Model):
+    """O ato de ordenação declara **qual decisão de recurso ele executa**.
+
+    A providência a jusante nomeia o remédio e não o executa (FR-049): quem executa é quem tem a
+    autoridade da 015. O que prova o cumprimento é esta citação — e ela prova de verdade **só quando
+    o ato é publicado**, porque um ato que fica obsoleto antes disso não corrigiu coisa alguma
+    (T-015, FR-112).
+
+    **`UNIQUE(ato, decisao)` e nada mais.** Um `UNIQUE(decisao)` — que uma redação anterior previa —
+    criaria dois defeitos de uma vez:
+
+    - **um beco permanente**: ficando obsoleto o ato citante antes da publicação, nenhum sucessor
+      poderia recitar a decisão, e a definitiva daquele marco ficaria impedida para sempre;
+    - **pertinência a um marco só**: uma decisão cuja providência é normativa alcança todos os
+      marcos que a regra retificada governa, e cada um precisa do seu ato citante publicado.
+
+    Ela é **proveniência do ato**, do mesmo tipo de `motivo_da_sucessao`: não tem autoridade,
+    instante nem motivo próprios, e não é passo humano separado que se possa esquecer. Nasce com o
+    ato, na mesma transação, por quem já tem autoridade para emiti-lo.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    ato = models.ForeignKey(AtoDeOrdenacao, on_delete=models.PROTECT, related_name="citacoes")
+    decisao = models.ForeignKey(
+        "recursos.DecisaoRecurso", on_delete=models.PROTECT, related_name="citacoes"
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["ato", "decisao"], name="uq_citacao_ato_decisao"),
+        ]
+        indexes = [models.Index(fields=["decisao"])]
+
+    def __str__(self):
+        return f"{self.ato_id} cita {self.decisao_id}"
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise TypeError("CitacaoDeDecisao é append-only")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise TypeError("CitacaoDeDecisao é append-only")

@@ -1,0 +1,77 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Recurso {{ recurso.protocolo }}{% endblock %}
+{% block conteudo %}
+<h1>Recurso {{ recurso.protocolo }}</h1>
+<p class="sub">{{ selecao.processo_titulo }}</p>
+
+{% comment %}
+Comprovante e acompanhamento na mesma página. Quem acabou de interpor precisa do protocolo; quem
+volta uma semana depois precisa da situação — e são a mesma pessoa lendo a mesma peça (FR-014).
+
+A situação é **derivada** dos atos que alcançaram o recurso, e não de coluna: o que se lê aqui é a
+existência do juízo e da decisão (D-010).
+{% endcomment %}
+<div class="protocolo" role="status">
+  <p class="linha-protocolo">
+    <span class="rotulo">Protocolo</span>
+    <strong>{{ recurso.protocolo }}</strong>
+  </p>
+  <p class="linha-protocolo">
+    <span class="rotulo">Recebido em</span>
+    {{ recurso.interposto_em|date:"d/m/Y" }} às {{ recurso.interposto_em|date:"H:i" }}
+  </p>
+</div>
+
+<dl class="campos">
+  <dt>Situação</dt>
+  <dd>{{ recurso.situacao_rotulo }}</dd>
+  <dt>Objeto contestado</dt>
+  <dd>{{ recurso.objeto }}</dd>
+  <dt>Sua razão</dt>
+  <dd>{{ recurso.fundamentacao|linebreaksbr }}</dd>
+  {% if recurso.janela_fecha_em %}
+  {% comment %}
+    **O prazo que valia quando esta peça nasceu**, e não o de hoje (FR-024): a janela foi gravada
+    na interposição justamente para que a leitura de amanhã não responda com a norma de amanhã.
+
+    A linha só existe quando houve janela declarada. Sem ela não há prazo a mostrar, e anunciar
+    "sem prazo" transformaria o silêncio do Edital em norma que ninguém publicou (FR-028).
+  {% endcomment %}
+  <dt>Prazo recursal</dt>
+  <dd>De {{ recurso.janela_abriu_em|date:"d/m/Y" }} às {{ recurso.janela_abriu_em|date:"H\hi" }}
+    até {{ recurso.janela_fecha_em|date:"d/m/Y" }} às {{ recurso.janela_fecha_em|date:"H\hi" }}
+    · {{ recurso.tempestividade_rotulo }}</dd>
+  {% endif %}
+</dl>
+
+{% if recurso.admissibilidade %}
+<h2>Admissibilidade</h2>
+{% comment %}
+O juízo negativo é terminal, e a motivação é o que o torna contestável: "não admitido" sem razão
+escrita é decisão que ninguém consegue discutir (FR-047).
+{% endcomment %}
+<p class="posicao">
+  <strong>{% if recurso.admissibilidade.admitido %}Admitido{% else %}Não admitido{% endif %}</strong>
+  · {{ recurso.admissibilidade.quando|date:"d/m/Y" }}
+</p>
+{% if recurso.admissibilidade.motivo %}<p class="meta">{{ recurso.admissibilidade.motivo }}</p>{% endif %}
+{% endif %}
+
+{% if recurso.decisao %}
+<h2>Decisão</h2>
+{% comment %}
+A espécie chega em português institucional, nunca como código: "Recurso deferido — o resultado foi
+corrigido" é o que a pessoa precisa entender (FR-048, SC-021).
+{% endcomment %}
+{% comment %}
+**Quem decidiu**, e não só o quê: uma decisão sem autor não é ato administrativo, é um texto que
+apareceu. Quem julga não é quem avalia — o nome do avaliador continua fora da tela do candidato, e
+é essa a fronteira da FR-093.
+{% endcomment %}
+<p class="posicao"><strong>{{ recurso.decisao.especie_rotulo }}</strong>
+  · decidido por {{ recurso.decisao.quem }} em {{ recurso.decisao.quando|date:"d/m/Y" }}</p>
+<p class="meta">{{ recurso.decisao.motivacao|linebreaksbr }}</p>
+{% endif %}
+
+<p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>
+{% endblock %}

@@ -139,6 +139,11 @@ class MarcoClassificatorio(models.Model):
     operacao = models.CharField(max_length=30, choices=Operacao.choices)
     normalizacao = models.CharField(max_length=30, choices=Normalizacao.choices)
     arredondamento = models.JSONField(default=dict, blank=True)
+    # A janela recursal do marco (018, degrau 8). **Vazio significa não declarada** — e não janela
+    # de zero dias: sem declaração o sistema não inventa prazo, e a tempestividade volta a ser juízo
+    # de admissibilidade motivado (FR-020, FR-028). Marcos diferentes admitem recurso ou não, e por
+    # prazos diferentes, e é por isso que ela mora aqui e não no Edital.
+    janela_recursal = models.JSONField(default=dict, blank=True)
 
     class Meta:
         constraints = [

@@ -245,7 +245,15 @@ verificação por linha que a 012 recusou.
 "appealWindow": {"admits": true, "durationDays": 5, "unit": "DIAS_CORRIDOS"}
 ```
 
-Ausente ou `null` significa **janela não declarada** (FR-029).
+Ausente ou `null` significa **janela não declarada** (FR-029). `admits: false` é o **terceiro**
+estado, e não sinônimo do segundo: é norma publicada dizendo que aquele marco não admite recurso, e
+a interposição por esta via é recusada com código próprio (FR-113).
+
+A distinção só apareceu na revisão da implementação, e vale registrar por quê: `computavel()`
+devolvia `None` para os três casos, porque a pergunta que ela responde é *"há prazo a contar?"* — e
+para essa pergunta os três são iguais. A pergunta que faltava era outra, *"cabe recurso?"*, e ela
+tem três respostas. Uma função respondendo duas perguntas com um valor só é o modo de falha que
+apaga a diferença sem produzir erro nenhum.
 
 **O custo escondido, e ele é o maior da feature.** `publicacoes/domain/elevacao.py` sabe descer dois
 níveis: `elevar_etapa` reescreve `/stages`, e `elevar_perfil` reescreve chaves do Perfil — este

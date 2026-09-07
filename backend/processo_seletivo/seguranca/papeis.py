@@ -48,6 +48,17 @@ TABELAS_APPEND_ONLY = (
     "divulgacao_documentodoresultado",
     "divulgacao_publicacaoresultado",
     "divulgacao_situacaodivulgada",
+    # A contestação do que foi divulgado (018): a peça, o juízo de admissibilidade e a decisão.
+    # Históricas pela mesma razão das demais — nascem e não mudam —, e com um agravante próprio:
+    # a decisão é a fonte jurídica de um Resultado sucessor, e reescrevê-la depois faria o
+    # Resultado citar um fundamento que já não é o que a autoridade decidiu (018, FR-046).
+    "recursos_decisaorecurso",
+    "recursos_juizodeadmissibilidade",
+    # A citação da decisão pelo ato de ordenação (018, T-013): proveniência do ato, e por isso
+    # append-only pela mesma razão que o próprio ato é — apagá-la reabriria uma providência que já
+    # foi cumprida, sem deixar rastro de que alguém a reabriu.
+    "classificacao_citacaodedecisao",
+    "recursos_recurso",
     "publicacoes_documentopublicado",
     "publicacoes_publicacao",
     "publicacoes_revisaoedital",

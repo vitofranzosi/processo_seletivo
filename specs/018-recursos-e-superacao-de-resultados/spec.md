@@ -147,10 +147,24 @@ publicação vigente do marco** — o instante que o sistema já grava e já exi
 absolutas do Cronograma.
 
 ```text
-declarada      →  o sistema calcula, exibe ao candidato e aplica a janela
-não declarada  →  o sistema não inventa prazo; a interposição permanece possível e a
-                  tempestividade é matéria de admissibilidade humana motivada
+declarada        →  o sistema calcula, exibe ao candidato e aplica a janela
+não declarada    →  o sistema não inventa prazo; a interposição permanece possível e a
+                    tempestividade é matéria de admissibilidade humana motivada
+negada           →  o Edital declarou que aquele marco NÃO admite recurso; a interposição
+                    por esta via é recusada, nomeando a norma
 ```
+
+**Os três estados são respostas diferentes, e confundir os dois últimos inverte a norma.** A
+ausência é silêncio: o Edital nada disse, e o sistema não decide por ele. A negativa é norma
+publicada: o Edital disse que não cabe recurso, e norma publicada se aplica. Tratar a negativa como
+silêncio transformaria *"não cabe recurso"* em *"cabe recurso para sempre"* — o oposto exato do que
+foi publicado, e a favor de ninguém: nem do candidato, que receberia uma peça que a comissão não
+tem como julgar, nem da instituição, que veria nascer recursos contra o que ela declarou
+irrecorrível.
+
+**A negativa não fecha a porta do candidato**, e a recusa diz isso: ele conserva as vias que a lei
+lhe dá fora deste sistema, e a mensagem o encaminha à comissão do certame. O que o sistema recusa é
+processar por dentro o que a norma não previu — não é o mesmo que declarar que não há remédio.
 
 **Por que não se lê o Cronograma.** `EventoCronograma.type` é texto livre, sem validação, e o
 próprio modelo registra a razão: *"inferir o período dali seria decidir uma regra de direito lendo
@@ -275,12 +289,22 @@ para o marco pertinente, existir:
    julgamento;
 2. **reavaliação determinada e ainda não cumprida**;
 3. **providência a jusante determinada em deferimento e ainda não cumprida** (D-009, espécie 4);
-4. **janela recursal estruturada ainda aberta**;
+4. **janela recursal estruturada ainda aberta**.
+
+A `PRELIMINAR` continua livre **nesses quatro**: é ela o caminho de quem quer divulgar enquanto a
+contestação corre, e é ela que abre o prazo.
+
+**Dois outros fatos impedem as duas naturezas**, e não entram na lista acima porque a assimetria
+não vale para eles:
+
 5. **ato de ordenação obsoleto** — que a 017 já verifica;
 6. **pendência reaberta por progressão retroativa** que afete o marco (D-007).
 
-A `PRELIMINAR` continua livre em todos esses casos: é ela o caminho de quem quer divulgar enquanto
-a contestação corre.
+Os quatro primeiros são fatos da **disputa**: enquanto ela corre, divulgar como preliminar é o
+caminho normal. Os dois últimos são do **conteúdo** do que se vai divulgar — ato obsoleto publica
+ordem revogada, e reingresso pendente publica ordem que já se sabe incompleta. Nenhuma das duas
+fica menos falsa por chamar-se preliminar, e chamá-la assim diria que a contestação ainda corre,
+não que o conteúdo pode estar errado.
 
 **Pertinência ao marco** alcança tanto o recurso contra a publicação daquele marco quanto o recurso
 contra `ResultadoEtapa` de Etapa que o marco enumera, no mesmo Edital e Perfil. Sem isso, o recurso
@@ -295,7 +319,9 @@ o que se pode verificar seria pedir à pessoa que respondesse pelo que o sistema
 **Uma publicação definitiva que sucede outra definitiva continua sendo `DEFINITIVA`.** Não nasce
 `DEFINITIVA_RETIFICADA`: vigência e natureza derivam da cadeia, e não de estado duplicado. O nome
 vem do fato — *"Resultado definitivo, retificado em DD/MM em razão do julgamento do recurso R"* —,
-texto derivado da cadeia e da causa, e não de coluna nova.
+texto derivado da cadeia e da causa, e não de coluna nova. Sendo mais de uma a causa, o texto as
+nomeia **todas**: dois deferimentos que alcançam o mesmo marco se resolvem numa emissão só, e
+nomear um deles omitiria quem recorreu e teve razão.
 
 **Nenhuma exceção à regra da janela, e a razão é de alcançabilidade.** Uma redação anterior desta
 decisão dispensava de janela nova a definitiva que corrige outra definitiva, temendo tornar o
@@ -920,6 +946,13 @@ acaso.
   algum, e a interposição MUST permanecer possível enquanto o objeto atacado for vigente.
 - **FR-029**: O sistema MUST elevar a versão do conteúdo canônico ao introduzir a janela, e MUST
   declarar que a ausência da declaração, em conteúdo anterior, significa **janela não declarada**.
+- **FR-113**: Declarando o marco que **não** admite recurso, a interposição contra a publicação
+  daquele marco, e contra o `ResultadoEtapa` de Etapa que somente marcos assim enumerem, MUST ser
+  recusada nomeando a norma, e a ação MUST NOT ser oferecida na tela. A negativa declarada MUST NOT
+  ser tratada como ausência de declaração — que é o caso da FR-028 —, e quando outro marco publicado
+  enumerar a mesma Etapa e admitir recurso, a FR-027 MUST prevalecer. A recusa MUST distinguir-se,
+  por código próprio, da recusa por janela encerrada da FR-026: a primeira diz que o recurso não é
+  previsto, e a segunda, que o prazo dele passou (D-004).
 - **FR-030**: A declaração da janela MUST ser escrita pelo assistente de elaboração, MUST aparecer
   no documento publicado e MUST ser endereçável pelo catálogo de Retificação por identidade estável.
 
@@ -1060,9 +1093,11 @@ acaso.
 - **FR-081**: A natureza pretendida MUST ser insumo da aferição de publicabilidade.
 - **FR-082**: A publicação `DEFINITIVA` MUST ser impedida enquanto, para o marco pertinente,
   existir recurso pendente, reavaliação determinada não cumprida, providência a jusante não cumprida
-  no sentido da FR-089, janela estruturada aberta, ato obsoleto ou pendência reaberta por progressão
-  retroativa.
-- **FR-083**: A publicação `PRELIMINAR` MUST permanecer possível em todos esses casos.
+  no sentido da FR-089 ou janela estruturada aberta.
+- **FR-083**: A publicação `PRELIMINAR` MUST permanecer possível nos quatro casos da FR-082. Ato de
+  ordenação obsoleto e pendência reaberta por progressão retroativa MUST impedir **as duas**
+  naturezas: o primeiro divulgaria ordem revogada e o segundo, ordem que já se sabe incompleta, e
+  nenhum dos dois deixa de ser falso por ser rotulado como preliminar (D-007, FR-079).
 - **FR-084**: A pertinência ao marco MUST alcançar o recurso contra a publicação daquele marco e o
   recurso contra `ResultadoEtapa` de Etapa que o marco enumera, no mesmo Edital e Perfil.
 - **FR-085**: Não havendo janela estruturada, a publicação `DEFINITIVA` MUST exigir declaração
@@ -1072,7 +1107,10 @@ acaso.
   prazo calculado.
 - **FR-087**: O sistema MUST NOT criar natureza nova para a definitiva que corrige outra definitiva.
 - **FR-088**: A publicação definitiva que sucede outra definitiva MUST ser apresentada pela causa,
-  em texto derivado da cadeia e da decisão que a motivou, na página e no documento.
+  em texto derivado da cadeia e das **decisões** que a motivaram, na página e no documento. Citando
+  o ato mais de uma decisão (FR-112), todas MUST ser nomeadas, em ordem estável, e a causa MUST ser
+  congelada no conteúdo publicado — derivá-la na leitura faria decisão posterior reescrever a frase
+  de ato já praticado (FR-091).
 - **FR-089**: A providência a jusante MUST ser considerada cumprida, **para um marco**, quando o ato
   de ordenação que se vai publicar citar a decisão que a determinou, **ou** quando já existir,
   naquele marco, ato citante que tenha sido publicado. Publicar como `DEFINITIVA` sem que uma das
@@ -1279,10 +1317,11 @@ vocabulário, entidade, autoridade e tela para verificar o que uma comparação 
 - **SC-016** — Editais publicados antes do incremento continuam legíveis, retificáveis e publicáveis
   sem nenhuma recusa causada pela ausência da declaração de janela.
 - **SC-017** — 100% das tentativas de publicar como definitivo com recurso pendente, reavaliação
-  pendente, providência pendente, janela aberta, ato obsoleto ou pendência reaberta são recusadas, e
-  a publicação preliminar permanece possível em todas elas. Publicado um ato que **cita** a decisão, a pendência da
-  providência deixa de existir sem que ninguém pratique ato de cumprimento; publicado um ato que não
-  a cita, ela permanece.
+  pendente, providência pendente ou janela aberta são recusadas, e a publicação preliminar permanece
+  possível nesses quatro. Com ato obsoleto ou pendência reaberta, 100% das tentativas são recusadas
+  **nas duas naturezas**. Publicado um ato que **cita** a decisão, a pendência da providência deixa
+  de existir sem que ninguém pratique ato de cumprimento; publicado um ato que não a cita, ela
+  permanece.
 - **SC-018** — Sem janela estruturada, nenhuma publicação definitiva existe sem declaração expressa
   de encerramento do prazo, com autor, instante e texto consultáveis.
 - **SC-019** — A publicação definitiva que corrige outra definitiva é apresentada pela causa, na

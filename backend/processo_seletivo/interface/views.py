@@ -7,7 +7,6 @@ fronteira de segurança (FR-002).
 
 import secrets
 from uuid import UUID, uuid4
-from zoneinfo import ZoneInfo
 
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
@@ -31,7 +30,7 @@ from processo_seletivo.avaliacoes.application.mesa import (
     INTEGRIDADE,
 )
 from processo_seletivo.avaliacoes.application.trilha import auditar as auditar_ato
-from processo_seletivo.avaliacoes.domain.previsao import rotulos
+from processo_seletivo.avaliacoes.domain.previsao import forma_publicada, rotulos
 from processo_seletivo.classificacao.application.emissao import assinatura_da_proposta, emitir_ordem
 from processo_seletivo.classificacao.application.selectors import (
     ato_por_id,
@@ -114,6 +113,12 @@ from processo_seletivo.publicacoes.application.selectors import (
 from processo_seletivo.publicacoes.domain import autoridades
 from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA, render_edital_pdf
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
+from processo_seletivo.recursos.application import admitir as recursos_admitir
+from processo_seletivo.recursos.application import julgar as recursos_julgar
+from processo_seletivo.recursos.application import selectors as recursos_selectors
+from processo_seletivo.recursos.domain.elegibilidade import RAZOES, impedimento
+from processo_seletivo.recursos.domain.janela import janela_declarada
+from processo_seletivo.recursos.models import Recurso
 from processo_seletivo.resultados.application import consolidacao as consolidacao_app
 from processo_seletivo.resultados.application import ocorrencia as ocorrencia_app
 from processo_seletivo.resultados.application import prontidao as prontidao_013
@@ -122,6 +127,7 @@ from processo_seletivo.seguranca.application.authorization import require_permis
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.http import marcar_como_privada
+from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
 # Ordem em que as situações aparecem: o fluxo do Edital, não a ordem alfabética.
 ORDEM_SITUACAO = [
@@ -1597,7 +1603,7 @@ def _vigencia(dados):
     if momento is None:
         raise ValueError(f"'{bruto}' não é uma data e hora válidas.")
     if timezone.is_naive(momento):
-        momento = momento.replace(tzinfo=ZoneInfo("America/Sao_Paulo"))
+        momento = momento.replace(tzinfo=ZONA_INSTITUCIONAL)
     return {"effectiveAt": momento}
 
 
@@ -2714,6 +2720,15 @@ def distribuicao(request, edital_id, etapa_id):
                 ),
                 "prontidao": request.GET.get("prontidao") or "",
                 "impedimento_da_etapa": panorama["impedimento_da_etapa"],
+                # Quem voltou ao certame por recurso aparece **nomeada** na Mesa: sem isso, ela
+                # entraria na lista como mais uma pendente, e a presidência não saberia por que
+                # alguém que estava eliminada reapareceu (FR-077).
+                "reabilitadas": _reabilitadas_da_etapa(edital, etapa_id),
+                # **O histórico do par não entra aqui**, e a razão não é custo: a Mesa organiza
+                # trabalho — quem falta avaliar, quem falta consolidar —, e a pergunta "o que a
+                # decisão alterou" é do painel de Resultados. Foi tentar respondê-la nas duas
+                # telas que quebrou esta: aqui as linhas são dicionários de prontidão, e não
+                # `ResultadoEtapa`.
                 "cobertura": request.GET.get("cobertura") or "",
                 "avaliador": request.GET.get("avaliador") or "",
                 "erro": erro,
@@ -3072,6 +3087,14 @@ def resultados_da_etapa(request, edital_id, etapa_id):
                 # A contestação superveniente vai ao lado da decisão, e não escondida na trilha:
                 # quem consulta precisa saber que a origem foi questionada depois (FR-032).
                 "contestados": resultado_selectors.contestacoes_supervenientes(linhas),
+                # A reabilitação por recurso, nomeada na própria linha: a nota mudou porque um
+                # recurso foi deferido, e quem lê o painel precisa saber disso sem sair da tela
+                # (FR-077). Uma consulta para a Etapa inteira, e nenhuma por linha.
+                "reabilitadas": _reabilitadas_da_etapa(edital, etapa_id),
+                # **O histórico do par, para quem responde a um recurso** (FR-064). Sem ele, a
+                # tela mostra a nota corrigida e cala sobre a que foi corrigida — e quem precisa
+                # conferir o que a decisão alterou teria de sair do sistema para fazê-lo.
+                "historicos": _historicos_superados(linhas, etapa_id),
                 "consequencia": request.GET.get("consequencia") or "",
                 # Os rótulos que **este** Edital publicou: quem consulta o Resultado tem direito ao
                 # vocabulário do Edital, e não ao enum do domínio (FR-118).
@@ -3079,6 +3102,67 @@ def resultados_da_etapa(request, edital_id, etapa_id):
                 "rotulo_desfavoravel": rotulos(etapa)[1],
             },
         )
+    )
+
+
+def _historicos_superados(linhas, etapa_id):
+    """`{inscricao_id: [linhas do par]}` — **somente** onde houve superação, numa consulta só.
+
+    A leitura é feita só para quem tem sucessor: o par sem cadeia responde uma linha só, e pagar
+    uma leitura por inscrição para descobrir isso devolveria à listagem o custo por linha que a
+    012 tirou dela.
+
+    **E é uma leitura para todos, e não uma por par.** A primeira versão chamava `historico_do_par`
+    dentro do laço, e a página lista até vinte e cinco linhas: com metade delas vindas de recurso
+    deferido, a tela pagava mais de uma dezena de consultas extras — e o custo crescia com o
+    **sucesso** dos recursos, que é o que a instituição espera que aconteça (FR-061).
+    """
+    from processo_seletivo.resultados.application.selectors import historicos_dos_pares
+
+    return historicos_dos_pares(
+        [
+            linha.inscricao_id
+            for linha in linhas
+            if getattr(linha, "resultado_anterior_id", None) is not None
+        ],
+        etapa_id,
+    )
+
+
+def _reabilitadas_da_etapa(edital, etapa_id):
+    """`{inscricao_id: linha}` de quem voltou por recurso e é relevante para esta Etapa.
+
+    Alcança **todas** as Etapas do Edital, e não só esta: quem foi reabilitada na Etapa 1 reaparece
+    como pendência na Etapa 2, e é ali que a presidência precisa do aviso. Restringir à Etapa atual
+    nomearia a reabilitação só onde ela já é evidente, e a esconderia onde ela surpreende.
+    """
+    from processo_seletivo.resultados.application.selectors import (
+        reabilitacao_da_inscricao,
+        reabilitadas_por_recurso,
+    )
+
+    return {
+        identidade: reabilitacao_da_inscricao(resultado)
+        for identidade, resultado in reabilitadas_por_recurso(edital=edital).items()
+    }
+
+
+def _decisoes_a_citar(edital, marco_id, marco):
+    """O que a tela de emissão oferece para citar — e nada além.
+
+    Só as providências **pendentes deste marco**: oferecer as já cumpridas convidaria a recitar por
+    engano, e oferecer as de outro marco convidaria a liberar uma definitiva que ninguém corrigiu.
+    """
+    from processo_seletivo.divulgacao.models import PublicacaoResultado
+    from processo_seletivo.recursos.application.selectors import decisoes_a_citar
+
+    publicacoes = list(
+        PublicacaoResultado.objects.filter(edital=edital, marco_id=marco_id).values_list(
+            "id", flat=True
+        )
+    )
+    return decisoes_a_citar(
+        edital=edital, marco_id=marco_id, marco=marco, publicacoes_do_marco=publicacoes
     )
 
 
@@ -3144,6 +3228,9 @@ def ordenacao(request, edital_id, marco_id):
                 "divergencias": estado["divergencias"],
                 "posicoes_divergentes": estado["posicoes_divergentes"],
                 "pode_emitir": pode_emitir,
+                # As providências a jusante pendentes deste marco: a emissão as oferece para que o
+                # ato as cite, e é a citação **publicada** que prova o cumprimento (FR-089, T-015).
+                "decisoes_a_citar": _decisoes_a_citar(edital, marco_id, estado["marco"]),
                 "resultado": request.session.pop("resultado_da_ordenacao", None),
                 "erro": request.session.pop("erro_da_ordenacao", None),
                 "chave_idempotencia": uuid4().hex,
@@ -3190,6 +3277,9 @@ def emitir_ordenacao(request, edital_id, marco_id):
             correlation_id=getattr(request, "correlation_id", ""),
             confirmacao_do_calculo=request.POST.get("confirmacao_do_calculo", ""),
             motivo=request.POST.get("motivo", ""),
+            # As decisões que este ato executa. A tela as oferece; gravá-las é do comando, na mesma
+            # transação do ato — citação é proveniência, e não passo humano separado (FR-089).
+            decisoes=request.POST.getlist("decisao"),
         )
     except DomainError as recusa:
         if recusa.status == 404:
@@ -3339,6 +3429,9 @@ def _renderizar_previa(request, ator, edital, ato, marco_id, *, erro="", status=
                 "confirmacao_da_previa": assinatura_da_previa(
                     ato=ato, publicacao_anterior=sucede, projecao=projecao
                 ),
+                # O campo da declaração só existe onde ela é exigida: onde há janela computável o
+                # sistema verifica, e oferecer o campo ali ensinaria a preenchê-lo sempre (FR-086).
+                "exige_declaracao": janela_declarada(edital=edital, marco_id=marco_id) is None,
                 "chave_idempotencia": uuid4().hex,
                 "erro": erro,
             },
@@ -3378,6 +3471,10 @@ def publicar_resultado(request, edital_id, marco_id, ato_id):
             confirmacao_da_previa=request.POST.get("confirmacao_da_previa", ""),
             idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
             correlation_id=getattr(request, "correlation_id", ""),
+            # A declaração expressa de encerramento do prazo, exigida só na definitiva e só onde
+            # não há janela computável (FR-085, FR-086). O comando decide se ela é exigida, se é
+            # recusada ou se é gravada — a tela apenas a transporta.
+            declaracao_de_encerramento=request.POST.get("declaracao_de_encerramento", ""),
         )
     except DomainError as recusa:
         if recusa.status == 404:
@@ -3800,3 +3897,263 @@ def auditoria_da_comissao(request, processo_id):
             "proximo_cursor": proximo,
         },
     )
+
+
+# ---------------------------------------------------------------------------
+# Os recursos (018). Julgar é ato de autoridade **própria**: a capacidade `recurso:julgar` não
+# deriva de presidir a comissão, de avaliar, de consolidar, de emitir nem de publicar — e é por
+# isso que estas views não passam por `comando_de_comissao` (D-005, T-005, FR-037).
+# ---------------------------------------------------------------------------
+
+
+@require_http_methods(["GET"])
+def recursos_do_edital(request, edital_id):
+    """Os recursos recebidos, para escolher qual abrir.
+
+    **Sem consulta de impedimento por linha** (T-006): a lista mostra recursos que o ator talvez
+    não possa julgar, e quem nomeia o impedimento é a tela da peça. A fundamentação também não vem
+    — ela é conteúdo do juízo, e a lista serve para escolher.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital = obter_edital(actor=ator, edital_id=edital_id)
+    if edital is None:
+        raise Http404
+    require_permission(ator, recursos_admitir.PERMISSAO)
+
+    situacao = request.GET.get("situacao", "")
+    return render(
+        request,
+        "interface/recursos.html",
+        {
+            "edital": edital,
+            "recursos": recursos_selectors.recursos_do_edital(edital, situacao=situacao),
+            "situacao": situacao,
+            "situacoes": sorted(recursos_selectors.SITUACOES.items()),
+        },
+    )
+
+
+def _peca_para_julgar(request, recurso_id):
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return None, None
+    peca = (
+        Recurso.objects.filter(pk=recurso_id)
+        .select_related(
+            "inscricao",
+            "inscricao__edital",
+            "versao",
+            "resultado_atacado",
+            "resultado_atacado__avaliacao",
+            "publicacao_atacada",
+            "publicacao_atacada__ato",
+        )
+        .prefetch_related("juizos", "decisoes")
+        .first()
+    )
+    if peca is None or peca.inscricao.edital.institution_scope != ator.institution_scope:
+        raise Http404
+    require_permission(ator, recursos_admitir.PERMISSAO)
+    return ator, peca
+
+
+@require_http_methods(["GET"])
+def recurso_recebido(request, recurso_id):
+    """A peça, com a proveniência da FR-092 e o impedimento **antes de qualquer botão**.
+
+    Nomear o impedimento depois do clique faria a pessoa escrever a motivação inteira para só
+    então descobrir que não podia decidir (FR-042).
+    """
+    ator, peca = _peca_para_julgar(request, recurso_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+
+    razao = impedimento(ator, peca)
+    # **A resposta carrega a fundamentação e o protocolo de quem recorreu**, e por isso não fica no
+    # cache do navegador: é o mesmo cuidado que a 013 aplicou às telas de Resultado, e a mesma razão
+    # — computador compartilhado, e o botão "voltar" de quem já saiu (FR-105).
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/recurso.html",
+            {
+                "edital": peca.inscricao.edital,
+                "peca": peca,
+                "resumo": recursos_selectors.resumo(peca),
+                "proveniencia": recursos_selectors.proveniencia(peca),
+                "impedimento": RAZOES.get(razao, ""),
+                "pode_decidir": razao is None,
+                "assinatura": recursos_selectors.assinatura_do_estado_da_peca(peca),
+                **_alvo_da_correcao(peca),
+            },
+        )
+    )
+
+
+def _alvo_da_correcao(peca):
+    """As Etapas que a decisão pode alcançar, e a forma que cada uma exige.
+
+    **O objeto atacado e o lugar do erro são eixos distintos** (D-001). Um recurso contra a
+    publicação cujo mérito é *"minha nota da Etapa 2 está errada"* corrige o `ResultadoEtapa` da
+    Etapa 2 — e enquanto esta função só olhava para `resultado_atacado`, esse recurso chegava à tela
+    sem alvo, e o formulário escondia as espécies `CORRECAO_FIXADA` e `REAVALIACAO_DETERMINADA`.
+    Quem recorreu da divulgação por causa da própria nota não tinha, pelo canal real, como obter a
+    correção que a decisão institucional prometeu.
+
+    No ramo do Resultado há **uma** Etapa alcançável, e ela já vem escolhida. No ramo da publicação
+    há as que o marco enumera, e o julgador escolhe: são elas que o ato divulgado ordena, e nenhuma
+    outra.
+
+    A tela pede **pontuação ou sentido conforme a forma que a Etapa publica**, e nunca as duas: um
+    formulário que oferecesse os dois campos convidaria a preencher o errado, e a decisão nasceria
+    incoerente com a própria norma que cita.
+    """
+    from processo_seletivo.recursos.domain.consequencia import etapa_publicada
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    alcancaveis = []
+    for etapa_id in _etapas_alcancaveis(peca):
+        vigente = ResultadoEtapa.vigentes.filter(
+            inscricao_id=peca.inscricao_id, etapa_id=etapa_id
+        ).first()
+        if vigente is None:
+            # Sem Resultado vigente não há o que corrigir naquela Etapa — e oferecê-la levaria a
+            # uma recusa que a tela poderia ter evitado (FR-013).
+            continue
+        etapa = etapa_publicada(peca.versao, etapa_id) or {}
+        alcancaveis.append(
+            {
+                "resultado": vigente,
+                "etapa_id": str(etapa_id),
+                "nome": etapa.get("name") or str(etapa_id),
+                # Vazia no ramo da Ocorrência: ali não há grandeza a fixar, e a decisão declara a
+                # consequência diretamente (FR-059).
+                "forma": "" if vigente.forma == "" else forma_publicada(etapa),
+                "sentidos": rotulos(etapa),
+            }
+        )
+    return {"alcancaveis": alcancaveis}
+
+
+def _etapas_alcancaveis(peca):
+    """As identidades de Etapa que o remédio pode alcançar, na versão que a peça cita.
+
+    Contra o Resultado, a Etapa dele. Contra a publicação, as que o **marco daquela publicação**
+    enumera: o ato divulgado ordena aquelas, e alcançar outras seria a decisão saindo do que se
+    contestou.
+    """
+    if peca.resultado_atacado_id is not None:
+        return [peca.resultado_atacado.etapa_id]
+    publicacao = peca.publicacao_atacada
+    if publicacao is None:
+        return []
+    for perfil in peca.versao.content.get("profiles") or []:
+        for marco in perfil.get("classificationMilestones") or []:
+            if str(marco.get("id")) == str(publicacao.marco_id):
+                return [item for item in marco.get("stages") or []]
+    return []
+
+
+@require_http_methods(["POST"])
+def admitir_recurso(request, recurso_id):
+    ator, peca = _peca_para_julgar(request, recurso_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+
+    try:
+        recursos_admitir.admitir(
+            actor=ator,
+            recurso_id=peca.id,
+            admitido=request.POST.get("admitido") == "sim",
+            motivo=request.POST.get("motivo", ""),
+            assinatura_do_estado=request.POST.get("assinatura", ""),
+            idempotency_key=f"admitir-{peca.id}",
+            correlation_id=str(peca.id),
+        )
+    except DomainError as recusa:
+        if recusa.status == 403 and recusa.code == "forbidden":
+            raise
+        return _recurso_com_recusa(request, ator, peca, recusa)
+    return redirect(reverse("interface:recurso", args=[peca.id]))
+
+
+def _recurso_com_recusa(request, ator, peca, recusa):
+    """A recusa volta **na própria tela da peça**, e não numa página de erro.
+
+    Quem escreveu a motivação precisa lê-la de volta junto da razão da recusa; mandá-la para uma
+    página de erro obrigaria a escrever tudo de novo.
+    """
+    peca.refresh_from_db()
+    razao = impedimento(ator, peca)
+    resposta = marcar_como_privada(
+        render(
+            request,
+            "interface/recurso.html",
+            {
+                "edital": peca.inscricao.edital,
+                "peca": peca,
+                "resumo": recursos_selectors.resumo(peca),
+                "proveniencia": recursos_selectors.proveniencia(peca),
+                "impedimento": RAZOES.get(razao, ""),
+                "pode_decidir": razao is None,
+                "assinatura": recursos_selectors.assinatura_do_estado_da_peca(peca),
+                "erro": recusa.detail,
+                "motivo": request.POST.get("motivo", ""),
+                "motivacao": request.POST.get("motivacao", ""),
+                **_alvo_da_correcao(peca),
+            },
+            status=recusa.status,
+        )
+    )
+    return resposta
+
+
+def _pontuacao_digitada(bruto):
+    """O que a pessoa escreveu, com a vírgula traduzida — e `None` quando ela não escreveu nada.
+
+    Não valida: o que não for número segue para o domínio, que recusa com motivo. Validar aqui
+    duplicaria a regra e deixaria a recusa dependente da porta por onde o pedido entrou.
+    """
+    texto = (bruto or "").strip()
+    return texto.replace(",", ".") if texto else None
+
+
+@require_http_methods(["POST"])
+def julgar_recurso(request, recurso_id):
+    """A decisão de mérito, nas quatro espécies.
+
+    A consequência **não** vem do formulário: o julgador fixa a conclusão, e a regra publicada da
+    Etapa diz o que ela produz (FR-059). Um campo `consequencia` aqui permitiria declarar
+    `HABILITADA` com nota abaixo da mínima.
+    """
+    ator, peca = _peca_para_julgar(request, recurso_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+
+    # A opção carrega `etapa|resultado`: a Etapa que a decisão alcança e a assinatura do Resultado
+    # vigente que a tela leu para ela. Separá-los em dois campos deixaria a assinatura descolar da
+    # Etapa quando o julgador trocasse a escolha.
+    etapa_id, _, assinatura = request.POST.get("etapa", "").partition("|")
+    try:
+        recursos_julgar.julgar(
+            actor=ator,
+            recurso_id=peca.id,
+            especie=request.POST.get("especie", ""),
+            motivacao=request.POST.get("motivacao", ""),
+            etapa_id=etapa_id or None,
+            # A vírgula é o separador decimal do país, e é o que estas telas imprimem — "8,5000",
+            # "26,00". Passá-la adiante como veio derrubava o julgamento em `InvalidOperation`:
+            # traduzi-la aqui é trabalho de apresentação, e o domínio segue recebendo número.
+            pontuacao=_pontuacao_digitada(request.POST.get(f"pontuacao-{etapa_id}")),
+            sentido=request.POST.get(f"sentido-{etapa_id}", ""),
+            assinatura_do_resultado=assinatura,
+            idempotency_key=f"julgar-{peca.id}",
+            correlation_id=str(peca.id),
+        )
+    except DomainError as recusa:
+        if recusa.status == 403 and recusa.code == "forbidden":
+            raise
+        return _recurso_com_recusa(request, ator, peca, recusa)
+    return redirect(reverse("interface:recurso", args=[peca.id]))

@@ -85,12 +85,42 @@ def _identificacao(composicao, cabecalho):
             ("PERFIL", cabecalho["perfil"]),
             ("MARCO", cabecalho["marco"]),
             ("NATUREZA", cabecalho["natureza_rotulo"]),
+            # **A causa da retificação, quando existe** (FR-088). Sem ela, o documento de uma
+            # divulgação que corrige outra afirmava uma ordem nova sem dizer que corrigia nada —
+            # e a página, que lê os mesmos bytes, já dizia.
+            ("RETIFICAÇÃO", _retificacao(cabecalho)),
             ("ATO DE ORIGEM", f"emitido em {_instante(cabecalho['ato']['emitido_em'])}"),
             ("PUBLICADO EM", _instante(cabecalho["publicado_em"])),
         ):
             if valor:
                 _par(composicao, rotulo, valor)
         composicao.espaco(4.0)
+
+
+def _retificacao(cabecalho):
+    """ "Em razão do julgamento do recurso REC-…, decidido em DD/MM/AAAA às HHhMM" — ou vazio.
+
+    Vazio some da moldura: `_identificacao` só imprime o par que tem valor, e uma linha
+    "RETIFICAÇÃO —" numa primeira divulgação afirmaria que houve o que não houve.
+
+    **Todas as causas, e não a primeira** (FR-112). Um ato pode citar mais de uma decisão, e o
+    documento que nomeasse só uma delas seria ato administrativo afirmando metade do que houve. A
+    chave no singular continua legível: publicação é imutável, e quem muda é o leitor (FR-091).
+    """
+    causas = [causa for causa in _causas(cabecalho) if (causa or {}).get("recurso")]
+    if not causas:
+        return ""
+    plural = "dos recursos" if len(causas) > 1 else "do recurso"
+    escritas = [f"{causa['recurso']}, decidido em {_instante(causa['quando'])}" for causa in causas]
+    return f"Em razão do julgamento {plural} " + "; ".join(escritas)
+
+
+def _causas(cabecalho):
+    congeladas = cabecalho.get("retificacoes")
+    if congeladas:
+        return list(congeladas)
+    unica = cabecalho.get("retificacao")
+    return [unica] if unica else []
 
 
 def _par(composicao, rotulo, valor):

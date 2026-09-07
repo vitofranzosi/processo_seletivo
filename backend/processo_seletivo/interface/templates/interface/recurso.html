@@ -1,0 +1,179 @@
+{% extends "interface/base.html" %}
+{% block titulo %}Recurso {{ peca.protocolo }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <a href="{% url 'interface:recursos' edital.id %}">Recursos</a> ›
+  <span aria-current="page">{{ peca.protocolo }}</span>
+</nav>
+
+<h1>Recurso {{ peca.protocolo }}</h1>
+<p class="sub">{{ resumo.situacao_rotulo }} · {{ resumo.objeto }}</p>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1">{{ erro }}</p>{% endif %}
+
+{% if impedimento %}
+{% comment %}
+**Antes de qualquer botão** (FR-042). Oferecer o julgamento e recusá-lo no clique faria a pessoa
+escrever a motivação inteira para só então descobrir que não podia decidir — e a razão é nomeada
+porque, sendo a autoria de um ato o que impede, ela é conferível.
+{% endcomment %}
+<p class="aviso" role="alert"><strong>Você não pode julgar este recurso.</strong><br>{{ impedimento }}</p>
+{% endif %}
+
+<h2>A peça</h2>
+<dl class="ficha">
+  <div><dt>Interposto por</dt><dd>{{ proveniencia.interposto_por }}</dd></div>
+  <div><dt>Inscrição</dt><dd class="destaque">{{ proveniencia.inscricao.nome }}</dd></div>
+  <div><dt>Protocolo da inscrição</dt><dd>{{ proveniencia.inscricao.protocolo }}</dd></div>
+  <div><dt>Interposto em</dt><dd>{{ proveniencia.interposto_em|date:"d/m/Y H:i" }}</dd></div>
+  <div><dt>Tempestividade</dt><dd>{{ proveniencia.tempestividade_rotulo }}</dd></div>
+  <div><dt>Objeto atacado</dt><dd>{{ proveniencia.objeto }}</dd></div>
+  <div><dt>Identidade do objeto</dt><dd>{{ proveniencia.objeto_identidade }}</dd></div>
+  {% if proveniencia.ato_vigente %}
+  <div><dt>Ato vigente naquele instante</dt><dd>{{ proveniencia.ato_vigente.id }}</dd></div>
+  {% endif %}
+  <div><dt>Versão consolidada citada</dt><dd>{{ proveniencia.versao.id }}</dd></div>
+</dl>
+
+<h2>Fundamentação</h2>
+{% comment %}
+Como escrita, e sem resumo. Resumir a razão de quem recorre é decidir por ele o que importa.
+{% endcomment %}
+<p class="fundamentacao">{{ peca.fundamentacao|linebreaksbr }}</p>
+
+<h2>Admissibilidade</h2>
+{% if proveniencia.admissibilidade %}
+<p class="julgado">
+  <strong>{% if proveniencia.admissibilidade.admitido %}Admitido{% else %}Não admitido{% endif %}</strong>
+  · {{ proveniencia.admissibilidade.decidido_por }} · {{ proveniencia.admissibilidade.decidido_em|date:"d/m/Y H:i" }}
+</p>
+<p class="motivacao">{{ proveniencia.admissibilidade.motivo }}</p>
+{% elif pode_decidir %}
+<form method="post" action="{% url 'interface:recurso-admitir' peca.id %}">
+  {% csrf_token %}
+  {% comment %}
+  A assinatura do estado lido viaja no formulário: se outra pessoa apreciar a peça enquanto esta
+  tela está aberta, a confirmação é recusada em vez de gravar por cima (FR-100).
+  {% endcomment %}
+  <input type="hidden" name="assinatura" value="{{ assinatura }}">
+  <div class="campo">
+    <label for="motivo">Motivo</label>
+    {% comment %}
+    Obrigatório **nas duas direções**. Exigi-lo só na inadmissão faria a admissão parecer
+    automática, e ela não é: é a afirmação de que a peça é própria e regularmente instruída.
+    {% endcomment %}
+    <textarea id="motivo" name="motivo" rows="5" required>{{ motivo }}</textarea>
+  </div>
+  <p class="salvar">
+    <button type="submit" name="admitido" value="sim" class="botao">Admitir</button>
+    <button type="submit" name="admitido" value="nao" class="botao secundario">Não admitir</button>
+  </p>
+</form>
+{% else %}
+<p class="vazio">Aguardando apreciação por quem não esteja impedido.</p>
+{% endif %}
+
+{% if not proveniencia.decisao and proveniencia.admissibilidade.admitido and pode_decidir %}
+<h2>Julgar</h2>
+{% comment %}
+**A consequência não é campo deste formulário** (FR-059). O julgador fixa a *conclusão* — a
+pontuação na forma pontuada, o sentido na decisória —, e o que ela produz sai da regra publicada
+da Etapa, sob a versão que a decisão cita. Um campo "habilitada/eliminada" aqui permitiria uma
+decisão declarar habilitação com nota abaixo da mínima, contradizendo a norma que ela mesma cita.
+
+As quatro espécies num só formulário, e não em quatro telas: quem julga escolhe o efeito depois de
+ler a peça, e separá-las obrigaria a decidir a espécie antes de escrever a motivação.
+{% endcomment %}
+<form method="post" action="{% url 'interface:recurso-julgar' peca.id %}">
+  {% csrf_token %}
+  <div class="campo">
+    <label for="especie">Espécie da decisão</label>
+    <select id="especie" name="especie" required>
+      <option value="INDEFERIDO">Indeferir</option>
+      {% if alcancaveis %}
+      <option value="CORRECAO_FIXADA">Deferir fixando a correção</option>
+      <option value="REAVALIACAO_DETERMINADA">Deferir determinando reavaliação</option>
+      {% endif %}
+      <option value="PROVIDENCIA_A_JUSANTE">Deferir determinando providência a jusante</option>
+    </select>
+  </div>
+  {% if alcancaveis %}
+  {% comment %}
+  **A Etapa alcançada é escolha do julgador, e não do objeto atacado** (D-001). Um recurso contra a
+  publicação cujo mérito é "minha nota da Etapa 2 está errada" corrige o Resultado da Etapa 2 — e
+  enquanto a tela derivava a Etapa do objeto atacado, esse recurso não tinha como produzir correção
+  nenhuma pelo canal real.
+
+  A assinatura do Resultado vigente viaja junto de cada opção: se ele mudar entre esta leitura e a
+  confirmação, a decisão é recusada em vez de corrigir o que já não é o vigente (FR-100).
+  {% endcomment %}
+  <div class="campo">
+    <label for="etapa">Etapa alcançada pela decisão</label>
+    <select id="etapa" name="etapa">
+      {% for alvo in alcancaveis %}
+      <option value="{{ alvo.etapa_id }}|{{ alvo.resultado.id }}">{{ alvo.nome }} —
+        {{ alvo.resultado.get_consequencia_display }}{% if alvo.resultado.pontuacao is not None %},
+        {{ alvo.resultado.pontuacao }}{% endif %}</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% for alvo in alcancaveis %}
+  {% if alvo.forma == "PONTUADA" %}
+  <div class="campo curto">
+    <label for="pontuacao-{{ alvo.etapa_id }}">Pontuação corrigida — {{ alvo.nome }}</label>
+    <input type="text" id="pontuacao-{{ alvo.etapa_id }}" name="pontuacao-{{ alvo.etapa_id }}"
+           inputmode="decimal">
+  </div>
+  {% elif alvo.forma == "DECISORIA" %}
+  <div class="campo">
+    <label for="sentido-{{ alvo.etapa_id }}">Sentido corrigido — {{ alvo.nome }}</label>
+    <select id="sentido-{{ alvo.etapa_id }}" name="sentido-{{ alvo.etapa_id }}">
+      <option value="FAVORAVEL">{{ alvo.sentidos.0|default:"Favorável" }}</option>
+      <option value="DESFAVORAVEL">{{ alvo.sentidos.1|default:"Desfavorável" }}</option>
+    </select>
+  </div>
+  {% endif %}
+  {% endfor %}
+  {% endif %}
+  <div class="campo">
+    <label for="motivacao">Motivação</label>
+    {% comment %}
+    Obrigatória em **todas** as espécies, inclusive no indeferimento: é a motivação que torna a
+    decisão contestável, e indeferir sem dizer por quê é decisão que ninguém consegue discutir.
+    {% endcomment %}
+    <textarea id="motivacao" name="motivacao" rows="6" required>{{ motivacao }}</textarea>
+  </div>
+  <p class="salvar"><button type="submit" class="botao">Registrar a decisão</button></p>
+</form>
+{% endif %}
+
+{% if proveniencia.decisao %}
+<h2>Decisão</h2>
+<p class="julgado"><strong>{{ proveniencia.especie_rotulo }}</strong>
+  · {{ proveniencia.decisao.decidido_por }} · {{ proveniencia.decisao.decidido_em|date:"d/m/Y H:i" }}</p>
+<p class="motivacao">{{ proveniencia.decisao.motivacao|linebreaksbr }}</p>
+{% endif %}
+
+{% if proveniencia.resultado_superado %}
+<h2>Efeito sobre o resultado</h2>
+{% comment %}
+O ato superado e o sucessor lado a lado: é o que permite conferir, numa jornada só, que a correção
+alcançou o que a decisão determinou — e que o anterior continua registrado (FR-092, FR-064).
+{% endcomment %}
+<dl class="ficha">
+  <div><dt>Resultado atacado</dt>
+    <dd>{{ proveniencia.resultado_superado.consequencia }}{% if proveniencia.resultado_superado.pontuacao is not None %} · {{ proveniencia.resultado_superado.pontuacao }}{% endif %}</dd></div>
+  <div><dt>Sucessor</dt>
+  {% if proveniencia.sucessor %}
+    <dd class="destaque">{{ proveniencia.sucessor.consequencia }}{% if proveniencia.sucessor.pontuacao is not None %} · {{ proveniencia.sucessor.pontuacao }}{% endif %}</dd>
+  {% else %}
+    <dd>Nenhum — este recurso não produziu resultado sucessor.</dd>
+  {% endif %}</div>
+  {% if proveniencia.sucessor %}
+  <div><dt>Motivo da superação</dt><dd>{{ proveniencia.sucessor.motivo_da_superacao }}</dd></div>
+  {% endif %}
+</dl>
+{% endif %}
+{% endblock %}
