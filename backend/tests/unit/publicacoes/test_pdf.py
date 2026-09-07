@@ -1564,3 +1564,71 @@ def test_o_silencio_do_edital_continua_sem_frase():
 
     assert _janela_recursal({"id": "m1"}) == ""
     assert _janela_recursal({"appealWindow": None}) == ""
+
+
+ANEXOS = [
+    {
+        "id": "99999999-9999-9999-9999-999999999991",
+        "label": "ANEXO I — REQUERIMENTO DE INSCRIÇÃO",
+        "order": 1,
+        "artifactId": "99999999-9999-9999-9999-9999999999a1",
+        "artifactHash": "b" * 64,
+    },
+    {
+        "id": "99999999-9999-9999-9999-999999999992",
+        "label": "ANEXO II — AUTODECLARAÇÃO ÉTNICO-RACIAL",
+        "order": 2,
+        "artifactId": "99999999-9999-9999-9999-9999999999a2",
+        "artifactHash": "c" * 64,
+    },
+]
+
+
+def test_o_documento_relaciona_os_anexos_pelo_rotulo_que_o_autor_escreveu():
+    """FR-027 da 020 — o documento cita os anexos, e cita como o autor os nomeou."""
+    texto = texto_de(documento(snapshot(attachments=ANEXOS), HASH))
+
+    assert "ANEXO I — REQUERIMENTO DE INSCRIÇÃO" in texto
+    assert "ANEXO II — AUTODECLARAÇÃO ÉTNICO-RACIAL" in texto
+
+
+def test_o_documento_nao_imprime_endereco_de_anexo():
+    """FR-027a — o endereço vive no canal, e não nos bytes.
+
+    Cravar URL num documento imutável prenderia o acervo a um domínio que um dia muda, e obrigaria
+    a identidade da publicação a existir antes de o documento ser composto. Nem o identificador do
+    artefato nem o resumo dele têm o que fazer no texto.
+    """
+    texto = texto_de(documento(snapshot(attachments=ANEXOS), HASH))
+
+    assert "99999999-9999-9999-9999-9999999999a1" not in texto
+    assert "http" not in texto.lower()
+    assert "b" * 64 not in texto
+
+
+def test_o_documento_nao_carrega_os_bytes_do_anexo():
+    """D-002 — os anexos acompanham a publicação; não se incorporam ao documento principal."""
+    pdf = documento(snapshot(attachments=ANEXOS), HASH)
+    sem_anexos = documento(snapshot(attachments=[]), HASH)
+
+    assert len(pdf) - len(sem_anexos) < 4096, (
+        "a diferença é uma lista de rótulos, e não um PDF embutido"
+    )
+
+
+def test_a_secao_de_anexos_some_quando_nao_ha_anexo():
+    """Título sobre nada não informa que não há nada: informa que alguém esqueceu de preencher."""
+    texto = texto_de(documento(snapshot(attachments=[]), HASH))
+
+    assert "Anexos" not in texto
+
+
+def test_a_ordem_dos_anexos_e_a_do_conteudo_publicado_e_nada_e_renumerado():
+    """FR-006 e FR-007 — o número está dentro do rótulo, e o documento não o recalcula."""
+    trocados = [{**ANEXOS[1], "order": 1}, {**ANEXOS[0], "order": 2}]
+
+    texto = texto_de(documento(snapshot(attachments=trocados), HASH))
+
+    assert texto.index("ANEXO II") < texto.index("ANEXO I —"), (
+        "quem decide a ordem é o campo, e o rótulo continua dizendo o que o autor escreveu"
+    )

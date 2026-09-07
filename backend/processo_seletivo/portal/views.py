@@ -108,7 +108,25 @@ def _selecao(versao):
         "titulo": conteudo.get("title", ""),
         "descricao": conteudo.get("description", ""),
         "publicacao_id": versao.source_publication_id,
+        "anexos": _anexos(conteudo),
     }
+
+
+def _anexos(conteudo):
+    """Os Anexos vigentes, na ordem editorial, **todos** (020, FR-039, FR-039a).
+
+    Sem filtro por Perfil ou modalidade: o Anexo é conteúdo do Edital e não tem Perfil próprio — e
+    filtrar por vínculo sumiria com o anexo que requisito nenhum aponta, que é legítimo. A
+    filtragem útil acontece onde importa, no fluxo de inscrição, onde o candidato vê o modelo do
+    requisito dele.
+    """
+    return [
+        {"rotulo": anexo.get("label", ""), "artefato_id": anexo.get("artifactId")}
+        for anexo in sorted(
+            conteudo.get("attachments") or [], key=lambda item: item.get("order", 0)
+        )
+        if anexo.get("artifactId")
+    ]
 
 
 ETAPAS = ("Seus dados e documentos", "Revisão", "Comprovante")

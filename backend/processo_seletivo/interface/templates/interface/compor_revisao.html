@@ -27,6 +27,11 @@
       <li>
         <strong>{{ item.titulo }}</strong>
         {% for linha in item.linhas %}{% if linha %}<span class="detalhe">{{ linha }}</span>{% endif %}{% endfor %}
+        {% comment %}
+        Os bytes do anexo, e não só a linha que diz que ele existe: conferir o que não se pode abrir
+        não é conferir, e é este o canal de quem homologa (020, FR-018).
+        {% endcomment %}
+        {% if item.anexo_id %}<a class="acao" href="{% url 'interface:anexo-arquivo' edital.id item.anexo_id %}">Abrir o arquivo</a>{% endif %}
       </li>
       {% endfor %}
     </ul>

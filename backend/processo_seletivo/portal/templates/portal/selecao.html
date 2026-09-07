@@ -16,6 +16,22 @@ inscrição. Ler o Edital continua a um toque — só não disputa mais a decis�
 <a class="documento secundaria" href="{% url 'public-document' publicacao_id %}">Ler o Edital completo (PDF)</a>
 
 {% comment %}
+Os anexos vêm logo abaixo do Edital porque é onde o leitor os procura: o documento acabou de citá-los
+pelo rótulo, e é aqui que o rótulo vira arquivo. Todos, na ordem editorial, sem filtro por Perfil —
+o anexo é conteúdo do Edital, e quem elabora decidiu a ordem (FR-039, FR-039a).
+{% endcomment %}
+{% if anexos %}
+<section aria-labelledby="anexos-titulo">
+  <h2 id="anexos-titulo">Anexos do Edital</h2>
+  <ul>
+    {% for anexo in anexos %}
+    <li><a class="documento secundaria" href="{% url 'public-anexo' anexo.artefato_id %}">{{ anexo.rotulo }}</a></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% comment %}
 Os resultados divulgados vêm **antes** dos Perfis, e de propósito: quem volta a esta página depois
 do período de inscrições volta para saber do resultado, e não para reler as vagas. Só os vigentes
 aparecem — o sucedido continua consultável pelo endereço dele (FR-050, SC-018).

@@ -1,0 +1,71 @@
+{% extends "interface/compor_base.html" %}
+{% block etapa_titulo %}Anexos{% endblock %}
+{% block etapa %}
+<section aria-labelledby="anexos-titulo">
+  <h2 id="anexos-titulo">Anexos do Edital</h2>
+  {% if pendencias_aqui %}
+  <div class="pendencias" role="status">
+    {% include "interface/_pendencias.html" with itens=pendencias_aqui com_link=False %}
+  </div>
+  {% endif %}
+  <p class="ajuda">Os documentos em forma própria que o Edital publica — o formulário que o
+    candidato baixa, preenche, assina e devolve. Cada anexo é um PDF, e o rótulo é o nome inteiro
+    com que o Edital o cita, como <strong>ANEXO I — REQUERIMENTO DE INSCRIÇÃO</strong>. O sistema
+    não numera nem renumera: o número, se houver, está dentro do rótulo que você escreve.</p>
+
+  {% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
+
+  <ul id="anexos-lista">
+    {% for anexo in anexos %}
+    <li class="linha">
+      <form method="post" action="{% url 'interface:anexos' edital.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="acao" value="rotular">
+        <input type="hidden" name="anexo" value="{{ anexo.id }}">
+        <label for="rotulo-{{ anexo.id }}">Rótulo</label>
+        <input id="rotulo-{{ anexo.id }}" name="rotulo" type="text" maxlength="255"
+               value="{{ anexo.rotulo }}"{% if not editavel %} disabled{% endif %}>
+        <span class="detalhe">{{ anexo.artefato.nome_original }}</span>
+        <a class="acao" href="{% url 'interface:anexo-arquivo' edital.id anexo.id %}">Abrir</a>
+        {% if editavel %}<button class="acao" type="submit">Salvar rótulo</button>{% endif %}
+      </form>
+      {% if editavel %}
+      <form method="post" action="{% url 'interface:anexos' edital.id %}"
+            enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="acao" value="substituir">
+        <input type="hidden" name="anexo" value="{{ anexo.id }}">
+        <label for="troca-{{ anexo.id }}">Trocar o arquivo</label>
+        <input id="troca-{{ anexo.id }}" name="arquivo" type="file" accept="application/pdf">
+        <button class="acao" type="submit">Substituir</button>
+      </form>
+      <form method="post" action="{% url 'interface:anexos' edital.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="acao" value="remover">
+        <input type="hidden" name="anexo" value="{{ anexo.id }}">
+        <button class="acao perigoso" type="submit">Remover</button>
+      </form>
+      {% endif %}
+    </li>
+    {% empty %}
+    <li class="vazio">Este Edital ainda não publica anexo nenhum. É legítimo: nem todo Edital
+      fornece formulário próprio.</li>
+    {% endfor %}
+  </ul>
+
+  {% if editavel %}
+  <form method="post" action="{% url 'interface:anexos' edital.id %}"
+        enctype="multipart/form-data" id="anexos-novo">
+    {% csrf_token %}
+    <input type="hidden" name="acao" value="anexar">
+    <h3>Acrescentar anexo</h3>
+    <label for="novo-rotulo">Rótulo</label>
+    <input id="novo-rotulo" name="rotulo" type="text" maxlength="255"
+           placeholder="ANEXO I — REQUERIMENTO DE INSCRIÇÃO">
+    <label for="novo-arquivo">Arquivo (PDF)</label>
+    <input id="novo-arquivo" name="arquivo" type="file" accept="application/pdf" required>
+    <button class="botao" type="submit">Acrescentar</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

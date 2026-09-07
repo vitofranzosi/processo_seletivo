@@ -4,6 +4,7 @@ from decimal import Decimal
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.domain import secoes
 from processo_seletivo.editais.domain.validation import blocking_findings, validate_for_publication
+from processo_seletivo.editais.models.anexos import ArtefatoAnexo
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import AtoAdministrativo, Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.infrastructure.pdf import (
@@ -282,6 +283,31 @@ def _document_requirements(edital: Edital) -> list[dict]:
     ]
 
 
+def congelar_artefatos(conteudo, *, now):
+    """Torna públicos e imutáveis os artefatos que esta versão publica (020, FR-010, FR-025).
+
+    **Na mesma transação em que a `Publicacao` nasce**, e é essa a razão de os bytes morarem em
+    coluna binária: a publicação é atômica, e um `rollback` leva tudo embora junto. Com arquivo em
+    disco, o congelamento aconteceria fora da transação, e conteúdo publicado poderia apontar para
+    bytes que não existem — o defeito que a feature veio corrigir (R-001).
+
+    Congelar o que já está congelado é no-op, e não erro: a mesma identidade atravessa versões, e
+    uma Retificação que reverte outra republica artefato que já é público. O filtro por
+    `congelado_em__isnull=True` torna a operação idempotente — e é também o que impede a trigger de
+    recusar a escrita.
+    """
+    identidades = [
+        anexo.get("artifactId")
+        for anexo in conteudo.get("attachments") or []
+        if isinstance(anexo, dict) and anexo.get("artifactId")
+    ]
+    if not identidades:
+        return 0
+    return ArtefatoAnexo.objects.filter(pk__in=identidades, congelado_em__isnull=True).update(
+        congelado_em=now
+    )
+
+
 def _locked_edital(actor, edital_id):
     try:
         edital = (
@@ -558,6 +584,7 @@ def publish_edital(
             bytes=pdf,
             document_hash=document_hash,
         )
+        congelar_artefatos(revisao.content, now=now)
         publication.document_hash = document.document_hash
         from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 

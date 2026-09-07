@@ -24,11 +24,14 @@ ORDEM_ESPERADA = [
     ("classificacao", "Critérios de Classificação", secoes.TEXTUAL),
     ("cronograma", "Cronograma", secoes.GERADA),
     ("recursos", "Dos Recursos", secoes.TEXTUAL),
+    # A `020` acrescenta a relação dos Anexos, e ela é **gerada**: o catálogo lista os anexos que o
+    # Edital publica, e quem os declara é a etapa própria, não um texto redigido aqui.
+    ("anexos", "Anexos", secoes.GERADA),
     ("disposicoes-finais", "Disposições Finais", secoes.TEXTUAL),
 ]
 
 
-def test_o_catalogo_tem_as_onze_secoes_na_ordem_declarada():
+def test_o_catalogo_tem_as_secoes_declaradas_na_ordem():
     assert [(s.key, s.title, s.type) for s in secoes.CATALOGO] == ORDEM_ESPERADA
 
 

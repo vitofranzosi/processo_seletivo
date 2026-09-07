@@ -490,6 +490,30 @@ paths:
             ETag: { description: Hash do documento, schema: { type: string } }
           content: { application/pdf: { schema: { type: string, contentEncoding: binary } } }
         '404': { $ref: '#/components/responses/NotFound' }
+  /public/anexos/{artefatoId}:
+    get:
+      tags: [Consulta pública]
+      summary: Baixar o artefato de um Anexo publicado
+      description: >-
+        O endereço é o do artefato, e não o do anexo: por ser imutável, ele resolve sempre "o de
+        então", nunca "o vigente". Artefato que nenhuma versão publicou responde 404 — dizer
+        "existe, mas não é público" já entregaria que existe.
+      operationId: baixarAnexoPublicado
+      parameters:
+        - name: artefatoId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Artefato imutável
+          headers:
+            ETag: { description: Resumo do artefato, schema: { type: string } }
+            Cache-Control: { description: 'public, max-age=31536000, immutable', schema: { type: string } }
+            Content-Disposition: { description: attachment, com o nome enviado saneado, schema: { type: string } }
+          content: { application/pdf: { schema: { type: string, contentEncoding: binary } } }
+        '304': { description: Não modificado, em resposta a If-None-Match }
+        '404': { $ref: '#/components/responses/NotFound' }
   /admin/auditoria:
     get:
       tags: [Auditoria]

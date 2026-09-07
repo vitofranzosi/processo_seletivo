@@ -26,6 +26,14 @@ urlpatterns = [
     ),
     path("editais/<uuid:edital_id>/atos/<slug:acao>", views.praticar_ato, name="ato"),
     path("editais/<uuid:edital_id>/retificar", views.retificar, name="retificar"),
+    # As cinco operações sobre a coleção de Anexos, e o download do artefato antes da publicação.
+    # A coleção não viaja no `replace_draft`, então não passa pelo POST da etapa (020, R-006).
+    path("editais/<uuid:edital_id>/anexos", views.anexos_acao, name="anexos"),
+    path(
+        "editais/<uuid:edital_id>/anexos/<uuid:anexo_id>/arquivo",
+        views.anexo_do_rascunho,
+        name="anexo-arquivo",
+    ),
     path("editais/<uuid:edital_id>/auditoria", views.auditoria, name="auditoria"),
     path(
         "editais/<uuid:edital_id>/inscricoes",

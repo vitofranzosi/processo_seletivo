@@ -148,9 +148,16 @@ CATALOGO: tuple[Secao, ...] = (
         ),
     ),
     Secao(
+        key="anexos",
+        title="Anexos",
+        order=11,
+        type=GERADA,
+        source="attachments",
+    ),
+    Secao(
         key="disposicoes-finais",
         title="Disposições Finais",
-        order=11,
+        order=12,
         type=TEXTUAL,
         default_text=(
             "Os casos omissos serão resolvidos pela autoridade responsável pelo processo seletivo, "

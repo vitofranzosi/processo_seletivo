@@ -896,6 +896,7 @@ def validate_for_publication(snapshot: dict) -> list[ValidationFinding]:
     findings.extend(_coerencia_dos_marcos(snapshot))
     findings.extend(_periodo_de_inscricoes(snapshot))
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
+    findings.extend(_coerencia_dos_anexos(snapshot))
     return findings
 
 
@@ -940,6 +941,66 @@ def _periodo_de_inscricoes(snapshot: dict) -> list[ValidationFinding]:
             )
         ]
     return []
+
+
+def _coerencia_dos_anexos(snapshot: dict) -> list[ValidationFinding]:
+    """O que impede publicar um Edital cujos anexos não estão de pé (020, FR-005, FR-023).
+
+    Três regras, e a terceira é a que dá nome à feature. **Rótulo vazio** é impeditivo porque o
+    documento publicado cita o anexo por ele: sem rótulo, o Edital manda o candidato a um anexo que
+    não tem nome. **Referência pendurada** é impeditivo porque um requisito que aponta anexo
+    inexistente é exatamente o defeito que a `020` veio corrigir, entrando pela porta de trás — a
+    Retificação que remove o anexo e esquece o vínculo.
+
+    **Rótulo repetido é aviso, e não impedimento**, porque rótulo não é identidade: dois anexos
+    podem legitimamente se chamar igual — o Edital que publica dois modelos de declaração sob o
+    mesmo título —, e recusar a publicação por isso seria o sistema decidindo redação por norma.
+    """
+    anexos = snapshot.get("attachments")
+    if not isinstance(anexos, list):
+        return []
+    findings = []
+    identidades = set()
+    vistos = {}
+    for indice, anexo in enumerate(anexos):
+        if not isinstance(anexo, dict):
+            continue
+        caminho = _caminho_da_entidade("attachments", anexo, indice)
+        identidades.add(str(anexo.get("id")))
+        rotulo = anexo.get("label")
+        if not isinstance(rotulo, str) or not rotulo.strip():
+            findings.append(
+                _impeditivo(
+                    "attachment_label_required",
+                    "O Anexo precisa de rótulo: é por ele que o Edital o cita.",
+                    caminho,
+                )
+            )
+        elif rotulo.strip() in vistos:
+            findings.append(
+                ValidationFinding(
+                    Severity.WARNING,
+                    "attachment_duplicate_label",
+                    f"Dois Anexos têm o mesmo rótulo: '{rotulo.strip()}'.",
+                    caminho,
+                )
+            )
+        else:
+            vistos[rotulo.strip()] = indice
+    for indice, documento in enumerate(snapshot.get("documentRequirements") or []):
+        if not isinstance(documento, dict):
+            continue
+        vinculo = documento.get("attachmentId")
+        if vinculo is not None and str(vinculo) not in identidades:
+            findings.append(
+                _impeditivo(
+                    "attachment_reference_dangling",
+                    f"O Documento Exigido '{documento.get('name', '')}' aponta um Anexo que não "
+                    "existe nesta versão do Edital.",
+                    _caminho_da_entidade("documentRequirements", documento, indice),
+                )
+            )
+    return findings
 
 
 def _coerencia_dos_documentos_exigidos(snapshot: dict) -> list[ValidationFinding]:

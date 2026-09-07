@@ -21,7 +21,7 @@ def test_toda_colecao_do_snapshot_esta_declarada_na_conferencia(
     api_client, manager_headers, process_payload
 ):
     edital = publish_original(
-        api_client, manager_headers, process_payload, draft=rascunho_com_etapas()
+        api_client, manager_headers, process_payload, draft=rascunho_com_etapas(), anexos=1
     )
     snapshot = edital_snapshot(Edital.objects.get(pk=edital.pk))
 

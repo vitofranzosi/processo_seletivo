@@ -6,6 +6,7 @@ fronteira de segurança (FR-002).
 """
 
 import secrets
+from urllib.parse import quote
 from uuid import UUID, uuid4
 
 from django.http import Http404, HttpResponse
@@ -71,6 +72,7 @@ from processo_seletivo.divulgacao.application.selectors import (
 from processo_seletivo.divulgacao.domain.conteudo import compor as compor_divulgacao
 from processo_seletivo.divulgacao.domain.publicabilidade import aferir as aferir_publicabilidade
 from processo_seletivo.divulgacao.models import Natureza
+from processo_seletivo.editais.application import anexos as anexos_command
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.application.identificacao import update_edital_identification
 from processo_seletivo.editais.domain.validation import validate_for_publication
@@ -433,6 +435,7 @@ DESTINO_DA_PENDENCIA = {
     # mandar quem lê para o Cronograma seria mandá-lo a uma tela sem o que corrigir.
     "/schedule": ("inscricao", "#inscricao-periodo", True),
     "documentRequirements": ("inscricao", "#inscricao-documentos", True),
+    "attachments": ("anexos", "#anexos-lista", True),
 }
 
 
@@ -500,6 +503,10 @@ ETAPAS_COMPOSICAO = [
     # a primeira redação o colocou (015, T072).
     ("classificacao", "Classificação", "interface/compor_classificacao.html"),
     ("inscricao", "Inscrição", "interface/compor_inscricao.html"),
+    # Depois da Inscrição, porque é o requisito que aponta o modelo — oferecer os anexos antes
+    # seria oferecê-los sem o que eles servem. **Fora de `ETAPAS_GRAVAVEIS`**: a coleção não viaja
+    # no `replace_draft`, e cada operação tem comando próprio (020, R-006).
+    ("anexos", "Anexos", "interface/compor_anexos.html"),
     # Depois de tudo o que gera conteúdo: as seções textuais complementam o que o sistema já
     # sabe, e quem as redige precisa ver o que já está estruturado.
     ("conteudo", "Conteúdo", "interface/compor_conteudo.html"),
@@ -595,6 +602,9 @@ def _progresso(edital, atual):
         "inscricao": CONCLUIDA
         if edital.documentos_exigidos.exists() or forms.periodo_do_edital(edital)
         else PENDENTE,
+        # Como `etapas`: Edital sem anexo é legítimo, e "concluída" diz "já tem", não "é
+        # obrigatório ter" (FR-024).
+        "anexos": CONCLUIDA if edital.anexos.exists() else PENDENTE,
         "conteudo": CONCLUIDA if edital.secoes.exists() else PRONTA,
         "revisao": PENDENTE,
     }
@@ -624,6 +634,82 @@ def _vizinhas(atual):
 @require_http_methods(["GET"])
 def compor(request, edital_id):
     return redirect(reverse("interface:compor-etapa", args=[edital_id, CHAVES_ETAPA[0]]))
+
+
+@require_http_methods(["POST"])
+def anexos_acao(request, edital_id):
+    """As cinco operações sobre a coleção de Anexos, numa rota só (020, FR-015).
+
+    Uma rota e não cinco porque as cinco são a mesma decisão de quem elabora — "como este Edital
+    publica os seus anexos" —, e porque a fronteira que importa não é a rota: é o comando, que
+    verifica `edital:elaborar` e o estado do Edital **depois** de travar a linha.
+
+    A view não decide nada. Ela lê o formulário, chama o comando e volta para a etapa; a recusa
+    volta pela mensagem, no lugar onde a pessoa estava.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital = obter_edital(actor=ator, edital_id=edital_id)
+    if edital is None:
+        raise Http404
+    acao = request.POST.get("acao", "")
+    destino = f"{reverse('interface:compor-etapa', args=[edital.id, 'anexos'])}"
+    comum = {
+        "actor": ator,
+        "edital_id": edital.id,
+        "expected_revision": edital.revision,
+        "correlation_id": request.correlation_id,
+    }
+    try:
+        if acao == "anexar":
+            arquivo = request.FILES.get("arquivo")
+            if arquivo is None:
+                raise DomainError("file_required", "Escolha o arquivo do anexo.", 422)
+            anexos_command.anexar(**comum, arquivo=arquivo, rotulo=request.POST.get("rotulo", ""))
+        elif acao == "substituir":
+            arquivo = request.FILES.get("arquivo")
+            if arquivo is None:
+                raise DomainError("file_required", "Escolha o arquivo do anexo.", 422)
+            anexos_command.substituir(
+                **comum, anexo_id=request.POST.get("anexo", ""), arquivo=arquivo
+            )
+        elif acao == "rotular":
+            anexos_command.rotular(
+                **comum,
+                anexo_id=request.POST.get("anexo", ""),
+                rotulo=request.POST.get("rotulo", ""),
+            )
+        elif acao == "reordenar":
+            anexos_command.reordenar(**comum, ordem=request.POST.getlist("ordem"))
+        elif acao == "remover":
+            anexos_command.remover(**comum, anexo_id=request.POST.get("anexo", ""))
+        else:
+            raise Http404
+    except DomainError as exc:
+        return redirect(f"{destino}?erro={quote(exc.detail)}")
+    return redirect(f"{destino}?salvo=anexos")
+
+
+@require_http_methods(["GET"])
+def anexo_do_rascunho(request, edital_id, anexo_id):
+    """Os bytes do anexo antes da publicação, para quem elabora, revisa e homologa (FR-017, FR-018).
+
+    Conferir bytes que não se pode abrir não é conferir. O artefato de Edital não publicado não tem
+    endereço público, e este endereço não é público: exige ator no escopo institucional do Edital.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital = obter_edital(actor=ator, edital_id=edital_id)
+    if edital is None:
+        raise Http404
+    anexo = edital.anexos.select_related("artefato").filter(pk=anexo_id).first()
+    if anexo is None:
+        raise Http404
+    resposta = HttpResponse(bytes(anexo.artefato.bytes), content_type=anexo.artefato.content_type)
+    resposta["Content-Disposition"] = f'inline; filename="{anexo.artefato.nome_original}"'
+    return marcar_como_privada(resposta)
 
 
 @require_http_methods(["GET", "POST"])
@@ -678,6 +764,7 @@ def compor_etapa(request, edital_id, etapa):
     # A conferência é lida do conteúdo canônico, e não montada bloco a bloco no template: é o que
     # impede a Revisão de envelhecer quando uma coleção nova entra no Edital.
     conferencia = revisao.blocos(edital_snapshot(edital)) if etapa == "revisao" else []
+    anexos = edital.anexos.select_related("artefato").all() if etapa == "anexos" else []
     return render(
         request,
         template,
@@ -690,6 +777,8 @@ def compor_etapa(request, edital_id, etapa):
                 for erro in erros
                 if isinstance(erro, dict) and erro.get("ancora")
             },
+            "anexos": anexos,
+            "erro": request.GET.get("erro", ""),
             "progresso": _progresso(edital, etapa),
             "anterior": anterior,
             "proxima": proxima,
