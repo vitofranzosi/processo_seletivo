@@ -150,3 +150,25 @@ def test_o_marco_sem_divulgacao_diz_isso_em_vez_de_mostrar_tabela_vazia(
 
     assert "Nenhum resultado foi divulgado neste marco ainda" in corpo
     assert "<tbody>" not in corpo
+
+
+def test_a_declaracao_de_encerramento_do_prazo_e_consultavel(client, seletor_ligado, com_sucessao):
+    """SC-018: gravada com autor, instante e texto — e **consultável**, não só gravada.
+
+    A caminhada da T125 encontrou o buraco: sem janela computável, publicar como definitivo exige a
+    declaração expressa, o sistema a recusa quando falta e a grava quando vem — e nenhuma tela a
+    mostrava depois. Uma afirmação de que o prazo se encerrou, guardada onde ninguém lê, não é ato
+    auditável: é uma linha de banco.
+    """
+    cenario, _primeira, _segunda = com_sucessao
+    identificar(client, "paula.publicadora", ["publicador"])
+
+    corpo = client.get(_historico(cenario)).content.decode()
+    linhas = _linhas(corpo)
+
+    assert "O prazo recursal encerrou-se sem interposição, conforme o Edital." in linhas[0], (
+        "a definitiva precisa mostrar o fundamento escrito de quem declarou o prazo encerrado"
+    )
+    assert "encerrou-se sem interposição" not in linhas[1], (
+        "a preliminar não declara prazo nenhum, e não pode herdar a declaração da sucessora"
+    )
