@@ -1272,9 +1272,16 @@ def recorrer(request, inscricao_id):
         return redirect(reverse("portal:inscricao", args=[registro.id]))
 
     recorriveis = objetos_recorriveis(registro)
-    if not recorriveis:
+    if not recorriveis and request.method != "POST":
         # Nada a contestar: a página do formulário não existe para quem não tem objeto atacável, e
         # devolvê-la vazia convidaria a um ato que seria recusado.
+        #
+        # **No `POST`, não.** Quem deixou o formulário aberto enquanto a janela corria envia depois
+        # dela, e esse envio precisa receber a norma, a abertura e o encerramento (FR-026). Aqui o
+        # atalho engolia o pedido antes de ele chegar ao domínio: a pessoa via a página de sempre,
+        # sem recusa nenhuma, e ficava sem saber que houve prazo e que ele passou. Recusar em
+        # silêncio é pior do que recusar — a única leitura disponível era a de que a interposição
+        # tinha acontecido.
         return redirect(reverse("portal:acompanhamento", args=[registro.id]))
 
     erro = ""
@@ -1370,26 +1377,37 @@ def recurso(request, recurso_id):
 
 
 def _correcao_da_publicacao(publicacao):
-    """Se esta publicação corrige outra por força de recurso, o que a motivou (FR-088).
+    """As decisões de recurso que motivaram esta publicação, se ela corrige outra (FR-088).
 
     A resposta vem da cadeia — existe publicação anterior, e o ato desta corrige por decisão de
     recurso —, e é a mesma derivação que a natureza e a vigência já usam: não há estado a manter
     coerente com nada.
 
-    **A causa congelada tem preferência**, e é ela que o documento imprime: o que a página diz e o
-    que o documento diz precisam ser a mesma frase, e ela foi decidida no ato de publicar. A
-    derivação ao vivo continua aqui para as publicações anteriores a este congelamento, que não
-    têm a chave — apagá-la faria a causa sumir de divulgações já feitas.
+    **As causas congeladas têm preferência**, e são elas que o documento imprime: o que a página diz
+    e o que o documento diz precisam ser a mesma frase, e ela foi decidida no ato de publicar. A
+    derivação ao vivo continua aqui para as publicações anteriores a este congelamento, que não têm
+    a chave — apagá-la faria a causa sumir de divulgações já feitas.
+
+    **A chave no singular também é lida.** Publicação é imutável, e reescrever conteúdo já publicado
+    para caber na forma nova seria alterar ato praticado (FR-091): quem muda é o leitor.
     """
-    from processo_seletivo.recursos.application.selectors import causa_da_correcao
+    from processo_seletivo.recursos.application.selectors import causas_da_correcao
 
     if publicacao.publicacao_anterior_id is None:
-        return None
+        return []
     conteudo = json.loads(bytes(publicacao.conteudo_publico).decode("utf-8"))
-    congelada = (conteudo.get("cabecalho") or {}).get("retificacao")
-    if congelada:
-        return congelada
-    return causa_da_correcao(publicacao.ato)
+    return congeladas_ou_derivadas(conteudo.get("cabecalho") or {}) or causas_da_correcao(
+        publicacao.ato
+    )
+
+
+def congeladas_ou_derivadas(cabecalho):
+    """As causas gravadas no conteúdo — na forma nova, ou na singular que a antecedeu."""
+    congeladas = cabecalho.get("retificacoes")
+    if congeladas:
+        return list(congeladas)
+    unica = cabecalho.get("retificacao")
+    return [unica] if unica else []
 
 
 def _documentos(conteudo, inscricao):
@@ -1893,7 +1911,7 @@ def resultado(request, publicacao_id):
             # pela **causa** — a decisão que a motivou —, derivada da cadeia. Uma natureza
             # `DEFINITIVA_RETIFICADA` seria terceiro valor no enum, mais um par na regra de não
             # regressão, e toda leitura de natureza mudando para dizer o que a cadeia já diz.
-            "correcao": _correcao_da_publicacao(publicacao),
+            "correcoes": _correcao_da_publicacao(publicacao),
             "edital_id": publicacao.edital_id,
         },
     )
