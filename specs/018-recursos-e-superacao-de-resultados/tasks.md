@@ -333,7 +333,24 @@ sendo juízo humano onde ela não a declarou.
 - [X] T122 [P] Verificar os orçamentos de consulta da 011, 012 e 015 em `backend/tests/performance/`: o filtro de vigência não pode ter acrescentado round-trip (FR-061)
 - [X] T123 [P] Testar a proteção de dados em `backend/tests/portal/test_recurso_privacidade.py`: fundamentação e decisão acessíveis ao titular, ao julgador e à auditoria, e a mais ninguém; respostas não armazenáveis pelo navegador (FR-102, FR-103, FR-105)
 - [X] T124 [P] Testar que nada é notificado em `backend/tests/integration/recursos/test_julgar.py`: nenhuma mensagem é disparada em interposição, admissibilidade ou decisão (FR-109)
-- [ ] T125 Executar o roteiro do [quickstart.md](./quickstart.md) de ponta a ponta pelo navegador, alternando os atores, e registrar as evidências (FR-106, SC-024)
+- [~] T125 Executar o roteiro do [quickstart.md](./quickstart.md) de ponta a ponta pelo navegador, alternando os atores, e registrar as evidências (FR-106, SC-024)
+
+  **Feito pelo canal real, e não pelo navegador — e a diferença fica registrada.**
+  `backend/tests/acceptance/test_us_recursos.py` percorre os passos 1 a 7 do roteiro pelas telas de
+  verdade (portal e gestão, HTTP, templates, sessão), alternando Helena, a presidência, a julgadora
+  e uma avaliadora sem capacidade. Os passos 8 a 11 têm cobertura própria em
+  `test_pejus.py`, `test_reavaliacao.py`, `test_definitividade.py` e `test_janela.py`.
+
+  **O que falta é a passagem manual com captura de evidências**, e ela depende de duas coisas que
+  esta sessão não tem:
+
+  1. o `preview` desta ferramenta serve o **checkout principal**, e não este worktree — o roteiro
+     rodaria contra código sem a 018;
+  2. `seed_demo` não conhece recursos: ele monta o estado da 017, e os atores do roteiro
+     (`julia.julgadora`, `otavio.avaliador`) e a janela declarada não existem nele.
+
+  Antes da passagem manual, portanto: estender `seed_demo` com o cenário da 018 e rodar o servidor
+  a partir deste worktree.
 
 ---
 
