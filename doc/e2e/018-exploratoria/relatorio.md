@@ -298,3 +298,98 @@ textual, e o elaborador segue podendo escrever o que precisar.
 - **entrar como `paulo.presidente` digitando o nome não funciona; pelo botão da sugestão, sim.** O
   formulário livre exige ao menos um papel marcado, e a presidência não é papel — vem do vínculo
   com a comissão. O seletor oferece a identidade certa logo acima, e é por ali que se entra.
+
+---
+
+## Convergência do PR #50 — o que a revisão encontrou, e o que foi percorrido de novo
+
+Quatro bloqueios e uma lacuna de contrato, todos corrigidos. **Cada um com teste que falha sem a
+correção**, e os que se veem na tela foram percorridos de novo no navegador.
+
+### C1 — a recusa depois do prazo não chegava a quem enviava
+
+O achado mais grave, e o que enfraquecia a SC-014. A tela **deixa de oferecer** a ação quando o
+prazo fecha, e isso está certo (FR-013). Mas quem deixou o formulário aberto enquanto a janela
+corria envia depois dela — e esse envio era **redirecionado para o acompanhamento antes de chegar
+ao domínio**. A pessoa via a página de sempre, sem recusa nenhuma, e ficava sem saber que houve
+prazo e que ele passou. Recusar em silêncio é pior do que recusar: a única leitura disponível era a
+de que a interposição tinha acontecido.
+
+Percorrido de novo no `ps018_prazo`, onde a janela se encerrou em 02/09. O envio — com o mesmo
+`objeto` que o formulário carregava, montado a partir do endereço público que o acompanhamento da
+candidata linka — agora responde:
+
+> **Recorrer**
+> O prazo para recorrer deste resultado encerrou-se em **02/09/2026**. Ele foi de **5 dias
+> corridos**, contados da divulgação de **28/08/2026**, conforme o Edital.
+> Voltar ao acompanhamento
+
+A norma, a abertura e o encerramento — e **sem formulário**: oferecer de novo o botão que acabou de
+recusar ensinaria a pessoa a tentar contra uma porta fechada. O `GET` continua devolvendo ao
+acompanhamento, que é a FR-013 intacta.
+
+O código HTTP continua 200, como em toda recusa de formulário do portal: o defeito era o
+redirecionamento, e trocar o status só aqui deixaria o portal inconsistente consigo mesmo.
+
+### C2 — a spec dizia as duas coisas sobre a preliminar
+
+A D-007 dizia que a reinclusão pendente impede *a publicação daquele marco*; a D-008 listava-a
+entre o que impede só a definitiva e fechava com *"a preliminar continua livre em todos esses
+casos"*. O **código sempre fez o certo** — ato obsoleto e reingresso pendente são aferidos antes de
+a natureza ser consultada, e o comando recusa a preliminar nos dois —, e era a prosa que prometia o
+contrário.
+
+Corrigidos `spec.md` (D-008, FR-082, FR-083, SC-017), `contracts/janela.md` e o `quickstart`, e a
+regra ganhou guarda própria em teste:
+
+```text
+1–4  recurso pendente · reavaliação · providência · janela aberta   só a DEFINITIVA
+5–6  ato obsoleto · reingresso pendente                             AS DUAS naturezas
+```
+
+A assimetria é dos quatro primeiros porque eles são fatos da **disputa**, e enquanto ela corre o
+preliminar é o caminho normal. Os dois últimos são do **conteúdo**: ordem revogada ou incompleta não
+fica menos falsa por chamar-se preliminar.
+
+### C3 — a correção fixada validava menos que a avaliação
+
+`avaliacoes/domain/pontuacao.py` recusa negativo, `Infinity`, `NaN`, casas em excesso, estouro da
+coluna e a máxima publicada. A correção fixada por recurso recusava só o que `Decimal()` não
+construía — e `NaN` nem isso: estourava. Duas validações para o mesmo campo produzem, mais cedo ou
+mais tarde, um Resultado que uma porta aceitou e a outra recusaria, e é a porta do recurso que grava
+sob decisão irreversível.
+
+Agora ela passa pela **mesma** função. E o sentido da Etapa decisória passa pelo mesmo normalizador:
+antes, qualquer texto virava sentido — inclusive o rótulo publicado que a tela mostra.
+
+Percorrido na tela de julgamento do `ps018_demo`, fixando `-5,0000`:
+
+> A pontuação não pode ser negativa.
+
+422, na página, com a motivação preservada. Antes, o valor era aceito e virava Resultado.
+
+### C4 — o histórico do par custava uma consulta por linha corrigida
+
+`_historicos_superados` chamava a leitura do par dentro do laço, e o painel da Etapa lista até vinte
+e cinco linhas por página. O custo crescia com o **sucesso** dos recursos — que é o que a
+instituição espera que aconteça. Passou a leitura em lote: **oito pares corrigidos, uma consulta**,
+com teste de contagem que falha em 8 se alguém voltar ao laço.
+
+### C5 — a retificação nomeava só uma causa
+
+A FR-112 sempre permitiu que um ato citasse mais de uma decisão, e é o caso normal quando dois
+deferimentos alcançam o mesmo marco: resolvem-se numa emissão só. A apresentação tomava a primeira
+— e quem recorreu, teve razão e foi corrigido no mesmo ato não se via na causa da retificação.
+
+Agora são **todas**, em ordem `(decidido_em, protocolo)`, congeladas no conteúdo publicado: página e
+documento leem os mesmos bytes, e ordem instável faria o mesmo ato produzir resumo canônico
+diferente a cada publicação. A forma singular já publicada continua legível — conteúdo publicado não
+se reescreve (FR-091), e quem muda é o leitor.
+
+Conferido no navegador, no `ps018_antigo`, cuja divulgação foi feita **antes** deste congelamento:
+
+> Resultado definitivo, retificado em 07/09/2026 em razão do julgamento do recurso
+> REC-2026-H7YZ4WW9.
+
+A página continua nomeando a causa — a retaguarda de derivação ao vivo funcionando sobre uma
+publicação que não tem a chave nova.

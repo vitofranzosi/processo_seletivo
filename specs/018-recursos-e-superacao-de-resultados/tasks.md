@@ -350,6 +350,16 @@ elas está no relatório: o domínio distinguia estados que a **borda** colapsav
 - [X] T133 Derivar a causa da retificação também pela cadeia — não só pela citação — e congelá-la no conteúdo publicado, para que página e documento digam a mesma frase, em `backend/processo_seletivo/recursos/application/selectors.py`, `backend/processo_seletivo/divulgacao/domain/conteudo.py`, `backend/processo_seletivo/divulgacao/application/publicar.py`, `backend/processo_seletivo/divulgacao/infrastructure/documento.py` e `backend/processo_seletivo/portal/views.py`; testar em `backend/tests/portal/test_definitiva_retificada.py` (FR-088, SC-019)
 - [X] T134 Semear os quatro estados da janela em bancos independentes, com `--dias-atras` e `--janela-recursal`, em `backend/processo_seletivo/processos/management/commands/seed_demo.py` (pré-requisito da T125)
 
+### Convergência do PR #50 — quatro bloqueios e uma lacuna de contrato
+
+Rodada posterior à publicação do PR. **Um teste por achado, e cada um conferido antes da correção.**
+
+- [X] T135 Deixar o `POST` de interposição alcançar o domínio depois do prazo, em `backend/processo_seletivo/portal/views.py` e `backend/processo_seletivo/portal/templates/portal/recorrer.html`: a recusa `appeal_window_closed` nomeia a norma, a abertura e o encerramento, e a página devolvida não oferece o formulário de novo; testar em `backend/tests/portal/test_janela_na_tela.py` (FR-013, FR-026, SC-014)
+- [X] T136 Resolver a contradição entre D-007 e D-008 em `spec.md` (D-008, FR-082, FR-083, SC-017), `contracts/janela.md` e `quickstart.md`: ato obsoleto e reingresso pendente impedem **as duas** naturezas, e a assimetria é dos quatro fatos da disputa; testar em `backend/tests/integration/divulgacao/test_definitividade.py` (D-007, FR-079, FR-083)
+- [X] T137 Reusar a validação canônica de `backend/processo_seletivo/avaliacoes/domain/pontuacao.py` na correção fixada, em `backend/processo_seletivo/recursos/domain/consequencia.py`, cobrindo `NaN`, `Infinity`, negativo, escala excessiva, estouro da coluna e máxima publicada — e o sentido da Etapa decisória pelo mesmo normalizador; testar em `backend/tests/unit/recursos/test_pontuacao_da_correcao.py` (FR-059, FR-118)
+- [X] T138 Substituir o laço de `_historicos_superados` por leitura em lote — `historicos_dos_pares` em `backend/processo_seletivo/resultados/application/selectors.py` — e testar a contagem de consultas em `backend/tests/performance/test_historico_do_par.py` (FR-061, FR-064)
+- [X] T139 Congelar e apresentar **todas** as causas da retificação, em ordem determinística, em `backend/processo_seletivo/recursos/application/selectors.py`, `backend/processo_seletivo/divulgacao/domain/conteudo.py`, `backend/processo_seletivo/divulgacao/application/publicar.py`, `backend/processo_seletivo/divulgacao/infrastructure/documento.py`, `backend/processo_seletivo/portal/views.py` e `resultado.html`, mantendo legível o conteúdo já publicado na forma singular; testar em `backend/tests/portal/test_definitiva_retificada.py` (FR-088, FR-091, FR-112, SC-019)
+
   **Executado em 07/09/2026**, contra quatro bancos independentes semeados por `seed_demo` —
   `ps018_demo` (janela aberta), `ps018_prazo` (janela encerrada), `ps018_antigo` (janela não
   declarada) e `ps018_negado` (`admits: false`) —, servidos deste worktree nas portas 8018 a 8021.
@@ -464,6 +474,12 @@ O que **foi alterado**, um a um, e por quê:
 | `tests/acceptance/test_us_publicacao_de_resultado.py` | o `POST` da definitiva passa a levar a declaração | publicar como definitivo passou a exigi-la onde não há janela computável (FR-085) |
 | `tests/test_vigencia_do_resultado.py` | três exceções declaradas | reprodução histórica, cumprimento da reavaliação e histórico do par **precisam** ver o superado — cada uma com a razão escrita |
 | `tests/fixtures/divulgacao.py` | `montar_marco` ganha `regra_da_etapa`; `emitir` ganha `decisoes`; `publicar_o_ato` ganha `declaracao` | parâmetros novos com padrão que preserva o comportamento anterior — nenhum cenário existente muda |
+
+**A convergência do PR #50 alterou mais uma**, na mesma disciplina:
+
+| arquivo | asserção | por que mudou |
+|---|---|---|
+| `tests/interface/test_pontuacao_da_correcao.py` | `"não é uma pontuação"` → `"A pontuação precisa ser um número."` | a correção fixada passou a usar a validação canônica de `avaliacoes/domain/pontuacao.py`, e a frase ad hoc desapareceu junto com a validação ad hoc que a produzia. Ter duas frases para a mesma recusa era o sintoma de ter duas validações — que era o defeito de fundo (T137) |
 
 **Nenhuma dessas mudanças enfraquece o que o teste protegia.** As de contagem sobem com
 justificativa escrita — que é exatamente a conversa que esses guardas existem para forçar. A de
