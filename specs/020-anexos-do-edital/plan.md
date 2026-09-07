@@ -224,7 +224,10 @@ Nenhum deles é trabalho desta feature, e nenhum vira prioridade automática (pr
    quatro coleções e omite `documentRequirements`, que está no snapshot congelado. Quem homologa
    aprova sem ver o que o Edital exigirá. O teste não pega porque só compara coleções não vazias.
    *Toca esta feature*: a mesma linha ganha `attachments`, e o FR-018 exige que a revisão veja os
-   anexos — mas corrigir a omissão do vizinho é outra tarefa.
+   anexos — mas corrigir a omissão do vizinho é outra tarefa, e foi. Corrigido em `e37fd89`, na
+   branch `claude/zen-meninsky-0b0af5`, que segue em PR próprio: a 020 não depende dela, porque T023
+   declara `attachments` de qualquer maneira. Quando as duas se encontrarem em `main`, este achado
+   deixa de valer.
 2. **`PublishedDocumentView` não honra `If-None-Match` nem envia `Cache-Control`**
    (`publicacoes/api/views.py:120-133`), sozinha entre as rotas públicas. A rota do artefato **não
    replica** a assimetria; alinhar a antiga é decisão de outra hora.

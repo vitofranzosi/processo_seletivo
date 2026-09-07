@@ -23,6 +23,9 @@ fase, para rastrear.
 - **[Story]**: a que história da spec a tarefa pertence
 - **O identificador é estável, e não é a ordem.** Quem executa segue a fase e o grafo de
   dependências; renumerar depois de uma correção invalidaria referência já feita em revisão.
+- **Tarefa nascida de uma revisão entra por sufixo ou por número seguinte**, conforme o vínculo:
+  `T023a` nasceu colada à T023 e não faz sentido sem ela; T065, T066 e T067 são tarefas próprias,
+  que apenas chegaram depois.
 
 ---
 
@@ -196,7 +199,7 @@ US4 (T050–T052)   US5 (T053–T058, │  US4 depende de US2; US5 depende de US
                                   │  T067 depende das cinco, e por isso é do Polish
    └──────────┬───────────────────┘
               ↓
-        Polish (T059–T064)
+        Polish (T059–T064, T067)
 ```
 
 Dentro da Foundational, a ordem que importa: T003 antes de T020 (declarar antes de emitir); T006–T008
@@ -207,10 +210,11 @@ linhas; e **T028 por último**, porque é ela que devolve a suíte ao verde depo
 
 - **Foundational**: T003, T004, T009, T010, T011 são arquivos distintos e correm juntas; T016, T017,
   T018 idem, depois das migrations. T028 não é paralelizável: ela fecha a fase.
-- **US1**: T026 e T029 não dependem de T019–T025; os quatro testes T031–T034 correm juntos no fim.
-- **US3 e US2** podem ser feitas por duas pessoas ao mesmo tempo, depois da US1. Dentro da US3,
-  T046 é sequencial — é o ciclo inteiro e depende de tudo o que veio antes; T047, T048, T049 e T066
-  correm juntas.
+- **US1**: T026 e T029 não dependem de T019–T025; os cinco testes — T023a e T031–T034 — correm
+  juntos no fim.
+- **US3 e US2** podem ser feitas por duas pessoas ao mesmo tempo, depois da US1. Dentro da US3, os
+  cinco testes — T046, T047, T048, T049 e T066 — correm juntos depois de T042–T045. O ciclo inteiro
+  não está aqui: é T067, no Polish.
 - **US5**: T065 precede T056, porque é ela que põe na tela o campo que T056 muda.
 - **Polish**: T059–T063 são todas independentes; T067 e T064 vêm depois de tudo, porque atravessam
   as cinco histórias.
