@@ -17,6 +17,24 @@ de três, a sucessora desta também já foi sucedida, e apontar para ela levaria
 outro (FR-044, SC-006).
 {% endcomment %}
 {% if vigente %}<a href="{% url 'portal:resultado' vigente.id %}">Ver o resultado vigente</a>{% endif %}</p>
+{% else %}
+{% comment %}
+**A vigente diz que é a vigente** (FR-090). Antes, só a sucedida dizia algo sobre a cadeia: quem
+abria a vigente não tinha como saber se estava lendo o que vale ou um histórico — que é a
+oportunidade nº 3 do relatório da E2E-017.
+{% endcomment %}
+<p class="vigente" role="status">Este é o resultado vigente deste marco.</p>
+{% endif %}
+
+{% if correcao %}
+{% comment %}
+**Nenhuma natureza nova** (FR-087, FR-088). A definitiva que corrige outra é apresentada pela
+**causa**, derivada da cadeia e da decisão que a motivou. Um terceiro valor no enum seria estado
+duplicado a manter coerente com a cadeia que já responde.
+{% endcomment %}
+<p class="corrigido">{{ cabecalho.natureza_rotulo }}, retificado em
+  {{ publicacao.publicado_em|date:"d/m/Y" }} em razão do julgamento do recurso
+  {{ correcao.recurso }}.</p>
 {% endif %}
 
 <p class="meta">

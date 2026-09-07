@@ -61,12 +61,17 @@ def ator_publicador(subject=PUBLICADORA):
     return ator_institucional(subject, "resultado:publicar")
 
 
-def rascunho_com_marco(seed=0, *, com_intermediario=False, criterios=None):
+def rascunho_com_marco(seed=0, *, com_intermediario=False, criterios=None, regra_da_etapa=None):
     """O rascunho da 015: duas Etapas, a segunda enumerada por um marco classificatório."""
     rascunho = rascunho_com_etapas(seed, avaliacoes=1, maxima="100.0000", minima="60.0000")
     primeira, segunda = rascunho["stages"]
     segunda["weight"] = "1.0000"
     primeira["weight"] = "1.0000"
+    # A regra da Etapa do marco, quando o teste precisa de uma: nota mínima e caráter eliminatório
+    # são o que separa "habilitada" de "eliminada", e sem elas o cenário só produz habilitação —
+    # o que tornaria vazio qualquer teste sobre a consequência derivada.
+    if regra_da_etapa:
+        segunda.update(regra_da_etapa)
     marcos = [
         {
             "id": marco_de(seed),
@@ -116,9 +121,15 @@ def montar_marco(
     com_intermediario=False,
     criterios=None,
     fatos=None,
+    regra_da_etapa=None,
 ):
     """Edital publicado, comissão constituída e banca alocada nas duas Etapas."""
-    rascunho = rascunho_com_marco(seed, com_intermediario=com_intermediario, criterios=criterios)
+    rascunho = rascunho_com_marco(
+        seed,
+        com_intermediario=com_intermediario,
+        criterios=criterios,
+        regra_da_etapa=regra_da_etapa,
+    )
     if fatos is not None:
         rascunho["profiles"][0]["declaredFacts"] = fatos
     edital = publish_original(
@@ -210,8 +221,12 @@ def pontuar(cenario, gestor, pontuacoes, *, primeiro=701, etapa=None, sufixo="a"
     return inscricoes
 
 
-def emitir(cenario, gestor, *, marco=None, chave="emitir-017", motivo=""):
-    """Emite o ato do marco pelo command, conferindo a assinatura como a tela faz."""
+def emitir(cenario, gestor, *, marco=None, chave="emitir-017", motivo="", decisoes=()):
+    """Emite o ato do marco pelo command, conferindo a assinatura como a tela faz.
+
+    `decisoes` são as providências a jusante que o ato executa (018, FR-089): a citação nasce com o
+    ato, na mesma transação, e é ela — depois de publicada — que prova o cumprimento.
+    """
     marco_id = marco or cenario["marco"]
     proposta = calcular_ordem(
         edital=cenario["edital"], perfil_id=cenario["perfil"], marco_id=marco_id
@@ -229,6 +244,7 @@ def emitir(cenario, gestor, *, marco=None, chave="emitir-017", motivo=""):
         correlation_id="fixture",
         confirmacao_do_calculo=assinatura_da_proposta(proposta, ato_vigente=vigente),
         motivo=motivo or ("Correção da ordem." if vigente is not None else ""),
+        decisoes=decisoes,
     )
     return AtoDeOrdenacao.objects.filter(
         edital=cenario["edital"], marco_id=marco_id, sucessores__isnull=True
@@ -278,8 +294,17 @@ def publicar_o_ato(
     autoridade="diretoria-cefor",
     chave="publicar-017",
     ato=None,
+    declaracao=None,
 ):
-    """Publica pelo command, recalculando a assinatura da prévia como a tela faz."""
+    """Publica pelo command, recalculando a assinatura da prévia como a tela faz.
+
+    **A declaração de encerramento do prazo acompanha a natureza definitiva** desde a 018: enquanto
+    o Edital não declara janela recursal computável, publicar como definitivo exige dizer, com
+    fundamento escrito, que o prazo se encerrou (FR-085). A fixture a fornece por padrão porque é o
+    que o operador faz na tela — os testes que exercitam a exigência a omitem de propósito.
+    """
+    if declaracao is None and natureza == "DEFINITIVA":
+        declaracao = "O prazo recursal encerrou-se sem interposição, conforme o Edital."
     from processo_seletivo.divulgacao.application.publicar import (
         assinatura_da_previa,
         publicar_resultado,
@@ -303,6 +328,7 @@ def publicar_o_ato(
         ),
         idempotency_key=chave,
         correlation_id="fixture",
+        declaracao_de_encerramento=declaracao or "",
     )
 
 

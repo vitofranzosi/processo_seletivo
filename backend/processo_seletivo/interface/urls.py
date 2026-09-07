@@ -210,6 +210,13 @@ urlpatterns = [
         views.conclusoes_preservadas,
         name="conclusoes-preservadas",
     ),
+    # Os recursos (018). A lista pende do **Edital** porque é a unidade que o julgador escolhe, e
+    # as três rotas da peça pendem do recurso: julgar não é ato de marco nem de Etapa, e endereçá-lo
+    # por um deles obrigaria a inventar um caminho para o recurso contra a publicação.
+    path("editais/<uuid:edital_id>/recursos", views.recursos_do_edital, name="recursos"),
+    path("recursos/<uuid:recurso_id>", views.recurso_recebido, name="recurso"),
+    path("recursos/<uuid:recurso_id>/admitir", views.admitir_recurso, name="recurso-admitir"),
+    path("recursos/<uuid:recurso_id>/julgar", views.julgar_recurso, name="recurso-julgar"),
     path("minhas-etapas", views.minhas_etapas, name="minhas-etapas"),
     # A inscrição como instrumento de trabalho, sob a Mesa que a autoriza (012, US3). O caminho
     # pende de `minhas-etapas` porque é dali que ele é alcançado, e porque a autorização é a

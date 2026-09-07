@@ -168,19 +168,19 @@ julga o mérito com motivação — e quem produziu o ato atacado não decide so
 **Teste independente**: conceder a capacidade a duas pessoas, uma delas a que consolidou o Resultado
 atacado; verificar que a segunda é recusada nas duas operações.
 
-- [ ] T045 [P] [US3] Acrescentar o papel `julgador` com a capacidade `recurso:julgar` em `backend/processo_seletivo/interface/identidade.py` — papel próprio, porque cada papel existente concederia julgamento a quem tende a estar impedido (T-005, FR-037, FR-038)
-- [ ] T046 [US3] Escrever as cinco perguntas do impedimento em `backend/processo_seletivo/recursos/domain/elegibilidade.py`, conforme [contracts/julgamento.md](./contracts/julgamento.md) §1 — reusando o `Impedimento` da 012, sem criar segundo conceito (T-006, FR-039, FR-040)
-- [ ] T047 [US3] Escrever o comando `admitir` em `backend/processo_seletivo/recursos/application/admitir.py`: `require_permission` fora da transação, `select_for_update` no Processo, autorização e impedimento reavaliados **depois** do bloqueio, reserva, gravação do juízo motivado (FR-032, FR-041, FR-043, FR-096)
-- [ ] T048 [US3] Escrever os seletores administrativos em `backend/processo_seletivo/recursos/application/selectors.py`: recursos por Edital com a situação derivada e a tempestividade, **sem consulta de impedimento por linha** (T-006, FR-031)
-- [ ] T049 [US3] Acrescentar as quatro rotas de [contracts/julgamento.md](./contracts/julgamento.md) em `backend/processo_seletivo/interface/urls.py`
-- [ ] T050 [US3] Escrever as views da lista e da peça em `backend/processo_seletivo/interface/views.py`, com a proveniência da FR-092 e o impedimento nomeado antes de qualquer botão (FR-042, FR-092)
-- [ ] T051 [US3] Escrever os templates da lista e da tela do recurso em `backend/processo_seletivo/interface/templates/interface/`, com confirmação que declara o alcance antes do ato
-- [ ] T052 [P] [US3] Testar o impedimento em `backend/tests/authorization/test_julgamento_de_recurso.py`: quem concluiu a Avaliação fonte, consolidou o Resultado, constatou a Ocorrência, emitiu o ato ou publicou o resultado é recusado nas duas operações; e quem tem `Impedimento` na Inscrição também (FR-039, FR-040, FR-041, SC-005)
-- [ ] T053 [P] [US3] Testar a capacidade em `backend/tests/authorization/test_julgamento_de_recurso.py`: sem `recurso:julgar` é 403 — **inclusive** para o presidente da comissão —, e a lista não é alcançável (FR-037, FR-038, SC-006)
-- [ ] T054 [P] [US3] Testar a admissibilidade em `backend/tests/integration/recursos/test_admitir.py`: o juízo nasce motivado nas duas direções, com autor e instante; motivo vazio é recusado; o segundo juízo é recusado pela constraint; julgar o não admitido é recusado; e a mesma chave repetida devolve o desfecho da primeira (FR-031, FR-032, FR-036, FR-097)
-- [ ] T055 [P] [US3] Testar a tempestividade em `backend/tests/integration/recursos/test_admitir.py`: sem janela estruturada, ela é juízo humano no motivo; com janela estruturada, ela **não** é matéria de admissibilidade, porque a interposição já a impediu (FR-033, FR-034, FR-035)
+- [X] T045 [P] [US3] Acrescentar o papel `julgador` com a capacidade `recurso:julgar` em `backend/processo_seletivo/interface/identidade.py` — papel próprio, porque cada papel existente concederia julgamento a quem tende a estar impedido (T-005, FR-037, FR-038)
+- [X] T046 [US3] Escrever as cinco perguntas do impedimento em `backend/processo_seletivo/recursos/domain/elegibilidade.py`, conforme [contracts/julgamento.md](./contracts/julgamento.md) §1 — reusando o `Impedimento` da 012, sem criar segundo conceito (T-006, FR-039, FR-040)
+- [X] T047 [US3] Escrever o comando `admitir` em `backend/processo_seletivo/recursos/application/admitir.py`: `require_permission` fora da transação, `select_for_update` no Processo, autorização e impedimento reavaliados **depois** do bloqueio, reserva, gravação do juízo motivado (FR-032, FR-041, FR-043, FR-096)
+- [X] T048 [US3] Escrever os seletores administrativos em `backend/processo_seletivo/recursos/application/selectors.py`: recursos por Edital com a situação derivada e a tempestividade, **sem consulta de impedimento por linha** (T-006, FR-031)
+- [X] T049 [US3] Acrescentar as quatro rotas de [contracts/julgamento.md](./contracts/julgamento.md) em `backend/processo_seletivo/interface/urls.py`
+- [X] T050 [US3] Escrever as views da lista e da peça em `backend/processo_seletivo/interface/views.py`, com a proveniência da FR-092 e o impedimento nomeado antes de qualquer botão (FR-042, FR-092)
+- [X] T051 [US3] Escrever os templates da lista e da tela do recurso em `backend/processo_seletivo/interface/templates/interface/`, com confirmação que declara o alcance antes do ato
+- [X] T052 [P] [US3] Testar o impedimento em `backend/tests/authorization/test_julgamento_de_recurso.py`: quem concluiu a Avaliação fonte, consolidou o Resultado, constatou a Ocorrência, emitiu o ato ou publicou o resultado é recusado nas duas operações; e quem tem `Impedimento` na Inscrição também (FR-039, FR-040, FR-041, SC-005)
+- [X] T053 [P] [US3] Testar a capacidade em `backend/tests/authorization/test_julgamento_de_recurso.py`: sem `recurso:julgar` é 403 — **inclusive** para o presidente da comissão —, e a lista não é alcançável (FR-037, FR-038, SC-006)
+- [X] T054 [P] [US3] Testar a admissibilidade em `backend/tests/integration/recursos/test_admitir.py`: o juízo nasce motivado nas duas direções, com autor e instante; motivo vazio é recusado; o segundo juízo é recusado pela constraint; julgar o não admitido é recusado; e a mesma chave repetida devolve o desfecho da primeira (FR-031, FR-032, FR-036, FR-097)
+- [X] T055 [P] [US3] Testar a tempestividade em `backend/tests/integration/recursos/test_admitir.py`: sem janela estruturada, ela é juízo humano no motivo; com janela estruturada, ela **não** é matéria de admissibilidade, porque a interposição já a impediu (FR-033, FR-034, FR-035)
 
-- [ ] T056 [P] [US3] Testar a proveniência administrativa em `backend/tests/interface/test_proveniencia_do_recurso.py`: a partir da tela do recurso, a administração reconstrói **em uma única jornada** a lista inteira da FR-092 — quem interpôs, qual Inscrição, qual objeto, qual era o ato vigente, sob qual versão, quando, se dentro da janela, quem admitiu e por quê, quem decidiu e por quê, qual efeito, qual ato superado e qual sucessor nasceu — sem banco e sem shell (FR-092, SC-020)
+- [X] T056 [P] [US3] Testar a proveniência administrativa em `backend/tests/interface/test_proveniencia_do_recurso.py`: a partir da tela do recurso, a administração reconstrói **em uma única jornada** a lista inteira da FR-092 — quem interpôs, qual Inscrição, qual objeto, qual era o ato vigente, sob qual versão, quando, se dentro da janela, quem admitiu e por quê, quem decidiu e por quê, qual efeito, qual ato superado e qual sucessor nasceu — sem banco e sem shell (FR-092, SC-020)
 
 **Checkpoint**: a instituição julga com autoridade própria, e a imparcialidade deixa de ser promessa.
 
@@ -195,19 +195,19 @@ Resultado sucessor nasce na mesma transação, e o anterior permanece íntegro.
 anterior permanece, que o sucessor é o vigente, que o ato ficou obsoleto e que a publicação passou a
 ser recusada com o caminho nomeado.
 
-- [ ] T057 [US4] Escrever a derivação da consequência em `backend/processo_seletivo/recursos/domain/consequencia.py`, a partir da conclusão fixada e da regra publicada da Etapa, sob a versão que a decisão cita — **nunca digitada livremente**, que permitiria declarar `HABILITADA` com nota abaixo da mínima (FR-059)
-- [ ] T058 [US4] Escrever a comparação de piora em `backend/processo_seletivo/recursos/domain/pejus.py`: consequência e pontuação, **nunca posição** (FR-070, FR-071, FR-074)
-- [ ] T059 [US4] Escrever o comando `julgar` em `backend/processo_seletivo/recursos/application/julgar.py`, na ordem exata de [contracts/julgamento.md](./contracts/julgamento.md) §5, com as quatro espécies e a superação do `CORRECAO_FIXADA` **na mesma transação**; a quarta espécie **nomeia** a providência na motivação e não a executa (FR-044, FR-045, FR-047, FR-049, FR-056)
-- [ ] T060 [US4] Escrever a view e o template do julgamento em `backend/processo_seletivo/interface/`, com as quatro espécies, a motivação obrigatória e a assinatura do Resultado vigente lido (FR-045, FR-100)
-- [ ] T061 [US4] Escrever a consulta do histórico do par em `backend/processo_seletivo/resultados/application/selectors.py` — a segunda exceção declarada do teste estrutural de T020 —, com os dois Resultados em ordem, motivo, autor, instante e a decisão que autorizou (FR-064, T-004)
-- [ ] T062 [US4] Nomear a causa `participante reingressou` na divergência de obsolescência em `backend/processo_seletivo/classificacao/domain/universo.py` e na tela do marco (FR-078)
-- [ ] T063 [P] [US4] Testar a atomicidade em `backend/tests/integration/recursos/test_julgar.py`: decisão e sucessor nascem juntos; qualquer invariante que falhe derruba a transação inteira — não fica decisão sem efeito nem efeito sem decisão (FR-056, SC-007)
-- [ ] T064 [P] [US4] Testar o sucessor em `backend/tests/integration/recursos/test_julgar.py`: origem em recurso, sem citar Avaliação, citando a decisão; o anterior permanece com pontuação, consequência e motivo intactos (FR-051, FR-057, FR-058, SC-007)
-- [ ] T065 [P] [US4] Testar o desfecho sem grandeza em `backend/tests/integration/recursos/test_julgar.py`: recurso contra Ocorrência deferido produz sucessor sem forma, sem pontuação e sem sentido (FR-059)
-- [ ] T066 [P] [US4] Testar a vedação de piora em `backend/tests/integration/recursos/test_pejus.py`: correção que baixaria a pontuação ou eliminaria resulta em indeferimento, e **nenhum** sucessor nasce; e a queda de posição por ato alheio **não** é piora (FR-070, FR-071, FR-072, SC-008)
-- [ ] T067 [P] [US4] Testar a concorrência em `backend/tests/integration/recursos/test_concorrencia.py`: dois deferimentos sobre o mesmo Resultado produzem **um** sucessor, resolvidos pela constraint e não por leitura prévia; dois julgadores no mesmo recurso produzem **uma** decisão; e o Resultado alterado entre leitura e confirmação recusa com `409` — tudo por revisão otimista, idempotência e constraint, sem mecanismo novo; exige PostgreSQL (FR-047, FR-099, FR-100, FR-101)
-- [ ] T068 [P] [US4] Testar a cadeia a jusante em `backend/tests/integration/classificacao/test_obsolescencia_por_recurso.py`: superado o Resultado, o ato fica obsoleto com a causa nomeada, a publicação daquele ato é recusada com o caminho, e **nenhum** ato ou publicação é emitido ou alterado automaticamente (FR-080, FR-108, SC-010)
-- [ ] T069 [P] [US4] Testar a trilha em `backend/tests/integration/recursos/test_julgar.py`: interposição, admissibilidade, decisão e superação aparecem na trilha existente, com ator, entidade, instante e versão, **sem** copiar fundamentação nem pontuação (FR-094, FR-095)
+- [X] T057 [US4] Escrever a derivação da consequência em `backend/processo_seletivo/recursos/domain/consequencia.py`, a partir da conclusão fixada e da regra publicada da Etapa, sob a versão que a decisão cita — **nunca digitada livremente**, que permitiria declarar `HABILITADA` com nota abaixo da mínima (FR-059)
+- [X] T058 [US4] Escrever a comparação de piora em `backend/processo_seletivo/recursos/domain/pejus.py`: consequência e pontuação, **nunca posição** (FR-070, FR-071, FR-074)
+- [X] T059 [US4] Escrever o comando `julgar` em `backend/processo_seletivo/recursos/application/julgar.py`, na ordem exata de [contracts/julgamento.md](./contracts/julgamento.md) §5, com as quatro espécies e a superação do `CORRECAO_FIXADA` **na mesma transação**; a quarta espécie **nomeia** a providência na motivação e não a executa (FR-044, FR-045, FR-047, FR-049, FR-056)
+- [X] T060 [US4] Escrever a view e o template do julgamento em `backend/processo_seletivo/interface/`, com as quatro espécies, a motivação obrigatória e a assinatura do Resultado vigente lido (FR-045, FR-100)
+- [X] T061 [US4] Escrever a consulta do histórico do par em `backend/processo_seletivo/resultados/application/selectors.py` — a segunda exceção declarada do teste estrutural de T020 —, com os dois Resultados em ordem, motivo, autor, instante e a decisão que autorizou (FR-064, T-004)
+- [X] T062 [US4] Nomear a causa `participante reingressou` na divergência de obsolescência em `backend/processo_seletivo/classificacao/domain/universo.py` e na tela do marco (FR-078)
+- [X] T063 [P] [US4] Testar a atomicidade em `backend/tests/integration/recursos/test_julgar.py`: decisão e sucessor nascem juntos; qualquer invariante que falhe derruba a transação inteira — não fica decisão sem efeito nem efeito sem decisão (FR-056, SC-007)
+- [X] T064 [P] [US4] Testar o sucessor em `backend/tests/integration/recursos/test_julgar.py`: origem em recurso, sem citar Avaliação, citando a decisão; o anterior permanece com pontuação, consequência e motivo intactos (FR-051, FR-057, FR-058, SC-007)
+- [X] T065 [P] [US4] Testar o desfecho sem grandeza em `backend/tests/integration/recursos/test_julgar.py`: recurso contra Ocorrência deferido produz sucessor sem forma, sem pontuação e sem sentido (FR-059)
+- [X] T066 [P] [US4] Testar a vedação de piora em `backend/tests/integration/recursos/test_pejus.py`: correção que baixaria a pontuação ou eliminaria resulta em indeferimento, e **nenhum** sucessor nasce; e a queda de posição por ato alheio **não** é piora (FR-070, FR-071, FR-072, SC-008)
+- [X] T067 [P] [US4] Testar a concorrência em `backend/tests/integration/recursos/test_concorrencia.py`: dois deferimentos sobre o mesmo Resultado produzem **um** sucessor, resolvidos pela constraint e não por leitura prévia; dois julgadores no mesmo recurso produzem **uma** decisão; e o Resultado alterado entre leitura e confirmação recusa com `409` — tudo por revisão otimista, idempotência e constraint, sem mecanismo novo; exige PostgreSQL (FR-047, FR-099, FR-100, FR-101)
+- [X] T068 [P] [US4] Testar a cadeia a jusante em `backend/tests/integration/classificacao/test_obsolescencia_por_recurso.py`: superado o Resultado, o ato fica obsoleto com a causa nomeada, a publicação daquele ato é recusada com o caminho, e **nenhum** ato ou publicação é emitido ou alterado automaticamente (FR-080, FR-108, SC-010)
+- [X] T069 [P] [US4] Testar a trilha em `backend/tests/integration/recursos/test_julgar.py`: interposição, admissibilidade, decisão e superação aparecem na trilha existente, com ator, entidade, instante e versão, **sem** copiar fundamentação nem pontuação (FR-094, FR-095)
 
 **Checkpoint**: o ciclo central fecha — recorrer, julgar, corrigir sem reescrever, e a cadeia a
 jusante reage sozinha.
@@ -223,14 +223,14 @@ consolidação posterior produz o sucessor.
 Etapa mostra a pendência nomeada, e que a consolidação da nova Avaliação produz o sucessor citando a
 decisão.
 
-- [ ] T070 [US5] Escrever a pendência derivada de reavaliação em `backend/processo_seletivo/recursos/application/selectors.py`: decisão dessa espécie sem sucessor do par posterior a ela — **derivada, nunca coluna** (FR-066, D-010)
-- [ ] T071 [US5] Acrescentar o estado `reavaliação determinada` à prontidão em `backend/processo_seletivo/resultados/application/prontidao.py`, de modo que a inscrição apareça como pendência nomeada e **não** como já consolidada (FR-067)
-- [ ] T072 [US5] Escrever a exceção única em `backend/processo_seletivo/resultados/application/consolidacao.py`: a consolidação praticada em cumprimento de decisão que determinou reavaliação cria o **sucessor**, citando a decisão; fora dela, consolidar continua recusando o par que já tem Resultado vigente (FR-055, FR-068)
-- [ ] T073 [US5] Aplicar a vedação de piora na consolidação em cumprimento, em `backend/processo_seletivo/resultados/application/consolidacao.py`: a nova Avaliação é **registrada**, e o seu Resultado não é consolidado como sucessor quando pior que o `resultado_protegido` (FR-073)
-- [ ] T074 [P] [US5] Testar que a decisão não antecipa em `backend/tests/integration/recursos/test_reavaliacao.py`: deferida a reavaliação, zero sucessores existem até a consolidação (FR-065, FR-069, SC-009)
-- [ ] T075 [P] [US5] Testar a pendência e a distribuição em `backend/tests/integration/resultados/test_reavaliacao.py`: a Etapa mostra a pendência nomeada, e a inscrição é distribuível, avaliável e consolidável pelas operações que já existem (FR-067)
-- [ ] T076 [P] [US5] Testar a garantia estrutural em `backend/tests/integration/resultados/test_reavaliacao.py`: quem concluiu a Avaliação original **não** consegue concluir a reavaliação, por `uq_avaliacao_concluida_por_pessoa` — é garantia que já existe, e o teste a registra como comportamento correto (FR-068)
-- [ ] T077 [P] [US5] Testar a porta de trás em `backend/tests/integration/recursos/test_pejus.py`: reavaliação que produziria resultado pior é registrada como Avaliação e **recusada** na consolidação, nomeando a vedação; nenhum sucessor pior nasce por caminho algum (FR-073, SC-008)
+- [X] T070 [US5] Escrever a pendência derivada de reavaliação em `backend/processo_seletivo/recursos/application/selectors.py`: decisão dessa espécie sem sucessor do par posterior a ela — **derivada, nunca coluna** (FR-066, D-010)
+- [X] T071 [US5] Acrescentar o estado `reavaliação determinada` à prontidão em `backend/processo_seletivo/resultados/application/prontidao.py`, de modo que a inscrição apareça como pendência nomeada e **não** como já consolidada (FR-067)
+- [X] T072 [US5] Escrever a exceção única em `backend/processo_seletivo/resultados/application/consolidacao.py`: a consolidação praticada em cumprimento de decisão que determinou reavaliação cria o **sucessor**, citando a decisão; fora dela, consolidar continua recusando o par que já tem Resultado vigente (FR-055, FR-068)
+- [X] T073 [US5] Aplicar a vedação de piora na consolidação em cumprimento, em `backend/processo_seletivo/resultados/application/consolidacao.py`: a nova Avaliação é **registrada**, e o seu Resultado não é consolidado como sucessor quando pior que o `resultado_protegido` (FR-073)
+- [X] T074 [P] [US5] Testar que a decisão não antecipa em `backend/tests/integration/recursos/test_reavaliacao.py`: deferida a reavaliação, zero sucessores existem até a consolidação (FR-065, FR-069, SC-009)
+- [X] T075 [P] [US5] Testar a pendência e a distribuição em `backend/tests/integration/resultados/test_reavaliacao.py`: a Etapa mostra a pendência nomeada, e a inscrição é distribuível, avaliável e consolidável pelas operações que já existem (FR-067)
+- [X] T076 [P] [US5] Testar a garantia estrutural em `backend/tests/integration/resultados/test_reavaliacao.py`: quem concluiu a Avaliação original **não** consegue concluir a reavaliação, por `uq_avaliacao_concluida_por_pessoa` — é garantia que já existe, e o teste a registra como comportamento correto (FR-068)
+- [X] T077 [P] [US5] Testar a porta de trás em `backend/tests/integration/recursos/test_pejus.py`: reavaliação que produziria resultado pior é registrada como Avaliação e **recusada** na consolidação, nomeando a vedação; nenhum sucessor pior nasce por caminho algum (FR-073, SC-008)
 
 **Checkpoint**: a *non reformatio in pejus* é íntegra — não é contornável pela reavaliação ordenada.
 
@@ -248,12 +248,12 @@ Etapa 2 já consolidada para todos; abrir a Etapa 2, a tela do marco e a prévia
 > porque a pendência reaberta é **um dos seis fatos** que a definitividade apura (FR-082): sem ela,
 > a US7 nasceria incompleta.
 
-- [ ] T078 [US8] Escrever a derivação `reabilitada por recurso` em `backend/processo_seletivo/resultados/application/selectors.py`: Resultado vigente que é sucessor, com consequência habilitante — derivada, sem estado de reintegração (FR-076, D-010)
-- [ ] T079 [US8] Nomear a linha reaberta na Mesa e no painel da Etapa em `backend/processo_seletivo/interface/templates/interface/`, com a data do deferimento (FR-077)
-- [ ] T080 [US8] Acrescentar o impedimento `publication_reentry_pending` em `backend/processo_seletivo/divulgacao/domain/publicabilidade.py`, com o caminho nomeado (FR-079)
-- [ ] T081 [P] [US8] Testar a progressão retroativa em `backend/tests/integration/resultados/test_progressao_retroativa.py`: removida a eliminação vigente, a inscrição reaparece como pendente em **todas** as Etapas seguintes, e é distribuível, avaliável e consolidável (FR-075, FR-076, SC-012)
-- [ ] T082 [P] [US8] Testar a guarda em `backend/tests/integration/divulgacao/test_publicabilidade_por_recurso.py`: enquanto houver pendência reaberta que afete o marco, publicar é recusado com a causa nomeada; consolidado o Resultado, o impedimento desaparece (FR-079, SC-013)
-- [ ] T083 [P] [US8] Testar os avisos em `backend/tests/interface/test_reabilitacao.py`: a linha aparece nomeada na Mesa e no painel, e a divergência do marco diz `participante reingressou` (FR-077, FR-078)
+- [X] T078 [US8] Escrever a derivação `reabilitada por recurso` em `backend/processo_seletivo/resultados/application/selectors.py`: Resultado vigente que é sucessor, com consequência habilitante — derivada, sem estado de reintegração (FR-076, D-010)
+- [X] T079 [US8] Nomear a linha reaberta na Mesa e no painel da Etapa em `backend/processo_seletivo/interface/templates/interface/`, com a data do deferimento (FR-077)
+- [X] T080 [US8] Acrescentar o impedimento `publication_reentry_pending` em `backend/processo_seletivo/divulgacao/domain/publicabilidade.py`, com o caminho nomeado (FR-079)
+- [X] T081 [P] [US8] Testar a progressão retroativa em `backend/tests/integration/resultados/test_progressao_retroativa.py`: removida a eliminação vigente, a inscrição reaparece como pendente em **todas** as Etapas seguintes, e é distribuível, avaliável e consolidável (FR-075, FR-076, SC-012)
+- [X] T082 [P] [US8] Testar a guarda em `backend/tests/integration/divulgacao/test_publicabilidade_por_recurso.py`: enquanto houver pendência reaberta que afete o marco, publicar é recusado com a causa nomeada; consolidado o Resultado, o impedimento desaparece (FR-079, SC-013)
+- [X] T083 [P] [US8] Testar os avisos em `backend/tests/interface/test_reabilitacao.py`: a linha aparece nomeada na Mesa e no painel, e a divergência do marco diz `participante reingressou` (FR-077, FR-078)
 
 **Checkpoint**: o efeito da progressão retroativa deixa de ser descoberto por acaso.
 
@@ -267,23 +267,23 @@ expressa quando o prazo não é computável.
 **Teste independente**: tentar publicar como definitivo em cada um dos casos impeditivos; resolver
 cada um e conferir que a publicação passa a ser permitida.
 
-- [ ] T084 [US7] Criar `CitacaoDeDecisao` em `backend/processo_seletivo/classificacao/models.py` e a migration `backend/processo_seletivo/classificacao/migrations/0004_citacao.py`, com **apenas** `UNIQUE(ato, decisao)` — **sem `UNIQUE(decisao)`**, que criaria beco quando o ato citante ficasse obsoleto antes de publicar e impediria a pertinência a mais de um marco (T-015, FR-112)
-- [ ] T085 [US7] Escrever a trigger `citacao_coerente` em `backend/processo_seletivo/classificacao/migrations/0004_citacao.py`: espécie `PROVIDENCIA_A_JUSANTE`, Edital, **Perfil e Marco**, nos dois ramos de objeto atacado — reusando o caminho `jsonb_array_elements` que `check_ordering_act_provenance` já percorre em `classificacao/0003` (T-015, FR-112)
-- [ ] T086 [US7] Acrescentar `prazo_encerrado_declarado_em`, `prazo_encerrado_declarado_por` e `prazo_encerrado_fundamento` a `PublicacaoResultado` em `backend/processo_seletivo/divulgacao/models.py`, e a migration `backend/processo_seletivo/divulgacao/migrations/0002_declaracao.py` com `ck_declaracao_completa` (FR-085)
-- [ ] T087 [P] [US7] Registrar `classificacao_citacaodedecisao` em `TABELAS_APPEND_ONLY` em `backend/processo_seletivo/seguranca/papeis.py` e as duas triggers da citação em `TRIGGERS_POR_APP["classificacao"]` em `backend/tests/migrations/test_migrations.py` (T-013, FR-063)
-- [ ] T088 [US7] Fazer `aferir()` receber a **natureza pretendida** em `backend/processo_seletivo/divulgacao/domain/publicabilidade.py` e em `backend/processo_seletivo/divulgacao/application/publicar.py` (FR-081)
-- [ ] T089 [US7] Escrever os fatos 1, 2 e 3 em `backend/processo_seletivo/divulgacao/domain/publicabilidade.py`: recurso pendente pertinente, reavaliação não cumprida e providência não cumprida, com os códigos e caminhos de [contracts/janela.md](./contracts/janela.md) §3 (FR-082, FR-084)
-- [ ] T090 [US7] Escrever a pertinência ao marco em `backend/processo_seletivo/recursos/application/selectors.py`: alcança o recurso contra a publicação **e** o recurso contra `ResultadoEtapa` de Etapa que o marco enumera — sem a segunda, o recurso individual é a porta por onde a definitiva escapa (FR-084)
-- [ ] T091 [US7] Oferecer as decisões pendentes do marco na emissão do ato e gravar a citação em `backend/processo_seletivo/classificacao/application/emissao.py`, na mesma transação do ato (T-015, FR-089)
-- [ ] T092 [US7] Exigir e gravar a declaração expressa em `backend/processo_seletivo/divulgacao/application/publicar.py` e no template da prévia — **somente** quando não há janela computável, e recusada quando há (FR-085, FR-086)
-- [ ] T093 [US7] Apresentar a definitiva que corrige outra pela causa, e a vigente como vigente, em `backend/processo_seletivo/portal/templates/portal/resultado.html` e no documento (FR-088, FR-090)
-- [ ] T094 [P] [US7] Testar os seis fatos em `backend/tests/integration/divulgacao/test_definitividade.py`: cada um recusa a `DEFINITIVA` com o código próprio, e a `PRELIMINAR` continua possível em todos (FR-082, FR-083, SC-017)
-- [ ] T095 [P] [US7] Testar o cumprimento por citação **publicada** em `backend/tests/integration/divulgacao/test_definitividade.py`: ato que não cita deixa a pendência aberta; **ato que cita mas não foi publicado também deixa**; ato citante publicado cumpre para sucessores posteriores do mesmo marco; e um ato cita duas decisões (FR-089, FR-112, SC-017)
-- [ ] T096 [P] [US7] Testar a recitação e a pertinência múltipla em `backend/tests/integration/divulgacao/test_definitividade.py`: ficando obsoleto o ato citante antes de publicar, o sucessor **recita** a mesma decisão e a pendência se fecha; e decisão pertinente a dois marcos exige ato citante publicado **em cada um** (FR-112)
-- [ ] T097 [US7] Testar a coerência da citação no banco em `backend/tests/integration/classificacao/test_citacao_de_decisao.py`: a inserção **direta** de citação entre decisão pertinente a `M1` e ato de `M2` do mesmo Edital é **recusada pela trigger**; espécie diferente de `PROVIDENCIA_A_JUSANTE` também; e Perfil divergente também — exige PostgreSQL (FR-112)
-- [ ] T098 [P] [US7] Testar a declaração em `backend/tests/integration/divulgacao/test_definitividade.py`: sem janela computável ela é exigida e gravada com autor, instante e texto; com janela computável ela é recusada (FR-085, FR-086, SC-018)
-- [ ] T099 [P] [US7] Testar que a publicação histórica não é tocada em `backend/tests/integration/divulgacao/test_definitividade.py`: nenhuma publicação anterior é alterada e nenhum documento é regenerado pela 018 (FR-091)
-- [ ] T100 [P] [US7] Testar o vocabulário em `backend/tests/portal/test_definitiva_retificada.py`: a definitiva que corrige outra é apresentada pela causa, **sem natureza nova**, e a vigente diz que é a vigente (FR-087, FR-088, FR-090, SC-019)
+- [X] T084 [US7] Criar `CitacaoDeDecisao` em `backend/processo_seletivo/classificacao/models.py` e a migration `backend/processo_seletivo/classificacao/migrations/0004_citacao.py`, com **apenas** `UNIQUE(ato, decisao)` — **sem `UNIQUE(decisao)`**, que criaria beco quando o ato citante ficasse obsoleto antes de publicar e impediria a pertinência a mais de um marco (T-015, FR-112)
+- [X] T085 [US7] Escrever a trigger `citacao_coerente` em `backend/processo_seletivo/classificacao/migrations/0004_citacao.py`: espécie `PROVIDENCIA_A_JUSANTE`, Edital, **Perfil e Marco**, nos dois ramos de objeto atacado — reusando o caminho `jsonb_array_elements` que `check_ordering_act_provenance` já percorre em `classificacao/0003` (T-015, FR-112)
+- [X] T086 [US7] Acrescentar `prazo_encerrado_declarado_em`, `prazo_encerrado_declarado_por` e `prazo_encerrado_fundamento` a `PublicacaoResultado` em `backend/processo_seletivo/divulgacao/models.py`, e a migration `backend/processo_seletivo/divulgacao/migrations/0002_declaracao.py` com `ck_declaracao_completa` (FR-085)
+- [X] T087 [P] [US7] Registrar `classificacao_citacaodedecisao` em `TABELAS_APPEND_ONLY` em `backend/processo_seletivo/seguranca/papeis.py` e as duas triggers da citação em `TRIGGERS_POR_APP["classificacao"]` em `backend/tests/migrations/test_migrations.py` (T-013, FR-063)
+- [X] T088 [US7] Fazer `aferir()` receber a **natureza pretendida** em `backend/processo_seletivo/divulgacao/domain/publicabilidade.py` e em `backend/processo_seletivo/divulgacao/application/publicar.py` (FR-081)
+- [X] T089 [US7] Escrever os fatos 1, 2 e 3 em `backend/processo_seletivo/divulgacao/domain/publicabilidade.py`: recurso pendente pertinente, reavaliação não cumprida e providência não cumprida, com os códigos e caminhos de [contracts/janela.md](./contracts/janela.md) §3 (FR-082, FR-084)
+- [X] T090 [US7] Escrever a pertinência ao marco em `backend/processo_seletivo/recursos/application/selectors.py`: alcança o recurso contra a publicação **e** o recurso contra `ResultadoEtapa` de Etapa que o marco enumera — sem a segunda, o recurso individual é a porta por onde a definitiva escapa (FR-084)
+- [X] T091 [US7] Oferecer as decisões pendentes do marco na emissão do ato e gravar a citação em `backend/processo_seletivo/classificacao/application/emissao.py`, na mesma transação do ato (T-015, FR-089)
+- [X] T092 [US7] Exigir e gravar a declaração expressa em `backend/processo_seletivo/divulgacao/application/publicar.py` e no template da prévia — **somente** quando não há janela computável, e recusada quando há (FR-085, FR-086)
+- [X] T093 [US7] Apresentar a definitiva que corrige outra pela causa, e a vigente como vigente, em `backend/processo_seletivo/portal/templates/portal/resultado.html` e no documento (FR-088, FR-090)
+- [X] T094 [P] [US7] Testar os seis fatos em `backend/tests/integration/divulgacao/test_definitividade.py`: cada um recusa a `DEFINITIVA` com o código próprio, e a `PRELIMINAR` continua possível em todos (FR-082, FR-083, SC-017)
+- [X] T095 [P] [US7] Testar o cumprimento por citação **publicada** em `backend/tests/integration/divulgacao/test_definitividade.py`: ato que não cita deixa a pendência aberta; **ato que cita mas não foi publicado também deixa**; ato citante publicado cumpre para sucessores posteriores do mesmo marco; e um ato cita duas decisões (FR-089, FR-112, SC-017)
+- [X] T096 [P] [US7] Testar a recitação e a pertinência múltipla em `backend/tests/integration/divulgacao/test_definitividade.py`: ficando obsoleto o ato citante antes de publicar, o sucessor **recita** a mesma decisão e a pendência se fecha; e decisão pertinente a dois marcos exige ato citante publicado **em cada um** (FR-112)
+- [X] T097 [US7] Testar a coerência da citação no banco em `backend/tests/integration/classificacao/test_citacao_de_decisao.py`: a inserção **direta** de citação entre decisão pertinente a `M1` e ato de `M2` do mesmo Edital é **recusada pela trigger**; espécie diferente de `PROVIDENCIA_A_JUSANTE` também; e Perfil divergente também — exige PostgreSQL (FR-112)
+- [X] T098 [P] [US7] Testar a declaração em `backend/tests/integration/divulgacao/test_definitividade.py`: sem janela computável ela é exigida e gravada com autor, instante e texto; com janela computável ela é recusada (FR-085, FR-086, SC-018)
+- [X] T099 [P] [US7] Testar que a publicação histórica não é tocada em `backend/tests/integration/divulgacao/test_definitividade.py`: nenhuma publicação anterior é alterada e nenhum documento é regenerado pela 018 (FR-091)
+- [X] T100 [P] [US7] Testar o vocabulário em `backend/tests/portal/test_definitiva_retificada.py`: a definitiva que corrige outra é apresentada pela causa, **sem natureza nova**, e a vigente diz que é a vigente (FR-087, FR-088, FR-090, SC-019)
 
 **Checkpoint**: o E2E17-005 está fechado — "definitivo" deixa de ser escolha livre de um seletor.
 
@@ -301,23 +301,23 @@ repetir tudo num Edital publicado antes do incremento.
 > adiada sem desmontar as demais: sem ela, a tempestividade continua sendo juízo de admissibilidade
 > motivado, que é a degradação que a decisão institucional declara.
 
-- [ ] T101 [US6] Subir `ZONA` de `interface/forms.py` e `interface/retificacao.py` para `backend/processo_seletivo/shared/tempo.py`, e fazer os dois importá-la — a contagem é domínio, e domínio não importa de `interface` (T-008)
-- [ ] T102 [US6] Elevar `SCHEMA_VERSION` para 8 em `backend/processo_seletivo/shared/canonical.py`, com o comentário que declara o que a ausência significa (FR-029)
-- [ ] T103 [US6] Escrever `DEGRAUS_DE_MARCO` e `elevar_marco` em `backend/processo_seletivo/publicacoes/domain/elevacao.py` — o terceiro nível, simétrico a `elevar_etapa` e `elevar_perfil` —, e alcançar o endereço do marco em `elevar_alteracoes` (T-007, FR-029)
-- [ ] T104 [US6] Escrever `janela.py` em `backend/processo_seletivo/recursos/domain/`: função pura que devolve abertura e encerramento a partir da publicação âncora e da norma, excluindo o dia do começo e incluindo o do vencimento, na zona institucional (FR-022, FR-023, FR-024)
-- [ ] T105 [US6] Escrever a âncora e a reabertura em `backend/processo_seletivo/recursos/domain/janela.py`: a publicação que divulgou **pela primeira vez** o ato que publica; comparação por identidade do ato, e não por hash do conteúdo (FR-025)
-- [ ] T106 [US6] Validar `appealWindow` na publicação em `backend/processo_seletivo/editais/domain/perfis.py`: unidade fora de `DIAS_CORRIDOS`, `admits` sem duração e duração não positiva, cada uma com a mensagem de [contracts/janela.md](./contracts/janela.md) §1 (FR-020, FR-021)
-- [ ] T107 [US6] Escrever os três campos da janela no assistente do marco em `backend/processo_seletivo/interface/forms.py` e no template correspondente (FR-030)
-- [ ] T108 [US6] Imprimir a frase normativa da janela no documento publicado em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-030)
-- [ ] T109 [US6] Verificar o endereçamento por Retificação de `appealWindow` em `backend/processo_seletivo/publicacoes/domain/colecoes.py`; recusando `changes.py` o objeto aninhado, declará-lo em `COLECOES_ATOMICAS` (T-007, FR-030)
-- [ ] T110 [US6] Aplicar a janela na interposição em `backend/processo_seletivo/recursos/application/interpor.py`, e exibir os dois instantes ao candidato em `backend/processo_seletivo/portal/templates/portal/` (FR-026, FR-024)
-- [ ] T111 [US6] Acrescentar o fato 4 — janela aberta — em `backend/processo_seletivo/divulgacao/domain/publicabilidade.py` (FR-082)
-- [ ] T112 [P] [US6] Testar a contagem em `backend/tests/unit/recursos/test_janela.py`: exclui o dia do começo, inclui o do vencimento, fecha ao fim do último dia na zona institucional, e não prorroga (FR-023, SC-014)
-- [ ] T113 [P] [US6] Testar a reabertura em `backend/tests/unit/recursos/test_janela.py`: publicação de ato diferente abre janela nova; publicação que só muda a natureza do mesmo ato **não** abre (FR-025)
-- [ ] T114 [P] [US6] Testar a retrocompatibilidade em `backend/tests/contract/test_elevacao_degrau_8.py`: Edital publicado antes do degrau eleva sem inventar janela, continua retificável e publicável, e a ausência significa **janela não declarada** (FR-029, SC-016)
-- [ ] T115 [P] [US6] Testar a aplicação em `backend/tests/integration/recursos/test_janela.py`: dentro do prazo a interposição é aceita e registra que estava dentro; depois do prazo é recusada citando a norma, a abertura e o encerramento; e a ação não é oferecida na tela (FR-026, SC-014)
-- [ ] T116 [P] [US6] Testar os vários marcos em `backend/tests/integration/recursos/test_janela.py`: enumerando dois marcos a mesma Etapa, a interposição é possível enquanto **qualquer** janela estiver aberta (FR-027)
-- [ ] T117 [P] [US6] Testar a ausência em `backend/tests/integration/recursos/test_janela.py`: sem declaração, zero prazos exibidos ou aplicados, e a interposição permanece possível enquanto o objeto for vigente (FR-028, SC-015)
+- [X] T101 [US6] Subir `ZONA` de `interface/forms.py` e `interface/retificacao.py` para `backend/processo_seletivo/shared/tempo.py`, e fazer os dois importá-la — a contagem é domínio, e domínio não importa de `interface` (T-008)
+- [X] T102 [US6] Elevar `SCHEMA_VERSION` para 8 em `backend/processo_seletivo/shared/canonical.py`, com o comentário que declara o que a ausência significa (FR-029)
+- [X] T103 [US6] Escrever `DEGRAUS_DE_MARCO` e `elevar_marco` em `backend/processo_seletivo/publicacoes/domain/elevacao.py` — o terceiro nível, simétrico a `elevar_etapa` e `elevar_perfil` —, e alcançar o endereço do marco em `elevar_alteracoes` (T-007, FR-029)
+- [X] T104 [US6] Escrever `janela.py` em `backend/processo_seletivo/recursos/domain/`: função pura que devolve abertura e encerramento a partir da publicação âncora e da norma, excluindo o dia do começo e incluindo o do vencimento, na zona institucional (FR-022, FR-023, FR-024)
+- [X] T105 [US6] Escrever a âncora e a reabertura em `backend/processo_seletivo/recursos/domain/janela.py`: a publicação que divulgou **pela primeira vez** o ato que publica; comparação por identidade do ato, e não por hash do conteúdo (FR-025)
+- [X] T106 [US6] Validar `appealWindow` na publicação em `backend/processo_seletivo/editais/domain/perfis.py`: unidade fora de `DIAS_CORRIDOS`, `admits` sem duração e duração não positiva, cada uma com a mensagem de [contracts/janela.md](./contracts/janela.md) §1 (FR-020, FR-021)
+- [X] T107 [US6] Escrever os três campos da janela no assistente do marco em `backend/processo_seletivo/interface/forms.py` e no template correspondente (FR-030)
+- [X] T108 [US6] Imprimir a frase normativa da janela no documento publicado em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` (FR-030)
+- [X] T109 [US6] Verificar o endereçamento por Retificação de `appealWindow` em `backend/processo_seletivo/publicacoes/domain/colecoes.py`; recusando `changes.py` o objeto aninhado, declará-lo em `COLECOES_ATOMICAS` (T-007, FR-030)
+- [X] T110 [US6] Aplicar a janela na interposição em `backend/processo_seletivo/recursos/application/interpor.py`, e exibir os dois instantes ao candidato em `backend/processo_seletivo/portal/templates/portal/` (FR-026, FR-024)
+- [X] T111 [US6] Acrescentar o fato 4 — janela aberta — em `backend/processo_seletivo/divulgacao/domain/publicabilidade.py` (FR-082)
+- [X] T112 [P] [US6] Testar a contagem em `backend/tests/unit/recursos/test_janela.py`: exclui o dia do começo, inclui o do vencimento, fecha ao fim do último dia na zona institucional, e não prorroga (FR-023, SC-014)
+- [X] T113 [P] [US6] Testar a reabertura em `backend/tests/unit/recursos/test_janela.py`: publicação de ato diferente abre janela nova; publicação que só muda a natureza do mesmo ato **não** abre (FR-025)
+- [X] T114 [P] [US6] Testar a retrocompatibilidade em `backend/tests/contract/test_elevacao_degrau_8.py`: Edital publicado antes do degrau eleva sem inventar janela, continua retificável e publicável, e a ausência significa **janela não declarada** (FR-029, SC-016)
+- [X] T115 [P] [US6] Testar a aplicação em `backend/tests/integration/recursos/test_janela.py`: dentro do prazo a interposição é aceita e registra que estava dentro; depois do prazo é recusada citando a norma, a abertura e o encerramento; e a ação não é oferecida na tela (FR-026, SC-014)
+- [X] T116 [P] [US6] Testar os vários marcos em `backend/tests/integration/recursos/test_janela.py`: enumerando dois marcos a mesma Etapa, a interposição é possível enquanto **qualquer** janela estiver aberta (FR-027)
+- [X] T117 [P] [US6] Testar a ausência em `backend/tests/integration/recursos/test_janela.py`: sem declaração, zero prazos exibidos ou aplicados, e a interposição permanece possível enquanto o objeto for vigente (FR-028, SC-015)
 
 **Checkpoint**: a tempestividade passa a ser regra reproduzível onde a norma a declarou, e continua
 sendo juízo humano onde ela não a declarou.
@@ -326,13 +326,13 @@ sendo juízo humano onde ela não a declarou.
 
 ## Phase 11: Polish & Cross-Cutting
 
-- [ ] T118 [P] Testar os limites declarados em `backend/tests/integration/recursos/test_limites.py`: nenhuma superfície aceita terceiro interessado, procurador ou representação; a peça **não** aceita anexos; nenhum ato de divulgação de `ResultadoEtapa` nasce; e nenhuma espécie, estado ou taxonomia além das declaradas existe (FR-005, FR-007, FR-019, FR-050)
-- [ ] T119 [P] Testar que a 018 não altera agregado existente em `backend/tests/integration/recursos/test_limites.py`: conteúdo, autoria e estado de Avaliação, Atribuição, Impedimento, `AtoDeOrdenacao`, `PosicaoNaOrdem` e `PublicacaoResultado` permanecem intactos (FR-107)
-- [ ] T120 [P] Melhorar a recusa de reabertura de Avaliação em `backend/processo_seletivo/avaliacoes/application/avaliacao.py`: a mensagem deixa de prometer uma "anulação" que não existe e passa a nomear o ato que existe (FR-111)
-- [ ] T121 [P] Registrar a não regressão por identidade de teste em `specs/018-recursos-e-superacao-de-resultados/tasks.md` e na descrição do PR: toda asserção alterada da 013, 015 e 017 enumerada uma a uma, e nenhum teste removido (FR-110)
-- [ ] T122 [P] Verificar os orçamentos de consulta da 011, 012 e 015 em `backend/tests/performance/`: o filtro de vigência não pode ter acrescentado round-trip (FR-061)
-- [ ] T123 [P] Testar a proteção de dados em `backend/tests/portal/test_recurso_privacidade.py`: fundamentação e decisão acessíveis ao titular, ao julgador e à auditoria, e a mais ninguém; respostas não armazenáveis pelo navegador (FR-102, FR-103, FR-105)
-- [ ] T124 [P] Testar que nada é notificado em `backend/tests/integration/recursos/test_julgar.py`: nenhuma mensagem é disparada em interposição, admissibilidade ou decisão (FR-109)
+- [X] T118 [P] Testar os limites declarados em `backend/tests/integration/recursos/test_limites.py`: nenhuma superfície aceita terceiro interessado, procurador ou representação; a peça **não** aceita anexos; nenhum ato de divulgação de `ResultadoEtapa` nasce; e nenhuma espécie, estado ou taxonomia além das declaradas existe (FR-005, FR-007, FR-019, FR-050)
+- [X] T119 [P] Testar que a 018 não altera agregado existente em `backend/tests/integration/recursos/test_limites.py`: conteúdo, autoria e estado de Avaliação, Atribuição, Impedimento, `AtoDeOrdenacao`, `PosicaoNaOrdem` e `PublicacaoResultado` permanecem intactos (FR-107)
+- [X] T120 [P] Melhorar a recusa de reabertura de Avaliação em `backend/processo_seletivo/avaliacoes/application/avaliacao.py`: a mensagem deixa de prometer uma "anulação" que não existe e passa a nomear o ato que existe (FR-111)
+- [X] T121 [P] Registrar a não regressão por identidade de teste em `specs/018-recursos-e-superacao-de-resultados/tasks.md` e na descrição do PR: toda asserção alterada da 013, 015 e 017 enumerada uma a uma, e nenhum teste removido (FR-110)
+- [X] T122 [P] Verificar os orçamentos de consulta da 011, 012 e 015 em `backend/tests/performance/`: o filtro de vigência não pode ter acrescentado round-trip (FR-061)
+- [X] T123 [P] Testar a proteção de dados em `backend/tests/portal/test_recurso_privacidade.py`: fundamentação e decisão acessíveis ao titular, ao julgador e à auditoria, e a mais ninguém; respostas não armazenáveis pelo navegador (FR-102, FR-103, FR-105)
+- [X] T124 [P] Testar que nada é notificado em `backend/tests/integration/recursos/test_julgar.py`: nenhuma mensagem é disparada em interposição, admissibilidade ou decisão (FR-109)
 - [ ] T125 Executar o roteiro do [quickstart.md](./quickstart.md) de ponta a ponta pelo navegador, alternando os atores, e registrar as evidências (FR-106, SC-024)
 
 ---
@@ -417,3 +417,33 @@ spec: a tempestividade continua sendo juízo de admissibilidade motivado.
 - Commit por tarefa ou grupo lógico
 - **A suíte precisa de PostgreSQL.** T023, T024, T025, T026, T067 e T097 verificam garantias que só
   existem lá, e são puladas em silêncio sob SQLite
+
+---
+
+## Não regressão por identidade de teste (T121, FR-110)
+
+**Nenhum teste foi removido.** `git status` sobre `backend/tests/` não registra exclusão alguma, e
+a garantia é essa: uma feature que apaga o teste que a incomoda não é compatível — ela apenas
+silenciou quem dizia que não era.
+
+O que **foi alterado**, um a um, e por quê:
+
+| arquivo | asserção | por que mudou |
+|---|---|---|
+| `tests/test_imutabilidade_do_resultado.py` | lista de colunas do `INSERT` cru | `resultados/0005` acrescentou `resultado_anterior`, `motivo_da_superacao` e `decisao`; o `INSERT` explícito precisa nomeá-las |
+| `tests/migrations/test_migrations.py` | `resultados: 4 → 5` | a `0005` dá sucessão ao `ResultadoEtapa` — o único elo da cadeia que não a tinha (decisão C §1.1) |
+| `tests/migrations/test_migrations.py` | `classificacao: 3 → 4` | a `0004` cria a `CitacaoDeDecisao`, sem a qual o cumprimento da providência só poderia ser presumido (T-015) |
+| `tests/migrations/test_migrations.py` | `divulgacao: nova entrada, 2` | a `0002` acrescenta os três campos da declaração expressa (FR-085) |
+| `tests/migrations/test_migrations.py` | `TRIGGERS_POR_APP` ganha `recursos` e duas de `classificacao` | as triggers novas precisam ser declaradas, ou o guarda deixa de guardar |
+| `tests/migrations/test_migrations.py` | `MIGRATIONS_DA_017` | a proibição de `AddField` passa a valer para as migrations **da 017**, e não para o app inteiro: senão a divulgação ficaria congelada para sempre |
+| `tests/unit/divulgacao/test_publicabilidade.py` | `"ato sucessor" em toda mensagem` → *toda mensagem nomeia um caminho* | as recusas novas se resolvem de outro jeito — aguardar julgamento, consolidar, citar a decisão. Exigir "ato sucessor" mandaria fazer o que não resolve |
+| `tests/performance/test_resumo_da_etapa.py` | teto de `5 → 6` consultas | o panorama passou a responder também "quem tem reavaliação pendente", em consulta **constante** (FR-067) |
+| `tests/unit/avaliacoes/test_elevacao.py`, `tests/contract/test_forma_publicada.py`, `tests/integration/editais/test_contrato_de_inscricao.py`, `tests/integration/publicacoes/test_elevacao_de_versao.py`, `tests/acceptance/test_quickstart.py` | `schemaVersion 7 → 8` | o degrau 8 declara `appealWindow`; a ausência significa **janela não declarada** (FR-029) |
+| `tests/acceptance/test_us_publicacao_de_resultado.py` | o `POST` da definitiva passa a levar a declaração | publicar como definitivo passou a exigi-la onde não há janela computável (FR-085) |
+| `tests/test_vigencia_do_resultado.py` | três exceções declaradas | reprodução histórica, cumprimento da reavaliação e histórico do par **precisam** ver o superado — cada uma com a razão escrita |
+| `tests/fixtures/divulgacao.py` | `montar_marco` ganha `regra_da_etapa`; `emitir` ganha `decisoes`; `publicar_o_ato` ganha `declaracao` | parâmetros novos com padrão que preserva o comportamento anterior — nenhum cenário existente muda |
+
+**Nenhuma dessas mudanças enfraquece o que o teste protegia.** As de contagem sobem com
+justificativa escrita — que é exatamente a conversa que esses guardas existem para forçar. A de
+`publicabilidade` troca uma frase por uma propriedade, e a propriedade é a que sempre esteve em
+jogo: *toda recusa diz o que fazer a seguir*.

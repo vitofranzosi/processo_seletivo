@@ -1369,6 +1369,31 @@ def recurso(request, recurso_id):
     )
 
 
+def _correcao_da_publicacao(publicacao):
+    """Se esta publicação corrige outra por força de recurso, o que a motivou (FR-088).
+
+    A resposta vem da cadeia: existe publicação anterior, e o ato desta cita decisão de recurso. É
+    a mesma derivação que a natureza e a vigência já usam — e por isso não há estado a manter
+    coerente com nada.
+    """
+    from processo_seletivo.classificacao.models import CitacaoDeDecisao
+
+    if publicacao.publicacao_anterior_id is None:
+        return None
+    citacao = (
+        CitacaoDeDecisao.objects.filter(ato_id=publicacao.ato_id)
+        .select_related("decisao", "decisao__recurso")
+        .order_by("decisao__decidido_em")
+        .first()
+    )
+    if citacao is None:
+        return None
+    return {
+        "recurso": citacao.decisao.recurso.protocolo,
+        "quando": citacao.decisao.decidido_em,
+    }
+
+
 def _documentos(conteudo, inscricao):
     """Cada requisito aplicável, com o arquivo que já chegou para ele — e o que falta.
 
@@ -1866,6 +1891,11 @@ def resultado(request, publicacao_id):
             "posicoes": conteudo["posicoes"],
             "foi_sucedida": foi_sucedida,
             "vigente": vigente,
+            # **Não nasce natureza nova** (FR-087). A definitiva que corrige outra é apresentada
+            # pela **causa** — a decisão que a motivou —, derivada da cadeia. Uma natureza
+            # `DEFINITIVA_RETIFICADA` seria terceiro valor no enum, mais um par na regra de não
+            # regressão, e toda leitura de natureza mudando para dizer o que a cadeia já diz.
+            "correcao": _correcao_da_publicacao(publicacao),
             "edital_id": publicacao.edital_id,
         },
     )

@@ -50,6 +50,12 @@ def _publicar_pela_tela(client, cenario, ato, *, natureza):
         {
             "natureza": natureza,
             "autoridade": "diretoria-cefor",
+            # Desde a 018, publicar como definitivo exige declarar expressamente que o prazo
+            # recursal se encerrou — enquanto o Edital não declara janela computável, é a pessoa
+            # que responde por essa afirmação (FR-085). Na preliminar o campo nem aparece.
+            "declaracao_de_encerramento": (
+                "O prazo recursal encerrou-se sem interposição." if natureza == "DEFINITIVA" else ""
+            ),
             "confirmacao_da_previa": re.search(
                 r'name="confirmacao_da_previa" value="([^"]+)"', corpo
             ).group(1),

@@ -23,6 +23,7 @@ from django.db.models import Exists, OuterRef
 from processo_seletivo.avaliacoes.application.selectors import avaliacoes_elegiveis
 from processo_seletivo.comissoes.domain.etapas import etapas_vigentes as etapas_vigentes_do_edital
 from processo_seletivo.inscricoes.models import Inscricao
+from processo_seletivo.recursos.application.selectors import reavaliacoes_pendentes
 from processo_seletivo.resultados.application.selectors import (
     conteudos_das_versoes,
     eliminadas_ate,
@@ -43,6 +44,13 @@ AGUARDANDO_ANTERIOR = "aguardando-anterior"
 CONSOLIDADA = "consolidada"
 PRONTA = "pronta"
 IMPEDIDA = "impedida"
+# O sexto estado, e o único que a 018 acrescenta. Ele existe porque a inscrição com reavaliação
+# determinada **tem** Resultado — e por isso a prontidão a chamava de `consolidada`, escondendo
+# justamente a pendência que a decisão criou. Quem organiza a Etapa precisa vê-la como trabalho a
+# fazer, e não como trabalho feito (FR-067).
+REAVALIACAO = "reavaliacao-determinada"
+
+REAVALIACAO_PENDENTE = "reavaliação determinada por recurso, ainda não cumprida"
 
 #: A conclusão elegível, reduzida ao que a prontidão precisa saber sobre ela.
 #:
@@ -206,6 +214,9 @@ def panorama_da_etapa(*, edital, etapa, etapas_vigentes):
     )
     resultados = inscricoes_com_resultado(edital=edital, etapa_id=etapa["id"])
     impedimento = impedimento_da_regra(etapa)
+    # Duas consultas para a Etapa inteira, e nenhuma por inscrição — o mesmo orçamento que o resto
+    # deste módulo respeita.
+    reavaliacoes = reavaliacoes_pendentes(edital, etapa_id=etapa["id"])
 
     elegiveis = {}
     if impedimento is None:
@@ -232,10 +243,14 @@ def panorama_da_etapa(*, edital, etapa, etapas_vigentes):
         estados[identidade] = (AGUARDANDO_ANTERIOR, "aguardando o resultado da Etapa anterior")
     for identidade in participantes:
         estados[identidade] = _estado_do_participante(
-            identidade, etapa, resultados, elegiveis, impedimento
+            identidade, etapa, resultados, elegiveis, impedimento, reavaliacoes
         )
     panorama = {
         "participantes": participantes,
+        # As decisões pendentes viajam **dentro** do panorama pela mesma razão que as contagens: a
+        # consolidação precisa saber qual decisão está cumprindo, e recalculá-la lá seria a segunda
+        # leitura do mesmo fato — com risco de as duas discordarem.
+        "reavaliacoes": reavaliacoes,
         "eliminadas": eliminadas,
         "aguardando": aguardando,
         "resultados": resultados,
@@ -249,7 +264,12 @@ def panorama_da_etapa(*, edital, etapa, etapas_vigentes):
     return panorama
 
 
-def _estado_do_participante(identidade, etapa, resultados, elegiveis, impedimento):
+def _estado_do_participante(identidade, etapa, resultados, elegiveis, impedimento, reavaliacoes):
+    if identidade in reavaliacoes:
+        # **Antes de "já consolidada"**, e é toda a questão: ela tem Resultado, e por isso caía no
+        # ramo de baixo e sumia da lista de trabalho. A decisão determinou reavaliar, e enquanto
+        # ninguém o fizer a Etapa tem uma pendência nomeada (FR-067).
+        return (REAVALIACAO, REAVALIACAO_PENDENTE)
     if identidade in resultados:
         # Já consolidada vem antes de tudo: reconsolidar não é o caminho normal esbarrando numa
         # regra, e apresentá-la como "pronta" convidaria a um ato que será recusado.
@@ -277,7 +297,7 @@ def contagens(panorama):
     A partição é verificável por construção: `participantes + eliminadas + aguardando` é o total, e
     os quatro estados dos participantes somam `participantes`.
     """
-    por_estado = {estado: 0 for estado in (CONSOLIDADA, PRONTA, IMPEDIDA)}
+    por_estado = {estado: 0 for estado in (CONSOLIDADA, PRONTA, IMPEDIDA, REAVALIACAO)}
     for estado, _ in panorama["estados"].values():
         if estado in por_estado:
             por_estado[estado] += 1
@@ -288,5 +308,6 @@ def contagens(panorama):
         "consolidadas": por_estado[CONSOLIDADA],
         "prontas": por_estado[PRONTA],
         "impedidas": por_estado[IMPEDIDA],
+        "reavaliacoes": por_estado[REAVALIACAO],
         "total": len(panorama["estados"]),
     }

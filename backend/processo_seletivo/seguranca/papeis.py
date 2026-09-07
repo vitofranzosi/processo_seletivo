@@ -54,6 +54,10 @@ TABELAS_APPEND_ONLY = (
     # Resultado citar um fundamento que já não é o que a autoridade decidiu (018, FR-046).
     "recursos_decisaorecurso",
     "recursos_juizodeadmissibilidade",
+    # A citação da decisão pelo ato de ordenação (018, T-013): proveniência do ato, e por isso
+    # append-only pela mesma razão que o próprio ato é — apagá-la reabriria uma providência que já
+    # foi cumprida, sem deixar rastro de que alguém a reabriu.
+    "classificacao_citacaodedecisao",
     "recursos_recurso",
     "publicacoes_documentopublicado",
     "publicacoes_publicacao",

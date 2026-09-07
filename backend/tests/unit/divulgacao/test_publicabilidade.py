@@ -108,14 +108,41 @@ def test_o_marco_removido_e_recusado_com_o_seu_codigo(cenario, api_client):
     assert aferida.status == 422
 
 
-def test_as_tres_recusas_nomeiam_o_caminho(cenario, gestor):
-    """Uma recusa que não diz o que fazer a seguir devolve a pessoa à tela anterior sem nada."""
-    from processo_seletivo.divulgacao.domain.publicabilidade import MENSAGENS
+def test_toda_recusa_nomeia_o_caminho(cenario, gestor):
+    """Uma recusa que não diz o que fazer a seguir devolve a pessoa à tela anterior sem nada.
 
-    for mensagem in MENSAGENS.values():
-        assert "ato sucessor" in mensagem, (
-            "cada recusa aponta para emitir o ato sucessor na tela da 015 (FR-006)"
+    **O que se exige é um caminho, e não uma frase.** A 017 tinha três recusas, e as três se
+    resolviam do mesmo jeito — emitindo o ato sucessor —, de modo que procurar essa expressão em
+    todas era o mesmo que procurar um caminho. A 018 acrescentou recusas cujo remédio é **outro**:
+    aguardar o julgamento, consolidar o resultado de quem reingressou, concluir a reavaliação,
+    emitir um ato que **cite a decisão**, declarar o encerramento do prazo. Continuar exigindo "ato
+    sucessor" em todas mandaria a pessoa fazer o que não resolve o caso dela.
+
+    A garantia continua valendo, e é a mesma: cada mensagem nomeia um verbo de ação para quem a lê.
+    """
+    from processo_seletivo.divulgacao.domain.publicabilidade import (
+        MARCO_REMOVIDO,
+        MENSAGENS,
+        SEM_SUCESSOR,
+    )
+
+    caminhos = (
+        "ato sucessor",
+        "Aguarde o julgamento",
+        "Conclua a reavaliação",
+        "Consolide o resultado",
+        "declarar expressamente",
+        "não é aceita aqui",
+        "Aguarde o encerramento",
+    )
+    for codigo, mensagem in MENSAGENS.items():
+        assert any(caminho in mensagem for caminho in caminhos), (
+            f"a recusa {codigo} não diz o que fazer a seguir (FR-006)"
         )
+
+    # O marco removido continua sendo a exceção declarada: ali **não há** ato sucessor a emitir, e
+    # a mensagem diz isso em vez de mandar fazer o impossível.
+    assert SEM_SUCESSOR in MENSAGENS[MARCO_REMOVIDO]
 
 
 def test_recusar_a_publicacao_nao_torna_o_ato_menos_consultavel(

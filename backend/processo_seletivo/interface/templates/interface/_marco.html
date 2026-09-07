@@ -52,6 +52,39 @@
       <span class="ajuda">Aplicado uma vez, sobre a pontuação combinada.</span>
     </p>
   </div>
+  {% comment %}
+  A janela recursal do marco (018, FR-030). **Não declarar é uma escolha legítima**, e é o que o
+  formulário oferece por padrão: sem prazo publicado o sistema não inventa nenhum, e a
+  tempestividade continua sendo juízo de admissibilidade motivado.
+
+  A unidade é campo publicado — e não constante de código — porque a frase normativa do documento a
+  cita: *"no prazo de 5 (cinco) dias corridos, contados da divulgação do resultado"*.
+  {% endcomment %}
+  <div class="campos">
+    <p class="campo escolha">
+      <input type="checkbox" id="marco-{{ indice }}-{{ sub }}-appealAdmits"
+             name="marco-{{ indice }}-{{ sub }}-appealAdmits" value="sim"
+             {% if marco.appealAdmits %}checked{% endif %}>
+      <label for="marco-{{ indice }}-{{ sub }}-appealAdmits">Este marco admite recurso</label>
+    </p>
+    <p class="campo curto">
+      <label for="marco-{{ indice }}-{{ sub }}-appealDurationDays">Prazo, em dias</label>
+      <input type="number" min="1" step="1"
+             id="marco-{{ indice }}-{{ sub }}-appealDurationDays"
+             name="marco-{{ indice }}-{{ sub }}-appealDurationDays"
+             value="{{ marco.appealDurationDays }}">
+      <span class="ajuda">Contados do dia seguinte ao da divulgação, incluindo o do vencimento.</span>
+    </p>
+    <p class="campo curto">
+      <label for="marco-{{ indice }}-{{ sub }}-appealUnit">Unidade</label>
+      <select id="marco-{{ indice }}-{{ sub }}-appealUnit"
+              name="marco-{{ indice }}-{{ sub }}-appealUnit">
+        <option value="DIAS_CORRIDOS" {% if marco.appealUnit == "DIAS_CORRIDOS" %}selected{% endif %}>Dias corridos</option>
+      </select>
+      <span class="ajuda">Dias úteis exigiriam o calendário de dias sem expediente, que o Edital
+        não publica.</span>
+    </p>
+  </div>
   <div class="campos">
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-operation">Como as pontuações se combinam <span class="obrigatorio" aria-hidden="true">*</span></label>

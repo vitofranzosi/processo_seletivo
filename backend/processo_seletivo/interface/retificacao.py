@@ -20,12 +20,14 @@ problema de representação (FR-019).
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from uuid import uuid4
-from zoneinfo import ZoneInfo
 
 from processo_seletivo.editais.domain import secoes as catalogo
 from processo_seletivo.publicacoes.domain.changes import ABSENT, resolve_path
+from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
-ZONA = ZoneInfo("America/Sao_Paulo")
+# A zona institucional mora em `shared/tempo.py` desde a 018: a contagem do prazo recursal é
+# domínio, e domínio não importa de `interface` (T-008).
+ZONA = ZONA_INSTITUCIONAL
 TEXTO, INTEIRO, INSTANTE = "texto", "inteiro", "instante"
 # A `006` publicou Etapas, Seções e a Regra Normativa das modalidades, e a tela ficou para trás:
 # o motor endereçava os três, a interface alcançava nenhum. Estes três tipos são o que faltava

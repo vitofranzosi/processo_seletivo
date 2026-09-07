@@ -266,3 +266,96 @@ def resultados_visiveis(inscricao):
             ),
         )
     ]
+
+
+def historico_do_par(inscricao_id, etapa_id):
+    """Os Resultados do par, do mais antigo ao vigente — **e é aqui que o superado é lido**.
+
+    A segunda exceção declarada do contrato de vigência, e por uma razão simétrica à primeira: as
+    outras leituras respondem "o que vale hoje", e esta responde "o que já valeu". Filtrá-la por
+    vigência devolveria uma linha só e destruiria justamente a informação que ela existe para dar
+    (FR-064, T-004).
+
+    O que cada linha carrega é o que permite conferir a correção sem sair da tela: consequência,
+    pontuação, motivo, quem consolidou, quando — e, no sucessor, a decisão que o autorizou.
+
+    A cadeia é percorrida por `resultado_anterior`, e não ordenada por instante: dois Resultados do
+    mesmo par gravados no mesmo segundo teriam ordem indefinida, e a sucessão é o que define a
+    ordem de verdade.
+    """
+    linhas = list(
+        ResultadoEtapa.objects.filter(inscricao_id=inscricao_id, etapa_id=etapa_id)
+        .select_related("decisao", "decisao__recurso")
+        .order_by("consolidado_em", "id")
+    )
+    if not linhas:
+        return []
+
+    por_anterior = {item.resultado_anterior_id: item for item in linhas}
+    corrente = por_anterior.get(None)
+    cadeia = []
+    while corrente is not None and len(cadeia) <= len(linhas):
+        cadeia.append(corrente)
+        corrente = por_anterior.get(corrente.id)
+    return [_linha_do_historico(item, ultimo=item is cadeia[-1]) for item in cadeia]
+
+
+def _linha_do_historico(resultado, *, ultimo):
+    decisao = resultado.decisao
+    return {
+        "resultado": resultado,
+        "vigente": ultimo,
+        "consequencia": resultado.consequencia,
+        "pontuacao": resultado.pontuacao,
+        "motivo": resultado.motivo,
+        "origem": resultado.origem,
+        "consolidado_por": resultado.consolidado_por,
+        "consolidado_em": resultado.consolidado_em,
+        "motivo_da_superacao": resultado.motivo_da_superacao,
+        "decisao": decisao,
+        "recurso": decisao.recurso.protocolo if decisao is not None else "",
+    }
+
+
+def reabilitadas_por_recurso(*, edital, etapa_ids=None):
+    """`{inscricao_id: resultado}` de quem voltou a participar porque um recurso a reabilitou.
+
+    **Derivada, e sem estado de reintegração** (D-010, FR-076). Reabilitada é quem tem, hoje, um
+    Resultado vigente que é **sucessor** e cuja consequência habilita. Não há "reintegrada": há um
+    Resultado que sucedeu outro e que diz que a pessoa segue.
+
+    Uma coluna de reintegração teria de ser mantida coerente com a cadeia de sucessão, e divergiria
+    dela no primeiro caso em que o sucessor fosse ele próprio sucedido. A derivação não tem como
+    divergir: ela **é** a cadeia.
+
+    Uma consulta, e não uma por inscrição: quem chama é uma tela de Etapa, que lista dezenas.
+    """
+    consulta = ResultadoEtapa.vigentes.filter(
+        edital=edital,
+        resultado_anterior__isnull=False,
+        consequencia=ResultadoEtapa.Consequencia.HABILITADA,
+    ).select_related("decisao", "decisao__recurso", "resultado_anterior")
+    if etapa_ids is not None:
+        consulta = consulta.filter(etapa_id__in=list(etapa_ids))
+    return {
+        resultado.inscricao_id: resultado
+        for resultado in consulta
+        # **Só reabilita quem estava fora.** Corrigir a nota de quem já seguia é superação, e não
+        # reingresso: nomeá-la como reabilitação faria a tela avisar sobre quem nunca saiu.
+        if resultado.resultado_anterior.consequencia != ResultadoEtapa.Consequencia.HABILITADA
+    }
+
+
+def reabilitacao_da_inscricao(resultado):
+    """A linha como as telas da operação a mostram: o que mudou, por qual recurso e quando.
+
+    A data é a do **deferimento**, e não a da consolidação do sucessor: é a decisão que reabilitou,
+    e é por ela que quem opera vai procurar quando quiser conferir (FR-077).
+    """
+    decisao = resultado.decisao
+    return {
+        "resultado": resultado,
+        "recurso": decisao.recurso.protocolo if decisao is not None else "",
+        "deferido_em": decisao.decidido_em if decisao is not None else None,
+        "consequencia_anterior": resultado.resultado_anterior.consequencia,
+    }

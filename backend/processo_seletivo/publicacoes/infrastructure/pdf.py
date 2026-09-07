@@ -1118,6 +1118,49 @@ def _arredondamento(marco):
     return ", ".join(partes)
 
 
+POR_EXTENSO = {
+    1: "um",
+    2: "dois",
+    3: "três",
+    4: "quatro",
+    5: "cinco",
+    6: "seis",
+    7: "sete",
+    8: "oito",
+    9: "nove",
+    10: "dez",
+    15: "quinze",
+    20: "vinte",
+    30: "trinta",
+}
+
+
+def _janela_recursal(marco):
+    """A frase normativa do prazo recursal, como um Edital a escreve (FR-030).
+
+    *"Caberá recurso no prazo de 5 (cinco) dias corridos, contados da divulgação do resultado."*
+
+    **O número por extenso entre parênteses não é enfeite**: é como um ato administrativo escreve
+    prazo, e é o que impede que um dígito trocado passe despercebido. Fora da tabela de números
+    conhecidos, imprime-se só o algarismo — inventar a grafia de "cento e vinte e três" aqui seria
+    mais chance de errar do que de acertar.
+
+    **O silêncio também é frase.** Marco que não declara janela não imprime nada: escrever "não
+    cabe recurso" afirmaria uma norma que o Edital não publicou, e o candidato conserva as vias que
+    a lei lhe dá fora deste sistema.
+    """
+    janela = marco.get("appealWindow") or {}
+    if not janela.get("admits"):
+        return ""
+    dias = janela.get("durationDays")
+    if not isinstance(dias, int) or isinstance(dias, bool) or dias <= 0:
+        return ""
+    extenso = POR_EXTENSO.get(dias)
+    quantos = f"{dias} ({extenso})" if extenso else str(dias)
+    plural = "dias corridos" if dias != 1 else "dia corrido"
+    return f"Caberá recurso no prazo de {quantos} {plural}, contados da divulgação do resultado."
+
+
 def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
     """Os marcos classificatórios por extenso, com o que basta para refazer a ordem publicada.
 
@@ -1172,6 +1215,9 @@ def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
                 arredondamento = _arredondamento(marco)
                 if arredondamento:
                     pares.append(["Arredondamento", arredondamento])
+                janela = _janela_recursal(marco)
+                if janela:
+                    pares.append(["Recurso", janela])
                 _pares(composicao, pares, recuo=32.0)
                 criterios = sorted(
                     marco.get("tiebreakers") or [], key=lambda item: item.get("order") or 0

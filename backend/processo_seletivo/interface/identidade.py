@@ -61,6 +61,12 @@ PAPEIS = {
             "comissao:gerir",
         ],
     ),
+    # Papel **próprio**, e não uma capacidade acrescentada a um existente (D-005, T-005). Cada
+    # papel que já existe reúne quem tende a estar impedido: quem elabora e publica o Edital
+    # também divulga o resultado atacado, e quem gere o Processo preside a comissão que avaliou.
+    # Pendurar `recurso:julgar` em qualquer um deles concederia o julgamento, por construção, a
+    # quem a FR-039 manda afastar — e o impedimento viraria a regra em vez da exceção.
+    "julgador": ("Julgador de recursos", ["recurso:julgar"]),
     "auditor": ("Auditor", ["auditoria:consultar"]),
 }
 

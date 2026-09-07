@@ -144,6 +144,10 @@ def edital_snapshot(edital: Edital) -> dict:
                 "operation": marco.operacao,
                 "normalization": marco.normalizacao,
                 "rounding": marco.arredondamento,
+                # `None` quando o marco não declara janela: é o que a versão 8 grafa para a
+                # ausência, e é a mesma grafia que `elevar_marco` escreve em Edital anterior ao
+                # degrau (018, FR-029).
+                "appealWindow": marco.janela_recursal or None,
                 "tiebreakers": [
                     {
                         "id": str(criterio.id),

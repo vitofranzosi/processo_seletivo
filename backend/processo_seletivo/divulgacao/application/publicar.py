@@ -102,6 +102,7 @@ def publicar_resultado(
     confirmacao_da_previa,
     idempotency_key,
     correlation_id,
+    declaracao_de_encerramento="",
 ):
     """Divulga um ato de ordenação vigente, congelando o que foi divulgado."""
     require_permission(actor, PERMISSAO)
@@ -156,7 +157,9 @@ def publicar_resultado(
                 campo="natureza",
             )
 
-        publicabilidade = aferir(edital=edital, marco_id=marco_id, ato=ato, at=agora)
+        publicabilidade = aferir(
+            edital=edital, marco_id=marco_id, ato=ato, at=agora, natureza=natureza
+        )
         if not publicabilidade.publicavel:
             raise DomainError(
                 publicabilidade.codigo,
@@ -190,6 +193,10 @@ def publicar_resultado(
                 campo="confirmacao_da_previa",
             )
 
+        declaracao = _declaracao_exigida(
+            edital=edital, marco_id=marco_id, natureza=natureza, texto=declaracao_de_encerramento
+        )
+
         conteudo = conteudo_divulgado(
             projecao, natureza=natureza, publicado_em=agora, signatario=assinante
         )
@@ -209,6 +216,9 @@ def publicar_resultado(
                 signatario_id=assinante.identificador,
                 signatario_nome=assinante.nome,
                 signatario_cargo=assinante.cargo,
+                prazo_encerrado_declarado_em=agora if declaracao else None,
+                prazo_encerrado_declarado_por=actor.subject if declaracao else "",
+                prazo_encerrado_fundamento=declaracao,
             )
         except IntegrityError as exc:
             # A cobertura dupla e deliberada: a idempotência responde ao **mesmo** pedido
@@ -269,6 +279,43 @@ def _narrativa_do_ato(conteudo, ato, anterior):
     if anterior is not None:
         partes.append(f"sucedendo a publicação {anterior.id}")
     return ", ".join(partes) + "."
+
+
+def _declaracao_exigida(*, edital, marco_id, natureza, texto):
+    """A declaração expressa, exigida **somente** onde não há janela computável (FR-085, FR-086).
+
+    Onde o Edital declara a janela, o sistema verifica: pedir a declaração ali seria pedir à pessoa
+    que respondesse pelo que a máquina sabe — e reintroduziria, com mais passos, a afirmação sem
+    lastro que o E2E17-005 registrou. Por isso ela é **recusada** quando há janela, e não apenas
+    ignorada: aceitar em silêncio ensinaria a preenchê-la sempre.
+
+    Enquanto o degrau 8 não existir, nenhum marco tem janela computável — e a declaração é sempre
+    exigida na definitiva. É a degradação declarada, e não um estado transitório escondido.
+    """
+    from processo_seletivo.divulgacao.domain.publicabilidade import (
+        DECLARACAO_EXIGIDA,
+        DECLARACAO_RECUSADA,
+        MENSAGENS,
+        STATUS,
+    )
+    from processo_seletivo.recursos.domain.janela import janela_declarada
+
+    texto = (texto or "").strip()
+    if natureza != Natureza.DEFINITIVA:
+        # Fora da definitiva a declaração não tem função: o preliminar não afirma que o prazo
+        # acabou. Aceitá-la aqui gravaria uma afirmação sem objeto.
+        return ""
+
+    computavel = janela_declarada(edital=edital, marco_id=marco_id) is not None
+    if computavel and texto:
+        raise DomainError(
+            DECLARACAO_RECUSADA, MENSAGENS[DECLARACAO_RECUSADA], STATUS[DECLARACAO_RECUSADA]
+        )
+    if not computavel and not texto:
+        raise DomainError(
+            DECLARACAO_EXIGIDA, MENSAGENS[DECLARACAO_EXIGIDA], STATUS[DECLARACAO_EXIGIDA]
+        )
+    return "" if computavel else texto
 
 
 def _gravar_documento(publicacao, conteudo):

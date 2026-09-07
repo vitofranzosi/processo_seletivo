@@ -19,6 +19,7 @@ que responde se duas requisições escaparem por caminhos diferentes (FR-010, FR
 import uuid
 
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 
 from processo_seletivo.inscricoes.application.rascunho import ator_do_candidato
 from processo_seletivo.inscricoes.domain.titularidade import exigir_titularidade
@@ -83,6 +84,7 @@ def interpor(
         _recusar_se_repetido(inscricao, publicacao, resultado)
 
         versao = selecao_publica(edital_id=inscricao.edital_id)
+        abriu, fecha = _janela(inscricao, publicacao, resultado, agora)
         peca = _gravar(
             protocolo=protocolo_do_recurso.gerar(agora.year),
             inscricao=inscricao,
@@ -92,11 +94,12 @@ def interpor(
             publicacao_atacada=publicacao,
             resultado_atacado=resultado,
             versao=versao,
-            # A janela estruturada é do degrau 8, e ela ainda não existe. Enquanto não existir, a
-            # ausência é a afirmação certa: o sistema **não inventa prazo**, e a tempestividade é
-            # juízo de admissibilidade motivado — que é a degradação declarada pela D-004.
-            janela_abriu_em=None,
-            janela_fecha_em=None,
+            # **Gravada, e não recalculada depois** (FR-024). Recalcular na leitura responderia
+            # com a norma de hoje sobre um ato de ontem. `None` nos dois quando o Edital não
+            # declarou janela: a ausência é a afirmação certa — o sistema não inventa prazo, e a
+            # tempestividade volta a ser juízo de admissibilidade motivado (D-004, FR-028).
+            janela_abriu_em=abriu,
+            janela_fecha_em=fecha,
         )
         _auditar(ator, peca, agora, correlation_id, idempotency_key)
         finish(reserva, peca, 201)
@@ -126,6 +129,84 @@ def _gravar(**campos):
         raise DomainError(
             "appeal_already_filed", JA_INTERPOSTO.format(protocolo=protocolo), 409
         ) from exc
+
+
+FORA_DO_PRAZO = (
+    "O prazo para recorrer deste resultado encerrou-se em {fecha}. Ele foi de {dias} dias "
+    "corridos, contados da divulgação de {abre}, conforme o Edital."
+)
+
+
+def _janelas_pertinentes(inscricao, publicacao, resultado, agora):
+    """As janelas abertas ou fechadas que alcançam este objeto, na norma vigente.
+
+    **Vários marcos podem enumerar a mesma Etapa** (FR-027), e a interposição contra o
+    `ResultadoEtapa` é possível enquanto **qualquer** uma delas estiver aberta: prazo que restringe
+    direito interpreta-se a favor de quem recorre. Contra a publicação, a janela é a daquele marco,
+    e só.
+    """
+    from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
+    from processo_seletivo.divulgacao.application.selectors import vigente_do_marco
+    from processo_seletivo.recursos.domain.janela import (
+        declaracao_do_marco,
+        janela_da_publicacao,
+    )
+
+    edital = inscricao.edital
+    conteudo = conteudo_vigente(edital)
+    if publicacao is not None:
+        marcos = [str(publicacao.marco_id)]
+    else:
+        marcos = [
+            str(marco.get("id"))
+            for perfil in conteudo.get("profiles") or []
+            if str(perfil.get("id")) == str(inscricao.profile_id)
+            for marco in perfil.get("classificationMilestones") or []
+            if str(resultado.etapa_id) in {str(item) for item in marco.get("stages") or []}
+        ]
+
+    janelas = []
+    for marco_id in marcos:
+        vigente = (
+            publicacao
+            if publicacao is not None
+            else vigente_do_marco(edital=edital, marco_id=marco_id)
+        )
+        computada = janela_da_publicacao(vigente, declaracao_do_marco(conteudo, marco_id))
+        if computada is not None:
+            janelas.append(computada)
+    return janelas
+
+
+def _janela(inscricao, publicacao, resultado, agora):
+    """A janela que se grava na peça — e a recusa quando **todas** as pertinentes fecharam.
+
+    Nenhuma janela declarada devolve `(None, None)`, e a interposição segue: sem norma não há prazo,
+    e inventá-lo seria o sistema legislando (FR-028).
+    """
+    janelas = _janelas_pertinentes(inscricao, publicacao, resultado, agora)
+    if not janelas:
+        return None, None
+
+    abertas = [(abre, fecha) for abre, fecha in janelas if agora <= fecha]
+    if abertas:
+        # A mais generosa entre as abertas: prazo que restringe direito interpreta-se a favor de
+        # quem recorre, e é o que a FR-027 manda fazer quando dois marcos alcançam a mesma Etapa.
+        return max(abertas, key=lambda par: par[1])
+
+    abre, fecha = max(janelas, key=lambda par: par[1])
+    dias = (fecha.date() - abre.astimezone(fecha.tzinfo).date()).days
+    raise DomainError(
+        "appeal_window_closed",
+        FORA_DO_PRAZO.format(fecha=_data(fecha), dias=dias, abre=_data(abre)),
+        422,
+    )
+
+
+def _data(momento):
+    from processo_seletivo.shared.tempo import ZONA
+
+    return momento.astimezone(ZONA).strftime("%d/%m/%Y")
 
 
 def _recusar_se_superado(publicacao, resultado):
@@ -258,6 +339,7 @@ def objetos_recorriveis(inscricao):
         if identificador is not None
     }
 
+    agora = timezone.now()
     publicacoes = [
         {
             "tipo": "publicacao",
@@ -266,10 +348,31 @@ def objetos_recorriveis(inscricao):
         }
         for item in situacoes_do_candidato(inscricao)
         if item["publicacao"].id not in ja_recorridos
+        and _no_prazo(inscricao, item["publicacao"], None, agora)
     ]
     resultados = [
         {"tipo": "resultado", "id": item["id"], "rotulo": item["etapa"]}
         for item in resultados_visiveis(inscricao)
         if item["id"] not in ja_recorridos
+        and _no_prazo(inscricao, None, _resultado(inscricao, item["id"]), agora)
     ]
     return publicacoes + resultados
+
+
+def _resultado(inscricao, identificador):
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    return ResultadoEtapa.objects.filter(pk=identificador, inscricao=inscricao).first()
+
+
+def _no_prazo(inscricao, publicacao, resultado, agora):
+    """Se ainda cabe recorrer deste objeto **hoje**, pela janela declarada.
+
+    **A ação não é oferecida quando a interposição não é possível** (FR-013): um botão que sempre
+    recusa ensina a pessoa a desconfiar da tela. Sem janela declarada não há prazo a aplicar, e a
+    resposta é sim — que é o comportamento de todo Edital anterior ao degrau 8.
+    """
+    if resultado is None and publicacao is None:
+        return False
+    janelas = _janelas_pertinentes(inscricao, publicacao, resultado, agora)
+    return not janelas or any(agora <= fecha for _abre, fecha in janelas)

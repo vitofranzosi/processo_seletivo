@@ -87,6 +87,28 @@
   {% comment %}A posição, a nota e o desempate nunca vêm do navegador. O POST só confirma que o servidor deve recalcular e constituir o ato.{% endcomment %}
   <p><strong>Emitir é irreversível.</strong> O sistema recalcula sob trava e grava um ato imutável; esta tela não envia posição, pontuação nem desempate.</p>
   {% if ato_vigente %}<p class="campo"><label for="motivo">Motivo da sucessão</label><textarea id="motivo" name="motivo" rows="3" required></textarea><span class="ajuda">O ato vigente permanece íntegro; este motivo explica por que uma nova ordem o sucede.</span></p>{% endif %}
+  {% if decisoes_a_citar %}
+  {% comment %}
+  **Citar é declarar que este ato executa aquela decisão** (FR-089, T-015). A providência a jusante
+  nomeia o remédio e não o executa; quem executa é quem emite o ato, e é a citação — depois de
+  publicada — que prova o cumprimento. Sem ela, o cumprimento só poderia ser presumido por "houve
+  ato novo", e um ato emitido por razão alheia encerraria a pendência sem que ninguém tivesse
+  corrigido o vício.
+
+  Um mesmo ato cita quantas decisões cumprir: dois deferimentos sobre o mesmo marco se resolvem
+  numa emissão só.
+  {% endcomment %}
+  <fieldset class="citacoes">
+    <legend>Decisões de recurso que este ato executa</legend>
+    {% for decisao in decisoes_a_citar %}
+    <p class="campo escolha">
+      <input type="checkbox" id="decisao-{{ decisao.id }}" name="decisao" value="{{ decisao.id }}">
+      <label for="decisao-{{ decisao.id }}">Recurso {{ decisao.recurso.protocolo }} —
+        {{ decisao.motivacao }}</label>
+    </p>
+    {% endfor %}
+  </fieldset>
+  {% endif %}
   <p class="acoes"><button type="submit" class="botao">Emitir ordem</button></p>
 </form>
 {% endif %}

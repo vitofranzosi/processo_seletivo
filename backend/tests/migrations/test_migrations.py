@@ -55,6 +55,11 @@ TRIGGERS_POR_APP = {
         # A proveniência do ato, conferida uma vez por ato e não uma vez por posição (T125).
         "ato_de_ordenacao_coerente",
         "posicao_coerente",
+        # A citação da decisão (018): imutável como toda proveniência, e coerente porque uma
+        # gravação direta que ligasse decisão de um marco a ato de outro liberaria indevidamente a
+        # publicação definitiva daquele outro (T-015, FR-112).
+        "citacao_append_only",
+        "citacao_coerente",
     ),
     # A divulgação da 017: as três de imutabilidade são **absolutas** — publicar não tem ato em
     # curso que legitime mutação, e toda sucessão é linha nova. A quarta é de coerência, no molde
@@ -493,15 +498,26 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
 
     raiz = _pathlib.Path(__file__).resolve().parents[2] / "processo_seletivo"
     esperadas = {
-        "classificacao": 3,
+        # **Sobe para 4 com a 018**, e a justificativa é própria: a `classificacao/0004` cria a
+        # `CitacaoDeDecisao` — a proveniência que liga o ato de ordenação à decisão de recurso que
+        # ele executa. Sem ela, o cumprimento da providência a jusante só poderia ser presumido
+        # ("publicou-se ato novo"), e um ato emitido por razão alheia encerraria a pendência sem
+        # que ninguém tivesse corrigido o vício reconhecido (018, T-015, FR-112).
+        "classificacao": 4,
         # **Sobe para 5 com a 018**, e a justificativa é a que este teste existe para exigir: a
         # `resultados/0005` dá sucessão ao `ResultadoEtapa` — o único elo da cadeia que não a
         # tinha —, para que um recurso deferido possa superar um Resultado sem alterá-lo. Não é
         # a 017 acrescentando migration a um app que ela lê: é outra feature, com decisão própria
         # (018, decisão C §1.1).
         "resultados": 5,
-        "editais": 10,
+        # **Sobe para 11 com a 018**: a `editais/0011` acrescenta `janela_recursal` ao marco
+        # classificatório — o degrau 8. É elaboração, e não divulgação: quem declara o prazo é o
+        # Edital, e é por isso que o campo mora aqui e não na 017 (FR-020, FR-030).
+        "editais": 11,
         "publicacoes": 8,
+        # **Sobe para 2 com a 018**: a `divulgacao/0002` acrescenta os três campos da declaração
+        # expressa de encerramento do prazo e a constraint que os mantém inteiros (FR-085).
+        "divulgacao": 2,
     }
     for app, quantas in esperadas.items():
         migrations = sorted((raiz / app / "migrations").glob("[0-9]*.py"))
@@ -512,11 +528,23 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         )
 
 
+# As migrations que a **017** escreveu. A guarda de alteração vale para elas, e não para o app
+# inteiro: a 018 acrescenta a `0002`, e ela **altera de propósito** a tabela da própria divulgação —
+# os três campos da declaração expressa. Manter a proibição sobre o app inteiro faria a guarda dizer
+# "a 017 não altera esquema" e verificar "ninguém altera esta tabela nunca", que é outra coisa e
+# congelaria a divulgação para sempre.
+MIGRATIONS_DA_017 = ("0001_initial.py",)
+
+
 def test_a_017_nao_toca_o_esquema_de_outros_apps():
     """O espelho da guarda da 011: a migration da divulgação não nomeia app alheio.
 
     Ela **depende** de `classificacao`, `inscricoes` e `processos` — é preciso, para as chaves
     estrangeiras —, e o que ela não pode é alterar tabela deles.
+
+    A proibição de nomear app alheio vale para **todas** as migrations da divulgação, inclusive as
+    que outras features acrescentarem: nenhuma delas tem por que alterar tabela de terceiro por
+    aqui. A proibição de alterar campo vale só para as da 017 — ver `MIGRATIONS_DA_017`.
     """
     import pathlib as _pathlib
 
@@ -527,11 +555,12 @@ def test_a_017_nao_toca_o_esquema_de_outros_apps():
     alteracoes = ("AlterField", "AddField", "RemoveField", "RenameField", "DeleteModel")
     for arquivo in migrations:
         corpo = arquivo.read_text()
-        for operacao in alteracoes:
-            assert operacao not in corpo, (
-                f"{arquivo.name} usa {operacao}: a 017 cria as tabelas dela e não altera as "
-                "existentes (FR-070)"
-            )
+        if arquivo.name in MIGRATIONS_DA_017:
+            for operacao in alteracoes:
+                assert operacao not in corpo, (
+                    f"{arquivo.name} usa {operacao}: a 017 cria as tabelas dela e não altera as "
+                    "existentes (FR-070)"
+                )
         for app_alheio in APPS_QUE_A_017_NAO_TOCA:
             assert f'model_name="{app_alheio}' not in corpo
 

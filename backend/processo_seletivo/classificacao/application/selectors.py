@@ -159,6 +159,7 @@ def estado_do_marco(*, edital, marco_id, at=None):
                 perfil_id=perfil["id"],
                 marco_id=marco_id,
             ),
+            reingressos=_reingressos(edital, proposta),
         )
     _nomear_modalidades(proposta, versao_atual.content, perfil_id=perfil["id"], marco_id=marco_id)
     return {
@@ -302,3 +303,24 @@ __all__ = [
     "posicoes_do_ato",
     "sucessor_de",
 ]
+
+
+def _reingressos(edital, proposta):
+    """Quem voltou ao universo porque um recurso removeu a eliminação que a excluía (FR-078).
+
+    Uma consulta só, e restrita às inscrições do universo proposto: perguntar por linha seria o
+    custo por linha que a 012 recusou, e perguntar pelo Edital inteiro leria o que a tela não usa.
+    """
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    participantes = [str(item) for item in (proposta["universo"].get("participants") or [])]
+    if not participantes:
+        return frozenset()
+    return frozenset(
+        str(identificador)
+        for identificador in ResultadoEtapa.vigentes.filter(
+            edital=edital,
+            inscricao_id__in=participantes,
+            resultado_anterior__isnull=False,
+        ).values_list("inscricao_id", flat=True)
+    )

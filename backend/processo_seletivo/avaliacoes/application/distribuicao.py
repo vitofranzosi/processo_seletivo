@@ -36,6 +36,7 @@ from processo_seletivo.comissoes.domain.etapas import conteudo_vigente, etapas_v
 from processo_seletivo.comissoes.models import AlocacaoEtapa, MembroComissao
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.processos.models import Edital
+from processo_seletivo.recursos.application.selectors import reavaliacoes_pendentes
 from processo_seletivo.shared.api.problems import DomainError
 
 ATRIBUIR = "AVALIACAO_ATRIBUIR"
@@ -307,6 +308,12 @@ def distribuir(
         impedidos, ja_atribuidas, ja_concluidas, ocupacao = _contexto_de_recusa(
             edital, etapa_id, membros, inscricoes
         )
+        # **A reavaliação determinada abre uma vaga a mais, e não é exceção de conveniência.** O
+        # teto do Edital conta as avaliações que a Etapa prevê no curso normal; a reavaliação é
+        # avaliação **ordenada por decisão**, e contá-la contra esse teto tornaria a determinação
+        # inexequível pelas operações que já existem — que é o que a FR-067 exige que ela seja. A
+        # vaga extra existe só enquanto a decisão está pendente, e some quando ela é cumprida.
+        reavaliacoes = reavaliacoes_pendentes(edital, etapa_id=etapa_id)
         nome_da_etapa = etapa.get("name") or str(etapa_id)
 
         criadas, recusas = [], []
@@ -320,14 +327,15 @@ def distribuir(
                     recusas.append(Recusa(membro, inscricao, motivo))
                     continue
                 candidatos.append(membro)
-            vagas = previstas - ocupacao.get(inscricao.id, 0)
+            teto = previstas + (1 if inscricao.id in reavaliacoes else 0)
+            vagas = teto - ocupacao.get(inscricao.id, 0)
             if len(candidatos) > vagas:
                 # **O conjunto não cabe, e o sistema não escolhe quem fica.** Conceder as vagas na
                 # ordem em que os membros vieram faria a ordenação do banco decidir quem avalia
                 # quem — decisão de distribuição, tomada por ninguém, que é exatamente o que
                 # FR-017 e P-002 recusam. Recusa-se a inscrição inteira, e a presidência escolhe.
                 recusas.extend(
-                    Recusa(membro, inscricao, _motivo_do_excesso(vagas, len(candidatos), previstas))
+                    Recusa(membro, inscricao, _motivo_do_excesso(vagas, len(candidatos), teto))
                     for membro in candidatos
                 )
                 continue

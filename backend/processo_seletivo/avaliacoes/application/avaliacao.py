@@ -359,9 +359,14 @@ def _recusar_se_fundamenta_resultado(avaliacao):
         # quem recebeu a recusa procurar qual — e quem responde a um recurso precisa citá-lo. A
         # pontuação **não** entra: quem organiza o trabalho não é necessariamente quem pode vê-la
         # (013, FR-033).
+        # **A mensagem deixou de prometer uma "anulação" que não existe** (018, FR-111). Ela
+        # mandava procurar um ato inexistente, e quem a recebia saía atrás de uma tela que nunca
+        # houve. O ato que existe é o recurso: ele não reabre a avaliação — ele **supera** o
+        # Resultado, criando outro que o sucede e deixando o anterior íntegro.
         f"Esta avaliação fundamenta o Resultado da Etapa {nome_da_etapa} para a inscrição "
         f"{protocolo} (Resultado {resultado.id}) e não pode ser reaberta. Corrigir um Resultado "
-        "consolidado exige anulação, que é ato de outra natureza.",
+        "consolidado é ato de outra natureza: o julgamento de recurso o supera por um Resultado "
+        "novo, sem alterar este.",
         409,
     )
 

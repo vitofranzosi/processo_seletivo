@@ -8,12 +8,14 @@ mensagens que tornam um erro de conversão compreensível antes de chegar ao dom
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from uuid import uuid4
-from zoneinfo import ZoneInfo
 
 from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.editais.domain import secoes
+from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
-ZONA = ZoneInfo("America/Sao_Paulo")
+# A zona institucional mora em `shared/tempo.py` desde a 018: a contagem do prazo recursal é
+# domínio, e domínio não importa de `interface` (T-008).
+ZONA = ZONA_INSTITUCIONAL
 
 RESERVA = [
     ("NONE", "Não há cadastro reserva"),
@@ -200,10 +202,33 @@ def _marcos(dados, prefixo):
                 # Escala e modo viajam mesmo vazios: é a validação que recusa, com mensagem que
                 # nomeia o que falta — e não o formulário, que devolveria silêncio.
                 "rounding": {"scale": escala, "mode": modo},
+                # A janela recursal do marco. **Ausente quando o marco não a declara**, e a
+                # ausência é a afirmação certa: sem prazo publicado, ninguém inventa prazo
+                # (FR-020, FR-028, FR-030).
+                "appealWindow": _janela_recursal(dados, base),
                 "tiebreakers": criterios,
             }
         )
     return marcos
+
+
+def _janela_recursal(dados, base):
+    """`{"admits": ..., "durationDays": ..., "unit": ...}` — ou `None`, quando não declarada.
+
+    A unidade viaja como campo publicado porque a frase normativa do documento a cita: *"no prazo
+    de 5 (cinco) dias corridos"*. Ela é única na V1, e mesmo assim é conteúdo, e não constante de
+    código: o dia em que outra unidade existir, os Editais já publicados continuarão dizendo em que
+    unidade o prazo deles corria.
+    """
+    admite = _texto(dados, f"{base}-appealAdmits") == "sim"
+    dias = _inteiro_opcional(dados, f"{base}-appealDurationDays")
+    if not admite and dias is None:
+        return None
+    return {
+        "admits": admite,
+        "durationDays": dias,
+        "unit": _texto(dados, f"{base}-appealUnit") or "DIAS_CORRIDOS",
+    }
 
 
 def ler_identificacao(dados):
@@ -513,6 +538,9 @@ def _marco_para_o_formulario(marco):
         "normalization": marco.normalizacao,
         "scale": arredondamento.get("scale", ""),
         "mode": arredondamento.get("mode", ""),
+        "appealAdmits": bool((marco.janela_recursal or {}).get("admits")),
+        "appealDurationDays": (marco.janela_recursal or {}).get("durationDays") or "",
+        "appealUnit": (marco.janela_recursal or {}).get("unit") or "DIAS_CORRIDOS",
         "criterios": [
             {
                 "id": str(criterio.id),

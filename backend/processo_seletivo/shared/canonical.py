@@ -70,7 +70,11 @@ from uuid import UUID
 # Etapa. `maxInscricoesPorCandidato` é campo da **raiz**, porque limita o total do candidato no
 # certame; marco e fatos são coleções **dentro do Perfil**. A elevação, que até aqui só sabia
 # reescrever `/stages`, passou a descer um nível (015, T-008).
-SCHEMA_VERSION = 7
+# **8 com a 018**: a janela recursal declarada por marco classificatório (`appealWindow`). A
+# ausência dela significa **janela não declarada** — e não janela de zero dias —, que é o que todo
+# Edital publicado antes deste degrau afirma: o sistema não inventa prazo, e a tempestividade
+# continua sendo juízo de admissibilidade motivado onde a norma não a declarou (FR-028, FR-029).
+SCHEMA_VERSION = 8
 
 
 def _default(value):

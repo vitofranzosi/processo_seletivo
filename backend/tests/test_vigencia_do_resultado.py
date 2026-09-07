@@ -59,6 +59,26 @@ EXCECOES = {
         "revalidação da interposição: precisa achar o objeto superado para recusá-lo com a "
         "mensagem que aponta o vigente, em vez de responder 404"
     ),
+    # O histórico do par responde "o que já valeu", e não "o que vale hoje". Filtrar por vigência
+    # aqui devolveria uma linha só e destruiria exatamente a informação que a consulta existe para
+    # dar — é a leitura em que ver o superado **é** o requisito (FR-064).
+    #
+    # A dispensa alcança o módulo inteiro, e por isso `resultados_visiveis` e as demais leituras
+    # de efeito que moram nele continuam em `vigentes` por escolha, e não por varredura. É a
+    # fraqueza conhecida desta exceção, e o preço de manter as duas consultas juntas: separá-las
+    # em módulos só para satisfazer a varredura esconderia a relação entre elas.
+    "resultados/application/selectors.py": (
+        "histórico do par: a consulta existe para mostrar o superado ao lado do vigente"
+    ),
+    # O cumprimento da reavaliação pergunta "existe **algum** sucessor deste Resultado protegido?",
+    # e a resposta certa inclui o sucessor que já foi sucedido de novo: a decisão foi cumprida
+    # naquele momento, e um segundo recurso depois não a torna pendente outra vez. Filtrar por
+    # vigência aqui reabriria pendências já cumpridas — silenciosamente, e só nos casos raros de
+    # cadeia com três elos (FR-066).
+    "recursos/application/selectors.py": (
+        "cumprimento da reavaliação: existir sucessor cumpre a decisão, mesmo que ele já tenha "
+        "sido sucedido depois"
+    ),
     "avaliacoes/application/avaliacao.py": (
         "guarda de reabertura: a Avaliação fonte de um Resultado superado continua protegida"
     ),

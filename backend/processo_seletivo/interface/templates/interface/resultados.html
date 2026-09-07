@@ -85,6 +85,17 @@ além de tornar indistinguíveis, para a varredura de vocabulário, a página qu
             Motivo: {{ contestacao.motivo }}</p>
           {% endif %}
           {% endwith %}
+          {% with reabilitada=reabilitadas|dicionario_simples:resultado.inscricao_id %}
+          {% if reabilitada %}
+          {% comment %}
+          **Mostrar sem explicar transformaria a reabilitação em erro aparente.** Quem vê alguém
+          eliminada reaparecer habilitada precisa saber que houve deferimento, qual recurso e
+          quando — e a data é a da decisão, que é por onde se procura (FR-077).
+          {% endcomment %}
+          <p class="reabilitada">Reabilitada por recurso: decisão de
+            {{ reabilitada.deferido_em|date:"d/m/Y" }} no recurso {{ reabilitada.recurso }}.</p>
+          {% endif %}
+          {% endwith %}
         </td>
         {% comment %}
         Sem Avaliação não há quem avaliou, e a célula diz isso — quem responde pelo desfecho está

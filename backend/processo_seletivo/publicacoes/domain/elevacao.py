@@ -62,6 +62,20 @@ DEGRAUS_DA_RAIZ = {
     7: {"maxInscricoesPorCandidato": None},
 }
 
+# **O degrau 8 é o terceiro nível**, e o primeiro dentro de uma coleção que já mora no Perfil. A
+# janela recursal é declarada por marco, e não pelo Edital: marcos diferentes admitem recurso ou
+# não, e por prazos diferentes.
+#
+# **`None` significa janela não declarada — e não janela de zero dias.** É o que a ausência diz em
+# todo Edital publicado antes deste degrau, e é uma afirmação, não uma omissão a corrigir: sem
+# declaração o sistema não inventa prazo, e a tempestividade volta a ser juízo de admissibilidade
+# motivado, que é a degradação que a D-004 declarou (FR-028, FR-029).
+DEGRAUS_DE_MARCO = {
+    8: {"appealWindow": None},
+}
+
+COLECAO_DE_MARCOS = "classificationMilestones"
+
 AUSENCIA_DE_PERFIL = {
     chave: valor for degrau in DEGRAUS_DE_PERFIL.values() for chave, valor in degrau.items()
 }
@@ -126,6 +140,25 @@ def elevar_perfil(perfil, *, de=VERSAO_DE_ORIGEM):
     return {**perfil, **faltando} if faltando else perfil
 
 
+def elevar_marco(marco, *, de=VERSAO_DE_ORIGEM):
+    """O marco classificatório na forma vigente. Simétrico a `elevar_etapa` e `elevar_perfil`.
+
+    Terceiro nível da árvore, e por isso terceiro dicionário: cada um responde por um nível, e
+    fundi-los obrigaria a função a descobrir onde cada chave mora — decidir por presença de chave em
+    vez de por posição declarada, que é o modo de falha que este módulo recusa em toda parte.
+    """
+    if not isinstance(marco, dict):
+        return marco
+    faltando = {
+        chave: valor
+        for versao, degrau in sorted(DEGRAUS_DE_MARCO.items())
+        if versao > de
+        for chave, valor in degrau.items()
+        if chave not in marco
+    }
+    return {**marco, **faltando} if faltando else marco
+
+
 def elevar(conteudo):
     """O conteúdo publicado na versão canônica vigente, sem inventar nada.
 
@@ -148,7 +181,7 @@ def elevar(conteudo):
     )
     perfis = conteudo.get("profiles")
     perfis_elevados = (
-        [elevar_perfil(item, de=declarada) for item in perfis]
+        [_elevar_perfil_e_marcos(item, declarada) for item in perfis]
         if isinstance(perfis, list)
         else perfis
     )
@@ -172,6 +205,25 @@ def elevar(conteudo):
     if isinstance(perfis, list):
         elevado["profiles"] = perfis_elevados
     return elevado
+
+
+def _elevar_perfil_e_marcos(perfil, declarada):
+    """O Perfil elevado, e os marcos dentro dele — na mesma passagem.
+
+    Os marcos são coleção **do Perfil**, e por isso não têm passagem própria em `elevar`: percorrer
+    a lista de perfis duas vezes para elevar dois níveis daria o mesmo resultado pagando duas
+    varreduras, e faria a ordem entre elas virar detalhe a lembrar.
+    """
+    elevado = elevar_perfil(perfil, de=declarada)
+    if not isinstance(elevado, dict):
+        return elevado
+    marcos = elevado.get(COLECAO_DE_MARCOS)
+    if not isinstance(marcos, list):
+        return elevado
+    marcos_elevados = [elevar_marco(item, de=declarada) for item in marcos]
+    if marcos_elevados == marcos:
+        return elevado
+    return {**elevado, COLECAO_DE_MARCOS: marcos_elevados}
 
 
 def _e_entidade_de_etapa(target_path):
@@ -234,13 +286,45 @@ def endereca_etapa(target_path):
     return _e_entidade_de_etapa(target_path or "") == "entidade"
 
 
+def _e_entidade_de_marco(target_path):
+    """Se o caminho endereça um marco classificatório inteiro — e não um campo dele.
+
+    O endereço do marco passa **dentro** do Perfil, e por isso não é prefixo fixo:
+
+        /profiles/id=<uuid>/classificationMilestones/-           acréscimo
+        /profiles/id=<uuid>/classificationMilestones/id=<uuid>   substituição do marco inteiro
+        /profiles/id=<uuid>/classificationMilestones             a coleção
+
+    `.../classificationMilestones/id=<uuid>/appealWindow` carrega o objeto da janela, e elevá-lo
+    seria corrompê-lo — quem o endereça já está escrevendo a forma nova.
+    """
+    caminho = target_path or ""
+    marca = f"/{COLECAO_DE_MARCOS}"
+    if not caminho.endswith(marca) and marca + "/" not in caminho:
+        return None
+    if caminho.endswith(marca):
+        return "colecao"
+    resto = caminho.split(marca + "/", 1)[1]
+    return None if "/" in resto else "entidade"
+
+
 def elevar_valor(target_path, valor):
-    """O `newValue` de uma Alteração, elevado quando — e só quando — ele é uma Etapa."""
+    """O `newValue` de uma Alteração, elevado quando — e só quando — ele é entidade elevável.
+
+    Duas coleções alcançam a elevação: as Etapas, desde a 012, e os marcos classificatórios, desde
+    a 018. Nas duas a regra é a mesma — a **entidade inteira** é elevada, e o campo isolado não é,
+    porque quem endereça um campo está escrevendo a forma que ele já tem.
+    """
     forma = _e_entidade_de_etapa(target_path or "")
     if forma == "entidade":
         return elevar_etapa(valor)
     if forma == "colecao" and isinstance(valor, list):
         return [elevar_etapa(item) for item in valor]
+    forma_do_marco = _e_entidade_de_marco(target_path)
+    if forma_do_marco == "entidade":
+        return elevar_marco(valor)
+    if forma_do_marco == "colecao" and isinstance(valor, list):
+        return [elevar_marco(item) for item in valor]
     return valor
 
 
