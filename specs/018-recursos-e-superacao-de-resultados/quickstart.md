@@ -13,7 +13,7 @@ O estado que a 017 já sabe produzir — e que `seed_demo` monta:
   Etapa 1** — ela é a protagonista do primeiro passo;
 - `AtoDeOrdenacao` emitido e vigente, e `PublicacaoResultado` **preliminar** publicada.
 
-Atores: **Helena**, candidata eliminada na Etapa 1 e fora do universo do ato; **Ana**, candidata
+Atores: **Elisa**, candidata eliminada na Etapa 1 e fora do universo do ato; **Ana**, candidata
 classificada; `júlia.julgadora` (papel **Julgador**, com `recurso:julgar`); `paulo.presidente`
 (presidência, que consolidou os Resultados); `paula.publicadora` (`resultado:publicar`);
 `alice.avaliadora` e `otavio.avaliador`.
@@ -28,11 +28,25 @@ cd backend && uv run python manage.py runserver
 
 > A interface administrativa exige o seletor de identidade ligado; sem ele, `/gestao/` devolve 503.
 
+**Os quatro estados da janela não cabem num Edital só**, e o passo 11 precisa dos quatro. Cada um
+sai do mesmo `seed_demo`, em banco próprio, pelos mesmos commands da aplicação:
+
+| estado | como semear |
+|---|---|
+| declarada e **aberta** | `seed_demo` (o padrão) |
+| declarada e **encerrada** | `seed_demo --dias-atras 10` — o certame inteiro ocorreu há dez dias |
+| **não declarada** | `seed_demo --janela-recursal ausente` — como todo Edital anterior ao degrau 8 |
+| **negada** | `seed_demo --janela-recursal negada` — o marco declara `admits: false` |
+
+Nenhuma das duas opções afrouxa regra: o certame percorre o mesmo caminho, com as mesmas aferições.
+O que muda é **quando** ele ocorreu e **o que o Edital declarou** — e sem elas um prazo de cinco dias
+declarado hoje só poderia ser demonstrado aberto.
+
 ---
 
-## 1 — Helena finalmente vê o que aconteceu com ela
+## 1 — Elisa finalmente vê o que aconteceu com ela
 
-Como **Helena**, abrir o acompanhamento da própria Inscrição.
+Como **Elisa**, abrir o acompanhamento da própria Inscrição.
 
 Antes desta feature, ela via "✓ Inscrição enviada" e o cronograma, e nada mais. Agora lê o próprio
 Resultado da Etapa 1, com a consequência e o **motivo escrito** — *"parecer desfavorável na análise
@@ -44,7 +58,7 @@ Conferir que ela **não** vê: Resultado de terceiro, lista de Resultados, parec
 
 Fecha o E2E17-004 pela raiz.
 
-## 2 — Helena recorre
+## 2 — Elisa recorre
 
 No mesmo lugar, a ação **Recorrer** aparece ao lado do Resultado. Abrir, escrever a fundamentação,
 confirmar.
@@ -59,7 +73,7 @@ peça: é uma capacidade com dois objetos, e não dois workflows (FR-002).
 
 ## 3 — Quem produziu o ato não julga
 
-Como **paulo.presidente**, que consolidou o Resultado de Helena: abrir o recurso dela. Admitir e
+Como **paulo.presidente**, que consolidou o Resultado de Elisa: abrir o recurso dela. Admitir e
 julgar são **recusados**, e a recusa nomeia o impedimento (FR-039, SC-005).
 
 Como **paula.publicadora**, que publicou o resultado que Ana atacou: recusada pela mesma porta no
@@ -69,15 +83,15 @@ Como **alice.avaliadora**, sem a capacidade: não alcança recurso nenhum (SC-00
 
 ## 4 — A admissibilidade
 
-Como **júlia.julgadora**, abrir o recurso de Helena e **admitir**, com motivo escrito.
+Como **júlia.julgadora**, abrir o recurso de Elisa e **admitir**, com motivo escrito.
 
 Tentar julgar um recurso **ainda não admitido**: recusado — receber a peça não é admiti-la (FR-036).
 
-Como **Helena**, reabrir o acompanhamento: a admissibilidade está lá, com o motivo.
+Como **Elisa**, reabrir o acompanhamento: a admissibilidade está lá, com o motivo.
 
 ## 5 — Deferir fixando a correção
 
-Como **júlia.julgadora**, julgar o recurso de Helena: **deferir com correção fixada**, declarando o
+Como **júlia.julgadora**, julgar o recurso de Elisa: **deferir com correção fixada**, declarando o
 sentido favorável e a motivação.
 
 O que acontece na mesma transação (SC-007):
@@ -112,7 +126,7 @@ decisão.
 
 Como **paulo.presidente**, abrir a Etapa 2, que estava consolidada para todos.
 
-Helena aparece como **pendente**, nomeada — *"reabilitada por recurso deferido em DD/MM"* (FR-077,
+Elisa aparece como **pendente**, nomeada — *"reabilitada por recurso deferido em DD/MM"* (FR-077,
 SC-012). Ela é distribuível, avaliável e consolidável pelas operações que já existem: nenhum estado
 de reintegração foi criado.
 
@@ -159,30 +173,49 @@ Como **paula.publicadora**, tentar publicar como **definitivo**, em cada estado:
 
 Em todos, publicar como **preliminar** continua possível (SC-017).
 
+*"Tudo resolvido"* não cabe no banco padrão enquanto a janela declarada corre: percorra-o no banco
+semeado com `--janela-recursal ausente`, onde o que separa a definitiva do resultado é só a
+declaração expressa.
+
 Sem janela estruturada no Edital, a definitiva exige a **declaração expressa** de encerramento do
-prazo, gravada com autor, instante e texto (SC-018).
+prazo, gravada com autor, instante e texto — e **consultável**: ela aparece junto da publicação que
+a exigiu, na tela de Resultados divulgados do marco (SC-018).
 
 Publicada a definitiva sobre o ato corrigido, conferir que ela é apresentada **pela causa** —
 *"Resultado definitivo, retificado em DD/MM em razão do julgamento do recurso…"* — sem natureza nova
-no vocabulário (SC-019), e que a vigente **diz que é a vigente**.
+no vocabulário, na página **e no documento** (SC-019), e que a vigente **diz que é a vigente**. A
+causa vale para qualquer espécie que corrija o ato, e não só para a providência que o cita.
 
 ## 11 — A janela recursal
 
 *Requer o degrau 8 — é a última fatia, e o roteiro até aqui funciona sem ela.*
 
-Como elaborador, compor um marco declarando **5 dias corridos**. Publicar o Edital e conferir a frase
-no documento.
+Como elaborador, compor um marco no passo *Classificação*: a declaração é uma escolha de **três** —
+*admite recurso, no prazo abaixo* · *não admite recurso por esta via* · *não declarar nada sobre
+recurso* —, e não uma caixa de marcação, porque silêncio e negativa não são a mesma coisa. Declarar
+**5 dias corridos**, publicar o Edital e conferir a frase no documento:
 
-Publicar o resultado. Como candidato, conferir na página e na Inscrição os instantes exatos de
-abertura e encerramento, na zona institucional (SC-014).
+> Recurso: Caberá recurso no prazo de 5 (cinco) dias corridos, contados da divulgação do resultado.
 
-Interpor dentro do prazo: aceito, e a peça registra que estava dentro da janela.
+Publicar o resultado. Como candidato, conferir os instantes exatos: o formulário de interposição
+nomeia o encerramento **ao lado de cada objeto** — *"Classificação final — até DD/MM/AAAA às 23h59"*
+—, porque dois marcos que alcançam a mesma Etapa têm prazos diferentes.
 
-Adiantar o relógio para depois do encerramento e tentar de novo: **recusado**, citando a norma, a
-abertura e o encerramento — e a ação não é oferecida na tela.
+Interpor dentro do prazo: aceito, e a peça **mostra** a janela que gravou — *"De … até … · Dentro do
+prazo"* (SC-014).
 
-Num Edital publicado **antes** do degrau: zero prazos exibidos, interposição aberta, e a
-tempestividade decidida no juízo de admissibilidade com motivo (SC-015, SC-016).
+No banco semeado com `--dias-atras 10`, a janela já se encerrou: a ação **não é oferecida**, e o
+endereço do formulário devolve ao acompanhamento em vez de mostrar um botão que sempre recusaria. A
+recusa nominal — a norma, a abertura e o encerramento — é a que a tentativa de publicar como
+definitivo exibe enquanto o prazo corre.
+
+Com `--janela-recursal ausente`, o Edital publicado **antes** do degrau: zero prazos exibidos,
+interposição aberta, e a tempestividade decidida no juízo de admissibilidade com motivo (SC-015,
+SC-016).
+
+Com `--janela-recursal negada`, o marco que **não** admite recurso: o documento publicado escreve a
+norma — *"Não caberá recurso contra o resultado deste marco."* —, a ação não é oferecida e a
+negativa não vira ausência (FR-113).
 
 ---
 
@@ -190,7 +223,7 @@ tempestividade decidida no juízo de admissibilidade com motivo (SC-015, SC-016)
 
 ```text
 resultado divulgado
-  → Helena vê o próprio Resultado da Etapa            (1)
+  → Elisa vê o próprio Resultado da Etapa            (1)
   → recorre e recebe protocolo                        (2)
   → quem produziu o ato é recusado                    (3)
   → a autoridade elegível admite e julga com motivo   (4, 5)

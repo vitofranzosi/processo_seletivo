@@ -254,7 +254,7 @@ ainda não existia.
 | Fase | Entrega | Termina quando |
 |---|---|---|
 | **F0** | **Fundação persistente, e só o que é indivisível**: app `recursos` com as três tabelas, constraints e triggers; sucessão do `ResultadoEtapa`; manager `vigentes` consumido em toda leitura de efeito; teste estrutural | `recursos/0001` e `resultados/0005` aplicam do zero e a partir da anterior; o teste estrutural falha em uso não declarado de `ResultadoEtapa.objects`; a suíte inteira continua verde em PostgreSQL |
-| **F1** | O candidato vê o próprio Resultado da Etapa | Helena, eliminada na Etapa 1 e fora do universo do ato, lê o próprio Indeferimento com o motivo escrito |
+| **F1** | O candidato vê o próprio Resultado da Etapa | Elisa, eliminada na Etapa 1 e fora do universo do ato, lê o próprio Indeferimento com o motivo escrito |
 | **F2** | Interposição, protocolo, acompanhamento, recusa por objeto superado — **sobre a fundação da F0** | O candidato recorre pelo portal e recebe protocolo; a segunda interposição é recusada nomeando a primeira |
 | **F3** | Papel `julgador`, impedimento que bloqueia, admissibilidade motivada, decisão nas quatro espécies, e o deferimento que fixa correção superando na mesma transação | Quem consolidou o Resultado atacado é recusado; o Resultado sucessor nasce, o anterior permanece, o ato fica obsoleto e a publicação é recusada com caminho |
 | **F4** | Reavaliação determinada: pendência nomeada, consolidação que produz o sucessor, *non reformatio* nos dois pontos | A Etapa mostra a pendência, a nova Avaliação é consolidada como sucessor, e a pior é recusada |

@@ -335,12 +335,27 @@ sendo juízo humano onde ela não a declarou.
 - [X] T124 [P] Testar que nada é notificado em `backend/tests/integration/recursos/test_julgar.py`: nenhuma mensagem é disparada em interposição, admissibilidade ou decisão (FR-109)
 - [X] T126 Recusar a interposição no marco que declara `admits: false`, em `backend/processo_seletivo/recursos/domain/janela.py` e `backend/processo_seletivo/recursos/application/interpor.py`, com código próprio e sem oferecer a ação na tela; e testá-la em `backend/tests/integration/recursos/test_convergencia.py` (FR-113, D-004)
 - [X] T127 Estender `backend/processo_seletivo/processos/management/commands/seed_demo.py` com o cenário e os atores da 018 — a eliminada na Etapa 1, a janela declarada num marco, `julia.julgadora` com o papel Julgador e um avaliador diverso —, **sem criar atalho de demonstração para comportamento que o produto não oferece** (pré-requisito da T125)
-- [X] T125 Executar o roteiro do [quickstart.md](./quickstart.md) de ponta a ponta pelo navegador, alternando os atores, e registrar as evidências (FR-106, SC-024)
+- [X] T125 Executar o roteiro do [quickstart.md](./quickstart.md) de ponta a ponta pelo navegador, alternando os atores, e registrar as evidências em [doc/e2e/018-exploratoria/relatorio.md](../../doc/e2e/018-exploratoria/relatorio.md) (FR-106, SC-024)
 
-  **Executado em 07/09/2026**, contra o servidor deste worktree em `127.0.0.1:8018`, com o banco
-  semeado por `seed_demo`. As evidências de cada passo, as duas ressalvas sobre o instrumento e os
-  dois defeitos do seed que a caminhada encontrou estão em
-  [evidencias-t125.md](./evidencias-t125.md).
+### Correções que a caminhada da T125 encontrou
+
+Seis defeitos que nenhum teste alcançava, todos com teste que falha sem a correção. O padrão entre
+elas está no relatório: o domínio distinguia estados que a **borda** colapsava.
+
+- [X] T128 Exibir ao candidato os instantes da janela — no formulário de interposição, por objeto, e na peça interposta — em `backend/processo_seletivo/recursos/application/interpor.py`, `backend/processo_seletivo/recursos/application/selectors.py`, `backend/processo_seletivo/portal/templates/portal/recorrer.html` e `recurso.html`; testar em `backend/tests/portal/test_janela_na_tela.py` (FR-024, FR-028, SC-014)
+- [X] T129 Apresentar a declaração expressa de encerramento do prazo junto da publicação que a exigiu, em `backend/processo_seletivo/interface/templates/interface/publicacoes_do_marco.html`; testar em `backend/tests/interface/test_publicacoes_do_marco.py` (FR-085, SC-018)
+- [X] T130 Trocar a caixa de marcação da janela por escolha de três — admite, não admite, não declarar — em `backend/processo_seletivo/interface/forms.py` e `backend/processo_seletivo/interface/templates/interface/_marco.html`; testar em `backend/tests/interface/test_janela_no_assistente.py` (FR-020, FR-030, FR-113)
+- [X] T131 Escrever no documento a negativa declarada, distinguindo-a do silêncio do Edital, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, e fazer o texto padrão da seção "Dos Recursos" remeter ao marco em `backend/processo_seletivo/editais/domain/secoes.py`; testar em `backend/tests/unit/publicacoes/test_pdf.py` e `backend/tests/unit/editais/test_secao_de_recursos.py` (FR-028, FR-113)
+- [X] T132 Aceitar a vírgula decimal na pontuação da correção e recusar o que não é número com motivo, em `backend/processo_seletivo/interface/views.py` e `backend/processo_seletivo/recursos/domain/consequencia.py`; testar em `backend/tests/interface/test_pontuacao_da_correcao.py` (FR-059)
+- [X] T133 Derivar a causa da retificação também pela cadeia — não só pela citação — e congelá-la no conteúdo publicado, para que página e documento digam a mesma frase, em `backend/processo_seletivo/recursos/application/selectors.py`, `backend/processo_seletivo/divulgacao/domain/conteudo.py`, `backend/processo_seletivo/divulgacao/application/publicar.py`, `backend/processo_seletivo/divulgacao/infrastructure/documento.py` e `backend/processo_seletivo/portal/views.py`; testar em `backend/tests/portal/test_definitiva_retificada.py` (FR-088, SC-019)
+- [X] T134 Semear os quatro estados da janela em bancos independentes, com `--dias-atras` e `--janela-recursal`, em `backend/processo_seletivo/processos/management/commands/seed_demo.py` (pré-requisito da T125)
+
+  **Executado em 07/09/2026**, contra quatro bancos independentes semeados por `seed_demo` —
+  `ps018_demo` (janela aberta), `ps018_prazo` (janela encerrada), `ps018_antigo` (janela não
+  declarada) e `ps018_negado` (`admits: false`) —, servidos deste worktree nas portas 8018 a 8021.
+  As evidências de cada passo, as três ressalvas sobre o instrumento, os dois defeitos do seed e os
+  **seis do produto** que a caminhada encontrou estão em
+  [doc/e2e/018-exploratoria/relatorio.md](../../doc/e2e/018-exploratoria/relatorio.md).
 
 ---
 
@@ -357,7 +372,7 @@ Setup (T001–T003)
           │             └─▶ US8 (T078–T083)   precisa de US4 (há sucessor habilitante)
           │                    └─▶ US7 (T084–T100)  precisa de US5 e US8 (dois dos seis fatos)
           │                           └─▶ US6 (T101–T117)
-          └────────────────────────────────────────▶ Polish (T118–T125)
+          └────────────────────────────────────────▶ Polish (T118–T134)
                                                      depois das histórias, não da fundação
 ```
 
