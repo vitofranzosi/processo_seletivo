@@ -1,405 +1,211 @@
-# T125 — o roteiro percorrido pelo navegador
+# Auditoria exploratória E2E — Recursos e Superação de Resultados (018)
 
-**Executado em** 07/09/2026, pelas telas, em **quatro bancos independentes** — porque quatro
-estados da janela recursal não cabem numa jornada só, e forçá-los no mesmo Edital exigiria mexer no
-banco durante o percurso:
+## 1. Resumo executivo
 
-| banco | porta | o que ele existe para mostrar |
-|---|---|---|
-| `ps018_demo` | 8018 | o roteiro inteiro, com janela declarada e **aberta** |
-| `ps018_prazo` | 8019 | o mesmo certame semeado **dez dias atrás**: a janela já se encerrou |
-| `ps018_antigo` | 8020 | Edital **sem** declaração de janela — o estado de todo Edital anterior ao degrau 8 |
-| `ps018_negado` | 8021 | marco que declara **`admits: false`**: não cabe recurso por esta via |
+O ciclo administrativo **fecha para três das quatro espécies de decisão**. Foi possível, só pelo navegador, publicar um resultado preliminar, ver o candidato consultá-lo, interpor recurso, admitir, julgar nas quatro espécies, produzir a superação append-only do `ResultadoEtapa`, reabilitar quem tinha sido eliminado numa Etapa anterior, fazê-lo progredir retroativamente, tornar a classificação obsoleta, emitir o ato sucessor e republicar — com a publicação anterior preservada e a Área do Candidato acompanhando cada passo.
 
-Os quatro nascem do mesmo `seed_demo`, pelos mesmos commands da aplicação. Duas opções novas o
-permitem — `--dias-atras`, que roda a demonstração como se ela tivesse ocorrido há N dias, e
-`--janela-recursal {declarada,negada,ausente}`. Nenhuma das duas afrouxa regra: o certame percorre
-o mesmo caminho, com as mesmas aferições, e o que muda é **quando** ele ocorreu e **o que o Edital
-declarou**. Sem elas, um prazo de cinco dias declarado hoje só poderia ser demonstrado aberto — e a
-recusa depois do encerramento exigiria esperar cinco dias.
+As três decisões que ficaram pendentes antes da spec foram implementadas e verificadas:
 
-A candidata que o roteiro chama de **Elisa Moraes** é a que os documentos da 017 chamavam de
-Helena. O `quickstart` e o `plan` foram alinhados ao nome que o `seed_demo` semeia; os relatórios da
-015 e da 017 continuam com o elenco que eles registraram, porque são registro do que aconteceu.
+- **A — definitividade** deixou de ser escolha livre. É porta de fato verificável: recurso pendente, reingresso pendente, reavaliação pendente, providência pendente e janela aberta. Testada e recusando.
+- **B — resultado de Etapa ao candidato** foi entregue. Helena, eliminada na Etapa 1 e fora de qualquer marco, agora vê "Analise de requisitos — Eliminada — a avaliação concluiu Indeferida" na própria inscrição.
+- **C — superação append-only** foi entregue. O Resultado corrigido nasce como linha nova citando a anterior, com motivo; a linha original permanece intacta no banco.
 
-**Como foi percorrido.** Pelas telas, alternando atores, sem shell e sem banco durante a jornada.
-Três ressalvas honestas sobre o instrumento, e não sobre o produto:
+**O achado que impede o fechamento é um só, e é grave.** A espécie `REAVALIACAO_DETERMINADA` — "deferir determinando reavaliação" — **não tem como ser cumprida pela interface**. A decisão determina que a Etapa reavalie; a única forma de produzir a nova avaliação é reabrir a conclusão; e a reabertura é recusada, por regra da 013, exatamente porque aquela avaliação fundamenta um Resultado consolidado. A recusa orienta a usar o julgamento de recurso — que é o que acabou de acontecer, e cuja espécie escolhida, por desenho, não cria sucessor. Como a reavaliação pendente é um dos fatos que barram a definitiva, o marco fica **permanentemente impedido de chegar a resultado definitivo**.
 
-- os cliques do painel de navegação falhavam de forma intermitente (a aba fica oculta e a página
-  não é desenhada). Onde isso ocorreu, o formulário **da própria página** foi submetido por
-  `requestSubmit()` — é o mesmo `POST`, com o mesmo `CSRF` e a mesma validação de servidor; o que
-  se perde é a prova do clique, não a do fluxo;
-- o código de acesso do candidato foi lido do console do servidor, que é onde o *backend* de e-mail
-  de desenvolvimento o escreve. É o que qualquer pessoa faria na demonstração;
-- **não há capturas de tela.** Esta sessão não consegue gravar imagem em arquivo — as capturas
-  voltam para a conversa, não para o disco —, e prometer numeradas como nas auditorias 015 e 017
-  seria prometer o que não se entrega. A evidência aqui é **transcrição literal** do que cada tela
-  respondeu, com protocolos, instantes e identificadores reais, verificáveis nos bancos acima
-  enquanto eles existirem.
+Os outros quatro cenários passaram: indeferimento sem efeito, correção direta com R1→R2, reabilitação com progressão retroativa, e a porta da definitividade recusando em duas situações distintas.
 
 ---
 
-## O que cada passo mostrou
+## 2. Ambiente e base
 
-| # | passo | evidência |
-|---|---|---|
-| 1 | **Elisa vê o próprio Resultado** | *"Prova objetiva — Eliminada · pontuação 4,0000 — pontuação inferior à nota mínima da Etapa (4,0000 < 6,0000)"*. Ela está **fora do universo do ato** e vê assim mesmo. Fecha o E2E17-004 |
-| 2 | **Elisa recorre** | protocolo `REC-2026-PQ6BRQ2F`, instante, situação *"Aguardando análise de admissibilidade"* e objeto nomeado pela Etapa — *"o meu resultado da Prova objetiva"* |
-| 3 | **Quem produziu o ato não julga** | como `paulo.presidente`, que consolidou: *"Você não pode julgar este recurso. Você consolidou o resultado atacado."* — e **os botões não são oferecidos** |
-| 4 | **A admissibilidade** | como `julia.julgadora`: admitida com motivo escrito, e o formulário de julgamento aparece com as quatro espécies e a Etapa alcançada |
-| 5 | **Deferir fixando a correção** | sucessor **HABILITADA · 6,5000**, com a consequência **derivada** da mínima 6,0 — o formulário não tem campo de consequência. O atacado permanece **ELIMINADA · 4,0000** |
-| 6 | **A cadeia a jusante reage** | a tela do marco diz *"O ato vigente está obsoleto"* e nomeia as **duas** causas: *"participante reingressou"* e *"resultado superado por recurso"*. Nada foi emitido nem publicado automaticamente |
-| 7 | **A progressão retroativa** | na Mesa da Etapa 2: *"Reabilitada por recurso: decisão de 07/09/2026 no recurso REC-2026-PQ6BRQ2F."* |
-| — | **O que a candidata lê ao fim** | *"Habilitada · pontuação 6,5000"*, com *"Resultado corrigido em cumprimento da decisão de 07/09/2026 no recurso REC-2026-PQ6BRQ2F. O resultado anterior permanece registrado."*, e o recurso listado em **Seus recursos** |
-| — | **A janela declarada** | a lista administrativa mostra **"Dentro do prazo"** — o degrau 8 computando a janela de 5 dias que o `seed_demo` declara no marco |
-
-### Passo 6 e 7 — a cascata de bloqueio, e o desbloqueio
-
-| o que se fez | o que a tela respondeu |
+| item | valor |
 |---|---|
-| como `paula.publicadora`, abrir a prévia com a pendência aberta | *"Este ato não pode ser divulgado — Há inscrição reabilitada por recurso cujo resultado ainda não foi consolidado numa Etapa que este marco enumera. Consolide o resultado dessa inscrição na Etapa e emita o ato sucessor antes de divulgar."* |
-| como `paulo.presidente`, distribuir a reabilitada na Etapa 2 | *"1 atribuída."* — a inscrição reaberta é distribuível pelas operações que já existem |
-| como `otavio.avaliador`, concluir a avaliação | a Mesa passa a mostrar `1 de 1` concluída |
-| voltar à Mesa como presidência | a linha diz **"pronta para consolidar"**, e continua nomeada: *"Reabilitada por recurso: decisão de 07/09/2026 no recurso REC-2026-PQ6BRQ2F."* |
-| consolidar | *"1 consolidada(s), 0 recusada(s)."* |
-| reabrir a prévia como `paula.publicadora` | **a recusa por reingresso desapareceu sozinha** e deu lugar à de ato obsoleto: *"A regra ou o universo mudaram desde a emissão deste ato… Emita o ato sucessor na tela de classificação do marco e publique o ato vigente."* |
+| commit | `368d9cd` (merge do PR #50 — SPEC 018) |
+| banco | PostgreSQL local `ps018_audit`, criado vazio e migrado |
+| servidor | `runserver` :8188, seletor de identidade ligado |
+| ferramentas | Playwright (Chromium), mailpit, `psql` para as provas de banco |
+| screenshots | **41** |
+| candidatos | 6 |
+| recursos | 4 (um por espécie de desfecho) |
+| publicações | 2 (P1 preliminar, P2 preliminar sucessora) |
+| atos de ordenação | 2 (C1, C2) |
 
-A troca de uma recusa pela outra é o ponto: a pendência reaberta é **derivada**, e some quando o
-fato que a produzia deixa de existir — ninguém deu baixa em nada.
+**Atores:** `elena.elaboradora`, `wagner.homologador`, `paula.publicadora`, `gustavo.gestor`, `paulo.presidente`, `alice.avaliadora`, `otavio.avaliador`, **`julia.julgadora`** (papel `julgador`, exclusivo de `recurso:julgar`) e seis candidatos. Sem superusuário.
 
-### Passo 2 — os subcenários da interposição
+**Preparação fora do produto:** banco vazio, seletor de identidade, mailpit, dois PDFs fictícios. Nada do domínio.
 
-| o que se fez | o que a tela respondeu |
-|---|---|
-| Ana, **dentro** do universo do ato, abre o formulário | três objetos atacáveis: *"Classificação final"*, *"Prova objetiva"*, *"Análise de títulos"* — a publicação **e** os dois Resultados (D-001) |
-| Ana recorre da **publicação** | `REC-2026-UQMBSGYA`, objeto *"o resultado divulgado da Classificação final"* — nomeado pelo Marco |
-| reabrir o formulário | a publicação **sumiu da lista**: o que já foi recorrido não é oferecido de novo (FR-013) |
-| submeter a mesma página **duas vezes**, sem recarregar | um recurso só. A segunda submissão cai no redirecionamento de "nada a contestar", **antes** de chegar à reserva de idempotência |
-| Bruno recorre da Prova objetiva e depois força o mesmo objeto | *"Você já recorreu deste mesmo resultado, pelo recurso REC-2026-CRKD55KV."* |
-
-**Uma observação sobre o duplo clique, e vale registrá-la.** Pela tela, quem já recorreu de tudo é
-barrado pelo redirecionamento da FR-013 — a reserva de idempotência é a **segunda** linha, e só é
-alcançada por quem chega por outro caminho. As duas garantias existem e as duas funcionam; o que a
-caminhada mostra é qual delas responde primeiro.
-
-### Passo 3 — o impedimento, nos dois ramos
-
-| ator | o que a tela respondeu |
-|---|---|
-| `paulo.presidente`, que consolidou o Resultado | *"Você não pode julgar este recurso. Você consolidou o resultado atacado."* — e **nenhum botão** |
-| `paula.publicadora`, no recurso contra a publicação que ela praticou | *"Você não pode julgar este recurso. Você praticou a publicação atacada."* — e nenhum botão |
-| `joana.avaliadora`, sem `recurso:julgar` | **403** na peça e **403** na lista de recursos do Edital |
-
-### Passo 4 — julgar antes de admitir
-
-Forçando o julgamento de uma peça ainda não apreciada: **409**, com
-*"Este recurso não foi admitido, ou ainda não teve a admissibilidade apreciada."* Receber a peça
-não é admiti-la.
-
-### Passo 5 — o histórico do par
-
-No painel da Etapa, o par superado abre em **Histórico deste par — 2 resultados**:
-
-```text
-ELIMINADA · 4,0000 — pontuação inferior à nota mínima da Etapa (4,0000 < 6,0000)
-                     paulo.presidente em 07/09/2026 10:23
-HABILITADA · 6,5000 — pontuação igual ou superior à nota mínima da Etapa (6,5000 ≥ 6,0000)
-                     julia.julgadora em 07/09/2026 10:25, por decisão no recurso REC-2026-PQ6BRQ2F
-                     — vigente
-```
-
-O superado aparece **como ele afirmou**: pontuação, consequência e motivo intactos.
-
-### Passo 8 — a tentativa de piora
-
-Com o recurso de Ana admitido, o formulário oferece *"Prova objetiva — Habilitada, 8,5000"*.
-Fixando **5,0000**:
-
-> **422** — *"A correção proposta pioraria a situação de quem recorreu, e o recurso não pode
-> agravá-la. Nenhum resultado sucessor foi criado."*
-
-O Resultado dela permanece **HABILITADA · 8,5000**, e nenhuma decisão foi gravada.
-
-### Passo 9 — reavaliação determinada, e a porta dos fundos
-
-| o que se fez | o que a tela respondeu |
-|---|---|
-| deferir determinando reavaliação | a decisão nasce e o efeito diz *"Nenhum — este recurso não produziu resultado sucessor."*; o vigente segue **HABILITADA · 8,5000** |
-| abrir a Mesa da Etapa | a linha diz **"reavaliação determinada por recurso, ainda não cumprida"** — e não "já consolidada" |
-| distribuir a reavaliação a `otavio.avaliador` | *"1 atribuída."* — a vaga extra da reavaliação, sem a qual o teto do Edital recusaria |
-| `otavio` conclui com **6,0** — pior que os 8,5 protegidos | a avaliação é gravada normalmente |
-| a presidência tenta consolidar | *"0 consolidada(s), 1 recusada(s)"* — *"a reavaliação produziu resultado pior que o protegido pela decisão, e o recurso não pode agravar a situação de quem recorreu; a avaliação fica registrada e o resultado não é superado"* |
-
-A *non reformatio in pejus* **não é contornável pela reavaliação ordenada**, e o juízo do avaliador
-não é apagado para consegui-lo.
-
-### Passos 10 e 11 — a definitividade ganha lastro, e a janela é aplicada
-
-Os fatos foram alcançados **em cascata**, um de cada vez, resolvendo o anterior — que é como a
-instituição os encontra:
-
-| fato | o que a tela respondeu ao pedido de `DEFINITIVA` |
-|---|---|
-| **1 · recurso pendente** | *"Há recurso pendente de julgamento sobre este marco: chamar de definitivo o que ainda está em disputa afirma o que não aconteceu. Aguarde o julgamento, ou publique como resultado preliminar."* |
-| **1 · a preliminar passa** | com o **mesmo** recurso pendente: *"Resultado publicado. Ele já pode ser consultado publicamente."* — a assimetria da FR-083 |
-| **2 · reavaliação não cumprida** | *"Há reavaliação determinada por recurso e ainda não cumprida numa Etapa que este marco enumera. Conclua a reavaliação, consolide o resultado e emita o ato sucessor."* |
-| **3 · providência não cumprida** | *"Há decisão de recurso que determinou providência a jusante e ainda não cumprida neste marco. Emita o ato sucessor **citando a decisão** e publique aquele ato."* |
-| **4 · janela aberta** | *"O prazo recursal deste marco ainda está aberto: ele se encerra em 12/09/2026 às 23h59. Aguarde o encerramento, ou publique como resultado preliminar."* |
-
-**A janela, no instante exato.** Cinco dias corridos contados da publicação de 07/09, fechando ao
-**fim** do dia 12 — o dia do começo excluído, o do vencimento incluído (FR-023). Nenhum teste de
-unidade prova isso tão bem quanto ver a data escrita na recusa.
-
-**A declaração expressa não é pedida aqui, e é o comportamento certo** (FR-086): o formulário de
-publicação **não tem** o campo, porque este marco declara janela computável — o sistema verifica, e
-pedir que a pessoa afirme o que a máquina sabe reintroduziria a afirmação sem lastro do E2E17-005.
-
-**O cumprimento da providência, por citação.** A tela de emissão ofereceu a decisão pendente —
-*"Recurso REC-2026-UQMBSGYA — Emita-se novo ato de ordenação do marco, corrigindo a soma dos
-títulos."* — e o ato emitido sem citá-la deixou a pendência aberta; o emitido citando-a a fechou.
-
-**Como se cumpriu a reavaliação, e o que isso revelou.** A reavaliação de Ana produziu 6,0, pior
-que os 8,5 protegidos, e a consolidação recusou. Para cumpri-la foi preciso **reabrir** a avaliação
-— ato da presidência, com motivo — e concluí-la de novo com 9,0. Vale registrar: sem a reabertura, a
-pendência ficaria sem saída, porque a unicidade de conclusão por pessoa impede o mesmo avaliador de
-concluir duas vezes e o único outro elegível já havia concluído. O caminho existe e é o correto —
-mas ele não é óbvio para quem opera, e o roteiro não o nomeia.
-
-**Tudo resolvido → permitido**, e as duas metades que faltavam. Elas foram percorridas no
-`ps018_antigo`, onde o marco não declara janela: julgado o único recurso pendente, a definitiva
-passou — e o sistema **exigiu a declaração expressa** antes de deixar passar.
-
-```text
-sem declaração   "Este marco não declara prazo recursal computável: para publicar como definitivo
-                  é preciso declarar expressamente, com fundamento escrito, que o prazo se
-                  encerrou."                                                            (422)
-com declaração   publicada · Vigente · Resultado definitivo · 07/09/2026 às 11h07
-                  por paula.publicadora · Reitora do Ifes
-```
-
-E a declaração **volta na tela**, junto da publicação que a exigiu, com autor, instante e texto —
-que é o que a SC-018 pede por "consultáveis". Ver [o que a caminhada encontrou](#o-que-a-caminhada-encontrou):
-até esta rodada ela era gravada e nunca lida.
-
-### A definitiva retificada, apresentada pela causa
-
-Ainda no `ps018_antigo`, sobre a definitiva já publicada: Bruno recorre do próprio Resultado da
-Análise de títulos, o recurso é admitido — com a tempestividade decidida como **juízo humano
-motivado**, porque não há prazo computável —, deferido com correção fixada em 10,0000, o ato
-sucessor é emitido e a nova divulgação é publicada como definitiva, com **nova** declaração expressa.
-
-O que a página pública passa a dizer:
-
-> Resultado definitivo
-> Este é o resultado vigente deste marco.
-> **Resultado definitivo, retificado em 07/09/2026 em razão do julgamento do recurso
-> REC-2026-H7YZ4WW9.**
-
-Sem natureza nova no vocabulário — `DEFINITIVA` nas duas —, e a vigente dizendo que é a vigente
-(FR-087, FR-088, FR-090, SC-019).
-
-### Passo 11 — a jornada da janela recursal, nos três estados
-
-**Declarada e aberta** (`ps018_demo`). O formulário de interposição nomeia o instante ao lado de
-cada objeto — *"Classificação final — até 12/09/2026 às 23h59"* —, e a peça interposta grava e
-mostra os dois:
-
-> Prazo recursal
-> De 07/09/2026 às 10h48 até 12/09/2026 às 23h59 · **Dentro do prazo**
-
-Cinco dias corridos: o dia da publicação excluído, o do vencimento incluído, fechando ao fim dele na
-zona institucional (FR-023, FR-024, SC-014).
-
-**Declarada e encerrada** (`ps018_prazo`, publicado em 28/08). O acompanhamento **não oferece** a
-ação, e o endereço do formulário devolve a pessoa ao acompanhamento em vez de mostrar um botão que
-sempre recusaria (FR-013). A recusa nominal — a norma, a abertura e o encerramento — é o que a
-tentativa de publicar definitiva exibiu no `ps018_demo`: *"O prazo recursal deste marco ainda está
-aberto: ele se encerra em 12/09/2026 às 23h59."*
-
-**Não declarada** (`ps018_antigo`). Três objetos oferecidos, **zero datas** em qualquer tela, e a
-tempestividade aparecendo na lista administrativa como *"Sem prazo computável"* — e sendo decidida,
-por escrito, no juízo de admissibilidade:
-
-> Tempestivo: o Edital 54/2026 não declara janela recursal, e a peça foi interposta dez dias após a
-> divulgação, prazo razoável à falta de norma expressa.
-
-O documento publicado desse Edital não imprime frase nenhuma sobre prazo no marco — escrever "não
-cabe recurso" ali afirmaria norma que ninguém publicou (FR-028, SC-015, SC-016).
-
-**Negada** (`ps018_negado`). O marco declara `admits: false`, e o documento publicado escreve a
-norma: *"Recurso: **Não caberá recurso contra o resultado deste marco.**"* Na tela do candidato a
-ação **não é oferecida**, e o endereço do formulário devolve ao acompanhamento — a negativa não vira
-"cabe para sempre" (FR-113).
-
-**A frase normativa do prazo, no documento** (`ps018_prazo`, Edital 03/2026):
-
-> Recurso: Caberá recurso no prazo de 5 (cinco) dias corridos, contados da divulgação do resultado.
-
-**A declaração, no assistente de elaboração.** Composto um Edital novo pela tela, o passo
-*Classificação* oferece a escolha em três — *"Admite recurso, no prazo abaixo"*, *"Não admite
-recurso por esta via"*, *"Não declarar nada sobre recurso"* — com o prazo em dias (*"Contados do dia
-seguinte ao da divulgação, incluindo o do vencimento"*) e a unidade (*"Dias úteis exigiriam o
-calendário de dias sem expediente, que o Edital não publica"*). Salvo e reaberto, o rascunho devolve
-os três estados como três. Ver [o que a caminhada encontrou](#o-que-a-caminhada-encontrou): a
-escolha era uma **caixa de marcação**, e o terceiro estado era inalcançável.
+**Cenário:** Edital 03/2026 — Auxiliar de Biblioteca. Duas Etapas (decisória e pontuada, nota mínima 60), marco `FINAL` **declarando que admite recurso em 5 dias**, um critério de desempate por fato declarado.
 
 ---
 
-## O que a caminhada encontrou
+## 3. Escopo executado
 
-**O roteiro não era percorrível, e a razão não estava no produto.** Dois defeitos do
-`seed_demo`, os dois corrigidos:
-
-1. **as inscrições semeadas eram inalcançáveis pelo próprio dono.** Elas nasciam com
-   `identity_subject` sintético, e nenhum login produz esse valor: quem entrasse com o e-mail da
-   Elisa criava uma identidade nova e vazia, e a inscrição dela respondia 404 — corretamente, e
-   para ninguém. O seed passa a criar a identidade e a credencial verificada, que são exatamente as
-   linhas que o produto cria quando alguém prova o controle do e-mail;
-2. **quem consolidava não era a presidência.** O `seed_demo` consolidava e emitia como
-   `gustavo.gestor`, que o seletor de identidade nem oferece — e o passo 3 ficava indemonstrável,
-   porque não havia como entrar como quem produziu o ato atacado. Os dois atos passam a ser
-   praticados por `paulo.presidente`, que é quem os pratica no certame e quem o roteiro nomeia.
-
-Nenhuma das duas correções é atalho de demonstração: as duas aproximam o seed do que o produto faz.
-
-### E seis defeitos do produto, que nenhum teste alcançava
-
-Todos corrigidos nesta rodada, e **cada um com teste que falha sem a correção**.
-
-| # | o que a tela mostrou | o que estava errado |
-|---|---|---|
-| **A1** | o formulário de recorrer não dizia **até quando** | a janela era computada, gravada na peça e aplicada na recusa — e nenhuma tela do candidato a exibia. A FR-024 manda exibir, e não só registrar. Corrigido no formulário (por objeto, porque dois marcos alcançando a mesma Etapa têm prazos diferentes) e na peça (*"De … até … · Dentro do prazo"*) |
-| **A2** | a declaração de encerramento sumia depois de escrita | gravada com autor, instante e texto, e lida por tela nenhuma. Afirmação de que o prazo se encerrou, guardada onde ninguém lê, não é ato auditável (SC-018). Passa a aparecer junto da publicação que a exigiu |
-| **A3** | a negativa da FR-113 era inalcançável pelo assistente | a declaração era **caixa de marcação**, e os estados são três. `admits: false` só nascia se a pessoa desmarcasse a caixa **e** digitasse um prazo — o que ninguém digita para um marco que não admite recurso. Virou escolha de três, e `{}` voltou a ser lido como silêncio, não como negativa |
-| **A4** | o documento calava sobre a negativa | imprimia a frase da janela declarada e silenciava nos outros dois casos, tratando `admits: false` como ausência. Mas a recusa **cita a norma**, e o candidato tem direito de conferi-la: agora o documento escreve *"Não caberá recurso contra o resultado deste marco."* O silêncio do Edital continua sem frase |
-| **A5** | erro 500 ao julgar, digitando a nota com vírgula | as telas imprimem "8,5000" e "26,00"; o campo da correção recebia a vírgula e estourava em `InvalidOperation` — sem recusa, sem motivo, apagando a motivação já escrita. A interface passa a traduzir o separador, e o domínio recusa o que não é número com motivo em vez de 500 |
-| **A6** | a definitiva retificada não dizia que retificava | a causa era derivada da `CitacaoDeDecisao`, que só a **providência a jusante** produz: correção fixada e reavaliação determinada corrigiam o ato sem citar nada, e a retificação ficava anônima. E o documento nunca a trazia, embora a FR-088 diga "na página **e** no documento". A causa passa a ser derivada também pela cadeia — o que **entrou** no universo do ato sucessor e carrega decisão — e é congelada no conteúdo publicado, que é o que a página e o documento leem |
-
-**O padrão entre elas.** Cinco das seis são a mesma falha em lugares diferentes: o domínio distingue
-estados que a **borda** colapsa. Silêncio e negativa viram a mesma caixa desmarcada; providência e
-correção viram a mesma ausência de citação; janela computada vira nenhuma data na tela. A parte
-difícil estava certa; o que faltava era a parte que a pessoa lê.
-
-### E uma contradição no documento, que a FR-113 tornou possível
-
-O texto padrão da seção *Dos Recursos* dizia *"Caberá recurso contra os resultados divulgados, nos
-prazos do Cronograma"* — e, num Edital cujo marco declara que **não** cabe recurso, as duas frases
-passaram a conviver no mesmo ato publicado. O padrão passa a **remeter**: *"nos casos e prazos que
-este Edital declara para cada marco classificatório"*, verdadeiro nos três estados. A seção continua
-textual, e o elaborador segue podendo escrever o que precisar.
-
-### Duas observações, que não viraram correção
-
-- **um Edital antigo não ganha janela pela tela de Retificação.** O catálogo de campos retificáveis
-  do marco oferece só a denominação; `appealWindow` é endereçável pela **gramática** de alterações,
-  e o `test_elevacao_degrau_8` prova que o caminho resolve — mas não há campo no formulário. Foi
-  isso que a T109 pediu, e é o que existe. Registrado como o que é: uma lacuna de ergonomia, não de
-  norma;
-- **entrar como `paulo.presidente` digitando o nome não funciona; pelo botão da sugestão, sim.** O
-  formulário livre exige ao menos um papel marcado, e a presidência não é papel — vem do vínculo
-  com a comissão. O seletor oferece a identidade certa logo acima, e é por ali que se entra.
+| Fase | Executada | Resultado | Evidência |
+|---|---|---|---|
+| Edital com janela de recurso declarada no marco | sim | ok | `01`, `02` |
+| 6 inscrições, comissão, distribuição | sim | ok | `03`, `04` |
+| Avaliação decisória e pontuada, consolidação | sim | ok | `05`–`07` |
+| Classificação C1 e **publicação preliminar P1** | sim | ok | `08`, `09` |
+| Candidato consulta resultado (classificado e eliminado) | sim | ok | `10` |
+| **Cenário 5a — definitiva com recurso pendente** | sim | **recusada** | `13` |
+| Interposição (4 recursos, com protocolo) | sim | ok | `11`, `12` |
+| Admissibilidade | sim | ok | `16` |
+| **Cenário 1 — indeferido** | sim | **nada mudou** | `17` |
+| **Cenário 2 — correção fixada (R1→R2)** | sim | **82 → 90** | `18`, `21` |
+| **Cenário 3 — reavaliação determinada** | sim | **sem caminho de cumprimento** | `19`, `27`, `30` |
+| **Cenário 4 — reabilitação e progressão retroativa** | sim | **ok, e bloqueia publicação** | `20`, `22`, `24`, `28` |
+| Classificação obsoleta por superação | sim | ok | `23` |
+| Ato sucessor C2 e republicação P2 | sim | ok | `31`, `33` |
+| **Cenário 5b — definitiva com reavaliação pendente** | sim | **recusada** | `32` |
+| P1 preservada após sucessão | sim | ok | `34` |
+| Área do Candidato nas 4 situações | sim | ok | `36` |
+| Superação append-only no banco | sim | **provada** | — |
+| *Non reformatio in pejus* | **não** | não exercida | — |
+| Impedimento do julgador (FR-039) | **não** | não exercido | — |
 
 ---
 
-## Convergência do PR #50 — o que a revisão encontrou, e o que foi percorrido de novo
+## 4. Jornada observada
 
-Quatro bloqueios e uma lacuna de contrato, todos corrigidos. **Cada um com teste que falha sem a
-correção**, e os que se veem na tela foram percorridos de novo no navegador.
+P1 preliminar publicada com **1º Ana 95 · 2º Bruno 88 · 3º Carla 82 · 4º Diego 75**, Elisa eliminada por nota e Helena fora do universo (eliminada na Etapa 1).
 
-### C1 — a recusa depois do prazo não chegava a quem enviava
+Quatro recursos interpostos pela Área do Candidato, cada um com protocolo próprio (`REC-2026-…`). Admitidos com motivo. Julgados:
 
-O achado mais grave, e o que enfraquecia a SC-014. A tela **deixa de oferecer** a ação quando o
-prazo fecha, e isso está certo (FR-013). Mas quem deixou o formulário aberto enquanto a janela
-corria envia depois dela — e esse envio era **redirecionado para o acompanhamento antes de chegar
-ao domínio**. A pessoa via a página de sempre, sem recusa nenhuma, e ficava sem saber que houve
-prazo e que ele passou. Recusar em silêncio é pior do que recusar: a única leitura disponível era a
-de que a interposição tinha acontecido.
+| candidato | espécie | efeito observado |
+|---|---|---|
+| Bruno | Indeferir | nenhum sucessor; resultado segue 88 |
+| Carla | Deferir fixando a correção | sucessor 90 citando o anterior e a decisão |
+| Diego | Deferir determinando reavaliação | nenhum sucessor — e **nenhum caminho para produzi-lo** |
+| Helena | Deferir fixando a correção (Etapa decisória) | Eliminada → Habilitada; volta à Etapa 2 |
 
-Percorrido de novo no `ps018_prazo`, onde a janela se encerrou em 02/09. O envio — com o mesmo
-`objeto` que o formulário carregava, montado a partir do endereço público que o acompanhamento da
-candidata linka — agora responde:
+A classificação ficou obsoleta com o motivo certo — *"Os Resultados oficiais do universo mudaram: resultado superado por recurso"* — e a publicação foi **bloqueada mesmo como preliminar** enquanto Helena não tivesse Resultado na Etapa seguinte: *"Há inscrição reabilitada por recurso cujo resultado ainda não foi consolidado numa Etapa que este marco enumera."*
 
-> **Recorrer**
-> O prazo para recorrer deste resultado encerrou-se em **02/09/2026 às 23h59**. Ele foi de **5 dias
-> corridos**, contados da divulgação de **28/08/2026**, conforme o Edital.
-> Voltar ao acompanhamento
+Cumprida a reabilitação, C2 foi emitido: **1º Ana 95 · 2º Carla 90 · 3º Bruno 88 · 4º Diego 75 · 5º Helena 70**. A definitiva foi recusada pela reavaliação pendente do Diego; a preliminar sucessora foi publicada, e P1 permaneceu consultável dizendo que foi sucedida.
 
-A norma, a abertura e o encerramento — e **sem formulário**: oferecer de novo o botão que acabou de
-recusar ensinaria a pessoa a tentar contra uma porta fechada. O `GET` continua devolvendo ao
-acompanhamento, que é a FR-013 intacta.
+---
 
-O código HTTP continua 200, como em toda recusa de formulário do portal: o defeito era o
-redirecionamento, e trocar o status só aqui deixaria o portal inconsistente consigo mesmo.
+## 5. Invariantes verificados
 
-### C2 — a spec dizia as duas coisas sobre a preliminar
+| Invariante | Resultado | Evidência |
+|---|---|---|
+| superação é append-only: linha nova citando a anterior | ✅ | banco: `aee50c8f` (82) ← `cfed1106` (90) e `4ae275dd` (Eliminada) ← `d0ae0268` (Habilitada), originais intactos |
+| indeferimento não produz efeito | ✅ | Bruno segue 88, "SUCESSOR: Nenhum" (`17`) |
+| correção fixada produz exatamente um sucessor, com motivo | ✅ | *"Resultado corrigido em cumprimento da decisão … no recurso REC-2026-MPP5E486"* |
+| reabilitação faz progredir retroativamente | ✅ | Helena reaparece na Mesa da Etapa 2 como "Não iniciada" (`28`) |
+| reingresso pendente bloqueia **até o preliminar** | ✅ | CTA ausente e recusa nominal (`24`) |
+| definitiva exige fato: recurso pendente barra | ✅ | recusa com próximo passo (`13`) |
+| definitiva exige fato: reavaliação pendente barra | ✅ | recusa com próximo passo (`32`) |
+| classificação fica obsoleta por superação | ✅ | motivo nomeia o recurso (`23`) |
+| publicação anterior preservada | ✅ | P1 mantém `3º Carla 82,00` e avisa que foi sucedida (`34`) |
+| candidato vê o próprio recurso e o efeito | ✅ | "Seus recursos" + motivo da correção na inscrição (`36`) |
+| julgar é papel próprio, não derivado | ✅ | presidência, gestão, elaboração e auditoria recusadas; só `julgador` entra (`14`, `15`) |
+| **reavaliação determinada é cumprível** | ❌ | **E2E18-001** |
 
-A D-007 dizia que a reinclusão pendente impede *a publicação daquele marco*; a D-008 listava-a
-entre o que impede só a definitiva e fechava com *"a preliminar continua livre em todos esses
-casos"*. O **código sempre fez o certo** — ato obsoleto e reingresso pendente são aferidos antes de
-a natureza ser consultada, e o comando recusa a preliminar nos dois —, e era a prosa que prometia o
-contrário.
+---
 
-Corrigidos `spec.md` (D-008, FR-082, FR-083, SC-017), `contracts/janela.md` e o `quickstart`, e a
-regra ganhou guarda própria em teste:
+## 6. Achados
 
-```text
-1–4  recurso pendente · reavaliação · providência · janela aberta   só a DEFINITIVA
-5–6  ato obsoleto · reingresso pendente                             AS DUAS naturezas
-```
+### E2E18-001 — A reavaliação determinada não tem como ser cumprida, e trava a definitiva para sempre
 
-A assimetria é dos quatro primeiros porque eles são fatos da **disputa**, e enquanto ela corre o
-preliminar é o caminho normal. Os dois últimos são do **conteúdo**: ordem revogada ou incompleta não
-fica menos falsa por chamar-se preliminar.
+**Severidade:** P1 · **Tipo:** domínio / funcional · **Features:** 012–013–018 · **Ator:** Presidência, Julgador
 
-### C3 — a correção fixada validava menos que a avaliação
+**Observado.** Julgado o recurso do Diego como *"Deferir determinando reavaliação"*, a decisão foi registrada e a tela da Etapa passou a exibir corretamente *"reavaliação determinada por recurso, ainda não cumprida — Otavio Oliveira"*. Para produzir a nova avaliação, a presidência foi a **Conclusões preservadas** e pediu a reabertura, que é o caminho que a própria tela indica. A reabertura foi **recusada**:
 
-`avaliacoes/domain/pontuacao.py` recusa negativo, `Infinity`, `NaN`, casas em excesso, estouro da
-coluna e a máxima publicada. A correção fixada por recurso recusava só o que `Decimal()` não
-construía — e `NaN` nem isso: estourava. Duas validações para o mesmo campo produzem, mais cedo ou
-mais tarde, um Resultado que uma porta aceitou e a outra recusaria, e é a porta do recurso que grava
-sob decisão irreversível.
+> Esta avaliação fundamenta o Resultado da Etapa Avaliacao de titulos para a inscrição INS-2026-8HCQF32J (Resultado …) e não pode ser reaberta. Corrigir um Resultado consolidado é ato de outra natureza: o julgamento de recurso o supera por um Resultado novo, sem alterar este.
 
-Agora ela passa pela **mesma** função. E o sentido da Etapa decisória passa pelo mesmo normalizador:
-antes, qualquer texto virava sentido — inclusive o rótulo publicado que a tela mostra.
+A orientação da recusa é circular: o julgamento de recurso **já aconteceu**, e a espécie escolhida é justamente a que, por desenho, não cria sucessor. A peça do recurso não oferece nenhuma ação de cumprimento ("AÇÕES: Sair"). Não há rota, botão ou tela em `interface/` que cumpra uma reavaliação.
 
-Percorrido na tela de julgamento do `ps018_demo`, fixando `-5,0000`:
+**Esperado.** Que a decisão que determina reavaliar abra o caminho para reavaliar — reabrindo a avaliação protegida, criando uma nova atribuição, ou qualquer via explícita.
 
-> A pontuação não pode ser negativa.
+**Impacto.** Duplo, e o segundo é o grave:
 
-422, na página, com a motivação preservada. Antes, o valor era aceito e virava Resultado.
+1. A decisão é **inexequível**: o candidato lê "Recurso deferido — a etapa será reavaliada" e nada acontece, nunca.
+2. Como reavaliação pendente é um dos fatos que barram a definitiva, o marco fica **permanentemente impedido** de chegar a resultado definitivo. A recusa da definitiva instrui *"Conclua a reavaliação, consolide o resultado e emita o ato sucessor"* — três passos, e o primeiro é impossível.
 
-### C4 — o histórico do par custava uma consulta por linha corrigida
+**Reprodução.** Julgar qualquer recurso como `REAVALIACAO_DETERMINADA` sobre Etapa já consolidada; tentar reabrir em Conclusões preservadas; tentar publicar definitiva.
 
-`_historicos_superados` chamava a leitura do par dentro do laço, e o painel da Etapa lista até vinte
-e cinco linhas por página. O custo crescia com o **sucesso** dos recursos — que é o que a
-instituição espera que aconteça. Passou a leitura em lote: **oito pares corrigidos, uma consulta**,
-com teste de contagem que falha em 8 se alguém voltar ao laço.
+**Evidência.** `19-julgamento-reavaliacao.png`, `27-reabertura-para-reavaliacao.png`, `30-recurso-reavaliacao-sem-caminho.png`, `32-definitiva-bloqueada-por-reavaliacao.png`.
 
-### C5 — a retificação nomeava só uma causa
+**Causa confirmada no código.** A guarda em `avaliacoes/application/avaliacao.py` recusa a reabertura sempre que existir `ResultadoEtapa` ligado à avaliação, **sem exceção para reavaliação determinada** — e o comentário mostra que a 018 editou exatamente essa mensagem (FR-111) sem abrir a via. Do outro lado, `julgar.py` documenta para a espécie: *"nenhum sucessor; a decisão declara o efeito e cita o Resultado protegido"*. E `recursos/application/selectors.py::reavaliacoes_pendentes` define cumprimento como *"a existência de um sucessor do Resultado protegido"*. As três peças são coerentes entre si e não se encontram: quem deve criar o sucessor não tem por onde.
 
-A FR-112 sempre permitiu que um ato citasse mais de uma decisão, e é o caso normal quando dois
-deferimentos alcançam o mesmo marco: resolvem-se numa emissão só. A apresentação tomava a primeira
-— e quem recorreu, teve razão e foi corrigido no mesmo ato não se via na causa da retificação.
+**Recomendação.** É decisão de desenho, não conserto óbvio. As saídas visíveis: (a) a decisão da espécie autorizar a reabertura daquela avaliação específica, nominalmente; (b) a decisão criar a atribuição de reavaliação, sem reabrir a conclusão antiga; (c) retirar a espécie do produto enquanto não houver via. O que não pode permanecer é a espécie ofertada no seletor sem caminho de cumprimento.
 
-Agora são **todas**, em ordem `(decidido_em, protocolo)`, congeladas no conteúdo publicado: página e
-documento leem os mesmos bytes, e ordem instável faria o mesmo ato produzir resumo canônico
-diferente a cada publicação. A forma singular já publicada continua legível — conteúdo publicado não
-se reescreve (FR-091), e quem muda é o leitor.
+---
 
-Conferido no navegador, no `ps018_antigo`, cuja divulgação foi feita **antes** deste congelamento:
+### E2E18-002 — Recurso contra Resultado de Etapa nasce "sem prazo computável"
 
-> Resultado definitivo, retificado em 07/09/2026 em razão do julgamento do recurso
-> REC-2026-H7YZ4WW9.
+**Severidade:** P2 · **Tipo:** domínio / governança · **Features:** 018 · **Ator:** Julgador
 
-A página continua nomeando a causa — a retaguarda de derivação ao vivo funcionando sobre uma
-publicação que não tem a chave nova.
+**Observado.** O marco declarou que admite recurso em 5 dias. Os quatro recursos — três contra Resultado de Etapa e um contra Resultado de Etapa decisória — aparecem na lista e na peça com **TEMPESTIVIDADE: Sem prazo computável**. A janela só é computável quando ancorada na publicação do marco.
 
-### C6 — o encerramento passa a ser instante, e não só data
+**Esperado.** Não necessariamente um prazo: a ausência é coerente com o desenho declarado em `janela.py` (silêncio devolve a tempestividade ao juízo humano). O que surpreende é que o Edital **declarou** prazo e ele não alcança o objeto que o candidato de fato ataca.
 
-Achado da checagem cruzada final, e o menor de todos: a recusa imprimia `02/09/2026`, enquanto a
-recusa irmã da definitividade já imprimia `12/09/2026 às 23h59`. A janela fecha às 23h59, e quem
-enviasse às 23h50 do próprio dia leria uma data igual à de hoje sem entender por que foi recusado.
+**Impacto.** Na prática, o prazo publicado no Edital governa apenas o recurso contra a classificação; recursos contra Etapa ficam sem prazo algum, e a tempestividade recai inteira sobre a admissibilidade motivada. Isso é defensável, mas é uma decisão normativa que o produto toma em silêncio — e um Edital que promete "5 dias contados da divulgação" não distingue os dois casos.
 
-A abertura continua sendo data, e a assimetria é do que cada uma responde: a abertura diz de quando
-o prazo correu — a hora ali é ruído, porque ninguém precisava agir naquele minuto —, e o
-encerramento diz até quando.
+**Evidência.** `14-lista-de-recursos.png`, `15-peca-do-recurso.png`.
+
+**Recomendação.** Decisão de governança: ou a declaração do marco alcança os Resultados das Etapas que ele enumera, ou a tela diz por que aquele objeto não tem prazo. Registrar, não consertar às cegas.
+
+---
+
+### E2E18-003 — A peça mostra identificadores técnicos onde quem julga lê significado
+
+**Severidade:** P3 · **Tipo:** conteúdo / legibilidade · **Features:** 018 · **Ator:** Julgador
+
+**Observado.** Na peça: `INTERPOSTO POR — cand:745c4cc1c91249428f9a5ad26f4f41ce`, `IDENTIDADE DO OBJETO — aa0aacff-…`, `VERSÃO CONSOLIDADA CITADA — 10a8a002-…`. O nome do candidato aparece logo abaixo, então não há ambiguidade — mas o campo "interposto por" é o único que responde "quem", e responde com um opaco.
+
+**Impacto.** Menor que o equivalente da 015 porque o contexto é administrativo e os dados corretos estão na mesma tela. Ainda assim é a peça que instrui a decisão.
+
+**Evidência.** `15-peca-do-recurso.png`.
+
+---
+
+### E2E18-004 — Comentário desatualizado sobre a janela na porta da definitividade
+
+**Severidade:** P3 · **Tipo:** consistência · **Ator:** — (código)
+
+**Observado.** O docstring de `_impedimento_da_definitiva` diz *"O quarto fato — janela aberta — é do degrau 8, e entra quando ele existir"*, e a função chama `_janela_aberta` seis linhas abaixo. O comentário descreve um estado anterior do código.
+
+**Impacto.** Nenhum em runtime; custo de leitura para quem for mexer na porta.
+
+---
+
+## 7. Severidade
+
+| Sev. | Qtde | Achados |
+|---|---|---|
+| P0 | 0 | — |
+| P1 | 1 | 001 |
+| P2 | 1 | 002 |
+| P3 | 2 | 003, 004 |
+
+---
+
+## 8. Regressões e decisões fechadas desde a auditoria da 017
+
+| Item | Estado | Como verifiquei |
+|---|---|---|
+| **E2E17-001** — Edital publicado sem período de inscrições | ✅ **corrigido** | compus o Edital na **ordem natural** do assistente, sem contorno, e as inscrições abriram; `eventos_persistidos()` passou a emitir `status` e `isRegistrationPeriod`, com teste de round-trip que também cobre `status` |
+| **E2E17-003** — UUID e data em inglês | ✅ **corrigido** | `LANGUAGE_CODE = "pt-br"` presente; a coluna MODALIDADE da ordenação mostra "Ampla concorrencia" |
+| **E2E17-004** — eliminado cedo sem notícia | ✅ **corrigido (decisão B)** | Helena vê "Resultado das etapas — Analise de requisitos — Eliminada" |
+| **E2E17-005** — definitiva por escolha livre | ✅ **corrigido (decisão A)** | porta de fato, com cinco impedimentos distintos; duas recusas observadas |
+| **Decisão C** — superação do `ResultadoEtapa` | ✅ **implementada** | append-only, linha nova citando a anterior, constraint de unicidade movida para a raiz |
+| Segregação de funções | ✅ sem regressão | julgar é papel próprio; presidência e gestão recusadas |
+| Sucessão de publicação | ✅ sem regressão | P1 intacta e sinalizada |
+
+Nenhuma regressão.
+
+---
+
+## 9. Não exercido nesta auditoria
+
+- **Non reformatio in pejus** (FR-070): o código a implementa em `CORRECAO_FIXADA`; não testei uma correção que piorasse a situação do recorrente.
+- **Impedimento do julgador** (FR-039): não testei julgar com quem avaliou a peça.
+- **Janela aberta bloqueando a definitiva**: a porta recusou antes, por recurso e por reavaliação pendentes; o quarto fato não chegou a ser alcançado.
+- **`PROVIDENCIA_A_JUSANTE`**: espécie não julgada.
+
+---
+
+## 10. Evidências
+
+`screenshots/` — 41 imagens na ordem da jornada, de `00-processo-criado.png` a `36-candidato-*-apos-recurso.png`.
