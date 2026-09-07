@@ -18,6 +18,11 @@ Os outros quatro cenários passaram: indeferimento sem efeito, correção direta
 > impedimento do julgador, *non reformatio in pejus* e a quarta espécie de decisão. O quarto revelou
 > um segundo P1: **a janela recursal declarada no Edital nunca chega ao conteúdo publicado**
 > (E2E18-005), o que também retrata o achado E2E18-002 da primeira passada.
+>
+> **Corrigido depois desta auditoria.** O E2E18-005 foi fechado pelo PR #51 (commit `ae97f5d`), e
+> com ele o cenário da janela — antes não observável — passou a ser verificável e foi verificado
+> (§9). Resta aberto o **E2E18-001**, que é decisão de desenho. O corpo dos achados preserva o que
+> foi observado; o estado de cada um vem ao fim da respectiva seção.
 
 ---
 
@@ -29,7 +34,7 @@ Os outros quatro cenários passaram: indeferimento sem efeito, correção direta
 | banco | PostgreSQL local `ps018_audit`, criado vazio e migrado |
 | servidor | `runserver` :8188, seletor de identidade ligado |
 | ferramentas | Playwright (Chromium), mailpit, `psql` para as provas de banco |
-| screenshots | **47** (41 na primeira passada + 6 na segunda) |
+| screenshots | **52** (41 na primeira passada, 11 na segunda) |
 | candidatos | 6 |
 | recursos | 6 (quatro na primeira passada, dois na segunda) |
 | publicações | 2 (P1 preliminar, P2 preliminar sucessora) |
@@ -68,7 +73,7 @@ Os outros quatro cenários passaram: indeferimento sem efeito, correção direta
 | *Non reformatio in pejus* (2ª passada) | sim | **recusada, sem gravar nada** | `38`, `39` |
 | Impedimento do julgador, FR-039 (2ª passada) | sim | **recusado** | `37` |
 | `PROVIDENCIA_A_JUSANTE` (2ª passada) | sim | julgada, sem sucessor | `40`, `41` |
-| Janela recursal aberta (2ª passada) | **não observável** | ver E2E18-005 | `43`–`46` |
+| Janela recursal aberta (2ª passada) | **provada após a correção** | barra a definitiva | `43`–`47` |
 
 ---
 
@@ -105,7 +110,8 @@ Cumprida a reabilitação, C2 foi emitido: **1º Ana 95 · 2º Carla 90 · 3º B
 | julgador impedido não julga (FR-039) | ✅ | tela sem ações e `POST` → 403 (`37`) |
 | recurso não agrava quem recorre (FR-070) | ✅ | recusa total, sem decisão nem sucessor (`39`) |
 | definitiva sem prazo declarado exige declaração escrita | ✅ | recusada sem, aceita com (`45`, `46`) |
-| **janela recursal chega ao conteúdo publicado** | ❌ | **E2E18-005** |
+| **janela recursal chega ao conteúdo publicado** | ✅ **após o PR #51** | `appealWindow` com o prazo no snapshot; antes dele, **E2E18-005** |
+| janela aberta barra a definitiva | ✅ | *"O prazo recursal deste marco ainda está aberto: ele se encerra em 12/09/2026 às 23h59"* (`47`) |
 | classificação fica obsoleta por superação | ✅ | motivo nomeia o recurso (`23`) |
 | publicação anterior preservada | ✅ | P1 mantém `3º Carla 82,00` e avisa que foi sucedida (`34`) |
 | candidato vê o próprio recurso e o efeito | ✅ | "Seus recursos" + motivo da correção na inscrição (`36`) |
@@ -138,6 +144,9 @@ A orientação da recusa é circular: o julgamento de recurso **já aconteceu**,
 **Evidência.** `19-julgamento-reavaliacao.png`, `27-reabertura-para-reavaliacao.png`, `30-recurso-reavaliacao-sem-caminho.png`, `32-definitiva-bloqueada-por-reavaliacao.png`.
 
 **Causa confirmada no código.** A guarda em `avaliacoes/application/avaliacao.py` recusa a reabertura sempre que existir `ResultadoEtapa` ligado à avaliação, **sem exceção para reavaliação determinada** — e o comentário mostra que a 018 editou exatamente essa mensagem (FR-111) sem abrir a via. Do outro lado, `julgar.py` documenta para a espécie: *"nenhum sucessor; a decisão declara o efeito e cita o Resultado protegido"*. E `recursos/application/selectors.py::reavaliacoes_pendentes` define cumprimento como *"a existência de um sucessor do Resultado protegido"*. As três peças são coerentes entre si e não se encontram: quem deve criar o sucessor não tem por onde.
+
+- **Estado (07/09/2026):** **aberto**. É o único ponto em que o ciclo da 018 não fecha, e depende
+  de decisão de governança — não entrou no hardening do E2E18-005.
 
 **Recomendação.** É decisão de desenho, não conserto óbvio. As saídas visíveis: (a) a decisão da espécie autorizar a reabertura daquela avaliação específica, nominalmente; (b) a decisão criar a atribuição de reavaliação, sem reabrir a conclusão antiga; (c) retirar a espécie do produto enquanto não houver via. O que não pode permanecer é a espécie ofertada no seletor sem caminho de cumprimento.
 
@@ -179,10 +188,12 @@ sintoma cuja causa eu ainda não conhecia. O número é preservado para as cita�
 | Sev. | Qtde | Achados |
 |---|---|---|
 | P0 | 0 | — |
-| P1 | 2 | 001, **005** |
+| P1 | 2 | 001 **aberto** · 005 — **corrigido** no PR #51 (`ae97f5d`) |
 | P2 | 0 | — |
 | P3 | 2 | 003, 004 |
 | — | 1 | 002 (retratado na segunda passada) |
+
+Aberto de fato, hoje: **um P1** (E2E18-001) e dois P3.
 
 ---
 
@@ -212,7 +223,7 @@ Edital mínimo criado só para isolar a janela.
 | **Impedimento do julgador (FR-039)** | ✅ **provado** | `37` |
 | **Non reformatio in pejus (FR-070)** | ✅ **provado** | `38`, `39` |
 | **`PROVIDENCIA_A_JUSANTE`** | ✅ julgada, sem sucessor, como especificado | `40`, `41` |
-| **Janela recursal como quarto fato** | ⚠️ **não observável** — ver E2E18-005 | `43`–`46` |
+| **Janela recursal como quarto fato** | ✅ **provada** depois de corrigido o E2E18-005 | `43`–`47` |
 
 **Impedimento.** `alice.avaliadora`, que produziu a nota atacada, recebeu o papel `julgador` e abriu
 o recurso da Ana: *"Você não pode julgar este recurso. Aguardando apreciação por quem não esteja
@@ -230,10 +241,18 @@ piora**, porque corrigir o erro de A desloca B sem agravar A.
 chegou a barrar a definitiva porque a reavaliação do E2E18-001 barra antes — a ordem dos
 impedimentos (recurso → reavaliação → providência → janela) foi observada na prática.
 
-**Janela.** Não foi possível observar o quarto fato: como nenhum Edital consegue publicar a janela
-(E2E18-005), a aferição cai sempre no ramo *"não declara prazo computável"*. Esse ramo foi testado
-e funciona bem, inclusive com a saída prevista: um campo **Declaração de encerramento do prazo
-recursal** aparece só na definitiva, a publicação é recusada sem ele e aceita com ele.
+**Janela.** Na auditoria não foi possível observar o quarto fato: como nenhum Edital conseguia
+publicar a janela (E2E18-005), a aferição caía sempre no ramo *"não declara prazo computável"*.
+Esse ramo foi testado e funciona bem, com a saída prevista: um campo **Declaração de encerramento
+do prazo recursal** aparece só na definitiva, a publicação é recusada sem ele e aceita com ele.
+
+**Depois da correção**, o cenário foi refeito num Edital composto na ordem natural, e o quarto fato
+recusou como especificado: *"O prazo recursal deste marco ainda está aberto: ele se encerra em
+12/09/2026 às 23h59. Aguarde o encerramento, ou publique como resultado preliminar."* E o campo de
+declaração escrita **desaparece** quando há prazo computável — a saída excepcional deixa de ser
+oferecida quando a norma responde sozinha. Confirma-se que o quarto fato da porta da
+definitividade estava implementado e correto o tempo todo: era o dado que nunca chegava até ele
+(`47`).
 
 ---
 
@@ -281,12 +300,22 @@ do Perfil, mas não desce ao marco.
 ao marco — de preferência afirmando a igualdade do rascunho inteiro, e não campo a campo, para
 fechar a classe em vez do caso.
 
+- **Resolução (07/09/2026):** corrigido em `ae97f5d` (PR #51), e a correção encontrou **duas
+  pontas** onde a auditoria via uma. Além de `_marco_persistido()`, o contrato de entrada da API —
+  `editais/api/serializers.py::ClassificationMilestoneSerializer` — também não declarava
+  `appealWindow`, de modo que nem por aquele canal a janela podia ser expressa. O teste de
+  round-trip desceu ao marco no idioma que já usava para o Cronograma, comparando a coleção
+  inteira, e foi conferido por mutação: revertendo apenas `_marco_persistido()`, ele falha.
+  Verificado também no navegador — Edital composto na ordem natural publica
+  `appealWindow = {"unit": "DIAS_CORRIDOS", "admits": true, "durationDays": 5}` — e o cenário da
+  janela, antes bloqueado, foi então exercido com sucesso (§9).
+
 ---
 
 ## 11. Não exercido em nenhuma das passadas
 
-- **Janela recursal efetivamente aberta** barrando a definitiva — impossível enquanto o
-  E2E18-005 existir.
+- ~~**Janela recursal efetivamente aberta** barrando a definitiva~~ — **exercida e provada** depois
+  da correção do E2E18-005 (§9).
 - **Cumprimento de `PROVIDENCIA_A_JUSANTE`** por ato citante publicado.
 - Recurso contra a **publicação** (todos os quatro atacaram Resultado de Etapa).
 
@@ -294,4 +323,5 @@ fechar a classe em vez do caso.
 
 ## 12. Evidências
 
-`screenshots/` — 47 imagens na ordem da jornada, de `00-processo-criado.png` a `36-candidato-*-apos-recurso.png`.
+`screenshots/` — 52 imagens na ordem da jornada, de `00-processo-criado.png` a
+`47-janela-aberta-bloqueia-a-definitiva.png`. As de `37` em diante são da segunda passada.
