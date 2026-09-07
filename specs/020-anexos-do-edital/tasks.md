@@ -31,7 +31,7 @@ fase, para rastrear.
 **Propósito**: mover para o lugar certo o que já existe, antes de acrescentar qualquer coisa.
 
 - [ ] T001 Mover `aceitar()` e `resumo()` de `backend/processo_seletivo/inscricoes/domain/arquivos.py` para `backend/processo_seletivo/shared/arquivos.py`, com `inscricoes` reimportando de lá e os testes existentes apontando para a casa nova (FR-009, R-007)
-- [ ] T002 [P] Declarar `EDITAL_ANEXOS_LIMITE_BYTES` em `backend/config/settings/base.py`, no molde de `ARQUIVOS_CANDIDATOS_LIMITE_BYTES` e com o comentário que diz por que o limite é da aplicação (FR-013)
+- [ ] T002 [P] Declarar `EDITAL_ANEXOS_LIMITE_BYTES` em `backend/config/settings/base.py`, lido do ambiente com **5 MB** de padrão (`5 * 1024 * 1024`), no molde de `ARQUIVOS_CANDIDATOS_LIMITE_BYTES` e com o comentário que diz por que o limite é da aplicação e não do Edital (FR-013)
 
 ---
 

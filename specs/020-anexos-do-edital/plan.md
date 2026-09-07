@@ -102,8 +102,10 @@ Diferença deliberada: a rota nova honra `If-None-Match` e envia `Cache-Control:
 `PublishedDocumentView` hoje **não** faz (`publicacoes/api/views.py:120-133`) — ver §Achados.
 
 **Constraints**: limite de tamanho do artefato é da aplicação (FR-013), em `settings`, no molde de
-`ARQUIVOS_CANDIDATOS_LIMITE_BYTES`. Sugestão: 5 MB — os formulários da amostra têm centenas de
-kilobytes, e o limite existe para proteger o banco, não para negociar com o Edital.
+`ARQUIVOS_CANDIDATOS_LIMITE_BYTES`. **Decidido em 5 MB**, metade do limite do candidato: o
+formulário da amostra tem centenas de kilobytes, quem o produz é a própria instituição, e o limite
+existe para proteger o banco — os bytes moram em coluna binária —, não para negociar com o Edital.
+Mudar o número é editar uma variável de ambiente, e não é decisão que precise da spec.
 
 **Scale/Scope**: de dois a doze anexos por Edital na amostra dos sete Editais lidos; uma dúzia de
 artefatos por versão, poucas versões por Edital.
