@@ -153,3 +153,76 @@ def _consolidar(cenario, etapa_id, inscricoes, *, chave):
         idempotency_key=chave,
         correlation_id="reabilitacao",
     )
+
+
+def test_a_mesa_abre_com_reavaliacao_determinada(client, seletor_ligado, deferida):
+    """A Mesa quebrava com `AttributeError` quando havia reavaliação determinada na Etapa.
+
+    O defeito nasceu ao ligar o histórico do par às **duas** telas: no painel de Resultados as
+    linhas são `ResultadoEtapa`, e na Mesa são dicionários de prontidão, de modo que
+    `linha.resultado_anterior_id` estourava. E só estourava quando alguma linha chegava ao ramo
+    novo, o que exige uma reavaliação pendente — foi a caminhada da T125 que o encontrou, e nenhum
+    teste o alcançava.
+
+    O histórico saiu da Mesa por decisão, e não por contorno: ela organiza trabalho — quem falta
+    avaliar, quem falta consolidar —, e "o que a decisão alterou" é pergunta do painel.
+    """
+    from processo_seletivo.recursos.application.julgar import julgar
+    from processo_seletivo.recursos.models import DecisaoRecurso
+    from tests.fixtures.recursos_us4 import julgador
+
+    cenario = deferida["cenario"]
+    outra = cenario["inscricoes"][1]
+    peca = _interpor_da_outra(deferida, outra)
+    julgar(
+        actor=julgador(),
+        recurso_id=peca.id,
+        especie=DecisaoRecurso.Especie.REAVALIACAO_DETERMINADA,
+        motivacao="Reavalie-se por avaliador diverso.",
+        etapa_id=cenario["etapa_do_recurso"],
+        assinatura_do_resultado=str(_vigente(outra, cenario["etapa_do_recurso"]).id),
+        idempotency_key="reavaliar-mesa",
+    )
+
+    identificar(client, "carlos", ["gestor"])
+    resposta = client.get(
+        reverse("interface:distribuicao", args=[cenario["edital"].id, cenario["etapa_do_recurso"]])
+    )
+
+    assert resposta.status_code == 200
+    assert "reavaliação determinada" in conteudo(resposta)
+
+
+def _vigente(inscricao, etapa_id):
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    return ResultadoEtapa.vigentes.get(inscricao=inscricao, etapa_id=etapa_id)
+
+
+def _interpor_da_outra(deferida, inscricao):
+    from processo_seletivo.portal.identidade import IdentidadeDoCandidato
+    from processo_seletivo.recursos.application.admitir import admitir
+    from processo_seletivo.recursos.application.interpor import interpor
+    from tests.fixtures.recursos_us4 import assinatura_de, julgador
+
+    cenario = deferida["cenario"]
+    alvo = _vigente(inscricao, cenario["etapa_do_recurso"])
+    peca = interpor(
+        identidade=IdentidadeDoCandidato(
+            inscricao.identity_subject, inscricao.nome, inscricao.cpf_normalizado, "o@ex.br"
+        ),
+        inscricao=inscricao,
+        resultado=alvo,
+        fundamentacao="A minha nota também está errada.",
+        assinatura_do_objeto=str(alvo.pk),
+        idempotency_key="interpor-mesa",
+    )
+    admitir(
+        actor=julgador(),
+        recurso_id=peca.id,
+        admitido=True,
+        motivo="Tempestivo.",
+        assinatura_do_estado=assinatura_de(peca),
+        idempotency_key="admitir-mesa",
+    )
+    return peca

@@ -96,6 +96,31 @@ além de tornar indistinguíveis, para a varredura de vocabulário, a página qu
             {{ reabilitada.deferido_em|date:"d/m/Y" }} no recurso {{ reabilitada.recurso }}.</p>
           {% endif %}
           {% endwith %}
+          {% with historico=historicos|dicionario_simples:resultado.inscricao_id %}
+          {% if historico %}
+          {% comment %}
+          **O histórico do par, ao lado do vigente** (FR-064). Mostrar a nota corrigida e calar
+          sobre a que foi corrigida obrigaria quem responde a um recurso a sair do sistema para
+          conferir o que a decisão alterou — e é justamente aqui que a pergunta é feita.
+
+          O superado aparece **como ele afirmou**: pontuação, consequência e motivo intactos. É o
+          que distingue superar de reescrever.
+          {% endcomment %}
+          <details class="historico-do-par">
+            <summary>Histórico deste par — {{ historico|length }} resultados</summary>
+            <ol>
+              {% for linha in historico %}
+              <li>{{ linha.consequencia }}{% if linha.pontuacao is not None %} · {{ linha.pontuacao }}{% endif %}
+                — {{ linha.motivo }}
+                <span class="ajuda">{{ linha.consolidado_por }} em
+                  {{ linha.consolidado_em|date:"d/m/Y H:i" }}{% if linha.recurso %}, por decisão no
+                  recurso {{ linha.recurso }}{% endif %}{% if linha.vigente %} — <strong>vigente</strong>{% endif %}</span>
+              </li>
+              {% endfor %}
+            </ol>
+          </details>
+          {% endif %}
+          {% endwith %}
         </td>
         {% comment %}
         Sem Avaliação não há quem avaliou, e a célula diz isso — quem responde pelo desfecho está
