@@ -43,6 +43,19 @@ class DocumentoExigido(models.Model):
         on_delete=models.CASCADE,
         related_name="documentos_exigidos",
     )
+    # O Anexo cujo modelo este requisito manda usar (020, FR-020). Anulável já é `N:1` por
+    # construção, e não há o que escolher: o requisito ou fornece forma própria, ou não fornece.
+    #
+    # `SET_NULL` é a forma da resposta que o repositório já deu em `EtapaAvaliacao.evento` —
+    # *"remover o Evento não pode remover a Etapa; o que não pode é o vínculo sobreviver a ele"*.
+    # Remover o Anexo não remove o requisito: desfaz o vínculo, e requisito sem modelo é legítimo.
+    anexo = models.ForeignKey(
+        "editais.AnexoEdital",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="requisitos",
+    )
 
     class Meta:
         ordering = ["order", "id"]

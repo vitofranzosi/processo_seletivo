@@ -11,8 +11,13 @@ SIGNATORY = {
 }
 
 
-def publish_original(api_client, manager_headers, process_payload, *, draft=None):
-    """Cria Processo e primeiro Edital e o leva até a primeira Publicação."""
+def publish_original(api_client, manager_headers, process_payload, *, draft=None, anexos=0):
+    """Cria Processo e primeiro Edital e o leva até a primeira Publicação.
+
+    `anexos` cria essa quantidade de Anexos entre o rascunho e a submissão. Não é opção de
+    conveniência: a coleção fica fora do `replace_draft`, então não há como pedi-la pelo payload —
+    e o padrão é zero porque Edital sem anexo continua sendo Edital (020, FR-024).
+    """
     criado = api_client.post(
         "/api/v1/admin/processos", process_payload, format="json", **manager_headers
     )
@@ -26,6 +31,16 @@ def publish_original(api_client, manager_headers, process_payload, *, draft=None
         format="json",
         **{**preparer, "HTTP_IF_MATCH": '"1"'},
     )
+    if anexos:
+        from tests.fixtures.anexos import criar_anexo
+
+        for posicao in range(anexos):
+            criar_anexo(
+                edital,
+                rotulo=f"ANEXO {posicao + 1} — FORMULÁRIO",
+                order=posicao + 1,
+                marca=chr(ord("A") + posicao),
+            )
     api_client.post(
         f"/api/v1/admin/editais/{edital.id}/submissoes",
         format="json",

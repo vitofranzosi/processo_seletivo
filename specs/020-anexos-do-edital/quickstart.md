@@ -54,12 +54,21 @@ TEST_DB_ENGINE=postgresql DB_USER="$USER" DB_NAME=test_anexos_020 uv run pytest 
   tests/authorization tests/migrations tests/acceptance/test_us_anexos.py
 ```
 
-Três alarmes esperados enquanto a F1 não fecha, e nenhum deles é regressão:
+Alarmes esperados enquanto a F1 não fecha, e nenhum deles é regressão:
 
-- `tests/contract/test_forma_publicada.py` — a coleção nova não tem esquema no contrato;
-- `tests/contract/test_documento_publicado.py` — comparação byte a byte contra a fixture, que muda
-  com o degrau 9; regenerar com `uv run python scripts/gerar_fixture_documento.py`;
+- `tests/contract/test_forma_publicada.py` — a coleção nova não tem esquema no contrato, e o
+  snapshot de um Edital publicado de verdade não a emite;
+- os testes que afirmam a versão canônica vigente por literal — `test_elevacao_degrau_8`,
+  `test_forma_publicada`, `test_contrato_de_inscricao`, `test_elevacao_de_versao`,
+  `test_quickstart` e `test_elevacao` das avaliações —, que sobem de 8 para 9 junto com o degrau;
+- `tests/migrations/test_migrations.py` — o guarda que conta migrations por app, que sobe de 11
+  para 13 em `editais` com a justificativa ao lado;
 - `tests/unit/interface/test_revisao.py` — a coleção nova não está declarada na tela de revisão.
+
+**`tests/contract/test_documento_publicado.py` não está nesta lista, e é de propósito.**
+`snapshot_publicado.json` é um literal congelado — está em `schemaVersion: 7` — e não acompanha
+`SCHEMA_VERSION`. A fixture de bytes só muda quando a **composição** do documento muda, que é a
+T027, e regenerá-la antes disso apagaria a evidência que ela guarda.
 
 ## O que **não** deve funcionar
 

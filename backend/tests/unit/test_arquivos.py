@@ -9,8 +9,8 @@ import io
 
 import pytest
 
-from processo_seletivo.inscricoes.domain.arquivos import aceitar, resumo
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.shared.arquivos import aceitar, resumo
 
 LIMITE = 10 * 1024 * 1024
 

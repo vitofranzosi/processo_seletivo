@@ -229,7 +229,31 @@ def edital_snapshot(edital: Edital) -> dict:
         "documentRequirements": _document_requirements(edital),
         "stages": _stages(edital),
         "sections": _sections(edital),
+        "attachments": _attachments(edital),
     }
+
+
+def _attachments(edital: Edital) -> list[dict]:
+    """Os Anexos do Edital, na ordem editorial declarada (020, FR-001, FR-029).
+
+    Cada versão carrega **identidade e resumo** do artefato, e os dois têm papéis distintos:
+    `artifactId` endereça os bytes, `artifactHash` prova que são os mesmos. Guardar só o resumo
+    faria a resolução ficar ambígua, porque dois artefatos de conteúdo idêntico são legítimos e o
+    resumo não os distingue (FR-011).
+
+    A ordenação vem do `Meta.ordering` do modelo — `(order, id)` —, determinística por construção:
+    ordem de inserção quebraria a igualdade de bytes entre dois snapshots do mesmo conteúdo.
+    """
+    return [
+        {
+            "id": str(anexo.id),
+            "label": anexo.rotulo,
+            "order": anexo.order,
+            "artifactId": str(anexo.artefato_id),
+            "artifactHash": anexo.artefato.document_hash,
+        }
+        for anexo in edital.anexos.select_related("artefato")
+    ]
 
 
 def _document_requirements(edital: Edital) -> list[dict]:
@@ -251,6 +275,8 @@ def _document_requirements(edital: Edital) -> list[dict]:
             "modalityId": (
                 None if documento.modalidade_id is None else str(documento.modalidade_id)
             ),
+            # O Anexo que serve de modelo, ou `null` para "não fornece modelo" (020, FR-020).
+            "attachmentId": None if documento.anexo_id is None else str(documento.anexo_id),
         }
         for documento in edital.documentos_exigidos.all()
     ]

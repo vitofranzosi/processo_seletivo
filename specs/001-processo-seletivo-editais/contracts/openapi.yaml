@@ -763,7 +763,8 @@ components:
         são anuláveis por semântica: `null` significa "não restringe", e é a ausência dos dois que
         faz o requisito valer para todos. As quatro combinações de aplicabilidade — todos, Perfil,
         modalidade, Perfil e modalidade — se leem daí, e não há uma quinta forma nem operador.
-      required: [id, key, name, instructions, required, order, profileId, modalityId]
+      required:
+        [id, key, name, instructions, required, order, profileId, modalityId, attachmentId]
       properties:
         id: { $ref: '#/components/schemas/Id' }
         key: { type: string }
@@ -774,6 +775,25 @@ components:
         order: { type: integer, minimum: 0 }
         profileId: { type: [string, 'null'], format: uuid }
         modalityId: { type: [string, 'null'], format: uuid }
+        # O Anexo cujo modelo este requisito manda usar, ou `null` para "não fornece modelo".
+        # Aponta a identidade do Anexo, e nunca a do artefato: substituir o artefato por
+        # Retificação não pode obrigar a reescrever todo requisito que o cita.
+        attachmentId: { type: [string, 'null'], format: uuid }
+    AnexoPublicado:
+      type: object
+      description: >-
+        Conteúdo normativo binário que o Edital publica junto com o seu documento — o formulário
+        que o candidato baixa, preenche, assina e devolve. O sistema não conhece o que há dentro
+        dele: `label` é texto único escrito pelo autor, e não há numeração derivada de posição.
+        `artifactId` endereça os bytes e `artifactHash` os verifica; os dois são necessários
+        porque o resumo não endereça — dois artefatos de conteúdo idêntico são legítimos.
+      required: [id, label, order, artifactId, artifactHash]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        label: { type: string }
+        order: { type: integer, minimum: 0 }
+        artifactId: { type: string, format: uuid }
+        artifactHash: { type: string }
     ModalidadePublicada:
       type: object
       description: >-

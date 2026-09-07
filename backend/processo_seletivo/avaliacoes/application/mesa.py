@@ -22,12 +22,12 @@ from django.utils.dateparse import parse_datetime
 from processo_seletivo.avaliacoes.domain.autorizacao import pode_avaliar_inscricao
 from processo_seletivo.avaliacoes.domain.previsao import decisoria, pontuacao_maxima, rotulos
 from processo_seletivo.inscricoes.application.rascunho import requisitos_da_inscricao
-from processo_seletivo.inscricoes.domain.arquivos import tamanho_legivel
 from processo_seletivo.inscricoes.domain.pessoais import mascarar_cpf
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.shared.arquivos import tamanho_legivel
 
 CONSULTAR_DOCUMENTO = "CONSULTAR_DOCUMENTO"
 INTEGRIDADE = "INTEGRIDADE"

@@ -33,8 +33,8 @@ fase, para rastrear.
 
 **Propósito**: mover para o lugar certo o que já existe, antes de acrescentar qualquer coisa.
 
-- [ ] T001 Mover `aceitar()` e `resumo()` de `backend/processo_seletivo/inscricoes/domain/arquivos.py` para `backend/processo_seletivo/shared/arquivos.py`, com `inscricoes` reimportando de lá e os testes existentes apontando para a casa nova (FR-009, R-007)
-- [ ] T002 [P] Declarar `EDITAL_ANEXOS_LIMITE_BYTES` em `backend/config/settings/base.py`, lido do ambiente com **5 MB** de padrão (`5 * 1024 * 1024`), no molde de `ARQUIVOS_CANDIDATOS_LIMITE_BYTES` e com o comentário que diz por que o limite é da aplicação e não do Edital (FR-013)
+- [X] T001 Mover `aceitar()` e `resumo()` de `backend/processo_seletivo/inscricoes/domain/arquivos.py` para `backend/processo_seletivo/shared/arquivos.py`, com `inscricoes` reimportando de lá e os testes existentes apontando para a casa nova (FR-009, R-007)
+- [X] T002 [P] Declarar `EDITAL_ANEXOS_LIMITE_BYTES` em `backend/config/settings/base.py`, lido do ambiente com **5 MB** de padrão (`5 * 1024 * 1024`), no molde de `ARQUIVOS_CANDIDATOS_LIMITE_BYTES` e com o comentário que diz por que o limite é da aplicação e não do Edital (FR-013)
 
 ---
 
@@ -43,34 +43,40 @@ fase, para rastrear.
 **Propósito**: a coleção passa a existir no conteúdo canônico e as tabelas passam a existir no banco.
 Nenhuma tela ainda. É a fase que mais quebra teste, e é melhor que quebre sozinha.
 
-**⚠️ Nenhuma história começa antes de T028**, que é a que devolve a suíte ao verde.
+**⚠️ Nenhuma história começa antes de T018.**
+
+*Corrigido em 07/09/2026, na execução:* a fase **não** passa por vermelho por causa da fixture de
+bytes. `snapshot_publicado.json` é um literal congelado — estava em `schemaVersion: 7`, e o degrau
+8 também não o tocou —, então ele não acompanha `SCHEMA_VERSION` e não quebra quando ela sobe. O
+vermelho da fase veio de onde devia: os guardas de declaração, que exigem que a coleção nova seja
+emitida, declarada e descrita no contrato. Todos fecham dentro da própria fase. A T028 foi para a
+US1, ao lado da T027, que é quando a composição do documento muda de verdade.
 
 ### A coleção declarada
 
-- [ ] T003 [P] Declarar `"/attachments"` em `COLECOES_COM_CHAVE` em `backend/processo_seletivo/publicacoes/domain/colecoes.py` — sem isto o seletor `id=` é recusado e a coleção nasce irretificável (FR-003, FR-032)
-- [ ] T004 [P] Escrever a tupla `ANEXO_PUBLICADO` de `Campo` e registrá-la em `COLECOES_PUBLICADAS` em `backend/processo_seletivo/editais/domain/validation.py` (FR-001, FR-005, FR-029)
-- [ ] T005 Acrescentar `attachmentId` (uuid, anulável) a `DOCUMENTO_EXIGIDO_PUBLICADO` em `backend/processo_seletivo/editais/domain/validation.py` (FR-020, FR-021)
-- [ ] T006 Elevar `SCHEMA_VERSION` de 8 para 9 em `backend/processo_seletivo/shared/canonical.py`, com o degrau narrado no log do módulo, e acrescentar `attachments: []` a `DEGRAUS_DA_RAIZ` em `backend/processo_seletivo/publicacoes/domain/elevacao.py` (R-004)
-- [ ] T007 Criar a tabela de degraus do nível `documentRequirement` em `backend/processo_seletivo/publicacoes/domain/elevacao.py`, com `attachmentId: null`, e o laço correspondente em `elevar()` (R-004)
-- [ ] T008 Acrescentar `_e_entidade_de_documento` e o tratamento em `elevar_valor`/`elevar_alteracoes` em `backend/processo_seletivo/publicacoes/domain/elevacao.py`, para que Alteração que endereça o requisito inteiro seja elevada (R-004)
-- [ ] T009 [P] Incorporar `AnexoPublicado`, `attachmentId` e `attachments` ao `specs/001-processo-seletivo-editais/contracts/openapi.yaml`, a partir de `specs/020-anexos-do-edital/contracts/anexos.yaml`
-- [ ] T010 [P] Registrar a coleção em `ESQUEMA_DA_COLECAO` em `backend/tests/contract/test_forma_publicada.py`
-- [ ] T011 [P] Acrescentar a coleção a `conteudo_normativo()` em `backend/tests/fixtures/snapshot.py`, mantendo os guardas de coleção declarada e elemento com chave. **`rascunho_completo()` não recebe `attachments`**: ele é o payload do `replace_draft`, e a coleção fica fora dele (R-006). A fixture de rascunho cria o anexo pelo comando próprio, antes de publicar
+- [X] T003 [P] Declarar `"/attachments"` em `COLECOES_COM_CHAVE` em `backend/processo_seletivo/publicacoes/domain/colecoes.py` — sem isto o seletor `id=` é recusado e a coleção nasce irretificável (FR-003, FR-032)
+- [X] T004 [P] Escrever a tupla `ANEXO_PUBLICADO` de `Campo` e registrá-la em `COLECOES_PUBLICADAS` em `backend/processo_seletivo/editais/domain/validation.py` (FR-001, FR-005, FR-029)
+- [X] T005 Acrescentar `attachmentId` (uuid, anulável) a `DOCUMENTO_EXIGIDO_PUBLICADO` em `backend/processo_seletivo/editais/domain/validation.py` (FR-020, FR-021)
+- [X] T006 Elevar `SCHEMA_VERSION` de 8 para 9 em `backend/processo_seletivo/shared/canonical.py`, com o degrau narrado no log do módulo, e acrescentar `attachments: []` a `DEGRAUS_DA_RAIZ` em `backend/processo_seletivo/publicacoes/domain/elevacao.py` (R-004)
+- [X] T007 Criar a tabela de degraus do nível `documentRequirement` em `backend/processo_seletivo/publicacoes/domain/elevacao.py`, com `attachmentId: null`, e o laço correspondente em `elevar()` (R-004)
+- [X] T008 Acrescentar `_e_entidade_de_documento` e o tratamento em `elevar_valor`/`elevar_alteracoes` em `backend/processo_seletivo/publicacoes/domain/elevacao.py`, para que Alteração que endereça o requisito inteiro seja elevada (R-004)
+- [X] T009 [P] Incorporar `AnexoPublicado`, `attachmentId` e `attachments` ao `specs/001-processo-seletivo-editais/contracts/openapi.yaml`, a partir de `specs/020-anexos-do-edital/contracts/anexos.yaml`
+- [X] T010 [P] Registrar a coleção em `ESQUEMA_DA_COLECAO` em `backend/tests/contract/test_forma_publicada.py`
+- [X] T011 [P] Acrescentar a coleção a `conteudo_normativo()` em `backend/tests/fixtures/snapshot.py`, mantendo os guardas de coleção declarada e elemento com chave. **`rascunho_completo()` não recebe `attachments`**: ele é o payload do `replace_draft`, e a coleção fica fora dele (R-006). A fixture de rascunho cria o anexo pelo comando próprio, antes de publicar
 
 ### As tabelas
 
-- [ ] T012 Criar `AnexoEdital` e `ArtefatoAnexo` em `backend/processo_seletivo/editais/models/anexos.py`, com os campos de [data-model.md](./data-model.md), e exportá-los em `backend/processo_seletivo/editais/models/__init__.py`. **Nenhuma tabela de versões por anexo**: a versão é a do Edital, como na Seção (FR-002, FR-004, FR-005, FR-007, FR-010, FR-011, FR-012, FR-014)
-- [ ] T013 Acrescentar a referência anulável `anexo` (`SET_NULL`) a `DocumentoExigido` em `backend/processo_seletivo/editais/models/documentos.py` **e incluir o campo no `bulk_create` de `replace_draft` em `backend/processo_seletivo/editais/application/draft.py`** — as linhas do requisito são apagadas e recriadas a cada gravação de etapa, e o campo esquecido zera o vínculo em silêncio (FR-020, FR-022)
-- [ ] T014 Escrever `backend/processo_seletivo/editais/migrations/0012_anexo_do_edital.py`
-- [ ] T015 Escrever `backend/processo_seletivo/editais/migrations/0013_congelamento_do_artefato.py`, com a trigger condicional `WHEN (OLD.congelado_em IS NOT NULL)` no molde de `publicacoes/migrations/0007_imutabilidade_do_historico.py` (FR-010, R-002)
+- [X] T012 Criar `AnexoEdital` e `ArtefatoAnexo` em `backend/processo_seletivo/editais/models/anexos.py`, com os campos de [data-model.md](./data-model.md), e exportá-los em `backend/processo_seletivo/editais/models/__init__.py`. **Nenhuma tabela de versões por anexo**: a versão é a do Edital, como na Seção (FR-002, FR-004, FR-005, FR-007, FR-010, FR-011, FR-012, FR-014)
+- [X] T013 Acrescentar a referência anulável `anexo` (`SET_NULL`) a `DocumentoExigido` em `backend/processo_seletivo/editais/models/documentos.py` **e incluir o campo no `bulk_create` de `replace_draft` em `backend/processo_seletivo/editais/application/draft.py`** — as linhas do requisito são apagadas e recriadas a cada gravação de etapa, e o campo esquecido zera o vínculo em silêncio (FR-020, FR-022)
+- [X] T014 Escrever `backend/processo_seletivo/editais/migrations/0012_anexo_do_edital.py`
+- [X] T015 Escrever `backend/processo_seletivo/editais/migrations/0013_congelamento_do_artefato.py`, com a trigger condicional `WHEN (OLD.congelado_em IS NOT NULL)` no molde de `publicacoes/migrations/0007_imutabilidade_do_historico.py` (FR-010, R-002)
 
 ### As garantias
 
-- [ ] T016 [P] Teste de migração em `backend/tests/migrations/` provando que artefato congelado recusa `UPDATE` e `DELETE` **no banco**, e que artefato não congelado aceita os dois (FR-010, FR-010a)
-- [ ] T017 [P] Estender `backend/tests/unit/publicacoes/test_colecoes.py` para cobrir `/attachments` como coleção declarada com chave
-- [ ] T018 [P] Escrever `backend/tests/contract/test_elevacao_degrau_9.py` no molde do degrau 8: conteúdo em versão 8 eleva para 9 com lista vazia e `attachmentId: null`, e a elevação é idempotente (R-004)
-- [ ] T020 Emitir `attachments` em `edital_snapshot` em `backend/processo_seletivo/publicacoes/application/publish_edital.py`, com ordenação determinística por `(order, id)` — a coleção é **declarada** em T003–T004 e precisa ser **emitida** aqui, senão a fase termina com declaração sem conteúdo (FR-001, FR-029, FR-030)
-- [ ] T028 Elevar `backend/tests/contract/fixtures/snapshot_publicado.json` para a versão 9 **à mão**, com `attachments` e `attachmentId`, e só então rodar `backend/scripts/gerar_fixture_documento.py`, que lê o JSON e regenera apenas o PDF. **Fecha a Foundational**: o degrau 9 muda o `content_hash` e o documento o imprime (`pdf.py:1786,1897`), então adiar isto deixaria a fase terminar com a suíte vermelha
+- [X] T016 [P] Teste de migração em `backend/tests/migrations/` provando que artefato congelado recusa `UPDATE` e `DELETE` **no banco**, e que artefato não congelado aceita os dois (FR-010, FR-010a)
+- [X] T017 [P] Estender `backend/tests/unit/publicacoes/test_colecoes.py` para cobrir `/attachments` como coleção declarada com chave
+- [X] T018 [P] Escrever `backend/tests/contract/test_elevacao_degrau_9.py` no molde do degrau 8: conteúdo em versão 8 eleva para 9 com lista vazia e `attachmentId: null`, e a elevação é idempotente (R-004)
+- [X] T020 Emitir `attachments` em `edital_snapshot` em `backend/processo_seletivo/publicacoes/application/publish_edital.py`, com ordenação determinística por `(order, id)` — a coleção é **declarada** em T003–T004 e precisa ser **emitida** aqui, senão a fase termina com declaração sem conteúdo (FR-001, FR-029, FR-030)
 
 ---
 
@@ -90,6 +96,7 @@ e baixar os três da página pública da seleção — sem shell e sem escrita d
 - [ ] T025 [US1] Acrescentar as regras impeditivas `attachment_label_required` e `attachment_artifact_missing`, e o aviso `attachment_duplicate_label`, em `backend/processo_seletivo/editais/domain/validation.py`, registradas em `validate_for_publication` (FR-005, FR-026)
 - [ ] T026 [P] [US1] Declarar a `Secao` gerada com `source="attachments"` no catálogo em `backend/processo_seletivo/editais/domain/secoes.py` (FR-027)
 - [ ] T027 [US1] Escrever o corpo `_anexos` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, listando rótulo e ordem **sem endereço**, e registrá-lo em `_CORPO_GERADO` (FR-027, FR-027a)
+- [ ] T028 [US1] Acrescentar os Anexos a `backend/tests/contract/fixtures/snapshot_publicado.json` e regenerar `documento_publicado_v1.pdf` com `backend/scripts/gerar_fixture_documento.py`, **na mesma tarefa que muda a composição** (T027) — é a única circunstância em que o script é legítimo, porque regenerar a evidência sem mudar o renderizador apaga o que a fixture guarda
 - [ ] T029 [P] [US1] Escrever `ArtefatoPublicoView` em `backend/processo_seletivo/publicacoes/api/public_views.py` e a rota em `public_urls.py`, com `AllowAny`, `ETag`, `If-None-Match` → 304, `IMMUTABLE_CACHE`, `Content-Disposition: attachment` e 404 para artefato não congelado. O endereço é o do **artefato**, e é assim que ele resolve "o de então" e nunca "o vigente" (FR-028, FR-039, FR-041, FR-042, FR-043, FR-052, R-003)
 - [ ] T030 [US1] Listar todos os anexos vigentes, na ordem editorial, na página pública da seleção em `backend/processo_seletivo/portal/views.py` e `templates/portal/selecao.html` (FR-039, FR-039a)
 - [ ] T031 [P] [US1] Testes de contrato da rota pública em `backend/tests/contract/`: 200 com `ETag`, 304 com `If-None-Match`, cabeçalho de cache, 404 do não congelado
@@ -186,10 +193,9 @@ lacuna e ausência de referência pendurada.
 ```text
 Setup (T001–T002)
    ↓
-Foundational (T003–T018, T020,    ← bloqueia tudo
-              T028)
+Foundational (T003–T018, T020)    ← bloqueia tudo
    ↓
-US1 (T019, T021–T027, T029–T034,  ┐
+US1 (T019, T021–T034,            ┐
      T023a)                       │
    ↓                              │
 US2 (T035–T041)   US3 (T042–T049, │  US2 e US3 são independentes entre si
@@ -203,13 +209,13 @@ US4 (T050–T052)   US5 (T053–T058, │  US4 depende de US2; US5 depende de US
 ```
 
 Dentro da Foundational, a ordem que importa: T003 antes de T020 (declarar antes de emitir); T006–T008
-antes de T011 e T018; T012–T013 antes de T014–T015; T020 depois de T012, porque emite a partir das
-linhas; e **T028 por último**, porque é ela que devolve a suíte ao verde depois do degrau 9.
+antes de T011 e T018; T012–T013 antes de T014–T015; e T020 depois de T012, porque emite a partir
+das linhas.
 
 ## Oportunidades de paralelismo
 
 - **Foundational**: T003, T004, T009, T010, T011 são arquivos distintos e correm juntas; T016, T017,
-  T018 idem, depois das migrations. T028 não é paralelizável: ela fecha a fase.
+  T018 idem, depois das migrations.
 - **US1**: T026 e T029 não dependem de T019–T025; os cinco testes — T023a e T031–T034 — correm
   juntos no fim.
 - **US3 e US2** podem ser feitas por duas pessoas ao mesmo tempo, depois da US1. Dentro da US3, os

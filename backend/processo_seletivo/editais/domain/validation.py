@@ -128,6 +128,10 @@ DOCUMENTO_EXIGIDO_PUBLICADO = (
     Campo("order", int, minimo=0),
     Campo("profileId", str, admite_nulo=True, formato="uuid"),
     Campo("modalityId", str, admite_nulo=True, formato="uuid"),
+    # O Anexo que serve de modelo para este requisito, ou nulo (020, FR-020). Aponta a identidade
+    # do **Anexo**, e nunca a do artefato: o artefato é o que aquela versão diz que o Anexo é, e
+    # trocá-lo por Retificação não pode obrigar a reescrever o requisito que o cita.
+    Campo("attachmentId", str, admite_nulo=True, formato="uuid"),
 )
 
 # A forma canônica do decimal de `weight` e `minimumScore`, os dois `decimal(7,4)`: no máximo três
@@ -184,11 +188,26 @@ SECAO_PUBLICADA = (
     Campo("type", str, valores=(GERADA, TEXTUAL)),
 )
 
+# O Anexo do Edital (020). Quatro campos e nenhum a mais, porque o sistema não conhece o que há
+# dentro do artefato: o rótulo é texto único escrito pelo autor — designação e título juntos, sem
+# campo separado que convidasse a derivar o numeral da posição (FR-005, FR-006) —, a ordem é campo
+# próprio, e o par identidade-do-artefato mais resumo é o que liga a versão aos bytes. O resumo
+# **verifica**; quem endereça é `artifactId`, porque dois artefatos de conteúdo idêntico são
+# legítimos e o resumo não distingue os dois (FR-011).
+ANEXO_PUBLICADO = (
+    Campo("id", str, formato="uuid"),
+    Campo("label", str),
+    Campo("order", int, minimo=0),
+    Campo("artifactId", str, formato="uuid"),
+    Campo("artifactHash", str),
+)
+
 COLECOES_PUBLICADAS = (
     ("profiles", PERFIL_PUBLICADO),
     ("schedule", EVENTO_PUBLICADO),
     ("stages", ETAPA_PUBLICADA),
     ("sections", SECAO_PUBLICADA),
+    ("attachments", ANEXO_PUBLICADO),
     ("documentRequirements", DOCUMENTO_EXIGIDO_PUBLICADO),
 )
 

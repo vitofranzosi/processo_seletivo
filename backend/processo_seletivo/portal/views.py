@@ -58,7 +58,6 @@ from processo_seletivo.inscricoes.application.submissao import (
     pendencias_para_enviar,
     reconhecer_versao,
 )
-from processo_seletivo.inscricoes.domain.arquivos import tamanho_legivel
 from processo_seletivo.inscricoes.domain.autenticidade import codigo_de_verificacao
 from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes, recebe_inscricoes
 from processo_seletivo.inscricoes.domain.pessoais import (
@@ -76,6 +75,7 @@ from processo_seletivo.recursos.application.interpor import objetos_recorriveis
 from processo_seletivo.recursos.application.selectors import recursos_do_titular
 from processo_seletivo.resultados.application.selectors import resultados_visiveis
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.shared.arquivos import tamanho_legivel
 from processo_seletivo.shared.http import marcar_como_privada, resposta_privada
 
 # O limite da coluna, aplicado antes de a gravação chegar ao banco.

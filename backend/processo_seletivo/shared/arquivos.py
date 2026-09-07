@@ -1,4 +1,4 @@
-"""O que o sistema aceita como documento do candidato — e como ele recusa o que não aceita.
+"""O que o sistema aceita como PDF — e como ele recusa o que não aceita.
 
 Duas regras, e nenhuma além: é PDF, e cabe no limite. O resto que se poderia querer aqui — OCR,
 conferência de conteúdo, antivírus, extração — está fora de escopo por decisão declarada, e a
@@ -6,7 +6,13 @@ recusa em implementá-lo é o que mantém esta camada pequena o bastante para se
 
 **A recusa ensina.** Um arquivo que o celular produziu ao fotografar um documento é o caso mais
 provável de todos, e "arquivo inválido" não diz à pessoa o que fazer com ele. Reconhecer as
-assinaturas de imagem custa uma tabela e transforma um beco numa instrução (FR-047).
+assinaturas de imagem custa uma tabela e transforma um beco numa instrução (FR-047 da `009`).
+
+**Mora em `shared` desde a `020`, e não em `inscricoes`.** As duas regras valem igual para o
+documento privado do candidato e para o anexo público do Edital; o que difere entre os dois é o
+**regime** — quem pode ler, e por quanto tempo os bytes vivem —, não o que se aceita como arquivo.
+O limite chega por parâmetro justamente por isso: cada regime tem o seu, declarado em `settings`, e
+uma cópia desta função para o outro lado criaria duas fontes da mesma regra (FR-009 da `020`).
 """
 
 import hashlib
