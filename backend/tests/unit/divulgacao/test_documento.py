@@ -5,8 +5,11 @@ permite afirmar sobre o texto **desenhado**, e não sobre o que se supõe ter si
 """
 
 import json
+import re
+from datetime import datetime
 
 import pytest
+from django.template import Context, Template
 
 from processo_seletivo.divulgacao.infrastructure.documento import render_resultado_pdf
 from processo_seletivo.shared.canonical import canonical_sha256
@@ -158,7 +161,50 @@ def test_o_documento_sem_posicao_alguma_diz_isso_em_vez_de_sair_vazio(conteudo):
     assert "Nenhum participante recebeu posição" in texto
 
 
-def test_o_instante_do_documento_e_o_mesmo_que_a_pagina_mostra(publicada, conteudo):
+def _leitura_do_relogio_no_documento(texto):
+    """A data e a hora que o documento imprime em PUBLICADO EM, como par comparável.
+
+    O rótulo e o valor saem em linhas próprias (`_par`), e o valor é a única coisa que interessa:
+    devolvê-lo como `(data, hora, minuto)` permite comparar **o instante** com o da página sem
+    exigir que as duas superfícies o escrevam com a mesma pontuação — `às 14h` e `14:00` são a
+    mesma leitura de relógio, e é sobre ela que este arquivo afirma.
+    """
+    linhas = texto.splitlines()
+    valor = linhas[linhas.index("PUBLICADO EM") + 1]
+    achado = re.fullmatch(r"(\d{2}/\d{2}/\d{4}), às (\d{2})h(\d{2})?", valor)
+    assert achado, f"o documento escreveu o instante fora da forma institucional: {valor!r}"
+    return achado.group(1), int(achado.group(2)), int(achado.group(3) or 0)
+
+
+PAGINA = Template('{{ m|date:"d/m/Y" }} {{ m|date:"H:i" }}')
+
+
+def _leitura_do_relogio_na_pagina(momento):
+    """O mesmo par, pelo caminho que a página percorre — o template, e não só o filtro.
+
+    `portal/resultado.html` escreve `{{ publicacao.publicado_em|date:"d/m/Y" }} às
+    {{ publicacao.publicado_em|date:"H:i" }}`. Renderizar em vez de transcrever o formato mantém
+    o teste preso ao que a página realmente faz — e **chamar `date` direto não bastaria**: quem
+    converte o instante para o fuso institucional é o motor de templates, em
+    `template_localtime`, não o filtro. Um ajudante que chamasse o filtro fora de um template
+    afirmaria UTC e acusaria o documento de errar justamente onde ele acerta.
+    """
+    data, relogio = PAGINA.render(Context({"m": momento})).split()
+    hora, minuto = relogio.split(":")
+    return data, int(hora), int(minuto)
+
+
+@pytest.mark.parametrize(
+    ("publicado_em", "por_que"),
+    [
+        ("2026-10-18T12:39:00+00:00", "09h39 — a hora de um dígito, que a página preenche"),
+        ("2026-10-18T03:00:00+00:00", "00h — a meia-noite, que o documento omitia inteira"),
+        ("2026-10-18T02:06:00+00:00", "23h06 do dia anterior — a virada, que muda o dia"),
+        ("2026-10-18T17:00:00+00:00", "14h — a hora cheia, que o Edital escreve sem os minutos"),
+        ("2026-10-18T20:42:00+00:00", "17h42 — a tarde, que já funcionava"),
+    ],
+)
+def test_o_instante_do_documento_e_o_mesmo_que_a_pagina_mostra(conteudo, publicado_em, por_que):
     """A página e o documento não podem discordar sobre **quando** o resultado foi divulgado.
 
     O conteúdo carrega o instante em UTC. A página passa pelo filtro `date`, que localiza; o
@@ -167,17 +213,22 @@ def test_o_instante_do_documento_e_o_mesmo_que_a_pagina_mostra(publicada, conteu
     que o documento existe para provar. Perto da meia-noite, a divergência muda também o dia.
 
     É o mesmo defeito que o comprovante da 009 já corrigiu, e pelo mesmo motivo.
+
+    **O instante é congelado, e não lido do relógio.** Enquanto o teste usava o `publicado_em`
+    que a publicação acabara de gravar, ele só exercitava a hora em que a suíte rodava: as duas
+    horas que o documento escrevia errado — a de um dígito e a meia-noite — passavam despercebidas
+    das 10h em diante e reprovavam de madrugada, o que fazia um defeito determinístico parecer
+    intermitente. Congelar transforma "às vezes falha" em "sempre cobre", e a parametrização diz
+    quais leituras de relógio o documento precisa acertar.
     """
-    from django.utils import timezone
+    momento = datetime.fromisoformat(publicado_em)
+    congelado = {**conteudo, "cabecalho": {**conteudo["cabecalho"], "publicado_em": publicado_em}}
 
-    _, publicacao = publicada
-    local = timezone.localtime(publicacao.publicado_em)
-    texto = texto_de_pdf_bytes(render_resultado_pdf(conteudo))
+    texto = texto_de_pdf_bytes(render_resultado_pdf(congelado))
 
-    assert local.strftime("%d/%m/%Y") in texto
-    assert f"{local:%H}h{local:%M}" in texto, (
-        f"o documento precisa dizer {local:%H}h{local:%M}, que é a hora que a página mostra"
-    )
+    documento = _leitura_do_relogio_no_documento(texto)
+
+    assert documento == _leitura_do_relogio_na_pagina(momento), por_que
 
 
 def test_o_documento_continua_deterministico_apesar_da_conversao_de_fuso(conteudo):

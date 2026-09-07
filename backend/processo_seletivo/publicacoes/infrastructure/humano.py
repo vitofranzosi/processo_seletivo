@@ -55,7 +55,19 @@ def instante(momento) -> str:
 
     `05/10/2026 14:00` é registro; `05/10/2026, às 14h` é ato administrativo. A hora cheia perde
     os minutos porque num Edital ela não os tem: um prazo que termina "às 23h59" se escreve assim,
-    e um que começa "às 14h" não vira "às 14h00".
+    e um que começa "às 14h" não vira "às 14h00". Essa omissão é a regra do módulo, e continua
+    valendo — o que mudou foram as duas exceções silenciosas que ela havia adquirido.
+
+    **A hora tem sempre dois dígitos** (`09h39`, e não `9h39`). A página passa pelo filtro `date`
+    do Django com `H`, que preenche; o documento não preenchia, e as duas superfícies discordavam
+    sobre o mesmo instante durante **dez horas de todo dia** — de 00h a 09h59. Divergência de
+    grafia num dado que o documento existe para provar é divergência, e a suíte só a acusava
+    quando rodava de manhã cedo, o que a fazia parecer intermitente.
+
+    **Meia-noite é hora, e não ausência de hora.** `00:00` caía num ramo que devolvia só a data:
+    o documento omitia o instante enquanto a página mostrava `00h00`. Um prazo que termina à
+    meia-noite precisa dizer que termina à meia-noite — e agora diz `às 00h`, que é a mesma regra
+    de `14h` aplicada à hora zero, e não uma exceção nova.
 
     **Escreve o que recebe, e não converte fuso.** É o mesmo compromisso do módulo: nada aqui
     depende de estado global do processo. Quem chama entrega o instante já no fuso em que ele deve
@@ -65,7 +77,5 @@ def instante(momento) -> str:
     if momento is None:
         return ""
     data = momento.strftime("%d/%m/%Y")
-    if momento.hour == 0 and momento.minute == 0:
-        return data
-    hora = f"{momento.hour}h" + (f"{momento.minute:02d}" if momento.minute else "")
+    hora = f"{momento.hour:02d}h" + (f"{momento.minute:02d}" if momento.minute else "")
     return f"{data}, às {hora}"

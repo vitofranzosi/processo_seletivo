@@ -309,7 +309,7 @@ def test_document_reproduces_the_schedule_with_institutional_dates():
     assert "Período de inscrições" in texto
     assert "INSCRICAO" not in texto
     # America/Sao_Paulo, conforme a zona institucional.
-    assert "01/09/2026, às 9h" in texto
+    assert "01/09/2026, às 09h" in texto
     assert "20/09/2026, às 23h59" in texto
 
 
@@ -446,7 +446,7 @@ def test_etapas_aparecem_com_caracter_peso_e_nota_minima():
     assert "Peso" in texto and "Nota mínima" in texto
     assert "2.0000" not in texto and "7.0000" not in texto
     assert "INSCRICAO" not in texto
-    assert "01/09/2026, às 9h" in texto
+    assert "01/09/2026, às 09h" in texto
 
 
 def test_parentheses_in_content_do_not_corrupt_the_document():
@@ -892,7 +892,7 @@ def test_o_cronograma_e_apresentado_em_tabela_com_colunas_alinhadas():
     centros = {
         round(recuo + largura(linha, tamanho, fonte) / 2)
         for linha, fonte, tamanho, recuo in linhas_desenhadas(documento(cronograma_longo(), HASH))
-        if linha == "01/09/2026, às 9h"
+        if linha == "01/09/2026, às 09h"
     }
     assert len(centros) == 1, f"a coluna de início não está alinhada: {centros}"
 
@@ -967,7 +967,7 @@ def test_a_etapa_apresenta_carater_peso_e_nota_em_pares_rotulo_valor():
     assert "2" in texto and "7" in texto
 
     # A data continua vindo do Evento vinculado, e não é digitada de novo na Etapa (FR-028).
-    assert "01/09/2026, às 9h" in texto
+    assert "01/09/2026, às 09h" in texto
 
     # Etapa sem peso nem nota mínima não ganha rótulo vazio.
     sem_ponderacao = snapshot()
@@ -1187,7 +1187,7 @@ def test_uma_celula_longa_nao_empurra_as_colunas_para_fora_da_pagina():
 
     # E o conteúdo continua lá: limitar a coluna quebra a célula, não a descarta.
     texto = texto_de(pdf)
-    assert "01/09/2026, às 9h" in texto and "20/09/2026, às 23h59" in texto
+    assert "01/09/2026, às 09h" in texto and "20/09/2026, às 23h59" in texto
     assert "DDDDD" in texto
 
 
