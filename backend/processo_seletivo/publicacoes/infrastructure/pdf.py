@@ -1145,11 +1145,17 @@ def _janela_recursal(marco):
     conhecidos, imprime-se só o algarismo — inventar a grafia de "cento e vinte e três" aqui seria
     mais chance de errar do que de acertar.
 
-    **O silêncio também é frase.** Marco que não declara janela não imprime nada: escrever "não
-    cabe recurso" afirmaria uma norma que o Edital não publicou, e o candidato conserva as vias que
-    a lei lhe dá fora deste sistema.
+    **O silêncio não imprime nada, e a negativa imprime** (FR-028, FR-113). São coisas diferentes:
+    marco que nada declara conserva as vias que a lei dá fora deste sistema, e escrever "não cabe
+    recurso" ali afirmaria norma que o Edital não publicou. Já `admits` falso **é** norma — a
+    recusa de interpor a cita, e o candidato tem direito de conferi-la no documento; calá-la aqui
+    deixaria a recusa citando o que não está escrito em lugar nenhum.
     """
-    janela = marco.get("appealWindow") or {}
+    janela = marco.get("appealWindow")
+    if not isinstance(janela, dict):
+        return ""
+    if janela.get("admits") is False:
+        return "Não caberá recurso contra o resultado deste marco."
     if not janela.get("admits"):
         return ""
     dias = janela.get("durationDays")

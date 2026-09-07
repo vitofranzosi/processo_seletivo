@@ -1,4 +1,11 @@
-"""Apoio comum às telas: identidade e o seletor que substitui a autenticação institucional."""
+"""Apoio comum às telas: identidade, o seletor que substitui a autenticação institucional, e o
+Edital em elaboração que mais de um teste do assistente precisa.
+
+As duas fixtures do rascunho moraram em `test_compor_classificacao.py` enquanto só ele as usava.
+Passaram para cá quando o assistente da janela recursal precisou do mesmo estado: importar fixture
+de um módulo de teste para outro funciona, mas faz o parâmetro da função sombrear o nome importado —
+e o mesmo estado passa a ter dois donos. Aqui ele não tem nenhum, que é o certo para apoio comum.
+"""
 
 import re
 
@@ -115,3 +122,62 @@ def protocolos_listados(corpo):
         if identificador is not None:
             listados.append(identificador)
     return listados
+
+
+ETAPA_CLASSIFICATORIA = "aaaaaaaa-0000-4000-8000-00000000e021"
+ETAPA_SO_ELIMINATORIA = "aaaaaaaa-0000-4000-8000-00000000e023"
+FATO_DO_DESEMPATE = "aaaaaaaa-0000-4000-8000-00000000e071"
+
+
+@pytest.fixture
+def edital(api_client, manager_headers, process_payload):
+    from processo_seletivo.processos.models import Edital
+
+    api_client.post("/api/v1/admin/processos", process_payload, format="json", **manager_headers)
+    return Edital.objects.get()
+
+
+@pytest.fixture
+def com_etapas(client, seletor_ligado, edital):
+    """Rascunho com uma Etapa classificatória e uma só eliminatória — o que o marco enumera.
+
+    O fato declarado entra aqui porque o desempate o consome: sem ele, o select "O que ele compara"
+    teria só Etapas, e metade da lista que o critério oferece ficaria fora do teste.
+    """
+    from tests.interface.test_compor import EVENTO, eventos, perfis
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(
+        client,
+        edital,
+        perfis=perfis(
+            **{
+                "fato-0-0-id": FATO_DO_DESEMPATE,
+                "fato-0-0-code": "EXPERIENCIA",
+                "fato-0-0-label": "Meses de experiência em EaD",
+                "fato-0-0-type": "INTEIRO",
+            }
+        ),
+        eventos=eventos(),
+    )
+    edital.refresh_from_db()
+    resposta = client.post(
+        reverse("interface:compor-etapa", args=[edital.id, "etapas"]),
+        {
+            "etapa-0-id": ETAPA_CLASSIFICATORIA,
+            "etapa-0-name": "Prova didática",
+            "etapa-0-order": "1",
+            "etapa-0-weight": "2",
+            "etapa-0-classificatory": "on",
+            "etapa-0-scheduleEventId": EVENTO,
+            "etapa-1-id": ETAPA_SO_ELIMINATORIA,
+            "etapa-1-name": "Análise documental",
+            "etapa-1-order": "2",
+            "etapa-1-weight": "1",
+            "etapa-1-eliminatory": "on",
+            "etapa-1-scheduleEventId": "",
+        },
+    )
+    assert resposta.status_code == 302, resposta.content
+    edital.refresh_from_db()
+    return edital

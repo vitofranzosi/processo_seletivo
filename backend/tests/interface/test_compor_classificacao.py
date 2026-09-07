@@ -17,9 +17,8 @@ from django.urls import reverse
 
 from processo_seletivo.classificacao.domain.combinacao import SEM_PONTUACAO, combinar
 from processo_seletivo.editais.models.perfis import MarcoClassificatorio
-from processo_seletivo.processos.models import Edital
-from tests.interface.conftest import compor_rascunho, identificar
-from tests.interface.test_compor import EVENTO, PERFIL, eventos, perfis
+from tests.interface.conftest import identificar
+from tests.interface.test_compor import PERFIL
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
@@ -28,53 +27,6 @@ ETAPA_SO_ELIMINATORIA = "aaaaaaaa-0000-4000-8000-00000000e023"
 MARCO = "aaaaaaaa-0000-4000-8000-00000000e051"
 CRITERIO = "aaaaaaaa-0000-4000-8000-00000000e061"
 FATO = "aaaaaaaa-0000-4000-8000-00000000e071"
-
-
-@pytest.fixture
-def edital(api_client, manager_headers, process_payload):
-    api_client.post("/api/v1/admin/processos", process_payload, format="json", **manager_headers)
-    return Edital.objects.get()
-
-
-@pytest.fixture
-def com_etapas(client, seletor_ligado, edital):
-    identificar(client, "ana.elaboradora", ["elaborador"])
-    # O fato declarado entra aqui porque o desempate o consome: sem ele, o select "O que ele
-    # compara" teria só Etapas, e metade da lista que o critério oferece ficaria fora do teste.
-    compor_rascunho(
-        client,
-        edital,
-        perfis=perfis(
-            **{
-                "fato-0-0-id": FATO,
-                "fato-0-0-code": "EXPERIENCIA",
-                "fato-0-0-label": "Meses de experiência em EaD",
-                "fato-0-0-type": "INTEIRO",
-            }
-        ),
-        eventos=eventos(),
-    )
-    edital.refresh_from_db()
-    resposta = client.post(
-        reverse("interface:compor-etapa", args=[edital.id, "etapas"]),
-        {
-            "etapa-0-id": ETAPA_CLASSIFICATORIA,
-            "etapa-0-name": "Prova didática",
-            "etapa-0-order": "1",
-            "etapa-0-weight": "2",
-            "etapa-0-classificatory": "on",
-            "etapa-0-scheduleEventId": EVENTO,
-            "etapa-1-id": ETAPA_SO_ELIMINATORIA,
-            "etapa-1-name": "Análise documental",
-            "etapa-1-order": "2",
-            "etapa-1-weight": "1",
-            "etapa-1-eliminatory": "on",
-            "etapa-1-scheduleEventId": "",
-        },
-    )
-    assert resposta.status_code == 302, resposta.content
-    edital.refresh_from_db()
-    return edital
 
 
 def marco_form(**alteracoes):
