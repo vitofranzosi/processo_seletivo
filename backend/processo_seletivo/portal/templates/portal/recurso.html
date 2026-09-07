@@ -29,6 +29,19 @@ existência do juízo e da decisão (D-010).
   <dd>{{ recurso.objeto }}</dd>
   <dt>Sua razão</dt>
   <dd>{{ recurso.fundamentacao|linebreaksbr }}</dd>
+  {% if recurso.janela_fecha_em %}
+  {% comment %}
+    **O prazo que valia quando esta peça nasceu**, e não o de hoje (FR-024): a janela foi gravada
+    na interposição justamente para que a leitura de amanhã não responda com a norma de amanhã.
+
+    A linha só existe quando houve janela declarada. Sem ela não há prazo a mostrar, e anunciar
+    "sem prazo" transformaria o silêncio do Edital em norma que ninguém publicou (FR-028).
+  {% endcomment %}
+  <dt>Prazo recursal</dt>
+  <dd>De {{ recurso.janela_abriu_em|date:"d/m/Y" }} às {{ recurso.janela_abriu_em|date:"H\hi" }}
+    até {{ recurso.janela_fecha_em|date:"d/m/Y" }} às {{ recurso.janela_fecha_em|date:"H\hi" }}
+    · {{ recurso.tempestividade_rotulo }}</dd>
+  {% endif %}
 </dl>
 
 {% if recurso.admissibilidade %}

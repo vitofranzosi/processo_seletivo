@@ -75,6 +75,12 @@ def resumo(peca):
         "objeto": _objeto(peca),
         "situacao": _situacao(juizo, decisao),
         "situacao_rotulo": SITUACOES[_situacao(juizo, decisao)],
+        # Os dois instantes que a peça gravou, para que a tela do titular possa **exibi-los**
+        # (FR-024) — e a tempestividade derivada deles, na mesma linha. Nulos quando o Edital não
+        # declarou janela, e é assim que a tela sabe não escrever prazo nenhum (FR-028).
+        "janela_abriu_em": peca.janela_abriu_em,
+        "janela_fecha_em": peca.janela_fecha_em,
+        "tempestividade_rotulo": TEMPESTIVIDADES[_tempestividade(peca)],
         "admissibilidade": (
             {"admitido": juizo.admitido, "motivo": juizo.motivo, "quando": juizo.decidido_em}
             if juizo is not None
@@ -502,3 +508,62 @@ def decisoes_a_citar(*, edital, marco_id, marco, publicacoes_do_marco):
         marco=marco,
         publicacoes_do_marco=publicacoes_do_marco,
     )
+
+
+def causa_da_correcao(ato):
+    """A decisão de recurso que motivou este ato sucessor — ou `None` (FR-088).
+
+    **Duas derivações, porque há duas maneiras de um recurso corrigir um ato**, e ler só a primeira
+    deixava metade das retificações anônimas:
+
+    ```text
+    citação     a providência a jusante nomeia a decisão no próprio ato — é o caminho da FR-089
+    cadeia      a correção fixada e a reavaliação determinada não citam nada: elas superam o
+                Resultado, e o ato sucessor passa a enumerar o sucessor no lugar do superado
+    ```
+
+    A segunda é a que a caminhada da T125 encontrou faltando: recurso deferido com correção fixada,
+    ato sucessor emitido, definitiva publicada — e a página dizia só "Resultado definitivo", sem
+    dizer que retificava nada nem por quê.
+
+    A comparação é entre os universos do ato e do seu antecessor: o que **entrou** e carrega decisão
+    de recurso é o que este ato corrigiu. Olhar só o universo de agora nomearia de novo, em cada
+    ato seguinte, uma correção que já foi divulgada.
+    """
+    from processo_seletivo.classificacao.models import CitacaoDeDecisao
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    citacao = (
+        CitacaoDeDecisao.objects.filter(ato_id=ato.pk)
+        .select_related("decisao", "decisao__recurso")
+        .order_by("decisao__decidido_em")
+        .first()
+    )
+    if citacao is not None:
+        return {"recurso": citacao.decisao.recurso.protocolo, "quando": citacao.decisao.decidido_em}
+
+    entraram = _resultados_do_universo(ato) - _resultados_do_universo(ato.ato_anterior)
+    if not entraram:
+        return None
+    superador = (
+        ResultadoEtapa.objects.filter(pk__in=entraram, decisao__isnull=False)
+        .select_related("decisao", "decisao__recurso")
+        .order_by("decisao__decidido_em")
+        .first()
+    )
+    if superador is None:
+        return None
+    return {
+        "recurso": superador.decisao.recurso.protocolo,
+        "quando": superador.decisao.decidido_em,
+    }
+
+
+def _resultados_do_universo(ato):
+    if ato is None:
+        return set()
+    return {
+        str(item.get("id"))
+        for item in (ato.universo or {}).get("stageResults") or []
+        if item.get("id")
+    }

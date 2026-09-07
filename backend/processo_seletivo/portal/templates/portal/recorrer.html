@@ -24,9 +24,15 @@ fundamentação seria pedir que a pessoa escrevesse tudo de novo por causa de um
     {% endcomment %}
     <select id="objeto" name="objeto" required>
       {% for alvo in recorriveis %}
-      <option value="{{ alvo.tipo }}:{{ alvo.id }}">{{ alvo.rotulo }}</option>
+      <option value="{{ alvo.tipo }}:{{ alvo.id }}">{{ alvo.rotulo }}{% if alvo.fecha_em %} — até {{ alvo.fecha_em|date:"d/m/Y" }} às {{ alvo.fecha_em|date:"H\hi" }}{% endif %}</option>
       {% endfor %}
     </select>
+    {% comment %}
+      **O instante do encerramento vai junto do que ele encerra** (FR-024). Uma data solta no topo
+      da página não diria de qual objeto é — e, com dois marcos alcançando a mesma Etapa, os prazos
+      são diferentes. Onde não há janela declarada não aparece data alguma: não há prazo a exibir
+      nem a aplicar, e escrever "sem prazo" ali sugeriria um prazo que ninguém declarou (FR-028).
+    {% endcomment %}
   </div>
   <div class="campo">
     <label for="fundamentacao">Sua razão</label>

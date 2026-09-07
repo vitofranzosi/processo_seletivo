@@ -409,18 +409,40 @@ def objetos_recorriveis(inscricao):
             "tipo": "publicacao",
             "id": item["publicacao"].id,
             "rotulo": item["marco"] or item["natureza_rotulo"],
+            "fecha_em": _fecha_em(inscricao, item["publicacao"], None, agora),
         }
         for item in situacoes_do_candidato(inscricao)
         if item["publicacao"].id not in ja_recorridos
         and _no_prazo(inscricao, item["publicacao"], None, agora)
     ]
     resultados = [
-        {"tipo": "resultado", "id": item["id"], "rotulo": item["etapa"]}
+        {
+            "tipo": "resultado",
+            "id": item["id"],
+            "rotulo": item["etapa"],
+            "fecha_em": _fecha_em(inscricao, None, _resultado(inscricao, item["id"]), agora),
+        }
         for item in resultados_visiveis(inscricao)
         if item["id"] not in ja_recorridos
         and _no_prazo(inscricao, None, _resultado(inscricao, item["id"]), agora)
     ]
     return publicacoes + resultados
+
+
+def _fecha_em(inscricao, publicacao, resultado, agora):
+    """Quando o prazo daquele objeto fecha — `None` quando não há janela declarada.
+
+    **É a mesma escolha da interposição**, e tem de ser: mostrar uma data e aceitar até outra faria
+    a tela mentir. Entre janelas abertas vale a mais generosa, porque é ela que a FR-027 aplica.
+
+    Sem declaração não há data a exibir, e `None` aqui não é "não sei": é a FR-028 dizendo que
+    prazo nenhum existe para exibir ou aplicar.
+    """
+    janelas, so_negativas = _janelas_pertinentes(inscricao, publicacao, resultado, agora)
+    if so_negativas or not janelas:
+        return None
+    abertas = [fecha for _abre, fecha in janelas if agora <= fecha]
+    return max(abertas) if abertas else None
 
 
 def _resultado(inscricao, identificador):
