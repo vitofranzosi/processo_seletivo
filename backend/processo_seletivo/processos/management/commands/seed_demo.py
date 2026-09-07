@@ -5,6 +5,7 @@ a segregação de funções e a auditoria fiquem verdadeiras. Serve para inspeci
 ar; não é fixture de teste nem carga de produção.
 """
 
+import contextlib
 from datetime import timedelta
 from decimal import Decimal
 
@@ -34,11 +35,48 @@ SIGNATARIO = {
 }
 
 
+@contextlib.contextmanager
+def _relogio_atrasado(dias):
+    """Roda a demonstração inteira como se ela tivesse acontecido há `dias` dias.
+
+    **Não é atalho de produto, e nenhuma regra é afrouxada**: o certame percorre os mesmos
+    commands, com as mesmas aferições; só o instante em que ele ocorreu é outro. Sem isso, um
+    prazo recursal de cinco dias declarado hoje só poderia ser demonstrado **aberto** — e o que
+    a instituição precisa ver é também a recusa depois do encerramento, que nenhuma tela alcança
+    sem esperar cinco dias.
+
+    O deslocamento vale só enquanto o `seed` roda; a aplicação continua lendo o relógio real, e é
+    por isso que o resultado semeado aparece, no navegador, com a janela já encerrada.
+    """
+    if not dias:
+        yield
+        return
+    real = timezone.now
+    deslocamento = timedelta(days=dias)
+
+    def atrasado():
+        return real() - deslocamento
+
+    timezone.now = atrasado
+    try:
+        yield
+    finally:
+        timezone.now = real
+
+
 def ator(subject, *permissoes):
     return Actor(subject, ESCOPO, frozenset(permissoes))
 
 
-def perfis(numero):
+def _janela_do_marco(escolha):
+    if escolha == "negada":
+        return {"appealWindow": {"admits": False, "durationDays": None, "unit": "DIAS_CORRIDOS"}}
+    if escolha == "declarada":
+        return {"appealWindow": {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"}}
+    return {}
+
+
+def perfis(numero, *, janela_recursal="declarada"):
     return [
         {
             "id": f"00000000-0000-0000-00{numero}-0000000000b1",
@@ -71,11 +109,19 @@ def perfis(numero):
                     # **norma publicada**, e a demonstração precisa mostrar o candidato lendo os
                     # instantes exatos de abertura e encerramento — e não uma tela que fala de
                     # recurso sem dizer até quando (FR-024, FR-030).
-                    "appealWindow": {
-                        "admits": True,
-                        "durationDays": 5,
-                        "unit": "DIAS_CORRIDOS",
-                    },
+                    #
+                    # Os **três** estados, porque são três coisas diferentes (FR-020, FR-113):
+                    #
+                    # ```text
+                    # declarada  admite recurso, por cinco dias corridos
+                    # negada     `admits` falso — norma publicada dizendo que não cabe por esta via
+                    # ausente    a chave não existe, como em todo Edital anterior ao degrau 8
+                    # ```
+                    #
+                    # A ausência devolve a tempestividade ao juízo humano motivado; a negativa a
+                    # recusa nomeando a norma. Semear só a primeira deixaria as outras duas
+                    # indemonstráveis no navegador.
+                    **_janela_do_marco(janela_recursal),
                 }
             ],
             "competitionModalities": [
@@ -271,8 +317,31 @@ class Command(BaseCommand):
         parser.add_argument(
             "--ano", type=int, default=None, help="ano do Edital (padrão: o ano corrente)"
         )
+        parser.add_argument(
+            "--janela-recursal",
+            choices=["declarada", "negada", "ausente"],
+            default="declarada",
+            help=(
+                "o que o marco declara sobre recurso: prazo de cinco dias, negativa expressa, "
+                "ou nada — como nos Editais anteriores ao degrau 8"
+            ),
+        )
+        parser.add_argument(
+            "--dias-atras",
+            type=int,
+            default=0,
+            help=(
+                "roda a demonstração como se ela tivesse ocorrido há N dias; serve para "
+                "exibir um prazo recursal já encerrado"
+            ),
+        )
 
     def handle(self, *args, **opcoes):
+        with _relogio_atrasado(opcoes["dias_atras"]):
+            self._semear(**opcoes)
+
+    def _semear(self, **opcoes):
+        self.janela_recursal = opcoes["janela_recursal"]
         codigo = opcoes["codigo"]
         existente = ProcessoSeletivo.objects.filter(
             institution_scope=ESCOPO, institutional_code=codigo
@@ -353,7 +422,7 @@ class Command(BaseCommand):
             actor=elaborador,
             edital_id=edital.id,
             expected_revision=edital.revision,
-            profiles=perfis(numero),
+            profiles=perfis(numero, janela_recursal=self.janela_recursal),
             schedule=cronograma(agora, numero),
             stages=etapas(numero),
             document_requirements=documentos_exigidos(numero),
@@ -465,7 +534,7 @@ class Command(BaseCommand):
             actor=elaborador,
             edital_id=edital.id,
             expected_revision=edital.revision,
-            profiles=perfis(numero),
+            profiles=perfis(numero, janela_recursal=self.janela_recursal),
             schedule=cronograma(agora - timedelta(days=60), numero),
             stages=etapas(numero),
             document_requirements=documentos_exigidos(numero),
