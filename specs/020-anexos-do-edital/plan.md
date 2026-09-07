@@ -148,7 +148,7 @@ specs/020-anexos-do-edital/
 backend/processo_seletivo/
 ├── editais/
 │   ├── models/anexos.py                  # NOVO — AnexoEdital, ArtefatoAnexo
-│   ├── models/documentos.py              # + anexo (FK anulável, PROTECT ou SET_NULL)
+│   ├── models/documentos.py              # + anexo (FK anulável, SET_NULL)
 │   ├── models/__init__.py                # + exports
 │   ├── migrations/0012_anexo_do_edital.py        # NOVO
 │   ├── migrations/0013_congelamento_do_artefato.py # NOVO — trigger condicional

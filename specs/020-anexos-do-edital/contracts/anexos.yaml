@@ -30,7 +30,10 @@ paths:
               description: 'public, max-age=31536000, immutable'
               schema: { type: string }
             Content-Disposition:
-              description: attachment, com nome derivado do rótulo do anexo.
+              description: >
+                attachment, com nome derivado do `nome_original` sanitizado do artefato. **Não** do
+                rótulo: a rota conhece o artefato, e o mesmo artefato pode servir a anexos de
+                rótulos diferentes — inclusive em Editais diferentes.
               schema: { type: string }
           content:
             application/pdf:

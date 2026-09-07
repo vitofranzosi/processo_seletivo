@@ -100,13 +100,15 @@ Não são perguntas para o `/plan`. Reabrir qualquer uma exige evidência nova.
 ### D-001 — Identidade normativa estável, separada do artefato binário
 
 O Anexo tem identidade própria no conteúdo publicado; cada versão do Edital referencia, para essa
-identidade, **um** artefato imutável endereçado por hash.
+identidade, **um** artefato imutável, de identidade própria e verificado por resumo criptográfico.
+O resumo prova; quem endereça é a identidade — o resumo não serve para isso, porque dois artefatos
+de conteúdo idêntico são legítimos.
 
 ```text
 Anexo VI  ← identidade normativa estável
    │
-   ├─ conteúdo canônico da versão 3 → { id, rótulo, ordem, hash A }
-   └─ conteúdo canônico da versão 4 → { id, rótulo, ordem, hash B }
+   ├─ conteúdo canônico da versão 3 → { id, rótulo, ordem, artefato A, resumo de A }
+   └─ conteúdo canônico da versão 4 → { id, rótulo, ordem, artefato B, resumo de B }
 ```
 
 As versões 3 e 4 são **do Edital**, não do anexo: não existe versão por anexo, pela mesma razão que
@@ -431,9 +433,10 @@ e ausência de referência pendurada.
 
 - **FR-009**: O artefato MUST ser PDF, verificado pelo conteúdo do arquivo e não pela extensão ou
   pelo nome.
-- **FR-010**: O artefato **referenciado por alguma versão publicada** MUST ser imutável, endereçado
-  por resumo criptográfico, e MUST NOT ser sobrescrito nem excluído pela aplicação — nem quando uma
-  Retificação posterior o substitui.
+- **FR-010**: O artefato **referenciado por alguma versão publicada** MUST ser imutável, MUST ter
+  identidade própria pela qual é referenciado, MUST ser verificável pelo resumo criptográfico
+  registrado, e MUST NOT ser sobrescrito nem excluído pela aplicação — nem quando uma Retificação
+  posterior o substitui. O resumo **não** endereça (FR-011).
 - **FR-010a**: Trocar o arquivo de um Anexo **antes da primeira publicação que o referencie** MUST
   substituir o artefato corrente, e o anterior MUST NOT ser preservado. Não há histórico de
   elaboração de artefato, e não há desfazer.
@@ -567,8 +570,8 @@ e ausência de referência pendurada.
 - **Anexo do Edital**: conteúdo normativo binário com identidade estável, rótulo editorial e ordem,
   declarado pelo Edital e publicado com ele. Não tem versão própria; a versão é a do Edital. É
   opaco: o sistema não conhece seus campos.
-- **Artefato**: os bytes publicados de um Anexo numa versão, imutáveis, endereçados por resumo
-  criptográfico, com tipo, tamanho, autoria e instante. Um Anexo referencia um artefato por versão;
+- **Artefato**: os bytes publicados de um Anexo numa versão, imutáveis, com identidade própria,
+  resumo criptográfico que os verifica, tipo, tamanho, autoria e instante. Um Anexo referencia um artefato por versão;
   versões diferentes podem referenciar artefatos diferentes, e os anteriores permanecem.
 - **Modelo do Documento Exigido**: a referência anulável do `DocumentoExigido` ao Anexo que serve de
   forma. Não é entidade nova, é campo — e não pode sobreviver ao alvo.

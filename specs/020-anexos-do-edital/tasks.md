@@ -40,7 +40,7 @@ fase, para rastrear.
 **Propósito**: a coleção passa a existir no conteúdo canônico e as tabelas passam a existir no banco.
 Nenhuma tela ainda. É a fase que mais quebra teste, e é melhor que quebre sozinha.
 
-**⚠️ Nenhuma história começa antes de T018.**
+**⚠️ Nenhuma história começa antes de T028**, que é a que devolve a suíte ao verde.
 
 ### A coleção declarada
 
@@ -52,11 +52,11 @@ Nenhuma tela ainda. É a fase que mais quebra teste, e é melhor que quebre sozi
 - [ ] T008 Acrescentar `_e_entidade_de_documento` e o tratamento em `elevar_valor`/`elevar_alteracoes` em `backend/processo_seletivo/publicacoes/domain/elevacao.py`, para que Alteração que endereça o requisito inteiro seja elevada (R-004)
 - [ ] T009 [P] Incorporar `AnexoPublicado`, `attachmentId` e `attachments` ao `specs/001-processo-seletivo-editais/contracts/openapi.yaml`, a partir de `specs/020-anexos-do-edital/contracts/anexos.yaml`
 - [ ] T010 [P] Registrar a coleção em `ESQUEMA_DA_COLECAO` em `backend/tests/contract/test_forma_publicada.py`
-- [ ] T011 [P] Acrescentar a coleção a `conteudo_normativo()` e `rascunho_completo()` em `backend/tests/fixtures/snapshot.py`, mantendo os guardas de coleção declarada e elemento com chave
+- [ ] T011 [P] Acrescentar a coleção a `conteudo_normativo()` em `backend/tests/fixtures/snapshot.py`, mantendo os guardas de coleção declarada e elemento com chave. **`rascunho_completo()` não recebe `attachments`**: ele é o payload do `replace_draft`, e a coleção fica fora dele (R-006). A fixture de rascunho cria o anexo pelo comando próprio, antes de publicar
 
 ### As tabelas
 
-- [ ] T012 Criar `AnexoEdital` e `ArtefatoAnexo` em `backend/processo_seletivo/editais/models/anexos.py`, com os campos de [data-model.md](./data-model.md), e exportá-los em `backend/processo_seletivo/editais/models/__init__.py` (FR-002, FR-005, FR-007, FR-010, FR-011, FR-012, FR-014)
+- [ ] T012 Criar `AnexoEdital` e `ArtefatoAnexo` em `backend/processo_seletivo/editais/models/anexos.py`, com os campos de [data-model.md](./data-model.md), e exportá-los em `backend/processo_seletivo/editais/models/__init__.py`. **Nenhuma tabela de versões por anexo**: a versão é a do Edital, como na Seção (FR-002, FR-004, FR-005, FR-007, FR-010, FR-011, FR-012, FR-014)
 - [ ] T013 Acrescentar a referência anulável `anexo` (`SET_NULL`) a `DocumentoExigido` em `backend/processo_seletivo/editais/models/documentos.py` **e incluir o campo no `bulk_create` de `replace_draft` em `backend/processo_seletivo/editais/application/draft.py`** — as linhas do requisito são apagadas e recriadas a cada gravação de etapa, e o campo esquecido zera o vínculo em silêncio (FR-020, FR-022)
 - [ ] T014 Escrever `backend/processo_seletivo/editais/migrations/0012_anexo_do_edital.py`
 - [ ] T015 Escrever `backend/processo_seletivo/editais/migrations/0013_congelamento_do_artefato.py`, com a trigger condicional `WHEN (OLD.congelado_em IS NOT NULL)` no molde de `publicacoes/migrations/0007_imutabilidade_do_historico.py` (FR-010, R-002)
@@ -66,7 +66,8 @@ Nenhuma tela ainda. É a fase que mais quebra teste, e é melhor que quebre sozi
 - [ ] T016 [P] Teste de migração em `backend/tests/migrations/` provando que artefato congelado recusa `UPDATE` e `DELETE` **no banco**, e que artefato não congelado aceita os dois (FR-010, FR-010a)
 - [ ] T017 [P] Estender `backend/tests/unit/publicacoes/test_colecoes.py` para cobrir `/attachments` como coleção declarada com chave
 - [ ] T018 [P] Escrever `backend/tests/contract/test_elevacao_degrau_9.py` no molde do degrau 8: conteúdo em versão 8 eleva para 9 com lista vazia e `attachmentId: null`, e a elevação é idempotente (R-004)
-- [ ] T028 Regenerar `backend/tests/contract/fixtures/snapshot_publicado.json` e `documento_publicado_v1.pdf` com `backend/scripts/gerar_fixture_documento.py` — **fecha a Foundational**, porque o degrau 9 muda o `content_hash` e o documento o imprime (`pdf.py:1786,1897`); adiar isto deixaria a fase terminar com a suíte vermelha
+- [ ] T020 Emitir `attachments` em `edital_snapshot` em `backend/processo_seletivo/publicacoes/application/publish_edital.py`, com ordenação determinística por `(order, id)` — a coleção é **declarada** em T003–T004 e precisa ser **emitida** aqui, senão a fase termina com declaração sem conteúdo (FR-001, FR-029, FR-030)
+- [ ] T028 Elevar `backend/tests/contract/fixtures/snapshot_publicado.json` para a versão 9 **à mão**, com `attachments` e `attachmentId`, e só então rodar `backend/scripts/gerar_fixture_documento.py`, que lê o JSON e regenera apenas o PDF. **Fecha a Foundational**: o degrau 9 muda o `content_hash` e o documento o imprime (`pdf.py:1786,1897`), então adiar isto deixaria a fase terminar com a suíte vermelha
 
 ---
 
@@ -77,11 +78,11 @@ Nenhuma tela ainda. É a fase que mais quebra teste, e é melhor que quebre sozi
 **Teste independente**: elaborar um Edital com três anexos pela interface administrativa, publicá-lo
 e baixar os três da página pública da seleção — sem shell e sem escrita direta no banco.
 
-- [ ] T019 [US1] Escrever `anexar`, `rotular`, `reordenar` e `remover` em `backend/processo_seletivo/editais/application/anexos.py`, com `require_permission(actor, "edital:elaborar")`, `compare_and_swap` na revisão do Edital, validação por `shared/arquivos.aceitar` e `record_event` (FR-015, FR-015a, FR-016, FR-055)
-- [ ] T020 [US1] Emitir `attachments` em `edital_snapshot` em `backend/processo_seletivo/publicacoes/application/publish_edital.py`, com ordenação determinística por `(order, id)` (FR-001, FR-029, FR-030)
-- [ ] T021 [US1] Acrescentar a etapa `anexos` ao assistente: rota em `backend/processo_seletivo/interface/urls.py`, tratamento em `backend/processo_seletivo/interface/views.py` e os templates `compor_anexos.html` e `_anexo.html`, com `enctype="multipart/form-data"` — é o primeiro caminho de escrita de arquivo da interface administrativa (FR-015, FR-019)
+- [ ] T019 [US1] Escrever `anexar`, `substituir`, `rotular`, `reordenar` e `remover` em `backend/processo_seletivo/editais/application/anexos.py`, com `require_permission(actor, "edital:elaborar")`, `compare_and_swap` na revisão do Edital, validação por `shared/arquivos.aceitar` e `record_event`. `substituir` troca o artefato do Anexo e **apaga o anterior** quando ele não está congelado — não há histórico de elaboração de artefato (FR-010a, FR-015, FR-015a, FR-016, FR-055)
+- [ ] T021 [US1] Acrescentar a etapa `anexos` ao assistente: rota em `backend/processo_seletivo/interface/urls.py`, tratamento em `backend/processo_seletivo/interface/views.py` e os templates `compor_anexos.html` e `_anexo.html`, com `enctype="multipart/form-data"` e a ação de **trocar o arquivo** de um anexo já existente — é o primeiro caminho de escrita de arquivo da interface administrativa (FR-010a, FR-015, FR-019)
 - [ ] T022 [US1] Servir o artefato de rascunho pela interface administrativa, exigindo ator no escopo institucional e autorização de elaboração, revisão ou homologação (FR-017)
-- [ ] T023 [US1] Declarar `attachments` em `COLECOES` em `backend/processo_seletivo/interface/revisao.py`, com a função de leitura no padrão de `_secao` (FR-018)
+- [ ] T023 [US1] Declarar `attachments` em `COLECOES` em `backend/processo_seletivo/interface/revisao.py`, com a função de leitura no padrão de `_secao`; a tela DEVE oferecer o **link para baixar o artefato** de cada anexo e dizer, em cada Documento Exigido, qual anexo é o seu modelo. Conferir bytes que não se pode abrir não é conferir, e é o canal do homologador que o princípio VI cobra (FR-018)
+- [ ] T023a [P] [US1] Teste de interface pelo canal do homologador: a tela de Revisão lista os anexos, entrega os bytes ao clicar, e nomeia o modelo de cada requisito (FR-018)
 - [ ] T024 [US1] Congelar, dentro da transação de `publish_edital`, todos os artefatos referenciados pela versão publicada, carimbando `congelado_em` (FR-010, FR-025)
 - [ ] T025 [US1] Acrescentar as regras impeditivas `attachment_label_required` e `attachment_artifact_missing`, e o aviso `attachment_duplicate_label`, em `backend/processo_seletivo/editais/domain/validation.py`, registradas em `validate_for_publication` (FR-005, FR-026)
 - [ ] T026 [P] [US1] Declarar a `Secao` gerada com `source="attachments"` no catálogo em `backend/processo_seletivo/editais/domain/secoes.py` (FR-027)
@@ -90,7 +91,7 @@ e baixar os três da página pública da seleção — sem shell e sem escrita d
 - [ ] T030 [US1] Listar todos os anexos vigentes, na ordem editorial, na página pública da seleção em `backend/processo_seletivo/portal/views.py` e `templates/portal/selecao.html` (FR-039, FR-039a)
 - [ ] T031 [P] [US1] Testes de contrato da rota pública em `backend/tests/contract/`: 200 com `ETag`, 304 com `If-None-Match`, cabeçalho de cache, 404 do não congelado
 - [ ] T032 [P] [US1] Teste de autorização em `backend/tests/authorization/`: artefato de Edital não publicado devolve **404** pela rota pública, e é entregue a quem tem autorização pela interface — é a fronteira entre o regime público versionado e a raiz privada da `009` (FR-017, FR-052)
-- [ ] T033 [P] [US1] Teste de interface em `backend/tests/interface/`: subir, rotular, ordenar e remover no rascunho — **e gravar outra etapa do assistente sem que os anexos sumam**, que é o modo de falha do `replace_draft` (R-006)
+- [ ] T033 [P] [US1] Teste de interface em `backend/tests/interface/`: subir, **substituir**, rotular, ordenar e remover no rascunho, provando que o artefato substituído não é preservado (FR-010a) — **e gravar outra etapa do assistente sem que os anexos nem o vínculo sumam**, que é o modo de falha do `replace_draft` (R-006)
 - [ ] T034 [P] [US1] Teste do PDF em `backend/tests/unit/publicacoes/test_pdf.py`: a seção de anexos aparece no documento, é determinística e não imprime endereço (FR-027a, FR-030)
 
 **Checkpoint**: passos 1, 6 e 7 do quickstart passam a ser demonstráveis.
@@ -126,11 +127,11 @@ que a publicação anterior e a vigente entregam bytes diferentes, com resumos d
 - [ ] T043 [US3] Aceitar a substituição do artefato dentro do ato de Retificação: `enctype="multipart/form-data"` em `templates/interface/retificar.html`, recepção em `backend/processo_seletivo/interface/views.py`, e criação do artefato com `congelado_em` nulo (FR-034, FR-035)
 - [ ] T044 [US3] Traduzir a substituição em `REPLACE` de `artifactId` e `artifactHash` em `diferencas` em `backend/processo_seletivo/interface/retificacao.py` — os bytes não viajam na alteração (FR-035)
 - [ ] T045 [US3] Congelar, em `publish_retification` em `backend/processo_seletivo/publicacoes/application/retificacoes.py`, os artefatos citados pelas alterações, na mesma transação em que a `Publicacao` e o `DocumentoPublicado` nascem (FR-010, FR-025)
-- [ ] T046 [US3] Escrever `backend/tests/acceptance/test_us_anexos.py` cobrindo o **ciclo inteiro** do 173/2025, no molde de `test_us6_consulta_publica.py`: publicar com os anexos-formulário, retificar substituindo um, baixar o vigente, devolver preenchido, deferir, perguntar por um instante anterior e provar que os dois artefatos coexistem com resumos distintos, ambos respondendo 200 (FR-042, SC-002, SC-005)
+- [ ] T046 [P] [US3] Teste de aceitação em `backend/tests/acceptance/test_us_anexos.py`: publicar, retificar substituindo o artefato, e provar que os dois coexistem com resumos distintos, ambos respondendo 200. **Não percorre inscrição nem devolução** — isso dependeria da US2, e as duas histórias são independentes (FR-042, SC-002)
 - [ ] T047 [P] [US3] Teste de consulta temporal: `?em=<instante anterior>` devolve o `artifactId` de então, e a publicação histórica continua entregando o artefato daquela versão (FR-028, FR-040, FR-041, SC-003)
 - [ ] T048 [P] [US3] Teste de concorrência: duas Retificações sobre o mesmo anexo, a segunda recusada pelo `expected_previous_hash` já existente (FR-036)
 - [ ] T049 [P] [US3] Teste de endereçamento: `/attachments/3` é recusado, `/attachments/id=<uuid>` é aceito (FR-032)
-- [ ] T066 [P] [US3] Teste de autorização em `backend/tests/authorization/`: substituir, rotular, ordenar, acrescentar e remover anexo depois da publicação exige `retificacao:elaborar` e `retificacao:submeter`, e nenhum desses atos é alcançável por quem só tem `edital:elaborar` (FR-037)
+- [ ] T066 [P] [US3] Teste de autorização em `backend/tests/authorization/` sobre a **matriz** de atos da Retificação, que são de papéis distintos (`interface/identidade.py:20-57`, `interface/atos_retificacao.py:50-103`): editar as cinco operações sobre anexo exige `retificacao:elaborar`; submeter, `retificacao:submeter`; homologar, `retificacao:homologar`; publicar, `retificacao:publicar`. Nenhum deles é alcançável por quem só tem `edital:elaborar`, e nenhum é derivado de outro (FR-037)
 
 ---
 
@@ -141,7 +142,7 @@ que a publicação anterior e a vigente entregam bytes diferentes, com resumos d
 **Teste independente**: abrir a mesa de avaliação de uma Inscrição enviada antes de uma Retificação e
 conferir que o modelo mostrado é o daquela versão.
 
-- [ ] T050 [US4] Resolver o artefato do requisito pela versão aceita da Inscrição e oferecê-lo na mesa, em `backend/processo_seletivo/interface/views.py`, sem gravar dado novo por submissão (FR-048, FR-050)
+- [ ] T050 [US4] Resolver o artefato do requisito pela versão aceita da Inscrição e oferecê-lo na mesa, em `backend/processo_seletivo/interface/views.py`, sem gravar dado novo por submissão e **sem acrescentar critério, conferência automática ou máquina de avaliação nenhuma** (FR-048, FR-050, FR-051)
 - [ ] T051 [P] [US4] Teste de interface: inscrição sob a versão anterior mostra o modelo daquela versão, e não o vigente (SC-007)
 - [ ] T052 [P] [US4] Teste: nenhuma tela afirma qual versão do modelo o candidato usou (FR-049)
 
@@ -158,8 +159,8 @@ lacuna e ausência de referência pendurada.
 - [ ] T053 [US5] Acrescentar `NOVO_ANEXO` e `_anexo_completo` em `backend/processo_seletivo/interface/retificacao.py`, produzindo exatamente a forma que `edital_snapshot` emite, e o bloco `ADD` em `diferencas` (FR-031)
 - [ ] T054 [US5] Marcar o grupo do anexo como `removivel=True` e traduzir a remoção em `REMOVE /attachments/id=<uuid>` (FR-031, FR-033)
 - [ ] T055 [US5] Oferecer rótulo e ordem como campos editáveis, garantindo que alterar um não recalcula nem renumera nenhum outro (FR-006, FR-007, FR-008)
-- [ ] T056 [US5] Desfazer o vínculo do `DocumentoExigido` no mesmo ato que remove o anexo, recusando com erro impeditivo a Retificação que deixaria referência pendurada (FR-022, FR-023)
 - [ ] T065 [US5] Acrescentar `attachmentId` a `CAMPOS_DOCUMENTO` em `backend/processo_seletivo/interface/retificacao.py`, como campo `REFERENCIA` com as opções vindas dos anexos daquela versão — sem ele T056 é irrealizável pelo canal do ator, porque a tela não oferece o campo que precisa mudar (FR-022, FR-031)
+- [ ] T056 [US5] Desfazer o vínculo do `DocumentoExigido` no mesmo ato que remove o anexo, recusando com erro impeditivo a Retificação que deixaria referência pendurada (FR-022, FR-023)
 - [ ] T057 [P] [US5] Testes em `backend/tests/interface/` e `backend/tests/unit/`: remover o quarto de seis deixa lacuna e não altera rótulo nenhum; retificação com vínculo pendurado é recusada nomeando o vínculo
 - [ ] T058 [P] [US5] Teste: anexo removido da versão futura continua íntegro na publicação anterior (FR-033)
 
@@ -172,6 +173,7 @@ lacuna e ausência de referência pendurada.
 - [ ] T061 [P] Teste da cadeia `versão histórica → identidade → resumo publicado → bytes`, como garantia interna (FR-053)
 - [ ] T062 [P] Teste provando que nenhuma rota expõe verificação de integridade ao usuário final (FR-054)
 - [ ] T063 [P] Acrescentar anexos ao `seed_demo` em `backend/processo_seletivo/processos/management/commands/seed_demo.py`, para que a demonstração tenha o que baixar
+- [ ] T067 Escrever o teste de ponta a ponta do ciclo do 173/2025 em `backend/tests/acceptance/`, no molde de `test_jornada_do_candidato.py`: publicar com os anexos-formulário, retificar preservando o anterior, baixar o vigente na data da inscrição, devolver preenchido, deferir, perguntar por um instante anterior e ver os dois artefatos coexistirem. **Depende de US1 a US5 inteiras**, e é por isso que mora aqui e não dentro de uma história (SC-005)
 - [ ] T064 Executar o [quickstart.md](./quickstart.md) inteiro, os sete passos e as cinco verificações negativas, e registrar o resultado
 
 ---
@@ -181,22 +183,25 @@ lacuna e ausência de referência pendurada.
 ```text
 Setup (T001–T002)
    ↓
-Foundational (T003–T018, T028)    ← bloqueia tudo
+Foundational (T003–T018, T020,    ← bloqueia tudo
+              T028)
    ↓
-US1 (T019–T027, T029–T034) ───────┐
+US1 (T019, T021–T027, T029–T034,  ┐
+     T023a)                       │
    ↓                              │
 US2 (T035–T041)   US3 (T042–T049, │  US2 e US3 são independentes entre si
    ↓                    T066)     │
 US4 (T050–T052)   US5 (T053–T058, │  US4 depende de US2; US5 depende de US3
                         T065)     │
+                                  │  T067 depende das cinco, e por isso é do Polish
    └──────────┬───────────────────┘
               ↓
         Polish (T059–T064)
 ```
 
 Dentro da Foundational, a ordem que importa: T003 antes de T020 (declarar antes de emitir); T006–T008
-antes de T011 e T018; T012–T013 antes de T014–T015; e **T028 por último**, porque é ela que devolve a
-suíte ao verde depois do degrau 9.
+antes de T011 e T018; T012–T013 antes de T014–T015; T020 depois de T012, porque emite a partir das
+linhas; e **T028 por último**, porque é ela que devolve a suíte ao verde depois do degrau 9.
 
 ## Oportunidades de paralelismo
 
@@ -206,8 +211,9 @@ suíte ao verde depois do degrau 9.
 - **US3 e US2** podem ser feitas por duas pessoas ao mesmo tempo, depois da US1. Dentro da US3,
   T046 é sequencial — é o ciclo inteiro e depende de tudo o que veio antes; T047, T048, T049 e T066
   correm juntas.
-- **US5**: T065 precede T056 na prática, porque é ela que põe o campo na tela que T056 usa.
-- **Polish**: T059–T063 são todas independentes.
+- **US5**: T065 precede T056, porque é ela que põe na tela o campo que T056 muda.
+- **Polish**: T059–T063 são todas independentes; T067 e T064 vêm depois de tudo, porque atravessam
+  as cinco histórias.
 
 ## Estratégia de entrega
 
