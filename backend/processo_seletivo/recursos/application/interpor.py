@@ -18,6 +18,8 @@ que responde se duas requisições escaparem por caminhos diferentes (FR-010, FR
 
 import uuid
 
+from django.db import IntegrityError, transaction
+
 from processo_seletivo.inscricoes.application.rascunho import ator_do_candidato
 from processo_seletivo.inscricoes.domain.titularidade import exigir_titularidade
 from processo_seletivo.publicacoes.application.selectors import selecao_publica
@@ -81,7 +83,7 @@ def interpor(
         _recusar_se_repetido(inscricao, publicacao, resultado)
 
         versao = selecao_publica(edital_id=inscricao.edital_id)
-        peca = Recurso.objects.create(
+        peca = _gravar(
             protocolo=protocolo_do_recurso.gerar(agora.year),
             inscricao=inscricao,
             interposto_por=identidade.subject,
@@ -99,6 +101,31 @@ def interpor(
         _auditar(ator, peca, agora, correlation_id, idempotency_key)
         finish(reserva, peca, 201)
         return peca
+
+
+def _gravar(**campos):
+    """A gravação e a **segunda** barreira da unicidade — a que responde sob concorrência.
+
+    Cobertura dupla, e deliberada, como em `publicar_resultado`: a idempotência responde ao
+    **mesmo** pedido repetido, e `_recusar_se_repetido` escreve a mensagem que nomeia o protocolo.
+    A constraint parcial responde a **dois pedidos distintos** que atravessaram a leitura prévia
+    ao mesmo tempo —
+    duas abas, duas chaves —, e sem esta tradução essa corrida viraria erro 500 numa tela de
+    candidato (FR-011, FR-098).
+    """
+    try:
+        with transaction.atomic():
+            return Recurso.objects.create(**campos)
+    except IntegrityError as exc:
+        anterior = Recurso.objects.filter(
+            inscricao=campos["inscricao"],
+            publicacao_atacada=campos["publicacao_atacada"],
+            resultado_atacado=campos["resultado_atacado"],
+        ).first()
+        protocolo = anterior.protocolo if anterior is not None else ""
+        raise DomainError(
+            "appeal_already_filed", JA_INTERPOSTO.format(protocolo=protocolo), 409
+        ) from exc
 
 
 def _recusar_se_superado(publicacao, resultado):
@@ -219,11 +246,17 @@ def objetos_recorriveis(inscricao):
     """
     from processo_seletivo.divulgacao.application.selectors import situacoes_do_candidato
 
-    ja_recorridos = set(
-        Recurso.objects.filter(inscricao=inscricao).values_list("publicacao_atacada_id", flat=True)
-    ) | set(
-        Recurso.objects.filter(inscricao=inscricao).values_list("resultado_atacado_id", flat=True)
-    )
+    # Uma consulta, e não duas: os dois campos vêm da mesma varredura das peças do titular. Duas
+    # leituras idênticas variando a coluna é o tipo de custo que passa despercebido com uma peça e
+    # aparece com dez.
+    ja_recorridos = {
+        identificador
+        for par in Recurso.objects.filter(inscricao=inscricao).values_list(
+            "publicacao_atacada_id", "resultado_atacado_id"
+        )
+        for identificador in par
+        if identificador is not None
+    }
 
     publicacoes = [
         {

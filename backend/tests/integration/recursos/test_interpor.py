@@ -357,3 +357,26 @@ def test_resultado_de_etapa_nao_divulgada_nao_e_recorrivel(
     assert recusa.value.code == "appeal_not_visible"
     assert recusa.value.status == 404
     assert not Recurso.objects.filter(inscricao=inscricao).exists()
+
+
+def test_a_constraint_responde_quando_a_leitura_previa_e_atravessada(cenario):
+    """A corrida de duas abas não pode virar erro 500 numa tela de candidato.
+
+    A leitura prévia de `_recusar_se_repetido` escreve a mensagem; a constraint parcial é quem
+    responde quando dois pedidos distintos a atravessam ao mesmo tempo. Aqui a leitura prévia é
+    desligada de propósito, que é o que a corrida faz na prática — e o desfecho precisa ser o
+    mesmo `409` que nomeia o protocolo, e não `IntegrityError` (FR-011, FR-098).
+    """
+    from unittest.mock import patch
+
+    inscricao = cenario["inscricoes"][1]
+    primeira = interponha(cenario, inscricao)
+
+    with patch("processo_seletivo.recursos.application.interpor._recusar_se_repetido"):
+        with pytest.raises(DomainError) as recusa:
+            interponha(cenario, inscricao, idempotency_key="corrida-us2")
+
+    assert recusa.value.code == "appeal_already_filed"
+    assert recusa.value.status == 409
+    assert primeira.protocolo in recusa.value.detail
+    assert Recurso.objects.filter(inscricao=inscricao).count() == 1
