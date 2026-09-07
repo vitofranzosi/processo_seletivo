@@ -162,35 +162,53 @@ def test_a_linha_nova_conhece_os_perfis_daquele_edital(client, seletor_ligado, e
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_o_vinculo_com_o_modelo_sobrevive_a_gravar_a_propria_etapa(
-    client, seletor_ligado, edital_com_perfis
-):
-    """FR-020 da 020, pelo caminho que a tela de documentos abre.
+def test_a_tela_oferece_o_modelo_e_grava_a_escolha(client, seletor_ligado, edital_com_perfis):
+    """FR-020 da 020 — o requisito aponta o Anexo que serve de modelo, pela tela de quem elabora.
 
-    `replace_draft` apaga os requisitos e os recria a cada gravação, e a tela ainda não oferece o
-    campo do modelo. Sem preservá-lo, gravar a etapa que **não fala do anexo** apagaria o vínculo —
-    sem erro, sem aviso, e sem que ninguém tivesse tocado nele.
+    Enquanto a tela não desenhava o campo, o vínculo sobrevivia por preservação. Agora ela desenha,
+    e preservá-lo passaria a ser o defeito oposto: a escolha nova seria sobrescrita pela antiga a
+    cada gravação, e a pessoa veria o formulário aceitar e o banco ignorar.
     """
+    from tests.fixtures.anexos import criar_anexo
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    anexo = criar_anexo(edital_com_perfis, rotulo="ANEXO I — REQUERIMENTO", order=1)
+
+    client.post(
+        reverse("interface:compor-etapa", args=[edital_com_perfis.id, "inscricao"]),
+        _campos(edital_com_perfis, **{"documento-0-attachmentId": str(anexo.id)}),
+    )
+    corpo = client.get(
+        reverse("interface:compor-etapa", args=[edital_com_perfis.id, "inscricao"])
+    ).content.decode()
+
+    assert "Modelo que o Edital fornece" in corpo
+    assert "ANEXO I — REQUERIMENTO" in corpo
+    documento = DocumentoExigido.objects.get(edital=edital_com_perfis, key="identificacao")
+    assert documento.anexo_id == anexo.id
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_desfazer_a_escolha_do_modelo_e_possivel(client, seletor_ligado, edital_com_perfis):
+    """ "Não fornece modelo" é escolha legítima, e precisa ser alcançável depois de ter havido um."""
     from tests.fixtures.anexos import criar_anexo
 
     identificar(client, "ana.elaboradora", ["elaborador"])
     anexo = criar_anexo(edital_com_perfis, rotulo="ANEXO I — REQUERIMENTO", order=1)
     client.post(
         reverse("interface:compor-etapa", args=[edital_com_perfis.id, "inscricao"]),
-        _campos(edital_com_perfis),
-    )
-    DocumentoExigido.objects.filter(edital=edital_com_perfis, key="identificacao").update(
-        anexo=anexo
+        _campos(edital_com_perfis, **{"documento-0-attachmentId": str(anexo.id)}),
     )
 
     client.post(
         reverse("interface:compor-etapa", args=[edital_com_perfis.id, "inscricao"]),
-        _campos(edital_com_perfis, **{"documento-0-name": "Documento de identificação (RG)"}),
+        _campos(edital_com_perfis, **{"documento-0-attachmentId": ""}),
     )
 
-    documento = DocumentoExigido.objects.get(edital=edital_com_perfis, key="identificacao")
-    assert documento.name == "Documento de identificação (RG)", "a edição pedida foi gravada"
-    assert documento.anexo_id == anexo.id, "e o vínculo que a tela não desenha continua de pé"
+    assert (
+        DocumentoExigido.objects.get(edital=edital_com_perfis, key="identificacao").anexo_id is None
+    )
 
 
 @pytest.mark.django_db(transaction=True)

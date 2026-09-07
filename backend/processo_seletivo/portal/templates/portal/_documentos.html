@@ -34,6 +34,14 @@ exige.
         <span>{{ linha.nome }}{% if not linha.obrigatorio %} <span class="ajuda">(facultativo)</span>{% endif %}</span>
       </p>
       {% if linha.instrucao %}<p class="instrucao">{{ linha.instrucao }}</p>{% endif %}
+      {% comment %}
+      O modelo vem **antes** do campo de envio, e não depois: quem chega aqui sem o documento
+      pronto precisa primeiro baixar o formulário, preencher, assinar e digitalizar. Pôr o link
+      depois do campo o ofereceria a quem já não precisa dele (020, FR-044).
+      {% endcomment %}
+      {% if linha.modelo %}
+      <p class="instrucao"><a class="documento secundaria" href="{% url 'public-anexo' linha.modelo.artefato_id %}">Baixar o modelo: {{ linha.modelo.rotulo }}</a></p>
+      {% endif %}
 
       {% if linha.enviado %}
       <p class="arquivo">

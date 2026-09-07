@@ -60,6 +60,18 @@
       {% if recusado_modalidade %}<span class="recusa" role="alert">{{ recusado_modalidade }}</span>{% endif %}
     </p>
   </div>
+  <p class="campo largo">
+    <label for="documento-{{ indice }}-attachmentId">Modelo que o Edital fornece</label>
+    <select id="documento-{{ indice }}-attachmentId" name="documento-{{ indice }}-attachmentId"
+            aria-describedby="ajuda-modelo-{{ indice }}">
+      <option value="">Não fornece modelo</option>
+      {% for anexo in anexos_do_edital %}
+      <option value="{{ anexo.id }}" {% if documento.attachmentId == anexo.id %}selected{% endif %}>{{ anexo.rotulo }}</option>
+      {% endfor %}
+    </select>
+    <span class="ajuda" id="ajuda-modelo-{{ indice }}">O anexo que o candidato baixa, preenche e
+      devolve neste requisito. Os anexos são cadastrados na etapa <strong>Anexos</strong>.</span>
+  </p>
   <p class="papel">
     <input type="checkbox" id="documento-{{ indice }}-required" name="documento-{{ indice }}-required"
            {% if documento.required|default_if_none:True %}checked{% endif %}>

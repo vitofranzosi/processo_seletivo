@@ -840,6 +840,7 @@ def compor_etapa(request, edital_id, etapa):
                 else forms.periodo_do_edital(edital)
             ),
             "alcance": forms.alcance_da_aplicabilidade(edital) if etapa == "inscricao" else [],
+            "anexos_do_edital": (forms.anexos_do_edital(edital) if etapa == "inscricao" else []),
             # As listas que o marco e o critério escolhem. Só no passo da classificação: montá-las
             # em toda tela custaria duas consultas por render sem servir a nenhuma delas.
             "etapas_classificatorias": (
@@ -996,9 +997,6 @@ PRESERVADO_DA_ETAPA = {
     "cronograma": ("status", "isRegistrationPeriod"),
     # Os dois objetos normativos do Perfil que nenhuma tela desenha.
     "perfis": ("classificationInformation", "callInformation"),
-    # O modelo que o requisito aponta. A tela de documentos ainda não o oferece, e enquanto não
-    # oferecer é aqui que ele sobrevive a gravar a própria etapa (020, FR-020).
-    "inscricao": ("attachmentId",),
 }
 
 LEITURA_DA_ETAPA = {
@@ -1149,6 +1147,7 @@ def fragmento_documento(request, edital_id):
             "documento": {"id": str(uuid4()), "required": True},
             "indice": _indice_de_linha(request),
             "alcance": forms.alcance_da_aplicabilidade(edital),
+            "anexos_do_edital": forms.anexos_do_edital(edital),
         },
     )
 

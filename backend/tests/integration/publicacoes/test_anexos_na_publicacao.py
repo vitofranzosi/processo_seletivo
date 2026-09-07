@@ -137,3 +137,35 @@ def test_a_publicacao_e_recusada_quando_o_artefato_nao_existe():
         congelar_artefatos(conteudo, now=timezone.now())
 
     assert recusa.value.code == "attachment_artifact_missing"
+
+
+def test_a_publicacao_e_recusada_quando_o_requisito_aponta_anexo_inexistente(
+    api_client, manager_headers, process_payload
+):
+    """FR-023 — a referência pendurada é impeditiva na publicação, e não só na Retificação.
+
+    É o defeito que a `020` veio corrigir entrando pela porta de trás: um Edital que promete modelo
+    e publica sem ele manda o candidato ao mesmo lugar vazio de antes.
+    """
+    from processo_seletivo.editais.domain.validation import (
+        blocking_findings,
+        validate_for_publication,
+    )
+
+    snapshot = {
+        "title": "Edital",
+        "profiles": [{"id": "11111111-1111-1111-1111-111111111111"}],
+        "schedule": [{"id": "22222222-2222-2222-2222-222222222222"}],
+        "attachments": [],
+        "documentRequirements": [
+            {
+                "id": "33333333-3333-3333-3333-333333333333",
+                "name": "Requerimento",
+                "attachmentId": "44444444-4444-4444-4444-444444444444",
+            }
+        ],
+    }
+
+    codigos = {item.code for item in blocking_findings(validate_for_publication(snapshot))}
+
+    assert "attachment_reference_dangling" in codigos

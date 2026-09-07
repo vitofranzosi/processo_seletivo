@@ -1451,6 +1451,7 @@ def _documentos(conteudo, inscricao):
                 # Tamanho e resumo criptográfico vão para o comprovante (D9): são o que permite a
                 # alguém, depois, afirmar que o arquivo em mãos é o que foi entregue.
                 "tamanho": None if documento is None else tamanho_legivel(documento.tamanho),
+                "modelo": _modelo_do_requisito(conteudo, requisito),
             }
         )
     obrigatorios = [linha for linha in linhas if linha["obrigatorio"]]
@@ -1461,6 +1462,25 @@ def _documentos(conteudo, inscricao):
         "recebidos": recebidos,
         "faltam": len(obrigatorios) - recebidos,
     }
+
+
+def _modelo_do_requisito(conteudo, requisito):
+    """O Anexo que este requisito manda usar, se houver (020, FR-044, FR-045).
+
+    Lido do **conteúdo publicado** que o candidato está vendo, e não do banco de elaboração: é a
+    mesma disciplina de `requisitos_da_inscricao`, e é o que faz o modelo oferecido ser o da versão
+    sob a qual ele preenche.
+
+    Requisito sem modelo devolve `None`, e o campo de envio funciona como sempre funcionou — não
+    fornecer forma própria é o caso mais comum, e não uma pendência (FR-024).
+    """
+    vinculo = requisito.get("attachmentId")
+    if not vinculo:
+        return None
+    for anexo in conteudo.get("attachments") or []:
+        if str(anexo.get("id")) == str(vinculo) and anexo.get("artifactId"):
+            return {"rotulo": anexo.get("label", ""), "artefato_id": anexo["artifactId"]}
+    return None
 
 
 def _perfil_do_conteudo(conteudo, profile_id):

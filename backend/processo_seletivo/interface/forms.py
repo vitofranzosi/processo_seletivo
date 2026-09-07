@@ -818,8 +818,21 @@ def documentos_do_edital(edital):
             "order": documento.order,
             "profileId": "" if documento.perfil_id is None else str(documento.perfil_id),
             "modalityId": "" if documento.modalidade_id is None else str(documento.modalidade_id),
+            "attachmentId": "" if documento.anexo_id is None else str(documento.anexo_id),
         }
         for documento in edital.documentos_exigidos.order_by("order")
+    ]
+
+
+def anexos_do_edital(edital):
+    """Os Anexos que a etapa `Inscrição` oferece como modelo (020, FR-020).
+
+    Só os deste Edital: o vínculo é com a identidade do Anexo, e oferecer o de outro Edital seria
+    oferecer uma referência que a publicação recusaria como pendurada.
+    """
+    return [
+        {"id": str(anexo.id), "rotulo": anexo.rotulo or "sem rótulo"}
+        for anexo in edital.anexos.order_by("order")
     ]
 
 

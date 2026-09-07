@@ -119,12 +119,12 @@ pelo portal e enviar o arquivo preenchido, sem sair do fluxo.
 - [X] T035 [US2] Emitir `attachmentId` em `_document_requirements` em `backend/processo_seletivo/publicacoes/application/publish_edital.py`, a partir da referência do modelo (FR-020, FR-021). *Feita junto com a T020: emitir a coleção e
   emitir o vínculo é a mesma passagem pelo construtor do snapshot, e separá-las deixaria o snapshot
   metade novo por uma fase inteira.*
-- [ ] T036 [US2] Oferecer a escolha do modelo na etapa `inscricao` do assistente, entre os anexos do próprio Edital, em `backend/processo_seletivo/interface/forms.py` e `templates/interface/_documento.html` (FR-020, FR-024)
-- [ ] T037 [US2] Provar `attachment_reference_dangling` **em cada fronteira de vigência da Retificação** (FR-023). *A regra em si já entrou na US1, em `_coerencia_dos_anexos`, e `validate_for_publication` é a mesma função que as fronteiras chamam — o que falta é o teste que prova o alcance, e ele precisa de uma Retificação, que é da US5. A tarefa fica aberta pela prova, e não pela regra.*
-- [ ] T038 [US2] Oferecer o modelo vigente ao lado do campo de envio, em `backend/processo_seletivo/portal/views.py` e `templates/portal/_documentos.html` (FR-044, FR-045)
-- [ ] T039 [US2] Verificar que nenhum caminho de descarte alcança documento enviado quando o modelo é substituído, e cobrir o caso com teste — o aviso de versão que já existe basta (FR-046, D-012)
-- [ ] T040 [P] [US2] Testes de portal em `backend/tests/portal/`: modelo oferecido, requisito sem modelo inalterado, documento preservado após substituição do modelo
-- [ ] T041 [P] [US2] Teste estrutural provando que nenhum caminho lê, compara ou extrai o conteúdo do arquivo devolvido (FR-047)
+- [X] T036 [US2] Oferecer a escolha do modelo na etapa `inscricao` do assistente, entre os anexos do próprio Edital, em `backend/processo_seletivo/interface/forms.py` e `templates/interface/_documento.html`, **e retirar `attachmentId` de `PRESERVADO_DA_ETAPA`**: enquanto a tela não desenhava o campo, preservá-lo era o que salvava o vínculo; a partir daqui seria o defeito oposto — a escolha nova sobrescrita pela antiga a cada gravação (FR-020, FR-024)
+- [X] T037 [US2] Provar `attachment_reference_dangling` na publicação **e** na fronteira de vigência da Retificação (FR-023). *A prova da fronteira chegou sozinha: a primeira redação de `test_o_modelo_vigente_e_oferecido_ao_lado_do_campo_de_envio` retificava só o vínculo, e a regra recusou o ato com 422 — o que obrigou o teste a acrescentar o anexo e o vínculo no mesmo ato. Não foi preciso esperar a US5.*
+- [X] T038 [US2] Oferecer o modelo vigente ao lado do campo de envio, em `backend/processo_seletivo/portal/views.py` e `templates/portal/_documentos.html` (FR-044, FR-045)
+- [X] T039 [US2] Verificar que nenhum caminho de descarte alcança documento enviado quando o modelo é substituído, e cobrir o caso com teste — o aviso de versão que já existe basta (FR-046, D-012)
+- [X] T040 [P] [US2] Testes de portal em `backend/tests/portal/`: modelo oferecido, requisito sem modelo inalterado, documento preservado após substituição do modelo
+- [X] T041 [P] [US2] Teste estrutural provando que nenhum caminho lê, compara ou extrai o conteúdo do arquivo devolvido (FR-047)
 
 ---
 
