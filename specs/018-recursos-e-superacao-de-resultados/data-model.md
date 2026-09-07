@@ -340,7 +340,17 @@ Dentro de cada marco classificatório:
 "appealWindow": {"admits": true, "durationDays": 5, "unit": "DIAS_CORRIDOS"}
 ```
 
-`null` ou ausente significa **janela não declarada** — e não janela de zero dias.
+**Três estados, e os três respondem coisas diferentes** (FR-113, D-004):
+
+```text
+ausente ou null   →  janela não declarada; nenhum prazo é exibido, calculado ou aplicado
+admits: false     →  o marco NÃO admite recurso; a interposição por esta via é recusada
+admits: true      →  admite, e `durationDays` diz por quanto tempo
+```
+
+Nenhum dos três é janela de zero dias. Confundir os dois primeiros transformaria *"não cabe
+recurso"* em *"cabe recurso para sempre"*, e o campo `admits` deixaria de ter função — nascendo,
+na prática, como um booleano que só o `true` consegue afirmar.
 
 ```text
 SCHEMA_VERSION      7 → 8

@@ -333,24 +333,14 @@ sendo juízo humano onde ela não a declarou.
 - [X] T122 [P] Verificar os orçamentos de consulta da 011, 012 e 015 em `backend/tests/performance/`: o filtro de vigência não pode ter acrescentado round-trip (FR-061)
 - [X] T123 [P] Testar a proteção de dados em `backend/tests/portal/test_recurso_privacidade.py`: fundamentação e decisão acessíveis ao titular, ao julgador e à auditoria, e a mais ninguém; respostas não armazenáveis pelo navegador (FR-102, FR-103, FR-105)
 - [X] T124 [P] Testar que nada é notificado em `backend/tests/integration/recursos/test_julgar.py`: nenhuma mensagem é disparada em interposição, admissibilidade ou decisão (FR-109)
-- [~] T125 Executar o roteiro do [quickstart.md](./quickstart.md) de ponta a ponta pelo navegador, alternando os atores, e registrar as evidências (FR-106, SC-024)
+- [X] T126 Recusar a interposição no marco que declara `admits: false`, em `backend/processo_seletivo/recursos/domain/janela.py` e `backend/processo_seletivo/recursos/application/interpor.py`, com código próprio e sem oferecer a ação na tela; e testá-la em `backend/tests/integration/recursos/test_convergencia.py` (FR-113, D-004)
+- [X] T127 Estender `backend/processo_seletivo/processos/management/commands/seed_demo.py` com o cenário e os atores da 018 — a eliminada na Etapa 1, a janela declarada num marco, `julia.julgadora` com o papel Julgador e um avaliador diverso —, **sem criar atalho de demonstração para comportamento que o produto não oferece** (pré-requisito da T125)
+- [X] T125 Executar o roteiro do [quickstart.md](./quickstart.md) de ponta a ponta pelo navegador, alternando os atores, e registrar as evidências (FR-106, SC-024)
 
-  **Feito pelo canal real, e não pelo navegador — e a diferença fica registrada.**
-  `backend/tests/acceptance/test_us_recursos.py` percorre os passos 1 a 7 do roteiro pelas telas de
-  verdade (portal e gestão, HTTP, templates, sessão), alternando Helena, a presidência, a julgadora
-  e uma avaliadora sem capacidade. Os passos 8 a 11 têm cobertura própria em
-  `test_pejus.py`, `test_reavaliacao.py`, `test_definitividade.py` e `test_janela.py`.
-
-  **O que falta é a passagem manual com captura de evidências**, e ela depende de duas coisas que
-  esta sessão não tem:
-
-  1. o `preview` desta ferramenta serve o **checkout principal**, e não este worktree — o roteiro
-     rodaria contra código sem a 018;
-  2. `seed_demo` não conhece recursos: ele monta o estado da 017, e os atores do roteiro
-     (`julia.julgadora`, `otavio.avaliador`) e a janela declarada não existem nele.
-
-  Antes da passagem manual, portanto: estender `seed_demo` com o cenário da 018 e rodar o servidor
-  a partir deste worktree.
+  **Executado em 07/09/2026**, contra o servidor deste worktree em `127.0.0.1:8018`, com o banco
+  semeado por `seed_demo`. As evidências de cada passo, as duas ressalvas sobre o instrumento e os
+  dois defeitos do seed que a caminhada encontrou estão em
+  [evidencias-t125.md](./evidencias-t125.md).
 
 ---
 

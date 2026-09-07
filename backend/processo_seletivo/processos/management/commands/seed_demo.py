@@ -67,6 +67,15 @@ def perfis(numero):
                     "normalization": "NENHUMA",
                     "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
                     "tiebreakers": [],
+                    # A janela recursal declarada (018, degrau 8). Ela existe aqui porque o prazo é
+                    # **norma publicada**, e a demonstração precisa mostrar o candidato lendo os
+                    # instantes exatos de abertura e encerramento — e não uma tela que fala de
+                    # recurso sem dizer até quando (FR-024, FR-030).
+                    "appealWindow": {
+                        "admits": True,
+                        "durationDays": 5,
+                        "unit": "DIAS_CORRIDOS",
+                    },
                 }
             ],
             "competitionModalities": [
@@ -501,6 +510,12 @@ class Command(BaseCommand):
 
         self.stdout.write("Constituindo a comissão e alocando a banca…")
         gestor = ator("gustavo.gestor", "comissao:gerir")
+        # **Consolidar e emitir são atos da presidência**, e não da gestão que constituiu a
+        # comissão. Os dois caminhos autorizam — `comando_de_comissao` aceita presidência **ou**
+        # `comissao:gerir` —, e quem os pratica na demonstração precisa ser quem os pratica no
+        # certame: sem isso, o impedimento da 018 fica indemonstrável, porque quem consolidou o
+        # Resultado não é ninguém que o seletor de identidade ofereça (018, FR-039).
+        presidencia = ator("paulo.presidente")
         perfil_id = f"00000000-0000-0000-00{numero}-0000000000b1"
         marco_id = f"00000000-0000-0000-00{numero}-0000000000a1"
         primeira = f"00000000-0000-0000-00{numero}-0000000000d1"
@@ -509,7 +524,15 @@ class Command(BaseCommand):
 
         membros = {}
         for indice, (subject, funcao) in enumerate(
-            [("paulo.presidente", Funcao.PRESIDENTE), ("joana.avaliadora", Funcao.MEMBRO)]
+            [
+                ("paulo.presidente", Funcao.PRESIDENTE),
+                ("joana.avaliadora", Funcao.MEMBRO),
+                # **Um segundo avaliador, e não um enfeite**: a reavaliação determinada por
+                # recurso exige avaliador diverso do que concluiu a original — a unicidade de
+                # conclusão por pessoa impede a segunda —, e sem ele o passo 9 do roteiro esbarra
+                # numa garantia estrutural em vez de ser percorrido (018, FR-068).
+                ("otavio.avaliador", Funcao.MEMBRO),
+            ]
         ):
             membro, _ = adicionar_membro(
                 actor=gestor,
@@ -521,15 +544,20 @@ class Command(BaseCommand):
             )
             membros[subject] = membro
         for etapa in (primeira, segunda):
-            alocar(
-                actor=gestor,
-                processo_id=edital.processo_id,
-                membro_id=membros["joana.avaliadora"].id,
-                edital_id=edital.id,
-                etapa_id=etapa,
-                idempotency_key=f"seed-demo-aloc-{chave}-{etapa[-4:]}",
-                correlation_id="seed-demo",
-            )
+            # Os **dois** avaliadores alocados nas duas Etapas: quem conclui a original é a Joana,
+            # e o Otávio fica disponível para a reavaliação que um deferimento pode determinar.
+            # Alocar só na hora seria um passo a mais no roteiro, e um passo que a presidência já
+            # teria dado ao montar a banca.
+            for nome in ("joana.avaliadora", "otavio.avaliador"):
+                alocar(
+                    actor=gestor,
+                    processo_id=edital.processo_id,
+                    membro_id=membros[nome].id,
+                    edital_id=edital.id,
+                    etapa_id=etapa,
+                    idempotency_key=f"seed-demo-aloc-{chave}-{etapa[-4:]}-{nome[:6]}",
+                    correlation_id="seed-demo",
+                )
 
         self.stdout.write("Recebendo inscrições e avaliando…")
         versao = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
@@ -546,6 +574,10 @@ class Command(BaseCommand):
             # Sem Resultado em Etapa alguma ele não estaria aqui: quem não passou pela Etapa
             # eliminatória anterior não é participante da seguinte, e o ato nem o consideraria.
             ("Daniel Rocha", "7.5000", None),
+            # **Eliminada na Etapa 1**, abaixo da mínima de 6,0: é ela quem o roteiro da 018 segue.
+            # Fora do universo do ato, ela não aparece na lista pública — e, desde a 018, lê o
+            # próprio Resultado com o motivo escrito e tem por onde recorrer (FR-014, FR-015).
+            ("Elisa Moraes", "4.0000", None),
         ]
         inscricoes = []
         for indice, (nome, _, _) in enumerate(candidatas, 1):
@@ -568,6 +600,7 @@ class Command(BaseCommand):
                 declaracoes_aceitas_em=agora,
             )
             inscricao.refresh_from_db()
+            self._dar_acesso(inscricao)
             inscricoes.append(inscricao)
 
         avaliadora = ator("joana.avaliadora")
@@ -607,7 +640,7 @@ class Command(BaseCommand):
                     correlation_id="seed-demo",
                 )
             consolidar(
-                actor=gestor,
+                actor=presidencia,
                 processo_id=edital.processo_id,
                 edital_id=edital.id,
                 etapa_id=etapa,
@@ -619,7 +652,7 @@ class Command(BaseCommand):
         self.stdout.write("Emitindo a ordem classificatória…")
         proposta = calcular_ordem(edital=edital, perfil_id=perfil_id, marco_id=marco_id)
         emitir_ordem(
-            actor=gestor,
+            actor=presidencia,
             processo_id=edital.processo_id,
             edital_id=edital.id,
             perfil_id=perfil_id,
@@ -647,6 +680,43 @@ class Command(BaseCommand):
             correlation_id="seed-demo",
         )
         return publicacao
+
+    def _dar_acesso(self, inscricao):
+        """A identidade e a credencial de quem já se inscreveu — para que ela consiga entrar.
+
+        **Não é atalho de demonstração**: são exatamente as linhas que o produto cria quando o
+        candidato prova o controle do e-mail, e a premissa deste seed é que essas pessoas já se
+        inscreveram — logo, já entraram alguma vez. Sem elas, o `identity_subject` das inscrições
+        seria um valor que nenhum login produz, e a demonstração ficaria com uma tela de
+        acompanhamento inalcançável: quem entrasse com o e-mail da Elisa criaria uma identidade
+        nova e vazia, e a inscrição dela responderia 404 — corretamente, e para ninguém.
+
+        A credencial nasce **verificada**, pela mesma razão: ela representa uma prova que já
+        aconteceu. A alternativa seria semear o desafio de acesso pendente, que é estado de
+        transição e não estado de mundo.
+        """
+        from processo_seletivo.identidade.domain.enderecos import canonizar
+        from processo_seletivo.identidade.models import CandidateEmail, CandidateIdentity
+
+        agora = timezone.now()
+        identidade, _ = CandidateIdentity.objects.get_or_create(
+            subject=inscricao.identity_subject,
+            defaults={
+                "nome": inscricao.nome,
+                "cpf_normalizado": inscricao.cpf_normalizado,
+                "created_at": agora,
+            },
+        )
+        CandidateEmail.objects.get_or_create(
+            email_canonico=canonizar(inscricao.email),
+            defaults={
+                "identidade": identidade,
+                "email_como_informado": inscricao.email,
+                "principal": True,
+                "verified_at": agora,
+                "created_at": agora,
+            },
+        )
 
     def _retificar(self, edital, agora):
         """Uma vigente e outra com vigência futura, para a consulta temporal ter o que mostrar."""
