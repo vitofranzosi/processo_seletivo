@@ -111,15 +111,19 @@ Append-only, e fonte jurídica citada pelo Resultado sucessor.
 | `consequencia` | enum, anulável | o que a decisão declara, na correção fixada |
 | `forma`, `pontuacao`, `sentido` | conforme a Etapa, anuláveis | a conclusão fixada, quando há grandeza |
 
-**Constraints — 5**
+**Constraints — 9**
 
 | nome | o que garante |
 |---|---|
 | `uq_decisao_por_recurso` | `UNIQUE(recurso)` |
 | `ck_decisao_motivacao` | `motivacao <> ''` |
+| `ck_decisao_especie` | a espécie está entre as quatro. `TextChoices` valida no formulário e **não** cria constraint: num registro append-only a espécie inventada entraria uma vez e ficaria. É a mesma razão de `ck_resultado_consequencia` na 013 |
 | `ck_decisao_correcao_completa` | `CORRECAO_FIXADA ⟹ consequencia, etapa_id e resultado_protegido presentes` |
 | `ck_decisao_reavaliacao` | `REAVALIACAO_DETERMINADA ⟹ etapa_id e resultado_protegido presentes, consequencia nula` |
 | `ck_decisao_sem_efeito` | `INDEFERIDO ou PROVIDENCIA_A_JUSANTE ⟹ consequencia e resultado_protegido nulos` |
+| `ck_decisao_consequencia` | a consequência está vazia ou no vocabulário — `choices` não protege o banco |
+| `ck_decisao_conclusao_por_forma` | forma, pontuação e sentido formam conclusão válida, como no Resultado |
+| `ck_decisao_sem_grandeza_residual` | só `CORRECAO_FIXADA` carrega grandeza; as demais não deixam pontuação pendurada |
 
 **As quatro espécies são um enum, e a providência não.** O que a espécie discrimina é o **efeito**, e
 é o efeito que o esquema e a aferição de definitividade precisam distinguir. Qual providência a
@@ -239,7 +243,7 @@ A matriz correta distingue **raiz de sucessor**, e é esta:
  OR (origem='OCORRENCIA' AND avaliacao IS NULL AND forma = '' AND resultado_anterior IS NULL)
  OR (origem='RECURSO'    AND avaliacao IS NULL AND resultado_anterior IS NOT NULL)
 
-~ ck_resultado_completo_por_forma   passa a depender de origem × forma (T-002)
+  ck_resultado_completo_por_forma   INALTERADA — ver abaixo
 ```
 
 **Como as quatro linhas passam, e as duas que não existem são barradas:**
@@ -260,6 +264,13 @@ cronologia são conferidas na **trigger**, que é onde as coerências entre tabe
 **`ck_sucessor_cita_decisao` é bidirecional de propósito**: sucessor sem decisão seria superação sem
 fundamento, e raiz com decisão seria consolidação disfarçada de julgamento.
 
+**`ck_resultado_completo_por_forma` não muda, e a implementação mostrou por quê.** Uma redação
+anterior deste documento dizia que ela passaria a depender de origem × forma. Não passa: ela diz se
+a linha é internamente coerente **dada a sua forma**, e quem diz qual forma cada origem admite é
+`ck_resultado_origem`. Os três ramos que já existem bastam — o terceiro, o das três ausências, serve
+à Ocorrência **e** ao desfecho sem grandeza do recurso. Duplicar a origem aqui repetiria a regra em
+dois lugares, que é exatamente o erro que a matriz de §6.1 corrigiu.
+
 **Note o que não muda.** `avaliacao` continua `OneToOne` e continua anulável, e o Resultado por
 recurso não a cita. É isso que impede, **no banco**, a Avaliação sintética que a decisão C recusou.
 
@@ -271,18 +282,27 @@ da Ocorrência. Ramos novos:
 ```text
 origem = RECURSO:
   não cita Avaliação nenhuma;
+  supera alguma coisa — raiz por recurso é recusada aqui, com mensagem própria, antes que o
+    `CHECK` a pegue: o gatilho roda primeiro, e a mensagem precisa nomear o problema certo;
   a decisão citada tem espécie CORRECAO_FIXADA;
   a decisão é da mesma Inscrição, do mesmo Edital e da mesma Etapa;
-  a consequência da linha é a que a decisão declarou;
+  **a conclusão inteira** — consequência, forma, pontuação e sentido — é a que a decisão fixou;
   a versão citada é a da decisão, e pertence a este Edital.
 
 origem = AVALIACAO com resultado_anterior NOT NULL:
   a decisão citada tem espécie REAVALIACAO_DETERMINADA;
+  a versão citada é **do mesmo Edital** da decisão — e não a mesma versão dela. Exigir identidade
+    quebraria o caminho: entre decidir e reavaliar pode haver Retificação, e a D-005 da 013 é
+    explícita ao dizer que Versões Consolidadas diferentes podem descrever a mesma regra da Etapa.
+    Como a decisão é imutável, a identidade produziria um sucessor permanentemente inconsolidável;
   a decisão é da mesma Inscrição, do mesmo Edital e da mesma Etapa;
   a Avaliação fonte confere com a linha, como já confere hoje;
   a Avaliação fonte é DIFERENTE da que fundamentou o superado.
 
 qualquer origem, com resultado_anterior NOT NULL:
+  o superado é **exatamente** o `resultado_protegido` da decisão citada — sem isto, a decisão e a
+    superação apontariam para linhas diferentes do mesmo par, e a *non reformatio*, que compara
+    contra o protegido, compararia com o Resultado errado;
   o superado é do mesmo (inscricao_id, etapa_id, edital_id);
   o superado ainda não tem sucessor;      ← redundante com a constraint, e barato: a constraint
                                             responde à concorrência, a trigger à leitura
@@ -344,7 +364,7 @@ resultados/0004  ──▶  recursos/0001  ──▶  resultados/0005
 
 | # | migration | conteúdo | depende de |
 |---|---|---|---|
-| 1 | `recursos/0001` | 3 tabelas, 13 constraints, 5 triggers | `resultados/0004`, `divulgacao/0001`, `classificacao/0003`, `inscricoes`, `publicacoes` |
+| 1 | `recursos/0001` | 3 tabelas, 17 constraints, 5 triggers | `resultados/0004`, `divulgacao/0001`, `classificacao/0003`, `inscricoes`, `publicacoes` |
 | 2 | `resultados/0005` | 3 colunas, 4 constraints novas, 2 recriadas, trigger recriada | `recursos/0001` |
 | 3 | `classificacao/0004` | 1 tabela, 1 constraint, 2 triggers | `recursos/0001` |
 | 4 | `divulgacao/0002` | 3 colunas, 1 constraint | `divulgacao/0001` |
@@ -355,7 +375,7 @@ de `resultados/0004` e antes de `resultados/0005`. Em Python não há import cir
 do Django.
 
 **Contagem de constraints em `recursos/0001`**: 6 no `Recurso` — incluindo a unicidade do protocolo,
-declarada no campo — + 2 no `JuizoDeAdmissibilidade` + 5 na `DecisaoRecurso` = **13**.
+declarada no campo — + 2 no `JuizoDeAdmissibilidade` + 9 na `DecisaoRecurso` = **17**.
 
 ---
 

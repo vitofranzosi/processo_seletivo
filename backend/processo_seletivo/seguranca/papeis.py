@@ -48,6 +48,13 @@ TABELAS_APPEND_ONLY = (
     "divulgacao_documentodoresultado",
     "divulgacao_publicacaoresultado",
     "divulgacao_situacaodivulgada",
+    # A contestação do que foi divulgado (018): a peça, o juízo de admissibilidade e a decisão.
+    # Históricas pela mesma razão das demais — nascem e não mudam —, e com um agravante próprio:
+    # a decisão é a fonte jurídica de um Resultado sucessor, e reescrevê-la depois faria o
+    # Resultado citar um fundamento que já não é o que a autoridade decidiu (018, FR-046).
+    "recursos_decisaorecurso",
+    "recursos_juizodeadmissibilidade",
+    "recursos_recurso",
     "publicacoes_documentopublicado",
     "publicacoes_publicacao",
     "publicacoes_revisaoedital",

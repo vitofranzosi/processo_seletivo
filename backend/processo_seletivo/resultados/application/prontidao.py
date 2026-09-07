@@ -137,11 +137,17 @@ def restringir_a_participantes(consulta, *, edital, etapa_id, vigentes=None, pre
     """
     anteriores, exigir = _anteriores_e_gate(edital, etapa_id, vigentes)
     referencia = OuterRef(f"{prefixo}_id") if prefixo else OuterRef("pk")
+    # **`vigentes` nos quatro `Exists`, e é aqui que o deferimento produz efeito** (018, T-004).
+    # Uma eliminação **superada** por recurso deferido continuaria excluindo a pessoa de toda
+    # Etapa seguinte — da distribuição, da Mesa, da prontidão e da próxima pendente. O
+    # deferimento seria simbólico exatamente onde ele mais importa. O filtro se dobra nas
+    # subconsultas correlacionadas que já existiam: nenhum round-trip a mais, e os orçamentos de
+    # consulta da 011, da 012 e da 015 continuam valendo.
     if anteriores:
         # Regra 1, sem gate: eliminada em qualquer Etapa anterior está fora, sempre.
         consulta = consulta.filter(
             ~Exists(
-                ResultadoEtapa.objects.filter(
+                ResultadoEtapa.vigentes.filter(
                     inscricao_id=referencia,
                     etapa_id__in=anteriores,
                     consequencia=ResultadoEtapa.Consequencia.ELIMINADA,
@@ -152,7 +158,7 @@ def restringir_a_participantes(consulta, *, edital, etapa_id, vigentes=None, pre
         # Regra 2, com gate: só depois que a imediatamente anterior produziu Resultado.
         consulta = consulta.filter(
             Exists(
-                ResultadoEtapa.objects.filter(
+                ResultadoEtapa.vigentes.filter(
                     inscricao_id=referencia,
                     etapa_id=exigir,
                     consequencia=ResultadoEtapa.Consequencia.HABILITADA,
@@ -171,7 +177,7 @@ def participa_da_etapa(*, edital, etapa_id, inscricao_id, vigentes=None):
     anteriores, exigir = _anteriores_e_gate(edital, etapa_id, vigentes)
     if (
         anteriores
-        and ResultadoEtapa.objects.filter(
+        and ResultadoEtapa.vigentes.filter(
             inscricao_id=inscricao_id,
             etapa_id__in=anteriores,
             consequencia=ResultadoEtapa.Consequencia.ELIMINADA,
@@ -180,7 +186,7 @@ def participa_da_etapa(*, edital, etapa_id, inscricao_id, vigentes=None):
         return False
     if exigir is None:
         return True
-    return ResultadoEtapa.objects.filter(
+    return ResultadoEtapa.vigentes.filter(
         inscricao_id=inscricao_id,
         etapa_id=exigir,
         consequencia=ResultadoEtapa.Consequencia.HABILITADA,

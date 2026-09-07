@@ -1,5 +1,10 @@
 """Os conjuntos que a progressão consulta, e os Resultados que a presidência lê.
 
+**Todas as leituras daqui são de vigência**, e consomem o manager `ResultadoEtapa.vigentes` —
+declarado no modelo, e não aqui: manager é do modelo, e o selector o consome. Um Resultado superado
+por recurso deferido não habilita, não elimina, não conta como "já consolidado" e não aparece na
+listagem da Etapa: ele é histórico, e histórico não produz efeito (018, T-004, FR-061).
+
 **Um conjunto por consulta, uma vez por listagem.** A 012 fechou a cadeia de autorização em duas
 condições e manteve o impedimento fora dela por uma razão de escala — somá-lo custaria uma
 verificação por linha em toda listagem. A progressão não reabre essa porta: quem desenha lista
@@ -18,13 +23,13 @@ def ha_resultado_em(*, edital, etapa_id):
     eliminadas antes —, e é isso que impede esta feature de esvaziar permanentemente a Etapa
     seguinte de um Edital de leitura múltipla, que a V1 não consolida.
     """
-    return ResultadoEtapa.objects.filter(edital=edital, etapa_id=etapa_id).exists()
+    return ResultadoEtapa.vigentes.filter(edital=edital, etapa_id=etapa_id).exists()
 
 
 def habilitadas_em(*, edital, etapa_id):
     """Identidades das inscrições com Resultado `HABILITADA` naquela Etapa."""
     return set(
-        ResultadoEtapa.objects.filter(
+        ResultadoEtapa.vigentes.filter(
             edital=edital,
             etapa_id=etapa_id,
             consequencia=ResultadoEtapa.Consequencia.HABILITADA,
@@ -41,7 +46,7 @@ def eliminadas_ate(*, edital, etapas_ids):
     if not etapas_ids:
         return set()
     return set(
-        ResultadoEtapa.objects.filter(
+        ResultadoEtapa.vigentes.filter(
             edital=edital,
             etapa_id__in=list(etapas_ids),
             consequencia=ResultadoEtapa.Consequencia.ELIMINADA,
@@ -57,7 +62,7 @@ def inscricoes_com_resultado(*, edital, etapa_id):
     agregação.
     """
     return set(
-        ResultadoEtapa.objects.filter(edital=edital, etapa_id=etapa_id).values_list(
+        ResultadoEtapa.vigentes.filter(edital=edital, etapa_id=etapa_id).values_list(
             "inscricao_id", flat=True
         )
     )
@@ -110,7 +115,7 @@ def resultados_da_etapa(*, edital, etapa_id, consequencia=None, pagina=1):
     """
     from django.core.paginator import Paginator
 
-    consulta = ResultadoEtapa.objects.filter(edital=edital, etapa_id=etapa_id).select_related(
+    consulta = ResultadoEtapa.vigentes.filter(edital=edital, etapa_id=etapa_id).select_related(
         "inscricao", "avaliacao", "avaliacao__atribuicao"
     )
     if consequencia:
@@ -133,19 +138,26 @@ def contestacoes_supervenientes(resultados):
 
     if not resultados:
         return {}
+    # **A chave inclui a Etapa**, e sem ela dois Resultados da mesma inscrição — em Etapas
+    # diferentes, ou o superado e o superador do mesmo par — colidiriam, e um perderia a
+    # marcação de contestação em silêncio. Antes da 018 a colisão era impossível pela unicidade
+    # incondicional do par; agora ela é alcançável (018, T-004).
     pares = {
-        (r.avaliacao.identity_subject, r.inscricao_id): r.id
+        (r.avaliacao.identity_subject, r.inscricao_id, r.etapa_id): r.id
         for r in resultados
         if r.avaliacao_id is not None
     }
     if not pares:
         return {}
     achados = Impedimento.objects.filter(
-        identity_subject__in={subject for subject, _ in pares},
-        inscricao_id__in={inscricao for _, inscricao in pares},
+        identity_subject__in={subject for subject, _, _ in pares},
+        inscricao_id__in={inscricao for _, inscricao, _ in pares},
     )
+    # O `Impedimento` é por pessoa × inscrição, e não conhece Etapa: um impedimento alcança
+    # **todos** os Resultados daquele par de pessoa e inscrição, e cada um recebe a sua marcação.
     return {
-        pares[(imp.identity_subject, imp.inscricao_id)]: imp
+        identificador: imp
         for imp in achados
-        if (imp.identity_subject, imp.inscricao_id) in pares
+        for (subject, inscricao, _etapa), identificador in pares.items()
+        if (subject, inscricao) == (imp.identity_subject, imp.inscricao_id)
     }

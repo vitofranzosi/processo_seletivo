@@ -54,12 +54,29 @@ def calcular_ordem(*, edital, perfil_id, marco_id, at=None):
     )
     inscricoes_ids = [item["id"] for item in inscricoes]
 
+    # **`vigentes`, e não `objects`** — e o `order_by` não é estilo (018, T-004). As duas coisas
+    # corrigem defeitos **diferentes**, e a execução mostrou que confundi-los era fácil:
+    #
+    # 1. o dicionário de pontuações abaixo é indexado por `etapa_id`, e dois Resultados do mesmo
+    #    par **colapsam** nele. Aqui quem corrige é o `order_by`: ordenando por `consolidado_em`,
+    #    o último a entrar é o sucessor, que é justamente o vigente. Sem a ordenação, o colapso
+    #    passa a depender da ordem em que o banco devolveu as linhas — e um defeito
+    #    irreproduzível some da suíte;
+    # 2. o **universo do ato**, montado adiante, grava o conjunto de ids dos Resultados que o
+    #    produziram. Aqui o `order_by` não ajuda: sem o filtro, o universo cita o superado, e
+    #    `comparar()` não vê mudança nenhuma quando o deferimento acontece. O ato **não fica
+    #    obsoleto**, a publicação continua sendo oferecida, e a cadeia inteira a jusante fica cega
+    #    ao recurso — que é o defeito pelo qual a alternativa 3 da decisão C foi descartada.
+    #
+    # É o segundo que torna o filtro indispensável, e é ele que o teste de regressão prende.
     resultados = list(
-        ResultadoEtapa.objects.filter(
+        ResultadoEtapa.vigentes.filter(
             edital=edital,
             inscricao_id__in=inscricoes_ids,
             etapa_id__in=enumeradas,
-        ).values(
+        )
+        .order_by("inscricao_id", "etapa_id", "consolidado_em", "id")
+        .values(
             "id",
             "inscricao_id",
             "etapa_id",

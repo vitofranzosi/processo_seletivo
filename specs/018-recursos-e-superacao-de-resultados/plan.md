@@ -82,7 +82,7 @@ resultados/0004 ──▶ recursos/0001 ──▶ resultados/0005
 divulgacao/0001 ──▶ divulgacao/0002        (independente das demais)
 ```
 
-`recursos/0001` cria três tabelas — a peça, o juízo de admissibilidade e a decisão —, com **13
+`recursos/0001` cria três tabelas — a peça, o juízo de admissibilidade e a decisão —, com **17
 constraints** e **5 triggers**: três de imutabilidade e **duas** de coerência, porque uma trigger
 instalada no `Recurso` não valida linha da `DecisaoRecurso`. `resultados/0005` é **inteiramente de
 esquema** — três colunas anuláveis, o terceiro valor de `origem`, quatro constraints novas, duas
@@ -172,7 +172,7 @@ specs/018-recursos-e-superacao-de-resultados/
 backend/processo_seletivo/
 ├── recursos/                            # app novo
 │   ├── models.py                        # Recurso, JuizoDeAdmissibilidade, DecisaoRecurso
-│   ├── migrations/0001_initial.py       # 3 tabelas, 13 constraints, 5 triggers
+│   ├── migrations/0001_initial.py       # 3 tabelas, 17 constraints, 5 triggers
 │   ├── domain/
 │   │   ├── janela.py                    # contagem pura: abre, fecha, está aberta (T-008)
 │   │   ├── elegibilidade.py             # as cinco perguntas do impedimento (T-006)

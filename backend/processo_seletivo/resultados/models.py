@@ -35,6 +35,7 @@ from processo_seletivo.avaliacoes.models import Avaliacao
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+from processo_seletivo.resultados.managers import VigentesManager
 
 
 class ResultadoEtapa(models.Model):
@@ -53,6 +54,18 @@ class ResultadoEtapa(models.Model):
 
         AVALIACAO = "AVALIACAO"
         OCORRENCIA = "OCORRENCIA"
+        # **`RECURSO` é a terceira, e ela não cita Avaliação nenhuma.** A decisão recursal pode
+        # fixar a consequência e, quando aplicável, a pontuação corrigida — e nesse caminho a
+        # fonte jurídica é a decisão, não uma avaliação. Sintetizar uma `Avaliacao` para
+        # satisfazer o esquema mentiria sobre a origem, pela mesma razão que a D-1 recusou
+        # registrar a ausência como conclusão decisória (018, decisão C §1.2).
+        RECURSO = "RECURSO"
+
+    # `objects` continua vendo **tudo**, superados inclusive: a reprodução histórica depende
+    # disso. `vigentes` é o caminho de toda leitura de efeito — progressão, participação,
+    # prontidão, consolidação, classificação e divulgação (018, T-004).
+    objects = models.Manager()
+    vigentes = VigentesManager()
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     inscricao = models.ForeignKey(Inscricao, on_delete=models.PROTECT, related_name="resultados")
@@ -105,11 +118,65 @@ class ResultadoEtapa(models.Model):
     # Identificador estável, e não referência ao vínculo: a autoria é histórica e sobrevive à saída
     # da pessoa da comissão, como a `Avaliacao.concluida_por` da 012.
     consolidado_por = models.CharField(max_length=255)
+    # **A sucessão que faltava a este elo.** `AtoDeOrdenacao` e `PublicacaoResultado` já usam esta
+    # forma; o `ResultadoEtapa` era o único da cadeia sem ela, e é a lacuna que a 018 fecha. O
+    # Resultado superado **não** é alterado, anulado nem apagado: nasce outra linha, que o cita.
+    # Vigente é quem ninguém sucedeu — e não há coluna de vigência a alternar, pela mesma razão
+    # que não há nas outras duas (018, decisão C §1.1).
+    resultado_anterior = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="sucessor",
+    )
+    motivo_da_superacao = models.TextField(blank=True, default="")
+    # A fonte jurídica do sucessor, obrigatória em **todo** sucessor, qualquer que seja a origem.
+    # Declarada como *string* porque `recursos` importa este módulo: é a referência tardia que
+    # quebra o ciclo em Python, enquanto o grafo de migrations o quebra por granularidade
+    # (018, T-001).
+    decisao = models.ForeignKey(
+        "recursos.DecisaoRecurso",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="resultados",
+    )
 
     class Meta:
         constraints = [
+            # **O par que a 015 e a 017 já escreveram duas vezes**, aplicado ao terceiro elo.
+            # A unicidade incondicional daria lugar a nada: ela impedia qualquer segundo
+            # Resultado, superador ou não. Agora ela é da **raiz**, e o sucessor tem a sua.
             models.UniqueConstraint(
-                fields=["inscricao", "etapa_id"], name="uq_resultado_inscricao_etapa"
+                fields=["inscricao", "etapa_id"],
+                condition=Q(resultado_anterior__isnull=True),
+                name="uq_resultado_raiz_por_par",
+            ),
+            # A corrida "dois deferimentos sobre o mesmo Resultado" é resolvida **aqui**, e não
+            # por leitura prévia — como `uq_ato_sucessor_unico` já resolve a emissão simultânea
+            # de dois sucessores do mesmo ato. Ler o vigente antes de gravar é conforto de
+            # mensagem de erro, e não garantia.
+            models.UniqueConstraint(
+                fields=["resultado_anterior"],
+                condition=Q(resultado_anterior__isnull=False),
+                name="uq_resultado_sucessor_unico",
+            ),
+            models.CheckConstraint(
+                condition=Q(resultado_anterior__isnull=True) | ~Q(motivo_da_superacao=""),
+                name="ck_superacao_com_motivo",
+            ),
+            # **Bidirecional de propósito**: sucessor sem decisão seria superação sem fundamento,
+            # e raiz com decisão seria consolidação disfarçada de julgamento. É a única constraint
+            # que amarra a decisão ao sucessor — e é por isso que `ck_resultado_origem` **não
+            # menciona `decisao`**: mencioná-la nos dois lugares foi o que tornou o sucessor por
+            # reavaliação impossível de existir.
+            models.CheckConstraint(
+                condition=(
+                    Q(resultado_anterior__isnull=True, decisao__isnull=True)
+                    | Q(resultado_anterior__isnull=False, decisao__isnull=False)
+                ),
+                name="ck_sucessor_cita_decisao",
             ),
             # `TextChoices` valida no formulário e no `full_clean`, e **não** cria constraint:
             # `bulk_create`, SQL direto ou código futuro gravariam qualquer texto. Num registro
@@ -128,8 +195,30 @@ class ResultadoEtapa(models.Model):
             models.CheckConstraint(
                 # Literais, como `ck_resultado_consequencia` ao lado: `Origem` é classe aninhada
                 # e não está em escopo dentro de `Meta`.
+                # **Quatro linhas legítimas, e só quatro** (018, data-model §6.1):
+                #
+                #   raiz por avaliação      AVALIACAO  · avaliação sim · anterior não
+                #   sucessor por reavaliação AVALIACAO · avaliação sim · anterior sim
+                #   raiz por ocorrência     OCORRENCIA · avaliação não · anterior não
+                #   sucessor por recurso    RECURSO    · avaliação não · anterior sim
+                #
+                # O ramo de `AVALIACAO` **não fala de `decisao` nem de `resultado_anterior`**: ele
+                # serve às duas linhas de avaliação, e amarrar a decisão aqui tornaria o sucessor
+                # por reavaliação insatisfazível. As condições sobre `resultado_anterior` nos
+                # outros dois ramos são o que barra as duas linhas que não existem — raiz por
+                # recurso e sucessor por ocorrência.
                 condition=Q(origem="AVALIACAO", avaliacao__isnull=False) & ~Q(forma="")
-                | Q(origem="OCORRENCIA", avaliacao__isnull=True, forma=""),
+                | Q(
+                    origem="OCORRENCIA",
+                    avaliacao__isnull=True,
+                    forma="",
+                    resultado_anterior__isnull=True,
+                )
+                | Q(
+                    origem="RECURSO",
+                    avaliacao__isnull=True,
+                    resultado_anterior__isnull=False,
+                ),
                 name="ck_resultado_origem",
             ),
             # O que a coluna `NOT NULL` garantia sozinha, dito agora por forma. A trigger confere o
@@ -137,10 +226,16 @@ class ResultadoEtapa(models.Model):
             # precisam existir — a trigger sozinha aprovaria uma linha sem forma se a fonte também
             # não a tivesse, e num registro append-only o inválido entra uma vez e fica.
             #
-            # **O terceiro ramo é a Ocorrência**, e ele é todo de ausências: sem forma, sem
-            # pontuação e sem sentido. Ela não pontua e não registra sentido — o Edital não
-            # publicou grandeza nenhuma para quem não compareceu, e a linha não pode afirmar uma
-            # (D-1).
+            # **O terceiro ramo é o das três ausências**, e ele serve a dois casos. A Ocorrência
+            # não pontua e não registra sentido — o Edital não publicou grandeza nenhuma para quem
+            # não compareceu, e a linha não pode afirmar uma (D-1). E o Resultado por recurso pode
+            # ser um **desfecho sem grandeza**: o recurso contra Ocorrência que a decisão acolhe
+            # sem que ninguém tenha avaliado nada (018, FR-059).
+            #
+            # **Esta constraint não mudou com a 018, e é o desenho certo.** Ela diz se a linha é
+            # internamente coerente *dada a sua forma*; quem diz **qual forma cada origem admite**
+            # é `ck_resultado_origem`. Duplicar a origem aqui repetiria a regra em dois lugares —
+            # que é exatamente o erro que a matriz acima corrigiu.
             models.CheckConstraint(
                 condition=Q(forma=Forma.PONTUADA, pontuacao__isnull=False, sentido="")
                 | Q(forma=Forma.DECISORIA, pontuacao__isnull=True, sentido__in=Sentido.values)

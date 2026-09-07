@@ -24,6 +24,9 @@ APPS = (
     "classificacao",
     # A divulgação da 017: três tabelas append-only e a coerência da publicação contra o ato.
     "divulgacao",
+    # A contestação da 018: três tabelas append-only e **duas** de coerência — uma por tabela que
+    # precisa dela, porque o gatilho é por tabela e uma trigger não valida linha de outra.
+    "recursos",
 )
 # Agrupadas pelo app que as cria, porque o teste de upgrade incremental exercita **um** app por vez:
 # voltar `publicacoes` uma migration desaplica também o que depende dela, e exigir ali o conjunto
@@ -62,6 +65,17 @@ TRIGGERS_POR_APP = {
         "situacao_divulgada_append_only",
         "documento_do_resultado_append_only",
         "publicacao_resultado_coerente",
+    ),
+    # A contestação da 018. As três de imutabilidade são **absolutas** — interpor, admitir e julgar
+    # acontecem uma vez cada, e não há ato em curso que legitime mutação. As duas de coerência são
+    # **duas** porque o gatilho é por tabela: `recurso_coerente` roda no `INSERT` do `Recurso`, e
+    # nenhuma linha de `DecisaoRecurso` passa por ela.
+    "recursos": (
+        "recurso_append_only",
+        "recurso_coerente",
+        "juizo_de_admissibilidade_append_only",
+        "decisao_recurso_append_only",
+        "decisao_recurso_coerente",
     ),
 }
 TRIGGERS = tuple(nome for grupo in TRIGGERS_POR_APP.values() for nome in grupo)
@@ -480,7 +494,12 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
     raiz = _pathlib.Path(__file__).resolve().parents[2] / "processo_seletivo"
     esperadas = {
         "classificacao": 3,
-        "resultados": 4,
+        # **Sobe para 5 com a 018**, e a justificativa é a que este teste existe para exigir: a
+        # `resultados/0005` dá sucessão ao `ResultadoEtapa` — o único elo da cadeia que não a
+        # tinha —, para que um recurso deferido possa superar um Resultado sem alterá-lo. Não é
+        # a 017 acrescentando migration a um app que ela lê: é outra feature, com decisão própria
+        # (018, decisão C §1.1).
+        "resultados": 5,
         "editais": 10,
         "publicacoes": 8,
     }
