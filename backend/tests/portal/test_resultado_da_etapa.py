@@ -17,8 +17,10 @@ from decimal import Decimal
 
 import pytest
 from django.urls import reverse
+from django.utils.timezone import localtime
 
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+from processo_seletivo.resultados.application.consolidacao import consolidar
 from processo_seletivo.resultados.application.ocorrencia import registrar_ocorrencia
 from processo_seletivo.resultados.models import ResultadoEtapa
 from tests.fixtures.divulgacao import (
@@ -28,6 +30,7 @@ from tests.fixtures.divulgacao import (
     pontuar,
     publicar_o_ato,
 )
+from tests.fixtures.mesa import concluir_como, distribuir_para
 from tests.fixtures.recursos import deferir_corrigindo
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
@@ -60,6 +63,29 @@ def cenario(gestor, api_client, manager_headers, process_payload):
     )
     cenario["ato"] = emitir(cenario, gestor, chave="emitir-018-us1")
     return cenario
+
+
+def consolidar_na_primeira(cenario, gestor, inscricoes, *, pontuacao):
+    """Consolida a **primeira** Etapa, que nenhum marco publicado enumera.
+
+    Feito **antes** da Etapa do marco, e por duas razões que se somam: é a ordem real do certame, e
+    é a única que não perturba o universo do ato — a exigência de habilitação da 013 passa a valer
+    assim que a Etapa anterior produz o primeiro Resultado, de modo que consolidá-la só para alguns
+    tiraria os demais da Etapa seguinte.
+    """
+    contexto = {**cenario, "etapa": cenario["primeira"]}
+    distribuir_para(contexto, gestor, ["joao"], inscricoes, chave="lote-018-primeira")
+    for inscricao in inscricoes:
+        concluir_como(contexto, "joao", inscricao, pontuacao=pontuacao)
+    consolidar(
+        actor=gestor,
+        processo_id=cenario["edital"].processo_id,
+        edital_id=cenario["edital"].id,
+        etapa_id=cenario["primeira"],
+        inscricao_ids=[item.id for item in inscricoes],
+        idempotency_key="consolidar-018-primeira",
+        correlation_id="consolidar-018-primeira",
+    )
 
 
 def abrir(client, inscricao):
@@ -110,22 +136,31 @@ def test_a_classificada_ve_a_propria_pontuacao(client, cenario):
     assert "90" in conteudo
 
 
-def test_etapa_que_nenhum_marco_publicado_enumera_nao_aparece(client, cenario):
-    """A autorização é por Etapa enumerada, e não por Edital.
+def test_etapa_que_nenhum_marco_publicado_enumera_nao_aparece(
+    client, gestor, api_client, manager_headers, process_payload
+):
+    """A autorização é por Etapa **enumerada**, e não por Edital (FR-018).
 
-    O cenário tem duas Etapas e o marco enumera uma. A outra tem Resultado no banco — e continua
-    invisível, porque nenhum ato administrativo autorizou mostrá-la.
+    O Resultado da primeira Etapa **existe no banco** e tem pontuação exclusiva — e continua
+    invisível, porque nenhum ato administrativo autorizou mostrá-lo. Uma redação anterior deste
+    teste era vacuamente verdadeira: ela nem criava o Resultado externo, e a asserção passava
+    tanto com ele quanto sem ele.
     """
-    publicar_o_ato(cenario, chave="publicar-018-us1c")
-    enumerada = cenario["etapa"]
-
-    conteudo = abrir(client, cenario["inscricoes"][0])
-    fora = ResultadoEtapa.objects.filter(inscricao=cenario["inscricoes"][0]).exclude(
-        etapa_id=enumerada
+    cenario = montar_marco(
+        gestor, api_client, manager_headers, process_payload, seed=88, codigo="0788"
     )
+    inscricoes = pontuar(cenario, gestor, ["90.0000"], primeiro=881, sufixo="88")
+    consolidar_na_primeira(cenario, gestor, inscricoes, pontuacao="88.7700")
+    cenario["ato"] = emitir(cenario, gestor, chave="emitir-018-us1c")
+    publicar_o_ato(cenario, chave="publicar-018-us1c")
 
+    fora = ResultadoEtapa.vigentes.get(inscricao=inscricoes[0], etapa_id=cenario["primeira"])
+    conteudo = abrir(client, inscricoes[0])
+
+    assert fora.pontuacao == Decimal("88.7700"), "o Resultado externo precisa existir de fato"
     assert conteudo.count("resultado-da-etapa") == 1
-    assert not fora.exists() or "resultado-da-etapa" in conteudo
+    assert "88,77" not in conteudo
+    assert "88.77" not in conteudo
 
 
 def test_a_correcao_por_recurso_e_explicada(client, cenario, gestor):
@@ -134,7 +169,7 @@ def test_a_correcao_por_recurso_e_explicada(client, cenario, gestor):
     publicar_o_ato(cenario, chave="publicar-018-us1d")
     superado = ResultadoEtapa.objects.get(inscricao=eliminada, etapa_id=cenario["etapa"])
     versao = VersaoConsolidada.objects.filter(edital=cenario["edital"]).latest("valid_from")
-    deferir_corrigindo(
+    _recurso, decisao, _sucessor = deferir_corrigindo(
         superado,
         versao=versao,
         pontuacao=Decimal("80.0000"),
@@ -146,7 +181,16 @@ def test_a_correcao_por_recurso_e_explicada(client, cenario, gestor):
 
     assert "Habilitada" in conteudo
     assert "Resultado corrigido" in conteudo
-    assert "julgamento do seu recurso" in conteudo
+    # **A explicação genérica não basta** (FR-016): quem recebe precisa saber qual decisão corrigiu
+    # o seu Resultado e quando ela foi tomada.
+    assert "REC-2026-US10001" in conteudo
+    # **Na zona institucional**, e não em UTC: o Princípio II exige que a regra de calendário use a
+    # zona do domínio, e uma decisão tomada às 22h de um dia não pode aparecer datada do dia
+    # seguinte para quem a lê.
+    assert localtime(decisao.decidido_em).strftime("%d/%m/%Y") in conteudo
+    # E o identificador técnico da decisão não atravessa a fronteira do que é linguagem
+    # institucional (FR-048).
+    assert str(decisao.id) not in conteudo
 
 
 def test_o_vigente_e_o_que_aparece_e_nao_o_superado(client, cenario, gestor):

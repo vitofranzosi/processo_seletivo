@@ -223,7 +223,10 @@ def resultados_visiveis(inscricao):
 
     resultados = (
         ResultadoEtapa.vigentes.filter(inscricao=inscricao, etapa_id__in=list(etapas_autorizadas))
-        .select_related("resultado_anterior", "decisao")
+        # `decisao__recurso` entra na junção: o protocolo é o que identifica a decisão para quem a
+        # recebe, e buscá-lo depois custaria uma consulta por Resultado corrigido — o tipo de custo
+        # que só aparece quando o histórico cresce.
+        .select_related("resultado_anterior", "decisao", "decisao__recurso")
         .order_by("consolidado_em")
     )
     return [
@@ -239,8 +242,17 @@ def resultados_visiveis(inscricao):
             # **A superação precisa ser explicável a quem a recebe.** Mostrar a nota nova sem dizer
             # que ela mudou porque o recurso foi deferido transforma a correção em erro aparente
             # (D-003, FR-016).
+            #
+            # E "explicável" não é uma frase genérica: quem recebe precisa saber **qual** decisão
+            # corrigiu o seu Resultado e **quando** ela foi tomada. O protocolo é o identificador
+            # humano dela — legível, ditável ao telefone e já conhecido de quem interpôs. O
+            # identificador técnico da decisão não atravessa: ele não diz nada a quem lê, e a
+            # FR-048 o mantém fora da linguagem institucional.
             "corrigido": resultado.resultado_anterior_id is not None,
-            "corrigido_em": resultado.consolidado_em if resultado.resultado_anterior_id else None,
+            "corrigido_por": (resultado.decisao.recurso.protocolo if resultado.decisao_id else ""),
+            # O instante **da decisão**, e não o da gravação do Resultado: é a decisão que corrige,
+            # e é a data dela que o candidato reconhece.
+            "corrigido_em": resultado.decisao.decidido_em if resultado.decisao_id else None,
         }
         for resultado in sorted(
             resultados,
