@@ -14,6 +14,11 @@ As três decisões que ficaram pendentes antes da spec foram implementadas e ver
 
 Os outros quatro cenários passaram: indeferimento sem efeito, correção direta com R1→R2, reabilitação com progressão retroativa, e a porta da definitividade recusando em duas situações distintas.
 
+> **Segunda passada (§9).** Os quatro cenários que faltavam foram exercidos depois. Três passaram —
+> impedimento do julgador, *non reformatio in pejus* e a quarta espécie de decisão. O quarto revelou
+> um segundo P1: **a janela recursal declarada no Edital nunca chega ao conteúdo publicado**
+> (E2E18-005), o que também retrata o achado E2E18-002 da primeira passada.
+
 ---
 
 ## 2. Ambiente e base
@@ -24,9 +29,9 @@ Os outros quatro cenários passaram: indeferimento sem efeito, correção direta
 | banco | PostgreSQL local `ps018_audit`, criado vazio e migrado |
 | servidor | `runserver` :8188, seletor de identidade ligado |
 | ferramentas | Playwright (Chromium), mailpit, `psql` para as provas de banco |
-| screenshots | **41** |
+| screenshots | **47** (41 na primeira passada + 6 na segunda) |
 | candidatos | 6 |
-| recursos | 4 (um por espécie de desfecho) |
+| recursos | 6 (quatro na primeira passada, dois na segunda) |
 | publicações | 2 (P1 preliminar, P2 preliminar sucessora) |
 | atos de ordenação | 2 (C1, C2) |
 
@@ -60,8 +65,10 @@ Os outros quatro cenários passaram: indeferimento sem efeito, correção direta
 | P1 preservada após sucessão | sim | ok | `34` |
 | Área do Candidato nas 4 situações | sim | ok | `36` |
 | Superação append-only no banco | sim | **provada** | — |
-| *Non reformatio in pejus* | **não** | não exercida | — |
-| Impedimento do julgador (FR-039) | **não** | não exercido | — |
+| *Non reformatio in pejus* (2ª passada) | sim | **recusada, sem gravar nada** | `38`, `39` |
+| Impedimento do julgador, FR-039 (2ª passada) | sim | **recusado** | `37` |
+| `PROVIDENCIA_A_JUSANTE` (2ª passada) | sim | julgada, sem sucessor | `40`, `41` |
+| Janela recursal aberta (2ª passada) | **não observável** | ver E2E18-005 | `43`–`46` |
 
 ---
 
@@ -95,6 +102,10 @@ Cumprida a reabilitação, C2 foi emitido: **1º Ana 95 · 2º Carla 90 · 3º B
 | reingresso pendente bloqueia **até o preliminar** | ✅ | CTA ausente e recusa nominal (`24`) |
 | definitiva exige fato: recurso pendente barra | ✅ | recusa com próximo passo (`13`) |
 | definitiva exige fato: reavaliação pendente barra | ✅ | recusa com próximo passo (`32`) |
+| julgador impedido não julga (FR-039) | ✅ | tela sem ações e `POST` → 403 (`37`) |
+| recurso não agrava quem recorre (FR-070) | ✅ | recusa total, sem decisão nem sucessor (`39`) |
+| definitiva sem prazo declarado exige declaração escrita | ✅ | recusada sem, aceita com (`45`, `46`) |
+| **janela recursal chega ao conteúdo publicado** | ❌ | **E2E18-005** |
 | classificação fica obsoleta por superação | ✅ | motivo nomeia o recurso (`23`) |
 | publicação anterior preservada | ✅ | P1 mantém `3º Carla 82,00` e avisa que foi sucedida (`34`) |
 | candidato vê o próprio recurso e o efeito | ✅ | "Seus recursos" + motivo da correção na inscrição (`36`) |
@@ -132,21 +143,14 @@ A orientação da recusa é circular: o julgamento de recurso **já aconteceu**,
 
 ---
 
-### E2E18-002 — Recurso contra Resultado de Etapa nasce "sem prazo computável"
+### E2E18-002 — ~~Recurso contra Resultado de Etapa nasce "sem prazo computável"~~ → RETRATADO
 
-**Severidade:** P2 · **Tipo:** domínio / governança · **Features:** 018 · **Ator:** Julgador
-
-**Observado.** O marco declarou que admite recurso em 5 dias. Os quatro recursos — três contra Resultado de Etapa e um contra Resultado de Etapa decisória — aparecem na lista e na peça com **TEMPESTIVIDADE: Sem prazo computável**. A janela só é computável quando ancorada na publicação do marco.
-
-**Esperado.** Não necessariamente um prazo: a ausência é coerente com o desenho declarado em `janela.py` (silêncio devolve a tempestividade ao juízo humano). O que surpreende é que o Edital **declarou** prazo e ele não alcança o objeto que o candidato de fato ataca.
-
-**Impacto.** Na prática, o prazo publicado no Edital governa apenas o recurso contra a classificação; recursos contra Etapa ficam sem prazo algum, e a tempestividade recai inteira sobre a admissibilidade motivada. Isso é defensável, mas é uma decisão normativa que o produto toma em silêncio — e um Edital que promete "5 dias contados da divulgação" não distingue os dois casos.
-
-**Evidência.** `14-lista-de-recursos.png`, `15-peca-do-recurso.png`.
-
-**Recomendação.** Decisão de governança: ou a declaração do marco alcança os Resultados das Etapas que ele enumera, ou a tela diz por que aquele objeto não tem prazo. Registrar, não consertar às cegas.
-
----
+**Retratação (segunda passada).** O achado **não procede como foi escrito**. A causa de todos os
+recursos aparecerem com "Sem prazo computável" não é o objeto atacado ser Resultado de Etapa: é que
+**nenhum dos Editais chegou a publicar a janela recursal**, por causa do defeito descrito em
+E2E18-005. Com a janela ausente do conteúdo publicado, nenhum recurso teria prazo computável,
+qualquer que fosse o objeto. A hipótese que registrei na primeira passada foi construída sobre um
+sintoma cuja causa eu ainda não conhecia. O número é preservado para as citações anteriores.
 
 ### E2E18-003 — A peça mostra identificadores técnicos onde quem julga lê significado
 
@@ -175,9 +179,10 @@ A orientação da recusa é circular: o julgamento de recurso **já aconteceu**,
 | Sev. | Qtde | Achados |
 |---|---|---|
 | P0 | 0 | — |
-| P1 | 1 | 001 |
-| P2 | 1 | 002 |
+| P1 | 2 | 001, **005** |
+| P2 | 0 | — |
 | P3 | 2 | 003, 004 |
+| — | 1 | 002 (retratado na segunda passada) |
 
 ---
 
@@ -197,15 +202,96 @@ Nenhuma regressão.
 
 ---
 
-## 9. Não exercido nesta auditoria
+## 9. Segunda passada — os quatro cenários que faltavam
 
-- **Non reformatio in pejus** (FR-070): o código a implementa em `CORRECAO_FIXADA`; não testei uma correção que piorasse a situação do recorrente.
-- **Impedimento do julgador** (FR-039): não testei julgar com quem avaliou a peça.
-- **Janela aberta bloqueando a definitiva**: a porta recusou antes, por recurso e por reavaliação pendentes; o quarto fato não chegou a ser alcançado.
-- **`PROVIDENCIA_A_JUSANTE`**: espécie não julgada.
+Executada logo após a primeira, no mesmo ambiente, com dois recursos novos (Ana e Elisa) e um
+Edital mínimo criado só para isolar a janela.
+
+| Cenário | Resultado | Evidência |
+|---|---|---|
+| **Impedimento do julgador (FR-039)** | ✅ **provado** | `37` |
+| **Non reformatio in pejus (FR-070)** | ✅ **provado** | `38`, `39` |
+| **`PROVIDENCIA_A_JUSANTE`** | ✅ julgada, sem sucessor, como especificado | `40`, `41` |
+| **Janela recursal como quarto fato** | ⚠️ **não observável** — ver E2E18-005 | `43`–`46` |
+
+**Impedimento.** `alice.avaliadora`, que produziu a nota atacada, recebeu o papel `julgador` e abriu
+o recurso da Ana: *"Você não pode julgar este recurso. Aguardando apreciação por quem não esteja
+impedido."* Sem ações na tela; `POST` direto em `/admitir` → **403**.
+
+**Non reformatio.** Julgando o recurso da Ana como correção fixada com pontuação **80** (contra 95
+vigentes): *"A correção proposta pioraria a situação de quem recorreu, e o recurso não pode
+agravá-la. Nenhum resultado sucessor foi criado."* Conferido no banco: **nenhuma decisão gravada** e
+nenhum sucessor novo — a atomicidade documentada em `julgar.py` (*"não fica decisão sem efeito, nem
+efeito sem decisão"*) se manteve sob recusa. Vale registrar a distinção fina do domínio: `pejus.py`
+trata como piora apenas perder a habilitação ou cair de pontuação — **queda de posição não é
+piora**, porque corrigir o erro de A desloca B sem agravar A.
+
+**Providência a jusante.** Registrada, sem sucessor, e passa a constar como pendência do marco. Não
+chegou a barrar a definitiva porque a reavaliação do E2E18-001 barra antes — a ordem dos
+impedimentos (recurso → reavaliação → providência → janela) foi observada na prática.
+
+**Janela.** Não foi possível observar o quarto fato: como nenhum Edital consegue publicar a janela
+(E2E18-005), a aferição cai sempre no ramo *"não declara prazo computável"*. Esse ramo foi testado
+e funciona bem, inclusive com a saída prevista: um campo **Declaração de encerramento do prazo
+recursal** aparece só na definitiva, a publicação é recusada sem ele e aceita com ele.
 
 ---
 
-## 10. Evidências
+## 10. Achado da segunda passada
 
-`screenshots/` — 41 imagens na ordem da jornada, de `00-processo-criado.png` a `36-candidato-*-apos-recurso.png`.
+### E2E18-005 — A janela recursal declarada no marco é apagada por qualquer gravação posterior
+
+**Severidade:** P1 · **Tipo:** domínio / funcional · **Features:** 006–015–018 · **Ator:** Elaborador
+
+**Observado.** No passo *Classificação*, declarei "Admite recurso, no prazo abaixo" com 5 dias. O
+rascunho gravou corretamente: `janela_recursal = {"unit": "DIAS_CORRIDOS", "admits": true,
+"durationDays": 5}`. Ao gravar **qualquer passo seguinte** — cronograma, inscrição, conteúdo —, o
+valor volta a `{}`, e o Edital é publicado com `appealWindow: null`. Reproduzido em três Editais
+independentes; nos três, `janela_recursal = {}` ao final.
+
+**Esperado.** A declaração sobrevive até a publicação, como sobrevive a marca do período de
+inscrições depois do E2E17-001.
+
+**Impacto.** Nenhum marco chega ao conteúdo publicado com prazo recursal computável. Em
+consequência: todo recurso nasce "Sem prazo computável" e a tempestividade recai inteiramente sobre
+a admissibilidade humana; e a publicação definitiva **sempre** exige a declaração escrita de
+encerramento, que foi desenhada para o caso excepcional do Edital que nada declarou. O documento
+publicado agrava o quadro: a seção *9. DOS RECURSOS* diz *"Caberá recurso … nos casos e prazos que
+este Edital declara para cada marco"* — remetendo a uma declaração que foi apagada em silêncio.
+
+**Reprodução.** Compor marco com "Admite recurso, 5 dias" → gravar o passo *Inscrição* (ou
+qualquer outro) → conferir `janela_recursal` no rascunho, ou `appealWindow` no snapshot publicado.
+
+**Evidência.** `43`–`46`; `janela_recursal = {}` nos Editais 03, 04 e 99; `appealWindow = null` nos
+snapshots.
+
+**Causa confirmada no código.** `interface/forms.py::_marco_persistido()` serializa
+`id, code, name, stages, operation, normalization, rounding, tiebreakers` — e **não**
+`appealWindow`. Como `views._gravar_etapa()` reconstrói `profiles` a partir de
+`perfis_persistidos()` em todos os passos, e `draft.py:287` faz
+`janela_recursal=marco_payload.get("appealWindow") or {}`, a declaração é zerada na gravação
+seguinte, sem recusa e sem aviso.
+
+**É a mesma família do E2E17-001**, no serializador irmão que o hardening não alcançou: lá era
+`eventos_persistidos()` omitindo `status` e `isRegistrationPeriod`; aqui é `_marco_persistido()`
+omitindo `appealWindow`. O teste de round-trip existente cobre o cronograma e o conteúdo normativo
+do Perfil, mas não desce ao marco.
+
+**Recomendação.** Emitir `appealWindow` em `_marco_persistido()` e estender o teste de round-trip
+ao marco — de preferência afirmando a igualdade do rascunho inteiro, e não campo a campo, para
+fechar a classe em vez do caso.
+
+---
+
+## 11. Não exercido em nenhuma das passadas
+
+- **Janela recursal efetivamente aberta** barrando a definitiva — impossível enquanto o
+  E2E18-005 existir.
+- **Cumprimento de `PROVIDENCIA_A_JUSANTE`** por ato citante publicado.
+- Recurso contra a **publicação** (todos os quatro atacaram Resultado de Etapa).
+
+---
+
+## 12. Evidências
+
+`screenshots/` — 47 imagens na ordem da jornada, de `00-processo-criado.png` a `36-candidato-*-apos-recurso.png`.
