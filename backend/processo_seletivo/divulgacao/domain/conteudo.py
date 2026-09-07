@@ -121,16 +121,20 @@ def compor(ato):
     }
 
 
-def conteudo_divulgado(composicao, *, natureza, publicado_em, signatario, retificacao=None):
+def conteudo_divulgado(composicao, *, natureza, publicado_em, signatario, retificacoes=()):
     """A forma final de `conteudo_publico` — a pública, acrescida do que o ato de publicar decide.
 
     **A projeção individual não entra.** O resumo publicado é o do que foi divulgado, que é o que a
     SC-004 afirma; incluí-la faria o resumo cobrir também o que não foi divulgado (T-010).
 
-    **A causa da retificação entra, e é decidida aqui** (FR-088). A página e o documento leem estes
-    mesmos bytes, e é daí que vem a correspondência entre os dois: derivá-la de novo na renderização
-    faria uma decisão posterior mudar a frase de um ato já praticado. A chave só existe quando há
-    causa — divulgação que não corrige nada não carrega campo vazio.
+    **As causas da retificação entram, e são decididas aqui** (FR-088, FR-112). A página e o
+    documento leem estes mesmos bytes, e é daí que vem a correspondência entre os dois: derivá-las
+    de novo na renderização faria uma decisão posterior mudar a frase de um ato já praticado. A
+    chave só existe quando há causa — divulgação que não corrige nada não carrega campo vazio.
+
+    **São várias, e não uma.** Um ato pode citar mais de uma decisão, e a ordem em que elas entram
+    é a que o selector fixa: o conteúdo entra no resumo canônico, e ordem instável faria o mesmo
+    ato produzir bytes diferentes a cada publicação.
     """
     rotulo = Natureza(natureza).label
     cabecalho = composicao["cabecalho"]
@@ -143,7 +147,7 @@ def conteudo_divulgado(composicao, *, natureza, publicado_em, signatario, retifi
             "publicado_em": publicado_em.isoformat(),
             "signatario_nome": signatario.nome,
             "signatario_cargo": signatario.cargo,
-            **({"retificacao": retificacao} if retificacao else {}),
+            **({"retificacoes": list(retificacoes)} if retificacoes else {}),
         },
         "posicoes": composicao["posicoes"],
     }

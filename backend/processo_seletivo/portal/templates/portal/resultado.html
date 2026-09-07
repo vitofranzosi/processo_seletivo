@@ -26,15 +26,19 @@ oportunidade nº 3 do relatório da E2E-017.
 <p class="vigente" role="status">Este é o resultado vigente deste marco.</p>
 {% endif %}
 
-{% if correcao %}
+{% if correcoes %}
 {% comment %}
 **Nenhuma natureza nova** (FR-087, FR-088). A definitiva que corrige outra é apresentada pela
-**causa**, derivada da cadeia e da decisão que a motivou. Um terceiro valor no enum seria estado
-duplicado a manter coerente com a cadeia que já responde.
+**causa**, derivada da cadeia e das decisões que a motivaram. Um terceiro valor no enum seria
+estado duplicado a manter coerente com a cadeia que já responde.
+
+**São várias, e o plural não é enfeite** (FR-112): dois deferimentos que alcançam o mesmo marco se
+resolvem numa emissão só, e nomear um deles omitiria quem recorreu e teve razão.
 {% endcomment %}
 <p class="corrigido">{{ cabecalho.natureza_rotulo }}, retificado em
-  {{ publicacao.publicado_em|date:"d/m/Y" }} em razão do julgamento do recurso
-  {{ correcao.recurso }}.</p>
+  {{ publicacao.publicado_em|date:"d/m/Y" }} em razão do julgamento
+  {% if correcoes|length > 1 %}dos recursos{% else %}do recurso{% endif %}
+  {% for causa in correcoes %}{% if not forloop.first %}{% if forloop.last %} e {% else %}, {% endif %}{% endif %}{{ causa.recurso }}{% endfor %}.</p>
 {% endif %}
 
 <p class="meta">

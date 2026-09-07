@@ -510,8 +510,8 @@ def decisoes_a_citar(*, edital, marco_id, marco, publicacoes_do_marco):
     )
 
 
-def causa_da_correcao(ato):
-    """A decisão de recurso que motivou este ato sucessor — ou `None` (FR-088).
+def causas_da_correcao(ato):
+    """As decisões de recurso que motivaram este ato sucessor — **todas**, em ordem estável.
 
     **Duas derivações, porque há duas maneiras de um recurso corrigir um ato**, e ler só a primeira
     deixava metade das retificações anônimas:
@@ -526,37 +526,42 @@ def causa_da_correcao(ato):
     ato sucessor emitido, definitiva publicada — e a página dizia só "Resultado definitivo", sem
     dizer que retificava nada nem por quê.
 
-    A comparação é entre os universos do ato e do seu antecessor: o que **entrou** e carrega decisão
-    de recurso é o que este ato corrigiu. Olhar só o universo de agora nomearia de novo, em cada
-    ato seguinte, uma correção que já foi divulgada.
+    **Lista, e não a primeira.** Um mesmo ato pode citar mais de uma decisão (FR-112), e é o caso
+    normal quando dois deferimentos alcançam o mesmo marco: resolvem-se numa emissão só. Tomar
+    `.first()` nomeava um recurso e omitia o outro — e quem recorreu e teve razão não se via na
+    causa da retificação.
+
+    **A ordem é `(decidido_em, protocolo)`**, e é ela que torna o congelamento reproduzível: o
+    conteúdo publicado entra no resumo canônico, e uma ordem que dependesse do plano de consulta
+    faria o mesmo ato produzir bytes diferentes a cada publicação.
+
+    A comparação da cadeia é entre os universos do ato e do seu antecessor: o que **entrou** e
+    carrega decisão de recurso é o que este ato corrigiu. Olhar só o universo de agora nomearia de
+    novo, em cada ato seguinte, uma correção que já foi divulgada.
     """
     from processo_seletivo.classificacao.models import CitacaoDeDecisao
     from processo_seletivo.resultados.models import ResultadoEtapa
 
-    citacao = (
-        CitacaoDeDecisao.objects.filter(ato_id=ato.pk)
-        .select_related("decisao", "decisao__recurso")
-        .order_by("decisao__decidido_em")
-        .first()
-    )
-    if citacao is not None:
-        return {"recurso": citacao.decisao.recurso.protocolo, "quando": citacao.decisao.decidido_em}
+    decisoes = {
+        citacao.decisao_id: citacao.decisao
+        for citacao in CitacaoDeDecisao.objects.filter(ato_id=ato.pk).select_related(
+            "decisao", "decisao__recurso"
+        )
+    }
 
     entraram = _resultados_do_universo(ato) - _resultados_do_universo(ato.ato_anterior)
-    if not entraram:
-        return None
-    superador = (
-        ResultadoEtapa.objects.filter(pk__in=entraram, decisao__isnull=False)
-        .select_related("decisao", "decisao__recurso")
-        .order_by("decisao__decidido_em")
-        .first()
-    )
-    if superador is None:
-        return None
-    return {
-        "recurso": superador.decisao.recurso.protocolo,
-        "quando": superador.decisao.decidido_em,
-    }
+    if entraram:
+        for superador in ResultadoEtapa.objects.filter(
+            pk__in=entraram, decisao__isnull=False
+        ).select_related("decisao", "decisao__recurso"):
+            decisoes.setdefault(superador.decisao_id, superador.decisao)
+
+    return [
+        {"recurso": decisao.recurso.protocolo, "quando": decisao.decidido_em}
+        for decisao in sorted(
+            decisoes.values(), key=lambda item: (item.decidido_em, item.recurso.protocolo)
+        )
+    ]
 
 
 def _resultados_do_universo(ato):

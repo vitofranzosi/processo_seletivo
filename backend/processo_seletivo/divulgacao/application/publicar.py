@@ -210,7 +210,7 @@ def publicar_resultado(
             # nasce de decisão de recurso é apresentada por ela — na página e no documento, que
             # leem os mesmos bytes. Derivá-la na leitura faria uma decisão posterior reescrever a
             # frase de um ato já praticado.
-            retificacao=_causa_da_retificacao(ato, anterior),
+            retificacoes=_causas_da_retificacao(ato, anterior),
         )
         bytes_do_conteudo = canonical_bytes(conteudo)
         try:
@@ -330,16 +330,20 @@ def _declaracao_exigida(*, edital, marco_id, natureza, texto):
     return "" if computavel else texto
 
 
-def _causa_da_retificacao(ato, anterior):
-    """A decisão de recurso que motivou esta divulgação sucessora — serializável, ou `None`."""
-    if anterior is None:
-        return None
-    from processo_seletivo.recursos.application.selectors import causa_da_correcao
+def _causas_da_retificacao(ato, anterior):
+    """As decisões que motivaram esta divulgação sucessora — serializáveis, ou lista vazia.
 
-    causa = causa_da_correcao(ato)
-    if causa is None:
-        return None
-    return {"recurso": causa["recurso"], "quando": causa["quando"].isoformat()}
+    Lista, e não a primeira: um ato pode citar mais de uma decisão (FR-112), e publicar uma e calar
+    sobre a outra conta metade do que aconteceu.
+    """
+    if anterior is None:
+        return []
+    from processo_seletivo.recursos.application.selectors import causas_da_correcao
+
+    return [
+        {"recurso": causa["recurso"], "quando": causa["quando"].isoformat()}
+        for causa in causas_da_correcao(ato)
+    ]
 
 
 def _gravar_documento(publicacao, conteudo):

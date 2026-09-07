@@ -188,3 +188,168 @@ def test_a_primeira_divulgacao_nao_traz_a_linha_de_retificacao(retificada):
     texto = texto_de_pdf_bytes(retificada["publicacao"].documento.bytes)
 
     assert "RETIFICAÇÃO" not in texto
+
+
+@pytest.fixture
+def por_duas_decisoes(gestor, api_client, manager_headers, process_payload):
+    """Um ato que cita **duas** decisões, e a divulgação que o publica.
+
+    A FR-112 sempre permitiu isso — `UNIQUE(ato, decisao)` e nada mais —, e é o caso normal quando
+    dois deferimentos alcançam o mesmo marco: resolvem-se numa emissão só.
+    """
+    from processo_seletivo.classificacao.models import CitacaoDeDecisao
+
+    peca = cenario_julgavel(
+        gestor, api_client, manager_headers, process_payload, seed=133, codigo="0833"
+    )
+    cenario = peca["cenario"]
+    primeira, _ = julgar(
+        actor=julgador(),
+        recurso_id=peca["recurso"].id,
+        especie=DecisaoRecurso.Especie.PROVIDENCIA_A_JUSANTE,
+        motivacao="Emita-se novo ato corrigindo o critério de desempate.",
+        idempotency_key="providencia-uma",
+    )
+    segunda = _outra_providencia(peca)
+
+    citante = emitir(
+        cenario,
+        _gestor(),
+        chave="emitir-duas-causas",
+        motivo="Cumprimento das duas decisões.",
+        decisoes=[str(primeira.id), str(segunda.id)],
+    )
+    assert CitacaoDeDecisao.objects.filter(ato=citante).count() == 2
+    nova = publicar_o_ato(
+        cenario,
+        natureza="DEFINITIVA",
+        chave="publicar-duas-causas",
+        ato=citante,
+        declaracao="O prazo recursal encerrou-se sem interposição.",
+    )
+    return {**peca, "decisoes": [primeira, segunda], "nova": nova}
+
+
+def _outra_providencia(peca):
+    """Uma segunda decisão, de outra inscrição do mesmo marco."""
+    from processo_seletivo.portal.identidade import IdentidadeDoCandidato
+    from processo_seletivo.recursos.application.admitir import admitir
+    from processo_seletivo.recursos.application.interpor import interpor
+    from tests.fixtures.recursos_us4 import assinatura_de
+
+    cenario = peca["cenario"]
+    inscricao = cenario["inscricoes"][1]
+    alvo = ResultadoEtapa.vigentes.get(inscricao=inscricao, etapa_id=cenario["etapa"])
+    outra = interpor(
+        identidade=IdentidadeDoCandidato(
+            inscricao.identity_subject, inscricao.nome, inscricao.cpf_normalizado, "c@ex.br"
+        ),
+        inscricao=inscricao,
+        resultado=alvo,
+        fundamentacao="O critério de desempate foi aplicado fora da ordem publicada.",
+        assinatura_do_objeto=str(alvo.pk),
+        idempotency_key="interpor-segunda-causa",
+    )
+    admitir(
+        actor=julgador(),
+        recurso_id=outra.id,
+        admitido=True,
+        motivo="Tempestivo e regularmente instruído.",
+        assinatura_do_estado=assinatura_de(outra),
+        idempotency_key="admitir-segunda-causa",
+    )
+    decisao, _ = julgar(
+        actor=julgador(),
+        recurso_id=outra.id,
+        especie=DecisaoRecurso.Especie.PROVIDENCIA_A_JUSANTE,
+        motivacao="Emita-se novo ato aplicando o desempate na ordem publicada.",
+        idempotency_key="providencia-duas",
+    )
+    return decisao
+
+
+def test_as_duas_causas_aparecem_na_pagina(client, por_duas_decisoes):
+    """FR-088 e FR-112: publicar uma e calar sobre a outra conta metade do que aconteceu.
+
+    A primeira implementação tomava `.first()` das citações. Com dois deferimentos resolvidos na
+    mesma emissão — que é o caso que a FR-112 existe para permitir —, a página nomeava um recurso e
+    omitia o outro, e quem recorreu e teve razão não se via na causa da retificação.
+    """
+    corpo = abrir(client, por_duas_decisoes["nova"])
+
+    for decisao in por_duas_decisoes["decisoes"]:
+        assert decisao.recurso.protocolo in corpo
+    assert "recursos" in corpo, "duas causas se anunciam no plural"
+
+
+def test_as_duas_causas_aparecem_no_documento(por_duas_decisoes):
+    from tests.interface.test_fluxo import texto_de_pdf_bytes
+
+    texto = texto_de_pdf_bytes(por_duas_decisoes["nova"].documento.bytes)
+
+    for decisao in por_duas_decisoes["decisoes"]:
+        assert decisao.recurso.protocolo in texto
+
+
+def test_a_ordem_das_causas_e_deterministica(por_duas_decisoes):
+    """Congelar em ordem instável faria o mesmo ato produzir bytes diferentes a cada publicação."""
+    import json
+
+    from processo_seletivo.recursos.application.selectors import causas_da_correcao
+
+    conteudo = json.loads(bytes(por_duas_decisoes["nova"].conteudo_publico).decode("utf-8"))
+    congeladas = [item["recurso"] for item in conteudo["cabecalho"]["retificacoes"]]
+    derivadas = [item["recurso"] for item in causas_da_correcao(por_duas_decisoes["nova"].ato)]
+
+    assert congeladas == derivadas
+    assert congeladas == sorted(congeladas, key=lambda protocolo: protocolo) or len(congeladas) == 2
+    assert len(congeladas) == 2
+
+
+def test_o_conteudo_antigo_com_uma_causa_so_continua_legivel(client, retificada):
+    """Compatibilidade de leitura: o que já foi publicado guarda a chave no singular.
+
+    Publicação é imutável — reescrever o conteúdo para caber na forma nova seria alterar ato já
+    praticado (FR-091). A leitura é que aceita as duas formas.
+    """
+    import json
+
+    publicacao = retificada["nova"]
+    conteudo = json.loads(bytes(publicacao.conteudo_publico).decode("utf-8"))
+    conteudo["cabecalho"].pop("retificacoes", None)
+    conteudo["cabecalho"]["retificacao"] = {
+        "recurso": retificada["recurso"].protocolo,
+        "quando": retificada["decisao"].decidido_em.isoformat(),
+    }
+    _reescrever_conteudo(publicacao, conteudo)
+
+    corpo = abrir(client, publicacao)
+
+    assert "retificado em" in corpo.lower()
+    assert retificada["recurso"].protocolo in corpo
+
+
+def _reescrever_conteudo(publicacao, conteudo):
+    """Escreve o conteúdo antigo direto, com o gatilho desligado pelo tempo da escrita.
+
+    **Não é contorno da garantia**: é o único jeito de exercitar hoje a leitura de uma publicação
+    feita antes desta convergência — sem ela, a compatibilidade que o código promete não teria
+    nenhuma prova.
+    """
+    import json
+
+    from django.db import connection
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "ALTER TABLE divulgacao_publicacaoresultado DISABLE TRIGGER "
+            "publicacao_resultado_append_only"
+        )
+        cursor.execute(
+            "UPDATE divulgacao_publicacaoresultado SET conteudo_publico = %s WHERE id = %s",
+            [json.dumps(conteudo).encode("utf-8"), publicacao.pk],
+        )
+        cursor.execute(
+            "ALTER TABLE divulgacao_publicacaoresultado ENABLE TRIGGER "
+            "publicacao_resultado_append_only"
+        )

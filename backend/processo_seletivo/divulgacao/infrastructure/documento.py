@@ -102,14 +102,25 @@ def _retificacao(cabecalho):
 
     Vazio some da moldura: `_identificacao` só imprime o par que tem valor, e uma linha
     "RETIFICAÇÃO —" numa primeira divulgação afirmaria que houve o que não houve.
+
+    **Todas as causas, e não a primeira** (FR-112). Um ato pode citar mais de uma decisão, e o
+    documento que nomeasse só uma delas seria ato administrativo afirmando metade do que houve. A
+    chave no singular continua legível: publicação é imutável, e quem muda é o leitor (FR-091).
     """
-    causa = cabecalho.get("retificacao") or {}
-    if not causa.get("recurso"):
+    causas = [causa for causa in _causas(cabecalho) if (causa or {}).get("recurso")]
+    if not causas:
         return ""
-    return (
-        f"Em razão do julgamento do recurso {causa['recurso']}, "
-        f"decidido em {_instante(causa['quando'])}"
-    )
+    plural = "dos recursos" if len(causas) > 1 else "do recurso"
+    escritas = [f"{causa['recurso']}, decidido em {_instante(causa['quando'])}" for causa in causas]
+    return f"Em razão do julgamento {plural} " + "; ".join(escritas)
+
+
+def _causas(cabecalho):
+    congeladas = cabecalho.get("retificacoes")
+    if congeladas:
+        return list(congeladas)
+    unica = cabecalho.get("retificacao")
+    return [unica] if unica else []
 
 
 def _par(composicao, rotulo, valor):
