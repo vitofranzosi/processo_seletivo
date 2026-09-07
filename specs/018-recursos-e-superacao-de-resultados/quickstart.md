@@ -162,16 +162,20 @@ nasce (FR-073, SC-008).
 
 Como **paula.publicadora**, tentar publicar como **definitivo**, em cada estado:
 
-| estado | resultado esperado |
-|---|---|
-| recurso pendente | recusado, com a pendência nomeada |
-| reavaliação determinada não cumprida | recusado |
-| providência a jusante não cumprida | recusado, publicando ato que **não cita** a decisão e sem ato citante já publicado no marco |
-| janela estruturada aberta | recusado, informando quando ela fecha |
-| pendência reaberta | recusado |
-| tudo resolvido | **permitido** |
+| estado | resultado esperado | e a preliminar? |
+|---|---|---|
+| recurso pendente | recusado, com a pendência nomeada | permitida |
+| reavaliação determinada não cumprida | recusado | permitida |
+| providência a jusante não cumprida | recusado, publicando ato que **não cita** a decisão e sem ato citante já publicado no marco | permitida |
+| janela estruturada aberta | recusado, informando quando ela fecha | permitida |
+| ato de ordenação obsoleto | recusado | **também recusada** |
+| pendência reaberta | recusado | **também recusada** |
+| tudo resolvido | **permitido** | permitida |
 
-Em todos, publicar como **preliminar** continua possível (SC-017).
+A assimetria é dos quatro primeiros: eles são fatos da **disputa**, e enquanto ela corre o
+preliminar é o caminho normal — é ele que abre o prazo. Ato obsoleto e reingresso pendente são do
+**conteúdo**, e ordem revogada ou incompleta não fica menos falsa por chamar-se preliminar (SC-017,
+D-007).
 
 *"Tudo resolvido"* não cabe no banco padrão enquanto a janela declarada corre: percorra-o no banco
 semeado com `--janela-recursal ausente`, onde o que separa a definitiva do resultado é só a

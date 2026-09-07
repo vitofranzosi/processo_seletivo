@@ -121,7 +121,13 @@ nada (T-010).
 | 3 | providência a jusante não cumprida | nem o ato candidato cita a decisão, nem há ato citante já publicado **naquele marco** | `DEFINITIVA` |
 | 4 | janela estruturada aberta | função pura sobre a publicação vigente e a norma | `DEFINITIVA` |
 | 5 | ato obsoleto | `estado_do_marco`, que a 017 já verifica | **as duas** naturezas |
-| 6 | pendência reaberta por progressão retroativa | inscrição com sucessor habilitante e sem Resultado numa Etapa do marco | `DEFINITIVA` |
+| 6 | pendência reaberta por progressão retroativa | inscrição com sucessor habilitante e sem Resultado numa Etapa do marco | **as duas** naturezas |
+
+**A assimetria é dos quatro primeiros, e não dos seis.** Eles são fatos da disputa, e enquanto ela
+corre o preliminar é o caminho normal. Os dois últimos são do conteúdo: ato obsoleto divulga ordem
+revogada e reingresso pendente divulga ordem que já se sabe incompleta — e nenhuma delas fica menos
+falsa por chamar-se preliminar (D-007, FR-079, FR-083). Por isso os dois são aferidos **antes** de a
+natureza pretendida ser consultada.
 
 **Pertinência ao marco** (FR-084) alcança dois conjuntos, e é a segunda metade que fecha o buraco:
 
@@ -209,11 +215,25 @@ sabe — e reintroduziria, com mais passos, a afirmação sem lastro que o E2E17
 decidir na regra de não regressão, mais um valor em `uq_publicacao_por_ato_natureza` e toda leitura
 de natureza mudando. Vigência e natureza derivam da cadeia, e não de estado duplicado (FR-087).
 
-**O nome vem do fato**, derivado da cadeia e da decisão que a motivou:
+**O nome vem do fato**, derivado da cadeia e das decisões que a motivaram:
 
 > *"Resultado definitivo, retificado em 12/09/2026 em razão do julgamento do recurso REC-2026-K7M4Q2PX."*
 
-Na página e no documento (FR-088). E a publicação vigente passa a **dizer que é a vigente** — hoje
+E, sendo mais de uma, todas — *"em razão do julgamento dos recursos A e B"*. A causa é derivada por
+dois caminhos, porque há dois modos de um recurso corrigir um ato:
+
+```text
+citação   a providência a jusante nomeia a decisão no próprio ato (FR-089)
+cadeia    a correção fixada e a reavaliação determinada não citam nada: superam o Resultado, e o
+          ato sucessor passa a enumerar o sucessor no lugar do superado
+```
+
+Ela é **congelada** no conteúdo publicado, em ordem `(decidido_em, protocolo)`: a página e o
+documento leem os mesmos bytes, e ordem instável faria o mesmo ato produzir resumo canônico
+diferente a cada publicação. A leitura aceita a forma singular que antecedeu esta — conteúdo
+publicado não se reescreve (FR-091).
+
+Na página e no documento (FR-088, FR-112). E a publicação vigente passa a **dizer que é a vigente** — hoje
 só a anterior diz que foi sucedida, que é a oportunidade nº 3 do relatório da E2E-017 (FR-090).
 
 **Nenhuma exceção à regra da janela.** A redação anterior da spec dispensava essa publicação de

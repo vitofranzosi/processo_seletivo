@@ -7,14 +7,18 @@ ainda em disputa. A natureza era um `<select>`, e o sistema acreditava.
 1  recurso pendente pertinente          impede a DEFINITIVA
 2  reavaliação determinada não cumprida impede a DEFINITIVA
 3  providência a jusante não cumprida   impede a DEFINITIVA
+4  janela estruturada aberta            impede a DEFINITIVA
 5  ato obsoleto                         impede AS DUAS naturezas
 6  reingresso pendente                  impede AS DUAS naturezas
 ```
 
-**A preliminar continua possível em todos**, e não é concessão: é o preliminar que abre o prazo, e
-bloqueá-lo travaria o certame exatamente onde ele precisa andar (FR-083).
+**A assimetria é dos quatro primeiros, e não dos seis** (FR-082, FR-083). Eles são fatos da
+**disputa**: enquanto ela corre, publicar como preliminar é o caminho normal — é o preliminar que
+abre o prazo, e bloqueá-lo travaria o certame exatamente onde ele precisa andar.
 
-O fato 4 — janela estruturada aberta — é do degrau 8, e entra quando ele existir.
+Os dois últimos não são da disputa: são do **conteúdo** do que se vai divulgar. Ato obsoleto
+publica ordem revogada, e reingresso pendente publica ordem que já se sabe incompleta — e nenhuma
+das duas fica menos falsa por chamar-se preliminar (D-007, FR-079).
 """
 
 import pytest
@@ -22,6 +26,7 @@ import pytest
 from processo_seletivo.divulgacao.domain.publicabilidade import (
     DECLARACAO_EXIGIDA,
     DECLARACAO_RECUSADA,
+    DESATUALIZADO,
     IMPEDIMENTO,
     PROVIDENCIA_PENDENTE,
     REAVALIACAO_PENDENTE,
@@ -141,6 +146,42 @@ def test_o_recurso_inadmitido_nao_impede(gestor, api_client, manager_headers, pr
     )
 
     assert afere(outra, "DEFINITIVA").publicavel is True
+
+
+def test_o_ato_obsoleto_impede_as_duas_naturezas(peca):
+    """Os fatos 5 e 6 **não** têm a assimetria dos quatro primeiros (D-007, FR-079).
+
+    A revisão do PR encontrou a spec afirmando as duas coisas: a D-007 dizia que a reinclusão
+    pendente impede *a publicação daquele marco*, e a D-008 listava-a entre o que impede só a
+    definitiva, fechando com "a preliminar continua livre em todos esses casos". O código sempre
+    fez o certo — os dois são aferidos antes de a natureza ser consultada —, e era a prosa que
+    prometia o contrário.
+
+    Chamar de preliminar uma ordem revogada não a torna menos revogada. O rótulo diz que a
+    contestação ainda corre, e não que o conteúdo pode estar errado.
+    """
+    julgar(
+        actor=julgador(),
+        recurso_id=peca["recurso"].id,
+        especie=DecisaoRecurso.Especie.CORRECAO_FIXADA,
+        motivacao="O documento juntado na inscrição não foi considerado.",
+        etapa_id=peca["cenario"]["etapa_do_recurso"],
+        pontuacao="82.0000",
+        assinatura_do_resultado=str(peca["superado"].id),
+        idempotency_key="corrigir-obsolescencia",
+    )
+
+    definitiva = afere(peca, "DEFINITIVA")
+    preliminar = afere(peca, "PRELIMINAR")
+
+    assert definitiva.nivel == IMPEDIMENTO
+    assert preliminar.nivel == IMPEDIMENTO, "preliminar de ordem revogada continua sendo revogada"
+    assert preliminar.codigo == DESATUALIZADO
+
+    # E o comando recusa, que é quem grava — a aferição sozinha não protege nada.
+    with pytest.raises(DomainError) as recusa:
+        publicar(peca, "PRELIMINAR", chave="preliminar-com-ato-obsoleto")
+    assert recusa.value.code == DESATUALIZADO
 
 
 def test_reavaliacao_determinada_impede_a_definitiva(peca):
