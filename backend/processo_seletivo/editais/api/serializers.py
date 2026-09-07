@@ -77,6 +77,12 @@ class ClassificationMilestoneSerializer(serializers.Serializer):
     operation = serializers.ChoiceField(choices=["SOMA_PONDERADA", "MEDIA_PONDERADA"])
     normalization = serializers.ChoiceField(choices=["NENHUMA", "PELA_SOMA_DOS_PESOS"])
     rounding = serializers.JSONField(required=False)
+    # A janela recursal do marco, como `rounding`: objeto declarado pela norma, e não enum de
+    # código. `allow_null` porque a ausência é uma das três respostas — o Edital pode não declarar
+    # nada sobre recurso naquele marco, e silêncio não é negativa (018, FR-020).
+    # Sem este campo o contrato de entrada não sabia dizer o prazo, e o Edital publicava
+    # `appealWindow: null` mesmo quando a instituição o havia declarado (E2E18-005).
+    appealWindow = serializers.JSONField(required=False, allow_null=True)
     tiebreakers = TiebreakerSerializer(many=True, required=False)
 
 

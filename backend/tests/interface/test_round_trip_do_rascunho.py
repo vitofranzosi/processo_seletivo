@@ -7,9 +7,11 @@ recusa e sem aviso.
 
 A auditoria exploratória da 017 encontrou o caso concreto: quem marca o Evento do período de
 inscrições e segue o assistente na ordem natural publica um Edital que anuncia prazo de inscrição
-e não recebe nenhuma. Estes testes cobrem a **classe** do defeito e não só aquela marca: para cada
-coleção, o estado persistido é comparado campo a campo com o que o contrato de entrada declara e o
-que `draft.py` reconstrói.
+e não recebe nenhuma. A da 018 encontrou o mesmo defeito um nível abaixo, no marco: quem declara
+"admite recurso em 5 dias" e segue o assistente publica um Edital que nada declara sobre recurso,
+e todo recurso nasce sem prazo computável (E2E18-005). Estes testes cobrem a **classe** do defeito
+e não só aquelas duas marcas: para cada coleção, o estado persistido é comparado campo a campo com
+o que o contrato de entrada declara e o que `draft.py` reconstrói.
 
 Dois caminhos, e os dois precisam valer:
 
@@ -28,7 +30,7 @@ from django.urls import reverse
 from django.utils.dateparse import parse_datetime
 
 from processo_seletivo.editais.models.cronograma import EventoCronograma
-from processo_seletivo.editais.models.perfis import PerfilVaga
+from processo_seletivo.editais.models.perfis import MarcoClassificatorio, PerfilVaga
 from processo_seletivo.processos.models import Edital
 from tests.fixtures.edital import actor_headers
 from tests.interface.conftest import identificar
@@ -39,6 +41,9 @@ PERFIL = "aaaaaaaa-0000-4000-8000-0000000017a1"
 MODALIDADE = "aaaaaaaa-0000-4000-8000-0000000017a2"
 INSCRICOES = "aaaaaaaa-0000-4000-8000-0000000017b1"
 RESULTADO = "aaaaaaaa-0000-4000-8000-0000000017b2"
+ETAPA = "aaaaaaaa-0000-4000-8000-0000000018c1"
+MARCO = "aaaaaaaa-0000-4000-8000-0000000018c2"
+CRITERIO = "aaaaaaaa-0000-4000-8000-0000000018c3"
 
 # O Evento do período, como a instituição o descreve. Cada chave é um campo do contrato
 # operacional que precisa atravessar o assistente inteiro.
@@ -64,6 +69,44 @@ EVENTO_DO_RESULTADO = {
     "isRegistrationPeriod": False,
 }
 
+ETAPA_CLASSIFICATORIA = {
+    "id": ETAPA,
+    "name": "Prova prática",
+    "order": 1,
+    "weight": "1.0000",
+    "eliminatory": True,
+    "classificatory": True,
+    "minimumScore": "60.0000",
+    "maximumScore": "100.0000",
+    "evaluationsPerRegistration": 1,
+    "forma": "PONTUADA",
+    "rotuloFavoravel": "",
+    "rotuloDesfavoravel": "",
+    "scheduleEventId": None,
+}
+
+# O marco, com **a janela recursal declarada**. É o campo que nenhuma etapa posterior edita e que
+# o reenvio precisa carregar: sem ele, o Edital publica `appealWindow: null` (E2E18-005).
+MARCO_COMPLETO = {
+    "id": MARCO,
+    "code": "FINAL",
+    "name": "Classificação final",
+    "stages": [ETAPA],
+    "operation": "SOMA_PONDERADA",
+    "normalization": "NENHUMA",
+    "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
+    "appealWindow": {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"},
+    "tiebreakers": [
+        {
+            "id": CRITERIO,
+            "order": 1,
+            "type": "MAIOR_PONTUACAO_NA_ETAPA",
+            "parameters": {"stageId": ETAPA},
+            "whenMissing": "ULTIMO_NO_CRITERIO",
+        }
+    ],
+}
+
 PERFIL_COMPLETO = {
     "id": PERFIL,
     "code": "TEC-LAB",
@@ -84,6 +127,7 @@ PERFIL_COMPLETO = {
     "competitionModalities": [
         {"id": MODALIDADE, "code": "AC", "name": "Ampla concorrência"},
     ],
+    "classificationMilestones": [MARCO_COMPLETO],
 }
 
 
@@ -91,6 +135,8 @@ def _rascunho():
     return {
         "profiles": [PERFIL_COMPLETO],
         "schedule": [EVENTO_DO_PERIODO, EVENTO_DO_RESULTADO],
+        # O marco enumera esta Etapa: sem ela no rascunho, o marco apontaria para o vazio.
+        "stages": [ETAPA_CLASSIFICATORIA],
     }
 
 
@@ -150,6 +196,38 @@ def _eventos_como_o_contrato_os_declara(edital):
             "isRegistrationPeriod": evento.is_registration_period,
         }
         for evento in EventoCronograma.objects.filter(cronograma__edital=edital).order_by("order")
+    ]
+
+
+def _marcos_como_o_contrato_os_declara(edital):
+    """Os marcos persistidos, no vocabulário do contrato de entrada.
+
+    A coleção inteira, pela mesma razão do Cronograma: comparar campo a campo escolhido a dedo
+    passaria a valer só para o campo que se lembrou de escolher, e o defeito desta classe é
+    justamente o campo de que ninguém se lembrou.
+    """
+    return [
+        {
+            "id": str(marco.id),
+            "code": marco.code,
+            "name": marco.name,
+            "stages": [str(etapa) for etapa in marco.etapas],
+            "operation": marco.operacao,
+            "normalization": marco.normalizacao,
+            "rounding": marco.arredondamento,
+            "appealWindow": marco.janela_recursal or None,
+            "tiebreakers": [
+                {
+                    "id": str(criterio.id),
+                    "order": criterio.ordem,
+                    "type": criterio.tipo,
+                    "parameters": criterio.parametros,
+                    "whenMissing": criterio.quando_ausente,
+                }
+                for criterio in marco.criterios.order_by("ordem")
+            ],
+        }
+        for marco in MarcoClassificatorio.objects.filter(perfil__edital=edital).order_by("code")
     ]
 
 
@@ -240,3 +318,66 @@ def test_gravar_outra_etapa_preserva_o_conteudo_normativo_do_perfil(client, sele
     perfil = PerfilVaga.objects.get(edital=edital)
     assert perfil.classification_information == PERFIL_COMPLETO["classificationInformation"]
     assert perfil.call_information == PERFIL_COMPLETO["callInformation"]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_gravar_a_etapa_seguinte_preserva_o_marco_inteiro(client, seletor_ligado, edital):
+    """A jornada real da 018: declarar o prazo recursal e seguir o assistente.
+
+    `classificacao` é seguida de `inscricao` e de `conteudo` na ordem do assistente, e as duas são
+    obrigatórias para chegar à Revisão. Era ali que a janela morria, e com ela o prazo que o
+    documento publicado promete (E2E18-005).
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.post(_etapa(edital, "inscricao"), {"periodo-inscricoes": INSCRICOES})
+    assert resposta.status_code == 302, resposta.content
+
+    edital.refresh_from_db()
+    resposta = client.post(_etapa(edital, "conteudo"), {"secao-recursos": "Cinco dias corridos."})
+    assert resposta.status_code == 302, resposta.content
+
+    assert _marcos_como_o_contrato_os_declara(edital) == [MARCO_COMPLETO]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_regravar_a_classificacao_preserva_a_janela_declarada(client, seletor_ligado, edital):
+    """Reeditar o marco na tela que o desenha não pode apagar a declaração que ela mesma oferece.
+
+    O caminho é o do formulário, e não o do reenvio: aqui quem lê é `ler_classificacao`, que
+    conhece os campos desenhados. A janela é um deles, e precisa sobreviver à própria tela.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    perfil = PerfilVaga.objects.get(edital=edital)
+    base = f"marco-{perfil.id}-0"
+
+    resposta = client.post(
+        _etapa(edital, "classificacao"),
+        {
+            "perfil_id": str(perfil.id),
+            f"{base}-id": MARCO,
+            f"{base}-code": "FINAL",
+            # A correção que a tela oferece: a denominação muda.
+            f"{base}-name": "Classificação final do certame",
+            f"{base}-stages": ETAPA,
+            f"{base}-operation": "SOMA_PONDERADA",
+            f"{base}-normalization": "NENHUMA",
+            f"{base}-scale": "2",
+            f"{base}-mode": "MEIO_PARA_CIMA",
+            f"{base}-appealDeclaration": "admite",
+            f"{base}-appealDurationDays": "5",
+            f"{base}-appealUnit": "DIAS_CORRIDOS",
+            f"criterio-{perfil.id}-0-0-id": CRITERIO,
+            f"criterio-{perfil.id}-0-0-order": "1",
+            f"criterio-{perfil.id}-0-0-type": "MAIOR_PONTUACAO_NA_ETAPA",
+            f"criterio-{perfil.id}-0-0-target": ETAPA,
+            f"criterio-{perfil.id}-0-0-whenMissing": "ULTIMO_NO_CRITERIO",
+        },
+    )
+    assert resposta.status_code == 302, resposta.content
+
+    marco = MarcoClassificatorio.objects.get(pk=MARCO)
+    assert marco.name == "Classificação final do certame", "a correção que a tela oferece vale"
+    assert marco.janela_recursal == MARCO_COMPLETO["appealWindow"], "a janela declarada sobrevive"
