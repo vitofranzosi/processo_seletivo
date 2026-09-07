@@ -600,6 +600,13 @@ def _marco_persistido(marco):
         "operation": marco.operacao,
         "normalization": marco.normalizacao,
         "rounding": marco.arredondamento,
+        # A janela recursal, pelo mesmo motivo que `status` e `isRegistrationPeriod` viajam no
+        # Evento: o reenvio precisa carregar **o contrato inteiro**, e não os campos que a tela da
+        # etapa atual desenha. Sem ela, declarar "admite recurso em 5 dias" no passo Classificação
+        # e gravar qualquer passo seguinte publicava um Edital que nada declara sobre recurso —
+        # e todo recurso nascia sem prazo computável (E2E18-005).
+        # `or None` como em `publish_edital`: `{}` é a ausência, e a ausência viaja como ausência.
+        "appealWindow": marco.janela_recursal or None,
         "tiebreakers": [
             {
                 "id": str(criterio.id),
