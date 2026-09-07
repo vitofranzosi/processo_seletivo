@@ -104,6 +104,31 @@ ato da instituição sobre você.
 </section>
 {% endfor %}
 
+{% if meus_recursos %}
+<h2>Seus recursos</h2>
+{% comment %}
+Quem recorreu volta para saber em que pé está, e a situação é derivada dos atos que alcançaram a
+peça — não de coluna (D-010, FR-014).
+{% endcomment %}
+<ul class="meus-recursos">
+  {% for peca in meus_recursos %}
+  <li class="peca">
+    <a href="{% url 'portal:recurso' peca.recurso.id %}">Recurso {{ peca.protocolo }}</a>
+    <span class="quando">{{ peca.interposto_em|date:"d/m/Y" }}</span>
+    <span class="meta">{{ peca.situacao_rotulo }} · contra {{ peca.objeto }}</span>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+{% if recorriveis %}
+{% comment %}
+**A ação não aparece quando não há o que contestar** (FR-013). Um botão que sempre recusa ensina a
+pessoa a desconfiar da tela, e é pior do que a ausência dele.
+{% endcomment %}
+<p><a class="principal" href="{% url 'portal:recorrer' inscricao.id %}">Recorrer de um resultado</a></p>
+{% endif %}
+
 <h2>Cronograma do processo</h2>
 <ul class="linha-do-tempo processo">
   {% for evento in cronograma %}

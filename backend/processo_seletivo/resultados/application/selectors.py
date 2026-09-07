@@ -231,6 +231,10 @@ def resultados_visiveis(inscricao):
     )
     return [
         {
+            # O identificador vai no dicionário porque a tela precisa dele **no endereço** do
+            # formulário de recurso — e endereço não é linguagem apresentada, que é a distinção
+            # que a 017 já fixou. Nenhum template o imprime como texto.
+            "id": resultado.id,
             "etapa": (etapas_autorizadas.get(str(resultado.etapa_id)) or {}).get("name", ""),
             "ordem": (etapas_autorizadas.get(str(resultado.etapa_id)) or {}).get("order") or 0,
             "consequencia": resultado.consequencia,

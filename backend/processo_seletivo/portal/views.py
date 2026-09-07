@@ -72,6 +72,8 @@ from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.portal import identidade as identidade_do_candidato
 from processo_seletivo.portal.arquivos import entregar_ao_titular
 from processo_seletivo.publicacoes.application import selectors
+from processo_seletivo.recursos.application.interpor import objetos_recorriveis
+from processo_seletivo.recursos.application.selectors import recursos_do_titular
 from processo_seletivo.resultados.application.selectors import resultados_visiveis
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.http import marcar_como_privada, resposta_privada
@@ -1249,9 +1251,120 @@ def acompanhamento(request, inscricao_id):
             # conta". Quem foi eliminado antes do marco só existe no segundo — e era exatamente
             # ele que não via nada (E2E17-004, FR-014, FR-015).
             "resultados_das_etapas": resultados_visiveis(registro),
+            # Os recursos que a pessoa já interpôs, e o que pode ser contestado agora. A ação
+            # **não** é oferecida quando a interposição não é possível: um botão que sempre recusa
+            # é pior do que nenhum botão (FR-013).
+            "meus_recursos": recursos_do_titular(registro),
+            "recorriveis": objetos_recorriveis(registro),
             # A versão aceita deixou de ser a vigente: o Edital mudou depois do envio. O aviso
             # informa; ele **não** altera a versão aceita nem reabre coisa alguma (FR-079).
             "retificado": registro.versao_aceita_id != versao.pk,
+        },
+    )
+
+
+@require_http_methods(["GET", "POST"])
+@resposta_privada
+def recorrer(request, inscricao_id):
+    """O formulário e o ato de interpor — atrás da titularidade, como todo o resto do portal."""
+    registro, identidade, versao = _inscricao_do_titular(request, inscricao_id)
+    if registro.status != Inscricao.Status.SUBMETIDA:
+        return redirect(reverse("portal:inscricao", args=[registro.id]))
+
+    recorriveis = objetos_recorriveis(registro)
+    if not recorriveis:
+        # Nada a contestar: a página do formulário não existe para quem não tem objeto atacável, e
+        # devolvê-la vazia convidaria a um ato que seria recusado.
+        return redirect(reverse("portal:acompanhamento", args=[registro.id]))
+
+    erro = ""
+    if request.method == "POST":
+        alvo = request.POST.get("objeto", "")
+        tipo, _, identificador_do_alvo = alvo.partition(":")
+        try:
+            peca = _interpor(request, registro, identidade, tipo, identificador_do_alvo)
+        except DomainError as recusa:
+            erro = recusa.detail
+        else:
+            return redirect(reverse("portal:recurso", args=[peca.id]))
+
+    return render(
+        request,
+        "portal/recorrer.html",
+        {
+            "inscricao": registro,
+            "selecao": _selecao(versao),
+            "recorriveis": recorriveis,
+            "erro": erro,
+            "fundamentacao": request.POST.get("fundamentacao", ""),
+        },
+    )
+
+
+def _interpor(request, registro, identidade, tipo, identificador_do_alvo):
+    """Traduz o formulário no comando. Objeto inexistente é 404, como qualquer outro.
+
+    A **assinatura** do objeto lido viaja no próprio campo: é o identificador que a tela
+    apresentou, e compará-lo com o vigente é o que impede a peça de nascer contra um ato já
+    sucedido (FR-009).
+    """
+    from processo_seletivo.recursos.application.interpor import interpor, objeto_atacado
+
+    alvo = objeto_atacado(registro, tipo, identificador_do_alvo)
+    campo = "publicacao" if tipo == "publicacao" else "resultado"
+
+    fundamentacao = request.POST.get("fundamentacao", "")
+    assinatura = sha256(fundamentacao.encode()).hexdigest()[:16]
+    return interpor(
+        identidade=identidade,
+        inscricao=registro,
+        **{campo: alvo},
+        fundamentacao=fundamentacao,
+        assinatura_do_objeto=identificador_do_alvo,
+        # Chave determinística, como no envio da inscrição: o duplo clique reserva a **mesma**
+        # chave e recebe a mesma peça. Uma chave sorteada por requisição não protegeria de nada —
+        # seria idempotência só no nome.
+        #
+        # A fundamentação entra na chave de propósito. Sem ela, uma segunda tentativa com texto
+        # diferente bateria no conflito de idempotência — "a chave foi usada com outro conteúdo" —,
+        # que é verdade sobre a mecânica e não diz nada sobre o caso. Com ela, essa tentativa chega
+        # à recusa que a pessoa precisa ler: você já recorreu deste resultado, pelo recurso tal.
+        idempotency_key=f"recurso-{registro.id}-{tipo}-{identificador_do_alvo}-{assinatura}",
+        correlation_id=str(registro.id),
+    )
+
+
+@require_http_methods(["GET"])
+@resposta_privada
+def recurso(request, recurso_id):
+    """O comprovante e o acompanhamento da peça, numa página só.
+
+    O protocolo é a prova de que se interpôs, e a situação deriva dos atos que alcançaram a peça —
+    não de coluna (D-010). A titularidade é verificada pela **Inscrição** do recurso: é ela que
+    responde "este registro é dele?".
+    """
+    from processo_seletivo.recursos.application.selectors import resumo
+    from processo_seletivo.recursos.models import Recurso
+
+    peca = (
+        Recurso.objects.filter(pk=recurso_id)
+        .select_related("inscricao")
+        .prefetch_related("juizos", "decisoes")
+        .first()
+    )
+    if peca is None:
+        raise DomainError("not_found", "Recurso não encontrado.", 404)
+    exigir_titularidade(peca.inscricao, identidade_do_candidato.identidade_da_sessao(request))
+
+    return render(
+        request,
+        "portal/recurso.html",
+        {
+            "inscricao": peca.inscricao,
+            # A versão da página é a **vigente**, e não a que a peça cita: o cabeçalho nomeia a
+            # seleção de hoje, enquanto a peça guarda a regra sob a qual foi interposta (FR-024).
+            "selecao": _selecao(selectors.selecao_publica(edital_id=peca.inscricao.edital_id)),
+            "recurso": resumo(peca),
         },
     )
 

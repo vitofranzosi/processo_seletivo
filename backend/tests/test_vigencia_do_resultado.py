@@ -46,6 +46,19 @@ EXCECOES = {
     # A recusa de reabertura protege a Avaliação que fundamentou **qualquer** Resultado, superado
     # inclusive: reabrir mudaria a conclusão histórica que aquele Resultado afirma, e ele continua
     # existindo e sendo consultável (013, D-002).
+    # `objeto_atacado` resolve **o que a pessoa clicou**, que pode já ter sido superado enquanto a
+    # página estava aberta. Filtrar por vigência devolveria 404 "não encontrado" onde a resposta
+    # certa é a recusa que explica o que aconteceu e aponta o vigente (FR-009) — quem lê "não
+    # encontrado" conclui que o sistema perdeu o resultado dela. A decisão sobre vigência fica em
+    # `_recusar_se_superado`, no mesmo módulo.
+    #
+    # A dispensa é **deste** módulo, e não da view que o chama: `portal/views.py` tem mil e
+    # setecentas linhas, e isentá-lo inteiro deixaria passar calada qualquer leitura futura de
+    # efeito no portal. Foi por isso que a busca migrou para cá.
+    "recursos/application/interpor.py": (
+        "revalidação da interposição: precisa achar o objeto superado para recusá-lo com a "
+        "mensagem que aponta o vigente, em vez de responder 404"
+    ),
     "avaliacoes/application/avaliacao.py": (
         "guarda de reabertura: a Avaliação fonte de um Resultado superado continua protegida"
     ),

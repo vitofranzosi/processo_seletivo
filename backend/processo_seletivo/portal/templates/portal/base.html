@@ -191,6 +191,13 @@ details.como-converter li{margin-bottom:.4rem}
    sozinho, quanto se espera — e um campo largo demais parece formulário mal montado. */
 .campo.curto{max-width:15rem}
 .ajuda{color:var(--texto-fraco);font-size:.9375rem;margin:.25rem 0 1rem}
+/* O campo de razão do recurso é o único texto longo que o candidato escreve no portal, e herda a
+   moldura dos demais controles: nada aqui é especial por ser recurso. */
+.campo textarea{width:100%;padding:.6rem;border:1px solid var(--borda);border-radius:4px;
+  font:inherit;background:var(--branco);resize:vertical}
+.meus-recursos{list-style:none;margin:0 0 1.5rem;padding:0;display:grid;gap:.6rem}
+.meus-recursos .peca{display:grid;gap:.15rem;padding:.6rem .75rem;border:1px solid var(--borda);
+  border-left:4px solid var(--verde);border-radius:4px;background:var(--branco)}
 .dados{display:grid;grid-template-columns:1fr;gap:.15rem .75rem;margin:0 0 1rem}
 .dados dt{color:var(--texto-fraco)}
 .dados dd{margin:0 0 .5rem;overflow-wrap:anywhere}
