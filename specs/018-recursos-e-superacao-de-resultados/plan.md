@@ -176,7 +176,8 @@ backend/processo_seletivo/
 │   ├── domain/
 │   │   ├── janela.py                    # contagem pura: abre, fecha, está aberta (T-008)
 │   │   ├── elegibilidade.py             # as cinco perguntas do impedimento (T-006)
-│   │   ├── consequencia.py              # deriva a consequência da conclusão fixada (FR-059)
+│   │   ├── consequencia.py              # deriva a consequência da conclusão fixada, e recusa
+│   │   │                                #   com motivo o que não é pontuação (FR-059)
 │   │   ├── pejus.py                     # a comparação de piora, nos dois pontos (T-011)
 │   │   └── protocolo.py                 # REC-AAAA-XXXXXXXX, alfabeto compartilhado (T-012)
 │   └── application/
@@ -201,11 +202,15 @@ backend/processo_seletivo/
 │   ├── models.py                        # + os 3 campos da declaração de encerramento
 │   ├── migrations/0002_declaracao.py    # 3 colunas, 1 constraint
 │   ├── domain/publicabilidade.py        # + natureza pretendida e os seis fatos (T-010)
+│   ├── domain/conteudo.py               # + a causa da retificação, congelada na publicação (FR-088)
+│   ├── infrastructure/documento.py      # + a linha RETIFICAÇÃO no documento do resultado (FR-088)
 │   └── application/publicar.py          # + a natureza a aferir e a declaração expressa (FR-085)
 ├── avaliacoes/
 │   ├── application/impedimento.py       # + vigência na leitura de Resultado (T-004)
 │   └── application/avaliacao.py         # a recusa deixa de prometer "anulação" (FR-111)
-├── editais/domain/perfis.py             # + validação de `appealWindow` na publicação (FR-021)
+├── editais/
+│   ├── domain/perfis.py                 # + validação de `appealWindow` na publicação (FR-021)
+│   └── domain/secoes.py                 # a seção "Dos Recursos" remete ao marco (FR-113)
 ├── publicacoes/
 │   ├── domain/elevacao.py               # + DEGRAUS_DE_MARCO e elevar_marco (T-007)
 │   ├── domain/colecoes.py               # endereçamento de `appealWindow` por Retificação (T-007)
