@@ -45,6 +45,44 @@ ninguém decidiu (I-004, FR-056).
 Fica fora de "Sua participação" pela distinção da 010: aquela lista é o que **você fez**; divulgar é
 ato da instituição sobre você.
 {% endcomment %}
+{% for etapa in resultados_das_etapas %}
+{% if forloop.first %}
+<h2>Resultado das etapas</h2>
+{% comment %}
+  Este bloco só existe porque a publicação vigente de um marco do seu Perfil já enumerou estas
+  Etapas: é um ato administrativo que a instituição praticou, com autoridade, autor e instante, e
+  é ele que autoriza mostrar o seu Resultado individual (018, D-003).
+
+  **Alcança quem ficou fora do universo do ato**, e é essa a razão de ele existir: quem foi
+  eliminado numa Etapa anterior não tem linha em `SituacaoDivulgada` e não via absolutamente nada
+  — nem que houve resultado (E2E17-004).
+
+  Nada aqui é de terceiro: nenhum nome, nenhuma nota alheia, nenhum parecer, nenhuma avaliação.
+{% endcomment %}
+{% endif %}
+<section class="resultado-da-etapa" aria-labelledby="etapa-{{ forloop.counter }}">
+  <h3 id="etapa-{{ forloop.counter }}">{{ etapa.etapa }}</h3>
+  <p class="posicao">
+    <strong>{% if etapa.habilitada %}Habilitada{% else %}Eliminada{% endif %}</strong>
+    {% if etapa.pontuacao is not None %} · pontuação {{ etapa.pontuacao }}{% endif %}
+  </p>
+  {% comment %}
+    O motivo é escrito para ser lido — "pontuação inferior à nota mínima da Etapa (45,0000 <
+    60,0000)" —, e é obrigatório por constraint desde a 013. Antes desta feature ninguém o lia.
+  {% endcomment %}
+  {% if etapa.motivo %}<p class="meta">{{ etapa.motivo }}</p>{% endif %}
+  {% if etapa.corrigido %}
+  {% comment %}
+    **Mostrar sem explicar transformaria a correção em erro aparente.** Quem vê a nota mudar
+    precisa saber por quê, e a razão é um ato: o recurso foi deferido (D-003, FR-016).
+  {% endcomment %}
+  <p class="meta corrigido">
+    Resultado corrigido em {{ etapa.corrigido_em|date:"d/m/Y" }}, em razão do julgamento do seu recurso. O resultado anterior permanece registrado.
+  </p>
+  {% endif %}
+</section>
+{% endfor %}
+
 {% for resultado in resultados_divulgados %}
 {% if forloop.first %}<h2>Resultado divulgado</h2>{% endif %}
 <section class="resultado-divulgado" aria-labelledby="marco-{{ forloop.counter }}">

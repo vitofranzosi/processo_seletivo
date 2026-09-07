@@ -530,6 +530,20 @@ form.convite{margin:.75rem 0 0}
 .resultado-divulgado .posicao{margin:0 0 .5rem;font-size:1.125rem}
 .resultado-divulgado .meta{color:var(--texto-fraco);font-size:.9375rem;margin:0 0 .5rem}
 .resultado-divulgado p:last-child{margin-bottom:0}
+/* Um bloco por Etapa cujo Resultado a publicação vigente do marco já autoriza mostrar (018,
+   D-003). Reusa a caixa do marco divulgado porque as duas coisas se leem juntas e são do mesmo
+   registro — mudar de moldura entre elas sugeriria que uma é menos oficial que a outra. */
+.resultado-da-etapa{border:1px solid var(--borda);border-radius:6px;padding:1rem 1.25rem;
+  margin:0 0 1rem;max-width:var(--leitura)}
+.resultado-da-etapa>h3{margin:0}
+.resultado-da-etapa .posicao{margin:.25rem 0 .5rem;font-size:1.125rem}
+.resultado-da-etapa .meta{color:var(--texto-fraco);font-size:.9375rem;margin:0 0 .5rem}
+.resultado-da-etapa p:last-child{margin-bottom:0}
+/* A correção por recurso deferido é dita, e não apenas aplicada: quem vê a nota mudar precisa
+   saber por quê. Distinta do texto fraco ao lado, porque é a explicação de uma mudança — e não
+   mais um detalhe do registro (FR-016). */
+.resultado-da-etapa .corrigido{color:var(--texto);border-left:3px solid var(--borda);
+  padding-left:.75rem}
 </style>
 </head>
 <body>

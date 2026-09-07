@@ -161,3 +161,92 @@ def contestacoes_supervenientes(resultados):
         for (subject, inscricao, _etapa), identificador in pares.items()
         if (subject, inscricao) == (imp.identity_subject, imp.inscricao_id)
     }
+
+
+def resultados_visiveis(inscricao):
+    """O que o titular pode consultar do próprio Resultado de Etapa, e sob que autorização.
+
+    **O fato autorizador é um ato que já existe** (018, D-003): havendo `PublicacaoResultado`
+    vigente de um marco do Perfil da Inscrição, e enumerando esse marco a Etapa N, o titular passa
+    a ver o seu `ResultadoEtapa` vigente da Etapa N. Não é divulgação, não é ato novo e não nomeia
+    terceiros — é acesso do titular ao próprio dado, autorizado por uma decisão que a instituição
+    já tomou.
+
+    **Alcança quem ficou fora do universo do ato**, e é essa a propriedade que a torna a resposta
+    certa. `SituacaoDivulgada` só existe para quem estava no universo; quem foi eliminado numa Etapa
+    anterior não tem linha lá, e por isso não via absolutamente nada — nem que houve resultado
+    (E2E17-004). Aqui a porta é a **enumeração normativa** do marco, que não depende de quem
+    participou do ato.
+
+    **A enumeração vem da versão que o ato cita, e não da vigente.** É a norma que governou a
+    publicação que autoriza mostrar; ler a vigente faria uma Retificação posterior alargar ou
+    estreitar, em silêncio, o que já foi autorizado.
+
+    Três consultas, e o número **não cresce** com a quantidade de marcos: as publicações, os
+    conteúdos das versões distintas — por `conteudos_das_versoes`, e não por `select_related`, que
+    traria uma cópia do Edital por linha — e os Resultados vigentes (T-009).
+    """
+    from processo_seletivo.classificacao.domain.universo import por_identidade
+    from processo_seletivo.divulgacao.models import PublicacaoResultado
+
+    publicacoes = list(
+        PublicacaoResultado.objects.filter(
+            # `edital_id`, e não `edital`: a segunda dispararia um carregamento tardio da
+            # Inscrição só para chegar à chave que já está na linha. Uma consulta a mais por
+            # acompanhamento aberto, invisível em qualquer perfil de tempo.
+            edital_id=inscricao.edital_id,
+            perfil_id=inscricao.profile_id,
+            sucessoras__isnull=True,
+        )
+        .select_related("ato")
+        .order_by("publicado_em")
+    )
+    if not publicacoes:
+        return []
+
+    conteudos = conteudos_das_versoes({p.ato.versao_id for p in publicacoes})
+    etapas_autorizadas = {}
+    for publicacao in publicacoes:
+        conteudo = conteudos.get(publicacao.ato.versao_id) or {}
+        perfil = por_identidade(conteudo.get("profiles"), publicacao.perfil_id)
+        marco = por_identidade(
+            perfil.get("classificationMilestones") if perfil else None, publicacao.marco_id
+        )
+        rotulos = {str(item.get("id")): item for item in conteudo.get("stages") or []}
+        for etapa_id in (marco or {}).get("stages") or []:
+            # Um marco basta para autorizar: dois marcos que enumerem a mesma Etapa não a mostram
+            # duas vezes. O primeiro a chegar carrega o rótulo, e a ordem é a de publicação.
+            etapas_autorizadas.setdefault(str(etapa_id), rotulos.get(str(etapa_id)) or {})
+
+    if not etapas_autorizadas:
+        return []
+
+    resultados = (
+        ResultadoEtapa.vigentes.filter(inscricao=inscricao, etapa_id__in=list(etapas_autorizadas))
+        .select_related("resultado_anterior", "decisao")
+        .order_by("consolidado_em")
+    )
+    return [
+        {
+            "etapa": (etapas_autorizadas.get(str(resultado.etapa_id)) or {}).get("name", ""),
+            "ordem": (etapas_autorizadas.get(str(resultado.etapa_id)) or {}).get("order") or 0,
+            "consequencia": resultado.consequencia,
+            "habilitada": resultado.consequencia == ResultadoEtapa.Consequencia.HABILITADA,
+            "motivo": resultado.motivo,
+            # Só quando a forma a tiver: a Etapa decisória não produz número, e a Ocorrência não
+            # produz grandeza nenhuma. Inventar um zero afirmaria o que ninguém mediu.
+            "pontuacao": resultado.pontuacao,
+            # **A superação precisa ser explicável a quem a recebe.** Mostrar a nota nova sem dizer
+            # que ela mudou porque o recurso foi deferido transforma a correção em erro aparente
+            # (D-003, FR-016).
+            "corrigido": resultado.resultado_anterior_id is not None,
+            "corrigido_em": resultado.consolidado_em if resultado.resultado_anterior_id else None,
+        }
+        for resultado in sorted(
+            resultados,
+            key=lambda item: (
+                (etapas_autorizadas.get(str(item.etapa_id)) or {}).get("order") or 0,
+                item.consolidado_em,
+            ),
+        )
+    ]

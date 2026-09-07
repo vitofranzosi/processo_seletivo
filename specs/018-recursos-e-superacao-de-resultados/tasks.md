@@ -122,12 +122,12 @@ para ele em cada Etapa cujo marco já foi divulgado.
 **Teste independente**: publicado o marco que enumera a Etapa 1, a candidata eliminada nela — e
 **fora** do universo do ato — vê a consequência e o motivo escritos, e não vê Resultado de terceiro.
 
-- [ ] T027 [US1] Escrever `resultados_visiveis(inscricao)` em `backend/processo_seletivo/resultados/application/selectors.py`: publicações vigentes de marcos do Perfil, as Etapas que cada marco enumera **na versão que o ato cita**, e os Resultados vigentes da Inscrição nelas — em três consultas, usando `conteudos_das_versoes` (T-009, FR-014, FR-015, FR-018)
-- [ ] T028 [US1] Acrescentar o bloco do Resultado da Etapa em `backend/processo_seletivo/portal/views.py::acompanhamento` e no template `backend/processo_seletivo/portal/templates/portal/acompanhamento.html`, com consequência, motivo e pontuação quando houver (FR-014, FR-016)
-- [ ] T029 [US1] Exibir a correção quando o vigente for sucessor — que corrigiu o anterior, por qual decisão e quando — em `backend/processo_seletivo/portal/templates/portal/acompanhamento.html`, porque mostrar a nota nova sem explicar transforma a correção em erro aparente (FR-016)
-- [ ] T030 [P] [US1] Testar a visibilidade em `backend/tests/portal/test_resultado_da_etapa.py`: sem publicação, nada aparece; com publicação vigente do marco, a eliminada na Etapa 1 vê o próprio Resultado; Etapa que nenhum marco publicado enumera não aparece (FR-014, FR-015, FR-018, SC-001)
-- [ ] T031 [P] [US1] Testar a fronteira em `backend/tests/portal/test_resultado_da_etapa.py`: nenhum Resultado de terceiro, nenhuma Avaliação, nenhum parecer e nenhum nome de avaliador alcançáveis por caminho algum; e identificador manipulado devolve 404 uniforme (FR-017, FR-104, SC-021, SC-022)
-- [ ] T032 [P] [US1] Testar o orçamento de consultas em `backend/tests/performance/test_resultado_da_etapa.py`: número constante entre 1 e N marcos (T-009)
+- [X] T027 [US1] Escrever `resultados_visiveis(inscricao)` em `backend/processo_seletivo/resultados/application/selectors.py`: publicações vigentes de marcos do Perfil, as Etapas que cada marco enumera **na versão que o ato cita**, e os Resultados vigentes da Inscrição nelas — em três consultas, usando `conteudos_das_versoes` (T-009, FR-014, FR-015, FR-018)
+- [X] T028 [US1] Acrescentar o bloco do Resultado da Etapa em `backend/processo_seletivo/portal/views.py::acompanhamento` e no template `backend/processo_seletivo/portal/templates/portal/acompanhamento.html`, com consequência, motivo e pontuação quando houver (FR-014, FR-016)
+- [X] T029 [US1] Exibir a correção quando o vigente for sucessor — que corrigiu o anterior, por qual decisão e quando — em `backend/processo_seletivo/portal/templates/portal/acompanhamento.html`, porque mostrar a nota nova sem explicar transforma a correção em erro aparente (FR-016)
+- [X] T030 [P] [US1] Testar a visibilidade em `backend/tests/portal/test_resultado_da_etapa.py`: sem publicação, nada aparece; com publicação vigente do marco, a eliminada na Etapa 1 vê o próprio Resultado; Etapa que nenhum marco publicado enumera não aparece (FR-014, FR-015, FR-018, SC-001)
+- [X] T031 [P] [US1] Testar a fronteira em `backend/tests/portal/test_resultado_da_etapa.py`: nenhum Resultado de terceiro, nenhuma Avaliação, nenhum parecer e nenhum nome de avaliador alcançáveis por caminho algum; e identificador manipulado devolve 404 uniforme (FR-017, FR-104, SC-021, SC-022)
+- [X] T032 [P] [US1] Testar o orçamento de consultas em `backend/tests/performance/test_resultado_da_etapa.py`: número constante entre 1 e N marcos (T-009)
 
 **Checkpoint**: o E2E17-004 está fechado pela raiz — quem foi eliminado cedo deixa de receber
 silêncio absoluto.

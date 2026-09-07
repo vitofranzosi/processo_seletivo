@@ -72,6 +72,7 @@ from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.portal import identidade as identidade_do_candidato
 from processo_seletivo.portal.arquivos import entregar_ao_titular
 from processo_seletivo.publicacoes.application import selectors
+from processo_seletivo.resultados.application.selectors import resultados_visiveis
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.http import marcar_como_privada, resposta_privada
 
@@ -1241,6 +1242,13 @@ def acompanhamento(request, inscricao_id):
             # ela. Misturar as duas coisas na mesma lista devolveria à tela justamente a confusão
             # que a FR-077 da 010 nomeia (FR-060).
             "resultados_divulgados": situacoes_do_candidato(registro),
+            # **O Resultado individual de cada Etapa**, quando a publicação vigente de um marco do
+            # Perfil já autoriza mostrá-lo (018, D-003). É acréscimo à mesma tela, e não segunda
+            # fonte: `situacoes_do_candidato` responde "o que o marco divulgou sobre mim", e este
+            # responde "o que a instituição registrou de mim em cada Etapa que aquele marco
+            # conta". Quem foi eliminado antes do marco só existe no segundo — e era exatamente
+            # ele que não via nada (E2E17-004, FR-014, FR-015).
+            "resultados_das_etapas": resultados_visiveis(registro),
             # A versão aceita deixou de ser a vigente: o Edital mudou depois do envio. O aviso
             # informa; ele **não** altera a versão aceita nem reabre coisa alguma (FR-079).
             "retificado": registro.versao_aceita_id != versao.pk,

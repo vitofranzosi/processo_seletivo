@@ -95,8 +95,17 @@ def superar(superado, decisao, *, pontuacao=None, consequencia=None, motivo="Rec
     )
 
 
-def deferir_corrigindo(superado, *, versao, pontuacao, consequencia, protocolo="REC-2026-TESTE001"):
-    """O caminho inteiro, do jeito que a jornada o percorre: interpor, admitir, julgar, superar."""
+def deferir_corrigindo(
+    superado, *, versao, pontuacao, consequencia, forma=None, protocolo="REC-2026-TESTE001"
+):
+    """O caminho inteiro, do jeito que a jornada o percorre: interpor, admitir, julgar, superar.
+
+    **A forma é a que a Etapa publica, e não a do Resultado superado** (FR-059). Corrigir um
+    Resultado por Ocorrência — que não tem forma, porque ninguém avaliou — para uma pontuação exige
+    declarar `PONTUADA`: a decisão passa a afirmar uma grandeza, e a conclusão precisa ser coerente
+    com ela. Foi `ck_decisao_conclusao_por_forma` que apontou o deslize aqui, e é para isso que ela
+    existe.
+    """
     recurso = interpor(
         inscricao=superado.inscricao,
         versao=versao,
@@ -104,13 +113,15 @@ def deferir_corrigindo(superado, *, versao, pontuacao, consequencia, protocolo="
         protocolo=protocolo,
     )
     admitir(recurso)
+    if forma is None:
+        forma = "PONTUADA" if pontuacao is not None else superado.forma
     decisao = decidir(
         recurso,
         protegido=superado,
         consequencia=consequencia,
-        forma=superado.forma,
+        forma=forma,
         pontuacao=pontuacao,
-        sentido=superado.sentido,
+        sentido="" if pontuacao is not None else superado.sentido,
         versao=versao,
     )
     return recurso, decisao, superar(superado, decisao, pontuacao=pontuacao)
