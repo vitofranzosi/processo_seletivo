@@ -21,6 +21,8 @@ fase, para rastrear.
 
 - **[P]**: pode correr em paralelo (arquivos distintos, sem dependência pendente)
 - **[Story]**: a que história da spec a tarefa pertence
+- **O identificador é estável, e não é a ordem.** Quem executa segue a fase e o grafo de
+  dependências; renumerar depois de uma correção invalidaria referência já feita em revisão.
 
 ---
 
@@ -55,7 +57,7 @@ Nenhuma tela ainda. É a fase que mais quebra teste, e é melhor que quebre sozi
 ### As tabelas
 
 - [ ] T012 Criar `AnexoEdital` e `ArtefatoAnexo` em `backend/processo_seletivo/editais/models/anexos.py`, com os campos de [data-model.md](./data-model.md), e exportá-los em `backend/processo_seletivo/editais/models/__init__.py` (FR-002, FR-005, FR-007, FR-010, FR-011, FR-012, FR-014)
-- [ ] T013 Acrescentar a referência anulável `anexo` (`SET_NULL`) a `DocumentoExigido` em `backend/processo_seletivo/editais/models/documentos.py` (FR-020, FR-022)
+- [ ] T013 Acrescentar a referência anulável `anexo` (`SET_NULL`) a `DocumentoExigido` em `backend/processo_seletivo/editais/models/documentos.py` **e incluir o campo no `bulk_create` de `replace_draft` em `backend/processo_seletivo/editais/application/draft.py`** — as linhas do requisito são apagadas e recriadas a cada gravação de etapa, e o campo esquecido zera o vínculo em silêncio (FR-020, FR-022)
 - [ ] T014 Escrever `backend/processo_seletivo/editais/migrations/0012_anexo_do_edital.py`
 - [ ] T015 Escrever `backend/processo_seletivo/editais/migrations/0013_congelamento_do_artefato.py`, com a trigger condicional `WHEN (OLD.congelado_em IS NOT NULL)` no molde de `publicacoes/migrations/0007_imutabilidade_do_historico.py` (FR-010, R-002)
 
@@ -64,6 +66,7 @@ Nenhuma tela ainda. É a fase que mais quebra teste, e é melhor que quebre sozi
 - [ ] T016 [P] Teste de migração em `backend/tests/migrations/` provando que artefato congelado recusa `UPDATE` e `DELETE` **no banco**, e que artefato não congelado aceita os dois (FR-010, FR-010a)
 - [ ] T017 [P] Estender `backend/tests/unit/publicacoes/test_colecoes.py` para cobrir `/attachments` como coleção declarada com chave
 - [ ] T018 [P] Escrever `backend/tests/contract/test_elevacao_degrau_9.py` no molde do degrau 8: conteúdo em versão 8 eleva para 9 com lista vazia e `attachmentId: null`, e a elevação é idempotente (R-004)
+- [ ] T028 Regenerar `backend/tests/contract/fixtures/snapshot_publicado.json` e `documento_publicado_v1.pdf` com `backend/scripts/gerar_fixture_documento.py` — **fecha a Foundational**, porque o degrau 9 muda o `content_hash` e o documento o imprime (`pdf.py:1786,1897`); adiar isto deixaria a fase terminar com a suíte vermelha
 
 ---
 
@@ -83,11 +86,10 @@ e baixar os três da página pública da seleção — sem shell e sem escrita d
 - [ ] T025 [US1] Acrescentar as regras impeditivas `attachment_label_required` e `attachment_artifact_missing`, e o aviso `attachment_duplicate_label`, em `backend/processo_seletivo/editais/domain/validation.py`, registradas em `validate_for_publication` (FR-005, FR-026)
 - [ ] T026 [P] [US1] Declarar a `Secao` gerada com `source="attachments"` no catálogo em `backend/processo_seletivo/editais/domain/secoes.py` (FR-027)
 - [ ] T027 [US1] Escrever o corpo `_anexos` em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, listando rótulo e ordem **sem endereço**, e registrá-lo em `_CORPO_GERADO` (FR-027, FR-027a)
-- [ ] T028 [US1] Regenerar `backend/tests/contract/fixtures/snapshot_publicado.json` e `documento_publicado_v1.pdf` com `backend/scripts/gerar_fixture_documento.py`
-- [ ] T029 [P] [US1] Escrever `ArtefatoPublicoView` em `backend/processo_seletivo/publicacoes/api/public_views.py` e a rota em `public_urls.py`, com `AllowAny`, `ETag`, `If-None-Match` → 304, `IMMUTABLE_CACHE`, `Content-Disposition: attachment` e 404 para artefato não congelado (FR-039, FR-041, FR-042, FR-043, R-003)
+- [ ] T029 [P] [US1] Escrever `ArtefatoPublicoView` em `backend/processo_seletivo/publicacoes/api/public_views.py` e a rota em `public_urls.py`, com `AllowAny`, `ETag`, `If-None-Match` → 304, `IMMUTABLE_CACHE`, `Content-Disposition: attachment` e 404 para artefato não congelado. O endereço é o do **artefato**, e é assim que ele resolve "o de então" e nunca "o vigente" (FR-028, FR-039, FR-041, FR-042, FR-043, FR-052, R-003)
 - [ ] T030 [US1] Listar todos os anexos vigentes, na ordem editorial, na página pública da seleção em `backend/processo_seletivo/portal/views.py` e `templates/portal/selecao.html` (FR-039, FR-039a)
 - [ ] T031 [P] [US1] Testes de contrato da rota pública em `backend/tests/contract/`: 200 com `ETag`, 304 com `If-None-Match`, cabeçalho de cache, 404 do não congelado
-- [ ] T032 [P] [US1] Teste de autorização em `backend/tests/authorization/`: artefato de Edital não publicado devolve **404** pela rota pública, e é entregue a quem tem autorização pela interface (FR-017)
+- [ ] T032 [P] [US1] Teste de autorização em `backend/tests/authorization/`: artefato de Edital não publicado devolve **404** pela rota pública, e é entregue a quem tem autorização pela interface — é a fronteira entre o regime público versionado e a raiz privada da `009` (FR-017, FR-052)
 - [ ] T033 [P] [US1] Teste de interface em `backend/tests/interface/`: subir, rotular, ordenar e remover no rascunho — **e gravar outra etapa do assistente sem que os anexos sumam**, que é o modo de falha do `replace_draft` (R-006)
 - [ ] T034 [P] [US1] Teste do PDF em `backend/tests/unit/publicacoes/test_pdf.py`: a seção de anexos aparece no documento, é determinística e não imprime endereço (FR-027a, FR-030)
 
@@ -124,10 +126,11 @@ que a publicação anterior e a vigente entregam bytes diferentes, com resumos d
 - [ ] T043 [US3] Aceitar a substituição do artefato dentro do ato de Retificação: `enctype="multipart/form-data"` em `templates/interface/retificar.html`, recepção em `backend/processo_seletivo/interface/views.py`, e criação do artefato com `congelado_em` nulo (FR-034, FR-035)
 - [ ] T044 [US3] Traduzir a substituição em `REPLACE` de `artifactId` e `artifactHash` em `diferencas` em `backend/processo_seletivo/interface/retificacao.py` — os bytes não viajam na alteração (FR-035)
 - [ ] T045 [US3] Congelar, em `publish_retification` em `backend/processo_seletivo/publicacoes/application/retificacoes.py`, os artefatos citados pelas alterações, na mesma transação em que a `Publicacao` e o `DocumentoPublicado` nascem (FR-010, FR-025)
-- [ ] T046 [P] [US3] Teste de aceitação em `backend/tests/acceptance/test_us_anexos.py`: os dois artefatos coexistem, com resumos distintos, e ambos respondem 200 (FR-042, SC-002)
-- [ ] T047 [P] [US3] Teste de consulta temporal: `?em=<instante anterior>` devolve o `artifactId` de então (FR-040, SC-003)
+- [ ] T046 [US3] Escrever `backend/tests/acceptance/test_us_anexos.py` cobrindo o **ciclo inteiro** do 173/2025, no molde de `test_us6_consulta_publica.py`: publicar com os anexos-formulário, retificar substituindo um, baixar o vigente, devolver preenchido, deferir, perguntar por um instante anterior e provar que os dois artefatos coexistem com resumos distintos, ambos respondendo 200 (FR-042, SC-002, SC-005)
+- [ ] T047 [P] [US3] Teste de consulta temporal: `?em=<instante anterior>` devolve o `artifactId` de então, e a publicação histórica continua entregando o artefato daquela versão (FR-028, FR-040, FR-041, SC-003)
 - [ ] T048 [P] [US3] Teste de concorrência: duas Retificações sobre o mesmo anexo, a segunda recusada pelo `expected_previous_hash` já existente (FR-036)
 - [ ] T049 [P] [US3] Teste de endereçamento: `/attachments/3` é recusado, `/attachments/id=<uuid>` é aceito (FR-032)
+- [ ] T066 [P] [US3] Teste de autorização em `backend/tests/authorization/`: substituir, rotular, ordenar, acrescentar e remover anexo depois da publicação exige `retificacao:elaborar` e `retificacao:submeter`, e nenhum desses atos é alcançável por quem só tem `edital:elaborar` (FR-037)
 
 ---
 
@@ -156,6 +159,7 @@ lacuna e ausência de referência pendurada.
 - [ ] T054 [US5] Marcar o grupo do anexo como `removivel=True` e traduzir a remoção em `REMOVE /attachments/id=<uuid>` (FR-031, FR-033)
 - [ ] T055 [US5] Oferecer rótulo e ordem como campos editáveis, garantindo que alterar um não recalcula nem renumera nenhum outro (FR-006, FR-007, FR-008)
 - [ ] T056 [US5] Desfazer o vínculo do `DocumentoExigido` no mesmo ato que remove o anexo, recusando com erro impeditivo a Retificação que deixaria referência pendurada (FR-022, FR-023)
+- [ ] T065 [US5] Acrescentar `attachmentId` a `CAMPOS_DOCUMENTO` em `backend/processo_seletivo/interface/retificacao.py`, como campo `REFERENCIA` com as opções vindas dos anexos daquela versão — sem ele T056 é irrealizável pelo canal do ator, porque a tela não oferece o campo que precisa mudar (FR-022, FR-031)
 - [ ] T057 [P] [US5] Testes em `backend/tests/interface/` e `backend/tests/unit/`: remover o quarto de seis deixa lacuna e não altera rótulo nenhum; retificação com vínculo pendurado é recusada nomeando o vínculo
 - [ ] T058 [P] [US5] Teste: anexo removido da versão futura continua íntegro na publicação anterior (FR-033)
 
@@ -164,7 +168,7 @@ lacuna e ausência de referência pendurada.
 ## Phase 8: Polish e transversais
 
 - [ ] T059 [P] Acessibilidade da etapa de anexos e da lista pública, em `backend/tests/interface/test_acessibilidade*.py` e `backend/tests/portal/`
-- [ ] T060 [P] Conferir a trilha de auditoria de envio, vínculo, desvínculo e substituição, com ator, ação, entidade e instante, e sem nome de arquivo desnecessário (FR-055)
+- [ ] T060 [P] Conferir a trilha de auditoria de envio, vínculo, desvínculo e substituição, com ator, ação, entidade e instante, e sem nome de arquivo desnecessário; a Retificação sobre anexo registra autoria, motivo, instante e versão pela trilha que já existe (FR-038, FR-055)
 - [ ] T061 [P] Teste da cadeia `versão histórica → identidade → resumo publicado → bytes`, como garantia interna (FR-053)
 - [ ] T062 [P] Teste provando que nenhuma rota expõe verificação de integridade ao usuário final (FR-054)
 - [ ] T063 [P] Acrescentar anexos ao `seed_demo` em `backend/processo_seletivo/processos/management/commands/seed_demo.py`, para que a demonstração tenha o que baixar
@@ -177,27 +181,32 @@ lacuna e ausência de referência pendurada.
 ```text
 Setup (T001–T002)
    ↓
-Foundational (T003–T018)          ← bloqueia tudo
+Foundational (T003–T018, T028)    ← bloqueia tudo
    ↓
-US1 (T019–T034)  ─────────────────┐
+US1 (T019–T027, T029–T034) ───────┐
    ↓                              │
-US2 (T035–T041)   US3 (T042–T049) │  US2 e US3 são independentes entre si
-   ↓                    ↓         │
-US4 (T050–T052)   US5 (T053–T058) │  US4 depende de US2; US5 depende de US3
+US2 (T035–T041)   US3 (T042–T049, │  US2 e US3 são independentes entre si
+   ↓                    T066)     │
+US4 (T050–T052)   US5 (T053–T058, │  US4 depende de US2; US5 depende de US3
+                        T065)     │
    └──────────┬───────────────────┘
               ↓
         Polish (T059–T064)
 ```
 
 Dentro da Foundational, a ordem que importa: T003 antes de T020 (declarar antes de emitir); T006–T008
-antes de T011 e T018; T012–T013 antes de T014–T015.
+antes de T011 e T018; T012–T013 antes de T014–T015; e **T028 por último**, porque é ela que devolve a
+suíte ao verde depois do degrau 9.
 
 ## Oportunidades de paralelismo
 
 - **Foundational**: T003, T004, T009, T010, T011 são arquivos distintos e correm juntas; T016, T017,
-  T018 idem, depois das migrations.
+  T018 idem, depois das migrations. T028 não é paralelizável: ela fecha a fase.
 - **US1**: T026 e T029 não dependem de T019–T025; os quatro testes T031–T034 correm juntos no fim.
-- **US3 e US2** podem ser feitas por duas pessoas ao mesmo tempo, depois da US1.
+- **US3 e US2** podem ser feitas por duas pessoas ao mesmo tempo, depois da US1. Dentro da US3,
+  T046 é sequencial — é o ciclo inteiro e depende de tudo o que veio antes; T047, T048, T049 e T066
+  correm juntas.
+- **US5**: T065 precede T056 na prática, porque é ela que põe o campo na tela que T056 usa.
 - **Polish**: T059–T063 são todas independentes.
 
 ## Estratégia de entrega

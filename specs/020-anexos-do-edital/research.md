@@ -148,6 +148,11 @@ gravada apagaria os anexos. Ficando de fora, `replace_draft` não os enxerga e n
 O precedente é da `009`: `anexar_documento` grava na hora e sem `Salvar`, com validação e auditoria
 próprias (`inscricoes/application/rascunho.py:379`). Aqui é o mesmo desenho, do lado de quem elabora.
 
+**O que fica de fora é a coleção, e não o vínculo.** `attachmentId` é campo do `DocumentoExigido`, e
+essas linhas continuam sendo apagadas e recriadas pelo `replace_draft`. O campo tem de viajar no
+`bulk_create` e no formulário, como `profileId` e `modalityId` já viajam; esquecê-lo zera o vínculo a
+cada gravação de etapa, sem erro nenhum.
+
 **Alternativa considerada**: incluir `attachments` na montagem de `_gravar_etapa` — recusada em
 `plan.md` §Complexity Tracking, com a razão de que a exceção continuaria existindo, só que escondida.
 

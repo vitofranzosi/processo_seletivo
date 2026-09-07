@@ -52,6 +52,11 @@ e volta num POST de formulário. Por isso os Anexos ficam **fora** do `replace_d
 próprios e estreitos — é a exceção que a §Complexity Tracking justifica, e é o precedente do
 `anexar_documento` da `009`, que também grava na hora e sem `Salvar`.
 
+**A coleção fica de fora; o vínculo, não.** O `attachmentId` é campo do `DocumentoExigido`, e essas
+linhas o `replace_draft` apaga e recria a cada gravação (`draft.py:359-375`). O campo novo tem de
+entrar no `bulk_create`, senão salvar qualquer etapa do assistente zera o vínculo **em silêncio** —
+o mesmo modo de falha, entrando pela porta que a exceção não cobre.
+
 **O que não aparece no diagrama e custa mais que tudo** é o degrau 9. `attachments` na raiz e
 `attachmentId` em cada `documentRequirement` são conteúdo canônico novo, e `SCHEMA_VERSION` sobe de
 8 para 9 (`shared/canonical.py:77`). Sem o degrau, todo Edital já publicado vira **irretificável**
@@ -146,7 +151,7 @@ backend/processo_seletivo/
 │   ├── migrations/0012_anexo_do_edital.py        # NOVO
 │   ├── migrations/0013_congelamento_do_artefato.py # NOVO — trigger condicional
 │   ├── application/anexos.py             # NOVO — anexar, rotular, reordenar, remover
-│   ├── application/draft.py              # NÃO muda: Anexos ficam fora do replace_draft
+│   ├── application/draft.py              # + o campo `anexo` no bulk_create do DocumentoExigido
 │   └── domain/secoes.py                  # + Secao GERADA source="attachments"
 ├── publicacoes/
 │   ├── application/publish_edital.py     # + _attachments no snapshot; congelar no publish
