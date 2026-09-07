@@ -3106,19 +3106,27 @@ def resultados_da_etapa(request, edital_id, etapa_id):
 
 
 def _historicos_superados(linhas, etapa_id):
-    """`{inscricao_id: [linhas do par]}` — **somente** onde houve superação.
+    """`{inscricao_id: [linhas do par]}` — **somente** onde houve superação, numa consulta só.
 
-    A consulta é feita só para quem tem sucessor: o par sem cadeia responde uma linha só, e pagar
+    A leitura é feita só para quem tem sucessor: o par sem cadeia responde uma linha só, e pagar
     uma leitura por inscrição para descobrir isso devolveria à listagem o custo por linha que a
     012 tirou dela.
-    """
-    from processo_seletivo.resultados.application.selectors import historico_do_par
 
-    return {
-        linha.inscricao_id: historico_do_par(linha.inscricao_id, etapa_id)
-        for linha in linhas
-        if getattr(linha, "resultado_anterior_id", None) is not None
-    }
+    **E é uma leitura para todos, e não uma por par.** A primeira versão chamava `historico_do_par`
+    dentro do laço, e a página lista até vinte e cinco linhas: com metade delas vindas de recurso
+    deferido, a tela pagava mais de uma dezena de consultas extras — e o custo crescia com o
+    **sucesso** dos recursos, que é o que a instituição espera que aconteça (FR-061).
+    """
+    from processo_seletivo.resultados.application.selectors import historicos_dos_pares
+
+    return historicos_dos_pares(
+        [
+            linha.inscricao_id
+            for linha in linhas
+            if getattr(linha, "resultado_anterior_id", None) is not None
+        ],
+        etapa_id,
+    )
 
 
 def _reabilitadas_da_etapa(edital, etapa_id):

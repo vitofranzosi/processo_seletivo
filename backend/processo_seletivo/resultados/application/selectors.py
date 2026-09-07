@@ -12,6 +12,8 @@ resolve os dois conjuntos aqui, uma vez, e filtra; a rota individual pergunta pe
 consulta a mais não é gargalo.
 """
 
+from collections import defaultdict
+
 from processo_seletivo.resultados.models import ResultadoEtapa
 
 
@@ -283,20 +285,50 @@ def historico_do_par(inscricao_id, etapa_id):
     mesmo par gravados no mesmo segundo teriam ordem indefinida, e a sucessão é o que define a
     ordem de verdade.
     """
+    return historicos_dos_pares([inscricao_id], etapa_id).get(inscricao_id, [])
+
+
+def historicos_dos_pares(inscricao_ids, etapa_id):
+    """O mesmo histórico, para **vários pares numa consulta só** — `{inscricao_id: [linhas]}`.
+
+    A leitura por par existe e continua correta; o que ela não suporta é o painel da Etapa, que a
+    chamava uma vez por linha corrigida. Com metade das vinte e cinco linhas de uma página vindas
+    de recurso deferido, a tela pagava mais de uma dezena de leituras extras — e o custo crescia
+    com o **sucesso** dos recursos, que é o que a instituição espera que aconteça (FR-061).
+
+    A montagem da cadeia continua sendo por `resultado_anterior`, par a par, e não por instante:
+    dois Resultados do mesmo par gravados no mesmo segundo teriam ordem indefinida, e é a sucessão
+    que define a ordem de verdade.
+
+    Lista vazia não consulta: o painel sem correção nenhuma é o caso comum, e pagar uma leitura
+    para descobrir que não há o que ler é o custo que este selector existe para tirar.
+    """
+    identidades = [identidade for identidade in inscricao_ids if identidade is not None]
+    if not identidades:
+        return {}
+
     linhas = list(
-        ResultadoEtapa.objects.filter(inscricao_id=inscricao_id, etapa_id=etapa_id)
+        ResultadoEtapa.objects.filter(inscricao_id__in=identidades, etapa_id=etapa_id)
         .select_related("decisao", "decisao__recurso")
         .order_by("consolidado_em", "id")
     )
-    if not linhas:
-        return []
+    por_inscricao = defaultdict(list)
+    for item in linhas:
+        por_inscricao[item.inscricao_id].append(item)
+    return {
+        identidade: _cadeia_do_par(do_par) for identidade, do_par in por_inscricao.items() if do_par
+    }
 
+
+def _cadeia_do_par(linhas):
     por_anterior = {item.resultado_anterior_id: item for item in linhas}
     corrente = por_anterior.get(None)
     cadeia = []
     while corrente is not None and len(cadeia) <= len(linhas):
         cadeia.append(corrente)
         corrente = por_anterior.get(corrente.id)
+    if not cadeia:
+        return []
     return [_linha_do_historico(item, ultimo=item is cadeia[-1]) for item in cadeia]
 
 
