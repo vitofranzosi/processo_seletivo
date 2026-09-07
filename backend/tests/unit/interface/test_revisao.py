@@ -12,7 +12,7 @@ from processo_seletivo.interface import revisao
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
 from tests.fixtures.publicacao import publish_original
-from tests.fixtures.snapshot import rascunho_com_etapas
+from tests.fixtures.snapshot import rascunho_com_etapas, rascunho_completo
 
 
 @pytest.mark.django_db(transaction=True)
@@ -20,8 +20,16 @@ from tests.fixtures.snapshot import rascunho_com_etapas
 def test_toda_colecao_do_snapshot_esta_declarada_na_conferencia(
     api_client, manager_headers, process_payload
 ):
+    """O guarda por duas vias, porque a primeira sozinha já deixou passar uma coleção.
+
+    `rascunho_completo` é o conteúdo em que **toda** coleção-raiz existe e não é vazia: com um
+    rascunho mínimo, uma coleção ausente do snapshot simplesmente não era comparada. E a
+    comparação deixou de exigir que a coleção esteja preenchida — era essa restrição que fazia
+    `documentRequirements`, presente no snapshot mas fora da Revisão, passar em silêncio: bastava
+    o rascunho não declarar nenhum documento para que a chave saísse dos dois lados da igualdade.
+    """
     edital = publish_original(
-        api_client, manager_headers, process_payload, draft=rascunho_com_etapas()
+        api_client, manager_headers, process_payload, draft=rascunho_completo()
     )
     snapshot = edital_snapshot(Edital.objects.get(pk=edital.pk))
 
@@ -29,7 +37,6 @@ def test_toda_colecao_do_snapshot_esta_declarada_na_conferencia(
         chave
         for chave, valor in snapshot.items()
         if isinstance(valor, list)
-        and valor
         and all(isinstance(item, dict) and "id" in item for item in valor)
     }
     declaradas = {chave for chave, _, _, _ in revisao.COLECOES}
@@ -104,6 +111,34 @@ def test_a_etapa_que_nada_declara_nao_inventa_o_padrao(
 
     assert "Pontuação máxima" not in tudo
     assert "Avaliações por inscrição" not in tudo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_conferencia_mostra_o_documento_exigido_e_de_quem(
+    api_client, manager_headers, process_payload
+):
+    """O que o Edital exigirá do candidato, e de qual candidato.
+
+    A aplicabilidade é o que não se pode omitir por item: um documento restrito a um Perfil, numa
+    lista que não diz de quem é, se lê como exigido de todo mundo — e quem homologa homologaria
+    uma exigência que não existe.
+    """
+    edital = publish_original(
+        api_client, manager_headers, process_payload, draft=rascunho_completo()
+    )
+    blocos = revisao.blocos(edital_snapshot(Edital.objects.get(pk=edital.pk)))
+    documentos = next(bloco for bloco in blocos if bloco["titulo"] == "Documentos Exigidos")
+    tudo = "\n".join(
+        f"{item['titulo']}\n" + "\n".join(item["linhas"]) for item in documentos["itens"]
+    )
+
+    assert documentos["etapa"] == "inscricao", "o passo do assistente em que se corrige"
+    assert "1. Documento de identificação" in tudo
+    assert "Exigência: obrigatória" in tudo
+    assert "Aplica-se a: todos os candidatos" in tudo
+    assert "Instruções: Frente e verso, em arquivo único." in tudo
+    assert "Aplica-se a: candidatos ao perfil Perfil A" in tudo, "o restrito não vale para todos"
 
 
 @pytest.mark.django_db(transaction=True)
