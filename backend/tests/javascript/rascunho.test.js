@@ -136,3 +136,60 @@ test("sem recibo, o rascunho recente continua sendo oferecido", () => {
 
   assert.equal(armazem.removeuORascunho, false);
 });
+
+/* O grupo de rádio — a forma de conclusão da Etapa (012, D-008). Os dois controles dividem o
+   `name`, e era essa divisão que o rascunho não sabia tratar: `ler` percorria os dois e o último
+   sobrescrevia o escolhido, de modo que o guardado era sempre a última opção da lista. Mudar de
+   opção nem marcava o formulário como não enviado, porque o lido não mudava.
+
+   O que estes testes NÃO alcançam é a outra metade, `preencher`, que restaurava escrevendo no
+   `value` do rádio — e `value`, no rádio, é a opção que ele **representa**, não a escolhida. O
+   caminho de restauração precisa de `fetch` e de uma lista de verdade, que este shim não tem; ele
+   foi verificado no navegador, reproduzindo o defeito e conferindo a correção. */
+
+const ETAPAS = "ps:rascunho:edital:etapas:ana";
+
+function comGrupo(marcada) {
+  return new Formulario(
+    [
+      linha("etapa", 0, {
+        id: "e1",
+        name: "Prova",
+        forma: [
+          { type: "radio", value: "PONTUADA", checked: marcada === "PONTUADA" },
+          { type: "radio", value: "DECISORIA", checked: marcada === "DECISORIA" },
+        ],
+      }),
+    ],
+    { rascunho: "edital:etapas:ana", lista: "#etapas", fragmento: "/fragmentos/etapa" }
+  );
+}
+
+/** A linha que o script grava depois de o preenchimento divergir do renderizado.
+ *
+ * O `await`: a gravação é adiada em 400 ms para não escrever a cada tecla, e o shim só substitui
+ * `setTimeout` quando ele não existe — sob Node, o adiamento é real. Ler antes dele devolveria
+ * `null` e o teste passaria a afirmar nada.
+ */
+async function gravado(formulario) {
+  const armazem = new Armazem();
+  montar({ formulario, armazem });
+  carregar(SCRIPT);
+  formulario.elements.find((campo) => campo.name.endsWith("-name")).value = "Outra coisa";
+  formulario.disparar("input");
+  await new Promise((pronto) => setTimeout(pronto, 450));
+  const guardado = armazem.getItem(ETAPAS);
+  return guardado === null ? null : JSON.parse(guardado).dados.linhas[0];
+}
+
+test("o rascunho guarda a opção marcada, e não a última do grupo", async () => {
+  assert.equal((await gravado(comGrupo("PONTUADA"))).forma, "PONTUADA");
+});
+
+test("marcar a segunda opção é o que faz o rascunho registrar a segunda", async () => {
+  assert.equal((await gravado(comGrupo("DECISORIA"))).forma, "DECISORIA");
+});
+
+test("grupo sem opção marcada não inventa escolha nenhuma", async () => {
+  assert.equal("forma" in (await gravado(comGrupo(null))), false);
+});
