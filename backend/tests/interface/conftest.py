@@ -82,6 +82,9 @@ CLASSES_SEM_DESENHO = {
     # Retificação, e hoje não carrega desenho próprio nem é lido por script algum.
     "evento-novo",
     "perfil-novo",
+    # O mesmo gancho, para o Anexo acrescentado por Retificação: a linha é desenhada por `.linha`,
+    # e o nome serve para achá-la em teste e para o htmx trocar a certa (020).
+    "anexo-novo",
     "perfil",
     # Envolve um `.botao`, que é quem tem o peso; a classe nomeia o lugar, não o desenho.
     "proximo-passo",

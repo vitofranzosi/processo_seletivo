@@ -125,6 +125,10 @@ CAMPOS_DOCUMENTO = [
     ("order", "Ordem", INTEIRO),
     ("profileId", "Exigido apenas do Perfil", REFERENCIA),
     ("modalityId", "Exigido apenas da modalidade", REFERENCIA),
+    # O modelo que o Edital fornece (020, FR-020). Sem este campo, remover um Anexo apontado por um
+    # requisito seria irrealizável pelo canal do ator: a regra da referência pendurada recusaria o
+    # ato, e a tela não ofereceria o campo que precisa mudar junto.
+    ("attachmentId", "Modelo que o Edital fornece", REFERENCIA),
 ]
 
 LISTA = "lista"
@@ -147,6 +151,14 @@ NOVO_EVENTO = [
     ("description", "Descrição", TEXTO),
     ("startAt", "Início", INSTANTE),
     ("endAt", "Término", INSTANTE),
+]
+# Um Anexo acrescentado por Retificação. O arquivo entra como os demais — enviado antes, citado
+# pela identidade —, e o resumo é resolvido no servidor: nem aqui nem em lugar nenhum alguém digita
+# um SHA-256 (020, FR-031, FR-035).
+NOVO_ANEXO = [
+    ("label", "Rótulo", TEXTO),
+    ("order", "Ordem editorial", INTEIRO),
+    ("artifactId", "Arquivo do anexo (PDF)", ARQUIVO),
 ]
 
 
@@ -225,7 +237,12 @@ def opcoes_de_aplicabilidade(conteudo):
                 continue
             rotulo = f"{modalidade.get('code', '')} — {modalidade.get('name', '')}".strip(" —")
             modalidades.append((modalidade["id"], f"{rotulo_do_perfil} · {rotulo}"))
-    return {"profileId": perfis, "modalityId": modalidades}
+    anexos = [
+        (anexo["id"], anexo.get("label") or "sem rótulo")
+        for anexo in conteudo.get("attachments") or []
+        if anexo.get("id")
+    ]
+    return {"profileId": perfis, "modalityId": modalidades, "attachmentId": anexos}
 
 
 def _referenciar(grupos):
@@ -351,9 +368,11 @@ def campos_editaveis(conteudo):
                 f"/attachments/id={anexo.get('id', '')}",
                 anexo,
                 CAMPOS_ANEXO,
-                # Acrescentar e remover Anexo por Retificação são as outras duas operações da
-                # D-008, e entram com a US5: aqui só se altera o que já está publicado.
-                removivel=False,
+                # Removível, ao contrário do Documento Exigido: tirar um anexo da versão futura não
+                # torna incompleta a inscrição de ninguém — o que ele fornecia era a **forma**, e
+                # quem já enviou já enviou. Quem fica sem modelo é o requisito, e ele sobrevive
+                # sem um (020, D-008, FR-024).
+                removivel=True,
             )
         )
 
@@ -577,6 +596,27 @@ def _evento_completo(valores, ordem):
     }
 
 
+def _anexo_completo(valores, resumo_do_artefato):
+    """Forma que `edital_snapshot` produz. Um subconjunto quebraria a validação da coleção.
+
+    O resumo vem do artefato, e não do formulário: é a mesma razão da substituição — ninguém digita
+    SHA-256, e permitir declará-lo deixaria alguém afirmar bytes que não são os enviados.
+    """
+    artefato = str(valores.get("artifactId") or "")
+    conferido = resumo_do_artefato(artefato) if artefato and resumo_do_artefato else None
+    if not conferido:
+        raise ValueError(
+            "Arquivo do anexo (PDF): envie o arquivo do Anexo que está sendo acrescentado."
+        )
+    return {
+        "id": str(uuid4()),
+        "label": valores.get("label") or "",
+        "order": valores.get("order") or 0,
+        "artifactId": artefato,
+        "artifactHash": conferido,
+    }
+
+
 def diferencas(conteudo, dados, *, resumo_do_artefato=None):
     """Alterações Normativas derivadas do que mudou entre o vigente e o que foi submetido.
 
@@ -700,6 +740,55 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None):
                 "depois": valores.get("name") or "novo Perfil",
             }
         )
+
+    for valores in _linhas_novas(dados, "anexo", NOVO_ANEXO):
+        alteracoes.append(
+            {
+                "targetPath": "/attachments/-",
+                "operation": "ADD",
+                "newValue": _anexo_completo(valores, resumo_do_artefato),
+            }
+        )
+        resumo.append(
+            {
+                "grupo": f"Anexo {valores.get('order') or ''}".strip(),
+                "rotulo": "Acréscimo",
+                "antes": "—",
+                "depois": valores.get("label") or "novo Anexo",
+            }
+        )
+
+    # **O vínculo não sobrevive ao alvo** (020, FR-022). Remover o Anexo sem desfazer a referência
+    # deixaria o conteúdo com um requisito apontando o que aquela versão não publica, e a validação
+    # recusaria o ato inteiro — a pessoa veria a recusa e não teria como resolvê-la, porque tirar o
+    # anexo e soltar o vínculo são coisas que ela faria no mesmo lugar.
+    #
+    # A alteração é emitida **e aparece no resumo**: desfazer em silêncio seria o sistema decidindo
+    # conteúdo normativo sem dizer.
+    anexos_removidos = {
+        caminho.split("id=", 1)[-1]
+        for caminho in removidos
+        if caminho.startswith("/attachments/id=")
+    }
+    for documento in conteudo.get("documentRequirements") or []:
+        vinculo = str(documento.get("attachmentId") or "")
+        if vinculo and vinculo in anexos_removidos:
+            alteracoes.append(
+                {
+                    "targetPath": f"/documentRequirements/id={documento.get('id', '')}"
+                    "/attachmentId",
+                    "operation": "REPLACE",
+                    "newValue": None,
+                }
+            )
+            resumo.append(
+                {
+                    "grupo": f"Documento {documento.get('name', '')}".strip(),
+                    "rotulo": "Modelo que o Edital fornece",
+                    "antes": "o Anexo removido",
+                    "depois": "não fornece modelo",
+                }
+            )
 
     eventos_removidos = [caminho for caminho in removidos if caminho.startswith("/schedule/")]
     proxima_ordem = len(conteudo.get("schedule") or []) - len(eventos_removidos)

@@ -1323,6 +1323,15 @@ def fragmento_retificacao_evento(request):
 
 
 @require_http_methods(["GET"])
+def fragmento_retificacao_anexo(request):
+    return render(
+        request,
+        "interface/_retificacao_anexo.html",
+        {"indice": _indice_de_linha(request), "campos": _campos_de(retificacao_ui.NOVO_ANEXO)},
+    )
+
+
+@require_http_methods(["GET"])
 def fragmento_remover(request):
     """A linha removida é substituída por nada; o conteúdo digitado some junto."""
     return HttpResponse("")
@@ -1597,6 +1606,14 @@ def _artefatos_enviados(request, ator):
     for chave, arquivo in request.FILES.items():
         if not chave.startswith("arquivo:") or not arquivo:
             continue
+        # Duas formas, uma regra: `arquivo:<referencia>` alimenta o campo `campo:<referencia>` de um
+        # Anexo que já existe; `arquivo::<destino>` grava a identidade em `<destino>`, que é como o
+        # Anexo **acrescentado** recebe o seu. Quem nomeia o destino é o formulário, e não a view.
+        destino = (
+            chave.removeprefix("arquivo::")
+            if chave.startswith("arquivo::")
+            else f"campo:{chave.removeprefix('arquivo:')}"
+        )
         aceitar(
             arquivo,
             nome_original=arquivo.name,
@@ -1612,7 +1629,7 @@ def _artefatos_enviados(request, ator):
             enviado_por=ator.subject,
             enviado_em=timezone.now(),
         )
-        dados[f"campo:{chave.removeprefix('arquivo:')}"] = str(artefato.id)
+        dados[destino] = str(artefato.id)
     return dados
 
 
@@ -1763,6 +1780,9 @@ def retificar(request, edital_id):
             ),
             "novos_eventos": retificacao_ui.novas_para_formulario(
                 dados or {}, "evento", retificacao_ui.NOVO_EVENTO
+            ),
+            "novos_anexos": retificacao_ui.novas_para_formulario(
+                dados or {}, "anexo", retificacao_ui.NOVO_ANEXO
             ),
             "resumo": resumo,
             "erros": erros,

@@ -150,6 +150,20 @@ corrige é o caminho que não termina.
             hx-target="#novos-perfis" hx-swap="beforeend">Acrescentar Perfil</button>
   </section>
 
+  <section aria-labelledby="novos-anexos-titulo">
+    <h2 id="novos-anexos-titulo">Acrescentar Anexos</h2>
+    <p class="ajuda">Um Anexo acrescentado passa a integrar o Edital quando a Retificação for
+      publicada. O rótulo é o nome inteiro com que o Edital o cita, e o sistema não numera nada.</p>
+    <div id="novos-anexos">
+      {% for linha in novos_anexos %}
+      {% include "interface/_retificacao_anexo.html" with indice=linha.indice campos=linha.campos %}
+      {% endfor %}
+    </div>
+    <button type="button" class="botao secundario"
+            hx-get="{% url 'interface:fragmento-retificacao-anexo' %}"
+            hx-target="#novos-anexos" hx-swap="beforeend">Acrescentar Anexo</button>
+  </section>
+
   <section aria-labelledby="novos-eventos-titulo">
     <h2 id="novos-eventos-titulo">Acrescentar Eventos</h2>
     <div id="novos-eventos">

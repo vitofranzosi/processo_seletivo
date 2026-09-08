@@ -109,6 +109,11 @@ urlpatterns = [
         views.fragmento_retificacao_evento,
         name="fragmento-retificacao-evento",
     ),
+    path(
+        "fragmentos/retificacao/anexo",
+        views.fragmento_retificacao_anexo,
+        name="fragmento-retificacao-anexo",
+    ),
     path("fragmentos/remover", views.fragmento_remover, name="fragmento-remover"),
     # A organização do trabalho (011). Nenhuma rota usa `etapas/` como segmento: a palavra já
     # significa "passo do compositor" em `editais/<uuid>/compor/<slug:etapa>` (D-009, D-015).
