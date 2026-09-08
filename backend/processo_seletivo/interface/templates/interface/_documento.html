@@ -78,11 +78,5 @@
     <label for="documento-{{ indice }}-required">Obrigatório
       <span class="perms">Sem ele, a inscrição não pode ser enviada.</span></label>
   </p>
-  <p class="remover">
-    <button type="button" class="acao" data-mover="cima">↑ Subir</button>
-    <button type="button" class="acao" data-mover="baixo">↓ Descer</button>
-    <button type="button" class="acao perigo"
-            hx-get="{% url 'interface:fragmento-remover' %}"
-            hx-target="closest fieldset" hx-swap="outerHTML">Remover este documento</button>
-  </p>
+  {% include "interface/_acoes_da_linha.html" with rotulo_remover="Remover este documento" %}
 </fieldset>

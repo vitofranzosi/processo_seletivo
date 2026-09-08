@@ -532,8 +532,41 @@ fieldset.linha>legend{font-size:.75rem;text-transform:uppercase;letter-spacing:.
 .ajuda{display:block;font-size:.75rem;color:var(--texto-fraco);margin-top:.25rem}
 .ajuda code{background:var(--fundo);padding:.05rem .3rem;border-radius:3px}
 .remover{margin:.25rem 0 .75rem;text-align:right}
+/* As três ações da linha em símbolo (ver `_acoes_da_linha.html` para o porquê).
+
+   Quadrado de 2,5rem — 40 px, contra os 24×24 que a WCAG 2.2 AA pede como mínimo de alvo. O
+   `padding` some porque quem dá a medida agora é a caixa, e não o texto dentro dela. */
+.acao.simbolo{display:inline-flex;align-items:center;justify-content:center;
+  width:2.5rem;height:2.5rem;padding:0;font-size:1rem;line-height:1}
+/* Solto — no Documento, que tem campos abaixo dos primeiros —, o grupo é uma linha própria à
+   direita, como `.remover` era, e a reserva de rótulo não tem o que alinhar. */
+.acoes-da-linha{margin:.25rem 0 .75rem;display:flex;justify-content:flex-end}
+.acoes-da-linha .grupo{display:flex;gap:.4rem}
+.acoes-da-linha .rotulo-vazio{display:none}
+/* Alvos iguais e encostados viram um alvo só, e o vizinho aqui descarta trabalho não enviado. */
+.acoes-da-linha .simbolo.perigo{margin-left:.7rem}
+/* Dentro de `.campos`, o grupo é a última coluna e se alinha aos `input`, não aos rótulos:
+   `.rotulo-vazio` reserva a mesma altura que um `label` ocupa acima do seu controle. Sem ela os
+   botões ficariam 23 px acima da linha dos campos. `margin-left:auto` mantém o grupo à direita
+   também nas larguras em que ele quebra para uma linha só sua. */
+.campos>.acoes-da-linha{display:block;flex:0 0 auto;align-self:flex-start;
+  margin:0 0 .9rem;margin-left:auto}
+.campos>.acoes-da-linha .rotulo-vazio{display:block;height:1.5em;
+  font-size:.8125rem;font-weight:600;margin-bottom:.25rem}
 .acao.perigo{border-color:var(--vermelho);color:var(--vermelho)}
 .acao.perigo:hover{background:var(--vermelho-fundo)}
+/* Indisponível não pode parecer disponível. `ordenacao.js` desabilita "Subir" na primeira linha e
+   "Descer" na última — e a folha não tinha regra alguma para `:disabled`, de modo que o botão
+   inerte continuava com a borda verde e a cor de link. Com o rótulo em símbolo isso pesa mais: a
+   seta é a única coisa que resta dizendo o que o botão faz.
+
+   Convive com `.acao.desabilitado` e não a substitui: a classe existe para a âncora, que não
+   aceita o atributo. Depois de `.acao.perigo` porque as duas têm a mesma especificidade, e o
+   indisponível precisa vencer a advertência: oferecer em vermelho o que não se pode fazer é o
+   pior dos dois. */
+.acao:disabled{color:var(--texto-fraco);border-color:var(--borda);
+  background:var(--cinza-fundo);cursor:not-allowed}
+.acao:disabled:hover{background:var(--cinza-fundo)}
 .botao.secundario{background:var(--branco);color:var(--verde-texto);border:1px solid var(--verde)}
 /* Ação prevista como recusada: visível, legível e inoperante — FR-024. Contraste mantido
    acima de 4.5:1 para que o motivo ao lado continue lendo-se como informação, não ruído. */
