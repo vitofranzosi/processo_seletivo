@@ -139,6 +139,9 @@ tbody tr:last-child td{border-bottom:none}
 .botao:hover{background:var(--verde-escuro)}
 .vazio{background:var(--branco);border:1px dashed var(--borda);border-radius:6px;
   padding:2.5rem 1.5rem;text-align:center;color:var(--texto-fraco)}
+/* O mesmo "aqui não há nada", no tamanho de um campo. Solto, `.vazio` é caixa de página inteira:
+   como `span` dentro de um `.campo`, os 2,5rem de respiro vazavam por cima da linha seguinte. */
+.campo>.vazio{display:block;padding:.7rem .9rem;text-align:left}
 .etapas{display:flex;list-style:none;padding:0;margin:0 0 1.5rem;gap:0;flex-wrap:wrap;
   background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:1rem 1.25rem}
 .etapas li{flex:1 1 0;display:flex;flex-direction:column;gap:.3rem;position:relative;
@@ -745,6 +748,37 @@ input[type="file"].arquivo::file-selector-button{font:inherit;font-weight:600;cu
   color:var(--verde-texto);background:var(--branco);border:1px solid var(--verde-texto);
   border-radius:6px;padding:.35rem .7rem;margin-right:.6rem}
 input[type="file"].arquivo::file-selector-button:hover{background:var(--fundo)}
+
+/* Uma escolha que governa campos, e os campos de cada opção logo abaixo dela.
+
+   Antes, os campos dependentes eram irmãos da escolha numa fileira `.campos`: na Etapa, oito
+   colunas em que "Como esta Etapa é concluída" era a segunda de oito, governando a terceira, a
+   quarta, a quinta e a sexta; no marco, o prazo do recurso ao lado da opção que diz não declarar
+   nenhum. Aninhar é o que torna a dependência visível sem precisar lê-la numa frase de ajuda. */
+fieldset.opcoes{border:none;padding:0;margin:0 0 .9rem;min-width:0}
+fieldset.opcoes>legend{font-size:.8125rem;font-weight:600;color:var(--texto);padding:0;
+  margin-bottom:.25rem}
+fieldset.opcoes>.ajuda{margin:0 0 .6rem}
+.opcoes .opcao{display:flex;align-items:center;gap:.5rem;margin:0 0 .4rem}
+/* A bolinha herdava `width:100%` de `.campo input` e virava uma faixa da largura da coluna, com o
+   marcador centralizado longe do texto que ele marca. */
+.opcoes .opcao input[type=radio]{width:auto;flex:none;margin:0;padding:0;border:0;background:none}
+.opcoes .opcao label{margin:0;font-weight:400;font-size:.9375rem}
+.opcoes .dependentes{margin:0 0 .9rem 1.65rem}
+.opcoes .dependentes .campo{margin-bottom:0}
+/* Sozinho na linha, um `.curto` prende a ajuda numa coluna de 150 px e a quebra em quatro linhas.
+   O `input` continua curto — `.campo.curto>input` o limita —; quem cresce é a coluna, e a ajuda
+   pára na medida de leitura como qualquer outra. */
+.opcoes .dependentes .campo.curto:only-child{flex-basis:auto}
+
+/* O que a opção marcada torna inaplicável sai da tela. A regra é sempre "esconde **quando** outra
+   opção está marcada", e nunca "esconde por padrão": onde `:has` não existir, tudo aparece como
+   antes — e o servidor, que é quem descarta de fato, continua correto de qualquer modo. */
+fieldset.etapa:has(input[name$="-forma"][value="DECISORIA"]:checked) .so-pontuada,
+fieldset.etapa:has(input[name$="-forma"][value="PONTUADA"]:checked) .so-decisoria,
+fieldset.marco:has(input[name$="-appealDeclaration"]:checked:not([value="admite"])) .so-admite,
+fieldset.perfil:has(input[name$="-reserveType"]:checked:not([value="LIMITED"])) .so-limitada{
+  display:none}
 </style>
 </head>
 <body>

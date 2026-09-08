@@ -347,6 +347,19 @@ def ler_etapas(dados):
     etapas = []
     for indice in _indices(dados, "etapa"):
         base = f"etapa-{indice}"
+        # A forma governa quatro dos campos ao lado, e o domínio é categórico: a pontuada **proíbe**
+        # os rótulos do resultado, a decisória **proíbe** as notas (012, FR-033, FR-121). A tela
+        # agora esconde o que a escolha marcada torna inaplicável — mas esconder não é descartar:
+        # quem digitou "Deferido" e depois marcou "Com pontuação" continua enviando o rótulo, e
+        # envio forjado envia o que quiser. Quem decide o que sobrevive é aqui.
+        #
+        # É o mesmo lugar e a mesma razão de `_janela_recursal`, que já descarta o prazo do marco
+        # que não admite recurso. Sem isto, o formulário oferecia um campo e a submissão o recusava
+        # — a recusa era correta, e o convite é que não devia existir.
+        #
+        # `forma` continua sendo lida crua: trocá-la por um dos dois valores conhecidos faria uma
+        # forma inválida virar PONTUADA em silêncio, e a validação deixaria de alcançá-la.
+        decisoria = (_texto(dados, f"{base}-forma") or Forma.PONTUADA) == Forma.DECISORIA
         etapas.append(
             {
                 "id": _texto(dados, f"{base}-id"),
@@ -355,21 +368,23 @@ def ler_etapas(dados):
                 "weight": _decimal(dados, f"{base}-weight"),
                 "eliminatory": _marcado(dados, f"{base}-eliminatory"),
                 "classificatory": _marcado(dados, f"{base}-classificatory"),
-                "minimumScore": _decimal(dados, f"{base}-minimumScore"),
+                "minimumScore": (None if decisoria else _decimal(dados, f"{base}-minimumScore")),
                 # As duas do incremento da `012`. Vazio é "não declarado", e o assistente precisa
                 # devolvê-las porque ele reenvia o rascunho inteiro a cada passo: campo que ele não
                 # lê vira `null` na próxima gravação de qualquer outra Etapa (FR-007).
                 "evaluationsPerRegistration": _inteiro_opcional(
                     dados, f"{base}-evaluationsPerRegistration"
                 ),
-                "maximumScore": _decimal(dados, f"{base}-maximumScore"),
+                "maximumScore": (None if decisoria else _decimal(dados, f"{base}-maximumScore")),
                 # As três do incremento da revisão (D-008). A forma vem sempre preenchida, porque o
                 # controle é um par de opções com uma marcada: `_texto` vazio só acontece em envio
                 # forjado, e ali `or PONTUADA` devolve o que a ausência significa (FR-120). Os
                 # rótulos vazios significam "não se aplica" e viajam como vazio até o snapshot.
                 "forma": _texto(dados, f"{base}-forma") or Forma.PONTUADA,
-                "rotuloFavoravel": _texto(dados, f"{base}-rotuloFavoravel"),
-                "rotuloDesfavoravel": _texto(dados, f"{base}-rotuloDesfavoravel"),
+                "rotuloFavoravel": (_texto(dados, f"{base}-rotuloFavoravel") if decisoria else ""),
+                "rotuloDesfavoravel": (
+                    _texto(dados, f"{base}-rotuloDesfavoravel") if decisoria else ""
+                ),
                 # Vazio é "não vinculada a Evento", e não Evento inexistente.
                 "scheduleEventId": _texto(dados, f"{base}-scheduleEventId") or None,
             }

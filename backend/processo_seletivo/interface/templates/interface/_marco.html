@@ -11,19 +11,27 @@
       <label for="marco-{{ indice }}-{{ sub }}-code">Código <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="text" id="marco-{{ indice }}-{{ sub }}-code"
              name="marco-{{ indice }}-{{ sub }}-code"
-             value="{{ marco.code|default:'' }}" required placeholder="FINAL" aria-required="true">
+             value="{{ marco.code|default:'' }}" required placeholder="ex.: FINAL" aria-required="true">
     </p>
     <p class="campo largo">
       <label for="marco-{{ indice }}-{{ sub }}-name">Denominação <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="text" id="marco-{{ indice }}-{{ sub }}-name"
              name="marco-{{ indice }}-{{ sub }}-name"
              value="{{ marco.name|default:'' }}" required
-             placeholder="Classificação final" aria-required="true">
+             placeholder="ex.: Classificação final" aria-required="true">
     </p>
   </div>
   <div class="campos">
     <p class="campo largo">
       <label for="marco-{{ indice }}-{{ sub }}-stages">Etapas que entram na ordem <span class="obrigatorio" aria-hidden="true">*</span></label>
+      {% comment %}
+      Sem Etapa classificatória, isto era uma caixa vazia, obrigatória e impossível de preencher: o
+      navegador recusava a submissão apontando para um retângulo em branco, e a única explicação
+      estava num aviso no alto da página, fora da tela de quem já rolou até aqui. O `required` sai
+      junto com o seletor — o rascunho continua salvável, e é a validação da publicação que cobra as
+      Etapas, como sempre cobrou.
+      {% endcomment %}
+      {% if etapas_classificatorias %}
       <select id="marco-{{ indice }}-{{ sub }}-stages" name="marco-{{ indice }}-{{ sub }}-stages"
               multiple required aria-required="true" aria-describedby="ajuda-etapas-{{ indice }}-{{ sub }}">
         {% for etapa in etapas_classificatorias %}
@@ -32,6 +40,11 @@
       </select>
       <span class="ajuda" id="ajuda-etapas-{{ indice }}-{{ sub }}">Só Etapas classificatórias. O
         peso de cada uma é o que ela já publica; aqui se escolhe quais entram.</span>
+      {% else %}
+      <span class="vazio" id="ajuda-etapas-{{ indice }}-{{ sub }}">Nenhuma Etapa deste Edital foi
+        marcada como <strong>Classificatória</strong>. Volte ao passo <strong>Etapas de
+        Avaliação</strong> e marque as que entram na ordem; elas aparecem aqui.</span>
+      {% endif %}
     </p>
   </div>
   <div class="campos">
@@ -44,7 +57,7 @@
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-mode">Arredondamento <span class="obrigatorio" aria-hidden="true">*</span></label>
       <select id="marco-{{ indice }}-{{ sub }}-mode" name="marco-{{ indice }}-{{ sub }}-mode" required aria-required="true">
-        <option value="">—</option>
+        <option value="">Escolha o arredondamento</option>
         <option value="MEIO_PARA_CIMA" {% if marco.mode == "MEIO_PARA_CIMA" %}selected{% endif %}>Meio para cima (2,5 vira 3)</option>
         <option value="MEIO_PARA_PAR" {% if marco.mode == "MEIO_PARA_PAR" %}selected{% endif %}>Meio para par (2,5 vira 2)</option>
         <option value="TRUNCAR" {% if marco.mode == "TRUNCAR" %}selected{% endif %}>Truncar (2,9 vira 2)</option>
@@ -64,50 +77,59 @@
 
   A unidade é campo publicado — e não constante de código — porque a frase normativa do documento a
   cita: *"no prazo de 5 (cinco) dias corridos, contados da divulgação do resultado"*.
+
+  As três opções eram `campo escolha` — a classe da marca de filtrar, feita para uma caixa sozinha
+  numa barra. Como `display:flex`, ela punha as três numa fileira com o parágrafo de ajuda ao lado,
+  e cada bolinha acima do próprio texto. Pior: o prazo e a unidade ficavam habilitados **ao lado**
+  das três, inclusive sob "Não declarar nada sobre recurso" — e `_janela_recursal` descarta o prazo
+  de quem não admite recurso. Quem digitasse 5 ali salvava, não recebia erro nenhum, e o prazo
+  simplesmente não existia.
+
+  Agora o prazo mora dentro da opção que o pede.
   {% endcomment %}
-  <div class="campos">
-    <fieldset class="campo escolha">
-      <legend>Recurso contra o resultado deste marco</legend>
-      <p>
-        <input type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-admite"
-               name="marco-{{ indice }}-{{ sub }}-appealDeclaration" value="admite"
-               {% if marco.appealDeclaration == "admite" %}checked{% endif %}>
-        <label for="marco-{{ indice }}-{{ sub }}-appealDeclaration-admite">Admite recurso, no prazo abaixo</label>
-      </p>
-      <p>
-        <input type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_admite"
-               name="marco-{{ indice }}-{{ sub }}-appealDeclaration" value="nao_admite"
-               {% if marco.appealDeclaration == "nao_admite" %}checked{% endif %}>
-        <label for="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_admite">Não admite recurso por esta via</label>
-      </p>
-      <p>
-        <input type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_declarada"
-               name="marco-{{ indice }}-{{ sub }}-appealDeclaration" value="nao_declarada"
-               {% if marco.appealDeclaration != "admite" and marco.appealDeclaration != "nao_admite" %}checked{% endif %}>
-        <label for="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_declarada">Não declarar nada sobre recurso</label>
-      </p>
-      <span class="ajuda">Não declarar e negar são coisas diferentes: o silêncio devolve a
-        tempestividade ao juízo de admissibilidade motivado; a negativa é norma publicada, e
-        recusa a interposição nomeando-a.</span>
-    </fieldset>
-    <p class="campo curto">
-      <label for="marco-{{ indice }}-{{ sub }}-appealDurationDays">Prazo, em dias</label>
-      <input type="number" min="1" step="1"
-             id="marco-{{ indice }}-{{ sub }}-appealDurationDays"
-             name="marco-{{ indice }}-{{ sub }}-appealDurationDays"
-             value="{{ marco.appealDurationDays }}">
-      <span class="ajuda">Contados do dia seguinte ao da divulgação, incluindo o do vencimento.</span>
+  <fieldset class="opcoes">
+    <legend>Recurso contra o resultado deste marco</legend>
+    <span class="ajuda">Não declarar e negar são coisas diferentes: o silêncio devolve a
+      tempestividade ao juízo de admissibilidade motivado; a negativa é norma publicada, e
+      recusa a interposição nomeando-a.</span>
+    <p class="opcao">
+      <input type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-admite"
+             name="marco-{{ indice }}-{{ sub }}-appealDeclaration" value="admite"
+             {% if marco.appealDeclaration == "admite" %}checked{% endif %}>
+      <label for="marco-{{ indice }}-{{ sub }}-appealDeclaration-admite">Admite recurso, no prazo abaixo</label>
     </p>
-    <p class="campo curto">
-      <label for="marco-{{ indice }}-{{ sub }}-appealUnit">Unidade</label>
-      <select id="marco-{{ indice }}-{{ sub }}-appealUnit"
-              name="marco-{{ indice }}-{{ sub }}-appealUnit">
-        <option value="DIAS_CORRIDOS" {% if marco.appealUnit == "DIAS_CORRIDOS" %}selected{% endif %}>Dias corridos</option>
-      </select>
-      <span class="ajuda">Dias úteis exigiriam o calendário de dias sem expediente, que o Edital
-        não publica.</span>
+    <div class="campos dependentes so-admite">
+      <p class="campo curto">
+        <label for="marco-{{ indice }}-{{ sub }}-appealDurationDays">Prazo, em dias</label>
+        <input type="number" min="1" step="1"
+               id="marco-{{ indice }}-{{ sub }}-appealDurationDays"
+               name="marco-{{ indice }}-{{ sub }}-appealDurationDays"
+               value="{{ marco.appealDurationDays }}">
+        <span class="ajuda">Contados do dia seguinte ao da divulgação, incluindo o do vencimento.</span>
+      </p>
+      <p class="campo curto">
+        <label for="marco-{{ indice }}-{{ sub }}-appealUnit">Unidade</label>
+        <select id="marco-{{ indice }}-{{ sub }}-appealUnit"
+                name="marco-{{ indice }}-{{ sub }}-appealUnit">
+          <option value="DIAS_CORRIDOS" {% if marco.appealUnit == "DIAS_CORRIDOS" %}selected{% endif %}>Dias corridos</option>
+        </select>
+        <span class="ajuda">Dias úteis exigiriam o calendário de dias sem expediente, que o Edital
+          não publica.</span>
+      </p>
+    </div>
+    <p class="opcao">
+      <input type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_admite"
+             name="marco-{{ indice }}-{{ sub }}-appealDeclaration" value="nao_admite"
+             {% if marco.appealDeclaration == "nao_admite" %}checked{% endif %}>
+      <label for="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_admite">Não admite recurso por esta via</label>
     </p>
-  </div>
+    <p class="opcao">
+      <input type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_declarada"
+             name="marco-{{ indice }}-{{ sub }}-appealDeclaration" value="nao_declarada"
+             {% if marco.appealDeclaration != "admite" and marco.appealDeclaration != "nao_admite" %}checked{% endif %}>
+      <label for="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_declarada">Não declarar nada sobre recurso</label>
+    </p>
+  </fieldset>
   <div class="campos">
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-operation">Como as pontuações se combinam <span class="obrigatorio" aria-hidden="true">*</span></label>
