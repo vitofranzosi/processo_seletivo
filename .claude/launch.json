@@ -216,6 +216,32 @@
         "127.0.0.1:8031"
       ],
       "port": 8031
+    },
+    {
+      "name": "manual-s00",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "INTERFACE_SELETOR_IDENTIDADE=true",
+        "LC_ALL=en_US.UTF-8",
+        "DB_USER=saymoncastro",
+        "DB_NAME=ps_manual_s00",
+        "DEFAULT_FROM_EMAIL=nao-responda@exemplo.test",
+        "PORTAL_ATENDIMENTO=selecao@cefor.ifes.edu.br",
+        "ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos-manual-s00",
+        "DJANGO_EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend",
+        "EMAIL_HOST=localhost",
+        "EMAIL_PORT=1035",
+        "EMAIL_USE_TLS=false",
+        "uv",
+        "run",
+        "--directory",
+        "backend",
+        "python",
+        "manage.py",
+        "runserver",
+        "8033"
+      ],
+      "port": 8033
     }
   ]
 }
