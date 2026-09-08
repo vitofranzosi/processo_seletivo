@@ -1316,7 +1316,7 @@ mais no máximo dois arquivos do repositório.
 | **S-00** | **Piloto editorial** | **Layout provisório, C-03, C-12, C-18, o bloco-espécime de C-08, 8–12 capturas, padrão de anotação e régua de densidade** | **§C.bis, §G, §F.1** |
 | S-01 | Capturar as fases 1–5 | SS-001 a SS-042 | §F, padrão aprovado em S-00 |
 | S-02 | Capturar as fases 6–11 | SS-043 a SS-067 | idem |
-| S-03 | Capturar as fases 12–16 e as exceções | SS-068 a SS-087 | idem |
+| S-03 | Capturar as fases 12–16 e as exceções | SS-068 a SS-088 | idem |
 | S-04 | Esqueleto definitivo e sistema visual | Menu, busca, glossário com âncoras | §G, saída de S-00 |
 | S-05 | As quatro ilustrações vetoriais | 4 SVG | §B, §G.4 |
 | S-06 | C-06, C-07 | Abrir o Processo + Elaborar I | §C.bis, capturas de S-01 |
