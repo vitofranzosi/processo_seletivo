@@ -191,7 +191,7 @@ def test_a_tela_oferece_o_modelo_e_grava_a_escolha(client, seletor_ligado, edita
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
 def test_desfazer_a_escolha_do_modelo_e_possivel(client, seletor_ligado, edital_com_perfis):
-    """ "Não fornece modelo" é escolha legítima, e precisa ser alcançável depois de ter havido um."""
+    """Voltar a "não fornece modelo" é escolha legítima, e precisa continuar alcançável."""
     from tests.fixtures.anexos import criar_anexo
 
     identificar(client, "ana.elaboradora", ["elaborador"])

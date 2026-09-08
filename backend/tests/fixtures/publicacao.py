@@ -11,12 +11,19 @@ SIGNATORY = {
 }
 
 
-def publish_original(api_client, manager_headers, process_payload, *, draft=None, anexos=0):
+def publish_original(
+    api_client, manager_headers, process_payload, *, draft=None, anexos=0, antes_de_submeter=None
+):
     """Cria Processo e primeiro Edital e o leva até a primeira Publicação.
 
     `anexos` cria essa quantidade de Anexos entre o rascunho e a submissão. Não é opção de
     conveniência: a coleção fica fora do `replace_draft`, então não há como pedi-la pelo payload —
     e o padrão é zero porque Edital sem anexo continua sendo Edital (020, FR-024).
+
+    `antes_de_submeter` recebe o Edital na mesma janela, e existe pela mesma razão: o vínculo entre
+    requisito e modelo é campo de elaboração, e precisa estar de pé **antes** de o snapshot ser
+    congelado para que o conteúdo publicado o carregue. Sem isso, testar o modelo publicado
+    dependeria de uma Retificação — e de um congelamento que só a US3 traz.
     """
     criado = api_client.post(
         "/api/v1/admin/processos", process_payload, format="json", **manager_headers
@@ -41,6 +48,8 @@ def publish_original(api_client, manager_headers, process_payload, *, draft=None
                 order=posicao + 1,
                 marca=chr(ord("A") + posicao),
             )
+    if antes_de_submeter is not None:
+        antes_de_submeter(edital)
     api_client.post(
         f"/api/v1/admin/editais/{edital.id}/submissoes",
         format="json",
@@ -62,7 +71,9 @@ def publish_original(api_client, manager_headers, process_payload, *, draft=None
     return Edital.objects.get(pk=edital.pk)
 
 
-def create_retification(api_client, edital, changes, *, effective_at=None, suffix="a", base=None):
+def create_retification(
+    api_client, edital, changes, *, effective_at=None, suffix="a", base=None, esperar=201
+):
     """`base` é a versão sobre a qual o ato é elaborado; por padrão, a mais recente.
 
     Quando a Retificação vigora antes de outra já publicada, a versão mais recente não é a que
@@ -83,7 +94,11 @@ def create_retification(api_client, edital, changes, *, effective_at=None, suffi
         format="json",
         **actor_headers("retificador", ["retificacao:elaborar"], key=f"retificacao-{suffix}-0001"),
     )
-    assert created.status_code == 201, created.content
+    assert created.status_code == esperar, created.content
+    if esperar != 201:
+        # O caso negativo devolve o corpo do problema, e não uma Retificação — quem chama quer
+        # afirmar **qual** recusa aconteceu, e não que alguma aconteceu.
+        return created.json()
     return Retificacao.objects.get(pk=created.json()["id"])
 
 

@@ -1,8 +1,12 @@
 """O sistema não lê o conteúdo do que o candidato devolve (020, FR-047; 009, recusa original).
 
-É um teste **estrutural**, e não de comportamento, porque a garantia é uma ausência: nenhum caminho
-abre o arquivo do candidato para conferir o que há dentro. Um teste de comportamento provaria que a
-leitura não acontece **naquele** fluxo; este prova que ela não foi escrita em lugar nenhum.
+É um teste **estrutural**, e não de comportamento, porque a garantia é uma ausência: um teste de
+comportamento mostraria que a leitura não acontece **naquele** fluxo, e a recusa vale para todos.
+
+**É um guarda, e não uma demonstração.** Ele pega a implementação óbvia — a biblioteca importada, o
+módulo que conhece os dois lados — e não pega uma leitura montada por abstrações espalhadas. Quem
+quisesse burlá-lo conseguiria; o que ele impede é que alguém o faça **sem perceber**, que é como
+uma recusa declarada costuma morrer.
 
 O que é legítimo, e por isso não conta: abrir para **entregar** — a mesa e o titular recebem os
 bytes — e calcular o resumo do que chegou, que é integridade e não leitura de conteúdo.
