@@ -74,7 +74,14 @@ from uuid import UUID
 # ausência dela significa **janela não declarada** — e não janela de zero dias —, que é o que todo
 # Edital publicado antes deste degrau afirma: o sistema não inventa prazo, e a tempestividade
 # continua sendo juízo de admissibilidade motivado onde a norma não a declarou (FR-028, FR-029).
-SCHEMA_VERSION = 8
+# **9 com a 020**: os Anexos do Edital. Dois níveis de uma vez — `attachments` na raiz e
+# `attachmentId` em cada Documento Exigido —, e a conversão é legítima pelo critério que este
+# módulo declara: a ausência tem significado declarado e **verdadeiro**. Lista vazia diz "este
+# Edital não declarou anexo nenhum" e `attachmentId` nulo diz "este requisito não fornece modelo",
+# e as duas frases são verdadeiras sobre todo Edital publicado antes deste degrau. Não elevar
+# tornaria o acervo inteiro irretificável, que é o preço que o degrau 3→4 aceitou pagar quando
+# converter teria inventado norma — não é o caso aqui (020, R-004).
+SCHEMA_VERSION = 9
 
 
 def _default(value):

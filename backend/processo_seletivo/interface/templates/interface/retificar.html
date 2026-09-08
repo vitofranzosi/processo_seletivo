@@ -68,7 +68,7 @@ corrige é o caminho que não termina.
   </p>
 </section>
 {% else %}
-<form method="post">
+<form method="post" enctype="multipart/form-data">
   {% csrf_token %}
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
   {% comment %}
@@ -105,6 +105,16 @@ corrige é o caminho que não termina.
           <option value="1" {% if campo.valor == '1' %}selected{% endif %}>Sim</option>
           <option value="0" {% if campo.valor != '1' %}selected{% endif %}>Não</option>
         </select>
+        {% elif campo.tipo == 'arquivo' %}
+        {% comment %}
+        Dois controles para um campo: o arquivo, que quem retifica escolhe, e o oculto que carrega
+        a identidade do artefato entre as duas fases do formulário. O envio grava os bytes na
+        primeira fase e a confirmação referencia o que foi gravado — porque os bytes não viajam
+        dentro da Alteração (020, FR-035).
+        {% endcomment %}
+        <input id="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+               name="arquivo:{{ campo.referencia }}" type="file" accept="application/pdf">
+        <input type="hidden" name="campo:{{ campo.referencia }}" value="{{ campo.valor }}">
         {% else %}
         <input id="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
                name="campo:{{ campo.referencia }}"
@@ -138,6 +148,20 @@ corrige é o caminho que não termina.
     <button type="button" class="botao secundario"
             hx-get="{% url 'interface:fragmento-retificacao-perfil' %}"
             hx-target="#novos-perfis" hx-swap="beforeend">Acrescentar Perfil</button>
+  </section>
+
+  <section aria-labelledby="novos-anexos-titulo">
+    <h2 id="novos-anexos-titulo">Acrescentar Anexos</h2>
+    <p class="ajuda">Um Anexo acrescentado passa a integrar o Edital quando a Retificação for
+      publicada. O rótulo é o nome inteiro com que o Edital o cita, e o sistema não numera nada.</p>
+    <div id="novos-anexos">
+      {% for linha in novos_anexos %}
+      {% include "interface/_retificacao_anexo.html" with indice=linha.indice campos=linha.campos %}
+      {% endfor %}
+    </div>
+    <button type="button" class="botao secundario"
+            hx-get="{% url 'interface:fragmento-retificacao-anexo' %}"
+            hx-target="#novos-anexos" hx-swap="beforeend">Acrescentar Anexo</button>
   </section>
 
   <section aria-labelledby="novos-eventos-titulo">

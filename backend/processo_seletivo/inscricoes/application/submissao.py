@@ -23,11 +23,11 @@ from processo_seletivo.inscricoes.application.rascunho import (
     ator_do_candidato,
     requisitos_da_inscricao,
 )
-from processo_seletivo.inscricoes.domain.arquivos import ASSINATURA_PDF, resumo
 from processo_seletivo.inscricoes.domain.protocolo import gerar
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao, ValorDeFato
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
+from processo_seletivo.shared.arquivos import ASSINATURA_PDF, resumo
 from processo_seletivo.shared.concurrency import compare_and_swap
 from processo_seletivo.shared.idempotency import reserve
 

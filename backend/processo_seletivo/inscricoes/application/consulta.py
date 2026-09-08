@@ -16,7 +16,6 @@ from django.core.paginator import Paginator
 from django.db.models import Count, Q
 
 from processo_seletivo.inscricoes.application.rascunho import requisitos_da_inscricao
-from processo_seletivo.inscricoes.domain.arquivos import tamanho_legivel
 from processo_seletivo.inscricoes.domain.autenticidade import codigo_de_verificacao
 from processo_seletivo.inscricoes.domain.pessoais import mascarar_cpf
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
@@ -24,6 +23,7 @@ from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.shared.arquivos import tamanho_legivel
 
 CONSULTAR = "inscricao:consultar"
 

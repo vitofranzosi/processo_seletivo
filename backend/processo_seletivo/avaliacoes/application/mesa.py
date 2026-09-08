@@ -21,13 +21,14 @@ from django.utils.dateparse import parse_datetime
 
 from processo_seletivo.avaliacoes.domain.autorizacao import pode_avaliar_inscricao
 from processo_seletivo.avaliacoes.domain.previsao import decisoria, pontuacao_maxima, rotulos
+from processo_seletivo.editais.domain.documentos import modelo_do_requisito
 from processo_seletivo.inscricoes.application.rascunho import requisitos_da_inscricao
-from processo_seletivo.inscricoes.domain.arquivos import tamanho_legivel
 from processo_seletivo.inscricoes.domain.pessoais import mascarar_cpf
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.shared.arquivos import tamanho_legivel
 
 CONSULTAR_DOCUMENTO = "CONSULTAR_DOCUMENTO"
 INTEGRIDADE = "INTEGRIDADE"
@@ -134,6 +135,15 @@ def inscricao_para_avaliar(*, ator, edital, etapa_id, inscricao_id):
                 if enviados.get(str(requisito["id"])) is None
                 else tamanho_legivel(enviados[str(requisito["id"])].tamanho)
             ),
+            # O modelo que estava valendo **sob a versão que a inscrição aceitou** (020, FR-048,
+            # FR-050). Não é o vigente: uma Retificação pode ter substituído o formulário depois,
+            # e mostrar o novo faria a banca conferir o que voltou contra uma forma que não era a
+            # pedida.
+            #
+            # O que o sistema **não** afirma, e a tela não pode sugerir: que foi este o arquivo
+            # que o candidato baixou. Ele pode ter baixado sob outra versão, e os bytes devolvidos
+            # não dizem de onde vieram. Conformidade é juízo de quem avalia (D-004, FR-049).
+            "modelo": modelo_do_requisito(conteudo, requisito),
         }
         # A lista é a dos **requisitos**, e não a dos arquivos: requisito sem arquivo aparece como
         # requisito sem arquivo, que é informação para quem avalia — e não uma linha que some.

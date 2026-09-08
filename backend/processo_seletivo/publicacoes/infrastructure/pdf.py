@@ -1612,6 +1612,34 @@ def _titulo_do_grupo(perfil_id, modalidade_id, perfis, modalidades):
     )
 
 
+def _anexos(composicao, snapshot, secao=0, tabelas=None):
+    """A relação dos Anexos que acompanham este Edital (020, FR-027).
+
+    **Lista, e não conteúdo.** O documento principal cita os anexos e não carrega os bytes deles: a
+    prática observada retifica um anexo sozinho, e incorporar faria a correção de um formulário
+    reescrever o documento normativo inteiro (D-002).
+
+    **E não imprime endereço** (FR-027a). O endereço vive no canal — a página pública da seleção e a
+    consulta da publicação —, para que os bytes imutáveis não fiquem presos a um domínio que um dia
+    muda, e para que a identidade da publicação não precise existir antes de o documento ser
+    composto.
+
+    O rótulo é reproduzido como o autor o escreveu, inteiro. Nada aqui numera nem renumera: a ordem
+    é a do conteúdo publicado, e o número, se houver, está dentro do rótulo.
+    """
+    anexos = snapshot.get("attachments") or []
+    if not anexos:
+        return
+    with composicao.bloco():
+        for anexo in sorted(anexos, key=lambda item: item.get("order", 0)):
+            composicao.escrever(
+                anexo.get("label", ""),
+                tamanho=CORPO_TEXTO,
+                recuo=18.0,
+                antes=ANTES_DE_LINHA,
+            )
+
+
 def _documentos_exigidos(composicao, snapshot, secao=0, tabelas=None):
     """Os documentos que o candidato precisa apresentar, agrupados por a quem se aplicam.
 
@@ -1656,6 +1684,7 @@ _CORPO_GERADO = {
     "schedule": _cronograma,
     "stages": _etapas,
     "documentRequirements": _documentos_exigidos,
+    "attachments": _anexos,
 }
 
 

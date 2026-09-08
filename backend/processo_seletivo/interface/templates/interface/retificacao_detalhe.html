@@ -49,13 +49,21 @@
   <h2 id="alteracoes-titulo">Alterações declaradas ({{ alteracoes|length }})</h2>
   <table>
     <thead><tr>
-      <th scope="col">Caminho</th><th scope="col">Operação</th>
+      <th scope="col">Onde</th><th scope="col">Operação</th>
       <th scope="col">Antes</th><th scope="col">Depois</th>
     </tr></thead>
     <tbody>
       {% for item in alteracoes %}
       <tr>
-        <th scope="row"><code>{{ item.caminho }}</code></th>
+        {% comment %}
+        Quando a alteração tem tradução — hoje, os Anexos —, a coluna diz o item e o campo em
+        português, e o caminho normativo fica embaixo, em segundo plano, para quem audita. É nesta
+        tela que se aprova e se assina, e aprovar exige ler (020, POLISH020-002).
+        {% endcomment %}
+        <th scope="row">
+          {% if item.onde %}{{ item.onde }}<span class="detalhe">{{ item.campo }}</span>{% endif %}
+          <code>{{ item.caminho }}</code>
+        </th>
         <td>{{ item.operacao }}</td>
         <td class="antes">{{ item.antes }}</td>
         <td class="depois">{{ item.depois }}</td>

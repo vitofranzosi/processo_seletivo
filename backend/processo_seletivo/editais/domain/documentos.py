@@ -112,3 +112,26 @@ def aplicaveis(requirements: list[dict], *, profile_id: str, modality_id: str | 
             continue
         escolhidos.append(requirement)
     return sorted(escolhidos, key=lambda item: item.get("order", 0))
+
+
+def modelo_do_requisito(conteudo: dict, requisito: dict) -> dict | None:
+    """O Anexo que este requisito manda usar, resolvido **dentro daquela versão** (020, FR-020).
+
+    Mora no domínio, e não em cada tela, porque as duas telas que a fazem — o portal, que oferece o
+    modelo ao candidato, e a mesa, que mostra à banca o que estava valendo — precisam responder a
+    **mesma** pergunta sobre conteúdos **diferentes**: o portal lê a versão vigente, a mesa lê a
+    versão aceita pela Inscrição. Duplicar a resolução faria as duas divergirem no dia em que a
+    forma do anexo mudasse.
+
+    Devolve `None` quando o requisito não fornece modelo — o caso mais comum — e também quando o
+    vínculo aponta um anexo que aquela versão não publica. A segunda ausência não deveria existir,
+    porque a validação a recusa como referência pendurada (FR-023); tratá-la aqui é o que impede
+    uma versão antiga, publicada antes daquela regra, de quebrar a tela de quem avalia.
+    """
+    vinculo = requisito.get("attachmentId")
+    if not vinculo:
+        return None
+    for anexo in conteudo.get("attachments") or []:
+        if str(anexo.get("id")) == str(vinculo) and anexo.get("artifactId"):
+            return {"rotulo": anexo.get("label", ""), "artefato_id": anexo["artifactId"]}
+    return None

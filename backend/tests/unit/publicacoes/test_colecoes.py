@@ -7,6 +7,7 @@ seja uma falha de suíte.
 
 from processo_seletivo.publicacoes.domain import colecoes
 from tests.fixtures.snapshot import (
+    ANEXO,
     FATO,
     MODALIDADE,
     PERFIL,
@@ -36,6 +37,34 @@ def test_a_keyed_collection_missing_an_identifier_is_reported():
     conteudo = conteudo_normativo()
     del conteudo["profiles"][1]["id"]
     assert elementos_sem_chave(conteudo) == ["/profiles"]
+
+
+def test_a_colecao_de_anexos_tem_chave():
+    """Sem esta declaração o Anexo só resolveria por posição, e coleção inendereçável é coleção
+    irretificável — a Retificação não conseguiria substituir o artefato de um anexo (020, FR-003).
+    """
+    assert colecoes.tem_chave("/attachments")
+    assert not colecoes.e_atomica("/attachments")
+
+
+def test_todo_anexo_carrega_a_sua_identidade():
+    conteudo = conteudo_normativo()
+    del conteudo["attachments"][1]["id"]
+    assert elementos_sem_chave(conteudo) == ["/attachments"]
+
+
+def test_a_identidade_do_anexo_nao_e_a_do_artefato():
+    """Duas identidades, e o teste existe para que ninguém as funda depois.
+
+    O `id` é do Anexo e sobrevive à Retificação; o `artifactId` é dos bytes daquela versão e muda
+    quando a Retificação substitui o artefato. Confundi-los faria substituir o arquivo criar um
+    anexo novo em silêncio, que é exatamente o que a D-001 proíbe.
+    """
+    conteudo = conteudo_normativo()
+    primeiro = conteudo["attachments"][0]
+
+    assert primeiro["id"] == ANEXO["A"]
+    assert primeiro["artifactId"] != primeiro["id"]
 
 
 def test_as_colecoes_sem_chave_sao_declaradas_uma_a_uma():
@@ -87,8 +116,10 @@ def test_the_identity_topology_names_every_addressable_entity():
     assert f"/profiles/id={PERFIL['A']}" in topologia
     assert f"/profiles/id={PERFIL['A']}/competitionModalities/id={MODALIDADE['A']}" in topologia
     assert f"/profiles/id={PERFIL['B']}/declaredFacts/id={FATO['NASCIMENTO']}" in topologia
-    assert len(topologia) == 3 + 2 + 2 + 2, (
-        "três Perfis, duas Modalidades do primeiro, dois Eventos e dois Fatos Declarados do segundo"
+    assert f"/attachments/id={ANEXO['A']}" in topologia
+    assert len(topologia) == 3 + 2 + 2 + 2 + 2, (
+        "três Perfis, duas Modalidades do primeiro, dois Eventos, dois Fatos Declarados do "
+        "segundo e dois Anexos"
     )
 
 

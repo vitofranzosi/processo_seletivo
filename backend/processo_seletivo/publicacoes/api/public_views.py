@@ -1,11 +1,17 @@
 """Endpoints de consulta pública: acesso anônimo, somente leitura, sem dados de elaboração."""
 
+import re
+import unicodedata
+
+from django.core.exceptions import ValidationError
+from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from processo_seletivo.editais.models.anexos import AnexoEdital, ArtefatoAnexo
 from processo_seletivo.publicacoes.api.public_serializers import (
     PublicacaoDetalheSerializer,
     RetificacaoPublicaSerializer,
@@ -33,6 +39,64 @@ class PublicView(APIView):
             response["ETag"] = etag
         response["Cache-Control"] = cache_control
         return response
+
+
+class ArtefatoPublicoView(PublicView):
+    """Os bytes de um artefato que alguma versão publicada referencia (020, FR-039, FR-041).
+
+    **O endereço é o do artefato, e não o do par publicação-anexo**, e isso é o que faz D-011 valer
+    por construção: o artefato é imutável, então este endereço nunca resolve "o vigente" — ele
+    resolve o de então porque não há outro que ele pudesse resolver. Qual artefato pertence a qual
+    versão é o conteúdo canônico que diz, e ele já é histórico (R-003).
+
+    **`congelado_em` é a autorização.** Artefato não congelado é rascunho de Edital não publicado, e
+    responde 404 — não 403: dizer "existe, mas não é público" já entregaria que existe, que é a
+    mesma régua de `exigir_titularidade` na `009` (FR-017).
+
+    **O nome do arquivo entregue vem do rótulo do Anexo**, e não do nome físico que quem elaborou
+    enviou. Quem baixa doze anexos ficava com doze arquivos cujo nome dependia de como o autor tinha
+    salvo o dele — `autodeclaracao.pdf`, `Anexo I revisado FINAL (2).pdf`. O rótulo é a identidade
+    institucional, e é ele que faz sentido na pasta de quem baixou.
+
+    A rota conhece o artefato, e o mesmo artefato pode servir a anexos de rótulos diferentes: o
+    rótulo usado é o da versão **vigente** que o publica, e o `nome_original` continua sendo o
+    recurso quando nenhuma versão o cita por rótulo. A FR-014 continua valendo — o nome enviado não
+    decide identidade nem endereço, e aqui ele nem decide mais o nome entregue.
+    """
+
+    def get(self, request, artefato_id):
+        try:
+            artefato = ArtefatoAnexo.objects.get(pk=artefato_id, congelado_em__isnull=False)
+        except (ArtefatoAnexo.DoesNotExist, ValidationError) as exc:
+            raise DomainError("not_found", "Recurso não encontrado.", 404) from exc
+        etag = f'"{artefato.document_hash}"'
+        if request.headers.get("If-None-Match") == etag:
+            resposta = HttpResponse(status=304)
+        else:
+            resposta = HttpResponse(bytes(artefato.bytes), content_type=artefato.content_type)
+            resposta["Content-Disposition"] = f'attachment; filename="{_nome_do_arquivo(artefato)}"'
+        resposta["ETag"] = etag
+        resposta["Cache-Control"] = IMMUTABLE_CACHE
+        return resposta
+
+
+def _nome_do_arquivo(artefato):
+    """`ANEXO I — AUTODECLARAÇÃO ÉTNICO-RACIAL` vira `ANEXO-I-AUTODECLARACAO-ETNICO-RACIAL.pdf`.
+
+    Sem acento e sem espaço porque o nome atravessa sistemas de arquivo, cliente de e-mail e
+    cabeçalho HTTP, e um deles sempre estraga o que o outro aceitava. O que se preserva é o que
+    identifica: a designação e o título que o Edital usa.
+    """
+    rotulo = (
+        AnexoEdital.objects.filter(artefato=artefato)
+        .exclude(rotulo="")
+        .values_list("rotulo", flat=True)
+        .first()
+    )
+    base = rotulo or artefato.nome_original.rsplit(".", 1)[0]
+    sem_acento = unicodedata.normalize("NFKD", base).encode("ascii", "ignore").decode()
+    limpo = "-".join(parte for parte in re.split(r"[^A-Za-z0-9]+", sem_acento) if parte)
+    return f"{limpo[:120]}.pdf" if limpo else f"{artefato.id}.pdf"
 
 
 def _instant(request):

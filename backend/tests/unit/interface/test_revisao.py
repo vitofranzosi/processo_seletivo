@@ -27,9 +27,13 @@ def test_toda_colecao_do_snapshot_esta_declarada_na_conferencia(
     comparação deixou de exigir que a coleção esteja preenchida — era essa restrição que fazia
     `documentRequirements`, presente no snapshot mas fora da Revisão, passar em silêncio: bastava
     o rascunho não declarar nenhum documento para que a chave saísse dos dois lados da igualdade.
+
+    `anexos=1` vem por fora do `draft` porque a coleção fica fora do `replace_draft`: não há como
+    pedi-la pelo conteúdo, e sem ela `attachments` sairia dos dois lados da igualdade do mesmo jeito
+    que `documentRequirements` saía.
     """
     edital = publish_original(
-        api_client, manager_headers, process_payload, draft=rascunho_completo()
+        api_client, manager_headers, process_payload, draft=rascunho_completo(), anexos=1
     )
     snapshot = edital_snapshot(Edital.objects.get(pk=edital.pk))
 

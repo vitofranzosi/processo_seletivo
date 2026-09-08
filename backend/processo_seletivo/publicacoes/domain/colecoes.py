@@ -37,6 +37,13 @@ COLECOES_COM_CHAVE = frozenset(
         # (FR-009 da 009): nenhuma regra nova, nenhuma gramática nova — só mais uma coleção na
         # declaração que já existe.
         "/documentRequirements",
+        # O Anexo da `020`. A declaração é o que habilita as cinco operações que a Retificação
+        # precisa fazer sobre ele — acrescentar, substituir o artefato, alterar o rótulo, alterar a
+        # ordem editorial e remover da versão futura —, porque a gramática de `changes.py` é
+        # genérica e só pergunta se a coleção tem chave. Sem esta linha o seletor `id=` seria
+        # recusado, sobraria o endereçamento por posição, e coleção inendereçável é coleção
+        # irretificável (020, FR-003 e FR-032).
+        "/attachments",
     }
 )
 

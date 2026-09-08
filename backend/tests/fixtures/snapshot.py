@@ -9,6 +9,8 @@ Os identificadores são fixos e legíveis: um teste que falha aponta para `…05
 UUID aleatório que não diz de quem o ato falava.
 """
 
+import hashlib
+
 PERFIL = {
     "A": "00000000-0000-0000-0000-000000000501",
     "B": "00000000-0000-0000-0000-000000000502",
@@ -17,6 +19,14 @@ PERFIL = {
 EVENTO = {
     "A": "00000000-0000-0000-0000-000000000521",
     "B": "00000000-0000-0000-0000-000000000522",
+}
+ANEXO = {
+    "A": "00000000-0000-0000-0000-000000000531",
+    "B": "00000000-0000-0000-0000-000000000532",
+}
+ARTEFATO = {
+    "A": "00000000-0000-0000-0000-000000000541",
+    "B": "00000000-0000-0000-0000-000000000542",
 }
 FATO = {
     "NASCIMENTO": "00000000-0000-0000-0000-000000000531",
@@ -116,6 +126,17 @@ def evento(identificador, tipo, ordem, inicio):
     }
 
 
+def anexo(identificador, rotulo, ordem, artefato):
+    """Um Anexo na forma publicada. O resumo é derivado do artefato, para ser estável e legível."""
+    return {
+        "id": identificador,
+        "label": rotulo,
+        "order": ordem,
+        "artifactId": artefato,
+        "artifactHash": hashlib.sha256(artefato.encode("utf-8")).hexdigest(),
+    }
+
+
 def conteudo_normativo():
     """Conteúdo canônico com as quatro situações de endereçamento que a feature decide."""
     return {
@@ -147,6 +168,15 @@ def conteudo_normativo():
         "schedule": [
             evento(EVENTO["A"], "INSCRICAO", 1, "2026-09-01T12:00:00+00:00"),
             evento(EVENTO["B"], "PROVA", 2, "2026-10-01T12:00:00+00:00"),
+        ],
+        # Dois Anexos, e não um: com um só, resolver por chave e resolver por posição dariam o
+        # mesmo resultado, que é justamente o que este conteúdo existe para distinguir (020).
+        #
+        # Os dois apontam artefatos distintos porque é o caso normal; o caso de artefato repetido
+        # é legítimo e tem teste próprio, já que o resumo não é chave de unicidade (FR-011).
+        "attachments": [
+            anexo(ANEXO["A"], "ANEXO I — REQUERIMENTO DE INSCRIÇÃO", 1, ARTEFATO["A"]),
+            anexo(ANEXO["B"], "ANEXO II — AUTODECLARAÇÃO ÉTNICO-RACIAL", 2, ARTEFATO["B"]),
         ],
     }
 

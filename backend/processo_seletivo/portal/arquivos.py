@@ -12,10 +12,10 @@ from tempfile import SpooledTemporaryFile
 
 from django.http import FileResponse
 
-from processo_seletivo.inscricoes.domain.arquivos import BLOCO
 from processo_seletivo.inscricoes.domain.titularidade import exigir_titularidade
 from processo_seletivo.inscricoes.models import DocumentoSubmetido
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.shared.arquivos import BLOCO
 from processo_seletivo.shared.http import marcar_como_privada
 
 # Acima disto a cópia verificada vai para o disco em vez da memória. Dez megabytes é o limite de

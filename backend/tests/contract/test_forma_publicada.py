@@ -81,6 +81,7 @@ ESQUEMA_DA_COLECAO = {
     "stages": "EtapaPublicada",
     "sections": "SecaoPublicada",
     "documentRequirements": "DocumentoExigidoPublicado",
+    "attachments": "AnexoPublicado",
 }
 
 FORMAS = tuple(
@@ -219,7 +220,7 @@ def test_toda_colecao_de_entidades_do_snapshot_esta_declarada(
     from tests.fixtures.snapshot import rascunho_completo
 
     edital = publish_original(
-        api_client, manager_headers, process_payload, draft=rascunho_completo()
+        api_client, manager_headers, process_payload, draft=rascunho_completo(), anexos=1
     )
     conteudo = VersaoConsolidada.objects.get(edital=edital).content
 
@@ -312,6 +313,6 @@ def test_dois_snapshots_da_versao_vigente_do_mesmo_conteudo_tem_as_mesmas_chaves
     primeiro = edital_snapshot(edital)
     segundo = edital_snapshot(edital)
 
-    assert primeiro["schemaVersion"] == SCHEMA_VERSION == 8
+    assert primeiro["schemaVersion"] == SCHEMA_VERSION == 9
     assert chaves(primeiro) == chaves(segundo)
     assert {"/processoCode", "/processoTitle"} <= chaves(primeiro)

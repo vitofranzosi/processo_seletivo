@@ -9,6 +9,7 @@ from processo_seletivo.editais.domain.validation import (
 )
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
+from processo_seletivo.publicacoes.application.publish_edital import congelar_artefatos
 from processo_seletivo.publicacoes.domain.changes import (
     AcrescimoPosicionado,
     CampoNaoRetificavel,
@@ -656,6 +657,12 @@ def publish_retification(
         DocumentoPublicado.objects.create(
             publicacao=publication, bytes=pdf, document_hash=hashlib.sha256(pdf).hexdigest()
         )
+        # Os artefatos que **esta versão** publica (020, FR-010, FR-025). O anexo acrescentado ou
+        # substituído por Retificação nasce descongelado, como o de elaboração, e é aqui que ele
+        # vira público e imutável — na mesma transação em que a `Publicacao` nasce, pela mesma
+        # razão. Os que já vinham da versão anterior atravessam sem serem tocados: congelar o
+        # congelado é no-op, e é isso que torna seguro chamar sobre a coleção inteira.
+        congelar_artefatos(content, now=now)
         updated = Retificacao.objects.filter(pk=item.pk, revision=expected_revision).update(
             status=Retificacao.Status.PUBLICADA, publication=publication, revision=F("revision") + 1
         )

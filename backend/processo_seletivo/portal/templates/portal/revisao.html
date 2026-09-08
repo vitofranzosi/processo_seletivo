@@ -35,6 +35,22 @@ pedi-la sobre o que a pessoa não viu. Seus dados e arquivos continuam onde esta
     regras antes de enviar sua inscrição — seus dados e documentos continuam guardados.</p>
   <p><a href="{% url 'public-document' selecao.publicacao_id %}" target="_blank" rel="noopener">Ler
     o Edital vigente (PDF)</a></p>
+  {% comment %}
+  O modelo que mudou é o caso em que a pessoa mais perde trabalho: ela pode ter baixado, preenchido
+  e assinado o formulário anterior. O aviso genérico não a faz olhar para ele — este nomeia o
+  requisito e oferece o novo (020, POLISH020-010).
+  {% endcomment %}
+  {% if modelos_alterados %}
+  <p><strong>O modelo destes documentos mudou.</strong> Se você já preencheu o formulário anterior,
+    baixe o novo e refaça antes de enviar:</p>
+  <ul>
+    {% for modelo in modelos_alterados %}
+    <li>{{ modelo.requisito }} —
+      <a href="{% url 'public-anexo' modelo.artefato_id %}" download>Baixar o modelo vigente:
+        {{ modelo.rotulo }}</a></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
   {% if descartes_da_retificacao %}
   <p><strong>Estes documentos deixaram de ser exigidos e serão removidos ao continuar:</strong></p>
   <ul>

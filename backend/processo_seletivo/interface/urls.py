@@ -26,6 +26,14 @@ urlpatterns = [
     ),
     path("editais/<uuid:edital_id>/atos/<slug:acao>", views.praticar_ato, name="ato"),
     path("editais/<uuid:edital_id>/retificar", views.retificar, name="retificar"),
+    # As cinco operações sobre a coleção de Anexos, e o download do artefato antes da publicação.
+    # A coleção não viaja no `replace_draft`, então não passa pelo POST da etapa (020, R-006).
+    path("editais/<uuid:edital_id>/anexos", views.anexos_acao, name="anexos"),
+    path(
+        "editais/<uuid:edital_id>/anexos/<uuid:anexo_id>/arquivo",
+        views.anexo_do_rascunho,
+        name="anexo-arquivo",
+    ),
     path("editais/<uuid:edital_id>/auditoria", views.auditoria, name="auditoria"),
     path(
         "editais/<uuid:edital_id>/inscricoes",
@@ -100,6 +108,11 @@ urlpatterns = [
         "fragmentos/retificacao/evento",
         views.fragmento_retificacao_evento,
         name="fragmento-retificacao-evento",
+    ),
+    path(
+        "fragmentos/retificacao/anexo",
+        views.fragmento_retificacao_anexo,
+        name="fragmento-retificacao-anexo",
     ),
     path("fragmentos/remover", views.fragmento_remover, name="fragmento-remover"),
     # A organização do trabalho (011). Nenhuma rota usa `etapas/` como segmento: a palavra já
