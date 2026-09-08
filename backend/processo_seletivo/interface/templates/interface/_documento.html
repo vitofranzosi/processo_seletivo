@@ -14,7 +14,7 @@
       {% if recusado_key %}<span class="recusa" role="alert" id="recusa-documento-{{ indice }}-key">{{ recusado_key }}</span>{% endif %}
       <span class="oculto" id="ajuda-chave-{{ indice }}">Identificação estável, sem espaços.</span>
     </p>
-    <p class="campo largo">
+    <p class="campo">
       <label for="documento-{{ indice }}-name">Nome <span class="obrigatorio" aria-hidden="true">*</span></label>
       {% recusa_de recusas "documento" indice "name" as recusado_name %}
       <input type="text" id="documento-{{ indice }}-name" name="documento-{{ indice }}-name"
@@ -23,15 +23,20 @@
              {% if recusado_name %}aria-invalid="true" aria-describedby="recusa-documento-{{ indice }}-name"{% endif %}>
       {% if recusado_name %}<span class="recusa" role="alert" id="recusa-documento-{{ indice }}-name">{{ recusado_name }}</span>{% endif %}
     </p>
+    <p class="campo">
+      <label for="documento-{{ indice }}-instructions">Instrução ao candidato</label>
+      <input type="text" id="documento-{{ indice }}-instructions"
+             name="documento-{{ indice }}-instructions" value="{{ documento.instructions|default:'' }}"
+             placeholder="ex.: Frente e verso, em arquivo único."
+             aria-describedby="ajuda-instrucao-{{ indice }}">
+      <span class="oculto" id="ajuda-instrucao-{{ indice }}">Aparece ao candidato e no Edital publicado.</span>
+    </p>
   </div>
-  <p class="campo largo">
-    <label for="documento-{{ indice }}-instructions">Instrução ao candidato</label>
-    <input type="text" id="documento-{{ indice }}-instructions"
-           name="documento-{{ indice }}-instructions" value="{{ documento.instructions|default:'' }}"
-           placeholder="ex.: Frente e verso, em arquivo único."
-           aria-describedby="ajuda-instrucao-{{ indice }}">
-    <span class="oculto" id="ajuda-instrucao-{{ indice }}">Aparece ao candidato e no Edital publicado.</span>
-  </p>
+  {% comment %}
+  A quem o documento se aplica, e o que o Edital dá para ele: as três perguntas de alcance na mesma
+  faixa. As duas primeiras já dividiam a linha; a terceira ocupava uma só para si, e o `select`
+  parava no teto de leitura deixando o resto da largura vazio.
+  {% endcomment %}
   <div class="campos">
     <p class="campo">
       <label for="documento-{{ indice }}-profileId">Exigido apenas do Perfil</label>
@@ -60,23 +65,31 @@
       {% if recusado_modalidade %}<span class="recusa" role="alert">{{ recusado_modalidade }}</span>{% endif %}
     </p>
   </div>
-  <p class="campo largo">
-    <label for="documento-{{ indice }}-attachmentId">Modelo que o Edital fornece</label>
-    <select id="documento-{{ indice }}-attachmentId" name="documento-{{ indice }}-attachmentId"
-            aria-describedby="ajuda-modelo-{{ indice }}">
-      <option value="">Não fornece modelo</option>
-      {% for anexo in anexos_do_edital %}
-      <option value="{{ anexo.id }}" {% if documento.attachmentId == anexo.id %}selected{% endif %}>{{ anexo.rotulo }}</option>
-      {% endfor %}
-    </select>
-    <span class="oculto" id="ajuda-modelo-{{ indice }}">O anexo que o candidato baixa, preenche e
-      devolve neste requisito. Os anexos são cadastrados na etapa <strong>Anexos</strong>.</span>
-  </p>
-  <p class="papel">
+  {% comment %}
+  O Modelo não cabe numa linha de três: o rótulo de anexo mais longo da amostra pede 459 px, e a
+  terça parte da faixa dá 426 — cortaria justamente o texto pelo qual se escolhe o anexo. Ele fica
+  numa linha de dois, e quem preenche o resto dela é a marcação de obrigatório, que não tem largura
+  própria a defender.
+  {% endcomment %}
+  <div class="campos">
+    <p class="campo">
+      <label for="documento-{{ indice }}-attachmentId">Modelo que o Edital fornece</label>
+      <select id="documento-{{ indice }}-attachmentId" name="documento-{{ indice }}-attachmentId"
+              aria-describedby="ajuda-modelo-{{ indice }}">
+        <option value="">Não fornece modelo</option>
+        {% for anexo in anexos_do_edital %}
+        <option value="{{ anexo.id }}" {% if documento.attachmentId == anexo.id %}selected{% endif %}>{{ anexo.rotulo }}</option>
+        {% endfor %}
+      </select>
+      <span class="oculto" id="ajuda-modelo-{{ indice }}">O anexo que o candidato baixa, preenche e
+        devolve neste requisito. Os anexos são cadastrados na etapa <strong>Anexos</strong>.</span>
+    </p>
+    <p class="papel">
     <input type="checkbox" id="documento-{{ indice }}-required" name="documento-{{ indice }}-required"
            {% if documento.required|default_if_none:True %}checked{% endif %}>
     <label for="documento-{{ indice }}-required">Obrigatório
       <span class="perms">Sem ele, a inscrição não pode ser enviada.</span></label>
-  </p>
+    </p>
+  </div>
   {% include "interface/_acoes_da_linha.html" with rotulo_remover="Remover este documento" %}
 </fieldset>

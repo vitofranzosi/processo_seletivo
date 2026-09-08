@@ -56,7 +56,12 @@ input[type=date],input[type=datetime-local]{max-width:18rem}
 .conferencia>header{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
 .conferencia h3{font-size:1rem;margin:0 0 .5rem}
 .conferencia .detalhe{display:block;color:var(--texto-fraco);font-size:.875rem}
-.documento{width:100%;height:min(75vh,900px);border:1px solid var(--borda);border-radius:6px;
+/* `object.documento`, e não `.documento`: a altura de 75vh é do **visualizador de PDF** da prévia,
+   e o seletor solto alcançava também `fieldset.linha.documento` — o cartão do Documento Exigido no
+   assistente. O cartão ficava com 675 px numa janela de 900, independentemente do que carregasse:
+   os campos terminavam aos 444 px e sobravam 231 px de caixa vazia, que **cresciam com a janela**.
+   Removê-lo do próprio cartão não mudava nada, porque a altura nunca veio do conteúdo. */
+object.documento{width:100%;height:min(75vh,900px);border:1px solid var(--borda);border-radius:6px;
   background:var(--branco)}
 .modalidades{margin:.75rem 0 0;padding:.75rem 0 0;border-top:1px solid var(--borda)}
 .modalidades h3{font-size:.9375rem;margin:0 0 .25rem}
@@ -643,6 +648,9 @@ textarea{resize:vertical}
 input.curto,select.curto{width:150px}
 input.largo,textarea.largo{width:100%;}
 .papel{display:flex;gap:.5rem;align-items:flex-start;margin-bottom:.6rem}
+/* Dentro de uma linha de campos, a marcação preenche o que sobra: ela não tem largura própria a
+   defender, e o campo ao lado — que tem — fica com a sua. */
+.campos>.papel{flex:1 1 auto;align-items:center;margin-bottom:.9rem}
 .papel input{margin-top:.35rem}
 .papel .perms{display:block;font-size:.8125rem;color:var(--texto-fraco)}
 .erro{background:var(--vermelho-fundo);border-left:4px solid var(--vermelho);
