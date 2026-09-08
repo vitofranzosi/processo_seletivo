@@ -1299,7 +1299,21 @@ def fragmento_etapa(request, edital_id):
 
 
 def _campos_de(definicoes):
-    return [{"chave": chave, "rotulo": rotulo, "tipo": tipo} for chave, rotulo, tipo in definicoes]
+    """Os campos de uma linha nova, já com o valor inicial de cada um.
+
+    O campo de identidade nasce **aqui**, e não em `diferencas`: é o fragmento que cria a linha,
+    e é dele que a identidade precisa vir para atravessar conferência e confirmação sem mudar. Sem
+    isso, reenviar a confirmação produz um payload diferente sob a mesma chave de idempotência.
+    """
+    return [
+        {
+            "chave": chave,
+            "rotulo": rotulo,
+            "tipo": tipo,
+            "valor": str(uuid4()) if tipo == retificacao_ui.OCULTO else "",
+        }
+        for chave, rotulo, tipo in definicoes
+    ]
 
 
 @require_http_methods(["GET"])
@@ -1704,6 +1718,10 @@ def retificar(request, edital_id):
     edital = obter_edital(actor=ator, edital_id=edital_id)
     if edital is None:
         raise Http404
+    # **O POST com os arquivos já gravados**, e não o cru. A gravação acontece antes de tudo o que
+    # lê o formulário porque a reexibição também precisa dela: sem isso, a conferência devolve a
+    # linha nova sem a identidade do artefato, e quem confirma perde o arquivo que acabou de
+    # enviar — sem erro, e com a tela dizendo que estava tudo certo (020, FR-035).
     dados = request.POST if request.method == "POST" else None
     base = _base_da_composicao(edital, dados)
     if base is None and dados is not None:
@@ -1737,6 +1755,10 @@ def retificar(request, edital_id):
             erros.append("Você não tem a permissão para elaborar Retificações.")
         else:
             try:
+                # A gravação acontece **dentro** da verificação de permissão, e é por isso que
+                # ela fica aqui e não no topo: subida para antes, ela escreveria artefato no banco
+                # a pedido de quem não pode elaborar Retificação. O `dados` rebindado é o que a
+                # reexibição usa depois, então a linha nova volta com a identidade do artefato.
                 dados = _artefatos_enviados(request, ator)
                 alteracoes, resumo = retificacao_ui.diferencas(
                     projecao, dados, resumo_do_artefato=_resumo_pendente(ator)

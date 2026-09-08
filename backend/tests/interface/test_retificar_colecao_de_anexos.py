@@ -26,9 +26,14 @@ pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
 @pytest.fixture
 def publicado(api_client, manager_headers, process_payload):
-    """Três anexos, para que remover o do meio possa deixar lacuna sem ambiguidade."""
+    """**Seis** anexos, e o cenário é remover o quarto.
+
+    Três bastariam para haver lacuna, e não bastam para o que a FR-008 afirma: com o do meio, um
+    engano de renumeração ainda produziria uma sequência plausível. Com seis, remover o quarto tem
+    de deixar 1, 2, 3, 5 e 6 — e qualquer recálculo aparece.
+    """
     return publish_original(
-        api_client, manager_headers, process_payload, draft=rascunho_completo(), anexos=3
+        api_client, manager_headers, process_payload, draft=rascunho_completo(), anexos=6
     )
 
 
@@ -63,6 +68,23 @@ def enviar(client, publicado, campos, *, confirmar=False):
     return client.post(reverse("interface:retificar", args=[publicado.id]), dados)
 
 
+def ocultos_de(corpo, prefixo):
+    """Os campos ocultos que a conferência devolveu, como o navegador os reenviaria.
+
+    Fabricar o segundo POST a partir do banco prova que o servidor sabe; provar que o **formulário**
+    devolve o que a confirmação precisa é outra coisa — e é a que faltava.
+    """
+    return {
+        nome: valor
+        # Tolerante a quebra de linha entre os atributos: o template quebra, e um regex de uma
+        # linha só encontraria metade dos campos — e o teste acusaria o produto por um defeito seu.
+        for nome, valor in re.findall(
+            r'<input type="hidden"\s+name="([^"]+)"\s+value="([^"]*)"', corpo
+        )
+        if nome.startswith(prefixo)
+    }
+
+
 def conteudo_vigente(publicado):
     return VersaoConsolidada.objects.filter(edital=publicado).latest("materialized_at").content
 
@@ -79,7 +101,38 @@ def test_alterar_o_rotulo_de_um_anexo_nao_toca_no_rotulo_de_nenhum_outro(
     publish_retification(api_client, _retificacao(), suffix="rotulo")
 
     rotulos = [anexo["label"] for anexo in conteudo_vigente(publicado)["attachments"]]
-    assert rotulos == ["ANEXO 1 — FORMULÁRIO", "ANEXO II — AUTODECLARAÇÃO", "ANEXO 3 — FORMULÁRIO"]
+    assert rotulos == [
+        "ANEXO 1 — FORMULÁRIO",
+        "ANEXO II — AUTODECLARAÇÃO",
+        "ANEXO 3 — FORMULÁRIO",
+        "ANEXO 4 — FORMULÁRIO",
+        "ANEXO 5 — FORMULÁRIO",
+        "ANEXO 6 — FORMULÁRIO",
+    ]
+
+
+def test_alterar_a_ordem_editorial_nao_toca_no_rotulo_de_ninguem(
+    client, api_client, seletor_ligado, publicado
+):
+    """FR-007 — a ordem é campo próprio, e mexer nela não recalcula rótulo nenhum.
+
+    É a metade da FR-007 que o teste do rótulo não cobria: lá se mudava o texto e se conferia que os
+    outros textos ficaram; aqui se muda a **posição** e se confere a mesma coisa.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    campo = referencia_do_campo(abrir(client, publicado), "Anexo 2 —", "Ordem editorial")
+
+    enviar(client, publicado, {f"campo:{campo}": "9"}, confirmar=True)
+    publish_retification(api_client, _retificacao(), suffix="ordem")
+
+    anexos = conteudo_vigente(publicado)["attachments"]
+    por_rotulo = {anexo["label"]: anexo["order"] for anexo in anexos}
+    assert por_rotulo["ANEXO 2 — FORMULÁRIO"] == 9
+    assert por_rotulo["ANEXO 1 — FORMULÁRIO"] == 1
+    assert por_rotulo["ANEXO 3 — FORMULÁRIO"] == 3
+    assert sorted(por_rotulo) == [f"ANEXO {n} — FORMULÁRIO" for n in range(1, 7)], (
+        "nenhum rótulo foi reescrito porque uma posição mudou"
+    )
 
 
 def test_remover_um_anexo_deixa_lacuna_e_preserva_os_rotulos(
@@ -87,17 +140,16 @@ def test_remover_um_anexo_deixa_lacuna_e_preserva_os_rotulos(
 ):
     """FR-008 — renumerar aqui faria a numeração publicada divergir do que está impresso no PDF."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    grupo = referencia_do_grupo(abrir(client, publicado), "Anexo 2 —")
+    grupo = referencia_do_grupo(abrir(client, publicado), "Anexo 4 —")
 
     enviar(client, publicado, {f"remover:{grupo}": "1"}, confirmar=True)
     publish_retification(api_client, _retificacao(), suffix="remocao")
 
     anexos = conteudo_vigente(publicado)["attachments"]
     assert [anexo["label"] for anexo in anexos] == [
-        "ANEXO 1 — FORMULÁRIO",
-        "ANEXO 3 — FORMULÁRIO",
+        f"ANEXO {n} — FORMULÁRIO" for n in (1, 2, 3, 5, 6)
     ]
-    assert [anexo["order"] for anexo in anexos] == [1, 3], "a lacuna fica"
+    assert [anexo["order"] for anexo in anexos] == [1, 2, 3, 5, 6], "a lacuna fica no lugar do 4"
 
 
 def test_o_anexo_removido_continua_na_publicacao_anterior(
@@ -105,8 +157,8 @@ def test_o_anexo_removido_continua_na_publicacao_anterior(
 ):
     """FR-033 — remover é deixar de existir na versão seguinte, e nunca apagar do histórico."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    grupo = referencia_do_grupo(abrir(client, publicado), "Anexo 2 —")
-    antes = conteudo_vigente(publicado)["attachments"][1]
+    grupo = referencia_do_grupo(abrir(client, publicado), "Anexo 4 —")
+    antes = conteudo_vigente(publicado)["attachments"][3]
 
     enviar(client, publicado, {f"remover:{grupo}": "1"}, confirmar=True)
     publish_retification(api_client, _retificacao(), suffix="historico")
@@ -122,32 +174,42 @@ def test_acrescentar_um_anexo_exige_o_arquivo_e_o_resumo_vem_do_artefato(
     """FR-031 — o Anexo acrescentado nasce com a forma que `edital_snapshot` produz."""
     identificar(client, "ana.elaboradora", ["elaborador"])
 
-    enviar(
+    identidade = _identidade_da_linha_nova(client, publicado)
+    conferencia = enviar(
         client,
         publicado,
         {
-            "novo-anexo-0-label": "ANEXO IV — TERMO LGPD",
-            "novo-anexo-0-order": "4",
+            "novo-anexo-0-id": identidade,
+            "novo-anexo-0-label": "ANEXO VII — TERMO LGPD",
+            "novo-anexo-0-order": "7",
             "arquivo::novo-anexo-0-artifactId": SimpleUploadedFile(
                 "termo.pdf", pdf_de_teste("W"), content_type="application/pdf"
             ),
         },
+    ).content.decode()
+
+    # A confirmação reenvia o que a conferência devolveu — inclusive a identidade da linha e a do
+    # artefato —, que é o que o navegador faz e o que torna repetir o envio inofensivo.
+    devolvidos = ocultos_de(conferencia, "novo-anexo-0-")
+    assert devolvidos.get("novo-anexo-0-artifactId"), (
+        "a conferência precisa devolver a identidade do artefato; sem ela a confirmação a perde"
     )
-    novo = ArtefatoAnexo.objects.get(congelado_em__isnull=True)
     enviar(
         client,
         publicado,
         {
-            "novo-anexo-0-label": "ANEXO IV — TERMO LGPD",
-            "novo-anexo-0-order": "4",
-            "novo-anexo-0-artifactId": str(novo.id),
+            "novo-anexo-0-label": "ANEXO VII — TERMO LGPD",
+            "novo-anexo-0-order": "7",
+            **devolvidos,
         },
         confirmar=True,
     )
     publish_retification(api_client, _retificacao(), suffix="acrescimo")
 
+    novo = ArtefatoAnexo.objects.get(pk=devolvidos["novo-anexo-0-artifactId"])
     acrescentado = conteudo_vigente(publicado)["attachments"][-1]
-    assert acrescentado["label"] == "ANEXO IV — TERMO LGPD"
+    assert acrescentado["id"] == identidade, "a identidade é a que nasceu no fragmento"
+    assert acrescentado["label"] == "ANEXO VII — TERMO LGPD"
     assert acrescentado["artifactHash"] == novo.document_hash
     assert client.get(reverse("public-anexo", args=[novo.id])).status_code == 200
 
@@ -218,6 +280,14 @@ def test_remover_o_anexo_desfaz_o_vinculo_do_requisito_no_mesmo_ato(
     )
     assert requisito["attachmentId"] is None, "o vínculo não sobreviveu ao alvo"
     assert all(item["id"] != vinculado["attachmentId"] for item in depois["attachments"])
+
+
+def _identidade_da_linha_nova(client, publicado):
+    """A identidade que o fragmento gera para a linha acrescentada, lida do HTML dele."""
+    corpo = client.get(reverse("interface:fragmento-retificacao-anexo")).content.decode()
+    achado = re.search(r'name="novo-anexo-\d+-id" value="([^"]+)"', corpo)
+    assert achado, "o fragmento precisa nascer com identidade própria"
+    return achado.group(1)
 
 
 def _retificacao():

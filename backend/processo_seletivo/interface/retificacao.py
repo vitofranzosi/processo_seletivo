@@ -43,6 +43,9 @@ REFERENCIA = "referencia"
 # (020, FR-035). O campo aparece como `<input type="file">`, e o valor que atravessa as duas fases
 # do formulário é a identidade do artefato que o envio criou.
 ARQUIVO = "arquivo"
+# A identidade de uma linha acrescentada. Não é campo de digitar: nasce no fragmento, viaja em
+# campo oculto e é o que torna a confirmação repetível (020).
+OCULTO = "oculto"
 
 # (sufixo do caminho, rótulo, tipo) — aplicado a cada Perfil e a cada Evento.
 CAMPOS_PERFIL = [
@@ -156,6 +159,7 @@ NOVO_EVENTO = [
 # pela identidade —, e o resumo é resolvido no servidor: nem aqui nem em lugar nenhum alguém digita
 # um SHA-256 (020, FR-031, FR-035).
 NOVO_ANEXO = [
+    ("id", "", OCULTO),
     ("label", "Rótulo", TEXTO),
     ("order", "Ordem editorial", INTEIRO),
     ("artifactId", "Arquivo do anexo (PDF)", ARQUIVO),
@@ -419,6 +423,8 @@ def _converter(bruto, tipo, rotulo, opcoes=()):
         return bruto == "1"
     if bruto == "":
         return None
+    if tipo == OCULTO:
+        return bruto
     if tipo == ARQUIVO:
         # A identidade do artefato que o envio criou. Não há o que converter nem o que validar
         # aqui: quem a produziu foi a view, gravando os bytes que ela mesma conferiu.
@@ -609,7 +615,11 @@ def _anexo_completo(valores, resumo_do_artefato):
             "Arquivo do anexo (PDF): envie o arquivo do Anexo que está sendo acrescentado."
         )
     return {
-        "id": str(uuid4()),
+        # **Nasce no fragmento e atravessa as duas fases.** Gerar aqui produziria identidade nova a
+        # cada chamada de `diferencas`, e reenviar a confirmação — o duplo clique, o F5 — mudaria o
+        # payload sob a mesma chave de idempotência: a segunda tentativa seria recusada por
+        # conflito em vez de devolver a primeira.
+        "id": str(valores.get("id") or uuid4()),
         "label": valores.get("label") or "",
         "order": valores.get("order") or 0,
         "artifactId": artefato,
@@ -765,6 +775,12 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None):
     #
     # A alteração é emitida **e aparece no resumo**: desfazer em silêncio seria o sistema decidindo
     # conteúdo normativo sem dizer.
+    #
+    # **E só quando ninguém já decidiu por aquele caminho.** A T065 pôs o vínculo na tela, então a
+    # pessoa pode remover o Anexo A e escolher o B no mesmo ato — e as duas alterações cairiam
+    # sobre o mesmo caminho, com a automática por último, apagando a escolha. Quem decide é quem
+    # compõe; o automático existe para o caso em que ninguém decidiu.
+    ja_endereçados = {alteracao["targetPath"] for alteracao in alteracoes}
     anexos_removidos = {
         caminho.split("id=", 1)[-1]
         for caminho in removidos
@@ -772,11 +788,13 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None):
     }
     for documento in conteudo.get("documentRequirements") or []:
         vinculo = str(documento.get("attachmentId") or "")
+        caminho_do_vinculo = f"/documentRequirements/id={documento.get('id', '')}/attachmentId"
+        if caminho_do_vinculo in ja_endereçados:
+            continue
         if vinculo and vinculo in anexos_removidos:
             alteracoes.append(
                 {
-                    "targetPath": f"/documentRequirements/id={documento.get('id', '')}"
-                    "/attachmentId",
+                    "targetPath": caminho_do_vinculo,
                     "operation": "REPLACE",
                     "newValue": None,
                 }

@@ -2,6 +2,13 @@
   <legend>Anexo a acrescentar</legend>
   <div class="campos">
     {% for campo in campos %}
+    {% if campo.tipo == 'oculto' %}
+    {% comment %}
+    A identidade da linha, nascida no fragmento. Viaja nas duas fases para que confirmar de novo —
+    duplo clique, F5 — produza o mesmo ato, e não um conflito de idempotência (020).
+    {% endcomment %}
+    <input type="hidden" name="novo-anexo-{{ indice }}-{{ campo.chave }}" value="{{ campo.valor }}">
+    {% else %}
     <p class="campo{% if campo.tipo == 'inteiro' %} curto{% endif %}">
       <label for="na-{{ indice }}-{{ campo.chave }}">{{ campo.rotulo }}</label>
       {% if campo.tipo == 'arquivo' %}
@@ -23,6 +30,7 @@
              value="{{ campo.valor }}">
       {% endif %}
     </p>
+    {% endif %}
     {% endfor %}
   </div>
   <p class="acoes-linha">

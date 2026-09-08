@@ -168,12 +168,12 @@ não foi endereçado.
 **Teste independente**: aplicar as quatro operações por Retificação e verificar rótulos, ordem,
 lacuna e ausência de referência pendurada.
 
-- [X] T053 [US5] Acrescentar `NOVO_ANEXO` e `_anexo_completo` em `backend/processo_seletivo/interface/retificacao.py`, produzindo exatamente a forma que `edital_snapshot` emite, e o bloco `ADD` em `diferencas` (FR-031)
+- [X] T053 [US5] Acrescentar `NOVO_ANEXO` e `_anexo_completo` em `backend/processo_seletivo/interface/retificacao.py`, produzindo exatamente a forma que `edital_snapshot` emite, e o bloco `ADD` em `diferencas`. **A identidade da linha nasce no fragmento** e viaja nas duas fases: gerá-la em `diferencas` mudaria o payload a cada chamada, e reenviar a confirmação seria recusado por conflito de idempotência em vez de devolver o primeiro ato (FR-031)
 - [X] T054 [US5] Marcar o grupo do anexo como `removivel=True` e traduzir a remoção em `REMOVE /attachments/id=<uuid>` (FR-031, FR-033)
-- [X] T055 [US5] Oferecer rótulo e ordem como campos editáveis, garantindo que alterar um não recalcula nem renumera nenhum outro (FR-006, FR-007, FR-008)
+- [X] T055 [US5] Oferecer rótulo e ordem como campos editáveis, com teste para **cada um dos dois**, garantindo que alterar um não recalcula nem renumera nenhum outro (FR-006, FR-007, FR-008)
 - [X] T065 [US5] Acrescentar `attachmentId` a `CAMPOS_DOCUMENTO` em `backend/processo_seletivo/interface/retificacao.py`, como campo `REFERENCIA` com as opções vindas dos anexos daquela versão — sem ele T056 é irrealizável pelo canal do ator, porque a tela não oferece o campo que precisa mudar (FR-022, FR-031)
-- [X] T056 [US5] Desfazer o vínculo do `DocumentoExigido` no mesmo ato que remove o anexo, recusando com erro impeditivo a Retificação que deixaria referência pendurada (FR-022, FR-023)
-- [X] T057 [P] [US5] Testes em `backend/tests/interface/` e `backend/tests/unit/`: remover o quarto de seis deixa lacuna e não altera rótulo nenhum; retificação com vínculo pendurado é recusada nomeando o vínculo
+- [X] T056 [US5] Desfazer o vínculo do `DocumentoExigido` no mesmo ato que remove o anexo, **e só quando ninguém decidiu por aquele caminho**: com o campo da T065 na tela, remover A e escolher B é um ato legítimo, e a emissão automática por último apagaria a escolha. Quem decide é quem compõe (FR-022, FR-023)
+- [X] T057 [P] [US5] Testes em `backend/tests/interface/`: remover o quarto de **seis** deixa lacuna e não altera rótulo nenhum, e a confirmação é montada com os campos ocultos que a conferência devolveu — como o navegador faz. *Três anexos não bastam: com o do meio, um engano de renumeração ainda produziria sequência plausível.* A recusa por vínculo pendurado já está provada em `tests/portal/test_modelo_do_requisito.py`, e não se duplica aqui
 - [X] T058 [P] [US5] Teste: anexo removido da versão futura continua íntegro na publicação anterior (FR-033)
 
 ---
