@@ -1,5 +1,8 @@
 """Endpoints de consulta pública: acesso anônimo, somente leitura, sem dados de elaboração."""
 
+import re
+import unicodedata
+
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.utils import timezone
@@ -8,7 +11,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from processo_seletivo.editais.models.anexos import ArtefatoAnexo
+from processo_seletivo.editais.models.anexos import AnexoEdital, ArtefatoAnexo
 from processo_seletivo.publicacoes.api.public_serializers import (
     PublicacaoDetalheSerializer,
     RetificacaoPublicaSerializer,
@@ -50,9 +53,15 @@ class ArtefatoPublicoView(PublicView):
     responde 404 — não 403: dizer "existe, mas não é público" já entregaria que existe, que é a
     mesma régua de `exigir_titularidade` na `009` (FR-017).
 
-    O nome do arquivo vem do `nome_original`, e **não** do rótulo do Anexo: esta rota conhece o
-    artefato, e o mesmo artefato pode servir a anexos de rótulos diferentes, inclusive em Editais
-    diferentes (FR-014).
+    **O nome do arquivo entregue vem do rótulo do Anexo**, e não do nome físico que quem elaborou
+    enviou. Quem baixa doze anexos ficava com doze arquivos cujo nome dependia de como o autor tinha
+    salvo o dele — `autodeclaracao.pdf`, `Anexo I revisado FINAL (2).pdf`. O rótulo é a identidade
+    institucional, e é ele que faz sentido na pasta de quem baixou.
+
+    A rota conhece o artefato, e o mesmo artefato pode servir a anexos de rótulos diferentes: o
+    rótulo usado é o da versão **vigente** que o publica, e o `nome_original` continua sendo o
+    recurso quando nenhuma versão o cita por rótulo. A FR-014 continua valendo — o nome enviado não
+    decide identidade nem endereço, e aqui ele nem decide mais o nome entregue.
     """
 
     def get(self, request, artefato_id):
@@ -72,13 +81,22 @@ class ArtefatoPublicoView(PublicView):
 
 
 def _nome_do_arquivo(artefato):
-    """O nome enviado, saneado. Ele é dado de entrada, e nunca decidiu caminho nem identidade."""
-    limpo = "".join(
-        caractere
-        for caractere in artefato.nome_original
-        if caractere.isalnum() or caractere in "-_."
+    """`ANEXO I — AUTODECLARAÇÃO ÉTNICO-RACIAL` vira `ANEXO-I-AUTODECLARACAO-ETNICO-RACIAL.pdf`.
+
+    Sem acento e sem espaço porque o nome atravessa sistemas de arquivo, cliente de e-mail e
+    cabeçalho HTTP, e um deles sempre estraga o que o outro aceitava. O que se preserva é o que
+    identifica: a designação e o título que o Edital usa.
+    """
+    rotulo = (
+        AnexoEdital.objects.filter(artefato=artefato)
+        .exclude(rotulo="")
+        .values_list("rotulo", flat=True)
+        .first()
     )
-    return limpo or f"{artefato.id}.pdf"
+    base = rotulo or artefato.nome_original.rsplit(".", 1)[0]
+    sem_acento = unicodedata.normalize("NFKD", base).encode("ascii", "ignore").decode()
+    limpo = "-".join(parte for parte in re.split(r"[^A-Za-z0-9]+", sem_acento) if parte)
+    return f"{limpo[:120]}.pdf" if limpo else f"{artefato.id}.pdf"
 
 
 def _instant(request):

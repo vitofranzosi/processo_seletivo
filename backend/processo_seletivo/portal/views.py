@@ -1464,6 +1464,35 @@ def _documentos(conteudo, inscricao):
     }
 
 
+def _modelos_alterados(inscricao, conteudo_vigente):
+    """Os modelos que mudaram desde a versão que a pessoa reconheceu (020, POLISH020-010).
+
+    Compara **artefato**, e não rótulo: substituir o formulário mantendo o nome é o caso normal, e é
+    exatamente o que precisa ser dito. Só os requisitos daquela inscrição entram — avisar sobre o
+    anexo de um Perfil alheio seria ruído.
+    """
+    reconhecida = getattr(inscricao, "versao_reconhecida", None)
+    if reconhecida is None:
+        return []
+    antes = reconhecida.content
+    alterados = []
+    for requisito in requisitos_da_inscricao(conteudo_vigente, inscricao):
+        agora = modelo_do_requisito(conteudo_vigente, requisito)
+        if agora is None:
+            continue
+        anterior = next(
+            (
+                modelo_do_requisito(antes, item)
+                for item in antes.get("documentRequirements") or []
+                if str(item.get("id")) == str(requisito["id"])
+            ),
+            None,
+        )
+        if anterior and anterior["artefato_id"] != agora["artefato_id"]:
+            alterados.append({"requisito": requisito.get("name", ""), **agora})
+    return alterados
+
+
 def _perfil_do_conteudo(conteudo, profile_id):
     """O Perfil da inscrição, lido do conteúdo publicado — nunca da tabela de elaboração."""
     return (
@@ -1694,6 +1723,10 @@ def revisao(request, inscricao_id):
             "descartes_da_retificacao": (
                 documentos_que_a_retificacao_invalida(registro, versao) if retificado else []
             ),
+            # Os modelos que mudaram entre a versão que a pessoa reconheceu e a vigente (020). O
+            # aviso genérico — "houve alteração" — não faz ninguém olhar para o formulário que já
+            # preencheu e assinou, e é justamente esse o caso em que ela mais perde trabalho.
+            "modelos_alterados": (_modelos_alterados(registro, conteudo) if retificado else []),
             "erros": erros,
             "declaracoes": declaracoes,
             # Cada fato com o que a pessoa digitou: uma recusa não pode custar o que já estava

@@ -13,58 +13,135 @@
     com que o Edital o cita, como <strong>ANEXO I — REQUERIMENTO DE INSCRIÇÃO</strong>. O sistema
     não numera nem renumera: o número, se houver, está dentro do rótulo que você escreve.</p>
 
-  {% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
+  {% comment %}
+  A recusa vem da sessão, e não do endereço: mensagem de erro não é conteúdo de URL, e pela sessão
+  ela não sobrevive a recarregar nem viaja num link compartilhado.
+  {% endcomment %}
+  {% if recusa_de_anexo %}
+  <p class="erro" role="alert" id="anexos-recusa">{{ recusa_de_anexo.mensagem }}</p>
+  {% endif %}
 
-  <ul id="anexos-lista">
-    {% for anexo in anexos %}
-    <li class="linha">
-      <form method="post" action="{% url 'interface:anexos' edital.id %}">
+  <div id="anexos-lista">
+    {% for linha in anexos %}
+    {% comment %}
+    Um `fieldset` por anexo, com a legenda dizendo **qual de quantos** — o mesmo desenho do
+    Documento Exigido. Sem ele, três formulários empilhados corriam juntos e o botão de remover de
+    um ficava encostado no rótulo do seguinte.
+    {% endcomment %}
+    <fieldset class="linha anexo">
+      <legend>Anexo {{ linha.posicao }} de {{ linha.total }}</legend>
+      <p class="campo largo">
+        <label for="rotulo-{{ linha.anexo.id }}">Rótulo <span class="obrigatorio" aria-hidden="true">*</span></label>
+        {% if editavel %}
+        <input id="rotulo-{{ linha.anexo.id }}" form="rotular-{{ linha.anexo.id }}" name="rotulo"
+               type="text" maxlength="255" value="{{ linha.anexo.rotulo }}"
+               placeholder="ANEXO I — REQUERIMENTO DE INSCRIÇÃO"
+               aria-describedby="arquivo-de-{{ linha.anexo.id }}">
+        {% else %}
+        {% comment %}
+        Em somente leitura, texto — e não um campo desabilitado. A tela deixa de ser formulário
+        travado e passa a ser o que ela é: conteúdo publicado.
+        {% endcomment %}
+        <strong id="rotulo-{{ linha.anexo.id }}">{{ linha.anexo.rotulo|default:"sem rótulo" }}</strong>
+        {% endif %}
+      </p>
+
+      <p class="detalhe" id="arquivo-de-{{ linha.anexo.id }}">
+        Arquivo: <strong>{{ linha.anexo.artefato.nome_original }}</strong>
+        <a class="acao" href="{% url 'interface:anexo-arquivo' edital.id linha.anexo.id %}"
+           target="_blank" rel="noopener"
+           aria-label="Abrir o arquivo de {{ linha.anexo.rotulo|default:'anexo sem rótulo' }}">Abrir</a>
+      </p>
+
+      {% comment %}
+      De qual requisito este anexo é o modelo. A tela onde se remove era a única que não dizia que
+      havia vínculo — e remover o anexo desfaz o vínculo (FR-022).
+      {% endcomment %}
+      <p class="detalhe">
+        {% if linha.modelo_de %}Modelo de: {{ linha.modelo_de|join:", " }}
+        {% else %}Não é modelo de nenhum documento exigido.{% endif %}
+      </p>
+
+      {% if editavel %}
+      <form method="post" action="{% url 'interface:anexos' edital.id %}" id="rotular-{{ linha.anexo.id }}">
         {% csrf_token %}
         <input type="hidden" name="acao" value="rotular">
-        <input type="hidden" name="anexo" value="{{ anexo.id }}">
-        <label for="rotulo-{{ anexo.id }}">Rótulo</label>
-        <input id="rotulo-{{ anexo.id }}" name="rotulo" type="text" maxlength="255"
-               value="{{ anexo.rotulo }}"{% if not editavel %} disabled{% endif %}>
-        <span class="detalhe">{{ anexo.artefato.nome_original }}</span>
-        <a class="acao" href="{% url 'interface:anexo-arquivo' edital.id anexo.id %}">Abrir</a>
-        {% if editavel %}<button class="acao" type="submit">Salvar rótulo</button>{% endif %}
+        <input type="hidden" name="anexo" value="{{ linha.anexo.id }}">
       </form>
-      {% if editavel %}
       <form method="post" action="{% url 'interface:anexos' edital.id %}"
-            enctype="multipart/form-data">
+            enctype="multipart/form-data" id="trocar-{{ linha.anexo.id }}">
         {% csrf_token %}
         <input type="hidden" name="acao" value="substituir">
-        <input type="hidden" name="anexo" value="{{ anexo.id }}">
-        <label for="troca-{{ anexo.id }}">Trocar o arquivo</label>
-        <input id="troca-{{ anexo.id }}" name="arquivo" type="file" accept="application/pdf">
-        <button class="acao" type="submit">Substituir</button>
+        <input type="hidden" name="anexo" value="{{ linha.anexo.id }}">
+        <p class="campo largo">
+          <label for="troca-{{ linha.anexo.id }}">Trocar o arquivo</label>
+          <input id="troca-{{ linha.anexo.id }}" class="arquivo" name="arquivo" type="file"
+                 accept="application/pdf">
+          <span class="ajuda">Somente PDF. O arquivo atual é substituído.</span>
+        </p>
       </form>
-      <form method="post" action="{% url 'interface:anexos' edital.id %}">
+      <form method="post" action="{% url 'interface:anexos' edital.id %}" id="mover-{{ linha.anexo.id }}">
+        {% csrf_token %}
+        <input type="hidden" name="acao" value="mover">
+        <input type="hidden" name="anexo" value="{{ linha.anexo.id }}">
+      </form>
+      <p class="acoes-linha">
+        <button class="acao" type="submit" form="rotular-{{ linha.anexo.id }}">Salvar rótulo</button>
+        <button class="acao" type="submit" form="trocar-{{ linha.anexo.id }}">Substituir o arquivo</button>
+        {% comment %}
+        Subir e Descer, e não arrastar: funciona por teclado, e é o que a etapa Inscrição já usa.
+        {% endcomment %}
+        <button class="acao" type="submit" form="mover-{{ linha.anexo.id }}" name="direcao" value="subir"
+                {% if linha.posicao == 1 %}disabled{% endif %}>↑ Subir</button>
+        <button class="acao" type="submit" form="mover-{{ linha.anexo.id }}" name="direcao" value="descer"
+                {% if linha.posicao == linha.total %}disabled{% endif %}>↓ Descer</button>
+      </p>
+      <p class="remover">
+        {% comment %}
+        Confirmação porque o ato é irreversível: remover apaga o arquivo, e o próximo passo seria
+        procurar o PDF de novo. O rótulo nomeia o que se remove, para que a confirmação não pergunte
+        sobre "um anexo" qualquer.
+        {% endcomment %}
+        <button class="acao perigoso" type="submit" form="remover-{{ linha.anexo.id }}"
+                data-confirmar="Remover “{{ linha.anexo.rotulo|default:'anexo sem rótulo' }}” do Edital? O arquivo é apagado e precisará ser enviado de novo.">Remover este anexo</button>
+      </p>
+      <form method="post" action="{% url 'interface:anexos' edital.id %}" id="remover-{{ linha.anexo.id }}">
         {% csrf_token %}
         <input type="hidden" name="acao" value="remover">
-        <input type="hidden" name="anexo" value="{{ anexo.id }}">
-        <button class="acao perigoso" type="submit">Remover</button>
+        <input type="hidden" name="anexo" value="{{ linha.anexo.id }}">
       </form>
       {% endif %}
-    </li>
+    </fieldset>
     {% empty %}
-    <li class="vazio">Este Edital ainda não publica anexo nenhum. É legítimo: nem todo Edital
-      fornece formulário próprio.</li>
+    <p class="vazio">Este Edital ainda não publica anexo nenhum. É legítimo: nem todo Edital
+      fornece formulário próprio.</p>
     {% endfor %}
-  </ul>
+  </div>
 
   {% if editavel %}
   <form method="post" action="{% url 'interface:anexos' edital.id %}"
         enctype="multipart/form-data" id="anexos-novo">
     {% csrf_token %}
     <input type="hidden" name="acao" value="anexar">
-    <h3>Acrescentar anexo</h3>
-    <label for="novo-rotulo">Rótulo</label>
-    <input id="novo-rotulo" name="rotulo" type="text" maxlength="255"
-           placeholder="ANEXO I — REQUERIMENTO DE INSCRIÇÃO">
-    <label for="novo-arquivo">Arquivo (PDF)</label>
-    <input id="novo-arquivo" name="arquivo" type="file" accept="application/pdf" required>
-    <button class="botao" type="submit">Acrescentar</button>
+    <fieldset class="linha anexo-novo">
+      <legend>Acrescentar anexo</legend>
+      <p class="campo largo">
+        <label for="novo-rotulo">Rótulo</label>
+        <input id="novo-rotulo" name="rotulo" type="text" maxlength="255"
+               value="{{ recusa_de_anexo.rotulo|default:'' }}"
+               placeholder="ANEXO I — REQUERIMENTO DE INSCRIÇÃO"
+               {% if recusa_de_anexo %}aria-describedby="anexos-recusa"{% endif %}>
+        <span class="ajuda">O nome inteiro com que o Edital cita este anexo.</span>
+      </p>
+      <p class="campo largo">
+        <label for="novo-arquivo">Arquivo <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <input id="novo-arquivo" class="arquivo" name="arquivo" type="file"
+               accept="application/pdf" required
+               {% if recusa_de_anexo %}aria-invalid="true" aria-describedby="anexos-recusa"{% endif %}>
+        <span class="ajuda">Somente PDF.</span>
+      </p>
+      <p class="acoes-linha"><button class="botao" type="submit">Acrescentar anexo</button></p>
+    </fieldset>
   </form>
   {% endif %}
 </section>

@@ -337,10 +337,34 @@ precisa montar uma URL de API com um instante ISO-8601.
 
 ---
 
+### POLISH020-017
+
+**Severidade:** P1 · **Tipo:** autorização / UX · **Ator:** julgador de recursos, avaliador
+
+**Encontrado depois do fechamento da auditoria**, ao reproduzir a navegação como `ana — Julgador de
+recursos`: a página do Edital em `/gestao/editais/<id>/` oferece o marco **Classificação final**, e
+clicar nele devolve **404 — Recurso não encontrado** em `/gestao/editais/<id>/marcos/<id>`.
+
+**Observado:** o 404 é a autorização funcionando: a consulta de marcos publicados exige gerir a
+comissão ou `auditoria:consultar`, e o julgador não tem nenhum dos dois. O defeito não é a recusa —
+é a lista ter oferecido o link. A tela monta os marcos sem consultar quem está olhando.
+
+**Esperado:** oferecer apenas o que o ator pode abrir. Recusa depois de convidar é pior que ausência:
+quem clica não conclui que não tem permissão, conclui que o sistema está quebrado.
+
+**Impacto:** é a primeira leitura que um julgador faz da própria tela de trabalho, e ela parece
+defeituosa. O mesmo caminho vale para qualquer papel sem alcance sobre a comissão.
+
+**Evidência:** `/gestao/editais/814abbfe-.../`, identidade `ana — Julgador de recursos`, link
+"Classificação final".
+
+---
+
 ## 4. Métricas
 
 - Superfícies auditadas: **11** · Desktop e 375 px nas cinco principais
-- Achados: **16** — P1: **3** · P2: **9** · P3: **4**
+- Achados: **17** — P1: **4** · P2: **9** · P3: **4**
+  (16 na auditoria; POLISH020-017 veio depois, da navegação como julgador de recursos)
 - Defeitos funcionais encontrados: **0**
 - Falsos alarmes meus, verificados e descartados: **2** (aviso de versão que eu dei por ausente e
   existe; "sumiço" da lista em mobile que era captura no meio da rolagem)
@@ -401,3 +425,49 @@ feature apresentável ponta a ponta.
 **POLISH020-007** (ordem editorial sem tela) e **POLISH020-010** (o aviso que não nomeia o Anexo)
 são decisões de produto, não de acabamento, e merecem entrar como escopo declarado — não como
 correção silenciosa no meio de um polish.
+
+---
+
+## 8. Estado das correções
+
+Registrado em 08/09/2026, depois da instrução "corrija tudo o que foi identificado no relatório".
+Essa instrução também **autoriza expressamente** POLISH020-007 e POLISH020-010, que a §7 recomendava
+não corrigir em silêncio: eles entram declarados, e não escondidos no meio do acabamento.
+
+| Achado | Estado | O que mudou |
+|---|---|---|
+| 001 | ✅ corrigido | `compor_anexos.html`: `fieldset.linha` com `legend` `ANEXO 1 DE 3`, agrupamento visual e `Remover este anexo` |
+| 002 | ✅ corrigido | `retificacao_detalhe.html` + `_anexo_legivel`: a linha diz o rótulo do anexo e a operação; UUID e resumo ficam em segundo plano |
+| 003 | ✅ corrigido | `data-confirmar` nomeando o anexo, servido pelo `remocao.js` que a casa já usa |
+| 004 | ✅ corrigido | o título do grupo passa a ser o rótulo puro; o prefixo posicional saiu |
+| 005 | ✅ corrigido | `_descricao_do_artefato`: `nome_original · tamanho` nos dois lados da conferência |
+| 006 | ✅ corrigido | a recusa passa pela sessão (`anexos_recusa`), preserva o rótulo digitado e sai da query string |
+| 007 | ✅ corrigido | comando `mover` e os botões `↑ Subir` / `↓ Descer`, no padrão da etapa Inscrição |
+| 008 | ✅ corrigido | cada anexo diz "Modelo de: …" ou "Não é modelo de nenhum documento exigido." |
+| 009 | ✅ corrigido | em somente leitura o rótulo é texto (`<strong>`), e não `input disabled` |
+| 010 | ✅ corrigido | `_modelos_alterados` compara os artefatos entre a versão reconhecida e a vigente e nomeia o modelo que mudou |
+| 011 | ✅ corrigido | `(PDF, baixar)` no rótulo e `download` explícito, distinguindo do Edital que abre |
+| 012 | ✅ corrigido | `_nome_do_arquivo` deriva do rótulo institucional, dobrado para ASCII |
+| 013 | ✅ corrigido | `list-style: none` nas listas de anexo, pública e da elaboração |
+| 014 | ✅ corrigido | `input[type=file].arquivo` estilizado no padrão do portal |
+| 015 | ⬜ mantido | `/api/v1/public/anexos/<uuid>` é a mesma forma que o PDF do Edital já usa. Trocar só o endereço do anexo criaria a inconsistência que o achado aponta; a mudança é de rota pública, para todos os artefatos, e não cabe num polish |
+| 016 | ⬜ não feito | a página HTML da publicação histórica é **superfície pública nova**, não acabamento. O próprio achado a classifica como oportunidade e diz que a ausência é anterior à 020. Construí-la aqui seria escopo entrando pela porta dos fundos |
+| 017 | ✅ corrigido | `_marcos_publicados` recebe o ator e devolve lista vazia a quem não pode abrir o marco — a tela deixa de oferecer o que a autorização vai recusar |
+
+**Cobertura de teste.** Cada correção tem teste que falha sem ela — verificado reintroduzindo o
+defeito, e não apenas observando o verde. Os principais: `test_cada_anexo_e_um_item_com_posicao_e_acao_nomeada`,
+`test_subir_e_descer_mudam_a_ordem_e_nao_tocam_no_rotulo`,
+`test_a_recusa_preserva_o_rotulo_digitado_e_nao_vai_para_o_endereco`,
+`test_em_somente_leitura_o_rotulo_e_texto_e_nao_campo_travado`,
+`test_o_detalhe_da_retificacao_diz_o_anexo_e_nao_o_hash`,
+`test_a_conferencia_diz_qual_arquivo_sai_e_qual_entra`,
+`test_o_aviso_de_edital_atualizado_nomeia_o_modelo_que_mudou`,
+`test_sem_troca_de_modelo_o_aviso_nao_inventa_alteracao` e
+`test_a_classificacao_so_e_oferecida_a_quem_pode_abri_la`.
+
+**Suíte:** 3788 passaram, 1 pulada. `ruff` limpo.
+
+**Reauditoria pelo navegador:** a etapa Anexos e a página pública da seleção foram reabertas em
+`127.0.0.1:8022` depois das correções. A etapa mostra `ANEXO 1 DE 3` … `ANEXO 3 DE 3`, cada um com
+rótulo, arquivo, a linha de modelo e as ações nomeadas; a página pública lista
+`ANEXO I — AUTODECLARAÇÃO ÉTNICO-RACIAL (PDF, baixar)`.

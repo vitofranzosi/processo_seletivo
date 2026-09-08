@@ -7,7 +7,6 @@ fronteira de segurança (FR-002).
 
 import hashlib
 import secrets
-from urllib.parse import quote
 from uuid import UUID, uuid4
 
 from django.conf import settings
@@ -131,7 +130,7 @@ from processo_seletivo.resultados.application import selectors as resultado_sele
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
-from processo_seletivo.shared.arquivos import aceitar
+from processo_seletivo.shared.arquivos import aceitar, tamanho_legivel
 from processo_seletivo.shared.http import marcar_como_privada
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
@@ -691,6 +690,12 @@ def anexos_acao(request, edital_id):
                 anexo_id=request.POST.get("anexo", ""),
                 rotulo=request.POST.get("rotulo", ""),
             )
+        elif acao == "mover":
+            anexos_command.mover(
+                **comum,
+                anexo_id=request.POST.get("anexo", ""),
+                direcao=request.POST.get("direcao", ""),
+            )
         elif acao == "reordenar":
             anexos_command.reordenar(**comum, ordem=request.POST.getlist("ordem"))
         elif acao == "remover":
@@ -698,7 +703,16 @@ def anexos_acao(request, edital_id):
         else:
             raise Http404
     except DomainError as exc:
-        return redirect(f"{destino}?erro={quote(exc.detail)}")
+        # A recusa volta pela **sessão**, e não pela query string: a mensagem inteira no endereço
+        # sobrevive a recarregar, a compartilhar e ao histórico do navegador, e não é conteúdo de
+        # endereço nenhum. Junto vai o que a pessoa digitou, para que escolher o arquivo errado não
+        # custe redigitar o rótulo.
+        request.session["anexos_recusa"] = {
+            "mensagem": exc.detail,
+            "rotulo": request.POST.get("rotulo", ""),
+            "anexo": request.POST.get("anexo", ""),
+        }
+        return redirect(destino)
     return redirect(f"{destino}?salvo=anexos")
 
 
@@ -787,7 +801,8 @@ def compor_etapa(request, edital_id, etapa):
     # A conferência é lida do conteúdo canônico, e não montada bloco a bloco no template: é o que
     # impede a Revisão de envelhecer quando uma coleção nova entra no Edital.
     conferencia = revisao.blocos(edital_snapshot(edital)) if etapa == "revisao" else []
-    anexos = edital.anexos.select_related("artefato").all() if etapa == "anexos" else []
+    anexos = _anexos_da_etapa(edital) if etapa == "anexos" else []
+    recusa_de_anexo = request.session.pop("anexos_recusa", None) if etapa == "anexos" else None
     return render(
         request,
         template,
@@ -801,7 +816,7 @@ def compor_etapa(request, edital_id, etapa):
                 if isinstance(erro, dict) and erro.get("ancora")
             },
             "anexos": anexos,
-            "erro": request.GET.get("erro", ""),
+            "recusa_de_anexo": recusa_de_anexo,
             "progresso": _progresso(edital, etapa),
             "anterior": anterior,
             "proxima": proxima,
@@ -1511,13 +1526,22 @@ def detalhe(request, edital_id):
             "acoes": conjunto,
             "impedido_por_segregacao": segregacao,
             "proximo_passo": acoes.proximo_passo(edital, ator, segregacao=segregacao),
-            "marcos_classificatorios": _marcos_publicados(edital),
+            "marcos_classificatorios": _marcos_publicados(edital, ator),
         },
     )
 
 
-def _marcos_publicados(edital):
-    """Marcos alcançáveis a partir do Edital publicado, agrupados pelo Perfil que os nomeia."""
+def _marcos_publicados(edital, ator=None):
+    """Marcos alcançáveis a partir do Edital publicado, agrupados pelo Perfil que os nomeia.
+
+    **Alcançáveis por quem está olhando.** A porta do marco é `_edital_para_classificar`:
+    presidência ou auditoria lê, e o resto recebe 404. A lista era montada sem consultar o ator,
+    então quem julga recursos — que não tem nenhuma das duas — via "Classificação final" na tela do
+    Edital e recebia erro ao clicar. Oferecer o que se vai recusar é pior do que não oferecer.
+    """
+    if ator is not None and pode_gerir_comissao(ator, edital.processo) is None:
+        if not ator.can("auditoria:consultar"):
+            return []
     try:
         conteudo = effective_version(edital_id=edital.id).content
     except DomainError:
@@ -1602,6 +1626,34 @@ def _resumo_pendente(ator):
         )
 
     return resolver
+
+
+def _anexos_da_etapa(edital):
+    """Cada Anexo com a posição, o total e os requisitos que o citam como modelo (020).
+
+    Posição e total existem porque a tela precisa dizer **qual** anexo cada ação alcança — foi a
+    ausência disso que fez a auditoria de polish classificar a lista como risco de erro operacional.
+    Os requisitos vêm junto pela mesma razão: a tela onde se remove era a única que não dizia que
+    havia vínculo, e remover desfaz o vínculo.
+    """
+    anexos = list(edital.anexos.select_related("artefato").prefetch_related("requisitos"))
+    return [
+        {
+            "anexo": anexo,
+            "posicao": posicao,
+            "total": len(anexos),
+            "modelo_de": [requisito.name for requisito in anexo.requisitos.all()],
+        }
+        for posicao, anexo in enumerate(anexos, start=1)
+    ]
+
+
+def _descricao_do_artefato(identificador):
+    """`autodeclaracao.pdf · 3 KB` — o que a conferência precisa para ser conferência."""
+    artefato = ArtefatoAnexo.objects.filter(pk=identificador).first()
+    if artefato is None:
+        return ""
+    return f"{artefato.nome_original} · {tamanho_legivel(artefato.tamanho)}"
 
 
 def _artefatos_enviados(request, ator):
@@ -1761,7 +1813,10 @@ def retificar(request, edital_id):
                 # reexibição usa depois, então a linha nova volta com a identidade do artefato.
                 dados = _artefatos_enviados(request, ator)
                 alteracoes, resumo = retificacao_ui.diferencas(
-                    projecao, dados, resumo_do_artefato=_resumo_pendente(ator)
+                    projecao,
+                    dados,
+                    resumo_do_artefato=_resumo_pendente(ator),
+                    descricao_do_artefato=_descricao_do_artefato,
                 )
                 if not alteracoes:
                     erros.append(
@@ -1885,9 +1940,15 @@ def _alteracoes_legiveis(retificacao):
     for alteracao in retificacao.alteracoes.all():
         anterior = retificacao_ui._ler(base, alteracao.target_path)
         removendo = alteracao.operation == "REMOVE"
+        legivel = _anexo_legivel(base, alteracao, anterior)
+        if legivel is _OMITIR:
+            continue
         legiveis.append(
-            {
+            legivel
+            or {
                 "caminho": alteracao.target_path,
+                "onde": "",
+                "campo": "",
                 "operacao": alteracao.operation,
                 "antes": _resumo_de_linha(anterior) if anterior is not None else "—",
                 "depois": "removido do Edital"
@@ -1898,6 +1959,74 @@ def _alteracoes_legiveis(retificacao):
             }
         )
     return legiveis
+
+
+# A linha que existe no ato e não se mostra: dizer duas vezes a mesma substituição, uma delas em
+# SHA-256, é o que esta correção veio desfazer.
+_OMITIR = object()
+
+CAMPO_DO_ANEXO = {
+    "artifactId": "Arquivo do anexo",
+    "artifactHash": "Conferência do arquivo",
+    "label": "Rótulo",
+    "order": "Ordem editorial",
+}
+
+
+def _anexo_legivel(base, alteracao, anterior):
+    """A alteração sobre um Anexo, dita em português (020, POLISH020-002).
+
+    Sem isto, substituir o formulário rendia duas linhas de UUID e SHA-256 — e é **nesta** tela que
+    o homologador aprova e o publicador assina, sem terem visto a tela de composição. As colunas
+    "antes" e "depois" existem para conferir, e conferir dois identificadores opacos é confiar.
+
+    O rótulo do anexo vem do conteúdo-base, e não do banco: é o que aquela versão dizia, que é o que
+    quem aprova precisa ler.
+    """
+    caminho = alteracao.target_path or ""
+    if not caminho.startswith("/attachments/"):
+        return None
+    partes = caminho[len("/attachments/") :].split("/")
+    seletor, campo = partes[0], (partes[1] if len(partes) > 1 else "")
+    identidade_do_anexo = seletor.removeprefix("id=")
+    anexo = next(
+        (
+            item
+            for item in base.get("attachments") or []
+            if str(item.get("id")) == identidade_do_anexo
+        ),
+        None,
+    )
+    onde = (anexo or {}).get("label") or "Anexo acrescentado"
+    if not campo:
+        # A coleção inteira: acréscimo ou remoção do anexo.
+        novo = alteracao.new_value if isinstance(alteracao.new_value, dict) else {}
+        return {
+            "caminho": caminho,
+            "onde": onde if alteracao.operation == "REMOVE" else novo.get("label") or onde,
+            "campo": "O anexo",
+            "operacao": alteracao.operation,
+            "antes": onde if alteracao.operation == "REMOVE" else "—",
+            "depois": "removido do Edital"
+            if alteracao.operation == "REMOVE"
+            else "acrescentado ao Edital",
+        }
+    if campo == "artifactHash":
+        # A conferência anda junto com o arquivo e não é decisão própria: mostrá-la como linha
+        # separada duplicaria o mesmo fato e devolveria o SHA-256 à tela.
+        return _OMITIR
+    return {
+        "caminho": caminho,
+        "onde": onde,
+        "campo": CAMPO_DO_ANEXO.get(campo, campo),
+        "operacao": alteracao.operation,
+        "antes": "o arquivo publicado até aqui"
+        if campo == "artifactId"
+        else (_resumo_de_linha(anterior) if anterior is not None else "—"),
+        "depois": "um arquivo novo, que passa a ser o publicado"
+        if campo == "artifactId"
+        else (_resumo_de_linha(alteracao.new_value) if alteracao.new_value is not None else "—"),
+    }
 
 
 @require_http_methods(["GET", "POST"])

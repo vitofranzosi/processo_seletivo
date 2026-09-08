@@ -107,3 +107,40 @@ def test_ator_autenticado_sem_a_capacidade_nao_recebe_os_bytes(
     )
 
     assert resposta.status_code == 404
+
+
+@pytest.mark.authorization
+@pytest.mark.django_db(transaction=True)
+def test_a_classificacao_so_e_oferecida_a_quem_pode_abri_la(
+    client, seletor_ligado, gestor, api_client, manager_headers, process_payload
+):
+    """POLISH020-017 — oferecer o que se vai recusar é pior do que não oferecer.
+
+    Achado durante a auditoria visual, e anterior à `020`: a seção Classificação era montada sem
+    consultar o ator, então quem julga recursos via "Classificação final" na tela do Edital e
+    recebia uma página de erro ao clicar. A porta do marco sempre recusou; o que faltava era a tela
+    parar de convidar.
+
+    O caso **positivo** vai junto de propósito: sem ele, o teste passaria num Edital que não tem
+    marco nenhum, e provaria apenas que não há o que oferecer.
+    """
+    from django.urls import reverse as url
+
+    from tests.fixtures.divulgacao import rascunho_com_marco
+    from tests.fixtures.publicacao import publish_original
+    from tests.interface.conftest import identificar as identificar_na_gestao
+
+    publicado = publish_original(
+        api_client, manager_headers, process_payload, draft=rascunho_com_marco()
+    )
+    caminho = url("interface:detalhe", args=[publicado.id])
+
+    identificar_na_gestao(client, "carlos.auditor", ["auditor"])
+    de_quem_audita = client.get(caminho).content.decode()
+    identificar_na_gestao(client, "ana.julgadora", ["julgador"])
+    de_quem_julga = client.get(caminho).content.decode()
+
+    assert "/marcos/" in de_quem_audita, "quem audita lê o marco, e a tela precisa oferecê-lo"
+    assert "/marcos/" not in de_quem_julga, (
+        "quem julga recursos recebe 404 no marco; a tela não pode convidá-lo para lá"
+    )

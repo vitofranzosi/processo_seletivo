@@ -95,7 +95,7 @@ def test_alterar_o_rotulo_de_um_anexo_nao_toca_no_rotulo_de_nenhum_outro(
     """FR-006 e FR-007 — o número está dentro do rótulo, e ninguém o recalcula."""
     identificar(client, "ana.elaboradora", ["elaborador"])
     corpo = abrir(client, publicado)
-    campo = referencia_do_campo(corpo, "Anexo 2 —", "Rótulo")
+    campo = referencia_do_campo(corpo, "ANEXO 2 — FORMULÁRIO", "Rótulo")
 
     enviar(client, publicado, {f"campo:{campo}": "ANEXO II — AUTODECLARAÇÃO"}, confirmar=True)
     publish_retification(api_client, _retificacao(), suffix="rotulo")
@@ -120,7 +120,7 @@ def test_alterar_a_ordem_editorial_nao_toca_no_rotulo_de_ninguem(
     outros textos ficaram; aqui se muda a **posição** e se confere a mesma coisa.
     """
     identificar(client, "ana.elaboradora", ["elaborador"])
-    campo = referencia_do_campo(abrir(client, publicado), "Anexo 2 —", "Ordem editorial")
+    campo = referencia_do_campo(abrir(client, publicado), "ANEXO 2 — FORMULÁRIO", "Ordem editorial")
 
     enviar(client, publicado, {f"campo:{campo}": "9"}, confirmar=True)
     publish_retification(api_client, _retificacao(), suffix="ordem")
@@ -140,7 +140,7 @@ def test_remover_um_anexo_deixa_lacuna_e_preserva_os_rotulos(
 ):
     """FR-008 — renumerar aqui faria a numeração publicada divergir do que está impresso no PDF."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    grupo = referencia_do_grupo(abrir(client, publicado), "Anexo 4 —")
+    grupo = referencia_do_grupo(abrir(client, publicado), "ANEXO 4 — FORMULÁRIO")
 
     enviar(client, publicado, {f"remover:{grupo}": "1"}, confirmar=True)
     publish_retification(api_client, _retificacao(), suffix="remocao")
@@ -157,7 +157,7 @@ def test_o_anexo_removido_continua_na_publicacao_anterior(
 ):
     """FR-033 — remover é deixar de existir na versão seguinte, e nunca apagar do histórico."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    grupo = referencia_do_grupo(abrir(client, publicado), "Anexo 4 —")
+    grupo = referencia_do_grupo(abrir(client, publicado), "ANEXO 4 — FORMULÁRIO")
     antes = conteudo_vigente(publicado)["attachments"][3]
 
     enviar(client, publicado, {f"remover:{grupo}": "1"}, confirmar=True)
@@ -266,7 +266,7 @@ def test_remover_o_anexo_desfaz_o_vinculo_do_requisito_no_mesmo_ato(
     publicado = publicado_com_vinculo
     vigente = conteudo_vigente(publicado)
     vinculado = next(item for item in vigente["documentRequirements"] if item.get("attachmentId"))
-    grupo = referencia_do_grupo(abrir(client, publicado), "Anexo 2 —")
+    grupo = referencia_do_grupo(abrir(client, publicado), "ANEXO 2 — FORMULÁRIO")
 
     resposta = enviar(client, publicado, {f"remover:{grupo}": "1"})
     corpo = resposta.content.decode()

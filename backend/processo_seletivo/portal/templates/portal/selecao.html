@@ -23,9 +23,18 @@ o anexo é conteúdo do Edital, e quem elabora decidiu a ordem (FR-039, FR-039a)
 {% if anexos %}
 <section aria-labelledby="anexos-titulo">
   <h2 id="anexos-titulo">Anexos do Edital</h2>
-  <ul>
+  {% comment %}
+  `list-style: none` porque cada item já é um botão: o marcador ao lado de uma caixa verde não
+  organiza nada e, em telas estreitas, fica solto à esquerda.
+
+  E "(PDF, baixar)" no rótulo porque estes links **baixam**, enquanto o do Edital abre no navegador.
+  Dois links com a mesma aparência e comportamentos diferentes é o que faz alguém clicar esperando
+  ler e receber um arquivo.
+  {% endcomment %}
+  <ul class="anexos-publicados">
     {% for anexo in anexos %}
-    <li><a class="documento secundaria" href="{% url 'public-anexo' anexo.artefato_id %}">{{ anexo.rotulo }}</a></li>
+    <li><a class="documento secundaria" href="{% url 'public-anexo' anexo.artefato_id %}"
+           download>{{ anexo.rotulo }} <span class="formato">(PDF, baixar)</span></a></li>
     {% endfor %}
   </ul>
 </section>

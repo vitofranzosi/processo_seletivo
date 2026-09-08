@@ -222,6 +222,45 @@ def reordenar(*, actor, edital_id, expected_revision, ordem, correlation_id=""):
         return edital
 
 
+def mover(*, actor, edital_id, expected_revision, anexo_id, direcao, correlation_id=""):
+    """Troca a ordem editorial deste Anexo com a do vizinho (020, FR-007).
+
+    Existe porque `reordenar` pede a lista inteira, e a tela move **um** item — a mesma forma que o
+    Documento Exigido já usa com `↑ Subir` e `↓ Descer`, que funciona por teclado e não depende de
+    arrastar. Sem isto o comando de reordenação não tinha porta nenhuma, e a ordem ficava sendo a
+    ordem de envio.
+    """
+    require_permission(actor, PERMISSAO)
+    with command_context() as now:
+        edital = _edital_em_elaboracao(actor, edital_id, expected_revision)
+        anexos = list(edital.anexos.order_by("order", "id"))
+        posicoes = {str(anexo.id): indice for indice, anexo in enumerate(anexos)}
+        atual = posicoes.get(str(anexo_id))
+        if atual is None:
+            raise DomainError("not_found", "Recurso não encontrado.", 404)
+        destino = atual - 1 if direcao == "subir" else atual + 1
+        if not 0 <= destino < len(anexos):
+            # Já é o primeiro ou o último: nada a fazer, e recusar seria transformar em erro o que
+            # é apenas o fim da lista.
+            return edital
+        anexos[atual], anexos[destino] = anexos[destino], anexos[atual]
+        deslocamento = max(anexo.order for anexo in anexos) + 1
+        for posicao, anexo in enumerate(anexos):
+            AnexoEdital.objects.filter(pk=anexo.pk).update(order=deslocamento + posicao)
+        for posicao, anexo in enumerate(anexos):
+            AnexoEdital.objects.filter(pk=anexo.pk).update(order=posicao + 1)
+        _concluir(
+            edital,
+            actor=actor,
+            now=now,
+            expected_revision=expected_revision,
+            operation="REORDENAR_ANEXOS",
+            reason=f"anexo {anexo_id} para {direcao}",
+            correlation_id=correlation_id,
+        )
+        return edital
+
+
 def remover(*, actor, edital_id, expected_revision, anexo_id, correlation_id=""):
     """Tira o Anexo do Edital em elaboração, e **deixa lacuna** na sequência (FR-008).
 

@@ -54,7 +54,11 @@ def test_a_tela_oferece_o_anexo_com_rotulo_ordem_e_arquivo(client, seletor_ligad
 
     corpo = abrir(client, publicado)
 
-    assert "Anexo 1 — ANEXO 1 — FORMULÁRIO" in corpo
+    assert "ANEXO 1 — FORMULÁRIO" in corpo
+    assert "Anexo 1 — ANEXO 1" not in corpo, (
+        "o rótulo já identifica o anexo; prefixar a posição gagueja e inventa um número que o "
+        "sistema não calcula (POLISH020-004)"
+    )
     assert 'type="file"' in corpo
     assert 'enctype="multipart/form-data"' in corpo
 
@@ -168,3 +172,71 @@ def test_o_ciclo_inteiro_pela_tela_publica_e_os_dois_artefatos_respondem(
     respostas = [client.get(reverse("public-anexo", args=[item])) for item in (antigo, novo.id)]
     assert [resposta.status_code for resposta in respostas] == [200, 200]
     assert respostas[0].content != respostas[1].content
+
+
+def test_o_detalhe_da_retificacao_diz_o_anexo_e_nao_o_hash(
+    client, api_client, seletor_ligado, publicado
+):
+    """POLISH020-002 — é nesta tela que se aprova e se assina, e aprovar exige ler.
+
+    A substituição rendia duas linhas de UUID e SHA-256. O homologador e o publicador não viram a
+    tela de composição: para eles, aquelas duas linhas eram tudo o que havia sobre o ato.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo_inicial = abrir(client, publicado)
+    referencia = campo_do_arquivo(corpo_inicial)
+    base = base_da_composicao(corpo_inicial)
+    client.post(
+        reverse("interface:retificar", args=[publicado.id]),
+        {
+            "base": base,
+            "justificativa": "Formulário corrigido",
+            f"arquivo:{referencia}": SimpleUploadedFile(
+                "retificado.pdf", pdf_de_teste("Z"), content_type="application/pdf"
+            ),
+        },
+    )
+    novo = ArtefatoAnexo.objects.get(congelado_em__isnull=True)
+    client.post(
+        reverse("interface:retificar", args=[publicado.id]),
+        {
+            "base": base,
+            "justificativa": "Formulário corrigido",
+            "confirmar": "1",
+            f"campo:{referencia}": str(novo.id),
+        },
+    )
+
+    detalhe = client.get(
+        reverse("interface:retificacao-detalhe", args=[Retificacao.objects.get().id])
+    ).content.decode()
+
+    assert "ANEXO 1 — FORMULÁRIO" in detalhe, "a linha nomeia o anexo alterado"
+    assert "Arquivo do anexo" in detalhe
+    assert "o arquivo publicado até aqui" in detalhe
+    assert novo.document_hash not in detalhe, "o SHA-256 não é a linguagem desta tela"
+    assert detalhe.count("artifactHash") <= 1, (
+        "a conferência anda junto com o arquivo; como linha própria ela duplicava o mesmo fato"
+    )
+
+
+def test_a_conferencia_diz_qual_arquivo_sai_e_qual_entra(client, seletor_ligado, publicado):
+    """POLISH020-005 — "arquivo anterior → arquivo novo" não deixava notar a troca errada."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo_inicial = abrir(client, publicado)
+    referencia = campo_do_arquivo(corpo_inicial)
+    base = base_da_composicao(corpo_inicial)
+
+    conferencia = client.post(
+        reverse("interface:retificar", args=[publicado.id]),
+        {
+            "base": base,
+            "justificativa": "Formulário corrigido",
+            f"arquivo:{referencia}": SimpleUploadedFile(
+                "autodeclaracao-v2.pdf", pdf_de_teste("Z"), content_type="application/pdf"
+            ),
+        },
+    ).content.decode()
+
+    assert "autodeclaracao-v2.pdf" in conferencia
+    assert "arquivo novo" not in conferencia

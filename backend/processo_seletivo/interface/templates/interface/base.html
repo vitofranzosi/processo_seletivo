@@ -736,6 +736,15 @@ ul.documentos .entrega.ausente{font-style:italic}
 .coincidencia{display:inline-block;margin-left:.35rem;padding:.05rem .4rem;border-radius:4px;
   background:#fff4e5;border:1px solid #d98324;color:#8a4b00;font-size:.75rem;font-weight:600;
   white-space:nowrap}
+
+/* O controle de arquivo da gestão (020). Ficava no desenho do navegador — cinza, em inglês em
+   alguns sistemas — ao lado de uma tela inteira desenhada, enquanto o portal já estilizava o dele.
+   O `input` continua sendo o que envia e o que recebe foco; o que muda é o botão que ele desenha. */
+input[type="file"].arquivo{font:inherit;color:var(--texto);max-width:100%;}
+input[type="file"].arquivo::file-selector-button{font:inherit;font-weight:600;cursor:pointer;
+  color:var(--verde-texto);background:var(--branco);border:1px solid var(--verde-texto);
+  border-radius:6px;padding:.35rem .7rem;margin-right:.6rem}
+input[type="file"].arquivo::file-selector-button:hover{background:var(--fundo)}
 </style>
 </head>
 <body>

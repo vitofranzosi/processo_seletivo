@@ -13,6 +13,7 @@ from django.urls import reverse
 
 from processo_seletivo.editais.models import AnexoEdital, DocumentoExigido
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
+from tests.fixtures.anexos import criar_artefato
 from tests.fixtures.candidato import MARIA, PERFIL_DOCENTE, identificar, pdf
 from tests.fixtures.selecao import DOCUMENTO_DE_TODOS
 
@@ -180,7 +181,84 @@ def test_a_lista_publica_de_anexos_e_navegavel(client, selecao_com_modelo):
     assert 'aria-labelledby="anexos-titulo"' in corpo
     assert '<h2 id="anexos-titulo">Anexos do Edital</h2>' in corpo
     secao = re.search(r'aria-labelledby="anexos-titulo".*?</section>', corpo, re.S).group(0)
-    textos = re.findall(r"<a[^>]*>([^<]+)</a>", secao)
+    textos = [
+        " ".join(re.sub(r"<[^>]+>", " ", bloco).split())
+        for bloco in re.findall(r"<a[^>]*>(.*?)</a>", secao, re.S)
+    ]
     assert textos, "a lista precisa ter links"
-    assert all(texto.strip().startswith("ANEXO") for texto in textos), textos
+    assert all(texto.startswith("ANEXO") for texto in textos), textos
     assert len(set(textos)) == len(textos), "dois links com o mesmo texto não se distinguem"
+    assert all("(PDF, baixar)" in texto for texto in textos), (
+        "o link do anexo baixa, e o do Edital abre: a diferença tem de estar no rótulo"
+    )
+
+
+def test_o_aviso_de_edital_atualizado_nomeia_o_modelo_que_mudou(
+    client, selecao_com_modelo, api_client
+):
+    """POLISH020-010 — o aviso genérico não faz ninguém olhar para o formulário que já preencheu.
+
+    É o caso em que a candidata mais perde trabalho: ela pode ter baixado, preenchido e assinado o
+    anterior. Nomear o requisito e oferecer o novo é o que transforma "houve alteração" em algo
+    acionável.
+    """
+    from tests.fixtures.publicacao import create_retification, publish_retification
+
+    inscricao = inscrever(client, selecao_com_modelo)
+    anexo = AnexoEdital.objects.filter(edital=selecao_com_modelo).order_by("order").first()
+    novo = criar_artefato(marca="Z", nome="autodeclaracao-v2.pdf")
+    publish_retification(
+        api_client,
+        create_retification(
+            api_client,
+            selecao_com_modelo,
+            [
+                {
+                    "targetPath": f"/attachments/id={anexo.id}/artifactId",
+                    "operation": "REPLACE",
+                    "newValue": str(novo.id),
+                },
+                {
+                    "targetPath": f"/attachments/id={anexo.id}/artifactHash",
+                    "operation": "REPLACE",
+                    "newValue": novo.document_hash,
+                },
+            ],
+            suffix="aviso",
+        ),
+        suffix="aviso",
+    )
+
+    revisao = client.get(reverse("portal:revisao", args=[inscricao.id])).content.decode()
+
+    assert "O modelo destes documentos mudou." in revisao
+    assert "Documento de identificação" in revisao
+    assert reverse("public-anexo", args=[novo.id]) in revisao
+
+
+def test_sem_troca_de_modelo_o_aviso_nao_inventa_alteracao(client, selecao_com_modelo, api_client):
+    """Uma Retificação que não toca no anexo não deve alarmar sobre modelo nenhum."""
+    from tests.fixtures.publicacao import create_retification, publish_retification
+
+    inscricao = inscrever(client, selecao_com_modelo)
+    publish_retification(
+        api_client,
+        create_retification(
+            api_client,
+            selecao_com_modelo,
+            [
+                {
+                    "targetPath": "/title",
+                    "operation": "REPLACE",
+                    "newValue": "Edital com título corrigido",
+                }
+            ],
+            suffix="titulo",
+        ),
+        suffix="titulo",
+    )
+
+    revisao = client.get(reverse("portal:revisao", args=[inscricao.id])).content.decode()
+
+    assert "O Edital foi atualizado." in revisao
+    assert "O modelo destes documentos mudou." not in revisao

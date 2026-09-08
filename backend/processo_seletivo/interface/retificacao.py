@@ -200,6 +200,14 @@ def _para_formulario(valor, tipo):
     return str(valor)
 
 
+def _descrever(descricao, identificador):
+    """`autodeclaracao.pdf · 3 KB`, ou uma frase honesta quando não se sabe qual arquivo era."""
+    if not identificador:
+        return "—"
+    dito = descricao(str(identificador)) if descricao else None
+    return dito or "arquivo já publicado"
+
+
 def _grupo(titulo, caminho, item, campos, *, removivel=True, opcoes=None):
     opcoes = opcoes or {}
     return {
@@ -368,7 +376,11 @@ def campos_editaveis(conteudo):
     for anexo in conteudo.get("attachments") or []:
         grupos.append(
             _grupo(
-                f"Anexo {anexo.get('order', '')} — {anexo.get('label', '')}",
+                # **Sem prefixo de posição.** O rótulo já é a identificação editorial completa, e
+                # `Anexo 1 — ANEXO I — …` além de gaguejar introduzia um número que o sistema
+                # calcula — exatamente o que a D-006 decidiu não fazer. Se a ordem mudar, o prefixo
+                # mudaria e passaria a divergir do número impresso dentro do PDF.
+                anexo.get("label") or "Anexo sem rótulo",
                 f"/attachments/id={anexo.get('id', '')}",
                 anexo,
                 CAMPOS_ANEXO,
@@ -627,7 +639,7 @@ def _anexo_completo(valores, resumo_do_artefato):
     }
 
 
-def diferencas(conteudo, dados, *, resumo_do_artefato=None):
+def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefato=None):
     """Alterações Normativas derivadas do que mudou entre o vigente e o que foi submetido.
 
     **A ordem de emissão deixou de ser a garantia de correção.** Cada alteração nomeia a
@@ -640,6 +652,10 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None):
     resumo em branco, para ser recusada na publicação pela própria verificação de integridade.
     Resolver por função faz o resumo ser lido do artefato nas duas fases, **no servidor**, e nunca
     trafegar por campo oculto — que o navegador poderia trocar.
+
+    `descricao_do_artefato` é outra função, pela mesma razão, e serve ao resumo: sem ela a linha
+    dizia "arquivo anterior → arquivo novo", que não permite a ninguém notar que escolheu o arquivo
+    errado — e a conferência existe exatamente para isso (POLISH020-005).
 
     Substituir o artefato emite **duas** alterações — identidade e resumo —, porque o conteúdo
     publicado carrega as duas e uma sem a outra deixaria a versão afirmando bytes que não são os
@@ -695,8 +711,11 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None):
                     {
                         "grupo": grupo["titulo"],
                         "rotulo": campo["rotulo"],
-                        "antes": "arquivo anterior",
-                        "depois": "arquivo novo",
+                        # O nome e o tamanho dos dois, e não "anterior/novo": a conferência é onde
+                        # um arquivo trocado por engano deveria aparecer, e era a única etapa que
+                        # não permitia notá-lo (POLISH020-005).
+                        "antes": _descrever(descricao_do_artefato, anterior),
+                        "depois": _descrever(descricao_do_artefato, novo_valor),
                     }
                 )
                 continue

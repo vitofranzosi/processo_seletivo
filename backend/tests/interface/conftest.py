@@ -85,6 +85,8 @@ CLASSES_SEM_DESENHO = {
     # O mesmo gancho, para o Anexo acrescentado por Retificação: a linha é desenhada por `.linha`,
     # e o nome serve para achá-la em teste e para o htmx trocar a certa (020).
     "anexo-novo",
+    # E para a linha do Anexo já existente, pela mesma razão que `evento` e `secao` estão aqui.
+    "anexo",
     "perfil",
     # Envolve um `.botao`, que é quem tem o peso; a classe nomeia o lugar, não o desenho.
     "proximo-passo",
