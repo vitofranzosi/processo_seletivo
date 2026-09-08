@@ -60,7 +60,9 @@ def test_sem_autenticacao_a_pagina_mostra_o_resultado(client, cenario, publicada
     assert "Resultado preliminar" in corpo
     assert "Classificação final" in corpo
     assert "Candidata 1001" in corpo
-    assert "1001" in corpo, "o protocolo é a identificação pública"
+    # O protocolo **inteiro**, e não os quatro dígitos dele: `"1001" in corpo` passava também
+    # quando a página não o imprimia, porque qualquer UUID sorteado podia conter a sequência.
+    assert cenario["inscricoes"][0].protocolo in corpo, "o protocolo é a identificação pública"
     assert MODALIDADE_NOME in corpo
     assert "90,00" in corpo
     assert publicada.publicado_em.astimezone().strftime("%d/%m/%Y") in corpo

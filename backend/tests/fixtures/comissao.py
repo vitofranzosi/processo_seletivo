@@ -145,6 +145,16 @@ def inscrever(edital, quantos=1, *, primeiro=1, documentos=(), perfil=None):
     O protocolo é o que a tela mostra e o que a trilha guarda, então ele nasce aqui em vez de
     ficar em branco: sem ele, as asserções teriam de falar por UUID.
 
+    **E nasce na forma que o domínio gera** — `INS-<ano>-…`, como `protocolo.gerar` (FR-062) —, com
+    o número do candidato no lugar do sorteio para que a asserção que falha diga de quem ela fala.
+    Um protocolo de quatro dígitos nus, que é o que esta fixture gravava, é indistinguível de ruído
+    hexadecimal: todo dígito decimal também é dígito hex, e a página é cheia de UUID sorteado. Uma
+    asserção `outra.protocolo not in corpo` acusava vazamento entre candidatos quando o sorteio
+    calhava de conter `0801` — medido em ~1 execução em 1100, e foi o que derrubou
+    `test_nada_de_terceiro_atravessa` uma única vez numa suíte completa. O prefixo é o que torna a
+    busca por substring honesta; `protocolos_listados`, em `tests/interface/conftest.py`, contornava
+    o mesmo defeito lendo a coluna da tabela.
+
     `perfil` existe porque o Perfil é derivado do `seed` do Edital, e o padrão aqui é o do `seed`
     zero: um cenário que publica dois Editais no mesmo teste — como os da 017 fazem para exercitar
     escopo alheio — precisa de `seed` próprio, e a inscrição tem de nascer no Perfil **daquele**
@@ -177,7 +187,7 @@ def inscrever(edital, quantos=1, *, primeiro=1, documentos=(), perfil=None):
             anexar(inscricao, requirement_id)
         Inscricao.objects.filter(pk=inscricao.pk).update(
             status=Inscricao.Status.SUBMETIDA,
-            protocolo=f"{numero:04d}",
+            protocolo=f"INS-{agora.year}-{numero:04d}",
             submitted_at=agora,
             versao_aceita=versao,
             declaracoes_aceitas_em=agora,
