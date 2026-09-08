@@ -85,25 +85,40 @@
         <input type="hidden" name="acao" value="mover">
         <input type="hidden" name="anexo" value="{{ linha.anexo.id }}">
       </form>
-      <p class="acoes-linha">
+      {% comment %}
+      Duas famílias de ação numa fileira só, separadas pelo que fazem: à esquerda o que grava o que
+      se acabou de editar acima — e isso precisa de verbo —; à direita, em símbolo, o que se faz com
+      a **linha**, no mesmo vocabulário do Evento, da Etapa e do Documento exigido.
+
+      Antes eram duas fileiras, e as quatro ações vinham em fila indiana: "Salvar rótulo",
+      "Substituir o arquivo", "↑ Subir", "↓ Descer" — as duas primeiras sobre o conteúdo, as duas
+      últimas sobre a posição, sem nada dizendo que eram coisas diferentes. "Remover este anexo"
+      ficava sozinho numa terceira linha.
+
+      `perigoso`, e não `perigo`: aqui remover apaga o arquivo no servidor, e o próximo passo seria
+      procurar o PDF de novo. O vermelho preenchido no hover é a diferença entre isto e descartar
+      uma linha de formulário que ainda não foi enviada — e `data-confirmar` continua perguntando,
+      nomeando qual anexo.
+
+      Subir e Descer, e não arrastar: funciona por teclado, e é o que a etapa Inscrição já usa. Nas
+      pontas o botão chega desabilitado do servidor, e `.acao:disabled` o mostra assim.
+      {% endcomment %}
+      <p class="acoes-do-anexo">
         <button class="acao" type="submit" form="rotular-{{ linha.anexo.id }}">Salvar rótulo</button>
         <button class="acao" type="submit" form="trocar-{{ linha.anexo.id }}">Substituir o arquivo</button>
-        {% comment %}
-        Subir e Descer, e não arrastar: funciona por teclado, e é o que a etapa Inscrição já usa.
-        {% endcomment %}
-        <button class="acao" type="submit" form="mover-{{ linha.anexo.id }}" name="direcao" value="subir"
-                {% if linha.posicao == 1 %}disabled{% endif %}>↑ Subir</button>
-        <button class="acao" type="submit" form="mover-{{ linha.anexo.id }}" name="direcao" value="descer"
-                {% if linha.posicao == linha.total %}disabled{% endif %}>↓ Descer</button>
-      </p>
-      <p class="remover">
-        {% comment %}
-        Confirmação porque o ato é irreversível: remover apaga o arquivo, e o próximo passo seria
-        procurar o PDF de novo. O rótulo nomeia o que se remove, para que a confirmação não pergunte
-        sobre "um anexo" qualquer.
-        {% endcomment %}
-        <button class="acao perigoso" type="submit" form="remover-{{ linha.anexo.id }}"
-                data-confirmar="Remover “{{ linha.anexo.rotulo|default:'anexo sem rótulo' }}” do Edital? O arquivo é apagado e precisará ser enviado de novo.">Remover este anexo</button>
+        <span class="acoes-da-linha"><span class="grupo">
+          <button class="acao simbolo" type="submit" form="mover-{{ linha.anexo.id }}"
+                  name="direcao" value="subir" aria-label="Subir" title="Subir"
+                  {% if linha.posicao == 1 %}disabled{% endif %}><span aria-hidden="true">↑</span></button>
+          <button class="acao simbolo" type="submit" form="mover-{{ linha.anexo.id }}"
+                  name="direcao" value="descer" aria-label="Descer" title="Descer"
+                  {% if linha.posicao == linha.total %}disabled{% endif %}><span aria-hidden="true">↓</span></button>
+          <button class="acao simbolo perigoso" type="submit" form="remover-{{ linha.anexo.id }}"
+                  aria-label="Remover este anexo" title="Remover este anexo"
+                  data-confirmar="Remover “{{ linha.anexo.rotulo|default:'anexo sem rótulo' }}” do Edital? O arquivo é apagado e precisará ser enviado de novo.">
+            {% include "interface/_lixeira.html" %}
+          </button>
+        </span></span>
       </p>
       <form method="post" action="{% url 'interface:anexos' edital.id %}" id="remover-{{ linha.anexo.id }}">
         {% csrf_token %}

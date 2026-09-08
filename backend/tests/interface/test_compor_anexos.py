@@ -6,6 +6,8 @@ próprio — por isso a etapa não posta no POST genérico do assistente, e por 
 falha do rascunho precisam de teste explícito.
 """
 
+import re
+
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
@@ -163,6 +165,41 @@ def test_cada_anexo_e_um_item_com_posicao_e_acao_nomeada(client, seletor_ligado,
     assert "Remover “ANEXO 1 — FORMULÁRIO” do Edital?" in corpo, (
         "a confirmação precisa nomear o que remove"
     )
+
+
+def test_o_anexo_move_e_remove_por_simbolo_e_a_ponta_chega_inerte(client, seletor_ligado, edital):
+    """As três ações da linha em símbolo, como no Evento — mas por `submit`, e não por HTMX.
+
+    Duas coisas se perdem calado numa troca dessas. O nome, se `aria-label` faltar: quem usa leitor
+    de tela recebe "botão" e nada mais, porque a seta não é texto. E o estado da ponta, que aqui é
+    do **servidor** — `.acao:disabled` desenha o botão inerte, mas quem decide que ele é inerte é o
+    `{% if linha.posicao == 1 %}`, e com ele fora o primeiro anexo ofereceria subir para lugar
+    nenhum.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    for posicao in range(3):
+        acao(
+            client,
+            edital,
+            acao="anexar",
+            rotulo=f"ANEXO {posicao + 1} — FORMULÁRIO",
+            arquivo=arquivo(chr(ord("A") + posicao)),
+        )
+
+    corpo = client.get(
+        reverse("interface:compor-etapa", args=[edital.id, "anexos"])
+    ).content.decode()
+
+    for nome in ("Subir", "Descer", "Remover este anexo"):
+        assert f'aria-label="{nome}"' in corpo, nome
+
+    def inertes(direcao):
+        botoes = re.findall(r'<button[^>]*value="' + direcao + r'"[^>]*>', corpo, re.S)
+        assert len(botoes) == 3, botoes
+        return [b for b in botoes if "disabled" in b]
+
+    assert len(inertes("subir")) == 1, "só o primeiro anexo não tem para onde subir"
+    assert len(inertes("descer")) == 1, "só o último anexo não tem para onde descer"
 
 
 def test_a_lista_diz_de_qual_requisito_o_anexo_e_modelo(client, seletor_ligado, edital):
