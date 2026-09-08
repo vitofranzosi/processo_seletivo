@@ -311,14 +311,10 @@ def test_a_ordem_e_sugerida_e_nao_imposta(como_joao, edital_com_documentos, etap
     CSS. Afirmar sobre a resposta inteira mediria a folha, e uma regra de desenho não é um
     controle desabilitado nesta tela.
     """
-    corpo = re.sub(
-        r"<style>.*?</style>",
-        "",
-        como_joao.get(
-            reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
-        ).content.decode(),
-        flags=re.S,
+    mesa = reverse(
+        "interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id]
     )
+    corpo = re.sub(r"<style>.*?</style>", "", como_joao.get(mesa).content.decode(), flags=re.S)
 
     assert "Concluir avaliação" in corpo
     assert "disabled" not in corpo
