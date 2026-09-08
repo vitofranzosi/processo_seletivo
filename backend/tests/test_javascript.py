@@ -42,6 +42,11 @@ def test_scripts_da_interface_se_comportam_como_especificado():
     # com testes próprios quebrava esta linha — a suíte de JavaScript acusava regressão onde
     # tinha havido acréscimo, e a correção era sempre a mesma: subir o número. O que este teste
     # precisa saber é que o glob encontrou alguma coisa.
-    executados = re.search(r"^ℹ tests (\d+)$", resultado.stdout, re.M)
+    #
+    # As **duas** formas do resumo, porque o runner escolhe o relator pelo destino da saída: no
+    # terminal ele escreve `ℹ tests 53`; num `pipe` — que é como este teste o chama, e como a CI
+    # roda tudo — escreve TAP, `# tests 53` e indentado. Casar só a primeira passava aqui e
+    # reprovava lá, que foi exatamente o que aconteceu.
+    executados = [int(n) for n in re.findall(r"^\s*(?:ℹ|#) tests (\d+)$", resultado.stdout, re.M)]
     assert executados, resultado.stdout
-    assert int(executados.group(1)) > 0, "o glob não encontrou nenhum teste de JavaScript"
+    assert max(executados) > 0, "o glob não encontrou nenhum teste de JavaScript"
