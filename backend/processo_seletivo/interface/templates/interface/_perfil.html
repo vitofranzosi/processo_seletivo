@@ -60,25 +60,47 @@
              {% if recusado %}aria-invalid="true"{% endif %}>
       {% if recusado %}<span class="recusa" role="alert" id="recusa-perfil-{{ indice }}-immediateVacancies">{{ recusado }}</span>{% endif %}
     </p>
-    <p class="campo">
-      <label for="perfil-{{ indice }}-reserveType">Cadastro Reserva</label>
-      <select id="perfil-{{ indice }}-reserveType" name="perfil-{{ indice }}-reserveType">
-        {% for valor, rotulo in reservas %}
-        <option value="{{ valor }}" {% if perfil.reserveType == valor %}selected{% endif %}>{{ rotulo }}</option>
-        {% endfor %}
-      </select>
-    </p>
-    <p class="campo curto">
-      <label for="perfil-{{ indice }}-reserveLimit">Limite da reserva</label>
-      {% recusa_de recusas "perfil" indice "reserveLimit" as recusado %}
-      <input type="number" min="0" id="perfil-{{ indice }}-reserveLimit"
-             name="perfil-{{ indice }}-reserveLimit" value="{{ perfil.reserveLimit|default:'' }}"
-             aria-describedby="ajuda-reserva-{{ indice }}{% if recusado %} recusa-perfil-{{ indice }}-reserveLimit{% endif %}"
-             {% if recusado %}aria-invalid="true"{% endif %}>
-      {% if recusado %}<span class="recusa" role="alert" id="recusa-perfil-{{ indice }}-reserveLimit">{{ recusado }}</span>{% endif %}
-      <span class="ajuda" id="ajuda-reserva-{{ indice }}">Só para reserva limitada.</span>
-    </p>
   </div>
+  {% comment %}
+  A mesma escolha que governa um campo, e o campo dentro da opção que o pede.
+
+  O limite só existe na reserva limitada: `validate_profile` recusa limite na inexistente e na
+  ilimitada, e o **exige** na limitada. `ler_perfis` já descartava o que não fosse limitado — a
+  metade que faltava era a da tela, que oferecia o campo nas três e se explicava numa frase de
+  ajuda, "Só para reserva limitada.", embaixo dele.
+
+  As três viraram opções, e não continuaram num `select`, porque um `select` não tem onde aninhar o
+  campo que a escolha pede. É a razão que o marco já registrou para a janela recursal: quando a
+  escolha governa outro campo, ela precisa de lugar para ele.
+
+  O rótulo de cada uma continua vindo de `forms.RESERVA`, num lugar só.
+  {% endcomment %}
+  <fieldset class="opcoes">
+    <legend>Cadastro Reserva</legend>
+    {% for valor, rotulo in reservas %}
+    <p class="opcao">
+      <input type="radio" id="perfil-{{ indice }}-reserveType-{{ valor }}"
+             name="perfil-{{ indice }}-reserveType" value="{{ valor }}"
+             {% if perfil.reserveType == valor or not perfil.reserveType and valor == "NONE" %}checked{% endif %}>
+      <label for="perfil-{{ indice }}-reserveType-{{ valor }}">{{ rotulo }}</label>
+    </p>
+    {% if valor == "LIMITED" %}
+    <div class="campos dependentes so-limitada">
+      <p class="campo curto">
+        <label for="perfil-{{ indice }}-reserveLimit">Limite da reserva</label>
+        {% recusa_de recusas "perfil" indice "reserveLimit" as recusado %}
+        <input type="number" min="0" id="perfil-{{ indice }}-reserveLimit"
+               name="perfil-{{ indice }}-reserveLimit" value="{{ perfil.reserveLimit|default:'' }}"
+               aria-describedby="ajuda-reserva-{{ indice }}{% if recusado %} recusa-perfil-{{ indice }}-reserveLimit{% endif %}"
+               {% if recusado %}aria-invalid="true"{% endif %}>
+        {% if recusado %}<span class="recusa" role="alert" id="recusa-perfil-{{ indice }}-reserveLimit">{{ recusado }}</span>{% endif %}
+        <span class="ajuda" id="ajuda-reserva-{{ indice }}">Quantas pessoas o cadastro comporta.
+          O Edital publica "cadastro reserva limitado em 6".</span>
+      </p>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </fieldset>
   <div class="campos">
     <p class="campo largo">
       <label for="perfil-{{ indice }}-requirements">Requisitos</label>

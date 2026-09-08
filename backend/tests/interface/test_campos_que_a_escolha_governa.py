@@ -11,7 +11,12 @@ No **marco classificatório**, `_janela_recursal` descarta o prazo de quem não 
 formulário mostrava "Prazo, em dias" habilitado ao lado das três opções, inclusive sob "Não declarar
 nada sobre recurso". Quem digitasse 5 ali salvava, não recebia erro nenhum, e o prazo não existia.
 
-Um recusava tarde; o outro não recusava nunca. O que estes testes prendem é a divisão do trabalho:
+No **Perfil de Vaga**, `validate_profile` recusa limite na reserva inexistente e na ilimitada, e o
+exige na limitada. `ler_perfis` já descartava o que não fosse limitado — faltava a metade da tela,
+que oferecia "Limite da reserva" nas três e se explicava numa frase: "Só para reserva limitada."
+
+Um recusava tarde; o outro não recusava nunca; o terceiro descartava sem dizer. O que estes
+testes prendem é a divisão do trabalho:
 **a folha esconde, o servidor descarta.** Esconder sozinho não bastaria, porque campo escondido
 continua sendo enviado e porque envio forjado não passa por tela nenhuma.
 """
@@ -154,6 +159,43 @@ def test_as_opcoes_nao_usam_mais_a_classe_da_marca_de_filtrar(client, com_etapas
     assert 'class="campo escolha"' not in marco_de(client, com_etapas)
 
 
+def test_o_limite_mora_dentro_da_reserva_que_o_admite(client, elaborando):
+    corpo = client.get(reverse("interface:fragmento-perfil"), {"indice": "0"}).content.decode()
+
+    limitada = bloco(corpo, "so-limitada")
+    assert 'name="perfil-0-reserveLimit"' in limitada
+    # E entre a opção que o pede e a que não o admite, na ordem em que se lê.
+    assert corpo.index('value="LIMITED"') < corpo.index('class="campos dependentes so-limitada"')
+    assert corpo.index('class="campos dependentes so-limitada"') < corpo.index('value="UNLIMITED"')
+
+
+def test_a_reserva_deixou_de_ser_um_select_sem_onde_aninhar(client, elaborando):
+    """`select` não tem lugar para o campo que a escolha pede; as três viraram opções."""
+    corpo = client.get(reverse("interface:fragmento-perfil"), {"indice": "0"}).content.decode()
+
+    assert 'name="perfil-0-reserveType"' in corpo
+    assert '<select id="perfil-0-reserveType"' not in corpo
+    for valor in ("NONE", "LIMITED", "UNLIMITED"):
+        assert f'id="perfil-0-reserveType-{valor}"' in corpo
+        assert f'for="perfil-0-reserveType-{valor}"' in corpo
+
+
+def test_a_reserva_nasce_com_uma_opcao_marcada(client, elaborando):
+    """Sem marcada, a folha não teria o que esconder — e o limite apareceria fora da reserva."""
+    corpo = client.get(reverse("interface:fragmento-perfil"), {"indice": "0"}).content.decode()
+
+    opcoes = re.findall(r'<input type="radio"[^>]*name="perfil-0-reserveType"[^>]*>', corpo, re.S)
+    assert len(opcoes) == 3
+    marcadas = [re.search(r'value="(\w+)"', tag).group(1) for tag in opcoes if "checked" in tag]
+    assert marcadas == ["NONE"]
+
+
+def test_a_ajuda_do_limite_deixou_de_pedir_desculpa_pela_propria_posicao(client, elaborando):
+    corpo = client.get(reverse("interface:fragmento-perfil"), {"indice": "0"}).content.decode()
+
+    assert "Só para reserva limitada" not in corpo
+
+
 # ------------------------------------------------ a folha esconde o que a escolha torna inaplicável
 
 
@@ -170,6 +212,7 @@ def folha(client, seletor_ligado):
         ('input[name$="-forma"][value="DECISORIA"]:checked', ".so-pontuada"),
         ('input[name$="-forma"][value="PONTUADA"]:checked', ".so-decisoria"),
         ('input[name$="-appealDeclaration"]:checked:not([value="admite"])', ".so-admite"),
+        ('input[name$="-reserveType"]:checked:not([value="LIMITED"])', ".so-limitada"),
     ],
 )
 def test_a_folha_esconde_o_que_a_escolha_marcada_torna_inaplicavel(folha, marcada, escondido):
@@ -182,7 +225,7 @@ def test_a_folha_nunca_esconde_por_padrao(folha):
     Uma regra `\\.so-admite{display:none}` solta inverteria isso: o campo sumiria para sempre em
     navegador sem suporte, e a opção que o pede não teria como trazê-lo de volta.
     """
-    for classe in ("so-pontuada", "so-decisoria", "so-admite"):
+    for classe in ("so-pontuada", "so-decisoria", "so-admite", "so-limitada"):
         # `\n` na classe de caracteres, e não só `^`: sem ela a guarda passava por cima de uma
         # regra escrita em linha própria — que é exatamente como alguém a escreveria.
         assert not re.search(rf"(?:^|[\n,;\}}])\s*\.{classe}\s*\{{", folha), classe

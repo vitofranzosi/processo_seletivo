@@ -750,13 +750,18 @@ fieldset.opcoes>.ajuda{margin:0 0 .6rem}
 .opcoes .opcao label{margin:0;font-weight:400;font-size:.9375rem}
 .opcoes .dependentes{margin:0 0 .9rem 1.65rem}
 .opcoes .dependentes .campo{margin-bottom:0}
+/* Sozinho na linha, um `.curto` prende a ajuda numa coluna de 150 px e a quebra em quatro linhas.
+   O `input` continua curto — `.campo.curto>input` o limita —; quem cresce é a coluna, e a ajuda
+   pára na medida de leitura como qualquer outra. */
+.opcoes .dependentes .campo.curto:only-child{flex-basis:auto}
 
 /* O que a opção marcada torna inaplicável sai da tela. A regra é sempre "esconde **quando** outra
    opção está marcada", e nunca "esconde por padrão": onde `:has` não existir, tudo aparece como
    antes — e o servidor, que é quem descarta de fato, continua correto de qualquer modo. */
 fieldset.etapa:has(input[name$="-forma"][value="DECISORIA"]:checked) .so-pontuada,
 fieldset.etapa:has(input[name$="-forma"][value="PONTUADA"]:checked) .so-decisoria,
-fieldset.marco:has(input[name$="-appealDeclaration"]:checked:not([value="admite"])) .so-admite{
+fieldset.marco:has(input[name$="-appealDeclaration"]:checked:not([value="admite"])) .so-admite,
+fieldset.perfil:has(input[name$="-reserveType"]:checked:not([value="LIMITED"])) .so-limitada{
   display:none}
 </style>
 </head>
