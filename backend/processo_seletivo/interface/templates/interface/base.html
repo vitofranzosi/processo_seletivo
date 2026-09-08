@@ -252,6 +252,24 @@ fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);p
    exigido do opcional — descobria-se falhando. O asterisco é `aria-hidden` porque quem usa
    leitor de tela recebe a informação por `aria-required`, e ouvir "asterisco" seria ruído. */
 .obrigatorio{color:var(--vermelho);font-weight:700;margin-left:.15rem}
+/* A marca de opcional é o contrário do asterisco, e por isso não grita: ela vale para quem se
+   pergunta "posso deixar em branco?" e não deve competir com o rótulo que a carrega. Anda em par
+   com o `placeholder`, que diz **o que acontece** se ficar em branco. */
+.opcional{font-weight:400;color:var(--texto-fraco);font-size:.9em}
+
+/* A ajuda da lista, uma só, no lugar de uma por cartão. Fechada por padrão: quem já compôs um
+   Edital não a relê, e quem precisa dela acha pelo nome. `details` abre por teclado e por toque —
+   é o mesmo elemento que a Comissão e o portal já usam. */
+.como-preencher{margin:0 0 1rem;max-width:var(--leitura)}
+.como-preencher>summary{display:inline-block;cursor:pointer;font-size:.8125rem;font-weight:600;
+  color:var(--verde-texto);padding:.3rem .6rem;border:1px solid var(--borda);border-radius:4px}
+.como-preencher>summary:hover{border-color:var(--verde-texto)}
+.como-preencher[open]>summary{margin-bottom:.6rem}
+.como-preencher dl{margin:0;padding:.75rem 1rem;background:var(--branco);
+  border:1px solid var(--borda);border-radius:6px}
+.como-preencher dt{font-size:.8125rem;font-weight:600;margin-bottom:.15rem}
+.como-preencher dd{margin:0 0 .6rem;font-size:.875rem;color:var(--texto-fraco)}
+.como-preencher dd:last-child{margin-bottom:0}
 .legenda-obrigatorio{font-size:.8125rem;color:var(--texto-fraco);margin:0 0 1rem}
 /* Resumo de erros ancorado (FR-033): o resumo sozinho obriga a procurar; a marca junto do
    campo sozinha obriga a rolar até achar. */
@@ -800,7 +818,11 @@ fieldset.opcoes{border:none;padding:0;margin:0 0 .9rem;min-width:0}
 /* Quando a escolha divide a linha com um campo — "Vagas imediatas" ao lado de "Cadastro Reserva",
    que são as duas metades da mesma pergunta —, ela precisa de base própria: sem `flex`, o
    `fieldset` entrava como item de largura automática e empurrava o vizinho. */
-.campos>fieldset.opcoes{flex:1 1 18rem}
+/* 22rem, e não 18: a base precisa comportar os **campos que a opção pede**, e não só as opções.
+   Com a marca de opcional no rótulo, os dois campos de pontuação passaram a pedir 355 px
+   lado a lado e o grupo oferecia 349 — os seis px que faltavam empilhavam os dois e faziam o
+   cartão crescer, apesar de a ajuda visível ter ido embora. */
+.campos>fieldset.opcoes{flex:1 1 22rem}
 fieldset.opcoes>legend{font-size:.8125rem;font-weight:600;color:var(--texto);padding:0;
   margin-bottom:.25rem}
 fieldset.opcoes>.ajuda{margin:0 0 .6rem}

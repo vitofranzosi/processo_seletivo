@@ -13,8 +13,34 @@
     </div>
     {% endif %}
     <p class="ajuda">As fases pelas quais os candidatos passam, na ordem em que ocorrem. Valem para
-      todos os Perfis deste Edital. Vincular uma Etapa a um Evento do Cronograma traz as datas de
-      lá — não há data para digitar aqui.</p>
+      todos os Perfis deste Edital.</p>
+    {% comment %}
+    Uma ajuda para a lista, e não uma por cartão. As explicações conceituais não mudam de uma Etapa
+    para a outra: repetidas em cada cartão, disputavam a leitura com os dados, e um Edital de quatro
+    Etapas as imprimia quatro vezes. A frase do Evento, em particular, repetia palavra por palavra a
+    que abre esta seção.
+
+    `details`, e não dica sobre ícone: abre por teclado e por toque, não depende de ponteiro, e é o
+    mesmo elemento que a Comissão e o portal já usam. Fechado por padrão porque quem já compôs um
+    Edital não precisa relê-lo — e quem precisa acha pelo nome, que diz o que faz.
+
+    O que **não** mora aqui é o que só se descobre errando: o significado de deixar um campo vazio
+    fica no campo, como marca de opcional e como texto do próprio controle.
+    {% endcomment %}
+    <details class="como-preencher">
+      <summary>Como preencher estes campos</summary>
+      <dl>
+        <dt>Como esta Etapa é concluída</dt>
+        <dd>A pontuada publica nota e não publica rótulos; a decisória publica os rótulos do
+          resultado e não publica nota.</dd>
+        <dt>Rótulos do resultado</dt>
+        <dd>São o que o candidato lê no Edital e no resultado — "Deferido/Indeferido",
+          "Apto/Inapto". Só a Etapa decisória os publica.</dd>
+        <dt>Evento do Cronograma</dt>
+        <dd>Vincular a Etapa a um Evento traz as datas de lá; não há data para digitar aqui. Sem
+          vínculo, a Etapa não publica data.</dd>
+      </dl>
+    </details>
     <p class="contadores" data-contador="#etapas-avaliacao" data-item=".etapa" data-singular="Etapa" data-plural="Etapas">
       <span><strong>{{ etapas_avaliacao|length }}</strong> Etapa{{ etapas_avaliacao|length|pluralize:"s" }}</span>
     </p>
