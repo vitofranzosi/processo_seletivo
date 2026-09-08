@@ -9,9 +9,24 @@
   </div>
   {% endif %}
   <p class="ajuda">Os documentos em forma própria que o Edital publica — o formulário que o
-    candidato baixa, preenche, assina e devolve. Cada anexo é um PDF, e o rótulo é o nome inteiro
-    com que o Edital o cita, como <strong>ANEXO I — REQUERIMENTO DE INSCRIÇÃO</strong>. O sistema
-    não numera nem renumera: o número, se houver, está dentro do rótulo que você escreve.</p>
+    candidato baixa, preenche, assina e devolve.</p>
+  {% comment %}
+  A convenção do rótulo é a mesma para todo anexo, e a de substituição se repetia dentro de cada
+  cartão: um Edital com onze anexos — e a amostra real chega a isso — imprimia a segunda onze
+  vezes. Aqui elas vivem uma vez, e cada campo continua apontando para a sua descrição.
+  {% endcomment %}
+  <details class="como-preencher">
+    <summary>Como preencher estes campos</summary>
+    <dl>
+      <dt>Rótulo</dt>
+      <dd>O nome inteiro com que o Edital cita o anexo, como
+        <strong>ANEXO I — REQUERIMENTO DE INSCRIÇÃO</strong>. O sistema não numera nem renumera: o
+        número, se houver, está dentro do rótulo que você escreve.</dd>
+      <dt>Arquivo</dt>
+      <dd>Cada anexo é um PDF. Escolher um arquivo num anexo que já existe substitui o atual — não
+        há uma segunda versão guardada enquanto o Edital está em elaboração.</dd>
+    </dl>
+  </details>
 
   {% comment %}
   A recusa vem da sessão, e não do endereço: mensagem de erro não é conteúdo de URL, e pela sessão
@@ -76,8 +91,10 @@
         <p class="campo largo">
           <label for="troca-{{ linha.anexo.id }}">Trocar o arquivo</label>
           <input id="troca-{{ linha.anexo.id }}" class="arquivo" name="arquivo" type="file"
+                 aria-describedby="ajuda-troca-{{ linha.anexo.id }}"
                  accept="application/pdf">
-          <span class="ajuda">Somente PDF. O arquivo atual é substituído.</span>
+          <span class="oculto" id="ajuda-troca-{{ linha.anexo.id }}">Somente PDF. O arquivo atual
+            é substituído.</span>
         </p>
       </form>
       <form method="post" action="{% url 'interface:anexos' edital.id %}" id="mover-{{ linha.anexo.id }}">
@@ -144,16 +161,18 @@
         <label for="novo-rotulo">Rótulo</label>
         <input id="novo-rotulo" name="rotulo" type="text" maxlength="255"
                value="{{ recusa_de_anexo.rotulo|default:'' }}"
-               placeholder="ANEXO I — REQUERIMENTO DE INSCRIÇÃO"
-               {% if recusa_de_anexo %}aria-describedby="anexos-recusa"{% endif %}>
-        <span class="ajuda">O nome inteiro com que o Edital cita este anexo.</span>
+               placeholder="ex.: ANEXO I — REQUERIMENTO DE INSCRIÇÃO"
+               aria-describedby="ajuda-novo-rotulo{% if recusa_de_anexo %} anexos-recusa{% endif %}">
+        <span class="oculto" id="ajuda-novo-rotulo">O nome inteiro com que o Edital cita este
+          anexo.</span>
       </p>
       <p class="campo largo">
         <label for="novo-arquivo">Arquivo <span class="obrigatorio" aria-hidden="true">*</span></label>
         <input id="novo-arquivo" class="arquivo" name="arquivo" type="file"
                accept="application/pdf" required
-               {% if recusa_de_anexo %}aria-invalid="true" aria-describedby="anexos-recusa"{% endif %}>
-        <span class="ajuda">Somente PDF.</span>
+               aria-describedby="ajuda-novo-arquivo{% if recusa_de_anexo %} anexos-recusa{% endif %}"
+               {% if recusa_de_anexo %}aria-invalid="true"{% endif %}>
+        <span class="oculto" id="ajuda-novo-arquivo">Somente PDF.</span>
       </p>
       <p class="acoes-linha"><button class="botao" type="submit">Acrescentar anexo</button></p>
     </fieldset>
