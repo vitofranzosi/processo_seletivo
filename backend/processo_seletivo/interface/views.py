@@ -5,10 +5,12 @@ A decisão de autorização continua no backend: ocultar uma ação na tela é c
 fronteira de segurança (FR-002).
 """
 
+import hashlib
 import secrets
 from urllib.parse import quote
 from uuid import UUID, uuid4
 
+from django.conf import settings
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -76,6 +78,7 @@ from processo_seletivo.editais.application import anexos as anexos_command
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.application.identificacao import update_edital_identification
 from processo_seletivo.editais.domain.validation import validate_for_publication
+from processo_seletivo.editais.models.anexos import ArtefatoAnexo
 from processo_seletivo.editais.models.perfis import MarcoClassificatorio
 from processo_seletivo.inscricoes.application.consulta import (
     CONSULTAR,
@@ -128,6 +131,7 @@ from processo_seletivo.resultados.application import selectors as resultado_sele
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
+from processo_seletivo.shared.arquivos import aceitar
 from processo_seletivo.shared.http import marcar_como_privada
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
@@ -1552,6 +1556,43 @@ def praticar_ato(request, edital_id, acao):
     return redirect(f"{reverse('interface:detalhe', args=[edital.id])}?ato={ato.chave}")
 
 
+def _artefatos_enviados(request, ator, edital):
+    """Grava os arquivos que a Retificação envia, e devolve o POST com as identidades no lugar.
+
+    **Os bytes entram antes do ato, e não dentro dele** (020, FR-035). O artefato nasce
+    descongelado, como o de elaboração, e só a publicação da Retificação o torna público e
+    imutável — o que também significa que uma Retificação abandonada deixa um artefato que
+    ninguém alcança e que continua apagável, exatamente como as Alterações dela.
+
+    A gravação acontece na fase de conferência porque é ela que produz o resumo "antes e depois":
+    sem o artefato gravado não há resumo a mostrar, e pedir o arquivo de novo na confirmação faria
+    a pessoa escolhê-lo duas vezes.
+    """
+    dados = request.POST.copy()
+    resumos = {}
+    for chave, arquivo in request.FILES.items():
+        if not chave.startswith("arquivo:") or not arquivo:
+            continue
+        aceitar(
+            arquivo,
+            nome_original=arquivo.name,
+            limite_em_bytes=settings.EDITAL_ANEXOS_LIMITE_BYTES,
+        )
+        arquivo.seek(0)
+        conteudo = arquivo.read()
+        artefato = ArtefatoAnexo.objects.create(
+            bytes=conteudo,
+            tamanho=len(conteudo),
+            document_hash=hashlib.sha256(conteudo).hexdigest(),
+            nome_original=arquivo.name[:255],
+            enviado_por=ator.subject,
+            enviado_em=timezone.now(),
+        )
+        dados[f"campo:{chave.removeprefix('arquivo:')}"] = str(artefato.id)
+        resumos[str(artefato.id)] = artefato.document_hash
+    return dados, resumos
+
+
 def _executar(ato, request, ator, edital):
     argumentos = {
         "actor": ator,
@@ -1656,7 +1697,10 @@ def retificar(request, edital_id):
             erros.append("Você não tem a permissão para elaborar Retificações.")
         else:
             try:
-                alteracoes, resumo = retificacao_ui.diferencas(projecao, request.POST)
+                dados, resumos = _artefatos_enviados(request, ator, edital)
+                alteracoes, resumo = retificacao_ui.diferencas(
+                    projecao, dados, resumos_de_artefato=resumos
+                )
                 if not alteracoes:
                     erros.append(
                         "Nenhum campo foi alterado. Uma Retificação precisa mudar algum "

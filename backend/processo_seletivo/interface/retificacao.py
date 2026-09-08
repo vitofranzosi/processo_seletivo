@@ -38,6 +38,11 @@ DECIMAL, TEXTO_LONGO, BOOLEANO = "decimal", "texto_longo", "booleano"
 # (009, FR-009). Digitar UUID à mão faria um erro de digitação mudar em silêncio quem precisa
 # enviar o quê — que é o que `documentos.aplicaveis` decide a partir destes dois campos.
 REFERENCIA = "referencia"
+# O Anexo trouxe o primeiro campo que **não é digitado nem escolhido**: o artefato é um arquivo, e
+# o que a Alteração carrega é a identidade dele mais o resumo — os bytes nunca viajam dentro do ato
+# (020, FR-035). O campo aparece como `<input type="file">`, e o valor que atravessa as duas fases
+# do formulário é a identidade do artefato que o envio criou.
+ARQUIVO = "arquivo"
 
 # (sufixo do caminho, rótulo, tipo) — aplicado a cada Perfil e a cada Evento.
 CAMPOS_PERFIL = [
@@ -102,6 +107,14 @@ CAMPOS_ETAPA = [
 # Só o conteúdo. O catálogo de seções é fixo: título, ordem, tipo e origem divergentes são
 # recusados pela verificação de topologia, e uma seção gerada nem campo de conteúdo tem.
 CAMPOS_SECAO = [("content", "Texto da seção", TEXTO_LONGO)]
+# O Anexo da `020`. Rótulo e ordem editorial são escalares; o artefato é arquivo. Não há campo de
+# `artifactHash` para digitar: ele é derivado do artefato enviado, e oferecê-lo faria a tela pedir
+# que alguém copiasse um SHA-256 à mão — e permitiria declarar um resumo que não é o dos bytes.
+CAMPOS_ANEXO = [
+    ("label", "Rótulo", TEXTO),
+    ("order", "Ordem editorial", INTEIRO),
+    ("artifactId", "Arquivo do anexo (PDF)", ARQUIVO),
+]
 # E2E-004. `key` fica de fora de propósito: é a identificação estável com que a inscrição já
 # submetida nomeia o arquivo enviado, e trocá-la depois de publicado desligaria o documento do que
 # os candidatos mandaram. O que se corrige aqui é o que a pessoa lê e a quem o documento se aplica.
@@ -331,6 +344,19 @@ def campos_editaveis(conteudo):
             )
         )
 
+    for anexo in conteudo.get("attachments") or []:
+        grupos.append(
+            _grupo(
+                f"Anexo {anexo.get('order', '')} — {anexo.get('label', '')}",
+                f"/attachments/id={anexo.get('id', '')}",
+                anexo,
+                CAMPOS_ANEXO,
+                # Acrescentar e remover Anexo por Retificação são as outras duas operações da
+                # D-008, e entram com a US5: aqui só se altera o que já está publicado.
+                removivel=False,
+            )
+        )
+
     for secao in conteudo.get("sections") or []:
         # Seção gerada não tem conteúdo próprio: ela é composta a partir do dado que a origina,
         # e é lá que se corrige.
@@ -374,6 +400,10 @@ def _converter(bruto, tipo, rotulo, opcoes=()):
         return bruto == "1"
     if bruto == "":
         return None
+    if tipo == ARQUIVO:
+        # A identidade do artefato que o envio criou. Não há o que converter nem o que validar
+        # aqui: quem a produziu foi a view, gravando os bytes que ela mesma conferiu.
+        return bruto
     if tipo == REFERENCIA:
         # A tela oferece um `select`, e o `select` não é fronteira: um POST fabricado traria
         # qualquer UUID, e a verificação de publicação o aceitaria — ela confere **forma**, e um
@@ -547,12 +577,18 @@ def _evento_completo(valores, ordem):
     }
 
 
-def diferencas(conteudo, dados):
+def diferencas(conteudo, dados, *, resumos_de_artefato=None):
     """Alterações Normativas derivadas do que mudou entre o vigente e o que foi submetido.
 
     **A ordem de emissão deixou de ser a garantia de correção.** Cada alteração nomeia a
     entidade de que fala, então remover um Perfil não move os outros e nenhuma sequência produz
     resultado diferente de outra. A ordem abaixo é a que fica legível no resumo, e só isso.
+
+    `resumos_de_artefato` mapeia identidade de artefato para o resumo dele. A tela não digita o
+    resumo e o módulo não consulta o banco: quem envia o arquivo é a view, e é ela que sabe o
+    resumo do que gravou. Substituir o artefato emite **duas** alterações — identidade e resumo —,
+    porque o conteúdo publicado carrega as duas e uma sem a outra deixaria a versão afirmando bytes
+    que não são os que ela entrega (020, FR-034, FR-035).
     """
     alteracoes, resumo = [], []
     grupos = campos_editaveis(conteudo)
@@ -577,6 +613,32 @@ def diferencas(conteudo, dados):
                 enviado, campo["tipo"], campo["rotulo"], campo.get("opcoes", ())
             )
             anterior = _ler(conteudo, campo["caminho"])
+            if campo["tipo"] == ARQUIVO:
+                if not novo_valor or str(anterior) == str(novo_valor):
+                    continue
+                alteracoes.append(
+                    {
+                        "targetPath": campo["caminho"],
+                        "operation": "REPLACE",
+                        "newValue": str(novo_valor),
+                    }
+                )
+                alteracoes.append(
+                    {
+                        "targetPath": campo["caminho"].replace("/artifactId", "/artifactHash"),
+                        "operation": "REPLACE",
+                        "newValue": (resumos_de_artefato or {}).get(str(novo_valor), ""),
+                    }
+                )
+                resumo.append(
+                    {
+                        "grupo": grupo["titulo"],
+                        "rotulo": campo["rotulo"],
+                        "antes": "arquivo anterior",
+                        "depois": "arquivo novo",
+                    }
+                )
+                continue
             if campo["tipo"] == INSTANTE:
                 if _mesmo_instante(anterior, novo_valor):
                     continue

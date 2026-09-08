@@ -68,7 +68,7 @@ corrige é o caminho que não termina.
   </p>
 </section>
 {% else %}
-<form method="post">
+<form method="post" enctype="multipart/form-data">
   {% csrf_token %}
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
   {% comment %}
@@ -105,6 +105,16 @@ corrige é o caminho que não termina.
           <option value="1" {% if campo.valor == '1' %}selected{% endif %}>Sim</option>
           <option value="0" {% if campo.valor != '1' %}selected{% endif %}>Não</option>
         </select>
+        {% elif campo.tipo == 'arquivo' %}
+        {% comment %}
+        Dois controles para um campo: o arquivo, que quem retifica escolhe, e o oculto que carrega
+        a identidade do artefato entre as duas fases do formulário. O envio grava os bytes na
+        primeira fase e a confirmação referencia o que foi gravado — porque os bytes não viajam
+        dentro da Alteração (020, FR-035).
+        {% endcomment %}
+        <input id="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+               name="arquivo:{{ campo.referencia }}" type="file" accept="application/pdf">
+        <input type="hidden" name="campo:{{ campo.referencia }}" value="{{ campo.valor }}">
         {% else %}
         <input id="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
                name="campo:{{ campo.referencia }}"

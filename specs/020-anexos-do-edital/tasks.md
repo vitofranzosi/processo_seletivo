@@ -135,15 +135,15 @@ pelo portal e enviar o arquivo preenchido, sem sair do fluxo.
 **Teste independente**: retificar um Edital publicado substituindo o artefato de um anexo, e provar
 que a publicação anterior e a vigente entregam bytes diferentes, com resumos distintos.
 
-- [ ] T042 [US3] Acrescentar `CAMPOS_ANEXO` e o grupo correspondente em `campos_editaveis` em `backend/processo_seletivo/interface/retificacao.py` (FR-031)
-- [ ] T043 [US3] Aceitar a substituição do artefato dentro do ato de Retificação: `enctype="multipart/form-data"` em `templates/interface/retificar.html`, recepção em `backend/processo_seletivo/interface/views.py`, e criação do artefato com `congelado_em` nulo (FR-034, FR-035)
-- [ ] T044 [US3] Traduzir a substituição em `REPLACE` de `artifactId` e `artifactHash` em `diferencas` em `backend/processo_seletivo/interface/retificacao.py` — os bytes não viajam na alteração (FR-035)
-- [ ] T045 [US3] Congelar, em `publish_retification` em `backend/processo_seletivo/publicacoes/application/retificacoes.py`, os artefatos citados pelas alterações, na mesma transação em que a `Publicacao` e o `DocumentoPublicado` nascem (FR-010, FR-025)
-- [ ] T046 [P] [US3] Teste de aceitação em `backend/tests/acceptance/test_us_anexos.py`: publicar, retificar substituindo o artefato, e provar que os dois coexistem com resumos distintos, ambos respondendo 200. **Não percorre inscrição nem devolução** — isso dependeria da US2, e as duas histórias são independentes (FR-042, SC-002)
-- [ ] T047 [P] [US3] Teste de consulta temporal: `?em=<instante anterior>` devolve o `artifactId` de então, e a publicação histórica continua entregando o artefato daquela versão (FR-028, FR-040, FR-041, SC-003)
-- [ ] T048 [P] [US3] Teste de concorrência: duas Retificações sobre o mesmo anexo, a segunda recusada pelo `expected_previous_hash` já existente (FR-036)
-- [ ] T049 [P] [US3] Teste de endereçamento: `/attachments/3` é recusado, `/attachments/id=<uuid>` é aceito (FR-032)
-- [ ] T066 [P] [US3] Teste de autorização em `backend/tests/authorization/` sobre a **matriz** de atos da Retificação, que são de papéis distintos (`interface/identidade.py:20-57`, `interface/atos_retificacao.py:50-103`): editar as cinco operações sobre anexo exige `retificacao:elaborar`; submeter, `retificacao:submeter`; homologar, `retificacao:homologar`; publicar, `retificacao:publicar`. Nenhum deles é alcançável por quem só tem `edital:elaborar`, e nenhum é derivado de outro (FR-037)
+- [X] T042 [US3] Acrescentar `CAMPOS_ANEXO` e o grupo correspondente em `campos_editaveis` em `backend/processo_seletivo/interface/retificacao.py` (FR-031)
+- [X] T043 [US3] Aceitar a substituição do artefato dentro do ato de Retificação: `enctype="multipart/form-data"` em `templates/interface/retificar.html`, recepção em `backend/processo_seletivo/interface/views.py`, e criação do artefato com `congelado_em` nulo (FR-034, FR-035)
+- [X] T044 [US3] Traduzir a substituição em `REPLACE` de `artifactId` e `artifactHash` em `diferencas` em `backend/processo_seletivo/interface/retificacao.py` — os bytes não viajam na alteração (FR-035)
+- [X] T045 [US3] Congelar, em `publish_retification` em `backend/processo_seletivo/publicacoes/application/retificacoes.py`, os artefatos citados pelas alterações, na mesma transação em que a `Publicacao` e o `DocumentoPublicado` nascem (FR-010, FR-025)
+- [X] T046 [P] [US3] Teste de aceitação em `backend/tests/acceptance/test_us_anexos.py`: publicar, retificar substituindo o artefato, e provar que os dois coexistem com resumos distintos, ambos respondendo 200. **Não percorre inscrição nem devolução** — isso dependeria da US2, e as duas histórias são independentes (FR-042, SC-002)
+- [X] T047 [P] [US3] Teste de consulta temporal: `?em=<instante anterior>` devolve o `artifactId` de então, e a publicação histórica continua entregando o artefato daquela versão (FR-028, FR-040, FR-041, SC-003)
+- [X] T048 [P] [US3] Teste de concorrência: duas Retificações sobre o mesmo anexo, a segunda recusada pelo `expected_previous_hash` já existente (FR-036)
+- [X] T049 [P] [US3] Teste de endereçamento: `/attachments/3` é recusado, `/attachments/id=<uuid>` é aceito (FR-032)
+- [X] T066 [P] [US3] Teste de autorização em `backend/tests/authorization/` sobre a **matriz** de atos da Retificação, que são de papéis distintos (`interface/identidade.py:20-57`, `interface/atos_retificacao.py:50-103`): editar as cinco operações sobre anexo exige `retificacao:elaborar`; submeter, `retificacao:submeter`; homologar, `retificacao:homologar`; publicar, `retificacao:publicar`. Nenhum deles é alcançável por quem só tem `edital:elaborar`, e nenhum é derivado de outro (FR-037)
 
 ---
 
