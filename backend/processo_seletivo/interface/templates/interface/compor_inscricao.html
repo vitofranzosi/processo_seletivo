@@ -28,8 +28,28 @@
   </section>
   <section aria-labelledby="inscricao-documentos">
     <h2 id="inscricao-documentos">Documentos exigidos</h2>
-    <p class="ajuda">O que o candidato precisa apresentar. Um documento pode valer para todos, ou
-      só para um Perfil, ou só para uma modalidade, ou para a combinação dos dois.</p>
+    <p class="ajuda">O que o candidato precisa apresentar.</p>
+    {% comment %}
+    As quatro explicações eram uma por documento: um Edital com cinco requisitos as imprimia cinco
+    vezes, e nenhuma delas muda de um requisito para o outro. Elas continuam no documento, ocultas,
+    ligadas a cada campo por `aria-describedby` — sair de vista não é sair da página.
+    {% endcomment %}
+    <details class="como-preencher">
+      <summary>Como preencher estes campos</summary>
+      <dl>
+        <dt>Chave</dt>
+        <dd>Identificação estável, sem espaços. É por ela que o sistema reconhece o documento entre
+          uma versão do Edital e a seguinte, e por isso ela não acompanha mudanças de nome.</dd>
+        <dt>Instrução ao candidato</dt>
+        <dd>Aparece ao candidato e no Edital publicado.</dd>
+        <dt>A quem o documento se aplica</dt>
+        <dd>Um documento pode valer para todos, ou só para um Perfil, ou só para uma modalidade, ou
+          para a combinação dos dois. Deixe em "todos" quando vale para qualquer candidato.</dd>
+        <dt>Modelo que o Edital fornece</dt>
+        <dd>O anexo que o candidato baixa, preenche e devolve neste requisito. Os anexos são
+          cadastrados na etapa <strong>Anexos</strong>.</dd>
+      </dl>
+    </details>
     <p class="contadores" data-contador="#documentos" data-item=".documento" data-singular="documento" data-plural="documentos">
       <span><strong>{{ documentos|length }}</strong> documento{{ documentos|length|pluralize:"s" }}</span>
     </p>

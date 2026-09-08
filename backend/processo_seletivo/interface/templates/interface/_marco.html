@@ -38,7 +38,7 @@
         <option value="{{ etapa.id }}" {% if etapa.id in marco.etapas %}selected{% endif %}>{{ etapa.rotulo }}</option>
         {% endfor %}
       </select>
-      <span class="ajuda" id="ajuda-etapas-{{ indice }}-{{ sub }}">Só Etapas classificatórias. O
+      <span class="oculto" id="ajuda-etapas-{{ indice }}-{{ sub }}">Só Etapas classificatórias. O
         peso de cada uma é o que ela já publica; aqui se escolhe quais entram.</span>
       {% else %}
       <span class="vazio" id="ajuda-etapas-{{ indice }}-{{ sub }}">Nenhuma Etapa deste Edital foi
@@ -56,13 +56,14 @@
     </p>
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-mode">Arredondamento <span class="obrigatorio" aria-hidden="true">*</span></label>
-      <select id="marco-{{ indice }}-{{ sub }}-mode" name="marco-{{ indice }}-{{ sub }}-mode" required aria-required="true">
+      <select id="marco-{{ indice }}-{{ sub }}-mode" name="marco-{{ indice }}-{{ sub }}-mode" required aria-required="true"
+              aria-describedby="ajuda-modo-{{ indice }}-{{ sub }}">
         <option value="">Escolha o arredondamento</option>
         <option value="MEIO_PARA_CIMA" {% if marco.mode == "MEIO_PARA_CIMA" %}selected{% endif %}>Meio para cima (2,5 vira 3)</option>
         <option value="MEIO_PARA_PAR" {% if marco.mode == "MEIO_PARA_PAR" %}selected{% endif %}>Meio para par (2,5 vira 2)</option>
         <option value="TRUNCAR" {% if marco.mode == "TRUNCAR" %}selected{% endif %}>Truncar (2,9 vira 2)</option>
       </select>
-      <span class="ajuda">Aplicado uma vez, sobre a pontuação combinada.</span>
+      <span class="oculto" id="ajuda-modo-{{ indice }}-{{ sub }}">Aplicado uma vez, sobre a pontuação combinada.</span>
     </p>
   </div>
   {% comment %}
@@ -87,11 +88,16 @@
 
   Agora o prazo mora dentro da opção que o pede.
   {% endcomment %}
-  <fieldset class="opcoes">
+  {% comment %}
+  O `aria-describedby` fica no grupo, e não em cada rádio: a distinção entre não declarar e negar é
+  do conjunto das três opções, e repeti-la em cada uma faria o leitor de tela dizer o parágrafo
+  inteiro três vezes ao percorrer o grupo.
+  {% endcomment %}
+  <fieldset class="opcoes" aria-describedby="ajuda-recurso-{{ indice }}-{{ sub }}">
     <legend>Recurso contra o resultado deste marco</legend>
-    <span class="ajuda">Não declarar e negar são coisas diferentes: o silêncio devolve a
-      tempestividade ao juízo de admissibilidade motivado; a negativa é norma publicada, e
-      recusa a interposição nomeando-a.</span>
+    <span class="oculto" id="ajuda-recurso-{{ indice }}-{{ sub }}">Não declarar e negar são coisas
+      diferentes: o silêncio devolve a tempestividade ao juízo de admissibilidade motivado; a
+      negativa é norma publicada, e recusa a interposição nomeando-a.</span>
     <p class="opcao">
       <input type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-admite"
              name="marco-{{ indice }}-{{ sub }}-appealDeclaration" value="admite"
@@ -104,17 +110,19 @@
         <input type="number" min="1" step="1"
                id="marco-{{ indice }}-{{ sub }}-appealDurationDays"
                name="marco-{{ indice }}-{{ sub }}-appealDurationDays"
-               value="{{ marco.appealDurationDays }}">
-        <span class="ajuda">Contados do dia seguinte ao da divulgação, incluindo o do vencimento.</span>
+               value="{{ marco.appealDurationDays }}"
+               aria-describedby="ajuda-prazo-{{ indice }}-{{ sub }}">
+        <span class="oculto" id="ajuda-prazo-{{ indice }}-{{ sub }}">Contados do dia seguinte ao da divulgação, incluindo o do vencimento.</span>
       </p>
       <p class="campo curto">
         <label for="marco-{{ indice }}-{{ sub }}-appealUnit">Unidade</label>
         <select id="marco-{{ indice }}-{{ sub }}-appealUnit"
-                name="marco-{{ indice }}-{{ sub }}-appealUnit">
+                name="marco-{{ indice }}-{{ sub }}-appealUnit"
+                aria-describedby="ajuda-unidade-{{ indice }}-{{ sub }}">
           <option value="DIAS_CORRIDOS" {% if marco.appealUnit == "DIAS_CORRIDOS" %}selected{% endif %}>Dias corridos</option>
         </select>
-        <span class="ajuda">Dias úteis exigiriam o calendário de dias sem expediente, que o Edital
-          não publica.</span>
+        <span class="oculto" id="ajuda-unidade-{{ indice }}-{{ sub }}">Dias úteis exigiriam o
+          calendário de dias sem expediente, que o Edital não publica.</span>
       </p>
     </div>
     <p class="opcao">
@@ -133,27 +141,27 @@
   <div class="campos">
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-operation">Como as pontuações se combinam <span class="obrigatorio" aria-hidden="true">*</span></label>
-      <select id="marco-{{ indice }}-{{ sub }}-operation" name="marco-{{ indice }}-{{ sub }}-operation" required aria-required="true">
+      <select id="marco-{{ indice }}-{{ sub }}-operation" name="marco-{{ indice }}-{{ sub }}-operation" required aria-required="true"
+              aria-describedby="ajuda-operacao-{{ indice }}-{{ sub }}">
         <option value="SOMA_PONDERADA" {% if marco.operation == "SOMA_PONDERADA" %}selected{% endif %}>Soma ponderada pelos pesos das Etapas</option>
         <option value="MEDIA_PONDERADA" {% if marco.operation == "MEDIA_PONDERADA" %}selected{% endif %}>Média ponderada pelos pesos das Etapas</option>
       </select>
-      <span class="ajuda">O peso de cada Etapa é o que a própria Etapa já publica; aqui se declara
-        o que se faz com eles.</span>
+      <span class="oculto" id="ajuda-operacao-{{ indice }}-{{ sub }}">O peso de cada Etapa é o que a
+        própria Etapa já publica; aqui se declara o que se faz com eles.</span>
     </p>
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-normalization">Normalização <span class="obrigatorio" aria-hidden="true">*</span></label>
-      <select id="marco-{{ indice }}-{{ sub }}-normalization" name="marco-{{ indice }}-{{ sub }}-normalization" required aria-required="true">
+      <select id="marco-{{ indice }}-{{ sub }}-normalization" name="marco-{{ indice }}-{{ sub }}-normalization" required aria-required="true"
+              aria-describedby="ajuda-normalizacao-{{ indice }}-{{ sub }}">
         <option value="NENHUMA" {% if marco.normalization == "NENHUMA" %}selected{% endif %}>Nenhuma</option>
         <option value="PELA_SOMA_DOS_PESOS" {% if marco.normalization == "PELA_SOMA_DOS_PESOS" %}selected{% endif %}>Dividir pela soma dos pesos</option>
       </select>
-      <span class="ajuda">Os pesos não precisam somar 1: é a normalização declarada que responde
-        por isso.</span>
+      <span class="oculto" id="ajuda-normalizacao-{{ indice }}-{{ sub }}">Os pesos não precisam somar
+        1: é a normalização declarada que responde por isso.</span>
     </p>
   </div>
   <section class="modalidades">
     <h4>Critérios de desempate</h4>
-    <p class="ajuda">Aplicados na ordem declarada. Esgotados todos, os empatados compartilham
-      posição, e o ato registra que ali não existe ordem normativa.</p>
     <div id="criterios-{{ indice }}-{{ sub }}">
       {% for criterio in marco.criterios %}{% include "interface/_criterio.html" with n=forloop.counter0 %}{% endfor %}
     </div>
