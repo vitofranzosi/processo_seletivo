@@ -327,8 +327,14 @@ a.principal{display:inline-block;width:auto;text-align:center;text-decoration:no
 .secundario[disabled]:hover{background:transparent}
 /* A lista de inscrições (010). Situação por texto e símbolo — cor sozinha não informa quem não a
    distingue —, e o protocolo com quebra explícita, porque é um código longo em 375px. */
-.selecao .situacao{color:var(--texto-fraco);font-size:.9375rem}
-.selecao .situacao.enviada{color:var(--sucesso);font-weight:600}
+/* `.minhas-inscricoes`, e não `.selecao`: o cinza aqui é da situação **da inscrição** — enviada,
+   em rascunho —, e a vitrine usa a mesma marcação para a situação **do período**. Solta, esta
+   regra vencia `.situacao.aberto` por ordem na folha e deixava "Inscrições abertas" em cinza na
+   vitrine, do mesmo tom de "Inscrições encerradas": os dois cartões perdiam a única cor que os
+   distinguia. */
+.minhas-inscricoes .situacao{color:var(--texto-fraco);font-size:.9375rem}
+.minhas-inscricoes .situacao.enviada{color:var(--sucesso);font-weight:600}
+.selecao .situacao{font-size:.9375rem}
 /* `.codigo`, e não `.protocolo`: esta última já tinha significado visual próprio na `009` — a
    caixa de destaque do comprovante —, e reusar o nome fazia o protocolo da lista aparecer com
    aparência de campo de formulário. Aqui ele é informação de apoio, não o assunto da tela. */

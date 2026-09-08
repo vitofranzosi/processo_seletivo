@@ -9,7 +9,12 @@
 Mais recente primeiro, e uma ação principal por item. A situação aparece por texto **e** por
 símbolo: cor sozinha não informa quem não a distingue.
 {% endcomment %}
-<ul class="selecoes">
+{% comment %}
+`minhas-inscricoes` além de `selecoes`: as duas telas usam `ul.selecoes > li.selecao` para coisas
+diferentes — aqui é a inscrição da pessoa, na vitrine é a seleção publicada —, e a regra escrita
+para esta apagava a cor de estado daquela. Nome próprio no lugar de disputa de especificidade.
+{% endcomment %}
+<ul class="selecoes minhas-inscricoes">
   {% for inscricao in inscricoes %}
   <li class="selecao">
     <a class="titulo" href="{% url 'portal:inscricao' inscricao.id %}">{{ inscricao.perfil|default:"Inscrição" }}</a>
