@@ -285,3 +285,23 @@ def test_a_conclusao_divide_a_linha_com_o_que_nao_depende_dela(etapa):
 def test_o_grupo_que_divide_a_linha_tem_base_propria(folha):
     """Sem `flex`, o `fieldset` entra como item de largura automática e empurra o vizinho."""
     assert re.search(r"\.campos>fieldset\.opcoes\{[^}]*flex:", folha)
+
+
+def test_a_coluna_curta_tem_a_largura_do_que_carrega(folha):
+    """150 px cravados quebravam o rótulo, e o rótulo quebrado desalinhava a linha inteira.
+
+    "Avaliações por inscrição" precisa de 165 px e tinha 150: o rótulo ia para duas linhas e
+    empurrava o seu controle 19 px abaixo do controle de "Peso", ao lado. A ajuda quebrava pela
+    mesma razão, e as cinco ajudas da Etapa somavam 198 px — 45% da altura do cartão.
+
+    O `input` continua curto: quem o limita é `.campo.curto>input`, e não a coluna.
+    """
+    regra = re.search(r"\.campo\.curto\{([^}]*)\}", folha)
+    assert regra, "a folha não desenha `.campo.curto`"
+    assert "flex:01auto" in regra.group(1).replace(" ", ""), (
+        f"a coluna curta voltou a ter largura cravada: {regra.group(1)}"
+    )
+    do_input = re.search(r"\.campo\.curto>input\{([^}]*)\}", folha)
+    assert do_input and "max-width" in do_input.group(1), (
+        "sem teto no `input`, soltar a coluna soltaria o campo junto"
+    )

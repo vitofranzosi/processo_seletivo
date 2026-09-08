@@ -53,8 +53,13 @@
     <fieldset class="opcoes">
       <legend>Como esta Etapa é concluída</legend>
       {% recusa_de recusas "etapa" indice "forma" as recusado %}
-      <span class="ajuda" id="ajuda-forma-{{ indice }}">A decisória publica os rótulos do resultado e
-        não publica nota; a pontuada publica nota e não publica rótulos.</span>
+      {% comment %}
+      Encurtada porque o arranjo passou a dizer metade dela: com os campos aninhados dentro da
+      opção que os pede, a tela já mostra que a pontuada tem nota e a decisória tem rótulos. O que
+      a frase ainda acrescenta, e o arranjo não mostra, é o que cada forma **publica**.
+      {% endcomment %}
+      <span class="ajuda" id="ajuda-forma-{{ indice }}">A pontuada publica nota; a decisória
+        publica os rótulos do resultado.</span>
       {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-forma">{{ recusado }}</span>{% endif %}
       <p class="opcao">
         <input type="radio" id="etapa-{{ indice }}-forma-pontuada"
