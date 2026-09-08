@@ -171,6 +171,29 @@
         "127.0.0.1:8021"
       ],
       "port": 8021
+    },
+    {
+      "name": "spec-020",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DB_USER=saymoncastro",
+        "DB_NAME=ps020_demo",
+        "LC_ALL=en_US.UTF-8",
+        "DEFAULT_FROM_EMAIL=nao-responda@exemplo.test",
+        "PORTAL_ATENDIMENTO=selecao@cefor.ifes.edu.br",
+        "ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos-020",
+        "DJANGO_EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend",
+        "INTERFACE_SELETOR_IDENTIDADE=true",
+        "uv",
+        "run",
+        "--directory",
+        "backend",
+        "python",
+        "manage.py",
+        "runserver",
+        "127.0.0.1:8022"
+      ],
+      "port": 8022
     }
   ]
 }
