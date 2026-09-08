@@ -570,3 +570,68 @@ def test_as_duas_telas_preservam_a_descricao_apontada(
     assert escondidas, f"{tela} não preservou descrição nenhuma"
     assert escondidas <= apontadas, sorted(escondidas - apontadas)
     assert apontadas <= set(re.findall(r'id="([^"]+)"', corpo)), sorted(apontadas - escondidas)
+
+
+# ------------------------------------------------ o cartão do Documento Exigido
+
+
+@pytest.fixture
+def documento(client, seletor_ligado, com_etapas):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    return client.get(
+        reverse("interface:fragmento-documento", args=[com_etapas.id]), {"indice": "0"}
+    ).content.decode()
+
+
+def test_a_altura_do_visualizador_nao_veste_o_cartao_do_assistente(folha):
+    """`.documento` nomeava duas coisas sem relação, e a folha vestia as duas.
+
+    A regra é do **visualizador de PDF** da prévia — `object.documento`, com 75vh de altura. Solta,
+    ela alcançava também `fieldset.linha.documento`, o cartão do Documento Exigido: numa janela de
+    900 px ele ficava com 675, os campos terminavam aos 444 e sobravam 231 px de caixa vazia — que
+    **cresciam com a janela**. Remover um campo do cartão não mudava nada, porque a altura nunca
+    vinha do conteúdo.
+    """
+    achado = re.search(r"(^|[,;}\n])\s*(object)?\.documento\{([^}]*)\}", folha)
+    assert achado, "a folha não desenha o visualizador"
+    assert achado.group(2) == "object", (
+        f"o seletor solto volta a alcançar o cartão do assistente: {achado.group(0).strip()[:60]}"
+    )
+    assert "height" in achado.group(3), "o visualizador perdeu a altura que ele precisa ter"
+
+
+def test_nenhum_campo_do_documento_fica_fora_de_uma_linha(documento):
+    """Campo sozinho deixa à direita um vão do próprio tamanho dele.
+
+    O controle pára no teto de leitura e a linha tem a largura do cartão: Instrução e Modelo
+    ocupavam uma faixa inteira cada um para mostrar 685 px de campo em 1.310 de espaço.
+
+    A afirmação é sobre estar **fora** de uma linha, e não sobre a contagem dentro dela: no arranjo
+    antigo os dois ficavam fora de qualquer `div.campos`, e contar por linha os somava à anterior —
+    o teste passava com o defeito de pé.
+    """
+    profundidade, soltos = 0, []
+    for pedaco in re.findall(r'<div class="campos">|<div|</div>|<p class="campo[^"]*">', documento):
+        if pedaco.startswith("<p"):
+            if profundidade == 0:
+                soltos.append(pedaco)
+        elif pedaco == "</div>":
+            profundidade -= 1
+        else:
+            profundidade += 1
+
+    assert soltos == [], f"campo fora de qualquer linha: {soltos}"
+
+
+def test_o_modelo_divide_a_linha_com_a_marcacao_e_nao_com_dois_campos(documento):
+    """O rótulo de anexo mais longo da amostra pede 459 px; a terça parte da faixa dá 426.
+
+    Numa linha de três, o `select` cortaria justamente o texto pelo qual se escolhe o anexo. Ele
+    fica numa linha de dois, e quem preenche o resto é a marcação — que não tem largura a defender.
+    """
+    linha = re.search(
+        r'<div class="campos">((?:(?!</div>).)*?attachmentId.*?)</div>', documento, re.S
+    )
+    assert linha, "o Modelo não está numa linha de campos"
+    assert 'class="papel"' in linha.group(1), "o Modelo não divide a linha com a marcação"
+    assert linha.group(1).count('class="campo') == 1, "o Modelo voltou a dividir com outro campo"
