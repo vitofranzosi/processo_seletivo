@@ -196,3 +196,47 @@ def test_os_rotulos_de_grupo_tem_a_voz_do_rotulo_de_campo(folha, grupo):
         assert achado and achado.group(1).strip() == esperado, (
             f"`{grupo}` tem {propriedade} diferente do rótulo de campo"
         )
+
+
+# ------------------------------------------------ o cartão de Evento do Cronograma
+
+
+@pytest.fixture
+def evento(client, seletor_ligado, edital):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    return client.get(reverse("interface:fragmento-evento"), {"indice": "0"}).content.decode()
+
+
+def test_o_campo_de_data_tem_teto_proprio_e_nao_o_de_leitura(folha):
+    """68 caracteres não dizem nada sobre `dd/mm/aaaa, --:--`.
+
+    Fora da lista do teto, o campo esticava com a linha — 647 px para dezesseis caracteres —, e
+    eram os dois dele que impediam o Evento de caber numa linha só. O teto é folgado de propósito:
+    quem desenha o controle é o navegador, varia por idioma, e cortar um segmento de data é pior
+    do que sobrar espaço.
+    """
+    achado = re.search(r"input\[type=date\],input\[type=datetime-local\]\{([^}]*)\}", folha)
+    assert achado, "a folha não dá teto ao campo de data"
+    teto = re.search(r"max-width:([^;]+)", achado.group(1))
+    assert teto, f"sem `max-width`: {achado.group(1)}"
+    assert "--leitura" not in teto.group(1), (
+        "o teto da data não é medida de leitura: o conteúdo tem tamanho fixo, e quem o desenha\n"
+        "é o navegador"
+    )
+
+
+def test_a_coluna_da_data_nao_reserva_mais_do_que_o_campo_aceita(folha):
+    """Teto sem base resolve o campo e não a coluna: o vão só muda de lugar.
+
+    Com o `p` esticando, o espaço que o campo recusa fica **dentro** da linha, entre o campo de
+    data e o rótulo seguinte — que é pior de ler do que sobrar na ponta.
+    """
+    assert re.search(r"\.campo:has\(>input\[type=datetime-local\]\)[^{]*\{[^}]*flex:", folha)
+
+
+def test_o_evento_cabe_numa_linha(evento):
+    """Que evento é, o que é, quando começa, quando termina — a ordem em que se lê e se preenche."""
+    linhas = re.findall(r'<div class="campos">', evento)
+    assert len(linhas) == 1, f"o Evento ocupa {len(linhas)} linhas de campo"
+    for campo in ("-type", "-description", "-startAt", "-endAt"):
+        assert f'name="evento-0{campo}"' in evento
