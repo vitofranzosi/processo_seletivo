@@ -1842,13 +1842,21 @@ def retificar(request, edital_id):
             except DomainError as exc:
                 erros.append(exc.detail)
 
+    grupos = retificacao_ui.reexibir(
+        retificacao_ui.campos_editaveis(projecao, descricao_do_artefato=_descricao_do_artefato),
+        dados,
+    )
     return render(
         request,
         "interface/retificar.html",
         {
             "edital": edital,
             "base": base,
-            "grupos": retificacao_ui.reexibir(retificacao_ui.campos_editaveis(projecao), dados),
+            "grupos": grupos,
+            # As mesmas linhas, divididas nas seções que a tela desenha e que o índice do topo
+            # alcança. `grupos` continua servindo a leitura de quem não pode elaborar, que é uma
+            # lista corrida e não um formulário para navegar.
+            "secoes": retificacao_ui.agrupar_em_secoes(grupos),
             "digitado": dados,
             # As linhas acrescentadas nascem no cliente, mas precisam voltar do servidor depois
             # do POST: sem isto, ver o resumo devolve um formulário sem elas.

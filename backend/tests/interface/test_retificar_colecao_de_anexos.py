@@ -46,8 +46,14 @@ def base_de(corpo):
 
 
 def referencia_do_campo(corpo, titulo, rotulo):
-    """A referência opaca de um campo, achada pelo título do grupo — a tela não expõe caminho."""
-    grupo = re.search(rf"<legend[^>]*>{re.escape(titulo)}.*?(?=<fieldset|</form)", corpo, re.S)
+    """A referência opaca de um campo, achada pelo título do grupo — a tela não expõe caminho.
+
+    Pelo `data-rotulo` da legenda, e não pelo texto dentro dela: a legenda passou a ser composta
+    — a categoria de um lado, o nome do outro —, e casar com o texto renderizado prenderia o
+    teste ao arranjo visual de hoje. `data-rotulo` é o título inteiro, é o que `remocao.js` já lê
+    para montar a pergunta de confirmação, e existe exatamente para ser esse ponto estável.
+    """
+    grupo = re.search(rf'data-rotulo="{re.escape(titulo)}".*?(?=<fieldset|</form)', corpo, re.S)
     assert grupo, f"grupo {titulo!r} não está na tela"
     campo = re.search(rf'{re.escape(rotulo)}.*?name="campo:(g\d+c\d+)"', grupo.group(0), re.S)
     assert campo, f"campo {rotulo!r} não está no grupo {titulo!r}"
@@ -55,7 +61,7 @@ def referencia_do_campo(corpo, titulo, rotulo):
 
 
 def referencia_do_grupo(corpo, titulo):
-    grupo = re.search(rf'<legend[^>]*>{re.escape(titulo)}.*?name="remover:(g\d+)"', corpo, re.S)
+    grupo = re.search(rf'data-rotulo="{re.escape(titulo)}".*?name="remover:(g\d+)"', corpo, re.S)
     assert grupo, f"grupo {titulo!r} não é removível"
     return grupo.group(1)
 

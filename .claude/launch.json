@@ -194,6 +194,28 @@
         "127.0.0.1:8022"
       ],
       "port": 8022
+    },
+    {
+      "name": "ux-retificar",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DB_USER=saymoncastro",
+        "DB_NAME=ps_uxret",
+        "LC_ALL=en_US.UTF-8",
+        "INTERFACE_SELETOR_IDENTIDADE=true",
+        "DEFAULT_FROM_EMAIL=nao-responda@exemplo.test",
+        "ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos-uxret",
+        "DJANGO_EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend",
+        "uv",
+        "run",
+        "--directory",
+        "backend",
+        "python",
+        "manage.py",
+        "runserver",
+        "127.0.0.1:8031"
+      ],
+      "port": 8031
     }
   ]
 }

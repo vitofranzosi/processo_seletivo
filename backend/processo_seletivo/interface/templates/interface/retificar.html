@@ -12,8 +12,9 @@
 
 {% if pode_elaborar %}
 <p class="aviso"><strong>Como funciona.</strong> Abaixo está o conteúdo <em>vigente</em> do Edital.
-Cada campo que você alterar vira uma Alteração Normativa; os demais não são tocados. Nada muda
-para o público até a Retificação ser publicada.</p>
+Cada campo que você alterar vira uma Alteração Normativa; os demais não são tocados. Marcar
+<em>Remover do Edital</em> tira a linha inteira da versão futura — os campos dela passam a não ter
+efeito. Nada muda para o público até a Retificação ser publicada.</p>
 {% else %}
 {% comment %}
 FR-026: sem a permissão, a tela é de leitura. Antes ela abria inteira — campos, acrescentar
@@ -30,6 +31,7 @@ corrige é o caminho que não termina.
 {% if resumo %}
 <section aria-labelledby="resumo-titulo" class="consequencias">
   <h2 id="resumo-titulo">O que vai mudar ({{ resumo|length }})</h2>
+  <div class="rolagem">
   <table>
     <thead><tr>
       <th scope="col">Onde</th><th scope="col">Campo</th>
@@ -46,6 +48,7 @@ corrige é o caminho que não termina.
       {% endfor %}
     </tbody>
   </table>
+  </div>
 </section>
 {% endif %}
 
@@ -68,7 +71,24 @@ corrige é o caminho que não termina.
   </p>
 </section>
 {% else %}
-<form method="post" enctype="multipart/form-data">
+{% comment %}
+O índice. Um Edital com cronograma extenso, muitas Etapas e uma dezena de Anexos rende sessenta
+cartões e vários metros de rolagem; quem vem corrigir **um** prazo percorria todos eles até
+achar. São âncoras comuns: funcionam sem JavaScript, são links do teclado e do leitor de tela, e
+o navegador as trata como qualquer sumário.
+{% endcomment %}
+<nav class="indice" aria-label="Seções do Edital">
+  {# "Ir para" é o rótulo de quem vê; quem ouve recebe o mesmo pelo `aria-label` do `nav`. #}
+  <span class="indice-rotulo" aria-hidden="true">Ir para</span>
+  <ul>
+    {% for secao in secoes %}
+    <li><a href="#s-{{ secao.id }}">{{ secao.titulo }} <span class="conta">{{ secao.grupos|length }}</span></a></li>
+    {% endfor %}
+    <li><a href="#sobre-a-retificacao">Justificativa</a></li>
+  </ul>
+</nav>
+
+<form method="post" enctype="multipart/form-data" id="formulario-da-retificacao">
   {% csrf_token %}
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
   {% comment %}
@@ -76,125 +96,103 @@ corrige é o caminho que não termina.
   linha, uma Publicação no intervalo faria a mesma referência apontar para outro item.
   {% endcomment %}
   <input type="hidden" name="base" value="{{ base.id }}">
-  {% for grupo in grupos %}
-  <fieldset class="linha">
-    <legend>{{ grupo.titulo }}</legend>
-    <div class="campos">
-      {% comment %}
-      `campo.valor` já traz o que a pessoa digitou quando houve POST — a reexibição é resolvida
-      antes de chegar aqui, e não por um filtro repetido em cada controle.
-      {% endcomment %}
-      {% for campo in grupo.campos %}
-      <p class="campo{% if campo.tipo == 'inteiro' or campo.tipo == 'decimal' %} curto{% elif campo.tipo == 'texto_longo' %} largo{% endif %}">
-        <label for="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}">{{ campo.rotulo }}</label>
-        {% if campo.tipo == 'texto_longo' %}
-        <textarea id="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
-                  name="campo:{{ campo.referencia }}" rows="5">{{ campo.valor }}</textarea>
-        {% elif campo.tipo == 'referencia' %}
-        {# A opção vazia é normativa, e não cortesia: `null` significa "sem restrição". #}
-        <select id="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
-                name="campo:{{ campo.referencia }}">
-          <option value="" {% if not campo.valor %}selected{% endif %}>Sem restrição</option>
-          {% for identificador, rotulo in campo.opcoes %}
-          <option value="{{ identificador }}" {% if campo.valor == identificador %}selected{% endif %}>{{ rotulo }}</option>
-          {% endfor %}
-        </select>
-        {% elif campo.tipo == 'booleano' %}
-        <select id="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
-                name="campo:{{ campo.referencia }}">
-          <option value="1" {% if campo.valor == '1' %}selected{% endif %}>Sim</option>
-          <option value="0" {% if campo.valor != '1' %}selected{% endif %}>Não</option>
-        </select>
-        {% elif campo.tipo == 'arquivo' %}
-        {% comment %}
-        Dois controles para um campo: o arquivo, que quem retifica escolhe, e o oculto que carrega
-        a identidade do artefato entre as duas fases do formulário. O envio grava os bytes na
-        primeira fase e a confirmação referencia o que foi gravado — porque os bytes não viajam
-        dentro da Alteração (020, FR-035).
-        {% endcomment %}
-        <input id="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
-               name="arquivo:{{ campo.referencia }}" type="file" accept="application/pdf">
-        <input type="hidden" name="campo:{{ campo.referencia }}" value="{{ campo.valor }}">
-        {% else %}
-        <input id="c{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
-               name="campo:{{ campo.referencia }}"
-               type="{% if campo.tipo == 'inteiro' or campo.tipo == 'decimal' %}number{% elif campo.tipo == 'instante' %}datetime-local{% else %}text{% endif %}"
-               {% if campo.tipo == 'decimal' %}step="0.0001"{% endif %}
-               value="{{ campo.valor }}">
-        {% endif %}
-      </p>
-      {% endfor %}
-    </div>
-    {% if grupo.removivel %}
-    <p class="remover-linha">
-      <input type="checkbox" id="rm{{ forloop.counter }}" name="remover:{{ grupo.referencia }}" value="1"
-             {% if grupo.marcado_para_remover %}checked{% endif %}>
-      <label for="rm{{ forloop.counter }}">Remover do Edital</label>
-      <span class="ajuda">Os campos acima passam a não ter efeito.</span>
-    </p>
-    {% endif %}
-  </fieldset>
-  {% endfor %}
 
-  <section aria-labelledby="novos-perfis-titulo">
-    <h2 id="novos-perfis-titulo">Acrescentar Perfis</h2>
-    <p class="ajuda">Um Perfil acrescentado passa a integrar o Edital quando a Retificação for
-      publicada. Modalidades de Concorrência ainda não são definidas por aqui.</p>
+  {% for secao in secoes %}
+  <section class="secao-da-retificacao" id="s-{{ secao.id }}" aria-labelledby="t-{{ secao.id }}">
+    <h2 id="t-{{ secao.id }}">{{ secao.titulo }}</h2>
+    {% comment %}
+    Uma seção vazia só aparece quando é possível acrescentar nela — e então a nota diz o que
+    fazer. `.nenhuma` e não `.vazio`: `.vazio` é a caixa tracejada de página inteira, e ela
+    disputaria a atenção com o cartão tracejado que o botão logo abaixo cria.
+    {% endcomment %}
+    {% if not secao.grupos %}
+    <p class="nenhuma">Este Edital ainda não publica nada aqui — o botão abaixo cria o primeiro.</p>
+    {% endif %}
+    {% for grupo in secao.grupos %}
+    {% include "interface/_retificacao_linha.html" with grupo=grupo %}
+    {% endfor %}
+
+    {% comment %}
+    O botão de acrescentar mora **na seção do que ele acrescenta**, e não numa terceira área no
+    fim da página. Antes, quem quisesse um Evento novo terminava de ler o Cronograma, atravessava
+    as Etapas, os Documentos e as Seções do texto, e encontrava "Acrescentar Eventos" a quatro mil
+    pixels do último Evento — para então voltar e conferir a ordem.
+    {% endcomment %}
+    {% if secao.id == 'perfis' %}
     <div id="novos-perfis">
       {% for linha in novos_perfis %}
       {% include "interface/_retificacao_perfil.html" with indice=linha.indice campos=linha.campos %}
       {% endfor %}
     </div>
-    <button type="button" class="botao secundario"
-            hx-get="{% url 'interface:fragmento-retificacao-perfil' %}"
-            hx-target="#novos-perfis" hx-swap="beforeend">Acrescentar Perfil</button>
-  </section>
-
-  <section aria-labelledby="novos-anexos-titulo">
-    <h2 id="novos-anexos-titulo">Acrescentar Anexos</h2>
-    <p class="ajuda">Um Anexo acrescentado passa a integrar o Edital quando a Retificação for
-      publicada. O rótulo é o nome inteiro com que o Edital o cita, e o sistema não numera nada.</p>
-    <div id="novos-anexos">
-      {% for linha in novos_anexos %}
-      {% include "interface/_retificacao_anexo.html" with indice=linha.indice campos=linha.campos %}
-      {% endfor %}
-    </div>
-    <button type="button" class="botao secundario"
-            hx-get="{% url 'interface:fragmento-retificacao-anexo' %}"
-            hx-target="#novos-anexos" hx-swap="beforeend">Acrescentar Anexo</button>
-  </section>
-
-  <section aria-labelledby="novos-eventos-titulo">
-    <h2 id="novos-eventos-titulo">Acrescentar Eventos</h2>
+    <p class="acrescentar">
+      <button type="button" class="botao secundario"
+              hx-get="{% url 'interface:fragmento-retificacao-perfil' %}"
+              hx-target="#novos-perfis" hx-swap="beforeend">Acrescentar Perfil</button>
+      <span class="ajuda">Um Perfil acrescentado passa a integrar o Edital quando a Retificação
+        for publicada. Modalidades de Concorrência ainda não são definidas por aqui.</span>
+    </p>
+    {% elif secao.id == 'cronograma' %}
     <div id="novos-eventos">
       {% for linha in novos_eventos %}
       {% include "interface/_retificacao_evento.html" with indice=linha.indice campos=linha.campos %}
       {% endfor %}
     </div>
-    <button type="button" class="botao secundario"
-            hx-get="{% url 'interface:fragmento-retificacao-evento' %}"
-            hx-target="#novos-eventos" hx-swap="beforeend">Acrescentar Evento</button>
+    <p class="acrescentar">
+      <button type="button" class="botao secundario"
+              hx-get="{% url 'interface:fragmento-retificacao-evento' %}"
+              hx-target="#novos-eventos" hx-swap="beforeend">Acrescentar Evento</button>
+      <span class="ajuda">Um Evento acrescentado entra no Cronograma quando a Retificação for
+        publicada, continuando a ordem dos que já estão acima.</span>
+    </p>
+    {% elif secao.id == 'anexos' %}
+    <div id="novos-anexos">
+      {% for linha in novos_anexos %}
+      {% include "interface/_retificacao_anexo.html" with indice=linha.indice campos=linha.campos %}
+      {% endfor %}
+    </div>
+    <p class="acrescentar">
+      <button type="button" class="botao secundario"
+              hx-get="{% url 'interface:fragmento-retificacao-anexo' %}"
+              hx-target="#novos-anexos" hx-swap="beforeend">Acrescentar Anexo</button>
+      <span class="ajuda">O rótulo é o nome inteiro com que o Edital cita o Anexo, e o sistema
+        não numera nada.</span>
+    </p>
+    {% endif %}
+  </section>
+  {% endfor %}
+
+  <section class="secao-da-retificacao" id="sobre-a-retificacao" aria-labelledby="t-sobre">
+    <h2 id="t-sobre">Sobre esta Retificação</h2>
+    <fieldset class="linha">
+      <legend><span class="nome">O ato</span></legend>
+      <p class="campo largo">
+        <label for="justificativa">Justificativa <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <textarea id="justificativa" name="justificativa" rows="3" required
+                  aria-describedby="ajuda-just" aria-required="true">{{ justificativa }}</textarea>
+        <span class="ajuda" id="ajuda-just">Fica registrada no ato e na consulta pública.
+          Exigida para criar a Retificação; não para conferir o que vai mudar.</span>
+      </p>
+      <p class="campo">
+        <label for="vigencia">Vigência (opcional)</label>
+        <input type="datetime-local" id="vigencia" name="vigencia" value="{{ vigencia }}"
+               aria-describedby="ajuda-vig">
+        <span class="ajuda" id="ajuda-vig">Vazio significa vigorar na Publicação. Data futura
+          significa que o conteúdo atual continua valendo até lá.</span>
+      </p>
+    </fieldset>
   </section>
 
-  <fieldset class="linha">
-    <legend>Sobre esta Retificação</legend>
-    <p class="campo largo">
-      <label for="justificativa">Justificativa <span class="obrigatorio" aria-hidden="true">*</span></label>
-      <textarea id="justificativa" name="justificativa" rows="3" required
-                aria-describedby="ajuda-just" aria-required="true">{{ justificativa }}</textarea>
-      <span class="ajuda" id="ajuda-just">Fica registrada no ato e na consulta pública.</span>
-    </p>
-    <p class="campo">
-      <label for="vigencia">Vigência (opcional)</label>
-      <input type="datetime-local" id="vigencia" name="vigencia" value="{{ vigencia }}"
-             aria-describedby="ajuda-vig">
-      <span class="ajuda" id="ajuda-vig">Vazio significa vigorar na Publicação. Data futura
-        significa que o conteúdo atual continua valendo até lá.</span>
-    </p>
-  </fieldset>
+  {% comment %}
+  A barra gruda no rodapé da janela enquanto o formulário rola — `position:sticky`, sem script e
+  sem duplicar botão nenhum. Num Edital extenso, conferir uma alteração feita no primeiro cartão
+  custava rolar seis mil pixels até o fim da página e outros seis mil de volta.
 
-  <p class="navegacao-etapa">
-    <button type="submit" class="botao secundario">Ver o que vai mudar</button>
+  `formnovalidate` em "Ver o que vai mudar": a justificativa é exigida para **criar** a
+  Retificação, e exigi-la para conferir obrigava a escrever a fundamentação de uma alteração
+  antes de poder olhar se a alteração é a que se queria.
+  {% endcomment %}
+  <p class="navegacao-etapa barra-de-acoes">
+    <button type="submit" class="botao secundario" formnovalidate>Ver o que vai mudar</button>
     {% if resumo and pode_elaborar %}
     <button type="submit" name="confirmar" value="1" class="botao">Criar Retificação</button>
     {% endif %}
@@ -204,4 +202,5 @@ corrige é o caminho que não termina.
 {% endif %}
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
 <script src="{% static 'interface/remocao.js' %}" defer></script>
+<script src="{% static 'interface/retificacao.js' %}" defer></script>
 {% endblock %}

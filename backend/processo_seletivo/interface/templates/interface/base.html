@@ -886,6 +886,90 @@ fieldset.etapa:has(input[name$="-forma"][value="PONTUADA"]:checked) .so-decisori
 fieldset.marco:has(input[name$="-appealDeclaration"]:checked:not([value="admite"])) .so-admite,
 fieldset.perfil:has(input[name$="-reserveType"]:checked:not([value="LIMITED"])) .so-limitada{
   display:none}
+/* ── Retificação de Edital publicado ───────────────────────────────────────────────────────────
+   Um Edital institucional rende sessenta linhas editáveis e vários metros de rolagem. Tudo aqui
+   existe para a mesma pergunta: onde eu estou, o que eu já mudei, e como saio daqui. */
+
+/* O sumário. Barra de âncoras comuns — funciona sem script, é operável por teclado e o leitor de
+   tela a anuncia como lista de links. */
+.indice{display:flex;align-items:baseline;gap:.5rem .75rem;flex-wrap:wrap;background:var(--branco);
+  border:1px solid var(--borda);border-radius:6px;padding:.6rem .9rem;margin:0 0 1.5rem}
+.indice .indice-rotulo{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--texto-fraco);font-weight:600}
+.indice ul{display:flex;gap:.35rem .5rem;flex-wrap:wrap;list-style:none;margin:0;padding:0}
+.indice a{display:inline-flex;align-items:baseline;gap:.35rem;text-decoration:none;
+  font-size:.875rem;padding:.2rem .5rem;border-radius:4px}
+.indice a:hover{background:var(--verde-claro)}
+.indice .conta{font-size:.75rem;color:var(--texto-fraco);font-variant-numeric:tabular-nums}
+
+/* O título da seção separa o Cronograma das Etapas, e é o alvo das âncoras. `scroll-margin-top`
+   porque a âncora sem ele encosta o título na borda superior da janela, e a primeira linha da
+   seção fica fora de vista logo depois do salto. */
+.secao-da-retificacao{margin:0 0 2rem;scroll-margin-top:1rem}
+.secao-da-retificacao>h2{font-size:1rem;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--texto-fraco);border-bottom:2px solid var(--borda);padding-bottom:.35rem;
+  margin:0 0 .9rem}
+
+/* A legenda em duas vozes. Sessenta cartões repetem a categoria — "Modalidade", "Seção" — e o que
+   distingue um do outro é o nome. Numa legenda inteiriça em caixa alta os dois tinham o mesmo
+   peso, e o olho que procura "AC — DOC-INFO" lia a palavra "MODALIDADE" sessenta vezes antes. */
+fieldset.linha>legend .categoria{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--texto-fraco);font-weight:600;margin-right:.4rem}
+fieldset.linha>legend .nome{font-size:.9375rem;text-transform:none;letter-spacing:0;
+  color:var(--texto);font-weight:600}
+
+/* A linha que ainda **não** integra o Edital tem a borda tracejada: ela é uma proposta dentro de
+   um formulário cheio de conteúdo vigente, e nada a distinguia dos cartões que já valem. */
+fieldset.linha.perfil-novo,fieldset.linha.evento-novo,fieldset.linha.anexo-novo{
+  border-style:dashed}
+/* Modalidade, Fato, Marco e Critério pertencem ao Perfil imediatamente acima. Na lista plana eram
+   irmãos dele, e descobrir de quem era cada um exigia ler o sufixo do nome. */
+fieldset.linha.aninhada{margin-left:1.5rem;border-left:3px solid var(--borda)}
+
+/* O que você já mudou, enquanto muda. O resumo "antes e depois" só existe depois de um envio, e
+   até lá nada na tela distinguia um campo tocado de um campo intocado: quem alterou uma data no
+   primeiro cartão e seguiu rolando não tinha como reencontrá-la. A marca é do campo **e** da
+   linha, porque a linha é o que se acha rolando. */
+.campo[data-alterado] label{color:var(--verde-escuro)}
+.campo[data-alterado] input,.campo[data-alterado] select,.campo[data-alterado] textarea{
+  border-color:var(--verde);background:var(--verde-claro)}
+fieldset.linha[data-alterado]{border-color:var(--verde);box-shadow:inset 3px 0 0 var(--verde)}
+fieldset.linha[data-alterado].aninhada{border-left-color:var(--verde)}
+.remover-linha[data-alterado] label{color:var(--vermelho);font-weight:600}
+/* Cor não é o único portador: a legenda diz em palavras o que a borda diz em verde (WCAG 1.4.1). */
+fieldset.linha>legend .alterada{font-size:.7rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.03em;color:var(--verde-escuro);background:var(--verde-claro);
+  padding:.1rem .4rem;border-radius:3px;margin-left:.4rem}
+
+/* Filtrar esconde e não remove, e o `hidden` precisa vencer o `display` que a regra do próprio
+   elemento declara — `.campos{display:flex}` é a que o alcança de perto. */
+[hidden]{display:none!important}
+
+/* O filtro, criado por `retificacao.js`. Não existe no HTML de propósito: sem script ele não
+   filtraria nada, e um controle que promete e não cumpre é pior que a ausência dele. */
+.filtro-da-retificacao{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;
+  background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:.6rem .9rem;margin:0 0 1.5rem}
+.filtro-da-retificacao label{font-size:.8125rem;font-weight:600}
+.filtro-da-retificacao input[type=search]{padding:.4rem .5rem;border:1px solid var(--borda);
+  border-radius:4px;font:inherit;font-size:.875rem;min-width:16rem}
+.filtro-da-retificacao .marca{display:flex;align-items:center;gap:.4rem;font-size:.8125rem;
+  font-weight:600}
+.filtro-da-retificacao .achados{font-size:.8125rem;color:var(--texto-fraco);margin-left:auto}
+
+/* Quem acrescenta uma linha fica onde as linhas daquele tipo estão, e não numa área no fim. */
+.acrescentar{display:flex;align-items:baseline;gap:.75rem;flex-wrap:wrap;margin:.25rem 0 0}
+.acrescentar .ajuda{flex:1 1 20rem;margin:0}
+
+/* A barra que segue a rolagem. `sticky` e não `fixed`: ela ocupa lugar no fluxo, então o fim do
+   formulário não fica escondido atrás dela, e no fim da página ela repousa onde sempre esteve.
+   Sem duplicar botão nenhum — são os mesmos `submit` do formulário, com o mesmo nome e a mesma
+   ordem de tabulação. */
+.barra-de-acoes{position:sticky;bottom:0;z-index:5;background:var(--branco);
+  border:1px solid var(--borda);border-radius:6px;padding:.75rem 1rem;
+  box-shadow:0 -2px 8px rgba(0,0,0,.06);margin-top:1.5rem}
+.barra-de-acoes .contagem{margin-left:auto;font-size:.875rem;color:var(--texto-fraco)}
+.barra-de-acoes .contagem strong{color:var(--verde-escuro)}
 </style>
 </head>
 <body>

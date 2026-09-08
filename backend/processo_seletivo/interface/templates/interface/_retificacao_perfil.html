@@ -1,5 +1,5 @@
 <fieldset class="linha perfil-novo">
-  <legend>Perfil a acrescentar</legend>
+  <legend><span class="nome">Perfil a acrescentar</span></legend>
   <div class="campos">
     {% for campo in campos %}
     <p class="campo{% if campo.tipo == 'inteiro' %} curto{% elif campo.tipo == 'lista' %} largo{% endif %}">
