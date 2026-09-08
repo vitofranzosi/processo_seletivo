@@ -561,8 +561,15 @@ fieldset.linha>legend{font-size:.75rem;text-transform:uppercase;letter-spacing:.
 .acoes-da-linha{margin:.25rem 0 .75rem;display:flex;justify-content:flex-end}
 .acoes-da-linha .grupo{display:flex;gap:.4rem}
 .acoes-da-linha .rotulo-vazio{display:none}
-/* Alvos iguais e encostados viram um alvo só, e o vizinho aqui descarta trabalho não enviado. */
-.acoes-da-linha .simbolo.perigo{margin-left:.7rem}
+/* Alvos iguais e encostados viram um alvo só, e o vizinho aqui descarta trabalho não enviado.
+   As duas advertências: `.perigo` na linha de formulário, `.perigoso` no Anexo, onde remover
+   apaga o arquivo no servidor. */
+.acoes-da-linha .simbolo.perigo,.acoes-da-linha .simbolo.perigoso{margin-left:.7rem}
+/* O Anexo grava por `submit` em formulários próprios, e não por HTMX: o grupo de símbolos convive
+   ali com dois botões de verbo, que gravam o que se editou acima. O que separa as duas famílias é
+   a fileira — conteúdo à esquerda, linha à direita —, e `margin-left:auto` é quem a separa. */
+.acoes-do-anexo{margin:.5rem 0 0;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.acoes-do-anexo .acoes-da-linha{margin:0 0 0 auto}
 /* Dentro de `.campos`, o grupo é a última coluna e se alinha aos `input`, não aos rótulos:
    `.rotulo-vazio` reserva a mesma altura que um `label` ocupa acima do seu controle. Sem ela os
    botões ficariam 23 px acima da linha dos campos. `margin-left:auto` mantém o grupo à direita
