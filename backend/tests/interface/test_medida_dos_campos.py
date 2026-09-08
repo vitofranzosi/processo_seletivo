@@ -240,3 +240,48 @@ def test_o_evento_cabe_numa_linha(evento):
     assert len(linhas) == 1, f"o Evento ocupa {len(linhas)} linhas de campo"
     for campo in ("-type", "-description", "-startAt", "-endAt"):
         assert f'name="evento-0{campo}"' in evento
+
+
+# ------------------------------------------------ o cartão de Etapa de Avaliação
+
+
+@pytest.fixture
+def etapa(client, seletor_ligado, edital):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    return client.get(
+        reverse("interface:fragmento-etapa", args=[edital.id]), {"indice": "0"}
+    ).content.decode()
+
+
+def test_o_nome_da_etapa_nao_pede_mais_largura_do_que_cabe(etapa):
+    """`largo` é `flex 2`: ela pedia 862 px e o teto de leitura cortava em 685.
+
+    Os 151 px que sobravam não ficavam na ponta da linha: ficavam **entre** o campo e o rótulo do
+    Evento do Cronograma, que é onde um vão atrapalha a leitura.
+    """
+    assert re.search(r'<p class="campo">\s*<label for="etapa-0-name"', etapa)
+
+
+def test_a_conclusao_divide_a_linha_com_o_que_nao_depende_dela(etapa):
+    """Sozinha, ela usava 387 px de 1.355 — quase mil vazios à direita.
+
+    Peso, Avaliações por inscrição e Caráter são atributos **independentes** da forma de concluir:
+    podem dividir a faixa sem sugerir que dependem dela, e é isso que enche a linha.
+    """
+    # Do fim do grupo até o Peso não pode haver fechamento de linha nem abertura de outra. Contar
+    # profundidade a partir da linha **anterior** ao grupo não servia: no arranjo antigo ela já
+    # havia fechado, e a conta dava positivo por causa da linha nova que se abria depois — o teste
+    # passava com o defeito de pé.
+    fim_do_grupo = etapa.index("</fieldset>", etapa.index('<fieldset class="opcoes">'))
+    entre = etapa[fim_do_grupo : etapa.index("-weight")]
+
+    assert "</div>" not in entre and '<div class="campos">' not in entre, (
+        "há fronteira de linha entre a conclusão e o Peso — eles não dividem a mesma linha"
+    )
+    for vizinho in ("-weight", "-evaluationsPerRegistration", "caracter"):
+        assert vizinho in etapa
+
+
+def test_o_grupo_que_divide_a_linha_tem_base_propria(folha):
+    """Sem `flex`, o `fieldset` entra como item de largura automática e empurra o vizinho."""
+    assert re.search(r"\.campos>fieldset\.opcoes\{[^}]*flex:", folha)
