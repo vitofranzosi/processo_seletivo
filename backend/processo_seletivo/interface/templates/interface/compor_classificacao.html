@@ -10,9 +10,35 @@
   apontam Etapa ou fato declarado. Oferecê-lo antes seria oferecer listas vazias e chamá-las de
   escolha — a mesma razão pela qual a Inscrição veio depois do Cronograma.
   {% endcomment %}
-  <p class="ajuda">Onde a ordem entre participantes é produzida: quais Etapas entram, como as
-    pontuações se combinam, com que arredondamento, e em que ordem os critérios de desempate se
-    aplicam. Um Perfil sem marco não classifica.</p>
+  <p class="ajuda">Onde a ordem entre participantes é produzida. Um Perfil sem marco não
+    classifica.</p>
+  {% comment %}
+  Oito explicações viviam dentro do cartão do marco, e um Edital com três Perfis as imprimia três
+  vezes cada. Seis delas nem `id` tinham: não eram anunciadas a leitor de tela nenhum. Agora todas
+  têm, e o campo aponta para a sua — de modo que sair de vista **melhorou** o que se anuncia, em
+  vez de piorar.
+  {% endcomment %}
+  <details class="como-preencher">
+    <summary>Como preencher estes campos</summary>
+    <dl>
+      <dt>Etapas que entram na ordem</dt>
+      <dd>Só Etapas classificatórias. O peso de cada uma é o que ela já publica; aqui se escolhe
+        quais entram.</dd>
+      <dt>Casas decimais e arredondamento</dt>
+      <dd>O arredondamento é aplicado uma vez, sobre a pontuação combinada.</dd>
+      <dt>Como as pontuações se combinam</dt>
+      <dd>O peso de cada Etapa é o que a própria Etapa já publica; aqui se declara o que se faz com
+        eles. Os pesos não precisam somar 1: é a normalização declarada que responde por isso.</dd>
+      <dt>Recurso contra o resultado</dt>
+      <dd>Não declarar e negar são coisas diferentes: o silêncio devolve a tempestividade ao juízo
+        de admissibilidade motivado; a negativa é norma publicada, e recusa a interposição
+        nomeando-a. O prazo é contado do dia seguinte ao da divulgação, incluindo o do vencimento;
+        dias úteis exigiriam o calendário de dias sem expediente, que o Edital não publica.</dd>
+      <dt>Critérios de desempate</dt>
+      <dd>Aplicados na ordem declarada. Esgotados todos, os empatados compartilham posição, e o ato
+        registra que ali não existe ordem normativa.</dd>
+    </dl>
+  </details>
   {% if not etapas_classificatorias %}
   <div class="aviso" role="alert">
     <p>Nenhuma Etapa foi publicada como <strong>classificatória</strong>. Um marco só pode enumerar

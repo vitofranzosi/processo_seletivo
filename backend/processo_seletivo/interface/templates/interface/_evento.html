@@ -31,14 +31,19 @@
              name="evento-{{ indice }}-startAt" value="{{ evento.startAt|default:'' }}" required aria-required="true">
     </p>
     <p class="campo">
-      <label for="evento-{{ indice }}-endAt">Término</label>
+      <label for="evento-{{ indice }}-endAt">Término <span class="opcional">(opcional)</span></label>
       {% recusa_de recusas "evento" indice "endAt" as recusado %}
       <input type="datetime-local" id="evento-{{ indice }}-endAt"
              name="evento-{{ indice }}-endAt" value="{{ evento.endAt|default:'' }}"
              aria-describedby="ajuda-fim-{{ indice }}{% if recusado %} recusa-evento-{{ indice }}-endAt{% endif %}"
              {% if recusado %}aria-invalid="true"{% endif %}>
       {% if recusado %}<span class="recusa" role="alert" id="recusa-evento-{{ indice }}-endAt">{{ recusado }}</span>{% endif %}
-      <span class="ajuda" id="ajuda-fim-{{ indice }}">Vazio para evento pontual.</span>
+      {% comment %}
+      Campo de data não desenha `placeholder` — quem o preenche é o navegador, com o formato. Então
+      a consequência de deixar vazio se diz no rótulo, e a frase inteira fica na descrição que o
+      campo aponta.
+      {% endcomment %}
+      <span class="oculto" id="ajuda-fim-{{ indice }}">Vazio para evento pontual.</span>
     </p>
   </div>
   <p class="remover">
