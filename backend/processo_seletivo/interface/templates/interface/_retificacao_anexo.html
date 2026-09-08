@@ -1,0 +1,40 @@
+<fieldset class="linha anexo-novo">
+  <legend>Anexo a acrescentar</legend>
+  <div class="campos">
+    {% for campo in campos %}
+    {% if campo.tipo == 'oculto' %}
+    {% comment %}
+    A identidade da linha, nascida no fragmento. Viaja nas duas fases para que confirmar de novo —
+    duplo clique, F5 — produza o mesmo ato, e não um conflito de idempotência (020).
+    {% endcomment %}
+    <input type="hidden" name="novo-anexo-{{ indice }}-{{ campo.chave }}" value="{{ campo.valor }}">
+    {% else %}
+    <p class="campo{% if campo.tipo == 'inteiro' %} curto{% endif %}">
+      <label for="na-{{ indice }}-{{ campo.chave }}">{{ campo.rotulo }}</label>
+      {% if campo.tipo == 'arquivo' %}
+      {% comment %}
+      O arquivo entra na conferência e o campo oculto carrega a identidade do artefato até a
+      confirmação — os bytes não viajam dentro da Alteração (020, FR-035). O resumo não aparece
+      aqui de propósito: ninguém digita SHA-256, e oferecer o campo permitiria declarar bytes que
+      não são os enviados.
+      {% endcomment %}
+      <input id="na-{{ indice }}-{{ campo.chave }}"
+             name="arquivo::novo-anexo-{{ indice }}-{{ campo.chave }}"
+             type="file" accept="application/pdf">
+      <input type="hidden" name="novo-anexo-{{ indice }}-{{ campo.chave }}"
+             value="{{ campo.valor }}">
+      {% else %}
+      <input id="na-{{ indice }}-{{ campo.chave }}"
+             name="novo-anexo-{{ indice }}-{{ campo.chave }}"
+             type="{% if campo.tipo == 'inteiro' %}number{% else %}text{% endif %}"
+             value="{{ campo.valor }}">
+      {% endif %}
+    </p>
+    {% endif %}
+    {% endfor %}
+  </div>
+  <p class="acoes-linha">
+    <button type="button" class="acao" hx-get="{% url 'interface:fragmento-remover' %}"
+            hx-target="closest fieldset" hx-swap="outerHTML">Não acrescentar este Anexo</button>
+  </p>
+</fieldset>

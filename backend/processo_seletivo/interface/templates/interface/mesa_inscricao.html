@@ -78,6 +78,22 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
     <li>
       <span class="requisito">{{ documento.nome }}</span>
       <span class="celula-marca">{% if documento.obrigatorio %}<span class="marca">obrigatório</span>{% endif %}</span>
+      {% comment %}
+      O modelo que o Edital fornecia **na versão que esta inscrição aceitou** (020, FR-050). Não é
+      o vigente: uma Retificação pode ter substituído o formulário depois, e conferir o que voltou
+      contra a forma nova seria conferir contra o que não foi pedido.
+
+      A tela mostra qual era a forma, e **não** afirma que foi este o arquivo que a pessoa baixou —
+      ela pode ter baixado sob outra versão, e os bytes devolvidos não dizem de onde vieram.
+      Concluir se o que voltou serve é juízo de quem avalia (D-004).
+      {% endcomment %}
+      {% if documento.modelo %}
+      <span class="modelo"><a class="acao" href="{% url 'public-anexo' documento.modelo.artefato_id %}"
+         target="_blank" rel="noopener"
+         aria-label="Abrir o modelo exigido: {{ documento.modelo.rotulo }}">Modelo exigido</a></span>
+      {% else %}
+      <span class="modelo"></span>
+      {% endif %}
       {% if documento.enviado %}
       {% comment %}
       **Aba própria, e não a mesma.** O PDF é servido `inline`, então abrir na mesma aba substitui

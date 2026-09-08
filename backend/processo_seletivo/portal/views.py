@@ -31,7 +31,7 @@ from processo_seletivo.divulgacao.application.selectors import (
 from processo_seletivo.divulgacao.application.selectors import (
     publicacao_por_id as publicacao_de_resultado,
 )
-from processo_seletivo.editais.domain.documentos import aplicaveis
+from processo_seletivo.editais.domain.documentos import aplicaveis, modelo_do_requisito
 from processo_seletivo.identidade.application import associacao
 from processo_seletivo.identidade.application import credenciais as nucleo_da_identidade
 from processo_seletivo.identidade.application import desafio as desafio_de_acesso
@@ -58,7 +58,6 @@ from processo_seletivo.inscricoes.application.submissao import (
     pendencias_para_enviar,
     reconhecer_versao,
 )
-from processo_seletivo.inscricoes.domain.arquivos import tamanho_legivel
 from processo_seletivo.inscricoes.domain.autenticidade import codigo_de_verificacao
 from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes, recebe_inscricoes
 from processo_seletivo.inscricoes.domain.pessoais import (
@@ -76,6 +75,7 @@ from processo_seletivo.recursos.application.interpor import objetos_recorriveis
 from processo_seletivo.recursos.application.selectors import recursos_do_titular
 from processo_seletivo.resultados.application.selectors import resultados_visiveis
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.shared.arquivos import tamanho_legivel
 from processo_seletivo.shared.http import marcar_como_privada, resposta_privada
 
 # O limite da coluna, aplicado antes de a gravação chegar ao banco.
@@ -108,7 +108,25 @@ def _selecao(versao):
         "titulo": conteudo.get("title", ""),
         "descricao": conteudo.get("description", ""),
         "publicacao_id": versao.source_publication_id,
+        "anexos": _anexos(conteudo),
     }
+
+
+def _anexos(conteudo):
+    """Os Anexos vigentes, na ordem editorial, **todos** (020, FR-039, FR-039a).
+
+    Sem filtro por Perfil ou modalidade: o Anexo é conteúdo do Edital e não tem Perfil próprio — e
+    filtrar por vínculo sumiria com o anexo que requisito nenhum aponta, que é legítimo. A
+    filtragem útil acontece onde importa, no fluxo de inscrição, onde o candidato vê o modelo do
+    requisito dele.
+    """
+    return [
+        {"rotulo": anexo.get("label", ""), "artefato_id": anexo.get("artifactId")}
+        for anexo in sorted(
+            conteudo.get("attachments") or [], key=lambda item: item.get("order", 0)
+        )
+        if anexo.get("artifactId")
+    ]
 
 
 ETAPAS = ("Seus dados e documentos", "Revisão", "Comprovante")
@@ -1433,6 +1451,7 @@ def _documentos(conteudo, inscricao):
                 # Tamanho e resumo criptográfico vão para o comprovante (D9): são o que permite a
                 # alguém, depois, afirmar que o arquivo em mãos é o que foi entregue.
                 "tamanho": None if documento is None else tamanho_legivel(documento.tamanho),
+                "modelo": modelo_do_requisito(conteudo, requisito),
             }
         )
     obrigatorios = [linha for linha in linhas if linha["obrigatorio"]]
@@ -1443,6 +1462,35 @@ def _documentos(conteudo, inscricao):
         "recebidos": recebidos,
         "faltam": len(obrigatorios) - recebidos,
     }
+
+
+def _modelos_alterados(inscricao, conteudo_vigente):
+    """Os modelos que mudaram desde a versão que a pessoa reconheceu (020, POLISH020-010).
+
+    Compara **artefato**, e não rótulo: substituir o formulário mantendo o nome é o caso normal, e é
+    exatamente o que precisa ser dito. Só os requisitos daquela inscrição entram — avisar sobre o
+    anexo de um Perfil alheio seria ruído.
+    """
+    reconhecida = getattr(inscricao, "versao_reconhecida", None)
+    if reconhecida is None:
+        return []
+    antes = reconhecida.content
+    alterados = []
+    for requisito in requisitos_da_inscricao(conteudo_vigente, inscricao):
+        agora = modelo_do_requisito(conteudo_vigente, requisito)
+        if agora is None:
+            continue
+        anterior = next(
+            (
+                modelo_do_requisito(antes, item)
+                for item in antes.get("documentRequirements") or []
+                if str(item.get("id")) == str(requisito["id"])
+            ),
+            None,
+        )
+        if anterior and anterior["artefato_id"] != agora["artefato_id"]:
+            alterados.append({"requisito": requisito.get("name", ""), **agora})
+    return alterados
 
 
 def _perfil_do_conteudo(conteudo, profile_id):
@@ -1675,6 +1723,10 @@ def revisao(request, inscricao_id):
             "descartes_da_retificacao": (
                 documentos_que_a_retificacao_invalida(registro, versao) if retificado else []
             ),
+            # Os modelos que mudaram entre a versão que a pessoa reconheceu e a vigente (020). O
+            # aviso genérico — "houve alteração" — não faz ninguém olhar para o formulário que já
+            # preencheu e assinou, e é justamente esse o caso em que ela mais perde trabalho.
+            "modelos_alterados": (_modelos_alterados(registro, conteudo) if retificado else []),
             "erros": erros,
             "declaracoes": declaracoes,
             # Cada fato com o que a pessoa digitou: uma recusa não pode custar o que já estava

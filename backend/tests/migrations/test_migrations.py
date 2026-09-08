@@ -513,7 +513,11 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # **Sobe para 11 com a 018**: a `editais/0011` acrescenta `janela_recursal` ao marco
         # classificatório — o degrau 8. É elaboração, e não divulgação: quem declara o prazo é o
         # Edital, e é por isso que o campo mora aqui e não na 017 (FR-020, FR-030).
-        "editais": 11,
+        # **Sobe para 13 com a 020**: a `editais/0012` cria o Anexo e o seu artefato e liga o
+        # Documento Exigido ao modelo; a `0013` põe no banco a imutabilidade do artefato já
+        # publicado. São duas porque protegem coisas diferentes — criar tabela e trancar o que ela
+        # guarda —, e a segunda é condicional ao estado, como a `publicacoes/0007` (020, FR-010).
+        "editais": 13,
         "publicacoes": 8,
         # **Sobe para 2 com a 018**: a `divulgacao/0002` acrescenta os três campos da declaração
         # expressa de encerramento do prazo e a constraint que os mantém inteiros (FR-085).

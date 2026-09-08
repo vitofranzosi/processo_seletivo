@@ -4,6 +4,7 @@ from decimal import Decimal
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.domain import secoes
 from processo_seletivo.editais.domain.validation import blocking_findings, validate_for_publication
+from processo_seletivo.editais.models.anexos import ArtefatoAnexo
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import AtoAdministrativo, Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.infrastructure.pdf import (
@@ -229,7 +230,31 @@ def edital_snapshot(edital: Edital) -> dict:
         "documentRequirements": _document_requirements(edital),
         "stages": _stages(edital),
         "sections": _sections(edital),
+        "attachments": _attachments(edital),
     }
+
+
+def _attachments(edital: Edital) -> list[dict]:
+    """Os Anexos do Edital, na ordem editorial declarada (020, FR-001, FR-029).
+
+    Cada versão carrega **identidade e resumo** do artefato, e os dois têm papéis distintos:
+    `artifactId` endereça os bytes, `artifactHash` prova que são os mesmos. Guardar só o resumo
+    faria a resolução ficar ambígua, porque dois artefatos de conteúdo idêntico são legítimos e o
+    resumo não os distingue (FR-011).
+
+    A ordenação vem do `Meta.ordering` do modelo — `(order, id)` —, determinística por construção:
+    ordem de inserção quebraria a igualdade de bytes entre dois snapshots do mesmo conteúdo.
+    """
+    return [
+        {
+            "id": str(anexo.id),
+            "label": anexo.rotulo,
+            "order": anexo.order,
+            "artifactId": str(anexo.artefato_id),
+            "artifactHash": anexo.artefato.document_hash,
+        }
+        for anexo in edital.anexos.select_related("artefato")
+    ]
 
 
 def _document_requirements(edital: Edital) -> list[dict]:
@@ -251,9 +276,64 @@ def _document_requirements(edital: Edital) -> list[dict]:
             "modalityId": (
                 None if documento.modalidade_id is None else str(documento.modalidade_id)
             ),
+            # O Anexo que serve de modelo, ou `null` para "não fornece modelo" (020, FR-020).
+            "attachmentId": None if documento.anexo_id is None else str(documento.anexo_id),
         }
         for documento in edital.documentos_exigidos.all()
     ]
+
+
+def congelar_artefatos(conteudo, *, now):
+    """Torna públicos e imutáveis os artefatos que esta versão publica (020, FR-010, FR-025).
+
+    **Na mesma transação em que a `Publicacao` nasce**, e é essa a razão de os bytes morarem em
+    coluna binária: a publicação é atômica, e um `rollback` leva tudo embora junto. Com arquivo em
+    disco, o congelamento aconteceria fora da transação, e conteúdo publicado poderia apontar para
+    bytes que não existem — o defeito que a feature veio corrigir (R-001).
+
+    Congelar o que já está congelado é no-op, e não erro: a mesma identidade atravessa versões, e
+    uma Retificação que reverte outra republica artefato que já é público. O filtro por
+    `congelado_em__isnull=True` torna a operação idempotente — e é também o que impede a trigger de
+    recusar a escrita.
+
+    **Antes de congelar, confere** (FR-026). A primeira redação só executava o `UPDATE`, e com isso
+    um artefato ausente passaria em silêncio — a versão publicada citando bytes que ninguém tem — e
+    um artefato alterado entre a homologação e a publicação seria publicado com o resumo antigo,
+    fazendo o `ETag` mentir sobre o conteúdo entregue. As duas conferências custam uma consulta e
+    um `sha256` por anexo, e é o que sustenta a cadeia `versão → identidade → resumo → bytes`
+    (FR-053).
+    """
+    anexos = [
+        anexo
+        for anexo in conteudo.get("attachments") or []
+        if isinstance(anexo, dict) and anexo.get("artifactId")
+    ]
+    if not anexos:
+        return 0
+    artefatos = {
+        str(artefato.id): artefato
+        for artefato in ArtefatoAnexo.objects.filter(
+            pk__in=[anexo["artifactId"] for anexo in anexos]
+        )
+    }
+    for anexo in anexos:
+        artefato = artefatos.get(str(anexo["artifactId"]))
+        if artefato is None:
+            raise DomainError(
+                "attachment_artifact_missing",
+                f"O artefato do Anexo '{anexo.get('label', '')}' não existe.",
+                422,
+            )
+        if hashlib.sha256(bytes(artefato.bytes)).hexdigest() != anexo.get("artifactHash"):
+            raise DomainError(
+                "attachment_artifact_missing",
+                f"Os bytes do Anexo '{anexo.get('label', '')}' não correspondem ao resumo "
+                "registrado na versão homologada.",
+                422,
+            )
+    return ArtefatoAnexo.objects.filter(
+        pk__in=[anexo["artifactId"] for anexo in anexos], congelado_em__isnull=True
+    ).update(congelado_em=now)
 
 
 def _locked_edital(actor, edital_id):
@@ -532,6 +612,7 @@ def publish_edital(
             bytes=pdf,
             document_hash=document_hash,
         )
+        congelar_artefatos(revisao.content, now=now)
         publication.document_hash = document.document_hash
         from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 

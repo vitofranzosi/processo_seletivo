@@ -38,6 +38,14 @@ DECIMAL, TEXTO_LONGO, BOOLEANO = "decimal", "texto_longo", "booleano"
 # (009, FR-009). Digitar UUID à mão faria um erro de digitação mudar em silêncio quem precisa
 # enviar o quê — que é o que `documentos.aplicaveis` decide a partir destes dois campos.
 REFERENCIA = "referencia"
+# O Anexo trouxe o primeiro campo que **não é digitado nem escolhido**: o artefato é um arquivo, e
+# o que a Alteração carrega é a identidade dele mais o resumo — os bytes nunca viajam dentro do ato
+# (020, FR-035). O campo aparece como `<input type="file">`, e o valor que atravessa as duas fases
+# do formulário é a identidade do artefato que o envio criou.
+ARQUIVO = "arquivo"
+# A identidade de uma linha acrescentada. Não é campo de digitar: nasce no fragmento, viaja em
+# campo oculto e é o que torna a confirmação repetível (020).
+OCULTO = "oculto"
 
 # (sufixo do caminho, rótulo, tipo) — aplicado a cada Perfil e a cada Evento.
 CAMPOS_PERFIL = [
@@ -102,6 +110,14 @@ CAMPOS_ETAPA = [
 # Só o conteúdo. O catálogo de seções é fixo: título, ordem, tipo e origem divergentes são
 # recusados pela verificação de topologia, e uma seção gerada nem campo de conteúdo tem.
 CAMPOS_SECAO = [("content", "Texto da seção", TEXTO_LONGO)]
+# O Anexo da `020`. Rótulo e ordem editorial são escalares; o artefato é arquivo. Não há campo de
+# `artifactHash` para digitar: ele é derivado do artefato enviado, e oferecê-lo faria a tela pedir
+# que alguém copiasse um SHA-256 à mão — e permitiria declarar um resumo que não é o dos bytes.
+CAMPOS_ANEXO = [
+    ("label", "Rótulo", TEXTO),
+    ("order", "Ordem editorial", INTEIRO),
+    ("artifactId", "Arquivo do anexo (PDF)", ARQUIVO),
+]
 # E2E-004. `key` fica de fora de propósito: é a identificação estável com que a inscrição já
 # submetida nomeia o arquivo enviado, e trocá-la depois de publicado desligaria o documento do que
 # os candidatos mandaram. O que se corrige aqui é o que a pessoa lê e a quem o documento se aplica.
@@ -112,6 +128,10 @@ CAMPOS_DOCUMENTO = [
     ("order", "Ordem", INTEIRO),
     ("profileId", "Exigido apenas do Perfil", REFERENCIA),
     ("modalityId", "Exigido apenas da modalidade", REFERENCIA),
+    # O modelo que o Edital fornece (020, FR-020). Sem este campo, remover um Anexo apontado por um
+    # requisito seria irrealizável pelo canal do ator: a regra da referência pendurada recusaria o
+    # ato, e a tela não ofereceria o campo que precisa mudar junto.
+    ("attachmentId", "Modelo que o Edital fornece", REFERENCIA),
 ]
 
 LISTA = "lista"
@@ -134,6 +154,15 @@ NOVO_EVENTO = [
     ("description", "Descrição", TEXTO),
     ("startAt", "Início", INSTANTE),
     ("endAt", "Término", INSTANTE),
+]
+# Um Anexo acrescentado por Retificação. O arquivo entra como os demais — enviado antes, citado
+# pela identidade —, e o resumo é resolvido no servidor: nem aqui nem em lugar nenhum alguém digita
+# um SHA-256 (020, FR-031, FR-035).
+NOVO_ANEXO = [
+    ("id", "", OCULTO),
+    ("label", "Rótulo", TEXTO),
+    ("order", "Ordem editorial", INTEIRO),
+    ("artifactId", "Arquivo do anexo (PDF)", ARQUIVO),
 ]
 
 
@@ -169,6 +198,14 @@ def _para_formulario(valor, tipo):
     if tipo == INSTANTE:
         return datetime.fromisoformat(str(valor)).astimezone(ZONA).strftime("%Y-%m-%dT%H:%M")
     return str(valor)
+
+
+def _descrever(descricao, identificador):
+    """`autodeclaracao.pdf · 3 KB`, ou uma frase honesta quando não se sabe qual arquivo era."""
+    if not identificador:
+        return "—"
+    dito = descricao(str(identificador)) if descricao else None
+    return dito or "arquivo já publicado"
 
 
 def _grupo(titulo, caminho, item, campos, *, removivel=True, opcoes=None):
@@ -212,7 +249,12 @@ def opcoes_de_aplicabilidade(conteudo):
                 continue
             rotulo = f"{modalidade.get('code', '')} — {modalidade.get('name', '')}".strip(" —")
             modalidades.append((modalidade["id"], f"{rotulo_do_perfil} · {rotulo}"))
-    return {"profileId": perfis, "modalityId": modalidades}
+    anexos = [
+        (anexo["id"], anexo.get("label") or "sem rótulo")
+        for anexo in conteudo.get("attachments") or []
+        if anexo.get("id")
+    ]
+    return {"profileId": perfis, "modalityId": modalidades, "attachmentId": anexos}
 
 
 def _referenciar(grupos):
@@ -331,6 +373,25 @@ def campos_editaveis(conteudo):
             )
         )
 
+    for anexo in conteudo.get("attachments") or []:
+        grupos.append(
+            _grupo(
+                # **Sem prefixo de posição.** O rótulo já é a identificação editorial completa, e
+                # `Anexo 1 — ANEXO I — …` além de gaguejar introduzia um número que o sistema
+                # calcula — exatamente o que a D-006 decidiu não fazer. Se a ordem mudar, o prefixo
+                # mudaria e passaria a divergir do número impresso dentro do PDF.
+                anexo.get("label") or "Anexo sem rótulo",
+                f"/attachments/id={anexo.get('id', '')}",
+                anexo,
+                CAMPOS_ANEXO,
+                # Removível, ao contrário do Documento Exigido: tirar um anexo da versão futura não
+                # torna incompleta a inscrição de ninguém — o que ele fornecia era a **forma**, e
+                # quem já enviou já enviou. Quem fica sem modelo é o requisito, e ele sobrevive
+                # sem um (020, D-008, FR-024).
+                removivel=True,
+            )
+        )
+
     for secao in conteudo.get("sections") or []:
         # Seção gerada não tem conteúdo próprio: ela é composta a partir do dado que a origina,
         # e é lá que se corrige.
@@ -374,6 +435,12 @@ def _converter(bruto, tipo, rotulo, opcoes=()):
         return bruto == "1"
     if bruto == "":
         return None
+    if tipo == OCULTO:
+        return bruto
+    if tipo == ARQUIVO:
+        # A identidade do artefato que o envio criou. Não há o que converter nem o que validar
+        # aqui: quem a produziu foi a view, gravando os bytes que ela mesma conferiu.
+        return bruto
     if tipo == REFERENCIA:
         # A tela oferece um `select`, e o `select` não é fronteira: um POST fabricado traria
         # qualquer UUID, e a verificação de publicação o aceitaria — ela confere **forma**, e um
@@ -547,12 +614,52 @@ def _evento_completo(valores, ordem):
     }
 
 
-def diferencas(conteudo, dados):
+def _anexo_completo(valores, resumo_do_artefato):
+    """Forma que `edital_snapshot` produz. Um subconjunto quebraria a validação da coleção.
+
+    O resumo vem do artefato, e não do formulário: é a mesma razão da substituição — ninguém digita
+    SHA-256, e permitir declará-lo deixaria alguém afirmar bytes que não são os enviados.
+    """
+    artefato = str(valores.get("artifactId") or "")
+    conferido = resumo_do_artefato(artefato) if artefato and resumo_do_artefato else None
+    if not conferido:
+        raise ValueError(
+            "Arquivo do anexo (PDF): envie o arquivo do Anexo que está sendo acrescentado."
+        )
+    return {
+        # **Nasce no fragmento e atravessa as duas fases.** Gerar aqui produziria identidade nova a
+        # cada chamada de `diferencas`, e reenviar a confirmação — o duplo clique, o F5 — mudaria o
+        # payload sob a mesma chave de idempotência: a segunda tentativa seria recusada por
+        # conflito em vez de devolver a primeira.
+        "id": str(valores.get("id") or uuid4()),
+        "label": valores.get("label") or "",
+        "order": valores.get("order") or 0,
+        "artifactId": artefato,
+        "artifactHash": conferido,
+    }
+
+
+def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefato=None):
     """Alterações Normativas derivadas do que mudou entre o vigente e o que foi submetido.
 
     **A ordem de emissão deixou de ser a garantia de correção.** Cada alteração nomeia a
     entidade de que fala, então remover um Perfil não move os outros e nenhuma sequência produz
     resultado diferente de outra. A ordem abaixo é a que fica legível no resumo, e só isso.
+
+    `resumo_do_artefato` é uma **função**, e não um dicionário, e a diferença é o defeito que ela
+    corrige. O formulário tem duas fases — conferir e confirmar —, e o arquivo só existe na
+    primeira: um mapa montado no envio volta vazio na confirmação, e a Alteração seria gravada com
+    resumo em branco, para ser recusada na publicação pela própria verificação de integridade.
+    Resolver por função faz o resumo ser lido do artefato nas duas fases, **no servidor**, e nunca
+    trafegar por campo oculto — que o navegador poderia trocar.
+
+    `descricao_do_artefato` é outra função, pela mesma razão, e serve ao resumo: sem ela a linha
+    dizia "arquivo anterior → arquivo novo", que não permite a ninguém notar que escolheu o arquivo
+    errado — e a conferência existe exatamente para isso (POLISH020-005).
+
+    Substituir o artefato emite **duas** alterações — identidade e resumo —, porque o conteúdo
+    publicado carrega as duas e uma sem a outra deixaria a versão afirmando bytes que não são os
+    que ela entrega (020, FR-034, FR-035).
     """
     alteracoes, resumo = [], []
     grupos = campos_editaveis(conteudo)
@@ -577,6 +684,41 @@ def diferencas(conteudo, dados):
                 enviado, campo["tipo"], campo["rotulo"], campo.get("opcoes", ())
             )
             anterior = _ler(conteudo, campo["caminho"])
+            if campo["tipo"] == ARQUIVO:
+                if not novo_valor or str(anterior) == str(novo_valor):
+                    continue
+                alteracoes.append(
+                    {
+                        "targetPath": campo["caminho"],
+                        "operation": "REPLACE",
+                        "newValue": str(novo_valor),
+                    }
+                )
+                resumo_novo = resumo_do_artefato(str(novo_valor)) if resumo_do_artefato else None
+                if not resumo_novo:
+                    raise ValueError(
+                        f"{campo['rotulo']}: o arquivo enviado não foi encontrado. Envie-o "
+                        "novamente."
+                    )
+                alteracoes.append(
+                    {
+                        "targetPath": campo["caminho"].replace("/artifactId", "/artifactHash"),
+                        "operation": "REPLACE",
+                        "newValue": resumo_novo,
+                    }
+                )
+                resumo.append(
+                    {
+                        "grupo": grupo["titulo"],
+                        "rotulo": campo["rotulo"],
+                        # O nome e o tamanho dos dois, e não "anterior/novo": a conferência é onde
+                        # um arquivo trocado por engano deveria aparecer, e era a única etapa que
+                        # não permitia notá-lo (POLISH020-005).
+                        "antes": _descrever(descricao_do_artefato, anterior),
+                        "depois": _descrever(descricao_do_artefato, novo_valor),
+                    }
+                )
+                continue
             if campo["tipo"] == INSTANTE:
                 if _mesmo_instante(anterior, novo_valor):
                     continue
@@ -627,6 +769,63 @@ def diferencas(conteudo, dados):
                 "depois": valores.get("name") or "novo Perfil",
             }
         )
+
+    for valores in _linhas_novas(dados, "anexo", NOVO_ANEXO):
+        alteracoes.append(
+            {
+                "targetPath": "/attachments/-",
+                "operation": "ADD",
+                "newValue": _anexo_completo(valores, resumo_do_artefato),
+            }
+        )
+        resumo.append(
+            {
+                "grupo": f"Anexo {valores.get('order') or ''}".strip(),
+                "rotulo": "Acréscimo",
+                "antes": "—",
+                "depois": valores.get("label") or "novo Anexo",
+            }
+        )
+
+    # **O vínculo não sobrevive ao alvo** (020, FR-022). Remover o Anexo sem desfazer a referência
+    # deixaria o conteúdo com um requisito apontando o que aquela versão não publica, e a validação
+    # recusaria o ato inteiro — a pessoa veria a recusa e não teria como resolvê-la, porque tirar o
+    # anexo e soltar o vínculo são coisas que ela faria no mesmo lugar.
+    #
+    # A alteração é emitida **e aparece no resumo**: desfazer em silêncio seria o sistema decidindo
+    # conteúdo normativo sem dizer.
+    #
+    # **E só quando ninguém já decidiu por aquele caminho.** A T065 pôs o vínculo na tela, então a
+    # pessoa pode remover o Anexo A e escolher o B no mesmo ato — e as duas alterações cairiam
+    # sobre o mesmo caminho, com a automática por último, apagando a escolha. Quem decide é quem
+    # compõe; o automático existe para o caso em que ninguém decidiu.
+    ja_endereçados = {alteracao["targetPath"] for alteracao in alteracoes}
+    anexos_removidos = {
+        caminho.split("id=", 1)[-1]
+        for caminho in removidos
+        if caminho.startswith("/attachments/id=")
+    }
+    for documento in conteudo.get("documentRequirements") or []:
+        vinculo = str(documento.get("attachmentId") or "")
+        caminho_do_vinculo = f"/documentRequirements/id={documento.get('id', '')}/attachmentId"
+        if caminho_do_vinculo in ja_endereçados:
+            continue
+        if vinculo and vinculo in anexos_removidos:
+            alteracoes.append(
+                {
+                    "targetPath": caminho_do_vinculo,
+                    "operation": "REPLACE",
+                    "newValue": None,
+                }
+            )
+            resumo.append(
+                {
+                    "grupo": f"Documento {documento.get('name', '')}".strip(),
+                    "rotulo": "Modelo que o Edital fornece",
+                    "antes": "o Anexo removido",
+                    "depois": "não fornece modelo",
+                }
+            )
 
     eventos_removidos = [caminho for caminho in removidos if caminho.startswith("/schedule/")]
     proxima_ordem = len(conteudo.get("schedule") or []) - len(eventos_removidos)

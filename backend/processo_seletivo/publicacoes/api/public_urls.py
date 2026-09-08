@@ -1,6 +1,7 @@
 from django.urls import path
 
 from processo_seletivo.publicacoes.api.public_views import (
+    ArtefatoPublicoView,
     ConsolidatedVersionView,
     EffectiveVersionView,
     PublicHistoryView,
@@ -36,4 +37,7 @@ urlpatterns = [
         name="public-retification",
     ),
     path("versoes/<uuid:versao_id>", ConsolidatedVersionView.as_view(), name="public-version"),
+    # O artefato de um Anexo publicado. Endereçado pelo artefato, e não pelo anexo: ver a docstring
+    # da view — é o que faz "o de então" valer sem consultar versão nenhuma (020, R-003).
+    path("anexos/<uuid:artefato_id>", ArtefatoPublicoView.as_view(), name="public-anexo"),
 ]

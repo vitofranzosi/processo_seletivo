@@ -64,15 +64,17 @@ def conteudo_na_versao(versao):
 
 
 def test_o_degrau_8_existe_e_grafa_a_ausencia_como_nula():
+    # A afirmação "8 é a versão vigente" mudou de casa quando o degrau 9 nasceu: ela é do degrau
+    # mais novo, e este arquivo responde pelo significado do 8, que não muda mais.
     assert DEGRAUS_DE_MARCO == {8: {"appealWindow": None}}
-    assert SCHEMA_VERSION == 8
+    assert SCHEMA_VERSION >= 8
 
 
 def test_o_edital_anterior_eleva_sem_inventar_janela():
     elevado = elevar(conteudo_na_versao(7))
 
     marco = elevado["profiles"][0]["classificationMilestones"][0]
-    assert elevado["schemaVersion"] == 8
+    assert elevado["schemaVersion"] == SCHEMA_VERSION
     assert marco["appealWindow"] is None
     assert computavel(marco["appealWindow"]) is None
 

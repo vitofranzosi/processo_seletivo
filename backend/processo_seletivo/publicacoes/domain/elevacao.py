@@ -60,7 +60,26 @@ DEGRAUS_DE_PERFIL = {
 
 DEGRAUS_DA_RAIZ = {
     7: {"maxInscricoesPorCandidato": None},
+    # **O degrau 9 traz uma coleção inteira nova para a raiz**, e é o segundo a fazê-lo — o
+    # primeiro foi `documentRequirements`, no 3→4, que **não** foi convertido. A diferença é o
+    # significado da ausência: lá, escrever a coleção vazia teria afirmado que o Edital não exigia
+    # documento nenhum, o que não era verdade — ele exigia, em prosa. Aqui a lista vazia diz "este
+    # Edital não declarou anexo", e isso é verdade sobre todos eles, porque a capacidade não
+    # existia (020, R-004).
+    9: {"attachments": []},
 }
+
+# **O degrau 9 é o quarto nível**, e o primeiro dentro de `documentRequirements`. `attachmentId`
+# nulo diz que o requisito **não fornece modelo** — não que o modelo se perdeu. É o que todo
+# requisito publicado antes deste degrau afirma, e continua afirmando depois dele: o Edital que
+# mandava o candidato a um anexo inexistente continua mandando, e é a `020` que passa a permitir
+# que ele deixe de mandar (020, FR-020).
+DEGRAUS_DE_DOCUMENTO = {
+    9: {"attachmentId": None},
+}
+
+COLECAO_DE_DOCUMENTOS = "documentRequirements"
+COLECAO_DE_DOCUMENTOS_ENDERECADA = f"/{COLECAO_DE_DOCUMENTOS}"
 
 # **O degrau 8 é o terceiro nível**, e o primeiro dentro de uma coleção que já mora no Perfil. A
 # janela recursal é declarada por marco, e não pelo Edital: marcos diferentes admitem recurso ou
@@ -159,6 +178,20 @@ def elevar_marco(marco, *, de=VERSAO_DE_ORIGEM):
     return {**marco, **faltando} if faltando else marco
 
 
+def elevar_documento(documento, *, de=VERSAO_DE_ORIGEM):
+    """O Documento Exigido na forma vigente. Idempotente, como os demais degraus por entidade."""
+    if not isinstance(documento, dict):
+        return documento
+    faltando = {
+        chave: valor
+        for versao, degrau in sorted(DEGRAUS_DE_DOCUMENTO.items())
+        if versao > de
+        for chave, valor in degrau.items()
+        if chave not in documento
+    }
+    return {**documento, **faltando} if faltando else documento
+
+
 def elevar(conteudo):
     """O conteúdo publicado na versão canônica vigente, sem inventar nada.
 
@@ -185,6 +218,12 @@ def elevar(conteudo):
         if isinstance(perfis, list)
         else perfis
     )
+    documentos = conteudo.get(COLECAO_DE_DOCUMENTOS)
+    documentos_elevados = (
+        [elevar_documento(item, de=declarada) for item in documentos]
+        if isinstance(documentos, list)
+        else documentos
+    )
     raiz = {
         chave: valor
         for versao, degrau in sorted(DEGRAUS_DA_RAIZ.items())
@@ -196,6 +235,7 @@ def elevar(conteudo):
         declarada == SCHEMA_VERSION
         and elevadas == etapas
         and perfis_elevados == perfis
+        and documentos_elevados == documentos
         and not raiz
     ):
         return conteudo
@@ -204,6 +244,8 @@ def elevar(conteudo):
         elevado["stages"] = elevadas
     if isinstance(perfis, list):
         elevado["profiles"] = perfis_elevados
+    if isinstance(documentos, list):
+        elevado[COLECAO_DE_DOCUMENTOS] = documentos_elevados
     return elevado
 
 
@@ -308,12 +350,36 @@ def _e_entidade_de_marco(target_path):
     return None if "/" in resto else "entidade"
 
 
+def _e_entidade_de_documento(target_path):
+    """Se o caminho endereça um Documento Exigido inteiro — e não um campo dele.
+
+    Mesma régua declarada de `_e_entidade_de_etapa`, e as mesmas três formas:
+
+        /documentRequirements/-            acréscimo
+        /documentRequirements/id=<uuid>    substituição do requisito inteiro
+        /documentRequirements              a coleção
+
+    `/documentRequirements/id=<uuid>/attachmentId` carrega escalar, e elevá-lo seria corrompê-lo.
+    """
+    if target_path == COLECAO_DE_DOCUMENTOS_ENDERECADA:
+        return "colecao"
+    prefixo = f"{COLECAO_DE_DOCUMENTOS_ENDERECADA}/"
+    if not target_path.startswith(prefixo):
+        return None
+    return None if "/" in target_path[len(prefixo) :] else "entidade"
+
+
 def elevar_valor(target_path, valor):
     """O `newValue` de uma Alteração, elevado quando — e só quando — ele é entidade elevável.
 
-    Duas coleções alcançam a elevação: as Etapas, desde a 012, e os marcos classificatórios, desde
-    a 018. Nas duas a regra é a mesma — a **entidade inteira** é elevada, e o campo isolado não é,
-    porque quem endereça um campo está escrevendo a forma que ele já tem.
+    Três coleções alcançam a elevação: as Etapas, desde a 012; os marcos classificatórios, desde a
+    018; e os Documentos Exigidos, desde a 020. Nas três a regra é a mesma — a **entidade inteira**
+    é elevada, e o campo isolado não é, porque quem endereça um campo está escrevendo a forma que
+    ele já tem.
+
+    Os Anexos não entram aqui, e não é esquecimento: a coleção nasceu no degrau 9, então não existe
+    Alteração anterior a ela cujo valor precisasse ser elevado. A entrada vem no dia em que o Anexo
+    ganhar um campo — não antes.
     """
     forma = _e_entidade_de_etapa(target_path or "")
     if forma == "entidade":
@@ -325,6 +391,11 @@ def elevar_valor(target_path, valor):
         return elevar_marco(valor)
     if forma_do_marco == "colecao" and isinstance(valor, list):
         return [elevar_marco(item) for item in valor]
+    forma_do_documento = _e_entidade_de_documento(target_path or "")
+    if forma_do_documento == "entidade":
+        return elevar_documento(valor)
+    if forma_do_documento == "colecao" and isinstance(valor, list):
+        return [elevar_documento(item) for item in valor]
     return valor
 
 

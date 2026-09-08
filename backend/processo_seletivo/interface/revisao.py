@@ -159,6 +159,32 @@ def _secao(secao, _snapshot):
     return {"titulo": f"{secao.get('order', '')}. {secao.get('title', '')}", "linhas": [detalhe]}
 
 
+def _anexo(anexo, snapshot):
+    """O Anexo na conferência, **com o caminho para abrir os bytes** (020, FR-018).
+
+    Conferir bytes que não se pode abrir não é conferir: quem homologa precisa ver o formulário que
+    o Edital vai publicar, e não a linha que diz que ele existe. O identificador viaja para que o
+    template monte o endereço do rascunho, que não é público.
+
+    A linha nomeia os requisitos que apontam este Anexo como modelo. Sem ela, a tela mostraria duas
+    listas sem relação — os anexos de um lado, os documentos exigidos do outro — e quem homologa
+    teria de cruzá-las de cabeça.
+    """
+    identidade = str(anexo.get("id", ""))
+    modelos = [
+        documento.get("name", "")
+        for documento in snapshot.get("documentRequirements") or []
+        if str(documento.get("attachmentId") or "") == identidade
+    ]
+    return {
+        "titulo": anexo.get("label") or "sem rótulo",
+        "linhas": [
+            "modelo de: " + ", ".join(modelos) if modelos else "não é modelo de nenhum requisito",
+        ],
+        "anexo_id": identidade,
+    }
+
+
 # Coleção do conteúdo publicado → como se lê, e onde se corrige. Um teste confere que toda
 # coleção-raiz de entidades do snapshot está declarada aqui: é o que impede a Revisão de
 # envelhecer de novo.
@@ -170,6 +196,9 @@ COLECOES = (
     # sem ver o que o Edital exigiria do candidato. Entre Etapas e Conteúdo porque é a ordem
     # do assistente, e a etapa é `inscricao` — é lá que se corrige.
     ("documentRequirements", "Documentos Exigidos", "inscricao", _documento),
+    # Depois dos Documentos Exigidos pela mesma razão: no assistente, Anexos vem logo após
+    # Inscrição, e é o Anexo que serve de modelo ao requisito — não o contrário.
+    ("attachments", "Anexos do Edital", "anexos", _anexo),
     ("sections", "Conteúdo do Edital", "conteudo", _secao),
 )
 

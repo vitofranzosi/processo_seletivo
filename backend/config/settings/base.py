@@ -140,6 +140,12 @@ ARQUIVOS_CANDIDATOS_LIMITE_BYTES = int(
     os.getenv("ARQUIVOS_CANDIDATOS_LIMITE_BYTES", str(10 * 1024 * 1024))
 )
 
+# Anexos do Edital (020). O limite é da aplicação pela mesma razão do de cima — um Edital não
+# negocia tamanho de arquivo (FR-013) —, e é metade dele porque as duas pontas não são simétricas:
+# o candidato digitaliza documento em papel, e o formulário que a instituição publica nasce
+# digital. Aqui os bytes moram em coluna binária, então o limite protege o banco.
+EDITAL_ANEXOS_LIMITE_BYTES = int(os.getenv("EDITAL_ANEXOS_LIMITE_BYTES", str(5 * 1024 * 1024)))
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",

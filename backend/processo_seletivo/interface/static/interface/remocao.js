@@ -108,4 +108,18 @@
     if (!perdas) return;
     if (!confirmar(linha, perdas)) caixa.checked = false;
   });
+
+  /* O terceiro caso: o botão que **envia** uma remoção já gravada, e não uma linha de formulário.
+     O Anexo do Edital é assim — remover apaga o arquivo no servidor, e o próximo passo seria
+     procurar o PDF de novo. Aqui a pergunta não é derivada do que está preenchido: quem escreve o
+     botão declara a frase em `data-confirmar`, porque só ele sabe o que se perde e qual item é.
+
+     Sem JavaScript a remoção continua funcionando, e sem a pergunta. É a mesma degradação dos dois
+     casos acima, e vale dizer: a confirmação sólida seria uma tela de confirmação no servidor, no
+     molde de `confirmar.html`. */
+  document.addEventListener("click", function (evento) {
+    var botao = evento.target.closest("[data-confirmar]");
+    if (!botao) return;
+    if (!window.confirm(botao.getAttribute("data-confirmar"))) evento.preventDefault();
+  });
 })();

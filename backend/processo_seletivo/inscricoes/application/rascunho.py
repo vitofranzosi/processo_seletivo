@@ -16,7 +16,6 @@ from django.db import IntegrityError, transaction
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.domain.documentos import aplicaveis
-from processo_seletivo.inscricoes.domain.arquivos import aceitar, resumo
 from processo_seletivo.inscricoes.domain.periodo import recebe_inscricoes
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.inscricoes.storage import ArmazenamentoPrivado
@@ -25,6 +24,7 @@ from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.seguranca.domain import Actor
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import after_commit, command_context
+from processo_seletivo.shared.arquivos import aceitar, resumo
 from processo_seletivo.shared.concurrency import compare_and_swap
 
 # O rótulo da operação no registro de auditoria. **Não** é permissão concedida a ninguém: o ator do
