@@ -54,7 +54,14 @@ TEST_DB_ENGINE=postgresql DB_USER="$USER" DB_NAME=test_anexos_020 uv run pytest 
   tests/authorization tests/migrations tests/acceptance/test_us_anexos.py
 ```
 
-Alarmes esperados enquanto a F1 não fecha, e nenhum deles é regressão:
+**Executado em 07/09/2026, com a feature completa**: as suítes acima passam, `migrate` e
+`makemigrations --check` não acusam nada, e o `seed_demo` publica dois Anexos — a autodeclaração,
+que é modelo do requisito de todos, e a anuência da chefia —, com os dois artefatos congelados pela
+publicação. A demonstração pelo navegador não foi feita nesta sessão: o `preview` desta árvore de
+trabalho serve o checkout principal, e não este.
+
+Os alarmes abaixo pertencem ao percurso da implementação. Ficam registrados porque quem repetir a
+fase os encontrará na mesma ordem, e nenhum deles é regressão:
 
 - `tests/contract/test_forma_publicada.py` — a coleção nova não tem esquema no contrato, e o
   snapshot de um Edital publicado de verdade não a emite;

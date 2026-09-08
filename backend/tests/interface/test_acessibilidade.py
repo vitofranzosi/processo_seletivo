@@ -492,3 +492,37 @@ def test_nenhuma_classe_citada_deixa_de_existir_na_folha(template, folha):
 
     orfas = sorted(citadas - definidas - CLASSES_SEM_DESENHO)
     assert orfas == [], f"classes citadas e sem regra na folha: {orfas}"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_etapa_de_anexos_nomeia_cada_controle(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """020 — o primeiro caminho de escrita de arquivo da gestão precisa ser navegável sem mouse.
+
+    Campo de arquivo sem `label` associada é o defeito clássico da tela de upload: o leitor de tela
+    anuncia "botão", e quem navega por teclado não sabe o que vai enviar.
+    """
+    from django.urls import reverse
+
+    from processo_seletivo.processos.models import Edital
+    from tests.fixtures.anexos import criar_anexo
+    from tests.interface.conftest import identificar
+
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+    )
+    edital = Edital.objects.get(processo_id=criado.json()["id"])
+    criar_anexo(edital, rotulo="ANEXO I — REQUERIMENTO", order=1)
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = client.get(
+        reverse("interface:compor-etapa", args=[edital.id, "anexos"])
+    ).content.decode()
+
+    for identificador in re.findall(r'<input[^>]*id="([^"]+)"[^>]*type="file"', corpo):
+        assert f'for="{identificador}"' in corpo, (
+            f"o campo de arquivo {identificador} não tem rótulo"
+        )
+    assert 'aria-labelledby="anexos-titulo"' in corpo

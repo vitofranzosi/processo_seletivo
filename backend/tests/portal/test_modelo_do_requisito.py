@@ -165,3 +165,22 @@ def test_retificar_so_o_vinculo_para_anexo_inexistente_e_recusado(api_client, se
 
     assert recusa["code"] == "blocking_findings"
     assert "aponta um Anexo que não existe" in recusa["detail"]
+
+
+def test_a_lista_publica_de_anexos_e_navegavel(client, selecao_com_modelo):
+    """020, FR-039 — quem consulta o Edital chega aos anexos por teclado e por leitor de tela.
+
+    A seção é nomeada e cada anexo é um item de lista com link cujo texto é o **rótulo**: "clique
+    aqui" repetido doze vezes não distingue um anexo do outro para quem ouve a página.
+    """
+    import re
+
+    corpo = client.get(reverse("portal:selecao", args=[selecao_com_modelo.id])).content.decode()
+
+    assert 'aria-labelledby="anexos-titulo"' in corpo
+    assert '<h2 id="anexos-titulo">Anexos do Edital</h2>' in corpo
+    secao = re.search(r'aria-labelledby="anexos-titulo".*?</section>', corpo, re.S).group(0)
+    textos = re.findall(r"<a[^>]*>([^<]+)</a>", secao)
+    assert textos, "a lista precisa ter links"
+    assert all(texto.strip().startswith("ANEXO") for texto in textos), textos
+    assert len(set(textos)) == len(textos), "dois links com o mesmo texto não se distinguem"

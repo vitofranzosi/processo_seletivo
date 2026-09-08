@@ -180,13 +180,13 @@ lacuna e ausência de referência pendurada.
 
 ## Phase 8: Polish e transversais
 
-- [ ] T059 [P] Acessibilidade da etapa de anexos e da lista pública, em `backend/tests/interface/test_acessibilidade*.py` e `backend/tests/portal/`
-- [ ] T060 [P] Conferir a trilha de auditoria de envio, vínculo, desvínculo e substituição, com ator, ação, entidade e instante, e sem nome de arquivo desnecessário; a Retificação sobre anexo registra autoria, motivo, instante e versão pela trilha que já existe (FR-038, FR-055)
-- [ ] T061 [P] Teste da cadeia `versão histórica → identidade → resumo publicado → bytes`, como garantia interna (FR-053)
-- [ ] T062 [P] Teste provando que nenhuma rota expõe verificação de integridade ao usuário final (FR-054)
-- [ ] T063 [P] Acrescentar anexos ao `seed_demo` em `backend/processo_seletivo/processos/management/commands/seed_demo.py`, para que a demonstração tenha o que baixar
-- [ ] T067 Escrever o teste de ponta a ponta do ciclo do 173/2025 em `backend/tests/acceptance/`, no molde de `test_jornada_do_candidato.py`: publicar com os anexos-formulário, retificar preservando o anterior, baixar o vigente na data da inscrição, devolver preenchido, deferir, perguntar por um instante anterior e ver os dois artefatos coexistirem. **Depende de US1 a US5 inteiras**, e é por isso que mora aqui e não dentro de uma história (SC-005)
-- [ ] T064 Executar o [quickstart.md](./quickstart.md) inteiro, os sete passos e as cinco verificações negativas, e registrar o resultado
+- [X] T059 [P] Acessibilidade da etapa de anexos e da lista pública, em `backend/tests/interface/test_acessibilidade*.py` e `backend/tests/portal/`
+- [X] T060 [P] Conferir a trilha de auditoria de envio, vínculo, desvínculo e substituição, com ator, ação, entidade e instante, e sem nome de arquivo desnecessário; a Retificação sobre anexo registra autoria, motivo, instante e versão pela trilha que já existe (FR-038, FR-055)
+- [X] T061 [P] Teste da cadeia `versão histórica → identidade → resumo publicado → bytes`, como garantia interna (FR-053)
+- [X] T062 [P] Teste provando que nenhuma rota expõe verificação de integridade ao usuário final (FR-054)
+- [X] T063 [P] Acrescentar anexos ao `seed_demo` em `backend/processo_seletivo/processos/management/commands/seed_demo.py`, para que a demonstração tenha o que baixar
+- [X] T067 Escrever o teste de ponta a ponta do ciclo do 173/2025 em `backend/tests/acceptance/`, no molde de `test_jornada_do_candidato.py`: publicar com os anexos-formulário, retificar preservando o anterior, baixar o vigente na data da inscrição, devolver preenchido, deferir, perguntar por um instante anterior e ver os dois artefatos coexistirem. **Depende de US1 a US5 inteiras**, e é por isso que mora aqui e não dentro de uma história (SC-005)
+- [X] T064 Executar o [quickstart.md](./quickstart.md) inteiro, os sete passos e as cinco verificações negativas, e registrar o resultado
 
 ---
 

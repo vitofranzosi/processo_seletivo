@@ -366,6 +366,7 @@ class Command(BaseCommand):
             processo, _ = self._criar(elaborador, codigo, numero, ano, titulo)
             edital = Edital.objects.get(processo=processo)
             self._elaborar(elaborador, edital, agora, numero)
+            self._anexar_formularios(edital, numero)
             self._declarar_fatos_e_teto(edital, numero)
             self._publicar(elaborador, homologador, publicador, edital)
 
@@ -429,6 +430,49 @@ class Command(BaseCommand):
             correlation_id="seed-demo",
         )
         edital.refresh_from_db()
+
+    def _anexar_formularios(self, edital, numero):
+        """Os Anexos que o Edital publica, e o vínculo do requisito que os cita (020).
+
+        **Pelos modelos, e não pelo rascunho**, pela mesma razão dos fatos: a coleção fica fora do
+        `replace_draft`, e é comando próprio que a mantém. Precisa rodar **depois** de `_elaborar`,
+        que apaga e recria os Documentos Exigidos — e o vínculo mora num deles.
+
+        Dois anexos porque a demonstração precisa do caso com modelo e do sem: a autodeclaração
+        cita o Anexo I; a identificação e o diploma não fornecem forma própria, que é o caso mais
+        comum de todos.
+        """
+        import hashlib
+
+        from django.utils import timezone
+
+        from processo_seletivo.editais.models.anexos import AnexoEdital, ArtefatoAnexo
+        from processo_seletivo.editais.models.documentos import DocumentoExigido
+
+        self.stdout.write("Publicando os Anexos que o Edital fornece…")
+        for ordem, (rotulo, marca) in enumerate(
+            [
+                ("ANEXO I — AUTODECLARAÇÃO ÉTNICO-RACIAL", b"autodeclaracao"),
+                ("ANEXO II — DECLARAÇÃO DE ANUÊNCIA DA CHEFIA IMEDIATA", b"anuencia"),
+            ],
+            start=1,
+        ):
+            conteudo = b"%PDF-1.4\n% " + marca + b" (demonstracao)\n%%EOF\n"
+            artefato = ArtefatoAnexo.objects.create(
+                bytes=conteudo,
+                tamanho=len(conteudo),
+                document_hash=hashlib.sha256(conteudo).hexdigest(),
+                nome_original=f"{marca.decode()}.pdf",
+                enviado_por="ana.elaboradora",
+                enviado_em=timezone.now(),
+            )
+            anexo = AnexoEdital.objects.create(
+                edital=edital, rotulo=rotulo, order=ordem, artefato=artefato
+            )
+            if ordem == 1:
+                DocumentoExigido.objects.filter(edital=edital, key="autodeclaracao").update(
+                    anexo=anexo
+                )
 
     def _declarar_fatos_e_teto(self, edital, numero):
         """Os fatos que o desempate consome, e o teto do certame (D-2, D-3).
