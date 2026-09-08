@@ -490,3 +490,83 @@ def test_a_lista_carrega_a_explicacao_que_saiu_dos_cartoes(
     assert bloco, f"{etapa_do_assistente} não oferece a ajuda da lista"
     for conceito in conceitos:
         assert conceito in bloco.group(1), conceito
+
+
+# ------------------------------------------------ Identificação e Anexos: o mesmo princípio
+
+
+@pytest.fixture
+def anexos(client, seletor_ligado, edital):
+    """A etapa de Anexos com um anexo dentro — é dentro do cartão que a ajuda se repetia."""
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    from tests.fixtures.anexos import pdf_de_teste
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    client.post(
+        reverse("interface:anexos", args=[edital.id]),
+        {
+            "acao": "anexar",
+            "rotulo": "ANEXO I — REQUERIMENTO",
+            "arquivo": SimpleUploadedFile(
+                "requerimento.pdf", pdf_de_teste("A"), content_type="application/pdf"
+            ),
+        },
+    )
+    return client.get(
+        reverse("interface:compor-etapa", args=[edital.id, "anexos"])
+    ).content.decode()
+
+
+def test_a_convencao_do_rotulo_vive_uma_vez_na_lista_de_anexos(anexos):
+    """A convenção é a mesma para todo anexo, e a de substituição repetia dentro de cada cartão.
+
+    A amostra real de Editais chega a onze anexos: era onze vezes a mesma frase.
+    """
+    bloco = re.search(r'<details class="como-preencher">(.*?)</details>', anexos, re.S)
+    assert bloco, "a etapa de Anexos não oferece a ajuda da lista"
+    assert "não numera nem renumera" in bloco.group(1)
+    assert "substitui o atual" in bloco.group(1)
+
+
+def test_o_cartao_do_anexo_nao_carrega_ajuda_visivel(anexos):
+    cartoes = re.findall(r'<fieldset class="linha anexo">(.*?)</fieldset>', anexos, re.S)
+    assert cartoes, "nenhum cartão de anexo renderizado"
+    for cartao in cartoes:
+        assert 'class="ajuda"' not in cartao
+
+
+def test_a_identificacao_nao_ganha_ajuda_expansivel(identificacao):
+    """Sem lista, não há explicação que se repita — e a caixa cobraria um clique por nada.
+
+    Aplicar o padrão onde ele não tem o que carregar seria decalque, e não princípio. O que dava
+    para tirar do caminho saiu para dentro do campo.
+    """
+    assert "como-preencher" not in identificacao.replace(
+        identificacao[identificacao.index("<style>") : identificacao.index("</style>")], ""
+    )
+    campo = re.search(r"<textarea[^>]*id=\"ident-description\"[^>]*>", identificacao, re.S)
+    assert campo and 'placeholder="Resumo do objeto do Edital"' in campo.group(0)
+
+
+def test_a_descricao_do_edital_perdeu_a_frase_que_contava_uma_mudanca(identificacao):
+    """ "e agora ela pode ser preenchida aqui" narra a história do produto, não o que o campo é."""
+    assert "agora ela pode ser preenchida aqui" not in identificacao
+
+
+@pytest.mark.parametrize("tela", ["anexos", "identificacao"])
+def test_as_duas_telas_preservam_a_descricao_apontada(
+    client, seletor_ligado, edital, anexos, identificacao, tela
+):
+    corpo = anexos if tela == "anexos" else identificacao
+    escondidas = set(re.findall(r'<span class="oculto" id="([^"]+)"', corpo))
+    apontadas = {
+        alvo
+        for atributo in re.findall(r'aria-describedby="([^"]*)"', corpo)
+        for alvo in atributo.split()
+        if alvo.startswith("ajuda-")
+    }
+
+    assert escondidas, f"{tela} não preservou descrição nenhuma"
+    assert escondidas <= apontadas, sorted(escondidas - apontadas)
+    assert apontadas <= set(re.findall(r'id="([^"]+)"', corpo)), sorted(apontadas - escondidas)

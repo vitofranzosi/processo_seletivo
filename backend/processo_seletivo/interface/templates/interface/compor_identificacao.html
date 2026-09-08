@@ -38,11 +38,21 @@
     </p>
     <p class="campo largo">
       <label for="ident-description">Descrição</label>
+      {% comment %}
+      Sem ajuda expansível aqui, e de propósito: esta etapa não tem lista. A caixa existe para
+      guardar explicação que se repetiria a cada cartão, e aqui há um formulário só — escondê-la
+      cobraria um clique por duas linhas que já estão no lugar certo.
+
+      O que dava para tirar, tirei: o resumo do que se escreve foi para dentro do campo, onde
+      aparece exatamente quando importa. E a frase perdeu "e agora ela pode ser preenchida aqui",
+      que contava uma mudança do produto, e não o que o campo é.
+      {% endcomment %}
       <textarea id="ident-description" name="description" rows="4"
+                placeholder="Resumo do objeto do Edital"
                 aria-describedby="ajuda-descricao"
                 {% if not editavel %}disabled{% endif %}>{{ identificacao.description|default:'' }}</textarea>
-      <span class="ajuda" id="ajuda-descricao">Resumo do objeto do Edital. A validação avisa quando
-        está ausente, e agora ela pode ser preenchida aqui.</span>
+      <span class="oculto" id="ajuda-descricao">Resumo do objeto do Edital. A validação avisa
+        quando está ausente.</span>
     </p>
   </section>
   {% if editavel %}
