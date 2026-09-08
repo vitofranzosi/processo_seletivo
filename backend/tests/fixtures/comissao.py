@@ -91,7 +91,15 @@ def rascunho_com_etapas(seed=0, *, com_documentos=False, **declaracao):
 
 
 def publicar_processo_com_etapas(
-    api_client, manager_headers, process_payload, *, seed=0, com_documentos=False, **declaracao
+    api_client,
+    manager_headers,
+    process_payload,
+    *,
+    seed=0,
+    com_documentos=False,
+    anexos=0,
+    antes_de_submeter=None,
+    **declaracao,
 ):
     """Cria, elabora, submete, homologa e publica — pelo canal administrativo, como a 009 faz."""
     return publish_original(
@@ -99,6 +107,8 @@ def publicar_processo_com_etapas(
         manager_headers,
         process_payload,
         draft=rascunho_com_etapas(seed, com_documentos=com_documentos, **declaracao),
+        anexos=anexos,
+        antes_de_submeter=antes_de_submeter,
     )
 
 

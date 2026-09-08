@@ -628,9 +628,11 @@ fieldset.em-colunas>label .ajuda{margin:0}
    exatamente o desalinhamento que se queria resolver. `display:contents` no `li` entrega os filhos
    às trilhas da lista, e aí as três colunas valem para todas as linhas. */
 ul.documentos{list-style:none;margin:0;padding:0;border:1px solid var(--borda);border-radius:6px;
-  background:var(--branco);display:grid;grid-template-columns:minmax(0,1fr) auto auto auto}
-/* Três colunas: o nome primeiro, porque é o que se procura ao percorrer a lista; a marca em coluna
-   própria, que é o que a alinha sem precisar vir antes do nome; e a entrega à direita. */
+  background:var(--branco);display:grid;grid-template-columns:minmax(0,1fr) auto auto auto auto}
+/* O nome primeiro, porque é o que se procura ao percorrer a lista; a marca em coluna própria, que é
+   o que a alinha sem precisar vir antes do nome; o modelo exigido, que a `020` acrescentou; e a
+   entrega à direita. A coluna do modelo existe mesmo quando o requisito não fornece um: célula
+   vazia mantém a grade alinhada, e sem ela cada linha empurraria a seguinte. */
 ul.documentos>li{display:contents}
 ul.documentos>li>*{padding:.7rem .5rem;border-bottom:1px solid var(--fundo);
   display:flex;align-items:center;min-width:0}
@@ -640,6 +642,7 @@ ul.documentos>li:last-child>*{border-bottom:0}
 ul.documentos .entrega{justify-content:flex-end;white-space:nowrap}
 @media (max-width:34rem){
   ul.documentos{grid-template-columns:minmax(0,1fr) auto}
+  ul.documentos .modelo{grid-column:1/-1;padding:0 1rem}
   ul.documentos .entrega{grid-column:1/-1;padding:0 1rem .7rem}
   ul.documentos>li>*:not(.entrega){border-bottom:0}
 }
@@ -647,6 +650,10 @@ ul.documentos .entrega{justify-content:flex-end;white-space:nowrap}
    linha e a borda passava a envolver a célula inteira, virando uma caixa alta ao lado do nome. A
    célula cuida do espaçamento; a marca volta ao seu tamanho. */
 ul.documentos .celula-marca{justify-content:flex-start}
+/* O formulário que o Edital fornecia na versão que a inscrição aceitou. Coluna própria e discreta:
+   é referência para conferir, e não a ação principal da tela — que é abrir o que o candidato
+   mandou (020, FR-050). */
+ul.documentos .modelo{justify-content:flex-start;white-space:nowrap}
 /* O que já foi aberto por esta pessoa. Numa inscrição de dez documentos, é a coluna que responde
    "onde eu parei" — e o que ela marca é **aberto**, que é o que a trilha sabe: abrir não é ler, e
    ler não é avaliar. */

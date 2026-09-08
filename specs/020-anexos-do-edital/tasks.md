@@ -154,9 +154,9 @@ que a publicação anterior e a vigente entregam bytes diferentes, com resumos d
 **Teste independente**: abrir a mesa de avaliação de uma Inscrição enviada antes de uma Retificação e
 conferir que o modelo mostrado é o daquela versão.
 
-- [ ] T050 [US4] Resolver o artefato do requisito pela versão aceita da Inscrição e oferecê-lo na mesa, em `backend/processo_seletivo/interface/views.py`, sem gravar dado novo por submissão e **sem acrescentar critério, conferência automática ou máquina de avaliação nenhuma** (FR-048, FR-050, FR-051)
-- [ ] T051 [P] [US4] Teste de interface: inscrição sob a versão anterior mostra o modelo daquela versão, e não o vigente (SC-007)
-- [ ] T052 [P] [US4] Teste: nenhuma tela afirma qual versão do modelo o candidato usou (FR-049)
+- [X] T050 [US4] Resolver o artefato do requisito pela versão aceita da Inscrição e oferecê-lo na mesa, em `backend/processo_seletivo/interface/views.py`, sem gravar dado novo por submissão e **sem acrescentar critério, conferência automática ou máquina de avaliação nenhuma** (FR-048, FR-050, FR-051)
+- [X] T051 [P] [US4] Teste de interface: inscrição sob a versão anterior mostra o modelo daquela versão, e não o vigente (SC-007)
+- [X] T052 [P] [US4] Teste: nenhuma tela afirma qual versão do modelo o candidato usou (FR-049)
 
 ---
 
