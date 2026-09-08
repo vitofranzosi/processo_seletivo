@@ -577,18 +577,23 @@ def _evento_completo(valores, ordem):
     }
 
 
-def diferencas(conteudo, dados, *, resumos_de_artefato=None):
+def diferencas(conteudo, dados, *, resumo_do_artefato=None):
     """Alterações Normativas derivadas do que mudou entre o vigente e o que foi submetido.
 
     **A ordem de emissão deixou de ser a garantia de correção.** Cada alteração nomeia a
     entidade de que fala, então remover um Perfil não move os outros e nenhuma sequência produz
     resultado diferente de outra. A ordem abaixo é a que fica legível no resumo, e só isso.
 
-    `resumos_de_artefato` mapeia identidade de artefato para o resumo dele. A tela não digita o
-    resumo e o módulo não consulta o banco: quem envia o arquivo é a view, e é ela que sabe o
-    resumo do que gravou. Substituir o artefato emite **duas** alterações — identidade e resumo —,
-    porque o conteúdo publicado carrega as duas e uma sem a outra deixaria a versão afirmando bytes
-    que não são os que ela entrega (020, FR-034, FR-035).
+    `resumo_do_artefato` é uma **função**, e não um dicionário, e a diferença é o defeito que ela
+    corrige. O formulário tem duas fases — conferir e confirmar —, e o arquivo só existe na
+    primeira: um mapa montado no envio volta vazio na confirmação, e a Alteração seria gravada com
+    resumo em branco, para ser recusada na publicação pela própria verificação de integridade.
+    Resolver por função faz o resumo ser lido do artefato nas duas fases, **no servidor**, e nunca
+    trafegar por campo oculto — que o navegador poderia trocar.
+
+    Substituir o artefato emite **duas** alterações — identidade e resumo —, porque o conteúdo
+    publicado carrega as duas e uma sem a outra deixaria a versão afirmando bytes que não são os
+    que ela entrega (020, FR-034, FR-035).
     """
     alteracoes, resumo = [], []
     grupos = campos_editaveis(conteudo)
@@ -623,11 +628,17 @@ def diferencas(conteudo, dados, *, resumos_de_artefato=None):
                         "newValue": str(novo_valor),
                     }
                 )
+                resumo_novo = resumo_do_artefato(str(novo_valor)) if resumo_do_artefato else None
+                if not resumo_novo:
+                    raise ValueError(
+                        f"{campo['rotulo']}: o arquivo enviado não foi encontrado. Envie-o "
+                        "novamente."
+                    )
                 alteracoes.append(
                     {
                         "targetPath": campo["caminho"].replace("/artifactId", "/artifactHash"),
                         "operation": "REPLACE",
-                        "newValue": (resumos_de_artefato or {}).get(str(novo_valor), ""),
+                        "newValue": resumo_novo,
                     }
                 )
                 resumo.append(

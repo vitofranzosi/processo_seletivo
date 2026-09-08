@@ -1556,7 +1556,32 @@ def praticar_ato(request, edital_id, acao):
     return redirect(f"{reverse('interface:detalhe', args=[edital.id])}?ato={ato.chave}")
 
 
-def _artefatos_enviados(request, ator, edital):
+def _resumo_pendente(ator):
+    """O resumo de um artefato que **este ator** enviou e que nenhuma versão publicou ainda.
+
+    É consulta ao banco, e não campo oculto: o formulário tem duas fases, e o arquivo só existe na
+    primeira — confiar no navegador para carregar o resumo entre elas seria confiar nele para
+    dizer o que os bytes são.
+
+    As duas condições são a fronteira. **Não congelado** impede citar artefato de outro Edital já
+    publicado, que passaria a ser publicado sob este; **enviado por este ator** impede citar o
+    rascunho de outra pessoa. Nenhuma das duas é conveniência: sem elas, um POST fabricado
+    escolheria qualquer artefato do sistema.
+    """
+
+    def resolver(identificador):
+        return (
+            ArtefatoAnexo.objects.filter(
+                pk=identificador, congelado_em__isnull=True, enviado_por=ator.subject
+            )
+            .values_list("document_hash", flat=True)
+            .first()
+        )
+
+    return resolver
+
+
+def _artefatos_enviados(request, ator):
     """Grava os arquivos que a Retificação envia, e devolve o POST com as identidades no lugar.
 
     **Os bytes entram antes do ato, e não dentro dele** (020, FR-035). O artefato nasce
@@ -1569,7 +1594,6 @@ def _artefatos_enviados(request, ator, edital):
     a pessoa escolhê-lo duas vezes.
     """
     dados = request.POST.copy()
-    resumos = {}
     for chave, arquivo in request.FILES.items():
         if not chave.startswith("arquivo:") or not arquivo:
             continue
@@ -1589,8 +1613,7 @@ def _artefatos_enviados(request, ator, edital):
             enviado_em=timezone.now(),
         )
         dados[f"campo:{chave.removeprefix('arquivo:')}"] = str(artefato.id)
-        resumos[str(artefato.id)] = artefato.document_hash
-    return dados, resumos
+    return dados
 
 
 def _executar(ato, request, ator, edital):
@@ -1697,9 +1720,9 @@ def retificar(request, edital_id):
             erros.append("Você não tem a permissão para elaborar Retificações.")
         else:
             try:
-                dados, resumos = _artefatos_enviados(request, ator, edital)
+                dados = _artefatos_enviados(request, ator)
                 alteracoes, resumo = retificacao_ui.diferencas(
-                    projecao, dados, resumos_de_artefato=resumos
+                    projecao, dados, resumo_do_artefato=_resumo_pendente(ator)
                 )
                 if not alteracoes:
                     erros.append(

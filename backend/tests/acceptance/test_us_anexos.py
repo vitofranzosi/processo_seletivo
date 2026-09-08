@@ -4,8 +4,11 @@
 observada perde: o Ifes substitui o arquivo no mesmo caminho, e o artefato anterior desaparece.
 Depois disso, ninguém consegue responder o que estava valendo quando alguém se inscreveu.
 
-O teste percorre a jornada pelos canais de cada ator — quem elabora publica, quem retifica
-substitui, quem consulta baixa os dois — e não por escrita direta no banco.
+**Sobre o canal.** A substituição aqui entra pela API administrativa, que é canal de ator, e o
+artefato é gravado pela fixture. Quem prova a jornada **pela tela**, do upload à publicação, é
+`tests/interface/test_retificar_anexo.py`; este módulo prova o que acontece com o conteúdo e com os
+dois artefatos, e não a interface. A redação anterior desta docstring afirmava percorrer a tela e
+não percorria — e foi essa afirmação que escondeu o defeito das duas fases do formulário.
 """
 
 from urllib.parse import quote
@@ -188,6 +191,10 @@ def test_duas_retificacoes_sobre_o_mesmo_anexo_e_a_segunda_obsoleta_e_recusada(
     recusa = try_publish_retification(api_client, segunda, suffix="b")
 
     assert recusa.status_code == 409, recusa.content
+    assert recusa.json()["code"] == "expected_hash_mismatch", (
+        "o 409 tem de ser o do `expected_previous_hash`, e não outro conflito qualquer — foi ele "
+        "que a `020` herdou, e é ele que precisa estar de pé"
+    )
 
 
 def test_enderecar_o_anexo_por_posicao_e_recusado(api_client, publicado):

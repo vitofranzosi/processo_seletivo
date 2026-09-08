@@ -5,6 +5,11 @@
 uma em `interface/atos_retificacao.py`. A primeira redação da tarefa dizia duas, e pedia as duas do
 mesmo ator: isso não é a regra, é uma leitura apressada dela.
 
+**O ato exercitado é a substituição do artefato.** Acrescentar e remover Anexo por Retificação são
+as outras duas operações da D-008 e chegam com a US5; a autorização delas é a mesma cadeia, e o
+teste que a cobre nasce junto com elas — afirmar aqui que cobre as cinco operações seria repetir o
+erro que esta docstring corrige.
+
 O que importa aqui é que **nenhuma é derivada de outra**. Elaborar a substituição do artefato não
 dá o poder de submetê-la; homologar não dá o de publicar. É a mesma segregação que a `017` afirmou
 para o resultado — emitir constitui, publicar torna público, e são atos de autoridades distintas.
@@ -92,3 +97,26 @@ def test_cada_ato_da_retificacao_exige_a_sua_propria_capacidade(
     )
 
     assert recusa.status_code == 403, f"{etapa} aceitou quem tem {outras} e não tem {capacidade}"
+
+
+def test_cancelar_a_retificacao_do_anexo_exige_a_capacidade_de_cancelar(api_client, publicado):
+    """A quinta capacidade. Cancelar é ato próprio, e não consequência de ter elaborado."""
+    retificacao = create_retification(api_client, publicado, substituicao(publicado), suffix="q")
+
+    recusa = api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao.id}/cancelamentos",
+        {"reason": "Desisti"},
+        format="json",
+        **{
+            # A chave de idempotência vai junto para que a recusa seja de autorização, e não de
+            # forma — a mesma razão do corpo válido nos atos acima.
+            **actor_headers(
+                "vizinho",
+                ["retificacao:elaborar", "retificacao:submeter"],
+                key="anexo-cancelamento-0001",
+            ),
+            "HTTP_IF_MATCH": '"1"',
+        },
+    )
+
+    assert recusa.status_code == 403
