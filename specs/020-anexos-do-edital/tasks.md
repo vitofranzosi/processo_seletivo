@@ -155,8 +155,8 @@ que a publicação anterior e a vigente entregam bytes diferentes, com resumos d
 conferir que o modelo mostrado é o daquela versão.
 
 - [X] T050 [US4] Resolver o artefato do requisito pela versão aceita da Inscrição e oferecê-lo na mesa, em `backend/processo_seletivo/interface/views.py`, sem gravar dado novo por submissão e **sem acrescentar critério, conferência automática ou máquina de avaliação nenhuma** (FR-048, FR-050, FR-051)
-- [X] T051 [P] [US4] Teste de interface: inscrição sob a versão anterior mostra o modelo daquela versão, e não o vigente (SC-007)
-- [X] T052 [P] [US4] Teste: nenhuma tela afirma qual versão do modelo o candidato usou (FR-049)
+- [X] T051 [US4] Teste de interface **sobre cenário divergente**: publicar com o artefato A, inscrever, publicar Retificação com B, e provar que a mesa oferece A e **não** B — clicando no link e conferindo os bytes. *Sem a divergência, versão aceita e vigente coincidem e o teste passaria com uma tela que lê a errada* (SC-007)
+- [X] T052 [US4] Guarda sobre a **célula do modelo**, com vocabulário pinado: só as frases aprovadas podem aparecer ali. *Lista de permitidos e não de proibidos — procurar palavras na página inteira acusa "recusou" por conter "usou" e deixa passar a formulação que ninguém previu* (FR-049)
 
 ---
 
