@@ -100,9 +100,59 @@ def _etapa(etapa, snapshot):
     return {"titulo": f"{etapa.get('order', '')}. {etapa.get('name', '')}", "linhas": linhas}
 
 
+def _nomes_do_alcance(snapshot):
+    """Perfis e modalidades por identificador — o alcance é publicado por `id`, e lido por nome."""
+    perfis, modalidades = {}, {}
+    for perfil in snapshot.get("profiles") or []:
+        perfis[perfil.get("id")] = perfil.get("name") or perfil.get("code", "")
+        for modalidade in perfil.get("competitionModalities") or []:
+            modalidades[modalidade.get("id")] = modalidade.get("name") or modalidade.get("code", "")
+    return perfis, modalidades
+
+
+def _alcance(documento, snapshot):
+    """A quem o documento se aplica, nas quatro combinações que a ausência dos dois `id` produz.
+
+    É a informação mais fácil de ler errado do bloco: um laudo exigido só de uma modalidade parece
+    exigido de todo mundo quando a lista não diz de quem é. O documento publicado já resolve isso
+    agrupando as alíneas por destinatário; aqui a mesma frase vem por item, porque a conferência é
+    lista de itens e não tem grupos.
+    """
+    perfil_id, modalidade_id = documento.get("profileId"), documento.get("modalityId")
+    if perfil_id is None and modalidade_id is None:
+        return "todos os candidatos"
+    perfis, modalidades = _nomes_do_alcance(snapshot)
+    if modalidade_id is None:
+        return f"candidatos ao perfil {perfis.get(perfil_id, '')}"
+    if perfil_id is None:
+        return f"candidatos concorrentes na modalidade {modalidades.get(modalidade_id, '')}"
+    return (
+        f"candidatos ao perfil {perfis.get(perfil_id, '')} concorrentes na modalidade "
+        f"{modalidades.get(modalidade_id, '')}"
+    )
+
+
+def _documento(documento, snapshot):
+    linhas = [
+        "Exigência: " + ("obrigatória" if documento.get("required", True) else "facultativa"),
+        f"Aplica-se a: {_alcance(documento, snapshot)}",
+    ]
+    if documento.get("instructions"):
+        linhas.append(f"Instruções: {documento['instructions']}")
+    return {
+        "titulo": f"{documento.get('order', '')}. {documento.get('name', '')}",
+        "linhas": linhas,
+    }
+
+
 def _secao(secao, _snapshot):
     if secao.get("type") == catalogo.GERADA:
-        origem = {"profiles": "Perfis", "schedule": "Cronograma", "stages": "Etapas"}
+        origem = {
+            "profiles": "Perfis",
+            "schedule": "Cronograma",
+            "stages": "Etapas",
+            "documentRequirements": "Documentos Exigidos",
+        }
         detalhe = f"Composta a partir de {origem.get(secao.get('source'), secao.get('source'))}."
     else:
         detalhe = secao.get("content", "")
@@ -142,6 +192,12 @@ COLECOES = (
     ("profiles", "Perfis de Vaga", "perfis", _perfil),
     ("schedule", "Cronograma", "cronograma", _evento),
     ("stages", "Etapas de Avaliação", "etapas", _etapa),
+    # Estava no snapshot que a submissão congela e não estava aqui: quem revisava homologava
+    # sem ver o que o Edital exigiria do candidato. Entre Etapas e Conteúdo porque é a ordem
+    # do assistente, e a etapa é `inscricao` — é lá que se corrige.
+    ("documentRequirements", "Documentos Exigidos", "inscricao", _documento),
+    # Depois dos Documentos Exigidos pela mesma razão: no assistente, Anexos vem logo após
+    # Inscrição, e é o Anexo que serve de modelo ao requisito — não o contrário.
     ("attachments", "Anexos do Edital", "anexos", _anexo),
     ("sections", "Conteúdo do Edital", "conteudo", _secao),
 )

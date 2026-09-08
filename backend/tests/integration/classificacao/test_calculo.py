@@ -410,7 +410,7 @@ def test_resultado_fora_do_perfil_nao_obsoleta_o_ato(cenario, gestor):
     )
     Inscricao.objects.filter(pk=alheia.pk).update(
         status=Inscricao.Status.SUBMETIDA,
-        protocolo="0999",
+        protocolo=f"INS-{agora.year}-0999",
         submitted_at=agora,
         versao_aceita=versao,
         declaracoes_aceitas_em=agora,
