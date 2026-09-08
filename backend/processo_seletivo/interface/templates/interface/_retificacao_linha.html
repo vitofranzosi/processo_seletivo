@@ -1,0 +1,82 @@
+{% comment %}
+Uma linha do conteúdo vigente, aberta para edição.
+
+Vive num arquivo próprio porque a tela passou a desenhá-la dentro de sete seções, e repetir
+oitenta linhas de marcação em cada uma seria pedir que as sete divergissem.
+
+`data-rotulo` na legenda: `remocao.js` monta a pergunta de confirmação a partir dela, e a legenda
+agora é composta de duas partes — a categoria e o nome. Sem o atributo, "Remover Modalidade
+AC — DOC-INFO?" viria com o espaçamento da marcação dentro da frase.
+{% endcomment %}
+<fieldset class="linha{% if grupo.aninhado %} aninhada{% endif %}" data-linha data-nome="{{ grupo.titulo }}">
+  <legend data-rotulo="{{ grupo.titulo }}">
+    {% if grupo.tipo and grupo.tipo != grupo.nome %}<span class="categoria">{{ grupo.tipo }}</span>{% endif %}
+    <span class="nome">{{ grupo.nome }}</span>
+  </legend>
+  <div class="campos">
+    {% comment %}
+    `campo.valor` já traz o que a pessoa digitou quando houve POST — a reexibição é resolvida
+    antes de chegar aqui, e não por um filtro repetido em cada controle.
+    {% endcomment %}
+    {% for campo in grupo.campos %}
+    <p class="campo{% if campo.tipo == 'inteiro' or campo.tipo == 'decimal' %} curto{% elif campo.tipo == 'texto_longo' %} largo{% endif %}">
+      <label for="c-{{ campo.referencia }}">{{ campo.rotulo }}</label>
+      {% if campo.tipo == 'texto_longo' %}
+      <textarea id="c-{{ campo.referencia }}"
+                name="campo:{{ campo.referencia }}" rows="5">{{ campo.valor }}</textarea>
+      {% elif campo.tipo == 'referencia' %}
+      {# A opção vazia é normativa, e não cortesia: `null` significa "sem restrição". #}
+      <select id="c-{{ campo.referencia }}" name="campo:{{ campo.referencia }}">
+        <option value="" {% if not campo.valor %}selected{% endif %}>Sem restrição</option>
+        {% for identificador, rotulo in campo.opcoes %}
+        <option value="{{ identificador }}" {% if campo.valor == identificador %}selected{% endif %}>{{ rotulo }}</option>
+        {% endfor %}
+      </select>
+      {% elif campo.tipo == 'booleano' %}
+      <select id="c-{{ campo.referencia }}" name="campo:{{ campo.referencia }}">
+        <option value="1" {% if campo.valor == '1' %}selected{% endif %}>Sim</option>
+        <option value="0" {% if campo.valor != '1' %}selected{% endif %}>Não</option>
+      </select>
+      {% elif campo.tipo == 'arquivo' %}
+      {% comment %}
+      Dois controles para um campo: o arquivo, que quem retifica escolhe, e o oculto que carrega
+      a identidade do artefato entre as duas fases do formulário. O envio grava os bytes na
+      primeira fase e a confirmação referencia o que foi gravado — porque os bytes não viajam
+      dentro da Alteração (020, FR-035).
+      {% endcomment %}
+      <input id="c-{{ campo.referencia }}"
+             name="arquivo:{{ campo.referencia }}" type="file" accept="application/pdf"
+             {% if campo.descricao %}aria-describedby="atual-{{ campo.referencia }}"{% endif %}>
+      <input type="hidden" name="campo:{{ campo.referencia }}" value="{{ campo.valor }}">
+      {% comment %}
+      Qual PDF está publicado hoje. Sem esta linha o campo era um seletor de arquivo vazio ao
+      lado de um rótulo — nada dizia se já havia anexo, qual era, nem que deixar em branco
+      mantém o que está lá. Num Edital com dez Anexos, era a diferença entre conferir e apostar.
+      {% endcomment %}
+      {% if campo.descricao %}
+      <span class="ajuda" id="atual-{{ campo.referencia }}">Hoje: {{ campo.descricao }}.
+        Deixe em branco para manter.</span>
+      {% endif %}
+      {% else %}
+      <input id="c-{{ campo.referencia }}"
+             name="campo:{{ campo.referencia }}"
+             type="{% if campo.tipo == 'inteiro' or campo.tipo == 'decimal' %}number{% elif campo.tipo == 'instante' %}datetime-local{% else %}text{% endif %}"
+             {% if campo.tipo == 'decimal' %}step="0.0001"{% endif %}
+             value="{{ campo.valor }}">
+      {% endif %}
+    </p>
+    {% endfor %}
+  </div>
+  {% if grupo.removivel %}
+  {% comment %}
+  A explicação de o que a marcação faz vive uma vez, no topo da tela, e não uma vez por linha:
+  ela é a mesma em todas, e repeti-la vinte vezes é vinte vezes o mesmo texto para ler e nenhuma
+  informação nova sobre **esta** linha.
+  {% endcomment %}
+  <p class="remover-linha">
+    <input type="checkbox" id="rm-{{ grupo.referencia }}" name="remover:{{ grupo.referencia }}"
+           value="1" {% if grupo.marcado_para_remover %}checked{% endif %}>
+    <label for="rm-{{ grupo.referencia }}">Remover do Edital</label>
+  </p>
+  {% endif %}
+</fieldset>

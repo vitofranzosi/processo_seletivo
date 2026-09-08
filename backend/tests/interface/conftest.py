@@ -78,12 +78,13 @@ CLASSES_SEM_DESENHO = {
     # A grade da lista de documentos posiciona por ordem, e não por nome: o `span` do requisito é
     # célula da grade do `ul`, e a classe serve para achá-lo em teste.
     "requisito",
-    # `.linha` já desenha o bloco; o sufixo marca **qual** foi acrescentado agora no formulário de
-    # Retificação, e hoje não carrega desenho próprio nem é lido por script algum.
+    # `.linha` desenha o bloco; o sufixo marca **qual** foi acrescentado agora no formulário de
+    # Retificação — e desde a divisão da tela em seções ele carrega a borda tracejada que separa a
+    # proposta do conteúdo que já vige. Continua aqui porque também é o nome pelo qual o htmx
+    # troca a linha certa e pelo qual os testes a encontram.
     "evento-novo",
     "perfil-novo",
-    # O mesmo gancho, para o Anexo acrescentado por Retificação: a linha é desenhada por `.linha`,
-    # e o nome serve para achá-la em teste e para o htmx trocar a certa (020).
+    # O mesmo gancho, para o Anexo acrescentado por Retificação (020).
     "anexo-novo",
     # E para a linha do Anexo já existente, pela mesma razão que `evento` e `secao` estão aqui.
     "anexo",

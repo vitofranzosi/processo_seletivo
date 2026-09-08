@@ -208,10 +208,33 @@ def _descrever(descricao, identificador):
     return dito or "arquivo já publicado"
 
 
-def _grupo(titulo, caminho, item, campos, *, removivel=True, opcoes=None):
+def _arquivo_de_hoje(descricao, identificador):
+    """O PDF que está publicado neste campo, ou vazio quando ainda não há nenhum.
+
+    Distinto de `_descrever`, que serve ao resumo do antes-e-depois e diz "—" onde não havia
+    arquivo: aqui a ausência não é um traço a exibir, é o motivo de a tela não escrever a frase.
+    """
+    if not identificador:
+        return ""
+    return (descricao(str(identificador)) if descricao else "") or "arquivo já publicado"
+
+
+def _grupo(
+    titulo, caminho, item, campos, *, removivel=True, opcoes=None, tipo="", nome="", descricao=None
+):
+    """Uma linha do formulário: o que ela é, como ela se chama, e os campos que ela edita.
+
+    `tipo` e `nome` são o mesmo `titulo` partido em dois, e existem porque a tela precisa dos
+    dois separados: numa Retificação de Edital extenso são dezenas de cartões idênticos, e o que
+    distingue um do outro é o **nome** — "AC — DOC-INFO" —, que numa legenda inteiriça em caixa
+    alta tem o mesmo peso da categoria que se repete em todos. `titulo` continua inteiro porque é
+    o que a leitura corrida usa, e é dele que sai a pergunta de confirmação da remoção.
+    """
     opcoes = opcoes or {}
     return {
         "titulo": titulo,
+        "tipo": tipo,
+        "nome": nome or titulo,
         "caminho": caminho,
         "removivel": removivel,
         "campos": [
@@ -223,6 +246,12 @@ def _grupo(titulo, caminho, item, campos, *, removivel=True, opcoes=None):
                 # Vazia em todo campo escalar, e é o que faz o `select` existir só onde há o que
                 # escolher. A mesma tupla que a tela lê é a que o POST confere.
                 "opcoes": tuple(opcoes.get(chave, ())),
+                # Só o campo de arquivo tem o que dizer aqui: qual PDF está publicado hoje. Um
+                # seletor de arquivo vazio não distingue "não há anexo" de "há um, e trocá-lo é
+                # opcional", e era essa a pergunta de quem abre a tela com dez Anexos na frente.
+                "descricao": (
+                    _arquivo_de_hoje(descricao, _valor(item, chave)) if tipo == ARQUIVO else ""
+                ),
             }
             for chave, rotulo, tipo in campos
         ],
@@ -276,92 +305,123 @@ def _referenciar(grupos):
     return grupos
 
 
-def campos_editaveis(conteudo):
+def campos_editaveis(conteudo, *, descricao_do_artefato=None):
     """Campos que uma Retificação pode alterar, agrupados como a pessoa os enxerga.
 
     Cobre tudo o que o conteúdo publicado carrega e a gramática endereça. A `006` publicou
     Etapas, Seções e a Regra Normativa e não trouxe nenhuma das três para cá; corrigir uma cota
     depois de publicada exigia chamada de API, o que a Constituição não admite como jornada
     concluída.
+
+    A **ordem** desta lista é o que numera as referências (`g7c2`), e o POST reconstrói a mesma
+    lista para traduzi-las de volta. Ela não pode mudar entre o GET e o POST — e é por isso que
+    a divisão em seções que a tela exibe é feita depois, por `agrupar_em_secoes`, sobre esta
+    lista já numerada, e não reordenando-a.
+
+    `descricao_do_artefato` é opcional porque quem só traduz referência em caminho — o POST — não
+    precisa nomear arquivo nenhum: a descrição serve à tela, e consultá-la no POST seria uma ida
+    ao banco por Anexo para produzir texto que ninguém lê.
     """
-    grupos = [_grupo("Edital", "", conteudo, CAMPOS_RAIZ, removivel=False)]
+    grupos = [_grupo("Edital", "", conteudo, CAMPOS_RAIZ, removivel=False, tipo="Edital")]
 
     for perfil in conteudo.get("profiles") or []:
         caminho = f"/profiles/id={perfil.get('id', '')}"
+        nome_do_perfil = f"{perfil.get('code', '')} — {perfil.get('name', '')}".strip(" —")
         grupos.append(
             _grupo(
-                f"Perfil {perfil.get('code', '')} — {perfil.get('name', '')}",
+                f"Perfil {nome_do_perfil}",
                 caminho,
                 perfil,
                 CAMPOS_PERFIL,
+                tipo="Perfil",
+                nome=nome_do_perfil,
             )
         )
         for modalidade in perfil.get("competitionModalities") or []:
             campos = CAMPOS_MODALIDADE + (
                 CAMPOS_REGRA if isinstance(modalidade.get("normativeRule"), dict) else []
             )
+            nome = f"{modalidade.get('code', '')} — {perfil.get('code', '')}".strip(" —")
             grupos.append(
                 _grupo(
-                    f"Modalidade {modalidade.get('code', '')} — {perfil.get('code', '')}",
+                    f"Modalidade {nome}",
                     f"{caminho}/competitionModalities/id={modalidade.get('id', '')}",
                     modalidade,
                     campos,
+                    tipo="Modalidade",
+                    nome=nome,
                 )
             )
         for fato in perfil.get("declaredFacts") or []:
+            nome = f"{fato.get('code', '')} — {perfil.get('code', '')}".strip(" —")
             grupos.append(
                 _grupo(
-                    f"Fato {fato.get('code', '')} — {perfil.get('code', '')}",
+                    f"Fato {nome}",
                     f"{caminho}/declaredFacts/id={fato.get('id', '')}",
                     fato,
                     CAMPOS_FATO,
+                    tipo="Fato declarado",
+                    nome=nome,
                 )
             )
         for marco in perfil.get("classificationMilestones") or []:
             base_do_marco = f"{caminho}/classificationMilestones/id={marco.get('id', '')}"
+            nome_do_marco = f"{marco.get('code', '')} — {perfil.get('code', '')}".strip(" —")
             grupos.append(
                 _grupo(
-                    f"Marco {marco.get('code', '')} — {perfil.get('code', '')}",
+                    f"Marco {nome_do_marco}",
                     base_do_marco,
                     marco,
                     CAMPOS_MARCO,
+                    tipo="Marco",
+                    nome=nome_do_marco,
                 )
             )
             for criterio in marco.get("tiebreakers") or []:
+                nome = f"{criterio.get('order', '')} — marco {marco.get('code', '')}".strip(" —")
                 grupos.append(
                     _grupo(
-                        f"Critério {criterio.get('order', '')} — marco {marco.get('code', '')}",
+                        f"Critério {nome}",
                         f"{base_do_marco}/tiebreakers/id={criterio.get('id', '')}",
                         criterio,
                         CAMPOS_CRITERIO,
+                        tipo="Critério de desempate",
+                        nome=nome,
                     )
                 )
 
     for evento in conteudo.get("schedule") or []:
+        nome = f"{evento.get('order', '')} — {evento.get('type', '')}".strip(" —")
         grupos.append(
             _grupo(
-                f"Evento {evento.get('order', '')} — {evento.get('type', '')}",
+                f"Evento {nome}",
                 f"/schedule/id={evento.get('id', '')}",
                 evento,
                 CAMPOS_EVENTO,
+                tipo="Evento",
+                nome=nome,
             )
         )
 
     for etapa in conteudo.get("stages") or []:
+        nome = f"{etapa.get('order', '')} — {etapa.get('name', '')}".strip(" —")
         grupos.append(
             _grupo(
-                f"Etapa {etapa.get('order', '')} — {etapa.get('name', '')}",
+                f"Etapa {nome}",
                 f"/stages/id={etapa.get('id', '')}",
                 etapa,
                 CAMPOS_ETAPA,
+                tipo="Etapa",
+                nome=nome,
             )
         )
 
     aplicabilidade = opcoes_de_aplicabilidade(conteudo)
     for documento in conteudo.get("documentRequirements") or []:
+        nome = f"{documento.get('order', '')} — {documento.get('name', '')}".strip(" —")
         grupos.append(
             _grupo(
-                f"Documento {documento.get('order', '')} — {documento.get('name', '')}",
+                f"Documento {nome}",
                 f"/documentRequirements/id={documento.get('id', '')}",
                 documento,
                 CAMPOS_DOCUMENTO,
@@ -370,17 +430,20 @@ def campos_editaveis(conteudo):
                 # pedia, e o que fazer com essas pessoas é decisão normativa, não de tela.
                 removivel=False,
                 opcoes=aplicabilidade,
+                tipo="Documento exigido",
+                nome=nome,
             )
         )
 
     for anexo in conteudo.get("attachments") or []:
+        # **Sem prefixo de posição.** O rótulo já é a identificação editorial completa, e
+        # `Anexo 1 — ANEXO I — …` além de gaguejar introduzia um número que o sistema
+        # calcula — exatamente o que a D-006 decidiu não fazer. Se a ordem mudar, o prefixo
+        # mudaria e passaria a divergir do número impresso dentro do PDF.
+        rotulo = anexo.get("label") or "Anexo sem rótulo"
         grupos.append(
             _grupo(
-                # **Sem prefixo de posição.** O rótulo já é a identificação editorial completa, e
-                # `Anexo 1 — ANEXO I — …` além de gaguejar introduzia um número que o sistema
-                # calcula — exatamente o que a D-006 decidiu não fazer. Se a ordem mudar, o prefixo
-                # mudaria e passaria a divergir do número impresso dentro do PDF.
-                anexo.get("label") or "Anexo sem rótulo",
+                rotulo,
                 f"/attachments/id={anexo.get('id', '')}",
                 anexo,
                 CAMPOS_ANEXO,
@@ -389,6 +452,9 @@ def campos_editaveis(conteudo):
                 # quem já enviou já enviou. Quem fica sem modelo é o requisito, e ele sobrevive
                 # sem um (020, D-008, FR-024).
                 removivel=True,
+                tipo="Anexo",
+                nome=rotulo,
+                descricao=descricao_do_artefato,
             )
         )
 
@@ -397,17 +463,68 @@ def campos_editaveis(conteudo):
         # e é lá que se corrige.
         if secao.get("type") == catalogo.GERADA:
             continue
+        nome = f"{secao.get('order', '')} — {secao.get('title', '')}".strip(" —")
         grupos.append(
             _grupo(
-                f"Seção {secao.get('order', '')} — {secao.get('title', '')}",
+                f"Seção {nome}",
                 f"/sections/id={secao.get('id', '')}",
                 secao,
                 CAMPOS_SECAO,
                 removivel=False,
+                tipo="Seção",
+                nome=nome,
             )
         )
 
     return _referenciar(grupos)
+
+
+# A que seção da tela cada tipo de linha pertence. Um Edital extenso produz dezenas de cartões
+# indistinguíveis, e a lista plana não dizia onde o Cronograma acabava e as Etapas começavam:
+# quem procurava um prazo lia legenda por legenda até encontrar.
+SECOES_DA_TELA = (
+    ("identificacao", "Identificação", ("Edital",)),
+    (
+        "perfis",
+        "Perfis de Vaga",
+        ("Perfil", "Modalidade", "Fato declarado", "Marco", "Critério de desempate"),
+    ),
+    ("cronograma", "Cronograma", ("Evento",)),
+    ("etapas", "Etapas de Avaliação", ("Etapa",)),
+    ("documentos", "Documentos Exigidos", ("Documento exigido",)),
+    ("anexos", "Anexos", ("Anexo",)),
+    ("secoes", "Seções do texto", ("Seção",)),
+)
+# Seções em que a tela oferece "Acrescentar": elas aparecem mesmo vazias, porque é nelas que fica
+# o botão que cria o primeiro item. Sem isso, um Edital sem Anexo nenhum não teria por onde ganhar
+# o primeiro — o botão moraria numa seção que não existe.
+SECOES_QUE_ACRESCENTAM = frozenset({"perfis", "cronograma", "anexos"})
+# Filhas de um Perfil, desenhadas recuadas sob ele. O recuo diz o que a lista plana não dizia:
+# que a Modalidade **pertence** ao Perfil acima, e não é irmã dele. Sem isso, achar a cota de um
+# Perfil específico exigia ler o sufixo do nome de cada cartão para descobrir de quem ele era.
+TIPOS_ANINHADOS = frozenset({"Modalidade", "Fato declarado", "Marco", "Critério de desempate"})
+
+
+def agrupar_em_secoes(grupos):
+    """As mesmas linhas, na mesma ordem, divididas nas seções que a tela mostra.
+
+    Não reordena e não renumera: recebe a lista já referenciada por `campos_editaveis` e só diz
+    onde cada linha aparece. Uma seção vazia é omitida — um Edital sem Etapa nenhuma não deve
+    exibir um título "Etapas de Avaliação" seguido de nada, nem ganhar uma entrada no índice que
+    leva a um vazio —, salvo as que acrescentam, que precisam existir para abrigar o botão.
+    """
+    for grupo in grupos:
+        grupo["aninhado"] = grupo["tipo"] in TIPOS_ANINHADOS
+
+    secoes = []
+    for identificador, titulo, tipos in SECOES_DA_TELA:
+        # A ordem dentro da seção é a de `grupos`, e não a de `tipos`: é ela que mantém cada
+        # Modalidade logo abaixo do Perfil de que ela é.
+        conjunto = set(tipos)
+        linhas = [grupo for grupo in grupos if grupo["tipo"] in conjunto]
+        if linhas or identificador in SECOES_QUE_ACRESCENTAM:
+            secoes.append({"id": identificador, "titulo": titulo, "grupos": linhas})
+    return secoes
 
 
 def reexibir(grupos, dados):
@@ -479,7 +596,20 @@ def _exibir(valor, campo):
     O resumo é o que a pessoa confirma antes de submeter a Retificação. Exibir
     `f4c1…-…` no lugar de "Todos os Perfis → AC — Ampla Concorrência" pediria que ela
     conferisse um UUID de cor, que é o mesmo que não conferir.
+
+    Pela mesma razão, o instante sai na forma em que ele se lê e não na em que o `datetime-local`
+    o transporta: conferir "2026-07-10T14:21 → 2026-07-30T23:40" é conferir duas cadeias quase
+    iguais, e a diferença entre o dia 10 e o dia 30 é exatamente o que a Retificação está
+    mudando. `_para_formulario` continua servindo ao campo, que é outro trabalho.
     """
+    if campo["tipo"] == BOOLEANO:
+        # O resumo lê "Eliminatória: 1 → 0", que é o valor do controle e não a resposta que ele
+        # dá. A tela já escreve Sim e Não no `select`; conferir o ato pelo dígito seria conferir
+        # outra coisa.
+        return "Sim" if _para_formulario(valor, BOOLEANO) == "1" else "Não"
+    if campo["tipo"] == INSTANTE and valor is not None:
+        bruto = _para_formulario(valor, INSTANTE)
+        return datetime.fromisoformat(bruto).strftime("%d/%m/%Y %H:%M") if bruto else ""
     if campo["tipo"] != REFERENCIA:
         return _para_formulario(valor, campo["tipo"])
     if valor is None:

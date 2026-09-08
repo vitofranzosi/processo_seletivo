@@ -13,6 +13,7 @@ leitor de tela, o balão que `reportValidity` desenha. Isso é verificação man
 quickstart.md.
 """
 
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -36,4 +37,11 @@ def test_scripts_da_interface_se_comportam_como_especificado():
     assert resultado.returncode == 0, resultado.stdout + resultado.stderr
     # O runner reporta sucesso mesmo sem encontrar arquivo algum; sem isto, renomear a pasta
     # transformaria a suíte de JavaScript em silêncio aprovado.
-    assert "# pass 49" in resultado.stdout or "pass 49" in resultado.stdout, resultado.stdout
+    #
+    # **Que houve teste**, e não quantos. O número exato vivia cravado aqui, e cada script novo
+    # com testes próprios quebrava esta linha — a suíte de JavaScript acusava regressão onde
+    # tinha havido acréscimo, e a correção era sempre a mesma: subir o número. O que este teste
+    # precisa saber é que o glob encontrou alguma coisa.
+    executados = re.search(r"^ℹ tests (\d+)$", resultado.stdout, re.M)
+    assert executados, resultado.stdout
+    assert int(executados.group(1)) > 0, "o glob não encontrou nenhum teste de JavaScript"

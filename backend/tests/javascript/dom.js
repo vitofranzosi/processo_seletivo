@@ -25,7 +25,6 @@ class Elemento {
     this.hidden = false;
     this.style = {};
     this.dataset = {};
-    this.className = "";
     this.textContent = "";
     this.nodeType = 1;
     this.parentNode = null;
@@ -36,18 +35,33 @@ class Elemento {
     };
   }
 
-  /** O ancestral mais próximo — incluindo o próprio — que satisfaz `[atributo]` ou uma tag. */
+  /** O ancestral mais próximo — incluindo o próprio — que satisfaz `[atributo]`, `.classe` ou uma tag. */
   closest(seletor) {
     const atributo = /^\[([\w-]+)\]$/.exec(seletor);
+    // `.campo` e `.remover-linha`: `retificacao.js` sobe do controle até a célula que o envolve,
+    // que é quem recebe a marca de alterado.
+    const classe = /^\.([\w-]+)$/.exec(seletor);
     for (let no = this; no; no = no.parentNode) {
       if (atributo && no.getAttribute && no.getAttribute(atributo[1]) !== null) return no;
-      if (!atributo && no.tagName === seletor) return no;
+      if (classe && (no.classes || []).includes(classe[1])) return no;
+      if (!atributo && !classe && no.tagName === seletor) return no;
     }
     return null;
   }
 
   get name() {
     return this.atributos.name || "";
+  }
+
+  /* `className` e `classes` são a mesma coisa vista de dois lados, e eram duas: o shim guardava a
+     lista, os scripts escreviam a string, e um elemento criado com `className = "alterada"` ficava
+     com a lista vazia — invisível para `classList.contains` e para qualquer consulta por classe. */
+  get className() {
+    return this.classes.join(" ");
+  }
+
+  set className(valor) {
+    this.classes = String(valor || "").split(/\s+/).filter(Boolean);
   }
 
   setCustomValidity(mensagem) {
@@ -72,7 +86,16 @@ class Elemento {
     this.filhos.push(...nos);
   }
 
-  remove() {}
+  /* Sai mesmo da árvore, e não é detalhe: `retificacao.js` tira o selo "alterada" da legenda ao
+     desfazer a edição, e um `remove` que não removia deixava o selo lá — o script parecia certo e
+     a tela continuaria dizendo que a linha mudou. */
+  remove() {
+    const pai = this.parentNode;
+    if (!pai || !pai.filhos) return;
+    const posicao = pai.filhos.indexOf(this);
+    if (posicao >= 0) pai.filhos.splice(posicao, 1);
+    this.parentNode = null;
+  }
 
   focus() {
     documento.activeElement = this;
@@ -303,7 +326,11 @@ function montar({
       (ouvintes[tipo] || []).forEach((ouvinte) => ouvinte(evento));
       return evento;
     },
-    getElementById: (id) => (id === "formulario" ? formulario : null),
+    /* Duas telas, dois nomes para o mesmo papel: o assistente chama o formulário de
+       `formulario`, a Retificação de `formulario-da-retificacao`. O shim entrega o que o teste
+       montou, seja qual for o nome pelo qual o script o procura. */
+    getElementById: (id) =>
+      id === "formulario" || id === "formulario-da-retificacao" ? formulario : null,
     querySelector: (seletor) => {
       if (seletor === "[data-nao-enviado]") return null;
       if (seletor === "[data-rascunho-salvo]") {
@@ -317,6 +344,10 @@ function montar({
     querySelectorAll: (seletor) => (seletor === "[data-ordenavel]" ? ordenaveis : []),
     createElement: (tag) => new Elemento(tag),
   };
+  /* `retificacao.js` escuta `htmx:afterSwap` no corpo do documento: é o momento em que a linha
+     recém-acrescentada já está no DOM e pode ser contada. */
+  documento.body = new Elemento("body");
+  documento.body.addEventListener = documento.addEventListener;
   globalThis.document = documento;
   globalThis.window = { localStorage: armazem };
   globalThis.__documento = documento;
