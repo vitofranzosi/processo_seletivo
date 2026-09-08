@@ -61,15 +61,17 @@
     <p class="campo largo">
       <label for="perfil-{{ indice }}-duties">Atribuições</label>
       <textarea id="perfil-{{ indice }}-duties" name="perfil-{{ indice }}-duties" rows="3"
+                placeholder="Uma linha em branco separa parágrafos"
                 aria-describedby="ajuda-perfil-{{ indice }}-duties">{{ perfil.duties|default:'' }}</textarea>
-      <span class="ajuda" id="ajuda-perfil-{{ indice }}-duties">O que a pessoa fará. Uma linha em
+      <span class="oculto" id="ajuda-perfil-{{ indice }}-duties">O que a pessoa fará. Uma linha em
         branco separa parágrafos no documento.</span>
     </p>
     <p class="campo largo">
       <label for="perfil-{{ indice }}-requirements">Requisitos</label>
       <textarea id="perfil-{{ indice }}-requirements" name="perfil-{{ indice }}-requirements"
-                rows="3" aria-describedby="ajuda-req-{{ indice }}">{{ perfil.requirements|default:'' }}</textarea>
-      <span class="ajuda" id="ajuda-req-{{ indice }}">Um requisito por linha.</span>
+                rows="3" placeholder="Um requisito por linha"
+                aria-describedby="ajuda-req-{{ indice }}">{{ perfil.requirements|default:'' }}</textarea>
+      <span class="oculto" id="ajuda-req-{{ indice }}">Um requisito por linha.</span>
     </p>
   </div>
   {% comment %}
@@ -107,10 +109,11 @@
           {% recusa_de recusas "perfil" indice "reserveLimit" as recusado %}
           <input type="number" min="0" id="perfil-{{ indice }}-reserveLimit"
                  name="perfil-{{ indice }}-reserveLimit" value="{{ perfil.reserveLimit|default:'' }}"
+                 placeholder="ex.: 6"
                  aria-describedby="ajuda-reserva-{{ indice }}{% if recusado %} recusa-perfil-{{ indice }}-reserveLimit{% endif %}"
                  {% if recusado %}aria-invalid="true"{% endif %}>
           {% if recusado %}<span class="recusa" role="alert" id="recusa-perfil-{{ indice }}-reserveLimit">{{ recusado }}</span>{% endif %}
-          <span class="ajuda" id="ajuda-reserva-{{ indice }}">Quantas pessoas o cadastro comporta.
+          <span class="oculto" id="ajuda-reserva-{{ indice }}">Quantas pessoas o cadastro comporta.
             O Edital publica "cadastro reserva limitado em 6".</span>
         </p>
       </div>
@@ -120,8 +123,6 @@
   </div>
   <section class="modalidades" aria-labelledby="mod-titulo-{{ indice }}">
     <h3 id="mod-titulo-{{ indice }}">Modalidades de Concorrência</h3>
-    <p class="ajuda">Ampla concorrência e as reservas previstas, com o fundamento normativo de
-      cada reserva. Percentuais de modalidades distintas não somam cem por cento.</p>
     <div id="modalidades-{{ indice }}">
       {% for modalidade in perfil.modalidades %}{% include "interface/_modalidade.html" with sub=forloop.counter0 %}{% endfor %}
     </div>
@@ -131,8 +132,6 @@
   </section>
   <section class="marcos" aria-labelledby="fato-titulo-{{ indice }}">
     <h3 id="fato-titulo-{{ indice }}">Fatos exigidos do candidato</h3>
-    <p class="ajuda">O que a inscrição vai perguntar porque uma regra publicada consome — e nada
-      além. Um Perfil que não declara fato nenhum não acrescenta campo nenhum à inscrição.</p>
     <div id="fatos-{{ indice }}">
       {% for fato in perfil.fatos %}{% include "interface/_fato.html" with sub=forloop.counter0 %}{% endfor %}
     </div>

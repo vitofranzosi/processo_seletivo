@@ -152,12 +152,20 @@ function linha(classe, indice, campos, { rotulo = "" } = {}) {
     elemento.filhos.push(legenda);
   }
   for (const [sufixo, valor] of Object.entries(campos)) {
-    const campo = new Elemento("input", {
-      name: `${classe}-${indice}-${sufixo}`,
-      value: String(valor),
-    });
-    campo.parentNode = elemento;
-    elemento.filhos.push(campo);
+    // Um sufixo pode render mais de um controle: os rádios de um grupo dividem o `name`, e é
+    // justamente essa divisão que o rascunho precisa saber tratar. Lista vira grupo; o resto
+    // continua sendo um campo de texto com aquele valor.
+    for (const item of Array.isArray(valor) ? valor : [valor]) {
+      const config = item !== null && typeof item === "object" ? item : { value: item };
+      const campo = new Elemento("input", {
+        name: `${classe}-${indice}-${sufixo}`,
+        value: String(config.value),
+        type: config.type || "text",
+      });
+      campo.checked = Boolean(config.checked);
+      campo.parentNode = elemento;
+      elemento.filhos.push(campo);
+    }
   }
   return elemento;
 }

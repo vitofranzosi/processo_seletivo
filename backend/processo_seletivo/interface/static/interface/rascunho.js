@@ -74,6 +74,10 @@
     var simples = {};
     Array.prototype.forEach.call(form.elements, function (campo) {
       if (!campo.name || IGNORADOS.indexOf(campo.name) >= 0) return;
+      // Rádio não marcado não tem escolha a guardar: os do grupo dividem o `name`, e ler todos
+      // fazia o último sobrescrever o escolhido — o rascunho registrava sempre a última opção da
+      // lista, e mudar de opção nem marcava o formulário como não enviado.
+      if (campo.type === "radio" && !campo.checked) return;
       var partes = campo.name.match(/^([a-z]+)-(\d+)-(\w+)$/);
       if (!partes) {
         simples[campo.name] = valorDe(campo);
@@ -100,7 +104,16 @@
   function preencher(linha, valores) {
     Array.prototype.forEach.call(linha.querySelectorAll("[name]"), function (campo) {
       var partes = campo.name.match(/^[a-z]+-\d+-(\w+)$/);
-      if (partes && valores[partes[1]] !== undefined) campo.value = valores[partes[1]];
+      if (!partes || valores[partes[1]] === undefined) return;
+      var valor = valores[partes[1]];
+      // Marcação não se restaura escrevendo no `value`. No rádio, `value` é **a opção que o
+      // controle representa**, e não a escolha: escrever nele fazia os dois rádios do grupo
+      // passarem a valer "DECISORIA", de modo que nenhuma opção se distinguia da outra — a tela
+      // parava de reagir ao clique e o formulário submetia a forma errada, marcasse quem marcasse.
+      // Na caixa, o que se guarda é "marcada ou não", e vazio é desmarcada.
+      if (campo.type === "radio") campo.checked = campo.value === valor;
+      else if (campo.type === "checkbox") campo.checked = valor !== "";
+      else campo.value = valor;
     });
   }
 

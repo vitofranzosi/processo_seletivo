@@ -390,3 +390,103 @@ def test_nenhuma_descricao_se_perdeu_ao_sair_de_vista(etapa):
         apontados = re.search(r'aria-describedby="([^"]*)"', controle.group(0))
         assert apontados, f"{nome} deixou de apontar descrição"
         assert any(alvo in ocultos for alvo in apontados.group(1).split()), nome
+
+
+# ------------------------------------------------ o mesmo tratamento nas demais parciais
+
+
+@pytest.fixture
+def fragmentos(client, seletor_ligado, com_etapas):
+    """Cada parcial do assistente, renderizada como o htmx a insere."""
+    from tests.interface.test_compor import PERFIL
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    edital = com_etapas
+    pedidos = {
+        "perfil": (reverse("interface:fragmento-perfil"), {}),
+        "evento": (reverse("interface:fragmento-evento"), {}),
+        "documento": (reverse("interface:fragmento-documento", args=[edital.id]), {}),
+        "marco": (
+            reverse("interface:fragmento-marco", args=[PERFIL]),
+            {"edital": str(edital.id)},
+        ),
+        "etapa": (reverse("interface:fragmento-etapa", args=[edital.id]), {}),
+    }
+    return {
+        nome: client.get(url, {**dados, "indice": "0"}).content.decode()
+        for nome, (url, dados) in pedidos.items()
+    }
+
+
+@pytest.mark.parametrize("parcial", ["perfil", "evento", "documento", "marco", "etapa"])
+def test_nenhum_cartao_do_assistente_carrega_ajuda_visivel(fragmentos, parcial):
+    """Explicação que não muda de um cartão para o outro não se imprime uma vez por cartão.
+
+    Um Edital com três Perfis imprimia as duas introduções de subseção três vezes cada; um com
+    cinco requisitos, as quatro explicações do documento cinco vezes.
+    """
+    assert 'class="ajuda"' not in fragmentos[parcial]
+
+
+@pytest.mark.parametrize("parcial", ["perfil", "evento", "documento", "marco", "etapa"])
+def test_toda_descricao_escondida_continua_apontada_por_algum_campo(fragmentos, parcial):
+    """Sair de vista não é sair da página — mas só se alguém ainda apontar para ela.
+
+    No marco, seis das oito explicações **não tinham `id`** e não eram anunciadas a leitor de tela
+    nenhum. Escondê-las sem ligar teria sido apagá-las; ligá-las melhorou o que se anuncia.
+    """
+    marcacao = fragmentos[parcial]
+    escondidas = set(re.findall(r'<span class="oculto" id="([^"]+)"', marcacao))
+    apontadas = {
+        alvo
+        for atributo in re.findall(r'aria-describedby="([^"]*)"', marcacao)
+        for alvo in atributo.split()
+    }
+
+    assert escondidas, f"{parcial} não preservou descrição nenhuma"
+    assert escondidas <= apontadas, (
+        f"descrição escondida e não apontada em {parcial}: {sorted(escondidas - apontadas)}"
+    )
+
+
+@pytest.mark.parametrize("parcial", ["perfil", "evento", "documento", "marco", "etapa"])
+def test_nenhum_campo_aponta_para_descricao_que_nao_existe(fragmentos, parcial):
+    """O outro lado do mesmo laço: apontar para nada é pior do que não apontar."""
+    marcacao = fragmentos[parcial]
+    existentes = set(re.findall(r'<span[^>]* id="([^"]+)"', marcacao))
+    apontadas = {
+        alvo
+        for atributo in re.findall(r'aria-describedby="([^"]*)"', marcacao)
+        for alvo in atributo.split()
+        if alvo.startswith("ajuda-")
+    }
+
+    assert apontadas <= existentes, (
+        f"{parcial} aponta descrição inexistente: {sorted(apontadas - existentes)}"
+    )
+
+
+@pytest.mark.parametrize(
+    ("etapa_do_assistente", "conceitos"),
+    [
+        ("perfis", ["Modalidades de Concorrência", "Fatos exigidos"]),
+        ("classificacao", ["Etapas que entram na ordem", "Recurso contra o resultado"]),
+        ("inscricao", ["Chave", "Modelo que o Edital fornece"]),
+    ],
+)
+def test_a_lista_carrega_a_explicacao_que_saiu_dos_cartoes(
+    client, seletor_ligado, com_etapas, etapa_do_assistente, conceitos
+):
+    """O conceito não some: ele passa a viver uma vez, onde a lista inteira o alcança."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = client.get(
+        reverse("interface:compor-etapa", args=[com_etapas.id, etapa_do_assistente])
+    ).content.decode()
+
+    # `<details class="como-preencher">`, e não a string solta: o nome da classe também aparece na
+    # folha inline, que viaja em **toda** página — inclusive na de identificação.
+    bloco = re.search(r'<details class="como-preencher">(.*?)</details>', corpo, re.S)
+    assert bloco, f"{etapa_do_assistente} não oferece a ajuda da lista"
+    for conceito in conceitos:
+        assert conceito in bloco.group(1), conceito

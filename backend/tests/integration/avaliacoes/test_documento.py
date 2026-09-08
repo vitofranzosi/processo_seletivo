@@ -304,10 +304,17 @@ def test_depois_de_abrir_o_documento_o_foco_vai_para_a_nota(
 
 def test_a_ordem_e_sugerida_e_nao_imposta(como_joao, edital_com_documentos, etapa_a1, cenario):
     """Documento ausente é caso legítimo: ninguém precisa abrir arquivo para registrar que não
-    havia o que conferir. O formulário continua inteiro, e a nota continua aceita."""
-    corpo = como_joao.get(
-        reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
-    ).content.decode()
+    havia o que conferir. O formulário continua inteiro, e a nota continua aceita.
+
+    Sem o `<style>`, pela mesma razão de `test_minha_etapa.py`: a folha da base administrativa
+    desenha o controle indisponível de **outras** telas, e a palavra aparece ali como regra de
+    CSS. Afirmar sobre a resposta inteira mediria a folha, e uma regra de desenho não é um
+    controle desabilitado nesta tela.
+    """
+    mesa = reverse(
+        "interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id]
+    )
+    corpo = re.sub(r"<style>.*?</style>", "", como_joao.get(mesa).content.decode(), flags=re.S)
 
     assert "Concluir avaliação" in corpo
     assert "disabled" not in corpo

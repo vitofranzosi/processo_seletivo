@@ -1,0 +1,37 @@
+{% comment %}
+As três ações da linha — subir, descer, descartar — em símbolo, e não em frase.
+
+O rótulo era legenda de um ícone que já estava lá: "↑ Subir" repete com a palavra o que a seta já
+diz. E o peso visual estava invertido — numa lista de oito Eventos, "Remover este Evento" era
+impresso oito vezes, em vermelho, ao lado dos campos de data que são o que a pessoa veio preencher.
+O controle menos importante do cartão era o mais gritante.
+
+Em símbolo o grupo cabe na linha dos campos, e o cartão do Evento cai de 186 px para 143 px.
+
+**O nome não some, muda de lugar:** `aria-label` dá o mesmo texto ao leitor de tela, `title` o
+devolve a quem passa o mouse, e o glifo é `aria-hidden` para não ser anunciado duas vezes. Trocar
+palavra por ícone sem isso seria apagar o nome da ação, não encurtá-lo.
+
+`.rotulo-vazio` é o que alinha o grupo com os `input` quando ele divide a linha com os campos: cada
+`.campo` reserva a altura de um rótulo acima do controle, e sem essa reserva os botões subiriam 23 px
+acima da linha. Fora de `.campos` a folha o esconde.
+
+O respiro antes do botão vermelho é deliberado. "Descer" e "Remover" tinham larguras diferentes;
+iguais e colados, os dois viram um alvo só — e foi a vizinhança deles que originou a confirmação de
+`remocao.js`, que continua valendo aqui.
+{% endcomment %}
+<p class="acoes-da-linha">
+  <span class="rotulo-vazio" aria-hidden="true"></span>
+  <span class="grupo">
+    <button type="button" class="acao simbolo" data-mover="cima"
+            aria-label="Subir" title="Subir"><span aria-hidden="true">↑</span></button>
+    <button type="button" class="acao simbolo" data-mover="baixo"
+            aria-label="Descer" title="Descer"><span aria-hidden="true">↓</span></button>
+    <button type="button" class="acao simbolo perigo"
+            aria-label="{{ rotulo_remover }}" title="{{ rotulo_remover }}"
+            hx-get="{% url 'interface:fragmento-remover' %}"
+            hx-target="closest fieldset" hx-swap="outerHTML">
+      {% include "interface/_lixeira.html" %}
+    </button>
+  </span>
+</p>

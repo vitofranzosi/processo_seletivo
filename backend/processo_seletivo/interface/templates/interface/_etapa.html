@@ -169,12 +169,6 @@
                {% if etapa_linha.classificatory %}checked{% endif %}> Classificatória
       </label>
     </fieldset>
+    {% include "interface/_acoes_da_linha.html" with rotulo_remover="Remover esta Etapa" %}
   </div>
-  <p class="remover">
-    <button type="button" class="acao" data-mover="cima">↑ Subir</button>
-    <button type="button" class="acao" data-mover="baixo">↓ Descer</button>
-    <button type="button" class="acao perigo"
-            hx-get="{% url 'interface:fragmento-remover' %}"
-            hx-target="closest fieldset" hx-swap="outerHTML">Remover esta Etapa</button>
-  </p>
 </fieldset>

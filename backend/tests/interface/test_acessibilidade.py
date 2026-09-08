@@ -526,3 +526,49 @@ def test_a_etapa_de_anexos_nomeia_cada_controle(
             f"o campo de arquivo {identificador} não tem rótulo"
         )
     assert 'aria-labelledby="anexos-titulo"' in corpo
+
+
+# ---------------------------------------------------------------------------
+# O nome da ação quando o rótulo vira símbolo
+# ---------------------------------------------------------------------------
+
+SIMBOLO = re.compile(r'<button[^>]*\bclass="[^"]*\bsimbolo\b[^"]*"[^>]*>', re.S)
+
+
+@pytest.mark.parametrize("template", [p for p in TELAS], ids=lambda p: p.name)
+def test_botao_em_simbolo_nao_perde_o_nome_da_acao(template):
+    """Encurtar o rótulo é uma coisa; apagá-lo é outra.
+
+    "↑ Subir" virou "↑" porque a palavra repetia o que a seta já dizia — mas quem usa leitor de
+    tela não recebe a seta, recebe "botão". `aria-label` devolve o nome a esse público e `title`
+    a quem passa o mouse; sem os dois, a economia de espaço sai do bolso de quem menos pode pagar.
+    """
+    for botao in SIMBOLO.finditer(template.read_text()):
+        assert 'aria-label="' in botao.group(0), f"símbolo sem nome em {template.name}"
+        assert 'title="' in botao.group(0), f"símbolo sem dica em {template.name}"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize(
+    ("rota", "argumentos", "remover"),
+    [
+        ("interface:fragmento-evento", False, "Remover este Evento"),
+        ("interface:fragmento-etapa", True, "Remover esta Etapa"),
+        ("interface:fragmento-documento", True, "Remover este documento"),
+    ],
+)
+def test_o_nome_da_acao_chega_renderizado_a_cada_linha(
+    client, seletor_ligado, edital, rota, argumentos, remover
+):
+    """O nome vem de `{% include ... with rotulo_remover=... %}`, e variável esquecida não falha.
+
+    Ela renderiza vazio: `aria-label=""` deixa o botão sem nome nenhum, com a marcação inteira
+    parecendo correta. O teste do template acima vê o atributo; só o render vê o **valor**.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    alvo = reverse(rota, args=[edital.id] if argumentos else [])
+    corpo = client.get(alvo).content.decode()
+
+    assert 'aria-label=""' not in corpo
+    for nome in ("Subir", "Descer", remover):
+        assert f'aria-label="{nome}"' in corpo
