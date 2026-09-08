@@ -494,7 +494,12 @@ fieldset.linha>legend{font-size:.75rem;text-transform:uppercase;letter-spacing:.
   color:var(--texto-fraco);font-weight:600}
 .campos{display:flex;gap:1rem;flex-wrap:wrap}
 .campo{flex:1 1 200px;margin:0 0 .9rem}
-.campo.curto{flex:0 1 150px}
+/* A coluna tem a largura do que ela **carrega**, e não 150 px cravados. O `input` continua curto
+   — `.campo.curto>input` o limita em 10rem —; o que crescia junto era só o rótulo e a ajuda, que
+   quebravam em duas linhas dentro dos 150 px. Duas consequências: "Avaliações por inscrição"
+   deixa de quebrar, e os controles da linha voltam a ficar na mesma altura; e a ajuda cabe numa
+   linha, o que tirou 88 px da Etapa sem apagar uma palavra. */
+.campo.curto{flex:0 1 auto;min-width:9.5rem}
 /* `.curto` só encolhia dentro de `.campos`, onde `flex-basis` tem efeito. Solto — como na
    avaliação —, o campo é bloco e `width:100%` dava 1.350 px a uma caixa de quatro dígitos,
    ao lado de um parecer limitado à medida de leitura. O desencontro parecia defeito, e era:
