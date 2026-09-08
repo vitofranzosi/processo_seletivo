@@ -234,7 +234,9 @@ form.confirmar{background:var(--branco);border:1px solid var(--borda);border-rad
 .assistente .a-pronta .estado{color:var(--texto-fraco)}
 /* Caráter agrupado sob legenda (FR-037), sem a moldura pesada de um fieldset de linha. */
 fieldset.caracter{border:none;padding:0;margin:0}
-fieldset.caracter legend{font-size:.85rem;color:var(--texto-fraco);padding:0;
+/* A mesma voz de `.opcoes>legend` e de `.campo label`: um grupo que nomeia controles do mesmo
+   nível dos campos ao lado se lê como rótulo de campo, e não como um terceiro tamanho. */
+fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);padding:0;
   margin-bottom:.3rem}
 /* FR-032: em todo o produto não havia asterisco, etiqueta nem marca separando o campo
    exigido do opcional — descobria-se falhando. O asterisco é `aria-hidden` porque quem usa
@@ -473,7 +475,12 @@ section[aria-labelledby]{margin-bottom:2rem}
 section h2{margin-bottom:.75rem}
 fieldset.linha{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1rem 1.25rem 0.5rem;margin-bottom:1rem}
-fieldset.linha legend{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;
+/* `>`, e não descendente: a caixa alta com espaçamento é a faixa de identidade **do cartão** —
+   "PERFIL DE VAGA", "ETAPA DE AVALIAÇÃO 1 DE 3" —, e vazava para todo grupo aninhado dentro dele.
+   O resultado era "CADASTRO RESERVA" gritando ao lado de "Vagas imediatas", que rotula um campo
+   irmão e é escrito em caixa normal. Um grupo de opções nomeia controles do mesmo nível dos campos
+   ao lado; quem nomeia o cartão inteiro é outro nível, e só ele leva a faixa. */
+fieldset.linha>legend{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;
   color:var(--texto-fraco);font-weight:600}
 .campos{display:flex;gap:1rem;flex-wrap:wrap}
 .campo{flex:1 1 200px;margin:0 0 .9rem}
@@ -775,6 +782,10 @@ input[type="file"].arquivo::file-selector-button:hover{background:var(--fundo)}
    quarta, a quinta e a sexta; no marco, o prazo do recurso ao lado da opção que diz não declarar
    nenhum. Aninhar é o que torna a dependência visível sem precisar lê-la numa frase de ajuda. */
 fieldset.opcoes{border:none;padding:0;margin:0 0 .9rem;min-width:0}
+/* Quando a escolha divide a linha com um campo — "Vagas imediatas" ao lado de "Cadastro Reserva",
+   que são as duas metades da mesma pergunta —, ela precisa de base própria: sem `flex`, o
+   `fieldset` entrava como item de largura automática e empurrava o vizinho. */
+.campos>fieldset.opcoes{flex:1 1 18rem}
 fieldset.opcoes>legend{font-size:.8125rem;font-weight:600;color:var(--texto);padding:0;
   margin-bottom:.25rem}
 fieldset.opcoes>.ajuda{margin:0 0 .6rem}

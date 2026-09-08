@@ -112,3 +112,87 @@ def test_o_bloco_fixo_respira_antes_do_primeiro_campo(folha):
     assert margem and float(margem.group(1)) > 0, (
         f"`.fatos-fixos` sem margem inferior: {achado.group(1)}"
     )
+
+
+# ------------------------------------------------ o cartão de Perfil de Vaga
+
+
+@pytest.fixture
+def perfil(client, seletor_ligado, edital):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    return client.get(reverse("interface:fragmento-perfil"), {"indice": "0"}).content.decode()
+
+
+def campos_por_linha(marcacao):
+    """Quantos `.campo` cada `div.campos` do cartão carrega, na ordem em que aparecem."""
+    return [
+        bloco.count('class="campo')
+        for bloco in re.findall(
+            r'<div class="campos">(.*?)(?=<div class="campos"|<section)', marcacao, re.S
+        )
+    ]
+
+
+def test_nenhuma_linha_do_perfil_carrega_um_campo_sozinho(perfil):
+    """Campo sozinho na linha deixa um vão do próprio tamanho dele à direita.
+
+    O controle pára em `68ch` e a linha tem a largura do cartão: quatro campos ocupavam uma linha
+    cada um, e o Perfil media 1.098 px de altura para dizer o que cabe em 804. Com dois ou três por
+    linha, a largura é repartida antes de o teto morder — nada é cortado e nada sobra.
+    """
+    por_linha = campos_por_linha(perfil)
+    assert por_linha, "nenhuma linha de campos encontrada"
+    assert all(quantos >= 2 for quantos in por_linha), (
+        f"linha com um campo só: {por_linha}. Sozinho, ele deixa metade da linha vazia."
+    )
+
+
+def test_a_denominacao_nao_pede_mais_largura_do_que_cabe(perfil):
+    """`largo` é `flex 2`: na linha de três, ela pedia 725 px e o teto de leitura cortava em 685.
+
+    O vão não ficava na ponta da linha, e sim **no meio dela** — entre Denominação e Localidade.
+    """
+    assert re.search(r'<p class="campo">\s*<label for="perfil-0-name"', perfil)
+
+
+def test_a_reserva_divide_a_linha_com_as_vagas_imediatas(perfil):
+    """São as duas metades da mesma pergunta: quantas agora, e o que acontece depois delas."""
+    entre = perfil[perfil.index("immediateVacancies") : perfil.index('<fieldset class="opcoes">')]
+
+    # `</div>`, e não `<div class="campos">`: antes o grupo ficava **fora** de qualquer linha, de
+    # modo que nenhuma linha nova começava entre os dois — o que havia era o fechamento da linha
+    # das vagas. Procurar a abertura deixava o teste passar com o defeito de pé.
+    assert "</div>" not in entre, (
+        "a linha das vagas imediatas fecha antes da reserva — elas não dividem a mesma linha"
+    )
+
+
+# ------------------------------------------------ a voz dos rótulos de grupo
+
+
+def test_a_caixa_alta_e_do_cartao_e_nao_de_todo_grupo_dentro_dele(folha):
+    """`fieldset.linha legend` vestia a faixa de identidade do cartão — e vazava para dentro.
+
+    O resultado era "CADASTRO RESERVA" gritando ao lado de "Vagas imediatas", que rotula um campo
+    irmão e se escreve em caixa normal. Descendente virou filho direto.
+    """
+    achado = re.search(r"fieldset\.linha\s*(>?)\s*legend\{([^}]*)\}", folha)
+    assert achado, "a folha não desenha a legenda do cartão"
+    assert "uppercase" in achado.group(2), "a faixa do cartão perdeu a caixa alta"
+    assert achado.group(1) == ">", (
+        "a regra alcança todo `legend` dentro do cartão, inclusive os grupos aninhados"
+    )
+
+
+@pytest.mark.parametrize("grupo", ["fieldset.opcoes>legend", "fieldset.caracter legend"])
+def test_os_rotulos_de_grupo_tem_a_voz_do_rotulo_de_campo(folha, grupo):
+    """Um grupo que nomeia controles do mesmo nível dos campos ao lado se lê como eles."""
+    do_campo = re.search(r"\.campo label\{([^}]*)\}", folha).group(1)
+    do_grupo = re.search(re.escape(grupo).replace(r"\>", ">") + r"\{([^}]*)\}", folha)
+    assert do_grupo, f"a folha não desenha `{grupo}`"
+    for propriedade in ("font-size", "font-weight"):
+        esperado = re.search(rf"{propriedade}:([^;]+)", do_campo).group(1).strip()
+        achado = re.search(rf"{propriedade}:([^;]+)", do_grupo.group(1))
+        assert achado and achado.group(1).strip() == esperado, (
+            f"`{grupo}` tem {propriedade} diferente do rótulo de campo"
+        )
