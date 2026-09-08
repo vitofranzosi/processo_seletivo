@@ -27,7 +27,7 @@
                 {% if evento.id == etapa_linha.scheduleEventId %}selected{% endif %}>{{ evento.rotulo }}</option>
         {% endfor %}
       </select>
-      <span class="ajuda" id="ajuda-evento-{{ indice }}">As datas vêm do Evento; não se digitam
+      <span class="oculto" id="ajuda-evento-{{ indice }}">As datas vêm do Evento; não se digitam
         aqui.</span>
     </p>
   </div>
@@ -58,7 +58,7 @@
       opção que os pede, a tela já mostra que a pontuada tem nota e a decisória tem rótulos. O que
       a frase ainda acrescenta, e o arranjo não mostra, é o que cada forma **publica**.
       {% endcomment %}
-      <span class="ajuda" id="ajuda-forma-{{ indice }}">A pontuada publica nota; a decisória
+      <span class="oculto" id="ajuda-forma-{{ indice }}">A pontuada publica nota; a decisória
         publica os rótulos do resultado.</span>
       {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-forma">{{ recusado }}</span>{% endif %}
       <p class="opcao">
@@ -70,24 +70,27 @@
       </p>
       <div class="campos dependentes so-pontuada">
         <p class="campo curto">
-          <label for="etapa-{{ indice }}-minimumScore">Nota mínima</label>
+          <label for="etapa-{{ indice }}-minimumScore">Nota mínima <span class="opcional">(opcional)</span></label>
           {% recusa_de recusas "etapa" indice "minimumScore" as recusado %}
           <input type="number" step="0.0001" min="0" id="etapa-{{ indice }}-minimumScore"
                  name="etapa-{{ indice }}-minimumScore" value="{{ etapa_linha.minimumScore|default:'' }}"
+                 placeholder="Sem mínimo"
                  aria-describedby="ajuda-nota-{{ indice }}{% if recusado %} recusa-etapa-{{ indice }}-minimumScore{% endif %}"
                  {% if recusado %}aria-invalid="true"{% endif %}>
           {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-minimumScore">{{ recusado }}</span>{% endif %}
-          <span class="ajuda" id="ajuda-nota-{{ indice }}">Vazio: não há nota mínima.</span>
+          <span class="oculto" id="ajuda-nota-{{ indice }}">Vazio: não há nota mínima.</span>
         </p>
         <p class="campo curto">
-          <label for="etapa-{{ indice }}-maximumScore">Pontuação máxima</label>
+          <label for="etapa-{{ indice }}-maximumScore">Pontuação máxima <span class="opcional">(opcional)</span></label>
           {% recusa_de recusas "etapa" indice "maximumScore" as recusado %}
           <input type="number" step="0.0001" min="0.0001" id="etapa-{{ indice }}-maximumScore"
                  name="etapa-{{ indice }}-maximumScore" value="{{ etapa_linha.maximumScore|default:'' }}"
+                 {% comment %}"Limite não declarado" precisa de 152 px e o campo oferece 140: aparecia cortado. A frase inteira do domínio fica na descrição, que o campo aponta.{% endcomment %}
+                 placeholder="Sem limite"
                  aria-describedby="ajuda-maxima-{{ indice }}{% if recusado %} recusa-etapa-{{ indice }}-maximumScore{% endif %}"
                  {% if recusado %}aria-invalid="true"{% endif %}>
           {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-maximumScore">{{ recusado }}</span>{% endif %}
-          <span class="ajuda" id="ajuda-maxima-{{ indice }}">Vazio: o Edital não declara limite.</span>
+          <span class="oculto" id="ajuda-maxima-{{ indice }}">Vazio: o Edital não declara limite.</span>
         </p>
       </div>
       <p class="opcao">
@@ -121,20 +124,21 @@
                  aria-describedby="ajuda-rotulos-{{ indice }}{% if recusado %} recusa-etapa-{{ indice }}-rotuloDesfavoravel{% endif %}"
                  {% if recusado %}aria-invalid="true"{% endif %}>
           {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-rotuloDesfavoravel">{{ recusado }}</span>{% endif %}
-          <span class="ajuda" id="ajuda-rotulos-{{ indice }}">É o que o candidato lê no Edital e no
+          <span class="oculto" id="ajuda-rotulos-{{ indice }}">É o que o candidato lê no Edital e no
             resultado — "Deferido/Indeferido", "Apto/Inapto".</span>
         </p>
       </div>
     </fieldset>
     <p class="campo curto">
-      <label for="etapa-{{ indice }}-weight">Peso</label>
+      <label for="etapa-{{ indice }}-weight">Peso <span class="opcional">(opcional)</span></label>
       {% recusa_de recusas "etapa" indice "weight" as recusado %}
       <input type="number" step="0.0001" min="0.0001" id="etapa-{{ indice }}-weight"
              name="etapa-{{ indice }}-weight" value="{{ etapa_linha.weight|default:'' }}"
+             placeholder="Sem ponderação"
              aria-describedby="ajuda-peso-{{ indice }}{% if recusado %} recusa-etapa-{{ indice }}-weight{% endif %}"
              {% if recusado %}aria-invalid="true"{% endif %}>
       {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-weight">{{ recusado }}</span>{% endif %}
-      <span class="ajuda" id="ajuda-peso-{{ indice }}">Vazio: a Etapa não pondera.</span>
+      <span class="oculto" id="ajuda-peso-{{ indice }}">Vazio: a Etapa não pondera.</span>
     </p>
     <p class="campo curto">
       <label for="etapa-{{ indice }}-evaluationsPerRegistration">Avaliações por inscrição</label>
@@ -142,10 +146,11 @@
       <input type="number" step="1" min="1" id="etapa-{{ indice }}-evaluationsPerRegistration"
              name="etapa-{{ indice }}-evaluationsPerRegistration"
              value="{{ etapa_linha.evaluationsPerRegistration|default:'' }}"
+             placeholder="Padrão: 1"
              aria-describedby="ajuda-avaliacoes-{{ indice }}{% if recusado %} recusa-etapa-{{ indice }}-evaluationsPerRegistration{% endif %}"
              {% if recusado %}aria-invalid="true"{% endif %}>
       {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-evaluationsPerRegistration">{{ recusado }}</span>{% endif %}
-      <span class="ajuda" id="ajuda-avaliacoes-{{ indice }}">Vazio: uma avaliação por inscrição.</span>
+      <span class="oculto" id="ajuda-avaliacoes-{{ indice }}">Vazio: uma avaliação por inscrição.</span>
     </p>
     {% comment %}
     FR-037: as duas marcações não tinham rótulo de grupo. Flutuavam desalinhadas ao lado de Peso e

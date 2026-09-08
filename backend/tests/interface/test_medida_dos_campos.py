@@ -305,3 +305,88 @@ def test_a_coluna_curta_tem_a_largura_do_que_carrega(folha):
     assert do_input and "max-width" in do_input.group(1), (
         "sem teto no `input`, soltar a coluna soltaria o campo junto"
     )
+
+
+# ------------------------------------------------ divulgação progressiva, e não ajuda por cartão
+
+
+@pytest.fixture
+def pagina_de_etapas(client, seletor_ligado, edital):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    return client.get(
+        reverse("interface:compor-etapa", args=[edital.id, "etapas"])
+    ).content.decode()
+
+
+def test_a_explicacao_conceitual_vive_uma_vez_na_lista(pagina_de_etapas, etapa):
+    """Explicação que não muda de uma Etapa para a outra não se imprime uma vez por Etapa.
+
+    Sete ajudas visíveis por cartão disputavam a leitura com os dados, e um Edital de quatro Etapas
+    as repetia quatro vezes. Elas passaram para uma ajuda da lista; o cartão ficou com os dados.
+    """
+    assert 'class="como-preencher"' in pagina_de_etapas
+    assert 'class="ajuda"' not in etapa, "o cartão da Etapa voltou a carregar ajuda visível própria"
+
+
+def test_a_ajuda_da_lista_abre_sem_ponteiro(pagina_de_etapas):
+    """`details`/`summary` abre por teclado e por toque.
+
+    É o que separa divulgação progressiva de dica sobre ícone: a segunda só existe para quem tem
+    mouse, e foi por confundir as duas que a proposta anterior recusou a ideia inteira.
+    """
+    bloco = re.search(r"<details class=\"como-preencher\">(.*?)</details>", pagina_de_etapas, re.S)
+    assert bloco, "a ajuda da lista não é um `details`"
+    assert "<summary>" in bloco.group(1)
+    for conceito in ("Como esta Etapa é concluída", "Rótulos do resultado", "Evento do Cronograma"):
+        assert conceito in bloco.group(1), conceito
+
+
+def test_a_frase_do_evento_deixou_de_repetir_a_introducao(pagina_de_etapas):
+    """A ajuda do campo repetia, palavra por palavra, a frase que abre a seção — em cada cartão."""
+    intro = re.search(r'<p class="ajuda">(.*?)</p>', pagina_de_etapas, re.S).group(1)
+
+    assert "não há data para digitar aqui" not in " ".join(intro.split())
+
+
+@pytest.mark.parametrize(
+    ("campo", "marca"),
+    [
+        ("minimumScore", "Sem mínimo"),
+        ("maximumScore", "Sem limite"),
+        ("weight", "Sem ponderação"),
+        ("evaluationsPerRegistration", "Padrão: 1"),
+    ],
+)
+def test_a_consequencia_de_deixar_vazio_esta_no_proprio_controle(etapa, campo, marca):
+    """O que só se descobre errando fica no campo, e não numa ajuda que se lê antes de errar."""
+    controle = re.search(rf'<input[^>]*name="etapa-0-{campo}"[^>]*>', etapa, re.S)
+    assert controle, campo
+    assert f'placeholder="{marca}"' in controle.group(0), controle.group(0)
+
+
+@pytest.mark.parametrize("campo", ["minimumScore", "maximumScore", "weight"])
+def test_o_campo_que_admite_vazio_se_diz_opcional(etapa, campo):
+    """O contrário do asterisco: quem se pergunta se pode deixar em branco lê a resposta no
+    próprio rótulo."""
+    rotulo = re.search(rf'<label for="etapa-0-{campo}">(.*?)</label>', etapa, re.S)
+    assert rotulo and "(opcional)" in rotulo.group(1), campo
+
+
+def test_nenhuma_descricao_se_perdeu_ao_sair_de_vista(etapa):
+    """Esconder da tela não é apagar: o texto continua no documento e o campo continua apontando.
+
+    É a diferença entre divulgação progressiva e remoção — e é o que faz a mudança não custar nada
+    a quem usa leitor de tela.
+    """
+    ocultos = dict(re.findall(r'<span class="oculto" id="([^"]+)">(.*?)</span>', etapa, re.S))
+    assert len(ocultos) == 7, f"esperava sete descrições preservadas, achei {len(ocultos)}"
+
+    for nome in ("scheduleEventId", "minimumScore", "maximumScore", "weight"):
+        controle = re.search(
+            rf'<input[^>]*name="etapa-0-{nome}"[^>]*>|<select[^>]*name="etapa-0-{nome}"[^>]*>',
+            etapa,
+            re.S,
+        )
+        apontados = re.search(r'aria-describedby="([^"]*)"', controle.group(0))
+        assert apontados, f"{nome} deixou de apontar descrição"
+        assert any(alvo in ocultos for alvo in apontados.group(1).split()), nome
