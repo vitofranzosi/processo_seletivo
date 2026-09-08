@@ -1,13 +1,25 @@
 {% load interface_extras %}<fieldset class="linha perfil">
   <legend>Perfil de Vaga</legend>
   <input type="hidden" name="perfil-{{ indice }}-id" value="{{ perfil.id }}">
+  {% comment %}
+  Quatro bandas, e não oito linhas: identidade, o trabalho, o texto longo, a quantidade.
+
+  Antes, quatro campos ocupavam uma linha cada um sozinhos. O controle pára em `68ch` e a linha tem
+  a largura do cartão, de modo que cada um deixava à direita um vão do tamanho do próprio campo — e
+  o Perfil media 1.098 px de altura para dizer o que cabe em muito menos. Pior: como cada `.campos`
+  distribui a sua largura por conta própria, as linhas terminavam em seis lugares diferentes.
+
+  Emparelhar não é só encurtar: linha com dois ou três campos reparte a largura antes de o teto de
+  leitura morder, então nenhum campo é cortado e as bordas coincidem entre as bandas.
+  {% endcomment %}
   <div class="campos">
     <p class="campo curto">
       <label for="perfil-{{ indice }}-code">Código <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="text" id="perfil-{{ indice }}-code" name="perfil-{{ indice }}-code"
              value="{{ perfil.code|default:'' }}" required aria-required="true">
     </p>
-    <p class="campo largo">
+    {% comment %}Sem `largo`: com `flex 2` ela pedia 725 px, o teto de leitura a cortava em 685 e o vão aparecia no meio da linha.{% endcomment %}
+    <p class="campo">
       <label for="perfil-{{ indice }}-name">Denominação <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="text" id="perfil-{{ indice }}-name" name="perfil-{{ indice }}-name"
              value="{{ perfil.name|default:'' }}" required aria-required="true">
@@ -18,37 +30,56 @@
              value="{{ perfil.locality|default:'' }}">
     </p>
   </div>
-  <p class="campo">
-    <label for="perfil-{{ indice }}-description">Descrição</label>
-    <input type="text" id="perfil-{{ indice }}-description"
-           name="perfil-{{ indice }}-description" value="{{ perfil.description|default:'' }}">
-  </p>
   {% comment %}
-  O que um Edital real diz sobre a vaga (FR-012). Atribuições é área de texto porque são vários
-  parágrafos e o documento os preserva; carga horária e remuneração são frases, e não objeto de
-  moeda nem jornada estruturada — modelar isso agora construiria a estrutura antes de existir a
-  regra que a consome (FR-013).
+  O resumo da vaga junto das condições dela: o que é, em que jornada, por quanto. Carga horária e
+  remuneração são frases, e não objeto de moeda nem jornada estruturada — modelar isso agora
+  construiria a estrutura antes de existir a regra que a consome (FR-013).
   {% endcomment %}
-  <p class="campo largo">
-    <label for="perfil-{{ indice }}-duties">Atribuições</label>
-    <textarea id="perfil-{{ indice }}-duties" name="perfil-{{ indice }}-duties" rows="3"
-              aria-describedby="ajuda-perfil-{{ indice }}-duties">{{ perfil.duties|default:'' }}</textarea>
-    <span class="ajuda" id="ajuda-perfil-{{ indice }}-duties">O que a pessoa fará. Uma linha em
-      branco separa parágrafos no documento.</span>
-  </p>
   <div class="campos">
+    <p class="campo">
+      <label for="perfil-{{ indice }}-description">Descrição</label>
+      <input type="text" id="perfil-{{ indice }}-description"
+             name="perfil-{{ indice }}-description" value="{{ perfil.description|default:'' }}">
+    </p>
     <p class="campo">
       <label for="perfil-{{ indice }}-workload">Carga horária</label>
       <input type="text" id="perfil-{{ indice }}-workload" name="perfil-{{ indice }}-workload"
-             value="{{ perfil.workload|default:'' }}" placeholder="20 horas semanais">
+             value="{{ perfil.workload|default:'' }}" placeholder="ex.: 20 horas semanais">
     </p>
     <p class="campo">
       <label for="perfil-{{ indice }}-compensation">Remuneração</label>
       <input type="text" id="perfil-{{ indice }}-compensation"
              name="perfil-{{ indice }}-compensation" value="{{ perfil.compensation|default:'' }}"
-             placeholder="R$ 0.000,00 mensais">
+             placeholder="ex.: R$ 0.000,00 mensais">
     </p>
   </div>
+  {% comment %}
+  Os dois textos longos, lado a lado: são as duas metades da mesma pergunta — o que a pessoa fará e
+  o que ela precisa ter. Empilhados, ocupavam 280 px de altura para duas caixas de três linhas.
+  {% endcomment %}
+  <div class="campos">
+    <p class="campo largo">
+      <label for="perfil-{{ indice }}-duties">Atribuições</label>
+      <textarea id="perfil-{{ indice }}-duties" name="perfil-{{ indice }}-duties" rows="3"
+                aria-describedby="ajuda-perfil-{{ indice }}-duties">{{ perfil.duties|default:'' }}</textarea>
+      <span class="ajuda" id="ajuda-perfil-{{ indice }}-duties">O que a pessoa fará. Uma linha em
+        branco separa parágrafos no documento.</span>
+    </p>
+    <p class="campo largo">
+      <label for="perfil-{{ indice }}-requirements">Requisitos</label>
+      <textarea id="perfil-{{ indice }}-requirements" name="perfil-{{ indice }}-requirements"
+                rows="3" aria-describedby="ajuda-req-{{ indice }}">{{ perfil.requirements|default:'' }}</textarea>
+      <span class="ajuda" id="ajuda-req-{{ indice }}">Um requisito por linha.</span>
+    </p>
+  </div>
+  {% comment %}
+  Quantas vagas agora, e o que acontece depois delas — as duas metades da mesma pergunta, e por isso
+  na mesma linha. O limite continua dentro da opção que o pede: `validate_profile` recusa limite na
+  reserva inexistente e na ilimitada, e o exige na limitada.
+
+  As três viraram opções, e não continuaram num `select`, porque um `select` não tem onde aninhar o
+  campo que a escolha pede. O rótulo de cada uma vem de `forms.RESERVA`, num lugar só.
+  {% endcomment %}
   <div class="campos">
     <p class="campo curto">
       <label for="perfil-{{ indice }}-immediateVacancies">Vagas imediatas</label>
@@ -60,54 +91,32 @@
              {% if recusado %}aria-invalid="true"{% endif %}>
       {% if recusado %}<span class="recusa" role="alert" id="recusa-perfil-{{ indice }}-immediateVacancies">{{ recusado }}</span>{% endif %}
     </p>
-  </div>
-  {% comment %}
-  A mesma escolha que governa um campo, e o campo dentro da opção que o pede.
-
-  O limite só existe na reserva limitada: `validate_profile` recusa limite na inexistente e na
-  ilimitada, e o **exige** na limitada. `ler_perfis` já descartava o que não fosse limitado — a
-  metade que faltava era a da tela, que oferecia o campo nas três e se explicava numa frase de
-  ajuda, "Só para reserva limitada.", embaixo dele.
-
-  As três viraram opções, e não continuaram num `select`, porque um `select` não tem onde aninhar o
-  campo que a escolha pede. É a razão que o marco já registrou para a janela recursal: quando a
-  escolha governa outro campo, ela precisa de lugar para ele.
-
-  O rótulo de cada uma continua vindo de `forms.RESERVA`, num lugar só.
-  {% endcomment %}
-  <fieldset class="opcoes">
-    <legend>Cadastro Reserva</legend>
-    {% for valor, rotulo in reservas %}
-    <p class="opcao">
-      <input type="radio" id="perfil-{{ indice }}-reserveType-{{ valor }}"
-             name="perfil-{{ indice }}-reserveType" value="{{ valor }}"
-             {% if perfil.reserveType == valor or not perfil.reserveType and valor == "NONE" %}checked{% endif %}>
-      <label for="perfil-{{ indice }}-reserveType-{{ valor }}">{{ rotulo }}</label>
-    </p>
-    {% if valor == "LIMITED" %}
-    <div class="campos dependentes so-limitada">
-      <p class="campo curto">
-        <label for="perfil-{{ indice }}-reserveLimit">Limite da reserva</label>
-        {% recusa_de recusas "perfil" indice "reserveLimit" as recusado %}
-        <input type="number" min="0" id="perfil-{{ indice }}-reserveLimit"
-               name="perfil-{{ indice }}-reserveLimit" value="{{ perfil.reserveLimit|default:'' }}"
-               aria-describedby="ajuda-reserva-{{ indice }}{% if recusado %} recusa-perfil-{{ indice }}-reserveLimit{% endif %}"
-               {% if recusado %}aria-invalid="true"{% endif %}>
-        {% if recusado %}<span class="recusa" role="alert" id="recusa-perfil-{{ indice }}-reserveLimit">{{ recusado }}</span>{% endif %}
-        <span class="ajuda" id="ajuda-reserva-{{ indice }}">Quantas pessoas o cadastro comporta.
-          O Edital publica "cadastro reserva limitado em 6".</span>
+    <fieldset class="opcoes">
+      <legend>Cadastro Reserva</legend>
+      {% for valor, rotulo in reservas %}
+      <p class="opcao">
+        <input type="radio" id="perfil-{{ indice }}-reserveType-{{ valor }}"
+               name="perfil-{{ indice }}-reserveType" value="{{ valor }}"
+               {% if perfil.reserveType == valor or not perfil.reserveType and valor == "NONE" %}checked{% endif %}>
+        <label for="perfil-{{ indice }}-reserveType-{{ valor }}">{{ rotulo }}</label>
       </p>
-    </div>
-    {% endif %}
-    {% endfor %}
-  </fieldset>
-  <div class="campos">
-    <p class="campo largo">
-      <label for="perfil-{{ indice }}-requirements">Requisitos</label>
-      <textarea id="perfil-{{ indice }}-requirements" name="perfil-{{ indice }}-requirements"
-                rows="3" aria-describedby="ajuda-req-{{ indice }}">{{ perfil.requirements|default:'' }}</textarea>
-      <span class="ajuda" id="ajuda-req-{{ indice }}">Um requisito por linha.</span>
-    </p>
+      {% if valor == "LIMITED" %}
+      <div class="campos dependentes so-limitada">
+        <p class="campo curto">
+          <label for="perfil-{{ indice }}-reserveLimit">Limite da reserva</label>
+          {% recusa_de recusas "perfil" indice "reserveLimit" as recusado %}
+          <input type="number" min="0" id="perfil-{{ indice }}-reserveLimit"
+                 name="perfil-{{ indice }}-reserveLimit" value="{{ perfil.reserveLimit|default:'' }}"
+                 aria-describedby="ajuda-reserva-{{ indice }}{% if recusado %} recusa-perfil-{{ indice }}-reserveLimit{% endif %}"
+                 {% if recusado %}aria-invalid="true"{% endif %}>
+          {% if recusado %}<span class="recusa" role="alert" id="recusa-perfil-{{ indice }}-reserveLimit">{{ recusado }}</span>{% endif %}
+          <span class="ajuda" id="ajuda-reserva-{{ indice }}">Quantas pessoas o cadastro comporta.
+            O Edital publica "cadastro reserva limitado em 6".</span>
+        </p>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </fieldset>
   </div>
   <section class="modalidades" aria-labelledby="mod-titulo-{{ indice }}">
     <h3 id="mod-titulo-{{ indice }}">Modalidades de Concorrência</h3>

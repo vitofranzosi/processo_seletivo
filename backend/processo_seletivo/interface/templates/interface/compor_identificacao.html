@@ -12,10 +12,24 @@
     {% endif %}
     <p class="ajuda">Número, ano e Processo Seletivo são definidos na criação e não mudam. Título e
       descrição podem ser alterados enquanto o Edital estiver em elaboração.</p>
-    <dl class="participantes">
-      <dt>Processo Seletivo</dt><dd>{{ edital.processo.title }}
-        <span class="codigo">{{ edital.processo.institutional_code }}</span></dd>
-      <dt>Número e ano</dt><dd>{{ edital.number }}/{{ edital.year }}</dd>
+    {% comment %}
+    Os dois fatos que a criação fixou, na mesma forma dos campos abaixo — rótulo em cima, valor
+    embaixo, na mesma margem. Eram `dl.participantes`, a grade que lista quem participa de uma
+    banca: os valores começavam 120 px à direita, o cartão mostrava três margens esquerdas
+    diferentes, e o bloco encostava no campo seguinte sem respiro nenhum.
+
+    Continua sendo `dl` porque continua sendo termo e definição; o que muda é o arranjo.
+    {% endcomment %}
+    <dl class="fatos-fixos">
+      <div>
+        <dt>Processo Seletivo</dt>
+        <dd>{{ edital.processo.title }}
+          <span class="codigo">{{ edital.processo.institutional_code }}</span></dd>
+      </div>
+      <div>
+        <dt>Número e ano</dt>
+        <dd>{{ edital.number }}/{{ edital.year }}</dd>
+      </div>
     </dl>
     <p class="campo largo">
       <label for="ident-title">Título do Edital <span class="obrigatorio" aria-hidden="true">*</span></label>
