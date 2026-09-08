@@ -37,6 +37,16 @@ main>p,main>section>p,.sub,.ajuda,.vazio,legend+p{max-width:var(--leitura)}
    valia para o que se escreve; valer também para o que se escolhe é a mesma ideia — o campo tem
    a largura do que recebe, e não a da página. */
 .campo>select{max-width:var(--leitura)}
+/* Data não tem medida de leitura: o conteúdo é `dd/mm/aaaa, --:--` e quem desenha o tamanho é o
+   navegador. Fora da lista do teto, o campo esticava com a linha — 647 px para dezesseis
+   caracteres, no Cronograma —, e eram os dois deles que empurravam o Evento para duas linhas.
+   O teto é folgado de propósito: o desenho do controle varia por navegador e por idioma, e cortar
+   um segmento de data é pior do que sobrar espaço. */
+input[type=date],input[type=datetime-local]{max-width:18rem}
+/* E a linha deixa de reservar mais largura do que o campo aceita. Sem isto o teto resolvia o campo
+   e não a coluna: o `p` continuava esticando, e o vão apenas mudava de lugar — saía da ponta da
+   linha e ia para dentro dela, entre o campo de data e o rótulo seguinte. */
+.campo:has(>input[type=date]),.campo:has(>input[type=datetime-local]){flex:0 1 18rem}
 .sub{color:var(--texto-fraco);margin:0 0 1.5rem}
 .aviso{background:var(--amarelo-fundo);border-left:4px solid var(--amarelo);padding:.75rem 1rem;
   margin-bottom:1.5rem;border-radius:0 4px 4px 0}

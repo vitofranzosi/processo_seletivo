@@ -6,19 +6,25 @@
   antes de a leitura acontecer, de modo que mover a linha na tela, sozinho, não mudaria nada.
   {% endcomment %}
   <input type="hidden" name="evento-{{ indice }}-order" value="{{ evento.order|default:'0' }}">
+  {% comment %}
+  O Evento inteiro numa linha: que evento é, o que é, quando começa, quando termina — que é a ordem
+  em que se lê e em que se preenche.
+
+  Cabia antes e ninguém tinha reparado por causa dos campos de data: sem teto, cada um esticava para
+  647 px, e dois deles não deixavam sobrar largura para mais nada. Com o teto que a folha passou a
+  dar a `datetime-local`, os quatro cabem, e o cartão do Evento encolhe de duas linhas para uma.
+  {% endcomment %}
   <div class="campos">
     <p class="campo curto">
       <label for="evento-{{ indice }}-type">Tipo <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="text" id="evento-{{ indice }}-type" name="evento-{{ indice }}-type"
-             value="{{ evento.type|default:'' }}" required placeholder="Inscrições" aria-required="true">
+             value="{{ evento.type|default:'' }}" required placeholder="ex.: Inscrições" aria-required="true">
     </p>
-    <p class="campo largo">
+    <p class="campo">
       <label for="evento-{{ indice }}-description">Descrição <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="text" id="evento-{{ indice }}-description"
              name="evento-{{ indice }}-description" value="{{ evento.description|default:'' }}" required aria-required="true">
     </p>
-  </div>
-  <div class="campos">
     <p class="campo">
       <label for="evento-{{ indice }}-startAt">Início <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="datetime-local" id="evento-{{ indice }}-startAt"
