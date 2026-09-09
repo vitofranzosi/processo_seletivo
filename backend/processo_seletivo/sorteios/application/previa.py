@@ -34,12 +34,26 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
         "perfil": perfil,
         "marco": marco,
         "metodo": metodo,
+        # A ocorrência já observada para a referência que o método declara, se houver. A tela a
+        # exibe para que a semente esteja **à vista antes do ato** — é o que a transmissão mostra.
+        "ocorrencia": _ocorrencia_declarada(metodo),
         "metodo_hash": dominio_do_metodo.resumo_do_metodo(metodo) if metodo else "",
         "recortes": [
             _recorte(edital, perfil_id, marco_id, lista_id, nome, submetidas)
             for lista_id, nome in listas
         ],
     }
+
+
+def _ocorrencia_declarada(metodo):
+    """A ocorrência que o método declara, se já foi observada. `None` antes disso."""
+    from processo_seletivo.sorteios.models import OcorrenciaDaFonte
+
+    if not metodo:
+        return None
+    return OcorrenciaDaFonte.objects.filter(
+        fonte=metodo.get("source", ""), referencia=metodo.get("occurrence", "")
+    ).first()
 
 
 def _recorte(edital, perfil_id, marco_id, lista_id, nome, submetidas):

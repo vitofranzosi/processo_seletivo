@@ -2024,3 +2024,64 @@ def relacao_de_habilitados(request, relacao_id):
             "sucessora": relacao.sucessoras.first(),
         },
     )
+
+
+def _sorteio_publicado(sorteio_id):
+    from processo_seletivo.sorteios.models import Sorteio
+
+    return (
+        Sorteio.objects.filter(pk=sorteio_id)
+        .select_related("relacao", "relacao__versao", "relacao__edital", "ocorrencia", "ato")
+        .prefetch_related("sucessores")
+        .first()
+    )
+
+
+@require_http_methods(["GET"])
+def verificar_sorteio(request, sorteio_id):
+    """ "Verificar este sorteio", no canal público e sem autenticação (021, FR-048..FR-051).
+
+    **Recalcula das entradas, e relata em linguagem de gente.** A página não confere o banco contra
+    si mesmo: ela refaz a ordem a partir da relação congelada, da semente derivada do material
+    observado e do método que a relação citou — e diz, degrau por degrau, o que conferiu.
+
+    Funciona sem depender de gravação de vídeo nem de canal externo (FR-051): tudo o que ela usa
+    está publicado.
+    """
+    from processo_seletivo.sorteios.application.verificacao import verificar
+
+    sorteio = _sorteio_publicado(sorteio_id)
+    if sorteio is None:
+        raise Http404
+    return render(
+        request,
+        "portal/verificacao_de_sorteio.html",
+        {
+            "sorteio": sorteio,
+            "relacao": sorteio.relacao,
+            "veredito": verificar(sorteio),
+            "sucessor": sorteio.sucessores.first(),
+        },
+    )
+
+
+@require_http_methods(["GET"])
+def manifesto_do_sorteio(request, sorteio_id):
+    """O manifesto em JSON, legível por máquina (FR-047).
+
+    **Regenerado, e não guardado.** O que o ato grava é o `manifestHash`; os bytes nascem aqui, das
+    mesmas entradas congeladas. Dois downloads produzem bytes idênticos porque nada de vigente é
+    lido — é a regra 4 do contrato, e é o que o `ETag` afirma.
+    """
+    from processo_seletivo.shared.canonical import canonical_bytes
+    from processo_seletivo.sorteios.application.verificacao import manifesto_publicado
+
+    sorteio = _sorteio_publicado(sorteio_id)
+    if sorteio is None:
+        raise Http404
+    corpo = canonical_bytes(manifesto_publicado(sorteio))
+    resposta = HttpResponse(corpo, content_type="application/json")
+    resposta["ETag"] = f'"{sorteio.manifesto_hash}"'
+    resposta["Cache-Control"] = "public, max-age=31536000, immutable"
+    resposta["Content-Disposition"] = f'attachment; filename="manifesto-{sorteio.id}.json"'
+    return resposta

@@ -10,11 +10,15 @@ MARCO = "00000000-0000-4000-8000-000000000821"
 LISTA_PPI = "00000000-0000-4000-8000-000000000831"
 LISTA_PCD = "00000000-0000-4000-8000-000000000832"
 
+# **`occurrence` é a ocorrência concreta**, e `derivation` é a prosa que explica como ela foi
+# escolhida a partir da data programada. Se `occurrence` fosse a regra em prosa, a escolha de qual
+# extração observar voltaria para a mesa no dia do sorteio — que é exatamente o que a FR-015 e a
+# FR-017 proíbem. O Edital nomeia o concurso **antes** do congelamento.
 METODO = {
     "algorithm": "IFES-SORTEIO-SHA256-v1",
     "source": "Loteria Federal",
-    "occurrence": "extração imediatamente anterior à data do sorteio",
-    "derivation": "a extração de sábado imediatamente anterior à data publicada do sorteio",
+    "occurrence": "5900",
+    "derivation": "concurso 5900: a extração de sábado imediatamente anterior à data publicada",
     "normalization": {
         "rule": "DIGITOS_EM_SEQUENCIA",
         "text": "os cinco números sorteados, na ordem dos prêmios, separados por espaço",

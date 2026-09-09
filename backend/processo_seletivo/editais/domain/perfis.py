@@ -154,7 +154,7 @@ def validate_classification_milestones(milestones: list[dict]) -> None:
 CAMPOS_DO_METODO = (
     ("algorithm", "o algoritmo e a sua versão"),
     ("source", "a fonte pública externa da semente"),
-    ("occurrence", "a ocorrência que fixará a semente"),
+    ("occurrence", "a ocorrência concreta que fixará a semente"),
     ("derivation", "como a ocorrência decorre da data programada"),
     ("normalization", "como o material bruto vira semente"),
     ("substitutionRule", "o que vale se a ocorrência faltar, atrasar, bifurcar ou vier inválida"),

@@ -212,6 +212,21 @@ urlpatterns = [
         views.publicar_relacao_do_sorteio,
         name="publicar-relacao-do-sorteio",
     ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/ocorrencia",
+        views.observar_ocorrencia_do_sorteio,
+        name="observar-ocorrencia-do-sorteio",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/realizar",
+        views.realizar_sorteio,
+        name="realizar-sorteio",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/anular",
+        views.anular_o_sorteio,
+        name="anular-sorteio",
+    ),
     # A divulgação (017). A rota pende do **ato**, e não do marco, pelo mesmo motivo que as da 015
     # pendem do marco: é dali que ela é alcançada, e é o ato que a autorização qualifica. O GET
     # compõe a prévia e não grava nada; o POST é o ato.

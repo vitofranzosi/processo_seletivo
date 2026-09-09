@@ -4561,6 +4561,9 @@ def sorteio(request, edital_id, marco_id):
                 # não declara o método, e alterá-lo é Retificação (D-013, FR-014).
                 "metodo": estado["metodo"],
                 "metodo_hash": estado["metodo_hash"],
+                # A ocorrência declarada, se já observada: é o que põe a semente à vista **antes**
+                # do ato, que é o que a transmissão precisa mostrar.
+                "ocorrencia": estado["ocorrencia"],
                 "recortes": estado["recortes"],
                 "pode_emitir": pode_emitir,
                 "resultado": request.session.pop("resultado_do_sorteio", None),
@@ -4591,6 +4594,102 @@ def publicar_relacao_do_sorteio(request, edital_id, marco_id):
             idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
             correlation_id=getattr(request, "correlation_id", ""),
             motivo=request.POST.get("motivo", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_do_sorteio"] = recusa.detail
+    return redirect(destino)
+
+
+@require_http_methods(["POST"])
+def observar_ocorrencia_do_sorteio(request, edital_id, marco_id):
+    """Busca a ocorrência declarada na fonte e a registra. **Não sorteia** (021, R-006).
+
+    **A fonte e a ocorrência vêm do método publicado, e o formulário não as recebe.** O que a tela
+    envia é a intenção de observar, e nunca *qual* ocorrência observar: escolher a extração no dia
+    do sorteio seria a mesma fresta que escolher a semente. O Edital nomeia o concurso antes do
+    congelamento, e `derivation` publica como ele foi escolhido a partir da data programada
+    (FR-013, FR-017).
+    """
+    from processo_seletivo.sorteios.application.ocorrencia import observar_ocorrencia
+    from processo_seletivo.sorteios.application.previa import recortes_do_marco
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    destino = reverse("interface:sorteio", args=[edital_id, marco_id])
+    estado = recortes_do_marco(
+        edital=edital, perfil_id=_perfil_do_marco(edital, marco_id), marco_id=marco_id
+    )
+    metodo = estado["metodo"] or {}
+    try:
+        request.session["resultado_do_sorteio"] = observar_ocorrencia(
+            actor=ator,
+            processo_id=edital.processo_id,
+            fonte=metodo.get("source", ""),
+            referencia=metodo.get("occurrence", ""),
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_do_sorteio"] = recusa.detail
+    return redirect(destino)
+
+
+@require_http_methods(["POST"])
+def realizar_sorteio(request, edital_id, marco_id):
+    """Um botão só. Calcula a ordem e constitui o ato, numa transação (FR-029).
+
+    **Não há prévia, e não há confirmação de cálculo.** O fluxo da `015` — calcular, conferir
+    assinatura, confirmar, emitir — admite calcular várias vezes antes de decidir emitir, e isso,
+    depois da semente, é o ensaio que a D-010 existe para impedir.
+    """
+    from processo_seletivo.sorteios.application.sorteio import constituir_sorteio
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    destino = reverse("interface:sorteio", args=[edital_id, marco_id])
+    try:
+        request.session["resultado_do_sorteio"] = constituir_sorteio(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            relacao_id=request.POST.get("relacao_id"),
+            ocorrencia_id=request.POST.get("ocorrencia_id"),
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_do_sorteio"] = recusa.detail
+    return redirect(destino)
+
+
+@require_http_methods(["POST"])
+def anular_o_sorteio(request, edital_id, marco_id):
+    """Anular **é** constituir o sucessor, com motivo obrigatório (FR-052, FR-053)."""
+    from processo_seletivo.sorteios.application.sorteio import anular_sorteio
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    destino = reverse("interface:sorteio", args=[edital_id, marco_id])
+    try:
+        request.session["resultado_do_sorteio"] = anular_sorteio(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            sorteio_anterior_id=request.POST.get("sorteio_anterior_id"),
+            relacao_id=request.POST.get("relacao_id"),
+            ocorrencia_id=request.POST.get("ocorrencia_id"),
+            motivo=request.POST.get("motivo", ""),
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
         )
     except DomainError as recusa:
         if recusa.status == 404:

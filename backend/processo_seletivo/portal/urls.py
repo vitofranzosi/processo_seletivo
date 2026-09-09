@@ -83,6 +83,16 @@ urlpatterns = [
         views.relacao_de_habilitados,
         name="relacao-de-habilitados",
     ),
+    path(
+        "sorteio/<uuid:sorteio_id>/verificar",
+        views.verificar_sorteio,
+        name="verificar-sorteio",
+    ),
+    path(
+        "sorteio/<uuid:sorteio_id>/manifesto.json",
+        views.manifesto_do_sorteio,
+        name="manifesto-do-sorteio",
+    ),
     path("<uuid:edital_id>/", views.selecao, name="selecao"),
     path(
         "<uuid:edital_id>/vagas/<uuid:profile_id>/inscrever",
