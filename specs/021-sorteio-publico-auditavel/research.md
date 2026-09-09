@@ -101,9 +101,23 @@ público crescente (D-005). Como o resumo é sempre hexadecimal minúsculo de co
 lexicográfica da representação hexadecimal é idêntica à do binário — o verificador de terceiro pode
 usar qualquer das duas.
 
-**Vetor normativo obrigatório:** um caso com duas chaves idênticas, construído por participantes de
-mesmo `publicNumber` em relações distintas, provando que o desempate está implementado e não apenas
-descrito.
+**Vetor normativo obrigatório, e a forma dele importa.** O desempate precisa de prova executável, e
+**não existe entrada válida do sistema que produza duas chaves iguais**: mesmo `publicNumber` em
+relações distintas tem `relationHash` distinto, e na mesma relação a numeração é única por
+constraint. Colisão real de SHA-256 ninguém constrói.
+
+O vetor honesto exercita o **§4 do contrato**, e não o §3: entrega ao ordenador chaves já iguais e
+afirma a ordem resultante.
+
+```json
+{"name": "desempate-por-numero-publico",
+ "ordering": {"keys": {"7": "<64 hex>", "3": "<mesmo 64 hex>", "5": "<outro>"}},
+ "expectedOrder": [3, 7, 5]}
+```
+
+Apresentá-lo como "colisão de SHA-256" seria vender como propriedade criptográfica o que é regra de
+ordenação — e a tarefa que tentasse gerá-lo assim ficaria impossível de fechar. O nome do vetor
+mudou junto com a forma: `desempate-por-numero-publico`, e não `colisao-de-chave`.
 
 ---
 
@@ -123,6 +137,15 @@ as propriedades, não a fonte.
 imediatamente seguinte da mesma fonte". Aplicá-la MUST registrar a evidência da indisponibilidade
 (FR-015, e ver R-006).
 
+**Onde o método vive** (D-013): não em tabela própria, mas no conteúdo canônico do Edital, como
+objeto do marco de classificação — `drawMethod`, ao lado da `appealWindow` que o degrau 8 já pôs
+ali. É o que faz "alterá-lo é Retificação" deixar de ser analogia: o caminho
+`/profiles/id=…/classificationMilestones/id=…/drawMethod/…` já resolve na gramática existente.
+
+**Onde a semente derivada não vive** (D-016): não na ocorrência. Normalizar é regra do método, a
+ocorrência é única por `(fonte, referência)`, e guardar ali a semente normalizada congelaria a regra
+do primeiro método que a lesse. A ocorrência guarda material bruto; a semente é do `Sorteio`.
+
 **Alternativas consideradas.**
 
 - *Semente do próprio sistema, gerada ao vivo.* Recusada na D-003.
@@ -136,7 +159,11 @@ imediatamente seguinte da mesma fonte". Aplicá-la MUST registrar a evidência d
 **Problema.** Obter a semente é I/O de rede; constituir o ato é transação de banco. Fazer rede dentro
 da transação é ruim; fazer fora parece contrariar a D-010.
 
-**Decisão.** Duas etapas, e a fronteira é o que a D-010 de fato proíbe:
+**Decisão.** Duas etapas, e a fronteira é o que a D-010 de fato proíbe. **A FR-029 foi reescrita
+para dizer isto**: na redação anterior ela exigia obter a semente, calcular e constituir num comando
+único, e o plano entregava dois — a spec pedia literalmente o que o desenho recusava, e uma das duas
+tinha de ceder. Cedeu o texto, porque o desenho está certo: fundir a ida à rede com a transação não
+acrescenta garantia nenhuma e troca uma falha de rede por uma transação longa.
 
 ```text
 1. observar   busca a ocorrência na fonte e grava OcorrenciaDaFonte (append-only, idempotente
@@ -250,10 +277,69 @@ frase, porque ela é publicada junto com a relação.
 
 ## R-013 · Autorização
 
-**Decisão.** Os quatro comandos — publicar relação, congelar, constituir sorteio e anular — passam
-por `comando_de_comissao`, com a presidência como base suficiente, como `013`, `015` e `017` já
-fazem. Nenhum papel novo.
+**Decisão.** Os comandos são **quatro**, e a lista anterior contava mal: publicar a relação **é**
+congelá-la — o próprio `data-model.md` abre dizendo isso —, e anular é constituir um sorteio
+sucessor, não comando à parte. Em compensação, faltavam dois que escrevem e não tinham autorização
+declarada.
+
+| Comando | Quem pode | Por quê |
+|---|---|---|
+| declarar o método | quem elabora e retifica o Edital (`001`) | é conteúdo normativo do Edital, e não ato do sorteio (D-013) |
+| observar a ocorrência | `comando_de_comissao` | escreve registro auditado, e o descarte de ocorrência é controle da R-006 |
+| publicar a relação (= congelar) | `comando_de_comissao` | é o compromisso do universo |
+| constituir o sorteio (raiz ou sucessor) | `comando_de_comissao` | é o ato, e a anulação é o sucessor dele |
+
+Presidência como base suficiente, como `013`, `015` e `017` já fazem. Nenhum papel novo.
 
 **Segregação:** quem constitui o sorteio não precisa ser distinto de quem publicou a relação — o
 sorteio não é juízo, e a garantia contra manipulação está na semente, não na separação de pessoas.
 A `001` continua valendo onde já valia: elaborar, homologar e publicar o Edital.
+
+---
+
+## R-014 · A leitura do vigente, quando o ato não veio de Etapa
+
+**Problema.** `ato_vigente` procura um ato por `(edital, marco_id)` e devolve o primeiro sem
+sucessor; `estado_do_marco` recomputa a classificação por Etapas e compara com `vigente.universo`
+para decidir obsolescência; `aferir` consome esse veredito. Nenhum dos três foi escrito para um ato
+que não vem de Etapa nem para três atos no mesmo marco. Deixados como estão, a US4 sorteia, o
+seletor escolhe uma das três ordens ao acaso e a publicabilidade recusa todas como obsoletas.
+
+**Decisão.** Despachar por `lista_id` na leitura e por `universo["origem"]` na aferição.
+
+- `ato_vigente` passa a receber `lista_id` — sem ele, "o vigente do marco" não é pergunta com uma
+  resposta;
+- `estado_do_marco`, vendo `origem == "SORTEIO"`, **não** recomputa: a obsolescência de um ato de
+  sorteio é a da relação que o originou (a relação foi sucedida?), e não a divergência contra um
+  cálculo que jamais o produziu. É a mesma pergunta — "o ato ainda reflete o fato de origem?" — feita
+  ao fato de origem certo;
+- `aferir` não muda de regra: consome o estado já despachado.
+
+**Alternativa considerada.** *Fazer o ato de sorteio gravar um `universo` no formato de Etapas, para
+atravessar a comparação sem tocar em `classificacao`.* Recusada: seria escrever, num campo de
+proveniência, uma origem que não existiu — e a comparação passaria a acusar divergência a cada
+mudança de Etapa num marco que não depende de Etapa nenhuma.
+
+**Regressão obrigatória:** o caminho de hoje — marco sem lista, ato computado — sai bit a bit igual.
+É o que autoriza a alteração.
+
+---
+
+## R-015 · O resumo público tem de ser recalculável por quem o lê
+
+**Problema.** O conteúdo canônico da relação incluía `registrationId`. A FR-005 e a regra 1 do
+`manifesto.md` proíbem identificador interno no canal público. O cidadão recebia, então, um
+`relationHash` que **entra na chave de cada participante** e que ele não tinha como recalcular a
+partir da relação publicada — só aceitar. Isso desmonta a SC-002 por dentro: reimplementar o
+algoritmo continuaria possível, verificar a entrada dele não.
+
+**Decisão.** O conteúdo canônico da relação **é** a projeção pública da FR-005 — `publicNumber`,
+`name`, `protocol` —, mais o recorte, a versão, o critério e o `methodHash`. Nada que o portal não
+mostre entra no resumo público.
+
+**Consequência aceita:** corrigir o nome de um participante muda o `relationHash`. Está certo que
+mude — é fato de origem sucedido, e a D-011 já manda por aí: nova relação, nova ocorrência, novo ato.
+
+**Alternativa considerada.** *Dois resumos, um interno e um público.* Não recusada em definitivo, mas
+não construída agora: um resumo interno só se justifica quando houver um uso interno que o peça, e
+hoje não há. O que a análise recusa é o resumo único cobrir o que o canal público não pode exibir.

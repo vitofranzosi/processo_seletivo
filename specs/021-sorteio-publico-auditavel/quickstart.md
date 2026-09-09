@@ -9,8 +9,8 @@ fazer o que a tela deveria fazer: a Constituição §VI não aceita demonstraç�
 cd backend && make install
 ```
 
-Banco provisionado e migrado (a `021` acrescenta migrations em `sorteios`, `classificacao` e
-`editais`):
+Banco provisionado e migrado (a `021` acrescenta migrations em `sorteios`, `classificacao`,
+`divulgacao` e `editais`):
 
 ```bash
 cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python manage.py migrate
@@ -32,23 +32,29 @@ cd backend && DJANGO_SETTINGS_MODULE=config.settings.development INTERFACE_SELET
 
 Oito passos, e o teste da spec é este. Cada um é executável pelo canal do ator.
 
-### 1 · Declarar o método (gestão)
+### 1 · Declarar o método (composição do Edital, e não gestão do sorteio)
 
-Em `/gestao/editais/<id>/sorteio/`, declarar algoritmo, fonte, ocorrência, derivação, normalização e
-regra de substituição. **Antes** de congelar qualquer coisa.
+Na composição do marco de classificação, declarar algoritmo, fonte, ocorrência, derivação,
+normalização e regra de substituição, e publicar a versão. **Antes** de congelar qualquer coisa.
 
-*Esperado:* método gravado, com resumo próprio, e a tela dizendo que o universo ainda não está
-comprometido.
+*Esperado:* o método no conteúdo publicado do Edital, em
+`/profiles/id=…/classificationMilestones/id=…/drawMethod`, com resumo canônico próprio.
+
+*Prova de que é normativo, e não configuração:* retificar
+`…/drawMethod/substitutionRule` funciona pela gramática existente e gera versão nova; **não há**
+caminho na gestão do sorteio que altere o método (D-013, FR-014).
 
 ### 2 · Publicar a relação de habilitados (gestão)
 
 Um clique. O sistema projeta as inscrições submetidas do recorte, numera de 1 a N por protocolo
-crescente, calcula o resumo e publica — **publicar é congelar**.
+crescente, cita a versão e o resumo do método do marco, calcula o resumo da relação e publica —
+**publicar é congelar**.
 
-*Esperado:* quantidade, resumo, instante e ator gravados; a relação visível no portal, com números
-públicos e o critério de projeção escrito.
+*Esperado:* quantidade, resumo, `metodo_hash`, instante e ator gravados; a relação visível no portal,
+com número, nome e protocolo de cada participante e o critério de projeção escrito.
 
-*Prova negativa:* não há, em tela alguma, botão de incluir, excluir ou renumerar participante.
+*Prova negativa:* não há, em tela alguma, botão de incluir, excluir ou renumerar participante; e
+publicar segunda relação raiz para o mesmo recorte é recusado **pelo banco** (FR-070).
 
 ### 3 · Conferir o compromisso (portal, anônimo)
 
@@ -57,18 +63,24 @@ públicos e o critério de projeção escrito.
 *Esperado:* qualquer pessoa vê o universo **antes** de a semente existir. É o passo que a prática
 atual não tem.
 
+*Prova que fecha o círculo:* recalcular o `canonical_sha256` da relação a partir **do que a página
+mostra** dá o mesmo resumo publicado. Nenhum dado que o portal esconde entra na conta (R-015).
+
 ### 4 · Observar a ocorrência (gestão)
 
 Na data e hora publicadas, a tela busca a ocorrência declarada na fonte externa.
 
-*Esperado:* material bruto e semente normalizada gravados e exibidos. *Prova negativa:* não existe
-campo para digitar semente; com a fonte indisponível, a tela aplica a regra publicada de substituição
-e registra a evidência — e continua sem oferecer digitação.
+*Esperado:* material bruto gravado e exibido. A semente normalizada **não** é gravada aqui: ela
+nasce na constituição, sob a regra do método (D-016).
+
+*Prova negativa:* não existe campo para digitar semente; com a fonte indisponível, a tela aplica a
+regra publicada de substituição e registra a evidência — e continua sem oferecer digitação.
 
 ### 5 · Realizar o sorteio (gestão, com a tela transmitida)
 
-Um botão só. O comando lê a ocorrência, calcula a ordem de **todos** os participantes e constitui o
-ato, numa transação.
+Um botão só. O comando lê a ocorrência **já registrada** — não vai à rede —, lê o método pela versão
+que a relação cita, confere o resumo dele contra o que a relação comprometeu, normaliza, calcula a
+ordem de **todos** os participantes e constitui o ato, numa transação.
 
 *Esperado:* ordem completa, ato constituído com `origem = SORTEIO`, manifesto com resumo gravado.
 
@@ -77,9 +89,13 @@ ato, numa transação.
 
 ### 6 · Publicar o resultado (gestão)
 
-A divulgação do ato segue o caminho que a `017` já tem.
+A divulgação do ato segue o caminho que a `017` já tem, agora com a dimensão da lista.
 
 *Esperado:* a ordem publicada no portal, com identidade do sorteio, algoritmo, semente e resumos.
+
+*No certame com cotas* — o 57 e o 28 —, as três listas do marco produzem **três** publicações, cada
+uma citando o seu ato; e a publicação sem lista de um marco comum continua única, exatamente como
+antes (D-015, FR-068).
 
 ### 7 · Verificar por conta própria (portal, anônimo, e fora do sistema)
 
@@ -88,7 +104,7 @@ A divulgação do ato segue o caminho que a `017` já tem.
 E a prova que importa, **fora** do sistema:
 
 ```bash
-cd backend && node tests/javascript/sorteio-cli.js < manifesto.json
+cd backend && node processo_seletivo/portal/static/portal/sorteio-cli.js < manifesto.json
 ```
 
 *Esperado:* a mesma ordem, item a item, sem tocar no sistema e sem o vídeo.

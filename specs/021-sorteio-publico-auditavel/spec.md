@@ -130,7 +130,16 @@ duas listas, com posição independente em cada.
 28/2026   7 polos × (AC, PPI, PcD)                    3 ordens por polo — 21 no certame
 ```
 
-Onde não há cota há uma lista só, e o recorte degenera no Perfil. **A consequência é estrutural:**
+Onde não há cota há uma lista só, e o recorte degenera no Perfil.
+
+**Uma precisão de vocabulário, que a D-013 tornou necessária.** "Recorte" nomeia o par
+(recorte de vaga × lista) — é o que varia dentro de um marco. O **marco** é o terceiro eixo, e
+sempre esteve lá: o `AtoDeOrdenacao` é por marco desde a `015`, e é o marco que passa a declarar o
+método. Onde este documento diz "recorte" sem qualificar, o marco está subentendido; onde a
+identidade importa — chaves de unicidade, `metodo_hash`, endereçamento normativo —, os três eixos
+aparecem escritos.
+
+**A consequência é estrutural:**
 `uq_ato_raiz_por_marco` é única por `(edital, perfil_id, marco_id)` entre atos raiz, e três listas
 sobre o mesmo marco colidem hoje. A lista entra como **dimensão do ato**, e não como marco próprio:
 a janela recursal é do marco (`018`), e os Editais publicam **um** período de recurso para as três
@@ -152,18 +161,27 @@ sugerir é da tela, presumir é do conteúdo publicado.
 
 ### D-009 — Ato institucional único, computação livre
 
-Para a mesma relação congelada, a mesma ocorrência da fonte e o mesmo **método declarado** — que
-fixa algoritmo, versão e recorte —, existe no máximo **um ato raiz**. Recalcular é livre: o algoritmo
-precisa poder rodar indefinidamente por terceiros; emitir outra ordem não é. A unicidade é sobre a
-tupla inteira, e é o que mantém a anulação legal — o sucessor nasce de outra relação e de outra
-ocorrência.
+Para a mesma relação congelada e a mesma ocorrência da fonte existe no máximo **um ato raiz**.
+Recalcular é livre: o algoritmo precisa poder rodar indefinidamente por terceiros; emitir outra ordem
+não é. A unicidade é sobre a tupla inteira, e é o que mantém a anulação legal — o sucessor nasce de
+outra relação e de outra ocorrência.
+
+**O método ficou fora da tupla porque deixou de ser escolha.** A D-014 fez a relação citá-lo no
+congelamento: dada a relação, o método está determinado, e acrescentá-lo à chave de unicidade não
+restringiria nada — sugeriria, ao contrário, que um sorteio pudesse rodar sob método diferente do que
+a sua própria relação comprometeu.
 
 ### D-010 — Não existe prévia depois que a semente é conhecida
 
-Obter a semente, calcular e constituir o ato formam um comando **atômico e idempotente**. O fluxo da
-`015` — calcular, conferir assinatura, confirmar, emitir — não é herdado literalmente: ele admite
-calcular várias vezes antes de decidir emitir, e isso, depois da semente, é o ensaio que a feature
-existe para impedir.
+Calcular a ordem e constituir o ato formam um comando **atômico e idempotente**, e é ele que a
+proibição alcança. O fluxo da `015` — calcular, conferir assinatura, confirmar, emitir — não é
+herdado literalmente: ele admite calcular várias vezes antes de decidir emitir, e isso, depois da
+semente, é o ensaio que a feature existe para impedir.
+
+**Observar a ocorrência é ato anterior e distinto**, e não é ensaio: ele busca o material na fonte e
+o registra, sem calcular chave nenhuma e sem criar ato nenhum. A fronteira está no que o comando
+produz, e não em quantas chamadas o compõem — fundir a ida à rede com a transação de banco não
+acrescentaria garantia, e trocaria uma falha de rede por uma transação longa.
 
 ### D-011 — O universo é projeção, não digitação
 
@@ -175,6 +193,62 @@ ocorrência, novo ato —, e semente conhecida sobre relação alterada não se 
 
 O canal continua externo. O sistema entrega uma tela que valha a transmissão e uma verificação que
 sobreviva ao vídeo.
+
+> As quatro decisões seguintes foram tomadas **depois** do `tasks.md`, na análise cruzada dos
+> artefatos. Estão aqui, e não numa errata, porque governam modelo e requisito como as doze
+> anteriores — e porque a spec que as escondesse num apêndice mentiria sobre a própria ordem.
+
+### D-013 — O método do sorteio é conteúdo versionado do Edital
+
+A FR-014 sempre disse que o método é conteúdo normativo publicado e que alterá-lo é ato da classe da
+Retificação. **Uma tabela própria não entrega isso**: não tem versão consolidada, não tem autoridade
+signatária, não entra no snapshot e não é alcançada pela gramática de endereçamento. Dizer "classe
+da Retificação" sobre um registro operacional é analogia, não garantia.
+
+O método passa a ser objeto do **marco de classificação**, no conteúdo canônico:
+`/profiles/id=…/classificationMilestones/id=…/drawMethod`. É o mesmo lugar e a mesma forma da
+`appealWindow` da `018` — objeto aninhado no marco, elevado por degrau, `null` significando "não
+declarado" —, e a Retificação o alcança **sem gramática nova**, porque em objeto o caminho já
+resolve por chave literal.
+
+**O método é do marco, e não da lista.** Um sorteio é um evento: a mesma extração da mesma fonte
+semeia as três listas do recorte, e é o `relationHash` que as separa — é exatamente o que o vetor
+`mesma-semente-recortes-distintos` prova. Declarar método por lista abriria de novo a porta que a
+D-014 fecha, e não atenderia Edital nenhum da amostra.
+
+### D-014 — Uma relação vigente por recorte, e é ela que cita o método
+
+Duas frestas restavam entre o congelamento e a semente, e as duas tinham a mesma forma — escolher
+depois de saber:
+
+1. **duas relações raiz vivas.** A sucessão dizia qual era a vigente pela cadeia, mas nada impedia
+   duas raízes coexistirem no mesmo recorte, cada uma sem sucessora e portanto ambas "vigentes";
+2. **dois métodos declarados.** Relação e método chegavam ao sorteio como escolhas independentes, e
+   métodos apontam ocorrências diferentes — logo, sementes diferentes.
+
+A correção é uma só, e é a mesma dos atos: **unicidade de raiz por recorte**, mais a relação
+**citando o método** por resumo no instante em que congela. Depois disso o sorteio não recebe método:
+ele consome o que a relação comprometeu, sob a versão que ela cita.
+
+### D-015 — A publicação de resultado ganha a dimensão da lista
+
+A D-006 fez o ato admitir três raízes por marco e parou aí. `PublicacaoResultado` continua única por
+`(Edital, Perfil, marco)`, e três atos exigem três publicações: a segunda lista bate na constraint e
+o certame com cotas não publica. A dimensão da lista **atravessa** o ato e alcança a divulgação, e a
+cirurgia é a mesma já aceita para `AtoDeOrdenacao` — a constraint parte em duas parciais, e a de
+hoje sobrevive palavra por palavra para a publicação sem lista.
+
+Junto vem a leitura: `ato_vigente` procura um ato por marco, e `estado_do_marco` recomputa a
+classificação por Etapas para aferir obsolescência. Nenhum dos dois foi escrito para uma ordem que
+não vem de Etapa. **Ato de sorteio não se afere recomputando** — a sua obsolescência é a da relação
+que o originou, e não a de um cálculo que jamais o produziu.
+
+### D-016 — A semente normalizada é do sorteio, não da ocorrência
+
+Normalizar é regra do método; observar é registrar o que a fonte publicou. Guardar a semente
+normalizada na ocorrência — única por `(fonte, referência)` — congelaria a normalização do primeiro
+método que passasse por ali e a imporia a todos os demais, em silêncio. A ocorrência guarda **o
+material bruto**; a semente derivada é do `Sorteio`, que é onde método e ocorrência se encontram.
 
 ---
 
@@ -219,14 +293,26 @@ participante recebeu número, que o resumo canônico foi gravado e que a consult
 4. **Given** um Edital com cotas, **When** a comissão publica as relações, **Then** há uma relação
    por lista de concorrência, e quem se declarou aparece na de ampla concorrência **e** na da sua
    reserva, com numeração própria em cada.
+5. **Given** um marco cujo Edital publicado declara o método do sorteio, **When** a comissão publica
+   a relação, **Then** a relação grava o resumo daquele método — de modo que o compromisso do
+   universo e o compromisso do método nascem no mesmo instante, antes de a semente existir.
+6. **Given** um marco cujo Edital **não** declara método, **When** a comissão tenta publicar a
+   relação, **Then** o sistema recusa e diz o que falta: congelar sob método indefinido seria
+   escolher o método depois.
+7. **Given** um recorte que já tem relação vigente, **When** alguém publica outra relação para o
+   mesmo recorte sem suceder a primeira, **Then** o sistema recusa: duas relações vivas seriam duas
+   escolhas possíveis depois de a semente ser conhecida.
 
 ---
 
 ### User Story 2 — O sorteio oficial acontece uma vez, e produz a ordem (Priority: P1)
 
-Na data e hora publicadas, com a tela transmitida, a comissão executa o sorteio. O sistema obtém a
-semente da ocorrência declarada da fonte externa, calcula a ordem de **todos** os participantes e
-constitui o ato — tudo num comando só. Não há prévia, não há "executar de novo".
+Na data e hora publicadas, com a tela transmitida, a comissão observa a ocorrência declarada da
+fonte externa — que registra o material bruto e nada mais — e executa o sorteio: o sistema deriva a
+semente pela regra do método, calcula a ordem de **todos** os participantes e constitui o ato, tudo
+numa transação só. Não há prévia, não há "executar de novo". **São dois comandos, e a fronteira é
+proposital**: o que a proibição alcança é calcular e constituir, e ir à rede não produz ordem
+nenhuma.
 
 **Why this priority**: é o ato que o certame precisa e que hoje acontece fora do sistema.
 
@@ -236,12 +322,13 @@ e resumo, e que uma segunda execução sobre a mesma tupla é recusada.
 
 **Acceptance Scenarios**:
 
-1. **Given** relação congelada e método declarado, **When** a comissão executa o sorteio depois da
-   ocorrência da fonte, **Then** o sistema obtém a semente, calcula a ordem completa e constitui o
-   ato numa transação só.
+1. **Given** relação congelada e ocorrência já observada e registrada, **When** a comissão executa o
+   sorteio, **Then** o sistema lê o método pela versão que a relação cita, confere o resumo dele
+   contra o que a relação comprometeu, deriva a semente, calcula a ordem completa e constitui o ato
+   numa transação só — sem ir à fonte durante a transação.
 2. **Given** um sorteio já executado, **When** a mesma comissão pede execução de novo sobre a mesma
-   relação, ocorrência, versão do algoritmo e recorte, **Then** o sistema recusa — existe no máximo
-   um ato raiz para a tupla.
+   relação e a mesma ocorrência, **Then** o sistema recusa — existe no máximo um ato raiz para a
+   tupla.
 3. **Given** duas requisições concorrentes do mesmo comando, **When** ambas chegam, **Then** exatamente
    um ato nasce, e a segunda devolve o desfecho da primeira.
 4. **Given** a fonte da ocorrência indisponível na hora marcada, **When** a comissão tenta executar,
@@ -250,6 +337,9 @@ e resumo, e que uma segunda execução sobre a mesma tupla é recusada.
 5. **Given** uma relação alterada depois de a ocorrência ser conhecida, **When** a comissão tenta
    executar com aquela ocorrência, **Then** o sistema recusa: semente conhecida sobre relação
    alterada não se reutiliza.
+6. **Given** uma tentativa de passar método ao comando do sorteio, por qualquer rota, formulário ou
+   parâmetro, **When** ela chega, **Then** não há onde ela entre: o método vem da relação, e a
+   superfície não o aceita.
 
 ---
 
@@ -351,7 +441,10 @@ Cronograma o exibe e que a Retificação o alcança.
 
 - **Relação com um participante só, ou com nenhum.** A ordem de um é legítima; a de nenhum é
   recusada — não há universo a comprometer.
-- **Colisão de chave.** Improvável, previsto e testado: desempata pelo número público crescente.
+- **Colisão de chave.** Improvável ao ponto de não ser construtível, e ainda assim previsto e
+  testado: o desempate por número público crescente é exercitado por um vetor de **ordenação**, que
+  entrega as chaves já iguais. Nenhuma entrada válida do sistema produz duas chaves iguais, e um
+  vetor que prometesse colisão de SHA-256 prometeria o que ninguém constrói.
 - **Ocorrência da fonte que não existe, atrasa, bifurca ou vem inválida.** A regra publicada decide,
   sem escolha humana no momento.
 - **Retificação do Cronograma depois do congelamento.** Muda a data publicada do evento; não altera
@@ -363,6 +456,13 @@ Cronograma o exibe e que a Retificação o alcança.
   composição; o sistema não infere recorte de quadro de vagas.
 - **Tentativa de executar antes da ocorrência declarada.** Recusada: a semente é posterior ao
   congelamento por construção.
+- **Retificação do método depois do congelamento.** Vale para o que vier; **não** alcança relação
+  congelada nem ato constituído, porque a relação cita a versão e o resumo do método sob os quais
+  congelou. Sortear passa a ser recusado quando a versão citada não contém mais aquele método.
+- **Ocorrência já observada que nenhum sorteio consome.** Fica registrada e visível: é o controle
+  que torna o descarte de ocorrência auditável, e não um rascunho a limpar.
+- **Marco com três listas, no momento de divulgar.** Três atos, três publicações, cada uma com a sua
+  cadeia de sucessão. Suceder a publicação de uma lista não toca as outras duas.
 
 ## Requirements *(mandatory)*
 
@@ -379,10 +479,13 @@ Cronograma o exibe e que a Retificação o alcança.
   relação, e MUST NOT admitir numeração digitada.
 - **FR-004**: A numeração MUST ser própria de cada relação: o participante que figura em duas listas
   recebe número em cada uma.
-- **FR-005**: A relação publicada MUST expor, no canal público, ao menos o número público e a
-  identificação que o Edital já publica dos seus candidatos, e MUST NOT expor CPF nem identificador
-  interno.
-- **FR-006**: O sistema MUST gravar o resumo canônico da relação no momento da publicação.
+- **FR-005**: A relação publicada MUST expor, no canal público, exatamente três dados por
+  participante — número público, nome e protocolo da inscrição —, que são os que a divulgação de
+  resultado da `017` já publica, e MUST NOT expor CPF, identificador interno de inscrição nem
+  qualquer outro dado pessoal.
+- **FR-006**: O sistema MUST gravar o resumo canônico da relação no momento da publicação, e esse
+  resumo MUST cobrir **apenas** dados publicados — de modo que qualquer pessoa o recalcule a partir
+  da relação que lê no portal, sem pedir nada à instituição.
 - **FR-007**: A relação publicada MUST ser imutável: nem a aplicação nem a role de runtime alteram
   participante, número ou resumo.
 - **FR-008**: O sistema MUST registrar quem publicou a relação, quando, e sob qual versão do Edital.
@@ -390,25 +493,41 @@ Cronograma o exibe e que a Retificação o alcança.
 - **FR-010**: O sistema MUST permitir publicar relação nova para o mesmo recorte quando um fato de
   origem for sucedido, preservando integralmente a anterior.
 - **FR-011**: A consulta pública MUST devolver a relação publicada e o seu resumo.
-- **FR-012**: A relação MUST identificar o recorte a que pertence — recorte de vaga e lista de
-  concorrência.
+- **FR-012**: A relação MUST identificar o recorte a que pertence — recorte de vaga, marco de
+  classificação e lista de concorrência.
+- **FR-067**: A relação MUST citar, no instante em que é publicada, a versão do Edital sob a qual foi
+  projetada e o **resumo do método declarado** naquela versão para o seu marco; e o ato do sorteio
+  MUST consumir esse método, sem receber método como parâmetro em caminho algum.
+- **FR-070**: Para o mesmo recorte, o sistema MUST admitir no máximo **uma relação raiz** e, a cada
+  sucessão, no máximo uma sucessora — de modo que "a relação vigente" seja única por construção, e
+  não por convenção de leitura. Publicar segunda relação raiz para recorte que já tem uma MUST ser
+  recusado pelo banco, e não apenas pela aplicação.
+- **FR-071**: O sistema MUST recusar sortear relação que já tenha sucessora.
 
 #### O método declarado e a semente
 
-- **FR-013**: O Edital ou o ato do sorteio MUST declarar, **antes do congelamento**: o algoritmo e a
-  sua versão, o recorte, a fonte da semente, a ocorrência que a fixará, a regra de derivação da
-  ocorrência a partir da data programada, a representação dos bytes, a regra de normalização e a
-  regra de substituição em caso de indisponibilidade, atraso, bifurcação ou dado inválido.
-- **FR-014**: O método declarado MUST ser conteúdo normativo publicado; alterá-lo MUST ser ato da
-  classe da Retificação, e MUST NOT ser efeito de implantação de software.
+- **FR-013**: O conteúdo publicado do Edital MUST declarar, no marco de classificação e **antes do
+  congelamento**: o algoritmo e a sua versão, a fonte da semente, a ocorrência que a fixará, a regra
+  de derivação da ocorrência a partir da data programada, a representação dos bytes, a regra de
+  normalização e a regra de substituição em caso de indisponibilidade, atraso, bifurcação ou dado
+  inválido. O recorte **não** é campo do método: o método é do marco, e a identidade do marco é o
+  recorte a que ele se aplica (D-013).
+- **FR-014**: O método MUST viver no conteúdo canônico versionado, sob o marco que o declara, e
+  alterá-lo MUST ser Retificação sobre esse conteúdo, endereçada por identidade do Perfil e do
+  marco, sem gramática nova. MUST NOT ser efeito de implantação de software, e MUST NOT existir
+  caminho que o altere fora do ato normativo.
+- **FR-066**: O marco que não declara método MUST publicar o campo com valor nulo, significando
+  "método não declarado", e o sistema MUST recusar congelar relação em marco sem método declarado.
 - **FR-015**: A regra de substituição MUST ser mecânica: aplicada sem escolha humana no momento da
   execução.
 - **FR-016**: A ocorrência que fixa a semente MUST ser posterior ao congelamento da relação.
 - **FR-017**: O sistema MUST NOT admitir semente digitada, colada ou escolhida por qualquer ator.
 - **FR-018**: O sistema MUST NOT admitir compromisso de semente produzido pela própria instituição
   como substituto da fonte externa.
-- **FR-019**: O sistema MUST registrar o material bruto obtido da fonte, a semente normalizada e o
-  instante da obtenção.
+- **FR-019**: O registro da ocorrência MUST guardar o material bruto obtido da fonte e o instante da
+  obtenção, e MUST NOT guardar a semente normalizada: normalizar é regra do método, e a mesma
+  ocorrência pode ser lida por métodos que normalizam diferente. A semente normalizada MUST ser
+  gravada no sorteio, que é onde método e ocorrência se encontram (D-016).
 - **FR-020**: Sendo a relação alterada depois de a ocorrência ser conhecida, o sistema MUST recusar
   aquela ocorrência para o sorteio seguinte.
 
@@ -427,18 +546,23 @@ Cronograma o exibe e que a Retificação o alcança.
 - **FR-027**: A regra de composição da chave MUST ser publicada com detalhe suficiente para
   reimplementação independente.
 - **FR-028**: O repositório MUST publicar vetores de teste normativos com entrada, bytes canônicos,
-  resumo e ordem esperada, incluindo um caso de colisão.
+  resumo e ordem esperada, e MUST publicar, à parte, um vetor de **ordenação** cujas chaves são dadas
+  já iguais, provando que o desempate da FR-023 executa. O vetor de desempate MUST NOT ser
+  apresentado como colisão de SHA-256: colisão real não é produzível, e entradas válidas do sistema
+  não a produzem — números públicos iguais em relações distintas têm resumos de relação distintos, e
+  na mesma relação são recusados pela unicidade da numeração.
 
 #### O ato, e a sua unicidade
 
-- **FR-029**: Obter a semente, calcular a ordem e constituir o ato MUST acontecer num comando único,
-  atômico e idempotente.
+- **FR-029**: Calcular a ordem e constituir o ato MUST acontecer num comando único, atômico e
+  idempotente, que consome uma ocorrência **já observada e registrada** e MUST NOT ir à fonte durante
+  a transação. Observar a ocorrência MUST ser comando anterior e distinto, que registra material
+  bruto e MUST NOT calcular chave, ordem ou ato (D-010).
 - **FR-030**: O sistema MUST NOT oferecer cálculo prévio, simulação ou pré-visualização da ordem
   depois de a semente ser conhecida.
-- **FR-031**: Para a mesma relação congelada, a mesma ocorrência e o **mesmo método declarado** — que
-  é o que fixa algoritmo, versão e recorte —, o sistema MUST admitir no máximo um ato raiz. O método
-  é a unidade porque é ele que existe como declaração publicada; "versão do algoritmo" descreve o
-  conteúdo dele, e duas declarações distintas de mesma versão são dois métodos.
+- **FR-031**: Para a mesma relação congelada e a mesma ocorrência, o sistema MUST admitir no máximo
+  um ato raiz. O método não entra na tupla porque não é escolha: a relação o cita no congelamento
+  (FR-067), e dada a relação ele está determinado.
 - **FR-032**: Requisições concorrentes do mesmo comando MUST produzir exatamente um ato, devolvendo
   às demais o desfecho do primeiro.
 - **FR-033**: O ato MUST citar a relação por identidade e por resumo.
@@ -472,6 +596,13 @@ Cronograma o exibe e que a Retificação o alcança.
   relação publicada já expõe.
 - **FR-045**: O sistema MUST publicar a ordem completa, e MUST identificar a lista de concorrência a
   que ela pertence.
+- **FR-068**: A publicação de resultado MUST admitir a dimensão da lista de concorrência, de modo que
+  as ordens das listas distintas de um mesmo marco sejam publicadas cada uma no seu ato de
+  divulgação, e MUST preservar, para a publicação sem lista, a unicidade que hoje vale por
+  `(Edital, Perfil, marco)`.
+- **FR-069**: A leitura do ato vigente e a aferição de publicabilidade MUST distinguir ato computado
+  de ato constituído por sorteio, e MUST NOT declarar obsoleto um ato de sorteio por divergir de uma
+  classificação recomputada a partir de Etapas, que não é a regra que o produziu.
 - **FR-046**: O documento publicado do resultado MUST exibir identidade do sorteio, algoritmo,
   semente e resumos de integridade.
 - **FR-047**: O manifesto MUST estar disponível para download em formato legível por máquina.
@@ -508,8 +639,11 @@ Cronograma o exibe e que a Retificação o alcança.
 
 #### Autorização, e o que a feature recusa
 
-- **FR-062**: Publicar relação, congelar universo, executar sorteio e anular MUST exigir permissão
-  explícita e verificação de escopo institucional.
+- **FR-062**: Os comandos desta feature MUST exigir permissão explícita e verificação de escopo
+  institucional, e são **quatro**, porque publicar a relação **é** congelá-la: declarar o método,
+  observar a ocorrência, publicar a relação e constituir o sorteio — a anulação sendo a constituição
+  de um sorteio sucessor, e não comando à parte. Declarar o método MUST seguir a autorização do ato
+  normativo que o carrega, e não a dos comandos do sorteio.
 - **FR-063**: Quem executa o sorteio MUST estar vinculado à condução daquele certame.
 - **FR-064**: O sistema MUST NOT decidir quem ocupa vaga, quem é suplente, quem sai de qual lista nem
   até onde a análise documental desce.
@@ -522,10 +656,11 @@ Cronograma o exibe e que a Retificação o alcança.
   editada.
 - **Participante da Relação**: a inscrição que figura na relação, com o seu número público. É o que a
   chave do sorteio endereça.
-- **Método do Sorteio**: algoritmo, versão, recorte, fonte da semente, ocorrência, derivação,
-  normalização e regra de substituição. Conteúdo normativo publicado.
+- **Método do Sorteio**: algoritmo, versão, fonte da semente, ocorrência, derivação, normalização e
+  regra de substituição. **Não é entidade própria**: é objeto do marco de classificação no conteúdo
+  canônico versionado do Edital, retificável por identidade e sem gramática nova (D-013).
 - **Ocorrência da Fonte**: o evento externo, futuro e previamente determinado, cujo valor fixa a
-  semente. Guarda material bruto, semente normalizada e instante.
+  semente. Guarda material bruto e instante — e só isso.
 - **Ato de Ordenação constituído por sorteio**: a ordem emitida, com proveniência própria — relação,
   ocorrência, método —, sucessão e motivo.
 - **Manifesto do Sorteio**: o pacote público que torna a ordem reproduzível por terceiro.
@@ -536,12 +671,14 @@ Cronograma o exibe e que a Retificação o alcança.
 ### Measurable Outcomes
 
 - **SC-001**: Uma pessoa fora da instituição, com o manifesto publicado e uma ferramenta própria,
-  reproduz a ordem de um sorteio real **item a item**, sem contato com o Ifes e sem assistir ao
-  vídeo.
+  reproduz a ordem de um sorteio real **item a item** — e, querendo, recalcula o resumo da relação a
+  partir da relação publicada, em vez de aceitá-lo —, sem contato com o Ifes e sem assistir ao vídeo.
 - **SC-002**: Duas implementações independentes, escritas em linguagens diferentes a partir apenas da
   regra publicada, produzem a mesma ordem para todos os vetores normativos.
 - **SC-003**: Nenhum ator do sistema consegue, em nenhum caminho, escolher, digitar ou substituir a
-  semente do sorteio oficial — verificado por tentativa em todos os caminhos oferecidos.
+  semente do sorteio oficial, **nem escolher, depois de a semente ser conhecida, qual relação ou qual
+  método o sorteio usa** — verificado por tentativa em todos os caminhos oferecidos. As três frestas
+  são a mesma fresta: decidir uma entrada depois de conhecer o efeito dela.
 - **SC-004**: Um sorteio de 300 participantes vai do congelamento à ordem publicada, ao vivo, em
   menos de um minuto de operação — o tempo de uma tomada de transmissão.
 - **SC-005**: 100% dos sorteios publicados passam na própria verificação pública, e a verificação
@@ -556,8 +693,10 @@ Cronograma o exibe e que a Retificação o alcança.
 
 - O certame que sorteia publica a relação de habilitados antes do sorteio; é o que os quatro Editais
   fazem, com dois dias de antecedência.
-- A fonte pública externa da semente é escolhida institucionalmente e declarada no Edital ou no ato
-  do sorteio. A spec fixa as propriedades exigidas dela, não a sua identidade.
+- A fonte pública externa da semente é escolhida institucionalmente e declarada **no Edital**, junto
+  com o resto do método, no marco de classificação. A spec fixa as propriedades exigidas dela, não a
+  sua identidade. A redação anterior admitia "no Edital ou no ato do sorteio"; a segunda metade caiu
+  com a D-013, e era ela que deixava o método fora do conteúdo versionado.
 - A transmissão continua acontecendo em canal externo, operado por quem hoje o opera.
 - O recorte é declarado por quem elabora; o sistema não o infere do quadro de vagas, e o 76/2026
   mostra por quê.
