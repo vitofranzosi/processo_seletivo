@@ -13,6 +13,7 @@ from datetime import date, datetime, timedelta
 
 from django.db.models import Count
 from django.db.models.functions import TruncDate
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
@@ -30,7 +31,9 @@ from processo_seletivo.inscricoes.domain.periodo import (
     periodo_de_inscricoes,
 )
 from processo_seletivo.inscricoes.models import Inscricao
+from processo_seletivo.processos.domain.finalizacao import PROCESSO_FINAL
 from processo_seletivo.publicacoes.application.selectors import effective_version
+from processo_seletivo.recursos.application import admitir as recursos_admitir
 from processo_seletivo.recursos.application import selectors as recursos_selectors
 from processo_seletivo.recursos.models import Recurso
 from processo_seletivo.resultados.models import ResultadoEtapa
@@ -496,7 +499,7 @@ def posicao_temporal(inicio, fim, agora):
 # --- `UX-001` — Etapa sem marco no cronograma -----------------------------------------------
 
 
-def etapas_sem_marco(edital, conteudo):
+def etapas_sem_marco(edital, conteudo, encaminhar):
     """Etapa que não referencia Evento algum (`FR-026`).
 
     É publicável e legítimo — a validação recusa referência a Evento **inexistente** e admite a
@@ -520,13 +523,14 @@ def etapas_sem_marco(edital, conteudo):
                 f"A Etapa {nome}, do Edital {rotulo_do_edital(edital)}, "
                 f"está sem marco no cronograma."
             ),
+            destino=encaminhar(UX_001, edital),
         )
 
 
 # --- `UX-002` — declarado × posição temporal ------------------------------------------------
 
 
-def divergencias_temporais(edital, conteudo, agora):
+def divergencias_temporais(edital, conteudo, agora, encaminhar):
     """Evento cujo estado declarado é incompatível com a posição observável (`FR-027`).
 
     **As duas informações são apresentadas, e nenhuma é arbitrada** (`FR-023`, `D-004`): a tela não
@@ -552,13 +556,14 @@ def divergencias_temporais(edital, conteudo, agora):
                 f"declarado {DECLARACOES[declarado]} · "
                 f"{FRASES_DA_POSICAO[posicao]} {_dia(referencia)}."
             ),
+            destino=encaminhar(UX_002, edital),
         )
 
 
 # --- `UX-003` — cobertura de avaliação insuficiente -----------------------------------------
 
 
-def cobertura_insuficiente(edital, conteudo):
+def cobertura_insuficiente(edital, conteudo, encaminhar):
     """Etapa com inscrição carente de avaliador, com numerador e denominador (`FR-028`).
 
     Reusa `resumo_da_etapa` **como está**: uma agregação por Etapa, e não um laço sobre inscrições.
@@ -579,6 +584,7 @@ def cobertura_insuficiente(edital, conteudo):
                 f"A Etapa {nome}, do Edital {rotulo_do_edital(edital)}, "
                 f"tem inscrição sem avaliador suficiente."
             ),
+            destino=encaminhar(UX_003, edital, etapa.get("id")),
         )
 
 
@@ -629,7 +635,7 @@ def candidato_a_obsoleto(edital, ato, marco, versao_vigente):
     ).exists()
 
 
-def atos_obsoletos(edital, conteudo, versao_vigente):
+def atos_obsoletos(edital, conteudo, versao_vigente, encaminhar):
     """Ato vigente **confirmado** obsoleto (`FR-029`).
 
     Duas passagens, e a segunda só onde a primeira acusar. Chamar `estado_do_marco` para todos os
@@ -661,6 +667,7 @@ def atos_obsoletos(edital, conteudo, versao_vigente):
                 f"O ato de ordenação vigente do marco {nome}, do Edital "
                 f"{rotulo_do_edital(edital)}, está obsoleto."
             ),
+            destino=encaminhar(UX_004, edital, marco_id),
         )
 
 
@@ -710,7 +717,7 @@ def impedidos_por_recurso(pendentes):
     return impedidos
 
 
-def comissao_impedida(processo, editais):
+def comissao_impedida(processo, editais, encaminhar):
     """Recurso aguardando julgamento para o qual nenhum membro ativo está desimpedido (`FR-030`).
 
     **A mensagem se limita ao que verifica.** Julgar exige também a permissão sistêmica de julgar
@@ -741,7 +748,79 @@ def comissao_impedida(processo, editais):
                 f"Há recurso aguardando julgamento no Edital {rotulo_do_edital(edital)} para o "
                 f"qual todos os membros da comissão estão impedidos de julgar."
             ),
+            destino=encaminhar(UX_005, edital),
         )
+
+
+# ---------------------------------------------------------------------------
+# 8. Encaminhamento — do sinal ao lugar onde ele se resolve
+# ---------------------------------------------------------------------------
+
+# Os dois encaminhamentos que levam a **alterar o Edital**. Num Processo em estado final o domínio
+# recusa alteração dos seus Editais, e oferecer o caminho seria oferecer um beco — o mesmo que a
+# `007` passou uma feature inteira tirando (`FR-036`).
+ENCAMINHAMENTOS_QUE_ALTERAM_O_EDITAL = frozenset({UX_001, UX_002})
+
+# Onde cada sinal se resolve: a tela **dona** daquele fato, e nunca uma segunda implementação dele
+# (`FR-035`, `D-009`). O rótulo diz o que se vai encontrar lá, e não o que se vai fazer: a decisão
+# de agir é de quem chega.
+ROTULOS_DO_DESTINO = {
+    UX_001: "Abrir a composição das Etapas",
+    UX_002: "Abrir o cronograma do Edital",
+    UX_003: "Abrir a distribuição da Etapa",
+    UX_004: "Abrir a ordenação do marco",
+    UX_005: "Abrir os recursos do Edital",
+}
+
+
+def admite_encaminhamento(processo, especie):
+    """Se a **situação** do Processo admite o ato para onde o sinal encaminharia.
+
+    Não é autorização — quem recusa continua sendo a tela de destino (`FR-036`). É a mesma
+    distinção que o catálogo de ações do Edital já pratica: prever a recusa é conveniência; decidir
+    a autorização é da dona.
+    """
+    if especie in ENCAMINHAMENTOS_QUE_ALTERAM_O_EDITAL:
+        return processo.status not in PROCESSO_FINAL
+    return True
+
+
+def destino_de(processo, especie, edital, referencia=None):
+    """A tela dona daquele sinal, ou `None` quando a situação não admite o encaminhamento."""
+    if not admite_encaminhamento(processo, especie):
+        return None
+    caminhos = {
+        # A âncora é a da seção, e é a mesma que as pendências de publicação já usam: o lugar de
+        # agir sobre uma coleção é o começo dela.
+        UX_001: lambda: reverse("interface:compor-etapa", args=[edital.id, "etapas"])
+        + "#etapas-titulo",
+        UX_002: lambda: reverse("interface:compor-etapa", args=[edital.id, "cronograma"])
+        + "#cronograma-titulo",
+        UX_003: lambda: reverse("interface:distribuicao", args=[edital.id, referencia]),
+        UX_004: lambda: reverse("interface:ordenacao", args=[edital.id, referencia]),
+        UX_005: lambda: reverse("interface:recursos", args=[edital.id]),
+    }
+    return Destino(rotulo=ROTULOS_DO_DESTINO[especie], url=caminhos[especie]())
+
+
+def alcance(ator, processo):
+    """Quais espécies este ator alcança — **uma decisão por espécie**, e não uma na porta.
+
+    Menor privilégio levado até o elemento (`FR-004`, `T-008`). A supressão é silenciosa: anunciar
+    que existe um sinal suprimido diria a quem não pode vê-lo que **há** algo para ver, que é
+    vazamento por agregação.
+
+    Quatro das cinco linhas coincidem com a própria porta da supervisão, e escrevê-las assim mesmo
+    é o ponto: o dia em que a tela dona mudar de porta, o lugar de mudar é este.
+    """
+    gere = pode_gerir_comissao(ator, processo) is not None
+    return {
+        UX_001: pode_supervisionar(ator, processo) is not None,
+        UX_002: pode_supervisionar(ator, processo) is not None,
+        UX_003: gere,
+        UX_004: gere or bool(ator and ator.can("auditoria:consultar")),
+        UX_005: bool(ator and ator.can(recursos_admitir.PERMISSAO)),
+    }
 
 
 # --- A região inteira ------------------------------------------------------------------------
@@ -752,17 +831,34 @@ def sinais(processo, ator, *, agora=None):
 
     A ordem é a de `ESPECIES`, e não uma de gravidade: os cinco são igualmente acionáveis, e
     ordená-los por severidade pediria um juízo que o domínio não determina (`D-002`).
+
+    O sinal que o ator não alcança **não é montado** (`FR-004`): a detecção nem chega a rodar, o
+    que é ao mesmo tempo a supressão silenciosa e a leitura mais barata.
     """
     agora = agora or timezone.now()
+    alcancadas = alcance(ator, processo)
+
+    def encaminhar(especie, edital, referencia=None):
+        return destino_de(processo, especie, edital, referencia)
+
     leitura = leitura_dos_editais(processo)
     publicados = [(edital, conteudo) for edital, conteudo in leitura if conteudo is not None]
     achados = []
     for edital, conteudo in publicados:
-        achados += list(etapas_sem_marco(edital, conteudo))
-        achados += list(divergencias_temporais(edital, conteudo, agora))
-        achados += list(cobertura_insuficiente(edital, conteudo))
-        achados += list(atos_obsoletos(edital, conteudo, versao_vigente_do_edital(edital)))
-    achados += list(comissao_impedida(processo, [edital for edital, _ in publicados]))
+        if alcancadas[UX_001]:
+            achados += list(etapas_sem_marco(edital, conteudo, encaminhar))
+        if alcancadas[UX_002]:
+            achados += list(divergencias_temporais(edital, conteudo, agora, encaminhar))
+        if alcancadas[UX_003]:
+            achados += list(cobertura_insuficiente(edital, conteudo, encaminhar))
+        if alcancadas[UX_004]:
+            achados += list(
+                atos_obsoletos(edital, conteudo, versao_vigente_do_edital(edital), encaminhar)
+            )
+    if alcancadas[UX_005]:
+        achados += list(
+            comissao_impedida(processo, [edital for edital, _ in publicados], encaminhar)
+        )
     achados.sort(key=lambda sinal: (ESPECIES.index(sinal.especie), sinal.alvo))
     return tuple(achados)
 
@@ -773,7 +869,9 @@ __all__ = [
     "DECLARACOES",
     "DENTRO_DO_INTERVALO",
     "DEPOIS_DO_TERMINO",
+    "ENCAMINHAMENTOS_QUE_ALTERAM_O_EDITAL",
     "ESPECIES",
+    "ROTULOS_DO_DESTINO",
     "UX_001",
     "UX_002",
     "UX_003",
@@ -800,6 +898,9 @@ __all__ = [
     "marcos_do_edital",
     "periodo_do_edital",
     "pode_supervisionar",
+    "admite_encaminhamento",
+    "alcance",
+    "destino_de",
     "posicao_temporal",
     "pulso",
     "serie_do_edital",
