@@ -214,7 +214,7 @@ def _recusar_o_que_nao_pode_sortear(relacao, ocorrencia, metodo):
             "regra publicada de substituição põe no lugar dela, e essa também não se escolhe.",
             409,
         )
-    if ocorrencia.ocorrida_em is None:
+    if ocorrencia.ocorrida_nao_antes_de is None:
         # Sem saber **quando o evento externo aconteceu**, não há como afirmar que ele é posterior
         # ao congelamento: o instante da leitura é escolhido por quem lê (FR-016).
         raise DomainError(
@@ -224,17 +224,20 @@ def _recusar_o_que_nao_pode_sortear(relacao, ocorrencia, metodo):
             "não sabe datar não semeia sorteio.",
             409,
         )
-    if ocorrencia.ocorrida_em <= relacao.publicada_em:
+    if ocorrencia.ocorrida_nao_antes_de <= relacao.publicada_em:
         # A semente **posterior** ao congelamento é a inversão que organiza a feature inteira: uma
         # ocorrência anterior significaria que o universo foi fechado sabendo o resultado.
         #
-        # **A comparação é com `ocorrida_em`, e não com `observada_em`.** Era com a segunda, e a
-        # garantia era contornável: bastava congelar a relação depois de ver a extração na
-        # televisão e registrá-la no sistema em seguida.
+        # **A comparação é com o limite inferior da ocorrência, e não com a leitura.** Era com a
+        # leitura, e a garantia era contornável: bastava congelar depois de ver a extração na
+        # televisão e registrá-la em seguida. E o limite inferior é o que a fonte de fato publica —
+        # uma data sem horário vale como o início daquele dia, e não como um horário inventado.
         raise DomainError(
             "occurrence_precedes_freeze",
-            "A ocorrência aconteceu antes de a relação ser congelada. A semente é posterior ao "
-            "compromisso do universo, e não o contrário.",
+            "Não é possível afirmar que a ocorrência aconteceu depois do congelamento da relação: "
+            f"a fonte a situa a partir de {ocorrencia.ocorrida_nao_antes_de:%d/%m/%Y %H:%M}, e a "
+            f"relação foi congelada em {relacao.publicada_em:%d/%m/%Y %H:%M}. A semente é "
+            "posterior ao compromisso do universo, e não o contrário.",
             409,
         )
 

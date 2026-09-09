@@ -73,7 +73,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
   <dl class="ocorrencia">
     <dt>Fonte e ocorrência</dt><dd>{{ ocorrencia.fonte }} — {{ ocorrencia.referencia }}</dd>
     <dt>Material bruto observado</dt><dd><code>{{ ocorrencia.material_bruto }}</code></dd>
-    <dt>Quando aconteceu</dt><dd>{% if ocorrencia.ocorrida_em %}{{ ocorrencia.ocorrida_em|date:"d/m/Y H:i:s" }}{% else %}<span class="erro">a fonte não informou, e sem isso ela não semeia sorteio</span>{% endif %}</dd>
+    <dt>Aconteceu não antes de</dt><dd>{% if ocorrencia.ocorrida_nao_antes_de %}{{ ocorrencia.ocorrida_nao_antes_de|date:"d/m/Y H:i" }} — é o que a fonte publica, e o limite inferior é o que se compara com o congelamento{% else %}<span class="erro">a fonte não informou, e sem isso ela não semeia sorteio</span>{% endif %}</dd>
     <dt>Observada em</dt><dd>{{ ocorrencia.observada_em|date:"d/m/Y H:i:s" }} por {{ ocorrencia.observada_por }}</dd>
   </dl>
   {% elif proxima_referencia %}
@@ -148,6 +148,22 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       <p>Anular não desfaz e não repete: constitui um sorteio <strong>novo</strong>, ligado a este,
         a partir de uma relação nova e de uma ocorrência nova. Este ato continua consultável e
         verificável como registro do que foi feito.</p>
+      {% comment %}
+      **Os insumos são oferecidos, e não digitados.** A versão anterior pedia dois UUIDs colados à
+      mão, e depois da Retificação não existia caminho visível para criá-los: a anulação estava
+      corrigida no domínio e inalcançável pelo ator, que é o modo de falha que a Constituição §VI
+      nomeia. Os `select` abaixo listam exatamente o que o domínio admite — relações que sucedem a
+      do ato anulado, e ocorrências observadas que nenhum sorteio consumiu.
+
+      Faltando um deles, a tela diz **qual passo falta**, em ordem, em vez de recusar no envio.
+      {% endcomment %}
+      <ol class="passos-da-anulacao">
+        <li>Retificar o Edital para declarar a ocorrência nova — a anulação não escolhe extração.</li>
+        <li>Publicar a relação nova, no formulário acima, com o motivo da sucessão.</li>
+        <li>Observar a ocorrência que a Retificação declarou.</li>
+        <li>Anular, escolhendo os dois abaixo.</li>
+      </ol>
+      {% if recorte.relacoes_sucessoras and recorte.ocorrencias_disponiveis %}
       <form method="post" action="{% url 'interface:anular-sorteio' edital.id marco.id %}">
         {% csrf_token %}
         <input type="hidden" name="sorteio_anterior_id" value="{{ recorte.sorteio.id }}">
@@ -158,18 +174,33 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
           <span class="oculto" id="ajuda-anulacao-{{ forloop.counter }}">Um sorteio anulado sem razão registrada seria um ato desfeito sem que ninguém respondesse por isso.</span>
         </p>
         <p class="campo">
-          <label for="relacao-nova-{{ forloop.counter }}">Relação nova</label>
-          <input type="text" id="relacao-nova-{{ forloop.counter }}" name="relacao_id" required aria-required="true">
+          <label for="relacao-nova-{{ forloop.counter }}">Relação nova <span class="obrigatorio" aria-hidden="true">*</span></label>
+          <select id="relacao-nova-{{ forloop.counter }}" name="relacao_id" required aria-required="true">
+            {% for sucessora in recorte.relacoes_sucessoras %}
+            <option value="{{ sucessora.id }}">Publicada em {{ sucessora.publicada_em|date:"d/m/Y H:i" }} — {{ sucessora.quantidade }} participante{{ sucessora.quantidade|pluralize }}</option>
+            {% endfor %}
+          </select>
         </p>
         <p class="campo">
-          <label for="ocorrencia-nova-{{ forloop.counter }}">Ocorrência nova</label>
-          <input type="text" id="ocorrencia-nova-{{ forloop.counter }}" name="ocorrencia_id" required aria-required="true">
+          <label for="ocorrencia-nova-{{ forloop.counter }}">Ocorrência nova <span class="obrigatorio" aria-hidden="true">*</span></label>
+          <select id="ocorrencia-nova-{{ forloop.counter }}" name="ocorrencia_id" required aria-required="true">
+            {% for disponivel in recorte.ocorrencias_disponiveis %}
+            <option value="{{ disponivel.id }}">{{ disponivel.fonte }} — {{ disponivel.referencia }}, observada em {{ disponivel.observada_em|date:"d/m/Y H:i" }}</option>
+            {% endfor %}
+          </select>
         </p>
         <button type="submit" class="botao perigoso">Anular e constituir o sucessor</button>
       </form>
+      {% else %}
+      <p class="aviso">Faltam os insumos do sucessor:
+        {% if not recorte.relacoes_sucessoras %}<strong>a relação nova</strong>, que se publica no
+        formulário acima{% endif %}{% if not recorte.relacoes_sucessoras and not recorte.ocorrencias_disponiveis %} e {% endif %}{% if not recorte.ocorrencias_disponiveis %}<strong>a ocorrência nova</strong>, que se observa depois de a Retificação declará-la{% endif %}.
+        Enquanto eles não existirem, não há sucessor a constituir — e não há como anular sem
+        sucessor.</p>
+      {% endif %}
     </details>
     {% endif %}
-    {% elif recorte.congelada and ocorrencia and not ocorrencia.indisponivel and ocorrencia.ocorrida_em and pode_emitir %}
+    {% elif recorte.congelada and ocorrencia and not ocorrencia.indisponivel and ocorrencia.ocorrida_nao_antes_de and pode_emitir %}
     {% comment %}
     Um botão só, e ele constitui. Não há "calcular para conferir": depois da semente, conferir antes
     de emitir **é** o ensaio (D-010, FR-030).
@@ -182,7 +213,12 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
     </form>
     {% endif %}
 
-    {% if pode_emitir and metodo and not recorte.sorteio %}
+    {% comment %}
+    **O formulário continua disponível depois do sorteio**, e é o passo 2 da anulação: o sucessor
+    nasce de relação nova, e ela é publicada aqui. Escondê-lo tornava a anulação — corrigida no
+    domínio — inalcançável pela tela, o que a Constituição §VI não admite.
+    {% endcomment %}
+    {% if pode_emitir and metodo %}
     <form method="post" action="{% url 'interface:publicar-relacao-do-sorteio' edital.id marco.id %}">
       {% csrf_token %}
       <input type="hidden" name="lista_id" value="{{ recorte.lista_id }}">

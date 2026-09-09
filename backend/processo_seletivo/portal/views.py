@@ -1950,8 +1950,15 @@ def resultado(request, publicacao_id):
     # oferecê-la levaria de um resultado histórico a outro. Vigente é a que ninguém sucedeu, e é
     # ela que a FR-044 manda oferecer.
     foi_sucedida = bool(publicacao.sucessoras.all())
+    # **A vigente é a da mesma lista** (021, D-015, FR-068). Sem o eixo, uma publicação de PPI
+    # sucedida oferecia "ver o resultado vigente" apontando para a ampla concorrência — mandando
+    # quem consulta a ordem de uma lista para a ordem de outra.
     vigente = (
-        vigente_do_marco(edital=publicacao.edital, marco_id=publicacao.marco_id)
+        vigente_do_marco(
+            edital=publicacao.edital,
+            marco_id=publicacao.marco_id,
+            lista_id=publicacao.lista_id,
+        )
         if foi_sucedida
         else None
     )

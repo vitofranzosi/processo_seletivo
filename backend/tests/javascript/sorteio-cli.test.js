@@ -89,8 +89,9 @@ test("o manifesto íntegro tem o seu resumo conferido", () => {
 
   const resultado = cli.verificar(manifesto);
 
-  assert.equal(resultado.resumoConfere, true);
+  assert.equal(resultado.coerenteConsigo, true);
   assert.equal(resultado.iguais, true);
+  assert.equal(cli.verificar(manifesto, manifesto.manifestHash).resumoConfere, true);
 });
 
 test("um manifesto autoconsistente porém adulterado é denunciado pelo resumo", () => {
@@ -119,18 +120,80 @@ test("um manifesto autoconsistente porém adulterado é denunciado pelo resumo",
 
   assert.equal(resultado.iguais, true, "o pacote é internamente coerente");
   assert.deepEqual(resultado.divergenciasDeChave, [], "e as chaves fecham entre si");
-  assert.equal(resultado.resumoConfere, false, "e ainda assim não é o que foi publicado");
+  assert.equal(
+    resultado.coerenteConsigo,
+    false,
+    "e o resumo declarado, não recalculado, o denuncia"
+  );
 });
 
 test("um manifestHash arbitrário é denunciado", () => {
   const manifesto = manifestoDe();
   manifesto.manifestHash = "f".repeat(64);
 
-  assert.equal(cli.verificar(manifesto).resumoConfere, false);
+  assert.equal(cli.verificar(manifesto).coerenteConsigo, false);
 });
 
 test("um manifesto sem manifestHash não é dado como válido", () => {
   const manifesto = manifestoDe();
 
-  assert.equal(cli.verificar(manifesto).resumoConfere, false);
+  assert.equal(cli.verificar(manifesto).coerenteConsigo, false);
+  assert.equal(cli.verificar(manifesto, "a".repeat(64)).resumoConfere, false);
+});
+
+test("sem âncora externa o CLI não afirma que confere", () => {
+  /* **A circularidade que a revisão encontrou.** Comparar o hash recalculado com o campo que o
+     próprio arquivo carrega não prova nada: quem adultera recalcula o campo junto. Sem um resumo
+     vindo de fora, a resposta correta é "não verificado" — e não "confere". */
+  const manifesto = manifestoDe();
+  manifesto.manifestHash = cli.resumoDoManifesto(manifesto);
+
+  const resultado = cli.verificar(manifesto);
+
+  assert.equal(resultado.coerenteConsigo, true, "o arquivo fecha consigo mesmo");
+  assert.equal(resultado.resumoConfere, null, "e isso não é o mesmo que conferir");
+});
+
+test("um manifesto forjado com o resumo recalculado é denunciado pela âncora externa", () => {
+  const publicado = manifestoDe();
+  publicado.manifestHash = cli.resumoDoManifesto(publicado);
+  const resumoDoPortal = publicado.manifestHash;
+
+  /* O forjado: outra semente, chaves e posições coerentes entre si, e `manifestHash` recalculado —
+     um pacote impecável por dentro, e que não é o que a instituição publicou. */
+  const forjado = manifestoDe();
+  forjado.seed.normalized = "99999 99999 99999 99999 99999";
+  const chaves = referencia.chaves({
+    relationHash: forjado.relation.relationHash,
+    drawScopeId: cli.recorteDe(forjado.scope),
+    seed: forjado.seed.normalized,
+    publicNumbers: NUMEROS,
+  });
+  const ordem = referencia.ordenar(chaves);
+  forjado.participants = NUMEROS.map((numero) => ({
+    publicNumber: numero,
+    key: chaves[numero],
+    position: ordem.indexOf(numero) + 1,
+  }));
+  forjado.manifestHash = cli.resumoDoManifesto(forjado);
+
+  const semAncora = cli.verificar(forjado);
+  const comAncora = cli.verificar(forjado, resumoDoPortal);
+
+  assert.equal(semAncora.coerenteConsigo, true, "o forjado fecha consigo mesmo");
+  assert.equal(comAncora.resumoConfere, false, "e a âncora do portal o denuncia");
+});
+
+test("o manifesto publicado confere contra o resumo copiado do portal", () => {
+  const manifesto = manifestoDe();
+  manifesto.manifestHash = cli.resumoDoManifesto(manifesto);
+
+  assert.equal(cli.verificar(manifesto, manifesto.manifestHash).resumoConfere, true);
+  assert.equal(cli.verificar(manifesto, manifesto.manifestHash.toUpperCase()).resumoConfere, true);
+});
+
+test("o argumento --resumo é lido da linha de comando", () => {
+  assert.equal(cli.resumoEsperadoDosArgumentos(["--resumo", "abc"]), "abc");
+  assert.equal(cli.resumoEsperadoDosArgumentos([]), null);
+  assert.equal(cli.resumoEsperadoDosArgumentos(["--resumo"]), null);
 });

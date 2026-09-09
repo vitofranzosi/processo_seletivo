@@ -35,7 +35,8 @@ CAMINHO_DO_MARCO = f"/profiles/id={PERFIL}/classificationMilestones/id={MARCO}"
 METODO = {
     "algorithm": "IFES-SORTEIO-SHA256-v1",
     "source": "Loteria Federal",
-    "occurrence": "extração imediatamente anterior à data do sorteio",
+    "occurrence": "5900",
+    "occurrenceAt": "2026-11-20T20:00:00-03:00",
     "derivation": "a extração de sábado imediatamente anterior à data publicada",
     "normalization": {"rule": "DIGITOS_EM_SEQUENCIA", "text": "os cinco números, na ordem"},
     "substitutionRule": {

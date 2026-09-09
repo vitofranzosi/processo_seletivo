@@ -324,8 +324,13 @@ def metodo_do_sorteio(numero):
     concurso = f"59{numero}"
     return {
         "algorithm": "IFES-SORTEIO-SHA256-v1",
-        "source": "Loteria Federal",
+        # **A fonte de demonstração, e não a Loteria Federal**: a demonstração precisa rodar sem
+        # rede, e a fonte declarada é o que determina o adaptador consultado (FR-076). Declarar a
+        # Caixa aqui faria o seed depender da internet — e mentiria sobre de onde a semente veio.
+        "source": "Fonte de demonstração",
         "occurrence": concurso,
+        # No passado, para que o roteiro possa observar a ocorrência logo depois de semear.
+        "occurrenceAt": "2020-01-01T20:00:00-03:00",
         "derivation": (
             f"Concurso {concurso}: a extração de sábado imediatamente anterior à data publicada "
             "do sorteio."

@@ -40,6 +40,9 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
         "perfil": perfil,
         "marco": marco,
         "metodo": metodo,
+        # O instante publicado da ocorrência: separa "ainda não" de "não haverá", e a tela precisa
+        # dele para não oferecer o descarte antes da hora (FR-077).
+        "ocorre_em": _instante_declarado(metodo),
         # A ocorrência da vez — a declarada, ou a que a regra de substituição pôs no lugar dela —,
         # a referência que ainda falta observar, e as que a indisponibilidade descartou. A tela as
         # exibe para que a semente esteja **à vista antes do ato**, e para que o descarte fique
@@ -53,6 +56,13 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
             for lista_id, nome in listas
         ],
     }
+
+
+def _instante_declarado(metodo):
+    """O instante publicado em que a ocorrência acontece, ou `None` se o método não o declara."""
+    from django.utils.dateparse import parse_datetime
+
+    return parse_datetime(str((metodo or {}).get("occurrenceAt") or "")) or None
 
 
 def _ocorrencia_declarada(metodo):
@@ -99,9 +109,21 @@ def _recorte(edital, perfil_id, marco_id, lista_id, nome, submetidas, habilitada
     projetados = projecao.numerar(
         projecao.elegiveis(submetidas, lista_id=lista_id, habilitadas=habilitadas)
     )
+    # **O sorteio é do recorte, e não da relação vigente.** Lê-lo de `vigente.sorteios` funcionava
+    # até alguém publicar a relação nova: dali em diante a vigente é a sucessora, que ainda não tem
+    # sorteio — e a tela deixava de reconhecer o ato a anular exatamente no passo em que ele
+    # precisava ser reconhecido.
+    sorteio = _sorteio_vigente(edital, perfil_id, marco_id, lista_id)
     return {
         "lista_id": lista_id or "",
         "nome": nome,
+        # **Os insumos da sucessão, oferecidos e não digitados** (Princípio VI). A tela pedia que
+        # alguém colasse dois UUIDs; depois da Retificação não havia caminho visível para criá-los
+        # e escolhê-los, e a anulação — corrigida no domínio — ficava inalcançável pelo canal do
+        # ator. Aqui vão as relações que sucedem a do sorteio a anular e as ocorrências observadas
+        # que ainda não foram consumidas.
+        "relacoes_sucessoras": _relacoes_sucessoras(vigente, sorteio),
+        "ocorrencias_disponiveis": _ocorrencias_disponiveis(sorteio),
         # Quantos entrariam **agora**, se a relação fosse publicada neste instante. Depois do
         # congelamento é a relação que manda, e a divergência entre os dois números é informação:
         # ela diz que um fato de origem mudou desde o compromisso.
@@ -116,8 +138,56 @@ def _recorte(edital, perfil_id, marco_id, lista_id, nome, submetidas, habilitada
         ],
         "relacao": vigente,
         "congelada": vigente is not None,
-        "sorteio": getattr(vigente, "sorteios", None) and vigente.sorteios.first(),
+        "sorteio": sorteio,
     }
+
+
+def _sorteio_vigente(edital, perfil_id, marco_id, lista_id):
+    """O sorteio sem sucessor daquele recorte, ou `None`."""
+    from processo_seletivo.sorteios.models import Sorteio
+
+    return (
+        Sorteio.objects.filter(
+            edital=edital,
+            perfil_id=perfil_id,
+            marco_id=marco_id,
+            lista_id=lista_id,
+            sucessores__isnull=True,
+        )
+        .select_related("relacao", "ocorrencia")
+        .order_by("-executado_em")
+        .first()
+    )
+
+
+def _relacoes_sucessoras(vigente, sorteio):
+    """As relações que sucedem a do sorteio a anular — os únicos universos que o sucessor admite.
+
+    Vazia enquanto ninguém publicou a relação nova, e é isso que a tela usa para dizer, em ordem, o
+    que ainda falta fazer (FR-054).
+    """
+    from processo_seletivo.sorteios.models import RelacaoDeHabilitados
+
+    if sorteio is None:
+        return []
+    return list(
+        RelacaoDeHabilitados.objects.filter(relacao_anterior_id=sorteio.relacao_id).order_by(
+            "publicada_em"
+        )
+    )
+
+
+def _ocorrencias_disponiveis(sorteio):
+    """As ocorrências observadas que nenhum sorteio consumiu, e que não são a do ato a anular."""
+    from processo_seletivo.sorteios.models import OcorrenciaDaFonte
+
+    if sorteio is None:
+        return []
+    return list(
+        OcorrenciaDaFonte.objects.filter(indisponivel=False, sorteios__isnull=True)
+        .exclude(pk=sorteio.ocorrencia_id)
+        .order_by("observada_em")
+    )
 
 
 def _perfil_e_marco(conteudo, perfil_id, marco_id):

@@ -111,10 +111,16 @@ antes (D-015, FR-068).
 E a prova que importa, **fora** do sistema:
 
 ```bash
-cd backend && node processo_seletivo/portal/static/portal/sorteio-cli.js < manifesto.json
+cd backend && node processo_seletivo/portal/static/portal/sorteio-cli.js \
+  --resumo <o resumo do manifesto copiado da página do sorteio> < manifesto.json
 ```
 
 *Esperado:* a mesma ordem, item a item, sem tocar no sistema e sem o vídeo.
+
+**`--resumo` não é opcional por acaso.** Sem ele o programa confere apenas a coerência interna do
+arquivo — e diz isso, em vez de dizer que confere. Quem adultera um manifesto recalcula o
+`manifestHash` junto, e o pacote fecha consigo mesmo; a única âncora que não veio no arquivo é o
+resumo publicado no portal (D-018, FR-078).
 
 ### 8 · Anular e suceder (gestão, e uma Retificação)
 

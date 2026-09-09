@@ -14,10 +14,12 @@ por `(fonte, referência)`, e guardar a derivada aqui congelaria a regra do prim
 passasse por ela.
 """
 
+from django.utils import timezone
+
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.comissoes.application import comando_de_comissao
 from processo_seletivo.shared.api.problems import DomainError
-from processo_seletivo.sorteios.infrastructure.fontes import fonte_configurada
+from processo_seletivo.sorteios.infrastructure.fontes import fonte_declarada
 from processo_seletivo.sorteios.models import OcorrenciaDaFonte
 
 OBSERVAR = "SORTEIO_OBSERVAR_OCORRENCIA"
@@ -33,6 +35,7 @@ def observar_ocorrencia(
     idempotency_key,
     correlation_id,
     fonte_externa=None,
+    ocorre_em=None,
 ):
     """Busca na fonte e registra. Idempotente por `(fonte, referência)`, por constraint.
 
@@ -47,7 +50,22 @@ def observar_ocorrencia(
         # ocorrência já conhecida.
         return _declarado(ja_registrada)
 
-    observacao = (fonte_externa or fonte_configurada()).observar(fonte=fonte, referencia=referencia)
+    observacao = (fonte_externa or fonte_declarada(fonte)).observar(
+        fonte=fonte, referencia=referencia
+    )
+    if observacao.indisponivel and ocorre_em is not None and timezone.now() < ocorre_em:
+        # **"Ainda não" não é "não haverá"** (FR-077). Registrar a ausência como definitiva antes da
+        # hora publicada seria consumir a cadeia de substituição de propósito: bastava observar de
+        # manhã, a fonte não teria o que publicar, e a regra avançaria sozinha para a extração
+        # seguinte — devolvendo à mesa a escolha da ocorrência, com aparência de automatismo.
+        raise DomainError(
+            "occurrence_not_due_yet",
+            f"A ocorrência {referencia!r} está publicada para "
+            f"{timezone.localtime(ocorre_em).strftime('%d/%m/%Y às %H:%M')}, e ainda não chegou. "
+            "Antes desse instante, a fonte não ter publicado significa que ela ainda não "
+            "publicou — e não que não publicará. Observe depois da hora declarada.",
+            409,
+        )
     if observacao.indisponivel and not observacao.evidencia:
         raise DomainError(
             "source_unavailable_without_evidence",
@@ -71,7 +89,7 @@ def observar_ocorrencia(
             referencia=referencia,
             defaults={
                 "material_bruto": observacao.material_bruto,
-                "ocorrida_em": observacao.ocorrida_em,
+                "ocorrida_nao_antes_de": observacao.ocorrida_nao_antes_de,
                 "observada_em": ctx.now,
                 "observada_por": actor.subject,
                 "indisponivel": observacao.indisponivel,
@@ -103,7 +121,11 @@ def _declarado(ocorrencia):
         "fonte": ocorrencia.fonte,
         "referencia": ocorrencia.referencia,
         "materialBruto": ocorrencia.material_bruto,
-        "ocorridaEm": ocorrencia.ocorrida_em.isoformat() if ocorrencia.ocorrida_em else None,
+        "ocorridaNaoAntesDe": (
+            ocorrencia.ocorrida_nao_antes_de.isoformat()
+            if ocorrencia.ocorrida_nao_antes_de
+            else None
+        ),
         "indisponivel": ocorrencia.indisponivel,
         "evidencia": ocorrencia.evidencia,
     }

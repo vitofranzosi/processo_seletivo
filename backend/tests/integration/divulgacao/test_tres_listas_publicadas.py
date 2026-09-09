@@ -6,6 +6,8 @@ divulgava. Este arquivo exercita o caminho inteiro — pelo comando de publicaç
 que é o que prova que a dimensão atravessou de fato.
 """
 
+from unittest.mock import patch
+
 import pytest
 
 from processo_seletivo.divulgacao.application.publicar import (
@@ -87,9 +89,10 @@ def _publicar(certame, sorteio, *, chave, natureza="PRELIMINAR"):
         ),
         idempotency_key=chave,
         correlation_id="teste-021",
-        declaracao_de_encerramento=(
-            "O prazo recursal encerrou-se sem interposição." if natureza == "DEFINITIVA" else ""
-        ),
+        # **Sem declaração expressa**: o marco declara prazo computável, e onde há prazo o sistema
+        # verifica. Pedir a declaração ali seria pedir à pessoa que respondesse pelo que a máquina
+        # sabe — e o comando a recusa, corretamente (018, FR-085).
+        declaracao_de_encerramento="",
     )
 
 
@@ -133,18 +136,83 @@ def test_o_documento_publicado_identifica_a_lista(sorteadas):
 
 
 def test_suceder_a_publicacao_de_uma_lista_nao_toca_as_outras(sorteadas):
+    """A definitiva da PPI espera o prazo **da PPI**, e sucede só a preliminar dela.
+
+    O marco declara janela recursal, então a definitiva só é publicável depois de ela fechar — e é
+    isso que o `freeze_time` reproduz. Antes da correção do eixo, a janela consultada era a da ampla
+    concorrência: sem publicação lá, ela não existia, e a definitiva da PPI saía na hora.
+    """
+    from datetime import timedelta
+
+    from django.utils import timezone
+
     certame, sorteios = sorteadas
     publicadas = {
         lista: _publicar(certame, sorteio, chave=f"sucede-{indice}")
         for indice, (lista, sorteio) in enumerate(sorteios.items())
     }
 
-    definitiva = _publicar(
-        certame, sorteios[LISTA_PPI], chave="sucede-ppi-definitiva", natureza="DEFINITIVA"
-    )
+    depois_do_prazo = timezone.now() + timedelta(days=6)
+    with patch("django.utils.timezone.now", return_value=depois_do_prazo):
+        definitiva = _publicar(
+            certame, sorteios[LISTA_PPI], chave="sucede-ppi-definitiva", natureza="DEFINITIVA"
+        )
 
     assert definitiva.publicacao_anterior_id == publicadas[LISTA_PPI].id
     for lista in (None, LISTA_PCD):
         assert not PublicacaoResultado.objects.filter(
             publicacao_anterior=publicadas[lista]
         ).exists()
+
+
+def test_o_prazo_recursal_da_definitiva_e_o_da_propria_lista(sorteadas):
+    """**O eixo perdia-se no último degrau** (021, D-015, FR-068).
+
+    `_impedimento_da_definitiva` não encaminhava `lista_id`, e `_janela_aberta` procurava a
+    publicação da **ampla concorrência**. Havendo só uma preliminar de PPI, a consulta devolvia
+    `None`, a janela não existia, e a definitiva da PPI era liberada na hora — antes de qualquer
+    prazo recursal correr.
+    """
+    from processo_seletivo.divulgacao.domain.publicabilidade import IMPEDIMENTO, aferir
+
+    certame, sorteios = sorteadas
+    ppi = sorteios[LISTA_PPI]
+    _publicar(certame, ppi, chave="prazo-ppi-preliminar")
+
+    afericao = aferir(
+        edital=certame["edital"],
+        marco_id=ppi.marco_id,
+        ato=ppi.ato,
+        natureza="DEFINITIVA",
+        lista_id=ppi.lista_id,
+    )
+
+    assert afericao.nivel == IMPEDIMENTO, (
+        "a definitiva da PPI foi liberada sem o prazo recursal da própria PPI correr"
+    )
+
+
+def test_a_janela_de_uma_lista_nao_e_lida_da_outra(sorteadas):
+    """Sem a ampla publicada, a definitiva da PPI continua impedida pela janela dela mesma."""
+    from processo_seletivo.divulgacao.application.selectors import vigente_do_marco
+    from processo_seletivo.divulgacao.domain.publicabilidade import _janela_aberta
+
+    certame, sorteios = sorteadas
+    ppi = sorteios[LISTA_PPI]
+    _publicar(certame, ppi, chave="janela-ppi")
+
+    marco = {"appealWindow": {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"}}
+    da_ppi = _janela_aberta(
+        edital=certame["edital"],
+        marco_id=ppi.marco_id,
+        marco=marco,
+        at=None,
+        lista_id=ppi.lista_id,
+    )
+    da_ampla = _janela_aberta(
+        edital=certame["edital"], marco_id=ppi.marco_id, marco=marco, at=None, lista_id=None
+    )
+
+    assert da_ppi is not None, "a PPI tem publicação, logo tem janela correndo"
+    assert da_ampla is None, "a ampla não tem publicação, e a janela dela não existe"
+    assert vigente_do_marco(edital=certame["edital"], marco_id=ppi.marco_id) is None

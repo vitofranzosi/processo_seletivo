@@ -18,6 +18,7 @@ from processo_seletivo.sorteios.application.sorteio import anular_sorteio
 from processo_seletivo.sorteios.application.verificacao import verificar
 from processo_seletivo.sorteios.infrastructure.fontes import Observacao
 from processo_seletivo.sorteios.models import RelacaoDeHabilitados, Sorteio
+from tests.fixtures.sorteio import METODO
 from tests.unit.sorteios.test_manifesto import sorteado  # noqa: F401 — fixture compartilhada
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
@@ -28,7 +29,7 @@ class OutraExtracao:
         from django.utils import timezone
 
         return Observacao(
-            material_bruto="55555 44444 33333 22222 11111", ocorrida_em=timezone.now()
+            material_bruto="55555 44444 33333 22222 11111", ocorrida_nao_antes_de=timezone.now()
         )
 
 
@@ -81,7 +82,7 @@ def _sucessor(certame, api_client, sorteio, *, motivo="Vício reconhecido na con
     ocorrencia_nova = observar_ocorrencia(
         actor=_presidente(),
         processo_id=certame["processo"].id,
-        fonte="Loteria Federal",
+        fonte=METODO["source"],
         referencia="5901",
         idempotency_key="anular-ocorrencia",
         correlation_id="teste-021",
@@ -174,7 +175,7 @@ def test_o_sucessor_nao_pode_reusar_a_relacao_do_anulado(sorteado, api_client): 
     outra_ocorrencia = observar_ocorrencia(
         actor=_presidente(),
         processo_id=certame["processo"].id,
-        fonte="Loteria Federal",
+        fonte=METODO["source"],
         referencia="5901",
         idempotency_key="reuso-ocorrencia",
         correlation_id="teste-021",
@@ -247,7 +248,7 @@ def test_um_sorteio_ja_anulado_nao_se_anula_de_novo(sorteado, api_client):  # no
     ocorrencia_terceira = observar_ocorrencia(
         actor=_presidente(),
         processo_id=certame["processo"].id,
-        fonte="Loteria Federal",
+        fonte=METODO["source"],
         referencia="5902",
         idempotency_key="terceira-ocorrencia",
         correlation_id="teste-021",
@@ -287,7 +288,7 @@ def test_a_relacao_do_sucessor_precisa_suceder_a_do_anulado(sorteado, api_client
     outra_ocorrencia = observar_ocorrencia(
         actor=_presidente(),
         processo_id=certame["processo"].id,
-        fonte="Loteria Federal",
+        fonte=METODO["source"],
         referencia="5901",
         idempotency_key="cadeia-ocorrencia",
         correlation_id="teste-021",

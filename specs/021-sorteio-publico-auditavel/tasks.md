@@ -243,6 +243,15 @@ consolidar o comportamento errado.
 - [X] T105 Compartilhar a regra de quem entra entre a prévia e a publicação, e nomear a Etapa de habilitação no critério publicado (R-012, FR-011)
 - [X] T106 Escrever os testes dos oito cenários — `test_ocorrencia_declarada.py`, `test_etapa_de_habilitacao.py`, `test_publicar_sorteio_por_lista.py`, e as extensões de `test_anulacao.py`, `test_metodo_do_marco.py` e `sorteio-cli.test.js`
 
+- [X] T107 Impedir o descarte prematuro: o método declara `occurrenceAt`, e a ausência antes dele é "ainda não", e não "não haverá" (FR-077)
+- [X] T108 Parar de atribuir horário à data que a fonte publica — o campo passa a guardar o limite inferior verdadeiro, e a comparação exige congelamento anterior a ele (FR-016)
+- [X] T109 Fechar o vocabulário de fontes e ligá-lo ao adaptador que cada uma executa (FR-076)
+- [X] T110 Encaminhar `lista_id` até `_impedimento_da_definitiva` e `_janela_aberta` — o prazo recursal da definitiva é o da própria lista (FR-068)
+- [X] T111 Tornar a anulação percorrível pela tela: o formulário da relação nova continua disponível, e os insumos do sucessor são oferecidos em seletores, não digitados (Constituição §VI, FR-054)
+- [X] T112 Dar ao verificador independente uma âncora externa (`--resumo`), e fazê-lo dizer o que **não** verificou quando ela falta (FR-078)
+- [X] T113 Ler a publicação vigente por lista no portal — o link de uma publicação histórica de PPI apontava para a ampla (FR-068)
+- [X] T114 Escrever os testes dos sete cenários, pelos canais reais: descarte prematuro, data sem horário, fonte vinculada, prazo por lista, jornada da anulação pela tela, âncora externa do CLI e vigente por lista
+
 ---
 
 ## Phase 9: Polish & Cross-Cutting

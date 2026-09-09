@@ -171,6 +171,16 @@
              name="marco-{{ indice }}-{{ sub }}-draw-occurrence" value="{{ marco.drawOccurrence }}">
     </p>
     <p class="campo">
+      <label for="marco-{{ indice }}-{{ sub }}-draw-occurrenceAt">Quando a ocorrência acontece</label>
+      <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-occurrenceAt"
+             name="marco-{{ indice }}-{{ sub }}-draw-occurrenceAt"
+             value="{{ marco.drawOccurrenceAt }}" placeholder="2026-11-20T20:00:00-03:00"
+             aria-describedby="ajuda-quando-{{ indice }}-{{ sub }}">
+      <span class="oculto" id="ajuda-quando-{{ indice }}-{{ sub }}">Com fuso, como
+        2026-11-20T20:00:00-03:00. É este instante que separa "a fonte ainda não publicou" de "a
+        fonte não publicará": antes dele, a ausência não descarta a ocorrência.</span>
+    </p>
+    <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-draw-derivation">Como a ocorrência decorre da data programada</label>
       <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-derivation"
              name="marco-{{ indice }}-{{ sub }}-draw-derivation" value="{{ marco.drawDerivation }}">

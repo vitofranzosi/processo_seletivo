@@ -38,9 +38,9 @@ class LoteriaFederal(FonteExterna):
                 continue
             premios = corpo.get("listaDezenas") or corpo.get("listaRateioPremio") or []
             material = " ".join(str(item) for item in premios if str(item).strip())
-            quando = _instante_da_extracao(corpo)
+            quando = _nao_antes_de(corpo)
             if material and quando is not None:
-                return Observacao(material_bruto=material, ocorrida_em=quando)
+                return Observacao(material_bruto=material, ocorrida_nao_antes_de=quando)
             if material:
                 # Material sem data é material que não prova precedência: aceitá-lo devolveria ao
                 # certame a possibilidade de congelar já sabendo o resultado (FR-016).
@@ -56,12 +56,20 @@ class LoteriaFederal(FonteExterna):
         )
 
 
-def _instante_da_extracao(corpo):
-    """A data em que a extração aconteceu, como a fonte a publica.
+def _nao_antes_de(corpo):
+    """O instante **mais cedo** em que a extração pode ter acontecido, conforme a fonte publica.
 
-    Sem ela não há como afirmar que a ocorrência é posterior ao congelamento, e o instante da
-    **leitura** não serve: ele é escolhido por quem lê.
+    A Caixa publica `dataApuracao: "11/09/2024"` — uma data, sem horário. A versão anterior desta
+    função carimbava `20:00`, e isso era invenção: uma relação congelada no mesmo dia passava ou
+    falhava por causa de um horário que a fonte nunca disse. O limite inferior verdadeiro de uma
+    data é o **início do dia**, e é ele que se devolve.
+
+    A consequência é deliberada e conservadora: para provar precedência, a relação precisa ter sido
+    congelada **antes do dia** da extração. Onde a fonte publicar o horário, o limite inferior é o
+    próprio horário e a garantia fica mais apertada — sem que nada aqui mude de forma.
     """
+    from datetime import datetime, time
+
     from django.utils.dateparse import parse_date, parse_datetime
 
     bruto = corpo.get("dataApuracao") or corpo.get("data") or ""
@@ -72,9 +80,7 @@ def _instante_da_extracao(corpo):
         dia = parse_date(str(bruto)) or _dia_brasileiro(str(bruto))
         if dia is None:
             return None
-        from datetime import datetime, time
-
-        instante = datetime.combine(dia, time(20, 0))
+        instante = datetime.combine(dia, time.min)
     if timezone.is_naive(instante):
         instante = timezone.make_aware(instante, ZONA)
     return instante
@@ -106,7 +112,7 @@ class FonteDeTeste(FonteExterna):
                 indisponivel=True,
                 evidencia=f"Concurso {referencia} de {fonte}: sem extração publicada.",
             )
-        # O falso reporta a extração como **acontecida agora**, que é o que uma fonte real diria de
-        # uma extração recém-publicada. Sem isso ele não serviria para semear sorteio, e o teste
-        # estaria exercitando um caminho que a produção recusa.
-        return Observacao(material_bruto=material, ocorrida_em=timezone.now())
+        # O falso reporta o limite inferior como **agora**, que é o que uma fonte real diria de uma
+        # extração recém-publicada com horário. Sem isso ele não serviria para semear sorteio, e o
+        # teste estaria exercitando um caminho que a produção recusa.
+        return Observacao(material_bruto=material, ocorrida_nao_antes_de=timezone.now())

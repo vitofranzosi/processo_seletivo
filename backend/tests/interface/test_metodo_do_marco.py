@@ -28,6 +28,7 @@ _METODO_VALIDO = {
     "algorithm": "IFES-SORTEIO-SHA256-v1",
     "source": "Loteria Federal",
     "occurrence": "5900",
+    "occurrenceAt": "2026-11-20T20:00:00-03:00",
     "derivation": "a extração de sábado anterior",
     "normalization": {"rule": "DIGITOS_EM_SEQUENCIA", "text": "os cinco números"},
     "substitutionRule": {
@@ -39,7 +40,8 @@ _METODO_VALIDO = {
 METODO_NO_FORMULARIO = {
     f"marco-{PERFIL}-0-draw-algorithm": "IFES-SORTEIO-SHA256-v1",
     f"marco-{PERFIL}-0-draw-source": "Loteria Federal",
-    f"marco-{PERFIL}-0-draw-occurrence": "extração imediatamente anterior ao sorteio",
+    f"marco-{PERFIL}-0-draw-occurrence": "5900",
+    f"marco-{PERFIL}-0-draw-occurrenceAt": "2026-11-20T20:00:00-03:00",
     f"marco-{PERFIL}-0-draw-derivation": "a extração de sábado anterior à data publicada",
     f"marco-{PERFIL}-0-draw-normalizationRule": "DIGITOS_EM_SEQUENCIA",
     f"marco-{PERFIL}-0-draw-normalizationText": "os cinco números, na ordem dos prêmios",
@@ -140,13 +142,9 @@ def test_metodo_pela_metade_e_recusado_nomeando_o_que_falta(client, com_etapas):
         "normalization": "NENHUMA",
         "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
         "tiebreakers": [],
-        "drawMethod": {
-            "algorithm": "IFES-SORTEIO-SHA256-v1",
-            "source": "Loteria Federal",
-            "occurrence": "extração anterior",
-            "derivation": "sábado anterior",
-            "normalization": {"rule": "DIGITOS_EM_SEQUENCIA", "text": "os dígitos"},
-        },
+        # Tudo menos a regra de substituição: é ela que o teste cobra, e o método declarado pela
+        # metade devolve ao dia do sorteio a escolha que ele existe para eliminar.
+        "drawMethod": {k: v for k, v in _METODO_VALIDO.items() if k != "substitutionRule"},
     }
 
     with pytest.raises(ProfileValidationError, match="substitutionRule"):
@@ -162,14 +160,7 @@ def test_regra_de_normalizacao_fora_do_vocabulario_e_recusada_na_elaboracao():
 
     with pytest.raises(ProfileValidationError, match="não publicada por este sistema"):
         _validar_metodo_de_sorteio(
-            {
-                "algorithm": "IFES-SORTEIO-SHA256-v1",
-                "source": "Loteria Federal",
-                "occurrence": "x",
-                "derivation": "y",
-                "normalization": {"rule": "O_QUE_A_COMISSAO_ACHAR", "text": "z"},
-                "substitutionRule": {"rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE", "text": "w"},
-            }
+            {**_METODO_VALIDO, "normalization": {"rule": "O_QUE_A_COMISSAO_ACHAR", "text": "z"}}
         )
 
 

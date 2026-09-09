@@ -4580,6 +4580,7 @@ def sorteio(request, edital_id, marco_id):
                 # E as que a indisponibilidade descartou, visíveis de propósito: o descarte de
                 # ocorrência é justamente o que precisa ser auditável (R-006).
                 "ocorrencias_descartadas": estado["ocorrencias_descartadas"],
+                "ocorre_em": estado["ocorre_em"],
                 "recortes": estado["recortes"],
                 "pode_emitir": pode_emitir,
                 "resultado": request.session.pop("resultado_do_sorteio", None),
@@ -4657,6 +4658,8 @@ def observar_ocorrencia_do_sorteio(request, edital_id, marco_id):
             referencia=referencia,
             idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
             correlation_id=getattr(request, "correlation_id", ""),
+            # O instante publicado da ocorrência: antes dele, a ausência não é definitiva.
+            ocorre_em=estado["ocorre_em"],
         )
     except DomainError as recusa:
         if recusa.status == 404:

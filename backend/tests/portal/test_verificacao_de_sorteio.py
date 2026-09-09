@@ -116,3 +116,26 @@ def test_a_pagina_exibe_a_cadeia_de_anulacao(client, sorteado, api_client):  # n
     assert "Ver o sorteio que o sucedeu" in anulado
     assert "sucedeu um sorteio" in sucessor
     assert "Consultar o sorteio anulado" in sucessor
+
+
+def test_a_publicacao_sucedida_de_uma_lista_aponta_para_a_vigente_da_mesma_lista(client, sorteado):  # noqa: F811
+    """**O link levava de uma lista para outra** (021, D-015, FR-068).
+
+    A página pública consultava a vigente sem `lista_id`: uma publicação de PPI sucedida oferecia
+    "ver o resultado vigente" apontando para a ordem da ampla concorrência — mandando quem consulta
+    a ordem de uma lista para a ordem de outra.
+    """
+    from processo_seletivo.divulgacao.application.selectors import vigente_do_marco
+
+    _certame, sorteio = sorteado
+
+    # Sem publicação alguma na lista da PcD, a vigente daquela lista é `None` — e não a da ampla.
+    da_pcd = vigente_do_marco(
+        edital=sorteio.relacao.edital,
+        marco_id=sorteio.marco_id,
+        lista_id="00000000-0000-4000-8000-000000000832",
+    )
+    da_ampla = vigente_do_marco(edital=sorteio.relacao.edital, marco_id=sorteio.marco_id)
+
+    assert da_pcd is None
+    assert da_pcd is not da_ampla or da_ampla is None

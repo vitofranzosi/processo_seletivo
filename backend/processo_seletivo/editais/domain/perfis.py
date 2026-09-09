@@ -155,6 +155,7 @@ CAMPOS_DO_METODO = (
     ("algorithm", "o algoritmo e a sua versão"),
     ("source", "a fonte pública externa da semente"),
     ("occurrence", "a ocorrência concreta que fixará a semente"),
+    ("occurrenceAt", "o instante publicado em que a ocorrência acontece"),
     ("derivation", "como a ocorrência decorre da data programada"),
     ("normalization", "como o material bruto vira semente"),
     ("substitutionRule", "o que vale se a ocorrência faltar, atrasar, bifurcar ou vier inválida"),
@@ -194,6 +195,8 @@ def _validar_metodo_de_sorteio(metodo, *, etapas=()) -> None:
                 "terceiro reimplementa — e `text`, a frase publicada que a pessoa lê."
             )
     _validar_algoritmo_publicado(metodo["algorithm"])
+    _validar_fonte_publicada(metodo["source"])
+    _validar_instante_da_ocorrencia(metodo["occurrenceAt"])
     _validar_regra_publicada(metodo["normalization"]["rule"])
     _validar_substituicao_publicada(metodo["substitutionRule"]["rule"])
     _validar_etapa_de_habilitacao(metodo.get("qualifyingStageId"), etapas)
@@ -216,6 +219,52 @@ def _validar_etapa_de_habilitacao(etapa_id, etapas) -> None:
         raise ProfileValidationError(
             "A Etapa que habilita ao sorteio precisa ser uma das Etapas enumeradas pelo marco: "
             "uma Etapa de fora seria critério de entrada que a norma do marco não declara."
+        )
+
+
+def _validar_fonte_publicada(fonte) -> None:
+    """A fonte declarada precisa ser uma que este sistema consulta (021, FR-076).
+
+    Era texto livre, e o adaptador ignorava o argumento: um Edital podia declarar `Random.org`, o
+    sistema consultava a Caixa de qualquer jeito, e o manifesto publicava uma fonte que nunca foi
+    consultada. A identidade da fonte é conteúdo normativo — se ela não determina de onde a semente
+    vem, não é conteúdo normativo de nada.
+    """
+    from processo_seletivo.sorteios.infrastructure.fontes import FONTES
+
+    if fonte not in FONTES:
+        raise ProfileValidationError(
+            f"Fonte de sorteio não publicada por este sistema: {fonte!r}. "
+            f"As publicadas são: {', '.join(sorted(FONTES))}. Declarar uma fonte que o sistema não "
+            "consulta faria o manifesto publicar uma origem que a semente não teve."
+        )
+
+
+def _validar_instante_da_ocorrencia(instante) -> None:
+    """Quando a ocorrência acontece, publicado **antes** do congelamento (021, FR-077).
+
+    **É este campo que impede descartar a ocorrência antes da hora.** Sem ele, bastava observar de
+    manhã — a fonte ainda não publicou nada —, registrar a ausência como definitiva e deixar a
+    regra de substituição avançar sozinha para a extração seguinte: a escolha da ocorrência voltava
+    para a mesa, com a aparência de automatismo.
+
+    Declarado, ele é norma: até esse instante, "a fonte não publicou" significa *ainda não*, e não
+    *não haverá*.
+    """
+    from django.utils.dateparse import parse_datetime
+
+    lido = parse_datetime(str(instante))
+    if lido is None:
+        raise ProfileValidationError(
+            "O instante em que a ocorrência acontece (`occurrenceAt`) deve ser publicado no "
+            "formato RFC 3339 com fuso — como 2026-11-20T20:00:00-03:00. É ele que separa 'a "
+            "fonte ainda não publicou' de 'a fonte não publicará'."
+        )
+    if lido.utcoffset() is None:
+        raise ProfileValidationError(
+            "O instante da ocorrência deve declarar o fuso: sem ele, o mesmo texto designaria "
+            "momentos diferentes conforme quem lê, e a fronteira entre 'ainda não' e 'não haverá' "
+            "mudaria de lugar."
         )
 
 

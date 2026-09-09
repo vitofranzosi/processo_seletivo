@@ -282,7 +282,16 @@ def aferir(*, edital, marco_id, ato, sucede=None, at=None, natureza="", lista_id
 
     if str(natureza).upper() == "DEFINITIVA":
         impedimento = _impedimento_da_definitiva(
-            edital=edital, marco_id=marco_id, marco=estado.get("marco"), ato=ato, at=at
+            edital=edital,
+            marco_id=marco_id,
+            marco=estado.get("marco"),
+            ato=ato,
+            at=at,
+            # **O eixo da lista atravessa até aqui** (021, D-015). Sem ele, `_janela_aberta`
+            # procurava a publicação da ampla concorrência: havendo só uma preliminar de PPI, a
+            # consulta devolvia `None`, a janela não existia, e a definitiva da PPI era liberada
+            # imediatamente — antes de qualquer prazo recursal.
+            lista_id=lista_id,
         )
         if impedimento is not None:
             codigo, mensagem = impedimento
@@ -311,7 +320,7 @@ def aferir(*, edital, marco_id, ato, sucede=None, at=None, natureza="", lista_id
     return Afericao(INFORMACAO, divergencias=[])
 
 
-def _impedimento_da_definitiva(*, edital, marco_id, marco, ato, at=None):
+def _impedimento_da_definitiva(*, edital, marco_id, marco, ato, at=None, lista_id=None):
     """Os três fatos que só a definitiva enfrenta, na ordem em que a instituição os resolve.
 
     Primeiro o recurso pendente, porque enquanto há disputa em aberto nada mais importa; depois a
@@ -345,7 +354,7 @@ def _impedimento_da_definitiva(*, edital, marco_id, marco, ato, at=None):
         ato=ato,
     ):
         return (PROVIDENCIA_PENDENTE, MENSAGENS[PROVIDENCIA_PENDENTE])
-    fecha = _janela_aberta(edital=edital, marco_id=marco_id, marco=marco, at=at)
+    fecha = _janela_aberta(edital=edital, marco_id=marco_id, marco=marco, at=at, lista_id=lista_id)
     if fecha is not None:
         # **A mensagem diz o instante**, e não só que há prazo: quem lê precisa saber quando voltar,
         # e "aguarde" sem data manda a pessoa tentar de novo às cegas.
@@ -359,7 +368,7 @@ def _quando(momento):
     return momento.astimezone(ZONA).strftime("%d/%m/%Y às %Hh%M")
 
 
-def _janela_aberta(*, edital, marco_id, marco, at):
+def _janela_aberta(*, edital, marco_id, marco, at, lista_id=None):
     """O instante em que o prazo declarado fecha, se ele ainda corre — senão `None` (FR-082).
 
     **Onde há janela declarada, o sistema verifica** — e é justamente por isso que a declaração
@@ -373,7 +382,7 @@ def _janela_aberta(*, edital, marco_id, marco, at):
 
     if computavel((marco or {}).get("appealWindow")) is None:
         return None
-    vigente = vigente_do_marco(edital=edital, marco_id=marco_id)
+    vigente = vigente_do_marco(edital=edital, marco_id=marco_id, lista_id=lista_id)
     computada = janela_da_publicacao(vigente, (marco or {}).get("appealWindow"))
     if computada is None:
         return None

@@ -151,12 +151,20 @@ class OcorrenciaDaFonte(models.Model):
     # congelaria a regra do primeiro método que observasse a ocorrência e a imporia, calada, a todo
     # método posterior que a citasse (D-016, FR-019).
     material_bruto = models.TextField()
-    # **Quando o evento externo aconteceu**, como a fonte o publica — e não quando nós o lemos
-    # (021, FR-016). A distinção é a garantia: comparar o instante da **leitura** com o do
-    # congelamento permitiria fechar a relação já sabendo o resultado da extração e registrá-lo no
-    # sistema depois. Nulo só quando a fonte não o publica, e nesse caso a ocorrência não semeia
-    # sorteio nenhum — o comando recusa em vez de aceitar uma garantia que não pode provar.
-    ocorrida_em = models.DateTimeField(null=True, blank=True)
+    # **O instante mais cedo em que o evento externo pode ter acontecido**, conforme a fonte o
+    # publica — e não quando nós o lemos (021, FR-016). A distinção é a garantia: comparar o
+    # instante da **leitura** com o do congelamento permitiria fechar a relação já sabendo o
+    # resultado da extração e registrá-lo no sistema depois.
+    #
+    # **O nome diz o que o dado é.** Ele se chamava `ocorrida_em`, e o adaptador da Loteria Federal
+    # carimbava `20:00` sobre uma data sem horário: o campo afirmava um instante que a fonte nunca
+    # publicou, e um congelamento no mesmo dia passava ou falhava por causa dele. Agora guarda o
+    # limite inferior verdadeiro — o início do dia publicado —, e a comparação exige que o
+    # congelamento seja anterior a ele.
+    #
+    # Nulo só quando a fonte não publica data alguma, e nesse caso a ocorrência não semeia sorteio
+    # nenhum: o comando recusa em vez de aceitar uma garantia que não pode provar.
+    ocorrida_nao_antes_de = models.DateTimeField(null=True, blank=True)
     observada_em = models.DateTimeField()
     observada_por = models.CharField(max_length=255)
     indisponivel = models.BooleanField(default=False)

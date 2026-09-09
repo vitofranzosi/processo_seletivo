@@ -57,7 +57,7 @@ def test_o_sorteio_grava_o_metodo_que_a_relacao_comprometeu(certame):
         pk=observar_ocorrencia(
             actor=presidente(),
             processo_id=certame["processo"].id,
-            fonte="Loteria Federal",
+            fonte=METODO["source"],
             referencia=METODO["occurrence"],
             idempotency_key="metodo-ocorrencia",
             correlation_id="teste-021",

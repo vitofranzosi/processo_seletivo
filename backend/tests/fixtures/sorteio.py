@@ -16,8 +16,12 @@ LISTA_PCD = "00000000-0000-4000-8000-000000000832"
 # FR-017 proíbem. O Edital nomeia o concurso **antes** do congelamento.
 METODO = {
     "algorithm": "IFES-SORTEIO-SHA256-v1",
-    "source": "Loteria Federal",
+    # Nome do vocabulário fechado de fontes: é ele que determina qual adaptador consulta a semente.
+    "source": "Fonte de demonstração",
     "occurrence": "5900",
+    # O instante publicado da ocorrência, **no passado** para que os cenários possam observá-la.
+    # É ele que separa "a fonte ainda não publicou" de "a fonte não publicará" (FR-077).
+    "occurrenceAt": "2020-01-01T20:00:00-03:00",
     "derivation": "concurso 5900: a extração de sábado imediatamente anterior à data publicada",
     "normalization": {
         "rule": "DIGITOS_EM_SEQUENCIA",
@@ -55,6 +59,11 @@ def marco_com_metodo(rascunho, *, perfil_id, etapa_id, metodo=None, marco_id=MAR
                 "normalization": "NENHUMA",
                 "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
                 "tiebreakers": [],
+                # **A janela recursal declarada**, como o `seed_demo` já a declara: um marco de
+                # sorteio admite recurso, e é o prazo dele que a definitiva precisa esperar. Sem
+                # ela, o cenário do prazo por lista não se coloca — e foi o que escondeu, por um
+                # tempo, o eixo perdido em `_janela_aberta` (018, FR-030; 021, FR-068).
+                "appealWindow": {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"},
                 "drawMethod": METODO if metodo is None else metodo,
             }
         ]

@@ -117,3 +117,76 @@ def test_o_botao_de_sortear_so_aparece_com_relacao_congelada_e_ocorrencia_observ
     )
 
     assert "Realizar o sorteio" in _abrir(client, certame)
+
+
+def test_a_anulacao_e_percorrivel_pela_tela(certame, client):
+    """**A anulação estava corrigida no domínio e inalcançável pelo ator** (Constituição §VI).
+
+    A tela pedia dois UUIDs colados à mão, e escondia o formulário de publicar relação assim que
+    existia sorteio: depois da Retificação não havia caminho visível para criar os insumos nem para
+    escolhê-los. Este teste percorre os quatro passos pela tela, na ordem, e afirma que cada um
+    aparece quando é a vez dele.
+    """
+    from processo_seletivo.sorteios.application.sorteio import constituir_sorteio
+    from processo_seletivo.sorteios.models import OcorrenciaDaFonte, RelacaoDeHabilitados
+
+    identificar(client, "maria", [])
+    # 1 · relação congelada e sorteio realizado
+    client.post(
+        reverse(
+            "interface:publicar-relacao-do-sorteio", args=[certame["edital"].id, certame["marco"]]
+        ),
+        {"lista_id": "", "chave_idempotencia": "jornada-relacao"},
+    )
+    observar_ocorrencia(
+        actor=presidente(),
+        processo_id=certame["processo"].id,
+        fonte=METODO["source"],
+        referencia=METODO["occurrence"],
+        idempotency_key="jornada-ocorrencia",
+        correlation_id="teste-021",
+        fonte_externa=FonteDeTeste(),
+    )
+    constituir_sorteio(
+        actor=presidente(),
+        processo_id=certame["processo"].id,
+        edital_id=certame["edital"].id,
+        relacao_id=RelacaoDeHabilitados.objects.get().id,
+        ocorrencia_id=OcorrenciaDaFonte.objects.get().id,
+        idempotency_key="jornada-sorteio",
+        correlation_id="teste-021",
+    )
+
+    # 2 · com sorteio, a tela ensina a ordem e diz o que falta — sem pedir UUID
+    corpo = _abrir(client, certame)
+    assert "Retificar o Edital para declarar a ocorrência nova" in corpo
+    assert "Faltam os insumos do sucessor" in corpo
+    assert 'name="relacao_id" required' not in corpo, "não se digita UUID de relação"
+    assert "Publicar relação nova, sucedendo a atual" in corpo, "o passo 2 continua alcançável"
+
+    # 3 · publicada a relação nova e observada outra ocorrência, os seletores aparecem
+    client.post(
+        reverse(
+            "interface:publicar-relacao-do-sorteio", args=[certame["edital"].id, certame["marco"]]
+        ),
+        {
+            "lista_id": "",
+            "motivo": "Vício reconhecido na condução do ato.",
+            "chave_idempotencia": "jornada-relacao-nova",
+        },
+    )
+    observar_ocorrencia(
+        actor=presidente(),
+        processo_id=certame["processo"].id,
+        fonte=METODO["source"],
+        referencia="5901",
+        idempotency_key="jornada-ocorrencia-nova",
+        correlation_id="teste-021",
+        fonte_externa=FonteDeTeste(),
+    )
+
+    corpo = _abrir(client, certame)
+    assert "Faltam os insumos do sucessor" not in corpo
+    assert '<select id="relacao-nova-1" name="relacao_id"' in corpo
+    assert '<select id="ocorrencia-nova-1" name="ocorrencia_id"' in corpo
+    assert "Anular e constituir o sucessor" in corpo

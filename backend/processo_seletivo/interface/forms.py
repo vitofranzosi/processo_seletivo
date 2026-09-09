@@ -219,7 +219,7 @@ def _marcos(dados, prefixo):
 # Os seis campos do método, na ordem em que a tela os pede. `normalization` e `substitutionRule`
 # são pares `{rule, text}` — o identificador que a máquina aplica e a frase que a pessoa lê —, e é
 # por isso que eles não estão nesta tupla simples (021, FR-013).
-CAMPOS_SIMPLES_DO_METODO = ("algorithm", "source", "occurrence", "derivation")
+CAMPOS_SIMPLES_DO_METODO = ("algorithm", "source", "occurrence", "occurrenceAt", "derivation")
 
 
 def _metodo_de_sorteio(dados, base):
@@ -308,6 +308,7 @@ def _metodo_para_exibicao(metodo):
         "drawAlgorithm": declarado.get("algorithm") or "",
         "drawSource": declarado.get("source") or "",
         "drawOccurrence": declarado.get("occurrence") or "",
+        "drawOccurrenceAt": declarado.get("occurrenceAt") or "",
         "drawDerivation": declarado.get("derivation") or "",
         "drawNormalizationRule": normalizacao.get("rule") or "",
         "drawNormalizationText": normalizacao.get("text") or "",

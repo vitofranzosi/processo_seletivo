@@ -44,7 +44,7 @@ def pronto(gestor, api_client, manager_headers, process_payload):
         pk=observar_ocorrencia(
             actor=presidente(),
             processo_id=certame["processo"].id,
-            fonte="Loteria Federal",
+            fonte=METODO["source"],
             referencia="5900",
             idempotency_key="constituicao-ocorrencia",
             correlation_id="teste-021",
@@ -168,7 +168,7 @@ def test_ocorrencia_anterior_ao_congelamento_e_recusada(
         fonte=METODO["source"],
         referencia=METODO["occurrence"],
         material_bruto="1 2 3 4 5",
-        ocorrida_em=timezone.now() - timedelta(days=1),
+        ocorrida_nao_antes_de=timezone.now() - timedelta(days=1),
         observada_em=timezone.now(),
         observada_por="cpf:presidente",
     )

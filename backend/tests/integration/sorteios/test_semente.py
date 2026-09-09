@@ -19,7 +19,7 @@ from processo_seletivo.sorteios.application.sorteio import constituir_sorteio
 from processo_seletivo.sorteios.infrastructure.fontes import Observacao
 from processo_seletivo.sorteios.infrastructure.fontes.loteria_federal import FonteDeTeste
 from processo_seletivo.sorteios.models import OcorrenciaDaFonte, RelacaoDeHabilitados
-from tests.fixtures.sorteio import certame_de_sorteio, presidente
+from tests.fixtures.sorteio import METODO, certame_de_sorteio, presidente
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
 
@@ -64,7 +64,7 @@ def test_a_indisponibilidade_e_registrada_com_evidencia_e_nao_abre_digitacao(cer
     declarado = observar_ocorrencia(
         actor=presidente(),
         processo_id=certame["processo"].id,
-        fonte="Loteria Federal",
+        fonte=METODO["source"],
         referencia="5901",
         idempotency_key="indisponivel-1",
         correlation_id="teste-021",
@@ -83,7 +83,7 @@ def test_indisponibilidade_sem_evidencia_e_recusada(certame):
         observar_ocorrencia(
             actor=presidente(),
             processo_id=certame["processo"].id,
-            fonte="Loteria Federal",
+            fonte=METODO["source"],
             referencia="5902",
             idempotency_key="sem-evidencia-1",
             correlation_id="teste-021",
@@ -108,7 +108,7 @@ def test_a_ocorrencia_indisponivel_nao_sorteia(certame):
         pk=observar_ocorrencia(
             actor=presidente(),
             processo_id=certame["processo"].id,
-            fonte="Loteria Federal",
+            fonte=METODO["source"],
             referencia="5903",
             idempotency_key="indisponivel-2",
             correlation_id="teste-021",
@@ -134,7 +134,7 @@ def test_toda_observacao_fica_registrada_inclusive_a_que_nao_vira_sorteio(certam
         observar_ocorrencia(
             actor=presidente(),
             processo_id=certame["processo"].id,
-            fonte="Loteria Federal",
+            fonte=METODO["source"],
             referencia=referencia,
             idempotency_key=f"descarte-{indice}",
             correlation_id="teste-021",
@@ -149,7 +149,7 @@ def test_observar_duas_vezes_devolve_a_mesma_linha(certame):
     primeira = observar_ocorrencia(
         actor=presidente(),
         processo_id=certame["processo"].id,
-        fonte="Loteria Federal",
+        fonte=METODO["source"],
         referencia="5920",
         idempotency_key="idem-1",
         correlation_id="teste-021",
@@ -163,7 +163,7 @@ def test_observar_duas_vezes_devolve_a_mesma_linha(certame):
     segunda = observar_ocorrencia(
         actor=presidente(),
         processo_id=certame["processo"].id,
-        fonte="Loteria Federal",
+        fonte=METODO["source"],
         referencia="5920",
         idempotency_key="idem-2",
         correlation_id="teste-021",

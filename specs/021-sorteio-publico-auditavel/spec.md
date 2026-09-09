@@ -243,6 +243,16 @@ classificação por Etapas para aferir obsolescência. Nenhum dos dois foi escri
 não vem de Etapa. **Ato de sorteio não se afere recomputando** — a sua obsolescência é a da relação
 que o originou, e não a de um cálculo que jamais o produziu.
 
+### D-018 — O que a verificação de terceiro pode e não pode afirmar sozinha
+
+O verificador independente recalcula chaves e ordem a partir do manifesto, e compara o resumo
+recalculado com o que o arquivo declara. **Isso prova coerência interna, e nada além** — quem
+adultera o manifesto recalcula o resumo junto, e o pacote fecha consigo mesmo.
+
+A âncora é externa por construção: o resumo publicado na página do sorteio. Sem ela, o programa diz
+que conferiu a coerência interna e **não** diz que confere; com ela, diz. A diferença entre as duas
+frases é a diferença entre verificar e acreditar, e é a razão de o programa existir.
+
 ### D-017 — Anular custa uma Retificação, e isso é a garantia
 
 Descoberto na revisão da implementação, e mantido de propósito. A FR-054 exige que o sucessor nasça
@@ -532,10 +542,12 @@ Cronograma o exibe e que a Retificação o alcança.
 - **FR-015**: A regra de substituição MUST ser mecânica: aplicada sem escolha humana no momento da
   execução.
 - **FR-016**: A ocorrência que fixa a semente MUST ser posterior ao congelamento da relação, e a
-  precedência MUST ser aferida pelo instante em que **o evento externo aconteceu** — não pelo
-  instante em que o sistema o leu. Uma ocorrência cuja fonte não publique quando ela ocorreu MUST
-  NOT semear sorteio: sem esse dado, a precedência não é afirmável, e medir pela leitura permitiria
-  congelar a relação já sabendo o resultado e registrá-lo em seguida.
+  precedência MUST ser aferida pelo **limite inferior do instante em que o evento externo
+  aconteceu**, conforme a fonte o publica — não pelo instante em que o sistema o leu, e não por um
+  horário que o sistema atribua. Publicando a fonte apenas a data, o limite inferior é o início
+  daquele dia, e o congelamento MUST ser anterior a ele. Uma ocorrência que a fonte não saiba datar
+  MUST NOT semear sorteio: sem esse dado a precedência não é afirmável, e medir pela leitura
+  permitiria congelar já sabendo o resultado e registrá-lo em seguida.
 - **FR-072**: O sorteio MUST usar a ocorrência que o método declara — ou aquela que a regra
   publicada de substituição põe no lugar dela —, e MUST recusar qualquer outra, ainda que já
   registrada. Fonte e referência MUST ser conferidas contra o método comprometido pela relação, e
@@ -567,7 +579,14 @@ Cronograma o exibe e que a Retificação o alcança.
 - **FR-026**: O sistema MUST NOT depender de gerador pseudoaleatório de linguagem, runtime ou
   biblioteca para produzir a ordem.
 - **FR-074**: O algoritmo declarado no método MUST ser um dos que este sistema executa, e a
-  declaração MUST ser recusada na elaboração quando não for. Publicar um nome que o sistema não
+  declaração MUST ser recusada na elaboração quando não for.
+- **FR-076**: A fonte declarada MUST ser uma que este sistema consulta, e MUST determinar qual
+  adaptador obtém a semente. Fonte livre com adaptador fixo faria o manifesto publicar uma origem
+  que a semente não teve.
+- **FR-077**: O método MUST declarar o instante em que a ocorrência acontece, e o sistema MUST NOT
+  registrar indisponibilidade antes dele. Até esse instante, a fonte não ter publicado significa
+  **ainda não** — e não *não haverá*: tratar as duas coisas como uma permitiria consumir a cadeia
+  de substituição de propósito e escolher a ocorrência com aparência de automatismo. Publicar um nome que o sistema não
   implementa faria o manifesto anunciar um algoritmo e a ordem vir de outro — e quem reimplementasse
   a partir do publicado concluiria, corretamente, que o sorteio não confere.
 - **FR-027**: A regra de composição da chave MUST ser publicada com detalhe suficiente para
@@ -643,7 +662,12 @@ Cronograma o exibe e que a Retificação o alcança.
 - **FR-050**: A verificação MUST detectar e nomear divergência entre manifesto, relação e ordem
   publicada, **inclusive a do resumo do próprio manifesto**. Um pacote internamente coerente — com
   semente, chaves e posições que fecham entre si — mas cujo resumo não seja o publicado MUST ser
-  recusado: é ele que amarra o pacote ao que a instituição divulgou.
+  recusado.
+- **FR-078**: O verificador independente MUST comparar o resumo recalculado com um valor **externo
+  ao arquivo**, obtido do canal público, e MUST NOT afirmar que o manifesto é o publicado quando
+  esse valor não lhe for dado — dizendo, nesse caso, que conferiu apenas a coerência interna.
+  Comparar o resumo com o campo que o próprio arquivo carrega não prova nada: quem adultera o
+  manifesto recalcula o campo junto.
 - **FR-051**: A verificação MUST funcionar sem depender de gravação de vídeo ou de qualquer canal
   externo.
 
