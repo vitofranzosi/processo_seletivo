@@ -335,7 +335,7 @@ def marcos_do_edital(edital, conteudo, agora):
         marcos.append(
             Marco(
                 edital=edital,
-                descricao=evento.get("description") or evento.get("type") or "",
+                descricao=descricao_do_evento(evento),
                 inicio=inicio,
                 fim=fim,
                 # Apresentado como declaração, e nunca corrigido (`FR-023`, `D-004`).
@@ -344,6 +344,10 @@ def marcos_do_edital(edital, conteudo, agora):
         )
     marcos.sort(key=lambda marco: (marco.inicio or marco.fim, marco.descricao))
     return tuple(marcos)
+
+
+def descricao_do_evento(evento):
+    return evento.get("description") or evento.get("type") or ""
 
 
 def instantes_do_evento(evento):
@@ -480,6 +484,17 @@ def _dia(instante):
     return instante.astimezone(ZONA).strftime("%d/%m/%Y") if instante is not None else ""
 
 
+def _citado(texto):
+    """O nome de uma Etapa ou de um Evento, encaixado no meio de uma frase.
+
+    A descrição publicada costuma ser uma frase inteira, com ponto final — *"Inscrições pelo
+    sistema, com isenção de taxa até o 5º dia."* Encaixá-la crua produzia *"… 5º dia., do Edital
+    01/2026:"*, com o ponto no meio da oração. Tirar a pontuação terminal é a mesma coisa que se
+    faz ao citar uma frase dentro de outra.
+    """
+    return (texto or "").strip().rstrip(".;,")
+
+
 def posicao_temporal(inicio, fim, agora):
     """Onde o instante da leitura cai dentro do Evento, ou `None` quando não é determinável.
 
@@ -520,7 +535,7 @@ def etapas_sem_marco(edital, conteudo, encaminhar):
             edital=edital,
             alvo=nome,
             mensagem=(
-                f"A Etapa {nome}, do Edital {rotulo_do_edital(edital)}, "
+                f"A Etapa {_citado(nome)}, do Edital {rotulo_do_edital(edital)}, "
                 f"está sem marco no cronograma."
             ),
             destino=encaminhar(UX_001, edital),
@@ -545,14 +560,14 @@ def divergencias_temporais(edital, conteudo, agora, encaminhar):
         posicao = posicao_temporal(inicio, fim, agora)
         if posicao is None or (declarado, posicao) in COERENTES:
             continue
-        descricao = evento.get("description") or evento.get("type") or ""
+        descricao = descricao_do_evento(evento)
         referencia = inicio if posicao == ANTES_DO_INICIO else fim
         yield Sinal(
             especie=UX_002,
             edital=edital,
             alvo=descricao,
             mensagem=(
-                f"{descricao}, do Edital {rotulo_do_edital(edital)}: "
+                f"{_citado(descricao)}, do Edital {rotulo_do_edital(edital)}: "
                 f"declarado {DECLARACOES[declarado]} · "
                 f"{FRASES_DA_POSICAO[posicao]} {_dia(referencia)}."
             ),
@@ -581,7 +596,7 @@ def cobertura_insuficiente(edital, conteudo, encaminhar):
             alvo=nome,
             medida=Medida(numerador=resumo["carentes"], denominador=resumo["inscricoes"]),
             mensagem=(
-                f"A Etapa {nome}, do Edital {rotulo_do_edital(edital)}, "
+                f"A Etapa {_citado(nome)}, do Edital {rotulo_do_edital(edital)}, "
                 f"tem inscrição sem avaliador suficiente."
             ),
             destino=encaminhar(UX_003, edital, etapa.get("id")),
@@ -859,7 +874,17 @@ def sinais(processo, ator, *, agora=None):
         achados += list(
             comissao_impedida(processo, [edital for edital, _ in publicados], encaminhar)
         )
-    achados.sort(key=lambda sinal: (ESPECIES.index(sinal.especie), sinal.alvo))
+    # Espécie, depois **Edital**, depois alvo. O Edital entra no meio porque a leitura da região é
+    # feita por Edital: ordenar só pelo nome do alvo intercalava dois Editais com Etapas homônimas
+    # — "Análise documental" de um, depois a do outro —, e quem lê perdia a conta de onde estava.
+    achados.sort(
+        key=lambda sinal: (
+            ESPECIES.index(sinal.especie),
+            sinal.edital.year,
+            sinal.edital.number,
+            sinal.alvo,
+        )
+    )
     return tuple(achados)
 
 
@@ -890,6 +915,7 @@ __all__ = [
     "JANELA_RECENTE",
     "contagens_por_edital",
     "conteudo_ou_nada",
+    "descricao_do_evento",
     "editais_do_processo",
     "etapas_do_conteudo",
     "eventos_do_conteudo",

@@ -585,3 +585,74 @@ def test_a_011_nao_altera_o_esquema_de_outros_apps():
         corpo = arquivo.read_text()
         for app_alheio in ("editais", "publicacoes", "auditoria", "inscricoes"):
             assert f'"{app_alheio}' not in corpo.lower(), f"{arquivo.name} toca {app_alheio}"
+
+
+# Os apps que a **022** lê, e nada além de ler. São todos os que compõem o Pulso e os cinco
+# sinais: a supervisão observa a fronteira entre eles, e por isso conhece muitos — mas não é dona
+# de fato nenhum (022, T-001).
+APPS_QUE_A_022_NAO_TOCA = (
+    "avaliacoes",
+    "classificacao",
+    "comissoes",
+    "divulgacao",
+    "editais",
+    "inscricoes",
+    "processos",
+    "publicacoes",
+    "recursos",
+    "resultados",
+)
+
+
+def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
+    """FR-007 e SC-014: a supervisão não introduz estrutura de dados persistente nenhuma.
+
+    A tentação concreta que isto bloqueia tem nome, e ela é a mais sedutora da feature: gravar o
+    sinal. Uma tabela de "condições de atenção" tornaria a região barata de renderizar e cara de
+    manter — passaria a existir estado a sincronizar com sete agregados, e a primeira divergência
+    entre o gravado e o real seria invisível, porque a página leria o gravado.
+
+    `D-007` faz da necessidade de persistir estado um motivo para **revisar a spec**, e não para
+    escrever migration. A guarda é por contagem, no formato que a 017 e a 011 já usam: qualquer
+    migration nova nesses apps vem de outra feature, com justificativa própria — que é exatamente
+    a conversa que este teste força.
+    """
+    import pathlib as _pathlib
+
+    raiz = _pathlib.Path(__file__).resolve().parents[2] / "processo_seletivo"
+    esperadas = {
+        "avaliacoes": 3,
+        "classificacao": 4,
+        "comissoes": 1,
+        "divulgacao": 2,
+        "editais": 13,
+        "inscricoes": 4,
+        "processos": 2,
+        "publicacoes": 8,
+        "recursos": 1,
+        "resultados": 5,
+    }
+    assert set(esperadas) == set(APPS_QUE_A_022_NAO_TOCA)
+    for app, quantas in esperadas.items():
+        migrations = sorted((raiz / app / "migrations").glob("[0-9]*.py"))
+        assert len(migrations) == quantas, (
+            f"{app} tem {len(migrations)} migrations, e a 022 não acrescenta nenhuma a ele "
+            f"(FR-007). Se a mudança é legítima, ela é de outra feature — e este número sobe "
+            f"junto com a justificativa."
+        )
+
+
+def test_a_022_nao_cria_app_com_migrations_proprias():
+    """T-001: app sem modelo criaria a expectativa de que um dia terá.
+
+    A `011` abriu app novo porque trouxe agregado; a `022` não traz nenhum. Este teste é a metade
+    que a contagem acima não cobre: ela vigia os apps que existem, e este vigia o que não existe.
+    """
+    import pathlib as _pathlib
+
+    raiz = _pathlib.Path(__file__).resolve().parents[2] / "processo_seletivo"
+
+    assert not (raiz / "supervisao").exists(), (
+        "a supervisão é módulo de leitura em `interface/`, e não app: ela não é dona de fato "
+        "persistido algum (FR-007, T-001)."
+    )
