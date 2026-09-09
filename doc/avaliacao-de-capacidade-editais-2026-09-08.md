@@ -1,5 +1,9 @@
 # Avaliação de capacidade — os sete Editais contra a `main` pós-020
 
+> **Estado do repositório atualizado em 09/09/2026.** O que este documento mede é o de `2910c06`.
+> A `021` fechou o sorteio e a L-6 desde então, e a medição vigente está em
+> [`avaliacao-de-capacidade-editais-2026-09-09.md`](avaliacao-de-capacidade-editais-2026-09-09.md).
+
 Releitura do repositório em `2910c06` — `main` com a `020` (Anexos do Edital) integrada — contra a
 mesma amostra de sete Editais reais do Ifes/Cefor lida em
 [`avaliacao-de-capacidade-editais-2026-09-07.md`](avaliacao-de-capacidade-editais-2026-09-07.md),

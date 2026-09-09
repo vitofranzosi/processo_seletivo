@@ -312,6 +312,7 @@ Incrementos, na ordem em que foram especificados:
 | [`017`](specs/017-publicacao-de-resultados/spec.md) | publicação de resultados |
 | [`018`](specs/018-recursos-e-superacao-de-resultados/spec.md) | recursos e superação de resultados |
 | [`020`](specs/020-anexos-do-edital/spec.md) | anexos do Edital |
+| [`021`](specs/021-sorteio-publico-auditavel/spec.md) | sorteio público auditável |
 | [`022`](specs/022-supervisao-do-processo/spec.md) | supervisão do Processo |
 
 A [Constituição](.specify/memory/constitution.md) prevalece sobre todos.
