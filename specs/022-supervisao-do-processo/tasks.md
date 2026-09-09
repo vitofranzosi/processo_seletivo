@@ -33,8 +33,8 @@ novo, nenhum modelo, nenhuma migration** — `T-001` e `D-007`.
 
 **Purpose**: o esqueleto do módulo de leitura e o lugar dos testes.
 
-- [ ] T001 [P] Criar o pacote de testes em `backend/tests/integration/supervisao/__init__.py`
-- [ ] T002 [P] Criar `backend/processo_seletivo/interface/supervisao.py` com as formas de leitura de [data-model.md](./data-model.md) §2 — `Pulso`, `PulsoDoEdital`, `PeriodoDeInscricoes`, `Marco` e `Sinal` — como estruturas imutáveis sem derivação ainda. *`medida` do `Sinal` é par completo ou ausente, e não dois campos opcionais: é `FR-032` expresso na forma, e não confiado à disciplina de quem escreve o template*
+- [X] T001 [P] Criar o pacote de testes em `backend/tests/integration/supervisao/__init__.py`
+- [X] T002 [P] Criar `backend/processo_seletivo/interface/supervisao.py` com as formas de leitura de [data-model.md](./data-model.md) §2 — `Pulso`, `PulsoDoEdital`, `PeriodoDeInscricoes`, `Marco` e `Sinal` — como estruturas imutáveis sem derivação ainda. *`medida` do `Sinal` é par completo ou ausente, e não dois campos opcionais: é `FR-032` expresso na forma, e não confiado à disciplina de quem escreve o template*
 
 ---
 
@@ -44,13 +44,13 @@ novo, nenhum modelo, nenhuma migration** — `T-001` e `D-007`.
 
 **⚠️ CRÍTICO**: nenhuma user story começa antes deste checkpoint.
 
-- [ ] T003 Implementar `pode_supervisionar(ator, processo)` em `backend/processo_seletivo/interface/supervisao.py`, delegando a `comissoes.domain.autorizacao.pode_gerir_comissao` — as duas bases já existentes, sem papel nem permissão nova (`FR-002`)
-- [ ] T004 Acrescentar a view de leitura `supervisao` em `backend/processo_seletivo/interface/views.py`, devolvendo o 404 uniforme para escopo distinto, ausência de vínculo e Processo inexistente (`FR-001`, `FR-003`)
-- [ ] T005 Acrescentar a rota `processos/<uuid:processo_id>/supervisao` em `backend/processo_seletivo/interface/urls.py` (`FR-001`)
-- [ ] T006 [P] Criar `backend/processo_seletivo/interface/templates/interface/supervisao.html` com as duas regiões anunciadas como regiões, cada uma com título próprio, ainda vazias (`UX-006`)
-- [ ] T007 [P] Teste de autorização em `backend/tests/integration/supervisao/test_autorizacao.py`: presidência ativa, permissão sistêmica de gerir comissão, escopo institucional distinto, sem vínculo, e Processo inexistente — as três últimas com resposta **literalmente igual**. **Inclui o Processo cancelado, que continua legível para quem preside**: os fatos permanecem e alguém responde por eles (`FR-002`, `FR-003`, `SC-012`)
-- [ ] T008 Acrescentar o caminho até a supervisão em `backend/processo_seletivo/interface/templates/interface/processo_detalhe.html`, reusando o catálogo de ações existente e **sem** rederivar o conjunto de atos do Edital (`FR-008`)
-- [ ] T009 Resolver, em `backend/processo_seletivo/interface/supervisao.py`, os Editais do Processo e as Etapas da versão publicada de cada um, pelo resolvedor que a `011` já usa — nunca por leitura própria do conteúdo (`FR-005`)
+- [X] T003 Implementar `pode_supervisionar(ator, processo)` em `backend/processo_seletivo/interface/supervisao.py`, delegando a `comissoes.domain.autorizacao.pode_gerir_comissao` — as duas bases já existentes, sem papel nem permissão nova (`FR-002`)
+- [X] T004 Acrescentar a view de leitura `supervisao` em `backend/processo_seletivo/interface/views.py`, devolvendo o 404 uniforme para escopo distinto, ausência de vínculo e Processo inexistente (`FR-001`, `FR-003`)
+- [X] T005 Acrescentar a rota `processos/<uuid:processo_id>/supervisao` em `backend/processo_seletivo/interface/urls.py` (`FR-001`)
+- [X] T006 [P] Criar `backend/processo_seletivo/interface/templates/interface/supervisao.html` com as duas regiões anunciadas como regiões, cada uma com título próprio, ainda vazias (`UX-006`)
+- [X] T007 [P] Teste de autorização em `backend/tests/integration/supervisao/test_autorizacao.py`: presidência ativa, permissão sistêmica de gerir comissão, escopo institucional distinto, sem vínculo, e Processo inexistente — as três últimas com resposta **literalmente igual**. **Inclui o Processo cancelado, que continua legível para quem preside**: os fatos permanecem e alguém responde por eles (`FR-002`, `FR-003`, `SC-012`)
+- [X] T008 Acrescentar o caminho até a supervisão em `backend/processo_seletivo/interface/templates/interface/processo_detalhe.html`, reusando o catálogo de ações existente e **sem** rederivar o conjunto de atos do Edital (`FR-008`)
+- [X] T009 Resolver, em `backend/processo_seletivo/interface/supervisao.py`, os Editais do Processo e as Etapas da versão publicada de cada um, pelo resolvedor que a `011` já usa — nunca por leitura própria do conteúdo (`FR-005`)
 
 **Checkpoint**: a página abre para quem preside, recusa para os demais, e está vazia.
 
@@ -66,16 +66,16 @@ soma dos dois, que cada Edital aparece nomeado, e que o rascunho não entra na c
 
 ### Tests for User Story 1
 
-- [ ] T010 [P] [US1] Teste da soma e do desdobramento em `backend/tests/integration/supervisao/test_pulso.py`: total do Processo igual à soma dos Editais, cada Edital nomeado, inclusive o de zero inscrições (`FR-010`, `FR-011`, `SC-002`, `SC-007`)
-- [ ] T011 [P] [US1] Teste de que rascunho **não** soma, em `backend/tests/integration/supervisao/test_pulso.py` (`FR-012`, `SC-003`)
-- [ ] T012 [P] [US1] Teste de que nenhum percentual é apresentado sobre inscrição, em `backend/tests/interface/test_supervisao.py` (`FR-017`, `SC-005`)
+- [X] T010 [P] [US1] Teste da soma e do desdobramento em `backend/tests/integration/supervisao/test_pulso.py`: total do Processo igual à soma dos Editais, cada Edital nomeado, inclusive o de zero inscrições (`FR-010`, `FR-011`, `SC-002`, `SC-007`)
+- [X] T011 [P] [US1] Teste de que rascunho **não** soma, em `backend/tests/integration/supervisao/test_pulso.py` (`FR-012`, `SC-003`)
+- [X] T012 [P] [US1] Teste de que nenhum percentual é apresentado sobre inscrição, em `backend/tests/interface/test_supervisao.py` (`FR-017`, `SC-005`)
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Implementar as contagens por Edital em `backend/processo_seletivo/interface/supervisao.py` — submetidas e rascunhos em agregações separadas, jamais somadas (`FR-010`, `FR-011`, `FR-012`)
-- [ ] T014 [US1] Acrescentar o instante da leitura ao `Pulso` em `backend/processo_seletivo/interface/supervisao.py` (`FR-009`)
-- [ ] T015 [US1] Renderizar o Pulso em `backend/processo_seletivo/interface/templates/interface/supervisao.html`, com o Edital nomeado em toda linha que lhe pertença — **inclusive quando o Processo tem um Edital só** (`FR-011`, `FR-020`, `UX-007`)
-- [ ] T016 [US1] Adotar em `backend/processo_seletivo/interface/templates/interface/supervisao.html` o mesmo termo que a `009` usa para rascunho, até que haja decisão de vocabulário — dois termos para o mesmo conceito é o que o Princípio I recusa
+- [X] T013 [US1] Implementar as contagens por Edital em `backend/processo_seletivo/interface/supervisao.py` — submetidas e rascunhos em agregações separadas, jamais somadas (`FR-010`, `FR-011`, `FR-012`)
+- [X] T014 [US1] Acrescentar o instante da leitura ao `Pulso` em `backend/processo_seletivo/interface/supervisao.py` (`FR-009`)
+- [X] T015 [US1] Renderizar o Pulso em `backend/processo_seletivo/interface/templates/interface/supervisao.html`, com o Edital nomeado em toda linha que lhe pertença — **inclusive quando o Processo tem um Edital só** (`FR-011`, `FR-020`, `UX-007`)
+- [X] T016 [US1] Adotar em `backend/processo_seletivo/interface/templates/interface/supervisao.html` o mesmo termo que a `009` usa para rascunho, até que haja decisão de vocabulário — dois termos para o mesmo conceito é o que o Princípio I recusa
 
 **Checkpoint**: `US1` completa e demonstrável sozinha. É o MVP.
 
@@ -90,21 +90,21 @@ distribuição, que o rascunho fica fora dela, e que o prazo nomeia o Edital.
 
 ### Tests for User Story 2
 
-- [ ] T017 [P] [US2] Teste do período, do tempo restante e dos próximos marcos por Edital em `backend/tests/integration/supervisao/test_pulso.py` — **incluindo que Evento `CANCELADO` não entra na lista de marcos** (`FR-019`, `FR-021`, `SC-007`)
-- [ ] T018 [P] [US2] Teste da série em `backend/tests/integration/supervisao/test_pulso.py`: agrupada por instante de submissão, com rascunho antigo fora dela, e com dia de zero presente na série (`FR-014`, `FR-015`)
-- [ ] T018a [P] [US2] Teste das últimas 24 horas em `backend/tests/integration/supervisao/test_pulso.py`: soma os Editais do Processo, exclui submissão mais antiga que a janela **e** a de exatamente 24 h — a borda é onde o fora-por-um mora —, e **não** é apresentado quando nenhum Edital tem período em curso (`FR-013`)
-- [ ] T019 [P] [US2] Teste do equivalente textual da série em `backend/tests/interface/test_supervisao.py` — mesmos valores do gráfico (`FR-016`, `SC-015`)
-- [ ] T020 [P] [US2] Teste das declarações de ausência em `backend/tests/integration/supervisao/test_pulso.py`: nenhum Edital com período em curso, Edital sem cronograma, cronograma sem período marcado (`FR-018`, `FR-022`)
+- [X] T017 [P] [US2] Teste do período, do tempo restante e dos próximos marcos por Edital em `backend/tests/integration/supervisao/test_pulso.py` — **incluindo que Evento `CANCELADO` não entra na lista de marcos** (`FR-019`, `FR-021`, `SC-007`)
+- [X] T018 [P] [US2] Teste da série em `backend/tests/integration/supervisao/test_pulso.py`: agrupada por instante de submissão, com rascunho antigo fora dela, e com dia de zero presente na série (`FR-014`, `FR-015`)
+- [X] T018a [P] [US2] Teste das últimas 24 horas em `backend/tests/integration/supervisao/test_pulso.py`: soma os Editais do Processo, exclui submissão mais antiga que a janela **e** a de exatamente 24 h — a borda é onde o fora-por-um mora —, e **não** é apresentado quando nenhum Edital tem período em curso (`FR-013`)
+- [X] T019 [P] [US2] Teste do equivalente textual da série em `backend/tests/interface/test_supervisao.py` — mesmos valores do gráfico (`FR-016`, `SC-015`)
+- [X] T020 [P] [US2] Teste das declarações de ausência em `backend/tests/integration/supervisao/test_pulso.py`: nenhum Edital com período em curso, Edital sem cronograma, cronograma sem período marcado (`FR-018`, `FR-022`)
 
 ### Implementation for User Story 2
 
-- [ ] T021 [US2] Ler, por Edital, o Evento marcado como período de inscrições em `backend/processo_seletivo/interface/supervisao.py` — pela marca do domínio, nunca inferindo do texto livre do tipo (`FR-019`)
-- [ ] T022 [US2] Implementar a contagem das últimas 24 horas em `backend/processo_seletivo/interface/supervisao.py` (`FR-013`)
-- [ ] T023 [US2] Implementar a série diária em `backend/processo_seletivo/interface/supervisao.py`: uma agregação por Edital, por instante de submissão, recortada no período declarado, com os dias de zero preenchidos (`FR-014`, `FR-015`)
-- [ ] T024 [US2] Implementar os próximos marcos por Edital em `backend/processo_seletivo/interface/supervisao.py`, apresentando o `status` como **declaração** e sem alterá-lo, e **excluindo da lista o Evento `CANCELADO`** — cancelado sai da leitura temporal, aqui pela mesma razão que sai de `UX-002` (`FR-021`, `FR-023`)
-- [ ] T025 [US2] Implementar as declarações de ausência em `backend/processo_seletivo/interface/supervisao.py` (`FR-018`, `FR-022`)
-- [ ] T026 [US2] Criar `backend/processo_seletivo/interface/templates/interface/_serie_de_inscricoes.html` com a série **diária** e o equivalente textual, sem depender de cor e sem rolagem horizontal do corpo (`FR-016`, `UX-008`)
-- [ ] T027 [US2] **Conferência manual** — nenhuma automação substitui: abrir `backend/processo_seletivo/interface/templates/interface/supervisao.html` em 375 px e verificar que nem tabela nem gráfico forçam rolagem horizontal do corpo. *A `013` deixou a mesma conferência pendente em T063; esta não deve seguir o mesmo caminho* (`FR-016`)
+- [X] T021 [US2] Ler, por Edital, o Evento marcado como período de inscrições em `backend/processo_seletivo/interface/supervisao.py` — pela marca do domínio, nunca inferindo do texto livre do tipo (`FR-019`)
+- [X] T022 [US2] Implementar a contagem das últimas 24 horas em `backend/processo_seletivo/interface/supervisao.py` (`FR-013`)
+- [X] T023 [US2] Implementar a série diária em `backend/processo_seletivo/interface/supervisao.py`: uma agregação por Edital, por instante de submissão, recortada no período declarado, com os dias de zero preenchidos (`FR-014`, `FR-015`)
+- [X] T024 [US2] Implementar os próximos marcos por Edital em `backend/processo_seletivo/interface/supervisao.py`, apresentando o `status` como **declaração** e sem alterá-lo, e **excluindo da lista o Evento `CANCELADO`** — cancelado sai da leitura temporal, aqui pela mesma razão que sai de `UX-002` (`FR-021`, `FR-023`)
+- [X] T025 [US2] Implementar as declarações de ausência em `backend/processo_seletivo/interface/supervisao.py` (`FR-018`, `FR-022`)
+- [X] T026 [US2] Criar `backend/processo_seletivo/interface/templates/interface/_serie_de_inscricoes.html` com a série **diária** e o equivalente textual, sem depender de cor e sem rolagem horizontal do corpo (`FR-016`, `UX-008`)
+- [X] T027 [US2] **Conferência manual** — nenhuma automação substitui: abrir `backend/processo_seletivo/interface/templates/interface/supervisao.html` em 375 px e verificar que nem tabela nem gráfico forçam rolagem horizontal do corpo. *A `013` deixou a mesma conferência pendente em T063; esta não deve seguir o mesmo caminho* (`FR-016`)
 
 **Checkpoint**: o Pulso está fechado. `US1` e `US2` funcionam independentemente.
 
@@ -122,37 +122,37 @@ duas passagens, e por fim a consulta agregada.
 
 ### Forma da região
 
-- [ ] T028 [P] [US3] Criar `backend/processo_seletivo/interface/templates/interface/_sinal.html` — forma única dos cinco, com `medida` renderizada como par ou omitida, e **sem** campo de gravidade (`UX-006`, `FR-032`)
-- [ ] T029 [US3] Montar a região de atenção em `backend/processo_seletivo/interface/supervisao.py` a partir de uma enumeração fechada de cinco espécies, e declarar a ausência em **uma linha** quando não houver sinal (`FR-024`, `FR-025`, `SC-011`)
-- [ ] T030 [P] [US3] Teste de que a enumeração tem exatamente cinco espécies em `backend/tests/unit/interface/test_supervisao.py` — acrescentar uma sexta quebra o teste, que é o que torna `D-002` executável (`FR-024`)
+- [X] T028 [P] [US3] Criar `backend/processo_seletivo/interface/templates/interface/_sinal.html` — forma única dos cinco, com `medida` renderizada como par ou omitida, e **sem** campo de gravidade (`UX-006`, `FR-032`)
+- [X] T029 [US3] Montar a região de atenção em `backend/processo_seletivo/interface/supervisao.py` a partir de uma enumeração fechada de cinco espécies, e declarar a ausência em **uma linha** quando não houver sinal (`FR-024`, `FR-025`, `SC-011`)
+- [X] T030 [P] [US3] Teste de que a enumeração tem exatamente cinco espécies em `backend/tests/unit/interface/test_supervisao.py` — acrescentar uma sexta quebra o teste, que é o que torna `D-002` executável (`FR-024`)
 
 ### `UX-001` — Etapa sem marco no cronograma
 
-- [ ] T031 [P] [US3] Teste em `backend/tests/integration/supervisao/test_sinais.py`: Etapa sem Evento vinculado produz o sinal, e **não** produz situação temporal, atraso nem progresso zero (`FR-026`, `SC-008`)
-- [ ] T032 [US3] Implementar a detecção em `backend/processo_seletivo/interface/supervisao.py`, com a redação de `UX-001` e o Edital nomeado (`FR-026`)
+- [X] T031 [P] [US3] Teste em `backend/tests/integration/supervisao/test_sinais.py`: Etapa sem Evento vinculado produz o sinal, e **não** produz situação temporal, atraso nem progresso zero (`FR-026`, `SC-008`)
+- [X] T032 [US3] Implementar a detecção em `backend/processo_seletivo/interface/supervisao.py`, com a redação de `UX-001` e o Edital nomeado (`FR-026`)
 
 ### `UX-002` — Declarado × temporal
 
-- [ ] T033 [P] [US3] Teste de `UX-002` em `backend/tests/integration/supervisao/test_sinais.py` cobrindo a **tabela-verdade inteira** de `T-005` — as seis combinações que produzem sinal, incluindo `EM_ANDAMENTO` antes do início e `EM_ANDAMENTO` depois do término, as três coerentes que não produzem, e as duas exclusões (`CANCELADO` e Evento sem `end_at`). *Combinação omitida é a que ninguém testa* (`FR-027`, `SC-009`)
-- [ ] T034 [US3] Implementar a detecção de `UX-002` em `backend/processo_seletivo/interface/supervisao.py`, apresentando **as duas** informações e sem arbitrar entre elas nem alterar o `status` (`FR-027`, `FR-023`)
+- [X] T033 [P] [US3] Teste de `UX-002` em `backend/tests/integration/supervisao/test_sinais.py` cobrindo a **tabela-verdade inteira** de `T-005` — as seis combinações que produzem sinal, incluindo `EM_ANDAMENTO` antes do início e `EM_ANDAMENTO` depois do término, as três coerentes que não produzem, e as duas exclusões (`CANCELADO` e Evento sem `end_at`). *Combinação omitida é a que ninguém testa* (`FR-027`, `SC-009`)
+- [X] T034 [US3] Implementar a detecção de `UX-002` em `backend/processo_seletivo/interface/supervisao.py`, apresentando **as duas** informações e sem arbitrar entre elas nem alterar o `status` (`FR-027`, `FR-023`)
 
 ### `UX-003` — Cobertura insuficiente
 
-- [ ] T035 [P] [US3] Teste de `UX-003` em `backend/tests/integration/supervisao/test_sinais.py`: o sinal traz numerador e denominador, e a inscrição **sem nenhum** avaliador conta como carente **e** permanece no denominador (`FR-028`, `FR-032`, `FR-033`, `SC-004`, `SC-006`)
-- [ ] T036 [US3] Implementar a detecção de `UX-003` em `backend/processo_seletivo/interface/supervisao.py` reusando `avaliacoes.application.selectors.resumo_da_etapa` como está, nomeando Etapa e Edital (`FR-028`, `FR-032`)
+- [X] T035 [P] [US3] Teste de `UX-003` em `backend/tests/integration/supervisao/test_sinais.py`: o sinal traz numerador e denominador, e a inscrição **sem nenhum** avaliador conta como carente **e** permanece no denominador (`FR-028`, `FR-032`, `FR-033`, `SC-004`, `SC-006`)
+- [X] T036 [US3] Implementar a detecção de `UX-003` em `backend/processo_seletivo/interface/supervisao.py` reusando `avaliacoes.application.selectors.resumo_da_etapa` como está, nomeando Etapa e Edital (`FR-028`, `FR-032`)
 
 ### `UX-004` — Ato vigente obsoleto
 
-- [ ] T037 [P] [US3] Teste de `UX-004` em `backend/tests/integration/supervisao/test_sinais.py`: ato obsoleto produz sinal sem abrir o marco; **e a contraprova** — fato posterior que não altera o universo do marco **não** produz sinal (`FR-029`)
-- [ ] T038 [US3] Implementar o filtro barato em `backend/processo_seletivo/interface/supervisao.py` com as **duas** condições de `T-003` — versão vigente do Edital diferente da citada pelo ato, **ou** `ResultadoEtapa` vigente nas Etapas do marco com `consolidado_em` posterior a `emitido_em`. *Conservador de propósito: admitir candidato que a confirmação descarta é barato; perder um é silencioso* (`T-003`)
-- [ ] T039 [US3] Confirmar cada candidato com `classificacao.application.selectors.estado_do_marco`, e emitir o sinal `UX-004` **apenas** com `obsoleto` verdadeiro, em `backend/processo_seletivo/interface/supervisao.py` (`FR-029`, `T-003`)
+- [X] T037 [P] [US3] Teste de `UX-004` em `backend/tests/integration/supervisao/test_sinais.py`: ato obsoleto produz sinal sem abrir o marco; **e a contraprova** — fato posterior que não altera o universo do marco **não** produz sinal (`FR-029`)
+- [X] T038 [US3] Implementar o filtro barato em `backend/processo_seletivo/interface/supervisao.py` com as **duas** condições de `T-003` — versão vigente do Edital diferente da citada pelo ato, **ou** `ResultadoEtapa` vigente nas Etapas do marco com `consolidado_em` posterior a `emitido_em`. *Conservador de propósito: admitir candidato que a confirmação descarta é barato; perder um é silencioso* (`T-003`)
+- [X] T039 [US3] Confirmar cada candidato com `classificacao.application.selectors.estado_do_marco`, e emitir o sinal `UX-004` **apenas** com `obsoleto` verdadeiro, em `backend/processo_seletivo/interface/supervisao.py` (`FR-029`, `T-003`)
 
 ### `UX-005` — Comissão inteira impedida
 
-- [ ] T040 [P] [US3] Teste em `backend/tests/integration/supervisao/test_sinais.py`: com todos os membros ativos impedidos por autoria, o sinal aparece; bastando um desimpedido, ele some (`FR-030`, `SC-010`)
-- [ ] T041 [P] [US3] Teste da redação de `UX-005` em `backend/tests/interface/test_supervisao.py`: a mensagem nomeia a condição — todos os membros impedidos — e **não** afirma que o julgamento é impossível (`UX-005`, `FR-030a`)
-- [ ] T042 [US3] Implementar `UX-005` em `backend/processo_seletivo/interface/supervisao.py`: o conjunto de impedidos pelas cinco origens de `subject` de [data-model.md](./data-model.md) §3.5, comparado com a comissão ativa, **sem** iterar `recurso × membro` com o guardião individual, e com a redação de `UX-005` (`UX-005`, `FR-030`, `FR-031`)
-- [ ] T043 [US3] Teste de orçamento de consulta em `backend/tests/integration/supervisao/test_sinais.py` com `django_assert_num_queries`: dobrar o número de recursos pendentes **não** dobra as consultas (`FR-031`)
+- [X] T040 [P] [US3] Teste em `backend/tests/integration/supervisao/test_sinais.py`: com todos os membros ativos impedidos por autoria, o sinal aparece; bastando um desimpedido, ele some (`FR-030`, `SC-010`)
+- [X] T041 [P] [US3] Teste da redação de `UX-005` em `backend/tests/interface/test_supervisao.py`: a mensagem nomeia a condição — todos os membros impedidos — e **não** afirma que o julgamento é impossível (`UX-005`, `FR-030a`)
+- [X] T042 [US3] Implementar `UX-005` em `backend/processo_seletivo/interface/supervisao.py`: o conjunto de impedidos pelas cinco origens de `subject` de [data-model.md](./data-model.md) §3.5, comparado com a comissão ativa, **sem** iterar `recurso × membro` com o guardião individual, e com a redação de `UX-005` (`UX-005`, `FR-030`, `FR-031`)
+- [X] T043 [US3] Teste de orçamento de consulta em `backend/tests/integration/supervisao/test_sinais.py` com `django_assert_num_queries`: dobrar o número de recursos pendentes **não** dobra as consultas (`FR-031`)
 
 **Checkpoint**: os cinco sinais nascem e somem, um a um.
 
@@ -167,16 +167,16 @@ que não alcança uma das donas, conferir que aquele sinal simplesmente não est
 
 ### Tests for User Story 4
 
-- [ ] T044 [P] [US4] Teste dos destinos em `backend/tests/interface/test_supervisao.py`: cada um dos cinco leva à tela dona correspondente (`FR-035`)
-- [ ] T045 [P] [US4] Teste da supressão em `backend/tests/integration/supervisao/test_autorizacao.py`: ator que preside mas não alcança os recursos não vê `UX-005`, **e nada indica a supressão**; e a contraprova de `FR-004a` — os agregados do Pulso continuam visíveis para esse mesmo ator (`FR-004`, `FR-004a`, `SC-013`)
-- [ ] T045a [P] [US4] Teste do Processo cancelado em `backend/tests/integration/supervisao/test_autorizacao.py`: a supervisão continua legível, **e o encaminhamento que a situação não admite não é oferecido** — a contraprova que falta a T049 (`FR-036`)
-- [ ] T046 [P] [US4] Teste de que a supervisão **não** lista os registros contados, em `backend/tests/interface/test_supervisao.py` (`FR-037`)
+- [X] T044 [P] [US4] Teste dos destinos em `backend/tests/interface/test_supervisao.py`: cada um dos cinco leva à tela dona correspondente (`FR-035`)
+- [X] T045 [P] [US4] Teste da supressão em `backend/tests/integration/supervisao/test_autorizacao.py`: ator que preside mas não alcança os recursos não vê `UX-005`, **e nada indica a supressão**; e a contraprova de `FR-004a` — os agregados do Pulso continuam visíveis para esse mesmo ator (`FR-004`, `FR-004a`, `SC-013`)
+- [X] T045a [P] [US4] Teste do Processo cancelado em `backend/tests/integration/supervisao/test_autorizacao.py`: a supervisão continua legível, **e o encaminhamento que a situação não admite não é oferecido** — a contraprova que falta a T049 (`FR-036`)
+- [X] T046 [P] [US4] Teste de que a supervisão **não** lista os registros contados, em `backend/tests/interface/test_supervisao.py` (`FR-037`)
 
 ### Implementation for User Story 4
 
-- [ ] T047 [US4] Implementar o destino de cada sinal em `backend/processo_seletivo/interface/supervisao.py`, conforme a tabela de `T-008` (`FR-035`)
-- [ ] T048 [US4] Suprimir o sinal cujo destino o ator não alcança em `backend/processo_seletivo/interface/supervisao.py` — sem montar a forma, e sem marca de ausência (`FR-004`)
-- [ ] T049 [US4] Deixar a recusa para a tela de destino em `backend/processo_seletivo/interface/supervisao.py`: a supervisão decide **se oferece**, e não se autoriza. **Num Processo cancelado, encaminhamento que a situação não admite não é oferecido** — oferecer um beco é o que a `007` passou uma feature inteira tirando (`FR-036`)
+- [X] T047 [US4] Implementar o destino de cada sinal em `backend/processo_seletivo/interface/supervisao.py`, conforme a tabela de `T-008` (`FR-035`)
+- [X] T048 [US4] Suprimir o sinal cujo destino o ator não alcança em `backend/processo_seletivo/interface/supervisao.py` — sem montar a forma, e sem marca de ausência (`FR-004`)
+- [X] T049 [US4] Deixar a recusa para a tela de destino em `backend/processo_seletivo/interface/supervisao.py`: a supervisão decide **se oferece**, e não se autoriza. **Num Processo cancelado, encaminhamento que a situação não admite não é oferecido** — oferecer um beco é o que a `007` passou uma feature inteira tirando (`FR-036`)
 
 **Checkpoint**: todas as user stories funcionam de forma independente.
 
@@ -184,13 +184,13 @@ que não alcança uma das donas, conferir que aquele sinal simplesmente não est
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T050 [P] Teste de fronteira em `backend/tests/integration/supervisao/test_fronteira.py`: a feature não escreve em tabela alguma, não apresenta carga por membro, não classifica desempenho e **não exibe nome, CPF nem protocolo de candidato** (`FR-006`, `FR-034`, `FR-004a`)
-- [ ] T051 [P] Acrescentar `test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le` em `backend/tests/migrations/test_migrations.py`, no formato de guarda **por contagem de migrations por app** que a `017` e a `011` já usam — com a justificativa em comentário se alguma contagem subir por decisão de outra feature (`FR-007`, `SC-014`)
-- [ ] T052 [P] Teste de aceitação de ponta a ponta em `backend/tests/acceptance/test_supervisao_do_processo.py`: quem preside abre o Processo e obtém situação, volume, prazo e impedimento numa única tela (`SC-001`, `FR-005`)
-- [ ] T053 [P] Teste de orçamento da página inteira em `backend/tests/integration/supervisao/test_fronteira.py` com `django_assert_num_queries`: o custo cresce com o que mudou, e não com o tamanho do Processo (`T-002`, `T-003`)
-- [ ] T054 [P] Acrescentar a `022` à tabela de incrementos do `README.md`
+- [X] T050 [P] Teste de fronteira em `backend/tests/integration/supervisao/test_fronteira.py`: a feature não escreve em tabela alguma, não apresenta carga por membro, não classifica desempenho e **não exibe nome, CPF nem protocolo de candidato** (`FR-006`, `FR-034`, `FR-004a`)
+- [X] T051 [P] Acrescentar `test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le` em `backend/tests/migrations/test_migrations.py`, no formato de guarda **por contagem de migrations por app** que a `017` e a `011` já usam — com a justificativa em comentário se alguma contagem subir por decisão de outra feature (`FR-007`, `SC-014`)
+- [X] T052 [P] Teste de aceitação de ponta a ponta em `backend/tests/acceptance/test_supervisao_do_processo.py`: quem preside abre o Processo e obtém situação, volume, prazo e impedimento numa única tela (`SC-001`, `FR-005`)
+- [X] T053 [P] Teste de orçamento da página inteira em `backend/tests/integration/supervisao/test_fronteira.py` com `django_assert_num_queries`: o custo cresce com o que mudou, e não com o tamanho do Processo (`T-002`, `T-003`)
+- [X] T054 [P] Acrescentar a `022` à tabela de incrementos do `README.md`
 - [ ] T055 Executar [quickstart.md](./quickstart.md) inteiro — os cinco roteiros, com o papel exato de quem preside
-- [ ] T056 Executar `cd backend && make lint check test-pg`, e a varredura de citações por esta feature tocar `specs/`
+- [X] T056 Executar `cd backend && make lint check test-pg`, e a varredura de citações por esta feature tocar `specs/`
 
 ---
 
