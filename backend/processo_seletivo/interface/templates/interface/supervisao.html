@@ -1,0 +1,24 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Supervisão — {{ processo.institutional_code }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
+  <span aria-current="page">Supervisão</span>
+</nav>
+
+<h1>Supervisão do Processo</h1>
+<p class="sub">{{ processo.title }} — <span class="codigo">{{ processo.institutional_code }}</span></p>
+
+{% comment %}
+Duas regiões, e só duas (D-001). Cada uma é anunciada **como região**, com título próprio, para que
+quem navega por marcos saltasse de uma para a outra sem varrer a página (UX-006).
+{% endcomment %}
+<section aria-labelledby="pulso-titulo">
+  <h2 id="pulso-titulo">Pulso</h2>
+</section>
+
+<section aria-labelledby="atencao-titulo">
+  <h2 id="atencao-titulo">Atenção</h2>
+</section>
+{% endblock %}
