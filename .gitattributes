@@ -1,0 +1,10 @@
+# O container é Linux nas três plataformas, e um script com fim de linha CRLF morre dentro dele
+# com `exec format error` — mensagem que não diz nada sobre a causa e some no `git diff`, porque a
+# conversão acontece no checkout. Fixar LF aqui é o que faz `docker compose up` funcionar em
+# Windows sem ninguém precisar descobrir isto sozinho.
+* text=auto eol=lf
+*.sh text eol=lf
+Dockerfile text eol=lf
+Makefile text eol=lf
+*.png binary
+*.pdf binary
