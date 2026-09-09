@@ -17,6 +17,18 @@ entre compromisso e ato, e fechou seis das oito decisões. Base registrada em
 > Sorteio não habilita, não elimina e não ocupa vaga. Ele **constitui uma ordem completa** sobre a
 > relação congelada; corte, cotas, progressão e convocação **consomem** essa ordem.
 
+## A PRÁTICA QUE ESTA FEATURE SUBSTITUI, NAS PALAVRAS DOS PRÓPRIOS EDITAIS
+
+Os quatro repetem a mesma cláusula (77 6.2; 57 8.2; 28 8.2; 76 5.2): o software é de terceiro, e a
+garantia oferecida ao cidadão é uma linha no rodapé —
+
+> Para fins de auditoria, observar o campo "Semente utilizada: xxxxxxxxxxxxx", localizado ao fim da
+> página do sorteio. Ela é que garante a aleatoriedade do processo.
+
+Uma semente cuja lista de entrada ninguém publicou canonicamente, num software que a instituição não
+controla, exibida depois do fato. É contra isto que a feature se mede — não contra a ausência de
+sorteio.
+
 ## CONTEXTO OBRIGATÓRIO, ANTES DO /specify
 
 Ler, nesta ordem:
@@ -187,21 +199,66 @@ tela que valha a transmissão e uma verificação que sobreviva ao vídeo.
 | **D-1** | Onde a ordem entra | **B** — `AtoDeOrdenacao` constituído por sorteio, com discriminador de origem, estratégia de constituição e proveniência própria na reprodução. A e C ficam recusadas **por escrito**, com os custos acima |
 | **D-2** | A relação de habilitados entra? | **Sim** — publicada e congelada, ela é o compromisso do universo. Fora: recurso contra ela (P-4) e a relação de inscritos como artefato universal |
 | **D-3** | Semente | **Ocorrência futura, previamente determinada, de fonte pública externa** — com fallback mecânico. Compromisso publicado pela própria comissão fica **recusado**: conhecendo o universo, ela mói sementes e publica o resumo da conveniente |
-| **D-4** | Identificador na chave | **Número público da relação**, em representação canônica — é o que a audiência vê e o que o verificador de terceiro recebe |
+| **D-4** | Identificador na chave | **Número público da relação**, em representação canônica. É o que os Editais já fazem: *"cada candidato receberá um número para o sorteio, a ser publicado na respectiva listagem"* (77, 6.4; 57, 8.4) |
 | **D-5** | Empate de chave | **Número público crescente**, com vetor de teste que o prova |
+| **D-6** | Recorte do sorteio | **Recorte de vaga × lista de concorrência** — fechada pela leitura dos quatro Editais, §abaixo |
 | **D-7** | Corte e progressão | **Fora.** E a spec diz na frase de valor que o 77 não fecha por aqui |
 
-## AS DUAS QUE CONTINUAM ABERTAS, E O QUE FALTA PARA FECHÁ-LAS
+## D-6, FECHADA PELA LEITURA DOS QUATRO EDITAIS
 
-**D-6 · O recorte do sorteio.** A escolha proposta é **um sorteio por Perfil**, com modalidade
-seguindo como atributo da posição e `PerfilVaga.locality` (`editais/models/perfis.py:25`) já
-carregando polo e localidade. É defensável: uma ordem única por Perfil serve AC e cota por
-filtragem, que é o desenho usual. **O que falta é evidência, e ela está nos PDFs:** se algum dos
-quatro Editais de sorteio publica sorteios **independentes** por modalidade, uma ordem por Perfil
-não basta, e descobrir isso durante a implementação é caro. Ler os quatro antes de fechar.
+A hipótese era **um sorteio por Perfil**, com modalidade seguindo como atributo da posição. Os
+quatro Editais a desmentem, e a cláusula é a mesma, palavra por palavra, no 57 (8.7) e no 28 (8.7):
 
-**D-8 · Local e canal do evento (L-6).** *"Sorteio às 10h, canal do Cefor no YouTube"* é o evento
-desta feature, e hoje o Cronograma publica data e hora sem publicar onde. **Não é um campo opcional
+> todos os candidatos (inclusive os cotistas) participem do sorteio da ampla concorrência e em
+> sequência haverá o sorteio das reservas de vaga
+
+São **sorteios distintos**, e não um sorteio filtrado depois. Os cronogramas confirmam: a relação de
+habilitados e a classificação preliminar são publicadas *"(AMPLA CONCORRÊNCIA, PPI e PcD)"* — três
+relações e três ordens, e o número que cada candidato recebe é *"publicado na respectiva listagem"*.
+O cotista aparece em duas delas, com posição independente em cada.
+
+```
+77/2026   perfil único, sem cotas                     1 ordem
+76/2026   polos com cadastro de reserva, sem cotas    1 ordem por polo — e ver a ressalva
+57/2026   2 cursos × (AC, PPI, PcD)                   3 ordens por curso
+28/2026   7 polos × (AC, PPI, PcD)                    3 ordens por polo — 21 no certame
+```
+
+A ressalva é do 76, e vale registrar porque a spec vai encontrá-la: ele **não declara o seu próprio
+recorte**. Diz "sorteio para classificação do cadastro de reserva", num evento só, com as vagas
+distribuídas por polo — e o texto afirma seis polos onde o quadro lista cinco. O sistema não pode
+inferir recorte de quadro: onde o Edital não declara, quem elabora declara na composição.
+
+**D-6 fecha assim: o recorte do sorteio é (recorte de vaga × lista de concorrência), e o Edital
+declara quais listas existem.** Onde não há cota, há uma lista só — a ampla concorrência — e o
+recorte degenera no Perfil, que é por que a hipótese parecia funcionar em 77 e 76.
+
+**A consequência é estrutural, e está verificada:** `uq_ato_raiz_por_marco`
+(`classificacao/models.py:44`) é única por `(edital, perfil_id, marco_id)` entre atos raiz. Três
+listas sobre o mesmo Perfil e o mesmo marco **colidem hoje**. As duas saídas:
+
+```
+um marco por lista        custo: triplica declaração que o Edital faz uma vez — a janela
+                          recursal é do marco (018), e os cronogramas publicam um período
+                          de recurso só, "(AMPLA CONCORRÊNCIA, PPI e PcD)"
+
+lista como dimensão       custo: mexe na identidade do ato e na constraint
+do ato                    — mas é o que o Edital de fato declara
+```
+
+*Recomendação:* a segunda. É a que não inventa marco onde o Edital não criou ponto novo do certame.
+
+E o que **não** entra por causa disso: as cláusulas 8.8 e 8.9 — cotista sorteado dentro das vagas nas
+duas listas fica na de ampla concorrência, e a vaga reservada passa ao próximo autodeclarado — são
+**ocupação**, `016`. O sorteio produz as ordens; a interação entre elas é de quem as consome. Isto é
+a frase que mantém o corte, aplicada ao caso mais tentador de violá-la.
+
+## A QUE CONTINUA ABERTA
+
+**D-8 · Local e canal do evento (L-6).** A leitura reforçou a lacuna sem fechá-la. O 76 publica uma
+coluna **LOCAL** por evento — *"Canal do Ifes/Cefor no Youtube"*, *"Página da chamada pública"* —, o
+77 marca o salão de reuniões e o canal em prosa, e 57 e 28 chegam a criar um **evento próprio** só
+para o link da transmissão, que é o Cronograma sendo usado como campo que ele não tem. **Não é um campo opcional
 inócuo:** conteúdo publicado novo eleva `SCHEMA_VERSION` para 10 e exige degrau em
 `publicacoes/domain/elevacao.py`. É lacuna de **autoria**, da linhagem do Cronograma, e não do
 domínio do sorteio — incluí-la mistura linhagens em troca de uma seção melhor. Decisão de escopo,
@@ -215,7 +272,7 @@ Não basta "SHA-256 por participante". A spec congela isto, e publica vetores no
 key = SHA-256(canonical_bytes({
     "domain":       "processo-seletivo/sorteio/v1",
     "relationHash": <resumo canônico da relação congelada>,
-    "profileId":    <identidade do recorte>,
+    "drawScopeId":  <identidade do recorte: vaga × lista de concorrência (D-6)>,
     "seed":         <semente normalizada>,
     "publicNumber": <número público do participante na relação>
 }))
@@ -262,8 +319,9 @@ ocorrência futura substitui a original **sem escolha humana**.
 Descrever, sem lacuna, o ciclo do **77/2026** até a ordem publicada — e **parar ali**, dizendo por
 que para:
 
-1. encerradas as inscrições, a comissão publica a relação de habilitados, numerada, projetada dos
-   fatos oficiais e com resumo canônico;
+1. encerradas as inscrições, a comissão publica a relação de habilitados — uma só, porque o 77 não
+   tem cota; onde há, é uma **por lista de concorrência** (D-6) —, numerada, projetada dos fatos
+   oficiais e com resumo canônico;
 2. a relação é **congelada**, e o congelamento é o compromisso: quantidade, números públicos e
    resumo;
 3. o método já está declarado — algoritmo, versão, recorte, fonte da semente, ocorrência, fallback e
@@ -287,7 +345,9 @@ E mais sete, que a revisão acrescentou e que valem tanto quanto os oito:
     frase que `reproducao.py` já carrega, estendida a esta proveniência;
 14. nenhum CPF, UUID interno ou dado privado aparece no manifesto;
 15. duas implementações independentes — Python e JavaScript, por exemplo — reproduzem os mesmos
-    vetores.
+    vetores;
+16. um cotista aparece em **duas** ordens — a de ampla concorrência e a da sua reserva — com posição
+    independente em cada, e cada lista tem o seu próprio ato raiz (D-6).
 
 O passo 7 é o emblemático: é ele que separa esta feature de um sorteador com semente no rodapé. O
 passo 8 é o que impede que "refazer" seja um botão. O 13 é o que impede o verificador de provar a si
