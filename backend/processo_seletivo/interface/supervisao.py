@@ -16,6 +16,10 @@ from django.db.models.functions import TruncDate
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
+from processo_seletivo.avaliacoes.application.selectors import resumo_da_etapa
+from processo_seletivo.avaliacoes.models import Impedimento
+from processo_seletivo.classificacao.application.selectors import ato_vigente, estado_do_marco
+from processo_seletivo.comissoes.application import selectors as comissao_selectors
 from processo_seletivo.comissoes.domain.autorizacao import pode_gerir_comissao
 from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
 from processo_seletivo.editais.models.cronograma import EventoCronograma
@@ -26,6 +30,10 @@ from processo_seletivo.inscricoes.domain.periodo import (
     periodo_de_inscricoes,
 )
 from processo_seletivo.inscricoes.models import Inscricao
+from processo_seletivo.publicacoes.application.selectors import effective_version
+from processo_seletivo.recursos.application import selectors as recursos_selectors
+from processo_seletivo.recursos.models import Recurso
+from processo_seletivo.resultados.models import ResultadoEtapa
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.tempo import ZONA
 
@@ -416,8 +424,361 @@ def pulso(processo, *, agora=None):
     )
 
 
+# ---------------------------------------------------------------------------
+# 7. Atenção — o catálogo fechado dos cinco sinais
+#
+# Cinco perguntas nomeadas, e nenhum mecanismo genérico. Acrescentar uma sexta é revisar a spec, e
+# `tests/unit/interface/test_supervisao.py` é o que torna essa regra cobrável (`D-002`, `FR-024`).
+# ---------------------------------------------------------------------------
+
+UX_001 = "UX-001"
+UX_002 = "UX-002"
+UX_003 = "UX-003"
+UX_004 = "UX-004"
+UX_005 = "UX-005"
+
+ESPECIES = (UX_001, UX_002, UX_003, UX_004, UX_005)
+
+# As três posições determináveis do instante da leitura dentro de um Evento. A quarta —
+# indeterminada — é a ausência de término, e ela não é posição: é a impossibilidade de haver um
+# "depois" (`T-005`).
+ANTES_DO_INICIO = "antes"
+DENTRO_DO_INTERVALO = "dentro"
+DEPOIS_DO_TERMINO = "depois"
+
+# As três combinações coerentes da tabela-verdade de `T-005`. O que **não** está aqui, e não é
+# excluído pelas duas regras acima, diverge — e escrever as coerentes em vez das divergentes é o
+# que impede uma combinação de ficar implícita.
+COERENTES = frozenset(
+    {
+        (EventoCronograma.Status.PLANEJADO, ANTES_DO_INICIO),
+        (EventoCronograma.Status.EM_ANDAMENTO, DENTRO_DO_INTERVALO),
+        (EventoCronograma.Status.CONCLUIDO, DEPOIS_DO_TERMINO),
+    }
+)
+
+# Como cada posição é dita ao lado da declaração, na forma de `UX-002`: *declarado X · prazo …*.
+FRASES_DA_POSICAO = {
+    ANTES_DO_INICIO: "prazo começa em",
+    DENTRO_DO_INTERVALO: "prazo em curso até",
+    DEPOIS_DO_TERMINO: "prazo encerrado em",
+}
+
+
+def rotulo_do_edital(edital):
+    return f"{edital.number}/{edital.year}"
+
+
+def nome_da_etapa(etapa):
+    return etapa.get("name") or str(etapa.get("id") or "")
+
+
+def _dia(instante):
+    return instante.astimezone(ZONA).strftime("%d/%m/%Y") if instante is not None else ""
+
+
+def posicao_temporal(inicio, fim, agora):
+    """Onde o instante da leitura cai dentro do Evento, ou `None` quando não é determinável.
+
+    Sem término declarado só *antes* e *dentro* seriam determináveis, e nenhum dos dois basta
+    sozinho para acusar incoerência: Evento sem término é marco instantâneo, forma normal do dado.
+    Tratar a ausência como divergência encheria o painel de sinal sobre o que é legítimo.
+    """
+    if fim is None:
+        return None
+    if inicio is not None and agora < inicio:
+        return ANTES_DO_INICIO
+    if agora > fim:
+        return DEPOIS_DO_TERMINO
+    return DENTRO_DO_INTERVALO
+
+
+# --- `UX-001` — Etapa sem marco no cronograma -----------------------------------------------
+
+
+def etapas_sem_marco(edital, conteudo):
+    """Etapa que não referencia Evento algum (`FR-026`).
+
+    É publicável e legítimo — a validação recusa referência a Evento **inexistente** e admite a
+    ausência de referência —, e por isso vira sinal e não impeditivo: transformá-lo em erro de
+    publicação mudaria o que o sistema aceita publicar, decisão normativa que não cabe a um painel
+    (`T-006`).
+
+    A ausência é dita nesses termos, e **nunca** como atraso, espera ou progresso zero: a Etapa não
+    tem situação temporal alguma a receber, e atribuir-lhe uma seria inventar o estado que `D-003`
+    recusa criar.
+    """
+    for etapa in etapas_do_conteudo(conteudo):
+        if etapa.get("scheduleEventId"):
+            continue
+        nome = nome_da_etapa(etapa)
+        yield Sinal(
+            especie=UX_001,
+            edital=edital,
+            alvo=nome,
+            mensagem=(
+                f"A Etapa {nome}, do Edital {rotulo_do_edital(edital)}, "
+                f"está sem marco no cronograma."
+            ),
+        )
+
+
+# --- `UX-002` — declarado × posição temporal ------------------------------------------------
+
+
+def divergencias_temporais(edital, conteudo, agora):
+    """Evento cujo estado declarado é incompatível com a posição observável (`FR-027`).
+
+    **As duas informações são apresentadas, e nenhuma é arbitrada** (`FR-023`, `D-004`): a tela não
+    corrige o `status` nem recalcula as datas. Quando os dois discordam, quem discorda é o
+    cronograma, e quem decide é quem preside.
+    """
+    for evento in eventos_do_conteudo(conteudo):
+        declarado = evento.get("status")
+        if declarado == EventoCronograma.Status.CANCELADO or declarado not in DECLARACOES:
+            continue
+        inicio, fim = instantes_do_evento(evento)
+        posicao = posicao_temporal(inicio, fim, agora)
+        if posicao is None or (declarado, posicao) in COERENTES:
+            continue
+        descricao = evento.get("description") or evento.get("type") or ""
+        referencia = inicio if posicao == ANTES_DO_INICIO else fim
+        yield Sinal(
+            especie=UX_002,
+            edital=edital,
+            alvo=descricao,
+            mensagem=(
+                f"{descricao}, do Edital {rotulo_do_edital(edital)}: "
+                f"declarado {DECLARACOES[declarado]} · "
+                f"{FRASES_DA_POSICAO[posicao]} {_dia(referencia)}."
+            ),
+        )
+
+
+# --- `UX-003` — cobertura de avaliação insuficiente -----------------------------------------
+
+
+def cobertura_insuficiente(edital, conteudo):
+    """Etapa com inscrição carente de avaliador, com numerador e denominador (`FR-028`).
+
+    Reusa `resumo_da_etapa` **como está**: uma agregação por Etapa, e não um laço sobre inscrições.
+    A unidade sem nenhum avaliador é carente e permanece no denominador — retirá-la faria a
+    cobertura parecer completa justamente onde ela não começou (`FR-033`).
+    """
+    for etapa in etapas_do_conteudo(conteudo):
+        resumo = resumo_da_etapa(edital=edital, etapa=etapa)
+        if not resumo["carentes"]:
+            continue
+        nome = nome_da_etapa(etapa)
+        yield Sinal(
+            especie=UX_003,
+            edital=edital,
+            alvo=nome,
+            medida=Medida(numerador=resumo["carentes"], denominador=resumo["inscricoes"]),
+            mensagem=(
+                f"A Etapa {nome}, do Edital {rotulo_do_edital(edital)}, "
+                f"tem inscrição sem avaliador suficiente."
+            ),
+        )
+
+
+# --- `UX-004` — ato de ordenação vigente obsoleto -------------------------------------------
+
+
+def versao_vigente_do_edital(edital):
+    """A Versão Consolidada vigente, ou `None` quando o Edital não foi publicado.
+
+    O **conteúdo** vem pelo resolvedor da `011`; a **identidade** da versão vem daqui, porque
+    `UX-004` compara a versão que o ato cita com a que vige e o conteúdo não a carrega. A fonte é a
+    mesma dos dois lados.
+    """
+    try:
+        return effective_version(edital_id=edital.id)
+    except DomainError:
+        return None
+
+
+def marcos_do_conteudo(conteudo):
+    """`[(perfil, marco)]` — os marcos classificatórios que a versão vigente publica."""
+    return [
+        (perfil, marco)
+        for perfil in (conteudo or {}).get("profiles") or []
+        for marco in perfil.get("classificationMilestones") or []
+    ]
+
+
+def candidato_a_obsoleto(edital, ato, marco, versao_vigente):
+    """O filtro barato de `T-003`: as duas causas das quatro divergências que `comparar` produz.
+
+    ```text
+    versão diferente da citada pelo ato   →  regra_ausente, regra_alterada
+    Resultado vigente mais novo que o ato →  participantes_alterados, resultados_alterados
+    ```
+
+    **Conservador por construção, e a assimetria é deliberada**: ele admite candidato que a
+    confirmação descarta, e nunca o contrário. Errar para mais custa uma chamada que devolve falso;
+    errar para menos perde o sinal em silêncio, que é o defeito que ninguém descobre.
+    """
+    if versao_vigente is None or ato.versao_id != versao_vigente.id:
+        return True
+    etapas = [str(item) for item in marco.get("stages") or []]
+    if not etapas:
+        return False
+    return ResultadoEtapa.vigentes.filter(
+        edital=edital, etapa_id__in=etapas, consolidado_em__gt=ato.emitido_em
+    ).exists()
+
+
+def atos_obsoletos(edital, conteudo, versao_vigente):
+    """Ato vigente **confirmado** obsoleto (`FR-029`).
+
+    Duas passagens, e a segunda só onde a primeira acusar. Chamar `estado_do_marco` para todos os
+    marcos de todos os Editais a cada abertura repetiria o erro que a `018` recusou: usar a
+    verificação do ponto como varredura de listagem.
+
+    O sinal nasce da **confirmação**. Parar na primeira passagem exibiria candidato como sinal, e
+    fato posterior não implica divergência — um painel que erra uma vez deixa de ser lido.
+    """
+    for _, marco in marcos_do_conteudo(conteudo):
+        marco_id = marco.get("id")
+        ato = ato_vigente(edital=edital, marco_id=marco_id)
+        if ato is None or not candidato_a_obsoleto(edital, ato, marco, versao_vigente):
+            continue
+        try:
+            estado = estado_do_marco(edital=edital, marco_id=marco_id)
+        except DomainError:
+            # Marco que a norma vigente não conhece e ato que não existe: a leitura recusa, e a
+            # supervisão não inventa sinal a partir de uma recusa.
+            continue
+        if not estado["obsoleto"]:
+            continue
+        nome = (estado["marco"] or {}).get("name") or marco.get("name") or str(marco_id)
+        yield Sinal(
+            especie=UX_004,
+            edital=edital,
+            alvo=nome,
+            mensagem=(
+                f"O ato de ordenação vigente do marco {nome}, do Edital "
+                f"{rotulo_do_edital(edital)}, está obsoleto."
+            ),
+        )
+
+
+# --- `UX-005` — recurso sem membro desimpedido ----------------------------------------------
+
+
+def impedidos_por_recurso(pendentes):
+    """`{recurso_id: {subject}}` — as cinco origens de `T-004`, por álgebra sobre autorias.
+
+    **Sem uma verificação por par.** Iterar o guardião individual sobre `recursos × membros`
+    reintroduziria o custo por linha que a `018` recusou: são cinco perguntas por par, e a pergunta
+    da supervisão não é "este ator pode?", é "existe alguém?" (`FR-031`, `D-008`).
+
+    Duas consultas, e as duas independentes do número de recursos: uma traz as autorias alcançadas
+    pelas peças, outra os impedimentos declarados nas inscrições delas.
+    """
+    if not pendentes:
+        return {}
+    detalhados = Recurso.objects.filter(id__in=[peca.id for peca in pendentes]).select_related(
+        "resultado_atacado",
+        "resultado_atacado__avaliacao",
+        "publicacao_atacada",
+        "publicacao_atacada__ato",
+    )
+    declarados = {}
+    for inscricao_id, subject in Impedimento.objects.filter(
+        inscricao_id__in={peca.inscricao_id for peca in pendentes}
+    ).values_list("inscricao_id", "identity_subject"):
+        declarados.setdefault(inscricao_id, set()).add(subject)
+
+    impedidos = {}
+    for peca in detalhados:
+        conjunto = set()
+        # O alcance é o mesmo que o domínio define para leitura de listagem — o Resultado atacado
+        # quando existe —, e não a cadeia histórica do par.
+        resultado = peca.resultado_atacado
+        if resultado is not None:
+            if resultado.avaliacao_id is not None:
+                conjunto.add(resultado.avaliacao.concluida_por)
+            conjunto.add(resultado.consolidado_por)
+        publicacao = peca.publicacao_atacada
+        if publicacao is not None:
+            conjunto.add(publicacao.ato.emitido_por)
+            conjunto.add(publicacao.publicado_por)
+        conjunto |= declarados.get(peca.inscricao_id, set())
+        impedidos[peca.id] = {subject for subject in conjunto if subject}
+    return impedidos
+
+
+def comissao_impedida(processo, editais):
+    """Recurso aguardando julgamento para o qual nenhum membro ativo está desimpedido (`FR-030`).
+
+    **A mensagem se limita ao que verifica.** Julgar exige também a permissão sistêmica de julgar
+    recurso, e o sistema não sabe quem a possui: os papéis vêm da sessão, e não há registro que
+    ligue identidade a papel. Afirmar que o julgamento é impossível seria afirmar o que os dados
+    não sustentam — alguém de fora da comissão pode detê-la (`FR-030a`, `T-004`).
+    """
+    membros = {membro.identity_subject for membro in comissao_selectors.membros(processo)}
+    if not membros:
+        # Sem comissão ativa não há "comissão inteira impedida": há ausência de comissão, que é
+        # outra condição e não está no catálogo.
+        return
+    for edital in editais:
+        pendentes = [
+            linha["recurso"]
+            for linha in recursos_selectors.recursos_do_edital(
+                edital, situacao=recursos_selectors.AGUARDANDO_JULGAMENTO
+            )
+        ]
+        impedidos = impedidos_por_recurso(pendentes)
+        if not any(not (membros - impedidos.get(peca.id, set())) for peca in pendentes):
+            continue
+        yield Sinal(
+            especie=UX_005,
+            edital=edital,
+            alvo=rotulo_do_edital(edital),
+            mensagem=(
+                f"Há recurso aguardando julgamento no Edital {rotulo_do_edital(edital)} para o "
+                f"qual todos os membros da comissão estão impedidos de julgar."
+            ),
+        )
+
+
+# --- A região inteira ------------------------------------------------------------------------
+
+
+def sinais(processo, ator, *, agora=None):
+    """Os sinais deste Processo, na ordem do catálogo — e nada além deles.
+
+    A ordem é a de `ESPECIES`, e não uma de gravidade: os cinco são igualmente acionáveis, e
+    ordená-los por severidade pediria um juízo que o domínio não determina (`D-002`).
+    """
+    agora = agora or timezone.now()
+    leitura = leitura_dos_editais(processo)
+    publicados = [(edital, conteudo) for edital, conteudo in leitura if conteudo is not None]
+    achados = []
+    for edital, conteudo in publicados:
+        achados += list(etapas_sem_marco(edital, conteudo))
+        achados += list(divergencias_temporais(edital, conteudo, agora))
+        achados += list(cobertura_insuficiente(edital, conteudo))
+        achados += list(atos_obsoletos(edital, conteudo, versao_vigente_do_edital(edital)))
+    achados += list(comissao_impedida(processo, [edital for edital, _ in publicados]))
+    achados.sort(key=lambda sinal: (ESPECIES.index(sinal.especie), sinal.alvo))
+    return tuple(achados)
+
+
 __all__ = [
+    "ANTES_DO_INICIO",
+    "COERENTES",
     "DECLARACOES",
+    "DENTRO_DO_INTERVALO",
+    "DEPOIS_DO_TERMINO",
+    "ESPECIES",
+    "UX_001",
+    "UX_002",
+    "UX_003",
+    "UX_004",
+    "UX_005",
     "Destino",
     "Marco",
     "Medida",
@@ -439,7 +800,9 @@ __all__ = [
     "marcos_do_edital",
     "periodo_do_edital",
     "pode_supervisionar",
+    "posicao_temporal",
     "pulso",
     "serie_do_edital",
+    "sinais",
     "submetidas_nas_ultimas_24h",
 ]

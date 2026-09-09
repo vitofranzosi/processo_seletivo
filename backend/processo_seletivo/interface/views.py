@@ -2283,6 +2283,9 @@ def supervisao(request, processo_id):
         {
             "processo": processo,
             "pulso": supervisao_do_processo.pulso(processo),
+            # Os sinais recebem o ator, e o Pulso não: a supressão por alcance é **por sinal**,
+            # porque é o sinal que tem destino (FR-004, FR-004a).
+            "sinais": supervisao_do_processo.sinais(processo, ator),
         },
     )
 

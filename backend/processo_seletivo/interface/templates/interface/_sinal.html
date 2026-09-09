@@ -1,0 +1,19 @@
+{% comment %}
+A forma **única** dos cinco (UX-006). O que muda entre eles é o conteúdo, não a estrutura — é o que
+mantém o catálogo fechado legível e a região uniforme.
+
+Sem campo de gravidade, e a ausência é decisão (D-002): os cinco são igualmente acionáveis, e
+introduzir severidade pediria uma ordenação que o domínio não determina e que viraria juízo da tela.
+
+A medida é par ou nada (FR-032): ou vêm numerador e denominador, ou não vem medida. Não existe
+percentual solto, e a forma que chega aqui já garante isso — o template não tem como quebrá-lo.
+{% endcomment %}
+<li class="sinal">
+  <p class="mensagem">{{ sinal.mensagem }}</p>
+  {% if sinal.medida %}
+  <p class="medida">{{ sinal.medida.numerador }} de {{ sinal.medida.denominador }}</p>
+  {% endif %}
+  {% if sinal.destino %}
+  <a class="acao" href="{{ sinal.destino.url }}">{{ sinal.destino.rotulo }}</a>
+  {% endif %}
+</li>

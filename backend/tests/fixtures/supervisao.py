@@ -24,8 +24,14 @@ def perfil_de(seed):
     return identificador(401, seed)
 
 
-def evento_do_periodo(seed, *, inicio, fim):
-    """O Evento **marcado** como período de inscrições — a marca, e nunca o texto do tipo."""
+def evento_do_periodo(seed, *, inicio, fim, status=None):
+    """O Evento **marcado** como período de inscrições — a marca, e nunca o texto do tipo.
+
+    `status` viaja porque ele é metade da divergência de `UX-002`: um período em curso declarado
+    `PLANEJADO` produz sinal, e um cenário que não escolhesse o estado o produziria sem querer —
+    poluindo todo teste sobre os outros quatro sinais.
+    """
+    declarado = {} if status is None else {"status": status}
     return {
         "id": identificador(402, seed),
         "type": "INSCRICAO",
@@ -34,6 +40,7 @@ def evento_do_periodo(seed, *, inicio, fim):
         "endAt": None if fim is None else fim.isoformat(),
         "order": 1,
         "isRegistrationPeriod": True,
+        **declarado,
     }
 
 
@@ -55,7 +62,9 @@ def evento_simples(seed, *, base, descricao, inicio, fim=None, ordem=2, status=N
     }
 
 
-def rascunho_com_periodo(seed, *, inicio=None, fim=None, eventos=None, etapas=None):
+def rascunho_com_periodo(
+    seed, *, inicio=None, fim=None, eventos=None, etapas=None, status_do_periodo=None
+):
     """Um Edital publicável com período de inscrições declarado.
 
     `eventos` substitui o cronograma inteiro quando o cenário precisa de mais de um Evento — é
@@ -75,7 +84,8 @@ def rascunho_com_periodo(seed, *, inicio=None, fim=None, eventos=None, etapas=No
                 "competitionModalities": [],
             }
         ],
-        "schedule": eventos or [evento_do_periodo(seed, inicio=inicio, fim=fim)],
+        "schedule": eventos
+        or [evento_do_periodo(seed, inicio=inicio, fim=fim, status=status_do_periodo)],
         "stages": [] if etapas is None else etapas,
     }
 

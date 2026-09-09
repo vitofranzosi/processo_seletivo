@@ -173,3 +173,79 @@ def test_a_ausencia_de_periodo_em_curso_e_declarada(
 
     assert "Nenhum Edital com período de inscrições em curso" in texto(pulso)
     assert "últimas 24 horas" not in texto(pulso)
+
+
+@pytest.fixture
+def processo_limpo(gestor, api_client, manager_headers):
+    """Um Processo em que nenhuma das cinco condições se verifica.
+
+    Ele é montado do zero, e não obtido apagando o que sobra de outro: **nada é excluído** neste
+    sistema, e um teste que apagasse um Edital estaria provando o contrário do que a Constituição
+    garante.
+    """
+    from tests.fixtures.comissao import constituir
+    from tests.fixtures.publicacao import publish_original
+    from tests.fixtures.supervisao import etapa_ligada, rascunho_com_periodo
+
+    edital = publish_original(
+        api_client,
+        {**manager_headers, "HTTP_IDEMPOTENCY_KEY": "supervisao-limpo-0001"},
+        {
+            "institutionalCode": "PS-2026-090",
+            "title": "Processo sem condição de atenção",
+            "firstEdital": {"number": "90", "year": 2026, "title": "Edital limpo"},
+        },
+        draft=rascunho_com_periodo(9, etapas=[etapa_ligada(9)], status_do_periodo="EM_ANDAMENTO"),
+    )
+    constituir(gestor, edital.processo, [("maria", "PRESIDENTE")], prefixo="limpo")
+    return edital.processo
+
+
+def test_sem_nenhuma_condicao_a_atencao_ocupa_uma_linha(client, seletor_ligado, processo_limpo):
+    """`FR-025` e `SC-011`: a região encolhe a uma linha, e não some.
+
+    Sumir não distinguiria *nada a sinalizar* de *a página não carregou*. E não há seção por sinal:
+    cinco cabeçalhos vazios diriam cinco vezes que não há nada.
+    """
+    atencao = regiao(abrir(client, processo_limpo), "atencao-titulo")
+
+    assert "Nenhuma condição de atenção" in texto(atencao)
+    assert "<li" not in atencao
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_mensagem_de_recurso_sem_membro_desimpedido_nao_afirma_impossibilidade(
+    client, seletor_ligado, gestor, api_client, manager_headers, process_payload
+):
+    """`UX-005` e `FR-030a`: a mensagem se limita ao impedimento verificável.
+
+    A titularidade da permissão de julgar não é determinável pelo sistema — os papéis vêm da sessão
+    e nada liga identidade a papel —, e alguém de fora da comissão pode detê-la. Dizer que o
+    julgamento é impossível seria afirmar o que os dados não sustentam.
+    """
+    from django.utils import timezone
+
+    from processo_seletivo.avaliacoes.models import Impedimento
+    from tests.fixtures.recursos_us4 import cenario_julgavel
+
+    peca = cenario_julgavel(
+        gestor, api_client, manager_headers, process_payload, seed=131, codigo="0311"
+    )
+    Impedimento.objects.create(
+        identity_subject="maria",
+        inscricao=peca["inscricao"],
+        motivo="Parentesco declarado.",
+        criado_em=timezone.now(),
+        criado_por="carlos",
+    )
+
+    atencao = texto(
+        regiao(
+            abrir(client, peca["cenario"]["processo"], papeis=["julgador"]),
+            "atencao-titulo",
+        )
+    )
+
+    assert "todos os membros da comissão estão impedidos" in atencao
+    for proibido in ("impossível", "impossivel", "ninguém pode julgar", "não há quem julgue"):
+        assert proibido not in atencao.lower()

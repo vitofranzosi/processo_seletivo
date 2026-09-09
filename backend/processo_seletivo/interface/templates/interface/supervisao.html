@@ -127,5 +127,17 @@ quem navega por marcos salte de uma para a outra sem varrer a página (UX-006).
 
 <section aria-labelledby="atencao-titulo">
   <h2 id="atencao-titulo">Atenção</h2>
+  {% comment %}
+  D-001 e FR-025: sinal ausente não ocupa espaço, e não há seção permanente por sinal. A região
+  encolhe a uma linha, mas não some — sumir não distinguiria "nada a sinalizar" de "a página não
+  carregou".
+  {% endcomment %}
+  {% if sinais %}
+  <ul class="sinais">
+    {% for sinal in sinais %}{% include "interface/_sinal.html" %}{% endfor %}
+  </ul>
+  {% else %}
+  <p class="nenhuma">Nenhuma condição de atenção neste Processo.</p>
+  {% endif %}
 </section>
 {% endblock %}
