@@ -172,8 +172,21 @@ def test_deploy_check_nao_aponta_nada_no_modulo_de_producao():
     resultado = subprocess.run(
         [sys.executable, "manage.py", "check", "--deploy"],
         cwd=pathlib.Path(__file__).resolve().parents[1],
+        # **O ambiente do subprocesso é montado, e não herdado.** `_carregar` usa `clear=True`
+        # justamente para que o cenário seja o declarado aqui; este caminho herdava `os.environ`
+        # inteiro e desfazia a promessa do módulo. Quem copiasse o `.env.example` — que é o que o
+        # README manda — subia com `INTERFACE_SELETOR_IDENTIDADE=true`, e `production.py` recusa
+        # iniciar com ele: o teste reprovava na máquina de quem seguiu a instrução e passava no CI,
+        # onde não existe `.env`. Herdar variável é herdar a configuração de desenvolvimento de
+        # quem roda a suíte, e o defeito volta com a próxima variável nova.
         env={
-            **os.environ,
+            **{
+                chave: os.environ[chave]
+                # O mínimo para que um Python nasça e ache o que precisa: caminho de busca,
+                # diretório da pessoa e localidade. Nada disso é configuração da aplicação.
+                for chave in ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR")
+                if chave in os.environ
+            },
             **AMBIENTE_MINIMO,
             "DJANGO_SETTINGS_MODULE": "config.settings.production",
         },
