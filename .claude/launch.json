@@ -216,6 +216,46 @@
         "127.0.0.1:8031"
       ],
       "port": 8031
+    },
+    {
+      "name": "spec-021",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DB_USER=saymoncastro",
+        "DB_NAME=ps021_demo",
+        "LC_ALL=en_US.UTF-8",
+        "DJANGO_SETTINGS_MODULE=config.settings.development",
+        "DEFAULT_FROM_EMAIL=nao-responda@exemplo.test",
+        "PORTAL_ATENDIMENTO=selecao@cefor.ifes.edu.br",
+        "ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos-021",
+        "INTERFACE_SELETOR_IDENTIDADE=true",
+        "DJANGO_EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend",
+        "EMAIL_HOST=localhost",
+        "EMAIL_PORT=1025",
+        "EMAIL_USE_TLS=false",
+        "DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1",
+        "uv",
+        "run",
+        "--directory",
+        "backend",
+        "python",
+        "manage.py",
+        "runserver",
+        "127.0.0.1:8023"
+      ],
+      "port": 8023
+    },
+    {
+      "name": "mailpit",
+      "runtimeExecutable": "mailpit",
+      "runtimeArgs": [
+        "--smtp",
+        "127.0.0.1:1025",
+        "--listen",
+        "127.0.0.1:8025"
+      ],
+      "port": 8025,
+      "url": "http://localhost:8025"
     }
   ]
 }

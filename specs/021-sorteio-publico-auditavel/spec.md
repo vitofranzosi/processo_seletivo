@@ -53,7 +53,7 @@ entidade "lote de sorteio": a relação publicada já ocupa esse lugar.
 - **O contrato de reprodução** (`classificacao/application/reproducao.py`), e a frase que esta spec
   herda: *"A posição gravada nunca é usada como entrada do motor"*. O **mecanismo**, não: a
   implementação atual lê `stageResults` e não entende sorteio.
-- **Idempotência por chave** (`emissao.py`), com a ressalva da D-3 desta spec.
+- **Idempotência por chave** (`emissao.py`), com a ressalva da D-010 desta spec.
 - **Publicação de ordem e natureza preliminar/final** (`divulgacao`).
 - **Portal público e consulta temporal**: o verificador é uma tela a mais, não um sistema à parte.
 - **Retificação por identidade** (`004`): `/schedule/id=…/location` já é alcançável sem gramática
