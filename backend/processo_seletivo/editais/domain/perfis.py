@@ -148,6 +148,67 @@ def validate_classification_milestones(milestones: list[dict]) -> None:
                     "que ele consome não existe."
                 )
         _validar_janela_recursal(marco.get("appealWindow"))
+        _validar_metodo_de_sorteio(marco.get("drawMethod"))
+
+
+CAMPOS_DO_METODO = (
+    ("algorithm", "o algoritmo e a sua versão"),
+    ("source", "a fonte pública externa da semente"),
+    ("occurrence", "a ocorrência que fixará a semente"),
+    ("derivation", "como a ocorrência decorre da data programada"),
+    ("normalization", "como o material bruto vira semente"),
+    ("substitutionRule", "o que vale se a ocorrência faltar, atrasar, bifurcar ou vier inválida"),
+)
+
+
+def _validar_metodo_de_sorteio(metodo) -> None:
+    """O método declarado vale inteiro, ou não é declarado (021, FR-013, FR-015).
+
+    **A ausência é válida e significa alguma coisa**: marco que não sorteia não declara método, e a
+    maioria não sorteia. O que se recusa é a declaração pela metade — um método sem regra de
+    substituição prometeria conduta mecânica numa hipótese que ninguém escreveu, e no dia da
+    indisponibilidade a escolha voltaria para a mesa, que é exatamente o que a FR-015 proíbe.
+
+    **A regra de normalização e a de substituição são pares**: o identificador, que a máquina
+    aplica e o terceiro reimplementa, e a frase, que é o que a pessoa lê. Prosa sozinha não atende
+    à FR-015 nem à FR-027 — ninguém executa uma frase, e duas pessoas lendo "os dígitos sorteados"
+    produzem seis grafias da mesma semente.
+    """
+    if metodo is None:
+        return
+    if not isinstance(metodo, dict):
+        raise ProfileValidationError(
+            "O método do sorteio deve ser declarado como um objeto, ou não ser declarado."
+        )
+    for campo, o_que_e in CAMPOS_DO_METODO:
+        if not metodo.get(campo):
+            raise ProfileValidationError(
+                f"O método do sorteio não declara {o_que_e} (`{campo}`). Um método declarado pela "
+                "metade devolve ao dia do sorteio a escolha que ele existe para eliminar."
+            )
+    for campo in ("normalization", "substitutionRule"):
+        regra = metodo.get(campo)
+        if not isinstance(regra, dict) or not regra.get("rule") or not regra.get("text"):
+            raise ProfileValidationError(
+                f"`{campo}` deve declarar `rule` — o identificador que a máquina aplica e o "
+                "terceiro reimplementa — e `text`, a frase publicada que a pessoa lê."
+            )
+    _validar_regra_publicada(metodo["normalization"]["rule"])
+
+
+def _validar_regra_publicada(regra) -> None:
+    """Regra de normalização fora do vocabulário publicado é recusada na elaboração.
+
+    Recusar aqui é o que impede o Edital de publicar uma regra que ninguém executa: o defeito
+    apareceria no dia do sorteio, ao vivo, e não no dia em que alguém a escreveu.
+    """
+    from processo_seletivo.sorteios.domain.normalizacao import REGRAS
+
+    if regra not in REGRAS:
+        raise ProfileValidationError(
+            f"Regra de normalização não publicada por este sistema: {regra!r}. "
+            f"As publicadas são: {', '.join(sorted(REGRAS))}."
+        )
 
 
 def _validar_janela_recursal(janela) -> None:

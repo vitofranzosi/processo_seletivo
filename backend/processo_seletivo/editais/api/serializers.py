@@ -83,6 +83,10 @@ class ClassificationMilestoneSerializer(serializers.Serializer):
     # Sem este campo o contrato de entrada não sabia dizer o prazo, e o Edital publicava
     # `appealWindow: null` mesmo quando a instituição o havia declarado (E2E18-005).
     appealWindow = serializers.JSONField(required=False, allow_null=True)
+    # O método do sorteio, pela mesma razão e na mesma forma da janela: objeto declarado pela
+    # norma, e `allow_null` porque não declarar é resposta legítima — a maioria dos marcos não
+    # sorteia (021, FR-013, D-013).
+    drawMethod = serializers.JSONField(required=False, allow_null=True)
     tiebreakers = TiebreakerSerializer(many=True, required=False)
 
 

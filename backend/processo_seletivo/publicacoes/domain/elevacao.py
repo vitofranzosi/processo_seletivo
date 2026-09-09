@@ -89,8 +89,17 @@ COLECAO_DE_DOCUMENTOS_ENDERECADA = f"/{COLECAO_DE_DOCUMENTOS}"
 # todo Edital publicado antes deste degrau, e é uma afirmação, não uma omissão a corrigir: sem
 # declaração o sistema não inventa prazo, e a tempestividade volta a ser juízo de admissibilidade
 # motivado, que é a degradação que a D-004 declarou (FR-028, FR-029).
+# **O degrau 10 é o segundo dentro do marco**, e a razão é a mesma do 8: o que o marco declara é
+# dele, e não do Edital — marcos diferentes ordenam por regras diferentes, e só um deles sorteia.
+#
+# `None` significa **método não declarado**, e não método padrão. É o que todo Edital publicado
+# antes deste degrau afirma, e é verdade sobre todos eles: a capacidade não existia, e nenhum deles
+# declarou fonte, ocorrência ou regra de normalização. Há, portanto, conversão sem invenção — e o
+# sistema recusa congelar relação em marco sem método, em vez de escolher um por conta própria
+# (021, FR-066, D-013).
 DEGRAUS_DE_MARCO = {
     8: {"appealWindow": None},
+    10: {"drawMethod": None},
 }
 
 COLECAO_DE_MARCOS = "classificationMilestones"

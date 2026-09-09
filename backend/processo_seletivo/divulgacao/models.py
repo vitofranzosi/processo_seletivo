@@ -47,6 +47,13 @@ class PublicacaoResultado(models.Model):
     # acrescentar e remover itens sem criar ou apagar a linha correspondente no rascunho.
     perfil_id = models.UUIDField()
     marco_id = models.UUIDField()
+    # A dimensão da lista de concorrência (021, D-015, FR-068). `NULL` = ampla concorrência, que é
+    # o que toda publicação feita antes desta feature é.
+    #
+    # **A D-006 parou no ato, e a dimensão não parava ali.** Três atos raiz num marco exigem três
+    # publicações; sem esta coluna a segunda lista batia em `uq_publicacao_raiz_por_marco` e o
+    # certame com cotas sorteava sem conseguir divulgar.
+    lista_id = models.UUIDField(null=True, blank=True)
     natureza = models.CharField(max_length=20, choices=Natureza.choices)
     publicacao_anterior = models.ForeignKey(
         "self",
@@ -79,10 +86,18 @@ class PublicacaoResultado(models.Model):
 
     class Meta:
         constraints = [
+            # **Duas parciais, pela cirurgia idêntica à do `AtoDeOrdenacao`.** A primeira mantém o
+            # nome e a garantia de hoje para a publicação sem lista — e toda publicação existente
+            # tem `lista_id NULL`, portanto continua sob exatamente a constraint que já a governava.
             models.UniqueConstraint(
                 fields=["edital", "perfil_id", "marco_id"],
-                condition=Q(publicacao_anterior__isnull=True),
+                condition=Q(publicacao_anterior__isnull=True, lista_id__isnull=True),
                 name="uq_publicacao_raiz_por_marco",
+            ),
+            models.UniqueConstraint(
+                fields=["edital", "perfil_id", "marco_id", "lista_id"],
+                condition=Q(publicacao_anterior__isnull=True, lista_id__isnull=False),
+                name="uq_publicacao_raiz_por_marco_e_lista",
             ),
             models.UniqueConstraint(
                 fields=["publicacao_anterior"],
@@ -90,7 +105,11 @@ class PublicacaoResultado(models.Model):
                 name="uq_publicacao_sucessora_unica",
             ),
             # A resposta a "o mesmo ato pode ser publicado duas vezes?": pode, **uma vez por
-            # natureza** (D-007, FR-039). Um preliminar que ninguém contestou vira definitivo sem
+            # natureza** (D-007, FR-039). Não muda com a dimensão da lista, e não precisa mudar:
+            # três listas são três atos distintos, e a duplicidade que esta constraint recusa
+            # continua sendo a mesma (021, D-015).
+            #
+            # Um preliminar que ninguém contestou vira definitivo sem
             # que exista ato novo a emitir; a mesma natureza duas vezes é duplicidade, e o banco a
             # recusa — o que dá ao cenário das duas abas uma garantia de banco, e não só de
             # idempotência.

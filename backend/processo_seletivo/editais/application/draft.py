@@ -285,6 +285,7 @@ def replace_draft(
                     # `{}` quando o marco não declara janela — a ausência é a afirmação, e não uma
                     # omissão a corrigir depois (018, FR-020, FR-028).
                     janela_recursal=marco_payload.get("appealWindow") or {},
+                    metodo_de_sorteio=marco_payload.get("drawMethod") or {},
                 )
                 for criterio_payload in marco_payload.get("tiebreakers", []):
                     CriterioDesempate.objects.create(

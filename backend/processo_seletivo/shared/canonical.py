@@ -81,7 +81,19 @@ from uuid import UUID
 # e as duas frases são verdadeiras sobre todo Edital publicado antes deste degrau. Não elevar
 # tornaria o acervo inteiro irretificável, que é o preço que o degrau 3→4 aceitou pagar quando
 # converter teria inventado norma — não é o caso aqui (020, R-004).
-SCHEMA_VERSION = 9
+# **10 com a 021**: o método do sorteio declarado pelo marco de classificação (`drawMethod`). A
+# ausência dele significa **método não declarado** — e não um método padrão que o sistema
+# escolhesse —, e isso é verdadeiro sobre todo Edital publicado antes deste degrau: a capacidade
+# não existia, e nenhum deles declarou fonte, ocorrência, derivação ou regra de normalização.
+# Conversão sem invenção, portanto, e o degrau entra na mesma cadeia dos anteriores.
+#
+# **Por que este é o degrau menor da leva, e o local do Evento é o 11.** A `021` traz duas mudanças
+# de forma que não têm nada em comum além do calendário: o método, que é P1 e sem o qual a relação
+# não tem o que citar ao congelar, e o local do Evento do Cronograma, que é P3 e declaradamente
+# independente das demais histórias. Numerar o método antes é o que mantém a árvore de degraus
+# contígua em qualquer estado entregável do incremento — o contrário deixaria um 11 publicado com o
+# 10 por escrever (021, D-013).
+SCHEMA_VERSION = 10
 
 
 def _default(value):

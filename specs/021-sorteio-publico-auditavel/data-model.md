@@ -183,10 +183,24 @@ A primeira mantém, **palavra por palavra**, a garantia de hoje para o ato sem l
 
 **`universo` num ato constituído por sorteio.** É `JSONField` com `default=dict`, e é o campo que
 `comparar()` consome para decidir obsolescência. Um ato de sorteio grava ali a proveniência que o
-originou — `{"origem": "SORTEIO", "sorteioId": …, "relacaoId": …, "relationHash": …, "quantidade": N}`
-—, e **nunca** um resumo de Etapas, que não existiu. Deixá-lo `{}` faria o ato passar pela leitura
-sem denunciar nada e quebrar na comparação; enchê-lo com forma de ato computado seria mentir sobre a
-origem. É esta chave `origem` que a FR-069 usa para despachar.
+originou, e **nunca** um resumo de Etapas, que não existiu:
+
+```json
+{"editalId": "…", "profileId": "…", "milestoneId": "…", "versionId": "…",
+ "stageResults": [],
+ "origem": "SORTEIO", "sorteioId": "…", "relacaoId": "…", "relationHash": "…", "quantidade": 237}
+```
+
+**As cinco primeiras chaves não são escolha de desenho.** A trigger `check_ordering_act_provenance`,
+que a `015` instalou e a `018` estendeu, exige que `editalId`, `profileId`, `milestoneId` e
+`versionId` coincidam com as colunas do ato, que o marco exista na versão citada, e confere cada
+item de `stageResults` contra a linha append-only do Resultado. Um sorteio não tem Resultado de
+Etapa a citar, e `[]` é a resposta verdadeira — a trigger já lê a coleção com `COALESCE`, e a
+aceita. **Descoberto na implementação**: a redação anterior desta seção listava só a proveniência do
+sorteio, e um ato assim nem chega a ser gravado.
+
+Deixá-lo `{}` também não passa pela trigger; enchê-lo com forma de ato computado seria mentir sobre
+a origem. É a chave `origem` que a FR-069 usa para despachar.
 
 ### `classificacao.PosicaoNaOrdem` — o que cada campo recebe num ato de sorteio
 

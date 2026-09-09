@@ -206,10 +206,49 @@ def _marcos(dados, prefixo):
                 # ausência é a afirmação certa: sem prazo publicado, ninguém inventa prazo
                 # (FR-020, FR-028, FR-030).
                 "appealWindow": _janela_recursal(dados, base),
+                # O método do sorteio, **ausente quando o marco não sorteia** — que é a maioria
+                # deles. A ausência é a afirmação certa: sem método publicado, o sistema não
+                # escolhe um (021, FR-013, FR-066).
+                "drawMethod": _metodo_de_sorteio(dados, base),
                 "tiebreakers": criterios,
             }
         )
     return marcos
+
+
+# Os seis campos do método, na ordem em que a tela os pede. `normalization` e `substitutionRule`
+# são pares `{rule, text}` — o identificador que a máquina aplica e a frase que a pessoa lê —, e é
+# por isso que eles não estão nesta tupla simples (021, FR-013).
+CAMPOS_SIMPLES_DO_METODO = ("algorithm", "source", "occurrence", "derivation")
+
+
+def _metodo_de_sorteio(dados, base):
+    """`{...}` quando o marco declara o método do sorteio; `None` quando não declara.
+
+    **Nada de meio-declarado sai daqui.** Se a pessoa não preencheu nada, o método é ausente e a
+    ausência viaja como ausência. Se preencheu alguma coisa, o objeto viaja inteiro e a validação
+    do Perfil é que recusa a metade, nomeando o que falta — o formulário devolveria silêncio, e
+    silêncio sobre método é o que faz a escolha voltar para a mesa no dia do sorteio (FR-015).
+    """
+    valores = {campo: _texto(dados, f"{base}-draw-{campo}") for campo in CAMPOS_SIMPLES_DO_METODO}
+    regra_normalizacao = _texto(dados, f"{base}-draw-normalizationRule")
+    texto_normalizacao = _texto(dados, f"{base}-draw-normalizationText")
+    regra_substituicao = _texto(dados, f"{base}-draw-substitutionRule")
+    texto_substituicao = _texto(dados, f"{base}-draw-substitutionText")
+    preenchidos = [
+        *valores.values(),
+        regra_normalizacao,
+        texto_normalizacao,
+        regra_substituicao,
+        texto_substituicao,
+    ]
+    if not any(preenchidos):
+        return None
+    return {
+        **valores,
+        "normalization": {"rule": regra_normalizacao, "text": texto_normalizacao},
+        "substitutionRule": {"rule": regra_substituicao, "text": texto_substituicao},
+    }
 
 
 # As três escolhas da janela recursal, como viajam no formulário. Nomes em português porque é o
@@ -248,6 +287,28 @@ def _janela_recursal(dados, base):
 
 def _unidade(dados, base):
     return _texto(dados, f"{base}-appealUnit") or "DIAS_CORRIDOS"
+
+
+def _metodo_para_exibicao(metodo):
+    """Os seis campos do método de volta para a tela, achatados no prefixo `draw`.
+
+    Achatados porque o formulário é plano: `{rule, text}` viraria dois campos de qualquer forma, e
+    montá-los aqui é o que mantém o template sem lógica. Vazio quando não há método, e vazio é o
+    que a tela desenha — nada de rótulo institucional por padrão.
+    """
+    declarado = metodo or {}
+    normalizacao = declarado.get("normalization") or {}
+    substituicao = declarado.get("substitutionRule") or {}
+    return {
+        "drawAlgorithm": declarado.get("algorithm") or "",
+        "drawSource": declarado.get("source") or "",
+        "drawOccurrence": declarado.get("occurrence") or "",
+        "drawDerivation": declarado.get("derivation") or "",
+        "drawNormalizationRule": normalizacao.get("rule") or "",
+        "drawNormalizationText": normalizacao.get("text") or "",
+        "drawSubstitutionRule": substituicao.get("rule") or "",
+        "drawSubstitutionText": substituicao.get("text") or "",
+    }
 
 
 def _declaracao_do_marco(janela):
@@ -589,6 +650,7 @@ def _marco_para_o_formulario(marco):
         "appealDeclaration": _declaracao_do_marco(marco.janela_recursal),
         "appealDurationDays": (marco.janela_recursal or {}).get("durationDays") or "",
         "appealUnit": (marco.janela_recursal or {}).get("unit") or "DIAS_CORRIDOS",
+        **_metodo_para_exibicao(marco.metodo_de_sorteio),
         "criterios": [
             {
                 "id": str(criterio.id),
@@ -622,6 +684,11 @@ def _marco_persistido(marco):
         # e todo recurso nascia sem prazo computável (E2E18-005).
         # `or None` como em `publish_edital`: `{}` é a ausência, e a ausência viaja como ausência.
         "appealWindow": marco.janela_recursal or None,
+        # **E o método pelo mesmo motivo, no mesmo lugar.** São dois caminhos de perda, e fechar só
+        # um deixa o defeito vivo: sem esta linha, declarar o método no passo Classificação e
+        # gravar qualquer passo seguinte publicaria um Edital que não declara método nenhum — e o
+        # congelamento da relação seria recusado sem que ninguém entendesse por quê.
+        "drawMethod": marco.metodo_de_sorteio or None,
         "tiebreakers": [
             {
                 "id": str(criterio.id),

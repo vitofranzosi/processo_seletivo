@@ -24,7 +24,7 @@ código da recusa sem repetir aqui a regra que vive aqui.
 
 from dataclasses import dataclass, field
 
-from processo_seletivo.classificacao.application.selectors import estado_do_marco
+from processo_seletivo.classificacao.application.selectors import ORIGEM_SORTEIO, estado_do_marco
 
 INFORMACAO, AVISO, IMPEDIMENTO = "informacao", "aviso", "impedimento"
 
@@ -205,7 +205,7 @@ def reingressos_pendentes(*, edital, marco, at=None):
     return pendentes
 
 
-def aferir(*, edital, marco_id, ato, sucede=None, at=None, natureza=""):
+def aferir(*, edital, marco_id, ato, sucede=None, at=None, natureza="", lista_id=None):
     """Afere a publicabilidade de `ato` contra o estado atual do marco.
 
     **`natureza` é a pretendida, e sem ela a verificação não distingue o que impede a definitiva do
@@ -229,12 +229,17 @@ def aferir(*, edital, marco_id, ato, sucede=None, at=None, natureza=""):
     Quem chama sem `sucede` — o comando, que precisa saber apenas se recusa — recebe `informacao`
     no lugar de `aviso`, e a decisão dele é a mesma nos dois casos.
     """
-    estado = estado_do_marco(edital=edital, marco_id=marco_id, at=at)
+    estado = estado_do_marco(edital=edital, marco_id=marco_id, at=at, lista_id=lista_id)
+    # **Ato de sorteio não se afere recomputando** (021, FR-069, R-014). Ele também não é
+    # recomputável, e pela razão oposta: não falta regra, falta cabimento — recalcular por Etapas
+    # produziria uma ordem que não é a dele. A obsolescência dele já veio decidida no estado, pela
+    # sucessão da relação que o originou, e é ela que os degraus abaixo consomem.
+    sorteado = estado.get("origem") == ORIGEM_SORTEIO
 
     # **Primeiro o marco removido.** Sem regra vigente não há com que comparar, e as outras duas
     # perguntas não se colocam: `estado_do_marco` devolve `recomputavel=False` e uma divergência
     # de `regra_ausente` justamente para dizer isso.
-    if not estado["recomputavel"]:
+    if not sorteado and not estado["recomputavel"]:
         return Afericao(
             IMPEDIMENTO,
             MARCO_REMOVIDO,
@@ -257,7 +262,12 @@ def aferir(*, edital, marco_id, ato, sucede=None, at=None, natureza=""):
             ADMITE_SUCESSOR[SUCEDIDO],
         )
 
-    pendentes = reingressos_pendentes(edital=edital, marco=estado.get("marco"), at=at)
+    # O reingresso pendente é pergunta sobre **Etapas**: falta Resultado na Etapa seguinte para
+    # quem um recurso reabilitou. Num marco sorteado ela é categoria errada — a ordem não vem de
+    # Etapa —, e a mudança de universo que importa ali já aparece como relação sucedida.
+    pendentes = (
+        {} if sorteado else reingressos_pendentes(edital=edital, marco=estado.get("marco"), at=at)
+    )
     if pendentes:
         # **Antes da obsolescência**, e de propósito: quem lê precisa saber que o trabalho está na
         # Etapa, e não em emitir outro ato. Emitir sucessor aqui produziria o mesmo ato incompleto.

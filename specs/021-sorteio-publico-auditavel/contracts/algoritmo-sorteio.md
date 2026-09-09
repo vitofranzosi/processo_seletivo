@@ -81,6 +81,11 @@ Vetor de chave:
 }
 ```
 
+Campos opcionais de um vetor de chave: `note`, prosa explicando o que ele detecta, e `contrast`,
+um segundo `{input, canonicalBytes, keys, expectedOrder}` cuja ordem o teste afirma ser **diferente**
+da principal — é o que o `mesma-semente-recortes-distintos` precisa para provar o que promete, já
+que a propriedade é uma relação entre dois cálculos e não um cálculo só.
+
 Vetor de ordenação:
 
 ```json

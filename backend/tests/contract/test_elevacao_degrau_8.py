@@ -66,7 +66,12 @@ def conteudo_na_versao(versao):
 def test_o_degrau_8_existe_e_grafa_a_ausencia_como_nula():
     # A afirmação "8 é a versão vigente" mudou de casa quando o degrau 9 nasceu: ela é do degrau
     # mais novo, e este arquivo responde pelo significado do 8, que não muda mais.
-    assert DEGRAUS_DE_MARCO == {8: {"appealWindow": None}}
+    #
+    # **E a afirmação sobre o dicionário inteiro teve de virar afirmação sobre a entrada.** O
+    # degrau 10 da `021` pôs o `drawMethod` no mesmo `DEGRAUS_DE_MARCO`, e um teste que cobrasse o
+    # dicionário fechado faria cada degrau novo do marco reprovar o anterior — que é a mesma
+    # armadilha que a linha de cima já havia desarmado uma vez.
+    assert DEGRAUS_DE_MARCO[8] == {"appealWindow": None}
     assert SCHEMA_VERSION >= 8
 
 

@@ -33,10 +33,10 @@ Monólito modular: `backend/processo_seletivo/<módulo>/` para código,
 
 **Purpose**: o esqueleto do módulo, e nada de regra dentro dele.
 
-- [ ] T001 Criar o módulo em `backend/processo_seletivo/sorteios/` com `__init__.py`, `apps.py`, `models.py` e os pacotes `domain/`, `application/`, `api/`, `infrastructure/`, `migrations/`, no padrão dos módulos existentes
-- [ ] T002 Registrar `processo_seletivo.sorteios` em `INSTALLED_APPS` de `backend/config/settings/base.py`
-- [ ] T003 [P] Criar as pastas de teste `backend/tests/unit/sorteios/`, `backend/tests/integration/sorteios/` e `backend/tests/contract/fixtures/sorteio/`
-- [ ] T004 [P] Declarar em `backend/config/settings/base.py` apenas o **adaptador** da fonte externa (qual implementação, tempo limite, tentativas), com comentário dizendo que fonte, ocorrência e regra de substituição são conteúdo normativo e não moram aqui (FR-014)
+- [X] T001 Criar o módulo em `backend/processo_seletivo/sorteios/` com `__init__.py`, `apps.py`, `models.py` e os pacotes `domain/`, `application/`, `api/`, `infrastructure/`, `migrations/`, no padrão dos módulos existentes
+- [X] T002 Registrar `processo_seletivo.sorteios` em `INSTALLED_APPS` de `backend/config/settings/base.py`
+- [X] T003 [P] Criar as pastas de teste `backend/tests/unit/sorteios/`, `backend/tests/integration/sorteios/` e `backend/tests/contract/fixtures/sorteio/`
+- [X] T004 [P] Declarar em `backend/config/settings/base.py` apenas o **adaptador** da fonte externa (qual implementação, tempo limite, tentativas), com comentário dizendo que fonte, ocorrência e regra de substituição são conteúdo normativo e não moram aqui (FR-014)
 
 ---
 
@@ -47,28 +47,28 @@ chave, os vetores, os modelos e a constraint dividida.
 
 ### O algoritmo, antes de qualquer tela
 
-- [ ] T005 Implementar `backend/processo_seletivo/sorteios/domain/chave.py` — chave por participante sobre `canonical_bytes`, ordenação crescente pelo resumo completo e desempate por número público (FR-021, FR-022, FR-023, D-005); função pura, sem Django
-- [ ] T006 [P] Escrever os cinco vetores normativos em `backend/tests/contract/fixtures/sorteio/`, nas **duas formas** do contrato — de chave: `tres-participantes`, `acentos-e-nfc`, `um-participante`, `mesma-semente-recortes-distintos`; de ordenação: `desempate-por-numero-publico`, com as chaves dadas já iguais. O vetor de desempate **não** se apresenta como colisão de SHA-256: entrada válida do sistema não produz duas chaves iguais, e prometer isso deixaria a tarefa impossível de fechar (FR-028, R-004)
-- [ ] T073 Escrever `backend/tests/unit/sorteios/test_chave_fechada.py` — a chave recebe **apenas** os cinco campos do contrato, e nenhum valor escolhido por ator depois do congelamento a alcança: a tentativa de injetar campo extra falha, e alterar qualquer entrada muda o resumo (FR-024)
-- [ ] T007 Escrever `backend/tests/contract/test_vetores_de_sorteio.py`, que exercita as duas formas contra `domain/chave.py` — a de chave cobrando bytes canônicos, resumo e ordem; a de ordenação cobrando só a ordem, a partir das chaves dadas — e falha se qualquer uma divergir (FR-027, FR-028)
-- [ ] T008 [P] Implementar a referência em JavaScript em `backend/processo_seletivo/portal/static/portal/sorteio.js`, sem dependência externa, lendo os mesmos vetores (SC-002)
-- [ ] T009 [P] Escrever `backend/tests/javascript/sorteio.test.js`, que roda os vetores pela referência JS; afirmar sobre o resultado, **nunca** sobre o texto do relatório do runner
-- [ ] T010 [P] Implementar `backend/processo_seletivo/sorteios/domain/normalizacao.py` — material bruto da fonte → semente normalizada, pela regra publicada (FR-013)
+- [X] T005 Implementar `backend/processo_seletivo/sorteios/domain/chave.py` — chave por participante sobre `canonical_bytes`, ordenação crescente pelo resumo completo e desempate por número público (FR-021, FR-022, FR-023, D-005); função pura, sem Django
+- [X] T006 [P] Escrever os cinco vetores normativos em `backend/tests/contract/fixtures/sorteio/`, nas **duas formas** do contrato — de chave: `tres-participantes`, `acentos-e-nfc`, `um-participante`, `mesma-semente-recortes-distintos`; de ordenação: `desempate-por-numero-publico`, com as chaves dadas já iguais. O vetor de desempate **não** se apresenta como colisão de SHA-256: entrada válida do sistema não produz duas chaves iguais, e prometer isso deixaria a tarefa impossível de fechar (FR-028, R-004)
+- [X] T073 Escrever `backend/tests/unit/sorteios/test_chave_fechada.py` — a chave recebe **apenas** os cinco campos do contrato, e nenhum valor escolhido por ator depois do congelamento a alcança: a tentativa de injetar campo extra falha, e alterar qualquer entrada muda o resumo (FR-024)
+- [X] T007 Escrever `backend/tests/contract/test_vetores_de_sorteio.py`, que exercita as duas formas contra `domain/chave.py` — a de chave cobrando bytes canônicos, resumo e ordem; a de ordenação cobrando só a ordem, a partir das chaves dadas — e falha se qualquer uma divergir (FR-027, FR-028)
+- [X] T008 [P] Implementar a referência em JavaScript em `backend/processo_seletivo/portal/static/portal/sorteio.js`, sem dependência externa, lendo os mesmos vetores (SC-002)
+- [X] T009 [P] Escrever `backend/tests/javascript/sorteio.test.js`, que roda os vetores pela referência JS; afirmar sobre o resultado, **nunca** sobre o texto do relatório do runner
+- [X] T010 [P] Implementar `backend/processo_seletivo/sorteios/domain/normalizacao.py` — material bruto da fonte → semente normalizada, pela regra publicada (FR-013)
 
 ### Persistência
 
-- [ ] T011 Escrever os modelos em `backend/processo_seletivo/sorteios/models.py` — `RelacaoDeHabilitados` (com `marco_id` e `metodo_hash`), `ParticipanteHabilitado`, `OcorrenciaDaFonte` (sem semente normalizada) e `Sorteio` (com `metodo_hash` e `semente_normalizada`, e **sem** FK de método) —, append-only por `save`/`delete`, conforme `data-model.md`. São **quatro**: o método não é entidade, é conteúdo do Edital (D-013, D-016)
-- [ ] T012 Gerar a migration inicial de `sorteios` com todas as constraints do `data-model.md`, inclusive `ck_relacao_nao_vazia` (FR-009), `uq_numero_por_relacao` (FR-003), `uq_ocorrencia_por_fonte`, `uq_sorteio_raiz` em `(relacao, ocorrencia)` (FR-031) e as **duas** constraints parciais de relação raiz — `uq_relacao_raiz_por_marco` e `uq_relacao_raiz_por_marco_e_lista` (FR-070, D-014)
-- [ ] T078 [P] Escrever `backend/tests/integration/sorteios/test_relacao_raiz_unica.py` — duas relações raiz de ampla concorrência no mesmo recorte são recusadas **pelo banco**, três de listas distintas são aceitas, e a cadeia de sucessão continua admitindo quantas sucessões o certame precisar (FR-070)
-- [ ] T013 Acrescentar as tabelas novas às triggers de imutabilidade e à política de privilégios em `backend/processo_seletivo/seguranca/papeis.py`, com migration própria (FR-007)
-- [ ] T014 Estender `backend/tests/integration/test_database_permissions.py` para provar que a role de runtime não recebe `UPDATE` nem `DELETE` nas tabelas novas
+- [X] T011 Escrever os modelos em `backend/processo_seletivo/sorteios/models.py` — `RelacaoDeHabilitados` (com `marco_id` e `metodo_hash`), `ParticipanteHabilitado`, `OcorrenciaDaFonte` (sem semente normalizada) e `Sorteio` (com `metodo_hash` e `semente_normalizada`, e **sem** FK de método) —, append-only por `save`/`delete`, conforme `data-model.md`. São **quatro**: o método não é entidade, é conteúdo do Edital (D-013, D-016)
+- [X] T012 Gerar a migration inicial de `sorteios` com todas as constraints do `data-model.md`, inclusive `ck_relacao_nao_vazia` (FR-009), `uq_numero_por_relacao` (FR-003), `uq_ocorrencia_por_fonte`, `uq_sorteio_raiz` em `(relacao, ocorrencia)` (FR-031) e as **duas** constraints parciais de relação raiz — `uq_relacao_raiz_por_marco` e `uq_relacao_raiz_por_marco_e_lista` (FR-070, D-014)
+- [X] T078 [P] Escrever `backend/tests/integration/sorteios/test_relacao_raiz_unica.py` — duas relações raiz de ampla concorrência no mesmo recorte são recusadas **pelo banco**, três de listas distintas são aceitas, e a cadeia de sucessão continua admitindo quantas sucessões o certame precisar (FR-070)
+- [X] T013 Acrescentar as tabelas novas às triggers de imutabilidade e à política de privilégios em `backend/processo_seletivo/seguranca/papeis.py`, com migration própria (FR-007)
+- [X] T014 Estender `backend/tests/integration/test_database_permissions.py` para provar que a role de runtime não recebe `UPDATE` nem `DELETE` nas tabelas novas
 
 ### A constraint que muda
 
-- [ ] T015 Acrescentar `origem` (default `COMPUTADO`) e `lista_id` a `AtoDeOrdenacao` em `backend/processo_seletivo/classificacao/models.py`, e substituir `uq_ato_raiz_por_marco` pelas **duas** constraints parciais do `data-model.md` (D-006, FR-034, FR-035, FR-036)
-- [ ] T016 Gerar a migration correspondente em `backend/processo_seletivo/classificacao/migrations/`
-- [ ] T079 Declarar, em `backend/processo_seletivo/classificacao/models.py`, o que `universo` recebe num ato de sorteio — `{"origem": "SORTEIO", "sorteioId", "relacaoId", "relationHash", "quantidade"}` —, com a razão escrita: `{}` passaria pela leitura sem denunciar nada e quebraria na comparação, e a forma de ato computado mentiria sobre a origem (FR-069)
-- [ ] T017 Escrever `backend/tests/integration/classificacao/test_ato_por_lista.py` provando as duas metades: dois atos raiz de **ampla concorrência** para o mesmo marco continuam sendo recusados, e três atos de listas distintas são aceitos (D-006)
+- [X] T015 Acrescentar `origem` (default `COMPUTADO`) e `lista_id` a `AtoDeOrdenacao` em `backend/processo_seletivo/classificacao/models.py`, e substituir `uq_ato_raiz_por_marco` pelas **duas** constraints parciais do `data-model.md` (D-006, FR-034, FR-035, FR-036)
+- [X] T016 Gerar a migration correspondente em `backend/processo_seletivo/classificacao/migrations/`
+- [X] T079 Declarar, em `backend/processo_seletivo/classificacao/models.py`, o que `universo` recebe num ato de sorteio — `{"origem": "SORTEIO", "sorteioId", "relacaoId", "relationHash", "quantidade"}` —, com a razão escrita: `{}` passaria pela leitura sem denunciar nada e quebraria na comparação, e a forma de ato computado mentiria sobre a origem (FR-069)
+- [X] T017 Escrever `backend/tests/integration/classificacao/test_ato_por_lista.py` provando as duas metades: dois atos raiz de **ampla concorrência** para o mesmo marco continuam sendo recusados, e três atos de listas distintas são aceitos (D-006)
 
 ### O método, no conteúdo do Edital
 
@@ -76,24 +76,24 @@ chave, os vetores, os modelos e a constraint dividida.
 (FR-066, FR-067). O degrau do método é o **10**, e o do `location` é o 11 — o método é P1 e o local é
 P3, e a árvore de degraus precisa ficar contígua em qualquer estado entregável (D-013).
 
-- [ ] T080 Publicar `drawMethod` no conteúdo canônico, em `backend/processo_seletivo/publicacoes/application/publish_edital.py`, como objeto do marco de classificação — `algorithm`, `source`, `occurrence`, `derivation`, `normalization`, `substitutionRule` —, e elevar `SCHEMA_VERSION` de 9 para 10 em `backend/processo_seletivo/shared/canonical.py` (FR-013, FR-014)
-- [ ] T081 Acrescentar o degrau 10 a `DEGRAUS_DE_MARCO` em `backend/processo_seletivo/publicacoes/domain/elevacao.py` — `{10: {"drawMethod": None}}`, ao lado do `appealWindow` do degrau 8 —, com a nota dizendo que `None` significa "não declarado" e que isso é verdadeiro sobre todo Edital publicado antes (R-009)
-- [ ] T082 [P] Escrever `backend/tests/contract/test_elevacao_degrau_10.py` — Edital publicado antes do degrau permanece retificável e chega com `drawMethod` nulo; nenhum método é inventado
-- [ ] T083 [P] Escrever o teste de Retificação de `/profiles/id=…/classificationMilestones/id=…/drawMethod/substitutionRule`, provando que a gramática existente já o alcança **sem** entrada nova em `colecoes.py` — é objeto, e não coleção (FR-014, FR-060)
-- [ ] T084 Acrescentar o método à composição do marco em `backend/processo_seletivo/interface/`, com os seis campos e nenhum default institucional; e **não** oferecer caminho de alteração do método na gestão do sorteio (FR-013, D-013)
-- [ ] T085 [P] Escrever `backend/tests/interface/test_metodo_do_marco.py` — a composição declara, a Retificação altera, e a tela do sorteio **exibe sem editar**
-- [ ] T086 [P] Implementar `backend/processo_seletivo/sorteios/domain/metodo.py` — localizar o `drawMethod` do marco numa `VersaoConsolidada`, calcular o seu resumo canônico e recusar marco sem método (FR-066, FR-067); função de leitura, sem escrita
+- [X] T080 Publicar `drawMethod` no conteúdo canônico, em `backend/processo_seletivo/publicacoes/application/publish_edital.py`, como objeto do marco de classificação — `algorithm`, `source`, `occurrence`, `derivation`, `normalization`, `substitutionRule` —, e elevar `SCHEMA_VERSION` de 9 para 10 em `backend/processo_seletivo/shared/canonical.py` (FR-013, FR-014)
+- [X] T081 Acrescentar o degrau 10 a `DEGRAUS_DE_MARCO` em `backend/processo_seletivo/publicacoes/domain/elevacao.py` — `{10: {"drawMethod": None}}`, ao lado do `appealWindow` do degrau 8 —, com a nota dizendo que `None` significa "não declarado" e que isso é verdadeiro sobre todo Edital publicado antes (R-009)
+- [X] T082 [P] Escrever `backend/tests/contract/test_elevacao_degrau_10.py` — Edital publicado antes do degrau permanece retificável e chega com `drawMethod` nulo; nenhum método é inventado
+- [X] T083 [P] Escrever o teste de Retificação de `/profiles/id=…/classificationMilestones/id=…/drawMethod/substitutionRule`, provando que a gramática existente já o alcança **sem** entrada nova em `colecoes.py` — é objeto, e não coleção (FR-014, FR-060)
+- [X] T084 Acrescentar o método à composição do marco em `backend/processo_seletivo/interface/`, com os seis campos e nenhum default institucional; e **não** oferecer caminho de alteração do método na gestão do sorteio (FR-013, D-013)
+- [X] T085 [P] Escrever `backend/tests/interface/test_metodo_do_marco.py` — a composição declara, a Retificação altera, e a tela do sorteio **exibe sem editar**
+- [X] T086 [P] Implementar `backend/processo_seletivo/sorteios/domain/metodo.py` — localizar o `drawMethod` do marco numa `VersaoConsolidada`, calcular o seu resumo canônico e recusar marco sem método (FR-066, FR-067); função de leitura, sem escrita
 
 ### A divulgação, que ganha a dimensão da lista
 
 **A D-015, e o que o plano anterior dizia não existir.** Três atos raiz num marco exigem três
 publicações, e `uq_publicacao_raiz_por_marco` recusa a segunda.
 
-- [ ] T087 Acrescentar `lista_id` a `PublicacaoResultado` em `backend/processo_seletivo/divulgacao/models.py` e partir `uq_publicacao_raiz_por_marco` nas **duas** constraints parciais do `data-model.md`, mantendo a primeira com o nome e a garantia de hoje para a publicação sem lista (FR-068)
-- [ ] T088 Gerar a migration correspondente em `backend/processo_seletivo/divulgacao/migrations/`
-- [ ] T089 [P] Escrever `backend/tests/integration/divulgacao/test_publicacao_por_lista.py` provando as duas metades: duas publicações raiz sem lista no mesmo marco continuam sendo recusadas, e três de listas distintas são aceitas (FR-068)
-- [ ] T090 Despachar a leitura do vigente por lista e a aferição por origem — `ato_vigente` e `estado_do_marco` em `backend/processo_seletivo/classificacao/application/selectors.py`, consumidos por `aferir` em `backend/processo_seletivo/divulgacao/domain/publicabilidade.py`: vendo `universo["origem"] == "SORTEIO"`, a obsolescência é a da **relação** que originou o ato, e não a divergência contra um cálculo por Etapas que nunca o produziu (FR-069, R-014)
-- [ ] T091 Escrever `backend/tests/integration/divulgacao/test_publicabilidade_de_sorteio.py` — e, no mesmo arquivo, a **regressão que autoriza a alteração**: marco sem lista com ato computado sai com o mesmo desfecho de antes, degrau por degrau (FR-069)
+- [X] T087 Acrescentar `lista_id` a `PublicacaoResultado` em `backend/processo_seletivo/divulgacao/models.py` e partir `uq_publicacao_raiz_por_marco` nas **duas** constraints parciais do `data-model.md`, mantendo a primeira com o nome e a garantia de hoje para a publicação sem lista (FR-068)
+- [X] T088 Gerar a migration correspondente em `backend/processo_seletivo/divulgacao/migrations/`
+- [X] T089 [P] Escrever `backend/tests/integration/divulgacao/test_publicacao_por_lista.py` provando as duas metades: duas publicações raiz sem lista no mesmo marco continuam sendo recusadas, e três de listas distintas são aceitas (FR-068)
+- [X] T090 Despachar a leitura do vigente por lista e a aferição por origem — `ato_vigente` e `estado_do_marco` em `backend/processo_seletivo/classificacao/application/selectors.py`, consumidos por `aferir` em `backend/processo_seletivo/divulgacao/domain/publicabilidade.py`: vendo `universo["origem"] == "SORTEIO"`, a obsolescência é a da **relação** que originou o ato, e não a divergência contra um cálculo por Etapas que nunca o produziu (FR-069, R-014)
+- [X] T091 Escrever `backend/tests/integration/divulgacao/test_publicabilidade_de_sorteio.py` — e, no mesmo arquivo, a **regressão que autoriza a alteração**: marco sem lista com ato computado sai com o mesmo desfecho de antes, degrau por degrau (FR-069)
 
 ### Autorização
 

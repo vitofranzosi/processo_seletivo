@@ -503,7 +503,12 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # ele executa. Sem ela, o cumprimento da providência a jusante só poderia ser presumido
         # ("publicou-se ato novo"), e um ato emitido por razão alheia encerraria a pendência sem
         # que ninguém tivesse corrigido o vício reconhecido (018, T-015, FR-112).
-        "classificacao": 4,
+        # **Sobe para 5 com a 021**, e a justificativa é própria: a `classificacao/0005` acrescenta
+        # `origem` e `lista_id` ao `AtoDeOrdenacao` e parte `uq_ato_raiz_por_marco` em duas
+        # constraints parciais. Não é a 017 tocando o que lê — é a 021 dizendo que a ordem pode vir
+        # de sorteio e que três listas de concorrência produzem três atos raiz no mesmo marco. A
+        # metade sem lista continua sob exatamente a constraint que já a governava (021, D-006).
+        "classificacao": 5,
         # **Sobe para 5 com a 018**, e a justificativa é a que este teste existe para exigir: a
         # `resultados/0005` dá sucessão ao `ResultadoEtapa` — o único elo da cadeia que não a
         # tinha —, para que um recurso deferido possa superar um Resultado sem alterá-lo. Não é
@@ -517,11 +522,22 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # Documento Exigido ao modelo; a `0013` põe no banco a imutabilidade do artefato já
         # publicado. São duas porque protegem coisas diferentes — criar tabela e trancar o que ela
         # guarda —, e a segunda é condicional ao estado, como a `publicacoes/0007` (020, FR-010).
-        "editais": 13,
+        # **Sobe para 14 com a 021**: a `editais/0014` acrescenta `metodo_de_sorteio` ao marco
+        # classificatório — o degrau 10. Mesmo lugar e mesma razão da janela recursal do degrau 8:
+        # quem declara o método é o Edital, e alterá-lo é Retificação. Uma tabela de método no app
+        # do sorteio seria registro operacional que se diz normativo (021, D-013, FR-014).
+        "editais": 14,
         "publicacoes": 8,
         # **Sobe para 2 com a 018**: a `divulgacao/0002` acrescenta os três campos da declaração
         # expressa de encerramento do prazo e a constraint que os mantém inteiros (FR-085).
-        "divulgacao": 2,
+        #
+        # **Sobe para 3 com a 021**, e esta é a que mais precisava da conversa que este teste
+        # força. A `divulgacao/0003` acrescenta `lista_id` à `PublicacaoResultado` e parte
+        # `uq_publicacao_raiz_por_marco` em duas parciais. Não é a 017 crescendo por dentro: é a
+        # dimensão da lista de concorrência, que a 021 abriu no ato, atravessando até a divulgação
+        # — três atos raiz num marco exigem três publicações, e a constraint de hoje recusava a
+        # segunda. A metade sem lista mantém nome e garantia (021, D-015, FR-068).
+        "divulgacao": 3,
     }
     for app, quantas in esperadas.items():
         migrations = sorted((raiz / app / "migrations").glob("[0-9]*.py"))
