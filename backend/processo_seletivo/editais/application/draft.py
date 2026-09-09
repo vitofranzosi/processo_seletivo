@@ -310,6 +310,7 @@ def replace_draft(
                     order=event.get("order", 0),
                     status=event.get("status", EventoCronograma.Status.PLANEJADO),
                     is_registration_period=event.get("isRegistrationPeriod", False),
+                    location=(event.get("location") or "").strip(),
                 )
                 for event in schedule
             ]

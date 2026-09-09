@@ -31,6 +31,7 @@ Monólito modular em Python 3.13 / Django 5.2 LTS / DRF, sobre PostgreSQL. Cada 
 | `processos` | Processo Seletivo, Edital, atos administrativos e desfecho |
 | `editais` | Perfis de Vaga, vagas, modalidades, Cronograma e validação |
 | `publicacoes` | Publicação, Retificação, versões consolidadas e consulta pública |
+| `sorteios` | Relação de habilitados congelada, ocorrência da fonte externa e o sorteio auditável |
 | `seguranca` | Ator autenticado, permissões e autorização por objeto |
 | `auditoria` | Registro append-only e idempotência |
 | `shared` | Serialização canônica, concorrência otimista, Problem Details e observabilidade |

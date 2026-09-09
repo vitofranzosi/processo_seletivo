@@ -75,12 +75,14 @@ def test_a_tela_nao_tem_campo_de_semente_nem_botao_de_simular(client, certame):
         for acao in re.findall(r'<form method="post" action="([^"]+)"', corpo)
         if "sorteio" in acao
     }
-    assert acoes == {
-        reverse(
+    esperadas = {
+        reverse(nome, args=[certame["edital"].id, certame["marco"]])
+        for nome in (
             "interface:publicar-relacao-do-sorteio",
-            args=[certame["edital"].id, certame["marco"]],
+            "interface:observar-ocorrencia-do-sorteio",
         )
     }
+    assert acoes == esperadas
 
 
 def test_a_publicacao_congela_e_a_tela_passa_a_dizer_isso(client, certame):

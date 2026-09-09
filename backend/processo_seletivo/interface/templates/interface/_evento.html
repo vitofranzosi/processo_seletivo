@@ -25,6 +25,25 @@
       <input type="text" id="evento-{{ indice }}-description"
              name="evento-{{ indice }}-description" value="{{ evento.description|default:'' }}" required aria-required="true">
     </p>
+    {% comment %}
+    Onde o evento acontece (021, D-008, FR-056..FR-061). **Um campo de texto, e não dois**: o 76
+    publica naturezas diferentes na mesma coluna LOCAL, e o 77 diz sala física e canal na mesma
+    frase. **Não é validado como URL** — "Página da chamada pública" não é endereço eletrônico.
+
+    A sugestão do evento anterior aparece como `placeholder`, e **não** preenche o campo: sugerir é
+    da tela, presumir é do conteúdo publicado. Um `value` aqui aplicaria ao Edital um local que
+    ninguém declarou (FR-058, FR-059).
+    {% endcomment %}
+    <p class="campo largo">
+      <label for="evento-{{ indice }}-location">Onde acontece</label>
+      <input type="text" id="evento-{{ indice }}-location"
+             name="evento-{{ indice }}-location" value="{{ evento.location|default:'' }}"
+             maxlength="255"
+             {% if sugestao_de_local %}placeholder="Sugestão: {{ sugestao_de_local }}"{% endif %}
+             aria-describedby="ajuda-local-{{ indice }}">
+      <span class="oculto" id="ajuda-local-{{ indice }}">Sala, endereço, canal de transmissão ou
+        página — como o Edital o publica. Em branco significa não declarado.</span>
+    </p>
     <p class="campo">
       <label for="evento-{{ indice }}-startAt">Início <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="datetime-local" id="evento-{{ indice }}-startAt"

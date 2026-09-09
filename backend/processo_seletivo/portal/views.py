@@ -1232,6 +1232,11 @@ def _cronograma(conteudo, agora):
                 "inicio": inicio,
                 "fim": fim,
                 "situacao": situacao,
+                # Onde o evento acontece, quando o Edital o declarou (021, D-008, FR-057). Vazio
+                # significa não declarado, e a tela simplesmente não escreve linha alguma — dizer
+                # "local não informado" afirmaria uma omissão onde o Edital pode nunca ter tido o
+                # que declarar.
+                "local": (evento.get("location") or "").strip(),
             }
         )
     return eventos
@@ -2009,6 +2014,9 @@ def relacao_de_habilitados(request, relacao_id):
         "portal/relacao_de_habilitados.html",
         {
             "relacao": relacao,
+            # O nome da lista, lido da versão que a relação cita — e não do conteúdo vigente, que
+            # uma Retificação posterior poderia ter mudado (FR-045).
+            "lista": _nome_da_lista(relacao),
             "participantes": [
                 {
                     "numero": participante.numero_publico,
@@ -2026,12 +2034,31 @@ def relacao_de_habilitados(request, relacao_id):
     )
 
 
+def _nome_da_lista(relacao):
+    if not relacao.lista_id:
+        return ""
+    for perfil in relacao.versao.content.get("profiles") or []:
+        if str(perfil.get("id")) != str(relacao.perfil_id):
+            continue
+        for modalidade in perfil.get("competitionModalities") or []:
+            if str(modalidade.get("id")) == str(relacao.lista_id):
+                return modalidade.get("name") or ""
+    return ""
+
+
 def _sorteio_publicado(sorteio_id):
     from processo_seletivo.sorteios.models import Sorteio
 
     return (
         Sorteio.objects.filter(pk=sorteio_id)
-        .select_related("relacao", "relacao__versao", "relacao__edital", "ocorrencia", "ato")
+        .select_related(
+            "relacao",
+            "relacao__versao",
+            "relacao__edital",
+            "ocorrencia",
+            "ato",
+            "sorteio_anterior",
+        )
         .prefetch_related("sucessores")
         .first()
     )

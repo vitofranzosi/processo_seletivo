@@ -7,7 +7,6 @@ saía, sem bloco vazio e sem afirmar, por omissão de conteúdo, que aquele resu
 """
 
 import pytest
-
 from django.utils import timezone
 
 from processo_seletivo.divulgacao.domain.conteudo import compor, conteudo_divulgado

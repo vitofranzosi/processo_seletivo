@@ -93,7 +93,16 @@ from uuid import UUID
 # independente das demais histórias. Numerar o método antes é o que mantém a árvore de degraus
 # contígua em qualquer estado entregável do incremento — o contrário deixaria um 11 publicado com o
 # 10 por escrever (021, D-013).
-SCHEMA_VERSION = 10
+# **11 com a 021**, e o segundo degrau da mesma leva: o local do Evento do Cronograma
+# (`schedule[].location`). Vazio significa **não declarado** — e não "acontece em lugar nenhum" —,
+# e é verdade sobre todo Edital publicado antes dele: nenhum publicou o local em campo estruturado,
+# ainda que muitos o dissessem em prosa. Conversão sem invenção, portanto.
+#
+# Os dois degraus da 021 não sobem juntos, e a razão é a prioridade: o método é P1 e sem ele a
+# relação não tem o que citar ao congelar; o local é P3 e declaradamente independente das demais
+# histórias. Numerando o método antes, qualquer estado entregável do incremento tem a árvore de
+# degraus contígua (021, D-008, D-013).
+SCHEMA_VERSION = 11
 
 
 def _default(value):

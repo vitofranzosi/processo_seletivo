@@ -1,4 +1,4 @@
-"""O ato acontece uma vez, cobre todos, e a segunda tentativa é recusada (021, FR-025, FR-031, FR-032).
+"""O ato acontece uma vez, cobre todos, e a segunda é recusada (021, FR-025, FR-031, FR-032).
 
 **A inversão que organiza a feature está exercitada aqui**: a ocorrência é posterior ao
 congelamento, e o comando recusa o contrário. O resto são as garantias que decorrem dela — ordem

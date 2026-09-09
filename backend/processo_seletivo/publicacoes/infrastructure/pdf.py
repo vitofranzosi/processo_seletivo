@@ -1490,21 +1490,26 @@ def _cronograma(composicao, snapshot, secao=0, tabelas=None):
     eventos = snapshot.get("schedule") or []
     if not eventos:
         return
+    # **A coluna do local só aparece quando algum Evento declara um** (021, FR-057). Uma coluna de
+    # travessões em todo Edital anterior ao degrau 11 ocuparia largura para afirmar nada — e a
+    # ausência já significa "não declarado", que é diferente de "acontece em lugar nenhum".
+    algum_local = any((evento.get("location") or "").strip() for evento in eventos)
     linhas = [
         [
             str(evento.get("order", "")),
             evento.get("description") or evento.get("type", ""),
             _instante(evento.get("startAt")),
             _instante(evento["endAt"]) if evento.get("endAt") else "—",
+            *([evento.get("location") or "—"] if algum_local else []),
         ]
         for evento in eventos
     ]
     _tabela(
         composicao,
-        ["Nº", "Evento", "Início", "Término"],
+        ["Nº", "Evento", "Início", "Término", *(["Onde"] if algum_local else [])],
         linhas,
         recuo=0.0,
-        alinhamentos=[CENTRO, ESQUERDA, CENTRO, CENTRO],
+        alinhamentos=[CENTRO, ESQUERDA, CENTRO, CENTRO, *([ESQUERDA] if algum_local else [])],
         legenda=tabelas.legenda("Cronograma"),
     )
 

@@ -14,10 +14,22 @@ sorteio confere; o detalhe é para quem quiser conferir a conferência (FR-049).
 <p class="erro" role="alert"><strong>{{ veredito.resumo }}</strong></p>
 {% endif %}
 
+{% comment %}
+A cadeia dita **em texto**: sorteio anulado, motivo e sucessor. Quem chega a esta página por uma
+citação antiga precisa saber, na primeira tela, que este ato já não é o que vale — e por quê
+(FR-053, FR-055).
+{% endcomment %}
 {% if sucessor %}
 <p class="aviso"><strong>Este sorteio foi anulado.</strong> Ele permanece íntegro e verificável como
   registro do que foi feito, e não é mais o que vale.
+  {% if sucessor.motivo_da_anulacao %}Motivo declarado: {{ sucessor.motivo_da_anulacao }}{% endif %}
   <a href="{% url 'portal:verificar-sorteio' sucessor.id %}">Ver o sorteio que o sucedeu</a></p>
+{% elif sorteio.sorteio_anterior %}
+<p class="vigente" role="status">Este é o sorteio vigente deste recorte. Ele sucedeu um sorteio
+  anulado{% if sorteio.motivo_da_anulacao %}, pelo motivo: {{ sorteio.motivo_da_anulacao }}{% endif %}.
+  <a href="{% url 'portal:verificar-sorteio' sorteio.sorteio_anterior.id %}">Consultar o sorteio anulado</a></p>
+{% else %}
+<p class="vigente" role="status">Este é o sorteio vigente deste recorte.</p>
 {% endif %}
 
 <h2>O que foi conferido</h2>

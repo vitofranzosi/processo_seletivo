@@ -846,6 +846,10 @@ def compor_etapa(request, edital_id, etapa):
                 if etapa == "cronograma" and digitados is not None
                 else forms.eventos_do_edital(edital)
             ),
+            # A sugestão de local: o do evento anterior, se houver (021, FR-059). Ela vive no
+            # `placeholder` e **não** preenche o campo — sugerir é da tela, presumir é do conteúdo
+            # publicado.
+            "sugestao_de_local": forms.ultimo_local_declarado(edital),
             # Após recusa, o que a pessoa digitou; fora disso, o que está gravado — a mesma regra
             # das demais etapas, e o que impede a recusa apagar o preenchimento.
             "documentos": (

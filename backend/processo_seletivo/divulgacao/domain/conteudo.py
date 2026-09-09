@@ -114,6 +114,11 @@ def compor(ato):
             # que não é a ordem em que os marcos existem. Nem a página, nem o documento, nem a Área
             # o exibem: o que se mostra é `marco`, o nome publicado (FR-013).
             "marco_codigo": marco.get("code", "") or "",
+            # **A lista de concorrência, nomeada** (021, FR-045). Quem lê a ordem publicada precisa
+            # saber de qual lista ela é: num certame com cotas há três, e uma ordem sem essa
+            # identificação é indistinguível das outras duas. Vazio na ampla concorrência, que é o
+            # que todo resultado anterior à 021 é.
+            "lista": modalidades.get(str(ato.lista_id), "") if ato.lista_id else "",
             "ato": {"id": str(ato.id), "emitido_em": ato.emitido_em.isoformat()},
             # **A proveniência do sorteio, quando a ordem veio de um** (021, FR-046). A chave só
             # existe quando existe sorteio: um ato computado não carrega campo vazio, pela mesma

@@ -391,6 +391,9 @@ def ler_eventos(dados):
                 "startAt": _instante(dados, f"{base}-startAt"),
                 "endAt": _instante(dados, f"{base}-endAt"),
                 "order": _inteiro(dados, f"{base}-order", 0),
+                # Onde o evento acontece (021, D-008). Vazio significa "não declarado", e é o que
+                # a tela desenha por padrão: nenhum valor institucional se aplica sozinho.
+                "location": _texto(dados, f"{base}-location"),
             }
         )
     return _renumerar(eventos)
@@ -578,6 +581,7 @@ def eventos_do_edital(edital):
             if evento.end_at
             else "",
             "order": evento.order,
+            "location": evento.location,
             # O rótulo que a Etapa mostra ao escolher o vínculo (FR-036). A Etapa se vincula a um
             # Evento **para herdar as datas** — é o que a ajuda promete —, e a lista mostrava
             # "tipo — descrição", cortava por falta de largura e não mostrava data nenhuma: para
@@ -856,6 +860,11 @@ def eventos_persistidos(edital):
             "order": evento.order,
             "status": evento.status,
             "isRegistrationPeriod": evento.is_registration_period,
+            # **E o local pelo mesmo motivo.** É o terceiro campo a entrar nesta lista pela lição
+            # que a E2E17-001 deixou: campo omitido aqui volta ao padrão do modelo na gravação
+            # seguinte, sem recusa e sem aviso — e o Edital seria publicado sem o local que alguém
+            # digitou dois passos antes (021, FR-057).
+            "location": evento.location,
         }
         for evento in cronograma.eventos.order_by("order")
     ]
@@ -1018,3 +1027,20 @@ def ler_membros_em_lote(dados):
             identificador, separador, rotulo = linha.partition(";")
         entradas.append((identificador.strip(), rotulo.strip()))
     return {"entradas": entradas, "funcao": _texto(dados, "funcao"), "lista": bruto}
+
+
+def ultimo_local_declarado(edital):
+    """O local do último Evento que declarou um — a sugestão que a tela oferece (021, FR-059).
+
+    **Sugestão, e não preenchimento.** Ela chega ao template como `placeholder`: o campo continua
+    vazio, e vazio continua significando "não declarado". Um `value` aqui aplicaria ao Edital um
+    local que ninguém escreveu, que é a degradação que os rótulos da Etapa e o default institucional
+    do Evento já recusaram (FR-058).
+    """
+    cronograma = getattr(edital, "cronograma", None)
+    if cronograma is None:
+        return ""
+    for evento in cronograma.eventos.order_by("-order"):
+        if evento.location:
+            return evento.location
+    return ""

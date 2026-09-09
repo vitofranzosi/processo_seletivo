@@ -126,6 +126,18 @@ cd backend && TEST_DB_ENGINE=postgresql DB_USER="$USER" DB_NAME=test_021_sorteio
 e pula em silêncio os testes que dependem de constraint e trigger. `DB_NAME` próprio evita que duas
 suítes em worktrees diferentes disputem o mesmo banco.
 
+**O tempo medido (SC-004).** `tests/integration/sorteios/test_desempenho.py` percorre o caminho
+completo com 300 participantes e imprime o número:
+
+```text
+[SC-004] 300 participantes — congelamento 0,01s, constituição 0,02s, total 0,04s
+```
+
+A SC-004 pede menos de um minuto de operação, que é o tempo de uma tomada de transmissão. A folga é
+esperada e o teste não a celebra: o custo real do ato é a chamada à fonte externa, que acontece
+**antes** da transação e num comando separado. O que o limite de 60 segundos detecta é regressão de
+ordem de grandeza — uma consulta por participante nascendo dentro de um laço.
+
 Recortes úteis:
 
 ```bash
@@ -134,6 +146,27 @@ uv run pytest tests/test_javascript.py                      # os mesmos vetores,
 uv run pytest tests/integration/sorteios                    # relação, congelamento, constituição
 uv run pytest tests/portal/test_verificacao_de_sorteio.py   # a verificação pública
 ```
+
+## Os quatro recortes da amostra, e até onde o sistema conduz cada um (SC-006)
+
+A SC-006 pede que os quatro Editais de sorteio da amostra tenham o seu mecanismo de seleção
+executável no sistema. Conduz **não** é o mesmo que concluir o certame, e a tabela diz onde cada um
+para — a fronteira é a mesma para os quatro, e é deliberada (FR-064).
+
+| Edital | Recortes | Até onde o sistema o conduz | Onde ele para |
+|---|---|---|---|
+| **77/2026** | perfil único, sem cotas — **1 ordem** | Do congelamento à ordem publicada, com manifesto e verificação pública. É o percurso dos oito passos acima | Na ordem publicada. Quem ocupa as 39 vagas é `014`/`016` |
+| **76/2026** | polos com cadastro de reserva, sem cotas — **1 ordem por polo** | Um recorte por polo, cada um com relação, ocorrência e ato próprios. A tela de gestão lista os polos juntos, e é o que evita publicar dois e esquecer o terceiro | Na ordem de cada polo. O cadastro de reserva — quem é chamado, e em que ordem entre polos — está fora |
+| **57/2026** | 2 cursos × (AC, PPI, PcD) — **3 ordens por curso** | As três listas de cada curso, com o cotista figurando em duas e recebendo número próprio em cada. As três se divulgam separadamente, cada uma com a sua cadeia | Na ordem de cada lista. **A interação entre listas fica fora**: o cotista sorteado nas duas continua nas duas, e quem decide em qual ele fica é outra capacidade |
+| **28/2026** | 7 polos × (AC, PPI, PcD) — **21 ordens** | O mesmo do 57, multiplicado pelos polos. Uma extração da fonte semeia as 21 ordens, e o `relationHash` as separa — é o vetor `mesma-semente-recortes-distintos` provando isso | Igual ao 57, e com a mesma fronteira |
+
+**A fronteira é a mesma nos quatro, e é a frase que governa a feature**: o sistema entrega a ordem,
+e não decide quem entrou. Um roteiro que "terminasse" o 28/2026 estaria respondendo a pergunta que
+a `021` recusa responder.
+
+**Os quatro exigem a mesma preparação**: o marco de classificação declara o `drawMethod` no Edital,
+antes do congelamento. Sem ele o sistema recusa congelar a relação, e a recusa nomeia o Edital como
+o lugar da correção — e não a tela do sorteio.
 
 ## O que este roteiro não demonstra, de propósito
 

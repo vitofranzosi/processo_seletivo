@@ -95,3 +95,22 @@ def test_a_verificacao_nao_depende_de_video_nem_de_canal_externo(sorteado):  # n
     assert veredito["integro"] is True
     assert Sorteio.objects.filter(pk=sorteio.pk).exists()
     assert RelacaoDeHabilitados.objects.filter(pk=sorteio.relacao_id).exists()
+
+
+def test_a_pagina_exibe_a_cadeia_de_anulacao(client, sorteado):  # noqa: F811
+    """O anulado diz que foi anulado; o sucessor diz que sucedeu, e ambos ficam no ar (FR-055)."""
+    from tests.integration.sorteios.test_anulacao import _sucessor
+
+    certame, sorteio = sorteado
+    declarado = _sucessor(certame, sorteio)
+
+    anulado = client.get(reverse("portal:verificar-sorteio", args=[sorteio.id])).content.decode()
+    sucessor = client.get(
+        reverse("portal:verificar-sorteio", args=[declarado["sorteio"]])
+    ).content.decode()
+
+    assert "Este sorteio foi anulado" in anulado
+    assert "Vício reconhecido" in anulado
+    assert "Ver o sorteio que o sucedeu" in anulado
+    assert "sucedeu um sorteio" in sucessor
+    assert "Consultar o sorteio anulado" in sucessor

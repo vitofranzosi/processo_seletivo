@@ -2,7 +2,12 @@
 {% block titulo %}Relação de habilitados ao sorteio{% endblock %}
 {% block conteudo %}
 <h1>Relação de habilitados ao sorteio</h1>
-<p class="sub">{{ relacao.edital }}</p>
+{% comment %}
+A lista de concorrência **no topo**, e não escondida no critério: num certame com cotas há três
+relações sobre o mesmo marco, e uma página que não diga qual é esta é indistinguível das outras
+duas (FR-045).
+{% endcomment %}
+<p class="sub">{{ relacao.edital }}{% if lista %} — {{ lista }}{% else %} — Ampla concorrência{% endif %}</p>
 
 {% comment %}
 A sucessão dita **em texto**, e não só por cor, como a divulgação da `017` já faz. A relação
@@ -47,7 +52,12 @@ qual método este universo se comprometeu, **antes** de a semente existir (R-015
 
 <h2>Participantes</h2>
 <table>
-  <caption class="oculto">Participantes desta relação, com o número que cada um recebeu para o sorteio</caption>
+  {% comment %}
+  A legenda é **visível**, e não escondida para leitor de tela: no portal ela não é redundância da
+  marcação, é a frase que diz o que estes números são. O canal administrativo tem a classe `.oculto`
+  para legendas que repetem um título próximo; aqui não há título próximo a repetir.
+  {% endcomment %}
+  <caption>Cada participante recebeu o número abaixo para o sorteio.</caption>
   <thead>
     <tr><th scope="col">Número</th><th scope="col">Candidato</th><th scope="col">Protocolo</th></tr>
   </thead>

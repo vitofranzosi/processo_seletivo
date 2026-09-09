@@ -69,7 +69,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
   {% if pode_emitir and metodo %}
   <form method="post" action="{% url 'interface:observar-ocorrencia-do-sorteio' edital.id marco.id %}">
     {% csrf_token %}
-    <button type="submit">Observar a ocorrência na fonte</button>
+    <button type="submit" class="botao">Observar a ocorrência na fonte</button>
   </form>
   {% endif %}
   {% endif %}
@@ -113,7 +113,41 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
     {% if recorte.sorteio %}
     <p class="imutavel"><strong>Sorteio realizado em {{ recorte.sorteio.executado_em|date:"d/m/Y H:i:s" }}</strong>
       por {{ recorte.sorteio.executado_por }}. Semente <code>{{ recorte.sorteio.semente_normalizada }}</code>,
-      manifesto <code>{{ recorte.sorteio.manifesto_hash }}</code>.</p>
+      manifesto <code>{{ recorte.sorteio.manifesto_hash }}</code>.
+      <a href="{% url 'portal:verificar-sorteio' recorte.sorteio.id %}">Verificar no canal público</a></p>
+
+    {% comment %}
+    **Anular não é refazer**, e a tela diz isso antes de oferecer o botão. O sucessor nasce de
+    relação nova e ocorrência nova; o ato anulado permanece íntegro, legível e verificável. Não há,
+    aqui nem em lugar nenhum, "executar de novo" sobre as mesmas entradas (FR-052, FR-053, FR-054).
+    {% endcomment %}
+    {% if pode_emitir %}
+    <details class="consequencias irreversivel">
+      <summary>Anular este sorteio</summary>
+      <p>Anular não desfaz e não repete: constitui um sorteio <strong>novo</strong>, ligado a este,
+        a partir de uma relação nova e de uma ocorrência nova. Este ato continua consultável e
+        verificável como registro do que foi feito.</p>
+      <form method="post" action="{% url 'interface:anular-sorteio' edital.id marco.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="sorteio_anterior_id" value="{{ recorte.sorteio.id }}">
+        <p class="campo">
+          <label for="anulacao-{{ forloop.counter }}">Motivo da anulação <span class="obrigatorio" aria-hidden="true">*</span></label>
+          <input type="text" id="anulacao-{{ forloop.counter }}" name="motivo" required aria-required="true"
+                 aria-describedby="ajuda-anulacao-{{ forloop.counter }}">
+          <span class="oculto" id="ajuda-anulacao-{{ forloop.counter }}">Um sorteio anulado sem razão registrada seria um ato desfeito sem que ninguém respondesse por isso.</span>
+        </p>
+        <p class="campo">
+          <label for="relacao-nova-{{ forloop.counter }}">Relação nova</label>
+          <input type="text" id="relacao-nova-{{ forloop.counter }}" name="relacao_id" required aria-required="true">
+        </p>
+        <p class="campo">
+          <label for="ocorrencia-nova-{{ forloop.counter }}">Ocorrência nova</label>
+          <input type="text" id="ocorrencia-nova-{{ forloop.counter }}" name="ocorrencia_id" required aria-required="true">
+        </p>
+        <button type="submit" class="botao perigoso">Anular e constituir o sucessor</button>
+      </form>
+    </details>
+    {% endif %}
     {% elif recorte.congelada and ocorrencia and not ocorrencia.indisponivel and pode_emitir %}
     {% comment %}
     Um botão só, e ele constitui. Não há "calcular para conferir": depois da semente, conferir antes
@@ -123,7 +157,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       {% csrf_token %}
       <input type="hidden" name="relacao_id" value="{{ recorte.relacao.id }}">
       <input type="hidden" name="ocorrencia_id" value="{{ ocorrencia.id }}">
-      <button type="submit">Realizar o sorteio</button>
+      <button type="submit" class="botao">Realizar o sorteio</button>
     </form>
     {% endif %}
 
@@ -138,9 +172,9 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
                aria-describedby="ajuda-motivo-{{ forloop.counter }}">
         <span class="oculto" id="ajuda-motivo-{{ forloop.counter }}">A relação publicada é o compromisso do universo. Substituí-la sem razão escrita apagaria o compromisso sem que ninguém respondesse por isso.</span>
       </p>
-      <button type="submit">Publicar relação nova, sucedendo a atual</button>
+      <button type="submit" class="acao">Publicar relação nova, sucedendo a atual</button>
       {% else %}
-      <button type="submit">Publicar e congelar a relação</button>
+      <button type="submit" class="botao">Publicar e congelar a relação</button>
       {% endif %}
     </form>
     {% endif %}

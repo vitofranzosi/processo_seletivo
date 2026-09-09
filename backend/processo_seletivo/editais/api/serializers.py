@@ -133,6 +133,10 @@ class EventSerializer(serializers.Serializer):
     )
     # Ausente significa "não é o período de inscrições", que é a verdade para quase todo Evento.
     isRegistrationPeriod = serializers.BooleanField(required=False, default=False)
+    # Onde o Evento acontece (021, D-008). `allow_blank` porque não declarar é resposta legítima —
+    # e a mais comum —, e **sem** validação de URL: "Página da chamada pública" não é endereço
+    # eletrônico, e recusá-lo obrigaria a instituição a mentir para publicar (FR-061).
+    location = serializers.CharField(required=False, allow_blank=True, max_length=255)
 
     def validate(self, attrs):
         try:

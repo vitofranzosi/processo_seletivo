@@ -203,6 +203,11 @@ def edital_snapshot(edital: Edital) -> dict:
                 "endAt": None if event.end_at is None else event.end_at.isoformat(),
                 "order": event.order,
                 "status": event.status,
+                # Onde o Evento acontece (021, D-008). String sempre presente, `""` quando não
+                # declarado — nunca `null`, nunca chave omitida: é a convenção que `description` e
+                # `locality` do Perfil já seguem, e uma segunda convenção para texto faria a versão
+                # canônica admitir mais de uma forma.
+                "location": event.location,
                 # Qual Evento é o período de inscrições (FR-008 da 009). Booleano sempre presente,
                 # dentro do Evento: o candidato precisa saber quando as inscrições abrem, e a
                 # Retificação já alcança o campo por `/schedule/id=…/isRegistrationPeriod`, sem

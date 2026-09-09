@@ -91,6 +91,57 @@ def certame_de_sorteio(gestor, api_client, manager_headers, process_payload, *, 
     }
 
 
+def certame_com_cotas(gestor, api_client, manager_headers, process_payload, *, quantos=6):
+    """O 57 e o 28: ampla concorrência, PPI e PcD sobre o mesmo marco.
+
+    O cotista aparece em **duas** listas — a de ampla concorrência alcança todos, a de reserva
+    alcança quem declarou aquela modalidade —, e é isso que a US4 precisa exercitar.
+    """
+    from processo_seletivo.comissoes.domain.funcoes import Funcao
+    from tests.fixtures.comissao import constituir, inscrever, rascunho_com_etapas
+    from tests.fixtures.edital import PROFILE_ID
+    from tests.fixtures.publicacao import publish_original
+
+    rascunho = rascunho_com_etapas()
+    marco_com_metodo(rascunho, perfil_id=PROFILE_ID, etapa_id=rascunho["stages"][1]["id"])
+    for perfil in rascunho["profiles"]:
+        if str(perfil["id"]) == PROFILE_ID:
+            perfil["competitionModalities"] = [
+                {
+                    "id": LISTA_PPI,
+                    "code": "PPI",
+                    "name": "Pretos, pardos e indígenas",
+                    "reservedVacancies": 1,
+                },
+                {
+                    "id": LISTA_PCD,
+                    "code": "PCD",
+                    "name": "Pessoas com deficiência",
+                    "reservedVacancies": 1,
+                },
+            ]
+    edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
+    constituir(gestor, edital.processo, [("maria", Funcao.PRESIDENTE)], prefixo="cotas-021")
+    inscricoes = inscrever(edital, quantos, primeiro=701)
+    # Os dois primeiros declaram cota: eles figuram na ampla concorrência **e** na reserva deles,
+    # com numeração própria em cada (FR-004).
+    from processo_seletivo.inscricoes.models import Inscricao
+
+    Inscricao.objects.filter(pk=inscricoes[0].pk).update(modality_id=LISTA_PPI)
+    Inscricao.objects.filter(pk=inscricoes[1].pk).update(modality_id=LISTA_PCD)
+    for inscricao in inscricoes:
+        inscricao.refresh_from_db()
+    return {
+        "edital": edital,
+        "processo": edital.processo,
+        "perfil": PROFILE_ID,
+        "marco": MARCO,
+        "inscricoes": inscricoes,
+        "cotista_ppi": inscricoes[0],
+        "cotista_pcd": inscricoes[1],
+    }
+
+
 def presidente(subject="maria"):
     from tests.conftest import ator_institucional
 

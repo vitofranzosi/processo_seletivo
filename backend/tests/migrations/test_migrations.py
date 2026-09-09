@@ -522,11 +522,14 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # Documento Exigido ao modelo; a `0013` põe no banco a imutabilidade do artefato já
         # publicado. São duas porque protegem coisas diferentes — criar tabela e trancar o que ela
         # guarda —, e a segunda é condicional ao estado, como a `publicacoes/0007` (020, FR-010).
-        # **Sobe para 14 com a 021**: a `editais/0014` acrescenta `metodo_de_sorteio` ao marco
-        # classificatório — o degrau 10. Mesmo lugar e mesma razão da janela recursal do degrau 8:
-        # quem declara o método é o Edital, e alterá-lo é Retificação. Uma tabela de método no app
-        # do sorteio seria registro operacional que se diz normativo (021, D-013, FR-014).
-        "editais": 14,
+        # **Sobe para 15 com a 021**, e são duas migrations pela mesma razão que os degraus são
+        # dois. A `editais/0014` acrescenta `metodo_de_sorteio` ao marco classificatório — o degrau
+        # 10 —, mesmo lugar e mesma razão da janela recursal do degrau 8: quem declara o método é o
+        # Edital, e alterá-lo é Retificação. Uma tabela de método no app do sorteio seria registro
+        # operacional que se diz normativo. A `editais/0015` acrescenta `location` ao Evento do
+        # Cronograma — o degrau 11 —, que é elaboração e não sorteio: onde o evento acontece é dado
+        # do Edital, e vale para qualquer evento, sorteie ele ou não (021, D-008, D-013, FR-014).
+        "editais": 15,
         "publicacoes": 8,
         # **Sobe para 2 com a 018**: a `divulgacao/0002` acrescenta os três campos da declaração
         # expressa de encerramento do prazo e a constraint que os mantém inteiros (FR-085).
