@@ -1,0 +1,103 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Sorteio — {{ marco.name }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">Sorteio — {{ marco.name }}</span>
+</nav>
+
+<h1>Sorteio — {{ marco.name }}</h1>
+<p class="sub">{{ perfil.name }} — o universo é comprometido <strong>antes</strong> de a semente existir.</p>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível publicar:</strong> {{ erro }}</p>{% endif %}
+{% if resultado %}<p class="sucesso" role="status" tabindex="-1">Relação publicada e congelada, com {{ resultado.quantidade }} participante{{ resultado.quantidade|pluralize }}. O resumo é <code>{{ resultado.resumo }}</code>.</p>{% endif %}
+
+{% comment %}
+O método é **lido**, e não editado. Não há campo, não há botão de alterar: ele é conteúdo publicado
+do Edital, e trocá-lo é Retificação — com a autoridade daquele ato, e não com a de quem conduz o
+sorteio (021, D-013, FR-014). Exibi-lo aqui é o que permite conferir, antes de congelar, sob que
+regra este certame vai sortear.
+{% endcomment %}
+<section aria-labelledby="titulo-metodo">
+  <h2 id="titulo-metodo">Método declarado no Edital</h2>
+  {% if metodo %}
+  <dl class="metodo">
+    <dt>Algoritmo</dt><dd>{{ metodo.algorithm }}</dd>
+    <dt>Fonte da semente</dt><dd>{{ metodo.source }}</dd>
+    <dt>Ocorrência</dt><dd>{{ metodo.occurrence }}</dd>
+    <dt>Derivação</dt><dd>{{ metodo.derivation }}</dd>
+    <dt>Normalização</dt><dd>{{ metodo.normalization.text }}</dd>
+    <dt>Se a ocorrência faltar</dt><dd>{{ metodo.substitutionRule.text }}</dd>
+    <dt>Resumo do método</dt><dd><code>{{ metodo_hash }}</code></dd>
+  </dl>
+  <p class="meta">Este método é conteúdo publicado do Edital. Alterá-lo é uma Retificação, e não uma decisão desta tela.</p>
+  {% else %}
+  <p class="erro">Este marco não declara método de sorteio no Edital publicado. Enquanto ele não for
+    declarado — na composição, ou por Retificação, se o Edital já está publicado —, a relação não
+    pode ser congelada: congelar sob método indefinido seria escolher o método depois de conhecer
+    o universo.</p>
+  {% endif %}
+</section>
+
+{% comment %}
+Os recortes juntos, e não um por página: um marco com cotas tem três, e listá-los separados é o que
+faz alguém publicar dois e esquecer o terceiro. A prévia é **da relação**, e nunca da ordem — não há
+botão de simular, e não há o que simular antes da semente (FR-030, D-010).
+{% endcomment %}
+<section aria-labelledby="titulo-recortes">
+  <h2 id="titulo-recortes">Recortes deste marco</h2>
+  {% for recorte in recortes %}
+  <article class="recorte">
+    <h3>{{ recorte.nome }}</h3>
+    {% if recorte.congelada %}
+    <p class="imutavel"><strong>Relação congelada em {{ recorte.relacao.publicada_em|date:"d/m/Y H:i" }}</strong>
+      por {{ recorte.relacao.publicada_por }}, com {{ recorte.relacao.quantidade }} participante{{ recorte.relacao.quantidade|pluralize }}.
+      Resumo <code>{{ recorte.relacao.resumo }}</code>.
+      <a href="{% url 'portal:relacao-de-habilitados' recorte.relacao.id %}">Ver no canal público</a></p>
+    {% if recorte.projetados != recorte.relacao.quantidade %}
+    <p class="aviso">A projeção de agora traria {{ recorte.projetados }} participante{{ recorte.projetados|pluralize }},
+      e a relação congelada tem {{ recorte.relacao.quantidade }}. Um fato de origem mudou desde o
+      compromisso. A relação <strong>não</strong> se altera: corrigi-la é publicar outra, com motivo.</p>
+    {% endif %}
+    {% else %}
+    <p class="aviso">Universo ainda não comprometido. Seriam {{ recorte.projetados }} participante{{ recorte.projetados|pluralize }} se publicado agora.</p>
+    {% endif %}
+
+    <div class="tabela-rolavel">
+      <table>
+        <caption class="oculto">Participantes projetados do recorte {{ recorte.nome }}</caption>
+        <thead><tr><th scope="col">Número</th><th scope="col">Candidato</th><th scope="col">Protocolo</th></tr></thead>
+        <tbody>
+          {% for participante in recorte.participantes %}
+          <tr><td>{{ participante.numero }}</td><td>{{ participante.nome }}</td><td>{{ participante.protocolo }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% comment %}
+    Um botão só, e ele publica. **Não existe**, aqui nem em superfície alguma: incluir participante,
+    excluir participante, renumerar, campo de semente, simular, refazer (FR-002, FR-017, FR-030).
+    {% endcomment %}
+    {% if pode_emitir and metodo %}
+    <form method="post" action="{% url 'interface:publicar-relacao-do-sorteio' edital.id marco.id %}">
+      {% csrf_token %}
+      <input type="hidden" name="lista_id" value="{{ recorte.lista_id }}">
+      {% if recorte.congelada %}
+      <p class="campo">
+        <label for="motivo-{{ forloop.counter }}">Motivo da sucessão <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <input type="text" id="motivo-{{ forloop.counter }}" name="motivo" required aria-required="true"
+               aria-describedby="ajuda-motivo-{{ forloop.counter }}">
+        <span class="oculto" id="ajuda-motivo-{{ forloop.counter }}">A relação publicada é o compromisso do universo. Substituí-la sem razão escrita apagaria o compromisso sem que ninguém respondesse por isso.</span>
+      </p>
+      <button type="submit">Publicar relação nova, sucedendo a atual</button>
+      {% else %}
+      <button type="submit">Publicar e congelar a relação</button>
+      {% endif %}
+    </form>
+    {% endif %}
+  </article>
+  {% endfor %}
+</section>
+{% endblock %}

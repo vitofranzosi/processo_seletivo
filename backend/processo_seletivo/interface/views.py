@@ -4517,3 +4517,83 @@ def julgar_recurso(request, recurso_id):
             raise
         return _recurso_com_recusa(request, ator, peca, recusa)
     return redirect(reverse("interface:recurso", args=[peca.id]))
+
+
+# ---------------------------------------------------------------------------
+# 021 — o sorteio público auditável
+# ---------------------------------------------------------------------------
+
+
+@require_http_methods(["GET"])
+def sorteio(request, edital_id, marco_id):
+    """O estado de cada recorte do marco, e o que falta em cada um (021, FR-062).
+
+    **Não calcula ordem nenhuma**, e a ausência é a regra: depois de a semente ser conhecida, uma
+    prévia da ordem seria o ensaio que a D-010 existe para impedir; antes dela não há o que
+    calcular. O que esta tela mostra é o **universo** — quem entra, com que número — e o estado do
+    compromisso.
+
+    Um marco de sorteio com cotas tem três recortes, e cada um tem a sua relação, a sua ocorrência
+    e o seu ato. Listá-los juntos é o que evita que alguém publique dois e esqueça o terceiro.
+    """
+    from processo_seletivo.sorteios.application.previa import recortes_do_marco
+
+    ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    perfil_id = _perfil_do_marco(edital, marco_id)
+    try:
+        estado = recortes_do_marco(edital=edital, perfil_id=perfil_id, marco_id=marco_id)
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        raise
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/sorteio.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "perfil": estado["perfil"],
+                "marco": estado["marco"],
+                # Lido do Edital publicado e **exibido sem campo de edição**: quem conduz o sorteio
+                # não declara o método, e alterá-lo é Retificação (D-013, FR-014).
+                "metodo": estado["metodo"],
+                "metodo_hash": estado["metodo_hash"],
+                "recortes": estado["recortes"],
+                "pode_emitir": pode_emitir,
+                "resultado": request.session.pop("resultado_do_sorteio", None),
+                "erro": request.session.pop("erro_do_sorteio", None),
+            },
+        )
+    )
+
+
+@require_http_methods(["POST"])
+def publicar_relacao_do_sorteio(request, edital_id, marco_id):
+    """Publica — que é congelar — a relação de um recorte, e volta pela leitura (FR-001)."""
+    from processo_seletivo.sorteios.application.relacao import publicar_relacao
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    destino = reverse("interface:sorteio", args=[edital_id, marco_id])
+    lista_id = request.POST.get("lista_id") or None
+    try:
+        request.session["resultado_do_sorteio"] = publicar_relacao(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            perfil_id=_perfil_do_marco(edital, marco_id),
+            marco_id=marco_id,
+            lista_id=lista_id,
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+            motivo=request.POST.get("motivo", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_do_sorteio"] = recusa.detail
+    return redirect(destino)

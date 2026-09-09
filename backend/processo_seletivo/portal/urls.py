@@ -74,6 +74,15 @@ urlpatterns = [
         views.resultado_em_pdf,
         name="resultado-documento",
     ),
+    # O sorteio auditável (021). **Endereço estável e histórico pela identidade do artefato**, e
+    # não pelo recorte: uma relação sucedida continua respondendo no mesmo lugar, dizendo que foi
+    # sucedida — é o precedente que `resultados/<uuid>` estabeleceu, e é o que permite ao manifesto
+    # e ao documento publicado citarem um endereço que não muda (FR-011, FR-055).
+    path(
+        "sorteio/relacoes/<uuid:relacao_id>/",
+        views.relacao_de_habilitados,
+        name="relacao-de-habilitados",
+    ),
     path("<uuid:edital_id>/", views.selecao, name="selecao"),
     path(
         "<uuid:edital_id>/vagas/<uuid:profile_id>/inscrever",

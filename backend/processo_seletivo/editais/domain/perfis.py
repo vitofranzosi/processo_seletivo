@@ -148,7 +148,7 @@ def validate_classification_milestones(milestones: list[dict]) -> None:
                     "que ele consome não existe."
                 )
         _validar_janela_recursal(marco.get("appealWindow"))
-        _validar_metodo_de_sorteio(marco.get("drawMethod"))
+        _validar_metodo_de_sorteio(marco.get("drawMethod"), etapas=marco.get("stages") or [])
 
 
 CAMPOS_DO_METODO = (
@@ -161,7 +161,7 @@ CAMPOS_DO_METODO = (
 )
 
 
-def _validar_metodo_de_sorteio(metodo) -> None:
+def _validar_metodo_de_sorteio(metodo, *, etapas=()) -> None:
     """O método declarado vale inteiro, ou não é declarado (021, FR-013, FR-015).
 
     **A ausência é válida e significa alguma coisa**: marco que não sorteia não declara método, e a
@@ -194,6 +194,27 @@ def _validar_metodo_de_sorteio(metodo) -> None:
                 "terceiro reimplementa — e `text`, a frase publicada que a pessoa lê."
             )
     _validar_regra_publicada(metodo["normalization"]["rule"])
+    _validar_etapa_de_habilitacao(metodo.get("qualifyingStageId"), etapas)
+
+
+def _validar_etapa_de_habilitacao(etapa_id, etapas) -> None:
+    """A Etapa que habilita a participar do sorteio, quando o Edital declara uma (021, R-012).
+
+    **Sétimo campo, e opcional** — `null` significa "nenhuma", e é o caso dos quatro Editais lidos,
+    em que a análise documental vem **depois** do sorteio. `null` e conjunto vazio são coisas
+    diferentes: o primeiro diz que não há Etapa de habilitação, e o segundo diria que há e ninguém
+    passou. Confundi-los esvaziaria um certame inteiro.
+
+    Declarada, ela precisa ser uma das Etapas que o próprio marco enumera: uma Etapa de fora seria
+    critério de entrada que a norma do marco não menciona, e ninguém saberia lê-lo no Edital.
+    """
+    if not etapa_id:
+        return
+    if str(etapa_id) not in {str(item) for item in etapas}:
+        raise ProfileValidationError(
+            "A Etapa que habilita ao sorteio precisa ser uma das Etapas enumeradas pelo marco: "
+            "uma Etapa de fora seria critério de entrada que a norma do marco não declara."
+        )
 
 
 def _validar_regra_publicada(regra) -> None:

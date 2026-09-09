@@ -235,12 +235,14 @@ def _metodo_de_sorteio(dados, base):
     texto_normalizacao = _texto(dados, f"{base}-draw-normalizationText")
     regra_substituicao = _texto(dados, f"{base}-draw-substitutionRule")
     texto_substituicao = _texto(dados, f"{base}-draw-substitutionText")
+    etapa_de_habilitacao = _texto(dados, f"{base}-draw-qualifyingStageId")
     preenchidos = [
         *valores.values(),
         regra_normalizacao,
         texto_normalizacao,
         regra_substituicao,
         texto_substituicao,
+        etapa_de_habilitacao,
     ]
     if not any(preenchidos):
         return None
@@ -248,6 +250,9 @@ def _metodo_de_sorteio(dados, base):
         **valores,
         "normalization": {"rule": regra_normalizacao, "text": texto_normalizacao},
         "substitutionRule": {"rule": regra_substituicao, "text": texto_substituicao},
+        # `None` quando não declarada, e não `""`: a ausência é "não há Etapa de habilitação antes
+        # do sorteio", que é o caso dos quatro Editais lidos (021, R-012).
+        "qualifyingStageId": etapa_de_habilitacao or None,
     }
 
 
@@ -308,6 +313,7 @@ def _metodo_para_exibicao(metodo):
         "drawNormalizationText": normalizacao.get("text") or "",
         "drawSubstitutionRule": substituicao.get("rule") or "",
         "drawSubstitutionText": substituicao.get("text") or "",
+        "drawQualifyingStageId": declarado.get("qualifyingStageId") or "",
     }
 
 

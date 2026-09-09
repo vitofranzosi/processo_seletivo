@@ -1985,3 +1985,42 @@ def resultado_em_pdf(request, publicacao_id):
     # para guardar, e abri-lo no visualizador o devolveria à mesma tela de onde saiu.
     resposta["Content-Disposition"] = 'attachment; filename="Resultado.pdf"'
     return resposta
+
+
+@require_http_methods(["GET"])
+def relacao_de_habilitados(request, relacao_id):
+    """A relação publicada, no canal público e sem autenticação (021, FR-005, FR-011).
+
+    **É o passo que a prática atual não tem**: qualquer pessoa vê o universo comprometido **antes**
+    de a semente existir. Depois do sorteio ela continua no ar, e é dela que o verificador de
+    terceiro recalcula o resumo em vez de aceitá-lo (R-015).
+
+    Três dados por participante — número público, nome e protocolo —, que são os mesmos que a
+    divulgação de resultado da `017` já publica. CPF e identificador interno não aparecem, e não
+    aparecem porque não estão na projeção: a página não os filtra, ela não os tem (FR-005).
+    """
+    from processo_seletivo.sorteios.application.selectors import relacao_publica
+
+    relacao = relacao_publica(relacao_id)
+    if relacao is None:
+        raise Http404
+    return render(
+        request,
+        "portal/relacao_de_habilitados.html",
+        {
+            "relacao": relacao,
+            "participantes": [
+                {
+                    "numero": participante.numero_publico,
+                    "nome": participante.inscricao.nome or "",
+                    "protocolo": participante.inscricao.protocolo or "",
+                }
+                for participante in relacao.participantes.select_related("inscricao").order_by(
+                    "numero_publico"
+                )
+            ],
+            # Sucedida é o que o cidadão precisa saber antes de citar a relação: ela continua
+            # íntegra e legível, e já não é o universo comprometido do certame.
+            "sucessora": relacao.sucessoras.first(),
+        },
+    )

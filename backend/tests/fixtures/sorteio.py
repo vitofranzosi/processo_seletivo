@@ -57,6 +57,42 @@ def marco_com_metodo(rascunho, *, perfil_id, etapa_id, metodo=None, marco_id=MAR
     return rascunho
 
 
+def certame_de_sorteio(gestor, api_client, manager_headers, process_payload, *, quantos=3):
+    """Um Edital publicado com marco de sorteio, comissão presidida e inscrições submetidas.
+
+    É o ponto de partida de quase todo teste da feature. A presidência entra porque os comandos do
+    sorteio passam por `comando_de_comissao`, e a base suficiente é a presidência deste Processo.
+    """
+    from processo_seletivo.comissoes.domain.funcoes import Funcao
+    from tests.fixtures.comissao import constituir, inscrever, rascunho_com_etapas
+    from tests.fixtures.edital import PROFILE_ID
+    from tests.fixtures.publicacao import publish_original
+
+    rascunho = rascunho_com_etapas()
+    marco_com_metodo(rascunho, perfil_id=PROFILE_ID, etapa_id=rascunho["stages"][1]["id"])
+    edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
+    membros = constituir(
+        gestor,
+        edital.processo,
+        [("maria", Funcao.PRESIDENTE)],
+        prefixo="sorteio-021",
+    )
+    return {
+        "edital": edital,
+        "processo": edital.processo,
+        "membros": membros,
+        "perfil": PROFILE_ID,
+        "marco": MARCO,
+        "inscricoes": inscrever(edital, quantos, primeiro=901),
+    }
+
+
+def presidente(subject="maria"):
+    from tests.conftest import ator_institucional
+
+    return ator_institucional(subject)
+
+
 def universo_de_sorteio(
     edital, *, versao, perfil_id, marco_id=MARCO, relacao=None, sorteio_id=None
 ):

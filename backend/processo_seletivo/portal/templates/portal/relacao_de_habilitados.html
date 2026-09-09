@@ -1,0 +1,64 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Relação de habilitados ao sorteio{% endblock %}
+{% block conteudo %}
+<h1>Relação de habilitados ao sorteio</h1>
+<p class="sub">{{ relacao.edital }}</p>
+
+{% comment %}
+A sucessão dita **em texto**, e não só por cor, como a divulgação da `017` já faz. A relação
+sucedida continua respondendo neste mesmo endereço, com o conteúdo intacto: ela é histórica, e não
+removida — e é o que permite a um manifesto já publicado continuar citando o endereço que citou
+(021, FR-010, FR-055).
+{% endcomment %}
+{% if sucessora %}
+<p class="aviso"><strong>Esta relação foi sucedida.</strong> Ela permanece consultável como registro
+  do universo comprometido em {{ relacao.publicada_em|date:"d/m/Y" }}, e não é mais o que vale.
+  <a href="{% url 'portal:relacao-de-habilitados' sucessora.id %}">Ver a relação que a sucedeu</a></p>
+{% else %}
+<p class="vigente" role="status">Esta é a relação vigente deste recorte.</p>
+{% endif %}
+
+{% comment %}
+**O compromisso vem antes da lista.** Quem abre esta página precisa entender, primeiro, o que este
+universo é e desde quando ele está fechado — é isso que torna o sorteio conferível. A lista de nomes
+sem o critério e sem o resumo seria uma lista de nomes.
+{% endcomment %}
+<h2>O que esta relação é</h2>
+<p>{{ relacao.criterio_de_projecao }}</p>
+<p class="meta">
+  Publicada em {{ relacao.publicada_em|date:"d/m/Y" }} às {{ relacao.publicada_em|date:"H:i" }},
+  com {{ relacao.quantidade }} participante{{ relacao.quantidade|pluralize }}.
+  Publicada é congelada: a partir deste instante nada nesta relação muda. Corrigi-la é publicar
+  outra, ligada a esta.
+</p>
+
+<h2>Integridade</h2>
+{% comment %}
+Os dois resumos publicados juntos, e é aqui que a promessa desta feature se cumpre: o de cima o
+leitor **recalcula** do que esta página mostra — número, nome e protocolo —, e o de baixo prova sob
+qual método este universo se comprometeu, **antes** de a semente existir (R-015, FR-006, FR-067).
+{% endcomment %}
+<dl class="resumos">
+  <dt>Resumo desta relação (SHA-256)</dt>
+  <dd><code>{{ relacao.resumo }}</code></dd>
+  <dt>Resumo do método do sorteio declarado no Edital</dt>
+  <dd><code>{{ relacao.metodo_hash }}</code></dd>
+</dl>
+
+<h2>Participantes</h2>
+<table>
+  <caption class="oculto">Participantes desta relação, com o número que cada um recebeu para o sorteio</caption>
+  <thead>
+    <tr><th scope="col">Número</th><th scope="col">Candidato</th><th scope="col">Protocolo</th></tr>
+  </thead>
+  <tbody>
+    {% for participante in participantes %}
+    <tr>
+      <td>{{ participante.numero }}</td>
+      <td>{{ participante.nome }}</td>
+      <td>{{ participante.protocolo }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

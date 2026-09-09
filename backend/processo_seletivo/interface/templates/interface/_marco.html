@@ -211,6 +211,20 @@
              name="marco-{{ indice }}-{{ sub }}-draw-substitutionText"
              value="{{ marco.drawSubstitutionText }}">
     </p>
+    <p class="campo largo">
+      <label for="marco-{{ indice }}-{{ sub }}-draw-qualifyingStageId">Etapa que habilita a participar do sorteio</label>
+      <select id="marco-{{ indice }}-{{ sub }}-draw-qualifyingStageId"
+              name="marco-{{ indice }}-{{ sub }}-draw-qualifyingStageId"
+              aria-describedby="ajuda-habilitacao-{{ indice }}-{{ sub }}">
+        <option value="">Nenhuma — entram todas as inscrições submetidas</option>
+        {% for etapa in etapas_classificatorias %}
+        <option value="{{ etapa.id }}" {% if marco.drawQualifyingStageId == etapa.id %}selected{% endif %}>{{ etapa.rotulo }}</option>
+        {% endfor %}
+      </select>
+      <span class="oculto" id="ajuda-habilitacao-{{ indice }}-{{ sub }}">Nos quatro Editais de
+        sorteio lidos, a análise documental vem <strong>depois</strong> do sorteio: ali não há Etapa
+        de habilitação, e entram todas as inscrições submetidas do recorte.</span>
+    </p>
   </fieldset>
   <div class="campos">
     <p class="campo">
