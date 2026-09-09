@@ -51,7 +51,14 @@ qual método este universo se comprometeu, **antes** de a semente existir (R-015
 </dl>
 
 <h2>Participantes</h2>
-<table>
+{% comment %}
+**Envolvida em `.tabela-rolavel` e com a classe `.resultado`, como a tabela de resultado da `017`.**
+Sem isso ela caía no desenho padrão do navegador: a 375 px o nome quebrava em duas linhas e o
+protocolo — que é o identificador do próprio candidato, e o que ele precisa reconhecer — partia em
+`INS-2026-` / `4C63AEAA01`. O portal já tinha a solução; esta tabela era a única que não a usava.
+{% endcomment %}
+<div class="tabela-rolavel">
+<table class="resultado">
   {% comment %}
   A legenda é **visível**, e não escondida para leitor de tela: no portal ela não é redundância da
   marcação, é a frase que diz o que estes números são. O canal administrativo tem a classe `.oculto`
@@ -71,4 +78,5 @@ qual método este universo se comprometeu, **antes** de a semente existir (R-015
     {% endfor %}
   </tbody>
 </table>
+</div>
 {% endblock %}

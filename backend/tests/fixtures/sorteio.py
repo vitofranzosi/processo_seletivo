@@ -70,7 +70,9 @@ def marco_com_metodo(rascunho, *, perfil_id, etapa_id, metodo=None, marco_id=MAR
     return rascunho
 
 
-def certame_de_sorteio(gestor, api_client, manager_headers, process_payload, *, quantos=3):
+def certame_de_sorteio(
+    gestor, api_client, manager_headers, process_payload, *, quantos=3, metodo=None
+):
     """Um Edital publicado com marco de sorteio, comissão presidida e inscrições submetidas.
 
     É o ponto de partida de quase todo teste da feature. A presidência entra porque os comandos do
@@ -82,7 +84,9 @@ def certame_de_sorteio(gestor, api_client, manager_headers, process_payload, *, 
     from tests.fixtures.publicacao import publish_original
 
     rascunho = rascunho_com_etapas()
-    marco_com_metodo(rascunho, perfil_id=PROFILE_ID, etapa_id=rascunho["stages"][1]["id"])
+    marco_com_metodo(
+        rascunho, perfil_id=PROFILE_ID, etapa_id=rascunho["stages"][1]["id"], metodo=metodo
+    )
     edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
     membros = constituir(
         gestor,

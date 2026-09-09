@@ -166,6 +166,32 @@ uv run pytest tests/integration/sorteios                    # relação, congela
 uv run pytest tests/portal/test_verificacao_de_sorteio.py   # a verificação pública
 ```
 
+### O percurso inteiro contra a fonte **de produção**
+
+Toda a suíte observa a ocorrência por um falso — é o que a torna determinística e independente de
+rede. O preço é que o adaptador real, o que fala com a Caixa, lê `listaDezenas` e interpreta
+`dataApuracao`, não era exercitado pelo caminho que a presidência percorre. Este teste o exercita, e
+roda **por escolha**:
+
+```bash
+SORTEIO_E2E_FONTE_REAL=1 TEST_DB_ENGINE=postgresql DB_USER="$USER" DB_NAME=test_021_sorteio \
+  uv run pytest tests/interface/test_sorteio_com_a_fonte_de_producao.py
+```
+
+Ele percorre a tela do começo ao fim — congelar, observar **na rede**, realizar — e confere o
+resultado nas três páginas públicas; no fim, recalcula a ordem a partir do manifesto publicado, que
+é o que um auditor de fora faria. A extração é o concurso 6098, de 06/09/2026: história já
+publicada, e por isso reprodutível. Apontá-lo para outra é trocar `SORTEIO_E2E_CONCURSO` e
+`SORTEIO_E2E_OCORRE_EM`.
+
+**A única coisa simulada é o calendário do certame**, e é necessidade lógica, não conveniência: a
+FR-016 exige que a ocorrência seja posterior ao congelamento, e toda extração já publicada é, por
+construção, anterior a agora. O relógio corre no passado enquanto o Edital é publicado e a relação é
+congelada, e volta a ser o de verdade no instante em que a fonte é consultada.
+
+Ele fica fora do CI de propósito: um teste que depende do serviço da Caixa reprovaria a integração
+por indisponibilidade alheia, e a suíte deixaria de dizer o que diz.
+
 ## Os quatro recortes da amostra, e até onde o sistema conduz cada um (SC-006)
 
 A SC-006 pede que os quatro Editais de sorteio da amostra tenham o seu mecanismo de seleção
