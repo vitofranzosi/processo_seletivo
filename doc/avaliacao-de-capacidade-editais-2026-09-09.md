@@ -89,7 +89,7 @@ spec: `specs/` salta de `018` para `020`, e segue em `021` e `022`.
 | **77/2026** FIC, vagas remanescentes | publicável inteiro | **passou a produzir**: sorteio, ampla concorrência, `lista_id` nulo | corte dos suplentes analisados (014) e convocação (019) |
 | **76/2026** Secretaria Escolar, CR | **publicável inteiro** — L-6 fechada, a coluna LOCAL tem onde ir | **bloqueada, e por outro motivo**: o universo é projeção das inscrições submetidas, e as do 76 acontecem no SIGAA (P-8) | impugnação por quem não é candidato (P-4) |
 | **57/2026** unificado, 2 cursos | **não** — resta a L-1 | **passou a ter mecanismo**: três listas, três atos raiz, um marco — esperando o documento existir | heteroidentificação (L-2) e 2ª instância com órgão distinto |
-| **28/2026** Informática na Educação | **não** — resta a L-1 | **idem**, 7 polos × 3 modalidades | ocupação de vagas entre modalidades (016) |
+| **28/2026** Informática na Educação | **não** — resta a L-1 | **idem**, 7 polos × 3 modalidades | heteroidentificação (L-2) e ocupação de vagas entre modalidades (016) |
 | **173/2025** Designer Educacional | **não** — resta a L-1 | mecanismo computado, até a lista, como em 07/09 | ordem de convocação e heteroidentificação |
 | **14/2026** Orientador de TFC | publicável inteiro | o mais próximo, como em 07/09 | os mesmos quatro pontos, nenhum tocado |
 | **46/2026** técnicos integrados | fora do alvo do produto por decisão | | |
@@ -98,6 +98,12 @@ spec: `specs/` salta de `018` para `020`, e segue em `021` e `022`.
 por código para a entrevista (014), a cascata Grupo 1 → 2 → 3 na convocação (016/019), o terceiro
 critério de desempate (L-4) e o barema das duas fichas (D-4 da `015`). Nada disso é de sorteio, e
 por isso nada disso se moveu.
+
+**A heteroidentificação alcança quatro, e a tabela de 07/09 dizia dois.** O §L-2 daquele
+documento enumera 57, 28, 173 e 46 como os Editais em que a Etapa se aplica a quem declarou a
+modalidade; a tabela por Edital da mesma leitura só a nomeava no 57 e no 173, porque listava o
+bloqueio principal e não a lista inteira. A coluna acima segue o §L-2, que é o enunciado mais
+específico dos dois.
 
 **O 76/2026 trocou de bloqueio, e é a troca que interessa.** Até 08/09 ele parava no sorteio, que
 não existia; hoje o sorteio existe e ele para antes — a relação de habilitados **é projeção de
