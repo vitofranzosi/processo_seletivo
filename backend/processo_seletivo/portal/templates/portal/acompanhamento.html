@@ -140,6 +140,12 @@ pessoa a desconfiar da tela, e é pior do que a ausência dele.
       {% if evento.inicio %}{{ evento.inicio|date:"d/m" }}{% endif %}
       {% if evento.fim %}– {{ evento.fim|date:"d/m" }}{% endif %}
     </span>
+    {% comment %}
+    Onde o evento acontece, quando o Edital o declarou (021, FR-057). Sem declaração não se escreve
+    linha alguma: "local não informado" afirmaria uma omissão onde o Edital pode nunca ter tido o
+    que declarar.
+    {% endcomment %}
+    {% if evento.local %}<span class="onde">{{ evento.local }}</span>{% endif %}
   </li>
   {% empty %}
   <li class="marco"><span class="rotulo">O Edital não publicou cronograma.</span></li>

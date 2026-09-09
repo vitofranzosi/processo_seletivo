@@ -1005,6 +1005,39 @@ fieldset.linha>legend .alterada{font-size:.7rem;font-weight:700;text-transform:u
   box-shadow:0 -2px 8px rgba(0,0,0,.06);margin-top:1.5rem}
 .barra-de-acoes .contagem{margin-left:auto;font-size:.875rem;color:var(--texto-fraco)}
 .barra-de-acoes .contagem strong{color:var(--verde-escuro)}
+
+/* O sorteio auditável (021). O que estas quatro regras precisam dizer é a **ordem dos fatos**:
+   primeiro o método, que veio do Edital e não se edita aqui; depois a ocorrência, cujo material
+   bruto fica à vista antes do ato; e então cada recorte, com o seu universo e o seu botão.
+
+   `.recorte` é bloco separado porque um marco com cotas tem três, e eles precisam ser lidos como
+   três coisas — publicar dois e esquecer o terceiro é o erro que a tela existe para evitar.
+
+   `.metodo` e `.ocorrencia` são listas de definição com o valor em monoespaçada onde ele é resumo
+   ou material bruto: são números que alguém vai comparar com outra tela. */
+.metodo,.ocorrencia{margin:.5rem 0 0;padding:0}
+.metodo dt,.ocorrencia dt{font-weight:600;font-size:.8125rem;color:var(--texto-fraco);
+  margin-top:.5rem}
+.metodo dd,.ocorrencia dd{margin:.1rem 0 0}
+.metodo dd code,.ocorrencia dd code{font-size:.8125rem;overflow-wrap:anywhere}
+.recorte{border:1px solid var(--borda);border-radius:4px;padding:1rem;margin:1rem 0}
+.recorte h3{margin:0 0 .5rem}
+.meta{color:var(--texto-fraco);font-size:.875rem}
+
+
+/* As ocorrências que a indisponibilidade descartou (021, R-006). Elas ficam visíveis de propósito:
+   o descarte de ocorrência é justamente o que precisa ser auditável. */
+.descartadas{border-left:4px solid var(--amarelo);padding:.5rem 0 .5rem 1rem;margin:.75rem 0}
+.descartadas h3{margin:0 0 .35rem;font-size:.9375rem}
+.descartadas ul{margin:0;padding-left:1.1rem;color:var(--texto-fraco);font-size:.875rem}
+
+
+/* Os passos da anulação, numerados (021, FR-054). Anular é um percurso de quatro atos, e um deles
+   é uma Retificação: a lista existe para que a ordem seja lida antes de o formulário ser tentado. */
+.passos-da-anulacao{margin:.5rem 0 .75rem;padding-left:1.3rem;font-size:.875rem;
+  color:var(--texto-fraco)}
+.passos-da-anulacao li{margin:.2rem 0}
+
 </style>
 </head>
 <body>

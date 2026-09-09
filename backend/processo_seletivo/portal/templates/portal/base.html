@@ -565,6 +565,29 @@ form.convite{margin:.75rem 0 0}
 ul.anexos-publicados{list-style:none;margin:.35rem 0 0;padding:0;display:flex;flex-direction:column;
   align-items:flex-start;gap:.4rem}
 ul.anexos-publicados .formato{font-weight:400;opacity:.75}
+
+/* O sorteio auditável (021). Quatro regras, e cada uma responde a uma pergunta de quem lê.
+
+   `.resumos` e `.conferencias` são listas de definição: rótulo e valor, empilhados, com o valor em
+   monoespaçada quando é resumo criptográfico — 64 caracteres hexadecimais precisam poder ser
+   comparados caractere a caractere com o que a pessoa tem na tela ao lado.
+
+   `.conferido` e `.divergente` dizem o desfecho **em cor e em texto**: a página já escreve
+   "confere" e "não confere" no próprio rótulo, e a cor só reforça. Quem não enxerga cor lê a mesma
+   informação.
+
+   `.onde` é o local do evento na linha do tempo — quando o Edital o declarou. */
+.resumos{margin:.75rem 0 0;padding:0}
+.resumos dt{font-weight:600;font-size:.875rem;color:var(--texto-fraco);margin-top:.6rem}
+.resumos dd{margin:.15rem 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:.8125rem;overflow-wrap:anywhere}
+.conferencias{margin:.75rem 0 0;padding:0}
+.conferencias dt{font-weight:600;margin-top:.75rem}
+.conferencias dt.conferido{color:var(--verde-texto)}
+.conferencias dt.divergente{color:var(--vermelho)}
+.conferencias dd{margin:.15rem 0 0;color:var(--texto-fraco)}
+.onde{display:block;font-size:.875rem;color:var(--texto-fraco);overflow-wrap:anywhere}
+
 </style>
 </head>
 <body>

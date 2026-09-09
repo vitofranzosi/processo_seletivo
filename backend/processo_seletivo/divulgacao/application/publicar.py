@@ -161,8 +161,17 @@ def publicar_resultado(
                 campo="natureza",
             )
 
+        # A lista vem **do ato**, e não do formulário: o ato é a autoridade sobre os eixos, e é
+        # ele que a trigger de coerência confere. Recebê-la por parâmetro abriria a possibilidade
+        # de publicar a ordem de uma lista declarando outra (021, D-015).
+        lista_id = ato.lista_id
         publicabilidade = aferir(
-            edital=edital, marco_id=marco_id, ato=ato, at=agora, natureza=natureza
+            edital=edital,
+            marco_id=marco_id,
+            ato=ato,
+            at=agora,
+            natureza=natureza,
+            lista_id=lista_id,
         )
         if not publicabilidade.publicavel:
             raise DomainError(
@@ -171,7 +180,7 @@ def publicar_resultado(
                 publicabilidade.status,
             )
 
-        anterior = vigente_do_marco(edital=edital, marco_id=marco_id)
+        anterior = vigente_do_marco(edital=edital, marco_id=marco_id, lista_id=lista_id)
         if anterior is not None and anterior.natureza == Natureza.DEFINITIVA:
             if natureza == Natureza.PRELIMINAR:
                 raise DomainError(
@@ -219,6 +228,9 @@ def publicar_resultado(
                 ato=ato,
                 perfil_id=ato.perfil_id,
                 marco_id=ato.marco_id,
+                # Copiada do ato pela mesma razão que perfil e marco: ele é a autoridade sobre os
+                # eixos, e a trigger de coerência recusa a publicação que declare outro (021).
+                lista_id=lista_id,
                 natureza=natureza,
                 publicacao_anterior=anterior,
                 conteudo_publico=bytes_do_conteudo,

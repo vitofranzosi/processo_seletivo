@@ -11,6 +11,7 @@ from django.db.utils import IntegrityError
 from processo_seletivo.editais.models import DocumentoExigido, EventoCronograma
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+from processo_seletivo.shared.canonical import SCHEMA_VERSION
 from tests.fixtures.edital import actor_headers, identificador
 from tests.fixtures.publicacao import create_retification, publish_retification
 from tests.fixtures.selecao import publicar_selecao, rascunho_de_selecao
@@ -62,7 +63,7 @@ def test_o_contrato_declarado_chega_ao_conteudo_publicado(
 
     conteudo = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at").content
 
-    assert conteudo["schemaVersion"] == 9
+    assert conteudo["schemaVersion"] == SCHEMA_VERSION
     assert [documento["key"] for documento in conteudo["documentRequirements"]] == [
         "identificacao",
         "diploma",

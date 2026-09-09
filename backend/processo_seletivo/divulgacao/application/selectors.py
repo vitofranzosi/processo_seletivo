@@ -12,11 +12,20 @@ from processo_seletivo.divulgacao.models import (
 )
 
 
-def vigente_do_marco(*, edital, marco_id):
-    """A publicação sem sucessora do marco, ou `None` quando nada foi divulgado ainda."""
+def vigente_do_marco(*, edital, marco_id, lista_id=None):
+    """A publicação sem sucessora **daquele recorte**, ou `None` quando nada foi divulgado ainda.
+
+    **`lista_id` entra com a 021** (D-015, FR-068). Desde que três listas de concorrência produzem
+    três atos raiz no mesmo marco, "a vigente do marco" deixou de ser pergunta com uma resposta:
+    sem o filtro, a cadeia de uma lista seria lida como a de outra, e suceder a publicação da PPI
+    apareceria como suceder a da ampla concorrência.
+
+    O padrão `None` é a ampla concorrência, que é o que toda publicação anterior à 021 é: quem
+    chamava sem o argumento continua recebendo exatamente a publicação que recebia.
+    """
     return (
         PublicacaoResultado.objects.filter(
-            edital=edital, marco_id=marco_id, sucessoras__isnull=True
+            edital=edital, marco_id=marco_id, lista_id=lista_id, sucessoras__isnull=True
         )
         .order_by("-publicado_em")
         .first()

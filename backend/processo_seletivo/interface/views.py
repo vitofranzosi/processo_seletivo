@@ -847,6 +847,10 @@ def compor_etapa(request, edital_id, etapa):
                 if etapa == "cronograma" and digitados is not None
                 else forms.eventos_do_edital(edital)
             ),
+            # A sugestão de local: o do evento anterior, se houver (021, FR-059). Ela vive no
+            # `placeholder` e **não** preenche o campo — sugerir é da tela, presumir é do conteúdo
+            # publicado.
+            "sugestao_de_local": forms.ultimo_local_declarado(edital),
             # Após recusa, o que a pessoa digitou; fora disso, o que está gravado — a mesma regra
             # das demais etapas, e o que impede a recusa apagar o preenchimento.
             "documentos": (
@@ -3785,13 +3789,17 @@ def _renderizar_previa(request, ator, edital, ato, marco_id, *, erro="", status=
     são **recompostas aqui**, e é exatamente disso que a autoridade precisa depois de uma recusa por
     prévia obsoleta — a projeção que ela vai reconfirmar é a de agora, não a que envelheceu.
     """
-    sucede = publicacao_vigente_do_marco(edital=edital, marco_id=marco_id)
+    # **A lista vem do ato, e atravessa as duas leituras** (021, D-015, FR-068). Sem ela, a prévia
+    # de um ato de PPI lia a cadeia da ampla concorrência: o ato aparecia como já sucedido, ou a
+    # assinatura nascia do predecessor errado — e a lista simplesmente não se publicava pela tela.
+    # O teste das três listas não pegava isso porque chamava o domínio direto, já com `lista_id`.
+    sucede = publicacao_vigente_do_marco(edital=edital, marco_id=marco_id, lista_id=ato.lista_id)
     try:
         # `sucede` entra na aferição porque é ele que produz o degrau do meio da FR-005: publicar
         # sobre um marco já divulgado não impede nada, e ainda assim é o que a autoridade precisa
         # ler antes de confirmar.
         publicabilidade = aferir_publicabilidade(
-            edital=edital, marco_id=marco_id, ato=ato, sucede=sucede
+            edital=edital, marco_id=marco_id, ato=ato, sucede=sucede, lista_id=ato.lista_id
         )
     except DomainError as recusa:
         if recusa.status == 404:
@@ -4549,3 +4557,203 @@ def julgar_recurso(request, recurso_id):
             raise
         return _recurso_com_recusa(request, ator, peca, recusa)
     return redirect(reverse("interface:recurso", args=[peca.id]))
+
+
+# ---------------------------------------------------------------------------
+# 021 — o sorteio público auditável
+# ---------------------------------------------------------------------------
+
+
+@require_http_methods(["GET"])
+def sorteio(request, edital_id, marco_id):
+    """O estado de cada recorte do marco, e o que falta em cada um (021, FR-062).
+
+    **Não calcula ordem nenhuma**, e a ausência é a regra: depois de a semente ser conhecida, uma
+    prévia da ordem seria o ensaio que a D-010 existe para impedir; antes dela não há o que
+    calcular. O que esta tela mostra é o **universo** — quem entra, com que número — e o estado do
+    compromisso.
+
+    Um marco de sorteio com cotas tem três recortes, e cada um tem a sua relação, a sua ocorrência
+    e o seu ato. Listá-los juntos é o que evita que alguém publique dois e esqueça o terceiro.
+    """
+    from processo_seletivo.sorteios.application.previa import recortes_do_marco
+
+    ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    perfil_id = _perfil_do_marco(edital, marco_id)
+    try:
+        estado = recortes_do_marco(edital=edital, perfil_id=perfil_id, marco_id=marco_id)
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        raise
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/sorteio.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "perfil": estado["perfil"],
+                "marco": estado["marco"],
+                # Lido do Edital publicado e **exibido sem campo de edição**: quem conduz o sorteio
+                # não declara o método, e alterá-lo é Retificação (D-013, FR-014).
+                "metodo": estado["metodo"],
+                "metodo_hash": estado["metodo_hash"],
+                # A ocorrência da vez — a declarada, ou a que a regra de substituição pôs no
+                # lugar dela —, é o que põe a semente à vista **antes** do ato, que é o que a
+                # transmissão precisa mostrar.
+                "ocorrencia": estado["ocorrencia"],
+                # A referência que ainda falta observar, derivada pela regra publicada. É ela que a
+                # tela nomeia no botão: quem observa precisa saber o que vai buscar, e não há campo
+                # para trocá-la (FR-015, FR-017).
+                "proxima_referencia": estado["proxima_referencia"],
+                # E as que a indisponibilidade descartou, visíveis de propósito: o descarte de
+                # ocorrência é justamente o que precisa ser auditável (R-006).
+                "ocorrencias_descartadas": estado["ocorrencias_descartadas"],
+                "ocorre_em": estado["ocorre_em"],
+                "recortes": estado["recortes"],
+                "pode_emitir": pode_emitir,
+                "resultado": request.session.pop("resultado_do_sorteio", None),
+                "erro": request.session.pop("erro_do_sorteio", None),
+            },
+        )
+    )
+
+
+@require_http_methods(["POST"])
+def publicar_relacao_do_sorteio(request, edital_id, marco_id):
+    """Publica — que é congelar — a relação de um recorte, e volta pela leitura (FR-001)."""
+    from processo_seletivo.sorteios.application.relacao import publicar_relacao
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    destino = reverse("interface:sorteio", args=[edital_id, marco_id])
+    lista_id = request.POST.get("lista_id") or None
+    try:
+        request.session["resultado_do_sorteio"] = publicar_relacao(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            perfil_id=_perfil_do_marco(edital, marco_id),
+            marco_id=marco_id,
+            lista_id=lista_id,
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+            motivo=request.POST.get("motivo", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_do_sorteio"] = recusa.detail
+    return redirect(destino)
+
+
+@require_http_methods(["POST"])
+def observar_ocorrencia_do_sorteio(request, edital_id, marco_id):
+    """Busca a ocorrência declarada na fonte e a registra. **Não sorteia** (021, R-006).
+
+    **A fonte e a ocorrência vêm do método publicado, e o formulário não as recebe.** O que a tela
+    envia é a intenção de observar, e nunca *qual* ocorrência observar: escolher a extração no dia
+    do sorteio seria a mesma fresta que escolher a semente. O Edital nomeia o concurso antes do
+    congelamento, e `derivation` publica como ele foi escolhido a partir da data programada
+    (FR-013, FR-017).
+    """
+    from processo_seletivo.sorteios.application.ocorrencia import observar_ocorrencia
+    from processo_seletivo.sorteios.application.previa import recortes_do_marco
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    destino = reverse("interface:sorteio", args=[edital_id, marco_id])
+    estado = recortes_do_marco(
+        edital=edital, perfil_id=_perfil_do_marco(edital, marco_id), marco_id=marco_id
+    )
+    metodo = estado["metodo"] or {}
+    # **A referência da vez, derivada pela regra publicada** — e não a declarada no Edital
+    # (FR-015). Registrada uma indisponibilidade, é a regra que diz qual ocorrência a substitui, e
+    # observar sempre a declarada travava o certame para sempre na primeira extração não publicada.
+    referencia = estado["proxima_referencia"]
+    if not referencia:
+        request.session["erro_do_sorteio"] = (
+            "A ocorrência declarada e todas as substitutas previstas pela regra publicada estão "
+            "indisponíveis. Prosseguir exige Retificação que declare outro método."
+        )
+        return redirect(destino)
+    try:
+        request.session["resultado_do_sorteio"] = observar_ocorrencia(
+            actor=ator,
+            processo_id=edital.processo_id,
+            fonte=metodo.get("source", ""),
+            referencia=referencia,
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+            # O instante publicado da ocorrência: antes dele, a ausência não é definitiva.
+            ocorre_em=estado["ocorre_em"],
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_do_sorteio"] = recusa.detail
+    return redirect(destino)
+
+
+@require_http_methods(["POST"])
+def realizar_sorteio(request, edital_id, marco_id):
+    """Um botão só. Calcula a ordem e constitui o ato, numa transação (FR-029).
+
+    **Não há prévia, e não há confirmação de cálculo.** O fluxo da `015` — calcular, conferir
+    assinatura, confirmar, emitir — admite calcular várias vezes antes de decidir emitir, e isso,
+    depois da semente, é o ensaio que a D-010 existe para impedir.
+    """
+    from processo_seletivo.sorteios.application.sorteio import constituir_sorteio
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    destino = reverse("interface:sorteio", args=[edital_id, marco_id])
+    try:
+        request.session["resultado_do_sorteio"] = constituir_sorteio(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            relacao_id=request.POST.get("relacao_id"),
+            ocorrencia_id=request.POST.get("ocorrencia_id"),
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_do_sorteio"] = recusa.detail
+    return redirect(destino)
+
+
+@require_http_methods(["POST"])
+def anular_o_sorteio(request, edital_id, marco_id):
+    """Anular **é** constituir o sucessor, com motivo obrigatório (FR-052, FR-053)."""
+    from processo_seletivo.sorteios.application.sorteio import anular_sorteio
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    destino = reverse("interface:sorteio", args=[edital_id, marco_id])
+    try:
+        request.session["resultado_do_sorteio"] = anular_sorteio(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            sorteio_anterior_id=request.POST.get("sorteio_anterior_id"),
+            relacao_id=request.POST.get("relacao_id"),
+            ocorrencia_id=request.POST.get("ocorrencia_id"),
+            motivo=request.POST.get("motivo", ""),
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_do_sorteio"] = recusa.detail
+    return redirect(destino)

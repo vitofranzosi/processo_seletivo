@@ -2,7 +2,7 @@
 {% block titulo %}{{ cabecalho.titulo }}{% endblock %}
 {% block conteudo %}
 <h1>{{ cabecalho.natureza_rotulo }}</h1>
-<p class="sub">{{ cabecalho.processo }} · {{ cabecalho.edital }} · {{ cabecalho.perfil }} — {{ cabecalho.marco }}</p>
+<p class="sub">{{ cabecalho.processo }} · {{ cabecalho.edital }} · {{ cabecalho.perfil }} — {{ cabecalho.marco }}{% if cabecalho.lista %} · {{ cabecalho.lista }}{% endif %}</p>
 
 {% comment %}
 A sucessão dita **em texto**, e não só por cor: quem lê sem enxergar cor precisa da mesma

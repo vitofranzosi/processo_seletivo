@@ -15,6 +15,13 @@ from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 
 
+class OrigemDaOrdem(models.TextChoices):
+    """De onde a ordem veio: do cálculo por Etapas, ou de um sorteio (021, FR-034)."""
+
+    COMPUTADO = "COMPUTADO", "Computado a partir de Etapas"
+    SORTEIO = "SORTEIO", "Constituído por sorteio"
+
+
 class AtoDeOrdenacao(models.Model):
     """A ordem emitida sob uma regra e uma versão normativa determinadas."""
 
@@ -24,6 +31,15 @@ class AtoDeOrdenacao(models.Model):
     # itens sem criar ou apagar a linha correspondente nos modelos de rascunho.
     perfil_id = models.UUIDField()
     marco_id = models.UUIDField()
+    # A dimensão da lista de concorrência (021, D-006, FR-035). `NULL` = ampla concorrência, que é
+    # o que todo ato emitido antes desta feature é.
+    lista_id = models.UUIDField(null=True, blank=True)
+    # **Com default e não anulável**, pela razão que `EtapaAvaliacao.forma` já registrou: `NULL` e
+    # `"COMPUTADO"` descreveriam o mesmo ato com bytes diferentes, e todo ato existente **é**
+    # computado (021, FR-034).
+    origem = models.CharField(
+        max_length=20, choices=OrigemDaOrdem.choices, default=OrigemDaOrdem.COMPUTADO
+    )
     versao = models.ForeignKey(
         VersaoConsolidada, on_delete=models.PROTECT, related_name="atos_de_ordenacao"
     )
@@ -37,16 +53,46 @@ class AtoDeOrdenacao(models.Model):
     motivo_da_sucessao = models.TextField(blank=True, default="")
     # Resumo suficiente para identificar entradas e comparar obsolescência; a regra continua sob
     # a autoridade única de ``versao`` e não é copiada para cá.
+    #
+    # **Num ato constituído por sorteio ele guarda a proveniência, e não um resumo de Etapas**
+    # (021, FR-069):
+    #
+    #     {"editalId": …, "profileId": …, "milestoneId": …, "versionId": …,
+    #      "stageResults": [],
+    #      "origem": "SORTEIO", "sorteioId": …, "relacaoId": …,
+    #      "relationHash": …, "quantidade": N}
+    #
+    # **As cinco primeiras chaves não são escolha nossa**: a trigger `check_ordering_act_provenance`
+    # exige que as quatro identidades coincidam com as colunas do ato e que o marco exista na
+    # versão citada, e confere cada item de `stageResults` contra a linha append-only do Resultado.
+    # `[]` é a resposta verdadeira para um sorteio — nenhuma Etapa o produziu —, e a trigger a
+    # aceita porque já lê a coleção com `COALESCE`.
+    #
+    # As duas alternativas erradas foram consideradas e recusadas. Deixá-lo `{}` sequer atravessa a
+    # trigger, e antes disso faria o ato passar pela leitura sem denunciar nada e quebrar na
+    # comparação, longe da causa. Enchê-lo com a forma de um ato computado mentiria sobre a origem,
+    # e faria `comparar()` acusar divergência a cada mudança de Etapa num marco que não depende de
+    # Etapa nenhuma. É a chave ``origem`` daqui que `estado_do_marco` usa para despachar.
     universo = models.JSONField(default=dict)
     emitido_por = models.CharField(max_length=255)
     emitido_em = models.DateTimeField()
 
     class Meta:
         constraints = [
+            # **A constraint parte em duas parciais** (021, R-001, D-006). A primeira mantém,
+            # palavra por palavra, a garantia de hoje para o ato sem lista: dois atos raiz de ampla
+            # concorrência no mesmo marco continuam sendo recusados. A segunda abre a dimensão que
+            # o certame com cotas exige — três listas, três atos raiz, um marco só, porque a janela
+            # recursal é do marco e os Editais publicam **um** período para as três.
             models.UniqueConstraint(
                 fields=["edital", "perfil_id", "marco_id"],
-                condition=Q(ato_anterior__isnull=True),
+                condition=Q(ato_anterior__isnull=True, lista_id__isnull=True),
                 name="uq_ato_raiz_por_marco",
+            ),
+            models.UniqueConstraint(
+                fields=["edital", "perfil_id", "marco_id", "lista_id"],
+                condition=Q(ato_anterior__isnull=True, lista_id__isnull=False),
+                name="uq_ato_raiz_por_marco_e_lista",
             ),
             models.UniqueConstraint(
                 fields=["ato_anterior"],

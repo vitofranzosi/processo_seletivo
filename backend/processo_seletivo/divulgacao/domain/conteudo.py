@@ -114,11 +114,56 @@ def compor(ato):
             # que não é a ordem em que os marcos existem. Nem a página, nem o documento, nem a Área
             # o exibem: o que se mostra é `marco`, o nome publicado (FR-013).
             "marco_codigo": marco.get("code", "") or "",
+            # **A lista de concorrência, nomeada** (021, FR-045). Quem lê a ordem publicada precisa
+            # saber de qual lista ela é: num certame com cotas há três, e uma ordem sem essa
+            # identificação é indistinguível das outras duas. Vazio na ampla concorrência, que é o
+            # que todo resultado anterior à 021 é.
+            "lista": modalidades.get(str(ato.lista_id), "") if ato.lista_id else "",
             "ato": {"id": str(ato.id), "emitido_em": ato.emitido_em.isoformat()},
+            # **A proveniência do sorteio, quando a ordem veio de um** (021, FR-046). A chave só
+            # existe quando existe sorteio: um ato computado não carrega campo vazio, pela mesma
+            # razão que a retificação não carrega — o resumo canônico cobre o que foi divulgado, e
+            # uma chave nula em todo documento afirmaria "este resultado não foi sorteado" em
+            # milhares de atos que nunca tiveram a pergunta colocada.
+            **_proveniencia_do_sorteio(ato),
         },
         "posicoes": posicoes,
         "situacoes": situacoes,
     }
+
+
+def _proveniencia_do_sorteio(ato):
+    """Identidade, algoritmo, semente e resumos — os cinco dados que a FR-046 manda exibir.
+
+    Lidos do `Sorteio`, e não recompostos: o documento reproduz o que foi divulgado, e recalcular
+    aqui faria uma leitura posterior mudar a frase de um ato já praticado.
+    """
+    sorteio = getattr(ato, "sorteio", None)
+    if sorteio is None:
+        return {}
+    return {
+        "sorteio": {
+            "id": str(sorteio.id),
+            "algoritmo": _algoritmo_do_sorteio(sorteio),
+            "semente": sorteio.semente_normalizada,
+            "relacao_id": str(sorteio.relacao_id),
+            "relacao_resumo": sorteio.relacao.resumo,
+            "metodo_resumo": sorteio.metodo_hash,
+            "manifesto_resumo": sorteio.manifesto_hash,
+            "executado_em": sorteio.executado_em.isoformat(),
+        }
+    }
+
+
+def _algoritmo_do_sorteio(sorteio):
+    from processo_seletivo.sorteios.domain.metodo import metodo_declarado
+
+    declarado = metodo_declarado(
+        sorteio.relacao.versao.content,
+        perfil_id=sorteio.relacao.perfil_id,
+        marco_id=sorteio.relacao.marco_id,
+    )
+    return (declarado or {}).get("algorithm", "")
 
 
 def conteudo_divulgado(composicao, *, natureza, publicado_em, signatario, retificacoes=()):

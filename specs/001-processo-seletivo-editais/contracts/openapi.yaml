@@ -438,6 +438,33 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Versão consolidada, content: { application/json: { schema: { $ref: '#/components/schemas/VersaoConsolidadaResponse' } } } }
         '404': { $ref: '#/components/responses/NoEffectiveVersion' }
+  /public/sorteio/relacoes/{relacaoId}:
+    get:
+      tags: [Consulta pública]
+      summary: Consultar a relação de habilitados ao sorteio e o seu resumo
+      description: >-
+        O universo comprometido de um recorte, publicado antes de a semente existir (021, FR-011).
+        O corpo devolvido **é** o conteúdo canônico cujo canonical_sha256 é o relationHash: quem o
+        baixa recalcula o resumo sem intermediário, em vez de aceitá-lo. Por isso ele expõe
+        exatamente três dados por participante — número público, nome e protocolo — e nunca CPF ou
+        identificador interno de inscrição.
+
+        Endereço estável e histórico: uma relação sucedida continua respondendo aqui, com
+        supersededBy apontando a que a sucedeu.
+      operationId: consultarRelacaoDeHabilitados
+      parameters:
+        - name: relacaoId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Relação publicada, com o conteúdo que o resumo cobre
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RelacaoDeHabilitadosResponse' }
+        '304': { description: O cliente já tem esta representação }
+        '404': { $ref: '#/components/responses/NotFound' }
   /public/editais/{editalId}/historico:
     get:
       tags: [Consulta pública]
@@ -1095,6 +1122,46 @@ components:
         publishedAt: { type: string, format: date-time }
         effectiveAt: { type: string, format: date-time }
         changes: { type: array, minItems: 1, items: { $ref: '#/components/schemas/NormativeChange' } }
+    RelacaoDeHabilitadosResponse:
+      type: object
+      description: >-
+        O conteúdo canônico da relação, mais o que a leitura acrescenta. As nove primeiras
+        propriedades são exatamente as que entram no canonical_sha256 que produz relationHash;
+        acrescentar qualquer outra a elas faria o resumo deixar de fechar sobre o que se entrega.
+      required: [relationId, editalId, versionId, profileId, milestoneId, listId, methodHash,
+                 criterion, participants, relationHash, publishedAt, count]
+      properties:
+        relationId: { type: string, format: uuid }
+        editalId: { type: string, format: uuid }
+        versionId: { type: string, format: uuid }
+        profileId: { type: string, format: uuid }
+        milestoneId: { type: string, format: uuid }
+        listId:
+          type: [string, "null"]
+          format: uuid
+          description: Identidade publicada da modalidade. Nulo significa ampla concorrência.
+        methodHash:
+          type: string
+          description: >-
+            Resumo do método declarado no Edital, gravado no congelamento. É o que prova sob qual
+            método este universo se comprometeu, antes de a semente existir.
+        criterion: { type: string, description: A frase publicada de quem entrou e por quê }
+        participants:
+          type: array
+          items:
+            type: object
+            required: [publicNumber, name, protocol]
+            properties:
+              publicNumber: { type: integer, minimum: 1 }
+              name: { type: string }
+              protocol: { type: string }
+        relationHash: { type: string, description: canonical_sha256 do conteúdo acima }
+        publishedAt: { type: string, format: date-time }
+        count: { type: integer, minimum: 1 }
+        supersededBy:
+          type: [string, "null"]
+          format: uuid
+          description: A relação que sucedeu esta, quando houver. Esta continua legível.
     VersaoConsolidadaResponse:
       type: object
       required: [id, editalId, validFrom, contentHash, content, appliedPublications]

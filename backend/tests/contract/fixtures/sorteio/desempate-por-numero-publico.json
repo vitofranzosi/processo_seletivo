@@ -1,0 +1,16 @@
+{
+  "name": "desempate-por-numero-publico",
+  "ordering": {
+    "keys": {
+      "7": "0b5ac684fb3c29b9117491a341c1890fb78960499b4a8f7ac01ccddfe6a88765",
+      "3": "0b5ac684fb3c29b9117491a341c1890fb78960499b4a8f7ac01ccddfe6a88765",
+      "5": "9c4c64f89a7a8ee08db2ca92dda58673c79579eaf9659ff3dfa0b3642d7d5ee9"
+    }
+  },
+  "expectedOrder": [
+    3,
+    7,
+    5
+  ],
+  "note": "Vetor do § 4, e não do § 3: as chaves são dadas já iguais. Nenhuma entrada válida do sistema produz duas chaves iguais — números públicos iguais em relações distintas têm relationHash distintos, e na mesma relação a numeração é única —, e colisão real de SHA-256 ninguém constrói. Exercitar a ordenação com chaves prontas é a única forma honesta de provar que o desempate da regra 2 executa."
+}

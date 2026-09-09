@@ -1,0 +1,65 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Verificar este sorteio{% endblock %}
+{% block conteudo %}
+<h1>Verificar este sorteio</h1>
+<p class="sub">{{ relacao.edital }} — sorteio realizado em {{ sorteio.executado_em|date:"d/m/Y" }} às {{ sorteio.executado_em|date:"H:i:s" }}.</p>
+
+{% comment %}
+O veredito primeiro, em uma frase, e os degraus depois. Quem abre esta página quer saber se o
+sorteio confere; o detalhe é para quem quiser conferir a conferência (FR-049).
+{% endcomment %}
+{% if veredito.integro %}
+<p class="vigente" role="status"><strong>{{ veredito.resumo }}</strong></p>
+{% else %}
+<p class="erro" role="alert"><strong>{{ veredito.resumo }}</strong></p>
+{% endif %}
+
+{% comment %}
+A cadeia dita **em texto**: sorteio anulado, motivo e sucessor. Quem chega a esta página por uma
+citação antiga precisa saber, na primeira tela, que este ato já não é o que vale — e por quê
+(FR-053, FR-055).
+{% endcomment %}
+{% if sucessor %}
+<p class="aviso"><strong>Este sorteio foi anulado.</strong> Ele permanece íntegro e verificável como
+  registro do que foi feito, e não é mais o que vale.
+  {% if sucessor.motivo_da_anulacao %}Motivo declarado: {{ sucessor.motivo_da_anulacao }}{% endif %}
+  <a href="{% url 'portal:verificar-sorteio' sucessor.id %}">Ver o sorteio que o sucedeu</a></p>
+{% elif sorteio.sorteio_anterior %}
+<p class="vigente" role="status">Este é o sorteio vigente deste recorte. Ele sucedeu um sorteio
+  anulado{% if sorteio.motivo_da_anulacao %}, pelo motivo: {{ sorteio.motivo_da_anulacao }}{% endif %}.
+  <a href="{% url 'portal:verificar-sorteio' sorteio.sorteio_anterior.id %}">Consultar o sorteio anulado</a></p>
+{% else %}
+<p class="vigente" role="status">Este é o sorteio vigente deste recorte.</p>
+{% endif %}
+
+<h2>O que foi conferido</h2>
+<dl class="conferencias">
+  {% for item in veredito.conferencias %}
+  <dt class="{{ item.situacao }}">{{ item.nome }} — {% if item.situacao == "conferido" %}confere{% else %}não confere{% endif %}</dt>
+  <dd>{{ item.descricao }}</dd>
+  {% endfor %}
+</dl>
+
+<h2>Conferir por conta própria, fora deste sistema</h2>
+{% comment %}
+A verificação que importa não é esta página: é a que a pessoa faz na máquina dela. Esta seção existe
+para entregar o que ela precisa — o manifesto e o endereço da relação —, e a `SC-001` é sobre isso
+(FR-047, FR-051).
+{% endcomment %}
+<ul>
+  <li><a href="{% url 'portal:manifesto-do-sorteio' sorteio.id %}">Baixar o manifesto deste sorteio (JSON)</a>
+    — traz a relação, o método, a semente, as chaves e as posições.</li>
+  <li><a href="{% url 'portal:relacao-de-habilitados' relacao.id %}">Abrir a relação publicada</a>
+    — é dela que o resumo da relação se recalcula, sem depender de nós.</li>
+  <li><a href="/static/portal/sorteio-cli.js">Baixar o verificador independente (JavaScript)</a>
+    — roda com <code>node sorteio-cli.js &lt; manifesto.json</code> e imprime a ordem.</li>
+</ul>
+
+<h2>Integridade</h2>
+<dl class="resumos">
+  <dt>Resumo da relação</dt><dd><code>{{ relacao.resumo }}</code></dd>
+  <dt>Resumo do método</dt><dd><code>{{ sorteio.metodo_hash }}</code></dd>
+  <dt>Resumo do manifesto</dt><dd><code>{{ sorteio.manifesto_hash }}</code></dd>
+  <dt>Semente usada</dt><dd><code>{{ sorteio.semente_normalizada }}</code></dd>
+</dl>
+{% endblock %}

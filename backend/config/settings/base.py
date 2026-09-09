@@ -76,7 +76,26 @@ INSTALLED_APPS = [
     # `DecisaoRecurso` — porque só assim "todo sucessor cita a decisão" é constraint, e não
     # promessa. O ciclo se quebra por referência tardia, como o Django resolve (018, T-001).
     "processo_seletivo.recursos",
+    # O sorteio como ato auditável (021): a relação de habilitados congelada, a ocorrência da fonte
+    # externa e o `AtoDeOrdenacao` constituído por sorteio. App próprio porque o vocabulário e o
+    # ciclo de vida existem **antes** da ordem — a relação é publicada dias antes, e é ela o
+    # compromisso do universo. A direção da dependência é única: `sorteios` lê `classificacao`,
+    # `publicacoes` e `inscricoes`, e nenhum deles passa a conhecê-lo (021, R-002).
+    "processo_seletivo.sorteios",
 ]
+
+# **Só o adaptador da fonte da semente mora aqui.** Qual implementação atende à porta, quanto tempo
+# ela espera e quantas vezes tenta são decisões de operação. Fonte, ocorrência, derivação,
+# normalização e regra de substituição **não** estão aqui: são conteúdo normativo publicado, vivem
+# no `drawMethod` do marco de classificação do Edital, e alterá-las é Retificação — nunca
+# implantação de software (021, FR-014, D-013).
+SORTEIO_FONTE_ADAPTADOR = os.environ.get(
+    "SORTEIO_FONTE_ADAPTADOR",
+    "processo_seletivo.sorteios.infrastructure.fontes.loteria_federal.LoteriaFederal",
+)
+SORTEIO_FONTE_TIMEOUT_SEGUNDOS = float(os.environ.get("SORTEIO_FONTE_TIMEOUT_SEGUNDOS", "10"))
+SORTEIO_FONTE_TENTATIVAS = int(os.environ.get("SORTEIO_FONTE_TENTATIVAS", "3"))
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",

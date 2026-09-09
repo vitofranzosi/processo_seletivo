@@ -206,10 +206,54 @@ def _marcos(dados, prefixo):
                 # ausência é a afirmação certa: sem prazo publicado, ninguém inventa prazo
                 # (FR-020, FR-028, FR-030).
                 "appealWindow": _janela_recursal(dados, base),
+                # O método do sorteio, **ausente quando o marco não sorteia** — que é a maioria
+                # deles. A ausência é a afirmação certa: sem método publicado, o sistema não
+                # escolhe um (021, FR-013, FR-066).
+                "drawMethod": _metodo_de_sorteio(dados, base),
                 "tiebreakers": criterios,
             }
         )
     return marcos
+
+
+# Os seis campos do método, na ordem em que a tela os pede. `normalization` e `substitutionRule`
+# são pares `{rule, text}` — o identificador que a máquina aplica e a frase que a pessoa lê —, e é
+# por isso que eles não estão nesta tupla simples (021, FR-013).
+CAMPOS_SIMPLES_DO_METODO = ("algorithm", "source", "occurrence", "occurrenceAt", "derivation")
+
+
+def _metodo_de_sorteio(dados, base):
+    """`{...}` quando o marco declara o método do sorteio; `None` quando não declara.
+
+    **Nada de meio-declarado sai daqui.** Se a pessoa não preencheu nada, o método é ausente e a
+    ausência viaja como ausência. Se preencheu alguma coisa, o objeto viaja inteiro e a validação
+    do Perfil é que recusa a metade, nomeando o que falta — o formulário devolveria silêncio, e
+    silêncio sobre método é o que faz a escolha voltar para a mesa no dia do sorteio (FR-015).
+    """
+    valores = {campo: _texto(dados, f"{base}-draw-{campo}") for campo in CAMPOS_SIMPLES_DO_METODO}
+    regra_normalizacao = _texto(dados, f"{base}-draw-normalizationRule")
+    texto_normalizacao = _texto(dados, f"{base}-draw-normalizationText")
+    regra_substituicao = _texto(dados, f"{base}-draw-substitutionRule")
+    texto_substituicao = _texto(dados, f"{base}-draw-substitutionText")
+    etapa_de_habilitacao = _texto(dados, f"{base}-draw-qualifyingStageId")
+    preenchidos = [
+        *valores.values(),
+        regra_normalizacao,
+        texto_normalizacao,
+        regra_substituicao,
+        texto_substituicao,
+        etapa_de_habilitacao,
+    ]
+    if not any(preenchidos):
+        return None
+    return {
+        **valores,
+        "normalization": {"rule": regra_normalizacao, "text": texto_normalizacao},
+        "substitutionRule": {"rule": regra_substituicao, "text": texto_substituicao},
+        # `None` quando não declarada, e não `""`: a ausência é "não há Etapa de habilitação antes
+        # do sorteio", que é o caso dos quatro Editais lidos (021, R-012).
+        "qualifyingStageId": etapa_de_habilitacao or None,
+    }
 
 
 # As três escolhas da janela recursal, como viajam no formulário. Nomes em português porque é o
@@ -248,6 +292,30 @@ def _janela_recursal(dados, base):
 
 def _unidade(dados, base):
     return _texto(dados, f"{base}-appealUnit") or "DIAS_CORRIDOS"
+
+
+def _metodo_para_exibicao(metodo):
+    """Os seis campos do método de volta para a tela, achatados no prefixo `draw`.
+
+    Achatados porque o formulário é plano: `{rule, text}` viraria dois campos de qualquer forma, e
+    montá-los aqui é o que mantém o template sem lógica. Vazio quando não há método, e vazio é o
+    que a tela desenha — nada de rótulo institucional por padrão.
+    """
+    declarado = metodo or {}
+    normalizacao = declarado.get("normalization") or {}
+    substituicao = declarado.get("substitutionRule") or {}
+    return {
+        "drawAlgorithm": declarado.get("algorithm") or "",
+        "drawSource": declarado.get("source") or "",
+        "drawOccurrence": declarado.get("occurrence") or "",
+        "drawOccurrenceAt": declarado.get("occurrenceAt") or "",
+        "drawDerivation": declarado.get("derivation") or "",
+        "drawNormalizationRule": normalizacao.get("rule") or "",
+        "drawNormalizationText": normalizacao.get("text") or "",
+        "drawSubstitutionRule": substituicao.get("rule") or "",
+        "drawSubstitutionText": substituicao.get("text") or "",
+        "drawQualifyingStageId": declarado.get("qualifyingStageId") or "",
+    }
 
 
 def _declaracao_do_marco(janela):
@@ -324,6 +392,9 @@ def ler_eventos(dados):
                 "startAt": _instante(dados, f"{base}-startAt"),
                 "endAt": _instante(dados, f"{base}-endAt"),
                 "order": _inteiro(dados, f"{base}-order", 0),
+                # Onde o evento acontece (021, D-008). Vazio significa "não declarado", e é o que
+                # a tela desenha por padrão: nenhum valor institucional se aplica sozinho.
+                "location": _texto(dados, f"{base}-location"),
             }
         )
     return _renumerar(eventos)
@@ -511,6 +582,7 @@ def eventos_do_edital(edital):
             if evento.end_at
             else "",
             "order": evento.order,
+            "location": evento.location,
             # O rótulo que a Etapa mostra ao escolher o vínculo (FR-036). A Etapa se vincula a um
             # Evento **para herdar as datas** — é o que a ajuda promete —, e a lista mostrava
             # "tipo — descrição", cortava por falta de largura e não mostrava data nenhuma: para
@@ -589,6 +661,7 @@ def _marco_para_o_formulario(marco):
         "appealDeclaration": _declaracao_do_marco(marco.janela_recursal),
         "appealDurationDays": (marco.janela_recursal or {}).get("durationDays") or "",
         "appealUnit": (marco.janela_recursal or {}).get("unit") or "DIAS_CORRIDOS",
+        **_metodo_para_exibicao(marco.metodo_de_sorteio),
         "criterios": [
             {
                 "id": str(criterio.id),
@@ -622,6 +695,11 @@ def _marco_persistido(marco):
         # e todo recurso nascia sem prazo computável (E2E18-005).
         # `or None` como em `publish_edital`: `{}` é a ausência, e a ausência viaja como ausência.
         "appealWindow": marco.janela_recursal or None,
+        # **E o método pelo mesmo motivo, no mesmo lugar.** São dois caminhos de perda, e fechar só
+        # um deixa o defeito vivo: sem esta linha, declarar o método no passo Classificação e
+        # gravar qualquer passo seguinte publicaria um Edital que não declara método nenhum — e o
+        # congelamento da relação seria recusado sem que ninguém entendesse por quê.
+        "drawMethod": marco.metodo_de_sorteio or None,
         "tiebreakers": [
             {
                 "id": str(criterio.id),
@@ -783,6 +861,11 @@ def eventos_persistidos(edital):
             "order": evento.order,
             "status": evento.status,
             "isRegistrationPeriod": evento.is_registration_period,
+            # **E o local pelo mesmo motivo.** É o terceiro campo a entrar nesta lista pela lição
+            # que a E2E17-001 deixou: campo omitido aqui volta ao padrão do modelo na gravação
+            # seguinte, sem recusa e sem aviso — e o Edital seria publicado sem o local que alguém
+            # digitou dois passos antes (021, FR-057).
+            "location": evento.location,
         }
         for evento in cronograma.eventos.order_by("order")
     ]
@@ -945,3 +1028,20 @@ def ler_membros_em_lote(dados):
             identificador, separador, rotulo = linha.partition(";")
         entradas.append((identificador.strip(), rotulo.strip()))
     return {"entradas": entradas, "funcao": _texto(dados, "funcao"), "lista": bruto}
+
+
+def ultimo_local_declarado(edital):
+    """O local do último Evento que declarou um — a sugestão que a tela oferece (021, FR-059).
+
+    **Sugestão, e não preenchimento.** Ela chega ao template como `placeholder`: o campo continua
+    vazio, e vazio continua significando "não declarado". Um `value` aqui aplicaria ao Edital um
+    local que ninguém escreveu, que é a degradação que os rótulos da Etapa e o default institucional
+    do Evento já recusaram (FR-058).
+    """
+    cronograma = getattr(edital, "cronograma", None)
+    if cronograma is None:
+        return ""
+    for evento in cronograma.eventos.order_by("-order"):
+        if evento.location:
+            return evento.location
+    return ""
