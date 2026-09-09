@@ -10,7 +10,7 @@ Retificação. Nunca implantação de software.
 
 | Entrada | Origem | Forma |
 |---|---|---|
-| `relationHash` | resumo canônico da relação congelada | 64 hex minúsculos |
+| `relationHash` | resumo canônico da relação congelada, sobre a **projeção pública** dela | 64 hex minúsculos |
 | `drawScopeId` | identidade do recorte: `<perfilId>` ou `<perfilId>:<listaId>` | texto |
 | `seed` | semente normalizada, obtida da ocorrência declarada | texto |
 | `publicNumber` | número público do participante na relação | inteiro ≥ 1 |
@@ -62,7 +62,14 @@ Vivem em `backend/tests/contract/fixtures/sorteio/`, um arquivo JSON por vetor, 
 por duas implementações independentes — Python, no domínio, e JavaScript, em
 `backend/tests/javascript/sorteio.test.js`.
 
-Cada vetor traz:
+**Há duas formas de vetor, porque há duas coisas a provar.** Os de **chave** dão entradas e cobram
+bytes canônicos, resumo e ordem: exercitam os §§ 2 a 4 inteiros. O de **ordenação** dá as chaves já
+prontas e cobra só a ordem: exercita o § 4 sozinho, e é a única forma honesta de provar o desempate
+da regra 2 — **não existe entrada válida do sistema que produza duas chaves iguais**, porque números
+públicos iguais em relações distintas têm `relationHash` distintos, e na mesma relação a numeração é
+única. Um vetor que anunciasse "colisão de SHA-256" prometeria o que ninguém constrói (R-004).
+
+Vetor de chave:
 
 ```json
 {
@@ -74,19 +81,47 @@ Cada vetor traz:
 }
 ```
 
+Campos opcionais de um vetor de chave: `note`, prosa explicando o que ele detecta, e `contrast`,
+um segundo `{input, canonicalBytes, keys, expectedOrder}` cuja ordem o teste afirma ser **diferente**
+da principal — é o que o `mesma-semente-recortes-distintos` precisa para provar o que promete, já
+que a propriedade é uma relação entre dois cálculos e não um cálculo só.
+
+Vetor de ordenação:
+
+```json
+{
+  "name": "desempate-por-numero-publico",
+  "ordering": {"keys": {"7": "<64 hex>", "3": "<o mesmo 64 hex>", "5": "<outro>"}},
+  "expectedOrder": [3, 7, 5]
+}
+```
+
 Vetores obrigatórios:
 
-| Vetor | O que prova |
-|---|---|
-| `tres-participantes` | o caminho feliz, com bytes canônicos exibidos |
-| `acentos-e-nfc` | normalização NFC muda a chave, e a regra está declarada |
-| `colisao-de-chave` | o desempate por `publicNumber` existe e é executado |
-| `um-participante` | ordem de um é legítima |
-| `mesma-semente-recortes-distintos` | `relationHash` separa os dois |
+| Vetor | Forma | O que prova |
+|---|---|---|
+| `tres-participantes` | chave | o caminho feliz, com bytes canônicos exibidos |
+| `acentos-e-nfc` | chave | normalização NFC muda a chave, e a regra está declarada |
+| `um-participante` | chave | ordem de um é legítima |
+| `mesma-semente-recortes-distintos` | chave | `relationHash` separa os dois |
+| `desempate-por-numero-publico` | ordenação | o desempate da regra 2 existe e é executado |
+
+## 5.1 O que o verificador precisa conferir, e a ordem
+
+1. **O resumo do manifesto.** `canonical_sha256` do objeto **sem** o campo `manifestHash`, com as
+   chaves ordenadas em **todos** os níveis. É ele que amarra o pacote ao que a instituição
+   publicou: sem esta conferência, um manifesto internamente coerente — semente, chaves e posições
+   que fecham entre si — passaria como válido sem ser o que foi divulgado.
+2. **As chaves**, recalculadas das entradas (§ 3).
+3. **A ordem**, recalculada das chaves (§ 4).
+4. **O resumo da relação**, refeito da relação publicada no portal — número, nome e protocolo. É a
+   única conferência que o manifesto sozinho não permite, e é por isso que o endereço da relação
+   viaja com ele.
 
 ## 6. O que o verificador de terceiro precisa, e nada além
 
 - o manifesto publicado (§ `manifesto.md`);
+- a relação publicada no portal, se quiser refazer o `relationHash` em vez de aceitá-lo;
 - uma implementação de SHA-256;
 - estas cinco regras.
 

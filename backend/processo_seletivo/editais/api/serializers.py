@@ -83,6 +83,10 @@ class ClassificationMilestoneSerializer(serializers.Serializer):
     # Sem este campo o contrato de entrada não sabia dizer o prazo, e o Edital publicava
     # `appealWindow: null` mesmo quando a instituição o havia declarado (E2E18-005).
     appealWindow = serializers.JSONField(required=False, allow_null=True)
+    # O método do sorteio, pela mesma razão e na mesma forma da janela: objeto declarado pela
+    # norma, e `allow_null` porque não declarar é resposta legítima — a maioria dos marcos não
+    # sorteia (021, FR-013, D-013).
+    drawMethod = serializers.JSONField(required=False, allow_null=True)
     tiebreakers = TiebreakerSerializer(many=True, required=False)
 
 
@@ -129,6 +133,10 @@ class EventSerializer(serializers.Serializer):
     )
     # Ausente significa "não é o período de inscrições", que é a verdade para quase todo Evento.
     isRegistrationPeriod = serializers.BooleanField(required=False, default=False)
+    # Onde o Evento acontece (021, D-008). `allow_blank` porque não declarar é resposta legítima —
+    # e a mais comum —, e **sem** validação de URL: "Página da chamada pública" não é endereço
+    # eletrônico, e recusá-lo obrigaria a instituição a mentir para publicar (FR-061).
+    location = serializers.CharField(required=False, allow_blank=True, max_length=255)
 
     def validate(self, attrs):
         try:

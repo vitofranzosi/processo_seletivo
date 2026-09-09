@@ -199,6 +199,34 @@ urlpatterns = [
         views.ato_de_ordenacao,
         name="ato-de-ordenacao",
     ),
+    # O sorteio (021). A rota pende do **marco**, como as da 015, e é o recorte que ela lista: um
+    # marco de sorteio com cotas tem três recortes, e cada um tem o seu estado. O GET não escreve
+    # nada e não calcula ordem nenhuma — não há o que calcular antes da semente (D-010).
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio",
+        views.sorteio,
+        name="sorteio",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/relacao",
+        views.publicar_relacao_do_sorteio,
+        name="publicar-relacao-do-sorteio",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/ocorrencia",
+        views.observar_ocorrencia_do_sorteio,
+        name="observar-ocorrencia-do-sorteio",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/realizar",
+        views.realizar_sorteio,
+        name="realizar-sorteio",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/anular",
+        views.anular_o_sorteio,
+        name="anular-sorteio",
+    ),
     # A divulgação (017). A rota pende do **ato**, e não do marco, pelo mesmo motivo que as da 015
     # pendem do marco: é dali que ela é alcançada, e é o ato que a autorização qualifica. O GET
     # compõe a prévia e não grava nada; o POST é o ato.

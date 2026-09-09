@@ -144,6 +144,21 @@ class MarcoClassificatorio(models.Model):
     # de admissibilidade motivado (FR-020, FR-028). Marcos diferentes admitem recurso ou não, e por
     # prazos diferentes, e é por isso que ela mora aqui e não no Edital.
     janela_recursal = models.JSONField(default=dict, blank=True)
+    # O método do sorteio deste marco (021, degrau 10, D-013). **Vazio significa não declarado** —
+    # e o marco sem método não congela relação (FR-066): congelar sob método indefinido seria
+    # escolher o método depois.
+    #
+    # **Mora aqui, e não numa tabela de sorteio**, porque a FR-014 exige que alterá-lo seja
+    # Retificação. Uma tabela própria seria registro operacional que se diz normativo: sem versão
+    # consolidada, sem autoridade signatária, fora do snapshot e fora da gramática de
+    # endereçamento. Aqui ele é conteúdo publicado como qualquer outro, e
+    # `/profiles/id=…/classificationMilestones/id=…/drawMethod/…` já resolve — é objeto, e em
+    # objeto o segmento do caminho é nome de chave literal.
+    #
+    # **É do marco, e não da lista.** Um sorteio é um evento: a mesma extração da mesma fonte
+    # semeia as três listas do recorte, e é o `relationHash` que as separa. Método por lista
+    # reabriria a porta que a D-014 fechou, e não atenderia Edital nenhum da amostra.
+    metodo_de_sorteio = models.JSONField(default=dict, blank=True)
 
     class Meta:
         constraints = [

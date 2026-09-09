@@ -35,6 +35,19 @@ class EventoCronograma(models.Model):
     # cabe numa constraint. `type` é texto livre e nada o valida; inferir o período dali seria
     # decidir uma regra de direito lendo o que alguém digitou.
     is_registration_period = models.BooleanField(default=False)
+    # Onde o Evento acontece (021, D-008, FR-056..FR-061). **Um campo de texto, e não dois**: o 76
+    # publica naturezas diferentes na mesma coluna LOCAL, e o 77 diz sala física e canal na mesma
+    # frase — separar endereço de link inventaria uma distinção que os Editais não fazem.
+    #
+    # **Não é URL**, e não é validado como tal: *"Página da chamada pública"* não é endereço
+    # eletrônico, e recusá-lo obrigaria a instituição a mentir para poder publicar (FR-061).
+    #
+    # **Sem valor institucional por padrão** (FR-058), pela razão que os rótulos da Etapa já
+    # registraram: um default aplicaria ao Edital um dado que ele não publicou. Vazio significa
+    # "não declarado", e é o que todo Edital anterior ao degrau 11 afirma. A conveniência vai para
+    # a composição, que sugere o valor do evento anterior — sugerir é da tela, presumir é do
+    # conteúdo publicado (FR-059).
+    location = models.CharField(max_length=255, blank=True, default="")
 
     class Meta:
         ordering = ["order", "start_at", "id"]

@@ -89,9 +89,32 @@ COLECAO_DE_DOCUMENTOS_ENDERECADA = f"/{COLECAO_DE_DOCUMENTOS}"
 # todo Edital publicado antes deste degrau, e é uma afirmação, não uma omissão a corrigir: sem
 # declaração o sistema não inventa prazo, e a tempestividade volta a ser juízo de admissibilidade
 # motivado, que é a degradação que a D-004 declarou (FR-028, FR-029).
+# **O degrau 10 é o segundo dentro do marco**, e a razão é a mesma do 8: o que o marco declara é
+# dele, e não do Edital — marcos diferentes ordenam por regras diferentes, e só um deles sorteia.
+#
+# `None` significa **método não declarado**, e não método padrão. É o que todo Edital publicado
+# antes deste degrau afirma, e é verdade sobre todos eles: a capacidade não existia, e nenhum deles
+# declarou fonte, ocorrência ou regra de normalização. Há, portanto, conversão sem invenção — e o
+# sistema recusa congelar relação em marco sem método, em vez de escolher um por conta própria
+# (021, FR-066, D-013).
 DEGRAUS_DE_MARCO = {
     8: {"appealWindow": None},
+    10: {"drawMethod": None},
 }
+
+# **O degrau 11 é o primeiro dentro do Evento do Cronograma.** Vazio significa **não declarado**, e
+# não "acontece em lugar nenhum": é o que todo Edital publicado antes dele afirma, porque a
+# capacidade não existia — e nenhum deles publicou o local em campo estruturado, ainda que muitos o
+# dissessem em prosa. Conversão sem invenção, portanto (021, D-008, R-009).
+#
+# String e não `None`, pela convenção do próprio objeto: `description` e `type` do Evento são
+# strings, e uma terceira grafia para texto ausente faria a versão canônica admitir mais de uma
+# forma para o mesmo Edital.
+DEGRAUS_DE_EVENTO = {
+    11: {"location": ""},
+}
+
+COLECAO_DE_EVENTOS = "schedule"
 
 COLECAO_DE_MARCOS = "classificationMilestones"
 
@@ -178,6 +201,20 @@ def elevar_marco(marco, *, de=VERSAO_DE_ORIGEM):
     return {**marco, **faltando} if faltando else marco
 
 
+def elevar_evento(evento, *, de=VERSAO_DE_ORIGEM):
+    """O Evento do Cronograma na forma vigente. Simétrico aos demais degraus por entidade."""
+    if not isinstance(evento, dict):
+        return evento
+    faltando = {
+        chave: valor
+        for versao, degrau in sorted(DEGRAUS_DE_EVENTO.items())
+        if versao > de
+        for chave, valor in degrau.items()
+        if chave not in evento
+    }
+    return {**evento, **faltando} if faltando else evento
+
+
 def elevar_documento(documento, *, de=VERSAO_DE_ORIGEM):
     """O Documento Exigido na forma vigente. Idempotente, como os demais degraus por entidade."""
     if not isinstance(documento, dict):
@@ -224,6 +261,12 @@ def elevar(conteudo):
         if isinstance(documentos, list)
         else documentos
     )
+    eventos = conteudo.get(COLECAO_DE_EVENTOS)
+    eventos_elevados = (
+        [elevar_evento(item, de=declarada) for item in eventos]
+        if isinstance(eventos, list)
+        else eventos
+    )
     raiz = {
         chave: valor
         for versao, degrau in sorted(DEGRAUS_DA_RAIZ.items())
@@ -236,6 +279,7 @@ def elevar(conteudo):
         and elevadas == etapas
         and perfis_elevados == perfis
         and documentos_elevados == documentos
+        and eventos_elevados == eventos
         and not raiz
     ):
         return conteudo
@@ -246,6 +290,8 @@ def elevar(conteudo):
         elevado["profiles"] = perfis_elevados
     if isinstance(documentos, list):
         elevado[COLECAO_DE_DOCUMENTOS] = documentos_elevados
+    if isinstance(eventos, list):
+        elevado[COLECAO_DE_EVENTOS] = eventos_elevados
     return elevado
 
 

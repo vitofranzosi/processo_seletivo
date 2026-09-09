@@ -1,0 +1,30 @@
+{
+  "name": "acentos-e-nfc",
+  "input": {
+    "relationHash": "bc5c4f69423e93bda3144528b5133911a2ddae49155bc233e2d05662cfc67410",
+    "drawScopeId": "9f1c2d3e-perfil",
+    "seed": "Sorteio da Ampla Concorrência — café",
+    "participants": [
+      1,
+      2
+    ]
+  },
+  "canonicalBytes": {
+    "1": "{\"domain\":\"processo-seletivo/sorteio/v1\",\"drawScopeId\":\"9f1c2d3e-perfil\",\"publicNumber\":1,\"relationHash\":\"bc5c4f69423e93bda3144528b5133911a2ddae49155bc233e2d05662cfc67410\",\"seed\":\"Sorteio da Ampla Concorrência — café\"}",
+    "2": "{\"domain\":\"processo-seletivo/sorteio/v1\",\"drawScopeId\":\"9f1c2d3e-perfil\",\"publicNumber\":2,\"relationHash\":\"bc5c4f69423e93bda3144528b5133911a2ddae49155bc233e2d05662cfc67410\",\"seed\":\"Sorteio da Ampla Concorrência — café\"}"
+  },
+  "keys": {
+    "1": "5f42f2b8594b318dd0a0c630080b5a8e850d12002ef1f890bbf7653dbaa0e343",
+    "2": "3bf85c2ebda161c34cf0e1da51e8b3df8f25ef8b78c0dc74640e9939505b4ede"
+  },
+  "expectedOrder": [
+    2,
+    1
+  ],
+  "note": "A semente entra em NFD e os bytes canônicos saem em NFC: a regra do § 2.5 normaliza, e por isso as duas grafias produzem a mesma chave. Uma implementação que não normalizasse produziria outra chave e outra ordem — é isso que este vetor detecta.",
+  "seedNFC": "Sorteio da Ampla Concorrência — café",
+  "keysFromNFC": {
+    "1": "5f42f2b8594b318dd0a0c630080b5a8e850d12002ef1f890bbf7653dbaa0e343",
+    "2": "3bf85c2ebda161c34cf0e1da51e8b3df8f25ef8b78c0dc74640e9939505b4ede"
+  }
+}

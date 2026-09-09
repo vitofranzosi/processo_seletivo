@@ -1232,6 +1232,11 @@ def _cronograma(conteudo, agora):
                 "inicio": inicio,
                 "fim": fim,
                 "situacao": situacao,
+                # Onde o evento acontece, quando o Edital o declarou (021, D-008, FR-057). Vazio
+                # significa não declarado, e a tela simplesmente não escreve linha alguma — dizer
+                # "local não informado" afirmaria uma omissão onde o Edital pode nunca ter tido o
+                # que declarar.
+                "local": (evento.get("location") or "").strip(),
             }
         )
     return eventos
@@ -1945,8 +1950,15 @@ def resultado(request, publicacao_id):
     # oferecê-la levaria de um resultado histórico a outro. Vigente é a que ninguém sucedeu, e é
     # ela que a FR-044 manda oferecer.
     foi_sucedida = bool(publicacao.sucessoras.all())
+    # **A vigente é a da mesma lista** (021, D-015, FR-068). Sem o eixo, uma publicação de PPI
+    # sucedida oferecia "ver o resultado vigente" apontando para a ampla concorrência — mandando
+    # quem consulta a ordem de uma lista para a ordem de outra.
     vigente = (
-        vigente_do_marco(edital=publicacao.edital, marco_id=publicacao.marco_id)
+        vigente_do_marco(
+            edital=publicacao.edital,
+            marco_id=publicacao.marco_id,
+            lista_id=publicacao.lista_id,
+        )
         if foi_sucedida
         else None
     )
@@ -1984,4 +1996,126 @@ def resultado_em_pdf(request, publicacao_id):
     # `attachment`, como o comprovante: quem vem buscar o documento oficial vem buscar um arquivo
     # para guardar, e abri-lo no visualizador o devolveria à mesma tela de onde saiu.
     resposta["Content-Disposition"] = 'attachment; filename="Resultado.pdf"'
+    return resposta
+
+
+@require_http_methods(["GET"])
+def relacao_de_habilitados(request, relacao_id):
+    """A relação publicada, no canal público e sem autenticação (021, FR-005, FR-011).
+
+    **É o passo que a prática atual não tem**: qualquer pessoa vê o universo comprometido **antes**
+    de a semente existir. Depois do sorteio ela continua no ar, e é dela que o verificador de
+    terceiro recalcula o resumo em vez de aceitá-lo (R-015).
+
+    Três dados por participante — número público, nome e protocolo —, que são os mesmos que a
+    divulgação de resultado da `017` já publica. CPF e identificador interno não aparecem, e não
+    aparecem porque não estão na projeção: a página não os filtra, ela não os tem (FR-005).
+    """
+    from processo_seletivo.sorteios.application.selectors import relacao_publica
+
+    relacao = relacao_publica(relacao_id)
+    if relacao is None:
+        raise Http404
+    return render(
+        request,
+        "portal/relacao_de_habilitados.html",
+        {
+            "relacao": relacao,
+            # O nome da lista, lido da versão que a relação cita — e não do conteúdo vigente, que
+            # uma Retificação posterior poderia ter mudado (FR-045).
+            "lista": _nome_da_lista(relacao),
+            "participantes": [
+                {
+                    "numero": participante.numero_publico,
+                    "nome": participante.inscricao.nome or "",
+                    "protocolo": participante.inscricao.protocolo or "",
+                }
+                for participante in relacao.participantes.select_related("inscricao").order_by(
+                    "numero_publico"
+                )
+            ],
+            # Sucedida é o que o cidadão precisa saber antes de citar a relação: ela continua
+            # íntegra e legível, e já não é o universo comprometido do certame.
+            "sucessora": relacao.sucessoras.first(),
+        },
+    )
+
+
+def _nome_da_lista(relacao):
+    if not relacao.lista_id:
+        return ""
+    for perfil in relacao.versao.content.get("profiles") or []:
+        if str(perfil.get("id")) != str(relacao.perfil_id):
+            continue
+        for modalidade in perfil.get("competitionModalities") or []:
+            if str(modalidade.get("id")) == str(relacao.lista_id):
+                return modalidade.get("name") or ""
+    return ""
+
+
+def _sorteio_publicado(sorteio_id):
+    from processo_seletivo.sorteios.models import Sorteio
+
+    return (
+        Sorteio.objects.filter(pk=sorteio_id)
+        .select_related(
+            "relacao",
+            "relacao__versao",
+            "relacao__edital",
+            "ocorrencia",
+            "ato",
+            "sorteio_anterior",
+        )
+        .prefetch_related("sucessores")
+        .first()
+    )
+
+
+@require_http_methods(["GET"])
+def verificar_sorteio(request, sorteio_id):
+    """ "Verificar este sorteio", no canal público e sem autenticação (021, FR-048..FR-051).
+
+    **Recalcula das entradas, e relata em linguagem de gente.** A página não confere o banco contra
+    si mesmo: ela refaz a ordem a partir da relação congelada, da semente derivada do material
+    observado e do método que a relação citou — e diz, degrau por degrau, o que conferiu.
+
+    Funciona sem depender de gravação de vídeo nem de canal externo (FR-051): tudo o que ela usa
+    está publicado.
+    """
+    from processo_seletivo.sorteios.application.verificacao import verificar
+
+    sorteio = _sorteio_publicado(sorteio_id)
+    if sorteio is None:
+        raise Http404
+    return render(
+        request,
+        "portal/verificacao_de_sorteio.html",
+        {
+            "sorteio": sorteio,
+            "relacao": sorteio.relacao,
+            "veredito": verificar(sorteio),
+            "sucessor": sorteio.sucessores.first(),
+        },
+    )
+
+
+@require_http_methods(["GET"])
+def manifesto_do_sorteio(request, sorteio_id):
+    """O manifesto em JSON, legível por máquina (FR-047).
+
+    **Regenerado, e não guardado.** O que o ato grava é o `manifestHash`; os bytes nascem aqui, das
+    mesmas entradas congeladas. Dois downloads produzem bytes idênticos porque nada de vigente é
+    lido — é a regra 4 do contrato, e é o que o `ETag` afirma.
+    """
+    from processo_seletivo.shared.canonical import canonical_bytes
+    from processo_seletivo.sorteios.application.verificacao import manifesto_publicado
+
+    sorteio = _sorteio_publicado(sorteio_id)
+    if sorteio is None:
+        raise Http404
+    corpo = canonical_bytes(manifesto_publicado(sorteio))
+    resposta = HttpResponse(corpo, content_type="application/json")
+    resposta["ETag"] = f'"{sorteio.manifesto_hash}"'
+    resposta["Cache-Control"] = "public, max-age=31536000, immutable"
+    resposta["Content-Disposition"] = f'attachment; filename="manifesto-{sorteio.id}.json"'
     return resposta
