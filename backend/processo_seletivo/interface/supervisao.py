@@ -71,6 +71,11 @@ DECLARACOES = {
 
 # A janela da leitura recente (`FR-013`). Vinte e quatro horas **abertas no início**: a submissão de
 # exatamente 24 h fica de fora, porque incluí-la contaria um dia e um instante.
+#
+# **Os artefatos divergem neste ponto, e a escolha é registrada.** `data-model.md` §3.1 escreve
+# `submitted_at ≥ agora − 24h`; a T018 da `tasks.md` manda excluir "a de exatamente 24 h", com a
+# razão dita — "a borda é onde o fora-por-um mora". Vale a segunda, porque ela é a única das duas
+# que raciocina sobre a borda. Fechar a divergência no `data-model.md` é governança do usuário.
 JANELA_RECENTE = timedelta(hours=24)
 
 
