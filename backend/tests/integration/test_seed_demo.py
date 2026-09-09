@@ -141,3 +141,42 @@ def test_duas_demonstracoes_convivem_com_codigos_distintos():
 
     demonstracoes = ProcessoSeletivo.objects.filter(institutional_code__startswith="PS-TESTE-")
     assert demonstracoes.count() == 2
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_demonstracao_chega_ao_sorteio_constituido_e_verificavel():
+    """O terceiro Edital fecha o ciclo da 021 pelos commands da aplicação (021, SC-006).
+
+    **Pelos mesmos commands**, como o resto deste arquivo: congelar a relação, observar a ocorrência
+    e constituir o ato — nesta ordem, que é a inversão que organiza a feature. Semear o sorteio por
+    `INSERT` produziria um ato que a aplicação nunca teria aceitado, e a demonstração passaria a
+    mostrar um estado que o sistema não sabe alcançar.
+    """
+    from processo_seletivo.classificacao.models import OrigemDaOrdem
+    from processo_seletivo.sorteios.application.verificacao import verificar
+    from processo_seletivo.sorteios.models import RelacaoDeHabilitados, Sorteio
+
+    _executar(codigo="PS-TESTE-0006", numero="20", ano=2026)
+
+    sorteio = Sorteio.objects.get()
+    relacao = RelacaoDeHabilitados.objects.get()
+
+    assert sorteio.relacao_id == relacao.id
+    assert sorteio.ato.origem == OrigemDaOrdem.SORTEIO
+    assert relacao.quantidade == 7
+    assert relacao.metodo_hash == sorteio.metodo_hash, "o ato roda sob o método comprometido"
+    assert sorteio.semente_normalizada, "a semente nasceu do material observado"
+    assert verificar(sorteio)["integro"] is True, "a demonstração passa na própria verificação"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_relacao_da_demonstracao_e_congelada_antes_da_ocorrencia():
+    """A ordem dos fatos, que é a feature: universo comprometido **antes** de a semente existir."""
+    from processo_seletivo.sorteios.models import OcorrenciaDaFonte, RelacaoDeHabilitados
+
+    _executar(codigo="PS-TESTE-0007", numero="21", ano=2026)
+
+    relacao = RelacaoDeHabilitados.objects.get()
+    ocorrencia = OcorrenciaDaFonte.objects.get()
+
+    assert relacao.publicada_em < ocorrencia.observada_em

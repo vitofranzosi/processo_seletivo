@@ -293,6 +293,127 @@ def _numero_do_segundo_edital(numero):
     return f"{(int(numero) + 50) % 100:02d}"
 
 
+def _numero_do_terceiro_edital(numero):
+    """Dois dígitos, diferentes dos dois primeiros — o Edital de sorteio (021).
+
+    O deslocamento é 25, e não 50: com 50 o terceiro voltaria ao primeiro em aritmética modular, e
+    os três Editais disputariam identificador de Perfil, Etapa e marco. Com 25, os três números são
+    sempre distintos entre si.
+    """
+    if not numero.isdigit():
+        return None
+    return f"{(int(numero) + 25) % 100:02d}"
+
+
+def metodo_do_sorteio(numero):
+    """O método declarado no Edital, **antes** do congelamento (021, D-013, FR-013).
+
+    Ele mora no conteúdo publicado do marco, e não numa tabela: alterá-lo é Retificação.
+
+    `occurrence` é a ocorrência **concreta** — o concurso —, e `derivation` é a prosa que explica
+    como ela foi escolhida a partir da data programada. Se fosse a regra em prosa, escolher qual
+    extração observar voltaria para a mesa no dia do sorteio.
+
+    **O concurso deriva do número do Edital**, e não é constante. `OcorrenciaDaFonte` é única por
+    `(fonte, referência)` no acervo inteiro — como deve ser: a extração 5900 da Loteria Federal é
+    um fato do mundo, e não um fato de cada certame. Duas demonstrações que citassem o mesmo
+    concurso compartilhariam a linha, e a segunda encontraria uma ocorrência observada **antes** de
+    a relação dela ser congelada — o comando recusaria, com razão. Certames diferentes citam
+    extrações diferentes, e é o que esta derivação reproduz.
+    """
+    concurso = f"59{numero}"
+    return {
+        "algorithm": "IFES-SORTEIO-SHA256-v1",
+        "source": "Loteria Federal",
+        "occurrence": concurso,
+        "derivation": (
+            f"Concurso {concurso}: a extração de sábado imediatamente anterior à data publicada "
+            "do sorteio."
+        ),
+        "normalization": {
+            "rule": "DIGITOS_EM_SEQUENCIA",
+            "text": "Os cinco números sorteados, na ordem dos prêmios, separados por espaço.",
+        },
+        "substitutionRule": {
+            "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+            "text": (
+                "Não havendo extração na data prevista, vale a extração seguinte da mesma fonte."
+            ),
+        },
+        "qualifyingStageId": None,
+    }
+
+
+def perfil_de_sorteio(numero):
+    """O Perfil do Edital de sorteio: um marco que ordena por sorteio, e não por pontuação.
+
+    **Sem cotas, de propósito.** O certame com três listas é o do 57 e do 28, e a demonstração dele
+    exigiria três relações, três atos e três divulgações — muito para o que este seed precisa
+    mostrar, que é o ciclo inteiro de um sorteio auditável. As listas têm teste de integração
+    próprio.
+    """
+    return [
+        {
+            "id": f"00000000-0000-0000-00{numero}-0000000000b1",
+            "code": "TEC-EAD",
+            "name": "Técnico em Informática (EaD)",
+            "description": "Curso técnico subsequente, na modalidade a distância.",
+            "requirements": ["Ensino médio completo"],
+            "immediateVacancies": 40,
+            "reserveType": "NONE",
+            "reserveLimit": None,
+            "locality": "Polo Serra",
+            "duties": "Curso técnico subsequente.",
+            "workload": "1.200 horas",
+            "compensation": "Gratuito",
+            "classificationInformation": {
+                "criterio": "A ordem é produzida por sorteio público auditável.",
+            },
+            "callInformation": {"forma": "A convocação segue a ordem sorteada."},
+            # **As duas modalidades existem, e o marco continua sem listas.** Elas estão aqui
+            # porque `documentos_exigidos` aponta a segunda, e um Documento Exigido que aponte
+            # modalidade de nenhum Perfil é recusado na elaboração — corretamente. Declarar
+            # modalidade **não** cria lista de sorteio: a relação nasce por recorte quando alguém a
+            # publica, e este seed publica só a de ampla concorrência (021, D-006).
+            "competitionModalities": [
+                {
+                    "id": f"00000000-0000-0000-00{numero}-0000000000e1",
+                    "code": "AC",
+                    "name": "Ampla concorrência",
+                },
+                {
+                    "id": f"00000000-0000-0000-00{numero}-0000000000e2",
+                    "code": "PPP",
+                    "name": "Pessoas pretas, pardas e indígenas",
+                    "normativeRule": {
+                        "id": f"00000000-0000-0000-00{numero}-0000000000f2",
+                        "foundation": "Lei 12.990/2014",
+                        "version": "2014-06-09",
+                        "percentage": "20.0000",
+                        "rounding": {"modo": "PARA_CIMA"},
+                    },
+                },
+            ],
+            "declaredFacts": [],
+            "classificationMilestones": [
+                {
+                    "id": f"00000000-0000-0000-00{numero}-0000000000a1",
+                    "code": "SORTEIO",
+                    "name": "Sorteio público",
+                    "stages": [f"00000000-0000-0000-00{numero}-0000000000d2"],
+                    "operation": "SOMA_PONDERADA",
+                    "normalization": "NENHUMA",
+                    "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
+                    "tiebreakers": [],
+                    "appealWindow": {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"},
+                    # É isto que faz a `021` funcionar: o método publicado, antes do congelamento.
+                    "drawMethod": metodo_do_sorteio(numero),
+                }
+            ],
+        }
+    ]
+
+
 def _titulo_do_processo(ano, titulo_informado):
     return titulo_informado or f"Processo Seletivo Simplificado {ano}"
 
@@ -390,8 +511,18 @@ class Command(BaseCommand):
             )
             publicacao = self._divulgar_resultado(concluido, segundo, agora)
 
+        # O terceiro Edital: o do sorteio (021). Fora da transação dos anteriores, pela mesma
+        # razão — cada Edital é um ato completo, e falhar aqui não desfaz os outros.
+        terceiro = _numero_do_terceiro_edital(numero)
+        sorteio = None
+        if terceiro is not None:
+            sorteado = self._edital_de_sorteio(
+                elaborador, homologador, publicador, processo, terceiro, ano, agora
+            )
+            sorteio = self._sortear(sorteado, terceiro, agora)
+
         self._retificar(edital, agora)
-        self._resumo(processo, edital, publicacao)
+        self._resumo(processo, edital, publicacao, sorteio)
 
     def _criar(self, elaborador, codigo, numero, ano, titulo):
         self.stdout.write("Criando Processo e primeiro Edital…")
@@ -588,6 +719,146 @@ class Command(BaseCommand):
         self._publicar(elaborador, homologador, publicador, edital)
         edital.refresh_from_db()
         return edital
+
+    def _edital_de_sorteio(self, elaborador, homologador, publicador, processo, numero, ano, agora):
+        """Um **terceiro** Edital, cujo marco ordena por sorteio (021).
+
+        **Por que um Edital próprio, e não um marco a mais nos existentes.** O método é conteúdo
+        publicado do marco, e um marco que sorteia não pontua: enxertá-lo num dos Editais anteriores
+        faria a demonstração exibir um certame que ordena das duas maneiras ao mesmo tempo, que não
+        é coisa que exista. Os quatro Editais reais da amostra sorteiam **em vez de** pontuar.
+
+        O período de inscrições vai de 30 a 10 dias atrás: o universo precisa estar fechado para que
+        a relação possa ser congelada, e é ela o compromisso que o sorteio consome.
+        """
+        from processo_seletivo.editais.application.draft import replace_draft
+        from processo_seletivo.processos.application.commands import add_edital
+
+        self.stdout.write("Criando o terceiro Edital, que ordena por sorteio…")
+        edital, _ = add_edital(
+            actor=ator("gustavo.gestor", "edital:criar"),
+            processo_id=processo.id,
+            data={
+                "number": numero,
+                "year": ano,
+                "title": f"Edital {numero}/{ano} — seleção por sorteio",
+                "description": "Seleção cuja ordem é produzida por sorteio público auditável.",
+            },
+            idempotency_key=f"seed-demo-edital3-{processo.id.hex[:12]}",
+            correlation_id="seed-demo",
+        )
+        replace_draft(
+            actor=elaborador,
+            edital_id=edital.id,
+            expected_revision=edital.revision,
+            profiles=perfil_de_sorteio(numero),
+            schedule=cronograma(agora - timedelta(days=30), numero),
+            stages=etapas(numero),
+            document_requirements=documentos_exigidos(numero),
+            correlation_id="seed-demo",
+        )
+        edital.refresh_from_db()
+        self._publicar(elaborador, homologador, publicador, edital)
+        edital.refresh_from_db()
+        return edital
+
+    def _sortear(self, edital, numero, agora):
+        """O ciclo inteiro da 021, pelos mesmos commands da aplicação.
+
+        Congelar a relação, observar a ocorrência e constituir o ato — **nesta ordem**, que é a
+        inversão que organiza a feature: o universo é comprometido antes de a semente existir, e o
+        comando recusa o contrário.
+
+        A fonte é o falso de teste, e ele mora no código de produção justamente para isto: um seed
+        que dependesse de rede não rodaria numa máquina sem internet, e o roteiro do `quickstart`
+        deixaria de ser executável (R-005).
+        """
+        from processo_seletivo.inscricoes.models import Inscricao
+        from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+        from processo_seletivo.sorteios.application.ocorrencia import observar_ocorrencia
+        from processo_seletivo.sorteios.application.relacao import publicar_relacao
+        from processo_seletivo.sorteios.application.sorteio import constituir_sorteio
+        from processo_seletivo.sorteios.infrastructure.fontes.loteria_federal import FonteDeTeste
+        from processo_seletivo.sorteios.models import Sorteio
+
+        self.stdout.write("Congelando a relação, observando a ocorrência e sorteando…")
+        chave = edital.id.hex[:8]
+        perfil_id = f"00000000-0000-0000-00{numero}-0000000000b1"
+        marco_id = f"00000000-0000-0000-00{numero}-0000000000a1"
+        versao = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+
+        # **A comissão é do Processo, e já existe.** Ela foi constituída para o segundo Edital, e
+        # `paulo.presidente` já a preside: adicioná-lo de novo esbarraria em
+        # `uq_membro_ativo_por_processo` — corretamente, porque uma pessoa não é membro duas vezes
+        # do mesmo Processo. Um Edital novo no mesmo Processo herda a comissão que já existe, e é
+        # assim num certame real.
+        presidencia = ator("paulo.presidente")
+
+        # **Elenco próprio, e não o das outras demonstrações.** Reusar as candidatas do segundo
+        # Edital faria uma pessoa aparecer em dois certames com o mesmo `identity_subject`, e a
+        # Área do Candidato passaria a mostrar as duas inscrições misturadas.
+        sorteadas = [
+            "Amanda Lisboa",
+            "Bruno Tavares",
+            "Camila Duarte",
+            "Diego Prado",
+            "Elaine Vasques",
+            "Fábio Nunes",
+            "Gisele Amaro",
+        ]
+        for indice, nome in enumerate(sorteadas, 1):
+            inscricao = Inscricao.objects.create(
+                created_at=agora,
+                identity_subject=f"cand:sorteio-{chave}-{indice:02d}",
+                edital=edital,
+                profile_id=perfil_id,
+                nome=nome,
+                cpf="111.444.777-35",
+                cpf_normalizado="11144477735",
+                email=f"{nome.split()[0].lower()}.sorteio@exemplo.test",
+            )
+            Inscricao.objects.filter(pk=inscricao.pk).update(
+                status=Inscricao.Status.SUBMETIDA,
+                protocolo=f"INS-{edital.year}-{chave.upper()}{indice:02d}",
+                submitted_at=agora,
+                versao_aceita=versao,
+                declaracoes_aceitas_em=agora,
+            )
+            inscricao.refresh_from_db()
+            self._dar_acesso(inscricao)
+
+        relacao = publicar_relacao(
+            actor=presidencia,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            perfil_id=perfil_id,
+            marco_id=marco_id,
+            idempotency_key=f"seed-demo-relacao-{chave}",
+            correlation_id="seed-demo",
+        )
+        # **Lidos do conteúdo publicado**, e não da constante: é assim que a gestão os obtém, e é
+        # o que garante que a demonstração observe a ocorrência que o Edital declarou — e não uma
+        # que o código tenha em mãos.
+        metodo = metodo_do_sorteio(numero)
+        ocorrencia = observar_ocorrencia(
+            actor=presidencia,
+            processo_id=edital.processo_id,
+            fonte=metodo["source"],
+            referencia=metodo["occurrence"],
+            idempotency_key=f"seed-demo-ocorrencia-{chave}",
+            correlation_id="seed-demo",
+            fonte_externa=FonteDeTeste(),
+        )
+        declarado = constituir_sorteio(
+            actor=presidencia,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            relacao_id=relacao["relacao"],
+            ocorrencia_id=ocorrencia["ocorrencia"],
+            idempotency_key=f"seed-demo-sorteio-{chave}",
+            correlation_id="seed-demo",
+        )
+        return Sorteio.objects.get(pk=declarado["sorteio"])
 
     def _divulgar_resultado(self, edital, numero, agora):
         """A cadeia da 011 à 017, para que a demonstração chegue ao que o candidato lê (T072).
@@ -912,7 +1183,7 @@ class Command(BaseCommand):
                 correlation_id=correlacao,
             )
 
-    def _resumo(self, processo, edital, publicacao=None):
+    def _resumo(self, processo, edital, publicacao=None, sorteio=None):
         publicada = Retificacao.objects.filter(
             edital=edital, status=Retificacao.Status.PUBLICADA
         ).first()
@@ -929,6 +1200,18 @@ class Command(BaseCommand):
             (
                 "resultado",
                 f"/selecoes/resultados/{publicacao.id}/" if publicacao else "",
+            ),
+            (
+                "relação do sorteio",
+                f"/selecoes/sorteio/relacoes/{sorteio.relacao_id}/" if sorteio else "",
+            ),
+            (
+                "verificar o sorteio",
+                f"/selecoes/sorteio/{sorteio.id}/verificar" if sorteio else "",
+            ),
+            (
+                "manifesto do sorteio",
+                f"/selecoes/sorteio/{sorteio.id}/manifesto.json" if sorteio else "",
             ),
             (
                 "documento",
