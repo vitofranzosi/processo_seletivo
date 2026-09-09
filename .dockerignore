@@ -6,7 +6,20 @@ __pycache__/
 coverage/
 htmlcov/
 *.log*
-.env*
 Dockerfile*
 .dockerignore
 
+# Segredo não entra em camada de imagem. O `.env` chega por `env_file` em tempo de execução; o
+# exemplo pode entrar, porque é justamente o arquivo sem segredo nenhum.
+**/.env
+**/.env.*
+!**/.env.example
+
+# Fora do contexto por peso: `doc/e2e/` guarda centenas de capturas de tela, e nada disso é lido
+# pela imagem. `specs/` é montado em tempo de execução pelo `compose.yaml`, para que a varredura de
+# citações continue enxergando as especificações de dentro do container.
+doc/
+specs/
+.claude/
+.specify/
+.agents/

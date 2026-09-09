@@ -1,11 +1,16 @@
 # Processo Seletivo e Editais — Cefor/IFES
 
-Serviço backend para gestão de Processos Seletivos e seus Editais: elaboração, homologação,
-Publicação imutável, Retificações com vigência temporal e consulta pública histórica.
+Sistema de gestão de Processos Seletivos e seus Editais: elaboração, homologação, Publicação
+imutável, Retificações com vigência temporal e consulta pública histórica — com a interface
+administrativa que conduz o fluxo e o portal por onde o candidato se inscreve e acompanha.
 
 O projeto é conduzido por especificação, com [GitHub Spec Kit](https://github.com/github/spec-kit).
 A [Constituição](.specify/memory/constitution.md) é a autoridade de engenharia e domínio; em
 conflito, ela prevalece.
+
+Para subir o sistema, vá direto a [Como rodar com Docker Compose](#como-rodar-com-docker-compose).
+Quem for **mexer** no código — pessoa ou agente — comece por [`AGENTS.md`](AGENTS.md), que registra
+as armadilhas que não se descobrem lendo o código.
 
 ## O que o sistema garante
 
@@ -40,39 +45,86 @@ Operações de workflow são commands explícitos e transacionais. O controle ot
 
 ## Requisitos
 
-- Python 3.13
-- [uv](https://docs.astral.sh/uv/)
-- PostgreSQL 16 ou superior (a CI valida contra 18)
+Há duas formas de subir o sistema. A containerizada é a canônica: roda igual em **macOS, Windows e
+Linux**, e é a única que o CI verifica a cada push — o que significa que ela não pode apodrecer sem
+alguém notar. A nativa continua válida e é mais rápida no dia a dia de quem já a tem montada.
 
-## Como rodar
+| Caminho | Precisa de | Onde |
+|---|---|---|
+| **Docker Compose** | Docker Desktop (macOS, Windows) ou Docker Engine com o plugin `compose` (Linux) | as três plataformas |
+| **Nativo** | Python 3.13, [uv](https://docs.astral.sh/uv/), PostgreSQL 16+ (a CI valida contra 18), `make` | macOS e Linux — no Windows, dentro do WSL2 |
+
+## Como rodar com Docker Compose
+
+```bash
+cp backend/.env.example backend/.env
+docker compose up --build
+```
+
+No PowerShell do Windows os dois comandos são exatamente estes: `cp` é apelido de `Copy-Item` e a
+barra normal funciona como separador. No `cmd.exe`, troque o primeiro por
+`copy backend\.env.example backend\.env`.
+
+O que acontece nessa ordem, e por que ela é essa: o PostgreSQL sobe e é esperado até responder;
+então a aplicação **provisiona os papéis, aplica as migrations e provisiona de novo**. A segunda
+passada não é redundância — papel e privilégio padrão precisam existir antes de qualquer tabela, e
+privilégio *sobre* tabela só pode ser concedido depois que ela existe. Ela é a que tranca. O
+terminal mostra `18 de 18 tabelas append-only estão sem UPDATE nem DELETE para o runtime` quando
+deu certo.
+
+Quando o terminal parar, o sistema está em <http://localhost:8000> — use `localhost`, e não
+`127.0.0.1`: o padrão de `DJANGO_ALLOWED_HOSTS` recusa o segundo.
+
+Para ter o que olhar, popule a demonstração (o container já está de pé, então `exec`):
+
+```bash
+docker compose exec app python manage.py seed_demo
+```
+
+Editar o código no seu editor recarrega o servidor: a árvore `backend/` é montada de dentro do
+host. Para começar do zero — banco, volumes e tudo —, `docker compose down --volumes`.
+
+**Isto é ambiente de desenvolvimento.** Segredo fraco, `DEBUG` ligado e o seletor de identidade,
+que deixa qualquer pessoa declarar quem é. `config.settings.production` recusa iniciar com
+qualquer um dos três.
+
+## Como rodar nativamente
 
 ```bash
 cd backend && make install
+cp .env.example .env
 ```
 
-Copie `backend/.env.example` para `backend/.env` e ajuste as credenciais. O projeto separa a role de
-migração da role de runtime: a de runtime não recebe `UPDATE` nem `DELETE` sobre os registros
-append-only, garantia verificada em `tests/integration/test_database_permissions.py`.
+Ajuste o `.env`: no mínimo `POSTGRES_USER`, que é o superusuário do seu PostgreSQL — em instalação
+por Homebrew ele costuma ser o seu próprio usuário do sistema, e não `postgres`.
 
-Provisione os papéis com um usuário que possa criá-los — normalmente o superusuário da instalação.
-O comando é idempotente e pode rodar sobre banco vazio ou já provisionado; `--dry-run` imprime a
-política sem aplicá-la.
+> **Este arquivo não é lido por mágica.** O projeto não usa `python-dotenv`; quem o carrega são os
+> alvos do `Makefile` e o `docker compose`. Um `manage.py` chamado à mão fora do `make` enxerga só
+> o que estiver exportado no ambiente.
+
+Crie o banco e prepare-o. No macOS com PostgreSQL do Homebrew, exporte `LC_ALL` antes — sem ele o
+`createdb` falha:
 
 ```bash
-cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python manage.py provisionar_papeis
+export LC_ALL=en_US.UTF-8
+createdb processo_seletivo
+cd backend && make preparar
 ```
 
-A política vive em `processo_seletivo/seguranca/papeis.py` e é a mesma que os testes de
-conformidade verificam. É a segunda camada da imutabilidade, independente das triggers: a trigger
-recusa a mutação mesmo de quem tem privilégio; o privilégio ausente recusa antes, mesmo que a
-trigger seja removida.
+`make preparar` faz os três passos na mesma ordem do compose e pela mesma razão. Os três são
+idempotentes: rodar de novo sobre banco já preparado não faz mal.
+
+O projeto separa a role de migração da de runtime: a de runtime não recebe `UPDATE` nem `DELETE`
+sobre os registros append-only, garantia verificada em
+`tests/integration/test_database_permissions.py`. A política vive em
+`processo_seletivo/seguranca/papeis.py` e é a mesma que os testes de conformidade verificam. É a
+segunda camada da imutabilidade, independente das triggers: a trigger recusa a mutação mesmo de
+quem tem privilégio; o privilégio ausente recusa antes, mesmo que a trigger seja removida.
+`make provisionar` aceita `--dry-run` pelo comando subjacente, que imprime a política sem
+aplicá-la e oculta as senhas.
 
 ```bash
-cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python manage.py migrate
-```
-
-```bash
-cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python manage.py runserver
+cd backend && make runserver
 ```
 
 ### Ver o sistema no ar
@@ -83,17 +135,13 @@ compor Perfis e Cronograma, submeter, homologar, publicar, retificar e consultar
 
 A interface exige identidade. Enquanto o diretório institucional não está integrado, o seletor de
 identidade a substitui — e **só existe fora de produção**, onde `config.settings.production` recusa
-iniciar com ele ligado:
-
-```bash
-cd backend && DJANGO_SETTINGS_MODULE=config.settings.development INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver
-```
+iniciar com ele ligado. Ele vem ligado no `.env.example`; sem ele, `/gestao/` devolve 503.
 
 Para ter o que olhar, popule uma demonstração que percorre o fluxo normativo real, com atores
 distintos em cada etapa:
 
 ```bash
-cd backend && DJANGO_SETTINGS_MODULE=config.settings.development uv run python manage.py seed_demo
+cd backend && make seed
 ```
 
 O comando imprime os identificadores criados e as URLs prontas: versão vigente, histórico e
@@ -101,6 +149,10 @@ Retificação. Ele cria um Edital publicado com dois Perfis e três Eventos, mai
 uma já vigente e outra com vigência futura —, para que a consulta temporal tenha o que mostrar. Não
 há como recriá-la sobre o mesmo código: apagar a demonstração exigiria excluir Publicações, o que a
 Constituição proíbe e as triggers de imutabilidade recusam. Use outro `--codigo`.
+
+O portal do candidato envia código de acesso por e-mail, e em desenvolvimento o backend de e-mail é
+o de console: **a mensagem é impressa no terminal onde o servidor está rodando**. É de lá que se lê
+o código — no compose, `docker compose logs -f app`.
 
 ## Antes de receber dado pessoal real
 
@@ -139,15 +191,32 @@ cd backend && DJANGO_SETTINGS_MODULE=config.settings.production uv run python ma
 ## Verificação
 
 ```bash
-cd backend && make lint check test
+cd backend && make lint check test-pg
 ```
 
-A suíte roda em SQLite por padrão e ignora os testes que exigem garantias reais do banco. Para
-executar tudo, aponte para um PostgreSQL de teste:
+No ambiente containerizado, o mesmo de dentro dele, com o banco que já está de pé:
+
+```bash
+docker compose exec app make lint check test-pg
+```
+
+`test-pg` e não `test`: **a suíte precisa do PostgreSQL.** Sem variável nenhuma ela cai para
+SQLite, e nesse modo não é confiável — 182 testes são pulados e **21 falham**, porque executam SQL
+de PostgreSQL sob SQLite em casos que deveriam ter sido pulados e não foram. O CI não enxerga isso,
+porque só roda contra PostgreSQL. O achado está em
+[`doc/achado-suite-em-sqlite.md`](doc/achado-suite-em-sqlite.md).
+
+Contra PostgreSQL a suíte fecha em 3957 passando e 1 pulado. O alvo `test-pg` monta a conexão a
+partir do `POSTGRES_USER` do seu `.env`; à mão, fora do `make`, são necessárias as **duas**
+variáveis — sem `TEST_DB_ENGINE=postgresql` a suíte cai para SQLite, e sem `DB_USER` ela tenta
+conectar como a role de runtime, que não pode criar banco de teste:
 
 ```bash
 cd backend && TEST_DB_ENGINE=postgresql DB_NAME=processo_seletivo_test DB_USER=postgres DB_PASSWORD=postgres DB_HOST=localhost DB_PORT=5432 uv run pytest
 ```
+
+Se houver mais de uma worktree rodando a suíte ao mesmo tempo, dê a cada uma seu próprio `DB_NAME`:
+elas disputam o mesmo banco de teste e se derrubam.
 
 Suítes por marcador: `acceptance` (cenários rastreados), `contract` (conformidade HTTP/OpenAPI),
 `integration` (persistência, locks e concorrência), `authorization` (autorização e anti-IDOR) e
@@ -196,7 +265,12 @@ As sete histórias da feature `001-processo-seletivo-editais` estão implementad
 Todas as tarefas de `tasks.md` estão fechadas e os 38 requisitos ativos estão implementados. Restam
 dois pontos antes de declarar a feature concluída: o SLO de carga precisa ser medido em ambiente
 implantado, e a Regra Normativa é registrada mas ainda não aplicada — detalhes nos dois artefatos
-acima. A interface administrativa e pública é uma especificação futura, não parte deste incremento.
+acima.
+
+O projeto seguiu bastante além dela: a interface administrativa, o portal do candidato, a inscrição,
+a avaliação, a classificação, a publicação de resultados e os recursos são incrementos próprios,
+listados abaixo. O estado de cada um está na pasta do incremento, e não aqui — este parágrafo
+descreve a `001`.
 
 ## Documentação
 
@@ -213,11 +287,30 @@ em `specs/`, com os mesmos artefatos:
 | `quickstart.md` | Guia de validação |
 | `checklists/requirements.md` | Análise de consistência entre os artefatos |
 
-Incrementos: [001](specs/001-processo-seletivo-editais/spec.md) (backend),
-[002](specs/002-frontend-administrativo/spec.md) (interface),
-[003](specs/003-integridade-e-prontidao/spec.md) (integridade e prontidão) e
-[004](specs/004-enderecamento-normativo-estavel/spec.md) (endereçamento estável, ainda em
-especificação). A [Constituição](.specify/memory/constitution.md) prevalece sobre todos.
+Incrementos, na ordem em que foram especificados:
+
+| | |
+|---|---|
+| [`001`](specs/001-processo-seletivo-editais/spec.md) | backend do ciclo normativo |
+| [`002`](specs/002-frontend-administrativo/spec.md) | interface administrativa |
+| [`003`](specs/003-integridade-e-prontidao/spec.md) | integridade normativa e prontidão |
+| [`004`](specs/004-enderecamento-normativo-estavel/spec.md) | endereçamento por chave estável |
+| [`005`](specs/005-integridade-do-snapshot/spec.md) | integridade do snapshot |
+| [`006`](specs/006-elaboracao-completa-edital/spec.md) | elaboração completa do Edital |
+| [`007`](specs/007-edital-institucional/spec.md) | Edital institucional |
+| [`008`](specs/008-composicao-institucional/spec.md) | composição institucional |
+| [`009`](specs/009-inscricao-simples-documentos/spec.md) | inscrição e documentos do candidato |
+| [`010`](specs/010-area-do-candidato/spec.md) | área do candidato e acesso sem senha |
+| [`011`](specs/011-comissao-alocacao/spec.md) | comissão e alocação por Etapa |
+| [`012`](specs/012-mesa-de-avaliacao/spec.md) | mesa de avaliação |
+| [`012`](specs/012-013-revisao-formas-de-conclusao/spec.md) | revisão de compatibilidade 012–013 |
+| [`013`](specs/013-consolidacao-resultado-etapa/spec.md) | consolidação do Resultado da Etapa |
+| [`015`](specs/015-ordenacao-e-classificacao/spec.md) | ordenação e classificação |
+| [`017`](specs/017-publicacao-de-resultados/spec.md) | publicação de resultados |
+| [`018`](specs/018-recursos-e-superacao-de-resultados/spec.md) | recursos e superação de resultados |
+| [`020`](specs/020-anexos-do-edital/spec.md) | anexos do Edital |
+
+A [Constituição](.specify/memory/constitution.md) prevalece sobre todos.
 
 ### Spec Kit com dois agentes
 

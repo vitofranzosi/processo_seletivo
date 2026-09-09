@@ -1,0 +1,79 @@
+# Ambiente de desenvolvimento completo: banco provisionado, migrations aplicadas e o servidor no ar.
+#
+# É o caminho canônico porque é o único que roda igual em macOS, Windows e Linux, e o único que a
+# CI consegue verificar. A execução nativa continua documentada no README e continua válida —
+# ela é mais rápida no dia a dia de quem já a tem montada.
+#
+#   docker compose up --build
+#
+# Depois disso: http://localhost:8000/gestao/
+#
+# **Desenvolvimento apenas.** Segredos fracos, `DEBUG` ligado e o seletor de identidade — que deixa
+# qualquer pessoa declarar quem é — vêm de `backend/.env`. `config.settings.production` recusa
+# iniciar com qualquer um dos três.
+
+services:
+  db:
+    image: postgres:18
+    env_file: backend/.env
+    # O superusuário nasce aqui e é o único que pode criar papéis. A aplicação nunca se conecta
+    # com ele: o entrypoint o usa uma vez para provisionar `DB_MIGRATION_USER` e `DB_RUNTIME_USER`,
+    # e daí em diante quem fala com o banco é o papel de runtime, sem `UPDATE` nem `DELETE` sobre
+    # os registros append-only.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: backend/.env
+    environment:
+      # Estes três sobrescrevem `backend/.env` de propósito, e é por isso que vêm depois dele:
+      # o mesmo arquivo serve a execução nativa, onde o banco está em `localhost` e os documentos
+      # do candidato ficam onde a pessoa escolher. Dentro da rede do compose o banco atende em
+      # `db`, e a raiz privada é um volume.
+      DB_HOST: db
+      DB_PORT: "5432"
+      ARQUIVOS_CANDIDATOS_RAIZ: /var/lib/processo-seletivo/arquivos
+      # Diz ao `backend/Makefile` para não carregar o `.env` — ele chega aqui pela montagem de
+      # `./backend`, e as três variáveis acima seriam desfeitas por ele.
+      EM_CONTAINER: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      # A árvore do código vem do host para que o autoreload responda à edição feita no editor.
+      # O ambiente virtual não está aqui dentro — mora em `/opt/venv`, justamente para não ser
+      # escondido por esta montagem.
+      - ./backend:/app/backend
+      # As especificações, só para leitura: `tests/test_citacoes_de_requisito.py` varre `specs/`
+      # para conferir que nenhuma citação `FR-`/`SC-`/`D-` aponta para requisito inexistente. Sem
+      # esta montagem a suíte roda incompleta dentro do container, e falha por motivo errado.
+      - ./specs:/app/specs:ro
+      - arquivos-candidatos:/var/lib/processo-seletivo/arquivos
+    # `/readiness` é a verificação certa e não uma aproximação: ele responde 503 se o banco não
+    # responder **ou** se houver migration pendente. Com isto, `docker compose up --wait` só
+    # devolve o terminal quando o sistema está de fato utilizável — e a CI tem o que checar.
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://localhost:8000/readiness")
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 20s
+
+volumes:
+  postgres-data:
+  arquivos-candidatos:
