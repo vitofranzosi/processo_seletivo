@@ -1197,6 +1197,10 @@ class Command(BaseCommand):
         self.stdout.write(f"  Processo  {processo.institutional_code}  {processo.id}")
         self.stdout.write(f"  Edital    {edital.number}/{edital.year}  {edital.id}")
         self.stdout.write(f"  Versões consolidadas: {versoes}\n")
+        # `localhost`, e não `127.0.0.1`: o padrão de `ALLOWED_HOSTS` no código aceita só o
+        # primeiro, e quem roda `runserver` sem o `.env` do compose recebe `DisallowedHost` ao
+        # colar estes endereços. O README manda usar `localhost`; imprimir outra coisa aqui
+        # contradizia o roteiro no ponto exato em que ele é seguido.
         self.stdout.write("Abra no navegador (consulta pública, sem autenticação):")
         for rotulo, caminho in (
             ("versão vigente", f"/api/v1/public/editais/{edital.id}/versao-vigente"),
@@ -1225,4 +1229,4 @@ class Command(BaseCommand):
             ("saúde", "/health"),
         ):
             if caminho:
-                self.stdout.write(f"  {rotulo:16} http://127.0.0.1:8000{caminho}")
+                self.stdout.write(f"  {rotulo:16} http://localhost:8000{caminho}")

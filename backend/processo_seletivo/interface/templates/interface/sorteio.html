@@ -111,8 +111,16 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       e a relação congelada tem {{ recorte.relacao.quantidade }}. Um fato de origem mudou desde o
       compromisso. A relação <strong>não</strong> se altera: corrigi-la é publicar outra, com motivo.</p>
     {% endif %}
-    {% else %}
+    {% elif recorte.projetados %}
     <p class="aviso">Universo ainda não comprometido. Seriam {{ recorte.projetados }} participante{{ recorte.projetados|pluralize }} se publicado agora.</p>
+    {% else %}
+    {% comment %}
+    **Sem candidato não se oferece o botão.** Ele existia e a recusa era certa — "não existe
+    universo a comprometer" —, e num certame com três listas quem conduz não sabia se a lista está
+    vazia por engano dele ou porque ninguém a declarou (FR-009).
+    {% endcomment %}
+    <p class="aviso">Nenhuma inscrição submetida declarou esta lista de concorrência. Não há
+      universo a comprometer aqui — e não há o que sortear enquanto não houver.</p>
     {% endif %}
 
     <div class="tabela-rolavel">
@@ -159,7 +167,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       {% endcomment %}
       <ol class="passos-da-anulacao">
         <li>Retificar o Edital para declarar a ocorrência nova — a anulação não escolhe extração.</li>
-        <li>Publicar a relação nova, no formulário acima, com o motivo da sucessão.</li>
+        <li>Publicar a relação nova, no formulário <strong>logo abaixo desta caixa</strong>, com o motivo da sucessão.</li>
         <li>Observar a ocorrência que a Retificação declarou.</li>
         <li>Anular, escolhendo os dois abaixo.</li>
       </ol>
@@ -194,7 +202,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       {% else %}
       <p class="aviso">Faltam os insumos do sucessor:
         {% if not recorte.relacoes_sucessoras %}<strong>a relação nova</strong>, que se publica no
-        formulário acima{% endif %}{% if not recorte.relacoes_sucessoras and not recorte.ocorrencias_disponiveis %} e {% endif %}{% if not recorte.ocorrencias_disponiveis %}<strong>a ocorrência nova</strong>, que se observa depois de a Retificação declará-la{% endif %}.
+        formulário logo abaixo desta caixa{% endif %}{% if not recorte.relacoes_sucessoras and not recorte.ocorrencias_disponiveis %} e {% endif %}{% if not recorte.ocorrencias_disponiveis %}<strong>a ocorrência nova</strong>, que se observa depois de a Retificação declará-la{% endif %}.
         Enquanto eles não existirem, não há sucessor a constituir — e não há como anular sem
         sucessor.</p>
       {% endif %}
@@ -218,7 +226,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
     nasce de relação nova, e ela é publicada aqui. Escondê-lo tornava a anulação — corrigida no
     domínio — inalcançável pela tela, o que a Constituição §VI não admite.
     {% endcomment %}
-    {% if pode_emitir and metodo %}
+    {% if pode_emitir and metodo and recorte.projetados %}
     <form method="post" action="{% url 'interface:publicar-relacao-do-sorteio' edital.id marco.id %}">
       {% csrf_token %}
       <input type="hidden" name="lista_id" value="{{ recorte.lista_id }}">

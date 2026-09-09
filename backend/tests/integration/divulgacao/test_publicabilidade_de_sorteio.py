@@ -140,3 +140,54 @@ def test_a_regressao_do_ato_computado(cenario):
     assert estado["proposta"] is not None
     assert "origem" not in estado
     assert estado["vigente"] is None
+
+
+def test_ato_de_sorteio_sem_proveniencia_e_divergencia_e_nao_silencio(cenario):
+    """**Falhar aberto era o pior lugar para falhar** (FR-069).
+
+    `_divergencias_do_sorteio` devolvia `[]` quando o `universo` não citava relação alguma ou
+    citava uma que não existe — exatamente as duas situações em que ninguém consegue conferir a
+    ordem. Um ato assim era apresentado como não obsoleto, isto é, como publicável.
+    """
+    edital, versao, _inscricoes = cenario
+    universo = universo_de_sorteio(edital, versao=versao, perfil_id=PROFILE_ID, relacao=None)
+    universo.pop("relacaoId")
+    sem_relacao = AtoDeOrdenacao.objects.create(
+        edital=edital,
+        perfil_id=PROFILE_ID,
+        marco_id=MARCO,
+        origem=OrigemDaOrdem.SORTEIO,
+        versao=versao,
+        universo=universo,
+        emitido_por="cpf:presidente",
+        emitido_em=timezone.now(),
+    )
+
+    estado = estado_do_marco(edital=edital, marco_id=MARCO)
+
+    assert estado["vigente"].id == sem_relacao.id
+    assert estado["obsoleto"] is True
+    assert [d["tipo"] for d in estado["divergencias"]] == ["proveniencia_ausente"]
+    assert aferir(edital=edital, marco_id=MARCO, ato=sem_relacao).nivel == IMPEDIMENTO
+
+
+def test_ato_de_sorteio_citando_relacao_inexistente_e_divergencia(cenario):
+    edital, versao, _inscricoes = cenario
+    universo = universo_de_sorteio(edital, versao=versao, perfil_id=PROFILE_ID, relacao=None)
+    universo["relacaoId"] = "00000000-0000-4000-8000-0000000000ff"
+    fantasma = AtoDeOrdenacao.objects.create(
+        edital=edital,
+        perfil_id=PROFILE_ID,
+        marco_id=MARCO,
+        origem=OrigemDaOrdem.SORTEIO,
+        versao=versao,
+        universo=universo,
+        emitido_por="cpf:presidente",
+        emitido_em=timezone.now(),
+    )
+
+    estado = estado_do_marco(edital=edital, marco_id=MARCO)
+
+    assert estado["vigente"].id == fantasma.id
+    assert estado["obsoleto"] is True
+    assert [d["tipo"] for d in estado["divergencias"]] == ["proveniencia_inexistente"]

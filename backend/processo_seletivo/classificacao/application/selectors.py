@@ -112,14 +112,41 @@ def _marco_removido(vigente, perfil_historico, marco_historico):
 
 
 def _divergencias_do_sorteio(vigente):
-    """A obsolescência de um ato sorteado é a da relação que o originou, e nada mais."""
+    """A obsolescência de um ato sorteado é a da relação que o originou, e nada mais.
+
+    **E a ausência da relação é divergência, não silêncio.** Esta função devolvia `[]` quando o
+    `universo` não trazia `relacaoId` ou quando a identidade apontava para relação inexistente — as
+    duas situações que mais precisam ser ditas. Um ato de origem `SORTEIO` cuja proveniência não
+    resolve não é um ato íntegro sobre o qual nada há a observar: é um ato que ninguém consegue
+    conferir, e chamá-lo de não obsoleto seria falhar aberto justamente onde a feature promete o
+    contrário.
+    """
     from processo_seletivo.sorteios.models import RelacaoDeHabilitados
 
     identidade = (vigente.universo or {}).get("relacaoId")
     if not identidade:
-        return []
+        return [
+            {
+                "tipo": "proveniencia_ausente",
+                "descricao": (
+                    "Este ato declara origem por sorteio e não cita a relação de habilitados que "
+                    "o originou. Sem ela, a ordem publicada não é conferível contra universo "
+                    "algum."
+                ),
+            }
+        ]
     relacao = RelacaoDeHabilitados.objects.filter(pk=identidade).first()
-    if relacao is None or not relacao.sucessoras.exists():
+    if relacao is None:
+        return [
+            {
+                "tipo": "proveniencia_inexistente",
+                "descricao": (
+                    "A relação de habilitados que este ato cita não existe. A proveniência do "
+                    "sorteio não resolve, e a ordem publicada não é conferível."
+                ),
+            }
+        ]
+    if not relacao.sucessoras.exists():
         return []
     return [
         {

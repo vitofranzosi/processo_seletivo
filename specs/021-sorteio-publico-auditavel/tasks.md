@@ -67,7 +67,7 @@ chave, os vetores, os modelos e a constraint dividida.
 
 - [X] T015 Acrescentar `origem` (default `COMPUTADO`) e `lista_id` a `AtoDeOrdenacao` em `backend/processo_seletivo/classificacao/models.py`, e substituir `uq_ato_raiz_por_marco` pelas **duas** constraints parciais do `data-model.md` (D-006, FR-034, FR-035, FR-036)
 - [X] T016 Gerar a migration correspondente em `backend/processo_seletivo/classificacao/migrations/`
-- [X] T079 Declarar, em `backend/processo_seletivo/classificacao/models.py`, o que `universo` recebe num ato de sorteio — `{"origem": "SORTEIO", "sorteioId", "relacaoId", "relationHash", "quantidade"}` —, com a razão escrita: `{}` passaria pela leitura sem denunciar nada e quebraria na comparação, e a forma de ato computado mentiria sobre a origem (FR-069)
+- [X] T079 Declarar, em `backend/processo_seletivo/classificacao/models.py`, o que `universo` recebe num ato de sorteio — `{"origem": "SORTEIO", "relacaoId", "relationHash", "quantidade"}` — sem `sorteioId`, porque `Sorteio.ato` já é o vínculo canônico e imutável —, com a razão escrita: `{}` passaria pela leitura sem denunciar nada e quebraria na comparação, e a forma de ato computado mentiria sobre a origem (FR-069)
 - [X] T017 Escrever `backend/tests/integration/classificacao/test_ato_por_lista.py` provando as duas metades: dois atos raiz de **ampla concorrência** para o mesmo marco continuam sendo recusados, e três atos de listas distintas são aceitos (D-006)
 
 ### O método, no conteúdo do Edital
@@ -251,6 +251,22 @@ consolidar o comportamento errado.
 - [X] T112 Dar ao verificador independente uma âncora externa (`--resumo`), e fazê-lo dizer o que **não** verificou quando ela falta (FR-078)
 - [X] T113 Ler a publicação vigente por lista no portal — o link de uma publicação histórica de PPI apontava para a ampla (FR-068)
 - [X] T114 Escrever os testes dos sete cenários, pelos canais reais: descarte prematuro, data sem horário, fonte vinculada, prazo por lista, jornada da anulação pela tela, âncora externa do CLI e vigente por lista
+
+## Phase 11: Correções da terceira revisão e do teste visual
+
+**O teste visual pela interface encontrou o que a suíte não pegava**, e a revisão de código achou um
+desvio de autorização. O padrão dos quatro primeiros é o mesmo: o backend já garantia, e a tela
+entregava menos.
+
+- [X] T115 Autorizar **antes** da consulta externa e da leitura em cache, e reautorizar sob a trava — `exigir_base_de_comissao` (FR-079)
+- [X] T116 Fazer a divergência do ato sorteado falhar **fechada**: proveniência ausente ou inexistente vira divergência nomeada, e não `[]` (FR-080)
+- [X] T117 Retirar `sorteioId` do `universo` nos artefatos — `Sorteio.ato` já é o vínculo canônico e imutável
+- [X] T118 Exibir a proveniência do sorteio **na página pública do resultado**, com caminho para a verificação, e suprimir a coluna de pontuação onde ela não existe por desenho (FR-046)
+- [X] T119 Desambiguar os recortes homônimos na tela do sorteio, e deixar de oferecer publicação em lista sem candidato
+- [X] T120 Entregar o verificador com o `--resumo` preenchido na própria página, e explicar o que ele não prova sem ele (FR-078)
+- [X] T121 Corrigir o apontador da caixa de anulação — o formulário está abaixo dela, e o texto dizia acima
+- [X] T122 Atualizar o roteiro operacional: 22 tabelas append-only, URLs do seed em `localhost`, contradição do `.env.example`, e remoção do `SORTEIO_FONTE_ADAPTADOR` órfão com a R-005 revista
+- [X] T123 Escrever os testes: intruso não aciona a fonte, intruso não lê ocorrência em cache, e proveniência ausente ou inexistente impede a publicação
 
 ---
 

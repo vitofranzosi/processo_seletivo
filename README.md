@@ -70,7 +70,7 @@ O que acontece nessa ordem, e por que ela é essa: o PostgreSQL sobe e é espera
 então a aplicação **provisiona os papéis, aplica as migrations e provisiona de novo**. A segunda
 passada não é redundância — papel e privilégio padrão precisam existir antes de qualquer tabela, e
 privilégio *sobre* tabela só pode ser concedido depois que ela existe. Ela é a que tranca. O
-terminal mostra `18 de 18 tabelas append-only estão sem UPDATE nem DELETE para o runtime` quando
+terminal mostra `22 de 22 tabelas append-only estão sem UPDATE nem DELETE para o runtime` quando
 deu certo.
 
 Quando o terminal parar, o sistema está em <http://localhost:8000> — use `localhost`, e não

@@ -51,8 +51,17 @@ para entregar o que ela precisa — o manifesto e o endereço da relação —, 
     — traz a relação, o método, a semente, as chaves e as posições.</li>
   <li><a href="{% url 'portal:relacao-de-habilitados' relacao.id %}">Abrir a relação publicada</a>
     — é dela que o resumo da relação se recalcula, sem depender de nós.</li>
-  <li><a href="/static/portal/sorteio-cli.js">Baixar o verificador independente (JavaScript)</a>
-    — roda com <code>node sorteio-cli.js &lt; manifesto.json</code> e imprime a ordem.</li>
+  <li><a href="/static/portal/sorteio-cli.js">Baixar o verificador independente (JavaScript)</a> — rode assim:
+    <code>node sorteio-cli.js --resumo {{ sorteio.manifesto_hash }} &lt; manifesto.json</code>
+    {% comment %}
+    **O `--resumo` vem preenchido, e não é enfeite** (021, D-018, FR-078). A instrução anterior
+    mandava rodar sem ele — que é exatamente o modo em que o programa confere apenas a coerência
+    interna do arquivo. Quem adultera um manifesto recalcula o `manifestHash` junto, e o pacote
+    fecha consigo mesmo; a única âncora que não veio no arquivo é este valor, que está publicado
+    **aqui**. Entregar a ferramenta sem ele era entregá-la no modo que prova menos.
+    {% endcomment %}
+    <br><span class="meta">O valor acima é o resumo publicado deste manifesto. Sem ele, o programa
+    confere só a coerência interna do arquivo — e avisa que não verificou o resto.</span></li>
 </ul>
 
 <h2>Integridade</h2>

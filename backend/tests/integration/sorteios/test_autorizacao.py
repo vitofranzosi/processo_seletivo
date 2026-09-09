@@ -140,3 +140,77 @@ def test_a_presidencia_deste_processo_e_base_suficiente(certame):
     )
 
     assert declarado["relacao"]
+
+
+class FonteQueRegistraChamada:
+    """Uma fonte que anota ter sido chamada — é o que o teste precisa saber."""
+
+    def __init__(self):
+        self.chamadas = []
+
+    def observar(self, *, fonte, referencia):
+        from django.utils import timezone
+
+        from processo_seletivo.sorteios.infrastructure.fontes import Observacao
+
+        self.chamadas.append((fonte, referencia))
+        return Observacao(material_bruto="1 2 3 4 5", ocorrida_nao_antes_de=timezone.now())
+
+
+@pytest.mark.parametrize("intruso", [_sem_nada, _de_outro_escopo], ids=["sem-base", "outro-escopo"])
+def test_o_intruso_nao_aciona_a_fonte_externa(certame, intruso):
+    """**Autorizar depois de ir à rede não é autorizar** (Princípio III, FR-062).
+
+    A recusa final já existia, e passava: o comando ia à fonte, voltava, e só então perguntava quem
+    estava pedindo. Um ator sem base sobre o Processo fazia a instituição bater na fonte externa
+    tantas vezes quanto quisesse — e o teste antigo, que só afirmava sobre a exceção, aprovava isso.
+    """
+    fonte = FonteQueRegistraChamada()
+
+    with pytest.raises(DomainError) as recusa:
+        observar_ocorrencia(
+            actor=intruso(),
+            processo_id=certame["processo"].id,
+            fonte=METODO["source"],
+            referencia=METODO["occurrence"],
+            idempotency_key="intruso-nao-chama",
+            correlation_id="teste-021",
+            fonte_externa=fonte,
+        )
+
+    assert recusa.value.status == 404
+    assert fonte.chamadas == [], "a fonte externa foi consultada por quem não tem base"
+
+
+@pytest.mark.parametrize("intruso", [_sem_nada, _de_outro_escopo], ids=["sem-base", "outro-escopo"])
+def test_o_intruso_nao_le_uma_ocorrencia_ja_registrada(certame, intruso):
+    """O caminho em cache passava **inteiramente por fora** da autorização.
+
+    A ocorrência já registrada era devolvida antes de qualquer verificação, com o material bruto
+    dentro: quem não alcança o Processo lia a semente do certame só perguntando por ela.
+    """
+    from processo_seletivo.sorteios.infrastructure.fontes.loteria_federal import FonteDeTeste
+
+    declarado = observar_ocorrencia(
+        actor=presidente(),
+        processo_id=certame["processo"].id,
+        fonte=METODO["source"],
+        referencia=METODO["occurrence"],
+        idempotency_key="cache-legitimo",
+        correlation_id="teste-021",
+        fonte_externa=FonteDeTeste(),
+    )
+    assert declarado["materialBruto"], "a leitura legítima devolve o material"
+
+    with pytest.raises(DomainError) as recusa:
+        observar_ocorrencia(
+            actor=intruso(),
+            processo_id=certame["processo"].id,
+            fonte=METODO["source"],
+            referencia=METODO["occurrence"],
+            idempotency_key="cache-intruso",
+            correlation_id="teste-021",
+            fonte_externa=FonteDeTeste(),
+        )
+
+    assert recusa.value.status == 404
