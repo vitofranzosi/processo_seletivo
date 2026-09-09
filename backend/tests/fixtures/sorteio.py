@@ -157,9 +157,7 @@ def presidente(subject="maria"):
     return ator_institucional(subject)
 
 
-def universo_de_sorteio(
-    edital, *, versao, perfil_id, marco_id=MARCO, relacao=None, sorteio_id=None
-):
+def universo_de_sorteio(edital, *, versao, perfil_id, marco_id=MARCO, relacao=None):
     """O `universo` que um ato de sorteio grava — inclusive o que a trigger exige (021, FR-069).
 
     As quatro identidades e `stageResults` não são adorno: `check_ordering_act_provenance` recusa a
@@ -172,7 +170,6 @@ def universo_de_sorteio(
         "versionId": str(versao.id),
         "stageResults": [],
         "origem": "SORTEIO",
-        "sorteioId": str(sorteio_id) if sorteio_id else None,
         "relacaoId": str(relacao.id) if relacao is not None else None,
         "relationHash": relacao.resumo if relacao is not None else None,
         "quantidade": relacao.quantidade if relacao is not None else 0,

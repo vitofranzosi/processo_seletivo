@@ -126,7 +126,15 @@ mudou junto com a forma: `desempate-por-numero-publico`, e não `colisao-de-chav
 **Decisão.** A **identidade** da fonte, a ocorrência, a derivação a partir da data programada, a
 normalização e a regra de substituição são **conteúdo normativo publicado** — vivem no método
 declarado do sorteio, e alterá-las é ato da classe da Retificação (FR-013, FR-014). O **acesso** à
-fonte é implementação: uma porta com adaptadores, configurada por ambiente.
+fonte é implementação: uma porta com adaptadores.
+
+**Corrigido na revisão: o adaptador não é escolhido por ambiente** (FR-076). Esta decisão dizia
+"configurada por ambiente", e a implementação a seguiu — havia um `SORTEIO_FONTE_ADAPTADOR` no
+`settings`. Isso deixava a fonte declarada no Edital sem efeito algum: o adaptador da Loteria
+Federal ignorava o argumento `fonte` e consultava a Caixa fosse qual fosse a declaração, de modo
+que um Edital podia publicar `Random.org` e o manifesto anunciaria uma origem que a semente não
+teve. O vocabulário de fontes passou a ser **fechado e ligado ao adaptador que cada uma executa**,
+e o que resta de ambiente é o que sempre foi operação: tempo limite e tentativas.
 
 **Adaptador de referência:** extração da Loteria Federal, que é ocorrência pública, futura,
 previamente determinada por número de concurso e data, e amplamente usada como fonte de

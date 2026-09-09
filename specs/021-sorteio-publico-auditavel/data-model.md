@@ -188,7 +188,7 @@ originou, e **nunca** um resumo de Etapas, que não existiu:
 ```json
 {"editalId": "…", "profileId": "…", "milestoneId": "…", "versionId": "…",
  "stageResults": [],
- "origem": "SORTEIO", "sorteioId": "…", "relacaoId": "…", "relationHash": "…", "quantidade": 237}
+ "origem": "SORTEIO", "relacaoId": "…", "relationHash": "…", "quantidade": 237}
 ```
 
 **As cinco primeiras chaves não são escolha de desenho.** A trigger `check_ordering_act_provenance`,
@@ -201,6 +201,16 @@ sorteio, e um ato assim nem chega a ser gravado.
 
 Deixá-lo `{}` também não passa pela trigger; enchê-lo com forma de ato computado seria mentir sobre
 a origem. É a chave `origem` que a FR-069 usa para despachar.
+
+**Não há `sorteioId`, e a ausência é decisão.** A redação anterior prometia o campo e o comando
+nunca o gravou — sintoma do defeito de fundo, e não descuido de digitação: o vínculo entre o ato e o
+sorteio **já existe**, é `OneToOne` e é imutável (`Sorteio.ato`). Repeti-lo aqui criaria uma segunda
+resposta para a mesma pergunta, que ninguém manteria coerente com a primeira.
+
+**E `relacaoId` ausente ou apontando para relação inexistente é divergência, nunca silêncio.** São
+as duas situações que mais precisam ser ditas: um ato de origem `SORTEIO` cuja proveniência não
+resolve não é um ato íntegro sobre o qual nada há a observar — é um ato que ninguém consegue
+conferir (`proveniencia_ausente`, `proveniencia_inexistente`).
 
 ### `classificacao.PosicaoNaOrdem` — o que cada campo recebe num ato de sorteio
 

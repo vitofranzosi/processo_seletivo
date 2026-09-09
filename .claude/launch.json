@@ -2,20 +2,14 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "compose",
-      "url": "http://localhost:8000",
-      "port": 8000
-    },
-    {
-      "name": "correio",
-      "url": "http://localhost:8025",
-      "port": 8025
-    },
-    {
-      "name": "nativo",
-      "runtimeExecutable": "make",
-      "runtimeArgs": ["-C", "backend", "runserver"],
-      "port": 8000
+      "name": "processo-seletivo",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && DJANGO_SETTINGS_MODULE=config.settings.development DB_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8010"
+      ],
+      "port": 8010,
+      "url": "http://localhost:8010"
     }
   ]
 }

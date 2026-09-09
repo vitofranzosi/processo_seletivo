@@ -84,15 +84,12 @@ INSTALLED_APPS = [
     "processo_seletivo.sorteios",
 ]
 
-# **Só o adaptador da fonte da semente mora aqui.** Qual implementação atende à porta, quanto tempo
-# ela espera e quantas vezes tenta são decisões de operação. Fonte, ocorrência, derivação,
-# normalização e regra de substituição **não** estão aqui: são conteúdo normativo publicado, vivem
-# no `drawMethod` do marco de classificação do Edital, e alterá-las é Retificação — nunca
-# implantação de software (021, FR-014, D-013).
-SORTEIO_FONTE_ADAPTADOR = os.environ.get(
-    "SORTEIO_FONTE_ADAPTADOR",
-    "processo_seletivo.sorteios.infrastructure.fontes.loteria_federal.LoteriaFederal",
-)
+# **Só o *acesso* à fonte da semente mora aqui**: quanto tempo esperar e quantas vezes tentar são
+# decisões de operação. **Qual fonte** não é uma delas, e chegou a ser: havia aqui um
+# `SORTEIO_FONTE_ADAPTADOR` que escolhia o adaptador por ambiente, e ele ficou órfão quando a
+# FR-076 fechou o vocabulário de fontes. Manter uma variável que ninguém lê é pior que não a ter —
+# ela sugere que trocar a fonte da semente é configuração, quando é norma publicada no `drawMethod`
+# do marco, alterável só por Retificação (021, FR-076, D-013).
 SORTEIO_FONTE_TIMEOUT_SEGUNDOS = float(os.environ.get("SORTEIO_FONTE_TIMEOUT_SEGUNDOS", "10"))
 SORTEIO_FONTE_TENTATIVAS = int(os.environ.get("SORTEIO_FONTE_TENTATIVAS", "3"))
 

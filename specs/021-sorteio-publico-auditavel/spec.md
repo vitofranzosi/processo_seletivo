@@ -649,8 +649,11 @@ Cronograma o exibe e que a Retificação o alcança.
 - **FR-069**: A leitura do ato vigente e a aferição de publicabilidade MUST distinguir ato computado
   de ato constituído por sorteio, e MUST NOT declarar obsoleto um ato de sorteio por divergir de uma
   classificação recomputada a partir de Etapas, que não é a regra que o produziu.
-- **FR-046**: O documento publicado do resultado MUST exibir identidade do sorteio, algoritmo,
-  semente e resumos de integridade.
+- **FR-046**: O resultado publicado MUST exibir identidade do sorteio, algoritmo, semente e
+  resumos de integridade, **tanto no documento oficial quanto na página pública** — e a página MUST
+  oferecer o caminho para a verificação. O documento que a maioria das pessoas lê é a página; exibir
+  a proveniência só no PDF deixaria quem abre o resultado no navegador sem saber que a ordem veio de
+  sorteio, e sem por onde conferi-la.
 - **FR-047**: O manifesto MUST estar disponível para download em formato legível por máquina.
 
 #### A verificação pública
@@ -699,6 +702,13 @@ Cronograma o exibe e que a Retificação o alcança.
 
 #### Autorização, e o que a feature recusa
 
+- **FR-079**: Comando que consulte fonte externa ou devolva registro já existente MUST autorizar
+  **antes** de fazê-lo, e MUST reautorizar sob a trava antes de gravar. Autorizar só na gravação
+  deixa quem não tem base acionar a fonte externa da instituição e ler o material já registrado —
+  a recusa chega, e o dano já aconteceu.
+- **FR-080**: Ato de origem `SORTEIO` cuja proveniência não resolva — sem relação citada, ou
+  citando relação inexistente — MUST ser tratado como divergente, e MUST NOT ser apresentado como
+  íntegro. Uma ordem que ninguém consegue conferir não é uma ordem sobre a qual nada há a observar.
 - **FR-062**: Os comandos desta feature MUST exigir permissão explícita e verificação de escopo
   institucional, e são **quatro**, porque publicar a relação **é** congelá-la: declarar o método,
   observar a ocorrência, publicar a relação e constituir o sorteio — a anulação sendo a constituição

@@ -17,7 +17,10 @@ passasse por ela.
 from django.utils import timezone
 
 from processo_seletivo.avaliacoes.application.trilha import auditar
-from processo_seletivo.comissoes.application import comando_de_comissao
+from processo_seletivo.comissoes.application import (
+    comando_de_comissao,
+    exigir_base_de_comissao,
+)
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.sorteios.infrastructure.fontes import fonte_declarada
 from processo_seletivo.sorteios.models import OcorrenciaDaFonte
@@ -42,7 +45,19 @@ def observar_ocorrencia(
     **A ida à rede acontece antes da transação**, de propósito: manter a conexão aberta enquanto o
     banco espera trocaria um problema por outro, e não há nada a proteger — a leitura da fonte não
     escreve linha nenhuma.
+
+    **Mas ela acontece depois da autorização**, e a ordem entre as duas custou uma revisão para
+    aparecer. Antes, a leitura da ocorrência já registrada era devolvida sem autorização nenhuma, e
+    a chamada à fonte externa era disparada antes dela: um ator sem base sobre o Processo recebia o
+    material bruto de volta e, de quebra, fazia a instituição bater na fonte. É o oposto de negar
+    por padrão (Princípio III, FR-062).
+
+    **A autorização acontece duas vezes**, e não é redundância: aqui, sem trava, para não trabalhar
+    por quem não pode; e dentro de `comando_de_comissao`, sob a trava, que é onde a decisão vale.
+    Entre uma e outra o vínculo pode mudar, e é a segunda que grava.
     """
+    exigir_base_de_comissao(actor=actor, processo_id=processo_id)
+
     ja_registrada = OcorrenciaDaFonte.objects.filter(fonte=fonte, referencia=referencia).first()
     if ja_registrada is not None:
         # Observar duas vezes devolve a mesma linha, e é o que torna a observação idempotente. Não

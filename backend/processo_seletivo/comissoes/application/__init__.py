@@ -42,6 +42,36 @@ def nao_encontrado():
     return DomainError("not_found", "Recurso não encontrado.", 404)
 
 
+def exigir_base_de_comissao(*, actor, processo_id):
+    """A mesma autorização de `comando_de_comissao`, **sem trava e sem transação**.
+
+    Existe para comandos que precisam fazer alguma coisa cara ou observável **antes** de abrir a
+    transação — ir à rede, por exemplo. Sem ela, o trabalho acontece e só depois se pergunta quem
+    está pedindo: o ator sem base aciona a fonte externa e, se a leitura devolver algo, chega a
+    receber o dado de volta. É o oposto de negar por padrão (Princípio III, FR-062).
+
+    **Não substitui `comando_de_comissao`**: entre esta verificação e a gravação, o vínculo pode
+    mudar. Quem usa as duas autoriza duas vezes — aqui para não trabalhar por quem não pode, e lá
+    sob a trava, que é onde a decisão vale.
+
+    Devolve a base que autoriza, e recusa com 404 pelo mesmo motivo de sempre: dizer "existe, mas
+    você não pode" já entregaria que existe.
+    """
+    processo = (
+        ProcessoSeletivo.objects.filter(
+            pk=processo_id, institution_scope=actor.institution_scope
+        ).first()
+        if actor is not None
+        else None
+    )
+    if processo is None:
+        raise nao_encontrado()
+    base = pode_gerir_comissao(actor, processo)
+    if base is None:
+        raise nao_encontrado()
+    return base
+
+
 @contextmanager
 def comando_de_comissao(*, actor, processo_id, operation, payload, idempotency_key):
     """Abre a transação, bloqueia, autoriza, confere estado e reserva. Cede `(contexto)`."""

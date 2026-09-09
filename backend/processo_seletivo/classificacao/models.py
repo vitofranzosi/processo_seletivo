@@ -59,8 +59,12 @@ class AtoDeOrdenacao(models.Model):
     #
     #     {"editalId": …, "profileId": …, "milestoneId": …, "versionId": …,
     #      "stageResults": [],
-    #      "origem": "SORTEIO", "sorteioId": …, "relacaoId": …,
-    #      "relationHash": …, "quantidade": N}
+    #      "origem": "SORTEIO", "relacaoId": …, "relationHash": …, "quantidade": N}
+    #
+    # **Não há `sorteioId` aqui, e a ausência é decisão.** O vínculo entre o ato e o sorteio já
+    # existe, é `OneToOne` e é imutável: `Sorteio.ato`. Repeti-lo no `universo` criaria uma segunda
+    # resposta para a mesma pergunta, e uma que ninguém mantém coerente com a primeira — a redação
+    # anterior deste comentário prometia o campo, e o comando nunca o gravou.
     #
     # **As cinco primeiras chaves não são escolha nossa**: a trigger `check_ordering_act_provenance`
     # exige que as quatro identidades coincidam com as colunas do ato e que o marco exista na

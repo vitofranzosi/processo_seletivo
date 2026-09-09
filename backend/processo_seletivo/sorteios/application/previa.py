@@ -32,8 +32,21 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
     # congelava outro, sem que nada explicasse a diferença.
     habilitadas = habilitadas_na_etapa(edital, metodo)
     ocorrencia_da_vez, proxima_referencia, descartadas = _ocorrencia_declarada(metodo)
-    listas = [(None, "Ampla concorrência")] + [
-        (str(modalidade.get("id")), modalidade.get("name") or "")
+    # **Os recortes precisam ser distinguíveis na tela** (021, D-006). O primeiro é o recorte sem
+    # lista — todos os inscritos do Perfil —, e os demais são as modalidades declaradas. Quando o
+    # Edital declara uma modalidade chamada "Ampla concorrência", que é o caso normal, os dois
+    # nomes colidiam: a tela mostrava dois blocos homônimos, um com o sorteio feito e outro vazio,
+    # e quem conduz o certame não tinha como saber em qual publicar.
+    #
+    # O rótulo do recorte sem lista passa a dizer o que ele é — o universo inteiro do Perfil —, e
+    # cada modalidade carrega o código que o Edital publica.
+    listas = [(None, "Todos os inscritos do recorte de vaga (sem lista de concorrência)")] + [
+        (
+            str(modalidade.get("id")),
+            f"{modalidade.get('name') or ''} ({modalidade.get('code')})"
+            if modalidade.get("code")
+            else (modalidade.get("name") or ""),
+        )
         for modalidade in perfil.get("competitionModalities") or []
     ]
     return {
