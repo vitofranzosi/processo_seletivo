@@ -205,6 +205,33 @@ def test_as_ultimas_24_horas_somam_o_processo_e_excluem_a_borda(processo_a, edit
     assert lido.ultimas_24h == 5
 
 
+def test_as_ultimas_24_horas_nao_contam_o_que_veio_depois_da_leitura(
+    processo_a, edital_a, edital_c
+):
+    """A janela tem os **dois** limites, e o de cima é o instante declarado da leitura (`FR-009`).
+
+    Sem o teto, uma submissão gravada depois de `lido_em` — concorrente, entre a montagem do Pulso
+    e a contagem — entrava nas 24 horas e ficava **fora** da série, que sempre teve teto. A página
+    declarava um instante e contava um ato posterior a ele, e a discordância entre os dois números
+    não teria explicação para quem lê.
+    """
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    agora = timezone.now()
+    submeter(edital_c, 2, quando=agora - timedelta(hours=1), seed=2)
+    submeter(edital_c, 3, primeiro=300, quando=agora + timedelta(minutes=5), seed=2)
+
+    lido = supervisao.pulso(processo_a, agora=agora)
+
+    assert lido.lido_em == agora
+    assert lido.ultimas_24h == 2
+    # A série já respeitava o teto, e é a coerência entre os dois números que estava em jogo.
+    do_c = do_edital(lido, edital_c)
+    assert sum(ponto.quantidade for ponto in do_c.serie) == 2
+
+
 def test_sem_periodo_em_curso_as_ultimas_24_horas_nao_sao_apresentadas(
     processo_a, edital_a, api_client, manager_headers
 ):

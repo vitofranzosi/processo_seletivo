@@ -152,7 +152,9 @@ def test_processo_cancelado_le_e_nao_oferece_o_que_a_situacao_nao_admite(
     from processo_seletivo.interface import supervisao
     from tests.conftest import ator_institucional
 
-    presidenta = ator_institucional("maria")
+    # Quem preside **e** pode elaborar Retificação: é essa a combinação que recebe o caminho, e
+    # sem ela o teste não distinguiria "a situação não admite" de "este ator não pratica o ato".
+    presidenta = ator_institucional("maria", "retificacao:elaborar")
     antes = supervisao.sinais(processo_a, presidenta)
     assert [sinal.especie for sinal in antes] == [supervisao.UX_001]
     assert antes[0].destino is not None

@@ -83,7 +83,9 @@ def test_quem_preside_ve_situacao_volume_prazo_e_impedimento_numa_tela_so(
     submeter(segundo, 3, primeiro=100, seed=SEGUNDO_SEED)
     rascunhar(primeiro, 2, seed=11)
 
-    identificar(client, "maria", [])
+    # Preside **e** elabora Retificação: é a combinação que recebe o caminho até onde o sinal de
+    # conteúdo publicado se resolve.
+    identificar(client, "maria", ["elaborador"])
     # O caminho existe a partir da página do Processo: sem ele a capacidade não é alcançável.
     painel = client.get(reverse("interface:processo-detalhe", args=[processo.id])).content.decode()
     assert reverse("interface:supervisao", args=[processo.id]) in painel
@@ -104,6 +106,4 @@ def test_quem_preside_ve_situacao_volume_prazo_e_impedimento_numa_tela_so(
 
     # E se existe condição que impede o próximo ato.
     assert "está sem marco no cronograma" in lido
-    assert (
-        reverse("interface:compor-etapa", args=[primeiro.id, "etapas"]) in resposta.content.decode()
-    )
+    assert reverse("interface:retificar", args=[primeiro.id]) in resposta.content.decode()

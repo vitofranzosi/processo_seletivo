@@ -19,7 +19,11 @@ from django.utils.dateparse import parse_datetime
 
 from processo_seletivo.avaliacoes.application.selectors import resumo_da_etapa
 from processo_seletivo.avaliacoes.models import Impedimento
-from processo_seletivo.classificacao.application.selectors import ato_vigente, estado_do_marco
+from processo_seletivo.classificacao.application.selectors import (
+    ORIGEM_SORTEIO,
+    ato_vigente,
+    estado_do_marco,
+)
 from processo_seletivo.comissoes.application import selectors as comissao_selectors
 from processo_seletivo.comissoes.domain.autorizacao import pode_gerir_comissao
 from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
@@ -32,6 +36,7 @@ from processo_seletivo.inscricoes.domain.periodo import (
 )
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.processos.domain.finalizacao import PROCESSO_FINAL
+from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.recursos.application import admitir as recursos_admitir
 from processo_seletivo.recursos.application import selectors as recursos_selectors
@@ -290,6 +295,12 @@ def submetidas_nas_ultimas_24h(processo, agora):
         edital__processo=processo,
         status=Inscricao.Status.SUBMETIDA,
         submitted_at__gt=agora - JANELA_RECENTE,
+        # **O teto é o instante declarado da leitura**, e não "agora" de novo. Sem ele a janela
+        # ficava aberta para o futuro: uma submissão concorrente, gravada entre a montagem do
+        # `Pulso` e esta contagem, entrava nas 24 horas e ficava **fora** da série — que sempre
+        # teve teto. A página declara `lido_em` e contava um ato posterior a ele; e uma chamada com
+        # `agora=` explícito, que existe para ser determinística, não era.
+        submitted_at__lte=agora,
     ).count()
 
 
@@ -633,6 +644,29 @@ def marcos_do_conteudo(conteudo):
     ]
 
 
+def sorteado(ato):
+    """Se o ato veio de sorteio. A marca está no universo que ele gravou (`021`, `FR-069`)."""
+    return (ato.universo or {}).get("origem") == ORIGEM_SORTEIO
+
+
+def listas_do_marco(perfil, marco):
+    """Os recortes daquele marco: `[(lista_id, nome)]`, ampla concorrência primeiro.
+
+    **Só o sorteio emite ato por lista** (`021`, `D-006`): um marco de cotas produz três atos raiz
+    — ampla, e uma por modalidade de reserva —, e perguntar pelo "ato vigente do marco" sem dizer
+    de qual lista devolveria um dos três pela ordem de emissão. Um marco computado tem um recorte
+    só, e percorrer as modalidades dele custaria uma consulta por modalidade para não encontrar ato
+    nenhum.
+    """
+    if not marco.get("drawMethod"):
+        return [(None, "")]
+    return [(None, "")] + [
+        (modalidade.get("id"), modalidade.get("name") or "")
+        for modalidade in perfil.get("competitionModalities") or []
+        if modalidade.get("id")
+    ]
+
+
 def candidato_a_obsoleto(edital, ato, marco, versao_vigente):
     """O filtro barato de `T-003`: as duas causas das quatro divergências que `comparar` produz.
 
@@ -645,6 +679,14 @@ def candidato_a_obsoleto(edital, ato, marco, versao_vigente):
     confirmação descarta, e nunca o contrário. Errar para mais custa uma chamada que devolve falso;
     errar para menos perde o sinal em silêncio, que é o defeito que ninguém descobre.
     """
+    if sorteado(ato):
+        # **O ato sorteado escapa das duas condições**, e escaparia em silêncio: ele fica obsoleto
+        # quando a relação de habilitados que o originou ganha sucessora, e uma relação nova não
+        # muda a versão do Edital nem produz `ResultadoEtapa`. O filtro se afasta em vez de ganhar
+        # uma terceira condição porque a confirmação exata **dele já é barata**: aferir um ato de
+        # sorteio é ler a sucessão da relação, e não recalcular a ordem — a razão de existir do
+        # filtro não se aplica aqui (`T-003`, `021`, `FR-069`).
+        return True
     if versao_vigente is None or ato.versao_id != versao_vigente.id:
         return True
     etapas = [str(item) for item in marco.get("stages") or []]
@@ -665,30 +707,38 @@ def atos_obsoletos(edital, conteudo, versao_vigente, encaminhar):
     O sinal nasce da **confirmação**. Parar na primeira passagem exibiria candidato como sinal, e
     fato posterior não implica divergência — um painel que erra uma vez deixa de ser lido.
     """
-    for _, marco in marcos_do_conteudo(conteudo):
+    for perfil, marco in marcos_do_conteudo(conteudo):
         marco_id = marco.get("id")
-        ato = ato_vigente(edital=edital, marco_id=marco_id)
-        if ato is None or not candidato_a_obsoleto(edital, ato, marco, versao_vigente):
-            continue
-        try:
-            estado = estado_do_marco(edital=edital, marco_id=marco_id)
-        except DomainError:
-            # Marco que a norma vigente não conhece e ato que não existe: a leitura recusa, e a
-            # supervisão não inventa sinal a partir de uma recusa.
-            continue
-        if not estado["obsoleto"]:
-            continue
-        nome = (estado["marco"] or {}).get("name") or marco.get("name") or str(marco_id)
-        yield Sinal(
-            especie=UX_004,
-            edital=edital,
-            alvo=nome,
-            mensagem=(
-                f"O ato de ordenação vigente do marco {nome}, do Edital "
-                f"{rotulo_do_edital(edital)}, está obsoleto."
-            ),
-            destino=encaminhar(UX_004, edital, marco_id),
-        )
+        for lista_id, nome_da_lista in listas_do_marco(perfil, marco):
+            ato = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
+            if ato is None or not candidato_a_obsoleto(edital, ato, marco, versao_vigente):
+                continue
+            try:
+                estado = estado_do_marco(edital=edital, marco_id=marco_id, lista_id=lista_id)
+            except DomainError:
+                # Marco que a norma vigente não conhece e ato que não existe: a leitura recusa, e
+                # a supervisão não inventa sinal a partir de uma recusa.
+                continue
+            if not estado["obsoleto"]:
+                continue
+            nome = (estado["marco"] or {}).get("name") or marco.get("name") or str(marco_id)
+            # O recorte entra no alvo porque um marco de cotas tem três atos: sem ele os três
+            # sinais sairiam com a mesma frase, e quem lesse não saberia qual lista abrir.
+            alvo = f"{nome} — {nome_da_lista}" if nome_da_lista else nome
+            yield Sinal(
+                especie=UX_004,
+                edital=edital,
+                alvo=alvo,
+                mensagem=(
+                    f"O ato de ordenação vigente do marco {alvo}, do Edital "
+                    f"{rotulo_do_edital(edital)}, está obsoleto."
+                ),
+                # A dona não é a mesma nos dois casos: a ordenação diagnostica a divergência de um
+                # ato computado, e o sorteio é onde uma ordem sorteada se refaz — com relação nova
+                # e ocorrência nova. Mandar um sorteio para a ordenação levaria a uma tela que
+                # oferece recalcular o que só uma semente nova produz.
+                destino=encaminhar(UX_004, edital, marco_id, sorteio=sorteado(ato)),
+            )
 
 
 # --- `UX-005` — recurso sem membro desimpedido ----------------------------------------------
@@ -776,51 +826,77 @@ def comissao_impedida(processo, editais, encaminhar):
 # 8. Encaminhamento — do sinal ao lugar onde ele se resolve
 # ---------------------------------------------------------------------------
 
-# Os dois encaminhamentos que levam a **alterar o Edital**. Num Processo em estado final o domínio
-# recusa alteração dos seus Editais, e oferecer o caminho seria oferecer um beco — o mesmo que a
-# `007` passou uma feature inteira tirando (`FR-036`).
+# Os dois encaminhamentos que levam a **alterar conteúdo já publicado**. Num Processo em estado
+# final o domínio recusa alteração dos seus Editais, e um Edital que não está publicado não admite
+# Retificação: nos dois casos oferecer o caminho seria oferecer um beco — o mesmo que a `007`
+# passou uma feature inteira tirando (`FR-036`).
 ENCAMINHAMENTOS_QUE_ALTERAM_O_EDITAL = frozenset({UX_001, UX_002})
+
+# A permissão que **pratica** a Retificação. Ela não decide se o sinal aparece — a tela de destino
+# é legível por quem alcança o Edital —, e sim se o caminho é oferecido: o catálogo de ações do
+# Edital já pratica a mesma distinção, e oferecer um formulário cujo envio será recusado é o beco
+# que ele existe para não oferecer.
+PERMISSAO_DE_RETIFICAR = "retificacao:elaborar"
 
 # Onde cada sinal se resolve: a tela **dona** daquele fato, e nunca uma segunda implementação dele
 # (`FR-035`, `D-009`). O rótulo diz o que se vai encontrar lá, e não o que se vai fazer: a decisão
 # de agir é de quem chega.
 ROTULOS_DO_DESTINO = {
-    UX_001: "Abrir a composição das Etapas",
-    UX_002: "Abrir o cronograma do Edital",
+    UX_001: "Retificar as Etapas do Edital",
+    UX_002: "Retificar o cronograma do Edital",
     UX_003: "Abrir a distribuição da Etapa",
     UX_004: "Abrir a ordenação do marco",
+    # O rótulo do mesmo sinal quando o ato veio de sorteio: "ordenação" nomearia uma tela que
+    # aquele ato não usa, e quem lesse esperaria encontrar um recálculo que não existe ali.
+    (UX_004, "sorteio"): "Abrir o sorteio do marco",
     UX_005: "Abrir os recursos do Edital",
 }
 
 
-def admite_encaminhamento(processo, especie):
-    """Se a **situação** do Processo admite o ato para onde o sinal encaminharia.
+def admite_encaminhamento(processo, especie, edital, ator):
+    """Se a **situação** admite o ato para onde o sinal encaminharia, e se há quem o pratique.
 
     Não é autorização — quem recusa continua sendo a tela de destino (`FR-036`). É a mesma
     distinção que o catálogo de ações do Edital já pratica: prever a recusa é conveniência; decidir
     a autorização é da dona.
+
+    As três condições da Retificação são as que o próprio domínio impõe: Processo em estado final
+    não admite alteração dos seus Editais, Retificação incide sobre Edital **publicado**, e
+    elaborá-la exige a permissão. Faltando qualquer uma, o sinal continua aparecendo e o caminho
+    não é oferecido — que é o mesmo tratamento do Processo cancelado, e não a supressão de
+    `FR-004`.
     """
-    if especie in ENCAMINHAMENTOS_QUE_ALTERAM_O_EDITAL:
-        return processo.status not in PROCESSO_FINAL
-    return True
+    if especie not in ENCAMINHAMENTOS_QUE_ALTERAM_O_EDITAL:
+        return True
+    return (
+        processo.status not in PROCESSO_FINAL
+        and edital.status == Edital.Status.PUBLICADO
+        and bool(ator and ator.can(PERMISSAO_DE_RETIFICAR))
+    )
 
 
-def destino_de(processo, especie, edital, referencia=None):
+def destino_de(processo, especie, edital, referencia=None, *, ator=None, sorteio=False):
     """A tela dona daquele sinal, ou `None` quando a situação não admite o encaminhamento."""
-    if not admite_encaminhamento(processo, especie):
+    if not admite_encaminhamento(processo, especie, edital, ator):
         return None
     caminhos = {
-        # A âncora é a da seção, e é a mesma que as pendências de publicação já usam: o lugar de
-        # agir sobre uma coleção é o começo dela.
-        UX_001: lambda: reverse("interface:compor-etapa", args=[edital.id, "etapas"])
-        + "#etapas-titulo",
-        UX_002: lambda: reverse("interface:compor-etapa", args=[edital.id, "cronograma"])
-        + "#cronograma-titulo",
+        # **A Retificação, e não o compositor.** `UX-001` e `UX-002` nascem do conteúdo
+        # **publicado**, e o compositor é a coleção de **elaboração**: para um Edital publicado ele
+        # é somente leitura, e depois de uma Retificação ele mostra outro conteúdo — quem seguisse
+        # o caminho chegaria a uma tela onde não se corrige nada e onde o defeito pode nem
+        # aparecer. A Retificação edita o conteúdo vigente, que é exatamente o que produziu o
+        # sinal, e é o ato que a norma exige para mudá-lo.
+        UX_001: lambda: reverse("interface:retificar", args=[edital.id]),
+        UX_002: lambda: reverse("interface:retificar", args=[edital.id]),
         UX_003: lambda: reverse("interface:distribuicao", args=[edital.id, referencia]),
-        UX_004: lambda: reverse("interface:ordenacao", args=[edital.id, referencia]),
+        UX_004: lambda: reverse(
+            "interface:sorteio" if sorteio else "interface:ordenacao",
+            args=[edital.id, referencia],
+        ),
         UX_005: lambda: reverse("interface:recursos", args=[edital.id]),
     }
-    return Destino(rotulo=ROTULOS_DO_DESTINO[especie], url=caminhos[especie]())
+    rotulo = ROTULOS_DO_DESTINO.get((especie, "sorteio") if sorteio else especie)
+    return Destino(rotulo=rotulo or ROTULOS_DO_DESTINO[especie], url=caminhos[especie]())
 
 
 def alcance(ator, processo):
@@ -858,8 +934,8 @@ def sinais(processo, ator, *, agora=None):
     agora = agora or timezone.now()
     alcancadas = alcance(ator, processo)
 
-    def encaminhar(especie, edital, referencia=None):
-        return destino_de(processo, especie, edital, referencia)
+    def encaminhar(especie, edital, referencia=None, *, sorteio=False):
+        return destino_de(processo, especie, edital, referencia, ator=ator, sorteio=sorteio)
 
     leitura = leitura_dos_editais(processo)
     publicados = [(edital, conteudo) for edital, conteudo in leitura if conteudo is not None]
@@ -900,6 +976,7 @@ __all__ = [
     "DENTRO_DO_INTERVALO",
     "DEPOIS_DO_TERMINO",
     "ENCAMINHAMENTOS_QUE_ALTERAM_O_EDITAL",
+    "PERMISSAO_DE_RETIFICAR",
     "ESPECIES",
     "ROTULOS_DO_DESTINO",
     "UX_001",
@@ -926,6 +1003,7 @@ __all__ = [
     "eventos_do_conteudo",
     "instantes_do_evento",
     "leitura_dos_editais",
+    "listas_do_marco",
     "marcos_do_edital",
     "periodo_do_edital",
     "pode_supervisionar",
@@ -935,6 +1013,7 @@ __all__ = [
     "posicao_temporal",
     "pulso",
     "serie_do_edital",
+    "sorteado",
     "sinais",
     "submetidas_nas_ultimas_24h",
 ]

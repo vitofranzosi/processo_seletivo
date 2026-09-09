@@ -381,3 +381,117 @@ def test_dobrar_os_recursos_pendentes_nao_dobra_as_consultas(
 
     with django_assert_num_queries(orcamento):
         supervisao.sinais(processo, presidenta)
+
+
+# ---------------------------------------------------------------------------
+# `UX-004` — o ato **sorteado**, e os recortes que não são a ampla concorrência
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def certame_sorteado(gestor, api_client, manager_headers, process_payload):
+    """Um marco de sorteio com cotas: ampla concorrência, PPI e PcD sobre o mesmo marco."""
+    from tests.fixtures.sorteio import certame_com_cotas
+
+    return certame_com_cotas(gestor, api_client, manager_headers, process_payload)
+
+
+def ato_sorteado(cenario, relacao_publicada, *, lista_id=None):
+    """O ato que um sorteio grava, com a relação que o originou citada no universo."""
+    from processo_seletivo.classificacao.models import AtoDeOrdenacao, OrigemDaOrdem
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+    from tests.fixtures.sorteio import MARCO, universo_de_sorteio
+
+    versao = VersaoConsolidada.objects.filter(edital=cenario["edital"]).latest("materialized_at")
+    return AtoDeOrdenacao.objects.create(
+        edital=cenario["edital"],
+        perfil_id=cenario["perfil"],
+        marco_id=MARCO,
+        lista_id=lista_id,
+        origem=OrigemDaOrdem.SORTEIO,
+        versao=versao,
+        universo=universo_de_sorteio(
+            cenario["edital"],
+            versao=versao,
+            perfil_id=cenario["perfil"],
+            relacao=relacao_publicada,
+        ),
+        emitido_por="maria",
+        emitido_em=timezone.now(),
+    )
+
+
+def relacao_do_recorte(cenario, *, lista_id=None, anterior=None, inscricoes=()):
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+    from tests.fixtures.sorteio import MARCO, relacao
+
+    versao = VersaoConsolidada.objects.filter(edital=cenario["edital"]).latest("materialized_at")
+    return relacao(
+        cenario["edital"],
+        versao=versao,
+        perfil_id=cenario["perfil"],
+        marco_id=MARCO,
+        lista_id=lista_id,
+        inscricoes=inscricoes,
+        anterior=anterior,
+        motivo="Habilitação revista." if anterior is not None else "",
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_o_ato_sorteado_fica_obsoleto_pela_relacao_e_o_sinal_o_alcanca(
+    certame_sorteado, presidenta
+):
+    """`FR-029` com a `021`: a obsolescência de um sorteio não passa por versão nem por Resultado.
+
+    Um ato sorteado envelhece quando a **relação de habilitados** que o originou ganha sucessora —
+    e uma relação nova não altera a versão do Edital nem produz `ResultadoEtapa`. As duas condições
+    do filtro barato passavam ao largo disso, e a confirmação exata nunca era chamada: o sinal
+    ficava cego, em silêncio, que é o modo de falha que `T-003` diz custar caro.
+    """
+    inscricoes = certame_sorteado["inscricoes"]
+    original = relacao_do_recorte(certame_sorteado, inscricoes=inscricoes)
+    ato_sorteado(certame_sorteado, original)
+
+    antes = das_especies(
+        supervisao.sinais(certame_sorteado["processo"], presidenta), supervisao.UX_004
+    )
+    assert antes == [], "sem relação sucessora o ato reflete o fato que o originou"
+
+    relacao_do_recorte(certame_sorteado, anterior=original, inscricoes=inscricoes[:2])
+
+    achados = das_especies(
+        supervisao.sinais(certame_sorteado["processo"], presidenta), supervisao.UX_004
+    )
+    assert len(achados) == 1
+    assert achados[0].destino is not None
+    # A dona é o sorteio, e não a ordenação: uma ordem sorteada não se refaz recalculando, e a tela
+    # da 015 ofereceria justamente o recálculo que só uma semente nova produz.
+    assert achados[0].destino.url.endswith("/sorteio")
+
+
+@pytest.mark.django_db(transaction=True)
+def test_o_ato_de_uma_lista_de_reserva_tambem_e_alcancado(certame_sorteado, presidenta):
+    """`021`, `D-006`: um marco de cotas tem três atos raiz, e "o ato do marco" não é pergunta.
+
+    Consultar o vigente sem dizer de qual lista devolve o da ampla concorrência, e os de PPI e PcD
+    ficam invisíveis — a supervisão diria que está tudo em ordem enquanto duas das três ordens
+    publicadas já não correspondem ao universo comprometido.
+    """
+    from tests.fixtures.sorteio import LISTA_PPI
+
+    cotista = certame_sorteado["cotista_ppi"]
+    original = relacao_do_recorte(certame_sorteado, lista_id=LISTA_PPI, inscricoes=[cotista])
+    ato_sorteado(certame_sorteado, original, lista_id=LISTA_PPI)
+    relacao_do_recorte(
+        certame_sorteado, lista_id=LISTA_PPI, anterior=original, inscricoes=[cotista]
+    )
+
+    achados = das_especies(
+        supervisao.sinais(certame_sorteado["processo"], presidenta), supervisao.UX_004
+    )
+
+    assert len(achados) == 1
+    # O recorte é nomeado: sem ele os três sinais do mesmo marco sairiam com a mesma frase.
+    assert "Pretos, pardos e indígenas" in achados[0].alvo
+    assert "Pretos, pardos e indígenas" in achados[0].mensagem

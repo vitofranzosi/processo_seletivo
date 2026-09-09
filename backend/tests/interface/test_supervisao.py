@@ -280,10 +280,14 @@ def test_os_sinais_do_edital_conduzem_as_telas_donas(
 
     submeter(edital_c, 2, seed=SEGUNDO_SEED)
 
-    atencao = regiao(abrir(client, processo_a), "atencao-titulo")
+    atencao = regiao(abrir(client, processo_a, papeis=["elaborador"]), "atencao-titulo")
 
-    assert reverse("interface:compor-etapa", args=[edital_a.id, "etapas"]) in atencao
-    assert reverse("interface:compor-etapa", args=[edital_divergente.id, "cronograma"]) in atencao
+    # **A Retificação, e não o compositor.** Os dois primeiros sinais nascem do conteúdo publicado,
+    # e o compositor é a coleção de elaboração: para um Edital publicado ele é somente leitura, e
+    # depois de uma Retificação mostra outro conteúdo.
+    assert reverse("interface:retificar", args=[edital_a.id]) in atencao
+    assert reverse("interface:retificar", args=[edital_divergente.id]) in atencao
+    assert reverse("interface:compor-etapa", args=[edital_a.id, "etapas"]) not in atencao
     assert (
         reverse("interface:distribuicao", args=[edital_c.id, identificador(ETAPA_C1, SEGUNDO_SEED)])
         in atencao
@@ -365,3 +369,83 @@ def test_a_supervisao_nao_lista_os_registros_que_conta(
         assert inscricao.nome not in corpo
         assert inscricao.cpf not in corpo
         assert str(inscricao.id) not in corpo
+
+
+def test_o_encaminhamento_de_conteudo_publicado_abre_onde_ele_se_corrige(
+    client, seletor_ligado, processo_a, edital_a, edital_c, comissao_de_a
+):
+    """`FR-035`: o destino é seguido, e não só escrito no `href`.
+
+    O compositor passaria neste teste até a última linha: ele responde 200. O que ele **não** faz é
+    corrigir — para um Edital publicado ele é somente leitura, e o que ele exibe é a coleção de
+    elaboração, que diverge do conteúdo vigente depois de uma Retificação. Um teste que só
+    conferisse o endereço não distinguiria as duas telas, e foi por isso que o destino errado
+    passou despercebido.
+    """
+    from processo_seletivo.interface import supervisao as leitura
+    from tests.conftest import ator_institucional
+
+    ator = ator_institucional("maria", "retificacao:elaborar")
+    sinal = next(
+        item
+        for item in leitura.sinais(processo_a, ator)
+        if item.especie == leitura.UX_001 and item.edital.id == edital_a.id
+    )
+
+    identificar(client, "maria", ["elaborador"])
+    destino = client.get(sinal.destino.url)
+
+    assert destino.status_code == 200
+    pagina = destino.content.decode()
+    # A tela do ato que corrige conteúdo publicado — e não uma leitura dele.
+    assert f"Retificar Edital {edital_a.number}/{edital_a.year}" in pagina
+    assert 'name="justificativa"' in pagina
+    # E ela edita o conteúdo **vigente**, que é o que produziu o sinal: a Etapa nomeada está lá.
+    assert sinal.alvo in pagina
+
+
+def test_sem_a_permissao_de_retificar_o_sinal_fica_e_o_caminho_nao(
+    client, seletor_ligado, processo_a, edital_a, edital_c, comissao_de_a
+):
+    """`FR-036`: a supervisão decide **se oferece**, e não se autoriza.
+
+    Quem preside sem poder elaborar Retificação continua vendo a condição — ela é dele —, e não
+    recebe um formulário cujo envio seria recusado. O sinal não é suprimido: a tela de destino é
+    legível por quem alcança o Edital, e `FR-004` fala de alcance, não de permissão de ato.
+    """
+    from processo_seletivo.interface import supervisao as leitura
+    from tests.conftest import ator_institucional
+
+    sinais = leitura.sinais(processo_a, ator_institucional("maria"))
+
+    do_edital = [item for item in sinais if item.especie == leitura.UX_001]
+    assert do_edital, "o sinal continua sendo apresentado"
+    assert all(item.destino is None for item in do_edital)
+
+    atencao = texto(regiao(abrir(client, processo_a), "atencao-titulo"))
+    assert "está sem marco no cronograma" in atencao
+    assert "Retificar" not in atencao
+
+
+def test_edital_nao_publicado_nao_recebe_encaminhamento_de_retificacao(
+    processo_a, edital_a, edital_c, comissao_de_a
+):
+    """Retificação incide sobre Edital publicado; encerrado não admite o ato (`FR-036`).
+
+    O conteúdo vigente permanece — e por isso o sinal permanece —, mas o caminho levaria a uma
+    recusa de estado, que é o beco que a `007` passou uma feature inteira tirando.
+    """
+    from processo_seletivo.interface import supervisao as leitura
+    from processo_seletivo.processos.models import Edital
+    from tests.conftest import ator_institucional
+
+    ator = ator_institucional("maria", "retificacao:elaborar")
+    antes = [item for item in leitura.sinais(processo_a, ator) if item.especie == leitura.UX_001]
+    assert antes and all(item.destino is not None for item in antes)
+
+    Edital.objects.filter(pk=edital_a.pk).update(status=Edital.Status.ENCERRADO)
+
+    depois = [item for item in leitura.sinais(processo_a, ator) if item.especie == leitura.UX_001]
+    do_encerrado = [item for item in depois if item.edital.id == edital_a.id]
+    assert do_encerrado, "o sinal continua: o conteúdo publicado não muda porque o Edital encerrou"
+    assert all(item.destino is None for item in do_encerrado)
