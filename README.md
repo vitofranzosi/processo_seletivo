@@ -73,7 +73,8 @@ terminal mostra `18 de 18 tabelas append-only estão sem UPDATE nem DELETE para 
 deu certo.
 
 Quando o terminal parar, o sistema está em <http://localhost:8000> — use `localhost`, e não
-`127.0.0.1`: o padrão de `DJANGO_ALLOWED_HOSTS` recusa o segundo.
+`127.0.0.1`: o padrão de `DJANGO_ALLOWED_HOSTS` recusa o segundo. Em <http://localhost:8025> fica a
+caixa de entrada do coletor de e-mail, por onde se lê o código de acesso do portal do candidato.
 
 Para ter o que olhar, popule a demonstração (o container já está de pé, então `exec`):
 
@@ -150,9 +151,10 @@ uma já vigente e outra com vigência futura —, para que a consulta temporal t
 há como recriá-la sobre o mesmo código: apagar a demonstração exigiria excluir Publicações, o que a
 Constituição proíbe e as triggers de imutabilidade recusam. Use outro `--codigo`.
 
-O portal do candidato envia código de acesso por e-mail, e em desenvolvimento o backend de e-mail é
-o de console: **a mensagem é impressa no terminal onde o servidor está rodando**. É de lá que se lê
-o código — no compose, `docker compose logs -f app`.
+O portal do candidato envia código de acesso por e-mail. No compose há um coletor de SMTP junto:
+a mensagem chega em <http://localhost:8025>, e é de lá que se lê o código. Nativamente o backend de
+e-mail é o de console — **a mensagem é impressa no terminal onde o servidor está rodando**, e é
+preciso garimpá-la no log.
 
 ## Antes de receber dado pessoal real
 

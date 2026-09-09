@@ -32,6 +32,20 @@ services:
       # caminho antigo — ela o lê como base de versão anterior esperando `pg_upgrade`.
       - postgres-data:/var/lib/postgresql
 
+  # O portal envia código de acesso por e-mail, e sem coletor a mensagem só existe no terminal do
+  # servidor — o que obriga a garimpar log para autenticar como candidato. O mailpit recebe o SMTP
+  # e mostra a caixa de entrada em <http://localhost:8025>. Ele não guarda nada em disco: some
+  # junto com a pilha, que é o comportamento certo para mensagem de demonstração.
+  correio:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
   app:
     build:
       context: .
@@ -48,8 +62,16 @@ services:
       # Diz ao `backend/Makefile` para não carregar o `.env` — ele chega aqui pela montagem de
       # `./backend`, e as três variáveis acima seriam desfeitas por ele.
       EM_CONTAINER: "true"
+      # O correio do compose no lugar do backend de console: com ele a mensagem vai para a caixa
+      # de entrada em vez do log, e o código de acesso deixa de exigir garimpo no terminal.
+      DJANGO_EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+      EMAIL_HOST: correio
+      EMAIL_PORT: "1025"
+      EMAIL_USE_TLS: "false"
     depends_on:
       db:
+        condition: service_healthy
+      correio:
         condition: service_healthy
     ports:
       - "8000:8000"

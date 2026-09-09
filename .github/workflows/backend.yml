@@ -70,12 +70,14 @@ jobs:
       - name: Conferir que a segunda passada trancou as tabelas
         run: docker compose logs app | grep -E "[1-9][0-9]* de [0-9]+ tabelas append-only"
 
-      - name: Conferir que as três superfícies respondem
+      - name: Conferir que as superfícies respondem
         run: |
           curl -fsS -o /dev/null http://localhost:8000/health
           curl -fsS -o /dev/null http://localhost:8000/readiness
           curl -fsS -o /dev/null -L http://localhost:8000/gestao/
           curl -fsS -o /dev/null http://localhost:8000/selecoes/
+          # O coletor de e-mail: sem ele o código de acesso do portal volta a existir só no log.
+          curl -fsS -o /dev/null http://localhost:8025/
 
       - name: Logs, se algo falhou
         if: failure()

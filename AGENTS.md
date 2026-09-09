@@ -62,9 +62,9 @@ mesmo motivo. Os dois deixam qualquer pessoa declarar quem é, e produção recu
 **404 na gestão costuma ser autorização, não rota quebrada.** Reproduza com o papel exato do ator
 antes de sair caçando URL.
 
-**O código de acesso do portal sai no terminal do servidor.** O backend de e-mail é o de console:
-a mensagem é impressa onde o `runserver` está rodando. Nenhum roteiro de teste consegue lê-la de
-outro lugar.
+**O código de acesso do portal sai no terminal do servidor.** Na execução nativa o backend de
+e-mail é o de console: a mensagem é impressa onde o `runserver` está rodando, e não há outro lugar
+de onde lê-la. No compose há um coletor de SMTP, e ela chega em <http://localhost:8025>.
 
 **`lint` são dois passos.** `ruff check` **e** `ruff format --check`. Rodar só o primeiro declara
 verde local e quebra no CI — já aconteceu com quatro checkpoints seguidos.
