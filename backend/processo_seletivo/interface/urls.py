@@ -15,6 +15,13 @@ urlpatterns = [
         views.praticar_ato_processo,
         name="processo-ato",
     ),
+    # A supervisão do Processo (022). Pende do Processo, e não do Edital, porque é justamente o
+    # nível que não existia: a soma acima do Edital e o tempo acima de todos (FR-001).
+    path(
+        "processos/<uuid:processo_id>/supervisao",
+        views.supervisao,
+        name="supervisao",
+    ),
     path("editais/<uuid:edital_id>/", views.detalhe, name="detalhe"),
     path("editais/<uuid:edital_id>/compor", views.compor, name="compor"),
     path("editais/<uuid:edital_id>/compor/<slug:etapa>", views.compor_etapa, name="compor-etapa"),

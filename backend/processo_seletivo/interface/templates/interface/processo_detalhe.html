@@ -12,6 +12,12 @@
 
 <p class="acoes-do-painel">
   {% if pode_gerir_comissao %}
+  {% comment %}
+  022, FR-008: o caminho até a supervisão entra no catálogo de ações que já existe, e sob a mesma
+  base que a página consulta uma vez — a de gerir a comissão, que é também a porta da supervisão.
+  Um segundo cálculo aqui seria a segunda derivação que a spec proíbe.
+  {% endcomment %}
+  <a class="acao" href="{% url 'interface:supervisao' processo.id %}">Supervisão</a>
   <a class="acao" href="{% url 'interface:comissao' processo.id %}">Comissão</a>
   <a class="acao" href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a>
   {% endif %}

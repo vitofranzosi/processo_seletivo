@@ -95,6 +95,7 @@ from processo_seletivo.interface import (
     revisao,
 )
 from processo_seletivo.interface import retificacao as retificacao_ui
+from processo_seletivo.interface import supervisao as supervisao_do_processo
 from processo_seletivo.portal.arquivos import copia_verificada, entregar
 from processo_seletivo.processos.application.commands import create_process_with_first_edital
 from processo_seletivo.processos.application.selectors import (
@@ -2258,6 +2259,37 @@ def processo_detalhe(request, processo_id):
                 if ator.can("edital:elaborar")
                 else None
             ),
+        },
+    )
+
+
+@require_http_methods(["GET"])
+def supervisao(request, processo_id):
+    """O Pulso e a Atenção do Processo, numa leitura só (022, FR-001).
+
+    **A porta é a mesma da página do Processo** — presidência deste Processo ou a permissão
+    sistêmica de gerir comissão, cada uma suficiente sozinha (FR-002). Tudo o que o ator não
+    alcança responde a mesma coisa que um Processo inexistente responderia: distinguir "não existe"
+    de "você não pode" diria a quem não alcança que o Processo existe (FR-003, SC-012).
+
+    Nada aqui grava: a resposta é idempotente e não gera trilha. Ler um agregado do próprio
+    Processo que se preside não é ato sensível, e nenhuma tela de leitura existente registra.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    processo = _processo_do_ator(ator, processo_id)
+    if supervisao_do_processo.pode_supervisionar(ator, processo) is None:
+        raise Http404
+    return render(
+        request,
+        "interface/supervisao.html",
+        {
+            "processo": processo,
+            "pulso": supervisao_do_processo.pulso(processo),
+            # Os sinais recebem o ator, e o Pulso não: a supressão por alcance é **por sinal**,
+            # porque é o sinal que tem destino (FR-004, FR-004a).
+            "sinais": supervisao_do_processo.sinais(processo, ator),
         },
     )
 

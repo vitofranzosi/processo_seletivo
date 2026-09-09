@@ -230,3 +230,38 @@ def seletor_ligado(settings):
     do ator, e o canal exige identidade.
     """
     settings.INTERFACE_SELETOR_IDENTIDADE = True
+
+
+# ---------------------------------------------------------------------------
+# A supervisão do Processo (022). Ficam aqui pela mesma razão das anteriores: integração,
+# interface e aceitação exercitam as mesmas precondições, e fixture só é vista do conftest da raiz
+# ou do próprio diretório.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def edital_c(db, api_client, manager_headers, processo_a):
+    """Um segundo Edital **no mesmo Processo**, com período de inscrições em curso.
+
+    É o que torna a soma demonstrável: sem dois Editais sob o mesmo Processo, "o total é a soma dos
+    Editais" não tem contraprova.
+    """
+    from tests.fixtures.supervisao import (
+        SEGUNDO_SEED,
+        etapa_ligada,
+        publicar_no_processo,
+        rascunho_com_periodo,
+    )
+
+    return publicar_no_processo(
+        api_client,
+        manager_headers,
+        processo_a,
+        draft=rascunho_com_periodo(
+            SEGUNDO_SEED,
+            etapas=[etapa_ligada(SEGUNDO_SEED)],
+            # Coerente de propósito: um período em curso declarado `PLANEJADO` **é** divergência
+            # temporal, e a fixture padrão não pode produzir um sinal de brinde a todo teste.
+            status_do_periodo="EM_ANDAMENTO",
+        ),
+    )
