@@ -1,9 +1,11 @@
 # 021 — Sorteio público auditável
 
 Prompt do `/speckit-specify`. Escrito em 08/09/2026 a partir de uma proposta de feature e revisado
-no mesmo dia contra o código em `9ab8013` — a primeira revisão trouxe as seis correções da §"O que
-a revisão corrigiu", e a segunda desfez um erro factual sobre `AtoDeOrdenacao`, inverteu a relação
-entre compromisso e ato, e fechou seis das oito decisões. Base registrada em
+três vezes no mesmo dia contra o código em `9ab8013`: a primeira trouxe as seis correções da §"O que
+a revisão corrigiu"; a segunda desfez um erro factual sobre `AtoDeOrdenacao`, inverteu a relação
+entre compromisso e ato e fechou seis decisões; a terceira leu os quatro Editais de sorteio, o que
+fechou a D-6 **contra** a hipótese que o próprio documento trazia. A D-8 é decisão de escopo do
+usuário. **As oito estão fechadas.** Base registrada em
 [`descoberta-escopo-sorteio-e-anexos.md`](../descoberta-escopo-sorteio-e-anexos.md) §Parte 1.
 
 **Frase que governa:**
@@ -203,6 +205,7 @@ tela que valha a transmissão e uma verificação que sobreviva ao vídeo.
 | **D-5** | Empate de chave | **Número público crescente**, com vetor de teste que o prova |
 | **D-6** | Recorte do sorteio | **Recorte de vaga × lista de concorrência** — fechada pela leitura dos quatro Editais, §abaixo |
 | **D-7** | Corte e progressão | **Fora.** E a spec diz na frase de valor que o 77 não fecha por aqui |
+| **D-8** | Local e canal do evento (L-6) | **Dentro** — um campo de texto por Evento, sem default institucional, §abaixo |
 
 ## D-6, FECHADA PELA LEITURA DOS QUATRO EDITAIS
 
@@ -253,16 +256,43 @@ duas listas fica na de ampla concorrência, e a vaga reservada passa ao próximo
 **ocupação**, `016`. O sorteio produz as ordens; a interação entre elas é de quem as consome. Isto é
 a frase que mantém o corte, aplicada ao caso mais tentador de violá-la.
 
-## A QUE CONTINUA ABERTA
+## D-8, FECHADA POR DECISÃO DE ESCOPO
 
-**D-8 · Local e canal do evento (L-6).** A leitura reforçou a lacuna sem fechá-la. O 76 publica uma
-coluna **LOCAL** por evento — *"Canal do Ifes/Cefor no Youtube"*, *"Página da chamada pública"* —, o
-77 marca o salão de reuniões e o canal em prosa, e 57 e 28 chegam a criar um **evento próprio** só
-para o link da transmissão, que é o Cronograma sendo usado como campo que ele não tem. **Não é um campo opcional
-inócuo:** conteúdo publicado novo eleva `SCHEMA_VERSION` para 10 e exige degrau em
-`publicacoes/domain/elevacao.py`. É lacuna de **autoria**, da linhagem do Cronograma, e não do
-domínio do sorteio — incluí-la mistura linhagens em troca de uma seção melhor. Decisão de escopo,
-com o preço à vista.
+**Entra.** A decisão é do usuário, tomada em 08/09/2026, e a forma segue os precedentes do próprio
+repositório.
+
+A leitura dos quatro Editais mostrou a lacuna por três caminhos: o 76 publica uma coluna **LOCAL**
+por evento — *"Canal do Ifes/Cefor no Youtube"*, *"Página da chamada pública"* —, o 77 marca o salão
+de reuniões e o canal em prosa, e 57 e 28 criam um **evento próprio** só para o link da transmissão,
+que é o Cronograma sendo usado como campo que ele não tem.
+
+**A forma:**
+
+- **um campo de texto por Evento**, sempre presente e `""` quando ausente — a convenção de texto que
+  `PerfilVaga.description` e `DocumentoExigido.instructions` já seguem, para que a versão canônica
+  não admita duas grafias do mesmo nada;
+- **um só, e não dois.** O 76 põe naturezas diferentes na mesma coluna, e o 77 diz sala física e
+  canal na mesma frase. Separar "local" de "canal" obrigaria quem elabora a classificar o que está
+  digitando, e o sistema não tem como conferir a classificação;
+- **não é URL.** *"Página da chamada pública"* não é endereço, e validar como URL recusaria o que o
+  Edital publica;
+- **sem default institucional.** É a decisão registrada em `EtapaAvaliacao`, e vale palavra por
+  palavra: *"um default institucional aplicaria ao Edital um rótulo que ele não publicou"* (012,
+  D-008). Um campo que nascesse valendo "canal do Cefor no YouTube" publicaria, em todo evento de
+  todo Edital, um local que aquele Edital não declarou — e o 77 é o contraexemplo imediato, porque
+  sorteia num salão de reuniões com transmissão;
+- **a conveniência vai para a composição.** A tela sugere, repete o valor do evento anterior e
+  oferece o canal habitual em um clique. **Sugerir é da tela; presumir é do conteúdo publicado.**
+
+**O preço, e o que ele não é.** `SCHEMA_VERSION` sobe para 10, com degrau em
+`publicacoes/domain/elevacao.py` — conversão legítima, porque a ausência significa "não declarado" e
+isso é verdadeiro sobre todo Edital já publicado. **Não há gramática nova na Retificação:**
+`/schedule/id=…/location` é alcançável pelo endereçamento por identidade que já existe, do jeito que
+`isRegistrationPeriod` demonstrou (FR-008 da `009`).
+
+**O que a inclusão não faz:** proibir o evento-para-o-link. O Edital que quiser continuar publicando
+o link como linha própria do Cronograma continua podendo — o sistema passa a oferecer o lugar certo,
+e não fiscaliza o uso.
 
 ## A FORMA DA CHAVE
 
@@ -311,7 +341,8 @@ ocorrência futura substitui a original **sem escolha humana**.
 - **Recurso ou impugnação contra a relação de habilitados** (P-4);
 - **Relação de inscritos como artefato universal de todo Edital**;
 - **Heteroidentificação** e **aplicabilidade da Etapa** (L-2);
-- **Integração com API de transmissão**;
+- **Integração com API de transmissão** — o campo da D-8 guarda o que o Edital publica, e o canal
+  continua externo;
 - **Prova objetiva e importação de notas de fora** — é o outro mecanismo ausente, e não é este.
 
 ## O TESTE QUE A SPEC PRECISA PASSAR
@@ -347,7 +378,9 @@ E mais sete, que a revisão acrescentou e que valem tanto quanto os oito:
 15. duas implementações independentes — Python e JavaScript, por exemplo — reproduzem os mesmos
     vetores;
 16. um cotista aparece em **duas** ordens — a de ampla concorrência e a da sua reserva — com posição
-    independente em cada, e cada lista tem o seu próprio ato raiz (D-6).
+    independente em cada, e cada lista tem o seu próprio ato raiz (D-6);
+17. o Edital publica **onde** o sorteio acontece, e a Retificação alcança esse campo por
+    `/schedule/id=…/location` sem gramática nova (D-8).
 
 O passo 7 é o emblemático: é ele que separa esta feature de um sorteador com semente no rodapé. O
 passo 8 é o que impede que "refazer" seja um botão. O 13 é o que impede o verificador de provar a si
