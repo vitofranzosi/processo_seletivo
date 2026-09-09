@@ -126,8 +126,11 @@ A proveniência do ato: o que amarra relação, método e ocorrência à ordem p
 
 **Constraints**
 
-- `uq_sorteio_raiz` em `(relacao, ocorrencia, metodo, perfil_id, lista_id)` where
-  `sorteio_anterior IS NULL` — **a tupla inteira da D-009**;
+- `uq_sorteio_raiz` em `(relacao, ocorrencia, metodo)` where `sorteio_anterior IS NULL` — **a tupla
+  da D-009 e da FR-031**. `perfil_id` e `lista_id` ficam **fora** dela porque a relação já os carrega:
+  incluí-los não restringiria nada e sugeriria que um sorteio pudesse ter recorte diferente do da sua
+  própria relação. O método é a unidade da unicidade — duas declarações de mesma versão do algoritmo
+  são dois métodos, e é o método que a FR-031 nomeia;
 - `uq_sorteio_sucessor_unico` em `sorteio_anterior` where not null;
 - `ck_sorteio_sucessao_com_motivo`.
 
@@ -157,6 +160,27 @@ UniqueConstraint(fields=["edital", "perfil_id", "marco_id", "lista_id"],
 ```
 
 A primeira mantém, **palavra por palavra**, a garantia de hoje para o ato sem lista.
+
+### `classificacao.PosicaoNaOrdem` — o que cada campo recebe num ato de sorteio
+
+Nenhuma alteração de esquema, e ainda assim é preciso dizer: `consequencia` é `CharField` **sem
+default**, e sem valor definido a primeira gravação de posição falha no banco.
+
+| Campo | Valor num ato constituído por sorteio | Porquê |
+|---|---|---|
+| `posicao` | 1..N, sem lacuna | todos os participantes recebem posição (FR-025) |
+| `motivo` | `""` | `ck_posicao_ou_motivo` exige motivo vazio quando há posição |
+| `consequencia` | `HABILITADA` | é o que o motor já grava para quem recebe posição (`calculo.py:158`) |
+| `pontuacao_combinada` | `NULL` | não há grandeza a afirmar — sorteio não pontua |
+| `modalidade_id` | a modalidade da inscrição, como hoje | é coluna da posição, e continua sendo |
+| `empate_residual` | `False` | a ordem é total: o desempate por número público não deixa empate |
+| `desempate` | `[]`, ou o registro da colisão quando ela ocorre | proveniência do que separou duas chaves idênticas (D-005) |
+
+**Uma ressalva de vocabulário, registrada e não resolvida aqui.** `HABILITADA` é o termo que a `015`
+usa para "considerada e posicionada", e é o que o motor grava. Ele **não** afirma habilitação no
+sentido do Edital — quem habilita é a análise documental, que nesta feature vem depois e é de outra
+capacidade (FR-064). Reusar o valor mantém uma grafia só para o mesmo estado do motor; renomeá-lo
+seria mexer na `015` por causa da `021`.
 
 ### `editais.EventoCronograma`
 
@@ -208,6 +232,8 @@ AtoDeOrdenacao           inalterado: append-only, com sucessão por motivo
 | ordem cobre todos | comando compara `quantidade` com posições gravadas | FR-025 |
 | anulação exige motivo | `ck_sorteio_sucessao_com_motivo` | FR-053 |
 | manifesto sem dado pessoal indevido | serializador do manifesto, com teste | FR-044 |
+| nenhum valor pós-congelamento entra na chave | `domain/chave.py` recebe só os cinco campos do contrato, e o teste ataca a tentativa | FR-024 |
+| resultado publicado exibe sorteio, algoritmo, semente e resumos | renderizador do documento de resultado | FR-046 |
 
 ## O que este modelo deliberadamente não tem
 

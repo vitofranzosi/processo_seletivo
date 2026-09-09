@@ -152,10 +152,11 @@ sugerir é da tela, presumir é do conteúdo publicado.
 
 ### D-009 — Ato institucional único, computação livre
 
-Para a mesma relação congelada, a mesma ocorrência da fonte, a mesma versão do algoritmo e o mesmo
-recorte, existe no máximo **um ato raiz**. Recalcular é livre — o algoritmo precisa poder rodar
-indefinidamente por terceiros; emitir outra ordem não é. A unicidade é sobre a tupla inteira, e é o
-que mantém a anulação legal.
+Para a mesma relação congelada, a mesma ocorrência da fonte e o mesmo **método declarado** — que
+fixa algoritmo, versão e recorte —, existe no máximo **um ato raiz**. Recalcular é livre: o algoritmo
+precisa poder rodar indefinidamente por terceiros; emitir outra ordem não é. A unicidade é sobre a
+tupla inteira, e é o que mantém a anulação legal — o sucessor nasce de outra relação e de outra
+ocorrência.
 
 ### D-010 — Não existe prévia depois que a semente é conhecida
 
@@ -434,8 +435,10 @@ Cronograma o exibe e que a Retificação o alcança.
   atômico e idempotente.
 - **FR-030**: O sistema MUST NOT oferecer cálculo prévio, simulação ou pré-visualização da ordem
   depois de a semente ser conhecida.
-- **FR-031**: Para a mesma relação congelada, ocorrência, versão do algoritmo e recorte, o sistema
-  MUST admitir no máximo um ato raiz.
+- **FR-031**: Para a mesma relação congelada, a mesma ocorrência e o **mesmo método declarado** — que
+  é o que fixa algoritmo, versão e recorte —, o sistema MUST admitir no máximo um ato raiz. O método
+  é a unidade porque é ele que existe como declaração publicada; "versão do algoritmo" descreve o
+  conteúdo dele, e duas declarações distintas de mesma versão são dois métodos.
 - **FR-032**: Requisições concorrentes do mesmo comando MUST produzir exatamente um ato, devolvendo
   às demais o desfecho do primeiro.
 - **FR-033**: O ato MUST citar a relação por identidade e por resumo.

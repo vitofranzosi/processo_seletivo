@@ -49,6 +49,7 @@ chave, os vetores, os modelos e a constraint dividida.
 
 - [ ] T005 Implementar `backend/processo_seletivo/sorteios/domain/chave.py` — chave por participante sobre `canonical_bytes`, ordenação crescente pelo resumo completo e desempate por número público (FR-021, FR-022, FR-023, D-005); função pura, sem Django
 - [ ] T006 [P] Escrever os cinco vetores normativos em `backend/tests/contract/fixtures/sorteio/` — `tres-participantes`, `acentos-e-nfc`, `colisao-de-chave`, `um-participante`, `mesma-semente-recortes-distintos` —, conforme `contracts/algoritmo-sorteio.md` (FR-028)
+- [ ] T073 Escrever `backend/tests/unit/sorteios/test_chave_fechada.py` — a chave recebe **apenas** os cinco campos do contrato, e nenhum valor escolhido por ator depois do congelamento a alcança: a tentativa de injetar campo extra falha, e alterar qualquer entrada muda o resumo (FR-024)
 - [ ] T007 Escrever `backend/tests/contract/test_vetores_de_sorteio.py`, que exercita os vetores contra `domain/chave.py` e falha se bytes canônicos, resumo ou ordem divergirem (FR-027, FR-028)
 - [ ] T008 [P] Implementar a referência em JavaScript em `backend/processo_seletivo/portal/static/portal/sorteio.js`, sem dependência externa, lendo os mesmos vetores (SC-002)
 - [ ] T009 [P] Escrever `backend/tests/javascript/sorteio.test.js`, que roda os vetores pela referência JS; afirmar sobre o resultado, **nunca** sobre o texto do relatório do runner
@@ -87,9 +88,9 @@ numerada e publicada já é mais do que o certame tem hoje.
 
 - [ ] T020 [P] [US1] Implementar `backend/processo_seletivo/sorteios/domain/projecao.py` — quem entra na relação e a numeração de 1 a N por protocolo crescente (FR-002, FR-003, R-011, R-012)
 - [ ] T021 [P] [US1] Escrever `backend/tests/unit/sorteios/test_projecao.py` — inclusão por lista, exclusão de rascunho, numeração determinística e estabilidade entre duas projeções idênticas
-- [ ] T022 [US1] Implementar `backend/processo_seletivo/sorteios/application/relacao.py` — publicar (que **é** congelar), calcular o resumo canônico, gravar quantidade, ator e instante, e suceder com motivo (FR-001, FR-006, FR-008, FR-010)
+- [ ] T022 [US1] Implementar `backend/processo_seletivo/sorteios/application/relacao.py` — publicar (que **é** congelar), calcular o resumo canônico, gravar quantidade, ator, instante e recorte, e suceder com motivo (FR-001, FR-006, FR-008, FR-010, FR-012)
 - [ ] T023 [US1] Escrever `backend/tests/integration/sorteios/test_relacao.py` — publicação, imutabilidade, recusa de relação vazia, sucessão com motivo e preservação da anterior (FR-007, FR-009, FR-010)
-- [ ] T024 [US1] Registrar a publicação da relação na trilha de auditoria, a partir de `backend/processo_seletivo/sorteios/application/relacao.py`, com ator, ato, estados, motivo e correlação (Princípio III)
+- [ ] T024 [US1] Registrar a publicação da relação na trilha de auditoria, a partir de `backend/processo_seletivo/sorteios/application/relacao.py`, com ator, ato, estados, motivo e correlação (FR-038, Princípio III)
 - [ ] T025 [US1] Criar a tela de gestão em `backend/processo_seletivo/interface/` — estado do recorte, prévia **da relação** e botão de publicar, sem qualquer caminho de edição de participante (FR-002)
 - [ ] T026 [US1] Criar a página pública da relação em `backend/processo_seletivo/portal/` — números públicos, critério de projeção e resumo (FR-005, FR-011)
 - [ ] T027 [P] [US1] Expor a relação e o seu resumo na API pública, em `backend/processo_seletivo/sorteios/api/`
@@ -110,10 +111,11 @@ ordem completa, a recusa da segunda execução e a inexistência de campo de sem
 - [ ] T030 [US2] Implementar `backend/processo_seletivo/sorteios/application/metodo.py` — declarar o método com todos os campos da `data-model.md`, imutável desde a declaração (FR-013, FR-014)
 - [ ] T031 [P] [US2] Definir a porta da fonte em `backend/processo_seletivo/sorteios/infrastructure/fontes/__init__.py` e um adaptador de referência, com falso para teste (R-005)
 - [ ] T032 [US2] Implementar `backend/processo_seletivo/sorteios/application/ocorrencia.py` — observar a ocorrência, gravar material bruto e semente normalizada, registrar indisponibilidade com evidência e aplicar a regra publicada de substituição (FR-015, FR-019)
-- [ ] T033 [US2] Implementar `backend/processo_seletivo/sorteios/application/sorteio.py` — comando único, atômico e idempotente que lê a ocorrência, calcula a ordem e constitui `Sorteio` + `AtoDeOrdenacao` (`origem=SORTEIO`) + `PosicaoNaOrdem` (FR-029, FR-033, FR-034)
+- [ ] T033 [US2] Implementar `backend/processo_seletivo/sorteios/application/sorteio.py` — comando único, atômico e idempotente que lê a ocorrência, calcula a ordem e constitui `Sorteio` + `AtoDeOrdenacao` (`origem=SORTEIO`) + `PosicaoNaOrdem`, com os valores que o `data-model.md` fixa para cada campo (FR-029, FR-033, FR-034, FR-037)
 - [ ] T034 [US2] Em `backend/processo_seletivo/sorteios/application/sorteio.py`, recusar a execução quando a ocorrência é anterior ao congelamento (FR-016) e quando o resumo da relação mudou depois de a ocorrência ser conhecida (FR-020)
 - [ ] T035 [US2] Escrever `backend/tests/integration/sorteios/test_constituicao.py` — ordem cobre todos (FR-025), segunda execução sobre a mesma tupla é recusada (FR-031), e requisições concorrentes produzem um ato (FR-032)
 - [ ] T036 [P] [US2] Escrever `backend/tests/integration/sorteios/test_semente.py` — nenhuma rota aceita semente; fonte indisponível aplica a substituição e **não** abre digitação (FR-017, FR-018)
+- [ ] T076 [P] [US2] Escrever `backend/tests/integration/sorteios/test_superficies_da_semente.py` — varre todas as rotas e formulários do módulo e prova que **nenhum** aceita semente como entrada, em nenhum verbo (SC-003, FR-017)
 - [ ] T037 [US2] Criar a tela do sorteio em `backend/processo_seletivo/interface/` — universo, resumo, método e semente à vista, um botão só, legível em projeção (FR-029, FR-030)
 - [ ] T038 [P] [US2] Escrever `backend/tests/interface/test_tela_do_sorteio.py` — não há campo de semente, não há simular, não há refazer (FR-030, FR-052)
 - [ ] T039 [US2] Registrar na auditoria, a partir de `backend/processo_seletivo/sorteios/application/ocorrencia.py` e `.../sorteio.py`, toda observação de ocorrência — **inclusive a que não vira sorteio** — e a constituição do ato (R-006, Princípio III)
@@ -132,11 +134,13 @@ implementação JS, fora do sistema.
 
 - [ ] T040 [P] [US3] Implementar `backend/processo_seletivo/sorteios/domain/manifesto.py` — derivação determinística conforme `contracts/manifesto.md`, com `manifestHash` sobre o objeto sem o próprio campo (FR-042, FR-043, R-007)
 - [ ] T041 [US3] Gravar `manifesto_hash` no `Sorteio` na constituição, e servir o manifesto regenerado no download (FR-047)
-- [ ] T042 [P] [US3] Escrever `backend/tests/unit/sorteios/test_manifesto.py` — dois downloads produzem bytes idênticos, e o manifesto não traz CPF, identificador interno nem dado pessoal indevido (FR-044)
+- [ ] T042 [P] [US3] Escrever `backend/tests/unit/sorteios/test_manifesto.py` — dois downloads produzem bytes idênticos, e o manifesto não traz CPF, identificador interno nem dado pessoal indevido (FR-044, SC-007)
 - [ ] T043 [US3] Implementar `backend/processo_seletivo/sorteios/application/verificacao.py` — recalcula **das entradas**, jamais das posições publicadas, e relata o que conferiu (FR-039, FR-040, FR-049)
 - [ ] T044 [US3] Criar a página "Verificar este sorteio" em `backend/processo_seletivo/portal/`, anônima, com resposta em linguagem de gente (FR-048, FR-051)
-- [ ] T045 [P] [US3] Escrever `backend/tests/portal/test_verificacao_de_sorteio.py` — sorteio íntegro passa, manifesto adulterado é detectado e nomeado (FR-050)
+- [ ] T045 [P] [US3] Escrever `backend/tests/portal/test_verificacao_de_sorteio.py` — sorteio íntegro passa, manifesto adulterado é detectado e nomeado (FR-050, SC-005)
 - [ ] T046 [P] [US3] Escrever `backend/tests/unit/sorteios/test_reproducao_por_sorteio.py` — a reprodução usa relação, semente e método, e ignora as posições gravadas (FR-040, FR-041)
+- [ ] T074 [US3] Exibir, no documento publicado do resultado — o renderizador da `017`, em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py` —, a identidade do sorteio, o algoritmo e a sua versão, a semente e os resumos de integridade da relação e do manifesto (FR-046)
+- [ ] T075 [P] [US3] Escrever o teste do documento publicado em `backend/tests/unit/publicacoes/test_pdf.py`, provando que os cinco dados aparecem e que o documento de um ato **computado** segue sem eles (FR-046)
 - [ ] T047 [P] [US3] Publicar o verificador independente em `backend/processo_seletivo/portal/static/portal/sorteio-cli.js`, que lê um manifesto e imprime a ordem, com instrução no `quickstart.md` (SC-001)
 
 **Checkpoint**: as três P1 estão entregues. É o MVP defensável: universo comprometido, ato único e
@@ -199,6 +203,7 @@ retificar o campo.
 - [ ] T068 [P] Conferir acessibilidade e leitura em projeção da tela do sorteio, em `backend/tests/interface/test_acessibilidade.py`
 - [ ] T069 [P] Conferir a leitura em 375 px das páginas públicas novas — relação, resultado e verificação —, em `backend/tests/portal/`
 - [ ] T070 [P] Medir o caminho completo com 300 participantes e registrar o número no `quickstart.md` (SC-004)
+- [ ] T077 Conferir os quatro recortes reais em `specs/021-sorteio-publico-auditavel/quickstart.md` — 77/2026 com uma lista, 76/2026 com uma por polo, 57/2026 e 28/2026 com três por recorte —, registrando para cada um até onde o sistema o conduz e onde ele para (SC-006)
 - [ ] T071 Atualizar `README.md` com o módulo `sorteios` na tabela de módulos
 - [ ] T072 Rodar `uv run ruff check .`, `uv run ruff format --check .` e `uv run python manage.py makemigrations --check --dry-run` antes de fechar
 
@@ -209,18 +214,18 @@ retificar o campo.
 ```text
 Setup (T001–T004)
       ↓
-Foundational (T005–T019)  ← nenhuma história começa antes
+Foundational (T005–T019, T073)  ← nenhuma história começa antes
       ↓
 US1 (T020–T029)  ─────────────┐
       ↓                        │
-US2 (T030–T039)                │  US6 (T057–T064) é independente das cinco
+US2 (T030–T039, T076)                │  US6 (T057–T064) é independente das cinco
       ↓                        │  e pode correr a qualquer momento depois do Setup
-US3 (T040–T047)  ← MVP fecha   │
+US3 (T040–T047, T074–T075)  ← MVP fecha   │
       ↓                        │
 US4 (T048–T052)                │
 US5 (T053–T056)  ←─────────────┘
       ↓
-Polish (T065–T072)
+Polish (T065–T072, T077)
 ```
 
 - **US1 → US2**: não há o que sortear sem relação congelada.
@@ -245,10 +250,10 @@ T027 API pública  ∥  T028 teste de interface  ∥  T029 teste de portal
 **US3** — depois de T041:
 
 ```text
-T042 teste do manifesto  ∥  T045 teste da verificação  ∥  T046 teste da reprodução  ∥  T047 verificador CLI
+T042 teste do manifesto  ∥  T045 teste da verificação  ∥  T046 teste da reprodução  ∥  T047 verificador CLI  ∥  T075 teste do documento
 ```
 
-**Polish** — T065 a T070 são todas paralelas entre si.
+**Polish** — T065 a T070 e T077 são todas paralelas entre si.
 
 ## Implementation Strategy
 
