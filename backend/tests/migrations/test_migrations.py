@@ -641,10 +641,16 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
     raiz = _pathlib.Path(__file__).resolve().parents[2] / "processo_seletivo"
     esperadas = {
         "avaliacoes": 3,
-        "classificacao": 4,
+        # **Sobe para 5 com a 021**: a `classificacao/0005` dá ao ato de ordenação a origem e a
+        # lista de concorrência — o ato passa a poder nascer de um sorteio, e não só de nota.
+        "classificacao": 5,
         "comissoes": 1,
-        "divulgacao": 2,
-        "editais": 13,
+        # **Sobe para 3 com a 021**: a `divulgacao/0003` publica por lista de concorrência.
+        "divulgacao": 3,
+        # **Sobe para 15 com a 021**: a `editais/0014` põe o método de sorteio no marco e a `0015`
+        # o local do Evento. As duas são elaboração — quem declara é o Edital —, e nenhuma delas é
+        # da supervisão.
+        "editais": 15,
         "inscricoes": 4,
         "processos": 2,
         "publicacoes": 8,
