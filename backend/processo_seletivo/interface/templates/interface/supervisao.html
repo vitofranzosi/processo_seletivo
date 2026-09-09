@@ -12,10 +12,61 @@
 
 {% comment %}
 Duas regiões, e só duas (D-001). Cada uma é anunciada **como região**, com título próprio, para que
-quem navega por marcos saltasse de uma para a outra sem varrer a página (UX-006).
+quem navega por marcos salte de uma para a outra sem varrer a página (UX-006).
 {% endcomment %}
 <section aria-labelledby="pulso-titulo">
   <h2 id="pulso-titulo">Pulso</h2>
+  {% comment %}
+  FR-009: o instante da leitura. Ele qualifica todo o resto — o tempo restante, a série e as
+  últimas 24 horas são respostas sobre um agora —, e uma página que não o declara pede que quem
+  lê adivinhe de quando ela fala.
+  {% endcomment %}
+  <p class="sub">Lido em {{ pulso.lido_em|date:"d/m/Y, H\hi" }}.</p>
+
+  {% comment %}
+  Nenhum percentual (FR-017): não existe o número de inscrições que um Edital espera receber, e um
+  percentual de avanço responderia "quanto falta" a uma pergunta sem denominador.
+
+  “Em preenchimento”, e não “rascunhos”: é o termo que a tela de inscrições da 009 já usa. Dois
+  termos para o mesmo conceito é o que o Princípio I recusa, e a decisão de vocabulário que valha
+  para as duas telas é governança — registrada, e não tomada aqui.
+  {% endcomment %}
+  <ul class="resumo" aria-label="Inscrições no Processo">
+    <li><strong>{{ pulso.submetidas_no_processo }}</strong>inscriç{{ pulso.submetidas_no_processo|pluralize:"ão,ões" }} recebida{{ pulso.submetidas_no_processo|pluralize:"s" }} no Processo</li>
+    <li><strong>{{ pulso.rascunhos_no_processo }}</strong>em preenchimento</li>
+  </ul>
+
+  {% comment %}
+  D-005 e UX-007: a contagem do Edital sai nomeada pelo Edital, **inclusive quando há um só**. A
+  etiqueta não some porque o Processo tem um Edital: some porque a informação deixou de ser dele.
+  {% endcomment %}
+  <div class="tabela-rolavel">
+    <table>
+      <caption>Inscrições por Edital</caption>
+      <thead>
+        <tr>
+          <th scope="col">Edital</th>
+          <th scope="col">Recebidas</th>
+          <th scope="col">Em preenchimento</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in pulso.por_edital %}
+        <tr>
+          <th scope="row">
+            <a href="{% url 'interface:detalhe' item.edital.id %}">{{ item.edital.number }}/{{ item.edital.year }}</a>
+            — {{ item.edital.title }}
+            <span class="situacao s-{{ item.edital.status }}">{{ item.edital.status|situacao }}</span>
+          </th>
+          <td>{{ item.submetidas }}</td>
+          <td>{{ item.rascunhos }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" class="vazio">Este Processo ainda não tem Edital.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </section>
 
 <section aria-labelledby="atencao-titulo">

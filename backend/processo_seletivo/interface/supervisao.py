@@ -11,9 +11,13 @@ montagem de contexto é o que permite testá-las como domínio de leitura, sem r
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
+from django.db.models import Count
+from django.utils import timezone
+
 from processo_seletivo.comissoes.domain.autorizacao import pode_gerir_comissao
 from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
 from processo_seletivo.inscricoes.domain.periodo import ABERTO, ENCERRADO, FUTURO
+from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.shared.api.problems import DomainError
 
 # ---------------------------------------------------------------------------
@@ -80,11 +84,11 @@ class PulsoDoEdital:
     edital: object
     submetidas: int
     rascunhos: int
-    periodo: PeriodoDeInscricoes | None
+    periodo: PeriodoDeInscricoes | None = None
     # `SEM_CRONOGRAMA`, `SEM_PERIODO`, ou vazio quando há período declarado (`FR-022`).
-    ausencia: str
-    serie: tuple[PontoDaSerie, ...]
-    proximos_marcos: tuple[Marco, ...]
+    ausencia: str = ""
+    serie: tuple[PontoDaSerie, ...] = ()
+    proximos_marcos: tuple[Marco, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -199,6 +203,54 @@ def leitura_dos_editais(processo):
     return [(edital, conteudo_ou_nada(edital)) for edital in editais_do_processo(processo)]
 
 
+# ---------------------------------------------------------------------------
+# 4. O Pulso — inscrições
+# ---------------------------------------------------------------------------
+
+
+def contagens_por_edital(processo):
+    """`{edital_id: {status: quantidade}}` — **uma** consulta para o Processo inteiro.
+
+    Submetidas e rascunhos saem da mesma agregação e ficam em chaves distintas; somá-los seria
+    contrariar `FR-012` no lugar mais barato de contrariá-lo. Uma consulta por Edital pareceria
+    inofensiva com dois e cresceria com o Processo, que é justamente o que `T-002` recusa.
+    """
+    contagens = {}
+    for linha in (
+        Inscricao.objects.filter(edital__processo=processo)
+        .values("edital_id", "status")
+        .annotate(quantidade=Count("id"))
+    ):
+        contagens.setdefault(linha["edital_id"], {})[linha["status"]] = linha["quantidade"]
+    return contagens
+
+
+def pulso(processo, *, agora=None):
+    """A leitura do Processo num instante: quanto chegou, e quanto ainda é rascunho.
+
+    O instante viaja na forma (`FR-009`) porque é ele que qualifica todo o resto: o tempo restante,
+    a série e as últimas 24 horas são respostas sobre um agora, e uma página que não o declara pede
+    que quem lê adivinhe de quando ela fala.
+    """
+    agora = agora or timezone.now()
+    contagens = contagens_por_edital(processo)
+    por_edital = tuple(
+        PulsoDoEdital(
+            edital=edital,
+            submetidas=contagens.get(edital.id, {}).get(Inscricao.Status.SUBMETIDA, 0),
+            rascunhos=contagens.get(edital.id, {}).get(Inscricao.Status.RASCUNHO, 0),
+        )
+        for edital, _ in leitura_dos_editais(processo)
+    )
+    return Pulso(
+        submetidas_no_processo=sum(item.submetidas for item in por_edital),
+        rascunhos_no_processo=sum(item.rascunhos for item in por_edital),
+        ultimas_24h=None,
+        por_edital=por_edital,
+        lido_em=agora,
+    )
+
+
 __all__ = [
     "Destino",
     "Marco",
@@ -210,10 +262,12 @@ __all__ = [
     "SEM_CRONOGRAMA",
     "SEM_PERIODO",
     "Sinal",
+    "contagens_por_edital",
     "conteudo_ou_nada",
     "editais_do_processo",
     "etapas_do_conteudo",
     "eventos_do_conteudo",
     "leitura_dos_editais",
     "pode_supervisionar",
+    "pulso",
 ]

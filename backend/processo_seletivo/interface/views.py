@@ -2280,7 +2280,10 @@ def supervisao(request, processo_id):
     return render(
         request,
         "interface/supervisao.html",
-        {"processo": processo},
+        {
+            "processo": processo,
+            "pulso": supervisao_do_processo.pulso(processo),
+        },
     )
 
 
