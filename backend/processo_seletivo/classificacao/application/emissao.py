@@ -55,6 +55,12 @@ def emitir_ordem(
             edital=edital,
             perfil_id=identificador(perfil_id),
             marco_id=identificador(marco_id),
+            # **A lista entra aqui pelo mesmo motivo que entrou em `ato_vigente`** (`021`,
+            # `D-006`): um marco de cotas tem uma raiz por lista de concorrência, e perguntar pelo
+            # vigente sem dizer de qual delas devolveria uma das três pela ordem de emissão. Um
+            # ato computado é sempre o de ampla concorrência — só o sorteio emite por lista —, e é
+            # isso que a coluna nula afirma.
+            lista_id=None,
             sucessores__isnull=True,
         ).first()
 
@@ -64,6 +70,7 @@ def emitir_ordem(
             marco_id=marco_id,
             at=ctx.now,
         )
+        _recusar_marco_de_sorteio(proposta["marco"])
         esperada = assinatura_da_proposta(proposta, ato_vigente=vigente)
         if not (confirmacao_do_calculo or "").strip():
             raise DomainError(
@@ -163,6 +170,26 @@ def _edital_do_processo(processo, edital_id):
     if edital is None:
         raise nao_encontrado()
     return edital
+
+
+def _recusar_marco_de_sorteio(marco):
+    """A ordem de um marco de sorteio não se emite por cálculo (`021`, `D-006`, `FR-069`).
+
+    **A recusa é aqui porque o dano é irreversível.** O ato saía com `origem=COMPUTADO` e
+    `lista_id` nulo, que é a raiz da ampla concorrência: dali em diante `constituir_sorteio`
+    recusava o certame com `ordering_act_already_exists`, e não havia desfazer — a tabela é
+    append-only, e a sucessão de uma ordem sorteada nasce da anulação de um sorteio que, nesse
+    caminho, nunca chegou a existir. Fechar só a tela deixaria a porta do comando aberta.
+    """
+    if not (marco or {}).get("drawMethod"):
+        return
+    raise DomainError(
+        "ordering_milestone_is_drawn",
+        "Este marco tem o método de sorteio declarado no Edital: a ordem dele nasce do sorteio "
+        "público, e não do cálculo por Etapas. Conduza o sorteio na tela do marco.",
+        422,
+        campo="marco",
+    )
 
 
 def _citar(ato, marco, decisoes):

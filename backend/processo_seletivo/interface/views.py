@@ -3600,7 +3600,16 @@ def ordenacao(request, edital_id, marco_id):
     ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
     if ator is None:
         return redirect(reverse("interface:identificar"))
+    # **Marco de sorteio não se ordena por aqui, e a porta é esta.** A tela da `015` pende do
+    # marco, e o Edital publica em quais marcos a ordem nasce de sorteio: aberta num deles, ela
+    # calculava a ordem por Etapas e oferecia "Emitir ordem". O ato saía com `origem=COMPUTADO` e
+    # `lista_id` nulo — que é exatamente a raiz que o sorteio da ampla concorrência precisa —, e
+    # `constituir_sorteio` passava a recusar o certame inteiro com `ordering_act_already_exists`.
+    # Não havia volta: a tabela é append-only, e a sucessão de um ato sorteado nasce da anulação
+    # de um sorteio que nunca existiu (`021`, `D-006`, `FR-069`).
     try:
+        if _e_marco_de_sorteio(edital, marco_id):
+            return redirect(reverse("interface:sorteio", args=[edital_id, marco_id]))
         estado = estado_do_marco(edital=edital, marco_id=marco_id)
     except DomainError as recusa:
         if recusa.status == 404:
@@ -3641,18 +3650,40 @@ def ordenacao(request, edital_id, marco_id):
     )
 
 
-def _perfil_do_marco(edital, marco_id):
-    """Resolve o pai normativo do marco sem depender da linha de elaboração."""
+def _marco_publicado(edital, marco_id):
+    """`(perfil, marco)` como o Edital em vigor os publica, ou `(None, None)`.
+
+    Devolver em vez de recusar porque nem todo chamador quer 404: a tela do marco removido existe
+    justamente para o marco que a norma vigente já não conhece (`015`, `E2E15-010`).
+    """
     from processo_seletivo.publicacoes.application.selectors import effective_version
 
     conteudo = effective_version(edital_id=edital.id).content
     alvo = str(marco_id)
     for perfil in conteudo.get("profiles") or []:
-        if any(
-            str(marco.get("id")) == alvo for marco in perfil.get("classificationMilestones") or []
-        ):
-            return perfil["id"]
-    raise Http404
+        for marco in perfil.get("classificationMilestones") or []:
+            if str(marco.get("id")) == alvo:
+                return perfil, marco
+    return None, None
+
+
+def _e_marco_de_sorteio(edital, marco_id):
+    """Se o Edital em vigor declara que a ordem daquele marco nasce de sorteio (`021`, `FR-014`).
+
+    A pergunta é do **Edital publicado**, e não do que já foi emitido: um marco de sorteio ainda
+    sem ato nenhum é o caso perigoso — é nele que a tela da `015` calculava uma ordem por Etapas
+    para um marco que só o sorteio ordena.
+    """
+    _, marco = _marco_publicado(edital, marco_id)
+    return bool((marco or {}).get("drawMethod"))
+
+
+def _perfil_do_marco(edital, marco_id):
+    """Resolve o pai normativo do marco sem depender da linha de elaboração."""
+    perfil, _ = _marco_publicado(edital, marco_id)
+    if perfil is None:
+        raise Http404
+    return perfil["id"]
 
 
 @require_http_methods(["POST"])
@@ -3661,6 +3692,10 @@ def emitir_ordenacao(request, edital_id, marco_id):
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
         return redirect(reverse("interface:identificar"))
+    # Marco de sorteio não passa por aqui — ver a porta em `ordenacao`. Fechar só o GET deixaria
+    # esta rota alcançável por quem tivesse a tela antiga aberta, e é ela que grava o ato.
+    if _e_marco_de_sorteio(edital, marco_id):
+        return redirect(reverse("interface:sorteio", args=[edital_id, marco_id]))
     destino = reverse("interface:ordenacao", args=[edital_id, marco_id])
     try:
         request.session["resultado_da_ordenacao"] = emitir_ordem(
