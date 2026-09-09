@@ -24,6 +24,18 @@ from tests.interface.test_compor_classificacao import (
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
+_METODO_VALIDO = {
+    "algorithm": "IFES-SORTEIO-SHA256-v1",
+    "source": "Loteria Federal",
+    "occurrence": "5900",
+    "derivation": "a extração de sábado anterior",
+    "normalization": {"rule": "DIGITOS_EM_SEQUENCIA", "text": "os cinco números"},
+    "substitutionRule": {
+        "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+        "text": "vale a seguinte",
+    },
+}
+
 METODO_NO_FORMULARIO = {
     f"marco-{PERFIL}-0-draw-algorithm": "IFES-SORTEIO-SHA256-v1",
     f"marco-{PERFIL}-0-draw-source": "Loteria Federal",
@@ -159,3 +171,49 @@ def test_regra_de_normalizacao_fora_do_vocabulario_e_recusada_na_elaboracao():
                 "substitutionRule": {"rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE", "text": "w"},
             }
         )
+
+
+def test_um_algoritmo_que_o_sistema_nao_executa_e_recusado():
+    """O manifesto publicaria um nome, e a ordem viria de outro (021, FR-027).
+
+    A validação só conferia que `algorithm` estava preenchido, e a constituição sempre usava
+    `IFES-SORTEIO-SHA256-v1`: um Edital podia declarar `SORTEIO-XPTO-v3` e publicar um manifesto
+    que ninguém consegue reimplementar. Quem tentasse chegaria a outra ordem — e concluiria,
+    corretamente, que o sorteio não confere.
+    """
+    from processo_seletivo.editais.domain.perfis import (
+        ProfileValidationError,
+        _validar_metodo_de_sorteio,
+    )
+
+    with pytest.raises(ProfileValidationError, match="não publicado por este sistema"):
+        _validar_metodo_de_sorteio(
+            {
+                **{k: v for k, v in _METODO_VALIDO.items()},
+                "algorithm": "SORTEIO-XPTO-v3",
+            }
+        )
+
+
+def test_uma_regra_de_substituicao_que_o_sistema_nao_executa_e_recusada():
+    """Prosa não é aplicável "sem escolha humana no momento da execução" (021, FR-015)."""
+    from processo_seletivo.editais.domain.perfis import (
+        ProfileValidationError,
+        _validar_metodo_de_sorteio,
+    )
+
+    with pytest.raises(ProfileValidationError, match="Regra de substituição não publicada"):
+        _validar_metodo_de_sorteio(
+            {
+                **_METODO_VALIDO,
+                "substitutionRule": {"rule": "O_QUE_A_COMISSAO_DECIDIR", "text": "…"},
+            }
+        )
+
+
+def test_o_algoritmo_declarado_e_o_que_o_dominio_executa():
+    """A afirmação positiva: o vocabulário fechado **é** o que `chave.py` implementa."""
+    from processo_seletivo.sorteios.domain.chave import ALGORITMO, ALGORITMOS
+
+    assert _METODO_VALIDO["algorithm"] in ALGORITMOS
+    assert ALGORITMOS == frozenset({ALGORITMO})

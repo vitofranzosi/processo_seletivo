@@ -30,6 +30,16 @@ DOMINIO = "processo-seletivo/sorteio/v1"
 # `…-v2`, e é ato da classe da Retificação.
 ALGORITMO = "IFES-SORTEIO-SHA256-v1"
 
+# **Vocabulário fechado, e é o que impede o manifesto de mentir.** A validação do método só conferia
+# que `algorithm` estava preenchido, e a constituição sempre usava este módulo: um Edital podia
+# declarar `SORTEIO-XPTO-v3`, o sistema calculava por SHA-256, e o manifesto publicava o nome de um
+# algoritmo que ninguém implementa. Quem tentasse reimplementar a partir do que foi publicado
+# chegaria a outra ordem — e concluiria, corretamente, que o sorteio não confere.
+#
+# Declarar aqui é o mesmo desenho da regra de normalização: acrescentar algoritmo é publicar versão
+# nova, com implementação, vetores e contrato — nunca uma linha de texto no Edital.
+ALGORITMOS = frozenset({ALGORITMO})
+
 
 def bytes_canonicos(*, relation_hash, draw_scope_id, seed, public_number) -> bytes:
     """Os bytes que entram no resumo, exatamente como o § 2 do contrato os descreve.

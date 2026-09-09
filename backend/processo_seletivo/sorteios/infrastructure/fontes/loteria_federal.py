@@ -14,7 +14,9 @@ import json
 from urllib import error, request
 
 from django.conf import settings
+from django.utils import timezone
 
+from processo_seletivo.shared.tempo import ZONA
 from processo_seletivo.sorteios.infrastructure.fontes import FonteExterna, Observacao
 
 ENDERECO = "https://servicebus2.caixa.gov.br/portaldeloterias/api/federal/{referencia}"
@@ -36,8 +38,14 @@ class LoteriaFederal(FonteExterna):
                 continue
             premios = corpo.get("listaDezenas") or corpo.get("listaRateioPremio") or []
             material = " ".join(str(item) for item in premios if str(item).strip())
+            quando = _instante_da_extracao(corpo)
+            if material and quando is not None:
+                return Observacao(material_bruto=material, ocorrida_em=quando)
             if material:
-                return Observacao(material_bruto=material)
+                # Material sem data é material que não prova precedência: aceitá-lo devolveria ao
+                # certame a possibilidade de congelar já sabendo o resultado (FR-016).
+                ultima = "A fonte devolveu a extração sem a data em que ela ocorreu."
+                continue
             ultima = "A fonte respondeu sem os números da extração."
         return Observacao(
             indisponivel=True,
@@ -46,6 +54,39 @@ class LoteriaFederal(FonteExterna):
                 f"{tentativas} tentativa(s). Última resposta: {ultima}"
             ),
         )
+
+
+def _instante_da_extracao(corpo):
+    """A data em que a extração aconteceu, como a fonte a publica.
+
+    Sem ela não há como afirmar que a ocorrência é posterior ao congelamento, e o instante da
+    **leitura** não serve: ele é escolhido por quem lê.
+    """
+    from django.utils.dateparse import parse_date, parse_datetime
+
+    bruto = corpo.get("dataApuracao") or corpo.get("data") or ""
+    if not bruto:
+        return None
+    instante = parse_datetime(str(bruto))
+    if instante is None:
+        dia = parse_date(str(bruto)) or _dia_brasileiro(str(bruto))
+        if dia is None:
+            return None
+        from datetime import datetime, time
+
+        instante = datetime.combine(dia, time(20, 0))
+    if timezone.is_naive(instante):
+        instante = timezone.make_aware(instante, ZONA)
+    return instante
+
+
+def _dia_brasileiro(texto):
+    from datetime import datetime
+
+    try:
+        return datetime.strptime(texto, "%d/%m/%Y").date()
+    except ValueError:
+        return None
 
 
 class FonteDeTeste(FonteExterna):
@@ -65,4 +106,7 @@ class FonteDeTeste(FonteExterna):
                 indisponivel=True,
                 evidencia=f"Concurso {referencia} de {fonte}: sem extração publicada.",
             )
-        return Observacao(material_bruto=material)
+        # O falso reporta a extração como **acontecida agora**, que é o que uma fonte real diria de
+        # uma extração recém-publicada. Sem isso ele não serviria para semear sorteio, e o teste
+        # estaria exercitando um caminho que a produção recusa.
+        return Observacao(material_bruto=material, ocorrida_em=timezone.now())

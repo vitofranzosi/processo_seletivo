@@ -70,11 +70,18 @@ mostra** dá o mesmo resumo publicado. Nenhum dado que o portal esconde entra na
 
 Na data e hora publicadas, a tela busca a ocorrência declarada na fonte externa.
 
-*Esperado:* material bruto gravado e exibido. A semente normalizada **não** é gravada aqui: ela
-nasce na constituição, sob a regra do método (D-016).
+A tela nomeia **qual** ocorrência vai buscar, e a referência é derivada da regra publicada — não
+escolhida por quem opera.
 
-*Prova negativa:* não existe campo para digitar semente; com a fonte indisponível, a tela aplica a
-regra publicada de substituição e registra a evidência — e continua sem oferecer digitação.
+*Esperado:* material bruto gravado e exibido, junto com **quando a extração aconteceu** — que é o
+instante que a FR-016 compara com o do congelamento. A semente normalizada **não** é gravada aqui:
+ela nasce na constituição, sob a regra do método (D-016).
+
+*Prova negativa:* não existe campo para digitar semente nem para trocar a referência; com a fonte
+indisponível, a tela registra a evidência, a regra publicada aponta a ocorrência seguinte e o botão
+passa a nomeá-la. As descartadas continuam visíveis, com a evidência de cada uma — é o controle da
+R-006. Esgotadas as substitutas previstas, o sistema para e diz que prosseguir exige Retificação:
+ele não escolhe fonte por conta própria.
 
 ### 5 · Realizar o sorteio (gestão, com a tela transmitida)
 
@@ -109,9 +116,15 @@ cd backend && node processo_seletivo/portal/static/portal/sorteio-cli.js < manif
 
 *Esperado:* a mesma ordem, item a item, sem tocar no sistema e sem o vídeo.
 
-### 8 · Anular e suceder (gestão)
+### 8 · Anular e suceder (gestão, e uma Retificação)
 
-Anular com motivo, publicar relação nova, observar ocorrência nova, constituir o sucessor.
+**Retificar o Edital para declarar a ocorrência nova**, anular com motivo, publicar relação nova,
+observar a ocorrência declarada e constituir o sucessor.
+
+A Retificação não é burocracia acidental (D-017): a ocorrência é conteúdo declarado, e um sucessor
+que usasse outra extração sem a norma dizê-lo estaria escolhendo a extração. O efeito é a garantia
+mais forte desta feature — não existe anular até o resultado agradar, porque cada refazimento custa
+um ato normativo publicado.
 
 *Esperado:* os dois sorteios coexistem; o primeiro continua íntegro e verificável; o sucessor cita o
 anterior e o motivo.

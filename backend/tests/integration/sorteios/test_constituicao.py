@@ -6,6 +6,7 @@ completa, ato único por tupla, e concorrência produzindo exatamente um ato.
 """
 
 import threading
+from datetime import timedelta
 
 import pytest
 from django.db import connections
@@ -19,7 +20,7 @@ from processo_seletivo.sorteios.application.sorteio import constituir_sorteio
 from processo_seletivo.sorteios.domain import chave as dominio_da_chave
 from processo_seletivo.sorteios.infrastructure.fontes.loteria_federal import FonteDeTeste
 from processo_seletivo.sorteios.models import OcorrenciaDaFonte, RelacaoDeHabilitados, Sorteio
-from tests.fixtures.sorteio import certame_de_sorteio, presidente
+from tests.fixtures.sorteio import METODO, certame_de_sorteio, presidente
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
 
@@ -160,10 +161,14 @@ def test_ocorrencia_anterior_ao_congelamento_e_recusada(
 ):
     """A semente é posterior ao compromisso, e não o contrário (FR-016)."""
     certame = certame_de_sorteio(gestor, api_client, manager_headers, process_payload)
+    # A ocorrência **declarada** pelo Edital, e que aconteceu **antes** do congelamento: é a
+    # combinação que a FR-016 recusa, e a única que este teste quer exercitar. Uma referência
+    # diferente seria recusada antes, por outro motivo, e o teste mediria outra coisa.
     ocorrencia = OcorrenciaDaFonte.objects.create(
-        fonte="Loteria Federal",
-        referencia="5800",
+        fonte=METODO["source"],
+        referencia=METODO["occurrence"],
         material_bruto="1 2 3 4 5",
+        ocorrida_em=timezone.now() - timedelta(days=1),
         observada_em=timezone.now(),
         observada_por="cpf:presidente",
     )

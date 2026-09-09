@@ -52,26 +52,47 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
 {% endcomment %}
 <section aria-labelledby="titulo-ocorrencia">
   <h2 id="titulo-ocorrencia">Ocorrência da fonte</h2>
+  {% comment %}
+  **As ocorrências descartadas ficam visíveis**, e é o controle da R-006: sem elas, alguém poderia
+  observar até a semente agradar e o registro contaria uma história limpa. Aqui elas aparecem com a
+  evidência da indisponibilidade que a regra publicada usou para seguir adiante.
+  {% endcomment %}
+  {% if ocorrencias_descartadas %}
+  <div class="descartadas">
+    <h3>Ocorrências indisponíveis, e a substituição que a regra determinou</h3>
+    <ul>
+      {% for descartada in ocorrencias_descartadas %}
+      <li><strong>{{ descartada.referencia }}</strong> — {{ descartada.evidencia }}
+        {% if descartada.motivo %}<span class="erro">{{ descartada.motivo }}</span>{% endif %}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
   {% if ocorrencia %}
   <dl class="ocorrencia">
     <dt>Fonte e ocorrência</dt><dd>{{ ocorrencia.fonte }} — {{ ocorrencia.referencia }}</dd>
     <dt>Material bruto observado</dt><dd><code>{{ ocorrencia.material_bruto }}</code></dd>
+    <dt>Quando aconteceu</dt><dd>{% if ocorrencia.ocorrida_em %}{{ ocorrencia.ocorrida_em|date:"d/m/Y H:i:s" }}{% else %}<span class="erro">a fonte não informou, e sem isso ela não semeia sorteio</span>{% endif %}</dd>
     <dt>Observada em</dt><dd>{{ ocorrencia.observada_em|date:"d/m/Y H:i:s" }} por {{ ocorrencia.observada_por }}</dd>
   </dl>
-  {% if ocorrencia.indisponivel %}
-  <p class="erro">A fonte não publicou esta ocorrência. Evidência registrada:
-    {{ ocorrencia.evidencia }} — a regra publicada de substituição indica qual ocorrência a
-    substitui, e é aquela que se observa. Não há, aqui nem em lugar nenhum, campo para digitar a
-    semente.</p>
-  {% endif %}
-  {% else %}
-  <p class="aviso">A ocorrência declarada ainda não foi observada.</p>
+  {% elif proxima_referencia %}
+  {% comment %}
+  A referência da vez é **derivada** da regra publicada, e não escolhida: a tela a mostra para que
+  quem observa saiba o que vai buscar, e não há campo para trocá-la (FR-015, FR-017).
+  {% endcomment %}
+  <p class="aviso">A ocorrência <strong>{{ proxima_referencia }}</strong> de
+    {{ metodo.source }} ainda não foi observada. É a que a regra publicada determina agora.</p>
   {% if pode_emitir and metodo %}
   <form method="post" action="{% url 'interface:observar-ocorrencia-do-sorteio' edital.id marco.id %}">
     {% csrf_token %}
-    <button type="submit" class="botao">Observar a ocorrência na fonte</button>
+    <button type="submit" class="botao">Observar a ocorrência {{ proxima_referencia }} na fonte</button>
   </form>
   {% endif %}
+  {% else %}
+  <p class="erro">A ocorrência declarada e todas as substitutas previstas pela regra publicada estão
+    indisponíveis. Prosseguir exige Retificação que declare outro método: o sistema não escolhe
+    fonte por conta própria, e continuar tentando seria escolher.</p>
   {% endif %}
 </section>
 
@@ -148,7 +169,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       </form>
     </details>
     {% endif %}
-    {% elif recorte.congelada and ocorrencia and not ocorrencia.indisponivel and pode_emitir %}
+    {% elif recorte.congelada and ocorrencia and not ocorrencia.indisponivel and ocorrencia.ocorrida_em and pode_emitir %}
     {% comment %}
     Um botão só, e ele constitui. Não há "calcular para conferir": depois da semente, conferir antes
     de emitir **é** o ensaio (D-010, FR-030).

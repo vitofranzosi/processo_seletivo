@@ -46,6 +46,35 @@ const ordenar = (chavesPorNumero) =>
 const recorteDe = (escopo) =>
   escopo.listId ? `${escopo.profileId}:${escopo.listId}` : String(escopo.profileId);
 
+/* A serialização canônica do sistema, reimplementada aqui: chaves ordenadas **em todos os níveis**,
+   sem espaços, sem escape de não-ASCII, NFC sobre o texto inteiro, UTF-8.
+
+   `JSON.stringify` ordena nada — ele preserva a ordem de inserção —, e por isso a ordenação é
+   explícita e recursiva. É a diferença entre conferir o manifesto e confiar nele. */
+function canonical(valor) {
+  if (Array.isArray(valor)) {
+    return `[${valor.map(canonical).join(",")}]`;
+  }
+  if (valor !== null && typeof valor === "object") {
+    const chaves = Object.keys(valor).sort();
+    return `{${chaves.map((k) => `${JSON.stringify(k)}:${canonical(valor[k])}`).join(",")}}`;
+  }
+  return JSON.stringify(valor);
+}
+
+const canonicalSha256 = (valor) =>
+  crypto
+    .createHash("sha256")
+    .update(Buffer.from(canonical(valor).normalize("NFC"), "utf8"))
+    .digest("hex");
+
+/* O resumo do manifesto cobre o objeto **sem o próprio campo**, como o contrato declara. */
+function resumoDoManifesto(manifesto) {
+  const semOProprioCampo = { ...manifesto };
+  delete semOProprioCampo.manifestHash;
+  return canonicalSha256(semOProprioCampo);
+}
+
 function verificar(manifesto) {
   const escopo = recorteDe(manifesto.scope);
   const chaves = {};
@@ -69,12 +98,30 @@ function verificar(manifesto) {
     .map((p) => p.publicNumber);
   const iguais =
     ordem.length === publicada.length && ordem.every((n, i) => n === publicada[i]);
-  return { ordem, publicada, iguais, divergenciasDeChave };
+
+  /* **O resumo do manifesto, conferido — e não ignorado.** Sem esta linha, um manifesto
+     autoconsistente porém adulterado passava: bastava reescrever a semente e as chaves de forma
+     coerente entre si, e o verificador dizia que conferia. O `manifestHash` é o que amarra o pacote
+     ao que o sistema publicou, e conferi-lo é metade do que este programa existe para fazer. */
+  const resumoRecalculado = resumoDoManifesto(manifesto);
+  const resumoConfere = Boolean(
+    manifesto.manifestHash && manifesto.manifestHash === resumoRecalculado
+  );
+
+  return {
+    ordem,
+    publicada,
+    iguais,
+    divergenciasDeChave,
+    resumoRecalculado,
+    resumoConfere,
+  };
 }
 
 function principal(bruto) {
   const manifesto = JSON.parse(bruto);
-  const { ordem, publicada, iguais, divergenciasDeChave } = verificar(manifesto);
+  const { ordem, publicada, iguais, divergenciasDeChave, resumoRecalculado, resumoConfere } =
+    verificar(manifesto);
 
   console.log(`Sorteio ${manifesto.drawId}`);
   console.log(`Edital ${manifesto.process.editalNumber}, ${manifesto.relation.count} participantes`);
@@ -85,6 +132,13 @@ function principal(bruto) {
   ordem.forEach((numero, indice) => console.log(`  ${indice + 1}. número público ${numero}`));
   console.log("");
 
+  if (!resumoConfere) {
+    console.error(
+      "DIVERGÊNCIA: o resumo do manifesto não confere. " +
+        `Publicado: ${manifesto.manifestHash || "(ausente)"}. Recalculado: ${resumoRecalculado}. ` +
+        "Este pacote não é o que a instituição publicou."
+    );
+  }
   if (divergenciasDeChave.length) {
     console.error(
       `DIVERGÊNCIA: a chave publicada não confere para os números ${divergenciasDeChave.join(", ")}.`
@@ -98,11 +152,11 @@ function principal(bruto) {
     process.exitCode = 1;
     return;
   }
-  if (divergenciasDeChave.length) {
+  if (divergenciasDeChave.length || !resumoConfere) {
     process.exitCode = 1;
     return;
   }
-  console.log("Confere: a ordem publicada é a que estas entradas produzem.");
+  console.log("Confere: o manifesto é íntegro e a ordem publicada é a que estas entradas produzem.");
   console.log(
     "Para fechar o círculo, abra a relação publicada no portal e recalcule o resumo dela a " +
       "partir do número, do nome e do protocolo de cada participante."
@@ -115,4 +169,13 @@ if (require.main === module) {
   process.stdin.on("end", () => principal(Buffer.concat(pedacos).toString("utf8")));
 }
 
-module.exports = { bytesCanonicos, chave, ordenar, recorteDe, verificar };
+module.exports = {
+  bytesCanonicos,
+  canonical,
+  canonicalSha256,
+  chave,
+  ordenar,
+  recorteDe,
+  resumoDoManifesto,
+  verificar,
+};

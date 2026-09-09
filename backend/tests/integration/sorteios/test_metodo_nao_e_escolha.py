@@ -19,6 +19,10 @@ from processo_seletivo.sorteios.infrastructure.fontes.loteria_federal import Fon
 from processo_seletivo.sorteios.models import OcorrenciaDaFonte, RelacaoDeHabilitados, Sorteio
 from tests.fixtures.sorteio import METODO, certame_de_sorteio, presidente
 
+# **Este arquivo usava `5930` onde o Edital declara `5900`, e passava.** Era o sintoma do defeito
+# que a revisão encontrou: a ocorrência chegava por identidade, e fonte e referência nunca eram
+# comparadas com o método congelado. Agora o comando recusa, e a fixture usa a declarada.
+
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
 
 
@@ -54,7 +58,7 @@ def test_o_sorteio_grava_o_metodo_que_a_relacao_comprometeu(certame):
             actor=presidente(),
             processo_id=certame["processo"].id,
             fonte="Loteria Federal",
-            referencia="5930",
+            referencia=METODO["occurrence"],
             idempotency_key="metodo-ocorrencia",
             correlation_id="teste-021",
             fonte_externa=FonteDeTeste(),

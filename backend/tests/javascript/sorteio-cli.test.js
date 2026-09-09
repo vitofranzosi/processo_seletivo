@@ -78,3 +78,59 @@ test("a semente trocada muda a ordem inteira", () => {
   assert.notDeepEqual(resultado.ordem, original);
   assert.equal(resultado.iguais, false);
 });
+
+test("a canonicalização do CLI ordena as chaves em todos os níveis", () => {
+  assert.equal(cli.canonical({ b: [2, { d: 1, c: 2 }], a: "x" }), '{"a":"x","b":[2,{"c":2,"d":1}]}');
+});
+
+test("o manifesto íntegro tem o seu resumo conferido", () => {
+  const manifesto = manifestoDe();
+  manifesto.manifestHash = cli.resumoDoManifesto(manifesto);
+
+  const resultado = cli.verificar(manifesto);
+
+  assert.equal(resultado.resumoConfere, true);
+  assert.equal(resultado.iguais, true);
+});
+
+test("um manifesto autoconsistente porém adulterado é denunciado pelo resumo", () => {
+  /* **O defeito que este teste fecha.** O verificador recalculava as chaves e a ordem, e nunca
+     tocava no `manifestHash`. Bastava reescrever a semente e recalcular as chaves de forma
+     coerente entre si — um pacote internamente consistente, mas que não é o que a instituição
+     publicou — e ele dizia que conferia. */
+  const manifesto = manifestoDe();
+  manifesto.manifestHash = cli.resumoDoManifesto(manifesto);
+
+  manifesto.seed.normalized = "99999 99999 99999 99999 99999";
+  const chaves = referencia.chaves({
+    relationHash: manifesto.relation.relationHash,
+    drawScopeId: cli.recorteDe(manifesto.scope),
+    seed: manifesto.seed.normalized,
+    publicNumbers: NUMEROS,
+  });
+  const ordem = referencia.ordenar(chaves);
+  manifesto.participants = NUMEROS.map((numero) => ({
+    publicNumber: numero,
+    key: chaves[numero],
+    position: ordem.indexOf(numero) + 1,
+  }));
+
+  const resultado = cli.verificar(manifesto);
+
+  assert.equal(resultado.iguais, true, "o pacote é internamente coerente");
+  assert.deepEqual(resultado.divergenciasDeChave, [], "e as chaves fecham entre si");
+  assert.equal(resultado.resumoConfere, false, "e ainda assim não é o que foi publicado");
+});
+
+test("um manifestHash arbitrário é denunciado", () => {
+  const manifesto = manifestoDe();
+  manifesto.manifestHash = "f".repeat(64);
+
+  assert.equal(cli.verificar(manifesto).resumoConfere, false);
+});
+
+test("um manifesto sem manifestHash não é dado como válido", () => {
+  const manifesto = manifestoDe();
+
+  assert.equal(cli.verificar(manifesto).resumoConfere, false);
+});

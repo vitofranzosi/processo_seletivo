@@ -193,7 +193,9 @@ def _validar_metodo_de_sorteio(metodo, *, etapas=()) -> None:
                 f"`{campo}` deve declarar `rule` — o identificador que a máquina aplica e o "
                 "terceiro reimplementa — e `text`, a frase publicada que a pessoa lê."
             )
+    _validar_algoritmo_publicado(metodo["algorithm"])
     _validar_regra_publicada(metodo["normalization"]["rule"])
+    _validar_substituicao_publicada(metodo["substitutionRule"]["rule"])
     _validar_etapa_de_habilitacao(metodo.get("qualifyingStageId"), etapas)
 
 
@@ -214,6 +216,39 @@ def _validar_etapa_de_habilitacao(etapa_id, etapas) -> None:
         raise ProfileValidationError(
             "A Etapa que habilita ao sorteio precisa ser uma das Etapas enumeradas pelo marco: "
             "uma Etapa de fora seria critério de entrada que a norma do marco não declara."
+        )
+
+
+def _validar_algoritmo_publicado(algoritmo) -> None:
+    """O algoritmo declarado precisa ser um que este sistema executa (021, FR-027).
+
+    Sem isto, o Edital declarava um nome, a constituição usava outro, e o manifesto publicava o
+    nome declarado: quem reimplementasse a partir do que foi publicado chegaria a outra ordem — e
+    concluiria, corretamente, que o sorteio não confere. O algoritmo é conteúdo normativo, e
+    conteúdo normativo que o sistema não sabe executar é promessa.
+    """
+    from processo_seletivo.sorteios.domain.chave import ALGORITMOS
+
+    if algoritmo not in ALGORITMOS:
+        raise ProfileValidationError(
+            f"Algoritmo de sorteio não publicado por este sistema: {algoritmo!r}. "
+            f"Os publicados são: {', '.join(sorted(ALGORITMOS))}. Declarar um algoritmo que o "
+            "sistema não executa faria o manifesto publicar um nome e a ordem vir de outro."
+        )
+
+
+def _validar_substituicao_publicada(regra) -> None:
+    """A regra de substituição precisa ser executável, e não só escrita (021, FR-015).
+
+    Prosa não é aplicável "sem escolha humana no momento da execução": no dia da indisponibilidade
+    alguém teria de decidir qual é a ocorrência substituta, que é a escolha que a FR-015 proíbe.
+    """
+    from processo_seletivo.sorteios.domain.substituicao import REGRAS
+
+    if regra not in REGRAS:
+        raise ProfileValidationError(
+            f"Regra de substituição não publicada por este sistema: {regra!r}. "
+            f"As publicadas são: {', '.join(sorted(REGRAS))}."
         )
 
 

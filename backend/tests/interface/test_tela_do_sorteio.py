@@ -37,7 +37,10 @@ def test_a_tela_mostra_o_universo_o_metodo_e_o_estado_da_ocorrencia(certame, cli
     assert "Método declarado no Edital" in corpo
     assert "Ocorrência da fonte" in corpo
     assert "ainda não foi observada" in corpo
-    assert "Observar a ocorrência na fonte" in corpo
+    # **O botão nomeia a referência**, e não a fonte genérica: quem observa precisa saber qual
+    # extração vai buscar, e é a regra publicada — não a pessoa — que diz qual é (FR-015).
+    assert f"Observar a ocorrência {METODO['occurrence']} na fonte" in corpo
+    assert METODO["occurrence"] in corpo
 
 
 def test_a_semente_fica_a_vista_antes_do_ato(certame, client):

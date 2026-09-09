@@ -20,6 +20,7 @@ from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.canonical import canonical_sha256
+from processo_seletivo.sorteios.application.habilitacao import habilitadas_na_etapa, nome_da_etapa
 from processo_seletivo.sorteios.domain import metodo as dominio_do_metodo
 from processo_seletivo.sorteios.domain import projecao
 from processo_seletivo.sorteios.models import ParticipanteHabilitado, RelacaoDeHabilitados
@@ -86,6 +87,11 @@ def publicar_relacao(
             lista_id=lista_id,
             nome_da_modalidade=_nome_da_modalidade(versao.content, perfil_id, lista_id),
             quantidade=len(participantes),
+            # **A Etapa de habilitação entra na frase publicada** (FR-011, R-012). Sem ela, o
+            # critério dizia "todas as inscrições submetidas" numa relação que exclui quem não
+            # passou na Etapa anterior — e quem ficou de fora não tinha, no texto publicado, o que
+            # explicasse a própria ausência.
+            nome_da_etapa=nome_da_etapa(versao.content, metodo.get("qualifyingStageId")),
         )
         relacao = RelacaoDeHabilitados(
             edital=edital,
@@ -168,26 +174,13 @@ def _projetar(edital, versao, perfil_id, marco_id, lista_id):
 def _habilitadas(edital, versao, perfil_id, marco_id):
     """As identidades habilitadas na Etapa anterior, ou `None` quando o Edital não declara uma.
 
-    `None` e conjunto vazio são coisas diferentes, e confundi-las esvaziaria um certame inteiro: o
-    primeiro diz "não há Etapa de habilitação antes do sorteio" — o caso dos quatro Editais lidos —,
-    e o segundo, "há, e ninguém passou" (R-012).
+    A regra mora em `application/habilitacao.py` porque a prévia da tela precisa da **mesma**
+    resposta: quando as duas divergiam, a comissão via um número e congelava outro (R-012).
     """
-    metodo = dominio_do_metodo.metodo_declarado(
-        versao.content, perfil_id=perfil_id, marco_id=marco_id
+    return habilitadas_na_etapa(
+        edital,
+        dominio_do_metodo.metodo_declarado(versao.content, perfil_id=perfil_id, marco_id=marco_id),
     )
-    etapa_de_habilitacao = (metodo or {}).get("qualifyingStageId")
-    if not etapa_de_habilitacao:
-        return None
-    from processo_seletivo.resultados.models import ResultadoEtapa
-
-    return {
-        str(identidade)
-        for identidade in ResultadoEtapa.vigentes.filter(
-            edital=edital,
-            etapa_id=etapa_de_habilitacao,
-            consequencia=ResultadoEtapa.Consequencia.HABILITADA,
-        ).values_list("inscricao_id", flat=True)
-    }
 
 
 def _nome_da_modalidade(conteudo, perfil_id, lista_id):

@@ -225,6 +225,26 @@ retificar o campo.
 
 ---
 
+## Phase 10: Correções da revisão de código
+
+**Oito achados, e nenhum falso positivo.** Sete de integridade e auditabilidade, um de coerência
+entre a prévia e o publicado. O que eles têm em comum é o modo de falha: a garantia estava escrita
+no comentário e ausente no código, e a suíte não a exercitava — num caso, um teste chegava a
+consolidar o comportamento errado.
+
+- [X] T097 Conferir, em `backend/processo_seletivo/sorteios/application/sorteio.py`, que a ocorrência é a **declarada** pelo método congelado — fonte e referência —, e não apenas um registro válido por identidade (FR-072)
+- [X] T098 Implementar `backend/processo_seletivo/sorteios/domain/substituicao.py` — a regra publicada passa a ser executável, com vocabulário fechado, cadeia finita e recusa nomeando o ato normativo que falta (FR-015, FR-073)
+- [X] T099 Aferir a precedência por `ocorrida_em` — quando o evento externo aconteceu —, e recusar ocorrência que a fonte não saiba datar; acrescentar o campo ao modelo, à porta da fonte e aos adaptadores (FR-016)
+- [X] T100 Fechar o vocabulário de algoritmos em `domain/chave.py` e recusar, na elaboração, método que declare algoritmo que este sistema não executa (FR-074)
+- [X] T101 Fazer a tela observar a referência que a regra determina, exibir as ocorrências descartadas e dizer quando a cadeia se esgota — uma indisponibilidade deixava o sorteio travado para sempre (FR-015)
+- [X] T102 Exigir, na anulação, mesmo recorte, predecessor vigente, relação nova sucedendo a do anulado e ocorrência distinta (FR-054, FR-075)
+- [X] T103 Passar `lista_id` na prévia de publicação da interface — sem ele, as listas de reserva não se publicavam pela tela (FR-068)
+- [X] T104 Conferir o `manifestHash` no verificador independente, com serialização canônica recursiva em JavaScript (FR-050)
+- [X] T105 Compartilhar a regra de quem entra entre a prévia e a publicação, e nomear a Etapa de habilitação no critério publicado (R-012, FR-011)
+- [X] T106 Escrever os testes dos oito cenários — `test_ocorrencia_declarada.py`, `test_etapa_de_habilitacao.py`, `test_publicar_sorteio_por_lista.py`, e as extensões de `test_anulacao.py`, `test_metodo_do_marco.py` e `sorteio-cli.test.js`
+
+---
+
 ## Phase 9: Polish & Cross-Cutting
 
 - [X] T065 [P] Acrescentar ao `backend/processo_seletivo/processos/management/commands/seed_demo.py` um certame de sorteio — Edital publicado **com `drawMethod` no marco**, relação publicada citando-o e sorteio constituído — para que o roteiro do `quickstart.md` rode sem montagem manual

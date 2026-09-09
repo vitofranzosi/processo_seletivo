@@ -27,9 +27,16 @@ class Observacao:
     publicada. `evidencia` é o que se observou — o que a fonte respondeu, e quando —, porque
     aplicar a substituição sem registrar o que a motivou seria afirmar indisponibilidade sem lastro
     (FR-015, R-006).
+
+    **`ocorrida_em` é quando o evento externo aconteceu**, e não quando nós o lemos. A distinção é a
+    feature inteira: a FR-016 exige que a ocorrência que fixa a semente seja **posterior ao
+    congelamento**, e comparar o instante da leitura permitiria congelar a relação já sabendo o
+    resultado da extração e só depois registrá-la no sistema. O adaptador que não souber dizer
+    quando a ocorrência aconteceu não serve para semear sorteio, e o comando o recusa.
     """
 
     material_bruto: str = ""
+    ocorrida_em: object = None
     indisponivel: bool = False
     evidencia: str = ""
 

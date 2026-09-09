@@ -151,6 +151,12 @@ class OcorrenciaDaFonte(models.Model):
     # congelaria a regra do primeiro método que observasse a ocorrência e a imporia, calada, a todo
     # método posterior que a citasse (D-016, FR-019).
     material_bruto = models.TextField()
+    # **Quando o evento externo aconteceu**, como a fonte o publica — e não quando nós o lemos
+    # (021, FR-016). A distinção é a garantia: comparar o instante da **leitura** com o do
+    # congelamento permitiria fechar a relação já sabendo o resultado da extração e registrá-lo no
+    # sistema depois. Nulo só quando a fonte não o publica, e nesse caso a ocorrência não semeia
+    # sorteio nenhum — o comando recusa em vez de aceitar uma garantia que não pode provar.
+    ocorrida_em = models.DateTimeField(null=True, blank=True)
     observada_em = models.DateTimeField()
     observada_por = models.CharField(max_length=255)
     indisponivel = models.BooleanField(default=False)

@@ -3757,13 +3757,17 @@ def _renderizar_previa(request, ator, edital, ato, marco_id, *, erro="", status=
     são **recompostas aqui**, e é exatamente disso que a autoridade precisa depois de uma recusa por
     prévia obsoleta — a projeção que ela vai reconfirmar é a de agora, não a que envelheceu.
     """
-    sucede = publicacao_vigente_do_marco(edital=edital, marco_id=marco_id)
+    # **A lista vem do ato, e atravessa as duas leituras** (021, D-015, FR-068). Sem ela, a prévia
+    # de um ato de PPI lia a cadeia da ampla concorrência: o ato aparecia como já sucedido, ou a
+    # assinatura nascia do predecessor errado — e a lista simplesmente não se publicava pela tela.
+    # O teste das três listas não pegava isso porque chamava o domínio direto, já com `lista_id`.
+    sucede = publicacao_vigente_do_marco(edital=edital, marco_id=marco_id, lista_id=ato.lista_id)
     try:
         # `sucede` entra na aferição porque é ele que produz o degrau do meio da FR-005: publicar
         # sobre um marco já divulgado não impede nada, e ainda assim é o que a autoridade precisa
         # ler antes de confirmar.
         publicabilidade = aferir_publicabilidade(
-            edital=edital, marco_id=marco_id, ato=ato, sucede=sucede
+            edital=edital, marco_id=marco_id, ato=ato, sucede=sucede, lista_id=ato.lista_id
         )
     except DomainError as recusa:
         if recusa.status == 404:
@@ -4565,9 +4569,17 @@ def sorteio(request, edital_id, marco_id):
                 # não declara o método, e alterá-lo é Retificação (D-013, FR-014).
                 "metodo": estado["metodo"],
                 "metodo_hash": estado["metodo_hash"],
-                # A ocorrência declarada, se já observada: é o que põe a semente à vista **antes**
-                # do ato, que é o que a transmissão precisa mostrar.
+                # A ocorrência da vez — a declarada, ou a que a regra de substituição pôs no
+                # lugar dela —, é o que põe a semente à vista **antes** do ato, que é o que a
+                # transmissão precisa mostrar.
                 "ocorrencia": estado["ocorrencia"],
+                # A referência que ainda falta observar, derivada pela regra publicada. É ela que a
+                # tela nomeia no botão: quem observa precisa saber o que vai buscar, e não há campo
+                # para trocá-la (FR-015, FR-017).
+                "proxima_referencia": estado["proxima_referencia"],
+                # E as que a indisponibilidade descartou, visíveis de propósito: o descarte de
+                # ocorrência é justamente o que precisa ser auditável (R-006).
+                "ocorrencias_descartadas": estado["ocorrencias_descartadas"],
                 "recortes": estado["recortes"],
                 "pode_emitir": pode_emitir,
                 "resultado": request.session.pop("resultado_do_sorteio", None),
@@ -4627,12 +4639,22 @@ def observar_ocorrencia_do_sorteio(request, edital_id, marco_id):
         edital=edital, perfil_id=_perfil_do_marco(edital, marco_id), marco_id=marco_id
     )
     metodo = estado["metodo"] or {}
+    # **A referência da vez, derivada pela regra publicada** — e não a declarada no Edital
+    # (FR-015). Registrada uma indisponibilidade, é a regra que diz qual ocorrência a substitui, e
+    # observar sempre a declarada travava o certame para sempre na primeira extração não publicada.
+    referencia = estado["proxima_referencia"]
+    if not referencia:
+        request.session["erro_do_sorteio"] = (
+            "A ocorrência declarada e todas as substitutas previstas pela regra publicada estão "
+            "indisponíveis. Prosseguir exige Retificação que declare outro método."
+        )
+        return redirect(destino)
     try:
         request.session["resultado_do_sorteio"] = observar_ocorrencia(
             actor=ator,
             processo_id=edital.processo_id,
             fonte=metodo.get("source", ""),
-            referencia=metodo.get("occurrence", ""),
+            referencia=referencia,
             idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
             correlation_id=getattr(request, "correlation_id", ""),
         )

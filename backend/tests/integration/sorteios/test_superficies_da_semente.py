@@ -87,6 +87,9 @@ def test_a_porta_da_fonte_devolve_material_bruto_e_nao_semente():
 
     assert set(Observacao.__dataclass_fields__) == {
         "material_bruto",
+        # Quando o evento externo aconteceu, e não quando nós o lemos: é o que permite afirmar que
+        # a ocorrência é posterior ao congelamento (FR-016).
+        "ocorrida_em",
         "indisponivel",
         "evidencia",
     }

@@ -24,7 +24,7 @@ from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.sorteios.domain import chave as dominio_da_chave
 from processo_seletivo.sorteios.domain import manifesto as dominio_do_manifesto
 from processo_seletivo.sorteios.domain import metodo as dominio_do_metodo
-from processo_seletivo.sorteios.domain import normalizacao
+from processo_seletivo.sorteios.domain import normalizacao, substituicao
 from processo_seletivo.sorteios.models import OcorrenciaDaFonte, RelacaoDeHabilitados, Sorteio
 
 CONSTITUIR = "SORTEIO_CONSTITUIR"
@@ -69,19 +69,22 @@ def constituir_sorteio(
         edital = _edital_do_processo(ctx.processo, edital_id)
         relacao = _relacao(edital, relacao_id)
         ocorrencia = _ocorrencia(ocorrencia_id)
-        anterior = _anterior(edital, sorteio_anterior_id, motivo_da_anulacao)
-        _recusar_o_que_nao_pode_sortear(relacao, ocorrencia)
-        _recusar_ato_ja_existente(edital, relacao, ocorrencia, anterior)
+        anterior = _anterior(edital, sorteio_anterior_id, motivo_da_anulacao, relacao, ocorrencia)
 
-        # O método vem da **versão que a relação cita**, e não do conteúdo vigente: é o que faz a
-        # reprodução histórica valer, e o que impede uma Retificação posterior de mudar, em
-        # silêncio, a regra sob a qual o certame se comprometeu (FR-039, FR-067).
+        # **O método vem antes de qualquer recusa sobre a ocorrência**, e a ordem é a correção de
+        # um defeito: sem o método em mãos, não havia como perguntar se **esta** ocorrência é a
+        # declarada — e a pergunta não era feita. O método vem da versão que a relação cita, e não
+        # do conteúdo vigente: é o que faz a reprodução histórica valer, e o que impede uma
+        # Retificação posterior de mudar, em silêncio, a regra sob a qual o certame se comprometeu
+        # (FR-039, FR-067).
         metodo, _resumo = dominio_do_metodo.conferir_compromisso(
             relacao.versao.content,
             perfil_id=relacao.perfil_id,
             marco_id=relacao.marco_id,
             metodo_hash=relacao.metodo_hash,
         )
+        _recusar_o_que_nao_pode_sortear(relacao, ocorrencia, metodo)
+        _recusar_ato_ja_existente(edital, relacao, ocorrencia, anterior)
         semente = normalizacao.normalizar(
             material_bruto=ocorrencia.material_bruto,
             regra=(metodo.get("normalization") or {}).get("rule", ""),
@@ -177,7 +180,7 @@ def anular_sorteio(
     )
 
 
-def _recusar_o_que_nao_pode_sortear(relacao, ocorrencia):
+def _recusar_o_que_nao_pode_sortear(relacao, ocorrencia, metodo):
     if relacao.sucessoras.exists():
         raise DomainError(
             "relation_superseded",
@@ -185,20 +188,53 @@ def _recusar_o_que_nao_pode_sortear(relacao, ocorrencia):
             "relação vigente.",
             409,
         )
-    if ocorrencia.observada_em <= relacao.publicada_em:
-        # A semente **posterior** ao congelamento é a inversão que organiza a feature inteira: uma
-        # ocorrência anterior significaria que o universo foi fechado sabendo o resultado.
-        raise DomainError(
-            "occurrence_precedes_freeze",
-            "A ocorrência foi observada antes de a relação ser congelada. A semente é posterior ao "
-            "compromisso do universo, e não o contrário.",
-            409,
-        )
     if ocorrencia.indisponivel:
         raise DomainError(
             "occurrence_unavailable",
             "A ocorrência registrada é a de uma indisponibilidade. A regra publicada de "
             "substituição indica qual ocorrência a substitui; observe aquela.",
+            409,
+        )
+    # **A ocorrência tem de ser a que o Edital declarou** (FR-013, FR-017). Ela chegava por
+    # identidade, e fonte e referência nunca eram comparadas com o método congelado: bastava passar
+    # outro UUID para sortear com uma extração que ninguém publicou. A regra de substituição é a
+    # única coisa que desloca essa referência, e ela é mecânica.
+    indisponiveis = set(
+        OcorrenciaDaFonte.objects.filter(
+            fonte=str((metodo or {}).get("source") or ""), indisponivel=True
+        ).values_list("referencia", flat=True)
+    )
+    if not substituicao.admissivel(metodo, ocorrencia, indisponiveis):
+        esperada = substituicao.proxima_a_observar(metodo, indisponiveis)
+        raise DomainError(
+            "occurrence_not_declared",
+            f"O Edital declara a ocorrência {esperada!r} da fonte "
+            f"{(metodo or {}).get('source')!r}, e esta é {ocorrencia.referencia!r} de "
+            f"{ocorrencia.fonte!r}. A ocorrência que fixa a semente é a declarada — ou a que a "
+            "regra publicada de substituição põe no lugar dela, e essa também não se escolhe.",
+            409,
+        )
+    if ocorrencia.ocorrida_em is None:
+        # Sem saber **quando o evento externo aconteceu**, não há como afirmar que ele é posterior
+        # ao congelamento: o instante da leitura é escolhido por quem lê (FR-016).
+        raise DomainError(
+            "occurrence_without_instant",
+            "A fonte não informou quando esta ocorrência aconteceu, e sem isso não é possível "
+            "afirmar que ela é posterior ao congelamento da relação. Uma ocorrência que o sistema "
+            "não sabe datar não semeia sorteio.",
+            409,
+        )
+    if ocorrencia.ocorrida_em <= relacao.publicada_em:
+        # A semente **posterior** ao congelamento é a inversão que organiza a feature inteira: uma
+        # ocorrência anterior significaria que o universo foi fechado sabendo o resultado.
+        #
+        # **A comparação é com `ocorrida_em`, e não com `observada_em`.** Era com a segunda, e a
+        # garantia era contornável: bastava congelar a relação depois de ver a extração na
+        # televisão e registrá-la no sistema em seguida.
+        raise DomainError(
+            "occurrence_precedes_freeze",
+            "A ocorrência aconteceu antes de a relação ser congelada. A semente é posterior ao "
+            "compromisso do universo, e não o contrário.",
             409,
         )
 
@@ -367,7 +403,14 @@ def _ocorrencia(ocorrencia_id):
     return ocorrencia
 
 
-def _anterior(edital, sorteio_anterior_id, motivo):
+def _anterior(edital, sorteio_anterior_id, motivo, relacao, ocorrencia):
+    """O sorteio que este sucede — e as cinco coerências que a sucessão exige (FR-053, FR-054).
+
+    **A verificação era só "pertence ao mesmo Edital"**, e isso deixava passar exatamente o que a
+    FR-052 proíbe: encadear um "sucessor" com a mesma relação e a mesma ocorrência é refazer o
+    sorteio com os mesmos insumos, com outro nome. Também deixava encadear atos de recortes
+    diferentes, o que produziria uma cadeia que não é cadeia de nada.
+    """
     if not sorteio_anterior_id:
         return None
     anterior = Sorteio.objects.filter(pk=identificador(sorteio_anterior_id), edital=edital).first()
@@ -379,6 +422,44 @@ def _anterior(edital, sorteio_anterior_id, motivo):
             "O sorteio sucessor exige o motivo da anulação do anterior.",
             422,
             campo="motivo",
+        )
+    if anterior.sucessores.exists():
+        raise DomainError(
+            "draw_already_superseded",
+            "Este sorteio já foi anulado por um sucessor. A cadeia é linear: anula-se o vigente.",
+            409,
+        )
+    if (
+        str(anterior.perfil_id) != str(relacao.perfil_id)
+        or str(anterior.marco_id) != str(relacao.marco_id)
+        or str(anterior.lista_id or "") != str(relacao.lista_id or "")
+    ):
+        raise DomainError(
+            "draw_succession_across_scopes",
+            "O sorteio sucessor é do mesmo recorte que o anulado. Encadear recortes diferentes "
+            "produziria uma cadeia que não descreve certame nenhum.",
+            409,
+        )
+    if str(anterior.relacao_id) == str(relacao.id):
+        raise DomainError(
+            "draw_succession_reuses_relation",
+            "O sorteio sucessor nasce de relação **nova**: reusar a relação anulada seria refazer "
+            "o sorteio sobre o mesmo universo, que é o 'executar de novo' que não existe.",
+            409,
+        )
+    if str(anterior.ocorrencia_id) == str(ocorrencia.id):
+        raise DomainError(
+            "draw_succession_reuses_occurrence",
+            "O sorteio sucessor nasce de ocorrência **nova**: reusar a semente do ato anulado "
+            "produziria a mesma ordem, com outro número de ato.",
+            409,
+        )
+    if str(getattr(relacao.relacao_anterior, "id", "")) != str(anterior.relacao_id):
+        raise DomainError(
+            "draw_succession_relation_not_linked",
+            "A relação do sucessor precisa suceder diretamente a do sorteio anulado. Uma relação "
+            "de outra cadeia deixaria o universo do sucessor sem ligação com o que se anulou.",
+            409,
         )
     return anterior
 

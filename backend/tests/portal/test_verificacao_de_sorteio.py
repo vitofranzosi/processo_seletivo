@@ -97,12 +97,14 @@ def test_a_verificacao_nao_depende_de_video_nem_de_canal_externo(sorteado):  # n
     assert RelacaoDeHabilitados.objects.filter(pk=sorteio.relacao_id).exists()
 
 
-def test_a_pagina_exibe_a_cadeia_de_anulacao(client, sorteado):  # noqa: F811
+def test_a_pagina_exibe_a_cadeia_de_anulacao(client, sorteado, api_client):  # noqa: F811
     """O anulado diz que foi anulado; o sucessor diz que sucedeu, e ambos ficam no ar (FR-055)."""
     from tests.integration.sorteios.test_anulacao import _sucessor
 
     certame, sorteio = sorteado
-    declarado = _sucessor(certame, sorteio)
+    # `_sucessor` passou a exigir o cliente da API: anular um sorteio implica a Retificação que
+    # declara a ocorrência nova, e ela é publicada pelo canal administrativo (D-017, FR-075).
+    declarado = _sucessor(certame, api_client, sorteio)
 
     anulado = client.get(reverse("portal:verificar-sorteio", args=[sorteio.id])).content.decode()
     sucessor = client.get(

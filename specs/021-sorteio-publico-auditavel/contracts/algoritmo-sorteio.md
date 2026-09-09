@@ -106,6 +106,18 @@ Vetores obrigatórios:
 | `mesma-semente-recortes-distintos` | chave | `relationHash` separa os dois |
 | `desempate-por-numero-publico` | ordenação | o desempate da regra 2 existe e é executado |
 
+## 5.1 O que o verificador precisa conferir, e a ordem
+
+1. **O resumo do manifesto.** `canonical_sha256` do objeto **sem** o campo `manifestHash`, com as
+   chaves ordenadas em **todos** os níveis. É ele que amarra o pacote ao que a instituição
+   publicou: sem esta conferência, um manifesto internamente coerente — semente, chaves e posições
+   que fecham entre si — passaria como válido sem ser o que foi divulgado.
+2. **As chaves**, recalculadas das entradas (§ 3).
+3. **A ordem**, recalculada das chaves (§ 4).
+4. **O resumo da relação**, refeito da relação publicada no portal — número, nome e protocolo. É a
+   única conferência que o manifesto sozinho não permite, e é por isso que o endereço da relação
+   viaja com ele.
+
 ## 6. O que o verificador de terceiro precisa, e nada além
 
 - o manifesto publicado (§ `manifesto.md`);

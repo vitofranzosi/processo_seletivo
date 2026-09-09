@@ -71,6 +71,7 @@ def observar_ocorrencia(
             referencia=referencia,
             defaults={
                 "material_bruto": observacao.material_bruto,
+                "ocorrida_em": observacao.ocorrida_em,
                 "observada_em": ctx.now,
                 "observada_por": actor.subject,
                 "indisponivel": observacao.indisponivel,
@@ -102,6 +103,7 @@ def _declarado(ocorrencia):
         "fonte": ocorrencia.fonte,
         "referencia": ocorrencia.referencia,
         "materialBruto": ocorrencia.material_bruto,
+        "ocorridaEm": ocorrencia.ocorrida_em.isoformat() if ocorrencia.ocorrida_em else None,
         "indisponivel": ocorrencia.indisponivel,
         "evidencia": ocorrencia.evidencia,
     }

@@ -243,6 +243,17 @@ classificação por Etapas para aferir obsolescência. Nenhum dos dois foi escri
 não vem de Etapa. **Ato de sorteio não se afere recomputando** — a sua obsolescência é a da relação
 que o originou, e não a de um cálculo que jamais o produziu.
 
+### D-017 — Anular custa uma Retificação, e isso é a garantia
+
+Descoberto na revisão da implementação, e mantido de propósito. A FR-054 exige que o sucessor nasça
+de **ocorrência nova**; a FR-013 exige que a ocorrência seja **declarada no Edital**. As duas juntas
+implicam que refazer um sorteio anulado passa por publicar qual extração o refará.
+
+Poderia parecer atrito acidental. É o contrário: sem isso, anular seria o caminho barato para
+sortear de novo até o resultado agradar — bastaria escolher outra extração no dia. Com isso, cada
+refazimento é um ato normativo publicado, com autoria, data e motivo, e o custo está exatamente
+onde deve estar.
+
 ### D-016 — A semente normalizada é do sorteio, não da ocorrência
 
 Normalizar é regra do método; observar é registrar o que a fonte publicou. Guardar a semente
@@ -520,7 +531,19 @@ Cronograma o exibe e que a Retificação o alcança.
   "método não declarado", e o sistema MUST recusar congelar relação em marco sem método declarado.
 - **FR-015**: A regra de substituição MUST ser mecânica: aplicada sem escolha humana no momento da
   execução.
-- **FR-016**: A ocorrência que fixa a semente MUST ser posterior ao congelamento da relação.
+- **FR-016**: A ocorrência que fixa a semente MUST ser posterior ao congelamento da relação, e a
+  precedência MUST ser aferida pelo instante em que **o evento externo aconteceu** — não pelo
+  instante em que o sistema o leu. Uma ocorrência cuja fonte não publique quando ela ocorreu MUST
+  NOT semear sorteio: sem esse dado, a precedência não é afirmável, e medir pela leitura permitiria
+  congelar a relação já sabendo o resultado e registrá-lo em seguida.
+- **FR-072**: O sorteio MUST usar a ocorrência que o método declara — ou aquela que a regra
+  publicada de substituição põe no lugar dela —, e MUST recusar qualquer outra, ainda que já
+  registrada. Fonte e referência MUST ser conferidas contra o método comprometido pela relação, e
+  não apenas a identidade do registro.
+- **FR-073**: A regra de substituição MUST ser executável pelo sistema, de modo que exista **uma**
+  próxima ocorrência a observar, derivada e não escolhida. Esgotadas as substitutas previstas, o
+  sistema MUST recusar prosseguir e MUST nomear o ato normativo que falta, em vez de escolher outra
+  fonte.
 - **FR-017**: O sistema MUST NOT admitir semente digitada, colada ou escolhida por qualquer ator.
 - **FR-018**: O sistema MUST NOT admitir compromisso de semente produzido pela própria instituição
   como substituto da fonte externa.
@@ -543,6 +566,10 @@ Cronograma o exibe e que a Retificação o alcança.
   número de vagas.
 - **FR-026**: O sistema MUST NOT depender de gerador pseudoaleatório de linguagem, runtime ou
   biblioteca para produzir a ordem.
+- **FR-074**: O algoritmo declarado no método MUST ser um dos que este sistema executa, e a
+  declaração MUST ser recusada na elaboração quando não for. Publicar um nome que o sistema não
+  implementa faria o manifesto anunciar um algoritmo e a ordem vir de outro — e quem reimplementasse
+  a partir do publicado concluiria, corretamente, que o sorteio não confere.
 - **FR-027**: A regra de composição da chave MUST ser publicada com detalhe suficiente para
   reimplementação independente.
 - **FR-028**: O repositório MUST publicar vetores de teste normativos com entrada, bytes canônicos,
@@ -614,7 +641,9 @@ Cronograma o exibe e que a Retificação o alcança.
 - **FR-049**: A verificação MUST recalcular a ordem a partir das entradas e informar, em linguagem
   compreensível, o que foi conferido e o que resultou.
 - **FR-050**: A verificação MUST detectar e nomear divergência entre manifesto, relação e ordem
-  publicada.
+  publicada, **inclusive a do resumo do próprio manifesto**. Um pacote internamente coerente — com
+  semente, chaves e posições que fecham entre si — mas cujo resumo não seja o publicado MUST ser
+  recusado: é ele que amarra o pacote ao que a instituição divulgou.
 - **FR-051**: A verificação MUST funcionar sem depender de gravação de vídeo ou de qualquer canal
   externo.
 
@@ -622,7 +651,14 @@ Cronograma o exibe e que a Retificação o alcança.
 
 - **FR-052**: O sistema MUST NOT oferecer "refazer" um sorteio.
 - **FR-053**: A anulação MUST constituir novo sorteio, ligado ao anterior, com motivo obrigatório.
-- **FR-054**: O sorteio sucessor MUST nascer de relação nova e ocorrência nova.
+- **FR-054**: O sorteio sucessor MUST nascer de relação nova e ocorrência nova, do **mesmo
+  recorte** do anulado, com a relação nova sucedendo diretamente a do ato anulado. O sistema MUST
+  recusar sucessor que reuse a relação ou a ocorrência do anterior, que atravesse recortes, ou que
+  suceda um ato já sucedido.
+- **FR-075**: Sendo a ocorrência conteúdo declarado do Edital, o sorteio sucessor MUST citar uma
+  ocorrência declarada — e, portanto, a anulação MUST ser acompanhada da Retificação que a declara.
+  É consequência aceita, e é a garantia mais forte desta feature: não existe anular até o resultado
+  agradar, porque cada refazimento custa um ato normativo publicado.
 - **FR-055**: O sorteio anulado MUST permanecer íntegro, legível e consultável.
 
 #### O local do evento
