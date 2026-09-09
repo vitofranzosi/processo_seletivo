@@ -37,6 +37,24 @@ def evento_do_periodo(seed, *, inicio, fim):
     }
 
 
+def evento_simples(seed, *, base, descricao, inicio, fim=None, ordem=2, status=None):
+    """Um Evento comum do cronograma — o que a supervisão lê como marco.
+
+    `status` viaja porque a divergência de `UX-002` é entre ele e a posição temporal: sem poder
+    declará-lo, a tabela-verdade de `T-005` não teria como ser montada.
+    """
+    declarado = {} if status is None else {"status": status}
+    return {
+        "id": identificador(base, seed),
+        "type": "MARCO",
+        "description": descricao,
+        "startAt": inicio.isoformat(),
+        "endAt": None if fim is None else fim.isoformat(),
+        "order": ordem,
+        **declarado,
+    }
+
+
 def rascunho_com_periodo(seed, *, inicio=None, fim=None, eventos=None, etapas=None):
     """Um Edital publicável com período de inscrições declarado.
 

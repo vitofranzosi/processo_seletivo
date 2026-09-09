@@ -1,0 +1,37 @@
+{% comment %}
+A evolução das submissões daquele Edital, em série **diária** (FR-014, D-010).
+
+FR-016 e UX-008: as barras são desenho, e por isso `aria-hidden`; os valores vivem na tabela, que
+é o equivalente textual com **os mesmos números**. Nada aqui depende de cor: sem a folha de estilo
+a página continua dizendo quantas submissões houve em cada dia.
+
+A faixa das barras rola no próprio contêiner. Um período de sessenta dias produz sessenta colunas,
+e deixá-las empurrarem a largura faria a página inteira rolar na horizontal — que é o que FR-016
+proíbe.
+{% endcomment %}
+<figure class="serie">
+  <figcaption>Submissões por dia — Edital {{ item.edital.number }}/{{ item.edital.year }}</figcaption>
+  {% if item.pico %}
+  <ul class="barras" aria-hidden="true">
+    {% for ponto in item.serie %}
+    <li><span class="barra" style="height:{% widthratio ponto.quantidade item.pico 100 %}%"></span></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  <details class="equivalente">
+    <summary>Valores da série — {{ item.serie|length }} dia{{ item.serie|length|pluralize:"s" }}</summary>
+    <div class="tabela-rolavel">
+      <table>
+        <caption>Submissões por dia no Edital {{ item.edital.number }}/{{ item.edital.year }}</caption>
+        <thead>
+          <tr><th scope="col">Dia</th><th scope="col">Submissões</th></tr>
+        </thead>
+        <tbody>
+          {% for ponto in item.serie %}
+          <tr><th scope="row">{{ ponto.dia|date:"d/m/Y" }}</th><td>{{ ponto.quantidade }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
+</figure>

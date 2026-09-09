@@ -34,7 +34,22 @@ quem navega por marcos salte de uma para a outra sem varrer a página (UX-006).
   <ul class="resumo" aria-label="Inscrições no Processo">
     <li><strong>{{ pulso.submetidas_no_processo }}</strong>inscriç{{ pulso.submetidas_no_processo|pluralize:"ão,ões" }} recebida{{ pulso.submetidas_no_processo|pluralize:"s" }} no Processo</li>
     <li><strong>{{ pulso.rascunhos_no_processo }}</strong>em preenchimento</li>
+    {% comment %}
+    FR-013: a contagem recente é do **Processo**, e soma os Editais. Ela some quando nenhum período
+    está em curso, porque ali ela é sempre zero — e zero apresentado como notícia é ruído.
+    {% endcomment %}
+    {% if pulso.ultimas_24h is not None %}
+    <li><strong>{{ pulso.ultimas_24h }}</strong>nas últimas 24 horas</li>
+    {% endif %}
   </ul>
+
+  {% comment %}
+  FR-018: a condição é **declarada**, e não deixada como um zero sem qualificação.
+  {% endcomment %}
+  {% if not pulso.algum_periodo_em_curso %}
+  <p class="aviso"><strong>Nenhum Edital com período de inscrições em curso.</strong>
+    O volume recente não é apresentado enquanto não houver prazo aberto.</p>
+  {% endif %}
 
   {% comment %}
   D-005 e UX-007: a contagem do Edital sai nomeada pelo Edital, **inclusive quando há um só**. A
@@ -67,6 +82,47 @@ quem navega por marcos salte de uma para a outra sem varrer a página (UX-006).
       </tbody>
     </table>
   </div>
+
+  {% comment %}
+  D-005: o prazo, os marcos e a série pendem do Edital, e cada bloco o nomeia. Não existe data do
+  Processo, e escolher a de um dos Editais para representá-lo seria inventá-la.
+  {% endcomment %}
+  {% for item in pulso.por_edital %}
+  <section class="cartao" aria-labelledby="edital-{{ item.edital.id }}">
+    <h3 id="edital-{{ item.edital.id }}">Edital {{ item.edital.number }}/{{ item.edital.year }}</h3>
+
+    {% if item.ausencia == "sem-cronograma" %}
+    <p class="nenhuma">Este Edital não tem cronograma vigente: não há prazo nem marco a apresentar.</p>
+    {% elif item.ausencia == "sem-periodo" %}
+    <p class="nenhuma">O cronograma deste Edital não marca nenhum Evento como período de inscrições.</p>
+    {% else %}
+    <p>
+      Inscrições de {{ item.periodo.inicio|date:"d/m/Y, H\hi" }}
+      {% if item.periodo.fim %}a {{ item.periodo.fim|date:"d/m/Y, H\hi" }}{% else %}sem término declarado{% endif %}.
+      {% if item.periodo.restante %}Encerra em {{ item.periodo.fim|timeuntil }}.{% endif %}
+    </p>
+    {% endif %}
+
+    {% if item.serie %}{% include "interface/_serie_de_inscricoes.html" %}{% endif %}
+
+    {% if item.proximos_marcos %}
+    <h4>Próximos marcos</h4>
+    <ul class="marcos">
+      {% for marco in item.proximos_marcos %}
+      {% comment %}
+      FR-023 e D-004: o estado do Evento aparece como **declaração**, e a tela não o corrige nem o
+      arbitra contra as datas. Quando os dois discordam, quem diz isso é o sinal de UX-002.
+      {% endcomment %}
+      <li>
+        <strong>{{ marco.descricao }}</strong>
+        — {{ marco.inicio|date:"d/m/Y" }}{% if marco.fim %} a {{ marco.fim|date:"d/m/Y" }}{% endif %}
+        {% if marco.declarado %}<span class="marca">declarado {{ marco.declarado_legivel }}</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </section>
+  {% endfor %}
 </section>
 
 <section aria-labelledby="atencao-titulo">

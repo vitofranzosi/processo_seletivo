@@ -333,6 +333,24 @@ fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);p
    Com um contorno a mais, e é o estado zerado que o exige: a trilha sozinha é cinza sobre branco,
    e o cartão de quem não começou ficava sem barra nenhuma — justo o que a barra existe para
    dizer. No portal a lista nunca começa vazia; aqui, começar do zero é o caso comum. */
+/* A série diária de submissões da supervisão (022, UX-008). As barras são **desenho** — o
+   template as marca `aria-hidden` —, e os valores vivem na tabela ao lado: nenhuma informação
+   depende de cor nem de imagem, e sem a folha a página continua dizendo quantas houve em cada dia.
+   A altura vem do template porque o denominador é o pico daquela série, e a folha não o conhece.
+   A faixa rola no próprio contêiner: sessenta dias produzem sessenta colunas, e deixá-las
+   empurrarem a largura faria o corpo da página rolar na horizontal. */
+.serie{margin:0 0 1rem}
+.serie figcaption{color:var(--texto-fraco);font-size:.875rem;margin:0 0 .35rem}
+.serie .barras{display:flex;align-items:flex-end;gap:2px;height:5rem;margin:0 0 .5rem;padding:0;
+  list-style:none;border-bottom:1px solid var(--borda);overflow-x:auto}
+/* `height` não é a última declaração de propósito: uma regra terminada em porcentagem seguida da
+   chave de fechamento produz, no corpo servido, a mesma dupla de caracteres que fecha uma tag de
+   template. A varredura de sintaxe não interpretada procura substring, e não sabe que ali é folha
+   de estilo — e a prosa deste comentário, que também vai para a página, evita escrevê-la. */
+.serie .barras li{height:100%;flex:1 0 .4rem;display:flex;align-items:flex-end}
+.serie .barra{display:block;width:100%;min-height:1px;background:var(--verde);
+  border-radius:2px 2px 0 0}
+.serie .equivalente summary{color:var(--verde-texto);font-size:.875rem;cursor:pointer}
 .medidor{display:grid;gap:.3rem;margin:0 0 1rem}
 .medidor .numeros{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;
   margin:0;font-size:.9375rem}

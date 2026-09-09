@@ -12,13 +12,22 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
 from django.db.models import Count
+from django.db.models.functions import TruncDate
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 from processo_seletivo.comissoes.domain.autorizacao import pode_gerir_comissao
 from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
-from processo_seletivo.inscricoes.domain.periodo import ABERTO, ENCERRADO, FUTURO
+from processo_seletivo.editais.models.cronograma import EventoCronograma
+from processo_seletivo.inscricoes.domain.periodo import (
+    ABERTO,
+    ENCERRADO,
+    FUTURO,
+    periodo_de_inscricoes,
+)
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.shared.tempo import ZONA
 
 # ---------------------------------------------------------------------------
 # 1. As formas de leitura (data-model §2)
@@ -37,6 +46,21 @@ SITUACOES_DO_PERIODO = (FUTURO, ABERTO, ENCERRADO)
 # chegou e não designou o período.
 SEM_CRONOGRAMA = "sem-cronograma"
 SEM_PERIODO = "sem-periodo"
+
+# Como o Evento **declara** o próprio estado, dito para quem lê a tela. Não é vocabulário novo:
+# são os quatro valores que `EventoCronograma.Status` já declara. Fica aqui, e não no filtro
+# compartilhado de situações, porque ali o mesmo nome significa a situação do Edital e do Processo —
+# e "Concluído" de um Evento não é "Encerrado" de um Edital.
+DECLARACOES = {
+    EventoCronograma.Status.PLANEJADO: "planejado",
+    EventoCronograma.Status.EM_ANDAMENTO: "em andamento",
+    EventoCronograma.Status.CONCLUIDO: "concluído",
+    EventoCronograma.Status.CANCELADO: "cancelado",
+}
+
+# A janela da leitura recente (`FR-013`). Vinte e quatro horas **abertas no início**: a submissão de
+# exatamente 24 h fica de fora, porque incluí-la contaria um dia e um instante.
+JANELA_RECENTE = timedelta(hours=24)
 
 
 @dataclass(frozen=True)
@@ -72,6 +96,11 @@ class Marco:
     # O `status` do Evento, apresentado como **declaração** e nunca corrigido (`FR-023`, `D-004`).
     declarado: str
 
+    @property
+    def declarado_legivel(self) -> str:
+        """O estado declarado em português, ou o próprio código quando ele não é dos quatro."""
+        return DECLARACOES.get(self.declarado, self.declarado)
+
 
 @dataclass(frozen=True)
 class PontoDaSerie:
@@ -89,6 +118,16 @@ class PulsoDoEdital:
     ausencia: str = ""
     serie: tuple[PontoDaSerie, ...] = ()
     proximos_marcos: tuple[Marco, ...] = ()
+
+    @property
+    def pico(self) -> int:
+        """O maior valor da série — denominador da altura da barra, e nada além disso.
+
+        Fica aqui, e não no template, porque `widthratio` precisa de um denominador e o template
+        não sabe percorrer a série duas vezes. Não é dado do domínio: é a escala do desenho, e por
+        isso não entra em nenhuma leitura textual.
+        """
+        return max((ponto.quantidade for ponto in self.serie), default=0)
 
 
 @dataclass(frozen=True)
@@ -225,8 +264,124 @@ def contagens_por_edital(processo):
     return contagens
 
 
+def submetidas_nas_ultimas_24h(processo, agora):
+    """A contagem recente, **no Processo** (`FR-013`).
+
+    Contagem soma, e por isso este número é do Processo enquanto a série é do Edital: a série é
+    recortada por um período, e período é do Edital (`D-005`, `FR-014`).
+    """
+    return Inscricao.objects.filter(
+        edital__processo=processo,
+        status=Inscricao.Status.SUBMETIDA,
+        submitted_at__gt=agora - JANELA_RECENTE,
+    ).count()
+
+
+# ---------------------------------------------------------------------------
+# 5. O Pulso — cronograma
+# ---------------------------------------------------------------------------
+
+
+def periodo_do_edital(conteudo, agora):
+    """`(PeriodoDeInscricoes | None, ausência)` — o prazo daquele Edital, ou o que falta dele.
+
+    A leitura é a da `009`, e não uma segunda: o Evento **marcado** é quem diz qual é o período, e
+    procurar texto em `type` seria decidir uma regra de direito lendo o que alguém digitou.
+    """
+    if conteudo is None:
+        return None, SEM_CRONOGRAMA
+    lido = periodo_de_inscricoes(conteudo, agora)
+    if not lido.designado:
+        return None, SEM_PERIODO
+    # Sem término declarado não há contagem regressiva: inventar um fechamento seria o sistema
+    # fixando prazo que o Edital não fixou.
+    restante = lido.fim - agora if lido.fim is not None and lido.estado != ENCERRADO else None
+    return (
+        PeriodoDeInscricoes(
+            inicio=lido.inicio, fim=lido.fim, situacao=lido.estado, restante=restante
+        ),
+        "",
+    )
+
+
+def marcos_do_edital(edital, conteudo, agora):
+    """Os marcos que ainda vêm, em ordem cronológica e sem os cancelados (`FR-021`).
+
+    **O marco em curso ainda é próximo.** O corte é o término, e não o início: tirar da lista o que
+    está acontecendo esconderia justamente o prazo que corre.
+
+    `CANCELADO` sai da leitura temporal pela mesma razão que sai de `UX-002` — o Evento deixou o
+    cronograma efetivo, e cobrar prazo dele seria cobrar de quem já foi cancelado.
+    """
+    marcos = []
+    for evento in eventos_do_conteudo(conteudo):
+        if evento.get("status") == EventoCronograma.Status.CANCELADO:
+            continue
+        inicio, fim = instantes_do_evento(evento)
+        termina = fim or inicio
+        if termina is None or termina <= agora:
+            continue
+        marcos.append(
+            Marco(
+                edital=edital,
+                descricao=evento.get("description") or evento.get("type") or "",
+                inicio=inicio,
+                fim=fim,
+                # Apresentado como declaração, e nunca corrigido (`FR-023`, `D-004`).
+                declarado=evento.get("status") or "",
+            )
+        )
+    marcos.sort(key=lambda marco: (marco.inicio or marco.fim, marco.descricao))
+    return tuple(marcos)
+
+
+def instantes_do_evento(evento):
+    """`(início, término)` do Evento publicado. O término é anulável, e a ausência é legítima."""
+    inicio = parse_datetime(evento.get("startAt") or "")
+    fim = parse_datetime(evento.get("endAt") or "") if evento.get("endAt") else None
+    return inicio, fim
+
+
+def serie_do_edital(edital, periodo, agora):
+    """A série **diária** de submissões daquele Edital, com os dias de zero preenchidos.
+
+    Uma agregação por Edital, pelo instante de **submissão** e por mais nada (`FR-015`). O recorte
+    é o período declarado, e o dia sem submissão entra com zero: a ausência de um dia faria a
+    leitura supor uma continuidade que não houve.
+
+    A janela termina no menor entre o fim declarado e o instante da leitura, porque um dia que
+    ainda não aconteceu não é um dia com zero — é um dia que não houve.
+    """
+    if periodo is None or periodo.inicio is None:
+        return ()
+    limite = agora if periodo.fim is None or periodo.fim > agora else periodo.fim
+    if limite < periodo.inicio:
+        return ()
+    contagens = dict(
+        Inscricao.objects.filter(
+            edital=edital,
+            status=Inscricao.Status.SUBMETIDA,
+            submitted_at__gte=periodo.inicio,
+            submitted_at__lte=limite,
+        )
+        .annotate(dia=TruncDate("submitted_at", tzinfo=ZONA))
+        .values("dia")
+        .annotate(quantidade=Count("id"))
+        .values_list("dia", "quantidade")
+    )
+    primeiro = periodo.inicio.astimezone(ZONA).date()
+    ultimo = limite.astimezone(ZONA).date()
+    dias = (primeiro + timedelta(days=passo) for passo in range((ultimo - primeiro).days + 1))
+    return tuple(PontoDaSerie(dia=dia, quantidade=contagens.get(dia, 0)) for dia in dias)
+
+
+# ---------------------------------------------------------------------------
+# 6. O Pulso inteiro
+# ---------------------------------------------------------------------------
+
+
 def pulso(processo, *, agora=None):
-    """A leitura do Processo num instante: quanto chegou, e quanto ainda é rascunho.
+    """A leitura do Processo num instante: quanto chegou, quando encerra, e o que ainda vem.
 
     O instante viaja na forma (`FR-009`) porque é ele que qualifica todo o resto: o tempo restante,
     a série e as últimas 24 horas são respostas sobre um agora, e uma página que não o declara pede
@@ -234,24 +389,35 @@ def pulso(processo, *, agora=None):
     """
     agora = agora or timezone.now()
     contagens = contagens_por_edital(processo)
-    por_edital = tuple(
-        PulsoDoEdital(
-            edital=edital,
-            submetidas=contagens.get(edital.id, {}).get(Inscricao.Status.SUBMETIDA, 0),
-            rascunhos=contagens.get(edital.id, {}).get(Inscricao.Status.RASCUNHO, 0),
+    por_edital = []
+    for edital, conteudo in leitura_dos_editais(processo):
+        periodo, ausencia = periodo_do_edital(conteudo, agora)
+        por_edital.append(
+            PulsoDoEdital(
+                edital=edital,
+                submetidas=contagens.get(edital.id, {}).get(Inscricao.Status.SUBMETIDA, 0),
+                rascunhos=contagens.get(edital.id, {}).get(Inscricao.Status.RASCUNHO, 0),
+                periodo=periodo,
+                ausencia=ausencia,
+                serie=serie_do_edital(edital, periodo, agora),
+                proximos_marcos=marcos_do_edital(edital, conteudo, agora),
+            )
         )
-        for edital, _ in leitura_dos_editais(processo)
-    )
+    por_edital = tuple(por_edital)
+    em_curso = any(item.periodo is not None and item.periodo.em_curso for item in por_edital)
     return Pulso(
         submetidas_no_processo=sum(item.submetidas for item in por_edital),
         rascunhos_no_processo=sum(item.rascunhos for item in por_edital),
-        ultimas_24h=None,
+        # Encerrados todos os períodos o número não é apresentado: fora da janela ele é sempre
+        # zero, e zero apresentado como notícia é ruído — a ausência de período já é dita.
+        ultimas_24h=submetidas_nas_ultimas_24h(processo, agora) if em_curso else None,
         por_edital=por_edital,
         lido_em=agora,
     )
 
 
 __all__ = [
+    "DECLARACOES",
     "Destino",
     "Marco",
     "Medida",
@@ -262,12 +428,18 @@ __all__ = [
     "SEM_CRONOGRAMA",
     "SEM_PERIODO",
     "Sinal",
+    "JANELA_RECENTE",
     "contagens_por_edital",
     "conteudo_ou_nada",
     "editais_do_processo",
     "etapas_do_conteudo",
     "eventos_do_conteudo",
+    "instantes_do_evento",
     "leitura_dos_editais",
+    "marcos_do_edital",
+    "periodo_do_edital",
     "pode_supervisionar",
     "pulso",
+    "serie_do_edital",
+    "submetidas_nas_ultimas_24h",
 ]
