@@ -1019,16 +1019,33 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
             }
         )
 
-    for valores in _linhas_novas(
-        dados, "linha-do-quadro", NOVA_LINHA_DO_QUADRO, opcoes_da_linha_nova(conteudo)
-    ):
+    # Uma vez, e não uma por linha: `opcoes_da_linha_nova` percorre todos os Perfis, Modalidades e
+    # Anexos do conteúdo vigente, e ele não muda dentro do laço.
+    opcoes_da_linha = opcoes_da_linha_nova(conteudo)
+    for valores in _linhas_novas(dados, "linha-do-quadro", NOVA_LINHA_DO_QUADRO, opcoes_da_linha):
         perfil_id = valores.get("profileId")
         if not perfil_id:
             raise ValueError("Perfil: a linha do quadro precisa dizer a que Perfil ela pertence.")
+        quantidade = valores.get("immediateVacancies")
+        # **Em branco não vira zero, e a recusa é a resposta certa** (FR-159, D-006). Aqui a linha
+        # só existe porque alguém clicou para acrescentá-la: engolir o vazio como `0` publicaria
+        # "este recorte tem zero vagas" — afirmação normativa que ninguém fez —, e descartá-la em
+        # silêncio faria o acréscimo pedido não acontecer sem dizer por quê.
+        #
+        # É por isso que a regra aqui **difere** da composição, onde a linha em branco é ignorada:
+        # lá as linhas são oferecidas para toda Modalidade declarada, e não declarar a quantidade
+        # de uma delas é a forma de dizer "o Edital não repartiu esta". Quem quiser mesmo dizer
+        # zero digita zero, e é o que a mensagem manda fazer.
+        if quantidade is None:
+            raise ValueError(
+                "Vagas imediatas: a linha do quadro precisa dizer quantas vagas o recorte tem. "
+                "Em branco significa quantidade não declarada, e não zero — para declarar zero, "
+                "digite 0. Para desistir do acréscimo, use 'Não acrescentar esta linha'."
+            )
         recorte = next(
             (
                 rotulo
-                for identificador, rotulo in opcoes_da_linha_nova(conteudo)["modalityId"]
+                for identificador, rotulo in opcoes_da_linha["modalityId"]
                 if identificador == valores.get("modalityId")
             ),
             "Ampla concorrência",
@@ -1043,7 +1060,7 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                     # por posição, que é o que o sistema proíbe (FR-170, FR-171).
                     "id": str(uuid4()),
                     "modalityId": valores.get("modalityId") or None,
-                    "immediateVacancies": valores.get("immediateVacancies") or 0,
+                    "immediateVacancies": quantidade,
                 },
             }
         )
@@ -1052,7 +1069,7 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                 "grupo": f"Linha do quadro {recorte}",
                 "rotulo": "Acréscimo",
                 "antes": "—",
-                "depois": f"{valores.get('immediateVacancies') or 0} vaga(s)",
+                "depois": f"{quantidade} vaga(s)",
             }
         )
 

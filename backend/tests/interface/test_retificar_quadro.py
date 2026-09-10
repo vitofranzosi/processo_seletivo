@@ -155,3 +155,87 @@ def test_a_tela_acrescenta_linha_ao_quadro_de_um_perfil_que_nao_tem(
     assert acrescimo.new_value["modalityId"] is None, "vazio é a linha geral"
     assert acrescimo.new_value["immediateVacancies"] == 1
     assert re.fullmatch(r"[0-9a-f-]{36}", acrescimo.new_value["id"]), "nasce com identidade própria"
+
+
+def test_a_linha_acrescentada_sem_quantidade_e_recusada_e_nao_vira_zero(
+    client, seletor_ligado, edital, vigente
+):
+    """Em branco é "não declarado", e nunca zero — **também** no acréscimo (FR-159, D-006).
+
+    Aqui a linha só existe porque alguém clicou para acrescentá-la, e por isso a regra difere da
+    composição: engolir o vazio como `0` publicaria "este recorte tem zero vagas", que é afirmação
+    normativa que ninguém fez; descartá-la em silêncio faria o acréscimo pedido não acontecer sem
+    dizer por quê. A resposta certa é a recusa que ensina o que fazer.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = client.post(
+        reverse("interface:retificar", args=[edital.id]),
+        {
+            **campos(vigente),
+            "novo-linha-do-quadro-4-profileId": str(PERFIL),
+            "novo-linha-do-quadro-4-modalityId": "",
+            "novo-linha-do-quadro-4-immediateVacancies": "",
+            "justificativa": "Acréscimo sem número",
+            "confirmar": "1",
+            "chave_idempotencia": "retificar-quadro-branco-01",
+        },
+    )
+
+    assert resposta.status_code == 200
+    corpo = resposta.content.decode()
+    assert "Vagas imediatas: a linha do quadro precisa dizer quantas vagas" in corpo
+    assert "digite 0" in corpo
+    assert not Retificacao.objects.exists(), "nenhum ato nasce de uma linha pela metade"
+
+
+def test_a_linha_acrescentada_com_zero_declara_zero(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """Quem quer dizer zero digita zero, e aí o zero **é** a declaração (D-006).
+
+    O Perfil deste Edital não declarava quadro e oferece uma vaga. A Retificação declara a linha
+    geral com `0` **e** reduz o total a `0` no mesmo ato — os dois movimentos que a FR-161 amarra —,
+    e o `0` atravessa como quantidade declarada, e não como ausência.
+    """
+    edital = publish_original(api_client, manager_headers, process_payload)
+    base = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    perfil_id = base.content["profiles"][0]["id"]
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = client.post(
+        reverse("interface:retificar", args=[edital.id]),
+        {
+            **campos(base, **{f"/profiles/id={perfil_id}/immediateVacancies": "0"}),
+            "novo-linha-do-quadro-4-profileId": str(perfil_id),
+            "novo-linha-do-quadro-4-modalityId": "",
+            "novo-linha-do-quadro-4-immediateVacancies": "0",
+            "justificativa": "Ampla concorrência declarada como zero",
+            "confirmar": "1",
+            "chave_idempotencia": "retificar-quadro-zero-0001",
+        },
+    )
+    assert resposta.status_code in (200, 302), resposta.content
+    assert Retificacao.objects.exists(), resposta.content.decode()[-2000:]
+
+    acrescimo = Retificacao.objects.get().alteracoes.get(operation="ADD")
+    assert acrescimo.new_value["immediateVacancies"] == 0, "zero digitado é zero declarado"
+    assert acrescimo.new_value["modalityId"] is None
+
+
+def test_desistir_do_acrescimo_nao_e_recusa(client, seletor_ligado, edital, vigente):
+    """A linha em branco por inteiro é a que a pessoa acrescentou e desistiu de preencher."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = client.post(
+        reverse("interface:retificar", args=[edital.id]),
+        {
+            **campos(vigente),
+            "novo-linha-do-quadro-4-profileId": "",
+            "novo-linha-do-quadro-4-modalityId": "",
+            "novo-linha-do-quadro-4-immediateVacancies": "",
+            "justificativa": "Nada a acrescentar",
+        },
+    )
+
+    assert resposta.status_code == 200
+    corpo = resposta.content.decode()
+    assert "a linha do quadro precisa dizer" not in corpo
