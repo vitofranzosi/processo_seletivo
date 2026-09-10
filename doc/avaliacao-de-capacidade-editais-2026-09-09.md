@@ -5,7 +5,11 @@ Releitura do repositório em `6013929` — `main` com a `021` (Sorteio público 
 lida em [`avaliacao-de-capacidade-editais-2026-09-07.md`](avaliacao-de-capacidade-editais-2026-09-07.md).
 A medição anterior é a de [`2026-09-08`](avaliacao-de-capacidade-editais-2026-09-08.md), em `2910c06`.
 
-> **Adendo de 10/09/2026 — a `023` entrou na `main` e não move nada aqui.** Enquanto este
+> **Dois adendos de 10/09/2026**, ambos no fim: a [`023`](#a-023-e-a-p-6), que não move nada aqui,
+> e o [PR #85](#o-pr-85-e-a-porta-da-ordenação), que fechou um defeito irreversível e respondeu uma
+> lacuna desta tabela. Nenhuma contagem se altera.
+>
+> **A `023` entrou na `main` e não move nada aqui.** Enquanto este
 > documento era escrito, a `023` (*criar Edital a partir de Edital anterior*) foi integrada por
 > outro PR. Conferi a única lacuna que ela poderia tocar — a **P-6** — e ela permanece aberta, por
 > recusa explícita da própria `023`. O que mudou está em [§A `023` e a P-6](#a-023-e-a-p-6), no fim.
@@ -145,7 +149,7 @@ Todas onde estavam, exceto a que a `021` retirou da lista.
 | corte por alvo e progressão | `014` | inexistente; sem spec |
 | ocupação de vagas, cotas, remanejamento, concorrência concomitante | `016` | `percentage`, `distribution` e `callRules` viajam no snapshot (`publish_edital.py:118-122`) e **ninguém os consome** fora das telas de composição (`interface/forms.py:729`) |
 | convocação, chamada, suplência | `019` | inexistente; sem spec |
-| ordem computada por lista de concorrência | — | **assimetria nova**: `emitir_ordem` (`classificacao/application/emissao.py:20`) não tem a dimensão `lista_id` que o sorteio tem. Ordem concomitante em AC e em cota existe **se vier de sorteio**, e não existe se vier de cálculo. É o que o 173 precisaria |
+| ordem computada por lista de concorrência | — | **deixou de ser assimetria e virou decisão** (PR #85, 10/09): `emitir_ordem` fixa `lista_id=None` (`classificacao/application/emissao.py:63`) com a justificativa de que *"um ato computado é sempre o de ampla concorrência — só o sorteio emite por lista"*. A necessidade do 173 continua descoberta, agora contra uma decisão declarada e não contra um descuido |
 | barema estruturado | D-4 da `015` | `Avaliacao.pontuacao` é um decimal só |
 | autopontuação vinculante | P-7 | inexistente |
 | heteroidentificação | spec própria | inexistente — nenhuma ocorrência no código |
@@ -174,9 +178,9 @@ do Perfil. A `021` acrescentou duas, e nenhuma delas é defeito:
 
 Três, nenhum deles defeito de produto:
 
-1. **A `022` tem uma tarefa em aberto**: `T055` — executar o `quickstart.md` inteiro, os cinco
-   roteiros, com o papel exato de quem preside. As outras 57 estão marcadas, incluindo o
-   `make lint check test-pg` da `T056`.
+1. ~~**A `022` tem uma tarefa em aberto**: `T055` — executar o `quickstart.md` inteiro, os cinco
+   roteiros, com o papel exato de quem preside.~~ **Fechada pelo PR #85**, no mesmo dia — ver o
+   adendo no fim.
 2. **A `021` não entrou na tabela de incrementos do `README.md`** — a `020` e a `022` entraram, e
    a `021`, que ficou entre as duas, não tinha a tarefa equivalente. *Corrigido junto com este
    documento.*
@@ -243,3 +247,51 @@ consegue perguntar quantas vagas sobraram de onde"*. As duas metades da frase co
 linhas para dizer nove coisas. A `023` reduz o custo do Edital **recorrente**, que é outro eixo:
 ela copia de um Edital para o seguinte, e não de um Perfil para os outros sessenta e nove do mesmo
 Edital. As duas economias são legítimas e nenhuma substitui a outra.
+
+---
+
+## O PR #85 e a porta da ordenação
+
+*Adendo de 10/09/2026, sobre a `main` em `5802b7e`.*
+
+A validação da `022` encontrou, e corrigiu, **um defeito irreversível no caminho que esta avaliação
+mede** — e por isso ele entra aqui, e não só no histórico da `022`.
+
+**O que acontecia.** A tela da ordenação pende do marco e oferecia **todos** os marcos
+classificatórios, inclusive os que declaram `drawMethod`. Aberta num deles, a `015` calculava a
+ordem por Etapas e oferecia *"Emitir ordem"*. O ato saía com `origem=COMPUTADO` e `lista_id` nulo —
+que é exatamente a raiz da ampla concorrência —, e dali em diante `constituir_sorteio` recusava o
+certame com `ordering_act_already_exists`.
+
+**E não havia desfazer.** A única saída daquela recusa é o caminho do sucessor, e ele exige um
+`Sorteio` que exista (`sorteios/application/sorteio.py:409`). No caminho do defeito nunca existiu
+Sorteio nenhum — existia um `AtoDeOrdenacao` computado, numa tabela append-only. **Um certame com
+cotas perdia o sorteio da ampla concorrência para sempre**, por um clique. O 57/2026 e o 28/2026
+são exatamente esse caso.
+
+**Fechado em três camadas** — o GET encaminha para a tela do sorteio, a rota que grava recusa antes
+de chamar o comando, e o comando recusa sozinho (`classificacao/application/emissao.py:175`).
+Fechar só a tela deixaria as outras duas de pé. Cinco testes novos; a suíte foi de 4354 para 4358.
+
+### O que isso muda nesta avaliação
+
+**A ressalva que este documento não chegou a escrever, e que deixou de ser necessária.** Entre a
+`021` e o PR #85, o mecanismo do sorteio existia **com uma armadilha irreversível na frente dele**.
+As contagens da §Veredito estavam certas — o mecanismo produz a ordem —, mas o percurso real tinha
+um clique capaz de destruir o certame. Não tem mais.
+
+**A "assimetria nova" da tabela de lacunas ganhou resposta, e não é a que se esperava.** O PR não
+deu a `emitir_ordem` a dimensão que faltava: ele **fixou a ausência como decisão**, gravando
+`lista_id=None` com a justificativa de que *"um ato computado é sempre o de ampla concorrência — só
+o sorteio emite por lista —, e é isso que a coluna nula afirma"*
+(`classificacao/application/emissao.py:63`). A necessidade do 173/2025 — classificação concomitante
+por lista, vinda de cálculo — continua descoberta, e agora terá de ser levantada **contra uma
+decisão declarada**, e não contra um descuido. É mais caro de mudar, e é mais honesto.
+
+**A `T055` da `022` fechou.** Era o primeiro dos resíduos registrados na §Resíduos: os cinco
+roteiros do quickstart percorridos pela interface, com o papel de quem preside. Restam o
+[`achado-anexo-sem-destinatario.md`](achado-anexo-sem-destinatario.md) e — fora daquela lista — o
+segundo caso pulado da suíte, que este PR também não explica.
+
+**Nenhuma contagem de cobertura se altera.** Nenhum Edital ficou mais publicável ou mais conduzível;
+o que mudou é que o caminho que já existia deixou de ter uma porta que destrói o certame.
