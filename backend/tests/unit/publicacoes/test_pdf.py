@@ -1632,3 +1632,23 @@ def test_a_ordem_dos_anexos_e_a_do_conteudo_publicado_e_nada_e_renumerado():
     assert texto.index("ANEXO II") < texto.index("ANEXO I —"), (
         "quem decide a ordem é o campo, e o rótulo continua dizendo o que o autor escreveu"
     )
+
+
+def test_o_documento_publicado_nao_herdou_a_redacao_do_portal():
+    """024, T-010 — a página mudou de leitura; o ato publicado, não.
+
+    A `024` reescreveu como o portal lê cadastro reserva sem vaga imediata: a oferta virou a
+    manchete, e o zero desceu para posição secundária. **O documento não segue essa mudança**, e é
+    de propósito.
+
+    Documento publicado não se reescreve. Se a tradução do PDF acompanhasse a da tela, dois
+    Editais com o mesmo conteúdo publicado — um antes e outro depois desta feature — sairiam com
+    textos diferentes, e a cadeia "dados estruturados → versão homologada → PDF publicado" deixaria
+    de ser demonstrável (Princípio II).
+
+    Não é divergência normativa: o fato é o mesmo, `UNLIMITED`, lido da mesma fonte. É a diferença
+    entre o texto do ato e a leitura de quem decide.
+    """
+    from processo_seletivo.publicacoes.infrastructure.pdf import RESERVA
+
+    assert RESERVA == {"NONE": "não há", "LIMITED": "limitado", "UNLIMITED": "ilimitado"}

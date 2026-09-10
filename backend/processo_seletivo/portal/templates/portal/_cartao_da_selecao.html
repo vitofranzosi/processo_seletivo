@@ -6,7 +6,27 @@ abrir a página — o que quem procura emprego faz uma vez, não dez.
 O cartão inteiro é alvo do toque; o link é um só, estendido pelo pseudo-elemento (L8).
 {% endcomment %}
 <li class="selecao">
-  <a class="titulo" href="{% url 'portal:selecao' selecao.edital_id %}">{{ selecao.processo_titulo }}</a>
+  {% comment %}
+  **A situação como marca própria** (024, FR-145).
+
+  Antes, saber em que situação uma seleção estava exigia interpretar em qual seção ela caiu — e a
+  seção fundia três situações numa. Pior: a seleção sem período designado não era dita em lugar
+  nenhum, porque `_periodo.html` corretamente não escreve prazo para ela, e o cartão ficava mudo.
+
+  A marca fica **no alto e sempre na mesma posição**, para que dois cartões sejam comparáveis sem
+  releitura (UX-016) — e continua valendo quando a lista deixa de ter grupos, com consulta ativa.
+
+  Cor **e** palavra: quem não distingue as cores lê a mesma coisa (UX-019).
+  {% endcomment %}
+  {% if selecao.situacao_rotulo %}
+  <p class="marca-situacao {{ selecao.periodo.estado }}">{{ selecao.situacao_rotulo }}</p>
+  {% endif %}
+  {% comment %}
+  A consulta viaja no link (024, FR-144). Sem isto, abrir uma seleção e voltar devolvia a pessoa ao
+  catálogo inteiro, e ela refazia o filtro a cada cartão que abrisse. A gestão já registrou o mesmo
+  defeito: "foi como o cartão acabou perdendo a busca que o formulário preservava".
+  {% endcomment %}
+  <a class="titulo" href="{% url 'portal:selecao' selecao.edital_id %}{% if consulta.querystring %}?{{ consulta.querystring }}{% endif %}">{{ selecao.processo_titulo }}</a>
   {% if selecao.titulo %}<p class="chamada">{{ selecao.titulo }}</p>{% endif %}
   {% comment %} O código pode não existir no conteúdo publicado, e o separador saía sozinho: a
      linha começava com "· Edital 07/2026". Ponto que não separa nada é ruído com aparência de
@@ -30,7 +50,19 @@ O cartão inteiro é alvo do toque; o link é um só, estendido pelo pseudo-elem
 
   {% include "portal/_periodo.html" with periodo=selecao.periodo dias_restantes=selecao.dias_restantes %}
 
-  {% if selecao.periodo.estado == "aberto" %}
-  <p class="convite-da-vitrine"><span class="acao-aparente">Ver vagas e inscrever-se</span></p>
-  {% endif %}
+  {% comment %}
+  **Toda seleção tem caminho visível** (024, FR-148).
+
+  O convite só aparecia na aberta, e o cartão da encerrada não oferecia ação nenhuma: quem voltava
+  para ver o resultado, ou para reler o Edital, tinha de descobrir que o título era clicável.
+  Continua sendo um alvo só — o link do título, estendido a todo o cartão pelo pseudo-elemento —, e
+  o que muda é ele parecer o que é.
+  {% endcomment %}
+  <p class="convite-da-vitrine">
+    {% if selecao.periodo.estado == "aberto" %}
+    <span class="acao-aparente">Ver vagas e inscrever-se</span>
+    {% else %}
+    <span class="acao-aparente discreta">Ver a seleção</span>
+    {% endif %}
+  </p>
 </li>

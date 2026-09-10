@@ -82,16 +82,22 @@ def test_a_chave_de_leitura_e_uma_so_para_toda_a_feature(gestor, processo_a, com
     """Duas ordenações por nome no mesmo arquivo foi o que reintroduziu o defeito do acento.
 
     A lista da Comissão e o filtro da trilha ordenam pela mesma função — se alguém criar uma
-    terceira ordenação por nome, este teste não a pega, mas a ausência de `casefold()` solto
-    no módulo, sim.
+    terceira ordenação por nome, este teste não a pega, mas uma dobra solta no módulo, sim.
+
+    **A asserção mudou de alvo na `024`, e a garantia é a mesma.** A dobra saiu daqui para
+    `shared/texto.py`, porque a busca da vitrine precisou dela e uma terceira cópia era o risco que
+    este próprio teste nomeia. O que se prende continua sendo "existe um lugar só": antes, que o
+    `casefold()` não se repetisse no módulo; agora, que ninguém dobre texto à mão em vez de chamar
+    `dobrar`.
     """
     import inspect
 
     from processo_seletivo.comissoes.application import selectors
 
     fonte = inspect.getsource(selectors)
-    assert fonte.count(".casefold()") == 1, "a normalização de nome vive em `chave_de_leitura`"
-    assert "unicodedata" in fonte
+    assert fonte.count("dobrar(") == 1, "a normalização de nome vive em `chave_de_leitura`"
+    assert ".casefold()" not in fonte, "dobra à mão de volta no módulo"
+    assert "unicodedata" not in fonte, "dobra à mão de volta no módulo"
 
 
 def test_o_filtro_da_trilha_ordena_ignorando_acento(gestor, processo_a):
