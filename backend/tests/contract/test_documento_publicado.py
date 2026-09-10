@@ -376,3 +376,62 @@ def test_a_elevacao_da_fixture_nao_trouxe_identificador_tecnico_para_o_papel():
     texto = texto_de(documento(SNAPSHOT, HASH))
 
     assert not re.search(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", texto)
+
+
+@pytest.mark.contract
+def test_o_quadro_de_vagas_sai_no_documento_com_a_linha_geral_em_primeiro_lugar():
+    """FR-169: a ordem declarada, e a ampla concorrência à frente das reservadas.
+
+    A linha geral vem primeiro **independentemente** da posição dela no array: é apresentação, e é
+    o que a D-009 autoriza. O que a ordem declarada governa é a sequência das reservadas entre si.
+    """
+    partes = texto_de(documento(SNAPSHOT, HASH)).splitlines()
+    quadro = partes.index("Tabela 1 — Quadro de vagas")
+
+    assert partes[quadro + 1 : quadro + 3] == ["Lista de concorrência", "Vagas imediatas"]
+    assert partes[quadro + 3] == "Ampla concorrência"
+    assert "Pessoas pretas, pardas e indígenas (PPP)" in partes[quadro + 3 : quadro + 9]
+    assert partes.index("Ampla concorrência") < partes.index(
+        "Pessoas pretas, pardas e indígenas (PPP)"
+    )
+    # O bloco fica **antes** da tabela de Modalidades, dentro da subseção do Perfil.
+    assert quadro < partes.index("Tabela 2 — Modalidades de concorrência")
+
+
+@pytest.mark.contract
+def test_o_perfil_sem_quadro_omite_a_secao_inteira_sem_frase_de_ausencia():
+    """SC-050: nenhum Edital publicado antes desta feature passa a afirmar zero vaga.
+
+    Uma frase do tipo "quadro não declarado" seria uma afirmação nova sobre um documento que não a
+    fez. O bloco sai inteiro — título, cabeçalho e legenda —, e nada o substitui.
+    """
+    sem_quadro = {
+        **SNAPSHOT,
+        "profiles": [{**SNAPSHOT["profiles"][0], "vacancyTable": []}],
+    }
+    texto = texto_de(documento(sem_quadro, canonical_sha256(sem_quadro)))
+
+    assert "Quadro de vagas" not in texto
+    assert "Lista de concorrência" not in texto
+    assert "não declarado" not in texto
+    # E o que não é do quadro continua lá: a omissão é do bloco, e não da subseção do Perfil.
+    assert "Modalidades de concorrência" in texto
+    assert "Vagas imediatas:" in texto, "o total do Perfil continua impresso"
+
+
+@pytest.mark.contract
+def test_a_tabela_comparativa_de_perfis_nao_e_o_quadro_de_vagas():
+    """O Princípio I proíbe o mesmo termo nomear dois conceitos (025, R-011, T001).
+
+    `_quadro_de_perfis` tabula **Perfis** — código, localidade, vagas, reserva, carga horária — e o
+    quadro de vagas reparte as vagas de um Perfil por lista de concorrência. São coisas diferentes,
+    e o documento com um Perfil só imprime apenas a segunda.
+    """
+    from processo_seletivo.publicacoes.infrastructure import pdf
+
+    assert not hasattr(pdf, "_quadro_de_vagas"), (
+        "o nome do domínio pertence ao quadro de vagas, e a função que tabula Perfis é "
+        "`_quadro_de_perfis`"
+    )
+    assert hasattr(pdf, "_quadro_de_perfis")
+    assert hasattr(pdf, "_quadro_de_vagas_do_perfil")

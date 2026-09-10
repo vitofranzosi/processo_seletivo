@@ -1286,6 +1286,59 @@ def _fatos_declarados(composicao, perfil):
             )
 
 
+def _quadro_de_vagas_do_perfil(composicao, perfil, tabelas, nomear_perfil=False):
+    """O quadro de vagas: quantas vagas cabem em cada lista de concorrência (025, FR-169).
+
+    **Bloco próprio, e não coluna nova na tabela de Modalidades.** Aquela tabela já omite coluna sem
+    valor, e acrescentar "Vagas" ali seria tentador e barato. Mas ela é tabela de **Modalidades**, e
+    a linha geral não é Modalidade nenhuma: o `AC 56` não teria onde morar, que é precisamente o
+    defeito que a D-002 recusou no modelo de dados. Repeti-lo na apresentação publicaria um quadro
+    que não fecha.
+
+    **A linha geral vem primeiro**, rotulada "Ampla concorrência", independentemente da posição
+    dela no array — é apresentação, e é o que a D-009 autoriza. As reservadas saem na ordem
+    declarada, que não é recalculada nem alfabetizada.
+
+    **Sem quadro, o bloco não sai — e nenhuma frase o substitui.** Um "quadro não declarado"
+    impresso seria uma afirmação nova sobre um Edital que não a fez, e é o que a SC-050 cobra:
+    nenhum Edital publicado antes desta feature passa a afirmar zero vaga em lugar nenhum.
+    """
+    linhas_do_quadro = perfil.get("vacancyTable") or []
+    if not linhas_do_quadro:
+        return
+    denominacoes = {
+        str(modalidade.get("id")): (
+            f"{modalidade.get('name', '')} ({modalidade.get('code', '')})"
+            if modalidade.get("code")
+            else modalidade.get("name", "")
+        )
+        for modalidade in perfil.get("competitionModalities") or []
+        if modalidade.get("id")
+    }
+    gerais = [linha for linha in linhas_do_quadro if not linha.get("modalityId")]
+    reservadas = [linha for linha in linhas_do_quadro if linha.get("modalityId")]
+    linhas = [
+        [
+            "Ampla concorrência"
+            if not linha.get("modalityId")
+            else denominacoes.get(str(linha["modalityId"]), ""),
+            str(linha.get("immediateVacancies", 0)),
+        ]
+        for linha in gerais + reservadas
+    ]
+    titulo = "Quadro de vagas"
+    if nomear_perfil:
+        titulo = f"{titulo} — {perfil.get('code', '')}"
+    with composicao.bloco():
+        _tabela(
+            composicao,
+            ["Lista de concorrência", "Vagas imediatas"],
+            linhas,
+            alinhamentos=[ESQUERDA, CENTRO],
+            legenda=tabelas.legenda(titulo),
+        )
+
+
 def _modalidades(composicao, perfil, tabelas, nomear_perfil=False):
     """As modalidades em tabela — sem perder o que a frase corrida dizia (FR-018, FR-019).
 
@@ -1455,6 +1508,7 @@ def _perfis(composicao, snapshot, secao=0, tabelas=None):
                     for requisito in requisitos:
                         composicao.escrever(f"• {requisito}", tamanho=CORPO_TEXTO, recuo=32)
             _fatos_declarados(composicao, perfil)
+            _quadro_de_vagas_do_perfil(composicao, perfil, tabelas, len(perfis) > 1)
             _modalidades(composicao, perfil, tabelas, len(perfis) > 1)
             _marcos(composicao, snapshot, perfil, len(perfis) > 1)
 

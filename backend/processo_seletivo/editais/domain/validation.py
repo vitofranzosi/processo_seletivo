@@ -94,6 +94,20 @@ PERFIL_PUBLICADO = (
     # precisa do conteúdo inteiro e não caberia numa forma de campo (015, T-009).
     Campo("declaredFacts", list, tipo_do_item=dict),
     Campo("classificationMilestones", list, tipo_do_item=dict),
+    # O quadro de vagas da `025`. Sempre presente depois do degrau 12 — vazio nos Editais
+    # anteriores —, porque duas grafias para a ausência, chave ausente e lista vazia, é o que a
+    # D-005 existe para não permitir.
+    Campo("vacancyTable", list, tipo_do_item=dict),
+)
+
+# **A forma de dentro da linha É declarada**, ao contrário da de `competitionModalities`, que é a
+# única coleção do snapshot cuja forma interna não é. A diferença é o argumento e não uma
+# inconsistência: a linha carrega um número que a conferência da FR-161 vai **somar**, e somar
+# campo não verificado é somar o que ninguém garantiu ser inteiro (025, R-013).
+LINHA_DO_QUADRO_PUBLICADA = (
+    Campo("id", str, formato="uuid"),
+    Campo("modalityId", str, admite_nulo=True, formato="uuid"),
+    Campo("immediateVacancies", int, minimo=0),
 )
 
 # A forma canônica do instante, transcrita de `EventoPublicado` no contrato: `T` maiúsculo,
@@ -1102,16 +1116,55 @@ def _coerencia_do_quadro_de_vagas(snapshot: dict) -> list[ValidationFinding]:
         tem_linha_geral = False
         for indice, linha in enumerate(linhas):
             if not isinstance(linha, dict):
+                findings.append(
+                    _impeditivo(
+                        TIPO_INVALIDO,
+                        f"O item deveria ser objeto em {base}/vacancyTable/{indice}.",
+                        f"{base}/vacancyTable/{indice}",
+                    )
+                )
                 continue
             caminho = f"{base}/vacancyTable/{_dentro(linha, indice)}"
+            # A forma de dentro da linha, campo a campo. `COLECOES_PUBLICADAS` só percorre coleções
+            # de **raiz**, e o quadro é aninhado no Perfil — é o mesmo caminho que a coerência dos
+            # marcos e a faixa do percentual já tomam.
+            findings.extend(
+                achado
+                for campo in LINHA_DO_QUADRO_PUBLICADA
+                if (achado := _violacao(campo, linha, f"{caminho}/{campo.nome}")) is not None
+            )
             quantidade = linha.get("immediateVacancies")
             if isinstance(quantidade, int) and not isinstance(quantidade, bool):
                 soma += quantidade
             modalidade_id = linha.get("modalityId")
             if modalidade_id is None:
+                # A unicidade vale **também** depois da publicação: a elaboração a garante por
+                # constraint parcial, e a constraint não alcança o conteúdo publicado. Duas
+                # Retificações sucessivas, cada uma partindo de uma versão em que só uma linha
+                # geral existia, produziriam duas — e o quadro afirmaria a ampla concorrência duas
+                # vezes, com números diferentes (FR-154, invariante 2 da §5).
+                if tem_linha_geral:
+                    findings.append(
+                        _impeditivo(
+                            "vacancy_general_row_duplicated",
+                            f"O quadro do Perfil '{rotulo}' declara mais de uma linha de ampla "
+                            "concorrência, e ela tem uma linha só.",
+                            caminho,
+                        )
+                    )
                 tem_linha_geral = True
                 continue
             modalidade_id = str(modalidade_id)
+            if modalidade_id in com_linha:
+                # Pela mesma razão da linha geral, um nível abaixo (FR-155).
+                findings.append(
+                    _impeditivo(
+                        "vacancy_modality_row_duplicated",
+                        f"O quadro do Perfil '{rotulo}' declara mais de uma linha para a mesma "
+                        "modalidade, e cada uma tem no máximo uma.",
+                        caminho,
+                    )
+                )
             if modalidade_id not in modalidades:
                 findings.append(
                     _impeditivo(

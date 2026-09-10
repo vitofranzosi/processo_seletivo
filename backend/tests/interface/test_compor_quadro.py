@@ -191,24 +191,93 @@ def test_o_quadro_gravado_volta_a_tela_com_as_quantidades(client, seletor_ligado
 # --- A recusa da soma chega ancorada na linha, com os três números (UX-023) ------------------
 
 
-def test_a_divergencia_da_soma_e_dita_em_numeros_na_submissao(client, seletor_ligado, composto):
-    """A conferência é da submissão, e não da gravação: o rascunho aceita o quadro que não fecha.
+def _achados_do_quadro(edital):
+    return [
+        item
+        for item in blocking_findings(validate_for_publication(edital_snapshot(edital)))
+        if item.code.startswith("vacancy_")
+    ]
 
-    Recusá-lo na gravação impediria salvar o trabalho pela metade, que é o que compor um Edital de
-    sete polos exige. Quem recusa é quem publica — e diz os três números (FR-161, UX-023, SC-054).
+
+def test_o_rascunho_aceita_o_quadro_que_ainda_nao_fecha(client, seletor_ligado, composto):
+    """A conferência é da submissão, e não da gravação.
+
+    Recusá-la na gravação impediria salvar o trabalho pela metade, que é o que compor um Edital de
+    sete polos exige. Quem recusa é quem publica.
     """
     identificar(client, "ana.elaboradora", ["elaborador"])
     resposta = compor(client, composto, perfil(quantidades=("55", "4", "20")))
-    assert resposta.status_code == 302, "o rascunho aceita o quadro que ainda não fecha"
+
+    assert resposta.status_code == 302, resposta.content
+
+
+def test_a_soma_que_excede_o_total_e_recusada_com_os_numeros(client, seletor_ligado, composto):
+    """O limite superior não espera pela completude, e é ele que pega o erro perigoso (FR-177).
+
+    Um `PPI 200` digitado no lugar de `20` é recusado mesmo neste Edital — o que declara uma
+    Modalidade chamada "Ampla concorrência" e que, por isso, nunca tem quadro completo.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = compor(client, composto, perfil(quantidades=("56", "4", "200")))
+    assert resposta.status_code == 302, resposta.content
 
     composto.refresh_from_db()
-    achados = [
-        item
-        for item in blocking_findings(validate_for_publication(edital_snapshot(composto)))
-        if item.code.startswith("vacancy_")
-    ]
+    achados = _achados_do_quadro(composto)
+    assert [item.code for item in achados] == ["vacancy_sum_exceeds_total"]
+    mensagem = achados[0].message
+    assert "260" in mensagem and "80" in mensagem and "excesso de 180" in mensagem
+
+
+def test_a_igualdade_nao_roda_onde_uma_modalidade_fica_sem_linha(client, seletor_ligado, composto):
+    """**A lacuna da R-006, verificada em vez de suposta.**
+
+    Seguir a FR-176 deixa a Modalidade "Ampla concorrência" sem linha reservada, e o quadro nunca
+    fica completo: a igualdade da FR-161 não roda neste formato, que a spec diz ser o normal. O
+    quadro que soma 79 contra 80 passa, e é o que este teste registra — não como conquista, mas
+    para que a lacuna não seja descoberta de novo. Fechá-la pede uma das duas saídas nomeadas na
+    `research.md`, e a escolha é do usuário.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = compor(client, composto, perfil(quantidades=("55", "4", "20")))
+    assert resposta.status_code == 302, resposta.content
+
+    composto.refresh_from_db()
+    assert _achados_do_quadro(composto) == []
+
+
+def test_a_divergencia_da_soma_e_dita_em_numeros_onde_o_quadro_fecha(
+    client, seletor_ligado, edital
+):
+    """Onde o quadro **é** completo, a diferença é dita em três números (FR-161, UX-023, SC-054).
+
+    Aqui a única Modalidade declarada tem linha, e por isso a igualdade roda: o Perfil declara 80
+    vagas e o quadro reparte 79.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    dados = {
+        "perfil-0-id": _id("2500"),
+        "perfil-0-code": "C1",
+        "perfil-0-name": "Curso 1",
+        "perfil-0-immediateVacancies": "80",
+        "perfil-0-reserveType": "NONE",
+        "modalidade-0-0-id": _id("2510", sub=1),
+        "modalidade-0-0-code": "PPI",
+        "modalidade-0-0-name": "Pretos, pardos e indígenas",
+        "linha-0-0-id": _id("2520"),
+        "linha-0-0-modalityId": "",
+        "linha-0-0-immediateVacancies": "59",
+        "linha-0-1-id": _id("2520", sub=1),
+        "linha-0-1-modalityId": _id("2510", sub=1),
+        "linha-0-1-immediateVacancies": "20",
+    }
+    resposta = compor(client, edital, dados)
+    assert resposta.status_code == 302, resposta.content
+
+    edital.refresh_from_db()
+    achados = _achados_do_quadro(edital)
     assert [item.code for item in achados] == ["vacancy_sum_mismatch"]
-    assert "79" in achados[0].message and "80" in achados[0].message
+    mensagem = achados[0].message
+    assert "79" in mensagem and "80" in mensagem and "diferença de 1" in mensagem
 
 
 # --- T074–T076 · o Edital grande (US4) -------------------------------------------------------
@@ -269,3 +338,49 @@ def test_uma_quantidade_em_branco_entre_sete_perfis_apaga_so_aquela_linha(
     do_perfil = LinhaDoQuadroDeVagas.objects.filter(perfil_id=_id("2500", indice=3))
     assert do_perfil.count() == 2
     assert not do_perfil.filter(modalidade_id=_id("2510", sub=3, indice=3)).exists()
+
+
+# --- T077/T078 · o Edital grande atravessado pelo teclado ------------------------------------
+
+
+def test_a_secao_do_quadro_de_um_perfil_e_atravessada_inteira_antes_da_do_seguinte(
+    client, seletor_ligado, edital
+):
+    """A Constituição exige teclado e prevenção de erro, e o Edital grande é onde isso pesa.
+
+    Com sete cartões, a ordem de tabulação é a ordem do documento: as quatro linhas do quadro de
+    um Perfil vêm juntas, e nenhuma delas fica alcançável só depois de atravessar o Perfil
+    seguinte. Nenhum `tabindex` positivo reordena nada — se houvesse, seria ele a decidir.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = compor(client, edital, sete_polos())
+    assert resposta.status_code == 302, resposta.content
+
+    corpo = tela(client, edital)
+    assert not re.search(r'tabindex="[1-9]', corpo)
+
+    posicoes = [
+        (int(indice), int(sub), lugar.start())
+        for lugar in re.finditer(r'name="linha-(\d+)-(\d+)-immediateVacancies"', corpo)
+        for indice, sub in [lugar.groups()]
+    ]
+    assert len(posicoes) == 28
+    # Agrupadas por Perfil: a última linha do Perfil N vem antes da primeira do Perfil N+1.
+    for perfil_atual in range(6):
+        ultimas = [lugar for indice, _, lugar in posicoes if indice == perfil_atual]
+        primeiras = [lugar for indice, _, lugar in posicoes if indice == perfil_atual + 1]
+        assert max(ultimas) < min(primeiras)
+
+
+def test_cada_linha_do_quadro_tem_rotulo_ligado_ao_proprio_campo(client, seletor_ligado, composto):
+    """Rótulo solto não é anunciado, e o campo vira "caixa de número" para quem ouve a tela."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    quadro = secao_do_quadro(tela(client, composto))
+
+    rotulados = set(re.findall(r'<label for="(linha-\d+-\d+-immediateVacancies)"', quadro))
+    campos = set(re.findall(r'id="(linha-\d+-\d+-immediateVacancies)"', quadro))
+    assert rotulados == campos
+
+    descritos = set(re.findall(r'aria-describedby="(ajuda-linha-\d+-\d+)"', quadro))
+    existentes = set(re.findall(r'<span class="oculto" id="(ajuda-linha-\d+-\d+)"', quadro))
+    assert descritos <= existentes, "todo `aria-describedby` aponta alvo que existe"

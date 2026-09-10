@@ -94,6 +94,9 @@ def test_o_perfil_reduzido_aos_campos_de_entrada_e_recusado():
         # conteúdo publicado não admite campo opcional.
         "declaredFacts",
         "classificationMilestones",
+        # A da versão 12, pela mesma razão: opcional no rascunho, obrigatória no publicado, porque
+        # duas grafias para a ausência é o que a versão canônica existe para não admitir.
+        "vacancyTable",
     }
 
 
@@ -247,3 +250,33 @@ def test_instante_com_data_hora_e_fuso_passa(valor):
     conteudo = com_violacao(conteudo_normativo(), "schedule", 0, "startAt", valor)
 
     assert impeditivos(conteudo) == []
+
+
+def test_a_linha_do_quadro_tem_a_forma_declarada_verificada():
+    """A única coleção aninhada cuja forma de dentro é conferida, e a razão é a soma (025, R-013).
+
+    `competitionModalities` não a declara; o quadro declara, porque a linha carrega um número que a
+    conferência da FR-161 vai somar — e somar campo não verificado é somar o que ninguém garantiu
+    ser inteiro.
+    """
+    conteudo = conteudo_normativo()
+    conteudo["profiles"][0]["vacancyTable"] = [
+        {"id": "não-é-uuid", "modalityId": None, "immediateVacancies": "56"}
+    ]
+
+    achados = impeditivos(conteudo)
+    codigos = {achado.code for achado in achados}
+
+    assert v.FORMATO_INVALIDO in codigos, "o `id` da linha é uuid"
+    assert v.TIPO_INVALIDO in codigos, "a quantidade é inteiro, e não texto"
+    assert all(achado.path.startswith("/profiles/id=") for achado in achados)
+
+
+def test_a_linha_geral_do_quadro_admite_modalidade_nula():
+    """`NULL` na modalidade **é** a ampla concorrência, e não campo faltando (D-002, D-004)."""
+    conteudo = conteudo_normativo()
+    conteudo["profiles"][0]["vacancyTable"] = [
+        {"id": P1, "modalityId": None, "immediateVacancies": 1}
+    ]
+
+    assert [a for a in impeditivos(conteudo) if "vacancyTable" in a.path] == []

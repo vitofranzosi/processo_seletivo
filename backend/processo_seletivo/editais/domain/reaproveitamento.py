@@ -61,6 +61,12 @@ def mapa_de_identidades(conteudo, *, nova=uuid.uuid4) -> dict[str, str]:
             registrar(regra.get("id"))
         for fato in perfil.get("declaredFacts") or []:
             registrar(fato.get("id"))
+        # Passo 1 de 2 da linha do quadro (025, R-012). O `modalityId` dela **não** é registrado
+        # aqui: ele referencia a Modalidade, cuja identidade já foi mapeada acima — registrá-lo
+        # daria à referência uma identidade própria, e a linha copiada passaria a apontar uma
+        # Modalidade que não existe.
+        for linha in perfil.get("vacancyTable") or []:
+            registrar(linha.get("id"))
         for marco in perfil.get("classificationMilestones") or []:
             registrar(marco.get("id"))
             for criterio in marco.get("tiebreakers") or []:
@@ -112,6 +118,17 @@ def remapear(conteudo, mapa):
         novo_perfil["declaredFacts"] = [
             {**fato, "id": trocar(fato.get("id"), "declaredFacts[].id")}
             for fato in perfil.get("declaredFacts") or []
+        ]
+        # Passo 2 de 2, e é o que quebra em silêncio se for esquecido: sem trocar o `modalityId`,
+        # a linha copiada continuaria apontando a Modalidade do Edital **anterior**, e nada
+        # acusaria. `None` atravessa intocado — a linha geral não referencia nada (025, R-012).
+        novo_perfil["vacancyTable"] = [
+            {
+                **linha,
+                "id": trocar(linha.get("id"), "vacancyTable[].id"),
+                "modalityId": trocar(linha.get("modalityId"), "vacancyTable[].modalityId"),
+            }
+            for linha in perfil.get("vacancyTable") or []
         ]
         marcos = []
         for marco in perfil.get("classificationMilestones") or []:

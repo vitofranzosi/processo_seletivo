@@ -98,7 +98,7 @@ def _sections(edital: Edital) -> list[dict]:
 def edital_snapshot(edital: Edital) -> dict:
     profiles = []
     for profile in edital.perfis.prefetch_related(
-        "modalidades__regra_normativa", "fatos", "marcos__criterios"
+        "modalidades__regra_normativa", "fatos", "marcos__criterios", "quadro_de_vagas"
     ).order_by("code"):
         modalities = []
         for modality in profile.modalidades.order_by("code"):
@@ -166,6 +166,26 @@ def edital_snapshot(edital: Edital) -> dict:
             }
             for marco in sorted(profile.marcos.all(), key=lambda item: item.code)
         ]
+        # O quadro de vagas deste Perfil (025, D-002). Ordenado por `("ordem", "id")` pela mesma
+        # razão das Modalidades e dos marcos: a ordem do snapshot não pode depender da ordem de
+        # inserção, ou dois snapshots do mesmo conteúdo teriam bytes diferentes (FR-168).
+        #
+        # `ordem` **não** é publicada: a D-009 diz que a ordem do quadro é apresentação e não
+        # norma, e publicá-la faria o quadro afirmar uma precedência entre listas que é de outra
+        # feature. O que viaja é a posição no array.
+        #
+        # `modalityId` nulo **é** a linha geral, a da ampla concorrência — a mesma grafia que
+        # `Inscricao.modality_id` e `AtoDeOrdenacao.lista_id` já praticam.
+        vacancy_table = [
+            {
+                "id": str(linha.id),
+                "modalityId": str(linha.modalidade_id) if linha.modalidade_id else None,
+                "immediateVacancies": linha.vagas_imediatas,
+            }
+            for linha in sorted(
+                profile.quadro_de_vagas.all(), key=lambda item: (item.ordem, str(item.id))
+            )
+        ]
         profiles.append(
             {
                 "id": str(profile.id),
@@ -189,6 +209,7 @@ def edital_snapshot(edital: Edital) -> dict:
                 "competitionModalities": modalities,
                 "declaredFacts": declared_facts,
                 "classificationMilestones": milestones,
+                "vacancyTable": vacancy_table,
             }
         )
     schedule = []

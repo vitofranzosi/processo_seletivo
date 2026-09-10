@@ -1533,6 +1533,38 @@ def fragmento_retificacao_anexo(request):
 
 
 @require_http_methods(["GET"])
+def fragmento_retificacao_linha_do_quadro(request, edital_id):
+    """Uma linha do quadro a acrescentar por Retificação (025, FR-171).
+
+    A rota é escopada ao Edital porque os dois campos de escolha — o Perfil e a lista de
+    concorrência — saem do **conteúdo vigente daquele** Edital, e não de um catálogo global. É o
+    mesmo motivo pelo qual o fragmento da Etapa é escopado ao Edital.
+
+    Sem este caminho, nenhum Edital já publicado poderia ganhar quadro: todos foram publicados
+    antes de a capacidade existir, e alterar linha existente não alcança quem não tem linha alguma.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital = obter_edital(actor=ator, edital_id=edital_id)
+    if edital is None:
+        raise Http404
+    base = _base_da_composicao(edital, None)
+    if base is None:
+        raise Http404
+    opcoes = retificacao_ui.opcoes_da_linha_nova(conteudo_base(base))
+    campos = [
+        {**campo, "opcoes": tuple(opcoes.get(campo["chave"], ()))}
+        for campo in _campos_de(retificacao_ui.NOVA_LINHA_DO_QUADRO)
+    ]
+    return render(
+        request,
+        "interface/_retificacao_linha_do_quadro.html",
+        {"indice": _indice_de_linha(request), "campos": campos},
+    )
+
+
+@require_http_methods(["GET"])
 def fragmento_remover(request):
     """A linha removida é substituída por nada; o conteúdo digitado some junto."""
     return HttpResponse("")
@@ -2040,6 +2072,15 @@ def retificar(request, edital_id):
             ),
             "novos_anexos": retificacao_ui.novas_para_formulario(
                 dados or {}, "anexo", retificacao_ui.NOVO_ANEXO
+            ),
+            # As linhas do quadro acrescentadas voltam com as **opções** junto: os dois campos de
+            # escolha vêm do conteúdo vigente, e reexibi-los sem elas devolveria dois `select`
+            # vazios — a pessoa leria "vai acrescentar" e confirmaria uma linha sem Perfil.
+            "novas_linhas_do_quadro": retificacao_ui.novas_para_formulario(
+                dados or {},
+                "linha-do-quadro",
+                retificacao_ui.NOVA_LINHA_DO_QUADRO,
+                opcoes=retificacao_ui.opcoes_da_linha_nova(projecao),
             ),
             "resumo": resumo,
             "erros": erros,
