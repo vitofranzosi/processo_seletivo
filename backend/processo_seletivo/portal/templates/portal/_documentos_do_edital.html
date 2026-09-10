@@ -1,0 +1,61 @@
+{% comment %}
+**Uma lista só, datada** — o Edital de abertura, cada Retificação e os Anexos (024, FR-129 a FR-132).
+
+A primeira versão espalhava documento por três seções: o Edital no topo, "Anexos do Edital" no meio
+e "Histórico de publicações" no fim, este último com três cartões grandes e o mesmo rótulo de 45
+caracteres repetido em cada um. Um terço da página virou registro de auditoria, numa tela que existe
+para responder "tem vaga para mim?".
+
+Reunidos, viram o que o candidato já reconhece de qualquer portal de concurso: uma lista de arquivos
+com data, do mais novo para o mais antigo. A justificativa e o que mudou continuam ali, dentro de um
+`<details>` — quem quer conferir abre; quem quer o arquivo pega o arquivo.
+
+Nada de conteúdo se perdeu na compressão: mudou quanto espaço ele ocupa antes de alguém pedir.
+{% endcomment %}
+<ul class="documentos-do-edital">
+  {% for ato in atos_recentes %}
+  <li class="documento-publicado {{ ato.natureza }}">
+    <a href="{% url 'public-document' ato.documento_id %}">
+      {% if ato.natureza == "retificacao" %}Retificação{% else %}Edital de abertura{% endif %}
+      <span class="quando">{{ ato.publicado_em|date:"d/m/Y" }}</span>
+    </a>
+    {% comment %}
+    A vigência só é escrita quando **difere** da publicação. Repetir a mesma data duas vezes
+    ensinaria que publicar e entrar em vigor são a mesma coisa — e o caso em que diferem é
+    justamente o que alguém precisa notar: a Retificação assinada hoje que só vale daqui a duas
+    semanas.
+    {% endcomment %}
+    {% if ato.vigente_desde and ato.vigente_desde|date:"dmY" != ato.publicado_em|date:"dmY" %}
+    <span class="vigencia">vigente desde {{ ato.vigente_desde|date:"d/m/Y" }}</span>
+    {% endif %}
+
+    {% if ato.justificativa or ato.alteracoes %}
+    <details class="o-que-mudou">
+      <summary>O que mudou{% if ato.alteracoes %} ({{ ato.alteracoes|length }}){% endif %}</summary>
+      {% if ato.justificativa %}<p class="justificativa">{{ ato.justificativa }}</p>{% endif %}
+      {% if ato.alteracoes %}
+      <ul class="alteracoes">
+        {% for alteracao in ato.alteracoes %}
+        <li><span class="operacao {{ alteracao.operacao }}">{{ alteracao.operacao }}</span>
+          <span class="onde">{{ alteracao.onde }}</span>{% if alteracao.campo %} — {{ alteracao.campo }}{% endif %}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </details>
+    {% endif %}
+  </li>
+  {% endfor %}
+
+  {% comment %}
+  Os Anexos entram na mesma lista, e não em seção própria: para quem lê, são a mesma coisa —
+  arquivos deste Edital. O que os distingue é que **baixam** em vez de abrir, e isso continua dito
+  no rótulo: dois links de aparência igual e comportamento diferente é o que faz alguém clicar
+  esperando ler e receber um arquivo (FR-039, FR-039a).
+  {% endcomment %}
+  {% for anexo in anexos %}
+  <li class="documento-publicado anexo">
+    <a href="{% url 'public-anexo' anexo.artefato_id %}" download>{{ anexo.rotulo }}
+      <span class="quando">(PDF, baixar)</span></a>
+  </li>
+  {% endfor %}
+</ul>

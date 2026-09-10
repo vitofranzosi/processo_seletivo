@@ -79,8 +79,11 @@ def test_o_ciclo_dos_sete_passos(client, api_client, seletor_ligado, selecao_do_
     artefato_de_entao = autodeclaracao.artefato_id
 
     # Passo 1 — o Edital publicado cita os três formulários, e a página pública os entrega.
+    # A seção passou a se chamar "Edital e documentos" na `024`, que reuniu abertura, Retificações
+    # e Anexos numa lista só: o que o passo prova continua sendo que os formulários chegam ao
+    # público pela página, e não em qual bloco eles estão.
     publica = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
-    assert "Anexos do Edital" in publica
+    assert "Edital e documentos" in publica
     for rotulo in FORMULARIOS:
         assert rotulo in publica
     assert client.get(reverse("public-anexo", args=[artefato_de_entao])).status_code == 200

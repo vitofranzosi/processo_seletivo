@@ -1,6 +1,20 @@
 {% extends "interface/compor_base.html" %}
 {% block etapa_titulo %}Identificação{% endblock %}
 {% block etapa %}
+{% comment %}
+Partir de um Edital anterior (023, FR-001). Só aparece com o rascunho vazio e com permissão de
+elaborar: oferecer o que se vai recusar é pior do que não oferecer, e depois da primeira gravação
+`replace_draft` apagaria o que não fosse reenviado.
+{% endcomment %}
+{% if pode_reaproveitar %}
+<section aria-labelledby="reaproveitar-titulo" class="cartao">
+  <h2 id="reaproveitar-titulo">Este Edital está vazio</h2>
+  <p class="ajuda">Se a oferta é parecida com uma anterior, você pode partir do Edital dela em vez de
+    preencher tudo de novo. Reaproveite o que já foi elaborado e atualize o que mudou.</p>
+  <p><a class="botao" href="{% url 'interface:reaproveitar' edital.id %}">Partir de um Edital anterior</a></p>
+</section>
+{% endif %}
+
 <form method="post" id="formulario">
   {% csrf_token %}
   <section aria-labelledby="ident-titulo" class="cartao">

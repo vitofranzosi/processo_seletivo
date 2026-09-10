@@ -168,3 +168,59 @@ def test_nenhuma_acao_da_010_depende_de_script():
         for acao in re.findall(r"<form([^>]*)>", corpo):
             if "method" in acao:
                 assert 'method="post"' in acao, f"{nome}: {acao}"
+
+
+# ---------------------------------------------------------------------------
+# O que a 024 acrescentou ao canal público: o Cronograma antes da identificação.
+# ---------------------------------------------------------------------------
+
+
+def test_a_situacao_do_evento_nao_depende_so_de_cor():
+    """UX-019 — e o defeito que ela corrige existia antes desta feature.
+
+    A situação do Evento estava dita por peso de fonte e cor de borda. Peso não é cor, então a
+    rubrica passava; mas nada disso chega a quem lê com leitor de tela, e o cronograma era mudo
+    sobre qual evento é o de hoje. `aria-current="step"` e o rótulo em texto dizem, cada um ao seu
+    público, o que o desenho dizia sozinho — é a mesma solução que o `_etapas.html` já usava.
+    """
+    cronograma = (PORTAL / "_cronograma.html").read_text()
+
+    assert 'aria-current="step"' in cronograma
+    assert "Acontecendo agora" in cronograma, "o estado corrente precisa existir em texto"
+    assert "✓" in cronograma, "o concluído se distingue por símbolo, e não só por cor de borda"
+
+
+def test_o_cronograma_publico_e_uma_secao_anunciada():
+    """A seção tem nome acessível, e o nome não é um parágrafo em negrito.
+
+    `aria-labelledby` apontando o próprio `<h2>` é o que faz a região aparecer na navegação por
+    marcos do leitor de tela — sem isso, o cronograma é um `<ul>` solto no meio da página.
+    """
+    selecao = (PORTAL / "selecao.html").read_text()
+
+    assert 'aria-labelledby="cronograma-titulo"' in selecao
+    assert 'id="cronograma-titulo"' in selecao
+
+
+def test_a_consulta_da_vitrine_e_uma_regiao_de_busca_com_campos_rotulados():
+    """UX-017, UX-018 — e sem depender de script.
+
+    `role="search"` faz a região aparecer na navegação por marcos; o `<label for>` de cada campo é
+    o que faz o leitor de tela anunciar o que se digita ali. E o formulário é `GET` puro: a página
+    filtra sem o navegador executar nada.
+    """
+    consulta = (PORTAL / "_consulta.html").read_text()
+
+    assert 'role="search"' in consulta
+    assert 'method="get"' in consulta
+    for campo in ("busca", "unidade", "situacao", "perfil", "ordem"):
+        assert f'for="{campo}"' in consulta, f"o campo {campo} não tem rótulo ligado"
+        assert f'id="{campo}"' in consulta
+    assert "hx-" not in consulta and "onclick" not in consulta
+
+
+def test_a_contagem_de_resultados_e_anunciada():
+    """A resposta a "achou?" precisa chegar a quem não vê a lista mudar."""
+    vitrine = (PORTAL / "vitrine.html").read_text()
+
+    assert 'role="status"' in vitrine
