@@ -6,6 +6,7 @@ fronteira de segurança (FR-002).
 """
 
 import hashlib
+import re
 import secrets
 from uuid import UUID, uuid4
 
@@ -1590,10 +1591,31 @@ def fragmento_retificacao_linha_do_quadro(request, edital_id):
     )
 
 
+# O que `junto=` aceita: um `id` de elemento, e nada que possa virar marcação. O valor é escrito
+# num atributo `id` do fragmento devolvido, e o autoescape do template já o protegeria — mas a
+# recusa aqui é o que garante que só saia daqui um seletor plausível, e não texto qualquer.
+ALVO_DE_REMOCAO = re.compile(r"^[A-Za-z][A-Za-z0-9-]{0,80}$")
+
+
 @require_http_methods(["GET"])
 def fragmento_remover(request):
-    """A linha removida é substituída por nada; o conteúdo digitado some junto."""
-    return HttpResponse("")
+    """A linha removida é substituída por nada; o conteúdo digitado some junto.
+
+    `junto=` pede que **outro** elemento saia no mesmo ato, pelo `id` dele. Existe porque nem toda
+    linha do formulário mora inteira dentro do próprio `fieldset`: a Modalidade de Concorrência tem
+    uma linha correspondente na seção do quadro de vagas, e `closest fieldset` não a alcança.
+    Deixá-la para trás fazia o salvamento seguinte ser recusado por uma referência a uma Modalidade
+    que a pessoa acabara de remover — e que já não aparecia em lugar nenhum da tela (025).
+
+    Sem o parâmetro, o comportamento é o de sempre: devolver o vazio que apaga o alvo do
+    `hx-target`.
+    """
+    alvo = request.GET.get("junto", "")
+    if not alvo:
+        return HttpResponse("")
+    if not ALVO_DE_REMOCAO.match(alvo):
+        raise Http404
+    return render(request, "interface/_remover_junto.html", {"alvo": alvo})
 
 
 ETAPAS = [

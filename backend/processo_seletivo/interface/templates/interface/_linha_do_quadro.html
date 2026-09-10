@@ -1,4 +1,4 @@
-{% load interface_extras %}<div class="linha-do-quadro">
+{% load interface_extras %}<div class="linha-do-quadro"{% if linha.modalityId %} id="quadro-de-{{ linha.modalityId }}"{% endif %}>
   {% comment %}
   A identidade viaja oculta, como a da Modalidade: a gravação preserva o `id` recebido, e linha que
   nascesse sem identidade não teria o que preservar — é por esse `id` que a Retificação alcança
@@ -6,6 +6,12 @@
 
   `modalityId` vazio **é** a linha geral, a da ampla concorrência, e não uma referência faltando: o
   recorte sem lista de concorrência não filtra por Modalidade nenhuma.
+
+  **O `id` do elemento é o da Modalidade, e não o da linha**, porque quem precisa achá-la no DOM é
+  o botão que remove a Modalidade — e ele conhece a Modalidade, não a linha. Os dois `sub` não
+  servem para isso: na carga da página o da Modalidade conta a partir das Modalidades e o da linha
+  a partir do quadro, que tem a geral na frente, de modo que eles nunca coincidem. A linha geral
+  não recebe `id` porque não há botão que a remova: ela não pertence a Modalidade nenhuma.
   {% endcomment %}
   <input type="hidden" name="linha-{{ indice }}-{{ sub }}-id" value="{{ linha.id }}">
   <input type="hidden" name="linha-{{ indice }}-{{ sub }}-modalityId"

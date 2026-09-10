@@ -423,8 +423,9 @@ def test_a_modalidade_acrescentada_traz_a_linha_do_quadro_com_a_forma_dela(
 
     assert 'hx-swap-oob="beforeend:#quadro-0"' in corpo
     envelope = corpo[corpo.index("hx-swap-oob") :]
-    assert '<div class="linha-do-quadro">' in envelope, (
-        "o invólucro que desenha a linha vai **dentro** do envelope fora de banda"
+    assert '<div class="linha-do-quadro" id="quadro-de-' in envelope, (
+        "o invólucro que desenha a linha vai **dentro** do envelope fora de banda, e traz o `id` "
+        "pelo qual o botão da Modalidade a remove junto"
     )
     assert 'name="linha-0-9-immediateVacancies"' in envelope
     assert re.search(r'name="linha-0-9-modalityId"\s+value="[0-9a-f-]{36}"', envelope), (
@@ -460,3 +461,60 @@ def test_a_recusa_da_segunda_linha_geral_devolve_o_que_foi_digitado(
     assert re.search(
         r'<span class="recusa" role="alert" id="recusa-linha-0-\d+-modalityId"', quadro
     )
+
+
+# --- Remover a Modalidade leva a linha do quadro junto ---------------------------------------
+
+
+def test_o_botao_da_modalidade_pede_a_remocao_da_linha_do_quadro_junto(
+    client, seletor_ligado, composto
+):
+    """A linha do quadro vive noutra seção, e `closest fieldset` não a alcança.
+
+    Sem o pedido explícito, ela ficava para trás apontando uma Modalidade que o formulário já não
+    envia — e o salvamento seguinte era recusado com uma mensagem sobre uma Modalidade que a pessoa
+    acabara de remover e que não aparecia mais em lugar nenhum.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo = tela(client, composto)
+
+    pcd = _id("2510", sub=2)
+    assert f'id="quadro-de-{pcd}"' in corpo, "a linha reservada é achável pelo id da Modalidade"
+    assert f"?junto=quadro-de-{pcd}" in corpo, "e o botão da Modalidade pede a remoção dela junto"
+
+    # A linha geral não recebe `id`: não há botão que a remova, porque ela não é de Modalidade
+    # nenhuma. Só as três reservadas são endereçáveis assim.
+    assert corpo.count('class="linha-do-quadro" id="quadro-de-') == 3
+
+
+def test_o_fragmento_de_remocao_devolve_o_pedido_de_apagar_o_outro_elemento(client, seletor_ligado):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    alvo = f"quadro-de-{_id('2510', sub=2)}"
+
+    resposta = client.get(reverse("interface:fragmento-remover"), {"junto": alvo})
+
+    assert resposta.status_code == 200
+    corpo = resposta.content.decode()
+    assert f'id="{alvo}"' in corpo
+    assert 'hx-swap-oob="delete"' in corpo
+
+
+def test_sem_o_parametro_o_fragmento_de_remocao_continua_devolvendo_o_vazio(client, seletor_ligado):
+    """As demais linhas do assistente não mudaram: o pedido é opcional."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.get(reverse("interface:fragmento-remover"))
+
+    assert resposta.status_code == 200
+    assert resposta.content == b""
+
+
+def test_o_alvo_da_remocao_junto_nao_aceita_marcacao(client, seletor_ligado):
+    """O valor é escrito num atributo `id`; só sai daqui um seletor plausível."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.get(
+        reverse("interface:fragmento-remover"), {"junto": '"><script>alert(1)</script>'}
+    )
+
+    assert resposta.status_code == 404

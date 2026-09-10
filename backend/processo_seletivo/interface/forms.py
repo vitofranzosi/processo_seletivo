@@ -601,7 +601,11 @@ def perfis_do_edital(edital):
             "modalidades__regra_normativa",
             "marcos__criterios",
             "fatos",
-            "quadro_de_vagas__modalidade",
+            # `quadro_de_vagas`, e **não** `quadro_de_vagas__modalidade`: o rótulo da linha vem de
+            # `perfil.modalidades`, e daqui só saem `modalidade_id` e a quantidade — que já estão
+            # na própria linha. Descer até a Modalidade era uma consulta a mais por página, para
+            # carregar objetos que nenhuma linha deste arquivo lê.
+            "quadro_de_vagas",
         ).order_by("code")
     ]
 

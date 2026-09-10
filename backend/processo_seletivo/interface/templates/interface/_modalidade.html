@@ -49,9 +49,16 @@
         fundamento: sem ela, a norma aplicada não fica identificada.</span>
     </p>
   </div>
+  {% comment %}
+  **A linha do quadro sai junto, e o `junto=` é o que a faz sair.** Ela vive noutra seção — o quadro
+  é seção do cartão do Perfil, e não parte da Modalidade —, então `closest fieldset` não a alcança.
+  Sem isto ela ficava para trás apontando uma Modalidade que o formulário já não envia, e o
+  salvamento seguinte era recusado com uma mensagem sobre uma Modalidade que a pessoa acabara de
+  remover e que não aparecia mais em lugar nenhum.
+  {% endcomment %}
   <p class="remover">
     <button type="button" class="acao perigo"
-            hx-get="{% url 'interface:fragmento-remover' %}"
+            hx-get="{% url 'interface:fragmento-remover' %}?junto=quadro-de-{{ modalidade.id }}"
             hx-target="closest fieldset" hx-swap="outerHTML">Remover esta Modalidade</button>
   </p>
 </fieldset>

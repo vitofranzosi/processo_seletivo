@@ -1394,7 +1394,16 @@ def _quadro_de_perfis(composicao, perfis, tabelas):
     `Perfil`, `Localidade`, `Vagas`, `Cadastro reserva`, `Carga horária` —, e não a repartição das
     vagas por lista de concorrência, que é o que o domínio chama de quadro de vagas e que a `025`
     passou a publicar em `_quadro_de_vagas_do_perfil`. O Princípio I proíbe o mesmo termo nomear
-    dois conceitos; a renomeação é de nome só, e o documento sai byte a byte o mesmo.
+    dois conceitos.
+
+    **A renomeação da função não mudou o documento; a da legenda mudou, de propósito.** Trocar o
+    nome de uma função privada não altera byte nenhum do que se publica — mas quem lê o Edital lê a
+    legenda, e ela continuava dizendo "Quadro de vagas" algumas linhas acima da tabela que agora
+    tem esse nome. Ela passou a dizer "Perfis de vaga", e o documento mudou aí.
+
+    **A fixture de bytes não pega essa mudança**, e é bom saber por quê antes de confiar nela: ela
+    tem um Perfil só, e esta tabela só é composta com mais de um. Quem mexer aqui confere o
+    resultado por `test_as_duas_tabelas_de_vagas_nao_se_chamam_a_mesma_coisa`, que compõe dois.
     """
     linhas = []
     for perfil in perfis:
