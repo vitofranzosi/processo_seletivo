@@ -1,0 +1,186 @@
+"""A jornada de partir de um Edital anterior, pela tela (023, US1 e US3).
+
+O canal é a interface administrativa, que é o de quem elabora. Os dois papéis aparecem separados de
+propósito: quem cria o Processo é o **Gestor**, quem escolhe a origem é o **Elaborador**. Fazer os
+dois passos com a mesma identidade esconderia justamente a decisão que `D-001` tomou.
+"""
+
+import pytest
+from django.urls import reverse
+
+from processo_seletivo.processos.models import Edital
+from tests.fixtures.publicacao import retify
+from tests.integration.editais.test_reaproveitamento import PERFIL, rascunho_rico
+from tests.interface.conftest import identificar
+
+pytestmark = [pytest.mark.django_db, pytest.mark.usefixtures("seletor_ligado")]
+
+
+@pytest.fixture
+def origem(api_client, manager_headers, process_payload):
+    from tests.fixtures.publicacao import publish_original
+
+    def vincular(edital):
+        edital.documentos_exigidos.filter(key="diploma").update(
+            anexo=edital.anexos.order_by("order").first()
+        )
+
+    return publish_original(
+        api_client,
+        manager_headers,
+        process_payload,
+        draft=rascunho_rico(),
+        anexos=1,
+        antes_de_submeter=vincular,
+    )
+
+
+@pytest.fixture
+def destino(api_client, manager_headers, origem):
+    criado = api_client.post(
+        "/api/v1/admin/processos",
+        {
+            "institutionalCode": "PS-2027-001",
+            "title": "Processo Seletivo 2027",
+            "firstEdital": {"number": "77", "year": 2027, "title": "Edital da nova oferta"},
+        },
+        format="json",
+        **{**manager_headers, "HTTP_IDEMPOTENCY_KEY": "destino-key-0001"},
+    )
+    assert criado.status_code == 201, criado.content
+    return Edital.objects.get(processo_id=criado.json()["id"])
+
+
+def composicao(edital, etapa="identificacao"):
+    return reverse("interface:compor-etapa", args=[edital.id, etapa])
+
+
+def escolher(client, destino, origem):
+    pagina = client.get(reverse("interface:reaproveitar", args=[destino.id]))
+    assert pagina.status_code == 200
+    corpo = pagina.content.decode()
+    import re
+
+    chave = re.search(r'name="chave_idempotencia" value="([^"]+)"', corpo).group(1)
+    return client.post(
+        reverse("interface:reaproveitar", args=[destino.id]),
+        {"origem": str(origem.id), "chave_idempotencia": chave},
+    )
+
+
+# ---------------------------------------------------------------------------
+# T016 — a jornada e a afordância
+# ---------------------------------------------------------------------------
+
+
+def test_o_cartao_aparece_no_edital_vazio(client, destino):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = client.get(composicao(destino)).content.decode()
+
+    assert "Partir de um Edital anterior" in corpo
+    assert reverse("interface:reaproveitar", args=[destino.id]) in corpo
+
+
+def test_a_escolha_lista_a_origem_elegivel_e_a_copia_preenche_o_assistente(client, destino, origem):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    pagina = client.get(reverse("interface:reaproveitar", args=[destino.id])).content.decode()
+    assert f"Edital {origem.number}/{origem.year}" in pagina
+    assert "Usar como base" in pagina
+
+    resposta = escolher(client, destino, origem)
+
+    assert resposta.status_code == 302
+    assert resposta["Location"].startswith(composicao(destino))
+    destino.refresh_from_db()
+    assert destino.perfis.count() == 1
+    assert destino.anexos.count() == 1
+    # E o conteúdo chega nas etapas do assistente, que é o que a pessoa precisa ver.
+    perfis = client.get(composicao(destino, "perfis")).content.decode()
+    assert "Designer Educacional" in perfis
+    cronograma = client.get(composicao(destino, "cronograma")).content.decode()
+    assert "Período de inscrições" in cronograma
+
+
+def test_o_cartao_desaparece_depois_da_copia(client, destino, origem):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    escolher(client, destino, origem)
+
+    corpo = client.get(composicao(destino)).content.decode()
+
+    assert "Partir de um Edital anterior" not in corpo
+
+
+def test_a_tela_recusa_rascunho_que_ja_tem_conteudo(client, destino, origem):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    escolher(client, destino, origem)
+
+    repetida = client.get(reverse("interface:reaproveitar", args=[destino.id]))
+
+    assert repetida.status_code == 404
+
+
+def test_quem_nao_elabora_nao_ve_nem_alcanca(client, destino):
+    """Sem `edital:elaborar` o cartão não aparece e a tela não abre (FR-003)."""
+    identificar(client, "bruno.homologador", ["homologador"])
+
+    corpo = client.get(composicao(destino)).content.decode()
+    assert "Partir de um Edital anterior" not in corpo
+    assert client.get(reverse("interface:reaproveitar", args=[destino.id])).status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# T035 / T040 — o aviso e a trilha
+# ---------------------------------------------------------------------------
+
+
+def test_o_aviso_nomeia_a_origem_em_todas_as_etapas(client, destino, origem):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    escolher(client, destino, origem)
+
+    for etapa in ("identificacao", "perfis", "cronograma", "conteudo", "revisao"):
+        corpo = client.get(composicao(destino, etapa)).content.decode()
+        assert f"iniciado a partir do Edital {origem.number}/{origem.year}" in corpo
+        assert "atualize as informações desta oferta" in corpo
+
+
+def test_a_trilha_diz_de_onde_veio_em_forma_legivel(client, destino, origem, api_client):
+    """Identificador no registro, Edital e versão na tela (FR-014a).
+
+    O aviso desaparece quando o Edital sai da elaboração; a trilha é o que sobra, e é por ela que a
+    origem se verifica depois de publicado.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    escolher(client, destino, origem)
+
+    identificar(client, "carla.auditora", ["auditor"])
+    corpo = client.get(reverse("interface:auditoria", args=[destino.id])).content.decode()
+
+    assert "Criação a partir de Edital anterior" in corpo
+    assert f"a partir do Edital {origem.number}/{origem.year}" in corpo
+    assert "versão de" in corpo
+
+
+def test_a_trilha_continua_legivel_depois_de_retificada_a_origem(
+    client, destino, origem, api_client
+):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    escolher(client, destino, origem)
+
+    retify(
+        api_client,
+        origem,
+        [
+            {
+                "targetPath": f"/profiles/id={PERFIL}/name",
+                "operation": "REPLACE",
+                "newValue": "Nome retificado",
+            }
+        ],
+    )
+
+    identificar(client, "carla.auditora", ["auditor"])
+    corpo = client.get(reverse("interface:auditoria", args=[destino.id])).content.decode()
+
+    assert f"a partir do Edital {origem.number}/{origem.year}" in corpo

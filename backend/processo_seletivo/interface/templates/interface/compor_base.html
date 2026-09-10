@@ -43,6 +43,22 @@ Quem lia as duas frases juntas não tinha como saber qual delas era verdade.
   {% if ator %}data-rascunho-salvo="{{ edital.id }}:{{ salvo_chave }}:{{ ator.subject }}"{% endif %}
   >Rascunho salvo — {{ salvo }}.</p>{% endif %}
 
+{% comment %}
+O aviso permanente da 023 (FR-014). Mora **aqui**, e não em `base.html`: todas as etapas do
+assistente estendem este arquivo, e só elas precisam do aviso — mexer na folha comum custaria
+asserção de template quebrada e alcançaria telas a que ele não pertence.
+
+O que ele diz vem da trilha, resolvido por identificador (FR-015a). A versão é nomeada porque é ela
+que responde *de qual configuração partimos* depois de a origem ser retificada.
+{% endcomment %}
+{% if origem_reaproveitada %}
+<p class="aviso" role="status">
+  {% if origem_reaproveitada.edital %}<strong>Este Edital foi iniciado a partir do Edital {{ origem_reaproveitada.edital.number }}/{{ origem_reaproveitada.edital.year }}</strong>, na versão de {{ origem_reaproveitada.versao.valid_from|date:"d/m/Y" }}.
+  {% else %}<strong>Este Edital foi iniciado a partir de outro Edital.</strong>{% endif %}
+  Confira e atualize as informações desta oferta — datas, vagas e prazos são da oferta anterior até
+  que alguém os revise.</p>
+{% endif %}
+
 {% include "interface/_erros.html" with preserva_o_digitado=True %}
 
 {% if not editavel %}

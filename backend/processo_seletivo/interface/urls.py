@@ -25,6 +25,9 @@ urlpatterns = [
     path("editais/<uuid:edital_id>/", views.detalhe, name="detalhe"),
     path("editais/<uuid:edital_id>/compor", views.compor, name="compor"),
     path("editais/<uuid:edital_id>/compor/<slug:etapa>", views.compor_etapa, name="compor-etapa"),
+    # Partir de um Edital anterior (023). Fora do POST da etapa porque não é gravação de etapa:
+    # é um ato só, sobre um rascunho que precisa estar vazio.
+    path("editais/<uuid:edital_id>/reaproveitar", views.reaproveitar, name="reaproveitar"),
     path("editais/<uuid:edital_id>/previa", views.previa, name="previa"),
     path(
         "editais/<uuid:edital_id>/previa/documento",

@@ -9,6 +9,8 @@ quatro o teste é a única guarda (T-005, FR-010a).
 A origem destes cenários **usa todas as quatro**. Uma origem pobre não provaria nada.
 """
 
+import json
+
 import pytest
 from django.utils import timezone
 
@@ -878,3 +880,21 @@ def test_a_gravacao_do_rascunho_nao_marca_etapa_nenhuma_como_composta(destino, o
     registro = RegistroAuditoria.objects.get(operation="ALTERAR_RASCUNHO", aggregate_id=copiado.pk)
     assert registro.reason == AREA
     assert registro.reason.strip() != ""
+
+
+def test_a_origem_nao_entra_no_conteudo_canonico_do_destino(destino, origem, elaborador):
+    """Proveniência de autoria não é norma (FR-016).
+
+    O Edital novo **não publica** que foi copiado de outro: a origem vive na trilha, que é onde os
+    atos vivem, e não no conteúdo que vira documento. Um vínculo no conteúdo seria também a segunda
+    aresta Edital → Edital que a régua de tamanho recusa por colidir com P-6.
+    """
+    from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
+
+    copiado = copiar(destino, origem, elaborador)
+
+    serializado = json.dumps(edital_snapshot(copiado), default=str)
+    assert str(origem.pk) not in serializado
+    assert f'"{origem.number}"' not in serializado
+    for identidade in IDENTIDADES_DA_ORIGEM:
+        assert identidade not in serializado
