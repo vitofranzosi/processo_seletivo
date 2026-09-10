@@ -27,11 +27,22 @@ documentos de decisão em `doc/`, e — como fonte de verdade final — o códig
 templates das duas interfaces e os enums de domínio.
 
 > **Uma advertência sobre as specs.** A numeração não é sequência pedagógica e nem sequência
-> histórica confiável: faltam as pastas 014, 016 e 019 (features não construídas), a 012 e a 013
-> foram revisadas em conjunto por um terceiro documento, e o `README.md` está **defasado** — ele
-> descreve o produto até a spec 004 e afirma que "a interface administrativa e pública é uma
-> especificação futura", o que deixou de ser verdade há quinze incrementos. Nenhuma sessão de
-> produção do manual deve tomar o README como retrato do sistema.
+> histórica confiável: faltam as pastas 014, 016 e 019 (features não construídas) e a 012 e a 013
+> foram revisadas em conjunto por um terceiro documento. As duas coisas continuam verdadeiras, e a
+> `021` e a `022`, posteriores a esta descoberta, não as alteram.
+>
+> **Sobre o `README.md`, esta advertência envelheceu — corrigida em 10/09/2026.** A defasagem que
+> ela registrava era textual: "descreve o produto até a spec 004" e "a interface administrativa e
+> pública é uma especificação futura". **Nenhuma das duas frases existe mais**; o arquivo foi
+> reescrito, abre dizendo que o sistema tem as duas interfaces e mantém a tabela de incrementos
+> atualizada até a `022`.
+>
+> A conclusão prática, porém, sobrevive **por outro motivo**, e é este que a sessão precisa saber:
+> a tabela de módulos do README nomeia **7 dos 17** apps de `backend/processo_seletivo/` — ficam de
+> fora `avaliacoes`, `classificacao`, `comissoes`, `divulgacao`, `identidade`, `inscricoes`,
+> `interface`, `portal`, `recursos` e `resultados`, isto é, quase tudo o que o manual descreve.
+> Continua sendo retrato parcial, e nenhuma sessão de produção do manual deve tomá-lo como retrato
+> do sistema. O que mudou é a razão: era conteúdo errado, hoje é conteúdo ausente.
 
 ---
 

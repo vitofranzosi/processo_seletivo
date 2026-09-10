@@ -1,8 +1,10 @@
 # Avaliação de capacidade — sete Editais anexos contra o repositório
 
-> **Estado do repositório atualizado em 08/09/2026.** A leitura dos sete Editais que este
-> documento faz continua valendo; o estado do código que ele mede é o de `368d9cd`. A `020`
-> fechou L-5 desde então, e o que mudou está em
+> **Estado do repositório atualizado em 09/09/2026.** A leitura dos sete Editais que este
+> documento faz continua valendo; o estado do código que ele mede é o de `368d9cd`. A `020` fechou
+> a L-5 e a `021` fechou o sorteio e a L-6 desde então; a medição vigente está em
+> [`avaliacao-de-capacidade-editais-2026-09-09.md`](avaliacao-de-capacidade-editais-2026-09-09.md),
+> e a intermediária em
 > [`avaliacao-de-capacidade-editais-2026-09-08.md`](avaliacao-de-capacidade-editais-2026-09-08.md).
 
 Leitura integral de sete Editais reais do Ifes/Cefor contra o estado do repositório em `368d9cd`
