@@ -4,12 +4,11 @@ Toda Etapa vem de `etapas_vigentes()`, e a alocação órfã é **derivada na le
 alocação com o conteúdo vigente, sem campo, sem sincronizador e sem cópia da Etapa (FR-047).
 """
 
-import unicodedata
-
 from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
 from processo_seletivo.comissoes.models import AlocacaoEtapa, Funcao, MembroComissao
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.shared.texto import dobrar
 
 
 def _etapas_ou_nada(edital):
@@ -97,8 +96,9 @@ def chave_de_leitura(nome):
     com `casefold()` puro, reintroduzindo o mesmo defeito nove linhas abaixo da correção. Duas
     ordenações por nome no mesmo arquivo é que era o problema; agora é uma.
     """
-    sem_acento = unicodedata.normalize("NFKD", nome or "")
-    return "".join(c for c in sem_acento if not unicodedata.combining(c)).casefold()
+    # A dobra mora em `shared/texto.py` desde a `024`, que precisou dela na busca da vitrine: uma
+    # terceira cópia da mesma operação era o risco que o parágrafo acima já nomeia.
+    return dobrar(nome)
 
 
 def tem_presidente(processo):

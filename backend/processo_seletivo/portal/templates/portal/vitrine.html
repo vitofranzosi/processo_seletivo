@@ -6,21 +6,59 @@
   o Edital completo.</p>
 
 {% comment %}
-Abertas em seção própria, e primeiro. Quem chega aqui quer saber onde ainda dá para se inscrever —
-misturar o que já fechou com o que está aberto obriga a ler tudo para descobrir o que interessa.
+O formulário só existe quando há catálogo: filtrar o vazio é um controle que não faz nada.
 {% endcomment %}
-{% if abertas %}
-<h2 class="secao-vitrine">Inscrições abertas</h2>
+{% if selecoes %}{% include "portal/_consulta.html" %}{% endif %}
+
+{% if consulta.ativa %}
+{% comment %}
+**Com consulta ativa, uma lista única** (024, FR-146a).
+
+Agrupar é ajuda para quem folheia; ordenar é ajuda para quem procura. Quatro cabeçalhos sobre um
+cartão cada seria ruído, e a lista corrida é segura porque cada cartão traz a própria marca de
+situação (FR-145).
+
+A contagem é **uma só**, do total encontrado, e não um número por grupo (FR-141).
+{% endcomment %}
+<p class="contagem" role="status">
+  {% if total_encontrado %}
+  <strong>{{ total_encontrado }}</strong> seleç{{ total_encontrado|pluralize:"ão,ões" }} encontrada{{ total_encontrado|pluralize:"s" }}{% if consulta.busca %} para “{{ consulta.busca }}”{% endif %}.
+  {% else %}
+  Nenhuma seleção encontrada{% if consulta.busca %} para “{{ consulta.busca }}”{% endif %}.
+  {% endif %}
+</p>
+
+{% if encontradas %}
 <ul class="selecoes">
-  {% for selecao in abertas %}{% include "portal/_cartao_da_selecao.html" %}{% endfor %}
+  {% for selecao in encontradas %}{% include "portal/_cartao_da_selecao.html" %}{% endfor %}
 </ul>
+{% else %}
+{% comment %}
+Consulta sem resultado **não é erro** (FR-142): a tela diz o que foi procurado e oferece a volta ao
+catálogo. Tratar como falha faria alguém achar que a página quebrou, quando o que houve foi um
+catálogo que não tem aquilo hoje.
+{% endcomment %}
+<p class="vazio">Nenhuma seleção publicada corresponde a esses filtros hoje.
+  <a href="{% url 'portal:vitrine' %}">Ver todas as seleções</a>.</p>
 {% endif %}
 
-{% if outras %}
-<h2 class="secao-vitrine">{% if abertas %}Outras seleções publicadas{% else %}Seleções publicadas{% endif %}</h2>
+{% else %}
+{% comment %}
+**Quatro grupos, e não dois** (024, FR-146).
+
+Antes eram "Inscrições abertas" e "Outras seleções publicadas" — e "outras" era literalmente tudo o
+que não estava aberto: o que ainda vai abrir, o que já fechou e o que não recebe inscrição por este
+sistema, no mesmo balde. O domínio já distinguia as três; era a tela que as fundia, e quem procurava
+o que ainda vai abrir tinha de ler o que já fechou para descobrir.
+
+Grupo vazio não aparece: um título sobre nenhum cartão anuncia uma categoria que o catálogo não tem.
+{% endcomment %}
+{% for grupo in grupos %}
+<h2 class="secao-vitrine">{{ grupo.titulo }}</h2>
 <ul class="selecoes">
-  {% for selecao in outras %}{% include "portal/_cartao_da_selecao.html" %}{% endfor %}
+  {% for selecao in grupo.selecoes %}{% include "portal/_cartao_da_selecao.html" %}{% endfor %}
 </ul>
+{% endfor %}
 {% endif %}
 
 {% if not selecoes %}

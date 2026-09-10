@@ -131,25 +131,16 @@ pessoa a desconfiar da tela, e é pior do que a ausência dele.
 
 <h2>Cronograma do processo</h2>
 <ul class="linha-do-tempo processo">
-  {% for evento in cronograma %}
-  <li class="marco {{ evento.situacao }}">
-    <span class="rotulo">
-      {% if evento.situacao == "concluido" %}✓ {% endif %}{{ evento.nome }}
-    </span>
-    <span class="quando">
-      {% if evento.inicio %}{{ evento.inicio|date:"d/m" }}{% endif %}
-      {% if evento.fim %}– {{ evento.fim|date:"d/m" }}{% endif %}
-    </span>
-    {% comment %}
-    Onde o evento acontece, quando o Edital o declarou (021, FR-057). Sem declaração não se escreve
-    linha alguma: "local não informado" afirmaria uma omissão onde o Edital pode nunca ter tido o
-    que declarar.
-    {% endcomment %}
-    {% if evento.local %}<span class="onde">{{ evento.local }}</span>{% endif %}
-  </li>
-  {% empty %}
+  {% include "portal/_cronograma.html" %}
+  {% comment %}
+  A frase da ausência fica **aqui**, e não no parcial: nesta tela o assunto é a inscrição da pessoa,
+  e um bloco vazio seria um buraco sem explicação. Na página pública da seleção o assunto é o
+  Edital, e a mesma frase afirmaria uma omissão que ele pode nunca ter tido o que declarar — por
+  isso lá a seção some inteira (024, FR-128).
+  {% endcomment %}
+  {% if not cronograma %}
   <li class="marco"><span class="rotulo">O Edital não publicou cronograma.</span></li>
-  {% endfor %}
+  {% endif %}
 </ul>
 
 <p><a class="principal" href="{% url 'portal:inscricao' inscricao.id %}">Ver o que enviei</a></p>

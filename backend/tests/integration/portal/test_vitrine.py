@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from django.urls import reverse
 
-from tests.fixtures.selecao import publicar_selecao
+from tests.fixtures.selecao import publicar_selecao, rascunho_de_selecao
 
 
 @pytest.mark.django_db(transaction=True)
@@ -150,3 +150,138 @@ def test_o_separador_do_cartao_acompanha_o_valor_que_ele_separa():
 
     assert "{% if selecao.processo_codigo %}{{ selecao.processo_codigo }} · {% endif %}" in marcacao
     assert "{{ selecao.processo_codigo }} · Edital" not in marcacao
+
+
+# ---------------------------------------------------------------------------
+# As quatro situações (024, US5). Antes eram duas seções, e "outras" fundia três.
+# ---------------------------------------------------------------------------
+
+
+def _publicar_em(api_client, manager_headers, process_payload, *, situacao, seed, numero):
+    """Publica uma seleção na situação pedida, pelo canal administrativo."""
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    agora = timezone.now()
+    rascunho = rascunho_de_selecao(seed=seed)
+    evento = rascunho["schedule"][0]
+    if situacao == "aberto":
+        evento["startAt"] = (agora - timedelta(days=1)).isoformat()
+        evento["endAt"] = (agora + timedelta(days=9)).isoformat()
+        evento["isRegistrationPeriod"] = True
+    elif situacao == "futuro":
+        evento["startAt"] = (agora + timedelta(days=10)).isoformat()
+        evento["endAt"] = (agora + timedelta(days=20)).isoformat()
+        evento["isRegistrationPeriod"] = True
+    elif situacao == "encerrado":
+        evento["startAt"] = (agora - timedelta(days=30)).isoformat()
+        evento["endAt"] = (agora - timedelta(days=10)).isoformat()
+        evento["isRegistrationPeriod"] = True
+    # `nao-designado`: o Evento existe e **não** é marcado como período de inscrições. Não é
+    # esquecimento — é o Edital que não recebe inscrição por este sistema.
+    # Cada Processo é criado com chave de idempotência própria: a do `manager_headers` é fixa, e
+    # reusá-la com conteúdo diferente é recusado — corretamente — pelo próprio sistema.
+    return publicar_selecao(
+        api_client,
+        {**manager_headers, "HTTP_IDEMPOTENCY_KEY": f"vitrine-situacao-{numero}"},
+        {
+            **process_payload,
+            "institutionalCode": f"PS-SIT-{numero}",
+            "firstEdital": {**process_payload["firstEdital"], "number": f"9{numero}"},
+        },
+        rascunho=rascunho,
+        seed=seed,
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_as_quatro_situacoes_aparecem_em_grupos_distintos(
+    client, api_client, manager_headers, process_payload
+):
+    """FR-145, FR-146 — futuras deixam de cair junto de encerradas.
+
+    "Outras seleções publicadas" era literalmente tudo o que não estava aberto: o que ainda vai
+    abrir, o que já fechou e o que não recebe inscrição por este sistema, no mesmo balde. O domínio
+    já distinguia as três; era a tela que as fundia.
+    """
+    for indice, situacao in enumerate(("aberto", "futuro", "encerrado", "nao-designado")):
+        _publicar_em(
+            api_client,
+            manager_headers,
+            process_payload,
+            situacao=situacao,
+            seed=indice + 1,
+            numero=indice + 1,
+        )
+
+    corpo = client.get(reverse("portal:vitrine")).content.decode()
+
+    # Afirmar sobre o **cabeçalho**, e não sobre o texto solto: "Inscrições encerradas" também
+    # aparece na frase do período de um cartão, e uma busca por substring encontraria aquela.
+    def cabecalho(titulo):
+        return corpo.index(f'<h2 class="secao-vitrine">{titulo}</h2>')
+
+    for titulo in (
+        "Inscrições abertas",
+        "Próximas seleções",
+        "Inscrições encerradas",
+        "Outras seleções publicadas",
+    ):
+        assert f'<h2 class="secao-vitrine">{titulo}</h2>' in corpo, (
+            f"grupo {titulo!r} não anunciado"
+        )
+    # E na ordem da urgência de quem lê: o que está aberto primeiro, o que não tem prazo por último.
+    assert (
+        cabecalho("Inscrições abertas")
+        < cabecalho("Próximas seleções")
+        < cabecalho("Inscrições encerradas")
+        < cabecalho("Outras seleções publicadas")
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_cada_cartao_traz_a_situacao_como_marca_propria(
+    client, api_client, manager_headers, process_payload
+):
+    """FR-145 — e o caso que motivou a marca é o do Edital sem período designado.
+
+    Para ele, `_periodo.html` corretamente não escreve prazo nenhum — e o cartão ficava mudo sobre
+    o que aquela seleção é. A marca é o único lugar em que a quarta situação se diz.
+    """
+    _publicar_em(
+        api_client, manager_headers, process_payload, situacao="nao-designado", seed=7, numero=7
+    )
+
+    corpo = client.get(reverse("portal:vitrine")).content.decode()
+    # A lista, e não a página: o formulário de filtros oferece "Encerradas" como **opção**, e uma
+    # busca por substring na página inteira encontraria aquela.
+    lista = corpo[corpo.index('<ul class="selecoes">') :]
+
+    assert 'class="marca-situacao nao-designado"' in lista
+    assert "Consulta" in lista
+    # E **não** é chamada de encerrada: nenhum Edital declarou fechamento aqui (FR-149).
+    assert "Encerrada" not in lista
+    assert "Inscrições encerradas" not in lista
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_selecao_sem_inscricao_aberta_tem_caminho_visivel(
+    client, api_client, manager_headers, process_payload
+):
+    """FR-148 — o cartão da encerrada não oferecia ação nenhuma.
+
+    Quem voltava para ver o resultado, ou para reler o Edital, tinha de descobrir que o título era
+    clicável. Continua sendo um alvo só; o que muda é ele parecer o que é.
+    """
+    _publicar_em(
+        api_client, manager_headers, process_payload, situacao="encerrado", seed=8, numero=8
+    )
+
+    corpo = client.get(reverse("portal:vitrine")).content.decode()
+
+    assert "Ver a seleção" in corpo
+    assert "Ver vagas e inscrever-se" not in corpo, "encerrada não convida a inscrever-se"

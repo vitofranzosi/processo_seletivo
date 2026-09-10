@@ -1,0 +1,88 @@
+{% comment %}
+Busca, filtros e ordenação (024, FR-138 a FR-141).
+
+**`GET`, e nada de script.** A consulta **é** o endereço: assim ela é compartilhável, o botão
+*voltar* do navegador funciona, e a página faz o que faz sem o navegador executar nada (FR-143,
+UX-017). Guardar em sessão seria a alternativa aparentemente mais simples, e é a que a `D-002`
+recusa — duas abas na mesma vitrine passariam a mostrar listas diferentes sem explicação na tela.
+
+O molde é o da tela de inscrições da gestão: mesmo canal, mesmo desenho.
+
+Os filtros são montados a partir do **catálogo publicado**: oferecer um campus que não tem seleção
+nenhuma é prometer resultado onde não há.
+{% endcomment %}
+<form method="get" class="consulta" role="search">
+  {% comment %}
+  **Sem linha de ajuda embaixo**, e por duas razões que apontam para o mesmo lado.
+
+  Ela dizia "Cargo, unidade, título ou número do Edital" — quase palavra por palavra o que o
+  placeholder já diz. E, sendo uma linha a mais dentro do campo, ela quebrava o alinhamento da
+  linha inteira: `align-items:flex-end` alinha a **borda inferior** de cada campo, e a da busca
+  passava a ser o texto de ajuda em vez do próprio campo. O input subia, os seletores ficavam, e o
+  formulário parecia desmontado.
+
+  Com todos os campos na mesma forma — rótulo e controle —, as bordas coincidem por construção.
+
+  E o placeholder ficou **curto** de propósito: a versão que listava tudo o que a busca alcança
+  ("cargo, curso, unidade, número do edital…") era cortada no meio em 375px, e placeholder cortado
+  não informa — parece defeito. O rótulo diz o que o campo faz; que a busca alcance também unidade
+  e número se descobre usando.
+  {% endcomment %}
+  <p class="campo busca">
+    <label for="busca">Procurar</label>
+    <input type="search" id="busca" name="busca" value="{{ consulta.busca }}"
+           placeholder="cargo, curso ou edital…">
+  </p>
+
+  {% if opcoes.unidades|length > 1 %}
+  <p class="campo">
+    <label for="unidade">Unidade</label>
+    <select id="unidade" name="unidade">
+      <option value="">Todas</option>
+      {% for item in opcoes.unidades %}
+      <option value="{{ item }}" {% if consulta.unidade == item %}selected{% endif %}>{{ item }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  {% endif %}
+
+  <p class="campo">
+    <label for="situacao">Situação</label>
+    <select id="situacao" name="situacao">
+      <option value="">Todas</option>
+      <option value="aberto" {% if consulta.situacao == "aberto" %}selected{% endif %}>Inscrições abertas</option>
+      <option value="futuro" {% if consulta.situacao == "futuro" %}selected{% endif %}>Próximas</option>
+      <option value="encerrado" {% if consulta.situacao == "encerrado" %}selected{% endif %}>Encerradas</option>
+      <option value="nao-designado" {% if consulta.situacao == "nao-designado" %}selected{% endif %}>Sem inscrição por aqui</option>
+    </select>
+  </p>
+
+  {% if opcoes.perfis %}
+  <p class="campo">
+    <label for="perfil">Cargo ou curso</label>
+    <select id="perfil" name="perfil">
+      <option value="">Todos</option>
+      {% for item in opcoes.perfis %}
+      <option value="{{ item }}" {% if consulta.perfil == item %}selected{% endif %}>{{ item }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  {% endif %}
+
+  <p class="campo">
+    <label for="ordem">Ordenar por</label>
+    <select id="ordem" name="ordem">
+      <option value="prazo" {% if consulta.ordem == "prazo" %}selected{% endif %}>Prazo mais próximo</option>
+      <option value="recentes" {% if consulta.ordem == "recentes" %}selected{% endif %}>Mais recentes</option>
+    </select>
+  </p>
+
+  <p class="acoes">
+    <button type="submit" class="principal">Filtrar</button>
+    {% comment %}
+    O caminho de volta ao catálogo inteiro. Só aparece quando há o que limpar: um "Limpar" perpétuo
+    ao lado de um formulário vazio é um controle que nunca faz nada.
+    {% endcomment %}
+    {% if consulta.ativa %}<a class="limpar" href="{% url 'portal:vitrine' %}">Limpar filtros</a>{% endif %}
+  </p>
+</form>

@@ -1,0 +1,47 @@
+{% comment %}
+A lista de Eventos publicados, e só ela.
+
+**O caso vazio fica com quem inclui**, de propósito: a área do candidato escreve que o Edital não
+publicou cronograma, porque ali o assunto é a inscrição da pessoa e um bloco vazio seria um buraco
+sem explicação; a página pública omite a seção inteira, porque ali o assunto é o Edital e "não
+publicou" afirmaria uma omissão que ele pode nunca ter tido o que declarar (FR-128).
+
+A marcação é a que já existia na área do candidato, **letra por letra**. Não é apego: o teste da
+`010` afirma sobre a substring `class="marco em_curso"`, e a extração deste parcial não podia
+mudar o que ela vê.
+{% endcomment %}
+{% for evento in cronograma %}
+{% comment %}
+`aria-current="step"` e o rótulo "Acontecendo agora" existem pela mesma razão que os do
+`_etapas.html`: a situação do Evento estava dita só por peso de fonte e cor da borda, e nenhum dos
+dois chega a quem lê com leitor de tela (UX-019, e a SC-UX-005 que fixou a regra).
+
+O rótulo aparece **só no evento em curso**. Escrever "por vir" em cada linha futura seria repetir,
+em cinco linhas, o que a ordem cronológica já diz.
+
+A situação descreve **o Evento**, nunca quem lê (FR-126). "Acontecendo agora" é sobre a etapa do
+processo; nada aqui afirma nada sobre a pessoa.
+{% endcomment %}
+<li class="marco {{ evento.situacao }}"{% if evento.situacao == "em_curso" %} aria-current="step"{% endif %}>
+  <span class="rotulo">
+    {% if evento.situacao == "concluido" %}✓ {% endif %}{{ evento.nome }}
+    {% if evento.situacao == "em_curso" %}<span class="agora">Acontecendo agora</span>{% endif %}
+  </span>
+  {% comment %}
+  **Com o ano** (024, FR-126). `d/m` bastava na área do candidato, onde o assunto é a inscrição que
+  a pessoa acabou de enviar e o ano é o corrente por construção. Na página pública não: alguém
+  consulta um Edital encerrado meses ou anos depois, e "15/10" sozinho não diz de quando. O
+  cronograma também atravessa o ano com frequência — inscrição em dezembro, resultado em fevereiro.
+  {% endcomment %}
+  <span class="quando">
+    {% if evento.inicio %}{{ evento.inicio|date:"d/m/Y" }}{% endif %}
+    {% if evento.fim %}– {{ evento.fim|date:"d/m/Y" }}{% endif %}
+  </span>
+  {% comment %}
+  Onde o evento acontece, quando o Edital o declarou (021, FR-057; 024, FR-127). Sem declaração não
+  se escreve linha alguma: "local não informado" afirmaria uma omissão onde o Edital pode nunca ter
+  tido o que declarar.
+  {% endcomment %}
+  {% if evento.local %}<span class="onde">{{ evento.local }}</span>{% endif %}
+</li>
+{% endfor %}
