@@ -117,11 +117,19 @@ Ficam aqui porque são o conteúdo do modelo de leitura — as fórmulas, sem c�
 ```text
 submetidas(edital)  = Inscricao onde status = SUBMETIDA
 rascunhos(edital)   = Inscricao onde status = RASCUNHO
-ultimas_24h(edital) = submetidas com submitted_at ≥ agora − 24h
+ultimas_24h(edital) = submetidas com agora − 24h < submitted_at ≤ agora
 serie(edital)       = submetidas agrupadas por dia de submitted_at, dentro do período
 ```
 
 Não há estado `CANCELADA` no domínio; nenhuma derivação o pressupõe.
+
+**As duas bordas da janela são fechadas de propósito, e a redação já custou uma contradição.** A
+inferior é **estrita**: uma submissão de exatamente 24 horas atrás não está *nas últimas* 24 horas,
+está na borda delas — é onde o fora-por-um mora, e é o que `T018a` afirma. A superior é o instante
+declarado da leitura, e não "agora" de novo: sem teto, uma submissão gravada entre a montagem do
+`Pulso` e a contagem entrava no número e ficava fora da série, que sempre teve teto — e a página
+declara `lido_em`. Este parágrafo existe porque a fórmula dizia `≥ agora − 24h` e não dizia teto
+nenhum, contradizendo a tarefa e o código que a implementa.
 
 ### 3.2 Posição temporal (`UX-002`)
 
