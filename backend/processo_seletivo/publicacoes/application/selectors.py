@@ -224,6 +224,31 @@ def impede_por_segregacao(participantes, ator):
     )
 
 
+def versoes_vigentes(*, edital_ids, at=None):
+    """A versão vigente de cada Edital da lista, num par de consultas (023, FR-004a).
+
+    É a forma em lote de `effective_version`, e existe pela mesma razão que `selecoes_publicas` já
+    resolvia assim para a vitrine: chamar o seletor por Edital custaria uma consulta por linha, e a
+    tela que a usa é uma lista paginada.
+
+    A regra de desempate é a mesma dele — maior `valid_from` que já começou, e entre iguais a
+    materialização mais recente. **Precisa continuar sendo a mesma**: duas respostas para "qual
+    versão vigora" é o defeito que este módulo existe para não ter.
+    """
+    moment = at or timezone.now()
+    vigentes = {}
+    for edital_id, versao_id in (
+        VersaoConsolidada.objects.filter(edital_id__in=list(edital_ids), valid_from__lte=moment)
+        .order_by("edital_id", "-valid_from", "-materialized_at")
+        .values_list("edital_id", "id")
+    ):
+        vigentes.setdefault(edital_id, versao_id)
+    return {
+        versao.edital_id: versao
+        for versao in VersaoConsolidada.objects.filter(id__in=list(vigentes.values()))
+    }
+
+
 def selecoes_publicas(*, at=None):
     """As seleções que uma pessoa de fora pode consultar, com a versão vigente de cada uma.
 

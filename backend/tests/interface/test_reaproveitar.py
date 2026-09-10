@@ -5,8 +5,11 @@ propósito: quem cria o Processo é o **Gestor**, quem escolhe a origem é o **E
 dois passos com a mesma identidade esconderia justamente a decisão que `D-001` tomou.
 """
 
+import re
+
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 
 from processo_seletivo.processos.models import Edital
 from tests.fixtures.publicacao import retify
@@ -284,3 +287,120 @@ def test_enviar_sem_escolher_origem_recusa_em_vez_de_estourar(client, destino, o
     assert "Recurso não encontrado" in resposta.content.decode()
     destino.refresh_from_db()
     assert destino.perfis.count() == 0
+
+
+# ---------------------------------------------------------------------------
+# A escolha, pela tela: localizar, paginar, e escolher sem armadilha
+# ---------------------------------------------------------------------------
+
+
+def _publicar_muitas(quantas, ano=2026):
+    """Editais publicados em massa, para exercitar a lista longa.
+
+    Direto no modelo: o que se exercita aqui é a paginação e a busca, e levar vinte Editais até a
+    Publicação pelo fluxo inteiro custaria minutos para provar o que a lista já mostra. Eles não têm
+    versão consolidada — e é de propósito: a lista precisa aguentar isso sem cair.
+    """
+    from processo_seletivo.processos.models import ProcessoSeletivo
+
+    processo = ProcessoSeletivo.objects.create(
+        institution_scope="cefor",
+        institutional_code="PS-MASSA",
+        title="Processo com muitos Editais",
+        created_at=timezone.now(),
+        created_by="gestor-a",
+        last_changed_at=timezone.now(),
+    )
+    return Edital.objects.bulk_create(
+        [
+            Edital(
+                processo=processo,
+                institution_scope="cefor",
+                number=f"{numero:03d}",
+                year=ano,
+                title=f"Edital de massa {numero}",
+                status=Edital.Status.PUBLICADO,
+                created_at=timezone.now(),
+                created_by="gestor-a",
+                last_edited_by="gestor-a",
+            )
+            for numero in range(100, 100 + quantas)
+        ]
+    )
+
+
+def test_a_busca_encontra_e_o_filtro_fica_no_campo(client, destino, origem):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    _publicar_muitas(3)
+
+    corpo = client.get(
+        reverse("interface:reaproveitar", args=[destino.id]), {"busca": "massa 101"}
+    ).content.decode()
+
+    assert "Edital de massa 101" in corpo
+    assert "Edital de massa 102" not in corpo
+    assert origem.title not in corpo
+    assert 'value="massa 101"' in corpo
+    assert "Limpar" in corpo
+
+
+def test_a_busca_sem_resultado_diz_o_que_procurou(client, destino):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = client.get(
+        reverse("interface:reaproveitar", args=[destino.id]), {"busca": "não existe"}
+    ).content.decode()
+
+    assert "Nenhum Edital do seu escopo corresponde a" in corpo
+    assert "não existe" in corpo
+    assert "Usar como base" not in corpo
+
+
+def test_a_lista_e_paginada_e_a_busca_atravessa_as_paginas(client, destino, origem):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    _publicar_muitas(25)
+
+    primeira = client.get(
+        reverse("interface:reaproveitar", args=[destino.id]), {"busca": "massa"}
+    ).content.decode()
+    assert primeira.count('name="origem"') == 20
+    assert "Página 1 de 2" in primeira
+    assert "busca=massa" in primeira, "a pergunta que trouxe a pessoa até aqui viaja com a página"
+
+    segunda = client.get(
+        reverse("interface:reaproveitar", args=[destino.id]), {"busca": "massa", "pagina": 2}
+    ).content.decode()
+    assert segunda.count('name="origem"') == 5
+
+
+def test_nenhuma_origem_vem_pre_escolhida(client, destino, origem):
+    """Vinha a primeira. Com a lista paginada, isso vira armadilha: quem avança de página
+    encontraria outra origem já marcada, e copiaria o que não pretendia."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = client.get(reverse("interface:reaproveitar", args=[destino.id])).content.decode()
+
+    radios = re.findall(r"<input[^>]*type=\"radio\"[^>]*>", corpo)
+    assert radios, "a lista precisa oferecer alguma origem para o cenário significar algo"
+    assert all("checked" not in radio for radio in radios)
+    assert all("required" in radio for radio in radios)
+
+
+def test_o_grupo_de_escolha_e_anunciado_a_quem_ouve_a_tela(client, destino, origem):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = client.get(reverse("interface:reaproveitar", args=[destino.id])).content.decode()
+
+    assert "<fieldset>" in corpo
+    assert 'class="oculto">Edital de origem</legend>' in corpo
+
+
+def test_a_lista_diz_o_que_cada_origem_traz(client, destino, origem):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = client.get(reverse("interface:reaproveitar", args=[destino.id])).content.decode()
+
+    assert "1 perfil" in corpo
+    assert "2 eventos" in corpo
+    assert "1 anexo" in corpo
+    assert "Publicado em" in corpo

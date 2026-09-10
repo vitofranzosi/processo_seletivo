@@ -24,6 +24,7 @@ isso antes da chave faria toda repetição responder `draft_not_empty` (FR-017a)
 import hashlib
 
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.application.draft import replace_draft
@@ -36,8 +37,12 @@ from processo_seletivo.editais.domain.reaproveitamento import (
 from processo_seletivo.editais.models.anexos import AnexoEdital, ArtefatoAnexo
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
-from processo_seletivo.publicacoes.application.selectors import effective_version
+from processo_seletivo.publicacoes.application.selectors import (
+    effective_version,
+    versoes_vigentes,
+)
 from processo_seletivo.publicacoes.domain.elevacao import elevar
+from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
@@ -80,7 +85,29 @@ def rascunho_vazio(edital) -> bool:
     )
 
 
-def origens_elegiveis(actor, *, excluindo=None):
+def _procura_por(termo):
+    """A busca por número, ano, título e Processo — os mesmos atributos que a lista mostra.
+
+    `FR-004` pede que a origem seja **localizável** pelos atributos com que ela é identificada, e é
+    isso e nada mais: um campo só, sobre o que está na tela. Filtro por situação não entra porque a
+    lista já é fechada nas duas elegíveis, e filtro por Processo em separado repetiria o que o texto
+    livre já alcança.
+
+    O ano entra por igualdade e só quando o termo é um ano plausível: `year` é inteiro, e comparar
+    inteiro por semelhança de texto é conveniência que devolve resultado que ninguém pediu.
+    """
+    procura = (
+        Q(number__icontains=termo)
+        | Q(title__icontains=termo)
+        | Q(processo__institutional_code__icontains=termo)
+        | Q(processo__title__icontains=termo)
+    )
+    if termo.isdigit() and len(termo) == 4:
+        procura |= Q(year=int(termo))
+    return procura
+
+
+def origens_elegiveis(actor, *, excluindo=None, busca=""):
     """Os Editais que podem servir de origem, no escopo do ator.
 
     Ordenados do mais recente para o mais antigo: quem reaproveita parte, quase sempre, da edição do
@@ -93,7 +120,47 @@ def origens_elegiveis(actor, *, excluindo=None):
         .select_related("processo")
         .order_by("-year", "-number")
     )
+    termo = (busca or "").strip()
+    if termo:
+        consulta = consulta.filter(_procura_por(termo))
     return consulta.exclude(pk=excluindo) if excluindo is not None else consulta
+
+
+def com_resumo_da_origem(editais, *, at=None):
+    """O que cada origem traz, contado **no conteúdo que vigora** (023, FR-004a).
+
+    Contar nas tabelas seria mais barato e estaria errado pela mesma razão que `D-003` fixou a fonte
+    da cópia: a Retificação não reescreve `PerfilVaga` e companhia, então um Edital retificado
+    anunciaria na lista um número de Perfis que a cópia não traria. A coluna promete o que a
+    operação faz — e a única forma de a promessa se manter é contar o mesmo conteúdo que ela copia.
+
+    O conteúdo é elevado antes da contagem, como na cópia: para um degrau antigo a diferença é entre
+    ausência e coleção vazia, que dá o mesmo número, mas depender disso seria confiar que nenhum
+    degrau futuro renomeie coleção.
+    """
+    editais = list(editais)
+    if not editais:
+        return editais
+    versoes = versoes_vigentes(edital_ids=[edital.pk for edital in editais], at=at)
+    primeira_publicacao = {}
+    for edital_id, publicado_em in (
+        Publicacao.objects.filter(edital_id__in=[edital.pk for edital in editais])
+        .order_by("edital_id", "publication_order")
+        .values_list("edital_id", "published_at")
+    ):
+        primeira_publicacao.setdefault(edital_id, publicado_em)
+    for edital in editais:
+        versao = versoes.get(edital.pk)
+        conteudo = elevar(versao.content) if versao is not None else {}
+        edital.resumo = {
+            "perfis": len(conteudo.get("profiles") or []),
+            "eventos": len(conteudo.get("schedule") or []),
+            "etapas": len(conteudo.get("stages") or []),
+            "documentos": len(conteudo.get("documentRequirements") or []),
+            "anexos": len(conteudo.get("attachments") or []),
+        }
+        edital.publicado_em = primeira_publicacao.get(edital.pk)
+    return editais
 
 
 def _origem_elegivel(actor, origem_id):

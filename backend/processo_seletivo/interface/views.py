@@ -82,6 +82,7 @@ from processo_seletivo.editais.application.reaproveitamento import (
     OPERACAO as OPERACAO_DE_REAPROVEITAMENTO,
 )
 from processo_seletivo.editais.application.reaproveitamento import (
+    com_resumo_da_origem,
     origens_elegiveis,
     rascunho_vazio,
     reaproveitar_edital,
@@ -958,12 +959,29 @@ def reaproveitar(request, edital_id):
         else:
             return redirect(f"{composicao}?salvo=reaproveitamento")
 
+    from django.core.paginator import Paginator
+
+    busca = (request.GET.get("busca") or "").strip()
+    origens = origens_elegiveis(ator, excluindo=edital.pk, busca=busca)
+    # Paginada porque o acervo só cresce: a lista é de **todos** os Editais publicados do escopo, e
+    # uma instituição com alguns anos de casa tem centenas. O tamanho é o das demais listas da
+    # gestão.
+    paginas = Paginator(origens, 20)
+    pagina = paginas.get_page(request.GET.get("pagina") or 1)
     return render(
         request,
         "interface/reaproveitar.html",
         {
             "edital": edital,
-            "origens": origens_elegiveis(ator, excluindo=edital.pk).select_related("processo"),
+            "pagina": pagina,
+            # O que cada origem traz, contado no conteúdo que vigora — só da página exibida, que é
+            # o que separa duas consultas de uma por linha.
+            "origens": com_resumo_da_origem(pagina.object_list),
+            "busca": busca,
+            "total": paginas.count,
+            # A pergunta que trouxe a pessoa até aqui viaja com a paginação: avançar de página não
+            # pode desfazer o filtro.
+            "filtro": urlencode({"busca": busca}) if busca else "",
             "erros": erros,
             "voltar": composicao,
             # A chave atravessa o reenvio do formulário, como nas telas de criação: recarregar

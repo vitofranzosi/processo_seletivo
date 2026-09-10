@@ -350,6 +350,11 @@ saber que está diante de conteúdo herdado, não redigido para esta oferta.
 - **FR-004**: A escolha da origem DEVE listar apenas Editais do escopo institucional do ator em
   situação publicada ou encerrada, identificados por número, ano, título e Processo, e DEVE permitir
   localizá-los por esses atributos (D-008).
+- **FR-004a**: A lista de origens DEVE informar, para cada uma, **o que ela traz** — quantos Perfis,
+  Etapas, Eventos, Documentos Exigidos e Anexos — e quando o Edital foi publicado. A contagem DEVE
+  ser feita sobre o **conteúdo que vigora**, e não sobre o estado relacional: a coluna promete o que
+  a cópia entrega, e contar noutro lugar faria a promessa divergir dela (`D-003`). A lista DEVE ser
+  paginada, porque o acervo de Editais publicados só cresce.
 - **FR-005**: A origem da cópia DEVE ser a **versão vigente consolidada** do Edital escolhido,
   elevada ao esquema canônico corrente (D-003).
 - **FR-006**: A operação DEVE copiar para o destino a configuração que as etapas de composição
