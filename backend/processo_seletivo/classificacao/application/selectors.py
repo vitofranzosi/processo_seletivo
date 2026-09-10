@@ -91,6 +91,51 @@ def _estado_do_marco_sorteado(*, edital, marco_id, vigente, at):
     }
 
 
+def _estado_do_marco_que_sorteia(*, perfil, marco, vigente):
+    """O marco declara sorteio, e ainda não há ato de sorteio: **não há o que recomputar aqui**.
+
+    **A leitura, e não a porta.** As três camadas que impedem um ato computado nascer neste marco
+    são outras — a tela encaminha, a rota recusa e `emitir_ordem` recusa sozinho. O que se resolve
+    aqui é o que sobra depois delas: `estado_do_marco` respondia sobre um marco de sorteio como se
+    ele fosse computado, calculando por Etapas uma ordem que a norma daquele marco não prevê.
+
+    `proposta` é `None` e `recomputavel` é `False` pela mesma razão do ato já sorteado: a ordem
+    deste marco nasce de uma semente que ainda não existe, e nenhuma quantidade de cálculo por
+    Etapas a produz.
+
+    **`origem` viaja mesmo sem ato de sorteio**, e é o que impede `aferir` de anunciar "marco
+    removido" — que é o que ele diria de qualquer coisa não recomputável, e seria falso duas vezes.
+
+    Um ato **computado** vivo neste marco é divergência nomeada, e não silêncio. Ele não nasce mais
+    por caminho nenhum do sistema; existindo — emitido antes de as três camadas fecharem —, a
+    aferição de publicabilidade precisa dizer que aquela ordem não veio de onde a norma manda, em
+    vez de recomputá-la por Etapas e declará-la publicável.
+    """
+    divergencias = []
+    if vigente is not None and (vigente.universo or {}).get("origem") != ORIGEM_SORTEIO:
+        divergencias = [
+            {
+                "tipo": "ordem_computada_em_marco_de_sorteio",
+                "descricao": (
+                    "O Edital declara que este marco ordena por sorteio, e o ato vigente foi "
+                    "computado a partir de Etapas. A ordem publicada não veio da regra que a "
+                    "norma declara."
+                ),
+            }
+        ]
+    return {
+        "proposta": None,
+        "vigente": vigente,
+        "perfil": perfil,
+        "marco": marco,
+        "obsoleto": bool(divergencias),
+        "recomputavel": False,
+        "origem": ORIGEM_SORTEIO,
+        "divergencias": divergencias,
+        "posicoes_divergentes": [],
+    }
+
+
 def _marco_removido(vigente, perfil_historico, marco_historico):
     return {
         "proposta": None,
@@ -266,6 +311,12 @@ def estado_do_marco(*, edital, marco_id, at=None, lista_id=None):
             ],
             "posicoes_divergentes": [],
         }
+
+    # **O marco que declara sorteio não passa pelo motor de Etapas**, tenha ou não ato ainda. Ler
+    # `drawMethod` aqui é ler conteúdo publicado — não é dependência do app do sorteio, que continua
+    # sendo `sorteios → classificacao` e nunca o contrário (021, D-013).
+    if marco.get("drawMethod"):
+        return _estado_do_marco_que_sorteia(perfil=perfil, marco=marco, vigente=vigente)
 
     proposta = calcular_ordem(
         edital=edital,

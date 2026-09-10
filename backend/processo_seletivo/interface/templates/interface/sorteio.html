@@ -10,8 +10,54 @@
 <h1>Sorteio — {{ marco.name }}</h1>
 <p class="sub">{{ perfil.name }} — o universo é comprometido <strong>antes</strong> de a semente existir.</p>
 
-{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível publicar:</strong> {{ erro }}</p>{% endif %}
-{% if resultado %}<p class="sucesso" role="status" tabindex="-1">Relação publicada e congelada, com {{ resultado.quantidade }} participante{{ resultado.quantidade|pluralize }}. O resumo é <code>{{ resultado.resumo }}</code>.</p>{% endif %}
+{% comment %}
+**Cada comando responde pelo que ele fez.** Havia uma frase só — escrita para a publicação da
+relação — e ela respondia aos quatro: depois de observar a extração, a tela dizia "Relação publicada
+e congelada, com  participante"; depois de **realizar o sorteio**, dizia "Relação publicada e
+congelada, com 327 participantes", omitindo justamente a semente e a ordem. Era falso no minuto mais
+visto do certame, com a transmissão aberta — e a faixa de recusa tinha o mesmo vício, anunciando
+"não foi possível publicar" quando o que falhara era a fonte externa.
+{% endcomment %}
+{% if erro %}
+<p class="erro" role="alert" tabindex="-1" autofocus><strong>
+  {% if erro.tipo == "ocorrencia" %}Não foi possível obter os números na fonte:
+  {% elif erro.tipo == "sorteio" %}Não foi possível realizar o sorteio:
+  {% elif erro.tipo == "anulacao" %}Não foi possível anular este sorteio:
+  {% else %}Não foi possível publicar a relação:{% endif %}
+</strong> {{ erro.detalhe }}</p>
+{% endif %}
+
+{% if resultado %}
+{% if resultado.tipo == "relacao" %}
+<p class="sucesso" role="status" tabindex="-1">Relação publicada e congelada, com
+  {{ resultado.quantidade }} participante{{ resultado.quantidade|pluralize }}. O resumo é
+  <code>{{ resultado.resumo }}</code>.</p>
+{% elif resultado.tipo == "ocorrencia" %}
+{% comment %}
+**A indisponibilidade não é sucesso**, e anunciá-la em verde diria à mesa que o passo foi cumprido
+quando a fonte não publicou nada. Ela é aviso: o que se registrou foi a ausência, e a regra é que
+diz qual ocorrência a substitui.
+{% endcomment %}
+{% if resultado.indisponivel %}
+<p class="aviso" role="status" tabindex="-1"><strong>{{ resultado.fonte }} — {{ resultado.referencia }}: sem extração publicada.</strong>
+  A indisponibilidade ficou registrada com a evidência do que se observou, e a regra publicada
+  aponta qual ocorrência a substitui. {{ resultado.evidencia }}</p>
+{% else %}
+<p class="sucesso" role="status" tabindex="-1">Números obtidos em {{ resultado.fonte }} —
+  {{ resultado.referencia }}: <code>{{ resultado.materialBruto }}</code>. Nada foi sorteado ainda:
+  observar é o passo anterior, e o sorteio é o próximo.</p>
+{% endif %}
+{% elif resultado.tipo == "sorteio" %}
+<p class="sucesso" role="status" tabindex="-1"><strong>Sorteio realizado</strong>, com
+  {{ resultado.quantidade }} participante{{ resultado.quantidade|pluralize }} na ordem. A semente
+  usada foi <code>{{ resultado.semente }}</code> e o manifesto é
+  <code>{{ resultado.manifestoHash }}</code>. Falta publicar a classificação.</p>
+{% elif resultado.tipo == "anulacao" %}
+<p class="sucesso" role="status" tabindex="-1"><strong>Sorteio sucessor constituído</strong>, com
+  {{ resultado.quantidade }} participante{{ resultado.quantidade|pluralize }}. O sorteio anulado
+  continua íntegro e verificável no endereço em que sempre esteve.</p>
+{% endif %}
+{% endif %}
 
 {% comment %}
 O método é **lido**, e não editado. Não há campo, não há botão de alterar: ele é conteúdo publicado
@@ -86,6 +132,12 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
   {% if pode_emitir and metodo %}
   <form method="post" action="{% url 'interface:observar-ocorrencia-do-sorteio' edital.id marco.id %}">
     {% csrf_token %}
+    {% comment %}
+    A chave viaja no formulário, como na tela da `015`. Sem ela, cada envio gerava uma chave nova e
+    o duplo clique deixava de ser repetição: o segundo pedido batia numa recusa e pintava a tela de
+    vermelho depois de o primeiro ter dado certo.
+    {% endcomment %}
+    <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-ocorrencia">
     <button type="submit" class="botao">Observar a ocorrência {{ proxima_referencia }} na fonte</button>
   </form>
   {% endif %}
@@ -123,9 +175,22 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       universo a comprometer aqui — e não há o que sortear enquanto não houver.</p>
     {% endif %}
 
+    {% comment %}
+    **Congelada a relação, esta tabela é a da relação** — e não a projeção do instante. Esta é a
+    tela que a transmissão mostra: exibir a projeção de agora fazia a audiência ver uma lista que
+    não era o universo comprometido, e a divergência, quando havia, aparecia apenas como uma
+    diferença de contagem no aviso ao lado.
+
+    A legenda é **visível** quando a relação está congelada: ali ela não repete o título, diz o que
+    a tabela é — o compromisso publicado, e não uma prévia.
+    {% endcomment %}
     <div class="tabela-rolavel">
       <table>
+        {% if recorte.congelada %}
+        <caption>Relação congelada — os {{ recorte.relacao.quantidade }} participantes publicados, com o número de cada um.</caption>
+        {% else %}
         <caption class="oculto">Participantes projetados do recorte {{ recorte.nome }}</caption>
+        {% endif %}
         <thead><tr><th scope="col">Número</th><th scope="col">Candidato</th><th scope="col">Protocolo</th></tr></thead>
         <tbody>
           {% for participante in recorte.participantes %}
@@ -144,6 +209,19 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       por {{ recorte.sorteio.executado_por }}. Semente <code>{{ recorte.sorteio.semente_normalizada }}</code>,
       manifesto <code>{{ recorte.sorteio.manifesto_hash }}</code>.
       <a href="{% url 'portal:verificar-sorteio' recorte.sorteio.id %}">Verificar no canal público</a></p>
+
+    {% comment %}
+    **O passo seguinte fica na tela em que o sorteio terminou** (`017`, FR-069). A ordem existe e é
+    imutável; o que falta é divulgá-la — e a divulgação era alcançada só reconstruindo a navegação
+    por cinco telas: voltar ao Edital, abrir os marcos, entrar na ordenação, achar o ato no
+    histórico e abri-lo. Com a transmissão no ar, isso é tempo morto e chance de erro.
+
+    Oferecido **só a quem publica**: `resultado:publicar` é capacidade própria e não decorre de
+    presidir a comissão, e um caminho que responde 403 é pior do que caminho nenhum.
+    {% endcomment %}
+    {% if pode_publicar %}
+    <p class="acoes"><a class="botao" href="{% url 'interface:previa-de-publicacao' edital.id marco.id recorte.sorteio.ato_id %}">Publicar a classificação deste sorteio</a></p>
+    {% endif %}
 
     {% comment %}
     **Anular não é refazer**, e a tela diz isso antes de oferecer o botão. O sucessor nasce de
@@ -174,6 +252,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       {% if recorte.relacoes_sucessoras and recorte.ocorrencias_disponiveis %}
       <form method="post" action="{% url 'interface:anular-sorteio' edital.id marco.id %}">
         {% csrf_token %}
+        <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-anulacao-{{ recorte.lista_id }}">
         <input type="hidden" name="sorteio_anterior_id" value="{{ recorte.sorteio.id }}">
         <p class="campo">
           <label for="anulacao-{{ forloop.counter }}">Motivo da anulação <span class="obrigatorio" aria-hidden="true">*</span></label>
@@ -215,6 +294,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
     {% endcomment %}
     <form method="post" action="{% url 'interface:realizar-sorteio' edital.id marco.id %}">
       {% csrf_token %}
+      <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-sorteio-{{ recorte.lista_id }}">
       <input type="hidden" name="relacao_id" value="{{ recorte.relacao.id }}">
       <input type="hidden" name="ocorrencia_id" value="{{ ocorrencia.id }}">
       <button type="submit" class="botao">Realizar o sorteio</button>
@@ -229,6 +309,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
     {% if pode_emitir and metodo and recorte.projetados %}
     <form method="post" action="{% url 'interface:publicar-relacao-do-sorteio' edital.id marco.id %}">
       {% csrf_token %}
+      <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-relacao-{{ recorte.lista_id }}">
       <input type="hidden" name="lista_id" value="{{ recorte.lista_id }}">
       {% if recorte.congelada %}
       <p class="campo">

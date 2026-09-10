@@ -270,6 +270,35 @@ entregava menos.
 
 ---
 
+## Phase 12: O rito, medido contra uma transmissão ao vivo
+
+A exploração de `doc/descoberta-rito-do-sorteio-2026-09-10.md` mediu a feature não pela pergunta que
+ela já respondia — *a ordem é reproduzível?* —, mas pelas outras duas: *a comissão conduz isto ao
+vivo sem improvisar?* e *o cidadão consegue ver a garantia acontecer?*
+
+Os oito achados abaixo são todos de **tela e navegação**: nenhum toca a chave, a ordem, a semente ou
+o manifesto, e nenhum exige migration. A suíte estava verde nos 216 casos da feature — o que faltava
+era ler a frase que a tela devolve, clicar duas vezes no botão, e perguntar se alguém consegue
+chegar até ele.
+
+- [X] T124 Dar a cada comando o seu desfecho — a faixa de sucesso dizia "Relação publicada e congelada, com N participantes" depois de **observar a extração** e depois de **realizar o sorteio**, e a de recusa prefixava "Não foi possível publicar" a falhas da fonte externa (FR-062)
+- [X] T125 Levar a chave de idempotência nos formulários do sorteio, como a tela da `015` já faz: o duplo clique no botão de sortear não era repetição, batia em `draw_already_constituted` e anunciava falha depois de o ato ter nascido (FR-032)
+- [X] T126 Ligar o detalhe do Edital à tela do sorteio, para o marco que declara método: ela não era alcançável por link nenhum do sistema (Constituição §VI)
+- [X] T127 Recusar a emissão computada no marco que declara `drawMethod` — **fechado no `main` por `40f783d`**, em três camadas, enquanto esta exploração corria: a tela encaminha, a rota recusa e `emitir_ordem` recusa sozinho. O que sobrou daqui é a leitura: `estado_do_marco` deixa de calcular por Etapas um marco que não ordena por Etapas, e nomeia como divergência o ato computado que já exista (D-001, FR-034, FR-069)
+- [X] T128 Separar falha de acesso de indisponibilidade na porta da fonte: um blip de rede registrava indisponibilidade definitiva, em linha append-only, e a cadeia de substituição descartava para sempre a extração que o Edital declarou (FR-015, FR-073)
+- [X] T129 Mostrar, na tela transmitida, **a relação congelada** — e não a projeção do instante (FR-006)
+- [X] T130 Pôr o caminho da divulgação na tela em que o sorteio termina, condicionado a `resultado:publicar` (FR-069)
+- [X] T131 Anunciar o sorteio na página pública do Edital, **antes** de ele acontecer: situação, quantidade de habilitados, instante do congelamento e o caminho para a relação (FR-011, FR-048)
+- [X] T133 Ler **só** `listaDezenas` no adaptador da Loteria Federal: o `or listaRateioPremio` fazia uma resposta com a extração vazia e o rateio preenchido semear o sorteio com os **valores dos prêmios**, em silêncio (FR-019, FR-076)
+- [X] T132 Escrever os testes: `tests/interface/test_console_do_sorteio.py`, `tests/integration/sorteios/test_falha_de_acesso_a_fonte.py`, `tests/integration/sorteios/test_ordem_do_marco_que_sorteia.py`, `tests/portal/test_sorteio_na_pagina_do_edital.py`, e o caso do rateio em `test_falha_de_acesso_a_fonte.py`. A recusa da emissão computada já é guardada por `tests/interface/test_marco_de_sorteio_nao_se_ordena.py`, que veio no `main`
+
+**O que ficou de fora, e por quê.** A data e a hora do sorteio, o endereço da transmissão, a página
+"Como este sorteio foi feito" e o candidato ciente do próprio número **não** entram aqui: são
+capacidades novas, com decisão de domínio pendente — onde mora o instante do sorteio —, e a
+exploração as separou como P1 exatamente para que não virassem escopo por proximidade.
+
+---
+
 ## Phase 9: Polish & Cross-Cutting
 
 - [X] T065 [P] Acrescentar ao `backend/processo_seletivo/processos/management/commands/seed_demo.py` um certame de sorteio — Edital publicado **com `drawMethod` no marco**, relação publicada citando-o e sorteio constituído — para que o roteiro do `quickstart.md` rode sem montagem manual

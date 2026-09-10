@@ -43,6 +43,26 @@ def cenario(api_client, manager_headers, process_payload):
     return edital, versao, inscricoes_do(edital)
 
 
+@pytest.fixture
+def cenario_computado(api_client, manager_headers, process_payload):
+    """O mesmo certame, com um marco que **não** declara método: o caminho de sempre."""
+    rascunho = rascunho_com_etapas()
+    marco_sem_metodo(rascunho, perfil_id=PROFILE_ID, etapa_id=rascunho["stages"][1]["id"])
+    edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
+    versao = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    return edital, versao, inscricoes_do(edital)
+
+
+def marco_sem_metodo(rascunho, *, perfil_id, etapa_id):
+    """O marco da fixture do sorteio, menos o `drawMethod` — que é a única diferença que importa."""
+    marco_com_metodo(rascunho, perfil_id=perfil_id, etapa_id=etapa_id)
+    for perfil in rascunho["profiles"]:
+        if str(perfil["id"]) == str(perfil_id):
+            for marco in perfil["classificationMilestones"]:
+                marco.pop("drawMethod", None)
+    return rascunho
+
+
 def inscricoes_do(edital):
     return inscrever(edital, 3, primeiro=801)
 
@@ -128,18 +148,69 @@ def test_relacao_sucedida_torna_a_ordem_sorteada_obsoleta(cenario):
     assert afericao.nivel == IMPEDIMENTO
 
 
-def test_a_regressao_do_ato_computado(cenario):
-    """**A metade que autoriza a alteração**: marco sem lista e ato computado saem como antes."""
-    edital, versao, _inscricoes = cenario
+def test_a_regressao_do_ato_computado(cenario_computado):
+    """**A metade que autoriza a alteração**: marco sem lista e sem sorteio sai como antes.
+
+    O cenário deste teste era o do sorteio, e a premissa estava errada: ele afirmava que um marco
+    **de sorteio** sem ato continuava recomputável, com proposta calculada por Etapas. Era a
+    descrição do defeito, não da regressão — a tela lia esse estado e oferecia "Emitir ordem" num
+    marco cuja ordem só nasce da semente. A regressão de verdade é a de um marco que **não** declara
+    método, e é ela que este teste passa a guardar.
+    """
+    edital, _versao, _inscricoes = cenario_computado
 
     estado = estado_do_marco(edital=edital, marco_id=MARCO)
 
-    # Sem ato nenhum, o marco continua recomputável e a proposta continua sendo calculada — o
-    # despacho por origem só existe quando há ato de sorteio vigente.
     assert estado["recomputavel"] is True
     assert estado["proposta"] is not None
     assert "origem" not in estado
     assert estado["vigente"] is None
+
+
+def test_o_marco_que_sorteia_nao_recomputa_nem_sem_ato(cenario):
+    """**O buraco por onde o certame se travava** (021, D-001, FR-034).
+
+    O detalhe do Edital manda todo marco para a tela de ordenação. Sem ato, o estado dizia
+    `recomputavel=True`, a tela oferecia "Emitir ordem", e o cálculo por Etapas de um marco que não
+    ordena por Etapas produzia o ato raiz do recorte — depois do quê `constituir_sorteio` recusava,
+    corretamente, e o sucessor exigia um sorteio anterior que nunca existiu. O sorteio ficava
+    inalcançável pela própria interface.
+    """
+    edital, _versao, _inscricoes = cenario
+
+    estado = estado_do_marco(edital=edital, marco_id=MARCO)
+
+    assert estado["proposta"] is None, "não há o que calcular sem semente"
+    assert estado["recomputavel"] is False, "e nada aqui recompõe uma ordem sorteada"
+    assert estado["origem"] == "SORTEIO", "e `aferir` não deve chamá-lo de marco removido"
+    assert estado["obsoleto"] is False, "sem ato não há ordem obsoleta — há ordem por vir"
+
+
+def test_o_ato_computado_num_marco_que_sorteia_e_divergencia_nomeada(cenario):
+    """O defeito consumado não fica em silêncio: quem o vê precisa saber o que aconteceu."""
+    edital, versao, inscricoes = cenario
+    computado = AtoDeOrdenacao.objects.create(
+        edital=edital,
+        perfil_id=PROFILE_ID,
+        marco_id=MARCO,
+        versao=versao,
+        universo={
+            "editalId": str(edital.id),
+            "profileId": PROFILE_ID,
+            "milestoneId": MARCO,
+            "versionId": str(versao.id),
+            "stageResults": [],
+        },
+        emitido_por="cpf:presidente",
+        emitido_em=timezone.now(),
+    )
+
+    estado = estado_do_marco(edital=edital, marco_id=MARCO)
+
+    assert estado["obsoleto"] is True
+    assert [d["tipo"] for d in estado["divergencias"]] == ["ordem_computada_em_marco_de_sorteio"]
+    assert aferir(edital=edital, marco_id=MARCO, ato=computado).nivel == IMPEDIMENTO
+    assert len(inscricoes) == 3
 
 
 def test_ato_de_sorteio_sem_proveniencia_e_divergencia_e_nao_silencio(cenario):

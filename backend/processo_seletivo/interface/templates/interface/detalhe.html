@@ -132,7 +132,18 @@ permanecem preservados.</p>
 <section aria-labelledby="classificacao-titulo" class="cartao">
   <h2 id="classificacao-titulo">Classificação</h2>
   <p class="ajuda">Abra um marco para conferir a ordem calculada, emitir o ato e consultar seu histórico.</p>
-  <ul class="resumo-lista">{% for grupo in marcos_classificatorios %}{% for marco in grupo.marcos %}<li><a href="{% url 'interface:ordenacao' edital.id marco.id %}">{{ marco.name }}</a> <span class="quando">{{ grupo.perfil.name }}</span></li>{% endfor %}{% endfor %}</ul>
+  {% comment %}
+  **O marco que ordena por sorteio abre a tela do sorteio, e não a da ordenação** (021, D-013).
+
+  Esta lista mandava todos para a ordenação, e a tela do sorteio não era alcançável por link nenhum
+  do sistema: no dia da transmissão ela dependia de alguém ter a URL decorada. Pior, a ordenação
+  oferecia "Emitir ordem" a um marco que não ordena por Etapas — e emitir ali ocupava o ato raiz do
+  recorte, deixando o sorteio sem lugar onde nascer.
+
+  O rótulo diz o que se vai encontrar, e é a mesma regra que a supervisão já aplica ao mesmo par de
+  telas: "ordenação" nomearia um recálculo que aquele marco não tem.
+  {% endcomment %}
+  <ul class="resumo-lista">{% for grupo in marcos_classificatorios %}{% for marco in grupo.marcos %}<li>{% if marco.drawMethod %}<a href="{% url 'interface:sorteio' edital.id marco.id %}">{{ marco.name }}</a> <span class="quando">{{ grupo.perfil.name }} — sorteio público</span>{% else %}<a href="{% url 'interface:ordenacao' edital.id marco.id %}">{{ marco.name }}</a> <span class="quando">{{ grupo.perfil.name }}</span>{% endif %}</li>{% endfor %}{% endfor %}</ul>
 </section>
 {% endif %}
 

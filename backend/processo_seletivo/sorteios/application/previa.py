@@ -141,18 +141,42 @@ def _recorte(edital, perfil_id, marco_id, lista_id, nome, submetidas, habilitada
         # congelamento é a relação que manda, e a divergência entre os dois números é informação:
         # ela diz que um fato de origem mudou desde o compromisso.
         "projetados": len(projetados),
-        "participantes": [
-            {
-                "numero": numero,
-                "nome": inscricao.nome or "",
-                "protocolo": inscricao.protocolo or "",
-            }
-            for numero, inscricao in projetados
-        ],
+        # **Congelada a relação, a tabela é a da relação — e não a projeção de agora.** Esta é a
+        # tela que vai ao ar: mostrar a projeção do instante fazia a audiência ver uma lista que
+        # **não** era o universo comprometido, e a divergência, quando existia, aparecia só como
+        # uma diferença de contagem num aviso ao lado. O que se transmite passa a ser exatamente o
+        # que o portal publica e o que o resumo cobre (021, FR-006).
+        "participantes": _congelados(vigente) if vigente is not None else _projetados(projetados),
         "relacao": vigente,
         "congelada": vigente is not None,
         "sorteio": sorteio,
     }
+
+
+def _projetados(numerados):
+    """Quem entraria se a relação fosse publicada agora — o universo ainda não comprometido."""
+    return [
+        {"numero": numero, "nome": inscricao.nome or "", "protocolo": inscricao.protocolo or ""}
+        for numero, inscricao in numerados
+    ]
+
+
+def _congelados(relacao):
+    """Os participantes **da relação publicada**, na numeração que ela gravou.
+
+    Os mesmos três dados que o portal mostra e que o resumo cobre — número, nome e protocolo —, e
+    lidos da relação, que é imutável. É esta lista que a transmissão exibe.
+    """
+    return [
+        {
+            "numero": participante.numero_publico,
+            "nome": participante.inscricao.nome or "",
+            "protocolo": participante.inscricao.protocolo or "",
+        }
+        for participante in relacao.participantes.select_related("inscricao").order_by(
+            "numero_publico"
+        )
+    ]
 
 
 def _sorteio_vigente(edital, perfil_id, marco_id, lista_id):

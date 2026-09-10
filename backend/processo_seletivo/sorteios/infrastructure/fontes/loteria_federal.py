@@ -24,9 +24,22 @@ ENDERECO = "https://servicebus2.caixa.gov.br/portaldeloterias/api/federal/{refer
 
 class LoteriaFederal(FonteExterna):
     def observar(self, *, fonte, referencia):
+        """O que a fonte publicou — ou **por que** não foi possível saber.
+
+        **Os dois desfechos negativos são distintos, e a distinção é a garantia** (021, FR-015).
+        Uma resposta da fonte sem a extração é `indisponivel`: é fato sobre o mundo, e é o que
+        aciona a regra de substituição publicada — em linha append-only, para sempre. Não conseguir
+        falar com a fonte é `falha_de_acesso`: não afirma nada, não grava nada, e se tenta de novo.
+
+        Antes as duas eram a mesma coisa, e o efeito aparecia no pior momento possível: um blip de
+        rede durante a transmissão registrava indisponibilidade definitiva, a cadeia avançava
+        sozinha para a extração seguinte, e a extração que o Edital declarou ficava descartada sem
+        que ninguém tivesse decidido descartá-la.
+        """
         tentativas = max(int(getattr(settings, "SORTEIO_FONTE_TENTATIVAS", 3)), 1)
         limite = float(getattr(settings, "SORTEIO_FONTE_TIMEOUT_SEGUNDOS", 10))
-        ultima = ""
+        acesso = ""
+        resposta_da_fonte = ""
         for _ in range(tentativas):
             try:
                 with request.urlopen(
@@ -34,26 +47,57 @@ class LoteriaFederal(FonteExterna):
                 ) as resposta:
                     corpo = json.loads(resposta.read().decode("utf-8"))
             except (error.URLError, TimeoutError, ValueError) as falha:
-                ultima = f"{type(falha).__name__}: {falha}"
+                acesso = f"{type(falha).__name__}: {falha}"
                 continue
-            premios = corpo.get("listaDezenas") or corpo.get("listaRateioPremio") or []
-            material = " ".join(str(item) for item in premios if str(item).strip())
+            material = _bilhetes_premiados(corpo)
             quando = _nao_antes_de(corpo)
             if material and quando is not None:
                 return Observacao(material_bruto=material, ocorrida_nao_antes_de=quando)
-            if material:
+            resposta_da_fonte = (
                 # Material sem data é material que não prova precedência: aceitá-lo devolveria ao
                 # certame a possibilidade de congelar já sabendo o resultado (FR-016).
-                ultima = "A fonte devolveu a extração sem a data em que ela ocorreu."
-                continue
-            ultima = "A fonte respondeu sem os números da extração."
+                "A fonte devolveu a extração sem a data em que ela ocorreu."
+                if material
+                else "A fonte respondeu sem os números da extração."
+            )
+        if resposta_da_fonte:
+            # **A fonte falou.** Ela é quem diz que não há extração, e é por isso que este desfecho
+            # pode consumir a cadeia de substituição.
+            return Observacao(
+                indisponivel=True,
+                evidencia=(
+                    f"Concurso {referencia} de {fonte}: {resposta_da_fonte} "
+                    f"Observado em {tentativas} tentativa(s)."
+                ),
+            )
         return Observacao(
-            indisponivel=True,
+            falha_de_acesso=True,
             evidencia=(
-                f"Concurso {referencia} de {fonte}: a fonte não devolveu a extração em "
-                f"{tentativas} tentativa(s). Última resposta: {ultima}"
+                f"Concurso {referencia} de {fonte}: não foi possível falar com a fonte em "
+                f"{tentativas} tentativa(s). Última falha: {acesso}"
             ),
         )
+
+
+def _bilhetes_premiados(corpo):
+    """Os cinco bilhetes premiados da extração, na ordem dos prêmios — e **nada além deles**.
+
+    `listaDezenas` é o nome que a Caixa dá ao campo, e o nome engana: não são dezenas, são os cinco
+    números de bilhete, de seis dígitos cada, do 1º ao 5º prêmio. É esse o material bruto que a
+    regra `DIGITOS_EM_SEQUENCIA` transforma em semente.
+
+    **O `or corpo.get("listaRateioPremio")` que morava aqui era uma porta para semente inventada.**
+    O rateio é outra coisa inteiramente: são as faixas de premiação, com `valorPremio: 500000.0` e
+    `numeroDeGanhadores`. Numa resposta 200 em que a extração viesse vazia e o rateio não, o
+    material bruto passaria a ser a serialização Python daqueles dicionários, a regra publicada
+    extrairia os dígitos de **valores monetários**, e o sorteio de um certame seria semeado por
+    quanto se pagou de prêmio — sem que nada, em lugar nenhum, acusasse a troca.
+
+    Um campo, e a ausência dele é ausência de extração. Fonte que responde sem o que se foi buscar
+    não devolve um sucedâneo: devolve nada, e quem decide o que fazer com isso é a regra publicada.
+    """
+    bilhetes = corpo.get("listaDezenas") or []
+    return " ".join(str(item) for item in bilhetes if str(item).strip())
 
 
 def _nao_antes_de(corpo):

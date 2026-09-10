@@ -44,11 +44,24 @@ class Observacao:
 
     O adaptador que não souber dizer quando a ocorrência aconteceu não serve para semear sorteio, e
     o comando o recusa.
+
+    **`falha_de_acesso` não é `indisponivel`, e confundir os dois custava a extração do certame.**
+    `indisponivel` significa que a fonte **respondeu** e não havia extração — é o fato que a regra
+    de substituição publicada consome, e ele fica gravado para sempre numa linha append-only.
+    `falha_de_acesso` significa que não foi possível falar com a fonte: rede fora, tempo esgotado,
+    serviço no chão. A segunda hipótese não afirma nada sobre o mundo, e tratá-la como a primeira
+    fazia cinco segundos de rede ruim, ao vivo, **queimarem para sempre a extração que o Edital
+    declarou** e empurrarem o certame para a seguinte — que talvez só aconteça na semana que vem, e
+    sem nenhum caminho de volta, porque a linha não se altera nem se apaga.
+
+    Falha de acesso, portanto, **não grava nada**: o comando recusa, diz o que houve, e quem opera
+    tenta de novo.
     """
 
     material_bruto: str = ""
     ocorrida_nao_antes_de: object = None
     indisponivel: bool = False
+    falha_de_acesso: bool = False
     evidencia: str = ""
 
 

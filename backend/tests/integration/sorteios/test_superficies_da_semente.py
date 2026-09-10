@@ -91,6 +91,12 @@ def test_a_porta_da_fonte_devolve_material_bruto_e_nao_semente():
         # a ocorrência é posterior ao congelamento (FR-016).
         "ocorrida_nao_antes_de",
         "indisponivel",
+        # **Não conseguir falar com a fonte não é a fonte dizer que não há extração.** O campo
+        # existe para que os dois desfechos deixem de ser um só: `indisponivel` é fato sobre o
+        # mundo, grava linha append-only e consome a cadeia de substituição; `falha_de_acesso` não
+        # afirma nada e não grava — antes disso, um blip de rede ao vivo descartava para sempre a
+        # extração que o Edital declarou.
+        "falha_de_acesso",
         "evidencia",
     }
     assert set(inspect.signature(FonteExterna.observar).parameters) == {
