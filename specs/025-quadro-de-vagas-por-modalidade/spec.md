@@ -348,8 +348,9 @@ contando quantos campos exigiram digitação.
 - **Quadro só de reservadas, sem linha geral.** É quadro parcial (D-006), aceito; a conferência
   contra o total não roda.
 - **Modalidade declarada com nome "Ampla concorrência".** Ela existe, pode ser apontada por Documento
-  Exigido, e **não** carrega linha reservada (D-004). Quem tentar declará-la precisa ser advertido de
-  que o número da ampla concorrência mora na linha geral.
+  Exigido, e **não** carrega linha reservada (D-004). Quem tentar declará-la é **advertido** de que o
+  número da ampla concorrência mora na linha geral — advertido e não impedido, porque o sistema não
+  decide qual Modalidade o Edital usa como ampla concorrência (FR-176).
 - **Duas linhas reservadas para a mesma Modalidade.** Recusadas: uma Modalidade tem no máximo uma
   linha.
 - **Retificação que remove a única linha geral.** Aceita — o quadro passa a ser parcial —, e a
@@ -374,8 +375,8 @@ contando quantos campos exigiram digitação.
   Concorrência declarada no mesmo Perfil, e MUST haver no máximo uma linha por Modalidade.
 - **FR-156**: A quantidade de cada linha MUST ser um número inteiro absoluto maior ou igual a zero,
   declarado por quem compõe.
-- **FR-157**: Nenhum caminho desta feature MUST derivar, calcular ou recalcular quantidade de vaga a
-  partir de percentual, fundamento normativo ou qualquer campo da Regra Normativa.
+- **FR-157**: Esta feature MUST NOT derivar, calcular ou recalcular quantidade de vaga a partir de
+  percentual, fundamento normativo ou qualquer campo da Regra Normativa, por caminho algum.
 - **FR-158**: O sistema MUST recusar linha que referencie Modalidade de outro Perfil ou de Perfil
   nenhum, com mensagem que diga qual dos dois casos é.
 - **FR-159**: A ausência de linha para uma Modalidade MUST significar quantidade não declarada, e
@@ -384,7 +385,9 @@ contando quantos campos exigiram digitação.
   publicável.
 - **FR-161**: Quando o quadro é **completo** — linha geral e uma linha para cada Modalidade declarada
   no Perfil —, a soma das quantidades MUST ser conferida contra o total de vagas imediatas do Perfil,
-  e a divergência MUST recusar a submissão dizendo a diferença em números.
+  e a divergência MUST recusar a submissão dizendo a diferença em números. A conferência MUST valer
+  igualmente sobre o conteúdo que uma Retificação produziria: um quadro que fecha não pode ser
+  retificado para um que não fecha.
 - **FR-162**: O total de vagas imediatas do Perfil MUST permanecer declarado por quem compõe, e MUST
   NOT ser sobrescrito pela soma das linhas.
 - **FR-163**: O sistema MAY advertir, na elaboração, que uma quantidade declarada diverge do
@@ -426,6 +429,24 @@ contando quantos campos exigiram digitação.
 - **FR-176**: A ampla concorrência MUST ser declarada exclusivamente pela linha geral, e uma
   Modalidade que o Edital use como ampla concorrência MUST NOT carregar linha reservada.
 
+  > **As duas metades têm aplicação diferente, e dizer isso é o que impede a leitura errada.** A
+  > primeira o sistema **recusa**: há no máximo uma linha geral por Perfil (FR-154), e é ela que
+  > carrega a ampla concorrência. A segunda o sistema **adverte, e não recusa** — identificar qual
+  > Modalidade o Edital *usa como* ampla concorrência exige casar o nome dela, e reconciliar as duas
+  > grafias está fora do escopo desta feature (§7). A norma vale para quem redige o Edital; o que o
+  > sistema pode fazer é dizer, na composição, que o número da ampla concorrência mora na linha
+  > geral. O custo dessa escolha está medido em `research.md`, R-006.
+
+- **FR-177**: A soma das quantidades declaradas no quadro MUST NOT exceder o total de vagas imediatas
+  do Perfil, e o excesso MUST recusar a submissão dizendo a diferença em números — **independentemente
+  de o quadro ser completo ou parcial**.
+
+  > **A assimetria é deliberada.** Somar menos que o total é legítimo num quadro parcial: o Edital
+  > declarou parte da repartição e não a toda (D-006). Somar **mais** não é legítimo em quadro
+  > algum — nenhum Edital reserva mais vagas do que oferece —, e essa metade da conferência não
+  > precisa esperar pela completude. É o que faz a FR-161 alcançar o Edital que declara uma
+  > Modalidade chamada "Ampla concorrência", e que por isso nunca fica completo.
+
 ### Requisitos de apresentação
 
 - **UX-020**: O quadro MUST ser uma seção da tela de composição do Perfil, e não uma tela à parte.
@@ -457,8 +478,9 @@ Verificáveis a qualquer momento, em qualquer estado do acervo:
 3. Toda linha reservada referencia uma Modalidade do próprio Perfil.
 4. Toda linha publicada é alcançável por identidade, e nenhuma por posição.
 5. Quadro ausente nunca significa zero vaga.
-6. Nenhum valor publicado é reescrito por esta feature.
-7. Nenhuma tela desta feature atribui pessoa a linha do quadro.
+6. A soma de um quadro declarado nunca excede o total de vagas imediatas do Perfil.
+7. Nenhum valor publicado é reescrito por esta feature.
+8. Nenhuma tela desta feature atribui pessoa a linha do quadro.
 
 ## 6. Success Criteria *(mandatory)*
 
@@ -467,8 +489,13 @@ Verificáveis a qualquer momento, em qualquer estado do acervo:
 - **SC-048**: Quem compõe declara o quadro completo de um Perfil de três Modalidades digitando
   **apenas as quatro quantidades**, sem redigitar rótulo, código ou denominação.
 - **SC-049**: O ciclo completo do 57/2026 — declarar `AC 56`, `PcD 4` e `PPI 20`, publicar, e
-  retificar `PPI 20` para `PPI 18` — é percorrido sem que nenhuma outra linha mude e sem que nenhuma
-  quantidade seja recalculada.
+  retificar `PPI 20` para `PPI 18` **junto com o total do Perfil, de 80 para 78** — é percorrido sem
+  que nenhuma outra linha mude e sem que nenhuma quantidade seja recalculada.
+
+  > **Os dois movimentos são um ato só, e é a FR-161 que os amarra.** Reduzir a vaga reservada sem
+  > reduzir o total publicaria um quadro que não fecha, e o sistema recusa — pela mesma razão da
+  > D-007. Quem retifica declara os dois, como declara os dois da D-008.
+
 - **SC-050**: 100% dos Editais publicados antes desta feature permanecem legíveis depois dela, e
   nenhum passa a afirmar zero vaga.
 - **SC-051**: Um quadro cujas quantidades nenhum percentual gera — `Q 1`, `PCD 1` — é publicado e
@@ -538,4 +565,4 @@ conduzido alcança, do começo ao fim:
 - retificar uma linha por identidade, e ver as demais intactas e o quadro anterior legível;
 - abrir um Edital publicado antes do degrau e não encontrar afirmação de zero vaga em lugar nenhum.
 
-E quando os sete invariantes da §5 forem verificáveis por teste.
+E quando os oito invariantes da §5 forem verificáveis por teste.
