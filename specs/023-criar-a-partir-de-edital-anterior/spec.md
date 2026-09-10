@@ -202,6 +202,32 @@ para a mesma palavra — ambos sobre *de onde isto veio* — é o que o princíp
 A trilha é append-only e indexada por agregado (`auditoria/models.py`), então a pergunta *de onde
 este Edital partiu* é respondida onde as outras perguntas de autoria de ato já são.
 
+### D-009 — Trocar a origem é permitido sempre, e o que se perde é dito antes
+
+A primeira redação fechava a porta: escolhida a origem, a afordância sumia e o comando recusava. O
+caminho de volta era refazer à mão — ou cancelar o Edital, **que queima o número**, porque
+`uq_edital_scope_number_year` não tem condição e o cancelado continua ocupando `(escopo, número,
+ano)` para sempre. Errar a escolha custava caro, e o custo não aparecia na hora de escolher.
+
+**A troca é a mesma operação, com uma precondição diferente.** `replace_draft` já substitui o
+rascunho inteiro; o que precisa de cuidado são os Anexos, que não viajam nele e colidiriam em
+`uq_anexo_edital_order` — eles saem antes, e os artefatos junto, pelo critério que a `020` já
+escreveu: artefato que nenhuma versão publicou é rascunho substituível.
+
+**Permitir sempre, e não proibir depois da primeira gravação.** A alternativa considerada era
+bloquear a troca assim que alguém gravasse — derivável da trilha, sem estado novo. Foi recusada
+porque tranca a saída justamente para quem mais precisa dela: um "Avançar" no assistente bastaria
+para prender a pessoa à origem errada.
+
+**O que a substitui é a lista.** Descartar em silêncio e reaproveitar em silêncio são os dois erros
+simétricos, e enumerar o que se perde **antes** de perder é o que evita os dois — é a decisão que o
+portal já tomou para a mudança de modalidade (`009`, FR-031), aplicada aqui.
+
+**A confirmação é a recusa apresentada**, e não uma segunda verificação da precondição: a tela chama
+o comando, e é `draft_not_empty` que ela traduz em pergunta. Perguntar antes faria a repetição
+conhecida — mesma chave, cópia já feita — cair na pergunta em vez de terminar onde a primeira
+terminou.
+
 ### D-006 — Nenhum gate novo, e o stepper fica como está
 
 Não existe *"você ainda não revisou as seções reaproveitadas"*. Seria o primeiro impedimento
@@ -355,6 +381,15 @@ saber que está diante de conteúdo herdado, não redigido para esta oferta.
   ser feita sobre o **conteúdo que vigora**, e não sobre o estado relacional: a coluna promete o que
   a cópia entrega, e contar noutro lugar faria a promessa divergir dela (`D-003`). A lista DEVE ser
   paginada, porque o acervo de Editais publicados só cresce.
+- **FR-004b**: A lista DEVE oferecer, para cada origem, o caminho até o **Edital publicado** dela,
+  para que a escolha seja feita depois de ler e não antes. NÃO DEVE haver segunda renderização do
+  conteúdo: a página pública daquele Edital já o mostra inteiro, com o documento e os anexos.
+- **FR-002a**: Com o rascunho **não vazio**, a escolha de uma origem DEVE ser oferecida como
+  **substituição**: o sistema DEVE enumerar o que será descartado — Perfis, Eventos, Etapas,
+  Documentos Exigidos, Seções redigidas e Anexos — e só substituir depois de confirmado (`D-009`).
+  Sem confirmação, a recusa de `FR-002` permanece.
+- **FR-002b**: A substituição DEVE remover os Anexos do destino e os arquivos deles antes de criar
+  os novos, e NÃO DEVE tocar em nenhuma das origens.
 - **FR-005**: A origem da cópia DEVE ser a **versão vigente consolidada** do Edital escolhido,
   elevada ao esquema canônico corrente (D-003).
 - **FR-006**: A operação DEVE copiar para o destino a configuração que as etapas de composição

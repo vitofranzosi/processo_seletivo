@@ -36,6 +36,17 @@ divisão preenche a largura e devolve ao segundo parágrafo o título que ele se
   </section>
 </div>
 
+{% if not vazio %}
+{% comment %}
+Escolher aqui deixou de ser acrescentar e passou a ser substituir. O que se perde é dito antes, e
+outra vez na confirmação — a lista é o requisito, e uma advertência sem números não é lista.
+{% endcomment %}
+<div class="aviso" role="alert">
+  <p><strong>Este Edital já tem conteúdo composto.</strong> Escolher uma origem aqui
+    <strong>substitui</strong> o que está nele: {% if descarte.perfis %}{{ descarte.perfis }} perfi{{ descarte.perfis|pluralize:"l,s" }}, {% endif %}{% if descarte.eventos %}{{ descarte.eventos }} evento{{ descarte.eventos|pluralize }}, {% endif %}{% if descarte.etapas %}{{ descarte.etapas }} etapa{{ descarte.etapas|pluralize }}, {% endif %}{% if descarte.documentos %}{{ descarte.documentos }} documento{{ descarte.documentos|pluralize }} exigido{{ descarte.documentos|pluralize }}, {% endif %}{% if descarte.secoes %}{{ descarte.secoes }} seç{{ descarte.secoes|pluralize:"ão,ões" }} redigida{{ descarte.secoes|pluralize }}, {% endif %}{% if descarte.anexos %}{{ descarte.anexos }} anexo{{ descarte.anexos|pluralize }}, {% endif %}entre outros. Você confirma antes de qualquer coisa ser trocada.</p>
+</div>
+{% endif %}
+
 <section aria-labelledby="origens-titulo">
   <h2 id="origens-titulo">Editais que podem servir de origem</h2>
 
@@ -99,7 +110,16 @@ divisão preenche a largura e devolve ao segundo parágrafo o título que ele se
             <tr>
               <td><input type="radio" name="origem" id="origem-{{ origem.id }}" required
                          value="{{ origem.id }}"></td>
-              <th scope="row"><label for="origem-{{ origem.id }}">Edital {{ origem.number }}/{{ origem.year }}</label></th>
+              <th scope="row">
+                <label for="origem-{{ origem.id }}">Edital {{ origem.number }}/{{ origem.year }}</label>
+                {% comment %}
+                Ler antes de escolher. O Edital é publicado, então a página pública dele já mostra o
+                conteúdo inteiro, o PDF e os anexos — construir aqui uma segunda prévia repetiria a
+                renderização canônica, que é o que a `006` recusou para a prévia da elaboração.
+                {% endcomment %}
+                <a class="acao" href="{% url 'portal:selecao' origem.id %}" target="_blank"
+                   rel="noopener">Ver o Edital <span class="oculto">{{ origem.number }}/{{ origem.year }} em nova aba</span></a>
+              </th>
               <td>{{ origem.title }}</td>
               <td>{{ origem.processo.institutional_code }} — {{ origem.processo.title }}</td>
               <td>{{ origem.publicado_em|date:"d/m/Y"|default:"—" }}
@@ -124,7 +144,7 @@ divisão preenche a largura e devolve ao segundo parágrafo o título que ele se
 
     <p class="navegacao-etapa">
       <a href="{{ voltar }}">Cancelar</a>
-      <button type="submit" class="botao">Usar como base</button>
+      <button type="submit" class="botao">{% if vazio %}Usar como base{% else %}Substituir pelo escolhido{% endif %}</button>
     </p>
   </form>
 

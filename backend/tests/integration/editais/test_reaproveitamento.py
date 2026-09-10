@@ -1055,3 +1055,71 @@ def test_o_resumo_de_uma_origem_sem_versao_nao_derruba_a_lista(destino, elaborad
         "anexos": 0,
     }
     assert resumido.publicado_em is None
+
+
+# ---------------------------------------------------------------------------
+# Trocar a origem (D-009)
+# ---------------------------------------------------------------------------
+
+
+def test_o_que_sera_descartado_conta_o_rascunho_do_destino(destino, origem, elaborador):
+    """Nas tabelas, e não no conteúdo publicado: o destino é rascunho e nunca publicou nada."""
+    from processo_seletivo.editais.application.reaproveitamento import o_que_sera_descartado
+
+    assert o_que_sera_descartado(destino) == {
+        "perfis": 0,
+        "eventos": 0,
+        "etapas": 0,
+        "documentos": 0,
+        "secoes": 0,
+        "anexos": 0,
+    }
+
+    copiado = copiar(destino, origem, elaborador)
+
+    descarte = o_que_sera_descartado(copiado)
+    assert descarte["perfis"] == 1
+    assert descarte["eventos"] == 2
+    assert descarte["etapas"] == 1
+    assert descarte["documentos"] == 2
+    assert descarte["anexos"] == 1
+    assert descarte["secoes"] >= 1
+
+
+def test_a_troca_nao_toca_em_nenhuma_das_duas_origens(
+    destino, origem, elaborador, api_client, manager_headers
+):
+    """Substituir é copiar de novo: as duas origens continuam sendo lidas e nunca escritas."""
+    from tests.fixtures.edital import complete_draft
+    from tests.fixtures.publicacao import publish_original
+
+    outra = publish_original(
+        api_client,
+        {**manager_headers, "HTTP_IDEMPOTENCY_KEY": "outra-origem-0001"},
+        {
+            "institutionalCode": "PS-2026-002",
+            "title": "Outro Processo",
+            "firstEdital": {"number": "99", "year": 2026, "title": "Edital da outra origem"},
+        },
+        draft=complete_draft(seed=7),
+    )
+    copiar(destino, origem, elaborador)
+    antes = [(edital.status, edital.revision, edital.perfis.count()) for edital in (origem, outra)]
+
+    trocado = reaproveitar_edital(
+        actor=elaborador,
+        edital_id=destino.id,
+        origem_id=outra.id,
+        expected_revision=Edital.objects.get(pk=destino.pk).revision,
+        idempotency_key="troca-integracao-0001",
+        correlation_id="correlacao-023",
+        substituindo=True,
+    )
+
+    origem.refresh_from_db()
+    outra.refresh_from_db()
+    assert antes == [
+        (edital.status, edital.revision, edital.perfis.count()) for edital in (origem, outra)
+    ]
+    assert trocado.perfis.get().code == "P1"
+    assert trocado.anexos.count() == 0

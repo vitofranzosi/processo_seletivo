@@ -179,6 +179,42 @@ def _origem_elegivel(actor, origem_id):
         raise DomainError("not_found", "Recurso não encontrado.", 404) from exc
 
 
+def o_que_sera_descartado(edital):
+    """O que o rascunho do destino tem hoje, para ser dito **antes** de ser perdido.
+
+    Contado nas **tabelas**, e não no conteúdo publicado — ao contrário do resumo da origem, e a
+    assimetria é o próprio domínio: a origem é publicada e o que vale nela é a versão vigente; o
+    destino é rascunho e nunca publicou nada, então as tabelas são tudo o que ele é.
+    """
+    cronograma = getattr(edital, "cronograma", None)
+    return {
+        "perfis": edital.perfis.count(),
+        "eventos": cronograma.eventos.count() if cronograma is not None else 0,
+        "etapas": edital.etapas.count(),
+        "documentos": edital.documentos_exigidos.count(),
+        "secoes": edital.secoes.count(),
+        "anexos": edital.anexos.count(),
+    }
+
+
+def _descartar_anexos(edital):
+    """Os Anexos do destino saem antes de os novos entrarem.
+
+    **Precisam sair**, e não é escolha de arrumação: `uq_anexo_edital_order` é único por Edital, e a
+    segunda cópia recomeça a ordem em 1. O conteúdo não precisa do mesmo cuidado porque
+    `replace_draft` já apaga e recria as cinco coleções que viajam nele.
+
+    Apagar aqui é legítimo pelo critério que a `020` já escreveu: artefato que nenhuma versão
+    publicou é rascunho substituível — e o destino, por construção, nunca publicou. O congelado a
+    trigger recusaria, e é o certo.
+    """
+    for anexo in list(edital.anexos.select_related("artefato")):
+        artefato = anexo.artefato
+        anexo.delete()
+        if artefato.congelado_em is None:
+            artefato.delete()
+
+
 def _copiar_anexos(edital, conteudo, mapa, *, actor, now):
     """Artefato próprio, em rascunho, com os bytes do artefato congelado da origem.
 
@@ -231,6 +267,7 @@ def reaproveitar_edital(
     expected_revision,
     idempotency_key="",
     correlation_id="",
+    substituindo=False,
 ):
     """Copia a configuração vigente da origem para o rascunho vazio do destino.
 
@@ -255,6 +292,10 @@ def reaproveitar_edital(
             actor=actor,
             operation=f"edital:reaproveitar:{edital.pk}",
             key=idempotency_key,
+            # **`substituindo` não entra no payload da chave.** A chave identifica *o que* se está
+            # fazendo — copiar daquela origem para este Edital —, e não a permissão com que se
+            # chegou até aqui. Incluí-lo faria a confirmação bater de frente com a tentativa que a
+            # provocou: mesma chave, conteúdo diferente, `idempotency_conflict`.
             payload={"origem": str(origem.pk)},
         )
         if idem.result_id:
@@ -268,12 +309,18 @@ def reaproveitar_edital(
         if edital.revision != expected_revision:
             raise DomainError("stale_revision", "A revisão informada está obsoleta.", 412)
         if not rascunho_vazio(edital):
-            raise DomainError(
-                "draft_not_empty",
-                "Só é possível partir de outro Edital enquanto este não tiver nenhum conteúdo. "
-                "Este Edital já tem conteúdo composto.",
-                409,
-            )
+            # **`substituindo` é a confirmação atravessando a fronteira**, e não uma opção. A recusa
+            # continua sendo a resposta ao caminho acidental — o reenvio, o clique duplo, a
+            # requisição forjada —, e a substituição só acontece quando alguém disse, depois de ler
+            # o que se perde, que é para trocar (023, D-009).
+            if not substituindo:
+                raise DomainError(
+                    "draft_not_empty",
+                    "Este Edital já tem conteúdo composto. Para partir de outro Edital é preciso "
+                    "confirmar a substituição do que já está aqui.",
+                    409,
+                )
+            _descartar_anexos(edital)
 
         # **`at=now`, e não o instante que o seletor tomaria sozinho.** `effective_version` chama
         # `timezone.now()` quando não recebe o instante, e a auditoria registra o `now` da abertura
