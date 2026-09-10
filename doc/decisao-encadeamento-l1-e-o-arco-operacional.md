@@ -112,15 +112,47 @@ do recurso, ocupar e convocar são o mesmo evento na vida do candidato.
 **Decidir isto antes de especificar qualquer uma das duas.** Especificar com a fronteira ambígua
 produz duas features que se sobrepõem ou uma lacuna entre elas.
 
-### Q-2 · O quadro de vagas: caminho binário ou forma estruturada
+### Q-2 · Entregar a L-1 estruturada, ou adiá-la por publicação binária
+
+> **Reenquadrada em 10/09/2026.** A primeira redação desta seção chamava a Q-2 de *"a primeira
+> decisão que uma spec da L-1 teria de tomar"*. Está errado, e o erro importa: **a Q-2 não é uma
+> decisão de desenho dentro da L-1 — é a decisão de construí-la ou não.**
 
 Já registrada em
 [`descoberta-escopo-sorteio-e-anexos.md`](descoberta-escopo-sorteio-e-anexos.md), que a classificou
 como questão que **precede** a `020` e a `021`. As duas foram construídas sem que ela fosse
-respondida — o que é legítimo, porque nenhuma delas dependia da resposta, e continua pendente
-porque a L-1 depende.
+respondida — o que é legítimo, porque nenhuma delas dependia da resposta.
 
-É a primeira decisão que uma spec da L-1 teria de tomar, e não a última.
+**Escolhido o caminho binário, não se entrega a L-1.** Publica-se um arquivo que a `016` não
+consegue consumir. A escolha real é entre *construir a L-1 estruturada* e *adiar a L-1 em favor de
+uma solução documental* — e não entre duas formas de fazer a mesma coisa.
+
+**O custo do adiamento não é adiamento.** A §216 daquele documento já o escrevera, e vale por
+inteiro porque é a razão da recomendação:
+
+> *"O Edital que publicar o quadro como binário fica assim para sempre. Não é migração adiada — é
+> **bifurcação do acervo** entre Editais com quadro legível por máquina e Editais sem, permanente,
+> e a `016` depois só alcança a metade nova."*
+
+Publicação é ato imutável: um quadro publicado como anexo não se remodela depois. Cada Edital que
+sair por esse caminho entra na metade que a `016` nunca alcança.
+
+**A recomendação, portanto, é a forma estruturada** — não por elegância, e sim por coerência com a
+prioridade da §4: se a L-1 é entrada da `016`, entregá-la como binário é não entregá-la.
+
+**E há uma tensão que esta seção precisa registrar.** O caminho binário **já está disponível**
+desde a `020`: um quadro de vagas cabe num anexo hoje. E o repositório tem duas posições sobre
+isso, que ninguém conciliou:
+
+| Fonte | Posição |
+|---|---|
+| `descoberta-escopo-sorteio-e-anexos.md` §216 | o binário *"vale como escolha consciente"* para o quadro, com o custo declarado |
+| [avaliação de 09/09](avaliacao-de-capacidade-editais-2026-09-09.md) | conta 57, 28 e 173 como **impublicáveis** — isto é, recusa o anexo binário como forma de publicar o quadro |
+
+**A avaliação vem respondendo a Q-2 por antecipação**, e é bom que isso esteja escrito: os três
+Editais são contados como impublicáveis porque se presume que o quadro de vagas é conteúdo
+estruturado do documento, e não anexo. A presunção é defensável e é a que sustenta a recomendação
+acima — mas é presunção, e a decisão continua sendo do usuário.
 
 ## 6. A restrição que a `019` herda, e que não é dela desfazer
 
@@ -145,7 +177,7 @@ Dizer que a `019` "reabre" a `018` é impreciso e foi recusado nesta sessão: um
 reabre decisão vigente por existir. Ela a consome, ou propõe alterá-la pelo caminho que a
 Constituição prevê.
 
-## 7. As quatro correções desta sessão
+## 7. As cinco correções desta sessão
 
 Escritas porque a fundamentação de uma tese inclui o que quase a derrubou.
 
@@ -157,19 +189,26 @@ Escritas porque a fundamentação de uma tese inclui o que quase a derrubou.
    `014`, e o diagrama da §4 substitui a cadeia.
 3. **A fronteira `016`/`019` não é detalhe de escopo**: é a Q-1, e precede as duas.
 4. **"A `019` reabre a `018`" foi recusado**, e a §6 traz a formulação que ficou.
+5. **A Q-2 não era decisão de desenho dentro da L-1**, e a §5 foi reescrita por isso. Chamá-la de
+   *"a primeira decisão que uma spec da L-1 teria de tomar"* escondia que uma das alternativas é
+   **não construir a L-1**.
 
-E duas formulações ajustadas: a `018` **não** escolheu efeito pleno *porque* nenhuma vaga estava
-ocupada — esse fato barateou a escolha, cuja razão principal é jurídica; e "fechar o arco não ajuda
-os três Editais" era contraditório com a L-1 dentro do arco. A frase correta é: **fechar apenas as
-três features reservadas — `014`, `016` e `019` — não destrava a autoria desses Editais; a L-1,
-sim.**
+E três formulações ajustadas. A `018` **não** escolheu efeito pleno *porque* nenhuma vaga estava
+ocupada — esse fato barateou a escolha, cuja razão principal é jurídica. "Fechar o arco não ajuda os
+três Editais" era contraditório com a L-1 dentro do arco; a frase correta é **fechar apenas as três
+features reservadas — `014`, `016` e `019` — não destrava a autoria desses Editais; a L-1, sim.** E
+a `014` **não** está livre de decisões: o que se verificou é que ela **não possui dependência
+estrutural previamente identificada** — dizer "não pede decisão nenhuma" era overclaim. Ela ainda
+terá de decidir, por exemplo, empate atravessando o corte, alvo fixo contra alvo derivado de vagas,
+e progressão dependente da ocupação.
 
 ## 8. O que este documento **não** decide
 
 - **Não decide o que construir a seguir.** A tese ordena; ela não prioriza.
 - **Não abre spec.** Nenhuma linha daqui vira requisito, tarefa ou migration antes de a spec
   correspondente ser aberta, planejada e analisada pelo fluxo da Constituição.
-- **Não responde a Q-1 nem a Q-2.** As duas são de governança e ficam com o usuário.
+- **Não decide a Q-1 nem a Q-2.** As duas são de governança e ficam com o usuário. A §5 **recomenda** a forma estruturada para a Q-2 e diz por quê; recomendar não é decidir, e a
+  presunção que a avaliação de 09/09 já vinha aplicando está lá registrada como presunção.
 - **Não trata das lacunas fora deste encadeamento** — heteroidentificação (L-2), barema (D-4), fato
   sem grandeza (L-4), P-6, P-7, P-8. Elas continuam na
   [avaliação de 09/09](avaliacao-de-capacidade-editais-2026-09-09.md), que é o inventário.
