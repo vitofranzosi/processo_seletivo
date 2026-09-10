@@ -56,9 +56,18 @@
   salvamento seguinte era recusado com uma mensagem sobre uma Modalidade que a pessoa acabara de
   remover e que não aparecia mais em lugar nenhum.
   {% endcomment %}
+  {% with alvo="quadro-de-"|add:modalidade.id %}
   <p class="remover">
+    {% comment %}
+    O mesmo `alvo` nos dois atributos, e por isso escrito uma vez só: `junto=` diz ao servidor o que
+    apagar, e `data-junto` diz a `remocao.js` o que **contar** antes de perguntar. Repetir o valor
+    deixaria os dois se afastarem em silêncio — e o silêncio seria a confirmação subcontando o que
+    se perde, que é o oposto do que a FR-038 promete.
+    {% endcomment %}
     <button type="button" class="acao perigo"
-            hx-get="{% url 'interface:fragmento-remover' %}?junto=quadro-de-{{ modalidade.id }}"
+            hx-get="{% url 'interface:fragmento-remover' %}?junto={{ alvo }}"
+            data-junto="{{ alvo }}"
             hx-target="closest fieldset" hx-swap="outerHTML">Remover esta Modalidade</button>
   </p>
+  {% endwith %}
 </fieldset>

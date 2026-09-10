@@ -481,6 +481,12 @@ def test_o_botao_da_modalidade_pede_a_remocao_da_linha_do_quadro_junto(
     pcd = _id("2510", sub=2)
     assert f'id="quadro-de-{pcd}"' in corpo, "a linha reservada é achável pelo id da Modalidade"
     assert f"?junto=quadro-de-{pcd}" in corpo, "e o botão da Modalidade pede a remoção dela junto"
+    # **Os dois atributos dizem o mesmo alvo, e o teste não deixa que se afastem.** `junto=` manda
+    # o servidor apagar; `data-junto` manda `remocao.js` **contar** aquela quantidade antes de
+    # perguntar. Se um mudasse sem o outro, a confirmação subcontaria a perda — e, na Modalidade
+    # recém-criada em que só a quantidade foi digitada, deixaria de perguntar (FR-038).
+    assert f'data-junto="quadro-de-{pcd}"' in corpo
+    assert corpo.count(f"?junto=quadro-de-{pcd}") == corpo.count(f'data-junto="quadro-de-{pcd}"')
 
     # A linha geral não recebe `id`: não há botão que a remova, porque ela não é de Modalidade
     # nenhuma. Só as três reservadas são endereçáveis assim.

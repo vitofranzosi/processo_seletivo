@@ -49,9 +49,25 @@
     return legenda ? legenda.dataset.rotulo || legenda.textContent.trim() : "esta linha";
   }
 
+  /* O que sai **junto** com a linha, e que não mora dentro dela.
+
+     A Modalidade de Concorrência é o caso: a linha dela no quadro de vagas vive noutra seção do
+     cartão do Perfil, e o botão a remove pelo `id`. Contar só o `fieldset` subcontava a perda — e,
+     numa Modalidade recém-criada em que só a quantidade foi digitada, dava **zero**: a linha era
+     apagada sem pergunta nenhuma, que é exatamente o que a FR-038 existe para não deixar
+     acontecer. O `data-junto` do botão é o mesmo `id` que a requisição manda apagar. */
+  function tambem(botao) {
+    var alvo = botao.getAttribute && botao.getAttribute("data-junto");
+    var elemento = alvo && document.getElementById(alvo);
+    return elemento ? [elemento] : [];
+  }
+
   /* O que se perde ao descartar a linha, em palavras — ou vazio quando não há nada a perder. */
-  function perda(linha) {
+  function perda(linha, externos) {
     var campos = preenchidos(linha);
+    (externos || []).forEach(function (externo) {
+      campos += preenchidos(externo);
+    });
     var sublinhas = filhos(linha);
     var partes = [];
     if (campos) partes.push(campos === 1 ? "1 campo preenchido" : campos + " campos preenchidos");
@@ -86,7 +102,7 @@
     var linha = botao.closest("fieldset");
     if (!linha) return;
 
-    var perdas = perda(linha);
+    var perdas = perda(linha, tambem(botao));
     if (!perdas) return; // Nada a perder: remove direto.
 
     evento.preventDefault();
