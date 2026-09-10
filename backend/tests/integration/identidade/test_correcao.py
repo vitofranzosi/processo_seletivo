@@ -97,7 +97,16 @@ def test_o_cpf_congela_na_primeira_enviada(client, dentro, selecao):
     assert dentro.cpf_normalizado == "12345678909"
 
 
-def test_a_tela_explica_por_que_o_cpf_nao_muda_mais(client, dentro, selecao):
+def test_a_tela_explica_por_que_o_cpf_nao_muda_mais(client, dentro, selecao, settings):
+    """A frase de recurso genérica, que é a que aparece quando a instituição não declarou canal.
+
+    **O cenário é declarado aqui de propósito.** O teste afirmava sobre o *padrão* de
+    `PORTAL_ATENDIMENTO`, e `make test-pg` exporta o `backend/.env` inteiro para a suíte: quem
+    copiasse o `.env.example` — que é o que o README manda — via este caso reprovar por
+    configuração da própria máquina, enquanto o CI, que não tem `.env`, passava. Depender de
+    ausência de variável é depender do ambiente de quem roda.
+    """
+    settings.PORTAL_ATENDIMENTO = ""
     inscricao(selecao, dentro, enviada=True)
 
     corpo = client.get(reverse("portal:meus-dados")).content.decode()

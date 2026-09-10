@@ -209,6 +209,25 @@ permissão da tela dona:
 Anunciar que existe um sinal suprimido diria a quem não pode ver que **há** algo para ver, que é
 vazamento por agregação.
 
+**Emenda da implementação: em `UX-001` e `UX-002`, ver e corrigir se separaram.** A linha da tabela
+continua valendo para o **sinal** — ele aparece para quem passa pela porta da supervisão —, e a
+decisão que faltava aqui é a do **encaminhamento**. Os dois sinais nascem de defeito no conteúdo de
+um Edital **publicado**: Etapa sem marco no cronograma (`UX-001`), e `status` de Evento
+incompatível com as datas dele (`UX-002`). Conteúdo publicado não se corrige — se Retifica. Daí
+três consequências, todas em `destino_de` e `admite_encaminhamento`:
+
+- o destino é a tela de **Retificação**, e não o compositor do Edital: o compositor é a coleção de
+  **elaboração**, somente leitura para Edital publicado, e quem seguisse aquele caminho chegaria a
+  uma tela onde não se corrige nada e onde o defeito pode nem aparecer;
+- o caminho só é **oferecido** a quem tem `retificacao:elaborar`, e a ausência dele não suprime o
+  sinal — oferecer um formulário cujo envio será recusado é o beco que a `007` passou uma feature
+  tirando (`FR-036`);
+- a situação também tem que admitir o ato: Processo em estado final não admite alteração dos seus
+  Editais, e Retificação incide sobre Edital publicado.
+
+Ou seja: a permissão da dona governa **quem vê**, e `retificacao:elaborar` governa **a quem se
+oferece o caminho**. São perguntas diferentes, e a tabela acima respondia só a primeira.
+
 ---
 
 ## T-009 — O que a supervisão faz quando o Processo não tem o que supervisionar

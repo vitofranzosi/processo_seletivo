@@ -94,12 +94,10 @@ def _estado_do_marco_sorteado(*, edital, marco_id, vigente, at):
 def _estado_do_marco_que_sorteia(*, perfil, marco, vigente):
     """O marco declara sorteio, e ainda não há ato de sorteio: **não há o que recomputar aqui**.
 
-    **É o buraco por onde o certame se travava.** O detalhe do Edital manda todo marco para a tela
-    de ordenação; sem ato, o estado dizia `recomputavel=True`, a tela oferecia "Emitir ordem", e o
-    cálculo por Etapas de um marco que não ordena por Etapas produzia um ato raiz do recorte. Dali
-    em diante `constituir_sorteio` recusava — corretamente, com `ordering_act_already_exists` —, e
-    o sucessor exigia um sorteio anterior que nunca existiu: o sorteio ficava inalcançável pela
-    própria tela, que é o modo de falha que a Constituição §VI nomeia.
+    **A leitura, e não a porta.** As três camadas que impedem um ato computado nascer neste marco
+    são outras — a tela encaminha, a rota recusa e `emitir_ordem` recusa sozinho. O que se resolve
+    aqui é o que sobra depois delas: `estado_do_marco` respondia sobre um marco de sorteio como se
+    ele fosse computado, calculando por Etapas uma ordem que a norma daquele marco não prevê.
 
     `proposta` é `None` e `recomputavel` é `False` pela mesma razão do ato já sorteado: a ordem
     deste marco nasce de uma semente que ainda não existe, e nenhuma quantidade de cálculo por
@@ -108,8 +106,10 @@ def _estado_do_marco_que_sorteia(*, perfil, marco, vigente):
     **`origem` viaja mesmo sem ato de sorteio**, e é o que impede `aferir` de anunciar "marco
     removido" — que é o que ele diria de qualquer coisa não recomputável, e seria falso duas vezes.
 
-    Um ato **computado** vivo neste marco é divergência nomeada, e não silêncio: ele é o defeito
-    consumado, e quem o vê precisa saber que a ordem vigente não veio de onde a norma manda.
+    Um ato **computado** vivo neste marco é divergência nomeada, e não silêncio. Ele não nasce mais
+    por caminho nenhum do sistema; existindo — emitido antes de as três camadas fecharem —, a
+    aferição de publicabilidade precisa dizer que aquela ordem não veio de onde a norma manda, em
+    vez de recomputá-la por Etapas e declará-la publicável.
     """
     divergencias = []
     if vigente is not None and (vigente.universo or {}).get("origem") != ORIGEM_SORTEIO:

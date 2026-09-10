@@ -22,7 +22,7 @@ import pytest
 from django.urls import reverse
 
 from processo_seletivo.sorteios.models import Sorteio
-from tests.fixtures.sorteio import METODO, certame_de_sorteio
+from tests.fixtures.sorteio import certame_de_sorteio
 from tests.interface.conftest import identificar
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
@@ -231,7 +231,10 @@ def test_o_detalhe_do_edital_leva_ao_sorteio(certame, client):
     """**A tela do sorteio não era alcançável por link nenhum** (Constituição §VI).
 
     O detalhe mandava todo marco para a ordenação — inclusive o que ordena por sorteio —, e no dia
-    da transmissão a tela dependia de alguém ter a URL decorada.
+    da transmissão a tela dependia de alguém ter a URL decorada. A ordenação passou a **encaminhar**
+    para cá (`test_marco_de_sorteio_nao_se_ordena.py`), e o link direto continua sendo o certo: quem
+    lê o Edital procura a ordem deste marco, e ela nasce do sorteio — o desvio no meio do caminho
+    resolve o engano, e não o evita.
     """
     identificar(client, "maria", [])
 
@@ -244,17 +247,3 @@ def test_o_detalhe_do_edital_leva_ao_sorteio(certame, client):
     assert f'"{ordenacao}"' not in corpo, (
         "o marco que sorteia não abre a tela do cálculo por Etapas"
     )
-
-
-def test_a_ordenacao_de_um_marco_que_sorteia_nao_oferece_emissao(certame, client):
-    """E, chegando lá por um caminho antigo, a tela diz para onde ir — e não oferece o botão."""
-    identificar(client, "maria", [])
-
-    corpo = client.get(
-        reverse("interface:ordenacao", args=[certame["edital"].id, certame["marco"]])
-    ).content.decode()
-
-    assert "Emitir ordem" not in corpo
-    assert "produzida por sorteio público" in corpo
-    assert reverse("interface:sorteio", args=[certame["edital"].id, certame["marco"]]) in corpo
-    assert METODO["source"] not in corpo, "o método é da tela do sorteio, não desta"

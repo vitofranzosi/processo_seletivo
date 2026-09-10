@@ -48,7 +48,11 @@ de PostgreSQL — `ALTER TABLE ... DISABLE TRIGGER` — executando sob SQLite, e
 ter sido pulados e não foram. O CI não vê nada disso, porque só roda contra PostgreSQL. Ver
 [doc/achado-suite-em-sqlite.md](doc/achado-suite-em-sqlite.md).
 
-Contra PostgreSQL a suíte fecha em 3957 passando e 1 pulado. Para chegar lá é preciso o **par**:
+Contra PostgreSQL a suíte fecha em **4358 passando e 2 pulados** (medido em 2026-09-10). Os dois
+pulados são deliberados e estão nomeados em
+[doc/achado-fonte-real-do-sorteio-sem-gatilho.md](doc/achado-fonte-real-do-sorteio-sem-gatilho.md):
+um só roda fora do PostgreSQL, e o outro é o E2E contra o serviço real da Caixa, atrás da chave
+`SORTEIO_E2E_FONTE_REAL`. Para chegar lá é preciso o **par**:
 `TEST_DB_ENGINE=postgresql` **e** `DB_USER`. Só o primeiro cai para SQLite; só o segundo tenta
 conectar como a role de runtime, que não pode criar banco de teste. Nenhum dos dois casos avisa.
 

@@ -13,7 +13,14 @@ objetivo de responder a uma pergunta só:
 > §M foram corrigidos na mesma data, como Phase 12 da `021` — todos de tela e navegação, nenhuma
 > migration, nenhum toque na chave, na ordem, na semente ou no manifesto. São eles: E-01, E-02,
 > E-03, E-04, E-05, E-06, E-07, E-12 e E-19 — mais o **E-10**, que o usuário mandou corrigir junto
-> por estar na mesma função. O restante do relatório descreve o sistema **como ele
+> por estar na mesma função.
+>
+> Uma ressalva de honestidade sobre o **E-05**: enquanto esta exploração corria, uma sessão
+> paralela o encontrou por outro caminho — a validação da `022` — e o fechou no `main`
+> (`40f783d`), em três camadas, junto com o **E-11**. O que esta branch acrescentou ali é a
+> leitura, e não a porta. O achado é o mesmo; o mérito da correção é de lá.
+>
+> O restante do relatório descreve o sistema **como ele
 > foi encontrado**, e é assim que fica: o registro do que se mediu, e não do que se corrigiu.
 
 Base: `specs/021-sorteio-publico-auditavel/` (spec, research, data-model, contracts, quickstart),
