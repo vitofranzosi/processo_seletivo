@@ -30,7 +30,11 @@ from django.urls import reverse
 from django.utils.dateparse import parse_datetime
 
 from processo_seletivo.editais.models.cronograma import EventoCronograma
-from processo_seletivo.editais.models.perfis import MarcoClassificatorio, PerfilVaga
+from processo_seletivo.editais.models.perfis import (
+    LinhaDoQuadroDeVagas,
+    MarcoClassificatorio,
+    PerfilVaga,
+)
 from processo_seletivo.processos.models import Edital
 from tests.fixtures.edital import actor_headers
 from tests.interface.conftest import identificar
@@ -44,6 +48,9 @@ RESULTADO = "aaaaaaaa-0000-4000-8000-0000000017b2"
 ETAPA = "aaaaaaaa-0000-4000-8000-0000000018c1"
 MARCO = "aaaaaaaa-0000-4000-8000-0000000018c2"
 CRITERIO = "aaaaaaaa-0000-4000-8000-0000000018c3"
+PPI = "aaaaaaaa-0000-4000-8000-0000000025d1"
+LINHA_GERAL = "aaaaaaaa-0000-4000-8000-0000000025d2"
+LINHA_PPI = "aaaaaaaa-0000-4000-8000-0000000025d3"
 
 # O Evento do período, como a instituição o descreve. Cada chave é um campo do contrato
 # operacional que precisa atravessar o assistente inteiro.
@@ -126,8 +133,21 @@ PERFIL_COMPLETO = {
     "callInformation": {"prazo": "Cinco dias úteis a contar da convocação."},
     "competitionModalities": [
         {"id": MODALIDADE, "code": "AC", "name": "Ampla concorrência"},
+        {"id": PPI, "code": "PPI", "name": "Pretos, pardos e indígenas"},
     ],
     "classificationMilestones": [MARCO_COMPLETO],
+    # O quadro de vagas da `025`. É a quinta coleção do Perfil a atravessar este teste, e a razão
+    # é a mesma das quatro anteriores: `replace_draft` apaga e recria, e uma coleção que falte em
+    # qualquer uma das quatro travessias some na gravação da etapa seguinte, sem recusa e sem
+    # aviso — só que aqui o que some é uma quantidade de vagas publicável.
+    #
+    # Parcial de propósito: a Modalidade "Ampla concorrência" não carrega linha reservada (D-004),
+    # e por isso este quadro nunca fica completo — a igualdade da FR-161 não roda, e o limite
+    # superior da FR-177 roda e passa (1 + 1 = 2).
+    "vacancyTable": [
+        {"id": LINHA_GERAL, "modalityId": None, "immediateVacancies": 1},
+        {"id": LINHA_PPI, "modalityId": PPI, "immediateVacancies": 1},
+    ],
 }
 
 
@@ -228,6 +248,24 @@ def _marcos_como_o_contrato_os_declara(edital):
             ],
         }
         for marco in MarcoClassificatorio.objects.filter(perfil__edital=edital).order_by("code")
+    ]
+
+
+def _quadro_como_o_contrato_o_declara(edital):
+    """O quadro persistido, no vocabulário do contrato de entrada — a coleção **inteira**.
+
+    Campo a campo escolhido a dedo passaria a valer só para o campo que se lembrou de escolher, e
+    o defeito desta classe é justamente o campo de que ninguém se lembrou (025, R-009).
+    """
+    return [
+        {
+            "id": str(linha.id),
+            "modalityId": str(linha.modalidade_id) if linha.modalidade_id else None,
+            "immediateVacancies": linha.vagas_imediatas,
+        }
+        for linha in LinhaDoQuadroDeVagas.objects.filter(perfil__edital=edital).order_by(
+            "ordem", "id"
+        )
     ]
 
 
@@ -381,3 +419,78 @@ def test_regravar_a_classificacao_preserva_a_janela_declarada(client, seletor_li
     marco = MarcoClassificatorio.objects.get(pk=MARCO)
     assert marco.name == "Classificação final do certame", "a correção que a tela oferece vale"
     assert marco.janela_recursal == MARCO_COMPLETO["appealWindow"], "a janela declarada sobrevive"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_gravar_outra_etapa_preserva_o_quadro_de_vagas_inteiro(client, seletor_ligado, edital):
+    """A travessia 2 de 4 da `025`: o reenvio do estado persistido carrega o quadro.
+
+    Sem ela, quem declara `AC 1` e `PPI 1` no passo dos Perfis e segue o assistente publica um
+    Edital que não declara quadro nenhum — e o número que separa o certame de existir como
+    documento some numa visita ao Cronograma.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.post(_etapa(edital, "inscricao"), {"periodo-inscricoes": INSCRICOES})
+    assert resposta.status_code == 302, resposta.content
+
+    edital.refresh_from_db()
+    resposta = client.post(_etapa(edital, "conteudo"), {"secao-recursos": "Três dias úteis."})
+    assert resposta.status_code == 302, resposta.content
+
+    assert _quadro_como_o_contrato_o_declara(edital) == PERFIL_COMPLETO["vacancyTable"]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_regravar_os_perfis_pela_tela_preserva_o_quadro(client, seletor_ligado, edital):
+    """As travessias 1 e 3 da `025`: a tela lê o quadro que ela mesma desenha.
+
+    O caminho é o do formulário, e não o do reenvio: quem lê é `ler_perfis`, que conhece só os
+    campos desenhados. Se a seção do quadro não fosse lida, corrigir a denominação de um Perfil
+    apagaria as quantidades — na própria tela que as mostra.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.post(
+        _etapa(edital, "perfis"),
+        {
+            "perfil-0-id": PERFIL,
+            "perfil-0-code": "TEC-LAB",
+            # A correção que a tela oferece: a denominação muda.
+            "perfil-0-name": "Técnico de Laboratório (Vitória)",
+            "perfil-0-description": PERFIL_COMPLETO["description"],
+            "perfil-0-requirements": PERFIL_COMPLETO["requirements"][0],
+            "perfil-0-immediateVacancies": "2",
+            "perfil-0-reserveType": "LIMITED",
+            "perfil-0-reserveLimit": "5",
+            "perfil-0-locality": PERFIL_COMPLETO["locality"],
+            "perfil-0-duties": PERFIL_COMPLETO["duties"],
+            "perfil-0-workload": PERFIL_COMPLETO["workload"],
+            "perfil-0-compensation": PERFIL_COMPLETO["compensation"],
+            "modalidade-0-0-id": MODALIDADE,
+            "modalidade-0-0-code": "AC",
+            "modalidade-0-0-name": "Ampla concorrência",
+            "modalidade-0-1-id": PPI,
+            "modalidade-0-1-code": "PPI",
+            "modalidade-0-1-name": "Pretos, pardos e indígenas",
+            # A seção do quadro, como a tela a desenha: a geral primeiro, e uma por Modalidade.
+            # A da "Ampla concorrência" vai **em branco**, que é o que a D-004 manda — e em branco
+            # não grava linha, e não vira zero.
+            "linha-0-0-id": LINHA_GERAL,
+            "linha-0-0-modalityId": "",
+            "linha-0-0-immediateVacancies": "1",
+            "linha-0-1-id": "aaaaaaaa-0000-4000-8000-0000000025d9",
+            "linha-0-1-modalityId": MODALIDADE,
+            "linha-0-1-immediateVacancies": "",
+            "linha-0-2-id": LINHA_PPI,
+            "linha-0-2-modalityId": PPI,
+            "linha-0-2-immediateVacancies": "1",
+        },
+    )
+    assert resposta.status_code == 302, resposta.content
+
+    perfil = PerfilVaga.objects.get(pk=PERFIL)
+    assert perfil.name == "Técnico de Laboratório (Vitória)", "a correção que a tela oferece vale"
+    assert _quadro_como_o_contrato_o_declara(edital) == PERFIL_COMPLETO["vacancyTable"]

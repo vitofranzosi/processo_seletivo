@@ -33,6 +33,12 @@ COLECOES_COM_CHAVE = frozenset(
         # declaração, reordenar por Retificação só resolveria por índice — que é o que o sistema
         # proíbe, e o que faria a reordenação perder os identificadores (015, FR-015).
         "/profiles/*/classificationMilestones/*/tiebreakers",
+        # O quadro de vagas da `025`. Declarado **antes** de o snapshot o emitir, pela razão que a
+        # `015` já registrou acima e que aqui é literal: sem esta linha o seletor `id=` seria
+        # recusado, sobraria o endereçamento por posição — que o sistema proíbe —, e o primeiro
+        # Edital publicado com quadro nasceria irretificável. Endereço de retificação não se
+        # conserta depois, porque publicação é ato imutável (025, FR-170).
+        "/profiles/*/vacancyTable",
         # O Documento Exigido nasce com identidade estável e é endereçado por ela como as demais
         # (FR-009 da 009): nenhuma regra nova, nenhuma gramática nova — só mais uma coleção na
         # declaração que já existe.

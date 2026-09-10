@@ -1,0 +1,32 @@
+<div class="linha-do-quadro"{% if oob %} hx-swap-oob="beforeend:#quadro-{{ indice }}"{% endif %}>
+  {% comment %}
+  A identidade viaja oculta, como a da Modalidade: a gravação preserva o `id` recebido, e linha que
+  nascesse sem identidade não teria o que preservar — é por esse `id` que a Retificação alcança
+  **aquela** linha depois de publicada, e nunca por posição.
+
+  `modalityId` vazio **é** a linha geral, a da ampla concorrência, e não uma referência faltando: o
+  recorte sem lista de concorrência não filtra por Modalidade nenhuma.
+  {% endcomment %}
+  <input type="hidden" name="linha-{{ indice }}-{{ sub }}-id" value="{{ linha.id }}">
+  <input type="hidden" name="linha-{{ indice }}-{{ sub }}-modalityId"
+         value="{{ linha.modalityId|default:'' }}">
+  <p class="campo curto">
+    <label for="linha-{{ indice }}-{{ sub }}-immediateVacancies">
+      {% if linha.geral %}<strong>Ampla concorrência</strong>{% else %}{{ linha.rotulo }}{% endif %}
+    </label>
+    <input type="number" min="0" id="linha-{{ indice }}-{{ sub }}-immediateVacancies"
+           name="linha-{{ indice }}-{{ sub }}-immediateVacancies"
+           value="{{ linha.immediateVacancies|default_if_none:'' }}"
+           aria-describedby="ajuda-linha-{{ indice }}-{{ sub }}">
+    {% comment %}
+    Escondida, e não impressa: a explicação é a mesma em todos os cartões, e um Edital de sete
+    polos a imprimiria sete vezes. Continua anunciada a quem ouve a tela, pelo `aria-describedby`
+    do campo — sair de vista não é sair da página.
+    {% endcomment %}
+    <span class="oculto" id="ajuda-linha-{{ indice }}-{{ sub }}">{% if linha.geral %}Esta é a linha
+      da ampla concorrência: o recorte de que todos os inscritos participam, inclusive quem
+      concorre por reserva. Em branco: quantidade não declarada.{% else %}Quantas vagas cabem nesta
+      lista de concorrência. Em branco: quantidade não declarada — que não é o mesmo que
+      zero.{% endif %}</span>
+  </p>
+</div>

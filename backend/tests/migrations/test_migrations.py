@@ -529,7 +529,12 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # operacional que se diz normativo. A `editais/0015` acrescenta `location` ao Evento do
         # Cronograma — o degrau 11 —, que é elaboração e não sorteio: onde o evento acontece é dado
         # do Edital, e vale para qualquer evento, sorteie ele ou não (021, D-008, D-013, FR-014).
-        "editais": 15,
+        # **Sobe para 16 com a 025**: a `editais/0016` cria a `LinhaDoQuadroDeVagas` — a
+        # repartição das vagas imediatas do Perfil por lista de concorrência, o degrau 12. É
+        # elaboração pela mesma razão das duas anteriores: quem declara quantas vagas cabem em cada
+        # recorte é o Edital, e alterá-lo depois de publicado é Retificação. Aditiva: cria tabela e
+        # duas constraints parciais, e não toca em campo algum da `RegraNormativa` (025, FR-174).
+        "editais": 16,
         "publicacoes": 8,
         # **Sobe para 2 com a 018**: a `divulgacao/0002` acrescenta os três campos da declaração
         # expressa de encerramento do prazo e a constraint que os mantém inteiros (FR-085).
@@ -650,7 +655,12 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # **Sobe para 15 com a 021**: a `editais/0014` põe o método de sorteio no marco e a `0015`
         # o local do Evento. As duas são elaboração — quem declara é o Edital —, e nenhuma delas é
         # da supervisão.
-        "editais": 15,
+        # **Sobe para 16 com a 025**: a `editais/0016` cria a `LinhaDoQuadroDeVagas` — a
+        # repartição das vagas imediatas do Perfil por lista de concorrência, o degrau 12. É
+        # elaboração pela mesma razão das duas anteriores: quem declara quantas vagas cabem em cada
+        # recorte é o Edital, e alterá-lo depois de publicado é Retificação. Aditiva: cria tabela e
+        # duas constraints parciais, e não toca em campo algum da `RegraNormativa` (025, FR-174).
+        "editais": 16,
         "inscricoes": 4,
         "processos": 2,
         "publicacoes": 8,

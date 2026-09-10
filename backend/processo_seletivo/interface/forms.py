@@ -135,6 +135,33 @@ def _fatos(dados, prefixo):
     return fatos
 
 
+def _linhas(dados, prefixo):
+    """As linhas do quadro de vagas de um Perfil, pelo mesmo prefixo composto da modalidade.
+
+    **Quantidade em branco não grava linha** (FR-159, D-006). A tela oferece uma linha para a ampla
+    concorrência e uma para cada Modalidade declarada; quem não declara a quantidade de uma delas
+    está dizendo que o Edital não declarou aquela repartição — e não que ela é zero. Quem quiser
+    dizer zero digita `0`, que é linha com `0` e não ausência.
+
+    `modalityId` vazio **é** a linha geral, a da ampla concorrência, e não uma referência faltando
+    (D-002, D-004).
+    """
+    linhas = []
+    for indice in _indices(dados, prefixo):
+        base = f"{prefixo}-{indice}"
+        quantidade = _texto(dados, f"{base}-immediateVacancies")
+        if not quantidade:
+            continue
+        linhas.append(
+            {
+                "id": _texto(dados, f"{base}-id"),
+                "modalityId": _texto(dados, f"{base}-modalityId") or None,
+                "immediateVacancies": _inteiro(dados, f"{base}-immediateVacancies"),
+            }
+        )
+    return linhas
+
+
 def ler_classificacao(dados):
     """Os marcos de cada Perfil, indexados pelo identificador do Perfil.
 
@@ -365,6 +392,11 @@ def ler_perfis(dados):
                 # Pelo mesmo esquema de prefixo composto: `marco-3-…` pertence ao `perfil-3`.
                 "declaredFacts": _fatos(dados, f"fato-{indice}"),
                 "classificationMilestones": _marcos(dados, f"marco-{indice}"),
+                # Travessia 1 de 4. As outras três são `perfis_persistidos`, `perfis_do_edital` e
+                # a recriação em `draft.replace_draft`: `replace_draft` apaga e recria tudo, e uma
+                # coleção do Perfil que falte em qualquer uma delas **some** na gravação da etapa
+                # seguinte, sem erro nenhum (025, R-009).
+                "vacancyTable": _linhas(dados, f"linha-{indice}"),
             }
         )
     return perfis
@@ -561,11 +593,97 @@ def perfis_do_edital(edital):
             ],
             "marcos": [_marco_para_o_formulario(m) for m in perfil.marcos.order_by("code")],
             "fatos": [_fato_para_o_formulario(f) for f in perfil.fatos.order_by("code")],
+            # Travessia 3 de 4: sem isto o quadro gravado não voltaria à tela, e a gravação
+            # seguinte o apagaria — porque `ler_perfis` leria um formulário sem linha nenhuma.
+            "quadro": _quadro_para_o_formulario(perfil),
         }
         for perfil in edital.perfis.prefetch_related(
-            "modalidades__regra_normativa", "marcos__criterios", "fatos", "fatos"
+            "modalidades__regra_normativa",
+            "marcos__criterios",
+            "fatos",
+            "quadro_de_vagas__modalidade",
         ).order_by("code")
     ]
+
+
+def quadro_do_formulario(perfil):
+    """As linhas do quadro **a partir do que está no formulário**, e não do que está no banco.
+
+    É a metade que a reexibição depois de uma recusa precisa, e é a que faz a UX-021 valer no
+    momento em que ela importa: quem acrescenta uma Modalidade e digita a quantidade dela antes de
+    gravar precisa ver a linha — a Modalidade ainda não existe no banco, e derivar dali devolveria
+    uma tela que perdeu o que a pessoa acabou de escrever (R-009).
+
+    A ordem é a mesma da tela: a geral primeiro, e uma por Modalidade declarada. Quantidade não
+    digitada volta **em branco**, porque em branco é o que ela era — e nunca zero.
+    """
+    digitadas = {
+        str(linha.get("modalityId") or ""): linha for linha in perfil.get("vacancyTable") or []
+    }
+    geral = digitadas.get("")
+    linhas = [
+        {
+            "id": (geral or {}).get("id") or str(uuid4()),
+            "modalityId": "",
+            "rotulo": "Ampla concorrência",
+            "geral": True,
+            "immediateVacancies": (geral or {}).get("immediateVacancies", ""),
+        }
+    ]
+    for modalidade in perfil.get("competitionModalities") or []:
+        chave = str(modalidade.get("id") or "")
+        digitada = digitadas.get(chave)
+        nome = modalidade.get("name") or ""
+        codigo = modalidade.get("code") or ""
+        linhas.append(
+            {
+                "id": (digitada or {}).get("id") or str(uuid4()),
+                "modalityId": chave,
+                "rotulo": f"{nome} ({codigo})" if nome or codigo else "Modalidade sem denominação",
+                "geral": False,
+                "immediateVacancies": (digitada or {}).get("immediateVacancies", ""),
+            }
+        )
+    return linhas
+
+
+def _quadro_para_o_formulario(perfil):
+    """As linhas que a tela desenha: a geral primeiro, e uma por Modalidade declarada.
+
+    **As linhas são oferecidas, e não digitadas** (UX-021, SC-048). O rótulo de cada uma vem da
+    Modalidade que já está declarada no Perfil; o que falta é a quantidade. Modalidade sem linha
+    gravada aparece com o campo **vazio** — que é "não declarado", e nunca zero (FR-159).
+
+    A identidade de uma linha ainda não gravada nasce aqui, e não no navegador: a gravação preserva
+    o `id` recebido, e linha que nascesse sem identidade não teria o que preservar — é o mesmo
+    argumento que a Modalidade e a Regra Normativa já registram.
+    """
+    gravadas = {
+        str(linha.modalidade_id) if linha.modalidade_id else "": linha
+        for linha in perfil.quadro_de_vagas.all()
+    }
+    geral = gravadas.get("")
+    linhas = [
+        {
+            "id": str(geral.id) if geral else str(uuid4()),
+            "modalityId": "",
+            "rotulo": "Ampla concorrência",
+            "geral": True,
+            "immediateVacancies": geral.vagas_imediatas if geral else "",
+        }
+    ]
+    for modalidade in perfil.modalidades.order_by("code"):
+        gravada = gravadas.get(str(modalidade.id))
+        linhas.append(
+            {
+                "id": str(gravada.id) if gravada else str(uuid4()),
+                "modalityId": str(modalidade.id),
+                "rotulo": f"{modalidade.name} ({modalidade.code})",
+                "geral": False,
+                "immediateVacancies": gravada.vagas_imediatas if gravada else "",
+            }
+        )
+    return linhas
 
 
 def eventos_do_edital(edital):
@@ -624,6 +742,10 @@ def perfis_persistidos(edital):
                 _marco_persistido(m) for m in perfil.marcos.order_by("code")
             ],
             "declaredFacts": [_fato_persistido(f) for f in perfil.fatos.order_by("code")],
+            # Travessia 2 de 4, e é a que mata em silêncio: `replace_draft` apaga e recria tudo, de
+            # modo que o quadro que não for reenviado ao gravar **outra** etapa some sem erro
+            # nenhum — quantidade publicável desaparecendo por causa de uma visita ao Cronograma.
+            "vacancyTable": [_linha_persistida(linha) for linha in perfil.quadro_de_vagas.all()],
             # Pela mesma razão dos dois acima, e com um agravante: nenhuma tela do assistente os
             # desenha. Conteúdo normativo que só o contrato administrativo escreve atravessaria o
             # assistente uma vez e sumiria na primeira gravação — sem que houvesse tela onde
@@ -632,9 +754,17 @@ def perfis_persistidos(edital):
             "callInformation": perfil.call_information,
         }
         for perfil in edital.perfis.prefetch_related(
-            "modalidades__regra_normativa", "marcos__criterios"
+            "modalidades__regra_normativa", "marcos__criterios", "quadro_de_vagas"
         ).order_by("code")
     ]
+
+
+def _linha_persistida(linha):
+    return {
+        "id": str(linha.id),
+        "modalityId": str(linha.modalidade_id) if linha.modalidade_id else None,
+        "immediateVacancies": linha.vagas_imediatas,
+    }
 
 
 def _fato_para_o_formulario(fato):

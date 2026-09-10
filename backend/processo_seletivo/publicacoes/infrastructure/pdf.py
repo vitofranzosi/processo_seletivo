@@ -1329,13 +1329,19 @@ def _modalidades(composicao, perfil, tabelas, nomear_perfil=False):
         )
 
 
-def _quadro_de_vagas(composicao, perfis, tabelas):
-    """A visão global antes do detalhe — o `Quadro de vagas` dos Editais de referência.
+def _quadro_de_perfis(composicao, perfis, tabelas):
+    """A visão global antes do detalhe: os Perfis lado a lado.
 
     Um card por Perfil responde "como apresento esta entidade?". O Edital pergunta outra coisa:
     "qual a melhor composição para comunicar esta matéria?" — e a resposta, para dados comparáveis
     entre si, é uma tabela que os põe lado a lado. Com dez Perfis, dez fichas obrigam o leitor a
     percorrer o documento inteiro para saber quantas vagas existem.
+
+    **Esta função chamava-se `_quadro_de_vagas`, e o nome estava errado.** Ela tabula *Perfis* —
+    `Perfil`, `Localidade`, `Vagas`, `Cadastro reserva`, `Carga horária` —, e não a repartição das
+    vagas por lista de concorrência, que é o que o domínio chama de quadro de vagas e que a `025`
+    passou a publicar em `_quadro_de_vagas_do_perfil`. O Princípio I proíbe o mesmo termo nomear
+    dois conceitos; a renomeação é de nome só, e o documento sai byte a byte o mesmo.
     """
     linhas = []
     for perfil in perfis:
@@ -1362,7 +1368,7 @@ def _quadro_de_vagas(composicao, perfis, tabelas):
 
 
 def _perfis(composicao, snapshot, secao=0, tabelas=None):
-    """O quadro de vagas, e depois cada Perfil como subseção.
+    """A tabela comparativa de Perfis, e depois cada Perfil como subseção.
 
     **Sem moldura externa.** O retângulo em volta de tudo produzia um cartão de interface
     impresso: tabela dentro de caixa dentro de caixa. Um Edital descreve a vaga em prosa e
@@ -1372,7 +1378,7 @@ def _perfis(composicao, snapshot, secao=0, tabelas=None):
     """
     perfis = snapshot.get("profiles") or []
     if len(perfis) > 1:
-        _quadro_de_vagas(composicao, perfis, tabelas)
+        _quadro_de_perfis(composicao, perfis, tabelas)
 
     for ordem, perfil in enumerate(perfis, 1):
         with composicao.bloco(coeso=False):

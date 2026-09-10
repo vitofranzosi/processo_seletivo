@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from processo_seletivo.editais.models.perfis import LinhaDoQuadroDeVagas
 from processo_seletivo.processos.models import Edital
 from tests.fixtures.edital import actor_headers, complete_draft
 
@@ -285,7 +286,10 @@ def test_identidade_de_modalidade_e_de_regra_e_preservada_pela_api(
     A preservação valeria só pelo caminho da interface administrativa, e a recusa de identificador
     alheio não teria o que recusar.
     """
-    from processo_seletivo.editais.models.perfis import ModalidadeConcorrencia, RegraNormativa
+    from processo_seletivo.editais.models.perfis import (
+        ModalidadeConcorrencia,
+        RegraNormativa,
+    )
 
     criado = api_client.post(
         "/api/v1/admin/processos", process_payload, format="json", **manager_headers
@@ -564,3 +568,151 @@ def test_forma_fora_do_par_e_recusada_na_entrada():
     serializer = StageSerializer(data={"id": ETAPA_ID, "name": "Prova", "forma": "ORDINAL"})
 
     assert not serializer.is_valid()
+
+
+LINHA = {
+    "GERAL": "00000000-0000-0000-0000-0000000025a1",
+    "RESERVADA": "00000000-0000-0000-0000-0000000025a2",
+}
+
+
+def _com_quadro(seed, linhas, modalidades=()):
+    rascunho = complete_draft(seed)
+    rascunho["profiles"][0]["competitionModalities"] = list(modalidades)
+    rascunho["profiles"][0]["vacancyTable"] = linhas
+    return rascunho
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+def test_o_quadro_de_vagas_e_opcional_no_rascunho(api_client, manager_headers, process_payload):
+    """FR-160: um Perfil sem quadro continua submetível, e é o que todo Edital de hoje afirma.
+
+    Exigir a coleção no rascunho recusaria o acervo inteiro — a capacidade não existia até a `025`,
+    e nenhum Edital publicado declarou quadro. Ausência não é zero.
+    """
+    primeiro, _ = _dois_editais(
+        api_client, manager_headers, process_payload, "quadro-de-vagas-opcional"
+    )
+    preparador = actor_headers("preparador", ["edital:elaborar"], key="quadro-opcional-01")
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{primeiro.id}/rascunho",
+        complete_draft(0),
+        format="json",
+        **{**preparador, "HTTP_IF_MATCH": '"1"'},
+    )
+
+    assert resposta.status_code == 200, resposta.content
+    assert LinhaDoQuadroDeVagas.objects.count() == 0
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+def test_o_quadro_de_vagas_e_aceito_no_rascunho_com_a_identidade_recebida(
+    api_client, manager_headers, process_payload
+):
+    """A identidade é preservada: é por ela que a Retificação alcança a linha publicada."""
+    primeiro, _ = _dois_editais(
+        api_client, manager_headers, process_payload, "quadro-de-vagas-aceito-001"
+    )
+    preparador = actor_headers("preparador", ["edital:elaborar"], key="quadro-aceito-01")
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{primeiro.id}/rascunho",
+        _com_quadro(
+            0,
+            [
+                {"id": LINHA["GERAL"], "modalityId": None, "immediateVacancies": 1},
+                {
+                    "id": LINHA["RESERVADA"],
+                    "modalityId": MODALIDADE["A"],
+                    "immediateVacancies": 0,
+                },
+            ],
+            [_modalidade(MODALIDADE["A"], REGRA["A"], "PPP")],
+        ),
+        format="json",
+        **{**preparador, "HTTP_IF_MATCH": '"1"'},
+    )
+
+    assert resposta.status_code == 200, resposta.content
+    linhas = LinhaDoQuadroDeVagas.objects.order_by("ordem")
+    assert [str(linha.id) for linha in linhas] == [LINHA["GERAL"], LINHA["RESERVADA"]]
+    # `NULL` na modalidade **é** a ampla concorrência, e não ausência (D-002, D-004).
+    assert linhas[0].modalidade_id is None
+    assert str(linhas[1].modalidade_id) == MODALIDADE["A"]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+def test_linha_do_quadro_de_outro_edital_e_recusada_com_conflito(
+    api_client, manager_headers, process_payload
+):
+    """Sem a conferência, um `id` de linha de outro Edital seria aceito e nada acusaria (R-008).
+
+    É o defeito silencioso da coleção: a identidade estável passaria a designar a linha de outro
+    Edital, e o 409 que o contrato promete não aconteceria justamente para ela.
+    """
+    primeiro, segundo = _dois_editais(
+        api_client, manager_headers, process_payload, "quadro-de-vagas-conflito"
+    )
+    preparador = actor_headers("preparador", ["edital:elaborar"], key="quadro-conflito-01")
+
+    inicial = api_client.put(
+        f"/api/v1/admin/editais/{primeiro.id}/rascunho",
+        _com_quadro(0, [{"id": LINHA["GERAL"], "modalityId": None, "immediateVacancies": 1}]),
+        format="json",
+        **{**preparador, "HTTP_IF_MATCH": '"1"'},
+    )
+    assert inicial.status_code == 200, inicial.content
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{segundo.id}/rascunho",
+        _com_quadro(1, [{"id": LINHA["GERAL"], "modalityId": None, "immediateVacancies": 1}]),
+        format="json",
+        **{
+            **actor_headers("preparador", ["edital:elaborar"], key="quadro-conflito-02"),
+            "HTTP_IF_MATCH": '"1"',
+        },
+    )
+
+    assert resposta.status_code == 409, resposta.content
+    assert resposta.json()["code"] == "identifier_belongs_to_another_edital"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+def test_linha_que_aponta_modalidade_de_outro_perfil_e_recusada(
+    api_client, manager_headers, process_payload
+):
+    """FR-158: a mensagem separa os dois casos, porque a correção de cada um é outra."""
+    primeiro, _ = _dois_editais(
+        api_client, manager_headers, process_payload, "quadro-de-vagas-alheia-001"
+    )
+    preparador = actor_headers("preparador", ["edital:elaborar"], key="quadro-alheia-01")
+
+    rascunho = complete_draft(0)
+    rascunho["profiles"][0]["competitionModalities"] = [
+        _modalidade(MODALIDADE["A"], REGRA["A"], "PPP")
+    ]
+    rascunho["profiles"].append(
+        {
+            **complete_draft(2)["profiles"][0],
+            "code": "P2",
+            "competitionModalities": [],
+            "vacancyTable": [
+                {"id": LINHA["RESERVADA"], "modalityId": MODALIDADE["A"], "immediateVacancies": 1}
+            ],
+        }
+    )
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{primeiro.id}/rascunho",
+        rascunho,
+        format="json",
+        **{**preparador, "HTTP_IF_MATCH": '"1"'},
+    )
+
+    assert resposta.status_code == 422, resposta.content
+    assert "não pertence ao Perfil declarado" in resposta.json()["detail"]

@@ -65,6 +65,13 @@ object.documento{width:100%;height:min(75vh,900px);border:1px solid var(--borda)
   background:var(--branco)}
 .modalidades{margin:.75rem 0 0;padding:.75rem 0 0;border-top:1px solid var(--borda)}
 .modalidades h3{font-size:.9375rem;margin:0 0 .25rem}
+.quadro{margin:.75rem 0 0;padding:.75rem 0 0;border-top:1px solid var(--borda)}
+.quadro h3{font-size:.9375rem;margin:0 0 .25rem}
+/* A linha do quadro é rótulo e quantidade, e nada mais. O rótulo vem da Modalidade já declarada;
+   a linha geral se distingue pelo proprio texto e pelo peso tipografico do nome dela, e nunca por
+   cor. A medida do controle continua sendo a de `.campo.curto`: dar medida propria a esta linha
+   faria dois campos vizinhos do mesmo cartao terminarem em lugares diferentes. */
+.linha-do-quadro{padding:.15rem 0}
 .marcos{margin:.75rem 0 0;padding:.75rem 0 0;border-top:1px solid var(--borda)}
 .marcos h3{font-size:.9375rem;margin:0 0 .25rem}
 .marcos h4{font-size:.875rem;margin:0 0 .25rem}

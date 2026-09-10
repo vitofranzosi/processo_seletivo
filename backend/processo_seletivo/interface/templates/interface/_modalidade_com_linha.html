@@ -1,0 +1,13 @@
+{% comment %}
+Dois pedaços numa resposta só: a Modalidade, que entra onde o botão manda, e a linha do quadro
+correspondente, que entra fora de banda na seção do quadro do mesmo Perfil.
+
+Ela vem junto porque a promessa da tela é que a linha seja **oferecida**, e não digitada: acrescentar
+uma Modalidade e não ver onde escrever a quantidade dela devolveria a pessoa ao salvamento só para
+descobrir o campo. O `sub` da linha é o mesmo da Modalidade, e não colide com os das linhas
+desenhadas na carga da página — que são numeradas por posição a partir de zero. Ele continua
+sendo **dígitos**: `forms._indices` ordena por número quando o índice é numérico e por texto quando
+não é, e misturar os dois no mesmo Perfil faria a ordenação comparar `int` com `str`.
+{% endcomment %}
+{% include "interface/_modalidade.html" %}
+{% include "interface/_linha_do_quadro.html" with oob=True %}

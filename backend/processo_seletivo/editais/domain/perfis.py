@@ -51,7 +51,16 @@ def validate_normative_rule(rule: dict) -> None:
         )
 
 
-def validate_profile(profile: dict) -> None:
+def validate_profile(profile: dict, *, modalidades_do_edital: set[str] | None = None) -> None:
+    """As regras que se decidem olhando um Perfil só.
+
+    `modalidades_do_edital` é o **escopo** de que a referência cruzada do quadro precisa e que um
+    Perfil isolado não tem: distinguir "a Modalidade é de outro Perfil" de "a Modalidade não é de
+    Perfil nenhum deste Edital" exige conhecer os irmãos. `validate_profiles` o calcula e o passa
+    adiante; o serializer da API, que valida Perfil a Perfil, não o tem — e ali a conferência é
+    **adiada**, e não afrouxada: `replace_draft` chama `validate_profiles` logo em seguida, com o
+    escopo inteiro, e é lá que a recusa acontece com a mensagem certa (025, FR-158).
+    """
     immediate = profile.get("immediateVacancies", 0)
     reserve_type = profile.get("reserveType")
     reserve_limit = profile.get("reserveLimit")
@@ -91,6 +100,89 @@ def validate_profile(profile: dict) -> None:
             validate_normative_rule(rule)
     validate_declared_facts(profile.get("declaredFacts", []))
     validate_classification_milestones(profile.get("classificationMilestones", []))
+    validate_vacancy_table(profile, modalidades_do_edital=modalidades_do_edital)
+
+
+def validate_vacancy_table(profile: dict, *, modalidades_do_edital: set[str] | None = None) -> None:
+    """O quadro de vagas do Perfil: uma linha geral, uma linha por Modalidade (025, D-002).
+
+    **A validação mora no domínio, e não só no serializer**, pela razão que este módulo já registra
+    acima: a interface administrativa invoca o command diretamente e não atravessa o serializer da
+    API. Validar só ali deixaria sem verificação justamente o canal onde o dado é digitado.
+
+    **A soma não é conferida aqui.** A conferência contra o total de vagas imediatas do Perfil é
+    achado da operação de publicar — `editais/domain/validation.py` —, porque ela precisa alcançar
+    também o conteúdo que uma Retificação produziria (FR-161, FR-177). O que se decide olhando só o
+    Perfil é o que está abaixo: identidade, unicidade e forma da quantidade.
+
+    **Ausência de linha nunca é zero** (FR-159, D-006). Um quadro sem linha para a PcD diz que o
+    Edital não declarou aquela quantidade; quem quiser dizer zero declara a linha com `0`. Por isso
+    não há verificação alguma de completude aqui: quadro parcial é legítimo, e quadro ausente
+    também.
+    """
+    linhas = profile.get("vacancyTable") or []
+    if not linhas:
+        return
+
+    identidade_do_perfil = profile.get("id", "")
+    modalidades_do_perfil = {
+        str(modalidade["id"])
+        for modalidade in profile.get("competitionModalities") or []
+        if modalidade.get("id")
+    }
+
+    gerais = 0
+    reservadas: set[str] = set()
+    for linha in linhas:
+        identidade = linha.get("id", "")
+        quantidade = linha.get("immediateVacancies")
+        # `bool` é `int` em Python, e `True` passaria por inteiro não negativo sem esta recusa.
+        if isinstance(quantidade, bool) or not isinstance(quantidade, int) or quantidade < 0:
+            raise ProfileValidationError(
+                "A quantidade de vagas de uma linha do quadro deve ser um número inteiro maior ou "
+                "igual a zero.",
+                campo="immediateVacancies",
+                identidade=identidade or identidade_do_perfil,
+            )
+
+        modalidade_id = linha.get("modalityId")
+        if not modalidade_id:
+            gerais += 1
+            if gerais > 1:
+                raise ProfileValidationError(
+                    "A ampla concorrência tem uma linha só no quadro de vagas do Perfil.",
+                    campo="modalityId",
+                    identidade=identidade or identidade_do_perfil,
+                )
+            continue
+
+        modalidade_id = str(modalidade_id)
+        if modalidade_id in reservadas:
+            raise ProfileValidationError(
+                "Uma Modalidade de Concorrência tem no máximo uma linha no quadro de vagas.",
+                campo="modalityId",
+                identidade=identidade or identidade_do_perfil,
+            )
+        reservadas.add(modalidade_id)
+
+        if modalidade_id in modalidades_do_perfil:
+            continue
+        if modalidades_do_edital is None:
+            # Escopo desconhecido: quem sabe distinguir os dois casos é `validate_profiles`, e
+            # errar a mensagem seria pior do que adiá-la por uma chamada.
+            continue
+        # A mensagem separa os dois casos porque a correção é outra — é a mesma frase que
+        # `documentos.py` já monta para o Documento Exigido, com o sujeito trocado (FR-158).
+        motivo = (
+            "não pertence ao Perfil declarado"
+            if modalidade_id in modalidades_do_edital
+            else "não é de nenhum Perfil deste Edital"
+        )
+        raise ProfileValidationError(
+            f"A linha do quadro aponta uma modalidade que {motivo}.",
+            campo="modalityId",
+            identidade=identidade or identidade_do_perfil,
+        )
 
 
 def validate_declared_facts(facts: list[dict]) -> None:
@@ -361,5 +453,13 @@ def validate_profiles(profiles: list[dict]) -> None:
     codes = [profile["code"] for profile in profiles]
     if len(codes) != len(set(codes)):
         raise ProfileValidationError("Códigos de Perfil não podem se repetir no Edital.")
+    # O escopo que a referência cruzada do quadro precisa, e que só existe aqui: a distinção entre
+    # "de outro Perfil" e "de Perfil nenhum deste Edital" pede conhecer os irmãos (025, FR-158).
+    modalidades_do_edital = {
+        str(modalidade["id"])
+        for profile in profiles
+        for modalidade in profile.get("competitionModalities") or []
+        if modalidade.get("id")
+    }
     for profile in profiles:
-        validate_profile(profile)
+        validate_profile(profile, modalidades_do_edital=modalidades_do_edital)

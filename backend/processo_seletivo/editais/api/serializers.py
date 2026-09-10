@@ -90,6 +90,25 @@ class ClassificationMilestoneSerializer(serializers.Serializer):
     tiebreakers = TiebreakerSerializer(many=True, required=False)
 
 
+class VacancyTableRowSerializer(serializers.Serializer):
+    """Uma linha do quadro de vagas do Perfil (025, D-002).
+
+    `modalityId` **nulo ou ausente é a linha geral** — a da ampla concorrência —, e há no máximo
+    uma por Perfil. Com `modalityId`, é linha reservada, e há no máximo uma por Modalidade. A
+    unicidade e a referência cruzada vivem no domínio, e não aqui, porque a interface
+    administrativa invoca o command diretamente e não atravessa este serializer.
+
+    `id` é **obrigatório**, pela mesma razão que o de Modalidade já documenta acima: opcional, ele
+    reabriria o defeito que a estabilidade veio fechar — o servidor geraria um identificador que a
+    resposta não devolve, e a gravação seguinte trocaria a identidade de novo. E é por ele que a
+    Retificação alcança a linha depois de publicada (FR-170).
+    """
+
+    id = serializers.UUIDField()
+    modalityId = serializers.UUIDField(required=False, allow_null=True)
+    immediateVacancies = serializers.IntegerField(min_value=0)
+
+
 class ProfileSerializer(serializers.Serializer):
     id = serializers.UUIDField()
     code = serializers.CharField(min_length=1, max_length=100)
@@ -111,6 +130,9 @@ class ProfileSerializer(serializers.Serializer):
     classificationMilestones = ClassificationMilestoneSerializer(many=True, required=False)
     # Opcional pelo mesmo motivo: um Edital que não declara fato nenhum continua sem campo nenhum.
     declaredFacts = DeclaredFactSerializer(many=True, required=False)
+    # Opcional porque o rascunho legitimamente não traz quadro, e porque **todo** Edital publicado
+    # até a `025` não tinha onde declará-lo: exigi-la aqui recusaria o acervo inteiro (FR-160).
+    vacancyTable = VacancyTableRowSerializer(many=True, required=False)
 
     def validate(self, attrs):
         try:

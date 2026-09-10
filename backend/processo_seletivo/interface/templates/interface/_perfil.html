@@ -130,6 +130,24 @@
             hx-get="{% url 'interface:fragmento-modalidade' indice %}"
             hx-target="#modalidades-{{ indice }}" hx-swap="beforeend">Acrescentar Modalidade</button>
   </section>
+  <section class="quadro" aria-labelledby="quadro-titulo-{{ indice }}">
+    <h3 id="quadro-titulo-{{ indice }}">Quadro de vagas</h3>
+    {% comment %}
+    Seção do cartão do Perfil, e não tela à parte (UX-020). Uma tela à parte seria mais fácil de
+    escrever e destruiria o que a outra tivesse acabado de gravar, porque o rascunho é substituído
+    inteiro a cada POST: estando no mesmo formulário, o problema não existe.
+
+    As linhas são **oferecidas**, e só a quantidade é digitada (UX-021): a geral mais uma por
+    Modalidade já declarada. Nenhum código, rótulo ou denominação é redigitado — sete polos de três
+    Modalidades dão 28 campos, e nem um a mais.
+
+    Quantidade em branco não grava linha: ausência é "não declarado", e nunca zero. Quem quiser
+    dizer zero digita zero.
+    {% endcomment %}
+    <div id="quadro-{{ indice }}">
+      {% for linha in perfil.quadro %}{% include "interface/_linha_do_quadro.html" with sub=forloop.counter0 %}{% endfor %}
+    </div>
+  </section>
   <section class="marcos" aria-labelledby="fato-titulo-{{ indice }}">
     <h3 id="fato-titulo-{{ indice }}">Fatos exigidos do candidato</h3>
     <div id="fatos-{{ indice }}">

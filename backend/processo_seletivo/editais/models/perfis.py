@@ -69,6 +69,72 @@ class ModalidadeConcorrencia(models.Model):
         return f"{self.code} — {self.name}"
 
 
+class LinhaDoQuadroDeVagas(models.Model):
+    """Uma quantidade de vagas imediatas com identidade própria, dentro do Perfil (025, D-002).
+
+    **`modalidade` nula É a ampla concorrência, e não ausência.** O recorte sem lista de
+    concorrência não filtra por Modalidade nenhuma: entram todas as inscrições submetidas do Perfil,
+    que é o que a cláusula da ampla concorrência dos Editais reais manda. Guardar `AC 56` na
+    Modalidade chamada "Ampla concorrência" — quando ela existe — seria escrever o número no lugar
+    que o sorteio não consulta (D-004). A grafia não é inventada aqui: `Inscricao.modality_id`,
+    `PosicaoNaOrdem.modalidade_id` e `AtoDeOrdenacao.lista_id` já são anuláveis com este mesmo
+    sentido, e `classificacao/models.py` escreve a frase.
+
+    **`PROTECT` é a D-008 escrita no banco.** Remover a Modalidade não pode fazer a quantidade sumir
+    como efeito colateral de outro movimento: quem retifica declara os dois movimentos. Para o
+    conteúdo publicado a mesma regra é um achado impeditivo — banco e conteúdo publicado são duas
+    camadas independentes, como a Constituição pede para tudo o que é normativo.
+
+    **A quantidade é a fonte, e nunca é derivada de percentual** (D-003, FR-157). O percentual da
+    Regra Normativa fundamenta a cota e não a calcula: `Q 1` e `PCD 1` de um Edital real saem de
+    arredondamento sobre censo e não são geráveis por percentual algum.
+
+    **`ordem` existe por determinismo, e não por norma** (D-009). Sem ela a emissão sairia em ordem
+    indefinida e dois snapshots do mesmo conteúdo teriam resumos canônicos diferentes (FR-168). Ela
+    **não é publicada**: publicá-la faria o quadro afirmar uma precedência entre listas que é de
+    outra feature.
+
+    **A linha carrega vaga imediata, e só ela** (D-011). O cadastro de reserva não é repartido por
+    esta feature, e o campo para isso não é admitido de antemão: estrutura antes de existir regra
+    que a consuma é o que este repositório já recusou ao modelar os campos descritivos do Perfil.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    perfil = models.ForeignKey(PerfilVaga, on_delete=models.CASCADE, related_name="quadro_de_vagas")
+    modalidade = models.ForeignKey(
+        ModalidadeConcorrencia,
+        on_delete=models.PROTECT,
+        related_name="linhas_do_quadro",
+        null=True,
+        blank=True,
+    )
+    vagas_imediatas = models.PositiveIntegerField()
+    ordem = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["ordem", "id"]
+        constraints = [
+            # **As duas não são redundantes, e uma só seria mais fraca.** No PostgreSQL dois `NULL`
+            # não colidem: `UniqueConstraint(perfil, modalidade)` sozinha deixaria passar duas
+            # linhas gerais no mesmo Perfil, que é exatamente o que a FR-154 proíbe. É a mesma
+            # cirurgia de `uq_ato_raiz_por_marco`, em `classificacao/models.py`, e pela mesma razão.
+            models.UniqueConstraint(
+                fields=["perfil", "modalidade"],
+                name="uq_linha_por_modalidade",
+                condition=Q(modalidade__isnull=False),
+            ),
+            models.UniqueConstraint(
+                fields=["perfil"],
+                name="uq_linha_geral_por_perfil",
+                condition=Q(modalidade__isnull=True),
+            ),
+        ]
+
+    def __str__(self):
+        recorte = self.modalidade.code if self.modalidade_id else "Ampla concorrência"
+        return f"{recorte}: {self.vagas_imediatas}"
+
+
 class FatoDeclarado(models.Model):
     """Um fato que o Edital exige do candidato, para que uma regra publicada possa consumi-lo.
 

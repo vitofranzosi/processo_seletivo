@@ -16,6 +16,7 @@ from processo_seletivo.editais.models.etapas import EtapaAvaliacao
 from processo_seletivo.editais.models.perfis import (
     CriterioDesempate,
     FatoDeclarado,
+    LinhaDoQuadroDeVagas,
     MarcoClassificatorio,
     ModalidadeConcorrencia,
     PerfilVaga,
@@ -42,6 +43,7 @@ def _identidades_aninhadas_alheias(profiles):
     trocarem critérios seria trocar a norma de lugar sem que nada acusasse (015, FR-002).
     """
     modalidades, regras, marcos, criterios, fatos = {}, {}, {}, {}, {}
+    linhas = {}
     for perfil in profiles:
         for modalidade in perfil.get("competitionModalities", []):
             if modalidade.get("id"):
@@ -52,6 +54,12 @@ def _identidades_aninhadas_alheias(profiles):
         for fato in perfil.get("declaredFacts", []):
             if fato.get("id"):
                 fatos[str(fato["id"])] = str(perfil["id"])
+        # A linha do quadro, contra o Perfil. Sem esta conferência, um `id` de linha pertencente a
+        # outro Edital seria aceito na gravação, e o 409 que o contrato promete não aconteceria
+        # para esta coleção — defeito silencioso (025, R-008).
+        for linha in perfil.get("vacancyTable", []):
+            if linha.get("id"):
+                linhas[str(linha["id"])] = str(perfil["id"])
         for marco in perfil.get("classificationMilestones", []):
             if marco.get("id"):
                 marcos[str(marco["id"])] = str(perfil["id"])
@@ -84,6 +92,11 @@ def _identidades_aninhadas_alheias(profiles):
         "id", "perfil_id"
     ):
         if str(contêiner) != fatos[str(identificador)]:
+            alheios.add(str(identificador))
+    for identificador, contêiner in LinhaDoQuadroDeVagas.objects.filter(
+        id__in=list(linhas)
+    ).values_list("id", "perfil_id"):
+        if str(contêiner) != linhas[str(identificador)]:
             alheios.add(str(identificador))
     return alheios
 
@@ -215,6 +228,16 @@ def replace_draft(
         if edital.revision != expected_revision:
             raise DomainError("stale_revision", "A revisão informada está obsoleta.", 412)
         _reject_identifiers_of_other_editais(edital, profiles, schedule, stages)
+        # As linhas do quadro saem **antes**, e não é detalhe de ordenação: `modalidade` é
+        # `PROTECT` — a D-008 escrita no banco —, e a `ModalidadeConcorrencia` que a cascata do
+        # Perfil apagaria em seguida ainda está referenciada por elas. Sem esta linha, `delete()`
+        # levanta `ProtectedError` e **nenhuma** gravação de rascunho passa.
+        #
+        # Contorná-lo aqui não desfaz a proteção, porque quem a exerce já falou: `validate_profiles`
+        # rodou lá em cima e recusa a linha que aponte Modalidade que este envio não declara. Uma
+        # gravação que remova a Modalidade e deixe a linha para trás não chega até aqui — e é
+        # exatamente isso que a D-008 pede, com a mensagem que separa os dois casos.
+        LinhaDoQuadroDeVagas.objects.filter(perfil__edital=edital).delete()
         PerfilVaga.objects.filter(edital=edital).delete()
         for payload in profiles:
             perfil = PerfilVaga.objects.create(
@@ -268,6 +291,21 @@ def replace_draft(
                     code=fato_payload["code"],
                     label=fato_payload["label"],
                     tipo=fato_payload["type"],
+                )
+            for ordem, linha_payload in enumerate(payload.get("vacancyTable", [])):
+                # Depois das Modalidades, porque a linha reservada aponta uma delas. Com o `id`
+                # recebido, como tudo o mais: é por ele que a Retificação alcança a linha depois de
+                # publicada, e trocar a identidade a cada gravação a tornaria inalcançável.
+                #
+                # `ordem` nasce da posição no envio — determinismo da emissão, e não norma: a
+                # D-009 recusa publicar a ordem, porque o quadro não afirma precedência entre
+                # listas. Sem ela, dois snapshots do mesmo conteúdo teriam resumos diferentes.
+                LinhaDoQuadroDeVagas.objects.create(
+                    id=linha_payload["id"],
+                    perfil=perfil,
+                    modalidade_id=linha_payload.get("modalityId") or None,
+                    vagas_imediatas=linha_payload["immediateVacancies"],
+                    ordem=ordem,
                 )
             for marco_payload in payload.get("classificationMilestones", []):
                 # Com o `id` recebido, pela mesma razão da Modalidade: sem isto, cada gravação do

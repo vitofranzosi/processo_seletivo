@@ -592,6 +592,18 @@ def _recusa(exc, digitados, etapa):
     for indice, linha in enumerate(linhas):
         if str(linha.get("id", "")) == identidade:
             return {"mensagem": mensagem, "ancora": f"{prefixo}-{indice}-{campo}"}
+        # A linha do quadro é entidade **dentro** do Perfil, e a recusa nomeia a linha, não o
+        # Perfil. Sem esta descida a mensagem viraria texto solto no resumo, e quem compõe um
+        # Edital de sete polos teria de procurar em qual deles o número não fecha (025, UX-023).
+        #
+        # O índice vem de `quadro_do_formulario`, que é o que a tela **desenha** — e não da lista
+        # lida do POST, que já descartou as linhas em branco. Contar na lista lida daria o `id` de
+        # um controle que não existe, e a âncora apontaria para o nada.
+        if not linha.get("vacancyTable"):
+            continue
+        for sub, do_quadro in enumerate(forms.quadro_do_formulario(linha)):
+            if str(do_quadro.get("id", "")) == identidade:
+                return {"mensagem": mensagem, "ancora": f"linha-{indice}-{sub}-{campo}"}
     return {"mensagem": mensagem, "ancora": ""}
 
 
@@ -1035,6 +1047,10 @@ def _reexibir_perfis(perfis):
             "modalidades": [
                 _reexibir_modalidade(modalidade) for modalidade in perfil["competitionModalities"]
             ],
+            # As linhas nascem das Modalidades **do formulário**, e não das gravadas: a recusa que
+            # esta tela está mostrando pode ter sido causada por uma Modalidade que ainda não
+            # existe no banco, e derivar dali devolveria a tela sem o que a pessoa digitou (R-009).
+            "quadro": forms.quadro_do_formulario(perfil),
         }
         for perfil in perfis
     ]
@@ -1152,7 +1168,9 @@ COLECAO_DA_ETAPA = {
 # morrendo por meia jornada.
 PRESERVADO_DA_ETAPA = {
     "cronograma": ("status", "isRegistrationPeriod"),
-    # Os dois objetos normativos do Perfil que nenhuma tela desenha.
+    # Os dois objetos normativos do Perfil que nenhuma tela desenha. O quadro de vagas **não**
+    # entra aqui, e não é esquecimento: esta tela o desenha, e preservar o gravado por cima do
+    # digitado faria remover uma linha ser impossível — a remoção voltaria da fusão (025, T034).
     "perfis": ("classificationInformation", "callInformation"),
 }
 
@@ -1413,14 +1431,30 @@ def fragmento_modalidade(request, indice):
     criá-la, e a identidade precisa estar no formulário nesse momento.
 
     `indice` é o do Perfil que contém a linha: os nomes dos campos são `modalidade-<perfil>-<n>-…`.
+
+    **E a linha do quadro nasce junto, fora de banda.** A UX-021 promete que as linhas do quadro
+    são oferecidas a partir das Modalidades declaradas; quem acrescenta uma Modalidade e digita a
+    quantidade dela antes de gravar precisa ver a linha aparecer, e não descobrir depois que não
+    havia onde escrever o número. O rótulo dela só fica completo na volta do servidor, porque o
+    código e a denominação estão sendo digitados agora — e a alternativa seria espelhá-los por
+    JavaScript, que a CSP desta interface não admite.
     """
+    sub = _indice_de_linha(request)
+    modalidade = {"id": str(uuid4()), "ruleId": str(uuid4())}
     return render(
         request,
-        "interface/_modalidade.html",
+        "interface/_modalidade_com_linha.html",
         {
-            "modalidade": {"id": str(uuid4()), "ruleId": str(uuid4())},
+            "modalidade": modalidade,
             "indice": indice,
-            "sub": _indice_de_linha(request),
+            "sub": sub,
+            "linha": {
+                "id": str(uuid4()),
+                "modalityId": modalidade["id"],
+                "rotulo": "Modalidade nova",
+                "geral": False,
+                "immediateVacancies": "",
+            },
         },
     )
 
