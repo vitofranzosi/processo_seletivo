@@ -26,10 +26,17 @@ elegível sem conteúdo a ler.
 
 ---
 
-## T-002 — Três instantes viajam como texto, e a validação estoura neles
+## T-002 — Instantes e decimais viajam como texto, e a validação estoura neles
 
-**Decisão.** Converter para `datetime` com offset, antes de chamar `replace_draft`, exatamente três
-campos: `schedule[].startAt`, `schedule[].endAt` e `profiles[].competitionModalities[].normativeRule.effectiveFrom`.
+**Decisão.** Converter, antes de chamar `replace_draft`, exatamente seis campos: para `datetime`
+com offset, `schedule[].startAt`, `schedule[].endAt` e
+`profiles[].competitionModalities[].normativeRule.effectiveFrom`; para `Decimal`, `stages[].weight`,
+`stages[].minimumScore` e `stages[].maximumScore`.
+
+**Os decimais entraram na implementação, e pela mesma razão dos instantes.** `_decimal_canonico`
+publica `"1.5000"` — quatro casas, sempre, para que dois snapshots do mesmo conteúdo tenham os mesmos
+bytes —, e `validate_stage` compara `peso <= 0`: `str` contra `int` levanta `TypeError`. A previsão
+inicial cobria só as datas, e a primeira execução do serviço mostrou o resto.
 
 **Racional.** O conteúdo canônico grava instantes com `.isoformat()`
 (`publicacoes/application/publish_edital.py`), enquanto o caminho da tela entrega objetos `datetime`

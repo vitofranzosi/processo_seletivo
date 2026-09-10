@@ -73,7 +73,9 @@ correlation_id   o da requisição
 ```
 
 O aviso permanente (`FR-014`) é montado a partir deste registro: resolve a **versão** pelo
-identificador, chega ao Edital por `edital_id`, e renderiza número, ano e título da linha. **Nunca
+identificador, chega ao Edital por `edital_id`, e renderiza o Edital por número e ano mais a versão
+pelo par `(publicação que a produziu, vigência)` — único por construção, e o que impede duas versões
+da mesma fronteira de se anunciarem iguais (`FR-014a`). **Nunca
 interpreta o texto do registro** — é o que faz o aviso sobreviver a renomeações e o que impede que a
 origem se perca. E porque é a versão que está guardada, uma Retificação posterior na origem não apaga
 *de qual configuração se partiu*.
@@ -88,3 +90,18 @@ origem se perca. E porque é a versão que está guardada, uma Retificação pos
 | composição, todas as etapas | aviso permanente com a origem e o pedido de atualização, em `compor_base.html` — que todas as etapas estendem, e **não** em `base.html` | enquanto o destino estiver em elaboração |
 
 O formulário de escolha leva `chave_idempotencia`, como as telas de criação (`T-009`).
+
+**E a regra que separa exibir de enviar** — a que custou dois defeitos antes de ser escrita. A tela
+confere, **para exibir**, tudo o que decide se vale a pena oferecer: situação do Edital e rascunho
+vazio. Para **enviar**, confere apenas o que a operação não altera — permissão e escopo, que são
+autorização — e deixa situação, Processo e rascunho **inteiramente** para o serviço, depois da
+reserva da chave.
+
+```text
+GET   permissão · escopo · situação · rascunho vazio
+POST  permissão · escopo                              → o resto é do serviço (FR-017a)
+```
+
+A razão é a de `FR-017a`, e vale para **todas** as precondições que a operação altera, não só para o
+rascunho: copiado o Edital e submetido para revisão, reenviar a mesma requisição encontraria situação
+diferente — e responderia 404 onde a reserva já tem resposta pronta.

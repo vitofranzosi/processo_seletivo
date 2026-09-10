@@ -80,5 +80,14 @@
   vazio que a rodada anterior deixou saiu, o contrato passou a dizer que **detalha** o §7.1 em vez de
   reivindicar a mesma numeração, e o caso de borda da repetição passou a dizer o que importa: ela não
   é recusada por rascunho não vazio.
+- **Quarta rodada, depois da implementação: os artefatos tinham ficado para trás em quatro pontos.**
+  Nenhum defeito de código; deriva de rastreabilidade, que é o que o Princípio V não admite deixar.
+  (1) `FR-006` e `T-002` falavam só dos três instantes, e a implementação converte também os três
+  decimais da Etapa — `validate_stage` compara `peso <= 0` e `str` contra `int` levanta `TypeError`.
+  (2) O contrato descrevia a afordância sem separar **exibir** de **enviar**, que é exatamente a
+  regra cuja ausência produziu dois defeitos de 404 no reenvio. (3) `FR-014a` exigia forma legível,
+  mas não que a versão fosse **distinguível** — e uma Retificação rematerializa uma versão por
+  fronteira temporal, de modo que a data não separa duas. (4) `quickstart` e contrato citavam a
+  redação antiga do aviso.
 - Pendência de processo, e não de qualidade: `$speckit-plan` e `$speckit-tasks` ainda não rodaram, e
   `$speckit-analyze` exige os três artefatos.

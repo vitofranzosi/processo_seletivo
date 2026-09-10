@@ -129,8 +129,9 @@ Abra a composição do Edital novo e depois a trilha dele. Publique-o e volte à
 **Esperado**: o aviso nomeia a origem e pede a atualização; a trilha registra a **versão** de onde o
 conteúdo saiu, o ator e o instante; e o registro continua lá depois da publicação.
 
-**E a trilha é legível**: a entrada diz *a partir do Edital 173/2025, versão de <data>* — **não um
-identificador cru**. O aviso desaparece quando o Edital sai da elaboração; a trilha é o que sobra, e
+**E a trilha é legível**: a entrada diz *a partir do Edital 173/2025, versão da publicação nº 2,
+vigente desde <data e hora>* — **não um identificador cru**, e não uma data que duas versões da mesma
+fronteira compartilhariam. O aviso desaparece quando o Edital sai da elaboração; a trilha é o que sobra, e
 é por ela que `US3` se verifica depois de publicado (`FR-014a`). **Some ao
 cenário 8**: retifique a origem depois da cópia e volte à trilha — ela continua dizendo de qual
 versão se partiu, que é o que a Constituição pede ao exigir *independência e versão*.

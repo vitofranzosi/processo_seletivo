@@ -356,8 +356,11 @@ saber que está diante de conteúdo herdado, não redigido para esta oferta.
   desenham: Perfis de Vaga com modalidades de concorrência, regras normativas, fatos declarados,
   marcos classificatórios e critérios de desempate; Eventos do Cronograma, inclusive a designação do
   período de inscrições; Etapas de Avaliação; Documentos Exigidos; Seções textuais; e Anexos
-  (D-004). Os instantes que o conteúdo publicado carrega como texto — início e término de Evento, e
-  vigência da regra normativa — DEVEM sobreviver à cópia como instantes.
+  (D-004). O que o conteúdo publicado carrega como **texto** por ser forma canônica — os três
+  instantes (início e término de Evento, vigência da regra normativa) e os três decimais da Etapa
+  (peso, nota mínima, pontuação máxima) — DEVE voltar a ser instante e decimal na cópia. Não é
+  polimento: a validação da gravação compara e inspeciona esses valores, e sobre texto ela **estoura**
+  em vez de recusar.
 - **FR-007**: A identificação do Edital — número, ano, título e descrição — NÃO DEVE ser copiada.
 - **FR-008**: Campo normativo que nenhuma etapa de composição **desenha** NÃO DEVE ser copiado, ainda
   que a gravação o preserve: `maxInscricoesPorCandidato`, `classificationInformation` e
@@ -385,7 +388,8 @@ saber que está diante de conteúdo herdado, não redigido para esta oferta.
   exibir aviso permanente que nomeia a origem e pede a atualização das informações da nova oferta.
 - **FR-014a**: **Na entrada desta operação**, a trilha de auditoria DEVE identificar a origem em
   forma legível — o Edital pelo número e ano, e a versão — em vez do identificador que o registro
-  guarda. O registro guarda identificador para não envelhecer (`FR-015a`); quem o lê é pessoa, e
+  guarda. A versão DEVE ser nomeada de modo a **distinguir duas versões do mesmo Edital**: publicar
+  uma Retificação rematerializa uma versão por fronteira temporal, e uma data não as separa. O registro guarda identificador para não envelhecer (`FR-015a`); quem o lê é pessoa, e
   capacidade que nenhuma interface alcança não está entregue (Princípio VI). *O alcance é **esta**
   entrada, e não a trilha inteira: outras operações gravam identificador no motivo, e uniformizá-las
   é decisão de quem for dono delas (`T-010`).*
