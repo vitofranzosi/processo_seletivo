@@ -291,7 +291,9 @@ decisão declarada**, e não contra um descuido. É mais caro de mudar, e é mai
 **A `T055` da `022` fechou.** Era o primeiro dos resíduos registrados na §Resíduos: os cinco
 roteiros do quickstart percorridos pela interface, com o papel de quem preside. Restam o
 [`achado-anexo-sem-destinatario.md`](achado-anexo-sem-destinatario.md) e — fora daquela lista — o
-segundo caso pulado da suíte, que este PR também não explica.
+segundo caso pulado da suíte — **explicado em 10/09**, e não é falha silenciosa: é o E2E da
+`021` contra o serviço real da Caixa, atrás de uma chave que nenhum gatilho liga
+([achado](achado-fonte-real-do-sorteio-sem-gatilho.md)).
 
 **Nenhuma contagem de cobertura se altera.** Nenhum Edital ficou mais publicável ou mais conduzível;
 o que mudou é que o caminho que já existia deixou de ter uma porta que destrói o certame.
