@@ -925,15 +925,21 @@ def reaproveitar(request, edital_id):
     if edital is None:
         raise Http404
     composicao = reverse("interface:compor-etapa", args=[edital.id, CHAVES_ETAPA[0]])
-    editavel = edital.status == Edital.Status.EM_ELABORACAO and ator.can("edital:elaborar")
-    if not editavel:
+    # **Antes do comando, só o que não muda com a operação**: a permissão de elaborar e o escopo,
+    # que são autorização. Situação do Edital, Processo e rascunho vazio ficam **inteiramente** para
+    # o serviço, depois da reserva da chave (`FR-017a`, `§7.1`).
+    #
+    # A razão é a mesma que moveu a reserva para antes das precondições, e vale para todas elas, não
+    # só para o rascunho: a operação muda o estado que seria conferido. Depois da primeira cópia o
+    # rascunho tem conteúdo — e o Edital pode até ter avançado de situação, se alguém o submeteu no
+    # intervalo. Barrar o reenvio aqui devolveria 404 onde a reserva já tem resposta pronta.
+    if not ator.can("edital:elaborar"):
         raise Http404
-    # **A guarda do rascunho vazio vale para a exibição, e não para o envio** — pela mesma razão que
-    # move a reserva da chave para antes das precondições (`FR-017a`): depois da primeira cópia o
-    # rascunho não está mais vazio, e barrar o POST aqui faria o reenvio da mesma requisição
-    # responder 404 em vez de terminar onde a primeira terminou. Quem decide o envio é o comando,
-    # que reconhece a repetição pela chave, e recusa o resto.
-    if request.method == "GET" and not rascunho_vazio(edital):
+    # A exibição é outra conversa: o que a tela oferece precisa ser o que a tela consegue fazer, e
+    # oferecer o que se vai recusar é pior do que não oferecer.
+    if request.method == "GET" and (
+        edital.status != Edital.Status.EM_ELABORACAO or not rascunho_vazio(edital)
+    ):
         raise Http404
 
     erros = []
@@ -2178,7 +2184,11 @@ def _versao_por_identificador(identificador):
     nunca a página.
     """
     try:
-        return VersaoConsolidada.objects.filter(pk=identificador).select_related("edital").first()
+        return (
+            VersaoConsolidada.objects.filter(pk=identificador)
+            .select_related("edital", "source_publication")
+            .first()
+        )
     except (ValidationError, ValueError, TypeError):
         return None
 
@@ -2212,6 +2222,9 @@ def _origem_reaproveitada(edital):
     return {
         "edital": versao.edital,
         "versao": versao,
+        # A mesma frase da trilha, pela mesma razão: sem as duas datas, duas versões distintas se
+        # anunciam iguais.
+        "versao_por_extenso": _versao_por_extenso(versao),
         "quando": registro.occurred_at,
         "ator": registro.actor_subject,
     }
@@ -2229,10 +2242,26 @@ def _motivo_legivel(registro):
     if versao is None:
         return registro.reason
     origem = versao.edital
-    return (
-        f"a partir do Edital {origem.number}/{origem.year}, "
-        f"versão de {timezone.localtime(versao.valid_from).strftime('%d/%m/%Y')}"
-    )
+    return f"a partir do Edital {origem.number}/{origem.year}, {_versao_por_extenso(versao)}"
+
+
+def _versao_por_extenso(versao):
+    """A versão nomeada pelo ato que a produziu e pela vigência dela (023, FR-014a, SC-005).
+
+    **Data não nomeia versão.** Publicar uma Retificação rematerializa **uma versão por fronteira
+    temporal** (`publicacoes/application/retificacoes.py`), e uma Retificação posterior refaz as
+    mesmas fronteiras: duas linhas distintas — com identificadores distintos, e conteúdo distinto —
+    apareceriam como a mesma *"versão de 09/09/2026"*. `SC-005` ficaria atendido no banco e não na
+    tela, que é o inverso do que ele pede.
+
+    O par `(publicação que a produziu, vigência)` é **único por construção**: dentro de uma
+    materialização as fronteiras são um conjunto, e entre materializações a Publicação de origem
+    muda. E é a língua que o resto da interface já fala — a lista de documentos do Edital nomeia os
+    atos pela ordem de publicação.
+    """
+    publicacao = versao.source_publication
+    vigencia = timezone.localtime(versao.valid_from).strftime("%d/%m/%Y %H:%M")
+    return f"versão da publicação nº {publicacao.publication_order}, vigente desde {vigencia}"
 
 
 OPERACOES = {

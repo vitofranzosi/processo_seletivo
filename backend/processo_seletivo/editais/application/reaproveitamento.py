@@ -208,7 +208,11 @@ def reaproveitar_edital(
                 409,
             )
 
-        versao = effective_version(edital_id=origem.pk)
+        # **`at=now`, e não o instante que o seletor tomaria sozinho.** `effective_version` chama
+        # `timezone.now()` quando não recebe o instante, e a auditoria registra o `now` da abertura
+        # do comando: uma vigência programada que começasse no meio da transação faria o evento
+        # afirmar um instante anterior à versão que ele diz ter copiado.
+        versao = effective_version(edital_id=origem.pk, at=now)
         conteudo = elevar(versao.content)
         mapa = mapa_de_identidades(conteudo)
         _copiar_anexos(edital, conteudo, mapa, actor=actor, now=now)

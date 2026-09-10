@@ -142,6 +142,7 @@ def test_o_aviso_nomeia_a_origem_em_todas_as_etapas(client, destino, origem):
     for etapa in ("identificacao", "perfis", "cronograma", "conteudo", "revisao"):
         corpo = client.get(composicao(destino, etapa)).content.decode()
         assert f"iniciado a partir do Edital {origem.number}/{origem.year}" in corpo
+        assert "versão da publicação nº" in corpo and "vigente desde" in corpo
         assert "atualize as informações desta oferta" in corpo
 
 
@@ -159,7 +160,11 @@ def test_a_trilha_diz_de_onde_veio_em_forma_legivel(client, destino, origem, api
 
     assert "Criação a partir de Edital anterior" in corpo
     assert f"a partir do Edital {origem.number}/{origem.year}" in corpo
-    assert "versão de" in corpo
+    # **O ato que produziu a versão, e não só a data**: uma Retificação rematerializa uma versão por
+    # fronteira temporal, e duas linhas distintas apareceriam como a mesma "versão de 09/09/2026"
+    # (FR-014a, SC-005).
+    assert "versão da publicação nº" in corpo
+    assert "vigente desde" in corpo
 
 
 def test_a_trilha_continua_legivel_depois_de_retificada_a_origem(
@@ -207,10 +212,48 @@ def test_reenviar_o_formulario_termina_onde_a_primeira_requisicao_terminou(clien
         {"origem": str(origem.id), "chave_idempotencia": _chave_da_primeira(client, destino)},
     )
 
-    assert repetida.status_code in (302, 200)
+    # **302 e o destino, e não "302 ou 200"**: `DomainError` é renderizado com 200, então aceitar os
+    # dois faria o teste passar com a repetição recusada — que é exatamente o que ele existe para
+    # impedir.
+    assert repetida.status_code == 302
+    assert repetida["Location"].startswith(composicao(destino))
     destino.refresh_from_db()
     assert destino.perfis.count() == 1
     assert destino.anexos.count() == 1
+
+
+def test_a_repeticao_sobrevive_a_mudanca_de_situacao_do_destino(client, destino, origem):
+    """A precondição que a operação altera não é só o rascunho: a situação também muda.
+
+    Copiado o Edital, alguém o submete para revisão. O reenvio da mesma requisição — o botão de
+    voltar, a recarga da página de resultado — precisa terminar onde a primeira terminou, porque a
+    reserva da chave já tem resposta pronta. Conferir a situação antes do comando devolvia 404.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    escolher(client, destino, origem)
+    chave = _chave_da_primeira(client, destino)
+    Edital.objects.filter(pk=destino.pk).update(status=Edital.Status.EM_REVISAO)
+
+    repetida = client.post(
+        reverse("interface:reaproveitar", args=[destino.id]),
+        {"origem": str(origem.id), "chave_idempotencia": chave},
+    )
+
+    assert repetida.status_code == 302
+    assert repetida["Location"].startswith(composicao(destino))
+    destino.refresh_from_db()
+    assert destino.perfis.count() == 1
+
+
+def test_a_tela_de_escolha_some_quando_o_edital_sai_da_elaboracao(client, destino):
+    """A exibição continua conferindo a situação.
+
+    O que a tela oferece precisa ser o que a tela consegue fazer.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    Edital.objects.filter(pk=destino.pk).update(status=Edital.Status.EM_REVISAO)
+
+    assert client.get(reverse("interface:reaproveitar", args=[destino.id])).status_code == 404
 
 
 def _chave_da_primeira(client, destino):

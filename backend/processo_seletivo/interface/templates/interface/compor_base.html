@@ -49,11 +49,13 @@ assistente estendem este arquivo, e só elas precisam do aviso — mexer na folh
 asserção de template quebrada e alcançaria telas a que ele não pertence.
 
 O que ele diz vem da trilha, resolvido por identificador (FR-015a). A versão é nomeada porque é ela
-que responde *de qual configuração partimos* depois de a origem ser retificada.
+que responde *de qual configuração partimos* depois de a origem ser retificada — e é nomeada pelas
+**duas** datas porque uma Retificação rematerializa uma versão por fronteira temporal: só a data de
+vigência não distingue duas linhas diferentes.
 {% endcomment %}
 {% if origem_reaproveitada %}
 <p class="aviso" role="status">
-  {% if origem_reaproveitada.edital %}<strong>Este Edital foi iniciado a partir do Edital {{ origem_reaproveitada.edital.number }}/{{ origem_reaproveitada.edital.year }}</strong>, na versão de {{ origem_reaproveitada.versao.valid_from|date:"d/m/Y" }}.
+  {% if origem_reaproveitada.edital %}<strong>Este Edital foi iniciado a partir do Edital {{ origem_reaproveitada.edital.number }}/{{ origem_reaproveitada.edital.year }}</strong> — {{ origem_reaproveitada.versao_por_extenso }}.
   {% else %}<strong>Este Edital foi iniciado a partir de outro Edital.</strong>{% endif %}
   Confira e atualize as informações desta oferta — datas, vagas e prazos são da oferta anterior até
   que alguém os revise.</p>

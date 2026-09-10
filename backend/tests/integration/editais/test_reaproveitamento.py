@@ -898,3 +898,66 @@ def test_a_origem_nao_entra_no_conteudo_canonico_do_destino(destino, origem, ela
     assert f'"{origem.number}"' not in serializado
     for identidade in IDENTIDADES_DA_ORIGEM:
         assert identidade not in serializado
+
+
+def test_a_versao_copiada_e_a_vigente_no_instante_do_comando(destino, origem, elaborador):
+    """`at=now`, e não o instante que o seletor tomaria sozinho.
+
+    `effective_version` chama `timezone.now()` quando não recebe o instante, e a auditoria registra
+    o `now` da abertura do comando. Os dois são quase o mesmo — e "quase" é o problema: uma vigência
+    programada que comece no meio da transação faria o evento afirmar um instante **anterior** à
+    versão que ele diz ter copiado, e a proveniência deixaria de fechar.
+
+    O que se prende aqui é a âncora, e não a semântica do seletor: a versão lida é a que vigorava no
+    instante que o registro carimba.
+    """
+    from processo_seletivo.auditoria.models import RegistroAuditoria
+    from processo_seletivo.editais.application import reaproveitamento as servico
+    from processo_seletivo.editais.application.reaproveitamento import OPERACAO
+
+    original = servico.effective_version
+    instantes = []
+
+    def registrando(**kwargs):
+        instantes.append(kwargs.get("at"))
+        return original(**kwargs)
+
+    servico.effective_version = registrando
+    try:
+        copiado = copiar(destino, origem, elaborador)
+    finally:
+        servico.effective_version = original
+
+    registro = RegistroAuditoria.objects.get(operation=OPERACAO, aggregate_id=copiado.pk)
+    assert instantes == [registro.occurred_at]
+
+
+def test_duas_versoes_da_mesma_origem_nao_se_anunciam_iguais(
+    destino, origem, elaborador, api_client
+):
+    """Data não nomeia versão (FR-014a, SC-005).
+
+    Publicar uma Retificação rematerializa **uma versão por fronteira temporal**, e as fronteiras
+    caem no mesmo dia — no mesmo minuto, num teste. Enquanto a tela dizia só *"versão de
+    09/09/2026"*, duas linhas com identificadores e conteúdos distintos apareciam com a mesma frase,
+    e quem lesse a trilha não teria como saber de qual se partiu.
+    """
+    from processo_seletivo.interface.views import _versao_por_extenso
+    from tests.fixtures.publicacao import retify
+
+    primeira = VersaoConsolidada.objects.filter(edital=origem).latest("materialized_at")
+    retify(
+        api_client,
+        origem,
+        [
+            {
+                "targetPath": f"/profiles/id={PERFIL}/name",
+                "operation": "REPLACE",
+                "newValue": "Nome retificado",
+            }
+        ],
+    )
+    segunda = VersaoConsolidada.objects.filter(edital=origem).latest("materialized_at")
+
+    assert primeira.pk != segunda.pk
+    assert _versao_por_extenso(primeira) != _versao_por_extenso(segunda)
