@@ -64,6 +64,22 @@ def emitir_ordem(
             marco_id=marco_id,
             at=ctx.now,
         )
+        # **A ordem de um marco de sorteio não se emite por aqui** (021, D-001, FR-034). A tela
+        # deixou de oferecer o botão, e esta é a trava que vale: um ato computado neste marco
+        # ocuparia o ato raiz dele e deixaria `constituir_sorteio` sem lugar onde nascer — travando
+        # o sorteio pela porta de outra feature, e sem que nada dissesse por quê.
+        #
+        # `drawMethod` é lido do conteúdo publicado, e não do app do sorteio: a direção da
+        # dependência continua sendo `sorteios → classificacao`.
+        if (proposta["marco"] or {}).get("drawMethod"):
+            raise DomainError(
+                "milestone_ordered_by_draw",
+                "O Edital declara que este marco ordena por sorteio público. A ordem dele nasce do "
+                "sorteio, sobre a relação de habilitados congelada, e não do cálculo por Etapas — "
+                "emitir aqui produziria uma ordem que a norma não prevê e impediria o sorteio de "
+                "acontecer.",
+                409,
+            )
         esperada = assinatura_da_proposta(proposta, ato_vigente=vigente)
         if not (confirmacao_do_calculo or "").strip():
             raise DomainError(

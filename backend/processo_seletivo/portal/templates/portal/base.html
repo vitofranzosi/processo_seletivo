@@ -230,16 +230,27 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
    acidental da ordem das colunas: empilhado, o cronograma cai entre as vagas e os documentos, que
    é a ordem das perguntas de quem decide. */
 .corpo-da-selecao{display:grid;gap:0 2rem;
-  grid-template-areas:"vagas" "cronograma" "documentos"}
+  grid-template-areas:"vagas" "sorteio" "cronograma" "documentos"}
 .vagas-da-selecao{grid-area:vagas;min-width:0}
+/* O sorteio **acima** do cronograma na coluna lateral, e logo depois das vagas no celular: quando
+   ele existe, é a pergunta mais urgente da página — "a lista já fechou? quando é?" —, e ela vem
+   antes do calendário inteiro (021). Sem sorteio a área fica vazia, e uma linha vazia de altura
+   automática não ocupa nada. */
+.sorteio-da-selecao{grid-area:sorteio;min-width:0}
 .cronograma-da-selecao{grid-area:cronograma;min-width:0}
 .documentos-da-selecao{grid-area:documentos;min-width:0}
+.sorteio-da-selecao .sorteio+.sorteio{margin-top:1.25rem;padding-top:1.25rem;
+  border-top:1px solid var(--borda)}
+.sorteio-da-selecao h3{margin:0 0 .35rem;font-size:1rem}
+.acoes-do-sorteio{margin:.5rem 0 0;padding:0;list-style:none}
+.acoes-do-sorteio li+li{margin-top:.35rem}
 @media (min-width:60rem){
   .corpo-da-selecao{grid-template-columns:minmax(0,1fr) 19rem;
-    grid-template-areas:"vagas cronograma" "documentos cronograma"}
+    grid-template-areas:"vagas sorteio" "vagas cronograma" "documentos cronograma"}
   /* O título da coluna lateral alinha com o da principal: sem isto, o `margin-top` de `h2` deixava
      os dois em alturas diferentes e a lateral parecia ter escorregado. */
   .cronograma-da-selecao>h2{margin-top:1.75rem}
+  .sorteio-da-selecao>h2{margin-top:1.75rem}
 }
 
 /* O cabeçalho de identidade: a marca da situação acima do título, e o bloco inteiro com respiro

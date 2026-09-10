@@ -77,6 +77,7 @@ from processo_seletivo.resultados.application.selectors import resultados_visive
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.arquivos import tamanho_legivel
 from processo_seletivo.shared.http import marcar_como_privada, resposta_privada
+from processo_seletivo.sorteios.application.selectors import sorteios_do_edital
 
 # O limite da coluna, aplicado antes de a gravação chegar ao banco.
 LIMITE_DO_TELEFONE = 30
@@ -371,6 +372,12 @@ def selecao(request, edital_id):
     # tivesse o endereço dela. Só as **vigentes** — uma publicação sucedida continua consultável
     # pelo endereço dela, e anunciá-la aqui ofereceria como atual o que já não é.
     contexto["resultados_divulgados"] = vigentes_do_edital(versao.edital)
+    # **O sorteio, antes de ele acontecer** (021, FR-011). A relação congelada era pública e não era
+    # alcançável: quem se inscreveu não tinha por onde saber que participava de um sorteio nem que a
+    # lista já estava fechada. A garantia que a feature existe para produzir — *o universo foi
+    # comprometido antes de a semente existir* — só era observável depois do fato, pela divulgação
+    # do resultado, e por quem já tivesse o endereço.
+    contexto["sorteios"] = sorteios_do_edital(versao.edital, versao.content)
     # **O Cronograma publicado, antes da identificação** (024, FR-125). Ele já estava no conteúdo
     # publicado e já era renderizado — mas só no acompanhamento, isto é, **depois** de a pessoa se
     # inscrever. Quem já se inscreveu via o calendário; quem estava decidindo se valia a pena, não.

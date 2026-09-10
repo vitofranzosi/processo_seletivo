@@ -37,6 +37,7 @@ from processo_seletivo.avaliacoes.application.trilha import auditar as auditar_a
 from processo_seletivo.avaliacoes.domain.previsao import forma_publicada, rotulos
 from processo_seletivo.classificacao.application.emissao import assinatura_da_proposta, emitir_ordem
 from processo_seletivo.classificacao.application.selectors import (
+    ORIGEM_SORTEIO,
     ato_por_id,
     estado_do_marco,
     nomear_criterios,
@@ -3844,6 +3845,11 @@ def ordenacao(request, edital_id, marco_id):
                 "posicoes": proposta["posicoes"],
                 "sem_posicao": proposta["sem_posicao"],
                 "ato_vigente": estado["vigente"],
+                # **O marco que ordena por sorteio não se recompõe aqui**, e a tela precisa dizer
+                # isso em vez de mostrar uma proposta vazia sem explicação. O caminho para a tela
+                # dona vai junto: quem chegou até aqui pelo Edital estava procurando a ordem deste
+                # marco, e a ordem dele nasce do sorteio (021, D-013).
+                "sorteia": estado.get("origem") == ORIGEM_SORTEIO,
                 "obsoleto": estado["obsoleto"],
                 "recomputavel": estado["recomputavel"],
                 "divergencias": estado["divergencias"],
@@ -4840,11 +4846,43 @@ def sorteio(request, edital_id, marco_id):
                 "ocorre_em": estado["ocorre_em"],
                 "recortes": estado["recortes"],
                 "pode_emitir": pode_emitir,
+                # **Quem publica o resultado não é necessariamente quem conduz o sorteio**
+                # (`017`, FR-025): a capacidade é própria, e oferecer o caminho a quem receberia
+                # 403 seria oferecer um beco. Com ela, o passo seguinte fica **na tela em que o
+                # sorteio terminou**, em vez de exigir que alguém reconstrua a navegação por cinco
+                # telas com a transmissão no ar.
+                "pode_publicar": ator.can("resultado:publicar"),
                 "resultado": request.session.pop("resultado_do_sorteio", None),
                 "erro": request.session.pop("erro_do_sorteio", None),
+                # **A chave de idempotência nasce na leitura, e viaja no formulário** — como a tela
+                # da `015` já fazia. Sem ela, cada envio gerava chave nova: o duplo clique no botão
+                # de sortear não era reconhecido como repetição, batia em `draw_already_constituted`
+                # e pintava a tela de vermelho **depois** de o sorteio ter dado certo, ao vivo. Com
+                # ela, o segundo envio devolve o desfecho do primeiro.
+                "chave_idempotencia": uuid4().hex,
             },
         )
     )
+
+
+# Os quatro comandos da tela do sorteio, nomeados. **O desfecho de cada um é dele**, e a faixa que
+# a tela mostra tem de dizer o que aconteceu — não o que aconteceria se o comando fosse outro
+# (`021`, FR-062).
+#
+# Antes havia uma frase só, escrita para a publicação da relação, e ela respondia aos quatro: depois
+# de observar a extração a tela anunciava *"Relação publicada e congelada, com  participante"*, e
+# depois de **realizar o sorteio** anunciava *"Relação publicada e congelada, com 327
+# participantes"* — no minuto mais visto do certame, com a transmissão aberta. A recusa tinha o
+# mesmo vício, e prefixava *"Não foi possível publicar"* uma falha da fonte externa.
+RELACAO, OCORRENCIA, SORTEIO, ANULACAO = "relacao", "ocorrencia", "sorteio", "anulacao"
+
+
+def _desfecho_do_sorteio(request, tipo, declarado):
+    request.session["resultado_do_sorteio"] = {"tipo": tipo, **(declarado or {})}
+
+
+def _recusa_do_sorteio(request, tipo, recusa):
+    request.session["erro_do_sorteio"] = {"tipo": tipo, "detalhe": recusa.detail}
 
 
 @require_http_methods(["POST"])
@@ -4858,21 +4896,25 @@ def publicar_relacao_do_sorteio(request, edital_id, marco_id):
     destino = reverse("interface:sorteio", args=[edital_id, marco_id])
     lista_id = request.POST.get("lista_id") or None
     try:
-        request.session["resultado_do_sorteio"] = publicar_relacao(
-            actor=ator,
-            processo_id=edital.processo_id,
-            edital_id=edital.id,
-            perfil_id=_perfil_do_marco(edital, marco_id),
-            marco_id=marco_id,
-            lista_id=lista_id,
-            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
-            correlation_id=getattr(request, "correlation_id", ""),
-            motivo=request.POST.get("motivo", ""),
+        _desfecho_do_sorteio(
+            request,
+            RELACAO,
+            publicar_relacao(
+                actor=ator,
+                processo_id=edital.processo_id,
+                edital_id=edital.id,
+                perfil_id=_perfil_do_marco(edital, marco_id),
+                marco_id=marco_id,
+                lista_id=lista_id,
+                idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+                correlation_id=getattr(request, "correlation_id", ""),
+                motivo=request.POST.get("motivo", ""),
+            ),
         )
     except DomainError as recusa:
         if recusa.status == 404:
             raise Http404 from recusa
-        request.session["erro_do_sorteio"] = recusa.detail
+        _recusa_do_sorteio(request, RELACAO, recusa)
     return redirect(destino)
 
 
@@ -4902,26 +4944,33 @@ def observar_ocorrencia_do_sorteio(request, edital_id, marco_id):
     # observar sempre a declarada travava o certame para sempre na primeira extração não publicada.
     referencia = estado["proxima_referencia"]
     if not referencia:
-        request.session["erro_do_sorteio"] = (
-            "A ocorrência declarada e todas as substitutas previstas pela regra publicada estão "
-            "indisponíveis. Prosseguir exige Retificação que declare outro método."
-        )
+        request.session["erro_do_sorteio"] = {
+            "tipo": OCORRENCIA,
+            "detalhe": (
+                "A ocorrência declarada e todas as substitutas previstas pela regra publicada "
+                "estão indisponíveis. Prosseguir exige Retificação que declare outro método."
+            ),
+        }
         return redirect(destino)
     try:
-        request.session["resultado_do_sorteio"] = observar_ocorrencia(
-            actor=ator,
-            processo_id=edital.processo_id,
-            fonte=metodo.get("source", ""),
-            referencia=referencia,
-            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
-            correlation_id=getattr(request, "correlation_id", ""),
-            # O instante publicado da ocorrência: antes dele, a ausência não é definitiva.
-            ocorre_em=estado["ocorre_em"],
+        _desfecho_do_sorteio(
+            request,
+            OCORRENCIA,
+            observar_ocorrencia(
+                actor=ator,
+                processo_id=edital.processo_id,
+                fonte=metodo.get("source", ""),
+                referencia=referencia,
+                idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+                correlation_id=getattr(request, "correlation_id", ""),
+                # O instante publicado da ocorrência: antes dele, a ausência não é definitiva.
+                ocorre_em=estado["ocorre_em"],
+            ),
         )
     except DomainError as recusa:
         if recusa.status == 404:
             raise Http404 from recusa
-        request.session["erro_do_sorteio"] = recusa.detail
+        _recusa_do_sorteio(request, OCORRENCIA, recusa)
     return redirect(destino)
 
 
@@ -4940,19 +4989,23 @@ def realizar_sorteio(request, edital_id, marco_id):
         return redirect(reverse("interface:identificar"))
     destino = reverse("interface:sorteio", args=[edital_id, marco_id])
     try:
-        request.session["resultado_do_sorteio"] = constituir_sorteio(
-            actor=ator,
-            processo_id=edital.processo_id,
-            edital_id=edital.id,
-            relacao_id=request.POST.get("relacao_id"),
-            ocorrencia_id=request.POST.get("ocorrencia_id"),
-            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
-            correlation_id=getattr(request, "correlation_id", ""),
+        _desfecho_do_sorteio(
+            request,
+            SORTEIO,
+            constituir_sorteio(
+                actor=ator,
+                processo_id=edital.processo_id,
+                edital_id=edital.id,
+                relacao_id=request.POST.get("relacao_id"),
+                ocorrencia_id=request.POST.get("ocorrencia_id"),
+                idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+                correlation_id=getattr(request, "correlation_id", ""),
+            ),
         )
     except DomainError as recusa:
         if recusa.status == 404:
             raise Http404 from recusa
-        request.session["erro_do_sorteio"] = recusa.detail
+        _recusa_do_sorteio(request, SORTEIO, recusa)
     return redirect(destino)
 
 
@@ -4966,19 +5019,23 @@ def anular_o_sorteio(request, edital_id, marco_id):
         return redirect(reverse("interface:identificar"))
     destino = reverse("interface:sorteio", args=[edital_id, marco_id])
     try:
-        request.session["resultado_do_sorteio"] = anular_sorteio(
-            actor=ator,
-            processo_id=edital.processo_id,
-            edital_id=edital.id,
-            sorteio_anterior_id=request.POST.get("sorteio_anterior_id"),
-            relacao_id=request.POST.get("relacao_id"),
-            ocorrencia_id=request.POST.get("ocorrencia_id"),
-            motivo=request.POST.get("motivo", ""),
-            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
-            correlation_id=getattr(request, "correlation_id", ""),
+        _desfecho_do_sorteio(
+            request,
+            ANULACAO,
+            anular_sorteio(
+                actor=ator,
+                processo_id=edital.processo_id,
+                edital_id=edital.id,
+                sorteio_anterior_id=request.POST.get("sorteio_anterior_id"),
+                relacao_id=request.POST.get("relacao_id"),
+                ocorrencia_id=request.POST.get("ocorrencia_id"),
+                motivo=request.POST.get("motivo", ""),
+                idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+                correlation_id=getattr(request, "correlation_id", ""),
+            ),
         )
     except DomainError as recusa:
         if recusa.status == 404:
             raise Http404 from recusa
-        request.session["erro_do_sorteio"] = recusa.detail
+        _recusa_do_sorteio(request, ANULACAO, recusa)
     return redirect(destino)

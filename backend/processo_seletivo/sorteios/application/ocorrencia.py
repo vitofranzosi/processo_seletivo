@@ -68,6 +68,23 @@ def observar_ocorrencia(
     observacao = (fonte_externa or fonte_declarada(fonte)).observar(
         fonte=fonte, referencia=referencia
     )
+    if observacao.falha_de_acesso:
+        # **Não conseguir falar com a fonte não é a fonte dizer que não há extração**, e a
+        # diferença custava o certame. A indisponibilidade é append-only e consome a cadeia de
+        # substituição publicada: gravá-la por causa de uma falha de rede descartaria para sempre a
+        # extração que o Edital declarou, ao vivo, e empurraria o sorteio para a seguinte — sem que
+        # ninguém tivesse decidido isso e sem caminho de volta.
+        #
+        # Aqui nada é gravado, e a recusa é repetível: tentar de novo é o ato certo, e é barato.
+        raise DomainError(
+            "source_unreachable",
+            f"Não foi possível falar com {fonte} agora, e por isso **nada foi registrado**: a "
+            f"ocorrência {referencia!r} continua sendo a que vale, e observá-la de novo é o "
+            "próximo passo. Falha de acesso não é ausência de extração — registrá-la como "
+            "indisponibilidade descartaria a extração que o Edital declarou. "
+            f"{observacao.evidencia}",
+            502,
+        )
     if observacao.indisponivel and ocorre_em is not None and timezone.now() < ocorre_em:
         # **"Ainda não" não é "não haverá"** (FR-077). Registrar a ausência como definitiva antes da
         # hora publicada seria consumir a cadeia de substituição de propósito: bastava observar de

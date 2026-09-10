@@ -216,6 +216,57 @@ documentos, que é a ordem das perguntas de quem decide.
   vazio nem frase de ausência. Dizer "cronograma não divulgado" afirmaria uma omissão onde o Edital
   pode nunca ter tido o que declarar (FR-128).
   {% endcomment %}
+  {% comment %}
+  **O sorteio, e o que dele já é público antes de ele acontecer** (021, FR-011, FR-048).
+
+  A relação de habilitados é publicada e congelada dias antes do sorteio, é imutável e é o
+  compromisso do universo — e nenhuma página do portal a apontava: ela só respondia no endereço da
+  própria identidade. Quem se inscreveu não descobria que participava de um sorteio, nem com que
+  número, nem que a lista já estava fechada. A garantia que a feature existe para produzir — *o
+  universo foi comprometido antes de a semente existir* — era observável só depois do fato.
+
+  Ao lado do Cronograma, e não no corpo: a pergunta que este bloco responde é "em que ponto está?",
+  a mesma do calendário. A tabela dos participantes **não** vem para cá — ela vive no endereço
+  estável da relação, que é o que o manifesto, o documento publicado e qualquer ofício citam.
+  {% endcomment %}
+  {% if sorteios %}
+  <aside class="sorteio-da-selecao" aria-labelledby="sorteio-titulo">
+    <h2 id="sorteio-titulo">Sorteio público</h2>
+    {% for item in sorteios %}
+    <div class="sorteio">
+      {% comment %}
+      O recorte é nomeado **só quando há mais de um**: num certame de lista única, repetir o nome do
+      marco em cada bloco seria ruído; num com polos ou cotas, é o que diz de qual sorteio se fala.
+      {% endcomment %}
+      {% if sorteios|length > 1 %}
+      <h3>{{ item.marco }}{% if item.lista %} — {{ item.lista }}{% endif %}{% if item.perfil %} <span class="quando">{{ item.perfil }}</span>{% endif %}</h3>
+      {% endif %}
+      {% if item.sorteio %}
+      <p class="vigente" role="status"><strong>Sorteio realizado</strong> em
+        {{ item.sorteio.executado_em|date:"d/m/Y" }} às {{ item.sorteio.executado_em|date:"H:i" }}.</p>
+      {% else %}
+      <p class="aviso"><strong>Aguardando o sorteio.</strong> A lista de quem vai participar já está
+        publicada e não muda mais: ela foi fechada em
+        {{ item.relacao.publicada_em|date:"d/m/Y" }} às {{ item.relacao.publicada_em|date:"H:i" }},
+        antes de existirem os números que vão decidir a ordem.</p>
+      {% endif %}
+      <p>{{ item.relacao.quantidade }} candidato{{ item.relacao.quantidade|pluralize }} habilitado{{ item.relacao.quantidade|pluralize }}.</p>
+      <ul class="acoes-do-sorteio">
+        {% comment %}
+        O tempo do verbo acompanha o fato: antes do sorteio a lista diz quem **vai** participar,
+        depois dele diz quem participou. É a mesma frase e o mesmo endereço — o que muda é que já
+        aconteceu, e escrever o futuro sobre um fato passado faz a página parecer desatualizada.
+        {% endcomment %}
+        <li><a href="{% url 'portal:relacao-de-habilitados' item.relacao.id %}">Ver quem {% if item.sorteio %}participou{% else %}vai participar{% endif %}, e com que número</a></li>
+        {% if item.sorteio %}
+        <li><a href="{% url 'portal:verificar-sorteio' item.sorteio.id %}">Como este sorteio foi feito</a></li>
+        {% endif %}
+      </ul>
+    </div>
+    {% endfor %}
+  </aside>
+  {% endif %}
+
   {% if cronograma %}
   <aside class="cronograma-da-selecao" aria-labelledby="cronograma-titulo">
     <h2 id="cronograma-titulo">Cronograma</h2>

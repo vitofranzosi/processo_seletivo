@@ -13,9 +13,21 @@
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível emitir:</strong> {{ erro }}</p>{% endif %}
 {% if resultado %}<p class="sucesso" role="status" tabindex="-1">Ordem emitida. O ato é imutável e já pode ser consultado.</p>{% endif %}
 
+{% comment %}
+**O marco que ordena por sorteio não calcula proposta nenhuma aqui**, e dizer isso é o ponto: sem
+ato, esta tela oferecia "Emitir ordem" a partir de um cálculo por Etapas que a norma daquele marco
+não prevê — e o ato assim emitido ocupava o ato raiz do recorte, deixando `constituir_sorteio` sem
+lugar onde nascer. O sorteio ficava inalcançável pela própria interface.
+{% endcomment %}
+{% if sorteia %}
+<p class="aviso"><strong>A ordem deste marco é produzida por sorteio público.</strong> Ela nasce da
+  relação de habilitados congelada e da extração que o Edital declarou — não do cálculo por Etapas,
+  e não desta tela. <a href="{% url 'interface:sorteio' edital.id marco.id %}">Abrir o sorteio deste marco</a></p>
+{% endif %}
+
 {% if ato_vigente %}
 <p class="imutavel"><strong>Ato vigente emitido em {{ ato_vigente.emitido_em|date:"d/m/Y H:i" }}</strong> por {{ ato_vigente.emitido_por }}. Abrir esta tela não o altera. <a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ato_vigente.id %}">Consultar ato e proveniência</a>.</p>
-{% else %}
+{% elif not sorteia %}
 <p class="aviso">Ainda não existe ato emitido para este marco. A lista abaixo é uma proposta calculada agora.</p>
 {% endif %}
 
