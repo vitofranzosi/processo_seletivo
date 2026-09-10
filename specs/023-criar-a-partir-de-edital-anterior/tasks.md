@@ -145,7 +145,37 @@ mostra que o defeito que ela caça atravessa a gravação sem recusa.
 
 ---
 
-## Phase 6: Polish & Cross-Cutting Concerns
+## Phase 6: A escolha da origem, revisada na tela (`US1`)
+
+**Por que uma fase depois da entrega.** A tela subiu cumprindo a metade visível de `FR-004` — listar
+— e não a segunda metade, **localizar**: `T020` e `T022` foram marcadas sem que nenhum teste
+cobrisse a palavra. A revisão de UI encontrou isso junto de três defeitos visuais e de duas lacunas
+de decisão. O que segue fecha as três coisas.
+
+- [X] T045 Implementar a busca em `backend/processo_seletivo/editais/application/reaproveitamento.py`: número, título, código e título do Processo por semelhança, e ano por igualdade — inteiro comparado por semelhança de texto devolve o que ninguém pediu (`FR-004`)
+- [X] T046 Implementar `versoes_vigentes` em `backend/processo_seletivo/publicacoes/application/selectors.py` — a forma em lote de `effective_version`, com a **mesma** regra de desempate: duas respostas para "qual versão vigora" é o defeito que aquele módulo existe para não ter (`FR-004a`)
+- [X] T047 Implementar `com_resumo_da_origem` em `backend/processo_seletivo/editais/application/reaproveitamento.py`, contando no conteúdo vigente e não nas tabelas (`FR-004a`, `D-003`)
+- [X] T048 Paginar a lista em `backend/processo_seletivo/interface/views.py`, reusando `interface/_paginacao_de_inscricoes.html`, com o filtro atravessando as páginas (`FR-004a`)
+- [X] T049 Refazer `backend/processo_seletivo/interface/templates/interface/reaproveitar.html`: barra de busca; dois cartões em `.colunas` — o título dizia "o que é reaproveitado" e o segundo parágrafo falava do que **não** vem; `fieldset`/`legend` no grupo de escolha; colunas de publicação e de conteúdo; `.navegacao-etapa` no lugar de `.acoes`, que é a classe da casa para *Cancelar* mais ação primária; e **nenhuma origem pré-marcada**, que com a lista paginada virava armadilha
+- [X] T050 Fechar o buraco de `tbody tr:last-child td` em `backend/processo_seletivo/interface/templates/interface/base.html`: a regra não cobria `th`, e toda tabela com cabeçalho de linha ficava com um traço solto abaixo do corpo — a `distribuicao` já contornava com regra própria
+- [X] T051 [P] Testes da busca e do resumo em `backend/tests/integration/editais/test_reaproveitamento.py`, **inclusive o que prova que a contagem não vem das tabelas**: retificar a origem acrescentando um Evento muda o resumo e não muda a tabela
+- [X] T052 [P] Testes da tela em `backend/tests/interface/test_reaproveitar.py`: busca com e sem resultado, paginação com o filtro atravessando, nenhuma origem pré-marcada, grupo anunciado, e a lista dizendo o que cada origem traz
+
+- [X] T053 Linkar cada origem ao Edital publicado dela em `backend/processo_seletivo/interface/templates/interface/reaproveitar.html` — a página pública, que já mostra conteúdo, documento e anexos. Segunda prévia, não: a `006` recusou um segundo layout para o mesmo conteúdo (`FR-004b`)
+- [X] T054 Aceitar rascunho não vazio no comando, atrás de `substituindo`, em `backend/processo_seletivo/editais/application/reaproveitamento.py`, descartando Anexos e artefatos do destino antes de copiar — `uq_anexo_edital_order` recomeça em 1 a cada cópia (`FR-002a`, `FR-002b`, `D-009`)
+- [X] T055 Implementar `o_que_sera_descartado` no mesmo arquivo, contando **nas tabelas** — o destino é rascunho e nunca publicou nada, ao contrário da origem (`FR-002a`)
+- [X] T056 Criar `backend/processo_seletivo/interface/templates/interface/reaproveitar_confirmar.html` com a lista do que se perde, no molde de `portal/descarte.html` (`FR-002a`)
+- [X] T057 Traduzir a recusa em pergunta em `backend/processo_seletivo/interface/views.py`: a confirmação é `draft_not_empty` apresentada, e **depois** da chamada ao comando — perguntar antes engoliria a repetição conhecida (`FR-002a`, `FR-017a`)
+- [X] T058 Acrescentar *Partir de outro Edital* ao aviso permanente em `backend/processo_seletivo/interface/templates/interface/compor_base.html`: é onde a origem é nomeada, e é lendo o Cronograma que se descobre ter partido do Edital errado (`FR-002a`)
+- [X] T059 [P] Testes da troca em `backend/tests/interface/test_reaproveitar.py`: a confirmação enumera, a troca substitui, o aviso passa a nomear a nova origem, e a repetição conhecida **não** cai na pergunta
+- [X] T060 [P] Testes em `backend/tests/integration/editais/test_reaproveitamento.py`: o que se descarta é contado no destino, e a troca não toca em nenhuma das duas origens
+
+**Checkpoint**: `FR-004` cumprido inteiro, a tela sustenta um acervo que cresce, e a escolha errada
+deixou de custar o número do Edital.
+
+---
+
+## Phase 7: Polish & Cross-Cutting Concerns
 
 - [X] T041 [P] Conferir a tela nova contra o padrão de acessibilidade das demais telas de gestão, em `backend/tests/interface/test_acessibilidade.py`
 - [X] T042 Verificar a régua de `§2`: `cd backend && uv run python manage.py makemigrations --check --dry-run` limpo, e na revisão do diff nenhum modelo novo, nenhuma entrada nova em `PAPEIS` e nenhum achado impeditivo novo em `validate_for_publication` (`SC-007`)
@@ -228,8 +258,12 @@ revisão em vez de a régua ser reescrita.
 |---|---|
 | FR-001 | T016, T021, T023 |
 | FR-002 | T011, T012, T016, T023 |
+| FR-002a | T054, T055, T056, T057, T058, T059, T060 |
+| FR-002b | T054, T059, T060 |
 | FR-003 | T015 |
-| FR-004 | T015, T020, T021, T022 |
+| FR-004 | T015, T020, T021, T022, T045, T051, T052 |
+| FR-004a | T046, T047, T048, T049, T051, T052 |
+| FR-004b | T053, T059 |
 | FR-005 | T017, T031, T031a |
 | FR-006 | T007, T008, T010, T013 |
 | FR-007 | T009, T010 |

@@ -82,6 +82,8 @@ from processo_seletivo.editais.application.reaproveitamento import (
     OPERACAO as OPERACAO_DE_REAPROVEITAMENTO,
 )
 from processo_seletivo.editais.application.reaproveitamento import (
+    com_resumo_da_origem,
+    o_que_sera_descartado,
     origens_elegiveis,
     rascunho_vazio,
     reaproveitar_edital,
@@ -935,35 +937,86 @@ def reaproveitar(request, edital_id):
     # intervalo. Barrar o reenvio aqui devolveria 404 onde a reserva já tem resposta pronta.
     if not ator.can("edital:elaborar"):
         raise Http404
-    # A exibição é outra conversa: o que a tela oferece precisa ser o que a tela consegue fazer, e
-    # oferecer o que se vai recusar é pior do que não oferecer.
-    if request.method == "GET" and (
-        edital.status != Edital.Status.EM_ELABORACAO or not rascunho_vazio(edital)
-    ):
+    # A exibição é outra conversa: o que a tela oferece precisa ser o que a tela consegue fazer.
+    # **Rascunho cheio não fecha mais a porta**, ele muda o que a porta avisa: escolher outra origem
+    # substitui o que está aqui, e o que se perde é enumerado antes de se perder (D-009).
+    if request.method == "GET" and edital.status != Edital.Status.EM_ELABORACAO:
         raise Http404
+    vazio = rascunho_vazio(edital)
 
     erros = []
     if request.method == "POST":
+        origem_id = request.POST.get("origem", "")
+        confirmada = bool(request.POST.get("confirmar_troca"))
+        chave = request.POST.get("chave_idempotencia", "")
         try:
             reaproveitar_edital(
                 actor=ator,
                 edital_id=edital.id,
-                origem_id=request.POST.get("origem", ""),
+                origem_id=origem_id,
                 expected_revision=edital.revision,
-                idempotency_key=request.POST.get("chave_idempotencia", ""),
+                idempotency_key=chave,
                 correlation_id=request.correlation_id,
+                substituindo=confirmada,
             )
         except DomainError as exc:
+            # **A tela de confirmação é a recusa apresentada na forma em que se pode agir sobre
+            # ela**, e não uma segunda verificação da mesma precondição. A ordem importa por uma
+            # razão que já custou dois defeitos: perguntar antes de chamar o comando faria a
+            # repetição conhecida — mesma chave, cópia já feita — cair na pergunta em vez de
+            # terminar onde a primeira terminou. Quem sabe se é repetição é a reserva, e ela mora
+            # no comando.
+            #
+            # A lista é o requisito: descartar em silêncio e reaproveitar em silêncio são os dois
+            # erros simétricos, e enumerar o que se perde antes de perder é o que evita os dois
+            # (`portal/descarte.html`, e agora aqui).
+            origem = (
+                origens_elegiveis(ator, excluindo=edital.pk).filter(pk=origem_id).first()
+                if exc.code == "draft_not_empty" and not confirmada
+                else None
+            )
+            if origem is not None:
+                return render(
+                    request,
+                    "interface/reaproveitar_confirmar.html",
+                    {
+                        "edital": edital,
+                        "origem": com_resumo_da_origem([origem])[0],
+                        "descarte": o_que_sera_descartado(edital),
+                        "chave_idempotencia": chave,
+                        "voltar": reverse("interface:reaproveitar", args=[edital.id]),
+                    },
+                )
             erros.append({"mensagem": exc.detail, "ancora": ""})
         else:
             return redirect(f"{composicao}?salvo=reaproveitamento")
 
+    from django.core.paginator import Paginator
+
+    busca = (request.GET.get("busca") or "").strip()
+    origens = origens_elegiveis(ator, excluindo=edital.pk, busca=busca)
+    # Paginada porque o acervo só cresce: a lista é de **todos** os Editais publicados do escopo, e
+    # uma instituição com alguns anos de casa tem centenas. O tamanho é o das demais listas da
+    # gestão.
+    paginas = Paginator(origens, 20)
+    pagina = paginas.get_page(request.GET.get("pagina") or 1)
     return render(
         request,
         "interface/reaproveitar.html",
         {
             "edital": edital,
-            "origens": origens_elegiveis(ator, excluindo=edital.pk).select_related("processo"),
+            "pagina": pagina,
+            # O que cada origem traz, contado no conteúdo que vigora — só da página exibida, que é
+            # o que separa duas consultas de uma por linha.
+            "origens": com_resumo_da_origem(pagina.object_list),
+            "busca": busca,
+            "total": paginas.count,
+            # A pergunta que trouxe a pessoa até aqui viaja com a paginação: avançar de página não
+            # pode desfazer o filtro.
+            "filtro": urlencode({"busca": busca}) if busca else "",
+            "vazio": vazio,
+            # O que a escolha vai substituir, quando houver o que substituir.
+            "descarte": None if vazio else o_que_sera_descartado(edital),
             "erros": erros,
             "voltar": composicao,
             # A chave atravessa o reenvio do formulário, como nas telas de criação: recarregar

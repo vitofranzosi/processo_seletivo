@@ -5,8 +5,11 @@ propósito: quem cria o Processo é o **Gestor**, quem escolhe a origem é o **E
 dois passos com a mesma identidade esconderia justamente a decisão que `D-001` tomou.
 """
 
+import re
+
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 
 from processo_seletivo.processos.models import Edital
 from tests.fixtures.publicacao import retify
@@ -112,13 +115,22 @@ def test_o_cartao_desaparece_depois_da_copia(client, destino, origem):
     assert "Partir de um Edital anterior" not in corpo
 
 
-def test_a_tela_recusa_rascunho_que_ja_tem_conteudo(client, destino, origem):
+def test_a_tela_avisa_quando_ja_ha_conteudo_a_substituir(client, destino, origem):
+    """Rascunho cheio não fecha mais a porta: muda o que a porta avisa (D-009).
+
+    Fechá-la deixava um beco — errada a origem, refazer à mão ou cancelar o Edital, que queima o
+    número para sempre porque a unicidade de `(escopo, número, ano)` não tem condição.
+    """
     identificar(client, "ana.elaboradora", ["elaborador"])
     escolher(client, destino, origem)
 
-    repetida = client.get(reverse("interface:reaproveitar", args=[destino.id]))
+    corpo = client.get(reverse("interface:reaproveitar", args=[destino.id]))
 
-    assert repetida.status_code == 404
+    assert corpo.status_code == 200
+    texto = corpo.content.decode()
+    assert "Este Edital já tem conteúdo composto" in texto
+    assert "substitui" in texto
+    assert "Substituir pelo escolhido" in texto
 
 
 def test_quem_nao_elabora_nao_ve_nem_alcanca(client, destino):
@@ -284,3 +296,250 @@ def test_enviar_sem_escolher_origem_recusa_em_vez_de_estourar(client, destino, o
     assert "Recurso não encontrado" in resposta.content.decode()
     destino.refresh_from_db()
     assert destino.perfis.count() == 0
+
+
+# ---------------------------------------------------------------------------
+# A escolha, pela tela: localizar, paginar, e escolher sem armadilha
+# ---------------------------------------------------------------------------
+
+
+def _publicar_muitas(quantas, ano=2026):
+    """Editais publicados em massa, para exercitar a lista longa.
+
+    Direto no modelo: o que se exercita aqui é a paginação e a busca, e levar vinte Editais até a
+    Publicação pelo fluxo inteiro custaria minutos para provar o que a lista já mostra. Eles não têm
+    versão consolidada — e é de propósito: a lista precisa aguentar isso sem cair.
+    """
+    from processo_seletivo.processos.models import ProcessoSeletivo
+
+    processo = ProcessoSeletivo.objects.create(
+        institution_scope="cefor",
+        institutional_code="PS-MASSA",
+        title="Processo com muitos Editais",
+        created_at=timezone.now(),
+        created_by="gestor-a",
+        last_changed_at=timezone.now(),
+    )
+    return Edital.objects.bulk_create(
+        [
+            Edital(
+                processo=processo,
+                institution_scope="cefor",
+                number=f"{numero:03d}",
+                year=ano,
+                title=f"Edital de massa {numero}",
+                status=Edital.Status.PUBLICADO,
+                created_at=timezone.now(),
+                created_by="gestor-a",
+                last_edited_by="gestor-a",
+            )
+            for numero in range(100, 100 + quantas)
+        ]
+    )
+
+
+def test_a_busca_encontra_e_o_filtro_fica_no_campo(client, destino, origem):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    _publicar_muitas(3)
+
+    corpo = client.get(
+        reverse("interface:reaproveitar", args=[destino.id]), {"busca": "massa 101"}
+    ).content.decode()
+
+    assert "Edital de massa 101" in corpo
+    assert "Edital de massa 102" not in corpo
+    assert origem.title not in corpo
+    assert 'value="massa 101"' in corpo
+    assert "Limpar" in corpo
+
+
+def test_a_busca_sem_resultado_diz_o_que_procurou(client, destino):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = client.get(
+        reverse("interface:reaproveitar", args=[destino.id]), {"busca": "não existe"}
+    ).content.decode()
+
+    assert "Nenhum Edital do seu escopo corresponde a" in corpo
+    assert "não existe" in corpo
+    assert "Usar como base" not in corpo
+
+
+def test_a_lista_e_paginada_e_a_busca_atravessa_as_paginas(client, destino, origem):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    _publicar_muitas(25)
+
+    primeira = client.get(
+        reverse("interface:reaproveitar", args=[destino.id]), {"busca": "massa"}
+    ).content.decode()
+    assert primeira.count('name="origem"') == 20
+    assert "Página 1 de 2" in primeira
+    assert "busca=massa" in primeira, "a pergunta que trouxe a pessoa até aqui viaja com a página"
+
+    segunda = client.get(
+        reverse("interface:reaproveitar", args=[destino.id]), {"busca": "massa", "pagina": 2}
+    ).content.decode()
+    assert segunda.count('name="origem"') == 5
+
+
+def test_nenhuma_origem_vem_pre_escolhida(client, destino, origem):
+    """Vinha a primeira. Com a lista paginada, isso vira armadilha: quem avança de página
+    encontraria outra origem já marcada, e copiaria o que não pretendia."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = client.get(reverse("interface:reaproveitar", args=[destino.id])).content.decode()
+
+    radios = re.findall(r"<input[^>]*type=\"radio\"[^>]*>", corpo)
+    assert radios, "a lista precisa oferecer alguma origem para o cenário significar algo"
+    assert all("checked" not in radio for radio in radios)
+    assert all("required" in radio for radio in radios)
+
+
+def test_o_grupo_de_escolha_e_anunciado_a_quem_ouve_a_tela(client, destino, origem):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = client.get(reverse("interface:reaproveitar", args=[destino.id])).content.decode()
+
+    assert "<fieldset>" in corpo
+    assert 'class="oculto">Edital de origem</legend>' in corpo
+
+
+def test_a_lista_diz_o_que_cada_origem_traz(client, destino, origem):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = client.get(reverse("interface:reaproveitar", args=[destino.id])).content.decode()
+
+    assert "1 perfil" in corpo
+    assert "2 eventos" in corpo
+    assert "1 anexo" in corpo
+    assert "Publicado em" in corpo
+
+
+# ---------------------------------------------------------------------------
+# Trocar a origem: a lista antes de perder, e a troca de verdade (D-009)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def segunda_origem(api_client, manager_headers, origem):
+    """Uma origem diferente da primeira, para a troca ter para onde ir."""
+    from tests.fixtures.edital import complete_draft
+    from tests.fixtures.publicacao import publish_original
+
+    return publish_original(
+        api_client,
+        {**manager_headers, "HTTP_IDEMPOTENCY_KEY": "segunda-origem-0001"},
+        {
+            "institutionalCode": "PS-2026-002",
+            "title": "Outro Processo",
+            "firstEdital": {"number": "99", "year": 2026, "title": "Edital da outra origem"},
+        },
+        draft=complete_draft(seed=7),
+    )
+
+
+def test_escolher_com_rascunho_cheio_pede_confirmacao_e_enumera_o_que_se_perde(
+    client, destino, origem, segunda_origem
+):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    escolher(client, destino, origem)
+
+    pedido = client.post(
+        reverse("interface:reaproveitar", args=[destino.id]),
+        {"origem": str(segunda_origem.id), "chave_idempotencia": "troca-0001"},
+    )
+
+    assert pedido.status_code == 200
+    corpo = pedido.content.decode()
+    assert "Isto substitui o que já está composto" in corpo
+    assert "Serão descartados" in corpo
+    assert "1 Perfil de Vaga" in corpo
+    assert "2 Eventos do Cronograma" in corpo
+    assert "1 Anexo" in corpo
+    # E nada foi trocado ainda.
+    destino.refresh_from_db()
+    assert destino.perfis.get().name == "Designer Educacional"
+
+
+def test_confirmada_a_troca_o_conteudo_e_o_da_nova_origem(client, destino, origem, segunda_origem):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    escolher(client, destino, origem)
+    anexos_da_primeira = list(destino.anexos.values_list("artefato_id", flat=True))
+
+    trocada = client.post(
+        reverse("interface:reaproveitar", args=[destino.id]),
+        {
+            "origem": str(segunda_origem.id),
+            "chave_idempotencia": "troca-0002",
+            "confirmar_troca": "1",
+        },
+    )
+
+    assert trocada.status_code == 302
+    destino.refresh_from_db()
+    assert destino.perfis.get().name == "Perfil"
+    assert destino.perfis.get().name != "Designer Educacional"
+    # Os Anexos da primeira origem saíram, e os arquivos deles junto: `uq_anexo_edital_order`
+    # recomeça em 1 a cada cópia, e artefato de rascunho que ninguém publicou não fica para trás.
+    from processo_seletivo.editais.models.anexos import ArtefatoAnexo
+
+    assert destino.anexos.count() == 0
+    assert not ArtefatoAnexo.objects.filter(id__in=anexos_da_primeira).exists()
+
+
+def test_o_aviso_passa_a_nomear_a_nova_origem(client, destino, origem, segunda_origem):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    escolher(client, destino, origem)
+
+    client.post(
+        reverse("interface:reaproveitar", args=[destino.id]),
+        {
+            "origem": str(segunda_origem.id),
+            "chave_idempotencia": "troca-0003",
+            "confirmar_troca": "1",
+        },
+    )
+
+    corpo = client.get(composicao(destino)).content.decode()
+    assert f"a partir do Edital {segunda_origem.number}/{segunda_origem.year}" in corpo
+    assert f"a partir do Edital {origem.number}/{origem.year}" not in corpo
+
+
+def test_a_troca_nao_engole_a_repeticao_conhecida(client, destino, origem):
+    """A confirmação é a recusa apresentada, e não uma segunda verificação.
+
+    Perguntar antes de chamar o comando faria o reenvio da mesma requisição cair na pergunta em vez
+    de terminar onde a primeira terminou — e quem sabe se é repetição é a reserva, no comando.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    escolher(client, destino, origem)
+
+    repetida = client.post(
+        reverse("interface:reaproveitar", args=[destino.id]),
+        {"origem": str(origem.id), "chave_idempotencia": _chave_da_primeira(client, destino)},
+    )
+
+    assert repetida.status_code == 302
+    assert "Isto substitui" not in repetida.content.decode()
+
+
+def test_a_troca_aparece_no_aviso_de_todas_as_etapas(client, destino, origem):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    escolher(client, destino, origem)
+
+    corpo = client.get(composicao(destino, "cronograma")).content.decode()
+
+    assert "Partir de outro" in corpo
+    assert reverse("interface:reaproveitar", args=[destino.id]) in corpo
+
+
+def test_a_lista_leva_ao_edital_publicado_para_ler_antes_de_escolher(client, destino, origem):
+    """Ler antes de escolher, sem construir uma segunda prévia do que já está publicado."""
+    from django.urls import reverse as url
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = client.get(reverse("interface:reaproveitar", args=[destino.id])).content.decode()
+
+    assert url("portal:selecao", args=[origem.id]) in corpo
+    assert "Ver o Edital" in corpo

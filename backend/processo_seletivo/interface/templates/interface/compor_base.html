@@ -58,7 +58,13 @@ vigência não distingue duas linhas diferentes.
   {% if origem_reaproveitada.edital %}<strong>Este Edital foi iniciado a partir do Edital {{ origem_reaproveitada.edital.number }}/{{ origem_reaproveitada.edital.year }}</strong> — {{ origem_reaproveitada.versao_por_extenso }}.
   {% else %}<strong>Este Edital foi iniciado a partir de outro Edital.</strong>{% endif %}
   Confira e atualize as informações desta oferta — datas, vagas e prazos são da oferta anterior até
-  que alguém os revise.</p>
+  que alguém os revise.
+  {% comment %}
+  A troca mora aqui porque é aqui que a origem é nomeada — e é lendo o Cronograma ou os Perfis que
+  se descobre ter partido do Edital errado. Só para quem pode elaborar: a ação é de elaboração.
+  {% endcomment %}
+  {% if editavel %} <a href="{% url 'interface:reaproveitar' edital.id %}">Partir de outro
+  Edital</a>.{% endif %}</p>
 {% endif %}
 
 {% include "interface/_erros.html" with preserva_o_digitado=True %}

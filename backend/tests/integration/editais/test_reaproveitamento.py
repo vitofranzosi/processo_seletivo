@@ -961,3 +961,165 @@ def test_duas_versoes_da_mesma_origem_nao_se_anunciam_iguais(
 
     assert primeira.pk != segunda.pk
     assert _versao_por_extenso(primeira) != _versao_por_extenso(segunda)
+
+
+# ---------------------------------------------------------------------------
+# A escolha da origem: localizar e saber o que cada uma traz (FR-004, FR-004a)
+# ---------------------------------------------------------------------------
+
+
+def test_a_busca_localiza_pelos_atributos_que_a_lista_mostra(origem, elaborador):
+    """`FR-004` pede a origem **localizável** pelos atributos com que ela é identificada."""
+    from processo_seletivo.editais.application.reaproveitamento import origens_elegiveis
+
+    assert list(origens_elegiveis(elaborador, busca=origem.number)) == [origem]
+    assert list(origens_elegiveis(elaborador, busca="2026")) == [origem]
+    assert list(origens_elegiveis(elaborador, busca="Primeiro Edital")) == [origem]
+    assert list(origens_elegiveis(elaborador, busca="PS-2026-001")) == [origem]
+    assert list(origens_elegiveis(elaborador, busca="Processo Seletivo 2026")) == [origem]
+    assert list(origens_elegiveis(elaborador, busca="nada disso existe")) == []
+
+
+def test_o_ano_so_entra_na_busca_quando_o_termo_e_um_ano():
+    """Ano é inteiro: comparar inteiro por semelhança de texto devolve o que ninguém pediu.
+
+    Contra a expressão, e não contra o resultado: uma origem qualquer casa "202" pelo código do
+    Processo — `PS-2026-001` contém o pedaço —, e o resultado não distinguiria o acerto pelo campo
+    certo do acerto por acidente.
+    """
+    from processo_seletivo.editais.application.reaproveitamento import _procura_por
+
+    def compara_ano(procura):
+        return "year" in str(procura)
+
+    assert compara_ano(_procura_por("2026"))
+    assert not compara_ano(_procura_por("202"))
+    assert not compara_ano(_procura_por("20261"))
+    assert not compara_ano(_procura_por("Multimídia"))
+
+
+def test_o_resumo_conta_o_conteudo_que_vigora_e_nao_as_tabelas(origem, elaborador, api_client):
+    """A coluna promete o que a cópia entrega, e é por isso que ela não conta nas tabelas.
+
+    A Retificação não reescreve `EventoCronograma`: contar ali anunciaria dois Eventos numa origem
+    que hoje vigora com três — e a cópia traria três. É a mesma razão de `D-003`, na apresentação.
+    """
+    from processo_seletivo.editais.application.reaproveitamento import com_resumo_da_origem
+    from tests.fixtures.publicacao import retify
+
+    antes = com_resumo_da_origem([origem])[0].resumo
+    assert antes == {"perfis": 1, "eventos": 2, "etapas": 1, "documentos": 2, "anexos": 1}
+
+    retify(
+        api_client,
+        origem,
+        [
+            {
+                "targetPath": "/schedule/-",
+                "operation": "ADD",
+                "newValue": {
+                    "id": ident(20),
+                    "type": "MATRICULA",
+                    "description": "Matrícula",
+                    "startAt": "2025-11-01T09:00:00-03:00",
+                    "endAt": None,
+                    "order": 3,
+                    "status": "PLANEJADO",
+                    "isRegistrationPeriod": False,
+                    "location": "",
+                },
+            }
+        ],
+    )
+    origem.refresh_from_db()
+
+    depois = com_resumo_da_origem([origem])[0].resumo
+    assert origem.cronograma.eventos.count() == 2, "a tabela segue no dia da publicação"
+    assert depois["eventos"] == 3
+
+
+def test_o_resumo_de_uma_origem_sem_versao_nao_derruba_a_lista(destino, elaborador):
+    """Não deveria existir Edital publicado sem versão — e a lista não é o lugar de descobrir."""
+    from processo_seletivo.editais.application.reaproveitamento import com_resumo_da_origem
+
+    Edital.objects.filter(pk=destino.pk).update(status=Edital.Status.PUBLICADO)
+    destino.refresh_from_db()
+
+    resumido = com_resumo_da_origem([destino])[0]
+
+    assert resumido.resumo == {
+        "perfis": 0,
+        "eventos": 0,
+        "etapas": 0,
+        "documentos": 0,
+        "anexos": 0,
+    }
+    assert resumido.publicado_em is None
+
+
+# ---------------------------------------------------------------------------
+# Trocar a origem (D-009)
+# ---------------------------------------------------------------------------
+
+
+def test_o_que_sera_descartado_conta_o_rascunho_do_destino(destino, origem, elaborador):
+    """Nas tabelas, e não no conteúdo publicado: o destino é rascunho e nunca publicou nada."""
+    from processo_seletivo.editais.application.reaproveitamento import o_que_sera_descartado
+
+    assert o_que_sera_descartado(destino) == {
+        "perfis": 0,
+        "eventos": 0,
+        "etapas": 0,
+        "documentos": 0,
+        "secoes": 0,
+        "anexos": 0,
+    }
+
+    copiado = copiar(destino, origem, elaborador)
+
+    descarte = o_que_sera_descartado(copiado)
+    assert descarte["perfis"] == 1
+    assert descarte["eventos"] == 2
+    assert descarte["etapas"] == 1
+    assert descarte["documentos"] == 2
+    assert descarte["anexos"] == 1
+    assert descarte["secoes"] >= 1
+
+
+def test_a_troca_nao_toca_em_nenhuma_das_duas_origens(
+    destino, origem, elaborador, api_client, manager_headers
+):
+    """Substituir é copiar de novo: as duas origens continuam sendo lidas e nunca escritas."""
+    from tests.fixtures.edital import complete_draft
+    from tests.fixtures.publicacao import publish_original
+
+    outra = publish_original(
+        api_client,
+        {**manager_headers, "HTTP_IDEMPOTENCY_KEY": "outra-origem-0001"},
+        {
+            "institutionalCode": "PS-2026-002",
+            "title": "Outro Processo",
+            "firstEdital": {"number": "99", "year": 2026, "title": "Edital da outra origem"},
+        },
+        draft=complete_draft(seed=7),
+    )
+    copiar(destino, origem, elaborador)
+    antes = [(edital.status, edital.revision, edital.perfis.count()) for edital in (origem, outra)]
+
+    trocado = reaproveitar_edital(
+        actor=elaborador,
+        edital_id=destino.id,
+        origem_id=outra.id,
+        expected_revision=Edital.objects.get(pk=destino.pk).revision,
+        idempotency_key="troca-integracao-0001",
+        correlation_id="correlacao-023",
+        substituindo=True,
+    )
+
+    origem.refresh_from_db()
+    outra.refresh_from_db()
+    assert antes == [
+        (edital.status, edital.revision, edital.perfis.count()) for edital in (origem, outra)
+    ]
+    assert trocado.perfis.get().code == "P1"
+    assert trocado.anexos.count() == 0

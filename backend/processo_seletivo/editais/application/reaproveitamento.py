@@ -24,6 +24,7 @@ isso antes da chave faria toda repetição responder `draft_not_empty` (FR-017a)
 import hashlib
 
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.application.draft import replace_draft
@@ -36,8 +37,12 @@ from processo_seletivo.editais.domain.reaproveitamento import (
 from processo_seletivo.editais.models.anexos import AnexoEdital, ArtefatoAnexo
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
-from processo_seletivo.publicacoes.application.selectors import effective_version
+from processo_seletivo.publicacoes.application.selectors import (
+    effective_version,
+    versoes_vigentes,
+)
 from processo_seletivo.publicacoes.domain.elevacao import elevar
+from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
@@ -80,7 +85,29 @@ def rascunho_vazio(edital) -> bool:
     )
 
 
-def origens_elegiveis(actor, *, excluindo=None):
+def _procura_por(termo):
+    """A busca por número, ano, título e Processo — os mesmos atributos que a lista mostra.
+
+    `FR-004` pede que a origem seja **localizável** pelos atributos com que ela é identificada, e é
+    isso e nada mais: um campo só, sobre o que está na tela. Filtro por situação não entra porque a
+    lista já é fechada nas duas elegíveis, e filtro por Processo em separado repetiria o que o texto
+    livre já alcança.
+
+    O ano entra por igualdade e só quando o termo é um ano plausível: `year` é inteiro, e comparar
+    inteiro por semelhança de texto é conveniência que devolve resultado que ninguém pediu.
+    """
+    procura = (
+        Q(number__icontains=termo)
+        | Q(title__icontains=termo)
+        | Q(processo__institutional_code__icontains=termo)
+        | Q(processo__title__icontains=termo)
+    )
+    if termo.isdigit() and len(termo) == 4:
+        procura |= Q(year=int(termo))
+    return procura
+
+
+def origens_elegiveis(actor, *, excluindo=None, busca=""):
     """Os Editais que podem servir de origem, no escopo do ator.
 
     Ordenados do mais recente para o mais antigo: quem reaproveita parte, quase sempre, da edição do
@@ -93,7 +120,47 @@ def origens_elegiveis(actor, *, excluindo=None):
         .select_related("processo")
         .order_by("-year", "-number")
     )
+    termo = (busca or "").strip()
+    if termo:
+        consulta = consulta.filter(_procura_por(termo))
     return consulta.exclude(pk=excluindo) if excluindo is not None else consulta
+
+
+def com_resumo_da_origem(editais, *, at=None):
+    """O que cada origem traz, contado **no conteúdo que vigora** (023, FR-004a).
+
+    Contar nas tabelas seria mais barato e estaria errado pela mesma razão que `D-003` fixou a fonte
+    da cópia: a Retificação não reescreve `PerfilVaga` e companhia, então um Edital retificado
+    anunciaria na lista um número de Perfis que a cópia não traria. A coluna promete o que a
+    operação faz — e a única forma de a promessa se manter é contar o mesmo conteúdo que ela copia.
+
+    O conteúdo é elevado antes da contagem, como na cópia: para um degrau antigo a diferença é entre
+    ausência e coleção vazia, que dá o mesmo número, mas depender disso seria confiar que nenhum
+    degrau futuro renomeie coleção.
+    """
+    editais = list(editais)
+    if not editais:
+        return editais
+    versoes = versoes_vigentes(edital_ids=[edital.pk for edital in editais], at=at)
+    primeira_publicacao = {}
+    for edital_id, publicado_em in (
+        Publicacao.objects.filter(edital_id__in=[edital.pk for edital in editais])
+        .order_by("edital_id", "publication_order")
+        .values_list("edital_id", "published_at")
+    ):
+        primeira_publicacao.setdefault(edital_id, publicado_em)
+    for edital in editais:
+        versao = versoes.get(edital.pk)
+        conteudo = elevar(versao.content) if versao is not None else {}
+        edital.resumo = {
+            "perfis": len(conteudo.get("profiles") or []),
+            "eventos": len(conteudo.get("schedule") or []),
+            "etapas": len(conteudo.get("stages") or []),
+            "documentos": len(conteudo.get("documentRequirements") or []),
+            "anexos": len(conteudo.get("attachments") or []),
+        }
+        edital.publicado_em = primeira_publicacao.get(edital.pk)
+    return editais
 
 
 def _origem_elegivel(actor, origem_id):
@@ -110,6 +177,42 @@ def _origem_elegivel(actor, origem_id):
         return origens_elegiveis(actor).get(pk=origem_id)
     except (Edital.DoesNotExist, ValidationError, ValueError, TypeError) as exc:
         raise DomainError("not_found", "Recurso não encontrado.", 404) from exc
+
+
+def o_que_sera_descartado(edital):
+    """O que o rascunho do destino tem hoje, para ser dito **antes** de ser perdido.
+
+    Contado nas **tabelas**, e não no conteúdo publicado — ao contrário do resumo da origem, e a
+    assimetria é o próprio domínio: a origem é publicada e o que vale nela é a versão vigente; o
+    destino é rascunho e nunca publicou nada, então as tabelas são tudo o que ele é.
+    """
+    cronograma = getattr(edital, "cronograma", None)
+    return {
+        "perfis": edital.perfis.count(),
+        "eventos": cronograma.eventos.count() if cronograma is not None else 0,
+        "etapas": edital.etapas.count(),
+        "documentos": edital.documentos_exigidos.count(),
+        "secoes": edital.secoes.count(),
+        "anexos": edital.anexos.count(),
+    }
+
+
+def _descartar_anexos(edital):
+    """Os Anexos do destino saem antes de os novos entrarem.
+
+    **Precisam sair**, e não é escolha de arrumação: `uq_anexo_edital_order` é único por Edital, e a
+    segunda cópia recomeça a ordem em 1. O conteúdo não precisa do mesmo cuidado porque
+    `replace_draft` já apaga e recria as cinco coleções que viajam nele.
+
+    Apagar aqui é legítimo pelo critério que a `020` já escreveu: artefato que nenhuma versão
+    publicou é rascunho substituível — e o destino, por construção, nunca publicou. O congelado a
+    trigger recusaria, e é o certo.
+    """
+    for anexo in list(edital.anexos.select_related("artefato")):
+        artefato = anexo.artefato
+        anexo.delete()
+        if artefato.congelado_em is None:
+            artefato.delete()
 
 
 def _copiar_anexos(edital, conteudo, mapa, *, actor, now):
@@ -164,6 +267,7 @@ def reaproveitar_edital(
     expected_revision,
     idempotency_key="",
     correlation_id="",
+    substituindo=False,
 ):
     """Copia a configuração vigente da origem para o rascunho vazio do destino.
 
@@ -188,6 +292,10 @@ def reaproveitar_edital(
             actor=actor,
             operation=f"edital:reaproveitar:{edital.pk}",
             key=idempotency_key,
+            # **`substituindo` não entra no payload da chave.** A chave identifica *o que* se está
+            # fazendo — copiar daquela origem para este Edital —, e não a permissão com que se
+            # chegou até aqui. Incluí-lo faria a confirmação bater de frente com a tentativa que a
+            # provocou: mesma chave, conteúdo diferente, `idempotency_conflict`.
             payload={"origem": str(origem.pk)},
         )
         if idem.result_id:
@@ -201,12 +309,18 @@ def reaproveitar_edital(
         if edital.revision != expected_revision:
             raise DomainError("stale_revision", "A revisão informada está obsoleta.", 412)
         if not rascunho_vazio(edital):
-            raise DomainError(
-                "draft_not_empty",
-                "Só é possível partir de outro Edital enquanto este não tiver nenhum conteúdo. "
-                "Este Edital já tem conteúdo composto.",
-                409,
-            )
+            # **`substituindo` é a confirmação atravessando a fronteira**, e não uma opção. A recusa
+            # continua sendo a resposta ao caminho acidental — o reenvio, o clique duplo, a
+            # requisição forjada —, e a substituição só acontece quando alguém disse, depois de ler
+            # o que se perde, que é para trocar (023, D-009).
+            if not substituindo:
+                raise DomainError(
+                    "draft_not_empty",
+                    "Este Edital já tem conteúdo composto. Para partir de outro Edital é preciso "
+                    "confirmar a substituição do que já está aqui.",
+                    409,
+                )
+            _descartar_anexos(edital)
 
         # **`at=now`, e não o instante que o seletor tomaria sozinho.** `effective_version` chama
         # `timezone.now()` quando não recebe o instante, e a auditoria registra o `now` da abertura

@@ -13,62 +13,154 @@
 
 {% include "interface/_erros.html" %}
 
-<section aria-labelledby="o-que-vem-titulo" class="cartao">
-  <h2 id="o-que-vem-titulo">O que é reaproveitado</h2>
-  <p class="ajuda">A configuração do Edital escolhido, na versão que vigora nele: perfis de vaga,
-    modalidades de concorrência, requisitos, documentos exigidos, etapas de avaliação, critérios de
-    classificação, a estrutura do cronograma, o conteúdo das seções e os anexos.</p>
-  {% comment %}
-  A lista do que **não** vem não é tranquilização decorativa: quem elabora precisa saber que a
-  operação não traz o certame anterior. O que ela não diz é o que não existe — não há como o novo
-  Edital herdar inscrição nenhuma, porque ele é outro Edital.
-  {% endcomment %}
-  <p class="ajuda">Nada do certame anterior vem junto: nem candidatos, nem inscrições, nem
-    documentos enviados, nem avaliações, nem resultados, nem recursos. Número, ano e título
-    continuam sendo os que você já informou, e as datas, as vagas e os prazos precisam ser
-    atualizados para esta oferta.</p>
-</section>
+{% comment %}
+Dois cartões, e não um. O primeiro dizia as duas coisas — o que vem e o que não vem — sob um título
+que só nomeava a primeira, e a prosa parava na medida de leitura deixando metade do cartão vazia.
+`.cartao` é `flex:1 1 320px` justamente para viver dentro de `.colunas`, como em `detalhe.html`: a
+divisão preenche a largura e devolve ao segundo parágrafo o título que ele sempre teve.
+{% endcomment %}
+<div class="colunas">
+  <section aria-labelledby="vem-titulo" class="cartao">
+    <h2 id="vem-titulo">O que vem junto</h2>
+    <p class="ajuda">A configuração do Edital escolhido, <strong>na versão que vigora nele</strong> —
+      inclusive as retificações já publicadas: perfis de vaga, modalidades de concorrência,
+      requisitos, documentos exigidos, etapas de avaliação, critérios de classificação, a estrutura
+      do cronograma, o conteúdo das seções e os anexos.</p>
+  </section>
+  <section aria-labelledby="nao-vem-titulo" class="cartao">
+    <h2 id="nao-vem-titulo">O que não vem</h2>
+    <p class="ajuda">Nada do certame anterior: nem candidatos, nem inscrições, nem documentos
+      enviados, nem avaliações, nem resultados, nem recursos.</p>
+    <p class="ajuda">Número, ano e título continuam sendo os que você já informou. <strong>Datas,
+      vagas e prazos são da oferta anterior</strong> até que alguém os atualize para esta.</p>
+  </section>
+</div>
+
+{% if not vazio %}
+{% comment %}
+Escolher aqui deixou de ser acrescentar e passou a ser substituir. O que se perde é dito antes, e
+outra vez na confirmação — a lista é o requisito, e uma advertência sem números não é lista.
+{% endcomment %}
+<div class="aviso" role="alert">
+  <p><strong>Este Edital já tem conteúdo composto.</strong> Escolher uma origem aqui
+    <strong>substitui</strong> o que está nele: {% if descarte.perfis %}{{ descarte.perfis }} perfi{{ descarte.perfis|pluralize:"l,s" }}, {% endif %}{% if descarte.eventos %}{{ descarte.eventos }} evento{{ descarte.eventos|pluralize }}, {% endif %}{% if descarte.etapas %}{{ descarte.etapas }} etapa{{ descarte.etapas|pluralize }}, {% endif %}{% if descarte.documentos %}{{ descarte.documentos }} documento{{ descarte.documentos|pluralize }} exigido{{ descarte.documentos|pluralize }}, {% endif %}{% if descarte.secoes %}{{ descarte.secoes }} seç{{ descarte.secoes|pluralize:"ão,ões" }} redigida{{ descarte.secoes|pluralize }}, {% endif %}{% if descarte.anexos %}{{ descarte.anexos }} anexo{{ descarte.anexos|pluralize }}, {% endif %}entre outros. Você confirma antes de qualquer coisa ser trocada.</p>
+</div>
+{% endif %}
 
 <section aria-labelledby="origens-titulo">
   <h2 id="origens-titulo">Editais que podem servir de origem</h2>
+
+  {% comment %}
+  A busca é `FR-004`, e não conveniência: o requisito pede que a origem seja **localizável** pelos
+  atributos com que ela é identificada. Um campo só, sobre o que está na tela — filtro por situação
+  seria redundante, porque a lista já é fechada nas duas elegíveis.
+  {% endcomment %}
+  <form method="get" class="filtros" role="search">
+    <p class="campo">
+      <label for="busca">Procurar</label>
+      <input type="search" id="busca" name="busca" value="{{ busca }}"
+             aria-describedby="ajuda-busca-origens">
+      <span class="ajuda" id="ajuda-busca-origens">Número, ano, título ou Processo Seletivo.</span>
+    </p>
+    <p class="acoes">
+      {% comment %}
+      `.acao`, e não `.salvar`: a segunda é a barra de gravação, e traz filete e rodapé consigo —
+      dentro do filtro ela desenhava uma caixa em volta do botão. É a mesma marcação de
+      `inscricoes.html`, que é onde esta barra já existe.
+      {% endcomment %}
+      <button type="submit" class="acao">Filtrar</button>
+      {% if busca %}<a href="{% url 'interface:reaproveitar' edital.id %}">Limpar</a>{% endif %}
+    </p>
+  </form>
+
   {% if origens %}
-  <p class="ajuda">Editais publicados ou encerrados do seu escopo. É a versão que vigora em cada um
-    que será copiada — inclusive as retificações já publicadas nele.</p>
+  <p class="contadores"><span><strong>{{ total }}</strong>
+    {% if busca %}encontrado{{ total|pluralize }}{% else %}disponíve{{ total|pluralize:"l,is" }}{% endif %}
+    como origem</span></p>
+
   <form method="post">
     {% csrf_token %}
     <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
-    <table class="tabela">
-      <caption class="oculto">Editais disponíveis como origem</caption>
-      <thead>
-        <tr><th scope="col">Escolher</th><th scope="col">Edital</th><th scope="col">Título</th>
-          <th scope="col">Processo Seletivo</th><th scope="col">Situação</th></tr>
-      </thead>
-      <tbody>
-        {% for origem in origens %}
-        <tr>
-          <td><input type="radio" name="origem" id="origem-{{ origem.id }}" value="{{ origem.id }}"
-                     {% if forloop.first %}checked{% endif %}></td>
-          <th scope="row"><label for="origem-{{ origem.id }}">Edital {{ origem.number }}/{{ origem.year }}</label></th>
-          <td>{{ origem.title }}</td>
-          <td>{{ origem.processo.institutional_code }} — {{ origem.processo.title }}</td>
-          <td><span class="situacao s-{{ origem.status }}">{{ origem.status|situacao }}</span></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    <p class="acoes">
-      <button type="submit" class="botao">Usar como base</button>
+    {% comment %}
+    `fieldset` e `legend`: sem eles, um leitor de tela anuncia vinte opções soltas rotuladas "Edital
+    X/AAAA" sem dizer do que é a escolha. A legenda é oculta porque o título da seção logo acima já
+    a diz para quem vê.
+
+    E **nenhuma vem marcada**. Vinha a primeira, e com a lista paginada isso passou a ser armadilha:
+    quem avança de página encontra outra origem pré-escolhida e pode copiar o que não pretendia. A
+    escolha é explícita, e `required` recusa o envio vazio antes de o servidor precisar recusá-lo.
+    {% endcomment %}
+    <fieldset>
+      <legend class="oculto">Edital de origem</legend>
+      <div class="tabela-rolavel">
+        <table class="tabela">
+          <caption class="oculto">Editais disponíveis como origem</caption>
+          <thead>
+            <tr>
+              <th scope="col">Escolher</th>
+              <th scope="col">Edital</th>
+              <th scope="col">Título</th>
+              <th scope="col">Processo Seletivo</th>
+              <th scope="col">Publicado em</th>
+              <th scope="col">O que traz</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for origem in origens %}
+            <tr>
+              <td><input type="radio" name="origem" id="origem-{{ origem.id }}" required
+                         value="{{ origem.id }}"></td>
+              <th scope="row">
+                <label for="origem-{{ origem.id }}">Edital {{ origem.number }}/{{ origem.year }}</label>
+                {% comment %}
+                Ler antes de escolher. O Edital é publicado, então a página pública dele já mostra o
+                conteúdo inteiro, o PDF e os anexos — construir aqui uma segunda prévia repetiria a
+                renderização canônica, que é o que a `006` recusou para a prévia da elaboração.
+                {% endcomment %}
+                <a class="acao" href="{% url 'portal:selecao' origem.id %}" target="_blank"
+                   rel="noopener">Ver o Edital <span class="oculto">{{ origem.number }}/{{ origem.year }} em nova aba</span></a>
+              </th>
+              <td>{{ origem.title }}</td>
+              <td>{{ origem.processo.institutional_code }} — {{ origem.processo.title }}</td>
+              <td>{{ origem.publicado_em|date:"d/m/Y"|default:"—" }}
+                <span class="situacao s-{{ origem.status }}">{{ origem.status|situacao }}</span></td>
+              {% comment %}
+              O que a escolha custa e o que ela poupa. A lista mostrava identidade e não substância:
+              quem decide entre duas origens está decidindo quanto trabalho vem junto. Os números são
+              contados no conteúdo **que vigora**, e não nas tabelas — é a mesma razão de `D-003`, e
+              é o que faz a coluna prometer exatamente o que a cópia entrega.
+              {% endcomment %}
+              <td class="resumo-da-origem">{{ origem.resumo.perfis }} perfi{{ origem.resumo.perfis|pluralize:"l,s" }} ·
+                {{ origem.resumo.etapas }} etapa{{ origem.resumo.etapas|pluralize }} ·
+                {{ origem.resumo.eventos }} evento{{ origem.resumo.eventos|pluralize }} ·
+                {{ origem.resumo.documentos }} documento{{ origem.resumo.documentos|pluralize }} ·
+                {{ origem.resumo.anexos }} anexo{{ origem.resumo.anexos|pluralize }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </fieldset>
+
+    <p class="navegacao-etapa">
       <a href="{{ voltar }}">Cancelar</a>
+      <button type="submit" class="botao">{% if vazio %}Usar como base{% else %}Substituir pelo escolhido{% endif %}</button>
     </p>
   </form>
+
+  {% include "interface/_paginacao_de_inscricoes.html" with pagina=pagina parametro="pagina" filtro=filtro rotulo="Páginas de Editais disponíveis como origem" %}
   {% else %}
   {% comment %}
-  Lista vazia sem explicação deixaria a pessoa procurando o que não existe. A razão é simples e
-  precisa ser dita: só Edital já publicado serve de origem.
+  Lista vazia sem explicação deixaria a pessoa procurando o que não existe, e a razão é diferente
+  conforme ela tenha procurado ou não.
   {% endcomment %}
-  <p class="aviso">Nenhum Edital do seu escopo pode servir de origem ainda. Só Editais já publicados
-    ou encerrados podem ser reaproveitados — um Edital em elaboração não é conteúdo institucional.</p>
-  <p class="acoes"><a href="{{ voltar }}">Voltar para a composição</a></p>
+  <p class="aviso">
+    {% if busca %}Nenhum Edital do seu escopo corresponde a <strong>{{ busca }}</strong>. Só Editais
+    já publicados ou encerrados podem ser reaproveitados.
+    {% else %}Nenhum Edital do seu escopo pode servir de origem ainda. Só Editais já publicados ou
+    encerrados podem ser reaproveitados — um Edital em elaboração não é conteúdo institucional.
+    {% endif %}</p>
+  <p class="navegacao-etapa"><a href="{{ voltar }}">Voltar para a composição</a></p>
   {% endif %}
 </section>
 {% endblock %}

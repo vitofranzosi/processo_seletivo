@@ -102,7 +102,11 @@ th,td{text-align:left;padding:.7rem 1.25rem;border-bottom:1px solid var(--borda)
   vertical-align:top;font-size:.9375rem}
 thead th{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;
   color:var(--texto-fraco);background:var(--fundo);font-weight:600}
-tbody tr:last-child td{border-bottom:none}
+/* `th` junto do `td`: a regra cobria só a célula comum, e a última linha de toda tabela com
+   cabeçalho de linha — `alocacoes`, `lista`, `supervisao`, `retificar` e as demais que usam
+   `th scope="row"` — ficava com um traço solto do tamanho daquela coluna, pendurado abaixo do
+   corpo. A `distribuicao` já contornava isso com regra própria; o buraco era da regra geral. */
+tbody tr:last-child td,tbody tr:last-child th{border-bottom:none}
 .situacao{display:inline-block;padding:.2rem .6rem;border-radius:12px;font-size:.75rem;
   font-weight:600;white-space:nowrap}
 .s-EM_ELABORACAO{background:var(--cinza-fundo);color:#333}
@@ -473,6 +477,12 @@ fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);p
 /* Remover é de outra natureza. Encostado no botão de alterar, o gesto errado fica à distância de
    um deslize; a folga é o que separa o rotineiro do irreversível. */
 .gerir-membro form+form{margin-top:.9rem;padding-top:.75rem;border-top:1px solid var(--fundo)}
+/* A linha escolhida, numa tabela de escolha única. O ponto do rádio é a marca correta e é pequena
+   demais para uma linha de seis colunas: quem confere o que marcou percorre a linha inteira com o
+   olho. `:has` degrada para "sem realce" onde não houver suporte — a escolha continua legível pelo
+   próprio controle, que é o que a acessibilidade exige. */
+tbody tr:has(input[type=radio]:checked){background:var(--verde-claro)}
+.resumo-da-origem{color:var(--texto-fraco);font-size:.875rem;white-space:nowrap}
 .escolha{display:flex;gap:.5rem;align-items:baseline;font-size:.9375rem;line-height:1.4}
 /* Caixa de marcar não é campo de texto. Dentro de `.campo`, ela herdava `width:100%` e virava um
    bloco da largura do filtro: o rótulo caía para a linha de baixo, e a marca ficava solta no meio
