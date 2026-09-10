@@ -184,3 +184,60 @@ def test_a_trilha_continua_legivel_depois_de_retificada_a_origem(
     corpo = client.get(reverse("interface:auditoria", args=[destino.id])).content.decode()
 
     assert f"a partir do Edital {origem.number}/{origem.year}" in corpo
+
+
+# ---------------------------------------------------------------------------
+# Regressões encontradas na revisão do próprio incremento
+# ---------------------------------------------------------------------------
+
+
+def test_reenviar_o_formulario_termina_onde_a_primeira_requisicao_terminou(client, destino, origem):
+    """O POST não pode ser barrado pela precondição que a própria operação altera.
+
+    Era o mesmo defeito de `FR-017a`, reintroduzido uma camada acima: a view conferia o rascunho
+    vazio antes de chamar o comando, e o reenvio da mesma requisição — recarregar a página de
+    resultado, ou voltar e enviar de novo — respondia 404 em vez de terminar na composição.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    primeira = escolher(client, destino, origem)
+    assert primeira.status_code == 302
+
+    repetida = client.post(
+        reverse("interface:reaproveitar", args=[destino.id]),
+        {"origem": str(origem.id), "chave_idempotencia": _chave_da_primeira(client, destino)},
+    )
+
+    assert repetida.status_code in (302, 200)
+    destino.refresh_from_db()
+    assert destino.perfis.count() == 1
+    assert destino.anexos.count() == 1
+
+
+def _chave_da_primeira(client, destino):
+    """A mesma chave da primeira requisição, que é o que caracteriza um reenvio."""
+    from processo_seletivo.auditoria.models import IdempotencyRecord
+
+    return (
+        IdempotencyRecord.objects.filter(operation=f"edital:reaproveitar:{destino.id}")
+        .latest("id")
+        .key
+    )
+
+
+def test_enviar_sem_escolher_origem_recusa_em_vez_de_estourar(client, destino, origem):
+    """`UUIDField` levanta `ValidationError`, que **não** é `ValueError`.
+
+    Sem a exceção na lista, o formulário enviado sem escolha devolvia 500 — e 500 não é recusa: é
+    defeito exibido a quem só deixou de marcar uma opção.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.post(
+        reverse("interface:reaproveitar", args=[destino.id]),
+        {"origem": "", "chave_idempotencia": "sem-escolha-0001"},
+    )
+
+    assert resposta.status_code == 200
+    assert "Recurso não encontrado" in resposta.content.decode()
+    destino.refresh_from_db()
+    assert destino.perfis.count() == 0

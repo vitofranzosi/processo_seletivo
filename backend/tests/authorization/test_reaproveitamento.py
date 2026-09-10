@@ -121,3 +121,14 @@ def test_o_destino_de_outro_escopo_nao_e_alcancavel(destino, origem):
         tentar(de_outro_escopo, destino, origem.id)
 
     assert recusa.value.status == 404
+
+
+@pytest.mark.authorization
+def test_origem_que_nao_e_uuid_e_recusa_de_dominio_e_nao_defeito(destino, origem):
+    """`ValidationError` do `UUIDField` não é `ValueError`, e sem ela a recusa virava 500."""
+    elaborador = ator_institucional("preparadora", "edital:elaborar")
+
+    for valor in ("", "não-é-uuid", "123"):
+        with pytest.raises(DomainError) as recusa:
+            tentar(elaborador, destino, valor, chave=f"malformado-{valor}")
+        assert recusa.value.status == 404

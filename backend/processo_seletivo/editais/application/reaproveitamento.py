@@ -23,6 +23,8 @@ isso antes da chave faria toda repetição responder `draft_not_empty` (FR-017a)
 
 import hashlib
 
+from django.core.exceptions import ValidationError
+
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.domain.reaproveitamento import (
@@ -99,10 +101,14 @@ def _origem_elegivel(actor, origem_id):
 
     Os três respondem igual porque distinguir já seria informação: dizer "existe, mas você não pode"
     revela a existência a quem não a alcança. É a regra que a gestão aplica em toda parte.
+
+    **`ValidationError` entra na lista**, e não é detalhe: a origem chega de um campo de
+    formulário, e `UUIDField` levanta `ValidationError` — que **não** é `ValueError` — para texto
+    que não é UUID. Sem ela, enviar o formulário sem escolher nada devolvia 500 em vez da recusa.
     """
     try:
         return origens_elegiveis(actor).get(pk=origem_id)
-    except (Edital.DoesNotExist, ValueError, TypeError) as exc:
+    except (Edital.DoesNotExist, ValidationError, ValueError, TypeError) as exc:
         raise DomainError("not_found", "Recurso não encontrado.", 404) from exc
 
 

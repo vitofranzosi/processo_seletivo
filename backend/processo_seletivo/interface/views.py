@@ -10,6 +10,7 @@ import secrets
 from uuid import UUID, uuid4
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -925,9 +926,14 @@ def reaproveitar(request, edital_id):
         raise Http404
     composicao = reverse("interface:compor-etapa", args=[edital.id, CHAVES_ETAPA[0]])
     editavel = edital.status == Edital.Status.EM_ELABORACAO and ator.can("edital:elaborar")
-    if not editavel or not rascunho_vazio(edital):
-        # A mesma recusa que o comando dá, dita onde a pessoa está. A regra continua no backend: o
-        # comando a verifica de novo depois de travar a linha.
+    if not editavel:
+        raise Http404
+    # **A guarda do rascunho vazio vale para a exibição, e não para o envio** — pela mesma razão que
+    # move a reserva da chave para antes das precondições (`FR-017a`): depois da primeira cópia o
+    # rascunho não está mais vazio, e barrar o POST aqui faria o reenvio da mesma requisição
+    # responder 404 em vez de terminar onde a primeira terminou. Quem decide o envio é o comando,
+    # que reconhece a repetição pela chave, e recusa o resto.
+    if request.method == "GET" and not rascunho_vazio(edital):
         raise Http404
 
     erros = []
@@ -2163,6 +2169,20 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
 
 
 # Como cada operação auditada é lida por quem responde um questionamento.
+def _versao_por_identificador(identificador):
+    """A versão que o motivo do registro nomeia, ou `None`.
+
+    O motivo é campo de texto, e o que esta feature grava nele é sempre um identificador — mas a
+    coluna não promete isso. Texto que não é UUID levanta `ValidationError` na consulta, e uma
+    entrada antiga com outro conteúdo derrubaria a tela inteira: o que se perde aqui é o detalhe,
+    nunca a página.
+    """
+    try:
+        return VersaoConsolidada.objects.filter(pk=identificador).select_related("edital").first()
+    except (ValidationError, ValueError, TypeError):
+        return None
+
+
 def _origem_reaproveitada(edital):
     """De qual Edital e de qual versão este Edital partiu, ou `None` (023, FR-014, FR-014a).
 
@@ -2184,7 +2204,7 @@ def _origem_reaproveitada(edital):
     )
     if registro is None:
         return None
-    versao = VersaoConsolidada.objects.filter(pk=registro.reason).select_related("edital").first()
+    versao = _versao_por_identificador(registro.reason)
     if versao is None:
         # A versão não é apagável — é append-only —, mas um motivo que não resolve não pode derrubar
         # a composição: o que se perde é o detalhe, não a tela.
@@ -2205,7 +2225,7 @@ def _motivo_legivel(registro):
     """
     if registro.operation != OPERACAO_DE_REAPROVEITAMENTO:
         return registro.reason
-    versao = VersaoConsolidada.objects.filter(pk=registro.reason).select_related("edital").first()
+    versao = _versao_por_identificador(registro.reason)
     if versao is None:
         return registro.reason
     origem = versao.edital
