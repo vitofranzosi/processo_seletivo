@@ -5,6 +5,12 @@ Releitura do repositório em `6013929` — `main` com a `021` (Sorteio público 
 lida em [`avaliacao-de-capacidade-editais-2026-09-07.md`](avaliacao-de-capacidade-editais-2026-09-07.md).
 A medição anterior é a de [`2026-09-08`](avaliacao-de-capacidade-editais-2026-09-08.md), em `2910c06`.
 
+> **Adendo de 10/09/2026 — a `023` entrou na `main` e não move nada aqui.** Enquanto este
+> documento era escrito, a `023` (*criar Edital a partir de Edital anterior*) foi integrada por
+> outro PR. Conferi a única lacuna que ela poderia tocar — a **P-6** — e ela permanece aberta, por
+> recusa explícita da própria `023`. O que mudou está em [§A `023` e a P-6](#a-023-e-a-p-6), no fim.
+> Nenhuma contagem deste documento se altera.
+
 **Este documento não relê os Editais**, pela mesma disciplina do anterior: a leitura de 07/09
 continua valendo como leitura, e as perguntas P-1 a P-9 continuam sendo as de
 [`achados-editais-externos.md`](achados-editais-externos.md). O que mudou foi o repositório, e é o
@@ -80,7 +86,7 @@ sorteio sem método declarado (`interface/supervisao.py:661`).
 Ela também **fixou a numeração do arco**, e isso vale para a leitura de qualquer roadmap daqui em
 diante: *012 conclui avaliações; 013 oficializa resultados de Etapa; **014** determina progressão;
 015 ordena; **016** ocupa vagas*; e a **019** convoca. Os três números continuam reservados e sem
-spec: `specs/` salta de `018` para `020`, e segue em `021` e `022`.
+spec: `specs/` salta de `018` para `020`, e segue em `021`, `022` e `023`.
 
 ## Por Edital
 
@@ -146,7 +152,7 @@ Todas onde estavam, exceto a que a `021` retirou da lista.
 | validade do Edital e prorrogação | P-3 | `Edital` (`processos/models.py:34`) segue sem prazo de validade; 77 publica seis meses, 14 e 173 publicam dois anos, e o que fica publicado é prosa que nada consome |
 | impugnação por quem não é candidato | P-4 | `Recurso.inscricao` segue obrigatório (`recursos/models.py:46`) |
 | recurso contra a relação de habilitados | P-4 | os dois objetos atacáveis continuam sendo `PublicacaoResultado` e `ResultadoEtapa` (`recursos/models.py:53,60`). **A `021` acrescentou um artefato publicado que não é nenhum dos dois** — e todo Edital de sorteio o publica |
-| Edital que deriva de outro | P-6 | inexistente |
+| Edital que deriva de outro | P-6 | inexistente — **e a `023` a recusou por escrito**; ver o adendo no fim |
 | inscrição originada fora | P-8 | inexistente — e agora é bloqueio, não observação |
 | requisito declarado e não verificado | P-9 | inexistente |
 | segunda instância recursal | D-011 da `018` | inexistente |
@@ -193,3 +199,47 @@ O achado de 07/09 era que **três das seis lacunas novas eram de autoria, e nenh
 014, 016 ou 019 para existir**. Duas já fecharam — a L-5 pela `020`, a L-6 pela `021` —, e nenhuma
 das duas exigiu um passo da fila de execução. Resta uma, a L-1, e ela é hoje a única coisa entre
 três Editais e um sistema que já sabe conduzi-los.
+
+---
+
+## A `023` e a P-6
+
+*Adendo de 10/09/2026, sobre a `main` em `f80e6e5`.*
+
+A `023` — *criar Edital a partir de Edital anterior* — foi integrada enquanto este documento era
+escrito. Ela é de autoria, e portanto a única lacuna da amostra que poderia tocar é a **P-6**:
+*"um processo pode derivar de outro, e o que herda dele?"* — o 76/2026 declara preencher as vagas
+não preenchidas pelo 52/2026, e o 77/2026 diz "vagas remanescentes" sem citar a origem.
+
+**Não toca, e diz que não toca.** O *Out of Scope* da `023` traz o item com o nome da pergunta:
+
+> *"**Derivação normativa entre Editais** — este Edital preenche as vagas que aquele não preencheu.
+> É P-6 de `doc/achados-editais-externos.md`, e esta feature deliberadamente não lhe toca."*
+
+A frase que governa a feature já separava as duas coisas: *"um Edital anterior pode ser o **ponto de
+partida** de um novo Edital; nunca sua **continuação**"*. Reaproveitar configuração é composição;
+herdar vaga não preenchida é norma.
+
+**Mas uma coisa adjacente mudou, e vale registrar antes que confunda quem escrever a P-6.** Pela
+primeira vez existe um vínculo legível por máquina entre dois Editais. Ele vive na **trilha de
+auditoria**, não no domínio: a operação `REAPROVEITAR_EDITAL` grava como motivo a identidade da
+`VersaoConsolidada` da origem (`editais/application/reaproveitamento.py:233-246`), e o comentário
+explica a escolha — a versão, e não o Edital, porque um identificador só responde as duas perguntas.
+Nenhuma migration acompanha a feature: **não há coluna nova em `Edital` apontando para outro
+Edital.**
+
+São, portanto, duas relações diferentes com a mesma aparência:
+
+```
+composição   "este Edital PARTIU daquele"        existe hoje, na trilha, para auditar quem copiou o quê
+norma        "este Edital HERDA vagas daquele"   é a P-6, e continua sem existir em lugar nenhum
+```
+
+A P-6 dizia que *"a relação existe no texto publicado e não no domínio, o que significa que ninguém
+consegue perguntar quantas vagas sobraram de onde"*. As duas metades da frase continuam verdadeiras.
+
+**E a pressão de autoria que a `023` não alivia.** O custo registrado em 07/09 é o do Edital
+**grande** — no 46, nove modalidades repetidas em cerca de setenta ofertas, seiscentas e trinta
+linhas para dizer nove coisas. A `023` reduz o custo do Edital **recorrente**, que é outro eixo:
+ela copia de um Edital para o seguinte, e não de um Perfil para os outros sessenta e nove do mesmo
+Edital. As duas economias são legítimas e nenhuma substitui a outra.
