@@ -10,6 +10,7 @@ import secrets
 from uuid import UUID, uuid4
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -21,6 +22,7 @@ from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.auditoria import selectors as auditoria_selectors
 from processo_seletivo.auditoria.application import record_event
+from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.avaliacoes.application import avaliacao as avaliacao_app
 from processo_seletivo.avaliacoes.application import distribuicao as distribuicao_app
 from processo_seletivo.avaliacoes.application import impedimento as impedimento_app
@@ -76,6 +78,14 @@ from processo_seletivo.divulgacao.models import Natureza
 from processo_seletivo.editais.application import anexos as anexos_command
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.application.identificacao import update_edital_identification
+from processo_seletivo.editais.application.reaproveitamento import (
+    OPERACAO as OPERACAO_DE_REAPROVEITAMENTO,
+)
+from processo_seletivo.editais.application.reaproveitamento import (
+    origens_elegiveis,
+    rascunho_vazio,
+    reaproveitar_edital,
+)
 from processo_seletivo.editais.domain.validation import validate_for_publication
 from processo_seletivo.editais.models.anexos import ArtefatoAnexo
 from processo_seletivo.editais.models.perfis import MarcoClassificatorio
@@ -889,6 +899,76 @@ def compor_etapa(request, edital_id, etapa):
             # A tela de revisão mostra tudo; as demais, só o que se resolve nelas — pendência
             # exibida onde não há como agir vira ruído que a pessoa aprende a ignorar.
             "pendencias_aqui": _pendencias_da_etapa(pendencias, etapa),
+            # Partir de um Edital anterior só é oferecido onde é possível: rascunho vazio e
+            # permissão de elaborar (023, FR-001, FR-002). Oferecer o que se vai recusar é pior do
+            # que não oferecer — e a conta das seis coleções só é paga na etapa que exibe o cartão.
+            "pode_reaproveitar": (editavel and etapa == CHAVES_ETAPA[0] and rascunho_vazio(edital)),
+            # O aviso permanente, em todas as etapas: este Edital partiu de outro, e as informações
+            # são da oferta anterior até alguém atualizá-las (023, FR-014).
+            "origem_reaproveitada": _origem_reaproveitada(edital),
+        },
+    )
+
+
+@require_http_methods(["GET", "POST"])
+def reaproveitar(request, edital_id):
+    """Escolher o Edital de onde partir, e partir (023, US1).
+
+    A view não decide nada: lista as origens elegíveis, lê dois campos e chama o comando. Os dois
+    campos são a origem e a chave de idempotência — `forms.py` existe para reconstruir coleções a
+    partir de campos indexados, e aqui não há coleção.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital = obter_edital(actor=ator, edital_id=edital_id)
+    if edital is None:
+        raise Http404
+    composicao = reverse("interface:compor-etapa", args=[edital.id, CHAVES_ETAPA[0]])
+    # **Antes do comando, só o que não muda com a operação**: a permissão de elaborar e o escopo,
+    # que são autorização. Situação do Edital, Processo e rascunho vazio ficam **inteiramente** para
+    # o serviço, depois da reserva da chave (`FR-017a`, `§7.1`).
+    #
+    # A razão é a mesma que moveu a reserva para antes das precondições, e vale para todas elas, não
+    # só para o rascunho: a operação muda o estado que seria conferido. Depois da primeira cópia o
+    # rascunho tem conteúdo — e o Edital pode até ter avançado de situação, se alguém o submeteu no
+    # intervalo. Barrar o reenvio aqui devolveria 404 onde a reserva já tem resposta pronta.
+    if not ator.can("edital:elaborar"):
+        raise Http404
+    # A exibição é outra conversa: o que a tela oferece precisa ser o que a tela consegue fazer, e
+    # oferecer o que se vai recusar é pior do que não oferecer.
+    if request.method == "GET" and (
+        edital.status != Edital.Status.EM_ELABORACAO or not rascunho_vazio(edital)
+    ):
+        raise Http404
+
+    erros = []
+    if request.method == "POST":
+        try:
+            reaproveitar_edital(
+                actor=ator,
+                edital_id=edital.id,
+                origem_id=request.POST.get("origem", ""),
+                expected_revision=edital.revision,
+                idempotency_key=request.POST.get("chave_idempotencia", ""),
+                correlation_id=request.correlation_id,
+            )
+        except DomainError as exc:
+            erros.append({"mensagem": exc.detail, "ancora": ""})
+        else:
+            return redirect(f"{composicao}?salvo=reaproveitamento")
+
+    return render(
+        request,
+        "interface/reaproveitar.html",
+        {
+            "edital": edital,
+            "origens": origens_elegiveis(ator, excluindo=edital.pk).select_related("processo"),
+            "erros": erros,
+            "voltar": composicao,
+            # A chave atravessa o reenvio do formulário, como nas telas de criação: recarregar
+            # depois de uma recusa não pode produzir duas cópias.
+            "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
         },
     )
 
@@ -2095,10 +2175,102 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
 
 
 # Como cada operação auditada é lida por quem responde um questionamento.
+def _versao_por_identificador(identificador):
+    """A versão que o motivo do registro nomeia, ou `None`.
+
+    O motivo é campo de texto, e o que esta feature grava nele é sempre um identificador — mas a
+    coluna não promete isso. Texto que não é UUID levanta `ValidationError` na consulta, e uma
+    entrada antiga com outro conteúdo derrubaria a tela inteira: o que se perde aqui é o detalhe,
+    nunca a página.
+    """
+    try:
+        return (
+            VersaoConsolidada.objects.filter(pk=identificador)
+            .select_related("edital", "source_publication")
+            .first()
+        )
+    except (ValidationError, ValueError, TypeError):
+        return None
+
+
+def _origem_reaproveitada(edital):
+    """De qual Edital e de qual versão este Edital partiu, ou `None` (023, FR-014, FR-014a).
+
+    Lido da **trilha**, e não de coluna nova: a origem é ato, e ato mora na auditoria. O registro
+    guarda o identificador da **versão** para não envelhecer (FR-015a), e é aqui que ele volta a ser
+    legível — resolver a versão dá o Edital de graça, porque o Edital deriva dela.
+
+    Nada é interpretado do texto: o motivo é um identificador, e um identificador não muda de forma
+    quando alguém renomeia um rótulo.
+    """
+    registro = (
+        RegistroAuditoria.objects.filter(
+            aggregate_type="Edital",
+            aggregate_id=edital.id,
+            operation=OPERACAO_DE_REAPROVEITAMENTO,
+        )
+        .order_by("-occurred_at")
+        .first()
+    )
+    if registro is None:
+        return None
+    versao = _versao_por_identificador(registro.reason)
+    if versao is None:
+        # A versão não é apagável — é append-only —, mas um motivo que não resolve não pode derrubar
+        # a composição: o que se perde é o detalhe, não a tela.
+        return {"edital": None, "versao": None, "quando": registro.occurred_at}
+    return {
+        "edital": versao.edital,
+        "versao": versao,
+        # A mesma frase da trilha, pela mesma razão: sem as duas datas, duas versões distintas se
+        # anunciam iguais.
+        "versao_por_extenso": _versao_por_extenso(versao),
+        "quando": registro.occurred_at,
+        "ator": registro.actor_subject,
+    }
+
+
+def _motivo_legivel(registro):
+    """O motivo como pessoa lê. Hoje só a origem precisa de tradução (023, FR-014a).
+
+    **Só a entrada desta operação**, e não a trilha inteira: outras operações gravam identificador
+    no motivo — a `020` grava `anexo <uuid>` —, e uniformizá-las é decisão de quem for dono delas.
+    """
+    if registro.operation != OPERACAO_DE_REAPROVEITAMENTO:
+        return registro.reason
+    versao = _versao_por_identificador(registro.reason)
+    if versao is None:
+        return registro.reason
+    origem = versao.edital
+    return f"a partir do Edital {origem.number}/{origem.year}, {_versao_por_extenso(versao)}"
+
+
+def _versao_por_extenso(versao):
+    """A versão nomeada pelo ato que a produziu e pela vigência dela (023, FR-014a, SC-005).
+
+    **Data não nomeia versão.** Publicar uma Retificação rematerializa **uma versão por fronteira
+    temporal** (`publicacoes/application/retificacoes.py`), e uma Retificação posterior refaz as
+    mesmas fronteiras: duas linhas distintas — com identificadores distintos, e conteúdo distinto —
+    apareceriam como a mesma *"versão de 09/09/2026"*. `SC-005` ficaria atendido no banco e não na
+    tela, que é o inverso do que ele pede.
+
+    O par `(publicação que a produziu, vigência)` é **único por construção**: dentro de uma
+    materialização as fronteiras são um conjunto, e entre materializações a Publicação de origem
+    muda. E é a língua que o resto da interface já fala — a lista de documentos do Edital nomeia os
+    atos pela ordem de publicação.
+    """
+    publicacao = versao.source_publication
+    vigencia = timezone.localtime(versao.valid_from).strftime("%d/%m/%Y %H:%M")
+    return f"versão da publicação nº {publicacao.publication_order}, vigente desde {vigencia}"
+
+
 OPERACOES = {
     "CRIAR": "Criação",
     "ALTERAR_RASCUNHO": "Alteração do rascunho",
     "ALTERAR_IDENTIFICACAO": "Alteração da identificação",
+    # A cópia de configuração de outro Edital (023). Sem esta entrada a trilha exibiria o
+    # código cru, e `US3` ficaria atendida no banco e não no canal do ator.
+    "REAPROVEITAR_EDITAL": "Criação a partir de Edital anterior",
     "ATIVAR": "Ativação do Processo",
     "SUBMETER": "Submissão para revisão",
     "HOMOLOGAR": "Homologação",
@@ -2186,7 +2358,7 @@ def auditoria(request, edital_id):
                     "agregado": AGREGADOS.get(registro.aggregate_type, registro.aggregate_type),
                     "de": registro.previous_state,
                     "para": registro.new_state,
-                    "motivo": registro.reason,
+                    "motivo": _motivo_legivel(registro),
                     "correlacao": registro.correlation_id,
                 }
                 for registro in registros

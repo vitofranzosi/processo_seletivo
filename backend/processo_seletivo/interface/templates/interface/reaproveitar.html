@@ -1,0 +1,74 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Partir de um Edital anterior — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <a href="{{ voltar }}">Compor</a> ›
+  <span aria-current="page">Partir de um Edital anterior</span>
+</nav>
+
+<h1>Partir de um Edital anterior</h1>
+<p class="sub">Edital {{ edital.number }}/{{ edital.year }} — {{ edital.title }}</p>
+
+{% include "interface/_erros.html" %}
+
+<section aria-labelledby="o-que-vem-titulo" class="cartao">
+  <h2 id="o-que-vem-titulo">O que é reaproveitado</h2>
+  <p class="ajuda">A configuração do Edital escolhido, na versão que vigora nele: perfis de vaga,
+    modalidades de concorrência, requisitos, documentos exigidos, etapas de avaliação, critérios de
+    classificação, a estrutura do cronograma, o conteúdo das seções e os anexos.</p>
+  {% comment %}
+  A lista do que **não** vem não é tranquilização decorativa: quem elabora precisa saber que a
+  operação não traz o certame anterior. O que ela não diz é o que não existe — não há como o novo
+  Edital herdar inscrição nenhuma, porque ele é outro Edital.
+  {% endcomment %}
+  <p class="ajuda">Nada do certame anterior vem junto: nem candidatos, nem inscrições, nem
+    documentos enviados, nem avaliações, nem resultados, nem recursos. Número, ano e título
+    continuam sendo os que você já informou, e as datas, as vagas e os prazos precisam ser
+    atualizados para esta oferta.</p>
+</section>
+
+<section aria-labelledby="origens-titulo">
+  <h2 id="origens-titulo">Editais que podem servir de origem</h2>
+  {% if origens %}
+  <p class="ajuda">Editais publicados ou encerrados do seu escopo. É a versão que vigora em cada um
+    que será copiada — inclusive as retificações já publicadas nele.</p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+    <table class="tabela">
+      <caption class="oculto">Editais disponíveis como origem</caption>
+      <thead>
+        <tr><th scope="col">Escolher</th><th scope="col">Edital</th><th scope="col">Título</th>
+          <th scope="col">Processo Seletivo</th><th scope="col">Situação</th></tr>
+      </thead>
+      <tbody>
+        {% for origem in origens %}
+        <tr>
+          <td><input type="radio" name="origem" id="origem-{{ origem.id }}" value="{{ origem.id }}"
+                     {% if forloop.first %}checked{% endif %}></td>
+          <th scope="row"><label for="origem-{{ origem.id }}">Edital {{ origem.number }}/{{ origem.year }}</label></th>
+          <td>{{ origem.title }}</td>
+          <td>{{ origem.processo.institutional_code }} — {{ origem.processo.title }}</td>
+          <td><span class="situacao s-{{ origem.status }}">{{ origem.status|situacao }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="acoes">
+      <button type="submit" class="botao">Usar como base</button>
+      <a href="{{ voltar }}">Cancelar</a>
+    </p>
+  </form>
+  {% else %}
+  {% comment %}
+  Lista vazia sem explicação deixaria a pessoa procurando o que não existe. A razão é simples e
+  precisa ser dita: só Edital já publicado serve de origem.
+  {% endcomment %}
+  <p class="aviso">Nenhum Edital do seu escopo pode servir de origem ainda. Só Editais já publicados
+    ou encerrados podem ser reaproveitados — um Edital em elaboração não é conteúdo institucional.</p>
+  <p class="acoes"><a href="{{ voltar }}">Voltar para a composição</a></p>
+  {% endif %}
+</section>
+{% endblock %}
