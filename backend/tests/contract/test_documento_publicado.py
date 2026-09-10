@@ -435,3 +435,37 @@ def test_a_tabela_comparativa_de_perfis_nao_e_o_quadro_de_vagas():
     )
     assert hasattr(pdf, "_quadro_de_perfis")
     assert hasattr(pdf, "_quadro_de_vagas_do_perfil")
+
+
+@pytest.mark.contract
+def test_as_duas_tabelas_de_vagas_nao_se_chamam_a_mesma_coisa():
+    """Achado do percurso conduzido: o documento publicava duas "Quadro de vagas" (E2E25-005).
+
+    Com mais de um Perfil, o Edital abre a seção com a tabela comparativa — código, localidade,
+    vagas, reserva, carga horária — e depois traz, por Perfil, a repartição das vagas por lista de
+    concorrência. As duas saíam com a mesma legenda, dizendo coisas diferentes, e quem lê o Edital
+    lê a legenda: renomear a função privada não alcançava isso.
+    """
+    dois = {
+        **SNAPSHOT,
+        "profiles": [
+            SNAPSHOT["profiles"][0],
+            {
+                **SNAPSHOT["profiles"][0],
+                "id": "22222222-2222-4222-8222-222222222222",
+                "code": "P2",
+                "name": "Segundo Perfil",
+                "competitionModalities": [],
+                "vacancyTable": [],
+            },
+        ],
+    }
+    texto = texto_de(documento(dois, canonical_sha256(dois)))
+    legendas = [linha for linha in texto.splitlines() if linha.startswith("Tabela ")]
+
+    assert any("Perfis de vaga" in legenda for legenda in legendas), (
+        "a comparativa diz o que tabula: Perfis"
+    )
+    quadros = [legenda for legenda in legendas if "Quadro de vagas" in legenda]
+    assert len(quadros) == 1, f"uma só tabela chamada quadro de vagas: {legendas}"
+    assert quadros[0].endswith("— DOC-INFO"), "e ela nomeia o Perfil de quem reparte"

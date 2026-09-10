@@ -1416,7 +1416,13 @@ def _quadro_de_perfis(composicao, perfis, tabelas):
         linhas,
         recuo=0.0,
         alinhamentos=[ESQUERDA, ESQUERDA, CENTRO, ESQUERDA, CENTRO],
-        legenda=tabelas.legenda("Quadro de vagas"),
+        # **A legenda mudou com a `025`, e não é ajuste de gosto** (E2E25-005). Ela dizia "Quadro
+        # de vagas", e o documento passou a publicar, algumas linhas abaixo, uma tabela com esse
+        # nome que é outra coisa: a repartição das vagas de **um** Perfil por lista de
+        # concorrência. Duas tabelas homônimas no mesmo documento, dizendo coisas diferentes, é
+        # exatamente a ambiguidade que o Princípio I existe para não ter — e a renomeação da
+        # função privada, sozinha, não a alcançava, porque quem lê o Edital lê a legenda.
+        legenda=tabelas.legenda("Perfis de vaga"),
     )
 
 

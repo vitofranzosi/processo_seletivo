@@ -601,8 +601,23 @@ def _recusa(exc, digitados, etapa):
         # um controle que não existe, e a âncora apontaria para o nada.
         if not linha.get("vacancyTable"):
             continue
-        for sub, do_quadro in enumerate(forms.quadro_do_formulario(linha)):
+        oferecidas = forms.quadro_do_formulario(linha)
+        for sub, do_quadro in enumerate(oferecidas):
             if str(do_quadro.get("id", "")) == identidade:
+                return {"mensagem": mensagem, "ancora": f"linha-{indice}-{sub}-{campo}"}
+        # **A linha recusada pode não estar entre as oferecidas**, e o caso é justamente o da
+        # duplicata: a tela oferece uma linha por recorte, e a segunda linha do mesmo recorte não
+        # tem onde aparecer. A âncora recua para a linha **daquele recorte** — que é onde a pessoa
+        # corrige o problema —, em vez de virar texto solto no resumo (025, E2E25-003).
+        recusada = next(
+            (item for item in linha["vacancyTable"] if str(item.get("id", "")) == identidade),
+            None,
+        )
+        if recusada is None:
+            continue
+        recorte = str(recusada.get("modalityId") or "")
+        for sub, do_quadro in enumerate(oferecidas):
+            if str(do_quadro.get("modalityId") or "") == recorte:
                 return {"mensagem": mensagem, "ancora": f"linha-{indice}-{sub}-{campo}"}
     return {"mensagem": mensagem, "ancora": ""}
 
@@ -1283,11 +1298,22 @@ def _indice_de_linha(request):
 
 @require_http_methods(["GET"])
 def fragmento_perfil(request):
+    """O Perfil novo nasce com a **linha geral** do quadro já oferecida (025, E2E25-001).
+
+    Sem ela, a seção do quadro de um Perfil recém-acrescentado aparecia vazia — título e mais nada
+    —, e quem compõe um Edital do zero não tinha onde escrever a quantidade da ampla concorrência
+    até salvar e recarregar. As reservadas continuam nascendo com as Modalidades, uma a uma, porque
+    é delas que vêm o rótulo e a identidade que a linha aponta.
+    """
     return render(
         request,
         "interface/_perfil.html",
         {
-            "perfil": {"id": str(uuid4()), "reserveType": "NONE"},
+            "perfil": {
+                "id": str(uuid4()),
+                "reserveType": "NONE",
+                "quadro": forms.quadro_do_formulario({}),
+            },
             "indice": _indice_de_linha(request),
             "reservas": forms.RESERVA,
         },

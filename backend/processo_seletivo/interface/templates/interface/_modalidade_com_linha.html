@@ -10,4 +10,12 @@ sendo **dígitos**: `forms._indices` ordena por número quando o índice é num�
 não é, e misturar os dois no mesmo Perfil faria a ordenação comparar `int` com `str`.
 {% endcomment %}
 {% include "interface/_modalidade.html" %}
-{% include "interface/_linha_do_quadro.html" with oob=True %}
+{% comment %}
+**O invólucro fora de banda é descartado, e o de dentro é que fica.** O htmx swapa o *conteúdo* do
+elemento marcado com `hx-swap-oob`, e não o elemento: marcar a própria linha fazia os campos
+chegarem soltos dentro da seção, sem o `div.linha-do-quadro` que a desenha — a linha vinha, e vinha
+sem forma. O envelope abaixo existe só para ser jogado fora (E2E25-002).
+{% endcomment %}
+<div hx-swap-oob="beforeend:#quadro-{{ indice }}">
+  {% include "interface/_linha_do_quadro.html" %}
+</div>

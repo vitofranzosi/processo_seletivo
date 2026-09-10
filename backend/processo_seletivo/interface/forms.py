@@ -617,9 +617,14 @@ def quadro_do_formulario(perfil):
     A ordem é a mesma da tela: a geral primeiro, e uma por Modalidade declarada. Quantidade não
     digitada volta **em branco**, porque em branco é o que ela era — e nunca zero.
     """
-    digitadas = {
-        str(linha.get("modalityId") or ""): linha for linha in perfil.get("vacancyTable") or []
-    }
+    # **A primeira ocorrência vence, e não a última.** Um envio com duas linhas para o mesmo
+    # recorte é recusado pelo domínio, e a tela precisa devolver o que a pessoa digitou para que
+    # ela possa corrigir. Com a última vencendo, a linha duplicada **sobrescrevia** a boa: quem
+    # tinha `56` na ampla concorrência recebia de volta a quantidade da duplicata, e o número certo
+    # sumia na tela que existe para mostrá-lo (025, E2E25-004).
+    digitadas = {}
+    for linha in perfil.get("vacancyTable") or []:
+        digitadas.setdefault(str(linha.get("modalityId") or ""), linha)
     geral = digitadas.get("")
     linhas = [
         {

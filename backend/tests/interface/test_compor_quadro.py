@@ -384,3 +384,79 @@ def test_cada_linha_do_quadro_tem_rotulo_ligado_ao_proprio_campo(client, seletor
     descritos = set(re.findall(r'aria-describedby="(ajuda-linha-\d+-\d+)"', quadro))
     existentes = set(re.findall(r'<span class="oculto" id="(ajuda-linha-\d+-\d+)"', quadro))
     assert descritos <= existentes, "todo `aria-describedby` aponta alvo que existe"
+
+
+# --- E2E25-001 · o Perfil recém-acrescentado já oferece a linha geral ------------------------
+
+
+def test_o_perfil_acrescentado_pela_tela_ja_oferece_a_linha_geral(client, seletor_ligado, edital):
+    """Achado do percurso conduzido: a seção do quadro nascia **vazia** no Perfil novo.
+
+    Título e mais nada. Quem compõe um Edital do zero — que é todo Edital — não tinha onde escrever
+    a quantidade da ampla concorrência até salvar e recarregar a tela, e o caminho natural da US1
+    começava com um beco. As reservadas continuam nascendo com as Modalidades, uma a uma, porque é
+    delas que vêm o rótulo e a identidade que a linha aponta (E2E25-001, UX-021, UX-022).
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo = client.get(reverse("interface:fragmento-perfil"), {"indice": "0"}).content.decode()
+
+    assert '<h3 id="quadro-titulo-0">Quadro de vagas</h3>' in corpo
+    assert "<strong>Ampla concorrência</strong>" in corpo
+    campos = re.findall(r'name="(linha-0-\d+-immediateVacancies)"', corpo)
+    assert len(campos) == 1, "a geral, e só ela: não há Modalidade declarada ainda"
+    assert re.search(r'name="linha-0-0-modalityId"\s+value=""', corpo), "vazio é a linha geral"
+
+
+def test_a_modalidade_acrescentada_traz_a_linha_do_quadro_com_a_forma_dela(
+    client, seletor_ligado, composto
+):
+    """Achado do percurso: a linha vinha, e vinha **sem forma** (E2E25-002).
+
+    O htmx swapa o *conteúdo* do elemento marcado com `hx-swap-oob`, e não o elemento: marcar a
+    própria linha fazia os campos chegarem soltos dentro da seção, sem o `div.linha-do-quadro` que
+    a desenha. O envelope existe para ser jogado fora, e o invólucro de dentro é que fica.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo = client.get(
+        reverse("interface:fragmento-modalidade", args=["0"]), {"indice": "9"}
+    ).content.decode()
+
+    assert 'hx-swap-oob="beforeend:#quadro-0"' in corpo
+    envelope = corpo[corpo.index("hx-swap-oob") :]
+    assert '<div class="linha-do-quadro">' in envelope, (
+        "o invólucro que desenha a linha vai **dentro** do envelope fora de banda"
+    )
+    assert 'name="linha-0-9-immediateVacancies"' in envelope
+    assert re.search(r'name="linha-0-9-modalityId"\s+value="[0-9a-f-]{36}"', envelope), (
+        "a linha nasce apontando a Modalidade que acabou de nascer"
+    )
+
+
+def test_a_recusa_da_segunda_linha_geral_devolve_o_que_foi_digitado(
+    client, seletor_ligado, composto
+):
+    """Achado do percurso: a linha duplicada **sobrescrevia** a boa na reexibição (E2E25-004).
+
+    Quem tinha `56` na ampla concorrência e enviava uma segunda linha geral recebia de volta a
+    quantidade da duplicata, e o número certo sumia — na tela que existe para mostrá-lo. A primeira
+    ocorrência vence, porque é a que a pessoa vê primeiro e é a que ela estava corrigindo.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    dados = perfil()
+    # A linha da PcD perde a referência e vira uma **segunda** linha geral.
+    dados["linha-0-2-modalityId"] = ""
+
+    resposta = compor(client, composto, dados)
+    assert resposta.status_code == 200, "a recusa devolve a tela, e não redireciona"
+
+    corpo = resposta.content.decode()
+    assert "uma linha só" in corpo
+    quadro = secao_do_quadro(corpo)
+    valores = re.findall(r'name="linha-0-\d+-immediateVacancies"\s+value="([^"]*)"', quadro)
+    assert valores[0] == "56", "o número que a pessoa digitou na ampla concorrência sobrevive"
+
+    # E a recusa aparece **ao lado da linha**, e não só no resumo (E2E25-003, FR-033).
+    assert 'aria-invalid="true"' in quadro
+    assert re.search(
+        r'<span class="recusa" role="alert" id="recusa-linha-0-\d+-modalityId"', quadro
+    )

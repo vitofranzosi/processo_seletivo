@@ -239,8 +239,24 @@ def _arquivo_de_hoje(descricao, identificador):
     return (descricao(str(identificador)) if descricao else "") or "arquivo já publicado"
 
 
+# O que a opção vazia de um campo de referência **significa**, por chave. Fora daqui vale "sem
+# restrição", que é o que `documentRequirements` quer dizer; na linha do quadro, o vazio é a ampla
+# concorrência, e o rótulo genérico diria o oposto do que a linha afirma (025, E2E25-006).
+ROTULO_DO_VAZIO = {"vacancyTable": {"modalityId": "Ampla concorrência"}}
+
+
 def _grupo(
-    titulo, caminho, item, campos, *, removivel=True, opcoes=None, tipo="", nome="", descricao=None
+    titulo,
+    caminho,
+    item,
+    campos,
+    *,
+    removivel=True,
+    opcoes=None,
+    tipo="",
+    nome="",
+    descricao=None,
+    rotulos_do_vazio=None,
 ):
     """Uma linha do formulário: o que ela é, como ela se chama, e os campos que ela edita.
 
@@ -272,6 +288,7 @@ def _grupo(
                 "descricao": (
                     _arquivo_de_hoje(descricao, _valor(item, chave)) if tipo == ARQUIVO else ""
                 ),
+                "rotulo_do_vazio": (rotulos_do_vazio or {}).get(chave, ""),
             }
             for chave, rotulo, tipo in campos
         ],
@@ -417,6 +434,7 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                     tipo="Linha do quadro de vagas",
                     nome=nome,
                     opcoes={"modalityId": modalidades_do_perfil},
+                    rotulos_do_vazio=ROTULO_DO_VAZIO["vacancyTable"],
                 )
             )
         for fato in perfil.get("declaredFacts") or []:

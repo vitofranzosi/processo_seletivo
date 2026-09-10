@@ -83,6 +83,11 @@ def test_a_tela_oferece_a_colecao_do_quadro_com_a_modalidade_como_escolha(
     modalidade = next(c for c in da_linha["campos"] if c["caminho"].endswith("/modalityId"))
     assert modalidade["tipo"] == "referencia"
     assert [identificador for identificador, _ in modalidade["opcoes"]] == [PPI]
+    # E a opção vazia diz o que ela **é** (E2E25-006). "Sem restrição" — o rótulo genérico do
+    # Documento Exigido — diria que a linha não se restringe a lista nenhuma, quando ela é
+    # precisamente a lista de que todos participam.
+    assert modalidade["rotulo_do_vazio"] == "Ampla concorrência"
+    assert "Sem restrição" not in corpo[corpo.index("Linha do quadro de vagas") :]
 
 
 def test_alterar_a_quantidade_pela_tela_vira_replace_por_identidade(
