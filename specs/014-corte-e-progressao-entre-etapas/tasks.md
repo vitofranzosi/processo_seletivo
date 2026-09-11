@@ -218,7 +218,7 @@ que já existem. Se alguma tarefa levar você a criar app, camada ou permissão,
 - [X] T079 [P] [US5] Em `backend/tests/integration/classificacao/test_corte_obsoleto.py`, a obsolescência **não altera, não substitui e não revoga** o corte vigente (`FR-217`, `SC-062`)
 - [X] T080 [P] [US5] Em `backend/tests/integration/classificacao/test_corte_obsoleto.py`, deferimento que devolve alguém ao universo **do ato de ordenação** produz a causa *participante reingressou* (`FR-218`)
 - [ ] T080a [P] [US5] Em `backend/tests/integration/classificacao/test_corte_obsoleto.py`, deferimento que **não** alcança o ato de ordenação — o recurso julgado na própria Etapa governada — **não** obsoleta o corte, e o trabalho da Etapa segue (`FR-230`). *Todo participante considerado está no universo do corte: medir a obsolescência ali faria qualquer reingresso parar a Etapa para exigir uma geração sucessora idêntica à anterior — e no 77, em que o recurso é julgado na Etapa que o corte governa, esse seria o caso normal*
-- [ ] T081 [P] [US5] Em `backend/tests/integration/classificacao/test_corte_obsoleto.py`, corte obsoleto **impede** publicar resultado que dele dependa, com motivo nomeado e o caminho a seguir (`FR-219`, `SC-063`)
+- [X] T081 [P] [US5] Em `backend/tests/integration/classificacao/test_corte_obsoleto.py`, corte obsoleto **impede** publicar resultado que dele dependa, com motivo nomeado e o caminho a seguir (`FR-219`, `SC-063`)
 - [X] T081a [P] [US5] Em `backend/tests/integration/classificacao/test_corte_obsoleto.py`, com o corte obsoleto e a geração sucessora ainda não emitida, **distribuir, concluir avaliação e consolidar Resultado na Etapa governada são recusados** — os três —, com motivo nomeado e o caminho — emitir a geração sucessora. O trabalho já registrado continua íntegro, e a leitura continua disponível (`FR-228`, `UX-030`, `SC-073`). *É o reingresso que obriga: deferido o recurso que devolve alguém ao universo, trabalhar sob a faixa antiga é exatamente excluir quem teve o direito reconhecido — e o sistema já sabe disso, porque foi ele que marcou a causa*
 - [X] T081b [P] [US5] Em `backend/tests/integration/classificacao/test_corte_obsoleto.py`, o percurso completo `emitir → continuar → a ordem muda → suceder`: **nenhuma** das duas faixas da geração anterior continua autorizando participante, e a Etapa governada passa a ler apenas a geração nova (`FR-227`, `SC-072`). *É o cenário que o desenho anterior não tinha como satisfazer — a sucessão sobre faixa isolada deixava a outra vigente*
 - [ ] T082 [P] [US5] Em `backend/tests/integration/classificacao/test_corte_obsoleto.py`, Retificação que **remove** a regra de um marco com corte emitido: o ato permanece legível, a causa é *regra alterada*, e a Etapa seguinte volta a admitir todos os habilitados
@@ -226,7 +226,7 @@ que já existem. Se alguma tarefa levar você a criar app, camada ou permissão,
 ### Implementation for User Story 5
 
 - [X] T083 [US5] Acrescentar o estado do corte ao `estado_do_marco` em `backend/processo_seletivo/classificacao/application/selectors.py:281`, com as quatro comparações de [research.md](./research.md) `R-011`. As três primeiras não custam consulta nova; a quarta reusa `_reingressos` (`selectors.py:488`), que a `018` já escreveu
-- [ ] T084 [US5] Acrescentar o impedimento de corte obsoleto em `backend/processo_seletivo/divulgacao/domain/publicabilidade.py`, ao lado do que já existe para ato de ordenação obsoleto (`FR-219`)
+- [X] T084 [US5] Acrescentar o impedimento de corte obsoleto em `backend/processo_seletivo/divulgacao/domain/publicabilidade.py`, ao lado do que já existe para ato de ordenação obsoleto (`FR-219`)
 - [ ] T085 [US5] Mostrar a obsolescência e a causa **ao abrir o marco**, sem que ninguém precise comparar nada manualmente (`UX-027`)
 - [X] T085a [US5] Implementar o bloqueio dos **três** verbos na Etapa governada em `backend/processo_seletivo/resultados/application/prontidao.py`, como **impedimento da Etapa** — a mesma forma que a `013` já usa para *regra insuficiente*, que a presidência vê na prontidão antes de tentar consolidar. Não nasce estado novo de inscrição, e a partição de estados continua fechando (`FR-228`, `UX-030`)
 
@@ -244,7 +244,7 @@ que já existem. Se alguma tarefa levar você a criar app, camada ou permissão,
 
 - [X] T086 [P] [US6] Teste de integração em `backend/tests/integration/classificacao/test_reproducao_do_corte.py`: o universo declarado reproduz faixa idêntica (`FR-199`, `SC-061`)
 - [X] T087 [P] [US6] Em `backend/tests/integration/classificacao/test_reproducao_do_corte.py`, corte antigo é lido com os **nomes da versão que congelou**, e não com os de hoje, mesmo depois de Retificação que renomeie a modalidade. Reusar `nomes_do_marco` (`classificacao/domain/nomes.py`)
-- [ ] T088 [P] [US6] Em `backend/tests/integration/classificacao/test_reproducao_do_corte.py`, a continuação cita a faixa anterior e o motivo declarado
+- [X] T088 [P] [US6] Em `backend/tests/integration/classificacao/test_reproducao_do_corte.py`, a continuação cita a faixa anterior e o motivo declarado
 - [X] T089 [P] [US6] Em `backend/tests/integration/classificacao/test_reproducao_do_corte.py`, a auditoria da emissão traz ator, ação, recorte, ordem citada, alvo apurado, quantidade alcançada e instante, recuperável sem acesso ao banco (`FR-222`, `SC-070`)
 
 ### Implementation for User Story 6

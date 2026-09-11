@@ -119,7 +119,11 @@ def participacao_detalhada(*, edital, etapa_id, vigentes=None):
     )
     submetidas = {identidade for identidade, _, _ in linhas}
     fora = {identidade for identidade, dentro, _ in linhas if not dentro}
-    ha_corte = any(existe for _, _, existe in linhas)
+    # **`None` quando não houve linha para perguntar**, e não `False`: com a coleção vazia a
+    # anotação não responde nada, e tratar isso como "não há corte" faria a tela de uma Etapa sem
+    # inscrição submetida afirmar que está em dia quando o corte dela está obsoleto. Quem precisar
+    # da resposta ali pergunta ao banco — é uma consulta, e não há listagem a proteger.
+    ha_corte = any(existe for _, _, existe in linhas) if linhas else None
     anteriores = [identidade for identidade, _ in etapas_anteriores(vigentes, etapa_id)]
     eliminadas = eliminadas_ate(edital=edital, etapas_ids=anteriores) & submetidas
 
@@ -367,7 +371,7 @@ def panorama_da_etapa(*, edital, etapa, etapas_vigentes):
     impedimento = impedimento_da_regra(etapa)
     # A conferência da obsolescência só é feita onde há corte — e `ha_corte` veio da mesma consulta
     # que já buscou as submetidas, de modo que a Etapa sem corte não paga nada por esta linha.
-    if impedimento is None and ha_corte:
+    if impedimento is None and ha_corte is not False:
         impedimento = impedimento_do_corte(edital, etapa["id"])
     # Duas consultas para a Etapa inteira, e nenhuma por inscrição — o mesmo orçamento que o resto
     # deste módulo respeita.

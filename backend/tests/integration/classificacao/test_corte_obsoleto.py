@@ -192,3 +192,35 @@ def test_emitir_sobre_ordem_obsoleta_recusa(cenario, gestor, api_client):
         calcular_corte(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO)
 
     assert erro.value.code == "ato_obsoleto"
+
+
+# --- T081 · corte obsoleto impede publicar o que dele depende (FR-219, SC-063) ---------------
+
+
+def test_publicar_com_o_corte_obsoleto_e_impedido_e_a_recusa_diz_o_caminho(cenario, gestor):
+    """O que se publicou não se despublica: divulgar uma faixa que a sucessão vai mudar é o erro."""
+    from processo_seletivo.divulgacao.domain.publicabilidade import CORTE_OBSOLETO, aferir
+
+    edital, _, _ = cenario
+    emitir(edital, gestor)
+    suceder_a_ordem(edital, gestor)
+
+    afericao = aferir(
+        edital=edital, marco_id=MARCO, ato=Corte.objects.first().ato, natureza="PRELIMINAR"
+    )
+
+    assert afericao.codigo in {CORTE_OBSOLETO, "publication_act_superseded"}
+    assert afericao.mensagem
+
+
+def test_sem_obsolescencia_a_publicacao_nao_e_impedida_pelo_corte(cenario, gestor):
+    from processo_seletivo.divulgacao.domain.publicabilidade import CORTE_OBSOLETO, aferir
+
+    edital, _, _ = cenario
+    emitir(edital, gestor)
+
+    afericao = aferir(
+        edital=edital, marco_id=MARCO, ato=Corte.objects.get().ato, natureza="PRELIMINAR"
+    )
+
+    assert afericao.codigo != CORTE_OBSOLETO

@@ -162,6 +162,13 @@ def continuar_corte(
                 "Não há geração vigente neste recorte: emita o corte antes de continuá-lo.",
                 409,
             )
+        if int(quantidade or 0) < 1:
+            raise DomainError(
+                "continuacao_sem_quantidade",
+                "Declare quantos a faixa seguinte deve alcançar: o sistema não decide por ninguém.",
+                422,
+                campo="quantidade",
+            )
         anterior = vigente[-1]
         if anterior.continuacoes.exists():
             raise DomainError(
@@ -268,7 +275,11 @@ def _gravar(
         motivo=motivo,
         universo=proposta["universo"],
         primeira_posicao=proposta["primeira_posicao"],
-        ultima_posicao=_ultima(itens) or proposta["ultima_posicao"],
+        # **Sem fallback para a faixa calculada**, e a diferença é a geração inteira: o fallback
+        # gravava a última posição que a faixa **poderia** alcançar quando ela não alcançou
+        # ninguém, e a continuação seguinte começava depois dela — pulando posições que faixa
+        # nenhuma tocou. `None` diz a verdade: esta faixa não chegou a posição alguma.
+        ultima_posicao=_ultima(itens) if limite is not None else proposta["ultima_posicao"],
         emitido_por=actor.subject,
         emitido_em=now,
     )
@@ -289,19 +300,35 @@ def _gravar(
 
 
 def _limitar(itens, limite):
-    """A continuação alcança **quantos quem emite declarou** — nunca mais do que isso (FR-203).
+    """A continuação alcança **quantos quem emite declarou** — sem jamais partir um empate.
 
-    A quantidade é pedida e conferida, e não inferida: o sistema não sabe quantas vagas foram
-    ocupadas, e decidir sozinho quantos chamar é exatamente o que a `FR-206` proíbe.
+    A quantidade é pedida, e não inferida: o sistema não sabe quantas vagas foram ocupadas, e
+    decidir sozinho quantos chamar é o que a `FR-206` proíbe.
+
+    **O limite para na fronteira do grupo empatado, e não no meio dele** (FR-196). Cortar pelo
+    número puro escolheria entre pessoas que a norma publicada declara empatadas — pela ordem em que
+    o banco devolveu as linhas, que é exatamente o que a `D-001` existe para impedir. Onde o limite
+    cairia dentro de um grupo, ele **avança** até o fim do grupo: alcançar um a mais é o que a regra
+    de empate já autoriza, e alcançar meio grupo não é.
     """
-    restantes = limite
+    progrediram = [
+        item for item in itens if item["consequencia"] == ItemDoCorte.Consequencia.PROGREDIU
+    ]
+    dentro = set()
+    for indice, item in enumerate(progrediram):
+        if indice < limite or (dentro and item["posicao"] == progrediram[indice - 1]["posicao"]):
+            dentro.add(item["inscricao_id"])
     ajustados = []
     for item in itens:
-        if item["consequencia"] == ItemDoCorte.Consequencia.PROGREDIU and restantes <= 0:
-            item = {**item, "consequencia": ItemDoCorte.Consequencia.FORA_DA_FAIXA}
-            item["motivo"] = f"além dos {limite} que esta faixa alcançou"
-        elif item["consequencia"] == ItemDoCorte.Consequencia.PROGREDIU:
-            restantes -= 1
+        if (
+            item["consequencia"] == ItemDoCorte.Consequencia.PROGREDIU
+            and item["inscricao_id"] not in dentro
+        ):
+            item = {
+                **item,
+                "consequencia": ItemDoCorte.Consequencia.FORA_DA_FAIXA,
+                "motivo": f"além dos {limite} que esta faixa alcançou",
+            }
         ajustados.append(item)
     return ajustados
 

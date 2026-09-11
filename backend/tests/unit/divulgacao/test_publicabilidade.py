@@ -134,6 +134,9 @@ def test_toda_recusa_nomeia_o_caminho(cenario, gestor):
         "declarar expressamente",
         "não é aceita aqui",
         "Aguarde o encerramento",
+        # A da 014: a faixa está para trás, e o próximo passo é emitir a geração sucessora do
+        # corte — não do ato de ordenação, que pode estar em dia (014, FR-219).
+        "geração sucessora",
     )
     for codigo, mensagem in MENSAGENS.items():
         assert any(caminho in mensagem for caminho in caminhos), (

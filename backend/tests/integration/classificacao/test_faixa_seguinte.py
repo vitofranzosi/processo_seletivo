@@ -23,6 +23,7 @@ from processo_seletivo.classificacao.models import Corte, ItemDoCorte
 from processo_seletivo.comissoes.domain.funcoes import Funcao
 from processo_seletivo.resultados.application.consolidacao import consolidar
 from processo_seletivo.resultados.application.prontidao import participacao
+from processo_seletivo.shared.api.problems import DomainError
 from tests.fixtures.comissao import alocar_em, constituir, inscrever, rascunho_com_etapas
 from tests.fixtures.edital import PROFILE_ID
 from tests.fixtures.mesa import concluir_como, distribuir_para
@@ -254,3 +255,58 @@ def test_a_continuacao_gera_auditoria_propria(cenario, gestor):
     continuar(edital, gestor)
 
     assert RegistroAuditoria.objects.filter(operation=CONTINUAR).count() == 1
+
+
+# --- as três do segundo code review -----------------------------------------------------------
+
+
+def test_a_quantidade_nao_parte_um_grupo_empatado(cenario, gestor, api_client):
+    """Cortar pelo número puro escolheria entre pessoas que a norma declara empatadas.
+
+    O limite para na **fronteira do grupo**, e não no meio dele: alcançar um a mais é o que a regra
+    de empate já autoriza; alcançar meio grupo não é (FR-196).
+    """
+    from processo_seletivo.classificacao.application.emissao_do_corte import _limitar
+    from processo_seletivo.classificacao.models import ItemDoCorte as Item
+
+    itens = [
+        {"inscricao_id": "a", "posicao": 3, "consequencia": Item.Consequencia.PROGREDIU},
+        {"inscricao_id": "b", "posicao": 4, "consequencia": Item.Consequencia.PROGREDIU},
+        {"inscricao_id": "c", "posicao": 4, "consequencia": Item.Consequencia.PROGREDIU},
+    ]
+
+    ajustados = _limitar(itens, 2)
+
+    dentro = {
+        item["inscricao_id"]
+        for item in ajustados
+        if item["consequencia"] == Item.Consequencia.PROGREDIU
+    }
+    assert dentro == {"a", "b", "c"}, "o empate na fronteira entra inteiro, ou não entra"
+
+
+def test_a_continuacao_sem_quantidade_recusa(cenario, gestor):
+    """Sem ela, a faixa alcançava ninguém e ainda registrava até onde teria ido."""
+    edital, _ = cenario
+
+    with pytest.raises(DomainError) as erro:
+        continuar(edital, gestor, quantidade=0, chave="faixa-014-sem-quantidade")
+
+    assert erro.value.code == "continuacao_sem_quantidade"
+
+
+def test_a_faixa_que_nao_alcanca_ninguem_nao_registra_posicao_alcancada(cenario, gestor):
+    """`None` diz a verdade: esta faixa não chegou a posição alguma.
+
+    Com o fallback anterior, a continuação seguinte começaria **depois** de uma posição que faixa
+    nenhuma tocou, e a geração inteira passaria a mentir sobre até onde chegou.
+    """
+    edital, inscricoes = cenario
+    # Esgota a ordem: a primeira continuação alcança as duas últimas posições.
+    continuar(edital, gestor, quantidade=2, chave="faixa-014-esgota")
+
+    continuar(edital, gestor, quantidade=1, chave="faixa-014-vazia", motivo="não sobrou ninguém")
+
+    ultima = Corte.objects.order_by("-emitido_em").first()
+    assert ultima.itens.filter(consequencia=ItemDoCorte.Consequencia.PROGREDIU).count() == 0
+    assert ultima.ultima_posicao is None
