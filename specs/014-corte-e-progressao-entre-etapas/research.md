@@ -207,6 +207,12 @@ publicados. Logo:
 ordem. Sob `STRICT`, recusa com `DomainError` nomeando as posições; sob `ADMITS_SURPLUS`, estende a
 faixa até a última linha daquela posição e grava quantos entraram além do alvo.
 
+**O alvo conta pessoas, e não números de posição.** `desempate.py:18-20` já registra a convenção e
+já a explica **por causa desta feature**: a posição é o número de participantes à frente mais um, e
+as posições consumidas por um grupo empatado são puladas — `1, 1, 3`. Logo "os dez primeiros" pode
+terminar na posição **nove** com dez pessoas dentro, e contar por número de posição entregaria nove.
+A `primeira_posicao` e a `ultima_posicao` gravadas no ato são **leitura**, não critério.
+
 **A fronteira é a da faixa emitida**, alvo mais excedente — e não a do alvo. É o que o caso de borda
 da spec fixa, e é o que o 57 e o 28 exigem: o empate relevante é o que atravessa a última posição
 **analisada**, e ninguém analisa o suplente 21 porque o 20 empatou.

@@ -59,8 +59,8 @@ de runtime e trigger no banco.
 | `corte_anterior` | FK `self` nula | **sucessão**: este substitui aquele |
 | `faixa_anterior` | FK `self` nula | **continuação**: este começa onde aquele parou |
 | `motivo` | texto | obrigatório em sucessão e em continuação |
-| `primeira_posicao` | inteiro | onde a faixa começa |
-| `ultima_posicao` | inteiro nulo | a última posição alcançada; nulo quando ninguém foi alcançado |
+| `primeira_posicao` | inteiro | onde a faixa começa — **leitura, não critério** |
+| `ultima_posicao` | inteiro nulo | a última posição alcançada; nula quando ninguém foi alcançado |
 | `emitido_por` | texto | o ator |
 | `emitido_em` | datetime | o instante |
 
@@ -116,6 +116,11 @@ do marco, ou não classificável, ele entra como `FORA_DA_FAIXA` com `posicao` n
 ordem já dizia — *"considerado sem posição na ordem"*. A `FR-194` enumera duas consequências, e um
 terceiro valor aqui faria o modelo contradizer a spec; o que distingue o caso é a posição nula, que
 já é dado, e não um enum a mais.
+
+**As duas posições não são o critério da faixa.** O alvo conta **pessoas**, e a numeração pula as
+posições que um grupo empatado consome (`1, 1, 3`) — "os dez primeiros" pode terminar na posição nove
+com dez pessoas dentro. Quem decide quem está na faixa é o conjunto de itens com `PROGREDIU`; as duas
+colunas existem para que a leitura do ato não precise contá-los.
 
 ---
 
