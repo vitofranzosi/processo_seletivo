@@ -255,6 +255,17 @@ nomeada *participante reingressou*, e a publicação que dele dependa é **imped
 A guarda é de bloqueio, e não de recálculo. Impede-se que a instituição divulgue uma faixa que omite
 quem teve o direito reconhecido; não se emite ato nenhum por conta própria.
 
+**E a obsolescência é medida no ato de ordenação, não em "o universo do corte"** (`FR-218`,
+`FR-230`). Todo participante considerado está no universo do corte, e a redação anterior fazia
+**qualquer** reingresso obsoletá-lo — inclusive o de quem já estava dentro da faixa. Somado ao
+bloqueio da `D-013`, isso parava o trabalho da Etapa governada para exigir uma geração sucessora
+**idêntica à anterior**. Pior: no 77, em que o recurso é julgado na própria Etapa que o corte governa,
+esse seria o caso normal, e não a exceção.
+
+O que obsoleta é o reingresso que alcança **a ordem**: ali a posição muda, a faixa pode mudar, e a
+geração sucessora tem o que dizer. O reingresso que só devolve alguém à Etapa governada não move
+posição nenhuma — e um ato que não muda nada não é ato, é cerimônia.
+
 ### D-009 — A regra do corte é conteúdo publicado, com a conta que isso implica
 
 Esquema canônico com elevação de versão e caminho de leitura das anteriores, elaboração na interface
@@ -546,8 +557,10 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
   quando há suplentes declarados.
 - **Marco com três listas.** O corte é por lista: três atos de ordenação raiz, três cortes, um marco.
   O alvo derivado lê a linha do quadro daquela modalidade; a lista sem modalidade lê a linha geral.
-- **Faixa seguinte depois de a ordem ser sucedida.** Recusada: a continuação se apoia numa ordem que
-  não é mais a vigente, e o caminho é emitir a geração nova sobre a ordem nova.
+- **Faixa seguinte depois de a ordem ser sucedida, ou da geração sucedida.** Recusada nos dois casos,
+  e eles são distintos: no primeiro a continuação se apoia numa ordem que não é mais a vigente; no
+  segundo a ordem está intacta e quem foi sucedido é a geração — o que acontece quando a Retificação
+  alcança a regra. O caminho é o mesmo: continuar a partir da geração vigente.
 - **Sucessão de geração que já tem continuação.** A sucessão alcança a geração inteira: a faixa
   inicial e todas as continuações deixam de ser efetivas no mesmo ato. Suceder uma faixa isolada não
   é operação que exista — seria deixar metade da geração anterior governando a Etapa.
@@ -685,12 +698,16 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
 
 - **FR-215**: O corte vigente MUST aparecer como obsoleto quando o ato de ordenação citado for
   sucedido, quando a Regra de Corte for retificada, quando a linha do quadro lida for retificada, ou
-  quando um participante reingressar no universo.
+  quando um participante reingressar no universo **daquele ato de ordenação**.
 - **FR-216**: A obsolescência MUST nomear a causa ocorrida, e MUST NOT ser apresentada como
   divergência genérica.
 - **FR-217**: Obsolescência MUST NOT alterar, substituir ou revogar o corte vigente.
-- **FR-218**: Inscrição que reingresse por decisão recursal deferida no universo de um corte vigente
-  MUST tornar aquele corte obsoleto com a causa *participante reingressou*.
+- **FR-218**: Inscrição que reingresse por decisão recursal deferida no universo do **ato de
+  ordenação** que o corte cita MUST tornar aquele corte obsoleto com a causa *participante
+  reingressou*.
+- **FR-230**: Reingresso que **não** alcance o ato de ordenação citado MUST NOT tornar o corte
+  obsoleto — o caso do recurso julgado na própria Etapa governada, que não move posição nenhuma.
+  Obsoletá-lo bloquearia trabalho para exigir uma geração sucessora idêntica à anterior.
 - **FR-219**: Corte obsoleto MUST impedir a publicação de resultado que dele dependa, com motivo
   nomeado e o caminho a seguir.
 - **FR-228**: Enquanto o corte estiver obsoleto e a geração sucessora não for emitida, o sistema MUST
@@ -761,7 +778,7 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
 - **IO-11**: sucedida uma geração, nenhuma faixa dela autoriza participante — nem a inicial, nem
   qualquer continuação.
 - **IO-12**: a Etapa que um corte governa é sempre lida da regra publicada, e nunca inferida.
-- **IO-14**: nenhuma ordem depende de um corte que ela própria produz.
+- **IO-14**: o universo de um ato de ordenação nunca depende de um corte derivado dele.
 - **IO-13**: nenhum trabalho novo é criado na Etapa governada enquanto o corte que a governa estiver
   obsoleto.
 

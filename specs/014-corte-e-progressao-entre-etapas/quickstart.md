@@ -220,8 +220,11 @@ palavras *vaga ocupada*, *vaga preenchida* ou *déficit* (`FR-207`, `SC-066`).
 2. Retifique o `targetCount` de `M1`: a causa passa a ser **regra alterada**.
 3. No Perfil B, retifique a linha do quadro de `40` para `38`: causa **quadro alterado** — que só é
    detectável porque o ato guardou o `rowId` (`R-009`).
-4. Defira um recurso que devolva alguém eliminado ao universo: causa **participante reingressou**, e
-   não uma divergência genérica (`FR-218`, `FR-216`).
+4. Defira um recurso que devolva alguém eliminado ao universo **do ato de ordenação**: causa
+   **participante reingressou**, e não uma divergência genérica (`FR-218`, `FR-216`). Depois, no
+   Perfil B, defira um recurso julgado na **própria Etapa governada**: o corte **não** fica obsoleto
+   e o trabalho segue (`FR-230`) — obsoletá-lo pararia a Etapa para exigir uma geração idêntica à
+   anterior.
 5. Com o corte obsoleto, tente publicar resultado que dele dependa: **impedido**, com o caminho a
    seguir (`FR-219`, `SC-063`).
 6. Ainda obsoleto, tente **distribuir**, concluir avaliação ou **consolidar Resultado** na Etapa

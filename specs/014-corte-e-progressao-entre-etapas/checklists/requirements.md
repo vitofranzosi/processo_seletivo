@@ -94,6 +94,23 @@ A correção da `D-012` deixou passar uma derivação disfarçada, e a varredura
 - [x] **`SC-071`** afirmava 70 em termos absolutos, onde o empate sob *admite excedente* legitimamente
       faz mais.
 
+## Quarta varredura — a terceira passada do `/speckit-analyze`
+
+Sem CRITICAL. O que sobrou eram dois requisitos que se cumpriam e, juntos, pediam um ato vazio:
+
+- [x] **`FR-218` media a obsolescência em "o universo do corte"**, e todo participante considerado
+      está nele. Somado ao bloqueio da `D-013`, qualquer reingresso parava a Etapa governada para
+      exigir uma geração sucessora **idêntica à anterior** — e no 77, em que o recurso é julgado na
+      própria Etapa que o corte governa, esse era o caso normal. Fechado pela `FR-218` reescrita e
+      pela `FR-230`: a medida é o **ato de ordenação**.
+- [x] **`IO-14` estava ao contrário** — "nenhuma ordem depende de um corte que ela própria produz".
+      A ordem não produz corte. Agora: *o universo de um ato de ordenação nunca depende de um corte
+      derivado dele*.
+- [x] **A árvore do plano** ainda dizia três achados impeditivos, onde a `T024` já pede sete.
+- [x] **O caso de borda da faixa seguinte** citava só a ordem sucedida, e a `FR-205` também recusa a
+      geração sucedida com a ordem intacta.
+- [x] **`T018a1`** era o único ID fora da convenção entre 107 tarefas; virou `T018d`, no lugar certo.
+
 ## Notes
 
 - As duas decisões normativas — desfecho do empate (D-001) e fronteira com a `016` (D-002) — foram

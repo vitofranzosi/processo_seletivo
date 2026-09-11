@@ -342,13 +342,20 @@ ao lado do estado da ordem, e as quatro causas da `FR-215` saem de quatro compar
 | ordem sucedida | o ato citado pelo corte não é mais o `ato_vigente` do recorte |
 | regra alterada | o `cutRule` da versão vigente difere do que o corte congelou |
 | quadro alterado | em alvo derivado, a linha citada mudou de quantidade na versão vigente |
-| participante reingressou | `_reingressos` (`selectors.py:488`), que a `018` já escreveu |
+| participante reingressou **no ato de ordenação** | `_reingressos` (`selectors.py:488`), que a `018` já escreveu |
 
 **As três primeiras não custam consulta nova**: o ato vigente e a versão já são lidos para o estado
 da ordem. A quarta é a mesma que a tela do marco já faz.
 
 **A mensagem diz a causa, e não "divergências"** (`FR-216`) — a `018` já pagou esse preço uma vez,
 quando a divergência genérica escondia o reingresso.
+
+**A medida é o ato de ordenação, e não "o universo do corte"** (`FR-218`, `FR-230`). Todo
+participante considerado está no universo do corte; medir ali faria **qualquer** reingresso
+obsoletá-lo, inclusive o de quem já está dentro da faixa — e, somado ao bloqueio abaixo, pararia a
+Etapa para exigir uma geração sucessora idêntica à anterior. No 77, em que o recurso é julgado na
+própria Etapa que o corte governa, esse seria o caso normal. `_reingressos` já responde sobre o ato,
+que é exatamente a pergunta certa.
 
 **E a obsolescência passou a ter consequência operacional** (`D-013`, `FR-228`): enquanto ela durar e
 a geração sucessora não for emitida, distribuir e concluir avaliação na Etapa governada ficam

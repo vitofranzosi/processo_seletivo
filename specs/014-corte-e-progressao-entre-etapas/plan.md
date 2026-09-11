@@ -135,7 +135,7 @@ backend/processo_seletivo/
 │   ├── models/perfis.py                         # MarcoClassificatorio.regra_de_corte (JSONField)
 │   ├── migrations/0017_regra_de_corte.py        # NOVO — o campo, com default {}
 │   ├── domain/perfis.py                         # validação do cutRule (FR-179..FR-181)
-│   ├── domain/validation.py                     # três achados impeditivos (R-014)
+│   ├── domain/validation.py                     # sete achados impeditivos (R-014)
 │   ├── api/serializers.py                       # cutRule em MarcoSerializer
 │   └── application/draft.py                     # persistência do cutRule no rascunho
 ├── classificacao/
