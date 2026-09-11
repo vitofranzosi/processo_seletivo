@@ -261,7 +261,7 @@ que já existem. Se alguma tarefa levar você a criar app, camada ou permissão,
 - [ ] T092 [P] Regenerar a fixture de bytes de `backend/tests/contract/test_documento_publicado.py`, **de propósito**, e registrar no commit que a regra de corte entrou no PDF
 - [ ] T093 [P] Conferir o teto de abertura: 1.000 participantes por recorte em até 3 segundos, e número de consultas que **não cresce** com a população (`SC-067`)
 - [ ] T094 [P] Percorrer o [quickstart.md](./quickstart.md) inteiro contra o servidor real, pela interface, e registrar o relatório em `doc/e2e/014-corte-e-progressao/relatorio.md`, com os achados numerados `E2E14-NNN` e **cada um citado na docstring do teste que o fecha**
-- [ ] T095 Rodar `DB_NAME=ps_demo_014 make lint check test-pg` em `backend/` e exigir verde. *`lint` são **dois** passos — `ruff check` **e** `ruff format --check`; rodar só o primeiro declara verde local e quebra no CI*
+- [X] T095 Rodar `DB_NAME=ps_demo_014 make lint check test-pg` em `backend/` e exigir verde. *`lint` são **dois** passos — `ruff check` **e** `ruff format --check`; rodar só o primeiro declara verde local e quebra no CI*
 - [X] T096 Escrever `specs/014-corte-e-progressao-entre-etapas/rastreabilidade.md` cobrindo `FR-178` a `FR-230`, `SC-055` a `SC-073` e `UX-024` a `UX-030`. *Onde existe matriz, `tests/test_citacoes_de_requisito.py` exige que ela alcance **cada** requisito — linha perdida é invisível de outro jeito*
 
 ---
