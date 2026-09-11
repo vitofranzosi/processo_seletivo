@@ -1,0 +1,98 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Corte — progressão para a Etapa seguinte{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">Corte</span>
+</nav>
+
+<h1>Corte e progressão</h1>
+<p class="sub">A faixa que progride, calculada a partir da ordem vigente e da regra publicada.</p>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível emitir:</strong> {{ erro }}</p>{% endif %}
+{% if resultado %}<p class="sucesso" role="status" tabindex="-1">Corte emitido. O ato é imutável, e quem ficou fora continua legível nele.</p>{% endif %}
+
+{% if recusa %}
+<p class="aviso" role="status">{{ recusa }}</p>
+{% endif %}
+
+{% if geracao %}
+<p class="imutavel"><strong>Geração vigente com {{ geracao|length }} faixa{{ geracao|length|pluralize:"s" }}</strong>, emitida em {{ geracao.0.emitido_em|date:"d/m/Y H:i" }} por {{ geracao.0.emitido_por }}. Abrir esta tela não a altera.</p>
+{% else %}
+<p class="aviso">Ainda não existe corte emitido neste recorte. O que está abaixo é uma proposta calculada agora, e nada foi gravado.</p>
+{% endif %}
+
+{% if proposta %}
+<section aria-labelledby="titulo-faixa">
+  <h2 id="titulo-faixa">A faixa calculada</h2>
+  <dl class="resumo">
+    <dt>Alvo declarado</dt>
+    <dd>{% if proposta.regra.targetKind == "FROM_VACANCY_TABLE" %}O que o quadro de vagas publicar no recorte{% else %}{{ proposta.regra.targetCount }}{% endif %}</dd>
+    <dt>Alvo apurado</dt>
+    <dd>{{ proposta.alvo }}{% if proposta.origem_do_alvo.rowId %} <span class="ajuda">lido da linha do quadro de vagas deste recorte</span>{% endif %}</dd>
+    <dt>Suplentes</dt>
+    <dd>{{ proposta.excedente }}</dd>
+    <dt>Progridem</dt>
+    <dd>{{ proposta.progrediram }}</dd>
+    <dt>Ficam fora</dt>
+    <dd>{{ proposta.fora }}</dd>
+    <dt>Última posição alcançada</dt>
+    <dd>{% if proposta.ultima_posicao %}{{ proposta.ultima_posicao }}º{% else %}<span class="nenhuma">Nenhuma</span>{% endif %}</dd>
+  </dl>
+  <div class="tabela-rolavel">
+  <table>
+    <caption class="oculto">Participantes considerados, com posição, consequência e causa</caption>
+    <thead><tr><th scope="col">Posição</th><th scope="col">Inscrição</th><th scope="col">Consequência</th><th scope="col">Causa</th></tr></thead>
+    <tbody>
+    {% for item in proposta.itens %}
+      <tr>
+        <td>{% if item.posicao %}{{ item.posicao }}º{% else %}<span class="nenhuma">Sem posição</span>{% endif %}</td>
+        <td>{{ item.inscricao_id }}</td>
+        <td>{% if item.consequencia == "PROGREDIU" %}Progride{% if item.excedente_por_empate %} <span class="situacao s-EM_REVISAO">Excedente por empate</span>{% endif %}{% else %}Fora da faixa{% endif %}</td>
+        <td>{{ item.motivo }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+
+{% if pode_emitir %}
+<form method="post" action="{% url 'interface:emitir-corte' edital.id marco_id %}" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="confirmacao_do_calculo" value="{{ confirmacao }}">
+  {% if lista_id %}<input type="hidden" name="lista" value="{{ lista_id }}">{% endif %}
+  {% comment %}
+  A faixa nunca vem do navegador: o POST só confirma que o servidor deve recalcular sob trava e
+  constituir o ato. É a mesma regra da emissão da ordem, e pela mesma razão.
+  {% endcomment %}
+  <p><strong>Emitir é irreversível.</strong> O ato é imutável e define quem prossegue para a Etapa seguinte; quem ficar fora continua registrado nele, com a posição e a causa.</p>
+  {% if geracao %}<p class="campo"><label for="motivo">Motivo da sucessão</label><textarea id="motivo" name="motivo" rows="3" required></textarea><span class="ajuda">A geração vigente permanece íntegra e legível; este motivo explica por que outra a sucede — e a sucessão alcança todas as faixas dela.</span></p>{% endif %}
+  <p class="acoes"><button type="submit" class="botao">Emitir corte</button></p>
+</form>
+
+{% if geracao and proposta.regra.continuation == "ALLOWED" %}
+<form method="post" action="{% url 'interface:continuar-corte' edital.id marco_id %}" class="confirmar">
+  {% csrf_token %}
+  {% if lista_id %}<input type="hidden" name="lista" value="{{ lista_id }}">{% endif %}
+  {% comment %}
+  A quantidade é **pedida**, e nunca inferida: o sistema não sabe quantas vagas foram ocupadas, e
+  decidir sozinho quantos chamar é o que esta feature existe para não fazer.
+  {% endcomment %}
+  <p><strong>Faixa seguinte.</strong> Ela começa depois da última posição alcançada e não revoga a anterior — as duas ficam na mesma geração.</p>
+  <p class="campo curto"><label for="quantidade">Quantos alcançar</label><input type="number" min="1" step="1" id="quantidade" name="quantidade" required></p>
+  <p class="campo"><label for="motivo-continuacao">Motivo</label><textarea id="motivo-continuacao" name="motivo" rows="3" required></textarea><span class="ajuda">Por que a faixa anterior não bastou. O sistema não o sabe, e não o inventa.</span></p>
+  <p class="acoes"><button type="submit" class="botao">Emitir faixa seguinte</button></p>
+</form>
+{% endif %}
+{% endif %}
+{% endif %}
+
+{% if geracao %}
+<section aria-labelledby="titulo-geracao">
+  <h2 id="titulo-geracao">Faixas desta geração</h2>
+  <ol>{% for faixa in geracao %}<li>{{ faixa.emitido_em|date:"d/m/Y H:i" }} — {{ faixa.emitido_por }}: {% if faixa.faixa_anterior_id %}continuação, da posição {{ faixa.primeira_posicao }} em diante — {{ faixa.motivo }}{% else %}faixa inicial, até a posição {{ faixa.ultima_posicao|default:"nenhuma" }}{% endif %}</li>{% endfor %}</ol>
+</section>
+{% endif %}
+{% endblock %}

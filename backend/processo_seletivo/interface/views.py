@@ -36,7 +36,18 @@ from processo_seletivo.avaliacoes.application.mesa import (
 )
 from processo_seletivo.avaliacoes.application.trilha import auditar as auditar_ato
 from processo_seletivo.avaliacoes.domain.previsao import forma_publicada, rotulos
+from processo_seletivo.classificacao.application.corte import (
+    calcular_corte,
+    geracao_vigente,
+)
 from processo_seletivo.classificacao.application.emissao import assinatura_da_proposta, emitir_ordem
+from processo_seletivo.classificacao.application.emissao_do_corte import (
+    assinatura_da_proposta as assinatura_do_corte,
+)
+from processo_seletivo.classificacao.application.emissao_do_corte import (
+    continuar_corte,
+    emitir_corte,
+)
 from processo_seletivo.classificacao.application.selectors import (
     ato_por_id,
     estado_do_marco,
@@ -4082,6 +4093,113 @@ def emitir_ordenacao(request, edital_id, marco_id):
         if recusa.status == 404:
             raise Http404 from recusa
         request.session["erro_da_ordenacao"] = recusa.detail
+    return redirect(destino)
+
+
+@require_http_methods(["GET"])
+def corte(request, edital_id, marco_id):
+    """Calcula a faixa para conferência, sem constituir ato algum (014, FR-190).
+
+    Abrir a tela **não emite**: é o mesmo desenho da ordem, e pela mesma razão — um corte
+    regenerado em silêncio quando a tela abre mudaria, sozinho, quem participa da Etapa seguinte.
+    """
+    ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    lista_id = request.GET.get("lista") or None
+    perfil_id = _perfil_do_marco(edital, marco_id)
+    geracao = geracao_vigente(
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+    )
+    proposta, recusa = None, None
+    try:
+        proposta = calcular_corte(
+            edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+        )
+    except DomainError as erro:
+        if erro.status == 404:
+            raise Http404 from erro
+        # A recusa é **mostrada**, e não devolvida como erro de servidor: "este marco não corta" e
+        # "a ordem está obsoleta" são estados legítimos da tela, e quem os lê precisa do motivo.
+        recusa = erro.detail
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/corte.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "marco_id": marco_id,
+                "lista_id": lista_id,
+                "proposta": proposta,
+                "recusa": recusa,
+                "geracao": geracao,
+                "confirmacao": (assinatura_do_corte(proposta, geracao=geracao) if proposta else ""),
+                "pode_emitir": pode_emitir,
+                "resultado": request.session.pop("resultado_do_corte", None),
+                "erro": request.session.pop("erro_do_corte", None),
+            },
+        )
+    )
+
+
+@require_http_methods(["POST"])
+def emitir_corte_view(request, edital_id, marco_id):
+    """Constitui a faixa conferida e volta à leitura pelo padrão POST-redirect-GET."""
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    lista_id = request.POST.get("lista") or None
+    destino = reverse("interface:corte", args=[edital_id, marco_id])
+    if lista_id:
+        destino = f"{destino}?lista={lista_id}"
+    try:
+        request.session["resultado_do_corte"] = emitir_corte(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            perfil_id=_perfil_do_marco(edital, marco_id),
+            marco_id=marco_id,
+            lista_id=lista_id,
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+            confirmacao_do_calculo=request.POST.get("confirmacao_do_calculo", ""),
+            motivo=request.POST.get("motivo", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_do_corte"] = recusa.detail
+    return redirect(destino)
+
+
+@require_http_methods(["POST"])
+def continuar_corte_view(request, edital_id, marco_id):
+    """A faixa seguinte, onde a regra publicada a admite (014, FR-202)."""
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    lista_id = request.POST.get("lista") or None
+    destino = reverse("interface:corte", args=[edital_id, marco_id])
+    if lista_id:
+        destino = f"{destino}?lista={lista_id}"
+    try:
+        request.session["resultado_do_corte"] = continuar_corte(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            perfil_id=_perfil_do_marco(edital, marco_id),
+            marco_id=marco_id,
+            lista_id=lista_id,
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+            quantidade=request.POST.get("quantidade") or 0,
+            motivo=request.POST.get("motivo", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_do_corte"] = recusa.detail
     return redirect(destino)
 
 

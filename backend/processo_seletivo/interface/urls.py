@@ -216,6 +216,24 @@ urlpatterns = [
         views.ato_de_ordenacao,
         name="ato-de-ordenacao",
     ),
+    # O corte (014). Pende do **marco**, como as da 015 e as do sorteio, e o recorte vem em
+    # `?lista=`: um marco de cotas tem três, e cada um tem a sua faixa. O GET calcula e mostra, e
+    # não grava nada — abrir a tela não pode mudar quem participa da Etapa seguinte (FR-190).
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/corte",
+        views.corte,
+        name="corte",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/corte/emitir",
+        views.emitir_corte_view,
+        name="emitir-corte",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/corte/continuar",
+        views.continuar_corte_view,
+        name="continuar-corte",
+    ),
     # O sorteio (021). A rota pende do **marco**, como as da 015, e é o recorte que ela lista: um
     # marco de sorteio com cotas tem três recortes, e cada um tem o seu estado. O GET não escreve
     # nada e não calcula ordem nenhuma — não há o que calcular antes da semente (D-010).
