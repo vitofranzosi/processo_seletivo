@@ -87,7 +87,7 @@ CONCLUSOES_DEMAIS = (
 )
 
 
-def participacao(*, edital, etapa_id, vigentes=None):
+def participacao_detalhada(*, edital, etapa_id, vigentes=None):
     """`(participantes, eliminadas, aguardando)` — as duas regras de D-003, nesta ordem.
 
     **É a única fonte da participação**, e é por isso que ela vive aqui e não em cada superfície.
@@ -103,18 +103,23 @@ def participacao(*, edital, etapa_id, vigentes=None):
     # **A condição do corte entra como anotação da consulta que já ia acontecer**, e não como uma
     # segunda leitura: `fora_do_corte` sozinho custaria a consulta a mais que o orçamento da tela da
     # Etapa não tem — foi o que a primeira redação fazia, e o teste de orçamento a reprovou.
+    faixas = faixas_que_governam(edital, etapa_id)
     linhas = list(
         Inscricao.objects.filter(edital=edital, status=Inscricao.Status.SUBMETIDA)
         .annotate(
             na_faixa=ExpressionWrapper(
-                _dentro_da_faixa(faixas_que_governam(edital, etapa_id), OuterRef("pk")),
+                _dentro_da_faixa(faixas, OuterRef("pk")),
                 output_field=BooleanField(),
-            )
+            ),
+            # **A segunda anotação sai de graça na mesma consulta**, e é ela que evita a pergunta
+            # "existe corte?" custar um round-trip só para decidir se vale conferir a obsolescência.
+            ha_corte=ExpressionWrapper(Exists(faixas), output_field=BooleanField()),
         )
-        .values_list("id", "na_faixa")
+        .values_list("id", "na_faixa", "ha_corte")
     )
-    submetidas = {identidade for identidade, _ in linhas}
-    fora = {identidade for identidade, dentro in linhas if not dentro}
+    submetidas = {identidade for identidade, _, _ in linhas}
+    fora = {identidade for identidade, dentro, _ in linhas if not dentro}
+    ha_corte = any(existe for _, _, existe in linhas)
     anteriores = [identidade for identidade, _ in etapas_anteriores(vigentes, etapa_id)]
     eliminadas = eliminadas_ate(edital=edital, etapas_ids=anteriores) & submetidas
 
@@ -130,7 +135,58 @@ def participacao(*, edital, etapa_id, vigentes=None):
     # pendente —, e quem precisa **nomeá-lo** o pede por `fora_do_corte`, que é o que a tela da
     # Etapa faz. A assinatura não muda, e os quatro consumidores desta função continuam corretos
     # sem tocar em nenhum deles (FR-208, FR-210).
-    return submetidas - eliminadas - aguardando - fora, eliminadas, aguardando
+    return submetidas - eliminadas - aguardando - fora, eliminadas, aguardando, fora, ha_corte
+
+
+CORTE_OBSOLETO = "corte-obsoleto"
+
+
+def impedimento_do_corte(edital, etapa_id, *, at=None):
+    """`(codigo, frase)` enquanto a faixa que governa esta Etapa estiver obsoleta (014, FR-228).
+
+    **É impedimento da Etapa inteira**, na forma que a `013` já usa para "regra insuficiente": a
+    presidência o vê na prontidão antes de tentar consolidar, e nenhum estado novo de inscrição
+    nasce — a partição continua fechando.
+
+    **O caso que obriga a bloquear é o reingresso.** Deferido o recurso que devolve alguém ao
+    universo da ordem, continuar trabalhando sob a faixa antiga é exatamente excluir quem teve o
+    direito reconhecido — e o sistema já sabe disso, porque foi ele que marcou a causa. Seguir sem
+    bloquear deixaria a operação construir, sobre uma faixa que o próprio sistema sabe estar para
+    trás, trabalho que a sucessão invalida.
+
+    **A leitura continua, e o registrado é preservado**: o que fica bloqueado é trabalho **novo**.
+    """
+    from processo_seletivo.classificacao.application.corte import estado_do_corte
+
+    for corte in faixas_que_governam(edital, etapa_id).filter(raiz__isnull=True):
+        estado = estado_do_corte(
+            edital=edital,
+            perfil_id=corte.perfil_id,
+            marco_id=corte.marco_id,
+            lista_id=corte.lista_id,
+            at=at,
+        )
+        if estado["obsoleto"]:
+            causas = "; ".join(item["descricao"] for item in estado["causas"])
+            return (
+                CORTE_OBSOLETO,
+                "a faixa que governa esta Etapa está para trás, e o caminho é emitir a geração "
+                f"sucessora — {causas}",
+            )
+    return None
+
+
+def participacao(*, edital, etapa_id, vigentes=None):
+    """`(participantes, eliminadas, aguardando)` — o contrato que os quatro consumidores conhecem.
+
+    A `014` acrescentou duas informações à mesma leitura — quem ficou fora da faixa, e se há corte
+    governando —, e elas saem por `participacao_detalhada`. Mudar a aridade desta função obrigaria
+    quatro chamadores a mudar para receber o que três deles não usam.
+    """
+    participantes, eliminadas, aguardando, _fora, _ha_corte = participacao_detalhada(
+        edital=edital, etapa_id=etapa_id, vigentes=vigentes
+    )
+    return participantes, eliminadas, aguardando
 
 
 def fora_do_corte(edital, etapa_id, candidatas):
@@ -304,11 +360,15 @@ def panorama_da_etapa(*, edital, etapa, etapas_vigentes):
     conta a partir daqui, e a listagem filtra a partir daqui, de modo que os dois não podem
     divergir.
     """
-    participantes, eliminadas, aguardando = participacao(
+    participantes, eliminadas, aguardando, fora, ha_corte = participacao_detalhada(
         edital=edital, etapa_id=etapa["id"], vigentes=etapas_vigentes
     )
     resultados = inscricoes_com_resultado(edital=edital, etapa_id=etapa["id"])
     impedimento = impedimento_da_regra(etapa)
+    # A conferência da obsolescência só é feita onde há corte — e `ha_corte` veio da mesma consulta
+    # que já buscou as submetidas, de modo que a Etapa sem corte não paga nada por esta linha.
+    if impedimento is None and ha_corte:
+        impedimento = impedimento_do_corte(edital, etapa["id"])
     # Duas consultas para a Etapa inteira, e nenhuma por inscrição — o mesmo orçamento que o resto
     # deste módulo respeita.
     reavaliacoes = reavaliacoes_pendentes(edital, etapa_id=etapa["id"])
@@ -336,6 +396,11 @@ def panorama_da_etapa(*, edital, etapa, etapas_vigentes):
         estados[identidade] = (ELIMINADA_ANTES, "eliminada em Etapa anterior")
     for identidade in aguardando:
         estados[identidade] = (AGUARDANDO_ANTERIOR, "aguardando o resultado da Etapa anterior")
+    # **Quem ficou fora da faixa é nomeado, e não some da partição** (FR-210, UX-026). Sem esta
+    # linha ele não ocuparia estado nenhum, e a soma dos estados deixaria de fechar com o total —
+    # que é exatamente o defeito que este módulo existe para não ter.
+    for identidade in fora - eliminadas - aguardando:
+        estados[identidade] = (FORA_DO_CORTE, "fora da faixa que progride para esta Etapa")
     for identidade in participantes:
         estados[identidade] = _estado_do_participante(
             identidade, etapa, resultados, elegiveis, impedimento, reavaliacoes

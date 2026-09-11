@@ -12,6 +12,7 @@ from processo_seletivo.classificacao.application.selectors import ato_vigente, e
 from processo_seletivo.classificacao.domain import faixa
 from processo_seletivo.classificacao.domain.nomes import nomes_do_marco
 from processo_seletivo.classificacao.models import Corte, ItemDoCorte
+from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.shared.api.problems import DomainError
 
 SEM_POSICAO = "considerado sem posição na ordem"
@@ -185,4 +186,113 @@ def _motivo(ident, posicao, motivo_da_ordem, dentro, primeira, ultima, desde):
     return f"posição {posicao}, além da última alcançada por esta faixa ({alcance})"
 
 
-__all__ = ["calcular_corte", "geracao_vigente", "linha_do_quadro", "regra_do_marco"]
+__all__ = [
+    "calcular_corte",
+    "estado_do_corte",
+    "geracao_vigente",
+    "linha_do_quadro",
+    "regra_do_marco",
+]
+
+
+def estado_do_corte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
+    """A geração vigente ao lado do que a norma diz agora — sem escrever nenhuma das duas (014).
+
+    Devolve `obsoleto` e as **causas nomeadas**, e nunca "divergências": a `018` já pagou esse preço
+    uma vez, quando a divergência genérica escondia o reingresso e quem lia não sabia o que havia
+    mudado (FR-216).
+
+    **São quatro causas, e três delas não custam consulta nova** — o ato vigente e a versão já são
+    lidos para o estado da ordem. A quarta é a mesma pergunta que a tela do marco já faz.
+    """
+    geracao = geracao_vigente(
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+    )
+    if not geracao:
+        return {"geracao": [], "obsoleto": False, "causas": []}
+    raiz = geracao[0]
+    causas = []
+    vigente = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
+    if vigente is None or str(vigente.id) != str(raiz.ato_id):
+        causas.append(
+            {
+                "tipo": "ordem_sucedida",
+                "descricao": (
+                    "A ordem que este corte leu foi sucedida. A faixa continua vigente e "
+                    "produzindo efeito até que a geração sucessora seja emitida."
+                ),
+            }
+        )
+    versao = effective_version(edital_id=edital.id, at=at)
+    regra_agora = regra_do_marco(versao.content, perfil_id=perfil_id, marco_id=marco_id)
+    if regra_agora != (raiz.universo or {}).get("cutRule"):
+        causas.append(
+            {
+                "tipo": "regra_alterada",
+                "descricao": (
+                    "A regra de corte publicada mudou desde esta emissão: o alvo, o excedente, o "
+                    "desfecho do empate ou a Etapa governada já não são os que a faixa congelou."
+                ),
+            }
+        )
+    causas.extend(_quadro_alterado(raiz, versao, perfil_id=perfil_id, lista_id=lista_id))
+    causas.extend(_reingressou(edital, geracao))
+    return {"geracao": geracao, "obsoleto": bool(causas), "causas": causas}
+
+
+def _quadro_alterado(raiz, versao, *, perfil_id, lista_id):
+    """A linha do quadro que o alvo derivado leu mudou de quantidade.
+
+    Só é detectável porque o ato guardou o `rowId`: a quantidade sozinha não identifica a linha de
+    onde veio, e sem a identidade a comparação não saberia dizer se **aquela** linha mudou.
+    """
+    alvo = (raiz.universo or {}).get("target") or {}
+    if alvo.get("source") != "VACANCY_TABLE_ROW":
+        return []
+    linha = linha_do_quadro(versao.content, perfil_id=perfil_id, lista_id=lista_id)
+    if linha is not None and linha.get("immediateVacancies") == alvo.get("count"):
+        return []
+    return [
+        {
+            "tipo": "quadro_alterado",
+            "descricao": (
+                "A linha do quadro de vagas de onde este corte tirou o alvo mudou, ou deixou de "
+                "existir na versão vigente."
+            ),
+        }
+    ]
+
+
+def _reingressou(edital, geracao):
+    """Alguém voltou ao universo **do ato de ordenação** que a faixa leu (FR-218, FR-230).
+
+    **A medida é o ato, e não "o universo do corte"**, e a diferença é a feature inteira: todo
+    participante considerado está no universo do corte, de modo que medir ali faria **qualquer**
+    deferimento obsoletá-lo — inclusive o de quem já está dentro da faixa. Somado ao bloqueio de
+    trabalho novo, isso pararia a Etapa para exigir uma geração sucessora idêntica à anterior. No
+    77/2026, em que o recurso é julgado na própria Etapa que o corte governa, esse seria o caso
+    normal, e não a exceção.
+    """
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    participantes = [
+        str(item) for item in ((geracao[0].ato.universo or {}).get("participants") or [])
+    ]
+    if not participantes:
+        return []
+    reingressaram = ResultadoEtapa.vigentes.filter(
+        edital=edital,
+        inscricao_id__in=participantes,
+        resultado_anterior__isnull=False,
+    ).exists()
+    if not reingressaram:
+        return []
+    return [
+        {
+            "tipo": "participante_reingressou",
+            "descricao": (
+                "Um participante reingressou no universo da ordem por decisão recursal deferida: "
+                "a faixa pode não ser mais a que a norma produz."
+            ),
+        }
+    ]
