@@ -1167,6 +1167,50 @@ def _janela_recursal(marco):
     return f"Caberá recurso no prazo de {quantos} {plural}, contados da divulgação do resultado."
 
 
+def _regra_de_corte(marco, etapas):
+    """A frase normativa do corte, como um Edital a escreve (014, FR-185).
+
+    *"Progridem para a Entrevista os 10 (dez) primeiros desta ordem, mais 20 suplentes."*
+
+    O número por extenso entre parênteses segue a regra da janela recursal, e pelo mesmo motivo: é
+    como um ato administrativo escreve quantidade, e é o que impede que um dígito trocado passe
+    despercebido.
+
+    **O alvo derivado não imprime número**, e a razão é que ele não tem um: a quantidade é a do
+    quadro de vagas do recorte, que já está publicado alguns parágrafos acima, e copiá-la aqui
+    criaria uma segunda resposta para a mesma pergunta — que é exatamente o que o Princípio II
+    proíbe. O documento diz de onde ela vem.
+
+    **O marco terminal não imprime nada sobre Etapa**: ele corta para a análise e para a chamada, e
+    escrever "não alimenta Etapa alguma" no Edital afirmaria ao candidato uma tecnicalidade do
+    sistema, e não uma norma do certame.
+    """
+    regra = marco.get("cutRule")
+    if not isinstance(regra, dict):
+        return ""
+    if regra.get("targetKind") == "FROM_VACANCY_TABLE":
+        quantos = "os primeiros desta ordem, até o número de vagas ofertadas no recorte"
+    else:
+        alvo = regra.get("targetCount")
+        if not isinstance(alvo, int) or isinstance(alvo, bool) or alvo < 0:
+            return ""
+        extenso = POR_EXTENSO.get(alvo)
+        numero = f"{alvo} ({extenso})" if extenso else str(alvo)
+        quantos = f"os {numero} primeiros desta ordem"
+    destino = etapas.get(str(regra.get("governedStage")) or "")
+    para = (
+        f" para {destino.get('name')}" if isinstance(destino, dict) and destino.get("name") else ""
+    )
+    frase = f"Progridem{para} {quantos}"
+    excedente = regra.get("surplusCount")
+    if isinstance(excedente, int) and not isinstance(excedente, bool) and excedente > 0:
+        extenso = POR_EXTENSO.get(excedente)
+        numero = f"{excedente} ({extenso})" if extenso else str(excedente)
+        plural = "suplentes" if excedente != 1 else "suplente"
+        frase = f"{frase}, mais {numero} {plural}"
+    return f"{frase}."
+
+
 def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
     """Os marcos classificatórios por extenso, com o que basta para refazer a ordem publicada.
 
@@ -1224,6 +1268,9 @@ def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
                 janela = _janela_recursal(marco)
                 if janela:
                     pares.append(["Recurso", janela])
+                corte = _regra_de_corte(marco, etapas)
+                if corte:
+                    pares.append(["Corte", corte])
                 _pares(composicao, pares, recuo=32.0)
                 criterios = sorted(
                     marco.get("tiebreakers") or [], key=lambda item: item.get("order") or 0

@@ -910,6 +910,9 @@ def compor_etapa(request, edital_id, etapa):
             "etapas_classificatorias": (
                 _etapas_e_fatos_do_edital(edital)[0] if etapa == "classificacao" else []
             ),
+            # Todas as Etapas, para a Etapa governada pelo corte: ela não precisa classificar
+            # (014, FR-224).
+            "etapas_governaveis": (_etapas_governaveis(edital) if etapa == "classificacao" else []),
             "fatos_declarados": (
                 _etapas_e_fatos_do_edital(edital)[1] if etapa == "classificacao" else []
             ),
@@ -1401,6 +1404,20 @@ def _etapas_e_fatos_do_edital(edital):
     return etapas, fatos
 
 
+def _etapas_governaveis(edital):
+    """**Todas** as Etapas do Edital, e não só as classificatórias (014, FR-224).
+
+    A Etapa que o corte alimenta não precisa classificar: no 77/2026 ela é a análise documental,
+    eliminatória e decisória, que não entra em ordem nenhuma. Oferecer só as classificatórias aqui
+    deixaria de fora justamente a Etapa do Edital que mais motiva esta feature.
+    """
+    if edital is None:
+        return []
+    return [
+        {"id": str(etapa.id), "rotulo": etapa.name} for etapa in edital.etapas.order_by("order")
+    ]
+
+
 def fragmento_marco(request, indice):
     """A linha nova nasce com identidade, pela mesma razão da modalidade.
 
@@ -1418,6 +1435,7 @@ def fragmento_marco(request, indice):
             # Sem as listas, a linha nova nasceria com os selects vazios — e quem acrescentasse um
             # marco não teria o que escolher, que é o defeito que este passo existe para evitar.
             "etapas_classificatorias": etapas,
+            "etapas_governaveis": _etapas_governaveis(edital),
             "fatos_declarados": fatos,
             # O marco não é folha: dele nasce o botão que pede o fragmento de critério, e esse
             # pedido carrega o Edital na query. Sem `edital` aqui, o `hx-get` do botão sairia com o

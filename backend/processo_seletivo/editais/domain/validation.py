@@ -612,6 +612,7 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
         fatos = {
             fato.get("id") for fato in (perfil.get("declaredFacts") or []) if isinstance(fato, dict)
         }
+        findings.extend(_corte_em_dois_marcos(perfil, base=base))
         for indice, marco in enumerate(perfil.get("classificationMilestones") or []):
             if not isinstance(marco, dict):
                 continue
@@ -630,6 +631,9 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
                     )
                 )
             findings.extend(_divisor_do_marco(marco, etapas, caminho))
+            findings.extend(
+                _regra_de_corte_do_marco(marco, perfil=perfil, etapas=etapas, caminho=caminho)
+            )
             for etapa_id in marco.get("stages") or []:
                 etapa = etapas.get(etapa_id)
                 # Peso é cobrado de **parcela**, e não de porta: a Etapa decisória não soma, e
@@ -714,6 +718,152 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
                         )
                     )
     return findings
+
+
+def _regra_de_corte_do_marco(marco, *, perfil, etapas, caminho) -> list[ValidationFinding]:
+    """As declarações que o sistema não pode concluir por ninguém (014, FR-182, FR-224, FR-226).
+
+    Quatro dos seis campos da regra existem porque **não há padrão honesto** para eles. Resolver a
+    ausência por conta própria afirmaria norma que ninguém escreveu — e as duas saídas fáceis do
+    empate são o exemplo: admitir o excedente entrega à Etapa seguinte mais gente do que a comissão
+    dimensionou, e parar no alvo corta alguém por desempate que a norma não previu.
+    """
+    from processo_seletivo.classificacao.domain import faixa
+
+    regra = marco.get("cutRule")
+    if not regra:
+        return []
+    findings = []
+    if regra.get("tieOutcome") not in faixa.DESFECHOS_DE_EMPATE:
+        findings.append(
+            _impeditivo(
+                "cut_rule_sem_desfecho_de_empate",
+                "A regra de corte não declara o que acontece com o empate que atravessa a última "
+                "posição da faixa. O sistema não escolhe por ela.",
+                f"{caminho}/cutRule/tieOutcome",
+            )
+        )
+    if regra.get("continuation") not in faixa.POLITICAS_DE_CONTINUACAO:
+        findings.append(
+            _impeditivo(
+                "cut_rule_sem_politica_de_continuacao",
+                "A regra de corte não declara se este Edital admite continuação além da faixa "
+                "publicada.",
+                f"{caminho}/cutRule/continuation",
+            )
+        )
+    declarada = regra.get("governedStage")
+    if not declarada:
+        findings.append(
+            _impeditivo(
+                "cut_rule_sem_etapa_governada",
+                "A regra de corte não declara qual Etapa o corte alimenta. Ela não é inferida de "
+                "lugar nenhum: declare a Etapa, ou declare que este corte não governa nenhuma.",
+                f"{caminho}/cutRule/governedStage",
+            )
+        )
+    elif declarada != faixa.SEM_ETAPA_GOVERNADA:
+        if str(declarada) not in etapas:
+            findings.append(
+                _impeditivo(
+                    "cut_rule_com_etapa_inexistente",
+                    "A regra de corte declara governar uma Etapa que este Edital não publica.",
+                    f"{caminho}/cutRule/governedStage",
+                )
+            )
+        # **A guarda é de circularidade, e não de ordem** (FR-229). Num marco cuja ordem é computada
+        # a partir de Etapas, governar uma das Etapas que a alimentam fecharia laço: o universo da
+        # ordem passaria a depender do corte que ela mesma produz. Num marco que ordena por sorteio
+        # não há laço — a ordem vem da relação de habilitados —, e governar a Etapa que o marco
+        # enumera é o **caso normal**: é a forma do 77/2026, em que não existe Etapa avaliada antes
+        # do sorteio e a única que existe é a análise documental que o corte alimenta. Uma guarda
+        # escrita como "a Etapa governada deve suceder a ordem do marco" tornaria aquele Edital
+        # impublicável.
+        elif not marco.get("drawMethod") and str(declarada) in {
+            str(item) for item in (marco.get("stages") or [])
+        }:
+            findings.append(
+                _impeditivo(
+                    "cut_rule_com_etapa_circular",
+                    "A regra de corte governa uma Etapa que alimenta a própria ordem do marco: o "
+                    "universo da ordem passaria a depender do corte que ela produz.",
+                    f"{caminho}/cutRule/governedStage",
+                )
+            )
+    findings.extend(_quadro_para_o_corte(regra, perfil=perfil, caminho=caminho))
+    return findings
+
+
+def _quadro_para_o_corte(regra, *, perfil, caminho) -> list[ValidationFinding]:
+    """Alvo derivado exige linha de quadro para **todo recorte que o marco ordena** (014, FR-183).
+
+    A `025` admite quadro parcial de propósito, e a regra de corte é do **marco**, que pode ordenar
+    três listas. Sem esta conferência, um Edital com quadro parcial publicaria uma regra derivada
+    inexequível na lista sem linha — e o defeito apareceria no dia da emissão, sob cronograma, com a
+    correção dependendo de Retificação.
+
+    **Os recortes são a linha geral e cada Modalidade declarada no Perfil.** Nada no conteúdo
+    publicado diz "esta Modalidade terá lista própria" — quem informa a lista é quem emite —, e por
+    isso a conferência é sobre todas elas. Linha **zerada** é declaração legítima e publica; o que
+    impede é a ausência.
+    """
+    from processo_seletivo.classificacao.domain import faixa
+
+    if regra.get("targetKind") != faixa.ALVO_DO_QUADRO:
+        return []
+    linhas = perfil.get("vacancyTable") or []
+    declarados = {
+        str(linha.get("modalityId")) if linha.get("modalityId") else None
+        for linha in linhas
+        if isinstance(linha, dict)
+    }
+    exigidos = [(None, "a ampla concorrência")]
+    for modalidade in perfil.get("competitionModalities") or []:
+        if isinstance(modalidade, dict) and modalidade.get("id"):
+            exigidos.append(
+                (str(modalidade["id"]), modalidade.get("name") or str(modalidade["id"]))
+            )
+    return [
+        _impeditivo(
+            "cut_rule_sem_linha_de_quadro",
+            f"A regra de corte deriva o alvo do quadro de vagas, e não há linha para {nome}.",
+            f"{caminho}/cutRule/targetKind",
+        )
+        for chave, nome in exigidos
+        if chave not in declarados
+    ]
+
+
+def _corte_em_dois_marcos(perfil, *, base) -> list[ValidationFinding]:
+    """Duas regras de corte do mesmo Perfil não governam a mesma Etapa (014, R-006).
+
+    A Etapa governada decide quem participa dela, e duas declarações com alvos distintos não têm
+    desempate possível. Não se escolhe uma: recusa-se o Edital que as publica. Unir as faixas
+    aplicaria a soma de dois alvos que ninguém publicou, e "o marco de maior ordem vence" inventaria
+    precedência normativa.
+
+    **É dentro do Perfil**, e não do Edital: a Etapa é do Edital e alcança todos os Perfis, mas cada
+    inscrição pertence a um Perfil só, e é a regra dele que a governa.
+    """
+    from processo_seletivo.classificacao.domain import faixa
+
+    governadas = {}
+    for marco in perfil.get("classificationMilestones") or []:
+        if not isinstance(marco, dict):
+            continue
+        etapa = faixa.etapa_governada(marco.get("cutRule"))
+        if etapa:
+            governadas.setdefault(etapa, []).append(marco.get("code") or marco.get("id"))
+    return [
+        _impeditivo(
+            "cut_rule_em_dois_marcos_da_mesma_etapa",
+            f"Os marcos {' e '.join(str(item) for item in marcos)} declaram governar a mesma "
+            "Etapa, com regras de corte que podem divergir.",
+            f"{base}/classificationMilestones",
+        )
+        for etapa, marcos in governadas.items()
+        if len(marcos) > 1
+    ]
 
 
 def _faixa_do_percentual(snapshot: dict) -> list[ValidationFinding]:

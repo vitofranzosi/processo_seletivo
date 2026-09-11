@@ -10,6 +10,7 @@ from decimal import Decimal, InvalidOperation
 from uuid import uuid4
 
 from processo_seletivo.avaliacoes.domain.formas import Forma
+from processo_seletivo.classificacao.domain.faixa import ALVO_FIXO
 from processo_seletivo.editais.domain import secoes
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
@@ -237,6 +238,11 @@ def _marcos(dados, prefixo):
                 # deles. A ausência é a afirmação certa: sem método publicado, o sistema não
                 # escolhe um (021, FR-013, FR-066).
                 "drawMethod": _metodo_de_sorteio(dados, base),
+                # A regra de corte, **ausente quando o marco não corta** — que é a maioria deles. A
+                # ausência é a afirmação certa: marco sem regra não corta, e a Etapa que ele
+                # alimentaria continua recebendo o conjunto que a progressão da 013 entrega
+                # (014, FR-178, FR-214).
+                "cutRule": _regra_de_corte(dados, base),
                 "tiebreakers": criterios,
             }
         )
@@ -314,6 +320,53 @@ def _janela_recursal(dados, base):
         "admits": True,
         "durationDays": _inteiro_opcional(dados, f"{base}-appealDurationDays"),
         "unit": _unidade(dados, base),
+    }
+
+
+def _regra_de_corte(dados, base):
+    """Os seis campos da regra, ou `None` quando o marco não corta (014, FR-178).
+
+    **A espécie do alvo é o interruptor.** Vazia significa "este marco não corta", e é o estado de
+    quase todo marco — não há caixa de marcação separada para isso, pela razão que a janela recursal
+    aprendeu a duras penas: um estado que só nasce de uma combinação que ninguém faz é um estado
+    inalcançável pela tela que existe para declará-lo.
+
+    **Os quatro campos sem padrão viajam mesmo vazios**, como escala e modo do arredondamento já
+    fazem: quem recusa é a aferição de publicabilidade, com mensagem que nomeia o que falta — e não
+    o formulário, que devolveria silêncio. O rascunho pode estar pela metade; a publicação não.
+    """
+    especie = _texto(dados, f"{base}-cutTargetKind")
+    if not especie:
+        return None
+    return {
+        "targetKind": especie,
+        # `targetCount` só na espécie fixa: o alvo tem uma fonte só, e mandar o número junto com a
+        # derivada faria o conteúdo publicado afirmar duas origens para a mesma quantidade.
+        "targetCount": (
+            _inteiro_opcional(dados, f"{base}-cutTargetCount") if especie == ALVO_FIXO else None
+        ),
+        "surplusCount": _inteiro_opcional(dados, f"{base}-cutSurplusCount") or 0,
+        "tieOutcome": _texto(dados, f"{base}-cutTieOutcome"),
+        "governedStage": _texto(dados, f"{base}-cutGovernedStage"),
+        "continuation": _texto(dados, f"{base}-cutContinuation"),
+    }
+
+
+def _ou_vazio(valor):
+    """Zero é valor, e `None` é ausência: o `or ""` de sempre confundiria os dois aqui."""
+    return "" if valor is None else valor
+
+
+def _corte_para_exibicao(regra):
+    """A regra de volta para a tela, campo a campo — e a ausência de volta como ausência."""
+    regra = regra or {}
+    return {
+        "cutTargetKind": regra.get("targetKind") or "",
+        "cutTargetCount": _ou_vazio(regra.get("targetCount")),
+        "cutSurplusCount": _ou_vazio(regra.get("surplusCount")),
+        "cutTieOutcome": regra.get("tieOutcome") or "",
+        "cutGovernedStage": regra.get("governedStage") or "",
+        "cutContinuation": regra.get("continuation") or "",
     }
 
 
@@ -801,6 +854,7 @@ def _marco_para_o_formulario(marco):
         "appealDurationDays": (marco.janela_recursal or {}).get("durationDays") or "",
         "appealUnit": (marco.janela_recursal or {}).get("unit") or "DIAS_CORRIDOS",
         **_metodo_para_exibicao(marco.metodo_de_sorteio),
+        **_corte_para_exibicao(marco.regra_de_corte),
         "criterios": [
             {
                 "id": str(criterio.id),
@@ -839,6 +893,11 @@ def _marco_persistido(marco):
         # gravar qualquer passo seguinte publicaria um Edital que não declara método nenhum — e o
         # congelamento da relação seria recusado sem que ninguém entendesse por quê.
         "drawMethod": marco.metodo_de_sorteio or None,
+        # **E a regra de corte pela mesma razão, no mesmo lugar.** São três caminhos de perda, e
+        # fechar dois deixa o defeito vivo: sem esta linha, declarar o corte no passo Classificação
+        # e gravar qualquer passo seguinte publicaria um Edital que não corta — e a Etapa governada
+        # voltaria a receber todos os habilitados sem que ninguém pedisse.
+        "cutRule": marco.regra_de_corte or None,
         "tiebreakers": [
             {
                 "id": str(criterio.id),

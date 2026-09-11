@@ -2,6 +2,7 @@ import hashlib
 from decimal import Decimal
 
 from processo_seletivo.auditoria.application import record_event
+from processo_seletivo.classificacao.domain import faixa
 from processo_seletivo.editais.domain import secoes
 from processo_seletivo.editais.domain.validation import blocking_findings, validate_for_publication
 from processo_seletivo.editais.models.anexos import ArtefatoAnexo
@@ -153,6 +154,13 @@ def edital_snapshot(edital: Edital) -> dict:
                 # ausência, e a mesma grafia que `elevar_marco` escreve em Edital anterior ao
                 # degrau (021, FR-066, D-013).
                 "drawMethod": marco.metodo_de_sorteio or None,
+                # `None` quando o marco não corta: é o que a versão 13 grafa para a ausência, e a
+                # mesma grafia que `elevar_marco` escreve em Edital anterior ao degrau. Declarada,
+                # ela sai **normalizada** — `surplusCount` sempre presente, `targetCount` nulo em
+                # alvo derivado —, porque a obsolescência do corte compara esta regra congelada com
+                # a da versão vigente, e duas grafias do mesmo significado acusariam diferença onde
+                # não há (014, FR-193).
+                "cutRule": faixa.normalizar(marco.regra_de_corte),
                 "tiebreakers": [
                     {
                         "id": str(criterio.id),

@@ -225,6 +225,22 @@ class MarcoClassificatorio(models.Model):
     # semeia as três listas do recorte, e é o `relationHash` que as separa. Método por lista
     # reabriria a porta que a D-014 fechou, e não atenderia Edital nenhum da amostra.
     metodo_de_sorteio = models.JSONField(default=dict, blank=True)
+    # A regra de corte deste marco (014, degrau 13, D-011 a D-014, FR-178). **Vazio significa não
+    # declarada** — e não regra padrão: o marco sem regra não corta, e a Etapa que ele alimentaria
+    # continua recebendo o conjunto que a progressão da 013 já entrega (FR-214). É o que todo
+    # Edital publicado antes deste degrau afirma, e é verdade sobre todos eles.
+    #
+    # **Mora aqui pelo mesmo motivo que os dois vizinhos acima**: alterá-la é Retificação (FR-184),
+    # e `/profiles/id=…/classificationMilestones/id=…/cutRule/targetCount` já resolve — é objeto, e
+    # em objeto o segmento do caminho é nome de chave literal. Na Etapa ela ficaria longe da ordem
+    # que lê, e a `EtapaAvaliacao` é do Edital e não do Perfil; no Edital, não saberia de qual
+    # Perfil falar.
+    #
+    # **Quatro dos seis campos existem porque o sistema não pode concluí-los** (FR-182, FR-224,
+    # FR-226): o desfecho do empate na fronteira, a Etapa governada — ou a declaração explícita de
+    # que não governa nenhuma —, e se aquele Edital admite continuação. A ausência de qualquer um
+    # deles impede a publicação, em vez de virar padrão.
+    regra_de_corte = models.JSONField(default=dict, blank=True)
 
     class Meta:
         constraints = [

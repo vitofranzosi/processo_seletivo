@@ -508,7 +508,11 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # constraints parciais. Não é a 017 tocando o que lê — é a 021 dizendo que a ordem pode vir
         # de sorteio e que três listas de concorrência produzem três atos raiz no mesmo marco. A
         # metade sem lista continua sob exatamente a constraint que já a governava (021, D-006).
-        "classificacao": 5,
+        # **Sobe para 6 com a 014**, e a justificativa é própria: a `classificacao/0006` cria o
+        # `Corte` e o `ItemDoCorte` — a faixa da ordem que progride para a Etapa governada, com as
+        # duas travas append-only que a 015 estabeleceu para o ato. Não é a 017 tocando o que
+        # lê: é outra feature, dizendo quem prossegue no certame (014, FR-192, FR-223).
+        "classificacao": 6,
         # **Sobe para 5 com a 018**, e a justificativa é a que este teste existe para exigir: a
         # `resultados/0005` dá sucessão ao `ResultadoEtapa` — o único elo da cadeia que não a
         # tinha —, para que um recurso deferido possa superar um Resultado sem alterá-lo. Não é
@@ -534,7 +538,11 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # elaboração pela mesma razão das duas anteriores: quem declara quantas vagas cabem em cada
         # recorte é o Edital, e alterá-lo depois de publicado é Retificação. Aditiva: cria tabela e
         # duas constraints parciais, e não toca em campo algum da `RegraNormativa` (025, FR-174).
-        "editais": 16,
+        # **Sobe para 17 com a 014**: a `editais/0017` acrescenta `regra_de_corte` ao marco
+        # classificatório — o degrau 13. Elaboração pela mesma razão das anteriores: quem declara
+        # como o certame corta é o Edital, e alterá-lo depois de publicado é Retificação. Aditiva:
+        # uma coluna com default, e não toca em nada do que já existe (014, FR-178, FR-184).
+        "editais": 17,
         "publicacoes": 8,
         # **Sobe para 2 com a 018**: a `divulgacao/0002` acrescenta os três campos da declaração
         # expressa de encerramento do prazo e a constraint que os mantém inteiros (FR-085).
@@ -648,7 +656,11 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         "avaliacoes": 3,
         # **Sobe para 5 com a 021**: a `classificacao/0005` dá ao ato de ordenação a origem e a
         # lista de concorrência — o ato passa a poder nascer de um sorteio, e não só de nota.
-        "classificacao": 5,
+        # **Sobe para 6 com a 014**, e a justificativa é própria: a `classificacao/0006` cria o
+        # `Corte` e o `ItemDoCorte` — a faixa da ordem que progride para a Etapa governada, com as
+        # duas travas append-only que a 015 estabeleceu para o ato. Não é a 022 tocando o que
+        # lê: é outra feature, dizendo quem prossegue no certame (014, FR-192, FR-223).
+        "classificacao": 6,
         "comissoes": 1,
         # **Sobe para 3 com a 021**: a `divulgacao/0003` publica por lista de concorrência.
         "divulgacao": 3,
@@ -660,7 +672,11 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # elaboração pela mesma razão das duas anteriores: quem declara quantas vagas cabem em cada
         # recorte é o Edital, e alterá-lo depois de publicado é Retificação. Aditiva: cria tabela e
         # duas constraints parciais, e não toca em campo algum da `RegraNormativa` (025, FR-174).
-        "editais": 16,
+        # **Sobe para 17 com a 014**: a `editais/0017` acrescenta `regra_de_corte` ao marco
+        # classificatório — o degrau 13. Elaboração pela mesma razão das anteriores: quem declara
+        # como o certame corta é o Edital, e alterá-lo depois de publicado é Retificação. Aditiva:
+        # uma coluna com default, e não toca em nada do que já existe (014, FR-178, FR-184).
+        "editais": 17,
         "inscricoes": 4,
         "processos": 2,
         "publicacoes": 8,

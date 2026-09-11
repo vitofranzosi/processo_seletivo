@@ -87,6 +87,11 @@ class ClassificationMilestoneSerializer(serializers.Serializer):
     # norma, e `allow_null` porque não declarar é resposta legítima — a maioria dos marcos não
     # sorteia (021, FR-013, D-013).
     drawMethod = serializers.JSONField(required=False, allow_null=True)
+    # A regra de corte, pela mesma razão e na mesma forma dos dois acima: objeto declarado pela
+    # norma, e `allow_null` porque não declarar é resposta legítima — marco que não corta é a
+    # maioria. Os campos que não têm padrão honesto são cobrados na **publicação**, e não aqui: o
+    # rascunho pode estar pela metade (014, FR-178).
+    cutRule = serializers.JSONField(required=False, allow_null=True)
     tiebreakers = TiebreakerSerializer(many=True, required=False)
 
 

@@ -795,6 +795,16 @@ components:
             desempate. A ordem dos critérios é campo publicado de cada um, e não a posição no array,
             porque a Retificação os endereça por identidade. Vazia significa que o Perfil não
             classifica.
+
+            Cada marco traz ainda appealWindow (018), drawMethod (021) e cutRule (014) — os três
+            objetos declarados pela norma, com null significando não declarado. Em cutRule, quatro
+            dos seis campos existem porque o sistema não pode concluí-los, e a ausência de qualquer
+            um impede a publicação em vez de virar padrão: tieOutcome (ADMITS_SURPLUS ou STRICT),
+            governedStage (a identidade da Etapa que o corte alimenta, ou a palavra NONE) e
+            continuation (ALLOWED ou NONE). Os outros dois são targetKind (FIXED ou
+            FROM_VACANCY_TABLE, com targetCount só na primeira espécie) e surplusCount, sempre
+            emitido, inclusive zero, porque duas grafias do mesmo significado fariam a comparação de
+            obsolescência do corte acusar diferença onde não há.
           items: { type: object }
         vacancyTable:
           type: array

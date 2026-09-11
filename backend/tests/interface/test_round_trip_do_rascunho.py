@@ -103,6 +103,18 @@ MARCO_COMPLETO = {
     "normalization": "NENHUMA",
     "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
     "appealWindow": {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"},
+    # **E a regra de corte, pelo mesmo motivo.** É o terceiro campo que nenhuma etapa posterior
+    # edita e que o reenvio precisa carregar: sem ele, declarar o corte no passo Classificação e
+    # gravar qualquer passo seguinte publicaria um Edital que não corta, e a Etapa governada
+    # voltaria a receber todos os habilitados sem que ninguém pedisse (014, FR-178).
+    "cutRule": {
+        "targetKind": "FIXED",
+        "targetCount": 10,
+        "surplusCount": 0,
+        "tieOutcome": "STRICT",
+        "governedStage": "NONE",
+        "continuation": "NONE",
+    },
     "tiebreakers": [
         {
             "id": CRITERIO,
@@ -236,6 +248,7 @@ def _marcos_como_o_contrato_os_declara(edital):
             "normalization": marco.normalizacao,
             "rounding": marco.arredondamento,
             "appealWindow": marco.janela_recursal or None,
+            "cutRule": marco.regra_de_corte or None,
             "tiebreakers": [
                 {
                     "id": str(criterio.id),
@@ -405,6 +418,16 @@ def test_regravar_a_classificacao_preserva_a_janela_declarada(client, seletor_li
             f"{base}-scale": "2",
             f"{base}-mode": "MEIO_PARA_CIMA",
             f"{base}-appealDeclaration": "admite",
+            # E a regra de corte, pelo mesmo motivo da janela: ela é um dos campos que **esta** tela
+            # desenha, e o navegador os devolve preenchidos. Omiti-los aqui simularia um navegador
+            # que não envia o que a tela mostra — e o que o teste protege é o contrário disso: que a
+            # declaração sobreviva à própria tela que a oferece (014, FR-178).
+            f"{base}-cutTargetKind": "FIXED",
+            f"{base}-cutTargetCount": "10",
+            f"{base}-cutSurplusCount": "0",
+            f"{base}-cutTieOutcome": "STRICT",
+            f"{base}-cutGovernedStage": "NONE",
+            f"{base}-cutContinuation": "NONE",
             f"{base}-appealDurationDays": "5",
             f"{base}-appealUnit": "DIAS_CORRIDOS",
             f"criterio-{perfil.id}-0-0-id": CRITERIO,
@@ -419,6 +442,7 @@ def test_regravar_a_classificacao_preserva_a_janela_declarada(client, seletor_li
     marco = MarcoClassificatorio.objects.get(pk=MARCO)
     assert marco.name == "Classificação final do certame", "a correção que a tela oferece vale"
     assert marco.janela_recursal == MARCO_COMPLETO["appealWindow"], "a janela declarada sobrevive"
+    assert marco.regra_de_corte == MARCO_COMPLETO["cutRule"], "a regra de corte declarada sobrevive"
 
 
 @pytest.mark.django_db(transaction=True)

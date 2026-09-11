@@ -113,7 +113,16 @@ from uuid import UUID
 # nenhum — quem quiser dizer zero declara uma linha com `0`. Não converter é que seria a decisão
 # cara: deixaria o acervo inteiro com uma coleção inendereçável, e endereço de retificação não se
 # conserta depois (025, D-005, FR-167).
-SCHEMA_VERSION = 12
+# **13 com a `014`**: a regra de corte declarada por marco classificatório (`cutRule`). A ausência
+# dela significa **marco que não corta** — e não corte com alvo zero —, que é o que todo Edital
+# publicado antes deste degrau afirma: a capacidade não existia, e a Etapa que o marco alimentaria
+# continua recebendo o conjunto que a progressão da `013` já entrega (014, FR-186, FR-214).
+#
+# **Quatro dos seis campos do objeto existem porque o sistema não pode concluí-los** — o desfecho do
+# empate na fronteira, a Etapa governada ou a declaração explícita de que não há uma, e se aquele
+# Edital admite continuação. A ausência de qualquer um impede a publicação em vez de virar padrão,
+# e é por isso que a conversão escreve `null` no objeto inteiro, e nunca um objeto pela metade.
+SCHEMA_VERSION = 13
 
 
 def _default(value):

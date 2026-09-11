@@ -41,6 +41,12 @@ TABELAS_APPEND_ONLY = (
     # outra linha, e nem o cabeçalho nem uma posição emitida podem ser reinterpretados depois.
     "classificacao_atodeordenacao",
     "classificacao_posicaonaordem",
+    # O corte da `014` e os seus itens: a faixa emitida decide quem prossegue no certame, e é o ato
+    # mais contestável que o sistema produz. Append-only pela razão das demais — nasce e não muda —,
+    # com um agravante próprio: sucessão e continuação já criam linha nova, de modo que nenhuma
+    # alteração de linha existente é sequer legítima (014, FR-223).
+    "classificacao_corte",
+    "classificacao_itemdocorte",
     # A divulgação do resultado (017): o ato publicado, a situação congelada de cada participante
     # e o documento oficial. As três são históricas pela mesma razão das demais — nascem e não
     # mudam —, com um agravante próprio: o que elas guardam já é público, e reescrevê-lo depois
