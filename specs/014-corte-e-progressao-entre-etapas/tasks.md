@@ -143,7 +143,7 @@ que já existem. Se alguma tarefa levar você a criar app, camada ou permissão,
 
 - [X] T052 [US2] Escrever `calcular_corte` em `backend/processo_seletivo/classificacao/application/corte.py`: lê o ato vigente do recorte, apura o alvo, forma a faixa e devolve a proposta com o resumo do universo. **Não reordena, não recalcula pontuação e não aplica desempate novo** — lê `PosicaoNaOrdem` como ela foi emitida (`FR-187`, `FR-188`)
 - [X] T053 [US2] Escrever, em `backend/processo_seletivo/classificacao/domain/faixa.py`, o alvo apurado, a fronteira da faixa — `alvo + excedente` na primeira emissão — e a detecção do empate que a atravessa. Puro, sem tocar em banco de norma
-- [ ] T054 [US2] Escrever `emitir_corte` em `backend/processo_seletivo/classificacao/application/emissao_do_corte.py`, pelo mesmo `comando_de_comissao` de `emitir_ordem` (`classificacao/application/emissao.py:20`): idempotência por chave, desfecho anterior na repetição, autorização por `classificacao:emitir` e auditoria por `auditar`. **Sem permissão nova** (`FR-220`, `FR-222`)
+- [X] T054 [US2] Escrever `emitir_corte` em `backend/processo_seletivo/classificacao/application/emissao_do_corte.py`, pelo mesmo `comando_de_comissao` de `emitir_ordem` (`classificacao/application/emissao.py:20`): idempotência por chave, desfecho anterior na repetição, autorização por `classificacao:emitir` e auditoria por `auditar`. **Sem permissão nova** (`FR-220`, `FR-222`)
 - [X] T054a [US2] Gravar `raiz` em toda faixa e `corte_anterior` **apenas em raiz**, na emissão. *A sucessão é de geração: apontá-la para uma continuação deixaria a raiz anterior vigente, autorizando participantes de uma ordem já substituída (`FR-227`)*
 - [X] T055 [US2] Gravar o universo declarado de [data-model.md](./data-model.md) §4 — inclusive o `rowId` da linha do quadro em alvo derivado. *Sem ele, retificado o quadro, não há como dizer se **aquele** corte ficou para trás: a quantidade sozinha não identifica a linha (`FR-193`, `R-009`)*
 - [X] T056 [US2] Acrescentar as quatro rotas de [contracts/corte.md](./contracts/corte.md) §2 em `backend/processo_seletivo/interface/urls.py:205`, pendendo do marco como as da ordem e as do sorteio, e as views em `backend/processo_seletivo/interface/views.py`
@@ -194,7 +194,7 @@ que já existem. Se alguma tarefa levar você a criar app, camada ou permissão,
 - [X] T072 [P] [US4] Em `backend/tests/integration/classificacao/test_faixa_seguinte.py`, **continuação não é sucessão**: a faixa anterior não ganha sucessor, e o estado do marco mostra as duas. *Trocar uma pela outra produz um sistema que parece funcionar e deixa alguém fora de uma Etapa em que deveria estar*
 - [X] T073 [P] [US4] Em `backend/tests/integration/classificacao/test_faixa_seguinte.py`, continuação sem motivo recusa; continuação onde a regra publica `continuation: NONE` recusa dizendo que aquele Edital não a publicou; sobre ordem sucedida recusa; e sobre **geração já sucedida** recusa **mesmo com a ordem intacta** — a sucessão também acontece por Retificação da regra sobre a mesma ordem (`FR-203`, `FR-204`, `FR-205`, `FR-226`)
 - [X] T073a [P] [US4] Em `backend/tests/integration/classificacao/test_faixa_seguinte.py`, a continuação **admitida não tem teto numérico**: ela vai até o fim da ordem, limitada pelo motivo declarado e pela autorização. *O Edital diz "até que se preencha", e quantas vagas foram preenchidas é conta da `016` — inventar um teto aqui seria publicar norma que ninguém escreveu, e era o que a redação anterior da `FR-204` fazia*
-- [ ] T074 [P] [US4] Em `backend/tests/integration/classificacao/test_faixa_seguinte.py`, **o sistema nunca continua sozinho**: nenhum cenário exercitado produz faixa seguinte sem ato humano (`FR-206`, `SC-065`)
+- [X] T074 [P] [US4] Em `backend/tests/integration/classificacao/test_faixa_seguinte.py`, **o sistema nunca continua sozinho**: nenhum cenário exercitado produz faixa seguinte sem ato humano (`FR-206`, `SC-065`)
 - [X] T075 [P] [US4] Teste de varredura em `backend/tests/test_vocabulario_do_corte.py` — no **topo** da árvore, como `backend/tests/test_vocabulario_do_resultado.py`, que é o precedente exato: nenhuma tela, mensagem, ato ou documento desta feature contém *vaga ocupada*, *vaga preenchida* ou *déficit* (`FR-207`, `SC-066`). *É assim que a fronteira com a `016` deixa de ser promessa de prosa.* **Ler o template sem os blocos `{% comment %}`**, pelo mesmo critério do precedente. *Explicar por que a palavra é proibida exige escrevê-la, e a varredura ingênua reprova a própria explicação*
 
 ### Implementation for User Story 4
@@ -242,14 +242,14 @@ que já existem. Se alguma tarefa levar você a criar app, camada ou permissão,
 
 ### Tests for User Story 6
 
-- [ ] T086 [P] [US6] Teste de integração em `backend/tests/integration/classificacao/test_reproducao_do_corte.py`: o universo declarado reproduz faixa idêntica (`FR-199`, `SC-061`)
-- [ ] T087 [P] [US6] Em `backend/tests/integration/classificacao/test_reproducao_do_corte.py`, corte antigo é lido com os **nomes da versão que congelou**, e não com os de hoje, mesmo depois de Retificação que renomeie a modalidade. Reusar `nomes_do_marco` (`classificacao/domain/nomes.py`)
+- [X] T086 [P] [US6] Teste de integração em `backend/tests/integration/classificacao/test_reproducao_do_corte.py`: o universo declarado reproduz faixa idêntica (`FR-199`, `SC-061`)
+- [X] T087 [P] [US6] Em `backend/tests/integration/classificacao/test_reproducao_do_corte.py`, corte antigo é lido com os **nomes da versão que congelou**, e não com os de hoje, mesmo depois de Retificação que renomeie a modalidade. Reusar `nomes_do_marco` (`classificacao/domain/nomes.py`)
 - [ ] T088 [P] [US6] Em `backend/tests/integration/classificacao/test_reproducao_do_corte.py`, a continuação cita a faixa anterior e o motivo declarado
-- [ ] T089 [P] [US6] Em `backend/tests/integration/classificacao/test_reproducao_do_corte.py`, a auditoria da emissão traz ator, ação, recorte, ordem citada, alvo apurado, quantidade alcançada e instante, recuperável sem acesso ao banco (`FR-222`, `SC-070`)
+- [X] T089 [P] [US6] Em `backend/tests/integration/classificacao/test_reproducao_do_corte.py`, a auditoria da emissão traz ator, ação, recorte, ordem citada, alvo apurado, quantidade alcançada e instante, recuperável sem acesso ao banco (`FR-222`, `SC-070`)
 
 ### Implementation for User Story 6
 
-- [ ] T090 [US6] Escrever a reprodução em `backend/processo_seletivo/classificacao/application/corte.py`, a partir do universo declarado — e **não** do estado de hoje
+- [X] T090 [US6] Escrever a reprodução em `backend/processo_seletivo/classificacao/application/corte.py`, a partir do universo declarado — e **não** do estado de hoje
 - [ ] T091 [US6] Desenhar a leitura do corte histórico na rota `cortes/<corte_id>`, sucedido ou vigente, com a proveniência inteira (`UX-024`)
 
 **Checkpoint**: todas as user stories fechadas e independentemente demonstráveis.

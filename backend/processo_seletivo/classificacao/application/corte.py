@@ -188,10 +188,12 @@ def _motivo(ident, posicao, motivo_da_ordem, dentro, primeira, ultima, desde):
 
 __all__ = [
     "calcular_corte",
+    "divergencias_da_reproducao",
     "estado_do_corte",
     "geracao_vigente",
     "linha_do_quadro",
     "regra_do_marco",
+    "reproduzir_corte",
 ]
 
 
@@ -272,17 +274,31 @@ def _reingressou(edital, geracao):
     trabalho novo, isso pararia a Etapa para exigir uma geração sucessora idêntica à anterior. No
     77/2026, em que o recurso é julgado na própria Etapa que o corte governa, esse seria o caso
     normal, e não a exceção.
+
+    "Alcançar o ato" tem duas metades, e as duas são conferidas: a pessoa estar entre os
+    participantes que ele congelou, **e** o Resultado superado ser de uma das Etapas que produziram
+    a ordem. Sem a segunda, o deferimento na Etapa governada obsoletaria o corte — que é justamente
+    o que a `FR-230` proíbe.
     """
     from processo_seletivo.resultados.models import ResultadoEtapa
 
-    participantes = [
-        str(item) for item in ((geracao[0].ato.universo or {}).get("participants") or [])
-    ]
-    if not participantes:
+    universo = geracao[0].ato.universo or {}
+    participantes = [str(item) for item in (universo.get("participants") or [])]
+    # **As Etapas que produziram a ordem, e só elas.** É aqui que a `FR-230` vira código: um
+    # deferimento na Etapa **governada** não move posição nenhuma, e obsoletar por causa dele
+    # pararia a Etapa para exigir uma geração sucessora idêntica à anterior. Num ato de sorteio a
+    # coleção é vazia — a ordem não vem de Etapa nenhuma —, e por isso reingresso algum o obsoleta.
+    etapas_da_ordem = {
+        str(item.get("stageId"))
+        for item in (universo.get("stageResults") or [])
+        if isinstance(item, dict) and item.get("stageId")
+    }
+    if not participantes or not etapas_da_ordem:
         return []
     reingressaram = ResultadoEtapa.vigentes.filter(
         edital=edital,
         inscricao_id__in=participantes,
+        etapa_id__in=etapas_da_ordem,
         resultado_anterior__isnull=False,
     ).exists()
     if not reingressaram:
@@ -293,6 +309,76 @@ def _reingressou(edital, geracao):
             "descricao": (
                 "Um participante reingressou no universo da ordem por decisão recursal deferida: "
                 "a faixa pode não ser mais a que a norma produz."
+            ),
+        }
+    ]
+
+
+def reproduzir_corte(corte):
+    """A faixa calculada de novo, **a partir do universo declarado** — e não do estado de hoje.
+
+    Registrar o que foi usado e chegar de novo ao mesmo resultado são coisas distintas, e a
+    Constituição pede a segunda. Por isso nada aqui consulta a regra vigente, o quadro vigente ou o
+    ato vigente: a regra vem do `universo` que o corte congelou, as posições vêm do ato que ele
+    citou, e o alvo vem do número que ele apurou — inclusive quando derivado, porque a linha do
+    quadro pode ter mudado desde então (FR-199).
+
+    **A posição gravada no item nunca é entrada do motor**, pela mesma razão que a `015` já
+    registrou para a ordem: usá-la faria a reprodução confirmar a si mesma.
+    """
+    universo = corte.universo or {}
+    regra = universo.get("cutRule") or {}
+    alvo = (universo.get("target") or {}).get("count") or 0
+    desde = 0
+    if corte.faixa_anterior_id is not None:
+        desde = corte.faixa_anterior.ultima_posicao or 0
+    posicoes = [
+        (str(inscricao_id), posicao)
+        for inscricao_id, posicao in corte.ato.posicoes.all()
+        .values_list("inscricao_id", "posicao")
+        .order_by("posicao")
+    ]
+    progrediram, excedentes, primeira, ultima = faixa.calcular(
+        posicoes,
+        alvo=alvo,
+        excedente=universo.get("surplus") or 0,
+        desfecho=regra.get("tieOutcome"),
+        desde=desde,
+    )
+    return {
+        "progrediram": progrediram,
+        "excedentes": excedentes,
+        "primeira_posicao": primeira,
+        "ultima_posicao": ultima,
+    }
+
+
+def divergencias_da_reproducao(corte, *, reproduzido=None):
+    """O que a reprodução encontra de diferente do que o ato gravou — vazio quando reproduz.
+
+    A continuação limita a faixa à quantidade que quem emitiu declarou (`FR-203`), e essa quantidade
+    **não** está no universo: ela é decisão de quem emite, e não norma publicada. Por isso a
+    comparação de uma continuação é do **prefixo**: a reprodução diz até onde a faixa poderia ir, e
+    o ato diz até onde ela foi.
+    """
+    reproduzido = reproduzido or reproduzir_corte(corte)
+    gravados = [
+        str(item)
+        for item in corte.itens.filter(consequencia=ItemDoCorte.Consequencia.PROGREDIU)
+        .order_by("posicao")
+        .values_list("inscricao_id", flat=True)
+    ]
+    calculados = reproduzido["progrediram"]
+    if corte.faixa_anterior_id is not None:
+        calculados = calculados[: len(gravados)]
+    if gravados == calculados:
+        return []
+    return [
+        {
+            "tipo": "faixa_divergente",
+            "descricao": (
+                "A reprodução a partir do universo declarado não chega à mesma faixa que o ato "
+                "gravou."
             ),
         }
     ]
