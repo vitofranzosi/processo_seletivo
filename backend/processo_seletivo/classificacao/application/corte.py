@@ -171,7 +171,14 @@ def calcular_corte(
             "milestoneId": str(marco_id),
             "listId": str(lista_id) if lista_id else None,
             "orderingActId": str(ato.id),
-            "versionId": str(ato.versao_id),
+            # **A versão que governou o corte**, que é a vigente no instante da emissão — a mesma
+            # que `Corte.versao` guarda. Citar aqui a versão do **ato de ordenação** faria o mesmo
+            # ato declarar duas normas diferentes depois de uma Retificação que alcançasse só o
+            # quadro, e a proveniência deixaria de reproduzir (FR-193).
+            "versionId": str(versao.id),
+            # A da ordem entra ao lado, com nome próprio: ela é proveniência do que foi **lido**, e
+            # não da norma que decidiu a faixa.
+            "orderingVersionId": str(ato.versao_id),
             "cutRule": regra,
             "target": {"count": alvo, **origem},
             "surplus": int(regra.get("surplusCount") or 0),

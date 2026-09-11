@@ -129,6 +129,30 @@
     <button type="button" class="acao"
             hx-get="{% url 'interface:fragmento-modalidade' indice %}"
             hx-target="#modalidades-{{ indice }}" hx-swap="beforeend">Acrescentar Modalidade</button>
+    {% comment %}
+    Qual das Modalidades acima é a ampla concorrência (014, D-014, FR-231).
+
+    A quantidade dela mora na **linha geral** do quadro, e por isso ela nao recebe linha propria. A
+    declaracao existe porque o sistema nao adivinha: identificar a ampla concorrencia casando o nome
+    foi recusado por escrito na 025, e sem dizer qual e, exigir linha de quadro de toda Modalidade
+    tornaria impublicavel o Edital no formato normal.
+
+    Fica aqui, e nao na secao do quadro, porque e declaracao sobre a **Modalidade** — o quadro so a
+    consome.
+    {% endcomment %}
+    <p class="campo">
+      <label for="perfil-{{ indice }}-generalCompetitionModalityId">Qual delas é a ampla concorrência</label>
+      <select id="perfil-{{ indice }}-generalCompetitionModalityId"
+              name="perfil-{{ indice }}-generalCompetitionModalityId"
+              aria-describedby="ajuda-ampla-{{ indice }}">
+        <option value="">Nenhuma — a ampla concorrência é só a linha geral do quadro</option>
+        {% for modalidade in perfil.modalidades %}
+        <option value="{{ modalidade.id }}" {% if perfil.generalCompetitionModalityId == modalidade.id %}selected{% endif %}>{{ modalidade.code }} — {{ modalidade.name }}</option>
+        {% endfor %}
+      </select>
+      <span class="oculto" id="ajuda-ampla-{{ indice }}">A declarada não recebe linha no quadro: a
+        quantidade dela é a da linha geral.</span>
+    </p>
   </section>
   <section class="quadro" aria-labelledby="quadro-titulo-{{ indice }}">
     <h3 id="quadro-titulo-{{ indice }}">Quadro de vagas</h3>

@@ -433,6 +433,13 @@ def ler_perfis(dados):
                     if linha.strip()
                 ],
                 "immediateVacancies": _inteiro(dados, f"{base}-immediateVacancies"),
+                # Qual das Modalidades é a ampla concorrência (014, D-014, FR-231). Vazio significa
+                # que o Perfil não declara nenhuma, que é o formato em que ela existe só como a
+                # linha geral do quadro.
+                "generalCompetitionModalityId": _texto(
+                    dados, f"{base}-generalCompetitionModalityId"
+                )
+                or None,
                 "reserveType": reserva,
                 "reserveLimit": int(limite) if reserva == "LIMITED" and limite else None,
                 "locality": _texto(dados, f"{base}-locality"),
@@ -641,6 +648,13 @@ def perfis_do_edital(edital):
             "duties": perfil.duties,
             "workload": perfil.workload,
             "compensation": perfil.compensation,
+            # Travessia 3: sem isto a declaração gravada não voltaria à tela, e a gravação seguinte
+            # a apagaria — porque `ler_perfis` leria um formulário sem ela.
+            "generalCompetitionModalityId": (
+                str(perfil.modalidade_ampla_concorrencia)
+                if perfil.modalidade_ampla_concorrencia
+                else ""
+            ),
             "modalidades": [
                 _modalidade_para_o_formulario(m) for m in perfil.modalidades.order_by("code")
             ],
@@ -787,6 +801,15 @@ def perfis_persistidos(edital):
             "immediateVacancies": perfil.immediate_vacancies,
             "reserveType": perfil.reserve_type,
             "reserveLimit": perfil.reserve_limit,
+            # **Travessia 2, e ela vale para este campo tanto quanto para o quadro**: sem esta
+            # linha, declarar a ampla concorrência no passo dos Perfis e gravar qualquer etapa
+            # seguinte publicaria um Edital que não a declara — e a conferência do alvo derivado
+            # voltaria a exigir linha de quadro para ela (014, FR-231).
+            "generalCompetitionModalityId": (
+                str(perfil.modalidade_ampla_concorrencia)
+                if perfil.modalidade_ampla_concorrencia
+                else None
+            ),
             "locality": perfil.locality,
             "duties": perfil.duties,
             "workload": perfil.workload,

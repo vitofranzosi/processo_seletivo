@@ -174,7 +174,43 @@ def test_sucedida_a_geracao_nenhuma_faixa_dela_autoriza_participante(cenario, ge
 
 
 def test_emitir_sobre_ordem_obsoleta_recusa(cenario, gestor, api_client):
+    """A Retificação que alcança a **regra da ordem** — aqui o arredondamento do marco."""
     edital, _, _ = cenario
+    retify(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": (
+                    f"/profiles/id={PROFILE_ID}/classificationMilestones/id={MARCO}/rounding/scale"
+                ),
+                "operation": "REPLACE",
+                "newValue": 4,
+            }
+        ],
+        suffix="b",
+    )
+
+    with pytest.raises(DomainError) as erro:
+        calcular_corte(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO)
+
+    assert erro.value.code == "ato_obsoleto"
+
+
+def test_retificar_a_regra_de_corte_nao_obsoleta_a_ordem_e_permite_suceder(
+    cenario, gestor, api_client
+):
+    """A `FR-205` prevê sucessão por Retificação da regra **sobre a mesma ordem**.
+
+    A regra de corte mora no mesmo objeto do marco desde o degrau 13, e não é insumo da ordem: o
+    corte **lê** a ordem, e não a produz. Enquanto ela entrava no recorte comparado, retificar
+    `targetCount` obsoletava o ato de ordenação — e como não se corta sobre ordem obsoleta, a
+    sucessão que a spec descreve ficava inalcançável: exigia emitir uma ordem nova que sairia byte a
+    byte igual à anterior.
+    """
+    edital, _, _ = cenario
+    emitir(edital, gestor)
+    anterior = Corte.objects.get()
     retify(
         api_client,
         edital,
@@ -185,13 +221,15 @@ def test_emitir_sobre_ordem_obsoleta_recusa(cenario, gestor, api_client):
                 "newValue": 3,
             }
         ],
-        suffix="b",
+        suffix="d",
     )
 
-    with pytest.raises(DomainError) as erro:
-        calcular_corte(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO)
+    obsoleto, tipos = causas(edital)
+    proposta = calcular_corte(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO)
 
-    assert erro.value.code == "ato_obsoleto"
+    assert obsoleto is True and "regra_alterada" in tipos, "o **corte** ficou para trás"
+    assert proposta["ato"].id == anterior.ato_id, "e a ordem continua sendo a mesma"
+    assert proposta["alvo"] == 3, "a sucessora já nasce sob a norma nova"
 
 
 # --- T081 · corte obsoleto impede publicar o que dele depende (FR-219, SC-063) ---------------

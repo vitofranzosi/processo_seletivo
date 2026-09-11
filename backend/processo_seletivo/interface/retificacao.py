@@ -49,6 +49,10 @@ OCULTO = "oculto"
 
 # (sufixo do caminho, rótulo, tipo) — aplicado a cada Perfil e a cada Evento.
 CAMPOS_PERFIL = [
+    # Qual das Modalidades é a ampla concorrência (014, FR-231). Retificá-la é mudar quais recortes
+    # exigem linha de quadro, e por isso é norma — não é rótulo. `REFERENCIA` porque o valor é a
+    # identidade de uma Modalidade do próprio Perfil, e não texto livre.
+    ("generalCompetitionModalityId", "Modalidade que é a ampla concorrência", REFERENCIA),
     ("name", "Denominação", TEXTO),
     ("locality", "Localidade", TEXTO),
     # O que um Edital diz sobre a vaga também se corrige depois de publicado (FR-016). Sem estes
@@ -862,6 +866,10 @@ def _perfil_completo(valores):
         # legítimo, e é o que o acervo inteiro afirma —, e quem quiser declará-lo acrescenta as
         # linhas na Retificação seguinte, pela coleção que já é endereçável (025, D-005, D-006).
         "vacancyTable": [],
+        # A da versão 13, pela mesma razão de novo. `None` diz que este Perfil não declara qual das
+        # suas Modalidades é a ampla concorrência — e um Perfil que nasce sem Modalidade nenhuma não
+        # teria mesmo o que apontar (014, FR-231).
+        "generalCompetitionModalityId": None,
     }
 
 

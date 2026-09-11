@@ -721,9 +721,11 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
   declarada corresponde à **linha geral** do quadro, MUST NOT ter linha própria, e MUST NOT ser
   exigida pela conferência da `FR-183`. Declaração que aponte Modalidade que o Perfil não publica, e
   Modalidade declarada com linha própria, MUST impedir a publicação.
-- **FR-232**: A condição do corte MUST ser correlacionada ao **Perfil da inscrição**. Corte emitido
-  num Perfil MUST NOT alcançar inscrições de outro, ainda que a Etapa governada seja a mesma — a
-  Etapa é do Edital e alcança todos os Perfis, mas cada inscrição pertence a um só.
+- **FR-232**: A condição do corte MUST ser correlacionada ao **recorte da inscrição** — Perfil e
+  lista. Corte emitido num Perfil MUST NOT alcançar inscrições de outro, e corte emitido numa lista
+  MUST NOT alcançar inscrições de outra: um marco de cotas tem três atos raiz e três cortes,
+  emitidos em instantes diferentes, e enquanto só um existir os demais recortes MUST permanecer
+  dormentes. Corte **sem lista** alcança o Perfil inteiro, porque é o recorte da ampla concorrência.
 - **FR-233**: A faixa seguinte MUST alcançar a quantidade declarada por quem a emite, e MUST NOT
   herdar o alvo nem o excedente da primeira emissão como teto. Quantidade menor que um MUST ser
   recusada, e a faixa MUST NOT partir grupo empatado ao aplicá-la.
@@ -733,6 +735,17 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
 - **FR-235**: O cálculo MUST ler a regra e o quadro da versão normativa **vigente**, e as posições
   do ato de ordenação citado. Ler a norma da versão do ato faria a geração sucessora nascer obsoleta
   sempre que a Retificação alcançasse o quadro sem tocar no marco.
+- **FR-236**: O universo declarado MUST citar como sua versão normativa a **mesma** que o ato
+  guarda — a vigente no instante da emissão. A versão do ato de ordenação MUST viajar ao lado, com
+  nome próprio: ela é proveniência do que foi lido, e não da norma que decidiu a faixa.
+- **FR-237**: A Retificação que alcance **apenas** a regra de corte MUST NOT tornar obsoleto o ato
+  de ordenação. A regra de corte MUST NOT integrar o recorte normativo comparado pela ordem: o corte
+  lê a ordem e não a produz, e incluí-la tornaria inalcançável a sucessão que a `FR-205` descreve —
+  exigiria emitir uma ordem nova que sairia idêntica à anterior.
+- **FR-238**: A declaração de qual Modalidade é a ampla concorrência MUST atravessar o assistente
+  inteiro — leitura, persistência, reenvio e reexibição —, MUST constar do contrato de entrada e da
+  forma publicada conferida, e MUST ser alcançável por Retificação. Declarada e não reenviada ao
+  gravar outra etapa, ela MUST NOT ser apagada.
 - **FR-219**: Corte obsoleto MUST impedir a publicação de resultado que dele dependa, com motivo
   nomeado e o caminho a seguir.
 - **FR-228**: Enquanto o corte estiver obsoleto e a geração sucessora não for emitida, o sistema MUST
@@ -854,7 +867,10 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
 - **SC-074**: Nenhuma faixa de uma geração alcança quem outra faixa dela já alcançou, em nenhuma
   sequência de continuações — inclusive depois de uma faixa que não alcançou ninguém.
 - **SC-075**: Num Edital de sete Perfis em que apenas um emitiu corte, os outros seis conduzem a
-  Etapa governada exatamente como antes desta feature.
+  Etapa governada exatamente como antes desta feature — e o mesmo vale entre listas do mesmo Perfil.
+- **SC-076**: O mesmo pedido de emissão, repetido pela tela, produz **uma** faixa.
+- **SC-077**: Retificada apenas a regra de corte, a geração sucessora é emitida sobre a **mesma**
+  ordem, sem que nenhuma ordem nova precise existir.
 
 ## 7. Out of Scope
 

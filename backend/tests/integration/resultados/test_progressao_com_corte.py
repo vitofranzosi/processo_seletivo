@@ -5,6 +5,8 @@ passa a receber a faixa. E é aqui que a assimetria com a `013` precisa valer: o
 regras de progressão que já existem, e não as revoga.
 """
 
+from uuid import uuid4
+
 import pytest
 
 from processo_seletivo.classificacao.application.calculo import calcular_ordem
@@ -233,3 +235,50 @@ def test_a_etapa_anterior_continua_valendo_junto_com_o_corte(cortado):
     edital, inscricoes = cortado
 
     assert inscricoes[3].id not in participantes(edital)
+
+
+# --- o recorte é (Perfil, marco, lista), e não só o Perfil (FR-232, SC-075) -------------------
+
+
+def test_o_corte_de_uma_lista_nao_desperta_o_gate_para_as_outras(cortado, gestor):
+    """Um marco de cotas tem três atos raiz e três cortes, emitidos em instantes diferentes.
+
+    Enquanto só o da PPI existisse, um filtro por Perfil despertaria o gate para o Perfil inteiro:
+    as inscrições de PcD, ausentes dos itens da PPI, sairiam da Etapa sem que corte nenhum as
+    tivesse cortado.
+
+    O corte por lista é **construído aqui**, e não emitido: ordenar por lista exige a máquina de
+    sorteio da `021`, e o que este teste verifica é a condição do gate — que é da `014`.
+    """
+    from processo_seletivo.classificacao.models import Corte, ItemDoCorte
+
+    edital, inscricoes = cortado
+    raiz = Corte.objects.get()
+    ppi, pcd = uuid4(), uuid4()
+    Inscricao.objects.filter(pk=inscricoes[2].id).update(modality_id=pcd)
+    da_ppi = Corte.objects.create(
+        edital=edital,
+        perfil_id=raiz.perfil_id,
+        marco_id=raiz.marco_id,
+        lista_id=ppi,
+        ato=raiz.ato,
+        versao=raiz.versao,
+        etapa_governada_id=raiz.etapa_governada_id,
+        universo={},
+        primeira_posicao=1,
+        ultima_posicao=1,
+        emitido_por="maria",
+        emitido_em=raiz.emitido_em,
+    )
+    ItemDoCorte.objects.create(
+        corte=da_ppi,
+        inscricao=inscricoes[0],
+        posicao=1,
+        consequencia=ItemDoCorte.Consequencia.PROGREDIU,
+    )
+
+    participantes, _, _ = participacao(edital=edital, etapa_id=ENTREVISTA)
+
+    assert inscricoes[0].id in participantes, "alcançada pelo corte sem lista e pelo da PPI"
+    assert inscricoes[1].id in participantes, "alcançada pelo corte sem lista, que é do Perfil todo"
+    assert inscricoes[2].id not in participantes, "cortada pelo corte sem lista, e não pelo da PPI"

@@ -114,13 +114,15 @@ def participacao_detalhada(*, edital, etapa_id, vigentes=None, conteudo=None):
         Inscricao.objects.filter(edital=edital, status=Inscricao.Status.SUBMETIDA)
         .annotate(
             na_faixa=ExpressionWrapper(
-                _dentro_da_faixa(faixas, OuterRef("pk"), OuterRef("profile_id")),
+                _dentro_da_faixa(
+                    faixas, OuterRef("pk"), OuterRef("profile_id"), OuterRef("modality_id")
+                ),
                 output_field=BooleanField(),
             ),
             # **A segunda anotação sai de graça na mesma consulta**, e é ela que evita a pergunta
             # "existe corte?" custar um round-trip só para decidir se vale conferir a obsolescência.
             ha_corte=ExpressionWrapper(
-                Exists(faixas.filter(perfil_id=OuterRef("profile_id"))),
+                Exists(_do_recorte(faixas, OuterRef("profile_id"), OuterRef("modality_id"))),
                 output_field=BooleanField(),
             ),
         )
@@ -211,7 +213,11 @@ def fora_do_corte(edital, etapa_id, candidatas):
     faixas = faixas_que_governam(edital, etapa_id)
     return set(
         Inscricao.objects.filter(pk__in=candidatas)
-        .exclude(_dentro_da_faixa(faixas, OuterRef("pk"), OuterRef("profile_id")))
+        .exclude(
+            _dentro_da_faixa(
+                faixas, OuterRef("pk"), OuterRef("profile_id"), OuterRef("modality_id")
+            )
+        )
         .values_list("pk", flat=True)
     )
 
@@ -265,7 +271,22 @@ def faixas_que_governam(edital, etapa_id, *, marcos=None, conteudo=None, at=None
     )
 
 
-def _dentro_da_faixa(faixas, referencia, perfil):
+def _do_recorte(faixas, perfil, modalidade):
+    """As faixas que alcançam **esta** inscrição: as do Perfil dela, na lista dela.
+
+    O recorte da feature é `(Perfil, marco, lista)`, e não só o Perfil. Um marco de cotas tem três
+    atos raiz e três cortes, emitidos em instantes diferentes — e enquanto só o da PPI existisse, um
+    filtro por Perfil despertaria o gate para o Perfil **inteiro**: as inscrições de PcD, ausentes
+    dos itens da PPI, sairiam da Etapa sem que corte nenhum as tivesse cortado.
+
+    **Corte sem lista alcança o Perfil inteiro**, porque é o recorte da ampla concorrência, de que
+    todas as inscrições participam — é o que a cláusula 8.7 do 57 e do 28 manda. Corte **com** lista
+    alcança quem declarou aquela Modalidade.
+    """
+    return faixas.filter(perfil_id=perfil).filter(Q(lista_id__isnull=True) | Q(lista_id=modalidade))
+
+
+def _dentro_da_faixa(faixas, referencia, perfil, modalidade):
     """A condição inteira, **incluindo a dormência e o recorte** — sem perguntar antes se há corte.
 
     **A correlação com o Perfil é o que impede o corte de um alcançar os outros.** A Etapa é do
@@ -280,12 +301,13 @@ def _dentro_da_faixa(faixas, referencia, perfil):
     condição ficar dormente onde ela deve ficar: Perfil sem regra, e Perfil com regra e sem corte
     emitido, conduzem a Etapa exatamente como antes desta feature (FR-214).
     """
-    # **A correlação entra por `corte__perfil_id`, e não filtrando o queryset de faixas antes.**
+    # **A correlação entra pelos campos do `corte`, e não filtrando o queryset de faixas antes.**
     # Um queryset já correlacionado, usado como `corte__in=...`, vira subconsulta de subconsulta: o
     # `OuterRef` passaria a resolver contra `ItemDoCorte`, e o Django recusa com `FieldError`. Aqui
     # cada `OuterRef` sobe exatamente um nível, que é o que ele sabe fazer.
-    return ~Exists(faixas.filter(perfil_id=perfil)) | Exists(
+    return ~Exists(_do_recorte(faixas, perfil, modalidade)) | Exists(
         ItemDoCorte.objects.filter(
+            Q(corte__lista_id__isnull=True) | Q(corte__lista_id=modalidade),
             inscricao_id=referencia,
             corte__in=faixas,
             corte__perfil_id=perfil,
@@ -376,9 +398,13 @@ def restringir_a_participantes(
     # ela restringe o que sobrou, e não o substitui. Dormente onde nenhuma regra publicada governa
     # esta Etapa, que é o que preserva o comportamento de todo Edital anterior à feature (FR-214).
     perfil = OuterRef(f"{prefixo}__profile_id") if prefixo else OuterRef("profile_id")
+    modalidade = OuterRef(f"{prefixo}__modality_id") if prefixo else OuterRef("modality_id")
     consulta = consulta.filter(
         _dentro_da_faixa(
-            faixas_que_governam(edital, etapa_id, conteudo=conteudo), referencia, perfil
+            faixas_que_governam(edital, etapa_id, conteudo=conteudo),
+            referencia,
+            perfil,
+            modalidade,
         )
     )
     return consulta
@@ -407,6 +433,7 @@ def participa_da_etapa(*, edital, etapa_id, inscricao_id, vigentes=None):
                 faixas_que_governam(edital, etapa_id, conteudo=conteudo),
                 OuterRef("pk"),
                 OuterRef("profile_id"),
+                OuterRef("modality_id"),
             )
         )
         .exists()

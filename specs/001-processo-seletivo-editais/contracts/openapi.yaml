@@ -630,6 +630,14 @@ components:
         competitionModalities:
           type: array
           items: { $ref: '#/components/schemas/ModalidadeInput' }
+        generalCompetitionModalityId:
+          type: [string, 'null']
+          format: uuid
+          description: >-
+            Qual das competitionModalities é a ampla concorrência (014). A declarada corresponde à
+            linha geral do quadro de vagas, não recebe linha própria, e por isso não é exigida pela
+            conferência do alvo derivado do corte. Nula quando o Perfil não declara nenhuma — o
+            formato em que a ampla concorrência existe só como a linha geral.
         vacancyTable:
           type: array
           description: >-
@@ -752,7 +760,8 @@ components:
       required:
         [id, code, name, description, requirements, immediateVacancies, reserveType, reserveLimit,
          locality, duties, workload, compensation, classificationInformation, callInformation,
-         competitionModalities, declaredFacts, classificationMilestones, vacancyTable]
+         competitionModalities, declaredFacts, classificationMilestones, vacancyTable,
+         generalCompetitionModalityId]
       properties:
         id: { $ref: '#/components/schemas/Id' }
         code: { type: string }
@@ -787,6 +796,13 @@ components:
             competitionModalities: cada item é objeto, e o que vai nele é verificado pela coerência
             dos marcos, que precisa do conteúdo inteiro.
           items: { type: object }
+        generalCompetitionModalityId:
+          type: [string, 'null']
+          format: uuid
+          description: >-
+            Qual das competitionModalities é a ampla concorrência (014). A declarada corresponde à
+            linha geral do quadro de vagas, não recebe linha própria, e não é exigida pela
+            conferência do alvo derivado do corte. Nula quando o Perfil não declara nenhuma.
         classificationMilestones:
           type: array
           description: >-

@@ -97,6 +97,9 @@ def test_o_perfil_reduzido_aos_campos_de_entrada_e_recusado():
         # A da versão 12, pela mesma razão: opcional no rascunho, obrigatória no publicado, porque
         # duas grafias para a ausência é o que a versão canônica existe para não admitir.
         "vacancyTable",
+        # A da versão 13, pela mesma razão de novo: o Perfil publicado diz **sempre** qual das suas
+        # Modalidades é a ampla concorrência, ainda que a resposta seja `null` (014, FR-231).
+        "generalCompetitionModalityId",
     }
 
 

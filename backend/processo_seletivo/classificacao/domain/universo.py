@@ -25,7 +25,12 @@ def recorte_da_regra(conteudo, *, perfil_id, marco_id):
     etapas = {str(item.get("id")): item for item in conteudo.get("stages") or []}
     enumeradas = [str(item) for item in marco.get("stages") or []]
     return {
-        "milestone": marco,
+        # **Sem a regra de corte** (014, FR-205). Ela mora no mesmo objeto desde o degrau 13, e não
+        # é insumo da ordem: o corte **lê** a ordem, e não a produz. Mantê-la aqui fazia retificar
+        # `targetCount` obsoletar o ato de ordenação — e como não se corta sobre ordem obsoleta,
+        # a sucessão da geração por Retificação da regra, que a `FR-205` descreve, ficava
+        # inalcançável: exigia emitir ordem nova que sairia byte a byte igual à anterior.
+        "milestone": {chave: valor for chave, valor in marco.items() if chave != "cutRule"},
         # O peso vive na Etapa, fora do marco, e por isso precisa entrar explicitamente no
         # recorte. Os demais campos preservam a interpretação de porta/parcela e a ordem.
         "stages": [

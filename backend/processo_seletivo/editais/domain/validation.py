@@ -78,6 +78,11 @@ PERFIL_PUBLICADO = (
     Campo("immediateVacancies", int, minimo=0),
     Campo("reserveType", str, valores=RESERVA),
     Campo("reserveLimit", int, admite_nulo=True, minimo=0),
+    # Qual das Modalidades declaradas é a ampla concorrência (014, D-014, FR-231). **Anulável**: há
+    # Edital em que ela existe só como a linha geral do quadro, e nesse caso não há Modalidade a
+    # apontar. Que a identidade aponte Modalidade **deste** Perfil é conferido à parte, porque
+    # depende do conteúdo do Perfil inteiro e não da forma do campo.
+    Campo("generalCompetitionModalityId", str, formato="uuid", admite_nulo=True),
     Campo("locality", str),
     # `str` sem `admite_nulo`: os três são **sempre presentes**, com `""` quando não informados
     # (FR-014). Declará-los assim é o que faz a versão canônica 3 identificar uma forma só.

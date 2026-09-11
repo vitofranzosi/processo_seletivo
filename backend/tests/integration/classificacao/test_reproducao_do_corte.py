@@ -136,3 +136,33 @@ def test_o_ato_guarda_quem_emitiu_e_quando(cenario, gestor):
     assert corte.emitido_em is not None
     assert corte.itens.count() == 4, "a proveniência inclui quem ficou fora"
     assert corte.itens.filter(consequencia=ItemDoCorte.Consequencia.FORA_DA_FAIXA).exists()
+
+
+# --- o universo cita a versão que governou o corte, e não a da ordem (FR-193) -----------------
+
+
+def test_o_universo_cita_a_mesma_versao_que_o_ato_guarda(cenario, gestor, api_client):
+    """O mesmo ato não pode declarar duas normas.
+
+    `Corte.versao` passou a ser a vigente no instante da emissão; enquanto `universo.versionId`
+    continuava sendo a do **ato de ordenação**, uma Retificação que alcançasse só o quadro fazia o
+    corte citar duas versões diferentes — e a proveniência deixava de reproduzir.
+    """
+    from processo_seletivo.publicacoes.application.selectors import effective_version
+
+    edital, _, _ = cenario
+    retify(
+        api_client,
+        edital,
+        [{"targetPath": "/title", "operation": "REPLACE", "newValue": "Edital retificado"}],
+        suffix="e",
+    )
+    emitir(edital, gestor, chave="corte-014-universo")
+
+    corte = Corte.objects.get()
+    vigente = effective_version(edital_id=edital.id)
+    assert corte.universo["versionId"] == str(corte.versao_id) == str(vigente.id)
+    assert corte.universo["orderingVersionId"] == str(corte.ato.versao_id)
+    assert corte.universo["versionId"] != corte.universo["orderingVersionId"], (
+        "a Retificação separou as duas, e é aí que o defeito aparecia"
+    )

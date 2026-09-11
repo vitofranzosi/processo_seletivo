@@ -5,13 +5,15 @@ pela mesma razão — e é a única garantia que um teste de domínio não alcan
 no GET.
 """
 
+import re
+
 import pytest
 from django.urls import reverse
 
 from processo_seletivo.classificacao.models import Corte
 from tests.interface.conftest import identificar
 
-pytestmark = [pytest.mark.django_db, pytest.mark.integration]
+pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
 
 def test_a_rota_do_corte_existe_e_pende_do_marco():
@@ -73,19 +75,34 @@ def test_a_emissao_so_aceita_post(client, seletor_ligado):
 # --- os três do terceiro review, na porta da interface -----------------------------------------
 
 
-def test_a_chave_de_idempotencia_nasce_no_get(client, seletor_ligado):
-    """Gerada no POST, cada clique virava pedido novo — e duplo clique, duas faixas (R-015)."""
-    from processo_seletivo.interface import views
+def test_a_tela_entrega_a_chave_de_idempotencia_em_campo_oculto(cliente_no_corte):
+    """Gerada no POST, cada clique virava pedido novo — e duplo clique, duas faixas."""
+    client, edital, marco = cliente_no_corte
 
-    contexto = views.corte.__doc__
-    assert contexto, "a view existe"
-    identificar(client, "ana.presidente", ["elaborador"])
-    edital = "00000000-0000-4000-8000-000000000001"
-    marco = "00000000-0000-4000-8000-000000000002"
+    corpo = client.get(reverse("interface:corte", args=[edital.id, marco])).content.decode()
 
-    resposta = client.get(reverse("interface:corte", args=[edital, marco]))
+    assert 'name="chave_idempotencia"' in corpo
+    assert corpo.count('name="chave_idempotencia"') >= 1, "a emissão a carrega"
 
-    assert resposta.status_code in {200, 404}
+
+def test_o_mesmo_post_repetido_nao_emite_duas_faixas(cliente_no_corte):
+    """A prova de verdade: o segundo POST da mesma leitura devolve o desfecho do primeiro.
+
+    Na continuação não há confirmação intermediária que segurasse o segundo clique — é a chave que
+    segura, e ela precisa ser **a mesma** nas duas tentativas.
+    """
+    from processo_seletivo.classificacao.models import Corte
+
+    client, edital, marco = cliente_no_corte
+    corpo = client.get(reverse("interface:corte", args=[edital.id, marco])).content.decode()
+    chave = re.search(r'name="chave_idempotencia" value="([^"]+)"', corpo).group(1)
+    confirmacao = re.search(r'name="confirmacao_do_calculo" value="([^"]+)"', corpo).group(1)
+    formulario = {"chave_idempotencia": chave, "confirmacao_do_calculo": confirmacao}
+
+    client.post(reverse("interface:emitir-corte", args=[edital.id, marco]), formulario)
+    client.post(reverse("interface:emitir-corte", args=[edital.id, marco]), formulario)
+
+    assert Corte.objects.count() == 1, "duplo clique não emite duas faixas"
 
 
 @pytest.mark.parametrize("lixo", ["abc", "1", "%%"])
@@ -100,10 +117,28 @@ def test_lista_que_nao_e_identidade_responde_404_e_nao_500(client, seletor_ligad
     assert resposta.status_code == 404
 
 
-def test_quantidade_que_nao_e_numero_nao_derruba_o_servidor(client, seletor_ligado):
-    """Texto no campo numérico é erro de quem preenche, e vira recusa de domínio."""
-    from processo_seletivo.interface.views import _inteiro_do_formulario
+def test_quantidade_que_nao_e_numero_nao_derruba_a_rota(cliente_no_corte):
+    """Texto no campo numérico é erro de quem preenche, e vira recusa de domínio — não 500.
 
-    assert _inteiro_do_formulario("abc") == 0
-    assert _inteiro_do_formulario(None) == 0
-    assert _inteiro_do_formulario(" 7 ") == 7
+    O percurso é o da rota inteira, e não o da função de conversão: era ali que o `ValueError`
+    escapava, antes de o comando ter chance de recusar.
+    """
+    client, edital, marco = cliente_no_corte
+
+    resposta = client.post(
+        reverse("interface:continuar-corte", args=[edital.id, marco]),
+        {"quantidade": "abc", "motivo": "tentativa"},
+    )
+
+    assert resposta.status_code == 302, "volta à tela pelo POST-redirect-GET, e não explode"
+
+
+@pytest.fixture
+def cliente_no_corte(client, seletor_ligado, gestor, api_client, manager_headers, process_payload):
+    """Um Edital real com ordem emitida e corte por emitir, pela porta da interface."""
+    from tests.fixtures.corte import MARCO, montar_cenario_do_corte
+
+    edital, _, _ = montar_cenario_do_corte(gestor, api_client, manager_headers, process_payload)
+    # A base de gestão é o que a rota exige para emitir — ler tem porta mais larga.
+    identificar(client, "carlos", ["gestor"])
+    return client, edital, MARCO
