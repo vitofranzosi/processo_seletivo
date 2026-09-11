@@ -174,8 +174,21 @@ derivação acerta por acidente, e erraria no dia em que alguém trocasse a Etap
 igualmente irrelevante para aquele marco.
 
 **Decisão (`D-012`).** A regra **declara** `governedStage`, por identidade estável, ou declara `NONE`.
-Nada é inferido. A publicação recusa a ausência (`FR-224`), a Etapa inexistente na versão e a Etapa
-que não sucede a ordem do marco (`FR-225`).
+Nada é inferido. A publicação recusa a ausência (`FR-224`) e a Etapa inexistente na versão
+(`FR-225`).
+
+**E a guarda contra Etapa errada é de circularidade, não de ordem.** A primeira redação desta
+decisão dizia que a Etapa governada precisa "suceder a ordem do marco" — e isso era a derivação
+entrando de novo pela janela que a `D-012` fechou. Pior: tornava o **77/2026 impublicável**. Naquele
+Edital não existe Etapa avaliada antes do sorteio; a única é a análise documental, que é a que o
+marco **tem de enumerar** — o domínio exige ao menos uma — e é a que o corte governa.
+
+O que a norma de fato proíbe é o **laço**, e só ele existe em marco computado:
+
+| Marco | Etapa governada entre as que ele enumera | Por quê |
+|---|---|---|
+| computado a partir de Etapas | **impede a publicação** (`FR-229`) | o universo da ordem passaria a depender do corte que ela mesma produz |
+| constituído por sorteio | **legítimo, e é o caso normal** | a ordem vem da relação de habilitados, não de Etapa nenhuma — `_estado_do_marco_que_sorteia` devolve `proposta: None` |
 
 **A colisão que esta questão tratava desaparece junto.** Dois marcos com regra de corte governando a
 mesma Etapa continua sendo achado impeditivo de publicação, nomeando os dois marcos — e agora a
@@ -219,6 +232,10 @@ regressão: Edital sem regra e Edital com regra e sem corte emitido não ganham 
 de uma ordem. A condição do corte **deve** valer ali também: a ordem do marco seguinte não pode
 conter quem o corte anterior deixou de fora. Não há circularidade — o corte anterior é ato emitido,
 não cálculo em curso.
+
+**E o laço que poderia existir é fechado na publicação, não aqui** (`FR-229`): em marco computado, a
+Etapa governada não pode estar entre as que alimentam a própria ordem. Em marco de sorteio a
+restrição não se aplica, porque `calculo.py` não participa: a ordem vem da relação de habilitados.
 
 ---
 
@@ -384,7 +401,8 @@ ganha contrato próprio em [contracts/corte.md](contracts/corte.md).
 | `cut_rule_sem_linha_de_quadro` | `FROM_VACANCY_TABLE` e o recorte sem linha | impeditivo |
 | `cut_rule_em_dois_marcos_da_mesma_etapa` | dois marcos **declarando** governar a mesma Etapa | impeditivo |
 | `cut_rule_sem_etapa_governada` | nem Etapa declarada, nem `NONE` | impeditivo |
-| `cut_rule_com_etapa_inexistente` | a Etapa declarada não existe na versão, ou não sucede a ordem do marco | impeditivo |
+| `cut_rule_com_etapa_inexistente` | a Etapa declarada não existe na versão | impeditivo |
+| `cut_rule_com_etapa_circular` | marco **computado** cuja Etapa governada alimenta a própria ordem | impeditivo |
 | `cut_rule_sem_politica_de_continuacao` | `continuation` não declarada | impeditivo |
 
 E um impedimento na publicação de **resultado** (`FR-219`), ao lado do que já existe para ato de

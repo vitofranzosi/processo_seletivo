@@ -47,7 +47,7 @@ indistinguível de "esqueci" em toda chave anulável do sistema.
 | Momento | O que recusa |
 |---|---|
 | elaboração (`editais/domain/perfis.py`) | forma malformada, `targetCount` nos dois lugares, inteiro negativo |
-| publicação (`editais/domain/validation.py`) | `tieOutcome`, `governedStage` ou `continuation` ausentes; Etapa governada inexistente na versão ou que não sucede a ordem do marco; `FROM_VACANCY_TABLE` sem linha de quadro **para algum dos recortes que o marco ordena**; dois marcos declarando governar a mesma Etapa |
+| publicação (`editais/domain/validation.py`) | `tieOutcome`, `governedStage` ou `continuation` ausentes; Etapa governada inexistente na versão, ou — em marco **computado** — entre as que alimentam a própria ordem; `FROM_VACANCY_TABLE` sem linha de quadro **para algum dos recortes que o marco ordena**; dois marcos declarando governar a mesma Etapa |
 | Retificação | pela gramática de campo que `appealWindow` já usa, endereçada por identidade do marco |
 
 ---

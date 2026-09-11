@@ -56,7 +56,8 @@ sucessora emitida à toa.
 |---|---|---|
 | `cut_rule_sem_desfecho_de_empate` | `tieOutcome` ausente | impeditivo |
 | `cut_rule_sem_etapa_governada` | nem Etapa declarada, nem `NONE` | impeditivo |
-| `cut_rule_com_etapa_inexistente` | a Etapa declarada não existe na versão, ou não sucede a ordem do marco | impeditivo |
+| `cut_rule_com_etapa_inexistente` | a Etapa declarada não existe na versão | impeditivo |
+| `cut_rule_com_etapa_circular` | marco **computado** cuja Etapa governada está entre as que alimentam a própria ordem | impeditivo |
 | `cut_rule_sem_politica_de_continuacao` | `continuation` não declarada | impeditivo |
 | `cut_rule_sem_linha_de_quadro` | `FROM_VACANCY_TABLE` e **algum** recorte que o marco ordena sem linha | impeditivo |
 | `cut_rule_em_dois_marcos_da_mesma_etapa` | dois marcos declarando governar a mesma Etapa | impeditivo |
@@ -120,6 +121,7 @@ contagens.
 | `continuacao_nao_publicada` | a regra declara `continuation: NONE` (`FR-204`, `FR-226`) | 422 |
 | `continuacao_sem_motivo` | motivo vazio (`FR-203`) | 422 |
 | `continuacao_sobre_ordem_sucedida` | a ordem da faixa anterior não é mais a vigente (`FR-205`) | 409 |
+| `continuacao_de_geracao_sucedida` | a geração da faixa anterior já foi sucedida (`FR-205`) | 409 |
 | `sem_faixa_anterior` | não há geração vigente no recorte | 409 |
 | `continuacao_ja_emitida` | a faixa anterior já tem continuação | 409 |
 

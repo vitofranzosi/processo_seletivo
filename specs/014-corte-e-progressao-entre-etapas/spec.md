@@ -595,8 +595,13 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
 - **FR-224**: A Regra de Corte MUST declarar **qual Etapa o corte governa**, por identidade estável,
   ou declarar explicitamente que não governa Etapa alguma. A Etapa governada MUST NOT ser inferida
   das Etapas que o marco enumera, e a ausência de declaração MUST impedir a publicação.
-- **FR-225**: Etapa governada declarada que não exista na versão publicada, ou que não suceda a
-  ordem do marco, MUST impedir a publicação, com achado que nomeia o marco e a Etapa.
+- **FR-225**: Etapa governada declarada que não exista na versão publicada MUST impedir a
+  publicação, com achado que nomeia o marco e a Etapa.
+- **FR-229**: Em marco cuja ordem é **computada a partir de Etapas**, Etapa governada que esteja
+  entre as que alimentam a própria ordem MUST impedir a publicação: o universo da ordem passaria a
+  depender do corte que ela mesma produz. Em marco cuja ordem é **constituída por sorteio** essa
+  restrição MUST NOT ser aplicada — a ordem não vem de Etapa nenhuma, e governar a Etapa que o marco
+  enumera é o caso normal.
 - **FR-226**: A Regra de Corte MUST declarar se admite **continuação**, e a ausência de declaração
   MUST impedir a publicação. Regra que não a admite MUST recusar toda faixa seguinte.
 
@@ -650,7 +655,8 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
   a recusa MUST dizer que aquele Edital não a publicou. Admitida, ela **não tem teto numérico
   publicado** — o que a limita é o motivo declarado, a autorização, a auditoria e o fim da ordem.
 - **FR-205**: A faixa seguinte MUST ser recusada quando a ordem citada pela faixa anterior não for
-  mais a vigente.
+  mais a vigente, **ou quando a geração a que ela pertence já tiver sido sucedida**. As duas não são
+  a mesma coisa: a sucessão também acontece por Retificação da regra sobre a mesma ordem.
 - **FR-206**: O sistema MUST NOT emitir faixa seguinte por conta própria, em nenhuma circunstância.
 - **FR-207**: O sistema MUST NOT afirmar, em ato, tela, mensagem ou documento desta feature, que
   vagas foram ocupadas, que vagas foram preenchidas ou que existe déficit de vagas — o vocabulário é
@@ -688,8 +694,11 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
 - **FR-219**: Corte obsoleto MUST impedir a publicação de resultado que dele dependa, com motivo
   nomeado e o caminho a seguir.
 - **FR-228**: Enquanto o corte estiver obsoleto e a geração sucessora não for emitida, o sistema MUST
-  bloquear **trabalho novo** na Etapa governada — distribuir e concluir avaliação —, com motivo
-  nomeado. O trabalho já registrado MUST ser preservado, e a leitura MUST continuar disponível.
+  bloquear **trabalho novo** na Etapa governada — distribuir, concluir avaliação **e consolidar
+  Resultado** —, com motivo nomeado. Os três, e não dois: consolidar sob a faixa que o sistema já
+  sabe estar para trás oficializaria o desfecho de quem talvez não devesse estar ali, e é o mais
+  irreversível dos três. O trabalho já registrado MUST ser preservado, e a leitura MUST continuar
+  disponível.
 
 **Autorização e auditoria**
 
@@ -752,6 +761,7 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
 - **IO-11**: sucedida uma geração, nenhuma faixa dela autoriza participante — nem a inicial, nem
   qualquer continuação.
 - **IO-12**: a Etapa que um corte governa é sempre lida da regra publicada, e nunca inferida.
+- **IO-14**: nenhuma ordem depende de um corte que ela própria produz.
 - **IO-13**: nenhum trabalho novo é criado na Etapa governada enquanto o corte que a governa estiver
   obsoleto.
 
@@ -791,7 +801,8 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
 - **SC-070**: Todo corte emitido tem auditoria com ator, instante, recorte, ordem citada e alvo
   apurado, recuperável sem acesso ao banco.
 - **SC-071**: Um Edital que publica alvo **e** suplentes tem os dois alcançados pela **mesma**
-  emissão — no recorte de 40 vagas com 30 suplentes, a primeira faixa contém 70 pessoas.
+  emissão — no recorte de 40 vagas com 30 suplentes e sem empate na fronteira, a primeira faixa
+  contém exatamente 70 pessoas; havendo empate sob *admite excedente*, contém mais, e nunca menos.
 - **SC-072**: Sucedida uma geração que tinha continuação, nenhum participante alcançado por qualquer
   faixa dela continua participando da Etapa governada.
 - **SC-073**: Com o corte obsoleto, nenhuma distribuição e nenhuma conclusão de avaliação nova

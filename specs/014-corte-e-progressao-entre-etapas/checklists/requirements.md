@@ -74,6 +74,26 @@ leitura encontrou, e onde está resolvido:
 - [x] **"Nenhum módulo novo"** virou "nenhum app, camada ou serviço novo" — a feature cria três
       módulos, e dizia que não criava nenhum.
 
+## Terceira varredura — o `/speckit-analyze` de 11/09, depois das correções
+
+A correção da `D-012` deixou passar uma derivação disfarçada, e a varredura seguinte a pegou:
+
+- [x] **A guarda de Etapa governada era de ordem, e tinha de ser de circularidade.** A `FR-225` dizia
+      "que não suceda a ordem do marco" — a derivação voltando pela janela que a `D-012` fechou —, e
+      tornava o **77/2026 impublicável**: lá não há Etapa avaliada antes do sorteio, a única é a
+      análise documental, o marco tem de enumerá-la e é ela que o corte governa. Fechado pela
+      `FR-229`: laço é proibido em marco computado, e governar a Etapa enumerada é o caso normal em
+      marco de sorteio.
+- [x] **O percurso contornava o mesmo defeito.** O Perfil B do quickstart inventava uma Etapa
+      "Sorteio" — que ninguém avalia e que nunca produz Resultado. Agora ele tem uma Etapa só, que é
+      a forma do 77.
+- [x] **A `FR-228` bloqueava dois verbos e o terceiro ficava implícito.** Consolidar Resultado entra
+      na lista: é o mais irreversível dos três.
+- [x] **Continuar uma geração já sucedida** não era recusado quando a ordem não mudava — e a sucessão
+      também acontece por Retificação da regra sobre a mesma ordem. Fechado na `FR-205`.
+- [x] **`SC-071`** afirmava 70 em termos absolutos, onde o empate sob *admite excedente* legitimamente
+      faz mais.
+
 ## Notes
 
 - As duas decisões normativas — desfecho do empate (D-001) e fronteira com a `016` (D-002) — foram

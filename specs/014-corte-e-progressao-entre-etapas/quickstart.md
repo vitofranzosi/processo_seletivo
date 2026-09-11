@@ -79,10 +79,17 @@ precisamos —, então o Edital é montado à mão pela interface.
 | | Perfil | Etapas | Marco | Regra de corte |
 |---|---|---|---|---|
 | **A** | `TFC-01` — Orientador de TFC | 1 Prova de Títulos (pontuada), 2 Entrevista | `M1` | alvo **fixo 10**, excedente **0**, empate **STRICT**, governa a **Etapa 2**, continuação **NONE** |
-| **B** | `FIC-01` — vagas remanescentes | 1 Sorteio, 2 Análise documental | `M2`, que ordena por sorteio | alvo **derivado**, excedente **30**, empate `ADMITS_SURPLUS`, governa a **Etapa 2**, continuação **ALLOWED** |
+| **B** | `FIC-01` — vagas remanescentes | **uma só**: Análise documental | `M2`, que ordena por sorteio e **enumera essa mesma Etapa** | alvo **derivado**, excedente **30**, empate `ADMITS_SURPLUS`, governa a **Análise documental**, continuação **ALLOWED** |
 
 No Perfil B, o quadro de vagas publica **40** vagas imediatas na linha geral — é dele que o alvo
 derivado sai.
+
+**O Perfil B tem uma Etapa só, e isso não é simplificação.** É a forma do 77/2026: não há Etapa
+avaliada antes do sorteio — quem envia inscrição completa entra na relação de habilitados, sorteia-se,
+e só então os documentos dos primeiros são analisados. O marco precisa enumerar ao menos uma Etapa,
+porque o domínio exige, e a única que existe é justamente a que o corte governa. Inventar uma Etapa
+"Sorteio" para contornar isso — como uma redação anterior deste percurso fazia — cria uma Etapa que
+ninguém avalia, que nunca produz Resultado e que trava o certame.
 
 **As duas declarações de fronteira não são detalhe de formulário.** A Etapa governada é declarada
 porque num marco de sorteio a Etapa enumerada não significa nada — o domínio exige que o marco
@@ -116,7 +123,8 @@ Como **elaborador**, em `/gestao/editais/<id>/compor/perfis/`.
 | digitar `-1` no alvo ou no excedente | recusa (`FR-179`, `FR-180`) |
 | deixar o desfecho do empate **em branco** e tentar **publicar** | publicação impedida, com o marco nomeado (`FR-182`, `UX-025`) |
 | não declarar a **Etapa governada** — nem uma Etapa, nem a ausência explícita — e publicar | impedida, dizendo que ela não é inferida de lugar nenhum (`FR-224`) |
-| declarar Etapa governada que **não existe** na versão, ou anterior à ordem do marco | impedida, nomeando o marco e a Etapa (`FR-225`) |
+| declarar Etapa governada que **não existe** na versão | impedida, nomeando o marco e a Etapa (`FR-225`) |
+| no Perfil **A**, governar uma das Etapas que alimentam a própria ordem | impedida: seria laço (`FR-229`) — e no Perfil **B**, governar a Etapa que o marco enumera **publica**, porque a ordem vem do sorteio |
 | não declarar se admite **continuação** e publicar | impedida, nomeando o marco (`FR-226`) |
 | pôr regra *derivada* num marco de **três listas** com quadro parcial e publicar | impedida, nomeando o recorte sem linha (`FR-183`) — e linha **zerada** publica |
 | declarar regra de corte em **dois** marcos que declaram governar a mesma Etapa | impedida, nomeando os dois marcos e a Etapa |
@@ -181,7 +189,7 @@ Como **presidência**, no Perfil B — o recorte de sorteio, com alvo derivado.
 
 1. Abra o corte de `M2`: alvo apurado **40**, lido da linha geral do quadro com a origem visível, e
    excedente **30** — faixa de **70** (`FR-189`, `FR-193`, `SC-071`).
-2. Emita. Os **70** primeiros da ordem do sorteio progridem para a análise documental: as 40 vagas e
+2. Emita. Os **70** primeiros da ordem do sorteio progridem para a Análise documental: as 40 vagas e
    os até 30 suplentes, analisados **juntos**, que é o que a cláusula 6.10 manda com a palavra
    *imediata*.
 3. Indefira seis inscrições dessa faixa.
@@ -216,7 +224,8 @@ palavras *vaga ocupada*, *vaga preenchida* ou *déficit* (`FR-207`, `SC-066`).
    não uma divergência genérica (`FR-218`, `FR-216`).
 5. Com o corte obsoleto, tente publicar resultado que dele dependa: **impedido**, com o caminho a
    seguir (`FR-219`, `SC-063`).
-6. Ainda obsoleto, tente **distribuir** ou concluir avaliação na Etapa governada: recusado, dizendo
+6. Ainda obsoleto, tente **distribuir**, concluir avaliação ou **consolidar Resultado** na Etapa
+   governada: os três são recusados, dizendo
    que a faixa está para trás e que o caminho é emitir a geração sucessora. O trabalho já registrado
    continua íntegro e legível (`FR-228`, `UX-030`, `SC-073`).
 7. No Perfil B, que já tem faixa inicial **e** continuação: suceda a geração com motivo. **Nenhuma**
