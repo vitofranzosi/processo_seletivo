@@ -240,35 +240,42 @@ def test_a_etapa_anterior_continua_valendo_junto_com_o_corte(cortado):
 # --- o recorte é (Perfil, marco, lista), e não só o Perfil (FR-232, SC-075) -------------------
 
 
-def test_o_corte_de_uma_lista_nao_desperta_o_gate_para_as_outras(cortado, gestor):
+def test_o_corte_de_uma_lista_nao_desperta_o_gate_para_as_outras(
+    gestor, api_client, manager_headers, process_payload
+):
     """Um marco de cotas tem três atos raiz e três cortes, emitidos em instantes diferentes.
 
-    Enquanto só o da PPI existisse, um filtro por Perfil despertaria o gate para o Perfil inteiro:
-    as inscrições de PcD, ausentes dos itens da PPI, sairiam da Etapa sem que corte nenhum as
-    tivesse cortado.
+    **O cenário começa sem corte geral**, e é isso que o torna uma prova: um corte sem lista governa
+    o Perfil inteiro e mascararia exatamente a dormência que se quer verificar. Aqui existe **só** o
+    corte da PPI — e quem declarou PcD tem de continuar participando, porque corte nenhum a cortou.
 
     O corte por lista é **construído aqui**, e não emitido: ordenar por lista exige a máquina de
-    sorteio da `021`, e o que este teste verifica é a condição do gate — que é da `014`.
+    sorteio da `021`, e o que este teste verifica é a condição do gate, que é da `014`.
     """
+    from processo_seletivo.classificacao.application.selectors import ato_vigente
     from processo_seletivo.classificacao.models import Corte, ItemDoCorte
+    from processo_seletivo.publicacoes.application.selectors import effective_version
 
-    edital, inscricoes = cortado
-    raiz = Corte.objects.get()
+    edital, inscricoes = montar(
+        gestor, api_client, manager_headers, process_payload, prefixo="por-lista"
+    )
     ppi, pcd = uuid4(), uuid4()
-    Inscricao.objects.filter(pk=inscricoes[2].id).update(modality_id=pcd)
+    Inscricao.objects.filter(pk=inscricoes[0].id).update(modality_id=ppi)
+    Inscricao.objects.filter(pk=inscricoes[1].id).update(modality_id=pcd)
+    ato = ato_vigente(edital=edital, marco_id=MARCO)
     da_ppi = Corte.objects.create(
         edital=edital,
-        perfil_id=raiz.perfil_id,
-        marco_id=raiz.marco_id,
+        perfil_id=PROFILE_ID,
+        marco_id=MARCO,
         lista_id=ppi,
-        ato=raiz.ato,
-        versao=raiz.versao,
-        etapa_governada_id=raiz.etapa_governada_id,
+        ato=ato,
+        versao=effective_version(edital_id=edital.id),
+        etapa_governada_id=ENTREVISTA,
         universo={},
         primeira_posicao=1,
         ultima_posicao=1,
         emitido_por="maria",
-        emitido_em=raiz.emitido_em,
+        emitido_em=ato.emitido_em,
     )
     ItemDoCorte.objects.create(
         corte=da_ppi,
@@ -279,6 +286,8 @@ def test_o_corte_de_uma_lista_nao_desperta_o_gate_para_as_outras(cortado, gestor
 
     participantes, _, _ = participacao(edital=edital, etapa_id=ENTREVISTA)
 
-    assert inscricoes[0].id in participantes, "alcançada pelo corte sem lista e pelo da PPI"
-    assert inscricoes[1].id in participantes, "alcançada pelo corte sem lista, que é do Perfil todo"
-    assert inscricoes[2].id not in participantes, "cortada pelo corte sem lista, e não pelo da PPI"
+    assert inscricoes[0].id in participantes, "alcançada pelo corte da própria lista"
+    assert inscricoes[1].id in participantes, (
+        "a lista PcD não tem corte: o recorte dela continua dormente"
+    )
+    assert inscricoes[2].id in participantes, "sem Modalidade declarada, e sem corte sem lista"

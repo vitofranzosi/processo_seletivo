@@ -85,24 +85,39 @@ def test_a_tela_entrega_a_chave_de_idempotencia_em_campo_oculto(cliente_no_corte
     assert corpo.count('name="chave_idempotencia"') >= 1, "a emissão a carrega"
 
 
-def test_o_mesmo_post_repetido_nao_emite_duas_faixas(cliente_no_corte):
-    """A prova de verdade: o segundo POST da mesma leitura devolve o desfecho do primeiro.
+def test_a_continuacao_repetida_nao_emite_duas_faixas(cliente_no_corte):
+    """**A continuação**, e não a emissão inicial — era ela o fluxo vulnerável.
 
-    Na continuação não há confirmação intermediária que segurasse o segundo clique — é a chave que
-    segura, e ela precisa ser **a mesma** nas duas tentativas.
+    Na emissão, a confirmação do cálculo já recusaria o segundo POST sozinha, e o teste passaria
+    mesmo sem idempotência nenhuma. A continuação não tem confirmação intermediária: o que segura o
+    segundo clique é a chave, e ela precisa ser **a mesma** nas duas tentativas.
     """
     from processo_seletivo.classificacao.models import Corte
 
     client, edital, marco = cliente_no_corte
     corpo = client.get(reverse("interface:corte", args=[edital.id, marco])).content.decode()
-    chave = re.search(r'name="chave_idempotencia" value="([^"]+)"', corpo).group(1)
     confirmacao = re.search(r'name="confirmacao_do_calculo" value="([^"]+)"', corpo).group(1)
-    formulario = {"chave_idempotencia": chave, "confirmacao_do_calculo": confirmacao}
+    chave_da_emissao = re.search(r'name="chave_idempotencia" value="([^"]+)"', corpo).group(1)
+    client.post(
+        reverse("interface:emitir-corte", args=[edital.id, marco]),
+        {"chave_idempotencia": chave_da_emissao, "confirmacao_do_calculo": confirmacao},
+    )
+    assert Corte.objects.count() == 1, "o cenário começa com a faixa inicial emitida"
 
-    client.post(reverse("interface:emitir-corte", args=[edital.id, marco]), formulario)
-    client.post(reverse("interface:emitir-corte", args=[edital.id, marco]), formulario)
+    # A tela recarregada traz a chave da **próxima** tentativa, que é o que o navegador reenviaria.
+    corpo = client.get(reverse("interface:corte", args=[edital.id, marco])).content.decode()
+    formulario_da_continuacao = corpo[corpo.index("/corte/continuar") :]
+    assert 'name="chave_idempotencia"' in formulario_da_continuacao, (
+        "é o formulário da continuação que precisa dela: sem confirmação intermediária, é a chave "
+        "que segura o segundo clique"
+    )
+    chave = re.search(r'name="chave_idempotencia" value="([^"]+)"', corpo).group(1)
+    continuar = {"chave_idempotencia": chave, "quantidade": "1", "motivo": "um indeferimento"}
 
-    assert Corte.objects.count() == 1, "duplo clique não emite duas faixas"
+    client.post(reverse("interface:continuar-corte", args=[edital.id, marco]), continuar)
+    client.post(reverse("interface:continuar-corte", args=[edital.id, marco]), continuar)
+
+    assert Corte.objects.count() == 2, "duplo clique na continuação não emite duas faixas"
 
 
 @pytest.mark.parametrize("lixo", ["abc", "1", "%%"])
@@ -136,9 +151,18 @@ def test_quantidade_que_nao_e_numero_nao_derruba_a_rota(cliente_no_corte):
 @pytest.fixture
 def cliente_no_corte(client, seletor_ligado, gestor, api_client, manager_headers, process_payload):
     """Um Edital real com ordem emitida e corte por emitir, pela porta da interface."""
-    from tests.fixtures.corte import MARCO, montar_cenario_do_corte
+    from tests.fixtures.corte import MARCO, montar_cenario_do_corte, regra
 
-    edital, _, _ = montar_cenario_do_corte(gestor, api_client, manager_headers, process_payload)
+    # **Com continuação admitida**: é ela o fluxo sem confirmação intermediária, e portanto o que
+    # o teste de idempotência precisa exercitar.
+    edital, _, _ = montar_cenario_do_corte(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        cut=regra(continuation="ALLOWED"),
+        prefixo="corte-014-ui",
+    )
     # A base de gestão é o que a rota exige para emitir — ler tem porta mais larga.
     identificar(client, "carlos", ["gestor"])
     return client, edital, MARCO

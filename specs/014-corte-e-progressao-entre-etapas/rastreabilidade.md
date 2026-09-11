@@ -62,14 +62,14 @@ leitura, e não o inventário — quem quer o inventário lê o `git log` da fea
 | **FR-217** | T079 | `tests/integration/classificacao/test_corte_obsoleto.py` | sim |
 | **FR-218** | T080 | `tests/integration/classificacao/test_corte_obsoleto.py` | **não** |
 | **FR-230** | T080a, T096 | `tests/integration/classificacao/test_corte_obsoleto.py` | **não** |
-| **FR-231** | T097, T098, T099 | `classificacao/application/corte.py`, `editais/domain/validation.py`, `editais/migrations/0018_ampla_concorrencia_declarada.py` | sim |
+| **FR-231** | T097, T098, T099, T115 | `classificacao/application/corte.py`, `editais/domain/validation.py`, `editais/migrations/0018_ampla_concorrencia_declarada.py` | sim |
 | **FR-232** | T102, T111 | `resultados/application/prontidao.py` | sim |
 | **FR-233** | T100 | `classificacao/application/corte.py` | sim |
 | **FR-234** | T103 | `resultados/application/prontidao.py` | sim |
 | **FR-235** | T104 | `classificacao/application/corte.py` | sim |
 | **FR-236** | T113 | `classificacao/application/corte.py` | sim |
 | **FR-237** | T112 | `classificacao/domain/universo.py` | sim |
-| **FR-238** | T109, T110 | `editais/domain/validation.py`, `interface/forms.py`, `interface/retificacao.py` | sim |
+| **FR-238** | T109, T110, T115 | `editais/domain/validation.py`, `interface/forms.py`, `interface/retificacao.py` | sim |
 | **FR-219** | T081, T084 | `divulgacao/domain/publicabilidade.py`, `tests/integration/classificacao/test_corte_obsoleto.py` | sim |
 | **FR-228** | T081a, T085a | `resultados/application/prontidao.py`, `tests/integration/classificacao/test_corte_obsoleto.py` | sim |
 | **FR-220** | T054, T105 | `classificacao/application/emissao_do_corte.py`, `interface/templates/interface/corte.html`, `interface/views.py` | sim |
@@ -101,8 +101,8 @@ leitura, e não o inventário — quem quer o inventário lê o `git log` da fea
 | **SC-072** | T081b | `tests/integration/classificacao/test_corte_obsoleto.py` | sim |
 | **SC-073** | T081a, T096 | `tests/integration/classificacao/test_corte_obsoleto.py` | sim |
 | **SC-074** | T101, T108 | `classificacao/application/emissao_do_corte.py`, `tests/integration/classificacao/test_corte_obsoleto.py`, `tests/integration/classificacao/test_faixa_seguinte.py` | sim |
-| **SC-075** | T102, T108, T111 | `resultados/application/prontidao.py`, `tests/integration/classificacao/test_corte_obsoleto.py`, `tests/integration/classificacao/test_faixa_seguinte.py` | sim |
-| **SC-076** | T114 | `tests/integration/resultados/test_progressao_com_corte.py`, `tests/interface/test_corte.py` | sim |
+| **SC-075** | T102, T108, T111, T116 | `resultados/application/prontidao.py`, `tests/integration/classificacao/test_corte_obsoleto.py`, `tests/integration/classificacao/test_faixa_seguinte.py` | sim |
+| **SC-076** | T114, T116 | `tests/integration/resultados/test_progressao_com_corte.py`, `tests/interface/test_corte.py` | sim |
 | **SC-077** | T114 | `tests/integration/resultados/test_progressao_com_corte.py`, `tests/interface/test_corte.py` | sim |
 
 ### Requisitos de apresentação

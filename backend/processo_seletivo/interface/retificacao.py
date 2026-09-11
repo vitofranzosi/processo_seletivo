@@ -396,6 +396,17 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
     for perfil in conteudo.get("profiles") or []:
         caminho = f"/profiles/id={perfil.get('id', '')}"
         nome_do_perfil = f"{perfil.get('code', '')} — {perfil.get('name', '')}".strip(" —")
+        # As Modalidades **deste** Perfil, e não as do Edital. Servem a dois campos de referência —
+        # a ampla concorrência declarada pelo Perfil e a `modalityId` de cada linha do quadro —, e
+        # por isso são calculadas antes do primeiro grupo que as usa.
+        modalidades_do_perfil = [
+            (
+                modalidade["id"],
+                f"{modalidade.get('code', '')} — {modalidade.get('name', '')}".strip(" —"),
+            )
+            for modalidade in perfil.get("competitionModalities") or []
+            if modalidade.get("id")
+        ]
         grupos.append(
             _grupo(
                 f"Perfil {nome_do_perfil}",
@@ -404,6 +415,16 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                 CAMPOS_PERFIL,
                 tipo="Perfil",
                 nome=nome_do_perfil,
+                # **Sem isto o seletor nasce vazio**, e um campo de referência sem opção não
+                # oferece nada e ainda apaga a declaração vigente ao ser submetido em branco: a
+                # tela mostraria só o rótulo do vazio, e retificar qualquer outro campo do Perfil
+                # levaria junto a ampla concorrência declarada (014, FR-231, FR-238).
+                opcoes={"generalCompetitionModalityId": modalidades_do_perfil},
+                rotulos_do_vazio={
+                    "generalCompetitionModalityId": (
+                        "Nenhuma — a ampla concorrência é só a linha geral do quadro"
+                    )
+                },
             )
         )
         for modalidade in perfil.get("competitionModalities") or []:
@@ -421,17 +442,9 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                     nome=nome,
                 )
             )
-        # As linhas do quadro. As opções de `modalityId` são as Modalidades **deste** Perfil, e não
-        # as do Edital: uma linha que apontasse Modalidade de outro Perfil é o que a FR-158 recusa,
-        # e oferecê-la na tela seria oferecer o que a publicação não aceita.
-        modalidades_do_perfil = [
-            (
-                modalidade["id"],
-                f"{modalidade.get('code', '')} — {modalidade.get('name', '')}".strip(" —"),
-            )
-            for modalidade in perfil.get("competitionModalities") or []
-            if modalidade.get("id")
-        ]
+        # As linhas do quadro usam a mesma lista de Modalidades calculada acima: uma linha que
+        # apontasse Modalidade de outro Perfil é o que a FR-158 recusa, e oferecê-la na tela seria
+        # oferecer o que a publicação não aceita.
         for linha in perfil.get("vacancyTable") or []:
             recorte = next(
                 (

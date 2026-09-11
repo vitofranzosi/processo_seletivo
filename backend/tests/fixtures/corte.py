@@ -73,15 +73,21 @@ def rascunho(cut=None):
     return base, pontuada
 
 
-def montar_cenario_do_corte(gestor, api_client, manager_headers, process_payload):
-    """Quatro inscritos, três pontuados, ordem emitida — e um alvo de dois."""
-    draft, pontuada = rascunho()
+def montar_cenario_do_corte(
+    gestor, api_client, manager_headers, process_payload, *, cut=None, prefixo="corte-014"
+):
+    """Quatro inscritos, três pontuados, ordem emitida — e um alvo de dois.
+
+    `cut` permite ao chamador declarar outra regra: quem exercita a continuação precisa de um Edital
+    que a publique, e a do cenário base é a do 14/2026, que não a admite.
+    """
+    draft, pontuada = rascunho(cut=cut if cut is not None else regra())
     edital = publish_original(api_client, manager_headers, process_payload, draft=draft)
     membros = constituir(
         gestor,
         edital.processo,
         [("maria", Funcao.PRESIDENTE), ("joao", Funcao.MEMBRO)],
-        prefixo="corte-014",
+        prefixo=prefixo,
     )
     alocar_em(gestor, edital.processo, membros["joao"], edital, pontuada["id"])
     contexto = {
@@ -91,7 +97,7 @@ def montar_cenario_do_corte(gestor, api_client, manager_headers, process_payload
         "etapa": pontuada["id"],
     }
     inscricoes = inscrever(edital, 4, primeiro=601)
-    distribuir_para(contexto, gestor, ["joao"], inscricoes[:3], chave="corte-014-lote")
+    distribuir_para(contexto, gestor, ["joao"], inscricoes[:3], chave=f"{prefixo}-lote")
     for indice, pontuacao in enumerate(["90.0000", "80.0000", "70.0000"]):
         concluir_como(contexto, "joao", inscricoes[indice], pontuacao=pontuacao)
     consolidar(
@@ -100,7 +106,7 @@ def montar_cenario_do_corte(gestor, api_client, manager_headers, process_payload
         edital_id=edital.id,
         etapa_id=pontuada["id"],
         inscricao_ids=[item.id for item in inscricoes[:3]],
-        idempotency_key="corte-014-consolidar",
+        idempotency_key=f"{prefixo}-consolidar",
         correlation_id="teste-corte-014",
     )
     emitir_ordem(
@@ -109,7 +115,7 @@ def montar_cenario_do_corte(gestor, api_client, manager_headers, process_payload
         edital_id=edital.id,
         perfil_id=PROFILE_ID,
         marco_id=MARCO,
-        idempotency_key="corte-014-ordem",
+        idempotency_key=f"{prefixo}-ordem",
         correlation_id="teste-corte-014",
         confirmacao_do_calculo=assinatura_da_proposta(
             calcular_ordem(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO)
