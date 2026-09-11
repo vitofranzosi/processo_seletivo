@@ -209,10 +209,11 @@ de PostgreSQL sob SQLite em casos que deveriam ter sido pulados e não foram. O 
 porque só roda contra PostgreSQL. O achado está em
 [`doc/achado-suite-em-sqlite.md`](doc/achado-suite-em-sqlite.md).
 
-Contra PostgreSQL a suíte fecha em 3957 passando e 1 pulado. O alvo `test-pg` monta a conexão a
-partir do `POSTGRES_USER` do seu `.env`; à mão, fora do `make`, são necessárias as **duas**
-variáveis — sem `TEST_DB_ENGINE=postgresql` a suíte cai para SQLite, e sem `DB_USER` ela tenta
-conectar como a role de runtime, que não pode criar banco de teste:
+Contra PostgreSQL a suíte fecha em 4681 passando e 2 pulados — os dois deliberados, e nomeados em
+[`doc/achado-fonte-real-do-sorteio-sem-gatilho.md`](doc/achado-fonte-real-do-sorteio-sem-gatilho.md).
+O alvo `test-pg` monta a conexão a partir do `POSTGRES_USER` do seu `.env`; à mão, fora do `make`,
+são necessárias as **duas** variáveis — sem `TEST_DB_ENGINE=postgresql` a suíte cai para SQLite, e
+sem `DB_USER` ela tenta conectar como a role de runtime, que não pode criar banco de teste:
 
 ```bash
 cd backend && TEST_DB_ENGINE=postgresql DB_NAME=processo_seletivo_test DB_USER=postgres DB_PASSWORD=postgres DB_HOST=localhost DB_PORT=5432 uv run pytest
@@ -314,6 +315,9 @@ Incrementos, na ordem em que foram especificados:
 | [`020`](specs/020-anexos-do-edital/spec.md) | anexos do Edital |
 | [`021`](specs/021-sorteio-publico-auditavel/spec.md) | sorteio público auditável |
 | [`022`](specs/022-supervisao-do-processo/spec.md) | supervisão do Processo |
+| [`023`](specs/023-criar-a-partir-de-edital-anterior/spec.md) | criar Edital a partir de Edital anterior |
+| [`024`](specs/024-descoberta-e-transparencia-no-portal/spec.md) | descoberta e transparência no portal público |
+| [`025`](specs/025-quadro-de-vagas-por-modalidade/spec.md) | quadro de vagas por modalidade |
 
 A [Constituição](.specify/memory/constitution.md) prevalece sobre todos.
 
