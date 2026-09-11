@@ -104,7 +104,7 @@ que já existem. Se alguma tarefa levar você a criar app, camada ou permissão,
 - [X] T030 [US1] **Travessia 3 de 4** — reexibir a regra em `backend/processo_seletivo/interface/forms.py:836`, junto de `"appealWindow": marco.janela_recursal or None`
 - [X] T031 [US1] **Travessia 4 de 4** — conferir que a reexibição **não sobrescreve o valor bom** pelo da tentativa recusada, e que a recusa ancora no controle certo, com o `id` na profundidade do marco. *Foram dois dos seis defeitos que a `025` só encontrou percorrendo a tela*
 - [X] T032 [US1] Desenhar a **Regra de corte** dentro de `backend/processo_seletivo/interface/templates/interface/_marco.html`, com os **seis** controles — espécie e quantidade do alvo, excedente, desfecho do empate, Etapa governada e admissão de continuação — e rótulos que dizem o que cada um decide, nunca `FIXED`/`STRICT`/`NONE` crus na tela. A Etapa governada é escolhida entre as Etapas do Edital, mais a opção explícita *não governa Etapa alguma*
-- [ ] T033 [US1] Acrescentar `cutRule` ao catálogo de Retificação do marco em `backend/processo_seletivo/interface/retificacao.py`, endereçado por identidade — `/profiles/id=…/classificationMilestones/id=…/cutRule/targetCount` —, no padrão que `appealWindow` já usa (`FR-184`)
+- [X] T033 [US1] Acrescentar `cutRule` ao catálogo de Retificação do marco em `backend/processo_seletivo/interface/retificacao.py`, endereçado por identidade — `/profiles/id=…/classificationMilestones/id=…/cutRule/targetCount` —, no padrão que `appealWindow` já usa (`FR-184`)
 - [X] T034 [US1] Escrever a regra na seção do marco do documento em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, pelo caminho por onde a janela recursal já sai (`FR-185`)
 - [ ] T035 [US1] Acrescentar a regra à tela de conferência em `backend/processo_seletivo/interface/revisao.py`, no formato que ela já usa para as demais declarações do marco
 - [X] T036 [US1] Conferir `backend/tests/interface/test_medida_dos_campos.py` e `backend/tests/interface/test_acessibilidade.py` para os controles novos: toda classe citada existe na folha, todo `aria-describedby` aponta alvo existente
@@ -262,7 +262,7 @@ que já existem. Se alguma tarefa levar você a criar app, camada ou permissão,
 - [ ] T093 [P] Conferir o teto de abertura: 1.000 participantes por recorte em até 3 segundos, e número de consultas que **não cresce** com a população (`SC-067`)
 - [ ] T094 [P] Percorrer o [quickstart.md](./quickstart.md) inteiro contra o servidor real, pela interface, e registrar o relatório em `doc/e2e/014-corte-e-progressao/relatorio.md`, com os achados numerados `E2E14-NNN` e **cada um citado na docstring do teste que o fecha**
 - [ ] T095 Rodar `DB_NAME=ps_demo_014 make lint check test-pg` em `backend/` e exigir verde. *`lint` são **dois** passos — `ruff check` **e** `ruff format --check`; rodar só o primeiro declara verde local e quebra no CI*
-- [ ] T096 Escrever `specs/014-corte-e-progressao-entre-etapas/rastreabilidade.md` cobrindo `FR-178` a `FR-230`, `SC-055` a `SC-073` e `UX-024` a `UX-030`. *Onde existe matriz, `tests/test_citacoes_de_requisito.py` exige que ela alcance **cada** requisito — linha perdida é invisível de outro jeito*
+- [X] T096 Escrever `specs/014-corte-e-progressao-entre-etapas/rastreabilidade.md` cobrindo `FR-178` a `FR-230`, `SC-055` a `SC-073` e `UX-024` a `UX-030`. *Onde existe matriz, `tests/test_citacoes_de_requisito.py` exige que ela alcance **cada** requisito — linha perdida é invisível de outro jeito*
 
 ---
 

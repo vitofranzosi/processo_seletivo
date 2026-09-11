@@ -88,6 +88,19 @@ CAMPOS_REGRA = [
 # e a segunda é escolha entre formas que o motor sabe executar — retificá-las por caixa de texto
 # publicaria regra que o cálculo não interpreta. O que a tela alcança aqui é o rótulo.
 CAMPOS_MARCO = [("name", "Denominação do marco", TEXTO)]
+# A regra de corte, alcançada **campo a campo** (014, FR-184). Os dois números e o rótulo são o que
+# uma Retificação real muda: "onde se lê 10, leia-se 12".
+#
+# **A espécie do alvo, a Etapa governada e a política de continuação ficam de fora**, e a ausência é
+# a regra — a mesma que mantém `stages` e `operation` fora do marco. Trocar a espécie do alvo por
+# caixa de texto publicaria `targetKind` que o cálculo não interpreta; trocar a Etapa governada por
+# um UUID digitado publicaria um corte que alimenta Etapa que não existe. Retificações assim são
+# possíveis pela API, onde a aferição de publicabilidade as confere inteiras (`cut_rule_*`), e o que
+# a tela oferece é o que ela consegue conferir enquanto a pessoa digita.
+CAMPOS_DO_CORTE = [
+    ("cutRule/targetCount", "Quantos progridem", INTEIRO),
+    ("cutRule/surplusCount", "Suplentes alcançados na mesma faixa", INTEIRO),
+]
 # **O tipo do fato não está aqui, e a ausência é a regra.** Um fato declarado como data que virasse
 # número não é o mesmo fato: reinterpretar o valor já congelado seria o sistema decidindo o que a
 # pessoa quis dizer. Mudar o tipo é remover um fato e acrescentar outro, e o que foi congelado sob
@@ -457,7 +470,8 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                     f"Marco {nome_do_marco}",
                     base_do_marco,
                     marco,
-                    CAMPOS_MARCO,
+                    CAMPOS_MARCO
+                    + (CAMPOS_DO_CORTE if isinstance(marco.get("cutRule"), dict) else []),
                     tipo="Marco",
                     nome=nome_do_marco,
                 )
