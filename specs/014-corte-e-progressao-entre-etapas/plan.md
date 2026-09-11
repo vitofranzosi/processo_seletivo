@@ -165,10 +165,13 @@ backend/tests/
 │   └── test_corte_append_only.py                # NOVO — save, delete, privilégio, trigger
 ├── unit/editais/test_regra_de_corte.py          # NOVO — as três recusas de publicação
 ├── integration/classificacao/
-│   ├── test_emissao_do_corte.py                 # NOVO — universo, sucessão, continuação, corrida
+│   ├── test_emissao_do_corte.py                 # NOVO — universo, sucessão, corrida, marco sem Etapa seguinte
+│   ├── test_faixa_seguinte.py                   # NOVO — continuação não é sucessão; as duas vigentes
+│   ├── test_reproducao_do_corte.py              # NOVO — o universo declarado reproduz a faixa
 │   └── test_corte_obsoleto.py                   # NOVO — as quatro causas
 ├── integration/resultados/
 │   └── test_progressao_com_corte.py             # NOVO — as três portas, e a não regressão
+├── test_vocabulario_do_corte.py                 # NOVO — a fronteira com a 016, varrida na fonte
 ├── interface/test_corte.py                      # NOVO — a tela, as recusas, a confirmação
 └── acceptance/test_us3_corte.py                 # NOVO — o ciclo do 14/2026 e o do 77/2026
 ```
