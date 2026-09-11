@@ -255,6 +255,17 @@ class Corte(models.Model):
         "self", null=True, blank=True, on_delete=models.PROTECT, related_name="continuacoes"
     )
     motivo = models.TextField(blank=True, default="")
+    # A Etapa que este corte governa, lida da regra no instante da emissão. **Nula quando a regra
+    # declara `NONE`** — o marco terminal, cujo corte é legítimo e não tem efeito de participação.
+    #
+    # **É cópia da declaração, e não uma segunda fonte.** `universo.cutRule.governedStage` guarda a
+    # mesma identidade, e as duas nunca divergem porque a linha é append-only: o corte declara, no
+    # instante em que nasce, qual Etapa ele governava. A coluna existe por uma razão de leitura, e
+    # ela é medida: sem ela, a prontidão teria de abrir o conteúdo publicado a cada listagem para
+    # descobrir qual marco governa a Etapa — uma consulta por listagem que os orçamentos da 011, da
+    # 012 e da 015 não têm folga para pagar. Com ela, a condição do corte é uma subconsulta dentro
+    # da consulta que já ia acontecer (014, FR-213).
+    etapa_governada_id = models.UUIDField(null=True, blank=True)
     # Regra congelada, alvo apurado e sua origem, faixa anterior. O `rowId` da linha do quadro
     # entra aqui quando o alvo é derivado, e não é decoração: sem ele, retificado o quadro, não há
     # como dizer se **aquele** corte ficou para trás — a quantidade sozinha não identifica a linha.
@@ -325,6 +336,8 @@ class Corte(models.Model):
         indexes = [
             models.Index(fields=["edital", "perfil_id", "marco_id"]),
             models.Index(fields=["raiz"]),
+            # A junção que a prontidão faz por listagem: dada a Etapa, quais faixas a governam.
+            models.Index(fields=["edital", "etapa_governada_id"]),
         ]
 
     def __str__(self):

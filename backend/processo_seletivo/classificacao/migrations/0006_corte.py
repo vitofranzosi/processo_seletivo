@@ -78,6 +78,7 @@ class Migration(migrations.Migration):
                 ("marco_id", models.UUIDField()),
                 ("lista_id", models.UUIDField(blank=True, null=True)),
                 ("motivo", models.TextField(blank=True, default="")),
+                ("etapa_governada_id", models.UUIDField(blank=True, null=True)),
                 ("universo", models.JSONField(default=dict)),
                 ("primeira_posicao", models.PositiveIntegerField()),
                 ("ultima_posicao", models.PositiveIntegerField(blank=True, null=True)),
@@ -185,6 +186,12 @@ class Migration(migrations.Migration):
         migrations.AddIndex(
             model_name="corte",
             index=models.Index(fields=["raiz"], name="classificac_raiz_id_ce0d89_idx"),
+        ),
+        migrations.AddIndex(
+            model_name="corte",
+            index=models.Index(
+                fields=["edital", "etapa_governada_id"], name="classificac_edital__f73f08_idx"
+            ),
         ),
         migrations.AddConstraint(
             model_name="corte",
