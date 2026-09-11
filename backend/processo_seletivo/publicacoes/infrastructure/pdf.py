@@ -1286,6 +1286,59 @@ def _fatos_declarados(composicao, perfil):
             )
 
 
+def _quadro_de_vagas_do_perfil(composicao, perfil, tabelas, nomear_perfil=False):
+    """O quadro de vagas: quantas vagas cabem em cada lista de concorrência (025, FR-169).
+
+    **Bloco próprio, e não coluna nova na tabela de Modalidades.** Aquela tabela já omite coluna sem
+    valor, e acrescentar "Vagas" ali seria tentador e barato. Mas ela é tabela de **Modalidades**, e
+    a linha geral não é Modalidade nenhuma: o `AC 56` não teria onde morar, que é precisamente o
+    defeito que a D-002 recusou no modelo de dados. Repeti-lo na apresentação publicaria um quadro
+    que não fecha.
+
+    **A linha geral vem primeiro**, rotulada "Ampla concorrência", independentemente da posição
+    dela no array — é apresentação, e é o que a D-009 autoriza. As reservadas saem na ordem
+    declarada, que não é recalculada nem alfabetizada.
+
+    **Sem quadro, o bloco não sai — e nenhuma frase o substitui.** Um "quadro não declarado"
+    impresso seria uma afirmação nova sobre um Edital que não a fez, e é o que a SC-050 cobra:
+    nenhum Edital publicado antes desta feature passa a afirmar zero vaga em lugar nenhum.
+    """
+    linhas_do_quadro = perfil.get("vacancyTable") or []
+    if not linhas_do_quadro:
+        return
+    denominacoes = {
+        str(modalidade.get("id")): (
+            f"{modalidade.get('name', '')} ({modalidade.get('code', '')})"
+            if modalidade.get("code")
+            else modalidade.get("name", "")
+        )
+        for modalidade in perfil.get("competitionModalities") or []
+        if modalidade.get("id")
+    }
+    gerais = [linha for linha in linhas_do_quadro if not linha.get("modalityId")]
+    reservadas = [linha for linha in linhas_do_quadro if linha.get("modalityId")]
+    linhas = [
+        [
+            "Ampla concorrência"
+            if not linha.get("modalityId")
+            else denominacoes.get(str(linha["modalityId"]), ""),
+            str(linha.get("immediateVacancies", 0)),
+        ]
+        for linha in gerais + reservadas
+    ]
+    titulo = "Quadro de vagas"
+    if nomear_perfil:
+        titulo = f"{titulo} — {perfil.get('code', '')}"
+    with composicao.bloco():
+        _tabela(
+            composicao,
+            ["Lista de concorrência", "Vagas imediatas"],
+            linhas,
+            alinhamentos=[ESQUERDA, CENTRO],
+            legenda=tabelas.legenda(titulo),
+        )
+
+
 def _modalidades(composicao, perfil, tabelas, nomear_perfil=False):
     """As modalidades em tabela — sem perder o que a frase corrida dizia (FR-018, FR-019).
 
@@ -1329,13 +1382,28 @@ def _modalidades(composicao, perfil, tabelas, nomear_perfil=False):
         )
 
 
-def _quadro_de_vagas(composicao, perfis, tabelas):
-    """A visão global antes do detalhe — o `Quadro de vagas` dos Editais de referência.
+def _quadro_de_perfis(composicao, perfis, tabelas):
+    """A visão global antes do detalhe: os Perfis lado a lado.
 
     Um card por Perfil responde "como apresento esta entidade?". O Edital pergunta outra coisa:
     "qual a melhor composição para comunicar esta matéria?" — e a resposta, para dados comparáveis
     entre si, é uma tabela que os põe lado a lado. Com dez Perfis, dez fichas obrigam o leitor a
     percorrer o documento inteiro para saber quantas vagas existem.
+
+    **Esta função chamava-se `_quadro_de_vagas`, e o nome estava errado.** Ela tabula *Perfis* —
+    `Perfil`, `Localidade`, `Vagas`, `Cadastro reserva`, `Carga horária` —, e não a repartição das
+    vagas por lista de concorrência, que é o que o domínio chama de quadro de vagas e que a `025`
+    passou a publicar em `_quadro_de_vagas_do_perfil`. O Princípio I proíbe o mesmo termo nomear
+    dois conceitos.
+
+    **A renomeação da função não mudou o documento; a da legenda mudou, de propósito.** Trocar o
+    nome de uma função privada não altera byte nenhum do que se publica — mas quem lê o Edital lê a
+    legenda, e ela continuava dizendo "Quadro de vagas" algumas linhas acima da tabela que agora
+    tem esse nome. Ela passou a dizer "Perfis de vaga", e o documento mudou aí.
+
+    **A fixture de bytes não pega essa mudança**, e é bom saber por quê antes de confiar nela: ela
+    tem um Perfil só, e esta tabela só é composta com mais de um. Quem mexer aqui confere o
+    resultado por `test_as_duas_tabelas_de_vagas_nao_se_chamam_a_mesma_coisa`, que compõe dois.
     """
     linhas = []
     for perfil in perfis:
@@ -1357,12 +1425,18 @@ def _quadro_de_vagas(composicao, perfis, tabelas):
         linhas,
         recuo=0.0,
         alinhamentos=[ESQUERDA, ESQUERDA, CENTRO, ESQUERDA, CENTRO],
-        legenda=tabelas.legenda("Quadro de vagas"),
+        # **A legenda mudou com a `025`, e não é ajuste de gosto** (E2E25-005). Ela dizia "Quadro
+        # de vagas", e o documento passou a publicar, algumas linhas abaixo, uma tabela com esse
+        # nome que é outra coisa: a repartição das vagas de **um** Perfil por lista de
+        # concorrência. Duas tabelas homônimas no mesmo documento, dizendo coisas diferentes, é
+        # exatamente a ambiguidade que o Princípio I existe para não ter — e a renomeação da
+        # função privada, sozinha, não a alcançava, porque quem lê o Edital lê a legenda.
+        legenda=tabelas.legenda("Perfis de vaga"),
     )
 
 
 def _perfis(composicao, snapshot, secao=0, tabelas=None):
-    """O quadro de vagas, e depois cada Perfil como subseção.
+    """A tabela comparativa de Perfis, e depois cada Perfil como subseção.
 
     **Sem moldura externa.** O retângulo em volta de tudo produzia um cartão de interface
     impresso: tabela dentro de caixa dentro de caixa. Um Edital descreve a vaga em prosa e
@@ -1372,7 +1446,7 @@ def _perfis(composicao, snapshot, secao=0, tabelas=None):
     """
     perfis = snapshot.get("profiles") or []
     if len(perfis) > 1:
-        _quadro_de_vagas(composicao, perfis, tabelas)
+        _quadro_de_perfis(composicao, perfis, tabelas)
 
     for ordem, perfil in enumerate(perfis, 1):
         with composicao.bloco(coeso=False):
@@ -1449,6 +1523,7 @@ def _perfis(composicao, snapshot, secao=0, tabelas=None):
                     for requisito in requisitos:
                         composicao.escrever(f"• {requisito}", tamanho=CORPO_TEXTO, recuo=32)
             _fatos_declarados(composicao, perfil)
+            _quadro_de_vagas_do_perfil(composicao, perfil, tabelas, len(perfis) > 1)
             _modalidades(composicao, perfil, tabelas, len(perfis) > 1)
             _marcos(composicao, snapshot, perfil, len(perfis) > 1)
 

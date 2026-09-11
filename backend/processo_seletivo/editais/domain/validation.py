@@ -22,6 +22,7 @@ enumeração inclusive. O que ele não escreve, não se escreve aqui: coerência
 que ninguém tomou.
 """
 
+import math
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -93,6 +94,20 @@ PERFIL_PUBLICADO = (
     # precisa do conteúdo inteiro e não caberia numa forma de campo (015, T-009).
     Campo("declaredFacts", list, tipo_do_item=dict),
     Campo("classificationMilestones", list, tipo_do_item=dict),
+    # O quadro de vagas da `025`. Sempre presente depois do degrau 12 — vazio nos Editais
+    # anteriores —, porque duas grafias para a ausência, chave ausente e lista vazia, é o que a
+    # D-005 existe para não permitir.
+    Campo("vacancyTable", list, tipo_do_item=dict),
+)
+
+# **A forma de dentro da linha É declarada**, ao contrário da de `competitionModalities`, que é a
+# única coleção do snapshot cuja forma interna não é. A diferença é o argumento e não uma
+# inconsistência: a linha carrega um número que a conferência da FR-161 vai **somar**, e somar
+# campo não verificado é somar o que ninguém garantiu ser inteiro (025, R-013).
+LINHA_DO_QUADRO_PUBLICADA = (
+    Campo("id", str, formato="uuid"),
+    Campo("modalityId", str, admite_nulo=True, formato="uuid"),
+    Campo("immediateVacancies", int, minimo=0),
 )
 
 # A forma canônica do instante, transcrita de `EventoPublicado` no contrato: `T` maiúsculo,
@@ -897,6 +912,7 @@ def validate_for_publication(snapshot: dict) -> list[ValidationFinding]:
     findings.extend(_periodo_de_inscricoes(snapshot))
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
     findings.extend(_coerencia_dos_anexos(snapshot))
+    findings.extend(_coerencia_do_quadro_de_vagas(snapshot))
     return findings
 
 
@@ -1053,6 +1069,189 @@ def _coerencia_dos_documentos_exigidos(snapshot: dict) -> list[ValidationFinding
                 )
             )
     return findings
+
+
+def _coerencia_do_quadro_de_vagas(snapshot: dict) -> list[ValidationFinding]:
+    """O quadro de vagas depois da publicação: referência, soma e advertência (025).
+
+    **A conferência vale sobre o conteúdo que uma Retificação produziria**, e é isso que a faz
+    alcançar os dois pares de movimentos que a feature exige. Remover a Modalidade **e** a linha no
+    mesmo ato passa; remover só a Modalidade é recusado (D-008). Reduzir a linha da PPI **e** o
+    total do Perfil no mesmo ato passa; reduzir só a linha é recusado (FR-161). Verificar o
+    resultado, e não a operação, é o que faz as duas coisas serem verdadeiras sem código de
+    orquestração nenhum: `retificacoes.py` e `publish_edital.py` já chamam esta função.
+
+    **A igualdade só roda em quadro completo; o limite superior roda sempre.** Somar menos que o
+    total é legítimo num quadro parcial — o Edital declarou parte da repartição e não a toda
+    (D-006). Somar **mais** não é legítimo em quadro algum: nenhum Edital reserva mais vagas do que
+    oferece, e essa metade não precisa esperar pela completude (FR-177). É ela que alcança o Edital
+    que declara uma Modalidade chamada "Ampla concorrência" e que, por seguir a FR-176, nunca fica
+    completo — a lacuna que sobra está registrada em `research.md`, R-006.
+
+    **A advertência do percentual nunca bloqueia e nunca escreve.** A FR-157 proíbe derivar,
+    calcular ou recalcular quantidade a partir de percentual; a D-003 autoriza advertir e nada
+    além. Ela compara e reporta — e aceita o arredondamento em qualquer direção, porque `Q 1` e
+    `PCD 1` de um Edital real saem de arredondamento sobre censo.
+    """
+    findings = []
+    for posicao, perfil in enumerate(snapshot.get("profiles") or []):
+        if not isinstance(perfil, dict):
+            continue
+        linhas = perfil.get("vacancyTable")
+        if not isinstance(linhas, list) or not linhas:
+            # Quadro ausente é o que **todo** Edital publicado antes do degrau 12 afirma, e ele
+            # continua publicável: ausência não é zero (D-005, FR-160).
+            continue
+        base = _caminho_da_entidade("profiles", perfil, posicao)
+        modalidades = {
+            str(modalidade.get("id")): modalidade
+            for modalidade in perfil.get("competitionModalities") or []
+            if isinstance(modalidade, dict) and modalidade.get("id")
+        }
+        total = perfil.get("immediateVacancies")
+        rotulo = perfil.get("code") or perfil.get("name") or ""
+
+        soma = 0
+        com_linha = set()
+        tem_linha_geral = False
+        for indice, linha in enumerate(linhas):
+            if not isinstance(linha, dict):
+                findings.append(
+                    _impeditivo(
+                        TIPO_INVALIDO,
+                        f"O item deveria ser objeto em {base}/vacancyTable/{indice}.",
+                        f"{base}/vacancyTable/{indice}",
+                    )
+                )
+                continue
+            caminho = f"{base}/vacancyTable/{_dentro(linha, indice)}"
+            # A forma de dentro da linha, campo a campo. `COLECOES_PUBLICADAS` só percorre coleções
+            # de **raiz**, e o quadro é aninhado no Perfil — é o mesmo caminho que a coerência dos
+            # marcos e a faixa do percentual já tomam.
+            findings.extend(
+                achado
+                for campo in LINHA_DO_QUADRO_PUBLICADA
+                if (achado := _violacao(campo, linha, f"{caminho}/{campo.nome}")) is not None
+            )
+            quantidade = linha.get("immediateVacancies")
+            if isinstance(quantidade, int) and not isinstance(quantidade, bool):
+                soma += quantidade
+            modalidade_id = linha.get("modalityId")
+            if modalidade_id is None:
+                # A unicidade vale **também** depois da publicação: a elaboração a garante por
+                # constraint parcial, e a constraint não alcança o conteúdo publicado. Duas
+                # Retificações sucessivas, cada uma partindo de uma versão em que só uma linha
+                # geral existia, produziriam duas — e o quadro afirmaria a ampla concorrência duas
+                # vezes, com números diferentes (FR-154, invariante 2 da §5).
+                if tem_linha_geral:
+                    findings.append(
+                        _impeditivo(
+                            "vacancy_general_row_duplicated",
+                            f"O quadro do Perfil '{rotulo}' declara mais de uma linha de ampla "
+                            "concorrência, e ela tem uma linha só.",
+                            caminho,
+                        )
+                    )
+                tem_linha_geral = True
+                continue
+            modalidade_id = str(modalidade_id)
+            if modalidade_id in com_linha:
+                # Pela mesma razão da linha geral, um nível abaixo (FR-155).
+                findings.append(
+                    _impeditivo(
+                        "vacancy_modality_row_duplicated",
+                        f"O quadro do Perfil '{rotulo}' declara mais de uma linha para a mesma "
+                        "modalidade, e cada uma tem no máximo uma.",
+                        caminho,
+                    )
+                )
+            if modalidade_id not in modalidades:
+                findings.append(
+                    _impeditivo(
+                        "vacancy_row_modality_missing",
+                        f"A linha de {quantidade} vaga(s) do quadro do Perfil '{rotulo}' aponta "
+                        "uma modalidade que não existe neste Perfil.",
+                        caminho,
+                    )
+                )
+                continue
+            com_linha.add(modalidade_id)
+            findings.extend(
+                _divergencia_do_percentual(modalidades[modalidade_id], quantidade, total, caminho)
+            )
+
+        if not isinstance(total, int) or isinstance(total, bool):
+            continue
+        caminho_do_quadro = f"{base}/vacancyTable"
+        if soma > total:
+            findings.append(
+                _impeditivo(
+                    "vacancy_sum_exceeds_total",
+                    f"O quadro de vagas do Perfil '{rotulo}' soma {soma} e o Perfil declara "
+                    f"{total} vagas imediatas — excesso de {soma - total}.",
+                    caminho_do_quadro,
+                )
+            )
+        elif tem_linha_geral and not (set(modalidades) - com_linha) and soma != total:
+            findings.append(
+                _impeditivo(
+                    "vacancy_sum_mismatch",
+                    f"O quadro de vagas do Perfil '{rotulo}' soma {soma} e o Perfil declara "
+                    f"{total} vagas imediatas — diferença de {total - soma}.",
+                    caminho_do_quadro,
+                )
+            )
+    return findings
+
+
+def _dentro(entidade, posicao):
+    """O segmento que nomeia a entidade dentro da coleção: identidade, ou posição se não houver."""
+    identificador = entidade.get("id")
+    if isinstance(identificador, str) and identificador:
+        return f"id={identificador}"
+    return str(posicao)
+
+
+def _divergencia_do_percentual(modalidade, quantidade, total, caminho) -> list[ValidationFinding]:
+    """Dizer que `4` não é 20% de `80` é serviço legítimo; recalcular `4` não é (D-003, FR-163).
+
+    O arredondamento é aceito nas duas direções porque a norma que fundamenta a cota manda
+    arredondar, e Editais reais arredondam para cima e para baixo. O que se adverte é a quantidade
+    que não cabe em arredondamento nenhum do percentual publicado.
+    """
+    regra = modalidade.get("normativeRule")
+    if not isinstance(regra, dict):
+        return []
+    bruto = regra.get("percentage")
+    if bruto is None or not isinstance(quantidade, int) or isinstance(quantidade, bool):
+        return []
+    if not isinstance(total, int) or isinstance(total, bool) or total <= 0:
+        return []
+    try:
+        percentual = Decimal(str(bruto))
+    except InvalidOperation:
+        return []
+    esperado = Decimal(total) * percentual / Decimal(100)
+    piso, teto = math.floor(esperado), math.ceil(esperado)
+    if piso <= quantidade <= teto:
+        return []
+    return [
+        ValidationFinding(
+            Severity.WARNING,
+            "vacancy_row_percentage_divergence",
+            f"A linha da modalidade '{modalidade.get('code', '')}' declara {quantidade} vaga(s), e "
+            f"o percentual publicado na Regra Normativa ({_percentual_legivel(percentual)}%) sobre "
+            f"{total} vagas daria {piso if piso == teto else f'{piso} ou {teto}'}. "
+            "A quantidade declarada é a que vale.",
+            caminho,
+        )
+    ]
+
+
+def _percentual_legivel(percentual: Decimal) -> str:
+    """O percentual sem zeros à direita, para que a advertência se leia como uma frase."""
+    normalizado = percentual.normalize()
+    return f"{normalizado:f}"
 
 
 def blocking_findings(findings):

@@ -630,6 +630,26 @@ components:
         competitionModalities:
           type: array
           items: { $ref: '#/components/schemas/ModalidadeInput' }
+        vacancyTable:
+          type: array
+          description: >-
+            O quadro de vagas do Perfil. **Opcional**, porque o rascunho legitimamente não o traz e
+            porque quadro ausente significa "este Edital não publicou quadro" — nunca zero vaga.
+          items: { $ref: '#/components/schemas/LinhaDoQuadroInput' }
+    LinhaDoQuadroInput:
+      type: object
+      description: >-
+        Uma linha do quadro de vagas do Perfil. `modalityId` nulo ou ausente é a **linha geral** — a
+        da ampla concorrência —, e há no máximo uma por Perfil. Com `modalityId`, é linha reservada,
+        e há no máximo uma por Modalidade, que precisa ser do próprio Perfil. `id` é obrigatório e
+        preservado na gravação, como o de Perfil, Modalidade e Etapa: identificador que já pertença
+        a outro contêiner responde 409 identifier_belongs_to_another_edital. A quantidade declarada
+        é a fonte: nenhum caminho a deriva de percentual.
+      required: [id, immediateVacancies]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        modalityId: { type: [string, 'null'], format: uuid }
+        immediateVacancies: { type: integer, minimum: 0 }
     ModalidadeInput:
       type: object
       description: >-
@@ -732,7 +752,7 @@ components:
       required:
         [id, code, name, description, requirements, immediateVacancies, reserveType, reserveLimit,
          locality, duties, workload, compensation, classificationInformation, callInformation,
-         competitionModalities, declaredFacts, classificationMilestones]
+         competitionModalities, declaredFacts, classificationMilestones, vacancyTable]
       properties:
         id: { $ref: '#/components/schemas/Id' }
         code: { type: string }
@@ -776,6 +796,31 @@ components:
             porque a Retificação os endereça por identidade. Vazia significa que o Perfil não
             classifica.
           items: { type: object }
+        vacancyTable:
+          type: array
+          description: >-
+            O quadro de vagas do Perfil: quantas vagas cabem em cada lista de concorrência, em
+            números absolutos. Coleção com identidade estável, endereçada por id na Retificação.
+            **Vazia significa que o Edital não publicou quadro, e nunca zero vaga** — é a forma que
+            todo conteúdo elevado da versão 11 recebe, porque a capacidade não existia. Obrigatória
+            aqui e opcional no input: duas grafias para a ausência, chave ausente e lista vazia, é
+            o que a versão canônica existe para não admitir.
+          items: { $ref: '#/components/schemas/LinhaDoQuadroPublicada' }
+    LinhaDoQuadroPublicada:
+      type: object
+      description: >-
+        Uma linha do quadro publicado. `modalityId` nulo é a linha geral, a da ampla concorrência —
+        a mesma grafia que AtoDeOrdenacao.lista_id e Inscricao.modality_id já praticam. A ordem da
+        linha é a posição no array e não é campo: ela é apresentação, e não norma.
+
+        **A forma de dentro é verificada**, ao contrário da de competitionModalities. A linha
+        carrega um número que a conferência da soma vai somar, e somar campo não verificado é somar
+        o que ninguém garantiu ser inteiro.
+      required: [id, modalityId, immediateVacancies]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        modalityId: { type: [string, 'null'], format: uuid }
+        immediateVacancies: { type: integer, minimum: 0 }
     EventoPublicado:
       type: object
       description: >-

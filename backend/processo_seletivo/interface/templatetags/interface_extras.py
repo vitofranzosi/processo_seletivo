@@ -31,14 +31,20 @@ def situacao(valor):
 
 
 @register.simple_tag
-def recusa_de(recusas, prefixo, indice, campo):
+def recusa_de(recusas, prefixo, indice, campo, sub=None):
     """A mensagem de recusa daquele controle, ou vazio.
 
     Existe como tag, e não como filtro, porque o `id` do controle é composto de três partes —
     `perfil-3-reserveLimit` — e `{% include ... with alvo="perfil-{{ indice }}-..." %}` não
     interpola: dentro de uma tag, `{{ }}` é texto literal, e o alvo nunca casaria.
+
+    `sub` é a quarta parte, e existe para as coleções aninhadas no Perfil, cujo controle se chama
+    `linha-3-1-immediateVacancies`. Sem ela, a recusa que o domínio ancora na **linha** só teria
+    onde aparecer no resumo, e quem compõe um Edital de sete polos teria de procurar em qual deles
+    o número não fecha (025, E2E25-003).
     """
-    return (recusas or {}).get(f"{prefixo}-{indice}-{campo}", "")
+    partes = [prefixo, str(indice)] + ([str(sub)] if sub is not None else []) + [campo]
+    return (recusas or {}).get("-".join(partes), "")
 
 
 @register.filter

@@ -56,6 +56,13 @@ DEGRAUS = {
 # candidato, e não limitou o total de inscrições dele no certame (015, T-008).
 DEGRAUS_DE_PERFIL = {
     7: {"classificationMilestones": [], "declaredFacts": []},
+    # **O degrau 12 é o quadro de vagas** (025, D-005). Lista vazia diz "este Edital não publicou
+    # quadro", e é verdade sobre todos eles porque a capacidade não existia — nunca "zero vaga".
+    #
+    # É de Perfil, e não de raiz, porque o quadro é do Perfil: um Edital de sete polos publica sete
+    # quadros, e uma coleção de raiz teria de carregar a referência ao Perfil em cada linha,
+    # inventando uma segunda forma de dizer o que o aninhamento já diz.
+    12: {"vacancyTable": []},
 }
 
 DEGRAUS_DA_RAIZ = {

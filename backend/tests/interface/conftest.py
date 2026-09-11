@@ -86,6 +86,8 @@ CLASSES_SEM_DESENHO = {
     "perfil-novo",
     # O mesmo gancho, para o Anexo acrescentado por Retificação (020).
     "anexo-novo",
+    # E para a linha do quadro de vagas acrescentada por Retificação (025).
+    "linha-do-quadro-nova",
     # E para a linha do Anexo já existente, pela mesma razão que `evento` e `secao` estão aqui.
     "anexo",
     "perfil",

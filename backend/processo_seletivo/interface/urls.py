@@ -124,6 +124,13 @@ urlpatterns = [
         views.fragmento_retificacao_anexo,
         name="fragmento-retificacao-anexo",
     ),
+    # Escopada ao Edital porque os dois campos de escolha da linha — Perfil e lista de
+    # concorrência — saem do conteúdo vigente **daquele** Edital, como no fragmento da Etapa.
+    path(
+        "fragmentos/retificacao/<uuid:edital_id>/linha-do-quadro",
+        views.fragmento_retificacao_linha_do_quadro,
+        name="fragmento-retificacao-linha-do-quadro",
+    ),
     path("fragmentos/remover", views.fragmento_remover, name="fragmento-remover"),
     # A organização do trabalho (011). Nenhuma rota usa `etapas/` como segmento: a palavra já
     # significa "passo do compositor" em `editais/<uuid>/compor/<slug:etapa>` (D-009, D-015).

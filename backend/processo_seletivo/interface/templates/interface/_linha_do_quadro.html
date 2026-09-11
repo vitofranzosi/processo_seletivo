@@ -1,0 +1,43 @@
+{% load interface_extras %}<div class="linha-do-quadro"{% if linha.modalityId %} id="quadro-de-{{ linha.modalityId }}"{% endif %}>
+  {% comment %}
+  A identidade viaja oculta, como a da Modalidade: a gravação preserva o `id` recebido, e linha que
+  nascesse sem identidade não teria o que preservar — é por esse `id` que a Retificação alcança
+  **aquela** linha depois de publicada, e nunca por posição.
+
+  `modalityId` vazio **é** a linha geral, a da ampla concorrência, e não uma referência faltando: o
+  recorte sem lista de concorrência não filtra por Modalidade nenhuma.
+
+  **O `id` do elemento é o da Modalidade, e não o da linha**, porque quem precisa achá-la no DOM é
+  o botão que remove a Modalidade — e ele conhece a Modalidade, não a linha. Os dois `sub` não
+  servem para isso: na carga da página o da Modalidade conta a partir das Modalidades e o da linha
+  a partir do quadro, que tem a geral na frente, de modo que eles nunca coincidem. A linha geral
+  não recebe `id` porque não há botão que a remova: ela não pertence a Modalidade nenhuma.
+  {% endcomment %}
+  <input type="hidden" name="linha-{{ indice }}-{{ sub }}-id" value="{{ linha.id }}">
+  <input type="hidden" name="linha-{{ indice }}-{{ sub }}-modalityId"
+         value="{{ linha.modalityId|default:'' }}">
+  {% recusa_de recusas "linha" indice "immediateVacancies" sub as recusado_quantidade %}
+  {% recusa_de recusas "linha" indice "modalityId" sub as recusado_recorte %}
+  <p class="campo curto">
+    <label for="linha-{{ indice }}-{{ sub }}-immediateVacancies">
+      {% if linha.geral %}<strong>Ampla concorrência</strong>{% else %}{{ linha.rotulo }}{% endif %}
+    </label>
+    <input type="number" min="0" id="linha-{{ indice }}-{{ sub }}-immediateVacancies"
+           name="linha-{{ indice }}-{{ sub }}-immediateVacancies"
+           value="{{ linha.immediateVacancies|default_if_none:'' }}"
+           {% if recusado_quantidade or recusado_recorte %}aria-invalid="true"{% endif %}
+           aria-describedby="ajuda-linha-{{ indice }}-{{ sub }}{% if recusado_quantidade %} recusa-linha-{{ indice }}-{{ sub }}-immediateVacancies{% endif %}{% if recusado_recorte %} recusa-linha-{{ indice }}-{{ sub }}-modalityId{% endif %}">
+    {% if recusado_quantidade %}<span class="recusa" role="alert" id="recusa-linha-{{ indice }}-{{ sub }}-immediateVacancies">{{ recusado_quantidade }}</span>{% endif %}
+    {% if recusado_recorte %}<span class="recusa" role="alert" id="recusa-linha-{{ indice }}-{{ sub }}-modalityId">{{ recusado_recorte }}</span>{% endif %}
+    {% comment %}
+    Escondida, e não impressa: a explicação é a mesma em todos os cartões, e um Edital de sete
+    polos a imprimiria sete vezes. Continua anunciada a quem ouve a tela, pelo `aria-describedby`
+    do campo — sair de vista não é sair da página.
+    {% endcomment %}
+    <span class="oculto" id="ajuda-linha-{{ indice }}-{{ sub }}">{% if linha.geral %}Esta é a linha
+      da ampla concorrência: o recorte de que todos os inscritos participam, inclusive quem
+      concorre por reserva. Em branco: quantidade não declarada.{% else %}Quantas vagas cabem nesta
+      lista de concorrência. Em branco: quantidade não declarada — que não é o mesmo que
+      zero.{% endif %}</span>
+  </p>
+</div>

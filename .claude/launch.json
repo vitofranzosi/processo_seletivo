@@ -20,6 +20,16 @@
       ],
       "port": 8024,
       "url": "http://localhost:8024"
+    },
+    {
+      "name": "quadro-025",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_demo_025 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true PORTAL_IDENTIDADE_DEMO=true uv run python manage.py runserver 8025"
+      ],
+      "port": 8025,
+      "url": "http://localhost:8025"
     }
   ]
 }

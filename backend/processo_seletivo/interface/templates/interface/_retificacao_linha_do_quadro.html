@@ -1,0 +1,40 @@
+<fieldset class="linha linha-do-quadro-nova">
+  <legend><span class="nome">Linha do quadro a acrescentar</span></legend>
+  {% comment %}
+  Três campos, e dois deles são escolha. `profileId` diz a que Perfil a linha se acrescenta — ele
+  não é campo do conteúdo publicado, e sim o que compõe o caminho da Alteração. `modalityId` é
+  escolha e não UUID digitado: um erro de digitação mudaria em silêncio o que a linha significa,
+  e transformar a linha da PPI na linha da PcD é publicar outra repartição.
+
+  A opção vazia da lista de concorrência **é** a ampla concorrência, e não "não escolhi": é a linha
+  geral, e o Perfil tem no máximo uma.
+  {% endcomment %}
+  <div class="campos">
+    {% for campo in campos %}
+    <p class="campo{% if campo.chave == 'immediateVacancies' %} curto{% endif %}">
+      <label for="nq-{{ indice }}-{{ campo.chave }}">{{ campo.rotulo }}</label>
+      {% if campo.tipo == 'referencia' %}
+      <select id="nq-{{ indice }}-{{ campo.chave }}"
+              name="novo-linha-do-quadro-{{ indice }}-{{ campo.chave }}">
+        {% if campo.chave == 'modalityId' %}
+        <option value=""{% if not campo.valor %} selected{% endif %}>Ampla concorrência</option>
+        {% else %}
+        <option value="">Escolha o Perfil</option>
+        {% endif %}
+        {% for identificador, rotulo in campo.opcoes %}
+        <option value="{{ identificador }}"{% if campo.valor == identificador %} selected{% endif %}>{{ rotulo }}</option>
+        {% endfor %}
+      </select>
+      {% else %}
+      <input id="nq-{{ indice }}-{{ campo.chave }}"
+             name="novo-linha-do-quadro-{{ indice }}-{{ campo.chave }}"
+             type="number" min="0" value="{{ campo.valor }}">
+      {% endif %}
+    </p>
+    {% endfor %}
+  </div>
+  <p class="acoes-linha">
+    <button type="button" class="acao" hx-get="{% url 'interface:fragmento-remover' %}"
+            hx-target="closest fieldset" hx-swap="outerHTML">Não acrescentar esta linha</button>
+  </p>
+</fieldset>

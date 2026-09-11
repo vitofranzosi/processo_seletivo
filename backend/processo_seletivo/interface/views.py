@@ -6,6 +6,7 @@ fronteira de segurança (FR-002).
 """
 
 import hashlib
+import re
 import secrets
 from uuid import UUID, uuid4
 
@@ -592,6 +593,33 @@ def _recusa(exc, digitados, etapa):
     for indice, linha in enumerate(linhas):
         if str(linha.get("id", "")) == identidade:
             return {"mensagem": mensagem, "ancora": f"{prefixo}-{indice}-{campo}"}
+        # A linha do quadro é entidade **dentro** do Perfil, e a recusa nomeia a linha, não o
+        # Perfil. Sem esta descida a mensagem viraria texto solto no resumo, e quem compõe um
+        # Edital de sete polos teria de procurar em qual deles o número não fecha (025, UX-023).
+        #
+        # O índice vem de `quadro_do_formulario`, que é o que a tela **desenha** — e não da lista
+        # lida do POST, que já descartou as linhas em branco. Contar na lista lida daria o `id` de
+        # um controle que não existe, e a âncora apontaria para o nada.
+        if not linha.get("vacancyTable"):
+            continue
+        oferecidas = forms.quadro_do_formulario(linha)
+        for sub, do_quadro in enumerate(oferecidas):
+            if str(do_quadro.get("id", "")) == identidade:
+                return {"mensagem": mensagem, "ancora": f"linha-{indice}-{sub}-{campo}"}
+        # **A linha recusada pode não estar entre as oferecidas**, e o caso é justamente o da
+        # duplicata: a tela oferece uma linha por recorte, e a segunda linha do mesmo recorte não
+        # tem onde aparecer. A âncora recua para a linha **daquele recorte** — que é onde a pessoa
+        # corrige o problema —, em vez de virar texto solto no resumo (025, E2E25-003).
+        recusada = next(
+            (item for item in linha["vacancyTable"] if str(item.get("id", "")) == identidade),
+            None,
+        )
+        if recusada is None:
+            continue
+        recorte = str(recusada.get("modalityId") or "")
+        for sub, do_quadro in enumerate(oferecidas):
+            if str(do_quadro.get("modalityId") or "") == recorte:
+                return {"mensagem": mensagem, "ancora": f"linha-{indice}-{sub}-{campo}"}
     return {"mensagem": mensagem, "ancora": ""}
 
 
@@ -1035,6 +1063,10 @@ def _reexibir_perfis(perfis):
             "modalidades": [
                 _reexibir_modalidade(modalidade) for modalidade in perfil["competitionModalities"]
             ],
+            # As linhas nascem das Modalidades **do formulário**, e não das gravadas: a recusa que
+            # esta tela está mostrando pode ter sido causada por uma Modalidade que ainda não
+            # existe no banco, e derivar dali devolveria a tela sem o que a pessoa digitou (R-009).
+            "quadro": forms.quadro_do_formulario(perfil),
         }
         for perfil in perfis
     ]
@@ -1152,7 +1184,9 @@ COLECAO_DA_ETAPA = {
 # morrendo por meia jornada.
 PRESERVADO_DA_ETAPA = {
     "cronograma": ("status", "isRegistrationPeriod"),
-    # Os dois objetos normativos do Perfil que nenhuma tela desenha.
+    # Os dois objetos normativos do Perfil que nenhuma tela desenha. O quadro de vagas **não**
+    # entra aqui, e não é esquecimento: esta tela o desenha, e preservar o gravado por cima do
+    # digitado faria remover uma linha ser impossível — a remoção voltaria da fusão (025, T034).
     "perfis": ("classificationInformation", "callInformation"),
 }
 
@@ -1265,11 +1299,22 @@ def _indice_de_linha(request):
 
 @require_http_methods(["GET"])
 def fragmento_perfil(request):
+    """O Perfil novo nasce com a **linha geral** do quadro já oferecida (025, E2E25-001).
+
+    Sem ela, a seção do quadro de um Perfil recém-acrescentado aparecia vazia — título e mais nada
+    —, e quem compõe um Edital do zero não tinha onde escrever a quantidade da ampla concorrência
+    até salvar e recarregar. As reservadas continuam nascendo com as Modalidades, uma a uma, porque
+    é delas que vêm o rótulo e a identidade que a linha aponta.
+    """
     return render(
         request,
         "interface/_perfil.html",
         {
-            "perfil": {"id": str(uuid4()), "reserveType": "NONE"},
+            "perfil": {
+                "id": str(uuid4()),
+                "reserveType": "NONE",
+                "quadro": forms.quadro_do_formulario({}),
+            },
             "indice": _indice_de_linha(request),
             "reservas": forms.RESERVA,
         },
@@ -1413,14 +1458,30 @@ def fragmento_modalidade(request, indice):
     criá-la, e a identidade precisa estar no formulário nesse momento.
 
     `indice` é o do Perfil que contém a linha: os nomes dos campos são `modalidade-<perfil>-<n>-…`.
+
+    **E a linha do quadro nasce junto, fora de banda.** A UX-021 promete que as linhas do quadro
+    são oferecidas a partir das Modalidades declaradas; quem acrescenta uma Modalidade e digita a
+    quantidade dela antes de gravar precisa ver a linha aparecer, e não descobrir depois que não
+    havia onde escrever o número. O rótulo dela só fica completo na volta do servidor, porque o
+    código e a denominação estão sendo digitados agora — e a alternativa seria espelhá-los por
+    JavaScript, que a CSP desta interface não admite.
     """
+    sub = _indice_de_linha(request)
+    modalidade = {"id": str(uuid4()), "ruleId": str(uuid4())}
     return render(
         request,
-        "interface/_modalidade.html",
+        "interface/_modalidade_com_linha.html",
         {
-            "modalidade": {"id": str(uuid4()), "ruleId": str(uuid4())},
+            "modalidade": modalidade,
             "indice": indice,
-            "sub": _indice_de_linha(request),
+            "sub": sub,
+            "linha": {
+                "id": str(uuid4()),
+                "modalityId": modalidade["id"],
+                "rotulo": "Modalidade nova",
+                "geral": False,
+                "immediateVacancies": "",
+            },
         },
     )
 
@@ -1499,9 +1560,62 @@ def fragmento_retificacao_anexo(request):
 
 
 @require_http_methods(["GET"])
+def fragmento_retificacao_linha_do_quadro(request, edital_id):
+    """Uma linha do quadro a acrescentar por Retificação (025, FR-171).
+
+    A rota é escopada ao Edital porque os dois campos de escolha — o Perfil e a lista de
+    concorrência — saem do **conteúdo vigente daquele** Edital, e não de um catálogo global. É o
+    mesmo motivo pelo qual o fragmento da Etapa é escopado ao Edital.
+
+    Sem este caminho, nenhum Edital já publicado poderia ganhar quadro: todos foram publicados
+    antes de a capacidade existir, e alterar linha existente não alcança quem não tem linha alguma.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital = obter_edital(actor=ator, edital_id=edital_id)
+    if edital is None:
+        raise Http404
+    base = _base_da_composicao(edital, None)
+    if base is None:
+        raise Http404
+    opcoes = retificacao_ui.opcoes_da_linha_nova(conteudo_base(base))
+    campos = [
+        {**campo, "opcoes": tuple(opcoes.get(campo["chave"], ()))}
+        for campo in _campos_de(retificacao_ui.NOVA_LINHA_DO_QUADRO)
+    ]
+    return render(
+        request,
+        "interface/_retificacao_linha_do_quadro.html",
+        {"indice": _indice_de_linha(request), "campos": campos},
+    )
+
+
+# O que `junto=` aceita: um `id` de elemento, e nada que possa virar marcação. O valor é escrito
+# num atributo `id` do fragmento devolvido, e o autoescape do template já o protegeria — mas a
+# recusa aqui é o que garante que só saia daqui um seletor plausível, e não texto qualquer.
+ALVO_DE_REMOCAO = re.compile(r"^[A-Za-z][A-Za-z0-9-]{0,80}$")
+
+
+@require_http_methods(["GET"])
 def fragmento_remover(request):
-    """A linha removida é substituída por nada; o conteúdo digitado some junto."""
-    return HttpResponse("")
+    """A linha removida é substituída por nada; o conteúdo digitado some junto.
+
+    `junto=` pede que **outro** elemento saia no mesmo ato, pelo `id` dele. Existe porque nem toda
+    linha do formulário mora inteira dentro do próprio `fieldset`: a Modalidade de Concorrência tem
+    uma linha correspondente na seção do quadro de vagas, e `closest fieldset` não a alcança.
+    Deixá-la para trás fazia o salvamento seguinte ser recusado por uma referência a uma Modalidade
+    que a pessoa acabara de remover — e que já não aparecia em lugar nenhum da tela (025).
+
+    Sem o parâmetro, o comportamento é o de sempre: devolver o vazio que apaga o alvo do
+    `hx-target`.
+    """
+    alvo = request.GET.get("junto", "")
+    if not alvo:
+        return HttpResponse("")
+    if not ALVO_DE_REMOCAO.match(alvo):
+        raise Http404
+    return render(request, "interface/_remover_junto.html", {"alvo": alvo})
 
 
 ETAPAS = [
@@ -2006,6 +2120,15 @@ def retificar(request, edital_id):
             ),
             "novos_anexos": retificacao_ui.novas_para_formulario(
                 dados or {}, "anexo", retificacao_ui.NOVO_ANEXO
+            ),
+            # As linhas do quadro acrescentadas voltam com as **opções** junto: os dois campos de
+            # escolha vêm do conteúdo vigente, e reexibi-los sem elas devolveria dois `select`
+            # vazios — a pessoa leria "vai acrescentar" e confirmaria uma linha sem Perfil.
+            "novas_linhas_do_quadro": retificacao_ui.novas_para_formulario(
+                dados or {},
+                "linha-do-quadro",
+                retificacao_ui.NOVA_LINHA_DO_QUADRO,
+                opcoes=retificacao_ui.opcoes_da_linha_nova(projecao),
             ),
             "resumo": resumo,
             "erros": erros,

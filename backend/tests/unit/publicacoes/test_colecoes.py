@@ -47,6 +47,17 @@ def test_a_colecao_de_anexos_tem_chave():
     assert not colecoes.e_atomica("/attachments")
 
 
+def test_a_colecao_do_quadro_de_vagas_tem_chave():
+    """Declarada antes de o snapshot a emitir, e é essa ordem que a torna retificável (025, FR-170).
+
+    Sem a declaração, `changes.py` recusaria o seletor `id=` e sobraria o endereçamento por
+    posição — que o sistema proíbe. O primeiro Edital publicado com quadro nasceria irretificável, e
+    endereço de retificação não se conserta depois: publicação é ato imutável.
+    """
+    assert colecoes.tem_chave("/profiles/*/vacancyTable")
+    assert not colecoes.e_atomica("/profiles/*/vacancyTable")
+
+
 def test_todo_anexo_carrega_a_sua_identidade():
     conteudo = conteudo_normativo()
     del conteudo["attachments"][1]["id"]

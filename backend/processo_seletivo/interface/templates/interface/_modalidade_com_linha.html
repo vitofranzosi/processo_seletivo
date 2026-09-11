@@ -1,0 +1,21 @@
+{% comment %}
+Dois pedaços numa resposta só: a Modalidade, que entra onde o botão manda, e a linha do quadro
+correspondente, que entra fora de banda na seção do quadro do mesmo Perfil.
+
+Ela vem junto porque a promessa da tela é que a linha seja **oferecida**, e não digitada: acrescentar
+uma Modalidade e não ver onde escrever a quantidade dela devolveria a pessoa ao salvamento só para
+descobrir o campo. O `sub` da linha é o mesmo da Modalidade, e não colide com os das linhas
+desenhadas na carga da página — que são numeradas por posição a partir de zero. Ele continua
+sendo **dígitos**: `forms._indices` ordena por número quando o índice é numérico e por texto quando
+não é, e misturar os dois no mesmo Perfil faria a ordenação comparar `int` com `str`.
+{% endcomment %}
+{% include "interface/_modalidade.html" %}
+{% comment %}
+**O invólucro fora de banda é descartado, e o de dentro é que fica.** O htmx swapa o *conteúdo* do
+elemento marcado com `hx-swap-oob`, e não o elemento: marcar a própria linha fazia os campos
+chegarem soltos dentro da seção, sem o `div.linha-do-quadro` que a desenha — a linha vinha, e vinha
+sem forma. O envelope abaixo existe só para ser jogado fora (E2E25-002).
+{% endcomment %}
+<div hx-swap-oob="beforeend:#quadro-{{ indice }}">
+  {% include "interface/_linha_do_quadro.html" %}
+</div>

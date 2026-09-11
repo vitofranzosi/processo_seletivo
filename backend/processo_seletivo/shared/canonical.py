@@ -102,7 +102,18 @@ from uuid import UUID
 # relação não tem o que citar ao congelar; o local é P3 e declaradamente independente das demais
 # histórias. Numerando o método antes, qualquer estado entregável do incremento tem a árvore de
 # degraus contígua (021, D-008, D-013).
-SCHEMA_VERSION = 11
+# **12 com a 025**: o quadro de vagas do Perfil (`vacancyTable`) — quantas vagas cabem em cada
+# lista de concorrência, em números absolutos. Coleção **vazia** significa "este Edital não publicou
+# quadro", e é verdade sobre todo Edital publicado antes deste degrau, porque a capacidade não
+# existia: não havia onde escrever o número, e é por isso que Editais reais que o sistema conduz
+# até a ordem do sorteio não eram publicáveis por ele.
+#
+# **Escrever a lista vazia não inventa nada, e é isso que a distingue do 3→4.** Lista vazia é a
+# grafia da ausência que este módulo já usa desde o degrau 7, e ela não afirma zero vaga em lugar
+# nenhum — quem quiser dizer zero declara uma linha com `0`. Não converter é que seria a decisão
+# cara: deixaria o acervo inteiro com uma coleção inendereçável, e endereço de retificação não se
+# conserta depois (025, D-005, FR-167).
+SCHEMA_VERSION = 12
 
 
 def _default(value):
