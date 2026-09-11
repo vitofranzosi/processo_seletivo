@@ -16,6 +16,7 @@ from datetime import timedelta
 import pytest
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.timezone import localtime
 
 from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.publicacoes.models_retificacao import Retificacao
@@ -114,7 +115,11 @@ def test_retificacao_com_vigencia_futura_e_ato_publicado_que_ainda_nao_vale(
 
     # O ato aparece, com a data em que passa a valer.
     assert "Retificação" in pagina
-    assert f"vigente desde {daqui_a_quinze.strftime('%d/%m/%Y')}" in pagina
+    # **`localtime`, e não o instante cru.** `timezone.now()` devolve UTC e o filtro `date` do
+    # template converte para `TIME_ZONE` — `America/Sao_Paulo`, três horas atrás. Formatar o UTC
+    # aqui fazia o teste comparar dias diferentes sempre que ele rodasse entre 00h e 03h UTC, que
+    # é o fim da tarde daqui: verde o dia inteiro, vermelho no CI da madrugada.
+    assert f"vigente desde {localtime(daqui_a_quinze).strftime('%d/%m/%Y')}" in pagina
     # E o conteúdo continua sendo o de hoje: duas vagas, e não três.
     primeira_vaga = pagina[
         pagina.index("Professor de Informática") : pagina.index("Técnico de Lab")
