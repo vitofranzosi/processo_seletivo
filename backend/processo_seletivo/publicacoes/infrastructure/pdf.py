@@ -1197,10 +1197,13 @@ def _regra_de_corte(marco, etapas):
         extenso = POR_EXTENSO.get(alvo)
         numero = f"{alvo} ({extenso})" if extenso else str(alvo)
         quantos = f"os {numero} primeiros desta ordem"
-    destino = etapas.get(str(regra.get("governedStage")) or "")
-    para = (
-        f" para {destino.get('name')}" if isinstance(destino, dict) and destino.get("name") else ""
-    )
+    # A guarda da ausência é explícita, e não um `or ""` depois do `str()`: `str(None)` é a string
+    # `"None"`, que é verdadeira — o `or` nunca dispararia, e bastaria existir uma Etapa de `id`
+    # igual a `"None"` para o documento nomear a Etapa errada.
+    governada = regra.get("governedStage")
+    destino = etapas.get(str(governada)) if governada else None
+    nome = destino.get("name") if isinstance(destino, dict) else ""
+    para = f" para {nome}" if nome else ""
     frase = f"Progridem{para} {quantos}"
     excedente = regra.get("surplusCount")
     if isinstance(excedente, int) and not isinstance(excedente, bool) and excedente > 0:

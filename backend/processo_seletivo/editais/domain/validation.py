@@ -733,7 +733,7 @@ def _regra_de_corte_do_marco(marco, *, perfil, etapas, caminho) -> list[Validati
     regra = marco.get("cutRule")
     if not regra:
         return []
-    findings = []
+    findings = _forma_do_alvo(regra, caminho=caminho)
     if regra.get("tieOutcome") not in faixa.DESFECHOS_DE_EMPATE:
         findings.append(
             _impeditivo(
@@ -794,6 +794,62 @@ def _regra_de_corte_do_marco(marco, *, perfil, etapas, caminho) -> list[Validati
     return findings
 
 
+def _forma_do_alvo(regra, *, caminho) -> list[ValidationFinding]:
+    """A espécie e a aritmética do alvo, **também** na publicação (014, FR-179).
+
+    Elas já são recusadas na elaboração, e repeti-las aqui não é redundância: a **Retificação não
+    passa por `validate_profiles`**. `retificacoes.py` afere o conteúdo produzido apenas por
+    `validate_for_publication`, e sem esta conferência uma Retificação poderia gravar
+    `targetCount: -5` — ou nulo, com espécie fixa — e publicar. Na emissão, o alvo apurado viraria
+    zero e o corte sairia com **ninguém** progredindo, em silêncio, sobre um Edital cuja norma
+    publicada diz outra coisa. É a mesma razão pela qual a conferência da soma do quadro mora aqui.
+    """
+    from processo_seletivo.classificacao.domain import faixa
+
+    especie = regra.get("targetKind")
+    if especie not in faixa.ESPECIES_DE_ALVO:
+        return [
+            _impeditivo(
+                "cut_rule_sem_especie_de_alvo",
+                "A regra de corte não declara a espécie do alvo: uma quantidade fixa, ou a "
+                "quantidade que o quadro de vagas do recorte publica.",
+                f"{caminho}/cutRule/targetKind",
+            )
+        ]
+    findings = []
+    alvo = regra.get("targetCount")
+    if especie == faixa.ALVO_FIXO and alvo is None:
+        findings.append(
+            _impeditivo(
+                "cut_rule_sem_alvo",
+                "A regra de corte declara alvo fixo e não diz quantos.",
+                f"{caminho}/cutRule/targetCount",
+            )
+        )
+    if especie == faixa.ALVO_DO_QUADRO and alvo is not None:
+        findings.append(
+            _impeditivo(
+                "cut_rule_com_alvo_duplicado",
+                "A regra de corte deriva o alvo do quadro de vagas e ainda assim declara uma "
+                "quantidade fixa: o alvo tem uma fonte só.",
+                f"{caminho}/cutRule/targetCount",
+            )
+        )
+    for campo in ("targetCount", "surplusCount"):
+        valor = regra.get(campo)
+        if valor is None:
+            continue
+        if isinstance(valor, bool) or not isinstance(valor, int) or valor < 0:
+            findings.append(
+                _impeditivo(
+                    "cut_rule_com_quantidade_invalida",
+                    "As quantidades da regra de corte devem ser números inteiros não negativos.",
+                    f"{caminho}/cutRule/{campo}",
+                )
+            )
+    return findings
+
+
 def _quadro_para_o_corte(regra, *, perfil, caminho) -> list[ValidationFinding]:
     """Alvo derivado exige linha de quadro para **todo recorte que o marco ordena** (014, FR-183).
 
@@ -802,35 +858,42 @@ def _quadro_para_o_corte(regra, *, perfil, caminho) -> list[ValidationFinding]:
     inexequível na lista sem linha — e o defeito apareceria no dia da emissão, sob cronograma, com a
     correção dependendo de Retificação.
 
-    **Os recortes são a linha geral e cada Modalidade declarada no Perfil.** Nada no conteúdo
-    publicado diz "esta Modalidade terá lista própria" — quem informa a lista é quem emite —, e por
-    isso a conferência é sobre todas elas. Linha **zerada** é declaração legítima e publica; o que
-    impede é a ausência.
+    **O que se exige aqui é a linha geral, e a restrição a ela é achado desta implementação.** A
+    `D-014` da spec manda exigir linha para **todo recorte que o marco ordena**, e a leitura óbvia —
+    a geral mais cada Modalidade declarada — torna impublicável o Edital no **formato normal**. A
+    `025` documenta por quê: o Edital normal declara **também** uma Modalidade chamada "Ampla
+    concorrência", e a `FR-176` daquela feature **proíbe** dar linha reservada a ela, porque a
+    quantidade dela mora na linha geral. Essa Modalidade nunca terá linha, por norma — e exigi-la
+    recusaria o 57/2026 e o 28/2026, que são justamente os Editais que usam alvo derivado.
+
+    Identificá-la mecanicamente exigiria casar o nome, e a `025` recusou isso por escrito na sua
+    `R-006`: seria decidir no plano uma questão que a spec declarou aberta, e erraria em Edital que
+    chame a Modalidade de outra coisa. Copiar aqui aquela heurística seria copiar o que não se fez.
+
+    **Sobra a metade que é sempre verdadeira**, e não é pouca: a linha geral é o recorte da ampla
+    concorrência, todo marco a ordena, e sem ela o alvo derivado não tem de onde sair em recorte
+    nenhum. O recorte por Modalidade é conferido **na emissão**, onde a lista é conhecida — é o que
+    a `D-014` recusou por preferir a publicação, e a recusa foi tomada sem esta informação.
+
+    Linha **zerada** é declaração legítima e publica; o que impede é a ausência.
     """
     from processo_seletivo.classificacao.domain import faixa
 
     if regra.get("targetKind") != faixa.ALVO_DO_QUADRO:
         return []
     linhas = perfil.get("vacancyTable") or []
-    declarados = {
-        str(linha.get("modalityId")) if linha.get("modalityId") else None
-        for linha in linhas
-        if isinstance(linha, dict)
-    }
-    exigidos = [(None, "a ampla concorrência")]
-    for modalidade in perfil.get("competitionModalities") or []:
-        if isinstance(modalidade, dict) and modalidade.get("id"):
-            exigidos.append(
-                (str(modalidade["id"]), modalidade.get("name") or str(modalidade["id"]))
-            )
+    tem_linha_geral = any(
+        isinstance(linha, dict) and not linha.get("modalityId") for linha in linhas
+    )
+    if tem_linha_geral:
+        return []
     return [
         _impeditivo(
             "cut_rule_sem_linha_de_quadro",
-            f"A regra de corte deriva o alvo do quadro de vagas, e não há linha para {nome}.",
+            "A regra de corte deriva o alvo do quadro de vagas, e o Perfil não publica a linha "
+            "geral — a da ampla concorrência, de onde o alvo sai em todo recorte sem lista.",
             f"{caminho}/cutRule/targetKind",
         )
-        for chave, nome in exigidos
-        if chave not in declarados
     ]
 
 

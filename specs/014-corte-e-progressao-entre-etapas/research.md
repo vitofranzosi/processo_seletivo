@@ -292,6 +292,24 @@ Modalidade que terá lista própria. Faltando uma, o Edital é recusado nomeando
 **Linha zerada não é linha ausente.** Zero vagas naquele recorte é declaração legítima, publica, e o
 corte dali não faz ninguém progredir. A ausência é que impede.
 
+**Achado da implementação, e ele restringe a `D-014`.** Exigir linha para **toda** Modalidade
+declarada — a leitura óbvia daquela decisão — torna impublicável o Edital no **formato normal**. A
+`025` documenta por quê na sua `R-006`: o Edital normal declara **também** uma Modalidade chamada
+"Ampla concorrência", e a `FR-176` daquela feature **proíbe** dar linha reservada a ela, porque a
+quantidade dela mora na linha geral. Essa Modalidade nunca terá linha, por norma — e exigi-la
+recusaria o 57/2026 e o 28/2026, que são justamente os dois Editais que usam alvo derivado.
+
+Identificá-la mecanicamente exigiria casar o nome, e a `025` recusou isso por escrito: seria decidir
+no plano uma questão que aquela spec declarou aberta, e erraria em Edital que chame a Modalidade de
+outra coisa.
+
+**O que a implementação faz, e o que fica para o usuário decidir.** A publicação exige a **linha
+geral** — o recorte da ampla concorrência, que todo marco ordena e sem o qual o alvo derivado não
+sai em recorte nenhum —, e o recorte por Modalidade é conferido **na emissão**, onde a lista é
+conhecida. É a saída que a `D-014` recusou por preferir a publicação, e a recusa foi tomada sem esta
+informação. Fechar a lacuna inteira depende de resolver as duas grafias da ampla concorrência, que
+continua fora do escopo desta feature e da `025`.
+
 ---
 
 ## R-010 · Geração, e não faixa: os dois eixos e o buraco que o primeiro desenho tinha

@@ -148,9 +148,15 @@ def test_o_alvo_derivado_que_tambem_declara_quantidade_fixa_e_recusado():
         )
 
 
-def test_o_alvo_fixo_sem_quantidade_e_recusado():
-    with pytest.raises(ProfileValidationError, match="não diz quantos"):
-        validate_profiles([perfil(marco(cut=regra(targetCount=None)))])
+def test_o_alvo_fixo_sem_quantidade_nao_derruba_o_rascunho():
+    """Quem escolhe a espécie no seletor ainda não digitou o número (achado da revisão de código).
+
+    Recusar aqui derrubaria o rascunho inteiro do Perfil — inclusive o que nada tem a ver com o
+    corte —, e os outros quatro campos da mesma regra gravam em branco. Quem cobra é a publicação.
+    """
+    validate_profiles([perfil(marco(cut=regra(targetCount=None)))])
+
+    assert "cut_rule_sem_alvo" in impeditivos(perfil(marco(cut=regra(targetCount=None))))
 
 
 def test_a_regra_ausente_nao_e_recusada():
@@ -239,7 +245,29 @@ def test_as_duas_politicas_de_continuacao_publicam(politica):
     assert impeditivos(perfil(marco(cut=regra(continuation=politica)))) == set()
 
 
-# --- T018c · alvo derivado e quadro parcial, em três listas (FR-183) -------------------------
+# --- a forma do alvo **também** na publicação: a Retificação não passa pela elaboração ---------
+
+
+def test_a_especie_invalida_impede_a_publicacao():
+    """A Retificação afere só por `validate_for_publication`, e sem isto publicaria o inválido."""
+    assert "cut_rule_sem_especie_de_alvo" in impeditivos(
+        perfil(marco(cut=regra(targetKind="POR_PERCENTUAL")))
+    )
+
+
+def test_a_quantidade_negativa_impede_a_publicacao():
+    assert "cut_rule_com_quantidade_invalida" in impeditivos(
+        perfil(marco(cut=regra(targetCount=-5)))
+    )
+
+
+def test_o_alvo_duplicado_impede_a_publicacao():
+    assert "cut_rule_com_alvo_duplicado" in impeditivos(
+        perfil(marco(cut=regra(targetKind="FROM_VACANCY_TABLE", targetCount=10)))
+    )
+
+
+# --- T018c · alvo derivado e a linha geral (FR-183) ------------------------------------------
 
 
 def quadro_completo():
@@ -258,17 +286,33 @@ def test_o_alvo_derivado_com_as_tres_linhas_publica():
     assert impeditivos(perfil_de_tres_listas(quadro_completo())) == set()
 
 
-@pytest.mark.parametrize("faltando", [0, 1, 2])
-def test_falta_de_linha_em_qualquer_recorte_impede_a_publicacao(faltando):
-    quadro = [item for indice, item in enumerate(quadro_completo()) if indice != faltando]
+def test_a_falta_da_linha_geral_impede_a_publicacao():
+    quadro = [item for item in quadro_completo() if item["modalityId"]]
 
     assert "cut_rule_sem_linha_de_quadro" in impeditivos(perfil_de_tres_listas(quadro))
 
 
-def test_a_mensagem_nomeia_o_recorte_que_ficou_sem_linha():
+def test_a_falta_de_linha_de_uma_modalidade_nao_impede_a_publicacao():
+    """O achado da revisão de código, e ele é de domínio.
+
+    Exigir linha para **toda** Modalidade declarada — a leitura óbvia da `D-014` — tornaria
+    impublicável o Edital no formato normal. A `025` documenta por quê: o Edital normal declara
+    **também** uma Modalidade chamada "Ampla concorrência", e a `FR-176` daquela feature proíbe dar
+    linha reservada a ela, porque a quantidade dela mora na linha geral. Essa Modalidade nunca terá
+    linha, por norma — e exigi-la recusaria o 57/2026 e o 28/2026, que são justamente os Editais que
+    usam alvo derivado. Identificá-la mecanicamente é o que a `R-006` da `025` recusou por escrito.
+
+    O recorte por Modalidade é conferido na **emissão**, onde a lista é conhecida.
+    """
     quadro = [item for item in quadro_completo() if item["modalityId"] != PPI]
 
-    assert "PPI" in mensagens(perfil_de_tres_listas(quadro))
+    assert impeditivos(perfil_de_tres_listas(quadro)) == set()
+
+
+def test_a_mensagem_nomeia_a_linha_geral():
+    quadro = [item for item in quadro_completo() if item["modalityId"]]
+
+    assert "ampla concorrência" in mensagens(perfil_de_tres_listas(quadro))
 
 
 def test_linha_zerada_nao_e_linha_ausente():

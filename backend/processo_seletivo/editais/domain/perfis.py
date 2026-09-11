@@ -328,8 +328,11 @@ def _validar_regra_de_corte(regra) -> None:
             "A regra de corte deriva o alvo do quadro de vagas e ainda assim declara uma "
             "quantidade fixa: o alvo tem uma fonte só."
         )
-    if especie == faixa.ALVO_FIXO and regra.get("targetCount") is None:
-        raise ProfileValidationError("A regra de corte declara alvo fixo e não diz quantos.")
+    # **O alvo fixo sem quantidade não é recusado aqui**, e a assimetria é deliberada: quem escolhe
+    # a espécie no seletor ainda não digitou o número, e recusar já derrubaria o rascunho inteiro do
+    # Perfil — inclusive o que nada tem a ver com o corte. Os outros quatro campos da mesma regra
+    # gravam em branco pela mesma razão. Quem cobra é a publicação (`cut_rule_sem_alvo`), como cobra
+    # os demais campos sem padrão.
     for campo in ("targetCount", "surplusCount"):
         valor = regra.get(campo)
         if valor is None:
