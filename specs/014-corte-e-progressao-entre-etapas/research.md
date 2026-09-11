@@ -18,6 +18,12 @@ Três coisas esta pesquisa **encontrou**, e que ninguém tinha pedido:
   novo: posição compartilhada é o que `PosicaoNaOrdem` grava, e `empate_residual` diz se ele
   sobreviveu aos critérios publicados.
 
+**Revisão cruzada de 11/09/2026.** Uma segunda leitura dos três artefatos encontrou três
+incompatibilidades de domínio que a análise anterior não pegou, e o usuário fechou as quatro decisões
+que elas exigiam (`D-011` a `D-014` da spec). A `R-003`, a `R-006`, a `R-009` e a `R-010` estão
+reescritas por causa disso, e o que elas diziam antes está dito onde foi corrigido — porque o erro
+anterior é a razão de a redação atual ser o que é.
+
 ---
 
 ## R-001 · Os nomes
@@ -73,19 +79,34 @@ obrigaria a inventar a dimensão de Perfil que a Etapa ainda não tem.
 "cutRule": {
   "targetKind": "FIXED" | "FROM_VACANCY_TABLE",
   "targetCount": 10,
-  "surplusCount": 20,
-  "tieOutcome": "ADMITS_SURPLUS" | "STRICT"
+  "surplusCount": 0,
+  "tieOutcome": "ADMITS_SURPLUS" | "STRICT",
+  "governedStage": "<uuid da Etapa>" | "NONE",
+  "continuation": "ALLOWED" | "NONE"
 }
 ```
 
-- `targetKind` diz qual das duas formas da `FR-179` vale; `targetCount` só é lido em `FIXED`, e é
-  **recusado** em `FROM_VACANCY_TABLE` — declarar os dois faria o conteúdo publicado afirmar duas
-  fontes para a mesma quantidade, que é o que o Princípio II proíbe.
-- `surplusCount` é o excedente da `FR-180`, absoluto, e `0` significa sem suplentes. Aqui zero **é**
-  um valor: o Edital que não declara suplentes tem faixa igual ao alvo.
-- `tieOutcome` não tem valor padrão em lugar nenhum. A `FR-182` o exige declarado, e a ausência é
-  achado impeditivo de publicação.
-- `cutRule: null` significa **marco que não corta**, que é o que todo Edital publicado hoje afirma.
+| Campo | Regra |
+|---|---|
+| `targetKind` | obrigatório quando `cutRule` existe |
+| `targetCount` | inteiro ≥ 0 em `FIXED`; **sempre `null`** em `FROM_VACANCY_TABLE` |
+| `surplusCount` | inteiro ≥ 0, **sempre emitido**, inclusive `0` |
+| `tieOutcome` | obrigatório; a ausência impede a publicação (`FR-182`) |
+| `governedStage` | identidade da Etapa, ou a palavra `NONE`; a ausência impede a publicação (`FR-224`) |
+| `continuation` | `ALLOWED` ou `NONE`; a ausência impede a publicação (`FR-226`) |
+
+**`cutRule: null` significa marco que não corta**, que é o que todo Edital publicado hoje afirma.
+
+**A forma publicada é normalizada, e isso não é estética.** A obsolescência compara o `cutRule` que o
+corte congelou com o da versão vigente (`R-011`). Duas regras semanticamente idênticas gravadas com
+bytes diferentes — uma omitindo `surplusCount`, outra escrevendo `0`; uma com `targetCount: null`,
+outra sem a chave — fariam a comparação acusar **obsolescência falsa**, e a operação emitiria geração
+nova para corrigir uma diferença que não existe. Por isso: `surplusCount` sempre presente, e
+`targetCount` com uma grafia só em cada espécie.
+
+**`governedStage` carrega a ausência como palavra, e não como `null`.** A `D-012` exige que a ausência
+seja **declarada**, e `null` é indistinguível de "esqueci" em toda chave anulável do sistema. `NONE`
+é afirmação; `null` seria silêncio, e silêncio é o que a decisão proíbe.
 
 **Alternativa recusada.** Um `targetKind` implícito, deduzido de qual campo veio preenchido. Deduzir
 faria `targetCount: 0` ser indistinguível de "derivado", e o zero é legítimo.
@@ -138,28 +159,34 @@ não couber, é esse o recurso, e ele já está no repositório.
 
 ---
 
-## R-006 · Qual Etapa o corte governa — e a pergunta que não tinha resposta
+## R-006 · Qual Etapa o corte governa — declarada, e não inferida
 
-**Problema.** A spec diz "o marco que antecede uma Etapa". O marco enumera Etapas em `etapas`, e
-**nada impede dois marcos do mesmo Perfil de enumerarem conjuntos cuja última Etapa é a mesma**. Se
-os dois declararem regra de corte, a Etapa seguinte tem dois cortes com alvos diferentes, e o sistema
-não teria como escolher.
+**Problema.** A primeira redação derivava a Etapa governada: *"a que sucede a última Etapa que o marco
+enumera"*. A revisão cruzada mostrou que a derivação não se sustenta, e a razão é mais forte do que a
+colisão que esta questão originalmente tratava.
 
-**Decisão, em duas partes.**
+**O que a derivação não sabia.** `editais/domain/perfis.py:216` exige que **todo** marco enumere ao
+menos uma Etapa — *"sem Etapa não há pontuação a combinar, e a ordem não sai"*. Num marco que ordena
+por **sorteio**, porém, a ordem nasce da semente: a Etapa enumerada não entra em conta nenhuma, e
+está ali para satisfazer a validação. O marco `SORTEIO` do `seed_demo.py:408` enumera *Análise de
+títulos*, e a Etapa que um corte dali alimentaria é a *Análise documental*, que vem depois. A
+derivação acerta por acidente, e erraria no dia em que alguém trocasse a Etapa enumerada por outra
+igualmente irrelevante para aquele marco.
 
-1. **A Etapa governada é a que sucede a última Etapa que o marco enumera**, na ordem publicada das
-   Etapas. `calculo.py:189` já tem o `_ultima_etapa` que responde a primeira metade, e a segunda é o
-   `etapa_anterior`/`etapas_anteriores` de `resultados/domain/progressao.py`, lido ao contrário.
-2. **Dois marcos com regra de corte governando a mesma Etapa é achado impeditivo de publicação**, com
-   mensagem que nomeia os dois marcos. Não se escolhe um; recusa-se o Edital que os publica.
+**Decisão (`D-012`).** A regra **declara** `governedStage`, por identidade estável, ou declara `NONE`.
+Nada é inferido. A publicação recusa a ausência (`FR-224`), a Etapa inexistente na versão e a Etapa
+que não sucede a ordem do marco (`FR-225`).
 
-**Rationale.** A alternativa — unir as faixas dos dois — aplicaria a soma de dois alvos que ninguém
-publicou. A outra — o marco de maior ordem vence — inventaria precedência normativa. Recusar é a
-resposta que este repositório já dá quando duas declarações dizem coisas incompatíveis.
+**A colisão que esta questão tratava desaparece junto.** Dois marcos com regra de corte governando a
+mesma Etapa continua sendo achado impeditivo de publicação, nomeando os dois marcos — e agora a
+comparação é entre duas declarações, e não entre duas deduções.
 
-**E o marco que não antecede Etapa alguma pode ter corte.** É o corte de suplentes do 77, do 57 e do
-28: ele existe para a análise documental e para a chamada, e simplesmente não tem efeito de
-participação. A emissão é legítima; o gate não incide.
+**E o marco terminal continua existindo**, declarado: `governedStage: "NONE"`, corte legítimo e sem
+efeito de participação.
+
+*O que **não** é caso de marco terminal é o corte de suplentes.* A redação anterior dizia que sim, e
+errava: no 77, no 57 e no 28 os suplentes são a parte excedente da mesma faixa, no mesmo marco que
+alimenta a análise documental (`D-011`).
 
 ---
 
@@ -173,14 +200,17 @@ e da `015` são verificados por teste. A condição do corte não pode corroê-l
 
 ```
 consulta.filter(Exists(ItemDoCorte.objects.filter(
-    inscricao_id=OuterRef(…), corte__in=<cortes vigentes do marco governante>,
+    inscricao_id=OuterRef(…), corte__in=<faixas da geração vigente que governa esta Etapa>,
     consequencia=ItemDoCorte.Consequencia.PROGREDIU)))
 ```
 
-O conjunto `<cortes vigentes>` é resolvido **uma vez por listagem**, junto do `_anteriores_e_gate`,
+O conjunto das faixas vigentes é resolvido **uma vez por listagem**, junto do `_anteriores_e_gate`,
 que já lê o conteúdo publicado uma vez e devolve o que a junção precisa. O custo somado é: uma
-leitura a mais do marco governante no conteúdo que já estava em memória, e uma consulta para os
-cortes vigentes daquele marco — constante, não proporcional à população.
+leitura a mais da regra no conteúdo que já estava em memória, e uma consulta para as faixas da
+geração vigente — constante, não proporcional à população.
+
+**E a regra governante vem da declaração**, nunca da ordem das Etapas: a prontidão procura a regra
+publicada cujo `governedStage` é esta Etapa (`R-006`).
 
 **A condição é dormente quando não há corte vigente** (`FR-214`), e é esse gate que garante a não
 regressão: Edital sem regra e Edital com regra e sem corte emitido não ganham filtro nenhum.
@@ -219,7 +249,7 @@ da spec fixa, e é o que o 57 e o 28 exigem: o empate relevante é o que atraves
 
 ---
 
-## R-009 · O alvo derivado, e a identidade que o ato registra
+## R-009 · O alvo derivado, a identidade que o ato registra, e o quadro parcial
 
 **Decisão.** Em `FROM_VACANCY_TABLE`, o alvo apurado é `LinhaDoQuadroDeVagas.vagas_imediatas` da
 linha do recorte — a linha da Modalidade quando o ato tem `lista_id`, e a **linha geral** quando ele
@@ -233,31 +263,55 @@ pelo qual o ato de ordenação guarda `versionId` e não só a regra.
 a ampla concorrência, e a linha de `modalidade` nula é onde a quantidade dela mora. A leitura vem do
 **conteúdo publicado** da versão citada pelo ato, e não do relacional em elaboração.
 
-**Linha ausente não é zero** — mas isso é recusado na publicação (`FR-183`), e não na emissão: um
-Edital publicado com alvo derivado sempre tem a linha, porque sem ela não teria publicado.
+**O quadro parcial era o buraco, e a `D-014` o fecha.** A `025` admite quadro parcial de propósito, e
+a Regra de Corte é do **marco**, que pode ordenar três listas. A primeira redação dizia apenas "o
+recorte sem linha impede a publicação" — sem dizer **quais** recortes precisam de linha —, e com isso
+um Edital com quadro parcial publicava uma regra derivada que seria inexequível na lista sem linha,
+descoberta no dia da emissão.
+
+Agora a publicação exige linha para **todo recorte que o marco ordena**: a linha geral e cada
+Modalidade que terá lista própria. Faltando uma, o Edital é recusado nomeando o recorte (`FR-183`).
+
+**Linha zerada não é linha ausente.** Zero vagas naquele recorte é declaração legítima, publica, e o
+corte dali não faz ninguém progredir. A ausência é que impede.
 
 ---
 
-## R-010 · A faixa seguinte: uma cadeia, dois eixos
+## R-010 · Geração, e não faixa: os dois eixos e o buraco que o primeiro desenho tinha
 
 **Problema.** O corte tem **duas** relações com outro corte, e confundi-las é o defeito mais provável
 desta feature: *sucessão* substitui, *continuação* acrescenta.
 
-**Decisão.** Dois campos distintos, e duas constraints parciais:
+**O buraco que a revisão cruzada encontrou.** O primeiro desenho punha a sucessão sobre a **faixa**:
+`corte_anterior` apontando de um corte para outro, com um sucessor por corte. Ele funciona para uma
+cadeia de uma faixa só, e quebra na hora em que a `US4` existe. Depois de `raiz → continuação`, as
+duas estão vigentes; um sucessor aponta para **uma** delas, e a outra continua vigente autorizando
+participantes de uma ordem que já foi substituída. E a unicidade da raiz impedia a saída óbvia —
+começar uma cadeia independente.
+
+**Decisão: a sucessão é de geração.** Toda faixa aponta a sua raiz; a sucessão liga **raiz a raiz**, e
+alcança a geração inteira.
 
 | Campo | Significado | Unicidade |
 |---|---|---|
-| `corte_anterior` | sucessão — este corte substitui aquele | um sucessor por corte |
-| `faixa_anterior` | continuação — este corte começa onde aquele parou | uma continuação por faixa |
+| `raiz` | a faixa inicial da minha geração; nulo **na própria raiz** | — |
+| `faixa_anterior` | continuação — começo onde aquela parou | uma continuação por faixa |
+| `corte_anterior` | sucessão — **minha geração substitui aquela**, e só existe em raiz | uma sucessora por geração |
 
-A raiz é o corte com os dois nulos, e ela é única por `(edital, perfil_id, marco_id, lista_id)` — nas
-duas constraints parciais que o `AtoDeOrdenacao` já demonstrou, porque `NULL` não colide com `NULL`
-no PostgreSQL e uma constraint só deixaria passar duas raízes de ampla concorrência.
+**Vigente é a geração cuja raiz ninguém sucedeu**, e vigente é toda faixa dela. É a mesma definição do
+ato de ordenação, e pela mesma razão: vigência não é coluna, senão o append-only teria de ser
+desfeito para atualizá-la.
 
-**Vigente é o corte que ninguém sucedeu** — a mesma definição do ato de ordenação, e pela mesma
-razão: vigência não é coluna, senão o append-only teria de ser desfeito para atualizá-la. Uma
-continuação **não** sucede a anterior, e por isso as duas ficam vigentes ao mesmo tempo, que é o que
-a `FR-202` manda.
+**A unicidade de raiz continua expressável.** `corte_anterior IS NULL AND faixa_anterior IS NULL`
+identifica apenas a **primeira** geração do recorte, e é sobre ela que a constraint parcial age — nas
+duas metades que o `AtoDeOrdenacao` já demonstrou, porque `NULL` não colide com `NULL` no PostgreSQL
+e uma só deixaria passar duas raízes de ampla concorrência. A geração sucessora nasce com
+`corte_anterior` preenchido e por isso não disputa a constraint. É, de novo, exatamente o desenho do
+`AtoDeOrdenacao`.
+
+**O que isso obriga a testar**, e que o desenho anterior não tinha como: `emitir → continuar → a ordem
+muda → suceder`, provando que **nenhuma** das duas faixas da geração anterior continua efetiva
+(`FR-227`, `SC-072`).
 
 ---
 
@@ -278,6 +332,17 @@ da ordem. A quarta é a mesma que a tela do marco já faz.
 
 **A mensagem diz a causa, e não "divergências"** (`FR-216`) — a `018` já pagou esse preço uma vez,
 quando a divergência genérica escondia o reingresso.
+
+**E a obsolescência passou a ter consequência operacional** (`D-013`, `FR-228`): enquanto ela durar e
+a geração sucessora não for emitida, distribuir e concluir avaliação na Etapa governada ficam
+bloqueados. O ponto de verificação é o mesmo em que a condição do corte entra — a prontidão —, e por
+isso o bloqueio não custa consulta nova: quem já resolve os cortes vigentes do marco uma vez por
+listagem resolve, na mesma leitura, se eles estão obsoletos.
+
+**Comparar a regra exige a forma normalizada da `R-003`.** Sem `surplusCount` sempre emitido e sem
+uma grafia só para `targetCount`, duas regras idênticas com bytes diferentes acusariam obsolescência
+que não existe — e cada falso positivo custaria uma geração sucessora emitida à toa, que é ato
+irreversível.
 
 ---
 
@@ -317,7 +382,10 @@ ganha contrato próprio em [contracts/corte.md](contracts/corte.md).
 |---|---|---|
 | `cut_rule_sem_desfecho_de_empate` | `cutRule` declarado sem `tieOutcome` | impeditivo |
 | `cut_rule_sem_linha_de_quadro` | `FROM_VACANCY_TABLE` e o recorte sem linha | impeditivo |
-| `cut_rule_em_dois_marcos_da_mesma_etapa` | dois marcos governando a mesma Etapa | impeditivo |
+| `cut_rule_em_dois_marcos_da_mesma_etapa` | dois marcos **declarando** governar a mesma Etapa | impeditivo |
+| `cut_rule_sem_etapa_governada` | nem Etapa declarada, nem `NONE` | impeditivo |
+| `cut_rule_com_etapa_inexistente` | a Etapa declarada não existe na versão, ou não sucede a ordem do marco | impeditivo |
+| `cut_rule_sem_politica_de_continuacao` | `continuation` não declarada | impeditivo |
 
 E um impedimento na publicação de **resultado** (`FR-219`), ao lado do que já existe para ato de
 ordenação obsoleto: corte obsoleto impede publicar o que dele depende.
@@ -335,6 +403,63 @@ e criar `corte:emitir` inventaria uma capacidade que nenhum Edital distingue.
 
 **A corrida da `FR-201`** é resolvida pela constraint parcial de raiz, e não por trava de aplicação:
 a segunda emissão simultânea viola a unicidade e é devolvida como conflito.
+
+---
+
+## R-016 · O excedente entra junto, e a continuação é declarada
+
+**Problema.** A primeira redação dizia as duas coisas ao mesmo tempo: a `FR-180` mandava a faixa somar
+o excedente, e a `FR-204` dava à continuação o teto `alvo + excedente` — que a faixa inicial já teria
+consumido. Implementada ao pé da letra, a primeira emissão do 77 progredia setenta pessoas e a `US4`
+não tinha o que fazer.
+
+**O que os Editais dizem.** A 6.10 do 77, a 8.13 do 57 e a 8.12 do 28 mandam analisar os documentos
+dos suplentes **para chamada imediata, em caso de desistência**. Analisar depois é o que *imediata*
+existe para evitar: o suplente precisa estar com documentação deferida **antes** de a desistência
+acontecer. Logo os suplentes entram na mesma emissão do alvo.
+
+**E a continuação é outra cláusula.** A 6.3 descreve o que vem depois: *"haverá a análise da
+documentação do próximo candidato classificado, respeitando-se a ordem do sorteio, até que se preencha
+o número total de vagas"*. Ela vai **além** da faixa publicada.
+
+**Decisão (`D-011`).** Faixa da primeira emissão = `alvo + excedente`. A continuação existe onde a
+regra publicada declarar `continuation: ALLOWED`, e a ausência de declaração impede a publicação.
+
+**Sem teto numérico para a continuação admitida**, porque o Edital não publica nenhum: "até que se
+preencha" é uma condição cuja apuração é da `016`. O que a limita é o motivo declarado, a autorização,
+a auditoria e o fim da ordem. Inventar um teto aqui seria publicar norma que ninguém escreveu — e foi
+exatamente o que a `FR-204` fazia.
+
+**No 14/2026 a resposta é `NONE`**, e ela é normativa: a 6.1 diz que quem não foi convocado para a
+entrevista não será classificado no resultado final. Continuar ali contrariaria o Edital.
+
+**O empate na fronteira não muda de lugar**: ele incide sobre a última posição da **faixa emitida** —
+que agora é, sem ambiguidade, alvo mais excedente (`R-008`).
+
+---
+
+## R-017 · O que a obsolescência faz com o trabalho em curso
+
+**Problema.** A `FR-217` proíbe a obsolescência de alterar o corte vigente, e a `FR-208` faz a
+participação ler as faixas vigentes. As duas juntas deixavam uma pergunta sem resposta: durante a
+obsolescência, o corte antigo continua governando? O gate cai? O trabalho para?
+
+**O caso que obriga a decidir é o reingresso.** Deferido o recurso que devolve alguém ao universo, o
+corte fica obsoleto **por causa dessa pessoa** — e continuar trabalhando sob a faixa antiga é
+exatamente excluí-la. O sistema sabe disso: foi ele que marcou a causa.
+
+**Decisão (`D-013`).** O corte obsoleto continua definindo quem está dentro, e **trabalho novo fica
+bloqueado** na Etapa governada — distribuir e concluir avaliação —, com motivo nomeado, até a geração
+sucessora. O já registrado é preservado, e a leitura continua.
+
+**Onde o bloqueio mora.** No mesmo ponto da prontidão em que a condição do corte entra, como um
+impedimento da Etapa — a mesma forma que a `013` já usa para *regra insuficiente*, que a presidência
+vê na prontidão antes de tentar consolidar. Não nasce estado novo de inscrição: o impedimento é da
+Etapa, e a partição de estados continua fechando.
+
+**As duas alternativas recusadas.** Seguir sem bloquear deixa a operação construir, sobre uma faixa
+que o sistema já sabe estar para trás, trabalho que a sucessão invalida. Derrubar o gate readmite sem
+ato quem a norma cortou — e amplia o universo em silêncio, que é o oposto de negar por padrão.
 
 ---
 

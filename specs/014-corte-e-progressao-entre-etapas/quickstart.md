@@ -78,11 +78,17 @@ precisamos —, então o Edital é montado à mão pela interface.
 
 | | Perfil | Etapas | Marco | Regra de corte |
 |---|---|---|---|---|
-| **A** | `TFC-01` — Orientador de TFC | 1 Prova de Títulos (pontuada), 2 Entrevista | `M1`, sobre a Etapa 1 | alvo **fixo 10**, excedente 0, empate **STRICT** |
-| **B** | `FIC-01` — vagas remanescentes | 1 Análise documental | `M2`, sobre o sorteio | alvo **derivado**, excedente **30**, empate `ADMITS_SURPLUS` |
+| **A** | `TFC-01` — Orientador de TFC | 1 Prova de Títulos (pontuada), 2 Entrevista | `M1` | alvo **fixo 10**, excedente **0**, empate **STRICT**, governa a **Etapa 2**, continuação **NONE** |
+| **B** | `FIC-01` — vagas remanescentes | 1 Sorteio, 2 Análise documental | `M2`, que ordena por sorteio | alvo **derivado**, excedente **30**, empate `ADMITS_SURPLUS`, governa a **Etapa 2**, continuação **ALLOWED** |
 
 No Perfil B, o quadro de vagas publica **40** vagas imediatas na linha geral — é dele que o alvo
 derivado sai.
+
+**As duas declarações de fronteira não são detalhe de formulário.** A Etapa governada é declarada
+porque num marco de sorteio a Etapa enumerada não significa nada — o domínio exige que o marco
+enumere alguma, e a ordem nasce da semente. E a continuação é declarada porque o 14 e o 77 respondem
+diferente: a cláusula 6.1 do 14 diz que quem não foi convocado não será classificado, e a 6.3 do 77
+manda analisar o próximo *até que se preencha*.
 
 Inscreva **14 candidatos** no Perfil A e consolide os Resultados da Etapa 1 de modo que as posições
 9, 10 e 11 fiquem **empatadas e sem desempate publicado**. É esse arranjo que exercita a fronteira, e
@@ -96,8 +102,9 @@ Como **elaborador**, em `/gestao/editais/<id>/compor/perfis/`.
 
 1. No cartão do Perfil A, seção **Marcos classificatórios**, abra `M1`. Junto da janela recursal
    aparece **Regra de corte**.
-2. Escolha *quantidade fixa*, digite `10`, excedente `0`, e desfecho do empate **alvo estrito**.
-3. Salve o rascunho, recarregue: os quatro valores voltam.
+2. Escolha *quantidade fixa*, digite `10`, excedente `0`, desfecho do empate **alvo estrito**, a
+   **Etapa governada** (a Entrevista) e continuação **não admitida**.
+3. Salve o rascunho, recarregue: os seis valores voltam.
 
 **Prova**: a regra é conteúdo do marco, não configuração de tela (`FR-178`, `UX-024`).
 
@@ -108,8 +115,11 @@ Como **elaborador**, em `/gestao/editais/<id>/compor/perfis/`.
 | escolher *derivado do quadro* e ainda assim digitar `10` no alvo | recusa: o alvo tem uma fonte só (`FR-179`) |
 | digitar `-1` no alvo ou no excedente | recusa (`FR-179`, `FR-180`) |
 | deixar o desfecho do empate **em branco** e tentar **publicar** | publicação impedida, com o marco nomeado (`FR-182`, `UX-025`) |
-| pôr regra *derivada* num Perfil **sem linha de quadro** para o recorte e publicar | impedida, nomeando o recorte (`FR-183`) |
-| declarar regra de corte em **dois** marcos cujas Etapas terminam na mesma | impedida, nomeando os dois marcos e a Etapa |
+| não declarar a **Etapa governada** — nem uma Etapa, nem a ausência explícita — e publicar | impedida, dizendo que ela não é inferida de lugar nenhum (`FR-224`) |
+| declarar Etapa governada que **não existe** na versão, ou anterior à ordem do marco | impedida, nomeando o marco e a Etapa (`FR-225`) |
+| não declarar se admite **continuação** e publicar | impedida, nomeando o marco (`FR-226`) |
+| pôr regra *derivada* num marco de **três listas** com quadro parcial e publicar | impedida, nomeando o recorte sem linha (`FR-183`) — e linha **zerada** publica |
+| declarar regra de corte em **dois** marcos que declaram governar a mesma Etapa | impedida, nomeando os dois marcos e a Etapa |
 
 ### O que tem de ser aceito
 
@@ -122,8 +132,9 @@ habilitados, exatamente como antes desta feature (`FR-214`, `SC-069`).
 
 Como **presidência**, em `/gestao/editais/<id>/marcos/<M1>/corte`.
 
-1. A tela abre com a faixa calculada: alvo declarado `10`, alvo apurado `10`, excedente `0`, quem
-   progride, quem fica fora e a última posição alcançada. **Nada foi gravado** (`FR-190`).
+1. A tela abre com a faixa calculada: alvo declarado `10`, alvo apurado `10`, excedente `0` — faixa
+   de `10` —, quem progride, quem fica fora e a última posição alcançada. **Nada foi gravado**
+   (`FR-190`).
 2. Com as posições 9, 10 e 11 empatadas e o desfecho **alvo estrito**, a emissão é **recusada**, e a
    mensagem nomeia as posições empatadas (`FR-195`, `SC-059`).
 3. Retifique o marco para **admite excedente** e recarregue: agora as três empatadas progridem, a
@@ -138,8 +149,9 @@ Como **presidência**, em `/gestao/editais/<id>/marcos/<M1>/corte`.
 |---|---|
 | emitir num recorte **sem ordem vigente** | recusa nomeada (`FR-197`) |
 | suceder a ordem e **então** emitir | recusa: não se corta sobre ordem obsoleta (`FR-198`) |
-| emitir de novo, com corte vigente e **sem motivo** | recusa (`FR-200`) |
-| emitir duas vezes em paralelo | uma cadeia só; a segunda volta como conflito (`FR-201`, `SC-064`) |
+| abrir o corte de um marco **sem regra declarada** | recusa `marco_sem_regra_de_corte`; nenhum corte existe sem regra publicada (`SC-058`) |
+| emitir de novo, com geração vigente e **sem motivo** | recusa (`FR-200`) |
+| emitir duas vezes em paralelo | uma geração só; a segunda volta como conflito (`FR-201`, `SC-064`) |
 | alterar o corte emitido, por qualquer caminho | recusado (`SC-061`) |
 
 ---
@@ -167,19 +179,24 @@ feature (`SC-068`). O teste que conta consultas é quem cobra, e ele é anterior
 
 Como **presidência**, no Perfil B — o recorte de sorteio, com alvo derivado.
 
-1. Abra o corte de `M2`: alvo apurado **40**, lido da linha geral do quadro, com a origem visível
-   (`FR-189`, `FR-193`).
-2. Emita. Os 40 primeiros da ordem do sorteio progridem para a análise documental.
+1. Abra o corte de `M2`: alvo apurado **40**, lido da linha geral do quadro com a origem visível, e
+   excedente **30** — faixa de **70** (`FR-189`, `FR-193`, `SC-071`).
+2. Emita. Os **70** primeiros da ordem do sorteio progridem para a análise documental: as 40 vagas e
+   os até 30 suplentes, analisados **juntos**, que é o que a cláusula 6.10 manda com a palavra
+   *imediata*.
 3. Indefira seis inscrições dessa faixa.
 4. **Continue**: declare `quantidade 6` e o motivo *"indeferimento de seis inscrições da 1ª faixa"*.
-   A faixa seguinte começa na posição 41, e a anterior **continua vigente** (`FR-202`, `SC-064`).
+   A faixa seguinte começa na posição 71, e a anterior **continua vigente** — as duas na mesma
+   geração (`FR-202`, `SC-064`).
+5. Volte ao Perfil A e tente continuar: recusado, porque aquele Edital publicou `continuation: NONE`
+   (`FR-204`, `FR-226`).
 
 ### As recusas da continuação
 
 | Faça | Espere |
 |---|---|
 | continuar **sem motivo** | recusa (`FR-203`) |
-| continuar com quantidade que ultrapasse `40 + 30` | recusa dizendo qual limite foi ultrapassado (`FR-204`) |
+| continuar onde a regra publica `continuation: NONE` | recusa dizendo que aquele Edital não a publicou (`FR-204`) |
 | suceder a ordem e **então** continuar | recusa (`FR-205`) |
 | esperar o sistema continuar sozinho | nada acontece, em nenhum cenário (`FR-206`, `SC-065`) |
 
@@ -199,6 +216,12 @@ palavras *vaga ocupada*, *vaga preenchida* ou *déficit* (`FR-207`, `SC-066`).
    não uma divergência genérica (`FR-218`, `FR-216`).
 5. Com o corte obsoleto, tente publicar resultado que dele dependa: **impedido**, com o caminho a
    seguir (`FR-219`, `SC-063`).
+6. Ainda obsoleto, tente **distribuir** ou concluir avaliação na Etapa governada: recusado, dizendo
+   que a faixa está para trás e que o caminho é emitir a geração sucessora. O trabalho já registrado
+   continua íntegro e legível (`FR-228`, `UX-030`, `SC-073`).
+7. No Perfil B, que já tem faixa inicial **e** continuação: suceda a geração com motivo. **Nenhuma**
+   das duas faixas continua autorizando participante, e a Etapa governada passa a ler apenas a
+   geração nova (`FR-227`, `SC-072`).
 
 ---
 

@@ -52,6 +52,28 @@ seção existe. O que foi conferido à mão, par a par:
 - [x] **Não regressão.** FR-214, IO-10 e SC-069 dizem a mesma coisa em três alturas, e nenhum outro
       requisito a contradiz: nada nesta feature altera Edital sem Regra de Corte.
 
+## Segunda varredura — a revisão cruzada de 11/09
+
+A primeira varredura fechou 16/16 e não pegou três incompatibilidades de domínio. O que a segunda
+leitura encontrou, e onde está resolvido:
+
+- [x] **A faixa inicial contra o teto da continuação.** `FR-180` mandava somar o excedente e `FR-204`
+      dava à continuação o teto `alvo + excedente`, que a faixa já teria consumido. Fechado pela
+      `D-011`: primeira emissão `alvo + excedente`, continuação declarada e sem teto numérico.
+- [x] **A Etapa governada derivada.** Num marco de sorteio a Etapa enumerada não é norma. Fechado
+      pela `D-012`: declarada, ou `NONE` declarado; nunca inferida.
+- [x] **Sucessão de faixa contra sucessão de geração.** Depois de `raiz → continuação` as duas são
+      vigentes, e suceder uma deixava a outra governando. Fechado pela `R-010` e pela `FR-227`, com
+      `raiz` no modelo e a sucessão ligando raiz a raiz.
+- [x] **Obsolescência sem política operacional.** Fechado pela `D-013`: bloqueia trabalho novo na
+      Etapa governada até a geração sucessora.
+- [x] **Quadro parcial com três listas.** Fechado pela `D-014`: linha exigida para todo recorte que o
+      marco ordena.
+- [x] **Canonicalização do `cutRule`.** `surplusCount` sempre emitido e uma grafia por espécie para
+      `targetCount`, para que a comparação de obsolescência não acuse diferença onde não há.
+- [x] **"Nenhum módulo novo"** virou "nenhum app, camada ou serviço novo" — a feature cria três
+      módulos, e dizia que não criava nenhum.
+
 ## Notes
 
 - As duas decisões normativas — desfecho do empate (D-001) e fronteira com a `016` (D-002) — foram

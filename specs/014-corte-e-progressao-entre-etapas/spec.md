@@ -183,9 +183,12 @@ Três consequências diretas, e elas governam requisito por requisito abaixo:
 ### D-003 — Enquanto a `016` não existir, a causa da faixa seguinte é declarada por quem emite
 
 É o que mantém a jornada completa hoje sem antecipar a `016`. A faixa seguinte exige **motivo
-textual obrigatório** e a quantidade pretendida; o sistema confere que ela cabe no alvo e no
-excedente publicados e que começa depois da última posição já alcançada, e não confere mais do que
-isso — porque não tem, e não deve ter, como saber quantas vagas foram ocupadas.
+textual obrigatório** e a quantidade pretendida; o sistema confere que a regra publicada a admite e
+que ela começa depois da última posição já alcançada, e não confere mais do que isso — porque não
+tem, e não deve ter, como saber quantas vagas foram ocupadas.
+
+*A redação anterior mandava conferir também que a continuação "cabe no alvo e no excedente
+publicados". Cabia mal: a faixa inicial já consome os dois (`D-011`), e o teto que restaria era zero.*
 
 Quando a `016` existir, ela passa a ser a origem do motivo, sem que o ato mude de forma. O que esta
 decisão compra é que o 77/2026 seja conduzível **antes** da `016`, com a operação declarando o que
@@ -265,6 +268,81 @@ Emitir corte é ato explícito, autorizado e auditável, pela mesma cadeia que j
 ordem. Esta feature registra quem emitiu, sob qual autoria e em que instante; ela **não** define
 quem é a autoridade competente. Ler o corte para conduzir a Etapa não confere autorização de emitir.
 
+### D-011 — A primeira emissão alcança o alvo **e** o excedente; a continuação é declarada
+
+*Decisão do usuário, 11/09/2026, depois da revisão cruzada.*
+
+A cláusula 6.10 do 77, a 8.13 do 57 e a 8.12 do 28 mandam analisar os documentos dos suplentes **para
+chamada imediata**. Analisar depois é exatamente o que a palavra *imediata* existe para evitar. Logo
+a faixa da primeira emissão é `alvo + excedente`: no 77, 40 mais até 30, setenta pessoas analisadas
+de uma vez.
+
+**A continuação passa a ser outra coisa**, e é a 6.3 que a descreve: *"haverá a análise da
+documentação do próximo candidato classificado… até que se preencha o número total de vagas"*. Ela
+vai **além** da faixa publicada, e por isso não pode ser silenciosa: a regra declara se aquele Edital
+a admite, e a ausência de declaração impede a publicação. No 14 a resposta é não — a 6.1 diz que quem
+não foi convocado não será classificado, e continuar ali contrariaria o Edital.
+
+**Admitida, a continuação não tem teto numérico publicado**, porque o Edital não publica nenhum: ele
+diz "até que se preencha", e quantas vagas foram preenchidas é conta da `016`. O que a limita é o
+motivo declarado, a autorização, a auditoria e o fim da ordem — e essa é a forma honesta de escrever
+uma regra cujo limite mora fora desta feature.
+
+*A redação anterior dizia as duas coisas ao mesmo tempo — `FR-180` mandava a faixa inicial somar o
+excedente, e `FR-204` dava à continuação o teto `alvo + excedente`, que a faixa inicial já teria
+consumido. Implementada ao pé da letra, a primeira emissão do 77 progredia setenta e a `US4` ficava
+sem razão de existir.*
+
+### D-012 — A Etapa governada é declarada, e a ausência dela também
+
+*Decisão do usuário, 11/09/2026, depois da revisão cruzada.*
+
+A Regra de Corte declara, por identidade estável, **qual Etapa aquele corte alimenta** — ou declara
+explicitamente que não alimenta nenhuma. Não há inferência: nem da ordem das Etapas, nem das que o
+marco enumera.
+
+**A razão é que num marco de sorteio a Etapa enumerada não significa nada.** O domínio exige que todo
+marco enumere ao menos uma, porque sem Etapa não há pontuação a combinar; num marco que ordena por
+sorteio, porém, a ordem nasce da semente, e a Etapa está ali para satisfazer a validação. Derivar
+dela quem progride seria derivar de um campo preenchido para publicar, não para dizer alguma coisa —
+e mudar qual Etapa o marco enumera, por qualquer razão, moveria em silêncio quem continua no certame.
+
+**Ausência declarada é um valor, e não um vazio.** O marco terminal existe, e o corte dele é
+legítimo: ele não produz efeito de participação, e a regra diz isso com todas as letras em vez de
+deixar o sistema concluí-lo.
+
+### D-013 — Corte obsoleto bloqueia trabalho novo na Etapa governada
+
+*Decisão do usuário, 11/09/2026, depois da revisão cruzada.*
+
+O corte obsoleto **continua definindo quem está dentro** — a `FR-217` proíbe alterá-lo —, e enquanto
+a geração sucessora não é emitida, distribuir e concluir avaliação na Etapa governada ficam
+**bloqueados**, com motivo nomeado. O trabalho já registrado é preservado, e a leitura continua.
+
+É negar por padrão, e é o caso do reingresso que obriga: deferido o recurso que devolve alguém ao
+universo, continuar trabalhando sob a faixa antiga é justamente excluir quem teve o direito
+reconhecido — e o sistema já sabe disso, porque foi ele que marcou a obsolescência.
+
+As duas alternativas foram recusadas. Seguir sem bloquear deixa a operação construir, sobre uma faixa
+que o próprio sistema já sabe estar para trás, trabalho que a sucessão vai invalidar. Derrubar o gate
+— admitir todos os habilitados enquanto durar a obsolescência — readmite sem ato quem a norma cortou.
+
+### D-014 — Alvo derivado exige linha para todo recorte que o marco ordena
+
+*Decisão do usuário, 11/09/2026, depois da revisão cruzada.*
+
+A `025` admite quadro **parcial**, e a Regra de Corte é do **marco**, que pode ordenar três listas.
+Declarado alvo derivado, a publicação passa a exigir linha de quadro para a linha geral e para cada
+Modalidade que terá lista própria; faltando uma, o Edital é recusado nomeando o recorte.
+
+A alternativa — deixar publicar e recusar na emissão — descobriria o defeito no dia em que alguém vai
+cortar, com o cronograma correndo e a correção dependendo de Retificação. Regra publicada que é
+inexequível para uma das listas é regra que não devia ter publicado.
+
+*Tornar a regra uma coleção por lista foi considerado e recusado nesta feature: resolveria Editais
+heterogêneos que ninguém leu ainda, ao custo de identidade por lista, catálogo de Retificação próprio
+e uma tela muito maior.*
+
 ## 4. Problema
 
 Um Edital publica que a entrevista é dos dez primeiros de cada código, e o sistema conduz os
@@ -295,10 +373,17 @@ do documento, do conteúdo canônico e do catálogo de Retificação, alcançáv
 
 **Acceptance Scenarios**:
 
-1. **Given** um marco declarado, **When** quem elabora declara alvo fixo de dez e desfecho de empate
-   *alvo estrito*, **Then** a regra é aceita e viaja no conteúdo publicado.
-2. **Given** um marco com alvo derivado do quadro, **When** o Perfil não tem linha de quadro para o
-   recorte, **Then** a publicação é recusada com achado impeditivo que nomeia o recorte sem linha.
+1. **Given** um marco declarado, **When** quem elabora declara alvo fixo de dez, desfecho de empate
+   *alvo estrito*, a Etapa governada e que aquele Edital **não** admite continuação, **Then** a regra
+   é aceita e viaja no conteúdo publicado.
+1a. **Given** uma regra sem Etapa governada declarada — nem uma Etapa, nem a ausência explícita —,
+   **When** alguém tenta publicar, **Then** a publicação é impedida, e a mensagem diz que a Etapa
+   governada não é inferida de lugar nenhum.
+1b. **Given** uma regra que não declara se admite continuação, **When** alguém tenta publicar,
+   **Then** a publicação é impedida, nomeando o marco.
+2. **Given** um marco com alvo derivado que ordena três listas, **When** falta linha de quadro para
+   **qualquer** um dos três recortes, **Then** a publicação é recusada com achado impeditivo que
+   nomeia o recorte sem linha — e linha zerada não é linha ausente.
 3. **Given** uma regra de corte sem desfecho de empate declarado, **When** alguém tenta publicar o
    Edital, **Then** a publicação é impedida, e a mensagem diz qual marco não declarou o desfecho.
 4. **Given** um Edital publicado com regra de corte, **When** uma Retificação altera o alvo,
@@ -321,7 +406,8 @@ declarado.
 **Acceptance Scenarios**:
 
 1. **Given** ordem vigente e regra publicada, **When** a presidência abre o corte, **Then** vê a
-   faixa calculada, o alvo apurado e a última posição alcançada — e nada foi gravado.
+   faixa calculada — **alvo mais excedente** —, o alvo apurado e a última posição alcançada, e nada
+   foi gravado.
 2. **Given** a faixa calculada, **When** quem tem autoridade emite, **Then** o ato passa a existir
    com autor, instante e a versão normativa que o governou.
 3. **Given** alvo derivado, **When** o corte é emitido, **Then** o ato registra a quantidade lida do
@@ -365,9 +451,10 @@ navegação "próxima pendente" da Etapa seguinte alcançam exatamente quem prog
 
 ### User Story 4 — Emitir a faixa seguinte quando a anterior não bastou (Priority: P2)
 
-Analisada a documentação da primeira faixa, parte dela foi indeferida. Quem tem autoridade abre o
-marco, declara o motivo e quantos, e emite a **faixa seguinte** — que começa depois da última
-posição já alcançada e respeita o alvo e o excedente publicados. A faixa anterior não é revogada.
+Analisada a documentação da primeira faixa — o alvo **e** os suplentes —, parte dela foi indeferida.
+Onde o Edital publicou que admite continuação, quem tem autoridade abre o marco, declara o motivo e
+quantos, e emite a **faixa seguinte**, que começa depois da última posição já alcançada. A faixa
+anterior não é revogada, e as duas ficam na mesma geração.
 
 **Why this priority**: é o ciclo do 77, do 57 e do 28, e é o que torna esta feature suficiente antes
 da `016` existir.
@@ -381,8 +468,8 @@ que as duas coexistem, que a segunda começa na posição certa e que ninguém �
    **Then** ela começa depois da última posição alcançada e ambas permanecem vigentes.
 2. **Given** uma faixa seguinte sem motivo declarado, **When** alguém tenta emiti-la, **Then** a
    emissão é recusada.
-3. **Given** faixa seguinte que excederia o excedente publicado, **When** alguém tenta emiti-la,
-   **Then** a emissão é recusada, e a mensagem diz qual limite foi ultrapassado.
+3. **Given** um Edital cuja regra **não** admite continuação, **When** alguém tenta emitir a faixa
+   seguinte, **Then** a emissão é recusada, e a mensagem diz que aquele Edital não a publicou.
 4. **Given** qualquer estado do certame, **When** ninguém emite nada, **Then** o sistema não emite
    faixa seguinte por conta própria, em nenhuma circunstância.
 
@@ -410,6 +497,12 @@ causa certa e que o corte vigente não mudou.
    exibida é *participante reingressou*, e não uma divergência genérica.
 4. **Given** corte obsoleto, **When** alguém tenta publicar resultado que dele dependa, **Then** a
    publicação é impedida, com o caminho a seguir.
+5. **Given** corte obsoleto e geração sucessora ainda não emitida, **When** alguém tenta distribuir
+   ou concluir avaliação na Etapa governada, **Then** a operação é recusada dizendo que a faixa está
+   para trás e que o caminho é emitir a geração sucessora — e o trabalho já registrado continua
+   íntegro e legível.
+6. **Given** uma geração com faixa inicial e continuação, **When** ela é sucedida, **Then**
+   **nenhuma** das duas faixas continua autorizando participante.
 
 ---
 
@@ -454,7 +547,12 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
 - **Marco com três listas.** O corte é por lista: três atos de ordenação raiz, três cortes, um marco.
   O alvo derivado lê a linha do quadro daquela modalidade; a lista sem modalidade lê a linha geral.
 - **Faixa seguinte depois de a ordem ser sucedida.** Recusada: a continuação se apoia numa ordem que
-  não é mais a vigente, e o caminho é emitir corte novo sobre a ordem nova.
+  não é mais a vigente, e o caminho é emitir a geração nova sobre a ordem nova.
+- **Sucessão de geração que já tem continuação.** A sucessão alcança a geração inteira: a faixa
+  inicial e todas as continuações deixam de ser efetivas no mesmo ato. Suceder uma faixa isolada não
+  é operação que exista — seria deixar metade da geração anterior governando a Etapa.
+- **Marco que declara não governar Etapa alguma.** O corte é emitido, é auditável e não tem efeito de
+  participação. É legítimo, e é declarado — nunca concluído do fato de o marco ser o último.
 - **Corte emitido e Etapa seguinte já com Avaliação registrada.** O trabalho registrado é preservado
   como histórico; deixa de autorizar quem ficou fora, e volta a autorizar se uma faixa seguinte o
   alcançar.
@@ -478,19 +576,29 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
 - **FR-179**: A Regra de Corte MUST declarar o alvo em uma de duas formas, e apenas uma por regra:
   **quantidade fixa**, absoluta e publicada; ou **derivada do quadro de vagas** do recorte.
 - **FR-180**: A Regra de Corte MUST admitir um **excedente** declarado — os suplentes —, em
-  quantidade absoluta, somado ao alvo para formar a faixa.
+  quantidade absoluta. O excedente MUST ser somado ao alvo para formar a faixa **da primeira
+  emissão**: quem o Edital manda analisar para chamada imediata é analisado junto, e não depois.
 - **FR-181**: A Regra de Corte MUST declarar o desfecho do empate que atravessa a última posição da
   faixa, entre *admite excedente* e *alvo estrito*.
 - **FR-182**: Regra de Corte sem desfecho de empate declarado MUST impedir a publicação do Edital,
   com achado impeditivo que nomeia o marco. A ausência MUST NOT ser resolvida por padrão.
-- **FR-183**: Regra com alvo derivado cujo recorte não tenha linha no quadro de vagas MUST impedir a
-  publicação, com achado que nomeia o recorte sem linha. Linha ausente MUST NOT ser lida como zero.
+- **FR-183**: Regra com alvo derivado MUST exigir linha no quadro de vagas para **todo recorte que o
+  marco ordena** — a linha geral e cada Modalidade que terá lista própria. Faltando qualquer uma, a
+  publicação MUST ser impedida com achado que nomeia o recorte. Linha ausente MUST NOT ser lida como
+  zero, e linha **zerada** MUST ser aceita.
 - **FR-184**: A Regra de Corte MUST ser alcançável por Retificação, endereçada por identidade
   estável, e MUST NOT reescrever publicação anterior.
 - **FR-185**: A Regra de Corte MUST viajar no conteúdo canônico publicado e MUST constar do
   documento gerado, na seção do marco a que pertence.
 - **FR-186**: O sistema MUST ler as versões canônicas anteriores à que introduz a Regra de Corte, e
   Edital publicado antes dela MUST permanecer legível e conduzível.
+- **FR-224**: A Regra de Corte MUST declarar **qual Etapa o corte governa**, por identidade estável,
+  ou declarar explicitamente que não governa Etapa alguma. A Etapa governada MUST NOT ser inferida
+  das Etapas que o marco enumera, e a ausência de declaração MUST impedir a publicação.
+- **FR-225**: Etapa governada declarada que não exista na versão publicada, ou que não suceda a
+  ordem do marco, MUST impedir a publicação, com achado que nomeia o marco e a Etapa.
+- **FR-226**: A Regra de Corte MUST declarar se admite **continuação**, e a ausência de declaração
+  MUST impedir a publicação. Regra que não a admite MUST recusar toda faixa seguinte.
 
 **Cálculo**
 
@@ -522,20 +630,25 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
 - **FR-198**: Emitir corte a partir de ato de ordenação **obsoleto** MUST ser recusado, e a recusa
   MUST dizer qual é a causa da obsolescência.
 - **FR-199**: O mesmo universo declarado MUST reproduzir exatamente a mesma faixa.
-- **FR-200**: Um corte MUST poder ser sucedido por outro no mesmo recorte, com motivo obrigatório; o
-  sucedido MUST permanecer legível, e um corte MUST ter no máximo um sucessor.
+- **FR-200**: Uma **geração de cortes** — a faixa inicial e todas as suas continuações — MUST poder
+  ser sucedida por outra no mesmo recorte, com motivo obrigatório. A sucedida MUST permanecer
+  legível, e uma geração MUST ter no máximo uma sucessora.
+- **FR-227**: Sucedida a geração, **nenhuma** faixa dela MUST continuar efetiva: nem a inicial, nem
+  qualquer continuação. Suceder faixa isolada MUST NOT ser possível.
 - **FR-201**: Emissões concorrentes no mesmo recorte MUST resultar em uma única cadeia; a segunda
   MUST ser recusada e não produzir ato.
 
 **A faixa seguinte**
 
-- **FR-202**: O sistema MUST admitir emitir uma **faixa seguinte** sobre a mesma ordem, que começa
-  depois da última posição alcançada pela faixa anterior e não a revoga. Continuação MUST NOT ser
-  sucessão: as duas coexistem vigentes, e a faixa anterior não é sucedida por ela.
+- **FR-202**: Onde a regra publicada admitir continuação, o sistema MUST admitir emitir uma **faixa
+  seguinte** sobre a mesma ordem, que começa depois da última posição alcançada pela faixa anterior e
+  não a revoga. Continuação MUST NOT ser sucessão: as duas ficam vigentes na mesma geração, e a
+  faixa anterior não é sucedida por ela.
 - **FR-203**: A faixa seguinte MUST exigir motivo textual declarado por quem a emite e a quantidade
   pretendida.
-- **FR-204**: A faixa seguinte MUST ser recusada quando ultrapassar o alvo somado ao excedente
-  publicados, e a recusa MUST dizer qual limite foi ultrapassado.
+- **FR-204**: A faixa seguinte MUST ser recusada quando a regra publicada não admitir continuação, e
+  a recusa MUST dizer que aquele Edital não a publicou. Admitida, ela **não tem teto numérico
+  publicado** — o que a limita é o motivo declarado, a autorização, a auditoria e o fim da ordem.
 - **FR-205**: A faixa seguinte MUST ser recusada quando a ordem citada pela faixa anterior não for
   mais a vigente.
 - **FR-206**: O sistema MUST NOT emitir faixa seguinte por conta própria, em nenhuma circunstância.
@@ -545,8 +658,8 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
 
 **O efeito sobre a Etapa seguinte**
 
-- **FR-208**: Existindo corte vigente para o marco que antecede uma Etapa, participam dela as
-  inscrições alcançadas por alguma faixa vigente daquele marco.
+- **FR-208**: Existindo corte vigente cuja Regra declara governar uma Etapa, participam dela as
+  inscrições alcançadas por alguma faixa da **geração vigente** daquele corte.
 - **FR-209**: A condição do corte MUST somar-se às regras de progressão já vigentes, e MUST NOT
   revogá-las: inscrição eliminada em Etapa anterior continua fora, ainda que dentro da faixa.
 - **FR-210**: Inscrição fora da faixa MUST NOT ser distribuída, avaliada, contada como pendente nem
@@ -574,6 +687,9 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
   MUST tornar aquele corte obsoleto com a causa *participante reingressou*.
 - **FR-219**: Corte obsoleto MUST impedir a publicação de resultado que dele dependa, com motivo
   nomeado e o caminho a seguir.
+- **FR-228**: Enquanto o corte estiver obsoleto e a geração sucessora não for emitida, o sistema MUST
+  bloquear **trabalho novo** na Etapa governada — distribuir e concluir avaliação —, com motivo
+  nomeado. O trabalho já registrado MUST ser preservado, e a leitura MUST continuar disponível.
 
 **Autorização e auditoria**
 
@@ -601,6 +717,9 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
   ato é imutável e que ele define quem prossegue.
 - **UX-029**: Edital com muitos Perfis e listas MUST permitir enxergar o estado do corte de todos os
   recortes sem uma visita por recorte.
+- **UX-030**: O bloqueio por corte obsoleto MUST dizer, onde o trabalho é recusado, que a faixa está
+  para trás e qual é o caminho — emitir a geração sucessora —, e nunca aparecer como indisponibilidade
+  sem causa.
 
 ### Key Entities
 
@@ -629,7 +748,12 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
 - **IO-8**: quem está fora da faixa não é alcançado por nenhuma superfície de trabalho da Etapa
   seguinte, e continua visível como fora dela.
 - **IO-9**: o sistema nunca afirma vaga ocupada, vaga preenchida ou déficit.
-- **IO-10**: marco sem corte emitido conduz a Etapa seguinte exatamente como hoje.
+- **IO-10**: marco sem corte emitido conduz a Etapa governada exatamente como hoje.
+- **IO-11**: sucedida uma geração, nenhuma faixa dela autoriza participante — nem a inicial, nem
+  qualquer continuação.
+- **IO-12**: a Etapa que um corte governa é sempre lida da regra publicada, e nunca inferida.
+- **IO-13**: nenhum trabalho novo é criado na Etapa governada enquanto o corte que a governa estiver
+  obsoleto.
 
 ## 6. Success Criteria *(mandatory)*
 
@@ -666,6 +790,12 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
   ausência de regressão é verificada por teste.
 - **SC-070**: Todo corte emitido tem auditoria com ator, instante, recorte, ordem citada e alvo
   apurado, recuperável sem acesso ao banco.
+- **SC-071**: Um Edital que publica alvo **e** suplentes tem os dois alcançados pela **mesma**
+  emissão — no recorte de 40 vagas com 30 suplentes, a primeira faixa contém 70 pessoas.
+- **SC-072**: Sucedida uma geração que tinha continuação, nenhum participante alcançado por qualquer
+  faixa dela continua participando da Etapa governada.
+- **SC-073**: Com o corte obsoleto, nenhuma distribuição e nenhuma conclusão de avaliação nova
+  acontece na Etapa governada, e a recusa nomeia a causa e o caminho.
 
 ## 7. Out of Scope
 
@@ -703,14 +833,18 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
 - A autoridade competente para emitir corte é a mesma cadeia que autoriza emitir a ordem do marco,
   até que as capacidades constituídas digam outra coisa.
 - O volume de referência é o mesmo da ordem: até 1.000 participantes por recorte.
-- A Etapa alcançada pelo corte é a que sucede o marco na ordem declarada das Etapas do Edital; um
-  marco que não anteceda Etapa alguma pode ter corte, e o corte simplesmente não tem efeito de
-  participação — é o caso do corte de suplentes, que existe para a análise documental e não para uma
-  Etapa seguinte.
-- Regra de Corte e desfecho de empate entram na **mesma** elevação de versão canônica. Separá-las
-  seriam duas elevações e dois caminhos de leitura para uma decisão só.
+- A Etapa alcançada pelo corte é **sempre a que a regra publicada declara** (`FR-224`), e nunca
+  inferida. Um marco pode declarar que não governa Etapa alguma: o corte é legítimo e não tem efeito
+  de participação.
+- O corte de suplentes **não** é caso de marco terminal, e a redação anterior desta seção errava
+  nisso: no 77, no 57 e no 28 os suplentes são a parte excedente da **mesma** faixa que alcança o
+  alvo, no mesmo marco e na mesma emissão (`D-011`).
+- Regra de Corte, desfecho de empate, Etapa governada e admissão de continuação entram na **mesma**
+  elevação de versão canônica. São campos de um objeto só, e separá-los seriam quatro elevações e
+  quatro caminhos de leitura para uma decisão só.
 - A guarda de publicação desta feature se soma às que já existem; ela não redefine o que torna uma
-  publicação definitiva.
+  publicação definitiva. O bloqueio de trabalho novo da `FR-228` é operacional e independente dela:
+  um impede divulgar, o outro impede construir sobre faixa que já se sabe para trás.
 - Nenhum Edital hoje publicado declara Regra de Corte, e portanto nenhum corte existe: a feature
   nasce sem migração de dado normativo, e o caminho de leitura das versões anteriores é o que
   preserva os publicados.
@@ -726,7 +860,8 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
 4. **O efeito na participação** — a condição somada no mesmo ponto em que a progressão já é
    resolvida, e a linha *fora do corte* nas superfícies que consomem o conjunto.
 5. **A obsolescência e o reingresso** — as quatro causas nomeadas e a guarda de publicação.
-6. **A faixa seguinte** — continuação com motivo, limite e recusa sobre ordem sucedida.
+6. **A faixa seguinte** — continuação onde a regra a admite, com motivo e recusa sobre ordem
+   sucedida.
 
 Os passos 1 a 4 entregam o 14/2026 inteiro até a entrevista. O passo 6 é o que fecha o ciclo do 77,
 do 57 e do 28 antes de a `016` existir.

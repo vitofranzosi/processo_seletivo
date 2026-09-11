@@ -19,14 +19,24 @@ de schema, catálogo de Retificação, documento. O ato é mais um append-only a
 `AtoDeOrdenacao`, com a mesma forma de sucessão, o mesmo `comando_de_comissao` e a mesma trilha.
 
 Isso decide o formato do plano: **duas entidades, duas migrations, um degrau de schema (12 → 13),
-nenhum módulo novo e nenhuma permissão nova.** O risco não está na engenharia — está em três lugares
+nenhum app, camada ou serviço novo e nenhuma permissão nova.** Módulos novos existem — `faixa.py`,
+`corte.py` e `emissao_do_corte.py` —, e eles moram nos pacotes que já existem, na camada que já
+existe. O risco não está na engenharia — está em três lugares
 nomeados na §*Ordem de execução*: o ciclo de importação que a prontidão quase cria, a diferença entre
 **sucessão** e **continuação**, e o orçamento de consulta das listagens da `011`, da `012` e da `015`,
 que é verificado por teste e não pode ser corroído.
 
-Uma coisa este plano **encontrou**: nada no domínio impede dois marcos do mesmo Perfil de
-antecederem a mesma Etapa, e a spec pressupõe um. Está resolvido na `R-006` — por recusa de
-publicação, e não por escolha do sistema.
+**A revisão cruzada de 11/09 mudou quatro coisas deste plano, e nenhuma delas era cosmética.** A
+faixa da primeira emissão passou a ser `alvo + excedente` e a continuação passou a ser declarada
+(`R-016`); a Etapa governada passou a ser declarada, e nunca inferida (`R-006`); a sucessão passou a
+ser de **geração**, e não de faixa (`R-010`); e o corte obsoleto passou a **bloquear trabalho novo**
+na Etapa governada (`R-017`). A `R-009` fechou, junto, o que a publicação exige quando o alvo é
+derivado e o quadro é parcial.
+
+As três primeiras eram incompatibilidades de domínio que teriam chegado ao código: a primeira
+emissão do 77 progredia setenta pessoas e deixava a `US4` sem função; a Etapa governada saía de um
+campo que o marco de sorteio preenche só para publicar; e uma geração com continuação não podia ser
+sucedida sem deixar metade dela governando a Etapa.
 
 ---
 
@@ -81,7 +91,7 @@ na `R-004`.
 | **II — Integridade normativa e imutabilidade** | A regra é conteúdo publicado com fonte única; o ato é append-only por `save()`, por privilégio ausente e por trigger. Nada publicado é reescrito: o degrau 13 converte **para leitura**, e a `FR-217` proíbe obsolescência alterar o vigente. O corte congela a versão que o governou, e é lido com os nomes dela | ✅ |
 | **III — Segurança e proteção de dados** | Nenhuma permissão nova: `classificacao:emitir`, que já existe (`R-015`). A `FR-221` separa ler de emitir e fecha o IDOR pelo escopo do ator. Nenhum dado pessoal novo — o item do corte guarda identidade de inscrição, posição e causa, que a ordem já guarda | ✅ |
 | **IV — Regras explícitas e consistência** | Toda regra vive no domínio: o alvo, o empate e os limites da continuação são recusas de `DomainError`, não validação de formulário. As três recusas de publicação são achados classificados pela operação de publicar, que é o mecanismo que o princípio exige. A concorrência da `FR-201` é resolvida por constraint, e não por trava de aplicação | ✅ |
-| **V — Qualidade, rastreabilidade e simplicidade** | Cada FR tem cenário no [quickstart.md](quickstart.md). A simplicidade é o eixo: **zero módulo novo, zero mecanismo novo, zero permissão nova** — a `R-008` encontrou que o empate que atravessa o corte já é legível na ordem emitida, e a `R-011` que as quatro causas de obsolescência saem de comparações que a tela do marco já faz | ✅ |
+| **V — Qualidade, rastreabilidade e simplicidade** | Cada FR tem cenário no [quickstart.md](quickstart.md). A simplicidade é o eixo: **zero app novo, zero camada nova, zero permissão nova** — a `R-008` encontrou que o empate que atravessa o corte já é legível na ordem emitida, e a `R-011` que as quatro causas de obsolescência saem de comparações que a tela do marco já faz | ✅ |
 | **VI — Completude de jornada** | É o princípio que **motiva** a feature: quatro Editais reais param na ordem, e a decisão que define quem continua no certame vive hoje em planilha. O cenário demonstrável é o percurso do [quickstart.md](quickstart.md), pela interface administrativa, sem shell e sem banco | ✅ |
 
 ### Invariantes do domínio tocados
@@ -177,7 +187,8 @@ backend/tests/
 ```
 
 **Structure Decision**: o monólito Django existente, sem projeto novo, sem camada nova e **sem app
-novo**. A regra mora em `editais`, junto dos outros dois objetos do marco; o ato mora em
+novo**. Os três módulos que nascem — `domain/faixa.py`, `application/corte.py` e
+`application/emissao_do_corte.py` — moram em `classificacao`, ao lado dos que já estão lá. A regra mora em `editais`, junto dos outros dois objetos do marco; o ato mora em
 `classificacao`, ao lado do `AtoDeOrdenacao` que ele cita em toda leitura. A `R-005` mostra por que
 app próprio não resolveria nada e custaria uma fronteira.
 

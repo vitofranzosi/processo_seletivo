@@ -18,24 +18,36 @@ Etapa seguinte continua recebendo o que a progressão já entrega hoje (`FR-214`
 "cutRule": {
   "targetKind": "FIXED" | "FROM_VACANCY_TABLE",
   "targetCount": 10,
-  "surplusCount": 20,
-  "tieOutcome": "ADMITS_SURPLUS" | "STRICT"
+  "surplusCount": 0,
+  "tieOutcome": "ADMITS_SURPLUS" | "STRICT",
+  "governedStage": "<uuid da Etapa>" | "NONE",
+  "continuation": "ALLOWED" | "NONE"
 }
 ```
 
 | Campo | Regra |
 |---|---|
 | `targetKind` | obrigatório quando `cutRule` existe |
-| `targetCount` | inteiro ≥ 0, obrigatório em `FIXED`, **recusado** em `FROM_VACANCY_TABLE` |
-| `surplusCount` | inteiro ≥ 0; ausente lê-se `0`, e zero é valor legítimo |
+| `targetCount` | inteiro ≥ 0 em `FIXED`; **sempre `null`** em `FROM_VACANCY_TABLE` — uma grafia só por espécie |
+| `surplusCount` | inteiro ≥ 0, **sempre emitido**, inclusive `0`. Somado ao alvo, forma a faixa da **primeira** emissão |
 | `tieOutcome` | obrigatório sempre; a ausência impede a publicação (`FR-182`) |
+| `governedStage` | identidade da Etapa que o corte alimenta, ou a palavra `NONE`; a ausência impede a publicação (`FR-224`) |
+| `continuation` | `ALLOWED` ou `NONE`; a ausência impede a publicação (`FR-226`) |
+
+**A forma é normalizada, e a razão é a obsolescência.** A comparação do `cutRule` congelado com o da
+versão vigente decide se um corte ficou para trás. Duas regras semanticamente idênticas com bytes
+diferentes — uma omitindo `surplusCount`, outra escrevendo `0` — acusariam obsolescência falsa, e cada
+falso positivo custa uma geração sucessora emitida à toa, que é ato irreversível.
+
+**`NONE` é palavra, e não `null`.** A ausência de Etapa governada precisa ser **declarada**; `null` é
+indistinguível de "esqueci" em toda chave anulável do sistema.
 
 ### Onde ela é validada
 
 | Momento | O que recusa |
 |---|---|
 | elaboração (`editais/domain/perfis.py`) | forma malformada, `targetCount` nos dois lugares, inteiro negativo |
-| publicação (`editais/domain/validation.py`) | `tieOutcome` ausente; `FROM_VACANCY_TABLE` sem linha de quadro para o recorte; dois marcos com regra governando a mesma Etapa |
+| publicação (`editais/domain/validation.py`) | `tieOutcome`, `governedStage` ou `continuation` ausentes; Etapa governada inexistente na versão ou que não sucede a ordem do marco; `FROM_VACANCY_TABLE` sem linha de quadro **para algum dos recortes que o marco ordena**; dois marcos declarando governar a mesma Etapa |
 | Retificação | pela gramática de campo que `appealWindow` já usa, endereçada por identidade do marco |
 
 ---
@@ -56,7 +68,8 @@ de runtime e trigger no banco.
 | `ato` | FK `PROTECT` para `AtoDeOrdenacao` | a ordem que este corte leu |
 | `versao` | FK `PROTECT` para `VersaoConsolidada` | a norma que o governou |
 | `universo` | JSON | regra congelada, alvo apurado e sua origem, faixa anterior — ver §4 |
-| `corte_anterior` | FK `self` nula | **sucessão**: este substitui aquele |
+| `raiz` | FK `self` nula | a faixa inicial da minha geração; **nula na própria raiz** |
+| `corte_anterior` | FK `self` nula | **sucessão de geração**: minha geração substitui aquela. Só existe em raiz |
 | `faixa_anterior` | FK `self` nula | **continuação**: este começa onde aquele parou |
 | `motivo` | texto | obrigatório em sucessão e em continuação |
 | `primeira_posicao` | inteiro | onde a faixa começa — **leitura, não critério** |
@@ -73,20 +86,31 @@ uq_corte_raiz_por_marco            UNIQUE(edital, perfil_id, marco_id)
 uq_corte_raiz_por_marco_e_lista    UNIQUE(edital, perfil_id, marco_id, lista_id)
                                    WHERE corte_anterior IS NULL AND faixa_anterior IS NULL
                                      AND lista_id IS NOT NULL
-uq_corte_sucessor_unico            UNIQUE(corte_anterior) WHERE corte_anterior IS NOT NULL
+uq_geracao_sucessora_unica         UNIQUE(corte_anterior) WHERE corte_anterior IS NOT NULL
 uq_corte_continuacao_unica         UNIQUE(faixa_anterior) WHERE faixa_anterior IS NOT NULL
 ck_corte_sucessao_ou_continuacao   NOT (corte_anterior IS NOT NULL AND faixa_anterior IS NOT NULL)
+ck_corte_sucessao_e_raiz           corte_anterior IS NULL OR raiz IS NULL
+ck_corte_continuacao_tem_raiz      faixa_anterior IS NULL OR raiz IS NOT NULL
 ck_corte_com_motivo                corte_anterior IS NULL AND faixa_anterior IS NULL
                                      OR motivo <> ''
 ```
 
 **As duas primeiras não são redundantes**: no PostgreSQL dois `NULL` não colidem, e uma constraint só
 deixaria passar duas raízes de ampla concorrência no mesmo marco. É a mesma cirurgia de
-`uq_ato_raiz_por_marco`, e pela mesma razão.
+`uq_ato_raiz_por_marco`, e pela mesma razão. Elas alcançam apenas a **primeira** geração do recorte —
+a sucessora nasce com `corte_anterior` preenchido e não disputa a constraint, como o `AtoDeOrdenacao`
+já faz.
 
-**Vigente é o corte que ninguém sucedeu** — não há coluna de vigência, porque uma coluna assim exigiria
-`UPDATE` numa tabela que o papel de runtime não pode atualizar. Uma **continuação não sucede**: as
-duas ficam vigentes ao mesmo tempo, e é disso que a `FR-202` depende.
+**A sucessão é de geração, e não de faixa.** Uma geração é a raiz mais todas as suas continuações, e
+ela é sucedida por inteiro: `corte_anterior` liga **raiz a raiz**. O desenho anterior sucedia a faixa,
+e quebrava assim que a `US4` existia — depois de `raiz → continuação`, as duas ficam vigentes, um
+sucessor apontaria para uma só, e a outra continuaria autorizando participantes de uma ordem já
+substituída (`FR-227`).
+
+**Vigente é a geração cuja raiz ninguém sucedeu**, e vigente é toda faixa dela. Não há coluna de
+vigência, porque uma coluna assim exigiria `UPDATE` numa tabela que o papel de runtime não pode
+atualizar. Uma **continuação não sucede**: ela acrescenta à geração, e é disso que a `FR-202`
+depende.
 
 ---
 
@@ -132,7 +156,8 @@ O que o corte congela, e contra o que a obsolescência compara:
 {
   "editalId": "…", "profileId": "…", "milestoneId": "…", "listId": null,
   "orderingActId": "…", "versionId": "…",
-  "cutRule": { "targetKind": "…", "targetCount": 10, "surplusCount": 20, "tieOutcome": "STRICT" },
+  "cutRule": { "targetKind": "…", "targetCount": 10, "surplusCount": 20,
+                "tieOutcome": "STRICT", "governedStage": "…", "continuation": "NONE" },
   "target": { "count": 10, "source": "FIXED" },
   "surplus": 20,
   "previousCutId": null
@@ -173,18 +198,21 @@ O corte não tem máquina de estados, e a ausência é decisão: vigência e obs
 e gravá-las exigiria `UPDATE` numa tabela append-only.
 
 ```
-(nada)  ──emitir──▶  raiz vigente
-                        │
-                        ├──suceder (motivo)──▶  sucessor vigente; a raiz fica sucedida
-                        │
-                        └──continuar (motivo)─▶  continuação vigente; a anterior CONTINUA vigente
+(nada) ──emitir──▶  G1: raiz            ──continuar──▶  G1: faixa 2  ──continuar──▶  G1: faixa 3
+                      │                                  (as três VIGENTES juntas)
+                      │
+                      └──suceder (motivo, raiz→raiz)──▶  G2: raiz
+                                                          G1 INTEIRA deixa de ser efetiva
 ```
 
 | Pergunta | Como é respondida |
 |---|---|
-| este corte é vigente? | ninguém aponta para ele em `corte_anterior` |
+| qual é a minha geração? | `raiz`, ou eu mesmo quando ela é nula |
+| esta geração é vigente? | ninguém aponta para a raiz dela em `corte_anterior` |
+| esta faixa é vigente? | a geração dela é vigente — a raiz e as continuações, juntas |
 | este corte é obsoleto? | comparação do `universo` com o estado atual — as quatro causas da `R-011` |
-| esta inscrição progrediu? | existe `ItemDoCorte` com `PROGREDIU` em algum corte vigente do marco |
+| esta inscrição progrediu? | existe `ItemDoCorte` com `PROGREDIU` em alguma faixa da geração vigente |
+| posso trabalhar na Etapa governada? | sim, salvo se a geração vigente estiver obsoleta (`FR-228`) |
 
 ---
 
@@ -192,9 +220,10 @@ e gravá-las exigiria `UPDATE` numa tabela append-only.
 
 | Invariante | Onde é garantido |
 |---|---|
-| um corte raiz por recorte | constraint parcial, em duas metades |
-| um sucessor por corte, uma continuação por faixa | duas constraints parciais |
+| uma geração inicial por recorte | constraint parcial, em duas metades |
+| uma geração sucessora por geração, uma continuação por faixa | duas constraints parciais |
 | sucessão e continuação não coexistem na mesma linha | `CheckConstraint` |
+| sucessão só em raiz, e continuação sempre com raiz | dois `CheckConstraint` |
 | sucessão e continuação têm motivo | `CheckConstraint` |
 | um item por inscrição em cada corte | `UNIQUE` |
 | nada é alterado nem apagado | `save()`, `delete()`, privilégio ausente e trigger |

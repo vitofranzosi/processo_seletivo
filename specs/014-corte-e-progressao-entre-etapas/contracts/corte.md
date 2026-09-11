@@ -13,22 +13,33 @@ lugares em que o marco aparece, como `appealWindow` e `drawMethod` já estão.
 cutRule:
   type: object
   nullable: true
-  required: [targetKind, tieOutcome]
+  required: [targetKind, tieOutcome, governedStage, continuation]
   properties:
-    targetKind:   { type: string, enum: [FIXED, FROM_VACANCY_TABLE] }
-    targetCount:  { type: integer, minimum: 0, nullable: true }
-    surplusCount: { type: integer, minimum: 0, default: 0 }
-    tieOutcome:   { type: string, enum: [ADMITS_SURPLUS, STRICT] }
+    targetKind:    { type: string, enum: [FIXED, FROM_VACANCY_TABLE] }
+    targetCount:   { type: integer, minimum: 0, nullable: true }
+    surplusCount:  { type: integer, minimum: 0 }
+    tieOutcome:    { type: string, enum: [ADMITS_SURPLUS, STRICT] }
+    governedStage: { type: string, description: "uuid da Etapa governada, ou a palavra NONE" }
+    continuation:  { type: string, enum: [ALLOWED, NONE] }
 ```
 
 `targetCount` é obrigatório em `FIXED` e **recusado** em `FROM_VACANCY_TABLE`. A recusa é do domínio,
 e não do serializer: a interface invoca o command diretamente, e uma validação que vivesse só no DRF
 não alcançaria o caminho da tela.
 
+`governedStage` e `continuation` **não têm default**, e a ausência de qualquer um dos dois impede a
+publicação. `governedStage: "NONE"` é afirmação — o marco declara que o corte dele não alimenta Etapa
+alguma —, e nunca se conclui isso de um `null`.
+
 ### `MarcoPublicado` — o snapshot
 
 Mesma forma, com `cutRule: null` no marco que não corta. **Todo** Edital publicado antes do degrau 13
 é lido assim.
+
+**A emissão é normalizada**: `surplusCount` sai sempre, inclusive `0`, e `targetCount` sai `null` em
+`FROM_VACANCY_TABLE` — nunca ausente. Duas regras idênticas gravadas com bytes diferentes fariam a
+comparação de obsolescência acusar diferença onde não há, e cada falso positivo custa uma geração
+sucessora emitida à toa.
 
 ### Recusas da elaboração
 
@@ -44,10 +55,14 @@ Mesma forma, com `cutRule: null` no marco que não corta. **Todo** Edital public
 | Código | Quando | Classe |
 |---|---|---|
 | `cut_rule_sem_desfecho_de_empate` | `tieOutcome` ausente | impeditivo |
-| `cut_rule_sem_linha_de_quadro` | `FROM_VACANCY_TABLE` e o recorte sem linha no quadro | impeditivo |
-| `cut_rule_em_dois_marcos_da_mesma_etapa` | dois marcos com regra governando a mesma Etapa | impeditivo |
+| `cut_rule_sem_etapa_governada` | nem Etapa declarada, nem `NONE` | impeditivo |
+| `cut_rule_com_etapa_inexistente` | a Etapa declarada não existe na versão, ou não sucede a ordem do marco | impeditivo |
+| `cut_rule_sem_politica_de_continuacao` | `continuation` não declarada | impeditivo |
+| `cut_rule_sem_linha_de_quadro` | `FROM_VACANCY_TABLE` e **algum** recorte que o marco ordena sem linha | impeditivo |
+| `cut_rule_em_dois_marcos_da_mesma_etapa` | dois marcos declarando governar a mesma Etapa | impeditivo |
 
-A mensagem nomeia o marco, e no terceiro caso os **dois** marcos e a Etapa disputada (`UX-025`).
+A mensagem nomeia o marco; no caso da linha de quadro, o **recorte** que ficou sem ela; e no último,
+os **dois** marcos e a Etapa disputada (`UX-025`).
 
 ---
 
@@ -75,7 +90,11 @@ e a obsolescência com a causa quando houver.
 { "lista": "…|null", "confirmacao": "<sha256 do cálculo conferido>", "motivo": "" }
 ```
 
-`motivo` é obrigatório quando já existe corte vigente no recorte — a emissão então é **sucessão**.
+`motivo` é obrigatório quando já existe geração vigente no recorte — a emissão então é **sucessão de
+geração**, e alcança a raiz anterior e todas as continuações dela.
+
+A faixa emitida é `alvo + excedente`: quem o Edital manda analisar para chamada imediata entra aqui, e
+não numa continuação.
 
 | Recusa | Quando | HTTP |
 |---|---|---|
@@ -83,8 +102,9 @@ e a obsolescência com a causa quando houver.
 | `ato_obsoleto` | a ordem citada já está para trás (`FR-198`) | 409 |
 | `empate_atravessa_o_corte` | `STRICT` e empate residual na fronteira (`FR-195`) | 422 |
 | `calculo_divergente` | a confirmação não corresponde ao cálculo atual | 409 |
-| `sucessao_sem_motivo` | há vigente e o motivo veio vazio | 422 |
-| `corte_ja_emitido` | corrida: a raiz já existe (`FR-201`) | 409 |
+| `sucessao_sem_motivo` | há geração vigente e o motivo veio vazio | 422 |
+| `corte_ja_emitido` | corrida: a geração já existe (`FR-201`) | 409 |
+| `marco_sem_regra_de_corte` | o marco não declara `cutRule` | 409 |
 
 A resposta é o corte criado, com `id`, universo, alvo apurado, primeira e última posição, e as
 contagens.
@@ -97,14 +117,18 @@ contagens.
 
 | Recusa | Quando | HTTP |
 |---|---|---|
+| `continuacao_nao_publicada` | a regra declara `continuation: NONE` (`FR-204`, `FR-226`) | 422 |
 | `continuacao_sem_motivo` | motivo vazio (`FR-203`) | 422 |
-| `continuacao_excede_o_publicado` | ultrapassa alvo + excedente (`FR-204`) | 422 |
 | `continuacao_sobre_ordem_sucedida` | a ordem da faixa anterior não é mais a vigente (`FR-205`) | 409 |
-| `sem_faixa_anterior` | não há corte no recorte | 409 |
+| `sem_faixa_anterior` | não há geração vigente no recorte | 409 |
 | `continuacao_ja_emitida` | a faixa anterior já tem continuação | 409 |
 
 **A `quantidade` é pedida e conferida, nunca inferida.** O sistema não sabe quantas vagas foram
 ocupadas, e a `FR-206` proíbe que ele decida sozinho quantos chamar.
+
+**E a continuação admitida não tem teto numérico publicado.** O Edital diz *"até que se preencha"*, e
+quantas vagas foram preenchidas é conta da `016`. O que a limita é o motivo declarado, a autorização,
+a auditoria e o fim da ordem — inventar um teto aqui seria publicar norma que ninguém escreveu.
 
 ### `GET editais/{edital_id}/marcos/{marco_id}/cortes/{corte_id}`
 
