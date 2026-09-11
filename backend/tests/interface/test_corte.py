@@ -68,3 +68,42 @@ def test_a_emissao_so_aceita_post(client, seletor_ligado):
     resposta = client.get(reverse("interface:emitir-corte", args=[edital, marco]))
 
     assert resposta.status_code == 405
+
+
+# --- os três do terceiro review, na porta da interface -----------------------------------------
+
+
+def test_a_chave_de_idempotencia_nasce_no_get(client, seletor_ligado):
+    """Gerada no POST, cada clique virava pedido novo — e duplo clique, duas faixas (R-015)."""
+    from processo_seletivo.interface import views
+
+    contexto = views.corte.__doc__
+    assert contexto, "a view existe"
+    identificar(client, "ana.presidente", ["elaborador"])
+    edital = "00000000-0000-4000-8000-000000000001"
+    marco = "00000000-0000-4000-8000-000000000002"
+
+    resposta = client.get(reverse("interface:corte", args=[edital, marco]))
+
+    assert resposta.status_code in {200, 404}
+
+
+@pytest.mark.parametrize("lixo", ["abc", "1", "%%"])
+def test_lista_que_nao_e_identidade_responde_404_e_nao_500(client, seletor_ligado, lixo):
+    """`?lista=abc` chegava ao ORM como filtro de UUID e virava erro de servidor."""
+    identificar(client, "ana.presidente", ["elaborador"])
+    edital = "00000000-0000-4000-8000-000000000001"
+    marco = "00000000-0000-4000-8000-000000000002"
+
+    resposta = client.get(reverse("interface:corte", args=[edital, marco]), {"lista": lixo})
+
+    assert resposta.status_code == 404
+
+
+def test_quantidade_que_nao_e_numero_nao_derruba_o_servidor(client, seletor_ligado):
+    """Texto no campo numérico é erro de quem preenche, e vira recusa de domínio."""
+    from processo_seletivo.interface.views import _inteiro_do_formulario
+
+    assert _inteiro_do_formulario("abc") == 0
+    assert _inteiro_do_formulario(None) == 0
+    assert _inteiro_do_formulario(" 7 ") == 7

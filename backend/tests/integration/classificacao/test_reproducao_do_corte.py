@@ -118,7 +118,12 @@ def test_a_auditoria_traz_o_ator_o_instante_e_o_recorte(cenario, gestor):
     assert str(registro.aggregate_id) == str(corte.id)
     assert registro.actor_subject == gestor.subject
     assert registro.occurred_at is not None
-    assert registro.reason
+    # **Os quatro que são desta feature** (FR-222): sem eles a auditoria não reconstrói o ato sem
+    # abrir o banco, e "tem razão preenchida" não é a mesma coisa que "diz o que aconteceu".
+    assert str(corte.perfil_id) in registro.reason, "o recorte"
+    assert str(corte.ato_id) in registro.reason, "a ordem citada"
+    assert "alvo 2" in registro.reason, "o alvo apurado"
+    assert "2 progrediram" in registro.reason, "a quantidade alcançada"
 
 
 def test_o_ato_guarda_quem_emitiu_e_quando(cenario, gestor):

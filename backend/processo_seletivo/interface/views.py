@@ -67,6 +67,7 @@ from processo_seletivo.comissoes.domain.autorizacao import (
     pode_gerir_comissao,
 )
 from processo_seletivo.comissoes.domain.etapas import (
+    conteudo_vigente,
     etapa_vigente,
     etapas_vigentes,
     evento_vigente,
@@ -3465,8 +3466,11 @@ def distribuicao(request, edital_id, etapa_id):
     # O panorama da 013 é resolvido **uma vez** e entregue ao resumo e à listagem. Consultá-lo nos
     # dois lugares daria dois números para a mesma Etapa, que é o que D-004 recusa; consultá-lo por
     # linha devolveria à listagem o custo que a 012 tirou dela (FR-006, FR-009).
+    # O conteúdo publicado é lido **uma vez** e entregue: `effective_version` custa duas consultas,
+    # e a condição do corte da 014 precisa dos marcos que governam esta Etapa (014, R-005).
+    conteudo_publicado = conteudo_vigente(edital)
     panorama = prontidao_013.panorama_da_etapa(
-        edital=edital, etapa=etapa, etapas_vigentes=etapas_vigentes(edital)
+        edital=edital, etapa=etapa, conteudo=conteudo_publicado
     )
     linhas, pagina = avaliacao_selectors.inscricoes_da_etapa(
         edital=edital,
@@ -4096,6 +4100,28 @@ def emitir_ordenacao(request, edital_id, marco_id):
     return redirect(destino)
 
 
+def _identidade_ou_404(valor):
+    """Uma identidade vinda da URL ou do formulário, ou `None` — e nunca lixo para o ORM.
+
+    `?lista=abc` chegava ao banco como filtro de UUID e virava 500. O identificador público não
+    confere autorização **e** não derruba o servidor: o que não é identidade é ausência.
+    """
+    if not valor:
+        return None
+    try:
+        return str(UUID(str(valor)))
+    except (TypeError, ValueError) as erro:
+        raise Http404 from erro
+
+
+def _inteiro_do_formulario(valor):
+    """O que o campo numérico traz, ou `0` — a recusa é do domínio, e não do `int()`."""
+    try:
+        return int(str(valor).strip())
+    except (TypeError, ValueError):
+        return 0
+
+
 @require_http_methods(["GET"])
 def corte(request, edital_id, marco_id):
     """Calcula a faixa para conferência, sem constituir ato algum (014, FR-190).
@@ -4106,7 +4132,7 @@ def corte(request, edital_id, marco_id):
     ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
     if ator is None:
         return redirect(reverse("interface:identificar"))
-    lista_id = request.GET.get("lista") or None
+    lista_id = _identidade_ou_404(request.GET.get("lista"))
     perfil_id = _perfil_do_marco(edital, marco_id)
     geracao = geracao_vigente(
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
@@ -4135,6 +4161,12 @@ def corte(request, edital_id, marco_id):
                 "recusa": recusa,
                 "geracao": geracao,
                 "confirmacao": (assinatura_do_corte(proposta, geracao=geracao) if proposta else ""),
+                # **A chave nasce aqui, e não no POST.** Gerada a cada POST, ela fazia de cada
+                # clique um pedido novo: duplo clique ou reenvio do navegador produzia duas faixas
+                # sucessivas, e a geração avançava duas vezes sem que ninguém pedisse. Nascida no
+                # GET e enviada em campo oculto, a segunda tentativa da mesma leitura devolve o
+                # desfecho da primeira — que é o que a idempotência existe para fazer.
+                "chave_idempotencia": uuid4().hex,
                 "pode_emitir": pode_emitir,
                 "resultado": request.session.pop("resultado_do_corte", None),
                 "erro": request.session.pop("erro_do_corte", None),
@@ -4149,7 +4181,7 @@ def emitir_corte_view(request, edital_id, marco_id):
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
         return redirect(reverse("interface:identificar"))
-    lista_id = request.POST.get("lista") or None
+    lista_id = _identidade_ou_404(request.POST.get("lista"))
     destino = reverse("interface:corte", args=[edital_id, marco_id])
     if lista_id:
         destino = f"{destino}?lista={lista_id}"
@@ -4179,7 +4211,7 @@ def continuar_corte_view(request, edital_id, marco_id):
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
         return redirect(reverse("interface:identificar"))
-    lista_id = request.POST.get("lista") or None
+    lista_id = _identidade_ou_404(request.POST.get("lista"))
     destino = reverse("interface:corte", args=[edital_id, marco_id])
     if lista_id:
         destino = f"{destino}?lista={lista_id}"
@@ -4193,7 +4225,9 @@ def continuar_corte_view(request, edital_id, marco_id):
             lista_id=lista_id,
             idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
             correlation_id=getattr(request, "correlation_id", ""),
-            quantidade=request.POST.get("quantidade") or 0,
+            # O texto chega como texto, e vira recusa de domínio — nunca `ValueError` no meio do
+            # comando. `abc` no campo é erro de quem preenche, e não defeito de servidor.
+            quantidade=_inteiro_do_formulario(request.POST.get("quantidade")),
             motivo=request.POST.get("motivo", ""),
         )
     except DomainError as recusa:
@@ -4692,12 +4726,14 @@ def minha_etapa(request, edital_id, etapa_id):
         # existência não é enumerável por quem não tem acesso (FR-057).
         raise Http404
     try:
-        # A coleção inteira, e não `etapa_vigente`: é o que aquele wrapper leria por dentro, e a
-        # Mesa precisa dela para resolver a progressão. Ler uma vez e repassar mantém o custo onde
-        # estava — o orçamento de consulta desta tela é testado (013, FR-006).
-        vigentes = etapas_vigentes(edital)
+        # **O conteúdo publicado inteiro**, e não só a coleção de Etapas: é o que aquele wrapper
+        # leria por dentro, a Mesa precisa das Etapas para resolver a progressão, e a condição do
+        # corte da `014` precisa dos marcos que governam esta Etapa. Ler uma vez e repassar mantém
+        # o custo onde estava — o orçamento de consulta desta tela é testado (013, FR-006).
+        conteudo_da_mesa = conteudo_vigente(edital)
+        vigentes = {UUID(str(item["id"])): item for item in conteudo_da_mesa.get("stages") or []}
     except DomainError:
-        vigentes = {}
+        conteudo_da_mesa, vigentes = {}, {}
     etapa = vigentes.get(etapa_id)
     if etapa is None:
         raise Http404
@@ -4726,6 +4762,7 @@ def minha_etapa(request, edital_id, etapa_id):
             pagina=request.GET.get("pagina") or 1,
             filtro=request.GET.get("filtro") or None,
             vigentes=vigentes,
+            conteudo=conteudo_da_mesa,
         )
         if por_alocacao
         else (None, None, None)

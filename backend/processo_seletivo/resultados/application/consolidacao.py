@@ -16,11 +16,12 @@ que a tela não deveria ter oferecido — seleção vazia, Etapa sem regra, insc
 incompatibilidade, já consolidada — é recusa de linha, e o lote segue.
 """
 
+from uuid import UUID
+
 from processo_seletivo.avaliacoes.application.distribuicao import resultado_declarado
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
 from processo_seletivo.comissoes.application.comissao import identificador
-from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.resultados.application.prontidao import (
@@ -61,11 +62,19 @@ def _edital_do_processo(processo, edital_id):
 
 
 def _etapa_vigente_ou_404(edital, etapa_id):
-    vigentes = etapas_vigentes(edital)
+    """`(etapa, vigentes, conteudo)` — o conteúdo viaja porque a prontidão precisa dele.
+
+    `effective_version` custa duas consultas, e a condição do corte da `014` precisa dos marcos que
+    governam a Etapa: relê-lo lá dentro dobraria o custo de toda consolidação (014, R-005).
+    """
+    from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
+
+    conteudo = conteudo_vigente(edital)
+    vigentes = {UUID(str(etapa["id"])): etapa for etapa in conteudo.get("stages") or []}
     etapa = vigentes.get(identificador(etapa_id))
     if etapa is None:
         raise nao_encontrado()
-    return etapa, vigentes
+    return etapa, vigentes, conteudo
 
 
 def _inscricoes_da_selecao(edital, ids, panorama):
@@ -180,11 +189,13 @@ def consolidar(
             # Antes de qualquer trabalho: a repetição devolve o desfecho original, e não um
             # recálculo que responderia "zero criados" sobre um estado que já mudou (FR-021).
             return ctx.desfecho_anterior
-        etapa, vigentes = _etapa_vigente_ou_404(edital, etapa_id)
+        etapa, vigentes, conteudo = _etapa_vigente_ou_404(edital, etapa_id)
 
         # **Uma leitura do panorama, antes do laço.** Elegíveis, Resultados existentes e conjuntos
         # da progressão saem daqui; dentro do laço não há consulta nenhuma.
-        panorama = panorama_da_etapa(edital=edital, etapa=etapa, etapas_vigentes=vigentes)
+        panorama = panorama_da_etapa(
+            edital=edital, etapa=etapa, etapas_vigentes=vigentes, conteudo=conteudo
+        )
         impedimento = panorama["impedimento_da_etapa"]
         if impedimento is not None:
             # Impedimento da **Etapa inteira** é erro do pedido: nenhuma inscrição dela pode ser

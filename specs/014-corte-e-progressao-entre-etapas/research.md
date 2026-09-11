@@ -303,12 +303,16 @@ Identificá-la mecanicamente exigiria casar o nome, e a `025` recusou isso por e
 no plano uma questão que aquela spec declarou aberta, e erraria em Edital que chame a Modalidade de
 outra coisa.
 
-**O que a implementação faz, e o que fica para o usuário decidir.** A publicação exige a **linha
-geral** — o recorte da ampla concorrência, que todo marco ordena e sem o qual o alvo derivado não
-sai em recorte nenhum —, e o recorte por Modalidade é conferido **na emissão**, onde a lista é
-conhecida. É a saída que a `D-014` recusou por preferir a publicação, e a recusa foi tomada sem esta
-informação. Fechar a lacuna inteira depende de resolver as duas grafias da ampla concorrência, que
-continua fora do escopo desta feature e da `025`.
+**A saída não é enfraquecer a conferência, e a revisão de aceitação recusou a tentativa.** A
+primeira implementação exigiu só a linha geral e deixou o recorte por Modalidade para a emissão — o
+que permitiria publicar regra derivada inexequível numa das listas, com o defeito aparecendo no dia
+do corte. A `D-014` está mantida inteira.
+
+**O que destrava a conferência é o Edital dizer qual Modalidade é a ampla concorrência** (`FR-231`).
+Uma identidade declarada no Perfil, alcançável por Retificação, que corresponde à linha geral e não
+recebe linha própria. Ela não contraria a `R-006` da `025`: aquela pesquisa recusou **adivinhar**
+casando o nome, e isto é o oposto — o sistema lê o que foi declarado. As demais Modalidades continuam
+exigindo linha, e o Edital que declara a sua ampla concorrência publica sem exceção nenhuma.
 
 ---
 

@@ -130,6 +130,9 @@ class ProfileSerializer(serializers.Serializer):
     compensation = serializers.CharField(required=False, allow_blank=True)
     classificationInformation = serializers.JSONField(required=False)
     callInformation = serializers.JSONField(required=False)
+    # Qual das Modalidades é a ampla concorrência (014, D-014). `allow_null` porque não declarar é
+    # resposta legítima: há Edital em que a ampla concorrência existe só como a linha geral.
+    generalCompetitionModalityId = serializers.UUIDField(required=False, allow_null=True)
     competitionModalities = CompetitionModalitySerializer(many=True)
     # Opcional no rascunho: um Edital que não classifica não declara marco nenhum.
     classificationMilestones = ClassificationMilestoneSerializer(many=True, required=False)

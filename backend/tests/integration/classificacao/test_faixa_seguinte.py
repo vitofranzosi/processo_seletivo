@@ -260,29 +260,23 @@ def test_a_continuacao_gera_auditoria_propria(cenario, gestor):
 # --- as três do segundo code review -----------------------------------------------------------
 
 
-def test_a_quantidade_nao_parte_um_grupo_empatado(cenario, gestor, api_client):
+def test_a_quantidade_nao_parte_um_grupo_empatado():
     """Cortar pelo número puro escolheria entre pessoas que a norma declara empatadas.
 
-    O limite para na **fronteira do grupo**, e não no meio dele: alcançar um a mais é o que a regra
-    de empate já autoriza; alcançar meio grupo não é (FR-196).
+    A quantidade da continuação entra no **cálculo**, onde o empate é visto — e não num corte
+    posterior sobre a lista pronta, que partiria o grupo pela ordem em que o banco devolveu as
+    linhas. Alcançar um a mais é o que a regra de empate já autoriza; alcançar meio grupo não é
+    (FR-196).
     """
-    from processo_seletivo.classificacao.application.emissao_do_corte import _limitar
-    from processo_seletivo.classificacao.models import ItemDoCorte as Item
+    from processo_seletivo.classificacao.domain import faixa
 
-    itens = [
-        {"inscricao_id": "a", "posicao": 3, "consequencia": Item.Consequencia.PROGREDIU},
-        {"inscricao_id": "b", "posicao": 4, "consequencia": Item.Consequencia.PROGREDIU},
-        {"inscricao_id": "c", "posicao": 4, "consequencia": Item.Consequencia.PROGREDIU},
-    ]
+    posicoes = [("a", 3), ("b", 4), ("c", 4)]
 
-    ajustados = _limitar(itens, 2)
+    progrediram, _, _, _ = faixa.calcular(
+        posicoes, alvo=2, excedente=0, desfecho=faixa.EMPATE_ADMITE_EXCEDENTE, desde=2
+    )
 
-    dentro = {
-        item["inscricao_id"]
-        for item in ajustados
-        if item["consequencia"] == Item.Consequencia.PROGREDIU
-    }
-    assert dentro == {"a", "b", "c"}, "o empate na fronteira entra inteiro, ou não entra"
+    assert set(progrediram) == {"a", "b", "c"}, "o empate na fronteira entra inteiro"
 
 
 def test_a_continuacao_sem_quantidade_recusa(cenario, gestor):
@@ -310,3 +304,49 @@ def test_a_faixa_que_nao_alcanca_ninguem_nao_registra_posicao_alcancada(cenario,
     ultima = Corte.objects.order_by("-emitido_em").first()
     assert ultima.itens.filter(consequencia=ItemDoCorte.Consequencia.PROGREDIU).count() == 0
     assert ultima.ultima_posicao is None
+
+
+def test_a_continuacao_alcanca_mais_do_que_o_alvo_publicado(cenario, gestor):
+    """A continuação **não herda o teto da primeira emissão** (FR-204).
+
+    O alvo e o excedente publicados formam a faixa inicial. A continuação vai até onde quem emite
+    declarou, e o Edital não publica teto nenhum para ela — ele diz "até que se preencha", e quantas
+    vagas foram preenchidas é conta da `016`. Com alvo 2, pedir 3 tem de entregar 3.
+    """
+    edital, inscricoes = cenario
+
+    continuar(edital, gestor, quantidade=3, chave="faixa-014-alem-do-alvo")
+
+    seguinte = Corte.objects.exclude(faixa_anterior__isnull=True).get()
+    alcancados = set(
+        seguinte.itens.filter(consequencia=ItemDoCorte.Consequencia.PROGREDIU).values_list(
+            "inscricao_id", flat=True
+        )
+    )
+    assert alcancados == {inscricoes[2].id, inscricoes[3].id}, (
+        "alcança quantos restarem, e não quantos o alvo publicado permitia"
+    )
+
+
+def test_a_faixa_vazia_nao_faz_a_seguinte_recomecar_do_inicio(cenario, gestor):
+    """A última posição é a da **geração**, e não a da faixa imediatamente anterior.
+
+    Com `anterior.ultima_posicao or 0`, uma faixa que não alcançou ninguém fazia a continuação
+    seguinte recomeçar da primeira posição — realcançando quem já estava dentro.
+    """
+    edital, inscricoes = cenario
+    continuar(edital, gestor, quantidade=2, chave="faixa-014-esgota-tudo")
+    continuar(edital, gestor, quantidade=1, chave="faixa-014-vazia-2", motivo="não sobrou ninguém")
+
+    continuar(edital, gestor, quantidade=1, chave="faixa-014-depois-da-vazia", motivo="mais uma")
+
+    ultima = Corte.objects.order_by("-emitido_em").first()
+    assert ultima.itens.filter(consequencia=ItemDoCorte.Consequencia.PROGREDIU).count() == 0
+    alcancados = [
+        identidade
+        for corte in geracao_vigente(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO)
+        for identidade in corte.itens.filter(
+            consequencia=ItemDoCorte.Consequencia.PROGREDIU
+        ).values_list("inscricao_id", flat=True)
+    ]
+    assert len(alcancados) == len(set(alcancados)), "ninguém é realcançado depois da faixa vazia"

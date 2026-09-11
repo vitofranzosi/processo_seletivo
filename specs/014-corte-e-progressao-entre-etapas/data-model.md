@@ -52,6 +52,22 @@ indistinguível de "esqueci" em toda chave anulável do sistema.
 
 ---
 
+### O Perfil declara a sua ampla concorrência
+
+`PerfilVaga.modalidade_ampla_concorrencia` — `UUIDField(null=True, blank=True)`, publicado como
+`generalCompetitionModalityId` no degrau 13, ao lado do `cutRule`.
+
+**`None` significa que o Perfil não declarou nenhuma**, e é o formato em que a ampla concorrência
+existe só como a linha geral do quadro. Declarada, ela **corresponde** à linha geral: não recebe
+linha própria, e a conferência do alvo derivado não a exige.
+
+| Recusa | Quando |
+|---|---|
+| `general_competition_modality_unknown` | aponta Modalidade que o Perfil não publica |
+| `general_competition_modality_with_row` | a declarada tem linha própria no quadro |
+
+---
+
 ## 2. `Corte` — o ato emitido
 
 Em `classificacao/models.py`, ao lado do `AtoDeOrdenacao`, e append-only pelas três camadas que a

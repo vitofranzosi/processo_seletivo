@@ -60,6 +60,11 @@ def linha_do_quadro(conteudo, *, perfil_id, lista_id):
 
     perfil = por_identidade((conteudo or {}).get("profiles"), perfil_id) or {}
     alvo = str(lista_id) if lista_id else None
+    # **A lista da ampla concorrência lê a linha geral**, e não uma linha própria: é a mesma
+    # identidade vista dos dois lados, e é o que a declaração do Perfil existe para dizer (D-014).
+    ampla = perfil.get("generalCompetitionModalityId")
+    if ampla and alvo == str(ampla):
+        alvo = None
     for linha in perfil.get("vacancyTable") or []:
         declarada = str(linha.get("modalityId")) if linha.get("modalityId") else None
         if declarada == alvo:
@@ -68,7 +73,15 @@ def linha_do_quadro(conteudo, *, perfil_id, lista_id):
 
 
 def calcular_corte(
-    *, edital, perfil_id, marco_id, lista_id=None, at=None, desde=0, faixa_anterior=None
+    *,
+    edital,
+    perfil_id,
+    marco_id,
+    lista_id=None,
+    at=None,
+    desde=0,
+    faixa_anterior=None,
+    quantidade=None,
 ):
     """A proposta de faixa: quem progride, quem fica fora, e o universo que a delimita.
 
@@ -82,7 +95,14 @@ def calcular_corte(
             "Este recorte não tem ordem emitida: não há o que cortar.",
             409,
         )
-    conteudo = ato.versao.content
+    # **A norma é a vigente, e a ordem é a emitida.** O ato congela as posições; a regra e o quadro
+    # vêm da versão em vigor **agora**, que é o que a frase que governa esta feature diz: "a partir
+    # da ordem vigente e da regra publicada". Ler a regra de `ato.versao` fazia a geração sucessora
+    # nascer obsoleta sempre que a Retificação alcançasse o quadro sem tocar no marco — o alvo
+    # derivado recalculava o número antigo e a comparação com a versão vigente acusava a
+    # divergência que a própria sucessão deveria fechar.
+    versao = effective_version(edital_id=edital.id, at=at)
+    conteudo = versao.content
     regra = regra_do_marco(conteudo, perfil_id=perfil_id, marco_id=marco_id)
     if regra is None:
         raise DomainError(
@@ -104,10 +124,17 @@ def calcular_corte(
     posicoes = list(
         ato.posicoes.all().values_list("inscricao_id", "posicao", "motivo").order_by("posicao")
     )
+    # **A continuação não herda o teto da primeira emissão** (FR-204). O alvo e o excedente
+    # publicados formam a faixa **inicial**; a continuação vai até onde quem emite declarou, e o
+    # Edital não publica teto nenhum para ela — ele diz "até que se preencha", e quantas vagas foram
+    # preenchidas é conta da `016`. Limitar a continuação a `alvo + excedente` era exatamente o teto
+    # que a `FR-204` deixou de ter, herdado por dentro do cálculo.
+    tamanho = int(alvo) if quantidade is None else int(quantidade)
+    excedente = int(regra.get("surplusCount") or 0) if quantidade is None else 0
     progrediram, excedentes, primeira, ultima = faixa.calcular(
         [(str(ident), posicao) for ident, posicao, _ in posicoes],
-        alvo=alvo,
-        excedente=regra.get("surplusCount") or 0,
+        alvo=tamanho,
+        excedente=excedente,
         desfecho=regra.get("tieOutcome"),
         desde=desde,
     )
@@ -128,7 +155,7 @@ def calcular_corte(
     ]
     return {
         "ato": ato,
-        "versao": ato.versao,
+        "versao": versao,
         "regra": regra,
         "alvo": alvo,
         "origem_do_alvo": origem,
@@ -252,7 +279,11 @@ def _quadro_alterado(raiz, versao, *, perfil_id, lista_id):
     if alvo.get("source") != "VACANCY_TABLE_ROW":
         return []
     linha = linha_do_quadro(versao.content, perfil_id=perfil_id, lista_id=lista_id)
-    if linha is not None and linha.get("immediateVacancies") == alvo.get("count"):
+    # **A identidade entra na comparação, e não só a quantidade.** Sem ela, uma Retificação que
+    # substitua a linha por outra com o mesmo número deixaria a geração em dia — e a fonte
+    # normativa que o ato cita já não seria a que existe. É para isso que o `rowId` foi gravado.
+    mesma_linha = linha is not None and str(linha.get("id") or "") == str(alvo.get("rowId") or "")
+    if mesma_linha and linha.get("immediateVacancies") == alvo.get("count"):
         return []
     return [
         {

@@ -612,6 +612,7 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
         fatos = {
             fato.get("id") for fato in (perfil.get("declaredFacts") or []) if isinstance(fato, dict)
         }
+        findings.extend(_ampla_concorrencia_declarada(perfil, base=base))
         findings.extend(_corte_em_dois_marcos(perfil, base=base))
         for indice, marco in enumerate(perfil.get("classificationMilestones") or []):
             if not isinstance(marco, dict):
@@ -858,22 +859,17 @@ def _quadro_para_o_corte(regra, *, perfil, caminho) -> list[ValidationFinding]:
     inexequível na lista sem linha — e o defeito apareceria no dia da emissão, sob cronograma, com a
     correção dependendo de Retificação.
 
-    **O que se exige aqui é a linha geral, e a restrição a ela é achado desta implementação.** A
-    `D-014` da spec manda exigir linha para **todo recorte que o marco ordena**, e a leitura óbvia —
-    a geral mais cada Modalidade declarada — torna impublicável o Edital no **formato normal**. A
-    `025` documenta por quê: o Edital normal declara **também** uma Modalidade chamada "Ampla
-    concorrência", e a `FR-176` daquela feature **proíbe** dar linha reservada a ela, porque a
-    quantidade dela mora na linha geral. Essa Modalidade nunca terá linha, por norma — e exigi-la
-    recusaria o 57/2026 e o 28/2026, que são justamente os Editais que usam alvo derivado.
+    **Os recortes são a linha geral e cada Modalidade que terá lista própria.** A Modalidade que o
+    Perfil declara como **ampla concorrência** não é recorte próprio: a quantidade dela mora na
+    linha geral, que é o recorte que o sorteio consulta, e dar-lhe linha seria declarar duas vezes o
+    mesmo número (025, `FR-176`).
 
-    Identificá-la mecanicamente exigiria casar o nome, e a `025` recusou isso por escrito na sua
-    `R-006`: seria decidir no plano uma questão que a spec declarou aberta, e erraria em Edital que
-    chame a Modalidade de outra coisa. Copiar aqui aquela heurística seria copiar o que não se fez.
-
-    **Sobra a metade que é sempre verdadeira**, e não é pouca: a linha geral é o recorte da ampla
-    concorrência, todo marco a ordena, e sem ela o alvo derivado não tem de onde sair em recorte
-    nenhum. O recorte por Modalidade é conferido **na emissão**, onde a lista é conhecida — é o que
-    a `D-014` recusou por preferir a publicação, e a recusa foi tomada sem esta informação.
+    Essa declaração é o que destrava a conferência no formato normal de Edital. A `R-006` da `025`
+    registrou que identificar a ampla concorrência **casando o nome** seria decidir no plano uma
+    questão que aquela spec deixou aberta — e continua certa. O que faltava era o Edital dizer qual
+    é, e é o que `generalCompetitionModalityId` é: sem ele, exigir linha de toda Modalidade tornava
+    impublicável o Edital que declara "Ampla concorrência" como Modalidade; com ele, a exigência
+    vale inteira, sem heurística nenhuma.
 
     Linha **zerada** é declaração legítima e publica; o que impede é a ausência.
     """
@@ -882,17 +878,69 @@ def _quadro_para_o_corte(regra, *, perfil, caminho) -> list[ValidationFinding]:
     if regra.get("targetKind") != faixa.ALVO_DO_QUADRO:
         return []
     linhas = perfil.get("vacancyTable") or []
-    tem_linha_geral = any(
-        isinstance(linha, dict) and not linha.get("modalityId") for linha in linhas
-    )
-    if tem_linha_geral:
-        return []
+    declarados = {
+        str(linha.get("modalityId")) if linha.get("modalityId") else None
+        for linha in linhas
+        if isinstance(linha, dict)
+    }
+    ampla = perfil.get("generalCompetitionModalityId")
+    ampla = str(ampla) if ampla else None
+    exigidos = [(None, "a ampla concorrência")]
+    for modalidade in perfil.get("competitionModalities") or []:
+        if not isinstance(modalidade, dict) or not modalidade.get("id"):
+            continue
+        identidade = str(modalidade["id"])
+        if identidade == ampla:
+            continue
+        exigidos.append((identidade, modalidade.get("name") or identidade))
     return [
         _impeditivo(
             "cut_rule_sem_linha_de_quadro",
-            "A regra de corte deriva o alvo do quadro de vagas, e o Perfil não publica a linha "
-            "geral — a da ampla concorrência, de onde o alvo sai em todo recorte sem lista.",
+            f"A regra de corte deriva o alvo do quadro de vagas, e não há linha para {nome}.",
             f"{caminho}/cutRule/targetKind",
+        )
+        for chave, nome in exigidos
+        if chave not in declarados
+    ]
+
+
+def _ampla_concorrencia_declarada(perfil, *, base) -> list[ValidationFinding]:
+    """A Modalidade declarada como ampla concorrência existe, e não tem linha própria (014, D-014).
+
+    Duas recusas, e as duas são de coerência do que o próprio Perfil publica: apontar Modalidade que
+    ele não declara deixaria a conferência do alvo derivado exigindo linha de um recorte que não
+    existe, e dar linha à ampla concorrência declararia duas vezes o mesmo número — a quantidade
+    dela já está na linha geral.
+    """
+    ampla = perfil.get("generalCompetitionModalityId")
+    if not ampla:
+        return []
+    ampla = str(ampla)
+    modalidades = {
+        str(item.get("id"))
+        for item in perfil.get("competitionModalities") or []
+        if isinstance(item, dict) and item.get("id")
+    }
+    if ampla not in modalidades:
+        return [
+            _impeditivo(
+                "general_competition_modality_unknown",
+                "O Perfil declara como ampla concorrência uma Modalidade que ele não publica.",
+                f"{base}/generalCompetitionModalityId",
+            )
+        ]
+    tem_linha = any(
+        isinstance(linha, dict) and str(linha.get("modalityId") or "") == ampla
+        for linha in perfil.get("vacancyTable") or []
+    )
+    if not tem_linha:
+        return []
+    return [
+        _impeditivo(
+            "general_competition_modality_with_row",
+            "A Modalidade declarada como ampla concorrência tem linha própria no quadro de vagas, "
+            "e a quantidade dela já está na linha geral.",
+            f"{base}/vacancyTable",
         )
     ]
 

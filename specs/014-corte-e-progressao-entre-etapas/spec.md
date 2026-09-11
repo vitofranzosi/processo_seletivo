@@ -354,6 +354,15 @@ inexequível para uma das listas é regra que não devia ter publicado.
 heterogêneos que ninguém leu ainda, ao custo de identidade por lista, catálogo de Retificação próprio
 e uma tela muito maior.*
 
+**E a exigência só se sustenta porque o Perfil passa a declarar qual Modalidade é a ampla
+concorrência** (`FR-231`). A implementação tentou primeiro exigir linha de **toda** Modalidade, e
+isso tornava impublicável o Edital no formato normal: a `R-006` da `025` registrou que ele declara
+*também* uma Modalidade chamada "Ampla concorrência", cuja quantidade mora na linha geral e a quem a
+`FR-176` daquela feature proíbe dar linha reservada. A saída **não** é enfraquecer a conferência —
+seria deixar publicar regra derivada inexequível numa das listas — nem casar o nome, que é o que
+aquela pesquisa recusou por escrito. É o Edital **dizer qual é**: uma identidade declarada, alcançável
+por Retificação, que o sistema lê em vez de adivinhar.
+
 ## 4. Problema
 
 Um Edital publica que a entrevista é dos dez primeiros de cada código, e o sistema conduz os
@@ -596,9 +605,9 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
 - **FR-182**: Regra de Corte sem desfecho de empate declarado MUST impedir a publicação do Edital,
   com achado impeditivo que nomeia o marco. A ausência MUST NOT ser resolvida por padrão.
 - **FR-183**: Regra com alvo derivado MUST exigir linha no quadro de vagas para **todo recorte que o
-  marco ordena** — a linha geral e cada Modalidade que terá lista própria. Faltando qualquer uma, a
-  publicação MUST ser impedida com achado que nomeia o recorte. Linha ausente MUST NOT ser lida como
-  zero, e linha **zerada** MUST ser aceita.
+  marco ordena** — a linha geral e cada Modalidade, **exceto** a que o Perfil declarar como ampla
+  concorrência. Faltando qualquer uma, a publicação MUST ser impedida com achado que nomeia o
+  recorte. Linha ausente MUST NOT ser lida como zero, e linha **zerada** MUST ser aceita.
 - **FR-184**: A Regra de Corte MUST ser alcançável por Retificação, endereçada por identidade
   estável, e MUST NOT reescrever publicação anterior.
 - **FR-185**: A Regra de Corte MUST viajar no conteúdo canônico publicado e MUST constar do
@@ -708,6 +717,22 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
 - **FR-230**: Reingresso que **não** alcance o ato de ordenação citado MUST NOT tornar o corte
   obsoleto — o caso do recurso julgado na própria Etapa governada, que não move posição nenhuma.
   Obsoletá-lo bloquearia trabalho para exigir uma geração sucessora idêntica à anterior.
+- **FR-231**: O Perfil MUST poder declarar **qual das suas Modalidades é a ampla concorrência**. A
+  declarada corresponde à **linha geral** do quadro, MUST NOT ter linha própria, e MUST NOT ser
+  exigida pela conferência da `FR-183`. Declaração que aponte Modalidade que o Perfil não publica, e
+  Modalidade declarada com linha própria, MUST impedir a publicação.
+- **FR-232**: A condição do corte MUST ser correlacionada ao **Perfil da inscrição**. Corte emitido
+  num Perfil MUST NOT alcançar inscrições de outro, ainda que a Etapa governada seja a mesma — a
+  Etapa é do Edital e alcança todos os Perfis, mas cada inscrição pertence a um só.
+- **FR-233**: A faixa seguinte MUST alcançar a quantidade declarada por quem a emite, e MUST NOT
+  herdar o alvo nem o excedente da primeira emissão como teto. Quantidade menor que um MUST ser
+  recusada, e a faixa MUST NOT partir grupo empatado ao aplicá-la.
+- **FR-234**: A condição do corte MUST ficar dormente quando a norma **vigente** não declarar mais
+  regra governando aquela Etapa. Faixa emitida sob regra que a Retificação removeu MUST NOT
+  continuar governando.
+- **FR-235**: O cálculo MUST ler a regra e o quadro da versão normativa **vigente**, e as posições
+  do ato de ordenação citado. Ler a norma da versão do ato faria a geração sucessora nascer obsoleta
+  sempre que a Retificação alcançasse o quadro sem tocar no marco.
 - **FR-219**: Corte obsoleto MUST impedir a publicação de resultado que dele dependa, com motivo
   nomeado e o caminho a seguir.
 - **FR-228**: Enquanto o corte estiver obsoleto e a geração sucessora não for emitida, o sistema MUST
@@ -779,6 +804,8 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
   qualquer continuação.
 - **IO-12**: a Etapa que um corte governa é sempre lida da regra publicada, e nunca inferida.
 - **IO-14**: o universo de um ato de ordenação nunca depende de um corte derivado dele.
+- **IO-15**: a faixa de um Perfil nunca alcança inscrição de outro.
+- **IO-16**: nenhuma faixa emitida governa Etapa que a norma vigente já não lhe atribui.
 - **IO-13**: nenhum trabalho novo é criado na Etapa governada enquanto o corte que a governa estiver
   obsoleto.
 
@@ -824,6 +851,10 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
   faixa dela continua participando da Etapa governada.
 - **SC-073**: Com o corte obsoleto, nenhuma distribuição e nenhuma conclusão de avaliação nova
   acontece na Etapa governada, e a recusa nomeia a causa e o caminho.
+- **SC-074**: Nenhuma faixa de uma geração alcança quem outra faixa dela já alcançou, em nenhuma
+  sequência de continuações — inclusive depois de uma faixa que não alcançou ninguém.
+- **SC-075**: Num Edital de sete Perfis em que apenas um emitiu corte, os outros seis conduzem a
+  Etapa governada exatamente como antes desta feature.
 
 ## 7. Out of Scope
 

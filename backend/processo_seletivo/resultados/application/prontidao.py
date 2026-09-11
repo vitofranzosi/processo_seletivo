@@ -17,6 +17,7 @@ leitura múltipla, que a V1 não consolida.
 """
 
 from collections import namedtuple
+from uuid import UUID
 
 from django.db.models import BooleanField, Exists, ExpressionWrapper, OuterRef, Q
 
@@ -28,7 +29,7 @@ from processo_seletivo.avaliacoes.application.selectors import avaliacoes_elegiv
 # dos dois, num arquivo sorteado, longe da causa. `classificacao/models.py` não importa
 # `resultados`, e é o que mantém o caminho aberto (014, R-005).
 from processo_seletivo.classificacao.models import Corte, ItemDoCorte
-from processo_seletivo.comissoes.domain.etapas import etapas_vigentes as etapas_vigentes_do_edital
+from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.recursos.application.selectors import reavaliacoes_pendentes
 from processo_seletivo.resultados.application.selectors import (
@@ -87,7 +88,7 @@ CONCLUSOES_DEMAIS = (
 )
 
 
-def participacao_detalhada(*, edital, etapa_id, vigentes=None):
+def participacao_detalhada(*, edital, etapa_id, vigentes=None, conteudo=None):
     """`(participantes, eliminadas, aguardando)` — as duas regras de D-003, nesta ordem.
 
     **É a única fonte da participação**, e é por isso que ela vive aqui e não em cada superfície.
@@ -98,22 +99,30 @@ def participacao_detalhada(*, edital, etapa_id, vigentes=None):
     `vigentes` chega por parâmetro quando quem chama já o resolveu: a tela da Etapa lê o conteúdo
     publicado uma vez e o entrega, em vez de cada seletor relê-lo.
     """
+    # **Uma leitura do conteúdo publicado serve às duas perguntas.** As Etapas anteriores e os
+    # marcos que governam esta Etapa saem do mesmo documento, e lê-lo duas vezes é a consulta a mais
+    # que os orçamentos da 011, da 012 e da 015 não têm.
+    if conteudo is None:
+        conteudo = conteudo_vigente(edital)
     if vigentes is None:
-        vigentes = etapas_vigentes_do_edital(edital)
+        vigentes = {UUID(str(etapa["id"])): etapa for etapa in conteudo.get("stages") or []}
     # **A condição do corte entra como anotação da consulta que já ia acontecer**, e não como uma
     # segunda leitura: `fora_do_corte` sozinho custaria a consulta a mais que o orçamento da tela da
     # Etapa não tem — foi o que a primeira redação fazia, e o teste de orçamento a reprovou.
-    faixas = faixas_que_governam(edital, etapa_id)
+    faixas = faixas_que_governam(edital, etapa_id, conteudo=conteudo)
     linhas = list(
         Inscricao.objects.filter(edital=edital, status=Inscricao.Status.SUBMETIDA)
         .annotate(
             na_faixa=ExpressionWrapper(
-                _dentro_da_faixa(faixas, OuterRef("pk")),
+                _dentro_da_faixa(faixas, OuterRef("pk"), OuterRef("profile_id")),
                 output_field=BooleanField(),
             ),
             # **A segunda anotação sai de graça na mesma consulta**, e é ela que evita a pergunta
             # "existe corte?" custar um round-trip só para decidir se vale conferir a obsolescência.
-            ha_corte=ExpressionWrapper(Exists(faixas), output_field=BooleanField()),
+            ha_corte=ExpressionWrapper(
+                Exists(faixas.filter(perfil_id=OuterRef("profile_id"))),
+                output_field=BooleanField(),
+            ),
         )
         .values_list("id", "na_faixa", "ha_corte")
     )
@@ -180,7 +189,7 @@ def impedimento_do_corte(edital, etapa_id, *, at=None):
     return None
 
 
-def participacao(*, edital, etapa_id, vigentes=None):
+def participacao(*, edital, etapa_id, vigentes=None, conteudo=None):
     """`(participantes, eliminadas, aguardando)` — o contrato que os quatro consumidores conhecem.
 
     A `014` acrescentou duas informações à mesma leitura — quem ficou fora da faixa, e se há corte
@@ -188,7 +197,7 @@ def participacao(*, edital, etapa_id, vigentes=None):
     quatro chamadores a mudar para receber o que três deles não usam.
     """
     participantes, eliminadas, aguardando, _fora, _ha_corte = participacao_detalhada(
-        edital=edital, etapa_id=etapa_id, vigentes=vigentes
+        edital=edital, etapa_id=etapa_id, vigentes=vigentes, conteudo=conteudo
     )
     return participantes, eliminadas, aguardando
 
@@ -202,48 +211,84 @@ def fora_do_corte(edital, etapa_id, candidatas):
     faixas = faixas_que_governam(edital, etapa_id)
     return set(
         Inscricao.objects.filter(pk__in=candidatas)
-        .exclude(_dentro_da_faixa(faixas, OuterRef("pk")))
+        .exclude(_dentro_da_faixa(faixas, OuterRef("pk"), OuterRef("profile_id")))
         .values_list("pk", flat=True)
     )
 
 
-def faixas_que_governam(edital, etapa_id):
-    """As faixas da geração vigente de todo corte que declara governar esta Etapa (014, FR-208).
+def marcos_que_governam(edital, etapa_id, *, conteudo=None, at=None):
+    """Os marcos que a **norma vigente** declara governando esta Etapa (014, FR-208, FR-224).
+
+    Lista vazia significa dormência, e ela tem duas causas que precisam ser a mesma coisa aqui:
+    Edital que nunca declarou regra de corte, e Edital cuja Retificação a **removeu**. No segundo
+    caso a faixa emitida continua no banco, e perguntá-la sem consultar a norma faria um corte
+    revogado continuar governando a Etapa para sempre (edge case da §*Edge Cases*).
+
+    **A regra é encontrada pela declaração**, nunca pela ordem das Etapas: num marco de sorteio a
+    Etapa enumerada não significa nada, e derivar dali moveria em silêncio quem continua no certame.
+    """
+    from processo_seletivo.classificacao.domain import faixa
+    from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
+
+    conteudo = conteudo_vigente(edital, at=at) if conteudo is None else conteudo
+    alvo = str(etapa_id)
+    return [
+        str(marco.get("id"))
+        for perfil in conteudo.get("profiles") or []
+        if isinstance(perfil, dict)
+        for marco in perfil.get("classificationMilestones") or []
+        if isinstance(marco, dict) and faixa.etapa_governada(marco.get("cutRule")) == alvo
+    ]
+
+
+def faixas_que_governam(edital, etapa_id, *, marcos=None, conteudo=None, at=None):
+    """As faixas da geração vigente dos cortes que governam esta Etapa (014, FR-208).
 
     **Devolve um queryset preguiçoso, e nunca ids materializados.** Ele entra como subconsulta
     dentro da consulta que já ia acontecer, e não custa round-trip nenhum: materializar custaria uma
     leitura por listagem, e os orçamentos de consulta da `011`, da `012` e da `015` não têm folga
     para isso — eles existem justamente para que uma feature seguinte não os corroa em silêncio.
 
-    **A Etapa governada vem da coluna do corte, e não do conteúdo publicado.** Abrir o conteúdo aqui
-    para descobrir qual marco governa esta Etapa custaria uma consulta por listagem — foi o que a
-    primeira redação fazia, e três testes de orçamento a reprovaram. A coluna é cópia da declaração
-    congelada no ato, e não uma segunda fonte: a linha é append-only, e o corte diz, no instante em
-    que nasce, qual Etapa ele governava.
+    `marcos` chega pronto de quem já leu o conteúdo publicado, que é o caso das duas portas quentes.
 
     Vigente é a geração cuja **raiz** ninguém sucedeu, e vigente é toda faixa dela — a raiz e as
     continuações, juntas. Perguntar pela faixa sem sucessor devolveria só a continuação e esconderia
     a raiz, que continua governando quem progrediu primeiro (FR-227).
     """
-    return Corte.objects.filter(edital=edital, etapa_governada_id=etapa_id).filter(
+    if marcos is None:
+        marcos = marcos_que_governam(edital, etapa_id, conteudo=conteudo, at=at)
+    return Corte.objects.filter(
+        edital=edital, etapa_governada_id=etapa_id, marco_id__in=marcos
+    ).filter(
         Q(raiz__isnull=True, sucessores__isnull=True)
         | Q(raiz__isnull=False, raiz__sucessores__isnull=True)
     )
 
 
-def _dentro_da_faixa(faixas, referencia):
-    """A condição inteira, **incluindo a dormência** — e sem perguntar antes se há corte.
+def _dentro_da_faixa(faixas, referencia, perfil):
+    """A condição inteira, **incluindo a dormência e o recorte** — sem perguntar antes se há corte.
 
-    `~Exists(faixas)` não é correlacionado à linha: o banco o resolve uma vez por consulta, e a
-    alternativa — um `.exists()` em Python para decidir se aplica o filtro — custaria a consulta a
-    mais que os orçamentos não têm. É também o que faz a condição ficar dormente onde ela deve
-    ficar: marco sem regra, e marco com regra e sem corte emitido, conduzem a Etapa exatamente como
-    antes desta feature (FR-214).
+    **A correlação com o Perfil é o que impede o corte de um alcançar os outros.** A Etapa é do
+    Edital e alcança todos os Perfis, mas a inscrição pertence a um só, e o corte também: sem esta
+    metade, um Edital de sete polos em que **um** emitiu corte deixaria os outros seis fora da Etapa
+    inteira — o `~Exists` global veria faixas existindo e cobraria de todo mundo a presença num item
+    que só existe para o polo que cortou.
+
+    `~Exists(...)` não é correlacionado à **linha**, mas é correlacionado ao Perfil dela, e o banco
+    o resolve dentro da mesma consulta. A alternativa — um `.exists()` em Python para decidir se
+    aplica o filtro — custaria a consulta a mais que os orçamentos não têm. É também o que faz a
+    condição ficar dormente onde ela deve ficar: Perfil sem regra, e Perfil com regra e sem corte
+    emitido, conduzem a Etapa exatamente como antes desta feature (FR-214).
     """
-    return ~Exists(faixas) | Exists(
+    # **A correlação entra por `corte__perfil_id`, e não filtrando o queryset de faixas antes.**
+    # Um queryset já correlacionado, usado como `corte__in=...`, vira subconsulta de subconsulta: o
+    # `OuterRef` passaria a resolver contra `ItemDoCorte`, e o Django recusa com `FieldError`. Aqui
+    # cada `OuterRef` sobe exatamente um nível, que é o que ele sabe fazer.
+    return ~Exists(faixas.filter(perfil_id=perfil)) | Exists(
         ItemDoCorte.objects.filter(
             inscricao_id=referencia,
             corte__in=faixas,
+            corte__perfil_id=perfil,
             consequencia=ItemDoCorte.Consequencia.PROGREDIU,
         )
     )
@@ -256,8 +301,14 @@ def _anteriores_e_gate(edital, etapa_id, vigentes=None):
     que a progressão impõe às superfícies da 012 — o resto vira junção dentro da consulta que já ia
     acontecer.
     """
+    # **O conteúdo publicado é lido aqui, e devolvido a quem chamou.** A condição do corte precisa
+    # dos marcos que governam a Etapa, e eles saem do mesmo documento de onde saem as Etapas
+    # anteriores: lê-lo duas vezes é a consulta a mais que os orçamentos da 011, da 012 e da 015
+    # não têm — e foi o que reprovou três testes de uma vez quando a leitura era separada.
+    conteudo = None
     if vigentes is None:
-        vigentes = etapas_vigentes_do_edital(edital)
+        conteudo = conteudo_vigente(edital)
+        vigentes = {UUID(str(etapa["id"])): etapa for etapa in conteudo.get("stages") or []}
     anteriores = [identidade for identidade, _ in etapas_anteriores(vigentes, etapa_id)]
     imediata = etapa_anterior(vigentes, etapa_id)
     exigir = (
@@ -265,10 +316,12 @@ def _anteriores_e_gate(edital, etapa_id, vigentes=None):
         if imediata is not None and ha_resultado_em(edital=edital, etapa_id=imediata[0])
         else None
     )
-    return anteriores, exigir
+    return anteriores, exigir, conteudo
 
 
-def restringir_a_participantes(consulta, *, edital, etapa_id, vigentes=None, prefixo="inscricao"):
+def restringir_a_participantes(
+    consulta, *, edital, etapa_id, vigentes=None, prefixo="inscricao", conteudo=None
+):
     """Aplica as duas regras de D-003 a um queryset que já fala de inscrições.
 
     **Restringir a consulta, e não materializar o conjunto.** Devolver ids e passá-los em `__in`
@@ -287,7 +340,8 @@ def restringir_a_participantes(consulta, *, edital, etapa_id, vigentes=None, pre
     anterior satisfaz as duas metades separadamente, e sairia do conjunto de uma Etapa em que
     deveria estar. `Exists` amarra Etapa e consequência na mesma linha, que é o que a regra diz.
     """
-    anteriores, exigir = _anteriores_e_gate(edital, etapa_id, vigentes)
+    anteriores, exigir, lido = _anteriores_e_gate(edital, etapa_id, vigentes)
+    conteudo = conteudo or lido
     referencia = OuterRef(f"{prefixo}_id") if prefixo else OuterRef("pk")
     # **`vigentes` nos quatro `Exists`, e é aqui que o deferimento produz efeito** (018, T-004).
     # Uma eliminação **superada** por recurso deferido continuaria excluindo a pessoa de toda
@@ -321,7 +375,12 @@ def restringir_a_participantes(consulta, *, edital, etapa_id, vigentes=None, pre
     # continua fora ainda que dentro da faixa, e por isso esta condição vem **depois** das duas —
     # ela restringe o que sobrou, e não o substitui. Dormente onde nenhuma regra publicada governa
     # esta Etapa, que é o que preserva o comportamento de todo Edital anterior à feature (FR-214).
-    consulta = consulta.filter(_dentro_da_faixa(faixas_que_governam(edital, etapa_id), referencia))
+    perfil = OuterRef(f"{prefixo}__profile_id") if prefixo else OuterRef("profile_id")
+    consulta = consulta.filter(
+        _dentro_da_faixa(
+            faixas_que_governam(edital, etapa_id, conteudo=conteudo), referencia, perfil
+        )
+    )
     return consulta
 
 
@@ -331,7 +390,7 @@ def participa_da_etapa(*, edital, etapa_id, inscricao_id, vigentes=None):
     Duas perguntas de existência no pior caso, e nenhuma listagem passa por aqui: o docstring de
     `autorizacao.py` registra que listagem usa a forma em conjunto, e é ela que está acima.
     """
-    anteriores, exigir = _anteriores_e_gate(edital, etapa_id, vigentes)
+    anteriores, exigir, conteudo = _anteriores_e_gate(edital, etapa_id, vigentes)
     if (
         anteriores
         and ResultadoEtapa.vigentes.filter(
@@ -343,7 +402,13 @@ def participa_da_etapa(*, edital, etapa_id, inscricao_id, vigentes=None):
         return False
     if (
         not Inscricao.objects.filter(pk=inscricao_id)
-        .filter(_dentro_da_faixa(faixas_que_governam(edital, etapa_id), OuterRef("pk")))
+        .filter(
+            _dentro_da_faixa(
+                faixas_que_governam(edital, etapa_id, conteudo=conteudo),
+                OuterRef("pk"),
+                OuterRef("profile_id"),
+            )
+        )
         .exists()
     ):
         return False
@@ -356,7 +421,7 @@ def participa_da_etapa(*, edital, etapa_id, inscricao_id, vigentes=None):
     ).exists()
 
 
-def panorama_da_etapa(*, edital, etapa, etapas_vigentes):
+def panorama_da_etapa(*, edital, etapa, etapas_vigentes=None, conteudo=None):
     """Participação e prontidão da Etapa inteira, em consultas de número constante.
 
     Devolve `estados` como `{inscricao_id: (estado, motivo)}` cobrindo **toda** inscrição
@@ -364,8 +429,12 @@ def panorama_da_etapa(*, edital, etapa, etapas_vigentes):
     conta a partir daqui, e a listagem filtra a partir daqui, de modo que os dois não podem
     divergir.
     """
+    # **O conteúdo publicado, e não só as Etapas.** A condição do corte precisa dos marcos que
+    # governam esta Etapa, e `effective_version` custa duas consultas: lê-lo aqui de novo, quando
+    # quem chamou já o tinha, é o que reprovou três orçamentos. Quem ainda passa só as Etapas
+    # continua funcionando — e pagando a leitura.
     participantes, eliminadas, aguardando, fora, ha_corte = participacao_detalhada(
-        edital=edital, etapa_id=etapa["id"], vigentes=etapas_vigentes
+        edital=edital, etapa_id=etapa["id"], vigentes=etapas_vigentes, conteudo=conteudo
     )
     resultados = inscricoes_com_resultado(edital=edital, etapa_id=etapa["id"])
     impedimento = impedimento_da_regra(etapa)

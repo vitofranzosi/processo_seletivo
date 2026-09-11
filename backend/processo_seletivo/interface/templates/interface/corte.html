@@ -61,6 +61,7 @@
 {% if pode_emitir %}
 <form method="post" action="{% url 'interface:emitir-corte' edital.id marco_id %}" class="confirmar">
   {% csrf_token %}
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
   <input type="hidden" name="confirmacao_do_calculo" value="{{ confirmacao }}">
   {% if lista_id %}<input type="hidden" name="lista" value="{{ lista_id }}">{% endif %}
   {% comment %}
@@ -75,6 +76,11 @@
 {% if geracao and proposta.regra.continuation == "ALLOWED" %}
 <form method="post" action="{% url 'interface:continuar-corte' edital.id marco_id %}" class="confirmar">
   {% csrf_token %}
+  {% comment %}
+  A chave vem do GET, e não do POST. Sem ela, duplo clique ou reenvio do navegador emitia **duas**
+  faixas seguidas — e na continuação não há confirmação intermediária que segurasse o segundo.
+  {% endcomment %}
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
   {% if lista_id %}<input type="hidden" name="lista" value="{{ lista_id }}">{% endif %}
   {% comment %}
   A quantidade é **pedida**, e nunca inferida: o sistema não sabe quantas vagas foram ocupadas, e

@@ -542,7 +542,12 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # classificatório — o degrau 13. Elaboração pela mesma razão das anteriores: quem declara
         # como o certame corta é o Edital, e alterá-lo depois de publicado é Retificação. Aditiva:
         # uma coluna com default, e não toca em nada do que já existe (014, FR-178, FR-184).
-        "editais": 17,
+        # **Sobe para 18 com a 014**: a `editais/0018` acrescenta `modalidade_ampla_concorrencia`
+        # ao Perfil — qual das Modalidades declaradas corresponde à linha geral do quadro. É
+        # elaboração pela razão das anteriores, e é o que permite exigir linha de quadro para todo
+        # recorte que o marco ordena sem tornar impublicável o Edital que declara "Ampla
+        # concorrência" como Modalidade (014, D-014).
+        "editais": 18,
         "publicacoes": 8,
         # **Sobe para 2 com a 018**: a `divulgacao/0002` acrescenta os três campos da declaração
         # expressa de encerramento do prazo e a constraint que os mantém inteiros (FR-085).
@@ -676,7 +681,12 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # classificatório — o degrau 13. Elaboração pela mesma razão das anteriores: quem declara
         # como o certame corta é o Edital, e alterá-lo depois de publicado é Retificação. Aditiva:
         # uma coluna com default, e não toca em nada do que já existe (014, FR-178, FR-184).
-        "editais": 17,
+        # **Sobe para 18 com a 014**: a `editais/0018` acrescenta `modalidade_ampla_concorrencia`
+        # ao Perfil — qual das Modalidades declaradas corresponde à linha geral do quadro. É
+        # elaboração pela razão das anteriores, e é o que permite exigir linha de quadro para todo
+        # recorte que o marco ordena sem tornar impublicável o Edital que declara "Ampla
+        # concorrência" como Modalidade (014, D-014).
+        "editais": 18,
         "inscricoes": 4,
         "processos": 2,
         "publicacoes": 8,

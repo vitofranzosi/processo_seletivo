@@ -63,6 +63,14 @@ DEGRAUS_DE_PERFIL = {
     # quadros, e uma coleção de raiz teria de carregar a referência ao Perfil em cada linha,
     # inventando uma segunda forma de dizer o que o aninhamento já diz.
     12: {"vacancyTable": []},
+    # **O degrau 13 também é de Perfil**, e não só de marco: junto com a regra de corte entra a
+    # declaração de qual Modalidade é a ampla concorrência (014, D-014). `None` diz "este Perfil não
+    # declarou nenhuma", e é verdade sobre todo Edital publicado antes — a capacidade não existia.
+    #
+    # Os dois campos do degrau 13 entram **juntos** de propósito: a conferência do alvo derivado
+    # precisa dos dois para saber quais recortes exigem linha de quadro, e separá-los seria duas
+    # elevações e dois caminhos de leitura para uma decisão só.
+    13: {"generalCompetitionModalityId": None},
 }
 
 DEGRAUS_DA_RAIZ = {

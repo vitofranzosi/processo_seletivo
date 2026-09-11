@@ -224,3 +224,61 @@ def test_sem_obsolescencia_a_publicacao_nao_e_impedida_pelo_corte(cenario, gesto
     )
 
     assert afericao.codigo != CORTE_OBSOLETO
+
+
+# --- os do terceiro review: a sucessora contra a norma vigente, e o `rowId` --------------------
+
+
+def test_o_calculo_le_a_norma_vigente_e_nao_a_do_ato(cenario, gestor, api_client):
+    """Nascer obsoleta é o defeito que a sucessão existe para não ter (achado do terceiro review).
+
+    Lendo a regra e o quadro de `ato.versao`, a geração sucessora recalculava a norma **antiga** —
+    e no alvo derivado a comparação com a versão vigente acusava a mesma divergência que ela deveria
+    fechar. A Retificação aqui não alcança o marco de propósito: ela deixa a ordem em dia, que é o
+    caso em que o defeito aparecia.
+    """
+    from processo_seletivo.publicacoes.application.selectors import effective_version
+
+    edital, _, _ = cenario
+    emitir(edital, gestor)
+    da_ordem = Corte.objects.get().ato.versao_id
+    retify(
+        api_client,
+        edital,
+        [{"targetPath": "/title", "operation": "REPLACE", "newValue": "Edital retificado"}],
+        suffix="c",
+    )
+
+    proposta = calcular_corte(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO)
+
+    vigente = effective_version(edital_id=edital.id)
+    assert vigente.id != da_ordem, "a Retificação materializou versão nova"
+    assert proposta["versao"].id == vigente.id, "o cálculo lê a norma vigente"
+
+
+def test_a_linha_do_quadro_trocada_por_outra_de_mesma_quantidade_obsoleta(cenario, gestor):
+    """O `rowId` foi gravado para isto: a fonte normativa citada mudou, e a quantidade não."""
+    from processo_seletivo.classificacao.application.corte import _quadro_alterado
+
+    edital, _, _ = cenario
+    emitir(edital, gestor)
+    corte = Corte.objects.get()
+    corte.universo["target"] = {"count": 40, "source": "VACANCY_TABLE_ROW", "rowId": "linha-antiga"}
+
+    class VersaoFalsa:
+        content = {
+            "profiles": [
+                {
+                    "id": str(corte.perfil_id),
+                    "vacancyTable": [
+                        {"id": "linha-nova", "modalityId": None, "immediateVacancies": 40}
+                    ],
+                }
+            ]
+        }
+
+    causas_do_quadro = _quadro_alterado(
+        corte, VersaoFalsa(), perfil_id=corte.perfil_id, lista_id=None
+    )
+
+    assert [item["tipo"] for item in causas_do_quadro] == ["quadro_alterado"]

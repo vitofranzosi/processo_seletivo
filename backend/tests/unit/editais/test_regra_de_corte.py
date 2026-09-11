@@ -118,14 +118,19 @@ def snapshot(*perfis, etapas=None):
     }
 
 
+#: Os prefixos que esta feature acrescentou. O snapshot destes casos é mínimo de propósito — o que
+#: se verifica é a regra de corte, e não a forma publicada inteira, que tem catálogo próprio.
+DA_014 = ("cut_rule_", "general_competition_")
+
+
 def impeditivos(*perfis, etapas=None):
     findings = blocking_findings(validate_for_publication(snapshot(*perfis, etapas=etapas)))
-    return {item.code for item in findings if item.code.startswith("cut_rule_")}
+    return {item.code for item in findings if item.code.startswith(DA_014)}
 
 
 def mensagens(*perfis, etapas=None):
     findings = blocking_findings(validate_for_publication(snapshot(*perfis, etapas=etapas)))
-    return " ".join(item.message for item in findings if item.code.startswith("cut_rule_"))
+    return " ".join(item.message for item in findings if item.code.startswith(DA_014))
 
 
 # --- T014 · a espécie do alvo, e o alvo com uma fonte só (FR-179) ----------------------------
@@ -292,27 +297,68 @@ def test_a_falta_da_linha_geral_impede_a_publicacao():
     assert "cut_rule_sem_linha_de_quadro" in impeditivos(perfil_de_tres_listas(quadro))
 
 
-def test_a_falta_de_linha_de_uma_modalidade_nao_impede_a_publicacao():
-    """O achado da revisão de código, e ele é de domínio.
+@pytest.mark.parametrize("faltando", [0, 1, 2])
+def test_a_falta_de_linha_em_qualquer_recorte_impede_a_publicacao(faltando):
+    """A `D-014` inteira: **todo** recorte que o marco ordena precisa de linha."""
+    quadro = [item for indice, item in enumerate(quadro_completo()) if indice != faltando]
 
-    Exigir linha para **toda** Modalidade declarada — a leitura óbvia da `D-014` — tornaria
-    impublicável o Edital no formato normal. A `025` documenta por quê: o Edital normal declara
-    **também** uma Modalidade chamada "Ampla concorrência", e a `FR-176` daquela feature proíbe dar
-    linha reservada a ela, porque a quantidade dela mora na linha geral. Essa Modalidade nunca terá
-    linha, por norma — e exigi-la recusaria o 57/2026 e o 28/2026, que são justamente os Editais que
-    usam alvo derivado. Identificá-la mecanicamente é o que a `R-006` da `025` recusou por escrito.
+    assert "cut_rule_sem_linha_de_quadro" in impeditivos(perfil_de_tres_listas(quadro))
 
-    O recorte por Modalidade é conferido na **emissão**, onde a lista é conhecida.
-    """
+
+def test_a_mensagem_nomeia_o_recorte_que_ficou_sem_linha():
     quadro = [item for item in quadro_completo() if item["modalityId"] != PPI]
 
-    assert impeditivos(perfil_de_tres_listas(quadro)) == set()
+    assert "PPI" in mensagens(perfil_de_tres_listas(quadro))
+    quadro_sem_geral = [item for item in quadro_completo() if item["modalityId"]]
+    assert "ampla concorrência" in mensagens(perfil_de_tres_listas(quadro_sem_geral))
 
 
-def test_a_mensagem_nomeia_a_linha_geral():
-    quadro = [item for item in quadro_completo() if item["modalityId"]]
+# --- a ampla concorrência declarada, e o formato normal de Edital (D-014) --------------------
 
-    assert "ampla concorrência" in mensagens(perfil_de_tres_listas(quadro))
+
+def perfil_com_ampla_declarada(quadro, ampla=PCD):
+    dados = perfil_de_tres_listas(quadro)
+    dados["generalCompetitionModalityId"] = ampla
+    return dados
+
+
+def test_a_modalidade_declarada_como_ampla_nao_exige_linha_propria():
+    """É o formato normal de Edital, e é o que destrava a conferência nele.
+
+    O 57 e o 28 declaram **também** uma Modalidade chamada "Ampla concorrência", e a `FR-176` da
+    `025` proíbe dar linha reservada a ela: a quantidade dela mora na linha geral. Sem a declaração,
+    exigir linha de toda Modalidade os tornaria impublicáveis; com ela, a exigência vale inteira
+    para as demais. Identificá-la casando o nome é o que a `R-006` daquela feature recusou.
+    """
+    quadro = [linha(28), linha(10, PPI)]
+
+    assert impeditivos(perfil_com_ampla_declarada(quadro)) == set()
+
+
+def test_as_demais_modalidades_continuam_exigindo_linha():
+    """A declaração dispensa **uma**, e não afrouxa a regra para as outras."""
+    quadro = [linha(28), linha(2, PCD)]
+
+    assert "cut_rule_sem_linha_de_quadro" in impeditivos(
+        perfil_com_ampla_declarada(quadro, ampla=PCD)
+    )
+
+
+def test_a_ampla_declarada_com_linha_propria_impede_a_publicacao():
+    """A quantidade dela já está na linha geral: duas linhas para o mesmo recorte é contradição."""
+    quadro = [linha(28), linha(0, PCD), linha(10, PPI)]
+
+    assert "general_competition_modality_with_row" in impeditivos(
+        perfil_com_ampla_declarada(quadro)
+    )
+
+
+def test_declarar_como_ampla_uma_modalidade_que_o_perfil_nao_publica_impede():
+    quadro = [linha(28), linha(2, PCD), linha(10, PPI)]
+
+    assert "general_competition_modality_unknown" in impeditivos(
+        perfil_com_ampla_declarada(quadro, ampla=str(uuid.uuid4()))
+    )
 
 
 def test_linha_zerada_nao_e_linha_ausente():

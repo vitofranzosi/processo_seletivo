@@ -215,6 +215,14 @@ def edital_snapshot(edital: Edital) -> dict:
                 "classificationInformation": profile.classification_information,
                 "callInformation": profile.call_information,
                 "competitionModalities": modalities,
+                # Qual das Modalidades acima é a ampla concorrência, e portanto corresponde à linha
+                # geral do quadro em vez de exigir linha própria (014, D-014). `None` quando o
+                # Perfil não declara nenhuma.
+                "generalCompetitionModalityId": (
+                    str(profile.modalidade_ampla_concorrencia)
+                    if profile.modalidade_ampla_concorrencia
+                    else None
+                ),
                 "declaredFacts": declared_facts,
                 "classificationMilestones": milestones,
                 "vacancyTable": vacancy_table,

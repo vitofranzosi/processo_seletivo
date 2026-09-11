@@ -182,8 +182,13 @@ def continuar_corte(
             marco_id=marco_id,
             lista_id=lista_id,
             at=ctx.now,
-            desde=anterior.ultima_posicao or 0,
+            # **A última posição é a da geração, e não a da faixa imediatamente anterior.** Uma
+            # faixa que não alcançou ninguém grava `None`, e `anterior.ultima_posicao or 0` fazia a
+            # continuação seguinte recomeçar da primeira posição — realcançando quem já estava
+            # dentro. O máximo da geração é a única resposta que não volta atrás.
+            desde=max((item.ultima_posicao for item in vigente if item.ultima_posicao), default=0),
             faixa_anterior=anterior,
+            quantidade=int(quantidade),
         )
         if not faixa.admite_continuacao(proposta["regra"]):
             raise DomainError(
@@ -211,7 +216,6 @@ def continuar_corte(
             raiz=anterior.raiz or anterior,
             faixa_anterior=anterior,
             motivo=texto_do_motivo,
-            limite=int(quantidade or 0),
         )
         return _concluir(ctx, corte, proposta, actor, correlation_id, idempotency_key, CONTINUAR)
 
@@ -256,11 +260,8 @@ def _gravar(
     corte_anterior=None,
     raiz=None,
     faixa_anterior=None,
-    limite=None,
 ):
     itens = proposta["itens"]
-    if limite is not None:
-        itens = _limitar(itens, limite)
     corte = Corte.objects.create(
         edital=edital,
         perfil_id=identificador(perfil_id),
@@ -279,7 +280,10 @@ def _gravar(
         # gravava a última posição que a faixa **poderia** alcançar quando ela não alcançou
         # ninguém, e a continuação seguinte começava depois dela — pulando posições que faixa
         # nenhuma tocou. `None` diz a verdade: esta faixa não chegou a posição alguma.
-        ultima_posicao=_ultima(itens) if limite is not None else proposta["ultima_posicao"],
+        # `_ultima` e não `proposta["ultima_posicao"]`: quando ninguém progride, `None` é a
+        # verdade — esta faixa não chegou a posição alguma, e a continuação seguinte não pode
+        # começar depois de uma posição que faixa nenhuma tocou.
+        ultima_posicao=_ultima(itens),
         emitido_por=actor.subject,
         emitido_em=now,
     )
@@ -297,40 +301,6 @@ def _gravar(
         ]
     )
     return corte
-
-
-def _limitar(itens, limite):
-    """A continuação alcança **quantos quem emite declarou** — sem jamais partir um empate.
-
-    A quantidade é pedida, e não inferida: o sistema não sabe quantas vagas foram ocupadas, e
-    decidir sozinho quantos chamar é o que a `FR-206` proíbe.
-
-    **O limite para na fronteira do grupo empatado, e não no meio dele** (FR-196). Cortar pelo
-    número puro escolheria entre pessoas que a norma publicada declara empatadas — pela ordem em que
-    o banco devolveu as linhas, que é exatamente o que a `D-001` existe para impedir. Onde o limite
-    cairia dentro de um grupo, ele **avança** até o fim do grupo: alcançar um a mais é o que a regra
-    de empate já autoriza, e alcançar meio grupo não é.
-    """
-    progrediram = [
-        item for item in itens if item["consequencia"] == ItemDoCorte.Consequencia.PROGREDIU
-    ]
-    dentro = set()
-    for indice, item in enumerate(progrediram):
-        if indice < limite or (dentro and item["posicao"] == progrediram[indice - 1]["posicao"]):
-            dentro.add(item["inscricao_id"])
-    ajustados = []
-    for item in itens:
-        if (
-            item["consequencia"] == ItemDoCorte.Consequencia.PROGREDIU
-            and item["inscricao_id"] not in dentro
-        ):
-            item = {
-                **item,
-                "consequencia": ItemDoCorte.Consequencia.FORA_DA_FAIXA,
-                "motivo": f"além dos {limite} que esta faixa alcançou",
-            }
-        ajustados.append(item)
-    return ajustados
 
 
 def _ultima(itens):
@@ -353,8 +323,15 @@ def _concluir(ctx, corte, proposta, actor, correlation_id, idempotency_key, oper
         aggregate=corte,
         now=ctx.now,
         correlation_id=correlation_id,
+        # **O que a `FR-222` exige entra na razão, e não só no agregado.** Ator, ação e instante o
+        # registro genérico já guarda; recorte, ordem citada, alvo apurado e quantidade alcançada
+        # são desta feature, e sem eles a auditoria não reconstrói o ato sem abrir o banco.
         reason=(
-            corte.motivo or f"Corte do marco {corte.marco_id} emitido com alvo {proposta['alvo']}."
+            f"Corte do marco {corte.marco_id}, Perfil {corte.perfil_id}, "
+            f"lista {corte.lista_id or 'ampla concorrência'}: alvo {proposta['alvo']} mais "
+            f"{proposta['excedente']} de excedente sobre a ordem {corte.ato_id}; "
+            f"{progrediram} progrediram até a posição {corte.ultima_posicao or 'nenhuma'}."
+            + (f" Motivo: {corte.motivo}" if corte.motivo else "")
         ),
         idempotency_key=idempotency_key,
     )

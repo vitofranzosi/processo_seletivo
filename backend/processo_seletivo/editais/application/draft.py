@@ -250,6 +250,7 @@ def replace_draft(
                 immediate_vacancies=payload["immediateVacancies"],
                 reserve_type=payload["reserveType"],
                 reserve_limit=payload.get("reserveLimit"),
+                modalidade_ampla_concorrencia=(payload.get("generalCompetitionModalityId") or None),
                 locality=payload.get("locality", ""),
                 duties=payload.get("duties", ""),
                 workload=payload.get("workload", ""),
