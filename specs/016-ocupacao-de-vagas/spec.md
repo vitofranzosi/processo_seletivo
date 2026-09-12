@@ -442,6 +442,9 @@ Cada número exibido tem trilha: qual ato o produziu, sobre qual ordem, com qual
 - **SC-082**: A apuração de um Perfil com 7 polos × 3 listas responde em tempo comparável ao da
   emissão da ordem no mesmo volume — até 1.000 participantes por recorte.
 - **SC-083**: Cem por cento dos números exibidos têm trilha até o ato que os produziu.
+- **SC-084**: Recebida a reversão, o recorte de destino cujo número mudou aparece **obsoleto**, com
+  a causa nomeada, sem que ninguém emita nada — e passa a vigente na primeira emissão seguinte. É o
+  critério que prova a substituição da orquestração por obsolescência.
 
 ---
 
