@@ -208,7 +208,8 @@ SQLite, e nesse modo não é confiável — 201 testes são pulados e **33 falha
 deveriam ter sido pulados e não foram: uns executam SQL que só o PostgreSQL entende, outros esperam
 mensagem de constraint que o SQLite não escreve, outros ainda contam com gatilho e trancamento de
 linha que ele não tem. O CI não enxerga isso, porque só roda contra PostgreSQL. O achado está em
-[`doc/achado-suite-em-sqlite.md`](doc/achado-suite-em-sqlite.md).
+[`doc/achado-suite-em-sqlite.md`](doc/achado-suite-em-sqlite.md) — e mede 21, que era o número de
+09/09.
 
 Contra PostgreSQL a suíte fecha em 5082 passando e 2 pulados — os dois deliberados, e nomeados em
 [`doc/achado-fonte-real-do-sorteio-sem-gatilho.md`](doc/achado-fonte-real-do-sorteio-sem-gatilho.md).
