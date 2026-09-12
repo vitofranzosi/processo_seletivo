@@ -122,7 +122,20 @@ from uuid import UUID
 # empate na fronteira, a Etapa governada ou a declaração explícita de que não há uma, e se aquele
 # Edital admite continuação. A ausência de qualquer um impede a publicação em vez de virar padrão,
 # e é por isso que a conversão escreve `null` no objeto inteiro, e nunca um objeto pela metade.
-SCHEMA_VERSION = 13
+# **14 com a `016`**: a declaração da reversão de vaga reservada (`vacancyReversion`), objeto no
+# Perfil. `null` significa **este Edital não declara reversão** — e não "reverte do jeito comum" —,
+# que é o que todo Edital publicado antes deste degrau afirma: a capacidade não existia, e ninguém
+# poderia tê-la declarado.
+#
+# **A ausência não vira padrão de comportamento, e o 57/2026 prova por que.** O item 4.5 dele proíbe
+# por escrito o remanejamento entre cursos; um sistema que revertesse por conta própria produziria
+# ali exatamente o que o Edital veda. Ausência de declaração é "não move" (016, D-002, FR-245).
+#
+# **O objeto entra inteiro ou nulo, nunca pela metade**, pela mesma razão do degrau 13: declarar
+# reversão sem a espécie do gatilho impede a publicação em vez de virar padrão, porque os dois
+# Editais da amostra escrevem o gatilho de modo diferente e escolher por eles seria decidir norma
+# (016, D-007, FR-251).
+SCHEMA_VERSION = 14
 
 
 def _default(value):

@@ -180,63 +180,63 @@ linha geral passa a 62 e a soma por recorte não muda.
 
 ### A declaração publicada (passo 4 da ordem de execução)
 
-- [ ] T025 [US2] Acrescentar `especie_de_reversao` — **uma** coluna anulável — ao `PerfilVaga` em
+- [X] T025 [US2] Acrescentar `especie_de_reversao` — **uma** coluna anulável — ao `PerfilVaga` em
       `backend/processo_seletivo/editais/models/perfis.py`, e a migration
-- [ ] T026 [US2] Emitir `vacancyReversion` no Perfil do snapshot em
+- [X] T026 [US2] Emitir `vacancyReversion` no Perfil do snapshot em
       `backend/processo_seletivo/publicacoes/application/publish_edital.py`
-- [ ] T027 [US2] Elevar `SCHEMA_VERSION` para **14** em
+- [X] T027 [US2] Elevar `SCHEMA_VERSION` para **14** em
       `backend/processo_seletivo/shared/canonical.py`, com o comentário do degrau
-- [ ] T028 [US2] Implementar o degrau 14 em
+- [X] T028 [US2] Implementar o degrau 14 em
       `backend/processo_seletivo/publicacoes/domain/elevacao.py` — escreve `vacancyReversion: null`
       em todo Perfil anterior, que é conversão sem invenção
-- [ ] T029 [P] [US2] Teste de contrato do degrau em
+- [X] T029 [P] [US2] Teste de contrato do degrau em
       `backend/tests/contract/test_elevacao_degrau_14.py`: o acervo anterior continua legível e
       nenhuma tela passa a afirmar reversão onde não há
-- [ ] T030 [US2] Ler a declaração no rascunho em
+- [X] T030 [US2] Ler a declaração no rascunho em
       `backend/processo_seletivo/editais/application/draft.py`
-- [ ] T031 [US2] Conferir a declaração em
+- [X] T031 [US2] Conferir a declaração em
       `backend/processo_seletivo/editais/domain/validation.py`: os três impeditivos do contrato —
       `vacancy_reversion_kind_required` (`FR-251`), `vacancy_reversion_kind_unknown` e
       `vacancy_reversion_sem_quadro`
 - [ ] T032 [P] [US2] Testes da conferência em
       `backend/tests/unit/editais/test_reversao_declarada.py`, com o caso que a `FR-251` nomeia:
       reversão declarada **sem** espécie recusa a publicação, e a ausência não vira padrão
-- [ ] T033 [US2] Acrescentar a declaração a `CAMPOS_PERFIL` em
+- [X] T033 [US2] Acrescentar a declaração a `CAMPOS_PERFIL` em
       `backend/processo_seletivo/interface/retificacao.py`, com tipo **`REFERENCIA`** e a lista
       `ESPECIES_DE_REVERSAO` — **não** caixa de texto, pelo precedente de `cutRule/tieOutcome` — e
       o rótulo do vazio dizendo o que o vazio provoca
 - [ ] T034 [P] [US2] Teste da Retificação da declaração em
       `backend/tests/integration/interface/test_retificacao_reversao.py`
-- [ ] T035 [US2] Elaborar a declaração na tela de composição do Perfil, em
+- [X] T035 [US2] Elaborar a declaração na tela de composição do Perfil, em
       `backend/processo_seletivo/interface/forms.py` e `_perfil.html`
-- [ ] T036 [US2] Incluir a declaração no documento publicado, em
+- [X] T036 [US2] Incluir a declaração no documento publicado, em
       `backend/processo_seletivo/publicacoes/` (gerador do PDF)
 - [ ] T037 [P] [US2] Teste do documento em `backend/tests/unit/publicacoes/test_pdf.py`: a
       reversão declarada aparece no documento, e o Edital sem ela não ganha seção vazia
 
 ### A reversão (passo 5)
 
-- [ ] T038 [US2] Implementar `backend/processo_seletivo/ocupacao/application/movimento.py` — a
+- [X] T038 [US2] Implementar `backend/processo_seletivo/ocupacao/application/movimento.py` — a
       reversão cria o `MovimentoDeVaga` **na mesma transação** da apuração da origem, conforme a
       §*Quando o movimento nasce* do data-model
-- [ ] T039 [US2] Em `backend/processo_seletivo/ocupacao/application/emissao.py`, fazer a apuração
+- [X] T039 [US2] Em `backend/processo_seletivo/ocupacao/application/emissao.py`, fazer a apuração
       do destino **ler** o movimento por `destino_lista_id` e congelar os ids em
       `universo.movimentosLidos`, sem criar um segundo registro
-- [ ] T040 [P] [US2] Teste do invariante da soma constante em
+- [X] T040 [P] [US2] Teste do invariante da soma constante em
       `backend/tests/unit/ocupacao/test_soma_constante.py` — **propriedade** sobre sequências
       aleatórias de reversão e liberação, porque a composição erra e não cada movimento (`R-007`).
       No mesmo arquivo, que **`publicadas` nunca muda** por movimento algum (`FR-239a`): o que a
       reversão move é a quantidade efetiva, e o publicado é intocável
 - [ ] T041 [P] [US2] Teste de que nenhuma vaga atravessa Perfil em
       `backend/tests/integration/ocupacao/test_reversao.py` (`FR-246`) — é o item 4.5 do 57/2026
-- [ ] T042 [P] [US2] Teste da obsolescência do destino em
+- [X] T042 [P] [US2] Teste da obsolescência do destino em
       `backend/tests/integration/ocupacao/test_reversao.py`: recebida a reversão, o recorte de
       destino aparece obsoleto **sem que ninguém emita nada**, e vigente na emissão seguinte
       (`SC-084`)
 - [ ] T043 [US2] Exibir o movimento nomeado em
       `backend/processo_seletivo/interface/templates/interface/ocupacao.html`, com origem, destino e
       quantidade — e não como mudança silenciosa do número (`UX-033`)
-- [ ] T044 [P] [US2] Teste de que o Edital sem declaração não reverte, e a tela o diz, em
+- [X] T044 [P] [US2] Teste de que o Edital sem declaração não reverte, e a tela o diz, em
       `backend/tests/interface/test_ocupacao.py`
 
 **Checkpoint**: o 57 e o 28 passam a ser conduzíveis na reversão.

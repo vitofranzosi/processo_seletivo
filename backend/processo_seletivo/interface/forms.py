@@ -440,6 +440,13 @@ def ler_perfis(dados):
                     dados, f"{base}-generalCompetitionModalityId"
                 )
                 or None,
+                # A reversão declarada (016, D-007). Objeto quando há gatilho, `None` quando não —
+                # nunca objeto pela metade, que a publicação recusaria nomeando o Perfil.
+                "vacancyReversion": (
+                    {"kind": especie}
+                    if (especie := _texto(dados, f"{base}-vacancyReversion"))
+                    else None
+                ),
                 "reserveType": reserva,
                 "reserveLimit": int(limite) if reserva == "LIMITED" and limite else None,
                 "locality": _texto(dados, f"{base}-locality"),
@@ -655,6 +662,9 @@ def perfis_do_edital(edital):
                 if perfil.modalidade_ampla_concorrencia
                 else ""
             ),
+            # Travessia 3, pela mesma razão: sem isto a espécie gravada não voltaria à tela, e a
+            # gravação seguinte a apagaria — `ler_perfis` leria um formulário sem ela.
+            "vacancyReversion": perfil.especie_de_reversao,
             "modalidades": [
                 _modalidade_para_o_formulario(m) for m in perfil.modalidades.order_by("code")
             ],
@@ -809,6 +819,9 @@ def perfis_persistidos(edital):
                 str(perfil.modalidade_ampla_concorrencia)
                 if perfil.modalidade_ampla_concorrencia
                 else None
+            ),
+            "vacancyReversion": (
+                {"kind": perfil.especie_de_reversao} if perfil.especie_de_reversao else None
             ),
             "locality": perfil.locality,
             "duties": perfil.duties,

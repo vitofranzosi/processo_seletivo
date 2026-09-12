@@ -114,6 +114,23 @@ CAMPOS_DO_CORTE = [
 ]
 # Os dois desfechos, com as mesmas palavras da tela de composição: quem retifica escolhe entre o
 # que já leu ao declarar, e não entre dois códigos.
+# As duas espécies de gatilho, com as mesmas palavras da tela de composição: quem retifica escolhe
+# entre o que já leu ao declarar, e não entre dois códigos.
+ESPECIES_DE_REVERSAO = (
+    ("ON_EXHAUSTION", "Só quando a lista reservada esgota"),
+    ("ON_BALANCE", "A quantidade que ficou sem preencher"),
+)
+# A espécie do gatilho da reversão (016, D-007). **Só entra quando o objeto existe**, como os
+# campos do corte: um caminho de referência para dentro de objeto ausente não tem o que oferecer, e
+# a Retificação que *cria* a declaração é acréscimo de campo, não alteração dele.
+#
+# `REFERENCIA` e **não** texto livre, pelo precedente literal do `cutRule/tieOutcome`: são valores
+# fechados, e a referência os oferece conferindo a escolha contra a lista. Caixa de texto publicaria
+# gatilho que o cálculo não interpreta — e reversão sob gatilho errado é vaga que saiu do recorte
+# reservado sem fundamento.
+CAMPOS_DA_REVERSAO = [
+    ("vacancyReversion/kind", "Gatilho da reversão de vaga reservada", REFERENCIA),
+]
 DESFECHOS_DO_EMPATE = (
     ("ADMITS_SURPLUS", "Todos os empatados progridem"),
     ("STRICT", "A faixa para no alvo"),
@@ -425,18 +442,26 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                 f"Perfil {nome_do_perfil}",
                 caminho,
                 perfil,
-                CAMPOS_PERFIL,
+                CAMPOS_PERFIL
+                + (CAMPOS_DA_REVERSAO if isinstance(perfil.get("vacancyReversion"), dict) else []),
                 tipo="Perfil",
                 nome=nome_do_perfil,
                 # **Sem isto o seletor nasce vazio**, e um campo de referência sem opção não
                 # oferece nada e ainda apaga a declaração vigente ao ser submetido em branco: a
                 # tela mostraria só o rótulo do vazio, e retificar qualquer outro campo do Perfil
                 # levaria junto a ampla concorrência declarada (014, FR-231, FR-238).
-                opcoes={"generalCompetitionModalityId": modalidades_do_perfil},
+                opcoes={
+                    "generalCompetitionModalityId": modalidades_do_perfil,
+                    "vacancyReversion/kind": ESPECIES_DE_REVERSAO,
+                },
                 rotulos_do_vazio={
                     "generalCompetitionModalityId": (
                         "Nenhuma — a ampla concorrência é só a linha geral do quadro"
-                    )
+                    ),
+                    # O vazio existe porque o `select` de referência sempre o desenha. Dizer o que
+                    # ele provoca é o mínimo: sem gatilho, a reversão declarada não publica — e a
+                    # ausência do objeto inteiro é "este Edital não reverte" (016, FR-251).
+                    "vacancyReversion/kind": "Nenhum — este Edital não reverte vaga reservada",
                 },
             )
         )

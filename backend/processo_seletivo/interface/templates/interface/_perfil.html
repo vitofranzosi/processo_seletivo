@@ -153,6 +153,29 @@
       <span class="oculto" id="ajuda-ampla-{{ indice }}">A declarada não recebe linha no quadro: a
         quantidade dela é a da linha geral.</span>
     </p>
+    {% comment %}
+    A reversao de vaga reservada (016, D-007). Fica nesta secao, e nao na do quadro, pela mesma
+    razao do campo acima: e declaracao sobre **como as cotas se comportam**, e o quadro so fornece as
+    quantidades.
+
+    Os dois Editais da amostra escrevem o gatilho de modo diferente — o 28/2026 reverte "havendo
+    ausencia de candidatos aprovados", o 57/2026 "na hipotese do nao preenchimento total" —, e por
+    isso ele e **declarado** e nao inferido. Vazio significa que este Edital nao reverte, e o
+    57/2026 prova por que isso precisa ser respeitado: o item 4.5 dele proibe por escrito o
+    remanejamento entre cursos.
+    {% endcomment %}
+    <p class="campo">
+      <label for="perfil-{{ indice }}-vacancyReversion">Reverter vaga reservada não preenchida para a ampla concorrência</label>
+      <select id="perfil-{{ indice }}-vacancyReversion"
+              name="perfil-{{ indice }}-vacancyReversion"
+              aria-describedby="ajuda-reversao-{{ indice }}">
+        <option value="">Não — este Edital não reverte vaga reservada</option>
+        <option value="ON_EXHAUSTION" {% if perfil.vacancyReversion == "ON_EXHAUSTION" %}selected{% endif %}>Só quando a lista reservada esgota</option>
+        <option value="ON_BALANCE" {% if perfil.vacancyReversion == "ON_BALANCE" %}selected{% endif %}>A quantidade que ficou sem preencher</option>
+      </select>
+      <span class="oculto" id="ajuda-reversao-{{ indice }}">Declarar a reversão exige quadro de
+        vagas publicado: sem quantidade por recorte não há o que reverter.</span>
+    </p>
   </section>
   <section class="quadro" aria-labelledby="quadro-titulo-{{ indice }}">
     <h3 id="quadro-titulo-{{ indice }}">Quadro de vagas</h3>

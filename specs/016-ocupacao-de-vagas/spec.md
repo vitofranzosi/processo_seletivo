@@ -491,6 +491,17 @@ Cada número exibido tem trilha: qual ato o produziu, sobre qual ordem, com qual
 
 ## Assumptions
 
+- **Apurar a ocupação de uma cota exige ordem vigente daquele recorte, e ordem por lista só existe
+  em certame de sorteio.** `emitir_ordem` fixa `lista_id` nulo por decisão declarada (PR #85) — *"um
+  ato computado é sempre o de ampla concorrência; só o sorteio emite por lista"*. Logo **a reversão
+  de cota só é apurável em certame de sorteio**. É coerente com a amostra, e não uma limitação
+  surpresa: o 28/2026 e o 57/2026, os dois que declaram reversão, são de sorteio. Mas o percurso de
+  ponta a ponta da reversão precisa do cenário de sorteio com cotas — descoberto ao implementar, e
+  não previsto por esta spec.
+- **O invariante da soma vale entre apurações que leram o mesmo conjunto de movimentos**, e não
+  entre duas apurações quaisquer. Uma apuração anterior a um movimento não o leu, e por isso se
+  declara **obsoleta** em vez de mentir; somá-la com uma que já leu dá um número que não fecha, e
+  isso não viola a `FR-247` — é a obsolescência funcionando.
 - O polo do 28/2026 é um **Perfil**, e a reversão "em cada polo" é reversão dentro do Perfil
   (`D-005`). Se algum Edital real tratar polo como dimensão **dentro** de um Perfil, esta suposição
   cai e a feature muda de forma.

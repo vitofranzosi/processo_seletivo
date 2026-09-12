@@ -223,6 +223,12 @@ def edital_snapshot(edital: Edital) -> dict:
                     if profile.modalidade_ampla_concorrencia
                     else None
                 ),
+                # A reversão declarada, ou `None` (016, D-007). Objeto, e não campo solto, pela
+                # mesma razão do `cutRule`: é onde um campo novo da mesma decisão entra sem um
+                # segundo degrau.
+                "vacancyReversion": (
+                    {"kind": profile.especie_de_reversao} if profile.especie_de_reversao else None
+                ),
                 "declaredFacts": declared_facts,
                 "classificationMilestones": milestones,
                 "vacancyTable": vacancy_table,

@@ -14,6 +14,7 @@ from processo_seletivo.classificacao.application.corte import linha_do_quadro
 from processo_seletivo.classificacao.application.selectors import ato_vigente
 from processo_seletivo.comissoes.application import comando_de_comissao
 from processo_seletivo.comissoes.application.comissao import identificador
+from processo_seletivo.ocupacao.application import movimento as movimento_de_vaga
 from processo_seletivo.ocupacao.application import selectors
 from processo_seletivo.ocupacao.domain import apuracao as calculo
 from processo_seletivo.ocupacao.domain import reversao
@@ -143,7 +144,45 @@ def emitir_apuracao(
             emitida_em=ctx.now,
         )
         apuracao.save()
-        return _concluir(ctx, apuracao, actor, correlation_id, idempotency_key)
+        movimento = _reverter_se_declarado(
+            apuracao,
+            versao=versao,
+            perfil=perfil,
+            marco=marco,
+            lista=lista,
+            actor=actor,
+            now=ctx.now,
+        )
+        return _concluir(ctx, apuracao, actor, correlation_id, idempotency_key, movimento=movimento)
+
+
+def _reverter_se_declarado(apuracao, *, versao, perfil, marco, lista, actor, now):
+    """Cria o movimento de reversão **na mesma transação** da apuração que o determinou.
+
+    **Só a cota reverte, e só se o Edital declarar.** A linha geral é o destino, nunca a origem; e
+    Edital que não declara não move nada — que é o que o item 4.5 do 57/2026 exige.
+
+    O destino **não** é apurado em cascata: o movimento torna a apuração vigente dele obsoleta, com
+    a causa nomeada, e quem quiser o número novo emite. Reusar a obsolescência custa uma causa;
+    orquestrar a emissão do destino custaria uma coreografia entre dois recortes.
+    """
+    if lista is None:
+        return None
+    especie = _declaracao(versao.content, perfil_id=perfil)
+    if not especie:
+        return None
+    return movimento_de_vaga.reverter_cota(
+        apuracao=apuracao,
+        especie=especie,
+        ha_quem_ocupar=movimento_de_vaga.ha_quem_ocupar(
+            edital=apuracao.edital,
+            marco_id=marco,
+            lista_id=lista,
+            ja_ocupadas=apuracao.ocupadas,
+        ),
+        registrado_por=str(getattr(actor, "subject", actor)),
+        registrado_em=now,
+    )
 
 
 def _movimentos_a_ler(*, edital, perfil, marco, lista):
@@ -191,7 +230,7 @@ def _quantidade(linha):
     )
 
 
-def _concluir(ctx, apuracao, actor, correlation_id, idempotency_key):
+def _concluir(ctx, apuracao, actor, correlation_id, idempotency_key, *, movimento=None):
     auditar(
         actor=actor,
         permissao=ctx.base.permissao,
@@ -212,6 +251,11 @@ def _concluir(ctx, apuracao, actor, correlation_id, idempotency_key):
                 if apuracao.motivo_da_sucessao
                 else ""
             )
+            + (
+                f" Reversão: {movimento.quantidade} vaga(s) para a ampla concorrência."
+                if movimento is not None
+                else ""
+            )
         ),
         idempotency_key=idempotency_key,
     )
@@ -222,6 +266,7 @@ def _concluir(ctx, apuracao, actor, correlation_id, idempotency_key):
         "ocupadas": apuracao.ocupadas,
         "faltando": apuracao.faltando,
         "universo": apuracao.universo,
+        "reverteu": movimento.quantidade if movimento is not None else 0,
     }
     ctx.concluir_sem_resultado(201, declarado)
     return declarado
