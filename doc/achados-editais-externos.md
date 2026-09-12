@@ -31,6 +31,21 @@ evidência exige pergunta própria, ela é de fato nova.
 | **76/2026 — Secretaria Escolar** | discente, chamada pública | cadastro de reserva sem número, impugnação, deriva de outro Edital |
 | **77/2026 — FIC, vagas remanescentes** | discente, sorteio | validade do processo, suplente convocável para turma futura |
 
+Segunda amostra, lida em **12/09/2026** — o 77 repete, agora na versão retificada em 26/08:
+
+| Edital | Natureza | O que ele trouxe de novo |
+|---|---|---|
+| **58/2026 — unificado, 3 cursos FIC** | discente, sorteio | turmas com início próprio **dentro** de um código de vaga; regularização de matrícula indeferida |
+| **59/2026 — Libras A1, presencial** | discente, sorteio | **o código de vaga é a turma**, distinguida só por dia e horário de aula |
+| **69/2026 — Multimeios Didáticos** | discente, chamada pública, CR | entrega presencial de documentos; **reclassificação** de quem não comparece; impugnação sem recurso; procuração e menor de idade |
+| **78/2026 — Libras A1, remanescentes** | discente, sorteio | clone textual do 59, sem citá-lo; cronograma abrindo inscrição **antes** da publicação |
+| **158/2024 — FIC Educação Especial, remanescentes** | discente, sorteio, parceria SECADI | **2719 vagas sem código de vaga nenhum**; alvo derivado **sem** excedente; elegibilidade alternativa; retificação que deixa buraco na numeração |
+
+Os cinco são de ampla concorrência pura — nenhuma Modalidade declarada, nenhuma cota, nenhuma
+heteroidentificação. Confirmam pela negativa o achado acima: cota é escolha do Edital. E o 158, de
+dezembro de 2024, mostra que a família textual dos outros quatro tem pelo menos dois anos: a
+cláusula do corte é idêntica, palavra por palavra, através de todo esse intervalo.
+
 ## O achado que mais custa: a família não define o que o Edital exige
 
 O **173/2025 é seleção de pessoal** — bolsista, prova de títulos, desempate por idade, mesma
@@ -162,6 +177,82 @@ diferença entre requisito que ele confere e requisito que ele apenas declara.
 
 *Evidência: 173 (Fapes, Lattes, adimplência, residência); 14 (anuência da chefia imediata).*
 
+### P-10 · A oferta se reparte em turmas, e a turma nem sempre é o recorte de vaga
+
+Dois Editais do mesmo mês respondem à mesma necessidade em lugares incompatíveis:
+
+```
+a turma É o código de vaga      Turma 1 (40) e Turma 2 (40), distinguidas apenas por
+                                "Segundas e quintas-feiras, das 09h às 11h"
+
+a turma fica ABAIXO do código   um código de 200 vagas repartido em 1ª Turma (120) e
+                                2ª Turma (80), com datas de início distintas, declarado
+                                só no cronograma
+```
+
+É a **P-5 com o eixo do tempo**: lá a unidade era a oferta localizada, aqui ela é a oferta *datada*.
+A pergunta que o domínio precisa saber responder é quando a repartição por turma passa a ter
+consequência — vaga contada, ocupada ou revertida por turma —, porque só então ela precisa decidir
+se é Perfil novo ou dimensão abaixo do Perfil. Enquanto o próprio Edital não diz como um aprovado vai
+parar numa turma ou noutra, não há regra a executar.
+
+*Evidência: 59 e 78 (a turma é o código); 58 (a turma fica abaixo dele).*
+
+### P-11 · Que desfechos a convocação admite, além de aceitar e desistir?
+
+Três, e nenhum deles é recurso nem eliminação:
+
+```
+reclassificação        não compareceu → vai para o FIM da lista, convocável de novo depois
+                       de esgotados os suplentes
+regularização          matrícula indeferida → a Administração RECONVOCA quem foi indeferido,
+                       com 2 dias úteis para corrigir, se sobrarem vagas
+desistência por inércia não acessou o ambiente virtual em 6 dias, ou faltou à primeira semana →
+                       matrícula cancelada, próximo suplente convocado
+```
+
+O segundo é o que mais pesa: **é a Administração desfazendo um ato desfavorável sem que ninguém
+tenha recorrido**. A superação append-only já está decidida para o recurso deferido
+([`descoberta-018-decisao-c`](descoberta-018-decisao-c-superacao-de-resultado.md)); o que está aberto
+é se este caso usa o mesmo mecanismo com outra origem, ou se é outra coisa.
+
+*Evidência: 69 (reclassificação, 6.3); 58 e 59 (regularização, 8.2–8.3; inércia, 9.2 e 8.4).*
+
+### P-12 · O sistema pode registrar o cumprimento de exigência que ele não guarda?
+
+Há Edital cuja inscrição não carrega documento nenhum: eles são entregues **presencialmente**, em
+endereço publicado no cronograma, dentro de uma janela própria, podendo ser por procurador com
+procuração simples — e não voltam ao candidato, porque passam a compor o acervo da instituição por
+cinco anos.
+
+É o espelho da **P-8**. Lá a *inscrição* nasce fora do sistema; aqui é a *comprovação* que acontece
+fora dele, e o que o domínio precisaria registrar é que houve, quem atestou e o que concluiu, sem
+deter o artefato.
+
+O mesmo Edital traz junto uma pessoa que a inscrição não tem: **o menor de idade, cujo ato é
+praticado pelo responsável legal, e o procurador, que age por terceiro**.
+
+*Evidência: 69 (entrega presencial, 6.1–6.3; retenção por 5 anos, 8.8; procuração, Anexo II).*
+
+### P-13 · Como se declara requisito satisfeito por uma entre várias vias?
+
+Há Edital cujo público-alvo é alternativo — *professor da Educação Básica ou Superior, com
+graduação,* **ou** *aluno de Licenciatura a partir do 6º período* —, e cada via se comprova com
+documento próprio.
+
+**A evidência é de um Edital só, e é defeituosa — que é o que a torna útil.** Na lista de documentos,
+o comprovante de vínculo como professor aparece marcado *"para todos os candidatos"*: exatamente o
+documento que o aluno de Licenciatura não tem, sem alternativa listada. A instituição precisou dizer
+*uma de duas vias, cada via com sua comprovação*, e o que foi publicado exige de metade do seu
+público-alvo uma prova impossível.
+
+**Não é a alternativa dentro de um requisito**, que todo Edital lido pratica e que não é pergunta:
+*"Carteira de Identidade; Carteira de Trabalho; CNH; …"* e *"Diploma ou Declaração de Conclusão"* são
+formas de provar **o mesmo** fato. O que a pergunta pede é a ramificação **antes** do documento — a
+condição de elegibilidade que se satisfaz por caminhos distintos, cada um com sua prova.
+
+*Evidência: 158 (2.1 contra 5.4.c).*
+
 ## O que estes Editais **confirmaram**, em vez de acrescentar
 
 Vale registrar, porque confirmação é sinal de que a generalização anterior estava certa:
@@ -171,6 +262,25 @@ Vale registrar, porque confirmação é sinal de que a generalização anterior 
 - **A classificação é a mesma capacidade em marcos diferentes.** O 173 publica resultado de etapa,
   recebe recurso e republica — como o 14 já mostrava.
 - **Retificação é rotina, não exceção.** Cinco dos sete Editais lidos são versões retificadas.
+
+A segunda amostra confirmou cinco perguntas já registradas, e três delas ganharam evidência
+independente:
+
+- **P-2** — um Edital de cadastro de reserva sobre 6 vagas remanescentes: quantidade conhecida **e**
+  lista sem fim, no mesmo Edital;
+- **P-3** — a cláusula de validade de 6 meses, prorrogável, com suplente convocável para a turma
+  seguinte, repetida palavra por palavra em **quatro** Editais;
+- **P-4** — impugnação por qualquer cidadão em até 5 dias úteis, **terceira** evidência independente,
+  num Edital que não tem seção de recurso nenhuma;
+- **P-6** — as duas formas na mesma amostra: um Edital que cita a origem pelo número (*"vagas não
+  preenchidas pelo Edital Multicampi Nº 20/2026"*) e dois que são remanescentes **sem citar** de
+  quê;
+- **P-9** — *"ter habilidade no uso do computador"*, *"ter disponibilidade para frequentar as aulas
+  presenciais"*: requisito declarado e não verificável não é peculiaridade de Edital de bolsa.
+
+E uma confirmação de estrutura: **a condição que não é Perfil nem Modalidade** aparece nos cinco —
+*"no caso de candidatos do sexo masculino, maiores de 17 anos"* é condição **sobre a pessoa**, e é a
+terceira dimensão que o requisito documental ainda não tem.
 
 Duas formas **novas de regra**, que não são categorias e sim estrutura:
 
@@ -270,6 +380,10 @@ Sem virar fila, e sem numeração:
 | P-6 | processo e edital |
 | P-7 | conclusão de avaliação e inscrição |
 | P-8, P-9 | inscrição |
+| P-10 | quadro de vagas, e a unidade sobre a qual se conta |
+| P-11 | convocação e chamadas |
+| P-12 | inscrição, e a identidade de quem pratica o ato |
+| P-13 | perfil de vaga, e o requisito documental |
 
 **P-4 é a única que aponta para fora do arco de features previsto**: impugnação acontece entre a
 publicação do Edital e o fim das inscrições, é movida por quem não é candidato, e não tem ator no
