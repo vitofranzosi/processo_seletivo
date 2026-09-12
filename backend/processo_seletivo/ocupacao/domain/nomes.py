@@ -18,13 +18,16 @@ REVERSAO_POR_ESGOTAMENTO = "ON_EXHAUSTION"
 REVERSAO_POR_SALDO = "ON_BALANCE"
 ESPECIES_DE_REVERSAO = (REVERSAO_POR_ESGOTAMENTO, REVERSAO_POR_SALDO)
 
-# --- Espécies de movimento de vaga --------------------------------------------------------------
-# **Os dois sentidos são opostos, e trocá-los mantém a soma certa com o recorte errado** — o
-# defeito que só asserção de recorte pega. A reversão move quantidade da cota para a linha geral; a
-# liberação devolve ao recorte reservado a vaga de quem ocupou pela ampla (016, FR-253).
+# --- Espécie de movimento de vaga ---------------------------------------------------------------
+# **Uma só, e a ausência da segunda é o achado.** A reversão move quantidade da cota para a linha
+# geral. A concorrência concomitante do item 8.9 do 28/2026 **não** é movimento: ela não transfere
+# quantidade nenhuma — o autodeclarado que ocupa pela ampla simplesmente não é computado no
+# preenchimento da reservada, que continua com as vagas que publicou. Modelá-la como transferência
+# produzia 1 e 2 efetivas onde o Edital manda 2 e 1, e o erro era de leitura, não de conta.
+#
+# A exclusão mora no cálculo, em `apuracao.apurar`, e não aqui (016, FR-252).
 MOVIMENTO_REVERSAO = "REVERSAO_DE_COTA"
-MOVIMENTO_LIBERACAO = "LIBERACAO_POR_CONCOMITANCIA"
-ESPECIES_DE_MOVIMENTO = (MOVIMENTO_REVERSAO, MOVIMENTO_LIBERACAO)
+ESPECIES_DE_MOVIMENTO = (MOVIMENTO_REVERSAO,)
 
 # --- Estado de um recorte na leitura (016, contrato) --------------------------------------------
 # **Quatro valores, e dois deles não são erro.** `NAO_APURADO` é recorte sem apuração emitida;

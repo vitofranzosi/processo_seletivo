@@ -7,10 +7,11 @@ mundo produz dois resultados legítimos**, e quem decide é o Edital.
 from processo_seletivo.ocupacao.domain import nomes, reversao
 
 
-def reverter(*, especie, publicadas=10, ocupadas=3, ha_quem_ocupar=False):
+def reverter(*, especie, efetivas=10, ocupadas=3, ha_quem_ocupar=False):
+    """O saldo sai das **efetivas**, e é o que impede a reversão de duplicar a cada apuração."""
     return reversao.quantidade_a_reverter(
         especie=especie,
-        publicadas=publicadas,
+        efetivas=efetivas,
         ocupadas=ocupadas,
         ha_quem_ocupar=ha_quem_ocupar,
     )
@@ -80,3 +81,18 @@ class TestAusenciaDeDeclaracao:
         que não deveria existir.
         """
         assert reversao.declarada({"vacancyReversion": {"kind": "OUTRA"}}) is None
+
+
+class TestONaoDuplicarEAritmetico:
+    """**A guarda contra duplicação, e ela não é constraint** (016, US4).
+
+    Cedidas todas as vagas, a apuração seguinte lê o movimento, chega com `efetivas` já reduzida, e
+    o saldo dá zero. Partir de `publicadas` faria cada nova apuração da cota ceder a mesma
+    quantidade outra vez — e a aritmética é uma guarda mais barata e mais difícil de contornar.
+    """
+
+    def test_cedidas_todas_o_saldo_seguinte_e_zero(self):
+        assert reverter(especie=nomes.REVERSAO_POR_SALDO, efetivas=0, ocupadas=0) == 0
+
+    def test_cedida_parte_o_saldo_seguinte_e_o_que_resta(self):
+        assert reverter(especie=nomes.REVERSAO_POR_SALDO, efetivas=4, ocupadas=3) == 1

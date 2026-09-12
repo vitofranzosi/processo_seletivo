@@ -33,7 +33,29 @@ LINHA_PCD = "00000000-0000-4000-8000-000000000843"
 RECORTES = (None, LISTA_PPI, LISTA_PCD)
 
 
-def rascunho_sorteado_com_quadro(*, geral=2, ppi=1, pcd=1, reversao=None, ampla_declarada=None):
+def regra_de_corte_do_sorteio(*, etapa_governada, alvo=2):
+    """A regra de corte do marco de sorteio, **com Etapa governada declarada**.
+
+    **É ela que torna o caminho positivo da US4 possível.** Sem Etapa governada não há Resultado a
+    ler, logo ninguém consta ocupando — e o único caso provável seria o negativo. A `014` deixou a
+    Etapa governada obrigatória justamente para não ser inferida.
+
+    O alvo é fixo e não derivado do quadro: derivá-lo exigiria linha para todo recorte que o marco
+    ordena, e o que se exercita aqui é ocupação, não a conferência daquela regra.
+    """
+    return {
+        "targetKind": "FIXED",
+        "targetCount": alvo,
+        "surplusCount": 0,
+        "tieOutcome": "ADMITS_SURPLUS",
+        "governedStage": etapa_governada,
+        "continuation": "ALLOWED",
+    }
+
+
+def rascunho_sorteado_com_quadro(
+    *, geral=2, ppi=1, pcd=1, reversao=None, ampla_declarada=None, com_corte=False
+):
     """O rascunho do certame de cotas, com quadro publicado e reversão opcional.
 
     **O total do Perfil acompanha o quadro**, senão a conferência da soma da `025` recusa a
@@ -45,6 +67,20 @@ def rascunho_sorteado_com_quadro(*, geral=2, ppi=1, pcd=1, reversao=None, ampla_
 
     rascunho = rascunho_com_etapas()
     marco_com_metodo(rascunho, perfil_id=PROFILE_ID, etapa_id=rascunho["stages"][1]["id"])
+    if com_corte:
+        # A Etapa governada é a **primeira** — a que o marco não enumera —, porque a enumerada é a
+        # que produz a ordem. Governar a própria Etapa da ordem faria o corte alimentar o que o
+        # alimentou.
+        governada = rascunho["stages"][0]["id"]
+        for perfil in rascunho["profiles"]:
+            if str(perfil["id"]) == PROFILE_ID:
+                # **O alvo são as vagas da ampla**, e é a leitura fiel do Edital: o item 8.9 fala
+                # de quem foi "sorteado dentro do número de vagas oferecido para ampla
+                # concorrência". Um alvo maior que o quadro faria a faixa alcançar suplentes, que é
+                # legítimo e é outro cenário — o do teto da ocupação.
+                perfil["classificationMilestones"][0]["cutRule"] = regra_de_corte_do_sorteio(
+                    etapa_governada=governada, alvo=geral
+                )
     for perfil in rascunho["profiles"]:
         if str(perfil["id"]) != PROFILE_ID:
             continue
@@ -155,6 +191,11 @@ def certame_sorteado_com_quadro(
     atos = {
         ato.lista_id: ato for ato in AtoDeOrdenacao.objects.filter(edital=edital, marco_id=MARCO)
     }
+    from processo_seletivo.classificacao.application.corte import regra_do_marco
+    from processo_seletivo.publicacoes.application.selectors import effective_version
+
+    versao = effective_version(edital_id=edital.id)
+    regra = regra_do_marco(versao.content, perfil_id=PROFILE_ID, marco_id=MARCO)
     return {
         "edital": edital,
         "processo": edital.processo,
@@ -164,4 +205,6 @@ def certame_sorteado_com_quadro(
         "cotista_ppi": inscricoes[0],
         "cotista_pcd": inscricoes[1],
         "atos": atos,
+        # A Etapa que o corte governa, lida do publicado — é nela que o `HABILITADA` entra.
+        "etapa_governada": (regra or {}).get("governedStage"),
     }

@@ -199,3 +199,70 @@ class TestEstado:
             apuracao.estado(tem_quadro=True, tem_apuracao=True, causas_de_obsolescencia=[])
             == nomes.VIGENTE
         )
+
+
+class TestOTetoDaOcupacao:
+    """**Suplente não ocupa vaga**, e o teto é o que impede um número falso.
+
+    A faixa pode ser maior que o quadro: no 77/2026 são 40 vagas com 30 suplentes alcançados na
+    mesma faixa (`D-011` da `014`). Se todos habilitarem, a interseção dá 70 — e ocupar 70 de 40
+    não é um número grande, é um número falso. A constraint `ocupadas <= efetivas` recusaria o ato,
+    de modo que sem o teto a apuração daquele Edital simplesmente não sairia.
+    """
+
+    def test_a_faixa_maior_que_o_quadro_nao_ocupa_mais_que_as_vagas(self):
+        faixa = {f"i{n}" for n in range(70)}
+
+        _, efetivas, ocupadas = apuracao.apurar(
+            publicadas=40, dentro_da_faixa=faixa, habilitadas=faixa
+        )
+
+        assert (efetivas, ocupadas) == (40, 40)
+
+    def test_o_excedente_e_suplente_e_nao_ocupante(self):
+        """Trinta habilitados além das vagas continuam sendo trinta — eles só não ocupam."""
+        faixa = {f"i{n}" for n in range(70)}
+
+        _, _, ocupadas = apuracao.apurar(publicadas=40, dentro_da_faixa=faixa, habilitadas=faixa)
+
+        assert ocupadas == 40, "e os outros 30 esperam que uma vaga vague — é a 019 que os chama"
+
+    def test_o_teto_acompanha_as_efetivas_e_nao_as_publicadas(self):
+        """Recebida a reversão, o teto sobe com ela."""
+        faixa = {f"i{n}" for n in range(10)}
+
+        _, efetivas, ocupadas = apuracao.apurar(
+            publicadas=2,
+            dentro_da_faixa=faixa,
+            habilitadas=faixa,
+            movimentos_lidos=[(nomes.MOVIMENTO_REVERSAO, True, 3)],
+        )
+
+        assert (efetivas, ocupadas) == (5, 5)
+
+
+class TestAExclusaoDaConcomitancia:
+    """`FR-252`: quem ocupou pela ampla não é computado na reservada.
+
+    **Exclusão, e não transferência** — quantidade nenhuma muda de lista.
+    """
+
+    def test_o_ocupante_da_ampla_sai_da_contagem_da_reservada(self):
+        _, efetivas, ocupadas = apuracao.apurar(
+            publicadas=1,
+            dentro_da_faixa={"cotista"},
+            habilitadas={"cotista"},
+            ocupantes_da_ampla={"cotista"},
+        )
+
+        assert (efetivas, ocupadas) == (1, 0), "a vaga reservada segue aberta, e não migra"
+
+    def test_quem_nao_ocupou_pela_ampla_continua_contando(self):
+        _, _, ocupadas = apuracao.apurar(
+            publicadas=1,
+            dentro_da_faixa={"outro"},
+            habilitadas={"outro"},
+            ocupantes_da_ampla={"cotista"},
+        )
+
+        assert ocupadas == 1

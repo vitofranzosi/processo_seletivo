@@ -197,7 +197,7 @@ def test_as_tres_rotas_da_ocupacao_sao_distintas():
     assert len(rotas) == 3
 
 
-def test_a_tela_nomeia_os_dois_movimentos_e_os_distingue(
+def test_a_tela_nomeia_a_reversao_e_explica_a_divergencia(
     client,
     seletor_ligado,
     db,
@@ -207,11 +207,12 @@ def test_a_tela_nomeia_os_dois_movimentos_e_os_distingue(
     process_payload,
     raiz_de_arquivos,
 ):
-    """**`UX-033`**: reversão e liberação aparecem nomeadas, e com palavras distintas.
+    """**`UX-033`**: o movimento aparece nomeado, com origem, destino e quantidade.
 
-    Os dois sentidos são opostos — a reversão move quantidade da cota para a ampla; a liberação
-    devolve a vaga de uma pessoa ao recorte reservado. Mostrá-los com a mesma palavra apagaria o
-    sentido, e quem conduz o certame não saberia o que aconteceu com a vaga.
+    **Há uma espécie só na tela, e a ausência da segunda é deliberada.** A concorrência
+    concomitante não move quantidade nenhuma — ela aparece como ocupação menor na lista reservada,
+    e não como movimento, porque nada se moveu. Desenhá-la como movimento foi o defeito que a
+    revisão da US4 derrubou.
 
     O certame é de **sorteio**, porque é o único em que a reversão é alcançável.
     """

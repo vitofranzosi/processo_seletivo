@@ -16,6 +16,51 @@ from processo_seletivo.ocupacao.models import MovimentoDeVaga
 from processo_seletivo.shared.api.problems import DomainError
 
 
+def quantidade_que_a_cota_cede(*, especie, efetivas, ocupadas, ha_quem_ocupar):
+    """Quanto a cota cede, **antes** de a apuração existir.
+
+    A ordem importa: o id do movimento é gerado antes da apuração, para que ela o inclua nos
+    próprios `movimentosLidos` e nasça com a `efetivas` líquida. Por isso o cálculo tem de ser
+    possível sem a apuração em mão.
+    """
+    return reversao.quantidade_a_reverter(
+        especie=especie, efetivas=efetivas, ocupadas=ocupadas, ha_quem_ocupar=ha_quem_ocupar
+    )
+
+
+def gravar_reversao(
+    *,
+    identidade,
+    apuracao,
+    quantidade,
+    origem_lista_id,
+    publicadas,
+    especie,
+    registrado_por,
+    registrado_em,
+):
+    """Grava o movimento com o id que a apuração já citou."""
+    causa = (
+        "Lista reservada esgotada com saldo"
+        if especie == nomes.REVERSAO_POR_ESGOTAMENTO
+        else "Vagas reservadas não preenchidas"
+    )
+    return MovimentoDeVaga.objects.create(
+        id=identidade,
+        apuracao=apuracao,
+        especie=nomes.MOVIMENTO_REVERSAO,
+        origem_lista_id=origem_lista_id,
+        # **O destino é a linha geral — `None`** —, e não a Modalidade declarada como ampla
+        # concorrência: a quantidade da ampla mora na linha geral, e apontar a Modalidade faria o
+        # movimento chegar a um recorte que não tem linha.
+        destino_lista_id=None,
+        quantidade=quantidade,
+        causa=f"{causa}: {quantidade} de {publicadas}.",
+        registrado_por=registrado_por,
+        registrado_em=registrado_em,
+    )
+
+
 def reverter_cota(*, apuracao, especie, ha_quem_ocupar, registrado_por, registrado_em):
     """Cria o movimento de reversão da cota para a linha geral, se houver o que reverter.
 
@@ -33,67 +78,23 @@ def reverter_cota(*, apuracao, especie, ha_quem_ocupar, registrado_por, registra
             "reverte para si mesma.",
             409,
         )
-    quantidade = reversao.quantidade_a_reverter(
+    import uuid
+
+    quantidade = quantidade_que_a_cota_cede(
         especie=especie,
-        publicadas=apuracao.publicadas,
+        efetivas=apuracao.efetivas,
         ocupadas=apuracao.ocupadas,
         ha_quem_ocupar=ha_quem_ocupar,
     )
     if not quantidade:
         return None
-    causa = (
-        "Lista reservada esgotada com saldo"
-        if especie == nomes.REVERSAO_POR_ESGOTAMENTO
-        else "Vagas reservadas não preenchidas"
-    )
-    return MovimentoDeVaga.objects.create(
+    return gravar_reversao(
+        identidade=uuid.uuid4(),
         apuracao=apuracao,
-        especie=nomes.MOVIMENTO_REVERSAO,
-        origem_lista_id=apuracao.lista_id,
-        # **O destino é a linha geral — `None`** —, e não a Modalidade declarada como ampla
-        # concorrência: a quantidade da ampla mora na linha geral, e apontar a Modalidade faria o
-        # movimento chegar a um recorte que não tem linha.
-        destino_lista_id=None,
         quantidade=quantidade,
-        causa=f"{causa}: {quantidade} de {apuracao.publicadas}.",
-        registrado_por=registrado_por,
-        registrado_em=registrado_em,
-    )
-
-
-def liberar_por_concomitancia(*, apuracao, inscricao, registrado_por, registrado_em):
-    """Devolve ao recorte reservado a vaga de quem ocupou pela ampla concorrência.
-
-    É o item 8.9 do 28/2026: o autodeclarado sorteado dentro das vagas de ampla **não é computado**
-    no preenchimento das reservadas, "abrindo vaga para o próximo suplente autodeclarado".
-
-    **A vaga volta para a lista reservada, e nunca para a linha geral** (`FR-253`). O sentido é o
-    oposto da reversão, e trocá-lo manteria a soma certa com o recorte errado.
-    """
-    if apuracao.lista_id is not None:
-        raise DomainError(
-            "liberacao_de_lista_reservada",
-            "A liberação parte da ocupação pela ampla concorrência: a apuração de origem é a da "
-            "linha geral.",
-            409,
-        )
-    reservada = _lista_reservada_de(inscricao)
-    if reservada is None:
-        raise DomainError(
-            "sem_lista_reservada",
-            "Esta inscrição não concorre em lista reservada alguma: não há vaga a liberar.",
-            409,
-        )
-    return MovimentoDeVaga.objects.create(
-        apuracao=apuracao,
-        especie=nomes.MOVIMENTO_LIBERACAO,
-        origem_lista_id=None,
-        destino_lista_id=reservada,
-        quantidade=1,
-        causa=(
-            "Ocupou pela ampla concorrência e não é computado no preenchimento da lista reservada."
-        ),
-        inscricao=inscricao,
+        origem_lista_id=apuracao.lista_id,
+        publicadas=apuracao.publicadas,
+        especie=especie,
         registrado_por=registrado_por,
         registrado_em=registrado_em,
     )
@@ -123,4 +124,9 @@ def _lista_reservada_de(inscricao):
     return modalidade or None
 
 
-__all__ = ["ha_quem_ocupar", "liberar_por_concomitancia", "reverter_cota"]
+__all__ = [
+    "gravar_reversao",
+    "ha_quem_ocupar",
+    "quantidade_que_a_cota_cede",
+    "reverter_cota",
+]

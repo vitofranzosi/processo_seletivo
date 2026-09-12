@@ -25,7 +25,7 @@ faltam. **Append-only** (`D-008`): correção é sucessão.
 | `apuracao_anterior` | FK `self`, `PROTECT`, anulável | sucessão (`FR-262`); **nula na primeira** |
 | `motivo_da_sucessao` | texto | por que sucedeu |
 | `publicadas` | inteiro ≥ 0 | quantidade da **linha** do quadro (`FR-240`) |
-| `ocupadas` | inteiro ≥ 0 | dentro da faixa **e** `HABILITADA` (`R-001` da pesquisa) |
+| `ocupadas` | inteiro ≥ 0 | dentro da faixa **e** `HABILITADA` (`R-001`), **menos** quem ocupou pela ampla (`FR-252`), **limitado** a `efetivas` (`FR-253a`) |
 | `efetivas` | inteiro ≥ 0 | `publicadas + recebidas − cedidas`, somando **apenas os movimentos que esta apuração leu** |
 | `linha_do_quadro_id` | UUID, anulável | **qual** linha foi lida — a quantidade sozinha não identifica |
 | `universo` | JSON | quadro, declaração de reversão, recusas e **`movimentosLidos`** — os ids dos movimentos que entraram na conta |
@@ -89,12 +89,11 @@ somar duas tabelas.
 |---|---|---|
 | `id` | UUID, pk | |
 | `apuracao` | FK `ApuracaoDeOcupacao`, `PROTECT` | a apuração que o fundamentou |
-| `especie` | texto | `REVERSAO_DE_COTA` \| `LIBERACAO_POR_CONCOMITANCIA` |
+| `especie` | texto | `REVERSAO_DE_COTA` — **uma só**; a concomitância não move quantidade |
 | `origem_lista_id` | UUID, anulável | de qual recorte saiu — `NULL` = ampla |
 | `destino_lista_id` | UUID, anulável | para qual entrou — `NULL` = ampla |
 | `quantidade` | inteiro > 0 | |
 | `causa` | texto | o que autorizou (`FR-248`) |
-| `inscricao` | FK `Inscricao`, `PROTECT`, anulável | preenchida só na liberação, que é de pessoa |
 | `registrado_por` / `registrado_em` | texto / datetime | |
 
 ### Invariantes
@@ -104,9 +103,9 @@ somar duas tabelas.
    movimento (`R-007`).
 2. **Nenhuma vaga atravessa Perfil** (`FR-246`): origem e destino pertencem ao mesmo `perfil_id` da
    apuração. É o que o 57/2026 proíbe por escrito no item 4.5.
-3. **Reversão vai para a linha geral**; **liberação volta para o recorte reservado** (`FR-253`). São
-   sentidos opostos, e trocá-los mantém a soma certa com o recorte errado — o defeito que só o teste
-   de recorte pega.
+3. **A reversão vai sempre da cota para a linha geral** (`FR-246`). Há um sentido só: a
+   concorrência concomitante, que parecia ser o oposto, **não é movimento** — ela não transfere
+   quantidade, apenas deixa de computar o cotista na ocupação da reservada (`FR-252`, `FR-253`).
 4. `origem_lista_id ≠ destino_lista_id`.
 
 ```python

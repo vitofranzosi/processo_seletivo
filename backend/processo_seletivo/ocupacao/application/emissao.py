@@ -9,6 +9,8 @@ tomou, e esta feature a herda.
 que a `013` consolidou, e conta. Quem escolhe é a `014`; quem convoca é a `019`.
 """
 
+from uuid import uuid4
+
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.classificacao.application.corte import linha_do_quadro
 from processo_seletivo.classificacao.application.selectors import ato_vigente
@@ -107,12 +109,43 @@ def emitir_apuracao(
             (m.especie, calculo.mesma_lista(m.destino_lista_id, lista), m.quantidade)
             for m in movimentos
         ]
+        # **A concorrência concomitante é exclusão, e não transferência** (`FR-252`). Num recorte
+        # reservado, quem já ocupou pela ampla não é computado aqui — item 8.9 do 28/2026, que diz
+        # "não constarão na lista de classificados como autodeclarados, abrindo vaga para o próximo
+        # suplente autodeclarado". A vaga reservada **continua sendo da reserva**, e o que muda é
+        # que ele não a ocupou.
+        ocupantes_da_ampla = (
+            _ocupantes_da_ampla(edital=edital, perfil=perfil, marco=marco)
+            if lista is not None
+            else set()
+        )
         publicadas, efetivas, ocupadas = calculo.apurar(
             publicadas=_quantidade(linha),
             dentro_da_faixa=progrediram,
             habilitadas=habilitadas,
             movimentos_lidos=lidos,
+            ocupantes_da_ampla=ocupantes_da_ampla,
         )
+
+        # **A cessão é calculada antes de a apuração existir, e o id do movimento nasce aqui.**
+        # É o que permite a apuração citar o próprio movimento em `movimentosLidos` e nascer com a
+        # `efetivas` líquida — sem isso ela nascia obsoleta pelo movimento que ela mesma causou.
+        especie_da_reversao = _declaracao(versao.content, perfil_id=perfil)
+        cede = (
+            movimento_de_vaga.quantidade_que_a_cota_cede(
+                especie=especie_da_reversao,
+                efetivas=efetivas,
+                ocupadas=ocupadas,
+                ha_quem_ocupar=movimento_de_vaga.ha_quem_ocupar(
+                    edital=edital, marco_id=marco, lista_id=lista, ja_ocupadas=ocupadas
+                ),
+            )
+            if lista is not None
+            else 0
+        )
+        identidade_do_movimento = uuid4() if cede else None
+        if cede:
+            efetivas -= cede
 
         apuracao = ApuracaoDeOcupacao(
             edital=edital,
@@ -138,88 +171,40 @@ def emitir_apuracao(
                 # **Os ids, e não "os movimentos de hoje"**: reproduzir é reler estes
                 # (`FR-244`). Sem o congelamento, uma apuração antiga relida devolveria o número
                 # que o mundo virou depois, e não o que ela apurou.
-                "movimentosLidos": [str(m.id) for m in movimentos],
+                "movimentosLidos": [str(m.id) for m in movimentos]
+                + ([str(identidade_do_movimento)] if identidade_do_movimento else []),
             },
             emitida_por=str(getattr(actor, "subject", actor)),
             emitida_em=ctx.now,
         )
         apuracao.save()
-        movimento = _reverter_se_declarado(
-            apuracao,
-            versao=versao,
-            perfil=perfil,
-            marco=marco,
-            lista=lista,
-            actor=actor,
-            now=ctx.now,
+        movimento = (
+            movimento_de_vaga.gravar_reversao(
+                identidade=identidade_do_movimento,
+                apuracao=apuracao,
+                quantidade=cede,
+                origem_lista_id=lista,
+                publicadas=publicadas,
+                especie=especie_da_reversao,
+                registrado_por=str(getattr(actor, "subject", actor)),
+                registrado_em=ctx.now,
+            )
+            if cede
+            else None
         )
-        liberados = _liberar_concomitantes(
-            apuracao, ocupantes=progrediram & habilitadas, actor=actor, now=ctx.now
-        )
-        return _concluir(
-            ctx,
-            apuracao,
-            actor,
-            correlation_id,
-            idempotency_key,
-            movimento=movimento,
-            liberados=liberados,
-        )
+        return _concluir(ctx, apuracao, actor, correlation_id, idempotency_key, movimento=movimento)
 
 
-def _liberar_concomitantes(apuracao, *, ocupantes, actor, now):
-    """Quem ocupou pela ampla e declarou cota libera a vaga reservada dele (016, `FR-252`).
+def _ocupantes_da_ampla(*, edital, perfil, marco):
+    """Quem ocupa vaga pela ampla concorrência: dentro da faixa dela **e** habilitado.
 
-    É o item 8.9 do 28/2026, literal: o autodeclarado sorteado dentro das vagas de ampla **não é
-    computado** no preenchimento das reservadas, *"abrindo vaga para o próximo suplente
-    autodeclarado"*.
-
-    **Só a apuração da ampla libera**, porque só ela sabe quem ocupou por ela. E o movimento é de
-    **pessoa**: a vaga que volta é a daquela inscrição, e não uma quantidade qualquer.
+    É a mesma conta que a apuração da ampla faz, lida de fora — e é ela que a reservada subtrai.
     """
-    if apuracao.lista_id is not None:
-        return []
-    from processo_seletivo.inscricoes.models import Inscricao
-
-    concomitantes = Inscricao.objects.filter(id__in=ocupantes).exclude(modality_id=None)
-    return [
-        movimento_de_vaga.liberar_por_concomitancia(
-            apuracao=apuracao,
-            inscricao=inscricao,
-            registrado_por=str(getattr(actor, "subject", actor)),
-            registrado_em=now,
-        )
-        for inscricao in concomitantes
-    ]
-
-
-def _reverter_se_declarado(apuracao, *, versao, perfil, marco, lista, actor, now):
-    """Cria o movimento de reversão **na mesma transação** da apuração que o determinou.
-
-    **Só a cota reverte, e só se o Edital declarar.** A linha geral é o destino, nunca a origem; e
-    Edital que não declara não move nada — que é o que o item 4.5 do 57/2026 exige.
-
-    O destino **não** é apurado em cascata: o movimento torna a apuração vigente dele obsoleta, com
-    a causa nomeada, e quem quiser o número novo emite. Reusar a obsolescência custa uma causa;
-    orquestrar a emissão do destino custaria uma coreografia entre dois recortes.
-    """
-    if lista is None:
-        return None
-    especie = _declaracao(versao.content, perfil_id=perfil)
-    if not especie:
-        return None
-    return movimento_de_vaga.reverter_cota(
-        apuracao=apuracao,
-        especie=especie,
-        ha_quem_ocupar=movimento_de_vaga.ha_quem_ocupar(
-            edital=apuracao.edital,
-            marco_id=marco,
-            lista_id=lista,
-            ja_ocupadas=apuracao.ocupadas,
-        ),
-        registrado_por=str(getattr(actor, "subject", actor)),
-        registrado_em=now,
+    progrediram, corte = selectors.dentro_da_faixa(
+        edital=edital, perfil_id=perfil, marco_id=marco, lista_id=None
     )
+    etapa = corte.etapa_governada_id if corte is not None else None
+    return progrediram & selectors.habilitadas_na_etapa(edital=edital, etapa_id=etapa)
 
 
 def _movimentos_a_ler(*, edital, perfil, marco, lista):
@@ -267,9 +252,7 @@ def _quantidade(linha):
     )
 
 
-def _concluir(
-    ctx, apuracao, actor, correlation_id, idempotency_key, *, movimento=None, liberados=()
-):
+def _concluir(ctx, apuracao, actor, correlation_id, idempotency_key, *, movimento=None):
     auditar(
         actor=actor,
         permissao=ctx.base.permissao,
@@ -295,11 +278,6 @@ def _concluir(
                 if movimento is not None
                 else ""
             )
-            + (
-                f" Liberou {len(liberados)} vaga(s) reservada(s) de quem ocupou pela ampla."
-                if liberados
-                else ""
-            )
         ),
         idempotency_key=idempotency_key,
     )
@@ -311,7 +289,6 @@ def _concluir(
         "faltando": apuracao.faltando,
         "universo": apuracao.universo,
         "reverteu": movimento.quantidade if movimento is not None else 0,
-        "liberou": len(liberados),
     }
     ctx.concluir_sem_resultado(201, declarado)
     return declarado

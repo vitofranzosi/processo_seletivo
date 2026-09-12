@@ -15,17 +15,22 @@ sistema que revertesse por conta própria produziria ali exatamente o que o Edit
 from processo_seletivo.ocupacao.domain import nomes
 
 
-def quantidade_a_reverter(*, especie, publicadas, ocupadas, ha_quem_ocupar):
+def quantidade_a_reverter(*, especie, efetivas, ocupadas, ha_quem_ocupar):
     """Quantas vagas a cota cede à ampla concorrência. Zero quando não cede.
 
     `ha_quem_ocupar` é o que separa as duas espécies, e **não** é a contagem de ocupadas: é se a
     ordem daquela lista ainda tem alguém por analisar. Sob esgotamento, havendo quem ocupar não se
     reverte nada — a vaga continua sendo da cota, esperando análise.
+
+    **O saldo sai das efetivas, e não das publicadas — e é isso que impede a reversão de duplicar.**
+    Cedidas todas, a apuração seguinte lê o movimento, chega com `efetivas` já reduzida, e o saldo
+    dá zero. Partir de `publicadas` faria cada nova apuração da cota ceder a mesma quantidade outra
+    vez, e a aritmética é uma guarda mais barata que uma constraint.
     """
     if especie not in nomes.ESPECIES_DE_REVERSAO:
         # Inclui `None`: Edital que não declara reversão não reverte.
         return 0
-    saldo = max(int(publicadas) - int(ocupadas), 0)
+    saldo = max(int(efetivas) - int(ocupadas), 0)
     if not saldo:
         return 0
     if especie == nomes.REVERSAO_POR_ESGOTAMENTO and ha_quem_ocupar:

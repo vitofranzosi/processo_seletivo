@@ -311,9 +311,11 @@ reservada alcança o próximo da **lista reservada**.
 - [X] T054 [US4] Implementar a liberação em
       `backend/processo_seletivo/ocupacao/application/movimento.py`, com `inscricao` preenchida —
       é movimento de pessoa, e a constraint `ck_movimento_inscricao_conforme_especie` o exige
-- [X] T055 [US4] Exibir a liberação nomeada em
-      `backend/processo_seletivo/interface/templates/interface/ocupacao.html`, distinta da
-      reversão
+- [X] T055 [US4] Exibir na tela, em
+      `backend/processo_seletivo/interface/templates/interface/ocupacao.html`, que a reservada
+      mantém a vaga de quem ocupou pela ampla — **sem** desenhar movimento, porque a concomitância
+      não move quantidade nenhuma. *A redação anterior pedia "a liberação nomeada, distinta da
+      reversão", e partia da modelagem que a revisão da US4 derrubou.*
 
 **Checkpoint**: o item 8.9 do 28/2026 está alcançado. A outra metade do 8.8 continua fora, por
 depender de desistência, que é fato da `019` (`R-001`).

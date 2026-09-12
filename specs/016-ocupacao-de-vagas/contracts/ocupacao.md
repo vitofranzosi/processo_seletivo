@@ -144,7 +144,12 @@ MovimentoDeVaga:
   type: object
   required: [kind, quantity, cause]
   properties:
-    kind:            { type: string, enum: [QUOTA_REVERSION, CONCURRENT_RELEASE] }
+    kind:
+      type: string
+      enum: [QUOTA_REVERSION]
+      description: >
+        Uma espécie só. A concorrência concomitante do item 8.9 do 28/2026 não move quantidade
+        nenhuma — ela aparece como ocupação menor na lista reservada, e não como movimento.
     fromListId:      { type: string, format: uuid, nullable: true }
     toListId:        { type: string, format: uuid, nullable: true }
     quantity:        { type: integer, minimum: 1 }

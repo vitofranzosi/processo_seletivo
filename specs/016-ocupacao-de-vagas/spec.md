@@ -279,17 +279,18 @@ como a travessia da fronteira nos dois sentidos.
 
 ### User Story 4 — Tratar quem ocupa por duas listas ao mesmo tempo (Priority: P2)
 
-Quem concorre concomitantemente e ocupa pela ampla concorrência libera a vaga reservada, que volta
-ao recorte reservado e alcança o próximo daquela lista.
+Quem concorre concomitantemente e ocupa pela ampla concorrência **não é computado** no preenchimento
+da lista reservada, cuja vaga permanece dela e alcança o próximo daquela lista.
 
 **Por que P2.** É a regra do 28/2026 (8.8 e 8.9), e depende das três primeiras histórias existirem.
 
 **Aceitação**
 
 1. **Dado** alguém dentro do número de vagas nas duas listas, **quando** a ocupação é apurada,
-   **então** ele ocupa pela ampla e a vaga reservada dele fica disponível.
-2. **Dado** esse caso, **quando** a vaga reservada é liberada, **então** ela alcança o próximo da
-   **lista reservada**, e nunca a linha geral.
+   **então** ele consta ocupando na ampla e **não** consta ocupando na reservada.
+2. **Dado** esse caso, **quando** os dois recortes são lidos, **então** a reservada mantém as vagas
+   que publicou, com uma a ocupar — e **nenhum movimento de vaga** foi criado, porque nada se
+   moveu.
 3. **Dado** que ninguém mais existe na lista reservada, **então** o que sobra é déficit reservado —
    e a reversão da História 2 decide o que acontece com ele.
 
@@ -372,8 +373,17 @@ Cada número exibido tem trilha: qual ato o produziu, sobre qual ordem, com qual
 
 - **FR-252**: Quem ocupa vaga pela ampla concorrência MUST NOT ser computado no preenchimento da
   lista reservada em que também concorre.
-- **FR-253**: A vaga reservada liberada por `FR-252` MUST voltar ao recorte **reservado**, e
-  MUST NOT ir para a linha geral.
+- **FR-253**: A vaga reservada de quem ocupou pela ampla MUST permanecer no recorte reservado,
+  disponível ao próximo da lista daquele recorte — e a exclusão da `FR-252` MUST NOT transferir
+  quantidade para a linha geral nem para lugar algum. *A redação anterior dizia que a vaga
+  "liberada" MUST voltar ao recorte reservado, e estava errada: sob o item 8.9 do 28/2026 ela nunca
+  saiu. Modelar a concomitância como transferência produzia, num Perfil de 2 amplas e 1 reservada,
+  efetivas de 1 e 2 — onde o Edital manda 2 e 1.*
+- **FR-253a**: A quantidade ocupada de um recorte MUST NOT exceder a quantidade efetiva dele.
+  *A faixa pode ser maior que o quadro: no 77/2026 são 40 vagas com 30 suplentes alcançados na
+  mesma faixa. Sem o teto, todos habilitando, a apuração afirmaria 70 vagas ocupadas de 40 — e a
+  constraint recusaria o ato, de modo que o Edital não seria apurável. O excedente **é** o
+  suplente: está na faixa, habilitou, e não ocupa vaga até que uma vagueie.*
 - **FR-254**: Estando alguém dentro do número de vagas nas duas listas, o sistema MUST registrar a
   ocupação pela **ampla concorrência**.
 

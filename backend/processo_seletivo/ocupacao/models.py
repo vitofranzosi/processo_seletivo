@@ -17,7 +17,6 @@ import uuid
 from django.db import models
 from django.db.models import F, Q
 
-from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.ocupacao.domain import nomes
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models import VersaoConsolidada
@@ -139,17 +138,18 @@ class ApuracaoDeOcupacao(models.Model):
 
 
 class MovimentoDeVaga(models.Model):
-    """A vaga que muda de recorte — nos **dois** sentidos, na mesma entidade.
+    """A quantidade que sai de um recorte e entra em outro: a reversão de cota (016, `FR-246`).
 
-    Reversão move quantidade da cota para a linha geral; liberação devolve ao recorte reservado a
-    vaga de quem ocupou pela ampla. São o mesmo fato — uma quantidade que sai de um recorte e entra
-    em outro — e separá-los faria o invariante da soma ter de somar duas tabelas.
+    **Uma espécie só, e a ausência da segunda é o achado da US4.** A concorrência concomitante do
+    item 8.9 do 28/2026 parecia ser o sentido oposto deste movimento, e não é: ela não transfere
+    quantidade nenhuma. O autodeclarado que ocupa pela ampla apenas **não é computado** no
+    preenchimento da reservada, que continua com as vagas que publicou. Aquilo é exclusão no
+    cálculo de `ocupadas`, e mora em `apuracao.apurar`.
 
-    **Trocar os sentidos mantém a soma certa com o recorte errado**, e é o defeito mais provável
-    desta feature: só asserção de recorte o pega (`FR-253`).
-
-    **O movimento nasce com a apuração da origem**, na mesma transação que o determina; a apuração
-    do destino o **lê** por `destino_lista_id` e nunca cria um segundo registro.
+    **O movimento nasce com a apuração da origem**, na mesma transação que o determina, e com o id
+    gerado **antes** dela — para que ela o inclua nos próprios `movimentosLidos` e já nasça com a
+    `efetivas` líquida da cessão. Sem isso a apuração de origem nascia obsoleta, porque o
+    movimento que ela mesma causou não constava da lista que ela leu.
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -158,24 +158,12 @@ class MovimentoDeVaga(models.Model):
     )
     especie = models.CharField(
         max_length=32,
-        choices=[
-            (nomes.MOVIMENTO_REVERSAO, "Reversão de cota"),
-            (nomes.MOVIMENTO_LIBERACAO, "Liberação por concorrência concomitante"),
-        ],
+        choices=[(nomes.MOVIMENTO_REVERSAO, "Reversão de cota")],
     )
     origem_lista_id = models.UUIDField(null=True, blank=True)
     destino_lista_id = models.UUIDField(null=True, blank=True)
     quantidade = models.PositiveIntegerField()
     causa = models.TextField()
-    # Preenchida só na liberação, que é movimento **de pessoa**: é a vaga reservada de quem ocupou
-    # pela ampla. A reversão é de quantidade, e não tem inscrição a nomear.
-    inscricao = models.ForeignKey(
-        Inscricao,
-        null=True,
-        blank=True,
-        on_delete=models.PROTECT,
-        related_name="movimentos_de_vaga",
-    )
     registrado_por = models.CharField(max_length=255)
     registrado_em = models.DateTimeField()
 
@@ -197,14 +185,6 @@ class MovimentoDeVaga(models.Model):
                     )
                 ),
                 name="ck_movimento_recortes_distintos",
-            ),
-            # A liberação é de pessoa; a reversão é de quantidade.
-            models.CheckConstraint(
-                condition=(
-                    Q(especie=nomes.MOVIMENTO_REVERSAO, inscricao__isnull=True)
-                    | Q(especie=nomes.MOVIMENTO_LIBERACAO, inscricao__isnull=False)
-                ),
-                name="ck_movimento_inscricao_conforme_especie",
             ),
         ]
         indexes = [
