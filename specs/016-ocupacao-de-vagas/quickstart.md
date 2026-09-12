@@ -34,8 +34,11 @@ os candidatos, e o quadro por modalidade com polos não está lá. Monte pela te
 
 ## Cenário 1 — Ler os quatro números (História 1, `UX-031`, `UX-032`)
 
-1. Como **elaborador**, componha um Edital com um Perfil de **80 vagas imediatas**, três
-   Modalidades (`AC`, `PPI`, `PCD`) e quadro `55 / 20 / 4` na linha geral e nas duas cotas.
+1. Como **elaborador**, componha um Edital com um Perfil de **40 vagas imediatas**, três
+   Modalidades (`AC`, `PPI`, `PCD`) e quadro `28 / 10 / 2` na linha geral e nas duas cotas.
+   *São os números do 28/2026 por polo, e a soma fecha com o total de propósito: `80` com quadro
+   `55/20/4` somaria 79, que é a divergência silenciosa da `R-006` — caso legítimo de teste, e
+   péssimo caminho felizardo para um guia.*
 2. Declare **qual Modalidade é a ampla concorrência** (`AC`) — sem isso a conferência do alvo
    derivado recusa a publicação nomeando "Ampla concorrência".
 3. Publique. Emita a ordem do marco classificatório e o corte.
@@ -66,13 +69,20 @@ privilégio. As duas camadas, e nenhuma contornável em desenvolvimento.
 
 1. Retifique o Perfil declarando reversão com espécie **"A quantidade que ficou sem preencher"**
    (`ON_BALANCE`).
-2. Faça a lista de `PPI` esgotar com saldo — conduza a Etapa governada de modo que apenas 13 dos 20
-   fiquem `HABILITADA`.
+2. Faça a lista de `PPI` **esgotar** com saldo: a ordem de PPI tem 3 pessoas, as 3 ficam
+   `HABILITADA`, e não há mais ninguém a analisar. Sobram 7 das 10 vagas reservadas.
 3. Emita a apuração de `PPI` e da ampla.
 
-**Esperado:** a linha geral passa a **62** (55 + 7) e existe um movimento nomeado, com origem
-(`PPI`), destino (ampla) e quantidade (`7`). A soma por recorte **não muda**: 62 + 13 + 4 = 79, como
-antes.
+**Esperado:** a quantidade **efetiva** da linha geral passa a **35** (28 + 7), enquanto a
+**publicada** permanece **28** — e existe um movimento nomeado, com origem (`PPI`), destino (ampla)
+e quantidade (`7`). A soma das efetivas por recorte **não muda**: `35 + 3 + 2 = 40`, como antes.
+
+*O `3` aparece duas vezes e não é coincidência: cedido todo o saldo, a efetiva da linha que cede
+passa a ser igual ao que ela ocupou. É a mesma conta vista dos dois lados, e é o que a
+`FR-247` afirma.*
+
+São exatamente os números da `SC-079`, e é deliberado: critério de sucesso e guia de validação
+descrevem o mesmo cenário, para que percorrer o guia **seja** verificar o critério.
 
 **Contraprova 1:** repita num Perfil cujo Edital **não** declara reversão. Nada reverte, e a
 tela diz que aquele Edital não prevê reversão.
@@ -81,9 +91,15 @@ tela diz que aquele Edital não prevê reversão.
 **Nenhuma vaga alcança o outro Perfil, por nenhum caminho da interface.** É o item 4.5 daquele
 Edital, que proíbe remanejamento entre cursos.
 
-**Contraprova 3 — a espécie importa:** declare `ON_EXHAUSTION` no mesmo cenário. Com 13 de 20
-habilitados e a lista **ainda tendo gente**, nada reverte — que é a diferença entre as duas espécies
-da `D-007`.
+**Contraprova 3 — a espécie importa, e a condição que as separa é a lista ter gente:** monte a
+ordem de PPI com **12** pessoas, das quais 8 já estão `HABILITADA` e **4 seguem por analisar**.
+Sobram 2 vagas reservadas e a lista **não** esgotou.
+
+- sob `ON_EXHAUSTION`, **nada reverte** — ainda há quem possa ocupar;
+- sob `ON_BALANCE`, reverteriam **2**.
+
+É a `D-007` inteira em um par de execuções, e é por isso que o gatilho é declarado e não inferido:
+o mesmo estado do mundo produz dois resultados legítimos, e quem decide é o Edital.
 
 ## Cenário 4 — A faixa seguinte causada por déficit (História 3, `FR-255`, `FR-256`)
 
