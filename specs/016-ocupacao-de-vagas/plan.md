@@ -161,12 +161,12 @@ Os passos 1 a 3 e 6 fecham o 77/2026. Os 4, 5 e 7 alcançam o 57 e o 28.
 
 ### As três armadilhas que matam em silêncio
 
-**1. Vigência não pode ser coluna, e obsolescência não pode ser flag.** A tabela é append-only: o
-papel de runtime **não tem `UPDATE`**, e uma coluna `vigente` exigiria exatamente o que ele não
-pode. O `Corte` resolve por derivação — vigente é a geração cuja raiz ninguém sucedeu — e a
-obsolescência é **calculada** com as causas nomeadas (`corte.py:292` devolve
-`{"obsoleto": ..., "causas": [...]}`). Esta feature faz igual. Quem acrescentar a coluna descobre no
-provisionamento, e não no teste.
+**1. Vigência e obsolescência não são flags materializadas.** Mantê-las exigiria `UPDATE`, operação
+proibida nas tabelas append-only — o provisionamento instala e verifica essa proibição. O `Corte`
+resolve por derivação: vigente é a geração cuja raiz ninguém sucedeu, e a obsolescência é
+**calculada** com as causas nomeadas (`corte.py:292` devolve `{"obsoleto": ..., "causas": [...]}`).
+Esta feature faz igual. Quem acrescentar a coluna não é barrado ao criá-la — é barrado quando tentar
+atualizá-la, que é o modo de falha mais tardio possível.
 
 **2. A constraint parcial precisa vir em par, por causa do `NULL`.** `lista_id` nulo é a ampla
 concorrência, e **no PostgreSQL dois `NULL` não colidem**: uma `UniqueConstraint` sobre

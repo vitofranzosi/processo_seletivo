@@ -79,8 +79,10 @@ tem"* (`classificacao/models.py:221`). E a obsolescência da `014` já devolve
 `{"obsoleto": bool(causas), "causas": causas}` (`classificacao/application/corte.py:292`), com a
 razão registrada: *"nunca 'divergências' — a `018` já pagou esse preço"*.
 
-Uma coluna `vigente` ou `obsoleto` aqui falharia **no provisionamento**, e não no teste: a segunda
-passada retira `UPDATE` do papel de runtime sobre toda tabela append-only.
+**Não é o provisionamento que recusaria a coluna** — ele apenas revoga `UPDATE` e `DELETE`, e
+verifica a revogação. O que falharia é a tentativa posterior de atualizar a flag, barrada pelo
+privilégio ausente e pelo gatilho. Ou seja: a coluna seria aceita e **nunca poderia ser mantida**,
+que é o pior dos dois mundos.
 
 ## R-004 · A constraint parcial vem em par, e o `NULL` é a razão
 
@@ -139,8 +141,11 @@ leu, ao custo de catálogo de Retificação e tela por linha.
 **Problema.** A tela lista recortes, e cada linha precisa de três números. Calcular cada um
 abrindo o conteúdo publicado seria uma consulta por linha.
 
-**Decisão.** As quantidades apuradas são **colunas do ato**, gravadas na emissão; a tela lê
-colunas e SQL, nunca o snapshot por linha.
+**Decisão.** `publicadas`, `ocupadas` e `efetivas` são **colunas do ato**, gravadas na emissão; a
+tela lê colunas e SQL, nunca o snapshot por linha. `faltando` **não** é coluna: é
+`efetivas − ocupadas`, aritmética da mesma linha. A distinção não é estética — `efetivas` depende de
+**somar movimentos**, e `CHECK` não agrega, de modo que sem ela o limite `ocupadas ≤ efetivas` não
+seria expressável no banco.
 
 **Rationale.** É a lição que o `Corte` já registra no próprio modelo, com a medição escrita:
 `etapa_governada_id` existe como coluna porque *"sem ela, a prontidão teria de abrir o conteúdo

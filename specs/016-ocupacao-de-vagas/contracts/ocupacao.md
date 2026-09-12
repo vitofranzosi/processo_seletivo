@@ -81,7 +81,7 @@ Devolve, por recorte, os três números e o estado da apuração vigente.
 ```yaml
 OcupacaoPorRecorte:
   type: object
-  required: [profileId, milestoneId, listId, published, occupied, remaining, state]
+  required: [profileId, milestoneId, listId, published, effective, occupied, remaining, state]
   properties:
     profileId:   { type: string, format: uuid }
     milestoneId: { type: string, format: uuid }
@@ -91,8 +91,9 @@ OcupacaoPorRecorte:
       nullable: true
       description: "null = ampla concorrência, a mesma grafia da ordem e do corte"
     published:   { type: integer, minimum: 0, description: "da linha do quadro, nunca do total do Perfil" }
+    effective:   { type: integer, minimum: 0, description: "published mais o recebido, menos o cedido" }
     occupied:    { type: integer, minimum: 0 }
-    remaining:   { type: integer, minimum: 0 }
+    remaining:   { type: integer, minimum: 0, description: "effective menos occupied" }
     movements:
       type: array
       items: { $ref: "#/components/schemas/MovimentoDeVaga" }

@@ -26,25 +26,27 @@ faltam. **Append-only** (`D-008`): correção é sucessão.
 | `motivo_da_sucessao` | texto | por que sucedeu |
 | `publicadas` | inteiro ≥ 0 | quantidade da **linha** do quadro (`FR-240`) |
 | `ocupadas` | inteiro ≥ 0 | dentro da faixa **e** `HABILITADA` (`R-001` da pesquisa) |
-| `faltando` | inteiro ≥ 0 | `publicadas + recebidas − cedidas − ocupadas`, onde recebidas e cedidas são as somas dos `MovimentoDeVaga` deste recorte |
+| `efetivas` | inteiro ≥ 0 | `publicadas + recebidas − cedidas`, somando **apenas os movimentos que esta apuração leu** |
 | `linha_do_quadro_id` | UUID, anulável | **qual** linha foi lida — a quantidade sozinha não identifica |
-| `universo` | JSON | quadro, declaração de reversão e recusas congelados no instante |
+| `universo` | JSON | quadro, declaração de reversão, recusas e **`movimentosLidos`** — os ids dos movimentos que entraram na conta |
 | `emitida_por` | texto | |
 | `emitida_em` | datetime | |
 
-**Por que `publicadas`, `ocupadas` e `faltando` são colunas.** `R-006` da pesquisa: a tela lista
-recortes, e recalcular abrindo o snapshot por linha é a consulta por listagem que o orçamento já
-reprovou. É o mesmo motivo — e medido — pelo qual `Corte.etapa_governada_id` existe.
+**Por que `publicadas`, `ocupadas` e `efetivas` são colunas, e `faltando` não é.** `R-006` da
+pesquisa: a tela lista recortes, e recalcular abrindo o snapshot por linha é a consulta por listagem
+que o orçamento já reprovou. Mas `faltando` é `efetivas − ocupadas` — aritmética **da mesma linha**,
+sem junção e sem agregado. Guardá-la seria armazenar o derivável e convidar divergência; `efetivas`,
+ao contrário, **precisa** ser coluna, porque depende de somar movimentos, e `CHECK` não agrega.
 
 **Por que `linha_do_quadro_id` existe.** É a lição literal do `Corte`, que guarda o `rowId` quando o
 alvo é derivado: *"sem ele, retificado o quadro, não há como dizer se aquele corte ficou para trás —
 a quantidade sozinha não identifica a linha"* (`classificacao/models.py:277`). Sem esta coluna, a
 causa de obsolescência por retificação do quadro (`FR-263`) não é determinável.
 
-**O que NÃO é coluna, e a razão é dura:** `vigente` e `obsoleto`. A tabela é append-only e o
-papel de runtime **não tem `UPDATE`** — uma coluna dessas falha no provisionamento, não no
-teste. Vigente é a apuração que ninguém sucedeu no recorte; obsolescência é calculada com as
-causas nomeadas, como `corte.py:292` já faz (`R-003`).
+**O que NÃO é coluna:** `vigente` e `obsoleto`. Não são flags materializadas porque mantê-las
+exigiria `UPDATE`, operação proibida nas tabelas append-only — o provisionamento instala e
+verifica essa proibição. Vigente é a apuração que ninguém sucedeu no recorte; obsolescência é
+calculada com as causas nomeadas, como `corte.py:292` já faz (`R-003`).
 
 ### Constraints
 
@@ -61,15 +63,21 @@ UniqueConstraint(
     condition=Q(apuracao_anterior__isnull=True),
     name="uq_apuracao_primeira_por_marco_e_lista",
 )
-CheckConstraint(check=Q(publicadas__gte=0) & Q(ocupadas__gte=0) & Q(faltando__gte=0),
+# **Uma sucessora por apuração.** Sem esta, duas apurações sucedem a mesma anterior e o recorte
+# fica com duas vigentes — e vigência é derivada justamente de "ninguém me sucedeu". É a cópia de
+# `uq_geracao_sucessora_unica` (`classificacao/models.py:308`), que existe pela mesma razão.
+UniqueConstraint(
+    fields=["apuracao_anterior"],
+    condition=Q(apuracao_anterior__isnull=False),
+    name="uq_apuracao_sucessora_unica",
+)
+CheckConstraint(check=Q(publicadas__gte=0) & Q(ocupadas__gte=0) & Q(efetivas__gte=0),
                 name="ck_apuracao_nao_negativa")
-# Ocupar mais do que se publicou é defeito, nunca arredondamento.
-CheckConstraint(check=Q(ocupadas__lte=F("publicadas")), name="ck_apuracao_ocupadas_no_limite")
+# O limite é contra **efetivas**, e não contra publicadas: recebida a reversão, a linha geral passa
+# de 28 para 35, e as 35 são ocupáveis. Comparar com `publicadas` recusaria o ato justamente no
+# cenário de sucesso da feature.
+CheckConstraint(check=Q(ocupadas__lte=F("efetivas")), name="ck_apuracao_ocupadas_no_limite")
 ```
-
-*A última tem uma ressalva que o teste precisa cobrir: com reversão, o limite efetivo da linha geral
-sobe. A checagem é contra `publicadas` **da própria linha**, e o excedente recebido viaja em
-`MovimentoDeVaga` — é o que mantém a constraint verdadeira sem ela precisar conhecer reversão.*
 
 ## 2. `MovimentoDeVaga`
 

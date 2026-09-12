@@ -389,8 +389,9 @@ Cada número exibido tem trilha: qual ato o produziu, sobre qual ordem, com qual
 - **FR-262**: Emitida apuração nova para o mesmo recorte, a anterior MUST ficar **sucedida**, e a
   sucessão MUST nomear a causa.
 - **FR-263**: A apuração MUST ficar **obsoleta** quando a ordem do recorte é sucedida, quando o
-  corte que a alimentou fica obsoleto, ou quando o quadro publicado é retificado — e apuração
-  obsoleta MUST NOT causar faixa seguinte.
+  corte que a alimentou fica obsoleto, quando o quadro publicado é retificado, ou quando um
+  movimento de vaga alcança o recorte depois dela — e apuração obsoleta MUST NOT causar faixa
+  seguinte.
 
 ### Requisitos de apresentação
 
