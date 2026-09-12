@@ -3,8 +3,8 @@
 **Número:** `019` · **Diretório:** `specs/019-convocacao-chamada-suplencia`
 **Feature Branch:** `claude/avaliar-implementacoes-recentes-9c284e`
 **Criada:** 2026-09-12
-**Estado:** decisões fechadas em 12/09/2026 (§3.0, `D-006` a `D-010`) — pronta para
-`$speckit-plan`.
+**Estado:** decisões fechadas em 12/09/2026 — `D-006` a `D-010` pelo `$speckit-clarify`, e a
+`D-011` depois de o `$speckit-plan` achar a contradição da §1.0. Pronta para replanejamento.
 
 **Faixa de identificadores desta feature:** `FR-264`+, `SC-085`+, `UX-035`+. A faixa é global desde
 a `024`: o teto foi medido em `c746adf` (`FR-263`, `SC-084`, `UX-034`) e não reinicia.
@@ -42,6 +42,32 @@ desistência não existe, a contagem da `016` é verdadeira; no instante em que 
 dentro da faixa que desistiu continuaria sendo contado como ocupante de vaga. **A `Q-1` fechou isso
 em 12/09/2026** (`D-006`): a contagem continua sendo uma só, a da `016`, e o desfecho entra nela
 como exclusão — na emissão seguinte, nunca retroativamente.
+
+### 1.0 E a exclusão sozinha não move o número — medido
+
+**O `$speckit-plan` achou uma contradição funcional nesta spec, e ela se mede.** A apuração da `016`
+calcula `ocupadas = min(|faixa ∩ habilitadas|, efetivas)`, e o `min` **satura**: num recorte de 40
+vagas com faixa de 70 e 67 habilitadas, excluir o desistente do conjunto não muda nada, porque
+sobram 66 para saturar o mesmo 40. Chamando a função real:
+
+```
+40 vagas, faixa de 70, 67 habilitadas        ocupadas=40  faltando=0
+uma titular desiste (excluída do conjunto)   ocupadas=40  faltando=0
+cinco titulares desistem                     ocupadas=40  faltando=0
+vinte e sete desistem                        ocupadas=40  faltando=0
+vinte e oito desistem                        ocupadas=39  faltando=1
+```
+
+**São necessárias 28 desistências para o número se mover**, e cada uma das 27 primeiras é uma
+suplente promovida em silêncio — contada como ocupante de vaga sem ter sido convocada. Isso tornava
+inertes a `FR-275`, a `FR-279` e a `SC-085`: a vaga nunca se liberava, ninguém era chamado, e o
+ciclo que a `SC-085` promete não fechava.
+
+**A causa não é o `min`; é a definição.** `|faixa ∩ habilitadas|` conta *capacidade* — quantos
+habilitados existem para preencher —, e o que a feature precisa contar é *ocupação por pessoa
+identificada*. O comentário do próprio `apuracao.py` já dizia a intenção certa — *"o excedente **é**
+o suplente: ele está na faixa, habilitou, e não ocupa vaga nenhuma até que uma vagueie"* — e a
+cardinalidade saturada a contradizia. A `D-011` corrige isso.
 
 ### 1.1 As cláusulas reais, nas palavras dos Editais
 
@@ -92,7 +118,7 @@ Acesso a AVA, presença na primeira semana e entrega presencial acontecem fora, 
 |---|---|---|
 | a ordem de cada lista | ato de ordenação da `015`, recorte Perfil + marco + `lista_id` | **lê**; não reordena nem desempata |
 | quem progride, a faixa e o teto de suplentes | corte da `014` | **lê**; não seleciona e não emite faixa |
-| quantas vagas faltam no recorte | apuração da `016`, quatro números | **lê**; não recalcula |
+| quantas vagas faltam no recorte | apuração da `016`, quatro números | **lê**; não recalcula — e a definição de *ocupada* passa a ser a da `D-011` |
 | a causa da faixa seguinte | `causar_faixa_seguinte` da `016` | **não usa** — pedir faixa continua sendo ato de quem conduz |
 | quantas vagas cada lista tem | `vacancyTable`, degrau 12 (`025`) | **não lê direto** — chega pela apuração |
 | o resultado da Etapa e sua vigência | `013` e `017` | **lê** o deferimento que fundamenta a convocação |
@@ -129,7 +155,11 @@ Acesso a AVA, presença na primeira semana e entrega presencial acontecem fora, 
   convocação, reclassificação, desistência e cancelamento por inércia **não** são objetos de
   recurso; permanece recorrível o Resultado que fundamenta a posição ou o indeferimento. A hipótese
   futura fica registrada no *Out of Scope*.
-
+- Q: a exclusão da `D-006` basta para liberar a vaga? → A: **não** (achado do `$speckit-plan`,
+  §1.0). A `016` passa a contar **titulares iniciais habilitados**; o desfecho exclui uma ocupação
+  e o aceite ou a regularização **inclui** a suplente convocada, pela mesma porta append-only. Vaga
+  individual não é modelada, o vencimento em dias úteis é informado por quem convoca, e não
+  atendimento à convocação e cancelamento por inércia são desfechos distintos (`D-011`).
 ---
 
 ## 3. Decisões
@@ -140,6 +170,9 @@ Nenhuma era detalhe de implementação: as cinco mudavam requisito, fronteira ou
 alcançavam feature já entregue. As cinco foram apresentadas ao usuário com opções e custo, e as
 cinco foram respondidas por ele — ficam registradas como `D-006` a `D-010`.
 
+**E uma sexta decisão veio depois delas**, quando o `$speckit-plan` mostrou que a `D-006` não
+bastava: é a `D-011`, e o defeito que a motivou está medido na §1.0.
+
 #### `Q-1` — O que "ocupada" passa a significar depois da desistência · **respondida** (`D-006`)
 
 **O que estava em jogo.** Hoje `ocupadas = |faixa ∩ habilitadas| − ocupantes da ampla`, limitado às
@@ -147,7 +180,7 @@ efetivas. Quem desistiu, teve matrícula cancelada por inércia ou foi reclassif
 dois conjuntos. **Escolhida a opção A**, com a disciplina de obsolescência da `016` preservada — ver
 `D-006`.
 
-#### `Q-2` — O efeito da progressão retroativa depois de convocação, aceite ou matrícula · **respondida** (`D-007`)
+#### `Q-2` — O efeito da progressão retroativa depois da convocação · **respondida** (`D-007`)
 
 **O que estava em jogo.** A decisão de progressão retroativa da `018` fixou **efeito pleno** quando
 nenhuma vaga estava ocupada, e o recurso deferido meses depois alcança um certame onde há gente
@@ -155,7 +188,7 @@ matriculada. **Escolhida a opção B**: o efeito pleno é preservado onde a `018
 resultados, progressão e ordem — e o que se limita é o alcance sobre **atos posteriores desta
 feature**. Ver `D-007`.
 
-#### `Q-3` — Os três desfechos da `P-11`: mecanismo próprio ou o da `018`? · **respondida** (`D-008`)
+#### `Q-3` — Os três desfechos da `P-11`: mecanismo próprio ou da `018`? · **respondida** (`D-008`)
 
 **O que estava em jogo.** **Reclassificação**, **regularização** e **desistência por inércia** — e a
 regularização é a mais pesada, porque é a Administração desfazendo ato desfavorável **sem recurso**,
@@ -205,6 +238,11 @@ Quatro consequências que governam os requisitos:
    `classificacao` e nunca o contrário, e a `019` já lê o déficit da `016`. A exclusão, portanto,
    chega por porta que a `016` define e a `019` preenche — a `016` não passa a importar a feature
    nova. É restrição de desenho que o plano tem de respeitar, e não uma quinta opção da pergunta.
+
+> **Refinada pela `D-011`.** A exclusão desta decisão é necessária e **não é suficiente**: sobre a
+> definição de ocupada que a `016` tinha, excluir o desistente não movia o número (§1.0). A `D-011`
+> conserta a definição e acrescenta a inclusão; o que esta decisão fixou — uma contagem só, na
+> emissão seguinte, por porta que a `016` define — continua valendo inteiro.
 
 #### D-007 — O deferimento não desfaz ato praticado, e passa ao primeiro lugar da suplência
 
@@ -292,6 +330,36 @@ Três consequências:
    acrescenta a via administrativa da regularização, que não depende de recurso.
 3. **A hipótese futura é limite registrado, não escopo.** Ela fica na §7, e a Constituição é
    explícita: limite registrado é insumo de priorização, nunca a priorização em si.
+
+#### D-011 — A `016` conta titulares iniciais; o desfecho exclui e o aceite inclui
+
+*Decisão do usuário, 12/09/2026, depois de o `$speckit-plan` achar a contradição da §1.0.*
+
+> A `016` conta somente titulares iniciais habilitados. Um desfecho da `019` exclui uma ocupação.
+> Aceite ou regularização inclui a suplente convocada. Esses efeitos entram por uma porta
+> append-only definida pela `016`; não é necessário modelar vagas individualmente. Para dias úteis,
+> a comissão informa o vencimento explícito — nada de criar calendário de feriados. "Não atendimento
+> à convocação" e "cancelamento de matrícula por inércia" ficam como desfechos distintos.
+
+Seis consequências, e a segunda é a que faltava:
+
+1. **Ocupada passa a ser pessoa, não capacidade.** Titular inicial é a Inscrição que está entre as
+   primeiras `efetivas` posições da ordem do recorte; suplente é o excedente, e ele **não ocupa
+   nada** até ser convocado e aceitar. É o que o comentário do `apuracao.py` já afirmava.
+2. **Sem a inclusão, o número nunca voltava a subir.** Exclusão sozinha faria a apuração cair a cada
+   desistência e nunca recompor, ainda que o suplente aceitasse — a chamada não teria efeito
+   observável. Medido com a regra proposta: titular desiste → 39; suplente convocada aceita → 40.
+3. **Ninguém é promovido sem ato.** Nenhuma suplente entra na contagem por cardinalidade; entra por
+   aceite ou regularização registrados, que são atos de pessoas autorizadas.
+4. **Uma porta, append-only, e definida pela `016`.** Exclusões e inclusões chegam por ela, e a seta
+   de dependência continua sendo a da `D-006`. **Vaga individual não é modelada** — não há entidade
+   "vaga nº 7"; há quantidade e conjunto de pessoas.
+5. **O sistema não conta dias úteis.** Quem convoca informa o vencimento explícito, e o sistema o
+   registra, exibe e confere contra o envio. Calendário de feriados e contagem em dias úteis ficam
+   fora, como a `018` já os deixou.
+6. **Dois desfechos, e não um.** *Não atendimento à convocação* alcança quem foi chamado e não
+   respondeu; *cancelamento de matrícula por inércia* alcança quem já ocupava e desapareceu. Os dois
+   excluem ocupação, e os fundamentos, os atores e os prazos são diferentes.
 
 ### As decisões que esta spec toma sozinha
 
@@ -494,6 +562,11 @@ comunicação é o candidato. A forma é a que o Edital declarar, e o prazo corr
   o recorte fica sem vencimento, e o desfecho continua dependendo de ato humano (`D-003`, `D-009`).
 - **Convocação praticada e envio com falha** — estado *"convocado, prazo não iniciado"*: o ato vale,
   o relógio não começou, e tratá-lo como silêncio é o defeito que a `FR-269a` impede.
+- **Vencimento informado antes do envio** — recusado (`FR-269b`).
+- **Todos os titulares iniciais desistem** — a apuração seguinte diz zero ocupadas e o déficit é o
+  total; nenhuma suplente entra sem convocação, e a faixa seguinte continua sendo ato da `014`.
+- **A suplente convocada também desiste** — a exclusão dela não desconta nada, porque ela nunca
+  entrou na contagem: só entra quem aceitou ou regularizou (`FR-278d`).
 - **Certame sem apuração emitida** — convocar é recusado: chamar para vaga que ninguém apurou é
   prometer o que não se sabe existir.
 - **Vaga liberada no último dia da validade do Edital** — a `P-3` (validade e prorrogação) não
@@ -514,8 +587,10 @@ comunicação é o candidato. A forma é a que o Edital declarar, e o prazo corr
 - **FR-267**: A convocação MUST respeitar a ordem: MUST NOT convocar quem é precedido, no mesmo
   recorte, por habilitado ainda sem convocação e sem desfecho, salvo fundamento registrado no ato.
 - **FR-268**: Uma Inscrição MUST NOT ter duas convocações vigentes no mesmo recorte.
-- **FR-269**: A convocação MUST registrar o prazo de resposta, contado do **envio individual
-  registrado com sucesso** — ou da publicação, quando é ela a forma declarada pelo Edital (`D-009`).
+- **FR-269**: A convocação MUST registrar o **vencimento explícito** informado por quem convoca, e o
+  sistema MUST NOT calculá-lo em dias úteis nem manter calendário de feriados (`D-011`).
+- **FR-269b**: O vencimento informado MUST ser posterior ao envio, e o sistema MUST recusar
+  vencimento anterior a ele — prazo que vence antes de a pessoa poder saber não é prazo.
 - **FR-269a**: Falha no envio MUST NOT iniciar o prazo, e MUST NOT desfazer a convocação praticada:
   o recorte MUST exibir o estado *"convocado, prazo não iniciado"* enquanto não houver envio com
   sucesso.
@@ -529,12 +604,15 @@ comunicação é o candidato. A forma é a que o Edital declarar, e o prazo corr
 - **FR-272**: Convocação e desfecho MUST ser append-only: nenhum é alterado ou excluído depois de
   gravado, e correção é sucessão com motivo.
 - **FR-273**: Cada convocação MUST admitir no máximo um desfecho, entre os nomeados: aceite,
-  indeferimento, desistência expressa, não atendimento no prazo, reclassificação e regularização.
+  indeferimento, desistência expressa, **não atendimento à convocação**, reclassificação,
+  regularização e **cancelamento de matrícula por inércia**. Os dois últimos da lista de exclusão
+  são distintos entre si, e MUST NOT ser colapsados num só (`D-011`).
 - **FR-274**: O decurso do prazo MUST ser observável na leitura do recorte, e MUST NOT produzir
   desfecho por si — dar a convocação por não atendida é ato de quem conduz (`D-003`).
 - **FR-275**: Desfecho que não ocupa vaga MUST liberá-la para chamada no mesmo recorte.
 - **FR-276**: A liberação MUST tornar obsoleta a apuração vigente do recorte, acrescentando causa à
-  lista da `FR-263`.
+  lista da `FR-263`. É o efeito sobre a **vigência**; o da **contagem** está na `FR-278`, e os dois
+  não se substituem.
 - **FR-277**: Fato que ocorre fora deste sistema — acesso a ambiente virtual, presença em aula,
   entrega presencial — MUST ser registrado como atestado, com quem atestou e o que concluiu, e MUST
   NOT ser inferido (`D-004`).
@@ -542,6 +620,13 @@ comunicação é o candidato. A forma é a que o Edital declarar, e o prazo corr
   ocupadas **na emissão seguinte** da apuração, e MUST NOT alterar apuração já emitida (`D-006`).
 - **FR-278a**: Enquanto não houver emissão nova, o sistema MUST NOT afirmar número de ocupação
   diferente do apurado — MUST exibir o apurado com a obsolescência declarada.
+- **FR-278b**: O aceite e a regularização de quem foi convocado MUST **incluir** a Inscrição na
+  contagem, pela mesma porta e na mesma emissão seguinte (`D-011`). Sem a inclusão, a chamada do
+  suplente não tem efeito observável.
+- **FR-278c**: Exclusões e inclusões MUST chegar à apuração por porta append-only definida pela
+  `016`, e MUST NOT exigir entidade de vaga individual.
+- **FR-278d**: Nenhuma Inscrição MUST passar a ser contada como ocupante por cardinalidade: fora dos
+  titulares iniciais, só entra quem foi convocado e teve aceite ou regularização registrados.
 
 **A chamada do suplente**
 
@@ -635,6 +720,9 @@ comunicação é o candidato. A forma é a que o Edital declarar, e o prazo corr
 5. Nenhuma contagem de ocupação é produzida aqui — a conta é da `016`.
 6. Nenhum fato externo é inferido; todo fato externo tem atestante.
 7. Nenhum desfecho desfavorável nasce do relógio.
+8. **Nenhuma suplente é promovida sem ato**: fora dos titulares iniciais, ocupa quem foi convocado e
+   aceitou ou regularizou.
+9. A desistência de um titular **move o número** na emissão seguinte, e move exatamente um.
 
 ## 6. Success Criteria *(mandatory)*
 
@@ -650,6 +738,11 @@ comunicação é o candidato. A forma é a que o Edital declarar, e o prazo corr
 - **SC-091**: Quem foi convocado lê, na própria área, a chamada e o prazo.
 - **SC-092**: Nenhuma tela, ato ou mensagem desta feature afirma quantidade de vagas ocupadas por
   conta própria — verificado por varredura, como a `UX-034` verifica o simétrico na `016`.
+- **SC-093**: Num recorte de 40 vagas com faixa de 70 e 67 habilitadas, **uma** desistência faz a
+  emissão seguinte dizer 39 ocupadas e 1 faltando; o aceite da suplente convocada devolve 40. É o
+  teste que prende o defeito da §1.0, e ele reprova qualquer contagem que sature.
+- **SC-094**: Nenhuma Inscrição fora dos titulares iniciais aparece como ocupante sem convocação com
+  aceite ou regularização registrados.
 
 ### Requisitos de interface
 
@@ -675,6 +768,10 @@ comunicação é o candidato. A forma é a que o Edital declarar, e o prazo corr
 - A ordem por lista só existe em certame de sorteio (`emitir_ordem` fixa `lista_id` nulo por decisão
   declarada), e portanto a suplência **por lista** só é demonstrável em sorteio — a mesma suposição
   que a `016` registrou para a reversão.
+- **Não há calendário de dias úteis, feriados ou expediente neste sistema**, e a `018` já o deixou
+  fora. Quem convoca informa o vencimento, e a conferência possível é contra o envio (`D-011`).
+- **Vaga individual não é entidade.** O que existe é quantidade por recorte e conjunto de pessoas; a
+  ocupação é contada, não alocada a um número de vaga.
 - Matrícula, neste sistema, é o desfecho registrado da convocação — não integração com sistema
   acadêmico. O 77 (8.1a) diz que a matrícula é efetivada no Sistema Acadêmico do Cefor, e essa
   integração não é desta feature.
@@ -685,6 +782,9 @@ comunicação é o candidato. A forma é a que o Edital declarar, e o prazo corr
   `015` e da `014`.
 - **Integração com sistema acadêmico** para efetivar matrícula — o desfecho é registrado aqui; o
   lançamento acadêmico é de outro sistema, e a `P-8` já nomeia a classe do problema.
+- **Calendário de feriados e contagem em dias úteis** — o vencimento é informado por quem convoca
+  (`D-011`), e criar o calendário é incremento próprio, como a `018` registrou.
+- **Vaga como entidade individual** — a `D-011` a recusa por escrito: não há "vaga nº 7" a alocar.
 - **Turma como recorte** (`P-10`) — a repartição por turma só tem consequência quando alguém for
   alocado a uma delas, e nenhum Edital lido diz como.
 - **Validade do Edital e prorrogação** (`P-3`) — o 77 (6.11) convoca suplente para nova turma dentro
@@ -701,6 +801,10 @@ comunicação é o candidato. A forma é a que o Edital declarar, e o prazo corr
 
 ## 8. Ordem de implementação sugerida
 
+*Esta ordem é a leitura da spec. A sequência executável é a do [tasks.md](tasks.md), que põe a
+correção da contagem e o degrau canônico numa fase bloqueante; onde as duas divergirem, vale o
+`tasks.md`.*
+
 *A §3.0 está fechada, e três decisões alcançam feature entregue — a quarta exclusão na `016`
 (`D-006`), a origem nova de sucessor na `018` (`D-008`) e a revisão da `FR-084` da `010` (`D-009`).
 O plano precisa orçá-las explicitamente, e nenhuma é efeito colateral de um passo desta lista.*
@@ -710,8 +814,9 @@ O plano precisa orçá-las explicitamente, e nenhuma é efeito colateral de um p
 2. **O desfecho** — um por convocação, com os nomeados, e a liberação da vaga.
 3. **A tela do recorte** — os quatro números da `016` com o que esta feature acrescenta; é a US1 e a
    US2, e é o que substitui a planilha.
-4. **A conciliação com a `016`** — a quarta exclusão pela porta que ela define (`D-006`), com o
-   teste que prende a contagem e a obsolescência.
+4. **A conciliação com a `016`** — a definição de titular inicial, mais a porta append-only de
+   exclusão **e inclusão** (`D-006`, `D-011`), com o teste da `SC-093` prendendo a contagem. É o
+   passo que mexe em feature entregue, e o que o `$speckit-plan` mostrou não ser opcional.
 5. **A comunicação** — a forma declarada pelo Edital, o marco no envio e a recusa de afirmar
    entrega (`D-009`), precedida da revisão escrita da `FR-084` da `010`.
 6. **A área do candidato** — a US6, pelo canal do ator.
@@ -723,8 +828,10 @@ Os passos 1 a 3 fecham o essencial do 77 e do 28. O 69 depende do 7.
 
 ## 9. Gate de conclusão
 
-- As três consequências em feature entregue implementadas e testadas onde estão: a exclusão na
-  `016`, a origem de sucessor na `018` e a `FR-084` da `010` revisada por escrito.
+- As três consequências em feature entregue implementadas e testadas onde estão: a contagem de
+  titulares com exclusão e inclusão na `016`, a origem de sucessor na `018` e a `FR-084` da `010`
+  revisada por escrito.
+- A `SC-093` medida contra o cenário da §1.0 — uma desistência movendo o número em exatamente um.
 - Percurso conduzido pela interface, com o ciclo da `SC-085` inteiro, e relatório em `doc/e2e/`.
 - `make lint check test-pg` verde, com as tabelas novas contadas no provisionamento (`N de M`).
 - Varredura de vocabulário nos dois sentidos: esta feature não afirma contagem de ocupação, e a

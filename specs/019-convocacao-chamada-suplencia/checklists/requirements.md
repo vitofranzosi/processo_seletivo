@@ -38,22 +38,27 @@
 - **Citações**: `tests/test_citacoes_de_requisito.py` verde — nenhum `FR-`, `SC-`, `UX-` ou `D-`
   aponta para identificador inexistente. As decisões de outras features são citadas **por nome**, e
   não por número, porque `D-NNN` é por feature.
-- **Faixa**: `FR-264`–`FR-296` (com as alíneas `278a`, `286a`, `288a`, `288b`, `292a`–`292c`),
-  `SC-085`–`SC-092`, `UX-035`–`UX-039`. Teto anterior medido em `c746adf`: `FR-263`, `SC-084`,
-  `UX-034`.
+- **Faixa**: `FR-264`–`FR-296` (com as alíneas `269a`, `269b`, `278a`–`278d`, `286a`, `288a`,
+  `288b`, `292a`–`292c`), `SC-085`–`SC-094`, `UX-035`–`UX-039`. Teto anterior medido em `c746adf`:
+  `FR-263`, `SC-084`, `UX-034`.
 - **Fronteira**: nenhum requisito desta spec conta vaga, ordena ou emite faixa; a `SC-092` exige a
   varredura que prova o simétrico da `UX-034` da `016`.
 
 ## Notes
 
-**16 de 16.** As cinco decisões do usuário (`D-006` a `D-010`) estão na spec com o texto dele, e três
-delas alcançam feature já entregue — o que o plano tem de orçar explicitamente:
+**16 de 16.** As seis decisões do usuário (`D-006` a `D-011`) estão na spec com o texto dele, e
+três delas alcançam feature já entregue — o que o plano tem de orçar explicitamente:
 
-1. **`D-006`** — a `016` ganha uma quarta exclusão na contagem, alimentada por porta que ela define,
-   para não inverter a seta de dependência entre `ocupacao` e a feature nova.
-2. **`D-008`** — a `018` ganha origem de sucessor que não é recurso: linha nova no conjunto de formas
-   legítimas do Resultado, com migration de constraint e gatilho conferidos.
+1. **`D-006` + `D-011`** — a `016` passa a contar **titulares iniciais** e ganha porta append-only
+   de **exclusão e inclusão**, definida por ela para não inverter a seta de dependência. A exclusão
+   sozinha era inócua: medido, o número só se movia na **28ª** desistência (§1.0 da spec).
+2. **`D-008`** — a `018` ganha origem de sucessor que não é recurso: linha nova no conjunto de
+   formas legítimas do Resultado, com migration de constraint e gatilho conferidos.
 3. **`D-009`** — a `FR-084` da `010` tem de ser revisada por escrito antes de existir mensagem
    individual de convocação; a própria regra manda.
 
 Nenhuma delas é implementável sem o `$speckit-plan`, e nenhuma decorre automaticamente desta spec.
+
+**A `SC-093` é o teste de regressão desta correção**: uma desistência tem de mover o número em
+exatamente um, e o aceite da suplente convocada tem de devolvê-lo. Qualquer contagem que sature
+reprova ali.
