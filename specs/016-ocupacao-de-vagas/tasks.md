@@ -341,9 +341,17 @@ depender de desistência, que é fato da `019` (`R-001`).
 - [X] T057 [P] [US5] Teste de que fica legível **qual versão do quadro** cada apuração leu, em
       `backend/tests/integration/ocupacao/test_auditoria.py`
 - [X] T058 [US5] Tela de histórico em
-      `backend/processo_seletivo/interface/templates/interface/ocupacao_historico.html`, com rota
-      pendendo do Edital em `backend/processo_seletivo/interface/urls.py` — o precedente é
-      `corte-historico`, que pende do Edital e não do marco justamente para sobreviver à Retificação
+      `backend/processo_seletivo/interface/templates/interface/ocupacao_historico.html`, com rota em
+      `backend/processo_seletivo/interface/urls.py` que **carrega** o marco no caminho e **não o
+      resolve** no snapshot vigente. *A redação anterior dizia "rota pendendo do Edital… que pende
+      do Edital e não do marco", e descrevia mal as duas coisas: o caminho é
+      `editais/<edital>/marcos/<marco>/ocupacao/historico` — o marco está nele —, e o que mantém o
+      histórico acessível não é a forma do caminho, é a view não chamar `_perfil_do_marco`, que
+      levanta 404 quando o marco não está na versão vigente.* O precedente é `corte-historico`, que
+      endereça o **corte** e não o marco pela mesma razão. A série é encontrada pelas identidades
+      publicadas que as apurações guardaram, e a regressão
+      `test_o_historico_sobrevive_a_retificacao_que_remove_o_marco` prende as duas metades:
+      `interface:ocupacao` devolve 404 e o histórico devolve 200
 - [X] T059 [US5] Registrar ator, ato, estados, motivo e correlação na auditoria, em
       `backend/processo_seletivo/ocupacao/application/emissao.py`
 
@@ -365,16 +373,18 @@ depender de desistência, que é fato da `019` (`R-001`).
       contrato: enquanto o contrato não declarava o campo, as duas listas coincidiam **por
       ausência**. Fechado em quatro lugares: a transcrição, o Perfil acrescentado por Retificação,
       a fixture do snapshot e o conjunto esperado de `test_forma_do_snapshot.py`
-- [ ] T061 [P] ~~Acrescentar os três endpoints do contrato ao `openapi.yaml`~~ — **deliberadamente
-      não executada, e o motivo é que os três endpoints não existem.** Nenhuma tarefa desta feature
-      implementou rota HTTP: a `T017`, a `T020` e a `T045` entregam a capacidade por
-      `interface/views.py`, e o `openapi.yaml` não tem um único caminho de classificação, corte ou
-      sorteio — a `014` acrescentou ali apenas a **forma do conteúdo** (`cutRule`,
-      `generalCompetitionModalityId`), pela mesma razão. Declarar `GET /api/editais/{id}/ocupacao`
-      num contrato de API que responde 404 seria documentar interface que o sistema não serve. A
-      §2 do [contrato](./contracts/ocupacao.md) descreve a **leitura** que os selectors produzem, e
-      é ali que ela continua válida. Decisão de fronteira é do usuário: registrada, não convertida
-      em escopo
+- [X] T061 [P] Converter a §2 de `specs/016-ocupacao-de-vagas/contracts/ocupacao.md` em **contrato
+      de aplicação** e retirar dela os três caminhos `/api/...`. *A tarefa pedia acrescentá-los ao
+      `openapi.yaml`, e isso estava errado: eles não existem. Nenhuma tarefa desta feature
+      implementou rota HTTP — a `T017`, a `T020` e a `T045` entregam a capacidade por
+      `interface/views.py` —, e o `openapi.yaml` não tem um único caminho de classificação, corte ou
+      sorteio: a `014` acrescentou ali apenas a **forma do conteúdo** (`cutRule`,
+      `generalCompetitionModalityId`), pela mesma razão. Declará-los seria documentar interface que
+      responde 404, e contrato de API é a promessa mais barata de quebrar sem notar, porque teste
+      nenhum o confronta com as rotas.* Os nomes da seção passaram a ser os dos selectors e dos
+      commands — `ocupacao_do_recorte`, `emitir_apuracao`, `causar_faixa_seguinte` —, e o cabeçalho
+      declara as duas naturezas: a §1 é contrato de API, a §2 é de aplicação. Que a ocupação venha a
+      ter API é decisão aberta, e o desenho de partida fica registrado ali
 - [X] T062 [P] Escrever `specs/016-ocupacao-de-vagas/rastreabilidade.md` — matriz
       `FR-239`–`FR-263` (incluindo `FR-239a` e `FR-253a`), `SC-078`–`SC-084`, `UX-031`–`UX-034`
       (incluindo `UX-032a`) contra arquivo de teste, **medida por varredura e não afirmada**.

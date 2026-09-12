@@ -85,8 +85,10 @@ tivesse sido feita.
   testes fracos meus foram substituídos nesta feature antes de entrar, e a matriz teria ficado
   verde com os dois.
 - **O caminho conduzido pela interface.** Quatro critérios acima dependem dele, e é a `T065`.
-- **A `T061`.** Os três endpoints do [contrato](./contracts/ocupacao.md) não existem como rota
-  HTTP, e a tarefa está registrada como deliberadamente não executada no [tasks](./tasks.md).
+- **Contrato de API.** Não há nenhum nesta feature além da declaração da reversão no `openapi.yaml`
+  da `001`: a §2 do [contrato](./contracts/ocupacao.md) é de **aplicação**, e descreve o que os
+  selectors devolvem. A `T061` pedia acrescentar três endpoints que não existem, e foi encerrada
+  convergindo a seção.
 - **Requisito que nenhum teste cita porque nenhum teste o cobre.** Não há nenhum agora, mas a
   varredura mede citação, e citação é o que o autor escreve. A `FR-250` é o exemplo de como isso
   falha: ela exige a declaração como conteúdo publicado *"com presença no documento"*, e a forma

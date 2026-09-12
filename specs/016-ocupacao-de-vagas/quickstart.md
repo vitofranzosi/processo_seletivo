@@ -185,5 +185,8 @@ com ator, recorte, ordem citada e as quantidades na razão —, e quem o prova �
 cd backend && DB_NAME=ps_demo_016 make lint check test-pg
 ```
 
-`test-pg` e **não** `test`: no modo padrão a suíte cai para SQLite, onde 31 casos falham por
-garantias que aquele banco não tem — inclusive o gatilho append-only desta feature.
+`test-pg` e **não** `test`: no modo padrão a suíte cai para SQLite, onde **33** casos falham por
+garantias que aquele banco não tem — inclusive o gatilho append-only desta feature. Duas dessas 33
+são da `016`, e são da classe em que a mensagem do SQLite não nomeia a constraint: o
+`pytest.raises(match="uq_apuracao_sucessora_unica")` não casa. O [AGENTS](../../AGENTS.md) traz a
+repartição das três causas.

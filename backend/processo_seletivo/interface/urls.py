@@ -254,8 +254,15 @@ urlpatterns = [
         views.causar_faixa_view,
         name="causar-faixa",
     ),
-    # O histórico de um recorte (016, FR-259). Pende do marco como a leitura, e o recorte vem em
-    # `?lista=`: o que se lista é a **série** de um recorte, e é ela que o recorte identifica.
+    # O histórico de um recorte (016, FR-259). O caminho **carrega** o marco, como a leitura, e o
+    # recorte vem em `?lista=`: o que se lista é a **série** de um recorte, e é ela que o recorte
+    # identifica.
+    #
+    # **Carregar não é resolver, e é aqui que a distinção importa.** A view não chama
+    # `_perfil_do_marco`, que levanta 404 quando o marco não está na versão vigente: uma Retificação
+    # que removesse o marco faria desaparecer justamente o histórico que explica os números daquela
+    # época. A série é encontrada pelas identidades publicadas que as apurações guardaram. É o
+    # mesmo motivo pelo qual `corte-historico` endereça o **corte**, e não o marco.
     path(
         "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/historico",
         views.ocupacao_historico,

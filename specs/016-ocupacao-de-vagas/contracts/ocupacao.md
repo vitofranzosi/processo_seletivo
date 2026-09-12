@@ -1,8 +1,22 @@
 # Contrato — a ocupação e a declaração que a governa
 
-Dois contratos. O primeiro não é novo: a declaração da reversão entra no `openapi.yaml` da `001`,
+Dois contratos, **de naturezas diferentes**, e a distinção não é detalhe de forma.
+
+O primeiro é de **API**, e não é novo: a declaração da reversão entra no `openapi.yaml` da `001`,
 nos **dois** lugares em que o Perfil aparece, como `vacancyTable` e `generalCompetitionModalityId`
-já estão. O segundo é a leitura da apuração.
+já estão.
+
+O segundo é de **aplicação**: a forma que os *selectors* da ocupação devolvem e que os commands
+aceitam, consumida pela interface administrativa. **Não há endpoint HTTP nesta feature**, e a §2
+descrevia três — `GET /api/editais/{id}/ocupacao` e dois `POST` — que rota nenhuma serve. A
+capacidade é alcançada pela tela, como a `014` fez com o corte: ali o `openapi.yaml` recebeu apenas
+a **forma do conteúdo** (`cutRule`, `generalCompetitionModalityId`), e nenhum caminho de
+classificação, corte ou sorteio existe nele até hoje.
+
+*Corrigido na convergência da `T061`. Declarar caminhos que respondem 404 seria documentar interface
+que o sistema não serve — e um contrato de API é a promessa mais barata de quebrar sem notar, porque
+nenhum teste a confronta com as rotas.* Que a ocupação venha a ter API é decisão aberta, e o dia em
+que tiver, os nomes desta seção são o desenho de partida.
 
 ---
 
@@ -72,11 +86,16 @@ endereço de retificação não se conserta depois, porque publicação é ato i
 
 ---
 
-## 2. A leitura da apuração
+## 2. A leitura da apuração — contrato de aplicação
 
-### `GET /api/editais/{id}/ocupacao`
+Os nomes abaixo são os do **DTO** que `ocupacao/application/selectors.py` devolve, escritos em YAML
+porque é a notação que este repositório já usa para forma. Eles não são coluna nem endpoint: a tela
+os lê, e a Constituição proíbe expor entidade de persistência como contrato.
 
-Devolve, por recorte, os quatro números e o estado da apuração vigente.
+### `ocupacao_do_recorte(...)` — a leitura de um recorte
+
+Devolve, por recorte, os quatro números e o estado da apuração vigente. A tela chama uma vez por
+recorte do marco, por `recortes_do_marco(...)`.
 
 ```yaml
 OcupacaoPorRecorte:
@@ -156,10 +175,12 @@ MovimentoDeVaga:
     cause:           { type: string }
 ```
 
-### `POST /api/editais/{id}/ocupacao/apuracoes`
+### `emitir_apuracao(...)` — o ato
 
-Emite a apuração de um recorte. **Command explícito e idempotente**: exige
-`Idempotency-Key`, como todo command irreversível deste sistema.
+Emite a apuração de um recorte. **Command explícito e idempotente**: exige `idempotency_key`, como
+todo command irreversível deste sistema, e a tela a gera no GET — não no POST —, porque chave
+sorteada a cada envio faria um duplo clique produzir duas apurações sucessivas sem que ninguém
+pedisse. É a mesma lição que o corte da `014` registra.
 
 ```yaml
 EmitirApuracaoCommand:
@@ -179,10 +200,10 @@ EmitirApuracaoCommand:
 | `recorte_sem_linha` | a lista ordena e não tem linha no quadro |
 | `motivo_da_sucessao_obrigatorio` | há apuração anterior e falta o motivo |
 
-### `POST /api/editais/{id}/ocupacao/faixa-seguinte`
+### `causar_faixa_seguinte(...)` — a causa entregue à `014`
 
-Entrega o déficit apurado à `014` como causa da faixa seguinte (`FR-255`). **Este endpoint não
-seleciona ninguém**: ele chama a emissão do corte da `014`, que é quem lê ordem e escolhe.
+Entrega o déficit apurado à `014` como causa da faixa seguinte (`FR-255`). **Esta função não
+seleciona ninguém**: ela chama a emissão do corte da `014`, que é quem lê ordem e escolhe.
 
 | Erro | Quando |
 |---|---|
@@ -191,8 +212,12 @@ seleciona ninguém**: ele chama a emissão do corte da `014`, que é quem lê or
 
 ### O que estes contratos deliberadamente não expõem
 
+- **Nenhum endpoint HTTP**, e a razão está no cabeçalho: a capacidade é alcançada pela tela, e
+  caminho declarado sem rota que o sirva é promessa que nada confronta.
 - **Nenhum campo de convocação, aceite, matrícula ou desistência.** Não existem antes da `019`
   (`FR-258`), e o vocabulário é verificado por varredura (`UX-034`).
-- **Nenhum endpoint que ordene, desempate ou selecione** (`FR-257`).
+- **Nenhuma função que ordene, desempate ou selecione** (`FR-257`) — e a proibição é estrutural, e
+  não textual: `tests/test_dependencia_da_ocupacao.py` varre os imports e prova que a dependência
+  tem um sentido só.
 - **Nenhuma entidade de persistência como contrato**, conforme a Constituição: `published`,
   `occupied` e `remaining` são DTO, e não colunas expostas.
