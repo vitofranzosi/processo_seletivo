@@ -82,6 +82,6 @@ conferidas uma a uma.
 - A spec está **pronta para `$speckit-plan`**: as três questões que o precediam foram respondidas,
   e a `D-008` já fixou que há entidade nova. `$speckit-clarify` não é necessário.
 - Achado citado e não resolvido aqui:
-  [`achado-igualdade-da-soma-sem-a-ampla-declarada.md`](../../../doc/achado-igualdade-da-soma-sem-a-ampla-declarada.md).
+[`achado-igualdade-da-soma-sem-a-ampla-declarada.md`](../../../doc/achado-igualdade-da-soma-sem-a-ampla-declarada.md).
   A feature lê a **linha** do quadro e não o total do Perfil, e por isso não herda a divergência —
   está registrado em Edge Cases.
