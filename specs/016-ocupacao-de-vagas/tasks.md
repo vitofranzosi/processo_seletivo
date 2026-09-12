@@ -123,10 +123,14 @@ Perfil e ler os quatro números por recorte, sem emitir nada.
 
 ### Testes
 
-- [ ] T017 [P] [US1] Teste de interface em `backend/tests/interface/test_ocupacao.py`: os **quatro**
-      números por recorte — publicadas, efetivas, ocupadas, faltando —, e **nunca um deles sozinho**
-      (`UX-031`). Onde nenhum movimento alcançou o recorte, publicadas e efetivas coincidem; onde
-      divergem, os dois aparecem
+- [ ] T017 [P] [US1] Teste de interface em `backend/tests/interface/test_ocupacao.py`: com apuração
+      emitida, os **quatro** números por recorte — publicadas, efetivas, ocupadas, faltando —, e
+      **nunca um deles sozinho** (`UX-031`). Onde nenhum movimento alcançou o recorte, publicadas e
+      efetivas coincidem; onde divergem, os dois aparecem
+- [ ] T017a [P] [US1] Teste do recorte **sem apuração** no mesmo arquivo (`UX-032a`): a tela diz
+      "ocupação ainda não apurada", oferece a ação de emitir, mostra as **publicadas** — que são
+      fato do Edital — e **não** mostra efetivas, ocupadas nem faltando. *Zero ali seria afirmar
+      "não há vaga a ocupar" sem ato que o sustente*
 - [ ] T018 [P] [US1] Teste do Edital sem quadro em `backend/tests/interface/test_ocupacao.py`: a
       tela diz que o Edital não publicou quadro e **não** mostra zero (`UX-032`, `FR-242`)
 - [ ] T019 [P] [US1] Teste de orçamento de consulta em
@@ -148,10 +152,11 @@ Perfil e ler os quatro números por recorte, sem emitir nada.
 - [ ] T020 [US1] Implementar a view da ocupação em
       `backend/processo_seletivo/interface/views.py`, lendo colunas e SQL — `faltando` calculado na
       própria linha, como `efetivas − ocupadas`, e `publicadas` exibida **sem** ser alterada por
-      movimento (`FR-239a`)
+      movimento (`FR-239a`). Quantidade que nenhum ato produziu chega **nula** à tela, nunca zero
 - [ ] T021 [US1] Criar `backend/processo_seletivo/interface/templates/interface/ocupacao.html` com
       os quatro números da `UX-031` e os quatro estados do contrato (`CURRENT`, `OBSOLETE`,
-      `NOT_APPRAISED`, `NO_VACANCY_TABLE`) — e os dois últimos **não** são erro nem zero
+      `NOT_APPRAISED`, `NO_VACANCY_TABLE`) — e os dois últimos **não** são erro nem zero. Em
+      `NOT_APPRAISED` a linha traz a quantidade publicada e a ação de emitir, e nada mais
 - [ ] T022 [US1] Rotear a tela em `backend/processo_seletivo/interface/urls.py`, **pendendo do
       marco** como a do corte, e ligar o acesso em
       `backend/processo_seletivo/interface/templates/interface/detalhe.html`

@@ -228,12 +228,17 @@ estão ocupadas e quantas faltam — com cada número rastreável ao ato que o p
 existir. Entregue sozinha, já substitui a planilha.
 
 **Percurso independente.** Com um Edital publicado com quadro, ordem emitida e corte emitido, abrir
-a tela do Perfil e ler os quatro números por recorte, sem emitir nada.
+a tela do Perfil: ela diz "ocupação ainda não apurada" por recorte, com as publicadas. Emitir a
+apuração de um recorte e ver os **quatro** números aparecerem só nele. Ler não emite nada.
 
 **Aceitação**
 
-1. **Dado** um Perfil com linha geral de 28 e linha de PPI de 10, **quando** nada foi ocupado,
-   **então** a tela diz 28 e 10 faltando, e zero ocupadas.
+1. **Dado** um Perfil com linha geral de 28 e linha de PPI de 10 e **apuração emitida** nos dois
+   recortes, **quando** nada está ocupado, **então** a tela diz 28 e 10 publicadas, 28 e 10
+   faltando, e zero ocupadas.
+1a. **Dado** o mesmo Perfil **sem apuração emitida**, **quando** a tela abre, **então** ela diz
+   "ocupação ainda não apurada", mostra as publicadas e **não** mostra efetivas, ocupadas nem
+   faltando (`UX-032a`).
 2. **Dado** que a análise documental recusou 3 de PPI, **quando** a apuração corre, **então** o
    déficit de PPI é dito em número, e a causa de cada vaga não ocupada é legível.
 3. **Dado** um Edital publicado **sem** quadro de vagas, **quando** a tela abre, **então** ela diz
@@ -406,6 +411,11 @@ Cada número exibido tem trilha: qual ato o produziu, sobre qual ordem, com qual
   reversão: publicadas seguiam 28 enquanto o que faltava saía de 35.*
 - **UX-032**: Onde o Edital não publicou quadro, a tela MUST dizer isso com estas palavras, e
   MUST NOT mostrar zero.
+- **UX-032a**: Onde o recorte ainda **não tem apuração emitida**, a tela MUST dizer "ocupação ainda
+  não apurada" e oferecer a ação de emitir; MUST exibir a quantidade **publicada**, que é fato do
+  Edital; e MUST NOT exibir efetivas, ocupadas ou faltando — nem como zero, nem como traço que
+  pareça número. *Zero é afirmação: quer dizer "não há vaga a ocupar". Sem ato que a sustente, a
+  tela afirmaria o que ninguém apurou — e leitura passaria a produzir número, contra a `FR-261`.*
 - **UX-033**: A reversão MUST aparecer nomeada, com origem, destino e quantidade — e não como
   mudança silenciosa do número da linha geral.
 - **UX-034**: O vocabulário MUST ser "vaga ocupada", "vaga a ocupar" e "revertida". Termo de

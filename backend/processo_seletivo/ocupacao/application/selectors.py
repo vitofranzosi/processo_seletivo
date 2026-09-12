@@ -133,14 +133,23 @@ def ocupacao_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
         tem_apuracao=vigente is not None,
         causas_de_obsolescencia=causas,
     )
+    # **Quantidade que nenhum ato produziu vem nula, e nunca zero.** Zero é uma afirmação — "não há
+    # vaga a ocupar" —, e sem apuração emitida ninguém afirmou isso. Colapsar o estado em zero é o
+    # que o contrato proíbe, e seria "ler ocupa" pela porta dos fundos: a tela passaria a dizer um
+    # número que ato nenhum sustenta, contra a `FR-259` e contra a `FR-261`.
+    #
+    # `publicadas` é a exceção, e por uma razão: ela **não** vem de apuração. Sai da linha do quadro
+    # publicado, que é fato normativo do Edital e é rastreável a ele. Dizer "o Edital publicou 3
+    # vagas neste recorte, e a ocupação ainda não foi apurada" é verdadeiro nas duas metades.
+    sem_apuracao = vigente is None
     return {
         "perfilId": str(perfil_id),
         "marcoId": str(marco_id),
         "listaId": str(lista_id) if lista_id else None,
-        "publicadas": vigente.publicadas if vigente else _quantidade(linha),
-        "efetivas": vigente.efetivas if vigente else _quantidade(linha),
-        "ocupadas": vigente.ocupadas if vigente else 0,
-        "faltando": vigente.faltando if vigente else 0,
+        "publicadas": _quantidade(linha) if sem_apuracao else vigente.publicadas,
+        "efetivas": None if sem_apuracao else vigente.efetivas,
+        "ocupadas": None if sem_apuracao else vigente.ocupadas,
+        "faltando": None if sem_apuracao else vigente.faltando,
         "estado": estado,
         "causasDeObsolescencia": [item["causa"] for item in causas],
         "apuracao": vigente,
@@ -191,8 +200,13 @@ def habilitadas_na_etapa(*, edital, etapa_id):
 
 
 def _quantidade(linha):
+    """A quantidade da linha publicada, ou `None` quando não há linha.
+
+    `None`, e não zero: sem quadro publicado o Edital não declarou quantidade nenhuma, e zero
+    afirmaria que ele declarou nenhuma vaga (`UX-032`).
+    """
     if not linha:
-        return 0
+        return None
     quantidade = linha.get("immediateVacancies")
     return quantidade if isinstance(quantidade, int) and not isinstance(quantidade, bool) else 0
 

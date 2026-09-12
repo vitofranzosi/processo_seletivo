@@ -90,10 +90,26 @@ OcupacaoPorRecorte:
       format: uuid
       nullable: true
       description: "null = ampla concorrência, a mesma grafia da ordem e do corte"
-    published:   { type: integer, minimum: 0, description: "da linha do quadro, nunca do total do Perfil" }
-    effective:   { type: integer, minimum: 0, description: "published mais o recebido, menos o cedido" }
-    occupied:    { type: integer, minimum: 0 }
-    remaining:   { type: integer, minimum: 0, description: "effective menos occupied" }
+    published:
+      type: integer
+      minimum: 0
+      nullable: true
+      description: "da linha do quadro, nunca do total do Perfil; null em NO_VACANCY_TABLE"
+    effective:
+      type: integer
+      minimum: 0
+      nullable: true
+      description: "published mais o recebido, menos o cedido; null sem apuração emitida"
+    occupied:
+      type: integer
+      minimum: 0
+      nullable: true
+      description: "null sem apuração emitida — zero é afirmação, e ausência não é zero"
+    remaining:
+      type: integer
+      minimum: 0
+      nullable: true
+      description: "effective menos occupied; null sem apuração emitida"
     movements:
       type: array
       items: { $ref: "#/components/schemas/MovimentoDeVaga" }
@@ -108,8 +124,20 @@ OcupacaoPorRecorte:
 
 **`state` tem quatro valores, e dois deles não são erro.** `NOT_APPRAISED` é recorte que ainda não
 teve apuração emitida; `NO_VACANCY_TABLE` é Edital publicado antes do degrau 12, que **não** tem
-quadro — e a `UX-032` proíbe exibir zero ali. Colapsar os dois em "0 vagas" é o defeito que esta
-distinção existe para impedir.
+quadro. Colapsar os dois em "0 vagas" é o defeito que esta distinção existe para impedir.
+
+**E é por isso que as quatro quantidades são anuláveis**, com a regra dita campo a campo:
+
+| Estado | published | effective, occupied, remaining |
+|---|---|---|
+| `CURRENT`, `OBSOLETE` | da apuração | da apuração |
+| `NOT_APPRAISED` | **da linha do quadro** — fato do Edital, e não de apuração | `null` |
+| `NO_VACANCY_TABLE` | `null` | `null` |
+
+**Zero é afirmação, e `null` é ausência.** Depois de apurar, `occupied: 0` quer dizer que um ato
+contou e não encontrou ninguém ocupando; antes, quer dizer que ninguém contou. Devolver zero nos
+dois casos faria a leitura produzir número que ato nenhum sustenta — contra a `FR-259` e contra a
+`FR-261`, que é o "ler não ocupa" desta feature.
 
 ```yaml
 MovimentoDeVaga:

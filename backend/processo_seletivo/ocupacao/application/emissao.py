@@ -174,8 +174,21 @@ def _declaracao(conteudo, *, perfil_id):
 
 
 def _quantidade(linha):
+    """A quantidade publicada da linha, ou recusa.
+
+    **Nunca devolve zero por omissão.** A conferência da `025` garante que a linha publicada tem
+    quantidade inteira; se ela chegar aqui malformada, escrever `0` num ato append-only afirmaria
+    que o Edital publicou nenhuma vaga — e num ato imutável isso não tem conserto. Recusar é o
+    único desfecho reversível.
+    """
     quantidade = linha.get("immediateVacancies")
-    return quantidade if isinstance(quantidade, int) and not isinstance(quantidade, bool) else 0
+    if isinstance(quantidade, int) and not isinstance(quantidade, bool):
+        return quantidade
+    raise DomainError(
+        "recorte_sem_linha",
+        "A linha do quadro deste recorte não publica quantidade inteira de vagas.",
+        409,
+    )
 
 
 def _concluir(ctx, apuracao, actor, correlation_id, idempotency_key):
