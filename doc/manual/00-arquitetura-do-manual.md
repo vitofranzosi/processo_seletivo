@@ -20,6 +20,16 @@ manual precisa ensinar, em que ordem, para quem, com quais imagens e com qual li
 > foi a 88 capturas. Ficaram registrados também o **gate de S-00** e as nove perguntas que a sessão
 > precisa responder (§I.0).
 
+> **Revisão 4 — 08/09/2026, após S-00.** O piloto editorial foi executado e o padrão está fixado.
+> Cinco emendas entraram neste documento, todas marcadas **(S-00)** no ponto em que valem: o acento
+> único e o seu uso na anotação (§G.1, §G.6); o componente `Limitação conhecida desta versão`, que
+> **não** é um oitavo callout (§G.3); a forma reduzida do quadro "onde estou" (§G.5); a régua de
+> densidade (§G.8, nova); e a correção do viewport de captura (§F.2). Duas fichas do §C.bis mudam
+> por achado de produto: **C-06** deixa de prometer "um Processo com vários Editais", porque a tela
+> para acrescentar o segundo não existe. O inventário do §F foi revisado e passou a 89 capturas —
+> a revisão vive em `doc/manual/01-inventario-de-capturas-revisado.md`, e é ela que autoriza S-01.
+> As respostas de design estão em `doc/manual/piloto/relatorio-s00.md`.
+
 **Base da descoberta:** `main` @ `a6f25a4`. Fontes lidas: `README.md`, a Constituição, as 18 pastas
 de `specs/`, os quatro relatórios de auditoria E2E (`doc/e2e/015`, `017`, `018`, `020-polish`), os
 documentos de decisão em `doc/`, e — como fonte de verdade final — o código: `interface/urls.py`,
@@ -27,9 +37,10 @@ documentos de decisão em `doc/`, e — como fonte de verdade final — o códig
 templates das duas interfaces e os enums de domínio.
 
 > **Uma advertência sobre as specs.** A numeração não é sequência pedagógica e nem sequência
-> histórica confiável: faltam as pastas 014, 016 e 019 (features não construídas) e a 012 e a 013
-> foram revisadas em conjunto por um terceiro documento. As duas coisas continuam verdadeiras, e a
-> `021` e a `022`, posteriores a esta descoberta, não as alteram.
+> histórica confiável: falta a pasta 019 (feature não construída) e a 012 e a 013 foram revisadas
+> em conjunto por um terceiro documento. As duas coisas continuam verdadeiras, e a `021` e a `022`,
+> posteriores a esta descoberta, não as alteram. **A `014` e a `016`, que esta advertência listava
+> como ausentes, existem desde 12/09/2026** — foram construídas, e as pastas estão lá.
 >
 > **Sobre o `README.md`, esta advertência envelheceu — corrigida em 10/09/2026.** A defasagem que
 > ela registrava era textual: "descreve o produto até a spec 004" e "a interface administrativa e
@@ -482,10 +493,12 @@ alertas · o que NÃO entra.**
 - **Público:** gestor.
 - **Objetivo:** sair com um Processo ativo e um Edital em elaboração.
 - **Pré-requisitos:** ter o papel de gestor.
-- **Assuntos:** Processo × Edital; código institucional; ativar; um Processo com vários Editais;
-  numeração do Edital única por ano.
-- **Telas:** lista de Processos; Novo Processo; detalhe do Processo; criar Edital.
-- **Screenshots:** SS-008, SS-009, SS-010.
+- **Assuntos:** Processo × Edital; código institucional; ativar; numeração do Edital única por ano.
+  **(S-00)** O Processo **nasce com o primeiro Edital**, numa tela só — o capítulo ensina a tela como
+  ela é. Acrescentar um segundo Edital a um Processo existente é capacidade do domínio **sem tela**;
+  não se promete aqui, e o fato vai em uma linha para `G-03`.
+- **Telas:** lista de Processos; Novo Processo e primeiro Edital; detalhe do Processo.
+- **Screenshots:** SS-008, SS-009. **(S-00)** `SS-010` foi removida: a tela não existe.
 - **Exemplo:** *Processo Seletivo Simplificado 2026 · Edital 03/2026 — Auxiliar de Biblioteca*.
 - **Alertas:** 🕒 ative o Processo antes de publicar o Edital.
 - **NÃO entra:** comissão (é a fase 6, e tem capítulo).
@@ -695,7 +708,10 @@ alertas · o que NÃO entra.**
   procedimento. Aparece uma única vez, ao fim do capítulo, numa **caixa de limitação conhecida**
   com o texto: *"⛔ Não utilize esta opção nesta versão do sistema."* — seguido de uma frase
   dizendo o que acontece se alguém a usar (o marco fica impedido de chegar a resultado definitivo)
-  e da remissão a `G-03`. O manual não normaliza uma capacidade que não fecha operacionalmente.
+  e da remissão a `G-03`. **(S-00)** Essa caixa usa o componente
+  **`Limitação conhecida desta versão`** do §G.3, e **não** o callout `⛔`: o glifo permanece na
+  frase, mas o bloco não é do tipo "ato sem retorno" — uma capacidade que não deve ser usada é outra
+  coisa, e misturar as duas apagaria a distinção que se pede ao leitor que memorize. O manual não normaliza uma capacidade que não fecha operacionalmente.
 - **Telas:** Acompanhar → Recorrer; Recurso (candidato); Recursos recebidos; peça do recurso;
   Admissibilidade; Julgar.
 - **Screenshots:** SS-068 a SS-074.
@@ -747,8 +763,9 @@ limitações que não interrompem nenhuma tarefa (§H.0).
 - **Pré-requisitos:** nenhum; é seção de referência, alcançável do menu e por remissão.
 - **Assuntos:** consulta pública por data; Resultado de Etapa não público; ausência de comunicação
   ativa; ausência de corte e progressão automática entre Etapas; o ciclo terminar na divulgação;
-  múltiplos marcos sem orientação; capacidades sem tela; e — em caixa própria e destacada — a
-  espécie de decisão recursal que não deve ser usada.
+  múltiplos marcos sem orientação; capacidades sem tela — **(S-00)** entre elas, **acrescentar um
+  segundo Edital a um Processo já criado**, que existe no domínio e não tem tela; e — em caixa
+  própria e destacada — a espécie de decisão recursal que não deve ser usada.
 - **Telas:** nenhuma.
 - **Screenshots:** nenhum.
 - **Alertas:** nenhum. Esta seção **é** o alerta.
@@ -876,8 +893,16 @@ capítulo em capítulo:
 > Atores: Gustavo (gestor), Elena (elaboradora), Wagner (homologador), Paula (publicadora),
 > Paulo (presidente), Alice e Otávio (avaliadores), Júlia (julgadora), Aurora (auditora).
 
-**Preparação:** banco limpo, `seed_demo` **não cobre** comissão-a-recurso com o realismo necessário
-— ele não cria recursos. As capturas das fases 6 a 15 exigem execução manual pelo navegador, como
+**Preparação:** banco limpo. **(S-00, corrige e amplia)** `seed_demo` **não produz este certame em
+nenhuma parte**: cria dois perfis que não são o Auxiliar de Biblioteca, três Etapas com outra faixa
+de pontuação, e um elenco cujos primeiros nomes **colidem** com os dos candidatos
+(`ana.elaboradora` e a candidata Ana; `bruno.homologador` e o candidato Bruno). Num manual que
+ensina segregação de funções mostrando que são pessoas diferentes, isso é justamente o que não pode
+acontecer. O certame é montado **à mão, pela interface**, com o seletor de identidade digitando os
+nomes do elenco — o piloto percorreu a cadeia completa (Elena submete, Wagner homologa, Paula
+publica) e confirmou que ela é percorrível sem atalho. De `seed_demo` continua útil o
+`--dias-atras`, único jeito de obter no navegador uma janela recursal **já encerrada**. Ele também
+**não cria recursos**. As capturas das fases 6 a 15 exigem execução manual pelo navegador, como
 as auditorias E2E fizeram. Ver §I.
 
 > ⚠ **Este inventário é provisório até o piloto (S-00).** Ele foi montado a partir das telas, e não
@@ -890,7 +915,10 @@ as auditorias E2E fizeram. Ver §I.
 
 - **Estado necessário** descreve o que precisa existir **antes** da captura.
 - **Destaque** é anotação a ser aplicada depois (§G.6), não algo a fotografar.
-- Toda captura é **desktop 1280 px** salvo quando marcada `mobile 375`.
+- **(S-00, corrige)** Toda captura de desktop é tirada com viewport de **1 000 px** — não 1 280 —,
+  salvo quando marcada `mobile 375`. A 1 280 px a gestão abre calhas laterais vazias que sobram no
+  recorte. Enquadramento, anotação, resolução e as demais regras estão em
+  `doc/manual/01-inventario-de-capturas-revisado.md`, §1.
 - Nenhum dado pessoal real. Nenhum e-mail real. Nenhum CPF válido.
 
 ### F.3 O inventário
@@ -906,7 +934,6 @@ as auditorias E2E fizeram. Ver §I.
 | SS-007 | Auditora | Ato de classificação sucedido | Ato 1 sucedido pelo ato 2 | O aviso de sucessão **acima** dos valores | O aviso | C-05 |
 | SS-008 | Gestor | Novo Processo | — | Formulário com código institucional | Campo do código | C-06 |
 | SS-009 | Gestor | Detalhe do Processo | Processo ativo, 1 Edital | Trilha do Processo e lista de Editais | Trilha | C-06 |
-| SS-010 | Gestor | Criar Edital | Processo ativo | Número/ano/título | Número e ano | C-06 |
 | SS-011 | Elaboradora | Assistente — barra dos 9 passos | Edital novo | Os nove passos e seus três estados | A barra inteira | C-07 |
 | SS-012 | Elaboradora | Passo Identificação | Edital novo | Título e descrição | — | C-07 |
 | SS-013 | Elaboradora | Passo Perfis de Vaga | 1 perfil, 2 modalidades, 2 fatos | Vagas imediatas, cadastro reserva, modalidades | Bloco de modalidades | C-07 |
@@ -986,9 +1013,18 @@ as auditorias E2E fizeram. Ver §I.
 | SS-087 | Presidente | Distribuição — `mobile 375` | Distribuição confirmada | Legibilidade em tela estreita | — | C-14 |
 | SS-088 | Julgadora impedida | Peça do recurso com impedimento | Quem abre a peça publicou o resultado atacado | A razão do impedimento nomeada, e a tela **sem ações** | A razão | C-04 / C-19 |
 
-**88 capturas.** Cinco são deliberadamente de recusa (SS-004, SS-063, SS-074, SS-078/079) porque
-ensinam a regra melhor do que o caminho feliz. Três são `mobile` e cobrem as superfícies que o
-usuário mais consulta pelo celular. Nenhuma tela aparece duas vezes no mesmo estado.
+~~**88 capturas.**~~ **89 capturas, depois de S-00.** Cinco são deliberadamente de recusa (SS-004,
+SS-063, SS-074, SS-078/079) porque ensinam a regra melhor do que o caminho feliz. Quatro são
+`celular 375` e cobrem as superfícies que o usuário mais consulta pelo celular. Nenhuma tela aparece
+duas vezes no mesmo estado.
+
+> **(S-00) Esta tabela está superada em dezessete linhas, uma removida e duas acrescentadas.** A
+> versão que autoriza a coleta é `doc/manual/01-inventario-de-capturas-revisado.md`: ela mantém as
+> colunas *Estado necessário* e *O que precisa estar visível* desta tabela para tudo que não alterou,
+> acrescenta as regras de enquadramento e anotação que valem para todas, e registra que `seed_demo`
+> **não** produz o certame do §F.1 — nem os perfis, nem as Etapas, nem o elenco, cujos nomes ainda
+> colidem com os dos candidatos. **Leia as duas: esta pelo conteúdo, aquela pela forma e pelas
+> mudanças.**
 
 ---
 
@@ -999,7 +1035,9 @@ usuário mais consulta pelo celular. Nenhuma tela aparece duas vezes no mesmo es
 Institucional e claro. Referência mental: um manual de norma bem diagramado — não um blog, não um
 produto SaaS, não material infantil. Serifada no corpo do texto (leitura longa), sem serifa em
 títulos, rótulos e interface. Paleta contida: um cinza-azulado institucional, um acento único,
-branco generoso. Emoji **apenas** como marcador de tipo de caixa, sempre o mesmo símbolo para o
+branco generoso. **(S-00)** O acento é **violeta `#5b3a8f`**, e a escolha é funcional, não estética:
+ele é também a cor da anotação sobre as capturas, e o produto usa verde, vermelho e âmbar para
+estado — um acento nessas faixas seria lido como parte da tela fotografada. Emoji **apenas** como marcador de tipo de caixa, sempre o mesmo símbolo para o
 mesmo tipo, nunca no corpo do texto e nunca em títulos.
 
 ### G.2 Tipos de callout — sete, e só sete
@@ -1030,6 +1068,11 @@ com avisos comuns apagaria a única distinção que o leitor precisa memorizar.
 - **Tabela de decisão** — "se acontecer X, faça Y". É o formato da Parte 5 inteira.
 - **Passo numerado com captura** — a unidade do procedimento: número, uma frase imperativa, a
   captura anotada, e o resultado esperado.
+- **(S-00) Bloco "Limitação conhecida desta versão"** — moldura própria, barra vermelha à
+  esquerda, **sem marcador emoji**, com o veredicto em destaque na primeira frase. Existe para a
+  capacidade que o sistema oferece e que não deve ser usada (`§H.2`, em C-19). **Não é um oitavo
+  callout**: `⛔` continua reservado aos dez atos irreversíveis do §B.4, e este bloco é da família de
+  "por trás disto". Forma fixada e demonstrada em `doc/manual/piloto/index.html`.
 - **Bloco "por trás disto"** — recuado, cinza, tipograficamente menor. Só quando explicar o
   mecanismo evita erro: por que a prévia envelhece, por que a conclusão trava, por que a definitiva
   é recusada. Nunca fala de código.
@@ -1044,6 +1087,13 @@ existe na imagem.
 
 ### G.5 Navegação
 
+- **(S-00) O quadro "onde estou"** é uma **faixa de dezesseis traços**, um por fase, com o traço
+  atual mais alto e na cor de acento, e acima dela uma linha em texto:
+  `Fase 11 de 16 · Divulgar · o trabalho é do publicador`. Entra logo abaixo do resumo e antes do
+  primeiro callout, **só nos capítulos da Parte 2** — C-03 é a linha do tempo inteira e não a
+  repete. É gerado de um único atributo (`data-fase`), o que garante o mesmo nome de fase em vinte
+  capítulos. Dezesseis rótulos legíveis não cabem em 375 px sem rolagem horizontal, e este é o
+  último lugar do manual onde se pode pedir isso ao leitor.
 - **Menu lateral** persistente com as seis Partes; a Parte aberta expande; capítulo atual marcado.
 - **Breadcrumb**: `Manual › Parte 2 · As fases › C-16 Consolidar o resultado de cada Etapa`.
 - **Duas portas na home**, lado a lado e com o mesmo peso visual:
@@ -1063,6 +1113,19 @@ existe na imagem.
 - **Anotação sobre a imagem, não dentro dela:** retângulo de acento com 2 px e, quando houver mais
   de um alvo, marcadores numerados `①②③` que a legenda explica em texto. Isso mantém a captura
   legível e o texto pesquisável.
+- **(S-00) A anotação é CSS sobre a imagem — nunca gravada no PNG**, e suas coordenadas são
+  **emitidas pelo roteiro de captura**, em porcentagem da imagem, a partir do mesmo DOM que ele
+  recortou. Refazer a captura não obriga a refazer a anotação, e o retângulo acompanha a imagem em
+  qualquer largura de tela.
+- **(S-00) Os marcadores seguem a ordem de leitura da imagem** — de cima para baixo, da esquerda
+  para a direita —, e não a ordem de importância na legenda. A legenda se reescreve; a imagem não.
+  O marcador fica **fora** do retângulo, acima do canto superior esquerdo: encostado no canto, ele
+  cobre o primeiro caractere do rótulo que quer apontar.
+- **(S-00) O recorte começa e termina em fronteira de elemento**, nunca a N pixels: a faixa de
+  contexto acima é o elemento anterior inteiro. Margens de 22 px nas laterais e 8 px embaixo.
+- **(S-00) Em 375 px, uma captura de tela larga não encolhe: ela se desloca dentro da moldura**, em
+  tamanho real, com a legenda dizendo isso. Reduzida a 327 px, uma captura de 1 000 px fica com
+  texto de tela abaixo de 5 px — e a legenda passa a ser a única coisa que ensina.
 - **Legenda obrigatória**, em uma frase, dizendo o que a imagem prova — não o que ela mostra.
 - **Recorte antes de reduzir**: capturar a tela toda e mostrar só a região relevante, com uma faixa
   de contexto acima.
@@ -1079,6 +1142,24 @@ existe na imagem.
 - Nada de identificador técnico no corpo. Onde a tela mostra um, o manual diz: "o código longo ao
   lado é o registro de auditoria; você não precisa dele".
 - Uma seção — e uma só — com vocabulário técnico: `G-05`, para quem instala e opera o serviço.
+
+### G.8 · Régua de densidade **(S-00)**
+
+Medida nas quatro páginas do piloto, e passa a ser critério de revisão de cada capítulo:
+
+- **Entre duas capturas:** mínimo 4 linhas de texto, máximo 20. Abaixo de 4, as duas capturas são a
+  mesma e viram uma; acima de 20, ou falta uma captura, ou sobra explicação que pertence ao bloco
+  "por trás disto".
+- **Dentro de um passo com captura:** uma frase imperativa (1–2 linhas), a captura, a legenda
+  (1–3 linhas), o resultado esperado (1–2 linhas). Entre 3 e 8 linhas de texto por captura, fora a
+  legenda.
+- **Por página da Parte 2:** 850 a 1 150 palavras, 4 a 6 capturas, 5 a 7 caixas.
+- **Caixas:** no máximo uma a cada 100 palavras, e **nunca duas seguidas sem texto entre elas**.
+- **Prosa antes de procedimento:** um capítulo denso abre explicando o conceito, não listando
+  passos. Foi o que fez o bloco de C-08 sobreviver — os passos ficaram curtos porque a explicação
+  saiu deles.
+- **Onde uma tabela diz melhor, a tabela fica e a captura encolhe.** Se for preciso cortar, corta a
+  captura.
 
 ---
 
@@ -1098,7 +1179,7 @@ Três destinos, e cada lacuna tem exatamente um:
 | Destino | O que vai | Lacunas |
 |---|---|---|
 | **Alerta inline + `G-03`** | Afeta a ação em curso: o leitor faria algo errado, ou ficaria esperando algo que não vem | H.1, H.2, H.4, H.5, H.9, H.10, H.11 |
-| **Só `G-03`** | Fato relevante do produto que não muda nenhuma tarefa | H.3, H.6, H.7, H.13, H.14 |
+| **Só `G-03`** | Fato relevante do produto que não muda nenhuma tarefa | H.3, H.6, H.7, H.13, H.14, **H.17 (S-00)** |
 | **Nem no manual** | Achado interno; o manual o **resolve** escrevendo bem, ou ele é sobre o repositório | H.8, H.12, H.15 |
 
 Detalhando as três exceções da última linha, porque são as que costumam vazar para o texto por
@@ -1114,7 +1195,7 @@ E uma regra de forma para as que **têm** alerta inline: o alerta diz **o que fa
 falta. "Confira o prazo na página da seleção — o rascunho não avisa quando ele termina" ensina;
 "o rascunho não avisa que o período encerrou (defeito conhecido)" só reclama.
 
-### H.1 a H.15 · O inventário
+### H.1 a H.17 · O inventário
 
 **H.1 · Não há como documentar a entrada na área de gestão.**
 A identificação da gestão vem hoje de um seletor de identidade que **existe apenas fora de
@@ -1190,6 +1271,14 @@ A prova de reprodutibilidade do ato de classificação e o teto de inscrições 
 no domínio e não têm interface (o teto só é configurável fora do assistente). *No manual:*
 `G-03`, sem procedimento.
 
+**H.17 · Acrescentar um Edital a um Processo já criado não tem tela. (S-00)**
+Encontrado ao montar o certame do piloto. `/gestao/processos/criar` cria o Processo **junto com** o
+primeiro Edital, numa tela só (`Criar Processo e Edital`); o detalhe do Processo não oferece a ação,
+não há rota, e `add_edital` existe apenas na API. A capacidade é do domínio e a interface não a
+alcança. *No manual:* **só `G-03`**, em uma linha, junto do `H.14` — o fato não muda o que o leitor
+deve fazer agora, porque a tela o conduz corretamente pelo caminho que existe. C-06 perde a promessa
+de ensinar "um Processo com vários Editais", e a captura `SS-010` sai do inventário.
+
 **H.16 · Backlog de produto — o que não é problema de manual.**
 Três das lacunas acima são candidatas a correção no produto, e a distinção entre elas importa:
 
@@ -1201,6 +1290,12 @@ Três das lacunas acima são candidatas a correção no produto, e a distinção
 
 A produção do manual **não deve esperar** por H.8 nem por H.11. Só H.2 tem peso para justificar
 segurar a publicação institucional do material.
+
+**(S-00)** `H.17` entra neste quadro como quarto item, e é o mais brando dos quatro: **capacidade sem
+interface**, não bloqueio nem defeito. Um Processo com vários Editais é o que um Processo Seletivo
+real tem, e hoje só a API o monta. **Não trava o manual** — C-06 ensina a tela como ela é. Se a
+instituição precisar de dois Editais no mesmo Processo pela interface, é decisão de produto, e não
+escopo da produção do manual.
 
 **H.15 · A documentação do repositório está defasada.**
 O `README.md` descreve o produto até a spec 004. Os relatórios E2E citam achados já corrigidos —
@@ -1289,7 +1384,12 @@ adquirido de entrar no manual.
 - o comportamento em 375 px das três páginas;
 - uma decisão explícita sobre cada dúvida que aparecer — registrada, não deixada para depois.
 
-**Só depois da aprovação do piloto começa a coleta das 88 capturas.** Se o piloto indicar outro
+> **(S-00, executado em 08/09/2026.)** O piloto foi produzido em `doc/manual/piloto/`, as nove
+> respostas estão em `doc/manual/piloto/relatorio-s00.md`, e o inventário foi revisado em
+> `doc/manual/01-inventario-de-capturas-revisado.md` — de 88 para **89** capturas. As ferramentas de
+> captura ficaram em `doc/manual/piloto/ferramentas/`, para que S-01 não as reconstrua.
+
+**Só depois da aprovação do piloto começa a coleta das capturas.** Se o piloto indicar outro
 enquadramento, o inventário do §F é revisado antes de qualquer sessão de captura — e é para isso
 que ele existe.
 
@@ -1327,7 +1427,7 @@ mais no máximo dois arquivos do repositório.
 | **S-00** | **Piloto editorial** | **Layout provisório, C-03, C-12, C-18, o bloco-espécime de C-08, 8–12 capturas, padrão de anotação e régua de densidade** | **§C.bis, §G, §F.1** |
 | S-01 | Capturar as fases 1–5 | SS-001 a SS-042 | §F, padrão aprovado em S-00 |
 | S-02 | Capturar as fases 6–11 | SS-043 a SS-067 | idem |
-| S-03 | Capturar as fases 12–16 e as exceções | SS-068 a SS-088 | idem |
+| S-03 | Capturar as fases 12–16 e as exceções | SS-068 a SS-087 | idem |
 | S-04 | Esqueleto definitivo e sistema visual | Menu, busca, glossário com âncoras | §G, saída de S-00 |
 | S-05 | As quatro ilustrações vetoriais | 4 SVG | §B, §G.4 |
 | S-06 | C-06, C-07 | Abrir o Processo + Elaborar I | §C.bis, capturas de S-01 |

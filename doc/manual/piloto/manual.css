@@ -1,0 +1,383 @@
+/* Manual do Sistema de Processo Seletivo — folha provisória do piloto S-00.
+   Referência de tom: manual de norma bem diagramado (§G.1). Serifada no corpo,
+   sem serifa em títulos, rótulos e tudo que cite a interface. Um acento único. */
+
+:root {
+  --tinta: #1b2430;
+  --tinta-2: #55606e;
+  --tinta-3: #7b8593;
+  --papel: #ffffff;
+  --fundo: #f2f3f1;
+  --linha: #dcdfd9;
+  --linha-forte: #c3c8be;
+  --institucional: #23405a;
+  --acento: #5b3a8f;
+  --acento-fraco: #efeaf7;
+
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --coluna: 45rem;
+  --lateral: 18.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tinta: #e8eaec;
+    --tinta-2: #a8b1bc;
+    --tinta-3: #7f8994;
+    --papel: #171b21;
+    --fundo: #101318;
+    --linha: #2b323b;
+    --linha-forte: #3c4552;
+    --institucional: #9dc0dd;
+    --acento: #b79ce8;
+    --acento-fraco: #241c36;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--tinta);
+  font: 400 1.0625rem/1.65 var(--serif);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- estrutura ---------- */
+
+.moldura { display: grid; grid-template-columns: var(--lateral) 1fr; min-height: 100vh; }
+
+.lateral {
+  background: var(--papel);
+  border-right: 1px solid var(--linha);
+  padding: 1.75rem 1.25rem 4rem;
+  font-family: var(--sans);
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+
+.lateral .marca { display: block; font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--institucional); text-decoration: none; line-height: 1.35; }
+.lateral .marca span { display: block; font-weight: 400; text-transform: none; letter-spacing: 0;
+  color: var(--tinta-3); font-size: 0.75rem; margin-top: 0.2rem; }
+
+.lateral nav { margin-top: 1.75rem; }
+.lateral .parte { margin-bottom: 1.1rem; }
+.lateral .parte > p { margin: 0 0 0.4rem; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--tinta-3); }
+.lateral ul { list-style: none; margin: 0; padding: 0; }
+.lateral li a {
+  display: block; padding: 0.28rem 0.5rem 0.28rem 0.6rem; margin-left: -0.6rem;
+  font-size: 0.8125rem; line-height: 1.35; color: var(--tinta-2); text-decoration: none;
+  border-left: 2px solid transparent; border-radius: 0 3px 3px 0;
+}
+.lateral li a:hover { color: var(--tinta); background: var(--fundo); }
+.lateral li a .cod { font-variant-numeric: tabular-nums; color: var(--tinta-3); margin-right: 0.4rem; }
+.lateral li a[aria-current="page"] { color: var(--acento); background: var(--acento-fraco);
+  border-left-color: var(--acento); font-weight: 600; }
+.lateral li a[aria-current="page"] .cod { color: var(--acento); }
+.lateral li.vazia a { color: var(--tinta-3); font-style: italic; cursor: default; }
+.lateral li.vazia a:hover { background: none; }
+
+.pagina { padding: 0 3rem 6rem; background: var(--fundo); min-width: 0; }
+.conteudo { max-width: var(--coluna); margin: 0 auto; min-width: 0; }
+
+/* ---------- breadcrumb ---------- */
+
+.trilha { font-family: var(--sans); font-size: 0.75rem; color: var(--tinta-3);
+  padding: 1.5rem 0 0; max-width: var(--coluna); margin: 0 auto; }
+.trilha a { color: var(--tinta-2); text-decoration: none; }
+.trilha a:hover { color: var(--acento); }
+.trilha span { margin: 0 0.4rem; }
+
+/* ---------- cabeçalho de capítulo ---------- */
+
+.capitulo-cabeca { max-width: var(--coluna); margin: 0 auto; padding-top: 0.75rem; }
+.capitulo-cabeca .codigo { font-family: var(--sans); font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--acento); }
+h1 { font-family: var(--sans); font-size: 2rem; line-height: 1.2; font-weight: 700;
+  letter-spacing: -0.015em; margin: 0.35rem 0 0.6rem; }
+.resumo { font-size: 1.125rem; line-height: 1.55; color: var(--tinta-2); margin: 0 0 1.5rem; }
+
+h2 { font-family: var(--sans); font-size: 1.3125rem; font-weight: 700; letter-spacing: -0.01em;
+  margin: 2.75rem 0 0.75rem; padding-top: 0.4rem; border-top: 1px solid var(--linha); }
+h3 { font-family: var(--sans); font-size: 1.0625rem; font-weight: 700; margin: 1.75rem 0 0.5rem; }
+p { margin: 0 0 0.9rem; }
+a { color: var(--institucional); text-underline-offset: 2px; }
+strong { font-weight: 700; }
+main ul, main ol { margin: 0 0 1rem; padding-left: 1.3rem; }
+main li { margin-bottom: 0.35rem; }
+
+/* Rótulo de interface: tudo que a pessoa lê na tela aparece assim, sem serifa. */
+.rotulo { font-family: var(--sans); font-weight: 600; font-size: 0.94em;
+  letter-spacing: -0.005em; color: var(--tinta); white-space: nowrap; }
+
+/* ---------- "onde estou" (§G.5) ---------- */
+
+.onde-estou {
+  background: var(--papel); border: 1px solid var(--linha); border-radius: 4px;
+  padding: 0.85rem 1rem 0.95rem; margin: 0 0 2rem; font-family: var(--sans);
+}
+.onde-estou .dizer { font-size: 0.8125rem; color: var(--tinta-2); margin: 0 0 0.55rem; }
+.onde-estou .dizer b { color: var(--tinta); font-weight: 700; }
+.onde-estou .fita { display: flex; gap: 3px; align-items: flex-end; }
+.onde-estou .fita i {
+  flex: 1; height: 7px; background: var(--linha-forte); border-radius: 1px; font-style: normal;
+}
+.onde-estou .fita i.feita { background: var(--tinta-3); }
+.onde-estou .fita i.atual { background: var(--acento); height: 13px; }
+.onde-estou .legenda { display: flex; justify-content: space-between; font-size: 0.6875rem;
+  color: var(--tinta-3); margin-top: 0.4rem; }
+
+/* ---------- os sete callouts (§G.2) ---------- */
+
+.caixa {
+  --cor: var(--linha-forte);
+  border-left: 3px solid var(--cor);
+  background: var(--papel);
+  padding: 0.85rem 1.1rem 0.9rem;
+  margin: 1.4rem 0;
+  border-radius: 0 4px 4px 0;
+}
+.caixa > .titulo {
+  font-family: var(--sans); font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--cor); margin: 0 0 0.35rem;
+  display: flex; align-items: baseline; gap: 0.45rem;
+}
+.caixa > .titulo .marcador { font-size: 0.9375rem; line-height: 1; }
+.caixa p:last-child, .caixa ul:last-child, .caixa ol:last-child { margin-bottom: 0; }
+.caixa p { font-size: 0.9375rem; line-height: 1.55; }
+
+.caixa.quem      { --cor: #3f5b78; }
+.caixa.quando    { --cor: #6a5a2e; }
+.caixa.dica      { --cor: #2f6a52; }
+.caixa.atencao   { --cor: #9a5c14; background: #fdf7ee; }
+.caixa.sem-retorno { --cor: #9a2020; background: #fdf1f1; border-left-width: 4px; }
+.caixa.depois    { --cor: #4a3f7a; background: var(--acento-fraco); }
+.caixa.terminou  { --cor: #2f6a52; background: #f0f7f3; }
+
+@media (prefers-color-scheme: dark) {
+  .caixa.quem      { --cor: #92b1cf; }
+  .caixa.quando    { --cor: #c3ad6a; }
+  .caixa.dica      { --cor: #7bc2a2; }
+  .caixa.atencao   { --cor: #e0a45c; background: #241d12; }
+  .caixa.sem-retorno { --cor: #e88b8b; background: #2a1516; }
+  .caixa.depois    { --cor: #b79ce8; }
+  .caixa.terminou  { --cor: #7bc2a2; background: #10201a; }
+}
+
+.caixa.sem-retorno > .titulo { font-size: 0.75rem; }
+
+/* Bloco "limitação conhecida" (§G.3, acrescentado em S-00): NÃO é um oitavo callout.
+   Existe porque ⛔ está reservado a ato irreversível, e uma capacidade que não deve ser
+   usada é outra coisa — misturar as duas apagaria a distinção que o leitor decora. */
+.limitacao {
+  border: 1px solid var(--linha-forte); border-left: 4px solid #9a2020;
+  background: var(--papel); border-radius: 0 4px 4px 0;
+  padding: 0.9rem 1.1rem; margin: 1.6rem 0; font-family: var(--sans); font-size: 0.9375rem;
+}
+.limitacao .titulo { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--tinta-3); margin: 0 0 0.4rem; }
+.limitacao .veredicto { font-weight: 700; color: #9a2020; }
+.limitacao p:last-child { margin-bottom: 0; }
+@media (prefers-color-scheme: dark) {
+  .limitacao { border-left-color: #e88b8b; }
+  .limitacao .veredicto { color: #e88b8b; }
+}
+
+/* Bloco "por trás disto" (§G.3): recuado, menor, cinza. */
+.por-tras {
+  margin: 1.4rem 0 1.4rem 1.25rem; padding: 0.15rem 0 0.15rem 1rem;
+  border-left: 1px solid var(--linha-forte);
+  font-size: 0.875rem; line-height: 1.6; color: var(--tinta-2);
+}
+.por-tras .titulo { font-family: var(--sans); font-size: 0.6875rem; font-weight: 700;
+  letter-spacing: 0.07em; text-transform: uppercase; color: var(--tinta-3); margin: 0 0 0.3rem; }
+.por-tras p:last-child { margin-bottom: 0; }
+
+/* ---------- passo numerado com captura (§G.3) ---------- */
+
+.passos { list-style: none; margin: 1.5rem 0 2rem; padding: 0; counter-reset: passo; }
+.passo { counter-increment: passo; position: relative; padding-left: 2.6rem; margin-bottom: 1.9rem; }
+.passo::before {
+  content: counter(passo);
+  position: absolute; left: 0; top: 0.05rem;
+  width: 1.75rem; height: 1.75rem; border-radius: 50%;
+  background: var(--institucional); color: var(--papel);
+  font-family: var(--sans); font-size: 0.8125rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.passo > .acao { font-family: var(--sans); font-size: 1rem; font-weight: 600; line-height: 1.45;
+  margin: 0.15rem 0 0.5rem; }
+.passo > .acao .rotulo { font-weight: 700; }
+.passo > p { font-size: 0.9375rem; }
+.passo .resultado {
+  font-size: 0.875rem; color: var(--tinta-2); font-family: var(--sans);
+  border-left: 2px solid var(--linha-forte); padding-left: 0.7rem; margin: 0.6rem 0 0;
+}
+.passo .resultado b { color: var(--tinta); font-weight: 600; }
+
+/* ---------- capturas (§G.6) ---------- */
+
+figure.captura { margin: 1rem 0 1.1rem; }
+figure.captura .quadro {
+  display: block; border: 1px solid var(--linha-forte);
+  border-radius: 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); overflow: hidden;
+  background: var(--papel); line-height: 0;
+}
+figure.captura .tela { position: relative; display: block; }
+figure.captura img { width: 100%; height: auto; display: block; }
+figure.captura.celular { max-width: 19rem; }
+figure.captura.celular .quadro { border-radius: 10px; }
+/* Captura mais alta do que o olho aguenta numa página: rola dentro da moldura,
+   em vez de virar arranha-céu. */
+figure.captura.rolavel .quadro { max-height: 30rem; overflow-y: auto; }
+figure.captura.rolavel figcaption::after {
+  content: " A imagem rola dentro da moldura: na tela do celular tudo isto está numa coluna só.";
+  color: var(--tinta-3);
+}
+figure.captura.alta .quadro { max-height: 26rem; overflow-y: auto; }
+figure.captura.alta figcaption::after {
+  content: " A imagem rola dentro da moldura.";
+  color: var(--tinta-3);
+}
+figcaption {
+  font-family: var(--sans); font-size: 0.8125rem; line-height: 1.5; color: var(--tinta-2);
+  margin-top: 0.5rem;
+}
+figcaption .n { color: var(--acento); font-weight: 700; }
+
+/* Anotação sobre a imagem, nunca dentro dela. */
+.alvo { position: absolute; border: 2px solid var(--acento); border-radius: 3px; pointer-events: none; }
+.alvo .numero {
+  /* Fora do retângulo, e não sobre ele: encostado no canto o marcador cobria
+     justamente o primeiro caractere do rótulo que ele quer apontar. */
+  position: absolute; top: -1.5rem; left: -0.35rem;
+  width: 1.35rem; height: 1.35rem; border-radius: 50%;
+  background: var(--acento); color: #fff;
+  font-family: var(--sans); font-size: 0.75rem; font-weight: 700; line-height: 1.35rem;
+  text-align: center;
+}
+
+/* ---------- tabelas ---------- */
+
+table { border-collapse: collapse; width: 100%; font-family: var(--sans); font-size: 0.875rem;
+  margin: 1.1rem 0 1.4rem; }
+th, td { text-align: left; padding: 0.5rem 0.7rem 0.5rem 0; border-bottom: 1px solid var(--linha);
+  vertical-align: top; }
+th { font-size: 0.6875rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tinta-3);
+  border-bottom-color: var(--linha-forte); font-weight: 700; }
+/* Conteúdo largo rola dentro da própria caixa; a página nunca rola de lado.
+   `min-width: 0` é o que faz isso valer dentro do grid da moldura. */
+.rolavel-x { overflow-x: auto; min-width: 0; max-width: 100%; }
+
+/* ---------- ilustração vetorial ---------- */
+
+figure.desenho { margin: 1.5rem 0; }
+figure.desenho svg { width: 100%; height: auto; display: block; }
+
+/* ---------- rodapé de progressão (§G.5) ---------- */
+
+.progressao { max-width: var(--coluna); margin: 3.5rem auto 0; font-family: var(--sans);
+  border-top: 1px solid var(--linha-forte); padding-top: 1.4rem; }
+.progressao .adiante {
+  background: var(--papel); border: 1px solid var(--linha); border-radius: 4px;
+  padding: 0.9rem 1.1rem; margin-bottom: 1.2rem;
+}
+.progressao .adiante p { font-size: 0.875rem; margin: 0; color: var(--tinta-2); }
+.progressao .adiante .titulo { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--tinta-3); margin: 0 0 0.3rem; }
+.progressao .vizinhos { display: flex; justify-content: space-between; gap: 1rem; }
+.progressao .vizinhos a { flex: 1; text-decoration: none; color: var(--tinta-2); font-size: 0.8125rem; }
+.progressao .vizinhos a:hover { color: var(--acento); }
+.progressao .vizinhos a b { display: block; font-size: 0.9375rem; color: var(--tinta); font-weight: 600;
+  margin-top: 0.15rem; }
+.progressao .vizinhos .prox { text-align: right; }
+.progressao .vizinhos a:hover b { color: var(--acento); }
+
+/* ---------- home ---------- */
+
+.portas { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 2rem 0 2.5rem; }
+.porta {
+  display: block; background: var(--papel); border: 1px solid var(--linha-forte);
+  border-radius: 5px; padding: 1.35rem 1.4rem; text-decoration: none; color: inherit;
+}
+.porta:hover { border-color: var(--acento); }
+.porta h2 { font-size: 1.125rem; border: 0; padding: 0; margin: 0 0 0.4rem; }
+.porta p { font-size: 0.875rem; color: var(--tinta-2); margin: 0; font-family: var(--sans); }
+
+.nota-piloto {
+  background: var(--acento-fraco); border-left: 3px solid var(--acento);
+  padding: 0.9rem 1.1rem; border-radius: 0 4px 4px 0; font-size: 0.9375rem; margin: 1.5rem 0 2rem;
+}
+.nota-piloto p:last-child { margin-bottom: 0; }
+
+/* ---------- 375 px ---------- */
+
+.abre-menu { display: none; }
+
+@media (max-width: 60rem) {
+  .moldura { grid-template-columns: 1fr; }
+  .lateral {
+    position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--linha);
+    padding: 1rem 1.25rem 1.25rem;
+  }
+  .lateral nav { display: none; margin-top: 1rem; }
+  .lateral.aberta nav { display: block; }
+  .abre-menu {
+    display: block; margin-top: 0.85rem; font-family: var(--sans); font-size: 0.8125rem;
+    font-weight: 600; color: var(--institucional); background: none; border: 1px solid var(--linha-forte);
+    border-radius: 3px; padding: 0.4rem 0.75rem; cursor: pointer;
+  }
+  .pagina { padding: 0 1.25rem 4rem; }
+  h1 { font-size: 1.625rem; }
+  body { font-size: 1rem; }
+  .portas { grid-template-columns: 1fr; }
+  .progressao .vizinhos { flex-direction: column; gap: 0.75rem; }
+  .progressao .vizinhos .prox { text-align: left; }
+  .onde-estou .fita i { min-width: 0; }
+  .passo { padding-left: 2.25rem; }
+  figure.captura.celular { max-width: 100%; }
+  /* Uma captura de tela larga fica ilegível reduzida a 375 px. Em vez de encolhê-la,
+     ela mantém o tamanho e se desloca dentro da moldura — e a anotação vai junto. */
+  figure.captura.larga .quadro { overflow-x: auto; }
+  figure.captura.larga .tela { width: 40rem; }
+  figure.captura.larga figcaption::before {
+    content: "Arraste a imagem para o lado para ler a tela inteira. ";
+    color: var(--tinta-3);
+  }
+  .por-tras { margin-left: 0; }
+  .rolavel-x table { min-width: 34rem; }
+}
+
+@media print {
+  .lateral, .progressao .vizinhos, .abre-menu { display: none; }
+  .moldura { display: block; }
+  body { background: #fff; }
+}
+
+/* ---------- o mapa das 16 fases (§G.4) ----------
+   Dimensionado para que o texto menor não caia abaixo de 11 px em 375 px de tela,
+   e não estoure em desktop: por isso a largura tem teto. */
+
+.mapa-fases { max-width: 27rem; margin: 0 auto; font-family: var(--sans); }
+.mapa-fases .espinha { stroke: var(--linha-forte); stroke-width: 2; }
+.mapa-fases .no { fill: var(--papel); stroke: var(--institucional); stroke-width: 2; }
+.mapa-fases .num { font-size: 11px; font-weight: 700; fill: var(--institucional); text-anchor: middle; }
+.mapa-fases .nome { font-size: 13.5px; font-weight: 600; fill: var(--tinta); }
+.mapa-fases .ator { font-size: 11px; fill: var(--tinta-3); }
+.mapa-fases .trava { fill: none; stroke: #9a2020; stroke-width: 2; }
+.mapa-fases .paralela { fill: none; stroke: var(--acento); stroke-width: 1.5; }
+.mapa-fases .nota-lateral { font-size: 10px; fill: var(--acento); letter-spacing: 0.04em; }
+
+@media (prefers-color-scheme: dark) {
+  .mapa-fases .trava { stroke: #e88b8b; }
+}
+
+@media (max-width: 60rem) {
+  .mapa-fases { max-width: 100%; }
+}
