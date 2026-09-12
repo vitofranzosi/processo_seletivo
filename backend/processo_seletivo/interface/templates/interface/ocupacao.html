@@ -74,6 +74,21 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
     {% endif %}
   </form>
   {% endif %}
+
+  {% comment %}
+  A faixa seguinte, e ela **nao seleciona ninguem aqui**: o pedido entrega quantidade e motivo, e
+  quem le a ordem e escolhe e a `014`. Aparece so onde ha deficit apurado e a apuracao nao esta
+  obsoleta — pedir a faixa sobre numero que se sabe para tras e o que a `FR-263` impede.
+  {% endcomment %}
+  {% if pode_emitir and recorte.estado == "CURRENT" and recorte.faltando %}
+  <form method="post" action="{% url 'interface:causar-faixa' edital.id marco_id %}" class="acoes">
+    {% csrf_token %}
+    <input type="hidden" name="lista" value="{{ recorte.listaId|default_if_none:'' }}">
+    <input type="hidden" name="chave" value="{{ chave_idempotencia }}-faixa-{{ forloop.counter }}">
+    <p class="ajuda">O deficit apurado de {{ recorte.faltando }} vaga(s) sera a causa do ato, e a faixa anterior nao e revogada.</p>
+    <button type="submit" class="botao">Pedir a faixa seguinte com este deficit</button>
+  </form>
+  {% endif %}
 </section>
 {% endfor %}
 {% endblock %}

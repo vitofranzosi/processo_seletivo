@@ -53,7 +53,14 @@ def rascunho_com_quadro(*, geral=3, ppi=None, reversao=None, cut=None):
 
 
 def montar_cenario_da_ocupacao(
-    gestor, api_client, manager_headers, process_payload, *, prefixo="ocupacao-016", **quadro
+    gestor,
+    api_client,
+    manager_headers,
+    process_payload,
+    *,
+    prefixo="ocupacao-016",
+    cut=None,
+    **quadro,
 ):
     """Edital publicado com quadro, ordem emitida e corte emitido.
 
@@ -61,8 +68,14 @@ def montar_cenario_da_ocupacao(
     leia os dois arquivos reconheça o cenário.
     """
 
-    def monta(cut=None):
-        return rascunho_com_quadro(cut=cut, **quadro)
+    def monta(cut=None, _declarado=cut):
+        """O `cut` que o chamador declarou vence o que `montar_cenario_do_corte` injeta.
+
+        Quem exercita a faixa seguinte precisa de um Edital que **admita continuação**, e a regra do
+        cenário base é a do 14/2026, que não a admite. O parâmetro `_declarado` captura o valor no
+        momento da definição — mais legível aqui que fechar sobre a variável externa.
+        """
+        return rascunho_com_quadro(cut=_declarado if _declarado is not None else cut, **quadro)
 
     edital, pontuada, inscricoes = montar_cenario_do_corte(
         gestor,

@@ -252,12 +252,12 @@ a faixa seguinte é emitida com o déficit como causa.
 
 ### Testes
 
-- [ ] T045 [P] [US3] Teste de integração em
+- [X] T045 [P] [US3] Teste de integração em
       `backend/tests/integration/ocupacao/test_causar_faixa.py`: o ato da faixa guarda o **déficit
       apurado** como causa, e não texto digitado (`FR-255`)
-- [ ] T046 [P] [US3] Teste da recusa com déficit zero (`FR-256`) e da recusa sobre apuração
+- [X] T046 [P] [US3] Teste da recusa com déficit zero (`FR-256`) e da recusa sobre apuração
       obsoleta (`FR-263`), em `backend/tests/integration/ocupacao/test_causar_faixa.py`
-- [ ] T047 [P] [US3] Teste de dependência em
+- [X] T047 [P] [US3] Teste de dependência em
       `backend/tests/test_dependencia_da_ocupacao.py`, varrendo os imports por AST. Duas asserções:
       **nenhum** módulo de `classificacao` importa `ocupacao` (`R-002`); e **nenhum** módulo de
       `ocupacao` importa o que ordena ou desempata (`FR-257`) — a lista permitida é
@@ -270,13 +270,13 @@ a faixa seguinte é emitida com o déficit como causa.
 
 ### Implementação
 
-- [ ] T048 [US3] Implementar `backend/processo_seletivo/ocupacao/application/causar_faixa.py`,
+- [X] T048 [US3] Implementar `backend/processo_seletivo/ocupacao/application/causar_faixa.py`,
       chamando `classificacao.application.emissao_do_corte` com o déficit — a seta é desta feature
       para a `014`, nunca o contrário
-- [ ] T049 [US3] Ação para pedir a faixa seguinte pela ocupação — rota em
+- [X] T049 [US3] Ação para pedir a faixa seguinte pela ocupação — rota em
       `backend/processo_seletivo/interface/urls.py` e view em
       `backend/processo_seletivo/interface/views.py`
-- [ ] T050 [P] [US3] Teste do vocabulário em `backend/tests/test_vocabulario_da_ocupacao.py`:
+- [X] T050 [P] [US3] Teste do vocabulário em `backend/tests/test_vocabulario_da_ocupacao.py`:
       nenhuma tela, ato ou mensagem desta feature usa termo de convocação, aceite ou matrícula
       (`FR-258`, `UX-034`), na forma de `test_vocabulario_do_corte.py`. *A proibição estrutural da
       `FR-257` mora na `T047`, e não aqui: varredura de texto não prova que nenhum caminho ordena —

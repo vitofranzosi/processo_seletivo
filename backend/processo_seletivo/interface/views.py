@@ -4376,6 +4376,36 @@ def emitir_apuracao_view(request, edital_id, marco_id):
 
 
 @require_http_methods(["POST"])
+def causar_faixa_view(request, edital_id, marco_id):
+    """Pede à `014` a faixa seguinte com o déficit apurado como causa (016, FR-255).
+
+    **Esta ação não seleciona ninguém.** Ela entrega quantidade e motivo; quem lê a ordem e escolhe
+    é a `014`, do outro lado da chamada.
+    """
+    from processo_seletivo.ocupacao.application.causar_faixa import causar_faixa_seguinte
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    lista_id = _identidade_ou_404(request.POST.get("lista"))
+    destino = reverse("interface:ocupacao", args=[edital_id, marco_id])
+    try:
+        request.session["resultado_da_ocupacao"] = causar_faixa_seguinte(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital=edital,
+            perfil_id=_perfil_do_marco(edital, marco_id),
+            marco_id=marco_id,
+            lista_id=lista_id,
+            idempotency_key=request.POST.get("chave") or uuid4().hex,
+            correlation_id=f"interface-faixa-{edital_id}",
+        )
+    except DomainError as erro:
+        request.session["erro_da_ocupacao"] = erro.detail
+    return redirect(destino)
+
+
+@require_http_methods(["POST"])
 def emitir_corte_view(request, edital_id, marco_id):
     """Constitui a faixa conferida e volta à leitura pelo padrão POST-redirect-GET."""
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)

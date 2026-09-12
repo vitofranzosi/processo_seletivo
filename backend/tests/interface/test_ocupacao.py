@@ -160,3 +160,38 @@ def test_a_pagina_nao_tem_tabela_horizontal_a_375px(client, seletor_ligado, cena
     # `dl.meta` é o vocabulário que as telas irmãs já usam para pares rótulo/valor. Classe nova
     # exigiria regra nova na folha, e a varredura de CSS recusa classe sem desenho.
     assert 'class="meta"' in pagina
+
+
+def test_a_acao_da_faixa_seguinte_aparece_so_onde_ha_deficit(
+    client, seletor_ligado, cenario, gestor
+):
+    """Sem apuração não há déficit, e sem déficit a ação não é oferecida (`FR-256`).
+
+    Oferecer o botão e recusar no clique seria descobrir a recusa com o cronograma correndo — a
+    tela mostra o que ela consegue conferir enquanto a pessoa lê.
+    """
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+
+    antes = abrir(client, edital).content.decode()
+    assert "Pedir a faixa seguinte" not in antes
+
+    apurar(edital, gestor)
+    depois = abrir(client, edital).content.decode()
+
+    assert "Pedir a faixa seguinte" in depois
+    assert "O deficit apurado de 3 vaga(s)" in depois
+
+
+def test_as_tres_rotas_da_ocupacao_sao_distintas():
+    """Ler, apurar e causar a faixa são três coisas, e cada uma tem a sua rota."""
+    edital = "00000000-0000-4000-8000-000000000001"
+    marco = "00000000-0000-4000-8000-000000000002"
+
+    rotas = {
+        reverse("interface:ocupacao", args=[edital, marco]),
+        reverse("interface:emitir-apuracao", args=[edital, marco]),
+        reverse("interface:causar-faixa", args=[edital, marco]),
+    }
+
+    assert len(rotas) == 3

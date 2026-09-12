@@ -250,6 +250,11 @@ urlpatterns = [
         name="emitir-apuracao",
     ),
     path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/faixa-seguinte",
+        views.causar_faixa_view,
+        name="causar-faixa",
+    ),
+    path(
         "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/corte/continuar",
         views.continuar_corte_view,
         name="continuar-corte",
