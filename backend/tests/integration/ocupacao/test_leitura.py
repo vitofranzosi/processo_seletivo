@@ -61,6 +61,7 @@ class TestAntesDeApurar:
 
 class TestDepoisDeApurar:
     def test_os_quatro_numeros_aparecem(self, cenario, gestor):
+        """As **quatro** quantidades do recorte, e não três (`FR-239`)."""
         edital, _, _ = cenario
         apurar(edital, gestor)
 

@@ -255,7 +255,7 @@ def test_nenhuma_vaga_atravessa_perfil(com_saldo, gestor):
 def test_nenhuma_vaga_atravessa_perfil_em_certame_de_sorteio(
     db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos
 ):
-    """**`FR-246` e o item 4.5 do 57/2026, agora no cenário que a reversão exige.**
+    """**`FR-246`, `SC-080` e o item 4.5 do 57/2026, no cenário que a reversão exige.**
 
     Dois Perfis no mesmo Edital, cada um com o seu quadro. A busca de movimentos filtra por
     `apuracao__perfil_id`, de modo que não existe caminho em que a vaga cedida por um Perfil seja

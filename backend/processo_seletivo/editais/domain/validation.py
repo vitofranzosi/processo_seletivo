@@ -103,6 +103,20 @@ PERFIL_PUBLICADO = (
     # anteriores —, porque duas grafias para a ausência, chave ausente e lista vazia, é o que a
     # D-005 existe para não permitir.
     Campo("vacancyTable", list, tipo_do_item=dict),
+    # A declaração de reversão da `016` (D-007). **`dict` anulável, e nulo é a declaração de que
+    # este Edital não reverte** — não a ausência dela: sempre presente depois do degrau 14, como o
+    # quadro depois do 12, porque duas grafias para a ausência é o que a versão canônica existe
+    # para não admitir.
+    #
+    # **A forma de dentro não se declara aqui**, e é a mesma régua de `competitionModalities`: que
+    # `kind` exista e seja um dos dois declaráveis é conferido por `_reversao_declarada`, que
+    # precisa recusar a publicação com código próprio — `vacancy_reversion_kind_required` — em vez
+    # de devolver "tipo inválido".
+    #
+    # **Ela estava faltando, e o defeito é o do `T110` da `014` repetido**: a publicação emitia o
+    # campo, o degrau 14 o elevava, e a forma publicada não o conferia. Quem o encontrou foi
+    # `tests/contract/test_forma_publicada.py`, ao acrescentar `vacancyReversion` ao contrato.
+    Campo("vacancyReversion", dict, admite_nulo=True),
 )
 
 # **A forma de dentro da linha É declarada**, ao contrário da de `competitionModalities`, que é a

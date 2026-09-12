@@ -1,5 +1,8 @@
 """Nenhuma superfície da `016` afirma que alguém foi convocado, aceitou ou se matriculou.
 
+A `FR-258` é a proibição, e a `UX-034` é a verificabilidade dela por varredura — as duas provadas
+aqui, porque são a mesma frase dita como norma e como método.
+
 **Por que existe.** A fronteira com a `019` é a frase mais fácil de atravessar sem perceber. A
 ocupação diz **quantas vagas estão ocupadas**; quem foi chamado, quem aceitou e quem se matriculou
 são fatos que esta feature não tem e não pode inventar — ela conta quem está na faixa e habilitado,

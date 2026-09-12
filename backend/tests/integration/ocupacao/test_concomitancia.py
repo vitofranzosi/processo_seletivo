@@ -117,10 +117,12 @@ def emitir_cortes(certame, gestor):
 
 class TestOCaminhoPositivo:
     def test_o_cotista_ocupa_pela_ampla_e_nao_conta_na_reservada(self, sorteado, gestor):
-        """**`FR-252` no caminho de verdade**, e é o número que o Edital manda.
+        """**`FR-252` e `FR-254` no caminho de verdade**, e é o número que o Edital manda.
 
-        A ampla fica com 1 ocupada de 2; a reservada, com **0** de 1 — e a vaga dela segue aberta ao
-        próximo autodeclarado, que é literalmente o que o item 8.9 diz.
+        A ocupação é registrada pela **ampla concorrência** (`FR-254`), e a vaga reservada permanece
+        no recorte reservado (`FR-253`): a ampla fica com 1 ocupada de 2; a reservada, com **0** de
+        1, e a vaga dela segue aberta ao próximo autodeclarado — literalmente o que o item 8.9 diz.
+        Nenhuma quantidade mudou de recorte, e é isso que as efetivas 4 e 1 afirmam.
         """
         emitir_cortes(sorteado, gestor)
         habilitar(sorteado, [sorteado["cotista_ppi"]])

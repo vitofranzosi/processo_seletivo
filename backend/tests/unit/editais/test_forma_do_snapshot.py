@@ -100,6 +100,9 @@ def test_o_perfil_reduzido_aos_campos_de_entrada_e_recusado():
         # A da versão 13, pela mesma razão de novo: o Perfil publicado diz **sempre** qual das suas
         # Modalidades é a ampla concorrência, ainda que a resposta seja `null` (014, FR-231).
         "generalCompetitionModalityId",
+        # A da versão 14, e a razão não muda: o Perfil publicado diz **sempre** sob qual gatilho a
+        # vaga reservada reverte, e `null` é a declaração de que não reverte (016, FR-245).
+        "vacancyReversion",
     }
 
 

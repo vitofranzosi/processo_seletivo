@@ -353,16 +353,45 @@ depender de desistência, que é fato da `019` (`R-001`).
 
 ## Phase 8: Polish & Cross-Cutting
 
-- [ ] T060 [P] Acrescentar `vacancyReversion` ao `openapi.yaml` em
+- [X] T060 [P] Acrescentar `vacancyReversion` ao `openapi.yaml` em
       `specs/001-processo-seletivo-editais/contracts/openapi.yaml`, nos **dois** lugares em que o
-      Perfil aparece
-- [ ] T061 [P] Acrescentar os três endpoints do contrato ao `openapi.yaml`
-- [ ] T062 [P] Escrever `specs/016-ocupacao-de-vagas/rastreabilidade.md` — matriz
-      `FR-239`–`FR-263` (incluindo `FR-239a`), `SC-078`–`SC-084`, `UX-031`–`UX-034` contra arquivo
-      de teste
-- [ ] T063 [P] Acrescentar a linha da `016` à tabela de incrementos do `README.md` — o resíduo já
-      apareceu três vezes, e nenhum `tasks.md` anterior tinha esta tarefa
-- [ ] T064 Atualizar a contagem da suíte no `README.md` e no `AGENTS.md` com o número medido
+      Perfil aparece. **E ela encontrou um defeito que nenhuma tarefa desta feature previu**: o
+      campo era emitido pela publicação e elevado pelo degrau 14, e a **forma publicada não o
+      conferia** — `PERFIL_PUBLICADO` em `backend/processo_seletivo/editais/domain/validation.py`
+      não o transcrevia, e o Perfil acrescentado por Retificação nascia sem ele. É literalmente o
+      defeito que o `T110` da `014` fechou para `generalCompetitionModalityId` — *"o degrau 13
+      emitia campo que a forma publicada não conferia"* —, repetido um degrau depois. Quem o
+      encontrou foi `tests/contract/test_forma_publicada.py`, que confronta a transcrição com o
+      contrato: enquanto o contrato não declarava o campo, as duas listas coincidiam **por
+      ausência**. Fechado em quatro lugares: a transcrição, o Perfil acrescentado por Retificação,
+      a fixture do snapshot e o conjunto esperado de `test_forma_do_snapshot.py`
+- [ ] T061 [P] ~~Acrescentar os três endpoints do contrato ao `openapi.yaml`~~ — **deliberadamente
+      não executada, e o motivo é que os três endpoints não existem.** Nenhuma tarefa desta feature
+      implementou rota HTTP: a `T017`, a `T020` e a `T045` entregam a capacidade por
+      `interface/views.py`, e o `openapi.yaml` não tem um único caminho de classificação, corte ou
+      sorteio — a `014` acrescentou ali apenas a **forma do conteúdo** (`cutRule`,
+      `generalCompetitionModalityId`), pela mesma razão. Declarar `GET /api/editais/{id}/ocupacao`
+      num contrato de API que responde 404 seria documentar interface que o sistema não serve. A
+      §2 do [contrato](./contracts/ocupacao.md) descreve a **leitura** que os selectors produzem, e
+      é ali que ela continua válida. Decisão de fronteira é do usuário: registrada, não convertida
+      em escopo
+- [X] T062 [P] Escrever `specs/016-ocupacao-de-vagas/rastreabilidade.md` — matriz
+      `FR-239`–`FR-263` (incluindo `FR-239a` e `FR-253a`), `SC-078`–`SC-084`, `UX-031`–`UX-034`
+      (incluindo `UX-032a`) contra arquivo de teste, **medida por varredura e não afirmada**.
+      Cobertura 39 de 39, e a matriz **torna explícitos os dez** que chegaram aqui provados por
+      teste que não os citava: `FR-239`, `FR-253`, `FR-253a`, `FR-254`, `FR-258`, `UX-034`,
+      `SC-078`, `SC-080`, `SC-083` e — por rótulo parcial — a metade de interface da `SC-081`.
+      A prova existia; o rótulo, não, e quatro critérios continuam dependendo da `T065`
+- [X] T063 [P] Acrescentar a linha da `016` à tabela de incrementos do `README.md` — o resíduo já
+      apareceu três vezes, e nenhum `tasks.md` anterior tinha esta tarefa. **Faltava também a da
+      `014`**, já mergeada na `main`: a tabela ia de `013` a `015`, e as duas entraram
+- [X] T064 Atualizar a contagem da suíte no `README.md` e no `AGENTS.md` com o número medido:
+      **5076 passando e 2 pulados** contra PostgreSQL, e **33 falham / 4844 passam / 201 puladas**
+      no modo padrão, reclassificadas em 13 + 9 + 11 por causa medida. *As duas do modo padrão que
+      a `016` acrescenta são da segunda classe: a mensagem do SQLite não nomeia
+      `uq_apuracao_sucessora_unica`, e o `pytest.raises(match=...)` não casa.* **Atenção ao
+      mergear**: o PR do achado da `R-006` altera estas mesmas linhas com os números de antes da
+      `016` (4862 e 24 tabelas), e o conflito é esperado — quem entrar depois fica com 5076 e 26
 - [ ] T065 Percorrer o [quickstart](./quickstart.md) pela interface, contra servidor real, e
       registrar o relatório em `doc/e2e/016-ocupacao-de-vagas/relatorio.md`
 - [ ] T066 Rodar `cd backend && DB_NAME=ps_demo_016 make lint check test-pg` e registrar o

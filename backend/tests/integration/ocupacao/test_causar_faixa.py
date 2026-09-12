@@ -1,7 +1,9 @@
 """O déficit apurado causa a faixa seguinte pela `014` (016, `FR-255`, `FR-256`).
 
 **O que estes testes fecham é o ciclo do 77/2026**: faixa emitida, documentação recusada, déficit
-apurado, faixa seguinte emitida com o déficit **como causa** — e não com motivo digitado à mão.
+apurado, faixa seguinte emitida com o déficit **como causa** — e não com motivo digitado à mão. É a
+metade de domínio da `SC-081`; a outra metade dela é *"pela interface"*, e quem a prova é o percurso
+conduzido da `T065`, porque um teste de aplicação não percorre tela.
 
 A `D-003` da `014` previu exatamente isto: *"quando a `016` existir, ela passa a ser a origem do
 motivo, sem que o ato mude de forma"*. O que muda é de onde o motivo vem.

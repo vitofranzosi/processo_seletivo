@@ -7,6 +7,10 @@ diferentes mudam o número: a **reversão**, que move quantidade e deixa linha p
 O segundo é o que torna a trilha indispensável. Uma reservada que publica 1 e apura 0 ocupada não
 tem movimento nenhum a exibir — e sem o registro de *qual apuração leu qual versão do quadro, sobre
 qual ordem e qual corte*, ninguém reconstrói por que o número é aquele.
+
+**A `SC-083` é o que este arquivo mede**: todo número exibido tem trilha até o ato que o produziu.
+Ela se prova aqui e não na tela porque o que ela afirma é a existência da proveniência — ordem,
+corte, versão e linha do quadro citados por cada apuração —, e a tela apenas a exibe (`T058`).
 """
 
 import pytest

@@ -113,7 +113,7 @@ def test_abrir_a_tela_nao_apura(client, seletor_ligado, cenario):
 
 
 def test_a_tela_lista_um_bloco_por_recorte(client, seletor_ligado, cenario, gestor):
-    """Um marco com cota tem dois recortes, e listá-los juntos evita esquecer um.
+    """Um marco com cota tem dois recortes, e listá-los juntos evita esquecer um (`SC-078`).
 
     **O rótulo do recorte sem lista diz o que ele é.** A `021` pagou o preço de não dizer: num
     Edital que declara uma Modalidade chamada "Ampla concorrência", a tela mostrava dois blocos

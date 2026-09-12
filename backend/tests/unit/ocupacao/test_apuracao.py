@@ -202,7 +202,7 @@ class TestEstado:
 
 
 class TestOTetoDaOcupacao:
-    """**Suplente não ocupa vaga**, e o teto é o que impede um número falso.
+    """**Suplente não ocupa vaga**, e o teto é o que impede um número falso (`FR-253a`).
 
     A faixa pode ser maior que o quadro: no 77/2026 são 40 vagas com 30 suplentes alcançados na
     mesma faixa (`D-011` da `014`). Se todos habilitarem, a interseção dá 70 — e ocupar 70 de 40

@@ -928,6 +928,11 @@ def _perfil_completo(valores):
         # suas Modalidades é a ampla concorrência — e um Perfil que nasce sem Modalidade nenhuma não
         # teria mesmo o que apontar (014, FR-231).
         "generalCompetitionModalityId": None,
+        # A da versão 14, e é a última por enquanto. `None` diz que este Perfil não declara reversão
+        # de vaga reservada, e nunca "reverte do jeito comum" — declarar reversão num Perfil que
+        # nasce sem quadro seria, além disso, regra inexequível, que a publicação recusa
+        # (016, FR-245, FR-251).
+        "vacancyReversion": None,
     }
 
 
