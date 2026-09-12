@@ -12,46 +12,25 @@ somar movimentos e `CHECK` não agrega (016, R-006).
 
 from processo_seletivo.ocupacao.domain import nomes
 
+# **A leitura da linha do quadro NÃO é reimplementada aqui.** `classificacao.application.corte`
+# já tem `linha_do_quadro(conteudo, perfil_id=..., lista_id=...)`, e ela faz uma coisa que um
+# segundo leitor erraria: quando o `lista_id` é a Modalidade que o Perfil declara como ampla
+# concorrência, ela lê a **linha geral** — porque é lá que a quantidade da ampla mora. Escrever a
+# regra de novo aqui produziria dois módulos respondendo diferente para o mesmo recorte, e o alvo
+# derivado do corte discordaria da apuração no Edital do formato normal.
+#
+# A aplicação chama aquele leitor e entrega o número pronto a `apurar`. É por isso que esta camada
+# não conhece `conteudo` nenhum: ela recebe quantidades.
 
-def quantidade_publicada(perfil, *, lista_id):
-    """A quantidade da **linha** do quadro para este recorte, ou `None` se não houver linha.
 
-    `None` distingue "não há linha" de "há linha com zero", e a diferença decide: linha zerada é
-    declaração legítima do Edital, e ausência de linha é recorte que o quadro não descreve
-    (016, `FR-240`).
+def mesma_lista(a, b):
+    """Dois recortes são o mesmo. `None` é a ampla concorrência, e aqui ele **compara igual**.
 
-    **A ampla concorrência é a linha geral — `modalityId` nulo** —, e é a mesma grafia que a ordem,
-    o corte e o sorteio já usam. A Modalidade que o Perfil declara como ampla concorrência **não**
-    tem linha própria: a quantidade dela mora na linha geral, e dar-lhe linha declararia duas vezes
-    o mesmo número (016, `FR-241`).
+    Em SQL `NULL = NULL` não é verdadeiro, e é por isso que a constraint de recortes distintos
+    precisa de três metades. Em Python a comparação direta funciona, mas os valores chegam como
+    `UUID` de um lado e `str` do outro — normalizar num lugar só evita a divergência silenciosa.
     """
-    alvo = None if lista_id is None else str(lista_id)
-    for linha in perfil.get("vacancyTable") or []:
-        if not isinstance(linha, dict):
-            continue
-        identidade = linha.get("modalityId")
-        identidade = None if identidade is None else str(identidade)
-        if identidade == alvo:
-            quantidade = linha.get("immediateVacancies")
-            if isinstance(quantidade, int) and not isinstance(quantidade, bool):
-                return quantidade
-            return None
-    return None
-
-
-def linha_do_quadro(perfil, *, lista_id):
-    """A identidade da linha lida. Sem ela, retificado o quadro, não se sabe se **esta** apuração
-    ficou para trás — a quantidade sozinha não identifica a linha (016, `FR-263`).
-    """
-    alvo = None if lista_id is None else str(lista_id)
-    for linha in perfil.get("vacancyTable") or []:
-        if not isinstance(linha, dict):
-            continue
-        identidade = linha.get("modalityId")
-        identidade = None if identidade is None else str(identidade)
-        if identidade == alvo:
-            return linha.get("id")
-    return None
+    return (str(a) if a else None) == (str(b) if b else None)
 
 
 def apurar(*, publicadas, dentro_da_faixa, habilitadas, movimentos_lidos=()):

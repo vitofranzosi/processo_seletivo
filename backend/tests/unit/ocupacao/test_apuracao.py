@@ -6,55 +6,74 @@ são as três quantidades que o ato grava.
 
 import pytest
 
+from processo_seletivo.classificacao.application.corte import linha_do_quadro
 from processo_seletivo.ocupacao.domain import apuracao, nomes
 
+PERFIL = "99999999-9999-9999-9999-999999999999"
 AC = "11111111-1111-1111-1111-111111111111"
 PPI = "22222222-2222-2222-2222-222222222222"
 
 
-def perfil(*linhas):
-    """`(modalityId, quantidade)` — `None` na linha geral, que é a ampla concorrência."""
+def conteudo(*linhas, ampla=None):
+    """O conteúdo publicado com um Perfil e o quadro dado. `(modalityId, quantidade)` por linha."""
     return {
-        "vacancyTable": [
+        "profiles": [
             {
-                "id": f"aaaaaaaa-0000-0000-0000-00000000000{indice}",
-                "modalityId": m,
-                "immediateVacancies": q,
+                "id": PERFIL,
+                "generalCompetitionModalityId": ampla,
+                "vacancyTable": [
+                    {
+                        "id": f"aaaaaaaa-0000-0000-0000-00000000000{indice}",
+                        "modalityId": m,
+                        "immediateVacancies": q,
+                    }
+                    for indice, (m, q) in enumerate(linhas, start=1)
+                ],
             }
-            for indice, (m, q) in enumerate(linhas, start=1)
         ]
     }
 
 
-class TestQuantidadePublicada:
-    """A quantidade sai da **linha**, e nunca do total do Perfil (`FR-240`)."""
+class TestALinhaDoQuadroEReusada:
+    """A leitura da linha vem da `014`, e não de um segundo leitor (016, `FR-240`, `FR-241`).
+
+    **Este arquivo é de unidade e importa de `classificacao.application`** de propósito: a função é
+    pura — recebe o conteúdo publicado e devolve a linha — e o que os testes prendem é que a
+    apuração usa **aquela** regra, e não uma cópia dela. Um segundo leitor erraria o caso do Edital
+    que declara "Ampla concorrência" como Modalidade, e o alvo derivado do corte discordaria da
+    apuração no mesmo recorte.
+    """
 
     def test_a_linha_geral_e_a_ampla_concorrencia(self):
-        assert apuracao.quantidade_publicada(perfil((None, 28), (PPI, 10)), lista_id=None) == 28
+        linha = linha_do_quadro(conteudo((None, 28), (PPI, 10)), perfil_id=PERFIL, lista_id=None)
+        assert linha["immediateVacancies"] == 28
 
     def test_a_linha_da_modalidade_e_lida_por_identidade(self):
-        assert apuracao.quantidade_publicada(perfil((None, 28), (PPI, 10)), lista_id=PPI) == 10
+        linha = linha_do_quadro(conteudo((None, 28), (PPI, 10)), perfil_id=PERFIL, lista_id=PPI)
+        assert linha["immediateVacancies"] == 10
 
     def test_recorte_sem_linha_devolve_none_e_nao_zero(self):
         """**A distinção decide.** Linha zerada é declaração legítima do Edital; ausência de linha é
         recorte que o quadro não descreve, e apurar ali afirmaria zero vaga onde nada foi dito.
         """
-        assert apuracao.quantidade_publicada(perfil((None, 28)), lista_id=PPI) is None
+        assert linha_do_quadro(conteudo((None, 28)), perfil_id=PERFIL, lista_id=PPI) is None
 
     def test_linha_zerada_e_zero_de_verdade(self):
-        assert apuracao.quantidade_publicada(perfil((None, 28), (PPI, 0)), lista_id=PPI) == 0
+        linha = linha_do_quadro(conteudo((None, 28), (PPI, 0)), perfil_id=PERFIL, lista_id=PPI)
+        assert linha["immediateVacancies"] == 0
 
-    def test_quadro_ausente_devolve_none(self):
-        assert apuracao.quantidade_publicada({}, lista_id=None) is None
+    def test_a_modalidade_declarada_como_ampla_le_a_linha_geral(self):
+        """**É o caso que um leitor próprio erraria.**
 
-    def test_a_modalidade_declarada_como_ampla_nao_tem_linha_propria(self):
-        """Ela não é recorte próprio: a quantidade dela mora na linha geral (`FR-241`).
-
-        Este teste existe para prender a leitura por **identidade** e não por nome: um Perfil que
-        declara `AC` como ampla concorrência não ganha linha `AC`, e procurar por ela devolve nada.
+        O Perfil declara `AC` como ampla concorrência, e `AC` não tem linha reservada — a quantidade
+        dela mora na linha geral. Pedir a linha de `AC` devolve a **geral**, com 28, e não nada.
+        Uma segunda implementação que só casasse `modalityId` devolveria `None` aqui, e a apuração
+        passaria a discordar do alvo derivado do corte no mesmo recorte.
         """
-        quadro = perfil((None, 28), (PPI, 10))
-        assert apuracao.quantidade_publicada(quadro, lista_id=AC) is None
+        quadro = conteudo((None, 28), (PPI, 10), ampla=AC)
+        linha = linha_do_quadro(quadro, perfil_id=PERFIL, lista_id=AC)
+        assert linha["immediateVacancies"] == 28
+        assert linha["modalityId"] is None
 
 
 class TestOcupadas:

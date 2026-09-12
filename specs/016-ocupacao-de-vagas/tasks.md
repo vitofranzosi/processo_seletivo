@@ -92,21 +92,21 @@ append-only de mentira, e a segunda passada do provisionamento é o que o retira
 - [X] T011 [P] Teste do append-only em
       `backend/tests/unit/ocupacao/test_apuracao_append_only.py`: `UPDATE` e `DELETE` recusados
       pelo gatilho **e** pela ausência de privilégio (`FR-260`)
-- [ ] T012 [P] Teste das constraints em `backend/tests/unit/ocupacao/test_constraints.py`: duas
+- [X] T012 [P] Teste das constraints em `backend/tests/unit/ocupacao/test_constraints.py`: duas
       primeiras apurações do mesmo recorte recusadas — **inclusive com `lista_id` nulo nas duas**,
       que é o caso que uma constraint só deixaria passar — e **duas sucessoras da mesma anterior
       recusadas**
-- [ ] T013 Implementar a emissão em
+- [X] T013 Implementar a emissão em
       `backend/processo_seletivo/ocupacao/application/emissao.py`: autorização, auditoria, sucessão
       com motivo obrigatório, congelamento do `universo` e das quantidades
-- [ ] T014 Implementar `backend/processo_seletivo/ocupacao/application/selectors.py`: a vigente por
+- [X] T014 Implementar `backend/processo_seletivo/ocupacao/application/selectors.py`: a vigente por
       recorte (**derivada** — ninguém me sucedeu) e as **quatro** causas de obsolescência
       calculadas com nome (`FR-263`), na forma de `classificacao/application/corte.py:292`
-- [ ] T015 [P] Testes de integração da emissão em
+- [X] T015 [P] Testes de integração da emissão em
       `backend/tests/integration/ocupacao/test_emissao.py`: recusa sobre ordem não vigente
       (`FR-243`), recusa sem quadro publicado (`FR-242`), recusa de sucessão sem motivo, e a
       anterior continuando legível
-- [ ] T016 [P] Teste das quatro causas de obsolescência em
+- [X] T016 [P] Teste das quatro causas de obsolescência em
       `backend/tests/integration/ocupacao/test_obsolescencia.py` — uma por causa, com a causa
       nomeada na saída
 
