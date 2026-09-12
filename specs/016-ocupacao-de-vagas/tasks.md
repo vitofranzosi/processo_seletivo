@@ -227,13 +227,13 @@ linha geral passa a 62 e a soma por recorte não muda.
       aleatórias de reversão e liberação, porque a composição erra e não cada movimento (`R-007`).
       No mesmo arquivo, que **`publicadas` nunca muda** por movimento algum (`FR-239a`): o que a
       reversão move é a quantidade efetiva, e o publicado é intocável
-- [ ] T041 [P] [US2] Teste de que nenhuma vaga atravessa Perfil em
+- [X] T041 [P] [US2] Teste de que nenhuma vaga atravessa Perfil em
       `backend/tests/integration/ocupacao/test_reversao.py` (`FR-246`) — é o item 4.5 do 57/2026
 - [X] T042 [P] [US2] Teste da obsolescência do destino em
       `backend/tests/integration/ocupacao/test_reversao.py`: recebida a reversão, o recorte de
       destino aparece obsoleto **sem que ninguém emita nada**, e vigente na emissão seguinte
       (`SC-084`)
-- [ ] T043 [US2] Exibir o movimento nomeado em
+- [X] T043 [US2] Exibir o movimento nomeado em
       `backend/processo_seletivo/interface/templates/interface/ocupacao.html`, com origem, destino e
       quantidade — e não como mudança silenciosa do número (`UX-033`)
 - [X] T044 [P] [US2] Teste de que o Edital sem declaração não reverte, e a tela o diz, em
@@ -295,23 +295,23 @@ reservada alcança o próximo da **lista reservada**.
 
 ### Testes
 
-- [ ] T051 [P] [US4] Teste em `backend/tests/integration/ocupacao/test_concomitancia.py`: quem
+- [X] T051 [P] [US4] Teste em `backend/tests/integration/ocupacao/test_concomitancia.py`: quem
       está dentro nas duas listas ocupa pela ampla (`FR-254`) e não é computado na reservada
       (`FR-252`)
-- [ ] T052 [P] [US4] Teste do recorte de destino da liberação em
+- [X] T052 [P] [US4] Teste do recorte de destino da liberação em
       `backend/tests/integration/ocupacao/test_concomitancia.py`: a vaga volta para a **lista
       reservada** e nunca para a linha geral (`FR-253`). É a troca que mantém a soma certa com o
       recorte errado, e só a asserção de recorte a pega
-- [ ] T053 [P] [US4] Teste do caso em que a lista reservada esgota, em
+- [X] T053 [P] [US4] Teste do caso em que a lista reservada esgota, em
       `backend/tests/integration/ocupacao/test_concomitancia.py`: o que sobra é déficit reservado,
       e a reversão da História 2 decide o destino
 
 ### Implementação
 
-- [ ] T054 [US4] Implementar a liberação em
+- [X] T054 [US4] Implementar a liberação em
       `backend/processo_seletivo/ocupacao/application/movimento.py`, com `inscricao` preenchida —
       é movimento de pessoa, e a constraint `ck_movimento_inscricao_conforme_especie` o exige
-- [ ] T055 [US4] Exibir a liberação nomeada em
+- [X] T055 [US4] Exibir a liberação nomeada em
       `backend/processo_seletivo/interface/templates/interface/ocupacao.html`, distinta da
       reversão
 

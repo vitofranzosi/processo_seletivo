@@ -250,3 +250,103 @@ def test_nenhuma_vaga_atravessa_perfil(com_saldo, gestor):
         edital=edital, perfil_id=outro_perfil, marco_id=MARCO, lista_id=None
     )
     assert lidos["estado"] == nomes.SEM_QUADRO
+
+
+def test_nenhuma_vaga_atravessa_perfil_em_certame_de_sorteio(
+    db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos
+):
+    """**`FR-246` e o item 4.5 do 57/2026, agora no cenário que a reversão exige.**
+
+    Dois Perfis no mesmo Edital, cada um com o seu quadro. A busca de movimentos filtra por
+    `apuracao__perfil_id`, de modo que não existe caminho em que a vaga cedida por um Perfil seja
+    lida pela apuração de outro — e este teste o afirma sobre o certame de sorteio, onde a reversão
+    é alcançável.
+    """
+    from tests.fixtures.ocupacao_sorteada import LISTA_PPI as PPI_SORT
+    from tests.fixtures.ocupacao_sorteada import certame_sorteado_com_quadro
+    from tests.fixtures.sorteio import MARCO as MARCO_SORT
+
+    certame = certame_sorteado_com_quadro(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="perfil-016",
+        reversao=nomes.REVERSAO_POR_SALDO,
+    )
+    from processo_seletivo.ocupacao.application.emissao import emitir_apuracao
+
+    emitir_apuracao(
+        actor=gestor,
+        processo_id=certame["processo"].id,
+        edital_id=certame["edital"].id,
+        perfil_id=PROFILE_ID,
+        marco_id=MARCO_SORT,
+        lista_id=PPI_SORT,
+        idempotency_key="perfil-016-ppi",
+        correlation_id="teste-ocupacao-016",
+    )
+
+    movimento = MovimentoDeVaga.objects.get()
+    assert str(movimento.apuracao.perfil_id) == PROFILE_ID
+    # A leitura de outro Perfil não vê este movimento, e o recorte dele não tem quadro.
+    outro = selectors.ocupacao_do_recorte(
+        edital=certame["edital"],
+        perfil_id="00000000-0000-4000-8000-00000000dead",
+        marco_id=MARCO_SORT,
+        lista_id=None,
+    )
+    assert outro["estado"] == nomes.SEM_QUADRO
+    assert outro["movimentos"] == []
+
+
+def test_a_reversao_e_apuravel_de_ponta_a_ponta_em_certame_de_sorteio(
+    db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos
+):
+    """**O percurso que o cenário computado não alcançava** (`FR-245`–`FR-248`).
+
+    Aqui a apuração da cota é emitida pelo caminho normal — porque existe ordem daquele recorte —, e
+    a reversão nasce com ela, na mesma transação. É o que a fixture de sorteio destrava.
+    """
+    from processo_seletivo.ocupacao.application.emissao import emitir_apuracao
+    from tests.fixtures.ocupacao_sorteada import LISTA_PPI as PPI_SORT
+    from tests.fixtures.ocupacao_sorteada import certame_sorteado_com_quadro
+    from tests.fixtures.sorteio import MARCO as MARCO_SORT
+
+    certame = certame_sorteado_com_quadro(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="e2e-016",
+        geral=2,
+        ppi=1,
+        pcd=1,
+        reversao=nomes.REVERSAO_POR_SALDO,
+    )
+
+    da_cota = emitir_apuracao(
+        actor=gestor,
+        processo_id=certame["processo"].id,
+        edital_id=certame["edital"].id,
+        perfil_id=PROFILE_ID,
+        marco_id=MARCO_SORT,
+        lista_id=PPI_SORT,
+        idempotency_key="e2e-016-ppi",
+        correlation_id="teste-ocupacao-016",
+    )
+    da_ampla = emitir_apuracao(
+        actor=gestor,
+        processo_id=certame["processo"].id,
+        edital_id=certame["edital"].id,
+        perfil_id=PROFILE_ID,
+        marco_id=MARCO_SORT,
+        idempotency_key="e2e-016-ampla",
+        correlation_id="teste-ocupacao-016",
+    )
+
+    # A cota publica 1, ninguém ocupou, e o saldo de 1 foi cedido.
+    assert da_cota["publicadas"] == 1
+    assert da_cota["reverteu"] == 1
+    # A ampla publica 2 e passa a ter 3 efetivas, com a publicada intocada (`FR-239a`).
+    assert (da_ampla["publicadas"], da_ampla["efetivas"]) == (2, 3)

@@ -56,6 +56,18 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
   {% if recorte.efetivas != recorte.publicadas %}
   <p class="nota">As efetivas divergem das publicadas porque um movimento de vaga alcançou este recorte. A quantidade publicada não muda por movimento: o que o Edital publicou é intocável.</p>
   {% endif %}
+  {% comment %}
+  Os movimentos nomeados, e as duas especies **distintas** (UX-033). Reversao move quantidade da
+  cota para a linha geral; liberacao devolve a vaga de uma pessoa ao recorte reservado. Mostra-las
+  com a mesma palavra apagaria o sentido, e os dois sentidos sao opostos.
+  {% endcomment %}
+  {% if recorte.movimentos %}
+  <ul class="consequencias">
+    {% for movimento in recorte.movimentos %}
+    <li>{% if movimento.especie == "REVERSAO_DE_COTA" %}Reversão de cota: {{ movimento.quantidade }} vaga(s) da lista reservada para a ampla concorrência{% else %}Liberação por concorrência concomitante: 1 vaga volta à lista reservada, de quem ocupou pela ampla{% endif %} — {{ movimento.causa }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
   {% endif %}
 
   {% if pode_emitir and recorte.estado != "NO_VACANCY_TABLE" %}

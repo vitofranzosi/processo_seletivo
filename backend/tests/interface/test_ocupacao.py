@@ -195,3 +195,66 @@ def test_as_tres_rotas_da_ocupacao_sao_distintas():
     }
 
     assert len(rotas) == 3
+
+
+def test_a_tela_nomeia_os_dois_movimentos_e_os_distingue(
+    client,
+    seletor_ligado,
+    db,
+    gestor,
+    api_client,
+    manager_headers,
+    process_payload,
+    raiz_de_arquivos,
+):
+    """**`UX-033`**: reversão e liberação aparecem nomeadas, e com palavras distintas.
+
+    Os dois sentidos são opostos — a reversão move quantidade da cota para a ampla; a liberação
+    devolve a vaga de uma pessoa ao recorte reservado. Mostrá-los com a mesma palavra apagaria o
+    sentido, e quem conduz o certame não saberia o que aconteceu com a vaga.
+
+    O certame é de **sorteio**, porque é o único em que a reversão é alcançável.
+    """
+    from processo_seletivo.ocupacao.application.emissao import emitir_apuracao
+    from processo_seletivo.ocupacao.domain import nomes
+    from tests.fixtures.edital import PROFILE_ID as PERFIL
+    from tests.fixtures.ocupacao_sorteada import LISTA_PPI, certame_sorteado_com_quadro
+    from tests.fixtures.sorteio import MARCO as MARCO_SORT
+
+    certame = certame_sorteado_com_quadro(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="tela-mov-016",
+        reversao=nomes.REVERSAO_POR_SALDO,
+    )
+    emitir_apuracao(
+        actor=gestor,
+        processo_id=certame["processo"].id,
+        edital_id=certame["edital"].id,
+        perfil_id=PERFIL,
+        marco_id=MARCO_SORT,
+        lista_id=LISTA_PPI,
+        idempotency_key="tela-mov-016-ppi",
+        correlation_id="teste-ocupacao-016",
+    )
+    emitir_apuracao(
+        actor=gestor,
+        processo_id=certame["processo"].id,
+        edital_id=certame["edital"].id,
+        perfil_id=PERFIL,
+        marco_id=MARCO_SORT,
+        idempotency_key="tela-mov-016-ampla",
+        correlation_id="teste-ocupacao-016",
+    )
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = client.get(
+        reverse("interface:ocupacao", args=[certame["edital"].id, MARCO_SORT])
+    ).content.decode()
+
+    assert "Reversão de cota" in pagina
+    assert "da lista reservada para a ampla concorrência" in pagina
+    # E a divergência entre publicada e efetiva é explicada, em vez de o número mudar calado.
+    assert "As efetivas divergem das publicadas" in pagina

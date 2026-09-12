@@ -152,8 +152,22 @@ def ocupacao_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
         "faltando": None if sem_apuracao else vigente.faltando,
         "estado": estado,
         "causasDeObsolescencia": [item["causa"] for item in causas],
+        # **Os movimentos que a apuração vigente leu**, e não os de hoje: a tela mostra o que o ato
+        # considerou, que é o mesmo critério da `FR-244`. Movimento posterior aparece como causa de
+        # obsolescência, e não como linha que o número não explica.
+        "movimentos": _movimentos_lidos_por_apuracao(vigente),
         "apuracao": vigente,
     }
+
+
+def _movimentos_lidos_por_apuracao(apuracao):
+    if apuracao is None:
+        return []
+    ids = (apuracao.universo or {}).get("movimentosLidos") or []
+    if not ids:
+        return []
+    encontrados = {str(m.id): m for m in MovimentoDeVaga.objects.filter(id__in=ids)}
+    return [encontrados[str(i)] for i in ids if str(i) in encontrados]
 
 
 def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):

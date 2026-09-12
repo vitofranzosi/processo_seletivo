@@ -153,7 +153,44 @@ def emitir_apuracao(
             actor=actor,
             now=ctx.now,
         )
-        return _concluir(ctx, apuracao, actor, correlation_id, idempotency_key, movimento=movimento)
+        liberados = _liberar_concomitantes(
+            apuracao, ocupantes=progrediram & habilitadas, actor=actor, now=ctx.now
+        )
+        return _concluir(
+            ctx,
+            apuracao,
+            actor,
+            correlation_id,
+            idempotency_key,
+            movimento=movimento,
+            liberados=liberados,
+        )
+
+
+def _liberar_concomitantes(apuracao, *, ocupantes, actor, now):
+    """Quem ocupou pela ampla e declarou cota libera a vaga reservada dele (016, `FR-252`).
+
+    É o item 8.9 do 28/2026, literal: o autodeclarado sorteado dentro das vagas de ampla **não é
+    computado** no preenchimento das reservadas, *"abrindo vaga para o próximo suplente
+    autodeclarado"*.
+
+    **Só a apuração da ampla libera**, porque só ela sabe quem ocupou por ela. E o movimento é de
+    **pessoa**: a vaga que volta é a daquela inscrição, e não uma quantidade qualquer.
+    """
+    if apuracao.lista_id is not None:
+        return []
+    from processo_seletivo.inscricoes.models import Inscricao
+
+    concomitantes = Inscricao.objects.filter(id__in=ocupantes).exclude(modality_id=None)
+    return [
+        movimento_de_vaga.liberar_por_concomitancia(
+            apuracao=apuracao,
+            inscricao=inscricao,
+            registrado_por=str(getattr(actor, "subject", actor)),
+            registrado_em=now,
+        )
+        for inscricao in concomitantes
+    ]
 
 
 def _reverter_se_declarado(apuracao, *, versao, perfil, marco, lista, actor, now):
@@ -230,7 +267,9 @@ def _quantidade(linha):
     )
 
 
-def _concluir(ctx, apuracao, actor, correlation_id, idempotency_key, *, movimento=None):
+def _concluir(
+    ctx, apuracao, actor, correlation_id, idempotency_key, *, movimento=None, liberados=()
+):
     auditar(
         actor=actor,
         permissao=ctx.base.permissao,
@@ -256,6 +295,11 @@ def _concluir(ctx, apuracao, actor, correlation_id, idempotency_key, *, moviment
                 if movimento is not None
                 else ""
             )
+            + (
+                f" Liberou {len(liberados)} vaga(s) reservada(s) de quem ocupou pela ampla."
+                if liberados
+                else ""
+            )
         ),
         idempotency_key=idempotency_key,
     )
@@ -267,6 +311,7 @@ def _concluir(ctx, apuracao, actor, correlation_id, idempotency_key, *, moviment
         "faltando": apuracao.faltando,
         "universo": apuracao.universo,
         "reverteu": movimento.quantidade if movimento is not None else 0,
+        "liberou": len(liberados),
     }
     ctx.concluir_sem_resultado(201, declarado)
     return declarado
