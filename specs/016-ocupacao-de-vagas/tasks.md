@@ -198,20 +198,20 @@ linha geral passa a 62 e a soma por recorte não muda.
       `backend/processo_seletivo/editais/domain/validation.py`: os três impeditivos do contrato —
       `vacancy_reversion_kind_required` (`FR-251`), `vacancy_reversion_kind_unknown` e
       `vacancy_reversion_sem_quadro`
-- [ ] T032 [P] [US2] Testes da conferência em
+- [X] T032 [P] [US2] Testes da conferência em
       `backend/tests/unit/editais/test_reversao_declarada.py`, com o caso que a `FR-251` nomeia:
       reversão declarada **sem** espécie recusa a publicação, e a ausência não vira padrão
 - [X] T033 [US2] Acrescentar a declaração a `CAMPOS_PERFIL` em
       `backend/processo_seletivo/interface/retificacao.py`, com tipo **`REFERENCIA`** e a lista
       `ESPECIES_DE_REVERSAO` — **não** caixa de texto, pelo precedente de `cutRule/tieOutcome` — e
       o rótulo do vazio dizendo o que o vazio provoca
-- [ ] T034 [P] [US2] Teste da Retificação da declaração em
+- [X] T034 [P] [US2] Teste da Retificação da declaração em
       `backend/tests/integration/interface/test_retificacao_reversao.py`
 - [X] T035 [US2] Elaborar a declaração na tela de composição do Perfil, em
       `backend/processo_seletivo/interface/forms.py` e `_perfil.html`
 - [X] T036 [US2] Incluir a declaração no documento publicado, em
       `backend/processo_seletivo/publicacoes/` (gerador do PDF)
-- [ ] T037 [P] [US2] Teste do documento em `backend/tests/unit/publicacoes/test_pdf.py`: a
+- [X] T037 [P] [US2] Teste do documento em `backend/tests/unit/publicacoes/test_pdf.py`: a
       reversão declarada aparece no documento, e o Edital sem ela não ganha seção vazia
 
 ### A reversão (passo 5)

@@ -7,8 +7,9 @@ nenhum deles poderia tê-la declarado.
 
 **E a ausência não vira padrão de comportamento.** O 57/2026 prova por que isso importa: o item 4.5
 dele proíbe por escrito o remanejamento de vagas remanescentes entre os cursos. Um sistema que
-revertesse por conta própria produziria, naquele Edital, exatamente o que ele veda — e é por isso que
-"não declarou" tem de ser lido como "não move", e nunca como "move do jeito comum" (016, D-002).
+revertesse por conta própria produziria, naquele Edital, exatamente o que ele veda — e é por isso
+que "não declarou" tem de ser lido como "não move", e nunca como "move do jeito comum"
+(016, D-002).
 
 **Não elevar seria pior do que elevar**, pela razão de sempre: conteúdo em versão diferente da
 vigente é recusado, e deixar o acervo em 13 tornaria todo Edital publicado irretificável por causa

@@ -209,7 +209,10 @@ def test_a_reversao_obsoleta_o_destino_sem_ninguem_emitir(com_saldo, gestor):
 
 
 def test_a_linha_geral_nao_reverte_para_si_mesma(com_saldo, gestor):
-    """A ampla é destino, nunca origem — e a recusa diz por quê, em vez de deixar a constraint falar."""
+    """A ampla é destino, nunca origem.
+
+    A recusa diz por quê, em vez de deixar a constraint de recortes distintos falar por ela.
+    """
     from processo_seletivo.ocupacao.application.movimento import reverter_cota
     from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
     from processo_seletivo.shared.api.problems import DomainError
