@@ -19,10 +19,11 @@ from processo_seletivo.resultados.application.consolidacao import consolidar
 from processo_seletivo.resultados.models import ResultadoEtapa
 from tests.conftest import ator_institucional
 from tests.fixtures.resultado import montar_etapa_de_leitura_unica, semear_prontas
+from tests.performance.escala import escala
 
 pytestmark = [pytest.mark.django_db, pytest.mark.performance]
 
-TETO = 1000
+TETO = escala()
 
 
 def consolidar_lote(cenario, inscricoes, *, chave):
@@ -45,6 +46,7 @@ def test_mil_inscricoes_cabem_num_unico_envio(gestor, api_client, manager_header
     inscricoes = semear_prontas(cenario, TETO, primeiro=1)
 
     desfecho = consolidar_lote(cenario, inscricoes, chave="teto")
+    print(f"\n[escala] consolidacao: {desfecho['feitas']} inscrições num envio")
     assert desfecho["feitas"] == TETO
     assert desfecho["recusadas"] == 0
     assert ResultadoEtapa.objects.filter(edital=cenario["edital"]).count() == TETO
