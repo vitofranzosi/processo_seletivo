@@ -22,6 +22,7 @@ enumeração inclusive. O que ele não escreve, não se escreve aqui: coerência
 que ninguém tomou.
 """
 
+import math
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -77,6 +78,11 @@ PERFIL_PUBLICADO = (
     Campo("immediateVacancies", int, minimo=0),
     Campo("reserveType", str, valores=RESERVA),
     Campo("reserveLimit", int, admite_nulo=True, minimo=0),
+    # Qual das Modalidades declaradas é a ampla concorrência (014, D-014, FR-231). **Anulável**: há
+    # Edital em que ela existe só como a linha geral do quadro, e nesse caso não há Modalidade a
+    # apontar. Que a identidade aponte Modalidade **deste** Perfil é conferido à parte, porque
+    # depende do conteúdo do Perfil inteiro e não da forma do campo.
+    Campo("generalCompetitionModalityId", str, formato="uuid", admite_nulo=True),
     Campo("locality", str),
     # `str` sem `admite_nulo`: os três são **sempre presentes**, com `""` quando não informados
     # (FR-014). Declará-los assim é o que faz a versão canônica 3 identificar uma forma só.
@@ -93,6 +99,34 @@ PERFIL_PUBLICADO = (
     # precisa do conteúdo inteiro e não caberia numa forma de campo (015, T-009).
     Campo("declaredFacts", list, tipo_do_item=dict),
     Campo("classificationMilestones", list, tipo_do_item=dict),
+    # O quadro de vagas da `025`. Sempre presente depois do degrau 12 — vazio nos Editais
+    # anteriores —, porque duas grafias para a ausência, chave ausente e lista vazia, é o que a
+    # D-005 existe para não permitir.
+    Campo("vacancyTable", list, tipo_do_item=dict),
+    # A declaração de reversão da `016` (D-007). **`dict` anulável, e nulo é a declaração de que
+    # este Edital não reverte** — não a ausência dela: sempre presente depois do degrau 14, como o
+    # quadro depois do 12, porque duas grafias para a ausência é o que a versão canônica existe
+    # para não admitir.
+    #
+    # **A forma de dentro não se declara aqui**, e é a mesma régua de `competitionModalities`: que
+    # `kind` exista e seja um dos dois declaráveis é conferido por `_reversao_declarada`, que
+    # precisa recusar a publicação com código próprio — `vacancy_reversion_kind_required` — em vez
+    # de devolver "tipo inválido".
+    #
+    # **Ela estava faltando, e o defeito é o do `T110` da `014` repetido**: a publicação emitia o
+    # campo, o degrau 14 o elevava, e a forma publicada não o conferia. Quem o encontrou foi
+    # `tests/contract/test_forma_publicada.py`, ao acrescentar `vacancyReversion` ao contrato.
+    Campo("vacancyReversion", dict, admite_nulo=True),
+)
+
+# **A forma de dentro da linha É declarada**, ao contrário da de `competitionModalities`, que é a
+# única coleção do snapshot cuja forma interna não é. A diferença é o argumento e não uma
+# inconsistência: a linha carrega um número que a conferência da FR-161 vai **somar**, e somar
+# campo não verificado é somar o que ninguém garantiu ser inteiro (025, R-013).
+LINHA_DO_QUADRO_PUBLICADA = (
+    Campo("id", str, formato="uuid"),
+    Campo("modalityId", str, admite_nulo=True, formato="uuid"),
+    Campo("immediateVacancies", int, minimo=0),
 )
 
 # A forma canônica do instante, transcrita de `EventoPublicado` no contrato: `T` maiúsculo,
@@ -597,6 +631,9 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
         fatos = {
             fato.get("id") for fato in (perfil.get("declaredFacts") or []) if isinstance(fato, dict)
         }
+        findings.extend(_ampla_concorrencia_declarada(perfil, base=base))
+        findings.extend(_reversao_declarada(perfil, base=base))
+        findings.extend(_corte_em_dois_marcos(perfil, base=base))
         for indice, marco in enumerate(perfil.get("classificationMilestones") or []):
             if not isinstance(marco, dict):
                 continue
@@ -615,6 +652,9 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
                     )
                 )
             findings.extend(_divisor_do_marco(marco, etapas, caminho))
+            findings.extend(
+                _regra_de_corte_do_marco(marco, perfil=perfil, etapas=etapas, caminho=caminho)
+            )
             for etapa_id in marco.get("stages") or []:
                 etapa = etapas.get(etapa_id)
                 # Peso é cobrado de **parcela**, e não de porta: a Etapa decisória não soma, e
@@ -699,6 +739,333 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
                         )
                     )
     return findings
+
+
+def _marco_nomeado(marco) -> str:
+    """Como a recusa chama o marco (014, FR-182, UX-025).
+
+    O `code` é o que quem elabora digitou e o que o documento publica; o identificador só aparece
+    quando não há código, porque uma recusa que diga um UUID não diz nada a quem vai corrigi-la. O
+    percurso E2E encontrou as cinco recusas da regra de corte mudas quanto ao marco: num Perfil com
+    três marcos, "a regra de corte não declara o desfecho" não dizia **qual** abrir (E2E14-002).
+    """
+    return str(marco.get("code") or marco.get("name") or marco.get("id") or "sem código")
+
+
+def _regra_de_corte_do_marco(marco, *, perfil, etapas, caminho) -> list[ValidationFinding]:
+    """As declarações que o sistema não pode concluir por ninguém (014, FR-182, FR-224, FR-226).
+
+    Quatro dos seis campos da regra existem porque **não há padrão honesto** para eles. Resolver a
+    ausência por conta própria afirmaria norma que ninguém escreveu — e as duas saídas fáceis do
+    empate são o exemplo: admitir o excedente entrega à Etapa seguinte mais gente do que a comissão
+    dimensionou, e parar no alvo corta alguém por desempate que a norma não previu.
+    """
+    from processo_seletivo.classificacao.domain import faixa
+
+    regra = marco.get("cutRule")
+    if not regra:
+        return []
+    nomeado = _marco_nomeado(marco)
+    findings = _forma_do_alvo(regra, caminho=caminho, nomeado=nomeado)
+    if regra.get("tieOutcome") not in faixa.DESFECHOS_DE_EMPATE:
+        findings.append(
+            _impeditivo(
+                "cut_rule_sem_desfecho_de_empate",
+                f"A regra de corte do marco {nomeado} não declara o que acontece com o empate que "
+                "atravessa a última posição da faixa. O sistema não escolhe por ela.",
+                f"{caminho}/cutRule/tieOutcome",
+            )
+        )
+    if regra.get("continuation") not in faixa.POLITICAS_DE_CONTINUACAO:
+        findings.append(
+            _impeditivo(
+                "cut_rule_sem_politica_de_continuacao",
+                f"A regra de corte do marco {nomeado} não declara se este Edital admite "
+                "continuação além da faixa publicada.",
+                f"{caminho}/cutRule/continuation",
+            )
+        )
+    declarada = regra.get("governedStage")
+    if not declarada:
+        findings.append(
+            _impeditivo(
+                "cut_rule_sem_etapa_governada",
+                f"A regra de corte do marco {nomeado} não declara qual Etapa o corte alimenta. Ela "
+                "não é inferida de lugar nenhum: declare a Etapa, ou declare que este corte não "
+                "governa nenhuma.",
+                f"{caminho}/cutRule/governedStage",
+            )
+        )
+    elif declarada != faixa.SEM_ETAPA_GOVERNADA:
+        if str(declarada) not in etapas:
+            findings.append(
+                _impeditivo(
+                    "cut_rule_com_etapa_inexistente",
+                    f"A regra de corte do marco {nomeado} declara governar uma Etapa que este "
+                    "Edital não publica.",
+                    f"{caminho}/cutRule/governedStage",
+                )
+            )
+        # **A guarda é de circularidade, e não de ordem** (FR-229). Num marco cuja ordem é computada
+        # a partir de Etapas, governar uma das Etapas que a alimentam fecharia laço: o universo da
+        # ordem passaria a depender do corte que ela mesma produz. Num marco que ordena por sorteio
+        # não há laço — a ordem vem da relação de habilitados —, e governar a Etapa que o marco
+        # enumera é o **caso normal**: é a forma do 77/2026, em que não existe Etapa avaliada antes
+        # do sorteio e a única que existe é a análise documental que o corte alimenta. Uma guarda
+        # escrita como "a Etapa governada deve suceder a ordem do marco" tornaria aquele Edital
+        # impublicável.
+        elif not marco.get("drawMethod") and str(declarada) in {
+            str(item) for item in (marco.get("stages") or [])
+        }:
+            findings.append(
+                _impeditivo(
+                    "cut_rule_com_etapa_circular",
+                    f"A regra de corte do marco {nomeado} governa uma Etapa que alimenta a própria "
+                    "ordem do marco: o universo da ordem passaria a depender do corte que ela "
+                    "produz.",
+                    f"{caminho}/cutRule/governedStage",
+                )
+            )
+    findings.extend(_quadro_para_o_corte(regra, perfil=perfil, caminho=caminho, nomeado=nomeado))
+    return findings
+
+
+def _forma_do_alvo(regra, *, caminho, nomeado) -> list[ValidationFinding]:
+    """A espécie e a aritmética do alvo, **também** na publicação (014, FR-179).
+
+    Elas já são recusadas na elaboração, e repeti-las aqui não é redundância: a **Retificação não
+    passa por `validate_profiles`**. `retificacoes.py` afere o conteúdo produzido apenas por
+    `validate_for_publication`, e sem esta conferência uma Retificação poderia gravar
+    `targetCount: -5` — ou nulo, com espécie fixa — e publicar. Na emissão, o alvo apurado viraria
+    zero e o corte sairia com **ninguém** progredindo, em silêncio, sobre um Edital cuja norma
+    publicada diz outra coisa. É a mesma razão pela qual a conferência da soma do quadro mora aqui.
+    """
+    from processo_seletivo.classificacao.domain import faixa
+
+    especie = regra.get("targetKind")
+    if especie not in faixa.ESPECIES_DE_ALVO:
+        return [
+            _impeditivo(
+                "cut_rule_sem_especie_de_alvo",
+                f"A regra de corte do marco {nomeado} não declara a espécie do alvo: uma "
+                "quantidade fixa, ou a quantidade que o quadro de vagas do recorte publica.",
+                f"{caminho}/cutRule/targetKind",
+            )
+        ]
+    findings = []
+    alvo = regra.get("targetCount")
+    if especie == faixa.ALVO_FIXO and alvo is None:
+        findings.append(
+            _impeditivo(
+                "cut_rule_sem_alvo",
+                f"A regra de corte do marco {nomeado} declara alvo fixo e não diz quantos.",
+                f"{caminho}/cutRule/targetCount",
+            )
+        )
+    if especie == faixa.ALVO_DO_QUADRO and alvo is not None:
+        findings.append(
+            _impeditivo(
+                "cut_rule_com_alvo_duplicado",
+                f"A regra de corte do marco {nomeado} deriva o alvo do quadro de vagas e ainda "
+                "assim declara uma quantidade fixa: o alvo tem uma fonte só.",
+                f"{caminho}/cutRule/targetCount",
+            )
+        )
+    for campo in ("targetCount", "surplusCount"):
+        valor = regra.get(campo)
+        if valor is None:
+            continue
+        if isinstance(valor, bool) or not isinstance(valor, int) or valor < 0:
+            findings.append(
+                _impeditivo(
+                    "cut_rule_com_quantidade_invalida",
+                    f"As quantidades da regra de corte do marco {nomeado} devem ser números "
+                    "inteiros não negativos.",
+                    f"{caminho}/cutRule/{campo}",
+                )
+            )
+    return findings
+
+
+def _quadro_para_o_corte(regra, *, perfil, caminho, nomeado) -> list[ValidationFinding]:
+    """Alvo derivado exige linha de quadro para **todo recorte que o marco ordena** (014, FR-183).
+
+    A `025` admite quadro parcial de propósito, e a regra de corte é do **marco**, que pode ordenar
+    três listas. Sem esta conferência, um Edital com quadro parcial publicaria uma regra derivada
+    inexequível na lista sem linha — e o defeito apareceria no dia da emissão, sob cronograma, com a
+    correção dependendo de Retificação.
+
+    **Os recortes são a linha geral e cada Modalidade que terá lista própria.** A Modalidade que o
+    Perfil declara como **ampla concorrência** não é recorte próprio: a quantidade dela mora na
+    linha geral, que é o recorte que o sorteio consulta, e dar-lhe linha seria declarar duas vezes o
+    mesmo número (025, `FR-176`).
+
+    Essa declaração é o que destrava a conferência no formato normal de Edital. A `R-006` da `025`
+    registrou que identificar a ampla concorrência **casando o nome** seria decidir no plano uma
+    questão que aquela spec deixou aberta — e continua certa. O que faltava era o Edital dizer qual
+    é, e é o que `generalCompetitionModalityId` é: sem ele, exigir linha de toda Modalidade tornava
+    impublicável o Edital que declara "Ampla concorrência" como Modalidade; com ele, a exigência
+    vale inteira, sem heurística nenhuma.
+
+    Linha **zerada** é declaração legítima e publica; o que impede é a ausência.
+    """
+    from processo_seletivo.classificacao.domain import faixa
+
+    if regra.get("targetKind") != faixa.ALVO_DO_QUADRO:
+        return []
+    linhas = perfil.get("vacancyTable") or []
+    declarados = {
+        str(linha.get("modalityId")) if linha.get("modalityId") else None
+        for linha in linhas
+        if isinstance(linha, dict)
+    }
+    ampla = perfil.get("generalCompetitionModalityId")
+    ampla = str(ampla) if ampla else None
+    exigidos = [(None, "a ampla concorrência")]
+    for modalidade in perfil.get("competitionModalities") or []:
+        if not isinstance(modalidade, dict) or not modalidade.get("id"):
+            continue
+        identidade = str(modalidade["id"])
+        if identidade == ampla:
+            continue
+        exigidos.append((identidade, modalidade.get("name") or identidade))
+    return [
+        _impeditivo(
+            "cut_rule_sem_linha_de_quadro",
+            f"A regra de corte do marco {nomeado} deriva o alvo do quadro de vagas, e não há linha "
+            f"para {nome}.",
+            f"{caminho}/cutRule/targetKind",
+        )
+        for chave, nome in exigidos
+        if chave not in declarados
+    ]
+
+
+def _reversao_declarada(perfil, *, base) -> list[ValidationFinding]:
+    """A reversão declarada traz a espécie do gatilho, e pressupõe quadro (016, FR-249, FR-251).
+
+    **Três recusas, e a ausência do objeto não é nenhuma delas.** `null` é declaração legítima —
+    "este Edital não declara reversão" —, e o 57/2026 prova por que ela tem de ser respeitada: o
+    item 4.5 dele proíbe por escrito o remanejamento entre cursos.
+
+    **Objeto sem `kind` não vira espécie padrão.** Os dois Editais da amostra escrevem o gatilho de
+    modo diferente — o 28/2026 reverte "havendo ausência de candidatos aprovados", o 57/2026 "na
+    hipótese do não preenchimento total" —, e escolher por eles fixaria em ato publicado uma decisão
+    de norma. Vaga revertida sob a leitura larga num Edital que manda a estreita é vaga que saiu do
+    recorte reservado sem fundamento.
+
+    **E reverter pressupõe quantidade por recorte**: declarar reversão num Perfil sem quadro é regra
+    inexequível, e regra publicada inexequível é o que a `014` já recusou a publicar.
+    """
+    from processo_seletivo.ocupacao.domain.nomes import ESPECIES_DE_REVERSAO
+
+    objeto = perfil.get("vacancyReversion")
+    if objeto is None:
+        return []
+    caminho = f"{base}/vacancyReversion"
+    if not isinstance(objeto, dict):
+        return [_impeditivo(TIPO_INVALIDO, f"O item deveria ser objeto em {caminho}.", caminho)]
+    especie = objeto.get("kind")
+    if not especie:
+        return [
+            _impeditivo(
+                "vacancy_reversion_kind_required",
+                "O Perfil declara reversão de vaga sem dizer sob qual gatilho: declare por "
+                "esgotamento da lista reservada ou por saldo não preenchido.",
+                f"{caminho}/kind",
+            )
+        ]
+    if especie not in ESPECIES_DE_REVERSAO:
+        return [
+            _impeditivo(
+                "vacancy_reversion_kind_unknown",
+                f"O gatilho de reversão '{especie}' não é um dos declaráveis.",
+                f"{caminho}/kind",
+            )
+        ]
+    if not (perfil.get("vacancyTable") or []):
+        return [
+            _impeditivo(
+                "vacancy_reversion_sem_quadro",
+                "O Perfil declara reversão de vaga e não publica quadro: não há quantidade por "
+                "recorte a reverter.",
+                caminho,
+            )
+        ]
+    return []
+
+
+def _ampla_concorrencia_declarada(perfil, *, base) -> list[ValidationFinding]:
+    """A Modalidade declarada como ampla concorrência existe, e não tem linha própria (014, D-014).
+
+    Duas recusas, e as duas são de coerência do que o próprio Perfil publica: apontar Modalidade que
+    ele não declara deixaria a conferência do alvo derivado exigindo linha de um recorte que não
+    existe, e dar linha à ampla concorrência declararia duas vezes o mesmo número — a quantidade
+    dela já está na linha geral.
+    """
+    ampla = perfil.get("generalCompetitionModalityId")
+    if not ampla:
+        return []
+    ampla = str(ampla)
+    modalidades = {
+        str(item.get("id"))
+        for item in perfil.get("competitionModalities") or []
+        if isinstance(item, dict) and item.get("id")
+    }
+    if ampla not in modalidades:
+        return [
+            _impeditivo(
+                "general_competition_modality_unknown",
+                "O Perfil declara como ampla concorrência uma Modalidade que ele não publica.",
+                f"{base}/generalCompetitionModalityId",
+            )
+        ]
+    tem_linha = any(
+        isinstance(linha, dict) and str(linha.get("modalityId") or "") == ampla
+        for linha in perfil.get("vacancyTable") or []
+    )
+    if not tem_linha:
+        return []
+    return [
+        _impeditivo(
+            "general_competition_modality_with_row",
+            "A Modalidade declarada como ampla concorrência tem linha própria no quadro de vagas, "
+            "e a quantidade dela já está na linha geral.",
+            f"{base}/vacancyTable",
+        )
+    ]
+
+
+def _corte_em_dois_marcos(perfil, *, base) -> list[ValidationFinding]:
+    """Duas regras de corte do mesmo Perfil não governam a mesma Etapa (014, R-006).
+
+    A Etapa governada decide quem participa dela, e duas declarações com alvos distintos não têm
+    desempate possível. Não se escolhe uma: recusa-se o Edital que as publica. Unir as faixas
+    aplicaria a soma de dois alvos que ninguém publicou, e "o marco de maior ordem vence" inventaria
+    precedência normativa.
+
+    **É dentro do Perfil**, e não do Edital: a Etapa é do Edital e alcança todos os Perfis, mas cada
+    inscrição pertence a um Perfil só, e é a regra dele que a governa.
+    """
+    from processo_seletivo.classificacao.domain import faixa
+
+    governadas = {}
+    for marco in perfil.get("classificationMilestones") or []:
+        if not isinstance(marco, dict):
+            continue
+        etapa = faixa.etapa_governada(marco.get("cutRule"))
+        if etapa:
+            governadas.setdefault(etapa, []).append(marco.get("code") or marco.get("id"))
+    return [
+        _impeditivo(
+            "cut_rule_em_dois_marcos_da_mesma_etapa",
+            f"Os marcos {' e '.join(str(item) for item in marcos)} declaram governar a mesma "
+            "Etapa, com regras de corte que podem divergir.",
+            f"{base}/classificationMilestones",
+        )
+        for etapa, marcos in governadas.items()
+        if len(marcos) > 1
+    ]
 
 
 def _faixa_do_percentual(snapshot: dict) -> list[ValidationFinding]:
@@ -897,6 +1264,7 @@ def validate_for_publication(snapshot: dict) -> list[ValidationFinding]:
     findings.extend(_periodo_de_inscricoes(snapshot))
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
     findings.extend(_coerencia_dos_anexos(snapshot))
+    findings.extend(_coerencia_do_quadro_de_vagas(snapshot))
     return findings
 
 
@@ -1053,6 +1421,189 @@ def _coerencia_dos_documentos_exigidos(snapshot: dict) -> list[ValidationFinding
                 )
             )
     return findings
+
+
+def _coerencia_do_quadro_de_vagas(snapshot: dict) -> list[ValidationFinding]:
+    """O quadro de vagas depois da publicação: referência, soma e advertência (025).
+
+    **A conferência vale sobre o conteúdo que uma Retificação produziria**, e é isso que a faz
+    alcançar os dois pares de movimentos que a feature exige. Remover a Modalidade **e** a linha no
+    mesmo ato passa; remover só a Modalidade é recusado (D-008). Reduzir a linha da PPI **e** o
+    total do Perfil no mesmo ato passa; reduzir só a linha é recusado (FR-161). Verificar o
+    resultado, e não a operação, é o que faz as duas coisas serem verdadeiras sem código de
+    orquestração nenhum: `retificacoes.py` e `publish_edital.py` já chamam esta função.
+
+    **A igualdade só roda em quadro completo; o limite superior roda sempre.** Somar menos que o
+    total é legítimo num quadro parcial — o Edital declarou parte da repartição e não a toda
+    (D-006). Somar **mais** não é legítimo em quadro algum: nenhum Edital reserva mais vagas do que
+    oferece, e essa metade não precisa esperar pela completude (FR-177). É ela que alcança o Edital
+    que declara uma Modalidade chamada "Ampla concorrência" e que, por seguir a FR-176, nunca fica
+    completo — a lacuna que sobra está registrada em `research.md`, R-006.
+
+    **A advertência do percentual nunca bloqueia e nunca escreve.** A FR-157 proíbe derivar,
+    calcular ou recalcular quantidade a partir de percentual; a D-003 autoriza advertir e nada
+    além. Ela compara e reporta — e aceita o arredondamento em qualquer direção, porque `Q 1` e
+    `PCD 1` de um Edital real saem de arredondamento sobre censo.
+    """
+    findings = []
+    for posicao, perfil in enumerate(snapshot.get("profiles") or []):
+        if not isinstance(perfil, dict):
+            continue
+        linhas = perfil.get("vacancyTable")
+        if not isinstance(linhas, list) or not linhas:
+            # Quadro ausente é o que **todo** Edital publicado antes do degrau 12 afirma, e ele
+            # continua publicável: ausência não é zero (D-005, FR-160).
+            continue
+        base = _caminho_da_entidade("profiles", perfil, posicao)
+        modalidades = {
+            str(modalidade.get("id")): modalidade
+            for modalidade in perfil.get("competitionModalities") or []
+            if isinstance(modalidade, dict) and modalidade.get("id")
+        }
+        total = perfil.get("immediateVacancies")
+        rotulo = perfil.get("code") or perfil.get("name") or ""
+
+        soma = 0
+        com_linha = set()
+        tem_linha_geral = False
+        for indice, linha in enumerate(linhas):
+            if not isinstance(linha, dict):
+                findings.append(
+                    _impeditivo(
+                        TIPO_INVALIDO,
+                        f"O item deveria ser objeto em {base}/vacancyTable/{indice}.",
+                        f"{base}/vacancyTable/{indice}",
+                    )
+                )
+                continue
+            caminho = f"{base}/vacancyTable/{_dentro(linha, indice)}"
+            # A forma de dentro da linha, campo a campo. `COLECOES_PUBLICADAS` só percorre coleções
+            # de **raiz**, e o quadro é aninhado no Perfil — é o mesmo caminho que a coerência dos
+            # marcos e a faixa do percentual já tomam.
+            findings.extend(
+                achado
+                for campo in LINHA_DO_QUADRO_PUBLICADA
+                if (achado := _violacao(campo, linha, f"{caminho}/{campo.nome}")) is not None
+            )
+            quantidade = linha.get("immediateVacancies")
+            if isinstance(quantidade, int) and not isinstance(quantidade, bool):
+                soma += quantidade
+            modalidade_id = linha.get("modalityId")
+            if modalidade_id is None:
+                # A unicidade vale **também** depois da publicação: a elaboração a garante por
+                # constraint parcial, e a constraint não alcança o conteúdo publicado. Duas
+                # Retificações sucessivas, cada uma partindo de uma versão em que só uma linha
+                # geral existia, produziriam duas — e o quadro afirmaria a ampla concorrência duas
+                # vezes, com números diferentes (FR-154, invariante 2 da §5).
+                if tem_linha_geral:
+                    findings.append(
+                        _impeditivo(
+                            "vacancy_general_row_duplicated",
+                            f"O quadro do Perfil '{rotulo}' declara mais de uma linha de ampla "
+                            "concorrência, e ela tem uma linha só.",
+                            caminho,
+                        )
+                    )
+                tem_linha_geral = True
+                continue
+            modalidade_id = str(modalidade_id)
+            if modalidade_id in com_linha:
+                # Pela mesma razão da linha geral, um nível abaixo (FR-155).
+                findings.append(
+                    _impeditivo(
+                        "vacancy_modality_row_duplicated",
+                        f"O quadro do Perfil '{rotulo}' declara mais de uma linha para a mesma "
+                        "modalidade, e cada uma tem no máximo uma.",
+                        caminho,
+                    )
+                )
+            if modalidade_id not in modalidades:
+                findings.append(
+                    _impeditivo(
+                        "vacancy_row_modality_missing",
+                        f"A linha de {quantidade} vaga(s) do quadro do Perfil '{rotulo}' aponta "
+                        "uma modalidade que não existe neste Perfil.",
+                        caminho,
+                    )
+                )
+                continue
+            com_linha.add(modalidade_id)
+            findings.extend(
+                _divergencia_do_percentual(modalidades[modalidade_id], quantidade, total, caminho)
+            )
+
+        if not isinstance(total, int) or isinstance(total, bool):
+            continue
+        caminho_do_quadro = f"{base}/vacancyTable"
+        if soma > total:
+            findings.append(
+                _impeditivo(
+                    "vacancy_sum_exceeds_total",
+                    f"O quadro de vagas do Perfil '{rotulo}' soma {soma} e o Perfil declara "
+                    f"{total} vagas imediatas — excesso de {soma - total}.",
+                    caminho_do_quadro,
+                )
+            )
+        elif tem_linha_geral and not (set(modalidades) - com_linha) and soma != total:
+            findings.append(
+                _impeditivo(
+                    "vacancy_sum_mismatch",
+                    f"O quadro de vagas do Perfil '{rotulo}' soma {soma} e o Perfil declara "
+                    f"{total} vagas imediatas — diferença de {total - soma}.",
+                    caminho_do_quadro,
+                )
+            )
+    return findings
+
+
+def _dentro(entidade, posicao):
+    """O segmento que nomeia a entidade dentro da coleção: identidade, ou posição se não houver."""
+    identificador = entidade.get("id")
+    if isinstance(identificador, str) and identificador:
+        return f"id={identificador}"
+    return str(posicao)
+
+
+def _divergencia_do_percentual(modalidade, quantidade, total, caminho) -> list[ValidationFinding]:
+    """Dizer que `4` não é 20% de `80` é serviço legítimo; recalcular `4` não é (D-003, FR-163).
+
+    O arredondamento é aceito nas duas direções porque a norma que fundamenta a cota manda
+    arredondar, e Editais reais arredondam para cima e para baixo. O que se adverte é a quantidade
+    que não cabe em arredondamento nenhum do percentual publicado.
+    """
+    regra = modalidade.get("normativeRule")
+    if not isinstance(regra, dict):
+        return []
+    bruto = regra.get("percentage")
+    if bruto is None or not isinstance(quantidade, int) or isinstance(quantidade, bool):
+        return []
+    if not isinstance(total, int) or isinstance(total, bool) or total <= 0:
+        return []
+    try:
+        percentual = Decimal(str(bruto))
+    except InvalidOperation:
+        return []
+    esperado = Decimal(total) * percentual / Decimal(100)
+    piso, teto = math.floor(esperado), math.ceil(esperado)
+    if piso <= quantidade <= teto:
+        return []
+    return [
+        ValidationFinding(
+            Severity.WARNING,
+            "vacancy_row_percentage_divergence",
+            f"A linha da modalidade '{modalidade.get('code', '')}' declara {quantidade} vaga(s), e "
+            f"o percentual publicado na Regra Normativa ({_percentual_legivel(percentual)}%) sobre "
+            f"{total} vagas daria {piso if piso == teto else f'{piso} ou {teto}'}. "
+            "A quantidade declarada é a que vale.",
+            caminho,
+        )
+    ]
+
+
+def _percentual_legivel(percentual: Decimal) -> str:
+    """O percentual sem zeros à direita, para que a advertência se leia como uma frase."""
+    normalizado = percentual.normalize()
+    return f"{normalizado:f}"
 
 
 def blocking_findings(findings):

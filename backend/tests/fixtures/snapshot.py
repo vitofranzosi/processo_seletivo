@@ -86,7 +86,7 @@ def fato(identificador, sigla, rotulo, tipo):
     return {"id": identificador, "code": sigla, "label": rotulo, "type": tipo}
 
 
-def perfil(identificador, sigla, nome, *, modalidades=(), requisitos=(), fatos=()):
+def perfil(identificador, sigla, nome, *, modalidades=(), requisitos=(), fatos=(), quadro=()):
     return {
         "id": identificador,
         "code": sigla,
@@ -108,6 +108,17 @@ def perfil(identificador, sigla, nome, *, modalidades=(), requisitos=(), fatos=(
         # e a versão canônica identifica **uma** grafia.
         "declaredFacts": list(fatos),
         "classificationMilestones": [],
+        # A da versão 12, pela mesma razão: vazia significa "este Edital não publicou quadro", que
+        # é o que todo Edital publicado antes do degrau afirma — e nunca "zero vaga" (025, D-005).
+        "vacancyTable": list(quadro),
+        # A da versão 13, pela mesma razão: `None` significa "este Perfil não declarou qual das suas
+        # Modalidades é a ampla concorrência", que é o que todo Edital publicado antes do degrau
+        # afirma — e nunca "não há ampla concorrência" (014, D-014, FR-231).
+        "generalCompetitionModalityId": None,
+        # A da versão 14, pela mesma razão: `None` significa "este Edital não declara reversão de
+        # vaga reservada" — que é o que todo Edital publicado antes do degrau afirma —, e nunca
+        # "reverte do jeito comum" (016, D-007, FR-245).
+        "vacancyReversion": None,
     }
 
 
@@ -201,6 +212,12 @@ def rascunho_publicavel():
         # conteúdo **publicado** as tem porque a emissão as deriva dos modelos; o rascunho, não.
         perfil_.pop("declaredFacts", None)
         perfil_.pop("classificationMilestones", None)
+        # O quadro é opcional no rascunho e obrigatório no publicado — a assimetria é a D-005 no
+        # contrato: depois do degrau 12 todo conteúdo publicado tem a chave, vazia nos anteriores.
+        perfil_.pop("vacancyTable", None)
+        # Pela mesma assimetria: opcional no rascunho, presente no publicado (014, FR-231).
+        perfil_.pop("generalCompetitionModalityId", None)
+        perfil_.pop("vacancyReversion", None)
         for modalidade_ in perfil_["competitionModalities"]:
             modalidade_["normativeRule"] = {
                 chave: valor

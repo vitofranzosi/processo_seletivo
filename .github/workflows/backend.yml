@@ -44,3 +44,45 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run python manage.py makemigrations --check --dry-run
       - run: uv run pytest
+
+  # O ambiente containerizado é o caminho canônico de desenvolvimento, e caminho documentado que
+  # ninguém executa apodrece calado. Este job é o que impede isso: ele sobe a mesma pilha que a
+  # pessoa sobe na máquina dela, com o mesmo `.env.example`, e falha se ela não ficar utilizável.
+  compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # A cópia é o primeiro passo do README. Se ela deixar de bastar — variável nova exigida e não
+      # acrescentada ao exemplo —, é aqui que aparece, e não no primeiro dia de quem chega.
+      - name: Preparar o backend/.env a partir do exemplo
+        run: cp backend/.env.example backend/.env
+
+      # `--wait` só devolve quando o healthcheck de cada serviço passa, e o do `app` é o
+      # `/readiness`, que responde 503 se o banco não responder **ou** se houver migration
+      # pendente. Subir sem erro já prova provisionamento, migração e conexão pela role de runtime.
+      - name: Subir a pilha
+        run: docker compose up --build --detach --wait --wait-timeout 300
+
+      # A segunda passada do `provisionar_papeis` é a que concede privilégio sobre as tabelas que
+      # as migrations acabaram de criar. `0 de N` significa que ela não rodou, e o sistema sobe
+      # igual — a imutabilidade é que fica só com a camada da trigger.
+      - name: Conferir que a segunda passada trancou as tabelas
+        run: docker compose logs app | grep -E "[1-9][0-9]* de [0-9]+ tabelas append-only"
+
+      - name: Conferir que as superfícies respondem
+        run: |
+          curl -fsS -o /dev/null http://localhost:8000/health
+          curl -fsS -o /dev/null http://localhost:8000/readiness
+          curl -fsS -o /dev/null -L http://localhost:8000/gestao/
+          curl -fsS -o /dev/null http://localhost:8000/selecoes/
+          # O coletor de e-mail: sem ele o código de acesso do portal volta a existir só no log.
+          curl -fsS -o /dev/null http://localhost:8025/
+
+      - name: Logs, se algo falhou
+        if: failure()
+        run: docker compose logs
+
+      - name: Derrubar
+        if: always()
+        run: docker compose down --volumes

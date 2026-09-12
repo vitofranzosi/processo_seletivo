@@ -1,0 +1,5 @@
+{% comment %}
+O elemento que o htmx usa para apagar **outro**: ele acha no documento o elemento de mesmo `id` e o
+remove. Este `div` não entra na página — ele é o pedido, e não o resultado.
+{% endcomment %}
+<div id="{{ alvo }}" hx-swap-oob="delete"></div>

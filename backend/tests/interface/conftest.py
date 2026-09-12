@@ -86,6 +86,8 @@ CLASSES_SEM_DESENHO = {
     "perfil-novo",
     # O mesmo gancho, para o Anexo acrescentado por Retificação (020).
     "anexo-novo",
+    # E para a linha do quadro de vagas acrescentada por Retificação (025).
+    "linha-do-quadro-nova",
     # E para a linha do Anexo já existente, pela mesma razão que `evento` e `secao` estão aqui.
     "anexo",
     "perfil",
@@ -187,3 +189,25 @@ def com_etapas(client, seletor_ligado, edital):
     assert resposta.status_code == 302, resposta.content
     edital.refresh_from_db()
     return edital
+
+
+@pytest.fixture
+def cenario(db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos):
+    """O cenário da ocupação (016): Edital com quadro publicado, ordem e corte emitidos.
+
+    A fixture é declarada aqui **e** no `conftest` da integração, de propósito: importar fixture de
+    outro módulo de teste a redefine no importador. O que se importa é a função.
+    """
+    from tests.fixtures.ocupacao import montar_cenario_da_ocupacao
+
+    # **Com cota, de propósito**: a tela lista um bloco por recorte, e um cenário de recorte único
+    # não exercitaria a listagem — que é o que evita publicar dois e esquecer o terceiro.
+    return montar_cenario_da_ocupacao(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="ocupacao-016-tela",
+        geral=3,
+        ppi=2,
+    )

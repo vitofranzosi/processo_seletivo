@@ -46,6 +46,7 @@
       "classificationMilestones": [
         {
           "code": "FINAL",
+          "drawMethod": null,
           "id": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
           "name": "Classificação final",
           "normalization": "NENHUMA",
@@ -136,6 +137,18 @@
       ],
       "reserveLimit": 6,
       "reserveType": "LIMITED",
+      "vacancyTable": [
+        {
+          "id": "77777777-7777-7777-7777-777777777771",
+          "immediateVacancies": 2,
+          "modalityId": null
+        },
+        {
+          "id": "77777777-7777-7777-7777-777777777772",
+          "immediateVacancies": 1,
+          "modalityId": "44444444-4444-4444-4444-444444444444"
+        }
+      ],
       "workload": "40 horas semanais"
     }
   ],
@@ -145,6 +158,7 @@
       "endAt": "2026-09-20T23:59:00-03:00",
       "id": "66666666-6666-6666-6666-666666666666",
       "isRegistrationPeriod": true,
+      "location": "",
       "order": 1,
       "startAt": "2026-09-01T09:00:00-03:00",
       "status": "PLANEJADO",
@@ -155,13 +169,14 @@
       "endAt": null,
       "id": "77777777-7777-7777-7777-777777777777",
       "isRegistrationPeriod": false,
+      "location": "",
       "order": 2,
       "startAt": "2026-10-05T14:00:00-03:00",
       "status": "PLANEJADO",
       "type": "PROVA"
     }
   ],
-  "schemaVersion": 9,
+  "schemaVersion": 12,
   "sections": [
     {
       "content": "O Instituto Federal do Espírito Santo, por meio do Centro de Referência em Formação e em Educação a Distância, torna pública a realização do processo seletivo regido por este Edital.",

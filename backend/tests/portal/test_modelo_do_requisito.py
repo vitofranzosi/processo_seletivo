@@ -173,17 +173,25 @@ def test_a_lista_publica_de_anexos_e_navegavel(client, selecao_com_modelo):
 
     A seção é nomeada e cada anexo é um item de lista com link cujo texto é o **rótulo**: "clique
     aqui" repetido doze vezes não distingue um anexo do outro para quem ouve a página.
+
+    **A seção mudou de nome e de lugar na `024`, e a garantia é a mesma.** Os anexos deixaram de ter
+    seção própria e entraram na lista única de documentos do Edital — que é onde a `020` já dizia
+    que o leitor os procura, agora ao lado da abertura e das Retificações em vez de num bloco de
+    dois botões de largura total. O que este teste prende continua sendo o rótulo como texto do
+    link, a lista, e a seção nomeada.
     """
     import re
 
     corpo = client.get(reverse("portal:selecao", args=[selecao_com_modelo.id])).content.decode()
 
-    assert 'aria-labelledby="anexos-titulo"' in corpo
-    assert '<h2 id="anexos-titulo">Anexos do Edital</h2>' in corpo
-    secao = re.search(r'aria-labelledby="anexos-titulo".*?</section>', corpo, re.S).group(0)
+    assert 'aria-labelledby="documentos-titulo"' in corpo
+    assert '<h2 id="documentos-titulo">Edital e documentos</h2>' in corpo
+    secao = re.search(r'aria-labelledby="documentos-titulo".*?</section>', corpo, re.S).group(0)
+    anexos = re.findall(r'<li class="documento-publicado anexo">.*?</li>', secao, re.S)
     textos = [
         " ".join(re.sub(r"<[^>]+>", " ", bloco).split())
-        for bloco in re.findall(r"<a[^>]*>(.*?)</a>", secao, re.S)
+        for anexo in anexos
+        for bloco in re.findall(r"<a[^>]*>(.*?)</a>", anexo, re.S)
     ]
     assert textos, "a lista precisa ter links"
     assert all(texto.startswith("ANEXO") for texto in textos), textos

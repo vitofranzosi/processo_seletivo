@@ -129,6 +129,71 @@
     <button type="button" class="acao"
             hx-get="{% url 'interface:fragmento-modalidade' indice %}"
             hx-target="#modalidades-{{ indice }}" hx-swap="beforeend">Acrescentar Modalidade</button>
+    {% comment %}
+    Qual das Modalidades acima é a ampla concorrência (014, D-014, FR-231).
+
+    A quantidade dela mora na **linha geral** do quadro, e por isso ela nao recebe linha propria. A
+    declaracao existe porque o sistema nao adivinha: identificar a ampla concorrencia casando o nome
+    foi recusado por escrito na 025, e sem dizer qual e, exigir linha de quadro de toda Modalidade
+    tornaria impublicavel o Edital no formato normal.
+
+    Fica aqui, e nao na secao do quadro, porque e declaracao sobre a **Modalidade** — o quadro so a
+    consome.
+    {% endcomment %}
+    <p class="campo">
+      <label for="perfil-{{ indice }}-generalCompetitionModalityId">Qual delas é a ampla concorrência</label>
+      <select id="perfil-{{ indice }}-generalCompetitionModalityId"
+              name="perfil-{{ indice }}-generalCompetitionModalityId"
+              aria-describedby="ajuda-ampla-{{ indice }}">
+        <option value="">Nenhuma — a ampla concorrência é só a linha geral do quadro</option>
+        {% for modalidade in perfil.modalidades %}
+        <option value="{{ modalidade.id }}" {% if perfil.generalCompetitionModalityId == modalidade.id %}selected{% endif %}>{{ modalidade.code }} — {{ modalidade.name }}</option>
+        {% endfor %}
+      </select>
+      <span class="oculto" id="ajuda-ampla-{{ indice }}">A declarada não recebe linha no quadro: a
+        quantidade dela é a da linha geral.</span>
+    </p>
+    {% comment %}
+    A reversao de vaga reservada (016, D-007). Fica nesta secao, e nao na do quadro, pela mesma
+    razao do campo acima: e declaracao sobre **como as cotas se comportam**, e o quadro so fornece as
+    quantidades.
+
+    Os dois Editais da amostra escrevem o gatilho de modo diferente — o 28/2026 reverte "havendo
+    ausencia de candidatos aprovados", o 57/2026 "na hipotese do nao preenchimento total" —, e por
+    isso ele e **declarado** e nao inferido. Vazio significa que este Edital nao reverte, e o
+    57/2026 prova por que isso precisa ser respeitado: o item 4.5 dele proibe por escrito o
+    remanejamento entre cursos.
+    {% endcomment %}
+    <p class="campo">
+      <label for="perfil-{{ indice }}-vacancyReversion">Reverter vaga reservada não preenchida para a ampla concorrência</label>
+      <select id="perfil-{{ indice }}-vacancyReversion"
+              name="perfil-{{ indice }}-vacancyReversion"
+              aria-describedby="ajuda-reversao-{{ indice }}">
+        <option value="">Não — este Edital não reverte vaga reservada</option>
+        <option value="ON_EXHAUSTION" {% if perfil.vacancyReversion == "ON_EXHAUSTION" %}selected{% endif %}>Só quando a lista reservada esgota</option>
+        <option value="ON_BALANCE" {% if perfil.vacancyReversion == "ON_BALANCE" %}selected{% endif %}>A quantidade que ficou sem preencher</option>
+      </select>
+      <span class="oculto" id="ajuda-reversao-{{ indice }}">Declarar a reversão exige quadro de
+        vagas publicado: sem quantidade por recorte não há o que reverter.</span>
+    </p>
+  </section>
+  <section class="quadro" aria-labelledby="quadro-titulo-{{ indice }}">
+    <h3 id="quadro-titulo-{{ indice }}">Quadro de vagas</h3>
+    {% comment %}
+    Seção do cartão do Perfil, e não tela à parte (UX-020). Uma tela à parte seria mais fácil de
+    escrever e destruiria o que a outra tivesse acabado de gravar, porque o rascunho é substituído
+    inteiro a cada POST: estando no mesmo formulário, o problema não existe.
+
+    As linhas são **oferecidas**, e só a quantidade é digitada (UX-021): a geral mais uma por
+    Modalidade já declarada. Nenhum código, rótulo ou denominação é redigitado — sete polos de três
+    Modalidades dão 28 campos, e nem um a mais.
+
+    Quantidade em branco não grava linha: ausência é "não declarado", e nunca zero. Quem quiser
+    dizer zero digita zero.
+    {% endcomment %}
+    <div id="quadro-{{ indice }}">
+      {% for linha in perfil.quadro %}{% include "interface/_linha_do_quadro.html" with sub=forloop.counter0 %}{% endfor %}
+    </div>
   </section>
   <section class="marcos" aria-labelledby="fato-titulo-{{ indice }}">
     <h3 id="fato-titulo-{{ indice }}">Fatos exigidos do candidato</h3>

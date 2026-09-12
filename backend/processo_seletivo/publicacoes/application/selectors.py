@@ -182,6 +182,54 @@ def public_history(*, edital_id, cursor=None, limit=DEFAULT_LIMIT):
     return page, (_encode_cursor(page[-1]) if page and has_more else None)
 
 
+def atos_publicados(*, edital_id):
+    """Os atos publicados de um Edital, em ordem cronológica — a abertura e cada Retificação.
+
+    **Por que não é o `public_history`.** Aquele serve à API pública e faz três coisas que uma
+    página não quer: mescla um terceiro tipo — a Versão Consolidada —, pagina por cursor, e devolve
+    `limit` linhas do conjunto **misturado**. Filtrar a versão consolidada depois de paginar
+    produziria páginas curtas ou vazias por acaso: um Edital com muitas versões devolveria uma
+    primeira página só de versões, e a Retificação que interessa cairia na segunda.
+
+    E há a razão de domínio, que é a que decide: a Versão Consolidada é a máquina que produz o
+    conteúdo vigente, não um ato que alguém praticou. Numa página pública ela é ruído. O que a
+    pessoa precisa saber é **quem publicou o quê, e quando** (024, FR-129, D-006).
+
+    Sem cursor de propósito: um Edital tem uma abertura e um punhado de Retificações. Paginar isso
+    seria inventar um problema.
+
+    **Só Retificação publicada entra.** Em elaboração, em revisão, homologada e cancelada não são
+    atos publicados — anunciá-las diria ao público que o Edital mudou antes de ele ter mudado.
+    """
+    # `select_related` da base **não** é detalhe de desempenho: quem consome lê
+    # `retificacao.base_snapshot.content` para dar nome às entidades alteradas, e sem isto cada
+    # Retificação vira uma consulta própria trazendo o conteúdo publicado inteiro do Edital. Numa
+    # página anônima, sem cache, o custo cresce com o histórico — que é o que ela veio mostrar.
+    retificacoes = {
+        item.publication_id: item
+        for item in Retificacao.objects.filter(
+            edital_id=edital_id, status=Retificacao.Status.PUBLICADA, publication__isnull=False
+        )
+        .select_related("base_snapshot")
+        .prefetch_related("alteracoes")
+    }
+    atos = []
+    for publicacao in Publicacao.objects.filter(edital_id=edital_id).order_by(
+        "published_at", "publication_order"
+    ):
+        retificacao = retificacoes.get(publicacao.id)
+        atos.append(
+            {
+                "natureza": "retificacao" if retificacao else "abertura",
+                "publicado_em": publicacao.published_at,
+                "vigente_desde": publicacao.effective_at,
+                "documento_id": publicacao.id,
+                "retificacao": retificacao,
+            }
+        )
+    return atos
+
+
 def participantes_do_edital(edital):
     """Quem elaborou, homologou e publicou — base da segregação de funções (FR-012).
 
@@ -222,6 +270,31 @@ def impede_por_segregacao(participantes, ator):
         participantes["elaborou"]
         and participantes["elaborou"] == participantes["homologou"] == ator.subject
     )
+
+
+def versoes_vigentes(*, edital_ids, at=None):
+    """A versão vigente de cada Edital da lista, num par de consultas (023, FR-004a).
+
+    É a forma em lote de `effective_version`, e existe pela mesma razão que `selecoes_publicas` já
+    resolvia assim para a vitrine: chamar o seletor por Edital custaria uma consulta por linha, e a
+    tela que a usa é uma lista paginada.
+
+    A regra de desempate é a mesma dele — maior `valid_from` que já começou, e entre iguais a
+    materialização mais recente. **Precisa continuar sendo a mesma**: duas respostas para "qual
+    versão vigora" é o defeito que este módulo existe para não ter.
+    """
+    moment = at or timezone.now()
+    vigentes = {}
+    for edital_id, versao_id in (
+        VersaoConsolidada.objects.filter(edital_id__in=list(edital_ids), valid_from__lte=moment)
+        .order_by("edital_id", "-valid_from", "-materialized_at")
+        .values_list("edital_id", "id")
+    ):
+        vigentes.setdefault(edital_id, versao_id)
+    return {
+        versao.edital_id: versao
+        for versao in VersaoConsolidada.objects.filter(id__in=list(vigentes.values()))
+    }
 
 
 def selecoes_publicas(*, at=None):

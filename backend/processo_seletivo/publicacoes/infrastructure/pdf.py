@@ -1167,6 +1167,53 @@ def _janela_recursal(marco):
     return f"Caberá recurso no prazo de {quantos} {plural}, contados da divulgação do resultado."
 
 
+def _regra_de_corte(marco, etapas):
+    """A frase normativa do corte, como um Edital a escreve (014, FR-185).
+
+    *"Progridem para a Entrevista os 10 (dez) primeiros desta ordem, mais 20 suplentes."*
+
+    O número por extenso entre parênteses segue a regra da janela recursal, e pelo mesmo motivo: é
+    como um ato administrativo escreve quantidade, e é o que impede que um dígito trocado passe
+    despercebido.
+
+    **O alvo derivado não imprime número**, e a razão é que ele não tem um: a quantidade é a do
+    quadro de vagas do recorte, que já está publicado alguns parágrafos acima, e copiá-la aqui
+    criaria uma segunda resposta para a mesma pergunta — que é exatamente o que o Princípio II
+    proíbe. O documento diz de onde ela vem.
+
+    **O marco terminal não imprime nada sobre Etapa**: ele corta para a análise e para a chamada, e
+    escrever "não alimenta Etapa alguma" no Edital afirmaria ao candidato uma tecnicalidade do
+    sistema, e não uma norma do certame.
+    """
+    regra = marco.get("cutRule")
+    if not isinstance(regra, dict):
+        return ""
+    if regra.get("targetKind") == "FROM_VACANCY_TABLE":
+        quantos = "os primeiros desta ordem, até o número de vagas ofertadas no recorte"
+    else:
+        alvo = regra.get("targetCount")
+        if not isinstance(alvo, int) or isinstance(alvo, bool) or alvo < 0:
+            return ""
+        extenso = POR_EXTENSO.get(alvo)
+        numero = f"{alvo} ({extenso})" if extenso else str(alvo)
+        quantos = f"os {numero} primeiros desta ordem"
+    # A guarda da ausência é explícita, e não um `or ""` depois do `str()`: `str(None)` é a string
+    # `"None"`, que é verdadeira — o `or` nunca dispararia, e bastaria existir uma Etapa de `id`
+    # igual a `"None"` para o documento nomear a Etapa errada.
+    governada = regra.get("governedStage")
+    destino = etapas.get(str(governada)) if governada else None
+    nome = destino.get("name") if isinstance(destino, dict) else ""
+    para = f" para {nome}" if nome else ""
+    frase = f"Progridem{para} {quantos}"
+    excedente = regra.get("surplusCount")
+    if isinstance(excedente, int) and not isinstance(excedente, bool) and excedente > 0:
+        extenso = POR_EXTENSO.get(excedente)
+        numero = f"{excedente} ({extenso})" if extenso else str(excedente)
+        plural = "suplentes" if excedente != 1 else "suplente"
+        frase = f"{frase}, mais {numero} {plural}"
+    return f"{frase}."
+
+
 def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
     """Os marcos classificatórios por extenso, com o que basta para refazer a ordem publicada.
 
@@ -1224,6 +1271,9 @@ def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
                 janela = _janela_recursal(marco)
                 if janela:
                     pares.append(["Recurso", janela])
+                corte = _regra_de_corte(marco, etapas)
+                if corte:
+                    pares.append(["Corte", corte])
                 _pares(composicao, pares, recuo=32.0)
                 criterios = sorted(
                     marco.get("tiebreakers") or [], key=lambda item: item.get("order") or 0
@@ -1286,6 +1336,92 @@ def _fatos_declarados(composicao, perfil):
             )
 
 
+def _quadro_de_vagas_do_perfil(composicao, perfil, tabelas, nomear_perfil=False):
+    """O quadro de vagas: quantas vagas cabem em cada lista de concorrência (025, FR-169).
+
+    **Bloco próprio, e não coluna nova na tabela de Modalidades.** Aquela tabela já omite coluna sem
+    valor, e acrescentar "Vagas" ali seria tentador e barato. Mas ela é tabela de **Modalidades**, e
+    a linha geral não é Modalidade nenhuma: o `AC 56` não teria onde morar, que é precisamente o
+    defeito que a D-002 recusou no modelo de dados. Repeti-lo na apresentação publicaria um quadro
+    que não fecha.
+
+    **A linha geral vem primeiro**, rotulada "Ampla concorrência", independentemente da posição
+    dela no array — é apresentação, e é o que a D-009 autoriza. As reservadas saem na ordem
+    declarada, que não é recalculada nem alfabetizada.
+
+    **Sem quadro, o bloco não sai — e nenhuma frase o substitui.** Um "quadro não declarado"
+    impresso seria uma afirmação nova sobre um Edital que não a fez, e é o que a SC-050 cobra:
+    nenhum Edital publicado antes desta feature passa a afirmar zero vaga em lugar nenhum.
+    """
+    linhas_do_quadro = perfil.get("vacancyTable") or []
+    if not linhas_do_quadro:
+        return
+    denominacoes = {
+        str(modalidade.get("id")): (
+            f"{modalidade.get('name', '')} ({modalidade.get('code', '')})"
+            if modalidade.get("code")
+            else modalidade.get("name", "")
+        )
+        for modalidade in perfil.get("competitionModalities") or []
+        if modalidade.get("id")
+    }
+    gerais = [linha for linha in linhas_do_quadro if not linha.get("modalityId")]
+    reservadas = [linha for linha in linhas_do_quadro if linha.get("modalityId")]
+    linhas = [
+        [
+            "Ampla concorrência"
+            if not linha.get("modalityId")
+            else denominacoes.get(str(linha["modalityId"]), ""),
+            str(linha.get("immediateVacancies", 0)),
+        ]
+        for linha in gerais + reservadas
+    ]
+    titulo = "Quadro de vagas"
+    if nomear_perfil:
+        titulo = f"{titulo} — {perfil.get('code', '')}"
+    with composicao.bloco():
+        _tabela(
+            composicao,
+            ["Lista de concorrência", "Vagas imediatas"],
+            linhas,
+            alinhamentos=[ESQUERDA, CENTRO],
+            legenda=tabelas.legenda(titulo),
+        )
+    _reversao_declarada(composicao, perfil)
+
+
+def _reversao_declarada(composicao, perfil):
+    """A frase da reversão, abaixo do quadro que ela governa (016, D-007).
+
+    **Sai junto do quadro, e não em bloco próprio**, porque é uma regra sobre aquelas quantidades:
+    lida longe delas, o candidato teria de procurar a qual Perfil ela se aplica.
+
+    **Sem declaração, nenhuma frase sai** — nem "não há reversão". É a mesma disciplina que a `025`
+    aplicou ao quadro ausente: um Edital que não declarou reversão não passa a afirmar coisa alguma
+    sobre ela, e imprimir a negação seria afirmação nova sobre ato já publicado.
+    """
+    especie = (perfil.get("vacancyReversion") or {}).get("kind")
+    if not especie:
+        return
+    frases = {
+        "ON_EXHAUSTION": (
+            "Havendo ausência de candidatos aprovados na reserva de vagas, o quantitativo será "
+            "destinado à respectiva ampla concorrência."
+        ),
+        "ON_BALANCE": (
+            "Na hipótese do não preenchimento total das vagas reservadas, o quantitativo não "
+            "preenchido será destinado à respectiva ampla concorrência."
+        ),
+    }
+    frase = frases.get(especie)
+    if not frase:
+        return
+    with composicao.bloco():
+        # `escrever`, e não `paragrafo`: a `Composicao` não tem esse método, e eu o inventei por
+        # analogia. O teste da reversão pegou — a publicação inteira devolvia 500.
+        composicao.escrever(frase, antes=4.0, justificar=True)
+
+
 def _modalidades(composicao, perfil, tabelas, nomear_perfil=False):
     """As modalidades em tabela — sem perder o que a frase corrida dizia (FR-018, FR-019).
 
@@ -1329,13 +1465,28 @@ def _modalidades(composicao, perfil, tabelas, nomear_perfil=False):
         )
 
 
-def _quadro_de_vagas(composicao, perfis, tabelas):
-    """A visão global antes do detalhe — o `Quadro de vagas` dos Editais de referência.
+def _quadro_de_perfis(composicao, perfis, tabelas):
+    """A visão global antes do detalhe: os Perfis lado a lado.
 
     Um card por Perfil responde "como apresento esta entidade?". O Edital pergunta outra coisa:
     "qual a melhor composição para comunicar esta matéria?" — e a resposta, para dados comparáveis
     entre si, é uma tabela que os põe lado a lado. Com dez Perfis, dez fichas obrigam o leitor a
     percorrer o documento inteiro para saber quantas vagas existem.
+
+    **Esta função chamava-se `_quadro_de_vagas`, e o nome estava errado.** Ela tabula *Perfis* —
+    `Perfil`, `Localidade`, `Vagas`, `Cadastro reserva`, `Carga horária` —, e não a repartição das
+    vagas por lista de concorrência, que é o que o domínio chama de quadro de vagas e que a `025`
+    passou a publicar em `_quadro_de_vagas_do_perfil`. O Princípio I proíbe o mesmo termo nomear
+    dois conceitos.
+
+    **A renomeação da função não mudou o documento; a da legenda mudou, de propósito.** Trocar o
+    nome de uma função privada não altera byte nenhum do que se publica — mas quem lê o Edital lê a
+    legenda, e ela continuava dizendo "Quadro de vagas" algumas linhas acima da tabela que agora
+    tem esse nome. Ela passou a dizer "Perfis de vaga", e o documento mudou aí.
+
+    **A fixture de bytes não pega essa mudança**, e é bom saber por quê antes de confiar nela: ela
+    tem um Perfil só, e esta tabela só é composta com mais de um. Quem mexer aqui confere o
+    resultado por `test_as_duas_tabelas_de_vagas_nao_se_chamam_a_mesma_coisa`, que compõe dois.
     """
     linhas = []
     for perfil in perfis:
@@ -1357,12 +1508,18 @@ def _quadro_de_vagas(composicao, perfis, tabelas):
         linhas,
         recuo=0.0,
         alinhamentos=[ESQUERDA, ESQUERDA, CENTRO, ESQUERDA, CENTRO],
-        legenda=tabelas.legenda("Quadro de vagas"),
+        # **A legenda mudou com a `025`, e não é ajuste de gosto** (E2E25-005). Ela dizia "Quadro
+        # de vagas", e o documento passou a publicar, algumas linhas abaixo, uma tabela com esse
+        # nome que é outra coisa: a repartição das vagas de **um** Perfil por lista de
+        # concorrência. Duas tabelas homônimas no mesmo documento, dizendo coisas diferentes, é
+        # exatamente a ambiguidade que o Princípio I existe para não ter — e a renomeação da
+        # função privada, sozinha, não a alcançava, porque quem lê o Edital lê a legenda.
+        legenda=tabelas.legenda("Perfis de vaga"),
     )
 
 
 def _perfis(composicao, snapshot, secao=0, tabelas=None):
-    """O quadro de vagas, e depois cada Perfil como subseção.
+    """A tabela comparativa de Perfis, e depois cada Perfil como subseção.
 
     **Sem moldura externa.** O retângulo em volta de tudo produzia um cartão de interface
     impresso: tabela dentro de caixa dentro de caixa. Um Edital descreve a vaga em prosa e
@@ -1372,7 +1529,7 @@ def _perfis(composicao, snapshot, secao=0, tabelas=None):
     """
     perfis = snapshot.get("profiles") or []
     if len(perfis) > 1:
-        _quadro_de_vagas(composicao, perfis, tabelas)
+        _quadro_de_perfis(composicao, perfis, tabelas)
 
     for ordem, perfil in enumerate(perfis, 1):
         with composicao.bloco(coeso=False):
@@ -1449,6 +1606,7 @@ def _perfis(composicao, snapshot, secao=0, tabelas=None):
                     for requisito in requisitos:
                         composicao.escrever(f"• {requisito}", tamanho=CORPO_TEXTO, recuo=32)
             _fatos_declarados(composicao, perfil)
+            _quadro_de_vagas_do_perfil(composicao, perfil, tabelas, len(perfis) > 1)
             _modalidades(composicao, perfil, tabelas, len(perfis) > 1)
             _marcos(composicao, snapshot, perfil, len(perfis) > 1)
 
@@ -1490,21 +1648,26 @@ def _cronograma(composicao, snapshot, secao=0, tabelas=None):
     eventos = snapshot.get("schedule") or []
     if not eventos:
         return
+    # **A coluna do local só aparece quando algum Evento declara um** (021, FR-057). Uma coluna de
+    # travessões em todo Edital anterior ao degrau 11 ocuparia largura para afirmar nada — e a
+    # ausência já significa "não declarado", que é diferente de "acontece em lugar nenhum".
+    algum_local = any((evento.get("location") or "").strip() for evento in eventos)
     linhas = [
         [
             str(evento.get("order", "")),
             evento.get("description") or evento.get("type", ""),
             _instante(evento.get("startAt")),
             _instante(evento["endAt"]) if evento.get("endAt") else "—",
+            *([evento.get("location") or "—"] if algum_local else []),
         ]
         for evento in eventos
     ]
     _tabela(
         composicao,
-        ["Nº", "Evento", "Início", "Término"],
+        ["Nº", "Evento", "Início", "Término", *(["Onde"] if algum_local else [])],
         linhas,
         recuo=0.0,
-        alinhamentos=[CENTRO, ESQUERDA, CENTRO, CENTRO],
+        alinhamentos=[CENTRO, ESQUERDA, CENTRO, CENTRO, *([ESQUERDA] if algum_local else [])],
         legenda=tabelas.legenda("Cronograma"),
     )
 

@@ -15,9 +15,19 @@ urlpatterns = [
         views.praticar_ato_processo,
         name="processo-ato",
     ),
+    # A supervisão do Processo (022). Pende do Processo, e não do Edital, porque é justamente o
+    # nível que não existia: a soma acima do Edital e o tempo acima de todos (FR-001).
+    path(
+        "processos/<uuid:processo_id>/supervisao",
+        views.supervisao,
+        name="supervisao",
+    ),
     path("editais/<uuid:edital_id>/", views.detalhe, name="detalhe"),
     path("editais/<uuid:edital_id>/compor", views.compor, name="compor"),
     path("editais/<uuid:edital_id>/compor/<slug:etapa>", views.compor_etapa, name="compor-etapa"),
+    # Partir de um Edital anterior (023). Fora do POST da etapa porque não é gravação de etapa:
+    # é um ato só, sobre um rascunho que precisa estar vazio.
+    path("editais/<uuid:edital_id>/reaproveitar", views.reaproveitar, name="reaproveitar"),
     path("editais/<uuid:edital_id>/previa", views.previa, name="previa"),
     path(
         "editais/<uuid:edital_id>/previa/documento",
@@ -114,6 +124,13 @@ urlpatterns = [
         views.fragmento_retificacao_anexo,
         name="fragmento-retificacao-anexo",
     ),
+    # Escopada ao Edital porque os dois campos de escolha da linha — Perfil e lista de
+    # concorrência — saem do conteúdo vigente **daquele** Edital, como no fragmento da Etapa.
+    path(
+        "fragmentos/retificacao/<uuid:edital_id>/linha-do-quadro",
+        views.fragmento_retificacao_linha_do_quadro,
+        name="fragmento-retificacao-linha-do-quadro",
+    ),
     path("fragmentos/remover", views.fragmento_remover, name="fragmento-remover"),
     # A organização do trabalho (011). Nenhuma rota usa `etapas/` como segmento: a palavra já
     # significa "passo do compositor" em `editais/<uuid>/compor/<slug:etapa>` (D-009, D-015).
@@ -194,10 +211,95 @@ urlpatterns = [
         views.emitir_ordenacao,
         name="emitir-ordenacao",
     ),
+    # A leitura de um corte pela identidade dele, sucedido ou vigente (014, UX-024). Pende do
+    # Edital, e não do marco: o corte histórico continua legível depois de a Retificação remover o
+    # marco da versão vigente, e exigir o marco na rota a tornaria inalcançável justamente aí.
+    path(
+        "editais/<uuid:edital_id>/cortes/<uuid:corte_id>",
+        views.corte_historico,
+        name="corte-historico",
+    ),
     path(
         "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/atos/<uuid:ato_id>",
         views.ato_de_ordenacao,
         name="ato-de-ordenacao",
+    ),
+    # O corte (014). Pende do **marco**, como as da 015 e as do sorteio, e o recorte vem em
+    # `?lista=`: um marco de cotas tem três, e cada um tem a sua faixa. O GET calcula e mostra, e
+    # não grava nada — abrir a tela não pode mudar quem participa da Etapa seguinte (FR-190).
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/corte",
+        views.corte,
+        name="corte",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/corte/emitir",
+        views.emitir_corte_view,
+        name="emitir-corte",
+    ),
+    # A ocupação (016). Pende do **marco**, como as da 015, do corte e do sorteio, porque é o
+    # recorte que ela lista: um marco com cotas tem três recortes, e cada um tem o seu número.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao",
+        views.ocupacao,
+        name="ocupacao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/apurar",
+        views.emitir_apuracao_view,
+        name="emitir-apuracao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/faixa-seguinte",
+        views.causar_faixa_view,
+        name="causar-faixa",
+    ),
+    # O histórico de um recorte (016, FR-259). O caminho **carrega** o marco, como a leitura, e o
+    # recorte vem em `?lista=`: o que se lista é a **série** de um recorte, e é ela que o recorte
+    # identifica.
+    #
+    # **Carregar não é resolver, e é aqui que a distinção importa.** A view não chama
+    # `_perfil_do_marco`, que levanta 404 quando o marco não está na versão vigente: uma Retificação
+    # que removesse o marco faria desaparecer justamente o histórico que explica os números daquela
+    # época. A série é encontrada pelas identidades publicadas que as apurações guardaram. É o
+    # mesmo motivo pelo qual `corte-historico` endereça o **corte**, e não o marco.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/historico",
+        views.ocupacao_historico,
+        name="ocupacao-historico",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/corte/continuar",
+        views.continuar_corte_view,
+        name="continuar-corte",
+    ),
+    # O sorteio (021). A rota pende do **marco**, como as da 015, e é o recorte que ela lista: um
+    # marco de sorteio com cotas tem três recortes, e cada um tem o seu estado. O GET não escreve
+    # nada e não calcula ordem nenhuma — não há o que calcular antes da semente (D-010).
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio",
+        views.sorteio,
+        name="sorteio",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/relacao",
+        views.publicar_relacao_do_sorteio,
+        name="publicar-relacao-do-sorteio",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/ocorrencia",
+        views.observar_ocorrencia_do_sorteio,
+        name="observar-ocorrencia-do-sorteio",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/realizar",
+        views.realizar_sorteio,
+        name="realizar-sorteio",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/anular",
+        views.anular_o_sorteio,
+        name="anular-sorteio",
     ),
     # A divulgação (017). A rota pende do **ato**, e não do marco, pelo mesmo motivo que as da 015
     # pendem do marco: é dali que ela é alcançada, e é o ato que a autorização qualifica. O GET

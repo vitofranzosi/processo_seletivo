@@ -1,0 +1,143 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Supervisão — {{ processo.institutional_code }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
+  <span aria-current="page">Supervisão</span>
+</nav>
+
+<h1>Supervisão do Processo</h1>
+<p class="sub">{{ processo.title }} — <span class="codigo">{{ processo.institutional_code }}</span></p>
+
+{% comment %}
+Duas regiões, e só duas (D-001). Cada uma é anunciada **como região**, com título próprio, para que
+quem navega por marcos salte de uma para a outra sem varrer a página (UX-006).
+{% endcomment %}
+<section aria-labelledby="pulso-titulo">
+  <h2 id="pulso-titulo">Pulso</h2>
+  {% comment %}
+  FR-009: o instante da leitura. Ele qualifica todo o resto — o tempo restante, a série e as
+  últimas 24 horas são respostas sobre um agora —, e uma página que não o declara pede que quem
+  lê adivinhe de quando ela fala.
+  {% endcomment %}
+  <p class="sub">Lido em {{ pulso.lido_em|date:"d/m/Y, H\hi" }}.</p>
+
+  {% comment %}
+  Nenhum percentual (FR-017): não existe o número de inscrições que um Edital espera receber, e um
+  percentual de avanço responderia "quanto falta" a uma pergunta sem denominador.
+
+  “Em preenchimento”, e não “rascunhos”: é o termo que a tela de inscrições da 009 já usa. Dois
+  termos para o mesmo conceito é o que o Princípio I recusa, e a decisão de vocabulário que valha
+  para as duas telas é governança — registrada, e não tomada aqui.
+  {% endcomment %}
+  <ul class="resumo" aria-label="Inscrições no Processo">
+    <li><strong>{{ pulso.submetidas_no_processo }}</strong>inscriç{{ pulso.submetidas_no_processo|pluralize:"ão,ões" }} recebida{{ pulso.submetidas_no_processo|pluralize:"s" }} no Processo</li>
+    <li><strong>{{ pulso.rascunhos_no_processo }}</strong>em preenchimento</li>
+    {% comment %}
+    FR-013: a contagem recente é do **Processo**, e soma os Editais. Ela some quando nenhum período
+    está em curso, porque ali ela é sempre zero — e zero apresentado como notícia é ruído.
+    {% endcomment %}
+    {% if pulso.ultimas_24h is not None %}
+    <li><strong>{{ pulso.ultimas_24h }}</strong>nas últimas 24 horas</li>
+    {% endif %}
+  </ul>
+
+  {% comment %}
+  FR-018: a condição é **declarada**, e não deixada como um zero sem qualificação.
+  {% endcomment %}
+  {% if not pulso.algum_periodo_em_curso %}
+  <p class="aviso"><strong>Nenhum Edital com período de inscrições em curso.</strong>
+    O volume recente não é apresentado enquanto não houver prazo aberto.</p>
+  {% endif %}
+
+  {% comment %}
+  D-005 e UX-007: a contagem do Edital sai nomeada pelo Edital, **inclusive quando há um só**. A
+  etiqueta não some porque o Processo tem um Edital: some porque a informação deixou de ser dele.
+  {% endcomment %}
+  <div class="tabela-rolavel">
+    <table>
+      <caption>Inscrições por Edital</caption>
+      <thead>
+        <tr>
+          <th scope="col">Edital</th>
+          <th scope="col">Recebidas</th>
+          <th scope="col">Em preenchimento</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in pulso.por_edital %}
+        <tr>
+          <th scope="row">
+            <a href="{% url 'interface:detalhe' item.edital.id %}">{{ item.edital.number }}/{{ item.edital.year }}</a>
+            — {{ item.edital.title }}
+            <span class="situacao s-{{ item.edital.status }}">{{ item.edital.status|situacao }}</span>
+          </th>
+          <td>{{ item.submetidas }}</td>
+          <td>{{ item.rascunhos }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" class="vazio">Este Processo ainda não tem Edital.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% comment %}
+  D-005: o prazo, os marcos e a série pendem do Edital, e cada bloco o nomeia. Não existe data do
+  Processo, e escolher a de um dos Editais para representá-lo seria inventá-la.
+  {% endcomment %}
+  {% for item in pulso.por_edital %}
+  <section class="cartao" aria-labelledby="edital-{{ item.edital.id }}">
+    <h3 id="edital-{{ item.edital.id }}">Edital {{ item.edital.number }}/{{ item.edital.year }}</h3>
+
+    {% if item.ausencia == "sem-cronograma" %}
+    <p class="nenhuma">Este Edital não tem cronograma vigente: não há prazo nem marco a apresentar.</p>
+    {% elif item.ausencia == "sem-periodo" %}
+    <p class="nenhuma">O cronograma deste Edital não marca nenhum Evento como período de inscrições.</p>
+    {% else %}
+    <p>
+      Inscrições de {{ item.periodo.inicio|date:"d/m/Y, H\hi" }}
+      {% if item.periodo.fim %}a {{ item.periodo.fim|date:"d/m/Y, H\hi" }}{% else %}sem término declarado{% endif %}.
+      {% if item.periodo.restante %}Encerra em {{ item.periodo.fim|timeuntil }}.{% endif %}
+    </p>
+    {% endif %}
+
+    {% if item.serie %}{% include "interface/_serie_de_inscricoes.html" %}{% endif %}
+
+    {% if item.proximos_marcos %}
+    <h4>Próximos marcos</h4>
+    <ul class="marcos">
+      {% for marco in item.proximos_marcos %}
+      {% comment %}
+      FR-023 e D-004: o estado do Evento aparece como **declaração**, e a tela não o corrige nem o
+      arbitra contra as datas. Quando os dois discordam, quem diz isso é o sinal de UX-002.
+      {% endcomment %}
+      <li>
+        <strong>{{ marco.descricao }}</strong>
+        — {{ marco.inicio|date:"d/m/Y" }}{% if marco.fim %} a {{ marco.fim|date:"d/m/Y" }}{% endif %}
+        {% if marco.declarado %}<span class="marca">declarado {{ marco.declarado_legivel }}</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </section>
+  {% endfor %}
+</section>
+
+<section aria-labelledby="atencao-titulo">
+  <h2 id="atencao-titulo">Atenção</h2>
+  {% comment %}
+  D-001 e FR-025: sinal ausente não ocupa espaço, e não há seção permanente por sinal. A região
+  encolhe a uma linha, mas não some — sumir não distinguiria "nada a sinalizar" de "a página não
+  carregou".
+  {% endcomment %}
+  {% if sinais %}
+  <ul class="sinais">
+    {% for sinal in sinais %}{% include "interface/_sinal.html" %}{% endfor %}
+  </ul>
+  {% else %}
+  <p class="nenhuma">Nenhuma condição de atenção neste Processo.</p>
+  {% endif %}
+</section>
+{% endblock %}

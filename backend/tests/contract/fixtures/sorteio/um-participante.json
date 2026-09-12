@@ -1,0 +1,20 @@
+{
+  "name": "um-participante",
+  "input": {
+    "relationHash": "bc5c4f69423e93bda3144528b5133911a2ddae49155bc233e2d05662cfc67410",
+    "drawScopeId": "9f1c2d3e-perfil",
+    "seed": "0 4 8 1 5",
+    "participants": [
+      1
+    ]
+  },
+  "canonicalBytes": {
+    "1": "{\"domain\":\"processo-seletivo/sorteio/v1\",\"drawScopeId\":\"9f1c2d3e-perfil\",\"publicNumber\":1,\"relationHash\":\"bc5c4f69423e93bda3144528b5133911a2ddae49155bc233e2d05662cfc67410\",\"seed\":\"0 4 8 1 5\"}"
+  },
+  "keys": {
+    "1": "0b5ac684fb3c29b9117491a341c1890fb78960499b4a8f7ac01ccddfe6a88765"
+  },
+  "expectedOrder": [
+    1
+  ]
+}

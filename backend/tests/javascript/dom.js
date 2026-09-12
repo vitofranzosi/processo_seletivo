@@ -308,6 +308,10 @@ function montar({
   armazem = new Armazem(),
   avisos = [],
   ordenaveis = [],
+  // Elementos alcançáveis por `id`, para os scripts que trabalham fora da própria linha. É o caso
+  // da linha do quadro de vagas: ela mora noutra seção do cartão do Perfil, e `remocao.js` a
+  // encontra pelo `id` que o botão da Modalidade declara.
+  porId = {},
   // O recibo do servidor: a chave do rascunho que ele acabou de receber. `null` é a tela que
   // não vem de um salvamento, que é o caso comum.
   rascunhoSalvo = null,
@@ -337,8 +341,10 @@ function montar({
     /* Duas telas, dois nomes para o mesmo papel: o assistente chama o formulário de
        `formulario`, a Retificação de `formulario-da-retificacao`. O shim entrega o que o teste
        montou, seja qual for o nome pelo qual o script o procura. */
-    getElementById: (id) =>
-      id === "formulario" || id === "formulario-da-retificacao" ? formulario : null,
+    getElementById: (id) => {
+      if (id === "formulario" || id === "formulario-da-retificacao") return formulario;
+      return Object.prototype.hasOwnProperty.call(porId, id) ? porId[id] : null;
+    },
     querySelector: (seletor) => {
       if (seletor === "[data-nao-enviado]") return null;
       if (seletor === "[data-rascunho-salvo]") {

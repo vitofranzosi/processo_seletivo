@@ -36,6 +36,43 @@ class PerfilVaga(models.Model):
     classification_information = models.JSONField(default=dict, blank=True)
     call_information = models.JSONField(default=dict, blank=True)
 
+    # **Qual das Modalidades declaradas é a ampla concorrência** (014, D-014). `None` significa que
+    # o Perfil não declarou nenhuma — o formato em que a ampla concorrência existe só como a linha
+    # geral do quadro, sem Modalidade homônima.
+    #
+    # **Por que a declaração é necessária.** A `025` deixou registrado que o Edital normal declara
+    # *também* uma Modalidade chamada "Ampla concorrência", e que a quantidade dela mora na **linha
+    # geral** — a de `modalidade` nula —, porque é o recorte que o sorteio consulta. Sem dizer qual
+    # é, o sistema não tem como distinguir a Modalidade que corresponde à linha geral daquela que
+    # exige linha própria: a `R-006` daquela feature recusou, por escrito, identificá-la casando o
+    # nome, e continua certa em recusar. O que faltava era o Edital **dizê-lo**, e é o que este
+    # campo é.
+    #
+    # **Ela não recebe linha no quadro**, e a conferência recusa quem lhe der uma: a quantidade dela
+    # já está na linha geral, e duas linhas para o mesmo recorte é a contradição que a `025`
+    # proíbe.
+    modalidade_ampla_concorrencia = models.UUIDField(null=True, blank=True)
+    # A espécie do gatilho da reversão de vaga reservada (016, D-007). **Nula significa "este
+    # Edital não declara reversão"** — nunca "reverte do jeito comum": o 57/2026 proíbe por escrito
+    # o remanejamento entre cursos, e reverter por conta própria produziria ali o que ele veda.
+    #
+    # **Uma coluna, e não duas**, porque o objeto publicado tem um campo só. No conteúdo publicado a
+    # forma é objeto (`vacancyReversion`), para que um campo novo da mesma decisão entre sem um
+    # segundo degrau canônico (016, R-005).
+    #
+    # **Vazio, e não nulo**: é a grafia que este repositório usa para texto ausente — `null` em
+    # `CharField` daria duas formas de dizer a mesma coisa, e o `DJ001` cobra isso. Os dois valores
+    # declaráveis são não vazios, então vazio é inequivocamente "não declarou".
+    especie_de_reversao = models.CharField(
+        max_length=32,
+        blank=True,
+        default="",
+        choices=[
+            ("ON_EXHAUSTION", "Só quando a lista reservada esgota"),
+            ("ON_BALANCE", "A quantidade que ficou sem preencher"),
+        ],
+    )
+
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["edital", "code"], name="uq_perfil_edital_code"),
@@ -67,6 +104,72 @@ class ModalidadeConcorrencia(models.Model):
 
     def __str__(self):
         return f"{self.code} — {self.name}"
+
+
+class LinhaDoQuadroDeVagas(models.Model):
+    """Uma quantidade de vagas imediatas com identidade própria, dentro do Perfil (025, D-002).
+
+    **`modalidade` nula É a ampla concorrência, e não ausência.** O recorte sem lista de
+    concorrência não filtra por Modalidade nenhuma: entram todas as inscrições submetidas do Perfil,
+    que é o que a cláusula da ampla concorrência dos Editais reais manda. Guardar `AC 56` na
+    Modalidade chamada "Ampla concorrência" — quando ela existe — seria escrever o número no lugar
+    que o sorteio não consulta (D-004). A grafia não é inventada aqui: `Inscricao.modality_id`,
+    `PosicaoNaOrdem.modalidade_id` e `AtoDeOrdenacao.lista_id` já são anuláveis com este mesmo
+    sentido, e `classificacao/models.py` escreve a frase.
+
+    **`PROTECT` é a D-008 escrita no banco.** Remover a Modalidade não pode fazer a quantidade sumir
+    como efeito colateral de outro movimento: quem retifica declara os dois movimentos. Para o
+    conteúdo publicado a mesma regra é um achado impeditivo — banco e conteúdo publicado são duas
+    camadas independentes, como a Constituição pede para tudo o que é normativo.
+
+    **A quantidade é a fonte, e nunca é derivada de percentual** (D-003, FR-157). O percentual da
+    Regra Normativa fundamenta a cota e não a calcula: `Q 1` e `PCD 1` de um Edital real saem de
+    arredondamento sobre censo e não são geráveis por percentual algum.
+
+    **`ordem` existe por determinismo, e não por norma** (D-009). Sem ela a emissão sairia em ordem
+    indefinida e dois snapshots do mesmo conteúdo teriam resumos canônicos diferentes (FR-168). Ela
+    **não é publicada**: publicá-la faria o quadro afirmar uma precedência entre listas que é de
+    outra feature.
+
+    **A linha carrega vaga imediata, e só ela** (D-011). O cadastro de reserva não é repartido por
+    esta feature, e o campo para isso não é admitido de antemão: estrutura antes de existir regra
+    que a consuma é o que este repositório já recusou ao modelar os campos descritivos do Perfil.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    perfil = models.ForeignKey(PerfilVaga, on_delete=models.CASCADE, related_name="quadro_de_vagas")
+    modalidade = models.ForeignKey(
+        ModalidadeConcorrencia,
+        on_delete=models.PROTECT,
+        related_name="linhas_do_quadro",
+        null=True,
+        blank=True,
+    )
+    vagas_imediatas = models.PositiveIntegerField()
+    ordem = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["ordem", "id"]
+        constraints = [
+            # **As duas não são redundantes, e uma só seria mais fraca.** No PostgreSQL dois `NULL`
+            # não colidem: `UniqueConstraint(perfil, modalidade)` sozinha deixaria passar duas
+            # linhas gerais no mesmo Perfil, que é exatamente o que a FR-154 proíbe. É a mesma
+            # cirurgia de `uq_ato_raiz_por_marco`, em `classificacao/models.py`, e pela mesma razão.
+            models.UniqueConstraint(
+                fields=["perfil", "modalidade"],
+                name="uq_linha_por_modalidade",
+                condition=Q(modalidade__isnull=False),
+            ),
+            models.UniqueConstraint(
+                fields=["perfil"],
+                name="uq_linha_geral_por_perfil",
+                condition=Q(modalidade__isnull=True),
+            ),
+        ]
+
+    def __str__(self):
+        recorte = self.modalidade.code if self.modalidade_id else "Ampla concorrência"
+        return f"{recorte}: {self.vagas_imediatas}"
 
 
 class FatoDeclarado(models.Model):
@@ -144,6 +247,37 @@ class MarcoClassificatorio(models.Model):
     # de admissibilidade motivado (FR-020, FR-028). Marcos diferentes admitem recurso ou não, e por
     # prazos diferentes, e é por isso que ela mora aqui e não no Edital.
     janela_recursal = models.JSONField(default=dict, blank=True)
+    # O método do sorteio deste marco (021, degrau 10, D-013). **Vazio significa não declarado** —
+    # e o marco sem método não congela relação (FR-066): congelar sob método indefinido seria
+    # escolher o método depois.
+    #
+    # **Mora aqui, e não numa tabela de sorteio**, porque a FR-014 exige que alterá-lo seja
+    # Retificação. Uma tabela própria seria registro operacional que se diz normativo: sem versão
+    # consolidada, sem autoridade signatária, fora do snapshot e fora da gramática de
+    # endereçamento. Aqui ele é conteúdo publicado como qualquer outro, e
+    # `/profiles/id=…/classificationMilestones/id=…/drawMethod/…` já resolve — é objeto, e em
+    # objeto o segmento do caminho é nome de chave literal.
+    #
+    # **É do marco, e não da lista.** Um sorteio é um evento: a mesma extração da mesma fonte
+    # semeia as três listas do recorte, e é o `relationHash` que as separa. Método por lista
+    # reabriria a porta que a D-014 fechou, e não atenderia Edital nenhum da amostra.
+    metodo_de_sorteio = models.JSONField(default=dict, blank=True)
+    # A regra de corte deste marco (014, degrau 13, D-011 a D-014, FR-178). **Vazio significa não
+    # declarada** — e não regra padrão: o marco sem regra não corta, e a Etapa que ele alimentaria
+    # continua recebendo o conjunto que a progressão da 013 já entrega (FR-214). É o que todo
+    # Edital publicado antes deste degrau afirma, e é verdade sobre todos eles.
+    #
+    # **Mora aqui pelo mesmo motivo que os dois vizinhos acima**: alterá-la é Retificação (FR-184),
+    # e `/profiles/id=…/classificationMilestones/id=…/cutRule/targetCount` já resolve — é objeto, e
+    # em objeto o segmento do caminho é nome de chave literal. Na Etapa ela ficaria longe da ordem
+    # que lê, e a `EtapaAvaliacao` é do Edital e não do Perfil; no Edital, não saberia de qual
+    # Perfil falar.
+    #
+    # **Quatro dos seis campos existem porque o sistema não pode concluí-los** (FR-182, FR-224,
+    # FR-226): o desfecho do empate na fronteira, a Etapa governada — ou a declaração explícita de
+    # que não governa nenhuma —, e se aquele Edital admite continuação. A ausência de qualquer um
+    # deles impede a publicação, em vez de virar padrão.
+    regra_de_corte = models.JSONField(default=dict, blank=True)
 
     class Meta:
         constraints = [

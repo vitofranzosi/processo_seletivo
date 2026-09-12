@@ -81,7 +81,61 @@ from uuid import UUID
 # e as duas frases são verdadeiras sobre todo Edital publicado antes deste degrau. Não elevar
 # tornaria o acervo inteiro irretificável, que é o preço que o degrau 3→4 aceitou pagar quando
 # converter teria inventado norma — não é o caso aqui (020, R-004).
-SCHEMA_VERSION = 9
+# **10 com a 021**: o método do sorteio declarado pelo marco de classificação (`drawMethod`). A
+# ausência dele significa **método não declarado** — e não um método padrão que o sistema
+# escolhesse —, e isso é verdadeiro sobre todo Edital publicado antes deste degrau: a capacidade
+# não existia, e nenhum deles declarou fonte, ocorrência, derivação ou regra de normalização.
+# Conversão sem invenção, portanto, e o degrau entra na mesma cadeia dos anteriores.
+#
+# **Por que este é o degrau menor da leva, e o local do Evento é o 11.** A `021` traz duas mudanças
+# de forma que não têm nada em comum além do calendário: o método, que é P1 e sem o qual a relação
+# não tem o que citar ao congelar, e o local do Evento do Cronograma, que é P3 e declaradamente
+# independente das demais histórias. Numerar o método antes é o que mantém a árvore de degraus
+# contígua em qualquer estado entregável do incremento — o contrário deixaria um 11 publicado com o
+# 10 por escrever (021, D-013).
+# **11 com a 021**, e o segundo degrau da mesma leva: o local do Evento do Cronograma
+# (`schedule[].location`). Vazio significa **não declarado** — e não "acontece em lugar nenhum" —,
+# e é verdade sobre todo Edital publicado antes dele: nenhum publicou o local em campo estruturado,
+# ainda que muitos o dissessem em prosa. Conversão sem invenção, portanto.
+#
+# Os dois degraus da 021 não sobem juntos, e a razão é a prioridade: o método é P1 e sem ele a
+# relação não tem o que citar ao congelar; o local é P3 e declaradamente independente das demais
+# histórias. Numerando o método antes, qualquer estado entregável do incremento tem a árvore de
+# degraus contígua (021, D-008, D-013).
+# **12 com a 025**: o quadro de vagas do Perfil (`vacancyTable`) — quantas vagas cabem em cada
+# lista de concorrência, em números absolutos. Coleção **vazia** significa "este Edital não publicou
+# quadro", e é verdade sobre todo Edital publicado antes deste degrau, porque a capacidade não
+# existia: não havia onde escrever o número, e é por isso que Editais reais que o sistema conduz
+# até a ordem do sorteio não eram publicáveis por ele.
+#
+# **Escrever a lista vazia não inventa nada, e é isso que a distingue do 3→4.** Lista vazia é a
+# grafia da ausência que este módulo já usa desde o degrau 7, e ela não afirma zero vaga em lugar
+# nenhum — quem quiser dizer zero declara uma linha com `0`. Não converter é que seria a decisão
+# cara: deixaria o acervo inteiro com uma coleção inendereçável, e endereço de retificação não se
+# conserta depois (025, D-005, FR-167).
+# **13 com a `014`**: a regra de corte declarada por marco classificatório (`cutRule`). A ausência
+# dela significa **marco que não corta** — e não corte com alvo zero —, que é o que todo Edital
+# publicado antes deste degrau afirma: a capacidade não existia, e a Etapa que o marco alimentaria
+# continua recebendo o conjunto que a progressão da `013` já entrega (014, FR-186, FR-214).
+#
+# **Quatro dos seis campos do objeto existem porque o sistema não pode concluí-los** — o desfecho do
+# empate na fronteira, a Etapa governada ou a declaração explícita de que não há uma, e se aquele
+# Edital admite continuação. A ausência de qualquer um impede a publicação em vez de virar padrão,
+# e é por isso que a conversão escreve `null` no objeto inteiro, e nunca um objeto pela metade.
+# **14 com a `016`**: a declaração da reversão de vaga reservada (`vacancyReversion`), objeto no
+# Perfil. `null` significa **este Edital não declara reversão** — e não "reverte do jeito comum" —,
+# que é o que todo Edital publicado antes deste degrau afirma: a capacidade não existia, e ninguém
+# poderia tê-la declarado.
+#
+# **A ausência não vira padrão de comportamento, e o 57/2026 prova por que.** O item 4.5 dele proíbe
+# por escrito o remanejamento entre cursos; um sistema que revertesse por conta própria produziria
+# ali exatamente o que o Edital veda. Ausência de declaração é "não move" (016, D-002, FR-245).
+#
+# **O objeto entra inteiro ou nulo, nunca pela metade**, pela mesma razão do degrau 13: declarar
+# reversão sem a espécie do gatilho impede a publicação em vez de virar padrão, porque os dois
+# Editais da amostra escrevem o gatilho de modo diferente e escolher por eles seria decidir norma
+# (016, D-007, FR-251).
+SCHEMA_VERSION = 14
 
 
 def _default(value):

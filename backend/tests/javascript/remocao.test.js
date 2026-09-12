@@ -63,8 +63,8 @@ function linhaRemovivel({
   return { linha, botao };
 }
 
-function remover(alvo, { responder = true } = {}) {
-  montar({});
+function remover(alvo, { responder = true, porId = {} } = {}) {
+  montar({ porId });
   carregar(SCRIPT);
   globalThis.__resposta = responder;
   let disparou = false;
@@ -242,4 +242,88 @@ test("desmarcar não pergunta, porque desfazer não perde nada", () => {
   globalThis.__documento.disparar("change", caixa);
 
   assert.deepEqual(globalThis.__perguntas, []);
+});
+
+
+/* A linha que sai **junto** e mora fora do `fieldset` (025).
+
+   A Modalidade de Concorrência tem uma linha no quadro de vagas, e ela vive noutra seção do cartão
+   do Perfil: o botão a remove pelo `id`, e a confirmação precisa contá-la. Contar só o `fieldset`
+   subcontava a perda — e, no caso em que só a quantidade foi digitada, dava zero. */
+
+/** A linha do quadro daquela Modalidade, com a quantidade que a pessoa digitou. */
+function linhaDoQuadro(quantidade) {
+  const linha = new Elemento("div", { id: "quadro-de-m1" });
+  linha.classes = ["linha-do-quadro"];
+  for (const [nome, valor, tipo] of [
+    ["linha-0-1-id", "l1", "hidden"],
+    ["linha-0-1-modalityId", "m1", "hidden"],
+    ["linha-0-1-immediateVacancies", quantidade, "number"],
+  ]) {
+    const campo = new Elemento("input", { name: nome, value: String(valor), type: tipo });
+    campo.parentNode = linha;
+    linha.filhos.push(campo);
+  }
+  return linha;
+}
+
+test("a Modalidade vazia com quantidade digitada pergunta antes de remover", () => {
+  // O caso que passava em silêncio: acrescentar a Modalidade, digitar só a quantidade no quadro e
+  // clicar em remover. O `fieldset` da Modalidade não tem nada preenchido, e a linha do quadro —
+  // que **também** é apagada — tem a quantidade. Sem contá-la, `perda` dava vazio e a remoção
+  // acontecia sem pergunta, contra a FR-038.
+  const alvo = linhaRemovivel({
+    valores: { "modalidade-0-1-id": "m1", "modalidade-0-1-code": "", "modalidade-0-1-name": "" },
+    rotulo: "Modalidade de Concorrência",
+    atributos: { "data-junto": "quadro-de-m1" },
+  });
+  const { evento, disparou, perguntas } = remover(alvo, {
+    porId: { "quadro-de-m1": linhaDoQuadro("5") },
+  });
+
+  assert.equal(evento.impedido, true, "há uma quantidade a perder, e ela mora fora do fieldset");
+  assert.equal(disparou, true, "confirmado, a remoção acontece");
+  assert.match(perguntas[0], /Modalidade de Concorrência/);
+  assert.match(perguntas[0], /1 campo preenchido/);
+});
+
+test("a quantidade do quadro entra na conta junto com os campos da Modalidade", () => {
+  const alvo = linhaRemovivel({
+    valores: { "modalidade-0-1-code": "PPI", "modalidade-0-1-name": "Pretos, pardos e indígenas" },
+    rotulo: "Modalidade de Concorrência",
+    atributos: { "data-junto": "quadro-de-m1" },
+  });
+  const { perguntas } = remover(alvo, { porId: { "quadro-de-m1": linhaDoQuadro("20") } });
+
+  assert.match(perguntas[0], /3 campos preenchidos/, "dois da Modalidade e a quantidade do quadro");
+});
+
+test("a Modalidade sem quantidade digitada continua sem perguntar", () => {
+  // A regra não muda: linha vazia não pergunta. A linha do quadro existe e está em branco, que é
+  // "quantidade não declarada" — não há o que perder.
+  const alvo = linhaRemovivel({
+    valores: { "modalidade-0-1-id": "m1", "modalidade-0-1-code": "" },
+    rotulo: "Modalidade de Concorrência",
+    atributos: { "data-junto": "quadro-de-m1" },
+  });
+  const { evento, perguntas } = remover(alvo, {
+    porId: { "quadro-de-m1": linhaDoQuadro("") },
+  });
+
+  assert.equal(evento.impedido, false, "perguntar onde não há perda é ruído");
+  assert.deepEqual(perguntas, []);
+});
+
+test("um alvo declarado que não existe no documento não quebra a confirmação", () => {
+  // O `id` pode não estar no DOM — a linha já foi removida por outro caminho, por exemplo. O que
+  // não pode é o script parar de perguntar pelo que **está** no fieldset.
+  const alvo = linhaRemovivel({
+    valores: { "modalidade-0-1-code": "PPI" },
+    rotulo: "Modalidade de Concorrência",
+    atributos: { "data-junto": "quadro-de-inexistente" },
+  });
+  const { evento, perguntas } = remover(alvo);
+
+  assert.equal(evento.impedido, true);
+  assert.match(perguntas[0], /1 campo preenchido/);
 });

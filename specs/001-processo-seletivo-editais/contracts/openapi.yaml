@@ -438,6 +438,33 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '200': { description: Versão consolidada, content: { application/json: { schema: { $ref: '#/components/schemas/VersaoConsolidadaResponse' } } } }
         '404': { $ref: '#/components/responses/NoEffectiveVersion' }
+  /public/sorteio/relacoes/{relacaoId}:
+    get:
+      tags: [Consulta pública]
+      summary: Consultar a relação de habilitados ao sorteio e o seu resumo
+      description: >-
+        O universo comprometido de um recorte, publicado antes de a semente existir (021, FR-011).
+        O corpo devolvido **é** o conteúdo canônico cujo canonical_sha256 é o relationHash: quem o
+        baixa recalcula o resumo sem intermediário, em vez de aceitá-lo. Por isso ele expõe
+        exatamente três dados por participante — número público, nome e protocolo — e nunca CPF ou
+        identificador interno de inscrição.
+
+        Endereço estável e histórico: uma relação sucedida continua respondendo aqui, com
+        supersededBy apontando a que a sucedeu.
+      operationId: consultarRelacaoDeHabilitados
+      parameters:
+        - name: relacaoId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Relação publicada, com o conteúdo que o resumo cobre
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RelacaoDeHabilitadosResponse' }
+        '304': { description: O cliente já tem esta representação }
+        '404': { $ref: '#/components/responses/NotFound' }
   /public/editais/{editalId}/historico:
     get:
       tags: [Consulta pública]
@@ -603,6 +630,64 @@ components:
         competitionModalities:
           type: array
           items: { $ref: '#/components/schemas/ModalidadeInput' }
+        generalCompetitionModalityId:
+          type: [string, 'null']
+          format: uuid
+          description: >-
+            Qual das competitionModalities é a ampla concorrência (014). A declarada corresponde à
+            linha geral do quadro de vagas, não recebe linha própria, e por isso não é exigida pela
+            conferência do alvo derivado do corte. Nula quando o Perfil não declara nenhuma — o
+            formato em que a ampla concorrência existe só como a linha geral.
+        vacancyTable:
+          type: array
+          description: >-
+            O quadro de vagas do Perfil. **Opcional**, porque o rascunho legitimamente não o traz e
+            porque quadro ausente significa "este Edital não publicou quadro" — nunca zero vaga.
+          items: { $ref: '#/components/schemas/LinhaDoQuadroInput' }
+        vacancyReversion:
+          oneOf:
+            - { $ref: '#/components/schemas/ReversaoDeVagaInput' }
+            - { type: 'null' }
+          description: >-
+            Sob qual gatilho a vaga reservada não preenchida reverte para a ampla concorrência
+            (016). **Opcional, e nulo significa "este Edital não declara reversão"** — nunca
+            "reverte do jeito comum": o 57/2026 proíbe por escrito o remanejamento entre cursos, e
+            reverter por conta própria produziria ali o que ele veda. Objeto pela metade não
+            existe: declarar reversão sem kind responde 422 vacancy_reversion_kind_required, e
+            declará-la num Perfil sem vacancyTable responde vacancy_reversion_sem_quadro, porque
+            reverter pressupõe quantidade por recorte.
+    LinhaDoQuadroInput:
+      type: object
+      description: >-
+        Uma linha do quadro de vagas do Perfil. `modalityId` nulo ou ausente é a **linha geral** — a
+        da ampla concorrência —, e há no máximo uma por Perfil. Com `modalityId`, é linha reservada,
+        e há no máximo uma por Modalidade, que precisa ser do próprio Perfil. `id` é obrigatório e
+        preservado na gravação, como o de Perfil, Modalidade e Etapa: identificador que já pertença
+        a outro contêiner responde 409 identifier_belongs_to_another_edital. A quantidade declarada
+        é a fonte: nenhum caminho a deriva de percentual.
+      required: [id, immediateVacancies]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        modalityId: { type: [string, 'null'], format: uuid }
+        immediateVacancies: { type: integer, minimum: 0 }
+    ReversaoDeVagaInput:
+      type: object
+      description: >-
+        A declaração de reversão de vaga reservada. **Objeto de um campo, e não um campo solto**,
+        para que um segundo campo da mesma decisão normativa entre sem um novo degrau canônico
+        (016, R-005).
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum: [ON_EXHAUSTION, ON_BALANCE]
+          description: >-
+            Duas espécies, porque os Editais escrevem a reversão de modo diferente e o sistema não
+            pode escolher por eles: ON_EXHAUSTION reverte só quando a lista reservada esgota (a
+            redação do 28/2026, item 4.3, "havendo ausência de candidatos aprovados");
+            ON_BALANCE reverte o saldo ainda que a lista tenha gente por analisar (a do 57/2026,
+            item 4.3, "na hipótese do não preenchimento total"). Tratá-las como o mesmo efeito
+            fixaria, em ato publicado, uma divergência que é de norma.
     ModalidadeInput:
       type: object
       description: >-
@@ -705,7 +790,8 @@ components:
       required:
         [id, code, name, description, requirements, immediateVacancies, reserveType, reserveLimit,
          locality, duties, workload, compensation, classificationInformation, callInformation,
-         competitionModalities, declaredFacts, classificationMilestones]
+         competitionModalities, declaredFacts, classificationMilestones, vacancyTable,
+         generalCompetitionModalityId, vacancyReversion]
       properties:
         id: { $ref: '#/components/schemas/Id' }
         code: { type: string }
@@ -740,6 +826,13 @@ components:
             competitionModalities: cada item é objeto, e o que vai nele é verificado pela coerência
             dos marcos, que precisa do conteúdo inteiro.
           items: { type: object }
+        generalCompetitionModalityId:
+          type: [string, 'null']
+          format: uuid
+          description: >-
+            Qual das competitionModalities é a ampla concorrência (014). A declarada corresponde à
+            linha geral do quadro de vagas, não recebe linha própria, e não é exigida pela
+            conferência do alvo derivado do corte. Nula quando o Perfil não declara nenhuma.
         classificationMilestones:
           type: array
           description: >-
@@ -748,7 +841,56 @@ components:
             desempate. A ordem dos critérios é campo publicado de cada um, e não a posição no array,
             porque a Retificação os endereça por identidade. Vazia significa que o Perfil não
             classifica.
+
+            Cada marco traz ainda appealWindow (018), drawMethod (021) e cutRule (014) — os três
+            objetos declarados pela norma, com null significando não declarado. Em cutRule, quatro
+            dos seis campos existem porque o sistema não pode concluí-los, e a ausência de qualquer
+            um impede a publicação em vez de virar padrão: tieOutcome (ADMITS_SURPLUS ou STRICT),
+            governedStage (a identidade da Etapa que o corte alimenta, ou a palavra NONE) e
+            continuation (ALLOWED ou NONE). Os outros dois são targetKind (FIXED ou
+            FROM_VACANCY_TABLE, com targetCount só na primeira espécie) e surplusCount, sempre
+            emitido, inclusive zero, porque duas grafias do mesmo significado fariam a comparação de
+            obsolescência do corte acusar diferença onde não há.
           items: { type: object }
+        vacancyTable:
+          type: array
+          description: >-
+            O quadro de vagas do Perfil: quantas vagas cabem em cada lista de concorrência, em
+            números absolutos. Coleção com identidade estável, endereçada por id na Retificação.
+            **Vazia significa que o Edital não publicou quadro, e nunca zero vaga** — é a forma que
+            todo conteúdo elevado da versão 11 recebe, porque a capacidade não existia. Obrigatória
+            aqui e opcional no input: duas grafias para a ausência, chave ausente e lista vazia, é
+            o que a versão canônica existe para não admitir.
+          items: { $ref: '#/components/schemas/LinhaDoQuadroPublicada' }
+        vacancyReversion:
+          type: [object, 'null']
+          description: >-
+            Sob qual gatilho a vaga reservada não preenchida reverte para a ampla concorrência
+            (016). Obrigatório aqui e opcional no input, como vacancyTable: **null é a declaração
+            de que este Edital não reverte**, e é a forma que todo conteúdo elevado da versão 13
+            recebe, porque a capacidade não existia. A apuração da ocupação congela o valor lido no
+            instante em que apurou, de modo que Retificação posterior não reescreve o que um ato
+            anterior apurou.
+
+            **A forma de dentro é a de ReversaoDeVagaInput e não é declarada aqui**, pela mesma
+            régua de competitionModalities: a forma publicada confere que o campo existe e é objeto
+            ou nulo, e que kind seja um dos dois declaráveis é conferido à parte, porque a recusa
+            tem código próprio — vacancy_reversion_kind_required — em vez de "tipo inválido".
+    LinhaDoQuadroPublicada:
+      type: object
+      description: >-
+        Uma linha do quadro publicado. `modalityId` nulo é a linha geral, a da ampla concorrência —
+        a mesma grafia que AtoDeOrdenacao.lista_id e Inscricao.modality_id já praticam. A ordem da
+        linha é a posição no array e não é campo: ela é apresentação, e não norma.
+
+        **A forma de dentro é verificada**, ao contrário da de competitionModalities. A linha
+        carrega um número que a conferência da soma vai somar, e somar campo não verificado é somar
+        o que ninguém garantiu ser inteiro.
+      required: [id, modalityId, immediateVacancies]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        modalityId: { type: [string, 'null'], format: uuid }
+        immediateVacancies: { type: integer, minimum: 0 }
     EventoPublicado:
       type: object
       description: >-
@@ -1095,6 +1237,46 @@ components:
         publishedAt: { type: string, format: date-time }
         effectiveAt: { type: string, format: date-time }
         changes: { type: array, minItems: 1, items: { $ref: '#/components/schemas/NormativeChange' } }
+    RelacaoDeHabilitadosResponse:
+      type: object
+      description: >-
+        O conteúdo canônico da relação, mais o que a leitura acrescenta. As nove primeiras
+        propriedades são exatamente as que entram no canonical_sha256 que produz relationHash;
+        acrescentar qualquer outra a elas faria o resumo deixar de fechar sobre o que se entrega.
+      required: [relationId, editalId, versionId, profileId, milestoneId, listId, methodHash,
+                 criterion, participants, relationHash, publishedAt, count]
+      properties:
+        relationId: { type: string, format: uuid }
+        editalId: { type: string, format: uuid }
+        versionId: { type: string, format: uuid }
+        profileId: { type: string, format: uuid }
+        milestoneId: { type: string, format: uuid }
+        listId:
+          type: [string, "null"]
+          format: uuid
+          description: Identidade publicada da modalidade. Nulo significa ampla concorrência.
+        methodHash:
+          type: string
+          description: >-
+            Resumo do método declarado no Edital, gravado no congelamento. É o que prova sob qual
+            método este universo se comprometeu, antes de a semente existir.
+        criterion: { type: string, description: A frase publicada de quem entrou e por quê }
+        participants:
+          type: array
+          items:
+            type: object
+            required: [publicNumber, name, protocol]
+            properties:
+              publicNumber: { type: integer, minimum: 1 }
+              name: { type: string }
+              protocol: { type: string }
+        relationHash: { type: string, description: canonical_sha256 do conteúdo acima }
+        publishedAt: { type: string, format: date-time }
+        count: { type: integer, minimum: 1 }
+        supersededBy:
+          type: [string, "null"]
+          format: uuid
+          description: A relação que sucedeu esta, quando houver. Esta continua legível.
     VersaoConsolidadaResponse:
       type: object
       required: [id, editalId, validFrom, contentHash, content, appliedPublications]

@@ -49,6 +49,10 @@ OCULTO = "oculto"
 
 # (sufixo do caminho, rótulo, tipo) — aplicado a cada Perfil e a cada Evento.
 CAMPOS_PERFIL = [
+    # Qual das Modalidades é a ampla concorrência (014, FR-231). Retificá-la é mudar quais recortes
+    # exigem linha de quadro, e por isso é norma — não é rótulo. `REFERENCIA` porque o valor é a
+    # identidade de uma Modalidade do próprio Perfil, e não texto livre.
+    ("generalCompetitionModalityId", "Modalidade que é a ampla concorrência", REFERENCIA),
     ("name", "Denominação", TEXTO),
     ("locality", "Localidade", TEXTO),
     # O que um Edital diz sobre a vaga também se corrige depois de publicado (FR-016). Sem estes
@@ -71,6 +75,14 @@ CAMPOS_RAIZ = [("title", "Título do Edital", TEXTO), ("description", "Descriç�
 # conteúdo, e endereçá-lo seria recusado por caminho inexistente. A tela oferece exatamente o
 # que a gramática admite.
 CAMPOS_MODALIDADE = [("name", "Denominação", TEXTO), ("description", "Descrição", TEXTO)]
+# A linha do quadro de vagas (025, FR-171). `modalityId` é `REFERENCIA` e não texto pela razão que
+# este módulo já escreve acima: digitar UUID à mão faria um erro de digitação mudar em silêncio o
+# que a linha significa — transformar a linha da PPI na linha da PcD é publicar outra repartição.
+# Vazio é a linha geral, a da ampla concorrência, e o `select` a oferece com esse nome.
+CAMPOS_DA_LINHA = [
+    ("immediateVacancies", "Vagas imediatas", INTEIRO),
+    ("modalityId", "Lista de concorrência", REFERENCIA),
+]
 CAMPOS_REGRA = [
     ("normativeRule/percentage", "Percentual (%)", DECIMAL),
     ("normativeRule/foundation", "Fundamento normativo", TEXTO),
@@ -80,6 +92,49 @@ CAMPOS_REGRA = [
 # e a segunda é escolha entre formas que o motor sabe executar — retificá-las por caixa de texto
 # publicaria regra que o cálculo não interpreta. O que a tela alcança aqui é o rótulo.
 CAMPOS_MARCO = [("name", "Denominação do marco", TEXTO)]
+# A regra de corte, alcançada **campo a campo** (014, FR-184). Os dois números e o rótulo são o que
+# uma Retificação real muda: "onde se lê 10, leia-se 12".
+#
+# **A espécie do alvo, a Etapa governada e a política de continuação ficam de fora**, e a ausência é
+# a regra — a mesma que mantém `stages` e `operation` fora do marco. Trocar a espécie do alvo por
+# caixa de texto publicaria `targetKind` que o cálculo não interpreta; trocar a Etapa governada por
+# um UUID digitado publicaria um corte que alimenta Etapa que não existe. Retificações assim são
+# possíveis pela API, onde a aferição de publicabilidade as confere inteiras (`cut_rule_*`), e o que
+# a tela oferece é o que ela consegue conferir enquanto a pessoa digita.
+CAMPOS_DO_CORTE = [
+    ("cutRule/targetCount", "Quantos progridem", INTEIRO),
+    ("cutRule/surplusCount", "Suplentes alcançados na mesma faixa", INTEIRO),
+    # **O desfecho do empate entra, e as três exclusões acima continuam de fora.** A razão delas é
+    # a caixa de texto que publicaria valor não interpretável; o desfecho não tem esse problema —
+    # são dois valores fechados, e `REFERENCIA` os oferece conferindo a escolha contra a lista.
+    # Sem ele, o caminho que o próprio percurso da feature descreve — o empate atravessa a faixa
+    # sob alvo estrito, e a comissão decide admitir o excedente — não existia pela tela, e mudar o
+    # desfecho de um Edital publicado exigia chamada de API (E2E14-005).
+    ("cutRule/tieOutcome", "Empate na última posição", REFERENCIA),
+]
+# Os dois desfechos, com as mesmas palavras da tela de composição: quem retifica escolhe entre o
+# que já leu ao declarar, e não entre dois códigos.
+# As duas espécies de gatilho, com as mesmas palavras da tela de composição: quem retifica escolhe
+# entre o que já leu ao declarar, e não entre dois códigos.
+ESPECIES_DE_REVERSAO = (
+    ("ON_EXHAUSTION", "Só quando a lista reservada esgota"),
+    ("ON_BALANCE", "A quantidade que ficou sem preencher"),
+)
+# A espécie do gatilho da reversão (016, D-007). **Só entra quando o objeto existe**, como os
+# campos do corte: um caminho de referência para dentro de objeto ausente não tem o que oferecer, e
+# a Retificação que *cria* a declaração é acréscimo de campo, não alteração dele.
+#
+# `REFERENCIA` e **não** texto livre, pelo precedente literal do `cutRule/tieOutcome`: são valores
+# fechados, e a referência os oferece conferindo a escolha contra a lista. Caixa de texto publicaria
+# gatilho que o cálculo não interpreta — e reversão sob gatilho errado é vaga que saiu do recorte
+# reservado sem fundamento.
+CAMPOS_DA_REVERSAO = [
+    ("vacancyReversion/kind", "Gatilho da reversão de vaga reservada", REFERENCIA),
+]
+DESFECHOS_DO_EMPATE = (
+    ("ADMITS_SURPLUS", "Todos os empatados progridem"),
+    ("STRICT", "A faixa para no alvo"),
+)
 # **O tipo do fato não está aqui, e a ausência é a regra.** Um fato declarado como data que virasse
 # número não é o mesmo fato: reinterpretar o valor já congelado seria o sistema decidindo o que a
 # pessoa quis dizer. Mudar o tipo é remover um fato e acrescentar outro, e o que foi congelado sob
@@ -148,6 +203,18 @@ NOVO_PERFIL = [
     ("immediateVacancies", "Vagas imediatas", INTEIRO),
     ("reserveLimit", "Limite do Cadastro Reserva", INTEIRO),
     ("requirements", "Requisitos", LISTA),
+]
+# Uma linha do quadro acrescentada por Retificação (025, FR-171). **Sem ela, nenhum Edital já
+# publicado poderia ganhar quadro**: todos eles foram publicados antes de a capacidade existir, e a
+# coleção deles é vazia — a alteração de linha existente não alcança quem não tem linha nenhuma.
+#
+# `profileId` diz a **que Perfil** a linha se acrescenta, e não é campo do conteúdo publicado: a
+# linha mora dentro do Perfil, e o que ele compõe aqui é o caminho da Alteração. `modalityId` vazio
+# é a linha geral, a da ampla concorrência.
+NOVA_LINHA_DO_QUADRO = [
+    ("profileId", "Perfil", REFERENCIA),
+    ("modalityId", "Lista de concorrência", REFERENCIA),
+    ("immediateVacancies", "Vagas imediatas", INTEIRO),
 ]
 NOVO_EVENTO = [
     ("type", "Tipo", TEXTO),
@@ -219,8 +286,24 @@ def _arquivo_de_hoje(descricao, identificador):
     return (descricao(str(identificador)) if descricao else "") or "arquivo já publicado"
 
 
+# O que a opção vazia de um campo de referência **significa**, por chave. Fora daqui vale "sem
+# restrição", que é o que `documentRequirements` quer dizer; na linha do quadro, o vazio é a ampla
+# concorrência, e o rótulo genérico diria o oposto do que a linha afirma (025, E2E25-006).
+ROTULO_DO_VAZIO = {"vacancyTable": {"modalityId": "Ampla concorrência"}}
+
+
 def _grupo(
-    titulo, caminho, item, campos, *, removivel=True, opcoes=None, tipo="", nome="", descricao=None
+    titulo,
+    caminho,
+    item,
+    campos,
+    *,
+    removivel=True,
+    opcoes=None,
+    tipo="",
+    nome="",
+    descricao=None,
+    rotulos_do_vazio=None,
 ):
     """Uma linha do formulário: o que ela é, como ela se chama, e os campos que ela edita.
 
@@ -252,6 +335,7 @@ def _grupo(
                 "descricao": (
                     _arquivo_de_hoje(descricao, _valor(item, chave)) if tipo == ARQUIVO else ""
                 ),
+                "rotulo_do_vazio": (rotulos_do_vazio or {}).get(chave, ""),
             }
             for chave, rotulo, tipo in campos
         ],
@@ -284,6 +368,21 @@ def opcoes_de_aplicabilidade(conteudo):
         if anexo.get("id")
     ]
     return {"profileId": perfis, "modalityId": modalidades, "attachmentId": anexos}
+
+
+def opcoes_da_linha_nova(conteudo):
+    """A que Perfil a linha se acrescenta, e a que lista de concorrência ela se refere.
+
+    As Modalidades vêm rotuladas pelo Perfil a que pertencem — `P1 · PPI` —, como as opções do
+    Documento Exigido já vêm: a linha precisa apontar Modalidade **do mesmo Perfil** (FR-158), e o
+    rótulo é o que torna o par legível na hora de escolher. Um par incoerente não passa em silêncio:
+    a publicação recusa a linha cuja Modalidade não existe no Perfil, nomeando a linha (FR-166).
+    """
+    aplicabilidade = opcoes_de_aplicabilidade(conteudo)
+    return {
+        "profileId": aplicabilidade["profileId"],
+        "modalityId": aplicabilidade["modalityId"],
+    }
 
 
 def _referenciar(grupos):
@@ -327,14 +426,43 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
     for perfil in conteudo.get("profiles") or []:
         caminho = f"/profiles/id={perfil.get('id', '')}"
         nome_do_perfil = f"{perfil.get('code', '')} — {perfil.get('name', '')}".strip(" —")
+        # As Modalidades **deste** Perfil, e não as do Edital. Servem a dois campos de referência —
+        # a ampla concorrência declarada pelo Perfil e a `modalityId` de cada linha do quadro —, e
+        # por isso são calculadas antes do primeiro grupo que as usa.
+        modalidades_do_perfil = [
+            (
+                modalidade["id"],
+                f"{modalidade.get('code', '')} — {modalidade.get('name', '')}".strip(" —"),
+            )
+            for modalidade in perfil.get("competitionModalities") or []
+            if modalidade.get("id")
+        ]
         grupos.append(
             _grupo(
                 f"Perfil {nome_do_perfil}",
                 caminho,
                 perfil,
-                CAMPOS_PERFIL,
+                CAMPOS_PERFIL
+                + (CAMPOS_DA_REVERSAO if isinstance(perfil.get("vacancyReversion"), dict) else []),
                 tipo="Perfil",
                 nome=nome_do_perfil,
+                # **Sem isto o seletor nasce vazio**, e um campo de referência sem opção não
+                # oferece nada e ainda apaga a declaração vigente ao ser submetido em branco: a
+                # tela mostraria só o rótulo do vazio, e retificar qualquer outro campo do Perfil
+                # levaria junto a ampla concorrência declarada (014, FR-231, FR-238).
+                opcoes={
+                    "generalCompetitionModalityId": modalidades_do_perfil,
+                    "vacancyReversion/kind": ESPECIES_DE_REVERSAO,
+                },
+                rotulos_do_vazio={
+                    "generalCompetitionModalityId": (
+                        "Nenhuma — a ampla concorrência é só a linha geral do quadro"
+                    ),
+                    # O vazio existe porque o `select` de referência sempre o desenha. Dizer o que
+                    # ele provoca é o mínimo: sem gatilho, a reversão declarada não publica — e a
+                    # ausência do objeto inteiro é "este Edital não reverte" (016, FR-251).
+                    "vacancyReversion/kind": "Nenhum — este Edital não reverte vaga reservada",
+                },
             )
         )
         for modalidade in perfil.get("competitionModalities") or []:
@@ -350,6 +478,31 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                     campos,
                     tipo="Modalidade",
                     nome=nome,
+                )
+            )
+        # As linhas do quadro usam a mesma lista de Modalidades calculada acima: uma linha que
+        # apontasse Modalidade de outro Perfil é o que a FR-158 recusa, e oferecê-la na tela seria
+        # oferecer o que a publicação não aceita.
+        for linha in perfil.get("vacancyTable") or []:
+            recorte = next(
+                (
+                    rotulo
+                    for identificador, rotulo in modalidades_do_perfil
+                    if identificador == linha.get("modalityId")
+                ),
+                "Ampla concorrência",
+            )
+            nome = f"{recorte} — {perfil.get('code', '')}".strip(" —")
+            grupos.append(
+                _grupo(
+                    f"Linha do quadro {nome}",
+                    f"{caminho}/vacancyTable/id={linha.get('id', '')}",
+                    linha,
+                    CAMPOS_DA_LINHA,
+                    tipo="Linha do quadro de vagas",
+                    nome=nome,
+                    opcoes={"modalityId": modalidades_do_perfil},
+                    rotulos_do_vazio=ROTULO_DO_VAZIO["vacancyTable"],
                 )
             )
         for fato in perfil.get("declaredFacts") or []:
@@ -372,9 +525,17 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                     f"Marco {nome_do_marco}",
                     base_do_marco,
                     marco,
-                    CAMPOS_MARCO,
+                    CAMPOS_MARCO
+                    + (CAMPOS_DO_CORTE if isinstance(marco.get("cutRule"), dict) else []),
                     tipo="Marco",
                     nome=nome_do_marco,
+                    opcoes={"cutRule/tieOutcome": DESFECHOS_DO_EMPATE},
+                    rotulos_do_vazio={
+                        # O vazio existe porque o `select` de referência sempre o desenha. Dizer o
+                        # que ele provoca é o mínimo: a regra sem desfecho não publica, e a recusa
+                        # nomeia o marco.
+                        "cutRule/tieOutcome": "Não declarado — a publicação será impedida",
+                    },
                 )
             )
             for criterio in marco.get("tiebreakers") or []:
@@ -487,7 +648,14 @@ SECOES_DA_TELA = (
     (
         "perfis",
         "Perfis de Vaga",
-        ("Perfil", "Modalidade", "Fato declarado", "Marco", "Critério de desempate"),
+        (
+            "Perfil",
+            "Modalidade",
+            "Linha do quadro de vagas",
+            "Fato declarado",
+            "Marco",
+            "Critério de desempate",
+        ),
     ),
     ("cronograma", "Cronograma", ("Evento",)),
     ("etapas", "Etapas de Avaliação", ("Etapa",)),
@@ -502,7 +670,15 @@ SECOES_QUE_ACRESCENTAM = frozenset({"perfis", "cronograma", "anexos"})
 # Filhas de um Perfil, desenhadas recuadas sob ele. O recuo diz o que a lista plana não dizia:
 # que a Modalidade **pertence** ao Perfil acima, e não é irmã dele. Sem isso, achar a cota de um
 # Perfil específico exigia ler o sufixo do nome de cada cartão para descobrir de quem ele era.
-TIPOS_ANINHADOS = frozenset({"Modalidade", "Fato declarado", "Marco", "Critério de desempate"})
+TIPOS_ANINHADOS = frozenset(
+    {
+        "Modalidade",
+        "Linha do quadro de vagas",
+        "Fato declarado",
+        "Marco",
+        "Critério de desempate",
+    }
+)
 
 
 def agrupar_em_secoes(grupos):
@@ -650,16 +826,24 @@ def _marcados_para_remover(dados, grupos):
 
 
 def _indices_novos(dados, prefixo):
+    """Os índices das linhas acrescentadas, lidos **depois** do prefixo.
+
+    Contar hifens a partir do começo da chave supunha que todo prefixo fosse uma palavra só, e a
+    suposição só se revelou falsa quando `linha-do-quadro` chegou: `novo-linha-do-quadro-7-…`
+    devolvia `"do"` como índice, e a linha acrescentada sumia sem recusa nenhuma. Descontar o
+    prefixo antes de partir é o que faz a leitura não depender de como ele se escreve.
+    """
+    inicio = f"novo-{prefixo}-"
     return sorted(
         {
-            chave.split("-")[2]
+            resto.split("-")[0]
             for chave in dados
-            if chave.startswith(f"novo-{prefixo}-") and chave.count("-") >= 3
+            if chave.startswith(inicio) and "-" in (resto := chave[len(inicio) :])
         }
     )
 
 
-def novas_para_formulario(dados, prefixo, campos):
+def novas_para_formulario(dados, prefixo, campos, *, opcoes=None):
     """Linhas acrescentadas com o que foi digitado, para reexibir depois do POST.
 
     Sem isto, ver o resumo devolvia um formulário sem as linhas novas e sem as marcações de
@@ -674,6 +858,7 @@ def novas_para_formulario(dados, prefixo, campos):
                     "rotulo": rotulo,
                     "tipo": tipo,
                     "valor": dados.get(f"novo-{prefixo}-{indice}-{chave}") or "",
+                    "opcoes": tuple((opcoes or {}).get(chave, ())),
                 }
                 for chave, rotulo, tipo in campos
             ],
@@ -682,8 +867,14 @@ def novas_para_formulario(dados, prefixo, campos):
     ]
 
 
-def _linhas_novas(dados, prefixo, campos):
-    """Linhas acrescentadas, agrupadas pelo índice que o servidor deu a cada uma."""
+def _linhas_novas(dados, prefixo, campos, opcoes=None):
+    """Linhas acrescentadas, agrupadas pelo índice que o servidor deu a cada uma.
+
+    `opcoes` só existe para os campos de referência: o `select` da tela **não** é fronteira — um
+    POST fabricado traria qualquer UUID —, e é aqui que a escolha é conferida contra o que o
+    conteúdo vigente de fato oferece.
+    """
+    opcoes = opcoes or {}
     indices = _indices_novos(dados, prefixo)
     linhas = []
     for indice in indices:
@@ -696,7 +887,7 @@ def _linhas_novas(dados, prefixo, campos):
             if tipo == LISTA:
                 valores[chave] = [linha.strip() for linha in bruto.splitlines() if linha.strip()]
             else:
-                valores[chave] = _converter(bruto, tipo, rotulo)
+                valores[chave] = _converter(bruto, tipo, rotulo, tuple(opcoes.get(chave, ())))
         # Linha em branco é a que a pessoa acrescentou e desistiu de preencher.
         if not vazia:
             linhas.append(valores)
@@ -729,6 +920,19 @@ def _perfil_completo(valores):
         # `test_perfil_acrescentado_nasce_com_a_forma_do_snapshot` é justamente quem impede isso.
         "declaredFacts": [],
         "classificationMilestones": [],
+        # A da versão 12, pela mesma razão. Vazia diz que este Perfil não declara quadro — que é
+        # legítimo, e é o que o acervo inteiro afirma —, e quem quiser declará-lo acrescenta as
+        # linhas na Retificação seguinte, pela coleção que já é endereçável (025, D-005, D-006).
+        "vacancyTable": [],
+        # A da versão 13, pela mesma razão de novo. `None` diz que este Perfil não declara qual das
+        # suas Modalidades é a ampla concorrência — e um Perfil que nasce sem Modalidade nenhuma não
+        # teria mesmo o que apontar (014, FR-231).
+        "generalCompetitionModalityId": None,
+        # A da versão 14, e é a última por enquanto. `None` diz que este Perfil não declara reversão
+        # de vaga reservada, e nunca "reverte do jeito comum" — declarar reversão num Perfil que
+        # nasce sem quadro seria, além disso, regra inexequível, que a publicação recusa
+        # (016, FR-245, FR-251).
+        "vacancyReversion": None,
     }
 
 
@@ -900,6 +1104,60 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
             }
         )
 
+    # Uma vez, e não uma por linha: `opcoes_da_linha_nova` percorre todos os Perfis, Modalidades e
+    # Anexos do conteúdo vigente, e ele não muda dentro do laço.
+    opcoes_da_linha = opcoes_da_linha_nova(conteudo)
+    for valores in _linhas_novas(dados, "linha-do-quadro", NOVA_LINHA_DO_QUADRO, opcoes_da_linha):
+        perfil_id = valores.get("profileId")
+        if not perfil_id:
+            raise ValueError("Perfil: a linha do quadro precisa dizer a que Perfil ela pertence.")
+        quantidade = valores.get("immediateVacancies")
+        # **Em branco não vira zero, e a recusa é a resposta certa** (FR-159, D-006). Aqui a linha
+        # só existe porque alguém clicou para acrescentá-la: engolir o vazio como `0` publicaria
+        # "este recorte tem zero vagas" — afirmação normativa que ninguém fez —, e descartá-la em
+        # silêncio faria o acréscimo pedido não acontecer sem dizer por quê.
+        #
+        # É por isso que a regra aqui **difere** da composição, onde a linha em branco é ignorada:
+        # lá as linhas são oferecidas para toda Modalidade declarada, e não declarar a quantidade
+        # de uma delas é a forma de dizer "o Edital não repartiu esta". Quem quiser mesmo dizer
+        # zero digita zero, e é o que a mensagem manda fazer.
+        if quantidade is None:
+            raise ValueError(
+                "Vagas imediatas: a linha do quadro precisa dizer quantas vagas o recorte tem. "
+                "Em branco significa quantidade não declarada, e não zero — para declarar zero, "
+                "digite 0. Para desistir do acréscimo, use 'Não acrescentar esta linha'."
+            )
+        recorte = next(
+            (
+                rotulo
+                for identificador, rotulo in opcoes_da_linha["modalityId"]
+                if identificador == valores.get("modalityId")
+            ),
+            "Ampla concorrência",
+        )
+        alteracoes.append(
+            {
+                "targetPath": f"/profiles/id={perfil_id}/vacancyTable/-",
+                "operation": "ADD",
+                "newValue": {
+                    # A identidade nasce **aqui**, e é ela que a Retificação seguinte usa para
+                    # alcançar a linha: acrescentar sem identidade produziria linha endereçável só
+                    # por posição, que é o que o sistema proíbe (FR-170, FR-171).
+                    "id": str(uuid4()),
+                    "modalityId": valores.get("modalityId") or None,
+                    "immediateVacancies": quantidade,
+                },
+            }
+        )
+        resumo.append(
+            {
+                "grupo": f"Linha do quadro {recorte}",
+                "rotulo": "Acréscimo",
+                "antes": "—",
+                "depois": f"{quantidade} vaga(s)",
+            }
+        )
+
     for valores in _linhas_novas(dados, "anexo", NOVO_ANEXO):
         alteracoes.append(
             {
@@ -957,6 +1215,16 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                 }
             )
 
+    # **A linha do quadro NÃO ganha o equivalente disto, e a recusa é a resposta certa** (025,
+    # D-008, FR-172). É o padrão que se copiaria sem pensar: remover a Modalidade e emitir sozinho
+    # o `REMOVE` da linha que a aponta. Lá em cima, a emissão automática desfaz um **vínculo** —
+    # o requisito deixa de fornecer modelo, e nenhum valor normativo se perde. Aqui ela apagaria
+    # uma **quantidade publicada** como efeito colateral de outro movimento, e quem retifica não
+    # veria o número sumir. A D-008 recusou essa alternativa por escrito.
+    #
+    # O que acontece em vez disso: `validate_for_publication` recusa o ato, nomeando a linha que o
+    # impede, e quem retifica declara os dois movimentos. Remover a Modalidade **e** a linha no
+    # mesmo ato passa — a verificação é sobre o conteúdo resultante, e não sobre cada operação.
     eventos_removidos = [caminho for caminho in removidos if caminho.startswith("/schedule/")]
     proxima_ordem = len(conteudo.get("schedule") or []) - len(eventos_removidos)
     for deslocamento, valores in enumerate(_linhas_novas(dados, "evento", NOVO_EVENTO)):

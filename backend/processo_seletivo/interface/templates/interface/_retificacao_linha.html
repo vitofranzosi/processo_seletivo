@@ -25,9 +25,15 @@ AC — DOC-INFO?" viria com o espaçamento da marcação dentro da frase.
       <textarea id="c-{{ campo.referencia }}"
                 name="campo:{{ campo.referencia }}" rows="5">{{ campo.valor }}</textarea>
       {% elif campo.tipo == 'referencia' %}
-      {# A opção vazia é normativa, e não cortesia: `null` significa "sem restrição". #}
+      {% comment %}
+      A opção vazia é normativa, e não cortesia — mas **o que ela significa depende da coleção**, e
+      por isso o rótulo dela vem do campo. No Documento Exigido, `null` é "sem restrição"; na linha
+      do quadro de vagas, `null` **é** a ampla concorrência, e chamá-la de "sem restrição" ali
+      diria que a linha não se restringe a lista nenhuma — quando ela é, precisamente, a lista de
+      que todos participam (025, E2E25-006).
+      {% endcomment %}
       <select id="c-{{ campo.referencia }}" name="campo:{{ campo.referencia }}">
-        <option value="" {% if not campo.valor %}selected{% endif %}>Sem restrição</option>
+        <option value="" {% if not campo.valor %}selected{% endif %}>{{ campo.rotulo_do_vazio|default:"Sem restrição" }}</option>
         {% for identificador, rotulo in campo.opcoes %}
         <option value="{{ identificador }}" {% if campo.valor == identificador %}selected{% endif %}>{{ rotulo }}</option>
         {% endfor %}

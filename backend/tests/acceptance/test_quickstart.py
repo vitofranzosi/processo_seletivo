@@ -14,7 +14,7 @@ from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.domain.consolidation import consolidate
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
-from processo_seletivo.shared.canonical import canonical_sha256
+from processo_seletivo.shared.canonical import SCHEMA_VERSION, canonical_sha256
 from tests.fixtures.edital import actor_headers, caminho_perfil, complete_draft
 from tests.fixtures.publicacao import SIGNATORY, create_retification, publish_original, retify
 
@@ -358,7 +358,7 @@ def test_j1_o_edital_publica_como_a_etapa_e_concluida(gestor, api_client, manage
     conteudo = cenario["edital"].versoes_consolidadas.latest("materialized_at").content
     etapa = next(e for e in conteudo["stages"] if e["id"] == str(cenario["primeira"]))
 
-    assert conteudo["schemaVersion"] == 9
+    assert conteudo["schemaVersion"] == SCHEMA_VERSION
     assert etapa["forma"] == "DECISORIA"
     assert etapa["minimumScore"] is None and etapa["maximumScore"] is None
     assert (etapa["rotuloFavoravel"], etapa["rotuloDesfavoravel"]) == ("Deferido", "Indeferido")

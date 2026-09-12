@@ -131,6 +131,25 @@ o navegador as trata como qualquer sumário.
       <span class="ajuda">Um Perfil acrescentado passa a integrar o Edital quando a Retificação
         for publicada. Modalidades de Concorrência ainda não são definidas por aqui.</span>
     </p>
+    {% comment %}
+    O acréscimo de linha do quadro mora na mesma seção dos Perfis, junto das linhas que ele
+    acrescenta. Ele existe porque **todo** Edital publicado antes da `025` tem quadro vazio: sem
+    este caminho, o acervo inteiro nunca poderia declarar a repartição das vagas, e a alteração de
+    linha existente não alcança quem não tem linha nenhuma.
+    {% endcomment %}
+    <div id="novas-linhas-do-quadro">
+      {% for linha in novas_linhas_do_quadro %}
+      {% include "interface/_retificacao_linha_do_quadro.html" with indice=linha.indice campos=linha.campos %}
+      {% endfor %}
+    </div>
+    <p class="acrescentar">
+      <button type="button" class="botao secundario"
+              hx-get="{% url 'interface:fragmento-retificacao-linha-do-quadro' edital.id %}"
+              hx-target="#novas-linhas-do-quadro" hx-swap="beforeend">Acrescentar linha do quadro
+        de vagas</button>
+      <span class="ajuda">A linha diz quantas vagas cabem numa lista de concorrência do Perfil. A
+        opção "Ampla concorrência" é a linha geral, e o Perfil tem no máximo uma.</span>
+    </p>
     {% elif secao.id == 'cronograma' %}
     <div id="novos-eventos">
       {% for linha in novos_eventos %}

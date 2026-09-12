@@ -41,9 +41,16 @@ def test_o_conteudo_publicado_carrega_identidade_e_resumo_de_cada_anexo(publicad
 
 
 def test_a_pagina_publica_da_selecao_oferece_todos_os_anexos(client, publicado):
+    """020, FR-039 — todos os Anexos publicados alcançáveis pela página.
+
+    **A seção mudou de nome na `024`, e a garantia é a mesma.** Os Anexos deixaram de ter bloco
+    próprio e entraram na lista única de documentos do Edital, ao lado da abertura e das
+    Retificações — que é onde a `020` já dizia que o leitor os procura. O que se prende continua
+    sendo: todos aparecem, e cada um pelo endereço do próprio artefato.
+    """
     corpo = client.get(reverse("portal:selecao", args=[publicado.id])).content.decode()
 
-    assert "Anexos do Edital" in corpo
+    assert "Edital e documentos" in corpo
     for artefato in ArtefatoAnexo.objects.all():
         assert reverse("public-anexo", args=[artefato.id]) in corpo
 

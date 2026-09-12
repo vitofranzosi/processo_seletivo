@@ -65,6 +65,13 @@ object.documento{width:100%;height:min(75vh,900px);border:1px solid var(--borda)
   background:var(--branco)}
 .modalidades{margin:.75rem 0 0;padding:.75rem 0 0;border-top:1px solid var(--borda)}
 .modalidades h3{font-size:.9375rem;margin:0 0 .25rem}
+.quadro{margin:.75rem 0 0;padding:.75rem 0 0;border-top:1px solid var(--borda)}
+.quadro h3{font-size:.9375rem;margin:0 0 .25rem}
+/* A linha do quadro é rótulo e quantidade, e nada mais. O rótulo vem da Modalidade já declarada;
+   a linha geral se distingue pelo proprio texto e pelo peso tipografico do nome dela, e nunca por
+   cor. A medida do controle continua sendo a de `.campo.curto`: dar medida propria a esta linha
+   faria dois campos vizinhos do mesmo cartao terminarem em lugares diferentes. */
+.linha-do-quadro{padding:.15rem 0}
 .marcos{margin:.75rem 0 0;padding:.75rem 0 0;border-top:1px solid var(--borda)}
 .marcos h3{font-size:.9375rem;margin:0 0 .25rem}
 .marcos h4{font-size:.875rem;margin:0 0 .25rem}
@@ -102,7 +109,11 @@ th,td{text-align:left;padding:.7rem 1.25rem;border-bottom:1px solid var(--borda)
   vertical-align:top;font-size:.9375rem}
 thead th{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;
   color:var(--texto-fraco);background:var(--fundo);font-weight:600}
-tbody tr:last-child td{border-bottom:none}
+/* `th` junto do `td`: a regra cobria só a célula comum, e a última linha de toda tabela com
+   cabeçalho de linha — `alocacoes`, `lista`, `supervisao`, `retificar` e as demais que usam
+   `th scope="row"` — ficava com um traço solto do tamanho daquela coluna, pendurado abaixo do
+   corpo. A `distribuicao` já contornava isso com regra própria; o buraco era da regra geral. */
+tbody tr:last-child td,tbody tr:last-child th{border-bottom:none}
 .situacao{display:inline-block;padding:.2rem .6rem;border-radius:12px;font-size:.75rem;
   font-weight:600;white-space:nowrap}
 .s-EM_ELABORACAO{background:var(--cinza-fundo);color:#333}
@@ -333,6 +344,33 @@ fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);p
    Com um contorno a mais, e é o estado zerado que o exige: a trilha sozinha é cinza sobre branco,
    e o cartão de quem não começou ficava sem barra nenhuma — justo o que a barra existe para
    dizer. No portal a lista nunca começa vazia; aqui, começar do zero é o caso comum. */
+/* A região de Atenção da supervisão (022, UX-006). Forma única para os cinco, e sem cor de
+   severidade: os sinais são igualmente acionáveis, e pintar uns de vermelho seria a folha
+   decidindo uma ordenação que o domínio não determina. */
+.sinais{list-style:none;margin:0;padding:0;display:grid;gap:.75rem}
+.sinais .sinal{background:var(--branco);border:1px solid var(--borda);border-left:4px solid var(--verde);
+  border-radius:0 4px 4px 0;padding:.75rem 1rem}
+.sinais .mensagem{margin:0;max-width:var(--leitura)}
+.sinais .medida{margin:.25rem 0 0;color:var(--texto-fraco);font-variant-numeric:tabular-nums}
+.sinais .acao{margin-top:.5rem}
+/* A série diária de submissões da supervisão (022, UX-008). As barras são **desenho** — o
+   template as marca `aria-hidden` —, e os valores vivem na tabela ao lado: nenhuma informação
+   depende de cor nem de imagem, e sem a folha a página continua dizendo quantas houve em cada dia.
+   A altura vem do template porque o denominador é o pico daquela série, e a folha não o conhece.
+   A faixa rola no próprio contêiner: sessenta dias produzem sessenta colunas, e deixá-las
+   empurrarem a largura faria o corpo da página rolar na horizontal. */
+.serie{margin:0 0 1rem}
+.serie figcaption{color:var(--texto-fraco);font-size:.875rem;margin:0 0 .35rem}
+.serie .barras{display:flex;align-items:flex-end;gap:2px;height:5rem;margin:0 0 .5rem;padding:0;
+  list-style:none;border-bottom:1px solid var(--borda);overflow-x:auto}
+/* `height` não é a última declaração de propósito: uma regra terminada em porcentagem seguida da
+   chave de fechamento produz, no corpo servido, a mesma dupla de caracteres que fecha uma tag de
+   template. A varredura de sintaxe não interpretada procura substring, e não sabe que ali é folha
+   de estilo — e a prosa deste comentário, que também vai para a página, evita escrevê-la. */
+.serie .barras li{height:100%;flex:1 0 .4rem;display:flex;align-items:flex-end}
+.serie .barra{display:block;width:100%;min-height:1px;background:var(--verde);
+  border-radius:2px 2px 0 0}
+.serie .equivalente summary{color:var(--verde-texto);font-size:.875rem;cursor:pointer}
 .medidor{display:grid;gap:.3rem;margin:0 0 1rem}
 .medidor .numeros{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;
   margin:0;font-size:.9375rem}
@@ -446,6 +484,12 @@ fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);p
 /* Remover é de outra natureza. Encostado no botão de alterar, o gesto errado fica à distância de
    um deslize; a folga é o que separa o rotineiro do irreversível. */
 .gerir-membro form+form{margin-top:.9rem;padding-top:.75rem;border-top:1px solid var(--fundo)}
+/* A linha escolhida, numa tabela de escolha única. O ponto do rádio é a marca correta e é pequena
+   demais para uma linha de seis colunas: quem confere o que marcou percorre a linha inteira com o
+   olho. `:has` degrada para "sem realce" onde não houver suporte — a escolha continua legível pelo
+   próprio controle, que é o que a acessibilidade exige. */
+tbody tr:has(input[type=radio]:checked){background:var(--verde-claro)}
+.resumo-da-origem{color:var(--texto-fraco);font-size:.875rem;white-space:nowrap}
 .escolha{display:flex;gap:.5rem;align-items:baseline;font-size:.9375rem;line-height:1.4}
 /* Caixa de marcar não é campo de texto. Dentro de `.campo`, ela herdava `width:100%` e virava um
    bloco da largura do filtro: o rótulo caía para a linha de baixo, e a marca ficava solta no meio
@@ -978,6 +1022,39 @@ fieldset.linha>legend .alterada{font-size:.7rem;font-weight:700;text-transform:u
   box-shadow:0 -2px 8px rgba(0,0,0,.06);margin-top:1.5rem}
 .barra-de-acoes .contagem{margin-left:auto;font-size:.875rem;color:var(--texto-fraco)}
 .barra-de-acoes .contagem strong{color:var(--verde-escuro)}
+
+/* O sorteio auditável (021). O que estas quatro regras precisam dizer é a **ordem dos fatos**:
+   primeiro o método, que veio do Edital e não se edita aqui; depois a ocorrência, cujo material
+   bruto fica à vista antes do ato; e então cada recorte, com o seu universo e o seu botão.
+
+   `.recorte` é bloco separado porque um marco com cotas tem três, e eles precisam ser lidos como
+   três coisas — publicar dois e esquecer o terceiro é o erro que a tela existe para evitar.
+
+   `.metodo` e `.ocorrencia` são listas de definição com o valor em monoespaçada onde ele é resumo
+   ou material bruto: são números que alguém vai comparar com outra tela. */
+.metodo,.ocorrencia{margin:.5rem 0 0;padding:0}
+.metodo dt,.ocorrencia dt{font-weight:600;font-size:.8125rem;color:var(--texto-fraco);
+  margin-top:.5rem}
+.metodo dd,.ocorrencia dd{margin:.1rem 0 0}
+.metodo dd code,.ocorrencia dd code{font-size:.8125rem;overflow-wrap:anywhere}
+.recorte{border:1px solid var(--borda);border-radius:4px;padding:1rem;margin:1rem 0}
+.recorte h3{margin:0 0 .5rem}
+.meta{color:var(--texto-fraco);font-size:.875rem}
+
+
+/* As ocorrências que a indisponibilidade descartou (021, R-006). Elas ficam visíveis de propósito:
+   o descarte de ocorrência é justamente o que precisa ser auditável. */
+.descartadas{border-left:4px solid var(--amarelo);padding:.5rem 0 .5rem 1rem;margin:.75rem 0}
+.descartadas h3{margin:0 0 .35rem;font-size:.9375rem}
+.descartadas ul{margin:0;padding-left:1.1rem;color:var(--texto-fraco);font-size:.875rem}
+
+
+/* Os passos da anulação, numerados (021, FR-054). Anular é um percurso de quatro atos, e um deles
+   é uma Retificação: a lista existe para que a ordem seja lida antes de o formulário ser tentado. */
+.passos-da-anulacao{margin:.5rem 0 .75rem;padding-left:1.3rem;font-size:.875rem;
+  color:var(--texto-fraco)}
+.passos-da-anulacao li{margin:.2rem 0}
+
 </style>
 </head>
 <body>

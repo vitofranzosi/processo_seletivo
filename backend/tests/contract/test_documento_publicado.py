@@ -376,3 +376,154 @@ def test_a_elevacao_da_fixture_nao_trouxe_identificador_tecnico_para_o_papel():
     texto = texto_de(documento(SNAPSHOT, HASH))
 
     assert not re.search(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", texto)
+
+
+@pytest.mark.contract
+def test_o_quadro_de_vagas_sai_no_documento_com_a_linha_geral_em_primeiro_lugar():
+    """FR-169: a ordem declarada, e a ampla concorrência à frente das reservadas.
+
+    A linha geral vem primeiro **independentemente** da posição dela no array: é apresentação, e é
+    o que a D-009 autoriza. O que a ordem declarada governa é a sequência das reservadas entre si.
+    """
+    partes = texto_de(documento(SNAPSHOT, HASH)).splitlines()
+    quadro = partes.index("Tabela 1 — Quadro de vagas")
+
+    assert partes[quadro + 1 : quadro + 3] == ["Lista de concorrência", "Vagas imediatas"]
+    assert partes[quadro + 3] == "Ampla concorrência"
+    assert "Pessoas pretas, pardas e indígenas (PPP)" in partes[quadro + 3 : quadro + 9]
+    assert partes.index("Ampla concorrência") < partes.index(
+        "Pessoas pretas, pardas e indígenas (PPP)"
+    )
+    # O bloco fica **antes** da tabela de Modalidades, dentro da subseção do Perfil.
+    assert quadro < partes.index("Tabela 2 — Modalidades de concorrência")
+
+
+@pytest.mark.contract
+def test_a_reversao_declarada_sai_como_frase_abaixo_do_quadro():
+    """016, `FR-250`: a regra sobre aquelas quantidades sai junto delas.
+
+    **Abaixo do quadro, e não em bloco próprio**, porque é uma regra sobre aqueles números: lida
+    longe deles, quem lê teria de procurar a qual Perfil ela se aplica.
+
+    A frase é a do Edital, e não uma paráfrase do código: o 57/2026 escreve "na hipótese do não
+    preenchimento total", e é isso que sai sob `ON_BALANCE`.
+    """
+    com_reversao = {
+        **SNAPSHOT,
+        "profiles": [{**SNAPSHOT["profiles"][0], "vacancyReversion": {"kind": "ON_BALANCE"}}],
+    }
+    partes = texto_de(documento(com_reversao, canonical_sha256(com_reversao))).splitlines()
+    quadro = partes.index("Tabela 1 — Quadro de vagas")
+
+    # **A frase é refluida pelo compositor**, e por isso a asserção é sobre a região e não sobre
+    # uma linha: o PDF quebra o parágrafo pela largura da página, e prender a quebra faria o teste
+    # reprovar no dia em que alguém mudasse a margem.
+    regiao = " ".join(partes[quadro:])
+    assert "não preenchimento total das vagas reservadas" in regiao
+    assert "destinado à respectiva ampla concorrência" in regiao
+
+
+@pytest.mark.contract
+def test_a_reversao_por_esgotamento_sai_com_a_frase_daquele_gatilho():
+    """As duas espécies não compartilham frase, porque não dizem a mesma coisa.
+
+    O 28/2026 reverte "havendo ausência de candidatos aprovados"; o 57/2026, "na hipótese do não
+    preenchimento total". Publicar a mesma frase para as duas apagaria a diferença que o Edital
+    escreveu — e é a diferença que decide se sete vagas mudam de recorte.
+    """
+    com_reversao = {
+        **SNAPSHOT,
+        "profiles": [{**SNAPSHOT["profiles"][0], "vacancyReversion": {"kind": "ON_EXHAUSTION"}}],
+    }
+    texto = texto_de(documento(com_reversao, canonical_sha256(com_reversao)))
+
+    assert "ausência de candidatos aprovados" in texto
+    assert "não preenchimento total" not in texto
+
+
+@pytest.mark.contract
+def test_o_perfil_sem_reversao_nao_ganha_frase_de_ausencia():
+    """**Nem a negação sai.** É a mesma disciplina que a `025` aplicou ao quadro ausente.
+
+    Um Edital que não declarou reversão não passa a afirmar coisa alguma sobre ela: imprimir "não
+    há reversão" seria afirmação nova sobre ato já publicado.
+    """
+    texto = texto_de(documento(SNAPSHOT, HASH))
+
+    assert "ampla concorrência" in texto.lower(), "o quadro continua saindo"
+    assert "não preenchimento total" not in texto
+    assert "ausência de candidatos aprovados" not in texto
+    assert "não reverte" not in texto
+
+
+@pytest.mark.contract
+def test_o_perfil_sem_quadro_omite_a_secao_inteira_sem_frase_de_ausencia():
+    """SC-050: nenhum Edital publicado antes desta feature passa a afirmar zero vaga.
+
+    Uma frase do tipo "quadro não declarado" seria uma afirmação nova sobre um documento que não a
+    fez. O bloco sai inteiro — título, cabeçalho e legenda —, e nada o substitui.
+    """
+    sem_quadro = {
+        **SNAPSHOT,
+        "profiles": [{**SNAPSHOT["profiles"][0], "vacancyTable": []}],
+    }
+    texto = texto_de(documento(sem_quadro, canonical_sha256(sem_quadro)))
+
+    assert "Quadro de vagas" not in texto
+    assert "Lista de concorrência" not in texto
+    assert "não declarado" not in texto
+    # E o que não é do quadro continua lá: a omissão é do bloco, e não da subseção do Perfil.
+    assert "Modalidades de concorrência" in texto
+    assert "Vagas imediatas:" in texto, "o total do Perfil continua impresso"
+
+
+@pytest.mark.contract
+def test_a_tabela_comparativa_de_perfis_nao_e_o_quadro_de_vagas():
+    """O Princípio I proíbe o mesmo termo nomear dois conceitos (025, R-011, T001).
+
+    `_quadro_de_perfis` tabula **Perfis** — código, localidade, vagas, reserva, carga horária — e o
+    quadro de vagas reparte as vagas de um Perfil por lista de concorrência. São coisas diferentes,
+    e o documento com um Perfil só imprime apenas a segunda.
+    """
+    from processo_seletivo.publicacoes.infrastructure import pdf
+
+    assert not hasattr(pdf, "_quadro_de_vagas"), (
+        "o nome do domínio pertence ao quadro de vagas, e a função que tabula Perfis é "
+        "`_quadro_de_perfis`"
+    )
+    assert hasattr(pdf, "_quadro_de_perfis")
+    assert hasattr(pdf, "_quadro_de_vagas_do_perfil")
+
+
+@pytest.mark.contract
+def test_as_duas_tabelas_de_vagas_nao_se_chamam_a_mesma_coisa():
+    """Achado do percurso conduzido: o documento publicava duas "Quadro de vagas" (E2E25-005).
+
+    Com mais de um Perfil, o Edital abre a seção com a tabela comparativa — código, localidade,
+    vagas, reserva, carga horária — e depois traz, por Perfil, a repartição das vagas por lista de
+    concorrência. As duas saíam com a mesma legenda, dizendo coisas diferentes, e quem lê o Edital
+    lê a legenda: renomear a função privada não alcançava isso.
+    """
+    dois = {
+        **SNAPSHOT,
+        "profiles": [
+            SNAPSHOT["profiles"][0],
+            {
+                **SNAPSHOT["profiles"][0],
+                "id": "22222222-2222-4222-8222-222222222222",
+                "code": "P2",
+                "name": "Segundo Perfil",
+                "competitionModalities": [],
+                "vacancyTable": [],
+            },
+        ],
+    }
+    texto = texto_de(documento(dois, canonical_sha256(dois)))
+    legendas = [linha for linha in texto.splitlines() if linha.startswith("Tabela ")]
+
+    assert any("Perfis de vaga" in legenda for legenda in legendas), (
+        "a comparativa diz o que tabula: Perfis"
+    )
+    quadros = [legenda for legenda in legendas if "Quadro de vagas" in legenda]
+    assert len(quadros) == 1, f"uma só tabela chamada quadro de vagas: {legendas}"
+    assert quadros[0].endswith("— DOC-INFO"), "e ela nomeia o Perfil de quem reparte"

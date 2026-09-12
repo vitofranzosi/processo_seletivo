@@ -76,7 +76,30 @@ INSTALLED_APPS = [
     # `DecisaoRecurso` — porque só assim "todo sucessor cita a decisão" é constraint, e não
     # promessa. O ciclo se quebra por referência tardia, como o Django resolve (018, T-001).
     "processo_seletivo.recursos",
+    # O sorteio como ato auditável (021): a relação de habilitados congelada, a ocorrência da fonte
+    # externa e o `AtoDeOrdenacao` constituído por sorteio. App próprio porque o vocabulário e o
+    # ciclo de vida existem **antes** da ordem — a relação é publicada dias antes, e é ela o
+    # compromisso do universo. A direção da dependência é única: `sorteios` lê `classificacao`,
+    # `publicacoes` e `inscricoes`, e nenhum deles passa a conhecê-lo (021, R-002).
+    "processo_seletivo.sorteios",
+    # A ocupação de vaga da `016`: quantas vagas cada lista de concorrência tem publicadas, quantas
+    # estão ocupadas e quantas faltam, mais o movimento que reverte cota para a ampla. App próprio
+    # pela mesma razão do `sorteios`, e a direção da dependência é única: `ocupacao` lê
+    # `classificacao`, `publicacoes` e `resultados`, e **nenhum deles passa a conhecê-lo**. Fosse
+    # `classificacao` a ler a apuração para descobrir a causa da faixa seguinte, a `014` deixaria de
+    # ser compreensível sozinha — contra a fronteira que a decisão de 11/09/2026 fixou (016, R-002).
+    "processo_seletivo.ocupacao",
 ]
+
+# **Só o *acesso* à fonte da semente mora aqui**: quanto tempo esperar e quantas vezes tentar são
+# decisões de operação. **Qual fonte** não é uma delas, e chegou a ser: havia aqui um
+# `SORTEIO_FONTE_ADAPTADOR` que escolhia o adaptador por ambiente, e ele ficou órfão quando a
+# FR-076 fechou o vocabulário de fontes. Manter uma variável que ninguém lê é pior que não a ter —
+# ela sugere que trocar a fonte da semente é configuração, quando é norma publicada no `drawMethod`
+# do marco, alterável só por Retificação (021, FR-076, D-013).
+SORTEIO_FONTE_TIMEOUT_SEGUNDOS = float(os.environ.get("SORTEIO_FONTE_TIMEOUT_SEGUNDOS", "10"))
+SORTEIO_FONTE_TENTATIVAS = int(os.environ.get("SORTEIO_FONTE_TENTATIVAS", "3"))
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",

@@ -10,6 +10,7 @@ from decimal import Decimal, InvalidOperation
 from uuid import uuid4
 
 from processo_seletivo.avaliacoes.domain.formas import Forma
+from processo_seletivo.classificacao.domain.faixa import ALVO_FIXO
 from processo_seletivo.editais.domain import secoes
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
@@ -135,6 +136,33 @@ def _fatos(dados, prefixo):
     return fatos
 
 
+def _linhas(dados, prefixo):
+    """As linhas do quadro de vagas de um Perfil, pelo mesmo prefixo composto da modalidade.
+
+    **Quantidade em branco não grava linha** (FR-159, D-006). A tela oferece uma linha para a ampla
+    concorrência e uma para cada Modalidade declarada; quem não declara a quantidade de uma delas
+    está dizendo que o Edital não declarou aquela repartição — e não que ela é zero. Quem quiser
+    dizer zero digita `0`, que é linha com `0` e não ausência.
+
+    `modalityId` vazio **é** a linha geral, a da ampla concorrência, e não uma referência faltando
+    (D-002, D-004).
+    """
+    linhas = []
+    for indice in _indices(dados, prefixo):
+        base = f"{prefixo}-{indice}"
+        quantidade = _texto(dados, f"{base}-immediateVacancies")
+        if not quantidade:
+            continue
+        linhas.append(
+            {
+                "id": _texto(dados, f"{base}-id"),
+                "modalityId": _texto(dados, f"{base}-modalityId") or None,
+                "immediateVacancies": _inteiro(dados, f"{base}-immediateVacancies"),
+            }
+        )
+    return linhas
+
+
 def ler_classificacao(dados):
     """Os marcos de cada Perfil, indexados pelo identificador do Perfil.
 
@@ -206,10 +234,59 @@ def _marcos(dados, prefixo):
                 # ausência é a afirmação certa: sem prazo publicado, ninguém inventa prazo
                 # (FR-020, FR-028, FR-030).
                 "appealWindow": _janela_recursal(dados, base),
+                # O método do sorteio, **ausente quando o marco não sorteia** — que é a maioria
+                # deles. A ausência é a afirmação certa: sem método publicado, o sistema não
+                # escolhe um (021, FR-013, FR-066).
+                "drawMethod": _metodo_de_sorteio(dados, base),
+                # A regra de corte, **ausente quando o marco não corta** — que é a maioria deles. A
+                # ausência é a afirmação certa: marco sem regra não corta, e a Etapa que ele
+                # alimentaria continua recebendo o conjunto que a progressão da 013 entrega
+                # (014, FR-178, FR-214).
+                "cutRule": _regra_de_corte(dados, base),
                 "tiebreakers": criterios,
             }
         )
     return marcos
+
+
+# Os seis campos do método, na ordem em que a tela os pede. `normalization` e `substitutionRule`
+# são pares `{rule, text}` — o identificador que a máquina aplica e a frase que a pessoa lê —, e é
+# por isso que eles não estão nesta tupla simples (021, FR-013).
+CAMPOS_SIMPLES_DO_METODO = ("algorithm", "source", "occurrence", "occurrenceAt", "derivation")
+
+
+def _metodo_de_sorteio(dados, base):
+    """`{...}` quando o marco declara o método do sorteio; `None` quando não declara.
+
+    **Nada de meio-declarado sai daqui.** Se a pessoa não preencheu nada, o método é ausente e a
+    ausência viaja como ausência. Se preencheu alguma coisa, o objeto viaja inteiro e a validação
+    do Perfil é que recusa a metade, nomeando o que falta — o formulário devolveria silêncio, e
+    silêncio sobre método é o que faz a escolha voltar para a mesa no dia do sorteio (FR-015).
+    """
+    valores = {campo: _texto(dados, f"{base}-draw-{campo}") for campo in CAMPOS_SIMPLES_DO_METODO}
+    regra_normalizacao = _texto(dados, f"{base}-draw-normalizationRule")
+    texto_normalizacao = _texto(dados, f"{base}-draw-normalizationText")
+    regra_substituicao = _texto(dados, f"{base}-draw-substitutionRule")
+    texto_substituicao = _texto(dados, f"{base}-draw-substitutionText")
+    etapa_de_habilitacao = _texto(dados, f"{base}-draw-qualifyingStageId")
+    preenchidos = [
+        *valores.values(),
+        regra_normalizacao,
+        texto_normalizacao,
+        regra_substituicao,
+        texto_substituicao,
+        etapa_de_habilitacao,
+    ]
+    if not any(preenchidos):
+        return None
+    return {
+        **valores,
+        "normalization": {"rule": regra_normalizacao, "text": texto_normalizacao},
+        "substitutionRule": {"rule": regra_substituicao, "text": texto_substituicao},
+        # `None` quando não declarada, e não `""`: a ausência é "não há Etapa de habilitação antes
+        # do sorteio", que é o caso dos quatro Editais lidos (021, R-012).
+        "qualifyingStageId": etapa_de_habilitacao or None,
+    }
 
 
 # As três escolhas da janela recursal, como viajam no formulário. Nomes em português porque é o
@@ -246,8 +323,79 @@ def _janela_recursal(dados, base):
     }
 
 
+def _regra_de_corte(dados, base):
+    """Os seis campos da regra, ou `None` quando o marco não corta (014, FR-178).
+
+    **A espécie do alvo é o interruptor.** Vazia significa "este marco não corta", e é o estado de
+    quase todo marco — não há caixa de marcação separada para isso, pela razão que a janela recursal
+    aprendeu a duras penas: um estado que só nasce de uma combinação que ninguém faz é um estado
+    inalcançável pela tela que existe para declará-lo.
+
+    **Os quatro campos sem padrão viajam mesmo vazios**, como escala e modo do arredondamento já
+    fazem: quem recusa é a aferição de publicabilidade, com mensagem que nomeia o que falta — e não
+    o formulário, que devolveria silêncio. O rascunho pode estar pela metade; a publicação não.
+    """
+    especie = _texto(dados, f"{base}-cutTargetKind")
+    if not especie:
+        return None
+    return {
+        "targetKind": especie,
+        # `targetCount` só na espécie fixa: o alvo tem uma fonte só, e mandar o número junto com a
+        # derivada faria o conteúdo publicado afirmar duas origens para a mesma quantidade.
+        "targetCount": (
+            _inteiro_opcional(dados, f"{base}-cutTargetCount") if especie == ALVO_FIXO else None
+        ),
+        "surplusCount": _inteiro_opcional(dados, f"{base}-cutSurplusCount") or 0,
+        "tieOutcome": _texto(dados, f"{base}-cutTieOutcome"),
+        "governedStage": _texto(dados, f"{base}-cutGovernedStage"),
+        "continuation": _texto(dados, f"{base}-cutContinuation"),
+    }
+
+
+def _ou_vazio(valor):
+    """Zero é valor, e `None` é ausência: o `or ""` de sempre confundiria os dois aqui."""
+    return "" if valor is None else valor
+
+
+def _corte_para_exibicao(regra):
+    """A regra de volta para a tela, campo a campo — e a ausência de volta como ausência."""
+    regra = regra or {}
+    return {
+        "cutTargetKind": regra.get("targetKind") or "",
+        "cutTargetCount": _ou_vazio(regra.get("targetCount")),
+        "cutSurplusCount": _ou_vazio(regra.get("surplusCount")),
+        "cutTieOutcome": regra.get("tieOutcome") or "",
+        "cutGovernedStage": regra.get("governedStage") or "",
+        "cutContinuation": regra.get("continuation") or "",
+    }
+
+
 def _unidade(dados, base):
     return _texto(dados, f"{base}-appealUnit") or "DIAS_CORRIDOS"
+
+
+def _metodo_para_exibicao(metodo):
+    """Os seis campos do método de volta para a tela, achatados no prefixo `draw`.
+
+    Achatados porque o formulário é plano: `{rule, text}` viraria dois campos de qualquer forma, e
+    montá-los aqui é o que mantém o template sem lógica. Vazio quando não há método, e vazio é o
+    que a tela desenha — nada de rótulo institucional por padrão.
+    """
+    declarado = metodo or {}
+    normalizacao = declarado.get("normalization") or {}
+    substituicao = declarado.get("substitutionRule") or {}
+    return {
+        "drawAlgorithm": declarado.get("algorithm") or "",
+        "drawSource": declarado.get("source") or "",
+        "drawOccurrence": declarado.get("occurrence") or "",
+        "drawOccurrenceAt": declarado.get("occurrenceAt") or "",
+        "drawDerivation": declarado.get("derivation") or "",
+        "drawNormalizationRule": normalizacao.get("rule") or "",
+        "drawNormalizationText": normalizacao.get("text") or "",
+        "drawSubstitutionRule": substituicao.get("rule") or "",
+        "drawSubstitutionText": substituicao.get("text") or "",
+        "drawQualifyingStageId": declarado.get("qualifyingStageId") or "",
+    }
 
 
 def _declaracao_do_marco(janela):
@@ -285,6 +433,20 @@ def ler_perfis(dados):
                     if linha.strip()
                 ],
                 "immediateVacancies": _inteiro(dados, f"{base}-immediateVacancies"),
+                # Qual das Modalidades é a ampla concorrência (014, D-014, FR-231). Vazio significa
+                # que o Perfil não declara nenhuma, que é o formato em que ela existe só como a
+                # linha geral do quadro.
+                "generalCompetitionModalityId": _texto(
+                    dados, f"{base}-generalCompetitionModalityId"
+                )
+                or None,
+                # A reversão declarada (016, D-007). Objeto quando há gatilho, `None` quando não —
+                # nunca objeto pela metade, que a publicação recusaria nomeando o Perfil.
+                "vacancyReversion": (
+                    {"kind": especie}
+                    if (especie := _texto(dados, f"{base}-vacancyReversion"))
+                    else None
+                ),
                 "reserveType": reserva,
                 "reserveLimit": int(limite) if reserva == "LIMITED" and limite else None,
                 "locality": _texto(dados, f"{base}-locality"),
@@ -297,6 +459,11 @@ def ler_perfis(dados):
                 # Pelo mesmo esquema de prefixo composto: `marco-3-…` pertence ao `perfil-3`.
                 "declaredFacts": _fatos(dados, f"fato-{indice}"),
                 "classificationMilestones": _marcos(dados, f"marco-{indice}"),
+                # Travessia 1 de 4. As outras três são `perfis_persistidos`, `perfis_do_edital` e
+                # a recriação em `draft.replace_draft`: `replace_draft` apaga e recria tudo, e uma
+                # coleção do Perfil que falte em qualquer uma delas **some** na gravação da etapa
+                # seguinte, sem erro nenhum (025, R-009).
+                "vacancyTable": _linhas(dados, f"linha-{indice}"),
             }
         )
     return perfis
@@ -324,6 +491,9 @@ def ler_eventos(dados):
                 "startAt": _instante(dados, f"{base}-startAt"),
                 "endAt": _instante(dados, f"{base}-endAt"),
                 "order": _inteiro(dados, f"{base}-order", 0),
+                # Onde o evento acontece (021, D-008). Vazio significa "não declarado", e é o que
+                # a tela desenha por padrão: nenhum valor institucional se aplica sozinho.
+                "location": _texto(dados, f"{base}-location"),
             }
         )
     return _renumerar(eventos)
@@ -485,16 +655,121 @@ def perfis_do_edital(edital):
             "duties": perfil.duties,
             "workload": perfil.workload,
             "compensation": perfil.compensation,
+            # Travessia 3: sem isto a declaração gravada não voltaria à tela, e a gravação seguinte
+            # a apagaria — porque `ler_perfis` leria um formulário sem ela.
+            "generalCompetitionModalityId": (
+                str(perfil.modalidade_ampla_concorrencia)
+                if perfil.modalidade_ampla_concorrencia
+                else ""
+            ),
+            # Travessia 3, pela mesma razão: sem isto a espécie gravada não voltaria à tela, e a
+            # gravação seguinte a apagaria — `ler_perfis` leria um formulário sem ela.
+            "vacancyReversion": perfil.especie_de_reversao,
             "modalidades": [
                 _modalidade_para_o_formulario(m) for m in perfil.modalidades.order_by("code")
             ],
             "marcos": [_marco_para_o_formulario(m) for m in perfil.marcos.order_by("code")],
             "fatos": [_fato_para_o_formulario(f) for f in perfil.fatos.order_by("code")],
+            # Travessia 3 de 4: sem isto o quadro gravado não voltaria à tela, e a gravação
+            # seguinte o apagaria — porque `ler_perfis` leria um formulário sem linha nenhuma.
+            "quadro": _quadro_para_o_formulario(perfil),
         }
         for perfil in edital.perfis.prefetch_related(
-            "modalidades__regra_normativa", "marcos__criterios", "fatos", "fatos"
+            "modalidades__regra_normativa",
+            "marcos__criterios",
+            "fatos",
+            # `quadro_de_vagas`, e **não** `quadro_de_vagas__modalidade`: o rótulo da linha vem de
+            # `perfil.modalidades`, e daqui só saem `modalidade_id` e a quantidade — que já estão
+            # na própria linha. Descer até a Modalidade era uma consulta a mais por página, para
+            # carregar objetos que nenhuma linha deste arquivo lê.
+            "quadro_de_vagas",
         ).order_by("code")
     ]
+
+
+def quadro_do_formulario(perfil):
+    """As linhas do quadro **a partir do que está no formulário**, e não do que está no banco.
+
+    É a metade que a reexibição depois de uma recusa precisa, e é a que faz a UX-021 valer no
+    momento em que ela importa: quem acrescenta uma Modalidade e digita a quantidade dela antes de
+    gravar precisa ver a linha — a Modalidade ainda não existe no banco, e derivar dali devolveria
+    uma tela que perdeu o que a pessoa acabou de escrever (R-009).
+
+    A ordem é a mesma da tela: a geral primeiro, e uma por Modalidade declarada. Quantidade não
+    digitada volta **em branco**, porque em branco é o que ela era — e nunca zero.
+    """
+    # **A primeira ocorrência vence, e não a última.** Um envio com duas linhas para o mesmo
+    # recorte é recusado pelo domínio, e a tela precisa devolver o que a pessoa digitou para que
+    # ela possa corrigir. Com a última vencendo, a linha duplicada **sobrescrevia** a boa: quem
+    # tinha `56` na ampla concorrência recebia de volta a quantidade da duplicata, e o número certo
+    # sumia na tela que existe para mostrá-lo (025, E2E25-004).
+    digitadas = {}
+    for linha in perfil.get("vacancyTable") or []:
+        digitadas.setdefault(str(linha.get("modalityId") or ""), linha)
+    geral = digitadas.get("")
+    linhas = [
+        {
+            "id": (geral or {}).get("id") or str(uuid4()),
+            "modalityId": "",
+            "rotulo": "Ampla concorrência",
+            "geral": True,
+            "immediateVacancies": (geral or {}).get("immediateVacancies", ""),
+        }
+    ]
+    for modalidade in perfil.get("competitionModalities") or []:
+        chave = str(modalidade.get("id") or "")
+        digitada = digitadas.get(chave)
+        nome = modalidade.get("name") or ""
+        codigo = modalidade.get("code") or ""
+        linhas.append(
+            {
+                "id": (digitada or {}).get("id") or str(uuid4()),
+                "modalityId": chave,
+                "rotulo": f"{nome} ({codigo})" if nome or codigo else "Modalidade sem denominação",
+                "geral": False,
+                "immediateVacancies": (digitada or {}).get("immediateVacancies", ""),
+            }
+        )
+    return linhas
+
+
+def _quadro_para_o_formulario(perfil):
+    """As linhas que a tela desenha: a geral primeiro, e uma por Modalidade declarada.
+
+    **As linhas são oferecidas, e não digitadas** (UX-021, SC-048). O rótulo de cada uma vem da
+    Modalidade que já está declarada no Perfil; o que falta é a quantidade. Modalidade sem linha
+    gravada aparece com o campo **vazio** — que é "não declarado", e nunca zero (FR-159).
+
+    A identidade de uma linha ainda não gravada nasce aqui, e não no navegador: a gravação preserva
+    o `id` recebido, e linha que nascesse sem identidade não teria o que preservar — é o mesmo
+    argumento que a Modalidade e a Regra Normativa já registram.
+    """
+    gravadas = {
+        str(linha.modalidade_id) if linha.modalidade_id else "": linha
+        for linha in perfil.quadro_de_vagas.all()
+    }
+    geral = gravadas.get("")
+    linhas = [
+        {
+            "id": str(geral.id) if geral else str(uuid4()),
+            "modalityId": "",
+            "rotulo": "Ampla concorrência",
+            "geral": True,
+            "immediateVacancies": geral.vagas_imediatas if geral else "",
+        }
+    ]
+    for modalidade in perfil.modalidades.order_by("code"):
+        gravada = gravadas.get(str(modalidade.id))
+        linhas.append(
+            {
+                "id": str(gravada.id) if gravada else str(uuid4()),
+                "modalityId": str(modalidade.id),
+                "rotulo": f"{modalidade.name} ({modalidade.code})",
+                "geral": False,
+                "immediateVacancies": gravada.vagas_imediatas if gravada else "",
+            }
+        )
+    return linhas
 
 
 def eventos_do_edital(edital):
@@ -511,6 +786,7 @@ def eventos_do_edital(edital):
             if evento.end_at
             else "",
             "order": evento.order,
+            "location": evento.location,
             # O rótulo que a Etapa mostra ao escolher o vínculo (FR-036). A Etapa se vincula a um
             # Evento **para herdar as datas** — é o que a ajuda promete —, e a lista mostrava
             # "tipo — descrição", cortava por falta de largura e não mostrava data nenhuma: para
@@ -535,6 +811,18 @@ def perfis_persistidos(edital):
             "immediateVacancies": perfil.immediate_vacancies,
             "reserveType": perfil.reserve_type,
             "reserveLimit": perfil.reserve_limit,
+            # **Travessia 2, e ela vale para este campo tanto quanto para o quadro**: sem esta
+            # linha, declarar a ampla concorrência no passo dos Perfis e gravar qualquer etapa
+            # seguinte publicaria um Edital que não a declara — e a conferência do alvo derivado
+            # voltaria a exigir linha de quadro para ela (014, FR-231).
+            "generalCompetitionModalityId": (
+                str(perfil.modalidade_ampla_concorrencia)
+                if perfil.modalidade_ampla_concorrencia
+                else None
+            ),
+            "vacancyReversion": (
+                {"kind": perfil.especie_de_reversao} if perfil.especie_de_reversao else None
+            ),
             "locality": perfil.locality,
             "duties": perfil.duties,
             "workload": perfil.workload,
@@ -552,6 +840,10 @@ def perfis_persistidos(edital):
                 _marco_persistido(m) for m in perfil.marcos.order_by("code")
             ],
             "declaredFacts": [_fato_persistido(f) for f in perfil.fatos.order_by("code")],
+            # Travessia 2 de 4, e é a que mata em silêncio: `replace_draft` apaga e recria tudo, de
+            # modo que o quadro que não for reenviado ao gravar **outra** etapa some sem erro
+            # nenhum — quantidade publicável desaparecendo por causa de uma visita ao Cronograma.
+            "vacancyTable": [_linha_persistida(linha) for linha in perfil.quadro_de_vagas.all()],
             # Pela mesma razão dos dois acima, e com um agravante: nenhuma tela do assistente os
             # desenha. Conteúdo normativo que só o contrato administrativo escreve atravessaria o
             # assistente uma vez e sumiria na primeira gravação — sem que houvesse tela onde
@@ -560,9 +852,17 @@ def perfis_persistidos(edital):
             "callInformation": perfil.call_information,
         }
         for perfil in edital.perfis.prefetch_related(
-            "modalidades__regra_normativa", "marcos__criterios"
+            "modalidades__regra_normativa", "marcos__criterios", "quadro_de_vagas"
         ).order_by("code")
     ]
+
+
+def _linha_persistida(linha):
+    return {
+        "id": str(linha.id),
+        "modalityId": str(linha.modalidade_id) if linha.modalidade_id else None,
+        "immediateVacancies": linha.vagas_imediatas,
+    }
 
 
 def _fato_para_o_formulario(fato):
@@ -589,6 +889,8 @@ def _marco_para_o_formulario(marco):
         "appealDeclaration": _declaracao_do_marco(marco.janela_recursal),
         "appealDurationDays": (marco.janela_recursal or {}).get("durationDays") or "",
         "appealUnit": (marco.janela_recursal or {}).get("unit") or "DIAS_CORRIDOS",
+        **_metodo_para_exibicao(marco.metodo_de_sorteio),
+        **_corte_para_exibicao(marco.regra_de_corte),
         "criterios": [
             {
                 "id": str(criterio.id),
@@ -622,6 +924,16 @@ def _marco_persistido(marco):
         # e todo recurso nascia sem prazo computável (E2E18-005).
         # `or None` como em `publish_edital`: `{}` é a ausência, e a ausência viaja como ausência.
         "appealWindow": marco.janela_recursal or None,
+        # **E o método pelo mesmo motivo, no mesmo lugar.** São dois caminhos de perda, e fechar só
+        # um deixa o defeito vivo: sem esta linha, declarar o método no passo Classificação e
+        # gravar qualquer passo seguinte publicaria um Edital que não declara método nenhum — e o
+        # congelamento da relação seria recusado sem que ninguém entendesse por quê.
+        "drawMethod": marco.metodo_de_sorteio or None,
+        # **E a regra de corte pela mesma razão, no mesmo lugar.** São três caminhos de perda, e
+        # fechar dois deixa o defeito vivo: sem esta linha, declarar o corte no passo Classificação
+        # e gravar qualquer passo seguinte publicaria um Edital que não corta — e a Etapa governada
+        # voltaria a receber todos os habilitados sem que ninguém pedisse.
+        "cutRule": marco.regra_de_corte or None,
         "tiebreakers": [
             {
                 "id": str(criterio.id),
@@ -783,6 +1095,11 @@ def eventos_persistidos(edital):
             "order": evento.order,
             "status": evento.status,
             "isRegistrationPeriod": evento.is_registration_period,
+            # **E o local pelo mesmo motivo.** É o terceiro campo a entrar nesta lista pela lição
+            # que a E2E17-001 deixou: campo omitido aqui volta ao padrão do modelo na gravação
+            # seguinte, sem recusa e sem aviso — e o Edital seria publicado sem o local que alguém
+            # digitou dois passos antes (021, FR-057).
+            "location": evento.location,
         }
         for evento in cronograma.eventos.order_by("order")
     ]
@@ -945,3 +1262,20 @@ def ler_membros_em_lote(dados):
             identificador, separador, rotulo = linha.partition(";")
         entradas.append((identificador.strip(), rotulo.strip()))
     return {"entradas": entradas, "funcao": _texto(dados, "funcao"), "lista": bruto}
+
+
+def ultimo_local_declarado(edital):
+    """O local do último Evento que declarou um — a sugestão que a tela oferece (021, FR-059).
+
+    **Sugestão, e não preenchimento.** Ela chega ao template como `placeholder`: o campo continua
+    vazio, e vazio continua significando "não declarado". Um `value` aqui aplicaria ao Edital um
+    local que ninguém escreveu, que é a degradação que os rótulos da Etapa e o default institucional
+    do Evento já recusaram (FR-058).
+    """
+    cronograma = getattr(edital, "cronograma", None)
+    if cronograma is None:
+        return ""
+    for evento in cronograma.eventos.order_by("-order"):
+        if evento.location:
+            return evento.location
+    return ""

@@ -83,7 +83,35 @@ class ClassificationMilestoneSerializer(serializers.Serializer):
     # Sem este campo o contrato de entrada não sabia dizer o prazo, e o Edital publicava
     # `appealWindow: null` mesmo quando a instituição o havia declarado (E2E18-005).
     appealWindow = serializers.JSONField(required=False, allow_null=True)
+    # O método do sorteio, pela mesma razão e na mesma forma da janela: objeto declarado pela
+    # norma, e `allow_null` porque não declarar é resposta legítima — a maioria dos marcos não
+    # sorteia (021, FR-013, D-013).
+    drawMethod = serializers.JSONField(required=False, allow_null=True)
+    # A regra de corte, pela mesma razão e na mesma forma dos dois acima: objeto declarado pela
+    # norma, e `allow_null` porque não declarar é resposta legítima — marco que não corta é a
+    # maioria. Os campos que não têm padrão honesto são cobrados na **publicação**, e não aqui: o
+    # rascunho pode estar pela metade (014, FR-178).
+    cutRule = serializers.JSONField(required=False, allow_null=True)
     tiebreakers = TiebreakerSerializer(many=True, required=False)
+
+
+class VacancyTableRowSerializer(serializers.Serializer):
+    """Uma linha do quadro de vagas do Perfil (025, D-002).
+
+    `modalityId` **nulo ou ausente é a linha geral** — a da ampla concorrência —, e há no máximo
+    uma por Perfil. Com `modalityId`, é linha reservada, e há no máximo uma por Modalidade. A
+    unicidade e a referência cruzada vivem no domínio, e não aqui, porque a interface
+    administrativa invoca o command diretamente e não atravessa este serializer.
+
+    `id` é **obrigatório**, pela mesma razão que o de Modalidade já documenta acima: opcional, ele
+    reabriria o defeito que a estabilidade veio fechar — o servidor geraria um identificador que a
+    resposta não devolve, e a gravação seguinte trocaria a identidade de novo. E é por ele que a
+    Retificação alcança a linha depois de publicada (FR-170).
+    """
+
+    id = serializers.UUIDField()
+    modalityId = serializers.UUIDField(required=False, allow_null=True)
+    immediateVacancies = serializers.IntegerField(min_value=0)
 
 
 class ProfileSerializer(serializers.Serializer):
@@ -102,11 +130,20 @@ class ProfileSerializer(serializers.Serializer):
     compensation = serializers.CharField(required=False, allow_blank=True)
     classificationInformation = serializers.JSONField(required=False)
     callInformation = serializers.JSONField(required=False)
+    # Qual das Modalidades é a ampla concorrência (014, D-014). `allow_null` porque não declarar é
+    # resposta legítima: há Edital em que a ampla concorrência existe só como a linha geral.
+    generalCompetitionModalityId = serializers.UUIDField(required=False, allow_null=True)
+    # A reversão declarada (016, D-007). Objeto anulável: `null` é "não declara", e objeto sem
+    # `kind` é recusado pela conferência de publicação, não aqui — a recusa nomeia o Perfil.
+    vacancyReversion = serializers.DictField(required=False, allow_null=True)
     competitionModalities = CompetitionModalitySerializer(many=True)
     # Opcional no rascunho: um Edital que não classifica não declara marco nenhum.
     classificationMilestones = ClassificationMilestoneSerializer(many=True, required=False)
     # Opcional pelo mesmo motivo: um Edital que não declara fato nenhum continua sem campo nenhum.
     declaredFacts = DeclaredFactSerializer(many=True, required=False)
+    # Opcional porque o rascunho legitimamente não traz quadro, e porque **todo** Edital publicado
+    # até a `025` não tinha onde declará-lo: exigi-la aqui recusaria o acervo inteiro (FR-160).
+    vacancyTable = VacancyTableRowSerializer(many=True, required=False)
 
     def validate(self, attrs):
         try:
@@ -129,6 +166,10 @@ class EventSerializer(serializers.Serializer):
     )
     # Ausente significa "não é o período de inscrições", que é a verdade para quase todo Evento.
     isRegistrationPeriod = serializers.BooleanField(required=False, default=False)
+    # Onde o Evento acontece (021, D-008). `allow_blank` porque não declarar é resposta legítima —
+    # e a mais comum —, e **sem** validação de URL: "Página da chamada pública" não é endereço
+    # eletrônico, e recusá-lo obrigaria a instituição a mentir para publicar (FR-061).
+    location = serializers.CharField(required=False, allow_blank=True, max_length=255)
 
     def validate(self, attrs):
         try:

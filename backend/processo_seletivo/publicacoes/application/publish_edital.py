@@ -2,6 +2,7 @@ import hashlib
 from decimal import Decimal
 
 from processo_seletivo.auditoria.application import record_event
+from processo_seletivo.classificacao.domain import faixa
 from processo_seletivo.editais.domain import secoes
 from processo_seletivo.editais.domain.validation import blocking_findings, validate_for_publication
 from processo_seletivo.editais.models.anexos import ArtefatoAnexo
@@ -98,7 +99,7 @@ def _sections(edital: Edital) -> list[dict]:
 def edital_snapshot(edital: Edital) -> dict:
     profiles = []
     for profile in edital.perfis.prefetch_related(
-        "modalidades__regra_normativa", "fatos", "marcos__criterios"
+        "modalidades__regra_normativa", "fatos", "marcos__criterios", "quadro_de_vagas"
     ).order_by("code"):
         modalities = []
         for modality in profile.modalidades.order_by("code"):
@@ -149,6 +150,17 @@ def edital_snapshot(edital: Edital) -> dict:
                 # ausência, e é a mesma grafia que `elevar_marco` escreve em Edital anterior ao
                 # degrau (018, FR-029).
                 "appealWindow": marco.janela_recursal or None,
+                # `None` quando o marco não declara método: é o que a versão 10 grafa para a
+                # ausência, e a mesma grafia que `elevar_marco` escreve em Edital anterior ao
+                # degrau (021, FR-066, D-013).
+                "drawMethod": marco.metodo_de_sorteio or None,
+                # `None` quando o marco não corta: é o que a versão 13 grafa para a ausência, e a
+                # mesma grafia que `elevar_marco` escreve em Edital anterior ao degrau. Declarada,
+                # ela sai **normalizada** — `surplusCount` sempre presente, `targetCount` nulo em
+                # alvo derivado —, porque a obsolescência do corte compara esta regra congelada com
+                # a da versão vigente, e duas grafias do mesmo significado acusariam diferença onde
+                # não há (014, FR-193).
+                "cutRule": faixa.normalizar(marco.regra_de_corte),
                 "tiebreakers": [
                     {
                         "id": str(criterio.id),
@@ -161,6 +173,26 @@ def edital_snapshot(edital: Edital) -> dict:
                 ],
             }
             for marco in sorted(profile.marcos.all(), key=lambda item: item.code)
+        ]
+        # O quadro de vagas deste Perfil (025, D-002). Ordenado por `("ordem", "id")` pela mesma
+        # razão das Modalidades e dos marcos: a ordem do snapshot não pode depender da ordem de
+        # inserção, ou dois snapshots do mesmo conteúdo teriam bytes diferentes (FR-168).
+        #
+        # `ordem` **não** é publicada: a D-009 diz que a ordem do quadro é apresentação e não
+        # norma, e publicá-la faria o quadro afirmar uma precedência entre listas que é de outra
+        # feature. O que viaja é a posição no array.
+        #
+        # `modalityId` nulo **é** a linha geral, a da ampla concorrência — a mesma grafia que
+        # `Inscricao.modality_id` e `AtoDeOrdenacao.lista_id` já praticam.
+        vacancy_table = [
+            {
+                "id": str(linha.id),
+                "modalityId": str(linha.modalidade_id) if linha.modalidade_id else None,
+                "immediateVacancies": linha.vagas_imediatas,
+            }
+            for linha in sorted(
+                profile.quadro_de_vagas.all(), key=lambda item: (item.ordem, str(item.id))
+            )
         ]
         profiles.append(
             {
@@ -183,8 +215,23 @@ def edital_snapshot(edital: Edital) -> dict:
                 "classificationInformation": profile.classification_information,
                 "callInformation": profile.call_information,
                 "competitionModalities": modalities,
+                # Qual das Modalidades acima é a ampla concorrência, e portanto corresponde à linha
+                # geral do quadro em vez de exigir linha própria (014, D-014). `None` quando o
+                # Perfil não declara nenhuma.
+                "generalCompetitionModalityId": (
+                    str(profile.modalidade_ampla_concorrencia)
+                    if profile.modalidade_ampla_concorrencia
+                    else None
+                ),
+                # A reversão declarada, ou `None` (016, D-007). Objeto, e não campo solto, pela
+                # mesma razão do `cutRule`: é onde um campo novo da mesma decisão entra sem um
+                # segundo degrau.
+                "vacancyReversion": (
+                    {"kind": profile.especie_de_reversao} if profile.especie_de_reversao else None
+                ),
                 "declaredFacts": declared_facts,
                 "classificationMilestones": milestones,
+                "vacancyTable": vacancy_table,
             }
         )
     schedule = []
@@ -199,6 +246,11 @@ def edital_snapshot(edital: Edital) -> dict:
                 "endAt": None if event.end_at is None else event.end_at.isoformat(),
                 "order": event.order,
                 "status": event.status,
+                # Onde o Evento acontece (021, D-008). String sempre presente, `""` quando não
+                # declarado — nunca `null`, nunca chave omitida: é a convenção que `description` e
+                # `locality` do Perfil já seguem, e uma segunda convenção para texto faria a versão
+                # canônica admitir mais de uma forma.
+                "location": event.location,
                 # Qual Evento é o período de inscrições (FR-008 da 009). Booleano sempre presente,
                 # dentro do Evento: o candidato precisa saber quando as inscrições abrem, e a
                 # Retificação já alcança o campo por `/schedule/id=…/isRegistrationPeriod`, sem

@@ -2,7 +2,7 @@
 {% block titulo %}{{ cabecalho.titulo }}{% endblock %}
 {% block conteudo %}
 <h1>{{ cabecalho.natureza_rotulo }}</h1>
-<p class="sub">{{ cabecalho.processo }} · {{ cabecalho.edital }} · {{ cabecalho.perfil }} — {{ cabecalho.marco }}</p>
+<p class="sub">{{ cabecalho.processo }} · {{ cabecalho.edital }} · {{ cabecalho.perfil }} — {{ cabecalho.marco }}{% if cabecalho.lista %} · {{ cabecalho.lista }}{% endif %}</p>
 
 {% comment %}
 A sucessão dita **em texto**, e não só por cor: quem lê sem enxergar cor precisa da mesma
@@ -61,6 +61,30 @@ O nome acessível da tabela vem do próprio título da seção, e não de uma le
 uma legenda visualmente oculta precisa de largura fixa em pixel, que é justamente o que a base do
 portal não admite — é ela que produz rolagem horizontal a 375 px.
 {% endcomment %}
+{% comment %}
+**A proveniência do sorteio, na página e não só no PDF** (021, FR-046). O documento oficial trazia
+os cinco dados desde sempre; esta página não trazia nenhum — quem abria o resultado no navegador
+via uma ordem comum, com duas colunas vazias, e não tinha como saber que ela veio de sorteio nem
+por onde conferi-la. A FR-046 fala em "documento publicado", e o documento que as pessoas de fato
+leem é este.
+{% endcomment %}
+{% if cabecalho.sorteio %}
+<section class="proveniencia-do-sorteio" aria-labelledby="titulo-do-sorteio">
+  <h2 id="titulo-do-sorteio">Esta ordem foi produzida por sorteio público</h2>
+  <p>A relação de quem participou foi congelada <strong>antes</strong> de a semente existir, e a
+    semente veio de fonte externa à instituição. Qualquer pessoa refaz esta ordem:
+    <a href="{% url 'portal:verificar-sorteio' cabecalho.sorteio.id %}">verificar este sorteio</a>.</p>
+  <dl class="resumos">
+    <dt>Algoritmo</dt><dd>{{ cabecalho.sorteio.algoritmo }}</dd>
+    <dt>Semente usada</dt><dd>{{ cabecalho.sorteio.semente }}</dd>
+    <dt>Resumo da relação de habilitados</dt><dd><code>{{ cabecalho.sorteio.relacao_resumo }}</code></dd>
+    <dt>Resumo do método declarado no Edital</dt><dd><code>{{ cabecalho.sorteio.metodo_resumo }}</code></dd>
+    <dt>Resumo do manifesto</dt><dd><code>{{ cabecalho.sorteio.manifesto_resumo }}</code></dd>
+  </dl>
+  <p class="meta"><a href="{% url 'portal:relacao-de-habilitados' cabecalho.sorteio.relacao_id %}">Ver a relação de habilitados</a> — é dela que o resumo acima se recalcula, sem depender de nós.</p>
+</section>
+{% endif %}
+
 <table class="resultado" aria-labelledby="titulo-do-resultado">
   <thead>
     <tr>
@@ -68,7 +92,12 @@ portal não admite — é ela que produz rolagem horizontal a 375 px.
       <th scope="col">Candidato</th>
       <th scope="col">Protocolo</th>
       <th scope="col">Modalidade</th>
-      <th scope="col">Pontuação</th>
+      {% comment %}
+      **Sorteio não pontua, e a coluna não aparece** (021). Uma coluna "Pontuação" cheia de
+      travessões convida quem lê a achar que falta dado — quando a ausência é do desenho: a ordem
+      veio de sorteio, e não de pontuação nenhuma.
+      {% endcomment %}
+      {% if not cabecalho.sorteio %}<th scope="col">Pontuação</th>{% endif %}
     </tr>
   </thead>
   <tbody>
@@ -82,7 +111,7 @@ portal não admite — é ela que produz rolagem horizontal a 375 px.
       <td data-rotulo="Candidato">{{ item.candidato }}</td>
       <td data-rotulo="Protocolo">{{ item.protocolo }}</td>
       <td data-rotulo="Modalidade">{{ item.modalidade|default:"—" }}</td>
-      <td data-rotulo="Pontuação">{{ item.pontuacao|default:"—" }}</td>
+      {% if not cabecalho.sorteio %}<td data-rotulo="Pontuação">{{ item.pontuacao|default:"—" }}</td>{% endif %}
     </tr>
   {% endfor %}
   </tbody>

@@ -41,6 +41,18 @@ TABELAS_APPEND_ONLY = (
     # outra linha, e nem o cabeçalho nem uma posição emitida podem ser reinterpretados depois.
     "classificacao_atodeordenacao",
     "classificacao_posicaonaordem",
+    # O corte da `014` e os seus itens: a faixa emitida decide quem prossegue no certame, e é o ato
+    # mais contestável que o sistema produz. Append-only pela razão das demais — nasce e não muda —,
+    # com um agravante próprio: sucessão e continuação já criam linha nova, de modo que nenhuma
+    # alteração de linha existente é sequer legítima (014, FR-223).
+    "classificacao_corte",
+    "classificacao_itemdocorte",
+    # A apuração de ocupação da `016` e o movimento de vaga: quantas vagas cada recorte tem e a
+    # quantidade que muda de recorte. Append-only pela razão das demais — nascem e não mudam —, com
+    # um agravante próprio: a apuração é o número que alguém vai contestar, e a sucessão já cria
+    # linha nova, de modo que nenhuma alteração de linha existente é sequer legítima (016, FR-260).
+    "ocupacao_apuracaodeocupacao",
+    "ocupacao_movimentodevaga",
     # A divulgação do resultado (017): o ato publicado, a situação congelada de cada participante
     # e o documento oficial. As três são históricas pela mesma razão das demais — nascem e não
     # mudam —, com um agravante próprio: o que elas guardam já é público, e reescrevê-lo depois
@@ -59,6 +71,16 @@ TABELAS_APPEND_ONLY = (
     # foi cumprida, sem deixar rastro de que alguém a reabriu.
     "classificacao_citacaodedecisao",
     "recursos_recurso",
+    # O sorteio auditável (021): o universo comprometido, os seus participantes numerados, o
+    # material observado da fonte externa e a proveniência do ato. As quatro são históricas pela
+    # razão das demais — nascem e não mudam —, e com um agravante que é a feature inteira: a
+    # relação publicada **é** o compromisso anterior à semente, e reescrevê-la depois de conhecida
+    # a ocorrência é exatamente o ataque que esta capacidade existe para tornar impossível
+    # (021, FR-007).
+    "sorteios_relacaodehabilitados",
+    "sorteios_participantehabilitado",
+    "sorteios_ocorrenciadafonte",
+    "sorteios_sorteio",
     "publicacoes_documentopublicado",
     "publicacoes_publicacao",
     "publicacoes_revisaoedital",

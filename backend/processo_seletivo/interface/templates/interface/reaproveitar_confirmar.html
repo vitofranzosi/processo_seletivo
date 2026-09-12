@@ -1,0 +1,57 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Confirmar a troca de origem — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <a href="{{ voltar }}">Partir de um Edital anterior</a> ›
+  <span aria-current="page">Confirmar</span>
+</nav>
+
+<h1>Isto substitui o que já está composto</h1>
+<p class="sub">Edital {{ edital.number }}/{{ edital.year }} — {{ edital.title }}</p>
+
+{% comment %}
+A lista é o requisito, e não a advertência: descartar em silêncio e reaproveitar em silêncio são os
+dois erros simétricos, e enumerar o que se perde **antes** de perder é o que evita os dois. É a
+mesma decisão que o portal já tomou para a mudança de modalidade (009, FR-031).
+{% endcomment %}
+<div class="aviso" role="alert">
+  <p>O conteúdo atual deste Edital será <strong>apagado</strong> e substituído pelo do Edital
+    escolhido. Serão descartados:</p>
+  <ul class="motivos">
+    {% if descarte.perfis %}<li>{{ descarte.perfis }} Perfi{{ descarte.perfis|pluralize:"l,s" }} de Vaga, com as modalidades, regras e critérios que pendem del{{ descarte.perfis|pluralize:"e,es" }}</li>{% endif %}
+    {% if descarte.eventos %}<li>{{ descarte.eventos }} Evento{{ descarte.eventos|pluralize }} do Cronograma</li>{% endif %}
+    {% if descarte.etapas %}<li>{{ descarte.etapas }} Etapa{{ descarte.etapas|pluralize }} de Avaliação</li>{% endif %}
+    {% if descarte.documentos %}<li>{{ descarte.documentos }} Documento{{ descarte.documentos|pluralize }} Exigido{{ descarte.documentos|pluralize }}</li>{% endif %}
+    {% if descarte.secoes %}<li>{{ descarte.secoes }} seç{{ descarte.secoes|pluralize:"ão,ões" }} de conteúdo redigid{{ descarte.secoes|pluralize:"a,as" }}</li>{% endif %}
+    {% if descarte.anexos %}<li><strong>{{ descarte.anexos }} Anexo{{ descarte.anexos|pluralize }}</strong>, e os arquivos deles — que não estão publicados e não têm cópia</li>{% endif %}
+  </ul>
+  <p>Número, ano, título e descrição do Edital <strong>não</strong> mudam, e nada do certame é
+    tocado: este Edital nunca foi publicado.</p>
+</div>
+
+<section aria-labelledby="nova-origem-titulo" class="cartao">
+  <h2 id="nova-origem-titulo">A nova origem</h2>
+  <p><strong>Edital {{ origem.number }}/{{ origem.year }}</strong> — {{ origem.title }}<br>
+    <span class="ajuda">{{ origem.processo.institutional_code }} — {{ origem.processo.title }}</span></p>
+  <p class="ajuda">Traz {{ origem.resumo.perfis }} perfi{{ origem.resumo.perfis|pluralize:"l,s" }},
+    {{ origem.resumo.etapas }} etapa{{ origem.resumo.etapas|pluralize }},
+    {{ origem.resumo.eventos }} evento{{ origem.resumo.eventos|pluralize }},
+    {{ origem.resumo.documentos }} documento{{ origem.resumo.documentos|pluralize }} e
+    {{ origem.resumo.anexos }} anexo{{ origem.resumo.anexos|pluralize }}.</p>
+  <p><a class="acao" href="{% url 'portal:selecao' origem.id %}" target="_blank" rel="noopener">Ver o
+    Edital <span class="oculto">{{ origem.number }}/{{ origem.year }} em nova aba</span></a></p>
+</section>
+
+<form method="post" action="{{ voltar }}">
+  {% csrf_token %}
+  <input type="hidden" name="origem" value="{{ origem.id }}">
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  <input type="hidden" name="confirmar_troca" value="1">
+  <p class="navegacao-etapa">
+    <a href="{{ voltar }}">Voltar sem trocar</a>
+    <button type="submit" class="botao perigoso">Substituir o conteúdo</button>
+  </p>
+</form>
+{% endblock %}

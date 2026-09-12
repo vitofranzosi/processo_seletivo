@@ -1632,3 +1632,92 @@ def test_a_ordem_dos_anexos_e_a_do_conteudo_publicado_e_nada_e_renumerado():
     assert texto.index("ANEXO II") < texto.index("ANEXO I —"), (
         "quem decide a ordem é o campo, e o rótulo continua dizendo o que o autor escreveu"
     )
+
+
+def test_o_documento_publicado_nao_herdou_a_redacao_do_portal():
+    """024, T-010 — a página mudou de leitura; o ato publicado, não.
+
+    A `024` reescreveu como o portal lê cadastro reserva sem vaga imediata: a oferta virou a
+    manchete, e o zero desceu para posição secundária. **O documento não segue essa mudança**, e é
+    de propósito.
+
+    Documento publicado não se reescreve. Se a tradução do PDF acompanhasse a da tela, dois
+    Editais com o mesmo conteúdo publicado — um antes e outro depois desta feature — sairiam com
+    textos diferentes, e a cadeia "dados estruturados → versão homologada → PDF publicado" deixaria
+    de ser demonstrável (Princípio II).
+
+    Não é divergência normativa: o fato é o mesmo, `UNLIMITED`, lido da mesma fonte. É a diferença
+    entre o texto do ato e a leitura de quem decide.
+    """
+    from processo_seletivo.publicacoes.infrastructure.pdf import RESERVA
+
+    assert RESERVA == {"NONE": "não há", "LIMITED": "limitado", "UNLIMITED": "ilimitado"}
+
+
+# ---------------------------------------------------------------------------
+# A regra de corte na frase normativa (014, FR-185)
+# ---------------------------------------------------------------------------
+
+
+ETAPA_GOVERNADA = {"id": "e1", "name": "Entrevista"}
+
+
+def _corte(regra, etapas=None):
+    from processo_seletivo.publicacoes.infrastructure.pdf import _regra_de_corte
+
+    return _regra_de_corte({"cutRule": regra}, etapas or {"e1": ETAPA_GOVERNADA})
+
+
+def test_o_alvo_fixo_vira_frase_normativa_com_o_numero_por_extenso():
+    frase = _corte(
+        {
+            "targetKind": "FIXED",
+            "targetCount": 10,
+            "surplusCount": 0,
+            "governedStage": "e1",
+        }
+    )
+
+    assert frase == "Progridem para Entrevista os 10 (dez) primeiros desta ordem."
+
+
+def test_o_excedente_declarado_entra_na_mesma_frase():
+    """Os suplentes são parte da faixa, e não uma etapa posterior (D-011)."""
+    frase = _corte(
+        {
+            "targetKind": "FIXED",
+            "targetCount": 40,
+            "surplusCount": 20,
+            "governedStage": "e1",
+        }
+    )
+
+    assert frase.endswith("mais 20 (vinte) suplentes.")
+
+
+def test_o_alvo_derivado_nao_copia_o_numero_do_quadro():
+    """A quantidade já está publicada no quadro de vagas, e repeti-la criaria duas respostas."""
+    frase = _corte({"targetKind": "FROM_VACANCY_TABLE", "surplusCount": 0, "governedStage": "e1"})
+
+    assert frase == (
+        "Progridem para Entrevista os primeiros desta ordem, até o número de vagas ofertadas no "
+        "recorte."
+    )
+
+
+def test_o_marco_terminal_nao_afirma_tecnicalidade_no_edital():
+    """`NONE` é declaração do sistema, e não norma do certame: o documento não a imprime."""
+    frase = _corte(
+        {
+            "targetKind": "FIXED",
+            "targetCount": 30,
+            "surplusCount": 0,
+            "governedStage": "NONE",
+        }
+    )
+
+    assert frase == "Progridem os 30 (trinta) primeiros desta ordem."
+
+
+def test_o_marco_que_nao_corta_nao_imprime_nada():
+    assert _corte(None) == ""

@@ -15,11 +15,14 @@ from tests.fixtures.comissao import rascunho_com_etapas
 from tests.fixtures.edital import PROFILE_ID
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
+from tests.performance.escala import escala
 
 pytestmark = [pytest.mark.performance, pytest.mark.django_db(transaction=True)]
 
 MARCO = "00000000-0000-4000-8000-000000000481"
 BUDGET_SECONDS = 2.8
+ESCALA = escala()
+SEMENTE = 5
 
 
 @pytest.fixture
@@ -40,7 +43,7 @@ def edital_em_escala(api_client, manager_headers, process_payload):
         }
     ]
     edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
-    _acrescentar_inscricoes(edital, quantidade=5, inicio=1)
+    _acrescentar_inscricoes(edital, quantidade=SEMENTE, inicio=1)
     return edital
 
 
@@ -76,11 +79,15 @@ def _calcular(edital):
 def test_numero_de_consultas_nao_cresce_ate_mil_participantes(edital_em_escala):
     with CaptureQueriesContext(connection) as pequeno:
         _calcular(edital_em_escala)
-    _acrescentar_inscricoes(edital_em_escala, quantidade=995, inicio=6)
+    _acrescentar_inscricoes(edital_em_escala, quantidade=ESCALA - SEMENTE, inicio=SEMENTE + 1)
     with CaptureQueriesContext(connection) as grande:
         proposta = _calcular(edital_em_escala)
 
-    assert len(proposta["universo"]["participants"]) == 1000
+    print(
+        f"\n[escala] ordenacao: {SEMENTE} → {ESCALA} participantes, "
+        f"{len(pequeno)} → {len(grande)} consultas"
+    )
+    assert len(proposta["universo"]["participants"]) == ESCALA
     assert len(grande) == len(pequeno)
 
 
@@ -89,7 +96,7 @@ def test_tela_de_mil_participantes_fica_abaixo_do_teto(
     client,
     seletor_ligado,
 ):
-    _acrescentar_inscricoes(edital_em_escala, quantidade=995, inicio=6)
+    _acrescentar_inscricoes(edital_em_escala, quantidade=ESCALA - SEMENTE, inicio=SEMENTE + 1)
     identificar(client, "gestora", ["gestor"])
 
     inicio = time.monotonic()
@@ -97,4 +104,5 @@ def test_tela_de_mil_participantes_fica_abaixo_do_teto(
     duracao = time.monotonic() - inicio
 
     assert resposta.status_code == 200
-    assert duracao < BUDGET_SECONDS, f"a tela levou {duracao:.3f}s"
+    print(f"\n[escala] ordenacao: {ESCALA} participantes, tela em {duracao:.3f}s")
+    assert duracao < BUDGET_SECONDS, f"a tela levou {duracao:.3f}s com {ESCALA} participantes"

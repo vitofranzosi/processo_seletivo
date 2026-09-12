@@ -76,6 +76,36 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
    Cada linha tem peso próprio — o título domina, a chamada explica, a meta some no cinza. */
 .secao-vitrine{margin:1.75rem 0 .75rem;font-size:1rem;color:var(--texto-fraco);
   text-transform:uppercase;letter-spacing:.05em}
+/* A consulta da vitrine (024, FR-138 a FR-141). Empilha no celular e alinha quando há espaço; a
+   busca ocupa a linha inteira porque é o campo que mais se usa e o que mais precisa de largura. */
+.consulta{display:flex;flex-wrap:wrap;gap:.75rem 1rem;align-items:flex-end;margin:0 0 1.25rem;
+  padding:1rem;background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  max-width:76rem}
+.consulta .campo{margin:0;display:grid;gap:.2rem;flex:1 1 11rem;min-width:0}
+/* A busca é mais larga que os seletores porque é o campo que mais se usa — mas flui na mesma
+   linha. `flex-basis:100%` parecia a escolha certa e não era: o item **encolhe** para caber ao
+   lado dos outros, e o resultado era uma busca de meia largura com dois seletores à direita e a
+   ordenação sozinha na linha de baixo. */
+.consulta .campo.busca{flex:2 1 17rem}
+.consulta label{font-size:.8125rem;font-weight:600;color:var(--texto-fraco)}
+/* **Altura declarada, e não derivada do conteúdo.** O `input` herda `line-height:1.6` do corpo e
+   soma isso ao padding; o `select` ignora `line-height` e usa a métrica nativa do sistema. Com o
+   mesmo padding e a mesma fonte, os dois saíam com 5px de diferença — e numa fila de quatro
+   controles a diferença aparece de longe.
+   Padding só na horizontal: com `height` fixa, o navegador centra o texto verticalmente sozinho, e
+   somar padding vertical só reintroduziria a divergência que a altura veio resolver. */
+.consulta input,.consulta select{font:inherit;font-size:.9375rem;padding:0 .6rem;height:2.625rem;
+  border:1px solid var(--borda);border-radius:4px;background:var(--branco);color:var(--texto);
+  max-width:100%}
+.consulta .acoes{margin:0;display:flex;align-items:center;gap:.9rem;flex:0 0 auto}
+.consulta .limpar{font-size:.9375rem}
+/* A contagem responde "achou?" antes de a pessoa rolar a lista. `role="status"` para que a
+   resposta também chegue a quem não vê a lista mudar (UX-019). */
+.contagem{margin:0 0 1rem;color:var(--texto-fraco)}
+.contagem strong{color:var(--texto);font-size:1.125rem}
+/* A volta aos resultados, no alto da seleção. Discreta: ela serve a quem veio de uma busca, e não
+   pode disputar com o título da seleção. */
+.voltar{margin:0 0 .75rem;font-size:.9375rem}
 .selecao .chamada{margin:0;font-size:.9375rem;line-height:1.4}
 .selecao .vagas{margin:.35rem 0 0;font-size:.9375rem;display:grid;gap:.1rem}
 .selecao .vagas .rotulo{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;
@@ -88,9 +118,25 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 /* Parece botão e não é: o alvo continua sendo o link do título, estendido a todo o cartão. Um
    segundo elemento clicável aqui daria dois destinos ao teclado para uma decisão só. */
 .convite-da-vitrine{margin:.6rem 0 0}
+/* A marca da situação (024, FR-145). No alto e sempre na mesma posição, para que dois cartões
+   sejam comparáveis sem releitura — e para continuar valendo quando a lista perde os grupos, com
+   consulta ativa. Cor **e** palavra: a cor sozinha não informa quem não a distingue (UX-019). */
+.marca-situacao{margin:0;justify-self:start;font-size:.75rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.04em;border-radius:999px;padding:.15rem .6rem;
+  background:var(--cinza-fundo);color:var(--texto-fraco)}
+.marca-situacao.aberto{background:var(--verde-claro);color:var(--verde-escuro)}
+.marca-situacao.futuro{background:var(--amarelo-fundo);color:var(--amarelo)}
+/* A encerrada não é apagada: Edital encerrado continua sendo ato normativo publicado, e sumir com
+   ele visualmente diria "descartado" onde o certo é "não recebe mais inscrição". */
+.marca-situacao.encerrado{background:var(--cinza-fundo);color:var(--texto-fraco)}
 .acao-aparente{display:inline-block;padding:.5rem .9rem;border-radius:4px;background:var(--verde);
   color:var(--branco);font-weight:600;font-size:.9375rem}
 .selecao:hover .acao-aparente{background:var(--verde-escuro)}
+/* Parece ação e não disputa com a da seleção aberta: o destino é o mesmo cartão, e o que muda é o
+   que espera do outro lado — ler, e não inscrever-se. */
+.acao-aparente.discreta{background:transparent;color:var(--verde-texto);
+  border:1px solid var(--borda);font-weight:600}
+.selecao:hover .acao-aparente.discreta{background:var(--verde-claro);border-color:var(--verde-texto)}
 /* O cartão inteiro é alvo do toque (L8): num celular, mirar duas palavras de título é o tipo de
    precisão que faz errar. O link continua sendo um só — o pseudo-elemento estende a área dele, e
    por isso o teclado e o leitor de tela continuam vendo exatamente um destino. */
@@ -105,6 +151,10 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .perfil{background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:1rem;
   display:grid;grid-template-columns:1fr;gap:.25rem}
 .perfil>h3{margin:0 0 .35rem}
+/* Empilhados em tela estreita, o argumento e a oferta encostavam um no outro: "1 documento que
+   será pedido" colado em "Cadastro reserva" lê-se como uma coisa só. Em tela larga a lateral vai
+   para a coluna da direita e o respiro deixa de ser necessário — daí a margem viver só aqui. */
+.perfil>.lateral-vaga{margin-top:.85rem;padding-top:.85rem;border-top:1px solid var(--borda)}
 /* A ordem do DOM é a ordem da leitura em tela estreita: nome, argumento, e a ação no fim. Em
    tela larga a lateral vai para a coluna da direita, que estava vazia. */
 .perfil dl{margin:.5rem 0 0;display:grid;grid-template-columns:1fr;gap:.25rem .75rem;
@@ -122,6 +172,101 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .vagas-numero strong{font-size:1.75rem;line-height:1}
 .vagas-numero span{font-size:.9375rem;color:var(--texto-fraco)}
 .vagas-numero .reserva{flex-basis:100%}
+/* Cadastro reserva sem vaga imediata (024, FR-136). O título deixa de ser um numeral e passa a ser
+   uma frase, e 28px de "Cadastro reserva" atropelaria a coluna em 375px. O peso continua sendo do
+   que é a oferta; o tamanho cede. */
+.vagas-numero.reserva-primeiro strong{font-size:1.125rem;line-height:1.3;flex-basis:100%}
+.vagas-numero.reserva-primeiro>span{flex-basis:100%}
+/* O que a vaga é: atribuições, carga horária e remuneração (024, FR-134). Rótulo acima do valor,
+   e não ao lado: em 375px uma coluna de rótulos rouba metade da largura de um texto que costuma
+   ser longo — atribuições são um parágrafo, não um campo. */
+.sobre-a-vaga{margin:.75rem 0 0;display:grid;gap:.15rem}
+.sobre-a-vaga dt{font-size:.8125rem;font-weight:600;color:var(--texto-fraco);
+  text-transform:uppercase;letter-spacing:.03em}
+.sobre-a-vaga dd{margin:0 0 .6rem}
+.sobre-a-vaga dd:last-of-type{margin-bottom:0}
+/* O que acontece ao tocar o convite (024, FR-137). Discreto de propósito: informa, e não adverte —
+   não é obstáculo, é o passo seguinte dito antes da hora. */
+.antes-de-entrar{margin:.5rem 0 0;font-size:.8125rem;color:var(--texto-fraco);line-height:1.4}
+
+/* O histórico normativo (024, FR-129 a FR-132). Duas exigências de desenho puxam este bloco:
+   ele precisa ser **evidente** — quem não sabe que o Edital mudou não vai procurar — e precisa
+   ser **secundário**, porque a página existe para decidir sobre a vaga, não para auditar o ato. */
+.vigencia-do-conteudo{margin:.75rem 0 0;padding:.7rem .9rem;border-radius:6px;
+  background:var(--amarelo-fundo);border-left:3px solid var(--amarelo);font-size:.9375rem}
+/* **A lista de documentos, e não cartões** (024). Três cartões grandes com justificativa e link de
+   45 caracteres comiam um terço da página, numa tela que existe para responder "tem vaga para
+   mim?". Uma linha por documento, com data — que é como todo portal de concurso os apresenta, e
+   como o candidato já sabe ler. */
+.documentos-do-edital{list-style:none;margin:0;padding:0;display:grid;gap:.15rem}
+.documento-publicado{padding:.55rem 0;border-bottom:1px solid var(--borda)}
+.documento-publicado:last-child{border-bottom:0}
+.documento-publicado>a{font-weight:600;text-decoration:none}
+.documento-publicado>a:hover{text-decoration:underline}
+.documento-publicado .quando{font-weight:400;color:var(--texto-fraco);font-size:.875rem;
+  margin-left:.35rem}
+.documento-publicado .vigencia{display:block;color:var(--amarelo);font-size:.875rem}
+/* Fechado por padrão: quem quer o arquivo pega o arquivo; quem quer conferir o que mudou abre. */
+.o-que-mudou>summary{cursor:pointer;color:var(--verde-texto);font-size:.875rem;width:fit-content;
+  margin-top:.25rem}
+.o-que-mudou>summary:hover{text-decoration:underline}
+.o-que-mudou .justificativa{margin:.4rem 0 0;font-size:.9375rem}
+.alteracoes{list-style:none;margin:.4rem 0 .3rem;padding:0;display:grid;gap:.3rem;font-size:.9375rem}
+.alteracoes li{padding-left:.9rem;border-left:2px solid var(--borda)}
+.alteracoes .onde{font-weight:600}
+.alteracoes .operacao{display:inline-block;margin-right:.35rem;font-size:.6875rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.04em;border-radius:3px;padding:.05rem .35rem;
+  background:var(--cinza-fundo);color:var(--texto-fraco);vertical-align:.05em}
+/* Removido é o que mais importa achar numa lista de dez: alguém pode ter perdido um requisito que
+   cumpria, ou um Anexo que já preencheu. */
+.alteracoes .operacao.removido{background:var(--vermelho-fundo);color:var(--vermelho)}
+.alteracoes .operacao.acrescentado{background:var(--verde-claro);color:var(--verde-escuro)}
+
+/* **O corpo da seleção em duas colunas** (024). O cronograma ocupava uma faixa de largura total
+   para dizer três datas, e empurrava as vagas para fora da primeira tela. Ao lado, ele responde
+   "em que ponto está?" sem disputar espaço com o que traz alguém à página.
+
+   As áreas nomeadas existem para que a **ordem de leitura no celular** não seja a consequência
+   acidental da ordem das colunas: empilhado, o cronograma cai entre as vagas e os documentos, que
+   é a ordem das perguntas de quem decide. */
+.corpo-da-selecao{display:grid;gap:0 2rem;
+  grid-template-areas:"vagas" "sorteio" "cronograma" "documentos"}
+.vagas-da-selecao{grid-area:vagas;min-width:0}
+/* O sorteio **acima** do cronograma na coluna lateral, e logo depois das vagas no celular: quando
+   ele existe, é a pergunta mais urgente da página — "a lista já fechou? quando é?" —, e ela vem
+   antes do calendário inteiro (021). Sem sorteio a área fica vazia, e uma linha vazia de altura
+   automática não ocupa nada. */
+.sorteio-da-selecao{grid-area:sorteio;min-width:0}
+.cronograma-da-selecao{grid-area:cronograma;min-width:0}
+.documentos-da-selecao{grid-area:documentos;min-width:0}
+.sorteio-da-selecao .sorteio+.sorteio{margin-top:1.25rem;padding-top:1.25rem;
+  border-top:1px solid var(--borda)}
+.sorteio-da-selecao h3{margin:0 0 .35rem;font-size:1rem}
+.acoes-do-sorteio{margin:.5rem 0 0;padding:0;list-style:none}
+.acoes-do-sorteio li+li{margin-top:.35rem}
+@media (min-width:60rem){
+  .corpo-da-selecao{grid-template-columns:minmax(0,1fr) 19rem;
+    grid-template-areas:"vagas sorteio" "vagas cronograma" "documentos cronograma"}
+  /* O título da coluna lateral alinha com o da principal: sem isto, o `margin-top` de `h2` deixava
+     os dois em alturas diferentes e a lateral parecia ter escorregado. */
+  .cronograma-da-selecao>h2{margin-top:1.75rem}
+  .sorteio-da-selecao>h2{margin-top:1.75rem}
+}
+
+/* O cabeçalho de identidade: a marca da situação acima do título, e o bloco inteiro com respiro
+   próprio para separar "que seleção é esta" de "o que ela oferece". */
+.cabecalho-da-selecao{margin:0 0 1.5rem;padding:0 0 1.25rem;border-bottom:1px solid var(--borda)}
+.cabecalho-da-selecao h1{margin-top:.35rem}
+.cabecalho-da-selecao .sub{margin-bottom:.75rem}
+.cabecalho-da-selecao .descricao{margin:.5rem 0 0;max-width:var(--leitura)}
+.acoes-da-selecao{margin:1rem 0 0}
+
+/* O resultado ganha peso quando as inscrições não estão mais abertas: é o que a pessoa veio
+   buscar. Com inscrição correndo, ele continua ali e não disputa com a vaga. */
+.resultados{margin:0 0 1.5rem}
+.resultados.em-destaque{background:var(--sucesso-fundo);border-left:3px solid var(--sucesso);
+  border-radius:0 6px 6px 0;padding:.85rem 1rem}
+.resultados.em-destaque h2{margin-top:0}
 .requisitos{margin:.25rem 0 0;padding-left:1.25rem}
 .documento{display:inline-block;margin-top:.5rem;padding:.6rem 1rem;border-radius:4px;
   background:var(--verde);color:var(--branco);text-decoration:none;font-weight:600}
@@ -378,6 +523,13 @@ details.integridade .resumos{list-style:none;margin:.75rem 0 0;padding:0;display
    neutro — o mesmo do "Nada registrado ainda" —, e o cronograma dizia com duas aparências o
    que tem três significados. Passado que aconteceu é afirmação, e não ausência. */
 .linha-do-tempo .marco.concluido{border-left-color:var(--sucesso)}
+/* "Acontecendo agora" no evento em curso (024, UX-019). O peso da fonte e a cor da borda diziam
+   qual era o evento corrente, e nenhum dos dois chega a quem lê com leitor de tela — nem a quem
+   não distingue a cor. A etiqueta diz em texto o que o desenho dizia sozinho. */
+.linha-do-tempo .agora{display:inline-block;margin-left:.5rem;font-size:.75rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.04em;color:var(--verde-texto);
+  background:var(--verde-claro);border-radius:999px;padding:.1rem .5rem;
+  vertical-align:middle}
 
 /* As duas declarações do envio: é o aceite que precisa significar alguma coisa, e ele saía
    como parágrafo comum, com a marca desalinhada do texto que ela afirma. */
@@ -512,7 +664,7 @@ form.convite{margin:.75rem 0 0}
     align-items:start}
   .perfil>h3{grid-column:1/-1}
   .perfil>.corpo-vaga{grid-column:1}
-  .perfil>.lateral-vaga{grid-column:2;padding-top:.2rem}
+  .perfil>.lateral-vaga{grid-column:2;margin-top:0;padding-top:.2rem;border-top:0}
   .lateral-vaga form.convite,.lateral-vaga p.convite{margin:.75rem 0 0}
   .lateral-vaga .principal{width:100%}
   .dados{grid-template-columns:auto 1fr}
@@ -529,6 +681,10 @@ form.convite{margin:.75rem 0 0}
 .resultado thead th{font-size:.8125rem;color:var(--texto-fraco);text-transform:uppercase;
   letter-spacing:.02em;white-space:nowrap}
 .resultado td:last-child{text-align:right;white-space:nowrap}
+/* A legenda da tabela, quando ela é visível (021): é frase, e não rótulo — alinhada à esquerda e
+   com a mesma cor de texto secundário do resto do portal. */
+.resultado caption{text-align:left;color:var(--texto-fraco);font-size:.875rem;
+  padding:0 .75rem .5rem}
 /* O empate residual é dito em texto, e este é só o peso visual dele: quem não distingue a cor
    continua lendo "(posição compartilhada)" na própria célula (FR-014, FR-052). */
 .compartilhada{color:var(--texto-fraco);font-size:.8125rem;white-space:nowrap}
@@ -565,6 +721,36 @@ form.convite{margin:.75rem 0 0}
 ul.anexos-publicados{list-style:none;margin:.35rem 0 0;padding:0;display:flex;flex-direction:column;
   align-items:flex-start;gap:.4rem}
 ul.anexos-publicados .formato{font-weight:400;opacity:.75}
+
+/* O sorteio auditável (021). Quatro regras, e cada uma responde a uma pergunta de quem lê.
+
+   `.resumos` e `.conferencias` são listas de definição: rótulo e valor, empilhados, com o valor em
+   monoespaçada quando é resumo criptográfico — 64 caracteres hexadecimais precisam poder ser
+   comparados caractere a caractere com o que a pessoa tem na tela ao lado.
+
+   `.conferido` e `.divergente` dizem o desfecho **em cor e em texto**: a página já escreve
+   "confere" e "não confere" no próprio rótulo, e a cor só reforça. Quem não enxerga cor lê a mesma
+   informação.
+
+   `.onde` é o local do evento na linha do tempo — quando o Edital o declarou. */
+.resumos{margin:.75rem 0 0;padding:0}
+.resumos dt{font-weight:600;font-size:.875rem;color:var(--texto-fraco);margin-top:.6rem}
+.resumos dd{margin:.15rem 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:.8125rem;overflow-wrap:anywhere}
+.conferencias{margin:.75rem 0 0;padding:0}
+.conferencias dt{font-weight:600;margin-top:.75rem}
+.conferencias dt.conferido{color:var(--verde-texto)}
+.conferencias dt.divergente{color:var(--vermelho)}
+.conferencias dd{margin:.15rem 0 0;color:var(--texto-fraco)}
+.onde{display:block;font-size:.875rem;color:var(--texto-fraco);overflow-wrap:anywhere}
+
+
+/* A proveniência do sorteio no resultado publicado (021, FR-046). Ela vem **antes** da tabela: quem
+   abre a página precisa saber de onde a ordem veio antes de ler a ordem. */
+.proveniencia-do-sorteio{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem;margin:1.25rem 0}
+.proveniencia-do-sorteio h2{margin:0 0 .5rem;font-size:1.0625rem}
+
 </style>
 </head>
 <body>

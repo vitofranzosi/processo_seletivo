@@ -46,6 +46,7 @@ def render_resultado_pdf(conteudo: dict) -> bytes:
     _timbre(composicao, cabecalho)
     _identificacao(composicao, cabecalho)
     _lista(composicao, conteudo["posicoes"])
+    _sorteio(composicao, cabecalho)
     _autoridade(composicao, cabecalho)
     _integridade(composicao, conteudo)
     return render_documento(
@@ -174,6 +175,45 @@ def _autoridade(composicao, cabecalho):
     )
     composicao.escrever(
         cabecalho["signatario_cargo"], tamanho=CORPO_NOTA, alinhamento=CENTRO, antes=2.0
+    )
+
+
+def _sorteio(composicao, cabecalho):
+    """A proveniência do sorteio, quando a ordem veio de um (021, FR-046).
+
+    **Cinco dados, e cada um responde a uma pergunta de quem lê o papel.** A identidade diz qual
+    ato foi; o algoritmo, sob que regra; a semente, de onde veio o acaso; e os dois resumos
+    permitem conferir que a relação e o manifesto publicados são os que este documento cita — sem
+    pedir nada à instituição.
+
+    Documento de ato **computado** não traz esta seção, e não traz porque a chave não existe: um
+    bloco vazio afirmaria que aquele resultado não foi sorteado, em milhares de atos que nunca
+    tiveram a pergunta colocada.
+    """
+    sorteio = cabecalho.get("sorteio")
+    if not sorteio:
+        return
+    composicao.espaco(ENTRE_SECOES)
+    composicao.regua()
+    composicao.escrever(
+        "Ordem constituída por sorteio público",
+        tamanho=CORPO_SECAO,
+        fonte=NEGRITO,
+        antes=ANTES_DE_LINHA + 3,
+    )
+    _par(composicao, "Sorteio", sorteio["id"])
+    _par(composicao, "Algoritmo", sorteio["algoritmo"])
+    _par(composicao, "Semente", sorteio["semente"])
+    _par(composicao, "Resumo da relação de habilitados", sorteio["relacao_resumo"])
+    _par(composicao, "Resumo do método declarado", sorteio["metodo_resumo"])
+    _par(composicao, "Resumo do manifesto", sorteio["manifesto_resumo"])
+    composicao.escrever(
+        "A ordem acima foi produzida por sorteio, a partir da relação de habilitados congelada "
+        "antes de a semente existir. Qualquer pessoa pode reproduzi-la: o manifesto e a relação "
+        "estão publicados no portal, e os resumos acima permitem conferir que são os mesmos.",
+        tamanho=CORPO_NOTA,
+        antes=ANTES_DE_LINHA,
+        justificar=True,
     )
 
 

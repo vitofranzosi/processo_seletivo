@@ -503,7 +503,16 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # ele executa. Sem ela, o cumprimento da providência a jusante só poderia ser presumido
         # ("publicou-se ato novo"), e um ato emitido por razão alheia encerraria a pendência sem
         # que ninguém tivesse corrigido o vício reconhecido (018, T-015, FR-112).
-        "classificacao": 4,
+        # **Sobe para 5 com a 021**, e a justificativa é própria: a `classificacao/0005` acrescenta
+        # `origem` e `lista_id` ao `AtoDeOrdenacao` e parte `uq_ato_raiz_por_marco` em duas
+        # constraints parciais. Não é a 017 tocando o que lê — é a 021 dizendo que a ordem pode vir
+        # de sorteio e que três listas de concorrência produzem três atos raiz no mesmo marco. A
+        # metade sem lista continua sob exatamente a constraint que já a governava (021, D-006).
+        # **Sobe para 6 com a 014**, e a justificativa é própria: a `classificacao/0006` cria o
+        # `Corte` e o `ItemDoCorte` — a faixa da ordem que progride para a Etapa governada, com as
+        # duas travas append-only que a 015 estabeleceu para o ato. Não é a 017 tocando o que
+        # lê: é outra feature, dizendo quem prossegue no certame (014, FR-192, FR-223).
+        "classificacao": 6,
         # **Sobe para 5 com a 018**, e a justificativa é a que este teste existe para exigir: a
         # `resultados/0005` dá sucessão ao `ResultadoEtapa` — o único elo da cadeia que não a
         # tinha —, para que um recurso deferido possa superar um Resultado sem alterá-lo. Não é
@@ -517,11 +526,43 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # Documento Exigido ao modelo; a `0013` põe no banco a imutabilidade do artefato já
         # publicado. São duas porque protegem coisas diferentes — criar tabela e trancar o que ela
         # guarda —, e a segunda é condicional ao estado, como a `publicacoes/0007` (020, FR-010).
-        "editais": 13,
+        # **Sobe para 15 com a 021**, e são duas migrations pela mesma razão que os degraus são
+        # dois. A `editais/0014` acrescenta `metodo_de_sorteio` ao marco classificatório — o degrau
+        # 10 —, mesmo lugar e mesma razão da janela recursal do degrau 8: quem declara o método é o
+        # Edital, e alterá-lo é Retificação. Uma tabela de método no app do sorteio seria registro
+        # operacional que se diz normativo. A `editais/0015` acrescenta `location` ao Evento do
+        # Cronograma — o degrau 11 —, que é elaboração e não sorteio: onde o evento acontece é dado
+        # do Edital, e vale para qualquer evento, sorteie ele ou não (021, D-008, D-013, FR-014).
+        # **Sobe para 16 com a 025**: a `editais/0016` cria a `LinhaDoQuadroDeVagas` — a
+        # repartição das vagas imediatas do Perfil por lista de concorrência, o degrau 12. É
+        # elaboração pela mesma razão das duas anteriores: quem declara quantas vagas cabem em cada
+        # recorte é o Edital, e alterá-lo depois de publicado é Retificação. Aditiva: cria tabela e
+        # duas constraints parciais, e não toca em campo algum da `RegraNormativa` (025, FR-174).
+        # **Sobe para 17 com a 014**: a `editais/0017` acrescenta `regra_de_corte` ao marco
+        # classificatório — o degrau 13. Elaboração pela mesma razão das anteriores: quem declara
+        # como o certame corta é o Edital, e alterá-lo depois de publicado é Retificação. Aditiva:
+        # uma coluna com default, e não toca em nada do que já existe (014, FR-178, FR-184).
+        # **Sobe para 18 com a 014**: a `editais/0018` acrescenta `modalidade_ampla_concorrencia`
+        # ao Perfil — qual das Modalidades declaradas corresponde à linha geral do quadro. É
+        # elaboração pela razão das anteriores, e é o que permite exigir linha de quadro para todo
+        # recorte que o marco ordena sem tornar impublicável o Edital que declara "Ampla
+        # concorrência" como Modalidade (014, D-014).
+        # **Sobe para 19 com a 016**: a `editais/0019` acrescenta `especie_de_reversao` ao Perfil.
+        # É elaboração pela razão das anteriores — o gatilho da reversão é declarado pelo Edital, e
+        # não inferido do estado das listas, porque o 28/2026 e o 57/2026 o escrevem de modo
+        # diferente e escolher por eles fixaria norma em ato publicado (016, D-007).
+        "editais": 19,
         "publicacoes": 8,
         # **Sobe para 2 com a 018**: a `divulgacao/0002` acrescenta os três campos da declaração
         # expressa de encerramento do prazo e a constraint que os mantém inteiros (FR-085).
-        "divulgacao": 2,
+        #
+        # **Sobe para 3 com a 021**, e esta é a que mais precisava da conversa que este teste
+        # força. A `divulgacao/0003` acrescenta `lista_id` à `PublicacaoResultado` e parte
+        # `uq_publicacao_raiz_por_marco` em duas parciais. Não é a 017 crescendo por dentro: é a
+        # dimensão da lista de concorrência, que a 021 abriu no ato, atravessando até a divulgação
+        # — três atos raiz num marco exigem três publicações, e a constraint de hoje recusava a
+        # segunda. A metade sem lista mantém nome e garantia (021, D-015, FR-068).
+        "divulgacao": 3,
     }
     for app, quantas in esperadas.items():
         migrations = sorted((raiz / app / "migrations").glob("[0-9]*.py"))
@@ -585,3 +626,102 @@ def test_a_011_nao_altera_o_esquema_de_outros_apps():
         corpo = arquivo.read_text()
         for app_alheio in ("editais", "publicacoes", "auditoria", "inscricoes"):
             assert f'"{app_alheio}' not in corpo.lower(), f"{arquivo.name} toca {app_alheio}"
+
+
+# Os apps que a **022** lê, e nada além de ler. São todos os que compõem o Pulso e os cinco
+# sinais: a supervisão observa a fronteira entre eles, e por isso conhece muitos — mas não é dona
+# de fato nenhum (022, T-001).
+APPS_QUE_A_022_NAO_TOCA = (
+    "avaliacoes",
+    "classificacao",
+    "comissoes",
+    "divulgacao",
+    "editais",
+    "inscricoes",
+    "processos",
+    "publicacoes",
+    "recursos",
+    "resultados",
+)
+
+
+def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
+    """FR-007 e SC-014: a supervisão não introduz estrutura de dados persistente nenhuma.
+
+    A tentação concreta que isto bloqueia tem nome, e ela é a mais sedutora da feature: gravar o
+    sinal. Uma tabela de "condições de atenção" tornaria a região barata de renderizar e cara de
+    manter — passaria a existir estado a sincronizar com sete agregados, e a primeira divergência
+    entre o gravado e o real seria invisível, porque a página leria o gravado.
+
+    `D-007` faz da necessidade de persistir estado um motivo para **revisar a spec**, e não para
+    escrever migration. A guarda é por contagem, no formato que a 017 e a 011 já usam: qualquer
+    migration nova nesses apps vem de outra feature, com justificativa própria — que é exatamente
+    a conversa que este teste força.
+    """
+    import pathlib as _pathlib
+
+    raiz = _pathlib.Path(__file__).resolve().parents[2] / "processo_seletivo"
+    esperadas = {
+        "avaliacoes": 3,
+        # **Sobe para 5 com a 021**: a `classificacao/0005` dá ao ato de ordenação a origem e a
+        # lista de concorrência — o ato passa a poder nascer de um sorteio, e não só de nota.
+        # **Sobe para 6 com a 014**, e a justificativa é própria: a `classificacao/0006` cria o
+        # `Corte` e o `ItemDoCorte` — a faixa da ordem que progride para a Etapa governada, com as
+        # duas travas append-only que a 015 estabeleceu para o ato. Não é a 022 tocando o que
+        # lê: é outra feature, dizendo quem prossegue no certame (014, FR-192, FR-223).
+        "classificacao": 6,
+        "comissoes": 1,
+        # **Sobe para 3 com a 021**: a `divulgacao/0003` publica por lista de concorrência.
+        "divulgacao": 3,
+        # **Sobe para 15 com a 021**: a `editais/0014` põe o método de sorteio no marco e a `0015`
+        # o local do Evento. As duas são elaboração — quem declara é o Edital —, e nenhuma delas é
+        # da supervisão.
+        # **Sobe para 16 com a 025**: a `editais/0016` cria a `LinhaDoQuadroDeVagas` — a
+        # repartição das vagas imediatas do Perfil por lista de concorrência, o degrau 12. É
+        # elaboração pela mesma razão das duas anteriores: quem declara quantas vagas cabem em cada
+        # recorte é o Edital, e alterá-lo depois de publicado é Retificação. Aditiva: cria tabela e
+        # duas constraints parciais, e não toca em campo algum da `RegraNormativa` (025, FR-174).
+        # **Sobe para 17 com a 014**: a `editais/0017` acrescenta `regra_de_corte` ao marco
+        # classificatório — o degrau 13. Elaboração pela mesma razão das anteriores: quem declara
+        # como o certame corta é o Edital, e alterá-lo depois de publicado é Retificação. Aditiva:
+        # uma coluna com default, e não toca em nada do que já existe (014, FR-178, FR-184).
+        # **Sobe para 18 com a 014**: a `editais/0018` acrescenta `modalidade_ampla_concorrencia`
+        # ao Perfil — qual das Modalidades declaradas corresponde à linha geral do quadro. É
+        # elaboração pela razão das anteriores, e é o que permite exigir linha de quadro para todo
+        # recorte que o marco ordena sem tornar impublicável o Edital que declara "Ampla
+        # concorrência" como Modalidade (014, D-014).
+        # **Sobe para 19 com a 016**: a `editais/0019` acrescenta `especie_de_reversao` ao Perfil.
+        # É elaboração pela razão das anteriores — o gatilho da reversão é declarado pelo Edital, e
+        # não inferido do estado das listas, porque o 28/2026 e o 57/2026 o escrevem de modo
+        # diferente e escolher por eles fixaria norma em ato publicado (016, D-007).
+        "editais": 19,
+        "inscricoes": 4,
+        "processos": 2,
+        "publicacoes": 8,
+        "recursos": 1,
+        "resultados": 5,
+    }
+    assert set(esperadas) == set(APPS_QUE_A_022_NAO_TOCA)
+    for app, quantas in esperadas.items():
+        migrations = sorted((raiz / app / "migrations").glob("[0-9]*.py"))
+        assert len(migrations) == quantas, (
+            f"{app} tem {len(migrations)} migrations, e a 022 não acrescenta nenhuma a ele "
+            f"(FR-007). Se a mudança é legítima, ela é de outra feature — e este número sobe "
+            f"junto com a justificativa."
+        )
+
+
+def test_a_022_nao_cria_app_com_migrations_proprias():
+    """T-001: app sem modelo criaria a expectativa de que um dia terá.
+
+    A `011` abriu app novo porque trouxe agregado; a `022` não traz nenhum. Este teste é a metade
+    que a contagem acima não cobre: ela vigia os apps que existem, e este vigia o que não existe.
+    """
+    import pathlib as _pathlib
+
+    raiz = _pathlib.Path(__file__).resolve().parents[2] / "processo_seletivo"
+
+    assert not (raiz / "supervisao").exists(), (
+        "a supervisão é módulo de leitura em `interface/`, e não app: ela não é dona de fato "
+        "persistido algum (FR-007, T-001)."
+    )

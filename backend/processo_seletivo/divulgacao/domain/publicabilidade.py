@@ -24,7 +24,7 @@ código da recusa sem repetir aqui a regra que vive aqui.
 
 from dataclasses import dataclass, field
 
-from processo_seletivo.classificacao.application.selectors import estado_do_marco
+from processo_seletivo.classificacao.application.selectors import ORIGEM_SORTEIO, estado_do_marco
 
 INFORMACAO, AVISO, IMPEDIMENTO = "informacao", "aviso", "impedimento"
 
@@ -39,6 +39,11 @@ MARCO_REMOVIDO = "publication_milestone_removed"
 # uma ordem que já se sabe incompleta — e a pessoa reabilitada apareceria como ausente da lista, o
 # que é pior do que não publicar (FR-079).
 REINGRESSO_PENDENTE = "publication_reentry_pending"
+# A quinta, e a única que a 014 acrescenta. Ela também não é sobre o ato de ordenação: é sobre a
+# **faixa** que ele alimentou. Divulgar um resultado que depende de um corte que o sistema já sabe
+# estar para trás é divulgar uma faixa que a geração sucessora vai mudar — e o que se publicou não
+# se despublica (014, FR-219).
+CORTE_OBSOLETO = "publication_cut_stale"
 # As três da definitividade. Elas impedem **só** a natureza definitiva: publicar como preliminar
 # com recurso pendente é exatamente o caminho normal — é o preliminar que abre o prazo (FR-083).
 RECURSO_PENDENTE = "publication_appeal_pending"
@@ -49,6 +54,7 @@ DECLARACAO_EXIGIDA = "publication_deadline_declaration_required"
 DECLARACAO_RECUSADA = "publication_deadline_declaration_refused"
 
 STATUS = {
+    CORTE_OBSOLETO: 422,
     SUCEDIDO: 409,
     DESATUALIZADO: 422,
     MARCO_REMOVIDO: 422,
@@ -81,6 +87,10 @@ CAMINHO_DO_REINGRESSO = (
 )
 
 MENSAGENS = {
+    CORTE_OBSOLETO: (
+        "A faixa que este resultado reflete está para trás: o corte vigente deste marco ficou "
+        "obsoleto. Emita a geração sucessora antes de divulgar."
+    ),
     SUCEDIDO: (
         "Este ato foi sucedido por outro e não é mais o vigente do marco. " + CAMINHO_DO_SUCESSOR
     ),
@@ -126,6 +136,7 @@ MENSAGENS = {
 # Quais recusas admitem o remédio que a mensagem nomeia. É o que a tela lê para decidir se oferece
 # o caminho — e não o código da recusa, que a obrigaria a repetir aqui a regra do domínio.
 ADMITE_SUCESSOR = {
+    CORTE_OBSOLETO: True,
     SUCEDIDO: True,
     DESATUALIZADO: True,
     MARCO_REMOVIDO: False,
@@ -205,7 +216,7 @@ def reingressos_pendentes(*, edital, marco, at=None):
     return pendentes
 
 
-def aferir(*, edital, marco_id, ato, sucede=None, at=None, natureza=""):
+def aferir(*, edital, marco_id, ato, sucede=None, at=None, natureza="", lista_id=None):
     """Afere a publicabilidade de `ato` contra o estado atual do marco.
 
     **`natureza` é a pretendida, e sem ela a verificação não distingue o que impede a definitiva do
@@ -229,12 +240,17 @@ def aferir(*, edital, marco_id, ato, sucede=None, at=None, natureza=""):
     Quem chama sem `sucede` — o comando, que precisa saber apenas se recusa — recebe `informacao`
     no lugar de `aviso`, e a decisão dele é a mesma nos dois casos.
     """
-    estado = estado_do_marco(edital=edital, marco_id=marco_id, at=at)
+    estado = estado_do_marco(edital=edital, marco_id=marco_id, at=at, lista_id=lista_id)
+    # **Ato de sorteio não se afere recomputando** (021, FR-069, R-014). Ele também não é
+    # recomputável, e pela razão oposta: não falta regra, falta cabimento — recalcular por Etapas
+    # produziria uma ordem que não é a dele. A obsolescência dele já veio decidida no estado, pela
+    # sucessão da relação que o originou, e é ela que os degraus abaixo consomem.
+    sorteado = estado.get("origem") == ORIGEM_SORTEIO
 
     # **Primeiro o marco removido.** Sem regra vigente não há com que comparar, e as outras duas
     # perguntas não se colocam: `estado_do_marco` devolve `recomputavel=False` e uma divergência
     # de `regra_ausente` justamente para dizer isso.
-    if not estado["recomputavel"]:
+    if not sorteado and not estado["recomputavel"]:
         return Afericao(
             IMPEDIMENTO,
             MARCO_REMOVIDO,
@@ -257,7 +273,12 @@ def aferir(*, edital, marco_id, ato, sucede=None, at=None, natureza=""):
             ADMITE_SUCESSOR[SUCEDIDO],
         )
 
-    pendentes = reingressos_pendentes(edital=edital, marco=estado.get("marco"), at=at)
+    # O reingresso pendente é pergunta sobre **Etapas**: falta Resultado na Etapa seguinte para
+    # quem um recurso reabilitou. Num marco sorteado ela é categoria errada — a ordem não vem de
+    # Etapa —, e a mudança de universo que importa ali já aparece como relação sucedida.
+    pendentes = (
+        {} if sorteado else reingressos_pendentes(edital=edital, marco=estado.get("marco"), at=at)
+    )
     if pendentes:
         # **Antes da obsolescência**, e de propósito: quem lê precisa saber que o trabalho está na
         # Etapa, e não em emitir outro ato. Emitir sucessor aqui produziria o mesmo ato incompleto.
@@ -270,9 +291,32 @@ def aferir(*, edital, marco_id, ato, sucede=None, at=None, natureza=""):
             ADMITE_SUCESSOR[REINGRESSO_PENDENTE],
         )
 
+    # **Antes da definitividade e antes da obsolescência do ato**: o corte para trás é trabalho de
+    # quem emite a geração sucessora, e dizê-lo primeiro entrega o próximo passo a quem lê — que é
+    # o critério de ordem que esta função já segue.
+    corte_para_tras = _corte_obsoleto(edital=edital, estado=estado, at=at, lista_id=lista_id)
+    if corte_para_tras:
+        return Afericao(
+            IMPEDIMENTO,
+            CORTE_OBSOLETO,
+            MENSAGENS[CORTE_OBSOLETO],
+            STATUS[CORTE_OBSOLETO],
+            corte_para_tras,
+            ADMITE_SUCESSOR[CORTE_OBSOLETO],
+        )
+
     if str(natureza).upper() == "DEFINITIVA":
         impedimento = _impedimento_da_definitiva(
-            edital=edital, marco_id=marco_id, marco=estado.get("marco"), ato=ato, at=at
+            edital=edital,
+            marco_id=marco_id,
+            marco=estado.get("marco"),
+            ato=ato,
+            at=at,
+            # **O eixo da lista atravessa até aqui** (021, D-015). Sem ele, `_janela_aberta`
+            # procurava a publicação da ampla concorrência: havendo só uma preliminar de PPI, a
+            # consulta devolvia `None`, a janela não existia, e a definitiva da PPI era liberada
+            # imediatamente — antes de qualquer prazo recursal.
+            lista_id=lista_id,
         )
         if impedimento is not None:
             codigo, mensagem = impedimento
@@ -301,7 +345,29 @@ def aferir(*, edital, marco_id, ato, sucede=None, at=None, natureza=""):
     return Afericao(INFORMACAO, divergencias=[])
 
 
-def _impedimento_da_definitiva(*, edital, marco_id, marco, ato, at=None):
+def _corte_obsoleto(*, edital, estado, at=None, lista_id=None):
+    """As causas, quando a geração vigente do corte deste marco está para trás (014, FR-219).
+
+    Devolve a lista de causas — vazia quando não há corte, ou quando ele está em dia. O import é
+    local pela razão de sempre neste módulo: a divulgação lê a classificação, e não o contrário.
+    """
+    from processo_seletivo.classificacao.application.corte import estado_do_corte
+
+    marco = estado.get("marco") or {}
+    perfil = estado.get("perfil") or {}
+    if not marco.get("id") or not perfil.get("id"):
+        return []
+    estado_da_faixa = estado_do_corte(
+        edital=edital,
+        perfil_id=perfil["id"],
+        marco_id=marco["id"],
+        lista_id=lista_id,
+        at=at,
+    )
+    return estado_da_faixa["causas"] if estado_da_faixa["obsoleto"] else []
+
+
+def _impedimento_da_definitiva(*, edital, marco_id, marco, ato, at=None, lista_id=None):
     """Os três fatos que só a definitiva enfrenta, na ordem em que a instituição os resolve.
 
     Primeiro o recurso pendente, porque enquanto há disputa em aberto nada mais importa; depois a
@@ -335,7 +401,7 @@ def _impedimento_da_definitiva(*, edital, marco_id, marco, ato, at=None):
         ato=ato,
     ):
         return (PROVIDENCIA_PENDENTE, MENSAGENS[PROVIDENCIA_PENDENTE])
-    fecha = _janela_aberta(edital=edital, marco_id=marco_id, marco=marco, at=at)
+    fecha = _janela_aberta(edital=edital, marco_id=marco_id, marco=marco, at=at, lista_id=lista_id)
     if fecha is not None:
         # **A mensagem diz o instante**, e não só que há prazo: quem lê precisa saber quando voltar,
         # e "aguarde" sem data manda a pessoa tentar de novo às cegas.
@@ -349,7 +415,7 @@ def _quando(momento):
     return momento.astimezone(ZONA).strftime("%d/%m/%Y às %Hh%M")
 
 
-def _janela_aberta(*, edital, marco_id, marco, at):
+def _janela_aberta(*, edital, marco_id, marco, at, lista_id=None):
     """O instante em que o prazo declarado fecha, se ele ainda corre — senão `None` (FR-082).
 
     **Onde há janela declarada, o sistema verifica** — e é justamente por isso que a declaração
@@ -363,7 +429,7 @@ def _janela_aberta(*, edital, marco_id, marco, at):
 
     if computavel((marco or {}).get("appealWindow")) is None:
         return None
-    vigente = vigente_do_marco(edital=edital, marco_id=marco_id)
+    vigente = vigente_do_marco(edital=edital, marco_id=marco_id, lista_id=lista_id)
     computada = janela_da_publicacao(vigente, (marco or {}).get("appealWindow"))
     if computada is None:
         return None

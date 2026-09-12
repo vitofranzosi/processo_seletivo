@@ -18,7 +18,6 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods
 
@@ -69,6 +68,7 @@ from processo_seletivo.inscricoes.domain.titularidade import exigir_titularidade
 from processo_seletivo.inscricoes.infrastructure import comprovante_pdf
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.portal import identidade as identidade_do_candidato
+from processo_seletivo.portal import leitura
 from processo_seletivo.portal.arquivos import entregar_ao_titular
 from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.recursos.application.interpor import objetos_recorriveis
@@ -77,6 +77,7 @@ from processo_seletivo.resultados.application.selectors import resultados_visive
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.arquivos import tamanho_legivel
 from processo_seletivo.shared.http import marcar_como_privada, resposta_privada
+from processo_seletivo.sorteios.application.selectors import sorteios_do_edital
 
 # O limite da coluna, aplicado antes de a gravação chegar ao banco.
 LIMITE_DO_TELEFONE = 30
@@ -158,10 +159,48 @@ def _perfil(perfil):
         "vagas": vagas,
         "reserva": RESERVA.get(perfil.get("reserveType"), ""),
         "requisitos": perfil.get("requirements") or [],
+        # **O que a vaga é, e não só o que ela exige** (024, FR-134). Os três estavam no conteúdo
+        # publicado desde a `007` e não apareciam em tela nenhuma do portal: quem decidia entre
+        # duas vagas sabia o título que precisava ter e não sabia o que ia fazer, por quantas horas
+        # nem por quanto. Os três são sempre presentes no snapshot, com `""` quando não declarados
+        # — e `""` faz a linha sumir, porque "não informado" afirmaria uma omissão do Edital
+        # (FR-135).
+        "atribuicoes": (perfil.get("duties") or "").strip(),
+        "carga_horaria": (perfil.get("workload") or "").strip(),
+        "remuneracao": (perfil.get("compensation") or "").strip(),
+        "oferta": _oferta(vagas, perfil.get("reserveType"), perfil.get("reserveLimit")),
         "modalidades": [
             modalidade.get("name", "") for modalidade in perfil.get("competitionModalities") or []
         ],
     }
+
+
+def _oferta(vagas, tipo_de_reserva, limite_da_reserva):
+    """O que está sendo oferecido, na leitura de quem decide (024, FR-136, D-007).
+
+    Um Perfil com zero vagas imediatas e cadastro reserva é oportunidade legítima e frequente — e a
+    tela punha o **zero** em corpo 28, com a reserva de legenda embaixo. A leitura que sobrava era
+    de ausência: "0 vagas imediatas, com cadastro reserva ilimitado" parece contradição, e quem lê
+    rápido fecha a página.
+
+    Devolve `None` quando há vaga imediata: aí o número **é** a notícia, e a tela continua como
+    estava. Devolve o par (título, detalhe) quando não há — a oferta passa a ser o que salta, e o
+    zero continua dito em posição secundária.
+
+    Nada aqui muda o **fato**. `UNLIMITED` continua `UNLIMITED`, e o documento publicado continua
+    dizendo o que disse no dia em que foi publicado (T-010).
+    """
+    if vagas or not RESERVA.get(tipo_de_reserva):
+        return None
+    # `is not None`, e não veracidade: o domínio aceita `reserveLimit = 0` — `perfis.py` só recusa
+    # limite **negativo** —, e zero é limite declarado. Testado por veracidade, ele caía no ramo do
+    # ilimitado e a tela dizia "sem limite declarado" sobre um Edital que declarou o limite.
+    if tipo_de_reserva == "LIMITED" and limite_da_reserva is not None:
+        plural = "" if limite_da_reserva == 1 else "s"
+        detalhe = f"até {limite_da_reserva} classificado{plural}, para convocação futura"
+    else:
+        detalhe = "sem limite declarado, para convocação futura"
+    return {"titulo": "Cadastro reserva", "detalhe": detalhe}
 
 
 def _documentos_anunciados(conteudo, perfil):
@@ -215,20 +254,36 @@ def vitrine(request):
     """
     agora = timezone.now()
     selecoes = [_selecao_da_vitrine(versao, agora) for versao in selectors.selecoes_publicas()]
-    ordem = {"aberto": 0, "futuro": 1}
     selecoes.sort(
         key=lambda item: (
-            ordem.get(item["periodo"].estado, 2),
+            leitura.ORDEM_DAS_SITUACOES.get(item["periodo"].estado, len(leitura.GRUPOS)),
             item["periodo"].fim or item["periodo"].inicio or agora,
         )
     )
+    # **A consulta opera sobre o que a página já carregou** (024, D-003): busca, filtro e ordenação
+    # não acrescentam consulta nenhuma ao banco. É adequado à ordem de grandeza de dezenas de
+    # seleções simultâneas — e o sinal que obrigaria a revisar está nomeado na `D-003`, que é
+    # quando o catálogo passar de algumas centenas.
+    opcoes = leitura.opcoes_da_consulta(selecoes)
+    consulta = leitura.consulta_da_vitrine(request.GET, opcoes)
+    encontradas = leitura.filtrar(selecoes, consulta)
     return render(
         request,
         "portal/vitrine.html",
         {
             "selecoes": selecoes,
-            "abertas": [s for s in selecoes if s["periodo"].estado == "aberto"],
-            "outras": [s for s in selecoes if s["periodo"].estado != "aberto"],
+            "encontradas": encontradas,
+            "total_encontrado": len(encontradas),
+            "consulta": consulta,
+            "opcoes": opcoes,
+            # **Quatro grupos, e não dois** (024, FR-145, FR-146). "Outras" era literalmente tudo o
+            # que não estava aberto: futuras, encerradas e sem período designado no mesmo balde,
+            # embora o domínio já distinguisse as três. Quem procurava o que ainda vai abrir tinha
+            # de ler tudo para descobrir o que já fechou.
+            #
+            # Com consulta ativa não há grupos: quatro cabeçalhos sobre um cartão cada é ruído, e a
+            # marca de cada cartão é o que mantém as quatro distinguíveis (FR-146a).
+            "grupos": [] if consulta["ativa"] else leitura.agrupar_por_situacao(encontradas),
         },
     )
 
@@ -248,6 +303,13 @@ def _selecao_da_vitrine(versao, agora):
         "vagas": sum(perfil.get("immediateVacancies") or 0 for perfil in perfis),
         "tem_reserva": any((perfil.get("reserveType") or "NONE") != "NONE" for perfil in perfis),
         "dias_restantes": _dias_ate(periodo.fim, agora) if periodo.estado == "aberto" else None,
+        # A marca da situação, no cartão (024, FR-145). Sem ela, a situação de uma seleção sem
+        # período designado não era dita em lugar nenhum: `_periodo.html` não escreve prazo para
+        # ela — corretamente —, e o cartão ficava mudo sobre o que ela é.
+        "situacao_rotulo": leitura.SITUACAO_DO_CARTAO.get(periodo.estado, ""),
+        # O instante **do que está sendo mostrado**, que é por onde "mais recentes" ordena
+        # (FR-140, T-006).
+        "vigente_desde": versao.valid_from,
     }
 
 
@@ -310,6 +372,41 @@ def selecao(request, edital_id):
     # tivesse o endereço dela. Só as **vigentes** — uma publicação sucedida continua consultável
     # pelo endereço dela, e anunciá-la aqui ofereceria como atual o que já não é.
     contexto["resultados_divulgados"] = vigentes_do_edital(versao.edital)
+    # **O sorteio, antes de ele acontecer** (021, FR-011). A relação congelada era pública e não era
+    # alcançável: quem se inscreveu não tinha por onde saber que participava de um sorteio nem que a
+    # lista já estava fechada. A garantia que a feature existe para produzir — *o universo foi
+    # comprometido antes de a semente existir* — só era observável depois do fato, pela divulgação
+    # do resultado, e por quem já tivesse o endereço.
+    contexto["sorteios"] = sorteios_do_edital(versao.edital, versao.content)
+    # **O Cronograma publicado, antes da identificação** (024, FR-125). Ele já estava no conteúdo
+    # publicado e já era renderizado — mas só no acompanhamento, isto é, **depois** de a pessoa se
+    # inscrever. Quem já se inscreveu via o calendário; quem estava decidindo se valia a pena, não.
+    # É a mesma função que serve as duas telas, e não uma segunda leitura do mesmo dado.
+    contexto["cronograma"] = leitura.cronograma(versao.content, timezone.now())
+    # **O histórico normativo** (024, FR-129 a FR-133). Pela Constituição, Edital publicado só muda
+    # por Retificação — e o portal mostrava o conteúdo vigente sem nenhum sinal de que ele tivesse
+    # mudado. Quem leu na semana passada e voltou hoje lia outra coisa e não tinha como saber.
+    #
+    # `vigente_desde` é o instante do que está sendo mostrado, e não o do último ato: uma
+    # Retificação publicada hoje com vigência futura já é ato publicado e ainda não vale.
+    contexto["atos"] = leitura.atos_publicados(edital_id)
+    # Do mais novo para o mais antigo: numa lista de documentos, a primeira pergunta é "qual é o
+    # mais recente?". A ordem cronológica direta responde primeiro à pergunta de quem audita.
+    contexto["atos_recentes"] = list(reversed(contexto["atos"]))
+    # A marca de situação também aqui, e não só no cartão da vitrine: quem chega pelo endereço
+    # direto — de um e-mail, de um compartilhamento — nunca passou pela vitrine (FR-145).
+    contexto["situacao_rotulo"] = leitura.SITUACAO_DO_CARTAO.get(contexto["periodo"].estado, "")
+    # A pergunta que o histórico responde é "mudou?", e quem responde é a natureza do ato — não a
+    # contagem deles. Uma segunda Publicação sem Retificação faria a contagem dizer que sim.
+    contexto["houve_retificacao"] = any(
+        ato["natureza"] == "retificacao" for ato in contexto["atos"]
+    )
+    contexto["vigente_desde"] = versao.valid_from
+    # **A volta, com a consulta preservada** (024, FR-144). Só os cinco parâmetros declarados
+    # atravessam: repassar texto arbitrário de volta para dentro de um endereço é como se abre
+    # redirecionamento, e aqui o critério é ainda mais estreito que o de `_destino_seguro` — o que
+    # não é consulta reconhecida da vitrine simplesmente não sobrevive (T-007).
+    contexto["voltar_para"] = leitura.caminho_de_volta(request.GET, reverse("portal:vitrine"))
     resposta = render(request, "portal/selecao.html", contexto)
     # A página é pública, mas deixa de ser genérica quando quem lê já começou uma inscrição: o
     # `Continuar inscrição` diz que aquela pessoa se inscreveu. Num computador compartilhado, o
@@ -1210,33 +1307,6 @@ def _fatos_da_participacao(registro):
     return fatos
 
 
-def _cronograma(conteudo, agora):
-    """Os Eventos do processo, na ordem publicada, com a situação **do evento**.
-
-    Concluído, em curso ou por vir descrevem o Evento — nunca a pessoa. É a mesma distinção da
-    `FR-076`, dita em dado: nada aqui sabe quem está lendo.
-    """
-    eventos = []
-    for evento in sorted(conteudo.get("schedule") or [], key=lambda item: item.get("order") or 0):
-        inicio = parse_datetime(evento.get("startAt") or "")
-        fim = parse_datetime(evento.get("endAt") or "") if evento.get("endAt") else None
-        if fim is not None and agora > fim:
-            situacao = "concluido"
-        elif inicio is not None and agora < inicio:
-            situacao = "futuro"
-        else:
-            situacao = "em_curso"
-        eventos.append(
-            {
-                "nome": evento.get("description") or evento.get("type") or "",
-                "inicio": inicio,
-                "fim": fim,
-                "situacao": situacao,
-            }
-        )
-    return eventos
-
-
 @require_http_methods(["GET"])
 @resposta_privada
 def acompanhamento(request, inscricao_id):
@@ -1256,7 +1326,7 @@ def acompanhamento(request, inscricao_id):
             "inscricao": registro,
             "selecao": _selecao(versao),
             "fatos": _fatos_da_participacao(registro),
-            "cronograma": _cronograma(versao.content, timezone.now()),
+            "cronograma": leitura.cronograma(versao.content, timezone.now()),
             # **Acréscimo, e não reescrita.** `_fatos_da_participacao` continua descrevendo fatos
             # da própria inscrição — o que a pessoa fez —, e a publicação é ato de terceiro sobre
             # ela. Misturar as duas coisas na mesma lista devolveria à tela justamente a confusão
@@ -1945,8 +2015,15 @@ def resultado(request, publicacao_id):
     # oferecê-la levaria de um resultado histórico a outro. Vigente é a que ninguém sucedeu, e é
     # ela que a FR-044 manda oferecer.
     foi_sucedida = bool(publicacao.sucessoras.all())
+    # **A vigente é a da mesma lista** (021, D-015, FR-068). Sem o eixo, uma publicação de PPI
+    # sucedida oferecia "ver o resultado vigente" apontando para a ampla concorrência — mandando
+    # quem consulta a ordem de uma lista para a ordem de outra.
     vigente = (
-        vigente_do_marco(edital=publicacao.edital, marco_id=publicacao.marco_id)
+        vigente_do_marco(
+            edital=publicacao.edital,
+            marco_id=publicacao.marco_id,
+            lista_id=publicacao.lista_id,
+        )
         if foi_sucedida
         else None
     )
@@ -1984,4 +2061,126 @@ def resultado_em_pdf(request, publicacao_id):
     # `attachment`, como o comprovante: quem vem buscar o documento oficial vem buscar um arquivo
     # para guardar, e abri-lo no visualizador o devolveria à mesma tela de onde saiu.
     resposta["Content-Disposition"] = 'attachment; filename="Resultado.pdf"'
+    return resposta
+
+
+@require_http_methods(["GET"])
+def relacao_de_habilitados(request, relacao_id):
+    """A relação publicada, no canal público e sem autenticação (021, FR-005, FR-011).
+
+    **É o passo que a prática atual não tem**: qualquer pessoa vê o universo comprometido **antes**
+    de a semente existir. Depois do sorteio ela continua no ar, e é dela que o verificador de
+    terceiro recalcula o resumo em vez de aceitá-lo (R-015).
+
+    Três dados por participante — número público, nome e protocolo —, que são os mesmos que a
+    divulgação de resultado da `017` já publica. CPF e identificador interno não aparecem, e não
+    aparecem porque não estão na projeção: a página não os filtra, ela não os tem (FR-005).
+    """
+    from processo_seletivo.sorteios.application.selectors import relacao_publica
+
+    relacao = relacao_publica(relacao_id)
+    if relacao is None:
+        raise Http404
+    return render(
+        request,
+        "portal/relacao_de_habilitados.html",
+        {
+            "relacao": relacao,
+            # O nome da lista, lido da versão que a relação cita — e não do conteúdo vigente, que
+            # uma Retificação posterior poderia ter mudado (FR-045).
+            "lista": _nome_da_lista(relacao),
+            "participantes": [
+                {
+                    "numero": participante.numero_publico,
+                    "nome": participante.inscricao.nome or "",
+                    "protocolo": participante.inscricao.protocolo or "",
+                }
+                for participante in relacao.participantes.select_related("inscricao").order_by(
+                    "numero_publico"
+                )
+            ],
+            # Sucedida é o que o cidadão precisa saber antes de citar a relação: ela continua
+            # íntegra e legível, e já não é o universo comprometido do certame.
+            "sucessora": relacao.sucessoras.first(),
+        },
+    )
+
+
+def _nome_da_lista(relacao):
+    if not relacao.lista_id:
+        return ""
+    for perfil in relacao.versao.content.get("profiles") or []:
+        if str(perfil.get("id")) != str(relacao.perfil_id):
+            continue
+        for modalidade in perfil.get("competitionModalities") or []:
+            if str(modalidade.get("id")) == str(relacao.lista_id):
+                return modalidade.get("name") or ""
+    return ""
+
+
+def _sorteio_publicado(sorteio_id):
+    from processo_seletivo.sorteios.models import Sorteio
+
+    return (
+        Sorteio.objects.filter(pk=sorteio_id)
+        .select_related(
+            "relacao",
+            "relacao__versao",
+            "relacao__edital",
+            "ocorrencia",
+            "ato",
+            "sorteio_anterior",
+        )
+        .prefetch_related("sucessores")
+        .first()
+    )
+
+
+@require_http_methods(["GET"])
+def verificar_sorteio(request, sorteio_id):
+    """ "Verificar este sorteio", no canal público e sem autenticação (021, FR-048..FR-051).
+
+    **Recalcula das entradas, e relata em linguagem de gente.** A página não confere o banco contra
+    si mesmo: ela refaz a ordem a partir da relação congelada, da semente derivada do material
+    observado e do método que a relação citou — e diz, degrau por degrau, o que conferiu.
+
+    Funciona sem depender de gravação de vídeo nem de canal externo (FR-051): tudo o que ela usa
+    está publicado.
+    """
+    from processo_seletivo.sorteios.application.verificacao import verificar
+
+    sorteio = _sorteio_publicado(sorteio_id)
+    if sorteio is None:
+        raise Http404
+    return render(
+        request,
+        "portal/verificacao_de_sorteio.html",
+        {
+            "sorteio": sorteio,
+            "relacao": sorteio.relacao,
+            "veredito": verificar(sorteio),
+            "sucessor": sorteio.sucessores.first(),
+        },
+    )
+
+
+@require_http_methods(["GET"])
+def manifesto_do_sorteio(request, sorteio_id):
+    """O manifesto em JSON, legível por máquina (FR-047).
+
+    **Regenerado, e não guardado.** O que o ato grava é o `manifestHash`; os bytes nascem aqui, das
+    mesmas entradas congeladas. Dois downloads produzem bytes idênticos porque nada de vigente é
+    lido — é a regra 4 do contrato, e é o que o `ETag` afirma.
+    """
+    from processo_seletivo.shared.canonical import canonical_bytes
+    from processo_seletivo.sorteios.application.verificacao import manifesto_publicado
+
+    sorteio = _sorteio_publicado(sorteio_id)
+    if sorteio is None:
+        raise Http404
+    corpo = canonical_bytes(manifesto_publicado(sorteio))
+    resposta = HttpResponse(corpo, content_type="application/json")
+    resposta["ETag"] = f'"{sorteio.manifesto_hash}"'
+    resposta["Cache-Control"] = "public, max-age=31536000, immutable"
+    resposta["Content-Disposition"] = f'attachment; filename="manifesto-{sorteio.id}.json"'
     return resposta

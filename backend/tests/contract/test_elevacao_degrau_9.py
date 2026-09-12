@@ -57,13 +57,16 @@ def conteudo_na_versao(versao):
 def test_o_degrau_9_existe_nos_dois_niveis_e_grafa_a_ausencia():
     assert DEGRAUS_DA_RAIZ[9] == {"attachments": []}
     assert DEGRAUS_DE_DOCUMENTO == {9: {"attachmentId": None}}
-    assert SCHEMA_VERSION == 9
+    # `>=`, e não `==`: o degrau 10 chegou com a 021, e este teste é sobre o **9** continuar
+    # convertendo o que converte. É a mesma relaxação que o teste do degrau 8 fez quando o 9
+    # nasceu — travar a versão vigente aqui faria cada degrau novo reprovar o anterior.
+    assert SCHEMA_VERSION >= 9
 
 
 def test_o_edital_anterior_eleva_sem_inventar_anexo():
     elevado = elevar(conteudo_na_versao(8))
 
-    assert elevado["schemaVersion"] == 9
+    assert elevado["schemaVersion"] == SCHEMA_VERSION
     assert elevado["attachments"] == []
     assert elevado["documentRequirements"][0]["attachmentId"] is None
 

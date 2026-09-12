@@ -160,14 +160,54 @@ def test_o_tipo_do_item_da_colecao_e_transcrito(esquemas):
     assert TIPO_DO_CONTRATO[declarado_no_contrato["items"]["type"]] is campo.tipo_do_item
 
 
+def _tipo_do_item_no_contrato(esquemas, propriedade):
+    """O tipo que o contrato dá a cada item da coleção — escrito, ou referenciado.
+
+    `items: { type: object }` diz o tipo em linha. `items: { $ref: … }` o diz apontando um esquema,
+    e o esquema apontado declara `type`: as duas formas são o contrato escrevendo a restrição, e
+    ler só a primeira faria a transcrição de uma coleção referenciada parecer invenção nossa —
+    que é o oposto do que este teste existe para vigiar (025, `vacancyTable`).
+    """
+    itens = propriedade.get("items")
+    if not isinstance(itens, dict):
+        return None
+    if "type" in itens:
+        return itens["type"]
+    referencia = itens.get("$ref", "")
+    apontado = esquemas.get(referencia.rsplit("/", 1)[-1], {})
+    return apontado.get("type")
+
+
 @pytest.mark.contract
 def test_nenhum_outro_campo_declara_tipo_de_item(esquemas):
     """A transcrição não pode inventar restrição onde o contrato não a escreve."""
     for nome, forma in FORMAS:
         for campo in forma:
             propriedade = esquemas[nome]["properties"][campo.nome]
-            tem_items = "items" in propriedade and "type" in propriedade["items"]
-            assert (campo.tipo_do_item is not None) == tem_items, campo.nome
+            declarado = _tipo_do_item_no_contrato(esquemas, propriedade)
+            assert (campo.tipo_do_item is not None) == (declarado is not None), campo.nome
+            if declarado is not None:
+                assert TIPO_DO_CONTRATO[declarado] is campo.tipo_do_item, campo.nome
+
+
+@pytest.mark.contract
+def test_a_linha_do_quadro_publicada_e_transcrita_campo_a_campo(esquemas):
+    """A única coleção aninhada cuja forma de dentro é declarada, e a razão está no contrato.
+
+    `competitionModalities` não a declara; o quadro declara, porque a linha carrega um número que a
+    conferência da soma vai somar (025, R-013).
+    """
+    contrato = esquemas["LinhaDoQuadroPublicada"]
+    transcritos = {campo.nome for campo in validation.LINHA_DO_QUADRO_PUBLICADA}
+
+    assert transcritos == set(contrato["properties"])
+    assert transcritos == set(contrato["required"])
+    anulaveis = {campo.nome for campo in validation.LINHA_DO_QUADRO_PUBLICADA if campo.admite_nulo}
+    assert anulaveis == {
+        nome
+        for nome, forma in contrato["properties"].items()
+        if isinstance(forma.get("type"), list) and "null" in forma["type"]
+    }
 
 
 @pytest.mark.contract
@@ -313,6 +353,6 @@ def test_dois_snapshots_da_versao_vigente_do_mesmo_conteudo_tem_as_mesmas_chaves
     primeiro = edital_snapshot(edital)
     segundo = edital_snapshot(edital)
 
-    assert primeiro["schemaVersion"] == SCHEMA_VERSION == 9
+    assert primeiro["schemaVersion"] == SCHEMA_VERSION
     assert chaves(primeiro) == chaves(segundo)
     assert {"/processoCode", "/processoTitle"} <= chaves(primeiro)

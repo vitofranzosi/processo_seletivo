@@ -31,12 +31,40 @@ def publish_original(
     assert criado.status_code == 201, criado.content
     # Escopado ao Processo: o helper precisa servir a testes com mais de um Edital.
     edital = Edital.objects.get(processo_id=criado.json()["id"])
-    preparer = actor_headers("preparador", ["edital:elaborar", "edital:submeter"])
+    return levar_a_publicacao(
+        api_client,
+        edital,
+        draft=draft,
+        anexos=anexos,
+        antes_de_submeter=antes_de_submeter,
+    )
+
+
+def levar_a_publicacao(
+    api_client,
+    edital,
+    *,
+    draft=None,
+    anexos=0,
+    antes_de_submeter=None,
+    chave="publication-key-0001",
+):
+    """De rascunho a publicado, sobre um Edital que já existe.
+
+    Saiu de dentro de `publish_original` quando a `022` precisou de **dois Editais no mesmo
+    Processo**: o helper anterior criava sempre um Processo novo, e a soma acima do Edital não tinha
+    como ser montada. Duplicar as quatro chamadas num segundo lugar faria o ciclo de publicação ter
+    duas versões que envelheceriam separadamente.
+
+    `chave` distingue as reservas de idempotência: elas são por ator, operação e chave, e repetir a
+    mesma com outro conteúdo é conflito — corretamente.
+    """
+    preparer = actor_headers("preparador", ["edital:elaborar", "edital:submeter"], key=chave)
     api_client.put(
         f"/api/v1/admin/editais/{edital.id}/rascunho",
         draft or complete_draft(),
         format="json",
-        **{**preparer, "HTTP_IF_MATCH": '"1"'},
+        **{**preparer, "HTTP_IF_MATCH": f'"{edital.revision}"'},
     )
     if anexos:
         from tests.fixtures.anexos import criar_anexo
@@ -50,22 +78,31 @@ def publish_original(
             )
     if antes_de_submeter is not None:
         antes_de_submeter(edital)
+    edital.refresh_from_db()
     api_client.post(
         f"/api/v1/admin/editais/{edital.id}/submissoes",
         format="json",
-        **{**preparer, "HTTP_IF_MATCH": '"2"'},
+        **{**preparer, "HTTP_IF_MATCH": f'"{edital.revision}"'},
     )
+    edital.refresh_from_db()
     api_client.post(
         f"/api/v1/admin/editais/{edital.id}/homologacoes",
         {"reason": "OK"},
         format="json",
-        **{**actor_headers("homologador", ["edital:homologar"]), "HTTP_IF_MATCH": '"3"'},
+        **{
+            **actor_headers("homologador", ["edital:homologar"], key=chave),
+            "HTTP_IF_MATCH": f'"{edital.revision}"',
+        },
     )
+    edital.refresh_from_db()
     published = api_client.post(
         f"/api/v1/admin/editais/{edital.id}/publicacoes",
         {"signatory": SIGNATORY},
         format="json",
-        **{**actor_headers("publicador", ["edital:publicar"]), "HTTP_IF_MATCH": '"4"'},
+        **{
+            **actor_headers("publicador", ["edital:publicar"], key=chave),
+            "HTTP_IF_MATCH": f'"{edital.revision}"',
+        },
     )
     assert published.status_code == 201, published.content
     return Edital.objects.get(pk=edital.pk)

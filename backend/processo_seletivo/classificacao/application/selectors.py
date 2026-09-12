@@ -18,19 +18,191 @@ from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
 )
 from processo_seletivo.shared.api.problems import DomainError
 
+# O que um ato de sorteio grava em `universo["origem"]` (021, FR-069). Lido daqui e não do modelo
+# para que a leitura não passe a depender do app do sorteio: a direção é `sorteios → classificacao`,
+# e nunca o contrário.
+ORIGEM_SORTEIO = "SORTEIO"
 
-def ato_vigente(*, edital, marco_id):
-    """O ato sem sucessor, derivado da cadeia append-only."""
+
+def ato_vigente(*, edital, marco_id, lista_id=None):
+    """O ato sem sucessor daquele recorte, derivado da cadeia append-only.
+
+    **`lista_id` deixou de ser opcional no sentido que importa** (021, D-006, FR-069). Desde que
+    três listas de concorrência podem produzir três atos raiz no mesmo marco, "o vigente do marco"
+    não é pergunta com uma resposta: sem filtrar pela lista, `.first()` escolheria uma das três pela
+    ordem de emissão, que é sorteio de dado — e a tela mostraria a ordem de outra lista sem que nada
+    acusasse.
+
+    O padrão `None` é a ampla concorrência, que é o que todo ato emitido antes da `021` é: quem
+    chamava sem o argumento continua recebendo exatamente o ato que recebia.
+    """
     return (
         AtoDeOrdenacao.objects.filter(
             edital=edital,
             marco_id=marco_id,
+            lista_id=lista_id,
             sucessores__isnull=True,
         )
         .select_related("versao")
         .order_by("-emitido_em")
         .first()
     )
+
+
+def _estado_do_marco_sorteado(*, edital, marco_id, vigente, at):
+    """O estado de um marco cujo ato veio de sorteio — que **não** se afere recomputando (FR-069).
+
+    `calcular_ordem` produz a ordem por Etapas. Um ato de sorteio não veio dali, e comparar os dois
+    acusaria divergência a cada mudança de Etapa num marco que não depende de Etapa nenhuma: a
+    publicabilidade recusaria toda ordem sorteada como obsoleta, e o certame com sorteio nunca
+    divulgaria.
+
+    **A pergunta continua sendo a mesma** — "o ato ainda reflete o fato que o originou?" —, e só o
+    fato de origem muda: para o ato computado é o cálculo por Etapas; para o sorteado é a **relação
+    de habilitados**, que foi sucedida ou não. Uma relação sucedida depois do sorteio significa que
+    o universo comprometido mudou, e a ordem publicada já não corresponde a ele.
+
+    `proposta` é `None` de propósito, e é o que a tela usa para não oferecer "recalcular": não há o
+    que recalcular sem semente nova, e oferecer o botão seria oferecer o ensaio que a D-010 proíbe.
+    """
+    versao_atual = effective_version(edital_id=edital.id, at=at)
+    perfil, marco = _marco_na_versao(versao_atual.content, marco_id)
+    perfil_historico, marco_historico = _marco_na_versao(vigente.versao.content, marco_id)
+    if marco is None:
+        # **O marco removido é impedimento igual, e a resposta é a mesma que o caminho computado
+        # já dava.** Devolver a forma dele aqui — sem a chave `origem` — é o que faz `aferir` cair
+        # no mesmo degrau, em vez de precisar de um segundo ramo dizendo a mesma coisa.
+        return _marco_removido(vigente, perfil_historico, marco_historico)
+    divergencias = _divergencias_do_sorteio(vigente)
+    return {
+        "proposta": None,
+        "vigente": vigente,
+        "perfil": perfil,
+        "marco": marco,
+        "obsoleto": bool(divergencias),
+        # Não é recomputável, e dizer isso é o ponto: quem lê este dicionário não deve oferecer
+        # recálculo de uma ordem que só uma semente nova produziria (D-010).
+        "recomputavel": False,
+        # **A chave que faz `aferir` distinguir "não recomputável" de "marco removido".** Sem ela,
+        # todo ato de sorteio seria recusado como se o marco tivesse sumido da norma.
+        "origem": ORIGEM_SORTEIO,
+        "divergencias": divergencias,
+        "posicoes_divergentes": [],
+    }
+
+
+def _estado_do_marco_que_sorteia(*, perfil, marco, vigente):
+    """O marco declara sorteio, e ainda não há ato de sorteio: **não há o que recomputar aqui**.
+
+    **A leitura, e não a porta.** As três camadas que impedem um ato computado nascer neste marco
+    são outras — a tela encaminha, a rota recusa e `emitir_ordem` recusa sozinho. O que se resolve
+    aqui é o que sobra depois delas: `estado_do_marco` respondia sobre um marco de sorteio como se
+    ele fosse computado, calculando por Etapas uma ordem que a norma daquele marco não prevê.
+
+    `proposta` é `None` e `recomputavel` é `False` pela mesma razão do ato já sorteado: a ordem
+    deste marco nasce de uma semente que ainda não existe, e nenhuma quantidade de cálculo por
+    Etapas a produz.
+
+    **`origem` viaja mesmo sem ato de sorteio**, e é o que impede `aferir` de anunciar "marco
+    removido" — que é o que ele diria de qualquer coisa não recomputável, e seria falso duas vezes.
+
+    Um ato **computado** vivo neste marco é divergência nomeada, e não silêncio. Ele não nasce mais
+    por caminho nenhum do sistema; existindo — emitido antes de as três camadas fecharem —, a
+    aferição de publicabilidade precisa dizer que aquela ordem não veio de onde a norma manda, em
+    vez de recomputá-la por Etapas e declará-la publicável.
+    """
+    divergencias = []
+    if vigente is not None and (vigente.universo or {}).get("origem") != ORIGEM_SORTEIO:
+        divergencias = [
+            {
+                "tipo": "ordem_computada_em_marco_de_sorteio",
+                "descricao": (
+                    "O Edital declara que este marco ordena por sorteio, e o ato vigente foi "
+                    "computado a partir de Etapas. A ordem publicada não veio da regra que a "
+                    "norma declara."
+                ),
+            }
+        ]
+    return {
+        "proposta": None,
+        "vigente": vigente,
+        "perfil": perfil,
+        "marco": marco,
+        "obsoleto": bool(divergencias),
+        "recomputavel": False,
+        "origem": ORIGEM_SORTEIO,
+        "divergencias": divergencias,
+        "posicoes_divergentes": [],
+    }
+
+
+def _marco_removido(vigente, perfil_historico, marco_historico):
+    return {
+        "proposta": None,
+        "vigente": vigente,
+        "perfil": perfil_historico or {"id": str(vigente.perfil_id), "name": "Perfil"},
+        "marco": marco_historico or {"id": str(vigente.marco_id), "name": "Marco removido"},
+        "obsoleto": True,
+        "recomputavel": False,
+        "divergencias": [
+            {
+                "tipo": "regra_ausente",
+                "descricao": (
+                    "O marco não existe na norma vigente; não há regra vigente com que comparar."
+                ),
+            }
+        ],
+        "posicoes_divergentes": [],
+    }
+
+
+def _divergencias_do_sorteio(vigente):
+    """A obsolescência de um ato sorteado é a da relação que o originou, e nada mais.
+
+    **E a ausência da relação é divergência, não silêncio.** Esta função devolvia `[]` quando o
+    `universo` não trazia `relacaoId` ou quando a identidade apontava para relação inexistente — as
+    duas situações que mais precisam ser ditas. Um ato de origem `SORTEIO` cuja proveniência não
+    resolve não é um ato íntegro sobre o qual nada há a observar: é um ato que ninguém consegue
+    conferir, e chamá-lo de não obsoleto seria falhar aberto justamente onde a feature promete o
+    contrário.
+    """
+    from processo_seletivo.sorteios.models import RelacaoDeHabilitados
+
+    identidade = (vigente.universo or {}).get("relacaoId")
+    if not identidade:
+        return [
+            {
+                "tipo": "proveniencia_ausente",
+                "descricao": (
+                    "Este ato declara origem por sorteio e não cita a relação de habilitados que "
+                    "o originou. Sem ela, a ordem publicada não é conferível contra universo "
+                    "algum."
+                ),
+            }
+        ]
+    relacao = RelacaoDeHabilitados.objects.filter(pk=identidade).first()
+    if relacao is None:
+        return [
+            {
+                "tipo": "proveniencia_inexistente",
+                "descricao": (
+                    "A relação de habilitados que este ato cita não existe. A proveniência do "
+                    "sorteio não resolve, e a ordem publicada não é conferível."
+                ),
+            }
+        ]
+    if not relacao.sucessoras.exists():
+        return []
+    return [
+        {
+            "tipo": "relacao_sucedida",
+            "descricao": (
+                "A relação de habilitados que originou este sorteio foi sucedida; a ordem "
+                "publicada já não corresponde ao universo comprometido. Um sorteio novo nasce de "
+                "relação nova e de ocorrência nova."
+            ),
+        }
+    ]
 
 
 def historico(*, edital, marco_id):
@@ -106,9 +278,11 @@ def nomear_criterios(linhas, ato):
     return linhas
 
 
-def estado_do_marco(*, edital, marco_id, at=None):
+def estado_do_marco(*, edital, marco_id, at=None, lista_id=None):
     """A proposta de agora ao lado do ato vigente, sem escrever nenhum dos dois."""
-    vigente = ato_vigente(edital=edital, marco_id=marco_id)
+    vigente = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
+    if vigente is not None and (vigente.universo or {}).get("origem") == ORIGEM_SORTEIO:
+        return _estado_do_marco_sorteado(edital=edital, marco_id=marco_id, vigente=vigente, at=at)
     versao_atual = effective_version(edital_id=edital.id, at=at)
     perfil, marco = _marco_na_versao(versao_atual.content, marco_id)
 
@@ -137,6 +311,12 @@ def estado_do_marco(*, edital, marco_id, at=None):
             ],
             "posicoes_divergentes": [],
         }
+
+    # **O marco que declara sorteio não passa pelo motor de Etapas**, tenha ou não ato ainda. Ler
+    # `drawMethod` aqui é ler conteúdo publicado — não é dependência do app do sorteio, que continua
+    # sendo `sorteios → classificacao` e nunca o contrário (021, D-013).
+    if marco.get("drawMethod"):
+        return _estado_do_marco_que_sorteia(perfil=perfil, marco=marco, vigente=vigente)
 
     proposta = calcular_ordem(
         edital=edital,

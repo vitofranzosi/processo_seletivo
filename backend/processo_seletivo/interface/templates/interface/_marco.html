@@ -138,6 +138,104 @@
       <label for="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_declarada">Não declarar nada sobre recurso</label>
     </p>
   </fieldset>
+  {% comment %}
+  O método do sorteio, quando este marco ordena por sorteio (021, FR-013, D-013).
+
+  **Está aqui, e não numa tela de gestão do sorteio**, porque é conteúdo normativo do Edital:
+  alterá-lo depois de publicado é Retificação, com a autoridade daquele ato. Quem conduz o sorteio
+  lê o método; quem o declara é quem elabora.
+
+  Todos os campos vazios significam "este marco não sorteia", que é o caso da maioria. Nenhum valor
+  institucional por padrão — a mesma razão dos rótulos da Etapa e do local do Evento: um default
+  aplicaria ao Edital uma norma que ele não publicou.
+  {% endcomment %}
+  <fieldset class="campos" aria-describedby="ajuda-sorteio-{{ indice }}-{{ sub }}">
+    <legend>Método do sorteio, se este marco ordena por sorteio</legend>
+    <span class="oculto" id="ajuda-sorteio-{{ indice }}-{{ sub }}">Declarado aqui, o método é
+      conteúdo publicado do Edital: alterá-lo depois exige Retificação, e nunca implantação de
+      software. Deixe tudo em branco se este marco não sorteia.</span>
+    <p class="campo">
+      <label for="marco-{{ indice }}-{{ sub }}-draw-algorithm">Algoritmo e versão</label>
+      <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-algorithm"
+             name="marco-{{ indice }}-{{ sub }}-draw-algorithm"
+             value="{{ marco.drawAlgorithm }}" placeholder="IFES-SORTEIO-SHA256-v1">
+    </p>
+    <p class="campo">
+      <label for="marco-{{ indice }}-{{ sub }}-draw-source">Fonte pública externa da semente</label>
+      <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-source"
+             name="marco-{{ indice }}-{{ sub }}-draw-source" value="{{ marco.drawSource }}">
+    </p>
+    <p class="campo">
+      <label for="marco-{{ indice }}-{{ sub }}-draw-occurrence">Ocorrência que fixará a semente</label>
+      <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-occurrence"
+             name="marco-{{ indice }}-{{ sub }}-draw-occurrence" value="{{ marco.drawOccurrence }}">
+    </p>
+    <p class="campo">
+      <label for="marco-{{ indice }}-{{ sub }}-draw-occurrenceAt">Quando a ocorrência acontece</label>
+      <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-occurrenceAt"
+             name="marco-{{ indice }}-{{ sub }}-draw-occurrenceAt"
+             value="{{ marco.drawOccurrenceAt }}" placeholder="2026-11-20T20:00:00-03:00"
+             aria-describedby="ajuda-quando-{{ indice }}-{{ sub }}">
+      <span class="oculto" id="ajuda-quando-{{ indice }}-{{ sub }}">Com fuso, como
+        2026-11-20T20:00:00-03:00. É este instante que separa "a fonte ainda não publicou" de "a
+        fonte não publicará": antes dele, a ausência não descarta a ocorrência.</span>
+    </p>
+    <p class="campo">
+      <label for="marco-{{ indice }}-{{ sub }}-draw-derivation">Como a ocorrência decorre da data programada</label>
+      <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-derivation"
+             name="marco-{{ indice }}-{{ sub }}-draw-derivation" value="{{ marco.drawDerivation }}">
+    </p>
+    <p class="campo">
+      <label for="marco-{{ indice }}-{{ sub }}-draw-normalizationRule">Regra de normalização</label>
+      <select id="marco-{{ indice }}-{{ sub }}-draw-normalizationRule"
+              name="marco-{{ indice }}-{{ sub }}-draw-normalizationRule"
+              aria-describedby="ajuda-normalizacao-{{ indice }}-{{ sub }}">
+        <option value="">Não declarada</option>
+        <option value="DIGITOS_EM_SEQUENCIA" {% if marco.drawNormalizationRule == "DIGITOS_EM_SEQUENCIA" %}selected{% endif %}>Os dígitos do material, na ordem em que aparecem</option>
+        <option value="TEXTO_LITERAL" {% if marco.drawNormalizationRule == "TEXTO_LITERAL" %}selected{% endif %}>O texto literal do material observado</option>
+      </select>
+      <span class="oculto" id="ajuda-normalizacao-{{ indice }}-{{ sub }}">A regra é escolhida de uma
+        lista publicada porque a máquina a aplica e um terceiro a reimplementa: prosa sozinha não é
+        executável, e duas pessoas lendo a mesma frase produzem sementes diferentes.</span>
+    </p>
+    <p class="campo">
+      <label for="marco-{{ indice }}-{{ sub }}-draw-normalizationText">Como a regra de normalização será publicada</label>
+      <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-normalizationText"
+             name="marco-{{ indice }}-{{ sub }}-draw-normalizationText"
+             value="{{ marco.drawNormalizationText }}">
+    </p>
+    <p class="campo">
+      <label for="marco-{{ indice }}-{{ sub }}-draw-substitutionRule">Regra de substituição</label>
+      <select id="marco-{{ indice }}-{{ sub }}-draw-substitutionRule"
+              name="marco-{{ indice }}-{{ sub }}-draw-substitutionRule"
+              aria-describedby="ajuda-substituicao-{{ indice }}-{{ sub }}">
+        <option value="">Não declarada</option>
+        <option value="OCORRENCIA_SEGUINTE_DA_MESMA_FONTE" {% if marco.drawSubstitutionRule == "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE" %}selected{% endif %}>A ocorrência seguinte da mesma fonte</option>
+      </select>
+      <span class="oculto" id="ajuda-substituicao-{{ indice }}-{{ sub }}">Ela é aplicada sem escolha
+        humana no dia do sorteio. Não declará-la devolve a decisão para a mesa, ao vivo.</span>
+    </p>
+    <p class="campo">
+      <label for="marco-{{ indice }}-{{ sub }}-draw-substitutionText">Como a regra de substituição será publicada</label>
+      <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-substitutionText"
+             name="marco-{{ indice }}-{{ sub }}-draw-substitutionText"
+             value="{{ marco.drawSubstitutionText }}">
+    </p>
+    <p class="campo largo">
+      <label for="marco-{{ indice }}-{{ sub }}-draw-qualifyingStageId">Etapa que habilita a participar do sorteio</label>
+      <select id="marco-{{ indice }}-{{ sub }}-draw-qualifyingStageId"
+              name="marco-{{ indice }}-{{ sub }}-draw-qualifyingStageId"
+              aria-describedby="ajuda-habilitacao-{{ indice }}-{{ sub }}">
+        <option value="">Nenhuma — entram todas as inscrições submetidas</option>
+        {% for etapa in etapas_classificatorias %}
+        <option value="{{ etapa.id }}" {% if marco.drawQualifyingStageId == etapa.id %}selected{% endif %}>{{ etapa.rotulo }}</option>
+        {% endfor %}
+      </select>
+      <span class="oculto" id="ajuda-habilitacao-{{ indice }}-{{ sub }}">Nos quatro Editais de
+        sorteio lidos, a análise documental vem <strong>depois</strong> do sorteio: ali não há Etapa
+        de habilitação, e entram todas as inscrições submetidas do recorte.</span>
+    </p>
+  </fieldset>
   <div class="campos">
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-operation">Como as pontuações se combinam <span class="obrigatorio" aria-hidden="true">*</span></label>
@@ -160,6 +258,84 @@
         1: é a normalização declarada que responde por isso.</span>
     </p>
   </div>
+  {% comment %}
+  A regra de corte deste marco (014, D-011 a D-014).
+
+  A espécie do alvo é o interruptor: vazia significa que este marco nao corta, que e o estado de
+  quase todo marco. Nao ha caixa de marcacao separada para isso, pela razao que a janela recursal
+  aprendeu a duras penas -- um estado que so nasce de uma combinacao que ninguem faz e um estado
+  inalcancavel pela tela que existe para declara-lo.
+
+  Os quatro campos sem padrao ficam visiveis mesmo vazios, e quem cobra e a publicacao. O rascunho
+  pode estar pela metade; o Edital publicado nao.
+  {% endcomment %}
+  <fieldset class="campos">
+    <legend>Regra de corte</legend>
+      <p class="campo">
+        <label for="marco-{{ indice }}-{{ sub }}-cutTargetKind">Quantos progridem</label>
+        <select id="marco-{{ indice }}-{{ sub }}-cutTargetKind" name="marco-{{ indice }}-{{ sub }}-cutTargetKind"
+                aria-describedby="ajuda-corte-{{ indice }}-{{ sub }}">
+          <option value="">Este marco não corta</option>
+          <option value="FIXED" {% if marco.cutTargetKind == "FIXED" %}selected{% endif %}>Uma quantidade fixa, publicada abaixo</option>
+          <option value="FROM_VACANCY_TABLE" {% if marco.cutTargetKind == "FROM_VACANCY_TABLE" %}selected{% endif %}>Quantas vagas o quadro publicar no recorte</option>
+        </select>
+        <span class="oculto" id="ajuda-corte-{{ indice }}-{{ sub }}">Sem corte, a Etapa seguinte
+          recebe todos os habilitados, como hoje.</span>
+      </p>
+      <p class="campo curto">
+        <label for="marco-{{ indice }}-{{ sub }}-cutTargetCount">Alvo</label>
+        <input type="number" min="0" step="1"
+               id="marco-{{ indice }}-{{ sub }}-cutTargetCount" name="marco-{{ indice }}-{{ sub }}-cutTargetCount"
+               value="{{ marco.cutTargetCount }}"
+               aria-describedby="ajuda-alvo-{{ indice }}-{{ sub }}">
+        <span class="oculto" id="ajuda-alvo-{{ indice }}-{{ sub }}">Só na quantidade fixa: o alvo
+          tem uma fonte só.</span>
+      </p>
+      <p class="campo curto">
+        <label for="marco-{{ indice }}-{{ sub }}-cutSurplusCount">Suplentes</label>
+        <input type="number" min="0" step="1"
+               id="marco-{{ indice }}-{{ sub }}-cutSurplusCount" name="marco-{{ indice }}-{{ sub }}-cutSurplusCount"
+               value="{{ marco.cutSurplusCount }}"
+               aria-describedby="ajuda-suplentes-{{ indice }}-{{ sub }}">
+        <span class="oculto" id="ajuda-suplentes-{{ indice }}-{{ sub }}">Entram na mesma emissão do
+          alvo: quem o Edital manda analisar para chamada imediata é analisado junto.</span>
+      </p>
+      <p class="campo">
+        <label for="marco-{{ indice }}-{{ sub }}-cutTieOutcome">Empate na última posição</label>
+        <select id="marco-{{ indice }}-{{ sub }}-cutTieOutcome" name="marco-{{ indice }}-{{ sub }}-cutTieOutcome"
+                aria-describedby="ajuda-empate-{{ indice }}-{{ sub }}">
+          <option value="">Escolha o que acontece</option>
+          <option value="ADMITS_SURPLUS" {% if marco.cutTieOutcome == "ADMITS_SURPLUS" %}selected{% endif %}>Todos os empatados progridem</option>
+          <option value="STRICT" {% if marco.cutTieOutcome == "STRICT" %}selected{% endif %}>A faixa para no alvo</option>
+        </select>
+        <span class="oculto" id="ajuda-empate-{{ indice }}-{{ sub }}">Não há padrão: sem esta
+          declaração o Edital não publica.</span>
+      </p>
+      <p class="campo">
+        <label for="marco-{{ indice }}-{{ sub }}-cutGovernedStage">Etapa que o corte alimenta</label>
+        <select id="marco-{{ indice }}-{{ sub }}-cutGovernedStage" name="marco-{{ indice }}-{{ sub }}-cutGovernedStage"
+                aria-describedby="ajuda-governada-{{ indice }}-{{ sub }}">
+          <option value="">Escolha a Etapa</option>
+          <option value="NONE" {% if marco.cutGovernedStage == "NONE" %}selected{% endif %}>Não governa Etapa alguma</option>
+          {% for etapa in etapas_governaveis %}
+          <option value="{{ etapa.id }}" {% if marco.cutGovernedStage == etapa.id %}selected{% endif %}>{{ etapa.rotulo }}</option>
+          {% endfor %}
+        </select>
+        <span class="oculto" id="ajuda-governada-{{ indice }}-{{ sub }}">Ela é declarada, e nunca
+          deduzida das Etapas que este marco enumera.</span>
+      </p>
+      <p class="campo">
+        <label for="marco-{{ indice }}-{{ sub }}-cutContinuation">Faixa seguinte</label>
+        <select id="marco-{{ indice }}-{{ sub }}-cutContinuation" name="marco-{{ indice }}-{{ sub }}-cutContinuation"
+                aria-describedby="ajuda-continuacao-{{ indice }}-{{ sub }}">
+          <option value="">Escolha se este Edital a admite</option>
+          <option value="ALLOWED" {% if marco.cutContinuation == "ALLOWED" %}selected{% endif %}>Admite continuar além da faixa publicada</option>
+          <option value="NONE" {% if marco.cutContinuation == "NONE" %}selected{% endif %}>Não admite: a faixa é o que foi publicado</option>
+        </select>
+        <span class="oculto" id="ajuda-continuacao-{{ indice }}-{{ sub }}">O 77/2026 admite — "até
+          que se preencha"; o 14/2026 não.</span>
+      </p>
+  </fieldset>
   <section class="modalidades">
     <h4>Critérios de desempate</h4>
     <div id="criterios-{{ indice }}-{{ sub }}">

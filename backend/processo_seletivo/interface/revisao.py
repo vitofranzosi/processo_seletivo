@@ -48,6 +48,21 @@ def _perfil(perfil, _snapshot):
             if regra.get("version"):
                 partes.append(f"versão {regra['version']}")
         linhas.append("Modalidade: " + " · ".join(partes))
+    # O quadro de vagas, na ordem declarada e com a linha geral primeiro. Quem submete precisa ver
+    # os números que vai congelar — e o quadro é o que separa o certame de existir como documento.
+    # Perfil sem quadro não ganha frase nenhuma: ausência é "não declarou", e não "declarou zero".
+    denominacoes = {
+        str(modalidade.get("id")): f"{modalidade.get('name', '')} ({modalidade.get('code', '')})"
+        for modalidade in perfil.get("competitionModalities") or []
+        if modalidade.get("id")
+    }
+    for linha in perfil.get("vacancyTable") or []:
+        recorte = (
+            denominacoes.get(str(linha.get("modalityId")), "modalidade desconhecida")
+            if linha.get("modalityId")
+            else "Ampla concorrência"
+        )
+        linhas.append(f"Quadro: {recorte} — {linha.get('immediateVacancies', 0)} vaga(s)")
     return {"titulo": f"{perfil.get('code', '')} — {perfil.get('name', '')}", "linhas": linhas}
 
 

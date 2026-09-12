@@ -56,6 +56,28 @@ DEGRAUS = {
 # candidato, e não limitou o total de inscrições dele no certame (015, T-008).
 DEGRAUS_DE_PERFIL = {
     7: {"classificationMilestones": [], "declaredFacts": []},
+    # **O degrau 12 é o quadro de vagas** (025, D-005). Lista vazia diz "este Edital não publicou
+    # quadro", e é verdade sobre todos eles porque a capacidade não existia — nunca "zero vaga".
+    #
+    # É de Perfil, e não de raiz, porque o quadro é do Perfil: um Edital de sete polos publica sete
+    # quadros, e uma coleção de raiz teria de carregar a referência ao Perfil em cada linha,
+    # inventando uma segunda forma de dizer o que o aninhamento já diz.
+    12: {"vacancyTable": []},
+    # **O degrau 13 também é de Perfil**, e não só de marco: junto com a regra de corte entra a
+    # declaração de qual Modalidade é a ampla concorrência (014, D-014). `None` diz "este Perfil não
+    # declarou nenhuma", e é verdade sobre todo Edital publicado antes — a capacidade não existia.
+    #
+    # Os dois campos do degrau 13 entram **juntos** de propósito: a conferência do alvo derivado
+    # precisa dos dois para saber quais recortes exigem linha de quadro, e separá-los seria duas
+    # elevações e dois caminhos de leitura para uma decisão só.
+    13: {"generalCompetitionModalityId": None},
+    # **O degrau 14 é a declaração da reversão** (016, D-007). `None` diz "este Edital não declara
+    # reversão", e é verdade sobre todos eles — a capacidade não existia. Conversão sem invenção,
+    # como os degraus 12 e 13.
+    #
+    # E a ausência **não** é padrão de comportamento: o 57/2026 proíbe por escrito o remanejamento
+    # entre cursos, e um sistema que revertesse por conta própria produziria ali o que ele veda.
+    14: {"vacancyReversion": None},
 }
 
 DEGRAUS_DA_RAIZ = {
@@ -89,9 +111,40 @@ COLECAO_DE_DOCUMENTOS_ENDERECADA = f"/{COLECAO_DE_DOCUMENTOS}"
 # todo Edital publicado antes deste degrau, e é uma afirmação, não uma omissão a corrigir: sem
 # declaração o sistema não inventa prazo, e a tempestividade volta a ser juízo de admissibilidade
 # motivado, que é a degradação que a D-004 declarou (FR-028, FR-029).
+# **O degrau 10 é o segundo dentro do marco**, e a razão é a mesma do 8: o que o marco declara é
+# dele, e não do Edital — marcos diferentes ordenam por regras diferentes, e só um deles sorteia.
+#
+# `None` significa **método não declarado**, e não método padrão. É o que todo Edital publicado
+# antes deste degrau afirma, e é verdade sobre todos eles: a capacidade não existia, e nenhum deles
+# declarou fonte, ocorrência ou regra de normalização. Há, portanto, conversão sem invenção — e o
+# sistema recusa congelar relação em marco sem método, em vez de escolher um por conta própria
+# (021, FR-066, D-013).
+# **O degrau 13 é a regra de corte** (014, D-011 a D-014). `None` significa **marco que não corta**,
+# e é verdade sobre todo Edital publicado antes dele: a capacidade não existia, e nenhum deles
+# declarou alvo, excedente, desfecho de empate, Etapa governada ou política de continuação. Há,
+# portanto, conversão sem invenção, como nos dois degraus anteriores do mesmo objeto.
+#
+# `None` e não `{}`: os dois vizinhos já fixaram `None` para "não declarado", e um dicionário vazio
+# seria uma segunda grafia da mesma ausência — o modo de falha que este módulo recusa em toda parte.
 DEGRAUS_DE_MARCO = {
     8: {"appealWindow": None},
+    10: {"drawMethod": None},
+    13: {"cutRule": None},
 }
+
+# **O degrau 11 é o primeiro dentro do Evento do Cronograma.** Vazio significa **não declarado**, e
+# não "acontece em lugar nenhum": é o que todo Edital publicado antes dele afirma, porque a
+# capacidade não existia — e nenhum deles publicou o local em campo estruturado, ainda que muitos o
+# dissessem em prosa. Conversão sem invenção, portanto (021, D-008, R-009).
+#
+# String e não `None`, pela convenção do próprio objeto: `description` e `type` do Evento são
+# strings, e uma terceira grafia para texto ausente faria a versão canônica admitir mais de uma
+# forma para o mesmo Edital.
+DEGRAUS_DE_EVENTO = {
+    11: {"location": ""},
+}
+
+COLECAO_DE_EVENTOS = "schedule"
 
 COLECAO_DE_MARCOS = "classificationMilestones"
 
@@ -178,6 +231,20 @@ def elevar_marco(marco, *, de=VERSAO_DE_ORIGEM):
     return {**marco, **faltando} if faltando else marco
 
 
+def elevar_evento(evento, *, de=VERSAO_DE_ORIGEM):
+    """O Evento do Cronograma na forma vigente. Simétrico aos demais degraus por entidade."""
+    if not isinstance(evento, dict):
+        return evento
+    faltando = {
+        chave: valor
+        for versao, degrau in sorted(DEGRAUS_DE_EVENTO.items())
+        if versao > de
+        for chave, valor in degrau.items()
+        if chave not in evento
+    }
+    return {**evento, **faltando} if faltando else evento
+
+
 def elevar_documento(documento, *, de=VERSAO_DE_ORIGEM):
     """O Documento Exigido na forma vigente. Idempotente, como os demais degraus por entidade."""
     if not isinstance(documento, dict):
@@ -224,6 +291,12 @@ def elevar(conteudo):
         if isinstance(documentos, list)
         else documentos
     )
+    eventos = conteudo.get(COLECAO_DE_EVENTOS)
+    eventos_elevados = (
+        [elevar_evento(item, de=declarada) for item in eventos]
+        if isinstance(eventos, list)
+        else eventos
+    )
     raiz = {
         chave: valor
         for versao, degrau in sorted(DEGRAUS_DA_RAIZ.items())
@@ -236,6 +309,7 @@ def elevar(conteudo):
         and elevadas == etapas
         and perfis_elevados == perfis
         and documentos_elevados == documentos
+        and eventos_elevados == eventos
         and not raiz
     ):
         return conteudo
@@ -246,6 +320,8 @@ def elevar(conteudo):
         elevado["profiles"] = perfis_elevados
     if isinstance(documentos, list):
         elevado[COLECAO_DE_DOCUMENTOS] = documentos_elevados
+    if isinstance(eventos, list):
+        elevado[COLECAO_DE_EVENTOS] = eventos_elevados
     return elevado
 
 
