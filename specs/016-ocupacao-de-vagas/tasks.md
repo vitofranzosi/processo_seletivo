@@ -328,15 +328,15 @@ depender de desistência, que é fato da `019` (`R-001`).
 
 **Independent Test**: reconstruir o número de hoje a partir do quadro publicado, pela auditoria.
 
-- [ ] T056 [P] [US5] Teste em `backend/tests/integration/ocupacao/test_auditoria.py`: a sequência
+- [X] T056 [P] [US5] Teste em `backend/tests/integration/ocupacao/test_auditoria.py`: a sequência
       quadro → apurações → movimentos reconstrói o número vigente (`FR-259`)
-- [ ] T057 [P] [US5] Teste de que fica legível **qual versão do quadro** cada apuração leu, em
+- [X] T057 [P] [US5] Teste de que fica legível **qual versão do quadro** cada apuração leu, em
       `backend/tests/integration/ocupacao/test_auditoria.py`
-- [ ] T058 [US5] Tela de histórico em
+- [X] T058 [US5] Tela de histórico em
       `backend/processo_seletivo/interface/templates/interface/ocupacao_historico.html`, com rota
       pendendo do Edital em `backend/processo_seletivo/interface/urls.py` — o precedente é
       `corte-historico`, que pende do Edital e não do marco justamente para sobreviver à Retificação
-- [ ] T059 [US5] Registrar ator, ato, estados, motivo e correlação na auditoria, em
+- [X] T059 [US5] Registrar ator, ato, estados, motivo e correlação na auditoria, em
       `backend/processo_seletivo/ocupacao/application/emissao.py`
 
 **Checkpoint**: todas as histórias estão independentemente funcionais.

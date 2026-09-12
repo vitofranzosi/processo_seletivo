@@ -4348,6 +4348,42 @@ def ocupacao(request, edital_id, marco_id):
     )
 
 
+@require_http_methods(["GET"])
+def ocupacao_historico(request, edital_id, marco_id):
+    """Todas as apurações de um recorte, da mais antiga à mais nova (016, FR-259).
+
+    **Pende do Edital e do marco, e o recorte vem em `?lista=`** — como a tela da ocupação. A do
+    corte pende só do Edital porque um corte tem identidade própria; aqui o que se lista é a
+    **série** de um recorte, e o recorte é o que a identifica.
+
+    **Lidas como foram emitidas.** Cada apuração guarda a versão do quadro, a ordem, o corte e os
+    movimentos que considerou: uma Retificação posterior não reescreve o que uma apuração antiga
+    apurou.
+    """
+    from processo_seletivo.ocupacao.application.selectors import historico_do_recorte
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    lista_id = _identidade_ou_404(request.GET.get("lista"))
+    perfil_id = _perfil_do_marco(edital, marco_id)
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/ocupacao_historico.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "marco_id": marco_id,
+                "lista_id": lista_id,
+                "serie": historico_do_recorte(
+                    edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+                ),
+            },
+        )
+    )
+
+
 @require_http_methods(["POST"])
 def emitir_apuracao_view(request, edital_id, marco_id):
     """Emite a apuração de um recorte e volta à leitura, pelo padrão POST-redirect-GET."""

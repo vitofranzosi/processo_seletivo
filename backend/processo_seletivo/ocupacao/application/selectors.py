@@ -170,6 +170,40 @@ def _movimentos_lidos_por_apuracao(apuracao):
     return [encontrados[str(i)] for i in ids if str(i) in encontrados]
 
 
+def historico_do_recorte(*, edital, perfil_id, marco_id, lista_id=None):
+    """Todas as apurações do recorte, da mais antiga à mais nova, com o que cada uma leu.
+
+    **Lidas como elas foram emitidas**, e não reinterpretadas pela versão vigente: cada apuração
+    guarda a versão do quadro, a ordem, o corte e os movimentos que considerou. Uma Retificação
+    posterior não reescreve o que uma apuração antiga apurou — o ato é imutável, e a leitura dele
+    também precisa ser. É a mesma regra que a `015` aplica ao ato de ordenação.
+    """
+    apuracoes = list(
+        ApuracaoDeOcupacao.objects.filter(
+            edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+        ).order_by("emitida_em")
+    )
+    if not apuracoes:
+        return []
+    vigente = apuracoes[-1] if not apuracoes[-1].sucessoras.exists() else None
+    causas = {}
+    if vigente is not None:
+        causas[vigente.id] = causas_de_obsolescencia(vigente)
+    return [
+        {
+            "apuracao": item,
+            "publicadas": item.publicadas,
+            "efetivas": item.efetivas,
+            "ocupadas": item.ocupadas,
+            "faltando": item.faltando,
+            "movimentos": _movimentos_lidos_por_apuracao(item),
+            "vigente": item is vigente,
+            "causasDeObsolescencia": [c["causa"] for c in causas.get(item.id, [])],
+        }
+        for item in apuracoes
+    ]
+
+
 def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
     """Todo recorte do marco, com os quatro números e o estado de cada um (`UX-031`).
 
@@ -313,6 +347,7 @@ __all__ = [
     "causas_de_obsolescencia",
     "dentro_da_faixa",
     "habilitadas_na_etapa",
+    "historico_do_recorte",
     "movimentos_lidos_por",
     "ocupacao_do_recorte",
 ]

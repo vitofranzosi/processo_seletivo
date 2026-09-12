@@ -259,3 +259,59 @@ def test_a_tela_nomeia_a_reversao_e_explica_a_divergencia(
     assert "da lista reservada para a ampla concorrência" in pagina
     # E a divergência entre publicada e efetiva é explicada, em vez de o número mudar calado.
     assert "As efetivas divergem das publicadas" in pagina
+
+
+def test_o_historico_do_recorte_e_alcancavel_e_lista_as_apuracoes(
+    client, seletor_ligado, cenario, gestor
+):
+    """**`T058`**: a série de um recorte, lida como ela foi emitida.
+
+    A tela existe porque correção é sucessão: a apuração anterior continua dizendo o que apurou, e
+    quem audita precisa ver as duas. A rota pende do marco e o recorte vem em `?lista=`, como a da
+    leitura — o que se lista é a série de um recorte.
+    """
+    edital, _, _ = cenario
+    apurar(edital, gestor)
+    apurar(edital, gestor, chave="hist-016-2", motivo="Reanálise documental")
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = client.get(
+        reverse("interface:ocupacao-historico", args=[edital.id, MARCO])
+    ).content.decode()
+
+    assert "Apuração 1 de 2" in pagina
+    assert "Apuração 2 de 2" in pagina
+    assert "sucedida" in pagina and "vigente" in pagina
+    assert "Reanálise documental" in pagina
+    # A proveniência de cada uma: versão lida, linha do quadro, ordem e corte.
+    assert "Versão do conteúdo lida" in pagina
+    assert "Linha do quadro" in pagina
+
+
+def test_o_historico_de_recorte_sem_apuracao_diz_que_nada_foi_afirmado(
+    client, seletor_ligado, cenario
+):
+    """Sem apuração não há histórico — e a tela **não** inventa linha vazia."""
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = client.get(
+        reverse("interface:ocupacao-historico", args=[edital.id, MARCO])
+    ).content.decode()
+
+    assert "ainda não tem apuração emitida" in pagina
+    assert "nenhum número foi afirmado" in pagina
+
+
+def test_o_link_do_historico_so_aparece_onde_ha_apuracao(client, seletor_ligado, cenario, gestor):
+    """Oferecer o histórico de um recorte sem apuração levaria a uma tela que diz "não há nada"."""
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+
+    antes = abrir(client, edital).content.decode()
+    assert "Ver o histórico deste recorte" not in antes
+
+    apurar(edital, gestor)
+    depois = abrir(client, edital).content.decode()
+
+    assert "Ver o histórico deste recorte" in depois

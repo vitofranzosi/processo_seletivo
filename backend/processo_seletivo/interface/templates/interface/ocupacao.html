@@ -74,6 +74,10 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
   {% endif %}
   {% endif %}
 
+  {% if recorte.estado != "NO_VACANCY_TABLE" and recorte.estado != "NOT_APPRAISED" %}
+  <p class="acoes"><a href="{% url 'interface:ocupacao-historico' edital.id marco_id %}{% if recorte.listaId %}?lista={{ recorte.listaId }}{% endif %}">Ver o histórico deste recorte</a></p>
+  {% endif %}
+
   {% if pode_emitir and recorte.estado != "NO_VACANCY_TABLE" %}
   <form method="post" action="{% url 'interface:emitir-apuracao' edital.id marco_id %}" class="acoes">
     {% csrf_token %}

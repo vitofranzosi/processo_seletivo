@@ -1,0 +1,83 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Histórico da ocupação — as apurações deste recorte{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <a href="{% url 'interface:ocupacao' edital.id marco_id %}">Ocupação de vagas</a> ›
+  <span aria-current="page">Histórico</span>
+</nav>
+
+<h1>Histórico da ocupação</h1>
+<p class="sub">Todas as apurações deste recorte, da mais antiga à mais nova, com o que cada uma leu.</p>
+
+{% comment %}
+Cada apuracao e lida **como ela foi emitida**, e nao reinterpretada pela versao vigente: ela guarda
+a versao do quadro, a ordem, o corte e os movimentos que considerou. Uma Retificacao posterior nao
+reescreve o que uma apuracao antiga apurou — o ato e imutavel, e a leitura dele tambem precisa ser.
+
+**Correcao e sucessao**, e e por isso que esta tela existe: a apuracao anterior continua dizendo o
+que ela apurou, e quem audita precisa ver as duas.
+{% endcomment %}
+{% if serie %}
+<p class="imutavel">São {{ serie|length }} apuraç{{ serie|length|pluralize:"ão,ões" }} neste recorte. A anterior não é alterada quando outra a sucede: ela continua dizendo o que apurou.</p>
+
+{% for passo in serie %}
+<section aria-labelledby="apuracao-{{ forloop.counter }}" class="resumo">
+  <h2 id="apuracao-{{ forloop.counter }}">
+    Apuração {{ forloop.counter }} de {{ serie|length }}
+    {% if passo.vigente %}<span class="situacao s-EM_REVISAO">vigente</span>{% else %}<span class="situacao">sucedida</span>{% endif %}
+  </h2>
+
+  <dl class="meta">
+    <dt>Emitida em</dt><dd>{{ passo.apuracao.emitida_em|date:"d/m/Y H:i" }}</dd>
+    <dt>Por</dt><dd>{{ passo.apuracao.emitida_por }}</dd>
+    <dt>Publicadas</dt><dd>{{ passo.publicadas }}</dd>
+    <dt>Efetivas</dt><dd>{{ passo.efetivas }}</dd>
+    <dt>Ocupadas</dt><dd>{{ passo.ocupadas }}</dd>
+    <dt>A ocupar</dt><dd>{{ passo.faltando }}</dd>
+  </dl>
+
+  {% if passo.apuracao.motivo_da_sucessao %}
+  <p class="nota">Motivo da sucessão: {{ passo.apuracao.motivo_da_sucessao }}</p>
+  {% endif %}
+
+  {% comment %}
+  A proveniencia: **qual** versao do quadro, **qual** ordem e **qual** corte esta apuracao leu. Sem
+  a linha do quadro, retificado o quadro, nao se sabe se esta apuracao ficou para tras — a
+  quantidade sozinha nao identifica a linha.
+  {% endcomment %}
+  <dl class="meta">
+    <dt>Versão do conteúdo lida</dt><dd>{{ passo.apuracao.versao_id }}</dd>
+    <dt>Linha do quadro</dt><dd>{{ passo.apuracao.linha_do_quadro_id|default_if_none:"—" }}</dd>
+    <dt>Ordem</dt><dd>{{ passo.apuracao.ato_id }}</dd>
+    <dt>Corte</dt><dd>{{ passo.apuracao.corte_id|default_if_none:"nenhum — o marco não corta" }}</dd>
+  </dl>
+
+  {% if passo.movimentos %}
+  <ul class="consequencias">
+    {% for movimento in passo.movimentos %}
+    <li>Reversão de cota: {{ movimento.quantidade }} vaga(s) — {{ movimento.causa }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="nota">Nenhum movimento de vaga entrou nesta apuração.</p>
+  {% endif %}
+
+  {% if passo.causasDeObsolescencia %}
+  <p class="aviso" role="status"><strong>Esta apuração está obsoleta.</strong> O mundo mudou depois dela:</p>
+  <ul class="consequencias">
+    {% for causa in passo.causasDeObsolescencia %}
+    <li>{% if causa == "ordem_sucedida" %}a ordem deste recorte foi sucedida{% elif causa == "corte_obsoleto" %}o corte que a alimentou não é mais o vigente{% elif causa == "quadro_retificado" %}a linha do quadro que ela leu mudou por Retificação{% elif causa == "movimento_posterior" %}um movimento de vaga alcançou este recorte depois dela{% endif %}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endfor %}
+
+{% else %}
+<p class="aviso" role="status">Este recorte ainda não tem apuração emitida. Não há histórico a mostrar — e nenhum número foi afirmado sobre ele.</p>
+{% endif %}
+
+<p class="acoes"><a href="{% url 'interface:ocupacao' edital.id marco_id %}">Voltar à ocupação</a></p>
+{% endblock %}

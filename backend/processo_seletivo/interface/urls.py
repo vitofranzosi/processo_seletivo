@@ -254,6 +254,13 @@ urlpatterns = [
         views.causar_faixa_view,
         name="causar-faixa",
     ),
+    # O histórico de um recorte (016, FR-259). Pende do marco como a leitura, e o recorte vem em
+    # `?lista=`: o que se lista é a **série** de um recorte, e é ela que o recorte identifica.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/historico",
+        views.ocupacao_historico,
+        name="ocupacao-historico",
+    ),
     path(
         "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/corte/continuar",
         views.continuar_corte_view,
