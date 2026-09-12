@@ -87,6 +87,11 @@ class ClassificationMilestoneSerializer(serializers.Serializer):
     # norma, e `allow_null` porque não declarar é resposta legítima — a maioria dos marcos não
     # sorteia (021, FR-013, D-013).
     drawMethod = serializers.JSONField(required=False, allow_null=True)
+    # A regra de corte, pela mesma razão e na mesma forma dos dois acima: objeto declarado pela
+    # norma, e `allow_null` porque não declarar é resposta legítima — marco que não corta é a
+    # maioria. Os campos que não têm padrão honesto são cobrados na **publicação**, e não aqui: o
+    # rascunho pode estar pela metade (014, FR-178).
+    cutRule = serializers.JSONField(required=False, allow_null=True)
     tiebreakers = TiebreakerSerializer(many=True, required=False)
 
 
@@ -125,6 +130,9 @@ class ProfileSerializer(serializers.Serializer):
     compensation = serializers.CharField(required=False, allow_blank=True)
     classificationInformation = serializers.JSONField(required=False)
     callInformation = serializers.JSONField(required=False)
+    # Qual das Modalidades é a ampla concorrência (014, D-014). `allow_null` porque não declarar é
+    # resposta legítima: há Edital em que a ampla concorrência existe só como a linha geral.
+    generalCompetitionModalityId = serializers.UUIDField(required=False, allow_null=True)
     competitionModalities = CompetitionModalitySerializer(many=True)
     # Opcional no rascunho: um Edital que não classifica não declara marco nenhum.
     classificationMilestones = ClassificationMilestoneSerializer(many=True, required=False)

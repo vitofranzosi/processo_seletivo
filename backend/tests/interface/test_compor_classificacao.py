@@ -71,7 +71,18 @@ def test_get_oferece_so_etapas_classificatorias(client, com_etapas):
     assert f'hx-target="#marcos-{PERFIL}"' in corpo
     assert 'src="/static/interface/htmx.min.js"' in corpo
     assert "Prova didática" in corpo
-    assert "Análise documental" not in corpo
+    # **A asserção é sobre o seletor de Etapas do marco**, e não sobre a página inteira: desde a
+    # `014` a mesma tela traz o seletor da Etapa **governada** pelo corte, que oferece todas as
+    # Etapas de propósito — a que o corte alimenta não precisa classificar, e no 77/2026 ela é a
+    # análise documental (FR-224). O que continua proibido é o que este teste sempre protegeu:
+    # oferecer Etapa não classificatória como parcela do marco, que seria convidar a uma recusa
+    # que só apareceria na publicação (FR-010).
+    assert "Análise documental" not in _seletor_de_etapas_do_marco(corpo)
+
+
+def _seletor_de_etapas_do_marco(corpo):
+    abertura = corpo.index(f'name="marco-{PERFIL}-0-stages"')
+    return corpo[abertura : corpo.index("</select>", abertura)]
 
 
 def test_recusa_reexibe_o_que_foi_digitado(client, com_etapas):

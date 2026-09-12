@@ -1,0 +1,98 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Corte — {{ nomes.marco }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">Corte de {{ corte.emitido_em|date:"d/m/Y H:i" }}</span>
+</nav>
+
+<h1>Corte — {{ nomes.marco }}</h1>
+{% comment %}
+Os nomes vêm da versão que **este** corte cita, e acompanham os identificadores sem os substituir:
+na proveniência o UUID é a âncora de auditoria, e o nome é o que torna a página citável fora da
+máquina (mesma decisão da 015, E2E15-006).
+{% endcomment %}
+<p class="sub">{{ nomes.perfil }}{% if nomes.lista %} — {{ nomes.lista }}{% else %} — ampla concorrência{% endif %}, conforme a versão que o corte congelou.</p>
+
+{% if sucessores %}
+<p class="aviso" role="status"><strong>Esta geração foi sucedida.</strong> Ela continua íntegra e legível, e deixou de autorizar participação na Etapa governada.</p>
+{% endif %}
+
+<section aria-labelledby="titulo-proveniencia">
+  <h2 id="titulo-proveniencia">Proveniência</h2>
+  <dl class="resumo">
+    <dt>Emitido por</dt><dd>{{ corte.emitido_por }}</dd>
+    <dt>Emitido em</dt><dd>{{ corte.emitido_em|date:"d/m/Y H:i" }}</dd>
+    <dt>Edital</dt><dd>{{ nomes.edital }}</dd>
+    <dt>Processo</dt><dd>{{ nomes.processo }}</dd>
+    <dt>Marco</dt><dd>{{ nomes.marco }} <span class="ajuda">{{ corte.marco_id }}</span></dd>
+    <dt>Ordem citada</dt><dd><a href="{% url 'interface:ato-de-ordenacao' edital.id corte.marco_id corte.ato_id %}">Ato de {{ corte.ato.emitido_em|date:"d/m/Y H:i" }}</a></dd>
+    <dt>Versão normativa</dt><dd>{{ corte.versao_id }}</dd>
+    <dt>Etapa governada</dt><dd>{% if corte.etapa_governada_id %}{{ corte.etapa_governada_id }}{% else %}<span class="nenhuma">Nenhuma</span>{% endif %}</dd>
+    <dt>Faixa</dt>
+    <dd>{% if corte.faixa_anterior_id %}continuação, da posição {{ corte.primeira_posicao }} em diante{% else %}faixa inicial{% endif %}{% if corte.ultima_posicao %}, até a posição {{ corte.ultima_posicao }}{% endif %}</dd>
+    {% if corte.motivo %}<dt>Motivo</dt><dd>{{ corte.motivo }}</dd>{% endif %}
+  </dl>
+</section>
+
+<section aria-labelledby="titulo-regra">
+  <h2 id="titulo-regra">A regra que o governou</h2>
+  <dl class="resumo">
+    <dt>Alvo declarado</dt>
+    <dd>{% if regra.targetKind == "FROM_VACANCY_TABLE" %}O que o quadro de vagas publicou no recorte{% else %}{{ regra.targetCount }}{% endif %}</dd>
+    <dt>Alvo apurado</dt><dd>{{ universo.target.count }}</dd>
+    <dt>Suplentes</dt><dd>{{ universo.surplus|default:"0" }}</dd>
+    <dt>Empate na última posição</dt>
+    <dd>{% if regra.tieOutcome == "ADMITS_SURPLUS" %}Todos os empatados progridem{% else %}A faixa para no alvo{% endif %}</dd>
+    <dt>Faixa seguinte</dt>
+    <dd>{% if regra.continuation == "ALLOWED" %}Admitida{% else %}Não admitida{% endif %}</dd>
+  </dl>
+</section>
+
+<section aria-labelledby="titulo-reproducao">
+  <h2 id="titulo-reproducao">Reprodução a partir do universo declarado</h2>
+  {% comment %}
+  Registrar o que foi usado e chegar de novo ao mesmo resultado são coisas distintas, e a
+  Constituição pede a segunda (FR-199). Nada aqui consulta a regra vigente, o quadro vigente ou o
+  ato vigente.
+  {% endcomment %}
+  {% if divergencias %}
+  <div class="consequencias irreversivel">
+    <p><strong>A reprodução não chega à mesma faixa.</strong></p>
+    <ul>{% for item in divergencias %}<li>{{ item.descricao }}</li>{% endfor %}</ul>
+  </div>
+  {% else %}
+  <p class="sucesso" role="status">A faixa reproduz: {{ reproduzido.progrediram|length }} progridem, até a posição {{ reproduzido.ultima_posicao|default:"nenhuma" }}.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="titulo-itens">
+  <h2 id="titulo-itens">Participantes considerados</h2>
+  <div class="tabela-rolavel">
+  <table>
+    <caption class="oculto">Participantes considerados, com posição, consequência e causa</caption>
+    <thead><tr><th scope="col">Posição</th><th scope="col">Inscrição</th><th scope="col">Consequência</th><th scope="col">Causa</th></tr></thead>
+    <tbody>
+    {% for item in itens %}
+      <tr>
+        <td>{% if item.posicao %}{{ item.posicao }}º{% else %}<span class="nenhuma">Sem posição</span>{% endif %}</td>
+        <td>{{ item.inscricao.protocolo|default:item.inscricao_id }}{% if item.inscricao.nome %} — {{ item.inscricao.nome }}{% endif %}</td>
+        <td>{% if item.consequencia == "PROGREDIU" %}Progride{% if item.excedente_por_empate %} <span class="situacao s-EM_REVISAO">Excedente por empate</span>{% endif %}{% else %}Fora da faixa{% endif %}</td>
+        <td>{{ item.motivo }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+
+{% if geracao|length > 1 %}
+<section aria-labelledby="titulo-geracao">
+  <h2 id="titulo-geracao">As faixas desta geração</h2>
+  <ol>{% for faixa in geracao %}
+    <li>{% if faixa.id == corte.id %}<strong>Esta faixa</strong>{% else %}<a href="{% url 'interface:corte-historico' edital.id faixa.id %}">{{ faixa.emitido_em|date:"d/m/Y H:i" }}</a>{% endif %} — {% if faixa.faixa_anterior_id %}continuação, da posição {{ faixa.primeira_posicao }} em diante{% else %}faixa inicial{% endif %}</li>
+  {% endfor %}</ol>
+</section>
+{% endif %}
+{% endblock %}

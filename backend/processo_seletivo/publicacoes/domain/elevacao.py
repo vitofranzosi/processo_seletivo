@@ -63,6 +63,14 @@ DEGRAUS_DE_PERFIL = {
     # quadros, e uma coleção de raiz teria de carregar a referência ao Perfil em cada linha,
     # inventando uma segunda forma de dizer o que o aninhamento já diz.
     12: {"vacancyTable": []},
+    # **O degrau 13 também é de Perfil**, e não só de marco: junto com a regra de corte entra a
+    # declaração de qual Modalidade é a ampla concorrência (014, D-014). `None` diz "este Perfil não
+    # declarou nenhuma", e é verdade sobre todo Edital publicado antes — a capacidade não existia.
+    #
+    # Os dois campos do degrau 13 entram **juntos** de propósito: a conferência do alvo derivado
+    # precisa dos dois para saber quais recortes exigem linha de quadro, e separá-los seria duas
+    # elevações e dois caminhos de leitura para uma decisão só.
+    13: {"generalCompetitionModalityId": None},
 }
 
 DEGRAUS_DA_RAIZ = {
@@ -104,9 +112,17 @@ COLECAO_DE_DOCUMENTOS_ENDERECADA = f"/{COLECAO_DE_DOCUMENTOS}"
 # declarou fonte, ocorrência ou regra de normalização. Há, portanto, conversão sem invenção — e o
 # sistema recusa congelar relação em marco sem método, em vez de escolher um por conta própria
 # (021, FR-066, D-013).
+# **O degrau 13 é a regra de corte** (014, D-011 a D-014). `None` significa **marco que não corta**,
+# e é verdade sobre todo Edital publicado antes dele: a capacidade não existia, e nenhum deles
+# declarou alvo, excedente, desfecho de empate, Etapa governada ou política de continuação. Há,
+# portanto, conversão sem invenção, como nos dois degraus anteriores do mesmo objeto.
+#
+# `None` e não `{}`: os dois vizinhos já fixaram `None` para "não declarado", e um dicionário vazio
+# seria uma segunda grafia da mesma ausência — o modo de falha que este módulo recusa em toda parte.
 DEGRAUS_DE_MARCO = {
     8: {"appealWindow": None},
     10: {"drawMethod": None},
+    13: {"cutRule": None},
 }
 
 # **O degrau 11 é o primeiro dentro do Evento do Cronograma.** Vazio significa **não declarado**, e

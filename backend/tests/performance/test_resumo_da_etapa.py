@@ -10,7 +10,7 @@ from django.db import connection
 from django.test.utils import CaptureQueriesContext
 
 from processo_seletivo.avaliacoes.application.selectors import resumo_da_etapa
-from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
+from processo_seletivo.comissoes.domain.etapas import conteudo_vigente, etapas_vigentes
 from processo_seletivo.resultados.application.prontidao import panorama_da_etapa
 from tests.fixtures.comissao import inscrever
 from tests.fixtures.mesa import concluir_como, distribuir_para
@@ -26,6 +26,9 @@ def cenario(gestor, api_client, manager_headers):
     )
     vigentes = etapas_vigentes(montado["edital"])
     montado["vigentes"] = vigentes
+    # O conteúdo publicado, como a tela da Etapa o lê: uma vez, e entregue à prontidão. Ele é o que
+    # a condição do corte da 014 precisa, e relê-lo lá dentro custaria duas consultas (014, R-005).
+    montado["conteudo"] = conteudo_vigente(montado["edital"])
     montado["etapa_publicada"] = next(
         etapa for chave, etapa in vigentes.items() if str(chave) == str(montado["primeira"])
     )
@@ -37,7 +40,7 @@ def custo(cenario):
         panorama = panorama_da_etapa(
             edital=cenario["edital"],
             etapa=cenario["etapa_publicada"],
-            etapas_vigentes=cenario["vigentes"],
+            conteudo=cenario["conteudo"],
         )
         resumo_da_etapa(
             edital=cenario["edital"], etapa=cenario["etapa_publicada"], panorama=panorama

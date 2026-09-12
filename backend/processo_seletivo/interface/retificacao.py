@@ -49,6 +49,10 @@ OCULTO = "oculto"
 
 # (sufixo do caminho, rótulo, tipo) — aplicado a cada Perfil e a cada Evento.
 CAMPOS_PERFIL = [
+    # Qual das Modalidades é a ampla concorrência (014, FR-231). Retificá-la é mudar quais recortes
+    # exigem linha de quadro, e por isso é norma — não é rótulo. `REFERENCIA` porque o valor é a
+    # identidade de uma Modalidade do próprio Perfil, e não texto livre.
+    ("generalCompetitionModalityId", "Modalidade que é a ampla concorrência", REFERENCIA),
     ("name", "Denominação", TEXTO),
     ("locality", "Localidade", TEXTO),
     # O que um Edital diz sobre a vaga também se corrige depois de publicado (FR-016). Sem estes
@@ -88,6 +92,32 @@ CAMPOS_REGRA = [
 # e a segunda é escolha entre formas que o motor sabe executar — retificá-las por caixa de texto
 # publicaria regra que o cálculo não interpreta. O que a tela alcança aqui é o rótulo.
 CAMPOS_MARCO = [("name", "Denominação do marco", TEXTO)]
+# A regra de corte, alcançada **campo a campo** (014, FR-184). Os dois números e o rótulo são o que
+# uma Retificação real muda: "onde se lê 10, leia-se 12".
+#
+# **A espécie do alvo, a Etapa governada e a política de continuação ficam de fora**, e a ausência é
+# a regra — a mesma que mantém `stages` e `operation` fora do marco. Trocar a espécie do alvo por
+# caixa de texto publicaria `targetKind` que o cálculo não interpreta; trocar a Etapa governada por
+# um UUID digitado publicaria um corte que alimenta Etapa que não existe. Retificações assim são
+# possíveis pela API, onde a aferição de publicabilidade as confere inteiras (`cut_rule_*`), e o que
+# a tela oferece é o que ela consegue conferir enquanto a pessoa digita.
+CAMPOS_DO_CORTE = [
+    ("cutRule/targetCount", "Quantos progridem", INTEIRO),
+    ("cutRule/surplusCount", "Suplentes alcançados na mesma faixa", INTEIRO),
+    # **O desfecho do empate entra, e as três exclusões acima continuam de fora.** A razão delas é
+    # a caixa de texto que publicaria valor não interpretável; o desfecho não tem esse problema —
+    # são dois valores fechados, e `REFERENCIA` os oferece conferindo a escolha contra a lista.
+    # Sem ele, o caminho que o próprio percurso da feature descreve — o empate atravessa a faixa
+    # sob alvo estrito, e a comissão decide admitir o excedente — não existia pela tela, e mudar o
+    # desfecho de um Edital publicado exigia chamada de API (E2E14-005).
+    ("cutRule/tieOutcome", "Empate na última posição", REFERENCIA),
+]
+# Os dois desfechos, com as mesmas palavras da tela de composição: quem retifica escolhe entre o
+# que já leu ao declarar, e não entre dois códigos.
+DESFECHOS_DO_EMPATE = (
+    ("ADMITS_SURPLUS", "Todos os empatados progridem"),
+    ("STRICT", "A faixa para no alvo"),
+)
 # **O tipo do fato não está aqui, e a ausência é a regra.** Um fato declarado como data que virasse
 # número não é o mesmo fato: reinterpretar o valor já congelado seria o sistema decidindo o que a
 # pessoa quis dizer. Mudar o tipo é remover um fato e acrescentar outro, e o que foi congelado sob
@@ -379,6 +409,17 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
     for perfil in conteudo.get("profiles") or []:
         caminho = f"/profiles/id={perfil.get('id', '')}"
         nome_do_perfil = f"{perfil.get('code', '')} — {perfil.get('name', '')}".strip(" —")
+        # As Modalidades **deste** Perfil, e não as do Edital. Servem a dois campos de referência —
+        # a ampla concorrência declarada pelo Perfil e a `modalityId` de cada linha do quadro —, e
+        # por isso são calculadas antes do primeiro grupo que as usa.
+        modalidades_do_perfil = [
+            (
+                modalidade["id"],
+                f"{modalidade.get('code', '')} — {modalidade.get('name', '')}".strip(" —"),
+            )
+            for modalidade in perfil.get("competitionModalities") or []
+            if modalidade.get("id")
+        ]
         grupos.append(
             _grupo(
                 f"Perfil {nome_do_perfil}",
@@ -387,6 +428,16 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                 CAMPOS_PERFIL,
                 tipo="Perfil",
                 nome=nome_do_perfil,
+                # **Sem isto o seletor nasce vazio**, e um campo de referência sem opção não
+                # oferece nada e ainda apaga a declaração vigente ao ser submetido em branco: a
+                # tela mostraria só o rótulo do vazio, e retificar qualquer outro campo do Perfil
+                # levaria junto a ampla concorrência declarada (014, FR-231, FR-238).
+                opcoes={"generalCompetitionModalityId": modalidades_do_perfil},
+                rotulos_do_vazio={
+                    "generalCompetitionModalityId": (
+                        "Nenhuma — a ampla concorrência é só a linha geral do quadro"
+                    )
+                },
             )
         )
         for modalidade in perfil.get("competitionModalities") or []:
@@ -404,17 +455,9 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                     nome=nome,
                 )
             )
-        # As linhas do quadro. As opções de `modalityId` são as Modalidades **deste** Perfil, e não
-        # as do Edital: uma linha que apontasse Modalidade de outro Perfil é o que a FR-158 recusa,
-        # e oferecê-la na tela seria oferecer o que a publicação não aceita.
-        modalidades_do_perfil = [
-            (
-                modalidade["id"],
-                f"{modalidade.get('code', '')} — {modalidade.get('name', '')}".strip(" —"),
-            )
-            for modalidade in perfil.get("competitionModalities") or []
-            if modalidade.get("id")
-        ]
+        # As linhas do quadro usam a mesma lista de Modalidades calculada acima: uma linha que
+        # apontasse Modalidade de outro Perfil é o que a FR-158 recusa, e oferecê-la na tela seria
+        # oferecer o que a publicação não aceita.
         for linha in perfil.get("vacancyTable") or []:
             recorte = next(
                 (
@@ -457,9 +500,17 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                     f"Marco {nome_do_marco}",
                     base_do_marco,
                     marco,
-                    CAMPOS_MARCO,
+                    CAMPOS_MARCO
+                    + (CAMPOS_DO_CORTE if isinstance(marco.get("cutRule"), dict) else []),
                     tipo="Marco",
                     nome=nome_do_marco,
+                    opcoes={"cutRule/tieOutcome": DESFECHOS_DO_EMPATE},
+                    rotulos_do_vazio={
+                        # O vazio existe porque o `select` de referência sempre o desenha. Dizer o
+                        # que ele provoca é o mínimo: a regra sem desfecho não publica, e a recusa
+                        # nomeia o marco.
+                        "cutRule/tieOutcome": "Não declarado — a publicação será impedida",
+                    },
                 )
             )
             for criterio in marco.get("tiebreakers") or []:
@@ -848,6 +899,10 @@ def _perfil_completo(valores):
         # legítimo, e é o que o acervo inteiro afirma —, e quem quiser declará-lo acrescenta as
         # linhas na Retificação seguinte, pela coleção que já é endereçável (025, D-005, D-006).
         "vacancyTable": [],
+        # A da versão 13, pela mesma razão de novo. `None` diz que este Perfil não declara qual das
+        # suas Modalidades é a ampla concorrência — e um Perfil que nasce sem Modalidade nenhuma não
+        # teria mesmo o que apontar (014, FR-231).
+        "generalCompetitionModalityId": None,
     }
 
 

@@ -90,6 +90,30 @@ def test_a_tela_oferece_a_colecao_do_quadro_com_a_modalidade_como_escolha(
     assert "Sem restrição" not in corpo[corpo.index("Linha do quadro de vagas") :]
 
 
+def test_a_tela_oferece_a_ampla_concorrencia_como_escolha_entre_as_modalidades(
+    client, seletor_ligado, edital, vigente
+):
+    """O campo é referência, e referência sem opção não oferece nada (014, FR-231, FR-238).
+
+    Pior: submetido em branco, ele **apaga** a declaração vigente — retificar qualquer outro campo
+    do Perfil levaria junto qual Modalidade é a ampla concorrência. O seletor precisa trazer as
+    Modalidades daquele Perfil, e a opção vazia precisa dizer o que ela é.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    client.get(reverse("interface:retificar", args=[edital.id]))
+
+    grupos = campos_editaveis(vigente.content)
+    do_perfil = next(g for g in grupos if g["tipo"] == "Perfil")
+    ampla = next(
+        c for c in do_perfil["campos"] if c["caminho"].endswith("/generalCompetitionModalityId")
+    )
+
+    assert ampla["tipo"] == "referencia"
+    assert [identificador for identificador, _ in ampla["opcoes"]] == [PPI]
+    assert "Pretos, pardos e indígenas" in dict(ampla["opcoes"])[PPI]
+    assert ampla["rotulo_do_vazio"].startswith("Nenhuma")
+
+
 def test_alterar_a_quantidade_pela_tela_vira_replace_por_identidade(
     client, seletor_ligado, edital, vigente
 ):

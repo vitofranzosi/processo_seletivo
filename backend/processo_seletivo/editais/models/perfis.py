@@ -36,6 +36,23 @@ class PerfilVaga(models.Model):
     classification_information = models.JSONField(default=dict, blank=True)
     call_information = models.JSONField(default=dict, blank=True)
 
+    # **Qual das Modalidades declaradas é a ampla concorrência** (014, D-014). `None` significa que
+    # o Perfil não declarou nenhuma — o formato em que a ampla concorrência existe só como a linha
+    # geral do quadro, sem Modalidade homônima.
+    #
+    # **Por que a declaração é necessária.** A `025` deixou registrado que o Edital normal declara
+    # *também* uma Modalidade chamada "Ampla concorrência", e que a quantidade dela mora na **linha
+    # geral** — a de `modalidade` nula —, porque é o recorte que o sorteio consulta. Sem dizer qual
+    # é, o sistema não tem como distinguir a Modalidade que corresponde à linha geral daquela que
+    # exige linha própria: a `R-006` daquela feature recusou, por escrito, identificá-la casando o
+    # nome, e continua certa em recusar. O que faltava era o Edital **dizê-lo**, e é o que este
+    # campo é.
+    #
+    # **Ela não recebe linha no quadro**, e a conferência recusa quem lhe der uma: a quantidade dela
+    # já está na linha geral, e duas linhas para o mesmo recorte é a contradição que a `025`
+    # proíbe.
+    modalidade_ampla_concorrencia = models.UUIDField(null=True, blank=True)
+
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["edital", "code"], name="uq_perfil_edital_code"),
@@ -225,6 +242,22 @@ class MarcoClassificatorio(models.Model):
     # semeia as três listas do recorte, e é o `relationHash` que as separa. Método por lista
     # reabriria a porta que a D-014 fechou, e não atenderia Edital nenhum da amostra.
     metodo_de_sorteio = models.JSONField(default=dict, blank=True)
+    # A regra de corte deste marco (014, degrau 13, D-011 a D-014, FR-178). **Vazio significa não
+    # declarada** — e não regra padrão: o marco sem regra não corta, e a Etapa que ele alimentaria
+    # continua recebendo o conjunto que a progressão da 013 já entrega (FR-214). É o que todo
+    # Edital publicado antes deste degrau afirma, e é verdade sobre todos eles.
+    #
+    # **Mora aqui pelo mesmo motivo que os dois vizinhos acima**: alterá-la é Retificação (FR-184),
+    # e `/profiles/id=…/classificationMilestones/id=…/cutRule/targetCount` já resolve — é objeto, e
+    # em objeto o segmento do caminho é nome de chave literal. Na Etapa ela ficaria longe da ordem
+    # que lê, e a `EtapaAvaliacao` é do Edital e não do Perfil; no Edital, não saberia de qual
+    # Perfil falar.
+    #
+    # **Quatro dos seis campos existem porque o sistema não pode concluí-los** (FR-182, FR-224,
+    # FR-226): o desfecho do empate na fronteira, a Etapa governada — ou a declaração explícita de
+    # que não governa nenhuma —, e se aquele Edital admite continuação. A ausência de qualquer um
+    # deles impede a publicação, em vez de virar padrão.
+    regra_de_corte = models.JSONField(default=dict, blank=True)
 
     class Meta:
         constraints = [

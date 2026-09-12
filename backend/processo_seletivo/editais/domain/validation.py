@@ -78,6 +78,11 @@ PERFIL_PUBLICADO = (
     Campo("immediateVacancies", int, minimo=0),
     Campo("reserveType", str, valores=RESERVA),
     Campo("reserveLimit", int, admite_nulo=True, minimo=0),
+    # Qual das Modalidades declaradas é a ampla concorrência (014, D-014, FR-231). **Anulável**: há
+    # Edital em que ela existe só como a linha geral do quadro, e nesse caso não há Modalidade a
+    # apontar. Que a identidade aponte Modalidade **deste** Perfil é conferido à parte, porque
+    # depende do conteúdo do Perfil inteiro e não da forma do campo.
+    Campo("generalCompetitionModalityId", str, formato="uuid", admite_nulo=True),
     Campo("locality", str),
     # `str` sem `admite_nulo`: os três são **sempre presentes**, com `""` quando não informados
     # (FR-014). Declará-los assim é o que faz a versão canônica 3 identificar uma forma só.
@@ -612,6 +617,8 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
         fatos = {
             fato.get("id") for fato in (perfil.get("declaredFacts") or []) if isinstance(fato, dict)
         }
+        findings.extend(_ampla_concorrencia_declarada(perfil, base=base))
+        findings.extend(_corte_em_dois_marcos(perfil, base=base))
         for indice, marco in enumerate(perfil.get("classificationMilestones") or []):
             if not isinstance(marco, dict):
                 continue
@@ -630,6 +637,9 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
                     )
                 )
             findings.extend(_divisor_do_marco(marco, etapas, caminho))
+            findings.extend(
+                _regra_de_corte_do_marco(marco, perfil=perfil, etapas=etapas, caminho=caminho)
+            )
             for etapa_id in marco.get("stages") or []:
                 etapa = etapas.get(etapa_id)
                 # Peso é cobrado de **parcela**, e não de porta: a Etapa decisória não soma, e
@@ -714,6 +724,279 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
                         )
                     )
     return findings
+
+
+def _marco_nomeado(marco) -> str:
+    """Como a recusa chama o marco (014, FR-182, UX-025).
+
+    O `code` é o que quem elabora digitou e o que o documento publica; o identificador só aparece
+    quando não há código, porque uma recusa que diga um UUID não diz nada a quem vai corrigi-la. O
+    percurso E2E encontrou as cinco recusas da regra de corte mudas quanto ao marco: num Perfil com
+    três marcos, "a regra de corte não declara o desfecho" não dizia **qual** abrir (E2E14-002).
+    """
+    return str(marco.get("code") or marco.get("name") or marco.get("id") or "sem código")
+
+
+def _regra_de_corte_do_marco(marco, *, perfil, etapas, caminho) -> list[ValidationFinding]:
+    """As declarações que o sistema não pode concluir por ninguém (014, FR-182, FR-224, FR-226).
+
+    Quatro dos seis campos da regra existem porque **não há padrão honesto** para eles. Resolver a
+    ausência por conta própria afirmaria norma que ninguém escreveu — e as duas saídas fáceis do
+    empate são o exemplo: admitir o excedente entrega à Etapa seguinte mais gente do que a comissão
+    dimensionou, e parar no alvo corta alguém por desempate que a norma não previu.
+    """
+    from processo_seletivo.classificacao.domain import faixa
+
+    regra = marco.get("cutRule")
+    if not regra:
+        return []
+    nomeado = _marco_nomeado(marco)
+    findings = _forma_do_alvo(regra, caminho=caminho, nomeado=nomeado)
+    if regra.get("tieOutcome") not in faixa.DESFECHOS_DE_EMPATE:
+        findings.append(
+            _impeditivo(
+                "cut_rule_sem_desfecho_de_empate",
+                f"A regra de corte do marco {nomeado} não declara o que acontece com o empate que "
+                "atravessa a última posição da faixa. O sistema não escolhe por ela.",
+                f"{caminho}/cutRule/tieOutcome",
+            )
+        )
+    if regra.get("continuation") not in faixa.POLITICAS_DE_CONTINUACAO:
+        findings.append(
+            _impeditivo(
+                "cut_rule_sem_politica_de_continuacao",
+                f"A regra de corte do marco {nomeado} não declara se este Edital admite "
+                "continuação além da faixa publicada.",
+                f"{caminho}/cutRule/continuation",
+            )
+        )
+    declarada = regra.get("governedStage")
+    if not declarada:
+        findings.append(
+            _impeditivo(
+                "cut_rule_sem_etapa_governada",
+                f"A regra de corte do marco {nomeado} não declara qual Etapa o corte alimenta. Ela "
+                "não é inferida de lugar nenhum: declare a Etapa, ou declare que este corte não "
+                "governa nenhuma.",
+                f"{caminho}/cutRule/governedStage",
+            )
+        )
+    elif declarada != faixa.SEM_ETAPA_GOVERNADA:
+        if str(declarada) not in etapas:
+            findings.append(
+                _impeditivo(
+                    "cut_rule_com_etapa_inexistente",
+                    f"A regra de corte do marco {nomeado} declara governar uma Etapa que este "
+                    "Edital não publica.",
+                    f"{caminho}/cutRule/governedStage",
+                )
+            )
+        # **A guarda é de circularidade, e não de ordem** (FR-229). Num marco cuja ordem é computada
+        # a partir de Etapas, governar uma das Etapas que a alimentam fecharia laço: o universo da
+        # ordem passaria a depender do corte que ela mesma produz. Num marco que ordena por sorteio
+        # não há laço — a ordem vem da relação de habilitados —, e governar a Etapa que o marco
+        # enumera é o **caso normal**: é a forma do 77/2026, em que não existe Etapa avaliada antes
+        # do sorteio e a única que existe é a análise documental que o corte alimenta. Uma guarda
+        # escrita como "a Etapa governada deve suceder a ordem do marco" tornaria aquele Edital
+        # impublicável.
+        elif not marco.get("drawMethod") and str(declarada) in {
+            str(item) for item in (marco.get("stages") or [])
+        }:
+            findings.append(
+                _impeditivo(
+                    "cut_rule_com_etapa_circular",
+                    f"A regra de corte do marco {nomeado} governa uma Etapa que alimenta a própria "
+                    "ordem do marco: o universo da ordem passaria a depender do corte que ela "
+                    "produz.",
+                    f"{caminho}/cutRule/governedStage",
+                )
+            )
+    findings.extend(_quadro_para_o_corte(regra, perfil=perfil, caminho=caminho, nomeado=nomeado))
+    return findings
+
+
+def _forma_do_alvo(regra, *, caminho, nomeado) -> list[ValidationFinding]:
+    """A espécie e a aritmética do alvo, **também** na publicação (014, FR-179).
+
+    Elas já são recusadas na elaboração, e repeti-las aqui não é redundância: a **Retificação não
+    passa por `validate_profiles`**. `retificacoes.py` afere o conteúdo produzido apenas por
+    `validate_for_publication`, e sem esta conferência uma Retificação poderia gravar
+    `targetCount: -5` — ou nulo, com espécie fixa — e publicar. Na emissão, o alvo apurado viraria
+    zero e o corte sairia com **ninguém** progredindo, em silêncio, sobre um Edital cuja norma
+    publicada diz outra coisa. É a mesma razão pela qual a conferência da soma do quadro mora aqui.
+    """
+    from processo_seletivo.classificacao.domain import faixa
+
+    especie = regra.get("targetKind")
+    if especie not in faixa.ESPECIES_DE_ALVO:
+        return [
+            _impeditivo(
+                "cut_rule_sem_especie_de_alvo",
+                f"A regra de corte do marco {nomeado} não declara a espécie do alvo: uma "
+                "quantidade fixa, ou a quantidade que o quadro de vagas do recorte publica.",
+                f"{caminho}/cutRule/targetKind",
+            )
+        ]
+    findings = []
+    alvo = regra.get("targetCount")
+    if especie == faixa.ALVO_FIXO and alvo is None:
+        findings.append(
+            _impeditivo(
+                "cut_rule_sem_alvo",
+                f"A regra de corte do marco {nomeado} declara alvo fixo e não diz quantos.",
+                f"{caminho}/cutRule/targetCount",
+            )
+        )
+    if especie == faixa.ALVO_DO_QUADRO and alvo is not None:
+        findings.append(
+            _impeditivo(
+                "cut_rule_com_alvo_duplicado",
+                f"A regra de corte do marco {nomeado} deriva o alvo do quadro de vagas e ainda "
+                "assim declara uma quantidade fixa: o alvo tem uma fonte só.",
+                f"{caminho}/cutRule/targetCount",
+            )
+        )
+    for campo in ("targetCount", "surplusCount"):
+        valor = regra.get(campo)
+        if valor is None:
+            continue
+        if isinstance(valor, bool) or not isinstance(valor, int) or valor < 0:
+            findings.append(
+                _impeditivo(
+                    "cut_rule_com_quantidade_invalida",
+                    f"As quantidades da regra de corte do marco {nomeado} devem ser números "
+                    "inteiros não negativos.",
+                    f"{caminho}/cutRule/{campo}",
+                )
+            )
+    return findings
+
+
+def _quadro_para_o_corte(regra, *, perfil, caminho, nomeado) -> list[ValidationFinding]:
+    """Alvo derivado exige linha de quadro para **todo recorte que o marco ordena** (014, FR-183).
+
+    A `025` admite quadro parcial de propósito, e a regra de corte é do **marco**, que pode ordenar
+    três listas. Sem esta conferência, um Edital com quadro parcial publicaria uma regra derivada
+    inexequível na lista sem linha — e o defeito apareceria no dia da emissão, sob cronograma, com a
+    correção dependendo de Retificação.
+
+    **Os recortes são a linha geral e cada Modalidade que terá lista própria.** A Modalidade que o
+    Perfil declara como **ampla concorrência** não é recorte próprio: a quantidade dela mora na
+    linha geral, que é o recorte que o sorteio consulta, e dar-lhe linha seria declarar duas vezes o
+    mesmo número (025, `FR-176`).
+
+    Essa declaração é o que destrava a conferência no formato normal de Edital. A `R-006` da `025`
+    registrou que identificar a ampla concorrência **casando o nome** seria decidir no plano uma
+    questão que aquela spec deixou aberta — e continua certa. O que faltava era o Edital dizer qual
+    é, e é o que `generalCompetitionModalityId` é: sem ele, exigir linha de toda Modalidade tornava
+    impublicável o Edital que declara "Ampla concorrência" como Modalidade; com ele, a exigência
+    vale inteira, sem heurística nenhuma.
+
+    Linha **zerada** é declaração legítima e publica; o que impede é a ausência.
+    """
+    from processo_seletivo.classificacao.domain import faixa
+
+    if regra.get("targetKind") != faixa.ALVO_DO_QUADRO:
+        return []
+    linhas = perfil.get("vacancyTable") or []
+    declarados = {
+        str(linha.get("modalityId")) if linha.get("modalityId") else None
+        for linha in linhas
+        if isinstance(linha, dict)
+    }
+    ampla = perfil.get("generalCompetitionModalityId")
+    ampla = str(ampla) if ampla else None
+    exigidos = [(None, "a ampla concorrência")]
+    for modalidade in perfil.get("competitionModalities") or []:
+        if not isinstance(modalidade, dict) or not modalidade.get("id"):
+            continue
+        identidade = str(modalidade["id"])
+        if identidade == ampla:
+            continue
+        exigidos.append((identidade, modalidade.get("name") or identidade))
+    return [
+        _impeditivo(
+            "cut_rule_sem_linha_de_quadro",
+            f"A regra de corte do marco {nomeado} deriva o alvo do quadro de vagas, e não há linha "
+            f"para {nome}.",
+            f"{caminho}/cutRule/targetKind",
+        )
+        for chave, nome in exigidos
+        if chave not in declarados
+    ]
+
+
+def _ampla_concorrencia_declarada(perfil, *, base) -> list[ValidationFinding]:
+    """A Modalidade declarada como ampla concorrência existe, e não tem linha própria (014, D-014).
+
+    Duas recusas, e as duas são de coerência do que o próprio Perfil publica: apontar Modalidade que
+    ele não declara deixaria a conferência do alvo derivado exigindo linha de um recorte que não
+    existe, e dar linha à ampla concorrência declararia duas vezes o mesmo número — a quantidade
+    dela já está na linha geral.
+    """
+    ampla = perfil.get("generalCompetitionModalityId")
+    if not ampla:
+        return []
+    ampla = str(ampla)
+    modalidades = {
+        str(item.get("id"))
+        for item in perfil.get("competitionModalities") or []
+        if isinstance(item, dict) and item.get("id")
+    }
+    if ampla not in modalidades:
+        return [
+            _impeditivo(
+                "general_competition_modality_unknown",
+                "O Perfil declara como ampla concorrência uma Modalidade que ele não publica.",
+                f"{base}/generalCompetitionModalityId",
+            )
+        ]
+    tem_linha = any(
+        isinstance(linha, dict) and str(linha.get("modalityId") or "") == ampla
+        for linha in perfil.get("vacancyTable") or []
+    )
+    if not tem_linha:
+        return []
+    return [
+        _impeditivo(
+            "general_competition_modality_with_row",
+            "A Modalidade declarada como ampla concorrência tem linha própria no quadro de vagas, "
+            "e a quantidade dela já está na linha geral.",
+            f"{base}/vacancyTable",
+        )
+    ]
+
+
+def _corte_em_dois_marcos(perfil, *, base) -> list[ValidationFinding]:
+    """Duas regras de corte do mesmo Perfil não governam a mesma Etapa (014, R-006).
+
+    A Etapa governada decide quem participa dela, e duas declarações com alvos distintos não têm
+    desempate possível. Não se escolhe uma: recusa-se o Edital que as publica. Unir as faixas
+    aplicaria a soma de dois alvos que ninguém publicou, e "o marco de maior ordem vence" inventaria
+    precedência normativa.
+
+    **É dentro do Perfil**, e não do Edital: a Etapa é do Edital e alcança todos os Perfis, mas cada
+    inscrição pertence a um Perfil só, e é a regra dele que a governa.
+    """
+    from processo_seletivo.classificacao.domain import faixa
+
+    governadas = {}
+    for marco in perfil.get("classificationMilestones") or []:
+        if not isinstance(marco, dict):
+            continue
+        etapa = faixa.etapa_governada(marco.get("cutRule"))
+        if etapa:
+            governadas.setdefault(etapa, []).append(marco.get("code") or marco.get("id"))
+    return [
+        _impeditivo(
+            "cut_rule_em_dois_marcos_da_mesma_etapa",
+            f"Os marcos {' e '.join(str(item) for item in marcos)} declaram governar a mesma "
+            "Etapa, com regras de corte que podem divergir.",
+            f"{base}/classificationMilestones",
+        )
+        for etapa, marcos in governadas.items()
+        if len(marcos) > 1
+    ]
 
 
 def _faixa_do_percentual(snapshot: dict) -> list[ValidationFinding]:

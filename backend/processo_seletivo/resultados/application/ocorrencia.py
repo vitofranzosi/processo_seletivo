@@ -78,7 +78,7 @@ def exigir_motivo(motivo):
     return texto
 
 
-def _participantes_da_selecao(edital, ids, participantes):
+def _participantes_da_selecao(edital, etapa_id, ids, participantes):
     """As inscrições pedidas, exigindo que participem da Etapa.
 
     Fora do conjunto é **erro do pedido**, e não recusa de linha — a mesma classificação que
@@ -98,11 +98,13 @@ def _participantes_da_selecao(edital, ids, participantes):
             422,
             campo="inscricao_id",
         )
-    if [i for i in inscricoes if i.id not in participantes]:
+    sobraram = [i.id for i in inscricoes if i.id not in participantes]
+    if sobraram:
+        from processo_seletivo.resultados.application.prontidao import motivo_de_nao_participar
+
         raise DomainError(
             "inscricao_fora_da_etapa",
-            "Uma ou mais inscrições selecionadas não participam desta Etapa: elas foram "
-            "eliminadas numa Etapa anterior ou ainda aguardam o resultado da anterior.",
+            motivo_de_nao_participar(edital, etapa_id, sobraram),
             422,
             campo="inscricao_id",
         )
@@ -172,7 +174,7 @@ def registrar_ocorrencia(
         versao = effective_version(edital_id=edital.id, at=ctx.now)
 
         participantes, _, _ = participacao(edital=edital, etapa_id=etapa["id"], vigentes=vigentes)
-        inscricoes = _participantes_da_selecao(edital, ids, participantes)
+        inscricoes = _participantes_da_selecao(edital, etapa["id"], ids, participantes)
         ja_resolvidas = inscricoes_com_resultado(edital=edital, etapa_id=etapa["id"])
 
         criados, recusas = [], []

@@ -630,6 +630,14 @@ components:
         competitionModalities:
           type: array
           items: { $ref: '#/components/schemas/ModalidadeInput' }
+        generalCompetitionModalityId:
+          type: [string, 'null']
+          format: uuid
+          description: >-
+            Qual das competitionModalities é a ampla concorrência (014). A declarada corresponde à
+            linha geral do quadro de vagas, não recebe linha própria, e por isso não é exigida pela
+            conferência do alvo derivado do corte. Nula quando o Perfil não declara nenhuma — o
+            formato em que a ampla concorrência existe só como a linha geral.
         vacancyTable:
           type: array
           description: >-
@@ -752,7 +760,8 @@ components:
       required:
         [id, code, name, description, requirements, immediateVacancies, reserveType, reserveLimit,
          locality, duties, workload, compensation, classificationInformation, callInformation,
-         competitionModalities, declaredFacts, classificationMilestones, vacancyTable]
+         competitionModalities, declaredFacts, classificationMilestones, vacancyTable,
+         generalCompetitionModalityId]
       properties:
         id: { $ref: '#/components/schemas/Id' }
         code: { type: string }
@@ -787,6 +796,13 @@ components:
             competitionModalities: cada item é objeto, e o que vai nele é verificado pela coerência
             dos marcos, que precisa do conteúdo inteiro.
           items: { type: object }
+        generalCompetitionModalityId:
+          type: [string, 'null']
+          format: uuid
+          description: >-
+            Qual das competitionModalities é a ampla concorrência (014). A declarada corresponde à
+            linha geral do quadro de vagas, não recebe linha própria, e não é exigida pela
+            conferência do alvo derivado do corte. Nula quando o Perfil não declara nenhuma.
         classificationMilestones:
           type: array
           description: >-
@@ -795,6 +811,16 @@ components:
             desempate. A ordem dos critérios é campo publicado de cada um, e não a posição no array,
             porque a Retificação os endereça por identidade. Vazia significa que o Perfil não
             classifica.
+
+            Cada marco traz ainda appealWindow (018), drawMethod (021) e cutRule (014) — os três
+            objetos declarados pela norma, com null significando não declarado. Em cutRule, quatro
+            dos seis campos existem porque o sistema não pode concluí-los, e a ausência de qualquer
+            um impede a publicação em vez de virar padrão: tieOutcome (ADMITS_SURPLUS ou STRICT),
+            governedStage (a identidade da Etapa que o corte alimenta, ou a palavra NONE) e
+            continuation (ALLOWED ou NONE). Os outros dois são targetKind (FIXED ou
+            FROM_VACANCY_TABLE, com targetCount só na primeira espécie) e surplusCount, sempre
+            emitido, inclusive zero, porque duas grafias do mesmo significado fariam a comparação de
+            obsolescência do corte acusar diferença onde não há.
           items: { type: object }
         vacancyTable:
           type: array

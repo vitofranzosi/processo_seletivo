@@ -241,6 +241,7 @@ def validate_classification_milestones(milestones: list[dict]) -> None:
                 )
         _validar_janela_recursal(marco.get("appealWindow"))
         _validar_metodo_de_sorteio(marco.get("drawMethod"), etapas=marco.get("stages") or [])
+        _validar_regra_de_corte(marco.get("cutRule"))
 
 
 CAMPOS_DO_METODO = (
@@ -292,6 +293,54 @@ def _validar_metodo_de_sorteio(metodo, *, etapas=()) -> None:
     _validar_regra_publicada(metodo["normalization"]["rule"])
     _validar_substituicao_publicada(metodo["substitutionRule"]["rule"])
     _validar_etapa_de_habilitacao(metodo.get("qualifyingStageId"), etapas)
+
+
+def _validar_regra_de_corte(regra) -> None:
+    """A forma da regra de corte, e só ela (014, FR-179, FR-180).
+
+    **O que mora aqui é o que o Perfil sozinho consegue responder**: a espécie do alvo e a
+    aritmética das quantidades. O que depende do conteúdo inteiro — a Etapa governada existir, o
+    quadro ter linha para cada recorte, dois marcos não governarem a mesma Etapa — é achado de
+    publicação, em `domain/validation.py`, pela mesma razão que a coerência dos marcos já está lá.
+
+    A validação mora no domínio, e não só no serializer, porque a interface administrativa invoca o
+    command diretamente e não atravessa o DRF.
+    """
+    from processo_seletivo.classificacao.domain import faixa
+
+    if not regra:
+        return
+    if not isinstance(regra, dict):
+        raise ProfileValidationError(
+            "A regra de corte deve ser declarada como um objeto, ou não ser declarada."
+        )
+    especie = regra.get("targetKind")
+    if especie not in faixa.ESPECIES_DE_ALVO:
+        raise ProfileValidationError(
+            "A regra de corte deve declarar a espécie do alvo: uma quantidade fixa, ou a "
+            "quantidade que o quadro de vagas do recorte publica."
+        )
+    # **O alvo tem uma fonte só.** Declarar os dois faria o conteúdo publicado afirmar duas origens
+    # para a mesma quantidade, e deduzir a espécie de qual campo veio preenchido faria
+    # `targetCount: 0` ser indistinguível de "derivado" — e o zero é legítimo.
+    if especie == faixa.ALVO_DO_QUADRO and regra.get("targetCount") is not None:
+        raise ProfileValidationError(
+            "A regra de corte deriva o alvo do quadro de vagas e ainda assim declara uma "
+            "quantidade fixa: o alvo tem uma fonte só."
+        )
+    # **O alvo fixo sem quantidade não é recusado aqui**, e a assimetria é deliberada: quem escolhe
+    # a espécie no seletor ainda não digitou o número, e recusar já derrubaria o rascunho inteiro do
+    # Perfil — inclusive o que nada tem a ver com o corte. Os outros quatro campos da mesma regra
+    # gravam em branco pela mesma razão. Quem cobra é a publicação (`cut_rule_sem_alvo`), como cobra
+    # os demais campos sem padrão.
+    for campo in ("targetCount", "surplusCount"):
+        valor = regra.get(campo)
+        if valor is None:
+            continue
+        if isinstance(valor, bool) or not isinstance(valor, int) or valor < 0:
+            raise ProfileValidationError(
+                "As quantidades da regra de corte devem ser números inteiros não negativos."
+            )
 
 
 def _validar_etapa_de_habilitacao(etapa_id, etapas) -> None:

@@ -39,6 +39,11 @@ MARCO_REMOVIDO = "publication_milestone_removed"
 # uma ordem que já se sabe incompleta — e a pessoa reabilitada apareceria como ausente da lista, o
 # que é pior do que não publicar (FR-079).
 REINGRESSO_PENDENTE = "publication_reentry_pending"
+# A quinta, e a única que a 014 acrescenta. Ela também não é sobre o ato de ordenação: é sobre a
+# **faixa** que ele alimentou. Divulgar um resultado que depende de um corte que o sistema já sabe
+# estar para trás é divulgar uma faixa que a geração sucessora vai mudar — e o que se publicou não
+# se despublica (014, FR-219).
+CORTE_OBSOLETO = "publication_cut_stale"
 # As três da definitividade. Elas impedem **só** a natureza definitiva: publicar como preliminar
 # com recurso pendente é exatamente o caminho normal — é o preliminar que abre o prazo (FR-083).
 RECURSO_PENDENTE = "publication_appeal_pending"
@@ -49,6 +54,7 @@ DECLARACAO_EXIGIDA = "publication_deadline_declaration_required"
 DECLARACAO_RECUSADA = "publication_deadline_declaration_refused"
 
 STATUS = {
+    CORTE_OBSOLETO: 422,
     SUCEDIDO: 409,
     DESATUALIZADO: 422,
     MARCO_REMOVIDO: 422,
@@ -81,6 +87,10 @@ CAMINHO_DO_REINGRESSO = (
 )
 
 MENSAGENS = {
+    CORTE_OBSOLETO: (
+        "A faixa que este resultado reflete está para trás: o corte vigente deste marco ficou "
+        "obsoleto. Emita a geração sucessora antes de divulgar."
+    ),
     SUCEDIDO: (
         "Este ato foi sucedido por outro e não é mais o vigente do marco. " + CAMINHO_DO_SUCESSOR
     ),
@@ -126,6 +136,7 @@ MENSAGENS = {
 # Quais recusas admitem o remédio que a mensagem nomeia. É o que a tela lê para decidir se oferece
 # o caminho — e não o código da recusa, que a obrigaria a repetir aqui a regra do domínio.
 ADMITE_SUCESSOR = {
+    CORTE_OBSOLETO: True,
     SUCEDIDO: True,
     DESATUALIZADO: True,
     MARCO_REMOVIDO: False,
@@ -280,6 +291,20 @@ def aferir(*, edital, marco_id, ato, sucede=None, at=None, natureza="", lista_id
             ADMITE_SUCESSOR[REINGRESSO_PENDENTE],
         )
 
+    # **Antes da definitividade e antes da obsolescência do ato**: o corte para trás é trabalho de
+    # quem emite a geração sucessora, e dizê-lo primeiro entrega o próximo passo a quem lê — que é
+    # o critério de ordem que esta função já segue.
+    corte_para_tras = _corte_obsoleto(edital=edital, estado=estado, at=at, lista_id=lista_id)
+    if corte_para_tras:
+        return Afericao(
+            IMPEDIMENTO,
+            CORTE_OBSOLETO,
+            MENSAGENS[CORTE_OBSOLETO],
+            STATUS[CORTE_OBSOLETO],
+            corte_para_tras,
+            ADMITE_SUCESSOR[CORTE_OBSOLETO],
+        )
+
     if str(natureza).upper() == "DEFINITIVA":
         impedimento = _impedimento_da_definitiva(
             edital=edital,
@@ -318,6 +343,28 @@ def aferir(*, edital, marco_id, ato, sucede=None, at=None, natureza="", lista_id
         return Afericao(AVISO, SUCEDERA, AVISO_DE_SUCESSAO, 200)
 
     return Afericao(INFORMACAO, divergencias=[])
+
+
+def _corte_obsoleto(*, edital, estado, at=None, lista_id=None):
+    """As causas, quando a geração vigente do corte deste marco está para trás (014, FR-219).
+
+    Devolve a lista de causas — vazia quando não há corte, ou quando ele está em dia. O import é
+    local pela razão de sempre neste módulo: a divulgação lê a classificação, e não o contrário.
+    """
+    from processo_seletivo.classificacao.application.corte import estado_do_corte
+
+    marco = estado.get("marco") or {}
+    perfil = estado.get("perfil") or {}
+    if not marco.get("id") or not perfil.get("id"):
+        return []
+    estado_da_faixa = estado_do_corte(
+        edital=edital,
+        perfil_id=perfil["id"],
+        marco_id=marco["id"],
+        lista_id=lista_id,
+        at=at,
+    )
+    return estado_da_faixa["causas"] if estado_da_faixa["obsoleto"] else []
 
 
 def _impedimento_da_definitiva(*, edital, marco_id, marco, ato, at=None, lista_id=None):

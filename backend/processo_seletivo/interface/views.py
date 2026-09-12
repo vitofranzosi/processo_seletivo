@@ -36,7 +36,23 @@ from processo_seletivo.avaliacoes.application.mesa import (
 )
 from processo_seletivo.avaliacoes.application.trilha import auditar as auditar_ato
 from processo_seletivo.avaliacoes.domain.previsao import forma_publicada, rotulos
+from processo_seletivo.classificacao.application.corte import (
+    calcular_corte,
+    corte_por_id,
+    divergencias_da_reproducao,
+    estado_do_corte,
+    geracao_do_corte,
+    nomes_do_corte,
+    reproduzir_corte,
+)
 from processo_seletivo.classificacao.application.emissao import assinatura_da_proposta, emitir_ordem
+from processo_seletivo.classificacao.application.emissao_do_corte import (
+    assinatura_da_proposta as assinatura_do_corte,
+)
+from processo_seletivo.classificacao.application.emissao_do_corte import (
+    continuar_corte,
+    emitir_corte,
+)
 from processo_seletivo.classificacao.application.selectors import (
     ato_por_id,
     estado_do_marco,
@@ -56,6 +72,7 @@ from processo_seletivo.comissoes.domain.autorizacao import (
     pode_gerir_comissao,
 )
 from processo_seletivo.comissoes.domain.etapas import (
+    conteudo_vigente,
     etapa_vigente,
     etapas_vigentes,
     evento_vigente,
@@ -910,6 +927,9 @@ def compor_etapa(request, edital_id, etapa):
             "etapas_classificatorias": (
                 _etapas_e_fatos_do_edital(edital)[0] if etapa == "classificacao" else []
             ),
+            # Todas as Etapas, para a Etapa governada pelo corte: ela não precisa classificar
+            # (014, FR-224).
+            "etapas_governaveis": (_etapas_governaveis(edital) if etapa == "classificacao" else []),
             "fatos_declarados": (
                 _etapas_e_fatos_do_edital(edital)[1] if etapa == "classificacao" else []
             ),
@@ -1184,10 +1204,16 @@ COLECAO_DA_ETAPA = {
 # morrendo por meia jornada.
 PRESERVADO_DA_ETAPA = {
     "cronograma": ("status", "isRegistrationPeriod"),
-    # Os dois objetos normativos do Perfil que nenhuma tela desenha. O quadro de vagas **não**
-    # entra aqui, e não é esquecimento: esta tela o desenha, e preservar o gravado por cima do
-    # digitado faria remover uma linha ser impossível — a remoção voltaria da fusão (025, T034).
-    "perfis": ("classificationInformation", "callInformation"),
+    # Os objetos do Perfil que **esta** tela não desenha. O quadro de vagas **não** entra aqui, e
+    # não é esquecimento: esta tela o desenha, e preservar o gravado por cima do digitado faria
+    # remover uma linha ser impossível — a remoção voltaria da fusão (025, T034).
+    #
+    # Os marcos entram pela razão oposta, e custaram o percurso E2E da 014: quem desenha o marco é
+    # a etapa `classificacao`, que tem ramo próprio logo abaixo. Sem preservá-los aqui, salvar os
+    # Perfis mandava `classificationMilestones: []` para o `replace_draft` — que apaga e recria — e
+    # o marco inteiro sumia sem erro nenhum, levando junto a regra de corte declarada na etapa
+    # anterior (014, E2E14-001).
+    "perfis": ("classificationInformation", "callInformation", "classificationMilestones"),
 }
 
 LEITURA_DA_ETAPA = {
@@ -1401,6 +1427,20 @@ def _etapas_e_fatos_do_edital(edital):
     return etapas, fatos
 
 
+def _etapas_governaveis(edital):
+    """**Todas** as Etapas do Edital, e não só as classificatórias (014, FR-224).
+
+    A Etapa que o corte alimenta não precisa classificar: no 77/2026 ela é a análise documental,
+    eliminatória e decisória, que não entra em ordem nenhuma. Oferecer só as classificatórias aqui
+    deixaria de fora justamente a Etapa do Edital que mais motiva esta feature.
+    """
+    if edital is None:
+        return []
+    return [
+        {"id": str(etapa.id), "rotulo": etapa.name} for etapa in edital.etapas.order_by("order")
+    ]
+
+
 def fragmento_marco(request, indice):
     """A linha nova nasce com identidade, pela mesma razão da modalidade.
 
@@ -1418,6 +1458,7 @@ def fragmento_marco(request, indice):
             # Sem as listas, a linha nova nasceria com os selects vazios — e quem acrescentasse um
             # marco não teria o que escolher, que é o defeito que este passo existe para evitar.
             "etapas_classificatorias": etapas,
+            "etapas_governaveis": _etapas_governaveis(edital),
             "fatos_declarados": fatos,
             # O marco não é folha: dele nasce o botão que pede o fragmento de critério, e esse
             # pedido carrega o Edital na query. Sem `edital` aqui, o `hx-get` do botão sairia com o
@@ -3436,8 +3477,11 @@ def distribuicao(request, edital_id, etapa_id):
     # O panorama da 013 é resolvido **uma vez** e entregue ao resumo e à listagem. Consultá-lo nos
     # dois lugares daria dois números para a mesma Etapa, que é o que D-004 recusa; consultá-lo por
     # linha devolveria à listagem o custo que a 012 tirou dela (FR-006, FR-009).
+    # O conteúdo publicado é lido **uma vez** e entregue: `effective_version` custa duas consultas,
+    # e a condição do corte da 014 precisa dos marcos que governam esta Etapa (014, R-005).
+    conteudo_publicado = conteudo_vigente(edital)
     panorama = prontidao_013.panorama_da_etapa(
-        edital=edital, etapa=etapa, etapas_vigentes=etapas_vigentes(edital)
+        edital=edital, etapa=etapa, conteudo=conteudo_publicado
     )
     linhas, pagina = avaliacao_selectors.inscricoes_da_etapa(
         edital=edital,
@@ -3993,9 +4037,52 @@ def ordenacao(request, edital_id, marco_id):
                     else ""
                 ),
                 "historico": historico_da_ordenacao(edital=edital, marco_id=marco_id),
+                # **A obsolescência do corte aparece ao abrir o marco** (014, UX-027). Sem isto,
+                # quem sucede a ordem não fica sabendo que a faixa emitida leu o ato anterior:
+                # descobriria ao tentar conduzir a Etapa governada, e a recusa chegaria no meio do
+                # trabalho em vez de na tela que existe para conferir o marco.
+                **_corte_do_marco(edital, marco_id, estado["marco"]),
             },
         )
     )
+
+
+def _com_o_corte(edital, marco, recortes):
+    """Acrescenta a cada recorte o estado da faixa dele, sem exigir uma visita por lista (UX-029).
+
+    Uma leitura por recorte, e não por participante: são no máximo as listas que o Perfil declara,
+    e é a mesma pergunta que a tela do corte faz para um deles.
+    """
+    if not (marco or {}).get("cutRule"):
+        return recortes
+    perfil_id = _perfil_do_marco(edital, marco["id"])
+    for recorte in recortes:
+        estado = estado_do_corte(
+            edital=edital,
+            perfil_id=perfil_id,
+            marco_id=marco["id"],
+            lista_id=recorte.get("lista_id") or None,
+        )
+        recorte["corte"] = {
+            "faixas": estado["geracao"],
+            "obsoleto": estado["obsoleto"],
+            "causas": estado["causas"],
+        }
+    return recortes
+
+
+def _corte_do_marco(edital, marco_id, marco):
+    """O estado da faixa vigente deste marco, ou nada quando ele não corta (014, UX-027)."""
+    if not (marco or {}).get("cutRule"):
+        return {"corte_obsoleto": False, "causas_do_corte": []}
+    estado = estado_do_corte(
+        edital=edital, perfil_id=_perfil_do_marco(edital, marco_id), marco_id=marco_id
+    )
+    return {
+        "corte_obsoleto": estado["obsoleto"],
+        "causas_do_corte": estado["causas"],
+        "tem_corte": bool(estado["geracao"]),
+    }
 
 
 def _marco_publicado(edital, marco_id):
@@ -4064,6 +4151,224 @@ def emitir_ordenacao(request, edital_id, marco_id):
         if recusa.status == 404:
             raise Http404 from recusa
         request.session["erro_da_ordenacao"] = recusa.detail
+    return redirect(destino)
+
+
+@require_http_methods(["GET"])
+def corte_historico(request, edital_id, corte_id):
+    """Um corte pela identidade dele — sucedido ou vigente —, com a proveniência inteira (UX-024).
+
+    **Lido pela versão que ele congelou**, e não pela vigente: uma Retificação que renomeie o
+    Perfil, o marco ou a Modalidade do recorte não reescreve como um corte antigo é lido. É a mesma
+    regra que a `015` aplica ao ato de ordenação, e pela mesma razão — o ato é imutável, e a
+    leitura dele também precisa ser.
+
+    A reprodução aparece aqui porque é onde ela serve: registrar o que foi usado e **chegar de novo
+    ao mesmo resultado** são coisas distintas, e a segunda é o que a Constituição pede (FR-199).
+    """
+    ator, edital, _ = _edital_para_classificar(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    corte = corte_por_id(edital=edital, corte_id=corte_id)
+    if corte is None:
+        raise Http404
+    itens = [
+        {
+            "inscricao_id": str(item.inscricao_id),
+            "posicao": item.posicao,
+            "consequencia": item.consequencia,
+            "motivo": item.motivo,
+            "excedente_por_empate": item.excedente_por_empate,
+        }
+        for item in corte.itens.all().order_by("posicao", "inscricao_id")
+    ]
+    _com_a_inscricao(itens)
+    reproduzido = reproduzir_corte(corte)
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/corte_historico.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "corte": corte,
+                "nomes": nomes_do_corte(corte),
+                "regra": (corte.universo or {}).get("cutRule") or {},
+                "universo": corte.universo or {},
+                "itens": itens,
+                "geracao": geracao_do_corte(corte),
+                # Quem abre um corte histórico precisa ler, **antes** dos valores, que a geração
+                # dele já foi sucedida — sem isso dá para citar uma faixa superada sem perceber.
+                "sucessores": list(corte.sucessores.all()) if corte.raiz_id is None else [],
+                "reproduzido": reproduzido,
+                "divergencias": divergencias_da_reproducao(corte, reproduzido=reproduzido),
+            },
+        )
+    )
+
+
+def _com_a_inscricao(itens):
+    """Põe protocolo e nome ao lado da posição, no lugar do identificador interno (014, UX-025).
+
+    O cálculo do corte é do domínio e não conhece `Inscricao` — ele fala em identidades, e é assim
+    que o ato as congela. Quem lê a tela, porém, procura o protocolo: a tabela mostrava catorze
+    UUIDs, e conferir quem progrediu exigia traduzi-los por fora (E2E14-006). Uma consulta só,
+    como a tela do ato de ordenação faz na mesma coluna.
+    """
+    from processo_seletivo.inscricoes.models import Inscricao
+
+    por_identidade = {
+        str(inscricao.id): inscricao
+        for inscricao in Inscricao.objects.filter(
+            id__in=[item["inscricao_id"] for item in itens]
+        ).only("id", "protocolo", "nome")
+    }
+    for item in itens:
+        item["inscricao"] = por_identidade.get(item["inscricao_id"])
+    return itens
+
+
+def _identidade_ou_404(valor):
+    """Uma identidade vinda da URL ou do formulário, ou `None` — e nunca lixo para o ORM.
+
+    `?lista=abc` chegava ao banco como filtro de UUID e virava 500. O identificador público não
+    confere autorização **e** não derruba o servidor: o que não é identidade é ausência.
+    """
+    if not valor:
+        return None
+    try:
+        return str(UUID(str(valor)))
+    except (TypeError, ValueError) as erro:
+        raise Http404 from erro
+
+
+def _inteiro_do_formulario(valor):
+    """O que o campo numérico traz, ou `0` — a recusa é do domínio, e não do `int()`."""
+    try:
+        return int(str(valor).strip())
+    except (TypeError, ValueError):
+        return 0
+
+
+@require_http_methods(["GET"])
+def corte(request, edital_id, marco_id):
+    """Calcula a faixa para conferência, sem constituir ato algum (014, FR-190).
+
+    Abrir a tela **não emite**: é o mesmo desenho da ordem, e pela mesma razão — um corte
+    regenerado em silêncio quando a tela abre mudaria, sozinho, quem participa da Etapa seguinte.
+    """
+    ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    lista_id = _identidade_ou_404(request.GET.get("lista"))
+    perfil_id = _perfil_do_marco(edital, marco_id)
+    # O estado traz a geração **e** as causas da obsolescência na mesma leitura: perguntá-las em
+    # dois lugares daria duas respostas para a mesma faixa (014, UX-027).
+    estado = estado_do_corte(
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+    )
+    geracao = estado["geracao"]
+    proposta, recusa = None, None
+    try:
+        proposta = calcular_corte(
+            edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+        )
+    except DomainError as erro:
+        if erro.status == 404:
+            raise Http404 from erro
+        # A recusa é **mostrada**, e não devolvida como erro de servidor: "este marco não corta" e
+        # "a ordem está obsoleta" são estados legítimos da tela, e quem os lê precisa do motivo.
+        recusa = erro.detail
+    if proposta:
+        _com_a_inscricao(proposta["itens"])
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/corte.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "marco_id": marco_id,
+                "lista_id": lista_id,
+                "proposta": proposta,
+                "recusa": recusa,
+                "geracao": geracao,
+                "corte_obsoleto": estado["obsoleto"],
+                "causas_do_corte": estado["causas"],
+                "confirmacao": (assinatura_do_corte(proposta, geracao=geracao) if proposta else ""),
+                # **A chave nasce aqui, e não no POST.** Gerada a cada POST, ela fazia de cada
+                # clique um pedido novo: duplo clique ou reenvio do navegador produzia duas faixas
+                # sucessivas, e a geração avançava duas vezes sem que ninguém pedisse. Nascida no
+                # GET e enviada em campo oculto, a segunda tentativa da mesma leitura devolve o
+                # desfecho da primeira — que é o que a idempotência existe para fazer.
+                "chave_idempotencia": uuid4().hex,
+                "pode_emitir": pode_emitir,
+                "resultado": request.session.pop("resultado_do_corte", None),
+                "erro": request.session.pop("erro_do_corte", None),
+            },
+        )
+    )
+
+
+@require_http_methods(["POST"])
+def emitir_corte_view(request, edital_id, marco_id):
+    """Constitui a faixa conferida e volta à leitura pelo padrão POST-redirect-GET."""
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    lista_id = _identidade_ou_404(request.POST.get("lista"))
+    destino = reverse("interface:corte", args=[edital_id, marco_id])
+    if lista_id:
+        destino = f"{destino}?lista={lista_id}"
+    try:
+        request.session["resultado_do_corte"] = emitir_corte(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            perfil_id=_perfil_do_marco(edital, marco_id),
+            marco_id=marco_id,
+            lista_id=lista_id,
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+            confirmacao_do_calculo=request.POST.get("confirmacao_do_calculo", ""),
+            motivo=request.POST.get("motivo", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_do_corte"] = recusa.detail
+    return redirect(destino)
+
+
+@require_http_methods(["POST"])
+def continuar_corte_view(request, edital_id, marco_id):
+    """A faixa seguinte, onde a regra publicada a admite (014, FR-202)."""
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    lista_id = _identidade_ou_404(request.POST.get("lista"))
+    destino = reverse("interface:corte", args=[edital_id, marco_id])
+    if lista_id:
+        destino = f"{destino}?lista={lista_id}"
+    try:
+        request.session["resultado_do_corte"] = continuar_corte(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            perfil_id=_perfil_do_marco(edital, marco_id),
+            marco_id=marco_id,
+            lista_id=lista_id,
+            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+            # O texto chega como texto, e vira recusa de domínio — nunca `ValueError` no meio do
+            # comando. `abc` no campo é erro de quem preenche, e não defeito de servidor.
+            quantidade=_inteiro_do_formulario(request.POST.get("quantidade")),
+            motivo=request.POST.get("motivo", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_do_corte"] = recusa.detail
     return redirect(destino)
 
 
@@ -4556,12 +4861,14 @@ def minha_etapa(request, edital_id, etapa_id):
         # existência não é enumerável por quem não tem acesso (FR-057).
         raise Http404
     try:
-        # A coleção inteira, e não `etapa_vigente`: é o que aquele wrapper leria por dentro, e a
-        # Mesa precisa dela para resolver a progressão. Ler uma vez e repassar mantém o custo onde
-        # estava — o orçamento de consulta desta tela é testado (013, FR-006).
-        vigentes = etapas_vigentes(edital)
+        # **O conteúdo publicado inteiro**, e não só a coleção de Etapas: é o que aquele wrapper
+        # leria por dentro, a Mesa precisa das Etapas para resolver a progressão, e a condição do
+        # corte da `014` precisa dos marcos que governam esta Etapa. Ler uma vez e repassar mantém
+        # o custo onde estava — o orçamento de consulta desta tela é testado (013, FR-006).
+        conteudo_da_mesa = conteudo_vigente(edital)
+        vigentes = {UUID(str(item["id"])): item for item in conteudo_da_mesa.get("stages") or []}
     except DomainError:
-        vigentes = {}
+        conteudo_da_mesa, vigentes = {}, {}
     etapa = vigentes.get(etapa_id)
     if etapa is None:
         raise Http404
@@ -4590,6 +4897,7 @@ def minha_etapa(request, edital_id, etapa_id):
             pagina=request.GET.get("pagina") or 1,
             filtro=request.GET.get("filtro") or None,
             vigentes=vigentes,
+            conteudo=conteudo_da_mesa,
         )
         if por_alocacao
         else (None, None, None)
@@ -4996,7 +5304,11 @@ def sorteio(request, edital_id, marco_id):
                 # ocorrência é justamente o que precisa ser auditável (R-006).
                 "ocorrencias_descartadas": estado["ocorrencias_descartadas"],
                 "ocorre_em": estado["ocorre_em"],
-                "recortes": estado["recortes"],
+                # **Com o estado do corte de cada um** (014, UX-029). Esta é a tela que já reúne
+                # os recortes do marco; sem o corte aqui, enxergar o estado das três listas exigia
+                # uma visita por lista — e num certame com cotas é justamente onde o esforço se
+                # multiplica.
+                "recortes": _com_o_corte(edital, estado["marco"], estado["recortes"]),
                 "pode_emitir": pode_emitir,
                 # **Quem publica o resultado não é necessariamente quem conduz o sorteio**
                 # (`017`, FR-025): a capacidade é própria, e oferecer o caminho a quem receberia

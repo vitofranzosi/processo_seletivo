@@ -25,6 +25,7 @@ from processo_seletivo.avaliacoes.models import (
     ConclusaoAvaliacao,
     Impedimento,
 )
+from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
 from processo_seletivo.comissoes.models import AlocacaoEtapa
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.shared.api.problems import DomainError
@@ -262,7 +263,7 @@ RASCUNHOS = "rascunhos"
 NAO_INICIADAS = "nao-iniciadas"
 
 
-def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None, vigentes=None):
+def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None, vigentes=None, conteudo=None):
     """A lista de trabalho de quem avalia: **todas e somente** as inscrições dela (FR-020).
 
     A autorização vem da forma **em lote** que a 011 entregou — `etapas_autorizadas` responde a
@@ -293,6 +294,7 @@ def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None, vigentes=None):
         edital,
         identidade_da_etapa,
         vigentes=vigentes,
+        conteudo=conteudo,
     ).select_related("inscricao", "avaliacao")
     contagens = minhas.aggregate(
         total=Count("id"),
@@ -350,7 +352,6 @@ def carga_nas_etapas(*, ator, atribuicoes):
     # por pessoa, e a alternativa seria contar errado (013, FR-005).
     # O conteúdo publicado é lido **uma vez por Edital**, e não uma por Etapa: uma pessoa alocada
     # em quatro Etapas do mesmo Edital pagaria quatro leituras idênticas do mesmo conteúdo.
-    from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
 
     conteudos = {}
     por_etapa = Q(pk__in=[])
@@ -358,7 +359,7 @@ def carga_nas_etapas(*, ator, atribuicoes):
         edital = item["edital"]
         if edital.id not in conteudos:
             try:
-                conteudos[edital.id] = etapas_vigentes(edital)
+                conteudos[edital.id] = conteudo_vigente(edital)
             except DomainError:
                 # Edital sem Versão Consolidada vigente: não há Etapa anterior a consultar, e
                 # portanto nada a restringir. Capturar `Exception` aqui esconderia defeito de
@@ -369,7 +370,8 @@ def carga_nas_etapas(*, ator, atribuicoes):
                 Atribuicao.objects.filter(edital=edital, etapa_id=item["etapa_id"]),
                 edital,
                 item["etapa_id"],
-                vigentes=conteudos[edital.id],
+                vigentes=_etapas(conteudos[edital.id]),
+                conteudo=conteudos[edital.id],
             ).values("pk")
         )
     contagens = (
@@ -393,7 +395,14 @@ def carga_nas_etapas(*, ator, atribuicoes):
     }
 
 
-def _so_participantes(consulta, edital, etapa_id, prefixo="inscricao", vigentes=None):
+def _etapas(conteudo):
+    """As Etapas por identidade, a partir do conteúdo publicado — sem consultar de novo."""
+    return {UUID(str(etapa["id"])): etapa for etapa in (conteudo or {}).get("stages") or []}
+
+
+def _so_participantes(
+    consulta, edital, etapa_id, prefixo="inscricao", vigentes=None, conteudo=None
+):
     """As duas regras de progressão da `013`, **dobradas na consulta** que já ia acontecer.
 
     Materializar o conjunto e passá-lo em `__in` custaria duas leituras de população inteira por
@@ -406,7 +415,15 @@ def _so_participantes(consulta, edital, etapa_id, prefixo="inscricao", vigentes=
     from processo_seletivo.resultados.application.prontidao import restringir_a_participantes
 
     return restringir_a_participantes(
-        consulta, edital=edital, etapa_id=etapa_id, prefixo=prefixo, vigentes=vigentes
+        consulta,
+        edital=edital,
+        etapa_id=etapa_id,
+        prefixo=prefixo,
+        vigentes=vigentes,
+        # **O conteúdo publicado viaja junto, e não é relido lá dentro.** A condição do corte da
+        # `014` precisa dos marcos que governam a Etapa, e `effective_version` custa duas
+        # consultas: quem já leu o conteúdo o entrega, e o orçamento desta tela fica de pé.
+        conteudo=conteudo,
     )
 
 
