@@ -1,0 +1,79 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Ocupação de vagas — quantas faltam em cada lista{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">Ocupação de vagas</span>
+</nav>
+
+<h1>Ocupação de vagas</h1>
+<p class="sub">Quantas vagas cada lista de concorrência publicou, quantas tem efetivamente, quantas estão ocupadas e quantas faltam.</p>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível apurar:</strong> {{ erro }}</p>{% endif %}
+{% if resultado %}<p class="sucesso" role="status" tabindex="-1">Apuração emitida. O ato é imutável; corrigir é emitir uma sucessora com motivo.</p>{% endif %}
+
+<p class="imutavel">Abrir esta tela <strong>não apura nada</strong>. Os números abaixo vêm de atos já emitidos, e onde não há ato não há número.</p>
+
+{% comment %}
+Um recorte por bloco, e os quatro números juntos. A `UX-031` proíbe exibir um deles sozinho — e o
+motivo é aritmético: depois da reversão, "publicadas" e "efetivas" divergem, e mostrar só uma das
+duas ao lado de "faltando" produz uma conta que não fecha na cabeça de quem lê.
+
+**Zero e ausência não se parecem nesta tela**, e é a `UX-032a`. Sem apuração emitida, as três
+quantidades de apuração não são desenhadas — nem como zero, nem como traço que pareça número. O que
+aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emitir.
+{% endcomment %}
+{% for recorte in recortes %}
+<section aria-labelledby="recorte-{{ forloop.counter }}" class="resumo">
+  <h2 id="recorte-{{ forloop.counter }}">{{ recorte.rotulo }}</h2>
+
+  {% if recorte.estado == "NO_VACANCY_TABLE" %}
+  <p class="aviso" role="status">Este Edital não publicou quadro de vagas para este recorte. Não há quantidade declarada a apurar.</p>
+
+  {% elif recorte.estado == "NOT_APPRAISED" %}
+  <p class="aviso" role="status">Ocupação ainda não apurada.</p>
+  <dl class="meta">
+    <dt>Publicadas</dt><dd>{{ recorte.publicadas }}</dd>
+  </dl>
+  <p class="nota">A quantidade publicada é o que o Edital declara nesta linha do quadro. Quantas estão ocupadas e quantas faltam só existem depois de uma apuração emitida.</p>
+
+  {% else %}
+  {% if recorte.estado == "OBSOLETE" %}
+  <p class="aviso" role="status"><strong>Esta apuração está obsoleta.</strong> O número abaixo é o que ela apurou, e o mundo mudou depois dela:</p>
+  <ul class="consequencias">
+    {% for causa in recorte.causasDeObsolescencia %}
+    <li>{% if causa == "ordem_sucedida" %}a ordem deste recorte foi sucedida{% elif causa == "corte_obsoleto" %}o corte que a alimentou não é mais o vigente{% elif causa == "quadro_retificado" %}a linha do quadro que ela leu mudou por Retificação{% elif causa == "movimento_posterior" %}um movimento de vaga alcançou este recorte depois dela{% endif %}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  <dl class="meta">
+    <dt>Publicadas</dt><dd>{{ recorte.publicadas }}</dd>
+    <dt>Efetivas</dt><dd>{{ recorte.efetivas }}</dd>
+    <dt>Ocupadas</dt><dd>{{ recorte.ocupadas }}</dd>
+    <dt>A ocupar</dt><dd>{{ recorte.faltando }}</dd>
+  </dl>
+  {% if recorte.efetivas != recorte.publicadas %}
+  <p class="nota">As efetivas divergem das publicadas porque um movimento de vaga alcançou este recorte. A quantidade publicada não muda por movimento: o que o Edital publicou é intocável.</p>
+  {% endif %}
+  {% endif %}
+
+  {% if pode_emitir and recorte.estado != "NO_VACANCY_TABLE" %}
+  <form method="post" action="{% url 'interface:emitir-apuracao' edital.id marco_id %}" class="acoes">
+    {% csrf_token %}
+    <input type="hidden" name="lista" value="{{ recorte.listaId|default_if_none:'' }}">
+    <input type="hidden" name="chave" value="{{ chave_idempotencia }}-{{ forloop.counter }}">
+    {% if recorte.estado == "NOT_APPRAISED" %}
+    <button type="submit" class="botao">Apurar a ocupação deste recorte</button>
+    {% else %}
+    <label for="motivo-{{ forloop.counter }}">Motivo da nova apuração</label>
+    <input type="text" id="motivo-{{ forloop.counter }}" name="motivo" required
+           aria-describedby="motivo-ajuda-{{ forloop.counter }}">
+    <p class="ajuda" id="motivo-ajuda-{{ forloop.counter }}">A apuração vigente não é alterada: a nova a sucede, e a anterior continua legível.</p>
+    <button type="submit" class="botao">Emitir nova apuração</button>
+    {% endif %}
+  </form>
+  {% endif %}
+</section>
+{% endfor %}
+{% endblock %}

@@ -237,6 +237,18 @@ urlpatterns = [
         views.emitir_corte_view,
         name="emitir-corte",
     ),
+    # A ocupação (016). Pende do **marco**, como as da 015, do corte e do sorteio, porque é o
+    # recorte que ela lista: um marco com cotas tem três recortes, e cada um tem o seu número.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao",
+        views.ocupacao,
+        name="ocupacao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/apurar",
+        views.emitir_apuracao_view,
+        name="emitir-apuracao",
+    ),
     path(
         "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/corte/continuar",
         views.continuar_corte_view,

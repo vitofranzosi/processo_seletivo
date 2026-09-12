@@ -123,24 +123,24 @@ Perfil e ler os quatro números por recorte, sem emitir nada.
 
 ### Testes
 
-- [ ] T017 [P] [US1] Teste de interface em `backend/tests/interface/test_ocupacao.py`: com apuração
+- [X] T017 [P] [US1] Teste de interface em `backend/tests/interface/test_ocupacao.py`: com apuração
       emitida, os **quatro** números por recorte — publicadas, efetivas, ocupadas, faltando —, e
       **nunca um deles sozinho** (`UX-031`). Onde nenhum movimento alcançou o recorte, publicadas e
       efetivas coincidem; onde divergem, os dois aparecem
-- [ ] T017a [P] [US1] Teste do recorte **sem apuração** no mesmo arquivo (`UX-032a`): a tela diz
+- [X] T017a [P] [US1] Teste do recorte **sem apuração** no mesmo arquivo (`UX-032a`): a tela diz
       "ocupação ainda não apurada", oferece a ação de emitir, mostra as **publicadas** — que são
       fato do Edital — e **não** mostra efetivas, ocupadas nem faltando. *Zero ali seria afirmar
       "não há vaga a ocupar" sem ato que o sustente*
-- [ ] T018 [P] [US1] Teste do Edital sem quadro em `backend/tests/interface/test_ocupacao.py`: a
+- [X] T018 [P] [US1] Teste do Edital sem quadro em `backend/tests/interface/test_ocupacao.py`: a
       tela diz que o Edital não publicou quadro e **não** mostra zero (`UX-032`, `FR-242`)
-- [ ] T019 [P] [US1] Teste de orçamento de consulta em
+- [X] T019 [P] [US1] Teste de orçamento de consulta em
       `backend/tests/performance/test_ocupacao.py`: a listagem de 7 Perfis × 3 recortes não abre o
       conteúdo publicado por linha (`R-006`)
-- [ ] T019a [P] [US1] Teste em `backend/tests/interface/test_ocupacao.py` de que **ler não ocupa**
+- [X] T019a [P] [US1] Teste em `backend/tests/interface/test_ocupacao.py` de que **ler não ocupa**
       (`FR-261`): abrir a tela do recorte **não** emite apuração — contagem de
       `ApuracaoDeOcupacao` igual antes e depois do `GET`. *Nenhuma outra tarefa provava isso, e a
       `014` já nomeou o defeito equivalente: ler não corta*
-- [ ] T019b [P] [US1] Medir o teto de volume em
+- [X] T019b [P] [US1] Medir o teto de volume em
       `backend/tests/performance/test_ocupacao.py` (`SC-082`): apuração de um Edital com **7
       Perfis** — os polos, pela `D-005` — de 3 listas cada, com **1.000 participantes por
       recorte**, em **no máximo o dobro** do tempo da emissão da ordem no mesmo volume, medido na
@@ -149,21 +149,21 @@ Perfil e ler os quatro números por recorte, sem emitir nada.
 
 ### Implementação
 
-- [ ] T020 [US1] Implementar a view da ocupação em
+- [X] T020 [US1] Implementar a view da ocupação em
       `backend/processo_seletivo/interface/views.py`, lendo colunas e SQL — `faltando` calculado na
       própria linha, como `efetivas − ocupadas`, e `publicadas` exibida **sem** ser alterada por
       movimento (`FR-239a`). Quantidade que nenhum ato produziu chega **nula** à tela, nunca zero
-- [ ] T021 [US1] Criar `backend/processo_seletivo/interface/templates/interface/ocupacao.html` com
+- [X] T021 [US1] Criar `backend/processo_seletivo/interface/templates/interface/ocupacao.html` com
       os quatro números da `UX-031` e os quatro estados do contrato (`CURRENT`, `OBSOLETE`,
       `NOT_APPRAISED`, `NO_VACANCY_TABLE`) — e os dois últimos **não** são erro nem zero. Em
       `NOT_APPRAISED` a linha traz a quantidade publicada e a ação de emitir, e nada mais
-- [ ] T022 [US1] Rotear a tela em `backend/processo_seletivo/interface/urls.py`, **pendendo do
+- [X] T022 [US1] Rotear a tela em `backend/processo_seletivo/interface/urls.py`, **pendendo do
       marco** como a do corte, e ligar o acesso em
       `backend/processo_seletivo/interface/templates/interface/detalhe.html`
-- [ ] T023 [US1] Ação de emitir apuração pela tela — rota em
+- [X] T023 [US1] Ação de emitir apuração pela tela — rota em
       `backend/processo_seletivo/interface/urls.py` e view em
       `backend/processo_seletivo/interface/views.py`, com o motivo exigido na sucessão
-- [ ] T024 [P] [US1] Teste de responsividade a 375 px, sem tabela horizontal, em
+- [X] T024 [P] [US1] Teste de responsividade a 375 px, sem tabela horizontal, em
       `backend/tests/interface/test_ocupacao.py`
 
 **Checkpoint**: a História 1 substitui a planilha. É o MVP, e o Princípio VI já está satisfeito.

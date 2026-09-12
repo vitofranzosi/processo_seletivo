@@ -156,6 +156,46 @@ def ocupacao_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
     }
 
 
+def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
+    """Todo recorte do marco, com os quatro números e o estado de cada um (`UX-031`).
+
+    **A Modalidade declarada como ampla concorrência não é recorte próprio**, e por isso não entra
+    na lista: a quantidade dela mora na linha geral, e dar-lhe linha declararia duas vezes o mesmo
+    número. É a mesma regra que o leitor de linha da `014` aplica, vista de fora.
+
+    **O rótulo do recorte sem lista diz o que ele é.** A `021` pagou o preço de não dizer: num
+    Edital que declara uma Modalidade chamada "Ampla concorrência", a tela mostrava dois blocos
+    homônimos e quem conduz o certame não sabia em qual agir.
+    """
+    from processo_seletivo.classificacao.domain.universo import por_identidade
+
+    versao = effective_version(edital_id=edital.id, at=at)
+    perfil = por_identidade((versao.content or {}).get("profiles"), perfil_id) or {}
+    ampla_declarada = perfil.get("generalCompetitionModalityId")
+    recortes = [(None, "Ampla concorrência (linha geral do quadro)")]
+    for modalidade in perfil.get("competitionModalities") or []:
+        if not isinstance(modalidade, dict) or not modalidade.get("id"):
+            continue
+        identidade = str(modalidade["id"])
+        if ampla_declarada and identidade == str(ampla_declarada):
+            continue
+        nome = modalidade.get("name") or identidade
+        recortes.append((identidade, f"{nome} ({modalidade.get('code')})"))
+    return [
+        {
+            "rotulo": rotulo,
+            **ocupacao_do_recorte(
+                edital=edital,
+                perfil_id=perfil_id,
+                marco_id=marco_id,
+                lista_id=lista,
+                at=at,
+            ),
+        }
+        for lista, rotulo in recortes
+    ]
+
+
 def dentro_da_faixa(*, edital, perfil_id, marco_id, lista_id=None):
     """As inscrições que o corte vigente fez progredir — ou o universo do ato, quando não há corte.
 
@@ -187,11 +227,11 @@ def habilitadas_na_etapa(*, edital, etapa_id):
     """
     if etapa_id is None:
         return set()
-    # `sucessor`, no singular: é o `related_name` que a `018` deu à superação. Vigente é o
-    # Resultado que ninguém superou, e não o mais recente por data — superação cria linha nova.
-    resultados = ResultadoEtapa.objects.filter(edital=edital, etapa_id=etapa_id).filter(
-        sucessor__isnull=True
-    )
+    # **`vigentes`, e não `objects`.** O manager é o contrato de leitura de efeito que a `018`
+    # deixou, e a varredura `tests/test_vigencia_do_resultado.py` o cobra: eu havia reimplementado
+    # o filtro à mão, e ela recusou — com razão. O defeito que ela impede não produz erro: lido por
+    # `objects`, um Resultado **superado** por recurso deferido voltaria a contar como ocupação.
+    resultados = ResultadoEtapa.vigentes.filter(edital=edital, etapa_id=etapa_id)
     return {
         r.inscricao_id
         for r in resultados
@@ -255,6 +295,7 @@ def _movimento_posterior(apuracao):
 
 __all__ = [
     "apuracao_vigente",
+    "recortes_do_marco",
     "causas_de_obsolescencia",
     "dentro_da_faixa",
     "habilitadas_na_etapa",

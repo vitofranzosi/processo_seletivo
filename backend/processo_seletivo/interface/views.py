@@ -4310,6 +4310,71 @@ def corte(request, edital_id, marco_id):
     )
 
 
+@require_http_methods(["GET"])
+def ocupacao(request, edital_id, marco_id):
+    """Os quatro números de cada recorte do marco, e o estado de cada um (016, UX-031).
+
+    **Abrir a tela não apura nada** (FR-261): é o mesmo desenho da ordem e do corte, e pela mesma
+    razão — um número regenerado em silêncio quando a tela abre passaria a afirmar ocupação que ato
+    nenhum sustenta.
+
+    **Quantidade que nenhum ato produziu chega nula, e o template não a desenha.** Zero é afirmação
+    — quer dizer "não há vaga a ocupar" —, e sem apuração emitida ninguém a fez (UX-032a).
+    """
+    from processo_seletivo.ocupacao.application.selectors import recortes_do_marco
+
+    ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    perfil_id = _perfil_do_marco(edital, marco_id)
+    recortes = recortes_do_marco(edital=edital, perfil_id=perfil_id, marco_id=marco_id)
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/ocupacao.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "marco_id": marco_id,
+                "recortes": recortes,
+                # A chave nasce no GET pela razão que o corte já registra: gerada a cada POST, um
+                # duplo clique produziria duas apurações sucessivas sem que ninguém pedisse.
+                "chave_idempotencia": uuid4().hex,
+                "pode_emitir": pode_emitir,
+                "resultado": request.session.pop("resultado_da_ocupacao", None),
+                "erro": request.session.pop("erro_da_ocupacao", None),
+            },
+        )
+    )
+
+
+@require_http_methods(["POST"])
+def emitir_apuracao_view(request, edital_id, marco_id):
+    """Emite a apuração de um recorte e volta à leitura, pelo padrão POST-redirect-GET."""
+    from processo_seletivo.ocupacao.application.emissao import emitir_apuracao
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    lista_id = _identidade_ou_404(request.POST.get("lista"))
+    destino = reverse("interface:ocupacao", args=[edital_id, marco_id])
+    try:
+        request.session["resultado_da_ocupacao"] = emitir_apuracao(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            perfil_id=_perfil_do_marco(edital, marco_id),
+            marco_id=marco_id,
+            lista_id=lista_id,
+            idempotency_key=request.POST.get("chave") or uuid4().hex,
+            correlation_id=f"interface-ocupacao-{edital_id}",
+            motivo=(request.POST.get("motivo") or "").strip(),
+        )
+    except DomainError as erro:
+        request.session["erro_da_ocupacao"] = erro.detail
+    return redirect(destino)
+
+
 @require_http_methods(["POST"])
 def emitir_corte_view(request, edital_id, marco_id):
     """Constitui a faixa conferida e volta à leitura pelo padrão POST-redirect-GET."""
