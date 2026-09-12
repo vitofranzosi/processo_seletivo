@@ -39,27 +39,49 @@ def com_movimentos(db, gestor, api_client, manager_headers, process_payload, rai
     )
 
 
+def reconstruir(apuracao):
+    """`publicadas + recebidas − cedidas` a partir dos movimentos que **aquela** apuração citou.
+
+    **Os dois termos, e não só o recebido.** Somar apenas o que entra fecha a conta no destino e
+    deixa a origem sem verificação — e é justamente na origem que a reversão poderia duplicar,
+    cedendo a mesma quantidade a cada nova apuração da cota.
+    """
+    lidos = MovimentoDeVaga.objects.filter(id__in=apuracao.universo["movimentosLidos"])
+    recebidas = sum(m.quantidade for m in lidos if m.destino_lista_id == apuracao.lista_id)
+    cedidas = sum(m.quantidade for m in lidos if m.origem_lista_id == apuracao.lista_id)
+    return apuracao.publicadas + recebidas - cedidas, recebidas, cedidas
+
+
 class TestAReconstrucao:
     """`T056`: quadro → apurações → movimentos devolve o número de hoje."""
 
     def test_a_sequencia_reconstroi_a_efetiva_vigente(self, com_movimentos, gestor):
-        """A conta fecha a partir do publicado, sem abrir o banco por outro caminho."""
+        """A conta fecha a partir do publicado, **nos dois recortes que o movimento tocou**.
+
+        A reversão sai da cota e entra na ampla, e o invariante é o mesmo dos dois lados: quem
+        recebeu soma, quem cedeu subtrai. Verificar só o destino deixaria passar uma origem que
+        cede sem nunca descontar.
+        """
         emitir_cortes(com_movimentos, gestor)
         habilitar(com_movimentos, [com_movimentos["cotista_ppi"]])
         apurar(com_movimentos, gestor, chave="audit-016-ampla")
-        apurar(com_movimentos, gestor, lista_id=LISTA_PPI, chave="audit-016-ppi")
+        da_cota = apurar(com_movimentos, gestor, lista_id=LISTA_PPI, chave="audit-016-ppi")
         depois = apurar(
             com_movimentos, gestor, chave="audit-016-ampla-2", motivo="Reversão recebida"
         )
 
-        vigente = ApuracaoDeOcupacao.objects.get(id=depois["id"])
-        recebidas = sum(
-            m.quantidade
-            for m in MovimentoDeVaga.objects.filter(id__in=vigente.universo["movimentosLidos"])
-        )
+        destino = ApuracaoDeOcupacao.objects.get(id=depois["id"])
+        origem = ApuracaoDeOcupacao.objects.get(id=da_cota["id"])
 
-        assert vigente.publicadas + recebidas == vigente.efetivas
-        assert vigente.publicadas == 4 and recebidas == 1 and vigente.efetivas == 5
+        reconstruida, recebidas, cedidas = reconstruir(destino)
+        assert reconstruida == destino.efetivas
+        assert destino.publicadas == 4 and (recebidas, cedidas) == (1, 0)
+        assert destino.efetivas == 5
+
+        reconstruida, recebidas, cedidas = reconstruir(origem)
+        assert reconstruida == origem.efetivas, "a origem cedeu, e a conta dela desconta"
+        assert (recebidas, cedidas) == (0, 1)
+        assert origem.efetivas == origem.publicadas - 1
 
     def test_cada_apuracao_declara_a_ordem_e_o_corte_que_leu(self, com_movimentos, gestor):
         """Sem isso, o número não tem de onde ser reconstruído — ele só existe."""

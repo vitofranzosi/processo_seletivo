@@ -170,19 +170,24 @@ def _movimentos_lidos_por_apuracao(apuracao):
     return [encontrados[str(i)] for i in ids if str(i) in encontrados]
 
 
-def historico_do_recorte(*, edital, perfil_id, marco_id, lista_id=None):
+def historico_do_recorte(*, edital, marco_id, lista_id=None, perfil_id=None):
     """Todas as apurações do recorte, da mais antiga à mais nova, com o que cada uma leu.
 
     **Lidas como elas foram emitidas**, e não reinterpretadas pela versão vigente: cada apuração
     guarda a versão do quadro, a ordem, o corte e os movimentos que considerou. Uma Retificação
     posterior não reescreve o que uma apuração antiga apurou — o ato é imutável, e a leitura dele
     também precisa ser. É a mesma regra que a `015` aplica ao ato de ordenação.
+
+    **`perfil_id` é opcional de propósito, e é o que faz o histórico sobreviver à Retificação.** As
+    apurações guardam o Perfil e o marco como **identidades publicadas**; resolver o Perfil pelo
+    snapshot vigente daria 404 no dia em que uma Retificação removesse o marco — e seria justamente
+    o histórico antigo, o que mais importa, a desaparecer. A `T058` pedia isso em letras, e a
+    primeira versão desta tela o contrariou.
     """
-    apuracoes = list(
-        ApuracaoDeOcupacao.objects.filter(
-            edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
-        ).order_by("emitida_em")
-    )
+    recorte = {"edital": edital, "marco_id": marco_id, "lista_id": lista_id}
+    if perfil_id is not None:
+        recorte["perfil_id"] = perfil_id
+    apuracoes = list(ApuracaoDeOcupacao.objects.filter(**recorte).order_by("emitida_em"))
     if not apuracoes:
         return []
     vigente = apuracoes[-1] if not apuracoes[-1].sucessoras.exists() else None

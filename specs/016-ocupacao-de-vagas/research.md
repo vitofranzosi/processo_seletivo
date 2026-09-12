@@ -163,14 +163,16 @@ que o `Corte` usa para `universo.cutRule.governedStage` ao lado da coluna.
 Convém saber onde ele pode ser violado sem que ninguém perceba.
 
 **Decisão.** O invariante é verificado sobre a **sequência de movimentos**, e não sobre o quadro
-publicado: soma das quantidades do quadro + soma algébrica dos movimentos = soma das quantidades
-efetivas. Teste de propriedade sobre sequências aleatórias de reversão e liberação.
+publicado: `publicadas + recebidas − cedidas = efetivas`, afirmado nos **dois** recortes que um
+movimento toca — origem e destino —, porque no destino sozinho a conta fecha mesmo que a cota nunca
+tenha cedido. Teste de propriedade sobre sequências aleatórias de reversão.
 
-**Rationale.** Reversão e liberação andam em sentidos opostos (§1.2 da spec), e é a
-composição delas que erra — não cada uma. Um caso concreto: reverter 3 de PPI para a ampla e depois
-liberar 1 vaga reservada de PPI por concorrência concomitante. Se a liberação voltar para a ampla, a
-soma continua certa e **o recorte está errado** — exatamente o que a `FR-253` proíbe. Invariante de
-soma sozinho não pega isso; por isso o teste é de soma **e** de recorte.
+**Rationale.** Cada reversão sozinha é trivialmente correta; o que erra é a **composição** de
+várias sobre o mesmo Perfil. E há um sentido só — a concorrência concomitante, que parecia ser o
+oposto, não move quantidade (`FR-253`). Um caso concreto do que a soma não pega: reverter 3 de PPI
+para a ampla e, por engano, reverter 1 da ampla de volta para PPI. A soma continua certa e **o
+recorte está errado** — a vaga geral foi para um recorte reservado, e o próximo da lista geral nunca
+a receberia. Por isso o teste é de soma **e** de sentido.
 
 **O que ele não cobre, e fica declarado:** retificação do quadro entre dois movimentos. Ali a
 soma de referência muda por ato normativo, e é a obsolescência (`FR-263`) que responde, não o

@@ -115,7 +115,7 @@ backend/processo_seletivo/
 │   │   └── nomes.py                   # vocabulário e códigos de recusa
 │   ├── application/
 │   │   ├── emissao.py                 # emitir a apuração (ato), sucessão, autorização
-│   │   ├── movimento.py               # reversão e liberação — os dois sentidos
+│   │   ├── movimento.py               # a reversão — o único sentido que move quantidade
 │   │   ├── causar_faixa.py            # chama classificacao.emissao_do_corte com o déficit
 │   │   └── selectors.py               # leitura da vigente e das causas de obsolescência
 │   ├── models.py                      # ApuracaoDeOcupacao, MovimentoDeVaga
@@ -156,7 +156,7 @@ Segue a §8 da spec, com o que cada passo entrega e o que ele **não** pode deix
    elaboração, documento, `CAMPOS_PERFIL` e conferência. As duas espécies da `D-007` entram juntas.
 5. **A reversão** — `MovimentoDeVaga`, o invariante da soma constante (`FR-247`) e `UX-033`.
 6. **A causa para a `014`** — `causar_faixa.py`, `FR-255` e `FR-256`.
-7. **A concorrência concomitante** — a liberação em sentido contrário, História 4.
+7. **A concorrência concomitante** — a exclusão no cálculo da ocupação, História 4.
 
 Os passos 1 a 3 e 6 fecham o 77/2026. Os 4, 5 e 7 alcançam o 57 e o 28.
 

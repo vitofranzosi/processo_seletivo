@@ -315,3 +315,47 @@ def test_o_link_do_historico_so_aparece_onde_ha_apuracao(client, seletor_ligado,
     depois = abrir(client, edital).content.decode()
 
     assert "Ver o histórico deste recorte" in depois
+
+
+def test_o_historico_sobrevive_a_retificacao_que_remove_o_marco(
+    client, seletor_ligado, cenario, gestor, api_client
+):
+    """**`T058` em letras, e a primeira versão desta tela a contrariava.**
+
+    A tarefa pedia o histórico acessível depois de o marco sair da norma, e o precedente é o
+    `corte-historico`. Minha primeira view resolvia o Perfil por `_perfil_do_marco`, que lê a versão
+    **vigente** e levanta 404 quando o marco não está nela — de modo que uma Retificação que
+    removesse o marco faria desaparecer justamente o histórico antigo, o que mais importa.
+
+    As apurações guardam Perfil e marco como **identidades publicadas**. É por elas que a série é
+    encontrada, e é isso que este teste prende.
+    """
+    from tests.fixtures.edital import PROFILE_ID as PERFIL
+    from tests.fixtures.publicacao import retify
+
+    edital, _, _ = cenario
+    apurar(edital, gestor)
+    identificar(client, "carlos", ["gestor"])
+    url = reverse("interface:ocupacao-historico", args=[edital.id, MARCO])
+    assert "Apuração 1 de 1" in client.get(url).content.decode()
+
+    retify(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": f"/profiles/id={PERFIL}/classificationMilestones/id={MARCO}",
+                "operation": "REMOVE",
+            }
+        ],
+        suffix="remove-marco-016",
+    )
+
+    # **A prova de que o teste não é vácuo**: o marco saiu da versão vigente, e a tela da ocupação
+    # — que resolve o marco no snapshot, e deve — passa a dar 404. O histórico, não.
+    assert client.get(reverse("interface:ocupacao", args=[edital.id, MARCO])).status_code == 404
+
+    resposta = client.get(url)
+
+    assert resposta.status_code == 200, "o histórico do marco removido continua acessível"
+    assert "Apuração 1 de 1" in resposta.content.decode()

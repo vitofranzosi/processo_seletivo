@@ -4352,9 +4352,10 @@ def ocupacao(request, edital_id, marco_id):
 def ocupacao_historico(request, edital_id, marco_id):
     """Todas as apurações de um recorte, da mais antiga à mais nova (016, FR-259).
 
-    **Pende do Edital e do marco, e o recorte vem em `?lista=`** — como a tela da ocupação. A do
-    corte pende só do Edital porque um corte tem identidade própria; aqui o que se lista é a
-    **série** de um recorte, e o recorte é o que a identifica.
+    **O recorte vem no caminho, e nada é resolvido no snapshot vigente.** A rota carrega o marco
+    porque é ele que identifica a série, mas a busca é pelas **identidades publicadas** que as
+    apurações guardaram — é o que mantém o histórico acessível depois de uma Retificação remover o
+    marco, que é o precedente do `corte-historico`.
 
     **Lidas como foram emitidas.** Cada apuração guarda a versão do quadro, a ordem, o corte e os
     movimentos que considerou: uma Retificação posterior não reescreve o que uma apuração antiga
@@ -4366,7 +4367,11 @@ def ocupacao_historico(request, edital_id, marco_id):
     if ator is None:
         return redirect(reverse("interface:identificar"))
     lista_id = _identidade_ou_404(request.GET.get("lista"))
-    perfil_id = _perfil_do_marco(edital, marco_id)
+    # **Sem `_perfil_do_marco` aqui, e a ausência é a regra.** Aquele helper resolve o marco na
+    # versão **vigente** e levanta 404 quando ele não está nela — de modo que uma Retificação que
+    # removesse o marco faria o histórico antigo desaparecer, que é exatamente o que esta tela
+    # existe para impedir. As apurações guardam Perfil e marco como identidades publicadas, e é por
+    # elas que a série é encontrada.
     return marcar_como_privada(
         render(
             request,
@@ -4376,9 +4381,7 @@ def ocupacao_historico(request, edital_id, marco_id):
                 "edital": edital,
                 "marco_id": marco_id,
                 "lista_id": lista_id,
-                "serie": historico_do_recorte(
-                    edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
-                ),
+                "serie": historico_do_recorte(edital=edital, marco_id=marco_id, lista_id=lista_id),
             },
         )
     )

@@ -1,13 +1,15 @@
-"""A vaga que muda de recorte: reversão de cota e liberação por concomitância (016).
+"""A quantidade que sai de um recorte e entra em outro: a reversão de cota (016, `FR-246`).
 
-**O movimento nasce com a apuração da origem**, na mesma transação que o determina. A apuração do
-**destino** o lê pelo `destino_lista_id` e nunca cria um segundo registro — a linha existe uma vez,
-e é o que desfaz a circularidade entre "efetivas depende de movimentos" e "movimento aponta uma
-apuração".
+**Há um sentido só, e a ausência do segundo é o achado da US4.** A concorrência concomitante do item
+8.9 do 28/2026 parecia ser o sentido oposto — e não é: ela não transfere quantidade nenhuma. O
+autodeclarado que ocupa pela ampla apenas **não é computado** no preenchimento da reservada, que
+continua com as vagas que publicou. Aquilo é exclusão no cálculo de `ocupadas`, e mora em
+`apuracao.apurar`.
 
-**Os dois sentidos são opostos, e trocá-los mantém a soma certa com o recorte errado.** A reversão
-move quantidade da cota para a linha geral; a liberação devolve **ao recorte reservado** a vaga de
-quem ocupou pela ampla. Só asserção de recorte pega a troca, e é por isso que ela tem teste próprio.
+**O movimento nasce com a apuração da origem**, na mesma transação que o determina, e com o id
+gerado **antes** dela — para que ela o inclua nos próprios `movimentosLidos` e já nasça com a
+`efetivas` líquida da cessão. A apuração do **destino** o lê pelo `destino_lista_id` e nunca cria um
+segundo registro.
 """
 
 from processo_seletivo.classificacao.application.selectors import ato_vigente
@@ -112,16 +114,6 @@ def ha_quem_ocupar(*, edital, marco_id, lista_id, ja_ocupadas):
         return False
     com_posicao = sum(1 for posicao in ato.posicoes.all() if posicao.posicao is not None)
     return com_posicao > ja_ocupadas
-
-
-def _lista_reservada_de(inscricao):
-    """A Modalidade que a inscrição escolheu, ou `None`.
-
-    O candidato indica **uma** modalidade de reserva no ato da inscrição — item 4.2.3 do 28/2026 e
-    do 57/2026 —, e é ela o destino da vaga liberada.
-    """
-    modalidade = getattr(inscricao, "modality_id", None)
-    return modalidade or None
 
 
 __all__ = [

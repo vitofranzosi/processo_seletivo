@@ -122,11 +122,14 @@ causa nomeada, e não causa faixa nenhuma.
 1. Monte alguém autodeclarado que esteja dentro do número de vagas **nas duas** listas.
 2. Emita a apuração dos dois recortes.
 
-**Esperado:** a pessoa ocupa pela **ampla concorrência**, e a vaga reservada dela fica disponível —
-**para o próximo da lista reservada**, nunca para a linha geral. É o item 8.9 do 28/2026, literal.
+**Esperado:** a pessoa ocupa pela **ampla concorrência** e **não consta ocupando** na reservada,
+cuja vaga segue aberta ao próximo daquela lista. Nenhuma quantidade muda de recorte: as efetivas dos
+dois continuam as publicadas, e **movimento nenhum** aparece na tela ou na trilha. É o item 8.9 do
+28/2026, literal.
 
-**A troca que este cenário existe para pegar:** se a vaga liberada for para a ampla, a soma continua
-certa e o recorte está errado. Nenhum invariante de soma pega isso; só a asserção de recorte.
+**A troca que este cenário existe para pegar:** modelar isso como transferência da reservada para a
+ampla. Num Perfil de 2 amplas e 1 reservada, a soma continua 3 e os recortes ficam 1 e 2 — onde o
+Edital manda 2 e 1. Invariante de soma nenhum pega; só a asserção por recorte.
 
 ## Cenário 6 — Auditar (História 5, `FR-259`)
 

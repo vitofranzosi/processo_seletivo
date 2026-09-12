@@ -81,9 +81,9 @@ CheckConstraint(check=Q(ocupadas__lte=F("efetivas")), name="ck_apuracao_ocupadas
 
 ## 2. `MovimentoDeVaga`
 
-A vaga que muda de recorte. **Os dois sentidos na mesma entidade**, porque são o mesmo fato — uma
-quantidade que sai de um recorte e entra em outro — e separá-los faria o invariante da soma ter de
-somar duas tabelas.
+A vaga que muda de recorte: **uma quantidade que sai de um recorte e entra em outro**. Há um só
+fato dessa natureza nesta feature, a reversão de cota — a concorrência concomitante, que parecia ser
+o sentido oposto, não move quantidade nenhuma e por isso não tem registro aqui (`FR-253`).
 
 | Campo | Tipo | Nota |
 |---|---|---|
@@ -113,12 +113,10 @@ CheckConstraint(check=Q(quantidade__gt=0), name="ck_movimento_quantidade_positiv
 CheckConstraint(
     check=~Q(origem_lista_id=F("destino_lista_id")), name="ck_movimento_recortes_distintos"
 )
-# A liberação é de pessoa; a reversão é de quantidade.
-CheckConstraint(
-    check=Q(especie="REVERSAO_DE_COTA", inscricao__isnull=True)
-    | Q(especie="LIBERACAO_POR_CONCOMITANCIA", inscricao__isnull=False),
-    name="ck_movimento_inscricao_conforme_especie",
-)
+# **Não há constraint de espécie, porque não há segunda espécie.** A primeira versão deste
+# documento previa `ck_movimento_inscricao_conforme_ie` para separar um movimento de pessoa de
+# um movimento de quantidade; a concomitância não é movimento, e a coluna `inscricao` que a
+# constraint exigiria deixou de existir (migration `0002_liberacao_nao_e_movimento`).
 ```
 
 ## 3. `PerfilVaga.especie_de_reversao` — a declaração normativa

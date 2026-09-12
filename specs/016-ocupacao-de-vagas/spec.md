@@ -63,8 +63,12 @@ A leitura acima separa três coisas que a palavra "remanejamento" junta:
 2. **Reversão de cota** (28/2026 4.3; 57/2026 4.3). Vaga reservada **não preenchida** muda de
    recorte: passa para a ampla concorrência do mesmo Perfil — e, no 28, do mesmo **polo**.
 3. **Concorrência concomitante** (28/2026 4.3.1, 8.7, 8.8, 8.9). A mesma pessoa está em duas
-   listas. Ocupar pela ampla **libera** a vaga reservada dela, que volta ao recorte reservado — e
-   não à ampla. É movimento em sentido contrário ao da reversão.
+   listas, e ocupar pela ampla faz com que ela **não seja computada** no preenchimento da
+   reservada. *Parecia ser o sentido contrário da reversão, e não é: quantidade nenhuma muda de
+   lista. O item 8.9 diz que ela "não constará na lista de classificados como autodeclarados,
+   abrindo vaga para o próximo suplente autodeclarado" — a vaga reservada continua sendo da
+   reserva. Modelá-la como movimento produzia, num Perfil de 2 amplas e 1 reservada, efetivas de 1
+   e 2, onde o Edital manda 2 e 1.*
 
 E um quarto que a palavra também junta e que **não é desta feature**: a **cascata entre recortes**
 do 14/2026 (6.6), cujo gatilho é *"o número de classificados deste grupo seja menor que 10"* — uma
@@ -300,8 +304,9 @@ Cada número exibido tem trilha: qual ato o produziu, sobre qual ordem, com qual
 
 **Aceitação**
 
-1. **Dado** um Perfil com reversão e liberação, **quando** a auditoria é lida, **então** a
-   sequência de movimentos reconstrói o número de hoje a partir do quadro publicado.
+1. **Dado** um Perfil com reversão e com concomitância, **quando** a auditoria é lida, **então** o
+   número de hoje é reconstruído a partir do quadro publicado — e a ocupação menor da lista
+   reservada é explicada pela apuração da ampla, porque ali **não há movimento a exibir**.
 2. **Dado** o quadro retificado depois da apuração, **quando** a auditoria é lida, **então** fica
    legível qual versão do quadro cada apuração leu.
 
@@ -436,8 +441,8 @@ Cada número exibido tem trilha: qual ato o produziu, sobre qual ordem, com qual
 
 - **Apuração de ocupação** — ato append-only por recorte (`D-008`): quadro lido, ordem lida,
   ocupadas, faltando, instante, autoria, sucessora e causa de obsolescência.
-- **Movimento de vaga** — origem, destino, quantidade, causa. Cobre reversão de cota e liberação por
-  concorrência concomitante, que são sentidos opostos do mesmo movimento.
+- **Movimento de vaga** — origem, destino, quantidade, causa. Cobre **só** a reversão de cota: a
+  concorrência concomitante não move quantidade, e por isso não tem movimento (`FR-252`).
 - **Declaração de reversão** — conteúdo publicado do Perfil: se reverte, e sob qual das duas
   espécies de gatilho (`D-007`). Alcançável por Retificação, e com degrau canônico próprio.
 
@@ -445,7 +450,8 @@ Cada número exibido tem trilha: qual ato o produziu, sobre qual ordem, com qual
 
 ## 5. Invariantes observáveis
 
-1. A soma das quantidades por recorte é **constante** sob reversão e sob liberação.
+1. A soma das quantidades por recorte é **constante** sob reversão — `publicadas + recebidas −
+   cedidas` fecha nos dois recortes envolvidos, e não só no destino.
 2. Nenhuma vaga atravessa Perfil.
 3. Nenhuma quantidade sai de `percentage`.
 4. Nenhuma apuração corre sobre ordem não vigente.
@@ -542,7 +548,7 @@ da primeira tela, e não depois dela.*
 5. **A reversão** — o movimento, o registro e o invariante da soma constante.
 6. **A causa para a `014`** — o déficit apurado substituindo o motivo textual que aquela feature
    hoje exige de quem emite.
-7. **A concorrência concomitante** — a liberação em sentido contrário, que é a História 4.
+7. **A concorrência concomitante** — a exclusão no cálculo da ocupação, que é a História 4.
 
 Os passos 1 a 3 e 6 fecham o 77/2026. Os passos 4, 5 e 7 alcançam o 57 e o 28. **Nenhum passo
 alcança o 14/2026**, e é a consequência direta da `D-006`.
@@ -552,6 +558,6 @@ alcança o 14/2026**, e é a consequência direta da `D-006`.
 A feature está concluída quando, pela interface administrativa e sem manipulação de banco, for
 possível: ler os quatro números por recorte de um Perfil com três listas; declarar a reversão e
 publicá-la no documento; ver a vaga reservada não preenchida passar à ampla, nomeada; emitir a
-faixa seguinte tendo o déficit apurado como causa; ver a vaga liberada por quem ocupou pela ampla
-voltar à lista reservada; e reconstruir, pela auditoria, o número de hoje a partir do quadro
-publicado.
+faixa seguinte tendo o déficit apurado como causa; ver que quem ocupou pela ampla não consta
+ocupando na lista reservada dele, cuja vaga segue aberta ao próximo; e reconstruir, pela auditoria,
+o número de hoje a partir do quadro publicado.

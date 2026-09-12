@@ -224,7 +224,8 @@ linha geral passa a 62 e a soma por recorte não muda.
       `universo.movimentosLidos`, sem criar um segundo registro
 - [X] T040 [P] [US2] Teste do invariante da soma constante em
       `backend/tests/unit/ocupacao/test_soma_constante.py` — **propriedade** sobre sequências
-      aleatórias de reversão e liberação, porque a composição erra e não cada movimento (`R-007`).
+      aleatórias de reversão, afirmando o invariante nos **dois** recortes que o movimento toca,
+      porque a composição erra e não cada movimento (`R-007`).
       No mesmo arquivo, que **`publicadas` nunca muda** por movimento algum (`FR-239a`): o que a
       reversão move é a quantidade efetiva, e o publicado é intocável
 - [X] T041 [P] [US2] Teste de que nenhuma vaga atravessa Perfil em
@@ -288,29 +289,33 @@ a faixa seguinte é emitida com o déficit como causa.
 
 ## Phase 6: User Story 4 — Quem ocupa por duas listas ao mesmo tempo (P2)
 
-**Goal**: ocupar pela ampla libera a vaga reservada, que volta ao recorte reservado.
+**Goal**: ocupar pela ampla exclui a pessoa do preenchimento da reservada, sem mover quantidade.
 
-**Independent Test**: alguém dentro do número de vagas nas duas listas ocupa pela ampla, e a vaga
-reservada alcança o próximo da **lista reservada**.
+**Independent Test**: alguém dentro do número de vagas nas duas listas ocupa pela ampla, não consta
+ocupando na reservada, e a vaga dela continua na **lista reservada**, alcançando o próximo.
 
 ### Testes
 
 - [X] T051 [P] [US4] Teste em `backend/tests/integration/ocupacao/test_concomitancia.py`: quem
       está dentro nas duas listas ocupa pela ampla (`FR-254`) e não é computado na reservada
       (`FR-252`)
-- [X] T052 [P] [US4] Teste do recorte de destino da liberação em
-      `backend/tests/integration/ocupacao/test_concomitancia.py`: a vaga volta para a **lista
-      reservada** e nunca para a linha geral (`FR-253`). É a troca que mantém a soma certa com o
-      recorte errado, e só a asserção de recorte a pega
+- [X] T052 [P] [US4] Teste de que a exclusão **não transfere quantidade**, em
+      `backend/tests/integration/ocupacao/test_concomitancia.py`: a vaga reservada permanece no
+      recorte reservado e as efetivas dos dois recortes não se alteram (`FR-253`). É a troca que
+      mantém a soma certa com os recortes errados — 1 e 2 onde o Edital manda 2 e 1 —, e só a
+      asserção por recorte a pega
 - [X] T053 [P] [US4] Teste do caso em que a lista reservada esgota, em
       `backend/tests/integration/ocupacao/test_concomitancia.py`: o que sobra é déficit reservado,
       e a reversão da História 2 decide o destino
 
 ### Implementação
 
-- [X] T054 [US4] Implementar a liberação em
-      `backend/processo_seletivo/ocupacao/application/movimento.py`, com `inscricao` preenchida —
-      é movimento de pessoa, e a constraint `ck_movimento_inscricao_conforme_especie` o exige
+- [X] T054 [US4] Implementar a exclusão em
+      `backend/processo_seletivo/ocupacao/domain/apuracao.py`, pelo parâmetro `ocupantes_da_ampla`
+      que sai do cálculo das ocupadas do recorte reservado — **no cálculo, e não em movimento**.
+      *A redação anterior pedia implementá-la em `application/movimento.py` com `inscricao`
+      preenchida, sob a constraint `ck_movimento_inscricao_conforme_especie`: é a modelagem que a
+      revisão da US4 derrubou, e a migration `0002_liberacao_nao_e_movimento` desfez.*
 - [X] T055 [US4] Exibir na tela, em
       `backend/processo_seletivo/interface/templates/interface/ocupacao.html`, que a reservada
       mantém a vaga de quem ocupou pela ampla — **sem** desenhar movimento, porque a concomitância
@@ -329,7 +334,10 @@ depender de desistência, que é fato da `019` (`R-001`).
 **Independent Test**: reconstruir o número de hoje a partir do quadro publicado, pela auditoria.
 
 - [X] T056 [P] [US5] Teste em `backend/tests/integration/ocupacao/test_auditoria.py`: a sequência
-      quadro → apurações → movimentos reconstrói o número vigente (`FR-259`)
+      quadro → apurações → movimentos reconstrói o número vigente (`FR-259`), pelo invariante
+      completo `publicadas + recebidas − cedidas = efetivas` e afirmado **nos dois recortes** que o
+      movimento tocou — só o destino deixaria a origem sem verificação, e é nela que a reversão
+      poderia ceder a mesma quantidade duas vezes
 - [X] T057 [P] [US5] Teste de que fica legível **qual versão do quadro** cada apuração leu, em
       `backend/tests/integration/ocupacao/test_auditoria.py`
 - [X] T058 [US5] Tela de histórico em
@@ -372,8 +380,8 @@ depender de desistência, que é fato da `019` (`R-001`).
 - **US2 (4)**: depende de 2. A declaração publicada (`T025`–`T037`) é pré-requisito da reversão
   (`T038`+), e não o contrário
 - **US3 (5)**: depende de 2. Independe da US2
-- **US4 (6)**: depende de 2 e **da US2**, porque a liberação usa o `MovimentoDeVaga` que a `T038`
-  cria
+- **US4 (6)**: depende de 2 e **da US2** — não porque a exclusão mova quantidade, e sim porque a
+  `T053` exige a reversão para decidir o destino do déficit que sobra na reservada esgotada
 - **US5 (7)**: depende de 2; rende mais depois da US2 e da US4, que geram movimentos para auditar
 - **Polish (8)**: depois das histórias desejadas
 
