@@ -82,6 +82,13 @@ INSTALLED_APPS = [
     # compromisso do universo. A direção da dependência é única: `sorteios` lê `classificacao`,
     # `publicacoes` e `inscricoes`, e nenhum deles passa a conhecê-lo (021, R-002).
     "processo_seletivo.sorteios",
+    # A ocupação de vaga da `016`: quantas vagas cada lista de concorrência tem publicadas, quantas
+    # estão ocupadas e quantas faltam, mais o movimento que reverte cota para a ampla. App próprio
+    # pela mesma razão do `sorteios`, e a direção da dependência é única: `ocupacao` lê
+    # `classificacao`, `publicacoes` e `resultados`, e **nenhum deles passa a conhecê-lo**. Fosse
+    # `classificacao` a ler a apuração para descobrir a causa da faixa seguinte, a `014` deixaria de
+    # ser compreensível sozinha — contra a fronteira que a decisão de 11/09/2026 fixou (016, R-002).
+    "processo_seletivo.ocupacao",
 ]
 
 # **Só o *acesso* à fonte da semente mora aqui**: quanto tempo esperar e quantas vezes tentar são

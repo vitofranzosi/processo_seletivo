@@ -47,11 +47,11 @@ contrária, ela foi mal lida.
 
 **Purpose**: o app novo, vazio e registrado.
 
-- [ ] T001 Criar o app em `backend/processo_seletivo/ocupacao/` com `__init__.py`, `apps.py`,
+- [X] T001 Criar o app em `backend/processo_seletivo/ocupacao/` com `__init__.py`, `apps.py`,
       `domain/__init__.py`, `application/__init__.py` e `migrations/__init__.py`
-- [ ] T002 Registrar `processo_seletivo.ocupacao` em `INSTALLED_APPS`, em
+- [X] T002 Registrar `processo_seletivo.ocupacao` em `INSTALLED_APPS`, em
       `backend/config/settings/base.py`
-- [ ] T003 [P] Criar `backend/processo_seletivo/ocupacao/domain/nomes.py` com o vocabulário da
+- [X] T003 [P] Criar `backend/processo_seletivo/ocupacao/domain/nomes.py` com o vocabulário da
       feature e os códigos de recusa do contrato (`ordem_nao_vigente`, `sem_quadro_publicado`,
       `recorte_sem_linha`, `motivo_da_sucessao_obrigatorio`, `deficit_zero`, `apuracao_obsoleta`)
 
@@ -66,30 +66,30 @@ append-only de mentira, e a segunda passada do provisionamento é o que o retira
 
 ### O cálculo puro (passo 1 da ordem de execução)
 
-- [ ] T004 [P] Testes de unidade do cálculo em `backend/tests/unit/ocupacao/test_apuracao.py`:
+- [X] T004 [P] Testes de unidade do cálculo em `backend/tests/unit/ocupacao/test_apuracao.py`:
       publicadas da **linha** e nunca do total do Perfil (`FR-240`), ampla por
       `generalCompetitionModalityId` e nunca por nome (`FR-241`), reprodutibilidade (`FR-244`)
-- [ ] T005 Implementar `backend/processo_seletivo/ocupacao/domain/apuracao.py` — função pura que
+- [X] T005 Implementar `backend/processo_seletivo/ocupacao/domain/apuracao.py` — função pura que
       recebe quadro, ordem, recusas e movimentos lidos e devolve `publicadas`, `efetivas` e
       `ocupadas`. Sem ORM na assinatura, na forma de `classificacao/domain/faixa.py`
-- [ ] T006 [P] Implementar `backend/processo_seletivo/ocupacao/domain/reversao.py` — as duas
+- [X] T006 [P] Implementar `backend/processo_seletivo/ocupacao/domain/reversao.py` — as duas
       espécies de gatilho da `D-007` (`ON_EXHAUSTION`, `ON_BALANCE`) como funções puras
-- [ ] T007 [P] Testes de unidade das duas espécies em
+- [X] T007 [P] Testes de unidade das duas espécies em
       `backend/tests/unit/ocupacao/test_reversao.py`, incluindo o caso que as separa: 13 de 20
       habilitados com a lista **ainda tendo gente** reverte sob saldo e não sob esgotamento
 
 ### O ato (passo 2)
 
-- [ ] T008 Criar `ApuracaoDeOcupacao` e `MovimentoDeVaga` em
+- [X] T008 Criar `ApuracaoDeOcupacao` e `MovimentoDeVaga` em
       `backend/processo_seletivo/ocupacao/models.py`, conforme [data-model.md](./data-model.md) —
       com `efetivas` (e **sem** `faltando`), `universo.movimentosLidos`, e as quatro constraints:
       as duas parciais de primeira apuração, `uq_apuracao_sucessora_unica` e
       `ck_apuracao_ocupadas_no_limite` contra `efetivas`
-- [ ] T009 Gerar as migrations em `backend/processo_seletivo/ocupacao/migrations/`
-- [ ] T010 Acrescentar `ocupacao_apuracaodeocupacao` e `ocupacao_movimentodevaga` a
+- [X] T009 Gerar as migrations em `backend/processo_seletivo/ocupacao/migrations/`
+- [X] T010 Acrescentar `ocupacao_apuracaodeocupacao` e `ocupacao_movimentodevaga` a
       `TABELAS_APPEND_ONLY` em `backend/processo_seletivo/seguranca/papeis.py`, com o comentário da
       razão, e conferir que o provisionamento passa a informar **26**
-- [ ] T011 [P] Teste do append-only em
+- [X] T011 [P] Teste do append-only em
       `backend/tests/unit/ocupacao/test_apuracao_append_only.py`: `UPDATE` e `DELETE` recusados
       pelo gatilho **e** pela ausência de privilégio (`FR-260`)
 - [ ] T012 [P] Teste das constraints em `backend/tests/unit/ocupacao/test_constraints.py`: duas
