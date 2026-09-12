@@ -22,12 +22,14 @@ from tests.fixtures.comissao import rascunho_com_etapas
 from tests.fixtures.edital import PROFILE_ID
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
+from tests.performance.escala import escala
 
 pytestmark = [pytest.mark.performance, pytest.mark.django_db(transaction=True)]
 
 MARCO = "00000000-0000-4000-8000-000000000491"
 ENTREVISTA = "00000000-0000-4000-8000-000000000492"
 TETO_SEGUNDOS = 3.0
+ESCALA = escala()
 
 
 def _acrescentar_inscricoes(edital, *, quantidade, inicio):
@@ -96,7 +98,7 @@ def edital_com_corte(gestor, api_client, manager_headers, process_payload):
         }
     ]
     edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
-    _acrescentar_inscricoes(edital, quantidade=1000, inicio=1)
+    _acrescentar_inscricoes(edital, quantidade=ESCALA, inicio=1)
     emitir_ordem(
         actor=gestor,
         processo_id=edital.processo_id,
@@ -146,12 +148,16 @@ def test_o_numero_de_consultas_do_calculo_nao_cresce_com_os_participantes(edital
     # **A ordem é sucedida**, e não só a população aumentada: acrescentar participantes obsoleta o
     # ato, e sobre ordem obsoleta não se corta (FR-198). Medir o crescimento exige uma ordem
     # vigente dos dois lados.
-    _acrescentar_inscricoes(edital_com_corte, quantidade=1000, inicio=2001)
+    _acrescentar_inscricoes(edital_com_corte, quantidade=ESCALA, inicio=2 * ESCALA + 1)
     _suceder_a_ordem(edital_com_corte, gestor)
     with CaptureQueriesContext(connection) as depois:
         proposta = calcular_corte(edital=edital_com_corte, perfil_id=PROFILE_ID, marco_id=MARCO)
 
-    assert len(proposta["itens"]) == 2000
+    print(
+        f"\n[escala] corte: {ESCALA} → {2 * ESCALA} participantes, "
+        f"{len(antes)} → {len(depois)} consultas"
+    )
+    assert len(proposta["itens"]) == 2 * ESCALA
     assert len(depois) == len(antes)
 
 
@@ -165,4 +171,5 @@ def test_abrir_a_tela_do_corte_com_mil_participantes_fica_abaixo_do_teto(
     duracao = time.monotonic() - inicio
 
     assert resposta.status_code == 200
-    assert duracao < TETO_SEGUNDOS, f"a tela levou {duracao:.3f}s"
+    print(f"\n[escala] corte: {ESCALA} participantes, tela em {duracao:.3f}s")
+    assert duracao < TETO_SEGUNDOS, f"a tela levou {duracao:.3f}s com {ESCALA} participantes"
