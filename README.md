@@ -204,12 +204,14 @@ docker compose exec app make lint check test-pg
 ```
 
 `test-pg` e não `test`: **a suíte precisa do PostgreSQL.** Sem variável nenhuma ela cai para
-SQLite, e nesse modo não é confiável — 182 testes são pulados e **21 falham**, porque executam SQL
-de PostgreSQL sob SQLite em casos que deveriam ter sido pulados e não foram. O CI não enxerga isso,
-porque só roda contra PostgreSQL. O achado está em
-[`doc/achado-suite-em-sqlite.md`](doc/achado-suite-em-sqlite.md).
+SQLite, e nesse modo não é confiável — 197 testes são pulados e **31 falham**, todos em casos que
+deveriam ter sido pulados e não foram: uns executam SQL que só o PostgreSQL entende, outros esperam
+mensagem de constraint que o SQLite não escreve, outros ainda contam com gatilho e trancamento de
+linha que ele não tem. O CI não enxerga isso, porque só roda contra PostgreSQL. O achado está em
+[`doc/achado-suite-em-sqlite.md`](doc/achado-suite-em-sqlite.md) — e mede 21, que era o número de
+09/09.
 
-Contra PostgreSQL a suíte fecha em 4681 passando e 2 pulados — os dois deliberados, e nomeados em
+Contra PostgreSQL a suíte fecha em 4862 passando e 2 pulados — os dois deliberados, e nomeados em
 [`doc/achado-fonte-real-do-sorteio-sem-gatilho.md`](doc/achado-fonte-real-do-sorteio-sem-gatilho.md).
 O alvo `test-pg` monta a conexão a partir do `POSTGRES_USER` do seu `.env`; à mão, fora do `make`,
 são necessárias as **duas** variáveis — sem `TEST_DB_ENGINE=postgresql` a suíte cai para SQLite, e
@@ -309,6 +311,7 @@ Incrementos, na ordem em que foram especificados:
 | [`012`](specs/012-mesa-de-avaliacao/spec.md) | mesa de avaliação |
 | [`012`](specs/012-013-revisao-formas-de-conclusao/spec.md) | revisão de compatibilidade 012–013 |
 | [`013`](specs/013-consolidacao-resultado-etapa/spec.md) | consolidação do Resultado da Etapa |
+| [`014`](specs/014-corte-e-progressao-entre-etapas/spec.md) | corte e progressão entre Etapas |
 | [`015`](specs/015-ordenacao-e-classificacao/spec.md) | ordenação e classificação |
 | [`017`](specs/017-publicacao-de-resultados/spec.md) | publicação de resultados |
 | [`018`](specs/018-recursos-e-superacao-de-resultados/spec.md) | recursos e superação de resultados |

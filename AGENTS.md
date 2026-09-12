@@ -33,8 +33,9 @@ ficou anos sem efeito nenhum.
 
 **A preparação do banco tem três passos, nesta ordem:** provisionar papéis, migrar, provisionar de
 novo. Não é redundância — a segunda passada é a que concede privilégio sobre as tabelas que as
-migrations acabaram de criar. O comando informa quantas protegeu; se disser `0 de 18`, a segunda
-passada não rodou.
+migrations acabaram de criar. O comando informa quantas protegeu, no formato `N de M`; se o
+primeiro número vier `0`, a segunda passada não rodou. O `M` cresce a cada tabela append-only
+nova — eram 18, são 24 — e é por isso que a armadilha é o zero, e não o total.
 
 **Migration desaplicada contamina a sessão inteira.** O sintoma é `relation ... does not exist` num
 arquivo sorteado, longe da causa. Antes de investigar qualquer erro estranho, confira
@@ -43,12 +44,20 @@ arquivo sorteado, longe da causa. Antes de investigar qualquer erro estranho, co
 ## As armadilhas caras
 
 **O modo padrão da suíte não é confiável — rode contra PostgreSQL.** Sem variável nenhuma, a
-suíte cai para SQLite: **21 falham e 182 são puladas** (medido em 2026-09-09). As falhas são SQL
-de PostgreSQL — `ALTER TABLE ... DISABLE TRIGGER` — executando sob SQLite, em testes que deveriam
-ter sido pulados e não foram. O CI não vê nada disso, porque só roda contra PostgreSQL. Ver
-[doc/achado-suite-em-sqlite.md](doc/achado-suite-em-sqlite.md).
+suíte cai para SQLite: **31 falham, 4636 passam e 197 são puladas** (medido em 2026-09-12).
+Todas deveriam ter sido puladas e não foram, e a causa se reparte em três — o achado original
+([doc/achado-suite-em-sqlite.md](doc/achado-suite-em-sqlite.md), de 09/09) nomeava só a primeira,
+quando eram 21:
 
-Contra PostgreSQL a suíte fecha em **4358 passando e 2 pulados** (medido em 2026-09-10). Os dois
+| Quantas | Por que |
+|---|---|
+| 13 | SQL que só o PostgreSQL entende — `ALTER TABLE ... DISABLE TRIGGER` |
+| 8 | a mensagem do SQLite não nomeia a constraint, e o `pytest.raises(match=...)` não casa |
+| 10 | garantia ou forma que o SQLite não tem — gatilho ausente (`DID NOT RAISE`), `select_for_update` que não tranca, e erro de constraint que escapa cru |
+
+O CI não vê nada disso, porque só roda contra PostgreSQL.
+
+Contra PostgreSQL a suíte fecha em **4862 passando e 2 pulados** (medido em 2026-09-12). Os dois
 pulados são deliberados e estão nomeados em
 [doc/achado-fonte-real-do-sorteio-sem-gatilho.md](doc/achado-fonte-real-do-sorteio-sem-gatilho.md):
 um só roda fora do PostgreSQL, e o outro é o E2E contra o serviço real da Caixa, atrás da chave
