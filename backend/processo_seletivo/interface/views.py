@@ -4310,6 +4310,148 @@ def corte(request, edital_id, marco_id):
     )
 
 
+@require_http_methods(["GET"])
+def ocupacao(request, edital_id, marco_id):
+    """Os quatro números de cada recorte do marco, e o estado de cada um (016, UX-031).
+
+    **Abrir a tela não apura nada** (FR-261): é o mesmo desenho da ordem e do corte, e pela mesma
+    razão — um número regenerado em silêncio quando a tela abre passaria a afirmar ocupação que ato
+    nenhum sustenta.
+
+    **Quantidade que nenhum ato produziu chega nula, e o template não a desenha.** Zero é afirmação
+    — quer dizer "não há vaga a ocupar" —, e sem apuração emitida ninguém a fez (UX-032a).
+    """
+    from processo_seletivo.ocupacao.application.selectors import recortes_do_marco
+
+    ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    perfil_id = _perfil_do_marco(edital, marco_id)
+    recortes = recortes_do_marco(edital=edital, perfil_id=perfil_id, marco_id=marco_id)
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/ocupacao.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "marco_id": marco_id,
+                "recortes": recortes,
+                # A chave nasce no GET pela razão que o corte já registra: gerada a cada POST, um
+                # duplo clique produziria duas apurações sucessivas sem que ninguém pedisse.
+                "chave_idempotencia": uuid4().hex,
+                "pode_emitir": pode_emitir,
+                "resultado": request.session.pop("resultado_da_ocupacao", None),
+                # **Qual das duas ações aconteceu**, e não só que algo deu certo. As duas voltam
+                # para esta tela, e um aviso único dizia "Apuração emitida" depois de causar a
+                # faixa seguinte — frase falsa, porque apuração nenhuma foi emitida ali, e quem
+                # acabara de pedir a faixa ficava sem confirmação de que ela saiu. Encontrado no
+                # percurso conduzido da `016`.
+                "acao": request.session.pop("acao_da_ocupacao", None),
+                "erro": request.session.pop("erro_da_ocupacao", None),
+            },
+        )
+    )
+
+
+@require_http_methods(["GET"])
+def ocupacao_historico(request, edital_id, marco_id):
+    """Todas as apurações de um recorte, da mais antiga à mais nova (016, FR-259).
+
+    **O recorte vem no caminho, e nada é resolvido no snapshot vigente.** A rota carrega o marco
+    porque é ele que identifica a série, mas a busca é pelas **identidades publicadas** que as
+    apurações guardaram — é o que mantém o histórico acessível depois de uma Retificação remover o
+    marco, que é o precedente do `corte-historico`.
+
+    **Lidas como foram emitidas.** Cada apuração guarda a versão do quadro, a ordem, o corte e os
+    movimentos que considerou: uma Retificação posterior não reescreve o que uma apuração antiga
+    apurou.
+    """
+    from processo_seletivo.ocupacao.application.selectors import historico_do_recorte
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    lista_id = _identidade_ou_404(request.GET.get("lista"))
+    # **Sem `_perfil_do_marco` aqui, e a ausência é a regra.** Aquele helper resolve o marco na
+    # versão **vigente** e levanta 404 quando ele não está nela — de modo que uma Retificação que
+    # removesse o marco faria o histórico antigo desaparecer, que é exatamente o que esta tela
+    # existe para impedir. As apurações guardam Perfil e marco como identidades publicadas, e é por
+    # elas que a série é encontrada.
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/ocupacao_historico.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "marco_id": marco_id,
+                "lista_id": lista_id,
+                "serie": historico_do_recorte(edital=edital, marco_id=marco_id, lista_id=lista_id),
+            },
+        )
+    )
+
+
+@require_http_methods(["POST"])
+def emitir_apuracao_view(request, edital_id, marco_id):
+    """Emite a apuração de um recorte e volta à leitura, pelo padrão POST-redirect-GET."""
+    from processo_seletivo.ocupacao.application.emissao import emitir_apuracao
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    lista_id = _identidade_ou_404(request.POST.get("lista"))
+    destino = reverse("interface:ocupacao", args=[edital_id, marco_id])
+    try:
+        request.session["resultado_da_ocupacao"] = emitir_apuracao(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            perfil_id=_perfil_do_marco(edital, marco_id),
+            marco_id=marco_id,
+            lista_id=lista_id,
+            idempotency_key=request.POST.get("chave") or uuid4().hex,
+            correlation_id=f"interface-ocupacao-{edital_id}",
+            motivo=(request.POST.get("motivo") or "").strip(),
+        )
+        request.session["acao_da_ocupacao"] = "apuracao"
+    except DomainError as erro:
+        request.session["erro_da_ocupacao"] = erro.detail
+    return redirect(destino)
+
+
+@require_http_methods(["POST"])
+def causar_faixa_view(request, edital_id, marco_id):
+    """Pede à `014` a faixa seguinte com o déficit apurado como causa (016, FR-255).
+
+    **Esta ação não seleciona ninguém.** Ela entrega quantidade e motivo; quem lê a ordem e escolhe
+    é a `014`, do outro lado da chamada.
+    """
+    from processo_seletivo.ocupacao.application.causar_faixa import causar_faixa_seguinte
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    lista_id = _identidade_ou_404(request.POST.get("lista"))
+    destino = reverse("interface:ocupacao", args=[edital_id, marco_id])
+    try:
+        request.session["resultado_da_ocupacao"] = causar_faixa_seguinte(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital=edital,
+            perfil_id=_perfil_do_marco(edital, marco_id),
+            marco_id=marco_id,
+            lista_id=lista_id,
+            idempotency_key=request.POST.get("chave") or uuid4().hex,
+            correlation_id=f"interface-faixa-{edital_id}",
+        )
+        request.session["acao_da_ocupacao"] = "faixa"
+    except DomainError as erro:
+        request.session["erro_da_ocupacao"] = erro.detail
+    return redirect(destino)
+
+
 @require_http_methods(["POST"])
 def emitir_corte_view(request, edital_id, marco_id):
     """Constitui a faixa conferida e volta à leitura pelo padrão POST-redirect-GET."""

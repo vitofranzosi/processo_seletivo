@@ -644,6 +644,18 @@ components:
             O quadro de vagas do Perfil. **Opcional**, porque o rascunho legitimamente não o traz e
             porque quadro ausente significa "este Edital não publicou quadro" — nunca zero vaga.
           items: { $ref: '#/components/schemas/LinhaDoQuadroInput' }
+        vacancyReversion:
+          oneOf:
+            - { $ref: '#/components/schemas/ReversaoDeVagaInput' }
+            - { type: 'null' }
+          description: >-
+            Sob qual gatilho a vaga reservada não preenchida reverte para a ampla concorrência
+            (016). **Opcional, e nulo significa "este Edital não declara reversão"** — nunca
+            "reverte do jeito comum": o 57/2026 proíbe por escrito o remanejamento entre cursos, e
+            reverter por conta própria produziria ali o que ele veda. Objeto pela metade não
+            existe: declarar reversão sem kind responde 422 vacancy_reversion_kind_required, e
+            declará-la num Perfil sem vacancyTable responde vacancy_reversion_sem_quadro, porque
+            reverter pressupõe quantidade por recorte.
     LinhaDoQuadroInput:
       type: object
       description: >-
@@ -658,6 +670,24 @@ components:
         id: { $ref: '#/components/schemas/Id' }
         modalityId: { type: [string, 'null'], format: uuid }
         immediateVacancies: { type: integer, minimum: 0 }
+    ReversaoDeVagaInput:
+      type: object
+      description: >-
+        A declaração de reversão de vaga reservada. **Objeto de um campo, e não um campo solto**,
+        para que um segundo campo da mesma decisão normativa entre sem um novo degrau canônico
+        (016, R-005).
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum: [ON_EXHAUSTION, ON_BALANCE]
+          description: >-
+            Duas espécies, porque os Editais escrevem a reversão de modo diferente e o sistema não
+            pode escolher por eles: ON_EXHAUSTION reverte só quando a lista reservada esgota (a
+            redação do 28/2026, item 4.3, "havendo ausência de candidatos aprovados");
+            ON_BALANCE reverte o saldo ainda que a lista tenha gente por analisar (a do 57/2026,
+            item 4.3, "na hipótese do não preenchimento total"). Tratá-las como o mesmo efeito
+            fixaria, em ato publicado, uma divergência que é de norma.
     ModalidadeInput:
       type: object
       description: >-
@@ -761,7 +791,7 @@ components:
         [id, code, name, description, requirements, immediateVacancies, reserveType, reserveLimit,
          locality, duties, workload, compensation, classificationInformation, callInformation,
          competitionModalities, declaredFacts, classificationMilestones, vacancyTable,
-         generalCompetitionModalityId]
+         generalCompetitionModalityId, vacancyReversion]
       properties:
         id: { $ref: '#/components/schemas/Id' }
         code: { type: string }
@@ -832,6 +862,20 @@ components:
             aqui e opcional no input: duas grafias para a ausência, chave ausente e lista vazia, é
             o que a versão canônica existe para não admitir.
           items: { $ref: '#/components/schemas/LinhaDoQuadroPublicada' }
+        vacancyReversion:
+          type: [object, 'null']
+          description: >-
+            Sob qual gatilho a vaga reservada não preenchida reverte para a ampla concorrência
+            (016). Obrigatório aqui e opcional no input, como vacancyTable: **null é a declaração
+            de que este Edital não reverte**, e é a forma que todo conteúdo elevado da versão 13
+            recebe, porque a capacidade não existia. A apuração da ocupação congela o valor lido no
+            instante em que apurou, de modo que Retificação posterior não reescreve o que um ato
+            anterior apurou.
+
+            **A forma de dentro é a de ReversaoDeVagaInput e não é declarada aqui**, pela mesma
+            régua de competitionModalities: a forma publicada confere que o campo existe e é objeto
+            ou nulo, e que kind seja um dos dois declaráveis é conferido à parte, porque a recusa
+            tem código próprio — vacancy_reversion_kind_required — em vez de "tipo inválido".
     LinhaDoQuadroPublicada:
       type: object
       description: >-

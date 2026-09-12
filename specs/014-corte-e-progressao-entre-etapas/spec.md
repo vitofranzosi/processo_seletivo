@@ -888,9 +888,18 @@ exatamente a mesma faixa, com a mesma última posição alcançada.
 - **Publicação do corte como resultado e consulta pelo candidato** — a divulgação é da `017` e do
   portal; o que esta feature entrega é o impedimento de publicar sobre corte obsoleto.
 - **Recurso contra o corte** — os objetos atacáveis continuam sendo os que a `018` definiu.
-- **Cascata entre modalidades** — o "caso o número de classificados deste grupo seja menor que dez,
-  serão convocados os do Grupo 2 e do Grupo 3" do 14/2026 é concorrência entre modalidades, e é da
-  `016`. Esta feature corta **dentro** de cada recorte.
+- **Cascata entre recortes** — o "caso o número de classificados deste grupo seja menor que dez,
+  serão convocados os do Grupo 2 e do Grupo 3" do 14/2026 continua fora do que esta feature
+  entregou. Esta feature corta **dentro** de cada recorte.
+
+  *A redação anterior mandava a cascata para a `016`, tratando-a como concorrência entre
+  modalidades. Por decisão do usuário de 12/09/2026, tomada ao especificar a `016` e registrada na
+  spec dela, a cascata é **alvo derivado desta feature** — uma segunda espécie, que lê `callRules`
+  e alcança o recorte seguinte. O que decidiu foi o gatilho: "número de classificados menor que
+  dez" é contagem de classificados, e não vaga ocupada, e a fronteira fixada na `D-002` proíbe com
+  estas palavras usar "quantidade de habilitados" como sinônimo de "vagas ocupadas". A capacidade
+  é da linha desta feature e **não está construída**: é trabalho de incremento próprio, e a `016`
+  deixou de prometê-la.*
 - **Aplicabilidade da Etapa a um subconjunto de inscrições** — a Etapa continua sendo do Edital e
   alcançando todos os Perfis; a metade desta lacuna que depende de ordem é servida pelo corte, e a
   outra metade não é aberta aqui.

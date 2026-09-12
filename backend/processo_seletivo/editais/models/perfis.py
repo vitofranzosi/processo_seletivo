@@ -52,6 +52,26 @@ class PerfilVaga(models.Model):
     # já está na linha geral, e duas linhas para o mesmo recorte é a contradição que a `025`
     # proíbe.
     modalidade_ampla_concorrencia = models.UUIDField(null=True, blank=True)
+    # A espécie do gatilho da reversão de vaga reservada (016, D-007). **Nula significa "este
+    # Edital não declara reversão"** — nunca "reverte do jeito comum": o 57/2026 proíbe por escrito
+    # o remanejamento entre cursos, e reverter por conta própria produziria ali o que ele veda.
+    #
+    # **Uma coluna, e não duas**, porque o objeto publicado tem um campo só. No conteúdo publicado a
+    # forma é objeto (`vacancyReversion`), para que um campo novo da mesma decisão entre sem um
+    # segundo degrau canônico (016, R-005).
+    #
+    # **Vazio, e não nulo**: é a grafia que este repositório usa para texto ausente — `null` em
+    # `CharField` daria duas formas de dizer a mesma coisa, e o `DJ001` cobra isso. Os dois valores
+    # declaráveis são não vazios, então vazio é inequivocamente "não declarou".
+    especie_de_reversao = models.CharField(
+        max_length=32,
+        blank=True,
+        default="",
+        choices=[
+            ("ON_EXHAUSTION", "Só quando a lista reservada esgota"),
+            ("ON_BALANCE", "A quantidade que ficou sem preencher"),
+        ],
+    )
 
     class Meta:
         constraints = [

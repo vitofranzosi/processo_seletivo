@@ -82,6 +82,7 @@ def montar_cenario_do_corte(
     cut=None,
     prefixo="corte-014",
     pontuacoes=("90.0000", "80.0000", "70.0000"),
+    draft_factory=None,
 ):
     """Quatro inscritos, três pontuados, ordem emitida — e um alvo de dois.
 
@@ -92,7 +93,12 @@ def montar_cenario_do_corte(
     se duas pontuações forem iguais, e um cenário de pontuações fixas não o alcança. Um inscrito a
     mais que as pontuações fica sem avaliação, como no cenário base.
     """
-    draft, pontuada = rascunho(cut=cut if cut is not None else regra())
+    # `draft_factory` permite a outra feature montar o rascunho com o que **ela** precisa
+    # publicar, sem duplicar as cinco etapas deste cenário. A `016` usa isso para acrescentar o
+    # quadro de vagas: sem linha publicada não há quantidade a apurar, e a emissão dela recusa.
+    # O padrão continua sendo o rascunho do 14/2026, e nenhum teste da `014` muda.
+    monta = draft_factory or rascunho
+    draft, pontuada = monta(cut=cut if cut is not None else regra())
     edital = publish_original(api_client, manager_headers, process_payload, draft=draft)
     membros = constituir(
         gestor,

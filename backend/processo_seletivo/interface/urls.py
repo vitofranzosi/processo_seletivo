@@ -237,6 +237,37 @@ urlpatterns = [
         views.emitir_corte_view,
         name="emitir-corte",
     ),
+    # A ocupação (016). Pende do **marco**, como as da 015, do corte e do sorteio, porque é o
+    # recorte que ela lista: um marco com cotas tem três recortes, e cada um tem o seu número.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao",
+        views.ocupacao,
+        name="ocupacao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/apurar",
+        views.emitir_apuracao_view,
+        name="emitir-apuracao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/faixa-seguinte",
+        views.causar_faixa_view,
+        name="causar-faixa",
+    ),
+    # O histórico de um recorte (016, FR-259). O caminho **carrega** o marco, como a leitura, e o
+    # recorte vem em `?lista=`: o que se lista é a **série** de um recorte, e é ela que o recorte
+    # identifica.
+    #
+    # **Carregar não é resolver, e é aqui que a distinção importa.** A view não chama
+    # `_perfil_do_marco`, que levanta 404 quando o marco não está na versão vigente: uma Retificação
+    # que removesse o marco faria desaparecer justamente o histórico que explica os números daquela
+    # época. A série é encontrada pelas identidades publicadas que as apurações guardaram. É o
+    # mesmo motivo pelo qual `corte-historico` endereça o **corte**, e não o marco.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/historico",
+        views.ocupacao_historico,
+        name="ocupacao-historico",
+    ),
     path(
         "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/corte/continuar",
         views.continuar_corte_view,

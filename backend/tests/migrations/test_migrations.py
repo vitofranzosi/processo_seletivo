@@ -547,7 +547,11 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # elaboração pela razão das anteriores, e é o que permite exigir linha de quadro para todo
         # recorte que o marco ordena sem tornar impublicável o Edital que declara "Ampla
         # concorrência" como Modalidade (014, D-014).
-        "editais": 18,
+        # **Sobe para 19 com a 016**: a `editais/0019` acrescenta `especie_de_reversao` ao Perfil.
+        # É elaboração pela razão das anteriores — o gatilho da reversão é declarado pelo Edital, e
+        # não inferido do estado das listas, porque o 28/2026 e o 57/2026 o escrevem de modo
+        # diferente e escolher por eles fixaria norma em ato publicado (016, D-007).
+        "editais": 19,
         "publicacoes": 8,
         # **Sobe para 2 com a 018**: a `divulgacao/0002` acrescenta os três campos da declaração
         # expressa de encerramento do prazo e a constraint que os mantém inteiros (FR-085).
@@ -686,7 +690,11 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # elaboração pela razão das anteriores, e é o que permite exigir linha de quadro para todo
         # recorte que o marco ordena sem tornar impublicável o Edital que declara "Ampla
         # concorrência" como Modalidade (014, D-014).
-        "editais": 18,
+        # **Sobe para 19 com a 016**: a `editais/0019` acrescenta `especie_de_reversao` ao Perfil.
+        # É elaboração pela razão das anteriores — o gatilho da reversão é declarado pelo Edital, e
+        # não inferido do estado das listas, porque o 28/2026 e o 57/2026 o escrevem de modo
+        # diferente e escolher por eles fixaria norma em ato publicado (016, D-007).
+        "editais": 19,
         "inscricoes": 4,
         "processos": 2,
         "publicacoes": 8,

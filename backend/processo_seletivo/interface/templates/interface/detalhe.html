@@ -143,7 +143,7 @@ permanecem preservados.</p>
   O rótulo diz o que se vai encontrar, e é a mesma regra que a supervisão já aplica ao mesmo par de
   telas: "ordenação" nomearia um recálculo que aquele marco não tem.
   {% endcomment %}
-  <ul class="resumo-lista">{% for grupo in marcos_classificatorios %}{% for marco in grupo.marcos %}<li>{% if marco.drawMethod %}<a href="{% url 'interface:sorteio' edital.id marco.id %}">{{ marco.name }}</a> <span class="quando">{{ grupo.perfil.name }} — sorteio público</span>{% else %}<a href="{% url 'interface:ordenacao' edital.id marco.id %}">{{ marco.name }}</a> <span class="quando">{{ grupo.perfil.name }}</span>{% endif %}{% if marco.cutRule %} · <a href="{% url 'interface:corte' edital.id marco.id %}">corte</a>{% endif %}</li>{% endfor %}{% endfor %}</ul>
+  <ul class="resumo-lista">{% for grupo in marcos_classificatorios %}{% for marco in grupo.marcos %}<li>{% if marco.drawMethod %}<a href="{% url 'interface:sorteio' edital.id marco.id %}">{{ marco.name }}</a> <span class="quando">{{ grupo.perfil.name }} — sorteio público</span>{% else %}<a href="{% url 'interface:ordenacao' edital.id marco.id %}">{{ marco.name }}</a> <span class="quando">{{ grupo.perfil.name }}</span>{% endif %}{% if marco.cutRule %} · <a href="{% url 'interface:corte' edital.id marco.id %}">corte</a>{% endif %} · <a href="{% url 'interface:ocupacao' edital.id marco.id %}">ocupação</a></li>{% endfor %}{% endfor %}</ul>
 </section>
 {% endif %}
 
