@@ -330,7 +330,11 @@ Cada número exibido tem trilha: qual ato o produziu, sobre qual ordem, com qual
 **A apuração**
 
 - **FR-239**: O sistema MUST apurar, por recorte do ato de ordenação (Perfil, marco e lista),
-  quantas vagas o Edital publicou, quantas estão ocupadas e quantas faltam.
+  **quatro** quantidades: quantas vagas o Edital publicou, quantas o recorte tem **efetivamente**
+  (as publicadas mais as recebidas, menos as cedidas), quantas estão ocupadas e quantas faltam.
+- **FR-239a**: A quantidade publicada MUST permanecer **inalterada** por movimento de vaga: o que a
+  reversão muda é a quantidade **efetiva**. *Sem esta separação, reverter faria o sistema afirmar
+  que o Edital publicou um número que ele não publicou — e o publicado é intocável.*
 - **FR-240**: A quantidade publicada MUST ser lida da **linha** do `vacancyTable` correspondente ao
   recorte, e nunca do total de vagas imediatas do Perfil.
 - **FR-241**: O recorte da ampla concorrência MUST ser a linha geral do quadro — `modalityId`
@@ -395,8 +399,11 @@ Cada número exibido tem trilha: qual ato o produziu, sobre qual ordem, com qual
 
 ### Requisitos de apresentação
 
-- **UX-031**: A tela do Perfil MUST dizer, por recorte, os três números — publicadas, ocupadas,
-  faltando — e MUST NOT exibir um deles sozinho.
+- **UX-031**: A tela do Perfil MUST dizer, por recorte, os quatro números — publicadas, efetivas,
+  ocupadas e faltando — e MUST NOT exibir um deles sozinho. Onde nenhum movimento alcançou o
+  recorte, efetivas e publicadas coincidem, e a tela MAY dizê-lo em um número só; onde divergem,
+  MUST dizer os dois. *A redação anterior pedia três números e ficava incoerente depois da
+  reversão: publicadas seguiam 28 enquanto o que faltava saía de 35.*
 - **UX-032**: Onde o Edital não publicou quadro, a tela MUST dizer isso com estas palavras, e
   MUST NOT mostrar zero.
 - **UX-033**: A reversão MUST aparecer nomeada, com origem, destino e quantidade — e não como
@@ -434,7 +441,8 @@ Cada número exibido tem trilha: qual ato o produziu, sobre qual ordem, com qual
 - **SC-078**: A presidência lê, em uma tela, quantas vagas faltam em cada recorte de um Perfil com
   três listas, sem consultar planilha e sem somar à mão.
 - **SC-079**: Num Perfil de 28 + 10 + 2 com reversão declarada, o esgotamento da lista de PPI com
-  saldo 7 produz linha geral de 35 e registro que nomeia os 7.
+  saldo 7 leva a quantidade **efetiva** da linha geral a 35 — com as publicadas seguindo 28 — e
+  produz registro que nomeia os 7.
 - **SC-080**: Num Edital que proíbe remanejamento entre cursos, nenhuma vaga de um Perfil alcança
   outro em nenhum percurso da interface.
 - **SC-081**: O ciclo do 77/2026 fecha pela interface: faixa emitida, documentação recusada,

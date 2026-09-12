@@ -123,22 +123,33 @@ Perfil e ler os três números por recorte, sem emitir nada.
 
 ### Testes
 
-- [ ] T017 [P] [US1] Teste de interface em `backend/tests/interface/test_ocupacao.py`: os três
-      números por recorte, e **nunca um deles sozinho** (`UX-031`)
+- [ ] T017 [P] [US1] Teste de interface em `backend/tests/interface/test_ocupacao.py`: os **quatro**
+      números por recorte — publicadas, efetivas, ocupadas, faltando —, e **nunca um deles sozinho**
+      (`UX-031`). Onde nenhum movimento alcançou o recorte, publicadas e efetivas coincidem; onde
+      divergem, os dois aparecem
 - [ ] T018 [P] [US1] Teste do Edital sem quadro em `backend/tests/interface/test_ocupacao.py`: a
       tela diz que o Edital não publicou quadro e **não** mostra zero (`UX-032`, `FR-242`)
 - [ ] T019 [P] [US1] Teste de orçamento de consulta em
       `backend/tests/performance/test_ocupacao.py`: a listagem de 7 Perfis × 3 recortes não abre o
       conteúdo publicado por linha (`R-006`)
+- [ ] T019a [P] [US1] Teste em `backend/tests/interface/test_ocupacao.py` de que **ler não ocupa**
+      (`FR-261`): abrir a tela do recorte **não** emite apuração — contagem de
+      `ApuracaoDeOcupacao` igual antes e depois do `GET`. *Nenhuma outra tarefa provava isso, e a
+      `014` já nomeou o defeito equivalente: ler não corta*
+- [ ] T019b [P] [US1] Medir o teto de volume em
+      `backend/tests/performance/test_ocupacao.py` (`SC-082`): apuração de um Perfil com 7 polos ×
+      3 listas e **1.000 participantes por recorte**, em tempo comparável ao da emissão da ordem no
+      mesmo volume. *A `T019` mede contagem de consulta, que é outra grandeza*
 
 ### Implementação
 
 - [ ] T020 [US1] Implementar a view da ocupação em
       `backend/processo_seletivo/interface/views.py`, lendo colunas e SQL — `faltando` calculado na
-      própria linha, como `efetivas − ocupadas`
+      própria linha, como `efetivas − ocupadas`, e `publicadas` exibida **sem** ser alterada por
+      movimento (`FR-239a`)
 - [ ] T021 [US1] Criar `backend/processo_seletivo/interface/templates/interface/ocupacao.html` com
-      os quatro estados do contrato (`CURRENT`, `OBSOLETE`, `NOT_APPRAISED`, `NO_VACANCY_TABLE`) —
-      e os dois últimos **não** são erro nem zero
+      os quatro números da `UX-031` e os quatro estados do contrato (`CURRENT`, `OBSOLETE`,
+      `NOT_APPRAISED`, `NO_VACANCY_TABLE`) — e os dois últimos **não** são erro nem zero
 - [ ] T022 [US1] Rotear a tela em `backend/processo_seletivo/interface/urls.py`, **pendendo do
       marco** como a do corte, e ligar o acesso em
       `backend/processo_seletivo/interface/templates/interface/detalhe.html`
@@ -206,7 +217,9 @@ linha geral passa a 62 e a soma por recorte não muda.
       `universo.movimentosLidos`, sem criar um segundo registro
 - [ ] T040 [P] [US2] Teste do invariante da soma constante em
       `backend/tests/unit/ocupacao/test_soma_constante.py` — **propriedade** sobre sequências
-      aleatórias de reversão e liberação, porque a composição erra e não cada movimento (`R-007`)
+      aleatórias de reversão e liberação, porque a composição erra e não cada movimento (`R-007`).
+      No mesmo arquivo, que **`publicadas` nunca muda** por movimento algum (`FR-239a`): o que a
+      reversão move é a quantidade efetiva, e o publicado é intocável
 - [ ] T041 [P] [US2] Teste de que nenhuma vaga atravessa Perfil em
       `backend/tests/integration/ocupacao/test_reversao.py` (`FR-246`) — é o item 4.5 do 57/2026
 - [ ] T042 [P] [US2] Teste da obsolescência do destino em
@@ -249,9 +262,11 @@ a faixa seguinte é emitida com o déficit como causa.
 - [ ] T049 [US3] Ação para pedir a faixa seguinte pela ocupação — rota em
       `backend/processo_seletivo/interface/urls.py` e view em
       `backend/processo_seletivo/interface/views.py`
-- [ ] T050 [P] [US3] Teste do vocabulário em `backend/tests/test_vocabulario_da_ocupacao.py`:
-      nenhuma tela, ato ou mensagem desta feature usa termo de convocação, aceite ou matrícula
-      (`FR-258`, `UX-034`), na forma de `test_vocabulario_do_corte.py`
+- [ ] T050 [P] [US3] Teste do vocabulário **e da proibição** em
+      `backend/tests/test_vocabulario_da_ocupacao.py`: nenhuma tela, ato ou mensagem desta feature
+      usa termo de convocação, aceite ou matrícula (`FR-258`, `UX-034`), na forma de
+      `test_vocabulario_do_corte.py`; e nenhum caminho da `016` emite ordem, desempata ou seleciona
+      candidato (`FR-257`) — a seleção continua sendo ato da `014`
 
 **Checkpoint**: o ciclo do 77/2026 fecha de ponta a ponta.
 
@@ -319,7 +334,8 @@ depender de desistência, que é fato da `019` (`R-001`).
       Perfil aparece
 - [ ] T061 [P] Acrescentar os três endpoints do contrato ao `openapi.yaml`
 - [ ] T062 [P] Escrever `specs/016-ocupacao-de-vagas/rastreabilidade.md` — matriz
-      `FR-239`–`FR-263`, `SC-078`–`SC-084`, `UX-031`–`UX-034` contra arquivo de teste
+      `FR-239`–`FR-263` (incluindo `FR-239a`), `SC-078`–`SC-084`, `UX-031`–`UX-034` contra arquivo
+      de teste
 - [ ] T063 [P] Acrescentar a linha da `016` à tabela de incrementos do `README.md` — o resíduo já
       apareceu três vezes, e nenhum `tasks.md` anterior tinha esta tarefa
 - [ ] T064 Atualizar a contagem da suíte no `README.md` e no `AGENTS.md` com o número medido
@@ -387,4 +403,7 @@ inteiro com menos travessia. A §8 da spec sugere o contrário, e aqui a depend�
 - Nenhuma tarefa reintroduz `faltando` como coluna, nem compara `ocupadas` com `publicadas`
 - Nenhuma tarefa faz `classificacao` importar `ocupacao`
 - `T010` não se adia: sem ela as tabelas não são append-only de verdade
+- `T019a` e `T019b` nasceram do `/speckit-analyze`, depois da numeração fechar. Sufixo de letra é a
+  convenção do repositório para tarefa acrescentada depois — renumerar 66 itens custaria mais e
+  quebraria as referências dos commits
 - Comitar por tarefa ou grupo lógico; parar em qualquer checkpoint para validar

@@ -55,7 +55,7 @@ que a capacidade é da linha dela e **não está construída**.
 | O que | Resultado |
 |---|---|
 | `tests/test_citacoes_de_requisito.py` | **5 passando** — depois de três reparos, abaixo |
-| faixa de identificadores | `FR-239`–`FR-263` (25), `SC-078`–`SC-083`, `UX-031`–`UX-034`; teto anterior medido em `daded41` |
+| faixa de identificadores | `FR-239`–`FR-263` mais `FR-239a` (26), `SC-078`–`SC-084`, `UX-031`–`UX-034`; teto anterior medido em `daded41` |
 | margem de 100 colunas | nenhuma linha de prosa acima |
 
 **Os dois primeiros a varredura forçou, e o segundo era de escrita.** A primeira execução reprovou
