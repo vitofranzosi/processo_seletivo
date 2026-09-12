@@ -103,6 +103,20 @@ PERFIL_PUBLICADO = (
     # anteriores —, porque duas grafias para a ausência, chave ausente e lista vazia, é o que a
     # D-005 existe para não permitir.
     Campo("vacancyTable", list, tipo_do_item=dict),
+    # A declaração de reversão da `016` (D-007). **`dict` anulável, e nulo é a declaração de que
+    # este Edital não reverte** — não a ausência dela: sempre presente depois do degrau 14, como o
+    # quadro depois do 12, porque duas grafias para a ausência é o que a versão canônica existe
+    # para não admitir.
+    #
+    # **A forma de dentro não se declara aqui**, e é a mesma régua de `competitionModalities`: que
+    # `kind` exista e seja um dos dois declaráveis é conferido por `_reversao_declarada`, que
+    # precisa recusar a publicação com código próprio — `vacancy_reversion_kind_required` — em vez
+    # de devolver "tipo inválido".
+    #
+    # **Ela estava faltando, e o defeito é o do `T110` da `014` repetido**: a publicação emitia o
+    # campo, o degrau 14 o elevava, e a forma publicada não o conferia. Quem o encontrou foi
+    # `tests/contract/test_forma_publicada.py`, ao acrescentar `vacancyReversion` ao contrato.
+    Campo("vacancyReversion", dict, admite_nulo=True),
 )
 
 # **A forma de dentro da linha É declarada**, ao contrário da de `competitionModalities`, que é a
@@ -618,6 +632,7 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
             fato.get("id") for fato in (perfil.get("declaredFacts") or []) if isinstance(fato, dict)
         }
         findings.extend(_ampla_concorrencia_declarada(perfil, base=base))
+        findings.extend(_reversao_declarada(perfil, base=base))
         findings.extend(_corte_em_dois_marcos(perfil, base=base))
         for indice, marco in enumerate(perfil.get("classificationMilestones") or []):
             if not isinstance(marco, dict):
@@ -924,6 +939,60 @@ def _quadro_para_o_corte(regra, *, perfil, caminho, nomeado) -> list[ValidationF
         for chave, nome in exigidos
         if chave not in declarados
     ]
+
+
+def _reversao_declarada(perfil, *, base) -> list[ValidationFinding]:
+    """A reversão declarada traz a espécie do gatilho, e pressupõe quadro (016, FR-249, FR-251).
+
+    **Três recusas, e a ausência do objeto não é nenhuma delas.** `null` é declaração legítima —
+    "este Edital não declara reversão" —, e o 57/2026 prova por que ela tem de ser respeitada: o
+    item 4.5 dele proíbe por escrito o remanejamento entre cursos.
+
+    **Objeto sem `kind` não vira espécie padrão.** Os dois Editais da amostra escrevem o gatilho de
+    modo diferente — o 28/2026 reverte "havendo ausência de candidatos aprovados", o 57/2026 "na
+    hipótese do não preenchimento total" —, e escolher por eles fixaria em ato publicado uma decisão
+    de norma. Vaga revertida sob a leitura larga num Edital que manda a estreita é vaga que saiu do
+    recorte reservado sem fundamento.
+
+    **E reverter pressupõe quantidade por recorte**: declarar reversão num Perfil sem quadro é regra
+    inexequível, e regra publicada inexequível é o que a `014` já recusou a publicar.
+    """
+    from processo_seletivo.ocupacao.domain.nomes import ESPECIES_DE_REVERSAO
+
+    objeto = perfil.get("vacancyReversion")
+    if objeto is None:
+        return []
+    caminho = f"{base}/vacancyReversion"
+    if not isinstance(objeto, dict):
+        return [_impeditivo(TIPO_INVALIDO, f"O item deveria ser objeto em {caminho}.", caminho)]
+    especie = objeto.get("kind")
+    if not especie:
+        return [
+            _impeditivo(
+                "vacancy_reversion_kind_required",
+                "O Perfil declara reversão de vaga sem dizer sob qual gatilho: declare por "
+                "esgotamento da lista reservada ou por saldo não preenchido.",
+                f"{caminho}/kind",
+            )
+        ]
+    if especie not in ESPECIES_DE_REVERSAO:
+        return [
+            _impeditivo(
+                "vacancy_reversion_kind_unknown",
+                f"O gatilho de reversão '{especie}' não é um dos declaráveis.",
+                f"{caminho}/kind",
+            )
+        ]
+    if not (perfil.get("vacancyTable") or []):
+        return [
+            _impeditivo(
+                "vacancy_reversion_sem_quadro",
+                "O Perfil declara reversão de vaga e não publica quadro: não há quantidade por "
+                "recorte a reverter.",
+                caminho,
+            )
+        ]
+    return []
 
 
 def _ampla_concorrencia_declarada(perfil, *, base) -> list[ValidationFinding]:

@@ -133,6 +133,9 @@ class ProfileSerializer(serializers.Serializer):
     # Qual das Modalidades é a ampla concorrência (014, D-014). `allow_null` porque não declarar é
     # resposta legítima: há Edital em que a ampla concorrência existe só como a linha geral.
     generalCompetitionModalityId = serializers.UUIDField(required=False, allow_null=True)
+    # A reversão declarada (016, D-007). Objeto anulável: `null` é "não declara", e objeto sem
+    # `kind` é recusado pela conferência de publicação, não aqui — a recusa nomeia o Perfil.
+    vacancyReversion = serializers.DictField(required=False, allow_null=True)
     competitionModalities = CompetitionModalitySerializer(many=True)
     # Opcional no rascunho: um Edital que não classifica não declara marco nenhum.
     classificationMilestones = ClassificationMilestoneSerializer(many=True, required=False)

@@ -251,6 +251,9 @@ def replace_draft(
                 reserve_type=payload["reserveType"],
                 reserve_limit=payload.get("reserveLimit"),
                 modalidade_ampla_concorrencia=(payload.get("generalCompetitionModalityId") or None),
+                # **Vazio, e não `None`**: a coluna é `CharField` com `default=""`, e escrever nulo
+                # viola o `NOT NULL`. É a mesma grafia de ausência que o resto do modelo usa.
+                especie_de_reversao=((payload.get("vacancyReversion") or {}).get("kind") or ""),
                 locality=payload.get("locality", ""),
                 duties=payload.get("duties", ""),
                 workload=payload.get("workload", ""),

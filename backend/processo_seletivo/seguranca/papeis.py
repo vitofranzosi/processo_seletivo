@@ -47,6 +47,12 @@ TABELAS_APPEND_ONLY = (
     # alteração de linha existente é sequer legítima (014, FR-223).
     "classificacao_corte",
     "classificacao_itemdocorte",
+    # A apuração de ocupação da `016` e o movimento de vaga: quantas vagas cada recorte tem e a
+    # quantidade que muda de recorte. Append-only pela razão das demais — nascem e não mudam —, com
+    # um agravante próprio: a apuração é o número que alguém vai contestar, e a sucessão já cria
+    # linha nova, de modo que nenhuma alteração de linha existente é sequer legítima (016, FR-260).
+    "ocupacao_apuracaodeocupacao",
+    "ocupacao_movimentodevaga",
     # A divulgação do resultado (017): o ato publicado, a situação congelada de cada participante
     # e o documento oficial. As três são históricas pela mesma razão das demais — nascem e não
     # mudam —, com um agravante próprio: o que elas guardam já é público, e reescrevê-lo depois

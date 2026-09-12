@@ -71,6 +71,13 @@ DEGRAUS_DE_PERFIL = {
     # precisa dos dois para saber quais recortes exigem linha de quadro, e separá-los seria duas
     # elevações e dois caminhos de leitura para uma decisão só.
     13: {"generalCompetitionModalityId": None},
+    # **O degrau 14 é a declaração da reversão** (016, D-007). `None` diz "este Edital não declara
+    # reversão", e é verdade sobre todos eles — a capacidade não existia. Conversão sem invenção,
+    # como os degraus 12 e 13.
+    #
+    # E a ausência **não** é padrão de comportamento: o 57/2026 proíbe por escrito o remanejamento
+    # entre cursos, e um sistema que revertesse por conta própria produziria ali o que ele veda.
+    14: {"vacancyReversion": None},
 }
 
 DEGRAUS_DA_RAIZ = {

@@ -1387,6 +1387,39 @@ def _quadro_de_vagas_do_perfil(composicao, perfil, tabelas, nomear_perfil=False)
             alinhamentos=[ESQUERDA, CENTRO],
             legenda=tabelas.legenda(titulo),
         )
+    _reversao_declarada(composicao, perfil)
+
+
+def _reversao_declarada(composicao, perfil):
+    """A frase da reversão, abaixo do quadro que ela governa (016, D-007).
+
+    **Sai junto do quadro, e não em bloco próprio**, porque é uma regra sobre aquelas quantidades:
+    lida longe delas, o candidato teria de procurar a qual Perfil ela se aplica.
+
+    **Sem declaração, nenhuma frase sai** — nem "não há reversão". É a mesma disciplina que a `025`
+    aplicou ao quadro ausente: um Edital que não declarou reversão não passa a afirmar coisa alguma
+    sobre ela, e imprimir a negação seria afirmação nova sobre ato já publicado.
+    """
+    especie = (perfil.get("vacancyReversion") or {}).get("kind")
+    if not especie:
+        return
+    frases = {
+        "ON_EXHAUSTION": (
+            "Havendo ausência de candidatos aprovados na reserva de vagas, o quantitativo será "
+            "destinado à respectiva ampla concorrência."
+        ),
+        "ON_BALANCE": (
+            "Na hipótese do não preenchimento total das vagas reservadas, o quantitativo não "
+            "preenchido será destinado à respectiva ampla concorrência."
+        ),
+    }
+    frase = frases.get(especie)
+    if not frase:
+        return
+    with composicao.bloco():
+        # `escrever`, e não `paragrafo`: a `Composicao` não tem esse método, e eu o inventei por
+        # analogia. O teste da reversão pegou — a publicação inteira devolvia 500.
+        composicao.escrever(frase, antes=4.0, justificar=True)
 
 
 def _modalidades(composicao, perfil, tabelas, nomear_perfil=False):
